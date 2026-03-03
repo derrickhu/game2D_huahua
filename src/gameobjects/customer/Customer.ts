@@ -1,21 +1,26 @@
 import Phaser from 'phaser';
-import { FlowerFamily, FAMILY_COLORS, FAMILY_NAMES, COLORS } from '../../config/Constants';
+import { FlowerFamily, FAMILY_COLORS, FAMILY_NAMES } from '../../config/Constants';
 import { CustomerConfig, CustomerRequest } from '../../data/CustomerData';
+import { getFlowerConfig } from '../../data/FlowerData';
+import { FlowerItem } from '../board/FlowerItem';
 
 export class Customer extends Phaser.GameObjects.Container {
   public customerId: string;
   public customerName: string;
   public request: CustomerRequest;
   public slotIndex: number;  // 0 或 1，表示左边或右边的客人位
+  public reservedFlower: FlowerItem | null = null;  // 被锁定的花朵引用
 
-  private body: Phaser.GameObjects.Graphics;
+  private bodyGfx: Phaser.GameObjects.Graphics;
   private nameText: Phaser.GameObjects.Text;
   private bubble: Phaser.GameObjects.Container;
   private bubbleBg: Phaser.GameObjects.Graphics;
   private demandText: Phaser.GameObjects.Text;
   private rewardText: Phaser.GameObjects.Text;
+  private completeBtn: Phaser.GameObjects.Container | null = null;
   private waitTimer: Phaser.Time.TimerEvent | null = null;
   private onTimeout: (() => void) | null = null;
+  private onComplete: (() => void) | null = null;
 
   constructor(
     scene: Phaser.Scene,
@@ -23,6 +28,7 @@ export class Customer extends Phaser.GameObjects.Container {
     request: CustomerRequest,
     slotIndex: number,
     onTimeout: () => void,
+    onComplete: () => void,
   ) {
     super(scene, 0, 0);
 
@@ -31,11 +37,12 @@ export class Customer extends Phaser.GameObjects.Container {
     this.request = request;
     this.slotIndex = slotIndex;
     this.onTimeout = onTimeout;
+    this.onComplete = onComplete;
 
-    // 客人身体（占位：彩色椭圆+头部）
-    this.body = new Phaser.GameObjects.Graphics(scene);
+    // 客人身体
+    this.bodyGfx = new Phaser.GameObjects.Graphics(scene);
     this.drawBody(config.color);
-    this.add(this.body);
+    this.add(this.bodyGfx);
 
     // 名字
     this.nameText = new Phaser.GameObjects.Text(scene, 0, 48, config.name, {
@@ -58,10 +65,11 @@ export class Customer extends Phaser.GameObjects.Container {
     this.bubbleBg.strokeRoundedRect(-55, -35, 110, 60, 12);
     this.bubble.add(this.bubbleBg);
 
-    // 需求花系和等级
-    const familyName = FAMILY_NAMES[request.family];
-    this.demandText = new Phaser.GameObjects.Text(scene, 0, -22, `${familyName} Lv${request.minLevel}`, {
-      fontSize: '16px',
+    // 需求花系和等级 — 显示具体花名
+    const flowerConfig = getFlowerConfig(`${request.family}_${request.minLevel}`);
+    const demandLabel = flowerConfig ? flowerConfig.name : `${FAMILY_NAMES[request.family]} Lv${request.minLevel}`;
+    this.demandText = new Phaser.GameObjects.Text(scene, 0, -22, `求：${demandLabel}`, {
+      fontSize: '14px',
       fontFamily: 'Arial',
       color: `#${FAMILY_COLORS[request.family].toString(16).padStart(6, '0')}`,
       fontStyle: 'bold',
@@ -82,39 +90,95 @@ export class Customer extends Phaser.GameObjects.Container {
 
     this.add(this.bubble);
 
-    // 设置交互区域（用于接收花朵拖拽）
     this.setSize(110, 130);
-
     scene.add.existing(this);
   }
 
   private drawBody(color: number): void {
-    this.body.clear();
-    // 身体（椭圆）
-    this.body.fillStyle(color, 0.8);
-    this.body.fillEllipse(0, 20, 50, 60);
-    // 头部
-    this.body.fillStyle(0xFFE0BD, 1);
-    this.body.fillCircle(0, -12, 22);
-    // 眼睛
-    this.body.fillStyle(0x333333, 1);
-    this.body.fillCircle(-7, -14, 3);
-    this.body.fillCircle(7, -14, 3);
-    // 微笑
-    this.body.lineStyle(2, 0x333333, 1);
-    this.body.beginPath();
-    this.body.arc(0, -8, 8, 0.1, Math.PI - 0.1);
-    this.body.strokePath();
+    this.bodyGfx.clear();
+    this.bodyGfx.fillStyle(color, 0.8);
+    this.bodyGfx.fillEllipse(0, 20, 50, 60);
+    this.bodyGfx.fillStyle(0xFFE0BD, 1);
+    this.bodyGfx.fillCircle(0, -12, 22);
+    this.bodyGfx.fillStyle(0x333333, 1);
+    this.bodyGfx.fillCircle(-7, -14, 3);
+    this.bodyGfx.fillCircle(7, -14, 3);
+    this.bodyGfx.lineStyle(2, 0x333333, 1);
+    this.bodyGfx.beginPath();
+    this.bodyGfx.arc(0, -8, 8, 0.1, Math.PI - 0.1);
+    this.bodyGfx.strokePath();
   }
 
-  // 检查花朵是否满足需求
   canAccept(family: FlowerFamily, level: number): boolean {
     return family === this.request.family && level >= this.request.minLevel;
   }
 
-  // 播放满意动画
+  // 显示"完成"按钮（花朵已锁定时调用）
+  showCompleteButton(): void {
+    if (this.completeBtn) return;
+
+    this.completeBtn = new Phaser.GameObjects.Container(this.scene, 0, -110);
+
+    // 按钮背景
+    const btnBg = new Phaser.GameObjects.Graphics(this.scene);
+    btnBg.fillStyle(0x4CAF50, 1);
+    btnBg.fillRoundedRect(-32, -16, 64, 32, 12);
+    // 高光
+    btnBg.fillStyle(0xFFFFFF, 0.15);
+    btnBg.fillRoundedRect(-32, -16, 64, 16, { tl: 12, tr: 12, bl: 0, br: 0 });
+    this.completeBtn.add(btnBg);
+
+    // 文字
+    const btnText = new Phaser.GameObjects.Text(this.scene, 0, 0, '完成', {
+      fontSize: '16px',
+      fontFamily: 'Arial',
+      color: '#FFFFFF',
+      fontStyle: 'bold',
+    }).setOrigin(0.5);
+    this.completeBtn.add(btnText);
+
+    this.completeBtn.setSize(64, 32);
+    this.completeBtn.setInteractive(
+      new Phaser.Geom.Rectangle(0, 0, 64, 32),
+      Phaser.Geom.Rectangle.Contains,
+    );
+
+    // 点击完成按钮
+    this.completeBtn.on('pointerdown', () => {
+      if (this.onComplete) {
+        this.onComplete();
+      }
+    });
+
+    this.add(this.completeBtn);
+
+    // 弹出动画
+    this.completeBtn.setScale(0);
+    this.scene.tweens.add({
+      targets: this.completeBtn,
+      scaleX: 1,
+      scaleY: 1,
+      duration: 300,
+      ease: 'Back.easeOut',
+    });
+  }
+
+  // 隐藏完成按钮
+  hideCompleteButton(): void {
+    if (!this.completeBtn) return;
+    const btn = this.completeBtn;
+    this.completeBtn = null;
+    this.scene.tweens.add({
+      targets: btn,
+      scaleX: 0,
+      scaleY: 0,
+      duration: 200,
+      onComplete: () => btn.destroy(),
+    });
+  }
+
+  // 满意离开动画
   playHappyAnimation(onComplete: () => void): void {
-    // 头顶冒出爱心
     const heart = new Phaser.GameObjects.Text(this.scene, 0, -90, '❤️', {
       fontSize: '24px',
     }).setOrigin(0.5);
@@ -129,7 +193,6 @@ export class Customer extends Phaser.GameObjects.Container {
       onComplete: () => heart.destroy(),
     });
 
-    // 客人向右走出
     this.scene.tweens.add({
       targets: this,
       x: 850,
@@ -141,7 +204,6 @@ export class Customer extends Phaser.GameObjects.Container {
     });
   }
 
-  // 播放拒绝动画
   playRejectAnimation(): void {
     this.scene.tweens.add({
       targets: this,
@@ -152,7 +214,6 @@ export class Customer extends Phaser.GameObjects.Container {
     });
   }
 
-  // 播放走入动画
   playEnterAnimation(targetX: number, targetY: number): void {
     this.setPosition(-100, targetY);
     this.scene.tweens.add({
@@ -163,7 +224,6 @@ export class Customer extends Phaser.GameObjects.Container {
     });
   }
 
-  // 开始等待计时
   startWaitTimer(timeout: number): void {
     this.waitTimer = this.scene.time.delayedCall(timeout, () => {
       if (this.onTimeout) {
@@ -172,7 +232,6 @@ export class Customer extends Phaser.GameObjects.Container {
     });
   }
 
-  // 获取气泡的世界坐标范围（用于拖拽检测）
   getBubbleBounds(): Phaser.Geom.Rectangle {
     return new Phaser.Geom.Rectangle(
       this.x - 55,
@@ -186,6 +245,13 @@ export class Customer extends Phaser.GameObjects.Container {
     if (this.waitTimer) {
       this.waitTimer.destroy();
     }
+    // 解除花朵锁定
+    if (this.reservedFlower && !this.reservedFlower.scene) {
+      // 花朵已被销毁
+    } else if (this.reservedFlower) {
+      this.reservedFlower.setReserved(false);
+    }
+    this.reservedFlower = null;
     super.destroy(fromScene);
   }
 }

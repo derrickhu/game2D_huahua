@@ -5,6 +5,7 @@
   "scripts": {
     "dev": "vite",
     "build": "tsc && vite build",
+    "build:wx": "BUILD_TARGET=minigame vite build && rm -f minigame/index.html",
     "preview": "vite preview"
   },
   "keywords": [],
@@ -16,6 +17,7 @@
   },
   "devDependencies": {
     "@types/node": "^25.3.3",
+    "terser": "^5.46.0",
     "typescript": "^5.7.3",
     "vite": "^6.2.0"
   }

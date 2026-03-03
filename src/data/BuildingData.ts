@@ -3,7 +3,6 @@ import { FlowerFamily } from '../config/Constants';
 export interface BuildingConfig {
   id: string;
   name: string;
-  cd: number;                         // 冷却时间（秒）
   unlockPrice: number;                // 金币解锁价格
   unlockOrder: number;                // 解锁顺序
   selectableFamilies: FlowerFamily[]; // 可选花系
@@ -14,7 +13,6 @@ export const BuildingConfigs: BuildingConfig[] = [
   {
     id: 'workbench',
     name: '花艺操作台',
-    cd: 15,
     unlockPrice: 50,
     unlockOrder: 1,
     selectableFamilies: [FlowerFamily.DAILY],
@@ -23,7 +21,6 @@ export const BuildingConfigs: BuildingConfig[] = [
   {
     id: 'seedbox',
     name: '花苗培育箱',
-    cd: 20,
     unlockPrice: 200,
     unlockOrder: 2,
     selectableFamilies: [FlowerFamily.DAILY],
@@ -32,7 +29,6 @@ export const BuildingConfigs: BuildingConfig[] = [
   {
     id: 'wrapper',
     name: '包装台',
-    cd: 25,
     unlockPrice: 500,
     unlockOrder: 3,
     selectableFamilies: [FlowerFamily.DAILY, FlowerFamily.ROMANTIC],
@@ -41,7 +37,6 @@ export const BuildingConfigs: BuildingConfig[] = [
   {
     id: 'greenhouse',
     name: '温室',
-    cd: 30,
     unlockPrice: 1000,
     unlockOrder: 4,
     selectableFamilies: [FlowerFamily.DAILY, FlowerFamily.ROMANTIC, FlowerFamily.LUXURY],

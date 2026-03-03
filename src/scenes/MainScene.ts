@@ -30,6 +30,7 @@ export class MainScene extends Phaser.Scene {
 
     // === 客人系统 ===
     this.customerManager = new CustomerManager(this);
+    this.customerManager.setBoard(this.board);
     this.customerManager.startRefreshLoop();
 
     // === 拖拽交互 ===
@@ -121,78 +122,109 @@ export class MainScene extends Phaser.Scene {
   }
 
   private createBoardArea(): void {
-    // 棋盘区背景
+    // 棋盘区背景（铺满下半屏）
     const boardBg = this.add.graphics();
     boardBg.fillStyle(COLORS.BOARD_BG, 0.6);
     boardBg.fillRoundedRect(
-      15,
-      LAYOUT.BOARD_AREA_Y + 5,
-      GAME_WIDTH - 30,
-      LAYOUT.BOARD_AREA_HEIGHT - 10,
-      20,
+      4,
+      LAYOUT.BOARD_AREA_Y + 1,
+      GAME_WIDTH - 8,
+      LAYOUT.NAV_BAR_Y - LAYOUT.BOARD_AREA_Y - 2,
+      12,
     );
-
-    // 棋盘标题
-    this.add.text(GAME_WIDTH / 2, LAYOUT.BOARD_AREA_Y + 20, '合成台', {
-      fontSize: '16px',
-      fontFamily: 'Arial',
-      color: '#8A7A6A',
-    }).setOrigin(0.5);
 
     // 创建棋盘
     this.board = new Board(this, BOARD.INIT_ROWS, BOARD.INIT_COLS);
   }
 
   private setupInitialBoard(): void {
-    // 初始放置几朵日常花
     const emptyCells = this.board.getEmptyCells();
-    if (emptyCells.length >= 4) {
-      // 放4朵初始花
+    if (emptyCells.length >= 7) {
+      // 日常花系
       this.board.placeFlower(emptyCells[0], 'daily_1');
       this.board.placeFlower(emptyCells[1], 'daily_1');
       this.board.placeFlower(emptyCells[2], 'daily_1');
-      this.board.placeFlower(emptyCells[3], 'daily_1');
-
-      // 在一个格子放建筑
-      if (emptyCells.length >= 5) {
-        this.board.placeBuilding(emptyCells[4], 'workbench');
-      }
+      this.board.placeFlower(emptyCells[3], 'daily_2');
+      // 浪漫花系
+      this.board.placeFlower(emptyCells[4], 'romantic_1');
+      this.board.placeFlower(emptyCells[5], 'romantic_1');
+      // 建筑
+      this.board.placeBuilding(emptyCells[6], 'workbench');
     }
   }
 
   private setupDragAndDrop(): void {
-    this.input.on('dragstart', (_pointer: Phaser.Input.Pointer, gameObject: Phaser.GameObjects.GameObject) => {
+    // 调试：监听 pointerdown
+    this.input.on('pointerdown', (pointer: Phaser.Input.Pointer) => {
+      const sm = this.scale;
+      console.log('[MainScene] pointerdown',
+        'xy:', Math.round(pointer.x), Math.round(pointer.y),
+        'isDown:', pointer.isDown,
+        'wasTouch:', pointer.wasTouch,
+        'id:', pointer.id,
+        'displayScale:', sm.displayScale.x.toFixed(3), sm.displayScale.y.toFixed(3),
+        'interactive:', (this.input as any)._list?.length || 0);
+    });
+
+    // 调试：监听 gameobjectdown — 只有命中交互对象时才触发
+    this.input.on('gameobjectdown', (_pointer: Phaser.Input.Pointer, gameObject: Phaser.GameObjects.GameObject) => {
+      console.log('[MainScene] gameobjectdown HIT!', gameObject.constructor.name,
+        'at:', Math.round((gameObject as any).x), Math.round((gameObject as any).y));
+    });
+
+    // 调试：监听 pointermove
+    let moveCount = 0;
+    this.input.on('pointermove', () => {
+      moveCount++;
+      if (moveCount <= 3) {
+        console.log('[MainScene] pointermove #' + moveCount);
+      }
+    });
+
+    this.input.on('dragstart', (pointer: Phaser.Input.Pointer, gameObject: Phaser.GameObjects.GameObject) => {
+      console.log('[MainScene] dragstart!', gameObject.constructor.name);
       if (!(gameObject instanceof FlowerItem)) return;
       const flower = gameObject as FlowerItem;
+
+      // 被客人锁定的花不能拖拽
+      if (flower.isReserved) return;
 
       // 记录起始格子
       const cell = this.board.getCellAt(flower.row, flower.col);
       this.dragStartCell = cell;
 
-      // 从cell中移除，放到scene顶层
+      // 计算花朵当前世界坐标（嵌套 Container: Board → Cell → Flower）
+      const worldMatrix = flower.getWorldTransformMatrix();
+      const worldX = worldMatrix.tx;
+      const worldY = worldMatrix.ty;
+
+      // 从 cell 中移除，放到 scene 顶层
       if (cell) {
         cell.removeFlower();
       }
       this.add.existing(flower);
 
+      // 设置为世界坐标
+      flower.setPosition(worldX, worldY);
+
       // 放大 + 置顶
       flower.setScale(1.15);
       flower.setDepth(1000);
 
-      // 转换到世界坐标
-      if (cell) {
-        flower.setPosition(cell.x, cell.y);
-      }
+      console.log('[MainScene] dragstart worldPos:', Math.round(worldX), Math.round(worldY));
     });
 
-    this.input.on('drag', (_pointer: Phaser.Input.Pointer, gameObject: Phaser.GameObjects.GameObject, dragX: number, dragY: number) => {
+    this.input.on('drag', (pointer: Phaser.Input.Pointer, gameObject: Phaser.GameObjects.GameObject, _dragX: number, _dragY: number) => {
       if (!(gameObject instanceof FlowerItem)) return;
       const flower = gameObject as FlowerItem;
-      flower.setPosition(dragX, dragY);
+
+      // 不使用 Phaser 提供的 dragX/dragY（因为 dragstart 中改变了坐标系，偏移量不准）
+      // 直接使用 pointer 坐标
+      flower.setPosition(pointer.x, pointer.y);
 
       // 高亮可放置的目标
       this.clearHighlights();
-      const targetCell = this.board.getCellAtWorldPosition(dragX, dragY);
+      const targetCell = this.board.getCellAtWorldPosition(pointer.x, pointer.y);
       if (targetCell) {
         if (targetCell.isEmpty()) {
           targetCell.setHighlight(true, true);
@@ -201,28 +233,26 @@ export class MainScene extends Phaser.Scene {
           targetCell.setHighlight(true, canMerge);
         }
       }
-
-      // 检查是否在客人区
-      if (this.customerManager.isInCustomerArea(dragX, dragY)) {
-        // 可以显示某种视觉反馈
-      }
     });
 
-    this.input.on('dragend', (_pointer: Phaser.Input.Pointer, gameObject: Phaser.GameObjects.GameObject) => {
+    this.input.on('dragend', (pointer: Phaser.Input.Pointer, gameObject: Phaser.GameObjects.GameObject) => {
       if (!(gameObject instanceof FlowerItem)) return;
       const flower = gameObject as FlowerItem;
       flower.setScale(1);
       flower.setDepth(0);
       this.clearHighlights();
 
-      const worldX = flower.x;
-      const worldY = flower.y;
+      // 使用 pointer 的最终坐标
+      const worldX = pointer.x;
+      const worldY = pointer.y;
+      console.log('[MainScene] dragend xy:', Math.round(worldX), Math.round(worldY),
+        'flower:', flower.flowerId, 'family:', flower.family, 'lv:', flower.level);
 
       // 情况1：拖到客人区域 → 交付
       if (this.customerManager.isInCustomerArea(worldX, worldY)) {
         const delivered = this.customerManager.tryDeliver(flower, worldX, worldY);
         if (delivered) {
-          // 交付成功，从起始格子中移除花朵（已在dragstart时移除）
+          console.log('[MainScene] dragend → 交付成功');
           flower.destroy();
           this.dragStartCell = null;
           return;
@@ -231,10 +261,19 @@ export class MainScene extends Phaser.Scene {
 
       // 情况2：拖到棋盘格子
       const targetCell = this.board.getCellAtWorldPosition(worldX, worldY);
+      console.log('[MainScene] dragend → targetCell:', targetCell ? `[${targetCell.row},${targetCell.col}]` : 'null',
+        'hasFlower:', targetCell?.hasFlower(),
+        'targetFlower:', targetCell?.flower?.flowerId,
+        'isEmpty:', targetCell?.isEmpty());
       if (targetCell) {
         // 2a：拖到有花朵的格子 → 合成
         if (targetCell.hasFlower() && targetCell.flower) {
-          if (this.canMerge(flower, targetCell.flower)) {
+          const canMerge = this.canMerge(flower, targetCell.flower);
+          console.log('[MainScene] dragend → canMerge:', canMerge,
+            'src:', flower.flowerId, flower.family, flower.level,
+            'tgt:', targetCell.flower.flowerId, targetCell.flower.family, targetCell.flower.level,
+            'sameRef:', flower === targetCell.flower);
+          if (canMerge) {
             this.doMerge(flower, targetCell.flower, targetCell);
             this.dragStartCell = null;
             return;
@@ -243,13 +282,16 @@ export class MainScene extends Phaser.Scene {
 
         // 2b：拖到空格 → 移动
         if (targetCell.isEmpty()) {
+          console.log('[MainScene] dragend → 移动到空格');
           targetCell.placeFlower(flower);
           this.dragStartCell = null;
+          EventManager.emit(GameEvents.FLOWER_PLACED, { flowerId: flower.flowerId });
           return;
         }
       }
 
       // 情况3：无效位置 → 归位
+      console.log('[MainScene] dragend → 归位');
       this.returnToOrigin(flower);
     });
   }
@@ -258,7 +300,9 @@ export class MainScene extends Phaser.Scene {
     return a.family === b.family
       && a.level === b.level
       && a.level < 6
-      && a !== b;
+      && a !== b
+      && !a.isReserved
+      && !b.isReserved;
   }
 
   private doMerge(source: FlowerItem, target: FlowerItem, targetCell: Cell): void {

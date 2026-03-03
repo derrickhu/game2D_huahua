@@ -8,11 +8,14 @@ export class FlowerItem extends Phaser.GameObjects.Container {
   public level: number;
   public row: number;
   public col: number;
+  public isReserved: boolean = false;  // 被客人锁定预约
+  public reservedBySlot: number = -1;  // 锁定该花的客人槽位
 
   private bg: Phaser.GameObjects.Graphics;
   private levelText: Phaser.GameObjects.Text;
   private config: FlowerConfig;
   private glowTimer?: Phaser.Time.TimerEvent;
+  private reserveMark: Phaser.GameObjects.Graphics | null = null;
 
   constructor(scene: Phaser.Scene, row: number, col: number, flowerId: string) {
     super(scene, 0, 0);
@@ -34,24 +37,24 @@ export class FlowerItem extends Phaser.GameObjects.Container {
 
     // 等级数字
     this.levelText = new Phaser.GameObjects.Text(scene, 0, 0, `${config.level}`, {
-      fontSize: '28px',
+      fontSize: '20px',
       fontFamily: 'Arial',
       color: '#FFFFFF',
       fontStyle: 'bold',
       stroke: '#00000066',
-      strokeThickness: 3,
+      strokeThickness: 2,
     }).setOrigin(0.5);
     this.add(this.levelText);
 
     // 花系颜色标识（底部小点）
     const familyDot = new Phaser.GameObjects.Graphics(scene);
     familyDot.fillStyle(FAMILY_COLORS[config.family], 1);
-    familyDot.fillCircle(0, 32, 6);
+    familyDot.fillCircle(0, 24, 5);
     this.add(familyDot);
 
     // 花名（小文字显示在下方）
-    const nameText = new Phaser.GameObjects.Text(scene, 0, -38, config.name, {
-      fontSize: '14px',
+    const nameText = new Phaser.GameObjects.Text(scene, 0, -28, config.name, {
+      fontSize: '11px',
       fontFamily: 'Arial',
       color: '#5A4A3A',
     }).setOrigin(0.5);
@@ -60,8 +63,8 @@ export class FlowerItem extends Phaser.GameObjects.Container {
     this.setSize(BOARD.CELL_SIZE - 16, BOARD.CELL_SIZE - 16);
     this.setInteractive(
       new Phaser.Geom.Rectangle(
-        -(BOARD.CELL_SIZE - 16) / 2,
-        -(BOARD.CELL_SIZE - 16) / 2,
+        0,
+        0,
         BOARD.CELL_SIZE - 16,
         BOARD.CELL_SIZE - 16,
       ),
@@ -126,6 +129,54 @@ export class FlowerItem extends Phaser.GameObjects.Container {
       duration: 300,
       ease: 'Back.easeOut',
     });
+  }
+
+  // 设置被客人预约锁定
+  setReserved(reserved: boolean, slotIndex: number = -1): void {
+    this.isReserved = reserved;
+    this.reservedBySlot = slotIndex;
+
+    if (reserved) {
+      // 禁止拖拽
+      this.disableInteractive();
+
+      // 显示绿色✓标记
+      if (!this.reserveMark) {
+        this.reserveMark = new Phaser.GameObjects.Graphics(this.scene);
+        this.add(this.reserveMark);
+      }
+      this.reserveMark.clear();
+      const s = BOARD.CELL_SIZE;
+      // 绿色半透明底
+      this.reserveMark.fillStyle(0x66CC66, 0.25);
+      this.reserveMark.fillRoundedRect(-s / 2 + 4, -s / 2 + 4, s - 8, s - 8, 6);
+      // ✓ 图标（右下角）
+      this.reserveMark.fillStyle(0x4CAF50, 1);
+      this.reserveMark.fillCircle(s / 2 - 14, s / 2 - 14, 10);
+      // 白色✓
+      this.reserveMark.lineStyle(3, 0xFFFFFF, 1);
+      this.reserveMark.beginPath();
+      this.reserveMark.moveTo(s / 2 - 20, s / 2 - 14);
+      this.reserveMark.lineTo(s / 2 - 15, s / 2 - 9);
+      this.reserveMark.lineTo(s / 2 - 8, s / 2 - 20);
+      this.reserveMark.strokePath();
+    } else {
+      // 恢复拖拽
+      this.setInteractive(
+        new Phaser.Geom.Rectangle(
+          0,
+          0,
+          BOARD.CELL_SIZE - 16,
+          BOARD.CELL_SIZE - 16,
+        ),
+        Phaser.Geom.Rectangle.Contains,
+      );
+      this.scene.input.setDraggable(this);
+
+      if (this.reserveMark) {
+        this.reserveMark.clear();
+      }
+    }
   }
 
   destroy(fromScene?: boolean): void {

@@ -1,28 +1,64 @@
-// 游戏设计分辨率
-export const GAME_WIDTH = 750;
-export const GAME_HEIGHT = 1334;
+import { getSystemInfo } from '../utils/platform';
 
-// 区域布局（Y坐标划分）
+// ============================================================
+// 动态分辨率：宽度固定750，高度按屏幕真实比例自适应
+// 这样 canvas 内容比例 === 屏幕比例，永远不会变形
+// ============================================================
+export const GAME_WIDTH = 750;
+
+// 计算游戏高度
+function calcGameHeight(): number {
+  const info = getSystemInfo();
+  const screenRatio = info.height / info.width; // 竖屏宽高比
+  // 750 / h = screenWidth / screenHeight → h = 750 * screenRatio
+  const h = Math.round(GAME_WIDTH * screenRatio);
+  console.log(`[Constants] 屏幕: ${info.width}x${info.height} dpr=${info.pixelRatio} → 游戏分辨率: ${GAME_WIDTH}x${h}`);
+  return h;
+}
+
+export const GAME_HEIGHT = calcGameHeight();
+
+// ============================================================
+// 区域布局（基于动态高度，按比例分配）
+// ============================================================
+// 顶部栏固定 80px
+// 花店区域（客人区）固定 400px
+// 底部导航栏固定 100px
+// 棋盘区域 = 剩余空间
+const TOP_BAR_H = 80;
+const SHOP_AREA_H = 400;
+const NAV_BAR_H = 100;
+
 export const LAYOUT = {
-  TOP_BAR_HEIGHT: 80,
-  SHOP_AREA_Y: 80,
-  SHOP_AREA_HEIGHT: 400,
-  BOARD_AREA_Y: 480,
-  BOARD_AREA_HEIGHT: 670,
-  NAV_BAR_Y: 1234,
-  NAV_BAR_HEIGHT: 100,
+  TOP_BAR_HEIGHT: TOP_BAR_H,
+  SHOP_AREA_Y: TOP_BAR_H,
+  SHOP_AREA_HEIGHT: SHOP_AREA_H,
+  BOARD_AREA_Y: TOP_BAR_H + SHOP_AREA_H,
+  BOARD_AREA_HEIGHT: GAME_HEIGHT - TOP_BAR_H - SHOP_AREA_H - NAV_BAR_H,
+  NAV_BAR_Y: GAME_HEIGHT - NAV_BAR_H,
+  NAV_BAR_HEIGHT: NAV_BAR_H,
 };
 
-// 棋盘
+// 棋盘 — 根据可用空间动态计算格子大小
+const BOARD_ROWS = 8;
+const BOARD_COLS = 7;
+const BOARD_PADDING = 4;
+const boardAvailW = GAME_WIDTH - 16;   // 左右各留8px
+const boardAvailH = LAYOUT.BOARD_AREA_HEIGHT - 12; // 上下各留6px
+// 格子必须是正方形，取宽/高中较小的值
+const cellFromW = Math.floor((boardAvailW - (BOARD_COLS - 1) * BOARD_PADDING) / BOARD_COLS);
+const cellFromH = Math.floor((boardAvailH - (BOARD_ROWS - 1) * BOARD_PADDING) / BOARD_ROWS);
+const CELL_SIZE = Math.min(cellFromW, cellFromH);
+
 export const BOARD = {
-  INIT_ROWS: 3,
-  INIT_COLS: 4,
-  MAX_ROWS: 5,
-  MAX_COLS: 6,
-  CELL_SIZE: 108,
-  CELL_PADDING: 8,
-  BOARD_OFFSET_X: 750 / 2,  // 棋盘居中X
-  BOARD_OFFSET_Y: 520,       // 棋盘起始Y（相对于BOARD_AREA_Y有一些上边距）
+  INIT_ROWS: BOARD_ROWS,
+  INIT_COLS: BOARD_COLS,
+  MAX_ROWS: 9,
+  MAX_COLS: 8,
+  CELL_SIZE: CELL_SIZE,
+  CELL_PADDING: BOARD_PADDING,
+  BOARD_OFFSET_X: GAME_WIDTH / 2,
+  BOARD_OFFSET_Y: 520,
 };
 
 // 花系
@@ -35,26 +71,18 @@ export enum FlowerFamily {
 // 花朵最大等级
 export const MAX_FLOWER_LEVEL = 6;
 
-// 建筑
-export const BUILDING = {
-  WORKBENCH_CD: 15,     // 花艺操作台CD（秒）—— 阶段1用较短CD便于测试
-  SEEDBOX_CD: 20,
-  WRAPPER_CD: 25,
-  GREENHOUSE_CD: 30,
-};
-
 // 客人
 export const CUSTOMER = {
   MAX_ACTIVE: 2,
-  REFRESH_MIN: 8000,     // 最短刷新间隔（ms）—— 阶段1用较短间隔
+  REFRESH_MIN: 8000,
   REFRESH_MAX: 15000,
-  WAIT_TIMEOUT: 60000,   // 等待超时（ms）
+  WAIT_TIMEOUT: 60000,
 };
 
 // 挂机
 export const IDLE = {
-  PRODUCE_INTERVAL: 60000,  // 挂机产出间隔（ms）
-  MAX_OFFLINE_MS: 4 * 60 * 60 * 1000, // 最大离线收益时长4小时
+  PRODUCE_INTERVAL: 60000,
+  MAX_OFFLINE_MS: 4 * 60 * 60 * 1000,
 };
 
 // 存档
@@ -69,11 +97,11 @@ export const COLORS = {
   CELL_BORDER: 0xE8D5C0,
   CELL_LOCKED: 0xD0D0D0,
   GOLD: 0xFFD700,
-  WISH: 0xC89EFF,    // 花愿（淡紫）
-  DEW: 0x7EC8E3,     // 花露（淡蓝）
-  DAILY_GLOW: 0xE8E060,    // 日常花系光晕
-  ROMANTIC_GLOW: 0xFF9ECC,  // 浪漫花系光晕
-  LUXURY_GLOW: 0xC0A868,   // 奢华花系光晕
+  WISH: 0xC89EFF,
+  DEW: 0x7EC8E3,
+  DAILY_GLOW: 0xE8E060,
+  ROMANTIC_GLOW: 0xFF9ECC,
+  LUXURY_GLOW: 0xC0A868,
   TEXT_PRIMARY: 0x5A4A3A,
   TEXT_SECONDARY: 0x8A7A6A,
   WHITE: 0xFFFFFF,

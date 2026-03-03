@@ -16,7 +16,7 @@ export interface CustomerRequest {
   dewReward: number;
 }
 
-// 阶段1只有2种客人，后续逐步增加
+// 阶段1客人：覆盖日常+浪漫花系
 export const CustomerConfigs: CustomerConfig[] = [
   {
     id: 'energetic_girl',
@@ -34,6 +34,24 @@ export const CustomerConfigs: CustomerConfig[] = [
     possibleRequests: [
       { family: FlowerFamily.DAILY, minLevel: 1, maxLevel: 3, goldReward: 15, wishReward: 2, dewReward: 1 },
       { family: FlowerFamily.DAILY, minLevel: 2, maxLevel: 4, goldReward: 30, wishReward: 5, dewReward: 2 },
+    ],
+  },
+  {
+    id: 'romantic_lady',
+    name: '文艺青年',
+    color: 0xCC99FF,
+    possibleRequests: [
+      { family: FlowerFamily.ROMANTIC, minLevel: 1, maxLevel: 2, goldReward: 15, wishReward: 3, dewReward: 1 },
+      { family: FlowerFamily.ROMANTIC, minLevel: 2, maxLevel: 3, goldReward: 25, wishReward: 4, dewReward: 2 },
+    ],
+  },
+  {
+    id: 'couple_guy',
+    name: '告白男生',
+    color: 0x66CCCC,
+    possibleRequests: [
+      { family: FlowerFamily.ROMANTIC, minLevel: 2, maxLevel: 4, goldReward: 30, wishReward: 5, dewReward: 2 },
+      { family: FlowerFamily.DAILY, minLevel: 3, maxLevel: 5, goldReward: 35, wishReward: 6, dewReward: 3 },
     ],
   },
 ];

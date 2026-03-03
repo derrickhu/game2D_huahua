@@ -35,8 +35,8 @@ export class Cell extends Phaser.GameObjects.Container {
     this.add(this.highlightGfx);
 
     if (locked) {
-      this.lockIcon = new Phaser.GameObjects.Text(scene, 0, -8, '🔒', {
-        fontSize: '24px',
+      this.lockIcon = new Phaser.GameObjects.Text(scene, 0, -6, '🔒', {
+        fontSize: '20px',
       }).setOrigin(0.5);
       this.add(this.lockIcon);
     }
@@ -48,7 +48,7 @@ export class Cell extends Phaser.GameObjects.Container {
   private drawCellBg(locked: boolean): void {
     this.bg.clear();
     const s = BOARD.CELL_SIZE;
-    const r = 12; // 圆角半径
+    const r = 8; // 圆角半径
 
     if (locked) {
       this.bg.fillStyle(COLORS.CELL_LOCKED, 0.5);
@@ -125,7 +125,7 @@ export class Cell extends Phaser.GameObjects.Container {
       const s = BOARD.CELL_SIZE;
       const color = valid ? 0x66FF66 : 0xFF6666;
       this.highlightGfx.fillStyle(color, 0.3);
-      this.highlightGfx.fillRoundedRect(-s / 2, -s / 2, s, s, 12);
+      this.highlightGfx.fillRoundedRect(-s / 2, -s / 2, s, s, 8);
       this.highlightGfx.setAlpha(1);
     } else {
       this.highlightGfx.setAlpha(0);

@@ -1,4 +1,5 @@
 import { CurrencyState } from './CurrencyManager';
+import { storage } from '../utils/platform';
 
 export interface SaveData {
   version: number;
@@ -18,7 +19,7 @@ export class SaveManager {
     data.version = 1;
     try {
       const json = JSON.stringify(data);
-      localStorage.setItem(SAVE_KEY, json);
+      storage.setItem(SAVE_KEY, json);
     } catch (e) {
       console.error('Save failed:', e);
     }
@@ -26,7 +27,7 @@ export class SaveManager {
 
   static load(): SaveData | null {
     try {
-      const json = localStorage.getItem(SAVE_KEY);
+      const json = storage.getItem(SAVE_KEY);
       if (!json) return null;
       const data = JSON.parse(json) as SaveData;
       return data;
@@ -37,6 +38,6 @@ export class SaveManager {
   }
 
   static clear(): void {
-    localStorage.removeItem(SAVE_KEY);
+    storage.removeItem(SAVE_KEY);
   }
 }

@@ -11,11 +11,14 @@ export class Board extends Phaser.GameObjects.Container {
   private cols: number;
 
   constructor(scene: Phaser.Scene, rows: number = BOARD.INIT_ROWS, cols: number = BOARD.INIT_COLS) {
-    // 棋盘居中
+    // 棋盘铺满下半屏（从 BOARD_AREA_Y 到 NAV_BAR_Y）
     const boardWidth = cols * (BOARD.CELL_SIZE + BOARD.CELL_PADDING) - BOARD.CELL_PADDING;
     const boardHeight = rows * (BOARD.CELL_SIZE + BOARD.CELL_PADDING) - BOARD.CELL_PADDING;
     const startX = (750 - boardWidth) / 2 + BOARD.CELL_SIZE / 2;
-    const startY = LAYOUT.BOARD_AREA_Y + 40 + BOARD.CELL_SIZE / 2;
+    const areaTop = LAYOUT.BOARD_AREA_Y + 4;
+    const areaBottom = LAYOUT.NAV_BAR_Y - 4;
+    const areaHeight = areaBottom - areaTop;
+    const startY = areaTop + (areaHeight - boardHeight) / 2 + BOARD.CELL_SIZE / 2;
 
     super(scene, 0, 0);
     this.rows = rows;
@@ -185,7 +188,6 @@ export class Board extends Phaser.GameObjects.Container {
         }
         if (cell.hasBuilding() && cell.building) {
           state.buildingId = cell.building.buildingId;
-          state.cdRemaining = cell.building.getCdRemaining();
         }
         cellStates[r][c] = state;
       }
