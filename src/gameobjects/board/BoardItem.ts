@@ -1,6 +1,6 @@
 import Phaser from 'phaser';
-import { ItemCategory, BOARD, FAMILY_COLORS, DRINK_COLORS, LINE_COLORS } from '../../config/Constants';
-import { getItemInfo, ItemInfo } from '../../data/ItemData';
+import { ItemCategory, BOARD, LINE_COLORS } from '../../config/Constants';
+import { getItemInfo, getItemShapeDrawer, getCategoryIcon, ItemInfo } from '../../data/ItemData';
 
 /**
  * 棋盘上的通用物品（花束 or 花饮）
@@ -63,8 +63,8 @@ export class BoardItem extends Phaser.GameObjects.Container {
     lineDot.fillCircle(0, 24, 5);
     this.add(lineDot);
 
-    // 品类图标（花束用🌸，花饮用☕️）
-    const categoryIcon = info.category === ItemCategory.FLOWER ? '🌸' : '☕';
+    // 品类图标（从注册表获取，新品类只需 registerCategoryIcon 即可）
+    const categoryIcon = getCategoryIcon(info.category);
     const iconText = new Phaser.GameObjects.Text(scene, -22, -24, categoryIcon, {
       fontSize: '10px',
     }).setOrigin(0.5);
@@ -92,22 +92,19 @@ export class BoardItem extends Phaser.GameObjects.Container {
     const r = (BOARD.CELL_SIZE - 24) / 2;
     const color = this.info.color;
 
-    if (this.category === ItemCategory.FLOWER) {
-      // 花束：圆形
-      this.bg.fillStyle(color, 0.2);
-      this.bg.fillCircle(0, 0, r + 4);
-      this.bg.fillStyle(color, 0.9);
-      this.bg.fillCircle(0, 0, r);
-      this.bg.fillStyle(0xFFFFFF, 0.3);
-      this.bg.fillCircle(-r * 0.25, -r * 0.25, r * 0.4);
+    // 通过注册表获取品类绘制器（新增品类只需 registerItemShape 即可）
+    const drawer = getItemShapeDrawer(this.category);
+    if (drawer) {
+      drawer(this.bg, color, r);
     } else {
-      // 花饮：圆角方形（杯子造型区分）
-      this.bg.fillStyle(color, 0.2);
-      this.bg.fillRoundedRect(-r - 2, -r - 2, (r + 2) * 2, (r + 2) * 2, 10);
+      // 未注册品类的默认绘制：菱形
       this.bg.fillStyle(color, 0.9);
-      this.bg.fillRoundedRect(-r, -r, r * 2, r * 2, 8);
-      this.bg.fillStyle(0xFFFFFF, 0.3);
-      this.bg.fillRoundedRect(-r + 4, -r + 4, r * 0.8, r * 0.6, 4);
+      this.bg.fillPoints([
+        new Phaser.Geom.Point(0, -r),
+        new Phaser.Geom.Point(r, 0),
+        new Phaser.Geom.Point(0, r),
+        new Phaser.Geom.Point(-r, 0),
+      ], true);
     }
   }
 

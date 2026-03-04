@@ -1,6 +1,7 @@
 import Phaser from 'phaser';
-import { ItemCategory, LINE_COLORS } from '../../config/Constants';
+import { LINE_COLORS } from '../../config/Constants';
 import { CustomerConfig, OrderTemplate, DemandSlot } from '../../data/CustomerData';
+import { getCategoryIcon } from '../../data/ItemData';
 import { BoardItem } from '../board/BoardItem';
 
 /**
@@ -141,8 +142,8 @@ export class Customer extends Phaser.GameObjects.Container {
       slotBg.strokeRoundedRect(-slotW / 2, -slotW / 2, slotW, slotW, 6);
       slotContainer.add(slotBg);
 
-      // 品类图标
-      const icon = ds.demand.category === ItemCategory.FLOWER ? '🌸' : '☕';
+      // 品类图标（从注册表获取）
+      const icon = getCategoryIcon(ds.demand.category);
       const iconText = new Phaser.GameObjects.Text(this.scene, 0, -6, icon, {
         fontSize: '14px',
       }).setOrigin(0.5);

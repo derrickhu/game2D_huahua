@@ -341,31 +341,25 @@ export const CustomerConfigs: CustomerConfig[] = [
 
 /**
  * 根据游戏进度获取可选客人池
- * drinkUnlocked: 是否已解锁饮品建筑
+ * unlockedCategories: 已解锁的品类集合（FLOWER 默认解锁）
  */
-export function getAvailableCustomers(drinkUnlocked: boolean): CustomerConfig[] {
-  if (!drinkUnlocked) {
-    // 未解锁饮品建筑：只出现纯花束需求的客人（所有订单模板中至少有一个纯花束的）
-    return CustomerConfigs.filter(c =>
-      c.possibleOrders.some(order =>
-        order.demands.every(d => d.category === ItemCategory.FLOWER)
-      )
-    );
-  }
-  return CustomerConfigs;
+export function getAvailableCustomers(unlockedCategories: Set<ItemCategory>): CustomerConfig[] {
+  return CustomerConfigs.filter(c =>
+    c.possibleOrders.some(order =>
+      order.demands.every(d => unlockedCategories.has(d.category))
+    )
+  );
 }
 
-export function getRandomCustomerConfig(drinkUnlocked: boolean): CustomerConfig {
-  const pool = getAvailableCustomers(drinkUnlocked);
+export function getRandomCustomerConfig(unlockedCategories: Set<ItemCategory>): CustomerConfig {
+  const pool = getAvailableCustomers(unlockedCategories);
   return pool[Math.floor(Math.random() * pool.length)];
 }
 
-export function generateOrder(config: CustomerConfig, drinkUnlocked: boolean): OrderTemplate {
+export function generateOrder(config: CustomerConfig, unlockedCategories: Set<ItemCategory>): OrderTemplate {
   let orders = config.possibleOrders;
-  if (!drinkUnlocked) {
-    // 筛选出纯花束需求的订单
-    const flowerOnly = orders.filter(o => o.demands.every(d => d.category === ItemCategory.FLOWER));
-    if (flowerOnly.length > 0) orders = flowerOnly;
-  }
+  // 筛选出所有需求品类都已解锁的订单
+  const validOrders = orders.filter(o => o.demands.every(d => unlockedCategories.has(d.category)));
+  if (validOrders.length > 0) orders = validOrders;
   return orders[Math.floor(Math.random() * orders.length)];
 }

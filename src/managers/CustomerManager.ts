@@ -15,7 +15,8 @@ export class CustomerManager {
   private refreshTimer: Phaser.Time.TimerEvent | null = null;
   private scanTimer: Phaser.Time.TimerEvent | null = null;
   private customerContainer: Phaser.GameObjects.Container;
-  private drinkUnlocked: boolean = false;
+  /** 已解锁品类集合（FLOWER 默认解锁，后续品类通过建筑解锁自动添加） */
+  private unlockedCategories: Set<ItemCategory> = new Set([ItemCategory.FLOWER]);
 
   // 客人位置（2个槽位）
   private readonly SLOT_POSITIONS = [
@@ -33,26 +34,25 @@ export class CustomerManager {
     this.board = board;
   }
 
-  setDrinkUnlocked(unlocked: boolean): void {
-    this.drinkUnlocked = unlocked;
-  }
-
-  /** 检查是否已解锁饮品建筑（通过扫描棋盘上的建筑） */
-  checkDrinkUnlocked(): boolean {
-    if (!this.board) return false;
+  /** 扫描棋盘上的建筑，自动解锁对应品类 */
+  refreshUnlockedCategories(): void {
+    if (!this.board) return;
     const buildings = this.board.getAllBuildings();
     for (const { building } of buildings) {
       const config = getBuildingConfig(building.buildingId);
-      if (config && config.category === ItemCategory.DRINK) {
-        this.drinkUnlocked = true;
-        return true;
+      if (config) {
+        this.unlockedCategories.add(config.category);
       }
     }
-    return this.drinkUnlocked;
+  }
+
+  /** 获取当前已解锁品类集合 */
+  getUnlockedCategories(): Set<ItemCategory> {
+    return this.unlockedCategories;
   }
 
   startRefreshLoop(): void {
-    this.checkDrinkUnlocked();
+    this.refreshUnlockedCategories();
     this.spawnCustomer();
 
     this.refreshTimer = this.scene.time.addEvent({
@@ -88,7 +88,7 @@ export class CustomerManager {
     EventManager.on(GameEvents.FLOWER_MERGED, this.onItemChanged, this);
     EventManager.on(GameEvents.FLOWER_PLACED, this.onItemChanged, this);
     EventManager.on(GameEvents.BUILDING_PRODUCED, () => {
-      this.checkDrinkUnlocked();
+      this.refreshUnlockedCategories();
       this.scene.time.delayedCall(100, () => this.scanAndReserve());
     });
   }
@@ -124,8 +124,8 @@ export class CustomerManager {
     const slotIndex = this.getAvailableSlot();
     if (slotIndex === -1) return;
 
-    const config = getRandomCustomerConfig(this.drinkUnlocked);
-    const order = generateOrder(config, this.drinkUnlocked);
+    const config = getRandomCustomerConfig(this.unlockedCategories);
+    const order = generateOrder(config, this.unlockedCategories);
     const pos = this.SLOT_POSITIONS[slotIndex];
 
     const customer = new Customer(

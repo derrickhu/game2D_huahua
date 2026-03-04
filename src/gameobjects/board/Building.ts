@@ -1,6 +1,7 @@
 import Phaser from 'phaser';
-import { BOARD, COLORS, ItemCategory, LINE_COLORS, LINE_NAMES } from '../../config/Constants';
+import { BOARD, COLORS, LINE_COLORS, LINE_NAMES } from '../../config/Constants';
 import { BuildingConfig, getBuildingConfig, rollOutputLevel } from '../../data/BuildingData';
+import { getBuildingStyle } from '../../data/ItemData';
 import { EventManager, GameEvents } from '../../managers/EventManager';
 
 export class Building extends Phaser.GameObjects.Container {
@@ -53,21 +54,17 @@ export class Building extends Phaser.GameObjects.Container {
   private drawBuilding(): void {
     this.bg.clear();
     const s = BOARD.CELL_SIZE - 12;
-    const isDrink = this.config.category === ItemCategory.DRINK;
 
-    if (isDrink) {
-      // 饮品建筑：蓝灰色底+杯子图标感
-      this.bg.fillStyle(0x5C6BC0, 0.9);
+    // 通过注册表获取品类建筑样式（新增品类只需 registerBuildingStyle 即可）
+    const style = getBuildingStyle(this.config.category);
+    if (style) {
+      this.bg.fillStyle(style.bgColor, style.bgAlpha);
       this.bg.fillRoundedRect(-s / 2, -s / 2, s, s, 10);
-      // 杯子形状装饰
-      this.bg.fillStyle(0x7986CB, 1);
-      this.bg.fillRoundedRect(-s / 4, -s / 2 + 6, s / 2, s - 12, 6);
+      style.drawDecoration(this.bg, s);
     } else {
-      // 花束建筑：棕色底+三角屋顶
-      this.bg.fillStyle(0x8D6E63, 0.9);
+      // 未注册品类的默认样式：灰色方块
+      this.bg.fillStyle(0x9E9E9E, 0.9);
       this.bg.fillRoundedRect(-s / 2, -s / 2, s, s, 8);
-      this.bg.fillStyle(0xA1887F, 1);
-      this.bg.fillTriangle(0, -s / 2 - 10, -s / 2, -s / 2 + 8, s / 2, -s / 2 + 8);
     }
   }
 

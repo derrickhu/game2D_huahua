@@ -1,4 +1,8 @@
-import { DrinkLine, DRINK_NAMES } from '../config/Constants';
+import { DrinkLine, DRINK_NAMES, ItemCategory } from '../config/Constants';
+import {
+  registerCategory, registerItemShape, registerCategoryIcon, registerBuildingStyle,
+  type ItemInfo,
+} from './ItemData';
 
 export interface DrinkConfig {
   id: string;
@@ -8,6 +12,9 @@ export interface DrinkConfig {
   sellPrice: number;
   color: number;  // 占位图颜色
 }
+
+/** 花饮最大等级 */
+export const MAX_DRINK_LEVEL = 3;
 
 const TEA_NAMES = ['花草茶', '调味花茶', '限定手作茶'];
 const COLD_NAMES = ['花果冰饮', '花漾气泡水', '梦幻花饮'];
@@ -27,7 +34,7 @@ function createDrinkConfigs(): Map<string, DrinkConfig> {
   ];
 
   for (const { line, names, colors, basePrice } of lines) {
-    for (let level = 1; level <= 3; level++) {
+    for (let level = 1; level <= MAX_DRINK_LEVEL; level++) {
       const id = `${line}_${level}`;
       map.set(id, {
         id,
@@ -51,7 +58,7 @@ export function getDrinkConfig(drinkId: string): DrinkConfig | undefined {
 
 export function getDrinkNextLevelId(drinkId: string): string | null {
   const config = DrinkDataMap.get(drinkId);
-  if (!config || config.level >= 3) return null;
+  if (!config || config.level >= MAX_DRINK_LEVEL) return null;
   return `${config.line}_${config.level + 1}`;
 }
 
@@ -64,3 +71,44 @@ export function getDrinkDisplayName(drinkId: string): string {
 export function getAllDrinkIds(): string[] {
   return Array.from(DrinkDataMap.keys());
 }
+
+// =============================================
+// 注册到 ItemData 注册表
+// =============================================
+registerCategory({
+  category: ItemCategory.DRINK,
+  hasItem: (id) => DrinkDataMap.has(id),
+  getItemInfo: (id): ItemInfo | null => {
+    const c = DrinkDataMap.get(id);
+    if (!c) return null;
+    return {
+      id: c.id, category: ItemCategory.DRINK, line: c.line,
+      level: c.level, name: c.name, sellPrice: c.sellPrice,
+      color: c.color, maxLevel: MAX_DRINK_LEVEL,
+    };
+  },
+  getNextLevelId: getDrinkNextLevelId,
+});
+
+// 注册花饮的视觉配置
+registerCategoryIcon(ItemCategory.DRINK, '☕');
+
+registerItemShape(ItemCategory.DRINK, (gfx, color, r) => {
+  // 圆角方形（杯子造型区分）
+  gfx.fillStyle(color, 0.2);
+  gfx.fillRoundedRect(-r - 2, -r - 2, (r + 2) * 2, (r + 2) * 2, 10);
+  gfx.fillStyle(color, 0.9);
+  gfx.fillRoundedRect(-r, -r, r * 2, r * 2, 8);
+  gfx.fillStyle(0xFFFFFF, 0.3);
+  gfx.fillRoundedRect(-r + 4, -r + 4, r * 0.8, r * 0.6, 4);
+});
+
+registerBuildingStyle(ItemCategory.DRINK, {
+  bgColor: 0x5C6BC0,
+  bgAlpha: 0.9,
+  drawDecoration: (gfx, s) => {
+    // 杯子形状装饰
+    gfx.fillStyle(0x7986CB, 1);
+    gfx.fillRoundedRect(-s / 4, -s / 2 + 6, s / 2, s - 12, 6);
+  },
+});

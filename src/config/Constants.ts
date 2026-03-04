@@ -81,11 +81,6 @@ export enum DrinkLine {
   DESSERT = 'dessert', // 甜品线
 }
 
-// 花朵最大等级
-export const MAX_FLOWER_LEVEL = 6;
-// 饮品最大等级
-export const MAX_DRINK_LEVEL = 3;
-
 // 客人
 export const CUSTOMER = {
   MAX_ACTIVE: 2,

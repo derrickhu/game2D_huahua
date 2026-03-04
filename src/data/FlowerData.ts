@@ -1,4 +1,8 @@
-import { FlowerFamily, FAMILY_NAMES } from '../config/Constants';
+import { FlowerFamily, FAMILY_NAMES, ItemCategory } from '../config/Constants';
+import {
+  registerCategory, registerItemShape, registerCategoryIcon, registerBuildingStyle,
+  type ItemInfo,
+} from './ItemData';
 
 export interface FlowerConfig {
   id: string;
@@ -8,6 +12,9 @@ export interface FlowerConfig {
   sellPrice: number;
   color: number;  // 占位图颜色
 }
+
+/** 花束最大等级 */
+export const MAX_FLOWER_LEVEL = 6;
 
 // 日常花系花朵名称
 const DAILY_NAMES = ['小雏菊', '向日葵', '康乃馨', '百合花束', '花环', '阳光花篮'];
@@ -29,7 +36,7 @@ function createFlowerConfigs(): Map<string, FlowerConfig> {
   ];
 
   for (const { family, names, colors, basePrice } of families) {
-    for (let level = 1; level <= 6; level++) {
+    for (let level = 1; level <= MAX_FLOWER_LEVEL; level++) {
       const id = `${family}_${level}`;
       map.set(id, {
         id,
@@ -53,7 +60,7 @@ export function getFlowerConfig(flowerId: string): FlowerConfig | undefined {
 
 export function getNextLevelId(flowerId: string): string | null {
   const config = FlowerDataMap.get(flowerId);
-  if (!config || config.level >= 6) return null;
+  if (!config || config.level >= MAX_FLOWER_LEVEL) return null;
   return `${config.family}_${config.level + 1}`;
 }
 
@@ -66,3 +73,43 @@ export function getFlowerDisplayName(flowerId: string): string {
 export function getAllFlowerIds(): string[] {
   return Array.from(FlowerDataMap.keys());
 }
+
+// =============================================
+// 注册到 ItemData 注册表
+// =============================================
+registerCategory({
+  category: ItemCategory.FLOWER,
+  hasItem: (id) => FlowerDataMap.has(id),
+  getItemInfo: (id): ItemInfo | null => {
+    const c = FlowerDataMap.get(id);
+    if (!c) return null;
+    return {
+      id: c.id, category: ItemCategory.FLOWER, line: c.family,
+      level: c.level, name: c.name, sellPrice: c.sellPrice,
+      color: c.color, maxLevel: MAX_FLOWER_LEVEL,
+    };
+  },
+  getNextLevelId,
+});
+
+// 注册花束的视觉配置
+registerCategoryIcon(ItemCategory.FLOWER, '🌸');
+
+registerItemShape(ItemCategory.FLOWER, (gfx, color, r) => {
+  gfx.fillStyle(color, 0.2);
+  gfx.fillCircle(0, 0, r + 4);
+  gfx.fillStyle(color, 0.9);
+  gfx.fillCircle(0, 0, r);
+  gfx.fillStyle(0xFFFFFF, 0.3);
+  gfx.fillCircle(-r * 0.25, -r * 0.25, r * 0.4);
+});
+
+registerBuildingStyle(ItemCategory.FLOWER, {
+  bgColor: 0x8D6E63,
+  bgAlpha: 0.9,
+  drawDecoration: (gfx, s) => {
+    // 三角屋顶
+    gfx.fillStyle(0xA1887F, 1);
+    gfx.fillTriangle(0, -s / 2 - 10, -s / 2, -s / 2 + 8, s / 2, -s / 2 + 8);
+  },
+});
