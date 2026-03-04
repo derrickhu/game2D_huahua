@@ -1,6 +1,6 @@
 import Phaser from 'phaser';
 import { ItemCategory, BOARD, LINE_COLORS } from '../../config/Constants';
-import { getItemInfo, getItemShapeDrawer, getCategoryIcon, ItemInfo } from '../../data/ItemData';
+import { getItemInfo, getItemShapeDrawer, getCategoryIcon, getItemTexture, ItemInfo } from '../../data/ItemData';
 
 /**
  * 棋盘上的通用物品（花束 or 花饮）
@@ -21,6 +21,7 @@ export class BoardItem extends Phaser.GameObjects.Container {
   public reservedDemandIdx: number = -1; // 被锁定到客人的第几个需求槽位
 
   private bg: Phaser.GameObjects.Graphics;
+  private itemImage: Phaser.GameObjects.Image | null = null;
   private levelText: Phaser.GameObjects.Text;
   private info: ItemInfo;
   private glowTimer?: Phaser.Time.TimerEvent;
@@ -46,6 +47,9 @@ export class BoardItem extends Phaser.GameObjects.Container {
     this.drawItem();
     this.add(this.bg);
 
+    // 有图片纹理时不显示文字覆盖层
+    const hasTexture = !!this.itemImage;
+
     // 等级数字
     this.levelText = new Phaser.GameObjects.Text(scene, 0, 0, `${info.level}`, {
       fontSize: '20px',
@@ -55,12 +59,15 @@ export class BoardItem extends Phaser.GameObjects.Container {
       stroke: '#00000066',
       strokeThickness: 2,
     }).setOrigin(0.5);
+    this.levelText.setVisible(!hasTexture);
     this.add(this.levelText);
 
     // 产出线颜色标识（底部小点）
     const lineDot = new Phaser.GameObjects.Graphics(scene);
-    lineDot.fillStyle(LINE_COLORS[info.line] || 0x999999, 1);
-    lineDot.fillCircle(0, 24, 5);
+    if (!hasTexture) {
+      lineDot.fillStyle(LINE_COLORS[info.line] || 0x999999, 1);
+      lineDot.fillCircle(0, 24, 5);
+    }
     this.add(lineDot);
 
     // 品类图标（从注册表获取，新品类只需 registerCategoryIcon 即可）
@@ -68,6 +75,7 @@ export class BoardItem extends Phaser.GameObjects.Container {
     const iconText = new Phaser.GameObjects.Text(scene, -22, -24, categoryIcon, {
       fontSize: '10px',
     }).setOrigin(0.5);
+    iconText.setVisible(!hasTexture);
     this.add(iconText);
 
     // 物品名
@@ -76,6 +84,7 @@ export class BoardItem extends Phaser.GameObjects.Container {
       fontFamily: 'Arial',
       color: '#5A4A3A',
     }).setOrigin(0.5);
+    nameText.setVisible(!hasTexture);
     this.add(nameText);
 
     this.setSize(BOARD.CELL_SIZE - 16, BOARD.CELL_SIZE - 16);
@@ -92,7 +101,17 @@ export class BoardItem extends Phaser.GameObjects.Container {
     const r = (BOARD.CELL_SIZE - 24) / 2;
     const color = this.info.color;
 
-    // 通过注册表获取品类绘制器（新增品类只需 registerItemShape 即可）
+    // 优先使用图片纹理（如果已注册）
+    const textureKey = getItemTexture(this.itemId);
+    if (textureKey && this.scene.textures.exists(textureKey)) {
+      const size = BOARD.CELL_SIZE - 16;
+      this.itemImage = new Phaser.GameObjects.Image(this.scene, 0, 0, textureKey);
+      this.itemImage.setDisplaySize(size, size);
+      this.add(this.itemImage);
+      return;
+    }
+
+    // 降级：通过注册表获取品类绘制器（新增品类只需 registerItemShape 即可）
     const drawer = getItemShapeDrawer(this.category);
     if (drawer) {
       drawer(this.bg, color, r);

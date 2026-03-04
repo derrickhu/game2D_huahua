@@ -102,6 +102,7 @@ export interface BuildingStyle {
 const itemShapeDrawers = new Map<ItemCategory, ItemShapeDrawer>();
 const categoryIcons = new Map<ItemCategory, string>();
 const buildingStyles = new Map<ItemCategory, BuildingStyle>();
+const itemTextures = new Map<string, string>();  // itemId -> texture key
 
 /** 注册物品形状绘制器 */
 export function registerItemShape(category: ItemCategory, drawer: ItemShapeDrawer): void {
@@ -116,6 +117,16 @@ export function registerCategoryIcon(category: ItemCategory, icon: string): void
 /** 注册建筑样式 */
 export function registerBuildingStyle(category: ItemCategory, style: BuildingStyle): void {
   buildingStyles.set(category, style);
+}
+
+/** 注册物品纹理（itemId -> Phaser texture key） */
+export function registerItemTexture(itemId: string, textureKey: string): void {
+  itemTextures.set(itemId, textureKey);
+}
+
+/** 获取物品纹理key，无则返回undefined（降级到Graphics绘制） */
+export function getItemTexture(itemId: string): string | undefined {
+  return itemTextures.get(itemId);
 }
 
 /** 获取物品形状绘制器 */
