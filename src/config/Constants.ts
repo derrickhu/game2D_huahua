@@ -61,15 +61,30 @@ export const BOARD = {
   BOARD_OFFSET_Y: 520,
 };
 
-// 花系
+// 商品品类
+export enum ItemCategory {
+  FLOWER = 'flower',  // 花束
+  DRINK = 'drink',    // 花饮
+}
+
+// 花系（花束品类下的子分类）
 export enum FlowerFamily {
   DAILY = 'daily',
   ROMANTIC = 'romantic',
   LUXURY = 'luxury',
 }
 
+// 饮品线（花饮品类下的子分类）
+export enum DrinkLine {
+  TEA = 'tea',        // 茶饮线
+  COLD = 'cold',      // 冷饮线
+  DESSERT = 'dessert', // 甜品线
+}
+
 // 花朵最大等级
 export const MAX_FLOWER_LEVEL = 6;
+// 饮品最大等级
+export const MAX_DRINK_LEVEL = 3;
 
 // 客人
 export const CUSTOMER = {
@@ -121,4 +136,29 @@ export const FAMILY_NAMES: Record<string, string> = {
   [FlowerFamily.DAILY]: '日常',
   [FlowerFamily.ROMANTIC]: '浪漫',
   [FlowerFamily.LUXURY]: '奢华',
+};
+
+// 饮品线对应颜色
+export const DRINK_COLORS: Record<string, number> = {
+  [DrinkLine.TEA]: 0xA67B5B,
+  [DrinkLine.COLD]: 0x4FC3F7,
+  [DrinkLine.DESSERT]: 0xFF8A65,
+};
+
+// 饮品线对应中文名
+export const DRINK_NAMES: Record<string, string> = {
+  [DrinkLine.TEA]: '茶饮',
+  [DrinkLine.COLD]: '冷饮',
+  [DrinkLine.DESSERT]: '甜品',
+};
+
+// 所有产出线（花系+饮品线）合并的颜色和名称映射
+export const LINE_COLORS: Record<string, number> = {
+  ...FAMILY_COLORS,
+  ...DRINK_COLORS,
+};
+
+export const LINE_NAMES: Record<string, string> = {
+  ...FAMILY_NAMES,
+  ...DRINK_NAMES,
 };

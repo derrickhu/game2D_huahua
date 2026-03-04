@@ -1,11 +1,12 @@
 import Phaser from 'phaser';
-import { CUSTOMER, LAYOUT } from '../config/Constants';
+import { CUSTOMER, LAYOUT, ItemCategory } from '../config/Constants';
 import { Customer } from '../gameobjects/customer/Customer';
-import { CustomerRequest, getRandomCustomerConfig, generateRequest } from '../data/CustomerData';
+import { getRandomCustomerConfig, generateOrder, OrderTemplate } from '../data/CustomerData';
 import { CurrencyManager } from './CurrencyManager';
 import { EventManager, GameEvents } from './EventManager';
-import { FlowerItem } from '../gameobjects/board/FlowerItem';
+import { BoardItem } from '../gameobjects/board/BoardItem';
 import { Board } from '../gameobjects/board/Board';
+import { getBuildingConfig } from '../data/BuildingData';
 
 export class CustomerManager {
   private scene: Phaser.Scene;
@@ -14,6 +15,7 @@ export class CustomerManager {
   private refreshTimer: Phaser.Time.TimerEvent | null = null;
   private scanTimer: Phaser.Time.TimerEvent | null = null;
   private customerContainer: Phaser.GameObjects.Container;
+  private drinkUnlocked: boolean = false;
 
   // 客人位置（2个槽位）
   private readonly SLOT_POSITIONS = [
@@ -27,19 +29,36 @@ export class CustomerManager {
     scene.add.existing(this.customerContainer);
   }
 
-  // 设置棋盘引用，用于自动扫描
   setBoard(board: Board): void {
     this.board = board;
   }
 
+  setDrinkUnlocked(unlocked: boolean): void {
+    this.drinkUnlocked = unlocked;
+  }
+
+  /** 检查是否已解锁饮品建筑（通过扫描棋盘上的建筑） */
+  checkDrinkUnlocked(): boolean {
+    if (!this.board) return false;
+    const buildings = this.board.getAllBuildings();
+    for (const { building } of buildings) {
+      const config = getBuildingConfig(building.buildingId);
+      if (config && config.category === ItemCategory.DRINK) {
+        this.drinkUnlocked = true;
+        return true;
+      }
+    }
+    return this.drinkUnlocked;
+  }
+
   startRefreshLoop(): void {
+    this.checkDrinkUnlocked();
     this.spawnCustomer();
 
     this.refreshTimer = this.scene.time.addEvent({
       delay: Phaser.Math.Between(CUSTOMER.REFRESH_MIN, CUSTOMER.REFRESH_MAX),
       callback: () => {
         this.trySpawnCustomer();
-        // 重建timer以使用新的随机间隔
         if (this.refreshTimer) {
           this.refreshTimer.destroy();
         }
@@ -54,21 +73,47 @@ export class CustomerManager {
       loop: true,
     });
 
-    // 定时扫描棋盘，为客人自动匹配花朵（每500ms扫一次）
+    // 定时扫描棋盘，为客人自动匹配物品（每500ms）
     this.scanTimer = this.scene.time.addEvent({
       delay: 500,
-      callback: () => this.scanAndReserveFlowers(),
+      callback: () => this.scanAndReserve(),
       loop: true,
     });
 
-    // 监听花朵合成/放置事件，立即触发扫描
-    EventManager.on(GameEvents.FLOWER_MERGED, this.scanAndReserveFlowers, this);
-    EventManager.on(GameEvents.FLOWER_PLACED, this.scanAndReserveFlowers, this);
+    // 监听物品变化事件，立即触发扫描
+    EventManager.on(GameEvents.ITEM_MERGED, this.onItemChanged, this);
+    EventManager.on(GameEvents.ITEM_PLACED, this.onItemChanged, this);
+    EventManager.on(GameEvents.ITEM_CONSUMED, this.onItemConsumed, this);
+    // 兼容旧事件
+    EventManager.on(GameEvents.FLOWER_MERGED, this.onItemChanged, this);
+    EventManager.on(GameEvents.FLOWER_PLACED, this.onItemChanged, this);
     EventManager.on(GameEvents.BUILDING_PRODUCED, () => {
-      // 延迟一帧再扫描，等花朵放置完成
-      this.scene.time.delayedCall(100, () => this.scanAndReserveFlowers());
+      this.checkDrinkUnlocked();
+      this.scene.time.delayedCall(100, () => this.scanAndReserve());
     });
   }
+
+  private onItemChanged = (): void => {
+    this.scanAndReserve();
+  };
+
+  /**
+   * 物品被合成消耗时：解锁相关客人槽位，然后重新扫描
+   * data: { item: BoardItem }
+   */
+  private onItemConsumed = (data: { item: BoardItem }): void => {
+    const consumedItem = data.item;
+    for (const customer of this.activeCustomers) {
+      for (let i = 0; i < customer.demandStates.length; i++) {
+        const ds = customer.demandStates[i];
+        if (ds.locked && ds.lockedItem === consumedItem) {
+          customer.unlockDemandSlot(i);
+        }
+      }
+    }
+    // 延迟一帧后重新扫描（等新物品放置完）
+    this.scene.time.delayedCall(50, () => this.scanAndReserve());
+  };
 
   private trySpawnCustomer(): void {
     if (this.activeCustomers.length >= CUSTOMER.MAX_ACTIVE) return;
@@ -79,14 +124,14 @@ export class CustomerManager {
     const slotIndex = this.getAvailableSlot();
     if (slotIndex === -1) return;
 
-    const config = getRandomCustomerConfig();
-    const request = generateRequest(config);
+    const config = getRandomCustomerConfig(this.drinkUnlocked);
+    const order = generateOrder(config, this.drinkUnlocked);
     const pos = this.SLOT_POSITIONS[slotIndex];
 
     const customer = new Customer(
       this.scene,
       config,
-      request,
+      order,
       slotIndex,
       () => this.onCustomerTimeout(customer),
       () => this.onCustomerComplete(customer),
@@ -100,8 +145,8 @@ export class CustomerManager {
 
     EventManager.emit(GameEvents.CUSTOMER_ARRIVED, { customerId: config.id });
 
-    // 新客人到达后立即扫描
-    this.scene.time.delayedCall(900, () => this.scanAndReserveFlowers());
+    // 新客人到达后延迟扫描
+    this.scene.time.delayedCall(900, () => this.scanAndReserve());
   }
 
   private getAvailableSlot(): number {
@@ -111,145 +156,128 @@ export class CustomerManager {
     return -1;
   }
 
-  // 核心：自动扫描棋盘，为未匹配的客人找花并锁定
-  scanAndReserveFlowers(): void {
+  /**
+   * 核心：自动扫描棋盘，为每个客人的未满足需求槽位寻找匹配物品并锁定
+   *
+   * 策略：
+   * 1. 遍历每个客人每个未锁定的需求槽位
+   * 2. 检查已锁定物品是否还有效（未被销毁）
+   * 3. 在棋盘物品中寻找匹配的、未被锁定的物品
+   * 4. 优先选等级最低的（节约高级物品）
+   * 5. 锁定后物品仍可拖拽和合成（策划案核心策略点）
+   */
+  scanAndReserve(): void {
     if (!this.board) return;
 
     for (const customer of this.activeCustomers) {
-      // 已经有锁定的花 → 检查是否还有效
-      if (customer.reservedFlower) {
-        // 花朵可能被销毁了（不应该发生，但防御性检查）
-        if (!customer.reservedFlower.scene) {
-          customer.reservedFlower = null;
-          customer.hideCompleteButton();
-        } else {
-          continue; // 已锁定，跳过
-        }
-      }
-
-      // 在棋盘中寻找匹配的花
-      const allFlowers = this.board.getAllFlowers();
-      let bestMatch: FlowerItem | null = null;
-
-      for (const { flower } of allFlowers) {
-        // 跳过已被其他客人锁定的花
-        if (flower.isReserved) continue;
-        // 检查是否匹配
-        if (customer.canAccept(flower.family, flower.level)) {
-          // 优先选等级最低的（节约高级花）
-          if (!bestMatch || flower.level < bestMatch.level) {
-            bestMatch = flower;
+      // 先检查已锁定的槽位，清理无效的
+      for (let i = 0; i < customer.demandStates.length; i++) {
+        const ds = customer.demandStates[i];
+        if (ds.locked && ds.lockedItem) {
+          if (!ds.lockedItem.scene) {
+            // 物品已被销毁，解锁槽位
+            customer.unlockDemandSlot(i);
           }
         }
       }
 
-      if (bestMatch) {
-        // 锁定花朵
-        bestMatch.setReserved(true, customer.slotIndex);
-        customer.reservedFlower = bestMatch;
-        customer.showCompleteButton();
+      // 为每个未锁定的需求槽位寻找匹配物品
+      for (let i = 0; i < customer.demandStates.length; i++) {
+        const ds = customer.demandStates[i];
+        if (ds.locked) continue;
+
+        const allItems = this.board.getAllItems();
+        let bestMatch: BoardItem | null = null;
+
+        for (const { item } of allItems) {
+          // 跳过已被锁定的物品
+          if (item.isReserved) continue;
+
+          // 检查是否匹配需求
+          if (customer.itemMatchesDemand(item, ds.demand)) {
+            // 优先选等级最低的（节约高级物品）
+            if (!bestMatch || item.level < bestMatch.level) {
+              bestMatch = item;
+            }
+          }
+        }
+
+        if (bestMatch) {
+          // 锁定物品（仅视觉标记，不阻止拖拽）
+          bestMatch.setReserved(true, customer.slotIndex, i);
+          customer.lockDemandSlot(i, bestMatch);
+        }
       }
     }
   }
 
-  // 点击"完成"按钮回调
+  /** 点击"完成"按钮回调 — 交付所有锁定物品 */
   private onCustomerComplete(customer: Customer): void {
-    const flower = customer.reservedFlower;
-    if (!flower || !flower.scene) return;
+    if (!customer.isAllSatisfied()) return;
 
-    const request = customer.request;
+    const order = customer.order;
+    const lockedItems = customer.getLockedItems();
 
     // 发放奖励
-    CurrencyManager.addGold(request.goldReward);
-    CurrencyManager.addWish(request.wishReward);
-    if (request.dewReward > 0) {
-      CurrencyManager.addDew(request.dewReward);
+    CurrencyManager.addGold(order.goldReward);
+    CurrencyManager.addWish(order.wishReward);
+    if (order.dewReward > 0) {
+      CurrencyManager.addDew(order.dewReward);
     }
 
-    // 奖励飘字
-    this.showRewardFloating(customer.x, customer.y - 80, request);
+    this.showRewardFloating(customer.x, customer.y - 80, order);
 
-    // 移除花朵（从棋盘格子中）
+    // 移除所有锁定的物品
     if (this.board) {
-      const cell = this.board.getCellAt(flower.row, flower.col);
-      if (cell && cell.flower === flower) {
-        this.board.removeFlower(cell);
-      } else {
-        flower.destroy();
+      for (const item of lockedItems) {
+        if (!item.scene) continue;
+        const cell = this.board.getCellAt(item.row, item.col);
+        if (cell && cell.item === item) {
+          this.board.removeItem(cell);
+        } else {
+          item.destroy();
+        }
       }
-    } else {
-      flower.destroy();
     }
 
-    customer.reservedFlower = null;
+    // 清理客人状态
+    customer.unlockAllSlots();
 
     // 客人满意离开
     customer.playHappyAnimation(() => {
       this.removeCustomer(customer);
-      // 客人离开后重新扫描（可能释放的花可以给其他客人）
-      this.scanAndReserveFlowers();
+      this.scanAndReserve();
     });
 
     EventManager.emit(GameEvents.ORDER_COMPLETED, {
       customerId: customer.customerId,
-      flowerId: flower.flowerId,
-      rewards: request,
+      rewards: order,
     });
   }
 
-  // 旧的拖拽交付（保留作为备用，但主要用自动锁定机制）
-  tryDeliver(flower: FlowerItem, worldX: number, worldY: number): boolean {
-    for (const customer of this.activeCustomers) {
-      const bounds = customer.getBubbleBounds();
-      if (bounds.contains(worldX, worldY)) {
-        if (customer.canAccept(flower.family, flower.level)) {
-          this.doDeliver(customer, flower);
-          return true;
-        } else {
-          customer.playRejectAnimation();
-          this.showRejectTip(customer.x, customer.y - 100);
-          return false;
-        }
-      }
-    }
-    return false;
-  }
-
-  private doDeliver(customer: Customer, flower: FlowerItem): void {
-    const request = customer.request;
-
-    CurrencyManager.addGold(request.goldReward);
-    CurrencyManager.addWish(request.wishReward);
-    if (request.dewReward > 0) {
-      CurrencyManager.addDew(request.dewReward);
-    }
-
-    this.showRewardFloating(customer.x, customer.y - 80, request);
-
-    // 解除客人的锁定（如果有）
-    if (customer.reservedFlower && customer.reservedFlower !== flower) {
-      customer.reservedFlower.setReserved(false);
-    }
-    customer.reservedFlower = null;
-    customer.hideCompleteButton();
+  private onCustomerTimeout(customer: Customer): void {
+    customer.unlockAllSlots();
 
     customer.playHappyAnimation(() => {
       this.removeCustomer(customer);
-      this.scanAndReserveFlowers();
-    });
-
-    EventManager.emit(GameEvents.ORDER_COMPLETED, {
-      customerId: customer.customerId,
-      flowerId: flower.flowerId,
-      rewards: request,
+      this.scanAndReserve();
     });
   }
 
-  private showRewardFloating(x: number, y: number, request: CustomerRequest): void {
+  private removeCustomer(customer: Customer): void {
+    const index = this.activeCustomers.indexOf(customer);
+    if (index !== -1) {
+      this.activeCustomers.splice(index, 1);
+    }
+    customer.destroy();
+    EventManager.emit(GameEvents.CUSTOMER_LEFT, { customerId: customer.customerId });
+  }
+
+  private showRewardFloating(x: number, y: number, order: OrderTemplate): void {
     const parts: string[] = [];
-    if (request.goldReward > 0) parts.push(`+${request.goldReward}💰`);
-    if (request.wishReward > 0) parts.push(`+${request.wishReward}🌸`);
-    if (request.dewReward > 0) parts.push(`+${request.dewReward}💧`);
+    if (order.goldReward > 0) parts.push(`+${order.goldReward}💰`);
+    if (order.wishReward > 0) parts.push(`+${order.wishReward}🌸`);
+    if (order.dewReward > 0) parts.push(`+${order.dewReward}💧`);
 
     const text = this.scene.add.text(x, y, parts.join(' '), {
       fontSize: '18px',
@@ -270,31 +298,8 @@ export class CustomerManager {
     });
   }
 
-  private onCustomerTimeout(customer: Customer): void {
-    // 解除锁定
-    if (customer.reservedFlower) {
-      customer.reservedFlower.setReserved(false);
-      customer.reservedFlower = null;
-    }
-    customer.hideCompleteButton();
-
-    customer.playHappyAnimation(() => {
-      this.removeCustomer(customer);
-      this.scanAndReserveFlowers();
-    });
-  }
-
-  private removeCustomer(customer: Customer): void {
-    const index = this.activeCustomers.indexOf(customer);
-    if (index !== -1) {
-      this.activeCustomers.splice(index, 1);
-    }
-    customer.destroy();
-    EventManager.emit(GameEvents.CUSTOMER_LEFT, { customerId: customer.customerId });
-  }
-
   private showRejectTip(x: number, y: number): void {
-    const tip = this.scene.add.text(x, y, '不是我要的花~', {
+    const tip = this.scene.add.text(x, y, '不是我要的~', {
       fontSize: '14px',
       fontFamily: 'Arial',
       color: '#FF4444',
@@ -328,8 +333,11 @@ export class CustomerManager {
   }
 
   destroy(): void {
-    EventManager.off(GameEvents.FLOWER_MERGED, this.scanAndReserveFlowers, this);
-    EventManager.off(GameEvents.FLOWER_PLACED, this.scanAndReserveFlowers, this);
+    EventManager.off(GameEvents.ITEM_MERGED, this.onItemChanged, this);
+    EventManager.off(GameEvents.ITEM_PLACED, this.onItemChanged, this);
+    EventManager.off(GameEvents.ITEM_CONSUMED, this.onItemConsumed, this);
+    EventManager.off(GameEvents.FLOWER_MERGED, this.onItemChanged, this);
+    EventManager.off(GameEvents.FLOWER_PLACED, this.onItemChanged, this);
     if (this.refreshTimer) {
       this.refreshTimer.destroy();
     }

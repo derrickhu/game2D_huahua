@@ -1,7 +1,7 @@
 import Phaser from 'phaser';
 import { BOARD, LAYOUT } from '../../config/Constants';
 import { Cell } from './Cell';
-import { FlowerItem } from './FlowerItem';
+import { BoardItem } from './BoardItem';
 import { Building } from './Building';
 import { EventManager, GameEvents } from '../../managers/EventManager';
 
@@ -11,7 +11,6 @@ export class Board extends Phaser.GameObjects.Container {
   private cols: number;
 
   constructor(scene: Phaser.Scene, rows: number = BOARD.INIT_ROWS, cols: number = BOARD.INIT_COLS) {
-    // 棋盘铺满下半屏（从 BOARD_AREA_Y 到 NAV_BAR_Y）
     const boardWidth = cols * (BOARD.CELL_SIZE + BOARD.CELL_PADDING) - BOARD.CELL_PADDING;
     const boardHeight = rows * (BOARD.CELL_SIZE + BOARD.CELL_PADDING) - BOARD.CELL_PADDING;
     const startX = (750 - boardWidth) / 2 + BOARD.CELL_SIZE / 2;
@@ -24,7 +23,6 @@ export class Board extends Phaser.GameObjects.Container {
     this.rows = rows;
     this.cols = cols;
 
-    // 创建格子
     for (let r = 0; r < rows; r++) {
       this.cells[r] = [];
       for (let c = 0; c < cols; c++) {
@@ -37,9 +35,7 @@ export class Board extends Phaser.GameObjects.Container {
       }
     }
 
-    // 监听建筑产出事件
     EventManager.on(GameEvents.BUILDING_PRODUCED, this.onBuildingProduced, this);
-
     scene.add.existing(this);
   }
 
@@ -69,29 +65,28 @@ export class Board extends Phaser.GameObjects.Container {
         result.push(cell);
       }
     }
-    // 如果相邻没空格，找所有空格
     if (result.length === 0) {
       return this.getEmptyCells();
     }
     return result;
   }
 
-  placeFlower(cell: Cell, flowerId: string): FlowerItem {
-    const flower = new FlowerItem(this.scene, cell.row, cell.col, flowerId);
-    cell.placeFlower(flower);
-    return flower;
+  placeItem(cell: Cell, itemId: string): BoardItem {
+    const item = new BoardItem(this.scene, cell.row, cell.col, itemId);
+    cell.placeItem(item);
+    return item;
   }
 
-  placeFlowerAnywhere(flowerId: string): FlowerItem | null {
+  placeItemAnywhere(itemId: string): BoardItem | null {
     const emptyCells = this.getEmptyCells();
     if (emptyCells.length === 0) {
       EventManager.emit(GameEvents.BOARD_FULL);
       return null;
     }
     const cell = Phaser.Utils.Array.GetRandom(emptyCells);
-    const flower = this.placeFlower(cell, flowerId);
-    flower.playSpawnAnimation();
-    return flower;
+    const item = this.placeItem(cell, itemId);
+    item.playSpawnAnimation();
+    return item;
   }
 
   placeBuilding(cell: Cell, buildingId: string): Building {
@@ -100,10 +95,10 @@ export class Board extends Phaser.GameObjects.Container {
     return building;
   }
 
-  removeFlower(cell: Cell): void {
-    const flower = cell.removeFlower();
-    if (flower) {
-      flower.destroy();
+  removeItem(cell: Cell): void {
+    const item = cell.removeItem();
+    if (item) {
+      item.destroy();
     }
   }
 
@@ -111,21 +106,19 @@ export class Board extends Phaser.GameObjects.Container {
     return this.getEmptyCells().length === 0;
   }
 
-  // 获取所有花朵
-  getAllFlowers(): { cell: Cell; flower: FlowerItem }[] {
-    const result: { cell: Cell; flower: FlowerItem }[] = [];
+  getAllItems(): { cell: Cell; item: BoardItem }[] {
+    const result: { cell: Cell; item: BoardItem }[] = [];
     for (let r = 0; r < this.rows; r++) {
       for (let c = 0; c < this.cols; c++) {
         const cell = this.cells[r][c];
-        if (cell.hasFlower() && cell.flower) {
-          result.push({ cell, flower: cell.flower });
+        if (cell.hasItem() && cell.item) {
+          result.push({ cell, item: cell.item });
         }
       }
     }
     return result;
   }
 
-  // 获取所有建筑
   getAllBuildings(): { cell: Cell; building: Building }[] {
     const result: { cell: Cell; building: Building }[] = [];
     for (let r = 0; r < this.rows; r++) {
@@ -139,7 +132,6 @@ export class Board extends Phaser.GameObjects.Container {
     return result;
   }
 
-  // 根据像素坐标找格子
   getCellAtWorldPosition(worldX: number, worldY: number): Cell | null {
     const halfSize = BOARD.CELL_SIZE / 2;
     for (let r = 0; r < this.rows; r++) {
@@ -158,24 +150,20 @@ export class Board extends Phaser.GameObjects.Container {
     return null;
   }
 
-  // 建筑产出回调
-  private onBuildingProduced(data: { buildingId: string; flowerId: string; row: number; col: number }): void {
+  private onBuildingProduced(data: { buildingId: string; itemId: string; row: number; col: number }): void {
     const adjacentCells = this.getAdjacentEmptyCells(data.row, data.col);
     if (adjacentCells.length === 0) {
-      // 棋盘满了
       EventManager.emit(GameEvents.BOARD_FULL);
       return;
     }
-
     const targetCell = adjacentCells[0];
-    const flower = this.placeFlower(targetCell, data.flowerId);
-    flower.playSpawnAnimation();
+    const item = this.placeItem(targetCell, data.itemId);
+    item.playSpawnAnimation();
   }
 
   getRows(): number { return this.rows; }
   getCols(): number { return this.cols; }
 
-  // 序列化棋盘状态
   serialize(): any {
     const cellStates: any[][] = [];
     for (let r = 0; r < this.rows; r++) {
@@ -183,8 +171,8 @@ export class Board extends Phaser.GameObjects.Container {
       for (let c = 0; c < this.cols; c++) {
         const cell = this.cells[r][c];
         const state: any = { type: cell.contentType };
-        if (cell.hasFlower() && cell.flower) {
-          state.flowerId = cell.flower.flowerId;
+        if (cell.hasItem() && cell.item) {
+          state.itemId = cell.item.itemId;
         }
         if (cell.hasBuilding() && cell.building) {
           state.buildingId = cell.building.buildingId;
@@ -193,6 +181,14 @@ export class Board extends Phaser.GameObjects.Container {
       }
     }
     return { rows: this.rows, cols: this.cols, cells: cellStates };
+  }
+
+  // 兼容旧接口
+  placeFlower(cell: Cell, flowerId: string): BoardItem { return this.placeItem(cell, flowerId); }
+  placeFlowerAnywhere(flowerId: string): BoardItem | null { return this.placeItemAnywhere(flowerId); }
+  removeFlower(cell: Cell): void { this.removeItem(cell); }
+  getAllFlowers(): { cell: Cell; flower: BoardItem }[] {
+    return this.getAllItems().map(({ cell, item }) => ({ cell, flower: item }));
   }
 
   destroy(fromScene?: boolean): void {

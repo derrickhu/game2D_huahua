@@ -1,15 +1,15 @@
 import Phaser from 'phaser';
 import { BOARD, COLORS } from '../../config/Constants';
-import { FlowerItem } from './FlowerItem';
+import { BoardItem } from './BoardItem';
 import { Building } from './Building';
 
-export type CellContent = 'empty' | 'flower' | 'building' | 'locked';
+export type CellContent = 'empty' | 'item' | 'building' | 'locked';
 
 export class Cell extends Phaser.GameObjects.Container {
   public row: number;
   public col: number;
   public contentType: CellContent;
-  public flower: FlowerItem | null = null;
+  public item: BoardItem | null = null;
   public building: Building | null = null;
 
   private bg: Phaser.GameObjects.Graphics;
@@ -24,12 +24,10 @@ export class Cell extends Phaser.GameObjects.Container {
     this.col = col;
     this.contentType = locked ? 'locked' : 'empty';
 
-    // 格子背景
     this.bg = new Phaser.GameObjects.Graphics(scene);
     this.drawCellBg(locked);
     this.add(this.bg);
 
-    // 高亮层（拖拽时使用）
     this.highlightGfx = new Phaser.GameObjects.Graphics(scene);
     this.highlightGfx.setAlpha(0);
     this.add(this.highlightGfx);
@@ -48,7 +46,7 @@ export class Cell extends Phaser.GameObjects.Container {
   private drawCellBg(locked: boolean): void {
     this.bg.clear();
     const s = BOARD.CELL_SIZE;
-    const r = 8; // 圆角半径
+    const r = 8;
 
     if (locked) {
       this.bg.fillStyle(COLORS.CELL_LOCKED, 0.5);
@@ -56,8 +54,6 @@ export class Cell extends Phaser.GameObjects.Container {
       this.bg.fillStyle(COLORS.CELL_BG, 0.8);
     }
     this.bg.fillRoundedRect(-s / 2, -s / 2, s, s, r);
-
-    // 边框
     this.bg.lineStyle(2, locked ? 0xBBBBBB : COLORS.CELL_BORDER, 0.6);
     this.bg.strokeRoundedRect(-s / 2, -s / 2, s, s, r);
   }
@@ -70,32 +66,40 @@ export class Cell extends Phaser.GameObjects.Container {
     return this.contentType === 'locked';
   }
 
-  hasFlower(): boolean {
-    return this.contentType === 'flower' && this.flower !== null;
+  hasItem(): boolean {
+    return this.contentType === 'item' && this.item !== null;
   }
 
   hasBuilding(): boolean {
     return this.contentType === 'building' && this.building !== null;
   }
 
-  placeFlower(flower: FlowerItem): void {
-    this.flower = flower;
-    this.contentType = 'flower';
-    flower.row = this.row;
-    flower.col = this.col;
-    flower.setPosition(0, 0);
-    this.add(flower);
+  // 兼容旧接口
+  hasFlower(): boolean { return this.hasItem(); }
+  get flower(): BoardItem | null { return this.item; }
+
+  placeItem(item: BoardItem): void {
+    this.item = item;
+    this.contentType = 'item';
+    item.row = this.row;
+    item.col = this.col;
+    item.setPosition(0, 0);
+    this.add(item);
   }
 
-  removeFlower(): FlowerItem | null {
-    const flower = this.flower;
-    if (flower) {
-      this.remove(flower);
-      this.flower = null;
+  removeItem(): BoardItem | null {
+    const item = this.item;
+    if (item) {
+      this.remove(item);
+      this.item = null;
       this.contentType = 'empty';
     }
-    return flower;
+    return item;
   }
+
+  // 兼容旧接口
+  placeFlower(flower: BoardItem): void { this.placeItem(flower); }
+  removeFlower(): BoardItem | null { return this.removeItem(); }
 
   placeBuilding(building: Building): void {
     this.building = building;
@@ -106,7 +110,7 @@ export class Cell extends Phaser.GameObjects.Container {
     this.add(building);
   }
 
-  unlock(price?: number): void {
+  unlock(): void {
     this.contentType = 'empty';
     if (this.lockIcon) {
       this.lockIcon.destroy();

@@ -25,6 +25,9 @@ export const EventManager = new EventManagerClass();
 export const GameEvents = {
   FLOWER_MERGED: 'flower:merged',
   FLOWER_PLACED: 'flower:placed',
+  ITEM_MERGED: 'item:merged',
+  ITEM_PLACED: 'item:placed',
+  ITEM_CONSUMED: 'item:consumed',      // 物品被合成消耗（锁定物品被合并时触发）
   ORDER_COMPLETED: 'order:completed',
   CUSTOMER_ARRIVED: 'customer:arrived',
   CUSTOMER_LEFT: 'customer:left',
