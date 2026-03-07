@@ -7,6 +7,7 @@ import { Game } from '@/core/Game';
 import { EventBus } from '@/core/EventBus';
 import { BoardManager } from '@/managers/BoardManager';
 import { CurrencyManager } from '@/managers/CurrencyManager';
+import { BuildingManager } from '@/managers/BuildingManager';
 import { SaveManager } from '@/managers/SaveManager';
 import { BoardView } from '@/gameobjects/board/BoardView';
 import { TopBar } from '@/gameobjects/ui/TopBar';
@@ -126,6 +127,10 @@ export class MainScene implements Scene {
   private _update(): void {
     const dt = Game.ticker.deltaMS / 1000;
     CurrencyManager.update(dt);
+    BuildingManager.update(dt);
     SaveManager.update(dt);
+
+    // 更新建筑 CD 倒计时显示
+    this._boardView.updateCdDisplay();
   }
 }

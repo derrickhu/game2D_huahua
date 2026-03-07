@@ -10,7 +10,7 @@ declare const wx: any;
 declare const tt: any;
 const _api = typeof wx !== 'undefined' ? wx : typeof tt !== 'undefined' ? tt : null;
 
-const SAVE_KEY = 'huahua_save_v1';
+const SAVE_KEY = 'huahua_save_v2';
 const AUTO_SAVE_INTERVAL = 30; // 30秒自动存档
 
 interface SaveData {

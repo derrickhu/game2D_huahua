@@ -65,7 +65,7 @@ export const BOARD_PRESETS: CellPreset[] = [
   // ── 第4行 - 初始核心区 ──
   { row: 4, col: 0, state: CellState.FOG,  itemId: null,                  keyPrice: 0, unlockPriority: 30 },
   { row: 4, col: 1, state: CellState.PEEK, itemId: 'flower_daily_2',      keyPrice: 0, unlockPriority: 14 },
-  { row: 4, col: 2, state: CellState.OPEN, itemId: null,                  keyPrice: 0, unlockPriority: 0 },
+  { row: 4, col: 2, state: CellState.OPEN, itemId: 'building_perm_1',     keyPrice: 0, unlockPriority: 0 },
   { row: 4, col: 3, state: CellState.OPEN, itemId: 'flower_daily_1',      keyPrice: 0, unlockPriority: 0 },
   { row: 4, col: 4, state: CellState.OPEN, itemId: null,                  keyPrice: 0, unlockPriority: 0 },
   { row: 4, col: 5, state: CellState.PEEK, itemId: 'drink_tea_1',         keyPrice: 0, unlockPriority: 19 },

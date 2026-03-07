@@ -62,24 +62,39 @@ class BoardManagerClass {
     return this.cells[index] || null;
   }
 
-  /** 初始化随机开局：保证至少一组可合成物品 */
+  /** 初始化随机开局：保留预设的建筑/材料/宝箱，仅随机填充花束/花饮类空位 */
   private _randomizeInitialOpenItems(): void {
     const openCells = this.cells.filter(c => c.state === CellState.OPEN);
     if (openCells.length < 2) return;
 
-    for (const c of openCells) c.itemId = null;
+    // 保留建筑、建筑材料、宝箱等特殊预设物品
+    const preserveCategories = new Set([
+      Category.BUILDING, Category.BUILDING_MAT, Category.CHEST,
+    ]);
+    const fillable = openCells.filter(c => {
+      if (!c.itemId) return true;
+      const def = ITEM_DEFS.get(c.itemId);
+      return def ? !preserveCategories.has(def.category) : true;
+    });
+
+    for (const c of fillable) c.itemId = null;
+    if (fillable.length < 2) return;
+
+    // 至少保留 2 个空格供建筑产出使用
+    const emptyReserve = 2;
+    const maxFill = Math.max(2, fillable.length - emptyReserve);
 
     const mergeableLv1 = this._buildMergeableLv1Pool();
     if (mergeableLv1.length === 0) return;
 
     const pairId = this._pickRandom(mergeableLv1);
-    openCells[0].itemId = pairId;
-    openCells[1].itemId = pairId;
+    fillable[0].itemId = pairId;
+    fillable[1].itemId = pairId;
 
-    if (openCells[2]) openCells[2].itemId = pairId;
+    if (fillable[2] && maxFill > 2) fillable[2].itemId = pairId;
 
-    for (let i = 3; i < openCells.length; i++) {
-      openCells[i].itemId = Math.random() < 0.35 ? pairId : this._pickRandom(mergeableLv1);
+    for (let i = 3; i < maxFill; i++) {
+      fillable[i].itemId = Math.random() < 0.35 ? pairId : this._pickRandom(mergeableLv1);
     }
   }
 

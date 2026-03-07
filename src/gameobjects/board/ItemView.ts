@@ -12,6 +12,8 @@ export class ItemView extends PIXI.Container {
   private _nameText: PIXI.Text;
   private _levelText: PIXI.Text;
   private _levelBg: PIXI.Graphics;
+  private _cdOverlay: PIXI.Graphics;
+  private _cdText: PIXI.Text;
 
   private _itemId: string = '';
 
@@ -49,6 +51,25 @@ export class ItemView extends PIXI.Container {
     });
     this._levelText.anchor.set(0.5, 0.5);
     this.addChild(this._levelText);
+
+    // CD 冷却遮罩
+    this._cdOverlay = new PIXI.Graphics();
+    this._cdOverlay.visible = false;
+    this.addChild(this._cdOverlay);
+
+    // CD 倒计时文字
+    this._cdText = new PIXI.Text('', {
+      fontSize: 14,
+      fill: 0xFFFFFF,
+      fontFamily: FONT_FAMILY,
+      fontWeight: 'bold',
+      stroke: 0x000000,
+      strokeThickness: 2,
+    });
+    this._cdText.anchor.set(0.5, 0.5);
+    this._cdText.position.set(cs / 2, cs / 2);
+    this._cdText.visible = false;
+    this.addChild(this._cdText);
   }
 
   setItem(itemId: string | null): void {
@@ -132,6 +153,33 @@ export class ItemView extends PIXI.Container {
 
   get itemId(): string {
     return this._itemId;
+  }
+
+  /** 显示/隐藏 CD 冷却遮罩 */
+  setCooldown(remaining: number, total: number): void {
+    const cs = BoardMetrics.cellSize;
+    if (remaining <= 0) {
+      this._cdOverlay.visible = false;
+      this._cdText.visible = false;
+      return;
+    }
+
+    this._cdOverlay.visible = true;
+    this._cdText.visible = true;
+
+    this._cdOverlay.clear();
+    this._cdOverlay.beginFill(0x000000, 0.4);
+    this._cdOverlay.drawRoundedRect(0, 0, cs, cs, 8);
+    this._cdOverlay.endFill();
+
+    // 进度条（底部）
+    const progress = 1 - remaining / total;
+    const barHeight = 4;
+    this._cdOverlay.beginFill(0x4CAF50, 0.8);
+    this._cdOverlay.drawRoundedRect(4, cs - barHeight - 2, (cs - 8) * progress, barHeight, 2);
+    this._cdOverlay.endFill();
+
+    this._cdText.text = `${Math.ceil(remaining)}s`;
   }
 
   private _getCategoryEmoji(category: Category): string {

@@ -7,6 +7,7 @@ import { Game } from '@/core/Game';
 import { BOARD_COLS, BOARD_ROWS, CELL_GAP, BoardMetrics, COLORS, DESIGN_WIDTH } from '@/config/Constants';
 import { BoardManager, CellData } from '@/managers/BoardManager';
 import { MergeManager } from '@/managers/MergeManager';
+import { BuildingManager } from '@/managers/BuildingManager';
 import { CellView } from './CellView';
 import { ItemView } from './ItemView';
 
@@ -74,6 +75,24 @@ export class BoardView extends PIXI.Container {
       } else if (cell.state === 'open') {
         itemView.alpha = 1;
       }
+
+      // 更新建筑 CD 状态
+      const cdInfo = BuildingManager.getCdInfo(i);
+      if (cdInfo && cdInfo.remaining > 0) {
+        itemView.setCooldown(cdInfo.remaining, cdInfo.total);
+      } else {
+        itemView.setCooldown(0, 0);
+      }
+    }
+  }
+
+  /** 定时刷新建筑 CD 显示（由外部 ticker 调用） */
+  updateCdDisplay(): void {
+    for (let i = 0; i < BoardManager.cells.length; i++) {
+      const cdInfo = BuildingManager.getCdInfo(i);
+      if (cdInfo && cdInfo.remaining > 0) {
+        this._itemViews[i].setCooldown(cdInfo.remaining, cdInfo.total);
+      }
     }
   }
 
@@ -85,11 +104,15 @@ export class BoardView extends PIXI.Container {
     EventBus.on('board:itemRemoved', () => this.refresh());
     EventBus.on('board:initialized', () => this.refresh());
     EventBus.on('board:loaded', () => this.refresh());
+    EventBus.on('building:produced', () => this.refresh());
+    EventBus.on('building:exhausted', () => this.refresh());
+    EventBus.on('building:cdReady', (idx: number) => {
+      this._itemViews[idx]?.setCooldown(0, 0);
+    });
   }
 
-  /** 拖拽交互 */
+  /** 拖拽 + 建筑点击交互 */
   private _setupInteraction(): void {
-    const cs = BoardMetrics.cellSize;
     this.eventMode = 'static';
     this.hitArea = new PIXI.Rectangle(
       0, 0,
@@ -97,47 +120,116 @@ export class BoardView extends PIXI.Container {
       BoardMetrics.areaHeight,
     );
 
+    let downPos: { x: number; y: number } | null = null;
+    let hasMoved = false;
+
     this.on('pointerdown', (e: PIXI.FederatedPointerEvent) => {
       const localPos = this.toLocal(e.global);
       const cellIdx = this._hitTestCell(localPos.x, localPos.y);
       if (cellIdx < 0) return;
 
-      if (MergeManager.startDrag(cellIdx)) {
-        this._dragSrcIndex = cellIdx;
-        this._startDragGhost(cellIdx, localPos);
-        this._highlightMergeTargets(cellIdx);
+      downPos = { x: localPos.x, y: localPos.y };
+      hasMoved = false;
+      this._dragSrcIndex = cellIdx;
+
+      // 非建筑物品：立即进入拖拽模式（与之前行为一致）
+      const cell = BoardManager.getCellByIndex(cellIdx);
+      if (cell?.itemId && !BuildingManager.isBuildingItem(cell.itemId)) {
+        if (MergeManager.startDrag(cellIdx)) {
+          this._startDragGhost(cellIdx, localPos);
+          this._highlightMergeTargets(cellIdx);
+        }
       }
     });
 
     this.on('pointermove', (e: PIXI.FederatedPointerEvent) => {
-      if (!this._dragGhost) return;
+      if (this._dragSrcIndex < 0) return;
       const localPos = this.toLocal(e.global);
-      const half = BoardMetrics.cellSize / 2;
-      this._dragGhost.position.set(localPos.x - half, localPos.y - half);
+      hasMoved = true;
+
+      if (this._dragGhost) {
+        const half = BoardMetrics.cellSize / 2;
+        this._dragGhost.position.set(localPos.x - half, localPos.y - half);
+      }
     });
 
     this.on('pointerup', (e: PIXI.FederatedPointerEvent) => {
       if (this._dragSrcIndex < 0) return;
+      const srcIdx = this._dragSrcIndex;
       const localPos = this.toLocal(e.global);
-      const targetIdx = this._hitTestCell(localPos.x, localPos.y);
 
-      if (targetIdx >= 0) {
-        MergeManager.endDrag(targetIdx);
+      if (this._dragGhost) {
+        // 正在拖拽 → 合成或移动
+        const targetIdx = this._hitTestCell(localPos.x, localPos.y);
+        if (targetIdx >= 0) {
+          MergeManager.endDrag(targetIdx);
+        } else {
+          MergeManager.cancelDrag();
+        }
+        this._clearDragGhost();
+        this._clearHighlights();
       } else {
-        MergeManager.cancelDrag();
+        // 没拖拽 → 视为点击（建筑产出）
+        this._handleTap(srcIdx);
       }
 
-      this._clearDragGhost();
-      this._clearHighlights();
       this._dragSrcIndex = -1;
+      downPos = null;
+      hasMoved = false;
     });
 
     this.on('pointerupoutside', () => {
-      MergeManager.cancelDrag();
-      this._clearDragGhost();
-      this._clearHighlights();
+      if (this._dragGhost) {
+        MergeManager.cancelDrag();
+        this._clearDragGhost();
+        this._clearHighlights();
+      }
       this._dragSrcIndex = -1;
+      downPos = null;
+      hasMoved = false;
     });
+  }
+
+  /** 处理格子点击（非拖拽）：建筑产出 */
+  private _handleTap(cellIndex: number): void {
+    const cell = BoardManager.getCellByIndex(cellIndex);
+    if (!cell?.itemId) return;
+
+    console.log(`[BoardView] 点击格子 ${cellIndex}, itemId=${cell.itemId}, isBuilding=${BuildingManager.isBuildingItem(cell.itemId)}`);
+
+    if (!BuildingManager.isBuildingItem(cell.itemId)) return;
+
+    if (BuildingManager.canProduce(cellIndex)) {
+      const result = BuildingManager.produce(cellIndex);
+      if (result) {
+        this._playProduceAnim(cellIndex, result.targetIndex);
+      }
+    } else {
+      this._shakeCell(cellIndex);
+    }
+  }
+
+  /** 建筑产出动画 */
+  private _playProduceAnim(srcIndex: number, _targetIndex: number): void {
+    this._shakeCell(srcIndex);
+  }
+
+  /** 格子抖动反馈 */
+  private _shakeCell(cellIndex: number): void {
+    const view = this._cellViews[cellIndex];
+    if (!view) return;
+    const origX = view.x;
+    const steps = [4, -4, 3, -3, 1, -1, 0];
+    let i = 0;
+    const timer = setInterval(() => {
+      if (i >= steps.length) {
+        view.x = origX;
+        clearInterval(timer);
+        return;
+      }
+      view.x = origX + steps[i];
+      i++;
+    }, 35);
   }
 
   private _hitTestCell(x: number, y: number): number {
