@@ -116,27 +116,80 @@ function registerTouchEvents() {
     }
   }
 
+  // 分发 window 上的全局事件（PixiJS EventSystem 在 window 上也注册了 pointermove/pointerup）
+  function dispatchToWindow(type, event) {
+    if (typeof GameGlobal !== 'undefined' && GameGlobal.__windowDispatchEvent) {
+      GameGlobal.__windowDispatchEvent(type, event);
+    }
+  }
+
   platform.onTouchStart((e) => {
     dispatch('touchstart', e);
     dispatchPointer('pointerdown', e);
+    // window 上也需要收到 pointerdown
+    var touches = e.changedTouches || e.touches || [];
+    if (touches.length) {
+      var t = touches[0];
+      dispatchToWindow('pointerdown', {
+        type: 'pointerdown', pointerId: t.identifier || 0, pointerType: 'touch',
+        clientX: t.clientX, clientY: t.clientY, pageX: t.clientX, pageY: t.clientY,
+        button: 0, buttons: 1, isPrimary: true, target: canvas,
+        preventDefault: function(){}, stopPropagation: function(){}, stopImmediatePropagation: function(){},
+      });
+    }
   });
 
   platform.onTouchMove((e) => {
     dispatch('touchmove', e);
     dispatchPointer('pointermove', e);
+    var touches = e.changedTouches || e.touches || [];
+    if (touches.length) {
+      var t = touches[0];
+      dispatchToWindow('pointermove', {
+        type: 'pointermove', pointerId: t.identifier || 0, pointerType: 'touch',
+        clientX: t.clientX, clientY: t.clientY, pageX: t.clientX, pageY: t.clientY,
+        button: 0, buttons: 1, isPrimary: true, target: canvas,
+        preventDefault: function(){}, stopPropagation: function(){}, stopImmediatePropagation: function(){},
+      });
+    }
   });
 
   platform.onTouchEnd((e) => {
     dispatch('touchend', e);
     dispatchPointer('pointerup', e);
+    var touches = e.changedTouches || [];
+    if (touches.length) {
+      var t = touches[0];
+      dispatchToWindow('pointerup', {
+        type: 'pointerup', pointerId: t.identifier || 0, pointerType: 'touch',
+        clientX: t.clientX, clientY: t.clientY, pageX: t.clientX, pageY: t.clientY,
+        button: 0, buttons: 0, isPrimary: true, target: canvas,
+        preventDefault: function(){}, stopPropagation: function(){}, stopImmediatePropagation: function(){},
+      });
+    }
   });
 
   platform.onTouchCancel((e) => {
     dispatch('touchcancel', e);
     dispatchPointer('pointercancel', e);
+    var touches = e.changedTouches || [];
+    if (touches.length) {
+      var t = touches[0];
+      dispatchToWindow('pointercancel', {
+        type: 'pointercancel', pointerId: t.identifier || 0, pointerType: 'touch',
+        clientX: t.clientX, clientY: t.clientY, pageX: t.clientX, pageY: t.clientY,
+        button: 0, buttons: 0, isPrimary: true, target: canvas,
+        preventDefault: function(){}, stopPropagation: function(){}, stopImmediatePropagation: function(){},
+      });
+    }
   });
 
   // canvas.getBoundingClientRect - PixiJS 用来计算事件坐标
+  // 必须返回逻辑像素尺寸（与触摸事件 clientX/clientY 一致），否则坐标偏移
+  var sysInfo = platform.getSystemInfoSync();
+  var screenW = sysInfo.screenWidth || sysInfo.windowWidth || 375;
+  var screenH = sysInfo.screenHeight || sysInfo.windowHeight || 667;
+
   try {
     canvas.getBoundingClientRect = function() {
       return {
@@ -144,12 +197,18 @@ function registerTouchEvents() {
         y: 0,
         top: 0,
         left: 0,
-        width: canvas.width,
-        height: canvas.height,
-        right: canvas.width,
-        bottom: canvas.height,
+        width: screenW,
+        height: screenH,
+        right: screenW,
+        bottom: screenH,
       };
     };
+  } catch (e) {}
+
+  // clientWidth/clientHeight 也需返回逻辑像素
+  try {
+    Object.defineProperty(canvas, 'clientWidth', { get: function() { return screenW; }, configurable: true });
+    Object.defineProperty(canvas, 'clientHeight', { get: function() { return screenH; }, configurable: true });
   } catch (e) {}
 
   // PixiJS 会检查 canvas.style（微信 canvas 部分属性可能只读）
@@ -158,16 +217,33 @@ function registerTouchEvents() {
     canvas.style.touchAction = '';
     canvas.style.msTouchAction = '';
     canvas.style.cursor = '';
-    canvas.style.width = canvas.width + 'px';
-    canvas.style.height = canvas.height + 'px';
+    canvas.style.width = screenW + 'px';
+    canvas.style.height = screenH + 'px';
   } catch (e) {}
 
   // PixiJS 检查 focus
   if (!canvas.focus) canvas.focus = function() {};
 
-  // PixiJS 会检查 parentElement（微信 canvas 的部分属性是只读的）
-  try { canvas.parentElement = null; } catch (e) {}
-  try { canvas.parentNode = null; } catch (e) {}
+  // PixiJS EventSystem 需要 canvas.parentElement 来 addEventListener
+  // 不能设为 null，设为一个带事件能力的虚拟节点
+  var _parentListeners = {};
+  var fakeParent = {
+    addEventListener: function(type, handler, options) {
+      if (!_parentListeners[type]) _parentListeners[type] = [];
+      _parentListeners[type].push(handler);
+    },
+    removeEventListener: function(type, handler) {
+      if (!_parentListeners[type]) return;
+      var idx = _parentListeners[type].indexOf(handler);
+      if (idx !== -1) _parentListeners[type].splice(idx, 1);
+    },
+  };
+  try { canvas.parentElement = fakeParent; } catch (e) {
+    try { Object.defineProperty(canvas, 'parentElement', { value: fakeParent, configurable: true, writable: true }); } catch (e2) {}
+  }
+  try { canvas.parentNode = fakeParent; } catch (e) {
+    try { Object.defineProperty(canvas, 'parentNode', { value: fakeParent, configurable: true, writable: true }); } catch (e2) {}
+  }
 }
 
 module.exports = { TouchEvent, registerTouchEvents };

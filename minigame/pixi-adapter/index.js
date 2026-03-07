@@ -21,6 +21,37 @@ const {
   HTMLVideoElement,
 } = require('./element');
 
+// Patch Object.defineProperty / Object.defineProperties
+// 微信小游戏中 WebGL 上下文的属性（如 WRAP_MODE 等枚举常量）是 configurable:false，
+// PixiJS 初始化时 Object.defineProperties 重定义这些属性会抛 TypeError。
+// 这里做安全包裹：遇到不可配置属性时跳过而非报错。
+const _origDefineProperty = Object.defineProperty;
+Object.defineProperty = function safeDefineProperty(obj, prop, descriptor) {
+  try {
+    return _origDefineProperty.call(Object, obj, prop, descriptor);
+  } catch (e) {
+    // 如果是因为属性不可配置导致的，静默跳过
+    if (e instanceof TypeError) {
+      return obj;
+    }
+    throw e;
+  }
+};
+
+const _origDefineProperties = Object.defineProperties;
+Object.defineProperties = function safeDefineProperties(obj, props) {
+  for (const key in props) {
+    if (Object.prototype.hasOwnProperty.call(props, key)) {
+      try {
+        _origDefineProperty.call(Object, obj, key, props[key]);
+      } catch (e) {
+        if (!(e instanceof TypeError)) throw e;
+      }
+    }
+  }
+  return obj;
+};
+
 // 获取系统信息
 const sysInfo = platform.getSystemInfoSync();
 const isDevtools = sysInfo.platform === 'devtools';
@@ -66,6 +97,30 @@ const _performance = typeof performance !== 'undefined' ? performance : {
   now: Date.now.bind(Date),
 };
 
+// window 事件系统（PixiJS EventSystem 需要在 window 上注册 pointermove/pointerup 等全局事件）
+const _windowListeners = {};
+function _windowAddEventListener(type, handler, options) {
+  if (!_windowListeners[type]) _windowListeners[type] = [];
+  _windowListeners[type].push(handler);
+}
+function _windowRemoveEventListener(type, handler) {
+  if (!_windowListeners[type]) return;
+  const idx = _windowListeners[type].indexOf(handler);
+  if (idx !== -1) _windowListeners[type].splice(idx, 1);
+}
+function _windowDispatchEvent(type, event) {
+  const queue = _windowListeners[type];
+  if (queue) {
+    const copy = queue.slice();
+    copy.forEach(handler => {
+      try { handler(event); } catch (e) { console.error('[window event]', type, e); }
+    });
+  }
+}
+
+// 导出给 TouchEvent.js 使用
+GameGlobal.__windowDispatchEvent = _windowDispatchEvent;
+
 if (isDevtools) {
   // 模拟器环境：window 已存在，用 defineProperty 覆盖/补充
   const _win = typeof window !== 'undefined' ? window : GameGlobal;
@@ -82,8 +137,8 @@ if (isDevtools) {
     DOMParser: { value: DOMParser, configurable: true },
     localStorage: { value: localStorage, configurable: true },
     ontouchstart: { value: noop, configurable: true },
-    addEventListener: { value: noop, configurable: true },
-    removeEventListener: { value: noop, configurable: true },
+    addEventListener: { value: _windowAddEventListener, configurable: true },
+    removeEventListener: { value: _windowRemoveEventListener, configurable: true },
   };
 
   for (const key in defines) {
@@ -126,8 +181,8 @@ if (isDevtools) {
   GameGlobal.localStorage = localStorage;
   GameGlobal.performance = _performance;
   GameGlobal.ontouchstart = noop;
-  GameGlobal.addEventListener = noop;
-  GameGlobal.removeEventListener = noop;
+  GameGlobal.addEventListener = _windowAddEventListener;
+  GameGlobal.removeEventListener = _windowRemoveEventListener;
   GameGlobal.self = GameGlobal;
 }
 

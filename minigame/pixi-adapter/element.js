@@ -12,6 +12,7 @@ class Element {
     this.style = { cursor: null };
     this.clientWidth = 0;
     this.clientHeight = 0;
+    this._listeners = {};
   }
   appendChild(child) {
     this.childNodes.push(child);
@@ -22,13 +23,23 @@ class Element {
     if (idx !== -1) this.childNodes.splice(idx, 1);
     return child;
   }
-  addEventListener() {}
-  removeEventListener() {}
+  addEventListener(type, handler) {
+    if (!this._listeners[type]) this._listeners[type] = [];
+    this._listeners[type].push(handler);
+  }
+  removeEventListener(type, handler) {
+    if (!this._listeners[type]) return;
+    const idx = this._listeners[type].indexOf(handler);
+    if (idx !== -1) this._listeners[type].splice(idx, 1);
+  }
   insertBefore() {}
   replaceChild() {}
   cloneNode() { return new Element(); }
   setAttribute() {}
   getAttribute() { return null; }
+  getBoundingClientRect() {
+    return { x: 0, y: 0, top: 0, left: 0, width: 0, height: 0, right: 0, bottom: 0 };
+  }
 }
 
 // 通过 constructor 直接赋值（非 extends），确保 instanceof 正确

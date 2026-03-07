@@ -2,52 +2,50 @@
  * 物品视图 - 在格子中显示物品图标和等级
  */
 import * as PIXI from 'pixi.js';
-import { CELL_SIZE, COLORS, FONT_FAMILY } from '@/config/Constants';
+import { BoardMetrics, COLORS, FONT_FAMILY } from '@/config/Constants';
 import { ITEM_DEFS, Category, FlowerLine, DrinkLine } from '@/config/ItemConfig';
+import { TextureCache } from '@/utils/TextureCache';
 
 export class ItemView extends PIXI.Container {
   private _iconBg: PIXI.Graphics;
+  private _iconSprite: PIXI.Sprite | null = null;
   private _nameText: PIXI.Text;
   private _levelText: PIXI.Text;
   private _levelBg: PIXI.Graphics;
-  private _lineIndicator: PIXI.Graphics;
 
   private _itemId: string = '';
 
   constructor() {
     super();
+    const cs = BoardMetrics.cellSize;
 
     this._iconBg = new PIXI.Graphics();
     this.addChild(this._iconBg);
 
-    this._lineIndicator = new PIXI.Graphics();
-    this.addChild(this._lineIndicator);
-
     this._nameText = new PIXI.Text('', {
-      fontSize: 14,
+      fontSize: 13,
       fill: COLORS.TEXT_DARK,
       fontFamily: FONT_FAMILY,
       wordWrap: true,
-      wordWrapWidth: CELL_SIZE - 12,
+      wordWrapWidth: cs - 8,
       align: 'center',
     });
-    this._nameText.anchor.set(0.5, 0);
-    this._nameText.position.set(CELL_SIZE / 2, 8);
+    this._nameText.anchor.set(0.5, 1);
+    this._nameText.position.set(cs / 2, cs - 4);
     this.addChild(this._nameText);
 
-    // 等级背景圆点（复用，避免每次 setItem 创建新对象）
     this._levelBg = new PIXI.Graphics();
-    this._levelBg.position.set(CELL_SIZE - 14, CELL_SIZE - 14);
+    this._levelBg.position.set(cs - 14, 14);
     this.addChild(this._levelBg);
 
     this._levelText = new PIXI.Text('', {
-      fontSize: 12,
+      fontSize: 11,
       fill: 0xFFFFFF,
       fontFamily: FONT_FAMILY,
       fontWeight: 'bold',
     });
     this._levelText.anchor.set(0.5, 0.5);
-    this._levelText.position.set(CELL_SIZE - 14, CELL_SIZE - 14);
+    this._levelText.position.set(cs - 14, 14);
     this.addChild(this._levelText);
   }
 
@@ -66,32 +64,50 @@ export class ItemView extends PIXI.Container {
 
     this._itemId = itemId;
     this.visible = true;
+    const cs = BoardMetrics.cellSize;
 
-    // 物品图标背景（用颜色区分品类）
-    this._iconBg.clear();
-    const iconColor = this._getIconColor(def.category, def.line);
-    this._iconBg.beginFill(iconColor, 0.3);
-    this._iconBg.drawRoundedRect(6, 6, CELL_SIZE - 12, CELL_SIZE - 12, 6);
-    this._iconBg.endFill();
-
-    // 花系/饮品线色标条
-    this._lineIndicator.clear();
     const lineColor = this._getLineColor(def.line);
-    this._lineIndicator.beginFill(lineColor);
-    this._lineIndicator.drawRoundedRect(6, CELL_SIZE - 24, CELL_SIZE - 12, 4, 2);
-    this._lineIndicator.endFill();
+    const iconColor = this._getIconColor(def.category, def.line);
 
-    // 名称（短名）
-    const shortName = def.name.length > 4 ? def.name.substring(0, 4) : def.name;
-    this._nameText.text = shortName;
+    if (this._iconSprite) {
+      this.removeChild(this._iconSprite);
+      this._iconSprite.destroy();
+      this._iconSprite = null;
+    }
 
-    // 等级角标（复用 _levelBg，不每次创建新 Graphics）
+    const texture = TextureCache.get(def.icon);
+    if (texture) {
+      this._iconBg.clear();
+      this._nameText.visible = false;
+
+      this._iconSprite = new PIXI.Sprite(texture);
+      const padding = 4;
+      const maxSize = cs - padding * 2;
+      const scale = Math.min(maxSize / texture.width, maxSize / texture.height);
+      this._iconSprite.scale.set(scale);
+      this._iconSprite.anchor.set(0.5, 0.5);
+      this._iconSprite.position.set(cs / 2, cs / 2);
+      this.addChildAt(this._iconSprite, 1);
+    } else {
+      this._iconBg.clear();
+      this._iconBg.beginFill(iconColor, 0.35);
+      this._iconBg.drawRoundedRect(6, 4, cs - 12, cs - 22, 6);
+      this._iconBg.endFill();
+      this._iconBg.beginFill(iconColor, 0.15);
+      this._iconBg.drawCircle(cs / 2, cs / 2 - 8, 22);
+      this._iconBg.endFill();
+
+      this._nameText.visible = true;
+      const shortName = def.name.length > 4 ? def.name.substring(0, 4) : def.name;
+      this._nameText.text = shortName;
+    }
+
     this._levelBg.clear();
     this._levelBg.beginFill(lineColor, 0.9);
-    this._levelBg.drawCircle(0, 0, 11);
+    this._levelBg.drawCircle(0, 0, 10);
     this._levelBg.endFill();
 
-    this._levelText.text = `Lv${def.level}`;
+    this._levelText.text = `${def.level}`;
   }
 
   get itemId(): string {

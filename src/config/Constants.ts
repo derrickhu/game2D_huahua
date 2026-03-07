@@ -10,10 +10,37 @@ export const DESIGN_HEIGHT = 1334;
 export const BOARD_COLS = 6;
 export const BOARD_ROWS = 5;
 export const BOARD_TOTAL = BOARD_COLS * BOARD_ROWS; // 30
-export const CELL_SIZE = 100;
-export const CELL_GAP = 8;
-export const BOARD_PADDING_X = (DESIGN_WIDTH - (CELL_SIZE + CELL_GAP) * BOARD_COLS + CELL_GAP) / 2;
-export const BOARD_TOP_Y = 500; // 棋盘顶部Y坐标（设计坐标）
+export const CELL_GAP = 6;
+
+/**
+ * 棋盘动态布局参数（用对象包裹防止 Terser 常量内联）
+ * 在 computeBoardMetrics() 之后通过属性访问获取最新值
+ */
+export const BoardMetrics = {
+  cellSize: 108,
+  paddingX: 0,
+  topY: 380,
+};
+
+// 兼容旧引用的 getter
+export function getCellSize(): number { return BoardMetrics.cellSize; }
+
+/** 根据实际屏幕尺寸重新计算棋盘布局参数，需在 Game.init 之后调用 */
+export function computeBoardMetrics(logicHeight: number): void {
+  const shopBottom = 350;  // 顶栏90 + 店铺区260
+  const navHeight = 90;
+  const topMargin = 10;
+  const bottomMargin = 10;
+
+  const availableHeight = logicHeight - shopBottom - navHeight - topMargin - bottomMargin;
+  const maxCellByHeight = Math.floor((availableHeight + CELL_GAP) / BOARD_ROWS - CELL_GAP);
+  const maxCellByWidth = Math.floor((DESIGN_WIDTH - 40 + CELL_GAP) / BOARD_COLS - CELL_GAP);
+  BoardMetrics.cellSize = Math.min(maxCellByHeight, maxCellByWidth);
+  BoardMetrics.paddingX = (DESIGN_WIDTH - (BoardMetrics.cellSize + CELL_GAP) * BOARD_COLS + CELL_GAP) / 2;
+  BoardMetrics.topY = shopBottom + topMargin;
+
+  console.log(`[Board] 动态布局: cellSize=${BoardMetrics.cellSize}, topY=${BoardMetrics.topY}, availH=${availableHeight}`);
+}
 
 // 客人
 export const MAX_CUSTOMERS = 2;

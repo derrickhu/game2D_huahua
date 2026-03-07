@@ -2,7 +2,7 @@
  * 单格视图
  */
 import * as PIXI from 'pixi.js';
-import { CELL_SIZE, COLORS } from '@/config/Constants';
+import { BoardMetrics, COLORS } from '@/config/Constants';
 import { CellState } from '@/config/BoardLayout';
 
 export class CellView extends PIXI.Container {
@@ -37,10 +37,11 @@ export class CellView extends PIXI.Container {
   }
 
   setHighlight(on: boolean): void {
+    const cs = BoardMetrics.cellSize;
     this._bg.clear();
     const color = on ? COLORS.CELL_HIGHLIGHT : this._getBgColor();
     this._bg.beginFill(color, on ? 0.9 : 0.8);
-    this._bg.drawRoundedRect(0, 0, CELL_SIZE, CELL_SIZE, 8);
+    this._bg.drawRoundedRect(0, 0, cs, cs, 8);
     this._bg.endFill();
   }
 
@@ -54,18 +55,19 @@ export class CellView extends PIXI.Container {
   }
 
   private _drawBorder(): void {
+    const cs = BoardMetrics.cellSize;
     this._border.clear();
     this._border.lineStyle(2, COLORS.CELL_BORDER, 0.6);
-    this._border.drawRoundedRect(0, 0, CELL_SIZE, CELL_SIZE, 8);
+    this._border.drawRoundedRect(0, 0, cs, cs, 8);
   }
 
   private _redraw(): void {
+    const cs = BoardMetrics.cellSize;
     this._bg.clear();
     this._bg.beginFill(this._getBgColor(), 0.8);
-    this._bg.drawRoundedRect(0, 0, CELL_SIZE, CELL_SIZE, 8);
+    this._bg.drawRoundedRect(0, 0, cs, cs, 8);
     this._bg.endFill();
 
-    // 清除旧覆盖层
     if (this._fogOverlay) {
       this.removeChild(this._fogOverlay);
       this._fogOverlay.destroy();
@@ -79,20 +81,9 @@ export class CellView extends PIXI.Container {
 
     if (this._state === CellState.FOG) {
       this._fogOverlay = new PIXI.Graphics();
-      this._fogOverlay.beginFill(0x888888, 0.5);
-      this._fogOverlay.drawRoundedRect(0, 0, CELL_SIZE, CELL_SIZE, 8);
+      this._fogOverlay.beginFill(0xD4C4B0, 0.6);
+      this._fogOverlay.drawRoundedRect(0, 0, cs, cs, 8);
       this._fogOverlay.endFill();
-
-      // 问号图标
-      const q = new PIXI.Text('?', {
-        fontSize: 32,
-        fill: 0xFFFFFF,
-        fontWeight: 'bold',
-      });
-      q.anchor.set(0.5);
-      q.position.set(CELL_SIZE / 2, CELL_SIZE / 2);
-      this._fogOverlay.addChild(q);
-
       this.addChild(this._fogOverlay);
     }
 
@@ -101,15 +92,14 @@ export class CellView extends PIXI.Container {
         fontSize: 24,
       });
       this._keyIcon.anchor.set(0.5);
-      this._keyIcon.position.set(CELL_SIZE / 2, CELL_SIZE - 14);
+      this._keyIcon.position.set(cs / 2, cs - 14);
       this.addChild(this._keyIcon);
     }
 
     if (this._state === CellState.PEEK) {
-      // 半透明遮罩
       this._fogOverlay = new PIXI.Graphics();
       this._fogOverlay.beginFill(0xAAAAAA, 0.3);
-      this._fogOverlay.drawRoundedRect(0, 0, CELL_SIZE, CELL_SIZE, 8);
+      this._fogOverlay.drawRoundedRect(0, 0, cs, cs, 8);
       this._fogOverlay.endFill();
       this.addChild(this._fogOverlay);
     }

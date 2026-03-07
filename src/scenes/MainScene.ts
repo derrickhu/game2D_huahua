@@ -62,65 +62,64 @@ export class MainScene implements Scene {
   }
 
   private _buildShopArea(): void {
-    // 店铺背景
+    // 店铺背景（紧凑版）
     const bg = new PIXI.Graphics();
     bg.beginFill(0xFFF0E0, 0.6);
-    bg.drawRoundedRect(20, 0, DESIGN_WIDTH - 40, 380, 16);
+    bg.drawRoundedRect(20, 0, DESIGN_WIDTH - 40, 260, 16);
     bg.endFill();
     this._shopArea.addChild(bg);
 
     // 花店招牌
     const title = new PIXI.Text('🌸 花语小筑 🌸', {
-      fontSize: 28,
+      fontSize: 24,
       fill: COLORS.TEXT_DARK,
       fontFamily: FONT_FAMILY,
       fontWeight: 'bold',
     });
     title.anchor.set(0.5, 0);
-    title.position.set(DESIGN_WIDTH / 2, 16);
+    title.position.set(DESIGN_WIDTH / 2, 10);
     this._shopArea.addChild(title);
 
-    // 店主（Q版占位）
+    // 店主（Q版占位，缩小）
     const owner = new PIXI.Graphics();
     owner.beginFill(0xFFDDB8);
-    owner.drawCircle(DESIGN_WIDTH / 2, 140, 50);
+    owner.drawCircle(DESIGN_WIDTH / 2, 100, 40);
     owner.endFill();
-    // 笑脸
     owner.beginFill(0x4A3728);
-    owner.drawCircle(DESIGN_WIDTH / 2 - 15, 130, 5);
-    owner.drawCircle(DESIGN_WIDTH / 2 + 15, 130, 5);
+    owner.drawCircle(DESIGN_WIDTH / 2 - 12, 92, 4);
+    owner.drawCircle(DESIGN_WIDTH / 2 + 12, 92, 4);
     owner.endFill();
     owner.lineStyle(2, 0x4A3728);
-    owner.arc(DESIGN_WIDTH / 2, 145, 15, 0, Math.PI);
+    owner.arc(DESIGN_WIDTH / 2, 105, 12, 0, Math.PI);
     this._shopArea.addChild(owner);
 
     const ownerLabel = new PIXI.Text('店主', {
-      fontSize: 14,
+      fontSize: 13,
       fill: COLORS.TEXT_LIGHT,
       fontFamily: FONT_FAMILY,
     });
     ownerLabel.anchor.set(0.5, 0);
-    ownerLabel.position.set(DESIGN_WIDTH / 2, 200);
+    ownerLabel.position.set(DESIGN_WIDTH / 2, 148);
     this._shopArea.addChild(ownerLabel);
 
     // 柜台
     const counter = new PIXI.Graphics();
     counter.beginFill(0xD2B48C);
-    counter.drawRoundedRect(60, 240, DESIGN_WIDTH - 120, 60, 8);
+    counter.drawRoundedRect(60, 175, DESIGN_WIDTH - 120, 45, 8);
     counter.endFill();
     counter.beginFill(0xC4A882);
-    counter.drawRoundedRect(60, 270, DESIGN_WIDTH - 120, 30, 8);
+    counter.drawRoundedRect(60, 198, DESIGN_WIDTH - 120, 22, 8);
     counter.endFill();
     this._shopArea.addChild(counter);
 
     // 客人等候区提示
     const waitText = new PIXI.Text('— 客人等候区 —', {
-      fontSize: 14,
+      fontSize: 13,
       fill: COLORS.TEXT_LIGHT,
       fontFamily: FONT_FAMILY,
     });
     waitText.anchor.set(0.5, 0);
-    waitText.position.set(DESIGN_WIDTH / 2, 320);
+    waitText.position.set(DESIGN_WIDTH / 2, 230);
     this._shopArea.addChild(waitText);
   }
 

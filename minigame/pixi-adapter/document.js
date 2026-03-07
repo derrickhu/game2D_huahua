@@ -44,7 +44,11 @@ const document = {
     return null;
   },
 
-  getElementsByTagName() {
+  getElementsByTagName(tag) {
+    if (tag === 'canvas') {
+      const { canvas } = require('./canvas');
+      return [canvas];
+    }
     return [];
   },
 
@@ -54,6 +58,12 @@ const document = {
 
   querySelectorAll() {
     return [];
+  },
+
+  // PixiJS EventSystem 使用 elementFromPoint 来确定事件目标
+  elementFromPoint() {
+    const { canvas } = require('./canvas');
+    return canvas;
   },
 
   addEventListener(type, handler) {
