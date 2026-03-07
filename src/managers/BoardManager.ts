@@ -4,7 +4,7 @@
 import { EventBus } from '@/core/EventBus';
 import { BOARD_COLS, BOARD_ROWS, BOARD_TOTAL } from '@/config/Constants';
 import { CellState, BOARD_PRESETS } from '@/config/BoardLayout';
-import { ITEM_DEFS, getMergeResultId, Category } from '@/config/ItemConfig';
+import { ITEM_DEFS, getMergeResultId, Category, FlowerLine } from '@/config/ItemConfig';
 
 export interface CellData {
   index: number;
@@ -76,7 +76,7 @@ class BoardManagerClass {
     openCells[0].itemId = pairId;
     openCells[1].itemId = pairId;
 
-    if (openCells[2]) openCells[2].itemId = 'building_cons_1';
+    if (openCells[2]) openCells[2].itemId = pairId;
 
     for (let i = 3; i < openCells.length; i++) {
       openCells[i].itemId = Math.random() < 0.35 ? pairId : this._pickRandom(mergeableLv1);
@@ -84,9 +84,10 @@ class BoardManagerClass {
   }
 
   private _buildMergeableLv1Pool(): string[] {
+    // 当前只有日常花系有真实图片资源，优先使用
     return [...ITEM_DEFS.values()]
       .filter(def => def.level === 1 && def.maxLevel > 1)
-      .filter(def => def.category === Category.FLOWER || def.category === Category.DRINK || def.category === Category.BUILDING_MAT)
+      .filter(def => def.category === Category.FLOWER && def.line === FlowerLine.DAILY)
       .map(def => def.id);
   }
 

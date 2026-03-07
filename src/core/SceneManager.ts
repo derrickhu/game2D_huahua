@@ -21,9 +21,17 @@ class SceneManagerClass {
   }
 
   switchTo(name: string): void {
+    console.log(`[SceneManager] switchTo("${name}") Game.uid=${(Game as any)._uid}, stage=${!!Game.stage}`);
+
     const nextScene = this._scenes.get(name);
     if (!nextScene) {
       console.error(`[SceneManager] 场景 "${name}" 未注册`);
+      return;
+    }
+
+    if (!Game.stage) {
+      console.error('[SceneManager] Game.stage 未初始化，无法切换场景。'
+        + ' 请检查 Game.init() 是否在 switchTo() 之前被调用且执行成功。');
       return;
     }
 

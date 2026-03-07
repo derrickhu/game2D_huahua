@@ -51,7 +51,7 @@ export default defineConfig({
         inlineDynamicImports: true,
       },
     },
-    minify: 'terser',
+    minify: 'esbuild',
     emptyOutDir: false,
   },
 });

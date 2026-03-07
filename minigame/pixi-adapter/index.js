@@ -186,8 +186,11 @@ if (isDevtools) {
   GameGlobal.self = GameGlobal;
 }
 
-// 全局 canvas 暴露
+// 全局 canvas 暴露（同时挂载到 GameGlobal 和 window，确保 bundle 中能找到）
 GameGlobal.canvas = canvas;
+if (typeof window !== 'undefined') {
+  try { window.canvas = canvas; } catch (e) { /* 只读属性则忽略 */ }
+}
 
 // navigator.userAgent 赋值（只读属性，需 try-catch）
 try {

@@ -1,6 +1,8 @@
 /**
  * 花语小筑 - 游戏入口
  */
+// unsafe-eval patch 必须最先导入，在 new PIXI.Application() 之前执行
+import '@/core/pixiUnsafeEvalPatch';
 import { Game } from '@/core/Game';
 import { SceneManager } from '@/core/SceneManager';
 import { BoardManager } from '@/managers/BoardManager';
@@ -9,11 +11,20 @@ import { TextureCache } from '@/utils/TextureCache';
 import { MainScene } from '@/scenes/MainScene';
 import { computeBoardMetrics } from '@/config/Constants';
 
-declare const canvas: any;
+declare const GameGlobal: any;
 
 async function main(): Promise<void> {
   try {
     console.log('[main] 花语小筑启动中...');
+
+    // 获取主屏 canvas（pixi-adapter 已挂载到 GameGlobal.canvas）
+    const canvas = (typeof GameGlobal !== 'undefined' && GameGlobal.canvas)
+      || (typeof window !== 'undefined' && (window as any).canvas)
+      || null;
+
+    if (!canvas) {
+      throw new Error('[main] 无法获取 canvas，请检查 pixi-adapter 是否正确加载');
+    }
 
     // 初始化游戏
     Game.init(canvas);
@@ -40,6 +51,9 @@ async function main(): Promise<void> {
     // 注册场景
     const mainScene = new MainScene();
     SceneManager.register(mainScene);
+
+    // 诊断：确认 Game 实例一致性
+    console.log(`[main] switchTo 前: Game.uid=${(Game as any)._uid}, stage=${!!Game.stage}, ticker=${!!Game.ticker}`);
 
     // 进入主场景
     SceneManager.switchTo('main');

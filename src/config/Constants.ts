@@ -7,19 +7,20 @@ export const DESIGN_WIDTH = 750;
 export const DESIGN_HEIGHT = 1334;
 
 // 棋盘
-export const BOARD_COLS = 6;
+export const BOARD_COLS = 7;
 export const BOARD_ROWS = 9;
 export const BOARD_TOTAL = BOARD_COLS * BOARD_ROWS;
-export const CELL_GAP = 6;
+export const CELL_GAP = 4;
 
 /**
  * 棋盘动态布局参数（用对象包裹防止 Terser 常量内联）
  * 在 computeBoardMetrics() 之后通过属性访问获取最新值
  */
 export const BoardMetrics = {
-  cellSize: 108,
+  cellSize: 90,
   paddingX: 0,
   topY: 380,
+  areaHeight: 90 * 9 + 4 * 8,  // 初始值，computeBoardMetrics 会覆盖
 };
 
 // 兼容旧引用的 getter
@@ -27,27 +28,30 @@ export function getCellSize(): number { return BoardMetrics.cellSize; }
 
 /** 根据实际屏幕尺寸重新计算棋盘布局参数，需在 Game.init 之后调用 */
 export function computeBoardMetrics(logicHeight: number): void {
-  const shopBottom = 350;  // 顶栏90 + 店铺区260
   const navHeight = 90;
-  const topMargin = 10;
-  const bottomMargin = 10;
+  const bottomMargin = 6;
 
-  const boardTop = shopBottom + topMargin;
-  const availableHeight = logicHeight - boardTop - navHeight - bottomMargin;
-
-  // 宽度优先：保证 6 列铺满宽度；高度仅做上限保护
+  // 宽度优先：保证 7 列铺满宽度
   const maxCellByWidth = Math.floor((DESIGN_WIDTH - (BOARD_COLS - 1) * CELL_GAP) / BOARD_COLS);
+
+  // 棋盘可用高度 = 屏幕高 - 导航栏 - 底部间距 - 顶部最小间距(店铺区 ~350)
+  const shopBottom = 350;
+  const topMargin = 8;
+  const availableHeight = logicHeight - shopBottom - topMargin - navHeight - bottomMargin;
   const maxCellByHeight = Math.floor((availableHeight - (BOARD_ROWS - 1) * CELL_GAP) / BOARD_ROWS);
 
   BoardMetrics.cellSize = Math.max(72, Math.min(maxCellByWidth, maxCellByHeight));
-  BoardMetrics.paddingX = Math.floor((DESIGN_WIDTH - (BoardMetrics.cellSize * BOARD_COLS + CELL_GAP * (BOARD_COLS - 1))) / 2);
+
+  const gridWidth = BoardMetrics.cellSize * BOARD_COLS + CELL_GAP * (BOARD_COLS - 1);
+  BoardMetrics.paddingX = Math.floor((DESIGN_WIDTH - gridWidth) / 2);
 
   const gridHeight = BoardMetrics.cellSize * BOARD_ROWS + CELL_GAP * (BOARD_ROWS - 1);
   BoardMetrics.areaHeight = gridHeight;
-  // 贴近底部导航，优先消除下方空白
+
+  // 棋盘紧贴底部导航栏，消除下方空白
   BoardMetrics.topY = Math.floor(logicHeight - navHeight - bottomMargin - gridHeight);
 
-  console.log(`[Board] 动态布局: cellSize=${BoardMetrics.cellSize}, topY=${BoardMetrics.topY}, area=${DESIGN_WIDTH}x${BoardMetrics.areaHeight}`);
+  console.log(`[Board] 动态布局: cellSize=${BoardMetrics.cellSize}, topY=${BoardMetrics.topY}, paddingX=${BoardMetrics.paddingX}, area=${gridWidth}x${gridHeight}`);
 }
 
 // 客人

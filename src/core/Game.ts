@@ -5,7 +5,7 @@ import * as PIXI from 'pixi.js';
 import { ShaderSystem } from '@pixi/core';
 import { TweenManager } from './TweenManager';
 
-/* ---- @pixi/unsafe-eval 内联 patch (防止 tree-shaking 移除) ---- */
+/* ---- @pixi/unsafe-eval 内联 patch ---- */
 
 const GLSL_TO_SINGLE_SETTERS: Record<string, (gl: any, loc: any, cv: any, v: any) => void> = {
   vec3(gl, loc, cv, v) { (cv[0]!==v[0]||cv[1]!==v[1]||cv[2]!==v[2])&&(cv[0]=v[0],cv[1]=v[1],cv[2]=v[2],gl.uniform3f(loc,v[0],v[1],v[2])); },
@@ -67,20 +67,28 @@ function patchedSyncUniforms(group: any, uniformData: any, ud: any, uv: any, ren
   }
 }
 
-// 直接 patch ShaderSystem 原型 —— 必须在 new PIXI.Application() 之前
-Object.assign(ShaderSystem.prototype, {
-  systemCheck() { /* 禁用 eval 检测 */ },
-  syncUniforms(group: any, glProgram: any) {
-    const self = this as any;
-    patchedSyncUniforms(group, self.shader.program.uniformData, glProgram.uniformData, group.uniforms, self.renderer);
-  },
-});
+function ensureUnsafeEvalPatch(): void {
+  if ((ShaderSystem.prototype as any).__patched) return;
+  Object.assign(ShaderSystem.prototype, {
+    __patched: true,
+    systemCheck() { /* 禁用 eval 检测 */ },
+    syncUniforms(group: any, glProgram: any) {
+      const self = this as any;
+      patchedSyncUniforms(group, self.shader.program.uniformData, glProgram.uniformData, group.uniforms, self.renderer);
+    },
+  });
+  console.log('[Game] unsafe-eval patch 已应用');
+}
+
+// 立即执行一次（模块加载时）
+ensureUnsafeEvalPatch();
 
 /* ---- end unsafe-eval patch ---- */
 
 class GameClass {
   app!: PIXI.Application;
-  stage!: PIXI.Container;
+  stage: PIXI.Container;
+  ticker: PIXI.Ticker;
 
   /** 设计分辨率 */
   designWidth = 750;
@@ -98,8 +106,21 @@ class GameClass {
 
   private _initialized = false;
 
+  /** 唯一实例标识，用于调试模块重复加载问题 */
+  readonly _uid = Math.random().toString(36).slice(2, 8);
+
+  constructor() {
+    // 预初始化 stage/ticker，保证任何时刻访问都不为 undefined
+    this.stage = new PIXI.Container();
+    this.ticker = new PIXI.Ticker();
+    console.log(`[Game] GameClass 构造, uid=${this._uid}`);
+  }
+
   init(canvas: any): void {
     if (this._initialized) return;
+
+    // 再次确保 patch（防止 bundler 重排）
+    ensureUnsafeEvalPatch();
 
     // 获取屏幕信息
     const sysInfo = (typeof wx !== 'undefined' ? wx : typeof tt !== 'undefined' ? tt : null)
@@ -120,32 +141,107 @@ class GameClass {
     canvas.width = realWidth;
     canvas.height = realHeight;
 
-    this.app = new PIXI.Application({
-      view: canvas,
-      width: realWidth,
-      height: realHeight,
-      backgroundColor: 0xFFF5EE,
-      resolution: 1,
-      antialias: true,
-    });
+    // ---- 创建 renderer + stage + ticker ----
+    // 微信小游戏环境下 PIXI.Application 可能因 polyfill / Object.defineProperty
+    // 被静默 patch 等原因导致内部属性（stage/ticker）丢失，因此采用多级降级策略。
 
-    this.stage = this.app.stage;
+    let renderer: PIXI.IRenderer | null = null;
 
-    if (!this.stage) {
-      throw new Error(`[Game] PIXI.Application 创建失败: stage=${this.stage}, app=${!!this.app}`);
+    // 方式 1：标准 PIXI.Application
+    let app: PIXI.Application | null = null;
+    try {
+      app = new PIXI.Application({
+        view: canvas,
+        width: realWidth,
+        height: realHeight,
+        backgroundColor: 0xFFF5EE,
+        resolution: 1,
+        antialias: true,
+      });
+    } catch (e) {
+      console.error('[Game] new PIXI.Application 失败:', e);
+    }
+
+    if (app && app.stage && app.ticker && app.renderer) {
+      this.app = app;
+      this.stage = app.stage;
+      this.ticker = app.ticker;
+      renderer = app.renderer;
+      console.log('[Game] 方式1: PIXI.Application 创建成功');
+    } else {
+      if (app) {
+        console.warn('[Game] Application 已创建但不完整',
+          'stage:', !!app.stage, 'ticker:', !!app.ticker, 'renderer:', !!app.renderer);
+        // 尝试从不完整的 app 中回收可用的 renderer
+        if (app.renderer) renderer = app.renderer;
+      }
+
+      // 方式 2：手动 new PIXI.Renderer
+      if (!renderer) {
+        try {
+          renderer = new PIXI.Renderer({
+            view: canvas,
+            width: realWidth,
+            height: realHeight,
+            backgroundColor: 0xFFF5EE,
+            resolution: 1,
+            antialias: true,
+          });
+          console.log('[Game] 方式2: new PIXI.Renderer 创建成功');
+        } catch (e2) {
+          console.error('[Game] new PIXI.Renderer 失败:', e2);
+        }
+      }
+
+      // 方式 3：autoDetectRenderer 降级
+      if (!renderer) {
+        try {
+          renderer = PIXI.autoDetectRenderer({
+            view: canvas,
+            width: realWidth,
+            height: realHeight,
+            backgroundColor: 0xFFF5EE,
+            resolution: 1,
+            antialias: true,
+          });
+          console.log('[Game] 方式3: autoDetectRenderer 创建成功');
+        } catch (e3) {
+          console.error('[Game] autoDetectRenderer 失败:', e3);
+        }
+      }
+
+      // 确保 stage 和 ticker 存在
+      this.stage = new PIXI.Container();
+      this.ticker = new PIXI.Ticker();
+      this.ticker.start();
+
+      if (renderer) {
+        this.ticker.add(() => {
+          renderer!.render(this.stage);
+        });
+      } else {
+        console.error('[Game] 所有渲染器创建均失败，画面将无法渲染');
+      }
+
+      this.app = {
+        stage: this.stage,
+        ticker: this.ticker,
+        renderer,
+        view: canvas,
+      } as any;
     }
 
     // 整体缩放到设计分辨率
     this.stage.scale.set(this.scale, this.scale);
 
     // 注册 ticker 更新 TweenManager
-    this.app.ticker.add(() => {
-      const dt = this.app.ticker.deltaMS / 1000;
+    this.ticker.add(() => {
+      const dt = this.ticker.deltaMS / 1000;
       TweenManager.update(dt);
     });
 
     this._initialized = true;
-    console.log(`[Game] 初始化完成: ${realWidth}x${realHeight}, scale=${this.scale.toFixed(2)}, dpr=${this.dpr}`);
+    console.log(`[Game] 初始化完成: uid=${this._uid}, ${realWidth}x${realHeight}, scale=${this.scale.toFixed(2)}, dpr=${this.dpr}, stage=${!!this.stage}`);
   }
 
   /** 设计坐标转实际像素 */
@@ -164,4 +260,13 @@ class GameClass {
   }
 }
 
-export const Game = new GameClass();
+// 通过全局对象保证单例：防止 bundler 意外生成多份模块导致多个实例
+const _global: any = typeof GameGlobal !== 'undefined' ? GameGlobal
+  : typeof window !== 'undefined' ? window
+  : typeof globalThis !== 'undefined' ? globalThis
+  : {};
+
+if (!_global.__gameInstance) {
+  _global.__gameInstance = new GameClass();
+}
+export const Game: GameClass = _global.__gameInstance;

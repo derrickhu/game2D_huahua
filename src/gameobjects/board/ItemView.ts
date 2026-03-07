@@ -19,11 +19,13 @@ export class ItemView extends PIXI.Container {
     super();
     const cs = BoardMetrics.cellSize;
 
+    // 图标占位背景（无纹理时的 fallback）
     this._iconBg = new PIXI.Graphics();
     this.addChild(this._iconBg);
 
+    // 物品名字（fallback 时显示）
     this._nameText = new PIXI.Text('', {
-      fontSize: 13,
+      fontSize: 11,
       fill: COLORS.TEXT_DARK,
       fontFamily: FONT_FAMILY,
       wordWrap: true,
@@ -31,21 +33,21 @@ export class ItemView extends PIXI.Container {
       align: 'center',
     });
     this._nameText.anchor.set(0.5, 1);
-    this._nameText.position.set(cs / 2, cs - 4);
+    this._nameText.position.set(cs / 2, cs - 2);
     this.addChild(this._nameText);
 
+    // 等级徽章背景
     this._levelBg = new PIXI.Graphics();
-    this._levelBg.position.set(cs - 14, 14);
     this.addChild(this._levelBg);
 
+    // 等级文字
     this._levelText = new PIXI.Text('', {
-      fontSize: 11,
+      fontSize: 10,
       fill: 0xFFFFFF,
       fontFamily: FONT_FAMILY,
       fontWeight: 'bold',
     });
     this._levelText.anchor.set(0.5, 0.5);
-    this._levelText.position.set(cs - 14, 14);
     this.addChild(this._levelText);
   }
 
@@ -67,8 +69,8 @@ export class ItemView extends PIXI.Container {
     const cs = BoardMetrics.cellSize;
 
     const lineColor = this._getLineColor(def.line);
-    const iconColor = this._getIconColor(def.category, def.line);
 
+    // 清理旧 sprite
     if (this._iconSprite) {
       this.removeChild(this._iconSprite);
       this._iconSprite.destroy();
@@ -77,41 +79,70 @@ export class ItemView extends PIXI.Container {
 
     const texture = TextureCache.get(def.icon);
     if (texture) {
+      // 有纹理：显示图片
       this._iconBg.clear();
       this._nameText.visible = false;
 
       this._iconSprite = new PIXI.Sprite(texture);
-      const padding = 4;
+      // 图片留 6px 内边距，居中显示
+      const padding = 6;
       const maxSize = cs - padding * 2;
-      const scale = Math.min(maxSize / texture.width, maxSize / texture.height);
-      this._iconSprite.scale.set(scale);
+      const scaleX = maxSize / texture.width;
+      const scaleY = maxSize / texture.height;
+      const s = Math.min(scaleX, scaleY);
+      this._iconSprite.scale.set(s);
       this._iconSprite.anchor.set(0.5, 0.5);
       this._iconSprite.position.set(cs / 2, cs / 2);
       this.addChildAt(this._iconSprite, 1);
     } else {
+      // 无纹理 fallback：柔和的图标占位
       this._iconBg.clear();
-      this._iconBg.beginFill(iconColor, 0.35);
-      this._iconBg.drawRoundedRect(6, 4, cs - 12, cs - 22, 6);
-      this._iconBg.endFill();
+
+      // 柔和的圆形背景
+      const iconColor = this._getIconColor(def.category, def.line);
+      const cx = cs / 2;
+      const cy = cs / 2 - 4;
+      const radius = cs * 0.28;
+
       this._iconBg.beginFill(iconColor, 0.15);
-      this._iconBg.drawCircle(cs / 2, cs / 2 - 8, 22);
+      this._iconBg.drawRoundedRect(4, 4, cs - 8, cs - 8, 8);
+      this._iconBg.endFill();
+      this._iconBg.beginFill(iconColor, 0.3);
+      this._iconBg.drawCircle(cx, cy, radius);
       this._iconBg.endFill();
 
+      // 品类 emoji
+      const emoji = this._getCategoryEmoji(def.category);
       this._nameText.visible = true;
-      const shortName = def.name.length > 4 ? def.name.substring(0, 4) : def.name;
-      this._nameText.text = shortName;
+      this._nameText.text = emoji + (def.name.length > 3 ? def.name.substring(0, 3) : def.name);
     }
 
+    // 等级徽章（右上角小圆点）
+    const badgeX = cs - 10;
+    const badgeY = 10;
     this._levelBg.clear();
-    this._levelBg.beginFill(lineColor, 0.9);
-    this._levelBg.drawCircle(0, 0, 10);
+    this._levelBg.beginFill(lineColor, 0.85);
+    this._levelBg.drawCircle(0, 0, 8);
     this._levelBg.endFill();
+    this._levelBg.position.set(badgeX, badgeY);
 
     this._levelText.text = `${def.level}`;
+    this._levelText.position.set(badgeX, badgeY);
   }
 
   get itemId(): string {
     return this._itemId;
+  }
+
+  private _getCategoryEmoji(category: Category): string {
+    switch (category) {
+      case Category.FLOWER: return '🌸';
+      case Category.DRINK: return '🍵';
+      case Category.BUILDING_MAT: return '🧱';
+      case Category.BUILDING: return '🏠';
+      case Category.CHEST: return '📦';
+      default: return '❓';
+    }
   }
 
   private _getIconColor(category: Category, line: string): number {

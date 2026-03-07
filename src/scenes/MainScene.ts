@@ -31,11 +31,11 @@ export class MainScene implements Scene {
     this._boardView.refresh();
 
     // 注册 ticker 更新
-    Game.app.ticker.add(this._update, this);
+    Game.ticker.add(this._update, this);
   }
 
   onExit(): void {
-    Game.app.ticker.remove(this._update, this);
+    Game.ticker.remove(this._update, this);
   }
 
   private _buildUI(): void {
@@ -124,7 +124,7 @@ export class MainScene implements Scene {
   }
 
   private _update(): void {
-    const dt = Game.app.ticker.deltaMS / 1000;
+    const dt = Game.ticker.deltaMS / 1000;
     CurrencyManager.update(dt);
     SaveManager.update(dt);
   }
