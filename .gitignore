@@ -4,3 +4,7 @@ dist/
 *.local
 .vite/
 minigame/game-bundle.js
+
+# 游戏资产（由 game_assets 仓库管理）
+assets/images
+minigame/images/

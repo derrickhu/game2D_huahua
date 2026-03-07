@@ -72,7 +72,7 @@ function buildItemDefs(): Map<string, ItemDef> {
         line,
         level: i + 1,
         maxLevel: 6,
-        icon: `flower_${line}_${i + 1}`,
+        icon: `item_flower_${line}_${i + 1}`,
       });
     }
   }
@@ -88,7 +88,7 @@ function buildItemDefs(): Map<string, ItemDef> {
         line,
         level: i + 1,
         maxLevel: 3,
-        icon: `drink_${line}_${i + 1}`,
+        icon: `item_drink_${line}_${i + 1}`,
       });
     }
   }
@@ -104,7 +104,7 @@ function buildItemDefs(): Map<string, ItemDef> {
         line,
         level: i + 1,
         maxLevel: maxLv,
-        icon: `bmat_${line}_${i + 1}`,
+        icon: `item_bmat_${line}_${i + 1}`,
       });
     }
   }
@@ -120,7 +120,7 @@ function buildItemDefs(): Map<string, ItemDef> {
       line: 'chest',
       level: i + 1,
       maxLevel: 3,
-      icon: `chest_${i + 1}`,
+      icon: `item_chest_${i + 1}`,
     });
   }
 
@@ -138,7 +138,7 @@ function buildItemDefs(): Map<string, ItemDef> {
       line: i < 4 ? 'flower_build' : 'drink_build',
       level: 1,
       maxLevel: 1,
-      icon: `building_perm_${i + 1}`,
+      icon: `item_building_perm_${i + 1}`,
     });
   }
 
@@ -156,7 +156,7 @@ function buildItemDefs(): Map<string, ItemDef> {
       line: i < 3 ? 'flower_build' : 'drink_build',
       level: 1,
       maxLevel: 1,
-      icon: `building_cons_${i + 1}`,
+      icon: `item_building_cons_${i + 1}`,
     });
   }
 
