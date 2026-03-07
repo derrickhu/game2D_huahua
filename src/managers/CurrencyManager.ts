@@ -1,81 +1,90 @@
-import { EventManager, GameEvents } from './EventManager';
+/**
+ * 货币管理器
+ */
+import { EventBus } from '@/core/EventBus';
+import { STAMINA_MAX, STAMINA_RECOVER_INTERVAL } from '@/config/Constants';
 
 export interface CurrencyState {
   gold: number;
-  wish: number;
-  dew: number;
+  huayuan: number;  // 花愿
+  hualu: number;    // 花露
   diamond: number;
+  stamina: number;
+  level: number;
+  exp: number;
 }
 
 class CurrencyManagerClass {
-  private state: CurrencyState = {
-    gold: 100,  // 新手初始金币
-    wish: 0,
-    dew: 0,
-    diamond: 0,
+  private _state: CurrencyState = {
+    gold: 100,
+    huayuan: 0,
+    hualu: 0,
+    diamond: 10,
+    stamina: STAMINA_MAX,
+    level: 1,
+    exp: 0,
   };
 
-  getState(): Readonly<CurrencyState> {
-    return this.state;
-  }
+  private _lastStaminaRecover = 0;
 
-  get gold(): number { return this.state.gold; }
-  get wish(): number { return this.state.wish; }
-  get dew(): number { return this.state.dew; }
-  get diamond(): number { return this.state.diamond; }
+  get state(): Readonly<CurrencyState> {
+    return this._state;
+  }
 
   addGold(amount: number): void {
-    this.state.gold += amount;
-    this.emitChange();
+    this._state.gold = Math.max(0, this._state.gold + amount);
+    EventBus.emit('currency:changed', 'gold', this._state.gold);
   }
 
-  spendGold(amount: number): boolean {
-    if (this.state.gold < amount) return false;
-    this.state.gold -= amount;
-    this.emitChange();
-    return true;
+  addHuayuan(amount: number): void {
+    this._state.huayuan = Math.max(0, this._state.huayuan + amount);
+    EventBus.emit('currency:changed', 'huayuan', this._state.huayuan);
   }
 
-  addWish(amount: number): void {
-    this.state.wish += amount;
-    this.emitChange();
-  }
-
-  spendWish(amount: number): boolean {
-    if (this.state.wish < amount) return false;
-    this.state.wish -= amount;
-    this.emitChange();
-    return true;
-  }
-
-  addDew(amount: number): void {
-    this.state.dew += amount;
-    this.emitChange();
-  }
-
-  spendDew(amount: number): boolean {
-    if (this.state.dew < amount) return false;
-    this.state.dew -= amount;
-    this.emitChange();
-    return true;
+  addHualu(amount: number): void {
+    this._state.hualu = Math.max(0, this._state.hualu + amount);
+    EventBus.emit('currency:changed', 'hualu', this._state.hualu);
   }
 
   addDiamond(amount: number): void {
-    this.state.diamond += amount;
-    this.emitChange();
+    this._state.diamond = Math.max(0, this._state.diamond + amount);
+    EventBus.emit('currency:changed', 'diamond', this._state.diamond);
   }
 
-  loadState(state: CurrencyState): void {
-    this.state = { ...state };
-    this.emitChange();
+  consumeStamina(amount: number): boolean {
+    if (this._state.stamina < amount) return false;
+    this._state.stamina -= amount;
+    EventBus.emit('currency:changed', 'stamina', this._state.stamina);
+    return true;
   }
 
-  serialize(): CurrencyState {
-    return { ...this.state };
+  addStamina(amount: number): void {
+    this._state.stamina = Math.min(STAMINA_MAX, this._state.stamina + amount);
+    EventBus.emit('currency:changed', 'stamina', this._state.stamina);
   }
 
-  private emitChange(): void {
-    EventManager.emit(GameEvents.CURRENCY_CHANGED, this.state);
+  /** 每帧更新，处理体力自然恢复 */
+  update(dt: number): void {
+    if (this._state.stamina < STAMINA_MAX) {
+      this._lastStaminaRecover += dt;
+      if (this._lastStaminaRecover >= STAMINA_RECOVER_INTERVAL) {
+        this._lastStaminaRecover -= STAMINA_RECOVER_INTERVAL;
+        this.addStamina(1);
+      }
+    } else {
+      this._lastStaminaRecover = 0;
+    }
+  }
+
+  /** 加载存档 */
+  loadState(state: Partial<CurrencyState>): void {
+    Object.assign(this._state, state);
+    EventBus.emit('currency:loaded');
+  }
+
+  /** 导出存档 */
+  exportState(): CurrencyState {
+    return { ...this._state };
   }
 }
 

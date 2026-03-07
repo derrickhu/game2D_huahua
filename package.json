@@ -1,19 +1,21 @@
 {
   "name": "huahua",
-  "version": "1.0.0",
+  "version": "2.0.0",
   "type": "module",
   "scripts": {
-    "build": "vite build && rm -f minigame/index.html"
+    "build": "vite build && rm -f minigame/index.html",
+    "dev": "vite build --watch"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
-  "description": "",
+  "description": "花语小筑 - 合成经营微信小游戏",
   "dependencies": {
-    "phaser": "^3.80.1"
+    "pixi.js": "^7.3.2",
+    "@pixi/unsafe-eval": "^7.3.2"
   },
   "devDependencies": {
-    "@types/node": "^25.3.3",
+    "@types/node": "^22.0.0",
     "terser": "^5.46.0",
     "typescript": "^5.7.3",
     "vite": "^6.2.0"

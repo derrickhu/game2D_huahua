@@ -14,13 +14,12 @@ export default defineConfig({
     lib: {
       entry: path.resolve(__dirname, 'src/main.ts'),
       formats: ['iife'],
-      name: 'HuahuaGame',
+      name: 'Huahua',
       fileName: () => 'game-bundle.js',
     },
     rollupOptions: {
       output: {
         inlineDynamicImports: true,
-        assetFileNames: 'images/[name][extname]',
       },
     },
     minify: 'terser',
