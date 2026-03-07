@@ -3,7 +3,7 @@
  */
 import { EventBus } from '@/core/EventBus';
 import { BOARD_COLS, BOARD_ROWS, BOARD_TOTAL } from '@/config/Constants';
-import { CellState, CellPreset, BOARD_PRESETS } from '@/config/BoardLayout';
+import { CellState, BOARD_PRESETS } from '@/config/BoardLayout';
 import { ITEM_DEFS, getMergeResultId, Category } from '@/config/ItemConfig';
 
 export interface CellData {
@@ -23,19 +23,33 @@ class BoardManagerClass {
 
   init(): void {
     this.cells = [];
-    for (let i = 0; i < BOARD_TOTAL; i++) {
-      const preset = BOARD_PRESETS[i];
-      this.cells.push({
-        index: i,
-        row: preset.row,
-        col: preset.col,
-        state: preset.state,
-        itemId: preset.itemId,
-        keyPrice: preset.keyPrice,
-        unlockPriority: preset.unlockPriority,
-        reserved: false,
-      });
+
+    const presetMap = new Map<string, typeof BOARD_PRESETS[number]>();
+    for (const p of BOARD_PRESETS) {
+      presetMap.set(`${p.row}_${p.col}`, p);
     }
+
+    let prioritySeed = BOARD_PRESETS.length + 1;
+    for (let r = 0; r < BOARD_ROWS; r++) {
+      for (let c = 0; c < BOARD_COLS; c++) {
+        const index = r * BOARD_COLS + c;
+        const preset = presetMap.get(`${r}_${c}`);
+
+        this.cells.push({
+          index,
+          row: r,
+          col: c,
+          state: preset?.state ?? CellState.FOG,
+          itemId: preset?.itemId ?? null,
+          keyPrice: preset?.keyPrice ?? 0,
+          unlockPriority: preset?.unlockPriority ?? prioritySeed++,
+          reserved: false,
+        });
+      }
+    }
+
+    this._randomizeInitialOpenItems();
+    this._ensureAtLeastOneMergePair();
     EventBus.emit('board:initialized');
   }
 
@@ -46,6 +60,69 @@ class BoardManagerClass {
 
   getCellByIndex(index: number): CellData | null {
     return this.cells[index] || null;
+  }
+
+  /** 初始化随机开局：保证至少一组可合成物品 */
+  private _randomizeInitialOpenItems(): void {
+    const openCells = this.cells.filter(c => c.state === CellState.OPEN);
+    if (openCells.length < 2) return;
+
+    for (const c of openCells) c.itemId = null;
+
+    const mergeableLv1 = this._buildMergeableLv1Pool();
+    if (mergeableLv1.length === 0) return;
+
+    const pairId = this._pickRandom(mergeableLv1);
+    openCells[0].itemId = pairId;
+    openCells[1].itemId = pairId;
+
+    if (openCells[2]) openCells[2].itemId = 'building_cons_1';
+
+    for (let i = 3; i < openCells.length; i++) {
+      openCells[i].itemId = Math.random() < 0.35 ? pairId : this._pickRandom(mergeableLv1);
+    }
+  }
+
+  private _buildMergeableLv1Pool(): string[] {
+    return [...ITEM_DEFS.values()]
+      .filter(def => def.level === 1 && def.maxLevel > 1)
+      .filter(def => def.category === Category.FLOWER || def.category === Category.DRINK || def.category === Category.BUILDING_MAT)
+      .map(def => def.id);
+  }
+
+  private _pickRandom<T>(arr: T[]): T {
+    return arr[Math.floor(Math.random() * arr.length)];
+  }
+
+  private _hasMergeablePair(): boolean {
+    const countMap = new Map<string, number>();
+    for (const c of this.cells) {
+      if (c.state !== CellState.OPEN || !c.itemId) continue;
+      const def = ITEM_DEFS.get(c.itemId);
+      if (!def || def.level >= def.maxLevel) continue;
+      countMap.set(c.itemId, (countMap.get(c.itemId) || 0) + 1);
+      if ((countMap.get(c.itemId) || 0) >= 2) return true;
+    }
+    return false;
+  }
+
+  /** 兜底：如果当前开放格没有可合成对，则注入一对 */
+  private _ensureAtLeastOneMergePair(): void {
+    if (this._hasMergeablePair()) return;
+
+    const openCells = this.cells.filter(c => c.state === CellState.OPEN);
+    if (openCells.length < 2) return;
+
+    const pool = this._buildMergeableLv1Pool();
+    if (pool.length === 0) return;
+
+    const pairId = this._pickRandom(pool);
+    const first = openCells.find(c => !c.itemId) ?? openCells[0];
+    const second = openCells.find(c => c.index !== first.index && !c.itemId) ?? openCells.find(c => c.index !== first.index);
+    if (!second) return;
+
+    first.itemId = pairId;
+    second.itemId = pairId;
   }
 
   /** 判断两个物品是否可以合成 */
@@ -202,6 +279,7 @@ class BoardManagerClass {
         cell.reserved = saved.reserved;
       }
     }
+    this._ensureAtLeastOneMergePair();
     EventBus.emit('board:loaded');
   }
 }

@@ -1,5 +1,5 @@
 /**
- * 棋盘布局配置 - 30格初始预设
+ * 棋盘布局配置 - 仅定义核心区域预设，未覆盖格子使用默认规则补齐
  */
 
 export enum CellState {
@@ -22,8 +22,8 @@ export interface CellPreset {
 }
 
 /**
- * 30格棋盘预设（6列×5行）
- * 初始开放：中心 2×2 = 4格 (row 1~2, col 2~3)
+ * 核心区预设（6列×5行）
+ * 其余新增行由 BoardManager 自动补齐为迷雾格
  */
 export const BOARD_PRESETS: CellPreset[] = [
   // 第0行（最上方）- 第三圈

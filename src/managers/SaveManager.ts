@@ -4,6 +4,7 @@
 
 import { BoardManager } from './BoardManager';
 import { CurrencyManager } from './CurrencyManager';
+import { BOARD_TOTAL } from '@/config/Constants';
 
 declare const wx: any;
 declare const tt: any;
@@ -46,8 +47,14 @@ class SaveManagerClass {
       const data: SaveData = JSON.parse(raw);
       if (data.version !== 1) return false;
 
+      if (!Array.isArray(data.board) || data.board.length !== BOARD_TOTAL) {
+        console.warn('[Save] 存档棋盘规格不匹配，跳过读档并使用新开局');
+        return false;
+      }
+
       CurrencyManager.loadState(data.currency);
       BoardManager.loadState(data.board);
+
 
       console.log('[Save] 读档成功, 距上次存档:', Math.round((Date.now() - data.timestamp) / 1000), '秒');
       return true;

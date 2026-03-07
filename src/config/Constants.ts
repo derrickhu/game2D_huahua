@@ -8,8 +8,8 @@ export const DESIGN_HEIGHT = 1334;
 
 // 棋盘
 export const BOARD_COLS = 6;
-export const BOARD_ROWS = 5;
-export const BOARD_TOTAL = BOARD_COLS * BOARD_ROWS; // 30
+export const BOARD_ROWS = 9;
+export const BOARD_TOTAL = BOARD_COLS * BOARD_ROWS;
 export const CELL_GAP = 6;
 
 /**
@@ -32,14 +32,22 @@ export function computeBoardMetrics(logicHeight: number): void {
   const topMargin = 10;
   const bottomMargin = 10;
 
-  const availableHeight = logicHeight - shopBottom - navHeight - topMargin - bottomMargin;
-  const maxCellByHeight = Math.floor((availableHeight + CELL_GAP) / BOARD_ROWS - CELL_GAP);
-  const maxCellByWidth = Math.floor((DESIGN_WIDTH - 40 + CELL_GAP) / BOARD_COLS - CELL_GAP);
-  BoardMetrics.cellSize = Math.min(maxCellByHeight, maxCellByWidth);
-  BoardMetrics.paddingX = (DESIGN_WIDTH - (BoardMetrics.cellSize + CELL_GAP) * BOARD_COLS + CELL_GAP) / 2;
-  BoardMetrics.topY = shopBottom + topMargin;
+  const boardTop = shopBottom + topMargin;
+  const availableHeight = logicHeight - boardTop - navHeight - bottomMargin;
 
-  console.log(`[Board] 动态布局: cellSize=${BoardMetrics.cellSize}, topY=${BoardMetrics.topY}, availH=${availableHeight}`);
+  // 宽度优先：保证 6 列铺满宽度；高度仅做上限保护
+  const maxCellByWidth = Math.floor((DESIGN_WIDTH - (BOARD_COLS - 1) * CELL_GAP) / BOARD_COLS);
+  const maxCellByHeight = Math.floor((availableHeight - (BOARD_ROWS - 1) * CELL_GAP) / BOARD_ROWS);
+
+  BoardMetrics.cellSize = Math.max(72, Math.min(maxCellByWidth, maxCellByHeight));
+  BoardMetrics.paddingX = Math.floor((DESIGN_WIDTH - (BoardMetrics.cellSize * BOARD_COLS + CELL_GAP * (BOARD_COLS - 1))) / 2);
+
+  const gridHeight = BoardMetrics.cellSize * BOARD_ROWS + CELL_GAP * (BOARD_ROWS - 1);
+  BoardMetrics.areaHeight = gridHeight;
+  // 贴近底部导航，优先消除下方空白
+  BoardMetrics.topY = Math.floor(logicHeight - navHeight - bottomMargin - gridHeight);
+
+  console.log(`[Board] 动态布局: cellSize=${BoardMetrics.cellSize}, topY=${BoardMetrics.topY}, area=${DESIGN_WIDTH}x${BoardMetrics.areaHeight}`);
 }
 
 // 客人

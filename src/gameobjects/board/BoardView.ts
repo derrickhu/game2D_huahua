@@ -4,7 +4,7 @@
 import * as PIXI from 'pixi.js';
 import { EventBus } from '@/core/EventBus';
 import { Game } from '@/core/Game';
-import { BOARD_COLS, BOARD_ROWS, CELL_GAP, BoardMetrics } from '@/config/Constants';
+import { BOARD_COLS, BOARD_ROWS, CELL_GAP, BoardMetrics, COLORS, DESIGN_WIDTH } from '@/config/Constants';
 import { BoardManager, CellData } from '@/managers/BoardManager';
 import { MergeManager } from '@/managers/MergeManager';
 import { CellView } from './CellView';
@@ -15,22 +15,35 @@ export class BoardView extends PIXI.Container {
   private _itemViews: ItemView[] = [];
   private _dragGhost: ItemView | null = null;
   private _dragSrcIndex = -1;
+  private _gridOffsetY = 0;
 
   constructor() {
     super();
-    this.position.set(BoardMetrics.paddingX, BoardMetrics.topY);
+    this.position.set(0, BoardMetrics.topY);
+    this._drawBoardArea();
     this._buildGrid();
     this._bindEvents();
     this._setupInteraction();
   }
 
+  private _drawBoardArea(): void {
+    const bg = new PIXI.Graphics();
+    bg.beginFill(COLORS.CELL_OPEN, 0.35);
+    bg.drawRoundedRect(0, 0, DESIGN_WIDTH, BoardMetrics.areaHeight, 16);
+    bg.endFill();
+    this.addChild(bg);
+  }
+
   private _buildGrid(): void {
     const cs = BoardMetrics.cellSize;
+    this._gridOffsetY = 0;
+
+
     for (let r = 0; r < BOARD_ROWS; r++) {
       for (let c = 0; c < BOARD_COLS; c++) {
         const idx = r * BOARD_COLS + c;
-        const x = c * (cs + CELL_GAP);
-        const y = r * (cs + CELL_GAP);
+        const x = BoardMetrics.paddingX + c * (cs + CELL_GAP);
+        const y = this._gridOffsetY + r * (cs + CELL_GAP);
 
         const cellView = new CellView(idx);
         cellView.position.set(x, y);
@@ -80,8 +93,8 @@ export class BoardView extends PIXI.Container {
     this.eventMode = 'static';
     this.hitArea = new PIXI.Rectangle(
       0, 0,
-      BOARD_COLS * (cs + CELL_GAP) - CELL_GAP,
-      BOARD_ROWS * (cs + CELL_GAP) - CELL_GAP,
+      DESIGN_WIDTH,
+      BoardMetrics.areaHeight,
     );
 
     this.on('pointerdown', (e: PIXI.FederatedPointerEvent) => {
@@ -129,12 +142,16 @@ export class BoardView extends PIXI.Container {
 
   private _hitTestCell(x: number, y: number): number {
     const cs = BoardMetrics.cellSize;
-    const col = Math.floor(x / (cs + CELL_GAP));
-    const row = Math.floor(y / (cs + CELL_GAP));
+    const localX = x - BoardMetrics.paddingX;
+    const localY = y - this._gridOffsetY;
+    if (localX < 0 || localY < 0) return -1;
+
+    const col = Math.floor(localX / (cs + CELL_GAP));
+    const row = Math.floor(localY / (cs + CELL_GAP));
     if (col < 0 || col >= BOARD_COLS || row < 0 || row >= BOARD_ROWS) return -1;
 
-    const cellX = x - col * (cs + CELL_GAP);
-    const cellY = y - row * (cs + CELL_GAP);
+    const cellX = localX - col * (cs + CELL_GAP);
+    const cellY = localY - row * (cs + CELL_GAP);
     if (cellX > cs || cellY > cs) return -1;
 
     return row * BOARD_COLS + col;
