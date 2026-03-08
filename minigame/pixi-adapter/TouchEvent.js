@@ -153,12 +153,19 @@ function registerTouchEvents() {
     }
   });
 
+  var _moveLogCount = 0;
   platform.onTouchMove((e) => {
     dispatch('touchmove', e);
     dispatchPointer('pointermove', e);
     var touches = e.changedTouches || e.touches || [];
     if (touches.length) {
       var t = touches[0];
+      _moveLogCount++;
+      if (_moveLogCount <= 3) {
+        console.log('[Touch] move #' + _moveLogCount,
+          'x:', t.clientX, 'y:', t.clientY,
+          'windowListeners(pointermove):', typeof GameGlobal.__windowDispatchEvent);
+      }
       dispatchToWindow('pointermove', {
         type: 'pointermove', pointerId: t.identifier || 0, pointerType: 'touch',
         clientX: t.clientX, clientY: t.clientY, pageX: t.clientX, pageY: t.clientY,

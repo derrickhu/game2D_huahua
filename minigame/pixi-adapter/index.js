@@ -112,9 +112,14 @@ const _performance = typeof performance !== 'undefined' ? performance : {
 
 // ======== window 事件系统 ========
 const _windowListeners = {};
+var _winEvtLogCount = 0;
 function _windowAddEventListener(type, handler, options) {
   if (!_windowListeners[type]) _windowListeners[type] = [];
   _windowListeners[type].push(handler);
+  _winEvtLogCount++;
+  if (_winEvtLogCount <= 20) {
+    console.log('[pixi-adapter] globalThis.addEventListener 注册:', type, '(共' + _windowListeners[type].length + '个)');
+  }
 }
 function _windowRemoveEventListener(type, handler) {
   if (!_windowListeners[type]) return;
@@ -188,6 +193,26 @@ if (isDevtools) {
     } catch (e) { /* 只读属性忽略 */ }
   }
 
+  // 关键修复：包装 window.addEventListener / removeEventListener
+  // PixiJS EventSystem 在 globalThis(window) 上注册 pointermove / pointerup，
+  // 但 adapter 通过 _windowListeners 分发触摸事件——两个系统完全隔离。
+  // 包装后 handler 会同时进入 _windowListeners，adapter 的 dispatchToWindow 就能触达 PixiJS。
+  try {
+    var _nativeWinAdd = _win.addEventListener.bind(_win);
+    var _nativeWinRemove = _win.removeEventListener.bind(_win);
+    _win.addEventListener = function(type, handler, options) {
+      _windowAddEventListener(type, handler, options);
+      return _nativeWinAdd(type, handler, options);
+    };
+    _win.removeEventListener = function(type, handler, options) {
+      _windowRemoveEventListener(type, handler);
+      return _nativeWinRemove(type, handler, options);
+    };
+    console.log('[pixi-adapter] 模拟器 window.addEventListener 已包装');
+  } catch (e) {
+    console.warn('[pixi-adapter] 包装 window.addEventListener 失败:', e);
+  }
+
   // document 属性补充
   try {
     for (const key in document) {
@@ -211,18 +236,29 @@ if (isDevtools) {
   _realGlobal.self = _realGlobal;
   GameGlobal.self = _realGlobal;
 
+  // addEventListener/removeEventListener 必须强制覆盖：
+  // 微信框架可能内置了无效版本，PixiJS EventSystem 在 self 上注册
+  // pointermove/pointerup 依赖这些函数正确工作
+  var _forceOverwrite = new Set(['addEventListener', 'removeEventListener']);
+
   for (const key in _allGlobals) {
     if (key === 'window' || key === 'self') continue;
     var val = _allGlobals[key];
+    var force = _forceOverwrite.has(key);
     // 挂到真正的全局作用域
-    if (typeof _realGlobal[key] === 'undefined') {
+    if (force || typeof _realGlobal[key] === 'undefined') {
       try { _realGlobal[key] = val; } catch (e) { /* 忽略 */ }
     }
     // 同时挂到 GameGlobal
-    if (typeof GameGlobal[key] === 'undefined') {
+    if (force || typeof GameGlobal[key] === 'undefined') {
       try { GameGlobal[key] = val; } catch (e) { /* 忽略 */ }
     }
   }
+
+  // 确认事件系统已正确挂载
+  console.log('[pixi-adapter] 真机事件系统检查:',
+    'globalThis.addEventListener === _windowAddEventListener:', _realGlobal.addEventListener === _windowAddEventListener,
+    ', self.addEventListener === _windowAddEventListener:', (_realGlobal.self && _realGlobal.self.addEventListener === _windowAddEventListener));
 }
 
 // ======== 全局 canvas ========
