@@ -86,6 +86,16 @@ async function main(): Promise<void> {
     // ======== 真机渲染诊断 ========
     _runRenderDiag();
 
+    // 检查纹理上传 patch 是否在工作
+    try {
+      const testText = new PIXI.Text('测试', { fontSize: 16, fill: 0xFF0000 });
+      testText.position.set(170, 100);
+      Game.stage.addChild(testText);
+      console.log('[main] 测试 Text 已创建，texture valid:', testText.texture?.valid,
+        'baseTexture valid:', testText.texture?.baseTexture?.valid,
+        'w:', testText.texture?.width, 'h:', testText.texture?.height);
+    } catch (e) { console.error('[main] 测试 Text 创建失败:', e); }
+
     console.log('[main] 花语小筑启动完成 ✿');
   } catch (e) {
     console.error('[main] 启动失败:', e);
@@ -106,30 +116,65 @@ function _runRenderDiag(): void {
       'resource:', bt?.resource?.constructor?.name);
   } catch (e) { console.error('[diag] Texture.WHITE 异常:', e); }
 
-  // 2) 离屏 Canvas 2D 是否可用
+  // 2) createCanvas() 2D 能力测试
   try {
-    const c = _api ? _api.createCanvas() : document.createElement('canvas');
-    c.width = 4; c.height = 4;
-    const ctx = c.getContext('2d');
-    console.log('[diag] offscreen canvas 2d:', !!ctx);
-    if (ctx) {
-      ctx.fillStyle = '#FF0000';
-      ctx.fillRect(0, 0, 4, 4);
-      const pixel = ctx.getImageData(0, 0, 1, 1).data;
-      console.log('[diag] pixel after fill:', pixel[0], pixel[1], pixel[2], pixel[3]);
+    const c1 = _api ? _api.createCanvas() : document.createElement('canvas');
+    c1.width = 4; c1.height = 4;
+    const ctx1 = c1.getContext('2d');
+    let px1 = [0, 0, 0, 0];
+    if (ctx1) {
+      ctx1.fillStyle = '#FF0000';
+      ctx1.fillRect(0, 0, 4, 4);
+      try { px1 = Array.from(ctx1.getImageData(0, 0, 1, 1).data); } catch (_) {}
     }
-  } catch (e) { console.error('[diag] offscreen 2d 异常:', e); }
+    console.log('[diag] createCanvas 2D:', !!ctx1,
+      'pixel:', px1[0], px1[1], px1[2], px1[3],
+      'toTempFile:', typeof c1.toTempFilePathSync);
+  } catch (e) { console.error('[diag] createCanvas 2d 异常:', e); }
 
-  // 3) HTMLCanvasElement instanceof 检查
+  // 3) createOffscreenCanvas({ type:'2d' }) 能力测试
   try {
-    const c = _api ? _api.createCanvas() : document.createElement('canvas');
-    const HCE = typeof HTMLCanvasElement !== 'undefined' ? HTMLCanvasElement : null;
-    console.log('[diag] instanceof HTMLCanvasElement:', HCE ? (c instanceof HCE) : 'N/A',
-      ', canvas.constructor.name:', c?.constructor?.name,
-      ', HTMLCanvasElement.name:', HCE?.name || HCE);
-  } catch (e) { console.error('[diag] instanceof 异常:', e); }
+    if (_api && typeof _api.createOffscreenCanvas === 'function') {
+      const c2 = _api.createOffscreenCanvas({ type: '2d', width: 4, height: 4 });
+      const ctx2 = c2.getContext('2d');
+      let px2 = [0, 0, 0, 0];
+      if (ctx2) {
+        ctx2.fillStyle = '#00FF00';
+        ctx2.fillRect(0, 0, 4, 4);
+        try { px2 = Array.from(ctx2.getImageData(0, 0, 1, 1).data); } catch (_) {}
+      }
+      console.log('[diag] createOffscreenCanvas 2D:', !!ctx2,
+        'pixel:', px2[0], px2[1], px2[2], px2[3],
+        'toTempFile:', typeof c2.toTempFilePathSync);
+    } else {
+      console.log('[diag] createOffscreenCanvas 不可用');
+    }
+  } catch (e) { console.error('[diag] createOffscreenCanvas 异常:', e); }
 
-  // 4) 添加一个鲜红色测试矩形到 stage 最上层
+  // 4) ADAPTER.createCanvas 综合测试（PixiJS 实际使用的路径）
+  try {
+    const _settings = (PIXI as any).settings;
+    if (_settings && _settings.ADAPTER) {
+      const ac = _settings.ADAPTER.createCanvas(8, 8);
+      const actx = ac.getContext('2d');
+      let apx = [0, 0, 0, 0];
+      if (actx) {
+        actx.fillStyle = '#0000FF';
+        actx.fillRect(0, 0, 8, 8);
+        actx.fillStyle = '#FFFFFF';
+        actx.font = '8px sans-serif';
+        actx.fillText('A', 0, 7);
+        try { apx = Array.from(actx.getImageData(0, 0, 1, 1).data); } catch (_) {}
+      }
+      console.log('[diag] ADAPTER.createCanvas 2D:', !!actx,
+        'pixel:', apx[0], apx[1], apx[2], apx[3],
+        'constructor:', ac?.constructor?.name);
+    } else {
+      console.warn('[diag] PIXI.settings.ADAPTER 未设置');
+    }
+  } catch (e) { console.error('[diag] ADAPTER canvas 异常:', e); }
+
+  // 5) 添加一个鲜红色测试矩形到 stage 最上层
   try {
     const g = new PIXI.Graphics();
     g.beginFill(0xFF0000);
@@ -140,7 +185,7 @@ function _runRenderDiag(): void {
     console.log('[diag] 红色测试 Graphics 已加到 stage, children:', Game.stage.children.length);
   } catch (e) { console.error('[diag] test Graphics 异常:', e); }
 
-  // 5) 添加一个红色大字到 stage
+  // 6) 添加一个红色大字到 stage
   try {
     const t = new PIXI.Text('DIAG', { fontSize: 48, fill: 0xFF0000 });
     t.position.set(10, 100);
@@ -148,7 +193,7 @@ function _runRenderDiag(): void {
     console.log('[diag] 测试 Text 已加到 stage');
   } catch (e) { console.error('[diag] test Text 异常:', e); }
 
-  // 6) 事件交互测试：可点击的蓝色按钮
+  // 7) 事件交互测试：可点击的蓝色按钮
   try {
     const btn = new PIXI.Graphics();
     btn.beginFill(0x0066FF);
@@ -167,7 +212,7 @@ function _runRenderDiag(): void {
     console.log('[diag] 交互测试按钮已添加（蓝色矩形）');
   } catch (e) { console.error('[diag] 交互测试异常:', e); }
 
-  // 7) WebGL 扩展检查
+  // 8) WebGL 扩展检查
   try {
     const renderer = (Game as any).app?.renderer;
     const gl = renderer?.gl;

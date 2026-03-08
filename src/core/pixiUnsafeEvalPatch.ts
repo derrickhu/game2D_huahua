@@ -157,9 +157,13 @@ console.log('[pixiPatch] unsafe-eval patch 已应用');
 const _isRealDevice = (() => {
   try {
     const p: any = typeof wx !== 'undefined' ? wx : typeof tt !== 'undefined' ? tt : null;
-    return p ? p.getSystemInfoSync().platform !== 'devtools' : false;
+    if (!p) return false;
+    const info = p.getSystemInfoSync();
+    console.log('[pixiPatch] platform:', info.platform, 'brand:', info.brand, 'model:', info.model);
+    return info.platform !== 'devtools';
   } catch { return false; }
 })();
+console.log('[pixiPatch] _isRealDevice:', _isRealDevice);
 
 if (_isRealDevice) {
   // ---- 1) 强制用纯像素数据创建 Texture.WHITE ----
@@ -173,84 +177,88 @@ if (_isRealDevice) {
   try { Object.defineProperty(Texture, 'WHITE', { get: () => whiteTex, configurable: true }); } catch (_e) { /* */ }
   console.log('[pixiPatch] Texture.WHITE 已用 fromBuffer 重建（绕过 Canvas）');
 
-  // ---- 2) 真机 Canvas 纹理上传修复：toTempFilePathSync → Image ----
-  // toDataURL / getImageData 在真机上返回全黑，改用文件系统路径中转
-  const _platformApi: any = typeof wx !== 'undefined' ? wx : typeof tt !== 'undefined' ? tt : null;
+  // ---- 2) 真机 Canvas 纹理上传修复 ----
+  // 策略：永远先调用原始 upload（确保所有 GL 状态正确、Image 源正常工作），
+  // 然后仅对 Canvas 源用 getImageData 读取像素并同步覆盖 GL 纹理。
+  // 关键安全措施：
+  // - 不调用 renderer.texture.bind()，避免触发递归 upload
+  // - 用 toTempFilePathSync 存在性判断 Canvas（Image 无此方法）
+  // - 加重入保护防止无限递归
   const _origUpload = BaseImageResource.prototype.upload;
-  let _canvasUploadLog = 0;
+  let _uploadLog = 0;
+  let _inUpload = false;
+
+  // 预检测 getImageData 是否返回有效像素
+  let _canReadPixels = false;
+  try {
+    const tc = settings.ADAPTER.createCanvas(4, 4);
+    const tctx = tc.getContext('2d');
+    if (tctx) {
+      tctx.fillStyle = '#FF0000';
+      tctx.fillRect(0, 0, 4, 4);
+      const td = tctx.getImageData(0, 0, 1, 1).data;
+      _canReadPixels = td[0] > 200 && td[3] > 200;
+    }
+  } catch (_) { /* */ }
+  console.log('[pixiPatch] canvas getImageData 可用:', _canReadPixels);
 
   BaseImageResource.prototype.upload = function (
     renderer: any, baseTexture: any, glTexture: any, source?: any,
   ): boolean {
-    source = source || this.source;
+    // 重入保护：如果已在 upload 中，直接走原始路径
+    if (_inUpload) {
+      return _origUpload.call(this, renderer, baseTexture, glTexture, source);
+    }
+    _inUpload = true;
 
-    // 先用原始方法上传（确保 GL 纹理尺寸/格式状态正确；真机像素数据可能空白）
-    const result = _origUpload.call(this, renderer, baseTexture, glTexture, source);
+    try {
+      source = source || this.source;
 
-    // 仅对 Canvas 源做补救：通过 tempFile → Image 异步覆盖正确像素
-    if (source && typeof source.getContext === 'function'
-        && source.width > 0 && source.height > 0
-        && _platformApi
-        && typeof source.toTempFilePathSync === 'function') {
-      try {
-        const tempPath = source.toTempFilePathSync({
-          x: 0, y: 0,
-          width: source.width, height: source.height,
-          destWidth: source.width, destHeight: source.height,
-          fileType: 'png',
-        });
+      // 1) 永远先执行原始 upload（Image 纹理靠这步正常工作）
+      const result = _origUpload.call(this, renderer, baseTexture, glTexture, source);
 
-        if (_canvasUploadLog < 3) {
-          console.log('[pixiPatch] canvas→tempFile:', tempPath,
-            'size:', source.width, 'x', source.height);
-          _canvasUploadLog++;
-        }
+      // 2) 仅对 Canvas 源做像素补救
+      // Canvas 独有 toTempFilePathSync，Image 对象没有
+      if (_canReadPixels
+          && source
+          && source.width > 0 && source.height > 0
+          && typeof source.getContext === 'function'
+          && typeof source.toTempFilePathSync === 'function') {
+        try {
+          const ctx = source.getContext('2d');
+          if (ctx && typeof ctx.getImageData === 'function') {
+            const w = source.width;
+            const h = source.height;
+            const imageData = ctx.getImageData(0, 0, w, h);
+            const pixels = new Uint8Array(imageData.data.buffer);
 
-        const img = _platformApi.createImage();
-        const _cleanup = () => {
-          try {
-            _platformApi.getFileSystemManager().unlink({
-              filePath: tempPath, fail() {},
-            });
-          } catch (_) { /* 忽略 */ }
-        };
-
-        img.onload = () => {
-          try {
+            // 原始 upload 已绑定纹理，直接用 GL 覆盖像素
             const gl = renderer.gl;
-            renderer.texture.bind(baseTexture, 0);
             gl.pixelStorei(gl.UNPACK_PREMULTIPLY_ALPHA_WEBGL,
               baseTexture.alphaMode > 0 ? 1 : 0);
             gl.texImage2D(gl.TEXTURE_2D, 0, glTexture.internalFormat,
-              glTexture.format, glTexture.type, img);
-          } catch (e) {
-            if (_canvasUploadLog < 10) {
-              console.warn('[pixiPatch] tempFile→Image upload err:', e);
-              _canvasUploadLog++;
+              w, h, 0, baseTexture.format, glTexture.type, pixels);
+
+            if (_uploadLog < 5) {
+              console.log('[pixiPatch] canvas buffer 覆盖成功:', w, 'x', h);
+              _uploadLog++;
             }
           }
-          _cleanup();
-        };
-        img.onerror = () => {
-          if (_canvasUploadLog < 10) {
-            console.warn('[pixiPatch] tempFile→Image load failed:', tempPath);
-            _canvasUploadLog++;
+        } catch (e) {
+          if (_uploadLog < 10) {
+            console.warn('[pixiPatch] canvas buffer 覆盖失败:', e);
+            _uploadLog++;
           }
-          _cleanup();
-        };
-        img.src = tempPath;
-      } catch (e) {
-        if (_canvasUploadLog < 10) {
-          console.warn('[pixiPatch] toTempFilePathSync err:', e);
-          _canvasUploadLog++;
         }
       }
-    }
 
-    return result;
+      return result;
+    } finally {
+      _inUpload = false;
+    }
   };
 
-  console.log('[pixiPatch] canvas→tempFile→Image 纹理上传 patch 已应用');
+  console.log('[pixiPatch] 真机 canvas 纹理上传 patch 已应用');
 }
 
 } // end if !__patched
