@@ -31,6 +31,12 @@ class CurrencyManagerClass {
     return this._state;
   }
 
+  /** 体力恢复剩余秒数（满体力时返回 0） */
+  get staminaRecoverRemain(): number {
+    if (this._state.stamina >= STAMINA_MAX) return 0;
+    return Math.max(0, STAMINA_RECOVER_INTERVAL - this._lastStaminaRecover);
+  }
+
   addGold(amount: number): void {
     this._state.gold = Math.max(0, this._state.gold + amount);
     EventBus.emit('currency:changed', 'gold', this._state.gold);

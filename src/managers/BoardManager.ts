@@ -51,6 +51,26 @@ class BoardManagerClass {
 
     this._randomizeInitialOpenItems();
     this._ensureAtLeastOneMergePair();
+
+    // 兜底校验：如果 init 后棋盘竟然没物品，用预设数据恢复
+    const itemCount = this.cells.filter(c => c.itemId).length;
+    if (itemCount === 0) {
+      console.error('[Board] 初始化后无物品！用预设数据恢复...');
+      for (const p of BOARD_PRESETS) {
+        const idx = p.row * BOARD_COLS + p.col;
+        if (this.cells[idx]) {
+          this.cells[idx].state = p.state;
+          this.cells[idx].itemId = p.itemId;
+          this.cells[idx].keyPrice = p.keyPrice;
+        }
+      }
+    }
+
+    const finalItemCount = this.cells.filter(c => c.itemId).length;
+    const openCount = this.cells.filter(c => c.state === CellState.OPEN).length;
+    const fogCount = this.cells.filter(c => c.state === CellState.FOG).length;
+    console.log(`[Board] init 完成: ${this.cells.length} 格, ${openCount} OPEN, ${fogCount} FOG, ${finalItemCount} 有物品, ITEM_DEFS.size=${ITEM_DEFS.size}`);
+
     EventBus.emit('board:initialized');
   }
 
@@ -68,25 +88,33 @@ class BoardManagerClass {
     const openCells = this.cells.filter(c => c.state === CellState.OPEN);
     if (openCells.length < 2) return;
 
+    // 先检查填充池，池子为空则不做任何修改，保留预设物品
+    const mergeableLv1 = this._buildMergeableLv1Pool();
+    if (mergeableLv1.length === 0) {
+      console.warn('[Board] 可合成物品池为空，保留预设物品, ITEM_DEFS.size:', ITEM_DEFS.size);
+      return;
+    }
+
     // 保留建筑、建筑材料、宝箱等特殊预设物品
+    // 注意：ITEM_DEFS 中找不到的物品也保留（安全起见不清除未知物品）
     const preserveCategories = new Set([
       Category.BUILDING, Category.BUILDING_MAT, Category.CHEST,
     ]);
     const fillable = openCells.filter(c => {
       if (!c.itemId) return true;
       const def = ITEM_DEFS.get(c.itemId);
-      return def ? !preserveCategories.has(def.category) : true;
+      if (!def) return false; // 未知物品保留，不清除
+      return !preserveCategories.has(def.category);
     });
 
-    for (const c of fillable) c.itemId = null;
     if (fillable.length < 2) return;
+
+    // 清空可填充格，准备重新随机
+    for (const c of fillable) c.itemId = null;
 
     // 至少保留 2 个空格供建筑产出使用
     const emptyReserve = 2;
     const maxFill = Math.max(2, fillable.length - emptyReserve);
-
-    const mergeableLv1 = this._buildMergeableLv1Pool();
-    if (mergeableLv1.length === 0) return;
 
     const pairId = this._pickRandom(mergeableLv1);
     fillable[0].itemId = pairId;
@@ -343,6 +371,20 @@ class BoardManagerClass {
         cell.reserved = saved.reserved;
       }
     }
+
+    // 空棋盘检测：排除建筑后，如果可合成类物品（花束/花饮/建筑材料/宝箱）太少，
+    // 说明存档异常或物品全部被消耗，重新填充初始物品避免玩家卡死
+    const openCells = this.cells.filter(c => c.state === CellState.OPEN);
+    const nonBuildingItems = openCells.filter(c => {
+      if (!c.itemId) return false;
+      const def = ITEM_DEFS.get(c.itemId);
+      return def && def.category !== Category.BUILDING;
+    });
+    if (nonBuildingItems.length < 3 && openCells.length >= 4) {
+      console.warn(`[Board] 存档棋盘物品过少（非建筑物品仅${nonBuildingItems.length}个），重新填充初始物品`);
+      this._randomizeInitialOpenItems();
+    }
+
     this._ensureAtLeastOneMergePair();
     EventBus.emit('board:loaded');
   }

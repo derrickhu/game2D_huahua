@@ -56,7 +56,7 @@ const PERM_BUILDINGS: PermBuildingDef[] = [
     produceTable: [[1, 70], [2, 25], [3, 5]],
     produceCount: 1,
     staminaCost: 3,
-    cooldown: 30,
+    cooldown: 0,
   },
   {
     itemId: 'building_perm_2',

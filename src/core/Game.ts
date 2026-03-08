@@ -104,6 +104,9 @@ class GameClass {
   /** 像素密度 */
   dpr = 1;
 
+  /** 安全区顶部偏移（设计坐标），位于微信胶囊按钮下方 */
+  safeTop = 0;
+
   private _initialized = false;
 
   /** 唯一实例标识，用于调试模块重复加载问题 */
@@ -131,6 +134,21 @@ class GameClass {
       this.screenHeight = sysInfo.screenHeight;
       this.dpr = sysInfo.pixelRatio || 2;
     }
+
+    // 计算安全区顶部（微信胶囊按钮下方），转为设计坐标
+    const _api: any = typeof wx !== 'undefined' ? wx : typeof tt !== 'undefined' ? tt : null;
+    let safeTopPx = 0;
+    try {
+      const capsule = _api?.getMenuButtonBoundingClientRect?.();
+      if (capsule && capsule.bottom) {
+        safeTopPx = capsule.bottom + 8;
+      } else if (sysInfo?.statusBarHeight) {
+        safeTopPx = sysInfo.statusBarHeight + 44;
+      }
+    } catch (_) {}
+    if (safeTopPx <= 0) safeTopPx = 80;
+    this.safeTop = Math.round(safeTopPx * (this.designWidth / this.screenWidth));
+    console.log(`[Game] safeTop: ${safeTopPx}px → ${this.safeTop} 设计坐标`);
 
     // 计算缩放：以宽度为基准适配
     this.scale = this.screenWidth / this.designWidth * this.dpr;

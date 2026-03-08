@@ -26,6 +26,8 @@ export class BoardView extends PIXI.Container {
   private _dragHoverIndex = -1;
   private _mergeTargets: Set<number> = new Set();
   private _gridOffsetY = 0;
+  /** 当前选中的格子索引（用于底部信息栏） */
+  private _selectedIndex = -1;
 
   constructor() {
     super();
@@ -143,6 +145,30 @@ export class BoardView extends PIXI.Container {
     });
     EventBus.on('customer:lockChanged', () => this.refresh());
     EventBus.on('customer:delivered', () => this.refresh());
+
+    // 出售物品
+    EventBus.on('board:requestSell', (cellIndex: number, _itemId: string) => {
+      this._handleSellItem(cellIndex);
+    });
+  }
+
+  /** 出售物品 */
+  private _handleSellItem(cellIndex: number): void {
+    const cell = BoardManager.getCellByIndex(cellIndex);
+    if (!cell || !cell.itemId) return;
+
+    // 未解锁区域不可出售
+    if (cell.state !== CellState.OPEN) return;
+
+    const def = ITEM_DEFS.get(cell.itemId);
+    if (!def) return;
+
+    // 计算售价：基于等级
+    const sellPrice = def.level * 5 + (def.category === 'flower' ? 5 : 3);
+    CurrencyManager.addGold(sellPrice);
+    BoardManager.removeItem(cellIndex);
+    ToastMessage.show(`出售 ${def.name}，获得 ${sellPrice}💰`);
+    EventBus.emit('board:itemSold', cellIndex);
   }
 
   // ========== 拖拽 + 点击交互 ==========
@@ -205,7 +231,12 @@ export class BoardView extends PIXI.Container {
             this._playDropBounce(targetIdx);
           }
         } else {
+          // 原地释放（没有实际拖拽到其他格子）→ 当作点击，触发选中
           MergeManager.cancelDrag();
+          this._endDrag();
+          this._handleTap(srcIdx);
+          this._dragSrcIndex = -1;
+          return;
         }
         this._endDrag();
       } else {
@@ -317,10 +348,17 @@ export class BoardView extends PIXI.Container {
       return;
     }
 
-    if (!cell.itemId) return;
+    // 点击空格 → 取消选中
+    if (!cell.itemId) {
+      this._deselectItem();
+      return;
+    }
 
-    // 建筑 / 宝箱 → 产出
+    // 建筑 / 宝箱 → 产出（同时选中显示信息）
     if (BuildingManager.isInteractable(cell.itemId)) {
+      // 先选中，再尝试产出（这样即使产出失败或CD中也能看到信息）
+      this._selectItem(cellIndex, cell.itemId);
+
       if (BuildingManager.canProduce(cellIndex)) {
         const result = BuildingManager.produce(cellIndex);
         if (result) {
@@ -329,7 +367,31 @@ export class BoardView extends PIXI.Container {
       } else {
         this._shakeCell(cellIndex);
       }
+      return;
     }
+
+    // 普通物品 → 选中显示信息
+    this._selectItem(cellIndex, cell.itemId);
+  }
+
+  /** 选中物品 */
+  private _selectItem(cellIndex: number, itemId: string): void {
+    // 取消旧选中高亮
+    if (this._selectedIndex >= 0 && this._selectedIndex < this._cellViews.length) {
+      this._cellViews[this._selectedIndex].setHighlight(false);
+    }
+    this._selectedIndex = cellIndex;
+    this._cellViews[cellIndex].setHighlight(true);
+    EventBus.emit('board:itemSelected', cellIndex, itemId);
+  }
+
+  /** 取消选中 */
+  private _deselectItem(): void {
+    if (this._selectedIndex >= 0 && this._selectedIndex < this._cellViews.length) {
+      this._cellViews[this._selectedIndex].setHighlight(false);
+    }
+    this._selectedIndex = -1;
+    EventBus.emit('board:selectionCleared');
   }
 
   /** 钥匙格点击 → 确认弹窗 → 扣金币 → 解锁 */

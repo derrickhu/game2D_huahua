@@ -23,9 +23,14 @@ if (typeof GameGlobal !== 'undefined') {
   };
 }
 
+const BUILD_TIME = '__BUILD_' + new Date().toISOString().slice(0, 19) + '__';
+
 async function main(): Promise<void> {
   try {
-    console.log('[main] 花语小筑启动中...');
+    console.log('[main] 花语小筑启动中... BUILD:', BUILD_TIME);
+
+    // 开发阶段：启动时清除所有可能的旧存档，防止脏数据干扰
+    _clearAllSaves();
 
     // 环境诊断
     console.log('[main] typeof document:', typeof document,
@@ -58,8 +63,10 @@ async function main(): Promise<void> {
     } catch (e) { console.warn('[main] EventSystem 诊断失败:', e); }
 
     // 根据实际屏幕动态计算棋盘尺寸
-    computeBoardMetrics(Game.logicHeight);
-    console.log('[main] BoardMetrics 计算完成, logicHeight:', Game.logicHeight);
+    // topReserved = safeTop + TopBar(60) + gap(8) + ShopArea(220) + gap(8)
+    const topReserved = Game.safeTop + 60 + 8 + 220 + 8;
+    computeBoardMetrics(Game.logicHeight, topReserved);
+    console.log(`[main] BoardMetrics 计算完成, logicHeight:${Game.logicHeight}, safeTop:${Game.safeTop}, topReserved:${topReserved}`);
 
     // 预加载图片纹理
     await TextureCache.preloadAll((loaded, total) => {
@@ -70,9 +77,15 @@ async function main(): Promise<void> {
     BoardManager.init();
     console.log('[main] BoardManager.init 完成');
 
-    // 尝试加载存档
+    // 尝试加载存档（开发阶段已在启动时清除，此处应返回 false）
     const loaded = SaveManager.load();
     console.log('[main]', loaded ? '存档加载成功' : '无存档，使用默认数据');
+
+    // 再次确认棋盘状态
+    const cells = BoardManager.cells;
+    const hasItems = cells.some(c => c.itemId !== null);
+    const hasFog = cells.some(c => c.state !== 'open');
+    console.log(`[main] 棋盘确认: cells=${cells.length}, hasItems=${hasItems}, hasFog=${hasFog}`);
 
     // 注册场景
     const mainScene = new MainScene();
@@ -82,10 +95,25 @@ async function main(): Promise<void> {
     // 进入主场景
     SceneManager.switchTo('main');
 
-    console.log('[main] 花语小筑启动完成 ✿');
+    console.log('[main] 花语小筑启动完成 ✿ BUILD:', BUILD_TIME);
   } catch (e) {
     console.error('[main] 启动失败:', e);
   }
+}
+
+/** 开发阶段：启动时无条件清除所有存档 key，杜绝脏数据 */
+function _clearAllSaves(): void {
+  const api: any = typeof wx !== 'undefined' ? wx : typeof tt !== 'undefined' ? tt : null;
+  if (!api) return;
+  const keys = [
+    'huahua_save',
+    'huahua_save_v1', 'huahua_save_v2', 'huahua_save_v3',
+    'huahua_save_v4', 'huahua_save_v5',
+  ];
+  for (const k of keys) {
+    try { api.removeStorageSync(k); } catch (_) {}
+  }
+  console.log('[main] 已清除所有存档 key');
 }
 
 main();

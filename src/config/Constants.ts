@@ -26,18 +26,24 @@ export const BoardMetrics = {
 // 兼容旧引用的 getter
 export function getCellSize(): number { return BoardMetrics.cellSize; }
 
-/** 根据实际屏幕尺寸重新计算棋盘布局参数，需在 Game.init 之后调用 */
-export function computeBoardMetrics(logicHeight: number): void {
-  const navHeight = 90;
+/** 底部信息栏高度（替代旧的 90px BottomNav） */
+export const INFO_BAR_HEIGHT = 110;
+
+/**
+ * 根据实际屏幕尺寸重新计算棋盘布局参数，需在 Game.init 之后调用
+ * @param logicHeight  设计坐标下的逻辑屏幕高度
+ * @param topReserved  顶部已被占用的设计坐标高度（safeTop + TopBar + ShopArea + 间距）
+ */
+export function computeBoardMetrics(logicHeight: number, topReserved: number): void {
+  const navHeight = INFO_BAR_HEIGHT;
   const bottomMargin = 6;
+  const topMargin = 8;
 
   // 宽度优先：保证 7 列铺满宽度
   const maxCellByWidth = Math.floor((DESIGN_WIDTH - (BOARD_COLS - 1) * CELL_GAP) / BOARD_COLS);
 
-  // 棋盘可用高度 = 屏幕高 - 导航栏 - 底部间距 - 顶部最小间距(店铺区 ~350)
-  const shopBottom = 350;
-  const topMargin = 8;
-  const availableHeight = logicHeight - shopBottom - topMargin - navHeight - bottomMargin;
+  // 棋盘可用高度 = 屏幕高 - 顶部已占区域 - 间距 - 底部导航 - 底部间距
+  const availableHeight = logicHeight - topReserved - topMargin - navHeight - bottomMargin;
   const maxCellByHeight = Math.floor((availableHeight - (BOARD_ROWS - 1) * CELL_GAP) / BOARD_ROWS);
 
   BoardMetrics.cellSize = Math.max(72, Math.min(maxCellByWidth, maxCellByHeight));
@@ -48,10 +54,10 @@ export function computeBoardMetrics(logicHeight: number): void {
   const gridHeight = BoardMetrics.cellSize * BOARD_ROWS + CELL_GAP * (BOARD_ROWS - 1);
   BoardMetrics.areaHeight = gridHeight;
 
-  // 棋盘紧贴底部导航栏，消除下方空白
+  // 棋盘紧贴底部导航栏上方，消除下方空白
   BoardMetrics.topY = Math.floor(logicHeight - navHeight - bottomMargin - gridHeight);
 
-  console.log(`[Board] 动态布局: cellSize=${BoardMetrics.cellSize}, topY=${BoardMetrics.topY}, paddingX=${BoardMetrics.paddingX}, area=${gridWidth}x${gridHeight}`);
+  console.log(`[Board] 动态布局: cellSize=${BoardMetrics.cellSize}, topY=${BoardMetrics.topY}, topReserved=${topReserved}, paddingX=${BoardMetrics.paddingX}, area=${gridWidth}x${gridHeight}`);
 }
 
 // 客人
