@@ -14,6 +14,8 @@ export class ItemView extends PIXI.Container {
   private _levelBg: PIXI.Graphics;
   private _cdOverlay: PIXI.Graphics;
   private _cdText: PIXI.Text;
+  private _usesText: PIXI.Text;
+  private _lockBorder: PIXI.Graphics;
 
   private _itemId: string = '';
 
@@ -70,6 +72,25 @@ export class ItemView extends PIXI.Container {
     this._cdText.position.set(cs / 2, cs / 2);
     this._cdText.visible = false;
     this.addChild(this._cdText);
+
+    // 客人锁定边框
+    this._lockBorder = new PIXI.Graphics();
+    this._lockBorder.visible = false;
+    this.addChild(this._lockBorder);
+
+    // 消耗型剩余次数（左下角）
+    this._usesText = new PIXI.Text('', {
+      fontSize: 10,
+      fill: 0xFFFFFF,
+      fontFamily: FONT_FAMILY,
+      fontWeight: 'bold',
+      stroke: 0x000000,
+      strokeThickness: 2,
+    });
+    this._usesText.anchor.set(0, 1);
+    this._usesText.position.set(4, cs - 2);
+    this._usesText.visible = false;
+    this.addChild(this._usesText);
   }
 
   setItem(itemId: string | null): void {
@@ -153,6 +174,29 @@ export class ItemView extends PIXI.Container {
 
   get itemId(): string {
     return this._itemId;
+  }
+
+  /** 显示/隐藏客人锁定标记（金色闪烁边框） */
+  setLocked(locked: boolean): void {
+    const cs = BoardMetrics.cellSize;
+    this._lockBorder.clear();
+    if (locked) {
+      this._lockBorder.visible = true;
+      this._lockBorder.lineStyle(2.5, COLORS.GOLD, 0.85);
+      this._lockBorder.drawRoundedRect(1, 1, cs - 2, cs - 2, 8);
+    } else {
+      this._lockBorder.visible = false;
+    }
+  }
+
+  /** 显示/隐藏消耗型剩余次数 */
+  setUsesLeft(uses: number): void {
+    if (uses <= 0) {
+      this._usesText.visible = false;
+      return;
+    }
+    this._usesText.text = `×${uses}`;
+    this._usesText.visible = true;
   }
 
   /** 显示/隐藏 CD 冷却遮罩 */

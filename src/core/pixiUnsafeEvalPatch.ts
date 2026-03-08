@@ -1,9 +1,80 @@
 /**
- * @pixi/unsafe-eval 内联 patch
+ * @pixi/unsafe-eval 内联 patch + PIXI.settings.ADAPTER 配置
  * 必须在 new PIXI.Application() 之前执行
  * 单独文件，避免 Game.ts 因副作用代码被 bundler 打包多份
  */
-import { ShaderSystem } from '@pixi/core';
+import { ShaderSystem, BaseImageResource, Texture, BaseTexture } from '@pixi/core';
+import { settings } from '@pixi/settings';
+
+// ======== 配置 PIXI.settings.ADAPTER ========
+// 关键：PixiJS 的 BrowserAdapter 默认通过 document.createElement('canvas') 创建离屏 canvas，
+// 真机环境中 document 可能不可用或不完整，导致 Graphics/Text 全部不渲染。
+// 直接注入 wx/tt API 调用，完全绕过 document。
+declare const wx: any;
+declare const tt: any;
+const _api: any = typeof wx !== 'undefined' ? wx : typeof tt !== 'undefined' ? tt : null;
+if (_api) {
+  try {
+    // 创建 2D 离屏 canvas 的辅助函数
+    // 优先 createOffscreenCanvas({ type:'2d' }) 确保真机 canvas 2D 上下文可用；
+    // 部分设备（如鸿蒙/旧版微信）可能不支持，安全降级到 createCanvas()
+    let _useOffscreen = false;
+    try {
+      if (typeof _api.createOffscreenCanvas === 'function') {
+        const _test = _api.createOffscreenCanvas({ type: '2d', width: 1, height: 1 });
+        const _testCtx = _test.getContext('2d');
+        if (_testCtx) _useOffscreen = true;
+      }
+    } catch (_) { /* 不支持则回退 */ }
+    console.log('[pixiPatch] createOffscreenCanvas 可用:', _useOffscreen);
+
+    const _create2DCanvas = (w?: number, h?: number): any => {
+      let c: any;
+      if (_useOffscreen) {
+        try {
+          c = _api.createOffscreenCanvas({ type: '2d', width: w || 1, height: h || 1 });
+        } catch (_) {
+          c = _api.createCanvas();
+        }
+      } else {
+        c = _api.createCanvas();
+      }
+      if (w !== undefined) c.width = w;
+      if (h !== undefined) c.height = h;
+      return c;
+    };
+
+    settings.ADAPTER = {
+      createCanvas: _create2DCanvas,
+      getCanvasRenderingContext2D: (): any => {
+        try {
+          const c = _create2DCanvas(1, 1);
+          const ctx = c.getContext('2d');
+          return ctx ? ctx.constructor : Object;
+        } catch { return Object; }
+      },
+      getWebGLRenderingContext: (): any => {
+        try {
+          const c = _api.createCanvas();
+          const gl = c.getContext('webgl');
+          return gl ? gl.constructor : Object;
+        } catch { return Object; }
+      },
+      getNavigator: (): any => ({
+        userAgent: 'wxgame',
+        gpu: null,
+      }),
+      getBaseUrl: (): string => '',
+      getFontFaceSet: (): any => null,
+      fetch: ((_url: any, _opts?: any): any => {
+        return Promise.reject(new Error('fetch not available in mini game'));
+      }) as any,
+    };
+    console.log('[pixiPatch] PIXI.settings.ADAPTER 已配置为小游戏模式');
+  } catch (e) {
+    console.warn('[pixiPatch] ADAPTER 配置失败:', e);
+  }
+}
 
 if (!(ShaderSystem.prototype as any).__patched) {
 
@@ -77,5 +148,109 @@ Object.assign(ShaderSystem.prototype, {
 });
 
 console.log('[pixiPatch] unsafe-eval patch 已应用');
+
+// ======== 真机 Canvas 纹理 patch ========
+// 微信小游戏真机 gl.texImage2D(canvas) 静默失败，getImageData 返回全黑。
+// 策略：
+// 1) Texture.WHITE → 直接用 fromBuffer 纯白像素，完全绕过 Canvas
+// 2) PIXI.Text canvas → 用 toDataURL 转 Image 再上传（Image 上传真机可用）
+const _isRealDevice = (() => {
+  try {
+    const p: any = typeof wx !== 'undefined' ? wx : typeof tt !== 'undefined' ? tt : null;
+    return p ? p.getSystemInfoSync().platform !== 'devtools' : false;
+  } catch { return false; }
+})();
+
+if (_isRealDevice) {
+  // ---- 1) 强制用纯像素数据创建 Texture.WHITE ----
+  const whitePixels = new Uint8Array(16 * 16 * 4);
+  whitePixels.fill(255);
+  const whiteBT = BaseTexture.fromBuffer(whitePixels, 16, 16);
+  const whiteTex = new Texture(whiteBT);
+  (whiteTex as any).destroy = () => {};
+  // WHITE 是 getter 只读属性，必须用 defineProperty 覆盖
+  try { Object.defineProperty(Texture, '_WHITE', { value: whiteTex, writable: true, configurable: true }); } catch (_e) { /* */ }
+  try { Object.defineProperty(Texture, 'WHITE', { get: () => whiteTex, configurable: true }); } catch (_e) { /* */ }
+  console.log('[pixiPatch] Texture.WHITE 已用 fromBuffer 重建（绕过 Canvas）');
+
+  // ---- 2) 真机 Canvas 纹理上传修复：toTempFilePathSync → Image ----
+  // toDataURL / getImageData 在真机上返回全黑，改用文件系统路径中转
+  const _platformApi: any = typeof wx !== 'undefined' ? wx : typeof tt !== 'undefined' ? tt : null;
+  const _origUpload = BaseImageResource.prototype.upload;
+  let _canvasUploadLog = 0;
+
+  BaseImageResource.prototype.upload = function (
+    renderer: any, baseTexture: any, glTexture: any, source?: any,
+  ): boolean {
+    source = source || this.source;
+
+    // 先用原始方法上传（确保 GL 纹理尺寸/格式状态正确；真机像素数据可能空白）
+    const result = _origUpload.call(this, renderer, baseTexture, glTexture, source);
+
+    // 仅对 Canvas 源做补救：通过 tempFile → Image 异步覆盖正确像素
+    if (source && typeof source.getContext === 'function'
+        && source.width > 0 && source.height > 0
+        && _platformApi
+        && typeof source.toTempFilePathSync === 'function') {
+      try {
+        const tempPath = source.toTempFilePathSync({
+          x: 0, y: 0,
+          width: source.width, height: source.height,
+          destWidth: source.width, destHeight: source.height,
+          fileType: 'png',
+        });
+
+        if (_canvasUploadLog < 3) {
+          console.log('[pixiPatch] canvas→tempFile:', tempPath,
+            'size:', source.width, 'x', source.height);
+          _canvasUploadLog++;
+        }
+
+        const img = _platformApi.createImage();
+        const _cleanup = () => {
+          try {
+            _platformApi.getFileSystemManager().unlink({
+              filePath: tempPath, fail() {},
+            });
+          } catch (_) { /* 忽略 */ }
+        };
+
+        img.onload = () => {
+          try {
+            const gl = renderer.gl;
+            renderer.texture.bind(baseTexture, 0);
+            gl.pixelStorei(gl.UNPACK_PREMULTIPLY_ALPHA_WEBGL,
+              baseTexture.alphaMode > 0 ? 1 : 0);
+            gl.texImage2D(gl.TEXTURE_2D, 0, glTexture.internalFormat,
+              glTexture.format, glTexture.type, img);
+          } catch (e) {
+            if (_canvasUploadLog < 10) {
+              console.warn('[pixiPatch] tempFile→Image upload err:', e);
+              _canvasUploadLog++;
+            }
+          }
+          _cleanup();
+        };
+        img.onerror = () => {
+          if (_canvasUploadLog < 10) {
+            console.warn('[pixiPatch] tempFile→Image load failed:', tempPath);
+            _canvasUploadLog++;
+          }
+          _cleanup();
+        };
+        img.src = tempPath;
+      } catch (e) {
+        if (_canvasUploadLog < 10) {
+          console.warn('[pixiPatch] toTempFilePathSync err:', e);
+          _canvasUploadLog++;
+        }
+      }
+    }
+
+    return result;
+  };
+
+  console.log('[pixiPatch] canvas→tempFile→Image 纹理上传 patch 已应用');
+}
 
 } // end if !__patched

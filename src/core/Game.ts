@@ -240,6 +240,27 @@ class GameClass {
       TweenManager.update(dt);
     });
 
+    // ---- 修复 EventSystem 坐标映射 ----
+    // 真机 canvas.parentElement 不可写，PixiJS 内部 mapPositionToPoint
+    // 走到 fallback rect {width:0,height:0} 导致坐标 NaN，所有 hit test 失败
+    try {
+      const evtSys = (this.app.renderer as any).events;
+      if (evtSys && evtSys.domElement) {
+        const dom = evtSys.domElement;
+        evtSys.mapPositionToPoint = (point: any, x: number, y: number) => {
+          let rect: any;
+          try { rect = dom.getBoundingClientRect(); } catch (_) { rect = null; }
+          if (!rect || !rect.width || !rect.height) {
+            rect = { left: 0, top: 0, width: this.screenWidth, height: this.screenHeight };
+          }
+          const resMul = 1.0 / (evtSys.resolution || 1);
+          point.x = ((x - (rect.left || 0)) * (dom.width / rect.width)) * resMul;
+          point.y = ((y - (rect.top || 0)) * (dom.height / rect.height)) * resMul;
+        };
+        console.log('[Game] EventSystem.mapPositionToPoint 已修复');
+      }
+    } catch (e) { console.warn('[Game] EventSystem patch 失败:', e); }
+
     this._initialized = true;
     console.log(`[Game] 初始化完成: uid=${this._uid}, ${realWidth}x${realHeight}, scale=${this.scale.toFixed(2)}, dpr=${this.dpr}, stage=${!!this.stage}`);
   }

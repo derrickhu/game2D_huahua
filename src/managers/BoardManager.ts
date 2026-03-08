@@ -5,6 +5,7 @@ import { EventBus } from '@/core/EventBus';
 import { BOARD_COLS, BOARD_ROWS, BOARD_TOTAL } from '@/config/Constants';
 import { CellState, BOARD_PRESETS } from '@/config/BoardLayout';
 import { ITEM_DEFS, getMergeResultId, Category, FlowerLine } from '@/config/ItemConfig';
+import { BUILDING_DEFS } from '@/config/BuildingConfig';
 
 export interface CellData {
   index: number;
@@ -141,7 +142,7 @@ class BoardManagerClass {
     second.itemId = pairId;
   }
 
-  /** 判断两个物品是否可以合成 */
+  /** 判断两个物品是否可以合成（含跨格合成） */
   canMerge(srcIndex: number, dstIndex: number): boolean {
     const src = this.cells[srcIndex];
     const dst = this.cells[dstIndex];
@@ -153,15 +154,20 @@ class BoardManagerClass {
     if (!def) return false;
     if (def.level >= def.maxLevel) return false;
 
-    // 目标格必须是已开放格
-    if (dst.state !== CellState.OPEN) return false;
     // 来源格必须是已开放格
     if (src.state !== CellState.OPEN) return false;
+    // 目标格可以是 OPEN 或 PEEK（跨格合成）
+    if (dst.state !== CellState.OPEN && dst.state !== CellState.PEEK) return false;
+
+    // PEEK 跨格合成要求两格相邻
+    if (dst.state === CellState.PEEK) {
+      if (!this._isAdjacent(src, dst)) return false;
+    }
 
     return true;
   }
 
-  /** 执行合成 */
+  /** 执行合成（含跨格合成 + 建筑材料满级自动转化） */
   doMerge(srcIndex: number, dstIndex: number): string | null {
     if (!this.canMerge(srcIndex, dstIndex)) return null;
 
@@ -170,19 +176,54 @@ class BoardManagerClass {
     const resultId = getMergeResultId(src.itemId!);
     if (!resultId) return null;
 
-    // 来源格清空
+    const isPeekMerge = dst.state === CellState.PEEK;
+    let resultCellIndex: number;
+
     src.itemId = null;
     src.reserved = false;
-    // 目标格放置结果
-    dst.itemId = resultId;
-    dst.reserved = false;
 
-    EventBus.emit('board:merged', srcIndex, dstIndex, resultId);
+    if (isPeekMerge) {
+      dst.itemId = null;
+      dst.state = CellState.OPEN;
+      src.itemId = resultId;
+      resultCellIndex = srcIndex;
+      EventBus.emit('board:merged', srcIndex, dstIndex, resultId, resultCellIndex);
+      EventBus.emit('board:cellUnlocked', dstIndex);
+      this._checkRippleUnlock(dstIndex);
+      this._checkRippleUnlock(srcIndex);
+    } else {
+      dst.itemId = resultId;
+      dst.reserved = false;
+      resultCellIndex = dstIndex;
+      EventBus.emit('board:merged', srcIndex, dstIndex, resultId, resultCellIndex);
+      this._checkRippleUnlock(dstIndex);
+    }
 
-    // 合成波及：检查相邻格是否可以解锁
-    this._checkRippleUnlock(dstIndex);
+    // 建筑材料满级 → 自动转化为功能建筑
+    const finalId = this._checkBuildingMatConversion(resultCellIndex, resultId);
+    return finalId || resultId;
+  }
 
-    return resultId;
+  /** 检查建筑材料是否满级需要自动转化为建筑 */
+  private _checkBuildingMatConversion(cellIndex: number, itemId: string): string | null {
+    const def = ITEM_DEFS.get(itemId);
+    if (!def || def.category !== Category.BUILDING_MAT) return null;
+    if (def.level < def.maxLevel) return null;
+
+    for (const [buildingId, bDef] of BUILDING_DEFS) {
+      if (bDef.requireMatId === itemId) {
+        this.cells[cellIndex].itemId = buildingId;
+        console.log(`[Board] 建筑材料 ${def.name} 满级自动转化为建筑: ${bDef.name}`);
+        EventBus.emit('board:buildingConverted', cellIndex, itemId, buildingId);
+        return buildingId;
+      }
+    }
+    return null;
+  }
+
+  /** 判断两个格子是否相邻（上下左右） */
+  private _isAdjacent(a: CellData, b: CellData): boolean {
+    return (Math.abs(a.row - b.row) + Math.abs(a.col - b.col)) === 1;
   }
 
   /** 移动物品 */
@@ -232,13 +273,20 @@ class BoardManagerClass {
     return -1;
   }
 
-  /** 用金币解锁钥匙格 */
+  /** 用金币解锁钥匙格（需调用方先检查并扣除金币） */
   unlockKeyCell(index: number): boolean {
     const cell = this.cells[index];
     if (!cell || cell.state !== CellState.KEY) return false;
     cell.state = CellState.OPEN;
     EventBus.emit('board:cellUnlocked', index);
+    this._checkRippleUnlock(index);
     return true;
+  }
+
+  /** 获取钥匙格价格 */
+  getKeyCellPrice(index: number): number {
+    const cell = this.cells[index];
+    return cell?.state === CellState.KEY ? cell.keyPrice : 0;
   }
 
   /** 合成波及解锁 */

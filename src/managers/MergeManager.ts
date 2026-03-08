@@ -1,5 +1,5 @@
 /**
- * 合成管理器 - 处理拖拽合成的高级逻辑
+ * 合成管理器 - 处理拖拽合成的高级逻辑（含跨格合成）
  */
 import { EventBus } from '@/core/EventBus';
 import { BoardManager } from './BoardManager';
@@ -17,7 +17,7 @@ class MergeManagerClass {
     return true;
   }
 
-  /** 拖拽结束，判定合成或移动 */
+  /** 拖拽结束，判定合成（含跨格）或移动 */
   endDrag(targetIndex: number): 'merged' | 'moved' | 'cancelled' {
     if (this.draggingIndex < 0) return 'cancelled';
     const srcIndex = this.draggingIndex;
@@ -28,12 +28,14 @@ class MergeManagerClass {
       return 'cancelled';
     }
 
-    // 尝试合成
+    // 尝试合成（BoardManager.canMerge 已支持 PEEK 跨格合成）
     if (BoardManager.canMerge(srcIndex, targetIndex)) {
       const resultId = BoardManager.doMerge(srcIndex, targetIndex);
       if (resultId) {
         const def = ITEM_DEFS.get(resultId);
-        console.log(`[Merge] 合成成功: ${def?.name} (Lv.${def?.level})`);
+        const targetCell = BoardManager.getCellByIndex(targetIndex);
+        const mergeType = targetCell?.state === 'peek' ? '跨格合成' : '合成';
+        console.log(`[Merge] ${mergeType}成功: ${def?.name} (Lv.${def?.level})`);
         return 'merged';
       }
     }

@@ -1,29 +1,21 @@
 /**
- * 建筑管理器 - 处理建筑点击产出、CD 冷却、消耗型建筑次数
+ * 建筑管理器 - 处理建筑点击产出、CD 冷却、消耗型建筑次数、宝箱系统
  */
 import { EventBus } from '@/core/EventBus';
 import { BoardManager } from './BoardManager';
 import { CurrencyManager } from './CurrencyManager';
-import { ITEM_DEFS, Category, findItemId, FlowerLine, DrinkLine } from '@/config/ItemConfig';
+import { ITEM_DEFS, Category, findItemId, FlowerLine, DrinkLine, BuildingMatLine } from '@/config/ItemConfig';
 import { BOARD_COLS, BOARD_ROWS } from '@/config/Constants';
 
 /** 永久型建筑配置 */
 interface PermBuildingDef {
-  /** 对应 ITEM_DEFS 中的 id */
   itemId: string;
-  /** 产出品类 */
   produceCategory: Category;
-  /** 可产出的花系/饮品线 */
   produceLines: string[];
-  /** 是否需要选择花系（初级建筑固定产出，不需选择） */
   needSelect: boolean;
-  /** 产出概率表 [level, weight][] */
   produceTable: [number, number][];
-  /** 每次产出数量 */
   produceCount: number;
-  /** 体力消耗 */
   staminaCost: number;
-  /** CD 冷却（秒） */
   cooldown: number;
 }
 
@@ -36,22 +28,28 @@ interface ConsBuildingDef {
   produceTable: [number, number][];
   produceCount: number;
   staminaCost: number;
-  /** 总使用次数 */
+  maxUses: number;
+}
+
+/** 宝箱配置 */
+interface ChestDef {
+  itemId: string;
+  produceItems: { category: Category; lines: string[]; levelRange: [number, number] }[];
+  staminaCost: number;
   maxUses: number;
 }
 
 /** 运行时建筑状态（CD / 剩余次数） */
 interface BuildingState {
-  /** 剩余 CD（秒），0 表示可用 */
   cdRemaining: number;
-  /** 消耗型：剩余使用次数，-1 表示永久型 */
+  /** 剩余使用次数，-1 表示永久型 */
   usesLeft: number;
 }
 
 // ---- 永久型建筑定义 ----
 const PERM_BUILDINGS: PermBuildingDef[] = [
   {
-    itemId: 'building_perm_1', // 花艺操作台
+    itemId: 'building_perm_1',
     produceCategory: Category.FLOWER,
     produceLines: [FlowerLine.DAILY],
     needSelect: false,
@@ -61,7 +59,7 @@ const PERM_BUILDINGS: PermBuildingDef[] = [
     cooldown: 30,
   },
   {
-    itemId: 'building_perm_2', // 包装台
+    itemId: 'building_perm_2',
     produceCategory: Category.FLOWER,
     produceLines: [FlowerLine.DAILY, FlowerLine.ROMANTIC],
     needSelect: true,
@@ -71,7 +69,7 @@ const PERM_BUILDINGS: PermBuildingDef[] = [
     cooldown: 120,
   },
   {
-    itemId: 'building_perm_3', // 小型温室
+    itemId: 'building_perm_3',
     produceCategory: Category.FLOWER,
     produceLines: [FlowerLine.ROMANTIC, FlowerLine.LUXURY],
     needSelect: true,
@@ -81,7 +79,7 @@ const PERM_BUILDINGS: PermBuildingDef[] = [
     cooldown: 300,
   },
   {
-    itemId: 'building_perm_4', // 星光花房
+    itemId: 'building_perm_4',
     produceCategory: Category.FLOWER,
     produceLines: [FlowerLine.DAILY, FlowerLine.ROMANTIC, FlowerLine.LUXURY],
     needSelect: true,
@@ -91,7 +89,7 @@ const PERM_BUILDINGS: PermBuildingDef[] = [
     cooldown: 600,
   },
   {
-    itemId: 'building_perm_5', // 简易茶台
+    itemId: 'building_perm_5',
     produceCategory: Category.DRINK,
     produceLines: [DrinkLine.TEA],
     needSelect: false,
@@ -101,7 +99,7 @@ const PERM_BUILDINGS: PermBuildingDef[] = [
     cooldown: 30,
   },
   {
-    itemId: 'building_perm_6', // 调饮吧台
+    itemId: 'building_perm_6',
     produceCategory: Category.DRINK,
     produceLines: [DrinkLine.TEA, DrinkLine.COLD],
     needSelect: true,
@@ -111,7 +109,7 @@ const PERM_BUILDINGS: PermBuildingDef[] = [
     cooldown: 120,
   },
   {
-    itemId: 'building_perm_7', // 花饮工坊
+    itemId: 'building_perm_7',
     produceCategory: Category.DRINK,
     produceLines: [DrinkLine.TEA, DrinkLine.COLD, DrinkLine.DESSERT],
     needSelect: true,
@@ -125,7 +123,7 @@ const PERM_BUILDINGS: PermBuildingDef[] = [
 // ---- 消耗型建筑定义 ----
 const CONS_BUILDINGS: ConsBuildingDef[] = [
   {
-    itemId: 'building_cons_1', // 花材礼盒
+    itemId: 'building_cons_1',
     produceCategory: Category.FLOWER,
     produceLines: [FlowerLine.DAILY, FlowerLine.ROMANTIC, FlowerLine.LUXURY],
     needSelect: false,
@@ -135,7 +133,7 @@ const CONS_BUILDINGS: ConsBuildingDef[] = [
     maxUses: 5,
   },
   {
-    itemId: 'building_cons_2', // 精选花篮
+    itemId: 'building_cons_2',
     produceCategory: Category.FLOWER,
     produceLines: [FlowerLine.DAILY, FlowerLine.ROMANTIC, FlowerLine.LUXURY],
     needSelect: true,
@@ -145,7 +143,7 @@ const CONS_BUILDINGS: ConsBuildingDef[] = [
     maxUses: 4,
   },
   {
-    itemId: 'building_cons_3', // 花艺大师箱
+    itemId: 'building_cons_3',
     produceCategory: Category.FLOWER,
     produceLines: [FlowerLine.DAILY, FlowerLine.ROMANTIC, FlowerLine.LUXURY],
     needSelect: true,
@@ -155,7 +153,7 @@ const CONS_BUILDINGS: ConsBuildingDef[] = [
     maxUses: 3,
   },
   {
-    itemId: 'building_cons_4', // 茶包盒
+    itemId: 'building_cons_4',
     produceCategory: Category.DRINK,
     produceLines: [DrinkLine.TEA, DrinkLine.COLD, DrinkLine.DESSERT],
     needSelect: false,
@@ -165,7 +163,7 @@ const CONS_BUILDINGS: ConsBuildingDef[] = [
     maxUses: 5,
   },
   {
-    itemId: 'building_cons_5', // 调饮套装
+    itemId: 'building_cons_5',
     produceCategory: Category.DRINK,
     produceLines: [DrinkLine.TEA, DrinkLine.COLD, DrinkLine.DESSERT],
     needSelect: true,
@@ -175,7 +173,7 @@ const CONS_BUILDINGS: ConsBuildingDef[] = [
     maxUses: 4,
   },
   {
-    itemId: 'building_cons_6', // 花饮臻选箱
+    itemId: 'building_cons_6',
     produceCategory: Category.DRINK,
     produceLines: [DrinkLine.TEA, DrinkLine.COLD, DrinkLine.DESSERT],
     needSelect: true,
@@ -186,8 +184,37 @@ const CONS_BUILDINGS: ConsBuildingDef[] = [
   },
 ];
 
+// ---- 宝箱定义 ----
+const CHEST_DEFS: ChestDef[] = [
+  {
+    itemId: 'chest_1',
+    produceItems: [
+      { category: Category.BUILDING_MAT, lines: [BuildingMatLine.FLOWER_BUILD, BuildingMatLine.DRINK_BUILD], levelRange: [1, 1] },
+    ],
+    staminaCost: 2,
+    maxUses: 3,
+  },
+  {
+    itemId: 'chest_2',
+    produceItems: [
+      { category: Category.BUILDING_MAT, lines: [BuildingMatLine.FLOWER_BUILD, BuildingMatLine.DRINK_BUILD], levelRange: [1, 2] },
+      { category: Category.FLOWER, lines: [FlowerLine.DAILY, FlowerLine.ROMANTIC], levelRange: [1, 2] },
+    ],
+    staminaCost: 3,
+    maxUses: 4,
+  },
+  {
+    itemId: 'chest_3',
+    produceItems: [
+      { category: Category.BUILDING_MAT, lines: [BuildingMatLine.FLOWER_BUILD, BuildingMatLine.DRINK_BUILD], levelRange: [1, 3] },
+      { category: Category.FLOWER, lines: [FlowerLine.DAILY, FlowerLine.ROMANTIC, FlowerLine.LUXURY], levelRange: [2, 3] },
+    ],
+    staminaCost: 5,
+    maxUses: 3,
+  },
+];
+
 class BuildingManagerClass {
-  /** 格子索引 → 运行时状态 */
   private _states = new Map<number, BuildingState>();
 
   /** 判断某个物品是否是建筑 */
@@ -195,11 +222,21 @@ class BuildingManagerClass {
     return !!this._findPermDef(itemId) || !!this._findConsDef(itemId);
   }
 
-  /** 判断某个格子上的建筑是否可以点击产出 */
+  /** 判断某个物品是否是宝箱 */
+  isChestItem(itemId: string): boolean {
+    return !!this._findChestDef(itemId);
+  }
+
+  /** 判断某个物品是否可点击交互（建筑 / 宝箱） */
+  isInteractable(itemId: string): boolean {
+    return this.isBuildingItem(itemId) || this.isChestItem(itemId);
+  }
+
+  /** 判断某个格子上的建筑/宝箱是否可以点击产出 */
   canProduce(cellIndex: number): boolean {
     const cell = BoardManager.getCellByIndex(cellIndex);
     if (!cell?.itemId || cell.state !== 'open') return false;
-    if (!this.isBuildingItem(cell.itemId)) return false;
+    if (!this.isInteractable(cell.itemId)) return false;
 
     const state = this._getOrCreateState(cellIndex, cell.itemId);
     if (state.cdRemaining > 0) return false;
@@ -209,9 +246,7 @@ class BuildingManagerClass {
   }
 
   /**
-   * 点击建筑产出物品
-   * @param cellIndex 建筑所在格子
-   * @param selectedLine 选择的花系/饮品线（需选择的建筑使用）
+   * 点击建筑/宝箱产出物品
    * @returns 产出结果，null 表示失败
    */
   produce(cellIndex: number, selectedLine?: string): { itemId: string; targetIndex: number } | null {
@@ -220,8 +255,10 @@ class BuildingManagerClass {
 
     const permDef = this._findPermDef(cell.itemId);
     const consDef = this._findConsDef(cell.itemId);
-    const def = permDef || consDef;
-    if (!def) return null;
+    const chestDef = this._findChestDef(cell.itemId);
+    if (!permDef && !consDef && !chestDef) return null;
+
+    const staminaCost = permDef?.staminaCost ?? consDef?.staminaCost ?? chestDef!.staminaCost;
 
     const state = this._getOrCreateState(cellIndex, cell.itemId);
     if (state.cdRemaining > 0) {
@@ -232,47 +269,55 @@ class BuildingManagerClass {
     if (state.usesLeft === 0) return null;
 
     // 检查体力
-    if (!CurrencyManager.consumeStamina(def.staminaCost)) {
+    if (!CurrencyManager.consumeStamina(staminaCost)) {
       console.log('[Building] 体力不足');
-      EventBus.emit('building:noStamina', cellIndex, def.staminaCost);
+      EventBus.emit('building:noStamina', cellIndex, staminaCost);
       return null;
     }
 
     // 找相邻空格
     const targetIndex = this._findAdjacentEmpty(cellIndex);
     if (targetIndex < 0) {
-      // 体力回退
-      CurrencyManager.addStamina(def.staminaCost);
+      CurrencyManager.addStamina(staminaCost);
       console.log('[Building] 周围没有空格');
       EventBus.emit('building:noSpace', cellIndex);
       return null;
     }
 
-    // 确定产出线
-    const line = def.needSelect && selectedLine
-      ? selectedLine
-      : def.produceLines[Math.floor(Math.random() * def.produceLines.length)];
+    let producedId: string | null = null;
 
-    // 按概率表随机等级
-    const level = this._rollLevel(def.produceTable);
-    const producedId = findItemId(def.produceCategory, line, level);
+    if (chestDef) {
+      // 宝箱：从产出表中随机选取品类/线/等级
+      const option = chestDef.produceItems[Math.floor(Math.random() * chestDef.produceItems.length)];
+      const line = option.lines[Math.floor(Math.random() * option.lines.length)];
+      const [minLv, maxLv] = option.levelRange;
+      const level = minLv + Math.floor(Math.random() * (maxLv - minLv + 1));
+      producedId = findItemId(option.category, line, level);
+    } else {
+      // 建筑：按概率表产出
+      const def = (permDef || consDef)!;
+      const line = def.needSelect && selectedLine
+        ? selectedLine
+        : def.produceLines[Math.floor(Math.random() * def.produceLines.length)];
+      const level = this._rollLevel(def.produceTable);
+      producedId = findItemId(def.produceCategory, line, level);
+    }
+
     if (!producedId) {
-      CurrencyManager.addStamina(def.staminaCost);
-      console.warn(`[Building] 找不到产出物品: ${def.produceCategory}/${line}/lv${level}`);
+      CurrencyManager.addStamina(staminaCost);
+      console.warn('[Building] 找不到产出物品');
       return null;
     }
 
-    // 放置到目标格
     BoardManager.placeItem(targetIndex, producedId);
 
-    // 更新建筑状态
+    // 更新状态
     if (permDef) {
       state.cdRemaining = permDef.cooldown;
     }
-    if (consDef) {
+    if (consDef || chestDef) {
       state.usesLeft--;
       if (state.usesLeft <= 0) {
-        // 消耗型建筑用尽，移除
         BoardManager.removeItem(cellIndex);
         this._states.delete(cellIndex);
         EventBus.emit('building:exhausted', cellIndex);
@@ -280,7 +325,7 @@ class BuildingManagerClass {
     }
 
     const resultDef = ITEM_DEFS.get(producedId);
-    console.log(`[Building] 产出: ${resultDef?.name}(Lv.${level}) → 格子${targetIndex}`);
+    console.log(`[Building] 产出: ${resultDef?.name}(Lv.${resultDef?.level}) → 格子${targetIndex}`);
     EventBus.emit('building:produced', cellIndex, targetIndex, producedId);
 
     return { itemId: producedId, targetIndex };
@@ -309,10 +354,18 @@ class BuildingManagerClass {
     return { remaining: state.cdRemaining, total: permDef.cooldown };
   }
 
-  /** 获取消耗型建筑剩余次数 */
+  /** 获取消耗型建筑/宝箱剩余次数（-1 表示永久型） */
   getUsesLeft(cellIndex: number): number {
+    const cell = BoardManager.getCellByIndex(cellIndex);
+    if (!cell?.itemId) return -1;
+
+    const consDef = this._findConsDef(cell.itemId);
+    const chestDef = this._findChestDef(cell.itemId);
+    if (!consDef && !chestDef) return -1;
+
     const state = this._states.get(cellIndex);
-    return state?.usesLeft ?? -1;
+    if (!state) return consDef ? consDef.maxUses : chestDef!.maxUses;
+    return state.usesLeft;
   }
 
   // ---- 私有方法 ----
@@ -325,20 +378,24 @@ class BuildingManagerClass {
     return CONS_BUILDINGS.find(b => b.itemId === itemId);
   }
 
+  private _findChestDef(itemId: string): ChestDef | undefined {
+    return CHEST_DEFS.find(b => b.itemId === itemId);
+  }
+
   private _getOrCreateState(cellIndex: number, itemId: string): BuildingState {
     let state = this._states.get(cellIndex);
     if (!state) {
       const consDef = this._findConsDef(itemId);
+      const chestDef = this._findChestDef(itemId);
       state = {
         cdRemaining: 0,
-        usesLeft: consDef ? consDef.maxUses : -1,
+        usesLeft: consDef ? consDef.maxUses : chestDef ? chestDef.maxUses : -1,
       };
       this._states.set(cellIndex, state);
     }
     return state;
   }
 
-  /** 按权重概率表随机选等级 */
   private _rollLevel(table: [number, number][]): number {
     const totalWeight = table.reduce((sum, [, w]) => sum + w, 0);
     let roll = Math.random() * totalWeight;
@@ -349,7 +406,6 @@ class BuildingManagerClass {
     return table[table.length - 1][0];
   }
 
-  /** 查找指定格子周围的空格（上下左右优先） */
   private _findAdjacentEmpty(cellIndex: number): number {
     const row = Math.floor(cellIndex / BOARD_COLS);
     const col = cellIndex % BOARD_COLS;
@@ -364,7 +420,6 @@ class BuildingManagerClass {
       if (c && c.state === 'open' && !c.itemId) return idx;
     }
 
-    // 相邻没有空格，找全局第一个空格
     return BoardManager.findEmptyOpenCell();
   }
 }

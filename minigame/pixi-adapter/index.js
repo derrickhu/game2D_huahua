@@ -1,7 +1,11 @@
 /**
  * pixi-adapter 统一入口
  * 根据运行环境（真机/模拟器）将 DOM 模拟对象挂载到全局
- * 参考 finscn/weapp-adapter + 掘金社区文章的成熟模式
+ *
+ * 关键：真机环境中 IIFE bundle 的自由变量（document、window 等）
+ * 必须在 JS 引擎的全局作用域中可达，仅挂到 GameGlobal 不够——
+ * GameGlobal 只是跨文件共享对象，不是全局作用域。
+ * 因此真机需要挂到 globalThis / global 上。
  */
 
 const platform = require('./platform');
@@ -21,19 +25,19 @@ const {
   HTMLVideoElement,
 } = require('./element');
 
-// Patch Object.defineProperty / Object.defineProperties
-// 微信小游戏中 WebGL 上下文的属性（如 WRAP_MODE 等枚举常量）是 configurable:false，
-// PixiJS 初始化时 Object.defineProperties 重定义这些属性会抛 TypeError。
-// 这里做安全包裹：遇到不可配置属性时跳过而非报错。
+// ======== 获取真正的 JS 全局对象 ========
+// 优先 globalThis（ES2020+），其次 global（Node/V8），最后 GameGlobal
+const _realGlobal = (typeof globalThis !== 'undefined' && globalThis)
+  || (typeof global !== 'undefined' && global)
+  || GameGlobal;
+
+// ======== Patch Object.defineProperty ========
 const _origDefineProperty = Object.defineProperty;
 Object.defineProperty = function safeDefineProperty(obj, prop, descriptor) {
   try {
     return _origDefineProperty.call(Object, obj, prop, descriptor);
   } catch (e) {
-    // 如果是因为属性不可配置导致的，静默跳过
-    if (e instanceof TypeError) {
-      return obj;
-    }
+    if (e instanceof TypeError) return obj;
     throw e;
   }
 };
@@ -52,52 +56,61 @@ Object.defineProperties = function safeDefineProperties(obj, props) {
   return obj;
 };
 
-// 获取系统信息
+// ======== 获取系统信息 ========
 const sysInfo = platform.getSystemInfoSync();
 const isDevtools = sysInfo.platform === 'devtools';
 
-// 禁用 OffscreenCanvas（微信的实现不完整，会导致 PixiJS 走入错误分支）
+// ======== 定时器 & 动画帧 polyfill ========
+// 真机 IIFE bundle 可能无法以自由变量访问这些 API，
+// 在 adapter 模块作用域中它们可用，挂到真正的全局对象。
+;(function _patchTimers() {
+  var pairs = {};
+  if (typeof setTimeout !== 'undefined')              pairs.setTimeout = setTimeout;
+  if (typeof clearTimeout !== 'undefined')             pairs.clearTimeout = clearTimeout;
+  if (typeof setInterval !== 'undefined')              pairs.setInterval = setInterval;
+  if (typeof clearInterval !== 'undefined')            pairs.clearInterval = clearInterval;
+  if (typeof requestAnimationFrame !== 'undefined')    pairs.requestAnimationFrame = requestAnimationFrame;
+  if (typeof cancelAnimationFrame !== 'undefined')     pairs.cancelAnimationFrame = cancelAnimationFrame;
+  for (var k in pairs) {
+    if (typeof _realGlobal[k] === 'undefined') _realGlobal[k] = pairs[k];
+    if (typeof GameGlobal[k] === 'undefined')  GameGlobal[k] = pairs[k];
+  }
+})();
+
+// ======== 禁用 OffscreenCanvas ========
 if (typeof GameGlobal !== 'undefined') {
   GameGlobal.OffscreenCanvas = undefined;
+  _realGlobal.OffscreenCanvas = undefined;
 }
 
-// 构造 WebGLRenderingContext 全局引用（PixiJS 可能会检查）
+// ======== WebGL / Canvas2D 上下文构造函数 ========
 let _WebGLRenderingContext = {};
 try {
   const _tmpCanvas = platform.createCanvas();
   const _tmpGl = _tmpCanvas.getContext('webgl');
-  if (_tmpGl) {
-    _WebGLRenderingContext = _tmpGl.constructor || {};
-  }
-} catch (e) {
-  // 忽略
-}
+  if (_tmpGl) _WebGLRenderingContext = _tmpGl.constructor || {};
+} catch (e) { /* 忽略 */ }
 
-// CanvasRenderingContext2D 全局引用
 let _CanvasRenderingContext2D = {};
 try {
   const _tmpCanvas2 = platform.createCanvas();
   const _tmpCtx = _tmpCanvas2.getContext('2d');
-  if (_tmpCtx) {
-    _CanvasRenderingContext2D = _tmpCtx.constructor || {};
-  }
-} catch (e) {
-  // 忽略
-}
+  if (_tmpCtx) _CanvasRenderingContext2D = _tmpCtx.constructor || {};
+} catch (e) { /* 忽略 */ }
 
-// 空 DOMParser 实现
+// ======== DOMParser ========
 class DOMParser {
   parseFromString() {
     return { documentElement: new Element() };
   }
 }
 
-// performance 对象（小游戏环境通常已有，但保险起见）
+// ======== performance ========
 const _performance = typeof performance !== 'undefined' ? performance : {
   now: Date.now.bind(Date),
 };
 
-// window 事件系统（PixiJS EventSystem 需要在 window 上注册 pointermove/pointerup 等全局事件）
+// ======== window 事件系统 ========
 const _windowListeners = {};
 function _windowAddEventListener(type, handler, options) {
   if (!_windowListeners[type]) _windowListeners[type] = [];
@@ -117,128 +130,117 @@ function _windowDispatchEvent(type, event) {
     });
   }
 }
-
-// 导出给 TouchEvent.js 使用
 GameGlobal.__windowDispatchEvent = _windowDispatchEvent;
 
+// ======== 事件构造函数 ========
+function _PointerEvent(type, opts) { this.type = type; Object.assign(this, opts || {}); }
+function _TouchEventCtor(type, opts) { this.type = type; Object.assign(this, opts || {}); }
+function _MouseEvent(type, opts) { this.type = type; Object.assign(this, opts || {}); }
+
+// ======== URL / Blob ========
+const _URL = {
+  createObjectURL: function() { return ''; },
+  revokeObjectURL: function() {},
+};
+function _Blob() {}
+
+// ======== 所有需要挂载的全局属性 ========
+const _allGlobals = {
+  window: null,          // 下面特殊处理
+  document: document,
+  navigator: navigator,
+  location: location,
+  Image: Image,
+  Element: Element,
+  HTMLCanvasElement: HTMLCanvasElement,
+  HTMLImageElement: HTMLImageElement,
+  HTMLVideoElement: HTMLVideoElement,
+  WebGLRenderingContext: _WebGLRenderingContext,
+  CanvasRenderingContext2D: _CanvasRenderingContext2D,
+  XMLHttpRequest: XMLHttpRequest,
+  DOMParser: DOMParser,
+  localStorage: localStorage,
+  performance: _performance,
+  canvas: canvas,
+  ontouchstart: noop,
+  addEventListener: _windowAddEventListener,
+  removeEventListener: _windowRemoveEventListener,
+  self: null,            // 下面特殊处理
+  PointerEvent: _PointerEvent,
+  TouchEvent: _TouchEventCtor,
+  MouseEvent: _MouseEvent,
+  URL: _URL,
+  Blob: _Blob,
+};
+
 if (isDevtools) {
-  // 模拟器环境：window 已存在，用 defineProperty 覆盖/补充
+  // ======== 模拟器环境 ========
+  // window 已存在（浏览器环境），用 defineProperty 补充/覆盖
   const _win = typeof window !== 'undefined' ? window : GameGlobal;
 
-  const defines = {
-    Image: { value: Image, configurable: true },
-    Element: { value: Element, configurable: true },
-    HTMLCanvasElement: { value: HTMLCanvasElement, configurable: true },
-    HTMLImageElement: { value: HTMLImageElement, configurable: true },
-    HTMLVideoElement: { value: HTMLVideoElement, configurable: true },
-    WebGLRenderingContext: { value: _WebGLRenderingContext, configurable: true },
-    CanvasRenderingContext2D: { value: _CanvasRenderingContext2D, configurable: true },
-    XMLHttpRequest: { value: XMLHttpRequest, configurable: true },
-    DOMParser: { value: DOMParser, configurable: true },
-    localStorage: { value: localStorage, configurable: true },
-    ontouchstart: { value: noop, configurable: true },
-    addEventListener: { value: _windowAddEventListener, configurable: true },
-    removeEventListener: { value: _windowRemoveEventListener, configurable: true },
-  };
-
-  for (const key in defines) {
+  for (const key in _allGlobals) {
+    if (key === 'window' || key === 'self') continue;
     try {
       const desc = Object.getOwnPropertyDescriptor(_win, key);
       if (!desc || desc.configurable) {
-        Object.defineProperty(_win, key, defines[key]);
+        _origDefineProperty.call(Object, _win, key, { value: _allGlobals[key], configurable: true });
       }
-    } catch (e) {
-      // 某些属性不可修改，忽略
-    }
+    } catch (e) { /* 只读属性忽略 */ }
   }
 
-  // document 上的属性补充
+  // document 属性补充
   try {
     for (const key in document) {
       const desc = Object.getOwnPropertyDescriptor(_win.document, key);
       if (!desc || desc.configurable) {
-        Object.defineProperty(_win.document, key, { value: document[key], configurable: true });
+        _origDefineProperty.call(Object, _win.document, key, { value: document[key], configurable: true });
       }
     }
-  } catch (e) {
-    // 忽略
-  }
+  } catch (e) { /* 忽略 */ }
+
 } else {
-  // 真机环境：直接挂载到 GameGlobal
-  GameGlobal.window = GameGlobal;
-  GameGlobal.document = document;
-  GameGlobal.navigator = navigator;
-  GameGlobal.location = location;
-  GameGlobal.Image = Image;
-  GameGlobal.Element = Element;
-  GameGlobal.HTMLCanvasElement = HTMLCanvasElement;
-  GameGlobal.HTMLImageElement = HTMLImageElement;
-  GameGlobal.HTMLVideoElement = HTMLVideoElement;
-  GameGlobal.WebGLRenderingContext = _WebGLRenderingContext;
-  GameGlobal.CanvasRenderingContext2D = _CanvasRenderingContext2D;
-  GameGlobal.XMLHttpRequest = XMLHttpRequest;
-  GameGlobal.DOMParser = DOMParser;
-  GameGlobal.localStorage = localStorage;
-  GameGlobal.performance = _performance;
-  GameGlobal.ontouchstart = noop;
-  GameGlobal.addEventListener = _windowAddEventListener;
-  GameGlobal.removeEventListener = _windowRemoveEventListener;
-  GameGlobal.self = GameGlobal;
+  // ======== 真机环境 ========
+  // 关键：必须同时挂载到 _realGlobal（JS 引擎全局对象）和 GameGlobal（跨文件共享）
+  // 这样 IIFE bundle 中的自由变量 document、window 等才能正确解析
+
+  // window = 全局对象自身（模拟浏览器行为）
+  _realGlobal.window = _realGlobal;
+  GameGlobal.window = _realGlobal;
+
+  // self = 全局对象自身
+  _realGlobal.self = _realGlobal;
+  GameGlobal.self = _realGlobal;
+
+  for (const key in _allGlobals) {
+    if (key === 'window' || key === 'self') continue;
+    var val = _allGlobals[key];
+    // 挂到真正的全局作用域
+    if (typeof _realGlobal[key] === 'undefined') {
+      try { _realGlobal[key] = val; } catch (e) { /* 忽略 */ }
+    }
+    // 同时挂到 GameGlobal
+    if (typeof GameGlobal[key] === 'undefined') {
+      try { GameGlobal[key] = val; } catch (e) { /* 忽略 */ }
+    }
+  }
 }
 
-// 全局 canvas 暴露（同时挂载到 GameGlobal 和 window，确保 bundle 中能找到）
-GameGlobal.canvas = canvas;
-if (typeof window !== 'undefined') {
-  try { window.canvas = canvas; } catch (e) { /* 只读属性则忽略 */ }
-}
+// ======== 全局 canvas ========
+// 微信框架可能已将 canvas 设为只读属性，需 try-catch 保护
+try { GameGlobal.canvas = canvas; } catch (e) { /* 已由框架设置 */ }
+try { _realGlobal.canvas = canvas; } catch (e) { /* 只读属性忽略 */ }
 
-// navigator.userAgent 赋值（只读属性，需 try-catch）
+// ======== navigator.userAgent ========
 try {
-  if (typeof window !== 'undefined' && window.navigator) {
-    window.navigator.userAgent = navigator.userAgent;
+  if (_realGlobal.window && _realGlobal.window.navigator) {
+    _realGlobal.window.navigator.userAgent = navigator.userAgent;
   }
-} catch (e) {
-  // 只读属性，忽略
-}
+} catch (e) { /* 只读属性忽略 */ }
 
-// PixiJS 7 EventSystem 需要 PointerEvent
-if (typeof GameGlobal !== 'undefined' && !GameGlobal.PointerEvent) {
-  GameGlobal.PointerEvent = function PointerEvent(type, opts) {
-    this.type = type;
-    Object.assign(this, opts || {});
-  };
-}
-
-// PixiJS 可能检查 TouchEvent 构造函数
-if (typeof GameGlobal !== 'undefined' && !GameGlobal.TouchEvent) {
-  GameGlobal.TouchEvent = function TouchEvent(type, opts) {
-    this.type = type;
-    Object.assign(this, opts || {});
-  };
-}
-
-// PixiJS 可能检查 MouseEvent 构造函数
-if (typeof GameGlobal !== 'undefined' && !GameGlobal.MouseEvent) {
-  GameGlobal.MouseEvent = function MouseEvent(type, opts) {
-    this.type = type;
-    Object.assign(this, opts || {});
-  };
-}
-
-// PixiJS 在某些场景检查 URL / Blob
-if (typeof GameGlobal !== 'undefined') {
-  if (!GameGlobal.URL) {
-    GameGlobal.URL = {
-      createObjectURL: function() { return ''; },
-      revokeObjectURL: function() {},
-    };
-  }
-  if (!GameGlobal.Blob) {
-    GameGlobal.Blob = function Blob() {};
-  }
-}
-
-// 注册触摸事件桥接
+// ======== 注册触摸事件 ========
 registerTouchEvents();
 
 console.log('[pixi-adapter] 初始化完成, 平台:', platform.name, ', 环境:', isDevtools ? '模拟器' : '真机');
+console.log('[pixi-adapter] _realGlobal === GameGlobal:', _realGlobal === GameGlobal,
+  ', typeof document:', typeof _realGlobal.document,
+  ', typeof window:', typeof _realGlobal.window);
