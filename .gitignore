@@ -8,3 +8,6 @@ minigame/game-bundle.js
 # 游戏资产（由 game_assets 仓库管理）
 assets/images
 minigame/images/
+
+# CodeBuddy 项目数据
+.codebuddy/
