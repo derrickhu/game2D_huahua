@@ -15,7 +15,14 @@ import { BoardView } from '@/gameobjects/board/BoardView';
 import { CustomerView } from '@/gameobjects/customer/CustomerView';
 import { TopBar, TOP_BAR_HEIGHT } from '@/gameobjects/ui/TopBar';
 import { ItemInfoBar } from '@/gameobjects/ui/ItemInfoBar';
+import { MergeChainPanel } from '@/gameobjects/ui/MergeChainPanel';
+import { WarehousePanel } from '@/gameobjects/ui/WarehousePanel';
 import { ToastMessage } from '@/gameobjects/ui/ToastMessage';
+import { MergeHintSystem } from '@/systems/MergeHintSystem';
+import { ComboSystem } from '@/systems/ComboSystem';
+import { FlowerEasterEggSystem } from '@/systems/FlowerEasterEggSystem';
+import { SeasonSystem } from '@/systems/SeasonSystem';
+import { MergeStatsSystem } from '@/systems/MergeStatsSystem';
 import { DESIGN_WIDTH, COLORS, FONT_FAMILY, MAX_CUSTOMERS, INFO_BAR_HEIGHT } from '@/config/Constants';
 
 export class MainScene implements Scene {
@@ -25,6 +32,13 @@ export class MainScene implements Scene {
   private _boardView!: BoardView;
   private _topBar!: TopBar;
   private _infoBar!: ItemInfoBar;
+  private _mergeChainPanel!: MergeChainPanel;
+  private _warehousePanel!: WarehousePanel;
+  private _mergeHintSystem!: MergeHintSystem;
+  private _comboSystem!: ComboSystem;
+  private _flowerEasterEgg!: FlowerEasterEggSystem;
+  private _seasonSystem!: SeasonSystem;
+  private _mergeStats!: MergeStatsSystem;
   private _shopArea!: PIXI.Container;
   private _customerViews: CustomerView[] = [];
 
@@ -71,6 +85,43 @@ export class MainScene implements Scene {
     this._infoBar = new ItemInfoBar();
     this._infoBar.position.set(0, barY);
     this.container.addChild(this._infoBar);
+
+    // 合成线可视化面板（全屏覆盖层，初始隐藏）
+    this._mergeChainPanel = new MergeChainPanel();
+    this.container.addChild(this._mergeChainPanel);
+
+    // 合成线面板事件
+    EventBus.on('mergeChain:open', (itemId: string) => {
+      this._mergeChainPanel.open(itemId);
+    });
+
+    // 仓库面板
+    this._warehousePanel = new WarehousePanel();
+    this.container.addChild(this._warehousePanel);
+
+    EventBus.on('nav:openWarehouse', () => {
+      this._warehousePanel.open();
+    });
+
+    // 可合成提示系统
+    this._mergeHintSystem = new MergeHintSystem(this._boardView);
+
+    // 连击系统
+    this._comboSystem = new ComboSystem(this.container);
+
+    // 操作时通知提示系统重置空闲计时
+    EventBus.on('board:merged', () => this._mergeHintSystem.notifyInteraction());
+    EventBus.on('board:moved', () => this._mergeHintSystem.notifyInteraction());
+    EventBus.on('board:itemSelected', () => this._mergeHintSystem.notifyInteraction());
+
+    // 花语合成彩蛋系统
+    this._flowerEasterEgg = new FlowerEasterEggSystem(this.container);
+
+    // 季节主题系统
+    this._seasonSystem = new SeasonSystem(this.container);
+
+    // 合成统计系统
+    this._mergeStats = new MergeStatsSystem(this.container);
   }
 
   /** 店铺区域高度（设计坐标），供外部布局计算 */
@@ -174,5 +225,8 @@ export class MainScene implements Scene {
 
     this._boardView.updateCdDisplay();
     this._topBar.updateTimer();
+    this._mergeHintSystem.update(dt);
+    this._comboSystem.update(dt);
+    this._seasonSystem.update(dt);
   }
 }

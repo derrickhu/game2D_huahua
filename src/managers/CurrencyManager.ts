@@ -69,6 +69,12 @@ class CurrencyManagerClass {
     EventBus.emit('currency:changed', 'stamina', this._state.stamina);
   }
 
+  /** 增加经验值（连击加成等） */
+  addExp(amount: number): void {
+    this._state.exp += amount;
+    EventBus.emit('currency:changed', 'exp', this._state.exp);
+  }
+
   /** 每帧更新，处理体力自然恢复 */
   update(dt: number): void {
     if (this._state.stamina < STAMINA_MAX) {

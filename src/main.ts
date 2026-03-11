@@ -29,8 +29,8 @@ async function main(): Promise<void> {
   try {
     console.log('[main] 花语小筑启动中... BUILD:', BUILD_TIME);
 
-    // 开发阶段：启动时清除所有可能的旧存档，防止脏数据干扰
-    _clearAllSaves();
+    // 注意：不再在启动时无条件清除存档！
+    // 旧存档的兼容性由 SaveManager 的指纹校验负责处理
 
     // 环境诊断
     console.log('[main] typeof document:', typeof document,
@@ -99,21 +99,6 @@ async function main(): Promise<void> {
   } catch (e) {
     console.error('[main] 启动失败:', e);
   }
-}
-
-/** 开发阶段：启动时无条件清除所有存档 key，杜绝脏数据 */
-function _clearAllSaves(): void {
-  const api: any = typeof wx !== 'undefined' ? wx : typeof tt !== 'undefined' ? tt : null;
-  if (!api) return;
-  const keys = [
-    'huahua_save',
-    'huahua_save_v1', 'huahua_save_v2', 'huahua_save_v3',
-    'huahua_save_v4', 'huahua_save_v5',
-  ];
-  for (const k of keys) {
-    try { api.removeStorageSync(k); } catch (_) {}
-  }
-  console.log('[main] 已清除所有存档 key');
 }
 
 main();

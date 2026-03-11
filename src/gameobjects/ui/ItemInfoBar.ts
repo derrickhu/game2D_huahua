@@ -47,6 +47,8 @@ export class ItemInfoBar extends PIXI.Container {
   private _warehouseBtn!: PIXI.Container;
   /** 出售按钮 */
   private _sellBtn!: PIXI.Container;
+  /** 合成线按钮 */
+  private _chainBtn!: PIXI.Container;
 
   /** 物品名称文本 */
   private _nameText!: PIXI.Text;
@@ -71,6 +73,7 @@ export class ItemInfoBar extends PIXI.Container {
     this._buildBg();
     this._buildBackBtn();
     this._buildInfoArea();
+    this._buildChainBtn();
     this._buildSellBtn();
     this._buildWarehouseBtn();
     this._buildHint();
@@ -79,6 +82,7 @@ export class ItemInfoBar extends PIXI.Container {
     // 初始态：显示提示，隐藏信息
     this._infoContainer.visible = false;
     this._sellBtn.visible = false;
+    this._chainBtn.visible = false;
     this._hintText.visible = true;
   }
 
@@ -186,6 +190,39 @@ export class ItemInfoBar extends PIXI.Container {
     this._infoContainer.addChild(this._descText);
 
     this.addChild(this._infoContainer);
+  }
+
+  /** 合成线按钮（出售按钮左侧） */
+  private _buildChainBtn(): void {
+    this._chainBtn = new PIXI.Container();
+    const CHAIN_BTN_W = 72;
+    const CHAIN_BTN_H = 40;
+    const rightEdge = DESIGN_WIDTH - 56 - SELL_BTN_W / 2 - BTN_SIZE - 14 - SELL_BTN_W - 12;
+
+    const bg = new PIXI.Graphics();
+    bg.beginFill(0x8BB8D0);
+    bg.drawRoundedRect(-CHAIN_BTN_W / 2, -CHAIN_BTN_H / 2, CHAIN_BTN_W, CHAIN_BTN_H, 10);
+    bg.endFill();
+    this._chainBtn.addChild(bg);
+
+    const text = new PIXI.Text('📖合成线', {
+      fontSize: 13,
+      fill: 0xFFFFFF,
+      fontFamily: FONT_FAMILY,
+      fontWeight: 'bold',
+    });
+    text.anchor.set(0.5, 0.5);
+    this._chainBtn.addChild(text);
+
+    this._chainBtn.position.set(rightEdge, CONTENT_HEIGHT / 2);
+    this._chainBtn.eventMode = 'static';
+    this._chainBtn.cursor = 'pointer';
+    this._chainBtn.hitArea = new PIXI.Rectangle(
+      -CHAIN_BTN_W / 2 - 4, -CHAIN_BTN_H / 2 - 4,
+      CHAIN_BTN_W + 8, CHAIN_BTN_H + 8,
+    );
+    this._chainBtn.on('pointerdown', () => this._onChainTap());
+    this.addChild(this._chainBtn);
   }
 
   /** 出售按钮 */
@@ -319,6 +356,11 @@ export class ItemInfoBar extends PIXI.Container {
       && !!cell && cell.state === CellState.OPEN;
     this._sellBtn.visible = canSell;
 
+    // 合成线按钮：可合成物品（非建筑）才显示
+    const showChain = def.category !== Category.BUILDING
+      && def.maxLevel > 1;
+    this._chainBtn.visible = showChain;
+
     // 入场动画
     this._playShowAnim();
   }
@@ -328,6 +370,7 @@ export class ItemInfoBar extends PIXI.Container {
     this._selectedCellIndex = -1;
     this._infoContainer.visible = false;
     this._sellBtn.visible = false;
+    this._chainBtn.visible = false;
     this._hintText.visible = true;
   }
 
@@ -372,6 +415,12 @@ export class ItemInfoBar extends PIXI.Container {
   private _onWarehouseTap(): void {
     this._playBtnBounce(this._warehouseBtn);
     EventBus.emit('nav:openWarehouse');
+  }
+
+  private _onChainTap(): void {
+    if (!this._selectedItemId) return;
+    this._playBtnBounce(this._chainBtn);
+    EventBus.emit('mergeChain:open', this._selectedItemId);
   }
 
   // ===================== 动画 =====================

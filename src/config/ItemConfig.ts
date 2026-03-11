@@ -180,3 +180,33 @@ export function getMergeResultId(itemId: string): string | null {
   if (def.level >= def.maxLevel) return null;
   return findItemId(def.category, def.line, def.level + 1);
 }
+
+/** 获取物品所在的完整合成链（从1级到满级的所有物品ID） */
+export function getMergeChain(itemId: string): string[] {
+  const def = ITEM_DEFS.get(itemId);
+  if (!def) return [];
+  const chain: string[] = [];
+  for (let lv = 1; lv <= def.maxLevel; lv++) {
+    const id = findItemId(def.category, def.line, lv);
+    if (id) chain.push(id);
+  }
+  return chain;
+}
+
+/** 获取合成链的显示名称 */
+export function getMergeChainName(itemId: string): string {
+  const def = ITEM_DEFS.get(itemId);
+  if (!def) return '';
+  const lineNames: Record<string, string> = {
+    daily: '日常花系',
+    romantic: '浪漫花系',
+    luxury: '奢华花系',
+    tea: '茶饮线',
+    cold: '冷饮线',
+    dessert: '甜品线',
+    flower_build: '花束建筑线',
+    drink_build: '饮品建筑线',
+    chest: '宝箱',
+  };
+  return (lineNames[def.line] || def.line) + '合成线';
+}

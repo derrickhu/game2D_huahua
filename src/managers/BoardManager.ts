@@ -6,6 +6,7 @@ import { BOARD_COLS, BOARD_ROWS, BOARD_TOTAL } from '@/config/Constants';
 import { CellState, BOARD_PRESETS } from '@/config/BoardLayout';
 import { ITEM_DEFS, getMergeResultId, Category, FlowerLine } from '@/config/ItemConfig';
 import { BUILDING_DEFS } from '@/config/BuildingConfig';
+import { SeasonSystem } from '@/systems/SeasonSystem';
 
 export interface CellData {
   index: number;
@@ -195,14 +196,27 @@ class BoardManagerClass {
     return true;
   }
 
-  /** 执行合成（含跨格合成 + 建筑材料满级自动转化） */
+  /** 执行合成（含跨格合成 + 建筑材料满级自动转化 + 季节跳级） */
   doMerge(srcIndex: number, dstIndex: number): string | null {
     if (!this.canMerge(srcIndex, dstIndex)) return null;
 
     const src = this.cells[srcIndex];
     const dst = this.cells[dstIndex];
-    const resultId = getMergeResultId(src.itemId!);
+    let resultId = getMergeResultId(src.itemId!);
     if (!resultId) return null;
+
+    // 春天日常花系跳级：20%概率产物再升一级
+    const srcDef = ITEM_DEFS.get(src.itemId!);
+    if (srcDef) {
+      const skipChance = SeasonSystem.getSkipLevelChance(srcDef.line);
+      if (skipChance > 0 && Math.random() < skipChance) {
+        const skipId = getMergeResultId(resultId);
+        if (skipId) {
+          resultId = skipId;
+          console.log(`[Board] 季节跳级! ${srcDef.name} → 跳升至 ${ITEM_DEFS.get(skipId)?.name}`);
+        }
+      }
+    }
 
     const isPeekMerge = dst.state === CellState.PEEK;
     let resultCellIndex: number;
@@ -372,20 +386,14 @@ class BoardManagerClass {
       }
     }
 
-    // 空棋盘检测：排除建筑后，如果可合成类物品（花束/花饮/建筑材料/宝箱）太少，
-    // 说明存档异常或物品全部被消耗，重新填充初始物品避免玩家卡死
-    const openCells = this.cells.filter(c => c.state === CellState.OPEN);
-    const nonBuildingItems = openCells.filter(c => {
-      if (!c.itemId) return false;
-      const def = ITEM_DEFS.get(c.itemId);
-      return def && def.category !== Category.BUILDING;
-    });
-    if (nonBuildingItems.length < 3 && openCells.length >= 4) {
-      console.warn(`[Board] 存档棋盘物品过少（非建筑物品仅${nonBuildingItems.length}个），重新填充初始物品`);
-      this._randomizeInitialOpenItems();
-    }
-
+    // 确保至少有一对可合成物品（防止玩家完全卡死）
+    // 注意：不再重新随机填充，只在完全无可操作时补一对
     this._ensureAtLeastOneMergePair();
+
+    const openCells = this.cells.filter(c => c.state === CellState.OPEN);
+    const itemCount = openCells.filter(c => c.itemId).length;
+    console.log(`[Board] loadState 完成: ${openCells.length} OPEN, ${itemCount} 有物品`);
+
     EventBus.emit('board:loaded');
   }
 }
