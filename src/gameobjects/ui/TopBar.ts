@@ -9,7 +9,7 @@
 import * as PIXI from 'pixi.js';
 import { EventBus } from '@/core/EventBus';
 import { CurrencyManager } from '@/managers/CurrencyManager';
-import { STAMINA_MAX, FONT_FAMILY } from '@/config/Constants';
+import { FONT_FAMILY } from '@/config/Constants';
 
 /** TopBar 对外暴露的逻辑高度（设计坐标） */
 export const TOP_BAR_HEIGHT = 60;
@@ -294,11 +294,12 @@ export class TopBar extends PIXI.Container {
 
   private _updateAll(): void {
     const s = CurrencyManager.state;
+    const cap = CurrencyManager.staminaCap;
     this._levelText.text = `Lv.${s.level}`;
-    this._staminaText.text = `${s.stamina}/${STAMINA_MAX}`;
+    this._staminaText.text = `${s.stamina}/${cap}`;
     this._goldText.text = this._fmtNum(s.gold);
     this._diamondText.text = this._fmtNum(s.diamond);
-    this._drawStaminaBar(s.stamina / STAMINA_MAX);
+    this._drawStaminaBar(s.stamina / cap);
   }
 
   /** 由外部 ticker 调用，刷新体力倒计时 */

@@ -40,6 +40,11 @@ import { MergeStatsSystem } from '@/systems/MergeStatsSystem';
 import { TutorialSystem } from '@/systems/TutorialSystem';
 import { GMManager } from '@/managers/GMManager';
 import { GMPanel } from '@/gameobjects/ui/GMPanel';
+import { RegularCustomerManager } from '@/managers/RegularCustomerManager';
+import { StaminaPanel } from '@/gameobjects/ui/StaminaPanel';
+import { RegularCustomerPanel } from '@/gameobjects/ui/RegularCustomerPanel';
+import { StoryPopup } from '@/gameobjects/ui/StoryPopup';
+import { CUSTOMER_TYPES } from '@/config/CustomerConfig';
 import { DESIGN_WIDTH, COLORS, FONT_FAMILY, MAX_CUSTOMERS, INFO_BAR_HEIGHT } from '@/config/Constants';
 
 export class MainScene implements Scene {
@@ -72,6 +77,11 @@ export class MainScene implements Scene {
   // ---- GM 调试 ----
   private _gmPanel!: GMPanel;
 
+  // ---- 新增系统 ----
+  private _staminaPanel!: StaminaPanel;
+  private _regularPanel!: RegularCustomerPanel;
+  private _storyPopup!: StoryPopup;
+
   // ---- 离线计时 ----
   private _idleSaveTimer = 0;
 
@@ -89,6 +99,7 @@ export class MainScene implements Scene {
     CheckInManager.init();
     IdleManager.init();
     LevelManager.init();
+    RegularCustomerManager.init();
 
     this._bindCustomerEvents();
     this._bindSystemEvents();
@@ -216,6 +227,18 @@ export class MainScene implements Scene {
     this._levelUpPopup = new LevelUpPopup();
     this.container.addChild(this._levelUpPopup);
 
+    // 体力不足面板
+    this._staminaPanel = new StaminaPanel();
+    this.container.addChild(this._staminaPanel);
+
+    // 熟客档案面板
+    this._regularPanel = new RegularCustomerPanel();
+    this.container.addChild(this._regularPanel);
+
+    // 花语故事弹窗
+    this._storyPopup = new StoryPopup();
+    this.container.addChild(this._storyPopup);
+
     // GM 调试面板（最高层级）
     this._gmPanel = new GMPanel();
     this.container.addChild(this._gmPanel);
@@ -317,6 +340,7 @@ export class MainScene implements Scene {
     const buttons = [
       { icon: '📅', label: '签到', event: 'nav:openCheckIn', x: 40 },
       { icon: '📋', label: '任务', event: 'nav:openQuest', x: 110 },
+      { icon: '💝', label: '熟客', event: 'nav:openRegular', x: 180 },
     ];
 
     for (const btn of buttons) {
@@ -421,6 +445,50 @@ export class MainScene implements Scene {
         setTimeout(() => this._checkInPanel.open(), 1000);
       }
     });
+
+    // ---- 体力系统事件 ----
+
+    // 体力不足 → 弹出体力面板引导
+    EventBus.on('building:noStamina', () => {
+      this._staminaPanel.open();
+    });
+
+    // ---- 熟客系统事件 ----
+
+    // 打开熟客面板
+    EventBus.on('nav:openRegular', () => this._regularPanel.open());
+
+    // 熟客问候（到店时的对话气泡）
+    EventBus.on('regular:greeting', (_typeId: string, name: string, greeting: string) => {
+      ToastMessage.show(`💬 ${name}：「${greeting}」`);
+    });
+
+    // 熟客感谢（交付后的对话）
+    EventBus.on('regular:thanks', (_typeId: string, name: string, thanks: string) => {
+      ToastMessage.show(`💝 ${name}：「${thanks}」`);
+    });
+
+    // 好感度升级提示
+    EventBus.on('regular:favorLevelUp', (typeId: string, level: number) => {
+      const type = CUSTOMER_TYPES.find(t => t.id === typeId);
+      if (type) {
+        const levelNames = ['陌生', '熟悉', '亲密', '挚友'];
+        ToastMessage.show(`✨ ${type.name}的好感度升至「${levelNames[level] || ''}」！`);
+      }
+    });
+
+    // 新故事可解锁提示
+    EventBus.on('regular:storyAvailable', (typeId: string, _chapterIdx: number) => {
+      const type = CUSTOMER_TYPES.find(t => t.id === typeId);
+      if (type) {
+        ToastMessage.show(`📖 ${type.name}的新花语故事可以阅读了！`);
+      }
+    });
+
+    // 展示故事弹窗
+    EventBus.on('regular:showStory', (typeId: string, chapterIdx: number, chapter: any) => {
+      this._storyPopup.show(typeId, chapterIdx, chapter);
+    });
   }
 
   /** 刷新客人视图 */
@@ -442,6 +510,15 @@ export class MainScene implements Scene {
 
     const questDot = this._shopArea.getChildByName('redDot_nav:openQuest') as PIXI.Graphics;
     if (questDot) questDot.visible = QuestManager.hasClaimableQuest || QuestManager.hasClaimableAchievement;
+
+    // 熟客红点：有可阅读的新故事
+    const regularDot = this._shopArea.getChildByName('redDot_nav:openRegular') as PIXI.Graphics;
+    if (regularDot) {
+      const hasNewStory = RegularCustomerManager.getAllRegulars().some(d => {
+        return RegularCustomerManager.getUnlockableStory(d.typeId) !== null;
+      });
+      regularDot.visible = hasNewStory;
+    }
   }
 
   private _update(): void {
@@ -454,6 +531,7 @@ export class MainScene implements Scene {
 
     this._boardView.updateCdDisplay();
     this._topBar.updateTimer();
+    this._staminaPanel.updateTimer();
     this._mergeHintSystem.update(dt);
     this._comboSystem.update(dt);
     this._seasonSystem.update(dt);

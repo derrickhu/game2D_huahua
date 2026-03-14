@@ -4,6 +4,7 @@
 import { EventBus } from '@/core/EventBus';
 import { BoardManager } from './BoardManager';
 import { CurrencyManager } from './CurrencyManager';
+import { RegularCustomerManager } from './RegularCustomerManager';
 import { CUSTOMER_TYPES, CustomerTypeDef } from '@/config/CustomerConfig';
 import { ITEM_DEFS, findItemId } from '@/config/ItemConfig';
 import { MAX_CUSTOMERS, CUSTOMER_REFRESH_MIN, CUSTOMER_REFRESH_MAX } from '@/config/Constants';
@@ -76,12 +77,17 @@ class CustomerManagerClass {
       }
     }
 
-    // 发放奖励
-    CurrencyManager.addGold(customer.goldReward);
-    if (customer.huayuanReward > 0) CurrencyManager.addHuayuan(customer.huayuanReward);
-    if (customer.hualuReward > 0) CurrencyManager.addHualu(customer.hualuReward);
+    // 发放奖励（含熟客加成）
+    const bonus = RegularCustomerManager.getRewardBonus(customer.typeId);
+    const finalGold = Math.round(customer.goldReward * (1 + bonus));
+    CurrencyManager.addGold(finalGold);
+    if (customer.huayuanReward > 0) CurrencyManager.addHuayuan(Math.round(customer.huayuanReward * (1 + bonus)));
+    if (customer.hualuReward > 0) CurrencyManager.addHualu(Math.round(customer.hualuReward * (1 + bonus)));
 
-    console.log(`[Customer] 交付完成: ${customer.name}, 金币+${customer.goldReward}`);
+    // 更新 goldReward 为实际发放值（供 Toast 显示）
+    customer.goldReward = finalGold;
+
+    console.log(`[Customer] 交付完成: ${customer.name}, 金币+${finalGold}${bonus > 0 ? ` (熟客加成+${Math.round(bonus * 100)}%)` : ''}`);
 
     // 移除客人
     this._customers.splice(idx, 1);

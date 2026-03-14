@@ -160,7 +160,8 @@ class SaveManagerClass {
         'huahua_tutorial',
         'huahua_merge_stats',
         'huahua_flower_quotes',
-        'huahua_gm'
+        'huahua_gm',
+        'huahua_regulars'
       ];
       for (const key of keys) {
         try { _api?.removeStorageSync(key); } catch (_) {}
