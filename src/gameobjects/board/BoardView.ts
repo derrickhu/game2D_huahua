@@ -35,6 +35,9 @@ export class BoardView extends PIXI.Container {
   private _lastTapIndex = -1;
   private _lastTapTime = 0;
   private _tapTimer: ReturnType<typeof setTimeout> | null = null;
+  /** 长按检测（长按0.8秒打开合成线面板） */
+  private _longPressTimer: ReturnType<typeof setTimeout> | null = null;
+  private _longPressTriggered = false;
   /** 合成引导线系统 */
   private _guideLineSystem: MergeGuideLineSystem;
 
@@ -206,11 +209,32 @@ export class BoardView extends PIXI.Container {
       if (cellIdx < 0) return;
 
       this._dragSrcIndex = cellIdx;
+      this._longPressTriggered = false;
       const cell = BoardManager.getCellByIndex(cellIdx);
       if (!cell) return;
 
       if (cell.state === CellState.KEY) return;
       if (cell.itemId && BuildingManager.isInteractable(cell.itemId)) return;
+
+      // 长按检测：0.8秒后弹出合成线面板
+      if (cell.itemId && cell.state === CellState.OPEN) {
+        const def = ITEM_DEFS.get(cell.itemId);
+        if (def && def.maxLevel > 1 && def.category !== Category.BUILDING) {
+          this._clearLongPress();
+          const pressItemId = cell.itemId;
+          this._longPressTimer = setTimeout(() => {
+            this._longPressTriggered = true;
+            // 取消拖拽
+            if (this._dragGhost) {
+              MergeManager.cancelDrag();
+              this._endDrag();
+            }
+            this._dragSrcIndex = -1;
+            // 弹出合成线面板
+            EventBus.emit('mergeChain:open', pressItemId);
+          }, 800);
+        }
+      }
 
       if (cell.itemId && cell.state === CellState.OPEN) {
         if (MergeManager.startDrag(cellIdx)) {
@@ -226,12 +250,20 @@ export class BoardView extends PIXI.Container {
 
     canvas.addEventListener('pointermove', (e: any) => {
       if (this._dragSrcIndex < 0 || !this._dragGhost) return;
+      // 开始拖动后取消长按检测
+      this._clearLongPress();
       const localPos = this._rawToLocal(e);
       this._moveDragGhost(localPos);
     });
 
     const handleRawUp = (e: any) => {
+      this._clearLongPress();
       if (this._dragSrcIndex < 0) return;
+      // 长按已触发合成线面板，忽略抬手操作
+      if (this._longPressTriggered) {
+        this._longPressTriggered = false;
+        return;
+      }
       const srcIdx = this._dragSrcIndex;
 
       if (this._dragGhost) {
@@ -283,6 +315,7 @@ export class BoardView extends PIXI.Container {
 
     canvas.addEventListener('pointerup', handleRawUp);
     canvas.addEventListener('pointercancel', () => {
+      this._clearLongPress();
       if (this._dragGhost) {
         MergeManager.cancelDrag();
         this._endDrag();
@@ -441,6 +474,8 @@ export class BoardView extends PIXI.Container {
     }
 
     // 寻找最近的同类物品
+    // 注意：双击合成是用户主动操作，不应受客人锁定(reserved)限制
+    // 合成完成后客人系统会自动重新扫描锁定(_rescanAll)
     const srcCol = cellIndex % BOARD_COLS;
     const srcRow = Math.floor(cellIndex / BOARD_COLS);
     let bestIdx = -1;
@@ -450,7 +485,7 @@ export class BoardView extends PIXI.Container {
       if (i === cellIndex) continue;
       const other = BoardManager.cells[i];
       if (other.state !== CellState.OPEN || other.itemId !== cell.itemId) continue;
-      if (other.reserved) continue; // 被客人锁定的不可合成
+      // 不再跳过 reserved 物品：双击合成优先级高于客人锁定
 
       const col = i % BOARD_COLS;
       const row = Math.floor(i / BOARD_COLS);
@@ -597,6 +632,14 @@ export class BoardView extends PIXI.Container {
   }
 
   // ========== 工具方法 ==========
+
+  /** 清除长按检测计时器 */
+  private _clearLongPress(): void {
+    if (this._longPressTimer) {
+      clearTimeout(this._longPressTimer);
+      this._longPressTimer = null;
+    }
+  }
 
   private _hitTestCell(x: number, y: number): number {
     const cs = BoardMetrics.cellSize;

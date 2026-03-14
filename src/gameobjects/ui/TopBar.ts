@@ -33,7 +33,9 @@ const GOLD_W = 110;
 // 钻石胶囊
 const DIA_X = GOLD_X + GOLD_W + 10;  // 370
 const DIA_W = 110;
-// 最右端 370+110 = 480，安全范围内（胶囊按钮左边界约 ~550）
+// 统计按钮位置（钻石胶囊右侧）
+const STATS_X = DIA_X + DIA_W + 10;  // 490
+// 最右端 490+32 = 522，安全范围内
 
 // ── 颜色 ──
 const C = {
@@ -63,6 +65,7 @@ export class TopBar extends PIXI.Container {
     this._buildStaminaPill();
     this._buildGoldPill();
     this._buildDiamondPill();
+    this._buildStatsBtn();
     this._bindEvents();
     this._updateAll();
   }
@@ -246,6 +249,40 @@ export class TopBar extends PIXI.Container {
 
     // "+"
     this._drawPlusBtn(DIA_X + DIA_W - 2, PY + PILL_H / 2, C.DIAMOND_DARK);
+  }
+
+  /* ============== 合成统计按钮（📊图标） ============== */
+
+  private _buildStatsBtn(): void {
+    const cx = STATS_X + 16;
+    const cy = TOP_BAR_HEIGHT / 2;
+    const r = 16;
+
+    const bg = new PIXI.Graphics();
+    bg.beginFill(0xFFFFFF, 0.2);
+    bg.drawCircle(cx, cy, r);
+    bg.endFill();
+    bg.lineStyle(1.5, 0xFFFFFF, 0.4);
+    bg.drawCircle(cx, cy, r);
+    this.addChild(bg);
+
+    // 📊 用简易柱状图代替
+    const icon = new PIXI.Graphics();
+    icon.beginFill(0xFFFFFF, 0.9);
+    icon.drawRect(cx - 7, cy - 2, 4, 10);
+    icon.drawRect(cx - 1, cy - 7, 4, 15);
+    icon.drawRect(cx + 5, cy - 4, 4, 12);
+    icon.endFill();
+    this.addChild(icon);
+
+    const hitArea = new PIXI.Container();
+    hitArea.hitArea = new PIXI.Circle(cx, cy, r + 6);
+    hitArea.eventMode = 'static';
+    hitArea.cursor = 'pointer';
+    hitArea.on('pointerdown', () => {
+      EventBus.emit('stats:open');
+    });
+    this.addChild(hitArea);
   }
 
   /* ============== 事件 & 更新 ============== */

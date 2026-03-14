@@ -13,6 +13,7 @@ import { Game } from '@/core/Game';
 import { DESIGN_WIDTH, COLORS, FONT_FAMILY, BoardMetrics, BOARD_COLS, CELL_GAP } from '@/config/Constants';
 import { ITEM_DEFS } from '@/config/ItemConfig';
 import { CurrencyManager } from '@/managers/CurrencyManager';
+import { BoardManager } from '@/managers/BoardManager';
 import { SeasonSystem } from '@/systems/SeasonSystem';
 
 const COMBO_WINDOW = 5; // 秒
@@ -113,6 +114,11 @@ export class ComboSystem {
     // 触发狂热
     if (this._comboCount >= FRENZY_THRESHOLD && !this._isFrenzy) {
       this._startFrenzy();
+    }
+
+    // 合成溢出：狂热模式下10%概率额外产出同等级物品
+    if (this._isFrenzy && Math.random() < OVERFLOW_CHANCE) {
+      this._tryOverflow(resultId, resultCell);
     }
 
     // 更新最高记录
@@ -255,7 +261,8 @@ export class ComboSystem {
 
   private _endCombo(): void {
     if (this._comboCount >= 2) {
-      // 显示结算
+      // 显示结算浮窗
+      this._showComboSummary(this._comboCount, this._totalBonusExp);
       EventBus.emit('combo:end', this._comboCount, this._totalBonusExp);
     }
 
@@ -269,6 +276,137 @@ export class ComboSystem {
     if (this._isFrenzy) {
       this._endFrenzy();
     }
+  }
+
+  /** 合成溢出：在最近空格额外产出一个同等级物品 */
+  private _tryOverflow(resultId: string, _resultCell: number): void {
+    const def = ITEM_DEFS.get(resultId);
+    if (!def) return;
+
+    // 查找同等级同品类同线的物品ID（即和合成产物同ID）
+    const emptyCell = BoardManager.findEmptyOpenCell();
+    if (emptyCell < 0) return;
+
+    // 产出一个同ID的物品（等级与合成产物相同）
+    BoardManager.placeItem(emptyCell, resultId);
+    EventBus.emit('combo:overflow', emptyCell, resultId);
+
+    // 显示溢出提示
+    this._showOverflowText(emptyCell);
+  }
+
+  /** 溢出提示文字 */
+  private _showOverflowText(cellIndex: number): void {
+    const cs = BoardMetrics.cellSize;
+    const col = cellIndex % BOARD_COLS;
+    const row = Math.floor(cellIndex / BOARD_COLS);
+    const cx = BoardMetrics.paddingX + col * (cs + CELL_GAP) + cs / 2;
+    const cy = BoardMetrics.topY + row * (cs + CELL_GAP) - 5;
+
+    const text = new PIXI.Text('溢出!', {
+      fontSize: 16,
+      fill: 0xFF4500,
+      fontFamily: FONT_FAMILY,
+      fontWeight: 'bold',
+      stroke: 0xFFFFFF,
+      strokeThickness: 2,
+    });
+    text.anchor.set(0.5, 1);
+    text.position.set(cx, cy);
+    text.alpha = 1;
+    this._container.addChild(text);
+
+    TweenManager.to({
+      target: text,
+      props: { alpha: 0 },
+      duration: 1.0,
+      delay: 0.3,
+      ease: Ease.easeInQuad,
+      onComplete: () => {
+        this._container.removeChild(text);
+        text.destroy();
+      },
+    });
+    TweenManager.to({
+      target: text.position,
+      props: { y: cy - 25 },
+      duration: 1.0,
+      ease: Ease.easeOutQuad,
+    });
+  }
+
+  /** 连击结算浮窗 */
+  private _showComboSummary(count: number, bonusExp: number): void {
+    const summaryContainer = new PIXI.Container();
+
+    const cx = DESIGN_WIDTH / 2;
+    const cy = Game.logicHeight / 2 - 40;
+
+    // 背景卡片
+    const cardW = 240;
+    const cardH = 120;
+    const bg = new PIXI.Graphics();
+    bg.beginFill(0x000000, 0.6);
+    bg.drawRoundedRect(cx - cardW / 2, cy - cardH / 2, cardW, cardH, 16);
+    bg.endFill();
+    summaryContainer.addChild(bg);
+
+    // 连击数
+    const countColor = count >= 10 ? 0xFF4500 : count >= 5 ? 0xFF8C00 : 0xFFD700;
+    const countText = new PIXI.Text(`${count} 连击!`, {
+      fontSize: 28,
+      fill: countColor,
+      fontFamily: FONT_FAMILY,
+      fontWeight: 'bold',
+      stroke: 0x000000,
+      strokeThickness: 3,
+    });
+    countText.anchor.set(0.5, 0.5);
+    countText.position.set(cx, cy - 18);
+    summaryContainer.addChild(countText);
+
+    // 额外经验
+    if (bonusExp > 0) {
+      const expText = new PIXI.Text(`额外经验 +${bonusExp}`, {
+        fontSize: 16,
+        fill: 0xFFFFFF,
+        fontFamily: FONT_FAMILY,
+      });
+      expText.anchor.set(0.5, 0.5);
+      expText.position.set(cx, cy + 18);
+      summaryContainer.addChild(expText);
+    }
+
+    summaryContainer.alpha = 0;
+    summaryContainer.scale.set(0.5);
+    this._container.parent.addChild(summaryContainer);
+
+    // 入场动画
+    TweenManager.to({
+      target: summaryContainer,
+      props: { alpha: 1 },
+      duration: 0.2,
+      ease: Ease.easeOutQuad,
+    });
+    TweenManager.to({
+      target: summaryContainer.scale,
+      props: { x: 1, y: 1 },
+      duration: 0.25,
+      ease: Ease.easeOutBack,
+    });
+
+    // 1.5秒后渐隐
+    TweenManager.to({
+      target: summaryContainer,
+      props: { alpha: 0 },
+      duration: 0.5,
+      delay: 1.5,
+      ease: Ease.easeInQuad,
+      onComplete: () => {
+        summaryContainer.parent?.removeChild(summaryContainer);
+        summaryContainer.destroy({ children: true });
+      },
+    });
   }
 
   get bestCombo(): number { return this._bestCombo; }
