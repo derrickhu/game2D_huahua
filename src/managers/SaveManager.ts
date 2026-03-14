@@ -45,6 +45,7 @@ const CONFIG_FINGERPRINT = _computeConfigFingerprint();
 interface SaveData {
   fingerprint: string;
   timestamp: number;
+  version: number;
   currency: ReturnType<typeof CurrencyManager.exportState>;
   board: ReturnType<typeof BoardManager.exportState>;
   warehouse?: WarehouseState;
@@ -57,6 +58,7 @@ class SaveManagerClass {
     const data: SaveData = {
       fingerprint: CONFIG_FINGERPRINT,
       timestamp: Date.now(),
+      version: 2,
       currency: CurrencyManager.exportState(),
       board: BoardManager.exportState(),
       warehouse: WarehouseManager.exportState(),
@@ -138,6 +140,32 @@ class SaveManagerClass {
       for (let v = 1; v <= 10; v++) {
         try { _api?.removeStorageSync(`huahua_save_v${v}`); } catch (_) {}
       }
+    } catch (_) {}
+  }
+
+  /** 清除所有游戏数据（用于测试/重置） */
+  clearAllData(): void {
+    try {
+      // 主存档及历史版本
+      _api?.removeStorageSync(SAVE_SLOT);
+      for (let v = 1; v <= 10; v++) {
+        try { _api?.removeStorageSync(`huahua_save_v${v}`); } catch (_) {}
+      }
+      // 各系统独立存档
+      const keys = [
+        'huahua_checkin',
+        'huahua_quests',
+        'huahua_achievements',
+        'huahua_idle',
+        'huahua_tutorial',
+        'huahua_merge_stats',
+        'huahua_flower_quotes',
+        'huahua_gm'
+      ];
+      for (const key of keys) {
+        try { _api?.removeStorageSync(key); } catch (_) {}
+      }
+      console.log('[Save] 所有游戏数据已清除');
     } catch (_) {}
   }
 }

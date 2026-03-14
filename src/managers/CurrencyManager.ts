@@ -75,6 +75,18 @@ class CurrencyManagerClass {
     EventBus.emit('currency:changed', 'exp', this._state.exp);
   }
 
+  /** 设置经验值（升级时扣除） */
+  setExp(val: number): void {
+    this._state.exp = Math.max(0, val);
+    EventBus.emit('currency:changed', 'exp', this._state.exp);
+  }
+
+  /** 设置等级 */
+  setLevel(val: number): void {
+    this._state.level = val;
+    EventBus.emit('currency:changed', 'level', this._state.level);
+  }
+
   /** 每帧更新，处理体力自然恢复 */
   update(dt: number): void {
     if (this._state.stamina < STAMINA_MAX) {

@@ -7,6 +7,7 @@ import { Game } from '@/core/Game';
 import { SceneManager } from '@/core/SceneManager';
 import { BoardManager } from '@/managers/BoardManager';
 import { SaveManager } from '@/managers/SaveManager';
+import { IdleManager } from '@/managers/IdleManager';
 import { TextureCache } from '@/utils/TextureCache';
 import { MainScene } from '@/scenes/MainScene';
 import { computeBoardMetrics } from '@/config/Constants';
@@ -94,6 +95,19 @@ async function main(): Promise<void> {
 
     // 进入主场景
     SceneManager.switchTo('main');
+
+    // 监听小游戏生命周期：退到后台时保存状态
+    const _apiMain: any = typeof wx !== 'undefined' ? wx : typeof tt !== 'undefined' ? tt : null;
+    if (_apiMain) {
+      _apiMain.onHide?.(() => {
+        console.log('[main] 游戏退到后台，保存状态');
+        IdleManager.onHide();
+        SaveManager.save();
+      });
+      _apiMain.onShow?.(() => {
+        console.log('[main] 游戏回到前台');
+      });
+    }
 
     console.log('[main] 花语小筑启动完成 ✿ BUILD:', BUILD_TIME);
   } catch (e) {
