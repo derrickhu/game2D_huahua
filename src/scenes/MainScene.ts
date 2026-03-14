@@ -52,6 +52,20 @@ import { FloatingMenu } from '@/gameobjects/ui/FloatingMenu';
 import { SceneSwitch } from '@/gameobjects/ui/SceneSwitch';
 import { CUSTOMER_TYPES } from '@/config/CustomerConfig';
 import { DESIGN_WIDTH, COLORS, FONT_FAMILY, MAX_CUSTOMERS, INFO_BAR_HEIGHT } from '@/config/Constants';
+import { AdManager } from '@/managers/AdManager';
+import { CollectionManager } from '@/managers/CollectionManager';
+import { FlowerCardManager } from '@/managers/FlowerCardManager';
+import { DressUpManager } from '@/managers/DressUpManager';
+import { SocialManager } from '@/managers/SocialManager';
+import { EventManager } from '@/managers/EventManager';
+import { ChallengeManager } from '@/managers/ChallengeManager';
+import { HapticSystem } from '@/systems/HapticSystem';
+import { CollectionPanel } from '@/gameobjects/ui/CollectionPanel';
+import { FlowerCardPanel } from '@/gameobjects/ui/FlowerCardPanel';
+import { DressUpPanel } from '@/gameobjects/ui/DressUpPanel';
+import { EventPanel } from '@/gameobjects/ui/EventPanel';
+import { ChallengePanel } from '@/gameobjects/ui/ChallengePanel';
+import { LeaderboardPanel } from '@/gameobjects/ui/LeaderboardPanel';
 
 export class MainScene implements Scene {
   readonly name = 'main';
@@ -93,6 +107,15 @@ export class MainScene implements Scene {
   private _floatingMenu!: FloatingMenu;
   private _sceneSwitch!: SceneSwitch;
 
+  // ---- 新增系统 Phase 7+ ----
+  private _hapticSystem!: HapticSystem;
+  private _collectionPanel!: CollectionPanel;
+  private _flowerCardPanel!: FlowerCardPanel;
+  private _dressUpPanel!: DressUpPanel;
+  private _eventPanel!: EventPanel;
+  private _challengePanel!: ChallengePanel;
+  private _leaderboardPanel!: LeaderboardPanel;
+
   // ---- 离线计时 ----
   private _idleSaveTimer = 0;
   private _initialized = false;
@@ -115,6 +138,15 @@ export class MainScene implements Scene {
       RegularCustomerManager.init();
       DecorationManager.init();
       SoundSystem.init();
+
+      // Phase 7+ 新系统初始化
+      AdManager.init();
+      CollectionManager.init();
+      FlowerCardManager.init();
+      DressUpManager.init();
+      SocialManager.init();
+      EventManager.init();
+      ChallengeManager.init();
 
       this._bindCustomerEvents();
       this._bindSystemEvents();
@@ -224,6 +256,9 @@ export class MainScene implements Scene {
     // 合成统计系统
     this._mergeStats = new MergeStatsSystem(this.container);
 
+    // 触觉反馈系统（震动+粒子+屏幕抖动）
+    this._hapticSystem = new HapticSystem(this.container);
+
     // 左侧悬浮功能按钮组（签到/任务/熟客，纵向排列在棋盘左侧）
     // 参考 Merge Mansion / Travel Town：功能入口悬浮在棋盘边缘，不占用独立行空间
     this._floatingMenu = new FloatingMenu();
@@ -274,6 +309,25 @@ export class MainScene implements Scene {
     // GM 调试面板（最高层级）
     this._gmPanel = new GMPanel();
     overlay.addChild(this._gmPanel);
+
+    // ---- Phase 7+ 新面板（全局覆盖层） ----
+    this._collectionPanel = new CollectionPanel();
+    overlay.addChild(this._collectionPanel);
+
+    this._flowerCardPanel = new FlowerCardPanel();
+    overlay.addChild(this._flowerCardPanel);
+
+    this._dressUpPanel = new DressUpPanel();
+    overlay.addChild(this._dressUpPanel);
+
+    this._eventPanel = new EventPanel();
+    overlay.addChild(this._eventPanel);
+
+    this._challengePanel = new ChallengePanel();
+    overlay.addChild(this._challengePanel);
+
+    this._leaderboardPanel = new LeaderboardPanel();
+    overlay.addChild(this._leaderboardPanel);
   }
 
   /** 店铺区域高度（设计坐标），供外部布局计算 */
@@ -501,13 +555,64 @@ export class MainScene implements Scene {
 
     // ---- 场景入口事件（左侧浮动按钮） ----
     EventBus.on('nav:openDressup', () => {
-      // TODO: 主角换装系统（独立全屏场景）
-      ToastMessage.show('👗 主角装扮系统即将开放~');
+      ToastMessage.show('👗 主角装扮系统已上线！');
+      EventBus.emit('panel:openDressUp');
     });
 
     EventBus.on('nav:openAlbum', () => {
-      // TODO: 图鉴社交系统（独立全屏场景）
-      ToastMessage.show('📖 图鉴系统即将开放~');
+      ToastMessage.show('📖 花语图鉴已上线！');
+      EventBus.emit('panel:openCollection');
+    });
+
+    // ---- 限时活动入口 ----
+    EventBus.on('nav:openEvent', () => {
+      EventBus.emit('panel:openEvent');
+    });
+
+    // ---- 挑战关卡入口 ----
+    EventBus.on('nav:openChallenge', () => {
+      EventBus.emit('panel:openChallenge');
+    });
+
+    // ---- 排行榜入口 ----
+    EventBus.on('nav:openLeaderboard', () => {
+      EventBus.emit('panel:openLeaderboard');
+    });
+
+    // ---- 花语卡片收集事件 ----
+    EventBus.on('flowerCard:collected', (card: any) => {
+      ToastMessage.show(`🌸 获得花语卡片：「${card.name}」！`);
+    });
+
+    EventBus.on('flowerCard:complete', () => {
+      ToastMessage.show('🎉 集齐所有花语卡片！获得传说奖励！');
+    });
+
+    // ---- 图鉴发现事件 ----
+    EventBus.on('collection:discovered', (_cat: string, _itemId: string) => {
+      // 新发现不打扰游戏，只更新红点
+    });
+
+    EventBus.on('collection:milestoneReady', (percent: number) => {
+      ToastMessage.show(`📖 图鉴收集达到 ${percent}%！有里程碑奖励可领取！`);
+    });
+
+    // ---- 限时活动事件 ----
+    EventBus.on('event:taskCompleted', (_taskId: string, task: any) => {
+      ToastMessage.show(`🎪 活动任务完成：${task.name}！`);
+    });
+
+    EventBus.on('event:started', (event: any) => {
+      ToastMessage.show(`🎉 限时活动开启：${event.name}！`);
+    });
+
+    // ---- 挑战事件 ----
+    EventBus.on('challenge:ended', (_levelId: string, success: boolean, stars: number) => {
+      if (success) {
+        ToastMessage.show(`⭐ 挑战成功！获得 ${'⭐'.repeat(stars)} 评价！`);
+      } else {
+        ToastMessage.show('💔 挑战失败，再试一次？');
+      }
     });
 
     // ---- 场景切换事件（切换到花店场景） ----
@@ -539,6 +644,12 @@ export class MainScene implements Scene {
       return RegularCustomerManager.getUnlockableStory(d.typeId) !== null;
     });
     this._floatingMenu.setRedDot('regular', hasNewStory);
+
+    // 图鉴红点：有可领取的里程碑奖励
+    this._floatingMenu.setRedDot('album', CollectionManager.hasClaimableMilestone);
+
+    // 活动红点：有可领取的任务奖励
+    this._floatingMenu.setRedDot('event', EventManager.hasClaimableTask);
 
     // InfoBar 功能快捷按钮红点更新
     this._infoBar.updateQuickBtnRedDots();
@@ -573,6 +684,8 @@ export class MainScene implements Scene {
     this._mergeHintSystem.update(dt);
     this._comboSystem.update(dt);
     this._seasonSystem.update(dt);
+    this._hapticSystem.update(dt);
+    ChallengeManager.update(dt);
 
     // 定期保存离线时间戳
     this._idleSaveTimer += dt;

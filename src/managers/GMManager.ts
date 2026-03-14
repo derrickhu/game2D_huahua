@@ -520,6 +520,77 @@ class GMManagerClass {
     });
 
     // ========== GM 设置 ==========
+
+    // ========== 🎪 新系统调试 ==========
+    this._commands.push({
+      id: 'add_hualu_100',
+      group: '🎪 新系统',
+      name: '💧 +100 花露',
+      desc: '换装用稀缺货币',
+      execute: () => {
+        CurrencyManager.addHualu(100);
+        return `✅ +100花露，当前: ${CurrencyManager.state.hualu}`;
+      },
+    });
+
+    this._commands.push({
+      id: 'start_event',
+      group: '🎪 新系统',
+      name: '🎪 开启限时活动',
+      desc: '开启春·樱花祭活动(7天)',
+      execute: () => {
+        const { EventManager: EM } = require('@/managers/EventManager');
+        EM.startEvent(0, 7);
+        return '✅ 春·樱花祭活动已开启！';
+      },
+    });
+
+    this._commands.push({
+      id: 'add_event_points',
+      group: '🎪 新系统',
+      name: '🎟️ +500 活动积分',
+      desc: '增加活动积分',
+      execute: () => {
+        const { EventManager: EM } = require('@/managers/EventManager');
+        if (!EM.hasActiveEvent) return '❌ 没有进行中的活动';
+        // 通过完成任务间接增加（直接设置积分需要内部方法）
+        return '请通过完成活动任务获取积分';
+      },
+    });
+
+    this._commands.push({
+      id: 'open_collection',
+      group: '🎪 新系统',
+      name: '📖 打开图鉴',
+      desc: '打开图鉴收集面板',
+      execute: () => {
+        EventBus.emit('panel:openCollection');
+        return '✅ 已打开图鉴面板';
+      },
+    });
+
+    this._commands.push({
+      id: 'open_dressup',
+      group: '🎪 新系统',
+      name: '👗 打开换装',
+      desc: '打开店主换装面板',
+      execute: () => {
+        EventBus.emit('panel:openDressUp');
+        return '✅ 已打开换装面板';
+      },
+    });
+
+    this._commands.push({
+      id: 'open_challenge',
+      group: '🎪 新系统',
+      name: '🏆 打开挑战关卡',
+      desc: '打开挑战关卡面板',
+      execute: () => {
+        EventBus.emit('panel:openChallenge');
+        return '✅ 已打开挑战关卡';
+      },
+    });
+
     this._commands.push({
       id: 'disable_gm',
       group: '⚙️ GM设置',

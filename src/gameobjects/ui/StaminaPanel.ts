@@ -13,6 +13,7 @@ import { CurrencyManager } from '@/managers/CurrencyManager';
 import { TweenManager, Ease } from '@/core/TweenManager';
 import { ToastMessage } from './ToastMessage';
 import { DESIGN_WIDTH, COLORS, FONT_FAMILY, STAMINA_RECOVER_INTERVAL } from '@/config/Constants';
+import { AdManager, AdScene } from '@/managers/AdManager';
 
 const PANEL_W = 520;
 const PANEL_H = 380;
@@ -331,12 +332,17 @@ export class StaminaPanel extends PIXI.Container {
       return;
     }
 
-    // TODO: 接入真实广告 SDK
-    // 这里模拟广告播放成功
-    const ok = CurrencyManager.recoverStaminaByAd();
-    if (ok) {
-      ToastMessage.show(`📺 广告奖励：⚡ +${CurrencyManager.staminaAdAmount}`);
-      this._refresh();
-    }
+    // 通过 AdManager 展示激励视频广告
+    AdManager.showRewardedAd(AdScene.STAMINA_RECOVER, (success) => {
+      if (success) {
+        const ok = CurrencyManager.recoverStaminaByAd();
+        if (ok) {
+          ToastMessage.show(`📺 广告奖励：⚡ +${CurrencyManager.staminaAdAmount}`);
+          this._refresh();
+        }
+      } else {
+        ToastMessage.show('广告未完成，无法获得奖励');
+      }
+    });
   }
 }
