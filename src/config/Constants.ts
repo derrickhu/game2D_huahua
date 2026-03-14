@@ -26,7 +26,7 @@ export const BoardMetrics = {
 // 兼容旧引用的 getter
 export function getCellSize(): number { return BoardMetrics.cellSize; }
 
-/** 底部信息栏高度（替代旧的 90px BottomNav） */
+/** 底部信息栏高度 */
 export const INFO_BAR_HEIGHT = 110;
 
 /**

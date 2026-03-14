@@ -1,14 +1,18 @@
 /**
- * 底部物品信息栏 - 仿四季物语风格
+ * 底部信息栏 - 双态设计（参考 Merge Mansion / Travel Town / 四季物语）
  *
- * 布局：
- * ┌─────────────────────────────────────────────────────────┐
- * │ [返回]  物品名 Lv.X  ⚠  描述文字           [出售] [仓库] │
- * └─────────────────────────────────────────────────────────┘
+ * ★ 默认态 → 精致底部 Tab 导航栏
+ *   ┌────────────────────────────────────────────────────────────┐
+ *   │                                                            │
+ *   │  [🧩合成]   [🏡花店]   [📅签到]   [📋任务]   [💝熟客]  [📦] │
+ *   │    ───                                                     │
+ *   └────────────────────────────────────────────────────────────┘
+ *   当前激活的Tab有底部指示条 + 高亮色 + 图标放大
  *
- * - 左侧：返回按钮（圆形，预留跳转换装页面）
- * - 中间：物品名称 + 等级 + 描述（合成提示等）
- * - 右侧：出售按钮 + 仓库按钮
+ * ★ 物品选中态 → 物品详情模式
+ *   ┌────────────────────────────────────────────────────────────┐
+ *   │  物品名 Lv.X  描述文字             [合成线] [出售]     [📦] │
+ *   └────────────────────────────────────────────────────────────┘
  */
 import * as PIXI from 'pixi.js';
 import { EventBus } from '@/core/EventBus';
@@ -18,22 +22,71 @@ import { ITEM_DEFS, ItemDef, Category } from '@/config/ItemConfig';
 import { BUILDING_DEFS } from '@/config/BuildingConfig';
 import { CellState } from '@/config/BoardLayout';
 import { BoardManager } from '@/managers/BoardManager';
+import { FloatingMenu } from './FloatingMenu';
+import { DecorationManager } from '@/managers/DecorationManager';
 
 /** 底部栏总高度（含安全区） */
 export const INFO_BAR_HEIGHT = 110;
 
 /** 内容区高度 */
 const CONTENT_HEIGHT = 90;
-/** 底部安全区（小游戏 iPhone 刘海屏底部间距） */
+/** 底部安全区 */
 const SAFE_BOTTOM = 20;
-
-/** 按钮尺寸 */
-const BTN_SIZE = 52;
-const BTN_RADIUS = BTN_SIZE / 2;
 
 /** 出售按钮宽度 */
 const SELL_BTN_W = 72;
 const SELL_BTN_H = 40;
+/** 仓库按钮半径 */
+const WH_BTN_R = 24;
+
+// ==================== Tab 导航定义 ====================
+
+/** 颜色配置 */
+const C = {
+  BG: 0xFFF8F0,
+  BG_ALPHA: 0.97,
+  TOP_LINE: 0xF0E0D0,
+  ACTIVE_BG: 0xFFF0E5,        // 激活态的Tab背景色
+  INDICATOR: 0xFF8C69,         // 底部指示条（暖橙，呼应主题）
+  ACTIVE_TEXT: 0xFF7043,       // 激活态文字
+  INACTIVE_TEXT: 0xB0A898,     // 未激活态文字
+  RED_DOT: 0xFF3333,
+  RED_DOT_BORDER: 0xFFFFFF,
+};
+
+interface TabDef {
+  id: string;
+  icon: string;
+  label: string;
+  event: string;
+  isScene?: boolean;   // 是否是场景切换Tab
+  redDotKey?: string;  // FloatingMenu 红点对应key
+}
+
+const TABS: TabDef[] = [
+  { id: 'shop',    icon: '🏡', label: '花店',  event: 'scene:switchToShop',  isScene: true, redDotKey: 'shop' },
+  { id: 'checkin', icon: '📅', label: '签到',  event: 'nav:openCheckIn',     redDotKey: 'checkin' },
+  { id: 'quest',   icon: '📋', label: '任务',  event: 'nav:openQuest',       redDotKey: 'quest' },
+  { id: 'regular', icon: '💝', label: '熟客',  event: 'nav:openRegular',     redDotKey: 'regular' },
+];
+
+const TAB_ICON_SIZE = 26;
+const TAB_LABEL_SIZE = 11;
+const INDICATOR_W = 28;
+const INDICATOR_H = 3;
+const RED_DOT_R = 5;
+
+// ==================== Tab项视觉结构 ====================
+
+interface TabVisual {
+  container: PIXI.Container;
+  iconText: PIXI.Text;
+  labelText: PIXI.Text;
+  activeBg: PIXI.Graphics;
+  indicator: PIXI.Graphics;
+  redDot: PIXI.Graphics;
+  def: TabDef;
+}
 
 export class ItemInfoBar extends PIXI.Container {
   /** 背景 */
@@ -41,9 +94,7 @@ export class ItemInfoBar extends PIXI.Container {
   /** 分隔装饰线 */
   private _topLine!: PIXI.Graphics;
 
-  /** 返回按钮（圆形） */
-  private _backBtn!: PIXI.Container;
-  /** 仓库按钮（圆形） */
+  /** 仓库按钮（始终可见） */
   private _warehouseBtn!: PIXI.Container;
   /** 出售按钮 */
   private _sellBtn!: PIXI.Container;
@@ -57,11 +108,12 @@ export class ItemInfoBar extends PIXI.Container {
   /** 描述文本 */
   private _descText!: PIXI.Text;
 
-  /** 无选中时的提示 */
-  private _hintText!: PIXI.Text;
-
   /** 信息内容容器（选中后显示） */
   private _infoContainer!: PIXI.Container;
+
+  /** Tab 导航栏容器（无选中时显示） */
+  private _tabContainer!: PIXI.Container;
+  private _tabVisuals: Map<string, TabVisual> = new Map();
 
   /** 当前选中的物品ID */
   private _selectedItemId: string | null = null;
@@ -71,22 +123,21 @@ export class ItemInfoBar extends PIXI.Container {
   constructor() {
     super();
     this._buildBg();
-    this._buildBackBtn();
     this._buildInfoArea();
     this._buildChainBtn();
     this._buildSellBtn();
     this._buildWarehouseBtn();
-    this._buildHint();
+    this._buildTabBar();
     this._bindEvents();
 
-    // 初始态：显示提示，隐藏信息
+    // 初始态：显示Tab导航栏，隐藏物品信息
     this._infoContainer.visible = false;
     this._sellBtn.visible = false;
     this._chainBtn.visible = false;
-    this._hintText.visible = true;
+    this._tabContainer.visible = true;
   }
 
-  // ===================== 构建 =====================
+  // ===================== 构建背景 =====================
 
   private _buildBg(): void {
     this._bg = new PIXI.Graphics();
@@ -95,64 +146,155 @@ export class ItemInfoBar extends PIXI.Container {
 
     // 顶部装饰线
     this._topLine = new PIXI.Graphics();
-    this._topLine.beginFill(0xE8D5C0);
-    this._topLine.drawRoundedRect(20, 0, DESIGN_WIDTH - 40, 3, 1.5);
+    this._topLine.beginFill(C.TOP_LINE, 0.8);
+    this._topLine.drawRoundedRect(16, 0, DESIGN_WIDTH - 32, 2, 1);
     this._topLine.endFill();
     this.addChild(this._topLine);
   }
 
   private _drawBg(): void {
     this._bg.clear();
-    // 主背景：暖色渐变风格（用纯色模拟）
-    this._bg.beginFill(0xFFF8F0, 0.97);
-    this._bg.drawRoundedRect(0, 0, DESIGN_WIDTH, INFO_BAR_HEIGHT, 0);
+    // 微弱顶部阴影
+    this._bg.beginFill(0x000000, 0.03);
+    this._bg.drawRect(0, -3, DESIGN_WIDTH, 3);
     this._bg.endFill();
-
-    // 上部圆角装饰
-    this._bg.beginFill(0xFFF0E0, 0.6);
-    this._bg.drawRoundedRect(8, 4, DESIGN_WIDTH - 16, CONTENT_HEIGHT - 4, 16);
+    // 主背景
+    this._bg.beginFill(C.BG, C.BG_ALPHA);
+    this._bg.drawRect(0, 0, DESIGN_WIDTH, INFO_BAR_HEIGHT);
     this._bg.endFill();
   }
 
-  /** 左侧返回按钮 */
-  private _buildBackBtn(): void {
-    this._backBtn = new PIXI.Container();
-    const cx = 46;
-    const cy = CONTENT_HEIGHT / 2;
+  // ===================== Tab 导航栏 =====================
 
-    // 圆形背景
-    const circle = new PIXI.Graphics();
-    circle.beginFill(0xFFE4C8, 0.9);
-    circle.drawCircle(0, 0, BTN_RADIUS);
-    circle.endFill();
-    circle.lineStyle(2, 0xE8C9A8);
-    circle.drawCircle(0, 0, BTN_RADIUS);
-    this._backBtn.addChild(circle);
+  private _buildTabBar(): void {
+    this._tabContainer = new PIXI.Container();
 
-    // 返回箭头图标
-    const arrow = new PIXI.Graphics();
-    arrow.lineStyle(3, COLORS.TEXT_DARK, 1, 0.5);
-    arrow.moveTo(6, 0);
-    arrow.lineTo(-4, 0);
-    arrow.moveTo(-4, 0);
-    arrow.lineTo(2, -6);
-    arrow.moveTo(-4, 0);
-    arrow.lineTo(2, 6);
-    this._backBtn.addChild(arrow);
+    // Tab区域不含仓库按钮的宽度
+    const tabAreaW = DESIGN_WIDTH - 70; // 右侧给仓库按钮留空间
+    const tabW = tabAreaW / TABS.length;
+    const centerY = CONTENT_HEIGHT / 2;
 
-    this._backBtn.position.set(cx, cy);
-    this._backBtn.eventMode = 'static';
-    this._backBtn.cursor = 'pointer';
-    this._backBtn.hitArea = new PIXI.Circle(0, 0, BTN_RADIUS + 6);
-    this._backBtn.on('pointerdown', () => this._onBackTap());
-    this.addChild(this._backBtn);
+    for (let i = 0; i < TABS.length; i++) {
+      const def = TABS[i];
+      const cx = tabW * i + tabW / 2;
+
+      const tabItem = new PIXI.Container();
+
+      // 激活态背景（不再使用，但保留数据结构兼容）
+      const activeBg = new PIXI.Graphics();
+      activeBg.visible = false;
+      tabItem.addChild(activeBg);
+
+      // 底部指示条（不再使用）
+      const indicator = new PIXI.Graphics();
+      indicator.visible = false;
+      tabItem.addChild(indicator);
+
+      // 图标
+      const iconText = new PIXI.Text(def.icon, {
+        fontSize: TAB_ICON_SIZE,
+        fontFamily: FONT_FAMILY,
+      });
+      iconText.anchor.set(0.5, 0.5);
+      iconText.position.set(cx, centerY - 10);
+      tabItem.addChild(iconText);
+
+      // 文字标签
+      const labelText = new PIXI.Text(def.label, {
+        fontSize: TAB_LABEL_SIZE,
+        fill: C.ACTIVE_TEXT,
+        fontFamily: FONT_FAMILY,
+        fontWeight: 'bold',
+      });
+      labelText.anchor.set(0.5, 0);
+      labelText.position.set(cx, centerY + 12);
+      tabItem.addChild(labelText);
+
+      // 红点（右上角小圆点）
+      const redDot = new PIXI.Graphics();
+      const rdx = cx + TAB_ICON_SIZE / 2 + 2;
+      const rdy = centerY - 10 - TAB_ICON_SIZE / 2 + 2;
+      redDot.beginFill(C.RED_DOT);
+      redDot.drawCircle(rdx, rdy, RED_DOT_R);
+      redDot.endFill();
+      redDot.lineStyle(1.5, C.RED_DOT_BORDER);
+      redDot.drawCircle(rdx, rdy, RED_DOT_R);
+      redDot.visible = false;
+      tabItem.addChild(redDot);
+
+      // 点击热区
+      const hitRect = new PIXI.Container();
+      hitRect.hitArea = new PIXI.Rectangle(
+        cx - tabW / 2, 0,
+        tabW, CONTENT_HEIGHT + SAFE_BOTTOM,
+      );
+      hitRect.eventMode = 'static';
+      hitRect.cursor = 'pointer';
+      hitRect.on('pointerdown', () => {
+        this._onTabTap(def);
+      });
+      tabItem.addChild(hitRect);
+
+      this._tabContainer.addChild(tabItem);
+
+      this._tabVisuals.set(def.id, {
+        container: tabItem,
+        iconText,
+        labelText,
+        activeBg,
+        indicator,
+        redDot,
+        def,
+      });
+    }
+
+    // 无默认激活态（所有Tab都是功能入口，不表示当前页面）
+
+    this.addChild(this._tabContainer);
   }
+
+  /** Tab 点击处理 */
+  private _onTabTap(def: TabDef): void {
+    // 点击反馈动画（所有Tab统一）
+    const tab = this._tabVisuals.get(def.id);
+    if (tab) {
+      TweenManager.cancelTarget(tab.iconText.scale);
+      tab.iconText.scale.set(0.75);
+      TweenManager.to({
+        target: tab.iconText.scale,
+        props: { x: 1, y: 1 },
+        duration: 0.25,
+        ease: Ease.easeOutBack,
+      });
+    }
+
+    if (def.event) {
+      EventBus.emit(def.event);
+    }
+  }
+
+  // ===================== 红点更新 =====================
+
+  /** 外部定时调用，更新Tab红点 */
+  updateQuickBtnRedDots(): void {
+    for (const [, tab] of this._tabVisuals) {
+      if (!tab.def.redDotKey) continue;
+
+      if (tab.def.redDotKey === 'shop') {
+        tab.redDot.visible = DecorationManager.hasAffordableNew();
+      } else {
+        tab.redDot.visible = FloatingMenu.getRedDot(tab.def.redDotKey);
+      }
+    }
+  }
+
+  // ===================== 物品信息区域 =====================
 
   /** 中间信息区域 */
   private _buildInfoArea(): void {
     this._infoContainer = new PIXI.Container();
 
-    const infoX = 90;
+    const infoX = 24;
     const centerY = CONTENT_HEIGHT / 2;
 
     // 物品名称
@@ -192,12 +334,12 @@ export class ItemInfoBar extends PIXI.Container {
     this.addChild(this._infoContainer);
   }
 
-  /** 合成线按钮（出售按钮左侧） */
+  /** 合成线按钮 */
   private _buildChainBtn(): void {
     this._chainBtn = new PIXI.Container();
     const CHAIN_BTN_W = 72;
     const CHAIN_BTN_H = 40;
-    const rightEdge = DESIGN_WIDTH - 56 - SELL_BTN_W / 2 - BTN_SIZE - 14 - SELL_BTN_W - 12;
+    const rightEdge = DESIGN_WIDTH - 56 - SELL_BTN_W / 2 - WH_BTN_R * 2 - 14 - SELL_BTN_W - 12;
 
     const bg = new PIXI.Graphics();
     bg.beginFill(0x8BB8D0);
@@ -228,16 +370,14 @@ export class ItemInfoBar extends PIXI.Container {
   /** 出售按钮 */
   private _buildSellBtn(): void {
     this._sellBtn = new PIXI.Container();
-    const rightEdge = DESIGN_WIDTH - 56 - SELL_BTN_W / 2 - BTN_SIZE - 14;
+    const rightEdge = DESIGN_WIDTH - 56 - SELL_BTN_W / 2 - WH_BTN_R * 2 - 14;
 
-    // 按钮背景
     const bg = new PIXI.Graphics();
     bg.beginFill(0xFF8C69);
     bg.drawRoundedRect(-SELL_BTN_W / 2, -SELL_BTN_H / 2, SELL_BTN_W, SELL_BTN_H, 10);
     bg.endFill();
     this._sellBtn.addChild(bg);
 
-    // 出售文字
     const text = new PIXI.Text('出售', {
       fontSize: 16,
       fill: 0xFFFFFF,
@@ -258,22 +398,22 @@ export class ItemInfoBar extends PIXI.Container {
     this.addChild(this._sellBtn);
   }
 
-  /** 右侧仓库按钮 */
+  /** 右侧仓库按钮 - 始终可见 */
   private _buildWarehouseBtn(): void {
     this._warehouseBtn = new PIXI.Container();
-    const cx = DESIGN_WIDTH - 46;
+    const cx = DESIGN_WIDTH - 40;
     const cy = CONTENT_HEIGHT / 2;
 
-    // 圆形背景
+    // 圆形底
     const circle = new PIXI.Graphics();
     circle.beginFill(0xD0E8F8, 0.9);
-    circle.drawCircle(0, 0, BTN_RADIUS);
+    circle.drawCircle(0, 0, WH_BTN_R);
     circle.endFill();
     circle.lineStyle(2, 0xA8C8E8);
-    circle.drawCircle(0, 0, BTN_RADIUS);
+    circle.drawCircle(0, 0, WH_BTN_R);
     this._warehouseBtn.addChild(circle);
 
-    // 仓库图标（简易箱子）
+    // 箱子图标
     const icon = new PIXI.Graphics();
     icon.lineStyle(2.5, COLORS.TEXT_DARK, 1, 0.5);
     icon.drawRoundedRect(-10, -8, 20, 16, 3);
@@ -286,21 +426,9 @@ export class ItemInfoBar extends PIXI.Container {
     this._warehouseBtn.position.set(cx, cy);
     this._warehouseBtn.eventMode = 'static';
     this._warehouseBtn.cursor = 'pointer';
-    this._warehouseBtn.hitArea = new PIXI.Circle(0, 0, BTN_RADIUS + 6);
+    this._warehouseBtn.hitArea = new PIXI.Circle(0, 0, WH_BTN_R + 6);
     this._warehouseBtn.on('pointerdown', () => this._onWarehouseTap());
     this.addChild(this._warehouseBtn);
-  }
-
-  /** 未选中时的提示文字 */
-  private _buildHint(): void {
-    this._hintText = new PIXI.Text('点击棋盘上的物品查看详情', {
-      fontSize: 15,
-      fill: COLORS.TEXT_LIGHT,
-      fontFamily: FONT_FAMILY,
-    });
-    this._hintText.anchor.set(0.5, 0.5);
-    this._hintText.position.set(DESIGN_WIDTH / 2, CONTENT_HEIGHT / 2);
-    this.addChild(this._hintText);
   }
 
   // ===================== 事件 =====================
@@ -312,7 +440,6 @@ export class ItemInfoBar extends PIXI.Container {
     EventBus.on('board:selectionCleared', () => {
       this._clearSelection();
     });
-    // 物品变化时刷新（合成/移动/删除后）
     EventBus.on('board:merged', () => this._clearSelection());
     EventBus.on('board:moved', () => this._clearSelection());
     EventBus.on('board:itemRemoved', () => this._clearSelection());
@@ -339,24 +466,24 @@ export class ItemInfoBar extends PIXI.Container {
     // 更新名称
     this._nameText.text = def.name;
 
-    // 更新等级（在名称右侧）
+    // 更新等级
     this._levelText.text = ` Lv.${def.level}`;
     this._levelText.position.x = this._nameText.position.x + this._nameText.width + 4;
 
     // 描述文字
     this._descText.text = this._getDescription(def);
 
-    // 显示/隐藏
+    // 切换到物品信息模式
     this._infoContainer.visible = true;
-    this._hintText.visible = false;
+    this._tabContainer.visible = false;
 
-    // 出售按钮：建筑不可出售，未解锁区域(FOG/KEY/PEEK)不可出售
+    // 出售按钮
     const cell = BoardManager.getCellByIndex(cellIndex);
     const canSell = def.category !== Category.BUILDING
       && !!cell && cell.state === CellState.OPEN;
     this._sellBtn.visible = canSell;
 
-    // 合成线按钮：可合成物品（非建筑）才显示
+    // 合成线按钮
     const showChain = def.category !== Category.BUILDING
       && def.maxLevel > 1;
     this._chainBtn.visible = showChain;
@@ -368,15 +495,16 @@ export class ItemInfoBar extends PIXI.Container {
   private _clearSelection(): void {
     this._selectedItemId = null;
     this._selectedCellIndex = -1;
+
+    // 切换回Tab导航模式
     this._infoContainer.visible = false;
     this._sellBtn.visible = false;
     this._chainBtn.visible = false;
-    this._hintText.visible = true;
+    this._tabContainer.visible = true;
   }
 
   /** 获取物品描述 */
   private _getDescription(def: ItemDef): string {
-    // 建筑
     if (def.category === Category.BUILDING) {
       const bDef = BUILDING_DEFS.get(def.id);
       if (bDef) {
@@ -385,26 +513,18 @@ export class ItemInfoBar extends PIXI.Container {
       return '功能建筑';
     }
 
-    // 宝箱
     if (def.category === Category.CHEST) {
       return '点击开启，获得随机物品';
     }
 
-    // 可合成物品
     if (def.level < def.maxLevel) {
       return `合成后可获得更高级物品。`;
     }
 
-    // 满级
     return `已达最高等级！可用于完成订单。`;
   }
 
   // ===================== 按钮回调 =====================
-
-  private _onBackTap(): void {
-    this._playBtnBounce(this._backBtn);
-    EventBus.emit('nav:goToDressup');
-  }
 
   private _onSellTap(): void {
     if (this._selectedCellIndex < 0 || !this._selectedItemId) return;
@@ -425,7 +545,6 @@ export class ItemInfoBar extends PIXI.Container {
 
   // ===================== 动画 =====================
 
-  /** 信息栏入场动画 */
   private _playShowAnim(): void {
     this._infoContainer.alpha = 0;
     TweenManager.to({
@@ -436,7 +555,6 @@ export class ItemInfoBar extends PIXI.Container {
     });
   }
 
-  /** 按钮按下弹跳反馈 */
   private _playBtnBounce(btn: PIXI.Container): void {
     TweenManager.cancelTarget(btn.scale);
     btn.scale.set(0.85);

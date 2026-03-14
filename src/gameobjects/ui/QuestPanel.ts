@@ -30,18 +30,27 @@ export class QuestPanel extends PIXI.Container {
     this._activeTab = 'quest';
     this._refresh();
 
-    this.alpha = 0;
-    this._content.scale.set(0.8);
-    TweenManager.to({ target: this, props: { alpha: 1 }, duration: 0.2, ease: Ease.easeOutQuad });
-    TweenManager.to({ target: this._content.scale, props: { x: 1, y: 1 }, duration: 0.25, ease: Ease.easeOutBack });
+    // 弹出动画：遮罩淡入 + 面板从缩小弹出
+    this._bg.alpha = 0;
+    this._content.alpha = 0;
+    this._content.scale.set(0.85);
+    TweenManager.to({ target: this._bg, props: { alpha: 1 }, duration: 0.2, ease: Ease.easeOutQuad });
+    TweenManager.to({ target: this._content, props: { alpha: 1 }, duration: 0.2, ease: Ease.easeOutQuad });
+    TweenManager.to({ target: this._content.scale, props: { x: 1, y: 1 }, duration: 0.3, ease: Ease.easeOutBack });
   }
 
   close(): void {
     if (!this._isOpen) return;
     this._isOpen = false;
     TweenManager.to({
-      target: this, props: { alpha: 0 }, duration: 0.2,
-      onComplete: () => { this.visible = false; },
+      target: this._bg, props: { alpha: 0 }, duration: 0.15, ease: Ease.easeInQuad,
+    });
+    TweenManager.to({
+      target: this._content, props: { alpha: 0 }, duration: 0.15, ease: Ease.easeInQuad,
+      onComplete: () => { this.visible = false; this.alpha = 1; },
+    });
+    TweenManager.to({
+      target: this._content.scale, props: { x: 0.9, y: 0.9 }, duration: 0.15, ease: Ease.easeInQuad,
     });
   }
 
@@ -57,9 +66,8 @@ export class QuestPanel extends PIXI.Container {
     this._bg.on('pointerdown', () => this.close());
     this.addChild(this._bg);
 
+    // 面板内容容器
     this._content = new PIXI.Container();
-    this._content.pivot.set(w / 2, h / 2);
-    this._content.position.set(w / 2, h / 2);
     this.addChild(this._content);
   }
 
@@ -68,8 +76,12 @@ export class QuestPanel extends PIXI.Container {
       this._content.removeChild(this._content.children[0]);
     }
 
+    // 设置 _content 的 pivot 和 position 用于缩放动画居中
+    this._content.pivot.set(DESIGN_WIDTH / 2, Game.logicHeight / 2);
+    this._content.position.set(DESIGN_WIDTH / 2, Game.logicHeight / 2);
+
     const cx = DESIGN_WIDTH / 2;
-    const panelW = 620;
+    const panelW = Math.min(620, DESIGN_WIDTH - 40);
     const panelH = 560;
     const panelX = cx - panelW / 2;
     const panelY = Game.logicHeight / 2 - panelH / 2;

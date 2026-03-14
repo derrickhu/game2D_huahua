@@ -10,7 +10,9 @@ import { SaveManager } from '@/managers/SaveManager';
 import { IdleManager } from '@/managers/IdleManager';
 import { TextureCache } from '@/utils/TextureCache';
 import { MainScene } from '@/scenes/MainScene';
+import { ShopScene } from '@/scenes/ShopScene';
 import { computeBoardMetrics } from '@/config/Constants';
+import { FUNC_BAR_HEIGHT } from '@/gameobjects/ui/FloatingMenu';
 
 declare const GameGlobal: any;
 
@@ -64,8 +66,9 @@ async function main(): Promise<void> {
     } catch (e) { console.warn('[main] EventSystem 诊断失败:', e); }
 
     // 根据实际屏幕动态计算棋盘尺寸
-    // topReserved = safeTop + TopBar(60) + gap(8) + ShopArea(220) + gap(8)
-    const topReserved = Game.safeTop + 60 + 8 + 220 + 8;
+    // topReserved = safeTop + TopBar(60) + gap(8) + ShopArea(220) + gap(6)
+    // FloatingMenu 现在是悬浮按钮组（FUNC_BAR_HEIGHT=0），不再占用独立行空间
+    const topReserved = Game.safeTop + 60 + 8 + 220 + 2 + FUNC_BAR_HEIGHT + 4;
     computeBoardMetrics(Game.logicHeight, topReserved);
     console.log(`[main] BoardMetrics 计算完成, logicHeight:${Game.logicHeight}, safeTop:${Game.safeTop}, topReserved:${topReserved}`);
 
@@ -90,8 +93,10 @@ async function main(): Promise<void> {
 
     // 注册场景
     const mainScene = new MainScene();
+    const shopScene = new ShopScene();
     SceneManager.register(mainScene);
-    console.log('[main] MainScene 已注册');
+    SceneManager.register(shopScene);
+    console.log('[main] MainScene + ShopScene 已注册');
 
     // 进入主场景
     SceneManager.switchTo('main');

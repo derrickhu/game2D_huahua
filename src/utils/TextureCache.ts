@@ -6,14 +6,47 @@ import * as PIXI from 'pixi.js';
 
 /** 图片资源映射：icon key → 文件路径（相对于 minigame/ 根目录） */
 const IMAGE_MAP: Record<string, string> = {
-  // 日常花系 (已有图片)
+  // ---- 日常花系 (6张, 128x128 RGBA) ----
   flower_daily_1: 'images/flower_daily_1.png',
   flower_daily_2: 'images/flower_daily_2.png',
   flower_daily_3: 'images/flower_daily_3.png',
   flower_daily_4: 'images/flower_daily_4.png',
   flower_daily_5: 'images/flower_daily_5.png',
   flower_daily_6: 'images/flower_daily_6.png',
+
+  // ---- 花店建筑场景 ----
+  house_shop: 'images/house/shop.png',    // 花店2.5D建筑 (512x512)
+  house_bg: 'images/house/bg.png',        // 花店背景 (750xAuto)
+
+  // ---- 装修家具素材 room_items (36张, ~100-160px) ----
+  ...buildRoomMap('room', 36),
+
+  // ---- 装修家具素材 room2_items (36张, ~100-170px) ----
+  ...buildRoomMap('room2', 36),
+
+  // ---- 花朵装饰图标 (100张, ~60-100px) ----
+  ...buildFlowerMap(100),
 };
+
+/** 生成装修家具图片映射 */
+function buildRoomMap(prefix: string, count: number): Record<string, string> {
+  const map: Record<string, string> = {};
+  for (let i = 1; i <= count; i++) {
+    const key = `${prefix}_${String(i).padStart(2, '0')}`;
+    map[key] = `images/room/${key}.png`;
+  }
+  return map;
+}
+
+/** 生成花朵装饰图标映射 */
+function buildFlowerMap(count: number): Record<string, string> {
+  const map: Record<string, string> = {};
+  for (let i = 1; i <= count; i++) {
+    const key = `flower_deco_${String(i).padStart(3, '0')}`;
+    map[key] = `images/flowers/flower_${String(i).padStart(3, '0')}.png`;
+  }
+  return map;
+}
 
 class TextureCacheClass {
   private _cache = new Map<string, PIXI.Texture>();

@@ -46,11 +46,26 @@ class SceneManagerClass {
     Game.stage.addChild(nextScene.container);
     nextScene.onEnter?.();
 
+    // 确保全局覆盖层（弹窗面板）始终在场景之上
+    this._bringOverlayToFront();
+
     console.log(`[SceneManager] 切换到场景: ${name}`);
   }
 
   get current(): Scene | null {
     return this._currentScene;
+  }
+
+  /** 将 OverlayManager 的容器提升到 stage 最顶部 */
+  private _bringOverlayToFront(): void {
+    // 延迟导入避免循环依赖
+    try {
+      // eslint-disable-next-line @typescript-eslint/no-var-requires
+      const { OverlayManager } = require('./OverlayManager');
+      OverlayManager.bringToFront();
+    } catch (_) {
+      // OverlayManager 尚未初始化，忽略
+    }
   }
 }
 

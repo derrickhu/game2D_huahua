@@ -8,9 +8,10 @@
  * - 等级经验系统
  */
 import * as PIXI from 'pixi.js';
-import { Scene } from '@/core/SceneManager';
+import { Scene, SceneManager } from '@/core/SceneManager';
 import { Game } from '@/core/Game';
 import { EventBus } from '@/core/EventBus';
+import { OverlayManager } from '@/core/OverlayManager';
 import { BoardManager } from '@/managers/BoardManager';
 import { CurrencyManager } from '@/managers/CurrencyManager';
 import { BuildingManager } from '@/managers/BuildingManager';
@@ -20,7 +21,7 @@ import { QuestManager } from '@/managers/QuestManager';
 import { CheckInManager } from '@/managers/CheckInManager';
 import { IdleManager } from '@/managers/IdleManager';
 import { LevelManager } from '@/managers/LevelManager';
-import { TweenManager } from '@/core/TweenManager';
+import { TweenManager, Ease } from '@/core/TweenManager';
 import { BoardView } from '@/gameobjects/board/BoardView';
 import { CustomerView } from '@/gameobjects/customer/CustomerView';
 import { TopBar, TOP_BAR_HEIGHT } from '@/gameobjects/ui/TopBar';
@@ -38,12 +39,17 @@ import { FlowerEasterEggSystem } from '@/systems/FlowerEasterEggSystem';
 import { SeasonSystem } from '@/systems/SeasonSystem';
 import { MergeStatsSystem } from '@/systems/MergeStatsSystem';
 import { TutorialSystem } from '@/systems/TutorialSystem';
+import { SoundSystem } from '@/systems/SoundSystem';
 import { GMManager } from '@/managers/GMManager';
 import { GMPanel } from '@/gameobjects/ui/GMPanel';
 import { RegularCustomerManager } from '@/managers/RegularCustomerManager';
+import { DecorationManager } from '@/managers/DecorationManager';
 import { StaminaPanel } from '@/gameobjects/ui/StaminaPanel';
 import { RegularCustomerPanel } from '@/gameobjects/ui/RegularCustomerPanel';
 import { StoryPopup } from '@/gameobjects/ui/StoryPopup';
+import { DecorationPanel } from '@/gameobjects/ui/DecorationPanel';
+import { FloatingMenu } from '@/gameobjects/ui/FloatingMenu';
+import { SceneSwitch } from '@/gameobjects/ui/SceneSwitch';
 import { CUSTOMER_TYPES } from '@/config/CustomerConfig';
 import { DESIGN_WIDTH, COLORS, FONT_FAMILY, MAX_CUSTOMERS, INFO_BAR_HEIGHT } from '@/config/Constants';
 
@@ -81,33 +87,45 @@ export class MainScene implements Scene {
   private _staminaPanel!: StaminaPanel;
   private _regularPanel!: RegularCustomerPanel;
   private _storyPopup!: StoryPopup;
+  private _decoPanel!: DecorationPanel;
+
+  // ---- 新UI架构 ----
+  private _floatingMenu!: FloatingMenu;
+  private _sceneSwitch!: SceneSwitch;
 
   // ---- 离线计时 ----
   private _idleSaveTimer = 0;
+  private _initialized = false;
 
   constructor() {
     this.container = new PIXI.Container();
   }
 
   onEnter(): void {
-    this._buildUI();
-    this._boardView.refresh();
+    if (!this._initialized) {
+      this._buildUI();
+      this._boardView.refresh();
 
-    // 启动核心管理器
-    CustomerManager.init();
-    QuestManager.init();
-    CheckInManager.init();
-    IdleManager.init();
-    LevelManager.init();
-    RegularCustomerManager.init();
+      // 启动核心管理器
+      CustomerManager.init();
+      QuestManager.init();
+      CheckInManager.init();
+      IdleManager.init();
+      LevelManager.init();
+      RegularCustomerManager.init();
+      DecorationManager.init();
+      SoundSystem.init();
 
-    this._bindCustomerEvents();
-    this._bindSystemEvents();
+      this._bindCustomerEvents();
+      this._bindSystemEvents();
+
+      this._initialized = true;
+
+      // 启动后处理（延迟一帧确保UI就绪）
+      setTimeout(() => this._onGameReady(), 100);
+    }
 
     Game.ticker.add(this._update, this);
-
-    // 启动后处理（延迟一帧确保UI就绪）
-    setTimeout(() => this._onGameReady(), 100);
   }
 
   onExit(): void {
@@ -164,7 +182,7 @@ export class MainScene implements Scene {
     this._boardView = new BoardView();
     this.container.addChild(this._boardView);
 
-    // 底部物品信息栏
+    // 底部物品信息栏（紧贴屏幕底部）
     const barY = Game.logicHeight - INFO_BAR_HEIGHT;
     this._infoBar = new ItemInfoBar();
     this._infoBar.position.set(0, barY);
@@ -206,73 +224,98 @@ export class MainScene implements Scene {
     // 合成统计系统
     this._mergeStats = new MergeStatsSystem(this.container);
 
-    // ---- 留存系统 UI ----
+    // 左侧悬浮功能按钮组（签到/任务/熟客，纵向排列在棋盘左侧）
+    // 参考 Merge Mansion / Travel Town：功能入口悬浮在棋盘边缘，不占用独立行空间
+    this._floatingMenu = new FloatingMenu();
+    this.container.addChild(this._floatingMenu);
+
+    // 右下角场景切换按钮（参考四季物语 → 切换到花店场景）
+    this._sceneSwitch = new SceneSwitch();
+    this.container.addChild(this._sceneSwitch);
+
+    // ---- 留存系统 UI（全局覆盖层，任何场景都能使用） ----
+    const overlay = OverlayManager.container;
 
     // 新手引导系统
     this._tutorialSystem = new TutorialSystem(this.container);
 
     // 签到面板
     this._checkInPanel = new CheckInPanel();
-    this.container.addChild(this._checkInPanel);
+    overlay.addChild(this._checkInPanel);
 
     // 每日任务面板
     this._questPanel = new QuestPanel();
-    this.container.addChild(this._questPanel);
+    overlay.addChild(this._questPanel);
 
     // 离线收益面板
     this._offlineRewardPanel = new OfflineRewardPanel();
-    this.container.addChild(this._offlineRewardPanel);
+    overlay.addChild(this._offlineRewardPanel);
 
     // 升级弹窗
     this._levelUpPopup = new LevelUpPopup();
-    this.container.addChild(this._levelUpPopup);
+    overlay.addChild(this._levelUpPopup);
 
     // 体力不足面板
     this._staminaPanel = new StaminaPanel();
-    this.container.addChild(this._staminaPanel);
+    overlay.addChild(this._staminaPanel);
 
     // 熟客档案面板
     this._regularPanel = new RegularCustomerPanel();
-    this.container.addChild(this._regularPanel);
+    overlay.addChild(this._regularPanel);
 
     // 花语故事弹窗
     this._storyPopup = new StoryPopup();
-    this.container.addChild(this._storyPopup);
+    overlay.addChild(this._storyPopup);
+
+    // 花店装修面板
+    this._decoPanel = new DecorationPanel();
+    overlay.addChild(this._decoPanel);
 
     // GM 调试面板（最高层级）
     this._gmPanel = new GMPanel();
-    this.container.addChild(this._gmPanel);
+    overlay.addChild(this._gmPanel);
   }
 
   /** 店铺区域高度（设计坐标），供外部布局计算 */
-  static readonly SHOP_HEIGHT = 220;
+  static readonly SHOP_HEIGHT = 160;
 
   private _buildShopArea(): void {
-    // 店铺背景
+    // 店铺背景（柔和的花店氛围）
     const bg = new PIXI.Graphics();
-    bg.beginFill(0xFFF0E0, 0.6);
-    bg.drawRoundedRect(20, 0, DESIGN_WIDTH - 40, MainScene.SHOP_HEIGHT, 16);
+    bg.beginFill(0xFFF3E8, 0.7);
+    bg.drawRoundedRect(12, 0, DESIGN_WIDTH - 24, MainScene.SHOP_HEIGHT, 16);
+    bg.endFill();
+    bg.beginFill(0xFFE8D0, 0.3);
+    bg.drawRoundedRect(12, MainScene.SHOP_HEIGHT - 12, DESIGN_WIDTH - 24, 12, 8);
     bg.endFill();
     this._shopArea.addChild(bg);
 
-    // 花店招牌
+    // 花店招牌（居中，精致胶囊样式）
+    const titleBg = new PIXI.Graphics();
+    titleBg.beginFill(0xFFFFFF, 0.6);
+    titleBg.drawRoundedRect(DESIGN_WIDTH / 2 - 90, 4, 180, 30, 15);
+    titleBg.endFill();
+    titleBg.lineStyle(1.5, 0xFFD4A8, 0.5);
+    titleBg.drawRoundedRect(DESIGN_WIDTH / 2 - 90, 4, 180, 30, 15);
+    this._shopArea.addChild(titleBg);
+
     const title = new PIXI.Text('🌸 花语小筑 🌸', {
-      fontSize: 22,
+      fontSize: 18,
       fill: COLORS.TEXT_DARK,
       fontFamily: FONT_FAMILY,
       fontWeight: 'bold',
     });
     title.anchor.set(0.5, 0);
-    title.position.set(DESIGN_WIDTH / 2, 6);
+    title.position.set(DESIGN_WIDTH / 2, 8);
     title.eventMode = 'static';
     title.cursor = 'pointer';
     title.on('pointerdown', () => GMManager.onTitleTap());
     this._shopArea.addChild(title);
 
-    // GM 入口按钮（已激活 GM 模式时显示在店铺右上角）
-    const gmBtn = new PIXI.Text('🛠️', { fontSize: 18, fontFamily: FONT_FAMILY });
+    // GM 入口按钮
+    const gmBtn = new PIXI.Text('🛠️', { fontSize: 16, fontFamily: FONT_FAMILY });
     gmBtn.anchor.set(0.5, 0.5);
-    gmBtn.position.set(DESIGN_WIDTH - 50, 16);
+    gmBtn.position.set(DESIGN_WIDTH - 40, 18);
     gmBtn.eventMode = 'static';
     gmBtn.cursor = 'pointer';
     gmBtn.visible = GMManager.isEnabled;
@@ -280,51 +323,57 @@ export class MainScene implements Scene {
     gmBtn.on('pointerdown', () => GMManager.openPanel());
     this._shopArea.addChild(gmBtn);
 
-    // 监听 GM 激活事件，显示入口
-    EventBus.on('gm:activated', () => {
-      gmBtn.visible = true;
-    });
+    EventBus.on('gm:activated', () => { gmBtn.visible = true; });
 
-    // 店主（Q版占位，稍小）
-    const owner = new PIXI.Graphics();
-    owner.beginFill(0xFFDDB8);
-    owner.drawCircle(DESIGN_WIDTH / 2, 58, 26);
-    owner.endFill();
-    owner.beginFill(0x4A3728);
-    owner.drawCircle(DESIGN_WIDTH / 2 - 8, 53, 3);
-    owner.drawCircle(DESIGN_WIDTH / 2 + 8, 53, 3);
-    owner.endFill();
-    owner.lineStyle(2, 0x4A3728);
-    owner.arc(DESIGN_WIDTH / 2, 63, 8, 0, Math.PI);
-    this._shopArea.addChild(owner);
+    // 店主 Q 版形象（居中）
+    const ownerContainer = new PIXI.Container();
+    const ownerBg = new PIXI.Graphics();
+    ownerBg.beginFill(0xFFE4CC, 0.8);
+    ownerBg.drawCircle(0, 0, 20);
+    ownerBg.endFill();
+    ownerBg.lineStyle(2, 0xFFD4A8);
+    ownerBg.drawCircle(0, 0, 20);
+    ownerContainer.addChild(ownerBg);
+
+    const face = new PIXI.Graphics();
+    face.beginFill(0xFFDDB8);
+    face.drawCircle(0, 0, 16);
+    face.endFill();
+    face.beginFill(0x4A3728);
+    face.drawCircle(-5, -2, 2);
+    face.drawCircle(5, -2, 2);
+    face.endFill();
+    face.lineStyle(1.5, 0x4A3728);
+    face.arc(0, 4, 5, 0, Math.PI);
+    ownerContainer.addChild(face);
+    ownerContainer.position.set(DESIGN_WIDTH / 2, 56);
+    this._shopArea.addChild(ownerContainer);
 
     const ownerLabel = new PIXI.Text('店主', {
-      fontSize: 11,
-      fill: COLORS.TEXT_LIGHT,
-      fontFamily: FONT_FAMILY,
+      fontSize: 10, fill: COLORS.TEXT_LIGHT, fontFamily: FONT_FAMILY,
     });
     ownerLabel.anchor.set(0.5, 0);
-    ownerLabel.position.set(DESIGN_WIDTH / 2, 88);
+    ownerLabel.position.set(DESIGN_WIDTH / 2, 80);
     this._shopArea.addChild(ownerLabel);
 
-    // 柜台
+    // 柜台（精致木纹风格）
     const counter = new PIXI.Graphics();
     counter.beginFill(0xD2B48C);
-    counter.drawRoundedRect(60, 106, DESIGN_WIDTH - 120, 30, 8);
+    counter.drawRoundedRect(60, 95, DESIGN_WIDTH - 120, 24, 8);
     counter.endFill();
     counter.beginFill(0xC4A882);
-    counter.drawRoundedRect(60, 122, DESIGN_WIDTH - 120, 14, 8);
+    counter.drawRoundedRect(60, 107, DESIGN_WIDTH - 120, 12, 6);
+    counter.endFill();
+    counter.beginFill(0xFFFFFF, 0.15);
+    counter.drawRoundedRect(80, 97, DESIGN_WIDTH - 160, 6, 3);
     counter.endFill();
     this._shopArea.addChild(counter);
-
-    // 功能按钮区（签到、任务）
-    this._buildShopButtons();
 
     // 客人区域（柜台下方）
     this._customerViews = [];
     const slotPositions = [
-      { x: DESIGN_WIDTH * 0.3, y: 168 },
-      { x: DESIGN_WIDTH * 0.7, y: 168 },
+      { x: DESIGN_WIDTH * 0.3, y: 132 },
+      { x: DESIGN_WIDTH * 0.7, y: 132 },
     ];
 
     for (let i = 0; i < MAX_CUSTOMERS; i++) {
@@ -332,57 +381,6 @@ export class MainScene implements Scene {
       cv.position.set(slotPositions[i].x, slotPositions[i].y);
       this._shopArea.addChild(cv);
       this._customerViews.push(cv);
-    }
-  }
-
-  /** 店铺区域内的快捷入口按钮 */
-  private _buildShopButtons(): void {
-    const buttons = [
-      { icon: '📅', label: '签到', event: 'nav:openCheckIn', x: 40 },
-      { icon: '📋', label: '任务', event: 'nav:openQuest', x: 110 },
-      { icon: '💝', label: '熟客', event: 'nav:openRegular', x: 180 },
-    ];
-
-    for (const btn of buttons) {
-      // 按钮背景
-      const bg = new PIXI.Graphics();
-      bg.beginFill(0xFFFFFF, 0.6);
-      bg.drawRoundedRect(btn.x, 36, 56, 56, 12);
-      bg.endFill();
-      bg.lineStyle(1, 0xE0D0C0, 0.5);
-      bg.drawRoundedRect(btn.x, 36, 56, 56, 12);
-      this._shopArea.addChild(bg);
-
-      // 图标
-      const icon = new PIXI.Text(btn.icon, { fontSize: 22, fontFamily: FONT_FAMILY });
-      icon.anchor.set(0.5, 0.5);
-      icon.position.set(btn.x + 28, 56);
-      this._shopArea.addChild(icon);
-
-      // 标签
-      const label = new PIXI.Text(btn.label, {
-        fontSize: 10, fill: COLORS.TEXT_LIGHT, fontFamily: FONT_FAMILY,
-      });
-      label.anchor.set(0.5, 0);
-      label.position.set(btn.x + 28, 74);
-      this._shopArea.addChild(label);
-
-      // 交互
-      const hit = new PIXI.Container();
-      hit.hitArea = new PIXI.Rectangle(btn.x, 36, 56, 56);
-      hit.eventMode = 'static';
-      hit.cursor = 'pointer';
-      hit.on('pointerdown', () => EventBus.emit(btn.event));
-      this._shopArea.addChild(hit);
-
-      // 红点标记（有可领取内容时显示）
-      const redDot = new PIXI.Graphics();
-      redDot.beginFill(0xFF3333);
-      redDot.drawCircle(btn.x + 50, 40, 6);
-      redDot.endFill();
-      redDot.name = `redDot_${btn.event}`;
-      redDot.visible = false;
-      this._shopArea.addChild(redDot);
     }
   }
 
@@ -489,6 +487,33 @@ export class MainScene implements Scene {
     EventBus.on('regular:showStory', (typeId: string, chapterIdx: number, chapter: any) => {
       this._storyPopup.show(typeId, chapterIdx, chapter);
     });
+
+    // ---- 装修系统事件 ----
+    EventBus.on('nav:openDeco', () => this._decoPanel.open());
+
+    EventBus.on('decoration:unlocked', (_decoId: string, deco: any) => {
+      ToastMessage.show(`✨ 解锁新装饰：「${deco.name}」！`);
+    });
+
+    EventBus.on('decoration:equipped', (slot: string, _decoId: string) => {
+      ToastMessage.show(`🏠 已装备新${slot}装饰！`);
+    });
+
+    // ---- 场景入口事件（左侧浮动按钮） ----
+    EventBus.on('nav:openDressup', () => {
+      // TODO: 主角换装系统（独立全屏场景）
+      ToastMessage.show('👗 主角装扮系统即将开放~');
+    });
+
+    EventBus.on('nav:openAlbum', () => {
+      // TODO: 图鉴社交系统（独立全屏场景）
+      ToastMessage.show('📖 图鉴系统即将开放~');
+    });
+
+    // ---- 场景切换事件（切换到花店场景） ----
+    EventBus.on('scene:switchToShop', () => {
+      this._switchToShopScene();
+    });
   }
 
   /** 刷新客人视图 */
@@ -505,20 +530,33 @@ export class MainScene implements Scene {
 
   /** 更新红点 */
   private _updateRedDots(): void {
-    const checkInDot = this._shopArea.getChildByName('redDot_nav:openCheckIn') as PIXI.Graphics;
-    if (checkInDot) checkInDot.visible = CheckInManager.canCheckIn;
-
-    const questDot = this._shopArea.getChildByName('redDot_nav:openQuest') as PIXI.Graphics;
-    if (questDot) questDot.visible = QuestManager.hasClaimableQuest || QuestManager.hasClaimableAchievement;
+    // 通过 FloatingMenu 设置红点状态（ItemInfoBar 会读取这些状态）
+    this._floatingMenu.setRedDot('checkin', CheckInManager.canCheckIn);
+    this._floatingMenu.setRedDot('quest', QuestManager.hasClaimableQuest || QuestManager.hasClaimableAchievement);
 
     // 熟客红点：有可阅读的新故事
-    const regularDot = this._shopArea.getChildByName('redDot_nav:openRegular') as PIXI.Graphics;
-    if (regularDot) {
-      const hasNewStory = RegularCustomerManager.getAllRegulars().some(d => {
-        return RegularCustomerManager.getUnlockableStory(d.typeId) !== null;
-      });
-      regularDot.visible = hasNewStory;
-    }
+    const hasNewStory = RegularCustomerManager.getAllRegulars().some(d => {
+      return RegularCustomerManager.getUnlockableStory(d.typeId) !== null;
+    });
+    this._floatingMenu.setRedDot('regular', hasNewStory);
+
+    // InfoBar 功能快捷按钮红点更新
+    this._infoBar.updateQuickBtnRedDots();
+  }
+
+  /** 切换到花店场景（带过渡动画） */
+  private _switchToShopScene(): void {
+    // 淡出当前场景 → 切换到花店场景
+    TweenManager.to({
+      target: this.container,
+      props: { alpha: 0 },
+      duration: 0.3,
+      ease: Ease.easeInQuad,
+      onComplete: () => {
+        this.container.alpha = 1; // 恢复（下次进入时用）
+        SceneManager.switchTo('shop');
+      },
+    });
   }
 
   private _update(): void {

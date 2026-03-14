@@ -5,8 +5,7 @@ dist/
 .vite/
 minigame/game-bundle.js
 
-# 游戏资产（由 game_assets 仓库管理）
-assets/images
+# 游戏资产（由 game_assets 仓库通过 sync-assets.sh 同步到 minigame/images/）
 minigame/images/
 
 # CodeBuddy 项目数据

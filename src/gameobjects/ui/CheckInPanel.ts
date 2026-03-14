@@ -4,7 +4,6 @@
 import * as PIXI from 'pixi.js';
 import { Game } from '@/core/Game';
 import { TweenManager, Ease } from '@/core/TweenManager';
-import { EventBus } from '@/core/EventBus';
 import { CheckInManager, CHECK_IN_REWARDS } from '@/managers/CheckInManager';
 import { DESIGN_WIDTH, FONT_FAMILY, COLORS } from '@/config/Constants';
 
@@ -26,18 +25,27 @@ export class CheckInPanel extends PIXI.Container {
     this.visible = true;
     this._refresh();
 
-    this.alpha = 0;
-    this._content.scale.set(0.8);
-    TweenManager.to({ target: this, props: { alpha: 1 }, duration: 0.2, ease: Ease.easeOutQuad });
-    TweenManager.to({ target: this._content.scale, props: { x: 1, y: 1 }, duration: 0.25, ease: Ease.easeOutBack });
+    // 弹出动画：遮罩淡入 + 面板从缩小弹出
+    this._bg.alpha = 0;
+    this._content.alpha = 0;
+    this._content.scale.set(0.85);
+    TweenManager.to({ target: this._bg, props: { alpha: 1 }, duration: 0.2, ease: Ease.easeOutQuad });
+    TweenManager.to({ target: this._content, props: { alpha: 1 }, duration: 0.2, ease: Ease.easeOutQuad });
+    TweenManager.to({ target: this._content.scale, props: { x: 1, y: 1 }, duration: 0.3, ease: Ease.easeOutBack });
   }
 
   close(): void {
     if (!this._isOpen) return;
     this._isOpen = false;
     TweenManager.to({
-      target: this, props: { alpha: 0 }, duration: 0.2, ease: Ease.easeInQuad,
-      onComplete: () => { this.visible = false; },
+      target: this._bg, props: { alpha: 0 }, duration: 0.15, ease: Ease.easeInQuad,
+    });
+    TweenManager.to({
+      target: this._content, props: { alpha: 0 }, duration: 0.15, ease: Ease.easeInQuad,
+      onComplete: () => { this.visible = false; this.alpha = 1; },
+    });
+    TweenManager.to({
+      target: this._content.scale, props: { x: 0.9, y: 0.9 }, duration: 0.15, ease: Ease.easeInQuad,
     });
   }
 
@@ -54,9 +62,8 @@ export class CheckInPanel extends PIXI.Container {
     this._bg.on('pointerdown', () => this.close());
     this.addChild(this._bg);
 
+    // 面板内容容器 — 用 position 居中，不使用 pivot
     this._content = new PIXI.Container();
-    this._content.pivot.set(w / 2, h / 2);
-    this._content.position.set(w / 2, h / 2);
     this.addChild(this._content);
   }
 
@@ -68,11 +75,16 @@ export class CheckInPanel extends PIXI.Container {
       child.destroy({ children: true });
     }
 
-    const cx = DESIGN_WIDTH / 2;
-    const panelW = 600;
+    const panelW = Math.min(600, DESIGN_WIDTH - 40);
     const panelH = 480;
-    const panelX = cx - panelW / 2;
-    const panelY = Game.logicHeight / 2 - panelH / 2;
+    const panelX = (DESIGN_WIDTH - panelW) / 2;
+    const panelY = (Game.logicHeight - panelH) / 2;
+
+    // 设置 _content 的 pivot 和 position 用于缩放动画居中
+    this._content.pivot.set(DESIGN_WIDTH / 2, Game.logicHeight / 2);
+    this._content.position.set(DESIGN_WIDTH / 2, Game.logicHeight / 2);
+
+    const cx = DESIGN_WIDTH / 2;
 
     // 面板背景
     const bg = new PIXI.Graphics();

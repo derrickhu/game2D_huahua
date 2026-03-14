@@ -23,6 +23,7 @@ import { CheckInManager } from './CheckInManager';
 import { QuestManager } from './QuestManager';
 import { IdleManager } from './IdleManager';
 import { LevelManager } from './LevelManager';
+import { DecorationManager } from './DecorationManager';
 import { CellState } from '@/config/BoardLayout';
 import { ITEM_DEFS, Category, FlowerLine, findItemId } from '@/config/ItemConfig';
 import { STAMINA_MAX } from '@/config/Constants';
@@ -455,10 +456,66 @@ class GMManagerClass {
           `💰${cs.gold} 💎${cs.diamond} ⚡${cs.stamina} 🌸${cs.huayuan}`,
           `棋盘: ${openCount}格开放, ${itemCount}物品`,
           `签到: 连续${CheckInManager.consecutiveDays}天`,
+          `装修: ${DecorationManager.unlockedCount}/${DecorationManager.totalCount}解锁`,
         ];
         const msg = lines.join(' | ');
         console.log('[GM State]', msg);
         return msg;
+      },
+    });
+
+    // ========== 装修系统 ==========
+    this._commands.push({
+      id: 'add_huayuan_500',
+      group: '🏠 装修系统',
+      name: '🌸 +500 花愿',
+      desc: '大量花愿用于购买装修',
+      execute: () => {
+        CurrencyManager.addHuayuan(500);
+        return `✅ +500花愿，当前: ${CurrencyManager.state.huayuan}`;
+      },
+    });
+
+    this._commands.push({
+      id: 'open_deco_panel',
+      group: '🏠 装修系统',
+      name: '🏠 打开装修面板',
+      desc: '直接打开花店装修面板',
+      execute: () => {
+        EventBus.emit('nav:openDeco');
+        return '✅ 已打开装修面板';
+      },
+    });
+
+    this._commands.push({
+      id: 'unlock_all_deco',
+      group: '🏠 装修系统',
+      name: '🔓 解锁全部装修',
+      desc: '解锁所有装饰（不扣货币）',
+      execute: () => {
+        // 直接调用内部方法添加大量花愿后逐个解锁
+        const { DECO_DEFS } = require('@/config/DecorationConfig');
+        let count = 0;
+        for (const deco of DECO_DEFS) {
+          if (!DecorationManager.isUnlocked(deco.id)) {
+            // 给足花愿再解锁
+            CurrencyManager.addHuayuan(deco.cost);
+            if (DecorationManager.unlock(deco.id)) count++;
+          }
+        }
+        return `✅ 解锁了 ${count} 个装饰`;
+      },
+    });
+
+    this._commands.push({
+      id: 'reset_deco',
+      group: '🏠 装修系统',
+      name: '🗑️ 重置装修数据',
+      desc: '清除所有装修存档',
+      execute: () => {
+        try { _api?.removeStorageSync('huahua_decoration'); } catch (_) {}
+        DecorationManager.reset();
+        return '✅ 装修数据已清除';
       },
     });
 
