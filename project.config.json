@@ -11,7 +11,17 @@
       "disablePlugins": [],
       "outputPath": ""
     },
-    "useCompilerPlugins": false
+    "useCompilerPlugins": false,
+    "compileWorklet": false,
+    "uploadWithSourceMap": true,
+    "packNpmManually": false,
+    "minifyWXSS": true,
+    "minifyWXML": true,
+    "localPlugins": false,
+    "disableUseStrict": false,
+    "condition": false,
+    "swc": false,
+    "disableSWC": true
   },
   "compileType": "game",
   "miniprogramRoot": "minigame/",
@@ -22,5 +32,6 @@
   },
   "isGameTourist": false,
   "appid": "wx5fc9003a6d104ddd",
-  "editorSetting": {}
+  "editorSetting": {},
+  "libVersion": "3.12.1"
 }
