@@ -8,6 +8,7 @@ import { SceneManager } from '@/core/SceneManager';
 import { BoardManager } from '@/managers/BoardManager';
 import { SaveManager } from '@/managers/SaveManager';
 import { IdleManager } from '@/managers/IdleManager';
+import { RoomLayoutManager } from '@/managers/RoomLayoutManager';
 import { TextureCache } from '@/utils/TextureCache';
 import { MainScene } from '@/scenes/MainScene';
 import { ShopScene } from '@/scenes/ShopScene';
@@ -108,6 +109,8 @@ async function main(): Promise<void> {
         console.log('[main] 游戏退到后台，保存状态');
         IdleManager.onHide();
         SaveManager.save();
+        // 立即刷写装饰布局（防止防抖 timer 未触发导致位置丢失）
+        RoomLayoutManager.saveNow();
       });
       _apiMain.onShow?.(() => {
         console.log('[main] 游戏回到前台');

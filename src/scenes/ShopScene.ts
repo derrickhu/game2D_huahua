@@ -138,6 +138,8 @@ export class ShopScene implements Scene {
     if (this._isEditMode) {
       this._exitEditMode();
     }
+    // 无论是否编辑模式，都强制刷写布局存档（防止防抖 timer 未触发）
+    RoomLayoutManager.saveNow();
     Game.ticker.remove(this._update, this);
     this.container.removeChildren();
   }

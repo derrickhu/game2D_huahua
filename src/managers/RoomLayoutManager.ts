@@ -407,6 +407,7 @@ class RoomLayoutManagerClass {
         y: this._clampY(p.y),
         scale: Math.max(0.5, Math.min(2.0, p.scale ?? 1)),
         flipped: !!p.flipped,
+        zLayer: p.zLayer ?? 0,
       }));
 
       return true;

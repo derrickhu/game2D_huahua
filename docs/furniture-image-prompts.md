@@ -271,115 +271,127 @@ Each garden item includes a small patch of ground/grass beneath it. Centered in 
 ### 7a. 温馨原木风（bg_room_default.png）
 
 > 🎨 **风格关键词**：天然木质、暖棕色调、乡村小屋的温馨感
-> **差异化要素**：蜂蜜色横纹木地板 · 奶油色素墙 · 暖棕木柱 · 原木格子窗 · 粉色瓦顶 · 灰石地基
+> **配色方案**：粉橙色瓦顶 · 蜂蜜棕木地板 · 奶油白墙 · 焦糖棕柱子 · 棕木窗框 · 灰石地基
 
 ```
 A cute kawaii 2.5D isometric room interior, hand-drawn cartoon style with soft rounded brown outlines, viewed from upper-left at 45 degrees. Pure white background.
 
 STRUCTURE (must follow exactly):
 - An open room with only TWO WALLS forming an L-shape: a BACK WALL (running from upper-left to upper-right) and a RIGHT WALL (running from upper-right to lower-right). The FRONT side and LEFT side are completely open — NO front wall, NO left wall, NO door, NO exterior facade, NO signage, NO awning.
-- ROOF: warm pink/salmon colored semicircular clay tile roof with visible tile rows, covering the entire room from above.
-- FOUR square wooden PILLARS at the four corners of the room (back-left, back-right, front-left, front-right), all matching warm brown wood tone. Pillars are simple structural columns.
-- BACK WALL: a single clean, flat CREAM/OFF-WHITE painted surface. The wall must be completely plain and bare — NO shelves, NO cabinets, NO hangings. Just a smooth solid-color wall. Has 1 traditional wooden grid-pane window (warm brown frame, 3×2 grid muntins) positioned in the right portion.
-- RIGHT WALL: same clean, flat CREAM/OFF-WHITE painted surface. Has 2 traditional wooden grid-pane windows (warm brown frames, 3×2 grid muntins), evenly spaced.
-- Where the walls meet the floor, there is a low wooden wainscoting strip (about 1/5 wall height) in natural oak tone — this is purely a color band, NOT a protruding shelf or ledge.
-- FLOOR: warm honey-brown horizontal wood plank flooring with natural wood grain texture, subtle knot details.
-- Gray stone FOUNDATION/BASEBOARD visible around the outside base of the room, raising the floor above ground level.
-- 1-2 short honey-brown wooden STEPS at the front-left leading down from the elevated floor to the outdoor area.
+- ROOF: CORAL-PINK / salmon-orange semicircular clay tile roof (#E8967A) with visible tile rows and subtle shadow between each row, covering the entire room from above. The roof edge trim is CHOCOLATE BROWN wood (#5C3A1E).
+- FOUR square CARAMEL-BROWN wooden PILLARS (#8B5E3C) at the four corners of the room (back-left, back-right, front-left, front-right). Pillars are simple structural columns with visible wood grain texture.
+- BACK WALL: a single clean, flat WARM CREAM / ivory colored surface (#FFF5E1). The wall must be completely plain and bare — NO shelves, NO cabinets, NO hangings. Just a smooth warm-tinted wall. Has 1 traditional wooden grid-pane window with CHOCOLATE BROWN frame (#5C3A1E), 3×2 grid muntins, light cyan-tinted glass panes.
+- RIGHT WALL: same warm cream / ivory surface (#FFF5E1). Has 2 traditional wooden grid-pane windows (same chocolate brown frames, 3×2 grid, cyan glass), evenly spaced.
+- Where the walls meet the floor, there is a low wooden wainscoting strip (about 1/5 wall height) in NATURAL OAK tone (#C4944A, distinctly darker than the cream wall above) — this is purely a color band, NOT a protruding shelf or ledge.
+- FLOOR: warm HONEY-BROWN horizontal wood plank flooring (#B8834A) with visible natural wood grain lines and subtle knot details. Each plank clearly defined with thin dark seam lines between them.
+- MEDIUM GRAY stone FOUNDATION/BASEBOARD (#A0A0A0) with visible round cobblestone texture, visible around the outside base of the room, raising the floor above ground level.
+- 1-2 short HONEY-BROWN wooden STEPS (#B8834A, same as floor) at the front-left leading down to the outdoor area.
 - Interior is completely EMPTY — absolutely no furniture, no shelves, no cabinets, no items, no wall decorations.
-- OUTDOOR AREA (front-left, small patch): a small irregular patch of sandy/dirt ground (pale sandy-yellow color, NOT green grass), scattered gray pebble stepping stones, tiny tufts of green grass only at the edges. This outdoor patch is small and located at the lower-left of the composition.
+- OUTDOOR AREA (front-left, small patch): a small irregular patch of SANDY-YELLOW dirt ground (#E8D5A8), scattered gray pebble stepping stones (#B0B0B0), tiny tufts of green grass only at the edges.
 - BACKGROUND: pure white (#FFFFFF).
 
-IMPORTANT: Do NOT add any door, exterior facade, signage, or awning — the building has no enclosed exterior side. Do NOT add any shelves, cabinets, display racks, picture frames, clocks, or any standalone objects on or against the walls. Walls must remain clean and bare. (Carved/painted decorative patterns on pillars and window frames are fine.)
+IMPORTANT: Do NOT add any door, exterior facade, signage, or awning. Do NOT add any shelves, cabinets, display racks, picture frames, clocks, or any standalone objects on or against the walls. Walls must remain clean and bare. (Carved/painted decorative patterns on pillars and window frames are fine.)
 
-COLOR PALETTE: honey-brown & oak wood tones, cream/off-white walls, salmon pink roof tiles, gray stone base, sandy outdoor ground.
+COLOR CONTRAST GUIDE (each part must be visually distinct):
+- Roof (coral-pink #E8967A) ≠ Wall (cream #FFF5E1) ≠ Floor (honey-brown #B8834A) ≠ Pillar (caramel #8B5E3C) ≠ Foundation (gray #A0A0A0)
+- The floor should be clearly DARKER than the walls. The pillars should be clearly DARKER than the floor. The wainscoting is a visible mid-tone between wall and floor.
+
 STYLE: kawaii hand-drawn, soft brown outlines, warm cozy cottage atmosphere. Absolutely no furniture inside or outside. Mobile portrait aspect ratio (750x1334).
 ```
 
 ### 7b. 清新薄荷白（bg_room_white.png）
 
-> 🎨 **风格关键词**：北欧极简、明亮通透、薄荷绿点缀
-> **差异化要素**：漂白橡木人字拼地板 · 纯白素墙 · 白色柱子 · 白框简约窗 · 鸽灰瓦顶 · 浅灰石基
+> 🎨 **风格关键词**：北欧极简、明亮通透、色彩层次清晰
+> **配色方案**：天蓝灰瓦顶 · 浅米色人字拼地板 · 白墙 · 浅灰蓝柱子 · 原木色窗框 · 浅灰石基
 
 ```
-A cute kawaii 2.5D isometric room interior, hand-drawn cartoon style with soft rounded light-gray outlines, viewed from upper-left at 45 degrees. Pure white background. Nordic minimalist color redesign - SAME room structure as reference.
+A cute kawaii 2.5D isometric room interior, hand-drawn cartoon style with soft rounded gray outlines, viewed from upper-left at 45 degrees. Pure white background. Nordic minimalist color redesign - SAME room structure.
 
 STRUCTURE (must follow exactly - same layout, only colors/materials change):
 - An open room with only TWO WALLS forming an L-shape: BACK WALL + RIGHT WALL. FRONT and LEFT sides completely open — NO door, NO exterior facade, NO signage, NO awning.
-- ROOF: soft dove-gray/off-white slate tiles, same semicircular tile shape with visible rows, covering entire room.
-- FOUR square WHITE-PAINTED wooden PILLARS at the four corners, clean and minimal.
-- BACK WALL: a single clean, flat BRIGHT PURE WHITE smooth surface. Completely plain and bare. Has 1 window with thin white wooden frame, simplified 2×2 grid muntins.
-- RIGHT WALL: same bright pure white smooth surface. Has 2 windows with thin white frames, 2×2 grid muntins, evenly spaced.
-- Where the walls meet the floor, a low painted white wainscoting strip (about 1/5 wall height) — purely a color band, same white tone, subtle separation line only.
-- FLOOR: pale bleached-oak herringbone parquet flooring (V-shaped chevron pattern), very light warm-white wood tone.
-- Light warm-gray stone FOUNDATION/BASEBOARD around the outside base.
-- 1-2 pale bleached-wood STEPS at front-left.
+- ROOF: SLATE BLUE-GRAY semicircular tiles (#9EAEBB) with visible tile rows and subtle shadow lines. The roof edge trim is LIGHT GRAY wood (#C8C8C8).
+- FOUR square LIGHT BLUE-GRAY painted wooden PILLARS (#B8C5D0) at the four corners, clean and elegant. Smooth painted surface.
+- BACK WALL: a single clean, flat SOFT WHITE surface with a very subtle warm undertone (#F8F6F0, NOT pure white — slightly warmer). Completely plain and bare. Has 1 window with NATURAL LIGHT-OAK wooden frame (#C4A46A), 2×2 grid muntins, pale blue-tinted glass panes.
+- RIGHT WALL: same soft white surface (#F8F6F0). Has 2 windows with same light-oak frames, 2×2 grid, pale blue glass, evenly spaced.
+- Where the walls meet the floor, a low wainscoting strip (about 1/5 wall height) in PALE WARM GRAY (#D8D0C8) — a gentle visible color band that adds depth between the white wall and the floor.
+- FLOOR: WARM BEIGE / light-tan herringbone parquet flooring (#D4C4A8, V-shaped chevron pattern). Each plank has subtle wood grain. The floor tone should be clearly WARMER and DARKER than the white walls.
+- PALE GRAY stone FOUNDATION/BASEBOARD (#C0C0C0) with smooth rounded cobblestone texture around the outside base.
+- 1-2 LIGHT OAK-TONED wooden STEPS (#C4A46A) at front-left.
 - Interior is completely EMPTY — absolutely no furniture, no items, no wall decorations.
-- OUTDOOR AREA (front-left, small patch): small irregular patch of light sandy ground (pale cream), smooth pale flat stepping stones, tiny tufts of grass at edges only.
+- OUTDOOR AREA (front-left, small patch): small irregular patch of PALE CREAM sandy ground (#EDE8D8), smooth pale flat stepping stones (#D0D0D0), tiny tufts of green grass at edges only.
 - BACKGROUND: pure white (#FFFFFF).
 
 IMPORTANT: Do NOT add any door, exterior facade, signage, or awning. Do NOT add any shelves, cabinets, display racks, picture frames, curtains, plants, or any standalone objects on or against the walls. Walls must remain clean and bare.
 
-COLOR PALETTE: pure white & off-white, pale bleached oak, dove gray roof, light gray stone base, pale cream ground.
-STYLE: kawaii hand-drawn, light gray outlines, bright airy Scandinavian feel, ultra-clean and minimalist. Absolutely no furniture inside or outside. Mobile portrait aspect ratio (750x1334).
+COLOR CONTRAST GUIDE (each part must be visually distinct):
+- Roof (slate blue-gray #9EAEBB) ≠ Wall (soft white #F8F6F0) ≠ Floor (warm beige #D4C4A8) ≠ Pillar (blue-gray #B8C5D0) ≠ Window frame (oak #C4A46A) ≠ Foundation (pale gray #C0C0C0)
+- The floor should be clearly WARMER/DARKER than the walls. The window frames add a warm wood accent against the cool palette. The pillars are a cool blue-gray, contrasting with the warm floor.
+
+STYLE: kawaii hand-drawn, soft gray outlines, bright airy Scandinavian feel with clear color layering. Absolutely no furniture inside or outside. Mobile portrait aspect ratio (750x1334).
 ```
 
 ### 7c. 复古花坊（bg_room_vintage.png）
 
 > 🎨 **风格关键词**：欧式古董店、深暖色调、铁艺花窗、做旧质感
-> **差异化要素**：深胡桃木棋盘格地板 · 暖米色做旧素墙 · 深红木柱子+茛苕叶雕花 · 铁艺拱窗 · 酒红瓦顶 · 深灰旧石基
+> **配色方案**：酒红瓦顶 · 深胡桃棋盘格地板 · 暖米色旧墙 · 深棕红木柱+雕花 · 黑铁窗框 · 深灰旧石基
 
 ```
-A cute kawaii 2.5D isometric room interior, hand-drawn cartoon style with soft rounded warm-brown outlines, viewed from upper-left at 45 degrees. Pure white background. European vintage antique color redesign - SAME room structure as reference.
+A cute kawaii 2.5D isometric room interior, hand-drawn cartoon style with soft rounded warm-brown outlines, viewed from upper-left at 45 degrees. Pure white background. European vintage antique color redesign - SAME room structure.
 
 STRUCTURE (must follow exactly - same layout, only colors/materials change):
 - An open room with only TWO WALLS forming an L-shape: BACK WALL + RIGHT WALL. FRONT and LEFT sides completely open — NO door, NO exterior facade, NO signage, NO awning.
-- ROOF: deep BURGUNDY/wine-red clay tiles with slightly aged weathered texture, same semicircular tile shape with visible rows, covering entire room.
-- FOUR square dark-stained MAHOGANY PILLARS at the four corners, with subtle carved acanthus leaf details at the capitals (tops of pillars). Warm dark wood tone.
-- BACK WALL: a single clean, flat WARM ANTIQUE-BEIGE / PARCHMENT colored surface with a subtle aged plaster texture. Completely plain and bare — no wallpaper, no exposed brick. Has 1 window with dark WROUGHT-IRON arched frame, decorative iron scrollwork at the arch top, small diamond-shaped glass panes.
-- RIGHT WALL: same warm antique-beige aged plaster surface. Has 2 windows with dark wrought-iron arched frames, decorative scrollwork, diamond panes, evenly spaced.
-- Where the walls meet the floor, a low dark wood wainscoting strip (about 1/5 wall height) in aged mahogany tone — purely a color band.
-- FLOOR: dark walnut & warm mahogany CHECKERBOARD pattern tile flooring (alternating dark-brown and medium-brown squares in a diamond layout), rich and elegant.
-- Dark charcoal-gray weathered stone FOUNDATION/BASEBOARD with rough-hewn texture around the outside base.
-- 1-2 dark stained wood STEPS at front-left.
+- ROOF: deep BURGUNDY / wine-red clay tiles (#7A2E3A) with slightly aged weathered texture and visible tile rows. The roof edge trim is DARK BROWN wood (#3E2216).
+- FOUR square DARK MAHOGANY PILLARS (#4A2012) at the four corners, with subtle carved acanthus leaf details at the capitals (tops of pillars). Rich dark wood grain visible.
+- BACK WALL: a single clean, flat WARM ANTIQUE-BEIGE surface (#E8D8B8) with a subtle aged plaster texture (slightly mottled warm tone). Completely plain and bare — no wallpaper, no exposed brick. Has 1 window with DARK WROUGHT-IRON arched frame (#2A2A2A), decorative iron scrollwork at the arch top, small diamond-shaped amber-tinted glass panes.
+- RIGHT WALL: same warm antique-beige surface (#E8D8B8). Has 2 windows with dark wrought-iron arched frames, scrollwork, amber diamond panes, evenly spaced.
+- Where the walls meet the floor, a low wainscoting strip (about 1/5 wall height) in DARK WALNUT tone (#5A3520) — a rich dark wood band that creates strong contrast with the lighter wall above.
+- FLOOR: DARK WALNUT & MEDIUM BROWN CHECKERBOARD pattern tile flooring (alternating dark squares #4A2A15 and medium squares #7A5030 in a diamond layout). Rich, warm, and elegant with clear pattern definition.
+- DARK CHARCOAL-GRAY weathered stone FOUNDATION/BASEBOARD (#5A5A5A) with rough-hewn cobblestone texture around the outside base.
+- 1-2 DARK WALNUT wooden STEPS (#5A3520) at front-left.
 - Interior is completely EMPTY — absolutely no furniture, no items, no wall decorations.
-- OUTDOOR AREA (front-left, small patch): small irregular patch of worn COBBLESTONE ground (dark sandy-brown with faded stone pattern), old stone slab path, sparse grass tufts at edges.
+- OUTDOOR AREA (front-left, small patch): small irregular patch of DARK SANDY-BROWN worn cobblestone ground (#B0956A), old dark stone slab path, sparse grass tufts at edges.
 - BACKGROUND: pure white (#FFFFFF).
 
 IMPORTANT: Do NOT add any door, exterior facade, signage, or awning. Do NOT add any shelves, cabinets, display racks, picture frames, exposed brick sections, wallpaper patterns, or any standalone objects on or against the walls. Walls must show only their flat aged-plaster surface and windows. (Carved decorative details on pillars and iron scrollwork on window frames are fine.)
 
-COLOR PALETTE: dark walnut & mahogany wood, burgundy/wine-red roof tiles, antique brass accents, warm antique-beige walls, charcoal stone base.
-STYLE: kawaii hand-drawn, warm brown outlines, nostalgic old European antique atmosphere, rich and storied. Absolutely no furniture inside or outside. Mobile portrait aspect ratio (750x1334).
+COLOR CONTRAST GUIDE (each part must be visually distinct):
+- Roof (burgundy #7A2E3A) ≠ Wall (antique beige #E8D8B8) ≠ Floor (dark walnut checkerboard #4A2A15/#7A5030) ≠ Pillar (dark mahogany #4A2012) ≠ Window frame (iron black #2A2A2A) ≠ Foundation (charcoal #5A5A5A)
+- The floor should be dramatically DARKER than the walls. The dark pillars frame the light walls. The burgundy roof crowns the warm palette. Strong light-dark contrast throughout.
+
+STYLE: kawaii hand-drawn, warm brown outlines, nostalgic old European antique atmosphere, rich and layered. Absolutely no furniture inside or outside. Mobile portrait aspect ratio (750x1334).
 ```
 
 ### 7d. 🌸 春日粉（bg_room_spring.png）— 季节限定
 
-> 🎨 **风格关键词**：樱花粉梦幻、轻柔少女、花瓣纷飞
-> **差异化要素**：浅粉白色细木纹地板 · 柔和粉色素墙 · 粉色柱子+樱花藤蔓 · 樱花枝雕花窗框 · 粉色珍珠光瓦顶 · 粉石基+飘落花瓣
+> 🎨 **风格关键词**：樱花粉梦幻、轻柔少女、花瓣纷飞、颜色有层次
+> **配色方案**：玫瑰粉瓦顶 · 浅原木色地板 · 淡粉白墙 · 深粉色柱子+樱花藤蔓 · 粉棕窗框 · 浅粉石基+飘落花瓣
 
 ```
-A cute kawaii 2.5D isometric room interior, hand-drawn cartoon style with soft rounded PINK outlines, viewed from upper-left at 45 degrees. Pure white background. Dreamy spring cherry blossom color redesign - SAME room structure as reference.
+A cute kawaii 2.5D isometric room interior, hand-drawn cartoon style with soft rounded PINK outlines, viewed from upper-left at 45 degrees. Pure white background. Dreamy spring cherry blossom color redesign - SAME room structure.
 
 STRUCTURE (must follow exactly - same layout, only colors/materials change):
 - An open room with only TWO WALLS forming an L-shape: BACK WALL + RIGHT WALL. FRONT and LEFT sides completely open — NO door, NO exterior facade, NO signage, NO awning.
-- ROOF: soft BABY-PINK semicircular tiles with a subtle pearl sheen, same tile shape with visible rows. A few delicate cherry blossom branches with pink blooms extending from behind the roof edge. Scattered petals resting on the tile surface.
-- FOUR square LIGHT-PINK painted wooden PILLARS at the four corners. Each pillar is wrapped in a delicate cherry blossom VINE GARLAND spiraling upward (tiny painted pink flowers and green leaves — decorative carving/painting on the pillar itself, not a separate object).
-- BACK WALL: a single clean, flat soft BLUSH-PINK colored surface (gentle pastel pink, like a light watercolor wash). Completely plain and bare — no wallpaper, no sakura prints. Has 1 window with PINK-PAINTED wooden frame, adorned with a small spray of cherry blossom branch carvings along the top of the frame.
-- RIGHT WALL: same soft blush-pink surface. Has 2 windows with pink frames and cherry blossom branch carvings at the top, evenly spaced.
-- Where the walls meet the floor, a low rose-white wainscoting strip (about 1/5 wall height) — purely a color band.
-- FLOOR: light pinkish-white fine wood plank flooring with very subtle grain, giving a soft warm-pink glow underfoot.
-- Light BLUSH-PINK stone FOUNDATION/BASEBOARD around the outside base.
-- 1-2 light pink-washed wood STEPS at front-left with a few scattered pink petals on the treads.
-- A few floating pink cherry blossom petals drifting gently in the air inside.
+- ROOF: ROSE-PINK semicircular tiles (#E8889A) with a subtle pearl sheen and visible tile rows. The roof edge trim is DUSTY ROSE wood (#C4707A). A few delicate cherry blossom branches with BRIGHT PINK blooms (#FF9EAE) extending from behind the roof edge. Scattered petals resting on tiles.
+- FOUR square MEDIUM PINK-BROWN wooden PILLARS (#C4848A) at the four corners. Each pillar is wrapped in a delicate cherry blossom VINE GARLAND spiraling upward (tiny BRIGHT PINK flowers #FF9EAE and SPRING GREEN leaves #7ABE5E — decorative carving/painting on the pillar itself, not a separate object). The vines add colorful GREEN accents that contrast beautifully with the pink.
+- BACK WALL: a single clean, flat VERY PALE PINK / almost-white surface (#FFF0F2, like a blush-tinted white). Completely plain and bare — no wallpaper, no sakura prints on the wall surface. Has 1 window with DUSTY ROSE wooden frame (#C4707A), adorned with cherry blossom branch carvings at the top, pale pink-tinted glass panes.
+- RIGHT WALL: same very pale pink surface (#FFF0F2). Has 2 windows with dusty rose frames and cherry blossom carvings, evenly spaced.
+- Where the walls meet the floor, a low wainscoting strip (about 1/5 wall height) in SOFT PINK tone (#F0C0C8) — a gentle visible color band darker than the pale wall above.
+- FLOOR: LIGHT NATURAL WOOD plank flooring (#D4B896, warm beige-wood tone — NOT pink). Visible wood grain lines and plank seams. The floor should look like natural light wood, providing a warm NEUTRAL contrast against all the pink elements.
+- PALE PINK stone FOUNDATION/BASEBOARD (#D4A0A8) with rounded cobblestone texture around the outside base.
+- 1-2 WARM WOOD-TONED STEPS (#C4A080) at front-left with a few scattered BRIGHT PINK petals on the treads.
+- A few floating cherry blossom petals (BRIGHT PINK #FF9EAE) drifting gently in the air inside.
 - Interior is completely EMPTY — absolutely no furniture, no items, no wall decorations.
-- OUTDOOR AREA (front-left, small patch): small irregular patch of light pale ground dotted with fallen pink petals, pink-tinted smooth stepping stones, tiny spring-green grass tufts with small pink wildflowers at edges.
+- OUTDOOR AREA (front-left, small patch): small irregular patch of PALE CREAM ground (#F0E8D8) dotted with bright pink fallen petals, pale pink-tinted stepping stones (#D4B0B0), tiny SPRING-GREEN grass tufts (#7ABE5E) with small pink wildflowers at edges.
 - BACKGROUND: pure white (#FFFFFF).
-- FLOATING ELEMENTS: scattered cherry blossom petals gently falling throughout the entire scene, creating a magical dreamy atmosphere.
+- FLOATING ELEMENTS: scattered cherry blossom petals (bright pink #FF9EAE) gently falling throughout the entire scene.
 
-IMPORTANT: Do NOT add any door, exterior facade, signage, or awning. Do NOT add any shelves, cabinets, display racks, picture frames, or any standalone objects on or against the walls. Walls must show only their flat pastel-pink surface and windows. Cherry blossom decorations are ONLY allowed as: carved/painted details on pillars and window frames, floating petals in the air, and on the roof edge. Do NOT add wall-mounted or freestanding objects.
+IMPORTANT: Do NOT add any door, exterior facade, signage, or awning. Do NOT add any shelves, cabinets, display racks, picture frames, or any standalone objects on or against the walls. Walls must show only their flat pale-pink surface and windows. Cherry blossom decorations are ONLY allowed as: carved/painted details on pillars and window frames, floating petals in the air, and on the roof edge. Do NOT add wall-mounted or freestanding objects.
 
-COLOR PALETTE: baby pink, sakura blush, rose-pink, pearl white, spring green leaf accents, light pink stone.
-STYLE: kawaii hand-drawn, soft pink outlines, magical dreamy spring cherry blossom atmosphere, feminine and enchanting. Absolutely no furniture inside or outside. Mobile portrait aspect ratio (750x1334).
+COLOR CONTRAST GUIDE (each part must be visually distinct — NOT all the same pink!):
+- Roof (rose-pink #E8889A) ≠ Wall (pale blush-white #FFF0F2) ≠ Floor (natural wood beige #D4B896, NOT pink!) ≠ Pillar (pink-brown #C4848A) ≠ Window frame (dusty rose #C4707A) ≠ Foundation (pale pink stone #D4A0A8)
+- CRITICAL: The floor must be NATURAL WOOD TONE (beige/tan), NOT pink. This provides essential contrast so the room doesn't look like one blob of pink. The spring green vine leaves and grass add vital complementary color accents.
+
+STYLE: kawaii hand-drawn, soft pink outlines, magical dreamy spring cherry blossom atmosphere with clear color layering. Absolutely no furniture inside or outside. Mobile portrait aspect ratio (750x1334).
 ```
 
 ---
