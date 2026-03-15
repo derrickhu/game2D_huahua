@@ -193,6 +193,13 @@ class FurnitureDragSystemClass {
   }
 
   /**
+   * 根据 decoId 获取对应的 Sprite 引用
+   */
+  getSpriteByDecoId(decoId: string): PIXI.Sprite | undefined {
+    return this._spriteMap.get(decoId);
+  }
+
+  /**
    * 选中家具
    */
   select(decoId: string): void {
@@ -238,12 +245,20 @@ class FurnitureDragSystemClass {
     const tex = TextureCache.get(deco.icon);
     if (!tex) return;
 
+    // 将设计坐标转为容器本地坐标（支持 roomContainer 缩放后拖入）
+    const localPos = this._designToLocal(globalX, globalY);
+
+    // 计算与 _renderFurnitureLayout 一致的 baseScale
+    const BASE_SIZE = 100;
+    const defaultPlacementScale = 0.8; // 默认 placement.scale
+    const baseScale = Math.min(BASE_SIZE / tex.width, BASE_SIZE / tex.height) * defaultPlacementScale;
+
     const sprite = new PIXI.Sprite(tex);
     sprite.anchor.set(0.5, 0.8); // 底部偏中心作为锚点
-    sprite.x = globalX;
-    sprite.y = globalY;
+    sprite.x = localPos.x;
+    sprite.y = localPos.y;
     sprite.alpha = DRAG_ALPHA;
-    sprite.scale.set(0.8 * DRAG_SCALE_BOOST);
+    sprite.scale.set(baseScale * DRAG_SCALE_BOOST);
     (sprite as any)._decoId = decoId;
 
     this._roomContainer.addChild(sprite);
@@ -251,24 +266,26 @@ class FurnitureDragSystemClass {
     this._dragCtx = {
       sprite,
       decoId,
-      startX: globalX,
-      startY: globalY,
-      pointerStartX: globalX,
-      pointerStartY: globalY,
+      startX: localPos.x,
+      startY: localPos.y,
+      pointerStartX: localPos.x,
+      pointerStartY: localPos.y,
       dragging: true, // 从托盘拖入直接视为拖拽状态
       isNew: true,
-      originalScale: 0.8,
+      originalScale: baseScale,
     };
   }
 
   /**
-   * 对房间内所有家具按 y 坐标排序（2.5D 遮挡）
+   * 对房间内所有家具按 y 坐标排序（2.5D 遮挡），考虑手动图层偏移
    */
   sortByDepth(): void {
     if (!this._roomContainer) return;
     for (const child of this._roomContainer.children) {
       if (child instanceof PIXI.Sprite && (child as any)._decoId) {
-        child.zIndex = Math.floor(child.y);
+        const placement = RoomLayoutManager.getPlacement((child as any)._decoId);
+        const zLayer = placement?.zLayer ?? 0;
+        child.zIndex = Math.floor(child.y) + zLayer * 1000;
       }
     }
     this._roomContainer.sortChildren();
@@ -287,6 +304,9 @@ class FurnitureDragSystemClass {
       const decoId = (sprite as any)._decoId as string;
       const localPos = this._rawEventToDesign(e);
 
+      // 用 scale.y 作为 originalScale（始终为正值，不受翻转影响）
+      const absScale = Math.abs(sprite.scale.y);
+
       this._dragCtx = {
         sprite,
         decoId,
@@ -296,7 +316,7 @@ class FurnitureDragSystemClass {
         pointerStartY: localPos.y,
         dragging: false,
         isNew: false,
-        originalScale: sprite.scale.x,
+        originalScale: absScale,
       };
 
       // 选中该家具
@@ -318,7 +338,10 @@ class FurnitureDragSystemClass {
       if (Math.sqrt(dx * dx + dy * dy) < MOVE_THRESHOLD) return;
       ctx.dragging = true;
       ctx.sprite.alpha = DRAG_ALPHA;
-      ctx.sprite.scale.set(ctx.originalScale * DRAG_SCALE_BOOST);
+      // 保持翻转方向：scale.x 可能为负值（翻转），只改变绝对值
+      const boosted = ctx.originalScale * DRAG_SCALE_BOOST;
+      const signX = ctx.sprite.scale.x < 0 ? -1 : 1;
+      ctx.sprite.scale.set(signX * boosted, boosted);
       ctx.sprite.cursor = 'grabbing';
     }
 
@@ -393,7 +416,8 @@ class FurnitureDragSystemClass {
             this.sortByDepth();
           },
         });
-        ctx.sprite.scale.set(ctx.originalScale);
+        const signX = ctx.sprite.scale.x < 0 ? -1 : 1;
+        ctx.sprite.scale.set(signX * ctx.originalScale, ctx.originalScale);
         return;
       }
     }
@@ -404,13 +428,14 @@ class FurnitureDragSystemClass {
     this.sortByDepth();
   }
 
-  /** 放置时的弹跳动画 */
+  /** 放置时的弹跳动画（保持翻转方向） */
   private _playBounceAnimation(sprite: PIXI.Sprite, targetScale: number): void {
+    const signX = sprite.scale.x < 0 ? -1 : 1;
     // 先压扁再弹回
-    sprite.scale.set(targetScale * 0.85, targetScale * 1.15);
+    sprite.scale.set(signX * targetScale * 0.85, targetScale * 1.15);
     TweenManager.to({
       target: sprite.scale,
-      props: { x: targetScale, y: targetScale },
+      props: { x: signX * targetScale, y: targetScale },
       duration: BOUNCE_DURATION,
       ease: Ease.easeOutBack,
     });
@@ -429,26 +454,37 @@ class FurnitureDragSystemClass {
       ctx.sprite.x = ctx.startX;
       ctx.sprite.y = ctx.startY;
       ctx.sprite.alpha = 1;
-      ctx.sprite.scale.set(ctx.originalScale);
+      const signX = ctx.sprite.scale.x < 0 ? -1 : 1;
+      ctx.sprite.scale.set(signX * ctx.originalScale, ctx.originalScale);
     }
   }
 
-  /** FederatedPointerEvent → 设计坐标 */
+  /** FederatedPointerEvent → 容器本地坐标（考虑 roomContainer 的 transform） */
   private _rawEventToDesign(e: PIXI.FederatedPointerEvent): { x: number; y: number } {
-    // 使用 global 坐标（已经是舞台坐标），转换为设计坐标
-    return {
-      x: e.global.x / Game.scale * Game.dpr,
-      y: e.global.y / Game.scale * Game.dpr,
-    };
+    // global 坐标是 canvas 物理像素空间 [0, screenWidth*dpr]
+    // 转为设计坐标 [0, designWidth]：除以 dpr 得到逻辑像素，再乘 designWidth/screenWidth
+    const designX = (e.global.x / Game.dpr) * Game.designWidth / Game.screenWidth;
+    const designY = (e.global.y / Game.dpr) * Game.designHeight / Game.screenHeight;
+    return this._designToLocal(designX, designY);
   }
 
-  /** canvas 原生事件 → 设计坐标 */
+  /** canvas 原生事件 → 容器本地坐标（考虑 roomContainer 的 transform） */
   private _clientToDesign(e: any): { x: number; y: number } {
     const clientX = e.clientX ?? e.pageX ?? 0;
     const clientY = e.clientY ?? e.pageY ?? 0;
+    const designX = clientX * Game.designWidth / Game.screenWidth;
+    const designY = clientY * Game.designHeight / Game.screenHeight;
+    return this._designToLocal(designX, designY);
+  }
+
+  /** 设计坐标 → roomContainer 本地坐标 */
+  private _designToLocal(designX: number, designY: number): { x: number; y: number } {
+    if (!this._roomContainer) return { x: designX, y: designY };
+    const c = this._roomContainer;
+    const s = c.scale.x || 1;  // 假设 scale.x === scale.y
     return {
-      x: clientX * Game.designWidth / Game.screenWidth,
-      y: clientY * Game.designHeight / Game.screenHeight,
+      x: (designX - c.position.x) / s + c.pivot.x,
+      y: (designY - c.position.y) / s + c.pivot.y,
     };
   }
 }

@@ -12,7 +12,7 @@
 
 import { EventBus } from '@/core/EventBus';
 import { DecorationManager } from './DecorationManager';
-import { DECO_MAP, DecoSlot, DECO_SLOT_INFO } from '@/config/DecorationConfig';
+import { DECO_MAP, DecoSlot } from '@/config/DecorationConfig';
 import { DESIGN_WIDTH, DESIGN_HEIGHT } from '@/config/Constants';
 
 declare const wx: any;
@@ -34,6 +34,8 @@ export interface FurniturePlacement {
   scale: number;
   /** 是否水平翻转 */
   flipped: boolean;
+  /** 图层偏移（默认 0，正数=置前/更靠前，负数=置后） */
+  zLayer?: number;
 }
 
 export interface RoomLayoutSave {
@@ -45,23 +47,20 @@ export interface RoomLayoutSave {
 // 基于 shop.png 2.5D 花店的开放式室内区域
 
 const DEFAULT_POSITIONS: Record<string, { x: number; y: number; scale: number }> = {
-  [DecoSlot.SHELF]:     { x: 180, y: 520, scale: 0.9 },
-  [DecoSlot.COUNTER]:   { x: 375, y: 620, scale: 0.85 },
-  [DecoSlot.LIGHT]:     { x: 400, y: 380, scale: 0.7 },
-  [DecoSlot.ORNAMENT]:  { x: 560, y: 560, scale: 0.8 },
-  [DecoSlot.WALL]:      { x: 260, y: 420, scale: 0.65 },
-  [DecoSlot.SIGNBOARD]: { x: 375, y: 330, scale: 0.7 },
-  [DecoSlot.DOOR]:      { x: 375, y: 700, scale: 0.8 },
-  [DecoSlot.WINDOW]:    { x: 520, y: 400, scale: 0.65 },
-  [DecoSlot.FLOOR]:     { x: 375, y: 640, scale: 1.0 },
-  [DecoSlot.GARDEN]:    { x: 200, y: 780, scale: 0.85 },
+  [DecoSlot.SHELF]:    { x: 180, y: 520, scale: 0.9 },
+  [DecoSlot.TABLE]:    { x: 375, y: 620, scale: 0.85 },
+  [DecoSlot.LIGHT]:    { x: 400, y: 380, scale: 0.7 },
+  [DecoSlot.ORNAMENT]: { x: 560, y: 560, scale: 0.8 },
+  [DecoSlot.WALLART]:  { x: 260, y: 420, scale: 0.65 },
+  [DecoSlot.GARDEN]:   { x: 200, y: 780, scale: 0.85 },
 };
 
 // ---- 房间可摆放区域边界 (设计坐标) ----
+// 默认值（非编辑模式 / 初始值），编辑模式下由 ShopScene 动态更新
 const ROOM_BOUNDS = {
-  minX: 80,
-  maxX: 670,
-  minY: 300,
+  minX: 50,
+  maxX: 700,
+  minY: 280,
   maxY: 800,
 };
 
@@ -113,6 +112,18 @@ class RoomLayoutManagerClass {
     return { ...ROOM_BOUNDS };
   }
 
+  /**
+   * 动态更新可摆放区域边界
+   * 编辑模式下由 ShopScene 根据实际 UI 布局调用
+   */
+  updateBounds(partial: Partial<typeof ROOM_BOUNDS>): void {
+    if (partial.minX !== undefined) ROOM_BOUNDS.minX = partial.minX;
+    if (partial.maxX !== undefined) ROOM_BOUNDS.maxX = partial.maxX;
+    if (partial.minY !== undefined) ROOM_BOUNDS.minY = partial.minY;
+    if (partial.maxY !== undefined) ROOM_BOUNDS.maxY = partial.maxY;
+    console.log(`[RoomLayout] bounds 已更新: minX=${ROOM_BOUNDS.minX}, maxX=${ROOM_BOUNDS.maxX}, minY=${ROOM_BOUNDS.minY}, maxY=${ROOM_BOUNDS.maxY}`);
+  }
+
   // ---- 操作 ----
 
   /**
@@ -148,6 +159,7 @@ class RoomLayoutManagerClass {
       y: this._clampY(y ?? defaults.y),
       scale: Math.max(0.5, Math.min(2.0, scale ?? defaults.scale)),
       flipped: flipped ?? false,
+      zLayer: 0,
     };
 
     this._placements.push(placement);
@@ -218,6 +230,36 @@ class RoomLayoutManagerClass {
   }
 
   /**
+   * 将家具图层往前移一级（更靠近屏幕前方）
+   */
+  bringForward(decoId: string): boolean {
+    const p = this._placements.find(p => p.decoId === decoId);
+    if (!p) return false;
+
+    p.zLayer = Math.min(5, (p.zLayer ?? 0) + 1);
+    this._debounceSave();
+
+    EventBus.emit('roomlayout:updated', p);
+    console.log(`[RoomLayout] ${decoId} 图层前移 → zLayer=${p.zLayer}`);
+    return true;
+  }
+
+  /**
+   * 将家具图层往后移一级（更远离屏幕）
+   */
+  sendBackward(decoId: string): boolean {
+    const p = this._placements.find(p => p.decoId === decoId);
+    if (!p) return false;
+
+    p.zLayer = Math.max(-5, (p.zLayer ?? 0) - 1);
+    this._debounceSave();
+
+    EventBus.emit('roomlayout:updated', p);
+    console.log(`[RoomLayout] ${decoId} 图层后移 → zLayer=${p.zLayer}`);
+    return true;
+  }
+
+  /**
    * 批量更新整个布局（用于撤销/重做）
    */
   setLayout(placements: FurniturePlacement[]): void {
@@ -227,6 +269,7 @@ class RoomLayoutManagerClass {
       y: this._clampY(p.y),
       scale: Math.max(0.5, Math.min(2.0, p.scale)),
       flipped: p.flipped,
+      zLayer: p.zLayer ?? 0,
     }));
     this._debounceSave();
 

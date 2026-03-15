@@ -23,6 +23,9 @@ interface ToolButton {
   icon: string;
   tooltip: string;
   action: () => void;
+  bgColor?: number;      // 自定义背景色
+  borderColor?: number;   // 自定义边框色
+  tooltipColor?: number;  // 自定义文字色
 }
 
 export class RoomEditToolbar extends PIXI.Container {
@@ -41,8 +44,8 @@ export class RoomEditToolbar extends PIXI.Container {
 
   // ---- 公共方法 ----
 
-  /** 显示工具栏（在指定位置） */
-  show(decoId: string, x: number, y: number): void {
+  /** 显示工具栏（固定在屏幕中上方，不遮挡家具） */
+  show(decoId: string, _x?: number, _y?: number): void {
     this._currentDecoId = decoId;
     const deco = DECO_MAP.get(decoId);
     if (!deco) return;
@@ -50,20 +53,18 @@ export class RoomEditToolbar extends PIXI.Container {
     this._nameLabel.text = `✏️ ${deco.name}`;
     this.visible = true;
 
-    // 定位在家具上方
-    this.x = x - this.width / 2;
-    this.y = y - 60;
+    // 固定在屏幕水平居中、roomBounds 上方（不遮挡家具）
+    const totalW = TOOLBAR_PADDING * 2 + 7 * BTN_SIZE + 6 * BTN_GAP;
+    this.x = (750 - totalW) / 2;  // 设计宽度750
+    this.y = 240;  // 在顶部UI下方、房间区域上方
 
-    // 确保不超出屏幕
-    if (this.x < 10) this.x = 10;
-    if (this.x + this.width > 740) this.x = 740 - this.width;
-    if (this.y < 10) this.y = 10;
-
-    // 弹出动画
-    this.alpha = 0;
-    this.scale.set(0.8);
-    TweenManager.to({ target: this, props: { alpha: 1 }, duration: 0.15, ease: Ease.easeOutQuad });
-    TweenManager.to({ target: this.scale, props: { x: 1, y: 1 }, duration: 0.2, ease: Ease.easeOutBack });
+    // 弹出动画（仅首次或切换家具时）
+    if (this.alpha < 0.5) {
+      this.alpha = 0;
+      this.scale.set(0.8);
+      TweenManager.to({ target: this, props: { alpha: 1 }, duration: 0.15, ease: Ease.easeOutQuad });
+      TweenManager.to({ target: this.scale, props: { x: 1, y: 1 }, duration: 0.2, ease: Ease.easeOutBack });
+    }
   }
 
   /** 隐藏工具栏 */
@@ -87,7 +88,10 @@ export class RoomEditToolbar extends PIXI.Container {
       { icon: '➕', tooltip: '放大', action: () => this._onScale(0.1) },
       { icon: '➖', tooltip: '缩小', action: () => this._onScale(-0.1) },
       { icon: '↔️', tooltip: '翻转', action: () => this._onFlip() },
+      { icon: '⬆️', tooltip: '置前', action: () => this._onBringForward() },
+      { icon: '⬇️', tooltip: '置后', action: () => this._onSendBackward() },
       { icon: '🗑️', tooltip: '移除', action: () => this._onRemove() },
+      { icon: '✅', tooltip: '确认', action: () => this._onConfirm(), bgColor: 0xE8F5E8, borderColor: 0x4CAF50, tooltipColor: 0x2E7D32 },
     ];
 
     const totalW = TOOLBAR_PADDING * 2 + buttons.length * BTN_SIZE + (buttons.length - 1) * BTN_GAP;
@@ -106,13 +110,8 @@ export class RoomEditToolbar extends PIXI.Container {
     this._bg.endFill();
     this._bg.lineStyle(1.5, 0xE0D0C0);
     this._bg.drawRoundedRect(0, 0, totalW, totalH, 14);
-    // 底部小三角（指向家具）
-    this._bg.beginFill(BG_COLOR, BG_ALPHA);
-    this._bg.moveTo(totalW / 2 - 10, totalH);
-    this._bg.lineTo(totalW / 2, totalH + 10);
-    this._bg.lineTo(totalW / 2 + 10, totalH);
-    this._bg.endFill();
-    this._bg.eventMode = 'static'; // 阻止穿透
+    // 不拦截点击（允许穿透到下方家具）
+    this._bg.eventMode = 'none';
     this.addChild(this._bg);
 
     // 名称标签
@@ -139,10 +138,10 @@ export class RoomEditToolbar extends PIXI.Container {
 
     // 按钮背景（圆角）
     const bg = new PIXI.Graphics();
-    bg.beginFill(0xF5F0EB);
+    bg.beginFill(def.bgColor ?? 0xF5F0EB);
     bg.drawRoundedRect(0, 0, BTN_SIZE, BTN_SIZE, 10);
     bg.endFill();
-    bg.lineStyle(1, 0xE0D0C0, 0.5);
+    bg.lineStyle(1, def.borderColor ?? 0xE0D0C0, 0.5);
     bg.drawRoundedRect(0, 0, BTN_SIZE, BTN_SIZE, 10);
     container.addChild(bg);
 
@@ -156,7 +155,7 @@ export class RoomEditToolbar extends PIXI.Container {
 
     // 功能文字说明（底部小字）
     const tooltip = new PIXI.Text(def.tooltip, {
-      fontSize: 10, fill: 0x8B7355, fontFamily: FONT_FAMILY,
+      fontSize: 10, fill: def.tooltipColor ?? 0x8B7355, fontFamily: FONT_FAMILY,
     });
     tooltip.anchor.set(0.5, 0.5);
     tooltip.position.set(BTN_SIZE / 2, BTN_SIZE - 8);
@@ -214,7 +213,9 @@ export class RoomEditToolbar extends PIXI.Container {
 
     const newScale = Math.max(0.5, Math.min(2.0, placement.scale + delta));
     RoomLayoutManager.scaleFurniture(this._currentDecoId, newScale);
-    EventBus.emit('roomlayout:updated', placement);
+
+    // roomlayout:updated 事件已由 RoomLayoutManager 内部发射
+    // ShopScene 会监听该事件实时更新 Sprite 视觉
 
     // 更新工具栏位置
     this.show(this._currentDecoId, placement.x, placement.y);
@@ -223,7 +224,24 @@ export class RoomEditToolbar extends PIXI.Container {
   private _onFlip(): void {
     if (!this._currentDecoId) return;
     RoomLayoutManager.flipFurniture(this._currentDecoId);
-    EventBus.emit('roomlayout:updated', RoomLayoutManager.getPlacement(this._currentDecoId));
+    // roomlayout:updated 事件已由 RoomLayoutManager 内部发射
+  }
+
+  /** 将家具图层往前移（遮挡其它家具） */
+  private _onBringForward(): void {
+    if (!this._currentDecoId) return;
+    RoomLayoutManager.bringForward(this._currentDecoId);
+    // 图层变更后需要重新排序
+    FurnitureDragSystem.sortByDepth();
+    EventBus.emit('toast:show', '📐 图层前移');
+  }
+
+  /** 将家具图层往后移（被其它家具遮挡） */
+  private _onSendBackward(): void {
+    if (!this._currentDecoId) return;
+    RoomLayoutManager.sendBackward(this._currentDecoId);
+    FurnitureDragSystem.sortByDepth();
+    EventBus.emit('toast:show', '📐 图层后移');
   }
 
   private _onRemove(): void {
@@ -231,7 +249,16 @@ export class RoomEditToolbar extends PIXI.Container {
     const decoId = this._currentDecoId;
     const deco = DECO_MAP.get(decoId);
 
+    // 先从拖拽系统注销并获取 Sprite 引用
+    const sprite = FurnitureDragSystem.getSpriteByDecoId(decoId);
     FurnitureDragSystem.unregisterSprite(decoId);
+
+    // 从视图中移除 Sprite 节点
+    if (sprite && sprite.parent) {
+      sprite.parent.removeChild(sprite);
+      sprite.destroy();
+    }
+
     RoomLayoutManager.removeFurniture(decoId);
 
     this.hide();
@@ -241,5 +268,22 @@ export class RoomEditToolbar extends PIXI.Container {
       EventBus.emit('toast:show', `已移除「${deco.name}」`);
     }
     EventBus.emit('roomlayout:changed');
+  }
+
+  /** 确认当前家具编辑（取消选中，但保持编辑模式） */
+  private _onConfirm(): void {
+    if (!this._currentDecoId) return;
+    const deco = DECO_MAP.get(this._currentDecoId);
+
+    // 取消选中 + 隐藏工具栏
+    FurnitureDragSystem.deselect();
+    this.hide();
+
+    // 保存当前布局
+    RoomLayoutManager.saveNow();
+
+    if (deco) {
+      EventBus.emit('toast:show', `✓「${deco.name}」已确认`);
+    }
   }
 }

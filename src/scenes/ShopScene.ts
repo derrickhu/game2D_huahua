@@ -37,6 +37,7 @@ import { ToastMessage } from '@/gameobjects/ui/ToastMessage';
 const PROGRESS_BAR_W = 400;
 const PROGRESS_BAR_H = 28;
 const RETURN_BTN_SIZE = 80;   // ← 放大返回按钮
+const TRAY_HEIGHT = 300;      // 家具托盘高度（与 FurnitureTray 的 TRAY_H 一致）
 
 // ── 颜色 ──
 const C = {
@@ -100,6 +101,19 @@ export class ShopScene implements Scene {
   private _particleContainer!: PIXI.Container;
   private _shopBuildingSprite: PIXI.Sprite | null = null;
 
+  // ── 编辑模式缩放相关 ──
+  private _viewScale = 1.0;                   // 当前视图缩放倍数
+  private _viewScaleMin = 1.0;
+  private _viewScaleMax = 2.0;
+  private _zoomBtns: PIXI.Container | null = null;  // 缩放按钮容器
+  // pinch 手势追踪
+  private _pinchPointers = new Map<number, { x: number; y: number }>();
+  private _pinchStartDist = 0;
+  private _pinchStartScale = 1;
+  private _onPinchDown: ((e: any) => void) | null = null;
+  private _onPinchMove: ((e: any) => void) | null = null;
+  private _onPinchUp: ((e: any) => void) | null = null;
+
   constructor() {
     this.container = new PIXI.Container();
   }
@@ -160,15 +174,15 @@ export class ShopScene implements Scene {
     // ============== 8. 右下角返回按钮（参考四季物语的大箭头） ==============
     this._buildReturnButton(w, h);
 
-    // ============== 9. 编辑模式按钮 ==============
-    this._buildEditButton(w, h);
-
-    // ============== 10. 编辑模式组件（初始隐藏） ==============
+    // ============== 9. 编辑模式组件（初始隐藏） ==============
     this._furnitureTray = new FurnitureTray();
     this.container.addChild(this._furnitureTray);
 
     this._editToolbar = new RoomEditToolbar();
     this.container.addChild(this._editToolbar);
+
+    // ============== 10. 编辑模式按钮（放在最后，确保在最顶层） ==============
+    this._buildEditButton(w, h);
 
     // ============== 11. 氛围粒子 ==============
     this._particleContainer = new PIXI.Container();
@@ -229,8 +243,8 @@ export class ShopScene implements Scene {
     const shopTex = TextureCache.get('house_shop');
     if (shopTex) {
       this._shopBuildingSprite = new PIXI.Sprite(shopTex);
-      // 根据宽度缩放让花店占据屏幕主体
-      const shopScale = Math.min((w * 0.95) / shopTex.width, (h * 0.55) / shopTex.height);
+      // 放大花店建筑让它尽量占满屏幕宽度
+      const shopScale = Math.min((w * 1.15) / shopTex.width, (h * 0.65) / shopTex.height);
       this._shopBuildingSprite.scale.set(shopScale);
       this._shopBuildingSprite.anchor.set(0.5, 0.5);
       this._shopBuildingSprite.position.set(centerX, centerY + 20);
@@ -276,7 +290,7 @@ export class ShopScene implements Scene {
       );
       sprite.anchor.set(0.5, 0.8); // 底部偏中心
       sprite.position.set(placement.x, placement.y);
-      sprite.zIndex = Math.floor(placement.y); // 2.5D 遮挡排序
+      sprite.zIndex = Math.floor(placement.y) + (placement.zLayer ?? 0) * 1000; // 2.5D 遮挡排序 + 手动图层偏移
 
       // 标记 decoId（用于拖拽系统识别）
       (sprite as any)._decoId = placement.decoId;
@@ -724,18 +738,52 @@ export class ShopScene implements Scene {
   // ─────────────────── 事件 ───────────────────
 
   private _bindEvents(): void {
-    // 监听布局变化，刷新房间渲染
+    // 监听布局变化 — 仅在非编辑模式下才完整重渲染
+    // 编辑模式下由 FurnitureDragSystem 直接操控 Sprite
     EventBus.on('roomlayout:changed', () => {
-      this._renderFurnitureLayout();
+      if (!this._isEditMode) {
+        this._renderFurnitureLayout();
+      }
     });
+
+    // 添加家具：编辑模式下只刷新托盘（Sprite已由DragSystem创建）
     EventBus.on('roomlayout:added', () => {
-      this._renderFurnitureLayout();
+      if (!this._isEditMode) {
+        this._renderFurnitureLayout();
+      }
       if (this._furnitureTray.isOpen) this._furnitureTray.refresh();
     });
+
+    // 移除家具：编辑模式下Sprite已由Toolbar移除
     EventBus.on('roomlayout:removed', () => {
-      this._renderFurnitureLayout();
+      if (!this._isEditMode) {
+        this._renderFurnitureLayout();
+      }
       if (this._furnitureTray.isOpen) this._furnitureTray.refresh();
     });
+
+    // 缩放/翻转：编辑模式下实时更新 Sprite 视觉
+    EventBus.on('roomlayout:updated', (placement: any) => {
+      if (this._isEditMode && placement && placement.decoId) {
+        this._updateSpriteVisual(placement);
+      }
+    });
+  }
+
+  /** 编辑模式下实时更新家具 Sprite 的缩放/翻转视觉（不重建） */
+  private _updateSpriteVisual(placement: { decoId: string; scale: number; flipped: boolean }): void {
+    for (const child of this._roomContainer.children) {
+      if ((child as any)._decoId === placement.decoId && child instanceof PIXI.Sprite) {
+        const texture = child.texture;
+        const baseSize = 100;
+        const s = Math.min(baseSize / texture.width, baseSize / texture.height) * placement.scale;
+        child.scale.set(
+          placement.flipped ? -s : s,
+          s
+        );
+        break;
+      }
+    }
   }
 
   // ─────────────────── 编辑模式 ───────────────────
@@ -840,14 +888,57 @@ export class ShopScene implements Scene {
     if (this._isEditMode) return;
     this._isEditMode = true;
 
+    // 停止脉冲动画
+    TweenManager.cancelTarget(this._editBtn.scale);
+    this._editBtn.scale.set(1);
+
     // 更新编辑按钮（图标+文字分开存储）
     const children = this._editBtn.children;
     for (const child of children) {
       if (child instanceof PIXI.Text) {
-        if (child.text === '编辑花店') child.text = '完成编辑';
-        if (child.text === '✏️') child.text = '✅';
+        if (child.text === '编辑花店') child.text = '✅ 完成编辑';
+        if (child.text === '✏️') child.visible = false;
+      }
+      // 隐藏原背景
+      if (child instanceof PIXI.Graphics) {
+        child.visible = false;
       }
     }
+
+    // 添加绿色完成按钮背景
+    const completeBg = new PIXI.Graphics();
+    completeBg.beginFill(0x4CAF50, 0.95);
+    completeBg.drawRoundedRect(-80, -22, 160, 44, 22);
+    completeBg.endFill();
+    completeBg.lineStyle(2, 0x388E3C, 0.5);
+    completeBg.drawRoundedRect(-80, -22, 160, 44, 22);
+    (completeBg as any)._editModeBg = true;
+    this._editBtn.addChildAt(completeBg, 0);
+
+    // 更新文字颜色为白色
+    for (const child of this._editBtn.children) {
+      if (child instanceof PIXI.Text && child.text === '✅ 完成编辑') {
+        child.style.fill = 0xFFFFFF;
+        child.style.fontSize = 18;
+        child.position.set(0, 0);
+      }
+    }
+
+    // 将完成按钮固定在托盘上边缘（托盘顶部 y = logicH - 300）
+    // 按钮放在托盘上方 30px，确保不被遮挡
+    const h = Game.logicHeight;
+    this._editBtn.position.set(DESIGN_WIDTH / 2, h - TRAY_HEIGHT - 30);
+
+    // 动态更新可拖拽区域：
+    //   minY: 工具栏/头像下方（约 280），太靠上有 UI 遮挡
+    //   maxY: "完成编辑"按钮上方留 60px 间距，允许装饰房间外面
+    const editBtnY = h - TRAY_HEIGHT - 30;
+    RoomLayoutManager.updateBounds({
+      minX: 50,
+      maxX: 700,
+      minY: 280,
+      maxY: editBtnY - 60,
+    });
 
     // 启用拖拽系统
     FurnitureDragSystem.enable(this._roomContainer);
@@ -861,7 +952,11 @@ export class ShopScene implements Scene {
       container.visible = false;
     }
 
-    ToastMessage.show('✏️ 编辑模式：拖拽家具到花店内任意位置');
+    // 添加缩放控件 + 双指缩放手势
+    this._buildZoomControls();
+    this._enablePinchZoom();
+
+    ToastMessage.show('✏️ 编辑模式：点击家具可拖动，用工具栏缩放/翻转/移除');
     EventBus.emit('furniture:edit_mode_enter');
   }
 
@@ -870,21 +965,57 @@ export class ShopScene implements Scene {
     if (!this._isEditMode) return;
     this._isEditMode = false;
 
+    // 移除绿色完成按钮背景
+    const toRemoveBg: PIXI.DisplayObject[] = [];
+    for (const child of this._editBtn.children) {
+      if ((child as any)._editModeBg) toRemoveBg.push(child);
+    }
+    toRemoveBg.forEach(c => { this._editBtn.removeChild(c); c.destroy(); });
+
     // 还原编辑按钮
     const children = this._editBtn.children;
     for (const child of children) {
+      // 恢复隐藏的元素
+      child.visible = true;
       if (child instanceof PIXI.Text) {
-        if (child.text === '完成编辑') child.text = '编辑花店';
-        if (child.text === '✅') child.text = '✏️';
+        if (child.text === '✅ 完成编辑') {
+          child.text = '编辑花店';
+          child.style.fill = COLORS.BUTTON_PRIMARY;
+          child.position.set(12, 0);
+        }
+        if (child.text === '✏️') child.visible = true;
+      }
+      if (child instanceof PIXI.Graphics) {
+        child.visible = true;
       }
     }
+
+    // 恢复按钮位置
+    const h = Game.logicHeight;
+    this._editBtn.position.set(DESIGN_WIDTH / 2, h - 140);
+
+    // 恢复脉冲动画
+    this._pulseEditBtn();
 
     // 禁用拖拽系统（自动保存）
     FurnitureDragSystem.disable();
 
+    // 恢复默认可摆放区域
+    RoomLayoutManager.updateBounds({
+      minX: 50,
+      maxX: 700,
+      minY: 280,
+      maxY: 800,
+    });
+
     // 关闭家具托盘和工具栏
     this._furnitureTray.close();
     this._editToolbar.hide();
+
+    // 恢复视图缩放 + 移除缩放控件
+    this._resetViewZoom();
+    this._removeZoomControls();
+    this._disablePinchZoom();
 
     // 恢复按钮显示
     this._returnBtn.visible = true;
@@ -897,6 +1028,195 @@ export class ShopScene implements Scene {
 
     ToastMessage.show('💾 布局已保存');
     EventBus.emit('furniture:edit_mode_exit');
+  }
+
+  // ─────────────────── 编辑模式缩放控制 ───────────────────
+
+  /** 应用视图缩放 — 以屏幕中心为基点缩放 roomContainer */
+  private _applyViewZoom(newScale: number): void {
+    const s = Math.max(this._viewScaleMin, Math.min(this._viewScaleMax, newScale));
+    this._viewScale = s;
+
+    // 以屏幕中心为缩放基点
+    const cx = DESIGN_WIDTH / 2;
+    const cy = Game.logicHeight * 0.42;  // 与花店建筑 centerY 对齐
+
+    // 调整容器 pivot + position 实现中心缩放
+    this._roomContainer.pivot.set(cx, cy);
+    this._roomContainer.position.set(cx, cy);
+    this._roomContainer.scale.set(s);
+
+    // 更新缩放比例显示
+    this._updateZoomLabel();
+  }
+
+  /** 重置缩放 */
+  private _resetViewZoom(): void {
+    this._viewScale = 1.0;
+    this._roomContainer.pivot.set(0, 0);
+    this._roomContainer.position.set(0, 0);
+    this._roomContainer.scale.set(1);
+  }
+
+  /** 构建缩放按钮（编辑模式右侧） */
+  private _buildZoomControls(): void {
+    if (this._zoomBtns) return;
+    this._zoomBtns = new PIXI.Container();
+
+    const btnSize = 40;
+    const gap = 8;
+    const x = DESIGN_WIDTH - btnSize - 16;
+    const startY = 280;
+
+    // 放大按钮
+    const zoomIn = this._makeZoomBtn('🔍+', x, startY, btnSize, () => {
+      this._applyViewZoom(this._viewScale + 0.15);
+    });
+    this._zoomBtns.addChild(zoomIn);
+
+    // 缩放比例文本
+    const label = new PIXI.Text('1.0x', {
+      fontSize: 11, fill: 0xFFFFFF, fontFamily: FONT_FAMILY,
+      stroke: 0x000000, strokeThickness: 2,
+    });
+    label.anchor.set(0.5, 0.5);
+    label.position.set(x + btnSize / 2, startY + btnSize + gap + 8);
+    (label as any)._zoomLabel = true;
+    this._zoomBtns.addChild(label);
+
+    // 缩小按钮
+    const zoomOut = this._makeZoomBtn('🔍−', x, startY + btnSize + gap + 24, btnSize, () => {
+      this._applyViewZoom(this._viewScale - 0.15);
+    });
+    this._zoomBtns.addChild(zoomOut);
+
+    // 重置按钮
+    const reset = this._makeZoomBtn('↺', x, startY + (btnSize + gap) * 2 + 24, btnSize, () => {
+      this._applyViewZoom(1.0);
+    });
+    this._zoomBtns.addChild(reset);
+
+    this.container.addChild(this._zoomBtns);
+  }
+
+  /** 创建单个缩放按钮 */
+  private _makeZoomBtn(
+    label: string, x: number, y: number, size: number, action: () => void,
+  ): PIXI.Container {
+    const btn = new PIXI.Container();
+
+    const bg = new PIXI.Graphics();
+    bg.beginFill(0x000000, 0.45);
+    bg.drawRoundedRect(0, 0, size, size, 10);
+    bg.endFill();
+    btn.addChild(bg);
+
+    const text = new PIXI.Text(label, {
+      fontSize: 16, fill: 0xFFFFFF, fontFamily: FONT_FAMILY,
+    });
+    text.anchor.set(0.5, 0.5);
+    text.position.set(size / 2, size / 2);
+    btn.addChild(text);
+
+    btn.position.set(x, y);
+    btn.eventMode = 'static';
+    btn.cursor = 'pointer';
+    btn.hitArea = new PIXI.Rectangle(0, 0, size, size);
+    btn.on('pointerdown', (e: PIXI.FederatedPointerEvent) => {
+      e.stopPropagation();
+      // 按压反馈
+      btn.scale.set(0.9);
+      setTimeout(() => btn.scale.set(1), 100);
+      action();
+    });
+
+    return btn;
+  }
+
+  /** 更新缩放比例文本 */
+  private _updateZoomLabel(): void {
+    if (!this._zoomBtns) return;
+    for (const child of this._zoomBtns.children) {
+      if ((child as any)._zoomLabel) {
+        (child as PIXI.Text).text = `${this._viewScale.toFixed(1)}x`;
+        break;
+      }
+    }
+  }
+
+  /** 移除缩放按钮 */
+  private _removeZoomControls(): void {
+    if (this._zoomBtns) {
+      this._zoomBtns.parent?.removeChild(this._zoomBtns);
+      this._zoomBtns.destroy({ children: true });
+      this._zoomBtns = null;
+    }
+  }
+
+  /** 启用双指捏合缩放手势 */
+  private _enablePinchZoom(): void {
+    const canvas = Game.app.view as any;
+
+    this._onPinchDown = (e: PointerEvent) => {
+      if (!this._isEditMode) return;
+      this._pinchPointers.set(e.pointerId, { x: e.clientX, y: e.clientY });
+    };
+
+    this._onPinchMove = (e: PointerEvent) => {
+      if (!this._isEditMode) return;
+      if (!this._pinchPointers.has(e.pointerId)) return;
+
+      this._pinchPointers.set(e.pointerId, { x: e.clientX, y: e.clientY });
+
+      if (this._pinchPointers.size === 2) {
+        const pts = Array.from(this._pinchPointers.values());
+        const dx = pts[0].x - pts[1].x;
+        const dy = pts[0].y - pts[1].y;
+        const dist = Math.sqrt(dx * dx + dy * dy);
+
+        if (this._pinchStartDist === 0) {
+          // 首次检测到双指 → 记录初始距离和缩放
+          this._pinchStartDist = dist;
+          this._pinchStartScale = this._viewScale;
+        } else {
+          // 计算缩放比例
+          const ratio = dist / this._pinchStartDist;
+          this._applyViewZoom(this._pinchStartScale * ratio);
+        }
+      }
+    };
+
+    this._onPinchUp = (e: PointerEvent) => {
+      this._pinchPointers.delete(e.pointerId);
+      if (this._pinchPointers.size < 2) {
+        this._pinchStartDist = 0;
+      }
+    };
+
+    canvas.addEventListener('pointerdown', this._onPinchDown);
+    canvas.addEventListener('pointermove', this._onPinchMove);
+    canvas.addEventListener('pointerup', this._onPinchUp);
+    canvas.addEventListener('pointercancel', this._onPinchUp);
+  }
+
+  /** 禁用双指缩放手势 */
+  private _disablePinchZoom(): void {
+    const canvas = Game.app.view as any;
+    if (this._onPinchDown) {
+      canvas.removeEventListener('pointerdown', this._onPinchDown);
+      this._onPinchDown = null;
+    }
+    if (this._onPinchMove) {
+      canvas.removeEventListener('pointermove', this._onPinchMove);
+      this._onPinchMove = null;
+    }
+    if (this._onPinchUp) {
+      canvas.removeEventListener('pointerup', this._onPinchUp);
+      canvas.removeEventListener('pointercancel', this._onPinchUp);
+      this._onPinchUp = null;
+    }
+    this._pinchPointers.clear();
+    this._pinchStartDist = 0;
   }
 
   // ─────────────────── 氛围粒子 ───────────────────

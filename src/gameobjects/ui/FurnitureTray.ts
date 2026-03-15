@@ -368,9 +368,10 @@ export class FurnitureTray extends PIXI.Container {
   }
 
   private _eventToDesign(e: PIXI.FederatedPointerEvent): { x: number; y: number } {
+    // global 坐标是 canvas 物理像素空间，转为设计坐标
     return {
-      x: e.global.x / Game.scale * Game.dpr,
-      y: e.global.y / Game.scale * Game.dpr,
+      x: (e.global.x / Game.dpr) * Game.designWidth / Game.screenWidth,
+      y: (e.global.y / Game.dpr) * Game.designHeight / Game.screenHeight,
     };
   }
 }
