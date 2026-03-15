@@ -67,9 +67,9 @@ async function main(): Promise<void> {
     } catch (e) { console.warn('[main] EventSystem 诊断失败:', e); }
 
     // 根据实际屏幕动态计算棋盘尺寸
-    // topReserved = safeTop + TopBar(60) + gap(8) + ShopArea(220) + gap(6)
+    // topReserved = safeTop + TopBar(60) + gap(8) + ShopArea(200+气泡溢出≈240) + gap(6)
     // FloatingMenu 现在是悬浮按钮组（FUNC_BAR_HEIGHT=0），不再占用独立行空间
-    const topReserved = Game.safeTop + 60 + 8 + 220 + 2 + FUNC_BAR_HEIGHT + 4;
+    const topReserved = Game.safeTop + 60 + 8 + 240 + 2 + FUNC_BAR_HEIGHT + 4;
     computeBoardMetrics(Game.logicHeight, topReserved);
     console.log(`[main] BoardMetrics 计算完成, logicHeight:${Game.logicHeight}, safeTop:${Game.safeTop}, topReserved:${topReserved}`);
 

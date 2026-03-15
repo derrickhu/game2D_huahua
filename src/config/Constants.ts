@@ -61,8 +61,10 @@ export function computeBoardMetrics(logicHeight: number, topReserved: number): v
 }
 
 // 客人
-export const MAX_CUSTOMERS = 2;
-export const CUSTOMER_REFRESH_MIN = 10; // 秒
+export const MAX_CUSTOMERS = 5;          // 最大排队客人数（含服务中）
+export const MAX_VISIBLE_CUSTOMERS = 5;  // 滚动区可见客人数
+export const ACTIVE_CUSTOMER_SLOTS = 2;  // 前N位为"服务中"（可交付）
+export const CUSTOMER_REFRESH_MIN = 10;  // 秒
 export const CUSTOMER_REFRESH_MAX = 30;
 
 // 体力

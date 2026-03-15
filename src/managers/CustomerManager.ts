@@ -7,7 +7,7 @@ import { CurrencyManager } from './CurrencyManager';
 import { RegularCustomerManager } from './RegularCustomerManager';
 import { CUSTOMER_TYPES, CustomerTypeDef } from '@/config/CustomerConfig';
 import { ITEM_DEFS, findItemId } from '@/config/ItemConfig';
-import { MAX_CUSTOMERS, CUSTOMER_REFRESH_MIN, CUSTOMER_REFRESH_MAX } from '@/config/Constants';
+import { MAX_CUSTOMERS, ACTIVE_CUSTOMER_SLOTS, CUSTOMER_REFRESH_MIN, CUSTOMER_REFRESH_MAX } from '@/config/Constants';
 
 export interface DemandSlot {
   /** 需要的具体物品 ID */
@@ -185,7 +185,7 @@ class CustomerManagerClass {
     return slots;
   }
 
-  /** 重新扫描所有客人需求并锁定棋盘物品 */
+  /** 重新扫描所有客人需求并锁定棋盘物品（仅服务中的客人） */
   private _rescanAll(): void {
     // 清除所有客人锁定
     for (const cust of this._customers) {
@@ -202,8 +202,10 @@ class CustomerManagerClass {
     // 已锁定的格子集合
     const locked = new Set<number>();
 
-    // 按客人顺序依次锁定（先到的客人优先）
-    for (const cust of this._customers) {
+    // 只有前 ACTIVE_CUSTOMER_SLOTS 位客人（服务中）可以锁定物品
+    const activeCount = Math.min(this._customers.length, ACTIVE_CUSTOMER_SLOTS);
+    for (let ci = 0; ci < activeCount; ci++) {
+      const cust = this._customers[ci];
       for (const slot of cust.slots) {
         let bestIndex = -1;
 

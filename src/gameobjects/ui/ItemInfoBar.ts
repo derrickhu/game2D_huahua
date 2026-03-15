@@ -4,10 +4,10 @@
  * ★ 默认态 → 精致底部 Tab 导航栏
  *   ┌────────────────────────────────────────────────────────────┐
  *   │                                                            │
- *   │  [🧩合成]   [🏡花店]   [📅签到]   [📋任务]   [💝熟客]  [📦] │
- *   │    ───                                                     │
+ *   │       [🏡花店]        [💝熟客]        [📖图鉴]       [📦]  │
+ *   │                                                            │
  *   └────────────────────────────────────────────────────────────┘
- *   当前激活的Tab有底部指示条 + 高亮色 + 图标放大
+ *   签到→登录自动弹出；任务/活动/挑战→移到顶部活动横幅
  *
  * ★ 物品选中态 → 物品详情模式
  *   ┌────────────────────────────────────────────────────────────┐
@@ -65,9 +65,8 @@ interface TabDef {
 
 const TABS: TabDef[] = [
   { id: 'shop',    icon: '🏡', label: '花店',  event: 'scene:switchToShop',  isScene: true, redDotKey: 'shop' },
-  { id: 'checkin', icon: '📅', label: '签到',  event: 'nav:openCheckIn',     redDotKey: 'checkin' },
-  { id: 'quest',   icon: '📋', label: '任务',  event: 'nav:openQuest',       redDotKey: 'quest' },
   { id: 'regular', icon: '💝', label: '熟客',  event: 'nav:openRegular',     redDotKey: 'regular' },
+  { id: 'album',   icon: '📖', label: '图鉴',  event: 'nav:openAlbum',       redDotKey: 'album' },
 ];
 
 const TAB_ICON_SIZE = 26;
