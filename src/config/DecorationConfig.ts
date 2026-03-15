@@ -38,6 +38,8 @@ export interface DecoDef {
   icon: string;
   /** 简短描述 */
   desc: string;
+  /** 季节限定（可选）：spring / summer / autumn / winter */
+  season?: string;
 }
 
 /** 槽位信息 */
@@ -126,6 +128,20 @@ export const DECO_DEFS: DecoDef[] = [
   { id: 'garden_02', name: '藤蔓凉亭', slot: DecoSlot.GARDEN, rarity: DecoRarity.FINE, cost: 250, icon: 'room_36', desc: '绿意盎然的休憩角' },
   { id: 'garden_03', name: '玫瑰花廊', slot: DecoSlot.GARDEN, rarity: DecoRarity.RARE, cost: 500, icon: 'room2_35', desc: '浪漫的玫瑰拱廊' },
   { id: 'garden_04', name: '日式枯山水', slot: DecoSlot.GARDEN, rarity: DecoRarity.LIMITED, cost: 800, icon: 'room2_36', desc: '禅意满满的庭院' },
+
+  // ======== 🌸 季节限定装饰 ========
+  // 春 · 樱花季
+  { id: 'season_spring_shelf', name: '樱花花架', slot: DecoSlot.SHELF, rarity: DecoRarity.LIMITED, cost: 600, icon: 'room2_07', desc: '春日限定，花架上落满樱花', season: 'spring' },
+  { id: 'season_spring_wall', name: '樱花挂画', slot: DecoSlot.WALL, rarity: DecoRarity.LIMITED, cost: 500, icon: 'room2_15', desc: '一幅漫天樱花的油画', season: 'spring' },
+  // 夏 · 盛夏花园
+  { id: 'season_summer_light', name: '向日葵灯', slot: DecoSlot.LIGHT, rarity: DecoRarity.LIMITED, cost: 550, icon: 'room2_21', desc: '阳光灿烂的夏日灯具', season: 'summer' },
+  { id: 'season_summer_garden', name: '夏日喷泉', slot: DecoSlot.GARDEN, rarity: DecoRarity.LIMITED, cost: 700, icon: 'room2_28', desc: '清凉的花园喷泉', season: 'summer' },
+  // 秋 · 金色丰收
+  { id: 'season_autumn_orn', name: '南瓜灯笼', slot: DecoSlot.ORNAMENT, rarity: DecoRarity.LIMITED, cost: 500, icon: 'room2_30', desc: '秋收季节的温暖灯笼', season: 'autumn' },
+  { id: 'season_autumn_counter', name: '枫叶柜台', slot: DecoSlot.COUNTER, rarity: DecoRarity.LIMITED, cost: 650, icon: 'room2_04', desc: '铺满红叶的柜台', season: 'autumn' },
+  // 冬 · 雪之物语
+  { id: 'season_winter_window', name: '雪花窗帘', slot: DecoSlot.WINDOW, rarity: DecoRarity.LIMITED, cost: 500, icon: 'room2_24', desc: '窗外是漫天飞雪', season: 'winter' },
+  { id: 'season_winter_orn', name: '圣诞壁炉', slot: DecoSlot.ORNAMENT, rarity: DecoRarity.LIMITED, cost: 750, icon: 'room2_09', desc: '壁炉上挂满了圣诞袜', season: 'winter' },
 ];
 
 /** 按 ID 查找装饰 */
@@ -134,4 +150,14 @@ export const DECO_MAP = new Map<string, DecoDef>(DECO_DEFS.map(d => [d.id, d]));
 /** 获取某个槽位的所有装饰方案 */
 export function getSlotDecos(slot: DecoSlot): DecoDef[] {
   return DECO_DEFS.filter(d => d.slot === slot);
+}
+
+/** 获取指定季节的限定装饰 */
+export function getSeasonalDecos(season: string): DecoDef[] {
+  return DECO_DEFS.filter(d => d.season === season);
+}
+
+/** 获取所有非季节限定的装饰 */
+export function getNonSeasonalDecos(): DecoDef[] {
+  return DECO_DEFS.filter(d => !d.season);
 }

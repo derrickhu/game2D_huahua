@@ -132,6 +132,20 @@ class DecorationManagerClass {
   }
 
   /**
+   * 获取所有已解锁的装饰定义列表
+   */
+  getUnlockedDecos(): DecoDef[] {
+    return DECO_DEFS.filter(d => this._unlocked.has(d.id));
+  }
+
+  /**
+   * 获取指定槽位已解锁的装饰列表
+   */
+  getUnlockedBySlot(slot: DecoSlot): DecoDef[] {
+    return getSlotDecos(slot).filter(d => this._unlocked.has(d.id));
+  }
+
+  /**
    * 检查是否有可以购买但未解锁的新装饰
    */
   hasAffordableNew(): boolean {

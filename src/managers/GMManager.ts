@@ -519,6 +519,54 @@ class GMManagerClass {
       },
     });
 
+    this._commands.push({
+      id: 'open_room_editor',
+      group: '🏠 装修系统',
+      name: '✏️ 打开房间编辑器',
+      desc: '在花店场景中进入编辑模式',
+      execute: () => {
+        EventBus.emit('nav:switchToShop');
+        setTimeout(() => EventBus.emit('furniture:edit_mode_enter'), 500);
+        return '✅ 切换到花店场景并进入编辑模式';
+      },
+    });
+
+    this._commands.push({
+      id: 'reset_room_layout',
+      group: '🏠 装修系统',
+      name: '🏗️ 重置房间布局',
+      desc: '清除家具摆放数据，恢复默认布局',
+      execute: () => {
+        try { _api?.removeStorageSync('huahua_room_layout'); } catch (_) {}
+        const { RoomLayoutManager } = require('@/managers/RoomLayoutManager');
+        RoomLayoutManager.reset();
+        return '✅ 房间布局已重置为默认';
+      },
+    });
+
+    this._commands.push({
+      id: 'fill_room',
+      group: '🏠 装修系统',
+      name: '🛋️ 填充全部家具',
+      desc: '解锁所有装饰并全部放入房间',
+      execute: () => {
+        const { DECO_DEFS: allDecos } = require('@/config/DecorationConfig');
+        // 先给足够花愿
+        CurrencyManager.addHuayuan(50000);
+        let count = 0;
+        for (const d of allDecos) {
+          if (!DecorationManager.isUnlocked(d.id)) {
+            DecorationManager.unlock(d.id);
+          }
+          count++;
+        }
+        // 重建房间布局
+        const { RoomLayoutManager } = require('@/managers/RoomLayoutManager');
+        RoomLayoutManager.reset();
+        return `✅ 已解锁并放置 ${count} 件家具`;
+      },
+    });
+
     // ========== GM 设置 ==========
 
     // ========== 🎪 新系统调试 ==========

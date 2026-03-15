@@ -7,12 +7,12 @@ import * as PIXI from 'pixi.js';
 /** 图片资源映射：icon key → 文件路径（相对于 minigame/ 根目录） */
 const IMAGE_MAP: Record<string, string> = {
   // ---- 日常花系 (6张, 128x128 RGBA) ----
-  flower_daily_1: 'images/flower_daily_1.png',
-  flower_daily_2: 'images/flower_daily_2.png',
-  flower_daily_3: 'images/flower_daily_3.png',
-  flower_daily_4: 'images/flower_daily_4.png',
-  flower_daily_5: 'images/flower_daily_5.png',
-  flower_daily_6: 'images/flower_daily_6.png',
+  flower_daily_1: 'images/flowers/daisy.png',
+  flower_daily_2: 'images/flowers/sunflower.png',
+  flower_daily_3: 'images/flowers/carnation.png',
+  flower_daily_4: 'images/flowers/babysbreath_bouquet.png',
+  flower_daily_5: 'images/flowers/mixed_bouquet.png',
+  flower_daily_6: 'images/flowers/giftbox_bouquet.png',
 
   // ---- 花店建筑场景 ----
   house_shop: 'images/house/shop.png',    // 花店2.5D建筑 (512x512)
