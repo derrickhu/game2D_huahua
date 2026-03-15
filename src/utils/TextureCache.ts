@@ -23,6 +23,55 @@ const IMAGE_MAP: Record<string, string> = {
 
   // ---- 装修家具素材 room2_items (36张, ~100-170px) ----
   ...buildRoomMap('room2', 36),
+
+  // ---- 新家具素材 furniture/ (35张, 已扣底) ----
+  // 花架
+  shelf_wood:    'images/furniture/shelf_wood.png',
+  shelf_step:    'images/furniture/shelf_step.png',
+  shelf_long:    'images/furniture/shelf_long.png',
+  shelf_iron:    'images/furniture/shelf_iron.png',
+  shelf_glass:   'images/furniture/shelf_glass.png',
+  shelf_spring:  'images/furniture/shelf_spring.png',
+  // 桌台
+  table_counter: 'images/furniture/table_counter.png',
+  table_drawer:  'images/furniture/table_drawer.png',
+  table_work:    'images/furniture/table_work.png',
+  table_marble:  'images/furniture/table_marble.png',
+  table_autumn:  'images/furniture/table_autumn.png',
+  // 灯具
+  light_desk:    'images/furniture/light_desk.png',
+  light_floor:   'images/furniture/light_floor.png',
+  light_pendant: 'images/furniture/light_pendant.png',
+  light_crystal: 'images/furniture/light_crystal.png',
+  light_summer:  'images/furniture/light_summer.png',
+  // 摆件
+  orn_pot:       'images/furniture/orn_pot.png',
+  orn_vase:      'images/furniture/orn_vase.png',
+  orn_fountain:  'images/furniture/orn_fountain.png',
+  orn_candle:    'images/furniture/orn_candle.png',
+  orn_clock:     'images/furniture/orn_clock.png',
+  orn_fireplace: 'images/furniture/orn_fireplace.png',
+  orn_pumpkin:   'images/furniture/orn_pumpkin.png',
+  orn_christmas: 'images/furniture/orn_christmas.png',
+  // 墙饰
+  wallart_plant:  'images/furniture/wallart_plant.png',
+  wallart_frame:  'images/furniture/wallart_frame.png',
+  wallart_wreath: 'images/furniture/wallart_wreath.png',
+  wallart_relief: 'images/furniture/wallart_relief.png',
+  wallart_spring: 'images/furniture/wallart_spring.png',
+  wallart_winter: 'images/furniture/wallart_winter.png',
+  // 庭院
+  garden_flowerbed: 'images/furniture/garden_flowerbed.png',
+  garden_arbor:     'images/furniture/garden_arbor.png',
+  garden_arch:      'images/furniture/garden_arch.png',
+  garden_zen:       'images/furniture/garden_zen.png',
+  garden_summer:    'images/furniture/garden_summer.png',
+
+  // ---- 房间背景 ----
+  bg_room_default: 'images/house/bg_room_default.png',
+  bg_room_white:   'images/house/bg_room_white.png',
+  bg_room_vintage: 'images/house/bg_room_vintage.png',
+  bg_room_spring:  'images/house/bg_room_spring.png',
 };
 
 /** 生成装修家具图片映射 */

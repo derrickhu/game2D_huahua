@@ -93,69 +93,63 @@ export const ROOM_STYLE_MAP = new Map<string, RoomStyleDef>(
 );
 
 // ======== 可摆放家具定义 ========
-// icon 字段暂时复用旧素材 key，等新 spritesheet 切好后批量替换
+// icon 字段已切换为新素材 key（对应 images/furniture/ 目录下的扣底图）
 
 export const DECO_DEFS: DecoDef[] = [
 
   // ═══════ ① 花架 / 展示架 (shelf) ═══════
-  // spritesheet: furniture_shelf.png (2×3 网格)
-  { id: 'shelf_wood',    name: '简约木花架',  slot: DecoSlot.SHELF, rarity: DecoRarity.COMMON, cost: 0,   icon: 'room_01', desc: '三层原木架，朴素实用' },
-  { id: 'shelf_step',    name: '阶梯花架',    slot: DecoSlot.SHELF, rarity: DecoRarity.COMMON, cost: 50,  icon: 'room_05', desc: '层层叠叠，像小山丘' },
-  { id: 'shelf_long',    name: '长条花台',    slot: DecoSlot.SHELF, rarity: DecoRarity.FINE,   cost: 120, icon: 'room_10', desc: '靠墙摆放的温馨花台' },
-  { id: 'shelf_iron',    name: '铁艺旋转架',  slot: DecoSlot.SHELF, rarity: DecoRarity.FINE,   cost: 200, icon: 'room_17', desc: '优雅的法式铁艺风格' },
-  { id: 'shelf_glass',   name: '玻璃展示柜',  slot: DecoSlot.SHELF, rarity: DecoRarity.RARE,   cost: 400, icon: 'room2_05', desc: '高端玻璃门展示柜' },
+  { id: 'shelf_wood',    name: '简约木花架',  slot: DecoSlot.SHELF, rarity: DecoRarity.COMMON, cost: 0,   icon: 'shelf_wood',   desc: '三层原木架，朴素实用' },
+  { id: 'shelf_step',    name: '阶梯花架',    slot: DecoSlot.SHELF, rarity: DecoRarity.COMMON, cost: 50,  icon: 'shelf_step',   desc: '层层叠叠，像小山丘' },
+  { id: 'shelf_long',    name: '长条花台',    slot: DecoSlot.SHELF, rarity: DecoRarity.FINE,   cost: 120, icon: 'shelf_long',   desc: '靠墙摆放的温馨花台' },
+  { id: 'shelf_iron',    name: '铁艺旋转架',  slot: DecoSlot.SHELF, rarity: DecoRarity.FINE,   cost: 200, icon: 'shelf_iron',   desc: '优雅的法式铁艺风格' },
+  { id: 'shelf_glass',   name: '玻璃展示柜',  slot: DecoSlot.SHELF, rarity: DecoRarity.RARE,   cost: 400, icon: 'shelf_glass',  desc: '高端玻璃门展示柜' },
 
   // ═══════ ② 桌台 / 工作台 (table) ═══════
-  // spritesheet: furniture_table.png (2×2 网格)
-  { id: 'table_counter',  name: '木质收银台',  slot: DecoSlot.TABLE, rarity: DecoRarity.COMMON, cost: 0,   icon: 'room_03', desc: '温暖的原木收银台' },
-  { id: 'table_drawer',   name: '抽屉式柜台',  slot: DecoSlot.TABLE, rarity: DecoRarity.COMMON, cost: 80,  icon: 'room_04', desc: '带抽屉的实用柜台' },
-  { id: 'table_work',     name: '花艺工作台',  slot: DecoSlot.TABLE, rarity: DecoRarity.FINE,   cost: 180, icon: 'room_08', desc: '专业的花艺操作台' },
-  { id: 'table_marble',   name: '大理石桌',    slot: DecoSlot.TABLE, rarity: DecoRarity.RARE,   cost: 350, icon: 'room2_03', desc: '冷峻优雅的大理石面' },
+  { id: 'table_counter',  name: '木质收银台',  slot: DecoSlot.TABLE, rarity: DecoRarity.COMMON, cost: 0,   icon: 'table_counter', desc: '温暖的原木收银台' },
+  { id: 'table_drawer',   name: '抽屉式柜台',  slot: DecoSlot.TABLE, rarity: DecoRarity.COMMON, cost: 80,  icon: 'table_drawer',  desc: '带抽屉的实用柜台' },
+  { id: 'table_work',     name: '花艺工作台',  slot: DecoSlot.TABLE, rarity: DecoRarity.FINE,   cost: 180, icon: 'table_work',    desc: '专业的花艺操作台' },
+  { id: 'table_marble',   name: '大理石桌',    slot: DecoSlot.TABLE, rarity: DecoRarity.RARE,   cost: 350, icon: 'table_marble',  desc: '冷峻优雅的大理石面' },
 
   // ═══════ ③ 灯具 (light) ═══════
-  // spritesheet: furniture_light.png (2×2 网格)
-  { id: 'light_desk',     name: '台灯',        slot: DecoSlot.LIGHT, rarity: DecoRarity.COMMON, cost: 0,   icon: 'room_20', desc: '简约台灯，温暖光芒' },
-  { id: 'light_floor',    name: '落地灯',      slot: DecoSlot.LIGHT, rarity: DecoRarity.COMMON, cost: 60,  icon: 'room_21', desc: '角落里的柔和光源' },
-  { id: 'light_pendant',  name: '花式吊灯',    slot: DecoSlot.LIGHT, rarity: DecoRarity.FINE,   cost: 160, icon: 'room_22', desc: '花朵造型的精美吊灯' },
-  { id: 'light_crystal',  name: '水晶吊灯',    slot: DecoSlot.LIGHT, rarity: DecoRarity.RARE,   cost: 380, icon: 'room2_22', desc: '华丽的水晶折射光芒' },
+  { id: 'light_desk',     name: '台灯',        slot: DecoSlot.LIGHT, rarity: DecoRarity.COMMON, cost: 0,   icon: 'light_desk',    desc: '简约台灯，温暖光芒' },
+  { id: 'light_floor',    name: '落地灯',      slot: DecoSlot.LIGHT, rarity: DecoRarity.COMMON, cost: 60,  icon: 'light_floor',   desc: '角落里的柔和光源' },
+  { id: 'light_pendant',  name: '花式吊灯',    slot: DecoSlot.LIGHT, rarity: DecoRarity.FINE,   cost: 160, icon: 'light_pendant', desc: '花朵造型的精美吊灯' },
+  { id: 'light_crystal',  name: '水晶吊灯',    slot: DecoSlot.LIGHT, rarity: DecoRarity.RARE,   cost: 380, icon: 'light_crystal', desc: '华丽的水晶折射光芒' },
 
   // ═══════ ④ 摆件 / 装饰品 (ornament) ═══════
-  // spritesheet: furniture_ornament.png (2×3 网格)
-  { id: 'orn_pot',        name: '小花盆',      slot: DecoSlot.ORNAMENT, rarity: DecoRarity.COMMON, cost: 0,   icon: 'room_07', desc: '窗台上的小盆栽' },
-  { id: 'orn_vase',       name: '花瓶',        slot: DecoSlot.ORNAMENT, rarity: DecoRarity.COMMON, cost: 50,  icon: 'room_09', desc: '插一枝花就很美' },
-  { id: 'orn_fountain',   name: '迷你喷泉',    slot: DecoSlot.ORNAMENT, rarity: DecoRarity.FINE,   cost: 180, icon: 'room_28', desc: '叮咚的流水声' },
-  { id: 'orn_candle',     name: '香薰蜡烛',    slot: DecoSlot.ORNAMENT, rarity: DecoRarity.FINE,   cost: 200, icon: 'room_30', desc: '淡淡的花香弥漫' },
-  { id: 'orn_clock',      name: '复古挂钟',    slot: DecoSlot.ORNAMENT, rarity: DecoRarity.FINE,   cost: 220, icon: 'room_26', desc: '滴答滴答的复古时光' },
-  { id: 'orn_fireplace',  name: '壁炉',        slot: DecoSlot.ORNAMENT, rarity: DecoRarity.RARE,   cost: 500, icon: 'room2_10', desc: '温暖整个花店的壁炉' },
+  { id: 'orn_pot',        name: '小花盆',      slot: DecoSlot.ORNAMENT, rarity: DecoRarity.COMMON, cost: 0,   icon: 'orn_pot',       desc: '窗台上的小盆栽' },
+  { id: 'orn_vase',       name: '花瓶',        slot: DecoSlot.ORNAMENT, rarity: DecoRarity.COMMON, cost: 50,  icon: 'orn_vase',      desc: '插一枝花就很美' },
+  { id: 'orn_fountain',   name: '迷你喷泉',    slot: DecoSlot.ORNAMENT, rarity: DecoRarity.FINE,   cost: 180, icon: 'orn_fountain',  desc: '叮咚的流水声' },
+  { id: 'orn_candle',     name: '香薰蜡烛',    slot: DecoSlot.ORNAMENT, rarity: DecoRarity.FINE,   cost: 200, icon: 'orn_candle',    desc: '淡淡的花香弥漫' },
+  { id: 'orn_clock',      name: '复古挂钟',    slot: DecoSlot.ORNAMENT, rarity: DecoRarity.FINE,   cost: 220, icon: 'orn_clock',     desc: '滴答滴答的复古时光' },
+  { id: 'orn_fireplace',  name: '壁炉',        slot: DecoSlot.ORNAMENT, rarity: DecoRarity.RARE,   cost: 500, icon: 'orn_fireplace', desc: '温暖整个花店的壁炉' },
 
   // ═══════ ⑤ 墙饰 / 挂件 (wallart) ═══════
-  // spritesheet: furniture_wallart.png (2×2 网格)
-  { id: 'wallart_plant',  name: '植物壁挂',    slot: DecoSlot.WALLART, rarity: DecoRarity.COMMON, cost: 0,   icon: 'room_15', desc: '墙上的一抹绿意' },
-  { id: 'wallart_frame',  name: '装饰画框',    slot: DecoSlot.WALLART, rarity: DecoRarity.COMMON, cost: 70,  icon: 'room_16', desc: '花语主题装饰画' },
-  { id: 'wallart_wreath', name: '花环壁饰',    slot: DecoSlot.WALLART, rarity: DecoRarity.FINE,   cost: 150, icon: 'room2_16', desc: '干花与绿叶编织的花环' },
-  { id: 'wallart_relief', name: '艺术浮雕',    slot: DecoSlot.WALLART, rarity: DecoRarity.RARE,   cost: 450, icon: 'room2_26', desc: '精致的花卉浮雕壁饰' },
+  { id: 'wallart_plant',  name: '植物壁挂',    slot: DecoSlot.WALLART, rarity: DecoRarity.COMMON, cost: 0,   icon: 'wallart_plant',  desc: '墙上的一抹绿意' },
+  { id: 'wallart_frame',  name: '装饰画框',    slot: DecoSlot.WALLART, rarity: DecoRarity.COMMON, cost: 70,  icon: 'wallart_frame',  desc: '花语主题装饰画' },
+  { id: 'wallart_wreath', name: '花环壁饰',    slot: DecoSlot.WALLART, rarity: DecoRarity.FINE,   cost: 150, icon: 'wallart_wreath', desc: '干花与绿叶编织的花环' },
+  { id: 'wallart_relief', name: '艺术浮雕',    slot: DecoSlot.WALLART, rarity: DecoRarity.RARE,   cost: 450, icon: 'wallart_relief', desc: '精致的花卉浮雕壁饰' },
 
   // ═══════ ⑥ 庭院 / 户外 (garden) ═══════
-  // spritesheet: furniture_garden.png (2×2 网格)
-  { id: 'garden_flowerbed', name: '小花圃',    slot: DecoSlot.GARDEN, rarity: DecoRarity.COMMON, cost: 0,   icon: 'room_35', desc: '门前的一小片花圃' },
-  { id: 'garden_arbor',    name: '藤蔓凉亭',   slot: DecoSlot.GARDEN, rarity: DecoRarity.FINE,   cost: 250, icon: 'room_36', desc: '绿意盎然的休憩角' },
-  { id: 'garden_arch',     name: '玫瑰花廊',   slot: DecoSlot.GARDEN, rarity: DecoRarity.RARE,   cost: 500, icon: 'room2_35', desc: '浪漫的玫瑰拱廊' },
-  { id: 'garden_zen',      name: '日式枯山水', slot: DecoSlot.GARDEN, rarity: DecoRarity.LIMITED, cost: 800, icon: 'room2_36', desc: '禅意满满的庭院' },
+  { id: 'garden_flowerbed', name: '小花圃',    slot: DecoSlot.GARDEN, rarity: DecoRarity.COMMON, cost: 0,   icon: 'garden_flowerbed', desc: '门前的一小片花圃' },
+  { id: 'garden_arbor',    name: '藤蔓凉亭',   slot: DecoSlot.GARDEN, rarity: DecoRarity.FINE,   cost: 250, icon: 'garden_arbor',    desc: '绿意盎然的休憩角' },
+  { id: 'garden_arch',     name: '玫瑰花廊',   slot: DecoSlot.GARDEN, rarity: DecoRarity.RARE,   cost: 500, icon: 'garden_arch',     desc: '浪漫的玫瑰拱廊' },
+  { id: 'garden_zen',      name: '日式枯山水', slot: DecoSlot.GARDEN, rarity: DecoRarity.LIMITED, cost: 800, icon: 'garden_zen',      desc: '禅意满满的庭院' },
 
   // ═══════ 🌸 季节限定装饰 ═══════
 
   // 春 · 樱花季
-  { id: 'season_spring_shelf', name: '樱花花架',  slot: DecoSlot.SHELF,    rarity: DecoRarity.LIMITED, cost: 600, icon: 'room2_07',  desc: '春日限定，花架上落满樱花', season: 'spring' },
-  { id: 'season_spring_wall',  name: '樱花挂画',  slot: DecoSlot.WALLART,  rarity: DecoRarity.LIMITED, cost: 500, icon: 'room2_15',  desc: '一幅漫天樱花的油画', season: 'spring' },
+  { id: 'season_spring_shelf', name: '樱花花架',  slot: DecoSlot.SHELF,    rarity: DecoRarity.LIMITED, cost: 600, icon: 'shelf_spring',   desc: '春日限定，花架上落满樱花', season: 'spring' },
+  { id: 'season_spring_wall',  name: '樱花挂画',  slot: DecoSlot.WALLART,  rarity: DecoRarity.LIMITED, cost: 500, icon: 'wallart_spring', desc: '一幅漫天樱花的油画', season: 'spring' },
   // 夏 · 盛夏花园
-  { id: 'season_summer_light',  name: '向日葵灯',  slot: DecoSlot.LIGHT,   rarity: DecoRarity.LIMITED, cost: 550, icon: 'room2_21',  desc: '阳光灿烂的夏日灯具', season: 'summer' },
-  { id: 'season_summer_garden', name: '夏日喷泉',  slot: DecoSlot.GARDEN,  rarity: DecoRarity.LIMITED, cost: 700, icon: 'room2_28',  desc: '清凉的花园喷泉', season: 'summer' },
+  { id: 'season_summer_light',  name: '向日葵灯',  slot: DecoSlot.LIGHT,   rarity: DecoRarity.LIMITED, cost: 550, icon: 'light_summer',   desc: '阳光灿烂的夏日灯具', season: 'summer' },
+  { id: 'season_summer_garden', name: '夏日喷泉',  slot: DecoSlot.GARDEN,  rarity: DecoRarity.LIMITED, cost: 700, icon: 'garden_summer',  desc: '清凉的花园喷泉', season: 'summer' },
   // 秋 · 金色丰收
-  { id: 'season_autumn_orn',     name: '南瓜灯笼', slot: DecoSlot.ORNAMENT, rarity: DecoRarity.LIMITED, cost: 500, icon: 'room2_30', desc: '秋收季节的温暖灯笼', season: 'autumn' },
-  { id: 'season_autumn_table',   name: '枫叶柜台', slot: DecoSlot.TABLE,    rarity: DecoRarity.LIMITED, cost: 650, icon: 'room2_04', desc: '铺满红叶的柜台', season: 'autumn' },
+  { id: 'season_autumn_orn',     name: '南瓜灯笼', slot: DecoSlot.ORNAMENT, rarity: DecoRarity.LIMITED, cost: 500, icon: 'orn_pumpkin',   desc: '秋收季节的温暖灯笼', season: 'autumn' },
+  { id: 'season_autumn_table',   name: '枫叶柜台', slot: DecoSlot.TABLE,    rarity: DecoRarity.LIMITED, cost: 650, icon: 'table_autumn',  desc: '铺满红叶的柜台', season: 'autumn' },
   // 冬 · 雪之物语
-  { id: 'season_winter_wallart', name: '雪景挂画', slot: DecoSlot.WALLART,  rarity: DecoRarity.LIMITED, cost: 500, icon: 'room2_24', desc: '窗外是漫天飞雪', season: 'winter' },
-  { id: 'season_winter_orn',     name: '圣诞壁炉', slot: DecoSlot.ORNAMENT, rarity: DecoRarity.LIMITED, cost: 750, icon: 'room2_09', desc: '壁炉上挂满了圣诞袜', season: 'winter' },
+  { id: 'season_winter_wallart', name: '雪景挂画', slot: DecoSlot.WALLART,  rarity: DecoRarity.LIMITED, cost: 500, icon: 'wallart_winter', desc: '窗外是漫天飞雪', season: 'winter' },
+  { id: 'season_winter_orn',     name: '圣诞壁炉', slot: DecoSlot.ORNAMENT, rarity: DecoRarity.LIMITED, cost: 750, icon: 'orn_christmas', desc: '壁炉上挂满了圣诞袜', season: 'winter' },
 ];
 
 // ======== 索引 & 工具函数 ========
