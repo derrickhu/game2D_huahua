@@ -24,11 +24,26 @@ export class QuestPanel extends PIXI.Container {
   }
 
   open(): void {
-    if (this._isOpen) return;
+    console.log(`[QuestPanel] open() called, _isOpen=${this._isOpen}, visible=${this.visible}, parent=${!!this.parent}, parentVisible=${this.parent?.visible}`);
+    if (this._isOpen) {
+      console.warn('[QuestPanel] open() 提前返回: _isOpen=true');
+      return;
+    }
     this._isOpen = true;
     this.visible = true;
+    this.alpha = 1;
     this._activeTab = 'quest';
     this._refresh();
+    console.log(`[QuestPanel] open() 状态设置完成, visible=${this.visible}, worldVisible=${this.worldVisible}, parent=${this.parent?.constructor?.name}, parentParent=${this.parent?.parent?.constructor?.name}`);
+
+    // 取消之前可能残留的关闭动画
+    TweenManager.cancelTarget(this._bg);
+    TweenManager.cancelTarget(this._content);
+    TweenManager.cancelTarget(this._content.scale);
+
+    // 确保面板自身 transform 干净
+    this.position.set(0, 0);
+    this.scale.set(1, 1);
 
     // 弹出动画：遮罩淡入 + 面板从缩小弹出
     this._bg.alpha = 0;
@@ -42,6 +57,12 @@ export class QuestPanel extends PIXI.Container {
   close(): void {
     if (!this._isOpen) return;
     this._isOpen = false;
+
+    // 取消之前的开启动画
+    TweenManager.cancelTarget(this._bg);
+    TweenManager.cancelTarget(this._content);
+    TweenManager.cancelTarget(this._content.scale);
+
     TweenManager.to({
       target: this._bg, props: { alpha: 0 }, duration: 0.15, ease: Ease.easeInQuad,
     });

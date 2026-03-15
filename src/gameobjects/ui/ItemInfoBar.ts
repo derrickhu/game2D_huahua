@@ -255,6 +255,7 @@ export class ItemInfoBar extends PIXI.Container {
 
   /** Tab 点击处理 */
   private _onTabTap(def: TabDef): void {
+    console.log(`[ItemInfoBar] _onTabTap: id=${def.id}, event=${def.event}`);
     // 点击反馈动画（所有Tab统一）
     const tab = this._tabVisuals.get(def.id);
     if (tab) {

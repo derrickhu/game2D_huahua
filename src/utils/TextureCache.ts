@@ -23,9 +23,6 @@ const IMAGE_MAP: Record<string, string> = {
 
   // ---- 装修家具素材 room2_items (36张, ~100-170px) ----
   ...buildRoomMap('room2', 36),
-
-  // ---- 花朵装饰图标 (100张, ~60-100px) ----
-  ...buildFlowerMap(100),
 };
 
 /** 生成装修家具图片映射 */
@@ -38,15 +35,6 @@ function buildRoomMap(prefix: string, count: number): Record<string, string> {
   return map;
 }
 
-/** 生成花朵装饰图标映射 */
-function buildFlowerMap(count: number): Record<string, string> {
-  const map: Record<string, string> = {};
-  for (let i = 1; i <= count; i++) {
-    const key = `flower_deco_${String(i).padStart(3, '0')}`;
-    map[key] = `images/flowers/flower_${String(i).padStart(3, '0')}.png`;
-  }
-  return map;
-}
 
 class TextureCacheClass {
   private _cache = new Map<string, PIXI.Texture>();

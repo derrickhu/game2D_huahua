@@ -3,6 +3,8 @@
  */
 import * as PIXI from 'pixi.js';
 import { Game } from './Game';
+import { TweenManager } from './TweenManager';
+import { OverlayManager } from './OverlayManager';
 
 export interface Scene {
   readonly name: string;
@@ -37,9 +39,21 @@ class SceneManagerClass {
 
     // 退出当前场景
     if (this._currentScene) {
+      // 取消旧场景容器上的残留 tween 动画（如淡出过渡等）
+      TweenManager.cancelTarget(this._currentScene.container);
+
       this._currentScene.onExit?.();
       Game.stage.removeChild(this._currentScene.container);
     }
+
+    // 安全重置：确保 stage.pivot 归零（防止 HapticSystem 等系统残留偏移）
+    Game.stage.pivot.set(0, 0);
+
+    // 关闭所有弹窗面板，重置覆盖层 transform（防止场景切换时面板状态残留）
+    this._closeAndResetOverlay();
+
+    // 取消新场景容器上可能存在的旧 tween
+    TweenManager.cancelTarget(nextScene.container);
 
     // 进入新场景
     this._currentScene = nextScene;
@@ -58,13 +72,23 @@ class SceneManagerClass {
 
   /** 将 OverlayManager 的容器提升到 stage 最顶部 */
   private _bringOverlayToFront(): void {
-    // 延迟导入避免循环依赖
     try {
-      // eslint-disable-next-line @typescript-eslint/no-var-requires
-      const { OverlayManager } = require('./OverlayManager');
       OverlayManager.bringToFront();
-    } catch (_) {
-      // OverlayManager 尚未初始化，忽略
+      // 调试：打印 stage 子元素顺序
+      const stageChildren = Game.stage.children.map((c: any) => c.constructor?.name || 'Container');
+      console.log(`[SceneManager] bringToFront 完成, stage 子元素顺序: [${stageChildren.join(', ')}]`);
+    } catch (e) {
+      console.warn('[SceneManager] bringToFront 失败:', e);
+    }
+  }
+
+  /** 关闭所有弹窗并重置覆盖层 transform */
+  private _closeAndResetOverlay(): void {
+    try {
+      OverlayManager.closeAllPanels();
+      OverlayManager.resetTransform();
+    } catch (e) {
+      console.warn('[SceneManager] closeAndResetOverlay 失败:', e);
     }
   }
 }

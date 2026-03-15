@@ -31,6 +31,10 @@ class EventBusClass {
 
   emit(event: string, ...args: any[]): void {
     const handlers = this._listeners.get(event);
+    // 调试：追踪导航和场景事件
+    if (event.startsWith('nav:') || event.startsWith('scene:')) {
+      console.log(`[EventBus] emit("${event}"), 监听器数量=${handlers?.length ?? 0}`);
+    }
     if (!handlers) return;
     // 复制一份避免在回调中修改数组
     [...handlers].forEach(handler => {

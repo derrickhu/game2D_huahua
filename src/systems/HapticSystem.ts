@@ -40,6 +40,8 @@ interface Particle {
 
 export class HapticSystem {
   private _container: PIXI.Container;
+  /** 屏幕抖动的目标容器（场景 container，而非 Game.stage） */
+  private _shakeTarget: PIXI.Container;
   private _particles: Particle[] = [];
   private _screenShakeOffset = { x: 0, y: 0 };
   private _shakeTimer = 0;
@@ -49,10 +51,17 @@ export class HapticSystem {
   /** 用户设置：是否开启屏幕特效 */
   private _effectsEnabled = true;
 
-  constructor(parent: PIXI.Container) {
+  /**
+   * @param parent 粒子挂载的父容器
+   * @param shakeTarget 屏幕抖动作用的容器（通常是场景的 container），
+   *                    不再修改 Game.stage.pivot 以避免场景切换后坐标系污染
+   */
+  constructor(parent: PIXI.Container, shakeTarget?: PIXI.Container) {
     this._container = new PIXI.Container();
     this._container.zIndex = 100;
     parent.addChild(this._container);
+
+    this._shakeTarget = shakeTarget || parent;
 
     this._loadSettings();
     this._bindEvents();
@@ -306,21 +315,38 @@ export class HapticSystem {
       p.gfx.scale.set(s);
     }
 
-    // 更新屏幕抖动
+    // 更新屏幕抖动 —— 作用于场景容器而不是 stage，避免影响全局渲染
     if (this._shakeTimer > 0) {
       this._shakeTimer -= dt;
       const intensity = this._shakeIntensity * Math.min(1, this._shakeTimer * 8);
       this._screenShakeOffset.x = (Math.random() - 0.5) * intensity * 2;
       this._screenShakeOffset.y = (Math.random() - 0.5) * intensity * 2;
 
-      // 应用到 stage
-      Game.stage.pivot.set(-this._screenShakeOffset.x, -this._screenShakeOffset.y);
+      // 应用到场景容器（而非 Game.stage，避免 pivot 污染全局坐标系）
+      this._shakeTarget.position.set(this._screenShakeOffset.x, this._screenShakeOffset.y);
 
       if (this._shakeTimer <= 0) {
         this._shakeIntensity = 0;
-        Game.stage.pivot.set(0, 0);
+        this._shakeTarget.position.set(0, 0);
       }
     }
+  }
+
+  /** 立即停止所有效果并恢复状态（场景退出时调用） */
+  stopAll(): void {
+    // 停止屏幕抖动，恢复位置
+    this._shakeTimer = 0;
+    this._shakeIntensity = 0;
+    this._screenShakeOffset.x = 0;
+    this._screenShakeOffset.y = 0;
+    this._shakeTarget.position.set(0, 0);
+
+    // 清理所有粒子
+    for (const p of this._particles) {
+      this._container.removeChild(p.gfx);
+      p.gfx.destroy();
+    }
+    this._particles.length = 0;
   }
 
   // ═══════════════ 设置 ═══════════════

@@ -88,6 +88,12 @@ export class ShopScene implements Scene {
   }
 
   onEnter(): void {
+    // 确保容器 transform 干净
+    this.container.position.set(0, 0);
+    this.container.scale.set(1, 1);
+    this.container.pivot.set(0, 0);
+    this.container.alpha = 1;
+
     this._build();
     this._playEnterAnim();
     Game.ticker.add(this._update, this);

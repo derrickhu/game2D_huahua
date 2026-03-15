@@ -125,6 +125,12 @@ export class MainScene implements Scene {
   }
 
   onEnter(): void {
+    // 确保容器 transform 干净（从花店等其他场景切回后可能有残留状态）
+    this.container.position.set(0, 0);
+    this.container.scale.set(1, 1);
+    this.container.pivot.set(0, 0);
+    this.container.alpha = 1;
+
     if (!this._initialized) {
       this._buildUI();
       this._boardView.refresh();
@@ -162,6 +168,11 @@ export class MainScene implements Scene {
 
   onExit(): void {
     Game.ticker.remove(this._update, this);
+
+    // 停止所有触觉反馈效果，恢复容器位置（防止抖动残留导致坐标错乱）
+    if (this._hapticSystem) {
+      this._hapticSystem.stopAll();
+    }
   }
 
   /** 游戏就绪后的启动流程 */
@@ -257,7 +268,8 @@ export class MainScene implements Scene {
     this._mergeStats = new MergeStatsSystem(this.container);
 
     // 触觉反馈系统（震动+粒子+屏幕抖动）
-    this._hapticSystem = new HapticSystem(this.container);
+    // 传入 this.container 作为抖动目标，避免修改 Game.stage.pivot 导致场景切换后坐标错乱
+    this._hapticSystem = new HapticSystem(this.container, this.container);
 
     // 左侧悬浮功能按钮组（签到/任务/熟客，纵向排列在棋盘左侧）
     // 参考 Merge Mansion / Travel Town：功能入口悬浮在棋盘边缘，不占用独立行空间
@@ -675,7 +687,8 @@ export class MainScene implements Scene {
     CurrencyManager.update(dt);
     BuildingManager.update(dt);
     CustomerManager.update(dt);
-    TweenManager.update(dt);
+    // 注意：TweenManager.update 已在 Game.init 的全局 ticker 中注册，
+    // 此处不再重复调用，避免动画速度翻倍
     SaveManager.update(dt);
 
     this._boardView.updateCdDisplay();
