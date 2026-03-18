@@ -135,18 +135,19 @@ class GameClass {
       this.dpr = sysInfo.pixelRatio || 2;
     }
 
-    // 计算安全区顶部（微信胶囊按钮下方），转为设计坐标
+    // 计算安全区顶部（与微信胶囊按钮齐平），转为设计坐标
+    // TopBar 所有元素在胶囊左侧，不会重叠，因此对齐 capsule.top 即可
     const _api: any = typeof wx !== 'undefined' ? wx : typeof tt !== 'undefined' ? tt : null;
     let safeTopPx = 0;
     try {
       const capsule = _api?.getMenuButtonBoundingClientRect?.();
-      if (capsule && capsule.bottom) {
-        safeTopPx = capsule.bottom + 8;
+      if (capsule && capsule.top) {
+        safeTopPx = capsule.top;
       } else if (sysInfo?.statusBarHeight) {
-        safeTopPx = sysInfo.statusBarHeight + 44;
+        safeTopPx = sysInfo.statusBarHeight + 6;
       }
     } catch (_) {}
-    if (safeTopPx <= 0) safeTopPx = 80;
+    if (safeTopPx <= 0) safeTopPx = 40;
     this.safeTop = Math.round(safeTopPx * (this.designWidth / this.screenWidth));
     console.log(`[Game] safeTop: ${safeTopPx}px → ${this.safeTop} 设计坐标`);
 

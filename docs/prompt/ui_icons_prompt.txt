@@ -1,0 +1,32 @@
+A game UI icon sheet with 10 individual icons arranged in a 5 columns × 2 rows grid layout. Each icon is a standalone game UI element, drawn in cute hand-painted 2D anime game style with soft 3D volume shading. Icons should be bold, colorful, with clean rounded shapes and soft gradient lighting. VERY IMPORTANT: The entire background of the image and behind every icon MUST be solid bright magenta pink color #FF00FF. Every single pixel that is not part of an icon must be exactly #FF00FF magenta. No gradients, no cream, no white — ONLY solid #FF00FF magenta background everywhere. Thin solid #FF00FF magenta borders separating grid cells.
+
+STYLE REQUIREMENTS:
+- Cute kawaii game UI style, matching a cozy flower shop merge game
+- Bold vibrant colors with soft pastel undertones — NOT flat, has gentle 3D depth and highlights
+- Rounded bubbly shapes, thick clean outlines with soft inner shading
+- Each icon is large and fills most of its grid cell (approximately 80% of cell area)
+- Soft warm lighting from top-left, subtle drop shadow beneath each icon
+- NO TEXT, no labels, no numbers, no captions, no writing anywhere in the image
+- Background is SOLID #FF00FF MAGENTA everywhere, no exceptions
+
+GRID LAYOUT (left to right, top to bottom):
+
+[Row 1, Col 1] ENERGY ICON — A bright green glossy lightning bolt with yellow-green gradient, slightly tilted, with a tiny white sparkle highlight on the upper portion. Chunky rounded shape, vibrant green (#43A047 to #66BB6A). On solid magenta #FF00FF background.
+
+[Row 1, Col 2] GOLD COIN ICON — A shiny golden coin seen at a slight 3/4 angle, with a cute flower emblem embossed on the face. Warm gold gradient (#FFD54F to #F9A825), metallic shine highlight on top-left edge, subtle coin rim thickness visible. On solid magenta #FF00FF background.
+
+[Row 1, Col 3] DIAMOND GEM ICON — A beautiful faceted crystal gem in purple-pink gradient (#CE93D8 to #AB47BC), classic diamond shape with brilliant white sparkle reflections on facets. Slightly rotated for dynamic feel. On solid magenta #FF00FF background.
+
+[Row 1, Col 4] STAR BADGE ICON — A plump 5-pointed star in warm orange-gold gradient (#FFB74D to #FF7043), with a cute rounded shape (not sharp points), tiny white sparkle on top point. Cheerful and inviting. On solid magenta #FF00FF background.
+
+[Row 1, Col 5] PLUS BUTTON ICON — A bright green circle (#43A047) with a bold white "+" cross in the center. Clean, simple, with subtle 3D convex effect (lighter green at top, darker at bottom), small white highlight arc on upper-left. On solid magenta #FF00FF background.
+
+[Row 2, Col 1] FLOWER SHOP ICON — A cute miniature flower shop building/house: warm peach-orange roof with scalloped edges, cream/white walls, tiny awning over a small window, a tiny wreath or flowers on the door. Adorable dollhouse proportions, warm cozy colors (#FF8A65, #FFCCBC, #FFF3E0). On solid magenta #FF00FF background.
+
+[Row 2, Col 2] HEART ICON (Regulars/熟客) — A plump glossy heart in warm coral-pink gradient (#FF8A80 to #E91E63), with a tiny golden sparkle/star accent on upper-right. Rounded and puffy, looks soft and warm. Slight 3D pillow effect. On solid magenta #FF00FF background.
+
+[Row 2, Col 3] BOOK ICON (Collection/图鉴) — An open book seen from front at slight angle, warm brown leather cover (#8D6E63) with golden page edges. A small pink flower decoration on the cover. Pages slightly fanned open, cozy storybook feel. On solid magenta #FF00FF background.
+
+[Row 2, Col 4] TREASURE CHEST ICON (Warehouse/仓库) — A cute rounded treasure chest: warm brown wood body (#795548) with golden metal bands and clasp, lid slightly ajar showing a warm golden glow from inside. Small cute proportions, slightly chibi/SD style. On solid magenta #FF00FF background.
+
+[Row 2, Col 5] CHART ICON (Stats/统计) — A cute circular badge with a mini bar chart inside: 3 rounded bars in green, orange, and pink of different heights, on a soft cream circular background with a subtle warm border. Clean and readable. On solid magenta #FF00FF background.

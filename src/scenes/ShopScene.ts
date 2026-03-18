@@ -59,25 +59,30 @@ const C = {
 /** 侧边功能按钮定义 */
 interface SideBtnDef {
   id: string;
-  icon: string;       // 主图标 emoji
-  label: string;      // 中文标签
+  icon: string;       // 主图标 emoji（图标纹理不可用时降级）
+  texKey?: string;     // TextureCache 图标 key
+  label: string;
   event: string;
-  iconBg: number;     // 图标背景色
-  labelColor: number; // 标签颜色
+  iconBg: number;
+  labelColor: number;
 }
 
-/** 左侧 — 核心功能按钮（装修/装扮/图鉴） */
-const LEFT_BUTTONS: SideBtnDef[] = [
-  { id: 'deco',    icon: '🔨', label: '装修', event: 'nav:openDeco',    iconBg: 0xFFB347, labelColor: 0xD48B2E },
-  { id: 'dressup', icon: '👗', label: '装扮', event: 'nav:openDressup', iconBg: 0xFF7EB3, labelColor: 0xE0559C },
-  { id: 'album',   icon: '📖', label: '图鉴', event: 'nav:openAlbum',   iconBg: 0xA78BFA, labelColor: 0x7C5FC5 },
+/** 左下角横排 — 家具 / 装扮（无遮罩，大图标） */
+const DECO_PAIR_BUTTONS: SideBtnDef[] = [
+  { id: 'deco',    icon: '🛋️', texKey: 'icon_furniture', label: '家具', event: 'nav:openDeco',    iconBg: 0xFFB347, labelColor: 0xD48B2E },
+  { id: 'dressup', icon: '👗', texKey: 'icon_dress',      label: '装扮', event: 'nav:openDressup', iconBg: 0xFF7EB3, labelColor: 0xE0559C },
 ];
 
-/** 右侧 — 活动快捷按钮（签到/任务/熟客） */
+/** 左上角 — 图鉴 + 熟客（竖排） */
+const LEFT_TOP_BUTTONS: SideBtnDef[] = [
+  { id: 'album',   icon: '📖', texKey: 'icon_book',  label: '图鉴', event: 'nav:openAlbum',   iconBg: 0xA78BFA, labelColor: 0x7C5FC5 },
+  { id: 'regular', icon: '💝', texKey: 'icon_heart', label: '熟客', event: 'nav:openRegular', iconBg: 0xEF5350, labelColor: 0xC62828 },
+];
+
+/** 右侧 — 活动快捷按钮（签到/任务） */
 const RIGHT_BUTTONS: SideBtnDef[] = [
-  { id: 'checkin',  icon: '📅', label: '签到', event: 'nav:openCheckIn', iconBg: 0xFFA726, labelColor: 0xD48B2E },
-  { id: 'quest',    icon: '📋', label: '任务', event: 'nav:openQuest',   iconBg: 0x42A5F5, labelColor: 0x1976D2 },
-  { id: 'regular',  icon: '💝', label: '熟客', event: 'nav:openRegular', iconBg: 0xEF5350, labelColor: 0xC62828 },
+  { id: 'checkin', icon: '📅', texKey: 'icon_checkin', label: '签到', event: 'nav:openCheckIn', iconBg: 0xFFA726, labelColor: 0xD48B2E },
+  { id: 'quest',   icon: '📋', texKey: 'icon_quest',   label: '任务', event: 'nav:openQuest',   iconBg: 0x42A5F5, labelColor: 0x1976D2 },
 ];
 
 export class ShopScene implements Scene {
@@ -88,7 +93,6 @@ export class ShopScene implements Scene {
   private _progressText!: PIXI.Text;
   private _progressBar!: PIXI.Graphics;
   private _progressFill!: PIXI.Graphics;
-  private _starText!: PIXI.Text;
   private _returnBtn!: PIXI.Container;
   private _roomContainer!: PIXI.Container;
   private _activityBtns: Map<string, { container: PIXI.Container; redDot: PIXI.Graphics }> = new Map();
@@ -100,6 +104,17 @@ export class ShopScene implements Scene {
   private _editToolbar!: RoomEditToolbar;
   private _particleContainer!: PIXI.Container;
   private _shopBuildingSprite: PIXI.Sprite | null = null;
+
+  // ── 店主 ──
+  private _ownerContainer: PIXI.Container | null = null;
+  private _ownerSprite: PIXI.Sprite | null = null;
+  private _blinkTimer = 0;
+  private _blinkInterval = 3.5;
+  private _isBlinking = false;
+  private _ownerDragging = false;
+  private _ownerDragOffset = { x: 0, y: 0 };
+  private _onOwnerRawMove: ((e: any) => void) | null = null;
+  private _onOwnerRawUp: ((e: any) => void) | null = null;
 
   // ── 编辑模式缩放相关 ──
   private _viewScale = 1.0;                   // 当前视图缩放倍数
@@ -138,10 +153,25 @@ export class ShopScene implements Scene {
     if (this._isEditMode) {
       this._exitEditMode();
     }
+    // 清理店主拖拽的 canvas 事件
+    this._cleanupOwnerDragEvents();
     // 无论是否编辑模式，都强制刷写布局存档（防止防抖 timer 未触发）
     RoomLayoutManager.saveNow();
     Game.ticker.remove(this._update, this);
     this.container.removeChildren();
+  }
+
+  private _cleanupOwnerDragEvents(): void {
+    const canvas = Game.app.view as any;
+    if (this._onOwnerRawMove) {
+      canvas.removeEventListener('pointermove', this._onOwnerRawMove);
+      this._onOwnerRawMove = null;
+    }
+    if (this._onOwnerRawUp) {
+      canvas.removeEventListener('pointerup', this._onOwnerRawUp);
+      canvas.removeEventListener('pointercancel', this._onOwnerRawUp);
+      this._onOwnerRawUp = null;
+    }
   }
 
   private _build(): void {
@@ -164,14 +194,14 @@ export class ShopScene implements Scene {
     // ============== 4. 装修进度条（TopBar 下方） ==============
     this._buildProgressBar(w);
 
-    // ============== 5. 花愿星星数显示 ==============
-    this._buildStarDisplay(w);
+    // ============== 5. 左上角按钮（图鉴 + 熟客） ==============
+    this._buildLeftTopButtons();
 
-    // ============== 6. 左侧活动按钮（装修/装扮/图鉴） ==============
-    this._buildActivityButtons();
-
-    // ============== 7. 右侧快捷按钮（签到/任务/熟客） ==============
+    // ============== 6. 右侧快捷按钮（签到/任务/熟客） ==============
     this._buildQuickButtons();
+
+    // ============== 7. 左下横排装修/装扮按钮（无遮罩，大图标） ==============
+    this._buildDecoPairBtns();
 
     // ============== 8. 右下角返回按钮（参考四季物语的大箭头） ==============
     this._buildReturnButton(w, h);
@@ -217,10 +247,10 @@ export class ShopScene implements Scene {
       this.container.addChild(bg);
     }
 
-    // 底部地面区域（柔和渐变）
+    // 底部地面区域（柔和渐变，起始位置低于家具可放置范围）
     const ground = new PIXI.Graphics();
     ground.beginFill(0xD4C4A0, 0.5);
-    ground.drawRect(0, h * 0.75, w, h * 0.25);
+    ground.drawRect(0, h * 0.82, w, h * 0.18);
     ground.endFill();
     this.container.addChild(ground);
 
@@ -256,11 +286,12 @@ export class ShopScene implements Scene {
     // ---- 从 RoomLayoutManager 渲染所有已放置的家具 ----
     this._renderFurnitureLayout();
 
-    // ---- 店主角色 ----
-    this._drawShopOwner(centerX, centerY + 100);
+    // ---- 店主角色（位置可由玩家在编辑模式自定义） ----
+    const savedPos = RoomLayoutManager.ownerPos;
+    const ownerX = savedPos?.x ?? (centerX + 140);
+    const ownerY = savedPos?.y ?? (centerY + 120);
+    this._drawShopOwner(ownerX, ownerY);
 
-    // ---- 氛围小物件 ----
-    this._drawTableDecor(centerX - 180, centerY + 170);
   }
 
   /** 从 RoomLayoutManager 渲染家具布局 */
@@ -303,65 +334,42 @@ export class ShopScene implements Scene {
     this._roomContainer.sortChildren();
   }
 
-  /** 绘制店主形象（大版本） */
+  /** 绘制店主形象 */
   private _drawShopOwner(cx: number, cy: number): void {
     const owner = new PIXI.Container();
     owner.position.set(cx, cy);
+    this._ownerContainer = owner;
 
-    // 身体
-    const body = new PIXI.Graphics();
-    body.beginFill(0xFFE4CC, 0.9);
-    body.drawEllipse(0, 20, 35, 45);
-    body.endFill();
-    // 围裙
-    body.beginFill(0xFFC0CB, 0.7);
-    body.drawEllipse(0, 30, 30, 35);
-    body.endFill();
-    owner.addChild(body);
+    const tex = TextureCache.get('owner_full_default');
+    if (tex) {
+      this._ownerSprite = new PIXI.Sprite(tex);
+      this._ownerSprite.anchor.set(0.5, 1);
+      const targetH = 150;
+      const scale = targetH / tex.height;
+      this._ownerSprite.scale.set(scale);
+      owner.addChild(this._ownerSprite);
+    }
 
-    // 头部
-    const head = new PIXI.Graphics();
-    head.beginFill(0xFFDDB8);
-    head.drawCircle(0, -25, 30);
-    head.endFill();
-    // 头发
-    head.beginFill(0x8B4513, 0.8);
-    head.drawEllipse(0, -40, 32, 18);
-    head.endFill();
-    // 眼睛
-    head.beginFill(0x4A3728);
-    head.drawCircle(-10, -25, 3.5);
-    head.drawCircle(10, -25, 3.5);
-    head.endFill();
-    // 微笑
-    head.lineStyle(2, 0x4A3728);
-    head.arc(0, -16, 8, 0.1, Math.PI - 0.1);
-    // 腮红
-    head.beginFill(0xFFB6C1, 0.5);
-    head.drawEllipse(-18, -18, 6, 4);
-    head.drawEllipse(18, -18, 6, 4);
-    head.endFill();
-    owner.addChild(head);
-
-    // 花束（手持）
-    const flower = new PIXI.Text('💐', { fontSize: 28, fontFamily: FONT_FAMILY });
-    flower.anchor.set(0.5, 0.5);
-    flower.position.set(30, 10);
-    owner.addChild(flower);
-
-    // 名牌
-    const nameTag = new PIXI.Text('花语小筑 · 店主', {
-      fontSize: 13, fill: COLORS.TEXT_DARK, fontFamily: FONT_FAMILY, fontWeight: 'bold',
-    });
-    nameTag.anchor.set(0.5, 0);
-    nameTag.position.set(0, 72);
-    owner.addChild(nameTag);
-
-    // 点击店主可触发对话
+    owner.zIndex = Math.floor(cy);
     owner.eventMode = 'static';
     owner.cursor = 'pointer';
-    owner.hitArea = new PIXI.Circle(0, 0, 60);
-    owner.on('pointerdown', () => {
+    owner.hitArea = new PIXI.Circle(0, -40, 60);
+
+    // 交互：普通模式点击对话，编辑模式拖拽移动
+    owner.on('pointerdown', (e: PIXI.FederatedPointerEvent) => {
+      if (this._isEditMode) {
+        this._ownerDragging = true;
+        const designX = (e.global.x / Game.dpr) * Game.designWidth / Game.screenWidth;
+        const designY = (e.global.y / Game.dpr) * Game.designHeight / Game.screenHeight;
+        const c = this._roomContainer;
+        const s = c.scale.x || 1;
+        const localX = (designX - c.position.x) / s + c.pivot.x;
+        const localY = (designY - c.position.y) / s + c.pivot.y;
+        this._ownerDragOffset.x = owner.x - localX;
+        this._ownerDragOffset.y = owner.y - localY;
+        owner.alpha = 0.7;
+        return;
+      }
       const greetings = [
         '欢迎来到花语小筑~ 🌸',
         '今天想做什么呢？可以装修花店哦！',
@@ -371,8 +379,6 @@ export class ShopScene implements Scene {
       ];
       const msg = greetings[Math.floor(Math.random() * greetings.length)];
       ToastMessage.show(`💬 店主：「${msg}」`);
-
-      // 弹跳动画
       TweenManager.cancelTarget(owner.scale);
       owner.scale.set(0.9);
       TweenManager.to({
@@ -383,32 +389,34 @@ export class ShopScene implements Scene {
       });
     });
 
+    // 使用 canvas 级别事件处理拖拽（与 FurnitureDragSystem 一致，兼容微信小游戏）
+    const canvas = Game.app.view as any;
+    this._onOwnerRawMove = (rawEvt: any) => {
+      if (!this._ownerDragging) return;
+      const clientX = rawEvt.clientX ?? rawEvt.pageX ?? 0;
+      const clientY = rawEvt.clientY ?? rawEvt.pageY ?? 0;
+      const designX = clientX * Game.designWidth / Game.screenWidth;
+      const designY = clientY * Game.designHeight / Game.screenHeight;
+      const c = this._roomContainer;
+      const s = c.scale.x || 1;
+      const localX = (designX - c.position.x) / s + c.pivot.x;
+      const localY = (designY - c.position.y) / s + c.pivot.y;
+      owner.x = localX + this._ownerDragOffset.x;
+      owner.y = localY + this._ownerDragOffset.y;
+      owner.zIndex = Math.floor(owner.y);
+      this._roomContainer.sortChildren();
+    };
+    this._onOwnerRawUp = () => {
+      if (!this._ownerDragging) return;
+      this._ownerDragging = false;
+      owner.alpha = 1;
+      RoomLayoutManager.setOwnerPos(owner.x, owner.y);
+    };
+    canvas.addEventListener('pointermove', this._onOwnerRawMove);
+    canvas.addEventListener('pointerup', this._onOwnerRawUp);
+    canvas.addEventListener('pointercancel', this._onOwnerRawUp);
+
     this._roomContainer.addChild(owner);
-  }
-
-  /** 桌面装饰 */
-  private _drawTableDecor(cx: number, cy: number): void {
-    const table = new PIXI.Graphics();
-    // 圆桌
-    table.beginFill(0xD2B48C, 0.8);
-    table.drawEllipse(cx, cy, 60, 30);
-    table.endFill();
-    table.beginFill(0xC4A882, 0.6);
-    table.drawEllipse(cx, cy + 5, 55, 25);
-    table.endFill();
-    this._roomContainer.addChild(table);
-
-    // 茶杯
-    const cup = new PIXI.Text('☕', { fontSize: 24, fontFamily: FONT_FAMILY });
-    cup.anchor.set(0.5, 0.5);
-    cup.position.set(cx - 15, cy - 10);
-    this._roomContainer.addChild(cup);
-
-    // 小花瓶
-    const vase = new PIXI.Text('🌷', { fontSize: 20, fontFamily: FONT_FAMILY });
-    vase.anchor.set(0.5, 0.5);
-    vase.position.set(cx + 20, cy - 12);
-    this._roomContainer.addChild(vase);
   }
 
   // ─────────────────── 装修进度条 ───────────────────
@@ -421,11 +429,21 @@ export class ShopScene implements Scene {
     const barContainer = new PIXI.Container();
     barContainer.position.set(cx - PROGRESS_BAR_W / 2, y);
 
-    // 等级图标（猫猫/小图标）
-    const levelIcon = new PIXI.Text('🐱', { fontSize: 24, fontFamily: FONT_FAMILY });
-    levelIcon.anchor.set(0.5, 0.5);
-    levelIcon.position.set(-20, PROGRESS_BAR_H / 2);
-    barContainer.addChild(levelIcon);
+    // 等级徽章图标
+    const badgeTex = TextureCache.get('icon_level_badge');
+    if (badgeTex) {
+      const badgeSp = new PIXI.Sprite(badgeTex);
+      badgeSp.anchor.set(0.5, 0.5);
+      badgeSp.width = 32;
+      badgeSp.height = 32;
+      badgeSp.position.set(-20, PROGRESS_BAR_H / 2);
+      barContainer.addChild(badgeSp);
+    } else {
+      const levelIcon = new PIXI.Text('🐱', { fontSize: 24, fontFamily: FONT_FAMILY });
+      levelIcon.anchor.set(0.5, 0.5);
+      levelIcon.position.set(-20, PROGRESS_BAR_H / 2);
+      barContainer.addChild(levelIcon);
+    }
 
     // 进度条背景
     this._progressBar = new PIXI.Graphics();
@@ -454,17 +472,28 @@ export class ShopScene implements Scene {
 
     // 进度文字
     this._progressText = new PIXI.Text(`${unlocked}/${total}`, {
-      fontSize: 13, fill: COLORS.TEXT_DARK, fontFamily: FONT_FAMILY, fontWeight: 'bold',
+      fontSize: 17, fill: COLORS.TEXT_DARK, fontFamily: FONT_FAMILY, fontWeight: 'bold',
+      stroke: 0xFFFFFF, strokeThickness: 2,
     });
     this._progressText.anchor.set(0.5, 0.5);
     this._progressText.position.set(PROGRESS_BAR_W / 2, PROGRESS_BAR_H / 2);
     barContainer.addChild(this._progressText);
 
     // 右端礼盒图标（满级奖励）
-    const gift = new PIXI.Text('🎁', { fontSize: 22, fontFamily: FONT_FAMILY });
-    gift.anchor.set(0.5, 0.5);
-    gift.position.set(PROGRESS_BAR_W + 24, PROGRESS_BAR_H / 2);
-    barContainer.addChild(gift);
+    const giftTex = TextureCache.get('icon_gift');
+    if (giftTex) {
+      const giftSp = new PIXI.Sprite(giftTex);
+      giftSp.anchor.set(0.5, 0.5);
+      giftSp.width = 30;
+      giftSp.height = 30;
+      giftSp.position.set(PROGRESS_BAR_W + 24, PROGRESS_BAR_H / 2);
+      barContainer.addChild(giftSp);
+    } else {
+      const gift = new PIXI.Text('🎁', { fontSize: 22, fontFamily: FONT_FAMILY });
+      gift.anchor.set(0.5, 0.5);
+      gift.position.set(PROGRESS_BAR_W + 24, PROGRESS_BAR_H / 2);
+      barContainer.addChild(gift);
+    }
 
     this.container.addChild(barContainer);
   }
@@ -487,68 +516,101 @@ export class ShopScene implements Scene {
     }
   }
 
-  // ─────────────────── 花愿星星显示 ───────────────────
+  // ─────────────────── 左上角按钮（图鉴 + 熟客） ───────────────────
 
-  private _buildStarDisplay(w: number): void {
-    const y = Game.safeTop + TOP_BAR_HEIGHT + PROGRESS_BAR_H + 28;
-    const huayuan = CurrencyManager.state.huayuan || 0;
+  private _buildLeftTopButtons(): void {
+    const btnW = 84;
+    const btnH = 84;
+    const gap = 10;
+    const startY = Game.safeTop + TOP_BAR_HEIGHT + PROGRESS_BAR_H + 66 + btnH / 2;
+    const cx = btnW / 2 + 14;
 
-    const container = new PIXI.Container();
-    container.position.set(w / 2, y);
-
-    // 背景胶囊
-    const bg = new PIXI.Graphics();
-    bg.beginFill(0xFFFFFF, 0.3);
-    bg.drawRoundedRect(-60, -14, 120, 28, 14);
-    bg.endFill();
-    container.addChild(bg);
-
-    // 🔧 花愿图标
-    const icon = new PIXI.Text('🌸', { fontSize: 16, fontFamily: FONT_FAMILY });
-    icon.anchor.set(0.5, 0.5);
-    icon.position.set(-35, 0);
-    container.addChild(icon);
-
-    this._starText = new PIXI.Text(`${huayuan}`, {
-      fontSize: 16, fill: 0xFFFFFF, fontFamily: FONT_FAMILY, fontWeight: 'bold',
-    });
-    this._starText.anchor.set(0, 0.5);
-    this._starText.position.set(-20, 0);
-    container.addChild(this._starText);
-
-    // ⭐ 装饰
-    const star = new PIXI.Text('⭐', { fontSize: 14, fontFamily: FONT_FAMILY });
-    star.anchor.set(0.5, 0.5);
-    star.position.set(40, 0);
-    container.addChild(star);
-
-    this.container.addChild(container);
-  }
-
-  // ─────────────────── 左侧功能按钮（装修/装扮/图鉴） ───────────────────
-
-  private _buildActivityButtons(): void {
-    const startY = Game.logicHeight * 0.50;
-    const btnW = 72;
-    const btnH = 72;
-    const gap = 12;
-
-    for (let i = 0; i < LEFT_BUTTONS.length; i++) {
-      const def = LEFT_BUTTONS[i];
+    for (let i = 0; i < LEFT_TOP_BUTTONS.length; i++) {
+      const def = LEFT_TOP_BUTTONS[i];
       const y = startY + i * (btnH + gap);
-      const btn = this._createSideButton(def, btnW / 2 + 14, y, btnW, btnH);
+      const btn = this._createSideButton(def, cx, y, btnW, btnH);
       this.container.addChild(btn.container);
       this._activityBtns.set(def.id, btn);
     }
   }
 
+  // ─────────────────── 左下横排装修/装扮按钮 ───────────────────
+
+  private _buildDecoPairBtns(): void {
+    const ICON_R = 36;                // 比原来 50px 图标更大
+    const GAP = 16;
+    const pairY = Game.logicHeight * 0.85;
+    const startX = ICON_R + 14;      // 第一个按钮中心 x
+    const stepX = ICON_R * 2 + GAP;  // 两按钮间距
+
+    for (let i = 0; i < DECO_PAIR_BUTTONS.length; i++) {
+      const def = DECO_PAIR_BUTTONS[i];
+      const cx = startX + i * stepX;
+      const btn = this._createBareIconBtn(def, cx, pairY, ICON_R);
+      this.container.addChild(btn.container);
+      this._activityBtns.set(def.id, btn);
+    }
+  }
+
+  /** 无遮罩底板的纯图标按钮（用于左下横排） */
+  private _createBareIconBtn(
+    def: SideBtnDef, cx: number, cy: number, iconR: number,
+  ): { container: PIXI.Container; redDot: PIXI.Graphics } {
+    const container = new PIXI.Container();
+    container.position.set(cx, cy);
+
+    // 图标（优先纹理，否则 emoji）
+    const iconSize = iconR * 2;
+    const tex = def.texKey ? TextureCache.get(def.texKey) : null;
+    if (tex) {
+      const sp = new PIXI.Sprite(tex);
+      sp.anchor.set(0.5);
+      sp.width = iconSize;
+      sp.height = iconSize;
+      container.addChild(sp);
+    } else {
+      const icon = new PIXI.Text(def.icon, {
+        fontSize: iconR * 1.1, fontFamily: FONT_FAMILY,
+      });
+      icon.anchor.set(0.5, 0.5);
+      container.addChild(icon);
+    }
+
+    // 红点
+    const redDot = new PIXI.Graphics();
+    redDot.beginFill(0xFF3333);
+    redDot.drawCircle(iconR - 4, -iconR + 4, 6);
+    redDot.endFill();
+    redDot.lineStyle(2, 0xFFFFFF);
+    redDot.drawCircle(iconR - 4, -iconR + 4, 6);
+    redDot.visible = false;
+    container.addChild(redDot);
+
+    container.eventMode = 'static';
+    container.cursor = 'pointer';
+    container.hitArea = new PIXI.Circle(0, 0, iconR + 10);
+    container.on('pointerdown', () => {
+      TweenManager.cancelTarget(container.scale);
+      container.scale.set(0.85);
+      TweenManager.to({
+        target: container.scale,
+        props: { x: 1, y: 1 },
+        duration: 0.25,
+        ease: Ease.easeOutBack,
+      });
+      EventBus.emit(def.event);
+    });
+
+    return { container, redDot };
+  }
+
   // ─────────────────── 右侧快捷按钮（签到/任务/熟客） ───────────────────
 
   private _buildQuickButtons(): void {
-    const startY = Game.safeTop + TOP_BAR_HEIGHT + PROGRESS_BAR_H + 66;
-    const btnW = 72;
-    const btnH = 72;
-    const gap = 12;
+    const btnW = 84;
+    const btnH = 84;
+    const gap = 10;
+    const startY = Game.safeTop + TOP_BAR_HEIGHT + PROGRESS_BAR_H + 66 + btnH / 2;
     const w = DESIGN_WIDTH;
 
     for (let i = 0; i < RIGHT_BUTTONS.length; i++) {
@@ -561,8 +623,7 @@ export class ShopScene implements Scene {
   }
 
   /**
-   * 创建侧边胶囊按钮（参考业界：圆角卡片 + 彩色图标圈 + 清晰标签）
-   * 尺寸: 72×72，图标36px，标签14px
+   * 创建侧边按钮（半透明底板 + 大图标 + 白色描边标签压底边）
    */
   private _createSideButton(
     def: SideBtnDef, cx: number, cy: number, btnW: number, btnH: number,
@@ -573,61 +634,56 @@ export class ShopScene implements Scene {
     const halfW = btnW / 2;
     const halfH = btnH / 2;
 
-    // 1. 阴影层
-    const shadow = new PIXI.Graphics();
-    shadow.beginFill(C.SIDE_BTN_SHADOW, 0.12);
-    shadow.drawRoundedRect(-halfW + 2, -halfH + 3, btnW, btnH, 16);
-    shadow.endFill();
-    container.addChild(shadow);
+    // 1. 半透明白色圆角底板
+    const bg = new PIXI.Graphics();
+    bg.beginFill(0xFFFFFF, 0.40);
+    bg.drawRoundedRect(-halfW, -halfH, btnW, btnH, 18);
+    bg.endFill();
+    container.addChild(bg);
 
-    // 2. 白色卡片底板
-    const card = new PIXI.Graphics();
-    card.beginFill(C.SIDE_BTN_BG, 0.95);
-    card.drawRoundedRect(-halfW, -halfH, btnW, btnH, 16);
-    card.endFill();
-    card.lineStyle(1.5, def.iconBg, 0.3);
-    card.drawRoundedRect(-halfW, -halfH, btnW, btnH, 16);
-    container.addChild(card);
+    // 2. 图标（优先纹理，占满大部分区域，中心偏上）
+    const iconSize = btnW * 0.72;  // 约60px（84×0.72）
+    const iconCY = -halfH * 0.15;  // 图标中心偏上
+    const tex = def.texKey ? TextureCache.get(def.texKey) : null;
+    if (tex) {
+      const sp = new PIXI.Sprite(tex);
+      sp.anchor.set(0.5);
+      sp.width = iconSize;
+      sp.height = iconSize;
+      sp.position.set(0, iconCY);
+      container.addChild(sp);
+    } else {
+      const icon = new PIXI.Text(def.icon, { fontSize: iconSize * 0.7, fontFamily: FONT_FAMILY });
+      icon.anchor.set(0.5, 0.5);
+      icon.position.set(0, iconCY);
+      container.addChild(icon);
+    }
 
-    // 3. 彩色圆形图标背景（大而醒目）
-    const iconBgCircle = new PIXI.Graphics();
-    const iconR = 18;
-    iconBgCircle.beginFill(def.iconBg, 0.2);
-    iconBgCircle.drawCircle(0, -6, iconR);
-    iconBgCircle.endFill();
-    container.addChild(iconBgCircle);
-
-    // 4. Emoji 图标（大号）
-    const icon = new PIXI.Text(def.icon, {
-      fontSize: 26,
-      fontFamily: FONT_FAMILY,
-    });
-    icon.anchor.set(0.5, 0.5);
-    icon.position.set(0, -6);
-    container.addChild(icon);
-
-    // 5. 文字标签（加粗，清晰可读）
+    // 3. 文字标签：白色+描边，压在图标底边（参考 TopBar 星星样式）
+    const labelY = iconCY + iconSize / 2 - 2; // 与图标底边重合
     const label = new PIXI.Text(def.label, {
-      fontSize: 13,
-      fill: def.labelColor,
+      fontSize: 16,
+      fill: 0xFFFFFF,
       fontFamily: FONT_FAMILY,
       fontWeight: 'bold',
+      stroke: 0x00000040,   // 半透明黑色描边增加对比
+      strokeThickness: 3,
     });
     label.anchor.set(0.5, 0.5);
-    label.position.set(0, halfH - 14);
+    label.position.set(0, labelY);
     container.addChild(label);
 
-    // 6. 红点（右上角）
+    // 4. 红点（右上角）
     const redDot = new PIXI.Graphics();
     redDot.beginFill(0xFF3333);
-    redDot.drawCircle(halfW - 8, -halfH + 8, 7);
+    redDot.drawCircle(halfW - 6, -halfH + 6, 7);
     redDot.endFill();
     redDot.lineStyle(2, 0xFFFFFF);
-    redDot.drawCircle(halfW - 8, -halfH + 8, 7);
+    redDot.drawCircle(halfW - 6, -halfH + 6, 7);
     redDot.visible = false;
     container.addChild(redDot);
 
-    // 7. 点击交互
+    // 5. 点击交互
     container.eventMode = 'static';
     container.cursor = 'pointer';
     container.hitArea = new PIXI.Rectangle(-halfW - 6, -halfH - 6, btnW + 12, btnH + 12);
@@ -662,45 +718,38 @@ export class ShopScene implements Scene {
     shadow.endFill();
     this._returnBtn.addChild(shadow);
 
-    // 2. 主体圆形（绿色渐变效果）
-    const bg = new PIXI.Graphics();
-    bg.beginFill(C.RETURN_BG);
-    bg.drawCircle(0, 0, r);
-    bg.endFill();
-    // 高光（左上角偏亮模拟立体感）
-    bg.beginFill(0x66BB6A, 0.45);
-    bg.drawCircle(-6, -6, r - 10);
-    bg.endFill();
-    // 细白边框增加质感
-    bg.lineStyle(2.5, 0xFFFFFF, 0.35);
-    bg.drawCircle(0, 0, r);
-    this._returnBtn.addChild(bg);
+    // 2. 营业按钮图标
+    const backTex = TextureCache.get('icon_operate');
+    if (backTex) {
+      const sp = new PIXI.Sprite(backTex);
+      sp.anchor.set(0.5);
+      sp.width = r * 2;
+      sp.height = r * 2;
+      this._returnBtn.addChild(sp);
+    } else {
+      const bg = new PIXI.Graphics();
+      bg.beginFill(C.RETURN_BG);
+      bg.drawCircle(0, 0, r);
+      bg.endFill();
+      bg.beginFill(0x66BB6A, 0.45);
+      bg.drawCircle(-6, -6, r - 10);
+      bg.endFill();
+      bg.lineStyle(2.5, 0xFFFFFF, 0.35);
+      bg.drawCircle(0, 0, r);
+      this._returnBtn.addChild(bg);
 
-    // 3. 返回箭头图标（更大更粗）
-    const arrow = new PIXI.Graphics();
-    arrow.lineStyle(6, C.RETURN_ARROW, 1, 0.5);
-    // 弯曲箭头
-    arrow.arc(2, -4, 20, -Math.PI * 0.8, Math.PI * 0.25);
-    // 箭头头部
-    const endX = 2 + 20 * Math.cos(Math.PI * 0.25);
-    const endY = -4 + 20 * Math.sin(Math.PI * 0.25);
-    arrow.lineStyle(5, C.RETURN_ARROW, 1, 0.5);
-    arrow.moveTo(endX, endY);
-    arrow.lineTo(endX - 10, endY - 6);
-    arrow.moveTo(endX, endY);
-    arrow.lineTo(endX + 2, endY - 12);
-    this._returnBtn.addChild(arrow);
-
-    // 4. "返回"文字标签
-    const label = new PIXI.Text('返回', {
-      fontSize: 12,
-      fill: 0xFFFFFF,
-      fontFamily: FONT_FAMILY,
-      fontWeight: 'bold',
-    });
-    label.anchor.set(0.5, 0.5);
-    label.position.set(0, r * 0.52);
-    this._returnBtn.addChild(label);
+      const arrow = new PIXI.Graphics();
+      arrow.lineStyle(6, C.RETURN_ARROW, 1, 0.5);
+      arrow.arc(2, -4, 20, -Math.PI * 0.8, Math.PI * 0.25);
+      const endX = 2 + 20 * Math.cos(Math.PI * 0.25);
+      const endY = -4 + 20 * Math.sin(Math.PI * 0.25);
+      arrow.lineStyle(5, C.RETURN_ARROW, 1, 0.5);
+      arrow.moveTo(endX, endY);
+      arrow.lineTo(endX - 10, endY - 6);
+      arrow.moveTo(endX, endY);
+      arrow.lineTo(endX + 2, endY - 12);
+      this._returnBtn.addChild(arrow);
+    }
 
     this._returnBtn.position.set(cx, cy);
     this._returnBtn.eventMode = 'static';
@@ -812,23 +861,24 @@ export class ShopScene implements Scene {
     bg.drawRoundedRect(-btnW / 2, -btnH / 2, btnW, btnH, btnH / 2);
     this._editBtn.addChild(bg);
 
-    // 3. 左侧彩色圆形图标背景
-    const iconBg = new PIXI.Graphics();
-    iconBg.beginFill(COLORS.BUTTON_PRIMARY, 0.15);
-    iconBg.drawCircle(-btnW / 2 + 30, 0, 16);
-    iconBg.endFill();
-    this._editBtn.addChild(iconBg);
-
-    // 4. 图标
-    const iconText = new PIXI.Text('✏️', {
-      fontSize: 22, fontFamily: FONT_FAMILY,
-    });
-    iconText.anchor.set(0.5, 0.5);
-    iconText.position.set(-btnW / 2 + 30, 0);
-    this._editBtn.addChild(iconText);
+    // 3. 施工图标
+    const pencilTex = TextureCache.get('icon_build');
+    if (pencilTex) {
+      const sp = new PIXI.Sprite(pencilTex);
+      sp.anchor.set(0.5);
+      sp.width = 30;
+      sp.height = 30;
+      sp.position.set(-btnW / 2 + 30, 0);
+      this._editBtn.addChild(sp);
+    } else {
+      const iconText = new PIXI.Text('✏️', { fontSize: 22, fontFamily: FONT_FAMILY });
+      iconText.anchor.set(0.5, 0.5);
+      iconText.position.set(-btnW / 2 + 30, 0);
+      this._editBtn.addChild(iconText);
+    }
 
     // 5. 文字标签（加粗大号）
-    const label = new PIXI.Text('编辑花店', {
+    const label = new PIXI.Text('装修花店', {
       fontSize: 18, fill: COLORS.BUTTON_PRIMARY, fontFamily: FONT_FAMILY, fontWeight: 'bold',
     });
     label.anchor.set(0.5, 0.5);
@@ -898,8 +948,7 @@ export class ShopScene implements Scene {
     const children = this._editBtn.children;
     for (const child of children) {
       if (child instanceof PIXI.Text) {
-        if (child.text === '编辑花店') child.text = '✅ 完成编辑';
-        if (child.text === '✏️') child.visible = false;
+        if (child.text === '装修花店') child.text = '✅ 完成编辑';
       }
       // 隐藏原背景
       if (child instanceof PIXI.Graphics) {
@@ -958,7 +1007,7 @@ export class ShopScene implements Scene {
     this._buildZoomControls();
     this._enablePinchZoom();
 
-    ToastMessage.show('✏️ 编辑模式：点击家具可拖动，用工具栏缩放/翻转/移除');
+    ToastMessage.show('🔨 装修模式：点击家具可拖动，用工具栏缩放/翻转/移除');
     EventBus.emit('furniture:edit_mode_enter');
   }
 
@@ -981,11 +1030,10 @@ export class ShopScene implements Scene {
       child.visible = true;
       if (child instanceof PIXI.Text) {
         if (child.text === '✅ 完成编辑') {
-          child.text = '编辑花店';
+          child.text = '装修花店';
           child.style.fill = COLORS.BUTTON_PRIMARY;
           child.position.set(12, 0);
         }
-        if (child.text === '✏️') child.visible = true;
       }
       if (child instanceof PIXI.Graphics) {
         child.visible = true;
@@ -1002,12 +1050,12 @@ export class ShopScene implements Scene {
     // 禁用拖拽系统（自动保存）
     FurnitureDragSystem.disable();
 
-    // 恢复默认可摆放区域
+    // 恢复默认可摆放区域（maxY 限制在地面遮罩上方）
     RoomLayoutManager.updateBounds({
       minX: 50,
       maxX: 700,
       minY: 280,
-      maxY: 800,
+      maxY: Math.round(Game.logicHeight * 0.80),
     });
 
     // 关闭家具托盘和工具栏
@@ -1330,8 +1378,32 @@ export class ShopScene implements Scene {
     SaveManager.update(dt);
     this._topBar.updateTimer();
     this._updateRedDots();
-    this._updateStarDisplay();
+    this._updateOwnerBlink(dt);
   };
+
+  /** 店主眨眼动画：每隔一段时间闭眼 0.15 秒 */
+  private _updateOwnerBlink(dt: number): void {
+    if (!this._ownerSprite) return;
+
+    this._blinkTimer += dt;
+
+    if (this._isBlinking) {
+      if (this._blinkTimer >= 0.15) {
+        this._isBlinking = false;
+        this._blinkTimer = 0;
+        this._blinkInterval = 2.5 + Math.random() * 3;
+        const openTex = TextureCache.get('owner_full_default');
+        if (openTex) this._ownerSprite.texture = openTex;
+      }
+    } else {
+      if (this._blinkTimer >= this._blinkInterval) {
+        this._isBlinking = true;
+        this._blinkTimer = 0;
+        const closedTex = TextureCache.get('owner_full_default_blink');
+        if (closedTex) this._ownerSprite.texture = closedTex;
+      }
+    }
+  }
 
   private _updateRedDots(): void {
     // 签到红点
@@ -1356,10 +1428,4 @@ export class ShopScene implements Scene {
     if (decoBtn) decoBtn.redDot.visible = DecorationManager.hasAffordableNew();
   }
 
-  private _updateStarDisplay(): void {
-    if (this._starText) {
-      const huayuan = CurrencyManager.state.huayuan || 0;
-      this._starText.text = `${huayuan}`;
-    }
-  }
 }

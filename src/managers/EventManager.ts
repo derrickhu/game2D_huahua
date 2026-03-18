@@ -58,7 +58,7 @@ export interface EventShopItem {
   /** 已购买数量 */
   bought: number;
   /** 奖励类型 */
-  rewardType: 'gold' | 'diamond' | 'huayuan' | 'hualu' | 'decoration' | 'costume' | 'card';
+  rewardType: 'gold' | 'diamond' | 'huayuan' | 'hualu' | 'decoration' | 'outfit' | 'card';
   rewardId?: string;
   rewardAmount?: number;
 }
@@ -121,7 +121,7 @@ const EVENT_TEMPLATES: Omit<GameEvent, 'startTime' | 'endTime'>[] = [
     shop: [
       { id: 'es_gold_800', name: '金币×800', icon: '💰', desc: '', pointCost: 120, stock: -1, bought: 0, rewardType: 'gold', rewardAmount: 800 },
       { id: 'es_diamond_15', name: '钻石×15', icon: '💎', desc: '', pointCost: 250, stock: 3, bought: 0, rewardType: 'diamond', rewardAmount: 15 },
-      { id: 'es_costume_summer', name: '🌻 向日葵发饰', icon: '🌻', desc: '限定服装', pointCost: 900, stock: 1, bought: 0, rewardType: 'costume', rewardId: 'hair_sunflower' },
+      { id: 'es_outfit_summer', name: '🌻 夏日向日葵形象', icon: '🌻', desc: '限定整套形象', pointCost: 900, stock: 1, bought: 0, rewardType: 'outfit', rewardId: 'outfit_summer' },
     ],
   },
 ];
@@ -256,8 +256,8 @@ class EventManagerClass {
       case 'decoration':
         EventBus.emit('event:grantDecoration', item.rewardId);
         break;
-      case 'costume':
-        EventBus.emit('event:grantCostume', item.rewardId);
+      case 'outfit':
+        EventBus.emit('event:grantOutfit', item.rewardId);
         break;
     }
 

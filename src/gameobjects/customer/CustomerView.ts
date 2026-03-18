@@ -1,15 +1,14 @@
 /**
- * 单个客人视图 - 卡片式半身像设计（参考四季物语柜台排队）
+ * 单个客人视图 - 四季物语风格（无边框大半身像 + 底部信息面板）
  *
- * 布局（竖向卡片 130 x 130）:
- * ┌──────────────────┐
- * │  需求气泡（顶部） │
- * │  [槽1] [槽2]     │
- * ├──────────────────┤
- * │     👧 emoji     │
- * │    客人名字       │
- * │  [💰奖励] [完成]  │
- * └──────────────────┘
+ * 布局（以 center(0,0) 为原点）:
+ *
+ *       大半身像 (120px)        <- 无框，直接浮在底色上
+ *
+ *   ┌── 信息面板 ──────┐
+ *   │ ⭐💰120  [🌸][🍵] │     <- 奖励 + 需求槽位
+ *   └──────────────────┘
+ *      或 ✓ 完成 按钮         <- 需求全满足后
  */
 import * as PIXI from 'pixi.js';
 import { COLORS, FONT_FAMILY, ACTIVE_CUSTOMER_SLOTS } from '@/config/Constants';
@@ -18,78 +17,44 @@ import { TextureCache } from '@/utils/TextureCache';
 import { TweenManager, Ease } from '@/core/TweenManager';
 import { CustomerInstance, CustomerManager } from '@/managers/CustomerManager';
 
-/** 需求槽位尺寸 */
-const SLOT_SIZE = 34;
-const SLOT_GAP = 4;
+const SLOT_SIZE = 52;
+const SLOT_GAP = 8;
 
-/** 卡片尺寸 */
-const CARD_W = 120;
-const CARD_H = 130;
+export const CARD_W = 160;
+export const CARD_H = 240;
+
+const PANEL_W = CARD_W - 8;
+const PANEL_H = 64;
+const PANEL_Y = 6;
+const REWARD_BADGE_Y = -12;
 
 export class CustomerView extends PIXI.Container {
   private _customer: CustomerInstance | null = null;
 
-  private _cardBg: PIXI.Graphics;
   private _avatar: PIXI.Text;
-  private _nameText: PIXI.Text;
-  private _bubble: PIXI.Container;
-  private _rewardText: PIXI.Text;
+  private _avatarSprite: PIXI.Sprite;
+  private _infoPanel: PIXI.Container;
   private _completeBtn: PIXI.Container | null = null;
   private _bounceTween: { config: any; startValues: any; elapsed: number; delayRemaining: number } | null = null;
-  /** 排队标签 */
-  private _queueLabel: PIXI.Text;
-  /** 在队列中的索引 */
   private _queueIndex = 0;
 
   constructor() {
     super();
 
-    // 卡片背景
-    this._cardBg = new PIXI.Graphics();
-    this.addChild(this._cardBg);
+    this._avatarSprite = new PIXI.Sprite();
+    this._avatarSprite.anchor.set(0.5, 1.0);
+    this._avatarSprite.position.set(0, 0);
+    this._avatarSprite.visible = false;
+    this.addChild(this._avatarSprite);
 
-    // 需求气泡（卡片上方）
-    this._bubble = new PIXI.Container();
-    this._bubble.position.set(0, -CARD_H / 2 + 8);
-    this.addChild(this._bubble);
-
-    // 头像 emoji（大号，半身像效果）
-    this._avatar = new PIXI.Text('', { fontSize: 32 });
-    this._avatar.anchor.set(0.5, 0.5);
-    this._avatar.position.set(0, 6);
+    this._avatar = new PIXI.Text('', { fontSize: 52 });
+    this._avatar.anchor.set(0.5, 1.0);
+    this._avatar.position.set(0, 0);
     this.addChild(this._avatar);
 
-    // 名字
-    this._nameText = new PIXI.Text('', {
-      fontSize: 11,
-      fill: COLORS.TEXT_DARK,
-      fontFamily: FONT_FAMILY,
-      fontWeight: 'bold',
-    });
-    this._nameText.anchor.set(0.5, 0);
-    this._nameText.position.set(0, 26);
-    this.addChild(this._nameText);
-
-    // 奖励预览
-    this._rewardText = new PIXI.Text('', {
-      fontSize: 10,
-      fill: COLORS.GOLD,
-      fontFamily: FONT_FAMILY,
-    });
-    this._rewardText.anchor.set(0.5, 0);
-    this._rewardText.position.set(0, 42);
-    this.addChild(this._rewardText);
-
-    // 排队标签
-    this._queueLabel = new PIXI.Text('排队中', {
-      fontSize: 10,
-      fill: COLORS.TEXT_LIGHT,
-      fontFamily: FONT_FAMILY,
-    });
-    this._queueLabel.anchor.set(0.5, 0);
-    this._queueLabel.position.set(0, -CARD_H / 2 - 14);
-    this._queueLabel.visible = false;
-    this.addChild(this._queueLabel);
+    this._infoPanel = new PIXI.Container();
+    this._infoPanel.position.set(0, PANEL_Y);
+    this.addChild(this._infoPanel);
 
     this.visible = false;
   }
@@ -98,17 +63,8 @@ export class CustomerView extends PIXI.Container {
     return this._customer?.uid ?? -1;
   }
 
-  /** 设置队列索引（0开始，前 ACTIVE_CUSTOMER_SLOTS 个为服务中） */
   setQueueIndex(index: number): void {
     this._queueIndex = index;
-    const isQueuing = index >= ACTIVE_CUSTOMER_SLOTS;
-    this._queueLabel.visible = isQueuing;
-    this._queueLabel.text = isQueuing ? `排队 #${index - ACTIVE_CUSTOMER_SLOTS + 1}` : '';
-
-    // 排队中的客人半透明
-    if (isQueuing) {
-      this.alpha = 0.7;
-    }
   }
 
   setCustomer(customer: CustomerInstance | null): void {
@@ -121,18 +77,29 @@ export class CustomerView extends PIXI.Container {
     }
 
     this.visible = true;
-    this._avatar.text = customer.emoji;
-    this._nameText.text = customer.name;
-    this._rewardText.text = `💰${customer.goldReward}`;
-    this._drawCardBg();
-    this._rebuildBubble();
 
-    // 入场动画
+    const tex = TextureCache.get(`customer_${customer.typeId}`);
+    if (tex) {
+      this._avatarSprite.texture = tex;
+      const targetH = 160;
+      const s = targetH / tex.height;
+      this._avatarSprite.scale.set(s);
+      this._avatarSprite.visible = true;
+      this._avatar.visible = false;
+    } else {
+      this._avatarSprite.visible = false;
+      this._avatar.visible = true;
+      this._avatar.text = customer.emoji;
+    }
+
+    this._rebuildInfoPanel();
+
+    const isQueuing = this._queueIndex >= ACTIVE_CUSTOMER_SLOTS;
     this.alpha = 0;
     this.scale.set(0.6);
     TweenManager.to({
       target: this,
-      props: { alpha: this._queueIndex >= ACTIVE_CUSTOMER_SLOTS ? 0.7 : 1 },
+      props: { alpha: isQueuing ? 0.6 : 1 },
       duration: 0.3,
     });
     TweenManager.to({
@@ -145,119 +112,151 @@ export class CustomerView extends PIXI.Container {
 
   refreshSlots(): void {
     if (!this._customer) return;
-    this._rebuildBubble();
+    this._rebuildInfoPanel();
   }
 
-  // ========== 卡片背景 ==========
+  // ========== 底部信息面板 ==========
 
-  private _drawCardBg(): void {
-    this._cardBg.clear();
-    const isActive = this._queueIndex < ACTIVE_CUSTOMER_SLOTS;
-    const bgColor = isActive ? 0xFFFBF5 : 0xF5F0EA;
-    const borderColor = isActive ? 0xFFD4A8 : 0xD4C4B0;
-
-    // 卡片圆角矩形
-    this._cardBg.beginFill(bgColor, 0.9);
-    this._cardBg.drawRoundedRect(-CARD_W / 2, -CARD_H / 2, CARD_W, CARD_H, 12);
-    this._cardBg.endFill();
-
-    // 边框
-    this._cardBg.lineStyle(1.5, borderColor, 0.6);
-    this._cardBg.drawRoundedRect(-CARD_W / 2, -CARD_H / 2, CARD_W, CARD_H, 12);
-
-    // 服务中的高亮顶部装饰条
-    if (isActive) {
-      this._cardBg.lineStyle(0);
-      this._cardBg.beginFill(0xFF8C69, 0.15);
-      this._cardBg.drawRoundedRect(-CARD_W / 2, -CARD_H / 2, CARD_W, 4, 2);
-      this._cardBg.endFill();
-    }
-  }
-
-  // ========== 需求气泡 ==========
-
-  private _rebuildBubble(): void {
-    this._bubble.removeChildren();
+  private _rebuildInfoPanel(): void {
+    this._infoPanel.removeChildren();
     this._clearCompleteBtn();
+    this._clearRewardBadge();
     if (!this._customer) return;
 
-    const slots = this._customer.slots;
-    const totalW = slots.length * SLOT_SIZE + (slots.length - 1) * SLOT_GAP;
-    const startX = -totalW / 2;
+    const allDone = this._customer.allSatisfied && this._queueIndex < ACTIVE_CUSTOMER_SLOTS;
 
-    // 气泡背景
-    const bgPad = 4;
-    const bubbleBg = new PIXI.Graphics();
-    bubbleBg.beginFill(0xFFFFFF, 0.92);
-    bubbleBg.drawRoundedRect(
-      startX - bgPad, -SLOT_SIZE / 2 - bgPad,
-      totalW + bgPad * 2, SLOT_SIZE + bgPad * 2,
-      8,
-    );
-    bubbleBg.endFill();
-    bubbleBg.lineStyle(1, COLORS.CELL_BORDER, 0.4);
-    bubbleBg.drawRoundedRect(
-      startX - bgPad, -SLOT_SIZE / 2 - bgPad,
-      totalW + bgPad * 2, SLOT_SIZE + bgPad * 2,
-      8,
-    );
-    this._bubble.addChild(bubbleBg);
+    // 奖励徽章（头像底部，半透明深色遮罩）
+    this._buildRewardBadge();
 
-    // 各需求槽位
-    for (let i = 0; i < slots.length; i++) {
-      const slot = slots[i];
-      const sx = startX + i * (SLOT_SIZE + SLOT_GAP);
-      const sy = -SLOT_SIZE / 2;
-      const filled = slot.lockedCellIndex >= 0;
-
-      this._drawSlotItem(sx, sy, slot.itemId, filled);
+    // 面板背景（优先使用图片纹理）
+    const panelTex = TextureCache.get('order_panel');
+    if (panelTex) {
+      const panelBg = new PIXI.Sprite(panelTex);
+      panelBg.anchor.set(0.5, 0);
+      panelBg.width = PANEL_W;
+      panelBg.height = PANEL_H;
+      panelBg.position.set(0, 0);
+      this._infoPanel.addChild(panelBg);
+    } else {
+      const bg = new PIXI.Graphics();
+      bg.beginFill(0xFFFFFF, 0.92);
+      bg.drawRoundedRect(-PANEL_W / 2, 0, PANEL_W, PANEL_H, 12);
+      bg.endFill();
+      bg.lineStyle(1, 0xFFD4A8, 0.4);
+      bg.drawRoundedRect(-PANEL_W / 2, 0, PANEL_W, PANEL_H, 12);
+      this._infoPanel.addChild(bg);
     }
 
-    if (this._customer.allSatisfied && this._queueIndex < ACTIVE_CUSTOMER_SLOTS) {
+    // 需求槽位（面板内居中，始终显示花朵图标 + 绿勾）
+    const slots = this._customer.slots;
+    const totalSlotW = slots.length * SLOT_SIZE + (slots.length - 1) * SLOT_GAP;
+    const slotStartX = -totalSlotW / 2;
+    const slotY = (PANEL_H - SLOT_SIZE) / 2;
+
+    for (let i = 0; i < slots.length; i++) {
+      const slot = slots[i];
+      const sx = slotStartX + i * (SLOT_SIZE + SLOT_GAP);
+      const filled = slot.lockedCellIndex >= 0;
+      this._drawSlotItem(sx, slotY, slot.itemId, filled);
+    }
+
+    // 全部满足 → 面板下方显示完成按钮
+    if (allDone) {
       this._showCompleteBtn();
     }
   }
 
-  /** 绘制单个需求槽位 */
+  private _rewardBadge: PIXI.Container | null = null;
+
+  private _buildRewardBadge(): void {
+    if (!this._customer) return;
+    const badge = new PIXI.Container();
+    badge.position.set(0, REWARD_BADGE_Y);
+
+    const iconSize = 14;
+    const gap = 2;
+    let offsetX = 0;
+    const items: { icon: string; value: number }[] = [];
+
+    items.push({ icon: 'icon_huayuan', value: this._customer.huayuanReward });
+    if (this._customer.hualuReward > 0) {
+      items.push({ icon: 'icon_hualu', value: this._customer.hualuReward });
+    }
+
+    const content = new PIXI.Container();
+    for (const item of items) {
+      const tex = TextureCache.get(item.icon);
+      if (tex) {
+        const sp = new PIXI.Sprite(tex);
+        sp.anchor.set(0, 0.5);
+        sp.width = iconSize;
+        sp.height = iconSize;
+        sp.position.set(offsetX, 0);
+        content.addChild(sp);
+        offsetX += iconSize + gap;
+      }
+      const val = new PIXI.Text(`${item.value}`, {
+        fontSize: 11, fill: 0xFFFFFF, fontFamily: FONT_FAMILY, fontWeight: 'bold',
+      });
+      val.anchor.set(0, 0.5);
+      val.position.set(offsetX, 0);
+      content.addChild(val);
+      offsetX += val.width + 6;
+    }
+
+    const padX = 6;
+    const padY = 3;
+    const bw = offsetX - 6 + padX * 2;
+    const bh = iconSize + padY * 2;
+
+    const bg = new PIXI.Graphics();
+    bg.beginFill(0x000000, 0.45);
+    bg.drawRoundedRect(0, 0, bw, bh, bh / 2);
+    bg.endFill();
+
+    content.position.set(padX, bh / 2);
+    badge.addChild(bg);
+    badge.addChild(content);
+    badge.pivot.set(bw / 2, bh / 2);
+    this.addChild(badge);
+    this._rewardBadge = badge;
+  }
+
+  private _clearRewardBadge(): void {
+    if (this._rewardBadge) {
+      if (this._rewardBadge.parent) {
+        this._rewardBadge.parent.removeChild(this._rewardBadge);
+      }
+      this._rewardBadge.destroy({ children: true });
+      this._rewardBadge = null;
+    }
+  }
+
   private _drawSlotItem(x: number, y: number, itemId: string, filled: boolean): void {
     const cs = SLOT_SIZE;
     const def = ITEM_DEFS.get(itemId);
     if (!def) return;
 
-    // 槽位底色 + 边框
-    const slotBg = new PIXI.Graphics();
-    const borderColor = filled ? 0x4CAF50 : 0xFFB74D;
-    slotBg.beginFill(filled ? 0xE8F5E9 : 0xFFFBF5, 0.9);
-    slotBg.drawRoundedRect(x, y, cs, cs, 5);
-    slotBg.endFill();
-    slotBg.lineStyle(1, borderColor, 0.8);
-    slotBg.drawRoundedRect(x, y, cs, cs, 5);
-    this._bubble.addChild(slotBg);
-
-    // 尝试使用真实纹理
     const texture = TextureCache.get(def.icon);
     if (texture) {
       const sprite = new PIXI.Sprite(texture);
-      const pad = 3;
-      const maxS = cs - pad * 2;
-      const s = Math.min(maxS / texture.width, maxS / texture.height);
+      const s = Math.min(cs / texture.width, cs / texture.height);
       sprite.scale.set(s);
       sprite.anchor.set(0.5, 0.5);
       sprite.position.set(x + cs / 2, y + cs / 2);
-      if (!filled) sprite.alpha = 0.5;
-      this._bubble.addChild(sprite);
+      if (!filled) sprite.alpha = 0.45;
+      this._infoPanel.addChild(sprite);
     } else {
-      // Fallback：彩色圆形 + emoji + 短名
       const iconColor = this._getLineColor(def.line);
       const fg = new PIXI.Graphics();
       fg.beginFill(iconColor, 0.15);
       fg.drawRoundedRect(x + 2, y + 2, cs - 4, cs - 4, 4);
       fg.endFill();
       fg.beginFill(iconColor, 0.3);
-      fg.drawCircle(x + cs / 2, y + cs / 2 - 2, cs * 0.24);
+      fg.drawCircle(x + cs / 2, y + cs / 2 - 2, cs * 0.22);
       fg.endFill();
       if (!filled) fg.alpha = 0.5;
-      this._bubble.addChild(fg);
+      this._infoPanel.addChild(fg);
 
       const emoji = this._getCategoryEmoji(def.category);
       const nameTxt = new PIXI.Text(
@@ -267,40 +266,22 @@ export class CustomerView extends PIXI.Container {
       nameTxt.anchor.set(0.5, 1);
       nameTxt.position.set(x + cs / 2, y + cs - 1);
       if (!filled) nameTxt.alpha = 0.5;
-      this._bubble.addChild(nameTxt);
+      this._infoPanel.addChild(nameTxt);
     }
 
-    // 等级徽章
-    const lineColor = this._getLineColor(def.line);
-    const badgeR = 5;
-    const bx = x + cs - badgeR - 1;
-    const by = y + badgeR + 1;
-    const badge = new PIXI.Graphics();
-    badge.beginFill(lineColor, 0.85);
-    badge.drawCircle(bx, by, badgeR);
-    badge.endFill();
-    this._bubble.addChild(badge);
-
-    const lvlTxt = new PIXI.Text(`${def.level}`, {
-      fontSize: 7,
-      fill: 0xFFFFFF,
-      fontFamily: FONT_FAMILY,
-      fontWeight: 'bold',
-    });
-    lvlTxt.anchor.set(0.5, 0.5);
-    lvlTxt.position.set(bx, by);
-    this._bubble.addChild(lvlTxt);
-
-    // 已满足 ✓
     if (filled) {
-      const check = new PIXI.Text('✓', {
-        fontSize: 11,
-        fill: 0x4CAF50,
-        fontWeight: 'bold',
+      const check = new PIXI.Graphics();
+      check.beginFill(0x4CAF50);
+      check.drawCircle(x + cs - 6, y + cs - 6, 9);
+      check.endFill();
+      this._infoPanel.addChild(check);
+
+      const checkMark = new PIXI.Text('✓', {
+        fontSize: 11, fill: 0xFFFFFF, fontWeight: 'bold',
       });
-      check.anchor.set(0, 0);
-      check.position.set(x + 1, y);
-      this._bubble.addChild(check);
+      checkMark.anchor.set(0.5, 0.5);
+      checkMark.position.set(x + cs - 6, y + cs - 6);
+      this._infoPanel.addChild(checkMark);
     }
   }
 
@@ -309,17 +290,21 @@ export class CustomerView extends PIXI.Container {
   private _showCompleteBtn(): void {
     if (this._completeBtn) return;
 
+    const BTN_W = 100;
+    const BTN_H = 32;
     const btn = new PIXI.Container();
     btn.eventMode = 'static';
     btn.cursor = 'pointer';
 
     const bg = new PIXI.Graphics();
     bg.beginFill(0x4CAF50);
-    bg.drawRoundedRect(-30, -12, 60, 24, 12);
+    bg.drawRoundedRect(-BTN_W / 2, -BTN_H / 2, BTN_W, BTN_H, BTN_H / 2);
     bg.endFill();
+    bg.lineStyle(2, 0x388E3C, 0.5);
+    bg.drawRoundedRect(-BTN_W / 2, -BTN_H / 2, BTN_W, BTN_H, BTN_H / 2);
 
     const txt = new PIXI.Text('✓ 完成', {
-      fontSize: 12,
+      fontSize: 14,
       fill: 0xFFFFFF,
       fontFamily: FONT_FAMILY,
       fontWeight: 'bold',
@@ -328,7 +313,8 @@ export class CustomerView extends PIXI.Container {
 
     btn.addChild(bg);
     btn.addChild(txt);
-    btn.position.set(0, CARD_H / 2 - 16);
+    btn.position.set(0, PANEL_Y + PANEL_H + BTN_H / 2 + 6);
+    btn.zIndex = 999;
     btn.on('pointertap', () => {
       if (this._customer) {
         CustomerManager.deliver(this._customer.uid);
@@ -338,7 +324,6 @@ export class CustomerView extends PIXI.Container {
     this.addChild(btn);
     this._completeBtn = btn;
 
-    // 弹跳动画
     const proxy = { t: 0 };
     this._bounceTween = TweenManager.to({
       target: proxy,
@@ -346,7 +331,7 @@ export class CustomerView extends PIXI.Container {
       duration: 600,
       onUpdate: () => {
         if (this._completeBtn && !this._completeBtn.destroyed) {
-          this._completeBtn.y = CARD_H / 2 - 16 + Math.sin(proxy.t * 0.5) * 2;
+          this._completeBtn.y = PANEL_Y + PANEL_H + BTN_H / 2 + 6 + Math.sin(proxy.t * 0.5) * 2;
         }
       },
     });
@@ -362,7 +347,9 @@ export class CustomerView extends PIXI.Container {
   private _clearCompleteBtn(): void {
     this._stopBounce();
     if (this._completeBtn) {
-      this.removeChild(this._completeBtn);
+      if (this._completeBtn.parent) {
+        this._completeBtn.parent.removeChild(this._completeBtn);
+      }
       this._completeBtn.destroy({ children: true });
       this._completeBtn = null;
     }

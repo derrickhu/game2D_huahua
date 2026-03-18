@@ -17,12 +17,10 @@ export interface CustomerTypeDef {
   slotRange: [number, number];
   /** 可产生的需求池（按顺序为各槽位选取，循环使用） */
   demands: CustomerDemandDef[];
-  /** 金币奖励范围 */
-  goldReward: [number, number];
+  /** 花愿奖励范围（主货币，必给） */
+  huayuanReward: [number, number];
   expReward: number;
-  /** 掉落花愿概率 */
-  huayuanChance: number;
-  /** 掉落花露概率 */
+  /** 花露掉落概率（稀有货币） */
   hualuChance: number;
   /** 是否为可养成熟客 */
   isRegular: boolean;
@@ -34,32 +32,32 @@ export const CUSTOMER_TYPES: CustomerTypeDef[] = [
     id: 'child', name: '小朋友', emoji: '🧒',
     slotRange: [1, 1],
     demands: [{ category: Category.FLOWER, lines: [FlowerLine.DAILY], levelRange: [1, 1] }],
-    goldReward: [10, 20], expReward: 3,
-    huayuanChance: 0.1, hualuChance: 0,
+    huayuanReward: [10, 20], expReward: 3,
+    hualuChance: 0,
     isRegular: false,
   },
   {
     id: 'student', name: '学生少女', emoji: '👧',
     slotRange: [1, 1],
     demands: [{ category: Category.FLOWER, lines: [FlowerLine.DAILY], levelRange: [1, 2] }],
-    goldReward: [15, 30], expReward: 5,
-    huayuanChance: 0.2, hualuChance: 0.1,
+    huayuanReward: [15, 30], expReward: 5,
+    hualuChance: 0.1,
     isRegular: true,
   },
   {
     id: 'worker', name: '上班族', emoji: '👔',
     slotRange: [1, 2],
     demands: [{ category: Category.FLOWER, lines: [FlowerLine.DAILY, FlowerLine.ROMANTIC], levelRange: [1, 3] }],
-    goldReward: [20, 50], expReward: 8,
-    huayuanChance: 0.3, hualuChance: 0.15,
+    huayuanReward: [20, 50], expReward: 8,
+    hualuChance: 0.15,
     isRegular: true,
   },
   {
     id: 'mom', name: '温柔妈妈', emoji: '👩',
     slotRange: [1, 2],
     demands: [{ category: Category.FLOWER, lines: [FlowerLine.DAILY, FlowerLine.ROMANTIC], levelRange: [1, 3] }],
-    goldReward: [25, 60], expReward: 10,
-    huayuanChance: 0.3, hualuChance: 0.2,
+    huayuanReward: [25, 60], expReward: 10,
+    hualuChance: 0.2,
     isRegular: true,
   },
 
@@ -71,8 +69,8 @@ export const CUSTOMER_TYPES: CustomerTypeDef[] = [
       { category: Category.FLOWER, lines: [FlowerLine.DAILY, FlowerLine.ROMANTIC], levelRange: [1, 3] },
       { category: Category.DRINK, lines: [DrinkLine.TEA], levelRange: [1, 2] },
     ],
-    goldReward: [30, 70], expReward: 12,
-    huayuanChance: 0.4, hualuChance: 0.2,
+    huayuanReward: [30, 70], expReward: 12,
+    hualuChance: 0.2,
     isRegular: true,
   },
   {
@@ -82,8 +80,8 @@ export const CUSTOMER_TYPES: CustomerTypeDef[] = [
       { category: Category.FLOWER, lines: [FlowerLine.ROMANTIC, FlowerLine.LUXURY], levelRange: [2, 4] },
       { category: Category.DRINK, lines: [DrinkLine.COLD], levelRange: [1, 2] },
     ],
-    goldReward: [50, 100], expReward: 15,
-    huayuanChance: 0.5, hualuChance: 0.3,
+    huayuanReward: [50, 100], expReward: 15,
+    hualuChance: 0.3,
     isRegular: true,
   },
   {
@@ -93,8 +91,8 @@ export const CUSTOMER_TYPES: CustomerTypeDef[] = [
       { category: Category.FLOWER, lines: [FlowerLine.DAILY, FlowerLine.ROMANTIC, FlowerLine.LUXURY], levelRange: [2, 4] },
       { category: Category.DRINK, lines: [DrinkLine.DESSERT], levelRange: [1, 2] },
     ],
-    goldReward: [40, 90], expReward: 15,
-    huayuanChance: 0.4, hualuChance: 0.3,
+    huayuanReward: [40, 90], expReward: 15,
+    hualuChance: 0.3,
     isRegular: false,
   },
   {
@@ -104,8 +102,8 @@ export const CUSTOMER_TYPES: CustomerTypeDef[] = [
       { category: Category.FLOWER, lines: [FlowerLine.DAILY, FlowerLine.ROMANTIC, FlowerLine.LUXURY], levelRange: [3, 5] },
       { category: Category.DRINK, lines: [DrinkLine.TEA, DrinkLine.COLD, DrinkLine.DESSERT], levelRange: [1, 3] },
     ],
-    goldReward: [60, 120], expReward: 18,
-    huayuanChance: 0.5, hualuChance: 0.3,
+    huayuanReward: [60, 120], expReward: 18,
+    hualuChance: 0.3,
     isRegular: true,
   },
 
@@ -117,8 +115,8 @@ export const CUSTOMER_TYPES: CustomerTypeDef[] = [
       { category: Category.FLOWER, lines: [FlowerLine.LUXURY], levelRange: [3, 5] },
       { category: Category.DRINK, lines: [DrinkLine.DESSERT], levelRange: [2, 3] },
     ],
-    goldReward: [80, 200], expReward: 25,
-    huayuanChance: 0.6, hualuChance: 0.4,
+    huayuanReward: [80, 200], expReward: 25,
+    hualuChance: 0.4,
     isRegular: true,
   },
   {
@@ -128,8 +126,8 @@ export const CUSTOMER_TYPES: CustomerTypeDef[] = [
       { category: Category.FLOWER, lines: [FlowerLine.LUXURY], levelRange: [4, 6] },
       { category: Category.DRINK, lines: [DrinkLine.COLD, DrinkLine.DESSERT], levelRange: [2, 3] },
     ],
-    goldReward: [100, 250], expReward: 30,
-    huayuanChance: 0.7, hualuChance: 0.5,
+    huayuanReward: [100, 250], expReward: 30,
+    hualuChance: 0.5,
     isRegular: true,
   },
 ];

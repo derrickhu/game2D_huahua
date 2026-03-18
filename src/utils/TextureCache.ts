@@ -10,6 +10,41 @@ import * as PIXI from 'pixi.js';
 // 主包资源（随主包一起下载，无需等待分包）
 // ================================================================
 const MAIN_IMAGE_MAP: Record<string, string> = {
+  // ---- 店主形象 ----
+  owner_chibi_default:  'images/owner/chibi_default.png',
+  owner_full_default:   'images/owner/full_default.png',
+  owner_full_default_blink: 'images/owner/full_default_eyesclosed.png',
+
+  // ---- 客人半身像 ----
+  customer_child:   'images/customer/child.png',
+  customer_student: 'images/customer/student.png',
+  customer_worker:  'images/customer/worker.png',
+  customer_mom:     'images/customer/mom.png',
+  customer_youth:   'images/customer/youth.png',
+
+  // ---- UI 图标 ----
+  icon_energy: 'images/ui/icon_energy.png',
+  icon_coin:   'images/ui/icon_coin.png',
+  icon_gem:    'images/ui/icon_gem.png',
+  icon_star:   'images/ui/icon_star.png',
+  icon_plus:   'images/ui/icon_plus.png',
+  icon_shop:   'images/ui/icon_shop.png',
+  icon_heart:  'images/ui/icon_heart.png',
+  icon_book:   'images/ui/icon_book.png',
+  icon_basket: 'images/ui/icon_basket.png',
+  icon_chart:  'images/ui/icon_chart.png',
+  icon_level_badge: 'images/ui/icon_level_badge.png',
+  icon_gift:   'images/ui/icon_gift.png',
+  order_panel: 'images/ui/order_panel.png',
+  icon_hualu:    'images/ui/icon_hualu.png',
+  icon_huayuan:  'images/ui/icon_huayuan.png',
+  icon_furniture: 'images/ui/icon_furniture.png',
+  icon_dress:     'images/ui/icon_dress.png',
+  icon_checkin:   'images/ui/icon_checkin.png',
+  icon_quest:     'images/ui/icon_quest.png',
+  icon_build:     'images/ui/icon_build.png',
+  icon_operate:   'images/ui/icon_operate.png',
+
   // ---- 日常花系 (6张, 128x128 RGBA) ----
   flower_daily_1: 'images/flowers/daisy.png',
   flower_daily_2: 'images/flowers/sunflower.png',

@@ -27,7 +27,7 @@ export const BoardMetrics = {
 export function getCellSize(): number { return BoardMetrics.cellSize; }
 
 /** 底部信息栏高度 */
-export const INFO_BAR_HEIGHT = 110;
+export const INFO_BAR_HEIGHT = 100;
 
 /**
  * 根据实际屏幕尺寸重新计算棋盘布局参数，需在 Game.init 之后调用
@@ -36,13 +36,11 @@ export const INFO_BAR_HEIGHT = 110;
  */
 export function computeBoardMetrics(logicHeight: number, topReserved: number): void {
   const navHeight = INFO_BAR_HEIGHT;
-  const bottomMargin = 6;
-  const topMargin = 8;
+  const bottomMargin = 8;
+  const topMargin = 2;
 
-  // 宽度优先：保证 7 列铺满宽度
   const maxCellByWidth = Math.floor((DESIGN_WIDTH - (BOARD_COLS - 1) * CELL_GAP) / BOARD_COLS);
 
-  // 棋盘可用高度 = 屏幕高 - 顶部已占区域 - 间距 - 底部导航 - 底部间距
   const availableHeight = logicHeight - topReserved - topMargin - navHeight - bottomMargin;
   const maxCellByHeight = Math.floor((availableHeight - (BOARD_ROWS - 1) * CELL_GAP) / BOARD_ROWS);
 
@@ -54,8 +52,10 @@ export function computeBoardMetrics(logicHeight: number, topReserved: number): v
   const gridHeight = BoardMetrics.cellSize * BOARD_ROWS + CELL_GAP * (BOARD_ROWS - 1);
   BoardMetrics.areaHeight = gridHeight;
 
-  // 棋盘紧贴底部导航栏上方，消除下方空白
-  BoardMetrics.topY = Math.floor(logicHeight - navHeight - bottomMargin - gridHeight);
+  // 棋盘下方剩余空间，将 1/3 分配到棋盘上方，2/3 留给底部按钮区
+  const bottomSpace = logicHeight - (topReserved + topMargin) - gridHeight;
+  const shiftDown = Math.round(bottomSpace / 3);
+  BoardMetrics.topY = topReserved + topMargin + shiftDown;
 
   console.log(`[Board] 动态布局: cellSize=${BoardMetrics.cellSize}, topY=${BoardMetrics.topY}, topReserved=${topReserved}, paddingX=${BoardMetrics.paddingX}, area=${gridWidth}x${gridHeight}`);
 }

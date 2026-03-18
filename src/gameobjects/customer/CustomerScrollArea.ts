@@ -8,17 +8,15 @@
  * - 前2位客人为「服务中」（可交付），后续为「排队中」（预览需求）
  */
 import * as PIXI from 'pixi.js';
-import { CustomerView } from './CustomerView';
+import { CustomerView, CARD_W } from './CustomerView';
 import { CustomerInstance, CustomerManager } from '@/managers/CustomerManager';
 import { EventBus } from '@/core/EventBus';
 import { COLORS, FONT_FAMILY, MAX_VISIBLE_CUSTOMERS } from '@/config/Constants';
 
-/** 单张客人卡片宽度 */
-const CARD_W = 130;
 /** 卡片间距 */
 const CARD_GAP = 10;
 /** 滚动区域高度 */
-const AREA_H = 140;
+const AREA_H = 310;
 /** 惯性摩擦系数 */
 const FRICTION = 0.92;
 /** 最小惯性速度阈值 */
@@ -70,7 +68,7 @@ export class CustomerScrollArea extends PIXI.Container {
       fontFamily: FONT_FAMILY,
     });
     this._emptyHint.anchor.set(0.5, 0.5);
-    this._emptyHint.position.set(this._viewWidth / 2, AREA_H / 2);
+    this._emptyHint.position.set(this._viewWidth / 2, 120);
     this._emptyHint.alpha = 0.5;
     this.addChild(this._emptyHint);
 
@@ -104,7 +102,8 @@ export class CustomerScrollArea extends PIXI.Container {
     for (let i = 0; i < this._customerViews.length; i++) {
       if (i < customers.length) {
         const cx = i * (CARD_W + CARD_GAP) + CARD_W / 2;
-        this._customerViews[i].position.set(cx, AREA_H / 2 + 8);
+        this._customerViews[i].position.set(cx, 195);
+        this._customerViews[i].setQueueIndex(i);
         this._customerViews[i].setCustomer(customers[i]);
       } else {
         this._customerViews[i].setCustomer(null);
@@ -145,7 +144,7 @@ export class CustomerScrollArea extends PIXI.Container {
   private _updateMask(): void {
     this._maskGraphics.clear();
     this._maskGraphics.beginFill(0xFFFFFF);
-    this._maskGraphics.drawRoundedRect(0, 0, this._viewWidth, AREA_H, 8);
+    this._maskGraphics.drawRect(0, 0, this._viewWidth, AREA_H);
     this._maskGraphics.endFill();
   }
 

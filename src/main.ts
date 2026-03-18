@@ -13,8 +13,6 @@ import { TextureCache } from '@/utils/TextureCache';
 import { MainScene } from '@/scenes/MainScene';
 import { ShopScene } from '@/scenes/ShopScene';
 import { computeBoardMetrics } from '@/config/Constants';
-import { FUNC_BAR_HEIGHT } from '@/gameobjects/ui/FloatingMenu';
-
 declare const GameGlobal: any;
 
 // 全局错误捕获——确保真机上所有异常可见
@@ -66,10 +64,8 @@ async function main(): Promise<void> {
         'supportsTouchEvents:', events?.supportsTouchEvents);
     } catch (e) { console.warn('[main] EventSystem 诊断失败:', e); }
 
-    // 根据实际屏幕动态计算棋盘尺寸
-    // topReserved = safeTop + TopBar(60) + gap(8) + ShopArea(200+气泡溢出≈240) + gap(6)
-    // FloatingMenu 现在是悬浮按钮组（FUNC_BAR_HEIGHT=0），不再占用独立行空间
-    const topReserved = Game.safeTop + 60 + 8 + 240 + 2 + FUNC_BAR_HEIGHT + 4;
+    // topReserved = safeTop + TopBar(60) + gap(4) + Banner(38) + gap(4) + ShopArea(250)
+    const topReserved = Game.safeTop + 60 + 4 + 38 + 4 + 250;
     computeBoardMetrics(Game.logicHeight, topReserved);
     console.log(`[main] BoardMetrics 计算完成, logicHeight:${Game.logicHeight}, safeTop:${Game.safeTop}, topReserved:${topReserved}`);
 

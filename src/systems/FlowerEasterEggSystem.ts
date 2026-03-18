@@ -17,34 +17,34 @@ import { CurrencyManager } from '@/managers/CurrencyManager';
 interface FlowerQuote {
   name: string;
   quote: string;
-  goldReward: number;
+  huayuanReward: number;
   expReward: number;
 }
 
 const FLOWER_QUOTES: Record<string, FlowerQuote> = {
   // 日常花系
-  flower_daily_1: { name: '小雏菊', quote: '纯真无邪，藏在心底的小美好。', goldReward: 10, expReward: 5 },
-  flower_daily_2: { name: '向日葵', quote: '沉默的爱，追随着你的光芒。', goldReward: 15, expReward: 8 },
-  flower_daily_3: { name: '康乃馨', quote: '温馨的祝福，感恩每一份爱。', goldReward: 20, expReward: 12 },
-  flower_daily_4: { name: '满天星花束', quote: '甘愿做配角，只为衬托你的美。', goldReward: 30, expReward: 18 },
-  flower_daily_5: { name: '混搭花束', quote: '缤纷世界，每一种美都值得。', goldReward: 40, expReward: 25 },
-  flower_daily_6: { name: '精致礼盒花', quote: '最好的礼物，是用心准备的惊喜。', goldReward: 60, expReward: 35 },
+  flower_daily_1: { name: '小雏菊', quote: '纯真无邪，藏在心底的小美好。', huayuanReward: 10, expReward: 5 },
+  flower_daily_2: { name: '向日葵', quote: '沉默的爱，追随着你的光芒。', huayuanReward: 15, expReward: 8 },
+  flower_daily_3: { name: '康乃馨', quote: '温馨的祝福，感恩每一份爱。', huayuanReward: 20, expReward: 12 },
+  flower_daily_4: { name: '满天星花束', quote: '甘愿做配角，只为衬托你的美。', huayuanReward: 30, expReward: 18 },
+  flower_daily_5: { name: '混搭花束', quote: '缤纷世界，每一种美都值得。', huayuanReward: 40, expReward: 25 },
+  flower_daily_6: { name: '精致礼盒花', quote: '最好的礼物，是用心准备的惊喜。', huayuanReward: 60, expReward: 35 },
 
   // 浪漫花系
-  flower_romantic_1: { name: '粉玫瑰', quote: '初恋的感觉，心跳如花绽放。', goldReward: 12, expReward: 6 },
-  flower_romantic_2: { name: '百合', quote: '百年好合，纯洁的守候。', goldReward: 18, expReward: 10 },
-  flower_romantic_3: { name: '郁金香', quote: '高贵的爱恋，无可救药的浪漫。', goldReward: 25, expReward: 15 },
-  flower_romantic_4: { name: '薰衣草花束', quote: '等待爱情，紫色的承诺。', goldReward: 35, expReward: 22 },
-  flower_romantic_5: { name: '告白玫瑰礼盒', quote: '鼓起勇气说出口，你是我的唯一。', goldReward: 50, expReward: 30 },
-  flower_romantic_6: { name: '婚礼花艺', quote: '执子之手，与子偕老。', goldReward: 80, expReward: 45 },
+  flower_romantic_1: { name: '粉玫瑰', quote: '初恋的感觉，心跳如花绽放。', huayuanReward: 12, expReward: 6 },
+  flower_romantic_2: { name: '百合', quote: '百年好合，纯洁的守候。', huayuanReward: 18, expReward: 10 },
+  flower_romantic_3: { name: '郁金香', quote: '高贵的爱恋，无可救药的浪漫。', huayuanReward: 25, expReward: 15 },
+  flower_romantic_4: { name: '薰衣草花束', quote: '等待爱情，紫色的承诺。', huayuanReward: 35, expReward: 22 },
+  flower_romantic_5: { name: '告白玫瑰礼盒', quote: '鼓起勇气说出口，你是我的唯一。', huayuanReward: 50, expReward: 30 },
+  flower_romantic_6: { name: '婚礼花艺', quote: '执子之手，与子偕老。', huayuanReward: 80, expReward: 45 },
 
   // 奢华花系
-  flower_luxury_1: { name: '星空兰', quote: '在星光下绽放，如梦如幻。', goldReward: 15, expReward: 8 },
-  flower_luxury_2: { name: '生日花礼', quote: '又长大了一岁，愿你永远闪闪发光。', goldReward: 22, expReward: 13 },
-  flower_luxury_3: { name: '星空花礼', quote: '把星空装进花束，送给最特别的你。', goldReward: 30, expReward: 20 },
-  flower_luxury_4: { name: '鎏金花束', quote: '金色的祝福，闪耀的未来。', goldReward: 45, expReward: 28 },
-  flower_luxury_5: { name: '极光花礼', quote: '像极光一样璀璨，像花一样芬芳。', goldReward: 65, expReward: 38 },
-  flower_luxury_6: { name: '永恒花海典藏', quote: '时光流转，花香永存，这是永恒的约定。', goldReward: 100, expReward: 55 },
+  flower_luxury_1: { name: '星空兰', quote: '在星光下绽放，如梦如幻。', huayuanReward: 15, expReward: 8 },
+  flower_luxury_2: { name: '生日花礼', quote: '又长大了一岁，愿你永远闪闪发光。', huayuanReward: 22, expReward: 13 },
+  flower_luxury_3: { name: '星空花礼', quote: '把星空装进花束，送给最特别的你。', huayuanReward: 30, expReward: 20 },
+  flower_luxury_4: { name: '鎏金花束', quote: '金色的祝福，闪耀的未来。', huayuanReward: 45, expReward: 28 },
+  flower_luxury_5: { name: '极光花礼', quote: '像极光一样璀璨，像花一样芬芳。', huayuanReward: 65, expReward: 38 },
+  flower_luxury_6: { name: '永恒花海典藏', quote: '时光流转，花香永存，这是永恒的约定。', huayuanReward: 100, expReward: 55 },
 };
 
 export class FlowerEasterEggSystem {
@@ -168,7 +168,7 @@ export class FlowerEasterEggSystem {
 
     // 奖励信息
     const rewardText = new PIXI.Text(
-      `🎁 首次合成奖励\n💰 金币 +${data.goldReward}  ⭐ 经验 +${data.expReward}`,
+      `🎁 首次合成奖励\n🌸 花愿 +${data.huayuanReward}  ⭐ 经验 +${data.expReward}`,
       {
         fontSize: 14,
         fill: 0x8B7355,
@@ -217,7 +217,7 @@ export class FlowerEasterEggSystem {
 
     // 关闭面板的逻辑
     const closePanel = () => {
-      CurrencyManager.addGold(data.goldReward);
+      CurrencyManager.addHuayuan(data.huayuanReward);
       CurrencyManager.addExp(data.expReward);
 
       TweenManager.to({

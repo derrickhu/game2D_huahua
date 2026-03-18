@@ -23,7 +23,6 @@ export interface CustomerInstance {
   emoji: string;
   slots: DemandSlot[];
   allSatisfied: boolean;
-  goldReward: number;
   huayuanReward: number;
   hualuReward: number;
 }
@@ -79,15 +78,13 @@ class CustomerManagerClass {
 
     // 发放奖励（含熟客加成）
     const bonus = RegularCustomerManager.getRewardBonus(customer.typeId);
-    const finalGold = Math.round(customer.goldReward * (1 + bonus));
-    CurrencyManager.addGold(finalGold);
-    if (customer.huayuanReward > 0) CurrencyManager.addHuayuan(Math.round(customer.huayuanReward * (1 + bonus)));
+    const finalHuayuan = Math.round(customer.huayuanReward * (1 + bonus));
+    CurrencyManager.addHuayuan(finalHuayuan);
     if (customer.hualuReward > 0) CurrencyManager.addHualu(Math.round(customer.hualuReward * (1 + bonus)));
 
-    // 更新 goldReward 为实际发放值（供 Toast 显示）
-    customer.goldReward = finalGold;
+    customer.huayuanReward = finalHuayuan;
 
-    console.log(`[Customer] 交付完成: ${customer.name}, 金币+${finalGold}${bonus > 0 ? ` (熟客加成+${Math.round(bonus * 100)}%)` : ''}`);
+    console.log(`[Customer] 交付完成: ${customer.name}, 花愿+${finalHuayuan}${bonus > 0 ? ` (熟客加成+${Math.round(bonus * 100)}%)` : ''}`);
 
     // 移除客人
     this._customers.splice(idx, 1);
@@ -124,8 +121,8 @@ class CustomerManagerClass {
     const slots = this._generateDemands(type);
     if (slots.length === 0) return;
 
-    const goldRange = type.goldReward;
-    const gold = goldRange[0] + Math.floor(Math.random() * (goldRange[1] - goldRange[0] + 1));
+    const hyRange = type.huayuanReward;
+    const huayuan = hyRange[0] + Math.floor(Math.random() * (hyRange[1] - hyRange[0] + 1));
 
     const customer: CustomerInstance = {
       uid: this._nextUid++,
@@ -134,9 +131,8 @@ class CustomerManagerClass {
       emoji: type.emoji,
       slots,
       allSatisfied: false,
-      goldReward: gold,
-      huayuanReward: Math.random() < type.huayuanChance ? Math.ceil(gold * 0.1) : 0,
-      hualuReward: Math.random() < type.hualuChance ? Math.ceil(gold * 0.05) : 0,
+      huayuanReward: huayuan,
+      hualuReward: Math.random() < type.hualuChance ? Math.ceil(huayuan * 0.1) : 0,
     };
 
     this._customers.push(customer);

@@ -41,6 +41,7 @@ export interface FurniturePlacement {
 export interface RoomLayoutSave {
   version: number;
   placements: FurniturePlacement[];
+  ownerPos?: { x: number; y: number };
 }
 
 // ---- 默认摆放位置（槽位 → 初始位置） ----
@@ -68,6 +69,7 @@ const ROOM_BOUNDS = {
 
 class RoomLayoutManagerClass {
   private _placements: FurniturePlacement[] = [];
+  private _ownerPos: { x: number; y: number } | null = null;
   private _saveTimer: ReturnType<typeof setTimeout> | null = null;
   private _initialized = false;
 
@@ -105,6 +107,17 @@ class RoomLayoutManagerClass {
   /** 房间内家具数量 */
   get count(): number {
     return this._placements.length;
+  }
+
+  /** 获取店主位置（null 则使用默认） */
+  get ownerPos(): { x: number; y: number } | null {
+    return this._ownerPos;
+  }
+
+  /** 更新店主位置 */
+  setOwnerPos(x: number, y: number): void {
+    this._ownerPos = { x, y };
+    this._debounceSave();
   }
 
   /** 房间可摆放区域 */
@@ -367,6 +380,7 @@ class RoomLayoutManagerClass {
       const data: RoomLayoutSave = {
         version: 1,
         placements: this._placements,
+        ownerPos: this._ownerPos ?? undefined,
       };
       const json = JSON.stringify(data);
       if (_api) {
@@ -393,6 +407,11 @@ class RoomLayoutManagerClass {
       const data: RoomLayoutSave = JSON.parse(raw);
       if (!data.placements || !Array.isArray(data.placements)) return false;
 
+      // 加载店主位置
+      if (data.ownerPos && typeof data.ownerPos.x === 'number') {
+        this._ownerPos = { x: data.ownerPos.x, y: data.ownerPos.y };
+      }
+
       // 验证并过滤无效数据（装饰不存在或未解锁的跳过）
       this._placements = data.placements.filter(p => {
         const deco = DECO_MAP.get(p.decoId);
@@ -403,8 +422,8 @@ class RoomLayoutManagerClass {
         return true;
       }).map(p => ({
         decoId: p.decoId,
-        x: this._clampX(p.x),
-        y: this._clampY(p.y),
+        x: p.x,
+        y: p.y,
         scale: Math.max(0.5, Math.min(2.0, p.scale ?? 1)),
         flipped: !!p.flipped,
         zLayer: p.zLayer ?? 0,

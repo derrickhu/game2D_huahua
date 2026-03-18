@@ -37,7 +37,6 @@ import { ActivityBanner, BANNER_HEIGHT } from '@/gameobjects/ui/ActivityBanner';
 import { MergeHintSystem } from '@/systems/MergeHintSystem';
 import { ComboSystem } from '@/systems/ComboSystem';
 import { FlowerEasterEggSystem } from '@/systems/FlowerEasterEggSystem';
-import { SeasonSystem } from '@/systems/SeasonSystem';
 import { MergeStatsSystem } from '@/systems/MergeStatsSystem';
 import { TutorialSystem } from '@/systems/TutorialSystem';
 import { SoundSystem } from '@/systems/SoundSystem';
@@ -52,7 +51,8 @@ import { DecorationPanel } from '@/gameobjects/ui/DecorationPanel';
 import { FloatingMenu } from '@/gameobjects/ui/FloatingMenu';
 import { SceneSwitch } from '@/gameobjects/ui/SceneSwitch';
 import { CUSTOMER_TYPES } from '@/config/CustomerConfig';
-import { DESIGN_WIDTH, COLORS, FONT_FAMILY, INFO_BAR_HEIGHT } from '@/config/Constants';
+import { DESIGN_WIDTH, COLORS, FONT_FAMILY, INFO_BAR_HEIGHT, BoardMetrics } from '@/config/Constants';
+import { TextureCache } from '@/utils/TextureCache';
 import { AdManager } from '@/managers/AdManager';
 import { CollectionManager } from '@/managers/CollectionManager';
 import { FlowerCardManager } from '@/managers/FlowerCardManager';
@@ -86,7 +86,6 @@ export class MainScene implements Scene {
   private _mergeHintSystem!: MergeHintSystem;
   private _comboSystem!: ComboSystem;
   private _flowerEasterEgg!: FlowerEasterEggSystem;
-  private _seasonSystem!: SeasonSystem;
   private _mergeStats!: MergeStatsSystem;
 
   // ---- 留存系统 ----
@@ -233,9 +232,10 @@ export class MainScene implements Scene {
     this._boardView = new BoardView();
     this.container.addChild(this._boardView);
 
-    // 底部物品信息栏（紧贴屏幕底部）
-    const barY = Game.logicHeight - INFO_BAR_HEIGHT;
-    this._infoBar = new ItemInfoBar();
+    // 底部物品信息栏（紧贴棋盘下方，填满剩余空间）
+    const barY = BoardMetrics.topY + BoardMetrics.areaHeight + 4;
+    const barH = Game.logicHeight - barY;
+    this._infoBar = new ItemInfoBar(barH);
     this._infoBar.position.set(0, barY);
     this.container.addChild(this._infoBar);
 
@@ -268,9 +268,6 @@ export class MainScene implements Scene {
 
     // 花语合成彩蛋系统
     this._flowerEasterEgg = new FlowerEasterEggSystem(this.container);
-
-    // 季节主题系统
-    this._seasonSystem = new SeasonSystem(this.container);
 
     // 合成统计系统
     this._mergeStats = new MergeStatsSystem(this.container);
@@ -351,15 +348,10 @@ export class MainScene implements Scene {
   }
 
   /** 店铺区域高度（设计坐标），供外部布局计算 */
-  static readonly SHOP_HEIGHT = 210;
+  static readonly SHOP_HEIGHT = 250;
 
-  /** 店主展示容器（供换装刷新引用） */
   private _ownerContainer!: PIXI.Container;
-  /** 店主装备 emoji 显示 */
-  private _ownerHairText!: PIXI.Text;
-  private _ownerTopText!: PIXI.Text;
-  private _ownerAccText!: PIXI.Text;
-  /** 店主呼吸动画计时 */
+  private _ownerSprite!: PIXI.Sprite;
   private _ownerBreathT = 0;
 
   private _buildShopArea(): void {
@@ -371,178 +363,43 @@ export class MainScene implements Scene {
     const OWNER_W = 140;  // 左侧店主区宽度
     const CUSTOMER_LEFT = OWNER_W + 4; // 客人区起始 x
 
-    // ═══════ 1. 背景 — 多层渐变营造花店温馨氛围 ═══════
-    const bg = new PIXI.Graphics();
-    // 主背景
-    bg.beginFill(0xFFF5ED, 0.85);
-    bg.drawRoundedRect(PAD, 0, W - PAD * 2, H, 18);
-    bg.endFill();
-    // 上部亮色渐变条
-    bg.beginFill(0xFFEDD8, 0.4);
-    bg.drawRoundedRect(PAD, 0, W - PAD * 2, 50, 18);
-    bg.endFill();
-    // 底部深色装饰条
-    bg.beginFill(0xF5DFC0, 0.5);
-    bg.drawRoundedRect(PAD, H - 8, W - PAD * 2, 8, 6);
-    bg.endFill();
-    // 柔和边框
-    bg.lineStyle(1.5, 0xFFD4A8, 0.35);
-    bg.drawRoundedRect(PAD, 0, W - PAD * 2, H, 18);
-    this._shopArea.addChild(bg);
+    // 所有人物底边对齐的 Y 坐标（shopArea 内）
+    const CHAR_BOTTOM_Y = 195;
 
-    // ═══════ 2. 花店招牌 — 精致胶囊 + 店铺等级（居中偏右，在客人区上方） ═══════
-    const titleY = 6;
-    const titleCX = CUSTOMER_LEFT + (W - CUSTOMER_LEFT - PAD) / 2;
-    const titleBg = new PIXI.Graphics();
-    // 外层光晕
-    titleBg.beginFill(0xFFE4C8, 0.3);
-    titleBg.drawRoundedRect(titleCX - 105, titleY - 2, 210, 34, 17);
-    titleBg.endFill();
-    // 白色胶囊
-    titleBg.beginFill(0xFFFFFF, 0.75);
-    titleBg.drawRoundedRect(titleCX - 100, titleY, 200, 30, 15);
-    titleBg.endFill();
-    titleBg.lineStyle(1.5, 0xFFD4A8, 0.6);
-    titleBg.drawRoundedRect(titleCX - 100, titleY, 200, 30, 15);
-    this._shopArea.addChild(titleBg);
+    // ═══════ 1. 店主半身像（左侧大区域） ═══════
+    this._ownerContainer = new PIXI.Container();
+    const ownerCX = PAD + OWNER_W / 2;
 
-    const title = new PIXI.Text('🌸 花语小筑 🌸', {
-      fontSize: 16,
-      fill: COLORS.TEXT_DARK,
-      fontFamily: FONT_FAMILY,
-      fontWeight: 'bold',
+    // 店主形象 Sprite — 底部锚点对齐 CHAR_BOTTOM_Y
+    this._ownerSprite = new PIXI.Sprite();
+    this._ownerSprite.anchor.set(0.5, 1.0);
+    this._ownerSprite.position.set(0, 0);
+    this._ownerContainer.addChild(this._ownerSprite);
+
+    // 店主名字标签（同时承载 GM 激活的多次点击）
+    const ownerLabel = new PIXI.Text('💕 店主', {
+      fontSize: 11, fill: 0xFF8C69, fontFamily: FONT_FAMILY, fontWeight: 'bold',
     });
-    title.anchor.set(0.5, 0);
-    title.position.set(titleCX, titleY + 5);
-    title.eventMode = 'static';
-    title.cursor = 'pointer';
-    title.on('pointerdown', () => GMManager.onTitleTap());
-    this._shopArea.addChild(title);
+    ownerLabel.anchor.set(0.5, 0);
+    ownerLabel.position.set(0, 4);
+    ownerLabel.eventMode = 'static';
+    ownerLabel.cursor = 'pointer';
+    ownerLabel.on('pointerdown', () => GMManager.onTitleTap());
+    this._ownerContainer.addChild(ownerLabel);
 
-    // 左侧等级徽章
-    const lvl = LevelManager.level;
-    const lvlBadge = new PIXI.Graphics();
-    lvlBadge.beginFill(0xFF8C69);
-    lvlBadge.drawCircle(0, 0, 13);
-    lvlBadge.endFill();
-    lvlBadge.lineStyle(1.5, 0xFFFFFF, 0.8);
-    lvlBadge.drawCircle(0, 0, 13);
-    lvlBadge.position.set(titleCX - 108, titleY + 15);
-    this._shopArea.addChild(lvlBadge);
-
-    const lvlText = new PIXI.Text(`${lvl}`, {
-      fontSize: 11, fill: 0xFFFFFF, fontFamily: FONT_FAMILY, fontWeight: 'bold',
-    });
-    lvlText.anchor.set(0.5, 0.5);
-    lvlText.position.set(titleCX - 108, titleY + 15);
-    lvlText.name = 'shopLvlText';
-    this._shopArea.addChild(lvlText);
-
-    // GM 入口按钮
-    const gmBtn = new PIXI.Text('🛠️', { fontSize: 14, fontFamily: FONT_FAMILY });
+    // GM 入口按钮（隐藏于店主区域角落，激活后可见）
+    const gmBtn = new PIXI.Text('🛠️', { fontSize: 12, fontFamily: FONT_FAMILY });
     gmBtn.anchor.set(0.5, 0.5);
-    gmBtn.position.set(W - 30, titleY + 15);
+    gmBtn.position.set(OWNER_W / 2 - 6, -120);
     gmBtn.eventMode = 'static';
     gmBtn.cursor = 'pointer';
     gmBtn.visible = GMManager.isEnabled;
     gmBtn.name = 'gmBtn';
     gmBtn.on('pointerdown', () => GMManager.openPanel());
-    this._shopArea.addChild(gmBtn);
+    this._ownerContainer.addChild(gmBtn);
     EventBus.on('gm:activated', () => { gmBtn.visible = true; });
 
-    // ═══════ 3. 店主半身像（左侧大区域） ═══════
-    this._ownerContainer = new PIXI.Container();
-    const ownerCX = PAD + OWNER_W / 2;
-    const ownerCY = H / 2 + 10;
-
-    // 店主区域装饰背景
-    const ownerBg = new PIXI.Graphics();
-    ownerBg.beginFill(0xFFF0E5, 0.5);
-    ownerBg.drawRoundedRect(-OWNER_W / 2 + PAD, -H / 2 + 10, OWNER_W - PAD, H - 20, 14);
-    ownerBg.endFill();
-    this._ownerContainer.addChild(ownerBg);
-
-    // 脚下光圈（柔和阴影）
-    const shadow = new PIXI.Graphics();
-    shadow.beginFill(0xD4B896, 0.25);
-    shadow.drawEllipse(0, 56, 28, 8);
-    shadow.endFill();
-    this._ownerContainer.addChild(shadow);
-
-    // 身体（半身像 — 更大、更突出）
-    const body = new PIXI.Graphics();
-    body.beginFill(0xFFE4CC);
-    body.drawEllipse(0, 28, 20, 30);
-    body.endFill();
-    this._ownerContainer.addChild(body);
-
-    // 身体上装（围裙颜色反映当前装备）
-    const apron = new PIXI.Graphics();
-    apron.beginFill(0xFFC4A8, 0.7);
-    apron.drawRoundedRect(-17, 8, 34, 38, 8);
-    apron.endFill();
-    apron.beginFill(0xFFB090, 0.5);
-    apron.drawRoundedRect(-14, 12, 28, 6, 3);
-    apron.endFill();
-    this._ownerContainer.addChild(apron);
-
-    // 装备 emoji 展示 - 上装
-    this._ownerTopText = new PIXI.Text('', { fontSize: 18 });
-    this._ownerTopText.anchor.set(0.5, 0.5);
-    this._ownerTopText.position.set(0, 24);
-    this._ownerContainer.addChild(this._ownerTopText);
-
-    // 头部（大头Q版 — 更大）
-    const head = new PIXI.Graphics();
-    // 头发底色
-    head.beginFill(0x5C3A1E);
-    head.drawCircle(0, -20, 26);
-    head.endFill();
-    // 脸部
-    head.beginFill(0xFFDDB8);
-    head.drawCircle(0, -14, 22);
-    head.endFill();
-    // 眼睛（水汪汪大眼）
-    head.beginFill(0x4A3728);
-    head.drawEllipse(-8, -18, 3, 4);
-    head.drawEllipse(8, -18, 3, 4);
-    head.endFill();
-    // 眼睛高光
-    head.beginFill(0xFFFFFF);
-    head.drawCircle(-7, -19, 1.5);
-    head.drawCircle(9, -19, 1.5);
-    head.endFill();
-    // 腮红
-    head.beginFill(0xFFA0A0, 0.3);
-    head.drawEllipse(-14, -10, 5, 3);
-    head.drawEllipse(14, -10, 5, 3);
-    head.endFill();
-    // 嘴巴（微笑弧线）
-    head.lineStyle(2, 0xE88070);
-    head.arc(0, -8, 5, 0.2, Math.PI - 0.2);
-    this._ownerContainer.addChild(head);
-
-    // 装备 emoji 展示 - 发型
-    this._ownerHairText = new PIXI.Text('', { fontSize: 16 });
-    this._ownerHairText.anchor.set(0.5, 0.5);
-    this._ownerHairText.position.set(0, -42);
-    this._ownerContainer.addChild(this._ownerHairText);
-
-    // 装备 emoji 展示 - 配饰
-    this._ownerAccText = new PIXI.Text('', { fontSize: 12 });
-    this._ownerAccText.anchor.set(0.5, 0.5);
-    this._ownerAccText.position.set(18, -24);
-    this._ownerContainer.addChild(this._ownerAccText);
-
-    // 店主名字标签
-    const ownerLabel = new PIXI.Text('💕 店主', {
-      fontSize: 11, fill: 0xFF8C69, fontFamily: FONT_FAMILY, fontWeight: 'bold',
-    });
-    ownerLabel.anchor.set(0.5, 0);
-    ownerLabel.position.set(0, 62);
-    this._ownerContainer.addChild(ownerLabel);
-
-    this._ownerContainer.position.set(ownerCX, ownerCY);
+    this._ownerContainer.position.set(ownerCX, CHAR_BOTTOM_Y);
     // 点击店主 → 打开换装面板
     this._ownerContainer.eventMode = 'static';
     this._ownerContainer.cursor = 'pointer';
@@ -558,62 +415,28 @@ export class MainScene implements Scene {
     // 监听换装变化
     EventBus.on('dressup:equipped', () => this._refreshOwnerOutfit());
 
-    // ═══════ 4. 柜台 — 纵向分隔线 + 横向柜台面 ═══════
-    const counterY = 42;
-    const counterH = 22;
-    const counter = new PIXI.Graphics();
-    // 纵向分隔线（店主和客人区之间）
-    counter.beginFill(0xD2B48C, 0.4);
-    counter.drawRoundedRect(CUSTOMER_LEFT - 2, 10, 3, H - 20, 2);
-    counter.endFill();
-    // 客人区上方横向柜台面
-    counter.beginFill(0xD2B48C);
-    counter.drawRoundedRect(CUSTOMER_LEFT, counterY, W - CUSTOMER_LEFT - PAD, counterH, 6);
-    counter.endFill();
-    counter.beginFill(0xC4A87A);
-    counter.drawRoundedRect(CUSTOMER_LEFT, counterY + counterH * 0.6, W - CUSTOMER_LEFT - PAD, counterH * 0.4, 4);
-    counter.endFill();
-    // 柜台装饰小花
-    const flowerDeco = new PIXI.Text('🌷', { fontSize: 10 });
-    flowerDeco.anchor.set(0.5, 0.5);
-    flowerDeco.position.set(CUSTOMER_LEFT + 16, counterY + counterH / 2);
-    counter.addChild(flowerDeco);
-    const flowerDeco2 = new PIXI.Text('🌹', { fontSize: 10 });
-    flowerDeco2.anchor.set(0.5, 0.5);
-    flowerDeco2.position.set(W - PAD - 16, counterY + counterH / 2);
-    counter.addChild(flowerDeco2);
-    this._shopArea.addChild(counter);
-
-    // ═══════ 5. 客人横向滚动区（柜台下方，可左右滑动） ═══════
+    // ═══════ 2. 客人横向滚动区（可左右滑动） ═══════
     const customerAreaW = W - CUSTOMER_LEFT - PAD;
     this._customerScrollArea = new CustomerScrollArea(customerAreaW);
-    this._customerScrollArea.position.set(CUSTOMER_LEFT, counterY + counterH + 4);
+    this._customerScrollArea.position.set(CUSTOMER_LEFT, 0);
     this._shopArea.addChild(this._customerScrollArea);
-
-    // ═══════ 6. 装饰元素 — 店主区两侧花束点缀 ═══════
-    const leftDeco = new PIXI.Text('🌺', { fontSize: 14 });
-    leftDeco.anchor.set(0.5, 0.5);
-    leftDeco.position.set(PAD + 18, 20);
-    leftDeco.alpha = 0.5;
-    this._shopArea.addChild(leftDeco);
-
-    const rightDeco = new PIXI.Text('🌻', { fontSize: 14 });
-    rightDeco.anchor.set(0.5, 0.5);
-    rightDeco.position.set(PAD + OWNER_W - 18, 20);
-    rightDeco.alpha = 0.5;
-    this._shopArea.addChild(rightDeco);
   }
 
-  /** 刷新店主装备外观 */
+  /** 刷新店主形象外观 */
   private _refreshOwnerOutfit(): void {
-    const hair = DressUpManager.getEquipped('hair');
-    const top = DressUpManager.getEquipped('top');
-    const acc = DressUpManager.getEquipped('accessory');
+    const outfit = DressUpManager.getEquipped();
+    const outfitId = outfit?.id || 'outfit_default';
 
-    // 只显示非默认装备的 emoji
-    this._ownerHairText.text = (hair && hair.id !== 'hair_default') ? hair.icon : '';
-    this._ownerTopText.text = (top && top.id !== 'top_default') ? top.icon : '';
-    this._ownerAccText.text = (acc && acc.id !== 'acc_none') ? acc.icon : '';
+    // 尝试加载当前形象的 chibi 纹理，回退到默认
+    const tex = TextureCache.get(`owner_chibi_${outfitId}`)
+             || TextureCache.get('owner_chibi_default');
+
+    if (tex && this._ownerSprite) {
+      this._ownerSprite.texture = tex;
+      const targetH = 160;
+      const scale = targetH / tex.height;
+      this._ownerSprite.scale.set(scale);
+    }
   }
 
   /** 绑定客人相关事件 */
@@ -621,7 +444,7 @@ export class MainScene implements Scene {
     // CustomerScrollArea 内部已自行监听 customer:arrived/lockChanged/delivered
     // 这里只处理交付后的 Toast 提示
     EventBus.on('customer:delivered', (_uid: number, customer: any) => {
-      ToastMessage.show(`${customer.name} 满意离开！💰+${customer.goldReward}`);
+      ToastMessage.show(`${customer.name} 满意离开！🌸花愿+${customer.huayuanReward}${customer.hualuReward > 0 ? ` 💧花露+${customer.hualuReward}` : ''}`);
     });
   }
 
@@ -650,6 +473,13 @@ export class MainScene implements Scene {
     EventBus.on('achievement:unlocked', (defId: string, _tierIndex: number) => {
       const def = QuestManager.getAchievementDef(defId);
       if (def) ToastMessage.show(`🏆 成就达成：${def.name}！`);
+    });
+
+    // 活动/任务赠送整套形象
+    EventBus.on('event:grantOutfit', (outfitId: string) => {
+      if (DressUpManager.grantOutfit(outfitId)) {
+        ToastMessage.show('🎁 获得新形象，快去换装看看！');
+      }
     });
 
     // 升级弹窗
@@ -800,28 +630,14 @@ export class MainScene implements Scene {
 
   /** 更新红点 */
   private _updateRedDots(): void {
-    // 通过 FloatingMenu 设置红点状态（ItemInfoBar 会读取这些状态）
-    this._floatingMenu.setRedDot('shop', DecorationManager.hasAffordableNew());
-
-    // 熟客红点：有可阅读的新故事
-    const hasNewStory = RegularCustomerManager.getAllRegulars().some(d => {
-      return RegularCustomerManager.getUnlockableStory(d.typeId) !== null;
-    });
-    this._floatingMenu.setRedDot('regular', hasNewStory);
-
-    // 图鉴红点：有可领取的里程碑奖励
-    this._floatingMenu.setRedDot('album', CollectionManager.hasClaimableMilestone);
-
-    // 活动红点：有可领取的任务奖励（活动横幅会读取）
+    // 活动红点
     this._floatingMenu.setRedDot('event', EventManager.hasClaimableTask);
-
-    // 任务红点
     this._floatingMenu.setRedDot('quest', QuestManager.hasClaimableQuest || QuestManager.hasClaimableAchievement);
 
-    // InfoBar 功能快捷按钮红点更新
+    // 底部栏红点（装修按钮）
     this._infoBar.updateQuickBtnRedDots();
 
-    // 活动横幅红点更新
+    // 活动横幅红点
     this._activityBanner.updateRedDots();
   }
 
@@ -854,15 +670,13 @@ export class MainScene implements Scene {
     this._staminaPanel.updateTimer();
     this._mergeHintSystem.update(dt);
     this._comboSystem.update(dt);
-    this._seasonSystem.update(dt);
     this._hapticSystem.update(dt);
     ChallengeManager.update(dt);
 
     // 客人滚动区惯性动画
     this._customerScrollArea.update(dt);
 
-    // 店主呼吸动画（柔和上下浮动）— 基准Y = SHOP_HEIGHT/2 + 10
-    const ownerBaseY = MainScene.SHOP_HEIGHT / 2 + 10;
+    const ownerBaseY = 195;
     this._ownerBreathT += dt;
     if (this._ownerContainer && !this._ownerContainer.destroyed) {
       this._ownerContainer.y = ownerBaseY + Math.sin(this._ownerBreathT * 1.8) * 2;

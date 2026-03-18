@@ -1,0 +1,19 @@
+A single horizontal strip image showing 5 different customer bust portraits side by side in a 5x1 grid layout (5 columns, 1 row). Each cell contains one unique character shown from chest up (bust portrait, upper body only).
+
+Art style: Hand-drawn 2D anime with soft 3D volume, fresh and warm color palette, low saturation pastel tones, cute Q-version (chibi) proportions with large expressive eyes. Style must be consistent across all 5 characters - same line weight, same shading style, same level of detail. Background: uniform warm cream #FFF8F0 for all cells.
+
+All characters face slightly to the right (3/4 view), with warm friendly expressions.
+
+NO TEXT, no labels, no captions, no writing, no numbers anywhere in the image.
+
+Cell 1 - Little Boy (小朋友): A cheerful young boy around age 7-8. Short messy brown hair with a small cowlick. Big round curious eyes (dark brown). Wearing a bright colorful striped T-shirt (yellow and sky blue stripes). Rosy cheeks, wide innocent smile showing small teeth. Slightly tilted head expressing curiosity.
+
+Cell 2 - Student Girl (学生少女): A lively teenage girl around age 16. High ponytail tied with a pink hair ribbon, light brown hair. Bright sparkling eyes (amber). Wearing a white sailor-collar school uniform top with a pastel pink bow tie. Cheerful energetic smile, one hand raised in a small wave gesture. Light blush on cheeks.
+
+Cell 3 - Office Worker (上班族): A friendly young man around age 28. Short neat dark brown hair, parted to the side. Gentle tired but kind eyes (dark brown) with thin-framed glasses. Wearing a light blue dress shirt with loosened tie (navy blue). Warm polite smile, slightly relaxed posture suggesting he just got off work.
+
+Cell 4 - Gentle Mother (温柔妈妈): A warm motherly woman around age 32. Soft wavy medium-length chestnut brown hair, tucked behind one ear. Gentle loving eyes (warm brown). Wearing a cozy cream-colored knit sweater with a small floral apron visible at the bottom. Soft caring smile with dimples, holding posture suggesting warmth and comfort.
+
+Cell 5 - Artistic Youth (文艺青年): A stylish young person around age 22 with androgynous charm. Messy medium-length dark hair partially covered by a khaki beret. Dreamy thoughtful eyes (grey-brown). Wearing a loose beige turtleneck with a dark green scarf draped casually. Gentle half-smile with a contemplative expression, slight head tilt.
+
+Important: All 5 characters must be clearly separated in their own grid cells with equal spacing. Each bust portrait should be centered in its cell, showing from mid-chest up including shoulders. Maintain consistent proportions and art quality across all cells.

@@ -1,0 +1,62 @@
+A character outfit reference sheet for a cute anime-style flower shop owner girl. 3 columns by 2 rows grid layout (6 panels total), each panel showing the SAME character in a different complete outfit. Full body standing pose, front-facing 3/4 view, 4-head-tall cute chibi proportions. Thin light gray border separating each grid cell.
+
+CHARACTER CONSISTENCY (identical across ALL 6 panels):
+- Young woman approximately 18-20 years old
+- Light warm skin tone
+- Big round sparkling warm brown eyes with white highlights
+- Small cute button nose
+- Warm gentle smile with rosy cheeks and subtle blush
+- Petite slim body, same face shape in every panel
+
+ART STYLE:
+- Hand-painted 2D anime game character illustration with soft 3D shading
+- Soft pastel color palette, low saturation, warm and cozy
+- Clean lines with soft gradient shading for volume
+- Cute, appealing, gentle aesthetic matching a cozy flower shop game
+- Soft warm lighting from top-left
+- Solid light warm cream background #FFF8F0 per panel
+- Chinese label text below each character
+
+GRID POSITIONS (left to right, top to bottom):
+
+[Row 1, Col 1] "自然少女" — Default outfit:
+- HAIR: Light brown short bob (shoulder length), small pink flower hair clip on left side
+- TOP: White short-sleeve apron over light pink round-collar puff-sleeve blouse
+- BOTTOM: Light blue denim A-line knee-length skirt
+- SHOES: White Mary Jane shoes with small straps
+- No accessories, clean and fresh
+
+[Row 1, Col 2] "花店小姐姐" — Professional florist:
+- HAIR: Light brown low ponytail tied with green ribbon, small wildflower behind right ear
+- TOP: Sage green linen gardening apron with tool pockets over cream long-sleeve blouse, sleeves rolled to elbows
+- BOTTOM: Khaki wide-leg cropped pants
+- SHOES: Brown leather ankle boots
+- ACCESSORIES: Leather gardening gloves tucked in apron pocket, small pruning shears at waist
+
+[Row 1, Col 3] "春日樱花" — Spring cherry blossom:
+- HAIR: Light brown soft high bun with loose side tendrils, cherry blossom branch hairpin with pink ribbon
+- TOP: Pale pink kimono-inspired wrap top with delicate sakura petal print at sleeves and collar
+- BOTTOM: White pleated midi skirt with soft pink gradient at hem
+- SHOES: Pink ballet flats with ribbon ties at ankles
+- ACCESSORIES: Cherry blossom petal dangle earrings, thin pink silk choker with tiny flower pendant
+
+[Row 2, Col 1] "夏日向日葵" — Summer sunflower:
+- HAIR: Light brown high bouncy ponytail with sunflower scrunchie, wispy bangs
+- DRESS: Bright yellow off-shoulder sundress with small sunflower embroidery pattern, white lace trim at hem
+- SHOES: Yellow strappy woven sandals
+- ACCESSORIES: Small tilted straw hat with yellow ribbon on head, sunflower woven bracelet on wrist
+
+[Row 2, Col 2] "复古花坊" — Vintage flower boutique:
+- HAIR: Light brown elegant finger waves (Marcel wave) with side part, vintage pearl and dark red rose hairpiece
+- TOP: Dark burgundy velvet fitted jacket with ivory lace collar and gold buttons
+- BOTTOM: Long dark green plaid skirt with lace petticoat peeking at hem
+- SHOES: Black Victorian lace-up ankle boots
+- ACCESSORIES: Pearl drop earrings, cameo brooch at collar, thin gold chain necklace, black lace fingerless gloves
+- MAKEUP: Subtle rose lip color and enhanced blush
+
+[Row 2, Col 3] "花之女王" — Queen of Flowers (legendary):
+- HAIR: Light brown elaborate flowing wavy hair reaching waist, tiny flowers (roses, lilies) woven throughout, magnificent fresh flower crown with roses, peonies, small butterflies
+- DRESS: White and gold strapless goddess gown with floral embroidery on bodice, floor-length layered skirt with petals forming at hem, golden vine waist sash
+- ACCESSORIES: Butterfly wing crystal earrings, golden vine arm bracelet, sheer flower petal cape trailing behind, golden flower scepter in hand
+- MAKEUP: Light golden eyeshadow, rose petal lip color, luminous blush with subtle sparkle
+- EFFECT: Soft ethereal golden glow aura and floating flower petals around character
