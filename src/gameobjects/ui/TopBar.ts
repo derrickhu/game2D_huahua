@@ -12,6 +12,7 @@ import { EventBus } from '@/core/EventBus';
 import { CurrencyManager } from '@/managers/CurrencyManager';
 import { FONT_FAMILY } from '@/config/Constants';
 import { TextureCache } from '@/utils/TextureCache';
+import { TweenManager, Ease } from '@/core/TweenManager';
 
 export const TOP_BAR_HEIGHT = 60;
 
@@ -311,5 +312,44 @@ export class TopBar extends PIXI.Container {
     if (n >= 10000) return (n / 10000).toFixed(1) + 'w';
     if (n >= 1000) return (n / 1000).toFixed(1) + 'k';
     return n.toString();
+  }
+
+  /** 获取花愿图标在 TopBar 内的中心坐标 */
+  getHuayuanIconPos(): { x: number; y: number } {
+    return { x: HYUAN_CX, y: CURRENCY_ICON_CY };
+  }
+
+  /** 获取花露图标在 TopBar 内的中心坐标 */
+  getHualuIconPos(): { x: number; y: number } {
+    return { x: HUALU_CX, y: CURRENCY_ICON_CY };
+  }
+
+  /** 花愿数值闪烁弹跳效果 */
+  flashHuayuan(): void {
+    this._flashText(this._huayuanText);
+  }
+
+  /** 花露数值闪烁弹跳效果 */
+  flashHualu(): void {
+    this._flashText(this._hualuText);
+  }
+
+  private _flashText(txt: PIXI.Text): void {
+    const origSX = txt.scale.x;
+    const origSY = txt.scale.y;
+    TweenManager.to({
+      target: txt.scale,
+      props: { x: origSX * 1.5, y: origSY * 1.5 },
+      duration: 0.15,
+      ease: Ease.easeOutQuad,
+      onComplete: () => {
+        TweenManager.to({
+          target: txt.scale,
+          props: { x: origSX, y: origSY },
+          duration: 0.25,
+          ease: Ease.easeOutBounce,
+        });
+      },
+    });
   }
 }

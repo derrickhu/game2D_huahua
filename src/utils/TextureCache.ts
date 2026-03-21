@@ -45,6 +45,14 @@ const MAIN_IMAGE_MAP: Record<string, string> = {
   icon_build:     'images/ui/icon_build.png',
   icon_operate:   'images/ui/icon_operate.png',
 
+  // ---- 棋盘 & 场景背景 ----
+  board_bg:       'images/ui/board_bg.png',
+  board_bar:      'images/ui/board_bar.png',
+  cell_locked:    'images/ui/cell_locked.png',
+  cell_peek:      'images/ui/cell_peek.png',
+  cell_key:       'images/ui/cell_key.png',
+  shop_scene_bg:  'images/ui/shop_scene_bg.png',
+
   // ---- 日常花系 (6张, 128x128 RGBA) ----
   flower_daily_1: 'images/flowers/daisy.png',
   flower_daily_2: 'images/flowers/sunflower.png',

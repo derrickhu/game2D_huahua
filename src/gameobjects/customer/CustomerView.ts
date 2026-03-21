@@ -15,7 +15,8 @@ import { COLORS, FONT_FAMILY, ACTIVE_CUSTOMER_SLOTS } from '@/config/Constants';
 import { ITEM_DEFS, Category, FlowerLine, DrinkLine } from '@/config/ItemConfig';
 import { TextureCache } from '@/utils/TextureCache';
 import { TweenManager, Ease } from '@/core/TweenManager';
-import { CustomerInstance, CustomerManager } from '@/managers/CustomerManager';
+import { EventBus } from '@/core/EventBus';
+import { CustomerInstance } from '@/managers/CustomerManager';
 
 const SLOT_SIZE = 52;
 const SLOT_GAP = 8;
@@ -317,7 +318,9 @@ export class CustomerView extends PIXI.Container {
     btn.zIndex = 999;
     btn.on('pointertap', () => {
       if (this._customer) {
-        CustomerManager.deliver(this._customer.uid);
+        const globalPos = this.toGlobal(new PIXI.Point(0, 0));
+        EventBus.emit('customer:requestDeliver', this._customer.uid, this._customer, globalPos);
+        btn.eventMode = 'none';
       }
     });
 

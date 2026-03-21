@@ -185,13 +185,8 @@ class BoardManagerClass {
 
     // 来源格必须是已开放格
     if (src.state !== CellState.OPEN) return false;
-    // 目标格可以是 OPEN 或 PEEK（跨格合成）
+    // 目标格可以是 OPEN 或 PEEK（跨格合成，无距离限制）
     if (dst.state !== CellState.OPEN && dst.state !== CellState.PEEK) return false;
-
-    // PEEK 跨格合成要求两格相邻
-    if (dst.state === CellState.PEEK) {
-      if (!this._isAdjacent(src, dst)) return false;
-    }
 
     return true;
   }
@@ -331,36 +326,38 @@ class BoardManagerClass {
     return cell?.state === CellState.KEY ? cell.keyPrice : 0;
   }
 
-  /** 合成波及解锁 */
+  /** 合成波及：周围 3×3 的 FOG 格，有物品→PEEK，无物品→直接 OPEN */
   private _checkRippleUnlock(centerIndex: number): void {
     const center = this.cells[centerIndex];
-    const resultDef = center.itemId ? ITEM_DEFS.get(center.itemId) : null;
-    const resultLevel = resultDef?.level || 1;
+    const neighbors3x3 = this._getNeighbors3x3(center.row, center.col);
 
-    // 根据合成结果等级决定解锁数量
-    const unlockCount = resultLevel >= 3 ? 2 : 1;
+    const peeked: number[] = [];
+    for (const cell of neighbors3x3) {
+      if (cell.state === CellState.FOG) {
+        if (cell.itemId) {
+          cell.state = CellState.PEEK;
+          peeked.push(cell.index);
+        } else {
+          cell.state = CellState.OPEN;
+          EventBus.emit('board:cellUnlocked', cell.index);
+        }
+      }
+    }
 
-    const neighbors = this._getNeighbors(center.row, center.col);
-    const candidates = neighbors
-      .filter(c => c.state === CellState.FOG || c.state === CellState.PEEK)
-      .sort((a, b) => a.unlockPriority - b.unlockPriority);
-
-    let unlocked = 0;
-    for (const cell of candidates) {
-      if (unlocked >= unlockCount) break;
-      cell.state = CellState.OPEN;
-      unlocked++;
-      EventBus.emit('board:cellUnlocked', cell.index);
+    if (peeked.length > 0) {
+      EventBus.emit('board:cellsPeeked', peeked);
     }
   }
 
-  /** 获取相邻格子（上下左右） */
-  private _getNeighbors(row: number, col: number): CellData[] {
-    const dirs = [[-1, 0], [1, 0], [0, -1], [0, 1]];
+  /** 获取 3×3 邻域（8 方向） */
+  private _getNeighbors3x3(row: number, col: number): CellData[] {
     const result: CellData[] = [];
-    for (const [dr, dc] of dirs) {
-      const cell = this.getCell(row + dr, col + dc);
-      if (cell) result.push(cell);
+    for (let dr = -1; dr <= 1; dr++) {
+      for (let dc = -1; dc <= 1; dc++) {
+        if (dr === 0 && dc === 0) continue;
+        const cell = this.getCell(row + dr, col + dc);
+        if (cell) result.push(cell);
+      }
     }
     return result;
   }

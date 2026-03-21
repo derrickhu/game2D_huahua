@@ -8,6 +8,7 @@
  * - 前2位客人为「服务中」（可交付），后续为「排队中」（预览需求）
  */
 import * as PIXI from 'pixi.js';
+import { Game } from '@/core/Game';
 import { CustomerView, CARD_W } from './CustomerView';
 import { CustomerInstance, CustomerManager } from '@/managers/CustomerManager';
 import { EventBus } from '@/core/EventBus';
@@ -155,8 +156,10 @@ export class CustomerScrollArea extends PIXI.Container {
     return -(contentW - this._viewWidth);
   }
 
+  private _onRawMove: ((e: any) => void) | null = null;
+  private _onRawUp: ((e: any) => void) | null = null;
+
   private _setupInteraction(): void {
-    // 创建一个透明的交互背景
     const hitArea = new PIXI.Graphics();
     hitArea.beginFill(0xFFFFFF, 0.001);
     hitArea.drawRect(0, 0, this._viewWidth, AREA_H);
@@ -164,6 +167,8 @@ export class CustomerScrollArea extends PIXI.Container {
     hitArea.eventMode = 'static';
     hitArea.cursor = 'grab';
     this.addChildAt(hitArea, 0);
+
+    const canvas = Game.app.view as any;
 
     hitArea.on('pointerdown', (e: PIXI.FederatedPointerEvent) => {
       this._isDragging = true;
@@ -173,35 +178,60 @@ export class CustomerScrollArea extends PIXI.Container {
       this._lastDragX = e.globalX;
       this._lastDragTime = Date.now();
       this._velocity = 0;
+
+      this._cleanupRawEvents();
+
+      this._onRawMove = (rawE: any) => {
+        if (!this._isDragging) return;
+        const gx = this._rawToDesignX(rawE);
+
+        const dx = gx - this._dragStartX;
+        if (Math.abs(dx) > 5) this._hasMoved = true;
+
+        const now = Date.now();
+        const dtMs = Math.max(1, now - this._lastDragTime);
+        this._velocity = (gx - this._lastDragX) / dtMs * 16;
+        this._lastDragX = gx;
+        this._lastDragTime = now;
+
+        let newX = this._scrollStartX + dx;
+        const minX = this._getMinScrollX();
+        if (newX > 0) newX *= 0.3;
+        if (newX < minX) newX = minX + (newX - minX) * 0.3;
+        this._scrollContent.x = newX;
+      };
+
+      this._onRawUp = () => {
+        this._isDragging = false;
+        this._cleanupRawEvents();
+      };
+
+      canvas.addEventListener('pointermove', this._onRawMove);
+      canvas.addEventListener('pointerup', this._onRawUp);
+      canvas.addEventListener('pointercancel', this._onRawUp);
     });
+  }
 
-    hitArea.on('globalpointermove', (e: PIXI.FederatedPointerEvent) => {
-      if (!this._isDragging) return;
+  private _rawToDesignX(e: any): number {
+    const rect = (Game.app.view as any).getBoundingClientRect
+      ? (Game.app.view as any).getBoundingClientRect()
+      : { left: 0, width: Game.screenWidth };
+    const clientX = e.clientX ?? e.pageX ?? (e.changedTouches?.[0]?.clientX ?? 0);
+    const ratio = Game.designWidth / (rect.width || Game.screenWidth);
+    return (clientX - rect.left) * ratio;
+  }
 
-      const dx = e.globalX - this._dragStartX;
-      if (Math.abs(dx) > 5) this._hasMoved = true;
-
-      // 计算速度
-      const now = Date.now();
-      const dtMs = Math.max(1, now - this._lastDragTime);
-      this._velocity = (e.globalX - this._lastDragX) / dtMs * 16; // 归一化到帧
-      this._lastDragX = e.globalX;
-      this._lastDragTime = now;
-
-      // 应用滚动（带阻尼的过界拖拽）
-      let newX = this._scrollStartX + dx;
-      const minX = this._getMinScrollX();
-      if (newX > 0) newX *= 0.3;
-      if (newX < minX) newX = minX + (newX - minX) * 0.3;
-
-      this._scrollContent.x = newX;
-    });
-
-    const endDrag = () => {
-      this._isDragging = false;
-    };
-    hitArea.on('pointerup', endDrag);
-    hitArea.on('pointerupoutside', endDrag);
+  private _cleanupRawEvents(): void {
+    const canvas = Game.app.view as any;
+    if (this._onRawMove) {
+      canvas.removeEventListener('pointermove', this._onRawMove);
+      this._onRawMove = null;
+    }
+    if (this._onRawUp) {
+      canvas.removeEventListener('pointerup', this._onRawUp);
+      canvas.removeEventListener('pointercancel', this._onRawUp);
+      this._onRawUp = null;
+    }
   }
 
   private _bindEvents(): void {

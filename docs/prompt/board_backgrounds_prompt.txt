@@ -1,0 +1,74 @@
+== IMAGE 1: BOARD BACKGROUND (棋盘底图) ==
+
+A seamless light-colored wooden tabletop surface, viewed from directly above (top-down flat view). This is the work table in a cozy flower shop where flowers are arranged. The wood grain runs horizontally with very subtle, fine texture.
+
+STYLE:
+- Warm birch/light oak wood tone, pale cream-beige color (#F5E6D0 to #EDD8C2)
+- Very LOW saturation — the wood should look bleached/whitewashed, almost like a Scandinavian wood table
+- Fine grain texture visible but NOT distracting — subtle enough that colorful flower items placed on top will pop
+- Slight natural wood knot patterns (1-2 small ones) for organic feel
+- Soft warm lighting from above, even illumination, no strong shadows
+- Faint plank seam lines (2-3 vertical hairlines) to suggest wooden planks joined together
+- Overall brightness: HIGH — this is a light, airy workspace
+- Aspect ratio: roughly 7:9 proportion (width:height), portrait orientation
+- NO TEXT, no labels, no objects on the table, no decorations — JUST the bare wood surface
+- No vignetting, no dark edges — uniform color throughout
+
+
+== IMAGE 2: LOCKED CELL OVERLAY (锁定格遮罩 - 牛皮纸花材包裹) ==
+
+A single cute gift package / wrapped parcel viewed from directly above (top-down view), sitting on a solid bright magenta #FF00FF background. This represents an unopened flower material delivery in a cozy flower shop game.
+
+DESIGN:
+- A square-ish wrapped package made of warm kraft/brown paper (#C4A882 to #A0845C)
+- Tied with natural jute twine/hemp rope in a simple cross pattern with a small bow on top
+- A tiny dried flower sprig (lavender or baby's breath) tucked into the twine bow
+- The kraft paper has subtle crinkle/fold texture, slightly rounded puffy corners
+- Small cute circular wax seal or stamp in warm coral color (#FF8C69) at the center of the bow
+- Soft warm lighting, gentle shadow beneath the package
+- Cute hand-painted 2D anime game style with soft 3D volume, matching flower shop aesthetic
+- The package should look inviting, like a present waiting to be opened
+- Size: fills about 85% of a square cell, with magenta background visible around edges
+- ENTIRE background MUST be solid #FF00FF magenta — every pixel not part of the package is magenta
+- NO TEXT, no labels, no writing anywhere
+
+
+== IMAGE 3: HALF-LOCKED CELL OVERLAY (半锁定格遮罩 - 薄纱蕾丝) ==
+
+A single piece of delicate white lace/tulle fabric draped flat, viewed from directly above (top-down view), on a solid bright magenta #FF00FF background. This represents a peek-through cover in a flower shop game — the player can glimpse what's underneath.
+
+DESIGN:
+- A square piece of white/ivory sheer lace fabric (#FFFFF0 to #FFF8F0)
+- Semi-transparent effect — the lace has an open-weave floral pattern with visible gaps
+- Delicate floral lace motifs: tiny roses, leaves, and vine scrollwork woven into the fabric
+- The edges are slightly irregular/scalloped (not a perfect square) for natural fabric feel
+- Very soft, ethereal, dreamy quality — like looking through a wedding veil
+- The lace should be about 30-40% opaque overall — enough to partially obscure but allow peeking
+- Soft gentle wrinkles/drape texture, not perfectly flat
+- Warm white tone, not cold/blue white
+- Cute delicate style matching a cozy flower shop aesthetic
+- Size: fills about 90% of a square cell
+- ENTIRE background MUST be solid #FF00FF magenta — every pixel not part of the lace is magenta
+- NO TEXT, no labels, no writing anywhere
+
+
+== IMAGE 4: SHOP SCENE BACKGROUND (花店经营场景背景) ==
+
+A wide panoramic interior view of a cozy flower shop, seen from the customer's perspective looking at the counter area. This serves as the background behind character portraits in a merge game.
+
+DESIGN:
+- WIDE landscape composition (aspect ratio approximately 3:1, very wide and short)
+- Warm cream/ivory walls (#FFF8F0) with subtle plaster texture
+- Left side: a charming arched window letting in soft golden sunlight, sheer curtain slightly drawn
+- Center: the main counter/display area — a warm wooden counter surface visible at the bottom
+- Right side: wooden shelving with a few small potted plants and flower vases (blurred/soft focus)
+- Upper area: hanging dried flower bundles, a small vintage pendant lamp with warm glow
+- A few small decorative elements on the wall: a tiny framed botanical print, a small wall-mounted flower basket
+- Color palette: warm cream walls, honey wood tones, soft green plants, muted coral/pink flower accents
+- Lighting: warm golden hour atmosphere, sunbeams creating soft light patches
+- Depth of field: background elements are slightly soft/blurred (bokeh), keeping focus on the mid-ground where characters will be placed
+- Overall feeling: warm, inviting, cozy, like stepping into a charming neighborhood flower shop
+- The image should work as a BACKDROP — not too busy, not too plain, leaving space for character portraits in the foreground
+- Style: soft painted illustration, gentle watercolor-like edges, warm color grading
+- NO TEXT, no labels, no characters/people, no writing anywhere
+- NO dark areas — keep everything bright and airy

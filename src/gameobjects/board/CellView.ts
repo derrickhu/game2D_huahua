@@ -4,14 +4,15 @@
 import * as PIXI from 'pixi.js';
 import { BoardMetrics, COLORS, FONT_FAMILY } from '@/config/Constants';
 import { CellState } from '@/config/BoardLayout';
+import { TextureCache } from '@/utils/TextureCache';
 
 export class CellView extends PIXI.Container {
   readonly cellIndex: number;
 
   private _bg: PIXI.Graphics;
-  private _border: PIXI.Graphics;
-  private _fogOverlay: PIXI.Graphics | null = null;
-  private _keyIcon: PIXI.Text | null = null;
+  private _cornerBrackets: PIXI.Container | null = null;
+  private _fogOverlay: PIXI.Container | null = null;
+  private _keyIcon: PIXI.Container | null = null;
   private _state: CellState = CellState.OPEN;
 
   constructor(cellIndex: number) {
@@ -21,10 +22,6 @@ export class CellView extends PIXI.Container {
     this._bg = new PIXI.Graphics();
     this.addChild(this._bg);
 
-    this._border = new PIXI.Graphics();
-    this.addChild(this._border);
-
-    // 立即绘制初始状态
     this._redraw();
   }
 
@@ -39,98 +36,100 @@ export class CellView extends PIXI.Container {
   }
 
   setHighlight(on: boolean): void {
-    const cs = BoardMetrics.cellSize;
-    this._border.clear();
+    if (this._cornerBrackets) {
+      this.removeChild(this._cornerBrackets);
+      this._cornerBrackets.destroy();
+      this._cornerBrackets = null;
+    }
     if (on) {
-      this._border.lineStyle(2.5, 0xFF8C69, 0.9);
-      this._border.drawRoundedRect(0, 0, cs, cs, 8);
-    } else {
-      this._drawBorder();
-    }
-  }
+      const cs = BoardMetrics.cellSize;
+      const container = new PIXI.Container();
+      const len = cs * 0.30;
+      const thick = 5;
+      const color = 0xFFAA00;
+      const off = -2;
 
-  private _drawBorder(): void {
-    const cs = BoardMetrics.cellSize;
-    this._border.clear();
-    if (this._state === CellState.OPEN) {
-      // 开放格：极淡的细线边框
-      this._border.lineStyle(1, COLORS.CELL_BORDER, 0.3);
-      this._border.drawRoundedRect(0, 0, cs, cs, 8);
+      const drawCorner = (x1: number, y1: number, x2: number, y2: number, x3: number, y3: number) => {
+        const g = new PIXI.Graphics();
+        g.beginFill(color);
+        const vx = Math.min(x1, x2), vy = Math.min(y1, y2);
+        const vw = Math.abs(x2 - x1) || thick;
+        const vh = Math.abs(y2 - y1) || thick;
+        g.drawRoundedRect(vx, vy, vw, vh, 2);
+        const hx = Math.min(x2, x3), hy = Math.min(y2, y3);
+        const hw = Math.abs(x3 - x2) || thick;
+        const hh = Math.abs(y3 - y2) || thick;
+        g.drawRoundedRect(hx, hy, hw, hh, 2);
+        g.endFill();
+        container.addChild(g);
+      };
+
+      drawCorner(off, off + len, off, off, off + len, off);
+      drawCorner(cs - off - thick, off + len, cs - off - thick, off, cs - off - len, off);
+      drawCorner(off, cs - off - len, off, cs - off - thick, off + len, cs - off - thick);
+      drawCorner(cs - off - thick, cs - off - len, cs - off - thick, cs - off - thick, cs - off - len, cs - off - thick);
+
+      this.addChild(container);
+      this._cornerBrackets = container;
     }
-    // 迷雾/钥匙/窥视格不画边框，靠背景色区分
   }
 
   private _redraw(): void {
     const cs = BoardMetrics.cellSize;
 
-    // 背景
     this._bg.clear();
-    switch (this._state) {
-      case CellState.OPEN:
-        this._bg.beginFill(0xFFFBF5, 0.9);
-        this._bg.drawRoundedRect(0, 0, cs, cs, 8);
-        this._bg.endFill();
-        break;
-      case CellState.FOG:
-        this._bg.beginFill(0xD8CCBE, 0.7);
-        this._bg.drawRoundedRect(0, 0, cs, cs, 8);
-        this._bg.endFill();
-        break;
-      case CellState.PEEK:
-        this._bg.beginFill(0xEDE6DD, 0.8);
-        this._bg.drawRoundedRect(0, 0, cs, cs, 8);
-        this._bg.endFill();
-        break;
-      case CellState.KEY:
-        this._bg.beginFill(0xFFF3D0, 0.85);
-        this._bg.drawRoundedRect(0, 0, cs, cs, 8);
-        this._bg.endFill();
-        break;
-    }
+    this._bg.beginFill(0xFFFBF5, 0.55);
+    this._bg.drawRoundedRect(0, 0, cs, cs, 8);
+    this._bg.endFill();
 
-    this._drawBorder();
-
-    // 清理覆盖层
     if (this._fogOverlay) {
       this.removeChild(this._fogOverlay);
-      this._fogOverlay.destroy();
+      this._fogOverlay.destroy({ children: true });
       this._fogOverlay = null;
     }
     if (this._keyIcon) {
       this.removeChild(this._keyIcon);
-      this._keyIcon.destroy();
+      this._keyIcon.destroy({ children: true });
       this._keyIcon = null;
     }
 
-    // 迷雾格：加细微纹理点
     if (this._state === CellState.FOG) {
-      this._fogOverlay = new PIXI.Graphics();
-      const step = cs / 4;
-      for (let x = step; x < cs; x += step) {
-        for (let y = step; y < cs; y += step) {
-          this._fogOverlay.beginFill(0xBBAAAA, 0.25);
-          this._fogOverlay.drawCircle(x, y, 2);
-          this._fogOverlay.endFill();
-        }
+      const lockTex = TextureCache.get('cell_locked');
+      if (lockTex) {
+        const sp = new PIXI.Sprite(lockTex);
+        const fitSize = cs * 0.72;
+        const scale = Math.min(fitSize / lockTex.width, fitSize / lockTex.height);
+        sp.scale.set(scale);
+        sp.anchor.set(0.5, 0.5);
+        sp.position.set(cs / 2, cs / 2);
+        this._fogOverlay = sp;
+      } else {
+        const g = new PIXI.Graphics();
+        g.beginFill(0xD8CCBE, 0.5);
+        g.drawRoundedRect(4, 4, cs - 8, cs - 8, 6);
+        g.endFill();
+        this._fogOverlay = g;
       }
       this.addChild(this._fogOverlay);
     }
 
-    // 钥匙格
     if (this._state === CellState.KEY) {
-      this._keyIcon = new PIXI.Text('🔑', { fontSize: 20 });
-      this._keyIcon.anchor.set(0.5, 0.5);
-      this._keyIcon.position.set(cs / 2, cs / 2);
+      const keyTex = TextureCache.get('cell_key');
+      if (keyTex) {
+        const sp = new PIXI.Sprite(keyTex);
+        const fitSize = cs * 0.72;
+        const scale = Math.min(fitSize / keyTex.width, fitSize / keyTex.height);
+        sp.scale.set(scale);
+        sp.anchor.set(0.5, 0.5);
+        sp.position.set(cs / 2, cs / 2);
+        this._keyIcon = sp;
+      } else {
+        const fallback = new PIXI.Text('📤', { fontSize: 20 });
+        fallback.anchor.set(0.5, 0.5);
+        fallback.position.set(cs / 2, cs / 2);
+        this._keyIcon = fallback;
+      }
       this.addChild(this._keyIcon);
-    }
-
-    // 窥视格：半透明遮罩
-    if (this._state === CellState.PEEK) {
-      this._fogOverlay = new PIXI.Graphics();
-      this._fogOverlay.beginFill(0xCCC0B0, 0.25);
-      this._fogOverlay.drawRoundedRect(0, 0, cs, cs, 8);
-      this._fogOverlay.endFill();
-      this.addChild(this._fogOverlay);
     }
   }
 }

@@ -26,8 +26,8 @@ export const BoardMetrics = {
 // 兼容旧引用的 getter
 export function getCellSize(): number { return BoardMetrics.cellSize; }
 
-/** 底部信息栏高度 */
-export const INFO_BAR_HEIGHT = 100;
+/** 底部信息栏高度（与 ItemInfoBar 默认高度对齐，供棋盘布局预留） */
+export const INFO_BAR_HEIGHT = 112;
 
 /**
  * 根据实际屏幕尺寸重新计算棋盘布局参数，需在 Game.init 之后调用

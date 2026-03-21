@@ -154,11 +154,54 @@ class PlatformServiceClass {
 
   // ═══════════════ 分享 ═══════════════
 
-  /** 主动分享 */
+  /** 主动分享（fire-and-forget） */
   shareAppMessage(opts: { title: string; imageUrl?: string; query?: string }): void {
     try {
       this._api?.shareAppMessage?.(opts);
     } catch (_) {}
+  }
+
+  /**
+   * 主动分享并等待结果（通过 onHide/onShow 时间差判断）。
+   * 微信已移除分享成功回调，此方法用时间差启发式判断：
+   * 离开 >2s 视为分享成功，否则视为取消。
+   * @returns true = 可能已分享，false = 取消或未分享
+   */
+  shareAndWait(opts: { title: string; imageUrl?: string; query?: string }): Promise<boolean> {
+    return new Promise<boolean>((resolve) => {
+      if (!this._api) {
+        resolve(true);
+        return;
+      }
+
+      let hideTime = 0;
+      const SHARE_MIN_MS = 2000;
+
+      const onHide = () => {
+        hideTime = Date.now();
+      };
+
+      const onShow = () => {
+        cleanup();
+        const elapsed = Date.now() - hideTime;
+        resolve(elapsed >= SHARE_MIN_MS);
+      };
+
+      const cleanup = () => {
+        try { this._api?.offHide?.(onHide); } catch (_) {}
+        try { this._api?.offShow?.(onShow); } catch (_) {}
+      };
+
+      this._api.onHide(onHide);
+      this._api.onShow(onShow);
+
+      try {
+        this._api.shareAppMessage(opts);
+      } catch (_) {
+        cleanup();
+        resolve(false);
+      }
+    });
   }
 
   /** 注册被动分享（右上角"分享"） */

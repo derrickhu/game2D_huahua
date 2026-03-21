@@ -18,11 +18,11 @@ import { DecorationManager } from '@/managers/DecorationManager';
 import { TextureCache } from '@/utils/TextureCache';
 
 /** 底部栏总高度（含安全区） */
-export const INFO_BAR_HEIGHT = 100;
+export const INFO_BAR_HEIGHT = 112;
 
 
-const SELL_BTN_W = 64;
-const SELL_BTN_H = 36;
+const SELL_BTN_W = 78;
+const SELL_BTN_H = 42;
 
 /** 侧边圆形按钮半径 */
 const SIDE_BTN_R = 46;
@@ -178,7 +178,7 @@ export class ItemInfoBar extends PIXI.Container {
     const midL = SIDE_PAD + SIDE_BTN_R + 14;
     const midR = DESIGN_WIDTH - SIDE_PAD - SIDE_BTN_R - 14;
     const midW = midR - midL;
-    const midH = 52;
+    const midH = 56;
     const cy = this._contentCY;
 
     const bg = new PIXI.Graphics();
@@ -188,7 +188,7 @@ export class ItemInfoBar extends PIXI.Container {
     this._hintContainer.addChild(bg);
 
     const hint = new PIXI.Text('点击任意物品查看详情', {
-      fontSize: 18,
+      fontSize: 21,
       fill: 0xC0A898,
       fontFamily: FONT_FAMILY,
     });
@@ -208,34 +208,34 @@ export class ItemInfoBar extends PIXI.Container {
     const cy = this._contentCY;
 
     this._nameText = new PIXI.Text('', {
-      fontSize: 18,
+      fontSize: 22,
       fill: COLORS.TEXT_DARK,
       fontFamily: FONT_FAMILY,
       fontWeight: 'bold',
     });
     this._nameText.anchor.set(0, 0.5);
-    this._nameText.position.set(infoX, cy - 12);
+    this._nameText.position.set(infoX, cy - 14);
     this._infoContainer.addChild(this._nameText);
 
     this._levelText = new PIXI.Text('', {
-      fontSize: 14,
+      fontSize: 17,
       fill: COLORS.BUTTON_PRIMARY,
       fontFamily: FONT_FAMILY,
       fontWeight: 'bold',
     });
     this._levelText.anchor.set(0, 0.5);
-    this._levelText.position.set(infoX, cy - 12);
+    this._levelText.position.set(infoX, cy - 14);
     this._infoContainer.addChild(this._levelText);
 
     this._descText = new PIXI.Text('', {
-      fontSize: 12,
+      fontSize: 15,
       fill: COLORS.TEXT_LIGHT,
       fontFamily: FONT_FAMILY,
       wordWrap: true,
-      wordWrapWidth: 320,
+      wordWrapWidth: 300,
     });
     this._descText.anchor.set(0, 0.5);
-    this._descText.position.set(infoX, cy + 12);
+    this._descText.position.set(infoX, cy + 15);
     this._infoContainer.addChild(this._descText);
 
     this.addChild(this._infoContainer);
@@ -245,18 +245,18 @@ export class ItemInfoBar extends PIXI.Container {
 
   private _buildChainBtn(): void {
     this._chainBtn = new PIXI.Container();
-    const CHAIN_W = 66;
-    const CHAIN_H = 34;
+    const CHAIN_W = 84;
+    const CHAIN_H = 42;
     const cx = DESIGN_WIDTH - SIDE_PAD - SIDE_BTN_R - 14 - SELL_BTN_W - 10 - CHAIN_W / 2;
 
     const bg = new PIXI.Graphics();
     bg.beginFill(0x8BB8D0);
-    bg.drawRoundedRect(-CHAIN_W / 2, -CHAIN_H / 2, CHAIN_W, CHAIN_H, 10);
+    bg.drawRoundedRect(-CHAIN_W / 2, -CHAIN_H / 2, CHAIN_W, CHAIN_H, 12);
     bg.endFill();
     this._chainBtn.addChild(bg);
 
     const text = new PIXI.Text('合成线', {
-      fontSize: 12, fill: 0xFFFFFF, fontFamily: FONT_FAMILY, fontWeight: 'bold',
+      fontSize: 15, fill: 0xFFFFFF, fontFamily: FONT_FAMILY, fontWeight: 'bold',
     });
     text.anchor.set(0.5, 0.5);
     this._chainBtn.addChild(text);
@@ -279,12 +279,12 @@ export class ItemInfoBar extends PIXI.Container {
 
     const bg = new PIXI.Graphics();
     bg.beginFill(0xFF8C69);
-    bg.drawRoundedRect(-SELL_BTN_W / 2, -SELL_BTN_H / 2, SELL_BTN_W, SELL_BTN_H, 10);
+    bg.drawRoundedRect(-SELL_BTN_W / 2, -SELL_BTN_H / 2, SELL_BTN_W, SELL_BTN_H, 12);
     bg.endFill();
     this._sellBtn.addChild(bg);
 
     const text = new PIXI.Text('出售', {
-      fontSize: 14, fill: 0xFFFFFF, fontFamily: FONT_FAMILY, fontWeight: 'bold',
+      fontSize: 16, fill: 0xFFFFFF, fontFamily: FONT_FAMILY, fontWeight: 'bold',
     });
     text.anchor.set(0.5, 0.5);
     this._sellBtn.addChild(text);

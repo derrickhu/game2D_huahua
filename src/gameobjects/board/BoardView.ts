@@ -12,6 +12,7 @@ import { BoardManager } from '@/managers/BoardManager';
 import { MergeManager } from '@/managers/MergeManager';
 import { BuildingManager } from '@/managers/BuildingManager';
 import { CurrencyManager } from '@/managers/CurrencyManager';
+import { Platform } from '@/core/PlatformService';
 import { TextureCache } from '@/utils/TextureCache';
 import { CellView } from './CellView';
 import { ItemView } from './ItemView';
@@ -19,11 +20,13 @@ import { ConfirmDialog } from '../ui/ConfirmDialog';
 import { ToastMessage } from '../ui/ToastMessage';
 import { WarehouseManager } from '@/managers/WarehouseManager';
 import { MergeGuideLineSystem } from '@/systems/MergeGuideLineSystem';
+import { MergeHintSystem } from '@/systems/MergeHintSystem';
 import { SeasonSystem } from '@/systems/SeasonSystem';
 
 export class BoardView extends PIXI.Container {
   private _cellViews: CellView[] = [];
   private _itemViews: ItemView[] = [];
+  private _peekOverlays: PIXI.Sprite[] = [];
   private _dragGhost: PIXI.Container | null = null;
   private _dragSrcIndex = -1;
   private _dragHoverIndex = -1;
@@ -40,6 +43,8 @@ export class BoardView extends PIXI.Container {
   private _longPressTriggered = false;
   /** 合成引导线系统 */
   private _guideLineSystem: MergeGuideLineSystem;
+  /** 空闲合成提示系统 */
+  private _mergeHintSystem!: MergeHintSystem;
 
   constructor() {
     super();
@@ -49,14 +54,52 @@ export class BoardView extends PIXI.Container {
     this._bindEvents();
     this._setupInteraction();
     this._guideLineSystem = new MergeGuideLineSystem(this);
+    this._mergeHintSystem = new MergeHintSystem(this._itemViews);
   }
 
   private _drawBoardArea(): void {
-    const bg = new PIXI.Graphics();
-    bg.beginFill(COLORS.CELL_OPEN, 0.35);
-    bg.drawRoundedRect(0, 0, DESIGN_WIDTH, BoardMetrics.areaHeight, 16);
-    bg.endFill();
-    this.addChild(bg);
+    const w = DESIGN_WIDTH;
+    const h = BoardMetrics.areaHeight;
+    const BAR_H = 14;
+
+    // 木纹底图或纯色填充
+    const tex = TextureCache.get('board_bg');
+    if (tex) {
+      const sp = new PIXI.Sprite(tex);
+      sp.width = w;
+      sp.height = h;
+      const mask = new PIXI.Graphics();
+      mask.beginFill(0xFFFFFF);
+      mask.drawRoundedRect(0, 0, w, h, 8);
+      mask.endFill();
+      this.addChild(mask);
+      sp.mask = mask;
+      this.addChild(sp);
+    } else {
+      const bg = new PIXI.Graphics();
+      bg.beginFill(COLORS.CELL_OPEN, 0.35);
+      bg.drawRoundedRect(0, 0, w, h, 8);
+      bg.endFill();
+      this.addChild(bg);
+    }
+
+    // 装饰横条（上方紧贴棋盘顶部外侧，下方紧贴棋盘底部外侧）
+    const barTex = TextureCache.get('board_bar');
+    if (barTex) {
+      const topBar = new PIXI.Sprite(barTex);
+      topBar.width = w;
+      topBar.height = BAR_H;
+      topBar.anchor.set(0, 1);
+      topBar.position.set(0, 0);
+      this.addChild(topBar);
+
+      const botBar = new PIXI.Sprite(barTex);
+      botBar.width = w;
+      botBar.height = BAR_H;
+      botBar.anchor.set(0, 0);
+      botBar.position.set(0, h);
+      this.addChild(botBar);
+    }
   }
 
   private _buildGrid(): void {
@@ -84,6 +127,15 @@ export class BoardView extends PIXI.Container {
 
   /** 根据 BoardManager 数据刷新所有视图 */
   refresh(): void {
+    // 清理旧的 PEEK 丝带 overlay
+    for (const ov of this._peekOverlays) {
+      this.removeChild(ov);
+      ov.destroy();
+    }
+    this._peekOverlays.length = 0;
+
+    const cs = BoardMetrics.cellSize;
+
     for (let i = 0; i < BoardManager.cells.length; i++) {
       const cell = BoardManager.cells[i];
       const cellView = this._cellViews[i];
@@ -93,7 +145,7 @@ export class BoardView extends PIXI.Container {
 
       if (cell.state === CellState.PEEK && cell.itemId) {
         itemView.setItem(cell.itemId);
-        itemView.alpha = 0.5;
+        itemView.alpha = 1;
       } else if (cell.state === CellState.OPEN) {
         itemView.setItem(cell.itemId);
         itemView.alpha = 1;
@@ -115,6 +167,21 @@ export class BoardView extends PIXI.Container {
 
       // 客人锁定标记
       itemView.setLocked(cell.reserved);
+
+      // PEEK 丝带 overlay（叠在 ItemView 之上）
+      if (cell.state === CellState.PEEK) {
+        const peekTex = TextureCache.get('cell_peek');
+        if (peekTex) {
+          const sp = new PIXI.Sprite(peekTex);
+          const fitSize = cs * 0.95;
+          const scale = Math.min(fitSize / peekTex.width, fitSize / peekTex.height);
+          sp.scale.set(scale);
+          sp.anchor.set(0.5, 0.5);
+          sp.position.set(cellView.x + cs / 2, cellView.y + cs / 2);
+          this.addChild(sp);
+          this._peekOverlays.push(sp);
+        }
+      }
     }
   }
 
@@ -126,20 +193,24 @@ export class BoardView extends PIXI.Container {
         this._itemViews[i].setCooldown(cdInfo.remaining, cdInfo.total);
       }
     }
-    // 引导线闪烁更新
     const dt = Game.ticker.deltaMS / 1000;
     this._guideLineSystem.update(dt);
+    this._mergeHintSystem.update(dt);
   }
 
   // ========== 事件绑定 ==========
 
   private _bindEvents(): void {
     EventBus.on('board:merged', (_src: number, _dst: number, _resultId: string, resultCell: number) => {
+      this._mergeHintSystem.resetIdle();
       this.refresh();
       this._playMergeFlash(resultCell);
     });
     EventBus.on('board:moved', () => this.refresh());
     EventBus.on('board:cellUnlocked', () => this.refresh());
+    EventBus.on('board:cellsPeeked', (indices: number[]) => {
+      this._playFogToPeekAnim(indices);
+    });
     EventBus.on('board:itemPlaced', () => this.refresh());
     EventBus.on('board:itemRemoved', () => this.refresh());
     EventBus.on('board:initialized', () => this.refresh());
@@ -204,6 +275,8 @@ export class BoardView extends PIXI.Container {
 
     // ---- pointerdown：通过 PixiJS 容器事件做命中测试 ----
     this.on('pointerdown', (e: PIXI.FederatedPointerEvent) => {
+      this._mergeHintSystem.resetIdle();
+
       const localPos = this.toLocal(e.global);
       const cellIdx = this._hitTestCell(localPos.x, localPos.y);
       if (cellIdx < 0) return;
@@ -532,34 +605,27 @@ export class BoardView extends PIXI.Container {
     EventBus.emit('board:selectionCleared');
   }
 
-  /** 钥匙格点击 → 确认弹窗 → 扣金币 → 解锁 */
+  /** 转发解锁格点击 → 确认弹窗 → 分享好友 → 分享完成后解锁 */
   private async _handleKeyCellTap(cellIndex: number): Promise<void> {
-    const price = BoardManager.getKeyCellPrice(cellIndex);
-    if (price <= 0) return;
-
-    const gold = CurrencyManager.state.gold;
-    if (gold < price) {
-      ToastMessage.show(`金币不足（需要 ${price}💰）`);
-      this._shakeCell(cellIndex);
-      return;
-    }
-
     const confirmed = await ConfirmDialog.show(
       '解锁格子',
-      `花费 ${price} 金币解锁？\n当前金币：${gold}`,
-      `解锁（${price}💰）`,
+      '转发给好友即可解锁该格子',
+      '转发解锁',
       '取消',
     );
     if (!confirmed) return;
 
-    // 二次检查（弹窗期间金币可能变化）
-    if (CurrencyManager.state.gold < price) {
-      ToastMessage.show('金币不足');
-      return;
-    }
+    const shared = await Platform.shareAndWait({
+      title: '花语小筑 — 来帮我解锁新格子吧！',
+      query: `unlock_cell=${cellIndex}`,
+    });
 
-    CurrencyManager.addGold(-price);
-    BoardManager.unlockKeyCell(cellIndex);
+    if (shared) {
+      BoardManager.unlockKeyCell(cellIndex);
+      ToastMessage.show('解锁成功！');
+    } else {
+      ToastMessage.show('分享取消，未解锁');
+    }
   }
 
   // ========== 特效 ==========
@@ -604,6 +670,99 @@ export class BoardView extends PIXI.Container {
         flash.destroy();
       },
     });
+  }
+
+  /** FOG→PEEK 过渡动画：礼盒缩小消失 + 丝带+物品淡入 */
+  private _playFogToPeekAnim(indices: number[]): void {
+    const cs = BoardMetrics.cellSize;
+
+    for (let i = 0; i < indices.length; i++) {
+      const idx = indices[i];
+      const cellView = this._cellViews[idx];
+      if (!cellView) continue;
+
+      const delay = i * 0.12;
+
+      // 在旧 cellView 位置上创建一个临时礼盒精灵做消失动画
+      const lockTex = TextureCache.get('cell_locked');
+      if (lockTex) {
+        const oldGift = new PIXI.Sprite(lockTex);
+        const fitSize = cs * 0.72;
+        const scale = Math.min(fitSize / lockTex.width, fitSize / lockTex.height);
+        oldGift.scale.set(scale);
+        oldGift.anchor.set(0.5, 0.5);
+        oldGift.position.set(cellView.x + cs / 2, cellView.y + cs / 2);
+        this.addChild(oldGift);
+
+        // 礼盒旋转缩小消失
+        TweenManager.to({
+          target: oldGift,
+          props: { alpha: 0, rotation: 0.5 },
+          duration: 0.4,
+          delay,
+          ease: Ease.easeInBack,
+        });
+        TweenManager.to({
+          target: oldGift.scale,
+          props: { x: 0, y: 0 },
+          duration: 0.4,
+          delay,
+          ease: Ease.easeInBack,
+          onComplete: () => {
+            this.removeChild(oldGift);
+            oldGift.destroy();
+          },
+        });
+      }
+
+      // 延迟后刷新格子状态 + 显示新的丝带和物品（带弹出效果）
+      const refreshDelay = delay + 0.35;
+      const proxy = { t: 0 };
+      TweenManager.to({
+        target: proxy,
+        props: { t: 1 },
+        duration: 0.01,
+        delay: refreshDelay,
+        onComplete: () => {
+          // 刷新该格子的 CellView 和 ItemView
+          const cell = BoardManager.cells[idx];
+          if (cell) {
+            cellView.setState(cell.state);
+            const itemView = this._itemViews[idx];
+            if (cell.itemId && itemView) {
+              itemView.setItem(cell.itemId);
+              itemView.alpha = 1;
+            }
+
+            // PEEK 丝带 overlay
+            const peekTex = TextureCache.get('cell_peek');
+            if (cell.state === CellState.PEEK && peekTex) {
+              const ribbon = new PIXI.Sprite(peekTex);
+              const fitRibbon = cs * 0.95;
+              const rScale = Math.min(fitRibbon / peekTex.width, fitRibbon / peekTex.height);
+              ribbon.scale.set(0);
+              ribbon.anchor.set(0.5, 0.5);
+              ribbon.position.set(cellView.x + cs / 2, cellView.y + cs / 2);
+              ribbon.alpha = 0;
+              this.addChild(ribbon);
+              this._peekOverlays.push(ribbon);
+
+              TweenManager.to({
+                target: ribbon,
+                props: { alpha: 1 },
+                duration: 0.3,
+              });
+              TweenManager.to({
+                target: ribbon.scale,
+                props: { x: rScale, y: rScale },
+                duration: 0.4,
+                ease: Ease.easeOutBack,
+              });
+            }
+          }
+        },
+      });
+    }
   }
 
   /** 建筑产出动画 */
@@ -726,22 +885,19 @@ export class BoardView extends PIXI.Container {
     }
   }
 
-  /** 缓存可合成目标并高亮（仅计算一次） */
+  /** 缓存可合成目标（仅计算一次） */
   private _cacheAndHighlightTargets(srcIndex: number): void {
     this._mergeTargets.clear();
     for (let i = 0; i < BoardManager.cells.length; i++) {
       if (i === srcIndex) continue;
       if (BoardManager.canMerge(srcIndex, i)) {
         this._mergeTargets.add(i);
-        this._cellViews[i].setHighlight(true);
       }
     }
   }
 
   private _clearHighlights(): void {
-    for (const cv of this._cellViews) {
-      cv.setHighlight(false);
-    }
+    // no-op: merge targets no longer use cell highlight
   }
 
   /** 获取格子中心坐标 */

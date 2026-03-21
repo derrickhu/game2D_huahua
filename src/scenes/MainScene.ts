@@ -34,7 +34,6 @@ import { QuestPanel } from '@/gameobjects/ui/QuestPanel';
 import { OfflineRewardPanel } from '@/gameobjects/ui/OfflineRewardPanel';
 import { LevelUpPopup } from '@/gameobjects/ui/LevelUpPopup';
 import { ActivityBanner, BANNER_HEIGHT } from '@/gameobjects/ui/ActivityBanner';
-import { MergeHintSystem } from '@/systems/MergeHintSystem';
 import { ComboSystem } from '@/systems/ComboSystem';
 import { FlowerEasterEggSystem } from '@/systems/FlowerEasterEggSystem';
 import { MergeStatsSystem } from '@/systems/MergeStatsSystem';
@@ -83,7 +82,6 @@ export class MainScene implements Scene {
   private _activityBanner!: ActivityBanner;
 
   // ---- 体验增强系统 ----
-  private _mergeHintSystem!: MergeHintSystem;
   private _comboSystem!: ComboSystem;
   private _flowerEasterEgg!: FlowerEasterEggSystem;
   private _mergeStats!: MergeStatsSystem;
@@ -210,6 +208,16 @@ export class MainScene implements Scene {
   private _buildUI(): void {
     let y = Game.safeTop;
 
+    // 上半部分花店场景背景（从屏幕顶部 y=0 覆盖到棋盘顶部）
+    const sceneBgTex = TextureCache.get('shop_scene_bg');
+    if (sceneBgTex) {
+      const sceneBg = new PIXI.Sprite(sceneBgTex);
+      sceneBg.position.set(0, 0);
+      sceneBg.width = DESIGN_WIDTH;
+      sceneBg.height = BoardMetrics.topY;
+      this.container.addChild(sceneBg);
+    }
+
     // 顶部信息栏（紧贴安全区下方）
     this._topBar = new TopBar();
     this._topBar.position.set(0, y);
@@ -232,8 +240,8 @@ export class MainScene implements Scene {
     this._boardView = new BoardView();
     this.container.addChild(this._boardView);
 
-    // 底部物品信息栏（紧贴棋盘下方，填满剩余空间）
-    const barY = BoardMetrics.topY + BoardMetrics.areaHeight + 4;
+    // 底部物品信息栏（紧贴棋盘下方装饰条之后，填满剩余空间）
+    const barY = BoardMetrics.topY + BoardMetrics.areaHeight + 18;
     const barH = Game.logicHeight - barY;
     this._infoBar = new ItemInfoBar(barH);
     this._infoBar.position.set(0, barY);
@@ -255,16 +263,8 @@ export class MainScene implements Scene {
       this._warehousePanel.open();
     });
 
-    // 可合成提示系统
-    this._mergeHintSystem = new MergeHintSystem(this._boardView);
-
     // 连击系统
     this._comboSystem = new ComboSystem(this.container);
-
-    // 操作时通知提示系统重置空闲计时
-    EventBus.on('board:merged', () => this._mergeHintSystem.notifyInteraction());
-    EventBus.on('board:moved', () => this._mergeHintSystem.notifyInteraction());
-    EventBus.on('board:itemSelected', () => this._mergeHintSystem.notifyInteraction());
 
     // 花语合成彩蛋系统
     this._flowerEasterEgg = new FlowerEasterEggSystem(this.container);
@@ -361,7 +361,7 @@ export class MainScene implements Scene {
 
     // ═══════ 店主区域宽度 ═══════
     const OWNER_W = 140;  // 左侧店主区宽度
-    const CUSTOMER_LEFT = OWNER_W + 4; // 客人区起始 x
+    const CUSTOMER_LEFT = OWNER_W + 28; // 客人区起始 x（留间距）
 
     // 所有人物底边对齐的 Y 坐标（shopArea 内）
     const CHAR_BOTTOM_Y = 195;
@@ -376,16 +376,10 @@ export class MainScene implements Scene {
     this._ownerSprite.position.set(0, 0);
     this._ownerContainer.addChild(this._ownerSprite);
 
-    // 店主名字标签（同时承载 GM 激活的多次点击）
-    const ownerLabel = new PIXI.Text('💕 店主', {
-      fontSize: 11, fill: 0xFF8C69, fontFamily: FONT_FAMILY, fontWeight: 'bold',
-    });
-    ownerLabel.anchor.set(0.5, 0);
-    ownerLabel.position.set(0, 4);
-    ownerLabel.eventMode = 'static';
-    ownerLabel.cursor = 'pointer';
-    ownerLabel.on('pointerdown', () => GMManager.onTitleTap());
-    this._ownerContainer.addChild(ownerLabel);
+    // GM 激活点击移至店主精灵
+    this._ownerSprite.eventMode = 'static';
+    this._ownerSprite.cursor = 'pointer';
+    this._ownerSprite.on('pointerdown', () => GMManager.onTitleTap());
 
     // GM 入口按钮（隐藏于店主区域角落，激活后可见）
     const gmBtn = new PIXI.Text('🛠️', { fontSize: 12, fontFamily: FONT_FAMILY });
@@ -433,7 +427,7 @@ export class MainScene implements Scene {
 
     if (tex && this._ownerSprite) {
       this._ownerSprite.texture = tex;
-      const targetH = 160;
+      const targetH = 180;
       const scale = targetH / tex.height;
       this._ownerSprite.scale.set(scale);
     }
@@ -441,11 +435,139 @@ export class MainScene implements Scene {
 
   /** 绑定客人相关事件 */
   private _bindCustomerEvents(): void {
-    // CustomerScrollArea 内部已自行监听 customer:arrived/lockChanged/delivered
-    // 这里只处理交付后的 Toast 提示
+    // 点击"完成"后：先播放飞行动画，动画结束后再真正执行交付
+    EventBus.on('customer:requestDeliver', (uid: number, customer: any, globalPos: PIXI.Point) => {
+      const startLocal = this.container.toLocal(globalPos);
+
+      let pendingAnims = 0;
+      const onAnimDone = () => {
+        pendingAnims--;
+        if (pendingAnims <= 0) {
+          CustomerManager.deliver(uid);
+        }
+      };
+
+      // 花愿飞行动画
+      if (customer.huayuanReward > 0) {
+        pendingAnims++;
+        const targetPos = this._topBar.getHuayuanIconPos();
+        const endX = this._topBar.x + targetPos.x;
+        const endY = this._topBar.y + targetPos.y;
+        this._playRewardFly('icon_huayuan', startLocal.x, startLocal.y, endX, endY, customer.huayuanReward, () => {
+          this._topBar.flashHuayuan();
+          onAnimDone();
+        });
+      }
+
+      // 花露飞行动画（略微延迟）
+      if (customer.hualuReward > 0) {
+        pendingAnims++;
+        const targetPos = this._topBar.getHualuIconPos();
+        const endX = this._topBar.x + targetPos.x;
+        const endY = this._topBar.y + targetPos.y;
+        this._playRewardFly('icon_hualu', startLocal.x, startLocal.y - 10, endX, endY, customer.hualuReward, () => {
+          this._topBar.flashHualu();
+          onAnimDone();
+        }, 0.08);
+      }
+
+      // 无奖励时直接交付
+      if (pendingAnims === 0) {
+        CustomerManager.deliver(uid);
+      }
+    });
+
+    // 交付完成后的 Toast 提示
     EventBus.on('customer:delivered', (_uid: number, customer: any) => {
       ToastMessage.show(`${customer.name} 满意离开！🌸花愿+${customer.huayuanReward}${customer.hualuReward > 0 ? ` 💧花露+${customer.hualuReward}` : ''}`);
     });
+  }
+
+  /**
+   * 播放奖励图标飞行动画
+   * 生成多个小图标从起点散开，沿弧线飞向终点
+   */
+  private _playRewardFly(
+    texKey: string,
+    sx: number, sy: number,
+    ex: number, ey: number,
+    _amount: number,
+    onAllArrived: () => void,
+    initialDelay = 0,
+  ): void {
+    const tex = TextureCache.get(texKey);
+    const COUNT = Math.min(Math.max(3, Math.ceil(_amount / 5)), 8);
+    const ICON_SIZE = 28;
+    const FLY_DURATION = 0.5;
+    const STAGGER = 0.04;
+    let arrived = 0;
+
+    for (let i = 0; i < COUNT; i++) {
+      const icon = tex
+        ? new PIXI.Sprite(tex)
+        : new PIXI.Text('🌸', { fontSize: 20 });
+
+      icon.anchor.set(0.5);
+
+      // 计算目标 scale（让图标显示为 ICON_SIZE x ICON_SIZE）
+      let targetScale = 1;
+      if (icon instanceof PIXI.Sprite && tex) {
+        targetScale = ICON_SIZE / Math.max(tex.width, tex.height);
+      }
+
+      const randX = (Math.random() - 0.5) * 60;
+      const randY = (Math.random() - 0.5) * 40;
+      icon.position.set(sx + randX, sy + randY);
+      icon.alpha = 0;
+      icon.scale.set(targetScale * 0.3);
+
+      this.container.addChild(icon);
+
+      const delay = initialDelay + i * STAGGER;
+
+      TweenManager.to({
+        target: icon,
+        props: { alpha: 1 },
+        duration: 0.12,
+        delay,
+      });
+      TweenManager.to({
+        target: icon.scale,
+        props: { x: targetScale, y: targetScale },
+        duration: 0.2,
+        delay,
+        ease: Ease.easeOutBack,
+        onComplete: () => {
+          const cpx = (icon.x + ex) / 2 + (Math.random() - 0.5) * 80;
+          const cpy = Math.min(icon.y, ey) - 30 - Math.random() * 40;
+          const startX = icon.x;
+          const startY = icon.y;
+          const progress = { t: 0 };
+
+          TweenManager.to({
+            target: progress,
+            props: { t: 1 },
+            duration: FLY_DURATION,
+            ease: Ease.easeInQuad,
+            onUpdate: () => {
+              const t = progress.t;
+              const mt = 1 - t;
+              icon.x = mt * mt * startX + 2 * mt * t * cpx + t * t * ex;
+              icon.y = mt * mt * startY + 2 * mt * t * cpy + t * t * ey;
+              icon.scale.set(targetScale * (1 - t * 0.5));
+              icon.alpha = t < 0.8 ? 1 : 1 - (t - 0.8) / 0.2;
+            },
+            onComplete: () => {
+              icon.destroy();
+              arrived++;
+              if (arrived === COUNT) {
+                onAllArrived();
+              }
+            },
+          });
+        },
+      });
+    }
   }
 
   /** 绑定留存系统事件 */
@@ -668,7 +790,6 @@ export class MainScene implements Scene {
     this._boardView.updateCdDisplay();
     this._topBar.updateTimer();
     this._staminaPanel.updateTimer();
-    this._mergeHintSystem.update(dt);
     this._comboSystem.update(dt);
     this._hapticSystem.update(dt);
     ChallengeManager.update(dt);
