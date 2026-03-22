@@ -14,8 +14,8 @@ import { CustomerInstance, CustomerManager } from '@/managers/CustomerManager';
 import { EventBus } from '@/core/EventBus';
 import { COLORS, FONT_FAMILY, MAX_VISIBLE_CUSTOMERS } from '@/config/Constants';
 
-/** 卡片间距（客人之间留白） */
-const CARD_GAP = 26;
+/** 卡片间距（客人之间额外留白；中心距主要由 CustomerView.CARD_W 决定） */
+const CARD_GAP = 0;
 /** 滚动区域高度 */
 const AREA_H = 310;
 /** 惯性摩擦系数 */

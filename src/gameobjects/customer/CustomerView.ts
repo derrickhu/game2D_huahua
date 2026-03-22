@@ -3,11 +3,11 @@
  *
  * 布局（以 center(0,0) 为原点）:
  *
- *       大半身像                 <- 无框，直接浮在底色上
+ *       大半身像            ┌完成┐   <- 满足后：按钮在半身像右侧偏下（颈肩下，不与面板并排）
  *
- *   ┌── 需求面板（最多3格）──┐  ┌完成┐  <- 满足后按钮在面板右侧同排
- *   │ [🌸][🌸][🌸]          │  │ ✓ │
- *   └──────────────────────┘  └────┘
+ *   ┌──── 需求面板（放大，最多3格）────┐
+ *   │      [🌸] [🌸] [🌸]            │
+ *   └────────────────────────────────┘
  */
 import * as PIXI from 'pixi.js';
 import { COLORS, FONT_FAMILY, ACTIVE_CUSTOMER_SLOTS } from '@/config/Constants';
@@ -18,19 +18,32 @@ import { TweenManager, Ease } from '@/core/TweenManager';
 import { EventBus } from '@/core/EventBus';
 import { CustomerInstance } from '@/managers/CustomerManager';
 
-const SLOT_SIZE = 50;
-const SLOT_GAP = 6;
-/** 需求面板至少容纳 3 个槽位的宽度（含内边距） */
-const PANEL_W = SLOT_SIZE * 3 + SLOT_GAP * 2 + 20;
-const PANEL_H = 74;
-const PANEL_BTN_GAP = 10;
+/** 单格物品显示边长（3 个并排仍落在 PANEL_W 内） */
+const SLOT_SIZE = 66;
+const SLOT_GAP = 8;
+/** 需求面板至少容纳 3 个槽位（左右内边距略收，让给图标） */
+const PANEL_W = SLOT_SIZE * 3 + SLOT_GAP * 2 + 24;
+/** 比槽位略高，避免角标贴边 */
+const PANEL_H = SLOT_SIZE + 30;
 const COMPLETE_BTN_W = 88;
 const COMPLETE_BTN_H = 34;
+/**
+ * 「完成」按钮锚点在半身像右侧（脚点为 y=0，头像约高 160px 向上）
+ * 纵向约在颈肩下方；不与底部需求面板同一行
+ */
+const COMPLETE_BTN_X = 56;
+/** 约在颈肩下缘；下移约 2×按钮高度，避免贴额头 */
+const COMPLETE_BTN_Y = -45;
 
-export const CARD_W = Math.max(292, PANEL_W + PANEL_BTN_GAP + COMPLETE_BTN_W + 24);
-export const CARD_H = 248;
+/** 卡片水平占位：取「面板半宽」与「完成按钮右缘」较大者；不再用 300 下限以免客人间空一大截 */
+const CARD_LAYOUT_HALF = Math.max(PANEL_W / 2, COMPLETE_BTN_X + COMPLETE_BTN_W / 2);
+export const CARD_W = Math.max(
+  Math.ceil(PANEL_W + 4),
+  Math.ceil(CARD_LAYOUT_HALF * 2 + 8),
+);
+export const CARD_H = 278;
 
-const PANEL_Y = 6;
+const PANEL_Y = 8;
 const REWARD_BADGE_Y = -12;
 
 export class CustomerView extends PIXI.Container {
@@ -42,8 +55,8 @@ export class CustomerView extends PIXI.Container {
   private _completeBtn: PIXI.Container | null = null;
   private _bounceTween: { config: any; startValues: any; elapsed: number; delayRemaining: number } | null = null;
   private _queueIndex = 0;
-  /** 需求行左缘（相对 _infoPanel），供完成按钮与面板对齐 */
-  private _panelRowLeft = 0;
+  /** 当前卡片已绑定的客人 uid，用于 refresh 时避免全员重复播放入场动画 */
+  private _boundCustomerUid = -1;
 
   constructor() {
     super();
@@ -76,14 +89,19 @@ export class CustomerView extends PIXI.Container {
   }
 
   setCustomer(customer: CustomerInstance | null): void {
-    this._customer = customer;
     this._clearCompleteBtn();
 
     if (!customer) {
+      TweenManager.cancelTarget(this);
+      TweenManager.cancelTarget(this.scale);
+      this._boundCustomerUid = -1;
+      this._customer = null;
       this.visible = false;
       return;
     }
 
+    const prevUid = this._boundCustomerUid;
+    this._customer = customer;
     this.visible = true;
 
     const tex = TextureCache.get(`customer_${customer.typeId}`);
@@ -103,19 +121,51 @@ export class CustomerView extends PIXI.Container {
     this._rebuildInfoPanel();
 
     const isQueuing = this._queueIndex >= ACTIVE_CUSTOMER_SLOTS;
-    this.alpha = 0;
-    this.scale.set(0.6);
-    TweenManager.to({
-      target: this,
-      props: { alpha: isQueuing ? 0.6 : 1 },
-      duration: 0.3,
-    });
-    TweenManager.to({
-      target: this.scale,
-      props: { x: 1, y: 1 },
-      duration: 0.4,
-      ease: Ease.easeOutBack,
-    });
+    const targetAlpha = isQueuing ? 0.6 : 1;
+    const sameGuest = customer.uid === prevUid;
+
+    TweenManager.cancelTarget(this);
+    TweenManager.cancelTarget(this.scale);
+
+    if (sameGuest) {
+      // 仅需求/锁定状态等刷新：保持缩放，只平滑排队透明度
+      this.scale.set(1, 1);
+      TweenManager.to({
+        target: this,
+        props: { alpha: targetAlpha },
+        duration: 0.18,
+      });
+      return;
+    }
+
+    this._boundCustomerUid = customer.uid;
+    const wasShowingSomeone = prevUid >= 0 && this.alpha > 0.35;
+
+    if (wasShowingSomeone) {
+      // 队伍前移：此槽位换了人，用轻微变淡再亮代替全员 scale 弹跳
+      this.scale.set(1, 1);
+      this.alpha = Math.min(this.alpha, 0.72);
+      TweenManager.to({
+        target: this,
+        props: { alpha: targetAlpha },
+        duration: 0.22,
+      });
+    } else {
+      // 首次出现（新客人进入空槽）
+      this.alpha = 0;
+      this.scale.set(0.6);
+      TweenManager.to({
+        target: this,
+        props: { alpha: targetAlpha },
+        duration: 0.3,
+      });
+      TweenManager.to({
+        target: this.scale,
+        props: { x: 1, y: 1 },
+        duration: 0.4,
+        ease: Ease.easeOutBack,
+      });
+    }
   }
 
   refreshSlots(): void {
@@ -136,9 +186,8 @@ export class CustomerView extends PIXI.Container {
     // 奖励徽章（头像底部，半透明深色遮罩）
     this._buildRewardBadge();
 
-    const totalRowW = PANEL_W + (allDone ? PANEL_BTN_GAP + COMPLETE_BTN_W : 0);
-    const panelLeft = -totalRowW / 2;
-    this._panelRowLeft = panelLeft;
+    // 需求面板单独居中（宽度不含完成按钮）
+    const panelLeft = -PANEL_W / 2;
 
     // 面板背景（优先使用图片纹理）
     const panelTex = TextureCache.get('order_panel');
@@ -147,7 +196,7 @@ export class CustomerView extends PIXI.Container {
       panelBg.anchor.set(0.5, 0);
       panelBg.width = PANEL_W;
       panelBg.height = PANEL_H;
-      panelBg.position.set(panelLeft + PANEL_W / 2, 0);
+      panelBg.position.set(0, 0);
       this._infoPanel.addChild(panelBg);
     } else {
       const bg = new PIXI.Graphics();
@@ -172,7 +221,7 @@ export class CustomerView extends PIXI.Container {
       this._drawSlotItem(sx, slotY, slot.itemId, filled);
     }
 
-    // 全部满足 → 完成按钮在面板右侧、与面板垂直居中
+    // 全部满足 → 完成按钮在半身像右侧肩颈区域
     if (allDone) {
       this._showCompleteBtn();
     }
@@ -254,6 +303,22 @@ export class CustomerView extends PIXI.Container {
     const def = ITEM_DEFS.get(itemId);
     if (!def) return;
 
+    const slotCornerR = Math.max(8, Math.round(cs * 0.12));
+    const checkPad = Math.max(4, Math.round(cs * 0.07));
+    /** 满足：与棋盘订单格一致的浅绿底 + 更大对钩 */
+    const checkTarget = Math.min(40, Math.max(28, Math.round(cs * 0.46)));
+
+    if (filled) {
+      const mask = new PIXI.Graphics();
+      mask.beginFill(
+        COLORS.CELL_ORDER_MATCH_OVERLAY,
+        COLORS.CELL_ORDER_MATCH_OVERLAY_ALPHA,
+      );
+      mask.drawRoundedRect(x, y, cs, cs, slotCornerR);
+      mask.endFill();
+      this._infoPanel.addChild(mask);
+    }
+
     const texture = TextureCache.get(def.icon);
     if (texture) {
       const sprite = new PIXI.Sprite(texture);
@@ -301,24 +366,28 @@ export class CustomerView extends PIXI.Container {
       const badgeTex = TextureCache.get('ui_order_check_badge');
       if (badgeTex) {
         const sp = new PIXI.Sprite(badgeTex);
-        const target = 22;
-        const s = target / Math.max(badgeTex.width, badgeTex.height);
+        const s = checkTarget / Math.max(badgeTex.width, badgeTex.height);
         sp.scale.set(s);
-        sp.anchor.set(0.5, 0.5);
-        sp.position.set(x + cs - 6, y + cs - 6);
+        sp.anchor.set(1, 1);
+        sp.position.set(x + cs - checkPad, y + cs - checkPad);
         this._infoPanel.addChild(sp);
       } else {
+        const cr = Math.max(11, Math.round(checkTarget * 0.38));
+        const cx = x + cs - checkPad;
+        const cy = y + cs - checkPad;
         const check = new PIXI.Graphics();
         check.beginFill(0x4CAF50);
-        check.drawCircle(x + cs - 6, y + cs - 6, 9);
+        check.drawCircle(cx, cy, cr);
         check.endFill();
         this._infoPanel.addChild(check);
 
         const checkMark = new PIXI.Text('✓', {
-          fontSize: 11, fill: 0xFFFFFF, fontWeight: 'bold',
+          fontSize: Math.round(checkTarget * 0.48),
+          fill: 0xFFFFFF,
+          fontWeight: 'bold',
         });
         checkMark.anchor.set(0.5, 0.5);
-        checkMark.position.set(x + cs - 6, y + cs - 6);
+        checkMark.position.set(cx, cy);
         this._infoPanel.addChild(checkMark);
       }
     }
@@ -352,18 +421,24 @@ export class CustomerView extends PIXI.Container {
       btn.addChild(bg);
     }
 
-    const txt = new PIXI.Text('✓ 完成', {
-      fontSize: 13,
+    const txt = new PIXI.Text('完成', {
+      fontSize: 15,
       fill: 0xFFFFFF,
       fontFamily: FONT_FAMILY,
       fontWeight: 'bold',
+      stroke: 0x1b5e20,
+      strokeThickness: 3,
+      dropShadow: true,
+      dropShadowColor: 0x000000,
+      dropShadowAlpha: 0.35,
+      dropShadowBlur: 2,
+      dropShadowDistance: 1,
     });
     txt.anchor.set(0.5, 0.5);
     btn.addChild(txt);
 
-    // 与 _infoPanel 同坐标系：面板右侧 + 间距，纵向与面板中线对齐
-    const btnCenterX = this._panelRowLeft + PANEL_W + PANEL_BTN_GAP + BTN_W / 2;
-    const btnCenterY = PANEL_Y + PANEL_H / 2;
+    const btnCenterX = COMPLETE_BTN_X;
+    const btnCenterY = COMPLETE_BTN_Y;
     btn.position.set(btnCenterX, btnCenterY);
     btn.zIndex = 999;
     btn.on('pointertap', () => {
