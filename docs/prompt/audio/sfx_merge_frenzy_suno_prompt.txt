@@ -1,0 +1,5 @@
+用途说明：
+狂热模式触发时播放，连击达到很高次数时的高潮提示音。需要欢快、兴奋、有"爆发"感但仍然可爱，约 2~3 秒。
+
+Suno 提示词：
+A short exciting frenzy burst jingle for a cozy merge game. Rapid ascending sparkling arpeggios with bright bells, glockenspiel and tiny celebration fanfare. Feels like fireworks of flowers blooming, joyful and magical. More intense and energetic than a normal combo, but still warm and cute, not aggressive. 2-3 seconds, no vocals, no heavy drums, polished casual game celebration SFX.

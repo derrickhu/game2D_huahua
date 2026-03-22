@@ -1,0 +1,5 @@
+用途说明：
+合成成功时播放，两个物品拖到一起合成出更高级物品的瞬间。需要清脆、明亮、有小成就感，约 1~2 秒。
+
+Suno 提示词：
+A short bright cheerful chime sound effect for a cozy flower shop merge game. Crystal clear bell ding with a quick ascending two-note sparkle, magical and satisfying. Soft warm tone, cute and delicate, like successfully combining two flowers into something beautiful. 1-2 seconds, single hit, no melody, no beat, no vocals, clean and polished casual game SFX.

@@ -1,0 +1,5 @@
+用途说明：
+每日签到成功时播放。需要轻快、有"打卡完成"的愉悦感，约 1~2 秒。
+
+Suno 提示词：
+A short pleasant check-in confirmation sound for a cozy flower shop game. Quick bright three-note ascending chime with a soft bell ring at the end — like stamping a cute loyalty card. Light, happy, satisfying completion feeling. Warm and clean. 1-2 seconds, no vocals, no beat, polished casual game daily reward SFX.

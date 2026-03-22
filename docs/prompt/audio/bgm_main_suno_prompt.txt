@@ -1,0 +1,5 @@
+用途说明：
+适合游戏主玩法界面循环播放，覆盖合成、接单、经营、轻度装修等大多数常规游玩时段。整体要温暖、治愈、轻浪漫，有持续推进感，但不能太吵。
+
+Suno 提示词：
+Instrumental background music for a cozy flower shop merge game. Warm, healing, romantic, light and elegant. Soft piano, acoustic guitar, pizzicato strings, glockenspiel, gentle bells, subtle woodwinds, light hand percussion. The music should feel like arranging flowers, serving customers, merging cute items, unlocking small rewards, and slowly decorating a beautiful shop. Airy, bright, graceful, slightly magical, feminine but not childish. Gentle forward motion for gameplay, clean melody, simple memorable motif, loop friendly, polished casual game BGM. No vocals, no lyrics, no epic trailer feeling, no heavy bass, no aggressive EDM, no dark suspense.

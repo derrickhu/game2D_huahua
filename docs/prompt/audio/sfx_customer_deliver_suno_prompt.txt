@@ -1,0 +1,5 @@
+用途说明：
+成功交付订单给客人时播放。需要有金币落下的清脆感 + 小成就感，比普通合成更"丰收"，约 1~2 秒。
+
+Suno 提示词：
+A short rewarding coin collect jingle for a cozy flower shop game. Bright cascading coin clinks mixed with a cheerful little chime melody — like scattering gold coins on a wooden counter. Satisfying, warm, successful delivery feeling. Light and cute, not arcade-heavy. 1-2 seconds, no vocals, no heavy beat, polished casual game reward SFX.

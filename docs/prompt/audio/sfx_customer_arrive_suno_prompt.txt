@@ -1,0 +1,5 @@
+用途说明：
+新客人进入花店时播放。需要像推门进来的门铃声，温馨、清脆、有"有人来了"的提示感，约 1~2 秒。
+
+Suno 提示词：
+A short warm doorbell chime for a cozy flower shop game. Classic small shop door bell — two bright gentle ding-dong notes, like a customer pushing open a cute flower shop door. Warm, welcoming, cheerful, not loud or harsh. Brass or crystal bell tone with soft reverb. 1-2 seconds, no beat, no vocals, clean casual game notification SFX.

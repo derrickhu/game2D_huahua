@@ -40,8 +40,6 @@ export const SOUND_DEFS: SoundDef[] = [
 
 /** BGM 列表 */
 export const BGM_DEFS: SoundDef[] = [
-  { name: 'bgm_spring', src: 'audio/bgm_spring.mp3', volume: 0.4, desc: '春季BGM - 明快钢琴+鸟鸣' },
-  { name: 'bgm_summer', src: 'audio/bgm_summer.mp3', volume: 0.4, desc: '夏季BGM - 欢快吉他+蝉鸣' },
-  { name: 'bgm_autumn', src: 'audio/bgm_autumn.mp3', volume: 0.4, desc: '秋季BGM - 温暖木吉他+风声' },
-  { name: 'bgm_winter', src: 'audio/bgm_winter.mp3', volume: 0.4, desc: '冬季BGM - 柔和八音盒+铃声' },
+  { name: 'bgm_main',  src: 'audio/bgm_main.mp3',  volume: 0.4, desc: '主玩法BGM - 温暖治愈轻浪漫' },
+  { name: 'bgm_story', src: 'audio/bgm_story.mp3', volume: 0.35, desc: '花语剧情BGM - 细腻钢琴+八音盒' },
 ];

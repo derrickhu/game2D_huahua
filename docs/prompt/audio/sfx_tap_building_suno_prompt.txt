@@ -1,0 +1,5 @@
+用途说明：
+点击工具建筑（花铲、茶壶等）产出物品时播放。需要轻柔、有触感、像按下一个柔软按键，约 0.5~1 秒。
+
+Suno 提示词：
+A very short soft tap sound effect for a cozy flower shop game. Gentle woody knock with a tiny bright bell tail, like tapping on a warm wooden flower shop counter. Soft, tactile, pleasant, muted and delicate. 0.5-1 second, single hit, no melody, no beat, no vocals, clean casual game tap SFX.

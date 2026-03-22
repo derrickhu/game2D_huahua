@@ -1,0 +1,5 @@
+用途说明：
+玩家等级提升时播放。需要欢快、有仪式感、像小型庆典，约 2~3 秒。
+
+Suno 提示词：
+A short cheerful level up fanfare for a cozy flower shop game. Bright ascending trumpet-like melody with warm bells and a tiny sparkle burst at the peak. Feels like confetti and flowers celebrating together. Joyful, proud, uplifting, warm. Not bombastic or epic — more like a cute small celebration. 2-3 seconds, no vocals, no heavy drums, polished casual game level up jingle.

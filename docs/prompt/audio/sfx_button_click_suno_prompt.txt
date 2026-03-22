@@ -1,0 +1,5 @@
+用途说明：
+所有 UI 按钮的通用点击音。需要极轻、极短、不抢注意力，约 0.3~0.5 秒。
+
+Suno 提示词：
+A very short subtle UI button click for a cozy mobile game. Tiny soft pop with a barely audible bright overtone, like pressing a soft rubber button. Extremely gentle, clean, minimal, not distracting. 0.3-0.5 seconds, single tiny hit, no melody, no reverb tail, no vocals, ultra-clean casual game UI click SFX.

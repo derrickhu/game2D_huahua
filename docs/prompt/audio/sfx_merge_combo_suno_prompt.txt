@@ -1,0 +1,5 @@
+用途说明：
+连续合成 3 次以上触发连击时播放。比普通合成更激昂一点，有递进上升感，约 1~2 秒。
+
+Suno 提示词：
+A short escalating combo chime for a cozy merge game. Quick ascending scale of 3-4 bright bell notes going up in pitch, with a tiny sparkle burst at the end. More energetic and exciting than a single merge sound, but still soft and cute. Warm glockenspiel tones, satisfying momentum feeling. 1-2 seconds, no beat, no vocals, polished casual game combo SFX.

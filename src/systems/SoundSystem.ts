@@ -8,6 +8,7 @@
  */
 import { AudioManager } from '@/core/AudioManager';
 import { EventBus } from '@/core/EventBus';
+import { Game } from '@/core/Game';
 import { SOUND_DEFS, BGM_DEFS } from '@/config/AudioConfig';
 
 class SoundSystemClass {
@@ -77,14 +78,39 @@ class SoundSystemClass {
     EventBus.on('achievement:unlocked', () => {
       AudioManager.play('achievement');
     });
+
+    // 全局按钮点击音效：canvas 级监听，每次 tap 都播放
+    const canvas = Game.app?.view as HTMLCanvasElement | undefined;
+    if (canvas) {
+      let _firstTouch = true;
+      canvas.addEventListener('pointerup', () => {
+        if (_firstTouch) {
+          _firstTouch = false;
+          AudioManager.resumeOnInteraction();
+        }
+        AudioManager.play('button_click');
+      });
+    }
+
+    // 尝试自动播放主 BGM（可能因自动播放策略被拦截，首次交互时会重试）
+    this.playMainBGM();
   }
 
-  /** 根据季节播放对应 BGM */
-  playSeasonBGM(season: string): void {
-    const bgmName = `bgm_${season}`;
-    const bgm = BGM_DEFS.find(b => b.name === bgmName);
+  /** 播放主玩法 BGM */
+  playMainBGM(): void {
+    const bgm = BGM_DEFS.find(b => b.name === 'bgm_main');
     if (bgm) {
       AudioManager.playBGM(bgm.src, bgm.volume);
+    }
+  }
+
+  /** 播放花语剧情 BGM */
+  playStoryBGM(): void {
+    const bgm = BGM_DEFS.find(b => b.name === 'bgm_story');
+    if (bgm) {
+      AudioManager.playBGM(bgm.src, bgm.volume);
+    } else {
+      this.playMainBGM();
     }
   }
 

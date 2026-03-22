@@ -1,0 +1,5 @@
+用途说明：
+棋盘迷雾格子解锁时播放。需要有"封印解除"的魔法感，柔和但有仪式感，约 1~2 秒。
+
+Suno 提示词：
+A short magical unlock sound for a cozy merge game. Soft whoosh dissolve with a gentle crystalline shimmer — like mist clearing to reveal a hidden flower garden. Ethereal, airy, slightly magical. Warm tone, not dark or spooky. 1-2 seconds, no vocals, no heavy bass, polished casual game unlock SFX.
