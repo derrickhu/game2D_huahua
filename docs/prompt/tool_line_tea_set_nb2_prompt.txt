@@ -1,0 +1,28 @@
+A single wide game asset image: **1 row × 3 columns** of isolated TOOL icons for a cozy flower-shop merge game. These are **TEA / GONGFU TEA SET TOOLS** — ceramic and wood tea props, **NOT** colorful bubble tea cups, NOT coffee mugs with cute faces, NOT drinks as the hero.
+
+**CRITICAL — EACH COLUMN BECOMES A 1:1 SQUARE ICON IN-GAME:**
+- Every cell is a **square tile**. The prop must **fill the square boldly**: target **~88–94%** of the cell’s **width AND height** with even margins. Nothing clips the border.
+- **Chunky silhouette** — width/height of the subject roughly **0.85–1.15**. If elongated, **rotate or foreshorten** so it still dominates the square.
+
+**CHROMA-SAFE (post uses magenta key):**
+- **No magenta, purple, hot pink, or fuchsia** on props, steam, glaze, or reflections. Use **ink celadon, deep blue-green ceramic, warm brown wood, near-black tea** where needed.
+
+**TYPOGRAPHY — ABSOLUTE:**
+- **Zero visible text:** no letters, digits, Chinese, logos, “LEVEL”, labels. **No readable volume numbers** on any surface.
+
+**STYLE:**
+- Hand-painted 2D merge-game icons; **heavier shading than flower icons**; soft colored outlines (not harsh black).
+- Top-left light. **Muted dignified tea aesthetic** — 墨青、深青瓷、胡桃木；**forbid pastel pink/candy tea set.**
+
+**BACKGROUND — CRITICAL:**
+Only empty space between props = **solid flat #FF00FF**. No gradient in background.
+
+**GRID — three equal-width columns:**
+
+[Column 1 — smallest] **Teacup (茶杯):** One **small dark celadon / ink-green** ceramic cup on a **thin walnut wood saucer**; optional subtle steam as **pale gray-white wisps only**. Compact, centered. **#FF00FF** only behind.
+
+[Column 2 — medium] **Teapot (茶壶):** **Matching stoneware teapot** — rounded body, short spout, **dark wood or ceramic lid knob**; same blue-green family as L1. Clearly larger than L1. **#FF00FF** only outside.
+
+[Column 3 — largest] **Tea station (茶道台):** **Compact gongfu-style setup** — **dark walnut tray or low table segment**, small **bamboo mat** strip, room for implied ritual (one small cup + pot silhouette OK) but **one cohesive station**, not a wide panorama. **Largest** of the three. **#FF00FF** only outside.
+
+**Progression:** L1 cup → L2 pot → L3 mini station. Cohesive **茶饮工具** line.

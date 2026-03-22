@@ -371,7 +371,11 @@ export class ItemInfoBar extends PIXI.Container {
         const levels = tDef.produceTable.map(([lv]) => lv);
         const minLv = Math.min(...levels);
         const maxLv = Math.max(...levels);
-        return `⚡${tDef.staminaCost} | 冷却 ${tDef.cooldown}s | 产出 Lv.${minLv}~${maxLv}`;
+        const dual =
+          tDef.produceLinesRandom && tDef.produceLinesRandom.length > 1
+            ? ' | 随机鲜花/绿植同等级'
+            : '';
+        return `⚡${tDef.staminaCost} | 冷却 ${tDef.cooldown}s | 产出 Lv.${minLv}~${maxLv}${dual}`;
       }
       return '工具';
     }

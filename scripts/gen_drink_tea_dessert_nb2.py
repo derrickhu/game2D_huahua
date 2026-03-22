@@ -14,7 +14,7 @@ import sys
 import time
 
 GEN = os.path.expanduser("~/.cursor/skills/gemini-image-gen/scripts/generate_images.py")
-MODEL = "gemini-3.1-flash-image-preview"
+MODEL = "gemini-2.5-flash-image"
 SLEEP = 6
 
 ASSETS = "/Users/huyi/rosa_games/game_assets/huahua/assets"
@@ -47,7 +47,7 @@ CHROMA-KEY SAFETY:
 - NEVER use #FF00FF, hot fuchsia, or screen magenta ON the subject (food, liquid, steam painted as pink-purple that matches background).
 - Pink/red foods = coral, rose, strawberry red — clearly different from #FF00FF.
 
-SHORT WIDE / compact icon: subject fits comfortably in square with padding; avoid ultra-tall skinny composition.
+DEFAULT composition: subject fits comfortably in square with padding; **Level 1 tea is an exception** (see level text — slender tea bag).
 NO outer glow outside silhouette.
 """.strip()
 
@@ -87,8 +87,13 @@ NO text, NO letters, NO logo on cake "banner" shapes — decorative blank shapes
 
 TEA_SUBJECTS: dict[int, str] = {
     1: """
-LEVEL 1/8 — simplest: herbal tea BAG. Small sachet in LIGHT warm tan / cream kraft (#E8D5C4 feel) — bright NOT dark cardboard, NOT muddy brown.
-String + tiny tag with simple flower stamp. Plainest item; hairline outline only.
+LEVEL 1/8 — simplest: herbal tea BAG — **smallest tier; must look modest in a 1:1 cell.**
+
+**Shape:** **SLENDER and TALL** rectangular sachet (like a classic vertical tea bag), **NOT** a wide squat pillow — aspect about **taller than wide** (~1.25–1.6 : 1 height:width).
+
+**Scale:** whole prop (bag + string loop + small tag) only **~45–55%** of frame width AND height — **large empty #FF00FF padding** so it does not dominate the grid like a max-level item.
+
+LIGHT warm tan / cream kraft (#E8D5C4 feel) — bright NOT dark cardboard. Thin string + **small** tag with simple flower **silhouette** (no text). Hairline outline only. HARD EDGE per SHARED.
 """.strip(),
     2: """
 LEVEL 2/8 — jasmine tea. Short ceramic tea cup (squat), pale green-gold tea, 3–4 white jasmine buds floating on surface.

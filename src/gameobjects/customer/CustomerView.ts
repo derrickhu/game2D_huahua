@@ -14,6 +14,7 @@ import * as PIXI from 'pixi.js';
 import { COLORS, FONT_FAMILY, ACTIVE_CUSTOMER_SLOTS } from '@/config/Constants';
 import { ITEM_DEFS, Category, FlowerLine, DrinkLine } from '@/config/ItemConfig';
 import { TextureCache } from '@/utils/TextureCache';
+import { createToolEnergySprite, isBoardToolCategory } from '@/utils/ToolEnergyBadge';
 import { TweenManager, Ease } from '@/core/TweenManager';
 import { EventBus } from '@/core/EventBus';
 import { CustomerInstance } from '@/managers/CustomerManager';
@@ -250,8 +251,19 @@ export class CustomerView extends PIXI.Container {
       sprite.scale.set(s);
       sprite.anchor.set(0.5, 0.5);
       sprite.position.set(x + cs / 2, y + cs / 2);
-      
+
       this._infoPanel.addChild(sprite);
+
+      if (isBoardToolCategory(def.category)) {
+        const shell = new PIXI.Container();
+        shell.position.set(x, y);
+        const energy = createToolEnergySprite(cs, cs, { maxSideFrac: 0.28, pad: 5 });
+        if (energy) {
+          if (filled) energy.position.y -= 14;
+          shell.addChild(energy);
+          this._infoPanel.addChild(shell);
+        }
+      }
     } else {
       const iconColor = this._getLineColor(def.line);
       const fg = new PIXI.Graphics();

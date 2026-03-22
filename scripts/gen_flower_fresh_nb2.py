@@ -14,7 +14,7 @@ import sys
 import time
 
 GEN = os.path.expanduser("~/.cursor/skills/gemini-image-gen/scripts/generate_images.py")
-MODEL = "gemini-3.1-flash-image-preview"
+MODEL = "gemini-2.5-flash-image"
 SLEEP = 6
 
 ASSETS = "/Users/huyi/rosa_games/game_assets/huahua/assets"
@@ -72,8 +72,18 @@ NO water droplets spray, NO busy particle field — keep silhouette clean for fu
 # Lv1–6 names align with in-game 花种子→玫瑰; Lv7–10 follow v4 sheet progression (百合/绣球/兰花/牡丹系)
 SUBJECTS: dict[int, str] = {
     1: """
-LEVEL 1/10 — 花种子 (SEED). Plump round seed with warm brown–tan gradient (bright NOT mud); tiny bright lime sprout with 1–2 baby leaves emerging.
-Optional very small orange-brown pot or soil nub beneath — smallest, simplest tier. Hairline warm-brown edge on seed, green on sprout.
+LEVEL 1/10 — 花种子 (SEED) — **smallest merge tier, must look small on the board.**
+
+Show **2 or 3 SMALL round seeds** (each much smaller than a “hero” icon seed), warm brown–tan gradient (bright NOT mud).
+Each seed has a **tiny** bright lime sprout with **1–2 baby leaves** — cute but **miniature**.
+
+Arrange seeds in a **loose cluster** (slight triangle or gentle arc), **not** one giant seed filling the canvas.
+
+**SCALE (critical):** entire cluster (all seeds + sprouts together) only **~42–52%** of the icon width AND height — **generous #FF00FF margin** on all sides so it reads as a humble Lv1 item in a 1:1 cell.
+
+Optional **very small** shared soil nub or tiny terracotta chip under the group — keep minimal.
+
+Hairline warm-brown edge on seeds, green on sprouts. HARD EDGE to #FF00FF per SHARED.
 """.strip(),
     2: """
 LEVEL 2/10 — 花苞 (BUD). **NO pot, NO soil, NO big leaves.**

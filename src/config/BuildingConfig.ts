@@ -1,8 +1,8 @@
 /**
  * 工具/建筑配置
  *
- * 6条工具链 x 3级 = 18种工具
- * 每种工具只产出对应的一条产品线
+ * 5条工具链 x 3级 = 15种工具
+ * 多数工具只产出一条产品线；种植线（plant）在同等级下随机产出鲜花或绿植
  * 工具放在棋盘上可点击产出，合成两个同级工具升级为下一级
  */
 
@@ -17,8 +17,13 @@ export interface ToolDef {
   level: number;
   /** 产出的品类 */
   produceCategory: Category;
-  /** 产出的产品线（仅一条） */
+  /** 产出的产品线（单线工具使用） */
   produceLine: string;
+  /**
+   * 若存在：先按 produceTable 掷等级，再从中 **均匀随机** 选一条产品线产出同等级物品
+   * （与 produceLine 同时存在时，产出逻辑以本字段为准）
+   */
+  produceLinesRandom?: string[];
   /** 产出等级概率表 [[level, weight], ...] */
   produceTable: [number, number][];
   /** CD时间（秒），0 表示无CD */
@@ -47,6 +52,15 @@ const flowerToolTemplate = (toolLine: ToolLine, produceLine: FlowerLine): Omit<T
   },
 ];
 
+/** 种植线：同等级随机产出 鲜花(fresh) 或 绿植(green) */
+const plantDualFlowerTemplate = (): Omit<ToolDef, 'itemId' | 'level'>[] => {
+  const dual = [FlowerLine.FRESH, FlowerLine.GREEN];
+  return flowerToolTemplate(ToolLine.PLANT, FlowerLine.FRESH).map(t => ({
+    ...t,
+    produceLinesRandom: dual,
+  }));
+};
+
 // ═══════════════ 饮品工具（产品8级） ═══════════════
 
 const drinkToolTemplate = (toolLine: ToolLine, produceLine: DrinkLine): Omit<ToolDef, 'itemId' | 'level'>[] => [
@@ -73,9 +87,8 @@ function buildToolDefs(): Map<string, ToolDef> {
   const map = new Map<string, ToolDef>();
 
   const allTemplates: Omit<ToolDef, 'itemId' | 'level'>[][] = [
-    flowerToolTemplate(ToolLine.PLANT, FlowerLine.FRESH),
+    plantDualFlowerTemplate(),
     flowerToolTemplate(ToolLine.ARRANGE, FlowerLine.BOUQUET),
-    flowerToolTemplate(ToolLine.PACKAGE, FlowerLine.GREEN),
     drinkToolTemplate(ToolLine.TEA_SET, DrinkLine.TEA),
     drinkToolTemplate(ToolLine.MIXER, DrinkLine.COLD),
     drinkToolTemplate(ToolLine.BAKE, DrinkLine.DESSERT),

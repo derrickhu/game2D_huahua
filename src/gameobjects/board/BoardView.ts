@@ -14,6 +14,7 @@ import { BuildingManager } from '@/managers/BuildingManager';
 import { CurrencyManager } from '@/managers/CurrencyManager';
 import { Platform } from '@/core/PlatformService';
 import { TextureCache } from '@/utils/TextureCache';
+import { createToolEnergySprite, isBoardToolCategory } from '@/utils/ToolEnergyBadge';
 import { CellView } from './CellView';
 import { ItemView } from './ItemView';
 import { ConfirmDialog } from '../ui/ConfirmDialog';
@@ -843,6 +844,15 @@ export class BoardView extends PIXI.Container {
       sprite.scale.set(s);
       sprite.anchor.set(0.5, 0.5);
       ghost.addChild(sprite);
+      if (def && isBoardToolCategory(def.category)) {
+        const hw = (tex.width * s) / 2;
+        const hh = (tex.height * s) / 2;
+        const shell = new PIXI.Container();
+        shell.position.set(-hw, -hh);
+        const energy = createToolEnergySprite(hw * 2, hh * 2, { maxSideFrac: 0.34, pad: 5 });
+        if (energy) shell.addChild(energy);
+        ghost.addChild(shell);
+      }
     } else {
       const fallback = new PIXI.Graphics();
       fallback.beginFill(0xFFB74D, 0.5);

@@ -123,6 +123,26 @@ const MAIN_IMAGE_MAP: Record<string, string> = {
   tool_plant_1: 'images/tools/plant/tool_plant_1.png',
   tool_plant_2: 'images/tools/plant/tool_plant_2.png',
   tool_plant_3: 'images/tools/plant/tool_plant_3.png',
+
+  // ---- 工具：花艺线 ----
+  tool_arrange_1: 'images/tools/arrange/tool_arrange_1.png',
+  tool_arrange_2: 'images/tools/arrange/tool_arrange_2.png',
+  tool_arrange_3: 'images/tools/arrange/tool_arrange_3.png',
+
+  // ---- 工具：烘焙线 ----
+  tool_bake_1: 'images/tools/bake/tool_bake_1.png',
+  tool_bake_2: 'images/tools/bake/tool_bake_2.png',
+  tool_bake_3: 'images/tools/bake/tool_bake_3.png',
+
+  // ---- 工具：茶饮线（茶具）----
+  tool_tea_set_1: 'images/tools/tea_set/tool_tea_set_1.png',
+  tool_tea_set_2: 'images/tools/tea_set/tool_tea_set_2.png',
+  tool_tea_set_3: 'images/tools/tea_set/tool_tea_set_3.png',
+
+  // ---- 工具：冷饮线（饮品器具）----
+  tool_mixer_1: 'images/tools/mixer/tool_mixer_1.png',
+  tool_mixer_2: 'images/tools/mixer/tool_mixer_2.png',
+  tool_mixer_3: 'images/tools/mixer/tool_mixer_3.png',
 };
 
 // ================================================================

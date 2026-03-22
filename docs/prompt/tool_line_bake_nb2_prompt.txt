@@ -1,0 +1,9 @@
+Cute merge-game item sheet 16:9, split into 3 equal vertical columns (left to right). Each column is ONE isolated prop icon, same art style as the reference flower shop icons: heavy hand-painted 2D shading, soft edges, slightly chunky proportions, cozy workshop mood. Colors: warm caramel brown, cream enamel, muted brass/bronze accents, dusty rose or soft peach as tiny accent only. No neon, no pure black outlines, no glossy 3D render.
+
+Column 1 — rolling pin (擀面杖): wooden barrel + short handles, light wear, centered in column, fills ~78% of column height.
+
+Column 2 — small bakery oven (烤箱): front view, cream enamel body, bronze handle/knob, tiny warm window glow (soft orange, not harsh), centered, ~78% column height.
+
+Column 3 — cake finishing / mounting station (装裱台): compact counter with rotating cake turntable, a few muted piping bags or small tools on side, cozy not industrial, largest readable silhouette, ~78% column height.
+
+CRITICAL: Background must be a single flat solid color #FF00FF (magenta) ONLY across the entire image — no gradients, no floor, no shadows on background, no vignette, no props touching image edges. No text, no watermark, no UI frame.

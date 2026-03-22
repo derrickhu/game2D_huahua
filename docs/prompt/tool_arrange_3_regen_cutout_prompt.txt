@@ -1,0 +1,17 @@
+1:1 merge-game item icon — FLORIST WORK STATION / TYING BENCH — TOOLS AND SUPPLIES ONLY.
+
+Compact isometric workbench: dark walnut wood base with doors, thick gray stone countertop. Back: wooden posts with horizontal dowel holding ONLY three ribbon rolls (dusty sage, cream, muted dusty rose) — ribbons hang slightly, no black voids, no corrupted edges.
+
+On counter (minimal clutter): small gray floral foam brick with a few green plastic floral picks OR thin green wire stems ONLY — NO flower heads, NO roses, NO glass jars with bouquets, NO berries, NO loose petals (those break chroma-key).
+
+Optional: one pair of small pruning shears with dark brown handles resting on counter.
+
+Subject fills 88-92 percent of square on both axes — wide squat framing, NOT ultra-tall.
+
+Heavy hand-painted 2D, soft outlines.
+
+Background ONLY solid flat #FF00FF magenta. No gradient.
+
+ZERO text or labels.
+
+CRITICAL: Avoid hot pink, fuchsia, purple-pink in ribbons or any object — use muted low-saturation colors so post-processing magenta key does not eat pixels.

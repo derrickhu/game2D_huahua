@@ -17,6 +17,7 @@ import { WarehouseManager } from '@/managers/WarehouseManager';
 import { BoardManager } from '@/managers/BoardManager';
 import { CurrencyManager } from '@/managers/CurrencyManager';
 import { TextureCache } from '@/utils/TextureCache';
+import { createToolEnergySprite, isBoardToolCategory } from '@/utils/ToolEnergyBadge';
 import { ToastMessage } from './ToastMessage';
 import { ConfirmDialog } from './ConfirmDialog';
 
@@ -240,6 +241,10 @@ export class WarehousePanel extends PIXI.Container {
           sprite.anchor.set(0.5, 0.5);
           sprite.position.set(SLOT_SIZE / 2, SLOT_SIZE / 2 - 4);
           slot.addChild(sprite);
+          if (isBoardToolCategory(def.category)) {
+            const energy = createToolEnergySprite(SLOT_SIZE, SLOT_SIZE, { maxSideFrac: 0.30, pad: 5 });
+            if (energy) slot.addChild(energy);
+          }
         } else {
           // Fallback
           const circle = new PIXI.Graphics();

@@ -1,0 +1,18 @@
+1:1 merge-game item icon — FLORIST WRAPPING PAPER (花店包装纸), must be instantly readable.
+
+Main focus: TWO **wrapping paper rolls** side by side (short and wide, not tall thin cylinders):
+- LEFT roll: **kraft brown paper** with **fibrous texture**, one **torn peeling corner** of thin paper.
+- RIGHT roll: **matte dusty rose** paper, same thin-paper look, **curled paper tail** with torn edge.
+- Both wrapped with **natural twine** bow at middle.
+
+Add a **small bronze floral scissors** (pruning shears style) resting in **front** of the rolls at the bottom — tiny but clear, so the scene reads as **flower shop wrapping supplies**. Scissors handles dark wood.
+
+Fill 88-92 percent of square, chunky silhouette.
+
+Heavy hand-painted 2D merge-game, brown soft outlines.
+
+Background: solid flat #FF00FF magenta ONLY — no white panel, no rounded UI card.
+
+ZERO text, numbers, logos.
+
+NOT yoga mats, NOT fabric bolts, NOT wallpaper tubes — paper must look **thin and tearable**.

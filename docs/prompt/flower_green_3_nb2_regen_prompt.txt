@@ -1,0 +1,13 @@
+Game merge item icon, SINGLE isolated object centered in frame.
+
+CRITICAL — FILL THE 1:1 SQUARE (merge game tile):
+- Canvas is perfect 1:1. The plant + pot must look LARGE on the board: target **~85–92% of frame** on BOTH width AND height (whichever axis is tighter). Equal breathing room on all four sides — nothing touches the image edge.
+- **Silhouette must be chunky and nearly square**, NOT a tall skinny column. If you imagine a bounding box around all opaque pixels, its width/height ratio should stay roughly **0.85–1.15** (no skyscraper shapes).
+- **Pothos / devil's ivy:** Put it in a **tabletop round white ceramic pot** (NOT a hanging planter). **No long hanging ropes** — zero ceiling hook, zero dangling cord. **Bushy cluster:** 6–8 heart-shaped bright green leaves with golden-yellow variegation, arranged to **spread outward and fill horizontal space**; at most **one very short** tiny trailing tip with 1 leaf, kept inside lower padding. Leaves may overlap for a full, round mass.
+BACKGROUND: flat solid #FF00FF magenta only. No frames, no circles, no text.
+
+ART STYLE (match project green line):
+- BOLD vivid saturated greens (#66BB6A, #81C784, #43A047, #A5D6A7), smooth gradient shading, bright white highlight spots on leaves and pot
+- THIN outlines in same hue family as fill (not heavy black)
+- Cute chunky readable shapes, clear silhouette at small size
+- NO text, NO sparkles, NO outer glow

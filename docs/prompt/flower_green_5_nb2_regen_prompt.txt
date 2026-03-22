@@ -1,0 +1,14 @@
+Game merge item icon, SINGLE isolated object centered in frame.
+
+CRITICAL — FILL THE 1:1 SQUARE (merge game tile):
+- Canvas is perfect 1:1. Snake plant + pot must look **big in the cell**: subject spans **~85–92% of frame** on BOTH width AND height with small even margins — **do not** leave huge empty strips on left/right.
+- **Silhouette wide and squat:** total height of tallest leaf tip down to pot base should be **only modestly taller than pot width** — leaves are **short-to-medium** height but **spread outward in a fan** so the overall footprint is **roundish / squarish**, NOT a narrow vertical spike.
+- **Snake plant (Sansevieria)** in a **short wide gray cylinder pot** (wider than tall). **4–6** sword leaves: moderate length, **splayed sideways** more than stacked upward; bold dark green with golden-yellow edge stripes, glossy white highlights.
+
+BACKGROUND: flat solid #FF00FF magenta only. No frames, no text.
+
+ART STYLE (match project green line):
+- BOLD vivid saturated greens, smooth gradients, bright white highlight spots
+- THIN outlines in same hue family (not heavy black)
+- Cute chunky readable shapes
+- NO text, NO sparkles, NO outer glow

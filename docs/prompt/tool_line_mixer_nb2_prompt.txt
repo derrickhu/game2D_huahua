@@ -1,0 +1,27 @@
+A single wide game asset image: **1 row × 3 columns** of isolated TOOL icons for a cozy flower-shop merge game. These are **COLD DRINK / BAR WORKSHOP TOOLS** — measuring and mixing gear, **NOT** finished colorful drinks as the main subject.
+
+**CRITICAL — EACH COLUMN BECOMES A 1:1 SQUARE ICON IN-GAME:**
+- Each prop **fills ~88–94%** of its cell **width AND height** with even margins. **Chunky silhouette** (subject width/height ~**0.85–1.15**). **NOT** a thin sliver in a big square.
+
+**CHROMA-SAFE:**
+- **No magenta / purple / hot pink** in glass, liquid, or highlights. Glass = **cool blue-gray, cyan-gray, or clear with steel-blue tint**. Highlights **white or pale blue-gray only.**
+
+**TYPOGRAPHY — ABSOLUTE:**
+- **Zero text:** no letters, digits, Chinese, logos. **Measuring marks** = **faint abstract tick lines only** — must NOT be readable numbers.
+
+**STYLE:**
+- Hand-painted 2D merge icons; **stronger shading than flower products**; soft outlines.
+- Palette: **steel blue, brushed metal, frosted glass, dark gray counter** — crisp “workshop bar” feel, not candy neon.
+
+**BACKGROUND — CRITICAL:**
+Empty areas only = **solid flat #FF00FF**. No background gradient.
+
+**GRID — three equal-width columns:**
+
+[Column 1 — smallest] **Measuring cup (量杯):** **Frosted or clear glass** measuring cup with **steel-blue gray** body, **subtle etched tick marks** (no legible ml text), small **stainless pour lip**. **#FF00FF** behind only.
+
+[Column 2 — medium] **Mixing cup (搅拌杯):** **Tall frosted glass** mixing beaker OR **steel-blue tinted shaker** with simple **metal cap band**; heavier than L1. **#FF00FF** only outside.
+
+[Column 3 — largest] **Cold drink bar segment (冷饮吧台):** **Compact bar counter chunk** — **dark gray matte** top, **brushed steel** or **deep blue-gray** front, hint of **under-counter** or **small syrup bottles** as **mute colored shapes without labels**; **single station**, not a full restaurant. **Largest** of three. **#FF00FF** only outside.
+
+**Progression:** L1 measure → L2 mixer → L3 bar station. Cohesive **冷饮器具** line.

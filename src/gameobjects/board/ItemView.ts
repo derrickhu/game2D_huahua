@@ -5,6 +5,11 @@ import * as PIXI from 'pixi.js';
 import { BoardMetrics, COLORS, FONT_FAMILY } from '@/config/Constants';
 import { ITEM_DEFS, Category, FlowerLine, DrinkLine } from '@/config/ItemConfig';
 import { TextureCache } from '@/utils/TextureCache';
+import {
+  bringToolEnergyToFront,
+  createToolEnergySprite,
+  isBoardToolCategory,
+} from '@/utils/ToolEnergyBadge';
 
 /** 格子内物品最大边长占格子的比例（其余为边距） */
 const ITEM_CELL_FILL = 0.72;
@@ -21,6 +26,8 @@ export class ItemView extends PIXI.Container {
   private _cdText: PIXI.Text;
   private _usesText: PIXI.Text;
   private _lockBorder: PIXI.Graphics;
+  /** 工具右下角体力标 */
+  private _toolEnergySprite: PIXI.Sprite | null = null;
 
   private _itemId: string = '';
 
@@ -102,12 +109,14 @@ export class ItemView extends PIXI.Container {
     if (!itemId) {
       this.visible = false;
       this._itemId = '';
+      this._hideToolEnergy();
       return;
     }
 
     const def = ITEM_DEFS.get(itemId);
     if (!def) {
       this.visible = false;
+      this._hideToolEnergy();
       return;
     }
 
@@ -164,6 +173,8 @@ export class ItemView extends PIXI.Container {
       this._nameText.text = emoji + (def.name.length > 3 ? def.name.substring(0, 3) : def.name);
     }
 
+    this._syncToolEnergy(def.category);
+
     this._levelBg.clear();
     this._levelBg.visible = false;
     this._levelText.text = '';
@@ -185,6 +196,7 @@ export class ItemView extends PIXI.Container {
     } else {
       this._lockBorder.visible = false;
     }
+    bringToolEnergyToFront(this, this._toolEnergySprite);
   }
 
   /** 显示/隐藏消耗型剩余次数 */
@@ -195,6 +207,7 @@ export class ItemView extends PIXI.Container {
     }
     this._usesText.text = `×${uses}`;
     this._usesText.visible = true;
+    bringToolEnergyToFront(this, this._toolEnergySprite);
   }
 
   /** 显示/隐藏 CD 冷却遮罩 */
@@ -222,6 +235,25 @@ export class ItemView extends PIXI.Container {
     this._cdOverlay.endFill();
 
     this._cdText.text = `${Math.ceil(remaining)}s`;
+    bringToolEnergyToFront(this, this._toolEnergySprite);
+  }
+
+  private _hideToolEnergy(): void {
+    if (this._toolEnergySprite) {
+      this.removeChild(this._toolEnergySprite);
+      this._toolEnergySprite.destroy();
+      this._toolEnergySprite = null;
+    }
+  }
+
+  private _syncToolEnergy(category: Category): void {
+    this._hideToolEnergy();
+    if (!isBoardToolCategory(category)) return;
+    const sp = createToolEnergySprite(BoardMetrics.cellSize, BoardMetrics.cellSize);
+    if (!sp) return;
+    this._toolEnergySprite = sp;
+    this.addChild(sp);
+    bringToolEnergyToFront(this, sp);
   }
 
   private _getCategoryEmoji(category: Category): string {

@@ -11,6 +11,7 @@ import { DESIGN_WIDTH, COLORS, FONT_FAMILY, BoardMetrics } from '@/config/Consta
 import { ITEM_DEFS, getMergeChain, getMergeChainName, Category } from '@/config/ItemConfig';
 import { BoardManager } from '@/managers/BoardManager';
 import { TextureCache } from '@/utils/TextureCache';
+import { createToolEnergySprite, isBoardToolCategory } from '@/utils/ToolEnergyBadge';
 
 /** 面板高度 */
 const PANEL_HEIGHT = 280;
@@ -278,6 +279,10 @@ export class MergeChainPanel extends PIXI.Container {
       sprite.position.set(CARD_W / 2, 30);
       if (!owned && !isCurrent) sprite.alpha = 0.5;
       card.addChild(sprite);
+      if (isBoardToolCategory(def.category)) {
+        const energy = createToolEnergySprite(CARD_W, CARD_H, { maxSideFrac: 0.28, pad: 5 });
+        if (energy) card.addChild(energy);
+      }
     } else {
       // Fallback: 圆形+emoji
       const circle = new PIXI.Graphics();

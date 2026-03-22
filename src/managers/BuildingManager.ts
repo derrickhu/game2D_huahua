@@ -1,7 +1,7 @@
 /**
  * 建筑管理器 - 处理工具点击产出、CD 冷却、宝箱系统
  *
- * 新架构：工具本身就是建筑，每种工具只产出一条产品线。
+ * 新架构：工具本身就是建筑；种植线在同等级下随机产出鲜花或绿植，其余工具各对应一条产品线。
  * 合成两个同级工具升级为下一级（在 BoardManager 中处理）。
  */
 import { EventBus } from '@/core/EventBus';
@@ -174,7 +174,12 @@ class BuildingManagerClass {
       producedId = this._rollChestProduce(chestDef, cellIndex);
     } else if (toolDef) {
       const level = this._rollLevel(toolDef.produceTable);
-      producedId = findItemId(toolDef.produceCategory, toolDef.produceLine, level);
+      const lines = toolDef.produceLinesRandom;
+      const line =
+        lines && lines.length > 0
+          ? lines[Math.floor(Math.random() * lines.length)]
+          : toolDef.produceLine;
+      producedId = findItemId(toolDef.produceCategory, line, level);
     }
 
     if (!producedId) {
