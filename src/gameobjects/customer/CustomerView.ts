@@ -3,12 +3,11 @@
  *
  * 布局（以 center(0,0) 为原点）:
  *
- *       大半身像 (120px)        <- 无框，直接浮在底色上
+ *       大半身像                 <- 无框，直接浮在底色上
  *
- *   ┌── 信息面板 ──────┐
- *   │ ⭐💰120  [🌸][🍵] │     <- 奖励 + 需求槽位
- *   └──────────────────┘
- *      或 ✓ 完成 按钮         <- 需求全满足后
+ *   ┌── 需求面板（最多3格）──┐  ┌完成┐  <- 满足后按钮在面板右侧同排
+ *   │ [🌸][🌸][🌸]          │  │ ✓ │
+ *   └──────────────────────┘  └────┘
  */
 import * as PIXI from 'pixi.js';
 import { COLORS, FONT_FAMILY, ACTIVE_CUSTOMER_SLOTS } from '@/config/Constants';
@@ -19,14 +18,18 @@ import { TweenManager, Ease } from '@/core/TweenManager';
 import { EventBus } from '@/core/EventBus';
 import { CustomerInstance } from '@/managers/CustomerManager';
 
-const SLOT_SIZE = 52;
-const SLOT_GAP = 8;
+const SLOT_SIZE = 50;
+const SLOT_GAP = 6;
+/** 需求面板至少容纳 3 个槽位的宽度（含内边距） */
+const PANEL_W = SLOT_SIZE * 3 + SLOT_GAP * 2 + 20;
+const PANEL_H = 74;
+const PANEL_BTN_GAP = 10;
+const COMPLETE_BTN_W = 88;
+const COMPLETE_BTN_H = 34;
 
-export const CARD_W = 160;
-export const CARD_H = 240;
+export const CARD_W = Math.max(292, PANEL_W + PANEL_BTN_GAP + COMPLETE_BTN_W + 24);
+export const CARD_H = 248;
 
-const PANEL_W = CARD_W - 8;
-const PANEL_H = 64;
 const PANEL_Y = 6;
 const REWARD_BADGE_Y = -12;
 
@@ -39,9 +42,12 @@ export class CustomerView extends PIXI.Container {
   private _completeBtn: PIXI.Container | null = null;
   private _bounceTween: { config: any; startValues: any; elapsed: number; delayRemaining: number } | null = null;
   private _queueIndex = 0;
+  /** 需求行左缘（相对 _infoPanel），供完成按钮与面板对齐 */
+  private _panelRowLeft = 0;
 
   constructor() {
     super();
+    this.sortableChildren = true;
 
     this._avatarSprite = new PIXI.Sprite();
     this._avatarSprite.anchor.set(0.5, 1.0);
@@ -130,6 +136,10 @@ export class CustomerView extends PIXI.Container {
     // 奖励徽章（头像底部，半透明深色遮罩）
     this._buildRewardBadge();
 
+    const totalRowW = PANEL_W + (allDone ? PANEL_BTN_GAP + COMPLETE_BTN_W : 0);
+    const panelLeft = -totalRowW / 2;
+    this._panelRowLeft = panelLeft;
+
     // 面板背景（优先使用图片纹理）
     const panelTex = TextureCache.get('order_panel');
     if (panelTex) {
@@ -137,22 +147,22 @@ export class CustomerView extends PIXI.Container {
       panelBg.anchor.set(0.5, 0);
       panelBg.width = PANEL_W;
       panelBg.height = PANEL_H;
-      panelBg.position.set(0, 0);
+      panelBg.position.set(panelLeft + PANEL_W / 2, 0);
       this._infoPanel.addChild(panelBg);
     } else {
       const bg = new PIXI.Graphics();
       bg.beginFill(0xFFFFFF, 0.92);
-      bg.drawRoundedRect(-PANEL_W / 2, 0, PANEL_W, PANEL_H, 12);
+      bg.drawRoundedRect(panelLeft, 0, PANEL_W, PANEL_H, 12);
       bg.endFill();
       bg.lineStyle(1, 0xFFD4A8, 0.4);
-      bg.drawRoundedRect(-PANEL_W / 2, 0, PANEL_W, PANEL_H, 12);
+      bg.drawRoundedRect(panelLeft, 0, PANEL_W, PANEL_H, 12);
       this._infoPanel.addChild(bg);
     }
 
-    // 需求槽位（面板内居中，始终显示花朵图标 + 绿勾）
+    // 需求槽位（在面板矩形内水平居中）
     const slots = this._customer.slots;
     const totalSlotW = slots.length * SLOT_SIZE + (slots.length - 1) * SLOT_GAP;
-    const slotStartX = -totalSlotW / 2;
+    const slotStartX = panelLeft + (PANEL_W - totalSlotW) / 2;
     const slotY = (PANEL_H - SLOT_SIZE) / 2;
 
     for (let i = 0; i < slots.length; i++) {
@@ -162,7 +172,7 @@ export class CustomerView extends PIXI.Container {
       this._drawSlotItem(sx, slotY, slot.itemId, filled);
     }
 
-    // 全部满足 → 面板下方显示完成按钮
+    // 全部满足 → 完成按钮在面板右侧、与面板垂直居中
     if (allDone) {
       this._showCompleteBtn();
     }
@@ -288,18 +298,29 @@ export class CustomerView extends PIXI.Container {
     }
 
     if (filled) {
-      const check = new PIXI.Graphics();
-      check.beginFill(0x4CAF50);
-      check.drawCircle(x + cs - 6, y + cs - 6, 9);
-      check.endFill();
-      this._infoPanel.addChild(check);
+      const badgeTex = TextureCache.get('ui_order_check_badge');
+      if (badgeTex) {
+        const sp = new PIXI.Sprite(badgeTex);
+        const target = 22;
+        const s = target / Math.max(badgeTex.width, badgeTex.height);
+        sp.scale.set(s);
+        sp.anchor.set(0.5, 0.5);
+        sp.position.set(x + cs - 6, y + cs - 6);
+        this._infoPanel.addChild(sp);
+      } else {
+        const check = new PIXI.Graphics();
+        check.beginFill(0x4CAF50);
+        check.drawCircle(x + cs - 6, y + cs - 6, 9);
+        check.endFill();
+        this._infoPanel.addChild(check);
 
-      const checkMark = new PIXI.Text('✓', {
-        fontSize: 11, fill: 0xFFFFFF, fontWeight: 'bold',
-      });
-      checkMark.anchor.set(0.5, 0.5);
-      checkMark.position.set(x + cs - 6, y + cs - 6);
-      this._infoPanel.addChild(checkMark);
+        const checkMark = new PIXI.Text('✓', {
+          fontSize: 11, fill: 0xFFFFFF, fontWeight: 'bold',
+        });
+        checkMark.anchor.set(0.5, 0.5);
+        checkMark.position.set(x + cs - 6, y + cs - 6);
+        this._infoPanel.addChild(checkMark);
+      }
     }
   }
 
@@ -308,30 +329,42 @@ export class CustomerView extends PIXI.Container {
   private _showCompleteBtn(): void {
     if (this._completeBtn) return;
 
-    const BTN_W = 100;
-    const BTN_H = 32;
+    const BTN_W = COMPLETE_BTN_W;
+    const BTN_H = COMPLETE_BTN_H;
     const btn = new PIXI.Container();
     btn.eventMode = 'static';
     btn.cursor = 'pointer';
 
-    const bg = new PIXI.Graphics();
-    bg.beginFill(0x4CAF50);
-    bg.drawRoundedRect(-BTN_W / 2, -BTN_H / 2, BTN_W, BTN_H, BTN_H / 2);
-    bg.endFill();
-    bg.lineStyle(2, 0x388E3C, 0.5);
-    bg.drawRoundedRect(-BTN_W / 2, -BTN_H / 2, BTN_W, BTN_H, BTN_H / 2);
+    const btnTex = TextureCache.get('ui_complete_btn');
+    if (btnTex) {
+      const sp = new PIXI.Sprite(btnTex);
+      sp.width = BTN_W;
+      sp.height = BTN_H;
+      sp.anchor.set(0.5, 0.5);
+      btn.addChild(sp);
+    } else {
+      const bg = new PIXI.Graphics();
+      bg.beginFill(0x4CAF50);
+      bg.drawRoundedRect(-BTN_W / 2, -BTN_H / 2, BTN_W, BTN_H, BTN_H / 2);
+      bg.endFill();
+      bg.lineStyle(2, 0x388E3C, 0.5);
+      bg.drawRoundedRect(-BTN_W / 2, -BTN_H / 2, BTN_W, BTN_H, BTN_H / 2);
+      btn.addChild(bg);
+    }
 
     const txt = new PIXI.Text('✓ 完成', {
-      fontSize: 14,
+      fontSize: 13,
       fill: 0xFFFFFF,
       fontFamily: FONT_FAMILY,
       fontWeight: 'bold',
     });
     txt.anchor.set(0.5, 0.5);
-
-    btn.addChild(bg);
     btn.addChild(txt);
-    btn.position.set(0, PANEL_Y + PANEL_H + BTN_H / 2 + 6);
+
+    // 与 _infoPanel 同坐标系：面板右侧 + 间距，纵向与面板中线对齐
+    const btnCenterX = this._panelRowLeft + PANEL_W + PANEL_BTN_GAP + BTN_W / 2;
+    const btnCenterY = PANEL_Y + PANEL_H / 2;
+    btn.position.set(btnCenterX, btnCenterY);
     btn.zIndex = 999;
     btn.on('pointertap', () => {
       if (this._customer) {
@@ -351,7 +384,7 @@ export class CustomerView extends PIXI.Container {
       duration: 600,
       onUpdate: () => {
         if (this._completeBtn && !this._completeBtn.destroyed) {
-          this._completeBtn.y = PANEL_Y + PANEL_H + BTN_H / 2 + 6 + Math.sin(proxy.t * 0.5) * 2;
+          this._completeBtn.y = btnCenterY + Math.sin(proxy.t * 0.5) * 2;
         }
       },
     });

@@ -63,7 +63,8 @@ export function computeBoardMetrics(logicHeight: number, topReserved: number): v
 // 客人
 export const MAX_CUSTOMERS = 5;          // 最大排队客人数（含服务中）
 export const MAX_VISIBLE_CUSTOMERS = 5;  // 滚动区可见客人数
-export const ACTIVE_CUSTOMER_SLOTS = 5;  // 前N位为"服务中"（可交付）
+/** 与可见区一致：前 N 位（滚动区里显示的）客人，需求与棋盘物品一致则锁定/显示满足；可交付也限此范围 */
+export const ACTIVE_CUSTOMER_SLOTS = MAX_VISIBLE_CUSTOMERS;
 export const CUSTOMER_REFRESH_MIN = 10;  // 秒
 export const CUSTOMER_REFRESH_MAX = 30;
 
@@ -84,6 +85,10 @@ export const COLORS = {
   CELL_KEY: 0xFFD700,
   CELL_BORDER: 0xD4C4B0,
   CELL_HIGHLIGHT: 0xFFE4B5,
+  /** 订单满足：叠在米白格底上的淡绿遮罩颜色 */
+  CELL_ORDER_MATCH_OVERLAY: 0xA5D6A7,
+  /** 淡绿遮罩透明度（越大越绿） */
+  CELL_ORDER_MATCH_OVERLAY_ALPHA: 0.32,
 
   // 花系色标
   FLOWER_FRESH: 0xFFB347,    // 鲜花线 - 暖橙

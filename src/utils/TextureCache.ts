@@ -36,6 +36,10 @@ const MAIN_IMAGE_MAP: Record<string, string> = {
   icon_level_badge: 'images/ui/icon_level_badge.png',
   icon_gift:   'images/ui/icon_gift.png',
   order_panel: 'images/ui/order_panel.png',
+  /** NB2+抠图：选中格四角、订单完成角标、无字完成按钮底图 */
+  ui_cell_selection_corners: 'images/ui/ui_cell_selection_corners.png',
+  ui_order_check_badge: 'images/ui/ui_order_check_badge.png',
+  ui_complete_btn: 'images/ui/ui_complete_btn.png',
   icon_hualu:    'images/ui/icon_hualu.png',
   icon_huayuan:  'images/ui/icon_huayuan.png',
   icon_furniture: 'images/ui/icon_furniture.png',

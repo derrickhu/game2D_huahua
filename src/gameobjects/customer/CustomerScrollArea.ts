@@ -5,7 +5,7 @@
  * - 横向展示多位排队客人（卡片式半身像）
  * - 支持触控左右滑动 + 惯性滚动
  * - 带遮罩裁剪，超出区域不可见
- * - 前2位客人为「服务中」（可交付），后续为「排队中」（预览需求）
+ * - 前 ACTIVE_CUSTOMER_SLOTS 位可交付，其余为排队预览
  */
 import * as PIXI from 'pixi.js';
 import { Game } from '@/core/Game';
@@ -14,8 +14,8 @@ import { CustomerInstance, CustomerManager } from '@/managers/CustomerManager';
 import { EventBus } from '@/core/EventBus';
 import { COLORS, FONT_FAMILY, MAX_VISIBLE_CUSTOMERS } from '@/config/Constants';
 
-/** 卡片间距 */
-const CARD_GAP = 10;
+/** 卡片间距（客人之间留白） */
+const CARD_GAP = 26;
 /** 滚动区域高度 */
 const AREA_H = 310;
 /** 惯性摩擦系数 */

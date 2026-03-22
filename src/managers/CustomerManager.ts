@@ -45,6 +45,8 @@ class CustomerManagerClass {
     this._refreshTimer = CUSTOMER_REFRESH_MAX - 3;
 
     this._bindBoardEvents();
+    // 读档时 Board 已清空幽灵 reserved；此处再扫一遍（客人空则保持无锁）
+    this._rescanAll();
   }
 
   /** 每帧更新：客人刷新计时 */
@@ -198,7 +200,7 @@ class CustomerManagerClass {
     // 已锁定的格子集合
     const locked = new Set<number>();
 
-    // 只有前 ACTIVE_CUSTOMER_SLOTS 位客人（服务中）可以锁定物品
+    // 只有前 ACTIVE_CUSTOMER_SLOTS 位客人可锁定棋盘（与柜台「当前服务」一致）
     const activeCount = Math.min(this._customers.length, ACTIVE_CUSTOMER_SLOTS);
     for (let ci = 0; ci < activeCount; ci++) {
       const cust = this._customers[ci];

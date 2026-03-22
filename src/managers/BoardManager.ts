@@ -347,7 +347,8 @@ class BoardManagerClass {
       if (cell) {
         cell.state = saved.state;
         cell.itemId = saved.itemId;
-        cell.reserved = saved.reserved;
+        // reserved 由 CustomerManager 按当前客人队列实时计算，不读档（客人未持久化时会导致幽灵锁格+假满足标）
+        cell.reserved = false;
       }
     }
 

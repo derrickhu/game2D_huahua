@@ -2,7 +2,7 @@
  * 单格视图
  */
 import * as PIXI from 'pixi.js';
-import { BoardMetrics, COLORS, FONT_FAMILY } from '@/config/Constants';
+import { BoardMetrics, COLORS } from '@/config/Constants';
 import { CellState } from '@/config/BoardLayout';
 import { TextureCache } from '@/utils/TextureCache';
 
@@ -14,6 +14,8 @@ export class CellView extends PIXI.Container {
   private _fogOverlay: PIXI.Container | null = null;
   private _keyIcon: PIXI.Container | null = null;
   private _state: CellState = CellState.OPEN;
+  /** 该格物品已被客人订单锁定（已满足需求）→ 浅绿底 */
+  private _orderReserved = false;
 
   constructor(cellIndex: number) {
     super();
@@ -35,6 +37,17 @@ export class CellView extends PIXI.Container {
     return this._state;
   }
 
+  /**
+   * 订单已占用该格且需求匹配完成：格底变绿（仅 OPEN / PEEK 可见格）
+   */
+  setOrderReserved(on: boolean): void {
+    if (this._orderReserved === on) return;
+    this._orderReserved = on;
+    if (this._state === CellState.OPEN || this._state === CellState.PEEK) {
+      this._paintCellBase();
+    }
+  }
+
   setHighlight(on: boolean): void {
     if (this._cornerBrackets) {
       this.removeChild(this._cornerBrackets);
@@ -44,43 +57,69 @@ export class CellView extends PIXI.Container {
     if (on) {
       const cs = BoardMetrics.cellSize;
       const container = new PIXI.Container();
-      const len = cs * 0.30;
-      const thick = 5;
-      const color = 0xFFAA00;
-      const off = -2;
+      const selTex = TextureCache.get('ui_cell_selection_corners');
+      if (selTex) {
+        const sp = new PIXI.Sprite(selTex);
+        sp.width = cs;
+        sp.height = cs;
+        sp.position.set(0, 0);
+        container.addChild(sp);
+      } else {
+        const len = cs * 0.30;
+        const thick = 5;
+        const color = 0xFFAA00;
+        const off = -2;
 
-      const drawCorner = (x1: number, y1: number, x2: number, y2: number, x3: number, y3: number) => {
-        const g = new PIXI.Graphics();
-        g.beginFill(color);
-        const vx = Math.min(x1, x2), vy = Math.min(y1, y2);
-        const vw = Math.abs(x2 - x1) || thick;
-        const vh = Math.abs(y2 - y1) || thick;
-        g.drawRoundedRect(vx, vy, vw, vh, 2);
-        const hx = Math.min(x2, x3), hy = Math.min(y2, y3);
-        const hw = Math.abs(x3 - x2) || thick;
-        const hh = Math.abs(y3 - y2) || thick;
-        g.drawRoundedRect(hx, hy, hw, hh, 2);
-        g.endFill();
-        container.addChild(g);
-      };
+        const drawCorner = (x1: number, y1: number, x2: number, y2: number, x3: number, y3: number) => {
+          const g = new PIXI.Graphics();
+          g.beginFill(color);
+          const vx = Math.min(x1, x2), vy = Math.min(y1, y2);
+          const vw = Math.abs(x2 - x1) || thick;
+          const vh = Math.abs(y2 - y1) || thick;
+          g.drawRoundedRect(vx, vy, vw, vh, 2);
+          const hx = Math.min(x2, x3), hy = Math.min(y2, y3);
+          const hw = Math.abs(x3 - x2) || thick;
+          const hh = Math.abs(y3 - y2) || thick;
+          g.drawRoundedRect(hx, hy, hw, hh, 2);
+          g.endFill();
+          container.addChild(g);
+        };
 
-      drawCorner(off, off + len, off, off, off + len, off);
-      drawCorner(cs - off - thick, off + len, cs - off - thick, off, cs - off - len, off);
-      drawCorner(off, cs - off - len, off, cs - off - thick, off + len, cs - off - thick);
-      drawCorner(cs - off - thick, cs - off - len, cs - off - thick, cs - off - thick, cs - off - len, cs - off - thick);
+        drawCorner(off, off + len, off, off, off + len, off);
+        drawCorner(cs - off - thick, off + len, cs - off - thick, off, cs - off - len, off);
+        drawCorner(off, cs - off - len, off, cs - off - thick, off + len, cs - off - thick);
+        drawCorner(cs - off - thick, cs - off - len, cs - off - thick, cs - off - thick, cs - off - len, cs - off - thick);
+      }
 
       this.addChild(container);
       this._cornerBrackets = container;
     }
   }
 
-  private _redraw(): void {
+  private _paintCellBase(): void {
     const cs = BoardMetrics.cellSize;
-
     this._bg.clear();
     this._bg.beginFill(0xFFFBF5, 0.55);
     this._bg.drawRoundedRect(0, 0, cs, cs, 8);
     this._bg.endFill();
+
+    const greenMatch =
+      this._orderReserved &&
+      (this._state === CellState.OPEN || this._state === CellState.PEEK);
+    if (greenMatch) {
+      this._bg.beginFill(
+        COLORS.CELL_ORDER_MATCH_OVERLAY,
+        COLORS.CELL_ORDER_MATCH_OVERLAY_ALPHA,
+      );
+      this._bg.drawRoundedRect(0, 0, cs, cs, 8);
+      this._bg.endFill();
+    }
+  }
+
+  private _redraw(): void {
+    const cs = BoardMetrics.cellSize;
+
+    this._paintCellBase();
 
     if (this._fogOverlay) {
       this.removeChild(this._fogOverlay);

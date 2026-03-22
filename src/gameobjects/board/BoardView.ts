@@ -27,7 +27,6 @@ import { SeasonSystem } from '@/systems/SeasonSystem';
 export class BoardView extends PIXI.Container {
   private _cellViews: CellView[] = [];
   private _itemViews: ItemView[] = [];
-  private _peekOverlays: PIXI.Sprite[] = [];
   private _dragGhost: PIXI.Container | null = null;
   private _dragSrcIndex = -1;
   private _dragHoverIndex = -1;
@@ -128,21 +127,17 @@ export class BoardView extends PIXI.Container {
 
   /** 根据 BoardManager 数据刷新所有视图 */
   refresh(): void {
-    // 清理旧的 PEEK 丝带 overlay
-    for (const ov of this._peekOverlays) {
-      this.removeChild(ov);
-      ov.destroy();
-    }
-    this._peekOverlays.length = 0;
-
-    const cs = BoardMetrics.cellSize;
-
     for (let i = 0; i < BoardManager.cells.length; i++) {
       const cell = BoardManager.cells[i];
       const cellView = this._cellViews[i];
       const itemView = this._itemViews[i];
 
       cellView.setState(cell.state);
+      cellView.setOrderReserved(
+        !!cell.reserved &&
+          !!cell.itemId &&
+          (cell.state === CellState.OPEN || cell.state === CellState.PEEK),
+      );
 
       if (cell.state === CellState.PEEK && cell.itemId) {
         itemView.setItem(cell.itemId);
@@ -169,20 +164,8 @@ export class BoardView extends PIXI.Container {
       // 客人锁定标记
       itemView.setLocked(cell.reserved);
 
-      // PEEK 丝带 overlay（叠在 ItemView 之上）
-      if (cell.state === CellState.PEEK) {
-        const peekTex = TextureCache.get('cell_peek');
-        if (peekTex) {
-          const sp = new PIXI.Sprite(peekTex);
-          const fitSize = cs * 1.0;
-          const scale = Math.min(fitSize / peekTex.width, fitSize / peekTex.height);
-          sp.scale.set(scale);
-          sp.anchor.set(0.5, 0.5);
-          sp.position.set(cellView.x + cs / 2, cellView.y + cs / 2);
-          this.addChild(sp);
-          this._peekOverlays.push(sp);
-        }
-      }
+      // 半解锁丝带：挂在 ItemView 内并强制盖在体力角标之上
+      itemView.setPeekRibbon(cell.state === CellState.PEEK);
     }
   }
 
@@ -735,30 +718,9 @@ export class BoardView extends PIXI.Container {
               itemView.alpha = 1;
             }
 
-            // PEEK 丝带 overlay
-            const peekTex = TextureCache.get('cell_peek');
-            if (cell.state === CellState.PEEK && peekTex) {
-              const ribbon = new PIXI.Sprite(peekTex);
-              const fitRibbon = cs * 1.0;
-              const rScale = Math.min(fitRibbon / peekTex.width, fitRibbon / peekTex.height);
-              ribbon.scale.set(0);
-              ribbon.anchor.set(0.5, 0.5);
-              ribbon.position.set(cellView.x + cs / 2, cellView.y + cs / 2);
-              ribbon.alpha = 0;
-              this.addChild(ribbon);
-              this._peekOverlays.push(ribbon);
-
-              TweenManager.to({
-                target: ribbon,
-                props: { alpha: 1 },
-                duration: 0.3,
-              });
-              TweenManager.to({
-                target: ribbon.scale,
-                props: { x: rScale, y: rScale },
-                duration: 0.4,
-                ease: Ease.easeOutBack,
-              });
+            // PEEK 丝带（在物品层内；若 merge 已 refresh 则不再重复 intro）
+            if (cell.state === CellState.PEEK && itemView) {
+              itemView.setPeekRibbon(true, { intro: true });
             }
           }
         },

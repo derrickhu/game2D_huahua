@@ -5,6 +5,7 @@ import * as PIXI from 'pixi.js';
 import { BoardMetrics, COLORS, FONT_FAMILY } from '@/config/Constants';
 import { ITEM_DEFS, Category, FlowerLine, DrinkLine } from '@/config/ItemConfig';
 import { TextureCache } from '@/utils/TextureCache';
+import { TweenManager, Ease } from '@/core/TweenManager';
 import {
   bringToolEnergyToFront,
   createToolEnergySprite,
@@ -28,6 +29,10 @@ export class ItemView extends PIXI.Container {
   private _lockBorder: PIXI.Graphics;
   /** 工具右下角体力标 */
   private _toolEnergySprite: PIXI.Sprite | null = null;
+  /** 客人订单锁定：右下角完成角标（图） */
+  private _orderBadge: PIXI.Sprite | null = null;
+  /** 半解锁(PEEK) 丝带：必须在体力标等之上，放本容器内并始终置顶 */
+  private _peekRibbon: PIXI.Sprite | null = null;
 
   private _itemId: string = '';
 
@@ -107,16 +112,20 @@ export class ItemView extends PIXI.Container {
 
   setItem(itemId: string | null): void {
     if (!itemId) {
+      this.setPeekRibbon(false);
       this.visible = false;
       this._itemId = '';
       this._hideToolEnergy();
+      this._hideOrderBadge();
       return;
     }
 
     const def = ITEM_DEFS.get(itemId);
     if (!def) {
+      this.setPeekRibbon(false);
       this.visible = false;
       this._hideToolEnergy();
+      this._hideOrderBadge();
       return;
     }
 
@@ -185,18 +194,45 @@ export class ItemView extends PIXI.Container {
     return this._itemId;
   }
 
-  /** 显示/隐藏客人锁定标记（金色闪烁边框） */
+  /**
+   * 客人订单已锁定该格：仅显示右下角对钩与格子的淡绿遮罩（CellView），
+   * 不再绘制程序金边，避免与选中黄框混淆。
+   */
   setLocked(locked: boolean): void {
-    const cs = BoardMetrics.cellSize;
     this._lockBorder.clear();
-    if (locked) {
-      this._lockBorder.visible = true;
-      this._lockBorder.lineStyle(2.5, COLORS.GOLD, 0.85);
-      this._lockBorder.drawRoundedRect(1, 1, cs - 2, cs - 2, 8);
-    } else {
-      this._lockBorder.visible = false;
+    this._lockBorder.visible = false;
+    this._syncOrderBadge(locked);
+    this._bringToolEnergyThenPeekOnTop();
+  }
+
+  private _hideOrderBadge(): void {
+    if (this._orderBadge) {
+      this.removeChild(this._orderBadge);
+      this._orderBadge.destroy();
+      this._orderBadge = null;
     }
-    bringToolEnergyToFront(this, this._toolEnergySprite);
+  }
+
+  /** 订单已匹配：右下角绿色对钩角标 */
+  private _syncOrderBadge(locked: boolean): void {
+    this._hideOrderBadge();
+    if (!locked || !this.visible) return;
+
+    const tex = TextureCache.get('ui_order_check_badge');
+    if (!tex) return;
+
+    const cs = BoardMetrics.cellSize;
+    const sp = new PIXI.Sprite(tex);
+    /** 右下角贴格内边，锚点右下避免画出格子 */
+    const pad = Math.max(4, Math.round(cs * 0.055));
+    const maxSide = cs * 0.42;
+    const s = maxSide / Math.max(tex.width, tex.height);
+    sp.scale.set(s);
+    sp.anchor.set(1, 1);
+    sp.position.set(cs - pad, cs - pad);
+    this.addChild(sp);
+    this._orderBadge = sp;
+    this._bringToolEnergyThenPeekOnTop();
   }
 
   /** 显示/隐藏消耗型剩余次数 */
@@ -207,7 +243,7 @@ export class ItemView extends PIXI.Container {
     }
     this._usesText.text = `×${uses}`;
     this._usesText.visible = true;
-    bringToolEnergyToFront(this, this._toolEnergySprite);
+    this._bringToolEnergyThenPeekOnTop();
   }
 
   /** 显示/隐藏 CD 冷却遮罩 */
@@ -235,7 +271,7 @@ export class ItemView extends PIXI.Container {
     this._cdOverlay.endFill();
 
     this._cdText.text = `${Math.ceil(remaining)}s`;
-    bringToolEnergyToFront(this, this._toolEnergySprite);
+    this._bringToolEnergyThenPeekOnTop();
   }
 
   private _hideToolEnergy(): void {
@@ -253,7 +289,75 @@ export class ItemView extends PIXI.Container {
     if (!sp) return;
     this._toolEnergySprite = sp;
     this.addChild(sp);
-    bringToolEnergyToFront(this, sp);
+    this._bringToolEnergyThenPeekOnTop();
+  }
+
+  /**
+   * 半解锁格丝带（原在 BoardView 上易被体力标 sibling 顺序影响；放入本视图并强制最上层）
+   */
+  setPeekRibbon(show: boolean, opts?: { intro?: boolean }): void {
+    if (!show) {
+      if (this._peekRibbon) {
+        this.removeChild(this._peekRibbon);
+        this._peekRibbon.destroy();
+        this._peekRibbon = null;
+      }
+      return;
+    }
+
+    const peekTex = TextureCache.get('cell_peek');
+    if (!peekTex) return;
+
+    const cs = BoardMetrics.cellSize;
+    const fitSize = cs * 1.0;
+    const rScale = Math.min(fitSize / peekTex.width, fitSize / peekTex.height);
+
+    if (!this._peekRibbon) {
+      const ribbon = new PIXI.Sprite(peekTex);
+      ribbon.anchor.set(0.5, 0.5);
+      ribbon.position.set(cs / 2, cs / 2);
+      this.addChild(ribbon);
+      this._peekRibbon = ribbon;
+    }
+
+    const ribbon = this._peekRibbon!;
+    ribbon.position.set(cs / 2, cs / 2);
+
+    // intro 仅用于尚未显示过的丝带（避免 merge 已 refresh 后再播一遍缩放把角标盖住逻辑打乱）
+    const needIntro = !!opts?.intro && ribbon.alpha < 0.05;
+    if (needIntro) {
+      ribbon.scale.set(0);
+      ribbon.alpha = 0;
+      TweenManager.to({
+        target: ribbon,
+        props: { alpha: 1 },
+        duration: 0.3,
+      });
+      TweenManager.to({
+        target: ribbon.scale,
+        props: { x: rScale, y: rScale },
+        duration: 0.4,
+        ease: Ease.easeOutBack,
+        onComplete: () => this._ensurePeekRibbonOnTop(),
+      });
+    } else {
+      ribbon.alpha = 1;
+      ribbon.scale.set(rScale, rScale);
+    }
+
+    this._ensurePeekRibbonOnTop();
+  }
+
+  /** 体力标置顶后仍要保证丝带盖住角标（每帧 CD 等会反复顶体力） */
+  private _bringToolEnergyThenPeekOnTop(): void {
+    bringToolEnergyToFront(this, this._toolEnergySprite);
+    this._ensurePeekRibbonOnTop();
+  }
+
+  private _ensurePeekRibbonOnTop(): void {
+    if (this._peekRibbon && this._peekRibbon.parent === this && !this._peekRibbon.destroyed) {
+      this.setChildIndex(this._peekRibbon, this.children.length - 1);
+    }
   }
 
   private _getCategoryEmoji(category: Category): string {
