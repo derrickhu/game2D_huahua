@@ -89,11 +89,13 @@ TEA_SUBJECTS: dict[int, str] = {
     1: """
 LEVEL 1/8 — simplest: herbal tea BAG — **smallest tier; must look modest in a 1:1 cell.**
 
-**Shape:** **SLENDER and TALL** rectangular sachet (like a classic vertical tea bag), **NOT** a wide squat pillow — aspect about **taller than wide** (~1.25–1.6 : 1 height:width).
+**Shape:** **SLENDER and TALL** rectangular sachet (like a classic vertical tea bag), **NOT** a wide squat pillow — aspect about **taller than wide** (~1.25–1.6 : 1 height:width for the **bag body only**).
 
-**Scale:** whole prop (bag + string loop + small tag) only **~45–55%** of frame width AND height — **large empty #FF00FF padding** so it does not dominate the grid like a max-level item.
+**Scale:** whole prop (bag + string + loop + small tag) only **~32–42%** of frame **width** and **~38–48%** of frame **height** — **very large empty #FF00FF margin**; bag body itself is **small**, NOT a hero filling the square.
 
-LIGHT warm tan / cream kraft (#E8D5C4 feel) — bright NOT dark cardboard. Thin string + **small** tag with simple flower **silhouette** (no text). Hairline outline only. HARD EDGE per SHARED.
+**STRING (critical):** thin cord exits top of bag, runs **upward** with a **clear LONG loop** above the bag (generous arc — **do NOT** use a tiny stubby loop hugging the bag top). Then string descends to a **small** tag at the side/below the loop. Visually: **string+loop occupies a noticeable vertical band** so the line reads long and elegant; tag stays small. **FORBIDDEN:** cropping the loop against the top edge of canvas — keep **clear magenta gap** above the highest point of the string.
+
+LIGHT warm tan / cream kraft (#E8D5C4 feel) — bright NOT dark cardboard. **Small** tag with simple flower **silhouette** (no text). Hairline outline only. HARD EDGE per SHARED.
 """.strip(),
     2: """
 LEVEL 2/8 — jasmine tea. Short ceramic tea cup (squat), pale green-gold tea, 3–4 white jasmine buds floating on surface.
