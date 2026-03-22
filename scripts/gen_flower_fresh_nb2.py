@@ -133,21 +133,44 @@ LEVEL 6/10 — 玫瑰 (ROSE). Classic rose from slightly above — clear **SPIRA
 Must differ from Lv5: rose = smooth rounded petals in spiral, NOT frilly zigzag carnation mass. Dark red / brown-red hairline edge on petals only.
 """.strip(),
     7: """
-LEVEL 7/10 — 百合 (LILY). Elegant **6-petal star** — long pointed petals fanning symmetrically; white to soft blush pink gradient; small golden stamen cluster at center.
+LEVEL 7/10 — 多头百合 (multi-head LILY) — **short stem; OPEN flower = main hero; bud = clearly secondary.**
 
-**STEM IS REQUIRED (user reported missing):**
-- **Visible green stem** continuing **straight down** from the flower base below the petals — bloom must NOT float with zero stem.
-- Optional 1–2 slim leaves along stem; stem should read clearly against #FF00FF.
+STRUCTURE:
+- **ONE short green stem** — user: stem was too long — keep stem **stubby**: visible stem+below-bloom segment only **~10–18%** of total icon height (leaves sit **close under** the open bloom, **NOT** a tall pole).
+- **Head A — OPEN lily (PRIMARY, dominates frame):** classic **6 long pointed petals**; white → soft blush pink; **golden stamens** at center. This bloom must be the **largest shape** and sit in the **center / upper-center** — **~65–78%** of the plant's **silhouette area** (petals fill the square).
+- **Head B — bud (SECONDARY):** **smaller** closed bud (**~30–45%** the visual size of the open head), placed **peripheral** — e.g. **lower side**, **tucked near a leaf**, or **slightly behind** — reads as accent, **NOT** competing with the open flower.
 
-Very distinct from rose (spiral) and carnation (frilly globe). Hairline soft-pink on petals, darker green on stem.
+**BUD ORIENTATION:** tip **up or gently outward** — **FORBIDDEN** drooping bud toward bottom edge.
+
+**LEAVES:** **1–2 slim leaves** max near the **short** stem base — **small** relative to the open bloom so they **do not** steal focus.
+
+**FILL THE 1:1 CELL:** whole plant **~82–90%** — but **petal mass** of the **open lily** is the clear focal mass.
+
+Very distinct from rose / carnation. Hairline soft-pink on petals, darker green on stem. HARD EDGE per SHARED.
 """.strip(),
     8: """
 LEVEL 8/10 — 绣球 (HYDRANGEA). Big round ball of many small clustered florets — fluffy blue–periwinkle sphere (#90CAF9 → #5C6BC0) with bumpy readable texture.
 Two chunky green leaves at bottom. Premium tier, fuller than lily. Dark blue hairline edge.
 """.strip(),
     9: """
-LEVEL 9/10 — 兰花 (ORCHID). Distinctive butterfly shape: upper petals smooth purple–violet (#CE93D8 → #7B1FA2), lower lip petal deeper rose-wine (#AD1457) — NOT #FF00FF.
-Thin curved stem. Silhouette clearly orchid-like. Dark purple / wine red hairline edges.
+LEVEL 9/10 — 蝴蝶兰 (Phalaenopsis, "moth orchid") — **real shape + flowers are 90% of the icon.**
+
+REFERENCE (botanical — follow this read):
+- Flowers look like a **moth in flight**: **3 sepals + 2 true petals** spread **wide and flat**; **petals broader** than sepals; center has a short **column**; the **labellum (lip)** is the showy modified petal — often **3-lobed**, contrasting color, slightly **forward** — NOT a generic 5-petal daisy.
+- Blooms along a **short arching spike**; can face slightly different directions.
+
+COUNT (flexible — user OK with one OR several):
+- **1, 2, OR 3 open blooms** on the same short stem — **NOT 4+.** If **one** flower: make it **extra large** to fill the frame. If **2–3**: **one hero largest**, others smaller, **overlapping depth**.
+
+STEM / LEAVES:
+- **NO basal leaf rosette** — **FORBIDDEN** thick leaf pile at bottom. Prefer **only** thin green **stem / pedicels**; stem is **minimal** connector.
+- **Optional:** at most **one tiny** leaf hint or none.
+
+COLOR: sepals/petals purple–violet (#CE93D8 → #7B1FA2); **lip** deeper rose-wine **#AD1457 family — NOT #FF00FF**; yellow/cream accents on lip throat OK; white highlight spots per SHARED.
+
+**FILL THE 1:1 CELL:** combined bloom silhouettes **~88–95%** of frame — **petals are the subject**, thin #FF00FF rim.
+
+Silhouette must read **Phalaenopsis / 蝴蝶兰**, not generic purple flower. Dark purple / wine hairline. HARD EDGE per SHARED.
 """.strip(),
     10: """
 LEVEL 10/10 — 华贵牡丹 / 金色牡丹 (PEONY prestige). Large luxurious many-petal bloom: rich gold–amber–deep orange gradient (#FFD54F → #F57C00 → #E65100), layered round petals in 3–4 rings.

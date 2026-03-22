@@ -288,7 +288,7 @@ export class BoardView extends PIXI.Container {
       if (!cell) return;
 
       if (cell.state === CellState.KEY) return;
-      if (cell.itemId && BuildingManager.isInteractable(cell.itemId)) return;
+      // 工具/宝箱也可拖拽合成与移动；松手仍在原格时由 handleRawUp → _handleTap 触发点击产出
 
       // 长按检测：0.8秒后弹出合成线面板
       if (cell.itemId && cell.state === CellState.OPEN) {
