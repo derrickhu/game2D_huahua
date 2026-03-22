@@ -5,7 +5,6 @@ import { EventBus } from '@/core/EventBus';
 import { BOARD_COLS, BOARD_ROWS, BOARD_TOTAL } from '@/config/Constants';
 import { CellState, BOARD_PRESETS } from '@/config/BoardLayout';
 import { ITEM_DEFS, getMergeResultId, Category, FlowerLine } from '@/config/ItemConfig';
-import { BUILDING_DEFS } from '@/config/BuildingConfig';
 import { SeasonSystem } from '@/systems/SeasonSystem';
 
 export interface CellData {
@@ -53,7 +52,6 @@ class BoardManagerClass {
     this._randomizeInitialOpenItems();
     this._ensureAtLeastOneMergePair();
 
-    // 兜底校验：如果 init 后棋盘竟然没物品，用预设数据恢复
     const itemCount = this.cells.filter(c => c.itemId).length;
     if (itemCount === 0) {
       console.error('[Board] 初始化后无物品！用预设数据恢复...');
@@ -84,36 +82,29 @@ class BoardManagerClass {
     return this.cells[index] || null;
   }
 
-  /** 初始化随机开局：保留预设的建筑/材料/宝箱，仅随机填充花束/花饮类空位 */
+  /** 初始化随机开局：保留预设的建筑/宝箱，仅随机填充花/饮品类空位 */
   private _randomizeInitialOpenItems(): void {
     const openCells = this.cells.filter(c => c.state === CellState.OPEN);
     if (openCells.length < 2) return;
 
-    // 先检查填充池，池子为空则不做任何修改，保留预设物品
     const mergeableLv1 = this._buildMergeableLv1Pool();
     if (mergeableLv1.length === 0) {
       console.warn('[Board] 可合成物品池为空，保留预设物品, ITEM_DEFS.size:', ITEM_DEFS.size);
       return;
     }
 
-    // 保留建筑、建筑材料、宝箱等特殊预设物品
-    // 注意：ITEM_DEFS 中找不到的物品也保留（安全起见不清除未知物品）
-    const preserveCategories = new Set([
-      Category.BUILDING, Category.BUILDING_MAT, Category.CHEST,
-    ]);
+    const preserveCategories = new Set([Category.BUILDING, Category.CHEST]);
     const fillable = openCells.filter(c => {
       if (!c.itemId) return true;
       const def = ITEM_DEFS.get(c.itemId);
-      if (!def) return false; // 未知物品保留，不清除
+      if (!def) return false;
       return !preserveCategories.has(def.category);
     });
 
     if (fillable.length < 2) return;
 
-    // 清空可填充格，准备重新随机
     for (const c of fillable) c.itemId = null;
 
-    // 至少保留 2 个空格供建筑产出使用
     const emptyReserve = 2;
     const maxFill = Math.max(2, fillable.length - emptyReserve);
 
@@ -129,10 +120,9 @@ class BoardManagerClass {
   }
 
   private _buildMergeableLv1Pool(): string[] {
-    // 当前只有日常花系有真实图片资源，优先使用
     return [...ITEM_DEFS.values()]
       .filter(def => def.level === 1 && def.maxLevel > 1)
-      .filter(def => def.category === Category.FLOWER && def.line === FlowerLine.DAILY)
+      .filter(def => def.category === Category.FLOWER && def.line === FlowerLine.FRESH)
       .map(def => def.id);
   }
 
@@ -171,7 +161,7 @@ class BoardManagerClass {
     second.itemId = pairId;
   }
 
-  /** 判断两个物品是否可以合成（含跨格合成） */
+  /** 判断两个物品是否可以合成 */
   canMerge(srcIndex: number, dstIndex: number): boolean {
     const src = this.cells[srcIndex];
     const dst = this.cells[dstIndex];
@@ -183,15 +173,13 @@ class BoardManagerClass {
     if (!def) return false;
     if (def.level >= def.maxLevel) return false;
 
-    // 来源格必须是已开放格
     if (src.state !== CellState.OPEN) return false;
-    // 目标格可以是 OPEN 或 PEEK（跨格合成，无距离限制）
     if (dst.state !== CellState.OPEN && dst.state !== CellState.PEEK) return false;
 
     return true;
   }
 
-  /** 执行合成（含跨格合成 + 建筑材料满级自动转化 + 季节跳级） */
+  /** 执行合成（含跨格合成 + 季节跳级） */
   doMerge(srcIndex: number, dstIndex: number): string | null {
     if (!this.canMerge(srcIndex, dstIndex)) return null;
 
@@ -200,7 +188,7 @@ class BoardManagerClass {
     let resultId = getMergeResultId(src.itemId!);
     if (!resultId) return null;
 
-    // 春天日常花系跳级：20%概率产物再升一级
+    // 季节跳级
     const srcDef = ITEM_DEFS.get(src.itemId!);
     if (srcDef) {
       const skipChance = SeasonSystem.getSkipLevelChance(srcDef.line);
@@ -220,14 +208,13 @@ class BoardManagerClass {
     src.reserved = false;
 
     if (isPeekMerge) {
-      dst.itemId = null;
       dst.state = CellState.OPEN;
-      src.itemId = resultId;
-      resultCellIndex = srcIndex;
+      dst.itemId = resultId;
+      dst.reserved = false;
+      resultCellIndex = dstIndex;
       EventBus.emit('board:merged', srcIndex, dstIndex, resultId, resultCellIndex);
       EventBus.emit('board:cellUnlocked', dstIndex);
       this._checkRippleUnlock(dstIndex);
-      this._checkRippleUnlock(srcIndex);
     } else {
       dst.itemId = resultId;
       dst.reserved = false;
@@ -236,26 +223,7 @@ class BoardManagerClass {
       this._checkRippleUnlock(dstIndex);
     }
 
-    // 建筑材料满级 → 自动转化为功能建筑
-    const finalId = this._checkBuildingMatConversion(resultCellIndex, resultId);
-    return finalId || resultId;
-  }
-
-  /** 检查建筑材料是否满级需要自动转化为建筑 */
-  private _checkBuildingMatConversion(cellIndex: number, itemId: string): string | null {
-    const def = ITEM_DEFS.get(itemId);
-    if (!def || def.category !== Category.BUILDING_MAT) return null;
-    if (def.level < def.maxLevel) return null;
-
-    for (const [buildingId, bDef] of BUILDING_DEFS) {
-      if (bDef.requireMatId === itemId) {
-        this.cells[cellIndex].itemId = buildingId;
-        console.log(`[Board] 建筑材料 ${def.name} 满级自动转化为建筑: ${bDef.name}`);
-        EventBus.emit('board:buildingConverted', cellIndex, itemId, buildingId);
-        return buildingId;
-      }
-    }
-    return null;
+    return resultId;
   }
 
   /** 判断两个格子是否相邻（上下左右） */
@@ -282,7 +250,7 @@ class BoardManagerClass {
     return true;
   }
 
-  /** 在指定格子放置物品（建筑产出等） */
+  /** 在指定格子放置物品（工具产出等） */
   placeItem(index: number, itemId: string): boolean {
     const cell = this.cells[index];
     if (!cell || cell.state !== CellState.OPEN || cell.itemId) return false;
@@ -383,8 +351,6 @@ class BoardManagerClass {
       }
     }
 
-    // 确保至少有一对可合成物品（防止玩家完全卡死）
-    // 注意：不再重新随机填充，只在完全无可操作时补一对
     this._ensureAtLeastOneMergePair();
 
     const openCells = this.cells.filter(c => c.state === CellState.OPEN);

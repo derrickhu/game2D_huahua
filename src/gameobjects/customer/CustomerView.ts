@@ -174,8 +174,8 @@ export class CustomerView extends PIXI.Container {
     const badge = new PIXI.Container();
     badge.position.set(0, REWARD_BADGE_Y);
 
-    const iconSize = 14;
-    const gap = 2;
+    const iconSize = 22;
+    const gap = 4;
     let offsetX = 0;
     const items: { icon: string; value: number }[] = [];
 
@@ -197,17 +197,22 @@ export class CustomerView extends PIXI.Container {
         offsetX += iconSize + gap;
       }
       const val = new PIXI.Text(`${item.value}`, {
-        fontSize: 11, fill: 0xFFFFFF, fontFamily: FONT_FAMILY, fontWeight: 'bold',
+        fontSize: 16,
+        fill: 0xFFFFFF,
+        fontFamily: FONT_FAMILY,
+        fontWeight: 'bold',
+        stroke: 0x000000,
+        strokeThickness: 3,
       });
       val.anchor.set(0, 0.5);
       val.position.set(offsetX, 0);
       content.addChild(val);
-      offsetX += val.width + 6;
+      offsetX += val.width + 8;
     }
 
-    const padX = 6;
-    const padY = 3;
-    const bw = offsetX - 6 + padX * 2;
+    const padX = 8;
+    const padY = 5;
+    const bw = offsetX - 8 + padX * 2;
     const bh = iconSize + padY * 2;
 
     const bg = new PIXI.Graphics();
@@ -245,7 +250,7 @@ export class CustomerView extends PIXI.Container {
       sprite.scale.set(s);
       sprite.anchor.set(0.5, 0.5);
       sprite.position.set(x + cs / 2, y + cs / 2);
-      if (!filled) sprite.alpha = 0.45;
+      
       this._infoPanel.addChild(sprite);
     } else {
       const iconColor = this._getLineColor(def.line);
@@ -256,7 +261,7 @@ export class CustomerView extends PIXI.Container {
       fg.beginFill(iconColor, 0.3);
       fg.drawCircle(x + cs / 2, y + cs / 2 - 2, cs * 0.22);
       fg.endFill();
-      if (!filled) fg.alpha = 0.5;
+      
       this._infoPanel.addChild(fg);
 
       const emoji = this._getCategoryEmoji(def.category);
@@ -266,7 +271,7 @@ export class CustomerView extends PIXI.Container {
       );
       nameTxt.anchor.set(0.5, 1);
       nameTxt.position.set(x + cs / 2, y + cs - 1);
-      if (!filled) nameTxt.alpha = 0.5;
+      
       this._infoPanel.addChild(nameTxt);
     }
 
@@ -370,9 +375,9 @@ export class CustomerView extends PIXI.Container {
 
   private _getLineColor(line: string): number {
     switch (line) {
-      case FlowerLine.DAILY: return COLORS.FLOWER_DAILY;
-      case FlowerLine.ROMANTIC: return COLORS.FLOWER_ROMANTIC;
-      case FlowerLine.LUXURY: return COLORS.FLOWER_LUXURY;
+      case FlowerLine.FRESH: return COLORS.FLOWER_FRESH;
+      case FlowerLine.BOUQUET: return COLORS.FLOWER_BOUQUET;
+      case FlowerLine.GREEN: return COLORS.FLOWER_GREEN;
       case DrinkLine.TEA: return COLORS.DRINK_TEA;
       case DrinkLine.COLD: return COLORS.DRINK_COLD;
       case DrinkLine.DESSERT: return COLORS.DRINK_DESSERT;

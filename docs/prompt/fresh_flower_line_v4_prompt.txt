@@ -1,0 +1,37 @@
+A game item icon sheet with 10 individual flower icons arranged in a 5 columns × 2 rows grid layout. Merge progression from Level 1 (seed) to Level 10 (golden peony). Each icon is a bold, chunky GAME ICON — NOT a realistic flower illustration.
+
+VERY IMPORTANT: Solid #FF00FF magenta background everywhere. ABSOLUTELY NO TEXT anywhere. NO sparkles or particles OUTSIDE the flower shape — all decoration must be INSIDE the flower silhouette for clean cropping.
+
+STYLE REQUIREMENTS (follow EXACTLY):
+- Bold chunky rounded shapes — like game UI icons or emoji
+- Each flower is a SIMPLE GEOMETRIC SHAPE with minimal internal detail
+- ONLY 2-color gradient per flower (light tone → dark tone of SAME hue)
+- THIN outline (1px) around the shape in a DARKER shade of the SAME COLOR as the fill — NOT black, NOT dark brown. Example: pink flower gets dark pink outline, yellow flower gets dark yellow outline, blue flower gets dark blue outline
+- Soft 3D volume: bright highlight on top-left, darker shade on bottom-right
+- Subtle drop shadow beneath each icon
+- NO petal veins, NO fine texture — pure color and shape
+- Each icon fills 80% of its cell, centered
+- Small white specular highlight dot on top-left area
+- Think "3D clay render" or "inflatable toy" aesthetic
+
+GRID (left to right, top to bottom):
+
+[Row 1, Col 1] Lv1 SEED: A plump round seed. Warm brown gradient (#A1887F → #6D4C41), DARK BROWN thin outline. Tiny bright green sprout leaf on top. Small orange-brown pot beneath. Drop shadow. On #FF00FF.
+
+[Row 1, Col 2] Lv2 SPROUT: A chunky terracotta pot (rounded, orange-brown) with TWO big round green leaves (#66BB6A → #388E3C, dark green thin outline) and a small pink flower bud dot between them. Simple: pot + 2 leaves + bud. Drop shadow. On #FF00FF.
+
+[Row 1, Col 3] Lv3 DAISY: BIG round golden-yellow puffy center dome (#FFD54F → #F9A825), surrounded by 8 chunky rounded white petals (#FFFFFF → #E8E8E8). THIN warm-gray outline on petals, thin golden outline on center. Short green stem nub. Drop shadow. On #FF00FF.
+
+[Row 1, Col 4] Lv4 SUNFLOWER: Large round dark brown center (#5D4037 → #3E2723), ring of chunky golden-yellow petals (#FFC107 → #F57F17). THIN dark-gold outline. One thick green leaf at bottom. Drop shadow. On #FF00FF.
+
+[Row 1, Col 5] Lv5 CARNATION: A TALL vertically elongated ruffled bloom — NOT a round ball. Multiple stacked frilly petal layers creating a cylindrical/tower shape. Soft pink gradient (#F8BBD0 → #EC407A). THIN dark-pink outline. The ruffled layers should be visible as 4-5 horizontal wavy tiers stacked vertically, each tier slightly different shade of pink. Short green stem. Drop shadow. On #FF00FF.
+
+[Row 2, Col 1] Lv6 ROSE: Classic rose icon viewed from above — a FLAT SPIRAL pattern with 3-4 concentric curved petal layers creating a clear swirl/pinwheel. Deep red gradient (#EF5350 → #B71C1C). THIN dark-red outline. Two chunky dark green leaves at base. Very different from carnation — rose is ROUND and FLAT with a visible spiral center, carnation is TALL and RUFFLED. Drop shadow. On #FF00FF.
+
+[Row 2, Col 2] Lv7 LILY: An elegant star-shaped bloom with 6 smooth long pointed petals fanning outward symmetrically. Pure white to soft pink gradient (#FFFFFF → #F8BBD0). THIN soft-pink outline. Small golden dots at center. Clean starfish-like silhouette — very different from all other flowers. Drop shadow. On #FF00FF.
+
+[Row 2, Col 3] Lv8 HYDRANGEA: A big round ball of clustered tiny bumps — like a fluffy blue sphere with a bumpy surface texture. Blue-to-purple gradient (#90CAF9 → #5C6BC0). THIN dark-blue outline. Two chunky green leaves at bottom. Clearly a round dense cluster ball shape. Drop shadow. On #FF00FF.
+
+[Row 2, Col 4] Lv9 ORCHID: A distinctive butterfly/moth shape — 3 big smooth rounded upper petals in purple gradient (#CE93D8 → #7B1FA2), one distinctive lip petal at bottom in deeper magenta (#AD1457). THIN dark-purple outline. Clean butterfly-like silhouette. Thin curved stem. Drop shadow. On #FF00FF.
+
+[Row 2, Col 5] Lv10 GOLDEN PEONY: A magnificent large round bloom with many chunky layered round petals in rich gold gradient (#FFD54F → #E65100). THIN dark-gold outline. Petals arranged in 3-4 concentric rings, each ring slightly darker toward center. Two dark green leaves at base. The biggest icon. NO sparkles or stars outside the flower — keep the silhouette clean. Drop shadow. On #FF00FF.

@@ -1,0 +1,38 @@
+A game item icon sheet with 10 individual flower icons arranged in a 5 columns × 2 rows grid layout. This represents a merge progression chain from Level 1 (simple seed) to Level 10 (legendary magical flower). Each icon is a standalone single flower/plant item, drawn in cute hand-painted 2D anime game style with soft 3D volume shading, matching a cozy flower shop merge game aesthetic.
+
+VERY IMPORTANT: The entire background of the image and behind every icon MUST be solid bright magenta pink color #FF00FF. Every single pixel that is not part of an icon must be exactly #FF00FF magenta. No gradients, no cream, no white — ONLY solid #FF00FF magenta background everywhere. Thin solid #FF00FF magenta borders separating grid cells.
+
+STYLE REQUIREMENTS (MUST follow to match existing game assets):
+- Cute kawaii hand-painted illustration style, soft and warm
+- Each flower is a SINGLE stem/plant, NOT a bouquet — this is the "fresh flowers" line
+- Soft warm color palette with gentle gradients, NOT flat colors
+- Gentle 3D volume/depth through soft inner shading and highlights
+- Clean soft outlines (slightly darker than fill color, NOT harsh black)
+- Warm lighting from top-left with subtle white highlight spots
+- Each icon fills approximately 75-80% of its grid cell
+- Progressive beauty: Level 1 is simple/small, Level 10 is elaborate/magical/glowing
+- Each higher level flower should appear MORE refined, MORE vibrant, and MORE precious than the previous
+- NO TEXT, no labels, no numbers, no captions, no writing anywhere in the image
+- Background is SOLID #FF00FF MAGENTA everywhere, no exceptions
+
+GRID LAYOUT (left to right, top to bottom — Level 1 to Level 10):
+
+[Row 1, Col 1] LEVEL 1 — FLOWER SEED: A small round brown seed with a tiny green sprout just beginning to emerge from the top. Simple, humble beginning. Warm earthy brown (#8D6E63) with a bright green (#66BB6A) tiny leaf. On solid magenta #FF00FF background.
+
+[Row 1, Col 2] LEVEL 2 — SMALL SEEDLING: A cute small green seedling in a tiny terracotta pot. Two small round green leaves on a thin stem, with a tiny pink flower bud at the top just starting to open. Fresh spring green colors (#81C784, #A5D6A7). On solid magenta #FF00FF background.
+
+[Row 1, Col 3] LEVEL 3 — DAISY: A charming single white daisy flower with a plump golden-yellow center, 8-10 rounded white petals with very soft warm shadows, a green stem with one small leaf. Simple and cheerful. Matches the existing daisy asset style exactly. On solid magenta #FF00FF background.
+
+[Row 1, Col 4] LEVEL 4 — SUNFLOWER: A bright cheerful sunflower with rich golden-yellow petals (#FFD54F to #F9A825) radiating outward, a large dark brown center with detailed seed texture, thick green stem with broad leaf. Warm and vibrant. Matches existing sunflower asset style. On solid magenta #FF00FF background.
+
+[Row 1, Col 5] LEVEL 5 — CARNATION: A single fluffy pink carnation flower with delicately ruffled petal edges in soft pink gradient (#F48FB1 to #EC407A), creating a lush rounded bloom shape. Green stem with slender leaves. Elegant and refined. Matches existing carnation asset style. On solid magenta #FF00FF background.
+
+[Row 2, Col 1] LEVEL 6 — ROSE: A beautiful single red-to-deep-pink rose (#E91E63 to #C62828) in classic bloom shape with layered spiral petals showing depth and dimension. One or two dark green leaves. Rich velvety appearance with soft highlight on top petals. More refined than previous levels. On solid magenta #FF00FF background.
+
+[Row 2, Col 2] LEVEL 7 — LILY: An elegant white lily with graceful curved petals that have soft pink-blush edges (#FCE4EC) and golden stamens in the center. Long green stem, sophisticated and graceful form. Delicate beauty, more precious feeling. On solid magenta #FF00FF background.
+
+[Row 2, Col 3] LEVEL 8 — HYDRANGEA: A lush round cluster of hydrangea blooms in dreamy blue-lavender gradient (#90CAF9 to #CE93D8), many tiny four-petaled flowers clustered into one gorgeous ball shape. Rich green leaves underneath. Abundant and luxurious feeling. On solid magenta #FF00FF background.
+
+[Row 2, Col 4] LEVEL 9 — ORCHID (PHALAENOPSIS): An exquisite moth orchid with 3-4 elegant rounded petals in soft purple-pink gradient (#CE93D8 to #F48FB1), spotted/veined detail on petals, distinctive orchid lip in deeper magenta. Arching stem. Exotic and precious. On solid magenta #FF00FF background.
+
+[Row 2, Col 5] LEVEL 10 — ETERNAL FLOWER: A legendary magical crystalline flower that glows with ethereal light. Translucent petals in iridescent rainbow-shimmer gradient (soft gold → pink → lavender → sky blue), with tiny sparkle stars and gentle golden light rays emanating from its center. A small crystal/gem at the flower's heart. Surrounded by 2-3 tiny floating sparkle particles. The most beautiful, magical, and precious flower — clearly the ultimate legendary item. On solid magenta #FF00FF background.

@@ -6,6 +6,11 @@ import { BoardMetrics, COLORS, FONT_FAMILY } from '@/config/Constants';
 import { ITEM_DEFS, Category, FlowerLine, DrinkLine } from '@/config/ItemConfig';
 import { TextureCache } from '@/utils/TextureCache';
 
+/** 格子内物品最大边长占格子的比例（其余为边距） */
+const ITEM_CELL_FILL = 0.72;
+/** 花束线资源留白多，在格子里单独放大，边距更小 */
+const BOUQUET_CELL_FILL = 0.9;
+
 export class ItemView extends PIXI.Container {
   private _iconBg: PIXI.Graphics;
   private _iconSprite: PIXI.Sprite | null = null;
@@ -126,9 +131,9 @@ export class ItemView extends PIXI.Container {
       this._nameText.visible = false;
 
       this._iconSprite = new PIXI.Sprite(texture);
-      // 图片留 6px 内边距，居中显示
-      const padding = 6;
-      const maxSize = cs - padding * 2;
+      const fill =
+        def.line === FlowerLine.BOUQUET ? BOUQUET_CELL_FILL : ITEM_CELL_FILL;
+      const maxSize = cs * fill;
       const scaleX = maxSize / texture.width;
       const scaleY = maxSize / texture.height;
       const s = Math.min(scaleX, scaleY);
@@ -159,17 +164,10 @@ export class ItemView extends PIXI.Container {
       this._nameText.text = emoji + (def.name.length > 3 ? def.name.substring(0, 3) : def.name);
     }
 
-    // 等级徽章（右上角小圆点）
-    const badgeX = cs - 10;
-    const badgeY = 10;
     this._levelBg.clear();
-    this._levelBg.beginFill(lineColor, 0.85);
-    this._levelBg.drawCircle(0, 0, 8);
-    this._levelBg.endFill();
-    this._levelBg.position.set(badgeX, badgeY);
-
-    this._levelText.text = `${def.level}`;
-    this._levelText.position.set(badgeX, badgeY);
+    this._levelBg.visible = false;
+    this._levelText.text = '';
+    this._levelText.visible = false;
   }
 
   get itemId(): string {
@@ -230,7 +228,6 @@ export class ItemView extends PIXI.Container {
     switch (category) {
       case Category.FLOWER: return '🌸';
       case Category.DRINK: return '🍵';
-      case Category.BUILDING_MAT: return '🧱';
       case Category.BUILDING: return '🏠';
       case Category.CHEST: return '📦';
       default: return '❓';
@@ -241,7 +238,6 @@ export class ItemView extends PIXI.Container {
     switch (category) {
       case Category.FLOWER: return this._getLineColor(line);
       case Category.DRINK: return this._getLineColor(line);
-      case Category.BUILDING_MAT: return 0xB8860B;
       case Category.BUILDING: return 0x8B4513;
       case Category.CHEST: return 0xDAA520;
       default: return 0xCCCCCC;
@@ -250,9 +246,9 @@ export class ItemView extends PIXI.Container {
 
   private _getLineColor(line: string): number {
     switch (line) {
-      case FlowerLine.DAILY: return COLORS.FLOWER_DAILY;
-      case FlowerLine.ROMANTIC: return COLORS.FLOWER_ROMANTIC;
-      case FlowerLine.LUXURY: return COLORS.FLOWER_LUXURY;
+      case FlowerLine.FRESH: return COLORS.FLOWER_FRESH;
+      case FlowerLine.BOUQUET: return COLORS.FLOWER_BOUQUET;
+      case FlowerLine.GREEN: return COLORS.FLOWER_GREEN;
       case DrinkLine.TEA: return COLORS.DRINK_TEA;
       case DrinkLine.COLD: return COLORS.DRINK_COLD;
       case DrinkLine.DESSERT: return COLORS.DRINK_DESSERT;

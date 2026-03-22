@@ -1,0 +1,27 @@
+A game item icon sheet showing exactly 5 bouquet/flower arrangement icons in a 5-column × 2-row GRID (with the bottom row being a duplicate — use only the top row). Levels 6-10 of a flower bouquet merge chain. These are PREMIUM/LUXURY arrangements, visually grander and more elaborate than Levels 1-5.
+
+BACKGROUND: The ENTIRE image background MUST be solid #FF00FF magenta everywhere. Icons sit directly on the magenta.
+
+CRITICAL STYLE — must match the EXACT SAME style as Levels 1-5:
+- Bold vibrant SATURATED colors — bright coral-pink, rich crimson red, warm golden, pure white — NEVER muddy or dark
+- Every flower petal has SMOOTH GRADIENT shading with a prominent BRIGHT WHITE HIGHLIGHT creating glossy 3D volume
+- Clean THIN outlines in same color family as fill (NOT thick black)
+- Leaves are vivid bright green with white highlight
+- Simple rounded shapes, not over-detailed — use BOLD COLOR and VOLUME over fine detail
+- Game icon aesthetic — chunky, clear, readable at small sizes
+- NO TEXT, NO sparkles, NO glow effects, NO floating particles
+- Background is ONLY solid #FF00FF magenta
+
+GRID (5 columns × 2 rows — top row is the primary, bottom row is a slightly varied duplicate):
+
+[Row 1, Col 1] LEVEL 6 — FLOWER GIFT BOX (精美花盒): An elegant square ivory-white gift box with a wide golden satin ribbon tied in a big bow on top. The lid is slightly open/tilted, revealing bright red and pink roses arranged beautifully inside. The box has clean geometric lines, the ribbon is glossy gold with white highlights. Luxurious and special. Directly on #FF00FF.
+
+[Row 1, Col 2] LEVEL 7 — GRAND RED ROSE BOUQUET (红玫瑰大束): A LARGE impressive bouquet of many (12+) deep CRIMSON RED roses with glossy white highlights on each petal spiral. Wrapped in shimmering warm GOLD paper with a wide gold satin ribbon bow at the bottom. The gold wrapping has bright metallic highlights. Grand, romantic, and significantly bigger than previous bouquets. Directly on #FF00FF.
+
+[Row 1, Col 3] LEVEL 8 — FLOWER GIFT BASKET (花艺礼篮): A round woven basket with curved handle, overflowing with an abundant mix of flowers — pink roses, blue-purple hydrangea clusters, white blooms, and lush green leaves. Basket is warm golden-brown woven wicker with white highlights. Flowers are bright and glossy with visible white highlight spots. Rich and abundant. Directly on #FF00FF.
+
+[Row 1, Col 4] LEVEL 9 — GILDED BOUQUET (鎏金花束): An opulent large bouquet of soft PEACH-PINK peonies and cream roses, wrapped in deep BURGUNDY/WINE RED velvet paper with GOLD foil trim edges and a thick gold satin bow. Peonies are large, fluffy, with delicate peach gradient and white highlights. The dark wine wrapping creates elegant contrast with the soft flowers. Premium and luxurious. Directly on #FF00FF.
+
+[Row 1, Col 5] LEVEL 10 — LEGENDARY BOUQUET (传说花束): The MOST magnificent oversized bouquet — a grand cascade of RAINBOW-GRADIENT colored roses (soft pink, lavender purple, sky blue, peach, cream white, pale yellow) creating a beautiful color spectrum. Wrapped in elegant pearl-white paper with a wide soft gold satin ribbon. The rainbow roses are bright and vivid, each with glossy white highlights. Clearly the ultimate treasure — largest and most breathtaking. Directly on #FF00FF.
+
+[Row 2] Same 5 items as Row 1 but slightly different angle/size variation.

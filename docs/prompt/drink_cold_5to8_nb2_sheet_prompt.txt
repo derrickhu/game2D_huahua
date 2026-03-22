@@ -1,0 +1,42 @@
+Game item icon SPRITE SHEET — EXACTLY 4 premium cold-drink icons in ONE SINGLE HORIZONTAL ROW.
+
+ABSOLUTE LAYOUT RULE (highest priority):
+- 4 columns × 1 row ONLY. ONE row total across the entire image height.
+- FORBIDDEN: a second row, duplicate copy of the same row below, 2×4 grid, 4×2 grid, mirrored row, stacked rows.
+- If you draw 8 drinks, you FAILED — there must be ONLY 4 drinks in the whole image.
+- The image height must show ONE band of magenta top-to-bottom with four drinks side by side, NOT two bands stacked.
+
+CRITICAL GRID LAYOUT (must be perfect for automated slicing):
+- Divide the image into 4 EQUAL-WIDTH vertical columns. Each column is EXACTLY 25% of total image width. Ruler-perfect alignment.
+- Each drink icon is CENTERED horizontally inside its own column. The drink + glass silhouette must NOT cross into the neighboring column — keep clear empty #FF00FF magenta padding on BOTH left and right inside each column.
+- UNIFORM horizontal spacing: gap from LEFT edge to icon 1 = gap between 1–2 = 2–3 = 3–4 = gap from icon 4 to RIGHT edge.
+- Do NOT bunch icons in the center. Do NOT overlap columns.
+- All 4 icons share the SAME vertical alignment: each drink CENTERED vertically. Equal top and bottom magenta margin.
+- Each icon fills roughly 70–80% of its cell — similar visual weight; high-tier drinks can be slightly more ornate but must still fit the cell.
+
+BACKGROUND — STRICT:
+- The ENTIRE image is ONE flat solid color: #FF00FF magenta ONLY.
+- FORBIDDEN: alternating column colors, stripes, panels, background gradients. Same #FF00FF everywhere.
+- Icons sit directly on magenta. NO circles, NO badges, NO frames.
+
+NO TEXT ANYWHERE — HIGHEST PRIORITY:
+- ZERO text: no Chinese, English, numbers, brackets, captions above/below icons, labels, watermarks. ONLY four drinks on magenta.
+
+STYLE — match latest "green plant line" NB2 game icons:
+- BOLD VIVID SATURATED colors; glass and liquids feel glossy and expensive
+- Smooth GRADIENT shading + soft internal speculars (pale ice-blue, cream, mint) — NOT white描边 around the cup silhouette
+- NO WHITE OUTLINE: no continuous white border, no sticker white ring; outer edge line = darker tint of glass/liquid hue only
+- THIN outlines same hue family as glass/liquid (not heavy black)
+- Top-left warm lighting, chunky readable silhouettes
+- NO logos, NO sparkles outside drink, NO outer glow
+- Garnishes (peels, straws, flowers) must stay COMPACT inside the column — avoid hair-thin curls stretching into magenta dead space (hard to matte)
+
+4 ICONS left to right (冷饮线 Lv5–8, premium progression):
+
+[5] 花园特调 — Elegant stemmed glass or wide coupe, layered garden cocktail: bottom green herb tint, middle coral-pink, top clear ice sphere or large cube, mint sprig and small edible flower garnish, sophisticated bar look.
+
+[6] 花漾奶昔 — Thick milkshake in a classic tall glass, soft lavender-pink creamy body, tall swirl of whipped cream on top with one small flower and maybe a strawberry slice on cream, straw, looks rich and smooth.
+
+[7] 星空花饮 — Mystical tall glass or jar, deep indigo-to-violet gradient liquid (#5C6BC0 to #7E57C2), subtle lighter swirls like nebula (still readable as liquid, not outer glow), floating star-shaped fruit piece or tiny white flower, silver-blue highlights on glass — magical but still a drink.
+
+[8] 极光花漾特饮 — Ultimate showpiece: curved premium glass (e.g. hurricane or stemmed), vertical AURORA gradient inside liquid: mint (#26A69A) → electric blue → coral-pink (NOT pure #FF00FF screen magenta), wavy bands clearly INSIDE glass. Garnish: edible flower + SHORT thick lemon slice on rim — if zest curl, make it a CHUNKY spiral staying close to the glass, NOT a long thin thread into empty space.

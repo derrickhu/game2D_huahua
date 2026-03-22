@@ -11,7 +11,7 @@ import { EventBus } from '@/core/EventBus';
 import { TweenManager, Ease } from '@/core/TweenManager';
 import { DESIGN_WIDTH, COLORS, FONT_FAMILY } from '@/config/Constants';
 import { ITEM_DEFS, ItemDef, Category } from '@/config/ItemConfig';
-import { BUILDING_DEFS } from '@/config/BuildingConfig';
+import { findToolDef } from '@/config/BuildingConfig';
 import { CellState } from '@/config/BoardLayout';
 import { BoardManager } from '@/managers/BoardManager';
 import { DecorationManager } from '@/managers/DecorationManager';
@@ -366,11 +366,14 @@ export class ItemInfoBar extends PIXI.Container {
 
   private _getDescription(def: ItemDef): string {
     if (def.category === Category.BUILDING) {
-      const bDef = BUILDING_DEFS.get(def.id);
-      if (bDef) {
-        return `⚡${bDef.staminaCost} | 冷却 ${bDef.cooldown}s | 产出 Lv.${bDef.produceLevelRange[0]}~${bDef.produceLevelRange[1]}`;
+      const tDef = findToolDef(def.id);
+      if (tDef) {
+        const levels = tDef.produceTable.map(([lv]) => lv);
+        const minLv = Math.min(...levels);
+        const maxLv = Math.max(...levels);
+        return `⚡${tDef.staminaCost} | 冷却 ${tDef.cooldown}s | 产出 Lv.${minLv}~${maxLv}`;
       }
-      return '功能建筑';
+      return '工具';
     }
     if (def.category === Category.CHEST) return '点击开启，获得随机物品';
     if (def.level < def.maxLevel) return '合成后可获得更高级物品。';

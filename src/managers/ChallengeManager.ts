@@ -93,17 +93,17 @@ export interface ChallengeState {
 const CHALLENGE_LEVELS: ChallengeLevel[] = [
   // 第1章：入门
   {
-    id: 'c1_1', chapter: 1, level: 1, name: '初出茅庐', desc: '30秒内合成3个2级花束',
+    id: 'c1_1', chapter: 1, level: 1, name: '初出茅庐', desc: '30秒内合成3个2级鲜花',
     icon: '🌱', type: ChallengeType.TIMED, timeLimit: 30,
-    targets: [{ desc: '合成2级花束×3', count: 3, current: 0 }],
+    targets: [{ desc: '合成2级鲜花×3', count: 3, current: 0 }],
     star1: '完成目标', star2: '20秒内完成', star3: '15秒内完成',
     reward: { gold: 100, diamond: 2, huayuan: 0 },
     unlockStars: 0,
   },
   {
-    id: 'c1_2', chapter: 1, level: 2, name: '花艺入门', desc: '合成1个3级花束',
+    id: 'c1_2', chapter: 1, level: 2, name: '花艺入门', desc: '合成1个3级鲜花',
     icon: '🌿', type: ChallengeType.TARGET,
-    targets: [{ desc: '合成3级花束×1', count: 1, current: 0 }],
+    targets: [{ desc: '合成3级鲜花×1', count: 1, current: 0 }],
     star1: '完成目标', star2: '10步以内', star3: '5步以内',
     reward: { gold: 150, diamond: 3, huayuan: 0 },
     unlockStars: 1,
@@ -117,17 +117,17 @@ const CHALLENGE_LEVELS: ChallengeLevel[] = [
     unlockStars: 2,
   },
   {
-    id: 'c1_4', chapter: 1, level: 4, name: '限步大师', desc: '8步内合成2个3级花束',
+    id: 'c1_4', chapter: 1, level: 4, name: '限步大师', desc: '8步内合成2个4级鲜花',
     icon: '📏', type: ChallengeType.LIMITED_MOVES, moveLimit: 8,
-    targets: [{ desc: '合成3级花束×2', count: 2, current: 0 }],
+    targets: [{ desc: '合成4级鲜花×2', count: 2, current: 0 }],
     star1: '完成目标', star2: '6步内完成', star3: '4步内完成',
     reward: { gold: 250, diamond: 5, huayuan: 1 },
     unlockStars: 4,
   },
   {
-    id: 'c1_5', chapter: 1, level: 5, name: '花束风暴', desc: '60秒内合成5个3级花束',
+    id: 'c1_5', chapter: 1, level: 5, name: '鲜花风暴', desc: '60秒内合成5个4级鲜花',
     icon: '🌪️', type: ChallengeType.TIMED, timeLimit: 60,
-    targets: [{ desc: '合成3级花束×5', count: 5, current: 0 }],
+    targets: [{ desc: '合成4级鲜花×5', count: 5, current: 0 }],
     star1: '完成目标', star2: '40秒内', star3: '25秒内',
     reward: { gold: 400, diamond: 8, huayuan: 2 },
     unlockStars: 6,
@@ -135,9 +135,9 @@ const CHALLENGE_LEVELS: ChallengeLevel[] = [
 
   // 第2章：进阶
   {
-    id: 'c2_1', chapter: 2, level: 1, name: '花饮调配', desc: '合成2杯3级花饮',
+    id: 'c2_1', chapter: 2, level: 1, name: '花饮调配', desc: '合成2杯4级茶饮',
     icon: '🍵', type: ChallengeType.TARGET,
-    targets: [{ desc: '合成3级花饮×2', count: 2, current: 0 }],
+    targets: [{ desc: '合成4级茶饮×2', count: 2, current: 0 }],
     star1: '完成目标', star2: '12步内', star3: '8步内',
     reward: { gold: 300, diamond: 5, huayuan: 1 },
     unlockStars: 8,
@@ -151,11 +151,11 @@ const CHALLENGE_LEVELS: ChallengeLevel[] = [
     unlockStars: 10,
   },
   {
-    id: 'c2_3', chapter: 2, level: 3, name: '混合达人', desc: '同时合成花束和花饮',
+    id: 'c2_3', chapter: 2, level: 3, name: '混合达人', desc: '同时合成鲜花和茶饮',
     icon: '🎨', type: ChallengeType.TIMED, timeLimit: 60,
     targets: [
-      { desc: '合成3级花束×2', count: 2, current: 0 },
-      { desc: '合成2级花饮×2', count: 2, current: 0 },
+      { desc: '合成4级鲜花×2', count: 2, current: 0 },
+      { desc: '合成3级茶饮×2', count: 2, current: 0 },
     ],
     star1: '完成所有目标', star2: '40秒内', star3: '25秒内',
     reward: { gold: 600, diamond: 12, huayuan: 3 },
@@ -170,12 +170,58 @@ const CHALLENGE_LEVELS: ChallengeLevel[] = [
     unlockStars: 14,
   },
   {
-    id: 'c2_5', chapter: 2, level: 5, name: '终极花礼', desc: '合成1个6级花束',
+    id: 'c2_5', chapter: 2, level: 5, name: '终极花束', desc: '合成1个8级花束',
     icon: '🏆', type: ChallengeType.TIMED, timeLimit: 120,
-    targets: [{ desc: '合成6级花束×1', count: 1, current: 0 }],
+    targets: [{ desc: '合成8级花束×1', count: 1, current: 0 }],
     star1: '完成目标', star2: '80秒内', star3: '50秒内',
     reward: { gold: 1000, diamond: 20, huayuan: 5 },
     unlockStars: 16,
+  },
+
+  // 第3章：大师
+  {
+    id: 'c3_1', chapter: 3, level: 1, name: '花束大师', desc: '合成1个7级花束',
+    icon: '💐', type: ChallengeType.TARGET,
+    targets: [{ desc: '合成7级花束×1', count: 1, current: 0 }],
+    star1: '完成目标', star2: '15步内', star3: '10步内',
+    reward: { gold: 600, diamond: 10, huayuan: 3 },
+    unlockStars: 18,
+  },
+  {
+    id: 'c3_2', chapter: 3, level: 2, name: '甜品盛宴', desc: '合成3个5级甜品',
+    icon: '🎂', type: ChallengeType.TIMED, timeLimit: 90,
+    targets: [{ desc: '合成5级甜品×3', count: 3, current: 0 }],
+    star1: '完成目标', star2: '60秒内', star3: '40秒内',
+    reward: { gold: 800, diamond: 15, huayuan: 4 },
+    unlockStars: 20,
+  },
+  {
+    id: 'c3_3', chapter: 3, level: 3, name: '全能花艺师', desc: '同时合成鲜花、花束和绿植',
+    icon: '🌟', type: ChallengeType.TIMED, timeLimit: 120,
+    targets: [
+      { desc: '合成5级鲜花×1', count: 1, current: 0 },
+      { desc: '合成5级花束×1', count: 1, current: 0 },
+      { desc: '合成5级绿植×1', count: 1, current: 0 },
+    ],
+    star1: '完成所有目标', star2: '80秒内', star3: '50秒内',
+    reward: { gold: 1200, diamond: 25, huayuan: 6 },
+    unlockStars: 24,
+  },
+  {
+    id: 'c3_4', chapter: 3, level: 4, name: '传说之路', desc: '合成1个10级鲜花',
+    icon: '✨', type: ChallengeType.TARGET,
+    targets: [{ desc: '合成金色牡丹×1', count: 1, current: 0 }],
+    star1: '完成目标', star2: '25步内', star3: '18步内',
+    reward: { gold: 2000, diamond: 40, huayuan: 10 },
+    unlockStars: 28,
+  },
+  {
+    id: 'c3_5', chapter: 3, level: 5, name: '绿植大师', desc: '合成1个10级绿植',
+    icon: '👑', type: ChallengeType.TIMED, timeLimit: 180,
+    targets: [{ desc: '合成松树盆景×1', count: 1, current: 0 }],
+    star1: '完成目标', star2: '120秒内', star3: '80秒内',
+    reward: { gold: 3000, diamond: 60, huayuan: 15 },
+    unlockStars: 32,
   },
 ];
 

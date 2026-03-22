@@ -63,7 +63,7 @@ export function computeBoardMetrics(logicHeight: number, topReserved: number): v
 // 客人
 export const MAX_CUSTOMERS = 5;          // 最大排队客人数（含服务中）
 export const MAX_VISIBLE_CUSTOMERS = 5;  // 滚动区可见客人数
-export const ACTIVE_CUSTOMER_SLOTS = 2;  // 前N位为"服务中"（可交付）
+export const ACTIVE_CUSTOMER_SLOTS = 5;  // 前N位为"服务中"（可交付）
 export const CUSTOMER_REFRESH_MIN = 10;  // 秒
 export const CUSTOMER_REFRESH_MAX = 30;
 
@@ -86,9 +86,9 @@ export const COLORS = {
   CELL_HIGHLIGHT: 0xFFE4B5,
 
   // 花系色标
-  FLOWER_DAILY: 0xFFB347,    // 日常花系 - 暖橙
-  FLOWER_ROMANTIC: 0xFF69B4, // 浪漫花系 - 粉红
-  FLOWER_LUXURY: 0x9370DB,   // 奢华花系 - 紫色
+  FLOWER_FRESH: 0xFFB347,    // 鲜花线 - 暖橙
+  FLOWER_BOUQUET: 0xFF69B4,  // 花束线 - 粉红
+  FLOWER_GREEN: 0x66BB6A,    // 绿植线 - 绿色
 
   // 饮品线色标
   DRINK_TEA: 0x90EE90,       // 茶饮线 - 浅绿

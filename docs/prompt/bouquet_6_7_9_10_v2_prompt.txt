@@ -1,0 +1,23 @@
+A game item icon sheet showing exactly 4 flower arrangement icons in a 2-column × 2-row GRID. These are premium/luxury flower arrangements (Levels 6, 7, 9, 10 of a merge chain). Each must use DIFFERENT premium flower types — NOT regular roses.
+
+BACKGROUND: The ENTIRE image background MUST be solid #FF00FF magenta everywhere. Icons sit directly on the magenta with NO frames or badges.
+
+CRITICAL STYLE — match existing game assets:
+- Bold vibrant SATURATED colors — HIGH brightness, NEVER dark or muddy
+- Every petal has SMOOTH GRADIENT shading with prominent BRIGHT WHITE HIGHLIGHT spots creating glossy 3D volume
+- Clean THIN outlines in same color family as fill (NOT thick black)
+- Leaves are vivid bright green with white highlights
+- Simple chunky shapes, readable at small sizes — use BOLD COLOR and VOLUME over fine detail
+- Game icon aesthetic — cute, bright, glossy, rounded
+- NO TEXT, NO sparkles, NO glow effects, NO floating particles
+- Background is ONLY solid #FF00FF magenta
+
+4 ICONS (left to right, top to bottom):
+
+[Row 1, Col 1] FLOWER GIFT BOX — OPEN (精美花盒): An elegant cream-white square gift box with the LID OPEN and tilted to one side, revealing beautiful flowers arranged inside the box. Inside: soft PEACH AUSTIN ROSES (garden roses with many layered ruffled petals, warm peach-apricot gradient with white highlights) and white LISIANTHUS (洋桔梗, delicate ruffled white flowers with soft green edges). The box has a wide GOLD satin ribbon. The lid is clearly open showing the flowers. Luxurious gift presentation. Directly on #FF00FF.
+
+[Row 1, Col 2] GRAND DAHLIA & ROSE BOUQUET (红玫瑰大束): A LARGE impressive bouquet featuring 3-4 big round DAHLIAS (大丽花, with many tightly layered pointed petals in rich CRIMSON RED, each with white highlight creating 3D depth) mixed with deep red AUSTIN ROSES (fuller and more ruffled than regular roses, deep wine-red). Wrapped in shimmering warm GOLD paper with a wide gold satin ribbon bow. Grand and dramatic. Directly on #FF00FF.
+
+[Row 2, Col 1] PEONY LUXURY BOUQUET (鎏金花束): An opulent large bouquet of large fluffy WHITE and BLUSH-PINK PEONIES (牡丹, with many soft ruffled petals in cream-white to soft pink gradient, very full and voluminous) mixed with pale lavender LISIANTHUS (洋桔梗, delicate purple-lavender ruffled blooms). Wrapped in deep BURGUNDY/WINE RED velvet paper with GOLD foil trim and a thick gold satin bow. The soft pastel flowers contrast beautifully with the dark wrapping. Premium and elegant. Directly on #FF00FF.
+
+[Row 2, Col 2] LEGENDARY GRAND BOUQUET (传说花束): The MOST magnificent oversized bouquet — a grand cascade mixing MULTIPLE premium flower types: large CORAL PEONIES (warm coral-pink, full ruffled), WHITE PHALAENOPSIS ORCHIDS (elegant butterfly shapes), soft BLUE HYDRANGEA clusters (sky blue), and golden-yellow DAHLIAS. All together creating a stunning rainbow of natural premium flowers — NOT colored roses. Wrapped in elegant pearl-white paper with a wide soft gold satin ribbon. Each flower has glossy white highlights. Clearly the ultimate treasure — largest, most diverse, most breathtaking. Directly on #FF00FF.

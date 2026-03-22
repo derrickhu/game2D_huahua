@@ -1,0 +1,21 @@
+A game item icon sheet with 4 individual flower-themed cake/dessert icons arranged in a 2 columns × 2 rows grid layout. These represent merge game progression from Level 5 to Level 8 of a dessert line, showing cake evolution from a single slice to an elaborate two-tier cake. Drawn in cute hand-painted 2D anime game style with soft 3D volume shading, matching a cozy flower shop merge game aesthetic.
+
+VERY IMPORTANT: The entire background of the image MUST be solid bright magenta pink color #FF00FF. Every single pixel that is not part of an icon must be exactly #FF00FF magenta. ABSOLUTELY NO TEXT, no labels, no numbers, no captions anywhere.
+
+STYLE REQUIREMENTS (MUST follow):
+- Cute kawaii hand-painted illustration style, soft and warm
+- Each item is a CAKE/DESSERT decorated with flowers
+- Soft warm color palette with gentle gradients (pink, cream, white, soft gold)
+- Gentle 3D volume/depth through soft inner shading and highlights
+- Clean soft outlines (slightly darker than fill color, NOT harsh black)
+- Warm lighting from top-left with subtle white highlight spots
+- Each icon fills approximately 75-80% of its grid cell
+- Progressive size and elaborateness from Level 5 to Level 8
+
+[Row 1, Col 1] LEVEL 5 — CAKE SLICE: A single cute triangular slice of layered strawberry shortcake on a small plate. Pink frosting between cream-colored layers, topped with a small fondant rose. Simple and appetizing. The slice shows the cross-section with visible cream layers and strawberry filling. On solid #FF00FF background.
+
+[Row 1, Col 2] LEVEL 6 — CAKE PLATTER: A round serving tray/plate with 3-4 small cake pieces/petit fours arranged neatly. Each piece is a different pastel color (pink, lavender, cream) with tiny flower decorations on top. A small doily under the cakes. More substantial than a single slice. On solid #FF00FF background.
+
+[Row 2, Col 1] LEVEL 7 — WHOLE ROUND CAKE: A beautiful whole round single-tier cake with smooth pink buttercream frosting, decorated with buttercream roses and flowers on top and around the edges. A cute cake on a cake stand/plate. Elegant and complete. On solid #FF00FF background.
+
+[Row 2, Col 2] LEVEL 8 — TWO-TIER CAKE: A magnificent two-tier wedding-style cake with white and pink fondant, cascading sugar flowers down the side, golden pearl decorations, and a small flower arrangement on top. On a decorative cake stand. Tiny sparkle stars around it indicating luxury. The grandest dessert. On solid #FF00FF background.

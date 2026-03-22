@@ -1,19 +1,22 @@
 /**
- * 物品配置 - 花束 18 + 花饮 9 = 27 种商品
+ * 物品配置
+ *
+ * 产品线：花系 3线x10级 + 饮品 3线x8级 = 54 种商品
+ * 工具线：6条x3级 = 18 种工具（放在棋盘上可产出对应产品线物品）
+ * 宝箱：5级
  */
 
 export enum Category {
   FLOWER = 'flower',
   DRINK = 'drink',
-  BUILDING_MAT = 'building_mat', // 建筑材料
-  BUILDING = 'building',         // 建筑（放置在棋盘上的功能建筑）
-  CHEST = 'chest',               // 宝箱
+  BUILDING = 'building',
+  CHEST = 'chest',
 }
 
 export enum FlowerLine {
-  DAILY = 'daily',       // 日常花系
-  ROMANTIC = 'romantic', // 浪漫花系
-  LUXURY = 'luxury',     // 奢华花系
+  FRESH = 'fresh',       // 鲜花线
+  BOUQUET = 'bouquet',   // 花束线
+  GREEN = 'green',       // 绿植线
 }
 
 export enum DrinkLine {
@@ -22,46 +25,84 @@ export enum DrinkLine {
   DESSERT = 'dessert', // 甜品线
 }
 
-export enum BuildingMatLine {
-  FLOWER_BUILD = 'flower_build', // 花束建筑材料
-  DRINK_BUILD = 'drink_build',   // 饮品建筑材料
+export enum ToolLine {
+  PLANT = 'plant',       // 种植工具 → 鲜花线
+  ARRANGE = 'arrange',   // 花艺工具 → 花束线
+  PACKAGE = 'package',   // 绿植工具 → 绿植线
+  TEA_SET = 'tea_set',   // 茶具     → 茶饮线
+  MIXER = 'mixer',       // 饮品器具 → 冷饮线
+  BAKE = 'bake',         // 烘焙工具 → 甜品线
 }
+
+/** 工具线 → 对应产品线的映射 */
+export const TOOL_TO_PRODUCT_LINE: Record<ToolLine, { category: Category; line: string }> = {
+  [ToolLine.PLANT]:   { category: Category.FLOWER, line: FlowerLine.FRESH },
+  [ToolLine.ARRANGE]: { category: Category.FLOWER, line: FlowerLine.BOUQUET },
+  [ToolLine.PACKAGE]: { category: Category.FLOWER, line: FlowerLine.GREEN },
+  [ToolLine.TEA_SET]: { category: Category.DRINK,  line: DrinkLine.TEA },
+  [ToolLine.MIXER]:   { category: Category.DRINK,  line: DrinkLine.COLD },
+  [ToolLine.BAKE]:    { category: Category.DRINK,  line: DrinkLine.DESSERT },
+};
 
 export interface ItemDef {
   id: string;
   name: string;
   category: Category;
-  line: string;      // FlowerLine | DrinkLine | BuildingMatLine
-  level: number;     // 1~6（花束）、1~3（花饮）、1~4（花束建筑材料）、1~3（饮品建筑材料）
+  line: string;      // FlowerLine | DrinkLine | ToolLine
+  level: number;
   maxLevel: number;
-  icon: string;      // 图标资源key
+  icon: string;
 }
 
-// 花束数据：3花系 × 6级
+// ═══════════════ 产品数据 ═══════════════
+
 const FLOWER_DATA: [FlowerLine, string[]][] = [
-  [FlowerLine.DAILY, ['小雏菊', '向日葵', '康乃馨', '满天星花束', '混搭花束', '精致礼盒花']],
-  [FlowerLine.ROMANTIC, ['粉玫瑰', '百合', '郁金香', '薰衣草花束', '告白玫瑰礼盒', '婚礼花艺']],
-  [FlowerLine.LUXURY, ['星空兰', '生日花礼', '星空花礼', '鎏金花束', '极光花礼', '永恒花海典藏']],
+  [FlowerLine.FRESH, [
+    '花种子', '花苞', '小雏菊', '向日葵', '康乃馨',
+    '玫瑰', '百合', '绣球花', '蝴蝶兰', '金色牡丹',
+  ]],
+  [FlowerLine.BOUQUET, [
+    '一小捧散花', '迷你花束', '郁金香花束', '玫瑰满天星', '田园混搭花束',
+    '精美花盒', '红玫瑰大束', '花艺礼篮', '鎏金花束', '传说花束',
+  ]],
+  [FlowerLine.GREEN, [
+    '小芽苗', '多肉盆栽', '绿萝', '波士顿蕨', '虎皮兰',
+    '龟背竹', '琴叶榕', '柠檬树', '三角梅', '松树盆景',
+  ]],
 ];
 
-// 花饮数据：3饮品线 × 3级
 const DRINK_DATA: [DrinkLine, string[]][] = [
-  [DrinkLine.TEA, ['花草茶', '调味花茶', '限定手作茶']],
-  [DrinkLine.COLD, ['花果冰饮', '花漾气泡水', '梦幻花饮']],
-  [DrinkLine.DESSERT, ['花瓣饼干', '花艺蛋糕', '花宴甜品台']],
+  [DrinkLine.TEA, [
+    '花草茶包', '茉莉花茶', '玫瑰红茶', '调味花茶',
+    '手冲花茶', '四季花茶壶', '大师手作茶', '御品花茶典藏',
+  ]],
+  [DrinkLine.COLD, [
+    '柠檬花水', '花果冰饮', '花漾气泡水', '玫瑰冰沙',
+    '花园特调', '花漾奶昔', '星空花饮', '极光花漾特饮',
+  ]],
+  [DrinkLine.DESSERT, [
+    '花瓣饼干', '花形马卡龙', '花朵杯子蛋糕', '花茶慕斯',
+    '花瓣蛋糕块', '花饰蛋糕拼盘', '鲜花圆蛋糕', '双层花艺蛋糕',
+  ]],
 ];
 
-// 建筑材料：花束建筑线4级、饮品建筑线3级
-const BUILDING_MAT_DATA: [BuildingMatLine, string[], number][] = [
-  [BuildingMatLine.FLOWER_BUILD, ['花束蓝图碎片', '花艺工具箱', '花架组件', '花房设计图'], 4],
-  [BuildingMatLine.DRINK_BUILD, ['饮品蓝图碎片', '调饮器具箱', '吧台设计图'], 3],
+// ═══════════════ 工具数据 ═══════════════
+
+const TOOL_DATA: [ToolLine, string[]][] = [
+  [ToolLine.PLANT,   ['小花盆', '浇水壶', '小温室']],
+  [ToolLine.ARRANGE, ['花剪', '扎花台', '花艺工作室']],
+  [ToolLine.PACKAGE, ['小花铲', '育苗盘', '绿植架']],
+  [ToolLine.TEA_SET, ['茶杯', '茶壶', '茶道台']],
+  [ToolLine.MIXER,   ['量杯', '搅拌杯', '冷饮吧台']],
+  [ToolLine.BAKE,    ['擀面杖', '烤箱', '烘焙工坊']],
 ];
 
-// 生成所有物品定义
+// ═══════════════ 生成物品定义 ═══════════════
+
 function buildItemDefs(): Map<string, ItemDef> {
   const map = new Map<string, ItemDef>();
 
-  // 花束
+  // 花系
   for (const [line, names] of FLOWER_DATA) {
     for (let i = 0; i < names.length; i++) {
       const id = `flower_${line}_${i + 1}`;
@@ -71,13 +112,13 @@ function buildItemDefs(): Map<string, ItemDef> {
         category: Category.FLOWER,
         line,
         level: i + 1,
-        maxLevel: 6,
+        maxLevel: 10,
         icon: `flower_${line}_${i + 1}`,
       });
     }
   }
 
-  // 花饮
+  // 饮品
   for (const [line, names] of DRINK_DATA) {
     for (let i = 0; i < names.length; i++) {
       const id = `drink_${line}_${i + 1}`;
@@ -87,30 +128,30 @@ function buildItemDefs(): Map<string, ItemDef> {
         category: Category.DRINK,
         line,
         level: i + 1,
-        maxLevel: 3,
+        maxLevel: 8,
         icon: `drink_${line}_${i + 1}`,
       });
     }
   }
 
-  // 建筑材料
-  for (const [line, names, maxLv] of BUILDING_MAT_DATA) {
+  // 工具（BUILDING 品类，可合成升级）
+  for (const [line, names] of TOOL_DATA) {
     for (let i = 0; i < names.length; i++) {
-      const id = `bmat_${line}_${i + 1}`;
+      const id = `tool_${line}_${i + 1}`;
       map.set(id, {
         id,
         name: names[i],
-        category: Category.BUILDING_MAT,
+        category: Category.BUILDING,
         line,
         level: i + 1,
-        maxLevel: maxLv,
-        icon: `bmat_${line}_${i + 1}`,
+        maxLevel: 3,
+        icon: `tool_${line}_${i + 1}`,
       });
     }
   }
 
-  // 宝箱（3级）
-  const chestNames = ['铜宝箱', '银宝箱', '金宝箱'];
+  // 宝箱（5级）
+  const chestNames = ['铜宝箱', '银宝箱', '金宝箱', '钻石宝箱', '传说宝箱'];
   for (let i = 0; i < chestNames.length; i++) {
     const id = `chest_${i + 1}`;
     map.set(id, {
@@ -119,44 +160,8 @@ function buildItemDefs(): Map<string, ItemDef> {
       category: Category.CHEST,
       line: 'chest',
       level: i + 1,
-      maxLevel: 3,
+      maxLevel: 5,
       icon: `chest_${i + 1}`,
-    });
-  }
-
-  // 永久型建筑（棋盘上的功能物品）
-  const permBuildings = [
-    '花艺操作台', '包装台', '小型温室', '星光花房',
-    '简易茶台', '调饮吧台', '花饮工坊',
-  ];
-  for (let i = 0; i < permBuildings.length; i++) {
-    const id = `building_perm_${i + 1}`;
-    map.set(id, {
-      id,
-      name: permBuildings[i],
-      category: Category.BUILDING,
-      line: i < 4 ? 'flower_build' : 'drink_build',
-      level: 1,
-      maxLevel: 1,
-      icon: `item_building_perm_${i + 1}`,
-    });
-  }
-
-  // 消耗型建筑
-  const consBuildings = [
-    '花材礼盒', '精选花篮', '花艺大师箱',
-    '茶包盒', '调饮套装', '花饮臻选箱',
-  ];
-  for (let i = 0; i < consBuildings.length; i++) {
-    const id = `building_cons_${i + 1}`;
-    map.set(id, {
-      id,
-      name: consBuildings[i],
-      category: Category.BUILDING,
-      line: i < 3 ? 'flower_build' : 'drink_build',
-      level: 1,
-      maxLevel: 1,
-      icon: `building_cons_${i + 1}`,
     });
   }
 
@@ -198,15 +203,33 @@ export function getMergeChainName(itemId: string): string {
   const def = ITEM_DEFS.get(itemId);
   if (!def) return '';
   const lineNames: Record<string, string> = {
-    daily: '日常花系',
-    romantic: '浪漫花系',
-    luxury: '奢华花系',
-    tea: '茶饮线',
-    cold: '冷饮线',
-    dessert: '甜品线',
-    flower_build: '花束建筑线',
-    drink_build: '饮品建筑线',
+    [FlowerLine.FRESH]: '鲜花',
+    [FlowerLine.BOUQUET]: '花束',
+    [FlowerLine.GREEN]: '绿植',
+    [DrinkLine.TEA]: '茶饮',
+    [DrinkLine.COLD]: '冷饮',
+    [DrinkLine.DESSERT]: '甜品',
+    [ToolLine.PLANT]: '种植工具',
+    [ToolLine.ARRANGE]: '花艺工具',
+    [ToolLine.PACKAGE]: '绿植工具',
+    [ToolLine.TEA_SET]: '茶具',
+    [ToolLine.MIXER]: '饮品器具',
+    [ToolLine.BAKE]: '烘焙工具',
     chest: '宝箱',
   };
   return (lineNames[def.line] || def.line) + '合成线';
+}
+
+/** 判断物品是否是工具（BUILDING品类且可合成） */
+export function isToolItem(itemId: string): boolean {
+  const def = ITEM_DEFS.get(itemId);
+  if (!def) return false;
+  return def.category === Category.BUILDING;
+}
+
+/** 获取工具对应的产品线信息 */
+export function getToolProductLine(itemId: string): { category: Category; line: string } | null {
+  const def = ITEM_DEFS.get(itemId);
+  if (!def || def.category !== Category.BUILDING) return null;
+  return TOOL_TO_PRODUCT_LINE[def.line as ToolLine] ?? null;
 }

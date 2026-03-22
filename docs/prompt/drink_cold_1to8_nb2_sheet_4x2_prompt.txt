@@ -1,0 +1,63 @@
+STOP — READ FIRST — HARD CONSTRAINTS (if you violate, the image is WRONG):
+1) ZERO TEXT: no Chinese, English, numbers, brackets, names under icons, UI, captions, watermarks, "Lv", "[5]".
+2) ZERO TILES/FRAMES: no rounded squares, no lighter/darker magenta panels behind drinks, no checkerboard, no card UI, no drop-shadow plates. ONLY one uniform flat #FF00FF across the ENTIRE image.
+3) NOT a mobile app mockup, NOT a shop menu, NOT labeled product grid.
+
+Game item icon SPRITE SHEET — EXACTLY 8 cold-drink icons in a 4 columns × 2 rows grid. ONE sheet only.
+
+GRID LAYOUT (highest priority):
+- Column index left→right: 1, 2, 3, 4. Row index top→bottom: TOP row, BOTTOM row.
+- TOP row left→right = levels [1][2][3][4]. BOTTOM row left→right = levels [5][6][7][8].
+- Each of the 8 grid cells must be the SAME size: cell width = cell height (SQUARE cells). The composition should look like a uniform 4×2 table of squares — NOT a single tall strip of drinks.
+- Divide image into 4 EQUAL columns and 2 EQUAL rows. Ruler alignment.
+- Each drink is centered inside its own square cell with clear #FF00FF magenta padding on all four sides inside the cell. Drink must NOT cross cell borders.
+- EXACTLY 8 drinks total — NO duplicates, NO third row, NO extra copies, NO mirrored duplicate of the whole grid.
+
+PER-CELL ASPECT — FIX "TOO TALL GLASSES":
+- Treat EVERY cell as roughly 1:1 (square). The drink + glass together must fit in a SQUARE silhouette inside the cell.
+- GLASSWARE MUST be SHORT and WIDE: prefer wide low tumblers, short mason jars, shallow coupes, wide hurricane glasses with LOW liquid column, squat stemware. AVOID tall skinny Collins/highball/milkshake towers that stretch vertically.
+- If a drink needs height (e.g. milkshake), use a WIDE fluted glass with SHORT visible liquid column and wide whipped cream blob that spreads sideways, NOT a tall narrow column.
+- Maximum visual height of glass+contents ≈ maximum width — chunky icon proportions like merge-game tiles.
+
+NO TEXT ANYWHERE:
+- ZERO letters, numbers, Chinese, brackets, labels, captions, watermarks. Only drinks on magenta.
+
+BACKGROUND:
+- Entire image ONE flat solid #FF00FF magenta ONLY.
+- FORBIDDEN: darker magenta squares, rounded-rectangle tiles under each drink, "panels", checkerboard, cell frames, badges, drop shadows on floor, second background color. Drinks float directly on the SAME flat chroma as everywhere else.
+
+NO TEXT (again):
+- Do NOT write drink names in Chinese or English under icons. No [5] [6] labels. No captions anywhere.
+
+VISUAL PROGRESSION 1→8 (must read as merge tiers — NOT eight same-tier drinks):
+- Lv1–2: plainest glass, fewest garnishes, simplest colors (everyday drink).
+- Lv3–4: nicer glass shapes, more bubbles/texture, richer color, more “café” than Lv1–2.
+- Lv5–6: bar/dessert luxury — stemware, layered liquids OR thick cream tops, MORE garnish than Lv3–4.
+- Lv7–8: most fantasy & ornate — deepest/most complex liquids (nebula/aurora INSIDE glass), most decorative, Lv8 clearly ultimate vs Lv1.
+
+STYLE (match green plant / cold line NB2):
+- BOLD vivid saturated colors; smooth gradients; soft specular blobs (pale aqua / cream / mint) inside surfaces — NO white outline stroke around drinks
+- NO WHITE描边 / no #FFFFFF ring around icon edge; contour = slightly darker same-family color only
+- THIN outlines same hue family as glass/liquid (not heavy black)
+- Top-left warm lighting, consistent across all 8
+- NO logos, NO outer glow halos
+- [4] 玫瑰冰沙: smooth pink slush, SMOOTH glass rim — NO grainy sugar crust (bad for matting). NO #FF00FF-colored petals.
+- [8] 极光: garnish compact inside cell — chunky lemon slice, NO hair-thin peel threads into magenta
+
+8 CELLS content:
+
+TOP ROW [1] 柠檬花水 — Short wide clear glass or mason jar, pale yellow liquid, lemon wheels, tiny white flower, condensation.
+
+TOP ROW [2] 花果冰饮 — Wide tumbler, layered fruit-ice drink, berries/citrus, SHORT glass relative to width, straw OK if short.
+
+TOP ROW [3] 花漾气泡水 — Wide slim-RIM but SHORT body glass OR compact highball (low height), clear fizzy liquid, petals, bubbles.
+
+TOP ROW [4] 玫瑰冰沙 — Short WIDE tumbler, smooth rose-pink slush dome, smooth rim highlight, one petal on top.
+
+BOTTOM ROW [5] 花园特调 — WIDE shallow coupe or stemmed glass with LOW bowl, layered green+coral, ice sphere, mint + small flower.
+
+BOTTOM ROW [6] 花漾奶昔 — WIDE milkshake glass (short stem, wide bowl), lavender thick shake, wide whipped cream spread (not a skyscraper), strawberry + flower.
+
+BOTTOM ROW [7] 星空花饮 — Short wide jar or rocks glass, deep purple-blue liquid, soft nebula swirls INSIDE liquid, starfruit slice.
+
+BOTTOM ROW [8] 极光花漾特饮 — Wide curved hurricane but SHORT overall height, aurora bands INSIDE glass, thick garnish only.

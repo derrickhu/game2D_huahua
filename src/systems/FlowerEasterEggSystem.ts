@@ -22,29 +22,29 @@ interface FlowerQuote {
 }
 
 const FLOWER_QUOTES: Record<string, FlowerQuote> = {
-  // 日常花系
-  flower_daily_1: { name: '小雏菊', quote: '纯真无邪，藏在心底的小美好。', huayuanReward: 10, expReward: 5 },
-  flower_daily_2: { name: '向日葵', quote: '沉默的爱，追随着你的光芒。', huayuanReward: 15, expReward: 8 },
-  flower_daily_3: { name: '康乃馨', quote: '温馨的祝福，感恩每一份爱。', huayuanReward: 20, expReward: 12 },
-  flower_daily_4: { name: '满天星花束', quote: '甘愿做配角，只为衬托你的美。', huayuanReward: 30, expReward: 18 },
-  flower_daily_5: { name: '混搭花束', quote: '缤纷世界，每一种美都值得。', huayuanReward: 40, expReward: 25 },
-  flower_daily_6: { name: '精致礼盒花', quote: '最好的礼物，是用心准备的惊喜。', huayuanReward: 60, expReward: 35 },
+  // 鲜花线
+  flower_fresh_1: { name: '花种子', quote: '纯真无邪，藏在心底的小美好。', huayuanReward: 10, expReward: 5 },
+  flower_fresh_2: { name: '花苞', quote: '沉默的爱，追随着你的光芒。', huayuanReward: 15, expReward: 8 },
+  flower_fresh_3: { name: '小雏菊', quote: '温馨的祝福，感恩每一份爱。', huayuanReward: 20, expReward: 12 },
+  flower_fresh_4: { name: '向日葵', quote: '甘愿做配角，只为衬托你的美。', huayuanReward: 30, expReward: 18 },
+  flower_fresh_5: { name: '康乃馨', quote: '缤纷世界，每一种美都值得。', huayuanReward: 40, expReward: 25 },
+  flower_fresh_6: { name: '玫瑰', quote: '最好的礼物，是用心准备的惊喜。', huayuanReward: 60, expReward: 35 },
 
-  // 浪漫花系
-  flower_romantic_1: { name: '粉玫瑰', quote: '初恋的感觉，心跳如花绽放。', huayuanReward: 12, expReward: 6 },
-  flower_romantic_2: { name: '百合', quote: '百年好合，纯洁的守候。', huayuanReward: 18, expReward: 10 },
-  flower_romantic_3: { name: '郁金香', quote: '高贵的爱恋，无可救药的浪漫。', huayuanReward: 25, expReward: 15 },
-  flower_romantic_4: { name: '薰衣草花束', quote: '等待爱情，紫色的承诺。', huayuanReward: 35, expReward: 22 },
-  flower_romantic_5: { name: '告白玫瑰礼盒', quote: '鼓起勇气说出口，你是我的唯一。', huayuanReward: 50, expReward: 30 },
-  flower_romantic_6: { name: '婚礼花艺', quote: '执子之手，与子偕老。', huayuanReward: 80, expReward: 45 },
+  // 花束线
+  flower_bouquet_1: { name: '一小捧散花', quote: '初恋的感觉，心跳如花绽放。', huayuanReward: 12, expReward: 6 },
+  flower_bouquet_2: { name: '迷你花束', quote: '百年好合，纯洁的守候。', huayuanReward: 18, expReward: 10 },
+  flower_bouquet_3: { name: '郁金香花束', quote: '高贵的爱恋，无可救药的浪漫。', huayuanReward: 25, expReward: 15 },
+  flower_bouquet_4: { name: '玫瑰满天星', quote: '等待爱情，紫色的承诺。', huayuanReward: 35, expReward: 22 },
+  flower_bouquet_5: { name: '田园混搭花束', quote: '鼓起勇气说出口，你是我的唯一。', huayuanReward: 50, expReward: 30 },
+  flower_bouquet_6: { name: '精美花盒', quote: '执子之手，与子偕老。', huayuanReward: 80, expReward: 45 },
 
-  // 奢华花系
-  flower_luxury_1: { name: '星空兰', quote: '在星光下绽放，如梦如幻。', huayuanReward: 15, expReward: 8 },
-  flower_luxury_2: { name: '生日花礼', quote: '又长大了一岁，愿你永远闪闪发光。', huayuanReward: 22, expReward: 13 },
-  flower_luxury_3: { name: '星空花礼', quote: '把星空装进花束，送给最特别的你。', huayuanReward: 30, expReward: 20 },
-  flower_luxury_4: { name: '鎏金花束', quote: '金色的祝福，闪耀的未来。', huayuanReward: 45, expReward: 28 },
-  flower_luxury_5: { name: '极光花礼', quote: '像极光一样璀璨，像花一样芬芳。', huayuanReward: 65, expReward: 38 },
-  flower_luxury_6: { name: '永恒花海典藏', quote: '时光流转，花香永存，这是永恒的约定。', huayuanReward: 100, expReward: 55 },
+  // 绿植线
+  flower_green_1: { name: '小芽苗', quote: '小小的芽，蕴含着生命的力量。', huayuanReward: 15, expReward: 8 },
+  flower_green_2: { name: '多肉盆栽', quote: '圆润饱满，安静而治愈。', huayuanReward: 22, expReward: 13 },
+  flower_green_3: { name: '绿萝', quote: '顽强生长，为你带来好运。', huayuanReward: 30, expReward: 20 },
+  flower_green_4: { name: '波士顿蕨', quote: '优雅的弧线，如绿色瀑布。', huayuanReward: 45, expReward: 28 },
+  flower_green_5: { name: '虎皮兰', quote: '坚韧挺拔，守护者的姿态。', huayuanReward: 65, expReward: 38 },
+  flower_green_6: { name: '龟背竹', quote: '独一无二的裂叶，大自然的艺术。', huayuanReward: 100, expReward: 55 },
 };
 
 export class FlowerEasterEggSystem {

@@ -97,7 +97,8 @@ export class CellView extends PIXI.Container {
       const lockTex = TextureCache.get('cell_locked');
       if (lockTex) {
         const sp = new PIXI.Sprite(lockTex);
-        const fitSize = cs * 0.72;
+        // 绸缎铺满整格
+        const fitSize = cs * 1.0;
         const scale = Math.min(fitSize / lockTex.width, fitSize / lockTex.height);
         sp.scale.set(scale);
         sp.anchor.set(0.5, 0.5);
@@ -117,7 +118,7 @@ export class CellView extends PIXI.Container {
       const keyTex = TextureCache.get('cell_key');
       if (keyTex) {
         const sp = new PIXI.Sprite(keyTex);
-        const fitSize = cs * 0.72;
+        const fitSize = cs * 1.0;
         const scale = Math.min(fitSize / keyTex.width, fitSize / keyTex.height);
         sp.scale.set(scale);
         sp.anchor.set(0.5, 0.5);

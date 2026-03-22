@@ -1,0 +1,39 @@
+A game item icon sheet with 10 individual potted plant icons arranged in a 5 columns × 2 rows grid layout. This represents a merge progression chain from Level 1 (tiny sprout) to Level 10 (masterpiece bonsai). Each icon is a standalone single potted plant item, drawn in cute hand-painted 2D anime game style with soft 3D volume shading, matching a cozy flower shop merge game aesthetic.
+
+VERY IMPORTANT: The entire background of the image and behind every icon MUST be solid bright magenta pink color #FF00FF. Every single pixel that is not part of an icon must be exactly #FF00FF magenta. No gradients, no cream, no white — ONLY solid #FF00FF magenta background everywhere. Thin solid #FF00FF magenta borders separating grid cells.
+
+STYLE REQUIREMENTS (MUST follow to match existing game assets):
+- Cute kawaii hand-painted illustration style, soft and warm
+- Each plant is in a cute pot or planter appropriate to its size
+- Soft warm color palette with gentle gradients, NOT flat colors
+- Gentle 3D volume/depth through soft inner shading and highlights
+- Clean soft outlines (slightly darker than fill color, NOT harsh black)
+- Warm lighting from top-left with subtle white highlight spots
+- Each icon fills approximately 75-80% of its grid cell
+- Progressive complexity: Level 1 is tiny/simple, Level 10 is elaborate/masterful
+- Each higher level plant should appear LARGER, MORE lush, and MORE impressive than the previous
+- All plants should be clearly GREEN-themed (foliage plants, not flowers), creating a distinct "green plant" identity
+- NO TEXT, no labels, no numbers, no captions, no writing anywhere in the image
+- Background is SOLID #FF00FF MAGENTA everywhere, no exceptions
+
+GRID LAYOUT (left to right, top to bottom — Level 1 to Level 10):
+
+[Row 1, Col 1] LEVEL 1 — TINY SPROUT (小芽苗): A tiny white round pot with a single small bright green sprout emerging. Just one or two baby cotyledon leaves, very simple and minimal. The smallest item in the set. Cute and hopeful feeling. On solid magenta #FF00FF background.
+
+[Row 1, Col 2] LEVEL 2 — SUCCULENT (多肉盆栽): A cute small terracotta pot holding a round, chubby succulent plant with thick fleshy rosette-shaped leaves in blue-green to jade green gradient (#80CBC4 to #66BB6A). Plump and adorable, compact shape. On solid magenta #FF00FF background.
+
+[Row 1, Col 3] LEVEL 3 — POTHOS / GOLDEN POTHOS (绿萝): A small hanging-style white pot with trailing heart-shaped green leaves (#81C784) with subtle golden-yellow variegation streaks. 3-4 leaves cascading down on vine stems, creating a graceful trailing silhouette. On solid magenta #FF00FF background.
+
+[Row 1, Col 4] LEVEL 4 — BOSTON FERN (波士顿蕨): A wider ceramic pot with a lush Boston fern. Many delicate feathery fronds arching outward and downward in bright green (#4CAF50 to #81C784), creating a full, fluffy fountain shape. More volume than previous levels. On solid magenta #FF00FF background.
+
+[Row 1, Col 5] LEVEL 5 — SNAKE PLANT (虎皮兰): A modern cylindrical pot with 4-5 tall upright sword-shaped leaves in dark green (#388E3C) with distinctive golden-yellow (#FFD54F) horizontal stripe bands and golden leaf edges. Architectural and striking, vertical emphasis. On solid magenta #FF00FF background.
+
+[Row 2, Col 1] LEVEL 6 — MONSTERA (龟背竹): A stylish pot with the iconic Monstera deliciosa. 2-3 large leaves with the signature natural holes (fenestrations) and split edges, deep rich green (#2E7D32 to #43A047). Highly recognizable tropical silhouette. Modern and trendy feeling. On solid magenta #FF00FF background.
+
+[Row 2, Col 2] LEVEL 7 — FIDDLE LEAF FIG (琴叶榕): A tall elegant pot with a small tree shape. Large violin/fiddle-shaped leaves (#558B2F to #689F38) on a thin woody brown trunk. 5-6 broad waxy leaves creating a fashionable indoor tree silhouette. Sophisticated and stylish. On solid magenta #FF00FF background.
+
+[Row 2, Col 3] LEVEL 8 — LEMON TREE (柠檬树): A decorative terracotta pot with a small lemon tree. Glossy dark green leaves (#33691E to #558B2F) on brown branches, with 3-4 bright cheerful yellow lemons (#FDD835) visible among the foliage. The yellow fruits add a delightful color pop. Charming and vibrant. On solid magenta #FF00FF background.
+
+[Row 2, Col 4] LEVEL 9 — BOUGAINVILLEA (三角梅): A beautiful ornamental pot with a bushy bougainvillea plant. Rich magenta-purple to hot pink (#AD1457 to #E91E63) papery bracts creating abundant clusters of vibrant color, with small green leaves visible underneath. Stunning flowering shrub shape, very eye-catching. On solid magenta #FF00FF background.
+
+[Row 2, Col 5] LEVEL 10 — PINE BONSAI (松树盆景): An exquisite Japanese-style pine bonsai in a classic shallow ceramic bonsai pot (dark blue-green glazed). Beautifully sculpted miniature pine tree with gnarled twisted trunk, carefully shaped cloud-like foliage pads in deep pine green (#1B5E20 to #2E7D32), tiny moss ground cover. The epitome of patience and mastery — clearly the ultimate prestigious item. Elegant, refined, zen-like beauty. On solid magenta #FF00FF background.

@@ -1,0 +1,38 @@
+A game item icon sheet with 10 individual flower icons arranged in a 5 columns × 2 rows grid layout. This is a merge game progression from Level 1 (seed) to Level 10 (golden peony).
+
+VERY IMPORTANT: The entire background MUST be solid #FF00FF magenta. NO TEXT, NO LABELS anywhere.
+
+ART STYLE (CRITICAL — must follow exactly):
+- Mobile merge game icon style optimized for SMALL tile display (60x60 pixels)
+- VOLUME OVER DETAIL: Each item should be chunky, puffy, rounded with strong 3D volume
+- Very SIMPLE shapes — no fine details, no intricate petal textures, no vein lines
+- Only ONE thin clean outline around the outer edge (slightly darker than fill color, about 1-2px)
+- Soft gradient shading for 3D depth: lighter on top-left, darker on bottom-right
+- Bold saturated colors that pop on small screens
+- Minimal internal lines — use color gradients instead of drawn details
+- Each flower should be recognizable by its SILHOUETTE alone, even at tiny size
+- Slightly chibi/SD cute proportions — flowers look plump and adorable
+- Think "soft clay sculpture" or "inflatable toy" aesthetic — round, puffy, squeezable
+- Similar to items in casual mobile merge games like Merge Mansion, Love & Pies
+
+GRID LAYOUT (left to right, top to bottom):
+
+[Row 1, Col 1] Lv1 SEED: A small plump round brown seed with a tiny bright green sprout poking out. Very simple, like a cute little ball with a leaf. Warm brown gradient.
+
+[Row 1, Col 2] Lv2 SEEDLING: A cute chunky green seedling in a round terracotta pot. Two big round leaves, one tiny pink bud on top. The pot is a simple rounded trapezoid shape. Bold green and orange-brown.
+
+[Row 1, Col 3] Lv3 DAISY: A plump round daisy — big chunky white petals arranged in a circle around a large golden-yellow puffy center dome. Short green stem. Very simple, bold, recognizable shape.
+
+[Row 1, Col 4] Lv4 SUNFLOWER: A bold chunky sunflower with thick golden-yellow petals radiating outward, large round dark brown center. Simple leaf. Bright warm yellow, very recognizable silhouette.
+
+[Row 1, Col 5] Lv5 CARNATION: A round puffy pink bloom — looks like a soft pink cloud/ball shape with gentle wavy edges. No detailed ruffles, just a plump rounded mass of soft pink with subtle lighter/darker pink zones.
+
+[Row 2, Col 1] Lv6 ROSE: A classic rose shape — a plump rounded spiral bloom in deep coral-pink. Simple spiral pattern (3-4 visible petal curves), two chunky dark green leaves at base. Bold and recognizable.
+
+[Row 2, Col 2] Lv7 LILY: An elegant but SIMPLE lily — 5-6 big smooth pointed petals in white-to-soft-pink gradient, fanning outward. Small golden dots for stamens. Clean simple star-like shape.
+
+[Row 2, Col 3] Lv8 HYDRANGEA: A big round puffy ball of blue-purple blooms — like a colorful fluffy sphere. No individual tiny flower detail, just a round gradient mass of blue-lavender with subtle bumpy surface. Green leaves underneath.
+
+[Row 2, Col 4] Lv9 ORCHID: A distinctive orchid shape — 3 big smooth rounded petals in purple-pink gradient, with a characteristic lip petal at bottom in deeper magenta. Simple elegant curved form.
+
+[Row 2, Col 5] Lv10 GOLDEN PEONY: A magnificent large round puffy golden flower — many chunky rounded petals in rich gold-to-amber gradient (#FFD54F to #E65100). The biggest and most impressive of all flowers. 2-3 small sparkle stars around it to indicate legendary status. Dark green leaves at base. Luxurious and regal but still simple chunky shape.

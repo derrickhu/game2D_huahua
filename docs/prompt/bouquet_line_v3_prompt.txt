@@ -1,0 +1,42 @@
+A game item icon sheet with 10 individual bouquet/flower arrangement icons arranged in a 5 columns × 2 rows grid layout. This represents a merge progression chain from Level 1 (simple loose flowers) to Level 10 (legendary grand bouquet). Each icon is a standalone flower arrangement item, drawn in cute hand-painted 2D illustration style with soft gradient shading and clean outlines, matching a cozy flower shop merge game.
+
+VERY IMPORTANT: The entire background of the image and behind every icon MUST be solid bright magenta pink color #FF00FF. Every single pixel that is not part of an icon must be exactly #FF00FF magenta. No gradients, no cream, no white — ONLY solid #FF00FF magenta background everywhere. Thin solid #FF00FF magenta borders separating grid cells.
+
+STYLE REQUIREMENTS (MUST follow — match existing "fresh flower" game assets exactly):
+- Cute hand-painted illustration style, soft and warm, like children's book art
+- Soft warm color palette with gentle gradients, NOT flat colors
+- Gentle 3D volume through soft inner shading and highlights (NOT realistic, NOT overly detailed)
+- Clean soft outlines slightly darker than the fill color (NOT thick black outlines)
+- Warm lighting from top-left with subtle white highlight spots on rounded surfaces
+- Each icon fills approximately 75-80% of its grid cell, centered
+- Simple shapes, minimal internal detail — use volume and color to convey quality, not fine line detail
+- Progressive value: Level 1 is small/simple, Level 10 is large/grand/luxurious
+- Each higher level should look MORE elaborate with richer wrapping and more flowers
+- Levels 1-5 are WRAPPED BOUQUETS with increasing size and flower variety
+- Levels 6 and 8 are GIFT-STYLE items (flower box, flower basket) for visual variety
+- Levels 7, 9, 10 are GRAND BOUQUETS with premium wrapping
+- NO TEXT, no labels, no numbers, no captions, no writing anywhere in the image
+- NO sparkles, NO glow effects, NO floating particles — keep it clean and simple
+- Background is SOLID #FF00FF MAGENTA everywhere, no exceptions
+
+GRID LAYOUT (left to right, top to bottom — Level 1 to Level 10):
+
+[Row 1, Col 1] LEVEL 1 — LOOSE FLOWERS (一小捧散花): A tiny casual bunch of 3-4 small mixed wildflowers (white daisy, small yellow and pink flowers) held together loosely with no wrapping. Just stems tied with a simple green string. Very small and simple. Soft pastel flower colors. On solid magenta #FF00FF background.
+
+[Row 1, Col 2] LEVEL 2 — MINI BOUQUET (迷你花束): A small bouquet of 4-5 pink and white flowers wrapped in light brown kraft paper, tied with a simple twine bow. Cute and modest. The kraft paper has a warm beige-brown tone (#D7CCC8), flowers peek out from the top in soft pink and white. On solid magenta #FF00FF background.
+
+[Row 1, Col 3] LEVEL 3 — TULIP BOUQUET (郁金香花束): A mid-size bouquet of 5-6 red and yellow tulips wrapped in clean white tissue paper with a soft green ribbon bow. Tulips have bold simple petal shapes in warm red (#E53935) and sunny yellow (#FDD835). Paper is crisp white with subtle folds. On solid magenta #FF00FF background.
+
+[Row 1, Col 4] LEVEL 4 — ROSES & BABY'S BREATH (玫瑰满天星): A lovely bouquet of soft pink roses surrounded by tiny white baby's breath flowers, wrapped in light pink paper with a satin pink ribbon. Roses are plump rounded shapes in warm pink gradient (#F48FB1 to #EC407A), baby's breath as tiny white dots clusters. Paper is soft blush pink (#FCE4EC). On solid magenta #FF00FF background.
+
+[Row 1, Col 5] LEVEL 5 — COUNTRY MIX BOUQUET (田园混搭花束): A generous mixed bouquet with sunflowers, lavender, daisies, and greenery, wrapped in two-tone paper (cream inner, sage green outer). Rich variety of colors — golden yellow sunflower, purple lavender, white daisies, green leaves. Fuller and more abundant than previous levels. On solid magenta #FF00FF background.
+
+[Row 2, Col 1] LEVEL 6 — FLOWER GIFT BOX (精美花盒): A square elegant gift box with lid slightly open, revealing roses and other flowers arranged inside. Box is ivory white with a golden ribbon tied in a bow on top. Inside visible flowers are rich red and pink roses. Box has clean geometric shape, luxurious feeling. On solid magenta #FF00FF background.
+
+[Row 2, Col 2] LEVEL 7 — GRAND RED ROSE BOUQUET (红玫瑰大束): A large impressive bouquet of many deep red roses (12+), wrapped in shimmering gold-toned paper with a wide satin gold ribbon. The roses are rich crimson red (#C62828 to #B71C1C), the gold paper has warm metallic tones (#FFD54F to #F9A825). Grand and romantic, significantly bigger than previous bouquets. On solid magenta #FF00FF background.
+
+[Row 2, Col 3] LEVEL 8 — FLOWER GIFT BASKET (花艺礼篮): A round woven basket filled with an abundant flower arrangement — roses, hydrangeas, and lush greenery overflowing from a warm wicker basket. Basket is natural woven texture in warm brown (#8D6E63), flowers are a rich mix of pink, blue-purple, and white with green foliage. Basket has a curved handle. On solid magenta #FF00FF background.
+
+[Row 2, Col 4] LEVEL 9 — GILDED BOUQUET (鎏金花束): An opulent large bouquet of premium flowers (peonies, roses) wrapped in deep burgundy velvet-textured paper with gold foil edges and a thick gold satin bow. Flowers are soft peach-pink peonies (#FFAB91) and cream roses. Paper is deep wine red (#880E4F) with warm gold accents. Elegant and luxurious. On solid magenta #FF00FF background.
+
+[Row 2, Col 5] LEVEL 10 — LEGENDARY BOUQUET (传说花束): The most magnificent oversized bouquet — a grand cascade arrangement of rainbow-colored flowers (soft pink, lavender, sky blue, peach, cream), wrapped in elegant pearl-white paper with a wide satin ribbon in soft gold. The flowers form a beautiful graduated color spectrum. Rich, full, and breathtaking — clearly the ultimate treasure. Large and majestic but still clean and simple in style. On solid magenta #FF00FF background.

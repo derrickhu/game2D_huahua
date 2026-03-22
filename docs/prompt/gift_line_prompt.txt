@@ -1,0 +1,36 @@
+A game item icon sheet with 10 individual flower gift icons arranged in a 5 columns × 2 rows grid layout. This represents a merge progression chain from Level 1 (simple card) to Level 10 (legendary gift collection). Each icon is a FLOWER GIFT item (cards, boxes, baskets, gift sets), drawn in cute hand-painted 2D anime game style with soft 3D volume shading, matching a cozy flower shop merge game aesthetic.
+
+VERY IMPORTANT: The entire background of the image and behind every icon MUST be solid bright magenta pink color #FF00FF. Every single pixel that is not part of an icon must be exactly #FF00FF magenta. No gradients, no cream, no white — ONLY solid #FF00FF magenta background everywhere.
+
+STYLE REQUIREMENTS (MUST follow to match existing game assets):
+- Cute kawaii hand-painted illustration style, soft and warm
+- Each item is a FLOWER GIFT — packaging/gift items with flower decorations
+- Soft warm color palette with gentle gradients, NOT flat colors
+- Gentle 3D volume/depth through soft inner shading and highlights
+- Clean soft outlines (slightly darker than fill color, NOT harsh black)
+- Warm lighting from top-left with subtle white highlight spots
+- Each icon fills approximately 75-80% of its grid cell
+- Progressive beauty: Level 1 is simple/small, Level 10 is elaborate/glowing
+- ABSOLUTELY NO TEXT, no labels, no numbers, no captions anywhere
+
+GRID LAYOUT (left to right, top to bottom — Level 1 to Level 10):
+
+[Row 1, Col 1] LEVEL 1 — FLOWER CARD: A small cute greeting card with a tiny pressed flower on the front, soft cream paper with pastel pink edges. Simple and sweet. On solid #FF00FF background.
+
+[Row 1, Col 2] LEVEL 2 — MINI FLOWER BOX: A small round hatbox/cylinder box in soft pink with a mini rose poking out from the top, small ribbon on the side. Compact and cute. On solid #FF00FF background.
+
+[Row 1, Col 3] LEVEL 3 — SMALL FLOWER BASKET: A small woven basket with a handle, filled with a few colorful flowers and greenery. Warm wicker browns with pastel flowers. Charming cottage style. On solid #FF00FF background.
+
+[Row 1, Col 4] LEVEL 4 — FLORAL ARRANGEMENT: A decorative flower arrangement in a cute ceramic vase, artfully arranged flowers with decorative leaves. More polished and artistic. On solid #FF00FF background.
+
+[Row 1, Col 5] LEVEL 5 — ELEGANT GIFT BOX: A beautiful square gift box with a lid, decorated with a flower pattern, wrapped with a satin ribbon bow on top. Premium feeling, soft pink and white colors. On solid #FF00FF background.
+
+[Row 2, Col 1] LEVEL 6 — BIRTHDAY FLOWER GIFT: A festive flower gift set with a bouquet in a decorated box, small birthday cake candle decoration, colorful ribbons. Cheerful and celebratory. On solid #FF00FF background.
+
+[Row 2, Col 2] LEVEL 7 — FLORAL GIFT BASKET: A large elegant woven basket overflowing with flowers, chocolates, and a small bottle of perfume. Luxurious hamper style with ribbon. On solid #FF00FF background.
+
+[Row 2, Col 3] LEVEL 8 — STARRY FLOWER GIFT: A magical gift box opening to reveal flowers surrounded by tiny star decorations and soft blue-purple starlight effects. Dreamy night sky theme with deep blue and silver accents. On solid #FF00FF background.
+
+[Row 2, Col 4] LEVEL 9 — AURORA FLOWER GIFT: A spectacular crystal-clear gift container with flowers inside surrounded by aurora borealis colors (green, purple, pink gradients). Ethereal and magical with light effects. On solid #FF00FF background.
+
+[Row 2, Col 5] LEVEL 10 — ETERNAL FLOWER COLLECTION: A magnificent treasure chest-style display case overflowing with the most precious flowers in gold and rainbow colors. Crystal decorations, floating sparkle particles, golden light rays. The ultimate legendary flower gift. On solid #FF00FF background.

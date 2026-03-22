@@ -1,0 +1,32 @@
+A game item icon sheet with 8 individual tea drink icons arranged in a 4 columns × 2 rows grid layout. This represents a merge progression chain from Level 1 (simple tea bag) to Level 8 (legendary tea). Each icon is a TEA/HOT DRINK item, drawn in cute hand-painted 2D anime game style with soft 3D volume shading, matching a cozy flower shop merge game aesthetic.
+
+VERY IMPORTANT: The entire background of the image and behind every icon MUST be solid bright magenta pink color #FF00FF. Every single pixel that is not part of an icon must be exactly #FF00FF magenta. No gradients, no cream, no white — ONLY solid #FF00FF magenta background everywhere.
+
+STYLE REQUIREMENTS (MUST follow to match existing game assets):
+- Cute kawaii hand-painted illustration style, soft and warm
+- Each item is a TEA DRINK — tea bags, cups, teapots, tea sets
+- Soft warm color palette with gentle gradients, NOT flat colors
+- Gentle 3D volume/depth through soft inner shading and highlights
+- Clean soft outlines (slightly darker than fill color, NOT harsh black)
+- Warm lighting from top-left with subtle white highlight spots
+- Each icon fills approximately 75-80% of its grid cell
+- Progressive beauty: Level 1 is simple, Level 8 is luxurious/glowing
+- ABSOLUTELY NO TEXT, no labels, no numbers, no captions anywhere
+
+GRID LAYOUT (left to right, top to bottom — Level 1 to Level 8):
+
+[Row 1, Col 1] LEVEL 1 — HERBAL TEA BAG: A single cute tea bag with a small flower petal decoration, simple string and tag. Light beige/cream colors. Humble beginning. On solid #FF00FF background.
+
+[Row 1, Col 2] LEVEL 2 — JASMINE TEA: A small ceramic cup filled with pale green jasmine tea, 2-3 tiny white jasmine flowers floating on top. Delicate steam wisps. Soft green and white tones. On solid #FF00FF background.
+
+[Row 1, Col 3] LEVEL 3 — ROSE TEA: A pretty teacup with warm amber-red rose tea, small rose petals floating. Pink rose decoration on the cup. Warm pink and amber tones. On solid #FF00FF background.
+
+[Row 1, Col 4] LEVEL 4 — FLAVORED TEA: A tall glass cup with layered colorful fruit tea, flower petals, and a small stirring spoon. Multiple warm colors (orange, yellow, pink). On solid #FF00FF background.
+
+[Row 2, Col 1] LEVEL 5 — POUR-OVER TEA: A stylish pour-over/drip tea setup with a glass server and fresh flowers, showing the brewing process. Warm browns and ambers. On solid #FF00FF background.
+
+[Row 2, Col 2] LEVEL 6 — FOUR SEASONS TEAPOT: An elegant ceramic teapot with floral decorations painted on it, steam rising, accompanied by a small matching cup. Beautiful painted flowers on the pot. On solid #FF00FF background.
+
+[Row 2, Col 3] LEVEL 7 — MASTER'S HANDCRAFT TEA: An exquisite handcrafted tea set on a wooden tray — a refined porcelain teapot with premium tea, a small incense holder, artistic and zen. On solid #FF00FF background.
+
+[Row 2, Col 4] LEVEL 8 — IMPERIAL TEA COLLECTION: A magnificent golden tea set with ornate decorations, a large golden teapot with dragon/phoenix motifs, crystal-clear amber tea, tiny sparkle stars around it. The most precious and legendary tea. Gold (#FFD54F) and rich amber tones. On solid #FF00FF background.

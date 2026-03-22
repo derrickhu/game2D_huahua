@@ -1,0 +1,31 @@
+# 绿植线 Lv1/2/4/6/9/10 — BN2 单图 1:1（与 green_3_5_7_8 同风格）
+# 模型: gemini-3.1-flash-image-preview，--aspect-ratio 1:1
+# 原始 PNG 输出目录（勿放游戏仓库）: /Users/huyi/rosa_games/game_assets/huahua/assets/green_plant_nb2/raw/
+
+SHARED_STYLE:
+---
+Game merge item icon, SINGLE isolated object centered in frame.
+CRITICAL COMPOSITION — SQUARE 1:1 CELL:
+- Perfect SQUARE (1:1) canvas = one game tile.
+- Plant + pot fit COMFORTABLY with generous equal padding on all four sides; nothing touches or clips the edge.
+- COMPACT ROUNDISH silhouette — avoid extreme vertical stretch; shorter stems, fewer stacked layers, or wider pot so bounding box is nearly square.
+- Subject ~70–78% of width AND height.
+BACKGROUND: flat solid #FF00FF magenta ONLY. No circles, frames, badges.
+ART STYLE (same as latest green Lv3/5/7/8 regen):
+- BOLD vivid saturated greens (#66BB6A, #81C784, #43A047, #A5D6A7), smooth gradients, bright WHITE highlight spots on leaves and pot rims
+- THIN outlines in same hue family as fill (not heavy black)
+- Cute chunky readable silhouettes at small size
+- NO text, NO sparkles, NO outer glow
+---
+
+Lv1 小芽苗 — Tiny round white ceramic pot, ONE cute bright lime-green sprout with exactly 2 small round baby leaves on a thin stem. Smallest, simplest, very compact.
+
+Lv2 多肉盆栽 — Small terracotta pot, chubby succulent rosette: thick fleshy leaves vivid blue-green to jade, white highlight on each leaf. Low wide rosette, not tall.
+
+Lv4 波士顿蕨 — Wider cream ceramic pot, Boston fern with feathery fronds in vibrant spring green. COMPACT rounded fountain shape — shorter fronds so overall fits square, not a tall spray.
+
+Lv6 龟背竹 — White or charcoal ceramic pot, 2–3 LARGE iconic Monstera leaves with splits and holes (fenestrations). Rich green, white highlights on veins. Leaves arranged in a compact cluster, not a towering vertical stack.
+
+Lv9 三角梅 — Ornamental terracotta or ceramic pot, bushy COMPACT plant. Abundant papery bracts in CORAL, ROSE-PINK, RED-MAGENTA (#E91E63, #FF5C8D) — MUST differ from chroma-key background #FF00FF (no pure screen fuchsia). Small dark green real leaves between bracts. Explosion of warm pink/coral color.
+
+Lv10 松树盆景 — Shallow dark teal glazed bonsai tray with feet, miniature pine: gnarled brown trunk, 2–3 cloud-shaped foliage pads in vivid deep pine green (#2E7D32) with frosty white highlights, tiny moss dots. Prestige bonsai, compact and balanced in square.

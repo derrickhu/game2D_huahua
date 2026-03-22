@@ -1,0 +1,32 @@
+A game item icon sheet with 8 individual dessert icons arranged in a 4 columns × 2 rows grid layout. This represents a merge progression chain from Level 1 (simple cookie) to Level 8 (legendary dessert table). Each icon is a FLOWER-THEMED DESSERT item, drawn in cute hand-painted 2D anime game style with soft 3D volume shading, matching a cozy flower shop merge game aesthetic.
+
+VERY IMPORTANT: The entire background of the image and behind every icon MUST be solid bright magenta pink color #FF00FF. Every single pixel that is not part of an icon must be exactly #FF00FF magenta. No gradients, no cream, no white — ONLY solid #FF00FF magenta background everywhere.
+
+STYLE REQUIREMENTS (MUST follow to match existing game assets):
+- Cute kawaii hand-painted illustration style, soft and warm
+- Each item is a DESSERT with flower decorations — cookies, macarons, cakes
+- Soft warm color palette with gentle gradients, NOT flat colors
+- Gentle 3D volume/depth through soft inner shading and highlights
+- Clean soft outlines (slightly darker than fill color, NOT harsh black)
+- Warm lighting from top-left with subtle white highlight spots
+- Each icon fills approximately 75-80% of its grid cell
+- Progressive beauty: Level 1 is simple, Level 8 is elaborate/glowing
+- ABSOLUTELY NO TEXT, no labels, no numbers, no captions anywhere
+
+GRID LAYOUT (left to right, top to bottom — Level 1 to Level 8):
+
+[Row 1, Col 1] LEVEL 1 — FLOWER PETAL COOKIE: A single round cookie with a pressed flower petal design on top. Simple butter cookie in warm golden brown with a cute pink petal imprint. On solid #FF00FF background.
+
+[Row 1, Col 2] LEVEL 2 — FLOWER MACARON: A cute flower-shaped macaron in soft pastel pink, with a tiny flower decoration on top. Delicate and dainty French pastry. On solid #FF00FF background.
+
+[Row 1, Col 3] LEVEL 3 — FLOWER CUPCAKE: A charming cupcake with swirled pink frosting shaped like a rose on top, in a cute patterned wrapper. Soft pink and cream tones. On solid #FF00FF background.
+
+[Row 1, Col 4] LEVEL 4 — FLOWER TEA MOUSSE: An elegant glass dessert cup with layered flower-infused mousse in gradient pink-lavender colors, topped with a tiny edible flower. Sophisticated and delicate. On solid #FF00FF background.
+
+[Row 2, Col 1] LEVEL 5 — FLORAL CAKE: A small round single-tier cake decorated with beautiful buttercream flowers on top and around the sides. Pastel pink and cream with colorful flower decorations. On solid #FF00FF background.
+
+[Row 2, Col 2] LEVEL 6 — GARDEN AFTERNOON TEA: A cute two-tier afternoon tea stand with small sandwiches, scones, and flower-decorated petit fours. Elegant pastel colors with a tiny teacup beside it. On solid #FF00FF background.
+
+[Row 2, Col 3] LEVEL 7 — FLOWER FONDANT CAKE: A beautiful two-tier fondant cake covered in intricate sugar flowers, cascading down the sides. White and pink with detailed floral fondant work. Elegant and artistic. On solid #FF00FF background.
+
+[Row 2, Col 4] LEVEL 8 — FLOWER FEAST DESSERT TABLE: A magnificent miniature dessert display table with an elaborate wedding-style cake centerpiece, surrounded by macarons, petit fours, and flowers. Golden accents, tiny sparkle stars, the ultimate luxury dessert. On solid #FF00FF background.

@@ -53,13 +53,76 @@ const MAIN_IMAGE_MAP: Record<string, string> = {
   cell_key:       'images/ui/cell_key.png',
   shop_scene_bg:  'images/ui/shop_scene_bg.png',
 
-  // ---- 日常花系 (6张, 128x128 RGBA) ----
-  flower_daily_1: 'images/flowers/daisy.png',
-  flower_daily_2: 'images/flowers/sunflower.png',
-  flower_daily_3: 'images/flowers/carnation.png',
-  flower_daily_4: 'images/flowers/babysbreath_bouquet.png',
-  flower_daily_5: 'images/flowers/mixed_bouquet.png',
-  flower_daily_6: 'images/flowers/giftbox_bouquet.png',
+  // ---- 鲜花线 (10张) ----
+  flower_fresh_1:  'images/flowers/fresh/flower_fresh_1.png',
+  flower_fresh_2:  'images/flowers/fresh/flower_fresh_2.png',
+  flower_fresh_3:  'images/flowers/fresh/flower_fresh_3.png',
+  flower_fresh_4:  'images/flowers/fresh/flower_fresh_4.png',
+  flower_fresh_5:  'images/flowers/fresh/flower_fresh_5.png',
+  flower_fresh_6:  'images/flowers/fresh/flower_fresh_6.png',
+  flower_fresh_7:  'images/flowers/fresh/flower_fresh_7.png',
+  flower_fresh_8:  'images/flowers/fresh/flower_fresh_8.png',
+  flower_fresh_9:  'images/flowers/fresh/flower_fresh_9.png',
+  flower_fresh_10: 'images/flowers/fresh/flower_fresh_10.png',
+
+  // ---- 花束线 (10张) ----
+  flower_bouquet_1:  'images/flowers/bouquet/flower_bouquet_1.png',
+  flower_bouquet_2:  'images/flowers/bouquet/flower_bouquet_2.png',
+  flower_bouquet_3:  'images/flowers/bouquet/flower_bouquet_3.png',
+  flower_bouquet_4:  'images/flowers/bouquet/flower_bouquet_4.png',
+  flower_bouquet_5:  'images/flowers/bouquet/flower_bouquet_5.png',
+  flower_bouquet_6:  'images/flowers/bouquet/flower_bouquet_6.png',
+  flower_bouquet_7:  'images/flowers/bouquet/flower_bouquet_7.png',
+  flower_bouquet_8:  'images/flowers/bouquet/flower_bouquet_8.png',
+  flower_bouquet_9:  'images/flowers/bouquet/flower_bouquet_9.png',
+  flower_bouquet_10: 'images/flowers/bouquet/flower_bouquet_10.png',
+
+  // ---- 绿植线 (10张) ----
+  flower_green_1:  'images/flowers/green/flower_green_1.png',
+  flower_green_2:  'images/flowers/green/flower_green_2.png',
+  flower_green_3:  'images/flowers/green/flower_green_3.png',
+  flower_green_4:  'images/flowers/green/flower_green_4.png',
+  flower_green_5:  'images/flowers/green/flower_green_5.png',
+  flower_green_6:  'images/flowers/green/flower_green_6.png',
+  flower_green_7:  'images/flowers/green/flower_green_7.png',
+  flower_green_8:  'images/flowers/green/flower_green_8.png',
+  flower_green_9:  'images/flowers/green/flower_green_9.png',
+  flower_green_10: 'images/flowers/green/flower_green_10.png',
+
+  // ---- 茶饮线 (8张) ----
+  drink_tea_1: 'images/drinks/tea/drink_tea_1.png',
+  drink_tea_2: 'images/drinks/tea/drink_tea_2.png',
+  drink_tea_3: 'images/drinks/tea/drink_tea_3.png',
+  drink_tea_4: 'images/drinks/tea/drink_tea_4.png',
+  drink_tea_5: 'images/drinks/tea/drink_tea_5.png',
+  drink_tea_6: 'images/drinks/tea/drink_tea_6.png',
+  drink_tea_7: 'images/drinks/tea/drink_tea_7.png',
+  drink_tea_8: 'images/drinks/tea/drink_tea_8.png',
+
+  // ---- 冷饮线 (8张) ----
+  drink_cold_1: 'images/drinks/cold/drink_cold_1.png',
+  drink_cold_2: 'images/drinks/cold/drink_cold_2.png',
+  drink_cold_3: 'images/drinks/cold/drink_cold_3.png',
+  drink_cold_4: 'images/drinks/cold/drink_cold_4.png',
+  drink_cold_5: 'images/drinks/cold/drink_cold_5.png',
+  drink_cold_6: 'images/drinks/cold/drink_cold_6.png',
+  drink_cold_7: 'images/drinks/cold/drink_cold_7.png',
+  drink_cold_8: 'images/drinks/cold/drink_cold_8.png',
+
+  // ---- 甜品线 (8张) ----
+  drink_dessert_1: 'images/drinks/dessert/drink_dessert_1.png',
+  drink_dessert_2: 'images/drinks/dessert/drink_dessert_2.png',
+  drink_dessert_3: 'images/drinks/dessert/drink_dessert_3.png',
+  drink_dessert_4: 'images/drinks/dessert/drink_dessert_4.png',
+  drink_dessert_5: 'images/drinks/dessert/drink_dessert_5.png',
+  drink_dessert_6: 'images/drinks/dessert/drink_dessert_6.png',
+  drink_dessert_7: 'images/drinks/dessert/drink_dessert_7.png',
+  drink_dessert_8: 'images/drinks/dessert/drink_dessert_8.png',
+
+  // ---- 工具：种植线 (3级试跑) ----
+  tool_plant_1: 'images/tools/plant/tool_plant_1.png',
+  tool_plant_2: 'images/tools/plant/tool_plant_2.png',
+  tool_plant_3: 'images/tools/plant/tool_plant_3.png',
 };
 
 // ================================================================

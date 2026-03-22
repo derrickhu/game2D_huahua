@@ -1,0 +1,39 @@
+A game item icon sheet — SPRITE SHEET LAYOUT for automated slicing. Exactly 5 potted plant icons in ONE horizontal row: 5 columns × 1 row ONLY. NO second row. NO duplicate row.
+
+CRITICAL GRID LAYOUT (HIGHEST PRIORITY — must be perfect for cutting):
+- Divide the image into 5 EQUAL-WIDTH vertical columns. Each column is EXACTLY the same width (20% of total image width each). Think: ruler-perfect alignment.
+- Each plant must be CENTERED horizontally inside its own column. The plant silhouette must NOT cross into the neighboring column — keep clear empty #FF00FF magenta padding on BOTH left and right sides inside each column.
+- UNIFORM SPACING across the full image width: the horizontal gap from the LEFT image edge to plant 1 must EQUAL the gap between plant 1 and plant 2, which must EQUAL the gap between 2 and 3, 3 and 4, 4 and 5, AND the gap from plant 5 to the RIGHT image edge. Like 5 evenly spaced objects on a line — mathematical equal intervals.
+- Do NOT bunch plants in the center with huge empty margins on left and right. Do NOT overlap columns.
+- Draw each of the 5 plant types EXACTLY ONCE — NO duplicate second row, NO copy of the same row below.
+- All 5 plants share the SAME vertical alignment: each plant CENTERED vertically in the full image height (not hugging the top edge). Equal top and bottom magenta margin above/below each plant.
+- Each plant should occupy roughly the middle 70% of image height, centered.
+
+BACKGROUND — STRICT:
+- The ENTIRE image is ONE flat solid color: #FF00FF magenta ONLY.
+- FORBIDDEN: alternating column colors, vertical stripes, different shades of pink per column, panels, gradients on background. If you draw columns mentally, they must be invisible — same #FF00FF everywhere.
+- Icons sit directly on magenta. NO circles, NO badges, NO frames.
+
+STYLE — MUST match the same game art as "fresh flower" and "bouquet" icons in this project:
+- BOLD VIVID SATURATED colors — leaves are BRIGHT fresh greens (#66BB6A, #81C784, #43A047, #A5D6A7), NEVER dull gray-green, NEVER muddy or desaturated
+- Every leaf and pot surface has SMOOTH GRADIENT from bright highlight to rich shadow for strong 3D ROUNDNESS
+- Prominent BRIGHT WHITE highlight spots or arcs on the TOP of each leaf and on pot rims — glossy dewy game-icon look
+- THIN outlines in the SAME color family as the fill (slightly darker green for leaves, NOT thick black lines)
+- Warm lighting from top-left — consistent across all 5 icons
+- Cute chunky readable shapes — clear silhouette at small size
+- Pots in warm terracotta, clean white ceramic, or soft gray — each with white highlight on the curve
+- Each icon fills ~75-80% of its cell, similar visual weight
+- NO TEXT, NO sparkles, NO glow, NO floating particles
+- Background ONLY #FF00FF
+
+5 ICONS left to right:
+
+[1] 小芽苗 — Tiny round white pot, one cute bright lime-green sprout with 2 small round baby leaves, thin stem. Smallest, simplest. Glossy highlights on leaves.
+
+[2] 多肉盆栽 — Small terracotta pot, chubby succulent rosette: thick fleshy leaves in vivid blue-green to jade (#4DD0E1 tint to #66BB6A), each leaf has white highlight stripe. Plump and cute.
+
+[3] 绿萝 — Small white hanging pot, 4-5 heart-shaped leaves trailing down in BRIGHT emerald green with clear golden-yellow variegation streaks. Each leaf glossy with white edge highlight.
+
+[4] 波士顿蕨 — Wider cream ceramic pot, lush Boston fern with many feathery fronds in VIBRANT spring green (#66BB6A to #43A047), fluffy fountain shape. Highlights on frond tips.
+
+[5] 虎皮兰 — Modern gray cylinder pot, 4-5 tall sword leaves: deep rich green with BOLD golden-yellow horizontal bands (#FFD54F). Strong vertical graphic. Glossy leaf surface with white highlight down the center of each leaf.

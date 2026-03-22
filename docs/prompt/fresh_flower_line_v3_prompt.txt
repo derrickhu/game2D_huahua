@@ -1,0 +1,37 @@
+A game item icon sheet with 10 individual flower icons arranged in a 5 columns × 2 rows grid layout. Merge progression from Level 1 (seed) to Level 10 (golden peony). Each icon is a bold, chunky GAME ICON — NOT a realistic flower illustration.
+
+VERY IMPORTANT: Solid #FF00FF magenta background everywhere. ABSOLUTELY NO TEXT anywhere.
+
+STYLE REQUIREMENTS (follow EXACTLY — this is a game UI icon style, NOT botanical illustration):
+- Bold chunky rounded shapes — like game UI icons or emoji, NOT realistic botanical drawings
+- Each flower is a SIMPLE GEOMETRIC SHAPE with minimal internal detail
+- ONLY 2-color gradient per flower (light tone → dark tone of SAME hue), NO multicolor mess
+- Thick clean dark outline around the entire shape (2-3px, slightly darker than the fill)
+- Soft 3D volume: bright highlight on top-left, darker shade on bottom-right
+- Subtle drop shadow beneath each icon (dark semi-transparent oval below)
+- NO petal veins, NO stamens, NO fine texture, NO realistic details — pure color and shape
+- Each icon fills 80% of its cell, centered
+- Warm top-left lighting with a small white specular highlight dot
+- Think "mobile game icon" or "emoji style" — recognizable at 48x48 pixels
+
+GRID (left to right, top to bottom):
+
+[Row 1, Col 1] Lv1 SEED: A single plump round seed shape. Warm brown gradient (#A1887F → #6D4C41). Tiny bright green sprout (one small rounded leaf) poking from top. Very simple — just a brown circle with a green nub. Drop shadow. On #FF00FF.
+
+[Row 1, Col 2] Lv2 SPROUT: A small chunky terracotta pot (rounded trapezoid, orange-brown #E07A4F → #BF5B2E) with TWO big round green leaves (#66BB6A → #388E3C) and a tiny pink bud between them. Simple shapes only — pot + 2 leaves + bud dot. Drop shadow. On #FF00FF.
+
+[Row 1, Col 3] Lv3 DAISY: A bold simple daisy icon. BIG round golden-yellow center dome (#FFD54F → #F9A825), surrounded by 8 chunky rounded white petals (#FFFFFF → #E0E0E0) evenly spaced like a pinwheel. One short green stem nub at bottom. Clean and graphic. Drop shadow. On #FF00FF.
+
+[Row 1, Col 4] Lv4 SUNFLOWER: Bold sunflower icon. Large round dark brown center (#5D4037 → #3E2723), ring of chunky golden-yellow petals (#FFC107 → #F57F17) radiating outward. One thick green leaf at bottom-left. Warm and sunny. Drop shadow. On #FF00FF.
+
+[Row 1, Col 5] Lv5 CARNATION: A round puffy cloud-like pink bloom shape — like a fluffy ball with soft wavy edges. Gentle pink gradient (#F48FB1 → #E91E63). NO individual petals drawn, just a soft bumpy round silhouette. Short green stem. Drop shadow. On #FF00FF.
+
+[Row 2, Col 1] Lv6 ROSE: Classic rose icon — a spiral/swirl shape viewed from above. Deep coral-pink gradient (#EF5350 → #C62828). 3-4 concentric curved petal layers creating a spiral pattern. Two chunky dark green leaves at base. Velvety rich color. Drop shadow. On #FF00FF.
+
+[Row 2, Col 2] Lv7 LILY: An elegant star-shaped bloom with 5 smooth pointed petals fanning outward. Soft white-to-pink gradient (#FCE4EC → #F8BBD0). Small golden dots clustered at center (stamens). Clean star silhouette. Drop shadow. On #FF00FF.
+
+[Row 2, Col 3] Lv8 HYDRANGEA: A big round ball shape made of a bumpy cluster surface — like a fluffy sphere. Blue-to-lavender gradient (#90CAF9 → #5C6BC0). Two chunky green leaves at bottom. The ball has subtle bumpy texture but NO individual tiny flowers drawn. Drop shadow. On #FF00FF.
+
+[Row 2, Col 4] Lv9 ORCHID: A distinctive orchid shape — 3 big smooth rounded upper petals in purple gradient (#CE93D8 → #8E24AA), one distinctive lip petal at bottom in deeper magenta (#AD1457). Clean elegant butterfly-like silhouette. Thin curved stem. Drop shadow. On #FF00FF.
+
+[Row 2, Col 5] Lv10 GOLDEN PEONY: A magnificent large round bloom with chunky layered petals in rich gold gradient (#FFD54F → #E65100). Many rounded petal shapes arranged in concentric layers. Two dark green leaves at base. 3-4 small sparkle stars (✦) floating around it in gold/white. The biggest and most impressive icon. Drop shadow. On #FF00FF.

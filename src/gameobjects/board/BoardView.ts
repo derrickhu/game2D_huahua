@@ -173,7 +173,7 @@ export class BoardView extends PIXI.Container {
         const peekTex = TextureCache.get('cell_peek');
         if (peekTex) {
           const sp = new PIXI.Sprite(peekTex);
-          const fitSize = cs * 0.95;
+          const fitSize = cs * 1.0;
           const scale = Math.min(fitSize / peekTex.width, fitSize / peekTex.height);
           sp.scale.set(scale);
           sp.anchor.set(0.5, 0.5);
@@ -687,14 +687,14 @@ export class BoardView extends PIXI.Container {
       const lockTex = TextureCache.get('cell_locked');
       if (lockTex) {
         const oldGift = new PIXI.Sprite(lockTex);
-        const fitSize = cs * 0.72;
+        const fitSize = cs * 1.0;
         const scale = Math.min(fitSize / lockTex.width, fitSize / lockTex.height);
         oldGift.scale.set(scale);
         oldGift.anchor.set(0.5, 0.5);
         oldGift.position.set(cellView.x + cs / 2, cellView.y + cs / 2);
         this.addChild(oldGift);
 
-        // 礼盒旋转缩小消失
+        // 绸缎旋转缩小消失
         TweenManager.to({
           target: oldGift,
           props: { alpha: 0, rotation: 0.5 },
@@ -738,7 +738,7 @@ export class BoardView extends PIXI.Container {
             const peekTex = TextureCache.get('cell_peek');
             if (cell.state === CellState.PEEK && peekTex) {
               const ribbon = new PIXI.Sprite(peekTex);
-              const fitRibbon = cs * 0.95;
+              const fitRibbon = cs * 1.0;
               const rScale = Math.min(fitRibbon / peekTex.width, fitRibbon / peekTex.height);
               ribbon.scale.set(0);
               ribbon.anchor.set(0.5, 0.5);

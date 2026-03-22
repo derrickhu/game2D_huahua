@@ -45,8 +45,8 @@ const SEASON_CONFIGS: Record<Season, SeasonConfig> = {
     cellBorderColor: 0xFFB6C1,
     particleColor: 0xFFB7C5,
     particleEmoji: '🌸',
-    bonusLine: 'daily',
-    bonusDesc: '日常花系合成20%跳级',
+    bonusLine: 'fresh',
+    bonusDesc: '鲜花线合成20%跳级',
   },
   [Season.SUMMER]: {
     name: '夏',
@@ -67,8 +67,8 @@ const SEASON_CONFIGS: Record<Season, SeasonConfig> = {
     cellBorderColor: 0xFFCC80,
     particleColor: 0xE67E22,
     particleEmoji: '🍂',
-    bonusLine: 'romantic',
-    bonusDesc: '浪漫花系经验×1.5',
+    bonusLine: 'bouquet',
+    bonusDesc: '花束线经验×1.5',
   },
   [Season.WINTER]: {
     name: '冬',
@@ -156,10 +156,10 @@ export class SeasonSystem {
     return SEASON_CONFIGS[season].bonusLine === line;
   }
 
-  /** 春天日常花系跳级概率 */
+  /** 春天鲜花线跳级概率 */
   static getSkipLevelChance(line: string): number {
     const season = SeasonSystem.getCurrentSeason();
-    if (season === Season.SPRING && line === 'daily') return 0.2;
+    if (season === Season.SPRING && line === 'fresh') return 0.2;
     return 0;
   }
 
@@ -170,10 +170,10 @@ export class SeasonSystem {
     return 1;
   }
 
-  /** 秋天浪漫花系经验倍数 */
+  /** 秋天花束线经验倍数 */
   static getExpMultiplier(line: string): number {
     const season = SeasonSystem.getCurrentSeason();
-    if (season === Season.AUTUMN && line === 'romantic') return 1.5;
+    if (season === Season.AUTUMN && line === 'bouquet') return 1.5;
     return 1;
   }
 

@@ -1,0 +1,27 @@
+A game item icon sheet with 5 individual bouquet icons arranged in a single row (5 columns × 1 row). These are Levels 1-5 of a flower bouquet merge progression. Each bouquet must feature BRIGHT, LUMINOUS, GLOSSY flowers identical in rendering quality to single-stem flowers in the same game.
+
+VERY IMPORTANT: The entire background MUST be solid bright magenta #FF00FF. Every pixel not part of an icon must be #FF00FF. No other background color.
+
+CRITICAL STYLE — match existing game flower assets EXACTLY:
+- Flowers inside bouquets must look IDENTICAL to standalone game flower icons: bright saturated colors, glossy rounded petals with prominent WHITE HIGHLIGHT DOTS/ARCS on each petal surface, smooth soft gradient shading from light to dark creating strong 3D volume
+- Colors must be VIVID and HIGH SATURATION — pure bright pinks, warm golden yellows, crisp whites, rich reds — NOT muted, NOT dark, NOT desaturated
+- Each petal has a LUMINOUS TRANSLUCENT quality — lighter/brighter at the highlight, smoothly darkening toward edges
+- Outlines are THIN and SAME COLOR FAMILY as the fill (NOT black outlines) — e.g. pink petal has slightly darker pink outline
+- White highlight spots on every rounded surface (petals, leaves, wrapping paper) — this is the key to the glossy 3D look
+- Wrapping paper should be SIMPLE and CLEAN — minimal texture, just smooth color gradients with highlights
+- Flowers should be the DOMINANT visual element, wrapping is secondary
+- Each icon fills ~80% of its cell
+- NO TEXT, NO sparkles, NO glow effects, NO floating particles
+- Background is SOLID #FF00FF MAGENTA everywhere
+
+GRID (left to right, 5 cells):
+
+[Col 1] LEVEL 1 — LOOSE FLOWERS (一小捧散花): A tiny casual bunch of 3 small flowers — one white daisy with bright golden center, one small pink flower, one tiny yellow flower — stems loosely tied with a thin green string. Very small and simple. Flowers are bright and glossy with white highlights on petals. On solid #FF00FF background.
+
+[Col 2] LEVEL 2 — MINI BOUQUET (迷你花束): A small bouquet of 4 pink and white flowers wrapped in light warm beige kraft paper. Paper is simple and smooth. Flowers are bright rose-pink with clear white highlights on each petal, giving them a fresh dewy look. Small twine bow at bottom. On solid #FF00FF background.
+
+[Col 3] LEVEL 3 — TULIP BOUQUET (郁金香花束): A mid-size bouquet of 5 tulips in vivid red and bright sunny yellow, wrapped in crisp white paper with a green satin ribbon bow. Tulip petals are GLOSSY with strong highlights — bright scarlet red petals with white arc highlights, golden yellow petals with white dot highlights. Paper is clean white with subtle shadow folds. On solid #FF00FF background.
+
+[Col 4] LEVEL 4 — ROSES & BABY'S BREATH (玫瑰满天星): A pretty bouquet of plump bright pink roses surrounded by airy white baby's breath, wrapped in soft blush pink paper with a pink ribbon. Roses are VIVID coral-pink (#FF6B8A to #E91E63) with clearly visible spiral petal layers and BRIGHT WHITE HIGHLIGHTS on each petal giving volume and glow. Baby's breath as tiny bright white dot clusters. Paper is soft blush with clean gradient. On solid #FF00FF background.
+
+[Col 5] LEVEL 5 — COUNTRY MIX BOUQUET (田园混搭花束): A generous mixed bouquet with a bright golden sunflower, white daisies, small purple flowers, and green leaves, wrapped in two-tone paper (cream inner, sage green outer). Each flower is rendered with the SAME glossy luminous quality — sunflower with rich golden-yellow petals and white highlights, daisies with bright white petals and golden centers. Rich color variety. On solid #FF00FF background.

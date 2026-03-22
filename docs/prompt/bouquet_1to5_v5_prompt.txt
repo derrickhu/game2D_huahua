@@ -1,0 +1,27 @@
+A game item icon sheet showing exactly 5 bouquet icons in a strict 5-column × 1-row GRID, evenly spaced. Levels 1-5 of a flower bouquet merge chain. Each icon is placed DIRECTLY on the magenta background with NO circular badge, NO circle background, NO frame around icons.
+
+BACKGROUND: The ENTIRE image background MUST be solid #FF00FF magenta. Icons sit directly on the magenta with NO other background shape behind them. NO circles, NO badges, NO frames.
+
+CRITICAL FLOWER RENDERING STYLE — copy this EXACTLY from existing game:
+- Every flower petal is painted with SMOOTH GRADIENT from bright highlight to rich shadow, creating STRONG 3D ROUNDNESS
+- Each petal has a prominent BRIGHT WHITE highlight spot/arc near the top, making petals look glossy and dewy
+- Colors are PURE and VIVID — bright coral pink, rich golden yellow, crisp clean white — HIGH SATURATION, never muddy or dark
+- Outlines are THIN, matching the color family of each element (pink outline for pink petals, green outline for leaves) — NOT thick black lines
+- Leaves are vibrant fresh green with white highlight and clear vein lines
+- Overall look: bright, cheerful, luminous, like morning dew on fresh flowers
+- Wrapping paper is SIMPLE — smooth clean gradients, not textured, secondary to flowers
+- Each icon occupies its grid cell fully (~80%), all roughly same size
+- NO TEXT, NO sparkles, NO glow, NO floating effects
+- Background is ONLY solid #FF00FF magenta, nothing else
+
+5 ICONS (left to right):
+
+[1] LOOSE FLOWERS: 3 small bright flowers — a white daisy with plump golden center (white petals with soft pink edge shadow, bright white highlight on each petal), a tiny pink flower, a small yellow flower. Stems tied with thin green twine. Simple, tiny, casual. Directly on #FF00FF.
+
+[2] MINI KRAFT BOUQUET: 4 bright rose-pink flowers with GLOSSY white highlights on each petal, wrapped in smooth warm beige kraft paper with a small twine bow. Flowers are vivid rose-pink with clearly visible petal layers, each petal has a curved white highlight giving 3D roundness. Paper is clean beige gradient. Directly on #FF00FF.
+
+[3] TULIP BOUQUET: 5 tulips — 3 vivid scarlet red and 2 bright sunny yellow — wrapped in crisp white paper with emerald green ribbon. Each tulip petal is a smooth bold gradient with a bright white arc highlight at top making it look glossy and plump. Red tulips: bright cherry red to deeper red. Yellow tulips: bright lemon to warm gold. Directly on #FF00FF.
+
+[4] ROSES & BABY'S BREATH: A pretty bouquet of 5-6 bright coral-pink roses surrounded by clusters of tiny white baby's breath dots, wrapped in soft blush-pink paper with a pink satin ribbon bow. Each rose has VISIBLE SPIRAL PETAL LAYERS with bright-to-dark pink gradient and a WHITE HIGHLIGHT SPOT on each outer petal, looking dewy and fresh. Paper is clean pastel pink gradient. Directly on #FF00FF.
+
+[5] COUNTRY MIX BOUQUET: A generous mixed bouquet — 1 big bright golden sunflower (rich yellow petals with white highlights, dark brown textured center), 2 white daisies, small purple flowers, green leaf sprigs — wrapped in sage green + cream two-tone paper with cream ribbon. Each flower is rendered individually with full glossy highlights and bright saturated color. Clearly the largest and most abundant of the 5. Directly on #FF00FF.

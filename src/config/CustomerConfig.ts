@@ -1,5 +1,5 @@
 /**
- * 客人类型配置 - 16 种客人（前期只启用花束类需求，解锁饮品建筑后启用组合需求）
+ * 客人类型配置 - 16 种客人（前期只启用花系需求，解锁饮品工具后启用组合需求）
  */
 import { Category, FlowerLine, DrinkLine } from './ItemConfig';
 
@@ -27,11 +27,11 @@ export interface CustomerTypeDef {
 }
 
 export const CUSTOMER_TYPES: CustomerTypeDef[] = [
-  // ---- 花束入门（Phase 0 即可出现） ----
+  // ---- 花系入门（Phase 0 即可出现） ----
   {
     id: 'child', name: '小朋友', emoji: '🧒',
     slotRange: [1, 1],
-    demands: [{ category: Category.FLOWER, lines: [FlowerLine.DAILY], levelRange: [1, 1] }],
+    demands: [{ category: Category.FLOWER, lines: [FlowerLine.FRESH], levelRange: [1, 2] }],
     huayuanReward: [10, 20], expReward: 3,
     hualuChance: 0,
     isRegular: false,
@@ -39,7 +39,7 @@ export const CUSTOMER_TYPES: CustomerTypeDef[] = [
   {
     id: 'student', name: '学生少女', emoji: '👧',
     slotRange: [1, 1],
-    demands: [{ category: Category.FLOWER, lines: [FlowerLine.DAILY], levelRange: [1, 2] }],
+    demands: [{ category: Category.FLOWER, lines: [FlowerLine.FRESH], levelRange: [1, 3] }],
     huayuanReward: [15, 30], expReward: 5,
     hualuChance: 0.1,
     isRegular: true,
@@ -47,7 +47,7 @@ export const CUSTOMER_TYPES: CustomerTypeDef[] = [
   {
     id: 'worker', name: '上班族', emoji: '👔',
     slotRange: [1, 2],
-    demands: [{ category: Category.FLOWER, lines: [FlowerLine.DAILY, FlowerLine.ROMANTIC], levelRange: [1, 3] }],
+    demands: [{ category: Category.FLOWER, lines: [FlowerLine.FRESH, FlowerLine.BOUQUET], levelRange: [2, 4] }],
     huayuanReward: [20, 50], expReward: 8,
     hualuChance: 0.15,
     isRegular: true,
@@ -55,19 +55,19 @@ export const CUSTOMER_TYPES: CustomerTypeDef[] = [
   {
     id: 'mom', name: '温柔妈妈', emoji: '👩',
     slotRange: [1, 2],
-    demands: [{ category: Category.FLOWER, lines: [FlowerLine.DAILY, FlowerLine.ROMANTIC], levelRange: [1, 3] }],
+    demands: [{ category: Category.FLOWER, lines: [FlowerLine.FRESH, FlowerLine.BOUQUET], levelRange: [2, 5] }],
     huayuanReward: [25, 60], expReward: 10,
     hualuChance: 0.2,
     isRegular: true,
   },
 
-  // ---- 组合订单（需解锁饮品建筑后才出现） ----
+  // ---- 组合订单（需解锁饮品工具后才出现） ----
   {
     id: 'youth', name: '文艺青年', emoji: '🎨',
     slotRange: [2, 2],
     demands: [
-      { category: Category.FLOWER, lines: [FlowerLine.DAILY, FlowerLine.ROMANTIC], levelRange: [1, 3] },
-      { category: Category.DRINK, lines: [DrinkLine.TEA], levelRange: [1, 2] },
+      { category: Category.FLOWER, lines: [FlowerLine.FRESH, FlowerLine.BOUQUET], levelRange: [2, 5] },
+      { category: Category.DRINK, lines: [DrinkLine.TEA], levelRange: [1, 3] },
     ],
     huayuanReward: [30, 70], expReward: 12,
     hualuChance: 0.2,
@@ -77,8 +77,8 @@ export const CUSTOMER_TYPES: CustomerTypeDef[] = [
     id: 'couple', name: '情侣', emoji: '💑',
     slotRange: [2, 2],
     demands: [
-      { category: Category.FLOWER, lines: [FlowerLine.ROMANTIC, FlowerLine.LUXURY], levelRange: [2, 4] },
-      { category: Category.DRINK, lines: [DrinkLine.COLD], levelRange: [1, 2] },
+      { category: Category.FLOWER, lines: [FlowerLine.BOUQUET, FlowerLine.GREEN], levelRange: [3, 6] },
+      { category: Category.DRINK, lines: [DrinkLine.COLD], levelRange: [1, 4] },
     ],
     huayuanReward: [50, 100], expReward: 15,
     hualuChance: 0.3,
@@ -88,8 +88,8 @@ export const CUSTOMER_TYPES: CustomerTypeDef[] = [
     id: 'birthday', name: '生日顾客', emoji: '🎂',
     slotRange: [2, 2],
     demands: [
-      { category: Category.FLOWER, lines: [FlowerLine.DAILY, FlowerLine.ROMANTIC, FlowerLine.LUXURY], levelRange: [2, 4] },
-      { category: Category.DRINK, lines: [DrinkLine.DESSERT], levelRange: [1, 2] },
+      { category: Category.FLOWER, lines: [FlowerLine.FRESH, FlowerLine.BOUQUET, FlowerLine.GREEN], levelRange: [3, 6] },
+      { category: Category.DRINK, lines: [DrinkLine.DESSERT], levelRange: [1, 4] },
     ],
     huayuanReward: [40, 90], expReward: 15,
     hualuChance: 0.3,
@@ -99,8 +99,8 @@ export const CUSTOMER_TYPES: CustomerTypeDef[] = [
     id: 'blogger', name: '网红博主', emoji: '📸',
     slotRange: [2, 2],
     demands: [
-      { category: Category.FLOWER, lines: [FlowerLine.DAILY, FlowerLine.ROMANTIC, FlowerLine.LUXURY], levelRange: [3, 5] },
-      { category: Category.DRINK, lines: [DrinkLine.TEA, DrinkLine.COLD, DrinkLine.DESSERT], levelRange: [1, 3] },
+      { category: Category.FLOWER, lines: [FlowerLine.FRESH, FlowerLine.BOUQUET, FlowerLine.GREEN], levelRange: [4, 7] },
+      { category: Category.DRINK, lines: [DrinkLine.TEA, DrinkLine.COLD, DrinkLine.DESSERT], levelRange: [2, 5] },
     ],
     huayuanReward: [60, 120], expReward: 18,
     hualuChance: 0.3,
@@ -112,8 +112,8 @@ export const CUSTOMER_TYPES: CustomerTypeDef[] = [
     id: 'noble', name: '贵妇', emoji: '👸',
     slotRange: [2, 3],
     demands: [
-      { category: Category.FLOWER, lines: [FlowerLine.LUXURY], levelRange: [3, 5] },
-      { category: Category.DRINK, lines: [DrinkLine.DESSERT], levelRange: [2, 3] },
+      { category: Category.FLOWER, lines: [FlowerLine.GREEN], levelRange: [5, 8] },
+      { category: Category.DRINK, lines: [DrinkLine.DESSERT], levelRange: [3, 6] },
     ],
     huayuanReward: [80, 200], expReward: 25,
     hualuChance: 0.4,
@@ -123,8 +123,8 @@ export const CUSTOMER_TYPES: CustomerTypeDef[] = [
     id: 'collector', name: '收藏家', emoji: '🧐',
     slotRange: [2, 3],
     demands: [
-      { category: Category.FLOWER, lines: [FlowerLine.LUXURY], levelRange: [4, 6] },
-      { category: Category.DRINK, lines: [DrinkLine.COLD, DrinkLine.DESSERT], levelRange: [2, 3] },
+      { category: Category.FLOWER, lines: [FlowerLine.GREEN], levelRange: [7, 10] },
+      { category: Category.DRINK, lines: [DrinkLine.COLD, DrinkLine.DESSERT], levelRange: [5, 8] },
     ],
     huayuanReward: [100, 250], expReward: 30,
     hualuChance: 0.5,

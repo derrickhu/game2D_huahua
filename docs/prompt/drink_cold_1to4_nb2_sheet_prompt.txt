@@ -1,0 +1,46 @@
+Game item icon SPRITE SHEET — EXACTLY 4 cold-drink icons in ONE SINGLE HORIZONTAL ROW.
+
+ABSOLUTE LAYOUT RULE:
+- 4 columns × 1 row ONLY. ONE row in the whole image.
+- FORBIDDEN: second row, duplicate row below, 2×4 or 4×2 grid, 8 drinks total. ONLY 4 drinks in the entire image.
+
+CRITICAL GRID LAYOUT (must be perfect for automated slicing):
+- Divide the image into 4 EQUAL-WIDTH vertical columns. Each column is EXACTLY 25% of total image width. Ruler-perfect alignment.
+- Each drink icon is CENTERED horizontally inside its own column. The drink + glass silhouette must NOT cross into the neighboring column — keep clear empty #FF00FF magenta padding on BOTH left and right inside each column.
+- UNIFORM horizontal spacing: gap from LEFT edge to icon 1 = gap between 1–2 = 2–3 = 3–4 = gap from icon 4 to RIGHT edge (equal intervals like 4 evenly spaced objects).
+- Do NOT bunch icons in the center with huge side margins. Do NOT overlap columns.
+- All 4 icons share the SAME vertical alignment: each drink CENTERED vertically in the full image height. Equal top and bottom magenta margin.
+- Each icon fills roughly 70–80% of its cell height and width — similar visual weight across all four.
+
+BACKGROUND — STRICT:
+- The ENTIRE image is ONE flat solid color: #FF00FF magenta ONLY.
+- FORBIDDEN: alternating column colors, stripes, panels, gradients on background. Same #FF00FF everywhere.
+- Icons sit directly on magenta. NO circles, NO badges, NO frames, NO plates under drinks unless part of the glass itself.
+
+NO TEXT ANYWHERE — HIGHEST PRIORITY (pipeline will slice columns; text breaks automation):
+- ZERO text of any kind: no English, no numbers, no Chinese characters, no brackets [ ], no captions above/below drinks, no labels, no watermarks, no UI.
+- The image must contain ONLY four drink objects on flat magenta — nothing else.
+
+STYLE — match latest "green plant line" NB2 game icons in this project:
+- BOLD VIVID SATURATED colors — drinks look fresh, icy, appetizing; NEVER dull or muddy
+- Smooth GRADIENT shading + soft specular patches (pale aqua / pale cream / light mint) ON glass and fruit — NOT a continuous white ring tracing the cup edge
+- NO WHITE OUTLINE / NO white描边: forbidden white stroke or sticker border around the whole drink; outer contour line = slightly darker same-hue tint (teal-gray, blue-gray), never #FFFFFF halo
+- THIN outlines in the SAME color family as the liquid/glass (slightly darker tint), NOT thick black cartoon outlines
+- Cute chunky readable shapes — clear silhouette at small merge-game tile size
+- Top-left warm lighting consistency across all 4 icons
+- NO logos, NO sparkles outside the drink, NO outer glow halos (hard to cut out)
+
+4 ICONS left to right (冷饮线 Lv1–4, low tier → slightly fancier):
+
+[1] 柠檬花水 — Short clear glass or mason jar, pale yellow-citrus translucent liquid, 1–2 lemon wheel slices visible inside, tiny white jasmine or small edible flower floating on top, condensation droplets on glass, simple refreshing look.
+
+[2] 花果冰饮 — Slightly taller glass, layered orange-pink-red fruit colors with crushed ice, visible mixed berry and citrus chunks, small flower petal garnish on rim, straw optional (thin, simple), juicy summer vibe.
+
+[3] 花漾气泡水 — Tall slim glass, crystal-clear or very pale green liquid, MANY visible rising bubbles, 2–3 soft pastel flower petals (pink/white) inside or on surface, light fizzy sparkle on liquid (as shading, not magic particles).
+
+[4] 玫瑰冰沙 — REDESIGN (must be easy to cut out from #FF00FF magenta):
+- Short sturdy CLEAR glass tumbler (simple cylinder or slight taper), thick smooth rose-pink frozen slush (#F48FB1 → #EC407A), soft rounded dome on top, appetizing and cute.
+- CRITICAL — RIM / EDGE FOR MATTING: NO crystalline sugar or salt rim with white grain speckles (they blend with background and are impossible to key). NO noisy granular texture on the rim.
+- Instead: smooth glass lip with soft pale-blue or pale-mint gradient band on the rim (NOT pure white stroke line).
+- One small rose-petal garnish on top of slush; petal pink must NOT be identical to chroma magenta #FF00FF.
+- Slush surface: smooth soft shading, optional subtle gloss streaks — still NO grain noise at the rim.

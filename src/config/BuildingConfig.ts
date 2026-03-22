@@ -1,69 +1,101 @@
 /**
- * 建筑配置 - 永久型 7 + 消耗型 6
+ * 工具/建筑配置
+ *
+ * 6条工具链 x 3级 = 18种工具
+ * 每种工具只产出对应的一条产品线
+ * 工具放在棋盘上可点击产出，合成两个同级工具升级为下一级
  */
 
-import { FlowerLine, DrinkLine } from './ItemConfig';
+import { Category, FlowerLine, DrinkLine, ToolLine } from './ItemConfig';
 
-export enum BuildingType {
-  PERMANENT = 'permanent', // 永久型
-  CONSUMABLE = 'consumable', // 消耗型
-}
-
-export interface BuildingDef {
-  id: string;
-  name: string;
-  type: BuildingType;
-  /** 产出的品类（flower/drink） */
-  produceCategory: 'flower' | 'drink';
-  /** 可产出的花系/饮品线列表 */
-  produceLines: string[];
-  /** 产出等级范围 [min, max] */
-  produceLevelRange: [number, number];
-  /** CD时间（秒），仅永久型有效 */
+export interface ToolDef {
+  /** 物品ID（对应 ItemConfig 中的 tool_xxx_N） */
+  itemId: string;
+  /** 工具线 */
+  toolLine: ToolLine;
+  /** 工具等级 1-3 */
+  level: number;
+  /** 产出的品类 */
+  produceCategory: Category;
+  /** 产出的产品线（仅一条） */
+  produceLine: string;
+  /** 产出等级概率表 [[level, weight], ...] */
+  produceTable: [number, number][];
+  /** CD时间（秒），0 表示无CD */
   cooldown: number;
-  /** 消耗型总次数，仅消耗型有效 */
-  totalUses: number;
   /** 消耗体力 */
   staminaCost: number;
-  /** 合成所需材料ID（顶级建筑材料） */
-  requireMatId: string;
 }
 
-export const BUILDING_DEFS: Map<string, BuildingDef> = new Map();
+// ═══════════════ 花系工具（产品10级） ═══════════════
 
-// 花束永久型建筑（4种）
-const flowerPermanent: Omit<BuildingDef, 'id'>[] = [
-  { name: '花艺操作台', type: BuildingType.PERMANENT, produceCategory: 'flower', produceLines: [FlowerLine.DAILY, FlowerLine.ROMANTIC, FlowerLine.LUXURY], produceLevelRange: [1, 2], cooldown: 30, totalUses: 0, staminaCost: 2, requireMatId: 'bmat_flower_build_1' },
-  { name: '包装台', type: BuildingType.PERMANENT, produceCategory: 'flower', produceLines: [FlowerLine.DAILY, FlowerLine.ROMANTIC, FlowerLine.LUXURY], produceLevelRange: [1, 3], cooldown: 60, totalUses: 0, staminaCost: 3, requireMatId: 'bmat_flower_build_2' },
-  { name: '小型温室', type: BuildingType.PERMANENT, produceCategory: 'flower', produceLines: [FlowerLine.DAILY, FlowerLine.ROMANTIC, FlowerLine.LUXURY], produceLevelRange: [2, 4], cooldown: 120, totalUses: 0, staminaCost: 5, requireMatId: 'bmat_flower_build_3' },
-  { name: '星光花房', type: BuildingType.PERMANENT, produceCategory: 'flower', produceLines: [FlowerLine.DAILY, FlowerLine.ROMANTIC, FlowerLine.LUXURY], produceLevelRange: [3, 5], cooldown: 300, totalUses: 0, staminaCost: 8, requireMatId: 'bmat_flower_build_4' },
+const flowerToolTemplate = (toolLine: ToolLine, produceLine: FlowerLine): Omit<ToolDef, 'itemId' | 'level'>[] => [
+  {
+    toolLine, produceCategory: Category.FLOWER, produceLine,
+    produceTable: [[1, 70], [2, 25], [3, 5]],
+    cooldown: 0, staminaCost: 3,
+  },
+  {
+    toolLine, produceCategory: Category.FLOWER, produceLine,
+    produceTable: [[2, 20], [3, 30], [4, 25], [5, 15], [6, 10]],
+    cooldown: 120, staminaCost: 5,
+  },
+  {
+    toolLine, produceCategory: Category.FLOWER, produceLine,
+    produceTable: [[4, 10], [5, 20], [6, 25], [7, 20], [8, 15], [9, 7], [10, 3]],
+    cooldown: 300, staminaCost: 8,
+  },
 ];
 
-// 饮品永久型建筑（3种）
-const drinkPermanent: Omit<BuildingDef, 'id'>[] = [
-  { name: '简易茶台', type: BuildingType.PERMANENT, produceCategory: 'drink', produceLines: [DrinkLine.TEA, DrinkLine.COLD, DrinkLine.DESSERT], produceLevelRange: [1, 1], cooldown: 30, totalUses: 0, staminaCost: 2, requireMatId: 'bmat_drink_build_1' },
-  { name: '调饮吧台', type: BuildingType.PERMANENT, produceCategory: 'drink', produceLines: [DrinkLine.TEA, DrinkLine.COLD, DrinkLine.DESSERT], produceLevelRange: [1, 2], cooldown: 60, totalUses: 0, staminaCost: 3, requireMatId: 'bmat_drink_build_2' },
-  { name: '花饮工坊', type: BuildingType.PERMANENT, produceCategory: 'drink', produceLines: [DrinkLine.TEA, DrinkLine.COLD, DrinkLine.DESSERT], produceLevelRange: [2, 3], cooldown: 120, totalUses: 0, staminaCost: 5, requireMatId: 'bmat_drink_build_3' },
+// ═══════════════ 饮品工具（产品8级） ═══════════════
+
+const drinkToolTemplate = (toolLine: ToolLine, produceLine: DrinkLine): Omit<ToolDef, 'itemId' | 'level'>[] => [
+  {
+    toolLine, produceCategory: Category.DRINK, produceLine,
+    produceTable: [[1, 70], [2, 25], [3, 5]],
+    cooldown: 0, staminaCost: 3,
+  },
+  {
+    toolLine, produceCategory: Category.DRINK, produceLine,
+    produceTable: [[2, 25], [3, 30], [4, 25], [5, 20]],
+    cooldown: 120, staminaCost: 5,
+  },
+  {
+    toolLine, produceCategory: Category.DRINK, produceLine,
+    produceTable: [[4, 15], [5, 25], [6, 25], [7, 20], [8, 15]],
+    cooldown: 300, staminaCost: 8,
+  },
 ];
 
-// 消耗型建筑（6种）
-const consumable: Omit<BuildingDef, 'id'>[] = [
-  { name: '花材礼盒', type: BuildingType.CONSUMABLE, produceCategory: 'flower', produceLines: [FlowerLine.DAILY], produceLevelRange: [1, 2], cooldown: 0, totalUses: 5, staminaCost: 1, requireMatId: '' },
-  { name: '精选花篮', type: BuildingType.CONSUMABLE, produceCategory: 'flower', produceLines: [FlowerLine.DAILY, FlowerLine.ROMANTIC], produceLevelRange: [2, 3], cooldown: 0, totalUses: 4, staminaCost: 2, requireMatId: '' },
-  { name: '花艺大师箱', type: BuildingType.CONSUMABLE, produceCategory: 'flower', produceLines: [FlowerLine.ROMANTIC, FlowerLine.LUXURY], produceLevelRange: [3, 4], cooldown: 0, totalUses: 3, staminaCost: 3, requireMatId: '' },
-  { name: '茶包盒', type: BuildingType.CONSUMABLE, produceCategory: 'drink', produceLines: [DrinkLine.TEA], produceLevelRange: [1, 1], cooldown: 0, totalUses: 5, staminaCost: 1, requireMatId: '' },
-  { name: '调饮套装', type: BuildingType.CONSUMABLE, produceCategory: 'drink', produceLines: [DrinkLine.TEA, DrinkLine.COLD], produceLevelRange: [1, 2], cooldown: 0, totalUses: 4, staminaCost: 2, requireMatId: '' },
-  { name: '花饮臻选箱', type: BuildingType.CONSUMABLE, produceCategory: 'drink', produceLines: [DrinkLine.COLD, DrinkLine.DESSERT], produceLevelRange: [2, 3], cooldown: 0, totalUses: 3, staminaCost: 3, requireMatId: '' },
-];
+// ═══════════════ 构建完整工具定义表 ═══════════════
 
-// 注册
-let idx = 0;
-for (const def of [...flowerPermanent, ...drinkPermanent]) {
-  const id = `building_perm_${++idx}`;
-  BUILDING_DEFS.set(id, { id, ...def });
+function buildToolDefs(): Map<string, ToolDef> {
+  const map = new Map<string, ToolDef>();
+
+  const allTemplates: Omit<ToolDef, 'itemId' | 'level'>[][] = [
+    flowerToolTemplate(ToolLine.PLANT, FlowerLine.FRESH),
+    flowerToolTemplate(ToolLine.ARRANGE, FlowerLine.BOUQUET),
+    flowerToolTemplate(ToolLine.PACKAGE, FlowerLine.GREEN),
+    drinkToolTemplate(ToolLine.TEA_SET, DrinkLine.TEA),
+    drinkToolTemplate(ToolLine.MIXER, DrinkLine.COLD),
+    drinkToolTemplate(ToolLine.BAKE, DrinkLine.DESSERT),
+  ];
+
+  for (const templates of allTemplates) {
+    for (let i = 0; i < templates.length; i++) {
+      const t = templates[i];
+      const level = i + 1;
+      const itemId = `tool_${t.toolLine}_${level}`;
+      map.set(itemId, { itemId, level, ...t });
+    }
+  }
+
+  return map;
 }
-idx = 0;
-for (const def of consumable) {
-  const id = `building_cons_${++idx}`;
-  BUILDING_DEFS.set(id, { id, ...def });
+
+export const TOOL_DEFS = buildToolDefs();
+
+/** 根据物品ID查找工具定义 */
+export function findToolDef(itemId: string): ToolDef | undefined {
+  return TOOL_DEFS.get(itemId);
 }

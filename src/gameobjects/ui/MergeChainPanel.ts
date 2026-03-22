@@ -9,7 +9,6 @@ import { TweenManager, Ease } from '@/core/TweenManager';
 import { Game } from '@/core/Game';
 import { DESIGN_WIDTH, COLORS, FONT_FAMILY, BoardMetrics } from '@/config/Constants';
 import { ITEM_DEFS, getMergeChain, getMergeChainName, Category } from '@/config/ItemConfig';
-import { BUILDING_DEFS } from '@/config/BuildingConfig';
 import { BoardManager } from '@/managers/BoardManager';
 import { TextureCache } from '@/utils/TextureCache';
 
@@ -220,18 +219,6 @@ export class MergeChainPanel extends PIXI.Container {
     const startX = Math.max(20, (DESIGN_WIDTH - contentW) / 2);
     const centerY = (PANEL_HEIGHT - 100) / 2;
 
-    // 检查建筑材料满级转化
-    const lastItem = ITEM_DEFS.get(chain[chain.length - 1]);
-    let convertBuilding: string | null = null;
-    if (lastItem && lastItem.category === Category.BUILDING_MAT) {
-      for (const [bId, bDef] of BUILDING_DEFS) {
-        if (bDef.requireMatId === lastItem.id) {
-          convertBuilding = bId;
-          break;
-        }
-      }
-    }
-
     let x = startX;
     for (let i = 0; i < chain.length; i++) {
       const id = chain[i];
@@ -248,19 +235,6 @@ export class MergeChainPanel extends PIXI.Container {
         this._scrollContainer.addChild(arrow);
         x += ARROW_W + CARD_GAP;
       }
-    }
-
-    // 建筑材料满级转化箭头+建筑图标
-    if (convertBuilding) {
-      x += CARD_GAP;
-      const arrow = this._createConvertArrow();
-      arrow.position.set(x + ARROW_W / 2, centerY);
-      this._scrollContainer.addChild(arrow);
-      x += ARROW_W + CARD_GAP;
-
-      const bCard = this._createCard(convertBuilding, false, true);
-      bCard.position.set(x, centerY - CARD_H / 2);
-      this._scrollContainer.addChild(bCard);
     }
 
     // 如果内容超出可视区域，启用简单拖拽滚动
@@ -396,31 +370,6 @@ export class MergeChainPanel extends PIXI.Container {
     return c;
   }
 
-  /** 转化箭头（建筑材料→建筑） */
-  private _createConvertArrow(): PIXI.Container {
-    const c = new PIXI.Container();
-    const g = new PIXI.Graphics();
-    g.lineStyle(2.5, 0xB8860B);
-    g.moveTo(-10, 0);
-    g.lineTo(8, 0);
-    g.moveTo(4, -5);
-    g.lineTo(10, 0);
-    g.lineTo(4, 5);
-    c.addChild(g);
-
-    const txt = new PIXI.Text('转化', {
-      fontSize: 9,
-      fill: 0xB8860B,
-      fontFamily: FONT_FAMILY,
-      fontWeight: 'bold',
-    });
-    txt.anchor.set(0.5, 0);
-    txt.position.set(0, 7);
-    c.addChild(txt);
-
-    return c;
-  }
-
   /** 简单的拖拽滚动 */
   private _enableScroll(maxOffset: number): void {
     let dragging = false;
@@ -459,9 +408,9 @@ export class MergeChainPanel extends PIXI.Container {
 
   private _getLineColor(line: string): number {
     const map: Record<string, number> = {
-      daily: COLORS.FLOWER_DAILY,
-      romantic: COLORS.FLOWER_ROMANTIC,
-      luxury: COLORS.FLOWER_LUXURY,
+      fresh: COLORS.FLOWER_FRESH,
+      bouquet: COLORS.FLOWER_BOUQUET,
+      green: COLORS.FLOWER_GREEN,
       tea: COLORS.DRINK_TEA,
       cold: COLORS.DRINK_COLD,
       dessert: COLORS.DRINK_DESSERT,
@@ -473,7 +422,6 @@ export class MergeChainPanel extends PIXI.Container {
     switch (category) {
       case Category.FLOWER: return '🌸';
       case Category.DRINK: return '🍵';
-      case Category.BUILDING_MAT: return '🧱';
       case Category.BUILDING: return '🏠';
       case Category.CHEST: return '📦';
       default: return '❓';

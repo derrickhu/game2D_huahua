@@ -147,7 +147,7 @@ class IdleManagerClass {
   private _countPermanentBuildings(): number {
     let count = 0;
     for (const cell of BoardManager.cells) {
-      if (cell.state === 'open' && cell.itemId?.startsWith('building_perm')) {
+      if (cell.state === 'open' && cell.itemId?.startsWith('tool_')) {
         count++;
       }
     }
@@ -156,7 +156,7 @@ class IdleManagerClass {
 
   /** 随机产出低等级物品 */
   private _randomIdleItem(): string | null {
-    const lines = [FlowerLine.DAILY, FlowerLine.ROMANTIC, FlowerLine.LUXURY];
+    const lines = [FlowerLine.FRESH, FlowerLine.BOUQUET, FlowerLine.GREEN];
     const line = lines[Math.floor(Math.random() * lines.length)];
     // 70% 1级, 25% 2级, 5% 3级
     const roll = Math.random();

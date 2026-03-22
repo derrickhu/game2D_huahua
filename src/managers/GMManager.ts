@@ -327,7 +327,7 @@ class GMManagerClass {
       desc: '在空格子中填满1-2级花朵',
       execute: () => {
         let count = 0;
-        const lines = [FlowerLine.DAILY, FlowerLine.ROMANTIC, FlowerLine.LUXURY];
+        const lines = [FlowerLine.FRESH, FlowerLine.BOUQUET, FlowerLine.GREEN];
         for (const cell of BoardManager.cells) {
           if (cell.state === CellState.OPEN && !cell.itemId) {
             const line = lines[Math.floor(Math.random() * lines.length)];
@@ -350,7 +350,7 @@ class GMManagerClass {
       desc: '用同一种花填满空格（方便测试合成）',
       execute: () => {
         let count = 0;
-        const itemId = findItemId(Category.FLOWER, FlowerLine.DAILY, 1);
+        const itemId = findItemId(Category.FLOWER, FlowerLine.FRESH, 1);
         if (!itemId) return '❌ 找不到花朵配置';
         for (const cell of BoardManager.cells) {
           if (cell.state === CellState.OPEN && !cell.itemId) {
@@ -369,7 +369,7 @@ class GMManagerClass {
       desc: '在空格子中填满4-5级花朵',
       execute: () => {
         let count = 0;
-        const lines = [FlowerLine.DAILY, FlowerLine.ROMANTIC, FlowerLine.LUXURY];
+        const lines = [FlowerLine.FRESH, FlowerLine.BOUQUET, FlowerLine.GREEN];
         for (const cell of BoardManager.cells) {
           if (cell.state === CellState.OPEN && !cell.itemId) {
             const line = lines[Math.floor(Math.random() * lines.length)];

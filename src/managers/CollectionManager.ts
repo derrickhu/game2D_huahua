@@ -75,7 +75,7 @@ class CollectionManagerClass {
         this._discover(CollectionCategory.FLOWER, resultId);
       } else if (def.category === Category.DRINK) {
         this._discover(CollectionCategory.DRINK, resultId);
-      } else if (def.category === Category.BUILDING || def.category === Category.BUILDING_MAT) {
+      } else if (def.category === Category.BUILDING) {
         this._discover(CollectionCategory.BUILDING, resultId);
       }
     });

@@ -1,0 +1,36 @@
+A game item icon sheet with 10 individual bouquet icons arranged in a 5 columns × 2 rows grid layout. This represents a merge progression chain from Level 1 (small loose flowers) to Level 10 (legendary bouquet). Each icon is a BOUQUET (wrapped/bundled flowers), drawn in cute hand-painted 2D anime game style with soft 3D volume shading, matching a cozy flower shop merge game aesthetic.
+
+VERY IMPORTANT: The entire background of the image and behind every icon MUST be solid bright magenta pink color #FF00FF. Every single pixel that is not part of an icon must be exactly #FF00FF magenta. No gradients, no cream, no white — ONLY solid #FF00FF magenta background everywhere.
+
+STYLE REQUIREMENTS (MUST follow to match existing game assets):
+- Cute kawaii hand-painted illustration style, soft and warm
+- Each item is a BOUQUET — wrapped/bundled flowers with paper/ribbon wrapping
+- Soft warm color palette with gentle gradients, NOT flat colors
+- Gentle 3D volume/depth through soft inner shading and highlights
+- Clean soft outlines (slightly darker than fill color, NOT harsh black)
+- Warm lighting from top-left with subtle white highlight spots
+- Each icon fills approximately 75-80% of its grid cell
+- Progressive beauty: Level 1 is simple/small, Level 10 is elaborate/glowing
+- ABSOLUTELY NO TEXT, no labels, no numbers, no captions anywhere
+
+GRID LAYOUT (left to right, top to bottom — Level 1 to Level 10):
+
+[Row 1, Col 1] LEVEL 1 — SMALL LOOSE FLOWERS: A tiny casual handful of 2-3 small wildflowers loosely held together, stems visible, no wrapping. Simple and humble. Soft pastel colors. On solid #FF00FF background.
+
+[Row 1, Col 2] LEVEL 2 — MINI BOUQUET: A small mini bouquet of 3-4 mixed flowers wrapped in simple kraft paper, tied with a thin twine bow. Warm earthy paper tones with colorful flowers peeking out. On solid #FF00FF background.
+
+[Row 1, Col 3] LEVEL 3 — SINGLE-COLOR BOUQUET: A neat small bouquet of uniform-colored flowers (all soft pink) wrapped in clean white paper with a small ribbon. Simple and tidy. On solid #FF00FF background.
+
+[Row 1, Col 4] LEVEL 4 — GARDEN BOUQUET: A charming garden-style bouquet with mixed wildflowers and greenery, wrapped in natural burlap/linen paper. Rustic and warm with yellows, pinks, and greens. On solid #FF00FF background.
+
+[Row 1, Col 5] LEVEL 5 — MIXED BOUQUET: A beautiful mixed bouquet with varied flowers (roses, daisies, baby's breath) in complementary colors, wrapped in soft pastel paper with a satin ribbon. More refined. On solid #FF00FF background.
+
+[Row 2, Col 1] LEVEL 6 — ROMANTIC BOUQUET: A romantic hand-tied bouquet with roses and lush greenery, wrapped in elegant peach/blush paper with a silky ribbon bow. Warm and romantic feeling. On solid #FF00FF background.
+
+[Row 2, Col 2] LEVEL 7 — CONFESSION BOUQUET: A stunning heart-shaped arrangement of deep red roses wrapped in premium white paper with a golden ribbon. Dramatic and passionate. On solid #FF00FF background.
+
+[Row 2, Col 3] LEVEL 8 — BRIDAL BOUQUET: An exquisite cascading bridal bouquet with white roses, peonies, and trailing ivy, tied with lace and pearl-tipped pins. Elegant and dreamy. On solid #FF00FF background.
+
+[Row 2, Col 4] LEVEL 9 — GILDED BOUQUET: A luxurious bouquet with golden-tipped flowers, metallic gold wrapping paper, crystal accents, and a velvet ribbon. Opulent and dazzling gold tones (#FFD54F, #FFC107). On solid #FF00FF background.
+
+[Row 2, Col 5] LEVEL 10 — LEGENDARY BOUQUET: A magnificent oversized legendary bouquet overflowing with the most beautiful flowers in rainbow gradient colors, wrapped in iridescent holographic paper that shimmers. Tiny sparkle stars and golden light particles float around it. The ultimate dream bouquet. On solid #FF00FF background.

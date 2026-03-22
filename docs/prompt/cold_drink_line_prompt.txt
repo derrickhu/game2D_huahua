@@ -1,0 +1,32 @@
+A game item icon sheet with 8 individual cold drink icons arranged in a 4 columns × 2 rows grid layout. This represents a merge progression chain from Level 1 (simple lemon water) to Level 8 (legendary aurora drink). Each icon is a COLD DRINK item, drawn in cute hand-painted 2D anime game style with soft 3D volume shading, matching a cozy flower shop merge game aesthetic.
+
+VERY IMPORTANT: The entire background of the image and behind every icon MUST be solid bright magenta pink color #FF00FF. Every single pixel that is not part of an icon must be exactly #FF00FF magenta. No gradients, no cream, no white — ONLY solid #FF00FF magenta background everywhere.
+
+STYLE REQUIREMENTS (MUST follow to match existing game assets):
+- Cute kawaii hand-painted illustration style, soft and warm
+- Each item is a COLD DRINK — glasses, cups, bottles with cold beverages
+- Soft warm color palette with gentle gradients, NOT flat colors
+- Gentle 3D volume/depth through soft inner shading and highlights
+- Clean soft outlines (slightly darker than fill color, NOT harsh black)
+- Warm lighting from top-left with subtle white highlight spots
+- Each icon fills approximately 75-80% of its grid cell
+- Progressive beauty: Level 1 is simple, Level 8 is magical/glowing
+- ABSOLUTELY NO TEXT, no labels, no numbers, no captions anywhere
+
+GRID LAYOUT (left to right, top to bottom — Level 1 to Level 8):
+
+[Row 1, Col 1] LEVEL 1 — LEMON FLOWER WATER: A simple clear glass with water, a lemon slice, and a tiny edible flower floating. Light yellow and clear. Refreshing and simple. On solid #FF00FF background.
+
+[Row 1, Col 2] LEVEL 2 — FRUIT FLOWER ICE DRINK: A tall glass with colorful fruit and flower petal iced drink, a straw, ice cubes visible. Orange and pink tones. On solid #FF00FF background.
+
+[Row 1, Col 3] LEVEL 3 — FLOWER SPARKLING WATER: A cute bottle of sparkling water with flower petals inside, tiny bubbles rising. Light pink/peach color with effervescence. On solid #FF00FF background.
+
+[Row 1, Col 4] LEVEL 4 — ROSE ICE SMOOTHIE: A frosted glass with creamy pink rose ice smoothie/slushie, topped with a small rose, crushed ice visible. Soft pink color (#F48FB1). On solid #FF00FF background.
+
+[Row 2, Col 1] LEVEL 5 — GARDEN SPECIAL: A fancy cocktail-style glass with a layered colorful drink, garnished with flowers and a tiny umbrella. Multiple bright colors in layers. On solid #FF00FF background.
+
+[Row 2, Col 2] LEVEL 6 — FLOWER MILKSHAKE: A tall milkshake glass with creamy pastel flower-flavored milkshake, whipped cream on top, decorated with flower petals and a cherry. Dreamy pastel pink and lavender. On solid #FF00FF background.
+
+[Row 2, Col 3] LEVEL 7 — STARRY FLOWER DRINK: A magical galaxy-themed drink in a crystal glass with deep blue-purple liquid, tiny edible stars/flowers floating, silver sparkles. Dreamy night sky colors (#7B1FA2 to #1565C0). On solid #FF00FF background.
+
+[Row 2, Col 4] LEVEL 8 — AURORA FLOWER SPECIAL: A spectacular iridescent drink in an ornate crystal goblet, showing aurora borealis colors (green, purple, pink) swirling inside. Tiny sparkle stars floating around it, golden rim. The most magical and legendary cold drink. On solid #FF00FF background.

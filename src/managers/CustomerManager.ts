@@ -148,7 +148,7 @@ class CustomerManagerClass {
     const hasDrinkDemand = type.demands.some(d => d.category === 'drink');
     if (hasDrinkDemand) {
       const hasDrinkBuilding = BoardManager.cells.some(c =>
-        c.state === 'open' && c.itemId?.startsWith('building_perm_5')
+        c.state === 'open' && c.itemId?.startsWith('tool_tea_set')
       );
       // 暂时全部允许：早期也可能看到少量饮品需求客人
       // 后期可根据 unlockPhase 精确控制

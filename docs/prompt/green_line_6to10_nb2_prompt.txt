@@ -1,0 +1,24 @@
+A game item icon sheet with exactly 5 potted plant icons in ONE SINGLE HORIZONTAL ROW: 5 columns × 1 row only. Levels 6-10 of a "green plant" merge chain. NO second row. NO duplicate row.
+
+BACKGROUND: Entire image MUST be solid #FF00FF magenta only. Icons sit directly on magenta. NO circles, NO badges, NO frames.
+
+STYLE — MUST match the same game art as "fresh flower" and "bouquet" icons:
+- BOLD VIVID SATURATED colors — foliage BRIGHT and fresh, NEVER dull or muddy
+- Smooth GRADIENT shading + prominent BRIGHT WHITE highlights on leaves, fruits, bracts, trunk, and pots for glossy 3D volume
+- THIN outlines same color family as fill (NOT black)
+- Top-left warm lighting, chunky readable silhouettes
+- Each icon ~75-80% of cell, progressively grander from left to right
+- NO TEXT, NO sparkles, NO glow
+- Background ONLY #FF00FF
+
+5 ICONS left to right:
+
+[6] 龟背竹 — Stylish white or charcoal pot, 2-3 LARGE Monstera leaves: deep rich green with natural splits and holes (fenestrations). Each leaf has bold white highlight along veins and outer curve. Iconic tropical look.
+
+[7] 琴叶榕 — Tall elegant terracotta pot, small tree with thin brown trunk and 5-6 big fiddle-shaped leaves in VIVID lime-olive green (#8BC34A to #689F38), waxy glossy with strong white highlights. Fashion interior plant.
+
+[8] 柠檬树 — Decorative terracotta pot, small tree with glossy BRIGHT green oval leaves on brown branches, 3-4 round LEMON-YELLOW fruits (#FFEB3B to #FDD835) with white highlight spots — fruits must POP. Cheerful and sunny.
+
+[9] 三角梅 — Ornamental pot, bushy plant with abundant MAGENTA-HOT PINK papery bracts (#E91E63 to #F48FB1) — super saturated — small dark green leaves between. Explosion of color, still reads as "green plant line" with foliage visible.
+
+[10] 松树盆景 — Shallow dark blue-green glazed bonsai tray, miniature pine with gnarled brown trunk and cloud-shaped foliage pads in VIVID deep pine green (#2E7D32) with frosty white highlights on needle clusters, tiny bright moss dots (#66BB6A). Ultimate prestige item, elegant and crisp.

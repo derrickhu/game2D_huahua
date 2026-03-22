@@ -326,8 +326,8 @@ export class WarehousePanel extends PIXI.Container {
 
   private _getLineColor(line: string): number {
     const map: Record<string, number> = {
-      daily: COLORS.FLOWER_DAILY, romantic: COLORS.FLOWER_ROMANTIC,
-      luxury: COLORS.FLOWER_LUXURY, tea: COLORS.DRINK_TEA,
+      fresh: COLORS.FLOWER_FRESH, bouquet: COLORS.FLOWER_BOUQUET,
+      green: COLORS.FLOWER_GREEN, tea: COLORS.DRINK_TEA,
       cold: COLORS.DRINK_COLD, dessert: COLORS.DRINK_DESSERT,
     };
     return map[line] || 0x999999;
@@ -337,7 +337,7 @@ export class WarehousePanel extends PIXI.Container {
     switch (category) {
       case Category.FLOWER: return '🌸';
       case Category.DRINK: return '🍵';
-      case Category.BUILDING_MAT: return '🧱';
+      case Category.BUILDING: return '🏠';
       case Category.CHEST: return '📦';
       default: return '❓';
     }

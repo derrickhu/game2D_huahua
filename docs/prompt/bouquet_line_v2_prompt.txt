@@ -1,0 +1,29 @@
+A game item icon sheet with 10 individual bouquet icons arranged in a 5 columns × 2 rows grid layout. Merge game progression from Level 1 (tiny wildflowers) to Level 10 (legendary bouquet). Each level must look CLEARLY DIFFERENT from the others through flower types, wrapping materials, and size progression. Drawn in cute hand-painted 2D anime game style with soft 3D volume shading.
+
+VERY IMPORTANT: Solid #FF00FF magenta background everywhere. ABSOLUTELY NO TEXT, no labels, no numbers anywhere.
+
+STYLE: Cute kawaii hand-painted, soft warm gradients, gentle 3D shading, clean soft outlines. Each icon fills 75-80% of cell.
+
+CRITICAL: Each bouquet MUST be visually distinct — different flowers, different wrapping, different colors. NOT just "same bouquet in different color."
+
+GRID LAYOUT (left to right, top to bottom):
+
+[Row 1, Col 1] Lv1 — TINY WILDFLOWER BUNCH: Just 3-4 tiny wildflowers (daisies and forget-me-nots) loosely held together with a simple twine bow. NO wrapping paper. Very small, stems visible. Pastel blue and yellow flowers. Humble and cute. On #FF00FF.
+
+[Row 1, Col 2] Lv2 — KRAFT PAPER MINI BOUQUET: A small bouquet of mixed simple flowers (carnations and baby's breath) wrapped in plain brown KRAFT PAPER, tied with natural jute string. Rustic and simple. Warm brown paper tones. On #FF00FF.
+
+[Row 1, Col 3] Lv3 — TULIP BOUQUET: A neat bundle of 5-6 colorful tulips (red, yellow, pink, orange) in clean WHITE wrapping paper with a pastel pink ribbon. Fresh spring colors, simple and cheerful. On #FF00FF.
+
+[Row 1, Col 4] Lv4 — ROSE & BABY'S BREATH BOUQUET: A sweet bouquet of soft pink roses mixed with white baby's breath (gypsophila), wrapped in SOFT PINK tissue paper with a satin bow. Romantic pastel tones. Noticeably fuller than previous levels. On #FF00FF.
+
+[Row 1, Col 5] Lv5 — GARDEN MIX BOUQUET: A lush garden-style bouquet with SUNFLOWERS, daisies, purple lavender, and mixed greenery, wrapped in LAYERED TWO-TONE paper (brown outer, white inner). Colorful, vibrant, abundant feeling. Much bigger. On #FF00FF.
+
+[Row 2, Col 1] Lv6 — LUXURY ROSE BOUQUET: A dozen premium DEEP RED roses in CHAMPAGNE GOLD wrapping paper with a RED SATIN ribbon bow and small lace trim. Classic luxury Valentine's style. Rich, romantic, and expensive-looking. On #FF00FF.
+
+[Row 2, Col 2] Lv7 — PEONY & HYDRANGEA BOUQUET: A sophisticated bouquet with large PINK PEONIES, blue HYDRANGEAS, and white ranunculus. Korean-style layered COTTON PAPER wrapping in soft blush tones, multiple paper layers visible. Artistic and elegant. Very full and lush. On #FF00FF.
+
+[Row 2, Col 3] Lv8 — BRIDAL CASCADE BOUQUET: A stunning cascading bridal bouquet with WHITE ROSES, small ORCHIDS, and trailing IVY/eucalyptus hanging down. Wrapped with IVORY SILK fabric and decorated with pearl-tipped pins. Dreamy wedding style. Elongated teardrop shape. On #FF00FF.
+
+[Row 2, Col 4] Lv9 — GILDED LUXURY BOUQUET: An opulent bouquet with GOLDEN-tipped roses and white peonies, wrapped in DARK VELVET paper (burgundy/navy) with a METALLIC GOLD ribbon, small crystal/diamond accents on the wrapping. Gold and deep jewel tones. Feels like a luxury brand product. On #FF00FF.
+
+[Row 2, Col 5] Lv10 — LEGENDARY RAINBOW BOUQUET: A magnificent oversized bouquet overflowing with flowers in RAINBOW gradient colors (red→orange→yellow→green→blue→purple), wrapped in IRIDESCENT HOLOGRAPHIC paper that shimmers. Tiny sparkle stars and golden particles floating around. The ultimate dream bouquet — magical and breathtaking. On #FF00FF.
