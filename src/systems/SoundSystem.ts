@@ -6,6 +6,7 @@
  *
  * 使用方式：在 MainScene.onEnter 中调用 SoundSystem.init() 即可。
  */
+import * as PIXI from 'pixi.js';
 import { AudioManager } from '@/core/AudioManager';
 import { EventBus } from '@/core/EventBus';
 import { Game } from '@/core/Game';
@@ -79,36 +80,40 @@ class SoundSystemClass {
       AudioManager.play('achievement');
     });
 
-    // 首次交互恢复 BGM + 全局按钮点击音效
-    // 通过 canvas 原生 pointerup 事件 + renderer EventSystem hitTest
-    // 判断点击目标是否是 cursor='pointer' 的按钮，只有是的时候才播放。
+    // ---- 首次交互恢复 BGM ----
     const canvas = Game.app?.view as HTMLCanvasElement | undefined;
     if (canvas) {
       let _firstTouch = true;
-      canvas.addEventListener('pointerup', (nativeEvt: PointerEvent) => {
-        // 首次交互恢复 BGM（自动播放策略拦截后的重试）
+      canvas.addEventListener('pointerdown', () => {
         if (_firstTouch) {
           _firstTouch = false;
           AudioManager.resumeOnInteraction();
         }
+      });
+    }
 
-        // 通过 renderer EventSystem 做 hitTest，找到 PixiJS 层的点击目标
+    // ---- 全局按钮点击音效 ----
+    // 利用 PixiJS 事件冒泡机制：在 stage 上监听 pointerdown，
+    // e.target 就是实际命中的元素（在按钮回调修改场景树之前就已确定）。
+    // 这样完全不受"按钮回调打开面板遮罩 → hitTest 命中遮罩"的时序影响。
+    //
+    // 关键：stage.eventMode 必须设为 'static' 而非 'passive'！
+    // 根据 PixiJS 官方文档（v7+）：
+    //   - passive：自身不触发事件，不参与事件冒泡处理链，.on() 回调不会被调用
+    //   - static：触发事件并参与 hitTest，能接收子对象冒泡上来的事件
+    // 参考：https://github.com/pixijs/pixijs/discussions/10388
+    const stage = Game.app?.stage;
+    if (stage) {
+      stage.eventMode = 'static';
+      stage.hitArea = new PIXI.Rectangle(
+        0, 0,
+        Game.screenWidth * Game.dpr,
+        Game.screenHeight * Game.dpr,
+      );
+      stage.on('pointerdown', (e: any) => {
         try {
-          const renderer = Game.app?.renderer as any;
-          const evtSys = renderer?.events;
-          if (!evtSys) return;
-
-          // 将原生坐标映射到 PixiJS 内部坐标
-          const globalPos = { x: 0, y: 0 };
-          evtSys.mapPositionToPoint(globalPos, nativeEvt.clientX, nativeEvt.clientY);
-
-          // hitTest: 从 stage 向下查找命中的最上层交互元素
-          const hitTarget = evtSys.rootBoundary?.hitTest?.(globalPos.x, globalPos.y);
-          if (!hitTarget) return;
-
-          // 沿命中目标向上查找，看是否有 cursor='pointer' 的节点（即按钮）
-          let node = hitTarget;
-          while (node) {
+          let node = e.target;
+          while (node && node !== stage) {
             if (node.cursor === 'pointer') {
               AudioManager.play('button_click');
               return;
@@ -116,7 +121,7 @@ class SoundSystemClass {
             node = node.parent;
           }
         } catch (_) {
-          // hitTest 失败不影响游戏
+          // 静默失败
         }
       });
     }
