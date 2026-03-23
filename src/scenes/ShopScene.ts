@@ -120,7 +120,22 @@ export class ShopScene implements Scene {
   private _viewScale = 1.0;                   // 当前视图缩放倍数
   private _viewScaleMin = 1.0;
   private _viewScaleMax = 2.0;
-  private _zoomBtns: PIXI.Container | null = null;  // 缩放按钮容器
+  /** 编辑模式：贴右缘的缩放滑杆 */
+  private _zoomSlider: PIXI.Container | null = null;
+  private _zoomSliderThumb: PIXI.Graphics | null = null;
+  /** 滑杆可视高度（触摸区会再上下各扩一点） */
+  private _zoomSliderTrackH = 280;
+  private _zoomSliderDragging = false;
+  /** 已为 true 时才开始改缩放（长按或滑出阈值后） */
+  private _zoomSliderDragActive = false;
+  private _zoomSliderLastTap = 0;
+  private _zoomSliderLongPressTimer: ReturnType<typeof setTimeout> | null = null;
+  private _zoomSliderPressClient = { x: 0, y: 0 };
+  /** 按下时手指在轨道上的 y（0~H），长按到期时用 */
+  private _zoomSliderArmLocalY = 0;
+  private _zoomSliderPointerId = 0;
+  private _onZoomSliderCanvasMove: ((e: PointerEvent) => void) | null = null;
+  private _onZoomSliderCanvasUp: ((e: PointerEvent) => void) | null = null;
   // pinch 手势追踪
   private _pinchPointers = new Map<number, { x: number; y: number }>();
   private _pinchStartDist = 0;
@@ -1007,7 +1022,7 @@ export class ShopScene implements Scene {
     this._buildZoomControls();
     this._enablePinchZoom();
 
-    ToastMessage.show('🔨 装修模式：点击家具可拖动，用工具栏缩放/翻转/移除');
+    ToastMessage.show('🔨 装修模式：拖动家具；右侧滑杆需长按或滑动后拖动缩放；双击滑杆恢复 1×');
     EventBus.emit('furniture:edit_mode_enter');
   }
 
@@ -1096,8 +1111,7 @@ export class ShopScene implements Scene {
     this._roomContainer.position.set(cx, cy);
     this._roomContainer.scale.set(s);
 
-    // 更新缩放比例显示
-    this._updateZoomLabel();
+    this._syncZoomSliderThumb();
   }
 
   /** 重置缩放 */
@@ -1108,99 +1122,211 @@ export class ShopScene implements Scene {
     this._roomContainer.scale.set(1);
   }
 
-  /** 构建缩放按钮（编辑模式右侧） */
+  /**
+   * 屏幕 clientY → 滑杆轨道局部 y（0~轨道高度）。
+   * 场景高度必须用 Game.logicHeight，若误用 designHeight 会导致 y 系统性偏小、始终夹到轨道顶端（最大缩放）。
+   */
+  private _sliderLocalYFromClientY(clientY: number): number {
+    const H = this._zoomSliderTrackH;
+    const gh = clientY * Game.logicHeight / Game.screenHeight;
+    const topY = this._zoomSlider?.position.y ?? (Game.logicHeight - H) / 2;
+    return Math.max(0, Math.min(H, gh - topY));
+  }
+
+  /** 构建缩放滑杆（编辑模式：靠右但内缩，大触摸区） */
   private _buildZoomControls(): void {
-    if (this._zoomBtns) return;
-    this._zoomBtns = new PIXI.Container();
+    if (this._zoomSlider) return;
 
-    const btnSize = 40;
-    const gap = 8;
-    const x = DESIGN_WIDTH - btnSize - 16;
-    const startY = 280;
+    /** 距屏幕右缘留白，避免贴边难点 */
+    const EDGE_INSET = 36;
+    const TRACK_W = 16;
+    /** 触摸热区宽度（约两指宽，易拖） */
+    const HIT_W = 88;
+    /** 轨道上下各扩一点也算可点区域 */
+    const HIT_PAD_Y = 20;
+    const H = this._zoomSliderTrackH;
+    const cy = (Game.logicHeight - H) / 2;
 
-    // 放大按钮
-    const zoomIn = this._makeZoomBtn('🔍+', x, startY, btnSize, () => {
-      this._applyViewZoom(this._viewScale + 0.15);
-    });
-    this._zoomBtns.addChild(zoomIn);
+    const root = new PIXI.Container();
+    root.position.set(DESIGN_WIDTH - EDGE_INSET, cy);
+    root.eventMode = 'static';
+    root.cursor = 'pointer';
+    root.hitArea = new PIXI.Rectangle(-HIT_W, -HIT_PAD_Y, HIT_W, H + HIT_PAD_Y * 2);
 
-    // 缩放比例文本
-    const label = new PIXI.Text('1.0x', {
-      fontSize: 11, fill: 0xFFFFFF, fontFamily: FONT_FAMILY,
-      stroke: 0x000000, strokeThickness: 2,
-    });
-    label.anchor.set(0.5, 0.5);
-    label.position.set(x + btnSize / 2, startY + btnSize + gap + 8);
-    (label as any)._zoomLabel = true;
-    this._zoomBtns.addChild(label);
+    const track = new PIXI.Graphics();
+    track.beginFill(0xFFFFFF, 0.38);
+    track.drawRoundedRect(-TRACK_W, 0, TRACK_W, H, Math.min(8, TRACK_W / 2));
+    track.endFill();
+    track.lineStyle(2, 0x2C1810, 0.18);
+    track.drawRoundedRect(-TRACK_W, 0, TRACK_W, H, Math.min(8, TRACK_W / 2));
+    root.addChild(track);
 
-    // 缩小按钮
-    const zoomOut = this._makeZoomBtn('🔍−', x, startY + btnSize + gap + 24, btnSize, () => {
-      this._applyViewZoom(this._viewScale - 0.15);
-    });
-    this._zoomBtns.addChild(zoomOut);
+    const thumb = new PIXI.Graphics();
+    thumb.eventMode = 'none';
+    root.addChild(thumb);
+    this._zoomSliderThumb = thumb;
 
-    // 重置按钮
-    const reset = this._makeZoomBtn('↺', x, startY + (btnSize + gap) * 2 + 24, btnSize, () => {
-      this._applyViewZoom(1.0);
-    });
-    this._zoomBtns.addChild(reset);
+    this._zoomSlider = root;
+    this.container.addChild(root);
+    this._syncZoomSliderThumb();
 
-    this.container.addChild(this._zoomBtns);
-  }
+    const LONG_PRESS_MS = 320;
+    const MOVE_START_PX = 14;
 
-  /** 创建单个缩放按钮 */
-  private _makeZoomBtn(
-    label: string, x: number, y: number, size: number, action: () => void,
-  ): PIXI.Container {
-    const btn = new PIXI.Container();
-
-    const bg = new PIXI.Graphics();
-    bg.beginFill(0x000000, 0.45);
-    bg.drawRoundedRect(0, 0, size, size, 10);
-    bg.endFill();
-    btn.addChild(bg);
-
-    const text = new PIXI.Text(label, {
-      fontSize: 16, fill: 0xFFFFFF, fontFamily: FONT_FAMILY,
-    });
-    text.anchor.set(0.5, 0.5);
-    text.position.set(size / 2, size / 2);
-    btn.addChild(text);
-
-    btn.position.set(x, y);
-    btn.eventMode = 'static';
-    btn.cursor = 'pointer';
-    btn.hitArea = new PIXI.Rectangle(0, 0, size, size);
-    btn.on('pointerdown', (e: PIXI.FederatedPointerEvent) => {
-      e.stopPropagation();
-      // 按压反馈
-      btn.scale.set(0.9);
-      setTimeout(() => btn.scale.set(1), 100);
-      action();
-    });
-
-    return btn;
-  }
-
-  /** 更新缩放比例文本 */
-  private _updateZoomLabel(): void {
-    if (!this._zoomBtns) return;
-    for (const child of this._zoomBtns.children) {
-      if ((child as any)._zoomLabel) {
-        (child as PIXI.Text).text = `${this._viewScale.toFixed(1)}x`;
-        break;
+    const clearLongPressTimer = () => {
+      if (this._zoomSliderLongPressTimer) {
+        clearTimeout(this._zoomSliderLongPressTimer);
+        this._zoomSliderLongPressTimer = null;
       }
-    }
+    };
+
+    const beginDragFromPointerEvent = (ev: PointerEvent) => {
+      if (!this._zoomSlider || this._zoomSliderDragActive) return;
+      this._zoomSliderDragActive = true;
+      const cvs = Game.app.view as HTMLCanvasElement;
+      if (cvs.setPointerCapture) {
+        try {
+          cvs.setPointerCapture(ev.pointerId);
+        } catch (_) { /* */ }
+      }
+      const ly0 = this._sliderLocalYFromClientY(ev.clientY);
+      this._applyViewZoom(this._scaleFromTrackY(ly0));
+    };
+
+    root.on('pointerdown', (e: PIXI.FederatedPointerEvent) => {
+      e.stopPropagation();
+      const native = e.nativeEvent as PointerEvent | undefined;
+
+      const now = Date.now();
+      if (now - this._zoomSliderLastTap < 280) {
+        this._applyViewZoom(1.0);
+        this._zoomSliderLastTap = 0;
+        return;
+      }
+      this._zoomSliderLastTap = now;
+
+      if (this._zoomSliderDragging) return;
+      this._zoomSliderDragging = true;
+      this._zoomSliderDragActive = false;
+      this._zoomSliderPointerId = native?.pointerId ?? 0;
+      this._zoomSliderPressClient.x = native?.clientX ?? 0;
+      this._zoomSliderPressClient.y = native?.clientY ?? 0;
+
+      this._zoomSliderArmLocalY = native?.clientY != null
+        ? this._sliderLocalYFromClientY(native.clientY)
+        : Math.max(0, Math.min(H, root.toLocal(e.global).y));
+
+      const canvas = Game.app.view as HTMLCanvasElement;
+
+      clearLongPressTimer();
+      this._zoomSliderLongPressTimer = setTimeout(() => {
+        this._zoomSliderLongPressTimer = null;
+        if (!this._zoomSliderDragging || this._zoomSliderDragActive) return;
+        this._zoomSliderDragActive = true;
+        if (native?.pointerId != null && canvas.setPointerCapture) {
+          try {
+            canvas.setPointerCapture(native.pointerId);
+          } catch (_) { /* */ }
+        }
+        this._applyViewZoom(this._scaleFromTrackY(this._zoomSliderArmLocalY));
+      }, LONG_PRESS_MS);
+
+      this._onZoomSliderCanvasMove = (ev: PointerEvent) => {
+        if (!this._zoomSliderDragging || !this._zoomSlider) return;
+        if (this._zoomSliderPointerId && ev.pointerId !== this._zoomSliderPointerId) return;
+
+        const ly2 = this._sliderLocalYFromClientY(ev.clientY);
+
+        if (!this._zoomSliderDragActive) {
+          const dxp = ev.clientX - this._zoomSliderPressClient.x;
+          const dyp = ev.clientY - this._zoomSliderPressClient.y;
+          if (dxp * dxp + dyp * dyp >= MOVE_START_PX * MOVE_START_PX) {
+            clearLongPressTimer();
+            beginDragFromPointerEvent(ev);
+          } else {
+            return;
+          }
+        }
+
+        this._applyViewZoom(this._scaleFromTrackY(ly2));
+      };
+
+      this._onZoomSliderCanvasUp = (ev: PointerEvent) => {
+        if (this._zoomSliderPointerId && ev.pointerId !== this._zoomSliderPointerId) return;
+        clearLongPressTimer();
+        this._zoomSliderDragging = false;
+        this._zoomSliderDragActive = false;
+        this._zoomSliderPointerId = 0;
+        if (canvas.releasePointerCapture && ev.pointerId != null) {
+          try {
+            canvas.releasePointerCapture(ev.pointerId);
+          } catch (_) { /* */ }
+        }
+        if (this._onZoomSliderCanvasMove) {
+          canvas.removeEventListener('pointermove', this._onZoomSliderCanvasMove);
+          this._onZoomSliderCanvasMove = null;
+        }
+        if (this._onZoomSliderCanvasUp) {
+          canvas.removeEventListener('pointerup', this._onZoomSliderCanvasUp);
+          canvas.removeEventListener('pointercancel', this._onZoomSliderCanvasUp);
+          this._onZoomSliderCanvasUp = null;
+        }
+      };
+
+      canvas.addEventListener('pointermove', this._onZoomSliderCanvasMove);
+      canvas.addEventListener('pointerup', this._onZoomSliderCanvasUp);
+      canvas.addEventListener('pointercancel', this._onZoomSliderCanvasUp);
+    });
   }
 
-  /** 移除缩放按钮 */
+  /** 滑杆 y（0=顶）→ 缩放值 */
+  private _scaleFromTrackY(y: number): number {
+    const t = 1 - y / this._zoomSliderTrackH;
+    return this._viewScaleMin + t * (this._viewScaleMax - this._viewScaleMin);
+  }
+
+  private _syncZoomSliderThumb(): void {
+    if (!this._zoomSliderThumb || !this._zoomSlider) return;
+    const H = this._zoomSliderTrackH;
+    const t = (this._viewScale - this._viewScaleMin) / (this._viewScaleMax - this._viewScaleMin);
+    const y = H * (1 - Math.max(0, Math.min(1, t)));
+    const cx = -8;
+    const r = 22;
+    const g = this._zoomSliderThumb;
+    g.clear();
+    g.beginFill(0xFFFDF8, 0.92);
+    g.lineStyle(2.5, 0x5D4037, 0.35);
+    g.drawCircle(cx, y, r);
+    g.endFill();
+    g.beginFill(0xFFFFFF, 0.45);
+    g.drawCircle(cx - 5, y - 5, r * 0.35);
+    g.endFill();
+  }
+
+  /** 移除缩放滑杆 */
   private _removeZoomControls(): void {
-    if (this._zoomBtns) {
-      this._zoomBtns.parent?.removeChild(this._zoomBtns);
-      this._zoomBtns.destroy({ children: true });
-      this._zoomBtns = null;
+    if (this._zoomSliderLongPressTimer) {
+      clearTimeout(this._zoomSliderLongPressTimer);
+      this._zoomSliderLongPressTimer = null;
     }
+    this._zoomSliderDragging = false;
+    this._zoomSliderDragActive = false;
+    const canvas = Game.app.view as HTMLCanvasElement;
+    if (this._onZoomSliderCanvasMove) {
+      canvas.removeEventListener('pointermove', this._onZoomSliderCanvasMove);
+      this._onZoomSliderCanvasMove = null;
+    }
+    if (this._onZoomSliderCanvasUp) {
+      canvas.removeEventListener('pointerup', this._onZoomSliderCanvasUp);
+      canvas.removeEventListener('pointercancel', this._onZoomSliderCanvasUp);
+      this._onZoomSliderCanvasUp = null;
+    }
+    if (this._zoomSlider) {
+      this._zoomSlider.parent?.removeChild(this._zoomSlider);
+      this._zoomSlider.destroy({ children: true });
+      this._zoomSlider = null;
+    }
+    this._zoomSliderThumb = null;
   }
 
   /** 启用双指捏合缩放手势 */

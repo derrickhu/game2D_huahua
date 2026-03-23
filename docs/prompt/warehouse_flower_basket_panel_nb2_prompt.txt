@@ -1,0 +1,84 @@
+# 仓库弹窗 — 花篮 UI（NB2 拆件版）
+
+## 输出目录
+
+`~/rosa_games/game_assets/huahua/assets/warehouse_ui_nb2/for_review/`
+
+- **拆件**：每张子图单独生成，品红底 `#FF00FF`，便于 rembg / chroma 抠图后在游戏里**拼层**。
+- **中间面板**：单独一张 **纯色圆角矩形、无格子**；格子由程序绘制（与棋盘一致）。
+- **整图原型**（旧）：仍可通过 `--only full` 或 `--with-full-panel` 生成单张 9:16，**推荐以拆件为准**。
+
+---
+
+## 全局约束（所有子图共用）
+
+- 未绘制主体的像素 = **纯 #FF00FF**。
+- **不要任何可读文字**（中英数字），留白给程序叠字。
+- 画风：高饱和、柔 3D、左上高光、**彩色细描边**（不要粗黑线），与棋盘/订单 UI 一致。
+- 主体上禁止误用与背景相同的品红（**花篮框**子图例外：中间预留的「洞」必须为品红）。
+
+---
+
+## 拆件清单（文件名 → 用途）
+
+| 文件 | 比例 | 内容 |
+|------|------|------|
+| `warehouse_nb2_close_btn_1x1.png` | 1:1 | 仅右上角**关闭钮**：木质感外圈 + 红底 + 立体 **X 形**（装饰性叉号，非字体） |
+| `warehouse_nb2_title_tab_16x9.png` | 16:9 | 仅**顶栏标题条**：薰衣草紫圆角/波浪顶，留白 |
+| `warehouse_nb2_vip_bar_16x9.png` | 16:9 | 仅**黄橙 VIP 条**：左六边形框 + 右小绿胶囊钮，无字 |
+| `warehouse_nb2_inner_panel_1x1.png` | 1:1 | 仅**内层面板**：**均匀奶油色、无格子、无分割线、无水印花纹**（可极淡纸纹） |
+| `warehouse_nb2_instruction_strip_16x9.png` | 16:9 | 仅**说明条**：淡紫粉半透明条，留白 |
+| `warehouse_nb2_organize_btn_16x9.png` | 16:9 | 仅**整理大绿钮** + 木质凹槽底托，绿钮无字 |
+| `warehouse_nb2_bottom_toggle_16x9.png` | 16:9 | 仅**底部分段切换**：左橙 + 右砖红，无字 |
+| `warehouse_nb2_basket_frame_9x16.png` | 9:16 | **花篮外框**：藤编、提手、角花、蝴蝶结；**中央大块矩形区域整片 #FF00FF「洞」**（不放奶油板、不画格子） |
+
+### 拼层建议（实现时）
+
+1. 底：`basket_frame`（洞透出品红后，在洞的位置先铺纯色 `inner_panel` 或程序绘底色）。  
+2. `inner_panel` 缩放对齐洞口，其上 **Graphics 画格子**。  
+3. 自上而下叠：`title_tab` → `vip_bar` →（格子物品）→ `instruction_strip` → `organize_btn` → `bottom_toggle`。  
+4. `close_btn` 固定右上角，盖在最前。
+
+---
+
+## 整屏原型 v2（参考旧图、删组件）
+
+在**保留花篮框、紫顶栏、紫底条**的前提下，去掉：右上角关闭钮、黄 VIP 条（含小绿钮）、奶油区内**所有格子与格阴影**、底部大绿钮、最底橙红分段条。中间改为**纯色奶油底**（格由程序画）。
+
+- **模型**：仅使用 NB2，即脚本默认 `gemini-3.1-flash-image-preview`（勿改 `--model` 除非你明确要换）。
+- **参考图**：默认使用 `for_review/warehouse_flower_basket_panel_nb2_9x16.png`；也可用 `--ref` 指定你当前满意的那一版 PNG。
+
+```bash
+cd /Users/huyi/rosa_games/huahua
+python3 scripts/gen_warehouse_ui_nb2.py --panel-v2
+python3 scripts/gen_warehouse_ui_nb2.py --panel-v2 --ref /path/to/your_reference.png
+```
+
+输出：`warehouse_flower_basket_panel_nb2_v2_9x16.png`
+
+---
+
+## 生成命令
+
+```bash
+cd /Users/huyi/rosa_games/huahua
+
+# 一次性生成全部拆件（8 张，耗时较长）
+python3 scripts/gen_warehouse_ui_nb2.py
+
+# 只生成某一件（前缀匹配文件名）
+python3 scripts/gen_warehouse_ui_nb2.py --only warehouse_nb2_inner
+python3 scripts/gen_warehouse_ui_nb2.py --only warehouse_nb2_basket
+
+# 额外再生成旧版整屏原型
+python3 scripts/gen_warehouse_ui_nb2.py --with-full-panel
+
+# 换模型
+python3 scripts/gen_warehouse_ui_nb2.py --model gemini-2.5-flash-image
+```
+
+---
+
+## 英文提示词
+
+脚本内已内联各子图 `BODY`；全局前缀见 `scripts/gen_warehouse_ui_nb2.py` 中 `SHARED`。

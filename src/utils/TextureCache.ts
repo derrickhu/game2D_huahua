@@ -58,6 +58,8 @@ const MAIN_IMAGE_MAP: Record<string, string> = {
   cell_peek:      'images/ui/cell_peek.png',
   cell_key:       'images/ui/cell_key.png',
   shop_scene_bg:  'images/ui/shop_scene_bg.png',
+  /** NB2 花篮仓库整屏底图（v2：无关闭钮/黄条/格线/底按钮，品红已抠底） */
+  warehouse_panel_bg: 'images/ui/warehouse_panel_bg.png',
 };
 
 // ================================================================

@@ -1,11 +1,8 @@
 /**
- * 仓库面板 - 从底部上滑弹出，展示仓库格子
+ * 仓库面板 - 居中弹出，花篮整图底 + 程序绘制格子
  *
- * 布局：
- * ┌──────────────────────────────┐
- * │   仓库 X/Y       [+扩容]     │
- * │ [格1] [格2] [格3] [格4] ...  │
- * └──────────────────────────────┘
+ * 底图：warehouse_panel_bg（768×1376，与 NB2 v2 一致）
+ * 标题 / 扩容 / 格子叠在紫色顶栏与奶油内区（坐标按纹理中心为原点微调）
  */
 import * as PIXI from 'pixi.js';
 import { EventBus } from '@/core/EventBus';
@@ -21,15 +18,27 @@ import { createToolEnergySprite, isBoardToolCategory } from '@/utils/ToolEnergyB
 import { ToastMessage } from './ToastMessage';
 import { ConfirmDialog } from './ConfirmDialog';
 
-const PANEL_HEIGHT = 200;
+/** 与生成图一致，用于对齐 UI */
+const TEX_W = 768;
+const TEX_H = 1376;
+
 const SLOT_SIZE = 64;
 const SLOT_GAP = 10;
-const SLOTS_Y = 80;
+/** 奶油区内一行格子的最大宽度（纹理像素），超出则整体缩小 */
+const SLOTS_ROW_MAX_W = 520;
+
+/** 相对纹理中心（锚点 0.5）的像素偏移，可按美术微调 */
+const TITLE_OFFSET_X = -268;
+const TITLE_OFFSET_Y = -568;
+const EXPAND_OFFSET_X = 248;
+const EXPAND_OFFSET_Y = -568;
+const SLOTS_OFFSET_Y = -98;
 
 export class WarehousePanel extends PIXI.Container {
   private _overlay!: PIXI.Graphics;
-  private _panel!: PIXI.Container;
-  private _panelBg!: PIXI.Graphics;
+  /** 整块弹窗内容，用于缩放动画 */
+  private _content!: PIXI.Container;
+  private _basketSprite!: PIXI.Sprite;
   private _titleText!: PIXI.Text;
   private _expandBtn!: PIXI.Container;
   private _expandText!: PIXI.Text;
@@ -40,7 +49,7 @@ export class WarehousePanel extends PIXI.Container {
     super();
     this.visible = false;
     this._buildOverlay();
-    this._buildPanel();
+    this._buildContent();
     this._bindEvents();
   }
 
@@ -54,63 +63,78 @@ export class WarehousePanel extends PIXI.Container {
     this.addChild(this._overlay);
   }
 
-  private _buildPanel(): void {
-    this._panel = new PIXI.Container();
-    this._panel.position.set(0, Game.logicHeight - PANEL_HEIGHT);
+  private _buildContent(): void {
+    this._content = new PIXI.Container();
+    this._content.position.set(DESIGN_WIDTH / 2, Game.logicHeight / 2);
+    this._content.eventMode = 'static';
 
-    // 面板背景
-    this._panelBg = new PIXI.Graphics();
-    this._panelBg.beginFill(0xFFF8F0);
-    this._panelBg.drawRoundedRect(0, 0, DESIGN_WIDTH, PANEL_HEIGHT + 40, 20);
-    this._panelBg.endFill();
-    // 拖拽把手
-    this._panelBg.beginFill(0xE8D5C0);
-    this._panelBg.drawRoundedRect(DESIGN_WIDTH / 2 - 30, 8, 60, 4, 2);
-    this._panelBg.endFill();
-    this._panelBg.eventMode = 'static';
-    this._panel.addChild(this._panelBg);
+    // 透明区不响应花篮 Sprite 的点击时，仍拦截事件，避免点到遮罩层误关面板
+    const tapBlock = new PIXI.Sprite(PIXI.Texture.WHITE);
+    tapBlock.anchor.set(0.5);
+    tapBlock.width = TEX_W;
+    tapBlock.height = TEX_H;
+    tapBlock.alpha = 0;
+    tapBlock.eventMode = 'static';
+    tapBlock.on('pointerdown', (e: PIXI.FederatedPointerEvent) => e.stopPropagation());
+    this._content.addChild(tapBlock);
 
-    // 标题
+    const tex = TextureCache.get('warehouse_panel_bg');
+    this._basketSprite = new PIXI.Sprite(tex ?? PIXI.Texture.EMPTY);
+    this._basketSprite.anchor.set(0.5);
+    this._basketSprite.position.set(0, 0);
+    this._basketSprite.eventMode = 'static';
+    this._basketSprite.on('pointerdown', (e: PIXI.FederatedPointerEvent) => e.stopPropagation());
+    this._content.addChild(this._basketSprite);
+
     this._titleText = new PIXI.Text('', {
-      fontSize: 17,
-      fill: COLORS.TEXT_DARK,
+      fontSize: 26,
+      fill: 0xffffff,
       fontFamily: FONT_FAMILY,
       fontWeight: 'bold',
+      dropShadow: true,
+      dropShadowColor: 0x3d2b50,
+      dropShadowBlur: 2,
+      dropShadowDistance: 1,
     });
     this._titleText.anchor.set(0, 0.5);
-    this._titleText.position.set(30, 40);
-    this._panel.addChild(this._titleText);
+    this._titleText.position.set(TITLE_OFFSET_X, TITLE_OFFSET_Y);
+    this._titleText.eventMode = 'static';
+    this._titleText.on('pointerdown', (e: PIXI.FederatedPointerEvent) => e.stopPropagation());
+    this._content.addChild(this._titleText);
 
-    // 扩容按钮
     this._expandBtn = new PIXI.Container();
     const btnBg = new PIXI.Graphics();
-    btnBg.beginFill(0x9370DB);
-    btnBg.drawRoundedRect(-45, -16, 90, 32, 8);
+    btnBg.beginFill(0x9370DB, 0.92);
+    btnBg.drawRoundedRect(-52, -18, 104, 36, 10);
     btnBg.endFill();
+    btnBg.lineStyle(2, 0xffffff, 0.35);
+    btnBg.drawRoundedRect(-52, -18, 104, 36, 10);
     this._expandBtn.addChild(btnBg);
 
     this._expandText = new PIXI.Text('', {
-      fontSize: 13,
-      fill: 0xFFFFFF,
+      fontSize: 15,
+      fill: 0xffffff,
       fontFamily: FONT_FAMILY,
       fontWeight: 'bold',
     });
     this._expandText.anchor.set(0.5, 0.5);
     this._expandBtn.addChild(this._expandText);
 
-    this._expandBtn.position.set(DESIGN_WIDTH - 80, 40);
+    this._expandBtn.position.set(EXPAND_OFFSET_X, EXPAND_OFFSET_Y);
     this._expandBtn.eventMode = 'static';
     this._expandBtn.cursor = 'pointer';
-    this._expandBtn.hitArea = new PIXI.Rectangle(-50, -20, 100, 40);
-    this._expandBtn.on('pointerdown', () => this._onExpandTap());
-    this._panel.addChild(this._expandBtn);
+    this._expandBtn.hitArea = new PIXI.Rectangle(-56, -22, 112, 44);
+    this._expandBtn.on('pointerdown', (e: PIXI.FederatedPointerEvent) => {
+      e.stopPropagation();
+      this._onExpandTap();
+    });
+    this._content.addChild(this._expandBtn);
 
-    // 格子容器
     this._slotContainer = new PIXI.Container();
-    this._slotContainer.position.set(0, SLOTS_Y);
-    this._panel.addChild(this._slotContainer);
+    this._slotContainer.position.set(0, SLOTS_OFFSET_Y);
+    this._content.addChild(this._slotContainer);
 
-    this.addChild(this._panel);
+    this.addChild(this._content);
   }
 
   private _bindEvents(): void {
@@ -124,8 +148,15 @@ export class WarehousePanel extends PIXI.Container {
     this.visible = true;
     this._refreshSlots();
 
+    const tw = this._basketSprite.texture?.width || TEX_W;
+    const th = this._basketSprite.texture?.height || TEX_H;
+    const s1 = Math.min((DESIGN_WIDTH - 36) / tw, (Game.logicHeight - 72) / th, 1);
+    const s0 = s1 * 0.92;
+    this._content.scale.set(s0);
+
     this._overlay.alpha = 0;
-    this._panel.position.y = Game.logicHeight;
+    this._content.alpha = 0;
+
     TweenManager.to({
       target: this._overlay,
       props: { alpha: 1 },
@@ -133,9 +164,15 @@ export class WarehousePanel extends PIXI.Container {
       ease: Ease.easeOutQuad,
     });
     TweenManager.to({
-      target: this._panel.position,
-      props: { y: Game.logicHeight - PANEL_HEIGHT },
-      duration: 0.3,
+      target: this._content,
+      props: { alpha: 1 },
+      duration: 0.28,
+      ease: Ease.easeOutQuad,
+    });
+    TweenManager.to({
+      target: this._content.scale,
+      props: { x: s1, y: s1 },
+      duration: 0.32,
       ease: Ease.easeOutBack,
     });
   }
@@ -144,6 +181,8 @@ export class WarehousePanel extends PIXI.Container {
     if (!this._isOpen) return;
     this._isOpen = false;
 
+    const s0 = this._content.scale.x * 0.92;
+
     TweenManager.to({
       target: this._overlay,
       props: { alpha: 0 },
@@ -151,9 +190,15 @@ export class WarehousePanel extends PIXI.Container {
       ease: Ease.easeOutQuad,
     });
     TweenManager.to({
-      target: this._panel.position,
-      props: { y: Game.logicHeight },
-      duration: 0.25,
+      target: this._content,
+      props: { alpha: 0 },
+      duration: 0.22,
+      ease: Ease.easeInQuad,
+    });
+    TweenManager.to({
+      target: this._content.scale,
+      props: { x: s0, y: s0 },
+      duration: 0.22,
       ease: Ease.easeInQuad,
       onComplete: () => {
         this.visible = false;
@@ -164,7 +209,6 @@ export class WarehousePanel extends PIXI.Container {
   get isOpen(): boolean { return this._isOpen; }
 
   private _refreshSlots(): void {
-    // 清理旧格子
     while (this._slotContainer.children.length > 0) {
       const child = this._slotContainer.children[0];
       this._slotContainer.removeChild(child);
@@ -174,12 +218,13 @@ export class WarehousePanel extends PIXI.Container {
     const cap = WarehouseManager.capacity;
     const items = WarehouseManager.items;
     const totalW = cap * SLOT_SIZE + (cap - 1) * SLOT_GAP;
-    const startX = (DESIGN_WIDTH - totalW) / 2;
+    const rowScale = Math.min(1, SLOTS_ROW_MAX_W / totalW);
+    this._slotContainer.scale.set(rowScale);
 
-    // 标题
+    const startX = -totalW / 2;
+
     this._titleText.text = `🧺 仓库 ${WarehouseManager.usedSlots}/${cap}`;
 
-    // 扩容按钮
     if (WarehouseManager.canExpand) {
       this._expandBtn.visible = true;
       this._expandText.text = `+扩容 💎${WarehouseManager.expandCost}`;
@@ -197,7 +242,6 @@ export class WarehousePanel extends PIXI.Container {
   private _createSlot(index: number, itemId: string | null): PIXI.Container {
     const slot = new PIXI.Container();
 
-    // 格子背景
     const bg = new PIXI.Graphics();
     if (itemId) {
       bg.lineStyle(1.5, 0xD4C4B0);
@@ -209,7 +253,6 @@ export class WarehousePanel extends PIXI.Container {
     bg.drawRoundedRect(0, 0, SLOT_SIZE, SLOT_SIZE, 8);
     bg.endFill();
 
-    // 空格虚线边框
     if (!itemId) {
       bg.lineStyle(1, 0xCCCCCC, 0.6);
       const d = 6;
@@ -231,13 +274,12 @@ export class WarehousePanel extends PIXI.Container {
     if (itemId) {
       const def = ITEM_DEFS.get(itemId);
       if (def) {
-        // 物品图标
         const iconSize = SLOT_SIZE - 16;
         const tex = TextureCache.get(def.icon);
         if (tex) {
           const sprite = new PIXI.Sprite(tex);
-          const s = Math.min(iconSize / tex.width, iconSize / tex.height);
-          sprite.scale.set(s);
+          const sc = Math.min(iconSize / tex.width, iconSize / tex.height);
+          sprite.scale.set(sc);
           sprite.anchor.set(0.5, 0.5);
           sprite.position.set(SLOT_SIZE / 2, SLOT_SIZE / 2 - 4);
           slot.addChild(sprite);
@@ -246,7 +288,6 @@ export class WarehousePanel extends PIXI.Container {
             if (energy) slot.addChild(energy);
           }
         } else {
-          // Fallback
           const circle = new PIXI.Graphics();
           circle.beginFill(this._getLineColor(def.line), 0.3);
           circle.drawCircle(SLOT_SIZE / 2, SLOT_SIZE / 2 - 4, iconSize / 2 - 2);
@@ -262,7 +303,6 @@ export class WarehousePanel extends PIXI.Container {
           slot.addChild(emoji);
         }
 
-        // 短名
         const name = new PIXI.Text(
           def.name.length > 3 ? def.name.substring(0, 3) : def.name,
           { fontSize: 10, fill: COLORS.TEXT_DARK, fontFamily: FONT_FAMILY },
@@ -271,7 +311,6 @@ export class WarehousePanel extends PIXI.Container {
         name.position.set(SLOT_SIZE / 2, SLOT_SIZE - 2);
         slot.addChild(name);
 
-        // 等级
         const lvBg = new PIXI.Graphics();
         lvBg.beginFill(this._getLineColor(def.line), 0.85);
         lvBg.drawCircle(0, 0, 8);
@@ -280,18 +319,20 @@ export class WarehousePanel extends PIXI.Container {
         slot.addChild(lvBg);
 
         const lv = new PIXI.Text(`${def.level}`, {
-          fontSize: 10, fill: 0xFFFFFF, fontFamily: FONT_FAMILY, fontWeight: 'bold',
+          fontSize: 10, fill: 0xffffff, fontFamily: FONT_FAMILY, fontWeight: 'bold',
         });
         lv.anchor.set(0.5, 0.5);
         lv.position.set(SLOT_SIZE - 10, 10);
         slot.addChild(lv);
       }
 
-      // 点击取出
       slot.eventMode = 'static';
       slot.cursor = 'pointer';
       slot.hitArea = new PIXI.Rectangle(0, 0, SLOT_SIZE, SLOT_SIZE);
-      slot.on('pointerdown', () => this._onSlotTap(index));
+      slot.on('pointerdown', (e: PIXI.FederatedPointerEvent) => {
+        e.stopPropagation();
+        this._onSlotTap(index);
+      });
     }
 
     return slot;
@@ -307,7 +348,7 @@ export class WarehousePanel extends PIXI.Container {
     const itemId = WarehouseManager.retrieveItem(index);
     if (itemId) {
       BoardManager.placeItem(emptyCell, itemId);
-      ToastMessage.show(`已取出到棋盘`);
+      ToastMessage.show('已取出到棋盘');
     }
   }
 

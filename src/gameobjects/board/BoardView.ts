@@ -185,10 +185,22 @@ export class BoardView extends PIXI.Container {
   // ========== 事件绑定 ==========
 
   private _bindEvents(): void {
-    EventBus.on('board:merged', (_src: number, _dst: number, _resultId: string, resultCell: number) => {
+    EventBus.on('board:merged', (_src: number, _dst: number, resultId: string, resultCell: number) => {
       this._mergeHintSystem.resetIdle();
       this.refresh();
       this._playMergeFlash(resultCell);
+      // 合成结果格黄框选中；延后到微任务队列让 ItemInfoBar 等先处理完 board:merged（如清空）
+      // 微信小游戏环境无 queueMicrotask，统一用 Promise.then
+      if (resultCell >= 0 && resultCell < this._cellViews.length && resultId) {
+        Promise.resolve().then(() => {
+          const cell = BoardManager.getCellByIndex(resultCell);
+          if (cell?.itemId) {
+            this._selectItem(resultCell, cell.itemId);
+          } else {
+            this._selectItem(resultCell, resultId);
+          }
+        });
+      }
     });
     EventBus.on('board:moved', () => this.refresh());
     EventBus.on('board:cellUnlocked', () => this.refresh());

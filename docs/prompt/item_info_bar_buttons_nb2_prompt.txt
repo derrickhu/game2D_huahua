@@ -1,0 +1,55 @@
+# 底部信息栏 · 合成线 / 出售 图标按钮（NB2 出图）
+
+**用途**：`ItemInfoBar` 右侧两个操作按钮的**纯图形**皮肤（无文字）；游戏里仍用代码叠中文标签或仅用图标。  
+**出图后保存位置（勿直接进游戏仓库）**：  
+`/Users/huyi/rosa_games/game_assets/huahua/assets/item_info_bar_nb2/for_review/`
+
+建议文件名：
+- `btn_merge_chain_nb2.png` — 合成线
+- `btn_sell_nb2.png` — 出售
+
+---
+
+## 通用约束（两张都要）
+
+- 单张 **1:1 正方形** 或 **宽略大于高的小胶囊比例**（约 168×84 逻辑像素等比放大 2～3 倍导出，如 336×168 或 512×512 居中构图）。
+- **画面上不要出现任何文字、字母、数字、水印**。
+- 风格：**治愈系花店 / 合并类手游 UI**，软色、圆角、轻微立体感（非扁平 Material），与米色底栏 `#FFF8F0`、棕色描边协调。
+- 背景：**透明 PNG** 或 **纯品红 `#FF00FF` 底** 便于后期抠图（二选一，与现有 NB2 管线一致即可）。
+- 边缘留 **8%～12%** 安全边，避免图标贴边被圆角裁切。
+
+---
+
+## 图 A：合成线按钮（merge chain）
+
+**语义**：打开「合成线 / 升级路线」面板——分支、递进、图鉴感。
+
+**英文 prompt（可复制到 NB2）**：
+
+```
+Game UI button icon, no text, no letters. Soft cozy merge-game style, flower shop aesthetic. Rounded rectangle or squircle plate, gentle sky-blue and cream gradient, subtle inner highlight and soft drop shadow. Center motif: abstract merge diagram — three small circles or petals flowing into one upward branch, or a tiny stylized flower evolution arrow (decorative only). Cute, readable at small size. Empty space for developer to overlay Chinese label later. Transparent background OR solid magenta #FF00FF for chroma key. High resolution, crisp edges.
+```
+
+**负面 / 追加**：`text, typography, watermark, logo, realistic photo`
+
+---
+
+## 图 B：出售按钮（sell）
+
+**语义**：卖掉棋盘物品——金币、成交、收银。
+
+**英文 prompt**：
+
+```
+Game UI button icon, no text, no letters. Warm merge-game casual UI, flower shop theme. Rounded rectangle or squircle, soft coral-orange to peach gradient, gentle gloss, cozy not aggressive. Center motif: stack of two or three cute gold coins with a small sparkle, OR a minimalist price tag shape without any writing on it, OR a tiny hand and coin silhouette (abstract, no fingers detail). Friendly sell action vibe. Transparent background OR solid magenta #FF00FF for chroma key. High resolution.
+```
+
+**负面 / 追加**：`text, typography, numbers on coins, watermark, logo`
+
+---
+
+## 定稿后进包流程（备忘）
+
+1. 抠图 / 去底 → 缩放到与 `ItemInfoBar` 中 `CHAIN_W×CHAIN_H`、`SELL_BTN_W×SELL_BTN_H` 比例一致。  
+2. 拷贝至 `huahua/minigame/images/ui/`（例如 `btn_merge_chain.png`、`btn_sell.png`）。  
+3. 在 `TextureCache` 注册并在 `ItemInfoBar` 中用 `Sprite` 替换 `Graphics` 底 + 可选保留小号文字。

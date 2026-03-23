@@ -308,16 +308,34 @@ export class CustomerView extends PIXI.Container {
     /** 满足：与棋盘订单格一致的浅绿底 + 更大对钩 */
     const checkTarget = Math.min(40, Math.max(28, Math.round(cs * 0.46)));
 
+    // 每个需求槽都有圆角底框 + 描边：未满足浅米底，已满足浅绿底
+    const slotBg = new PIXI.Graphics();
     if (filled) {
-      const mask = new PIXI.Graphics();
-      mask.beginFill(
+      slotBg.lineStyle(
+        1.5,
+        COLORS.CUSTOMER_DEMAND_SATISFIED_BORDER,
+        COLORS.CUSTOMER_DEMAND_SATISFIED_BORDER_ALPHA,
+      );
+      slotBg.beginFill(
         COLORS.CELL_ORDER_MATCH_OVERLAY,
         COLORS.CELL_ORDER_MATCH_OVERLAY_ALPHA,
       );
-      mask.drawRoundedRect(x, y, cs, cs, slotCornerR);
-      mask.endFill();
-      this._infoPanel.addChild(mask);
+      slotBg.drawRoundedRect(x, y, cs, cs, slotCornerR);
+      slotBg.endFill();
+    } else {
+      slotBg.lineStyle(
+        1.5,
+        COLORS.CUSTOMER_DEMAND_PENDING_BORDER,
+        COLORS.CUSTOMER_DEMAND_PENDING_BORDER_ALPHA,
+      );
+      slotBg.beginFill(
+        COLORS.CUSTOMER_DEMAND_PENDING_BG,
+        COLORS.CUSTOMER_DEMAND_PENDING_BG_ALPHA,
+      );
+      slotBg.drawRoundedRect(x, y, cs, cs, slotCornerR);
+      slotBg.endFill();
     }
+    this._infoPanel.addChild(slotBg);
 
     const texture = TextureCache.get(def.icon);
     if (texture) {
