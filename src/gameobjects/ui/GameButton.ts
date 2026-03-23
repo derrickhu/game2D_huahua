@@ -14,8 +14,8 @@
  * ```
  */
 import * as PIXI from 'pixi.js';
-import { SoundButton, type SoundButtonOptions } from '@/engine/ui/SoundButton';
-import { AudioManager } from '@/engine/audio/AudioManager';
+import { SoundButton, type SoundButtonOptions } from '@/core/SoundButton';
+import { AudioManager } from '@/core/AudioManager';
 
 export interface GameButtonOptions {
   /** 点击回调 */
