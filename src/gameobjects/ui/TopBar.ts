@@ -1,7 +1,7 @@
 /**
  * 顶部信息栏
  *
- * 布局：[⭐Lv.5]  [⚡体力胶囊 105/105 进度条 倒计时 +]  [🌿花露 数值]  [💎花愿 数值]  [📊]
+ * 布局：[⭐Lv.5]  [⚡体力胶囊 … +]  [🌿花露]  [💎花愿]  [💠钻石条+加号]
  *
  * - 等级：星星图标，Lv 文字叠在星星内部
  * - 体力：胶囊进度条 + 恢复倒计时 + 加号按钮
@@ -33,7 +33,15 @@ const CURRENCY_TEXT_CY = CURRENCY_ICON_CY + CURRENCY_ICON / 2 - 4; // 文字中�
 
 const HUALU_CX  = STA_X + STA_W + 42;  // 花露图标中心 x（与体力条留足间距）
 const HYUAN_CX  = HUALU_CX + 64;       // 花愿图标中心 x（间距加大）
-const STATS_CX  = HYUAN_CX + 58;       // 统计图标中心 x
+/** 钻石条（含左侧宝石叠压）左上角 x */
+const DIAMOND_LP = HYUAN_CX + 44;
+
+// 钻石条（参考：浅色圆角底 + 左侧宝石 + 绿加号 + 棕色数字）
+const GEM_BAR_H = 38;
+const GEM_BAR_W = 102;
+const GEM_BAR_R = 12;
+const GEM_ICON_SIZE = 48;
+const GEM_PLUS_S = 20;
 
 // ── 颜色 ──
 const C = {
@@ -51,6 +59,8 @@ export class TopBar extends PIXI.Container {
   private _staminaBar!: PIXI.Graphics;
   private _hualuText!: PIXI.Text;
   private _huayuanText!: PIXI.Text;
+  private _diamondBar!: PIXI.Container;
+  private _diamondText!: PIXI.Text;
 
   constructor() {
     super();
@@ -58,7 +68,7 @@ export class TopBar extends PIXI.Container {
     this._buildStaminaPill();
     this._buildHualu();
     this._buildHuayuan();
-    this._buildStatsBtn();
+    this._buildDiamondPill();
     this._bindEvents();
     this._updateAll();
   }
@@ -213,26 +223,73 @@ export class TopBar extends PIXI.Container {
     this.addChild(this._huayuanText);
   }
 
-  /* ============== 统计按钮 ============== */
+  /* ============== 钻石（横条 + 叠压宝石 + 绿加号，参考统计类手游顶栏） ============== */
 
-  private _buildStatsBtn(): void {
-    const r = 20;
-    const chartTex = TextureCache.get('icon_chart');
-    if (chartTex) {
-      const sp = new PIXI.Sprite(chartTex);
+  private _buildDiamondPill(): void {
+    const topY = (TOP_BAR_HEIGHT - GEM_BAR_H) / 2;
+    const root = new PIXI.Container();
+    root.position.set(DIAMOND_LP, topY);
+    this._diamondBar = root;
+
+    const bg = new PIXI.Graphics();
+    bg.beginFill(0xF7EFE4);
+    bg.drawRoundedRect(18, 0, GEM_BAR_W, GEM_BAR_H, GEM_BAR_R);
+    bg.endFill();
+    bg.lineStyle(1.2, 0xD7C4B0, 0.65);
+    bg.drawRoundedRect(18, 0, GEM_BAR_W, GEM_BAR_H, GEM_BAR_R);
+    root.addChild(bg);
+
+    const gemTex = TextureCache.get('icon_gem');
+    if (gemTex) {
+      const sp = new PIXI.Sprite(gemTex);
       sp.anchor.set(0.5);
-      sp.width = r * 2;
-      sp.height = r * 2;
-      sp.position.set(STATS_CX, TOP_BAR_HEIGHT / 2);
-      this.addChild(sp);
+      sp.width = GEM_ICON_SIZE;
+      sp.height = GEM_ICON_SIZE;
+      sp.position.set(20, GEM_BAR_H / 2 - 1);
+      root.addChild(sp);
+    } else {
+      const fb = new PIXI.Text('💎', { fontSize: 28 });
+      fb.anchor.set(0.5);
+      fb.position.set(20, GEM_BAR_H / 2);
+      root.addChild(fb);
     }
 
-    const hitArea = new PIXI.Container();
-    hitArea.hitArea = new PIXI.Circle(STATS_CX, TOP_BAR_HEIGHT / 2, r + 6);
-    hitArea.eventMode = 'static';
-    hitArea.cursor = 'pointer';
-    hitArea.on('pointerdown', () => EventBus.emit('stats:open'));
-    this.addChild(hitArea);
+    const plus = new PIXI.Container();
+    plus.position.set(30, GEM_BAR_H - 4);
+    const pg = new PIXI.Graphics();
+    pg.beginFill(0x4CAF50);
+    pg.drawRoundedRect(-GEM_PLUS_S / 2, -GEM_PLUS_S / 2, GEM_PLUS_S, GEM_PLUS_S, 5);
+    pg.endFill();
+    pg.lineStyle(1, 0x2E7D32, 0.35);
+    pg.drawRoundedRect(-GEM_PLUS_S / 2, -GEM_PLUS_S / 2, GEM_PLUS_S, GEM_PLUS_S, 5);
+    plus.addChild(pg);
+    const pw = GEM_PLUS_S * 0.35;
+    const pc = new PIXI.Graphics();
+    pc.beginFill(0xFFFFFF);
+    pc.drawRoundedRect(-pw / 2, -2, pw, 4, 1);
+    pc.drawRoundedRect(-2, -pw / 2, 4, pw, 1);
+    pc.endFill();
+    plus.addChild(pc);
+    plus.eventMode = 'static';
+    plus.cursor = 'pointer';
+    plus.hitArea = new PIXI.Rectangle(-GEM_PLUS_S / 2 - 2, -GEM_PLUS_S / 2 - 2, GEM_PLUS_S + 4, GEM_PLUS_S + 4);
+    plus.on('pointerdown', (e: PIXI.FederatedPointerEvent) => {
+      e.stopPropagation();
+      // 暂不接入购买/获取，预留
+    });
+    root.addChild(plus);
+
+    this._diamondText = new PIXI.Text('0', {
+      fontSize: 20,
+      fontWeight: 'bold',
+      fill: C.TEXT_DARK,
+      fontFamily: FONT_FAMILY,
+    });
+    this._diamondText.anchor.set(0, 0.5);
+    this._diamondText.position.set(26 + GEM_ICON_SIZE * 0.35, GEM_BAR_H / 2);
+    root.addChild(this._diamondText);
+
+    this.addChild(root);
   }
 
   /* ============== 加号按钮 ============== */
@@ -277,6 +334,7 @@ export class TopBar extends PIXI.Container {
     this._staminaText.text = `${s.stamina}/${cap}`;
     this._hualuText.text = this._fmtNum(s.hualu);
     this._huayuanText.text = this._fmtNum(s.huayuan);
+    this._diamondText.text = this._fmtNum(s.diamond);
     this._drawStaminaBar(s.stamina / cap);
   }
 

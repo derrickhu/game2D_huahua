@@ -56,6 +56,33 @@ python3 scripts/gen_warehouse_ui_nb2.py --panel-v2 --ref /path/to/your_reference
 
 输出：`warehouse_flower_basket_panel_nb2_v2_9x16.png`
 
+入库到小游戏前可**压品红边**并重写透明底 PNG：
+
+```bash
+python3 scripts/matte_warehouse_panel.py
+```
+
+→ `minigame/images/ui/warehouse_panel_bg.png`
+
+**关闭钮**（`warehouse_nb2_close_btn_1x1`，品红底）抠图入库：
+
+```bash
+python3 scripts/matte_warehouse_close_btn.py
+```
+
+→ `minigame/images/ui/warehouse_close_btn.png`（RGBA）
+
+**仓库未解锁格锁图标**（NB2 1:1，禁止蓝箱子/绸带格）：
+
+```bash
+python3 scripts/gen_warehouse_ui_nb2.py --only warehouse_nb2_slot_lock
+python3 scripts/matte_warehouse_slot_lock.py
+```
+
+→ `minigame/images/ui/warehouse_slot_lock.png`（覆盖）。若 API 不可用，可临时用程序图：
+
+`python3 scripts/draw_warehouse_slot_lock_pil.py`
+
 ---
 
 ## 生成命令

@@ -60,6 +60,10 @@ const MAIN_IMAGE_MAP: Record<string, string> = {
   shop_scene_bg:  'images/ui/shop_scene_bg.png',
   /** NB2 花篮仓库整屏底图（v2：无关闭钮/黄条/格线/底按钮，品红已抠底） */
   warehouse_panel_bg: 'images/ui/warehouse_panel_bg.png',
+  /** NB2 拆件：仓库弹窗右上角关闭钮（来自 warehouse_nb2_close_btn_1x1） */
+  warehouse_close_btn: 'images/ui/warehouse_close_btn.png',
+  /** NB2：仓库未解锁格锁图标（warehouse_nb2_slot_lock_1x1 抠图后） */
+  warehouse_slot_lock: 'images/ui/warehouse_slot_lock.png',
 };
 
 // ================================================================

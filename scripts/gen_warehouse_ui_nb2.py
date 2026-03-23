@@ -99,6 +99,23 @@ NO other UI, NO basket, NO panel.
 """.strip(),
     ),
     (
+        "warehouse_nb2_slot_lock_1x1.png",
+        "1:1",
+        """
+ONLY one cute PADLOCK icon — inventory "locked warehouse slot" symbol. Nothing else.
+
+Design:
+- Warm antique BRASS / BRONZE metal padlock, soft 3D merge-game volumes, light specular highlight top-left on shackle and body.
+- Closed rounded U-shaped shackle + chunky rounded rectangular body below.
+- Small decorative KEYHOLE shape on the body (simple silhouette, not text).
+- Hairline to medium-soft COLORED outlines (warm brown / gold), NOT heavy black comic ink.
+
+FORBIDDEN: NO blue box, NO isometric crate, NO treasure chest, NO satin ribbon sheet, NO fog tile, NO grid, NO UI chrome.
+Subject ~52% of canvas height, centered; generous flat #FF00FF margin on all sides.
+NO readable text, NO numbers, NO Chinese, NO English.
+""".strip(),
+    ),
+    (
         "warehouse_nb2_title_tab_16x9.png",
         "16:9",
         """
@@ -287,7 +304,7 @@ def run(which: str | None, model: str, include_full: bool) -> None:
             jobs = [j for j in jobs if j[0].startswith(which)]
             if not jobs:
                 print("Unknown --only", which, file=sys.stderr)
-                print("Try prefix: warehouse_nb2_close / warehouse_nb2_title / warehouse_nb2_vip / warehouse_nb2_inner / warehouse_nb2_instruction / warehouse_nb2_organize / warehouse_nb2_bottom_toggle / warehouse_nb2_basket / full", file=sys.stderr)
+                print("Try prefix: warehouse_nb2_close / warehouse_nb2_slot_lock / warehouse_nb2_title / warehouse_nb2_vip / warehouse_nb2_inner / warehouse_nb2_instruction / warehouse_nb2_organize / warehouse_nb2_bottom_toggle / warehouse_nb2_basket / full", file=sys.stderr)
                 sys.exit(1)
 
     for idx, (fname, ratio, body) in enumerate(jobs):
