@@ -1,58 +1,7 @@
 /**
- * 全局事件总线 - 发布/订阅模式
+ * 桥接模块 - 从 engine 重导出
+ *
+ * 保留此文件使 `@/core/EventBus` 路径继续有效。
+ * 真正实现已迁移至 `@/engine/events/EventBus`。
  */
-
-type EventHandler = (...args: any[]) => void;
-
-class EventBusClass {
-  private _listeners: Map<string, EventHandler[]> = new Map();
-
-  on(event: string, handler: EventHandler): void {
-    if (!this._listeners.has(event)) {
-      this._listeners.set(event, []);
-    }
-    this._listeners.get(event)!.push(handler);
-  }
-
-  off(event: string, handler: EventHandler): void {
-    const handlers = this._listeners.get(event);
-    if (!handlers) return;
-    const idx = handlers.indexOf(handler);
-    if (idx !== -1) handlers.splice(idx, 1);
-  }
-
-  once(event: string, handler: EventHandler): void {
-    const wrapper = (...args: any[]) => {
-      handler(...args);
-      this.off(event, wrapper);
-    };
-    this.on(event, wrapper);
-  }
-
-  emit(event: string, ...args: any[]): void {
-    const handlers = this._listeners.get(event);
-    // 调试：追踪导航和场景事件
-    if (event.startsWith('nav:') || event.startsWith('scene:')) {
-      console.log(`[EventBus] emit("${event}"), 监听器数量=${handlers?.length ?? 0}`);
-    }
-    if (!handlers) return;
-    // 复制一份避免在回调中修改数组
-    [...handlers].forEach(handler => {
-      try {
-        handler(...args);
-      } catch (e) {
-        console.error(`[EventBus] 事件 "${event}" 处理出错:`, e);
-      }
-    });
-  }
-
-  clear(event?: string): void {
-    if (event) {
-      this._listeners.delete(event);
-    } else {
-      this._listeners.clear();
-    }
-  }
-}
-
-export const EventBus = new EventBusClass();
+export { EventBus } from '@/engine/events/EventBus';

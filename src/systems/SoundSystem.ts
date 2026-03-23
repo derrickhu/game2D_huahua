@@ -79,16 +79,45 @@ class SoundSystemClass {
       AudioManager.play('achievement');
     });
 
-    // 全局按钮点击音效：canvas 级监听，每次 tap 都播放
+    // 首次交互恢复 BGM + 全局按钮点击音效
+    // 通过 canvas 原生 pointerup 事件 + renderer EventSystem hitTest
+    // 判断点击目标是否是 cursor='pointer' 的按钮，只有是的时候才播放。
     const canvas = Game.app?.view as HTMLCanvasElement | undefined;
     if (canvas) {
       let _firstTouch = true;
-      canvas.addEventListener('pointerup', () => {
+      canvas.addEventListener('pointerup', (nativeEvt: PointerEvent) => {
+        // 首次交互恢复 BGM（自动播放策略拦截后的重试）
         if (_firstTouch) {
           _firstTouch = false;
           AudioManager.resumeOnInteraction();
         }
-        AudioManager.play('button_click');
+
+        // 通过 renderer EventSystem 做 hitTest，找到 PixiJS 层的点击目标
+        try {
+          const renderer = Game.app?.renderer as any;
+          const evtSys = renderer?.events;
+          if (!evtSys) return;
+
+          // 将原生坐标映射到 PixiJS 内部坐标
+          const globalPos = { x: 0, y: 0 };
+          evtSys.mapPositionToPoint(globalPos, nativeEvt.clientX, nativeEvt.clientY);
+
+          // hitTest: 从 stage 向下查找命中的最上层交互元素
+          const hitTarget = evtSys.rootBoundary?.hitTest?.(globalPos.x, globalPos.y);
+          if (!hitTarget) return;
+
+          // 沿命中目标向上查找，看是否有 cursor='pointer' 的节点（即按钮）
+          let node = hitTarget;
+          while (node) {
+            if (node.cursor === 'pointer') {
+              AudioManager.play('button_click');
+              return;
+            }
+            node = node.parent;
+          }
+        } catch (_) {
+          // hitTest 失败不影响游戏
+        }
       });
     }
 
