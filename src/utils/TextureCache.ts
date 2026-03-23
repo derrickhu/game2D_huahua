@@ -1,13 +1,15 @@
 /**
  * 纹理缓存 - 管理图片加载和 PIXI.Texture 缓存
  * 支持微信小游戏分包加载：
- *   - 主包：花朵等核心小图（images/）
+ *   - 主包：UI + 角色等核心小图（images/）
+ *   - 分包 items：花朵 + 饮品 + 工具物品图标（subpkg_items/images/）
  *   - 分包 deco：家具 + 房间背景 + 旧 room 素材（subpkg_deco/images/）
  */
 import * as PIXI from 'pixi.js';
 
 // ================================================================
 // 主包资源（随主包一起下载，无需等待分包）
+// 仅保留 UI 图标、角色形象等启动必需资源
 // ================================================================
 const MAIN_IMAGE_MAP: Record<string, string> = {
   // ---- 店主形象 ----
@@ -56,101 +58,106 @@ const MAIN_IMAGE_MAP: Record<string, string> = {
   cell_peek:      'images/ui/cell_peek.png',
   cell_key:       'images/ui/cell_key.png',
   shop_scene_bg:  'images/ui/shop_scene_bg.png',
-
-  // ---- 鲜花线 (10张) ----
-  flower_fresh_1:  'images/flowers/fresh/flower_fresh_1.png',
-  flower_fresh_2:  'images/flowers/fresh/flower_fresh_2.png',
-  flower_fresh_3:  'images/flowers/fresh/flower_fresh_3.png',
-  flower_fresh_4:  'images/flowers/fresh/flower_fresh_4.png',
-  flower_fresh_5:  'images/flowers/fresh/flower_fresh_5.png',
-  flower_fresh_6:  'images/flowers/fresh/flower_fresh_6.png',
-  flower_fresh_7:  'images/flowers/fresh/flower_fresh_7.png',
-  flower_fresh_8:  'images/flowers/fresh/flower_fresh_8.png',
-  flower_fresh_9:  'images/flowers/fresh/flower_fresh_9.png',
-  flower_fresh_10: 'images/flowers/fresh/flower_fresh_10.png',
-
-  // ---- 花束线 (10张) ----
-  flower_bouquet_1:  'images/flowers/bouquet/flower_bouquet_1.png',
-  flower_bouquet_2:  'images/flowers/bouquet/flower_bouquet_2.png',
-  flower_bouquet_3:  'images/flowers/bouquet/flower_bouquet_3.png',
-  flower_bouquet_4:  'images/flowers/bouquet/flower_bouquet_4.png',
-  flower_bouquet_5:  'images/flowers/bouquet/flower_bouquet_5.png',
-  flower_bouquet_6:  'images/flowers/bouquet/flower_bouquet_6.png',
-  flower_bouquet_7:  'images/flowers/bouquet/flower_bouquet_7.png',
-  flower_bouquet_8:  'images/flowers/bouquet/flower_bouquet_8.png',
-  flower_bouquet_9:  'images/flowers/bouquet/flower_bouquet_9.png',
-  flower_bouquet_10: 'images/flowers/bouquet/flower_bouquet_10.png',
-
-  // ---- 绿植线 (10张) ----
-  flower_green_1:  'images/flowers/green/flower_green_1.png',
-  flower_green_2:  'images/flowers/green/flower_green_2.png',
-  flower_green_3:  'images/flowers/green/flower_green_3.png',
-  flower_green_4:  'images/flowers/green/flower_green_4.png',
-  flower_green_5:  'images/flowers/green/flower_green_5.png',
-  flower_green_6:  'images/flowers/green/flower_green_6.png',
-  flower_green_7:  'images/flowers/green/flower_green_7.png',
-  flower_green_8:  'images/flowers/green/flower_green_8.png',
-  flower_green_9:  'images/flowers/green/flower_green_9.png',
-  flower_green_10: 'images/flowers/green/flower_green_10.png',
-
-  // ---- 茶饮线 (8张) ----
-  drink_tea_1: 'images/drinks/tea/drink_tea_1.png',
-  drink_tea_2: 'images/drinks/tea/drink_tea_2.png',
-  drink_tea_3: 'images/drinks/tea/drink_tea_3.png',
-  drink_tea_4: 'images/drinks/tea/drink_tea_4.png',
-  drink_tea_5: 'images/drinks/tea/drink_tea_5.png',
-  drink_tea_6: 'images/drinks/tea/drink_tea_6.png',
-  drink_tea_7: 'images/drinks/tea/drink_tea_7.png',
-  drink_tea_8: 'images/drinks/tea/drink_tea_8.png',
-
-  // ---- 冷饮线 (8张) ----
-  drink_cold_1: 'images/drinks/cold/drink_cold_1.png',
-  drink_cold_2: 'images/drinks/cold/drink_cold_2.png',
-  drink_cold_3: 'images/drinks/cold/drink_cold_3.png',
-  drink_cold_4: 'images/drinks/cold/drink_cold_4.png',
-  drink_cold_5: 'images/drinks/cold/drink_cold_5.png',
-  drink_cold_6: 'images/drinks/cold/drink_cold_6.png',
-  drink_cold_7: 'images/drinks/cold/drink_cold_7.png',
-  drink_cold_8: 'images/drinks/cold/drink_cold_8.png',
-
-  // ---- 甜品线 (8张) ----
-  drink_dessert_1: 'images/drinks/dessert/drink_dessert_1.png',
-  drink_dessert_2: 'images/drinks/dessert/drink_dessert_2.png',
-  drink_dessert_3: 'images/drinks/dessert/drink_dessert_3.png',
-  drink_dessert_4: 'images/drinks/dessert/drink_dessert_4.png',
-  drink_dessert_5: 'images/drinks/dessert/drink_dessert_5.png',
-  drink_dessert_6: 'images/drinks/dessert/drink_dessert_6.png',
-  drink_dessert_7: 'images/drinks/dessert/drink_dessert_7.png',
-  drink_dessert_8: 'images/drinks/dessert/drink_dessert_8.png',
-
-  // ---- 工具：种植线 (3级试跑) ----
-  tool_plant_1: 'images/tools/plant/tool_plant_1.png',
-  tool_plant_2: 'images/tools/plant/tool_plant_2.png',
-  tool_plant_3: 'images/tools/plant/tool_plant_3.png',
-
-  // ---- 工具：花艺线 ----
-  tool_arrange_1: 'images/tools/arrange/tool_arrange_1.png',
-  tool_arrange_2: 'images/tools/arrange/tool_arrange_2.png',
-  tool_arrange_3: 'images/tools/arrange/tool_arrange_3.png',
-
-  // ---- 工具：烘焙线 ----
-  tool_bake_1: 'images/tools/bake/tool_bake_1.png',
-  tool_bake_2: 'images/tools/bake/tool_bake_2.png',
-  tool_bake_3: 'images/tools/bake/tool_bake_3.png',
-
-  // ---- 工具：茶饮线（茶具）----
-  tool_tea_set_1: 'images/tools/tea_set/tool_tea_set_1.png',
-  tool_tea_set_2: 'images/tools/tea_set/tool_tea_set_2.png',
-  tool_tea_set_3: 'images/tools/tea_set/tool_tea_set_3.png',
-
-  // ---- 工具：冷饮线（饮品器具）----
-  tool_mixer_1: 'images/tools/mixer/tool_mixer_1.png',
-  tool_mixer_2: 'images/tools/mixer/tool_mixer_2.png',
-  tool_mixer_3: 'images/tools/mixer/tool_mixer_3.png',
 };
 
 // ================================================================
-// 分包资源（需先 loadSubpackage('deco') 后才可访问）
+// items 分包资源（花朵 + 饮品 + 工具，需先 loadSubpackage('items')）
+// ================================================================
+const ITEMS_IMAGE_MAP: Record<string, string> = {
+  // ---- 鲜花线 (10张) ----
+  flower_fresh_1:  'subpkg_items/images/flowers/fresh/flower_fresh_1.png',
+  flower_fresh_2:  'subpkg_items/images/flowers/fresh/flower_fresh_2.png',
+  flower_fresh_3:  'subpkg_items/images/flowers/fresh/flower_fresh_3.png',
+  flower_fresh_4:  'subpkg_items/images/flowers/fresh/flower_fresh_4.png',
+  flower_fresh_5:  'subpkg_items/images/flowers/fresh/flower_fresh_5.png',
+  flower_fresh_6:  'subpkg_items/images/flowers/fresh/flower_fresh_6.png',
+  flower_fresh_7:  'subpkg_items/images/flowers/fresh/flower_fresh_7.png',
+  flower_fresh_8:  'subpkg_items/images/flowers/fresh/flower_fresh_8.png',
+  flower_fresh_9:  'subpkg_items/images/flowers/fresh/flower_fresh_9.png',
+  flower_fresh_10: 'subpkg_items/images/flowers/fresh/flower_fresh_10.png',
+
+  // ---- 花束线 (10张) ----
+  flower_bouquet_1:  'subpkg_items/images/flowers/bouquet/flower_bouquet_1.png',
+  flower_bouquet_2:  'subpkg_items/images/flowers/bouquet/flower_bouquet_2.png',
+  flower_bouquet_3:  'subpkg_items/images/flowers/bouquet/flower_bouquet_3.png',
+  flower_bouquet_4:  'subpkg_items/images/flowers/bouquet/flower_bouquet_4.png',
+  flower_bouquet_5:  'subpkg_items/images/flowers/bouquet/flower_bouquet_5.png',
+  flower_bouquet_6:  'subpkg_items/images/flowers/bouquet/flower_bouquet_6.png',
+  flower_bouquet_7:  'subpkg_items/images/flowers/bouquet/flower_bouquet_7.png',
+  flower_bouquet_8:  'subpkg_items/images/flowers/bouquet/flower_bouquet_8.png',
+  flower_bouquet_9:  'subpkg_items/images/flowers/bouquet/flower_bouquet_9.png',
+  flower_bouquet_10: 'subpkg_items/images/flowers/bouquet/flower_bouquet_10.png',
+
+  // ---- 绿植线 (10张) ----
+  flower_green_1:  'subpkg_items/images/flowers/green/flower_green_1.png',
+  flower_green_2:  'subpkg_items/images/flowers/green/flower_green_2.png',
+  flower_green_3:  'subpkg_items/images/flowers/green/flower_green_3.png',
+  flower_green_4:  'subpkg_items/images/flowers/green/flower_green_4.png',
+  flower_green_5:  'subpkg_items/images/flowers/green/flower_green_5.png',
+  flower_green_6:  'subpkg_items/images/flowers/green/flower_green_6.png',
+  flower_green_7:  'subpkg_items/images/flowers/green/flower_green_7.png',
+  flower_green_8:  'subpkg_items/images/flowers/green/flower_green_8.png',
+  flower_green_9:  'subpkg_items/images/flowers/green/flower_green_9.png',
+  flower_green_10: 'subpkg_items/images/flowers/green/flower_green_10.png',
+
+  // ---- 茶饮线 (8张) ----
+  drink_tea_1: 'subpkg_items/images/drinks/tea/drink_tea_1.png',
+  drink_tea_2: 'subpkg_items/images/drinks/tea/drink_tea_2.png',
+  drink_tea_3: 'subpkg_items/images/drinks/tea/drink_tea_3.png',
+  drink_tea_4: 'subpkg_items/images/drinks/tea/drink_tea_4.png',
+  drink_tea_5: 'subpkg_items/images/drinks/tea/drink_tea_5.png',
+  drink_tea_6: 'subpkg_items/images/drinks/tea/drink_tea_6.png',
+  drink_tea_7: 'subpkg_items/images/drinks/tea/drink_tea_7.png',
+  drink_tea_8: 'subpkg_items/images/drinks/tea/drink_tea_8.png',
+
+  // ---- 冷饮线 (8张) ----
+  drink_cold_1: 'subpkg_items/images/drinks/cold/drink_cold_1.png',
+  drink_cold_2: 'subpkg_items/images/drinks/cold/drink_cold_2.png',
+  drink_cold_3: 'subpkg_items/images/drinks/cold/drink_cold_3.png',
+  drink_cold_4: 'subpkg_items/images/drinks/cold/drink_cold_4.png',
+  drink_cold_5: 'subpkg_items/images/drinks/cold/drink_cold_5.png',
+  drink_cold_6: 'subpkg_items/images/drinks/cold/drink_cold_6.png',
+  drink_cold_7: 'subpkg_items/images/drinks/cold/drink_cold_7.png',
+  drink_cold_8: 'subpkg_items/images/drinks/cold/drink_cold_8.png',
+
+  // ---- 甜品线 (8张) ----
+  drink_dessert_1: 'subpkg_items/images/drinks/dessert/drink_dessert_1.png',
+  drink_dessert_2: 'subpkg_items/images/drinks/dessert/drink_dessert_2.png',
+  drink_dessert_3: 'subpkg_items/images/drinks/dessert/drink_dessert_3.png',
+  drink_dessert_4: 'subpkg_items/images/drinks/dessert/drink_dessert_4.png',
+  drink_dessert_5: 'subpkg_items/images/drinks/dessert/drink_dessert_5.png',
+  drink_dessert_6: 'subpkg_items/images/drinks/dessert/drink_dessert_6.png',
+  drink_dessert_7: 'subpkg_items/images/drinks/dessert/drink_dessert_7.png',
+  drink_dessert_8: 'subpkg_items/images/drinks/dessert/drink_dessert_8.png',
+
+  // ---- 工具：种植线 (3级试跑) ----
+  tool_plant_1: 'subpkg_items/images/tools/plant/tool_plant_1.png',
+  tool_plant_2: 'subpkg_items/images/tools/plant/tool_plant_2.png',
+  tool_plant_3: 'subpkg_items/images/tools/plant/tool_plant_3.png',
+
+  // ---- 工具：花艺线 ----
+  tool_arrange_1: 'subpkg_items/images/tools/arrange/tool_arrange_1.png',
+  tool_arrange_2: 'subpkg_items/images/tools/arrange/tool_arrange_2.png',
+  tool_arrange_3: 'subpkg_items/images/tools/arrange/tool_arrange_3.png',
+
+  // ---- 工具：烘焙线 ----
+  tool_bake_1: 'subpkg_items/images/tools/bake/tool_bake_1.png',
+  tool_bake_2: 'subpkg_items/images/tools/bake/tool_bake_2.png',
+  tool_bake_3: 'subpkg_items/images/tools/bake/tool_bake_3.png',
+
+  // ---- 工具：茶饮线（茶具）----
+  tool_tea_set_1: 'subpkg_items/images/tools/tea_set/tool_tea_set_1.png',
+  tool_tea_set_2: 'subpkg_items/images/tools/tea_set/tool_tea_set_2.png',
+  tool_tea_set_3: 'subpkg_items/images/tools/tea_set/tool_tea_set_3.png',
+
+  // ---- 工具：冷饮线（饮品器具）----
+  tool_mixer_1: 'subpkg_items/images/tools/mixer/tool_mixer_1.png',
+  tool_mixer_2: 'subpkg_items/images/tools/mixer/tool_mixer_2.png',
+  tool_mixer_3: 'subpkg_items/images/tools/mixer/tool_mixer_3.png',
+};
+
+// ================================================================
+// deco 分包资源（需先 loadSubpackage('deco') 后才可访问）
 // ================================================================
 const DECO_IMAGE_MAP: Record<string, string> = {
   // ---- 花店建筑场景 ----
@@ -216,6 +223,7 @@ const DECO_IMAGE_MAP: Record<string, string> = {
 /** 合并后的完整映射（用于统一查询） */
 const IMAGE_MAP: Record<string, string> = {
   ...MAIN_IMAGE_MAP,
+  ...ITEMS_IMAGE_MAP,
   ...DECO_IMAGE_MAP,
 };
 
@@ -235,9 +243,10 @@ class TextureCacheClass {
   private _loading = new Set<string>();
   private _failed = new Set<string>();
   private _decoLoaded = false;
+  private _itemsLoaded = false;
 
   /**
-   * 预加载主包图片（花朵等核心资源）
+   * 预加载主包图片（UI + 角色等核心资源）
    * 在游戏启动时调用，不依赖分包
    */
   preloadMain(onProgress?: (loaded: number, total: number) => void): Promise<void> {
@@ -262,49 +271,37 @@ class TextureCacheClass {
   }
 
   /**
+   * 加载 items 分包（花朵/饮品/工具物品图标），然后预加载图片
+   * 启动时紧跟主包加载，玩法核心资源
+   */
+  loadItemsSubpackage(onProgress?: (loaded: number, total: number) => void): Promise<void> {
+    if (this._itemsLoaded) {
+      return this._preloadImageMap(ITEMS_IMAGE_MAP, 'items', onProgress);
+    }
+
+    return this._loadSubpackage('items').then(() => {
+      this._itemsLoaded = true;
+      return this._preloadImageMap(ITEMS_IMAGE_MAP, 'items', onProgress);
+    });
+  }
+
+  /**
    * 加载 deco 分包，然后预加载分包中的图片
    * 在进入花店场景前调用
    */
   loadDecoSubpackage(onProgress?: (loaded: number, total: number) => void): Promise<void> {
     if (this._decoLoaded) {
-      return this._preloadDecoImages(onProgress);
+      return this._preloadImageMap(DECO_IMAGE_MAP, 'deco', onProgress);
     }
 
-    return new Promise<void>((resolve, reject) => {
-      const platform = typeof wx !== 'undefined' ? wx : typeof tt !== 'undefined' ? tt : null;
-      if (!platform || !platform.loadSubpackage) {
-        // 非微信环境，直接加载（开发模式）
-        console.log('[TextureCache] 非微信环境，直接加载分包资源');
-        this._decoLoaded = true;
-        this._preloadDecoImages(onProgress).then(resolve).catch(reject);
-        return;
-      }
-
-      console.log('[TextureCache] 开始加载 deco 分包...');
-      const task = platform.loadSubpackage({
-        name: 'deco',
-        success: () => {
-          console.log('[TextureCache] deco 分包加载成功');
-          this._decoLoaded = true;
-          this._preloadDecoImages(onProgress).then(resolve).catch(reject);
-        },
-        fail: (err: any) => {
-          console.error('[TextureCache] deco 分包加载失败', err);
-          reject(err);
-        },
-      });
-
-      // 分包下载进度
-      if (task && task.onProgressUpdate) {
-        task.onProgressUpdate((res: any) => {
-          console.log(`[TextureCache] 分包下载: ${res.progress}% (${res.totalBytesWritten}/${res.totalBytesExpectedToWrite})`);
-        });
-      }
+    return this._loadSubpackage('deco').then(() => {
+      this._decoLoaded = true;
+      return this._preloadImageMap(DECO_IMAGE_MAP, 'deco', onProgress);
     });
   }
 
   /**
-   * 兼容旧接口：预加载所有资源（先加载主包，再加载分包）
+   * 兼容旧接口：预加载所有资源（主包 → items 分包 → deco 分包）
    */
   preloadAll(onProgress?: (loaded: number, total: number) => void): Promise<void> {
     const totalKeys = Object.keys(IMAGE_MAP).length;
@@ -316,6 +313,7 @@ class TextureCacheClass {
     };
 
     return this.preloadMain(() => wrapProgress())
+      .then(() => this.loadItemsSubpackage(() => wrapProgress()))
       .then(() => this.loadDecoSubpackage(() => wrapProgress()))
       .then(() => {
         console.log(`[TextureCache] 全部预加载完成: ${this._cache.size}/${totalKeys} 张纹理`);
@@ -332,25 +330,69 @@ class TextureCacheClass {
     return this._decoLoaded;
   }
 
-  /** 预加载分包中的图片 */
-  private _preloadDecoImages(onProgress?: (loaded: number, total: number) => void): Promise<void> {
-    const keys = Object.keys(DECO_IMAGE_MAP);
+  /** items 分包是否已加载 */
+  get isItemsLoaded(): boolean {
+    return this._itemsLoaded;
+  }
+
+  /**
+   * 通用分包加载方法
+   */
+  private _loadSubpackage(name: string): Promise<void> {
+    return new Promise<void>((resolve, reject) => {
+      const platform = typeof wx !== 'undefined' ? wx : typeof tt !== 'undefined' ? tt : null;
+      if (!platform || !platform.loadSubpackage) {
+        // 非微信环境，直接通过（开发模式）
+        console.log(`[TextureCache] 非微信环境，直接加载 ${name} 分包资源`);
+        resolve();
+        return;
+      }
+
+      console.log(`[TextureCache] 开始加载 ${name} 分包...`);
+      const task = platform.loadSubpackage({
+        name,
+        success: () => {
+          console.log(`[TextureCache] ${name} 分包加载成功`);
+          resolve();
+        },
+        fail: (err: any) => {
+          console.error(`[TextureCache] ${name} 分包加载失败`, err);
+          reject(err);
+        },
+      });
+
+      // 分包下载进度
+      if (task && task.onProgressUpdate) {
+        task.onProgressUpdate((res: any) => {
+          console.log(`[TextureCache] ${name} 分包下载: ${res.progress}% (${res.totalBytesWritten}/${res.totalBytesExpectedToWrite})`);
+        });
+      }
+    });
+  }
+
+  /** 通用图片批量预加载 */
+  private _preloadImageMap(
+    imageMap: Record<string, string>,
+    label: string,
+    onProgress?: (loaded: number, total: number) => void,
+  ): Promise<void> {
+    const keys = Object.keys(imageMap);
     let loaded = 0;
     const total = keys.length;
 
     const promises = keys.map(key =>
-      this._loadTexture(key, DECO_IMAGE_MAP[key]).then(() => {
+      this._loadTexture(key, imageMap[key]).then(() => {
         loaded++;
         onProgress?.(loaded, total);
       }).catch(err => {
-        console.warn(`[TextureCache] 分包加载失败: ${key}`, err);
+        console.warn(`[TextureCache] ${label} 加载失败: ${key}`, err);
         loaded++;
         onProgress?.(loaded, total);
       })
     );
 
     return Promise.all(promises).then(() => {
-      console.log(`[TextureCache] 分包图片预加载完成: ${loaded}/${total}`);
+      console.log(`[TextureCache] ${label} 图片预加载完成: ${loaded}/${total}`);
     });
   }
 

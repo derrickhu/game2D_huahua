@@ -69,10 +69,20 @@ async function main(): Promise<void> {
     computeBoardMetrics(Game.logicHeight, topReserved);
     console.log(`[main] BoardMetrics 计算完成, logicHeight:${Game.logicHeight}, safeTop:${Game.safeTop}, topReserved:${topReserved}`);
 
-    // 预加载图片纹理
+    // 预加载图片纹理（主包 → items 分包 → deco 分包）
     await TextureCache.preloadAll((loaded, total) => {
       console.log(`[main] 加载纹理: ${loaded}/${total}`);
     });
+
+    // 异步加载 audio 分包（不阻塞游戏启动，音效延迟可接受）
+    const _apiAudio: any = typeof wx !== 'undefined' ? wx : typeof tt !== 'undefined' ? tt : null;
+    if (_apiAudio?.loadSubpackage) {
+      _apiAudio.loadSubpackage({
+        name: 'audio',
+        success: () => console.log('[main] audio 分包加载成功'),
+        fail: (err: any) => console.warn('[main] audio 分包加载失败:', err),
+      });
+    }
 
     // 初始化棋盘数据
     BoardManager.init();
