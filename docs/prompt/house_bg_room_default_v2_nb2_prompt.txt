@@ -1,0 +1,33 @@
+Square game asset, 1:1 aspect. A reference image is attached: copy its ROOF look exactly — pastel pink scalloped / S-curve clay tiles (semi-cylindrical tile rows), soft glossy kawaii pink (#F4C2CC–#E8A8B8 range), each tile rounded like traditional oriental roof tiles but in playful pastel pink. At the outer apex where the two roof planes meet on the L-corner, place a thick rounded RIDGE / roll cap (cylindrical pink ridge tile) that seals the corner seam. Eaves clearly OVERHANG outward past the slender vertical corner posts; roof slopes downward and outward toward open air, not into the room. Under the eaves may show a slim band of light natural wood beam matching the posts. Ignore window count or wall panel layout from the reference if it conflicts — only the roof tile style, ridge treatment, eave direction, and pink palette must match the reference.
+
+Cute kawaii 2.5D isometric flower shop room shell, hand-painted mobile game art, bright fresh and lively — NOT dim, NOT muddy gray-green, NOT flat vector with zero shading. High-key daylight, soft pastel pops, gentle material texture on wood stone and tiles.
+
+Single unified soft light from upper-left: clear but soft highlights on each scalloped roof tile, window frames, and floor planks; subtle ambient occlusion in corners and under roof overhang; very soft cast shadow under the stone foundation onto the ground.
+
+ISOMETRIC ROOF AND EAVES (must match reference + L-room):
+- Eaves face OUTWARD; drip line beyond outer wall faces toward viewer / open sides. No eaves folding into the interior.
+- Pink scalloped tile courses follow each sloping roof plane; readable rows with soft highlight on outer curve of each scallop and light groove shadow between rows.
+- Outer-corner ridge cap prominent and cute, same pink family as tiles.
+
+PROPORTION AND SCALE (critical — previous error):
+- Walls read as SLIM: thin plaster or panel layer on frame — not chunky masonry. Corner posts are RELATIVELY SLENDER (narrow column width compared to room depth), elegant not log-thick.
+- Windows are generously sized on each wall segment — wall mass around frames should feel light, not a heavy thick band.
+- FLOOR: herringbone or chevron parquet made of MANY SMALL NARROW wood strips — fine-scale pattern like real shop flooring. Across the full visible floor area show at least 8 to 12 complete chevron zigzag repeats, each plank strip thin; absolutely NO huge wide planks that look like 4–5 tiles only. Tight repeat, delicate grain lines.
+
+STRUCTURE (follow exactly):
+- Open room: only TWO walls in L-shape — BACK wall (from upper-left to upper-right) and RIGHT wall (upper-right to lower-right). Front and left sides fully open. NO fourth wall, NO door panel, NO shop sign, NO awning, NO furniture, NO plants, NO characters, NO text, no watermark.
+- ROOF: as reference — pastel pink scalloped clay tiles, outer ridge cap, outward eaves; NOT orange terracotta for this asset.
+- FOUR corner posts: warm chestnut brown (#6B4423), visibly SLENDER proportions, wood grain; small cute carved leaf cap optional.
+- BACK wall: clean warm white (#FFFBF7). One window: warm caramel wood frame, 3x2 panes, glass pale aqua-mint (#D8F2EC) with soft inner glow.
+- RIGHT wall: same warm white. Two windows, same frame style, evenly spaced.
+- Thin warm wood baseboard (#C4956A) between wall and floor, modest height.
+- FLOOR: light honey-oak herringbone as specified above — fine narrow strips, many repeats, soft plank edge shading.
+- FOUNDATION: light warm-gray cobblestone (#C5C0BA), proportionally scaled to match slender walls — not an oversized thick plinth.
+- 1–2 short wooden steps at front-left, slender proportions.
+- OUTDOOR patch front-left: pale cream sand (#F2E8D8), a few flat gray stepping stones, tiny bright grass clumps (#8FD18A) and one or two micro white flower dots.
+
+Viewpoint: classic isometric from upper-left (~45°), consistent vanishing.
+
+BACKGROUND outside the structure: pure solid white #FFFFFF for easy cutout in pipeline.
+
+STYLE: soft brown line art slightly thicker than hairline, rounded corners, Animal Crossing–like coziness but BRIGHTER. NO circular spotlight overlay. NO heavy vignette.

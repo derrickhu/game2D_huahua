@@ -1,0 +1,14 @@
+Mobile game vertical full-screen background, empty outdoor garden yard ONLY — grass lawn and soft sky haze, NO building, NO house, NO structure, NO characters, NO furniture, NO fence, NO UI, NO text, no watermark, no labels, no captions.
+
+Soft hand-painted 2D illustration, cozy casual anime game aesthetic, high-key bright daylight, fresh and airy — NOT dark, NOT muddy gray-green, NOT flat single solid color field.
+
+Ground: natural spring lawn with subtle organic color variation — soft patches of slightly lighter and slightly darker grass, very sparse tiny white and pale yellow flower specks, faint suggestion of warmer soil or path tone along the bottom edge only. Must feel like real outdoor ground with gentle texture, not one flat paint bucket fill.
+
+Forbidden: obvious circular spotlight, radial gradient blob, heavy vignette, dramatic shadows, large props, trees that dominate the frame.
+
+Color direction (mood, not a flat swatch):
+- Lawn: fresh mint–spring green, slightly yellow-green in sunlight, approximate range #C8E6C4 to #E8F4E0 with gentle value shifts across the canvas
+- Upper area / sky haze: pale milky blue-green to almost white #EEF6F3–#F7FBF8
+- Moderate saturation, high lightness; must harmonize later with a separate isometric flower shop sprite (warm cream walls, terracotta roof, brown wood) placed in the center — so the yard should feel sunny and welcoming, not olive-drab.
+
+Composition: vertical 9:16, generous calm negative space in the center and mid-lower area for placing a building sprite later; slightly richer grass detail may appear toward edges; no hard geometric shapes.

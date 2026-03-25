@@ -64,6 +64,9 @@ const MAIN_IMAGE_MAP: Record<string, string> = {
   warehouse_close_btn: 'images/ui/warehouse_close_btn.png',
   /** NB2：仓库未解锁格锁图标（warehouse_nb2_slot_lock_1x1 抠图后） */
   warehouse_slot_lock: 'images/ui/warehouse_slot_lock.png',
+  /** NB2 合成线：标题彩带 + 奶油金边主面板（merge_chain_ui_nb2 抠图后） */
+  merge_chain_ribbon: 'images/ui/merge_chain_ribbon.png',
+  merge_chain_panel: 'images/ui/merge_chain_panel.png',
 };
 
 // ================================================================
@@ -221,9 +224,14 @@ const DECO_IMAGE_MAP: Record<string, string> = {
 
   // ---- 房间背景 ----
   bg_room_default: 'subpkg_deco/images/house/bg_room_default.png',
+  bg_room_candy_nb2: 'subpkg_deco/images/house/bg_room_candy_nb2.png',
   bg_room_white:   'subpkg_deco/images/house/bg_room_white.png',
   bg_room_vintage: 'subpkg_deco/images/house/bg_room_vintage.png',
   bg_room_spring:  'subpkg_deco/images/house/bg_room_spring.png',
+  bg_room_bloom_nb2: 'subpkg_deco/images/house/bg_room_bloom_nb2.png',
+  bg_room_lagoon_nb2: 'subpkg_deco/images/house/bg_room_lagoon_nb2.png',
+  bg_room_confetti_nb2: 'subpkg_deco/images/house/bg_room_confetti_nb2.png',
+  bg_room_pinkblue_nb2: 'subpkg_deco/images/house/bg_room_pinkblue_nb2.png',
 };
 
 /** 合并后的完整映射（用于统一查询） */

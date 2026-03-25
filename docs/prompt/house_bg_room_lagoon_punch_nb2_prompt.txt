@@ -1,0 +1,16 @@
+Attached reference image: this PNG is the APPROVED Lagoon room shell — use it as the master layout. Your task is a LOCAL FLOOR-ONLY revision, not a full redesign from scratch.
+
+EDIT SCOPE (critical):
+- KEEP unchanged: 1:1 canvas, building position/scale/margins, L-shaped two walls, three windows (sizes + positions), roof, wall stripes/blocks, posts/beams, window frames + teal glass, stone foundation, steps, outdoor sand, lighting, outlines, and all colors OUTSIDE the interior floor polygon.
+- CHANGE ONLY: the interior walkable floor surface (the empty diamond area) — replace it entirely with the new floor spec below. Do NOT use wood herringbone/chevron.
+
+LAGOON — new floor must read aquatic / resort deck, cool and glossy, unlike wood parquet:
+- Pattern: LARGE-FORMAT square or rectangular CERAMIC / glazed tiles in a straight grid (orthogonal), visible thin white or sea-foam grout lines; subtle reflection streaks suggesting water sheen on some tiles.
+- Colors: mix at least three tile body hues across the grid — sea-glass turquoise (#6EC8D0), pale lagoon aqua (#B8E8E8), and sandy ivory (#F0E8D8) accent tiles scattered sparingly; NO warm pink-dominant planks.
+- Optional: one row of smaller border tiles along the wall baseboard line in deeper teal (#4AA8B8) as a “pool edge” accent — still flat floor, no actual water puddle.
+
+Interior must stay empty — no furniture, no props, no characters, no text.
+
+FORBIDDEN on the floor: herringbone/chevron wood; basket-weave wood (Bloom); confetti hex dots (Confetti); dark nautical navy as single flat fill.
+
+BACKGROUND outside the building: pure solid white #FFFFFF.

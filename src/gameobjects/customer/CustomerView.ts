@@ -14,6 +14,7 @@ import { COLORS, FONT_FAMILY, ACTIVE_CUSTOMER_SLOTS } from '@/config/Constants';
 import { ITEM_DEFS, Category, FlowerLine, DrinkLine } from '@/config/ItemConfig';
 import { TextureCache } from '@/utils/TextureCache';
 import { createToolEnergySprite, isBoardToolCategory } from '@/utils/ToolEnergyBadge';
+import { ToolSparkleLayer } from '@/utils/ToolSparkleLayer';
 import { TweenManager, Ease } from '@/core/TweenManager';
 import { EventBus } from '@/core/EventBus';
 import { CustomerInstance } from '@/managers/CustomerManager';
@@ -348,6 +349,9 @@ export class CustomerView extends PIXI.Container {
       this._infoPanel.addChild(sprite);
 
       if (isBoardToolCategory(def.category)) {
+        const spark = new ToolSparkleLayer(cs, cs);
+        spark.position.set(x, y);
+        this._infoPanel.addChild(spark);
         const shell = new PIXI.Container();
         shell.position.set(x, y);
         const energy = createToolEnergySprite(cs, cs, { maxSideFrac: 0.28, pad: 5 });

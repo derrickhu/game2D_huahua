@@ -15,6 +15,7 @@ import { CurrencyManager } from '@/managers/CurrencyManager';
 import { Platform } from '@/core/PlatformService';
 import { TextureCache } from '@/utils/TextureCache';
 import { createToolEnergySprite, isBoardToolCategory } from '@/utils/ToolEnergyBadge';
+import { ToolSparkleLayer } from '@/utils/ToolSparkleLayer';
 import { CellView } from './CellView';
 import { ItemView } from './ItemView';
 import { ConfirmDialog } from '../ui/ConfirmDialog';
@@ -819,6 +820,9 @@ export class BoardView extends PIXI.Container {
       sprite.anchor.set(0.5, 0.5);
       ghost.addChild(sprite);
       if (def && isBoardToolCategory(def.category)) {
+        const spark = new ToolSparkleLayer(cs, cs);
+        spark.position.set(-cs / 2, -cs / 2);
+        ghost.addChild(spark);
         const hw = (tex.width * s) / 2;
         const hh = (tex.height * s) / 2;
         const shell = new PIXI.Container();

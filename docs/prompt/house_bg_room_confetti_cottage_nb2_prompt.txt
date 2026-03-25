@@ -1,0 +1,16 @@
+Attached reference image: this PNG is the APPROVED Confetti room shell — use it as the master layout. Your task is a LOCAL FLOOR-ONLY revision, not a full redesign from scratch.
+
+EDIT SCOPE (critical):
+- KEEP unchanged: 1:1 canvas, building position/scale/margins, L-shaped two walls, three windows (sizes + positions), roof with multi-color scallops, pill/dot wallpaper, posts/beams, window frames + pink glass, stone foundation, steps, outdoor sand, lighting, outlines, and all colors OUTSIDE the interior floor polygon.
+- CHANGE ONLY: the interior walkable floor surface (the empty diamond area) — replace it entirely with the new floor spec below. Do NOT use herringbone/chevron wood.
+
+CONFETTI — new floor must feel playful and graphic, “party floor”, unlike woven wood or lagoon tiles:
+- Pattern: HONEYCOMB / HEX TILE mosaic — each hex a distinct pastel “candy chip” color; grout lines thin and light cream; hexes roughly uniform size, aligned in offset rows (classic hex grid) following isometric perspective.
+- Colors: at least FIVE hex tints visible — soft pink (#F5B8D0), butter yellow (#FFECA8), mint (#B8F0D8), lilac (#D8C8F8), and peach (#FFD4C0); distribute so no single hue dominates; matte chalk finish, not glossy pool tile.
+- Optional: a few hexes with a tiny white dot center like confetti sprinkles — very sparse.
+
+Interior must stay empty — no furniture, no balloons as objects, no characters, no text.
+
+FORBIDDEN on the floor: herringbone/chevron; long parallel wood planks; basket-weave (Bloom); large square lagoon ceramics with water shine (Lagoon).
+
+BACKGROUND outside the building: pure solid white #FFFFFF.

@@ -82,7 +82,12 @@ export const DECO_RARITY_INFO: Record<DecoRarity, { name: string; color: number 
 // ======== 房间风格列表 ========
 
 export const ROOM_STYLES: RoomStyleDef[] = [
-  { id: 'style_default', name: '温馨原木风', cost: 0,   rarity: DecoRarity.COMMON, bgTexture: 'bg_room_default', desc: '暖色原木 + 浅绿墙面，花店标配' },
+  { id: 'style_default', name: '温馨明亮花坊', cost: 0, rarity: DecoRarity.COMMON, bgTexture: 'bg_room_default', desc: '左上柔光、粉瓦白墙与细密人字拼，贴近合成页明亮感（v2）' },
+  { id: 'style_candy_nb2', name: '🍬 糖果花坊', cost: 280, rarity: DecoRarity.FINE, bgTexture: 'bg_room_candy_nb2', desc: '多色糖果 pastel 硬装，壁纸感墙面与人字拼地板' },
+  { id: 'style_bloom_nb2', name: '🌷 花境小筑', cost: 350, rarity: DecoRarity.FINE, bgTexture: 'bg_room_bloom_nb2', desc: '窗台花箱与檐口垂花，多色 pastel 硬装' },
+  { id: 'style_lagoon_nb2', name: '🍹 海岛汽水', cost: 450, rarity: DecoRarity.RARE, bgTexture: 'bg_room_lagoon_nb2', desc: '青绿天蓝木瓜橙撞色，清新热带感' },
+  { id: 'style_confetti_nb2', name: '🎉 彩屑木屋', cost: 550, rarity: DecoRarity.LIMITED, bgTexture: 'bg_room_confetti_nb2', desc: '拼色屋顶与几何墙饰，节日感不荧光' },
+  { id: 'style_pinkblue_nb2', name: '💗 粉蓝花坊', cost: 400, rarity: DecoRarity.FINE, bgTexture: 'bg_room_pinkblue_nb2', desc: '粉白蓝温馨风：短绒地毯、樱花形窗、新瓦型屋顶' },
   { id: 'style_white',   name: '清新白调',   cost: 300, rarity: DecoRarity.FINE,   bgTexture: 'bg_room_white',   desc: '白墙白柜，北欧简约感' },
   { id: 'style_vintage', name: '复古花坊',   cost: 500, rarity: DecoRarity.RARE,   bgTexture: 'bg_room_vintage', desc: '深木色 + 怀旧砖墙，欧式老花店' },
   { id: 'style_spring',  name: '🌸 春日粉', cost: 600, rarity: DecoRarity.LIMITED, bgTexture: 'bg_room_spring',  desc: '粉色系墙面 + 樱花元素', season: 'spring' },

@@ -1,0 +1,63 @@
+---
+description: 花语小筑 AI 资产生图（NB2）与入库到 game_assets 再拷贝进 minigame 的固定流程
+alwaysApply: true
+---
+
+# 游戏资产：NB2 生图与入库（固定流程）
+
+当任务涉及「用 AI 生成游戏用图并替换工程内资源」时，按以下顺序执行，**不要跳过落盘与拷贝步骤**。
+
+## 路径约定
+
+| 用途 | 路径 |
+|------|------|
+| 提示词（入 Git 仓库） | `{workspace}/docs/prompt/{任务名}_nb2_prompt.txt` |
+| 生成原图（仓库外资产库） | `/Users/huyi/rosa_games/game_assets/huahua/assets/raw/{任务名}.png` |
+| 游戏内运行时资源 | `{workspace}/minigame/subpkg_deco/images/...`（以 `TextureCache` 或策划路径为准） |
+| 可选：与旧 sync 脚本对齐 | `/Users/huyi/rosa_games/game_assets/huahua/assets/house/bg.png` 等 |
+| **UI / 界面原型图（非运行时）** | `/Users/huyi/rosa_games/game_assets/huahua/assets/ui_prototypes/`（含 `*_prompt.txt`）；**勿**将此类 PNG 放入 `huahua` 的 `minigame/` 或 `docs/design/` |
+
+`{workspace}` 为本仓库根目录（花语小筑 huahua）。
+
+界面整页原型建议按 **9:16** 手机游戏画幅生成（`--aspect-ratio 9:16`）。
+
+## 模型与命令
+
+- **NB2** = `gemini-3.1-flash-image-preview`（gemini-image-gen skill）。
+- 竖版全屏背景常用 `--aspect-ratio 9:16`。
+- 使用 **prompt 文件** 避免超长命令行：
+
+```bash
+mkdir -p /Users/huyi/rosa_games/game_assets/huahua/assets/raw
+
+python3 ~/.cursor/skills/gemini-image-gen/scripts/generate_images.py \
+  --prompt-file "{workspace}/docs/prompt/{任务名}_nb2_prompt.txt" \
+  --output "/Users/huyi/rosa_games/game_assets/huahua/assets/raw/{任务名}.png" \
+  --model gemini-3.1-flash-image-preview \
+  --aspect-ratio 9:16
+```
+
+## 入库到游戏
+
+生成成功后 **再拷贝** 到工程内目标路径（示例：花店室外背景）：
+
+```bash
+cp "/Users/huyi/rosa_games/game_assets/huahua/assets/raw/house_yard_bg_nb2.png" \
+   "{workspace}/minigame/subpkg_deco/images/house/bg.png"
+```
+
+- `prompt.txt` 内**只写发送给模型的正文**，不要夹带 `#` 注释行（会一并提交给 API）。
+- 流程说明、任务元数据写在 `docs/游戏资产生图与入库流程.md` 或本规则中即可。
+- API/代理失败时：可改用 Cursor `GenerateImage` 等兜底，仍将**最终原图**保存到 `game_assets/.../raw/` 再拷贝进 `minigame/`。
+
+## 花店草地背景（当前任务映射）
+
+- 提示词：`docs/prompt/house_yard_bg_nb2_prompt.txt`
+- 原图：`.../assets/raw/house_yard_bg_nb2.png`
+- 游戏内：`minigame/subpkg_deco/images/house/bg.png`（`TextureCache.house_bg`）
+
+## 花店房间壳 bg_room_* 试看图
+
+- 先试做输出到：`/Users/huyi/rosa_games/game_assets/huahua/assets/preview_house_room/`
+- 仓库对比副本：`minigame/subpkg_deco/images/house/preview/`（不接入 TextureCache）
+- 示例：`house_bg_room_default_v2_nb2_prompt.txt` → `bg_room_default_v2_nb2.png`

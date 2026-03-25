@@ -1,7 +1,7 @@
 /**
  * 图鉴面板 - 6大收集分类展示 + 里程碑奖励
  *
- * 分类：花束(18) / 花饮(9) / 建筑(13) / 客人(6) / 装饰(72) / 花语卡片(18)
+ * 分类：花束(18) / 花饮(9) / 建筑(13) / 宝箱(5) / 客人(6) / 装饰(72) / 花语卡片(18)
  * 里程碑：25% / 50% / 75% / 100% 解锁奖励
  */
 import * as PIXI from 'pixi.js';
@@ -19,6 +19,7 @@ const CATEGORY_DISPLAY: { cat: CollectionCategory; icon: string; name: string; c
   { cat: CollectionCategory.FLOWER, icon: '🌸', name: '花束', color: 0xFFB7C5 },
   { cat: CollectionCategory.DRINK, icon: '🍵', name: '花饮', color: 0x90EE90 },
   { cat: CollectionCategory.BUILDING, icon: '🏠', name: '建筑', color: 0xDEB887 },
+  { cat: CollectionCategory.CHEST, icon: '📦', name: '宝箱', color: 0xDAA520 },
   { cat: CollectionCategory.CUSTOMER, icon: '👤', name: '客人', color: 0x87CEEB },
   { cat: CollectionCategory.DECORATION, icon: '🪑', name: '装饰', color: 0xDDA0DD },
   { cat: CollectionCategory.FLOWER_CARD, icon: '💐', name: '花语卡片', color: 0xFFD700 },
@@ -210,7 +211,7 @@ export class CollectionPanel extends PIXI.Container {
     this._content.addChild(hit);
   }
 
-  /** 总览 Tab - 显示 6 大分类的收集进度 */
+  /** 总览 Tab - 显示各大分类的收集进度 */
   private _drawOverviewTab(panelX: number, startY: number, panelW: number): number {
     const pad = 16;
     let y = startY + 10;

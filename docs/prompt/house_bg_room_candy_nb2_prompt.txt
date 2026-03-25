@@ -1,0 +1,17 @@
+Attached reference image: replicate EXACTLY the same isometric L-shaped open room shell in a 1:1 square canvas — same footprint, same horizontal centering, same vertical placement (building occupies the same band with matching empty margin at bottom), same scale. Same geometry: two walls only (back + right), three windows in the same sizes and positions as reference (one larger window on left wall, two smaller on right wall), same stair location front-left, same stone foundation outline, same roof silhouette and eaves sloping outward. ONLY change materials, patterns, and colors. Interior must stay completely EMPTY — no furniture, no shelves, no plants inside, no characters, no text, no watermark.
+
+CANDY PASTEL CUTE STYLE — multi-color hard finishes (NOT cold, NOT one dominant hue, NOT gray-green mint wash over everything). Match a cozy Chinese mobile merge-game aesthetic: fresh, bright, kawaii, soft hand-painted 2D with gentle volume (highlights on tile curves, soft groove shadows), unified soft light from upper-left, thin warm brown outer outlines (outline color follows local surface, not one dark line everywhere).
+
+Color zoning (use several distinct candy pastels at once):
+- ROOF: strawberry-milk / peach-pink scalloped tiles (#F8B8C8–#F5A0B8) as main field; alternate tile rows or eave lip accented with soft lemon (#FFF0A0) or mint candy (#B8F0D8) bands; ridge cap slightly deeper rose — roof must read as pink-party, not sage or slate.
+- WALLS: warm cream base (#FFFAF3) with subtle playful wallpaper: wide soft stripes OR large scattered dots in baby pink (#FFD6E8), lavender mist (#E8D8F5), and pale aqua (#D0F0F5) — pattern low-contrast, still cute and readable.
+- WOOD POSTS / BEAMS: honey blonde wood (#E8C49A) OR soft white painted wood; must CONTRAST with window frames.
+- WINDOW FRAMES: mint candy green (#7DD3B0) or baby sky blue (#7EC8E8) — different enough from wall pattern and posts. Glass: translucent pale mint-to-aqua (#E0F8F0) with soft inner glow, slight variation between the three windows OK.
+- BASEBOARD / wainscot band: soft peach (#FFD4C4) or butter yellow strip separating wall and floor.
+- FLOOR: fine herringbone parquet with THREE alternating plank tints in one floor — warm oak (#E8D4B8), blush wood (#F0D0D8), and pale mint wash (#E0F0E0) on different strips; many narrow strips, no single flat brown slab.
+- FOUNDATION: warm gray-cobble with cream undertone (#C8C0B8), not cold blue-gray.
+- OUTDOOR sand patch: light apricot (#F5E8D8); at most one or two tiny grass tufts with a candy-green accent — no flower boxes, no props.
+
+FORBIDDEN: monochrome cold Nordic palette; olive/sage as main roof color; flat white walls with no pattern; adding any furniture, lamps, pots, signs, pets; circular spotlight or radial gradient on the image; heavy vignette; fourth wall or closed facade.
+
+BACKGROUND outside the building: pure solid white #FFFFFF for game cutout pipeline.

@@ -7,7 +7,7 @@
  * - 可交互元素：装修入口、装扮入口、图鉴入口
  * - 左侧活动入口（签到、任务、熟客等）
  * - 右下角大的返回按钮，切回合成棋盘
- * - 顶部复用 TopBar（等级/体力/金币/钻石）
+ * - 顶部复用 TopBar（花露/花愿/体力/钻石）
  *
  * 对标四季物语第二张截图的交互体验
  */
@@ -26,7 +26,7 @@ import { QuestManager } from '@/managers/QuestManager';
 import { RegularCustomerManager } from '@/managers/RegularCustomerManager';
 import { SaveManager } from '@/managers/SaveManager';
 import { FurnitureDragSystem } from '@/systems/FurnitureDragSystem';
-import { FurnitureTray } from '@/gameobjects/ui/FurnitureTray';
+import { FurnitureTray, FURNITURE_TRAY_H } from '@/gameobjects/ui/FurnitureTray';
 import { RoomEditToolbar } from '@/gameobjects/ui/RoomEditToolbar';
 import { TextureCache } from '@/utils/TextureCache';
 import { DECO_MAP } from '@/config/DecorationConfig';
@@ -37,15 +37,26 @@ import { ToastMessage } from '@/gameobjects/ui/ToastMessage';
 const PROGRESS_BAR_W = 400;
 const PROGRESS_BAR_H = 28;
 const RETURN_BTN_SIZE = 80;   // ← 放大返回按钮
-const TRAY_HEIGHT = 300;      // 家具托盘高度（与 FurnitureTray 的 TRAY_H 一致）
 
-// ── 颜色 ──
+/** 与 FurnitureTray 一致，避免遮挡过多场景 */
+const TRAY_HEIGHT = FURNITURE_TRAY_H;
+
+/** 「装修花店」主按钮宽度（与 _buildEditButton 一致） */
+const EDIT_MAIN_BTN_W = (): number => Math.round(DESIGN_WIDTH * 0.5);
+const EDIT_MAIN_BTN_H = 64;
+const EDIT_MAIN_BTN_R = 18;
+
+/** 花店建筑竖直位置：中心 Y ≈ logicH * ratio + offset，ratio 增大则整体下移（原 0.405 偏上易顶到进度条） */
+const SHOP_BUILDING_CENTER_Y_RATIO = 0.442;
+const SHOP_BUILDING_ANCHOR_OFFSET_Y = 18;
+
+// ── 颜色（偏白天花店，与合成页明度更接近；无 house_bg 时 fallback 不再用夜间深蓝） ──
 const C = {
-  BG_TOP: 0x2C3E50,          // 深蓝色背景（花店夜间氛围）
-  BG_BOTTOM: 0x4A6741,       // 温暖绿底
+  BG_TOP: 0xE8F0E5,          // 浅薄荷灰绿 fallback
+  BG_BOTTOM: 0xC8D9C4,       // 柔和绿底（备用）
   FLOOR: 0x8B7355,           // 地板色
   WALL: 0x5D4E37,            // 墙壁色
-  WARM_LIGHT: 0xFFE4B5,      // 暖光
+  WARM_LIGHT: 0xFFF0D8,      // 略偏晨黄的暖光
   PROGRESS_BG: 0xFFE0C0,     // 进度条背景
   PROGRESS_FILL: 0xFF8C69,   // 进度条填充
   PROGRESS_BORDER: 0xD4A574, // 进度条边框
@@ -164,6 +175,7 @@ export class ShopScene implements Scene {
   }
 
   onExit(): void {
+    EventBus.off('decoration:room_style', this._refreshShopBuildingTexture);
     // 如果在编辑模式，退出时自动保存
     if (this._isEditMode) {
       this._exitEditMode();
@@ -253,48 +265,69 @@ export class ShopScene implements Scene {
       bgSprite.anchor.set(0.5, 0.5);
       bgSprite.position.set(w / 2, h / 2);
       this.container.addChild(bgSprite);
+      // 均匀薄提亮（无形状边缘），略压暗的贴图整体抬一档明度
+      const lift = new PIXI.Graphics();
+      lift.beginFill(0xFFFAF2, 0.045);
+      lift.drawRect(0, 0, w, h * 0.88);
+      lift.endFill();
+      this.container.addChild(lift);
     } else {
-      // fallback: 渐变背景
       const bg = new PIXI.Graphics();
       bg.beginFill(C.BG_TOP);
       bg.drawRect(0, 0, w, h);
       bg.endFill();
       this.container.addChild(bg);
+      const lower = new PIXI.Graphics();
+      lower.beginFill(C.BG_BOTTOM, 0.45);
+      lower.drawRect(0, h * 0.55, w, h * 0.45);
+      lower.endFill();
+      this.container.addChild(lower);
     }
 
-    // 底部地面区域（柔和渐变，起始位置低于家具可放置范围）
+    // 底部地面区域（略提亮）
     const ground = new PIXI.Graphics();
-    ground.beginFill(0xD4C4A0, 0.5);
+    ground.beginFill(0xE8DFD2, 0.42);
     ground.drawRect(0, h * 0.82, w, h * 0.18);
     ground.endFill();
     this.container.addChild(ground);
 
-    // 温暖的光照效果（中央发散）
-    const lightGradient = new PIXI.Graphics();
-    lightGradient.beginFill(C.WARM_LIGHT, 0.06);
-    lightGradient.drawEllipse(w / 2, h * 0.4, w * 0.5, h * 0.3);
-    lightGradient.endFill();
-    lightGradient.beginFill(C.WARM_LIGHT, 0.03);
-    lightGradient.drawEllipse(w / 2, h * 0.4, w * 0.7, h * 0.5);
-    lightGradient.endFill();
-    this.container.addChild(lightGradient);
+    // 自然环境光：模拟天光自上而下的漫反射，全宽水平带叠层，不用椭圆以免「舞台灯」感
+    this._addSkyAmbientBands(w, h);
+  }
+
+  /** 水平分层环境光（无径向聚光），与等轴房间的「顶亮底稳」更一致 */
+  private _addSkyAmbientBands(w: number, h: number): void {
+    const g = new PIXI.Graphics();
+    const maxY = h * 0.78;
+    const bands = 9;
+    for (let i = 0; i < bands; i++) {
+      const y0 = (maxY * i) / bands;
+      const y1 = (maxY * (i + 1)) / bands + 1;
+      const falloff = 1 - i / (bands + 1);
+      const a = 0.052 * falloff * falloff;
+      g.beginFill(0xFFFCF8, a);
+      g.drawRect(0, y0, w, y1 - y0);
+      g.endFill();
+    }
+    // 极轻的暖色空气透视（仍无圆形），与 C.WARM_LIGHT 色温一致
+    g.beginFill(C.WARM_LIGHT, 0.018);
+    g.drawRect(0, 0, w, h * 0.35);
+    g.endFill();
+    this.container.addChild(g);
   }
 
   // ─────────────────── 花店房间 ───────────────────
 
   private _buildRoom(w: number, h: number): void {
     const centerX = w / 2;
-    const centerY = h * 0.42;
+    const centerY = h * SHOP_BUILDING_CENTER_Y_RATIO;
 
-    // ---- 花店建筑 (shop.png) 作为 2.5D 底板 ----
-    const shopTex = TextureCache.get('house_shop');
+    // ---- 花店建筑底板：房间风格图 bg_room_*（TextureCache 键），缺省回退 shop.png ----
+    const bgKey = DecorationManager.getRoomBgTextureKey();
+    const shopTex = TextureCache.get(bgKey) ?? TextureCache.get('house_shop');
     if (shopTex) {
       this._shopBuildingSprite = new PIXI.Sprite(shopTex);
-      // 放大花店建筑让它尽量占满屏幕宽度
-      const shopScale = Math.min((w * 1.15) / shopTex.width, (h * 0.65) / shopTex.height);
-      this._shopBuildingSprite.scale.set(shopScale);
-      this._shopBuildingSprite.anchor.set(0.5, 0.5);
-      this._shopBuildingSprite.position.set(centerX, centerY + 20);
+      this._layoutShopBuildingSprite(w, h, centerX, centerY);
       this._roomContainer.addChild(this._shopBuildingSprite);
     }
 
@@ -308,6 +341,30 @@ export class ShopScene implements Scene {
     this._drawShopOwner(ownerX, ownerY);
 
   }
+
+  /** 按当前纹理尺寸缩放、定位建筑底板 */
+  private _layoutShopBuildingSprite(w: number, h: number, centerX: number, centerY: number): void {
+    if (!this._shopBuildingSprite) return;
+    const tex = this._shopBuildingSprite.texture;
+    const shopScale = Math.min((w * 1.18) / tex.width, (h * 0.72) / tex.height);
+    this._shopBuildingSprite.scale.set(shopScale);
+    this._shopBuildingSprite.anchor.set(0.5, 0.5);
+    this._shopBuildingSprite.position.set(centerX, centerY + SHOP_BUILDING_ANCHOR_OFFSET_Y);
+  }
+
+  /** 切换房间风格后刷新建筑贴图 */
+  private _refreshShopBuildingTexture = (): void => {
+    if (!this._shopBuildingSprite) return;
+    const w = DESIGN_WIDTH;
+    const h = Game.logicHeight;
+    const centerX = w / 2;
+    const centerY = h * SHOP_BUILDING_CENTER_Y_RATIO;
+    const bgKey = DecorationManager.getRoomBgTextureKey();
+    const tex = TextureCache.get(bgKey) ?? TextureCache.get('house_shop');
+    if (!tex) return;
+    this._shopBuildingSprite.texture = tex;
+    this._layoutShopBuildingSprite(w, h, centerX, centerY);
+  };
 
   /** 从 RoomLayoutManager 渲染家具布局 */
   private _renderFurnitureLayout(): void {
@@ -552,9 +609,9 @@ export class ShopScene implements Scene {
   // ─────────────────── 左下横排装修/装扮按钮 ───────────────────
 
   private _buildDecoPairBtns(): void {
-    const ICON_R = 36;                // 比原来 50px 图标更大
-    const GAP = 16;
-    const pairY = Game.logicHeight * 0.85;
+    const ICON_R = 40;
+    const GAP = 18;
+    const pairY = Game.logicHeight - 92;
     const startX = ICON_R + 14;      // 第一个按钮中心 x
     const stepX = ICON_R * 2 + GAP;  // 两按钮间距
 
@@ -804,6 +861,8 @@ export class ShopScene implements Scene {
   // ─────────────────── 事件 ───────────────────
 
   private _bindEvents(): void {
+    EventBus.on('decoration:room_style', this._refreshShopBuildingTexture);
+
     // 监听布局变化 — 仅在非编辑模式下才完整重渲染
     // 编辑模式下由 FurnitureDragSystem 直接操控 Sprite
     EventBus.on('roomlayout:changed', () => {
@@ -854,57 +913,65 @@ export class ShopScene implements Scene {
 
   // ─────────────────── 编辑模式 ───────────────────
 
-  /** 创建编辑模式入口按钮（大号醒目胶囊，花店核心交互入口） */
+  /** 创建编辑模式入口按钮（加宽双行文案，主 CTA 更醒目） */
   private _buildEditButton(w: number, h: number): void {
     this._editBtn = new PIXI.Container();
-    const btnW = 160;
-    const btnH = 50;
+    const btnW = EDIT_MAIN_BTN_W();
+    const btnH = EDIT_MAIN_BTN_H;
+    const cornerR = EDIT_MAIN_BTN_R;
 
     // 1. 阴影层
     const shadow = new PIXI.Graphics();
-    shadow.beginFill(0x000000, 0.15);
-    shadow.drawRoundedRect(-btnW / 2 + 2, -btnH / 2 + 3, btnW, btnH, btnH / 2);
+    shadow.beginFill(0x000000, 0.14);
+    shadow.drawRoundedRect(-btnW / 2 + 2, -btnH / 2 + 4, btnW, btnH, cornerR);
     shadow.endFill();
     this._editBtn.addChild(shadow);
 
     // 2. 白色胶囊底板
     const bg = new PIXI.Graphics();
-    bg.beginFill(0xFFFFFF, 0.95);
-    bg.drawRoundedRect(-btnW / 2, -btnH / 2, btnW, btnH, btnH / 2);
+    bg.beginFill(0xFFFFFF, 0.97);
+    bg.drawRoundedRect(-btnW / 2, -btnH / 2, btnW, btnH, cornerR);
     bg.endFill();
-    bg.lineStyle(2.5, COLORS.BUTTON_PRIMARY, 0.5);
-    bg.drawRoundedRect(-btnW / 2, -btnH / 2, btnW, btnH, btnH / 2);
+    bg.lineStyle(2.5, COLORS.BUTTON_PRIMARY, 0.55);
+    bg.drawRoundedRect(-btnW / 2, -btnH / 2, btnW, btnH, cornerR);
     this._editBtn.addChild(bg);
 
     // 3. 施工图标
     const pencilTex = TextureCache.get('icon_build');
+    const iconX = -btnW / 2 + 36;
     if (pencilTex) {
       const sp = new PIXI.Sprite(pencilTex);
       sp.anchor.set(0.5);
-      sp.width = 30;
-      sp.height = 30;
-      sp.position.set(-btnW / 2 + 30, 0);
+      sp.width = 34;
+      sp.height = 34;
+      sp.position.set(iconX, -6);
       this._editBtn.addChild(sp);
     } else {
-      const iconText = new PIXI.Text('✏️', { fontSize: 22, fontFamily: FONT_FAMILY });
+      const iconText = new PIXI.Text('✏️', { fontSize: 24, fontFamily: FONT_FAMILY });
       iconText.anchor.set(0.5, 0.5);
-      iconText.position.set(-btnW / 2 + 30, 0);
+      iconText.position.set(iconX, -6);
       this._editBtn.addChild(iconText);
     }
 
-    // 5. 文字标签（加粗大号）
     const label = new PIXI.Text('装修花店', {
-      fontSize: 18, fill: COLORS.BUTTON_PRIMARY, fontFamily: FONT_FAMILY, fontWeight: 'bold',
+      fontSize: 20, fill: COLORS.BUTTON_PRIMARY, fontFamily: FONT_FAMILY, fontWeight: 'bold',
     });
-    label.anchor.set(0.5, 0.5);
-    label.position.set(12, 0);
+    label.anchor.set(0, 0.5);
+    label.position.set(-btnW / 2 + 62, -14);
     this._editBtn.addChild(label);
 
-    // 位置：花店下方居中（底部留安全间距）
-    this._editBtn.position.set(w / 2, h - 140);
+    const sub = new PIXI.Text('摆放家具 · 拖动调整', {
+      fontSize: 13, fill: COLORS.TEXT_LIGHT, fontFamily: FONT_FAMILY,
+    });
+    sub.anchor.set(0, 0.5);
+    sub.position.set(-btnW / 2 + 62, 12);
+    this._editBtn.addChild(sub);
+
+    // 底部居中，略上移避免与系统安全区/返回键重叠
+    this._editBtn.position.set(w / 2, h - 118);
     this._editBtn.eventMode = 'static';
     this._editBtn.cursor = 'pointer';
-    this._editBtn.hitArea = new PIXI.Rectangle(-btnW / 2 - 10, -btnH / 2 - 10, btnW + 20, btnH + 20);
+    this._editBtn.hitArea = new PIXI.Rectangle(-btnW / 2 - 12, -btnH / 2 - 12, btnW + 24, btnH + 24);
     this._editBtn.on('pointerdown', () => {
       TweenManager.cancelTarget(this._editBtn.scale);
       this._editBtn.scale.set(0.92);
@@ -959,46 +1026,44 @@ export class ShopScene implements Scene {
     TweenManager.cancelTarget(this._editBtn.scale);
     this._editBtn.scale.set(1);
 
-    // 更新编辑按钮（图标+文字分开存储）
+    const bw = EDIT_MAIN_BTN_W();
+    const bh = EDIT_MAIN_BTN_H;
+    const br = EDIT_MAIN_BTN_R;
+
     const children = this._editBtn.children;
     for (const child of children) {
       if (child instanceof PIXI.Text) {
         if (child.text === '装修花店') child.text = '✅ 完成编辑';
+        if (child.text.includes('摆放家具')) child.visible = false;
       }
-      // 隐藏原背景
       if (child instanceof PIXI.Graphics) {
         child.visible = false;
       }
     }
 
-    // 添加绿色完成按钮背景
     const completeBg = new PIXI.Graphics();
     completeBg.beginFill(0x4CAF50, 0.95);
-    completeBg.drawRoundedRect(-80, -22, 160, 44, 22);
+    completeBg.drawRoundedRect(-bw / 2, -bh / 2, bw, bh, br);
     completeBg.endFill();
     completeBg.lineStyle(2, 0x388E3C, 0.5);
-    completeBg.drawRoundedRect(-80, -22, 160, 44, 22);
+    completeBg.drawRoundedRect(-bw / 2, -bh / 2, bw, bh, br);
     (completeBg as any)._editModeBg = true;
     this._editBtn.addChildAt(completeBg, 0);
 
-    // 更新文字颜色为白色
     for (const child of this._editBtn.children) {
       if (child instanceof PIXI.Text && child.text === '✅ 完成编辑') {
         child.style.fill = 0xFFFFFF;
-        child.style.fontSize = 18;
+        child.style.fontSize = 20;
+        child.anchor.set(0.5, 0.5);
         child.position.set(0, 0);
       }
     }
 
-    // 将完成按钮固定在托盘上边缘（托盘顶部 y = logicH - 300）
-    // 按钮放在托盘上方 30px，确保不被遮挡
     const h = Game.logicHeight;
-    this._editBtn.position.set(DESIGN_WIDTH / 2, h - TRAY_HEIGHT - 30);
+    const trayTopY = h - TRAY_HEIGHT;
+    this._editBtn.position.set(DESIGN_WIDTH / 2, trayTopY - 36);
 
-    // 动态更新可拖拽区域：
-    //   minY: 工具栏/头像下方（约 280），太靠上有 UI 遮挡
-    //   maxY: "完成编辑"按钮上方留 60px 间距，允许装饰房间外面
-    const editBtnY = h - TRAY_HEIGHT - 30;
+    const editBtnY = trayTopY - 36;
     RoomLayoutManager.updateBounds({
       minX: 50,
       maxX: 700,
@@ -1040,14 +1105,19 @@ export class ShopScene implements Scene {
 
     // 还原编辑按钮
     const children = this._editBtn.children;
+    const btnW = EDIT_MAIN_BTN_W();
     for (const child of children) {
-      // 恢复隐藏的元素
       child.visible = true;
       if (child instanceof PIXI.Text) {
         if (child.text === '✅ 完成编辑') {
           child.text = '装修花店';
           child.style.fill = COLORS.BUTTON_PRIMARY;
-          child.position.set(12, 0);
+          child.style.fontSize = 20;
+          child.anchor.set(0, 0.5);
+          child.position.set(-btnW / 2 + 62, -14);
+        }
+        if (child.text.includes('摆放家具')) {
+          child.visible = true;
         }
       }
       if (child instanceof PIXI.Graphics) {
@@ -1055,9 +1125,8 @@ export class ShopScene implements Scene {
       }
     }
 
-    // 恢复按钮位置
     const h = Game.logicHeight;
-    this._editBtn.position.set(DESIGN_WIDTH / 2, h - 140);
+    this._editBtn.position.set(DESIGN_WIDTH / 2, h - 118);
 
     // 恢复脉冲动画
     this._pulseEditBtn();
@@ -1104,7 +1173,7 @@ export class ShopScene implements Scene {
 
     // 以屏幕中心为缩放基点
     const cx = DESIGN_WIDTH / 2;
-    const cy = Game.logicHeight * 0.42;  // 与花店建筑 centerY 对齐
+    const cy = Game.logicHeight * SHOP_BUILDING_CENTER_Y_RATIO + SHOP_BUILDING_ANCHOR_OFFSET_Y;
 
     // 调整容器 pivot + position 实现中心缩放
     this._roomContainer.pivot.set(cx, cy);
@@ -1399,8 +1468,8 @@ export class ShopScene implements Scene {
 
   /** 生成飘落的花瓣/光斑粒子 */
   private _spawnAmbientParticles(w: number, h: number): void {
-    const emojis = ['🌸', '✨', '🌿', '💫'];
-    const count = 8;
+    const emojis = ['🌸', '✨', '🌿', '💫', '🍃'];
+    const count = 13;
 
     for (let i = 0; i < count; i++) {
       const emoji = emojis[Math.floor(Math.random() * emojis.length)];
@@ -1409,7 +1478,7 @@ export class ShopScene implements Scene {
         fontFamily: FONT_FAMILY,
       });
       particle.anchor.set(0.5, 0.5);
-      particle.alpha = 0.3 + Math.random() * 0.3;
+      particle.alpha = 0.35 + Math.random() * 0.35;
       particle.position.set(
         Math.random() * w,
         Math.random() * h * 0.6

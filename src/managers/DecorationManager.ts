@@ -9,6 +9,7 @@ import { CurrencyManager } from './CurrencyManager';
 import {
   DECO_DEFS, DECO_MAP, DecoSlot, DecoDef, DecoRarity,
   getSlotDecos, DECO_SLOT_INFO,
+  ROOM_STYLES, ROOM_STYLE_MAP,
 } from '@/config/DecorationConfig';
 
 export interface DecoSaveData {
@@ -16,6 +17,10 @@ export interface DecoSaveData {
   unlocked: string[];
   /** 当前装备：slot → decoId */
   equipped: Record<string, string>;
+  /** 当前房间整体风格（对应 ROOM_STYLES） */
+  roomStyleId?: string;
+  /** 已解锁的房间风格 id */
+  unlockedRoomStyles?: string[];
 }
 
 class DecorationManagerClass {
@@ -23,6 +28,18 @@ class DecorationManagerClass {
   private _unlocked = new Set<string>();
   /** 当前装备：slot → decoId */
   private _equipped = new Map<string, string>();
+  /** 当前房间风格 id（如 style_default） */
+  private _roomStyleId = 'style_default';
+  /** 已解锁的房间风格 */
+  private _unlockedRoomStyles = new Set<string>();
+
+  private _initRoomStyleDefaults(): void {
+    this._roomStyleId = 'style_default';
+    this._unlockedRoomStyles.clear();
+    for (const s of ROOM_STYLES) {
+      if (s.cost === 0) this._unlockedRoomStyles.add(s.id);
+    }
+  }
 
   /** 初始化：免费装饰默认解锁 */
   init(): void {
@@ -43,8 +60,50 @@ class DecorationManagerClass {
       }
     }
 
+    this._initRoomStyleDefaults();
     this._load();
-    console.log(`[Decoration] 初始化: ${this._unlocked.size} 个装饰已解锁`);
+    console.log(`[Decoration] 初始化: ${this._unlocked.size} 个装饰已解锁, 房间风格: ${this._roomStyleId}`);
+  }
+
+  /** TextureCache 键：当前房间背景 / 花店建筑底板图 */
+  getRoomBgTextureKey(): string {
+    const st = ROOM_STYLE_MAP.get(this._roomStyleId);
+    return st?.bgTexture ?? 'bg_room_default';
+  }
+
+  get roomStyleId(): string {
+    return this._roomStyleId;
+  }
+
+  isRoomStyleUnlocked(styleId: string): boolean {
+    return this._unlockedRoomStyles.has(styleId);
+  }
+
+  /**
+   * 切换房间整体风格（需已解锁）
+   */
+  equipRoomStyle(styleId: string): boolean {
+    if (!ROOM_STYLE_MAP.has(styleId) || !this._unlockedRoomStyles.has(styleId)) return false;
+    this._roomStyleId = styleId;
+    this._save();
+    EventBus.emit('decoration:room_style', styleId);
+    return true;
+  }
+
+  /**
+   * 花愿解锁付费房间风格
+   */
+  unlockRoomStyle(styleId: string): boolean {
+    const st = ROOM_STYLE_MAP.get(styleId);
+    if (!st || this._unlockedRoomStyles.has(styleId)) return false;
+    if (st.cost > 0 && CurrencyManager.state.huayuan < st.cost) return false;
+    if (st.cost > 0) {
+      CurrencyManager.addHuayuan(-st.cost);
+    }
+    this._unlockedRoomStyles.add(styleId);
+    this._save();
+    console.log(`[Decoration] 解锁房间风格: ${st.name}${st.cost > 0 ? ` (-${st.cost}花愿)` : ''}`);
+    return true;
   }
 
   /** 是否已解锁 */
@@ -160,6 +219,8 @@ class DecorationManagerClass {
       const data: DecoSaveData = {
         unlocked: [...this._unlocked],
         equipped: Object.fromEntries(this._equipped),
+        roomStyleId: this._roomStyleId,
+        unlockedRoomStyles: [...this._unlockedRoomStyles],
       };
       const platform = typeof wx !== 'undefined' ? wx : typeof tt !== 'undefined' ? tt : null;
       if (platform) {
@@ -199,6 +260,18 @@ class DecorationManagerClass {
           }
         }
       }
+      if (data.unlockedRoomStyles) {
+        for (const id of data.unlockedRoomStyles) {
+          if (ROOM_STYLE_MAP.has(id)) this._unlockedRoomStyles.add(id);
+        }
+      }
+      if (
+        data.roomStyleId
+        && ROOM_STYLE_MAP.has(data.roomStyleId)
+        && this._unlockedRoomStyles.has(data.roomStyleId)
+      ) {
+        this._roomStyleId = data.roomStyleId;
+      }
     } catch (e) {
       console.warn('[Decoration] 加载失败:', e);
     }
@@ -209,6 +282,8 @@ class DecorationManagerClass {
     return {
       unlocked: [...this._unlocked],
       equipped: Object.fromEntries(this._equipped),
+      roomStyleId: this._roomStyleId,
+      unlockedRoomStyles: [...this._unlockedRoomStyles],
     };
   }
 

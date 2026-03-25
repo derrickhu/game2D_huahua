@@ -1,0 +1,16 @@
+Attached reference image: this PNG is the APPROVED Bloom room shell — use it as the master layout. Your task is a LOCAL FLOOR-ONLY revision, not a full redesign from scratch.
+
+EDIT SCOPE (critical):
+- KEEP unchanged: 1:1 canvas, building position/scale/margins, L-shaped two walls, three windows (sizes + positions), roof, wall patterns, posts/beams, window frames + glass, window boxes + hanging florals, stone foundation, steps, outdoor sand patch, lighting, outlines, and all colors OUTSIDE the interior floor polygon.
+- CHANGE ONLY: the interior walkable floor surface (the empty diamond-shaped wooden area inside the room) — replace it entirely with the new floor spec below. Do NOT redraw herringbone/chevron wood planks.
+
+BLOOM — new floor must feel like a garden terrace, organic and floral-adjacent, clearly different shape language from wood herringbone:
+- Pattern: BASKET-WEAVE or DOUBLE-BASKET parquet — short rectangular blocks woven in over-under rows (orthogonal weave), NOT V-shaped herringbone, NOT plain parallel planks.
+- Materials/colors: three visible tints in the weave — warm honey oak (#E8C9A0), blush rosewood (#E8B8C0), and pale sage wash (#D8E8D8); soft matte finish with gentle grain; optional tiny debossed petal or quatrefoil shapes at a few tile centers (very subtle, not a busy rug print).
+- Perspective: follow the same isometric grid as the reference floor edges; meet baseboards cleanly.
+
+Interior must stay empty — no furniture, no vases on the floor, no characters, no text.
+
+FORBIDDEN on the floor: herringbone/chevron; single flat brown slab; checkerboard; ceramic bathroom tiles; water ripples (those belong to Lagoon).
+
+BACKGROUND outside the building: pure solid white #FFFFFF.

@@ -1,40 +1,86 @@
 /**
- * 合成线可视化面板 - 展示物品的完整合成路径
- *
- * 从底部上滑弹出，高度约屏幕 40%，展示物品所在合成链的所有等级。
+ * 合成线可视化面板 — 屏幕居中弹窗；NB2 小彩带 + 金边奶油主面板；合成链 4 列网格（无图时矢量回退）
  */
 import * as PIXI from 'pixi.js';
-import { EventBus } from '@/core/EventBus';
 import { TweenManager, Ease } from '@/core/TweenManager';
 import { Game } from '@/core/Game';
-import { DESIGN_WIDTH, COLORS, FONT_FAMILY, BoardMetrics } from '@/config/Constants';
-import { ITEM_DEFS, getMergeChain, getMergeChainName, Category } from '@/config/ItemConfig';
+import { CELL_GAP, DESIGN_WIDTH, COLORS, FONT_FAMILY, BoardMetrics } from '@/config/Constants';
+import { getSourceToolsForProductLine } from '@/config/BuildingConfig';
+import { ITEM_DEFS, getMergeChain, Category, FlowerLine, type ItemDef } from '@/config/ItemConfig';
 import { BoardManager } from '@/managers/BoardManager';
+import { CollectionManager, CollectionCategory } from '@/managers/CollectionManager';
 import { TextureCache } from '@/utils/TextureCache';
-import { createToolEnergySprite, isBoardToolCategory } from '@/utils/ToolEnergyBadge';
+import {
+  bringToolEnergyToFront,
+  createToolEnergySprite,
+  isBoardToolCategory,
+} from '@/utils/ToolEnergyBadge';
+import { ToolSparkleLayer } from '@/utils/ToolSparkleLayer';
 
-/** 面板高度 */
-const PANEL_HEIGHT = 280;
-/** 单个物品卡片 */
-const CARD_W = 72;
-const CARD_H = 100;
-const CARD_GAP = 12;
-/** 箭头宽度 */
+/** 弹窗最小高度（过矮时仍可读） */
+const PANEL_MIN_HEIGHT = 580;
+/** 主面板相对设计宽度的左右留白（越小面板越“满屏”） */
+const PANEL_SIDE_INSET = 4;
+/** 合成链网格左右安全边距（相对设计宽，防止格子贴边溢出底图金边） */
+const CHAIN_AREA_PAD_X = 20;
+/** 与 ItemView 一致的图标占比 */
+const ITEM_CELL_FILL = 0.72;
+const BOUQUET_CELL_FILL = 0.9;
+/** 三角连接件在水平方向占位（与 stepX 一致） */
 const ARROW_W = 24;
+const CHAIN_CELL_GAP = CELL_GAP;
+/** 合成链网格：每行物品数（与参考图一致） */
+const CHAIN_COLS = 4;
+const CHAIN_ROW_GAP = CELL_GAP * 2;
+/** 链区域与标题/彩带拉开，避免第一行与顶栏视觉重叠 */
+const CHAIN_PAD_TOP = 46;
+
+/** 内容区顶部（小彩带 + 面板顶边） */
+const SCROLL_TOP = 90;
+/** 标题文字纵坐标（叠在彩带上） */
+const TITLE_CENTER_Y = 58;
+/** 副标题占用底部高度 */
+const SUBTITLE_RESERVE = 54;
+/** 「获取来源」分隔线 + 文案 + 与格子行的纵向余量（格子高度另加 cellSize） */
+const SOURCES_HEADER_H = 52;
+const SOURCE_CELL_GAP = CELL_GAP;
+/** 「获取来源」整块相对预留区上移，贴近合成链（像素，负值向上） */
+const SOURCES_ROOT_OFFSET_Y = -20;
+/** 标题彩带最大宽度（随面板略放大） */
+const RIBBON_MAX_W = 500;
+
+/** 偏圆、偏可爱的中文回退栈（与 WarehousePanel 顶栏标题一致） */
+const FONT_CUTE = `'PingFang SC','Hiragino Sans GB','Microsoft YaHei','Noto Sans SC',${FONT_FAMILY}`;
+
+/** 复用仓库面板关闭钮资源与比例（设计坐标下最长边） */
+const MERGE_CLOSE_BTN_MAX_SIDE = 56;
+const MERGE_CLOSE_BTN_HIT_PAD = 12;
+/** 相对原右上锚位向左、向下微调（更贴彩带内侧） */
+const MERGE_CLOSE_BTN_SHIFT_X = 42;
+const MERGE_CLOSE_BTN_SHIFT_Y = 26;
 
 export class MergeChainPanel extends PIXI.Container {
   private _overlay!: PIXI.Graphics;
   private _panel!: PIXI.Container;
-  private _panelBg!: PIXI.Graphics;
+  private _bgLayer!: PIXI.Container;
+  /** NB2 主面板精灵（动态高度时重算缩放） */
+  private _panelCardSp: PIXI.Sprite | null = null;
+  private _panelRibbonSp: PIXI.Sprite | null = null;
+  private _panelCardGfx: PIXI.Graphics | null = null;
+  /** 当前面板总高度（随棋盘区变化） */
+  private _panelHeight = 724;
   private _titleText!: PIXI.Text;
   private _subtitleText!: PIXI.Text;
   private _closeBtn!: PIXI.Container;
   private _scrollContainer!: PIXI.Container;
   private _scrollMask!: PIXI.Graphics;
+  private _sourcesLayer!: PIXI.Container;
   private _isOpen = false;
-
-  /** 当前棋盘上拥有的物品ID集合 */
   private _ownedItems = new Set<string>();
+  /** 当前面板展示的合成链（打开时缓存） */
+  private _chainIds: string[] = [];
+  /** 用户选中的链上物品（可点击已解锁格切换） */
+  private _selectedItemId = '';
 
   constructor() {
     super();
@@ -43,11 +89,71 @@ export class MergeChainPanel extends PIXI.Container {
     this._buildPanel();
     this._buildCloseBtn();
     this._buildScrollArea();
+    this._buildSourcesLayer();
+    this._syncPanelFrame();
+  }
+
+  /** 与截图红框一致：纵向占满棋盘区，上沿贴近棋盘、下沿在底部信息栏之上 */
+  private _computePanelGeometry(): { y: number; h: number } {
+    const barY = BoardMetrics.topY + BoardMetrics.areaHeight + 18;
+    const top = Math.max(12, BoardMetrics.topY - 14);
+    const bottom = Math.min(Game.logicHeight - 12, barY - 8);
+    const h = Math.max(PANEL_MIN_HEIGHT, Math.round(bottom - top));
+    return { y: top, h };
+  }
+
+  private _sourcesSectionHeight(): number {
+    return SOURCES_HEADER_H + BoardMetrics.cellSize + 14;
+  }
+
+  private _scrollInnerHeight(): number {
+    return this._panelHeight - SCROLL_TOP - SUBTITLE_RESERVE - this._sourcesSectionHeight();
+  }
+
+  /** 根据当前逻辑高度与棋盘位置更新面板外框、遮罩与底图缩放 */
+  private _syncPanelFrame(): void {
+    const { y, h } = this._computePanelGeometry();
+    this._panelHeight = h;
+    this._panel.position.y = y;
+
+    this._subtitleText.position.y = h - SUBTITLE_RESERVE + 4;
+
+    const innerH = this._scrollInnerHeight();
+    const pad = PANEL_SIDE_INSET + 6;
+    this._scrollMask.clear();
+    this._scrollMask.beginFill(0xffffff);
+    this._scrollMask.drawRect(pad, SCROLL_TOP, DESIGN_WIDTH - pad * 2, innerH);
+    this._scrollMask.endFill();
+    this._sourcesLayer.position.y = SCROLL_TOP + innerH;
+
+    const cardTop = 26;
+    const cardMaxW = DESIGN_WIDTH - PANEL_SIDE_INSET * 2;
+    const cardMaxH = h - cardTop - 8;
+
+    if (this._panelCardSp && this._panelCardSp.texture?.width > 0) {
+      const tex = this._panelCardSp.texture;
+      const sc = Math.min(cardMaxW / tex.width, cardMaxH / tex.height);
+      this._panelCardSp.scale.set(sc);
+    } else if (this._panelCardGfx) {
+      const g = this._panelCardGfx;
+      const x = PANEL_SIDE_INSET;
+      const y0 = cardTop;
+      const w = DESIGN_WIDTH - PANEL_SIDE_INSET * 2;
+      const rOut = 28;
+      g.clear();
+      g.lineStyle(4, 0xffd700, 0.95);
+      g.beginFill(0xfff9e6, 0.98);
+      g.drawRoundedRect(x, y0, w, cardMaxH, rOut);
+      g.endFill();
+      const inset = 5;
+      g.lineStyle(2, 0xd97b00, 0.92);
+      g.drawRoundedRect(x + inset, y0 + inset, w - inset * 2, cardMaxH - inset * 2, Math.max(12, rOut - inset));
+    }
   }
 
   private _buildOverlay(): void {
     this._overlay = new PIXI.Graphics();
-    this._overlay.beginFill(0x000000, 0.6);
+    this._overlay.beginFill(0x000000, 0.55);
     this._overlay.drawRect(0, 0, DESIGN_WIDTH, Game.logicHeight);
     this._overlay.endFill();
     this._overlay.eventMode = 'static';
@@ -55,118 +161,181 @@ export class MergeChainPanel extends PIXI.Container {
     this.addChild(this._overlay);
   }
 
+  /** NB2 主面板底 + 标题彩带；无纹理时回退矢量 */
+  private _buildDecorBackground(): void {
+    this._bgLayer = new PIXI.Container();
+    const cardTex = TextureCache.get('merge_chain_panel');
+    const ribTex = TextureCache.get('merge_chain_ribbon');
+
+    const cardTop = 26;
+    const cardMaxW = DESIGN_WIDTH - PANEL_SIDE_INSET * 2;
+    const cardMaxH = this._panelHeight - cardTop - 8;
+
+    if (cardTex && cardTex.width > 0) {
+      const sp = new PIXI.Sprite(cardTex);
+      this._panelCardSp = sp;
+      sp.anchor.set(0.5, 0);
+      sp.position.set(DESIGN_WIDTH / 2, cardTop);
+      const sc = Math.min(cardMaxW / cardTex.width, cardMaxH / cardTex.height);
+      sp.scale.set(sc);
+      sp.eventMode = 'static';
+      sp.on('pointerdown', (e: PIXI.FederatedPointerEvent) => e.stopPropagation());
+      this._bgLayer.addChild(sp);
+    } else {
+      const g = new PIXI.Graphics();
+      this._panelCardGfx = g;
+      const x = PANEL_SIDE_INSET;
+      const y = cardTop;
+      const w = DESIGN_WIDTH - PANEL_SIDE_INSET * 2;
+      const h = cardMaxH;
+      const rOut = 28;
+      g.lineStyle(4, 0xffd700, 0.95);
+      g.beginFill(0xfff9e6, 0.98);
+      g.drawRoundedRect(x, y, w, h, rOut);
+      g.endFill();
+      const inset = 5;
+      g.lineStyle(2, 0xd97b00, 0.92);
+      g.drawRoundedRect(x + inset, y + inset, w - inset * 2, h - inset * 2, Math.max(12, rOut - inset));
+      g.eventMode = 'static';
+      g.on('pointerdown', (e: PIXI.FederatedPointerEvent) => e.stopPropagation());
+      this._bgLayer.addChild(g);
+    }
+
+    if (ribTex && ribTex.width > 0) {
+      const r = new PIXI.Sprite(ribTex);
+      this._panelRibbonSp = r;
+      r.anchor.set(0.5, 0);
+      const targetW = Math.min(RIBBON_MAX_W, DESIGN_WIDTH - 48);
+      r.scale.set(targetW / ribTex.width);
+      r.position.set(DESIGN_WIDTH / 2, 8);
+      r.eventMode = 'static';
+      r.on('pointerdown', (e: PIXI.FederatedPointerEvent) => e.stopPropagation());
+      this._bgLayer.addChild(r);
+    } else {
+      const g = new PIXI.Graphics();
+      const rw = Math.min(RIBBON_MAX_W, DESIGN_WIDTH - 88);
+      const rh = 46;
+      const rx = (DESIGN_WIDTH - rw) / 2;
+      const ry = 12;
+      g.beginFill(0xffb088, 0.98);
+      g.drawRoundedRect(rx, ry, rw, rh, 18);
+      g.endFill();
+      g.lineStyle(2, 0xff7f50, 0.7);
+      g.drawRoundedRect(rx, ry, rw, rh, 18);
+      g.eventMode = 'static';
+      g.on('pointerdown', (e: PIXI.FederatedPointerEvent) => e.stopPropagation());
+      this._bgLayer.addChild(g);
+    }
+
+    this._panel.addChildAt(this._bgLayer, 0);
+  }
+
   private _buildPanel(): void {
     this._panel = new PIXI.Container();
-    this._panel.position.set(0, Game.logicHeight - PANEL_HEIGHT);
+    this._panel.position.set(0, 0);
 
-    // 面板背景
-    this._panelBg = new PIXI.Graphics();
-    this._panelBg.beginFill(0xFFF8F0);
-    this._panelBg.drawRoundedRect(0, 0, DESIGN_WIDTH, PANEL_HEIGHT + 40, 20);
-    this._panelBg.endFill();
-    // 顶部装饰线
-    this._panelBg.beginFill(0xE8D5C0);
-    this._panelBg.drawRoundedRect(DESIGN_WIDTH / 2 - 30, 8, 60, 4, 2);
-    this._panelBg.endFill();
-    this._panel.addChild(this._panelBg);
-    // 阻止面板点击穿透到overlay
-    this._panelBg.eventMode = 'static';
+    this._buildDecorBackground();
 
-    // 标题
-    this._titleText = new PIXI.Text('', {
-      fontSize: 18,
-      fill: COLORS.TEXT_DARK,
-      fontFamily: FONT_FAMILY,
-      fontWeight: 'bold',
-    });
-    this._titleText.anchor.set(0.5, 0);
-    this._titleText.position.set(DESIGN_WIDTH / 2, 20);
+    this._titleText = new PIXI.Text('', this._mergeRibbonTitleStyle());
+    this._titleText.anchor.set(0.5, 0.5);
+    this._titleText.position.set(DESIGN_WIDTH / 2, TITLE_CENTER_Y);
+    this._titleText.eventMode = 'static';
+    this._titleText.on('pointerdown', (e: PIXI.FederatedPointerEvent) => e.stopPropagation());
     this._panel.addChild(this._titleText);
 
-    // 副标题（底部提示）
     this._subtitleText = new PIXI.Text('', {
-      fontSize: 13,
-      fill: COLORS.TEXT_LIGHT,
+      fontSize: 15,
+      fill: COLORS.TEXT_DARK,
       fontFamily: FONT_FAMILY,
     });
     this._subtitleText.anchor.set(0.5, 0);
-    this._subtitleText.position.set(DESIGN_WIDTH / 2, PANEL_HEIGHT - 40);
+    this._subtitleText.position.set(DESIGN_WIDTH / 2, this._panelHeight - SUBTITLE_RESERVE + 4);
     this._panel.addChild(this._subtitleText);
 
     this.addChild(this._panel);
   }
 
+  /** 合成线彩带标题：深描边 + 略深阴影，在橙/粉彩带上更易辨认 */
+  private _mergeRibbonTitleStyle(): PIXI.ITextStyle {
+    return {
+      fontFamily: FONT_CUTE,
+      fontWeight: '900',
+      fontSize: 32,
+      fill: 0xffffff,
+      stroke: 0x7a4530,
+      strokeThickness: 5,
+      dropShadow: true,
+      dropShadowColor: 0x4a2818,
+      dropShadowBlur: 3,
+      dropShadowDistance: 2,
+      align: 'center',
+      wordWrap: true,
+      wordWrapWidth: DESIGN_WIDTH - 140,
+    } as PIXI.ITextStyle;
+  }
+
   private _buildCloseBtn(): void {
     this._closeBtn = new PIXI.Container();
-    const bg = new PIXI.Graphics();
-    bg.beginFill(0xE8D5C0, 0.8);
-    bg.drawCircle(0, 0, 16);
-    bg.endFill();
-    this._closeBtn.addChild(bg);
-
-    const x = new PIXI.Text('✕', {
-      fontSize: 16,
-      fill: COLORS.TEXT_DARK,
-      fontFamily: FONT_FAMILY,
-      fontWeight: 'bold',
-    });
-    x.anchor.set(0.5, 0.5);
-    this._closeBtn.addChild(x);
-
-    this._closeBtn.position.set(DESIGN_WIDTH - 36, 24);
+    this._closeBtn.position.set(
+      DESIGN_WIDTH - 48 - MERGE_CLOSE_BTN_SHIFT_X,
+      TITLE_CENTER_Y + MERGE_CLOSE_BTN_SHIFT_Y,
+    );
     this._closeBtn.eventMode = 'static';
     this._closeBtn.cursor = 'pointer';
-    this._closeBtn.hitArea = new PIXI.Circle(0, 0, 22);
-    this._closeBtn.on('pointerdown', () => this.close());
+    const closeTex = TextureCache.get('warehouse_close_btn');
+    const closeSp = new PIXI.Sprite(closeTex ?? PIXI.Texture.EMPTY);
+    closeSp.anchor.set(0.5);
+    if (closeTex && closeTex.width > 0) {
+      const s = MERGE_CLOSE_BTN_MAX_SIDE / Math.max(closeTex.width, closeTex.height);
+      closeSp.scale.set(s);
+    }
+    this._closeBtn.addChild(closeSp);
+    const hit = Math.max(MERGE_CLOSE_BTN_MAX_SIDE + MERGE_CLOSE_BTN_HIT_PAD * 2, 72);
+    this._closeBtn.hitArea = new PIXI.Circle(0, 0, hit / 2);
+    this._closeBtn.on('pointerdown', (e: PIXI.FederatedPointerEvent) => {
+      e.stopPropagation();
+      this.close();
+    });
     this._panel.addChild(this._closeBtn);
   }
 
   private _buildScrollArea(): void {
+    const innerH = this._scrollInnerHeight();
     this._scrollContainer = new PIXI.Container();
-    this._scrollContainer.position.set(0, 50);
+    this._scrollContainer.position.set(0, SCROLL_TOP);
     this._panel.addChild(this._scrollContainer);
 
-    // 滚动区域遮罩
     this._scrollMask = new PIXI.Graphics();
-    this._scrollMask.beginFill(0xFFFFFF);
-    this._scrollMask.drawRect(10, 50, DESIGN_WIDTH - 20, PANEL_HEIGHT - 100);
+    this._scrollMask.beginFill(0xffffff);
+    const pad = PANEL_SIDE_INSET + 6;
+    this._scrollMask.drawRect(pad, SCROLL_TOP, DESIGN_WIDTH - pad * 2, innerH);
     this._scrollMask.endFill();
     this._panel.addChild(this._scrollMask);
     this._scrollContainer.mask = this._scrollMask;
   }
 
-  /** 打开面板，显示指定物品的合成链 */
+  private _buildSourcesLayer(): void {
+    this._sourcesLayer = new PIXI.Container();
+    this._sourcesLayer.position.set(0, SCROLL_TOP + this._scrollInnerHeight());
+    this._panel.addChild(this._sourcesLayer);
+  }
+
   open(itemId: string): void {
     const chain = getMergeChain(itemId);
     if (chain.length === 0) return;
 
     this._isOpen = true;
     this.visible = true;
+    this._chainIds = chain;
+    this._selectedItemId = itemId;
 
-    // 收集当前棋盘上拥有的物品
-    this._ownedItems.clear();
-    for (const cell of BoardManager.cells) {
-      if (cell.itemId) this._ownedItems.add(cell.itemId);
-    }
+    this._refreshOwnedFromBoard();
+    this._applySelectedItemUi();
 
-    // 设置标题
-    this._titleText.text = getMergeChainName(itemId);
+    this._syncPanelFrame();
+    this._renderChain(chain, this._selectedItemId);
 
-    // 设置副标题
-    const def = ITEM_DEFS.get(itemId);
-    if (def && def.level >= def.maxLevel) {
-      this._subtitleText.text = '✨ 已达到最高等级！';
-    } else if (def) {
-      const nextDef = chain[def.level] ? ITEM_DEFS.get(chain[def.level]) : null;
-      this._subtitleText.text = nextDef
-        ? `合成 2个 ${def.name} 可获得 ${nextDef.name}`
-        : '';
-    }
-
-    // 渲染合成链
-    this._renderChain(chain, itemId);
-
-    // 入场动画
+    const targetY = this._computePanelGeometry().y;
     this._overlay.alpha = 0;
     this._panel.position.y = Game.logicHeight;
     TweenManager.to({
@@ -177,13 +346,12 @@ export class MergeChainPanel extends PIXI.Container {
     });
     TweenManager.to({
       target: this._panel.position,
-      props: { y: Game.logicHeight - PANEL_HEIGHT },
-      duration: 0.3,
+      props: { y: targetY },
+      duration: 0.32,
       ease: Ease.easeOutBack,
     });
   }
 
-  /** 关闭面板 */
   close(): void {
     if (!this._isOpen) return;
     this._isOpen = false;
@@ -197,10 +365,13 @@ export class MergeChainPanel extends PIXI.Container {
     TweenManager.to({
       target: this._panel.position,
       props: { y: Game.logicHeight },
-      duration: 0.25,
+      duration: 0.26,
       ease: Ease.easeInQuad,
       onComplete: () => {
         this.visible = false;
+        this._chainIds = [];
+        this._selectedItemId = '';
+        this._clearSourcesLayer();
         this._clearChain();
       },
     });
@@ -208,193 +379,268 @@ export class MergeChainPanel extends PIXI.Container {
 
   get isOpen(): boolean { return this._isOpen; }
 
-  /** 渲染合成链 */
+  private _refreshOwnedFromBoard(): void {
+    this._ownedItems.clear();
+    for (const cell of BoardManager.cells) {
+      if (cell.itemId) this._ownedItems.add(cell.itemId);
+    }
+  }
+
+  /** 图鉴已收录（花束/花饮/建筑）；宝箱线等未进图鉴的仍只看棋盘 */
+  private _isDiscoveredInAlbum(def: ItemDef): boolean {
+    switch (def.category) {
+      case Category.FLOWER:
+        return CollectionManager.isDiscovered(CollectionCategory.FLOWER, def.id);
+      case Category.DRINK:
+        return CollectionManager.isDiscovered(CollectionCategory.DRINK, def.id);
+      case Category.BUILDING:
+        return CollectionManager.isDiscovered(CollectionCategory.BUILDING, def.id);
+      case Category.CHEST:
+        return CollectionManager.isDiscovered(CollectionCategory.CHEST, def.id);
+      default:
+        return false;
+    }
+  }
+
+  /** 链上格子是否展示为已解锁（棋盘上有 / 图鉴有 / 当前选中） */
+  private _isChainSlotRevealed(itemId: string, isCurrent: boolean): boolean {
+    if (isCurrent) return true;
+    if (this._ownedItems.has(itemId)) return true;
+    const def = ITEM_DEFS.get(itemId);
+    return def ? this._isDiscoveredInAlbum(def) : false;
+  }
+
+  /** 根据 _selectedItemId 更新标题、副标题、来源（不重建链格子时由外部先 render） */
+  private _applySelectedItemUi(): void {
+    const chain = this._chainIds;
+    const itemId = this._selectedItemId;
+    const def = ITEM_DEFS.get(itemId);
+    this._titleText.text = def?.name ?? '';
+    if (def && def.level >= def.maxLevel) {
+      this._subtitleText.text = '✨ 已达到最高等级！';
+    } else if (def) {
+      const nextDef = chain[def.level] ? ITEM_DEFS.get(chain[def.level]) : null;
+      this._subtitleText.text = nextDef
+        ? `合成 2个 ${def.name} 可获得 ${nextDef.name}`
+        : '';
+    } else {
+      this._subtitleText.text = '';
+    }
+    if (def) this._renderSources(def.category, def.line);
+    else this._clearSourcesLayer();
+  }
+
+  private _onChainCellPointerTap(itemId: string): void {
+    if (!this._isOpen || itemId === this._selectedItemId) return;
+    const def = ITEM_DEFS.get(itemId);
+    if (!def) return;
+    const revealed = this._ownedItems.has(itemId) || this._isDiscoveredInAlbum(def);
+    if (!revealed) return;
+
+    this._selectedItemId = itemId;
+    this._refreshOwnedFromBoard();
+    this._applySelectedItemUi();
+    this._renderChain(this._chainIds, this._selectedItemId);
+  }
+
   private _renderChain(chain: string[], currentItemId: string): void {
     this._clearChain();
 
-    const totalCards = chain.length;
-    const totalArrows = totalCards - 1;
-    const contentW = totalCards * CARD_W + totalArrows * ARROW_W + (totalCards - 1) * CARD_GAP;
-    const availW = DESIGN_WIDTH - 40;
-    // 居中偏移
-    const startX = Math.max(20, (DESIGN_WIDTH - contentW) / 2);
-    const centerY = (PANEL_HEIGHT - 100) / 2;
+    const cs = BoardMetrics.cellSize;
+    const chainPadTop = CHAIN_PAD_TOP + Math.round(cs * 0.5);
+    const innerH = this._scrollInnerHeight();
+    const stepX = cs + ARROW_W + CHAIN_CELL_GAP;
+    const fullRowW = CHAIN_COLS * cs + (CHAIN_COLS - 1) * (ARROW_W + CHAIN_CELL_GAP);
+    const availW = Math.max(200, DESIGN_WIDTH - CHAIN_AREA_PAD_X * 2);
+    const rowScale = Math.min(1, availW / fullRowW);
 
-    let x = startX;
+    const chainRoot = new PIXI.Container();
+    this._scrollContainer.addChild(chainRoot);
+    chainRoot.scale.set(rowScale);
+    chainRoot.position.x = (DESIGN_WIDTH - fullRowW * rowScale) / 2;
+
+    let maxBottom = chainPadTop;
     for (let i = 0; i < chain.length; i++) {
       const id = chain[i];
+      const row = Math.floor(i / CHAIN_COLS);
+      const col = i % CHAIN_COLS;
+      const x = col * stepX;
+      const y = chainPadTop + row * (cs + CHAIN_ROW_GAP);
       const isCurrent = id === currentItemId;
-      const card = this._createCard(id, isCurrent);
-      card.position.set(x, centerY - CARD_H / 2);
-      this._scrollContainer.addChild(card);
-      x += CARD_W;
+      const cell = this._createChainCell(id, isCurrent);
+      cell.position.set(x, y);
+      chainRoot.addChild(cell);
+      maxBottom = Math.max(maxBottom, y + cs);
 
-      // 箭头
-      if (i < chain.length - 1) {
+      if (i < chain.length - 1 && col < CHAIN_COLS - 1) {
         const arrow = this._createArrow();
-        arrow.position.set(x + CARD_GAP / 2 + ARROW_W / 2, centerY);
-        this._scrollContainer.addChild(arrow);
-        x += ARROW_W + CARD_GAP;
+        arrow.position.set(x + cs + CHAIN_CELL_GAP / 2 + ARROW_W / 2, y + cs / 2);
+        chainRoot.addChild(arrow);
       }
     }
 
-    // 如果内容超出可视区域，启用简单拖拽滚动
-    const finalW = x + CARD_W + 20;
-    if (finalW > availW) {
-      this._enableScroll(finalW - availW);
+    const contentH = maxBottom + Math.max(10, Math.round(cs * 0.35));
+    const contentVisualH = contentH * rowScale;
+    if (contentVisualH > innerH) {
+      this._enableVerticalScroll(contentVisualH - innerH);
     }
   }
 
-  /** 创建单个物品卡片 */
-  private _createCard(itemId: string, isCurrent: boolean, isBuilding = false): PIXI.Container {
-    const card = new PIXI.Container();
+  /** 与棋盘 CellView 开放格底一致 + 仅图标（同 ItemView 缩放）；选中黄角框同棋盘 */
+  private _createChainCell(itemId: string, isCurrent: boolean): PIXI.Container {
+    const cell = new PIXI.Container();
     const def = ITEM_DEFS.get(itemId);
-    if (!def) return card;
+    if (!def) return cell;
 
-    const owned = this._ownedItems.has(itemId);
-    const isMaxLevel = def.level >= def.maxLevel;
+    const cs = BoardMetrics.cellSize;
+    const revealed = this._isChainSlotRevealed(itemId, isCurrent);
+    const locked = !revealed;
 
-    // 卡片背景
     const bg = new PIXI.Graphics();
-    if (isCurrent) {
-      // 当前物品：金色高亮
-      bg.lineStyle(3, 0xFFD700);
-      bg.beginFill(0xFFF8DC);
-    } else {
-      bg.lineStyle(1.5, owned ? 0xD4C4B0 : 0xCCCCCC);
-      bg.beginFill(owned ? 0xFFFEFC : 0xF0EDE8);
-    }
-    bg.drawRoundedRect(0, 0, CARD_W, CARD_H, 10);
+    bg.beginFill(0xfffbf5, 0.55);
+    bg.drawRoundedRect(0, 0, cs, cs, 8);
     bg.endFill();
-    card.addChild(bg);
+    cell.addChild(bg);
 
-    // 物品图标
-    const iconSize = 40;
-    const tex = TextureCache.get(def.icon);
-    if (tex) {
-      const sprite = new PIXI.Sprite(tex);
-      const s = Math.min(iconSize / tex.width, iconSize / tex.height);
-      sprite.scale.set(s);
-      sprite.anchor.set(0.5, 0.5);
-      sprite.position.set(CARD_W / 2, 30);
-      if (!owned && !isCurrent) sprite.alpha = 0.5;
-      card.addChild(sprite);
-      if (isBoardToolCategory(def.category)) {
-        const energy = createToolEnergySprite(CARD_W, CARD_H, { maxSideFrac: 0.28, pad: 5 });
-        if (energy) card.addChild(energy);
-      }
+    if (!locked) {
+      this._addBoardLikeItemIcon(cell, def, cs);
     } else {
-      // Fallback: 圆形+emoji
-      const circle = new PIXI.Graphics();
-      const iconColor = this._getLineColor(def.line);
-      circle.beginFill(iconColor, owned || isCurrent ? 0.3 : 0.15);
-      circle.drawCircle(CARD_W / 2, 30, iconSize / 2 - 2);
-      circle.endFill();
-      card.addChild(circle);
-
-      const emoji = new PIXI.Text(this._getCategoryEmoji(def.category), {
-        fontSize: 18,
-        fontFamily: FONT_FAMILY,
-      });
-      emoji.anchor.set(0.5, 0.5);
-      emoji.position.set(CARD_W / 2, 28);
-      if (!owned && !isCurrent) emoji.alpha = 0.5;
-      card.addChild(emoji);
-    }
-
-    // 物品名称
-    const name = new PIXI.Text(def.name.length > 4 ? def.name.substring(0, 4) : def.name, {
-      fontSize: 11,
-      fill: owned || isCurrent ? COLORS.TEXT_DARK : 0xAAAAAA,
-      fontFamily: FONT_FAMILY,
-      align: 'center',
-    });
-    name.anchor.set(0.5, 0);
-    name.position.set(CARD_W / 2, 56);
-    card.addChild(name);
-
-    // 等级标签
-    const lvText = isBuilding ? '建筑' : `Lv.${def.level}`;
-    const lv = new PIXI.Text(lvText, {
-      fontSize: 10,
-      fill: isCurrent ? 0xCC8800 : COLORS.TEXT_LIGHT,
-      fontFamily: FONT_FAMILY,
-      fontWeight: 'bold',
-    });
-    lv.anchor.set(0.5, 0);
-    lv.position.set(CARD_W / 2, 72);
-    card.addChild(lv);
-
-    // 满级皇冠
-    if (isMaxLevel && !isBuilding) {
-      const crown = new PIXI.Text('👑', { fontSize: 12, fontFamily: FONT_FAMILY });
-      crown.anchor.set(0.5, 0.5);
-      crown.position.set(CARD_W - 10, 10);
-      card.addChild(crown);
-    }
-
-    // 当前标记
-    if (isCurrent) {
-      const marker = new PIXI.Text('▲当前', {
-        fontSize: 9,
-        fill: 0xCC8800,
+      const q = new PIXI.Text('?', {
+        fontSize: Math.round(cs * 0.42),
+        fill: 0xe8956a,
         fontFamily: FONT_FAMILY,
         fontWeight: 'bold',
       });
-      marker.anchor.set(0.5, 0);
-      marker.position.set(CARD_W / 2, CARD_H - 2);
-      card.addChild(marker);
+      q.anchor.set(0.5, 0.5);
+      q.position.set(cs / 2, cs / 2);
+      cell.addChild(q);
     }
 
-    return card;
+    if (isCurrent) {
+      const selTex = TextureCache.get('ui_cell_selection_corners');
+      if (selTex) {
+        const corners = new PIXI.Sprite(selTex);
+        corners.width = cs;
+        corners.height = cs;
+        corners.position.set(0, 0);
+        cell.addChild(corners);
+      }
+    }
+
+    if (!locked) {
+      cell.eventMode = 'static';
+      cell.cursor = 'pointer';
+      cell.hitArea = new PIXI.Rectangle(0, 0, cs, cs);
+      cell.on('pointertap', (e: PIXI.FederatedPointerEvent) => {
+        e.stopPropagation();
+        this._onChainCellPointerTap(itemId);
+      });
+    }
+
+    return cell;
   }
 
-  /** 创建箭头 */
+  /** 棋盘格内绘制物品图标 + 工具闪光/体力（与 ItemView 一致） */
+  private _addBoardLikeItemIcon(parent: PIXI.Container, def: ItemDef, cs: number): void {
+    const tex = TextureCache.get(def.icon);
+    if (tex) {
+      const sprite = new PIXI.Sprite(tex);
+      const fill = def.line === FlowerLine.BOUQUET ? BOUQUET_CELL_FILL : ITEM_CELL_FILL;
+      const maxSize = cs * fill;
+      const s = Math.min(maxSize / tex.width, maxSize / tex.height);
+      sprite.scale.set(s);
+      sprite.anchor.set(0.5, 0.5);
+      sprite.position.set(cs / 2, cs / 2);
+      parent.addChild(sprite);
+
+      if (isBoardToolCategory(def.category)) {
+        const sparkle = new ToolSparkleLayer(cs, cs);
+        sparkle.position.set(0, 0);
+        parent.addChild(sparkle);
+        const energy = createToolEnergySprite(cs, cs, { maxSideFrac: 0.28, pad: 5 });
+        if (energy) {
+          parent.addChild(energy);
+          bringToolEnergyToFront(parent, energy);
+        }
+      }
+    } else {
+      const iconColor = this._getLineColor(def.line);
+      const fallback = new PIXI.Graphics();
+      fallback.beginFill(iconColor, 0.25);
+      fallback.drawCircle(cs / 2, cs / 2, cs * 0.28);
+      fallback.endFill();
+      parent.addChild(fallback);
+
+      const emoji = new PIXI.Text(this._getCategoryEmoji(def.category), {
+        fontSize: Math.round(cs * 0.36),
+        fontFamily: FONT_FAMILY,
+      });
+      emoji.anchor.set(0.5, 0.5);
+      emoji.position.set(cs / 2, cs / 2);
+      parent.addChild(emoji);
+    }
+  }
+
+  /** 右指三角 + ×2（陶土色、略浮雕感，对齐参考图） */
   private _createArrow(): PIXI.Container {
     const c = new PIXI.Container();
-    const g = new PIXI.Graphics();
-    // 花瓣形箭头
-    g.lineStyle(2.5, 0xE8D5C0);
-    g.moveTo(-8, 0);
-    g.lineTo(6, 0);
-    g.moveTo(3, -4);
-    g.lineTo(8, 0);
-    g.lineTo(3, 4);
-    c.addChild(g);
+    const back = -9;
+    const tip = 10;
+    const halfH = 9;
 
-    // ×2 标注
+    const body = new PIXI.Graphics();
+    body.beginFill(0x8f6e5e, 0.55);
+    body.drawPolygon([back + 1.2, -halfH + 0.8, back + 1.2, halfH - 0.2, tip + 0.8, 0.3]);
+    body.endFill();
+
+    body.beginFill(0xc9a088, 1);
+    body.drawPolygon([back, -halfH, back, halfH, tip, 0]);
+    body.endFill();
+
+    body.lineStyle(1.2, 0xdab9a4, 0.75);
+    body.moveTo(back + 0.6, -halfH + 0.8);
+    body.lineTo(tip - 2.2, -0.15);
+
+    body.lineStyle(1, 0xa07868, 0.5);
+    body.moveTo(back + 0.5, halfH - 0.6);
+    body.lineTo(tip - 1.8, 0.35);
+
+    c.addChild(body);
+
     const txt = new PIXI.Text('×2', {
-      fontSize: 9,
-      fill: COLORS.TEXT_LIGHT,
+      fontSize: 10,
+      fill: 0xa89488,
       fontFamily: FONT_FAMILY,
+      fontWeight: 'bold',
     });
     txt.anchor.set(0.5, 0);
-    txt.position.set(0, 6);
+    txt.position.set(0, halfH + 3);
     c.addChild(txt);
 
     return c;
   }
 
-  /** 简单的拖拽滚动 */
-  private _enableScroll(maxOffset: number): void {
+  private _enableVerticalScroll(maxOffset: number): void {
     let dragging = false;
-    let startX = 0;
-    let startScrollX = 0;
+    let startY = 0;
+    let startScrollY = 0;
+    const innerH = this._scrollInnerHeight();
+    const topY = SCROLL_TOP;
 
     this._scrollContainer.eventMode = 'static';
-    this._scrollContainer.hitArea = new PIXI.Rectangle(0, 0, DESIGN_WIDTH, PANEL_HEIGHT - 100);
+    this._scrollContainer.hitArea = new PIXI.Rectangle(0, 0, DESIGN_WIDTH, innerH);
 
     this._scrollContainer.on('pointerdown', (e: PIXI.FederatedPointerEvent) => {
       dragging = true;
-      startX = e.global.x;
-      startScrollX = this._scrollContainer.position.x;
+      startY = e.global.y;
+      startScrollY = this._scrollContainer.position.y;
     });
     this._scrollContainer.on('pointermove', (e: PIXI.FederatedPointerEvent) => {
       if (!dragging) return;
-      const dx = e.global.x - startX;
-      let newX = startScrollX + dx;
-      newX = Math.max(-maxOffset, Math.min(0, newX));
-      this._scrollContainer.position.x = newX;
+      const dy = e.global.y - startY;
+      let newY = startScrollY + dy;
+      newY = Math.max(topY - maxOffset, Math.min(topY, newY));
+      this._scrollContainer.position.y = newY;
     });
     this._scrollContainer.on('pointerup', () => { dragging = false; });
     this._scrollContainer.on('pointerupoutside', () => { dragging = false; });
@@ -406,9 +652,137 @@ export class MergeChainPanel extends PIXI.Container {
       this._scrollContainer.removeChild(child);
       child.destroy({ children: true });
     }
-    this._scrollContainer.position.x = 0;
+    this._scrollContainer.position.set(0, SCROLL_TOP);
     this._scrollContainer.eventMode = 'auto';
     this._scrollContainer.removeAllListeners();
+  }
+
+  private _clearSourcesLayer(): void {
+    while (this._sourcesLayer.children.length > 0) {
+      const ch = this._sourcesLayer.children[0];
+      this._sourcesLayer.removeChild(ch);
+      ch.destroy({ children: true });
+    }
+  }
+
+  private _renderSources(category: Category, productLine: string): void {
+    this._clearSourcesLayer();
+    const root = new PIXI.Container();
+    root.position.y = SOURCES_ROOT_OFFSET_Y;
+    this._sourcesLayer.addChild(root);
+
+    const mid = DESIGN_WIDTH / 2;
+    const lineY = 14;
+    const lineInset = 108;
+    const labelGapHalf = 78;
+    const lineG = new PIXI.Graphics();
+    lineG.lineStyle(2, 0xd4c4b0, 0.88);
+    lineG.moveTo(lineInset, lineY);
+    lineG.lineTo(mid - labelGapHalf, lineY);
+    lineG.moveTo(mid + labelGapHalf, lineY);
+    lineG.lineTo(DESIGN_WIDTH - lineInset, lineY);
+    root.addChild(lineG);
+
+    const label = new PIXI.Text('获取来源', {
+      fontSize: 22,
+      fill: 0x7a6a58,
+      fontFamily: FONT_FAMILY,
+      fontWeight: 'bold',
+    });
+    label.anchor.set(0.5, 0.5);
+    label.position.set(mid, lineY);
+    root.addChild(label);
+
+    const cs = BoardMetrics.cellSize;
+    const rowY = 30;
+    const ids = getSourceToolsForProductLine(category, productLine);
+    if (ids.length === 0) {
+      const hint = new PIXI.Text('无固定建筑来源', {
+        fontSize: 15,
+        fill: 0xaaaaaa,
+        fontFamily: FONT_FAMILY,
+      });
+      hint.anchor.set(0.5, 0);
+      hint.position.set(mid, rowY + Math.round(cs / 2));
+      root.addChild(hint);
+      return;
+    }
+
+    const availW = DESIGN_WIDTH - 48;
+    const totalW = ids.length * cs + (ids.length - 1) * SOURCE_CELL_GAP;
+    const row = new PIXI.Container();
+    row.position.set(0, rowY);
+
+    let x = 0;
+    for (const tid of ids) {
+      const slot = this._createSourceBoardCell(tid);
+      slot.position.set(x, 0);
+      row.addChild(slot);
+      x += cs + SOURCE_CELL_GAP;
+    }
+
+    if (totalW <= availW) {
+      row.position.x = (DESIGN_WIDTH - totalW) / 2;
+    } else {
+      const padX = 24;
+      row.position.x = padX;
+      const maskG = new PIXI.Graphics();
+      maskG.beginFill(0xffffff);
+      maskG.drawRect(padX, rowY, availW, cs + 8);
+      maskG.endFill();
+      root.addChild(maskG);
+      row.mask = maskG;
+      this._enableSourcesRowScroll(row, totalW - availW, totalW, cs, padX);
+    }
+
+    root.addChild(row);
+  }
+
+  private _createSourceBoardCell(toolItemId: string): PIXI.Container {
+    const cell = new PIXI.Container();
+    const def = ITEM_DEFS.get(toolItemId);
+    if (!def) return cell;
+
+    const cs = BoardMetrics.cellSize;
+    const bg = new PIXI.Graphics();
+    bg.beginFill(0xfffbf5, 0.55);
+    bg.drawRoundedRect(0, 0, cs, cs, 8);
+    bg.endFill();
+    cell.addChild(bg);
+
+    this._addBoardLikeItemIcon(cell, def, cs);
+    return cell;
+  }
+
+  private _enableSourcesRowScroll(
+    row: PIXI.Container,
+    maxOffset: number,
+    contentW: number,
+    cellH: number,
+    padX: number,
+  ): void {
+    let dragging = false;
+    let startX = 0;
+    let startRowX = 0;
+    row.eventMode = 'static';
+    row.cursor = 'pointer';
+    row.hitArea = new PIXI.Rectangle(0, 0, contentW, cellH + 8);
+
+    row.on('pointerdown', (e: PIXI.FederatedPointerEvent) => {
+      e.stopPropagation();
+      dragging = true;
+      startX = e.global.x;
+      startRowX = row.position.x;
+    });
+    row.on('pointermove', (e: PIXI.FederatedPointerEvent) => {
+      if (!dragging) return;
+      const dx = e.global.x - startX;
+      let nx = startRowX + dx;
+      nx = Math.max(padX - maxOffset, Math.min(padX, nx));
+      row.position.x = nx;
+    });
+    row.on('pointerup', () => { dragging = false; });
+    row.on('pointerupoutside', () => { dragging = false; });
   }
 
   private _getLineColor(line: string): number {

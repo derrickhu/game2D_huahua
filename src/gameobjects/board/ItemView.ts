@@ -11,6 +11,7 @@ import {
   createToolEnergySprite,
   isBoardToolCategory,
 } from '@/utils/ToolEnergyBadge';
+import { ToolSparkleLayer } from '@/utils/ToolSparkleLayer';
 
 /** 格子内物品最大边长占格子的比例（其余为边距） */
 const ITEM_CELL_FILL = 0.72;
@@ -29,6 +30,8 @@ export class ItemView extends PIXI.Container {
   private _lockBorder: PIXI.Graphics;
   /** 工具右下角体力标 */
   private _toolEnergySprite: PIXI.Sprite | null = null;
+  /** 工具格白色星闪层（盖在图标上、体力标下） */
+  private _toolSparkle: ToolSparkleLayer | null = null;
   /** 客人订单锁定：右下角完成角标（图） */
   private _orderBadge: PIXI.Sprite | null = null;
   /** 半解锁(PEEK) 丝带：必须在体力标等之上，放本容器内并始终置顶 */
@@ -116,6 +119,7 @@ export class ItemView extends PIXI.Container {
       this.visible = false;
       this._itemId = '';
       this._hideToolEnergy();
+      this._hideToolSparkle();
       this._hideOrderBadge();
       return;
     }
@@ -125,6 +129,7 @@ export class ItemView extends PIXI.Container {
       this.setPeekRibbon(false);
       this.visible = false;
       this._hideToolEnergy();
+      this._hideToolSparkle();
       this._hideOrderBadge();
       return;
     }
@@ -182,6 +187,7 @@ export class ItemView extends PIXI.Container {
       this._nameText.text = emoji + (def.name.length > 3 ? def.name.substring(0, 3) : def.name);
     }
 
+    this._syncToolSparkle(def.category);
     this._syncToolEnergy(def.category);
 
     this._levelBg.clear();
@@ -280,6 +286,27 @@ export class ItemView extends PIXI.Container {
       this._toolEnergySprite.destroy();
       this._toolEnergySprite = null;
     }
+  }
+
+  private _hideToolSparkle(): void {
+    if (this._toolSparkle) {
+      this.removeChild(this._toolSparkle);
+      this._toolSparkle.destroy();
+      this._toolSparkle = null;
+    }
+  }
+
+  private _syncToolSparkle(category: Category): void {
+    this._hideToolSparkle();
+    if (!isBoardToolCategory(category)) return;
+    const cs = BoardMetrics.cellSize;
+    const layer = new ToolSparkleLayer(cs, cs);
+    layer.position.set(0, 0);
+    const insertAt = this._iconSprite
+      ? this.getChildIndex(this._iconSprite) + 1
+      : Math.min(1, this.children.length);
+    this.addChildAt(layer, Math.min(insertAt, this.children.length));
+    this._toolSparkle = layer;
   }
 
   private _syncToolEnergy(category: Category): void {

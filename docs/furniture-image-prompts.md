@@ -270,7 +270,62 @@ Each garden item includes a small patch of ground/grass beneath it. Centered in 
 
 ### 7a. 温馨原木风（bg_room_default.png）
 
-> 🎨 **风格关键词**：温暖可爱小木屋、奶油糖果色、甜蜜手绘感
+#### 7a-v2（2025–2026 试做 · 贴近合成页明亮感）
+
+旧版偏暗沉；v2 由 NB2（`gemini-3.1-flash-image-preview`）按新提示词生成，强调 **左上柔光、材质肌理、高亮暖白墙、珊瑚橙瓦、薄荷感窗玻璃**，避免整体发灰。
+
+**v2 迭代修正**：屋檐须 **向外挑出**（滴水朝室外/open 侧，勿向内翻进室内）；**地板人字拼改细密小条**（整面可见多次曲折重复）；**墙与柱减薄**，窗洞占比更大，整体比例更轻巧。
+
+**屋顶参考图**：粉瓦筒瓦/鳞状檐、`L` 外角脊线、檐口越过立柱 — 见 `docs/prompt/refs/roof_reference_pink_scalloped.png`；生图时加参数 `--image .../roof_reference_pink_scalloped.png` 与提示词一并提交。
+
+- **提示词**：`docs/prompt/house_bg_room_default_v2_nb2_prompt.txt`
+- **预览图**：`minigame/subpkg_deco/images/house/preview/bg_room_default_v2_nb2.png`
+- **原图目录**：`/Users/huyi/rosa_games/game_assets/huahua/assets/preview_house_room/bg_room_default_v2_nb2.png`
+- 验收通过后：将正式文件覆盖 `minigame/subpkg_deco/images/house/bg_room_default.png`（并保持 1024×1024 或与 `shop.png` 缩放策略一致）
+
+#### 7a-candy（糖果 pastel · 单套，多分区硬装）
+
+与 **7a-alt 薄荷北欧** 等冷灰/单主导色方案区分：同一 **`bg_room_default.png`** 布局参考（`--image`），硬装改为 **多色糖果 pastel**（屋顶粉/黄/薄荷分区、墙饰条纹或圆点、木构与窗框撞色、人字拼多色木条等），对齐全局 **清新柔和、温馨明亮、Q 版可爱**。
+
+- **提示词**：`docs/prompt/house_bg_room_candy_nb2_prompt.txt`
+- **建议输出文件名**：`bg_room_candy_nb2.png`（**原始生图**目录：`/Users/huyi/rosa_games/game_assets/huahua/assets/preview_house_room/`，勿将未抠图中间产物放入 minigame）
+- 验收抠图后可覆盖 `minigame/.../bg_room_default.png`（当前默认 **糖果花坊** 即此管线）；与四套 alt 的说明见 **`docs/prompt/house_bg_room_alt_variants_README.md`**（顶部亦指向本提示词）。
+
+#### 7a-nb2 · 三套扩展房壳（花境 / 海岛 / 彩屑）
+
+**NB2** `gemini-3.1-flash-image-preview`；**原始生图输出目录**（勿写入 minigame）：`/Users/huyi/rosa_games/game_assets/huahua/assets/preview_house_room/`；验收抠图后再放入 `minigame/subpkg_deco/images/house/`。
+
+**首次整房生成**：可用 **`bg_room_default.png`** 作 `--image` 锁布局（与 7a-candy 相同思路）。
+
+**仅改地板（局部重绘）**：提示词已改为「以当前成品为母图、只替换室内地板多边形」。`--image` **须对应该套已入库的 PNG**（墙顶窗不变、地板形制三者互斥：花境 = 编织木纹块、海岛 = 大砖釉面带水光、彩屑 = 彩色六边形马赛克），便于模型在统一硬装下区分地板：
+
+| 提示词文件 | 风格 | `--image`（地板迭代时） | 建议 raw 输出名 | 游戏内贴图键 |
+|------------|------|-------------------------|-----------------|--------------|
+| `house_bg_room_bloom_parade_nb2_prompt.txt` | 花境 | `minigame/.../house/bg_room_bloom_nb2.png` | `bg_room_bloom_nb2.png` | `bg_room_bloom_nb2` |
+| `house_bg_room_lagoon_punch_nb2_prompt.txt` | 海岛 | `minigame/.../house/bg_room_lagoon_nb2.png` | `bg_room_lagoon_nb2.png` | `bg_room_lagoon_nb2` |
+| `house_bg_room_confetti_cottage_nb2_prompt.txt` | 彩屑 | `minigame/.../house/bg_room_confetti_nb2.png` | `bg_room_confetti_nb2.png` | `bg_room_confetti_nb2` |
+| `house_bg_room_pinkblue_nb2_prompt.txt` | 粉蓝可爱（粉白蓝主色、温馨温柔） | `minigame/.../house/bg_room_default.png`（首版锁布局）；迭代可用已生成的 `bg_room_pinkblue_nb2.png` | `bg_room_pinkblue_nb2.png` | `bg_room_pinkblue_nb2` |
+
+粉蓝套 v2 约束（已写入提示词）：**整铺短绒地毯**（禁人字木地板）、**地面无投影/无接触暗角**、**新瓦型**（鱼鳞或平瓦曲边等，禁默认半圆筒瓦）、**樱花轮廓窗框**。
+
+对应 `ROOM_STYLES`：`style_bloom_nb2` / `style_lagoon_nb2` / `style_confetti_nb2` / `style_pinkblue_nb2`（见 [`DecorationConfig.ts`](src/config/DecorationConfig.ts)）。
+
+#### 7a-alt · 四款变体（布局锁定当前 default）
+
+以 **`minigame/subpkg_deco/images/house/bg_room_default.png`** 为参考图（`--image`），**1:1、体量与在画面中的位置须与参考一致**，仅换配色/材质。四套提示词：
+
+| 提示词文件 | 风格 |
+|------------|------|
+| `docs/prompt/house_bg_room_alt_mint_nb2_prompt.txt` | 薄荷北欧 |
+| `docs/prompt/house_bg_room_alt_autumn_nb2_prompt.txt` | 焦糖秋叶 |
+| `docs/prompt/house_bg_room_alt_lilac_nb2_prompt.txt` | 淡紫童话 |
+| `docs/prompt/house_bg_room_alt_lagoon_nb2_prompt.txt` | 热带泻湖 |
+
+批量命令与输出路径见 **`docs/prompt/house_bg_room_alt_variants_README.md`**。生成后建议抠图再对应替换 `bg_room_white` / `bg_room_vintage` / `bg_room_spring` 等（或新增 `TextureCache` 键）。
+
+---
+
+> 🎨 **风格关键词（旧版说明，供对比）**：温暖可爱小木屋、奶油糖果色、甜蜜手绘感
 > **配色方案**：🧡 暖橙黄瓦顶 · 🤎 焦糖棕木地板 · 🤍 奶油白墙 · 🪵 红棕色柱子 · 🟫 深棕窗框 · ⬜ 浅灰石基
 
 ```

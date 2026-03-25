@@ -1,10 +1,11 @@
 /**
  * 图鉴收集管理器
  *
- * 6大收集分类：
+ * 7 大收集分类：
  * - 🌸 花束图鉴（18种）
  * - 🍵 花饮图鉴（9种）
  * - 🏠 建筑图鉴（13种）
+ * - 📦 宝箱图鉴（5级，合成产出时解锁）
  * - 👤 客人图鉴（基于熟客系统）
  * - 🪑 装饰图鉴（基于装修系统）
  * - 🌸 花语卡片（18张，首次合成解锁）
@@ -23,6 +24,7 @@ export enum CollectionCategory {
   FLOWER = 'flower',
   DRINK = 'drink',
   BUILDING = 'building',
+  CHEST = 'chest',
   CUSTOMER = 'customer',
   DECORATION = 'decoration',
   FLOWER_CARD = 'flower_card',
@@ -77,6 +79,8 @@ class CollectionManagerClass {
         this._discover(CollectionCategory.DRINK, resultId);
       } else if (def.category === Category.BUILDING) {
         this._discover(CollectionCategory.BUILDING, resultId);
+      } else if (def.category === Category.CHEST) {
+        this._discover(CollectionCategory.CHEST, resultId);
       }
     });
 
@@ -174,6 +178,7 @@ class CollectionManagerClass {
       case CollectionCategory.FLOWER: return 18;
       case CollectionCategory.DRINK: return 9;
       case CollectionCategory.BUILDING: return 13;
+      case CollectionCategory.CHEST: return 5;
       case CollectionCategory.CUSTOMER: return 6; // 6种熟客
       case CollectionCategory.DECORATION: return 72; // 装饰总数
       case CollectionCategory.FLOWER_CARD: return 18;

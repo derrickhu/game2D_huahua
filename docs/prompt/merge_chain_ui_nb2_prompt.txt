@@ -1,0 +1,36 @@
+# 合成线弹窗 UI（NB2 拆件）
+
+## 输出目录
+
+`~/rosa_games/game_assets/huahua/assets/merge_chain_ui_nb2/for_review/`
+
+| 文件 | 比例 | 内容 |
+|------|------|------|
+| `merge_chain_ribbon_nb2_1x1.png` | 1:1 | 仅标题彩带（桃→珊瑚渐变、两端折叠），中间留白叠字 |
+| `merge_chain_panel_nb2_3x4.png` | 3:4 | 仅主面板：大圆角奶油底 + 金色外圈描边，内无格子/图标 |
+
+品红底 `#FF00FF`，无文字无物品，与仓库拆件规则一致。
+
+## 生成（NB2）
+
+```bash
+cd /Users/huyi/rosa_games/huahua
+python3 scripts/gen_merge_chain_ui_nb2.py
+# 单张：--only merge_chain_ribbon  /  --only merge_chain_panel
+```
+
+## 抠图入库
+
+```bash
+python3 scripts/matte_merge_chain_ui.py
+```
+
+→ `minigame/images/ui/merge_chain_ribbon.png`  
+→ `minigame/images/ui/merge_chain_panel.png`
+
+彩带图会按 alpha **裁剪外沿留白**，便于游戏里按宽度缩放。
+
+## 游戏内
+
+`TextureCache`：`merge_chain_ribbon`、`merge_chain_panel`  
+`MergeChainPanel.ts`：底图 + 彩带叠层；无图时回退矢量绘制。

@@ -19,8 +19,10 @@ import {
 import { DESIGN_WIDTH, FONT_FAMILY, COLORS } from '@/config/Constants';
 
 // ---- 布局常量 ----
+/** 导出供 ShopScene 对齐编辑按钮位置；略低于旧 300px，少挡花店场景 */
+export const FURNITURE_TRAY_H = 252;
 
-const TRAY_H = 300;               // 托盘总高度（加大）
+const TRAY_H = FURNITURE_TRAY_H;
 const TAB_BAR_H = 52;             // 分类 Tab 栏高度（加大）
 const CARD_SIZE = 96;             // 家具卡片尺寸（加大）
 const CARD_GAP = 12;

@@ -1,0 +1,26 @@
+Attached reference image: replicate EXACTLY the same isometric L-shaped open room shell in a 1:1 square canvas — same footprint, same horizontal centering, same vertical placement (building occupies the same band with matching empty margin at bottom), same scale. Two walls only (back + right), THREE window openings in the same locations and rough proportions as reference (one wide on left wall, two on right wall), same stair front-left, same stone foundation massing, same roof overhang silhouette. Interior completely EMPTY — no furniture, no shelves, no indoor plants, no characters, no text.
+
+STRAWBERRY-MILK SKY v2 — warm, gentle, tender 温馨温柔 cute pastel: PINK + WHITE + BABY BLUE dominant (NOT cold gray, NOT neon). Soft merge-game 2D with rounded, comforting shapes; thin dusty-rose outlines.
+
+ROOF — NEW TILE STYLE (do NOT reuse default semicircular scallop / half-pipe tiles):
+- Use a clearly different profile: overlapping FISH-SCALE tiles (rounded teardrop scales) OR soft flat KAWARA-style curved rectangles in staggered rows OR gentle WAVE-RIBBON shingle rows.
+- Colors: strawberry-milk pink (#F5A8C0) with white (#FFFAFC) ridge or cap; optional thin baby-blue (#B8D8F8) accent under eaves. Tiles read plush and sweet, not industrial.
+
+WINDOWS — SAKURA / CHERRY-BLOSSOM SILHOUETTE:
+- Same three openings as reference, but each window’s outer frame follows a soft **five-lobe petal / cherry-blossom flower outline** (rounded scalloped top or full gentle flower silhouette) — cute stylized, not photoreal.
+- Inner glass still divided by simple white or pale-blue muntins; glass: pale sky blue (#D0E8FF) translucent.
+- Frames: baby blue (#7EB8E8) with whisper pink (#F5C0D0) trim.
+
+WALLS: milk white (#FFFBFA) with soft vertical stripes or large dots in baby pink (#FFD6E8) and powder blue (#D8ECFF).
+POSTS / BEAMS: pale blush (#E8C0C8) or white painted wood.
+
+FLOOR — PLUSH CARPET (NOT wood, NOT herringbone, NOT tile):
+- Wall-to-wall **low-pile or short-cut pile carpet**: velvety, soft, slightly matted fiber texture visible as tiny uniform fuzz — colors blended from shell pink (#F5D8E0), warm ivory (#FAF4F0), and whisper periwinkle (#E8E8F5) in a gentle cloud-like or very subtle damask/wave pattern (low contrast).
+- **NO cast shadows on the carpet** — floor lighting perfectly even and flat; no dark contact blobs at wall base, no sun patches, no radial gradients on the rug, no directional shade bands.
+
+BASEBOARD: soft shell pink (#FFD0DC).
+FOUNDATION: warm gray cobble with pink undertone (#D4C8C8). Outdoor ground: pale blush sand (#FAE8EC); tiny mint grass tufts OK.
+
+FORBIDDEN: herringbone or plank wood floor; semicircular barrel roof tiles matching generic reference; sharp rectangular-only window frames; floor shadows or vignette on floor; furniture; fourth wall.
+
+BACKGROUND outside the building: pure solid white #FFFFFF.

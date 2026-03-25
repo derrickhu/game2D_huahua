@@ -1,11 +1,10 @@
 /**
  * 顶部信息栏
  *
- * 布局：[⭐Lv.5]  [⚡体力胶囊 … +]  [🌿花露]  [💎花愿]  [💠钻石条+加号]
+ * 布局：[🌿花露]  [💎花愿]  [⚡体力胶囊 … +]  [💠钻石条+加号]（无等级星，四区垂直中线对齐）
  *
- * - 等级：星星图标，Lv 文字叠在星星内部
- * - 体力：胶囊进度条 + 恢复倒计时 + 加号按钮
- * - 花露/花愿：图标上方 + 数值下方，紧凑排列
+ * - 体力：粉米色圆角外框 + 内绿进度 + 左侧闪电叠压 + 闪电右下绿圆加号 + 居中数值 + 条下倒计时
+ * - 花露/花愿：图标 + 数值叠在底边，图标中心与体力闪电/钻石宝石同一水平中线
  */
 import * as PIXI from 'pixi.js';
 import { EventBus } from '@/core/EventBus';
@@ -14,49 +13,66 @@ import { FONT_FAMILY } from '@/config/Constants';
 import { TextureCache } from '@/utils/TextureCache';
 import { TweenManager, Ease } from '@/core/TweenManager';
 
-export const TOP_BAR_HEIGHT = 60;
+/** 含体力条下方倒计时，略高于原 60 */
+export const TOP_BAR_HEIGHT = 76;
 
 const PILL_H = 42;
 const PILL_R = PILL_H / 2;
 const PY = Math.round((TOP_BAR_HEIGHT - PILL_H) / 2);
+/** 顶栏内统一垂直中线（花露/花愿图标、闪电、钻石宝石中心对齐） */
+const BAR_MID_Y = TOP_BAR_HEIGHT / 2;
 
-// ── 水平布局 ──
-const LVL_X = 12;
-const LVL_D = 48;                       // 等级徽章直径
-const STA_X = LVL_X + LVL_D + 8;       // 68
-const STA_W = 158;
+// ── 水平布局（花露 → 花愿 → 体力 → 钻石，间距放宽）──
+const LEFT_MARGIN = 28;
+const CURRENCY_ICON    = 46;
+const HUALU_CX = LEFT_MARGIN + CURRENCY_ICON / 2;
+/** 花露/花愿图标中心 y：与体力闪电、钻石宝石同中线 */
+const CURRENCY_ICON_CY = BAR_MID_Y;
+const CURRENCY_TEXT_CY = CURRENCY_ICON_CY + CURRENCY_ICON / 2 - 5;
 
-// 花露/花愿：上图标+下文字叠排，文字压在图标底边（参考星星样式）
-const CURRENCY_ICON    = 46;            // 图标尺寸（加大）
-const CURRENCY_ICON_CY = 19;           // 图标中心 y（偏上，让图标占据上半区）
-const CURRENCY_TEXT_CY = CURRENCY_ICON_CY + CURRENCY_ICON / 2 - 4; // 文字中心压在图标底边
+const GAP_HUALU_HYUAN = 74;
+const HYUAN_CX = HUALU_CX + GAP_HUALU_HYUAN;
 
-const HUALU_CX  = STA_X + STA_W + 42;  // 花露图标中心 x（与体力条留足间距）
-const HYUAN_CX  = HUALU_CX + 64;       // 花愿图标中心 x（间距加大）
+const GAP_HYUAN_TO_STAMINA = 36;
+const STA_X = HYUAN_CX + CURRENCY_ICON / 2 + GAP_HYUAN_TO_STAMINA;
+const STA_W = 102;
+
+const GAP_STAMINA_TO_DIAMOND = 28;
 /** 钻石条（含左侧宝石叠压）左上角 x */
-const DIAMOND_LP = HYUAN_CX + 44;
+const DIAMOND_LP = STA_X + STA_W + GAP_STAMINA_TO_DIAMOND;
 
 // 钻石条（参考：浅色圆角底 + 左侧宝石 + 绿加号 + 棕色数字）
 const GEM_BAR_H = 38;
-const GEM_BAR_W = 102;
+/** 钻石胶囊主体宽度（整体比体力条更短） */
+const GEM_BAR_W = 86;
 const GEM_BAR_R = 12;
 const GEM_ICON_SIZE = 48;
-const GEM_PLUS_S = 20;
-
-// ── 颜色 ──
+// ── 颜色（体力胶囊参考：浅粉框 + 鲜绿填充 + 绿圆加号）──
 const C = {
-  STAMINA_BG:   0x43A047,
-  STAMINA_DARK: 0x2E7D32,
-  TEXT_WHITE:   0xFFFFFF,
-  TEXT_DARK:    0x5D4037,
-  TIMER_TEXT:   0xC8E6C9,
+  /** 胶囊外沿浅粉米 */
+  CAPSULE_FACE:   0xFFEFE8,
+  CAPSULE_RIM:    0xE5989E,
+  /** 内圈深粉边 */
+  CAPSULE_INSET:  0xCE93A8,
+  /** 未满槽浅绿底 */
+  STAMINA_TRACK:  0xDcedc8,
+  STAMINA_FILL:   0x8BC34A,
+  PLUS_GREEN:     0x66BB6A,
+  PLUS_GREEN_DK:  0x2E7D32,
+  PLUS_RING:      0x1B5E20,
+  TEXT_WHITE:     0xFFFFFF,
+  TEXT_DARK:      0x5D4037,
+  TIMER_FILL:     0x5D4037,
+  TIMER_STROKE:   0xFFFFFF,
 };
 
 export class TopBar extends PIXI.Container {
-  private _levelText!: PIXI.Text;
   private _staminaText!: PIXI.Text;
   private _staminaTimer!: PIXI.Text;
-  private _staminaBar!: PIXI.Graphics;
+  /** 体力条内绿进度（内缩区域左上角为原点） */
+  private _staminaFill!: PIXI.Graphics;
+  /** 体力内槽尺寸（用于绘制进度） */
+  private _staminaInner = { x: 0, y: 0, w: 0, h: 0 };
   private _hualuText!: PIXI.Text;
   private _huayuanText!: PIXI.Text;
   private _diamondBar!: PIXI.Container;
@@ -64,111 +80,106 @@ export class TopBar extends PIXI.Container {
 
   constructor() {
     super();
-    this._buildLevelBadge();
-    this._buildStaminaPill();
     this._buildHualu();
     this._buildHuayuan();
+    this._buildStaminaPill();
     this._buildDiamondPill();
     this._bindEvents();
     this._updateAll();
   }
 
-  /* ============== 等级星星徽章（Lv 叠在星星内） ============== */
-
-  private _buildLevelBadge(): void {
-    const cx = LVL_X + LVL_D / 2;
-    const cy = TOP_BAR_HEIGHT / 2;
-
-    const tex = TextureCache.get('icon_star');
-    if (tex) {
-      const sp = new PIXI.Sprite(tex);
-      sp.anchor.set(0.5);
-      sp.width = LVL_D;
-      sp.height = LVL_D;
-      sp.position.set(cx, cy);
-      this.addChild(sp);
-    } else {
-      const bg = new PIXI.Graphics();
-      bg.beginFill(0xFF7043);
-      bg.drawCircle(cx, cy, LVL_D / 2 - 2);
-      bg.endFill();
-      this.addChild(bg);
-    }
-
-    this._levelText = new PIXI.Text('Lv.1', {
-      fontSize: 14,
-      fontWeight: 'bold',
-      fill: C.TEXT_WHITE,
-      fontFamily: FONT_FAMILY,
-    });
-    this._levelText.anchor.set(0.5);
-    this._levelText.position.set(cx, cy + 1);
-    this.addChild(this._levelText);
-  }
-
-  /* ============== 体力胶囊（保留进度条 + 倒计时 + 加号） ============== */
+  /* ============== 体力胶囊（参考：粉框 + 内绿进度 + 闪电叠压 + 闪电角绿圆加号） ============== */
 
   private _buildStaminaPill(): void {
-    const ICON_SIZE = 38;
-    const ICON_R = ICON_SIZE / 2;
+    const BOLT_W = 50;
+    const BOLT_H = 54;
+    const ix = STA_X + 6;
+    /** 闪电中心与花露/花愿/钻石宝石同一中线 */
+    const iy = BAR_MID_Y;
 
-    // 胶囊背景
-    const bg = new PIXI.Graphics();
-    bg.beginFill(C.STAMINA_DARK);
-    bg.drawRoundedRect(STA_X, PY, STA_W, PILL_H, PILL_R);
-    bg.endFill();
-    bg.beginFill(C.STAMINA_BG, 0.85);
-    bg.drawRoundedRect(STA_X, PY, STA_W, PILL_H - 4, PILL_R);
-    bg.endFill();
-    this.addChild(bg);
+    // 外框：浅粉米胶囊 + 粉描边
+    const frame = new PIXI.Graphics();
+    frame.lineStyle(2.2, C.CAPSULE_RIM, 1);
+    frame.beginFill(C.CAPSULE_FACE);
+    frame.drawRoundedRect(STA_X, PY, STA_W, PILL_H, PILL_R);
+    frame.endFill();
+    this.addChild(frame);
 
-    // 闪电图标
-    const ix = STA_X + 3 + ICON_R;
-    const iy = PY + PILL_H / 2;
+    // 内凹槽描边（略嵌套感）
+    const inset = 3.5;
+    const ix0 = STA_X + inset;
+    const iy0 = PY + inset;
+    const iw = STA_W - inset * 2;
+    const ih = PILL_H - inset * 2;
+    const ir = Math.max(6, PILL_R - inset);
+    this._staminaInner = { x: ix0, y: iy0, w: iw, h: ih };
+
+    const innerRim = new PIXI.Graphics();
+    innerRim.lineStyle(1.2, C.CAPSULE_INSET, 0.85);
+    innerRim.beginFill(C.STAMINA_TRACK);
+    innerRim.drawRoundedRect(ix0, iy0, iw, ih, ir);
+    innerRim.endFill();
+    this.addChild(innerRim);
+
+    // 绿色进度（盖在浅槽上）
+    this._staminaFill = new PIXI.Graphics();
+    this._staminaFill.position.set(ix0, iy0);
+    this.addChild(this._staminaFill);
+
+    // 闪电 + 与体力相同的绿圆「+」（叠在闪电右下）
+    const boltWrap = new PIXI.Container();
+    boltWrap.position.set(ix, iy);
     const energyTex = TextureCache.get('icon_energy');
     if (energyTex) {
       const sp = new PIXI.Sprite(energyTex);
       sp.anchor.set(0.5);
-      sp.width = ICON_SIZE + 4;
-      sp.height = ICON_SIZE + 4;
-      sp.position.set(ix, iy);
-      this.addChild(sp);
+      sp.width = BOLT_W;
+      sp.height = BOLT_H;
+      sp.position.set(0, 0);
+      boltWrap.addChild(sp);
     } else {
       const iconBg = new PIXI.Graphics();
       iconBg.beginFill(0xFFEB3B);
-      iconBg.drawCircle(ix, iy, ICON_R);
+      iconBg.drawCircle(0, 0, BOLT_W / 2);
       iconBg.endFill();
-      this.addChild(iconBg);
+      boltWrap.addChild(iconBg);
     }
+    const staminaPlus = this._createGreenCirclePlusButton();
+    staminaPlus.position.set(BOLT_W * 0.22, BOLT_H * 0.28);
+    staminaPlus.eventMode = 'static';
+    staminaPlus.cursor = 'pointer';
+    staminaPlus.on('pointertap', (e: PIXI.FederatedPointerEvent) => {
+      e.stopPropagation();
+      // 预留：体力补充入口
+    });
+    boltWrap.addChild(staminaPlus);
+    this.addChild(boltWrap);
 
-    // 体力数值
+    // 体力数值：条内水平居中，白字 + 深色描边
     this._staminaText = new PIXI.Text('0/0', {
-      fontSize: 18,
+      fontSize: 17,
       fontWeight: 'bold',
       fill: C.TEXT_WHITE,
       fontFamily: FONT_FAMILY,
+      stroke: 0x3E2723,
+      strokeThickness: 2.5,
     });
-    this._staminaText.anchor.set(0, 0.5);
-    this._staminaText.position.set(STA_X + ICON_SIZE + 10, PY + PILL_H / 2 - 3);
+    this._staminaText.anchor.set(0.5, 0.5);
+    this._staminaText.position.set(STA_X + STA_W / 2 + 8, BAR_MID_Y);
     this.addChild(this._staminaText);
 
-    // 迷你进度条
-    this._staminaBar = new PIXI.Graphics();
-    this._staminaBar.position.set(STA_X + ICON_SIZE + 10, PY + PILL_H - 8);
-    this.addChild(this._staminaBar);
-
-    // 恢复倒计时
+    // 倒计时：条下方居中，深棕字 + 白描边
     this._staminaTimer = new PIXI.Text('', {
       fontSize: 13,
-      fill: C.TIMER_TEXT,
+      fontWeight: 'bold',
+      fill: C.TIMER_FILL,
       fontFamily: FONT_FAMILY,
+      stroke: C.TIMER_STROKE,
+      strokeThickness: 2,
     });
-    this._staminaTimer.anchor.set(1, 0.5);
-    this._staminaTimer.position.set(STA_X + STA_W - 28, PY + PILL_H / 2);
+    this._staminaTimer.anchor.set(0.5, 0);
+    this._staminaTimer.position.set(STA_X + STA_W / 2 + 8, PY + PILL_H + 1);
     this.addChild(this._staminaTimer);
-
-    // "+" 按钮
-    this._drawPlusBtn(STA_X + STA_W - 2, PY + PILL_H / 2);
   }
 
   /* ============== 花露（上图标 + 下文字叠压，参考星星样式） ============== */
@@ -223,101 +234,106 @@ export class TopBar extends PIXI.Container {
     this.addChild(this._huayuanText);
   }
 
-  /* ============== 钻石（横条 + 叠压宝石 + 绿加号，参考统计类手游顶栏） ============== */
+  /* ============== 钻石（与体力条同系粉框胶囊 + 叠压宝石 + 同款绿圆加号） ============== */
 
   private _buildDiamondPill(): void {
-    const topY = (TOP_BAR_HEIGHT - GEM_BAR_H) / 2;
+    /** 胶囊竖直居中于 BAR_MID_Y，宝石中心落在 BAR_MID_Y */
+    const topY = Math.round(BAR_MID_Y - GEM_BAR_H / 2);
     const root = new PIXI.Container();
     root.position.set(DIAMOND_LP, topY);
     this._diamondBar = root;
 
-    const bg = new PIXI.Graphics();
-    bg.beginFill(0xF7EFE4);
-    bg.drawRoundedRect(18, 0, GEM_BAR_W, GEM_BAR_H, GEM_BAR_R);
-    bg.endFill();
-    bg.lineStyle(1.2, 0xD7C4B0, 0.65);
-    bg.drawRoundedRect(18, 0, GEM_BAR_W, GEM_BAR_H, GEM_BAR_R);
-    root.addChild(bg);
+    const barX = 16;
+    const barW = GEM_BAR_W + 4;
+    const barH = GEM_BAR_H;
+    const barR = GEM_BAR_R;
 
+    const outer = new PIXI.Graphics();
+    outer.lineStyle(2, C.CAPSULE_RIM, 1);
+    outer.beginFill(C.CAPSULE_FACE);
+    outer.drawRoundedRect(barX, 0, barW, barH, barR);
+    outer.endFill();
+    root.addChild(outer);
+
+    const ins = 3;
+    const ir = Math.max(5, barR - ins);
+    const inner = new PIXI.Graphics();
+    inner.lineStyle(1.1, C.CAPSULE_INSET, 0.8);
+    inner.beginFill(0xF7F5F0);
+    inner.drawRoundedRect(barX + ins, ins, barW - ins * 2, barH - ins * 2, ir);
+    inner.endFill();
+    root.addChild(inner);
+
+    const gemWrap = new PIXI.Container();
+    gemWrap.position.set(22, GEM_BAR_H / 2);
     const gemTex = TextureCache.get('icon_gem');
     if (gemTex) {
       const sp = new PIXI.Sprite(gemTex);
       sp.anchor.set(0.5);
       sp.width = GEM_ICON_SIZE;
       sp.height = GEM_ICON_SIZE;
-      sp.position.set(20, GEM_BAR_H / 2 - 1);
-      root.addChild(sp);
+      sp.position.set(0, 0);
+      gemWrap.addChild(sp);
     } else {
       const fb = new PIXI.Text('💎', { fontSize: 28 });
       fb.anchor.set(0.5);
-      fb.position.set(20, GEM_BAR_H / 2);
-      root.addChild(fb);
+      gemWrap.addChild(fb);
     }
-
-    const plus = new PIXI.Container();
-    plus.position.set(30, GEM_BAR_H - 4);
-    const pg = new PIXI.Graphics();
-    pg.beginFill(0x4CAF50);
-    pg.drawRoundedRect(-GEM_PLUS_S / 2, -GEM_PLUS_S / 2, GEM_PLUS_S, GEM_PLUS_S, 5);
-    pg.endFill();
-    pg.lineStyle(1, 0x2E7D32, 0.35);
-    pg.drawRoundedRect(-GEM_PLUS_S / 2, -GEM_PLUS_S / 2, GEM_PLUS_S, GEM_PLUS_S, 5);
-    plus.addChild(pg);
-    const pw = GEM_PLUS_S * 0.35;
-    const pc = new PIXI.Graphics();
-    pc.beginFill(0xFFFFFF);
-    pc.drawRoundedRect(-pw / 2, -2, pw, 4, 1);
-    pc.drawRoundedRect(-2, -pw / 2, 4, pw, 1);
-    pc.endFill();
-    plus.addChild(pc);
-    plus.eventMode = 'static';
-    plus.cursor = 'pointer';
-    plus.hitArea = new PIXI.Rectangle(-GEM_PLUS_S / 2 - 2, -GEM_PLUS_S / 2 - 2, GEM_PLUS_S + 4, GEM_PLUS_S + 4);
-    plus.on('pointerdown', (e: PIXI.FederatedPointerEvent) => {
+    const dPlus = this._createGreenCirclePlusButton();
+    dPlus.position.set(GEM_ICON_SIZE * 0.22, GEM_ICON_SIZE * 0.28);
+    dPlus.eventMode = 'static';
+    dPlus.cursor = 'pointer';
+    dPlus.on('pointertap', (e: PIXI.FederatedPointerEvent) => {
       e.stopPropagation();
       // 暂不接入购买/获取，预留
     });
-    root.addChild(plus);
+    gemWrap.addChild(dPlus);
+    root.addChild(gemWrap);
 
     this._diamondText = new PIXI.Text('0', {
-      fontSize: 20,
+      fontSize: 19,
       fontWeight: 'bold',
       fill: C.TEXT_DARK,
       fontFamily: FONT_FAMILY,
     });
-    this._diamondText.anchor.set(0, 0.5);
-    this._diamondText.position.set(26 + GEM_ICON_SIZE * 0.35, GEM_BAR_H / 2);
+    this._diamondText.anchor.set(1, 0.5);
+    this._diamondText.position.set(barX + barW - ins - 4, GEM_BAR_H / 2);
     root.addChild(this._diamondText);
 
     this.addChild(root);
   }
 
-  /* ============== 加号按钮 ============== */
+  /**
+   * 体力闪电角 / 钻石宝石角共用的绿圆白「+」（与参考图一致：亮绿圆 + 底侧略深 + 细描边）
+   */
+  private _createGreenCirclePlusButton(): PIXI.Container {
+    const r = 11;
+    const root = new PIXI.Container();
+    const hitPad = 4;
+    root.hitArea = new PIXI.Rectangle(-r - hitPad, -r - hitPad, (r + hitPad) * 2, (r + hitPad) * 2);
 
-  private _drawPlusBtn(cx: number, cy: number): void {
-    const r = 12;
-    const plusTex = TextureCache.get('icon_plus');
-    if (plusTex) {
-      const sp = new PIXI.Sprite(plusTex);
-      sp.anchor.set(0.5);
-      sp.width = r * 2;
-      sp.height = r * 2;
-      sp.position.set(cx, cy);
-      this.addChild(sp);
-    } else {
-      const g = new PIXI.Graphics();
-      g.beginFill(0xFFFFFF);
-      g.drawCircle(cx, cy, r);
-      g.endFill();
-      g.beginFill(C.STAMINA_DARK);
-      g.drawCircle(cx, cy, r - 1.5);
-      g.endFill();
-      g.beginFill(0xFFFFFF);
-      g.drawRect(cx - 4, cy - 1, 8, 2);
-      g.drawRect(cx - 1, cy - 4, 2, 8);
-      g.endFill();
-      this.addChild(g);
-    }
+    const body = new PIXI.Graphics();
+    body.beginFill(C.PLUS_GREEN_DK, 0.95);
+    body.drawEllipse(0, 2.2, r * 0.92, r * 0.42);
+    body.endFill();
+    body.beginFill(C.PLUS_GREEN);
+    body.drawCircle(0, -0.5, r - 0.5);
+    body.endFill();
+    body.lineStyle(1.3, C.PLUS_RING, 0.95);
+    body.drawCircle(0, -0.5, r - 0.5);
+    body.endFill();
+    root.addChild(body);
+
+    const arm = 2.4;
+    const len = r * 0.42;
+    const cross = new PIXI.Graphics();
+    cross.beginFill(C.TEXT_WHITE);
+    cross.drawRoundedRect(-len, -arm / 2, len * 2, arm, 1.1);
+    cross.drawRoundedRect(-arm / 2, -len, arm, len * 2, 1.1);
+    cross.endFill();
+    root.addChild(cross);
+
+    return root;
   }
 
   /* ============== 事件 & 更新 ============== */
@@ -330,7 +346,6 @@ export class TopBar extends PIXI.Container {
   private _updateAll(): void {
     const s = CurrencyManager.state;
     const cap = CurrencyManager.staminaCap;
-    this._levelText.text = `Lv.${s.level}`;
     this._staminaText.text = `${s.stamina}/${cap}`;
     this._hualuText.text = this._fmtNum(s.hualu);
     this._huayuanText.text = this._fmtNum(s.huayuan);
@@ -353,17 +368,16 @@ export class TopBar extends PIXI.Container {
   /* ============== 绘制工具 ============== */
 
   private _drawStaminaBar(ratio: number): void {
-    const g = this._staminaBar;
-    const w = 80, h = 4;
+    const g = this._staminaFill;
+    const { w, h } = this._staminaInner;
+    const t = Math.min(1, Math.max(0, ratio));
+    const fillW = Math.max(0, w * t);
     g.clear();
-    g.beginFill(0x000000, 0.25);
-    g.drawRoundedRect(0, 0, w, h, 2);
+    if (fillW < 0.5) return;
+    const rr = Math.min(h / 2 - 0.5, fillW / 2);
+    g.beginFill(C.STAMINA_FILL);
+    g.drawRoundedRect(0, 0, fillW, h, rr);
     g.endFill();
-    if (ratio > 0) {
-      g.beginFill(0xFFEB3B);
-      g.drawRoundedRect(0, 0, Math.max(4, w * Math.min(1, ratio)), h, 2);
-      g.endFill();
-    }
   }
 
   private _fmtNum(n: number): string {
@@ -380,6 +394,11 @@ export class TopBar extends PIXI.Container {
   /** 获取花露图标在 TopBar 内的中心坐标 */
   getHualuIconPos(): { x: number; y: number } {
     return { x: HUALU_CX, y: CURRENCY_ICON_CY };
+  }
+
+  /** 获取钻石图标在 TopBar 内的中心坐标（与 _buildDiamondPill 内宝石精灵对齐） */
+  getDiamondIconPos(): { x: number; y: number } {
+    return { x: DIAMOND_LP + 22, y: BAR_MID_Y };
   }
 
   /** 花愿数值闪烁弹跳效果 */

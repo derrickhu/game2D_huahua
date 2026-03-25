@@ -112,3 +112,22 @@ export const TOOL_DEFS = buildToolDefs();
 export function findToolDef(itemId: string): ToolDef | undefined {
   return TOOL_DEFS.get(itemId);
 }
+
+/**
+ * 可产出指定产品线物品的 Lv1 工具 ID（按 toolLine 去重）。
+ * 用于合成线面板「获取来源」；宝箱等无对应工具时返回空数组。
+ */
+export function getSourceToolsForProductLine(
+  category: Category,
+  productLine: string,
+): string[] {
+  const byToolLine = new Map<ToolLine, string>();
+  for (const def of TOOL_DEFS.values()) {
+    if (def.produceCategory !== category) continue;
+    const lines = def.produceLinesRandom ?? [def.produceLine];
+    if (!lines.includes(productLine)) continue;
+    if (def.level !== 1) continue;
+    byToolLine.set(def.toolLine, def.itemId);
+  }
+  return Array.from(byToolLine.values());
+}

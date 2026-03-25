@@ -14,6 +14,7 @@ import { BoardManager } from '@/managers/BoardManager';
 import { CurrencyManager } from '@/managers/CurrencyManager';
 import { TextureCache } from '@/utils/TextureCache';
 import { createToolEnergySprite, isBoardToolCategory } from '@/utils/ToolEnergyBadge';
+import { ToolSparkleLayer } from '@/utils/ToolSparkleLayer';
 import { ToastMessage } from './ToastMessage';
 import { ConfirmDialog } from './ConfirmDialog';
 
@@ -72,11 +73,11 @@ const GRID_GAP = CELL_GAP;
  * 若与条重叠：略增 GRID_INSET_TOP/BOTTOM；若仍太靠边：略减 CREAM.width/height。
  */
 const GRID_INSET_TOP = 48;
-const GRID_INSET_BOTTOM = 56;
+const GRID_INSET_BOTTOM = 66;
 const GRID_INSET_X = 6;
 
 /** 行数上限 */
-const MAX_GRID_ROWS = 7;
+const MAX_GRID_ROWS = 6;
 
 /**
  * 整块格子容器缩放（越大格越大；1.0 为逻辑尺寸满铺安全区宽向）。
@@ -304,6 +305,12 @@ export class WarehousePanel extends PIXI.Container {
     });
   }
 
+  /** 花篮中心在屏外下方的 Y（打开滑入 / 关闭滑出，与 MergeChainPanel 同类动效） */
+  private _warehouseContentHideY(s1: number): number {
+    const th = this._basketSprite.texture?.height || TEX_H;
+    return Game.logicHeight + Math.ceil(th * s1 * 0.52) + 48;
+  }
+
   open(): void {
     this._isOpen = true;
     this.visible = true;
@@ -313,10 +320,15 @@ export class WarehousePanel extends PIXI.Container {
     const th = this._basketSprite.texture?.height || TEX_H;
     const s1 = Math.min((DESIGN_WIDTH - 36) / tw, (Game.logicHeight - 72) / th, 1);
     const s0 = s1 * 0.92;
+    const cx = DESIGN_WIDTH / 2;
+    const cyOpen = Game.logicHeight / 2;
+    const yFrom = this._warehouseContentHideY(s1);
+
     this._content.scale.set(s0);
+    this._content.position.set(cx, yFrom);
+    this._content.alpha = 1;
 
     this._overlay.alpha = 0;
-    this._content.alpha = 0;
 
     TweenManager.to({
       target: this._overlay,
@@ -325,10 +337,10 @@ export class WarehousePanel extends PIXI.Container {
       ease: Ease.easeOutQuad,
     });
     TweenManager.to({
-      target: this._content,
-      props: { alpha: 1 },
-      duration: 0.28,
-      ease: Ease.easeOutQuad,
+      target: this._content.position,
+      props: { y: cyOpen },
+      duration: 0.32,
+      ease: Ease.easeOutBack,
     });
     TweenManager.to({
       target: this._content.scale,
@@ -342,7 +354,9 @@ export class WarehousePanel extends PIXI.Container {
     if (!this._isOpen) return;
     this._isOpen = false;
 
-    const s0 = this._content.scale.x * 0.92;
+    const s1 = this._content.scale.x;
+    const yTo = this._warehouseContentHideY(s1);
+    const cx = DESIGN_WIDTH / 2;
 
     TweenManager.to({
       target: this._overlay,
@@ -351,18 +365,13 @@ export class WarehousePanel extends PIXI.Container {
       ease: Ease.easeOutQuad,
     });
     TweenManager.to({
-      target: this._content,
-      props: { alpha: 0 },
-      duration: 0.22,
-      ease: Ease.easeInQuad,
-    });
-    TweenManager.to({
-      target: this._content.scale,
-      props: { x: s0, y: s0 },
-      duration: 0.22,
+      target: this._content.position,
+      props: { y: yTo },
+      duration: 0.26,
       ease: Ease.easeInQuad,
       onComplete: () => {
         this.visible = false;
+        this._content.position.set(cx, Game.logicHeight / 2);
       },
     });
   }
@@ -503,6 +512,7 @@ export class WarehousePanel extends PIXI.Container {
           sprite.position.set(s / 2, s / 2);
           slot.addChild(sprite);
           if (isBoardToolCategory(def.category)) {
+            slot.addChild(new ToolSparkleLayer(s, s));
             const energy = createToolEnergySprite(s, s, { maxSideFrac: 0.30, pad: 4 });
             if (energy) slot.addChild(energy);
           }
