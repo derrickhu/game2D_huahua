@@ -174,6 +174,24 @@ export class CustomerView extends PIXI.Container {
     this._rebuildInfoPanel();
   }
 
+  /**
+   * 需求槽位物品图标中心在 CustomerView 局部坐标系中的位置（与 _rebuildInfoPanel 布局一致）
+   */
+  getDemandSlotIconLocalCenter(slotIndex: number): PIXI.Point | null {
+    if (!this._customer || slotIndex < 0 || slotIndex >= this._customer.slots.length) {
+      return null;
+    }
+    const n = this._customer.slots.length;
+    const panelLeft = -PANEL_W / 2;
+    const totalSlotW = n * SLOT_SIZE + (n - 1) * SLOT_GAP;
+    const slotStartX = panelLeft + (PANEL_W - totalSlotW) / 2;
+    const slotY = (PANEL_H - SLOT_SIZE) / 2;
+    const sx = slotStartX + slotIndex * (SLOT_SIZE + SLOT_GAP);
+    const cx = sx + SLOT_SIZE / 2;
+    const cy = PANEL_Y + slotY + SLOT_SIZE / 2;
+    return new PIXI.Point(cx, cy);
+  }
+
   // ========== 底部信息面板 ==========
 
   private _rebuildInfoPanel(): void {
@@ -519,6 +537,7 @@ export class CustomerView extends PIXI.Container {
     switch (line) {
       case FlowerLine.FRESH: return COLORS.FLOWER_FRESH;
       case FlowerLine.BOUQUET: return COLORS.FLOWER_BOUQUET;
+      case FlowerLine.WRAP: return COLORS.FLOWER_WRAP;
       case FlowerLine.GREEN: return COLORS.FLOWER_GREEN;
       case DrinkLine.TEA: return COLORS.DRINK_TEA;
       case DrinkLine.COLD: return COLORS.DRINK_COLD;

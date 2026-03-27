@@ -1,0 +1,27 @@
+Game merge item icon, ONE single object only, centered, flat solid #FF00FF magenta background ONLY.
+Perfect SQUARE 1:1 canvas. NO text, NO Chinese, NO labels, NO UI, NO frames, NO tiles.
+Category: Tea Drinks. This is level 1 of 8 — must look CLEARLY the simplest and most humble of the series.
+
+HARD EDGE FOR MATTING (highest priority):
+- Outside the colored outline, the VERY NEXT pixels must be SOLID #FF00FF only.
+- FORBIDDEN: semi-transparent white/pale ring, feathered glow, soft aura, airbrush halo between object and background.
+- Opaque cel-game art; crisp silhouette then immediate chroma.
+
+ART STYLE — MUST match brightness of existing tea line icons (Lv2 jasmine cup, Lv3 rose tea cup):
+- BOLD VIVID SATURATED colors — NEVER muddy, NEVER gray-brown cast, NEVER desaturated dusty look.
+- SMOOTH GRADIENT shading inside each shape + prominent BRIGHT highlight spots (cream/white) on glossy areas.
+- Warm lighting from top-left; colors feel FRESH and LIT.
+
+LINE — thin and LIGHT:
+- HAIRLINE outline ONLY: ultra-THIN stroke, 1px-feel. FORBIDDEN: thick black contour, heavy dark brown line.
+- Outline color = ONE small step darker than the LOCAL fill in the SAME hue family.
+
+ABSOLUTELY NO steam, NO vapor, NO smoke wisps, NO hot-air curls above the cup.
+
+GLASS CUP WALLS — NO chroma #FF00FF bleeding through:
+- FORBIDDEN: photoreal transparent glass where background magenta shows through and tints the water pink.
+- REQUIRED: cel-shaded OPAQUE or frosted glass — walls = pale blue-gray / milky white with specular highlights drawn INSIDE the wall shape only.
+- Water inside = SOLID very pale clear blue-white gradient INSIDE the liquid area — not see-through to background.
+
+LEVEL 1/8 — HOT WATER in a TALL SLENDER glass:
+ONE clear drinking glass with a **tall narrow silhouette** — elongated cylinder or gently tapered highball shape (**height clearly greater than width**, slim elegant proportions, NOT short or squat). Filled with plain hot water: crystal clear with very faint warm tint — pale blue-white gradient inside the liquid area (cel-shaded OPAQUE water; NO magenta bleed). Cel-shaded opaque / frosted glass walls — pale blue-gray with specular highlights drawn INSIDE the wall only; bright top-left specular. No stem, no wine-glass bowl — just a simple **tall slim tumbler / highball**. No patterns, flowers, or garnish. Modest scale in the 1:1 frame with generous #FF00FF margin so the tall glass does not touch the canvas edges.

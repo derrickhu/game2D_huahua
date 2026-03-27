@@ -1,0 +1,9 @@
+Single square 1:1 game icon for a merge flower-shop game. ONE object only — a garden shovel (铲子) — centered; the shovel must occupy 88–92% of the image width or height (whichever constrains), so it almost fills the square with only a thin margin of background.
+
+LINE — gardening tools (flower+plant) low-saturation palette: terracotta/clay (#C67B5C), slate gray-green metal (#5A6B66), deep forest green (#2D4A3E), warm brown wood handle (#6D4C3B), cast-iron (#3A3A3A). Muted earth tones — NOT flower-petal saturation.
+
+STYLE: Cute hand-painted 2D; clear volume; heavier shading than flower icons; soft colored outline (not black). Matte metal and wood. NO text, logos, numbers.
+
+BACKGROUND: ONLY solid flat bright magenta #FF00FF outside the object. Do not tint the shovel magenta.
+
+CHROMA-SAFE: No purple/magenta/pink in materials or reflections.

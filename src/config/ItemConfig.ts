@@ -1,8 +1,8 @@
 /**
  * 物品配置
  *
- * 产品线：花系 3线x10级 + 饮品 3线x8级 = 54 种商品
- * 工具线：5条x3级 = 15 种工具（放在棋盘上可产出对应产品线物品）
+ * 产品线：花系（鲜花/花束/绿植各10级 + 包装中间品4级）+ 饮品 3线x8级
+ * 工具线：园艺6级、包装5级、茶饮/冷饮/烘焙各5级；工具1–2级仅合成，其后可产出
  * 宝箱：5级
  */
 
@@ -17,6 +17,8 @@ export enum FlowerLine {
   FRESH = 'fresh',       // 鲜花线
   BOUQUET = 'bouquet',   // 花束线
   GREEN = 'green',       // 绿植线
+  /** 包装中间品（不进订单）：丝带→花束包装纸 */
+  WRAP = 'wrap',
 }
 
 export enum DrinkLine {
@@ -28,7 +30,7 @@ export enum DrinkLine {
 export enum ToolLine {
   /** 园艺种植工具 → 同等级随机产出 鲜花线 或 绿植线 */
   PLANT = 'plant',
-  ARRANGE = 'arrange',   // 花艺工具 → 花束线
+  ARRANGE = 'arrange',   // 包装线工具 → 包装中间品
   TEA_SET = 'tea_set',   // 茶具     → 茶饮线
   MIXER = 'mixer',       // 饮品器具 → 冷饮线
   BAKE = 'bake',         // 烘焙工具 → 甜品线
@@ -38,7 +40,8 @@ export enum ToolLine {
 export const TOOL_TO_PRODUCT_LINE: Record<ToolLine, { category: Category; line: string }> = {
   /** 展示用主标签；实际产出见 BuildingConfig produceLinesRandom */
   [ToolLine.PLANT]:   { category: Category.FLOWER, line: FlowerLine.FRESH },
-  [ToolLine.ARRANGE]: { category: Category.FLOWER, line: FlowerLine.BOUQUET },
+  /** 包装线工具产出包装中间品；花束由「花束包装纸」产出 */
+  [ToolLine.ARRANGE]: { category: Category.FLOWER, line: FlowerLine.WRAP },
   [ToolLine.TEA_SET]: { category: Category.DRINK,  line: DrinkLine.TEA },
   [ToolLine.MIXER]:   { category: Category.DRINK,  line: DrinkLine.COLD },
   [ToolLine.BAKE]:    { category: Category.DRINK,  line: DrinkLine.DESSERT },
@@ -69,11 +72,14 @@ const FLOWER_DATA: [FlowerLine, string[]][] = [
     '小芽苗', '多肉盆栽', '绿萝', '波士顿蕨', '虎皮兰',
     '龟背竹', '琴叶榕', '柠檬树', '三角梅', '松树盆景',
   ]],
+  [FlowerLine.WRAP, [
+    '丝带卷', '丝带条', '包装纸', '花艺材料篮',
+  ]],
 ];
 
 const DRINK_DATA: [DrinkLine, string[]][] = [
   [DrinkLine.TEA, [
-    '花草茶包', '茉莉花茶', '玫瑰红茶', '调味花茶',
+    '热水', '茉莉花茶', '玫瑰红茶', '调味花茶',
     '手冲花茶', '四季花茶壶', '大师手作茶', '御品花茶典藏',
   ]],
   [DrinkLine.COLD, [
@@ -89,11 +95,21 @@ const DRINK_DATA: [DrinkLine, string[]][] = [
 // ═══════════════ 工具数据 ═══════════════
 
 const TOOL_DATA: [ToolLine, string[]][] = [
-  [ToolLine.PLANT,   ['小花铲', '浇水壶', '小温室']],
-  [ToolLine.ARRANGE, ['花剪', '包装纸', '扎花台']],
-  [ToolLine.TEA_SET, ['茶杯', '茶壶', '茶道台']],
-  [ToolLine.MIXER,   ['量杯', '搅拌杯', '冷饮吧台']],
-  [ToolLine.BAKE,    ['擀面杖', '烤箱', '装裱台']],
+  [ToolLine.PLANT, [
+    '铲子', '水壶', '育苗盘', '简易温室', '温室', '高级温室',
+  ]],
+  [ToolLine.ARRANGE, [
+    '铁丝', '铁丝剪刀', '简易包装台', '包装台', '高级包装台',
+  ]],
+  [ToolLine.TEA_SET, [
+    '茶包', '茶叶罐', '茶壶', '茶台', '高级茶台',
+  ]],
+  [ToolLine.MIXER, [
+    '量杯', '雪克杯', '制冰机', '冰箱', '冰柜',
+  ]],
+  [ToolLine.BAKE, [
+    '擀面杖', '打蛋器', '烤箱', '装裱台', '高级装裱台',
+  ]],
 ];
 
 // ═══════════════ 生成物品定义 ═══════════════
@@ -103,6 +119,7 @@ function buildItemDefs(): Map<string, ItemDef> {
 
   // 花系
   for (const [line, names] of FLOWER_DATA) {
+    const maxLv = line === FlowerLine.WRAP ? names.length : 10;
     for (let i = 0; i < names.length; i++) {
       const id = `flower_${line}_${i + 1}`;
       map.set(id, {
@@ -111,7 +128,7 @@ function buildItemDefs(): Map<string, ItemDef> {
         category: Category.FLOWER,
         line,
         level: i + 1,
-        maxLevel: 10,
+        maxLevel: maxLv,
         icon: `flower_${line}_${i + 1}`,
       });
     }
@@ -135,6 +152,7 @@ function buildItemDefs(): Map<string, ItemDef> {
 
   // 工具（BUILDING 品类，可合成升级）
   for (const [line, names] of TOOL_DATA) {
+    const maxLv = names.length;
     for (let i = 0; i < names.length; i++) {
       const id = `tool_${line}_${i + 1}`;
       map.set(id, {
@@ -143,7 +161,7 @@ function buildItemDefs(): Map<string, ItemDef> {
         category: Category.BUILDING,
         line,
         level: i + 1,
-        maxLevel: 3,
+        maxLevel: maxLv,
         icon: `tool_${line}_${i + 1}`,
       });
     }
@@ -205,11 +223,12 @@ export function getMergeChainName(itemId: string): string {
     [FlowerLine.FRESH]: '鲜花',
     [FlowerLine.BOUQUET]: '花束',
     [FlowerLine.GREEN]: '绿植',
+    [FlowerLine.WRAP]: '包装',
     [DrinkLine.TEA]: '茶饮',
     [DrinkLine.COLD]: '冷饮',
     [DrinkLine.DESSERT]: '甜品',
     [ToolLine.PLANT]: '园艺工具',
-    [ToolLine.ARRANGE]: '花艺工具',
+    [ToolLine.ARRANGE]: '包装工具',
     [ToolLine.TEA_SET]: '茶具',
     [ToolLine.MIXER]: '饮品器具',
     [ToolLine.BAKE]: '烘焙工具',

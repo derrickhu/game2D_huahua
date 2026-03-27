@@ -1,0 +1,11 @@
+Single square 1:1 game tool icon — **tea line**, **white + brown** only.
+
+**OBJECT:** One **teapot (茶壶)** — **classic white porcelain** body (bone-china warm white), **short curved spout** same white; **handle and lid knob** in **warm brown wood**; subtle lid seam; optional very soft gray shadow in creases — **not** blue-green ceramic.
+
+**STYLE:** 2D merge-game tool icon; soft cel-shading; thin tonal edges; dignified cafe/tea house prop, **not** cute mascot.
+
+**COMPOSITION:** centered, **~88–93%** of frame, slightly larger presence than a single cup.
+
+**BACKGROUND:** ONLY **#FF00FF** behind the pot.
+
+**NO** text, logos. **CHROMA-SAFE:** no magenta/purple/pink on glaze or steam (steam if any = pale gray-white only).

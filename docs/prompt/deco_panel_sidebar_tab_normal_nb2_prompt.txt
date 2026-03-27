@@ -1,0 +1,15 @@
+Single isolated inactive sidebar tab button asset on flat solid magenta FF00FF background for chroma-key cutout.
+
+One vertical rounded pill or capsule shape, portrait orientation approximately 2:3 width-to-height ratio, centered in the square canvas. The pill fills about 70 percent of the canvas.
+
+FILL: Light warm beige to pale cream, hex range F5EDE0 to FFF5EA, flat or with a very subtle vertical gradient slightly lighter at top. The surface looks soft and matte, like unglazed ceramic or warm paper.
+
+BORDER: Thin soft warm brown outline, approximately 1 to 2 pixels at game resolution, consistent thickness all around. The outline color is a muted warm brown, not dark or harsh.
+
+DEPTH: A gentle inner shadow along the top and left edges gives a very subtle recessed feel. No outer drop shadow or only a whisper of one. The button should look quietly resting, unselected, calm.
+
+OVERALL FEEL: Understated, warm, clearly unselected and waiting. It should contrast clearly with the selected state version (which will be vibrant and glowing). This is the quiet background state.
+
+No text, no icons, no emoji, no Chinese characters, no watermark. Only the pill shape on magenta.
+
+High quality 2D casual game UI illustration, cute cozy merge-game aesthetic, warm muted palette, soft hand-painted feel. Not photorealistic.

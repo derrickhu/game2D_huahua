@@ -250,6 +250,27 @@ class BoardManagerClass {
     return true;
   }
 
+  /**
+   * 交换两格上的物品（均须为已开放且均有物品；不可合成时用于拖拽互换）
+   */
+  swapItems(srcIndex: number, dstIndex: number): boolean {
+    const src = this.cells[srcIndex];
+    const dst = this.cells[dstIndex];
+    if (!src || !dst) return false;
+    if (!src.itemId || !dst.itemId) return false;
+    if (src.state !== CellState.OPEN || dst.state !== CellState.OPEN) return false;
+
+    const itemA = src.itemId;
+    const resA = src.reserved;
+    src.itemId = dst.itemId;
+    src.reserved = dst.reserved;
+    dst.itemId = itemA;
+    dst.reserved = resA;
+
+    EventBus.emit('board:swapped', srcIndex, dstIndex);
+    return true;
+  }
+
   /** 在指定格子放置物品（工具产出等） */
   placeItem(index: number, itemId: string): boolean {
     const cell = this.cells[index];

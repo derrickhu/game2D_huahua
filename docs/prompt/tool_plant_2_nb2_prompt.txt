@@ -1,0 +1,9 @@
+Single square 1:1 game icon for a merge flower-shop game. ONE object only — a metal watering can (水壶) — centered; it must occupy 88–92% of the frame, almost filling the square, thin margin of #FF00FF only.
+
+LINE — deep forest green matte enamel body (#2D4A3E), cream or pale clay accent band, dark gray spout (#5A6B66), classic shape — clearly heavier than a shovel icon. Muted — NOT vivid candy colors.
+
+STYLE: Cute hand-painted 2D; clear volume; soft outline. NO text, logos.
+
+BACKGROUND: ONLY solid #FF00FF outside the object.
+
+CHROMA-SAFE: No purple/magenta/pink in highlights or metal.

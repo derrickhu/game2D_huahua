@@ -4,12 +4,12 @@
 import * as PIXI from 'pixi.js';
 import { BoardMetrics, COLORS, FONT_FAMILY } from '@/config/Constants';
 import { ITEM_DEFS, Category, FlowerLine, DrinkLine } from '@/config/ItemConfig';
+import { findBoardProducerDef } from '@/config/BuildingConfig';
 import { TextureCache } from '@/utils/TextureCache';
 import { TweenManager, Ease } from '@/core/TweenManager';
 import {
   bringToolEnergyToFront,
   createToolEnergySprite,
-  isBoardToolCategory,
 } from '@/utils/ToolEnergyBadge';
 import { ToolSparkleLayer } from '@/utils/ToolSparkleLayer';
 
@@ -27,6 +27,8 @@ export class ItemView extends PIXI.Container {
   private _cdOverlay: PIXI.Graphics;
   private _cdText: PIXI.Text;
   private _usesText: PIXI.Text;
+  /** Lv2/Lv3 工具：本 CD 周期内剩余可产出次数（非 CD 时显示） */
+  private _chargeText: PIXI.Text;
   private _lockBorder: PIXI.Graphics;
   /** 工具右下角体力标 */
   private _toolEnergySprite: PIXI.Sprite | null = null;
@@ -111,6 +113,19 @@ export class ItemView extends PIXI.Container {
     this._usesText.position.set(4, cs - 2);
     this._usesText.visible = false;
     this.addChild(this._usesText);
+
+    this._chargeText = new PIXI.Text('', {
+      fontSize: 11,
+      fill: 0xFFFFFF,
+      fontFamily: FONT_FAMILY,
+      fontWeight: 'bold',
+      stroke: 0x000000,
+      strokeThickness: 3,
+    });
+    this._chargeText.anchor.set(0.5, 0);
+    this._chargeText.position.set(cs / 2, 3);
+    this._chargeText.visible = false;
+    this.addChild(this._chargeText);
   }
 
   setItem(itemId: string | null): void {
@@ -118,6 +133,7 @@ export class ItemView extends PIXI.Container {
       this.setPeekRibbon(false);
       this.visible = false;
       this._itemId = '';
+      this._chargeText.visible = false;
       this._hideToolEnergy();
       this._hideToolSparkle();
       this._hideOrderBadge();
@@ -128,6 +144,7 @@ export class ItemView extends PIXI.Container {
     if (!def) {
       this.setPeekRibbon(false);
       this.visible = false;
+      this._chargeText.visible = false;
       this._hideToolEnergy();
       this._hideToolSparkle();
       this._hideOrderBadge();
@@ -155,7 +172,7 @@ export class ItemView extends PIXI.Container {
 
       this._iconSprite = new PIXI.Sprite(texture);
       const fill =
-        def.line === FlowerLine.BOUQUET ? BOUQUET_CELL_FILL : ITEM_CELL_FILL;
+        (def.line === FlowerLine.BOUQUET || def.line === FlowerLine.WRAP) ? BOUQUET_CELL_FILL : ITEM_CELL_FILL;
       const maxSize = cs * fill;
       const scaleX = maxSize / texture.width;
       const scaleY = maxSize / texture.height;
@@ -261,6 +278,8 @@ export class ItemView extends PIXI.Container {
       return;
     }
 
+    this._chargeText.visible = false;
+
     this._cdOverlay.visible = true;
     this._cdText.visible = true;
 
@@ -277,6 +296,17 @@ export class ItemView extends PIXI.Container {
     this._cdOverlay.endFill();
 
     this._cdText.text = `${Math.ceil(remaining)}s`;
+    this._bringToolEnergyThenPeekOnTop();
+  }
+
+  /** 本周期内剩余产出次数（Lv2/Lv3，非 CD 时）；max<=0 时隐藏 */
+  setProduceCharges(left: number, max: number): void {
+    if (max <= 0 || left <= 0) {
+      this._chargeText.visible = false;
+      return;
+    }
+    this._chargeText.text = `×${left}`;
+    this._chargeText.visible = true;
     this._bringToolEnergyThenPeekOnTop();
   }
 
@@ -298,7 +328,8 @@ export class ItemView extends PIXI.Container {
 
   private _syncToolSparkle(category: Category): void {
     this._hideToolSparkle();
-    if (!isBoardToolCategory(category)) return;
+    const td = findBoardProducerDef(this._itemId);
+    if (!td?.canProduce) return;
     const cs = BoardMetrics.cellSize;
     const layer = new ToolSparkleLayer(cs, cs);
     layer.position.set(0, 0);
@@ -311,7 +342,8 @@ export class ItemView extends PIXI.Container {
 
   private _syncToolEnergy(category: Category): void {
     this._hideToolEnergy();
-    if (!isBoardToolCategory(category)) return;
+    const td = findBoardProducerDef(this._itemId);
+    if (!td?.canProduce) return;
     const sp = createToolEnergySprite(BoardMetrics.cellSize, BoardMetrics.cellSize);
     if (!sp) return;
     this._toolEnergySprite = sp;
@@ -411,11 +443,81 @@ export class ItemView extends PIXI.Container {
     switch (line) {
       case FlowerLine.FRESH: return COLORS.FLOWER_FRESH;
       case FlowerLine.BOUQUET: return COLORS.FLOWER_BOUQUET;
+      case FlowerLine.WRAP: return COLORS.FLOWER_WRAP;
       case FlowerLine.GREEN: return COLORS.FLOWER_GREEN;
       case DrinkLine.TEA: return COLORS.DRINK_TEA;
       case DrinkLine.COLD: return COLORS.DRINK_COLD;
       case DrinkLine.DESSERT: return COLORS.DRINK_DESSERT;
       default: return 0x999999;
     }
+  }
+
+  /**
+   * 对齐棋盘格布局：清除 pivot/缩放补间残留（合成弹出、被选中反馈打断时否则会错位）
+   */
+  snapToCellLayout(): void {
+    TweenManager.cancelTarget(this.scale);
+    this.pivot.set(0, 0);
+    this.scale.set(1, 1);
+    this.alpha = 1;
+  }
+
+  /** 点击选中时的轻量反馈：仅轻微放大回弹（由 BoardView 仅在 OPEN 格调用） */
+  playTapFeedback(): void {
+    if (!this.visible || !this._itemId) return;
+    this.snapToCellLayout();
+
+    const peak = 1.035;
+    TweenManager.to({
+      target: this.scale,
+      props: { x: peak, y: peak },
+      duration: 0.06,
+      ease: Ease.easeOutQuad,
+      onComplete: () => {
+        TweenManager.to({
+          target: this.scale,
+          props: { x: 1, y: 1 },
+          duration: 0.11,
+          ease: Ease.easeOutBack,
+        });
+      },
+    });
+  }
+
+  /**
+   * 合成成功：新物品从格子中心弹出（与 BoardView 合成特效配合）
+   * 使用 pivot 绕格心缩放，结束后恢复左上角锚点，避免影响布局与拖拽命中
+   * @param onComplete 动画正常结束并复位后调用（用于延后选中反馈，避免 playTapFeedback 取消 scale 补间导致不执行 finish）
+   */
+  playMergeSpawnIn(onComplete?: () => void): void {
+    if (!this.visible || !this._itemId) {
+      onComplete?.();
+      return;
+    }
+    const cs = BoardMetrics.cellSize;
+    this.snapToCellLayout();
+
+    const ox = this.x;
+    const oy = this.y;
+    this.pivot.set(cs / 2, cs / 2);
+    this.position.set(ox + cs / 2, oy + cs / 2);
+    this.scale.set(0.08, 0.08);
+    this.alpha = 0.92;
+
+    const finish = (): void => {
+      this.pivot.set(0, 0);
+      this.position.set(ox, oy);
+      this.scale.set(1, 1);
+      this.alpha = 1;
+      onComplete?.();
+    };
+
+    TweenManager.to({
+      target: this.scale,
+      props: { x: 1, y: 1 },
+      duration: 0.4,
+      ease: Ease.easeOutBack,
+      onComplete: finish,
+    });
   }
 }

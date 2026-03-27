@@ -105,6 +105,7 @@ class CustomerManagerClass {
     const rescan = () => this._rescanAll();
     EventBus.on('board:merged', rescan);
     EventBus.on('board:moved', rescan);
+    EventBus.on('board:swapped', rescan);
     EventBus.on('board:itemPlaced', rescan);
     EventBus.on('board:itemRemoved', rescan);
     EventBus.on('board:cellUnlocked', rescan);

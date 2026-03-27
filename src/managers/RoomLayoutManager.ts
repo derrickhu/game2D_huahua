@@ -11,7 +11,6 @@
  */
 
 import { EventBus } from '@/core/EventBus';
-import { DecorationManager } from './DecorationManager';
 import { DECO_MAP, DecoSlot } from '@/config/DecorationConfig';
 import { DESIGN_WIDTH, DESIGN_HEIGHT } from '@/config/Constants';
 
@@ -74,7 +73,7 @@ class RoomLayoutManagerClass {
   private _initialized = false;
 
   /**
-   * 初始化：加载存档，若无存档则从 DecorationManager 已装备数据 + 默认位置生成初始布局
+   * 初始化：加载存档；若无存档则房间为空（家具需在花店装修模式中从托盘拖入摆放）
    */
   init(): void {
     if (this._initialized) return;
@@ -82,7 +81,7 @@ class RoomLayoutManagerClass {
 
     const loaded = this._load();
     if (!loaded) {
-      this._generateDefaultLayout();
+      this._generateEmptyLayout();
     }
 
     // 监听装饰装备变化，自动更新布局
@@ -308,41 +307,27 @@ class RoomLayoutManagerClass {
     };
   }
 
-  /** 重置布局（GM 调试用） */
+  /** 重置布局（GM 调试用）：清空房间内所有已摆放家具 */
   reset(): void {
     this._placements = [];
-    this._generateDefaultLayout();
     this._save();
     EventBus.emit('roomlayout:changed');
-    console.log('[RoomLayout] 已重置为默认布局');
+    console.log('[RoomLayout] 已清空房间布局');
   }
 
   // ---- 私有方法 ----
 
-  /** 从 DecorationManager 已装备数据生成默认布局 */
-  private _generateDefaultLayout(): void {
+  /** 无存档时的初始布局：空房间 */
+  private _generateEmptyLayout(): void {
     this._placements = [];
-    const equipped = DecorationManager.getAllEquipped();
-    for (const { slot, deco } of equipped) {
-      const defaults = DEFAULT_POSITIONS[slot] || { x: 375, y: 550, scale: 0.8 };
-      this._placements.push({
-        decoId: deco.id,
-        x: defaults.x,
-        y: defaults.y,
-        scale: defaults.scale,
-        flipped: false,
-      });
-    }
     this._save();
   }
 
-  /** 装饰装备变化时自动更新布局 */
-  private _onDecoEquipped(slot: string, newDecoId: string, prevDecoId: string | null): void {
-    // 移除旧的
+  /** 装饰装备变化时：仅当「旧装饰已在房间内」时替换为新装饰并保留坐标；不自动把新装饰摆进房间 */
+  private _onDecoEquipped(_slot: string, newDecoId: string, prevDecoId: string | null): void {
     if (prevDecoId) {
       const idx = this._placements.findIndex(p => p.decoId === prevDecoId);
       if (idx !== -1) {
-        // 用旧家具的位置放置新家具
         const old = this._placements[idx];
         this._placements[idx] = {
           decoId: newDecoId,
@@ -350,15 +335,12 @@ class RoomLayoutManagerClass {
           y: old.y,
           scale: old.scale,
           flipped: old.flipped,
+          zLayer: old.zLayer ?? 0,
         };
         this._debounceSave();
         EventBus.emit('roomlayout:changed');
-        return;
       }
     }
-
-    // 旧家具不在布局中，添加新家具到默认位置
-    this.addFurniture(newDecoId);
   }
 
   /** 装饰数据重置时重建布局 */

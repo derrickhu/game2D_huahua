@@ -1,0 +1,9 @@
+Single square 1:1 game icon for a merge flower-shop game — **same art style as the shovel and watering can** in this plant tool line: **isometric / three-quarter view**, **very thin tonal outlines** (slightly darker same hue as each surface — **not** black), soft cel-shading, top-left light, matte materials.
+
+ONE object only: a **seedling tray (育苗盘)** — **low flat rectangular plastic tray** with a **grid of small square cells** (6–12 cells visible), each cell filled with **dark brown soil**, **no** tall plants — optional **tiny barely visible sprouts** only. Tray body **muted forest green** or **warm gray-green** recycled plastic look; **clear, not muddy** colors.
+
+**COMPOSITION:** tray centered, fills **~80–88%** of the square frame.
+
+**BACKGROUND:** ONLY solid **#FF00FF** outside the object.
+
+**NO** text, logos. **CHROMA-SAFE:** no purple/magenta/pink on the tray.

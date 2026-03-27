@@ -1,0 +1,11 @@
+Single isolated lock overlay icon asset on flat solid magenta FF00FF background for chroma-key cutout.
+
+A golden padlock icon centered in the square canvas. The padlock has a warm gold to amber body with a curved shackle on top, soft 3D shading with a bright highlight on the upper-left and a deeper shadow on the lower-right. The padlock looks solid, metallic, and cute, like a cartoon treasure lock.
+
+Behind the padlock, a soft dark semi-transparent circular vignette or rounded haze radiates outward, fading from dark smoky gray at center to fully transparent (magenta visible) at the edges. This dark overlay represents the locked or greyed-out state when composited over a card. The vignette should be gentle and not too opaque, approximately 50 to 60 percent darkness at center.
+
+The padlock is clearly the focal point, sitting in front of the dark vignette, bright gold against the dim background.
+
+No text, no numbers, no Chinese characters, no level indicators, no watermark. Only the padlock and dark vignette on magenta.
+
+High quality 2D casual game UI illustration, cute cozy merge-game aesthetic, warm cheerful lighting on the padlock, soft hand-painted feel. Not photorealistic.

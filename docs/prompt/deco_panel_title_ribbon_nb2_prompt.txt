@@ -1,0 +1,11 @@
+Single isolated horizontal title ribbon banner asset on flat solid magenta FF00FF background for chroma-key cutout.
+
+The ribbon is a wide curved banner shape, horizontally stretched like a festive scroll header. Approximately 4:1 width-to-height ratio. Both ends taper or curl slightly inward (classic ribbon tail shape). The ribbon occupies most of the canvas width.
+
+COLOR AND SHADING: Salmon-red to coral-orange gradient, slightly lighter and warmer at the top edge, deeper toward the bottom. A bright specular highlight strip runs along the upper curve of the ribbon, giving a soft satin or pillow-like 3D volume. The underside has a gentle darker shadow fold. A soft drop shadow falls below the ribbon onto the magenta background. The ribbon should look thick, puffy, and festive, like a real cloth banner with dimensional heft.
+
+The center of the ribbon has a wide clean empty flat band reserved for game text overlay. This area must stay uniform color with no decoration, no printed text, no glyphs of any kind.
+
+No Chinese characters, no English text, no numbers, no watermark, no icons, no extra UI elements. Only the ribbon shape on magenta.
+
+High quality 2D casual game UI illustration, soft hand-painted feel, warm cheerful lighting, cute cozy merge-game aesthetic. Not photorealistic.

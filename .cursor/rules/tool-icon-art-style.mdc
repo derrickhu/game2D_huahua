@@ -1,0 +1,58 @@
+---
+description: 工具物品图标的标准画风提示词与生成流程，所有工具线图标生成必须遵循
+globs: docs/prompt/tool_*_nb2_prompt.txt, docs/prompt/flower_wrap_*_nb2_prompt.txt
+alwaysApply: false
+---
+
+# 工具物品图标 — 标准画风规范
+
+所有工具线图标（arrange、bake、tea_set、mixer、plant 及 flower_wrap 中间品）生成时**必须**使用以下统一画风。
+
+## 画风参考源
+
+唯一参考：`minigame/subpkg_items/images/tools/bake/tool_bake_2.png`（烤箱图标）
+
+## 标准画风提示词前缀（英文，直接用于 prompt）
+
+每个物品提示词 **必须** 以此段开头，后接物品具体描述：
+
+```
+Cute small mobile game item icon, 3/4 top-down isometric view. Rounded chunky proportions, slightly chibi/compact. Soft smooth gradient shading with small bright highlight spots on surfaces. No hard black outlines — edges defined by color transitions and subtle darker-tone borders only. Warm cozy color palette with realistic material colors. Clean simple white background. No text, no labels, no UI elements. The item should look like a tiny desktop ornament.
+```
+
+## 画风要点
+
+- 小巧可爱的手游物品图标，介于卡通与写实之间
+- 圆润饱满，比例偏 Q 版（短粗），所有棱角带圆倒角
+- 无硬黑描边，物体边缘靠色彩明暗自然过渡
+- 柔和渐变上色，光滑色阶过渡，有小而亮的高光反射点
+- 统一左上方柔光
+- 多种材质各有自己的颜色（木纹暖棕、搪瓷米白、金属银灰等）
+- 3/4 俯视等距视角
+- 物体小巧精致，像桌面上的小摆件
+
+## 生成参数
+
+| 参数 | 值 |
+|------|-----|
+| 模型 | `gemini-2.5-flash-image` |
+| 风格参考图 | `--image minigame/subpkg_items/images/tools/bake/tool_bake_2.png` |
+| 比例 | `1:1`（默认） |
+| 环境变量 | `GEMINI_IMAGE_REST_ONLY=1 HTTPS_PROXY=http://127.0.0.1:7890` |
+| 背景 | 提示词要求白色背景，生成后用 rembg 抠图 |
+
+## 后处理流程
+
+1. **rembg** 抠图（模型 `birefnet-general-lite`，使用技能脚本 `~/.cursor/skills/remove-background/scripts/rembg_single.py`）
+2. **trim_rgba_padding** 裁掉多余透明边（padding=4）
+3. 写入 `minigame/subpkg_items/images/tools/{line}/` 目标路径
+
+## 生成命令模板
+
+```bash
+GEMINI_IMAGE_REST_ONLY=1 HTTPS_PROXY=http://127.0.0.1:7890 python3 ~/.cursor/skills/gemini-image-gen/scripts/generate_images.py \
+  --prompt-file docs/prompt/{item_name}_nb2_prompt.txt \
+  --output /Users/huyi/rosa_games/game_assets/huahua/assets/raw/{item_name}_nb2.png \
+  --model gemini-2.5-flash-image \
+  --image minigame/subpkg_items/images/tools/bake/tool_bake_2.png
+```

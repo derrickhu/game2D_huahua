@@ -16,6 +16,8 @@ export class CellView extends PIXI.Container {
   private _state: CellState = CellState.OPEN;
   /** 该格物品已被客人订单锁定（已满足需求）→ 浅绿底 */
   private _orderReserved = false;
+  /** 拖拽中：与拿起物品同 id 的其他已解锁格，提示可合成 */
+  private _mergePartnerHint = false;
 
   constructor(cellIndex: number) {
     super();
@@ -43,6 +45,15 @@ export class CellView extends PIXI.Container {
   setOrderReserved(on: boolean): void {
     if (this._orderReserved === on) return;
     this._orderReserved = on;
+    if (this._state === CellState.OPEN || this._state === CellState.PEEK) {
+      this._paintCellBase();
+    }
+  }
+
+  /** 拿起物品时高亮同品所在格（仅 OPEN/PEEK 有物品的底） */
+  setMergePartnerHint(on: boolean): void {
+    if (this._mergePartnerHint === on) return;
+    this._mergePartnerHint = on;
     if (this._state === CellState.OPEN || this._state === CellState.PEEK) {
       this._paintCellBase();
     }
@@ -110,6 +121,18 @@ export class CellView extends PIXI.Container {
       this._bg.beginFill(
         COLORS.CELL_ORDER_MATCH_OVERLAY,
         COLORS.CELL_ORDER_MATCH_OVERLAY_ALPHA,
+      );
+      this._bg.drawRoundedRect(0, 0, cs, cs, 8);
+      this._bg.endFill();
+    }
+
+    if (
+      this._mergePartnerHint &&
+      (this._state === CellState.OPEN || this._state === CellState.PEEK)
+    ) {
+      this._bg.beginFill(
+        COLORS.CELL_MERGE_PARTNER_HINT,
+        COLORS.CELL_MERGE_PARTNER_HINT_ALPHA,
       );
       this._bg.drawRoundedRect(0, 0, cs, cs, 8);
       this._bg.endFill();

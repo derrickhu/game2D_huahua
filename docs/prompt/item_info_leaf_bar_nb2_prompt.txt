@@ -1,0 +1,7 @@
+Mobile game UI title banner, horizontal elongated LEAF shape (one long leaf silhouette, not a ribbon). Same art style as the attached reference ribbon image: thick dark brown-red outline (use dark forest-green or deep olive outline on the leaf instead, same line weight and cartoon weight as reference), soft rounded organic edges, cute casual merge-game 2D icon look.
+
+COLOR: the leaf body is ONE solid flat green — a single saturated leaf green, NO multi-color gradient across the surface, NO mint-to-forest blend. Like flat cel shading fill.
+
+3D / VOLUME (match reference lighting, not gradients): add only small sculpted details — a soft pale highlight strip along the top curved edge (like the reference’s top rim light), and slightly darker green or soft shadow only in tight crease areas (e.g. subtle vein groove or underside) so it reads chunky and pop-out, but the main leaf area stays one solid green.
+
+No text, no letters, no icons, no flowers. No separate drop-shadow layer behind the shape. Clean simple white background for cutout. Aspect wider than tall, about 5:1 to 6:1 width to height.

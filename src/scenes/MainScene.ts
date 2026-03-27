@@ -15,7 +15,7 @@ import { OverlayManager } from '@/core/OverlayManager';
 import { BoardManager } from '@/managers/BoardManager';
 import { CurrencyManager } from '@/managers/CurrencyManager';
 import { BuildingManager } from '@/managers/BuildingManager';
-import { CustomerManager } from '@/managers/CustomerManager';
+import { CustomerManager, DemandSlot } from '@/managers/CustomerManager';
 import { SaveManager } from '@/managers/SaveManager';
 import { QuestManager } from '@/managers/QuestManager';
 import { CheckInManager } from '@/managers/CheckInManager';
@@ -51,6 +51,7 @@ import { FloatingMenu } from '@/gameobjects/ui/FloatingMenu';
 import { SceneSwitch } from '@/gameobjects/ui/SceneSwitch';
 import { CUSTOMER_TYPES } from '@/config/CustomerConfig';
 import { DESIGN_WIDTH, COLORS, FONT_FAMILY, INFO_BAR_HEIGHT, BoardMetrics } from '@/config/Constants';
+import { ITEM_DEFS } from '@/config/ItemConfig';
 import { TextureCache } from '@/utils/TextureCache';
 import { AdManager } from '@/managers/AdManager';
 import { CollectionManager } from '@/managers/CollectionManager';
@@ -345,6 +346,9 @@ export class MainScene implements Scene {
 
     this._leaderboardPanel = new LeaderboardPanel();
     overlay.addChild(this._leaderboardPanel);
+
+    // 棋盘拖拽幽灵挂到场景根容器，避免被 ItemInfoBar / 仓库条等后添加的兄弟节点遮挡
+    this._boardView.setDragGhostParent(this.container);
   }
 
   /** 店铺区域高度（设计坐标），供外部布局计算 */
@@ -446,6 +450,38 @@ export class MainScene implements Scene {
           CustomerManager.deliver(uid);
         }
       };
+
+      // 棋盘上已锁定的物品 → 飞到对应需求槽位
+      const cv = this._customerScrollArea.customerViews.find(v => v.customerUid === uid) ?? null;
+      const slotsToFly: { slotIndex: number; cellIndex: number; itemId: string }[] = [];
+      (customer.slots as DemandSlot[]).forEach((slot, idx) => {
+        if (slot.lockedCellIndex >= 0) {
+          slotsToFly.push({ slotIndex: idx, cellIndex: slot.lockedCellIndex, itemId: slot.itemId });
+        }
+      });
+      if (cv && slotsToFly.length > 0) {
+        for (const s of slotsToFly) {
+          this._boardView.setItemHiddenForDelivery(s.cellIndex, true);
+        }
+        slotsToFly.forEach((s, i) => {
+          const start = this._boardView.getCellCenterLocal(s.cellIndex);
+          const endLocal = cv.getDemandSlotIconLocalCenter(s.slotIndex);
+          if (!start || !endLocal) {
+            this._boardView.setItemHiddenForDelivery(s.cellIndex, false);
+            return;
+          }
+          const sg = this._boardView.toGlobal(new PIXI.Point(start.x, start.y));
+          const eg = cv.toGlobal(endLocal);
+          const sx = this.container.toLocal(sg).x;
+          const sy = this.container.toLocal(sg).y;
+          const ex = this.container.toLocal(eg).x;
+          const ey = this.container.toLocal(eg).y;
+          const def = ITEM_DEFS.get(s.itemId);
+          const texKey = def?.icon ?? '';
+          pendingAnims++;
+          this._playDeliverItemFly(texKey, sx, sy, ex, ey, onAnimDone, i * 0.07);
+        });
+      }
 
       // 花愿飞行动画
       if (customer.huayuanReward > 0) {
@@ -568,6 +604,84 @@ export class MainScene implements Scene {
         },
       });
     }
+  }
+
+  /**
+   * 交付时：单个物品图标从棋盘格中心沿弧线飞到顾客需求槽位
+   */
+  private _playDeliverItemFly(
+    texKey: string,
+    sx: number,
+    sy: number,
+    ex: number,
+    ey: number,
+    onComplete: () => void,
+    delay = 0,
+  ): void {
+    const tex = TextureCache.get(texKey);
+    const cs = BoardMetrics.cellSize;
+    const startMax = cs * 0.72;
+    const endMax = 60;
+
+    const icon = tex
+      ? new PIXI.Sprite(tex)
+      : new PIXI.Text('🌸', { fontSize: 30 });
+
+    icon.anchor.set(0.5);
+
+    let startScale = 1;
+    let endScale = 0.85;
+    if (icon instanceof PIXI.Sprite && tex) {
+      const m = Math.max(tex.width, tex.height);
+      startScale = startMax / m;
+      endScale = endMax / m;
+    }
+
+    icon.position.set(sx, sy);
+    icon.alpha = 0;
+    icon.scale.set(startScale * 0.85);
+
+    this.container.addChild(icon);
+
+    TweenManager.to({
+      target: icon,
+      props: { alpha: 1 },
+      duration: 0.1,
+      delay,
+    });
+    TweenManager.to({
+      target: icon.scale,
+      props: { x: startScale, y: startScale },
+      duration: 0.15,
+      delay,
+      ease: Ease.easeOutBack,
+      onComplete: () => {
+        const FLY_DURATION = 0.52;
+        const cpx = (sx + ex) / 2 + (Math.random() - 0.5) * 36;
+        const cpy = Math.min(sy, ey) - 36 - Math.random() * 28;
+        const progress = { t: 0 };
+
+        TweenManager.to({
+          target: progress,
+          props: { t: 1 },
+          duration: FLY_DURATION,
+          ease: Ease.easeInQuad,
+          onUpdate: () => {
+            const t = progress.t;
+            const mt = 1 - t;
+            icon.x = mt * mt * sx + 2 * mt * t * cpx + t * t * ex;
+            icon.y = mt * mt * sy + 2 * mt * t * cpy + t * t * ey;
+            const sc = startScale + (endScale - startScale) * t;
+            icon.scale.set(sc);
+            icon.alpha = t < 0.88 ? 1 : 1 - (t - 0.88) / 0.12;
+          },
+          onComplete: () => {
+            icon.destroy();
+            onComplete();
+          },
+        });
+      },
+    });
   }
 
   /** 绑定留存系统事件 */

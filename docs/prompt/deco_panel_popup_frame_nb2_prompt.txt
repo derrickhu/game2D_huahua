@@ -1,0 +1,11 @@
+One single empty mobile-game popup panel, portrait, filling the entire canvas edge to edge. Outer shape is a rounded rectangle with width-to-height ratio exactly two to three. Nothing cropped at the edges.
+
+The border must be an extremely thin golden-yellow stroke, like a single hairline or one-pixel UI outline at game resolution: a delicate line only, visually as thin as possible, not a band. The gold line is barely thicker than a pencil stroke along the outer perimeter. Absolutely no thick frame, no wide gold rim, no beveled molding, no raised lip, no double outline, no inner second border, no chunky candy-like piping, no photo-frame thickness. If in doubt, make the border thinner.
+
+Interior: soft warm cream to pale ivory, very subtle vertical gradient, clean flat 2D, no texture noise. Optional very soft split: narrow left strip slightly warmer beige and main area lighter cream, only as a gentle tone shift with no line or divider.
+
+Corners smoothly rounded, moderate radius.
+
+The entire image is only this empty shell. No text, no numbers, no watermark, no ribbon, no buttons, no tabs, no icons, no cards.
+
+High quality flat 2D casual game UI art, cheerful warm light, no photorealism.

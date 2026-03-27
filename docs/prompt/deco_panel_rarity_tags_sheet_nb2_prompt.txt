@@ -1,0 +1,15 @@
+Single horizontal sprite strip containing exactly four small ribbon tag shapes in a row from left to right, on flat solid magenta FF00FF background for chroma-key cutout.
+
+Each tag is a small folded ribbon banner or pennant shape with a pointed or notched right end, approximately 3:1 width-to-height ratio per tag. All four tags are evenly spaced with magenta gaps between them. Each tag has soft 3D shading: a bright highlight along the top edge and a slightly darker fold shadow along the bottom, giving a small fabric ribbon feel.
+
+TAG COLORS from left to right:
+1. Cool silver-gray with warm undertone (Common tier)
+2. Fresh spring green, moderately saturated (Fine tier)
+3. Clear sky blue, moderately saturated (Rare tier)
+4. Warm orange-red to coral, saturated and vibrant (Limited tier)
+
+Each tag must be a solid color ribbon shape ONLY. Absolutely no text, no letters, no Chinese characters, no numbers, no icons printed on any tag. The tags are blank colored ribbons.
+
+The strip should occupy the full width of the canvas with the four tags evenly distributed.
+
+High quality 2D casual game UI illustration, cute cozy merge-game aesthetic, warm cheerful lighting, soft hand-painted feel. Not photorealistic.

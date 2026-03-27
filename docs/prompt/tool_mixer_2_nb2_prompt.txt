@@ -1,0 +1,11 @@
+Single square 1:1 game tool icon — **cold drink mixer line**: **transparent white (frosted glass)** + **sky blue** palette.
+
+**OBJECT:** One **cocktail shaker (雪克杯)** — **tall tapered body**: **frosted clear glass** or **pale icy white** metal with **sky-blue** metallic or enamel band; **simple white or pale cap**; **no** dark gray as dominant. Clearly larger silhouette than a thin stick.
+
+**STYLE:** 2D illustrated; soft cel-shading; cool highlights; **not** a finished drink inside — empty or faint neutral.
+
+**COMPOSITION:** centered, **~88–93%** of frame.
+
+**BACKGROUND:** ONLY **#FF00FF** outside.
+
+**NO** text, logos, readable scales. **CHROMA-SAFE:** no purple/magenta/pink on metal or glass.

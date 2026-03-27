@@ -1,0 +1,13 @@
+Single square 1:1 game tool icon for a merge flower-shop game — **cold drink / mixer tool line**. Main colors: **frosted transparent white** + **sky blue** only.
+
+**OBJECT:** One **glass measuring cup (量杯)** — **pour spout** and **simple handle**; **milky frosted glass** or **semi-opaque white glass** body — **NOT** crystal-clear empty glass. **CRITICAL:** The cup must **NOT** show the magenta sheet through the walls: use **solid painted milky fill**, **pale ice-blue interior**, or **heavy frost** so **no #FF00FF** is visible through the material; **no** “see-through” transparency to the background.
+
+**Rim / band:** **sky-blue** accent; **faint tick marks** as abstract lines only — **no** readable numbers. **NOT** a stirring rod or spoon.
+
+**STYLE:** 2D hand-painted merge icon; soft tonal outlines; top-left light; crisp cold-workshop feel.
+
+**COMPOSITION:** **~86–92%** of frame, centered.
+
+**BACKGROUND:** ONLY solid **#FF00FF** outside the cup silhouette — magenta must **not** appear inside the cup or through glass.
+
+**NO** legible text, logos. **CHROMA-SAFE:** no magenta, purple, hot pink, or fuchsia on any surface.

@@ -1,0 +1,17 @@
+Single isolated empty furniture item card frame asset on flat solid magenta FF00FF background for chroma-key cutout.
+
+One vertical rounded rectangle card, portrait orientation approximately 3:4 width-to-height ratio, centered in the canvas. The card fills about 80 percent of the canvas.
+
+EXTERIOR: Very thin warm beige to light brown outline, about 1 pixel at game resolution. A soft gentle drop shadow falls behind the card onto the magenta, giving it a slight floating lifted feel.
+
+INTERIOR: Clean warm white to soft cream fill, hex range FFFFFF to FFF8F0, with a very subtle gradient slightly lighter at the top. The surface has a delicate recessed inner shadow along the top and left edges, creating a gentle card-well or inset feel. The interior is completely empty and flat, ready for furniture icon overlay.
+
+TOP-LEFT CORNER: A small reserved area approximately 25 percent width and 12 percent height in the upper-left corner is slightly recessed or tinted, indicating where a rarity tag ribbon will be placed later. This area can be a very faint warmer tint or gentle shadow indent, but must remain subtle.
+
+CORNERS: Moderately rounded, consistent radius on all four corners, soft and friendly.
+
+OVERALL FEEL: The card should look like a clean collectible card slot in a cozy merge-game shop panel. Slightly raised from the panel surface with shadow, but the card itself has an inset well feel for the icon area. Tactile, warm, inviting.
+
+No furniture illustration inside, no text, no numbers, no Chinese characters, no rarity labels, no status buttons, no watermark. Only the empty card frame on magenta.
+
+High quality 2D casual game UI illustration, soft hand-painted feel, warm cheerful lighting, cute cozy merge-game aesthetic. Not photorealistic.

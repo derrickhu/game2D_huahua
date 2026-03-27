@@ -501,7 +501,7 @@ export class WarehousePanel extends PIXI.Container {
     if (itemId) {
       const def = ITEM_DEFS.get(itemId);
       if (def) {
-        const fill = def.line === FlowerLine.BOUQUET ? WH_BOUQUET_FILL : WH_ITEM_FILL;
+        const fill = (def.line === FlowerLine.BOUQUET || def.line === FlowerLine.WRAP) ? WH_BOUQUET_FILL : WH_ITEM_FILL;
         const maxIcon = s * fill;
         const tex = TextureCache.get(def.icon);
         if (tex && tex.width > 0) {

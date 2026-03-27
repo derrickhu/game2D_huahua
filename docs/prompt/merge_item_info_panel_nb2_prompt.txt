@@ -1,0 +1,5 @@
+Mobile casual merge-game UI asset, single horizontal information bar panel ONLY, isolated on flat solid magenta background chroma key color exactly FF00FF, no game board, no grid, no icons except empty chrome.
+
+Wide rounded rectangle with very large corner radius, pill-like but stretched horizontally. Fill warm off-white cream FEF8F3 range, subtle vertical gradient slightly lighter on top, soft inner highlight and gentle outer shadow for light 3D depth. Very thin clean border slightly darker warm beige or soft brown outline. Matte plastic cozy aesthetic, cute high-quality 2D UI illustration, not photoreal, not noisy texture.
+
+Center area must stay empty and clean for later text overlay. No Chinese, no English, no letters, no numbers, no watermark, no logo, no characters, no plants, no items.

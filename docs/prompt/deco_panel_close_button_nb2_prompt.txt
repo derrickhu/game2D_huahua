@@ -1,0 +1,9 @@
+Single isolated circular close button asset on flat solid magenta FF00FF background for chroma-key cutout.
+
+One round button centered in the square canvas. The button has a saturated red fill with a soft radial gradient: slightly brighter cherry-red highlight near the upper-left, deeper crimson toward the lower-right. A thick rounded rim or beveled edge wraps around the circle, giving it a tactile peg-like 3D feel, like a candy button you can press. A bright white specular dot or crescent highlight sits on the upper-left quadrant. A soft drop shadow falls beneath.
+
+In the exact center of the red circle, a clean crisp white X mark (two crossed strokes, slightly rounded ends, bold weight). The X is clearly legible and symmetrical.
+
+No text, no numbers, no Chinese characters, no watermark, no extra UI elements. Only the red circle button with white X on magenta background.
+
+High quality 2D casual game UI illustration, cute cozy merge-game aesthetic, warm cheerful lighting, soft outlines, clear volume. Not photorealistic.

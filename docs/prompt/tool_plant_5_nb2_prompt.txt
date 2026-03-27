@@ -1,0 +1,9 @@
+Single square 1:1 game icon for a merge flower-shop game. ONE object only — a small greenhouse (温室) — small walk-in or lean-to — centered; must occupy 88–92% of the frame, almost filling the square (scale the building to fit).
+
+LINE: frosted glass as cool blue-gray or cyan-gray (no purple/pink in glass), dark green or gray metal frame, wooden base or door trim; inside: only small seedlings / muted greens, no colorful blooms.
+
+STYLE: Cute hand-painted 2D isometric or slight 3/4 view; no neon. NO text, logos.
+
+BACKGROUND: ONLY solid #FF00FF outside the structure.
+
+CHROMA-SAFE: No magenta/purple/violet in glass or reflections.

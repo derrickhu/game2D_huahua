@@ -1,25 +1,31 @@
-A single wide game asset image: **1 row × 3 columns** grid of TOOL icons for a cozy flower-shop merge game. These are **GARDENING / PLANTING TOOLS** (heavy, functional props) — NOT cut flowers, NOT bouquets, NOT drinks.
+A single wide game asset image: **1 row × 6 columns** grid of TOOL icons for a cozy flower-shop merge game. These are **GARDENING / PLANTING TOOLS and growing stations** (heavy, functional props) — NOT cut flowers, NOT bouquets, NOT drinks, NOT vivid petal colors.
 
-**LINE IDENTITY — merged “鲜花 + 绿植”园艺线，厚重配色：**
-- **Terracotta / clay** (#C67B5C, #A86B52), **slate gray-green** (#5A6B66) for metal parts, **deep forest green** (#2D4A3E) enamel, **cast-iron** (#3A3A3A), **warm brown wood** for handles.
-- Earthy, workshop / potting-shed feel — **not** vivid candy pink or fluorescent flower-petal colors.
+**LINE IDENTITY — merged “鲜花 + 绿植”园艺线，统一主色（低饱和、偏大地与工坊感，避免与花朵抢艳）：**
+- **Terracotta / clay** (#C67B5C, #A86B52, #8B5E4A), **slate gray-green** (#5A6B66, #6B7D78) for metal, **deep forest green** (#2D4A3E, #3D5C4F) enamel or painted steel, **cast-iron** (#3A3A3A), **warm brown wood** (#6D4C3B, #8B6914 muted) for handles and bases.
+- Overall **muted saturation** — earthy potting-shed / workshop, **not** candy pink, neon, or flower-petal saturation.
 
 **STYLE (global):**
-- Cute hand-painted 2D merge-game icons with **stronger shading than flower product icons**; soft colored outlines (not harsh black).
-- Top-left soft light; **no neon**.
+- Cute hand-painted 2D merge-game icons with **clear volume** and **heavier shading than flower product icons**; soft colored outlines (not harsh black).
+- Top-left soft light; **no neon**; matte or semi-matte materials.
 - Each icon fills **~75–80%** of its cell, centered.
 - **ABSOLUTELY NO text, numbers, labels, logos.**
 - **CHROMA-SAFE COLORS:** On ALL props (especially glass), **never** use magenta, purple, violet, hot pink, or fuchsia in materials, reflections, refraction, fog, or inner glow — those hues will be removed in post. Use **cool blue-gray, cyan-gray, slate, or neutral gray** instead where you need translucency.
 
 **BACKGROUND — CRITICAL:**
-The entire image background and all space **between** the three icons MUST be **solid flat bright magenta #FF00FF** only. **Do NOT tint the props themselves** (especially greenhouse glass) toward magenta/purple; only the empty background is #FF00FF.
+The entire image background and all space **between** the six icons MUST be **solid flat bright magenta #FF00FF** only. **Do NOT tint the props themselves** toward magenta/purple; only the empty background is #FF00FF.
 
-**GRID — left to right, equal width columns:**
+**GRID — left to right, equal width columns (progression: small tool → large structure):**
 
-[Column 1] **LEVEL 1 — small hand trowel (小花铲):** A **small sturdy garden trowel** with **slate or dark green** metal blade and **warm wooden** handle, a little soil on the blade. Compact, humble. On **#FF00FF**.
+[Column 1] **LEVEL 1 — 铲子 shovel:** A **sturdy garden shovel / spade head** with **slate or dark gray-green** metal blade, **warm wooden** handle, a little dry soil on the blade. Compact, humble. On **#FF00FF**.
 
-[Column 2] **LEVEL 2 — watering can (浇水壶):** A **medium metal watering can** in **deep forest green** matte or enamel, **cream** accent band, **dark gray spout**; classic shape, clearly **heavier** than L1. Subtle water droplet highlights OK. On **#FF00FF**.
+[Column 2] **LEVEL 2 — 水壶 watering can:** A **metal watering can** in **deep forest green** matte enamel, **cream or pale clay** accent band, **dark gray spout**; clearly **heavier and taller** than L1. On **#FF00FF**.
 
-[Column 3] **LEVEL 3 — mini greenhouse (小温室):** A **compact tabletop greenhouse** — **frosted / semi-clear glass** as **cool blue-gray or cyan-gray** (e.g. #C5D3DC / #A8B8C4 feel), **white or pale blue-gray highlights only** — **no purple, pink, or magenta in the glass**. **Dark green / gray metal** frame, **wooden base**; inside: **several small seedlings** (greens only, no colorful blooms). Largest and most complete of the three. On **#FF00FF** background only behind the structure.
+[Column 3] **LEVEL 3 — 育苗盘 seedling tray:** A **low flat rectangular plastic seedling tray** with a **grid of small soil-filled cells** (6–12 cells), **muted forest green or gray-green** tray; optional tiny sprouts. On **#FF00FF**.
 
-**Progression:** L1 smallest → L2 medium → L3 largest station. One cohesive **园艺工具** line.
+[Column 4] **LEVEL 4 — 简易温室 small greenhouse:** A **modest walk-in or lean-to greenhouse** — **frosted / semi-clear glass** as **cool blue-gray or cyan-gray** (no purple/pink in glass), **dark green or gray metal** frame, **wooden base**; inside: **small seedlings**, muted. **Smaller** than L5–L6. On **#FF00FF**.
+
+[Column 5] **LEVEL 5 — 温室 greenhouse:** Same **line identity** as L4 but **clearly larger or more complete** — more glass, neater frame; still **muted greens/grays**, no purple/pink in glass. On **#FF00FF** background only behind the structure.
+
+[Column 6] **LEVEL 6 — 高级温室 advanced greenhouse:** **Most premium** in the row: **more glass panels**, optional **vent** or **extra peak**; **richer wood staging**; still **muted greens and grays**. **Largest** of the six. On **#FF00FF** only between cells.
+
+**Progression:** L1–L2 handheld tools → L3 seedling tray → L4–L6 greenhouses (small → standard → advanced); one cohesive **园艺工具** line with **one unified earthy + forest-green + terracotta** family, **lower saturation than flower item art**.

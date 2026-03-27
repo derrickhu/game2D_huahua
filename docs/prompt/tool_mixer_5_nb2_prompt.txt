@@ -1,0 +1,12 @@
+Single square 1:1 game tool icon — **cold drink mixer line**, top tier: **frosted white + sky blue**.
+
+**OBJECT — must read clearly as a FREEZER (冰柜), NOT a wardrobe or cabinet:**
+One **commercial glass-door freezer / ice-cream display freezer** — **horizontal low profile** or **upright double doors**. **CRITICAL — glass must NOT leak chroma key:** **Do NOT** paint **transparent** glass that reveals the **#FF00FF** background. Use **frosted / semi-opaque door panels** with **fully painted interior** — **soft white-blue fog, ice haze, or opaque cold glow** behind the glass — **no magenta visible through doors or windows**. **White metal frame** with **sky-blue** trim; **thick frames**; **bottom vent grille**; **must look like frozen-food retail equipment**.
+
+**STYLE:** 2D merge-game prop; strongest silhouette in series; cool highlights.
+
+**COMPOSITION:** **~90–95%** of frame.
+
+**BACKGROUND:** ONLY **#FF00FF** strictly **outside** the freezer outline — **never** inside glass or interior.
+
+**NO** text, logos. **CHROMA-SAFE:** no magenta/purple/pink on any surface.

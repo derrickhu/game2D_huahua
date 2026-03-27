@@ -545,7 +545,7 @@ export class MergeChainPanel extends PIXI.Container {
     const tex = TextureCache.get(def.icon);
     if (tex) {
       const sprite = new PIXI.Sprite(tex);
-      const fill = def.line === FlowerLine.BOUQUET ? BOUQUET_CELL_FILL : ITEM_CELL_FILL;
+      const fill = (def.line === FlowerLine.BOUQUET || def.line === FlowerLine.WRAP) ? BOUQUET_CELL_FILL : ITEM_CELL_FILL;
       const maxSize = cs * fill;
       const s = Math.min(maxSize / tex.width, maxSize / tex.height);
       sprite.scale.set(s);

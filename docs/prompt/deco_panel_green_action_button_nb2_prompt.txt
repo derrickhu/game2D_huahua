@@ -1,0 +1,13 @@
+Single isolated wide rounded action button asset on flat solid magenta FF00FF background for chroma-key cutout.
+
+One horizontally stretched rounded rectangle button, approximately 3:1 width-to-height ratio, centered in the canvas. The button fills about 70 percent of the canvas width.
+
+COLOR AND SHADING: Vibrant mint-green to emerald-green gradient, brighter and lighter at the top edge, slightly deeper green toward the bottom. A bright white specular highlight strip runs along the upper curve of the button, giving it a glossy gel-cap or candy-button 3D feel. The bottom edge has a slightly darker green shadow line suggesting thickness. A soft warm drop shadow falls beneath the button onto the magenta background.
+
+The button surface has a clean smooth finish, slightly glossy but not mirror-reflective. The overall shape is a plump rounded pill, thick and tappable looking, like a juicy casual game CTA button.
+
+The center of the button is a wide clean empty flat area reserved for game text overlay. This area must stay uniform with no decoration.
+
+No text, no numbers, no Chinese characters, no icons, no watermark, no currency symbols. Only the green button shape on magenta.
+
+High quality 2D casual game UI illustration, cute cozy merge-game aesthetic, warm cheerful lighting, soft hand-painted feel, clear volume. Not photorealistic.

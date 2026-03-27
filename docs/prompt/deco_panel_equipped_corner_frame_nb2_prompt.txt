@@ -1,0 +1,11 @@
+Single isolated equipped-state corner bracket overlay asset on flat solid magenta FF00FF background for chroma-key cutout.
+
+Four decorative L-shaped corner brackets arranged at the four corners of an invisible square, forming a selection frame. Only the corner pieces are visible; the entire center area between them is empty magenta (transparent after cutout). Each bracket is a thick warm orange-gold to coral stroke with soft 3D bevel, bright highlight on the outer edge, and a gentle glow or bloom effect suggesting the item is actively selected or in-use.
+
+Near the top-right corner bracket, a small solid circle badge overlaps: bright green or coral-orange fill with a clean white checkmark inside, soft shadow beneath the badge. This badge indicates equipped or active status.
+
+The four brackets should feel like glowing selection corners from a merge-game board, warm and luminous, not flat wireframe.
+
+No text, no numbers, no Chinese characters, no watermark, no furniture icon, no card background. Only the four corner brackets and checkmark badge on magenta.
+
+High quality 2D casual game UI illustration, cute cozy merge-game aesthetic, warm cheerful lighting, soft colored outlines, clear volume. Not photorealistic.

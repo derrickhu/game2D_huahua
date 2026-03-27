@@ -47,14 +47,14 @@ CHROMA-KEY SAFETY:
 - NEVER use #FF00FF, hot fuchsia, or screen magenta ON the subject (food, liquid, steam painted as pink-purple that matches background).
 - Pink/red foods = coral, rose, strawberry red — clearly different from #FF00FF.
 
-DEFAULT composition: subject fits comfortably in square with padding; **Level 1 tea is an exception** (see level text — slender tea bag).
+DEFAULT composition: subject fits comfortably in square with padding; **Level 1 tea is an exception** (see level text — modest glass of hot water).
 NO outer glow outside silhouette.
 """.strip()
 
 # All tea icons: user asked no visible steam (hard to cut, clutters icon)
 TEA_GLOBAL = """
 TEA LINE — ALWAYS (every level):
-- It is always a FLOWER TEA beverage in a drinking vessel. Do NOT switch to unrelated props as the main subject.
+- Level 1 = plain hot water in a simple glass (brewing base). Levels 2–8 = flower tea beverages in a drinking vessel. Do NOT switch to unrelated props as the main subject.
 - ABSOLUTELY NO steam, NO vapor, NO smoke wisps, NO hot-air curls above the cup — tea reads fresh but with ZERO rising steam.
 
 GLASS / CUP WALLS — NO chroma #FF00FF bleeding through (user reported pink tint on tea):
@@ -87,15 +87,13 @@ NO text, NO letters, NO logo on cake "banner" shapes — decorative blank shapes
 
 TEA_SUBJECTS: dict[int, str] = {
     1: """
-LEVEL 1/8 — simplest: herbal tea BAG — **smallest tier; must look modest in a 1:1 cell.**
+LEVEL 1/8 — simplest: HOT WATER in a **TALL SLENDER** glass — **smallest tier; humble brewing base.**
 
-**Shape:** **SLENDER and TALL** rectangular sachet (like a classic vertical tea bag), **NOT** a wide squat pillow — aspect about **taller than wide** (~1.25–1.6 : 1 height:width for the **bag body only**).
+**Subject:** ONE clear glass with **height clearly greater than width** — tall narrow highball / slim tumbler (elongated cylinder or slight taper), NOT short squat mug. Filled with plain hot water — very pale blue-white / faint warm tint (cel-shaded OPAQUE water per TEA_GLOBAL; NO magenta bleed).
 
-**Scale:** whole prop (bag + string + loop + small tag) only **~32–42%** of frame **width** and **~38–48%** of frame **height** — **very large empty #FF00FF margin**; bag body itself is **small**, NOT a hero filling the square.
+**Glass:** cel OPAQUE / frosted walls — pale blue-gray highlights INSIDE wall only; bright top-left specular. NO stem, NO wine goblet shape. NO flowers, NO tea bag, NO garnish.
 
-**STRING (critical):** thin cord exits top of bag, runs **upward** with a **clear LONG loop** above the bag (generous arc — **do NOT** use a tiny stubby loop hugging the bag top). Then string descends to a **small** tag at the side/below the loop. Visually: **string+loop occupies a noticeable vertical band** so the line reads long and elegant; tag stays small. **FORBIDDEN:** cropping the loop against the top edge of canvas — keep **clear magenta gap** above the highest point of the string.
-
-LIGHT warm tan / cream kraft (#E8D5C4 feel) — bright NOT dark cardboard. **Small** tag with simple flower **silhouette** (no text). Hairline outline only. HARD EDGE per SHARED.
+**Scale:** modest in frame — generous #FF00FF margin; tall glass must NOT touch top/bottom edges. Hairline colored outline only. HARD EDGE per SHARED.
 """.strip(),
     2: """
 LEVEL 2/8 — jasmine tea. Short ceramic tea cup (squat), pale green-gold tea, 3–4 white jasmine buds floating on surface.

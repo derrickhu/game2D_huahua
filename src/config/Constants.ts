@@ -89,6 +89,9 @@ export const COLORS = {
   CELL_ORDER_MATCH_OVERLAY: 0xA5D6A7,
   /** 淡绿遮罩透明度（越大越绿） */
   CELL_ORDER_MATCH_OVERLAY_ALPHA: 0.32,
+  /** 拿起物品时：棋盘上同种物品所在格提示可合成（与订单浅绿区分，偏暖黄） */
+  CELL_MERGE_PARTNER_HINT: 0xFFF59D,
+  CELL_MERGE_PARTNER_HINT_ALPHA: 0.42,
   /** 顾客需求槽：未满足时的浅底（与已满足浅绿区分） */
   CUSTOMER_DEMAND_PENDING_BG: 0xEBE0D4,
   CUSTOMER_DEMAND_PENDING_BG_ALPHA: 0.72,

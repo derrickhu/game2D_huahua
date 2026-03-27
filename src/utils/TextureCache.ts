@@ -64,9 +64,26 @@ const MAIN_IMAGE_MAP: Record<string, string> = {
   warehouse_close_btn: 'images/ui/warehouse_close_btn.png',
   /** NB2：仓库未解锁格锁图标（warehouse_nb2_slot_lock_1x1 抠图后） */
   warehouse_slot_lock: 'images/ui/warehouse_slot_lock.png',
-  /** NB2 合成线：标题彩带 + 奶油金边主面板（merge_chain_ui_nb2 抠图后） */
+  /** 合成线弹窗标题彩带（桃/珊瑚渐变，原版） */
   merge_chain_ribbon: 'images/ui/merge_chain_ribbon.png',
+  /** 仅底栏 ItemInfoBar 叶形标题条（与合成线弹窗彩带分离） */
+  item_info_leaf_bar: 'images/ui/item_info_leaf_bar.png',
   merge_chain_panel: 'images/ui/merge_chain_panel.png',
+  /** NB2 花店装修抽屉弹层底图（deco_panel_popup_frame_proto_nb2，无字无按钮） */
+  deco_panel_popup_frame: 'images/ui/deco_panel_popup_frame.png',
+  /** 花店装修顶栏标题彩带（可与底栏解耦，装修换图不影响物品信息栏） */
+  deco_panel_title_ribbon: 'images/ui/deco_panel_title_ribbon.png',
+  /** 底部物品信息栏标题彩带（固定资源，与花店装修 `deco_panel_title_ribbon` 分离） */
+  item_info_title_ribbon: 'images/ui/item_info_title_ribbon.png',
+  /** 花店装修家具卡底部：1 使用中 / 2 待使用(可装备) / 3 购买花愿（assets/button 1–3 抠图） */
+  deco_card_btn_1: 'images/ui/deco_card_btn_1.png',
+  deco_card_btn_2: 'images/ui/deco_card_btn_2.png',
+  deco_card_btn_3: 'images/ui/deco_card_btn_3.png',
+  /** 家具/房间卡稀有度角标（button/tag.png 2×2 切分抠图） */
+  deco_rarity_tag_common: 'images/ui/deco_rarity_tag_common.png',
+  deco_rarity_tag_fine: 'images/ui/deco_rarity_tag_fine.png',
+  deco_rarity_tag_rare: 'images/ui/deco_rarity_tag_rare.png',
+  deco_rarity_tag_limited: 'images/ui/deco_rarity_tag_limited.png',
 };
 
 // ================================================================
@@ -96,6 +113,12 @@ const ITEMS_IMAGE_MAP: Record<string, string> = {
   flower_bouquet_8:  'subpkg_items/images/flowers/bouquet/flower_bouquet_8.png',
   flower_bouquet_9:  'subpkg_items/images/flowers/bouquet/flower_bouquet_9.png',
   flower_bouquet_10: 'subpkg_items/images/flowers/bouquet/flower_bouquet_10.png',
+
+  // ---- 包装中间品（占位图，可后续替换） ----
+  flower_wrap_1: 'subpkg_items/images/tools/wrap/flower_wrap_1.png',
+  flower_wrap_2: 'subpkg_items/images/tools/wrap/flower_wrap_2.png',
+  flower_wrap_3: 'subpkg_items/images/tools/wrap/flower_wrap_3.png',
+  flower_wrap_4: 'subpkg_items/images/tools/wrap/flower_wrap_4.png',
 
   // ---- 绿植线 (10张) ----
   flower_green_1:  'subpkg_items/images/flowers/green/flower_green_1.png',
@@ -143,26 +166,37 @@ const ITEMS_IMAGE_MAP: Record<string, string> = {
   tool_plant_1: 'subpkg_items/images/tools/plant/tool_plant_1.png',
   tool_plant_2: 'subpkg_items/images/tools/plant/tool_plant_2.png',
   tool_plant_3: 'subpkg_items/images/tools/plant/tool_plant_3.png',
+  tool_plant_4: 'subpkg_items/images/tools/plant/tool_plant_4.png',
+  tool_plant_5: 'subpkg_items/images/tools/plant/tool_plant_5.png',
+  tool_plant_6: 'subpkg_items/images/tools/plant/tool_plant_6.png',
 
   // ---- 工具：花艺线 ----
   tool_arrange_1: 'subpkg_items/images/tools/arrange/tool_arrange_1.png',
   tool_arrange_2: 'subpkg_items/images/tools/arrange/tool_arrange_2.png',
   tool_arrange_3: 'subpkg_items/images/tools/arrange/tool_arrange_3.png',
+  tool_arrange_4: 'subpkg_items/images/tools/arrange/tool_arrange_4.png',
+  tool_arrange_5: 'subpkg_items/images/tools/arrange/tool_arrange_5.png',
 
   // ---- 工具：烘焙线 ----
   tool_bake_1: 'subpkg_items/images/tools/bake/tool_bake_1.png',
   tool_bake_2: 'subpkg_items/images/tools/bake/tool_bake_2.png',
   tool_bake_3: 'subpkg_items/images/tools/bake/tool_bake_3.png',
+  tool_bake_4: 'subpkg_items/images/tools/bake/tool_bake_4.png',
+  tool_bake_5: 'subpkg_items/images/tools/bake/tool_bake_5.png',
 
   // ---- 工具：茶饮线（茶具）----
   tool_tea_set_1: 'subpkg_items/images/tools/tea_set/tool_tea_set_1.png',
   tool_tea_set_2: 'subpkg_items/images/tools/tea_set/tool_tea_set_2.png',
   tool_tea_set_3: 'subpkg_items/images/tools/tea_set/tool_tea_set_3.png',
+  tool_tea_set_4: 'subpkg_items/images/tools/tea_set/tool_tea_set_4.png',
+  tool_tea_set_5: 'subpkg_items/images/tools/tea_set/tool_tea_set_5.png',
 
   // ---- 工具：冷饮线（饮品器具）----
   tool_mixer_1: 'subpkg_items/images/tools/mixer/tool_mixer_1.png',
   tool_mixer_2: 'subpkg_items/images/tools/mixer/tool_mixer_2.png',
   tool_mixer_3: 'subpkg_items/images/tools/mixer/tool_mixer_3.png',
+  tool_mixer_4: 'subpkg_items/images/tools/mixer/tool_mixer_4.png',
+  tool_mixer_5: 'subpkg_items/images/tools/mixer/tool_mixer_5.png',
 };
 
 // ================================================================

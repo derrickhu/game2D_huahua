@@ -1,35 +1,12 @@
-A single wide game asset image: **1 row × 3 columns** of isolated TOOL icons for a cozy flower-shop merge game. **FLORIST / ARRANGEMENT WORKSHOP PROPS** — wrapping and arranging supplies, **NOT** finished bouquets as the hero, NOT drinks.
+Semi-realistic 2D mobile game item icon style. Smooth gradient shading, NOT flat cel-shade. Dark color-matched outlines (darker shade of the object's own color), NOT uniform black. Visible material textures: wood grain, metal reflection, fabric ribbon. Strong 3D volume with soft ambient shadows. 3/4 top-down perspective. Each icon fills ~80-90% of its square cell. Solid #FF00FF background in gaps. NO text, NO labels.
 
-**CRITICAL — EACH COLUMN WILL BECOME A 1:1 SQUARE ICON IN-GAME:**
-- Every cell is a **square tile**. The prop in that cell must **fill the square boldly**: target **~88–94%** of the cell’s **width AND height** (similar margin on all four sides). Nothing clips the cell border.
-- **Avoid tall skinny silhouettes** inside the square. The subject’s overall bounding box should be **chunky and roughly square** (width/height of the prop silhouette roughly **0.85–1.15**). If a tool is naturally elongated, **rotate it**, **foreshorten**, or **scale it huge** so it still **visually dominates** the square — NOT a small diagonal sliver with huge empty magenta above/below or left/right.
+LINE IDENTITY: Florist packaging tools. Dominant color family = warm orange / amber / honey-oak. Metal parts are amber-gold (NOT cold gray). Wood is honey-oak with grain. Handles are warm apricot. Accents: soft pink and cream ribbon, warm cream paper.
 
-**LINE IDENTITY — 花艺工具线，厚重配色（与艳丽花材产品区分）：**
-- **Antique copper / bronze** (#B87333, #8D6E63) for metal (scissors),
-- **Deep wine-burgundy** (#6D2E3A) cloth or accents,
-- **Warm kraft brown** (#8D6E63, #A1887F) for paper,
-- **Soft cream / blush paper** (muted, NOT neon pink),
-- **Cool gray counter** (#9E9E9E, #78909C) for the large station’s surface,
-- **Dark walnut wood** edges. **No fluorescent rainbow.**
+GRID (5 columns, 1→5):
+Column 1 — Wire spool: small amber-gold wire wound on a honey-oak wooden bobbin, simple cylinder.
+Column 2 — Wire scissors: short amber-gold blades + warm apricot rubber handles, slightly open, a loose wire piece nearby.
+Column 3 — Simple wrapping station: compact honey-oak table, scissors + 1-2 ribbon spools + small paper stack on top.
+Column 4 — Wrapping station: same table + wooden ribbon rack with hanging colorful ribbons + more paper + visible drawer with brass knob.
+Column 5 — Advanced wrapping station: same table + side shelf with ribbon spools + extra tool (glue gun) on surface + two drawers.
 
-**STYLE (global):**
-- Cute hand-painted 2D merge-game icons; **stronger shading than flower product icons**; soft colored outlines (not harsh black).
-- Top-left soft light.
-- **Each cell contains exactly ONE prop cluster**, centered.
-- **Strict isolation:** wide strips of flat magenta between columns — **props must NOT touch the left/right cell borders**, must NOT merge into one continuous scene across columns, and must NOT show pieces of the neighbor cell’s objects.
-
-**TYPOGRAPHY — ABSOLUTE (model often violates weaker wording):**
-- **Zero visible text anywhere:** no Latin letters, no digits, no Chinese characters, no logos, no watermarks, no captions, no “LEVEL”, no UI, no labels, no words on props or in the image. **If you would name the item in words, do not draw those words — only draw the object.**
-
-**BACKGROUND — CRITICAL:**
-Only the **empty areas** between and around the three props = **solid flat magenta #FF00FF**. No gradients in the background.
-
-**GRID — three equal-width columns, left to right:**
-
-[Column 1 — smallest] Professional **floral shears**: **antique copper/bronze** blades, **dark brown wood** handles, slightly open. **Pose for square fill:** angle the shears so the **full length runs diagonally corner-to-corner** of the cell OR use a **slightly more horizontal** layout — **scale large** so tips and handle ends sit **just inside** the padding zone. **#FF00FF** only behind.
-
-[Column 2 — medium] **Two rolls** of florist wrapping paper — **kraft brown** + **muted blush/cream**, tied with **twine**. **Chunky composition:** **shorter, slightly fatter rolls**, grouped tight; avoid one super-long thin diagonal; the **pair should occupy most of the square**. **#FF00FF** only outside.
-
-[Column 3 — largest] **Compact florist work counter**: **gray stone or laminate** top, **dark wood** base, **ribbon spool holder** with **2–3 muted satin** rolls (dusty rose, cream, sage), optional **pin foam** block. **Squatter framing:** show a **bit more width** (three-quarter view filling horizontal space), **not an ultra-tall narrow tower** — station fills **~88–94%** of the square. **#FF00FF** only outside.
-
-**Progression:** left smallest tool → center medium supplies → right largest station. One cohesive **florist workshop** line.
+All five columns have IDENTICAL rendering quality and art style. Higher levels have MORE components on the same object type, NOT better rendering.

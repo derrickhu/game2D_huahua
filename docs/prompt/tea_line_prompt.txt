@@ -1,10 +1,10 @@
-A game item icon sheet with 8 individual tea drink icons arranged in a 4 columns × 2 rows grid layout. This represents a merge progression chain from Level 1 (simple tea bag) to Level 8 (legendary tea). Each icon is a TEA/HOT DRINK item, drawn in cute hand-painted 2D anime game style with soft 3D volume shading, matching a cozy flower shop merge game aesthetic.
+A game item icon sheet with 8 individual tea drink icons arranged in a 4 columns × 2 rows grid layout. This represents a merge progression chain from Level 1 (simple glass of hot water) to Level 8 (legendary tea). Each icon is a TEA/HOT DRINK item, drawn in cute hand-painted 2D anime game style with soft 3D volume shading, matching a cozy flower shop merge game aesthetic.
 
 VERY IMPORTANT: The entire background of the image and behind every icon MUST be solid bright magenta pink color #FF00FF. Every single pixel that is not part of an icon must be exactly #FF00FF magenta. No gradients, no cream, no white — ONLY solid #FF00FF magenta background everywhere.
 
 STYLE REQUIREMENTS (MUST follow to match existing game assets):
 - Cute kawaii hand-painted illustration style, soft and warm
-- Each item is a TEA DRINK — tea bags, cups, teapots, tea sets
+- Each item is a TEA DRINK — from plain hot water in a glass (Lv1) through cups, teapots, tea sets
 - Soft warm color palette with gentle gradients, NOT flat colors
 - Gentle 3D volume/depth through soft inner shading and highlights
 - Clean soft outlines (slightly darker than fill color, NOT harsh black)
@@ -15,7 +15,7 @@ STYLE REQUIREMENTS (MUST follow to match existing game assets):
 
 GRID LAYOUT (left to right, top to bottom — Level 1 to Level 8):
 
-[Row 1, Col 1] LEVEL 1 — HERBAL TEA BAG: A single cute tea bag with a small flower petal decoration, simple string and tag. Light beige/cream colors. Humble beginning. On solid #FF00FF background.
+[Row 1, Col 1] LEVEL 1 — HOT WATER: A tall slender clear glass (highball / slim tumbler, height greater than width) filled with plain hot water — pale blue-white tint, cel-shaded opaque glass walls (no magenta bleed). Humble brewing base, no tea bag, no flowers. On solid #FF00FF background.
 
 [Row 1, Col 2] LEVEL 2 — JASMINE TEA: A small ceramic cup filled with pale green jasmine tea, 2-3 tiny white jasmine flowers floating on top. Delicate steam wisps. Soft green and white tones. On solid #FF00FF background.
 

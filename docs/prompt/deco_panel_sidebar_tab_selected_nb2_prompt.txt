@@ -1,0 +1,15 @@
+Single isolated selected sidebar tab button asset on flat solid magenta FF00FF background for chroma-key cutout.
+
+One vertical rounded pill or capsule shape, portrait orientation approximately 2:3 width-to-height ratio, centered in the square canvas. The pill fills about 70 percent of the canvas.
+
+FILL: Vibrant warm coral-orange to salmon gradient, brighter and lighter at the top, deeper warm orange toward the bottom. The surface has a soft glossy candy-coated sheen. A bright white specular highlight strip curves along the upper portion of the pill, giving it a plump 3D gel-button feel. The overall color is saturated, warm, and eye-catching, clearly the active or selected state.
+
+BORDER: A slightly deeper coral or rose-pink outline, thin but visible, about 2 pixels at game resolution. The border reinforces the warm saturated tone.
+
+DEPTH: A soft warm drop shadow falls beneath and to the right of the pill onto the magenta background. The button should feel raised, pressed-forward, and active compared to the inactive tab.
+
+OVERALL FEEL: Bright, inviting, clearly selected and active. It pops with warmth and energy, contrasting strongly with the quiet beige inactive state. Like a glowing candy button that says this category is currently chosen.
+
+No text, no icons, no emoji, no Chinese characters, no watermark. Only the pill shape on magenta.
+
+High quality 2D casual game UI illustration, cute cozy merge-game aesthetic, warm cheerful lighting, soft hand-painted feel, clear volume. Not photorealistic.

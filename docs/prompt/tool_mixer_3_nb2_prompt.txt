@@ -1,0 +1,11 @@
+Single square 1:1 game tool icon — **cold drink mixer line**: **frost white + sky blue**.
+
+**OBJECT:** One **compact ice maker (制冰机)** — **small countertop machine**: **clean white** plastic or enamel housing with **sky-blue** front panel, vent grille, or LED strip hint; optional tiny **clear ice** cubes behind a **frosted window** — **no** warm brown wood.
+
+**STYLE:** 2D merge-game prop; readable materials; soft edges; workshop appliance look.
+
+**COMPOSITION:** **~88–94%** of frame.
+
+**BACKGROUND:** ONLY **#FF00FF** outside.
+
+**NO** text, brand badges, digits. **CHROMA-SAFE:** no magenta/purple/pink on surfaces.

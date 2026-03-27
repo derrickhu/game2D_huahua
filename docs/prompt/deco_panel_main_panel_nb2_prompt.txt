@@ -1,0 +1,15 @@
+Single isolated mobile-game popup panel asset on a flat solid magenta FF00FF background for chroma-key cutout.
+
+The panel is one complete large rounded rectangle in portrait orientation, width-to-height ratio approximately two to three. All four edges and all four rounded corners must be fully visible and unclipped. The panel fills at least 90 percent of the canvas, leaving only a thin magenta margin on all sides.
+
+BORDER: The outer frame is a warm rose-pink to soft coral-pink border. It must be a thin elegant frame, NOT thick or chunky: the visible colored rim must be no more than 1.5 percent of the shorter side in thickness, so the inner cream content area stays as large as possible. The border still has a soft candy-coated bevel: a brighter pink highlight strip along the top and left inner edge, and a slightly deeper rose tone along the bottom and right outer edge, giving a gentle 3D rim without widening the band. There is a subtle warm drop shadow cast outward onto the magenta background (will be trimmed later). Do NOT use yellow or gold for the border at all.
+
+INTERIOR: Warm cream to pale ivory fill, hex range FFF8EE to FEF2E0, with a very soft vertical gradient (slightly lighter at the top, slightly warmer toward the bottom). The surface has a very subtle matte card-stock paper texture, just enough to feel tactile and not digitally flat, but NOT noisy or grungy. A faint inner highlight glow along the top interior edge adds depth.
+
+CORNERS: Smoothly rounded, generous radius, friendly and soft. All four corners identical.
+
+OVERALL FEEL: Quality merge-game shop popup: glossy matte hybrid, warm, inviting, tactile. The panel reads as a polished UI shell with a slim frame and a spacious interior, not a heavy chunky border. Subtle volume and polish on a thin rim only.
+
+The entire image contains ONLY this empty panel shell on magenta. No text, no numbers, no Chinese characters, no watermark, no ribbon, no close button, no tabs, no icons, no furniture, no cards inside. The cream area is completely blank.
+
+High quality 2D casual game UI illustration, soft hand-painted feel, warm cheerful lighting from top-left, clear volume with subtle cel-shading. Not photorealistic.

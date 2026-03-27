@@ -27,13 +27,13 @@ export interface CellPreset {
  */
 export const BOARD_PRESETS: CellPreset[] = [
   // ── 第0行 - 外围迷雾 ──
-  { row: 0, col: 0, state: CellState.FOG,  itemId: 'tool_plant_3',       keyPrice: 0, unlockPriority: 40 },
+  { row: 0, col: 0, state: CellState.FOG,  itemId: 'tool_plant_6',       keyPrice: 0, unlockPriority: 40 },
   { row: 0, col: 1, state: CellState.KEY,  itemId: null,                  keyPrice: 500, unlockPriority: 41 },
   { row: 0, col: 2, state: CellState.FOG,  itemId: null,                  keyPrice: 0, unlockPriority: 42 },
   { row: 0, col: 3, state: CellState.PEEK, itemId: 'flower_green_4',       keyPrice: 0, unlockPriority: 35 },
   { row: 0, col: 4, state: CellState.FOG,  itemId: null,                  keyPrice: 0, unlockPriority: 43 },
   { row: 0, col: 5, state: CellState.KEY,  itemId: null,                  keyPrice: 500, unlockPriority: 44 },
-  { row: 0, col: 6, state: CellState.FOG,  itemId: 'tool_tea_set_3',      keyPrice: 0, unlockPriority: 45 },
+  { row: 0, col: 6, state: CellState.FOG,  itemId: 'tool_tea_set_5',      keyPrice: 0, unlockPriority: 45 },
 
   // ── 第1行 - 外围迷雾/窥视 ──
   { row: 1, col: 0, state: CellState.FOG,  itemId: 'drink_dessert_3',     keyPrice: 0, unlockPriority: 36 },
@@ -92,9 +92,9 @@ export const BOARD_PRESETS: CellPreset[] = [
   // ── 第7行 - 外围迷雾 ──
   { row: 7, col: 0, state: CellState.FOG,  itemId: null,                  keyPrice: 0, unlockPriority: 52 },
   { row: 7, col: 1, state: CellState.FOG,  itemId: null,                  keyPrice: 0, unlockPriority: 53 },
-  { row: 7, col: 2, state: CellState.FOG,  itemId: 'tool_plant_3',       keyPrice: 0, unlockPriority: 54 },
+  { row: 7, col: 2, state: CellState.FOG,  itemId: 'tool_plant_6',       keyPrice: 0, unlockPriority: 54 },
   { row: 7, col: 3, state: CellState.FOG,  itemId: null,                  keyPrice: 0, unlockPriority: 55 },
-  { row: 7, col: 4, state: CellState.FOG,  itemId: 'tool_tea_set_3',      keyPrice: 0, unlockPriority: 56 },
+  { row: 7, col: 4, state: CellState.FOG,  itemId: 'tool_tea_set_5',      keyPrice: 0, unlockPriority: 56 },
   { row: 7, col: 5, state: CellState.FOG,  itemId: null,                  keyPrice: 0, unlockPriority: 57 },
   { row: 7, col: 6, state: CellState.FOG,  itemId: null,                  keyPrice: 0, unlockPriority: 58 },
 

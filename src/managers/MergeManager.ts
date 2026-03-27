@@ -17,8 +17,8 @@ class MergeManagerClass {
     return true;
   }
 
-  /** 拖拽结束，判定合成（含跨格）或移动 */
-  endDrag(targetIndex: number): 'merged' | 'moved' | 'cancelled' {
+  /** 拖拽结束，判定合成（含跨格）、互换、或移入空格 */
+  endDrag(targetIndex: number): 'merged' | 'moved' | 'swapped' | 'cancelled' {
     if (this.draggingIndex < 0) return 'cancelled';
     const srcIndex = this.draggingIndex;
     this.draggingIndex = -1;
@@ -38,6 +38,11 @@ class MergeManagerClass {
         console.log(`[Merge] ${mergeType}成功: ${def?.name} (Lv.${def?.level})`);
         return 'merged';
       }
+    }
+
+    // 目标格有物品且不能合成：两格互换
+    if (BoardManager.swapItems(srcIndex, targetIndex)) {
+      return 'swapped';
     }
 
     // 尝试移动到空格

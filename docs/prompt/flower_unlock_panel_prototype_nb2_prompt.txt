@@ -1,0 +1,21 @@
+Mobile merge-game vertical UI mockup, true smartphone portrait 9:16 tall canvas, NOT landscape.
+
+Soft cozy healing casual game aesthetic: clean vector-style shapes, thin warm beige outlines, gentle gradients, light glossy plastic depth — NOT photoreal, NOT oil painting, NOT watercolor paper texture.
+
+Background: heavily blurred soft merge board grid and pastel garden tones behind UI, darkened slightly with vignette so the modal reads clearly.
+
+Center: ONE main rounded-rectangle modal card only — large corner radius, cream fill around FFFDF5 to FEF8F3, double thin border inner frame in soft gold-beige E8C8A0 range with subtle inner highlight on top edge. Absolutely NO wooden easel, NO tripod, NO standing canvas, NO artist easel legs.
+
+Top of card: small floating pill or ribbon badge in light peach cream FFF0D4 with soft shadow, empty center reserved for title text — no Chinese characters, optional tiny English word NEW or leave blank decorative band only.
+
+Upper-middle inside card: a nested rounded “showcase” frame (UI picture window, NOT a physical canvas on easel) with soft inner shadow; inside, one cute stylized flower illustration matching merge-game item art — simple bold outlines, soft shading, friendly readable at small size — example sunflower or tulip, not a photo.
+
+Below showcase: thin horizontal divider line light peach-beige. Then a quote text area with two lines of placeholder English lorem-style short sentence in medium gray-brown, italic feel, centered.
+
+Reward row: small horizontal strip with two icon slots — abstract pink petal icon and yellow star sparkle icon — plus placeholder numbers in simple digits if needed, or blank chips; label area English words First Reward or tiny gift icon only, avoid Chinese.
+
+Bottom: one wide primary rounded button spanning most of card width, apricot-peach gradient E8A87C family, strong top highlight, soft drop shadow, empty center for label — no text or English ACCEPT only.
+
+Tiny decorative accents only: a few floating white sparkle dots and small petal shapes near corners — restrained, not cluttered.
+
+No watermark, no developer debug text. English placeholder text only where needed; do not render Chinese characters anywhere.
