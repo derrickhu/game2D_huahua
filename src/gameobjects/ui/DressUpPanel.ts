@@ -10,6 +10,7 @@ import { TweenManager, Ease } from '@/core/TweenManager';
 import { DressUpManager, Outfit } from '@/managers/DressUpManager';
 import { CurrencyManager } from '@/managers/CurrencyManager';
 import { TextureCache } from '@/utils/TextureCache';
+import { checkRequirement } from '@/utils/UnlockChecker';
 import { ToastMessage } from './ToastMessage';
 import { DESIGN_WIDTH, FONT_FAMILY, COLORS } from '@/config/Constants';
 
@@ -199,7 +200,7 @@ export class DressUpPanel extends PIXI.Container {
 
   private _addDressFooter(
     card: PIXI.Container, cw: number, ch: number,
-    mode: 'equipped' | 'ready' | 'purchase' | 'condition',
+    mode: 'equipped' | 'ready' | 'purchase' | 'locked',
     line: string,
     purchaseHualuCost?: number,
   ): void {
@@ -216,22 +217,7 @@ export class DressUpPanel extends PIXI.Container {
       strokeThickness: 2,
     };
 
-    if (mode === 'condition') {
-      const t = new PIXI.Text(line, {
-        fontSize: 11,
-        fill: COLORS.TEXT_LIGHT,
-        fontFamily: FONT_FAMILY,
-        align: 'center',
-        wordWrap: true,
-        wordWrapWidth: cw - 12,
-      });
-      t.anchor.set(0.5, 1);
-      t.position.set(cw / 2, ch - bottomPad);
-      card.addChild(t);
-      return;
-    }
-
-    const key = mode === 'equipped' ? 'deco_card_btn_1' : mode === 'ready' ? 'deco_card_btn_2' : 'deco_card_btn_3';
+    const key = mode === 'equipped' ? 'deco_card_btn_1' : mode === 'locked' ? 'deco_card_btn_2' : 'deco_card_btn_3';
     const tex = TextureCache.get(key);
     const pillCenterY = (btnHScaled: number) => ch - bottomPad - btnHScaled / 2;
 
@@ -272,7 +258,8 @@ export class DressUpPanel extends PIXI.Container {
         price.position.set(xLeft + price.width / 2, 0);
         card.addChild(row);
       } else {
-        const label = new PIXI.Text(line, labelStyle as any);
+        const lockStyle = mode === 'locked' ? { ...labelStyle, fontSize: 13 } : labelStyle;
+        const label = new PIXI.Text(line, lockStyle as any);
         label.anchor.set(0.5, 0.5);
         label.position.set(cw / 2, cy);
         card.addChild(label);
@@ -281,7 +268,7 @@ export class DressUpPanel extends PIXI.Container {
       const btnW = Math.min(maxBtnW, 100);
       const btnH = targetH;
       const btnY = ch - bottomPad - btnH;
-      const color = mode === 'equipped' ? 0xbb88dd : mode === 'ready' ? COLORS.BUTTON_PRIMARY : 0x4caf50;
+      const color = mode === 'equipped' ? 0xbb88dd : mode === 'locked' ? 0xf0a030 : mode === 'ready' ? COLORS.BUTTON_PRIMARY : 0x4caf50;
       const g = new PIXI.Graphics();
       g.beginFill(color);
       g.drawRoundedRect(cw / 2 - btnW / 2, btnY, btnW, btnH, btnH / 2);
@@ -315,7 +302,8 @@ export class DressUpPanel extends PIXI.Container {
         price.position.set(xLeft + price.width / 2, 0);
         card.addChild(row);
       } else {
-        const t = new PIXI.Text(line, { fontSize: 14, fill: 0xffffff, fontFamily: FONT_FAMILY, fontWeight: 'bold' });
+        const fs = mode === 'locked' ? 12 : 14;
+        const t = new PIXI.Text(line, { fontSize: fs, fill: 0xffffff, fontFamily: FONT_FAMILY, fontWeight: 'bold' });
         t.anchor.set(0.5, 0.5);
         t.position.set(cw / 2, cy);
         card.addChild(t);
@@ -332,7 +320,7 @@ export class DressUpPanel extends PIXI.Container {
 
     const isEquipped = outfit.equipped;
     const isUnlocked = outfit.unlocked;
-    const hasCondition = !!outfit.unlockCondition;
+    const reqResult = checkRequirement(outfit.unlockRequirement);
 
     this._drawCardBg(card, cw, ch, isUnlocked, isEquipped);
 
@@ -371,16 +359,18 @@ export class DressUpPanel extends PIXI.Container {
       this._addDressFooter(card, cw, ch, 'equipped', '穿戴中');
     } else if (isUnlocked) {
       this._addDressFooter(card, cw, ch, 'ready', '换装');
-    } else if (hasCondition) {
-      this._addDressFooter(card, cw, ch, 'condition', outfit.unlockCondition!);
-    } else {
+    } else if (!reqResult.met) {
+      this._addDressFooter(card, cw, ch, 'locked', reqResult.text);
+    } else if (outfit.hualuCost > 0) {
       this._addDressFooter(card, cw, ch, 'purchase', '', outfit.hualuCost);
+    } else {
+      this._addDressFooter(card, cw, ch, 'ready', '领取');
     }
 
     card.eventMode = 'static';
     card.hitArea = new PIXI.Rectangle(0, 0, cw, ch);
     if (!isEquipped) {
-      card.cursor = (isUnlocked || (!hasCondition && CurrencyManager.state.hualu >= outfit.hualuCost)) ? 'pointer' : 'default';
+      card.cursor = (isUnlocked || (reqResult.met && CurrencyManager.state.hualu >= outfit.hualuCost)) ? 'pointer' : 'default';
       card.on('pointertap', (e: PIXI.FederatedPointerEvent) => {
         e.stopPropagation();
         if (isUnlocked) {
@@ -389,7 +379,12 @@ export class DressUpPanel extends PIXI.Container {
             this._refreshHeaderNumbers();
             this._rebuildGrid();
           }
-        } else if (!hasCondition) {
+        } else {
+          const req = checkRequirement(outfit.unlockRequirement);
+          if (!req.met) {
+            ToastMessage.show(`🔒 ${req.text}`);
+            return;
+          }
           if (CurrencyManager.state.hualu < outfit.hualuCost) {
             ToastMessage.show('💧 花露不足');
             return;

@@ -6,6 +6,7 @@
  */
 import { EventBus } from '@/core/EventBus';
 import { CurrencyManager } from './CurrencyManager';
+import { checkRequirement } from '@/utils/UnlockChecker';
 import {
   DECO_DEFS, DECO_MAP, DecoSlot, DecoDef, DecoRarity,
   getSlotDecos, DECO_SLOT_INFO,
@@ -37,15 +38,14 @@ class DecorationManagerClass {
     this._roomStyleId = 'style_default';
     this._unlockedRoomStyles.clear();
     for (const s of ROOM_STYLES) {
-      if (s.cost === 0) this._unlockedRoomStyles.add(s.id);
+      if (s.cost === 0 && !s.unlockRequirement) this._unlockedRoomStyles.add(s.id);
     }
   }
 
   /** 初始化：免费装饰默认解锁 */
   init(): void {
-    // 所有 cost=0 的免费装饰自动解锁
     for (const deco of DECO_DEFS) {
-      if (deco.cost === 0) {
+      if (deco.cost === 0 && !deco.unlockRequirement) {
         this._unlocked.add(deco.id);
       }
     }
@@ -96,6 +96,8 @@ class DecorationManagerClass {
   unlockRoomStyle(styleId: string): boolean {
     const st = ROOM_STYLE_MAP.get(styleId);
     if (!st || this._unlockedRoomStyles.has(styleId)) return false;
+    const req = checkRequirement(st.unlockRequirement);
+    if (!req.met) return false;
     if (st.cost > 0 && CurrencyManager.state.huayuan < st.cost) return false;
     if (st.cost > 0) {
       CurrencyManager.addHuayuan(-st.cost);
@@ -148,6 +150,9 @@ class DecorationManagerClass {
 
     const deco = DECO_MAP.get(decoId);
     if (!deco) return false;
+
+    const req = checkRequirement(deco.unlockRequirement);
+    if (!req.met) return false;
 
     if (CurrencyManager.state.huayuan < deco.cost) return false;
 

@@ -33,7 +33,7 @@ import { CheckInPanel } from '@/gameobjects/ui/CheckInPanel';
 import { QuestPanel } from '@/gameobjects/ui/QuestPanel';
 import { OfflineRewardPanel } from '@/gameobjects/ui/OfflineRewardPanel';
 import { LevelUpPopup } from '@/gameobjects/ui/LevelUpPopup';
-import { ActivityBanner, BANNER_HEIGHT } from '@/gameobjects/ui/ActivityBanner';
+import { ShopRowPanoramaScroll, SHOP_PANORAMA_VIEW_H } from '@/gameobjects/ui/ShopRowPanoramaScroll';
 import { ComboSystem } from '@/systems/ComboSystem';
 import { FlowerEasterEggSystem } from '@/systems/FlowerEasterEggSystem';
 import { MergeStatsSystem } from '@/systems/MergeStatsSystem';
@@ -82,7 +82,8 @@ export class MainScene implements Scene {
   private _warehousePanel!: WarehousePanel;
   private _shopArea!: PIXI.Container;
   private _customerScrollArea!: CustomerScrollArea;
-  private _activityBanner!: ActivityBanner;
+  private _shopRowPanorama!: ShopRowPanoramaScroll;
+  private _shopMainBlock!: PIXI.Container;
 
   // ---- 体验增强系统 ----
   private _comboSystem!: ComboSystem;
@@ -231,13 +232,7 @@ export class MainScene implements Scene {
     this.container.addChild(this._topBar);
     y += TOP_BAR_HEIGHT + 4;
 
-    // 活动横幅（限时活动 / 每日任务 / 挑战入口）
-    this._activityBanner = new ActivityBanner(DESIGN_WIDTH - 24);
-    this._activityBanner.position.set(12, y);
-    this.container.addChild(this._activityBanner);
-    y += BANNER_HEIGHT + 4;
-
-    // 店铺区域（店主左侧 + 客人横向滚动）
+    // 店铺区域（店主左侧 + 客人横向滚动；任务/活动入口在客人区上方）
     this._shopArea = new PIXI.Container();
     this._shopArea.position.set(0, y);
     this._buildShopArea();
@@ -370,7 +365,10 @@ export class MainScene implements Scene {
     this._boardView.setDragGhostParent(this.container);
   }
 
-  /** 店铺区域高度（设计坐标），供外部布局计算 */
+  /**
+   * 店铺区域占位高度（供 topReserved / 棋盘 topY），须与改版前一致以免店主客人与棋盘之间出现大缝。
+   * 全景行 `ShopRowPanoramaScroll` 自身仍用 SHOP_PANORAMA_VIEW_H 做遮罩，多出的像素与原先客人区一样可压在棋盘上方。
+   */
   static readonly SHOP_HEIGHT = 250;
 
   private _ownerContainer!: PIXI.Container;
@@ -378,7 +376,6 @@ export class MainScene implements Scene {
   private _ownerBreathT = 0;
 
   private _buildShopArea(): void {
-    const H = MainScene.SHOP_HEIGHT;
     const W = DESIGN_WIDTH;
     const PAD = 12;
 
@@ -424,7 +421,6 @@ export class MainScene implements Scene {
     this._ownerContainer.on('pointertap', () => {
       EventBus.emit('panel:openDressUp');
     });
-    this._shopArea.addChild(this._ownerContainer);
 
     // 刷新装备显示
     this._refreshOwnerOutfit();
@@ -432,16 +428,23 @@ export class MainScene implements Scene {
     // 监听换装变化
     EventBus.on('dressup:equipped', () => this._refreshOwnerOutfit());
 
-    // ═══════ 1b. 奖励收纳框按钮（店主脚下） ═══════
+    // ═══════ 店铺主块（店主 + 礼包 + 客人），将装入整行全景滑动 ═══════
+    this._shopMainBlock = new PIXI.Container();
+    this._shopMainBlock.addChild(this._ownerContainer);
+
     this._rewardBoxButton = new RewardBoxButton();
     this._rewardBoxButton.position.set(ownerCX - REWARD_BOX_BTN_SIZE / 2, CHAR_BOTTOM_Y + 8);
-    this._shopArea.addChild(this._rewardBoxButton);
+    this._shopMainBlock.addChild(this._rewardBoxButton);
 
-    // ═══════ 2. 客人横向滚动区（可左右滑动） ═══════
     const customerAreaW = W - CUSTOMER_LEFT - PAD;
-    this._customerScrollArea = new CustomerScrollArea(customerAreaW);
+    // 上半身区域不抢横向拖动，便于整行右滑露出左侧活动列
+    this._customerScrollArea = new CustomerScrollArea(customerAreaW, 128);
     this._customerScrollArea.position.set(CUSTOMER_LEFT, 0);
-    this._shopArea.addChild(this._customerScrollArea);
+    this._shopMainBlock.addChild(this._customerScrollArea);
+
+    this._shopRowPanorama = new ShopRowPanoramaScroll(DESIGN_WIDTH, SHOP_PANORAMA_VIEW_H);
+    this._shopRowPanorama.setShopBlock(this._shopMainBlock);
+    this._shopArea.addChild(this._shopRowPanorama);
   }
 
   /** 刷新店主形象外观 */
@@ -897,8 +900,7 @@ export class MainScene implements Scene {
     // 底部栏红点（装修按钮）
     this._infoBar.updateQuickBtnRedDots();
 
-    // 活动横幅红点
-    this._activityBanner.updateRedDots();
+    this._shopRowPanorama.updateRedDots();
   }
 
   /** 切换到花店场景（带过渡动画） */
@@ -934,6 +936,7 @@ export class MainScene implements Scene {
 
     // 客人滚动区惯性动画
     this._customerScrollArea.update(dt);
+    this._shopRowPanorama.update(dt);
 
     // 奖励收纳框滚动惯性
     this._rewardBoxPanel.update(dt);

@@ -48,6 +48,8 @@ const MAIN_IMAGE_MAP: Record<string, string> = {
   icon_dress:     'images/ui/icon_dress.png',
   icon_checkin:   'images/ui/icon_checkin.png',
   icon_quest:     'images/ui/icon_quest.png',
+  /** 挑战关卡入口占位（正式图标就绪后替换路径或 key） */
+  icon_challenge: 'images/ui/icon_level_badge.png',
   icon_build:     'images/ui/icon_build.png',
   icon_operate:   'images/ui/icon_operate.png',
 

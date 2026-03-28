@@ -14,6 +14,7 @@ import { TweenManager, Ease } from '@/core/TweenManager';
 import { EventBus } from '@/core/EventBus';
 import { DecorationManager } from '@/managers/DecorationManager';
 import { TextureCache } from '@/utils/TextureCache';
+import { checkRequirement } from '@/utils/UnlockChecker';
 import {
   DecoSlot, DecoRarity, DECO_SLOT_INFO, DECO_RARITY_INFO,
   getSlotDecos, DecoDef,
@@ -590,33 +591,38 @@ export class DecorationPanel extends PIXI.Container {
     const info = DECO_RARITY_INFO[rarity];
     const key = DECO_RARITY_TAG_KEYS[rarity];
     const tex = TextureCache.get(key);
+    const tagPad = 4;
+    const labelFont = 12;
     if (tex?.width) {
-      const maxW = Math.min(72, Math.round(cw * 0.38));
-      const maxH = 18;
+      const maxW = Math.min(102, Math.round(cw * 0.52));
+      const maxH = 28;
       const s = Math.min(maxW / tex.width, maxH / tex.height);
       const sp = new PIXI.Sprite(tex);
       sp.scale.set(s);
-      sp.position.set(4, 4);
+      sp.position.set(tagPad, tagPad);
       card.addChild(sp);
       const label = new PIXI.Text(info.name, {
-        fontSize: 9, fill: 0xffffff, fontFamily: FONT_FAMILY, fontWeight: 'bold',
+        fontSize: labelFont, fill: 0xffffff, fontFamily: FONT_FAMILY, fontWeight: 'bold',
         stroke: 0x333333, strokeThickness: 2,
       } as any);
       label.anchor.set(0.5, 0.5);
-      label.position.set(4 + (tex.width * s) / 2, 4 + (tex.height * s) / 2);
+      label.position.set(tagPad + (tex.width * s) / 2, tagPad + (tex.height * s) / 2);
       card.addChild(label);
       return;
     }
+    const rw = 56;
+    const rh = 24;
     const bg = new PIXI.Graphics();
     bg.beginFill(info.color, 0.85);
-    bg.drawRoundedRect(4, 4, 38, 16, 4);
+    bg.drawRoundedRect(tagPad, tagPad, rw, rh, 6);
     bg.endFill();
     card.addChild(bg);
     const t = new PIXI.Text(info.name, {
-      fontSize: 9, fill: 0xffffff, fontFamily: FONT_FAMILY, fontWeight: 'bold',
-    });
+      fontSize: labelFont, fill: 0xffffff, fontFamily: FONT_FAMILY, fontWeight: 'bold',
+      stroke: 0x333333, strokeThickness: 2,
+    } as any);
     t.anchor.set(0.5, 0.5);
-    t.position.set(23, 12);
+    t.position.set(tagPad + rw / 2, tagPad + rh / 2);
     card.addChild(t);
   }
 
@@ -638,15 +644,26 @@ export class DecorationPanel extends PIXI.Container {
 
   private _addFooter(
     card: PIXI.Container, cw: number, ch: number,
-    mode: 'equipped' | 'ready' | 'purchase',
+    mode: 'equipped' | 'ready' | 'purchase' | 'locked',
     cost: number | undefined,
     actionLabel: string,
   ): void {
-    const key = mode === 'equipped' ? 'deco_card_btn_1' : mode === 'ready' ? 'deco_card_btn_2' : 'deco_card_btn_3';
+    const key = mode === 'equipped' ? 'deco_card_btn_1' : mode === 'locked' ? 'deco_card_btn_2' : 'deco_card_btn_3';
     const tex = TextureCache.get(key);
     const bottomPad = 10;
-    const maxBtnW = cw - 16;
-    const targetH = Math.min(32, Math.round((24 * ch) / CARD_BASE_H));
+    const maxBtnW = cw - 12;
+    const targetH = Math.min(44, Math.round((34 * ch) / CARD_BASE_H));
+    const labelFont = 16;
+    const labelStyle = {
+      fontSize: labelFont,
+      fill: 0xffffff,
+      fontFamily: FONT_FAMILY,
+      fontWeight: 'bold' as const,
+      stroke: 0x333333,
+      strokeThickness: 2,
+    };
+    const lineText = mode === 'equipped' ? '使用中' : actionLabel;
+    const pillCenterY = (btnHScaled: number) => ch - bottomPad - btnHScaled / 2;
 
     if (tex?.width) {
       const sp = new PIXI.Sprite(tex);
@@ -655,32 +672,86 @@ export class DecorationPanel extends PIXI.Container {
       sp.anchor.set(0.5, 1);
       sp.position.set(cw / 2, ch - bottomPad);
       card.addChild(sp);
+      const scaledH = tex.height * s;
+      const cy = pillCenterY(scaledH);
 
-      const labelText = mode === 'equipped' ? '使用中'
-        : mode === 'purchase' && cost ? `🌸 ${cost}`
-        : actionLabel;
-      const label = new PIXI.Text(labelText, {
-        fontSize: 12, fill: 0xffffff, fontFamily: FONT_FAMILY, fontWeight: 'bold',
-        stroke: 0x333333, strokeThickness: 2,
-      } as any);
-      label.anchor.set(0.5, 0.5);
-      label.position.set(cw / 2, ch - bottomPad - (tex.height * s) / 2);
-      card.addChild(label);
+      if (mode === 'purchase' && cost !== undefined && cost > 0) {
+        const iconTex = TextureCache.get('icon_huayuan');
+        const gap = 5;
+        const iconH = Math.max(16, Math.min(28, Math.round(scaledH * 0.62)));
+        let iconW = 0;
+        const row = new PIXI.Container();
+        row.position.set(cw / 2, cy);
+        if (iconTex?.width) {
+          const iconSp = new PIXI.Sprite(iconTex);
+          iconSp.anchor.set(0.5, 0.5);
+          iconSp.height = iconH;
+          iconSp.width = (iconTex.width / iconTex.height) * iconH;
+          iconW = iconSp.width;
+          row.addChild(iconSp);
+        }
+        const price = new PIXI.Text(String(cost), labelStyle as any);
+        price.anchor.set(0.5, 0.5);
+        row.addChild(price);
+        const rowW = iconW > 0 ? iconW + gap + price.width : price.width;
+        let xLeft = -rowW / 2;
+        if (iconW > 0) {
+          (row.children[0] as PIXI.Sprite).position.set(xLeft + iconW / 2, 0);
+          xLeft += iconW + gap;
+        }
+        price.position.set(xLeft + price.width / 2, 0);
+        card.addChild(row);
+      } else {
+        const lockStyle = mode === 'locked' ? { ...labelStyle, fontSize: 13 } : labelStyle;
+        const label = new PIXI.Text(lineText, lockStyle as any);
+        label.anchor.set(0.5, 0.5);
+        label.position.set(cw / 2, cy);
+        card.addChild(label);
+      }
     } else {
-      const btnW = Math.min(maxBtnW, 80);
+      const btnW = Math.min(maxBtnW, 100);
       const btnH = targetH;
       const btnY = ch - bottomPad - btnH;
-      const color = mode === 'equipped' ? 0xBB88DD : mode === 'ready' ? COLORS.BUTTON_PRIMARY : 0x4CAF50;
+      const color = mode === 'equipped' ? 0xbb88dd : mode === 'locked' ? 0xf0a030 : mode === 'ready' ? COLORS.BUTTON_PRIMARY : 0x4caf50;
       const g = new PIXI.Graphics();
       g.beginFill(color);
       g.drawRoundedRect(cw / 2 - btnW / 2, btnY, btnW, btnH, btnH / 2);
       g.endFill();
       card.addChild(g);
-      const labelText = mode === 'equipped' ? '使用中' : mode === 'purchase' && cost ? `🌸 ${cost}` : actionLabel;
-      const t = new PIXI.Text(labelText, { fontSize: 11, fill: 0xFFFFFF, fontFamily: FONT_FAMILY, fontWeight: 'bold' });
-      t.anchor.set(0.5, 0.5);
-      t.position.set(cw / 2, btnY + btnH / 2);
-      card.addChild(t);
+      const cy = btnY + btnH / 2;
+      if (mode === 'purchase' && cost !== undefined && cost > 0) {
+        const row = new PIXI.Container();
+        row.position.set(cw / 2, cy);
+        const gap = 5;
+        const iconH = Math.max(16, Math.min(26, Math.round(btnH * 0.58)));
+        const iconTex = TextureCache.get('icon_huayuan');
+        let iconW = 0;
+        if (iconTex?.width) {
+          const iconSp = new PIXI.Sprite(iconTex);
+          iconSp.anchor.set(0.5, 0.5);
+          iconSp.height = iconH;
+          iconSp.width = (iconTex.width / iconTex.height) * iconH;
+          iconW = iconSp.width;
+          row.addChild(iconSp);
+        }
+        const price = new PIXI.Text(String(cost), labelStyle as any);
+        price.anchor.set(0.5, 0.5);
+        row.addChild(price);
+        const rowW = iconW > 0 ? iconW + gap + price.width : price.width;
+        let xLeft = -rowW / 2;
+        if (iconW > 0 && row.children[0]) {
+          (row.children[0] as PIXI.Sprite).position.set(xLeft + iconW / 2, 0);
+          xLeft += iconW + gap;
+        }
+        price.position.set(xLeft + price.width / 2, 0);
+        card.addChild(row);
+      } else {
+        const fs = mode === 'locked' ? 12 : 14;
+        const t = new PIXI.Text(lineText, { fontSize: fs, fill: 0xffffff, fontFamily: FONT_FAMILY, fontWeight: 'bold' });
+        t.anchor.set(0.5, 0.5);
+        t.position.set(cw / 2, cy);
+        card.addChild(t);
+      }
     }
   }
 
@@ -741,9 +812,12 @@ export class DecorationPanel extends PIXI.Container {
     nameText.position.set(cw / 2, nameY);
     card.addChild(nameText);
 
+    const reqResult = checkRequirement(deco.unlockRequirement);
     if (isEquipped) this._addFooter(card, cw, ch, 'equipped', undefined, '装备');
     else if (isUnlocked) this._addFooter(card, cw, ch, 'ready', undefined, '装备');
+    else if (!reqResult.met) this._addFooter(card, cw, ch, 'locked', undefined, reqResult.text);
     else if (deco.cost > 0) this._addFooter(card, cw, ch, 'purchase', deco.cost, '装备');
+    else this._addFooter(card, cw, ch, 'ready', undefined, '领取');
 
     card.eventMode = 'static';
     card.cursor = 'pointer';
@@ -814,9 +888,12 @@ export class DecorationPanel extends PIXI.Container {
     nameText.position.set(cw / 2, nameY);
     card.addChild(nameText);
 
+    const reqResult = checkRequirement(style.unlockRequirement);
     if (equipped) this._addFooter(card, cw, ch, 'equipped', undefined, '使用');
     else if (unlocked) this._addFooter(card, cw, ch, 'ready', undefined, '使用');
+    else if (!reqResult.met) this._addFooter(card, cw, ch, 'locked', undefined, reqResult.text);
     else if (style.cost > 0) this._addFooter(card, cw, ch, 'purchase', style.cost, '使用');
+    else this._addFooter(card, cw, ch, 'ready', undefined, '领取');
 
     card.eventMode = 'static';
     card.cursor = 'pointer';
@@ -837,6 +914,11 @@ export class DecorationPanel extends PIXI.Container {
       DecorationManager.equip(deco.id);
       this._refreshAll();
     } else {
+      const req = checkRequirement(deco.unlockRequirement);
+      if (!req.met) {
+        EventBus.emit('toast:show', `🔒 ${req.text}`);
+        return;
+      }
       if (DecorationManager.unlock(deco.id)) {
         DecorationManager.equip(deco.id);
         EventBus.emit('toast:show', `✨ 解锁了「${deco.name}」！`);
@@ -857,6 +939,11 @@ export class DecorationPanel extends PIXI.Container {
         this._refreshAll();
       }
     } else {
+      const req = checkRequirement(style.unlockRequirement);
+      if (!req.met) {
+        EventBus.emit('toast:show', `🔒 ${req.text}`);
+        return;
+      }
       if (DecorationManager.unlockRoomStyle(style.id)) {
         DecorationManager.equipRoomStyle(style.id);
         EventBus.emit('toast:show', `✨ 解锁「${style.name}」！`);

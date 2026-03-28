@@ -47,10 +47,13 @@ export class CustomerScrollArea extends PIXI.Container {
 
   /** 空状态提示 */
   private _emptyHint: PIXI.Text;
+  /** 顶部不响应横向拖动的像素高度（给外层整行滑动让路，如客人上半身区域） */
+  private _panHitTopExclusion = 0;
 
-  constructor(viewWidth: number) {
+  constructor(viewWidth: number, panHitTopExclusionPx = 0) {
     super();
     this._viewWidth = viewWidth;
+    this._panHitTopExclusion = Math.max(0, Math.min(panHitTopExclusionPx, AREA_H - 48));
 
     // 遮罩
     this._maskGraphics = new PIXI.Graphics();
@@ -162,7 +165,9 @@ export class CustomerScrollArea extends PIXI.Container {
   private _setupInteraction(): void {
     const hitArea = new PIXI.Graphics();
     hitArea.beginFill(0xFFFFFF, 0.001);
-    hitArea.drawRect(0, 0, this._viewWidth, AREA_H);
+    const ey = this._panHitTopExclusion;
+    const eh = Math.max(40, AREA_H - ey);
+    hitArea.drawRect(0, ey, this._viewWidth, eh);
     hitArea.endFill();
     hitArea.eventMode = 'static';
     hitArea.cursor = 'grab';

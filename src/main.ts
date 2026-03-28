@@ -64,8 +64,8 @@ async function main(): Promise<void> {
         'supportsTouchEvents:', events?.supportsTouchEvents);
     } catch (e) { console.warn('[main] EventSystem 诊断失败:', e); }
 
-    // topReserved = safeTop + TopBar(60) + gap(4) + Banner(38) + gap(4) + ShopArea(250)
-    const topReserved = Game.safeTop + 60 + 4 + 38 + 4 + 250;
+    // topReserved = safeTop + TopBar(60) + gap(4) + ShopArea(250)；与 SHOP_HEIGHT 一致（全景遮罩可高于此，略压棋盘顶边）
+    const topReserved = Game.safeTop + 60 + 4 + MainScene.SHOP_HEIGHT;
     computeBoardMetrics(Game.logicHeight, topReserved);
     console.log(`[main] BoardMetrics 计算完成, logicHeight:${Game.logicHeight}, safeTop:${Game.safeTop}, topReserved:${topReserved}`);
 
