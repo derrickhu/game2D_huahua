@@ -13,7 +13,7 @@ import { Game } from '@/core/Game';
 import { DESIGN_WIDTH, COLORS, FONT_FAMILY, BoardMetrics, BOARD_COLS, CELL_GAP } from '@/config/Constants';
 import { ITEM_DEFS } from '@/config/ItemConfig';
 import { CurrencyManager } from '@/managers/CurrencyManager';
-import { BoardManager } from '@/managers/BoardManager';
+import { RewardBoxManager } from '@/managers/RewardBoxManager';
 import { SeasonSystem } from '@/systems/SeasonSystem';
 
 const COMBO_WINDOW = 5; // 秒
@@ -278,32 +278,23 @@ export class ComboSystem {
     }
   }
 
-  /** 合成溢出：在最近空格额外产出一个同等级物品 */
+  /** 合成溢出：额外产出一个同等级物品到奖励收纳框 */
   private _tryOverflow(resultId: string, _resultCell: number): void {
     const def = ITEM_DEFS.get(resultId);
     if (!def) return;
 
-    // 查找同等级同品类同线的物品ID（即和合成产物同ID）
-    const emptyCell = BoardManager.findEmptyOpenCell();
-    if (emptyCell < 0) return;
+    RewardBoxManager.addItem(resultId);
+    EventBus.emit('combo:overflow', -1, resultId);
 
-    // 产出一个同ID的物品（等级与合成产物相同）
-    BoardManager.placeItem(emptyCell, resultId);
-    EventBus.emit('combo:overflow', emptyCell, resultId);
-
-    // 显示溢出提示
-    this._showOverflowText(emptyCell);
+    this._showOverflowToast(resultId);
   }
 
-  /** 溢出提示文字 */
-  private _showOverflowText(cellIndex: number): void {
-    const cs = BoardMetrics.cellSize;
-    const col = cellIndex % BOARD_COLS;
-    const row = Math.floor(cellIndex / BOARD_COLS);
-    const cx = BoardMetrics.paddingX + col * (cs + CELL_GAP) + cs / 2;
-    const cy = BoardMetrics.topY + row * (cs + CELL_GAP) - 5;
+  /** 溢出提示（物品已进入收纳框） */
+  private _showOverflowToast(resultId: string): void {
+    const def = ITEM_DEFS.get(resultId);
+    const name = def?.name || '物品';
 
-    const text = new PIXI.Text('溢出!', {
+    const text = new PIXI.Text(`溢出! ${name} → 收纳框`, {
       fontSize: 16,
       fill: 0xFF4500,
       fontFamily: FONT_FAMILY,
@@ -312,7 +303,7 @@ export class ComboSystem {
       strokeThickness: 2,
     });
     text.anchor.set(0.5, 1);
-    text.position.set(cx, cy);
+    text.position.set(DESIGN_WIDTH / 2, BoardMetrics.topY - 10);
     text.alpha = 1;
     this._container.addChild(text);
 
@@ -320,7 +311,7 @@ export class ComboSystem {
       target: text,
       props: { alpha: 0 },
       duration: 1.0,
-      delay: 0.3,
+      delay: 0.5,
       ease: Ease.easeInQuad,
       onComplete: () => {
         this._container.removeChild(text);
@@ -329,7 +320,7 @@ export class ComboSystem {
     });
     TweenManager.to({
       target: text.position,
-      props: { y: cy - 25 },
+      props: { y: text.position.y - 25 },
       duration: 1.0,
       ease: Ease.easeOutQuad,
     });

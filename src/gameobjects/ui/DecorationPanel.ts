@@ -3,7 +3,7 @@
  *
  * 布局：
  * - 底图复用 merge_chain_panel（金边奶油底）
- * - 顶部 merge_chain_ribbon 彩带 + 描边白字标题
+ * - 顶部彩带 + 标题；其下居中「已收集」进度 + 分割线；右上角关闭
  * - 左侧：分类 Tab 栏（药丸式纯文字）
  * - 右侧：家具/房间风格卡网格（2 列，可纵向滑动）
  * - 卡片为程序绘制双层金边圆角 + 贴图按钮 + 稀有度标签
@@ -26,21 +26,37 @@ const PANEL_MARGIN_LEFT = 36;
 const PANEL_H_RATIO = 0.74;
 const PANEL_TOP_R = 20;
 
-const RIBBON_MAX_W = Math.round(PANEL_W * 0.72);
-const RIBBON_MAX_H = 68;
-/** 彩带整体下移，避免贴顶过挤 */
-const RIBBON_Y = 8;
+const RIBBON_MAX_W = Math.min(PANEL_W - 8, Math.round(PANEL_W * 0.98));
+const RIBBON_MAX_H = 124;
+/** 彩带相对面板顶的位置（与 _contentTopY 联动） */
+const RIBBON_Y = 34;
 
-/** 家具网格与 Tab 区顶边（与横幅下移联动） */
-const CONTENT_TOP = 102;
+/** 关闭钮：面板右上角，距右边缘（锚点为中心；数值越大越靠左） */
+const CLOSE_BTN_INSET_RIGHT = 56;
+/** 彩带底到收集进度文字 */
+const PROGRESS_BELOW_RIBBON = 8;
+/** 进度文字基线与分割线间距 */
+const PROGRESS_TO_DIVIDER = 14;
+/** 分割线与家具区顶边（小一点让网格更贴上分割线） */
+const DIVIDER_TO_CONTENT = 6;
+/** 顶部分割线长度占面板内宽比例（居中，避免顶到金边） */
+const HEADER_DIVIDER_WIDTH_RATIO = 0.56;
 const CONTENT_BOTTOM = 10;
 
 /** 左侧分类栏宽度（加大、避免贴边显得「偏」） */
 const TAB_W = 108;
 const TAB_GAP = 10;
-/** Tab 列略右移，贴近内框左侧中线 */
-const TAB_COLUMN_LEFT = 22;
+/** Tab 列左边距（再往右，完全落在奶油区内） */
+const TAB_COLUMN_LEFT = 60;
+/** Tab 列整体上移（像素） */
+const TAB_COLUMN_NUDGE_Y = 12;
 const GRID_MARGIN_RIGHT = 14;
+
+/** 侧边 Tab：选中态暖色底 / 未选中灰奶油 */
+const TAB_BG_SELECTED = 0xffc9a8;
+const TAB_BG_SELECTED_INNER = 0xffe8d8;
+const TAB_BG_IDLE = 0xefebe5;
+const TAB_BORDER_IDLE = 0xc4b8ae;
 
 const GRID_COLS = 2;
 const CARD_GAP = 10;
@@ -70,6 +86,14 @@ function measureCardGrid(gridW: number): { cw: number; ch: number; cols: number;
   return { cw, ch, cols: GRID_COLS, startX };
 }
 
+/** 列表顶留白：可一屏放下时少留空，整体上移贴近分割线；需滚动时略收紧 */
+function decoGridListTopPad(availH: number, totalRows: number, ch: number): number {
+  const baseH = CARD_GAP + totalRows * (ch + CARD_GAP);
+  if (baseH >= availH) return 10;
+  const spare = availH - baseH;
+  return Math.min(10, Math.max(0, Math.floor(spare * 0.28)));
+}
+
 /** global pixel -> design coordinate */
 function globalToDesignY(globalY: number): number {
   return globalY / Game.scale;
@@ -86,8 +110,14 @@ export class DecorationPanel extends PIXI.Container {
   private _tabContainer!: PIXI.Container;
   private _gridContainer!: PIXI.Container;
   private _gridMask!: PIXI.Graphics;
+  private _headerDivider!: PIXI.Graphics;
   private _titleText!: PIXI.Text;
   private _progressText!: PIXI.Text;
+  private _closeBtn: PIXI.Sprite | PIXI.Text | null = null;
+  /** 标题/彩带行中心 y，供关闭钮对齐 */
+  private _titleCenterY = 58;
+  /** Tab / 网格顶边（分割线以下，_build 内按彩带高度计算） */
+  private _contentTopY = 168;
   private _isOpen = false;
   private _activeTab: DecoPanelTab = DecoSlot.SHELF;
   private _scrollY = 0;
@@ -157,6 +187,11 @@ export class DecorationPanel extends PIXI.Container {
     this._pendingGridTap = null;
   }
 
+  private _layoutCloseButton(): void {
+    if (!this._closeBtn) return;
+    this._closeBtn.position.set(PANEL_W - CLOSE_BTN_INSET_RIGHT, this._titleCenterY);
+  }
+
   private _addScrollPlate(inner: PIXI.Container, w: number, h: number): void {
     const plate = new PIXI.Container();
     plate.eventMode = 'static';
@@ -222,6 +257,7 @@ export class DecorationPanel extends PIXI.Container {
     const panelY = h - panelH;
 
     this._content = new PIXI.Container();
+    this._content.sortableChildren = true;
     this._content.position.set(panelX, panelY);
     this.addChild(this._content);
 
@@ -245,9 +281,10 @@ export class DecorationPanel extends PIXI.Container {
       this._content.addChild(g);
     }
 
-    // --- ribbon（略压入面板，与 CONTENT_TOP 留出空隙） ---
+    // --- ribbon（加大、下移） ---
     const ribbonTex = TextureCache.get('merge_chain_ribbon');
-    let titleCenterY = 36;
+    let titleCenterY = 58;
+    let ribbonBottom = titleCenterY + 36;
     if (ribbonTex?.width) {
       const rib = new PIXI.Sprite(ribbonTex);
       const s = Math.min(RIBBON_MAX_W / ribbonTex.width, RIBBON_MAX_H / ribbonTex.height);
@@ -255,18 +292,21 @@ export class DecorationPanel extends PIXI.Container {
       rib.anchor.set(0.5, 0);
       rib.position.set(PANEL_W / 2, RIBBON_Y);
       rib.eventMode = 'static';
+      rib.zIndex = 5;
       this._content.addChild(rib);
       titleCenterY = RIBBON_Y + (ribbonTex.height * s) * 0.45;
+      ribbonBottom = RIBBON_Y + ribbonTex.height * s;
     }
+    this._titleCenterY = titleCenterY;
 
     // --- title (outlined white text like MergeChainPanel) ---
     this._titleText = new PIXI.Text('花店装修', {
-      fontSize: 24,
+      fontSize: 30,
       fill: 0xffffff,
       fontFamily: FONT_FAMILY,
       fontWeight: 'bold',
       stroke: 0x7a4530,
-      strokeThickness: 4,
+      strokeThickness: 5,
       dropShadow: true,
       dropShadowColor: 0x5a2d10,
       dropShadowBlur: 2,
@@ -274,63 +314,66 @@ export class DecorationPanel extends PIXI.Container {
     } as any);
     this._titleText.anchor.set(0.5, 0.5);
     this._titleText.position.set(PANEL_W / 2, titleCenterY);
+    this._titleText.zIndex = 6;
     this._content.addChild(this._titleText);
 
-    // --- progress text ---
+    // --- 收集进度：彩带正下方居中（红框区域） ---
+    const progressY = Math.round(ribbonBottom + PROGRESS_BELOW_RIBBON);
     this._progressText = new PIXI.Text('', {
-      fontSize: 13, fill: COLORS.TEXT_LIGHT, fontFamily: FONT_FAMILY,
-    });
-    this._progressText.anchor.set(1, 0.5);
-    this._progressText.position.set(PANEL_W - 20, titleCenterY);
+      fontSize: 20,
+      fill: 0xfff5e8,
+      fontFamily: FONT_FAMILY,
+      fontWeight: 'bold',
+      stroke: 0xb86b4a,
+      strokeThickness: 3,
+      dropShadow: true,
+      dropShadowColor: 0x4a3020,
+      dropShadowBlur: 2,
+      dropShadowDistance: 1,
+    } as any);
+    this._progressText.anchor.set(0.5, 0.5);
+    this._progressText.position.set(PANEL_W / 2, progressY);
+    this._progressText.zIndex = 6;
     this._content.addChild(this._progressText);
 
-    // --- close button (warehouse_close_btn sprite or text fallback) ---
-    const closeTex = TextureCache.get('warehouse_close_btn');
-    if (closeTex?.width) {
-      const closeBtn = new PIXI.Sprite(closeTex);
-      const cs = Math.min(36 / closeTex.width, 36 / closeTex.height);
-      closeBtn.scale.set(cs);
-      closeBtn.anchor.set(0.5, 0.5);
-      closeBtn.position.set(PANEL_W - 24, titleCenterY);
-      closeBtn.eventMode = 'static';
-      closeBtn.cursor = 'pointer';
-      closeBtn.on('pointertap', () => this.close());
-      this._content.addChild(closeBtn);
-    } else {
-      const closeBtn = new PIXI.Text('✕', {
-        fontSize: 22, fill: 0xffffff, fontFamily: FONT_FAMILY, fontWeight: 'bold',
-        stroke: 0x7a4530, strokeThickness: 3,
-      } as any);
-      closeBtn.anchor.set(0.5, 0.5);
-      closeBtn.position.set(PANEL_W - 24, titleCenterY);
-      closeBtn.eventMode = 'static';
-      closeBtn.cursor = 'pointer';
-      closeBtn.on('pointertap', () => this.close());
-      this._content.addChild(closeBtn);
-    }
+    // --- 顶部分割线：居中短横，不顶到两侧金边 ---
+    const dividerY = Math.round(progressY + PROGRESS_TO_DIVIDER);
+    const divHalfW = Math.round((PANEL_W * HEADER_DIVIDER_WIDTH_RATIO) / 2);
+    this._headerDivider = new PIXI.Graphics();
+    this._headerDivider.zIndex = 5;
+    this._headerDivider.lineStyle(2, GOLD_LINE, 0.75);
+    this._headerDivider.moveTo(Math.round(PANEL_W / 2) - divHalfW, dividerY);
+    this._headerDivider.lineTo(Math.round(PANEL_W / 2) + divHalfW, dividerY);
+    this._content.addChild(this._headerDivider);
+
+    this._contentTopY = Math.round(dividerY + DIVIDER_TO_CONTENT);
 
     // --- layout zones（Tab 列与网格之间留白对称） ---
     const gridX = TAB_COLUMN_LEFT + TAB_W + TAB_GAP;
     const gridW = PANEL_W - gridX - GRID_MARGIN_RIGHT;
-    const gridH = panelH - CONTENT_TOP - CONTENT_BOTTOM;
+    const gridH = panelH - this._contentTopY - CONTENT_BOTTOM;
 
     // tab container：y 在 _buildTabs 内写入 _tabVerticalPad 后对齐
     this._tabContainer = new PIXI.Container();
     this._content.addChild(this._tabContainer);
 
     this._buildTabs(gridH);
-    this._tabContainer.position.set(TAB_COLUMN_LEFT, CONTENT_TOP + this._tabVerticalPad);
+    this._tabContainer.position.set(
+      TAB_COLUMN_LEFT,
+      this._contentTopY + this._tabVerticalPad - TAB_COLUMN_NUDGE_Y,
+    );
 
     // grid container (right side)
     this._gridContainer = new PIXI.Container();
-    this._gridContainer.position.set(gridX, CONTENT_TOP);
+    this._gridContainer.position.set(gridX, this._contentTopY);
     this._content.addChild(this._gridContainer);
 
     // mask in _content coords covering exactly the grid area
     this._gridMask = new PIXI.Graphics();
     this._gridMask.beginFill(0xFFFFFF);
-    this._gridMask.drawRect(gridX, CONTENT_TOP, gridW, gridH);
+    this._gridMask.drawRect(gridX, this._contentTopY, gridW, gridH);
     this._gridMask.endFill();
+    this._gridMask.eventMode = 'none';
     this._content.addChild(this._gridMask);
     this._gridContainer.mask = this._gridMask;
 
@@ -340,6 +383,34 @@ export class DecorationPanel extends PIXI.Container {
       this._scrollY = Math.max(-this._maxScrollY, Math.min(0, this._scrollY - (e.deltaY || 0)));
       this._applyScroll();
     });
+
+    // 关闭钮：右上角，最后加入保证盖在 Tab/网格之上
+    const closeTex = TextureCache.get('warehouse_close_btn');
+    if (closeTex?.width) {
+      const closeBtn = new PIXI.Sprite(closeTex);
+      const cs = Math.min(54 / closeTex.width, 54 / closeTex.height);
+      closeBtn.scale.set(cs);
+      closeBtn.anchor.set(0.5, 0.5);
+      closeBtn.eventMode = 'static';
+      closeBtn.cursor = 'pointer';
+      closeBtn.zIndex = 2000;
+      closeBtn.on('pointertap', () => this.close());
+      this._content.addChild(closeBtn);
+      this._closeBtn = closeBtn;
+    } else {
+      const closeBtn = new PIXI.Text('✕', {
+        fontSize: 34, fill: 0xffffff, fontFamily: FONT_FAMILY, fontWeight: 'bold',
+        stroke: 0x7a4530, strokeThickness: 4,
+      } as any);
+      closeBtn.anchor.set(0.5, 0.5);
+      closeBtn.eventMode = 'static';
+      closeBtn.cursor = 'pointer';
+      closeBtn.zIndex = 2000;
+      closeBtn.on('pointertap', () => this.close());
+      this._content.addChild(closeBtn);
+      this._closeBtn = closeBtn;
+    }
+    this._layoutCloseButton();
   }
 
   // ─── tabs (left column, pill-shaped text buttons) ─────────
@@ -350,7 +421,8 @@ export class DecorationPanel extends PIXI.Container {
     const slots = Object.values(DecoSlot);
     const tabCount = 1 + slots.length;
     const tabH = Math.min(Math.floor(availH / tabCount), 66);
-    this._tabVerticalPad = Math.max(0, Math.floor((availH - tabCount * tabH) / 2));
+    const spare = Math.max(0, availH - tabCount * tabH);
+    this._tabVerticalPad = Math.floor(spare * 0.2);
     const pad = 4;
     const bw = TAB_W - pad * 2;
 
@@ -358,25 +430,36 @@ export class DecorationPanel extends PIXI.Container {
       const tab = new PIXI.Container();
       tab.position.set(0, row * tabH);
       const bh = tabH - pad * 2;
+      const r = bh / 2;
+
+      const drop = new PIXI.Graphics();
+      drop.beginFill(0x4a3020, 0.08);
+      drop.drawRoundedRect(pad + 1, pad + 2, bw, bh, r);
+      drop.endFill();
+      tab.addChild(drop);
+
       const bg = new PIXI.Graphics();
       if (isCurrent) {
-        bg.beginFill(0xFFF0E0);
-        bg.drawRoundedRect(pad, pad, bw, bh, bh / 2);
+        bg.beginFill(TAB_BG_SELECTED);
+        bg.drawRoundedRect(pad, pad, bw, bh, r);
         bg.endFill();
         bg.lineStyle(2.5, COLORS.BUTTON_PRIMARY);
-        bg.drawRoundedRect(pad, pad, bw, bh, bh / 2);
+        bg.drawRoundedRect(pad, pad, bw, bh, r);
+        const ir = Math.max(5, r - 3);
+        bg.lineStyle(1.2, TAB_BG_SELECTED_INNER, 0.85);
+        bg.drawRoundedRect(pad + 2, pad + 2, bw - 4, bh - 4, ir);
       } else {
-        bg.beginFill(0xFFF8F0, 0.92);
-        bg.drawRoundedRect(pad, pad, bw, bh, bh / 2);
+        bg.beginFill(TAB_BG_IDLE);
+        bg.drawRoundedRect(pad, pad, bw, bh, r);
         bg.endFill();
-        bg.lineStyle(1, 0xE8D8C8, 0.85);
-        bg.drawRoundedRect(pad, pad, bw, bh, bh / 2);
+        bg.lineStyle(1.25, TAB_BORDER_IDLE, 0.95);
+        bg.drawRoundedRect(pad, pad, bw, bh, r);
       }
       tab.addChild(bg);
 
       const label = new PIXI.Text(title, {
         fontSize: isCurrent ? 17 : 15,
-        fill: isCurrent ? COLORS.TEXT_DARK : COLORS.TEXT_LIGHT,
+        fill: isCurrent ? 0x5a3528 : COLORS.TEXT_LIGHT,
         fontFamily: FONT_FAMILY,
         fontWeight: isCurrent ? 'bold' : 'normal',
       });
@@ -412,9 +495,13 @@ export class DecorationPanel extends PIXI.Container {
 
   private _refreshAll(): void {
     const panelH = Math.round(Game.logicHeight * PANEL_H_RATIO);
-    const gridH = panelH - CONTENT_TOP - CONTENT_BOTTOM;
+    this._layoutCloseButton();
+    const gridH = panelH - this._contentTopY - CONTENT_BOTTOM;
     this._buildTabs(gridH);
-    this._tabContainer.position.set(TAB_COLUMN_LEFT, CONTENT_TOP + this._tabVerticalPad);
+    this._tabContainer.position.set(
+      TAB_COLUMN_LEFT,
+      this._contentTopY + this._tabVerticalPad - TAB_COLUMN_NUDGE_Y,
+    );
     this._buildGrid(gridH);
     this._updateProgress();
   }
@@ -432,14 +519,17 @@ export class DecorationPanel extends PIXI.Container {
     const inner = new PIXI.Container();
     this._gridContainer.addChild(inner);
 
+    const totalRows = Math.ceil(decos.length / cols);
+    const listTopPad = decoGridListTopPad(availH, totalRows, ch);
+
     decos.forEach((deco, i) => {
       const col = i % cols;
       const row = Math.floor(i / cols);
-      inner.addChild(this._buildCard(deco, startX + col * (cw + CARD_GAP), CARD_GAP + row * (ch + CARD_GAP), cw, ch));
+      const y = listTopPad + CARD_GAP + row * (ch + CARD_GAP);
+      inner.addChild(this._buildCard(deco, startX + col * (cw + CARD_GAP), y, cw, ch));
     });
 
-    const totalRows = Math.ceil(decos.length / cols);
-    const contentH = CARD_GAP + totalRows * (ch + CARD_GAP);
+    const contentH = listTopPad + CARD_GAP + totalRows * (ch + CARD_GAP);
     this._addScrollPlate(inner, gridW, contentH);
     this._maxScrollY = Math.max(0, contentH - availH);
     this._scrollY = 0;
@@ -452,14 +542,17 @@ export class DecorationPanel extends PIXI.Container {
     const inner = new PIXI.Container();
     this._gridContainer.addChild(inner);
 
+    const totalRows = Math.ceil(ROOM_STYLES.length / cols);
+    const listTopPad = decoGridListTopPad(availH, totalRows, ch);
+
     ROOM_STYLES.forEach((style, i) => {
       const col = i % cols;
       const row = Math.floor(i / cols);
-      inner.addChild(this._buildRoomStyleCard(style, startX + col * (cw + CARD_GAP), CARD_GAP + row * (ch + CARD_GAP), cw, ch));
+      const y = listTopPad + CARD_GAP + row * (ch + CARD_GAP);
+      inner.addChild(this._buildRoomStyleCard(style, startX + col * (cw + CARD_GAP), y, cw, ch));
     });
 
-    const totalRows = Math.ceil(ROOM_STYLES.length / cols);
-    const contentH = CARD_GAP + totalRows * (ch + CARD_GAP);
+    const contentH = listTopPad + CARD_GAP + totalRows * (ch + CARD_GAP);
     this._addScrollPlate(inner, gridW, contentH);
     this._maxScrollY = Math.max(0, contentH - availH);
     this._scrollY = 0;
@@ -777,7 +870,7 @@ export class DecorationPanel extends PIXI.Container {
   // ─── utils ────────────────────────────────────────────────
 
   private _updateProgress(): void {
-    this._progressText.text = `${DecorationManager.unlockedCount}/${DecorationManager.totalCount}`;
+    this._progressText.text = `已收集 ${DecorationManager.unlockedCount}/${DecorationManager.totalCount}`;
   }
 
   private _applyScroll(): void {

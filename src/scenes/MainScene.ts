@@ -67,6 +67,8 @@ import { DressUpPanel } from '@/gameobjects/ui/DressUpPanel';
 import { EventPanel } from '@/gameobjects/ui/EventPanel';
 import { ChallengePanel } from '@/gameobjects/ui/ChallengePanel';
 import { LeaderboardPanel } from '@/gameobjects/ui/LeaderboardPanel';
+import { RewardBoxButton, REWARD_BOX_BTN_SIZE } from '@/gameobjects/ui/RewardBoxButton';
+import { RewardBoxPanel } from '@/gameobjects/ui/RewardBoxPanel';
 
 export class MainScene implements Scene {
   readonly name = 'main';
@@ -115,6 +117,10 @@ export class MainScene implements Scene {
   private _eventPanel!: EventPanel;
   private _challengePanel!: ChallengePanel;
   private _leaderboardPanel!: LeaderboardPanel;
+
+  // ---- 奖励收纳框 ----
+  private _rewardBoxButton!: RewardBoxButton;
+  private _rewardBoxPanel!: RewardBoxPanel;
 
   // ---- 离线计时 ----
   private _idleSaveTimer = 0;
@@ -347,6 +353,19 @@ export class MainScene implements Scene {
     this._leaderboardPanel = new LeaderboardPanel();
     overlay.addChild(this._leaderboardPanel);
 
+    // 奖励收纳框面板
+    this._rewardBoxPanel = new RewardBoxPanel();
+    overlay.addChild(this._rewardBoxPanel);
+
+    EventBus.on('rewardBox:open', () => {
+      const parent = this._rewardBoxPanel.parent;
+      if (!parent) return;
+      const p = new PIXI.Point(REWARD_BOX_BTN_SIZE / 2, REWARD_BOX_BTN_SIZE);
+      const global = this._rewardBoxButton.toGlobal(p);
+      const local = parent.toLocal(global);
+      this._rewardBoxPanel.openNear(local.x, local.y);
+    });
+
     // 棋盘拖拽幽灵挂到场景根容器，避免被 ItemInfoBar / 仓库条等后添加的兄弟节点遮挡
     this._boardView.setDragGhostParent(this.container);
   }
@@ -412,6 +431,11 @@ export class MainScene implements Scene {
 
     // 监听换装变化
     EventBus.on('dressup:equipped', () => this._refreshOwnerOutfit());
+
+    // ═══════ 1b. 奖励收纳框按钮（店主脚下） ═══════
+    this._rewardBoxButton = new RewardBoxButton();
+    this._rewardBoxButton.position.set(ownerCX - REWARD_BOX_BTN_SIZE / 2, CHAR_BOTTOM_Y + 8);
+    this._shopArea.addChild(this._rewardBoxButton);
 
     // ═══════ 2. 客人横向滚动区（可左右滑动） ═══════
     const customerAreaW = W - CUSTOMER_LEFT - PAD;
@@ -910,6 +934,9 @@ export class MainScene implements Scene {
 
     // 客人滚动区惯性动画
     this._customerScrollArea.update(dt);
+
+    // 奖励收纳框滚动惯性
+    this._rewardBoxPanel.update(dt);
 
     const ownerBaseY = 195;
     this._ownerBreathT += dt;

@@ -7,6 +7,7 @@
 import { EventBus } from '@/core/EventBus';
 import { BoardManager } from './BoardManager';
 import { CurrencyManager } from './CurrencyManager';
+import { RewardBoxManager } from './RewardBoxManager';
 import { IDLE_PRODUCE_INTERVAL, OFFLINE_MAX_HOURS, STAMINA_RECOVER_INTERVAL, STAMINA_MAX } from '@/config/Constants';
 import { ITEM_DEFS, Category, findItemId, FlowerLine } from '@/config/ItemConfig';
 
@@ -109,12 +110,9 @@ class IdleManagerClass {
     const reward = this._pendingReward;
     const multiplier = doubled ? 2 : 1;
 
-    // 放置产出物品到棋盘
+    // 产出物品进入奖励收纳框
     for (const item of reward.producedItems) {
-      const emptyCell = BoardManager.findEmptyOpenCell();
-      if (emptyCell >= 0) {
-        BoardManager.placeItem(emptyCell, item.itemId);
-      }
+      RewardBoxManager.addItem(item.itemId);
     }
 
     // 恢复体力

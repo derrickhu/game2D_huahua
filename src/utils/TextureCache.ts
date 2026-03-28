@@ -55,6 +55,8 @@ const MAIN_IMAGE_MAP: Record<string, string> = {
   board_bg:       'images/ui/board_bg.png',
   board_bar:      'images/ui/board_bar.png',
   cell_locked:    'images/ui/cell_locked.png',
+  /** 奖励收纳入口按钮底图（收起态礼盒） */
+  cell_locked_v2: 'images/ui/cell_locked_v2.png',
   cell_peek:      'images/ui/cell_peek.png',
   cell_key:       'images/ui/cell_key.png',
   shop_scene_bg:  'images/ui/shop_scene_bg.png',

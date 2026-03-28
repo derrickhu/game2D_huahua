@@ -9,6 +9,7 @@
 import { BoardManager } from './BoardManager';
 import { CurrencyManager } from './CurrencyManager';
 import { WarehouseManager, WarehouseState } from './WarehouseManager';
+import { RewardBoxManager, RewardBoxState } from './RewardBoxManager';
 import { BOARD_TOTAL } from '@/config/Constants';
 import { BOARD_PRESETS } from '@/config/BoardLayout';
 import { ITEM_DEFS } from '@/config/ItemConfig';
@@ -49,6 +50,7 @@ interface SaveData {
   currency: ReturnType<typeof CurrencyManager.exportState>;
   board: ReturnType<typeof BoardManager.exportState>;
   warehouse?: WarehouseState;
+  rewardBox?: RewardBoxState;
 }
 
 class SaveManagerClass {
@@ -62,6 +64,7 @@ class SaveManagerClass {
       currency: CurrencyManager.exportState(),
       board: BoardManager.exportState(),
       warehouse: WarehouseManager.exportState(),
+      rewardBox: RewardBoxManager.exportState(),
     };
 
     try {
@@ -113,6 +116,9 @@ class SaveManagerClass {
       BoardManager.loadState(data.board);
       if (data.warehouse) {
         WarehouseManager.loadState(data.warehouse);
+      }
+      if (data.rewardBox) {
+        RewardBoxManager.loadState(data.rewardBox);
       }
 
       console.log('[Save] 读档成功, 距上次存档:', Math.round((Date.now() - data.timestamp) / 1000), '秒');
