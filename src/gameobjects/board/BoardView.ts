@@ -75,14 +75,14 @@ export class BoardView extends PIXI.Container {
   private _drawBoardArea(): void {
     const w = DESIGN_WIDTH;
     const h = BoardMetrics.areaHeight;
-    const BAR_H = 14;
+    const BAR_H = 18;
 
-    // 木纹底图或纯色填充
     const tex = TextureCache.get('board_bg');
     if (tex) {
       const sp = new PIXI.Sprite(tex);
       sp.width = w;
       sp.height = h;
+      sp.tint = 0xD8EDCE;
       const mask = new PIXI.Graphics();
       mask.beginFill(0xFFFFFF);
       mask.drawRoundedRect(0, 0, w, h, 8);
@@ -92,13 +92,12 @@ export class BoardView extends PIXI.Container {
       this.addChild(sp);
     } else {
       const bg = new PIXI.Graphics();
-      bg.beginFill(COLORS.CELL_OPEN, 0.35);
+      bg.beginFill(COLORS.CELL_OPEN, 0.85);
       bg.drawRoundedRect(0, 0, w, h, 8);
       bg.endFill();
       this.addChild(bg);
     }
 
-    // 装饰横条（上方紧贴棋盘顶部外侧，下方紧贴棋盘底部外侧）
     const barTex = TextureCache.get('board_bar');
     if (barTex) {
       const topBar = new PIXI.Sprite(barTex);
@@ -114,6 +113,13 @@ export class BoardView extends PIXI.Container {
       botBar.anchor.set(0, 0);
       botBar.position.set(0, h);
       this.addChild(botBar);
+    } else {
+      const fallbackBar = new PIXI.Graphics();
+      fallbackBar.beginFill(0xC8B090, 0.7);
+      fallbackBar.drawRoundedRect(0, -BAR_H, w, BAR_H, 4);
+      fallbackBar.drawRoundedRect(0, h, w, BAR_H, 4);
+      fallbackBar.endFill();
+      this.addChild(fallbackBar);
     }
   }
 

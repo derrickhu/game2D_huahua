@@ -79,7 +79,7 @@ export const OFFLINE_MAX_HOURS = 4;
 // 颜色主题
 export const COLORS = {
   BG: 0xFFF5EE,
-  CELL_OPEN: 0xFFF8F0,
+  CELL_OPEN: 0xE8F0E4,
   CELL_FOG: 0xC0C0C0,
   CELL_PEEK: 0xE8E0D8,
   CELL_KEY: 0xFFD700,

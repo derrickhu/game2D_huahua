@@ -192,6 +192,7 @@ export class FlowerEasterEggSystem {
     btn.endFill();
     btn.eventMode = 'static';
     btn.cursor = 'pointer';
+    btn.hitArea = new PIXI.Rectangle(cx - btnW / 2, btnY, btnW, btnH);
     overlay.addChild(btn);
 
     const btnText = new PIXI.Text('收下奖励', {
@@ -202,6 +203,8 @@ export class FlowerEasterEggSystem {
     });
     btnText.anchor.set(0.5, 0.5);
     btnText.position.set(cx, btnY + btnH / 2);
+    // 文字叠在按钮之上时会抢走命中；须穿透到下层 Graphics（与 TutorialSystem 按钮做法一致）
+    btnText.eventMode = 'none';
     overlay.addChild(btnText);
 
     // 入场动画

@@ -208,7 +208,12 @@ export class CustomerView extends PIXI.Container {
     // 需求面板单独居中（宽度不含完成按钮）
     const panelLeft = -PANEL_W / 2;
 
-    // 面板背景（优先使用图片纹理）
+    const panelShadow = new PIXI.Graphics();
+    panelShadow.beginFill(0x8B7355, 0.18);
+    panelShadow.drawRoundedRect(panelLeft + 2, 3, PANEL_W, PANEL_H, 12);
+    panelShadow.endFill();
+    this._infoPanel.addChild(panelShadow);
+
     const panelTex = TextureCache.get('order_panel');
     if (panelTex) {
       const panelBg = new PIXI.Sprite(panelTex);
@@ -219,10 +224,10 @@ export class CustomerView extends PIXI.Container {
       this._infoPanel.addChild(panelBg);
     } else {
       const bg = new PIXI.Graphics();
-      bg.beginFill(0xFFFFFF, 0.92);
+      bg.beginFill(0xFFFBF2, 0.96);
       bg.drawRoundedRect(panelLeft, 0, PANEL_W, PANEL_H, 12);
       bg.endFill();
-      bg.lineStyle(1, 0xFFD4A8, 0.4);
+      bg.lineStyle(1.5, 0xDEC090, 0.6);
       bg.drawRoundedRect(panelLeft, 0, PANEL_W, PANEL_H, 12);
       this._infoPanel.addChild(bg);
     }

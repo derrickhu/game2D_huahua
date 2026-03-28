@@ -69,11 +69,13 @@ const MAIN_IMAGE_MAP: Record<string, string> = {
   /** 仅底栏 ItemInfoBar 叶形标题条（与合成线弹窗彩带分离） */
   item_info_leaf_bar: 'images/ui/item_info_leaf_bar.png',
   merge_chain_panel: 'images/ui/merge_chain_panel.png',
-  /** NB2 花店装修抽屉弹层底图（deco_panel_popup_frame_proto_nb2，无字无按钮） */
+  /** NB2 花店装修抽屉弹层底图（deco_panel_main_panel_nb2 品红抠图裁边） */
   deco_panel_popup_frame: 'images/ui/deco_panel_popup_frame.png',
-  /** 花店装修顶栏标题彩带（可与底栏解耦，装修换图不影响物品信息栏） */
+  /** NB2 家具/房间风格卡底框（deco_panel_furniture_card_nb2 抠图裁边） */
+  deco_furniture_card: 'images/ui/deco_furniture_card.png',
+  /** 可选：装修专用顶栏彩带资源（花店装修 UI 现复用 `merge_chain_ribbon`） */
   deco_panel_title_ribbon: 'images/ui/deco_panel_title_ribbon.png',
-  /** 底部物品信息栏标题彩带（固定资源，与花店装修 `deco_panel_title_ribbon` 分离） */
+  /** 底部物品信息栏标题彩带（与合成线/装修顶栏资源解耦） */
   item_info_title_ribbon: 'images/ui/item_info_title_ribbon.png',
   /** 花店装修家具卡底部：1 使用中 / 2 待使用(可装备) / 3 购买花愿（assets/button 1–3 抠图） */
   deco_card_btn_1: 'images/ui/deco_card_btn_1.png',

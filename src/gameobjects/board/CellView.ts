@@ -110,7 +110,7 @@ export class CellView extends PIXI.Container {
   private _paintCellBase(): void {
     const cs = BoardMetrics.cellSize;
     this._bg.clear();
-    this._bg.beginFill(0xFFFBF5, 0.55);
+    this._bg.beginFill(0xFFFFFF, 0.78);
     this._bg.drawRoundedRect(0, 0, cs, cs, 8);
     this._bg.endFill();
 
@@ -159,12 +159,13 @@ export class CellView extends PIXI.Container {
       const lockTex = TextureCache.get('cell_locked');
       if (lockTex) {
         const sp = new PIXI.Sprite(lockTex);
-        // 绸缎铺满整格
         const fitSize = cs * 1.0;
         const scale = Math.min(fitSize / lockTex.width, fitSize / lockTex.height);
         sp.scale.set(scale);
         sp.anchor.set(0.5, 0.5);
         sp.position.set(cs / 2, cs / 2);
+        sp.alpha = 0.55;
+        sp.tint = 0xd0dce0;
         this._fogOverlay = sp;
       } else {
         const g = new PIXI.Graphics();

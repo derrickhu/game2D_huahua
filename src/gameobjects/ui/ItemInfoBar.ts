@@ -182,10 +182,10 @@ export class ItemInfoBar extends PIXI.Container {
 
   private _buildBg(): void {
     this._bg = new PIXI.Graphics();
-    this._bg.beginFill(0x000000, 0.03);
-    this._bg.drawRect(0, -3, DESIGN_WIDTH, 3);
+    this._bg.beginFill(0xC8B8A0, 0.6);
+    this._bg.drawRect(0, -2.5, DESIGN_WIDTH, 2.5);
     this._bg.endFill();
-    this._bg.beginFill(0xfff5ea, 0.96);
+    this._bg.beginFill(0xfff0d0, 0.97);
     this._bg.drawRect(0, 0, DESIGN_WIDTH, this._actualHeight);
     this._bg.endFill();
     this.addChild(this._bg);
