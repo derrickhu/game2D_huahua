@@ -95,9 +95,9 @@ class LevelManagerClass {
       }
     });
 
-    // 交付客人给经验
+    // 交付客人给经验（由订单档位决定）
     EventBus.on('customer:delivered', (_uid: number, customer: any) => {
-      const baseExp = 10 + (customer.slots?.length || 1) * 5;
+      const baseExp = customer.expReward ?? (10 + (customer.slots?.length || 1) * 5);
       this.addExp(baseExp);
     });
   }

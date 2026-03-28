@@ -1,7 +1,7 @@
 /**
  * 花店装修管理器
  *
- * 管理装饰解锁状态、当前装备、花愿购买等
+ * 管理装饰拥有（花愿购买）、当前装备、房间风格等
  * 数据持久化到 localStorage 'huahua_decoration'
  */
 import { EventBus } from '@/core/EventBus';
@@ -42,24 +42,11 @@ class DecorationManagerClass {
     }
   }
 
-  /** 初始化：免费装饰默认解锁 */
+  /**
+   * 初始化：不赠送任何家具；已拥有/装备仅来自存档。
+   * 配置里「无 unlockRequirement」仅表示等级到了即可花愿购买，不等于已拥有。
+   */
   init(): void {
-    for (const deco of DECO_DEFS) {
-      if (deco.cost === 0 && !deco.unlockRequirement) {
-        this._unlocked.add(deco.id);
-      }
-    }
-
-    // 每个槽位默认装备第一个免费装饰
-    for (const slotKey of Object.values(DecoSlot)) {
-      if (!this._equipped.has(slotKey)) {
-        const freeDecos = getSlotDecos(slotKey).filter(d => d.cost === 0);
-        if (freeDecos.length > 0) {
-          this._equipped.set(slotKey, freeDecos[0].id);
-        }
-      }
-    }
-
     this._initRoomStyleDefaults();
     this._load();
     console.log(`[Decoration] 初始化: ${this._unlocked.size} 个装饰已解锁, 房间风格: ${this._roomStyleId}`);
@@ -214,7 +201,11 @@ class DecorationManagerClass {
    */
   hasAffordableNew(): boolean {
     const huayuan = CurrencyManager.state.huayuan;
-    return DECO_DEFS.some(d => !this._unlocked.has(d.id) && d.cost > 0 && d.cost <= huayuan);
+    return DECO_DEFS.some(d => {
+      if (this._unlocked.has(d.id) || d.cost <= 0) return false;
+      if (!checkRequirement(d.unlockRequirement).met) return false;
+      return d.cost <= huayuan;
+    });
   }
 
   // ---- 存档 ----

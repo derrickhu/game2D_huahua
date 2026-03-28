@@ -1,20 +1,29 @@
 /**
  * 客人管理器 - 客人刷新、需求生成、自动锁定棋盘物品、交付结算
+ *
+ * 重构：需求由 OrderTierConfig 档位模板驱动，不再依赖 CustomerConfig 写死的 demands。
  */
 import { EventBus } from '@/core/EventBus';
 import { BoardManager } from './BoardManager';
 import { CurrencyManager } from './CurrencyManager';
 import { RegularCustomerManager } from './RegularCustomerManager';
-import { CUSTOMER_TYPES, CustomerTypeDef, type CustomerDemandDef } from '@/config/CustomerConfig';
+import { LevelManager } from './LevelManager';
+import { CUSTOMER_TYPES, type CustomerDemandDef } from '@/config/CustomerConfig';
 import { CellState } from '@/config/BoardLayout';
 import { TOOL_DEFS } from '@/config/BuildingConfig';
 import { findItemId, Category, FlowerLine, ToolLine } from '@/config/ItemConfig';
+import {
+  ORDER_TIERS,
+  getOrderTierWeights,
+  pickTierByWeight,
+  type OrderTier,
+  type OrderType,
+  type UnlockedLines,
+} from '@/config/OrderTierConfig';
 import { MAX_CUSTOMERS, ACTIVE_CUSTOMER_SLOTS, CUSTOMER_REFRESH_MIN, CUSTOMER_REFRESH_MAX } from '@/config/Constants';
 
 export interface DemandSlot {
-  /** 需要的具体物品 ID */
   itemId: string;
-  /** 已锁定的棋盘格索引，-1 = 未锁定 */
   lockedCellIndex: number;
 }
 
@@ -27,6 +36,14 @@ export interface CustomerInstance {
   allSatisfied: boolean;
   huayuanReward: number;
   hualuReward: number;
+  tier: OrderTier;
+  orderType: OrderType;
+  timeLimit: number | null;
+  expReward: number;
+  /** 预留：连续订单序号 */
+  chainIndex?: number;
+  /** 预留：奖励倍率 */
+  bonusMultiplier?: number;
 }
 
 class CustomerManagerClass {
@@ -43,15 +60,12 @@ class CustomerManagerClass {
     this._customers = [];
     this._nextUid = 1;
     this._started = true;
-    // 首位客人 3 秒后到达
     this._refreshTimer = CUSTOMER_REFRESH_MAX - 3;
 
     this._bindBoardEvents();
-    // 读档时 Board 已清空幽灵 reserved；此处再扫一遍（客人空则保持无锁）
     this._rescanAll();
   }
 
-  /** 每帧更新：客人刷新计时 */
   update(dt: number): void {
     if (!this._started) return;
 
@@ -66,21 +80,18 @@ class CustomerManagerClass {
     }
   }
 
-  /** 交付客人订单 */
   deliver(uid: number): boolean {
     const idx = this._customers.findIndex(c => c.uid === uid);
     if (idx < 0) return false;
     const customer = this._customers[idx];
     if (!customer.allSatisfied) return false;
 
-    // 扣除锁定的物品
     for (const slot of customer.slots) {
       if (slot.lockedCellIndex >= 0) {
         BoardManager.removeItem(slot.lockedCellIndex);
       }
     }
 
-    // 发放奖励（含熟客加成）
     const bonus = RegularCustomerManager.getRewardBonus(customer.typeId);
     const finalHuayuan = Math.round(customer.huayuanReward * (1 + bonus));
     CurrencyManager.addHuayuan(finalHuayuan);
@@ -88,21 +99,17 @@ class CustomerManagerClass {
 
     customer.huayuanReward = finalHuayuan;
 
-    console.log(`[Customer] 交付完成: ${customer.name}, 花愿+${finalHuayuan}${bonus > 0 ? ` (熟客加成+${Math.round(bonus * 100)}%)` : ''}`);
+    console.log(`[Customer] 交付完成: ${customer.name}(${customer.tier}), 花愿+${finalHuayuan}${bonus > 0 ? ` (熟客加成+${Math.round(bonus * 100)}%)` : ''}`);
 
-    // 移除客人
     this._customers.splice(idx, 1);
     EventBus.emit('customer:delivered', uid, customer);
 
-    // 重新扫描剩余客人锁定
     this._rescanAll();
-
     return true;
   }
 
-  // ---- 私有方法 ----
+  // ---- private ----
 
-  /** 监听棋盘变化，自动重新扫描锁定 */
   private _bindBoardEvents(): void {
     const rescan = () => this._rescanAll();
     EventBus.on('board:merged', rescan);
@@ -116,54 +123,25 @@ class CustomerManagerClass {
     EventBus.on('building:exhausted', rescan);
   }
 
-  /** 生成一位新客人 */
-  private _spawnCustomer(): void {
-    const pool = CUSTOMER_TYPES.filter(t => this._isTypeAvailable(t));
-    if (pool.length === 0) return;
+  // ---------- 产线解锁检测 ----------
 
-    const type = pool[Math.floor(Math.random() * pool.length)];
-    const slots = this._generateDemands(type);
-    if (slots.length === 0) return;
-
-    const hyRange = type.huayuanReward;
-    const huayuan = hyRange[0] + Math.floor(Math.random() * (hyRange[1] - hyRange[0] + 1));
-
-    const customer: CustomerInstance = {
-      uid: this._nextUid++,
-      typeId: type.id,
-      name: type.name,
-      emoji: type.emoji,
-      slots,
-      allSatisfied: false,
-      huayuanReward: huayuan,
-      hualuReward: Math.random() < type.hualuChance ? Math.ceil(huayuan * 0.1) : 0,
+  private _getUnlockedLines(): UnlockedLines {
+    return {
+      hasBouquet: this._hasBouquetProducerOnBoard(),
+      hasGreen: this._hasGreenProducerOnBoard(),
+      hasDrink: this._hasDrinkProducerOnBoard(),
     };
-
-    this._customers.push(customer);
-    console.log(`[Customer] 新客人: ${customer.name}(${customer.emoji}), 需求: ${customer.slots.map(s => s.itemId).join(', ')}`);
-    EventBus.emit('customer:arrived', customer);
-
-    this._rescanAll();
   }
 
-  /** 判断某个客人类型当前是否可用 */
-  private _isTypeAvailable(type: CustomerTypeDef): boolean {
-    const hasDrinkDemand = type.demands.some(d => d.category === Category.DRINK);
-    if (hasDrinkDemand) {
-      const hasDrinkProducer = BoardManager.cells.some(c => {
-        if (c.state !== CellState.OPEN || !c.itemId) return false;
-        const def = TOOL_DEFS.get(c.itemId);
-        return !!(def && def.produceCategory === Category.DRINK && def.canProduce);
-      });
-      if (!hasDrinkProducer) return false;
+  private _hasDrinkProducerOnBoard(): boolean {
+    for (const c of BoardManager.cells) {
+      if (c.state !== CellState.OPEN || !c.itemId) continue;
+      const def = TOOL_DEFS.get(c.itemId);
+      if (def && def.produceCategory === Category.DRINK && def.canProduce) return true;
     }
-    return true;
+    return false;
   }
 
-  /**
-   * 花束线：棋盘上有花艺材料篮，或已有 ≥3 级包装工具（可产出包装线进而合成花束包装纸）。
-   * 与 BuildingConfig 中 canProduce 的 tool_arrange_3+ / flower_wrap_4 一致。
-   */
   private _hasBouquetProducerOnBoard(): boolean {
     for (const c of BoardManager.cells) {
       if (c.state !== CellState.OPEN || !c.itemId) continue;
@@ -174,10 +152,6 @@ class CustomerManagerClass {
     return false;
   }
 
-  /**
-   * 绿植与鲜花共用种植工具产出；与 BuildingConfig 一致：tool_plant_1/2 仅合成、不可点击产出，
-   * 从 tool_plant_3（育苗盘）起 canProduce，单次产出在鲜花/绿植线间按权重随机。
-   */
   private _hasGreenProducerOnBoard(): boolean {
     for (const c of BoardManager.cells) {
       if (c.state !== CellState.OPEN || !c.itemId) continue;
@@ -187,7 +161,8 @@ class CustomerManagerClass {
     return false;
   }
 
-  /** 仅保留当前已具备产出手段的花系产品线（鲜花线始终允许） */
+  // ---------- 产线过滤 ----------
+
   private _eligibleFlowerLines(lines: readonly string[]): string[] {
     return lines.filter(line => {
       if (line === FlowerLine.BOUQUET) return this._hasBouquetProducerOnBoard();
@@ -197,20 +172,89 @@ class CustomerManagerClass {
   }
 
   private _eligibleDemandLines(demandDef: CustomerDemandDef): string[] {
-    if (demandDef.category !== Category.FLOWER) return [...demandDef.lines];
-    return this._eligibleFlowerLines(demandDef.lines);
+    if (demandDef.category === Category.DRINK) {
+      if (!this._hasDrinkProducerOnBoard()) return [];
+      return [...demandDef.lines];
+    }
+    if (demandDef.category === Category.FLOWER) {
+      return this._eligibleFlowerLines(demandDef.lines);
+    }
+    return [...demandDef.lines];
   }
 
-  /** 为客人生成具体需求 */
-  private _generateDemands(type: CustomerTypeDef): DemandSlot[] {
-    const [minSlots, maxSlots] = type.slotRange;
+  // ---------- 新的刷客流程 ----------
+
+  private _spawnCustomer(): void {
+    const level = LevelManager.level;
+    const lines = this._getUnlockedLines();
+    const weights = getOrderTierWeights(level, lines);
+    const tier = pickTierByWeight(weights);
+    const tierDef = ORDER_TIERS[tier];
+
+    const pool = CUSTOMER_TYPES.filter(t =>
+      t.tiers.includes(tier) && this._isTypeAvailableForTier(t.id, tier),
+    );
+    if (pool.length === 0) return;
+
+    const type = pool[Math.floor(Math.random() * pool.length)];
+    const slots = this._generateDemands(tierDef.demandPool, tierDef.slotRange);
+    if (slots.length === 0) return;
+
+    const [minHy, maxHy] = tierDef.huayuanRange;
+    const huayuan = minHy + Math.floor(Math.random() * (maxHy - minHy + 1));
+
+    const customer: CustomerInstance = {
+      uid: this._nextUid++,
+      typeId: type.id,
+      name: type.name,
+      emoji: type.emoji,
+      slots,
+      allSatisfied: false,
+      huayuanReward: huayuan,
+      hualuReward: Math.random() < tierDef.hualuChance ? Math.ceil(huayuan * 0.1) : 0,
+      tier,
+      orderType: tierDef.orderType,
+      timeLimit: tierDef.timeLimit,
+      expReward: tierDef.expReward,
+    };
+
+    this._customers.push(customer);
+    console.log(`[Customer] 新客人: ${customer.name}(${customer.emoji}) [${tier}], 需求: ${customer.slots.map(s => s.itemId).join(', ')}`);
+    EventBus.emit('customer:arrived', customer);
+
+    this._rescanAll();
+  }
+
+  /**
+   * 判断某客人类型在指定档位下是否可用（检查该档位需求池的产线是否已解锁）。
+   * 如果档位 demandPool 含饮品但棋盘无饮品工具 → 不可用（防止无法完成的订单）。
+   */
+  private _isTypeAvailableForTier(_typeId: string, tier: OrderTier): boolean {
+    const tierDef = ORDER_TIERS[tier];
+    const hasDrinkInPool = tierDef.demandPool.some(d => d.category === Category.DRINK);
+    if (hasDrinkInPool && !this._hasDrinkProducerOnBoard()) {
+      const hasFlowerOnly = tierDef.demandPool.some(d => d.category === Category.FLOWER);
+      if (!hasFlowerOnly) return false;
+    }
+    return true;
+  }
+
+  /** 从档位的 demandPool 和 slotRange 生成具体需求 */
+  private _generateDemands(
+    demandPool: CustomerDemandDef[],
+    slotRange: [number, number],
+  ): DemandSlot[] {
+    const [minSlots, maxSlots] = slotRange;
     const slotCount = minSlots + Math.floor(Math.random() * (maxSlots - minSlots + 1));
     const slots: DemandSlot[] = [];
 
     for (let i = 0; i < slotCount; i++) {
-      const demandDef = type.demands[i % type.demands.length];
+      const demandDef = demandPool[i % demandPool.length];
       const eligibleLines = this._eligibleDemandLines(demandDef);
-      if (eligibleLines.length === 0) return [];
+      if (eligibleLines.length === 0) {
+        if (demandPool.length > 1) continue;
+        return [];
+      }
 
       const [minLv, maxLv] = demandDef.levelRange;
       let itemId: string | null = null;
@@ -231,9 +275,8 @@ class CustomerManagerClass {
     return slots;
   }
 
-  /** 重新扫描所有客人需求并锁定棋盘物品（仅服务中的客人） */
+  /** 重新扫描所有客人需求并锁定棋盘物品 */
   private _rescanAll(): void {
-    // 清除所有客人锁定
     for (const cust of this._customers) {
       for (const slot of cust.slots) {
         if (slot.lockedCellIndex >= 0) {
@@ -245,10 +288,7 @@ class CustomerManagerClass {
       cust.allSatisfied = false;
     }
 
-    // 已锁定的格子集合
     const locked = new Set<number>();
-
-    // 只有前 ACTIVE_CUSTOMER_SLOTS 位客人可锁定棋盘（与柜台「当前服务」一致）
     const activeCount = Math.min(this._customers.length, ACTIVE_CUSTOMER_SLOTS);
     for (let ci = 0; ci < activeCount; ci++) {
       const cust = this._customers[ci];

@@ -12,6 +12,7 @@
 import * as PIXI from 'pixi.js';
 import { COLORS, FONT_FAMILY, ACTIVE_CUSTOMER_SLOTS } from '@/config/Constants';
 import { ITEM_DEFS, Category, FlowerLine, DrinkLine } from '@/config/ItemConfig';
+import { TIER_COLORS, type OrderTier } from '@/config/OrderTierConfig';
 import { TextureCache } from '@/utils/TextureCache';
 import { createToolEnergySprite, isBoardToolInteract } from '@/utils/ToolEnergyBadge';
 import { ToolSparkleLayer } from '@/utils/ToolSparkleLayer';
@@ -198,12 +199,16 @@ export class CustomerView extends PIXI.Container {
     this._infoPanel.removeChildren();
     this._clearCompleteBtn();
     this._clearRewardBadge();
+    this._clearTierBadge();
     if (!this._customer) return;
 
     const allDone = this._customer.allSatisfied && this._queueIndex < ACTIVE_CUSTOMER_SLOTS;
 
     // 奖励徽章（头像底部，半透明深色遮罩）
     this._buildRewardBadge();
+
+    // 档位角标（需求面板左上角小圆标）
+    this._buildTierBadge();
 
     // 需求面板单独居中（宽度不含完成按钮）
     const panelLeft = -PANEL_W / 2;
@@ -319,6 +324,45 @@ export class CustomerView extends PIXI.Container {
       }
       this._rewardBadge.destroy({ children: true });
       this._rewardBadge = null;
+    }
+  }
+
+  private _tierBadge: PIXI.Container | null = null;
+
+  private _buildTierBadge(): void {
+    this._clearTierBadge();
+    if (!this._customer) return;
+    const tier: OrderTier = (this._customer as any).tier ?? 'C';
+    const color = TIER_COLORS[tier] ?? 0x999999;
+
+    const badge = new PIXI.Container();
+    const r = 11;
+    const bg = new PIXI.Graphics();
+    bg.beginFill(color, 0.92);
+    bg.drawCircle(0, 0, r);
+    bg.endFill();
+    badge.addChild(bg);
+
+    const label = new PIXI.Text(tier, {
+      fontSize: 12,
+      fill: 0xFFFFFF,
+      fontFamily: FONT_FAMILY,
+      fontWeight: 'bold',
+    });
+    label.anchor.set(0.5, 0.5);
+    badge.addChild(label);
+
+    badge.position.set(-PANEL_W / 2 + r + 2, PANEL_Y - r - 2);
+    badge.zIndex = 10;
+    this.addChild(badge);
+    this._tierBadge = badge;
+  }
+
+  private _clearTierBadge(): void {
+    if (this._tierBadge) {
+      if (this._tierBadge.parent) this._tierBadge.parent.removeChild(this._tierBadge);
+      this._tierBadge.destroy({ children: true });
+      this._tierBadge = null;
     }
   }
 
