@@ -2,7 +2,7 @@
  * 广告管理器 - 微信/抖音双平台广告统一管理
  *
  * 支持：
- * - 激励视频广告（体力恢复、离线翻倍、CD加速）
+ * - 激励视频广告（体力恢复、CD加速等）
  * - 插屏广告（场景切换间隙）
  * - Banner 广告（预留位）
  *
@@ -30,7 +30,6 @@ const AD_CONFIG = {
 /** 广告场景枚举 */
 export enum AdScene {
   STAMINA_RECOVER  = 'stamina_recover',   // 体力恢复
-  OFFLINE_DOUBLE   = 'offline_double',    // 离线收益翻倍
   CD_SPEEDUP       = 'cd_speedup',        // 建筑CD加速
   EXTRA_REWARD     = 'extra_reward',      // 额外奖励
   REVIVE           = 'revive',            // 挑战复活

@@ -75,6 +75,8 @@ export const STAMINA_RECOVER_INTERVAL = 180; // 3分钟恢复1点
 // 挂机
 export const IDLE_PRODUCE_INTERVAL = 60; // 60秒产出一个1级物品
 export const OFFLINE_MAX_HOURS = 4;
+/** 离线收益：每满该秒数得 1 花愿（与 OFFLINE_MAX_HOURS 叠乘后满档 = 4×60÷5 = 48） */
+export const OFFLINE_HUAYUAN_INTERVAL_SEC = 300; // 5 分钟 1 点
 
 // 颜色主题
 export const COLORS = {

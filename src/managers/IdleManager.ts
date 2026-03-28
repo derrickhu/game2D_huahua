@@ -1,14 +1,14 @@
 /**
  * 离线挂机收益系统
  *
- * 玩家离线期间，永久型建筑自动产出物品。
- * 回归时展示"离线收益报告"。
+ * 离线期间按规则产出收纳框物品 + 花愿；体力仅走在线自然回复，不计入本系统。
+ * 回归时展示「离线收益报告」，领取无广告翻倍。
  */
 import { EventBus } from '@/core/EventBus';
 import { BoardManager } from './BoardManager';
 import { CurrencyManager } from './CurrencyManager';
 import { RewardBoxManager } from './RewardBoxManager';
-import { IDLE_PRODUCE_INTERVAL, OFFLINE_MAX_HOURS, STAMINA_RECOVER_INTERVAL, STAMINA_MAX } from '@/config/Constants';
+import { IDLE_PRODUCE_INTERVAL, OFFLINE_MAX_HOURS, OFFLINE_HUAYUAN_INTERVAL_SEC } from '@/config/Constants';
 import { ITEM_DEFS, Category, findItemId, FlowerLine } from '@/config/ItemConfig';
 
 declare const wx: any;
@@ -22,12 +22,8 @@ export interface OfflineReward {
   offlineSeconds: number;
   /** 产出的物品 [{itemId, name}] */
   producedItems: { itemId: string; name: string }[];
-  /** 恢复的体力 */
-  staminaRecovered: number;
-  /** 基础花愿 */
+  /** 花愿（体力由在线/自然回复单独结算，不计入离线） */
   huayuanEarned: number;
-  /** 是否可以看广告翻倍 */
-  canDoubleByAd: boolean;
 }
 
 interface IdleSaveData {
@@ -81,20 +77,12 @@ class IdleManagerClass {
       }
     }
 
-    // 计算体力恢复
-    const currentStamina = CurrencyManager.state.stamina;
-    const staminaRecoverable = STAMINA_MAX - currentStamina;
-    const staminaFromTime = Math.floor(effectiveSeconds / STAMINA_RECOVER_INTERVAL);
-    const staminaRecovered = Math.min(staminaFromTime, staminaRecoverable);
-
-    const huayuanEarned = Math.floor(effectiveSeconds / 60) * 2;
+    const huayuanEarned = Math.floor(effectiveSeconds / OFFLINE_HUAYUAN_INTERVAL_SEC);
 
     const reward: OfflineReward = {
       offlineSeconds: effectiveSeconds,
       producedItems,
-      staminaRecovered,
       huayuanEarned,
-      canDoubleByAd: true,
     };
 
     this._pendingReward = reward;
@@ -103,28 +91,21 @@ class IdleManagerClass {
   }
 
   /** 领取离线收益 */
-  claimReward(doubled = false): void {
+  claimReward(): void {
     if (!this._pendingReward) return;
 
     const reward = this._pendingReward;
-    const multiplier = doubled ? 2 : 1;
 
-    // 产出物品进入奖励收纳框
     for (const item of reward.producedItems) {
       RewardBoxManager.addItem(item.itemId);
     }
 
-    // 恢复体力
-    if (reward.staminaRecovered > 0) {
-      CurrencyManager.addStamina(reward.staminaRecovered);
-    }
-
     if (reward.huayuanEarned > 0) {
-      CurrencyManager.addHuayuan(reward.huayuanEarned * multiplier);
+      CurrencyManager.addHuayuan(reward.huayuanEarned);
     }
 
     this._pendingReward = null;
-    EventBus.emit('idle:claimed', reward, doubled);
+    EventBus.emit('idle:claimed', reward);
   }
 
   /** 记录玩家在线状态（在每帧 update 或离开时调用） */

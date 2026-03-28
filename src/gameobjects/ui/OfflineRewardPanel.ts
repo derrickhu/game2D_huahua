@@ -7,8 +7,6 @@ import { TweenManager, Ease } from '@/core/TweenManager';
 import { EventBus } from '@/core/EventBus';
 import { IdleManager, OfflineReward } from '@/managers/IdleManager';
 import { DESIGN_WIDTH, FONT_FAMILY, COLORS } from '@/config/Constants';
-import { AdManager, AdScene } from '@/managers/AdManager';
-import { ToastMessage } from './ToastMessage';
 
 export class OfflineRewardPanel extends PIXI.Container {
   private _bg!: PIXI.Graphics;
@@ -129,64 +127,16 @@ export class OfflineRewardPanel extends PIXI.Container {
       y += lineH;
     }
 
-    // 体力恢复
-    if (this._reward.staminaRecovered > 0) {
-      this._drawRewardLine(panelX + 60, y, '💖', `体力恢复 +${this._reward.staminaRecovered}`);
-      y += lineH;
-    }
-
     if (this._reward.huayuanEarned > 0) {
       this._drawRewardLine(panelX + 60, y, '💰', `花愿收入 +${this._reward.huayuanEarned}`);
       y += lineH;
     }
 
-    // 按钮区域（双按钮：普通领取 + 广告翻倍）
     const btnY = panelY + panelH - 90;
-    const btnW = 190;
+    const btnW = 220;
     const btnH = 48;
-    const btnGap = 16;
 
-    // ---- 广告翻倍按钮（左侧，高亮金色） ----
-    if (this._reward.canDoubleByAd) {
-      const adBtnX = cx - btnW - btnGap / 2;
-      const adBtn = new PIXI.Graphics();
-      adBtn.beginFill(0xFFB300);
-      adBtn.drawRoundedRect(adBtnX, btnY, btnW, btnH, 24);
-      adBtn.endFill();
-      // 闪光装饰
-      adBtn.beginFill(0xFFD54F, 0.3);
-      adBtn.drawRoundedRect(adBtnX + 4, btnY + 2, btnW - 8, btnH / 2 - 2, 20);
-      adBtn.endFill();
-      this._content.addChild(adBtn);
-
-      const adText = new PIXI.Text('📺 看广告×2倍', {
-        fontSize: 17, fill: 0xFFFFFF, fontFamily: FONT_FAMILY, fontWeight: 'bold',
-      });
-      adText.anchor.set(0.5, 0.5);
-      adText.position.set(adBtnX + btnW / 2, btnY + btnH / 2);
-      this._content.addChild(adText);
-
-      const adHit = new PIXI.Container();
-      adHit.hitArea = new PIXI.Rectangle(adBtnX, btnY, btnW, btnH);
-      adHit.eventMode = 'static';
-      adHit.cursor = 'pointer';
-      adHit.on('pointerdown', () => {
-        AdManager.showRewardedAd(AdScene.OFFLINE_DOUBLE, (success) => {
-          if (success) {
-            IdleManager.claimReward(true);
-            ToastMessage.show('🎉 收益已翻倍！');
-          } else {
-            IdleManager.claimReward(false);
-            ToastMessage.show('广告未完成，领取基础收益');
-          }
-          this.close();
-        });
-      });
-      this._content.addChild(adHit);
-    }
-
-    // ---- 普通领取按钮（右侧） ----
-    const claimBtnX = this._reward.canDoubleByAd ? cx + btnGap / 2 : cx - btnW / 2;
+    const claimBtnX = cx - btnW / 2;
     const claimBtn = new PIXI.Graphics();
     claimBtn.beginFill(COLORS.BUTTON_PRIMARY);
     claimBtn.drawRoundedRect(claimBtnX, btnY, btnW, btnH, 24);
@@ -205,7 +155,7 @@ export class OfflineRewardPanel extends PIXI.Container {
     claimHit.eventMode = 'static';
     claimHit.cursor = 'pointer';
     claimHit.on('pointerdown', () => {
-      IdleManager.claimReward(false);
+      IdleManager.claimReward();
       this.close();
     });
     this._content.addChild(claimHit);

@@ -5,5 +5,8 @@ dist/
 .vite/
 minigame/game-bundle.js
 
+# 图像处理临时文件：勿写入 minigame/images（开发者工具可能缓存路径，删除后出现 ENOENT）
+minigame/images/**/tmp*.png
+
 # CodeBuddy 项目数据
 .codebuddy/
