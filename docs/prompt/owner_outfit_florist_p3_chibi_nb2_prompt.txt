@@ -1,0 +1,20 @@
+REFERENCE IMAGE — attached file is the game's canonical DEFAULT owner bust (chibi_default), already approved:
+Match it EXACTLY for rendering pipeline: same soft brown line weight, same soft 3D anime shading on face and cloth, same eye size and face shape, same bust crop scale and how much head fills the 9:16 frame. Only change hair details, accessories, and upper-body costume to the florist theme below. Forbidden: switching to full-body SD chibi, isometric shop token style, duplicate ghost/offset copy of the figure, or any flat magenta shapes remaining behind the silhouette (solid FF00FF only outside the character).
+
+FRAMING — absolute requirements, failure if violated:
+This is a BUST PORTRAIT ONLY for a mobile game dialogue / order UI. The image must show ONLY from upper chest (collarbone area) through top of hair. The bottom edge of the canvas MUST cut horizontally across the mid-torso — at or above the natural waist. Absolutely FORBIDDEN in frame: hips, legs, knees, boots, feet, full skirt length, ground, or any full-body chibi with tiny body under huge head. If the viewer can see the character's shoes or full legs, the image is WRONG. Redraw as a tight bust crop.
+
+STYLE — must match huahua `customer_*` order-panel bust sprites exactly:
+Hand-drawn 2D anime with soft 3D volume, low saturation warm pastel, soft warm brown outlines (not harsh black). Large expressive warm brown eyes with white sparkle, rosy cheeks, gentle smile. Same shading depth and line quality as customer NPC bust art — cozy dimensional portrait. NOT the flat super-deformed isometric shop-floor sprite look. NOT a miniature full-body doll.
+
+BODY PROPORTIONS for visible torso:
+Use anime dialogue-bust proportions like customers: head is large and cute but the visible chest and shoulders look like a normal bust portrait, not a pin-sized body under a giant head.
+
+POSE: slight 3/4 toward viewer's right, both eyes visible, warm expression.
+
+IDENTITY (from reference for colors and accessories only): light brown low side ponytail, sage-green ribbon, wildflower behind ear, cream blouse, dark green apron with pockets and brown belt visible on upper body only — do not extend crop to show skirt or boots.
+
+LAYOUT:
+Portrait 9:16, single character, bust crop only. Hair top ~10% to 16% from canvas top; bottom crop line through mid-torso with ~10% to 16% magenta band below figure. Centered, ~6% to 10% magenta side margins. Background flat FF00FF only. No text.
+
+The reference bust defines style and scale; text below defines florist outfit identity on top of that base.

@@ -1,0 +1,19 @@
+Single isolated empty card frame asset on flat solid magenta FF00FF background for chroma-key cutout.
+
+One vertical rounded rectangle card, portrait orientation approximately 3:4 width-to-height ratio, centered in the canvas. The card fills about 80 percent of the canvas.
+
+The card has a two-part structure:
+
+TOP HEADER ZONE: The upper 18 percent of the card is a distinct header strip with a slightly deeper pink-coral tone, hex approximately F8C0B8 to F5A8A0. This area has a gentle gradient from lighter at top to slightly deeper at bottom. It is separated from the main body by a very faint horizontal tonal shift, not a hard line. This header area is where a day number label will be overlaid.
+
+MAIN BODY: The remaining lower 82 percent is the card content area. Fill color is warm cream to soft ivory, hex FFFBF3 to FFF5E8. Clean, flat, empty, ready for item icon overlays.
+
+BORDER: Thin warm coral-salmon outline, approximately 2 pixels, hex E8967A to D4836F. Consistent around all edges. The outline has a very subtle darker tone at the bottom edge suggesting a tiny depth shadow.
+
+CORNERS: Moderately rounded, approximately 12 percent of card width as corner radius. Soft and friendly.
+
+A very soft drop shadow falls behind the card onto the magenta, giving a slight floating lifted feel.
+
+No icons inside, no text, no numbers, no Chinese characters, no checkmarks, no rarity labels, no watermark. Only the empty two-tone card frame on magenta.
+
+High quality 2D casual game UI illustration, soft hand-painted feel, warm cheerful lighting, cute cozy merge-game aesthetic. Not photorealistic. Flat style with gentle gradients, not overly 3D or sculpted.

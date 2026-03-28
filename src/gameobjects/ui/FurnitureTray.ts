@@ -7,7 +7,7 @@
 import * as PIXI from 'pixi.js';
 import { Game } from '@/core/Game';
 import { TweenManager, Ease } from '@/core/TweenManager';
-import { EventBus } from '@/core/EventBus';
+import { ToastMessage } from '@/gameobjects/ui/ToastMessage';
 import { DecorationManager } from '@/managers/DecorationManager';
 import { RoomLayoutManager } from '@/managers/RoomLayoutManager';
 import { FurnitureDragSystem } from '@/systems/FurnitureDragSystem';
@@ -319,7 +319,7 @@ export class FurnitureTray extends PIXI.Container {
       if (isPlaced) {
         // 已在房间中：选中它
         FurnitureDragSystem.select(deco.id);
-        EventBus.emit('toast:show', `已选中「${deco.name}」，可在房间中拖动`);
+        ToastMessage.show( `已选中「${deco.name}」，可在房间中拖动`);
       } else {
         // 从托盘拖入房间
         const designPos = this._eventToDesign(e);

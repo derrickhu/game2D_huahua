@@ -1,0 +1,17 @@
+REFERENCE IMAGE — attached default owner bust is the style anchor: replicate line softness, gradients, and bust crop scale exactly; vintage hair, corset vest, and lace from text. Forbidden: full-body chibi ratio, ghost layer, magenta artifact behind subject.
+
+BUST PORTRAIT — align with huahua customer bust portraits: elegant but same soft 3D anime volume as `customer_*` NPC heads.
+
+ART STYLE:
+Hand-drawn 2D anime, gentle gradient shading, muted warm pastel, soft warm brown outlines. Large gentle brown eyes, refined smile, rosy cheeks. Dimensional illustration matching customer bust quality — not flat chibi game token.
+
+CAMERA SCALE — critical:
+Large UI bust. Head plus hairstyle fills about 58% to 72% of canvas height. Waist-up: high collar, vest, shoulders; half-up wavy hair and burgundy bow fully visible. Match head scale to the attached default bust reference, not to any SD full-body sheet.
+
+POSE: mild 3/4 toward viewer's right, both eyes visible, like customer strip.
+
+IDENTITY: chest-length waves, half-up with burgundy velvet bow, pearl drop earrings, cream lace high-collar blouse, burgundy corset vest, cameo brooch, dusty rose skirt top edge optional.
+
+LAYOUT: 9:16, one figure, thin FF00FF padding (hair ~12% to 18% from top, bust bottom ~18% to 24% from bottom), centered, 6% to 10% side margins. No text.
+
+Vintage identity from text; rendering must match attached default bust.

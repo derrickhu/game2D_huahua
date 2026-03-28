@@ -1,0 +1,17 @@
+Single horizontal image: exactly 3 equal columns in one row. Same girl in all 3 cells, identical face hair outfit accessories, same art style. Column 1 and 2 match pose except eyes; column 3 is different pose allowed.
+
+Background for entire image: one solid flat chroma key color only, exact pure magenta RGB 255 0 255 hex FF00FF. No gradients, no vignette, no white gray or black backdrop, no checkerboard, no floor shadow painted on background. Characters may have normal soft shadows only on their own bodies, not a large white or black card behind them.
+
+Character: cute young flower shop girl as Flower Queen about 18, warm light brown bob more lustrous, golden floral crown roses lilies tiny gems, large brown eyes with soft golden shimmer when open, rosy cheeks, Q-version chibi about 4 to 4.5 heads tall in full body columns.
+
+Outfit: majestic gown white bodice gradient lavender and rose pink hem, golden vine embroidery crystal flowers on bodice, translucent petal cape like soft wings iridescent shimmer, golden vine belt large rose centerpiece, golden sandals vine straps, one hand holds slim golden scepter with crystal flower bud top in full body columns.
+
+Style: hand-drawn 2D anime, soft shading, gold lavender white pink dreamy sparkle subtle, cozy fantasy storybook. No text no watermark.
+
+Column 1: full body standing 3/4 right, one hand scepter other arm relaxed, eyes open serene confident smile, full dress to feet centered in column.
+
+Column 2: same pose and outfit as column 1 only eyes closed gentle smile, identical otherwise.
+
+Column 3: bust mid-chest up, crown and gown bodice embroidery visible. Front-facing portrait, both eyes visible, regal warm smile, overall frontal read with optional slight head turn toward right up to mild 3/4, not profile. Scepter may be lowered or not visible, pose may differ from full body. Larger scale centered.
+
+Critical: three equal width columns clear separation no overlap.

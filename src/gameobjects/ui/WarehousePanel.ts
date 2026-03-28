@@ -13,7 +13,7 @@ import { WarehouseManager } from '@/managers/WarehouseManager';
 import { BoardManager } from '@/managers/BoardManager';
 import { CurrencyManager } from '@/managers/CurrencyManager';
 import { TextureCache } from '@/utils/TextureCache';
-import { createToolEnergySprite, isBoardToolCategory } from '@/utils/ToolEnergyBadge';
+import { createToolEnergySprite, isBoardToolInteract } from '@/utils/ToolEnergyBadge';
 import { ToolSparkleLayer } from '@/utils/ToolSparkleLayer';
 import { ToastMessage } from './ToastMessage';
 import { ConfirmDialog } from './ConfirmDialog';
@@ -446,10 +446,12 @@ export class WarehousePanel extends PIXI.Container {
       bg.beginFill(0xd8ccbe, 0.35);
       bg.drawRoundedRect(0, 0, s, s, rad);
       bg.endFill();
+      slot.addChild(bg);
+      // 必须先铺底再叠锁，否则格底会盖住 `warehouse_slot_lock` 图标
       const lockTex = TextureCache.get('warehouse_slot_lock');
       if (lockTex && lockTex.width > 0) {
         const sp = new PIXI.Sprite(lockTex);
-        const fit = s * 0.58;
+        const fit = s * 0.64;
         const sc = Math.min(fit / lockTex.width, fit / lockTex.height);
         sp.scale.set(sc);
         sp.anchor.set(0.5, 0.5);
@@ -465,6 +467,7 @@ export class WarehousePanel extends PIXI.Container {
         lock.alpha = 0.55;
         slot.addChild(lock);
       }
+      return slot;
     } else if (itemId) {
       const def = ITEM_DEFS.get(itemId);
       const tex0 = def ? TextureCache.get(def.icon) : null;
@@ -494,10 +497,6 @@ export class WarehousePanel extends PIXI.Container {
     }
     slot.addChild(bg);
 
-    if (locked) {
-      return slot;
-    }
-
     if (itemId) {
       const def = ITEM_DEFS.get(itemId);
       if (def) {
@@ -511,7 +510,7 @@ export class WarehousePanel extends PIXI.Container {
           sprite.anchor.set(0.5, 0.5);
           sprite.position.set(s / 2, s / 2);
           slot.addChild(sprite);
-          if (isBoardToolCategory(def.category)) {
+          if (isBoardToolInteract(def.interactType)) {
             slot.addChild(new ToolSparkleLayer(s, s));
             const energy = createToolEnergySprite(s, s, { maxSideFrac: 0.30, pad: 4 });
             if (energy) slot.addChild(energy);

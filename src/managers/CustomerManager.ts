@@ -5,8 +5,10 @@ import { EventBus } from '@/core/EventBus';
 import { BoardManager } from './BoardManager';
 import { CurrencyManager } from './CurrencyManager';
 import { RegularCustomerManager } from './RegularCustomerManager';
-import { CUSTOMER_TYPES, CustomerTypeDef } from '@/config/CustomerConfig';
-import { ITEM_DEFS, findItemId } from '@/config/ItemConfig';
+import { CUSTOMER_TYPES, CustomerTypeDef, type CustomerDemandDef } from '@/config/CustomerConfig';
+import { CellState } from '@/config/BoardLayout';
+import { TOOL_DEFS } from '@/config/BuildingConfig';
+import { findItemId, Category, FlowerLine, ToolLine } from '@/config/ItemConfig';
 import { MAX_CUSTOMERS, ACTIVE_CUSTOMER_SLOTS, CUSTOMER_REFRESH_MIN, CUSTOMER_REFRESH_MAX } from '@/config/Constants';
 
 export interface DemandSlot {
@@ -116,7 +118,6 @@ class CustomerManagerClass {
 
   /** 生成一位新客人 */
   private _spawnCustomer(): void {
-    // 当前阶段只选花束类客人（前 4 种），后期扩展 unlockPhase
     const pool = CUSTOMER_TYPES.filter(t => this._isTypeAvailable(t));
     if (pool.length === 0) return;
 
@@ -147,17 +148,57 @@ class CustomerManagerClass {
 
   /** 判断某个客人类型当前是否可用 */
   private _isTypeAvailable(type: CustomerTypeDef): boolean {
-    // 简化：有饮品需求的客人需要棋盘上已有饮品建筑
-    const hasDrinkDemand = type.demands.some(d => d.category === 'drink');
+    const hasDrinkDemand = type.demands.some(d => d.category === Category.DRINK);
     if (hasDrinkDemand) {
-      const hasDrinkBuilding = BoardManager.cells.some(c =>
-        c.state === 'open' && c.itemId?.startsWith('tool_tea_set')
-      );
-      // 暂时全部允许：早期也可能看到少量饮品需求客人
-      // 后期可根据 unlockPhase 精确控制
-      if (hasDrinkDemand && !hasDrinkBuilding) return false;
+      const hasDrinkProducer = BoardManager.cells.some(c => {
+        if (c.state !== CellState.OPEN || !c.itemId) return false;
+        const def = TOOL_DEFS.get(c.itemId);
+        return !!(def && def.produceCategory === Category.DRINK && def.canProduce);
+      });
+      if (!hasDrinkProducer) return false;
     }
     return true;
+  }
+
+  /**
+   * 花束线：棋盘上有花艺材料篮，或已有 ≥3 级包装工具（可产出包装线进而合成花束包装纸）。
+   * 与 BuildingConfig 中 canProduce 的 tool_arrange_3+ / flower_wrap_4 一致。
+   */
+  private _hasBouquetProducerOnBoard(): boolean {
+    for (const c of BoardManager.cells) {
+      if (c.state !== CellState.OPEN || !c.itemId) continue;
+      if (c.itemId === 'flower_wrap_4') return true;
+      const m = /^tool_arrange_(\d+)$/.exec(c.itemId);
+      if (m && parseInt(m[1], 10) >= 3) return true;
+    }
+    return false;
+  }
+
+  /**
+   * 绿植与鲜花共用种植工具产出；与 BuildingConfig 一致：tool_plant_1/2 仅合成、不可点击产出，
+   * 从 tool_plant_3（育苗盘）起 canProduce，单次产出在鲜花/绿植线间按权重随机。
+   */
+  private _hasGreenProducerOnBoard(): boolean {
+    for (const c of BoardManager.cells) {
+      if (c.state !== CellState.OPEN || !c.itemId) continue;
+      const def = TOOL_DEFS.get(c.itemId);
+      if (def?.toolLine === ToolLine.PLANT && def.canProduce) return true;
+    }
+    return false;
+  }
+
+  /** 仅保留当前已具备产出手段的花系产品线（鲜花线始终允许） */
+  private _eligibleFlowerLines(lines: readonly string[]): string[] {
+    return lines.filter(line => {
+      if (line === FlowerLine.BOUQUET) return this._hasBouquetProducerOnBoard();
+      if (line === FlowerLine.GREEN) return this._hasGreenProducerOnBoard();
+      return true;
+    });
+  }
+
+  private _eligibleDemandLines(demandDef: CustomerDemandDef): string[] {
+    if (demandDef.category !== Category.FLOWER) return [...demandDef.lines];
+    return this._eligibleFlowerLines(demandDef.lines);
   }
 
   /** 为客人生成具体需求 */
@@ -168,16 +209,22 @@ class CustomerManagerClass {
 
     for (let i = 0; i < slotCount; i++) {
       const demandDef = type.demands[i % type.demands.length];
-      const line = demandDef.lines[Math.floor(Math.random() * demandDef.lines.length)];
-      const [minLv, maxLv] = demandDef.levelRange;
-      const level = minLv + Math.floor(Math.random() * (maxLv - minLv + 1));
-      const itemId = findItemId(demandDef.category, line, level);
+      const eligibleLines = this._eligibleDemandLines(demandDef);
+      if (eligibleLines.length === 0) return [];
 
-      if (itemId) {
-        // 避免同一客人出现重复需求
-        if (!slots.some(s => s.itemId === itemId)) {
-          slots.push({ itemId, lockedCellIndex: -1 });
+      const [minLv, maxLv] = demandDef.levelRange;
+      let itemId: string | null = null;
+      for (let attempt = 0; attempt < 16; attempt++) {
+        const line = eligibleLines[Math.floor(Math.random() * eligibleLines.length)];
+        const level = minLv + Math.floor(Math.random() * (maxLv - minLv + 1));
+        const cand = findItemId(demandDef.category, line, level);
+        if (cand && !slots.some(s => s.itemId === cand)) {
+          itemId = cand;
+          break;
         }
+      }
+      if (itemId) {
+        slots.push({ itemId, lockedCellIndex: -1 });
       }
     }
 

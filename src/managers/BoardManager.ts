@@ -3,8 +3,8 @@
  */
 import { EventBus } from '@/core/EventBus';
 import { BOARD_COLS, BOARD_ROWS, BOARD_TOTAL } from '@/config/Constants';
-import { CellState, BOARD_PRESETS } from '@/config/BoardLayout';
-import { ITEM_DEFS, getMergeResultId, Category, FlowerLine } from '@/config/ItemConfig';
+import { CellState, BOARD_PRESETS, KeyUnlockMode } from '@/config/BoardLayout';
+import { ITEM_DEFS, getMergeResultId, Category, InteractType, FlowerLine } from '@/config/ItemConfig';
 import { SeasonSystem } from '@/systems/SeasonSystem';
 
 export interface CellData {
@@ -15,6 +15,8 @@ export interface CellData {
   itemId: string | null;
   keyPrice: number;
   unlockPriority: number;
+  /** 钥匙格解锁方式 */
+  keyUnlockMode: KeyUnlockMode;
   /** 是否被客人锁定 */
   reserved: boolean;
 }
@@ -44,6 +46,7 @@ class BoardManagerClass {
           itemId: preset?.itemId ?? null,
           keyPrice: preset?.keyPrice ?? 0,
           unlockPriority: preset?.unlockPriority ?? prioritySeed++,
+          keyUnlockMode: preset?.keyUnlockMode ?? 'huayuan',
           reserved: false,
         });
       }
@@ -93,12 +96,11 @@ class BoardManagerClass {
       return;
     }
 
-    const preserveCategories = new Set([Category.BUILDING, Category.CHEST]);
     const fillable = openCells.filter(c => {
       if (!c.itemId) return true;
       const def = ITEM_DEFS.get(c.itemId);
       if (!def) return false;
-      return !preserveCategories.has(def.category);
+      return def.interactType === InteractType.NONE;
     });
 
     if (fillable.length < 2) return;
@@ -299,6 +301,11 @@ class BoardManagerClass {
     return -1;
   }
 
+  /** 所有空格（已开放且无物），索引升序，用于宝箱批量散落 */
+  getEmptyOpenCellIndices(): number[] {
+    return this.cells.filter(c => c.state === CellState.OPEN && !c.itemId).map(c => c.index);
+  }
+
   /** 用金币解锁钥匙格（需调用方先检查并扣除金币） */
   unlockKeyCell(index: number): boolean {
     const cell = this.cells[index];
@@ -313,6 +320,12 @@ class BoardManagerClass {
   getKeyCellPrice(index: number): number {
     const cell = this.cells[index];
     return cell?.state === CellState.KEY ? cell.keyPrice : 0;
+  }
+
+  /** 获取钥匙格解锁方式 */
+  getKeyCellUnlockMode(index: number): KeyUnlockMode {
+    const cell = this.cells[index];
+    return cell?.keyUnlockMode ?? 'huayuan';
   }
 
   /** 合成波及：周围 3×3 的 FOG 格，有物品→PEEK，无物品→直接 OPEN */

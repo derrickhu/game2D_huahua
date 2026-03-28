@@ -1,0 +1,23 @@
+Four small gift box icons arranged in a 2x2 grid on flat solid magenta FF00FF background for chroma-key cutout.
+
+Each gift box occupies one quadrant of the canvas with equal spacing between them. The overall canvas is square 1:1 ratio. Each gift box is centered within its quadrant with generous padding between boxes.
+
+All four gift boxes share the same design: a cute small wrapped present box with a ribbon bow on top. The box shape is a simple rounded cube seen from a slight three-quarter angle. The ribbon crosses over the top and front face, tied into a perky bow at the top center. Each box has tiny sparkle dots or stars around it for a magical reward feel.
+
+The four boxes differ ONLY in color:
+
+TOP-LEFT BOX: Spring green and yellow-green. Box body is fresh leaf green hex 8BC34A, ribbon and bow are golden-yellow hex FFD54F. Light yellow-green highlight on the top face.
+
+TOP-RIGHT BOX: Sky blue and white. Box body is cheerful sky blue hex 42A5F5, ribbon and bow are crisp white with a slight cream tint. Light cyan highlight on the top face.
+
+BOTTOM-LEFT BOX: Plum purple and pink. Box body is warm plum purple hex AB47BC, ribbon and bow are soft rose pink hex F48FB1. Light lavender highlight on the top face.
+
+BOTTOM-RIGHT BOX: Teal and coral. Box body is fresh teal hex 26A69A, ribbon and bow are coral-peach hex FF8A65. Light mint highlight on the top face.
+
+Each box is rendered in the same cute 2D hand-painted style: soft shading with gentle gradients, small highlight on the top-left of the box body, subtle shadow under the box. Not photorealistic, not heavily 3D. Think flat illustration with gentle dimensional hints.
+
+The boxes should be approximately 40 percent of their quadrant size, leaving clear magenta space around each for clean cutout.
+
+No text, no numbers, no Chinese characters, no additional decorations beyond the sparkle dots, no watermark.
+
+High quality 2D casual game UI illustration, soft hand-painted feel, warm cheerful lighting, cute cozy merge-game aesthetic. Not photorealistic.

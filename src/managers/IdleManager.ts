@@ -24,8 +24,8 @@ export interface OfflineReward {
   producedItems: { itemId: string; name: string }[];
   /** 恢复的体力 */
   staminaRecovered: number;
-  /** 基础金币 */
-  goldEarned: number;
+  /** 基础花愿 */
+  huayuanEarned: number;
   /** 是否可以看广告翻倍 */
   canDoubleByAd: boolean;
 }
@@ -87,14 +87,13 @@ class IdleManagerClass {
     const staminaFromTime = Math.floor(effectiveSeconds / STAMINA_RECOVER_INTERVAL);
     const staminaRecovered = Math.min(staminaFromTime, staminaRecoverable);
 
-    // 基础金币（离线时长的奖励）
-    const goldEarned = Math.floor(effectiveSeconds / 60) * 5; // 每分钟5金币
+    const huayuanEarned = Math.floor(effectiveSeconds / 60) * 2;
 
     const reward: OfflineReward = {
       offlineSeconds: effectiveSeconds,
       producedItems,
       staminaRecovered,
-      goldEarned,
+      huayuanEarned,
       canDoubleByAd: true,
     };
 
@@ -120,9 +119,8 @@ class IdleManagerClass {
       CurrencyManager.addStamina(reward.staminaRecovered);
     }
 
-    // 发放金币
-    if (reward.goldEarned > 0) {
-      CurrencyManager.addGold(reward.goldEarned * multiplier);
+    if (reward.huayuanEarned > 0) {
+      CurrencyManager.addHuayuan(reward.huayuanEarned * multiplier);
     }
 
     this._pendingReward = null;

@@ -1,0 +1,11 @@
+Use the attached image only for approximate bust crop scale and background color. Replace the art direction with classic Japanese shoujo manga handsome male lead (bishounen): stunning pretty-boy face, large luminous eyes with long lashes and bright highlights, elegant slim nose, soft blush on cheeks, radiant charming smile full of star power, youthful idol beauty, not western cartoon or rugged.
+
+Hand-drawn 2D anime, soft cel shading, thin clean brown-black line art, low-saturation warm pastels with a touch of sparkle in the eyes. 3/4 view slightly to the right. Solid flat warm cream background hex FFF8F0 only, no texture.
+
+Bust only: head, neck, shoulders, upper chest. REQUIRED: voluminous curly golden-yellow blond hair, glossy curls framing the face. REQUIRED: wide captivating smile, dazzling and sweet. REQUIRED: trendy high-fashion top with a very wide open neckline (deep V or loose open shirt) clearly showing collarbones and upper chest, silky pastel cream or champagne fabric, optional delicate chain necklace.
+
+CRITICAL BOTTOM EDGE: The portrait must end with a perfectly FLAT horizontal straight line, like the bottom edge of a playing card or UI sticker. Draw the clothing cutoff at the chest as one ruler-straight horizontal line across the full width of the figure. Absolutely forbidden: curved hem, scalloped bottom, oval crop, bubble silhouette, soft fade, or rounded bottom. The bottom silhouette of the painted character must be a single straight horizontal edge.
+
+Single character centered with modest padding on top and sides.
+
+NO TEXT, no labels, no captions, no writing, no numbers.

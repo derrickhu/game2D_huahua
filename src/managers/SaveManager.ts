@@ -7,9 +7,11 @@
  */
 
 import { BoardManager } from './BoardManager';
+import { BuildingManager, type BuildingPersistEntry } from './BuildingManager';
 import { CurrencyManager } from './CurrencyManager';
 import { WarehouseManager, WarehouseState } from './WarehouseManager';
 import { RewardBoxManager, RewardBoxState } from './RewardBoxManager';
+import { Platform } from '@/core/PlatformService';
 import { BOARD_TOTAL } from '@/config/Constants';
 import { BOARD_PRESETS } from '@/config/BoardLayout';
 import { ITEM_DEFS } from '@/config/ItemConfig';
@@ -49,6 +51,8 @@ interface SaveData {
   version: number;
   currency: ReturnType<typeof CurrencyManager.exportState>;
   board: ReturnType<typeof BoardManager.exportState>;
+  /** 工具 CD、花束纸次数、宝箱待散落队列等 */
+  buildings?: BuildingPersistEntry[];
   warehouse?: WarehouseState;
   rewardBox?: RewardBoxState;
 }
@@ -56,22 +60,36 @@ interface SaveData {
 class SaveManagerClass {
   private _lastSave = 0;
 
-  save(): void {
+  private _buildSaveData(): string {
     const data: SaveData = {
       fingerprint: CONFIG_FINGERPRINT,
       timestamp: Date.now(),
-      version: 2,
+      version: 3,
       currency: CurrencyManager.exportState(),
       board: BoardManager.exportState(),
+      buildings: BuildingManager.exportState(),
       warehouse: WarehouseManager.exportState(),
       rewardBox: RewardBoxManager.exportState(),
     };
+    return JSON.stringify(data);
+  }
 
+  /** 同步存档（onHide / 手动触发时使用，确保数据不丢） */
+  save(): void {
     try {
-      _api?.setStorageSync(SAVE_SLOT, JSON.stringify(data));
-      console.log('[Save] 存档成功, fingerprint:', CONFIG_FINGERPRINT);
+      _api?.setStorageSync(SAVE_SLOT, this._buildSaveData());
+      console.log('[Save] 存档成功(sync), fingerprint:', CONFIG_FINGERPRINT);
     } catch (e) {
       console.error('[Save] 存档失败:', e);
+    }
+  }
+
+  /** 异步存档（自动存档定时器使用，不阻塞主线程） */
+  private _saveAsync(): void {
+    try {
+      Platform.setStorageAsync(SAVE_SLOT, this._buildSaveData());
+    } catch (e) {
+      console.error('[Save] 异步存档失败:', e);
     }
   }
 
@@ -112,8 +130,10 @@ class SaveManagerClass {
         console.log(`[Save] 软迁移完成，清理了 ${cleanedCount} 个无效物品`);
       }
 
+      BuildingManager.reset();
       CurrencyManager.loadState(data.currency);
       BoardManager.loadState(data.board);
+      BuildingManager.loadState(data.buildings);
       if (data.warehouse) {
         WarehouseManager.loadState(data.warehouse);
       }
@@ -129,12 +149,12 @@ class SaveManagerClass {
     }
   }
 
-  /** 每帧调用，处理自动存档 */
+  /** 每帧调用，处理自动存档（使用异步写入避免卡帧） */
   update(dt: number): void {
     this._lastSave += dt;
     if (this._lastSave >= AUTO_SAVE_INTERVAL) {
       this._lastSave = 0;
-      this.save();
+      this._saveAsync();
     }
   }
 
@@ -170,7 +190,13 @@ class SaveManagerClass {
         'huahua_regulars',
         'huahua_decoration',
         'huahua_room_layout',
-        'huahua_dressup'
+        'huahua_dressup',
+        'huahua_social',
+        'huahua_events',
+        'huahua_challenge',
+        'huahua_collection',
+        'huahua_flower_cards',
+        'huahua_haptic',
       ];
       for (const key of keys) {
         try { _api?.removeStorageSync(key); } catch (_) {}

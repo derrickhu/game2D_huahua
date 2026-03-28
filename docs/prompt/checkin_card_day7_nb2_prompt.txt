@@ -1,0 +1,23 @@
+Single isolated empty wide landscape card frame asset on flat solid magenta FF00FF background for chroma-key cutout.
+
+One wide horizontal rounded rectangle card, landscape orientation approximately 3:1 width-to-height ratio, centered in the canvas. The card fills about 90 percent of the canvas width.
+
+This is a special Day-7 grand reward card and should feel premium, celebratory, and more elaborate than the standard day cards.
+
+The card has a two-part structure:
+
+TOP HEADER ZONE: The upper 25 percent of the card is a distinct header strip with a rich warm golden-amber tone, hex approximately FFB74D to FFA726. This header has a gentle gradient from lighter gold at top to deeper amber at bottom. It should feel warm and festive, like golden sunlight.
+
+MAIN BODY: The remaining lower 75 percent is the wide content area. Fill color is soft warm cream to pale golden-cream, hex FFFCF0 to FFF8E1. Clean, warm, spacious, empty, ready for multiple item icon overlays arranged horizontally.
+
+BORDER: A slightly thicker warm golden-orange outline, approximately 3 pixels, hex E8960A to D4830A. The golden border frames the card with a premium feel. The border has a very subtle inner highlight at the top edge, like a thin bright golden line, adding a touch of luxury.
+
+At the left and right ends of the card, tiny decorative flourishes or small petal-like corner ornaments in soft gold tones add elegance. These are very small, just 2-3 tiny petal shapes at each corner, suggesting floral luxury without being elaborate.
+
+CORNERS: Generously rounded, approximately 15 percent of card height as corner radius. Smooth and inviting.
+
+A warm golden-tinted soft drop shadow falls behind the card onto the magenta, slightly more prominent than standard cards.
+
+No icons inside, no text, no numbers, no Chinese characters, no watermark. Only the empty wide golden card frame on magenta.
+
+High quality 2D casual game UI illustration, soft hand-painted feel, warm golden cheerful lighting, cute cozy merge-game aesthetic. Not photorealistic. Flat style with gentle gradients, the golden theme being the key distinction.

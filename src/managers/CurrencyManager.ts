@@ -15,6 +15,8 @@ export interface CurrencyState {
   stamina: number;
   level: number;
   exp: number;
+  /** 距上次体力恢复已过的秒数（用于恢复倒计时的持久化） */
+  staminaRecoverElapsed?: number;
 }
 
 /** 钻石购买体力的价格表（第N次购买的钻石花费） */
@@ -30,8 +32,8 @@ const STAMINA_AD_MAX_DAILY = 5;
 
 class CurrencyManagerClass {
   private _state: CurrencyState = {
-    gold: 100,
-    huayuan: 0,
+    gold: 0,
+    huayuan: 100,
     hualu: 0,
     diamond: 10,
     stamina: STAMINA_MAX,
@@ -92,14 +94,17 @@ class CurrencyManagerClass {
     return STAMINA_AD_AMOUNT;
   }
 
+  /** @deprecated 统一使用 addHuayuan；此方法内部转发到花愿 */
   addGold(amount: number): void {
-    this._state.gold = Math.max(0, this._state.gold + amount);
-    EventBus.emit('currency:changed', 'gold', this._state.gold);
+    this.addHuayuan(amount);
   }
 
   addHuayuan(amount: number): void {
     this._state.huayuan = Math.max(0, this._state.huayuan + amount);
     EventBus.emit('currency:changed', 'huayuan', this._state.huayuan);
+    if (amount > 0) {
+      EventBus.emit('quest:huayuanEarned', amount);
+    }
   }
 
   addHualu(amount: number): void {
@@ -119,8 +124,13 @@ class CurrencyManagerClass {
     return true;
   }
 
+  /**
+   * 增加体力（可超过体力上限）。
+   * 上限仅约束自然恢复（见 update）；购买、广告、棋盘货币等主动获得均不受上限截断。
+   */
   addStamina(amount: number): void {
-    this._state.stamina = Math.min(this.staminaCap, this._state.stamina + amount);
+    if (amount === 0) return;
+    this._state.stamina = Math.max(0, this._state.stamina + amount);
     EventBus.emit('currency:changed', 'stamina', this._state.stamina);
   }
 
@@ -195,13 +205,17 @@ class CurrencyManagerClass {
 
   /** 加载存档 */
   loadState(state: Partial<CurrencyState>): void {
-    Object.assign(this._state, state);
+    if (state.staminaRecoverElapsed !== undefined) {
+      this._lastStaminaRecover = state.staminaRecoverElapsed;
+    }
+    const { staminaRecoverElapsed: _, ...rest } = state;
+    Object.assign(this._state, rest);
     EventBus.emit('currency:loaded');
   }
 
   /** 导出存档 */
   exportState(): CurrencyState {
-    return { ...this._state };
+    return { ...this._state, staminaRecoverElapsed: this._lastStaminaRecover };
   }
 
   /** 检查并重置每日计数 */

@@ -41,12 +41,12 @@ class SoundSystemClass {
     });
 
     // 狂热模式
-    EventBus.on('combo:frenzy', () => {
+    EventBus.on('combo:frenzyStart', () => {
       AudioManager.play('merge_frenzy');
     });
 
-    // 建筑点击
-    EventBus.on('building:tapped', () => {
+    // 建筑产出（点击建筑成功产出时）
+    EventBus.on('building:produced', () => {
       AudioManager.play('tap_building');
     });
 

@@ -173,8 +173,8 @@ def main() -> None:
     )
     ap.add_argument(
         "--model",
-        default="birefnet-general-lite",
-        help="rembg model",
+        default="birefnet-general",
+        help="rembg model（默认与全项目规范一致）",
     )
     ap.add_argument(
         "--copy-to-game",

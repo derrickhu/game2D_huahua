@@ -1,0 +1,17 @@
+Single horizontal image: exactly 3 equal columns in one row. Same girl in all 3 cells, identical face hair outfit accessories, same art style. Column 1 and 2 match pose except eyes; column 3 is different pose allowed.
+
+Background for entire image: one solid flat chroma key color only, exact pure magenta RGB 255 0 255 hex FF00FF. No gradients, no vignette, no white gray or black backdrop, no checkerboard, no floor shadow painted on background. Characters may have normal soft shadows only on their own bodies, not a large white or black card behind them.
+
+Character: cute young flower shop girl about 18, warm light brown chin-length bob, delicate cherry blossom hairpin with three tiny sakura on viewer left, large brown eyes when open, soft round face, Q-version chibi about 4 to 4.5 heads tall in full body columns.
+
+Outfit: spring theme soft pink kimono-inspired wrap dress with scattered sakura petal print, light pink obi bow at back, flowing sleeves white lace trim, white stockings pale pink Mary Jane shoes, small woven flower basket on wrist.
+
+Style: hand-drawn 2D anime, soft shading, pink white pastel dreamy spring, cozy storybook, clean outline. No text no watermark.
+
+Column 1: full body standing slight 3/4 view facing right, arms relaxed, eyes open gentle smile, head to feet centered in column.
+
+Column 2: same as column 1 only eyes closed happy curved eyelids, identical otherwise.
+
+Column 3: bust mid-chest up, same outfit hair accessories. Front-facing portrait, both eyes visible, mostly straight-on face, may tilt head slightly toward the right with at most mild 3/4, still clearly frontal not profile. Eyes open soft smile. Pose may differ from full body. Larger scale centered in column.
+
+Critical: three equal width columns clear separation no overlap.

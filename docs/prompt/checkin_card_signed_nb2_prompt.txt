@@ -1,0 +1,23 @@
+Single isolated empty muted card frame asset on flat solid magenta FF00FF background for chroma-key cutout.
+
+One vertical rounded rectangle card, portrait orientation approximately 3:4 width-to-height ratio, centered in the canvas. The card fills about 80 percent of the canvas.
+
+This card represents the already-signed completed state and should feel subdued, quiet, and done compared to active cards.
+
+The card has a two-part structure:
+
+TOP HEADER ZONE: The upper 18 percent of the card is a distinct header strip with a muted dusty purple tone, hex approximately B0A0B8 to 9888A0. Desaturated and calm. This area has a very gentle gradient.
+
+MAIN BODY: The remaining lower 82 percent is the card content area. Fill color is muted warm gray to soft lavender-gray, hex F0ECF0 to E8E0E8. Slightly desaturated and peaceful, suggesting this day has passed. Clean, flat, empty, ready for dimmed item icon overlays.
+
+BORDER: Thin muted purple-gray outline, approximately 2 pixels, hex 9080A0 to 806890. Subdued and soft, not attention-grabbing.
+
+CORNERS: Moderately rounded, approximately 12 percent of card width as corner radius. Soft and friendly.
+
+A very subtle soft drop shadow falls behind the card onto the magenta, less prominent than normal cards, adding to the quiet completed feel.
+
+The overall palette should feel like a gently faded version of the normal card, with purple-gray tones replacing the warm coral-cream of the active card.
+
+No icons inside, no text, no numbers, no Chinese characters, no checkmarks, no watermark. Only the empty muted card frame on magenta.
+
+High quality 2D casual game UI illustration, soft hand-painted feel, muted warm lighting, cute cozy merge-game aesthetic. Not photorealistic. Flat style with gentle gradients.

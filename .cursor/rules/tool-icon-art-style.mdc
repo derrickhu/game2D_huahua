@@ -43,7 +43,7 @@ Cute small mobile game item icon, 3/4 top-down isometric view. Rounded chunky pr
 
 ## 后处理流程
 
-1. **rembg** 抠图（模型 `birefnet-general-lite`，使用技能脚本 `~/.cursor/skills/remove-background/scripts/rembg_single.py`）
+1. **rembg** 抠图（模型 **`birefnet-general`**（与店主等资源统一最高质量档），使用技能脚本 `~/.cursor/skills/remove-background/scripts/rembg_single.py`）
 2. **trim_rgba_padding** 裁掉多余透明边（padding=4）
 3. 写入 `minigame/subpkg_items/images/tools/{line}/` 目标路径
 

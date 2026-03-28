@@ -6,7 +6,7 @@
  * 工具放在棋盘上可点击产出（仅 canProduce），合成两个同级工具升级为下一级
  */
 
-import { Category, FlowerLine, DrinkLine, ToolLine } from './ItemConfig';
+import { Category, FlowerLine, DrinkLine, ToolLine, findItemId } from './ItemConfig';
 
 /** 单次产出的明确目标：品类 + 产品线 + 产品等级 + 权重（相对权重即可） */
 export interface ToolProduceOutcome {
@@ -308,6 +308,7 @@ export const TOOL_DEFS = buildToolDefs();
 /** 棋盘上的非 tool_* 产出定义（如花束包装纸） */
 function buildBoardProducerDefs(): Map<string, ToolDef> {
   const map = new Map<string, ToolDef>();
+  /** 花艺材料篮：与宝箱不同，仍为每点一次产 1 个花束，共 `exhaustAfterProduces` 次后格子清空（BuildingManager 工具分支） */
   map.set('flower_wrap_4', {
     itemId: 'flower_wrap_4',
     toolLine: ToolLine.ARRANGE,
@@ -334,6 +335,61 @@ export function findToolDef(itemId: string): ToolDef | undefined {
 /** 工具或棋盘特殊产出物（tool_* + 花束包装纸等） */
 export function findBoardProducerDef(itemId: string): ToolDef | undefined {
   return TOOL_DEFS.get(itemId) ?? BOARD_PRODUCER_DEFS.get(itemId);
+}
+
+/** 合成线「可产出」悬浮窗：单次点击各可能产物的概率（百分比，与运行时掷骰逻辑一致） */
+export type ToolProduceDisplayEntry = { itemId: string; percent: number };
+
+function roundOutcomePercent(p: number): number {
+  return Math.round(p * 10) / 10;
+}
+
+/** 合并相同 itemId 的概率（如多线均分同一等级时）；宝箱产出预览与工具共用 */
+export function mergeOutcomePercents(entries: ToolProduceDisplayEntry[]): ToolProduceDisplayEntry[] {
+  const map = new Map<string, number>();
+  for (const { itemId, percent } of entries) {
+    map.set(itemId, (map.get(itemId) ?? 0) + percent);
+  }
+  return [...map.entries()]
+    .map(([itemId, percent]) => ({ itemId, percent: roundOutcomePercent(percent) }))
+    .sort((a, b) => b.percent - a.percent || a.itemId.localeCompare(b.itemId));
+}
+
+/**
+ * 与 BuildingManager.produce 一致：
+ * - 有 produceOutcomes：按 weight 加权；
+ * - 否则按 produceTable 掷等级，再在 produceLinesRandom 或单条 produceLine 上均匀选线。
+ */
+export function getBoardProducerOutcomePercents(def: ToolDef): ToolProduceDisplayEntry[] {
+  if (def.produceOutcomes && def.produceOutcomes.length > 0) {
+    const sum = def.produceOutcomes.reduce((s, o) => s + o.weight, 0);
+    if (sum <= 0) return [];
+    const raw: ToolProduceDisplayEntry[] = [];
+    for (const o of def.produceOutcomes) {
+      const id = findItemId(o.category, o.line, o.level);
+      if (!id) continue;
+      raw.push({ itemId: id, percent: (o.weight / sum) * 100 });
+    }
+    return mergeOutcomePercents(raw);
+  }
+
+  const table = def.produceTable;
+  if (!table.length) return [];
+  const sumT = table.reduce((s, [, w]) => s + w, 0);
+  if (sumT <= 0) return [];
+  const lines =
+    def.produceLinesRandom && def.produceLinesRandom.length > 0
+      ? def.produceLinesRandom
+      : [def.produceLine];
+  const raw: ToolProduceDisplayEntry[] = [];
+  for (const [lvl, w] of table) {
+    for (const line of lines) {
+      const id = findItemId(def.produceCategory, line, lvl);
+      if (!id) continue;
+      raw.push({ itemId: id, percent: (w / sumT) * (1 / lines.length) * 100 });
+    }
+  }
+  return mergeOutcomePercents(raw);
 }
 
 function toolMatchesProductLine(def: ToolDef, category: Category, productLine: string): boolean {

@@ -5,7 +5,7 @@
 - tool_arrange_{1..5} → minigame/subpkg_items/images/tools/arrange/
 - flower_wrap_{1..4}  → minigame/subpkg_items/images/tools/wrap/
 
-全部 9 张均使用 rembg（birefnet-general-lite）抠图，不再使用品红键。
+全部 9 张均使用 rembg（birefnet-general）抠图，不再使用品红键。
 
   python3 scripts/process_bouquet_chain_nb2_raw.py
 """
@@ -34,7 +34,7 @@ def _process_one(src: Path, dst: Path) -> None:
 
     tmp = Path("/tmp") / f"rembg_{src.name}"
     result = subprocess.run(
-        [sys.executable, str(_REMBG_SCRIPT), str(src), "-o", str(tmp), "-m", "birefnet-general-lite"],
+        [sys.executable, str(_REMBG_SCRIPT), str(src), "-o", str(tmp), "-m", "birefnet-general"],
         capture_output=True, text=True,
     )
     if result.returncode != 0:

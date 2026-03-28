@@ -1,0 +1,19 @@
+Single isolated decorative title banner asset with floral garland on flat solid magenta FF00FF background for chroma-key cutout.
+
+The composition is a festive banner scene with two distinct layers:
+
+TOP LAYER - FLORAL GARLAND ARCH: A lush cascading arch of mixed flowers and greenery crowns the banner from above. The garland forms a gentle inverted-U or swag shape, drooping slightly at the sides. It features pink roses, coral peonies, small white baby's breath blossoms, soft green leaves, and scattered loose petals drifting downward. The flowers are rendered in a flat 2D hand-painted style with soft shading, not photorealistic. Colors: rose pink, coral salmon, warm peach, cream white, soft sage green. A few tiny sparkle dots or golden stardust particles float among the petals for a magical feel.
+
+At the center top of the garland arch, a small decorative gift box or flower bouquet ornament serves as the crown jewel, tied with a golden ribbon bow.
+
+BOTTOM LAYER - TITLE RIBBON BANNER: Below the garland, a wide curved ribbon banner stretches horizontally across the lower portion of the composition. The ribbon has a gently curved upward arc shape with tapered ends that fold back, classic scroll banner style. Width-to-height ratio of the ribbon itself is approximately 4:1.
+
+RIBBON COLORS: Warm coral-salmon to soft rose-pink gradient, lighter and warmer at the top edge, deeper coral toward the bottom. A soft specular highlight strip runs along the upper curve. The underside fold is a slightly deeper rose tone. The ribbon should look soft and pillowy but NOT heavily 3D sculpted. Think flat illustration with gentle gradient shading.
+
+The center of the ribbon has a wide clean empty flat band reserved for game text overlay. This area must stay uniform color with no decoration, no printed text, no glyphs.
+
+Overall composition ratio is approximately 4:3 (width to height), with the garland occupying the upper portion and the ribbon the lower portion. The total element fills about 85 percent of the canvas.
+
+No Chinese characters, no English text, no numbers, no watermark, no balloons. Only flowers, petals, leaves, ribbon, and garland on magenta.
+
+High quality 2D casual game UI illustration, soft hand-painted feel, warm cheerful lighting, cute cozy flower-shop merge-game aesthetic. Not photorealistic. Flat illustration style with gentle gradients.

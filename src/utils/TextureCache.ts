@@ -17,12 +17,40 @@ const MAIN_IMAGE_MAP: Record<string, string> = {
   owner_full_default:   'images/owner/full_default.png',
   owner_full_default_blink: 'images/owner/full_default_eyesclosed.png',
 
+  owner_full_outfit_florist: 'images/owner/full_outfit_florist.png',
+  owner_full_outfit_florist_blink: 'images/owner/full_outfit_florist_eyesclosed.png',
+  owner_chibi_outfit_florist: 'images/owner/chibi_outfit_florist.png',
+
+  owner_full_outfit_spring: 'images/owner/full_outfit_spring.png',
+  owner_full_outfit_spring_blink: 'images/owner/full_outfit_spring_eyesclosed.png',
+  owner_chibi_outfit_spring: 'images/owner/chibi_outfit_spring.png',
+
+  owner_full_outfit_summer: 'images/owner/full_outfit_summer.png',
+  owner_full_outfit_summer_blink: 'images/owner/full_outfit_summer_eyesclosed.png',
+  owner_chibi_outfit_summer: 'images/owner/chibi_outfit_summer.png',
+
+  owner_full_outfit_vintage: 'images/owner/full_outfit_vintage.png',
+  owner_full_outfit_vintage_blink: 'images/owner/full_outfit_vintage_eyesclosed.png',
+  owner_chibi_outfit_vintage: 'images/owner/chibi_outfit_vintage.png',
+
+  owner_full_outfit_queen: 'images/owner/full_outfit_queen.png',
+  owner_full_outfit_queen_blink: 'images/owner/full_outfit_queen_eyesclosed.png',
+  owner_chibi_outfit_queen: 'images/owner/chibi_outfit_queen.png',
+
   // ---- 客人半身像 ----
   customer_child:   'images/customer/child.png',
   customer_student: 'images/customer/student.png',
   customer_worker:  'images/customer/worker.png',
   customer_mom:     'images/customer/mom.png',
   customer_youth:   'images/customer/youth.png',
+  customer_couple:   'images/customer/couple.png',
+  customer_birthday: 'images/customer/birthday.png',
+  customer_blogger:  'images/customer/blogger.png',
+  customer_noble:    'images/customer/noble.png',
+  customer_collector: 'images/customer/collector.png',
+  customer_athlete:   'images/customer/athlete.png',
+  customer_mystery:   'images/customer/mystery.png',
+  customer_celebrity: 'images/customer/celebrity.png',
 
   // ---- UI 图标 ----
   icon_energy: 'images/ui/icon_energy.png',
@@ -47,6 +75,23 @@ const MAIN_IMAGE_MAP: Record<string, string> = {
   icon_furniture: 'images/ui/icon_furniture.png',
   icon_dress:     'images/ui/icon_dress.png',
   icon_checkin:   'images/ui/icon_checkin.png',
+  /** NB2 签到 UI：品红抠图裁边；里程碑礼包为 2×2 切分 */
+  checkin_title_banner: 'images/ui/checkin_title_banner.png',
+  checkin_milestone_panel: 'images/ui/checkin_milestone_panel.png',
+  checkin_progress_track: 'images/ui/checkin_progress_track.png',
+  checkin_card_future: 'images/ui/checkin_card_future.png',
+  checkin_card_today: 'images/ui/checkin_card_today.png',
+  checkin_card_signed: 'images/ui/checkin_card_signed.png',
+  checkin_card_day7: 'images/ui/checkin_card_day7.png',
+  checkin_milestone_gift_1: 'images/ui/checkin_milestone_gift_1.png',
+  checkin_milestone_gift_2: 'images/ui/checkin_milestone_gift_2.png',
+  checkin_milestone_gift_3: 'images/ui/checkin_milestone_gift_3.png',
+  checkin_milestone_gift_4: 'images/ui/checkin_milestone_gift_4.png',
+  /** NB2 花语彩蛋弹窗：品红抠图裁边 */
+  flower_egg_title_banner: 'images/ui/flower_egg_title_banner.png',
+  flower_egg_btn_claim: 'images/ui/flower_egg_btn_claim.png',
+  flower_egg_card_bg: 'images/ui/flower_egg_card_bg.png',
+  flower_egg_reward_bg: 'images/ui/flower_egg_reward_bg.png',
   icon_quest:     'images/ui/icon_quest.png',
   /** 挑战关卡入口占位（正式图标就绪后替换路径或 key） */
   icon_challenge: 'images/ui/icon_level_badge.png',
@@ -66,7 +111,7 @@ const MAIN_IMAGE_MAP: Record<string, string> = {
   warehouse_panel_bg: 'images/ui/warehouse_panel_bg.png',
   /** NB2 拆件：仓库弹窗右上角关闭钮（来自 warehouse_nb2_close_btn_1x1） */
   warehouse_close_btn: 'images/ui/warehouse_close_btn.png',
-  /** NB2：仓库未解锁格锁图标（warehouse_nb2_slot_lock_1x1 抠图后） */
+  /** 仓库未解锁格：金色挂锁图标 `minigame/images/ui/warehouse_slot_lock.png` */
   warehouse_slot_lock: 'images/ui/warehouse_slot_lock.png',
   /** 合成线弹窗标题彩带（桃/珊瑚渐变，原版） */
   merge_chain_ribbon: 'images/ui/merge_chain_ribbon.png',
@@ -85,6 +130,7 @@ const MAIN_IMAGE_MAP: Record<string, string> = {
   deco_card_btn_1: 'images/ui/deco_card_btn_1.png',
   deco_card_btn_2: 'images/ui/deco_card_btn_2.png',
   deco_card_btn_3: 'images/ui/deco_card_btn_3.png',
+  deco_card_btn_4: 'images/ui/deco_card_btn_4.png',
   /** 家具/房间卡稀有度角标（button/tag.png 2×2 切分抠图） */
   deco_rarity_tag_common: 'images/ui/deco_rarity_tag_common.png',
   deco_rarity_tag_fine: 'images/ui/deco_rarity_tag_fine.png',
@@ -203,6 +249,13 @@ const ITEMS_IMAGE_MAP: Record<string, string> = {
   tool_mixer_3: 'subpkg_items/images/tools/mixer/tool_mixer_3.png',
   tool_mixer_4: 'subpkg_items/images/tools/mixer/tool_mixer_4.png',
   tool_mixer_5: 'subpkg_items/images/tools/mixer/tool_mixer_5.png',
+
+  // ---- 宝箱 5 档（NB2 品红底抠图，与工具线同 256 逻辑像素规范）----
+  chest_1: 'subpkg_items/images/chest/chest_1.png',
+  chest_2: 'subpkg_items/images/chest/chest_2.png',
+  chest_3: 'subpkg_items/images/chest/chest_3.png',
+  chest_4: 'subpkg_items/images/chest/chest_4.png',
+  chest_5: 'subpkg_items/images/chest/chest_5.png',
 };
 
 // ================================================================

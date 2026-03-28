@@ -1,0 +1,7 @@
+Single isolated game inventory icon for a casual merge mobile game about a flower shop. Square 1:1 composition, target detail level for 256px display (readable silhouette).
+
+Style: cute 2D merge-game prop icon, soft cel shading with gentle gradients, slightly plastic toy look, rich warm gold metal, brown soft line outline not pure black. Isometric three-quarter view from front-right. One object centered, fills about 68% to 76% of frame width. No text, no watermark, no UI chrome.
+
+Subject: gold treasure chest, bright yellow-gold metal body, decorative banding, small round ruby-red gem cabochon centered on lid front edge, premium feel, medium-large size. Lid closed.
+
+Background: flat solid chroma key magenta only, hex FF00FF, no gradient, no floor, no shadow cast on background (shading only on the chest itself).

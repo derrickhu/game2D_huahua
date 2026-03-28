@@ -6,6 +6,7 @@
  */
 import * as PIXI from 'pixi.js';
 import { EventBus } from '@/core/EventBus';
+import { ToastMessage } from '@/gameobjects/ui/ToastMessage';
 import { TweenManager, Ease } from '@/core/TweenManager';
 import { RoomLayoutManager } from '@/managers/RoomLayoutManager';
 import { FurnitureDragSystem } from '@/systems/FurnitureDragSystem';
@@ -233,7 +234,7 @@ export class RoomEditToolbar extends PIXI.Container {
     RoomLayoutManager.bringForward(this._currentDecoId);
     // 图层变更后需要重新排序
     FurnitureDragSystem.sortByDepth();
-    EventBus.emit('toast:show', '📐 图层前移');
+    ToastMessage.show( '📐 图层前移');
   }
 
   /** 将家具图层往后移（被其它家具遮挡） */
@@ -241,7 +242,7 @@ export class RoomEditToolbar extends PIXI.Container {
     if (!this._currentDecoId) return;
     RoomLayoutManager.sendBackward(this._currentDecoId);
     FurnitureDragSystem.sortByDepth();
-    EventBus.emit('toast:show', '📐 图层后移');
+    ToastMessage.show( '📐 图层后移');
   }
 
   private _onRemove(): void {
@@ -265,7 +266,7 @@ export class RoomEditToolbar extends PIXI.Container {
     FurnitureDragSystem.deselect();
 
     if (deco) {
-      EventBus.emit('toast:show', `已移除「${deco.name}」`);
+      ToastMessage.show( `已移除「${deco.name}」`);
     }
     EventBus.emit('roomlayout:changed');
   }
@@ -283,7 +284,7 @@ export class RoomEditToolbar extends PIXI.Container {
     RoomLayoutManager.saveNow();
 
     if (deco) {
-      EventBus.emit('toast:show', `✓「${deco.name}」已确认`);
+      ToastMessage.show( `✓「${deco.name}」已确认`);
     }
   }
 }

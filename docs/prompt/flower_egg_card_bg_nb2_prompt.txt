@@ -1,0 +1,11 @@
+Mobile casual merge-game popup card background, one squarish rounded rectangle filling most of the frame, not a tall phone poster.
+
+Center area is a completely flat solid warm ivory cream fill with no grid, no slots, no inner frames, no paper grain in the middle, uniform color only.
+
+Floral decoration must follow the rounded square border: a continuous band of flowers and leaves along all four edges and around the rounded corners, like a frame garland pressed flat against the card edge. Do not use a circular wreath or a ring of flowers floating in the middle. The empty readable zone in the center stays a simple rounded rectangle of cream.
+
+Art style: flat 2D illustration harmonious with soft merge-game UI, gentle pastel-friendly colors, cozy flower shop mood. Minimal depth: simple cel-like shading or very light gradient only, no strong 3D bevel, no plastic glossy petals, no heavy drop shadows under blooms, no photoreal sculpting. Roses, small daisies, lavender sprigs, tiny blue flowers, simple green leaves with clean readable silhouettes.
+
+No text, no UI chrome.
+
+CRITICAL: fill the entire canvas outside the rounded card with flat solid chroma key magenta RGB 255 0 255 only for automated removal. The card artwork must not use that magenta.

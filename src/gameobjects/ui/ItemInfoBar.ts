@@ -5,8 +5,8 @@ import * as PIXI from 'pixi.js';
 import { EventBus } from '@/core/EventBus';
 import { TweenManager, Ease } from '@/core/TweenManager';
 import { DESIGN_WIDTH, COLORS, FONT_FAMILY } from '@/config/Constants';
-import { ITEM_DEFS, ItemDef, Category, FlowerLine } from '@/config/ItemConfig';
-import { findToolDef, findBoardProducerDef, getToolProduceLevelRange } from '@/config/BuildingConfig';
+import { ITEM_DEFS, ItemDef, Category, InteractType, FlowerLine, getMergeChain } from '@/config/ItemConfig';
+import { findBoardProducerDef } from '@/config/BuildingConfig';
 import { CellState } from '@/config/BoardLayout';
 import { BoardManager } from '@/managers/BoardManager';
 import { DecorationManager } from '@/managers/DecorationManager';
@@ -130,6 +130,10 @@ export class ItemInfoBar extends PIXI.Container {
   private _nameText!: PIXI.Text;
   private _levelText!: PIXI.Text;
   private _descText!: PIXI.Text;
+  /** 可产出工具 / 花束包装：仅显示体力图标 + 消耗文案 */
+  private _staminaDescRow!: PIXI.Container;
+  private _staminaEnergyIcon!: PIXI.Sprite;
+  private _staminaDescLabel!: PIXI.Text;
 
   private _cardLeft = 0;
   private _cardTop = 0;
@@ -372,6 +376,28 @@ export class ItemInfoBar extends PIXI.Container {
     this._descText.position.set(this._cardLeft + 10, descTop);
     this._infoContainer.addChild(this._descText);
 
+    this._staminaDescRow = new PIXI.Container();
+    this._staminaDescRow.position.set(this._cardLeft + 10, descTop + 2);
+    this._staminaDescRow.visible = false;
+    const enT = TextureCache.get('icon_energy');
+    this._staminaEnergyIcon = new PIXI.Sprite(enT && enT.width > 0 ? enT : PIXI.Texture.EMPTY);
+    this._staminaEnergyIcon.anchor.set(0, 0.5);
+    if (enT && enT.width > 0) {
+      const sc = 24 / Math.max(enT.width, enT.height);
+      this._staminaEnergyIcon.scale.set(sc);
+    }
+    this._staminaEnergyIcon.position.set(0, 10);
+    this._staminaDescRow.addChild(this._staminaEnergyIcon);
+    this._staminaDescLabel = new PIXI.Text('', {
+      fontSize: 17,
+      fill: COLORS.TEXT_DARK,
+      fontFamily: FONT_FAMILY,
+    });
+    this._staminaDescLabel.anchor.set(0, 0.5);
+    this._staminaDescLabel.position.set(30, 10);
+    this._staminaDescRow.addChild(this._staminaDescLabel);
+    this._infoContainer.addChild(this._staminaDescRow);
+
     this.addChild(this._infoContainer);
   }
 
@@ -553,11 +579,22 @@ export class ItemInfoBar extends PIXI.Container {
       Math.max(this._leafDisplayWMin, neededRibbonW),
     );
 
-    this._descText.text = this._getDescription(def);
-
     const cell = BoardManager.getCellByIndex(cellIndex);
-    const canSell = def.category !== Category.BUILDING
-      && !!cell && cell.state === CellState.OPEN;
+    const producerDef = findBoardProducerDef(def.id);
+    const showStaminaRow = def.interactType === InteractType.TOOL && !!producerDef?.canProduce;
+
+    if (showStaminaRow) {
+      const cost = producerDef!.staminaCost;
+      this._descText.visible = false;
+      this._staminaDescRow.visible = true;
+      this._staminaDescLabel.text = `消耗体力 ${cost}`;
+    } else {
+      this._descText.visible = true;
+      this._staminaDescRow.visible = false;
+      this._descText.text = this._getDescription(def);
+    }
+
+    const canSell = !!cell && cell.state === CellState.OPEN && def.sellable;
     this._sellBtn.visible = canSell;
     if (canSell) {
       const hyTex = TextureCache.get('icon_huayuan');
@@ -568,7 +605,7 @@ export class ItemInfoBar extends PIXI.Container {
       this._sellPriceText.text = '';
     }
 
-    const showChain = def.category !== Category.BUILDING && def.maxLevel > 1;
+    const showChain = getMergeChain(def.id).length > 1;
     this._chainBtn.visible = showChain;
 
     const descReserveW =
@@ -602,49 +639,24 @@ export class ItemInfoBar extends PIXI.Container {
     this._infoContainer.visible = false;
     this._sellBtn.visible = false;
     this._chainBtn.visible = false;
+    this._staminaDescRow.visible = false;
+    this._descText.visible = true;
     this._hintContainer.visible = true;
   }
 
   private _getDescription(def: ItemDef): string {
-    if (def.category === Category.BUILDING) {
-      const tDef = findToolDef(def.id);
-      if (tDef) {
-        if (!tDef.canProduce) {
-          return '仅可合成升级，不可直接产出物品。';
-        }
-        const range = getToolProduceLevelRange(tDef);
-        const minLv = range?.min ?? 1;
-        const maxLv = range?.max ?? 1;
-        const dual =
-          tDef.produceOutcomes && tDef.produceOutcomes.length > 0
-            ? ' | 按配置概率产出'
-            : tDef.produceLinesRandom && tDef.produceLinesRandom.length > 1
-              ? ' | 随机鲜花/绿植同等级'
-              : '';
-        const cdDesc =
-          tDef.cooldown <= 0
-            ? '无冷却'
-            : tDef.producesBeforeCooldown > 0
-              ? `每${tDef.producesBeforeCooldown}次后冷却 ${tDef.cooldown}s`
-              : `冷却 ${tDef.cooldown}s`;
-        return `⚡${tDef.staminaCost} | ${cdDesc} | 产出 Lv.${minLv}~${maxLv}${dual}`;
-      }
+    if (def.interactType === InteractType.TOOL) {
+      const pd = findBoardProducerDef(def.id);
+      if (pd && !pd.canProduce) return '合成后可获得更高级物品。';
+      if (pd?.canProduce) return '';
       return '工具';
     }
+    if (def.interactType === InteractType.CHEST) {
+      return '点击开启，宝物散落棋盘';
+    }
     if (def.category === Category.FLOWER && def.line === FlowerLine.WRAP) {
-      if (def.id === 'flower_wrap_4') {
-        const bp = findBoardProducerDef(def.id);
-        if (bp?.canProduce) {
-          const range = getToolProduceLevelRange(bp);
-          const minLv = range?.min ?? 1;
-          const maxLv = range?.max ?? 1;
-          const n = bp.exhaustAfterProduces ?? 0;
-          return `⚡${bp.staminaCost} | 无冷却 | 产出花束 Lv.${minLv}~${maxLv} | 共可产出 ${n} 次后消失`;
-        }
-      }
       return '包装中间材，合成用，不进入订单。';
     }
-    if (def.category === Category.CHEST) return '点击开启，获得随机物品';
     if (def.level < def.maxLevel) return '合成后可获得更高级物品。';
     return '已达最高等级！可用于完成订单。';
   }

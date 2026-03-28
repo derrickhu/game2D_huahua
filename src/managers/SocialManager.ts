@@ -13,7 +13,6 @@
 import { EventBus } from '@/core/EventBus';
 import { Platform } from '@/core/PlatformService';
 import { CurrencyManager } from './CurrencyManager';
-import { LevelManager } from './LevelManager';
 import { CollectionManager } from './CollectionManager';
 
 const STORAGE_KEY = 'huahua_social';

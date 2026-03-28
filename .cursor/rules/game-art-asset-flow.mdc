@@ -37,6 +37,10 @@ python3 ~/.cursor/skills/gemini-image-gen/scripts/generate_images.py \
   --aspect-ratio 9:16
 ```
 
+## 抠图（透明底）
+
+若资源需去底 PNG：**强制**遵循仓库规则 **「抠图（remove-background）— 项目强制规范」**（`remove-background-game-art.mdc`）：使用 **`~/.cursor/skills/remove-background/scripts/`** 下脚本，默认 **`-m birefnet-general`**，**禁止**以色键替代主抠图流程。
+
 ## 入库到游戏
 
 生成成功后 **再拷贝** 到工程内目标路径（示例：花店室外背景）：

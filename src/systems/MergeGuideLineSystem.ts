@@ -84,7 +84,7 @@ export class MergeGuideLineSystem {
       const col = i % BOARD_COLS;
       const row = Math.floor(i / BOARD_COLS);
       const cx = BoardMetrics.paddingX + col * (cs + CELL_GAP) + cs / 2;
-      const cy = row * (cs + CELL_GAP) + cs / 2;
+      const cy = BoardMetrics.topY + row * (cs + CELL_GAP) + cs / 2;
       const dist = Math.abs(col - srcCol) + Math.abs(row - srcRow);
 
       targets.push({ index: i, cx, cy, distance: dist });
@@ -97,7 +97,7 @@ export class MergeGuideLineSystem {
     const showTargets = targets.slice(0, 3);
 
     const srcCx = BoardMetrics.paddingX + srcCol * (cs + CELL_GAP) + cs / 2;
-    const srcCy = srcRow * (cs + CELL_GAP) + cs / 2;
+    const srcCy = BoardMetrics.topY + srcRow * (cs + CELL_GAP) + cs / 2;
 
     for (let ti = 0; ti < showTargets.length; ti++) {
       const t = showTargets[ti];

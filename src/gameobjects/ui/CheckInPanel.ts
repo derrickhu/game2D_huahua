@@ -1,16 +1,33 @@
 /**
- * 签到面板 - 7日签到 UI
+ * 签到面板 - 全屏遮罩覆盖式 3+3+1 卡片布局
+ *
+ * 无面板背景框，所有元素直接绘制在半透明遮罩上。
+ * 包含里程碑进度条、物品图标（TextureCache）、领取飞入动效接口。
  */
 import * as PIXI from 'pixi.js';
 import { Game } from '@/core/Game';
+import { EventBus } from '@/core/EventBus';
 import { TweenManager, Ease } from '@/core/TweenManager';
-import { CheckInManager, CHECK_IN_REWARDS } from '@/managers/CheckInManager';
-import { DESIGN_WIDTH, FONT_FAMILY, COLORS } from '@/config/Constants';
+import {
+  CheckInManager, CHECK_IN_REWARDS, MILESTONES,
+  type RewardItem, type CheckInReward,
+} from '@/managers/CheckInManager';
+import { DESIGN_WIDTH, FONT_FAMILY } from '@/config/Constants';
+import { TextureCache } from '@/utils/TextureCache';
+
+const CARD_AREA_W = 620;
+const CARD_GAP = 14;
+const CARD_W = Math.floor((CARD_AREA_W - CARD_GAP * 2) / 3);
+const CARD_H = 172;
+const DAY7_H = 132;
 
 export class CheckInPanel extends PIXI.Container {
   private _bg!: PIXI.Graphics;
   private _content!: PIXI.Container;
   private _isOpen = false;
+
+  /** 每张日卡的屏幕中心坐标，供飞入动效使用 */
+  _dayCardCenters: { x: number; y: number }[] = [];
 
   constructor() {
     super();
@@ -26,16 +43,12 @@ export class CheckInPanel extends PIXI.Container {
     this.alpha = 1;
     this._refresh();
 
-    // 取消之前可能残留的关闭动画
     TweenManager.cancelTarget(this._bg);
     TweenManager.cancelTarget(this._content);
     TweenManager.cancelTarget(this._content.scale);
-
-    // 确保面板自身 transform 干净
     this.position.set(0, 0);
     this.scale.set(1, 1);
 
-    // 弹出动画：遮罩淡入 + 面板从缩小弹出
     this._bg.alpha = 0;
     this._content.alpha = 0;
     this._content.scale.set(0.85);
@@ -44,211 +57,508 @@ export class CheckInPanel extends PIXI.Container {
     TweenManager.to({ target: this._content.scale, props: { x: 1, y: 1 }, duration: 0.3, ease: Ease.easeOutBack });
   }
 
+  /** 将签到内容层本地坐标转为场景全局坐标（用于飞入动效与 MainScene.container 对齐） */
+  contentToGlobal(local: { x: number; y: number }): PIXI.Point {
+    return this._content.toGlobal(new PIXI.Point(local.x, local.y));
+  }
+
   close(): void {
     if (!this._isOpen) return;
     this._isOpen = false;
-
-    // 取消之前的开启动画
     TweenManager.cancelTarget(this._bg);
     TweenManager.cancelTarget(this._content);
     TweenManager.cancelTarget(this._content.scale);
 
-    TweenManager.to({
-      target: this._bg, props: { alpha: 0 }, duration: 0.15, ease: Ease.easeInQuad,
-    });
+    TweenManager.to({ target: this._bg, props: { alpha: 0 }, duration: 0.15, ease: Ease.easeInQuad });
     TweenManager.to({
       target: this._content, props: { alpha: 0 }, duration: 0.15, ease: Ease.easeInQuad,
       onComplete: () => { this.visible = false; this.alpha = 1; },
     });
-    TweenManager.to({
-      target: this._content.scale, props: { x: 0.9, y: 0.9 }, duration: 0.15, ease: Ease.easeInQuad,
-    });
+    TweenManager.to({ target: this._content.scale, props: { x: 0.9, y: 0.9 }, duration: 0.15, ease: Ease.easeInQuad });
   }
+
+  /* ====== 骨架 ====== */
 
   private _build(): void {
     const w = DESIGN_WIDTH;
     const h = Game.logicHeight;
 
-    // 半透明背景遮罩
     this._bg = new PIXI.Graphics();
-    this._bg.beginFill(0x000000, 0.5);
+    this._bg.beginFill(0x000000, 0.6);
     this._bg.drawRect(0, 0, w, h);
     this._bg.endFill();
     this._bg.eventMode = 'static';
     this._bg.on('pointerdown', () => this.close());
     this.addChild(this._bg);
 
-    // 面板内容容器 — 用 position 居中，不使用 pivot
     this._content = new PIXI.Container();
     this.addChild(this._content);
   }
 
+  /* ====== 内容刷新 ====== */
+
   private _refresh(): void {
-    // 清除旧内容
     while (this._content.children.length > 0) {
-      const child = this._content.children[0];
-      this._content.removeChild(child);
-      child.destroy({ children: true });
+      const c = this._content.children[0];
+      this._content.removeChild(c);
+      c.destroy({ children: true });
     }
-
-    const panelW = Math.min(600, DESIGN_WIDTH - 40);
-    const panelH = 480;
-    const panelX = (DESIGN_WIDTH - panelW) / 2;
-    const panelY = (Game.logicHeight - panelH) / 2;
-
-    // 设置 _content 的 pivot 和 position 用于缩放动画居中
-    this._content.pivot.set(DESIGN_WIDTH / 2, Game.logicHeight / 2);
-    this._content.position.set(DESIGN_WIDTH / 2, Game.logicHeight / 2);
+    this._dayCardCenters = [];
 
     const cx = DESIGN_WIDTH / 2;
+    const logicH = Game.logicHeight;
+    this._content.pivot.set(cx, logicH / 2);
+    this._content.position.set(cx, logicH / 2);
 
-    // 面板背景
-    const bg = new PIXI.Graphics();
-    bg.beginFill(0xFFFBF0);
-    bg.drawRoundedRect(panelX, panelY, panelW, panelH, 20);
-    bg.endFill();
-    bg.lineStyle(2, 0xFFD700, 0.4);
-    bg.drawRoundedRect(panelX, panelY, panelW, panelH, 20);
-    bg.eventMode = 'static'; // 阻止点击穿透
-    this._content.addChild(bg);
+    const state = CheckInManager.state;
+    const justCompletedCycle = state.signedToday && state.signedDays === 0;
+    const effectiveSignedDays = justCompletedCycle ? 7 : state.signedDays;
 
-    // 标题
-    const title = new PIXI.Text('📅 每日签到', {
-      fontSize: 24, fill: COLORS.TEXT_DARK, fontFamily: FONT_FAMILY, fontWeight: 'bold',
-    });
-    title.anchor.set(0.5, 0);
-    title.position.set(cx, panelY + 16);
-    this._content.addChild(title);
+    const cardAreaX = cx - CARD_AREA_W / 2;
 
-    // 连续签到信息
-    const streakText = new PIXI.Text(
-      `连续签到 ${CheckInManager.consecutiveDays} 天  ${CheckInManager.state.signedToday ? '✅ 今日已签到' : '❗ 今日未签到'}`,
-      { fontSize: 14, fill: COLORS.TEXT_LIGHT, fontFamily: FONT_FAMILY },
+    const ESTIMATED_H = 200 + 220 + CARD_H + CARD_GAP + CARD_H + CARD_GAP + DAY7_H + 20 + 56;
+    const startY = Math.max(36, (logicH - ESTIMATED_H) / 2);
+    let y = startY;
+
+    const blocker = new PIXI.Graphics();
+    blocker.beginFill(0x000000, 0.001);
+    blocker.drawRoundedRect(cardAreaX - 28, startY - 36, CARD_AREA_W + 56, ESTIMATED_H + 120, 20);
+    blocker.endFill();
+    blocker.eventMode = 'static';
+    this._content.addChild(blocker);
+
+    y = this._buildTitleBanner(cx, y);
+
+    const subTxt = new PIXI.Text(
+      `累计签到 ${state.totalSignedDays} 天  ·  连续 ${state.consecutiveDays} 天`,
+      { fontSize: 17, fill: 0xE0E0E0, fontFamily: FONT_FAMILY, fontWeight: 'bold' },
     );
-    streakText.anchor.set(0.5, 0);
-    streakText.position.set(cx, panelY + 48);
-    this._content.addChild(streakText);
+    subTxt.anchor.set(0.5, 0);
+    subTxt.position.set(cx, y);
+    this._content.addChild(subTxt);
+    y += 32;
 
-    // 连续签到加成
-    const bonusDesc = CheckInManager.streakBonusDesc;
-    if (bonusDesc) {
-      const bonusText = new PIXI.Text(`🎉 连续签到加成：${bonusDesc}`, {
-        fontSize: 13, fill: 0xFF8C69, fontFamily: FONT_FAMILY,
-      });
-      bonusText.anchor.set(0.5, 0);
-      bonusText.position.set(cx, panelY + 68);
-      this._content.addChild(bonusText);
+    y += this._buildMilestoneBar(cardAreaX, y, state.totalSignedDays, CARD_AREA_W);
+
+    // ── 日卡 Row 1 (Day 1-3) ──
+    for (let i = 0; i < 3; i++) {
+      const x = cardAreaX + i * (CARD_W + CARD_GAP);
+      this._buildDayCard(x, y, CARD_W, CARD_H, i, effectiveSignedDays, state.signedToday);
     }
+    y += CARD_H + CARD_GAP;
 
-    // 7天签到格子
-    const startY = panelY + 96;
-    const cardW = 72;
-    const cardH = 100;
-    const gap = 8;
-    const totalW = 7 * cardW + 6 * gap;
-    let startX = cx - totalW / 2;
-
-    const signedDays = CheckInManager.state.signedDays;
-    const signedToday = CheckInManager.state.signedToday;
-
-    for (let i = 0; i < 7; i++) {
-      const reward = CHECK_IN_REWARDS[i];
-      const dayX = startX + i * (cardW + gap);
-      const isSigned = i < signedDays || (i === signedDays && signedToday);
-      const isToday = i === signedDays && !signedToday;
-
-      // 卡片背景
-      const card = new PIXI.Graphics();
-      if (isSigned) {
-        card.beginFill(0xE8F5E8);
-      } else if (isToday) {
-        card.beginFill(0xFFF3E0);
-        card.lineStyle(2, 0xFFD700);
-      } else {
-        card.beginFill(0xF5F5F5);
-      }
-      card.drawRoundedRect(dayX, startY, cardW, cardH, 10);
-      card.endFill();
-      this._content.addChild(card);
-
-      // Day 标签
-      const dayLabel = new PIXI.Text(`Day ${reward.day}`, {
-        fontSize: 11, fill: isToday ? 0xFF8C69 : COLORS.TEXT_LIGHT, fontFamily: FONT_FAMILY,
-        fontWeight: isToday ? 'bold' : 'normal',
-      });
-      dayLabel.anchor.set(0.5, 0);
-      dayLabel.position.set(dayX + cardW / 2, startY + 6);
-      this._content.addChild(dayLabel);
-
-      // 图标
-      const icon = new PIXI.Text(isSigned ? '✅' : reward.icon, {
-        fontSize: 24, fill: 0x000000, fontFamily: FONT_FAMILY,
-      });
-      icon.anchor.set(0.5, 0.5);
-      icon.position.set(dayX + cardW / 2, startY + 42);
-      this._content.addChild(icon);
-
-      // 奖励描述
-      const desc = new PIXI.Text(this._shortRewardDesc(reward), {
-        fontSize: 10, fill: COLORS.TEXT_LIGHT, fontFamily: FONT_FAMILY,
-        wordWrap: true, wordWrapWidth: cardW - 8,
-        align: 'center',
-      });
-      desc.anchor.set(0.5, 0);
-      desc.position.set(dayX + cardW / 2, startY + 64);
-      this._content.addChild(desc);
+    // ── 日卡 Row 2 (Day 4-6) ──
+    for (let i = 3; i < 6; i++) {
+      const x = cardAreaX + (i - 3) * (CARD_W + CARD_GAP);
+      this._buildDayCard(x, y, CARD_W, CARD_H, i, effectiveSignedDays, state.signedToday);
     }
+    y += CARD_H + CARD_GAP;
 
-    // 签到按钮
+    // ── 日卡 Row 3 (Day 7) ──
+    this._buildDayCard(cardAreaX, y, CARD_AREA_W, DAY7_H, 6, effectiveSignedDays, state.signedToday, true);
+    y += DAY7_H + 20;
+
+    // ── 签到按钮 ──
     if (CheckInManager.canCheckIn) {
-      const btnW = 200;
-      const btnH = 50;
-      const btnY = startY + cardH + 30;
-
-      const btn = new PIXI.Graphics();
-      btn.beginFill(COLORS.BUTTON_PRIMARY);
-      btn.drawRoundedRect(cx - btnW / 2, btnY, btnW, btnH, 25);
-      btn.endFill();
-      this._content.addChild(btn);
-
-      const btnText = new PIXI.Text('🎁 立即签到', {
-        fontSize: 20, fill: 0xFFFFFF, fontFamily: FONT_FAMILY, fontWeight: 'bold',
-      });
-      btnText.anchor.set(0.5, 0.5);
-      btnText.position.set(cx, btnY + btnH / 2);
-      this._content.addChild(btnText);
-
-      const hitArea = new PIXI.Container();
-      hitArea.hitArea = new PIXI.Rectangle(cx - btnW / 2, btnY, btnW, btnH);
-      hitArea.eventMode = 'static';
-      hitArea.cursor = 'pointer';
-      hitArea.on('pointerdown', () => {
-        const reward = CheckInManager.checkIn();
-        if (reward) {
-          this._refresh();
-        }
-      });
-      this._content.addChild(hitArea);
+      this._buildSignButton(cx, y);
     }
-
-    // 关闭按钮
-    const closeBtn = new PIXI.Text('✕', {
-      fontSize: 22, fill: COLORS.TEXT_LIGHT, fontFamily: FONT_FAMILY,
-    });
-    closeBtn.anchor.set(0.5, 0.5);
-    closeBtn.position.set(panelX + panelW - 24, panelY + 24);
-    closeBtn.eventMode = 'static';
-    closeBtn.cursor = 'pointer';
-    closeBtn.on('pointerdown', () => this.close());
-    this._content.addChild(closeBtn);
   }
 
-  private _shortRewardDesc(reward: typeof CHECK_IN_REWARDS[0]): string {
-    const parts: string[] = [];
-    if (reward.gold) parts.push(`💰${reward.gold}`);
-    if (reward.stamina) parts.push(`💖${reward.stamina}`);
-    if (reward.diamond) parts.push(`💎${reward.diamond}`);
-    if (reward.huayuan) parts.push(`🌸${reward.huayuan}`);
-    return parts.join('\n');
+  /* ====== 标题横幅 ====== */
+
+  private _buildTitleBanner(cx: number, y: number): number {
+    const tex = TextureCache.get('checkin_title_banner');
+    if (!tex) {
+      const title = new PIXI.Text('每日奖励', {
+        fontSize: 36, fill: 0xFFFFFF, fontFamily: FONT_FAMILY, fontWeight: 'bold',
+        dropShadow: true, dropShadowColor: 0x000000, dropShadowDistance: 2, dropShadowAlpha: 0.5,
+      });
+      title.anchor.set(0.5, 0);
+      title.position.set(cx, y);
+      this._content.addChild(title);
+      return y + 48;
+    }
+    const sp = new PIXI.Sprite(tex);
+    sp.anchor.set(0.5, 0);
+    const tw = Math.min(560, DESIGN_WIDTH - 40);
+    sp.width = tw;
+    sp.height = (tex.height / tex.width) * tw;
+    sp.position.set(cx, y);
+    this._content.addChild(sp);
+    const title = new PIXI.Text('每日奖励', {
+      fontSize: 30,
+      fill: 0xFFFFFF,
+      fontFamily: FONT_FAMILY,
+      fontWeight: 'bold',
+      stroke: 0x6D4C41,
+      strokeThickness: 4,
+      dropShadow: true,
+      dropShadowColor: 0x000000,
+      dropShadowDistance: 1,
+      dropShadowAlpha: 0.45,
+    });
+    title.anchor.set(0.5, 0.5);
+    title.position.set(cx, y + sp.height * 0.72);
+    this._content.addChild(title);
+    return y + sp.height + 8;
+  }
+
+  /* ====== 里程碑：与下方日卡同宽；底板内礼包+程序绘制进度条+文字 ====== */
+
+  private _buildMilestoneBar(x: number, y: number, totalDays: number, blockW: number): number {
+    const MAX_DAYS = 30;
+    const SIDE_PAD = 20;
+    const INNER_TOP = 12;
+    const GAP_GIFT_TO_TRACK = 12;
+    const GAP_TRACK_TO_LABEL = 10;
+    const INNER_BOTTOM = 14;
+    const GIFT_SZ = 48;
+    const TRACK_H = 22;
+    /** 礼包与「N天」以中心对齐轨道；末位若贴满 track 右缘会裁切，故左右内缩 */
+    const MILESTONE_X_INSET = Math.max(30, Math.ceil(GIFT_SZ * 0.62));
+
+    const trackW = blockW - SIDE_PAD * 2;
+    const trackLeft = x + SIDE_PAD;
+    const trackR = TRACK_H / 2;
+
+    const innerY = y + INNER_TOP;
+    const GIFT_Y = innerY + GIFT_SZ * 0.5 + 4;
+    const trackTop = innerY + GIFT_SZ + GAP_GIFT_TO_TRACK;
+    const labelTop = trackTop + TRACK_H + GAP_TRACK_TO_LABEL;
+    const blockH = (labelTop + 22 + INNER_BOTTOM) - y;
+
+    const panelTex = TextureCache.get('checkin_milestone_panel');
+    if (panelTex) {
+      const panel = new PIXI.Sprite(panelTex);
+      panel.position.set(x, y);
+      panel.width = blockW;
+      panel.height = blockH;
+      this._content.addChild(panel);
+    } else {
+      const plate = new PIXI.Graphics();
+      plate.lineStyle(2, 0xC4A574, 0.9);
+      plate.beginFill(0xFFF8EE, 0.92);
+      plate.drawRoundedRect(x, y, blockW, blockH, 18);
+      plate.endFill();
+      this._content.addChild(plate);
+    }
+
+    const trackBg = new PIXI.Graphics();
+    trackBg.lineStyle(2, 0xCEB8A8, 1);
+    trackBg.beginFill(0xEEF6E8);
+    trackBg.drawRoundedRect(trackLeft, trackTop, trackW, TRACK_H, trackR);
+    trackBg.endFill();
+    this._content.addChild(trackBg);
+
+    const fillRatio = Math.min(1, totalDays / MAX_DAYS);
+    const fillW = Math.max(0, fillRatio * trackW);
+    if (fillW > 1.5) {
+      const inset = 3;
+      const fw = Math.max(0, fillW - inset * 2);
+      const fillBar = new PIXI.Graphics();
+      fillBar.beginFill(0x8BC34A);
+      fillBar.drawRoundedRect(trackLeft + inset, trackTop + inset, fw, TRACK_H - inset * 2, Math.max(4, trackR - inset));
+      fillBar.endFill();
+      this._content.addChild(fillBar);
+      const gloss = new PIXI.Graphics();
+      gloss.beginFill(0xffffff, 0.22);
+      gloss.drawRoundedRect(trackLeft + inset + 2, trackTop + inset + 1, Math.max(0, fw - 4), (TRACK_H - inset * 2) * 0.35, 6);
+      gloss.endFill();
+      this._content.addChild(gloss);
+    }
+
+    const mileSpan = Math.max(40, trackW - MILESTONE_X_INSET * 2);
+    MILESTONES.forEach((ms, mi) => {
+      const nodeX = trackLeft + MILESTONE_X_INSET + (ms.threshold / MAX_DAYS) * mileSpan;
+      const giftTex = TextureCache.get(`checkin_milestone_gift_${mi + 1}`);
+      const claimed = CheckInManager.isMilestoneClaimed(ms.threshold);
+      const canClaim = CheckInManager.canClaimMilestone(ms.threshold);
+
+      let pulseTarget: PIXI.Sprite | PIXI.Graphics | null = null;
+
+      if (giftTex) {
+        const sp = new PIXI.Sprite(giftTex);
+        sp.anchor.set(0.5);
+        sp.position.set(nodeX, GIFT_Y);
+        sp.width = GIFT_SZ;
+        sp.height = GIFT_SZ;
+        this._content.addChild(sp);
+        pulseTarget = sp;
+      } else {
+        const g = new PIXI.Graphics();
+        g.beginFill(0xFFD54F);
+        g.lineStyle(2, 0xF57C00, 1);
+        g.drawRoundedRect(nodeX - 16, GIFT_Y - 16, 32, 32, 6);
+        g.endFill();
+        this._content.addChild(g);
+        pulseTarget = g;
+      }
+
+      if (claimed) {
+        const ck = new PIXI.Text('✓', { fontSize: 20, fill: 0xFFFFFF, fontFamily: FONT_FAMILY, fontWeight: 'bold', stroke: 0x2E7D32, strokeThickness: 3 });
+        ck.anchor.set(0.5);
+        ck.position.set(nodeX, GIFT_Y);
+        this._content.addChild(ck);
+      }
+
+      if (canClaim) {
+        const dot = new PIXI.Graphics();
+        dot.beginFill(0xE53935);
+        dot.lineStyle(1.5, 0xFFFFFF, 1);
+        dot.drawCircle(nodeX + GIFT_SZ * 0.3, GIFT_Y - GIFT_SZ * 0.32, 6);
+        dot.endFill();
+        this._content.addChild(dot);
+      }
+
+      const lbl = new PIXI.Text(`${ms.threshold}天`, {
+        fontSize: 16, fill: 0x5D4037, fontFamily: FONT_FAMILY, fontWeight: 'bold',
+        stroke: 0xFFFFFF,
+        strokeThickness: 3,
+      });
+      lbl.anchor.set(0.5, 0);
+      lbl.position.set(nodeX, labelTop);
+      this._content.addChild(lbl);
+
+      if (canClaim) {
+        if (pulseTarget instanceof PIXI.Sprite) {
+          const pt = pulseTarget;
+          const pObj = { s: 1 };
+          const bounce = (): void => {
+            TweenManager.to({
+              target: pObj, props: { s: 1.08 }, duration: 0.45, ease: Ease.easeInOutQuad,
+              onUpdate: () => pt.scale.set(pObj.s),
+              onComplete: () => {
+                TweenManager.to({
+                  target: pObj, props: { s: 1 }, duration: 0.45, ease: Ease.easeInOutQuad,
+                  onUpdate: () => pt.scale.set(pObj.s),
+                  onComplete: bounce,
+                });
+              },
+            });
+          };
+          bounce();
+        }
+
+        const hit = new PIXI.Container();
+        hit.hitArea = new PIXI.Circle(nodeX, GIFT_Y, GIFT_SZ * 0.65);
+        hit.eventMode = 'static';
+        hit.cursor = 'pointer';
+        hit.on('pointerdown', () => {
+          const result = CheckInManager.claimMilestone(ms.threshold);
+          if (result) {
+            EventBus.emit('checkin:flyMilestone', result, { x: nodeX, y: GIFT_Y });
+            this._refresh();
+          }
+        });
+        this._content.addChild(hit);
+      }
+    });
+
+    return blockH + 10;
+  }
+
+  /* ====== 日卡 ====== */
+
+  private _buildDayCard(
+    x: number, y: number, w: number, h: number,
+    dayIndex: number, effectiveSigned: number, signedToday: boolean,
+    isWide = false,
+  ): void {
+    const reward = CHECK_IN_REWARDS[dayIndex];
+    const isSigned = dayIndex < effectiveSigned;
+    const isToday = !signedToday && dayIndex === effectiveSigned;
+
+    const card = new PIXI.Container();
+    card.position.set(x, y);
+
+    const R = 14;
+    let cardBg: PIXI.Graphics | PIXI.Sprite | null = null;
+    const texKey = isWide
+      ? 'checkin_card_day7'
+      : isSigned
+        ? 'checkin_card_signed'
+        : isToday
+          ? 'checkin_card_today'
+          : 'checkin_card_future';
+    const cardTex = TextureCache.get(texKey);
+    if (cardTex) {
+      const sp = new PIXI.Sprite(cardTex);
+      sp.width = w;
+      sp.height = h;
+      card.addChild(sp);
+      cardBg = sp;
+    } else {
+      const bg = new PIXI.Graphics();
+      if (isSigned) {
+        bg.beginFill(0x2E7D32, 0.45);
+      } else if (isToday) {
+        bg.lineStyle(2.5, 0xFFD700, 0.85);
+        bg.beginFill(0x5D4037, 0.4);
+      } else {
+        bg.beginFill(0x37474F, 0.38);
+      }
+      bg.drawRoundedRect(0, 0, w, h, R);
+      bg.endFill();
+      card.addChild(bg);
+      cardBg = bg;
+    }
+
+    const dayStr = isToday ? '今天' : `第${reward.day}天`;
+    const dayLbl = new PIXI.Text(dayStr, {
+      fontSize: isWide ? 20 : 18,
+      fill: 0xFFFFFF,
+      fontFamily: FONT_FAMILY,
+      fontWeight: 'bold',
+      stroke: 0x3E2723,
+      strokeThickness: 4,
+    });
+    dayLbl.anchor.set(0.5, 0);
+    dayLbl.position.set(w / 2, 7);
+    card.addChild(dayLbl);
+
+    const items = reward.items;
+    const ICON_SZ = isWide ? 48 : (items.length > 1 ? 40 : 52);
+    const contentCY = h / 2 + 10;
+
+    if (isWide || items.length > 1) {
+      const spacing = isWide ? 100 : 78;
+      const startIX = w / 2 - ((items.length - 1) * spacing) / 2;
+      for (let j = 0; j < items.length; j++) {
+        this._drawRewardItem(card, startIX + j * spacing, contentCY, items[j], isSigned, ICON_SZ);
+      }
+    } else {
+      this._drawRewardItem(card, w / 2, contentCY, items[0], isSigned, ICON_SZ);
+    }
+
+    // 已签到覆盖层
+    if (isSigned) {
+      const overlay = new PIXI.Graphics();
+      overlay.beginFill(0x1B5E20, 0.2);
+      overlay.drawRoundedRect(0, 0, w, h, R);
+      overlay.endFill();
+      card.addChild(overlay);
+
+      const chk = new PIXI.Text('✓', {
+        fontSize: isWide ? 36 : 28, fill: 0x66BB6A, fontFamily: FONT_FAMILY, fontWeight: 'bold',
+      });
+      chk.anchor.set(0.5);
+      chk.position.set(w / 2, h / 2);
+      card.addChild(chk);
+    }
+
+    // 今天脉冲
+    if (isToday && cardBg) {
+      const p = { a: 0.92 };
+      const up = (): void => {
+        TweenManager.to({
+          target: p, props: { a: 1 }, duration: 0.8, ease: Ease.easeInOutQuad,
+          onUpdate: () => { cardBg!.alpha = p.a; },
+          onComplete: () => {
+            TweenManager.to({
+              target: p, props: { a: 0.88 }, duration: 0.8, ease: Ease.easeInOutQuad,
+              onUpdate: () => { cardBg!.alpha = p.a; },
+              onComplete: up,
+            });
+          },
+        });
+      };
+      up();
+    }
+
+    this._content.addChild(card);
+    this._dayCardCenters[dayIndex] = { x: x + w / 2, y: y + h / 2 };
+  }
+
+  private _drawRewardItem(
+    parent: PIXI.Container, cx: number, cy: number,
+    item: RewardItem, dimmed: boolean, size: number,
+  ): void {
+    const tex = TextureCache.get(item.textureKey);
+    if (tex) {
+      const sp = new PIXI.Sprite(tex);
+      sp.anchor.set(0.5);
+      const sc = size / Math.max(tex.width, tex.height);
+      sp.scale.set(sc);
+      sp.position.set(cx, cy - 8);
+      if (dimmed) sp.alpha = 0.35;
+      parent.addChild(sp);
+    } else {
+      const fb = new PIXI.Graphics();
+      fb.beginFill(0x888888);
+      fb.drawCircle(cx, cy - 8, size / 2);
+      fb.endFill();
+      if (dimmed) fb.alpha = 0.35;
+      parent.addChild(fb);
+    }
+
+    const amt = new PIXI.Text(`×${item.amount}`, {
+      fontSize: 16, fill: dimmed ? 0xAAAAAA : 0x4E342E,
+      fontFamily: FONT_FAMILY, fontWeight: 'bold',
+      stroke: dimmed ? 0x000000 : 0xFFFFFF,
+      strokeThickness: dimmed ? 0 : 2.5,
+    });
+    amt.anchor.set(0.5, 0);
+    amt.position.set(cx, cy + size / 2 - 4);
+    parent.addChild(amt);
+  }
+
+  /* ====== 签到按钮 ====== */
+
+  private _buildSignButton(cx: number, y: number): void {
+    const BW = 240;
+    const BH = 52;
+
+    const btnTex = TextureCache.get('deco_card_btn_2');
+    if (btnTex) {
+      const sp = new PIXI.Sprite(btnTex);
+      sp.anchor.set(0.5, 0);
+      sp.width = BW;
+      sp.height = BH;
+      sp.position.set(cx, y);
+      this._content.addChild(sp);
+    } else {
+      const btnBg = new PIXI.Graphics();
+      btnBg.lineStyle(2, 0xFFAA80, 0.6);
+      btnBg.beginFill(0xFF8C69);
+      btnBg.drawRoundedRect(cx - BW / 2, y, BW, BH, BH / 2);
+      btnBg.endFill();
+      this._content.addChild(btnBg);
+    }
+
+    const btnTxt = new PIXI.Text('点击领取', {
+      fontSize: 22, fill: 0xFFFFFF, fontFamily: FONT_FAMILY, fontWeight: 'bold',
+    });
+    btnTxt.anchor.set(0.5, 0.5);
+    btnTxt.position.set(cx, y + BH / 2);
+    this._content.addChild(btnTxt);
+
+    const hit = new PIXI.Container();
+    hit.hitArea = new PIXI.Rectangle(cx - BW / 2, y, BW, BH);
+    hit.eventMode = 'static';
+    hit.cursor = 'pointer';
+    hit.on('pointerdown', () => this._onCheckIn());
+    this._content.addChild(hit);
+  }
+
+  /* ====== 签到逻辑 ====== */
+
+  _onCheckIn(): void {
+    const dayIdx = CheckInManager.state.signedDays;
+    const center = this._dayCardCenters[dayIdx];
+
+    const result = CheckInManager.checkIn();
+    if (!result) return;
+
+    const flyItems = [...result.reward.items];
+    if (result.streakBonusHualu > 0) {
+      flyItems.push({ type: 'hualu', amount: result.streakBonusHualu, textureKey: 'icon_hualu' });
+    }
+    if (center && flyItems.length > 0) {
+      EventBus.emit('checkin:flyReward', { items: flyItems, autoClosePanel: true }, center);
+    } else {
+      this.close();
+    }
+
+    this._refresh();
   }
 }

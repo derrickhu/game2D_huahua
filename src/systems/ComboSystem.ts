@@ -279,12 +279,12 @@ export class ComboSystem {
   }
 
   /** 合成溢出：额外产出一个同等级物品到奖励收纳框 */
-  private _tryOverflow(resultId: string, _resultCell: number): void {
+  private _tryOverflow(resultId: string, resultCell: number): void {
     const def = ITEM_DEFS.get(resultId);
     if (!def) return;
 
     RewardBoxManager.addItem(resultId);
-    EventBus.emit('combo:overflow', -1, resultId);
+    EventBus.emit('combo:overflow', resultCell, resultId);
 
     this._showOverflowToast(resultId);
   }

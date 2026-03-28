@@ -473,7 +473,7 @@ class ChallengeManagerClass {
       // 首次通关奖励
       if (!this._claimed.has(levelId)) {
         this._claimed.add(levelId);
-        CurrencyManager.addGold(level.reward.gold);
+        CurrencyManager.addHuayuan(level.reward.gold);
         CurrencyManager.addDiamond(level.reward.diamond);
         if (level.reward.huayuan > 0) CurrencyManager.addHuayuan(level.reward.huayuan);
       }

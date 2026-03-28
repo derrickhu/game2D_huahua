@@ -11,6 +11,17 @@ export enum Category {
   DRINK = 'drink',
   BUILDING = 'building',
   CHEST = 'chest',
+  CURRENCY = 'currency',
+}
+
+/** 物品的交互机制——决定点击行为、是否走 CD / 宝箱散落等 */
+export enum InteractType {
+  /** 普通可合成物品，不可点击产出 */
+  NONE = 'none',
+  /** 工具类：点击消耗体力产出物品，可能有 CD / exhaustAfterProduces */
+  TOOL = 'tool',
+  /** 宝箱类：点击一次性掷出多件物品并批量散落到棋盘 */
+  CHEST = 'chest',
 }
 
 export enum FlowerLine {
@@ -25,6 +36,13 @@ export enum DrinkLine {
   TEA = 'tea',         // 茶饮线
   COLD = 'cold',       // 冷饮线
   DESSERT = 'dessert', // 甜品线
+}
+
+export enum CurrencyLine {
+  STAMINA = 'stamina',
+  HUAYUAN = 'huayuan',
+  HUALU = 'hualu',
+  DIAMOND = 'diamond',
 }
 
 export enum ToolLine {
@@ -55,6 +73,14 @@ export interface ItemDef {
   level: number;
   maxLevel: number;
   icon: string;
+  /** 交互机制：NONE / TOOL / CHEST */
+  interactType: InteractType;
+  /** 是否可卖出 */
+  sellable: boolean;
+  /** 是否可存入仓库 */
+  storable: boolean;
+  /** 货币物品双击使用时获得的奖励 */
+  currencyReward?: { type: 'stamina' | 'huayuan' | 'hualu' | 'diamond'; amount: number };
 }
 
 // ═══════════════ 产品数据 ═══════════════
@@ -130,6 +156,9 @@ function buildItemDefs(): Map<string, ItemDef> {
         level: i + 1,
         maxLevel: maxLv,
         icon: `flower_${line}_${i + 1}`,
+        interactType: InteractType.NONE,
+        sellable: true,
+        storable: true,
       });
     }
   }
@@ -146,6 +175,9 @@ function buildItemDefs(): Map<string, ItemDef> {
         level: i + 1,
         maxLevel: 8,
         icon: `drink_${line}_${i + 1}`,
+        interactType: InteractType.NONE,
+        sellable: true,
+        storable: true,
       });
     }
   }
@@ -163,6 +195,42 @@ function buildItemDefs(): Map<string, ItemDef> {
         level: i + 1,
         maxLevel: maxLv,
         icon: `tool_${line}_${i + 1}`,
+        interactType: InteractType.TOOL,
+        sellable: true,
+        storable: false,
+      });
+    }
+  }
+
+  // 花艺材料篮：虽然品类是 FLOWER，但行为是工具（点击产出花束，用完消失）
+  const wrapTool = map.get('flower_wrap_4');
+  if (wrapTool) {
+    wrapTool.interactType = InteractType.TOOL;
+    wrapTool.storable = false;
+  }
+
+  // 货币物品（4 种 x 3 级 = 12 个）
+  const CURRENCY_DATA: [CurrencyLine, string[], 'stamina' | 'huayuan' | 'hualu' | 'diamond', string, number[]][] = [
+    [CurrencyLine.STAMINA,  ['体力瓶', '体力罐', '体力桶'],   'stamina',  'icon_energy',  [2, 5, 12]],
+    [CurrencyLine.HUAYUAN,  ['花愿袋', '花愿包', '花愿箱'],   'huayuan',  'icon_huayuan', [10, 25, 60]],
+    [CurrencyLine.HUALU,    ['花露滴', '花露瓶', '花露壶'],   'hualu',    'icon_hualu',   [3, 8, 20]],
+    [CurrencyLine.DIAMOND,  ['碎钻', '钻石', '大钻石'],       'diamond',  'icon_gem',     [1, 3, 8]],
+  ];
+  for (const [line, names, rewardType, icon, amounts] of CURRENCY_DATA) {
+    for (let i = 0; i < names.length; i++) {
+      const id = `currency_${line}_${i + 1}`;
+      map.set(id, {
+        id,
+        name: names[i],
+        category: Category.CURRENCY,
+        line,
+        level: i + 1,
+        maxLevel: names.length,
+        icon,
+        interactType: InteractType.NONE,
+        sellable: false,
+        storable: true,
+        currencyReward: { type: rewardType, amount: amounts[i] },
       });
     }
   }
@@ -178,7 +246,10 @@ function buildItemDefs(): Map<string, ItemDef> {
       line: 'chest',
       level: i + 1,
       maxLevel: 5,
-      icon: `chest_${i + 1}`,
+      icon: id,
+      interactType: InteractType.CHEST,
+      sellable: false,
+      storable: false,
     });
   }
 
@@ -233,20 +304,24 @@ export function getMergeChainName(itemId: string): string {
     [ToolLine.MIXER]: '饮品器具',
     [ToolLine.BAKE]: '烘焙工具',
     chest: '宝箱',
+    [CurrencyLine.STAMINA]: '体力',
+    [CurrencyLine.HUAYUAN]: '花愿',
+    [CurrencyLine.HUALU]: '花露',
+    [CurrencyLine.DIAMOND]: '钻石',
   };
   return (lineNames[def.line] || def.line) + '合成线';
 }
 
-/** 判断物品是否是工具（BUILDING品类且可合成） */
+/** 判断物品是否是工具类交互（含 flower_wrap_4 等非 BUILDING 品类的工具） */
 export function isToolItem(itemId: string): boolean {
   const def = ITEM_DEFS.get(itemId);
   if (!def) return false;
-  return def.category === Category.BUILDING;
+  return def.interactType === InteractType.TOOL;
 }
 
 /** 获取工具对应的产品线信息 */
 export function getToolProductLine(itemId: string): { category: Category; line: string } | null {
   const def = ITEM_DEFS.get(itemId);
-  if (!def || def.category !== Category.BUILDING) return null;
+  if (!def || def.interactType !== InteractType.TOOL) return null;
   return TOOL_TO_PRODUCT_LINE[def.line as ToolLine] ?? null;
 }

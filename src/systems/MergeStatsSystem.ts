@@ -59,17 +59,17 @@ interface GoalDef {
   name: string;
   type: 'weekly' | 'monthly';
   condition: (stats: StatsData) => boolean;
-  reward: { gold?: number; huayuan?: number; hualu?: number; diamond?: number };
+  reward: { huayuan?: number; hualu?: number; diamond?: number };
   desc: string;
 }
 
 const WEEKLY_GOALS: GoalDef[] = [
   { id: 'w1', name: '初级合成师', type: 'weekly',
     condition: s => s.weekMerges >= 100,
-    reward: { gold: 50 }, desc: '本周合成100次' },
+    reward: { huayuan: 50 }, desc: '本周合成100次' },
   { id: 'w2', name: '中级合成师', type: 'weekly',
     condition: s => s.weekMerges >= 300,
-    reward: { gold: 200, huayuan: 10 }, desc: '本周合成300次' },
+    reward: { huayuan: 200 }, desc: '本周合成300次' },
   { id: 'w3', name: '高级合成师', type: 'weekly',
     condition: s => s.weekMerges >= 500,
     reward: { huayuan: 50 }, desc: '本周合成500次' },
@@ -210,6 +210,12 @@ export class MergeStatsSystem {
     EventBus.on('customer:delivered', () => {
       this._stats.todayOrders++;
       this._stats.totalOrders++;
+      this._saveStats();
+    });
+
+    // 体力消耗追踪（建筑产出时消耗体力）
+    EventBus.on('building:produced', () => {
+      this._stats.todayStamina++;
       this._saveStats();
     });
 
@@ -450,7 +456,6 @@ export class MergeStatsSystem {
     }
 
     // 发放奖励
-    if (goal.reward.gold) CurrencyManager.addGold(goal.reward.gold);
     if (goal.reward.huayuan) CurrencyManager.addHuayuan(goal.reward.huayuan);
     if (goal.reward.hualu) CurrencyManager.addHualu(goal.reward.hualu);
     if (goal.reward.diamond) CurrencyManager.addDiamond(goal.reward.diamond);

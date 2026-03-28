@@ -6,6 +6,7 @@ import '@/core/pixiUnsafeEvalPatch';
 import { Game } from '@/core/Game';
 import { SceneManager } from '@/core/SceneManager';
 import { BoardManager } from '@/managers/BoardManager';
+import { BuildingManager } from '@/managers/BuildingManager';
 import { SaveManager } from '@/managers/SaveManager';
 import { IdleManager } from '@/managers/IdleManager';
 import { RoomLayoutManager } from '@/managers/RoomLayoutManager';
@@ -90,6 +91,9 @@ async function main(): Promise<void> {
 
     // 尝试加载存档（开发阶段已在启动时清除，此处应返回 false）
     const loaded = SaveManager.load();
+    if (!loaded) {
+      BuildingManager.reset();
+    }
     console.log('[main]', loaded ? '存档加载成功' : '无存档，使用默认数据');
 
     // 再次确认棋盘状态

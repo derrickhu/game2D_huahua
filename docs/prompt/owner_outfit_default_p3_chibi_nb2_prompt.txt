@@ -1,0 +1,14 @@
+BUST PORTRAIT STYLE — must match huahua regular customer bust portraits and the classic dress-up owner bust look (same series), NOT the flat isometric full-body shop sprite look:
+Hand-drawn 2D anime with soft 3D volume: gentle gradient shading on face and clothing, low saturation warm pastel palette, clean soft warm brown line art (not pure black ink, not harsh comic ink). Cute Q-version bust proportions with large sparkling warm brown eyes and white highlight, soft round cheeks, rosy blush, gentle smile. Same rendering depth and appeal as the game's customer dialogue portraits — dimensional, soft, inviting.
+
+IDENTITY locked to attached full-body reference: same light brown bob, pink flower hair clip on viewer's left, pink puff-sleeve blouse, white pinafore apron with two rounded pockets visible at bust, dusty blue skirt top edge optional at lower frame. Clearly the same shopkeeper girl.
+
+HEAD SCALE: the face and hair in this bust should feel consistent with the head size of the reference full-body figure — do not crop to a tiny distant face, do not inflate to an isolated oversized fashion illustration head; bust framing naturally fills the panel with head plus upper torso.
+
+LAYOUT STANDARD for bust panel:
+Portrait 9:16, waist-up from mid-chest to top of head including shoulders. Front-facing portrait, both eyes visible, gentle smile; optional very slight turn toward viewer's right but still clearly frontal.
+Vertical: center of face near 36% to 42% from top of canvas; keep solid magenta padding above hair and at bottom crop edge.
+Horizontal: centered with 8% to 12% magenta margin left and right of silhouette.
+Background: flat uniform magenta RGB 255 0 255 FF00FF only. No text, no frame.
+
+Pose may differ from reference.

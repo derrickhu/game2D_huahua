@@ -57,6 +57,7 @@ import { AdManager } from '@/managers/AdManager';
 import { CollectionManager } from '@/managers/CollectionManager';
 import { FlowerCardManager } from '@/managers/FlowerCardManager';
 import { DressUpManager } from '@/managers/DressUpManager';
+import { getOwnerBoardDisplayScale } from '@/config/DressUpConfig';
 import { SocialManager } from '@/managers/SocialManager';
 import { EventManager } from '@/managers/EventManager';
 import { ChallengeManager } from '@/managers/ChallengeManager';
@@ -69,6 +70,19 @@ import { ChallengePanel } from '@/gameobjects/ui/ChallengePanel';
 import { LeaderboardPanel } from '@/gameobjects/ui/LeaderboardPanel';
 import { RewardBoxButton, REWARD_BOX_BTN_SIZE } from '@/gameobjects/ui/RewardBoxButton';
 import { RewardBoxPanel } from '@/gameobjects/ui/RewardBoxPanel';
+import { RewardBoxManager } from '@/managers/RewardBoxManager';
+import { RoomLayoutManager } from '@/managers/RoomLayoutManager';
+
+/** 合成页左侧店主半身：目标高度与最大宽度（设计 px），统一 scale=min(宽限,高限) 保持宽高比、避免栏内「压扁」感 */
+const BOARD_OWNER_TARGET_H = 208;
+const BOARD_OWNER_MAX_W = 126;
+/** 合成页店主整体再放大倍率（与 DressUpConfig.ownerBoardDisplayScale 叠乘） */
+const BOARD_OWNER_SIZE_MULT = 1.1;
+/**
+ * 合成页店主容器在店铺区内的 Y（局部坐标，越大整体越靠下）。
+ * 须与 `_update` 里呼吸动画的基准一致，勿只改 `_buildShopArea`。
+ */
+const BOARD_OWNER_BASE_Y = 250;
 
 export class MainScene implements Scene {
   readonly name = 'main';
@@ -150,6 +164,7 @@ export class MainScene implements Scene {
       LevelManager.init();
       RegularCustomerManager.init();
       DecorationManager.init();
+      RoomLayoutManager.init();
       SoundSystem.init();
 
       // Phase 7+ 新系统初始化
@@ -157,17 +172,23 @@ export class MainScene implements Scene {
       CollectionManager.init();
       FlowerCardManager.init();
       DressUpManager.init();
+      // 店主半身像在 _buildShopArea 里已刷新过，但当时尚未 _loadState，须在换装存档加载后再刷一次
+      this._refreshOwnerOutfit();
       SocialManager.init();
       EventManager.init();
       ChallengeManager.init();
 
       this._bindCustomerEvents();
+      this._bindBoardCurrencyFly();
       this._bindSystemEvents();
 
       this._initialized = true;
 
       // 启动后处理（延迟一帧确保UI就绪）
       setTimeout(() => this._onGameReady(), 100);
+    } else {
+      // 从花店切回时同步 DressUpManager 当前装扮（避免仅依赖 dressup:equipped 漏刷新）
+      this._refreshOwnerOutfit();
     }
 
     Game.ticker.add(this._update, this);
@@ -396,24 +417,12 @@ export class MainScene implements Scene {
     this._ownerSprite.position.set(0, 0);
     this._ownerContainer.addChild(this._ownerSprite);
 
-    // GM 激活点击移至店主精灵
+    // GM 激活：连按店主（与顶栏 🛠️ 入口配合，入口已移至 TopBar 避免店主容器小圆 hitArea 挡点击）
     this._ownerSprite.eventMode = 'static';
     this._ownerSprite.cursor = 'pointer';
     this._ownerSprite.on('pointerdown', () => GMManager.onTitleTap());
 
-    // GM 入口按钮（隐藏于店主区域角落，激活后可见）
-    const gmBtn = new PIXI.Text('🛠️', { fontSize: 12, fontFamily: FONT_FAMILY });
-    gmBtn.anchor.set(0.5, 0.5);
-    gmBtn.position.set(OWNER_W / 2 - 6, -120);
-    gmBtn.eventMode = 'static';
-    gmBtn.cursor = 'pointer';
-    gmBtn.visible = GMManager.isEnabled;
-    gmBtn.name = 'gmBtn';
-    gmBtn.on('pointerdown', () => GMManager.openPanel());
-    this._ownerContainer.addChild(gmBtn);
-    EventBus.on('gm:activated', () => { gmBtn.visible = true; });
-
-    this._ownerContainer.position.set(ownerCX, CHAR_BOTTOM_Y);
+    this._ownerContainer.position.set(ownerCX, BOARD_OWNER_BASE_Y);
     // 点击店主 → 打开换装面板
     this._ownerContainer.eventMode = 'static';
     this._ownerContainer.cursor = 'pointer';
@@ -430,17 +439,23 @@ export class MainScene implements Scene {
 
     // ═══════ 店铺主块（店主 + 礼包 + 客人），将装入整行全景滑动 ═══════
     this._shopMainBlock = new PIXI.Container();
+    this._shopMainBlock.sortableChildren = true;
     this._shopMainBlock.addChild(this._ownerContainer);
+    this._ownerContainer.zIndex = 0;
 
     this._rewardBoxButton = new RewardBoxButton();
     this._rewardBoxButton.position.set(ownerCX - REWARD_BOX_BTN_SIZE / 2, CHAR_BOTTOM_Y + 8);
     this._shopMainBlock.addChild(this._rewardBoxButton);
+    // 礼包后绘，保证叠在店主之上（人物略放大时可压在礼盒底下由礼盒盖住边缘）
+    this._rewardBoxButton.zIndex = 5;
 
     const customerAreaW = W - CUSTOMER_LEFT - PAD;
     // 上半身区域不抢横向拖动，便于整行右滑露出左侧活动列
     this._customerScrollArea = new CustomerScrollArea(customerAreaW, 128);
     this._customerScrollArea.position.set(CUSTOMER_LEFT, 0);
     this._shopMainBlock.addChild(this._customerScrollArea);
+    this._customerScrollArea.zIndex = 10;
+    this._shopMainBlock.sortChildren();
 
     this._shopRowPanorama = new ShopRowPanoramaScroll(DESIGN_WIDTH, SHOP_PANORAMA_VIEW_H);
     this._shopRowPanorama.setShopBlock(this._shopMainBlock);
@@ -452,14 +467,17 @@ export class MainScene implements Scene {
     const outfit = DressUpManager.getEquipped();
     const outfitId = outfit?.id || 'outfit_default';
 
-    // 尝试加载当前形象的 chibi 纹理，回退到默认
-    const tex = TextureCache.get(`owner_chibi_${outfitId}`)
-             || TextureCache.get('owner_chibi_default');
+    // TextureCache 中默认套 key 为 owner_chibi_default，其余为 owner_chibi_<outfitId>
+    const chibiKey =
+      outfitId === 'outfit_default' ? 'owner_chibi_default' : `owner_chibi_${outfitId}`;
+    const tex = TextureCache.get(chibiKey) ?? TextureCache.get('owner_chibi_default');
 
-    if (tex && this._ownerSprite) {
+    if (tex && tex.width > 0 && tex.height > 0 && this._ownerSprite) {
       this._ownerSprite.texture = tex;
-      const targetH = 180;
-      const scale = targetH / tex.height;
+      const mult = getOwnerBoardDisplayScale(outfitId) * BOARD_OWNER_SIZE_MULT;
+      const targetH = BOARD_OWNER_TARGET_H * mult;
+      const maxW = BOARD_OWNER_MAX_W * mult;
+      const scale = Math.min(maxW / tex.width, targetH / tex.height);
       this._ownerSprite.scale.set(scale);
     }
   }
@@ -543,6 +561,70 @@ export class MainScene implements Scene {
     // 交付完成后的 Toast 提示
     EventBus.on('customer:delivered', (_uid: number, customer: any) => {
       ToastMessage.show(`${customer.name} 满意离开！🌸花愿+${customer.huayuanReward}${customer.hualuReward > 0 ? ` 💧花露+${customer.hualuReward}` : ''}`);
+    });
+  }
+
+  /** 棋盘货币物品双击：弧线飞入 TopBar（与客人花愿/花露飞入同一套），到账在动画结束后执行 */
+  private _bindBoardCurrencyFly(): void {
+    EventBus.on('board:currencyUseFly', (payload: {
+      cellIndex: number;
+      itemId: string;
+      currencyType: 'stamina' | 'huayuan' | 'hualu' | 'diamond';
+      iconKey: string;
+      amount: number;
+    }) => {
+      const { cellIndex, itemId, currencyType, iconKey, amount } = payload;
+
+      const start = this._boardView.getCellCenterLocal(cellIndex);
+      if (!start) {
+        this._boardView.setItemHiddenForDelivery(cellIndex, false);
+        return;
+      }
+      const sg = this._boardView.toGlobal(new PIXI.Point(start.x, start.y));
+      const sx = this.container.toLocal(sg).x;
+      const sy = this.container.toLocal(sg).y;
+
+      const posMap: Record<string, { x: number; y: number }> = {
+        stamina: this._topBar.getStaminaIconPos(),
+        huayuan: this._topBar.getHuayuanIconPos(),
+        hualu: this._topBar.getHualuIconPos(),
+        diamond: this._topBar.getDiamondIconPos(),
+      };
+      const lp = posMap[currencyType];
+      if (!lp) {
+        this._boardView.setItemHiddenForDelivery(cellIndex, false);
+        return;
+      }
+      const endX = this._topBar.x + lp.x;
+      const endY = this._topBar.y + lp.y;
+
+      const labelMap: Record<string, string> = {
+        stamina: '体力',
+        huayuan: '花愿',
+        hualu: '花露',
+        diamond: '钻石',
+      };
+
+      this._playRewardFly(iconKey, sx, sy, endX, endY, amount, () => {
+        switch (currencyType) {
+          case 'stamina': CurrencyManager.addStamina(amount); break;
+          case 'huayuan': CurrencyManager.addHuayuan(amount); break;
+          case 'hualu': CurrencyManager.addHualu(amount); break;
+          case 'diamond': CurrencyManager.addDiamond(amount); break;
+        }
+        ToastMessage.show(`+${amount} ${labelMap[currencyType] ?? currencyType}`);
+
+        const cur = BoardManager.getCellByIndex(cellIndex);
+        if (cur?.itemId === itemId) {
+          BoardManager.removeItem(cellIndex);
+        }
+        this._boardView.setItemHiddenForDelivery(cellIndex, false);
+
+        if (currencyType === 'stamina') this._topBar.flashStamina();
+        else if (currencyType === 'huayuan') this._topBar.flashHuayuan();
+        else if (currencyType === 'hualu') this._topBar.flashHualu();
+        else if (currencyType === 'diamond') this._topBar.flashDiamond();
+      });
     });
   }
 
@@ -634,6 +716,49 @@ export class MainScene implements Scene {
   }
 
   /**
+   * 签到/里程碑奖励飞入：每种货币分别飞向 TopBar 对应图标。
+   * @param onAllComplete 所有批次飞入结束后的回调（用于关闭签到面板等）
+   */
+  private _playCheckinFly(
+    items: { type: string; textureKey: string; amount: number }[],
+    source: { x: number; y: number },
+    onAllComplete?: () => void,
+  ): void {
+    const posMap: Record<string, { pos: { x: number; y: number }; flash: () => void }> = {
+      hualu:   { pos: this._topBar.getHualuIconPos(),    flash: () => this._topBar.flashHualu() },
+      gold:    { pos: this._topBar.getHualuIconPos(),    flash: () => this._topBar.flashHualu() },
+      huayuan: { pos: this._topBar.getHuayuanIconPos(),  flash: () => this._topBar.flashHuayuan() },
+      diamond: { pos: this._topBar.getDiamondIconPos(),  flash: () => this._topBar.flashDiamond() },
+      stamina: { pos: this._topBar.getStaminaIconPos(),  flash: () => this._topBar.flashStamina() },
+    };
+
+    let remaining = 0;
+    const doneOne = (): void => {
+      remaining--;
+      if (remaining <= 0) onAllComplete?.();
+    };
+
+    if (!items?.length) {
+      onAllComplete?.();
+      return;
+    }
+
+    items.forEach((item, idx) => {
+      const info = posMap[item.type];
+      if (!info) return;
+      remaining++;
+      const endX = this._topBar.x + info.pos.x;
+      const endY = this._topBar.y + info.pos.y;
+      this._playRewardFly(item.textureKey, source.x, source.y, endX, endY, item.amount, () => {
+        info.flash();
+        doneOne();
+      }, idx * 0.08);
+    });
+
+    if (remaining <= 0) onAllComplete?.();
+  }
+
+  /**
    * 交付时：单个物品图标从棋盘格中心沿弧线飞到顾客需求槽位
    */
   private _playDeliverItemFly(
@@ -716,11 +841,77 @@ export class MainScene implements Scene {
     // 签到面板
     EventBus.on('nav:openCheckIn', () => this._checkInPanel.open());
 
-    // 签到成功
-    EventBus.on('checkin:signed', (reward: any, streakBonus: number) => {
-      let msg = `✅ 签到成功！${reward.desc}`;
-      if (streakBonus > 0) msg += ` (连续加成 +${streakBonus}💰)`;
-      ToastMessage.show(msg);
+    // 签到飞入动效
+    EventBus.on('checkin:flyReward', (payload: {
+      items: { type: string; textureKey: string; amount: number }[];
+      autoClosePanel?: boolean;
+    }, sourcePos: { x: number; y: number }) => {
+      const globalP = this._checkInPanel.contentToGlobal(sourcePos);
+      const lp = this.container.toLocal(globalP);
+      this._playCheckinFly(
+        payload.items,
+        { x: lp.x, y: lp.y },
+        payload.autoClosePanel ? () => { this._checkInPanel.close(); } : undefined,
+      );
+    });
+
+    EventBus.on('checkin:flyMilestone', (ms: any, sourcePos: { x: number; y: number }) => {
+      const globalP = this._checkInPanel.contentToGlobal(sourcePos);
+      const lp = this.container.toLocal(globalP);
+      this._playCheckinFly(ms.items, { x: lp.x, y: lp.y });
+    });
+
+    // 首次合成解锁：收下后花露/花愿飞向顶栏，到账在飞入结束（与棋盘货币双击一致）
+    EventBus.on('firstMergeUnlock:claimFly', (payload: {
+      source: { x: number; y: number };
+      hualuReward: number;
+      huayuanReward: number;
+      onComplete: () => void;
+    }) => {
+      const { source, hualuReward, huayuanReward, onComplete } = payload;
+      let pending = 0;
+      const doneOne = (): void => {
+        pending--;
+        if (pending <= 0) onComplete();
+      };
+
+      const runFly = (
+        texKey: string,
+        amount: number,
+        targetPos: { x: number; y: number },
+        grant: () => void,
+        flash: () => void,
+        delay: number,
+      ): void => {
+        if (amount <= 0) return;
+        pending++;
+        const endX = this._topBar.x + targetPos.x;
+        const endY = this._topBar.y + targetPos.y;
+        this._playRewardFly(texKey, source.x, source.y, endX, endY, amount, () => {
+          grant();
+          flash();
+          doneOne();
+        }, delay);
+      };
+
+      runFly(
+        'icon_hualu',
+        hualuReward,
+        this._topBar.getHualuIconPos(),
+        () => CurrencyManager.addHualu(hualuReward),
+        () => this._topBar.flashHualu(),
+        0,
+      );
+      runFly(
+        'icon_huayuan',
+        huayuanReward,
+        this._topBar.getHuayuanIconPos(),
+        () => CurrencyManager.addHuayuan(huayuanReward),
+        () => this._topBar.flashHuayuan(),
+        0.1,
+      );
+
+      if (pending === 0) onComplete();
     });
 
     // 任务面板
@@ -745,9 +936,24 @@ export class MainScene implements Scene {
       }
     });
 
-    // 升级弹窗
+    // 升级弹窗（收纳盒物品在飞入礼包动画结束后再写入）
     EventBus.on('level:up', (level: number, reward: any) => {
-      this._levelUpPopup.show(level, reward);
+      const g = this._rewardBoxButton.toGlobal(
+        new PIXI.Point(REWARD_BOX_BTN_SIZE / 2, REWARD_BOX_BTN_SIZE / 2),
+      );
+      this._levelUpPopup.show(level, reward, {
+        rewardFlyTargetGlobal: g,
+        onGrantRewardBoxItems: entries => {
+          let any = false;
+          for (const { itemId, count } of entries) {
+            if (ITEM_DEFS.has(itemId) && count > 0) {
+              RewardBoxManager.addItem(itemId, count);
+              any = true;
+            }
+          }
+          if (any) SaveManager.save();
+        },
+      });
     });
 
     // 离线收益领取后检查签到
@@ -941,10 +1147,9 @@ export class MainScene implements Scene {
     // 奖励收纳框滚动惯性
     this._rewardBoxPanel.update(dt);
 
-    const ownerBaseY = 195;
     this._ownerBreathT += dt;
     if (this._ownerContainer && !this._ownerContainer.destroyed) {
-      this._ownerContainer.y = ownerBaseY + Math.sin(this._ownerBreathT * 1.8) * 2;
+      this._ownerContainer.y = BOARD_OWNER_BASE_Y + Math.sin(this._ownerBreathT * 1.8) * 2;
     }
 
     // 定期保存离线时间戳

@@ -1,0 +1,17 @@
+CHIBI PROPORTION — critical, same as huahua shop owner full-body SD chibi for isometric flower shop interior, NOT elegant realistic mannequin proportions.
+Standing height top of hair to soles = 2 to 2.8 heads only. Large head 42% to 52% of body height. Very short neck, compact torso, short thick arms and legs, simple shoes. Absolutely forbid tall slender vintage fashion model body.
+
+ART STYLE:
+2D cute merge-game character, soft muted pastel, gentle shading, warm brown line art, big brown eyes with soft highlight, refined but still chibi-cute smile. Cozy European boutique vibe without realism.
+
+LAYOUT STANDARD for game sprites — follow exactly:
+Portrait 9:16, one character, CHIBI PROPORTION.
+Vertical: soles in bottom 10% to 14%; top of half-up hairstyle and bow in top 16% to 22%; magenta padding.
+Horizontal: centered; 8% to 12% magenta margins.
+Background: flat magenta FF00FF only.
+
+Identity — shopkeeper girl vintage theme: chest-length soft waves, half-up half-down with burgundy velvet bow at crown, wispy bangs. Small pearl drop earrings. Large brown eyes open, gentle refined smile. Slight 3/4 toward viewer's right. Arms relaxed at sides.
+
+Outfit vintage: cream high-collar lace blouse puff sleeves simplified, burgundy corset-style vest shortened for chibi, dusty rose A-line skirt knee-ish length for SD body, brown lace-up ankle boots, tiny cameo brooch — chunky readable shapes not lace micro-detail.
+
+Full body head to feet, eyes open.

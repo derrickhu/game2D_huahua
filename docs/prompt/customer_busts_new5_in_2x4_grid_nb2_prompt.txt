@@ -1,0 +1,23 @@
+The attached image is the official character sheet template: exactly two rows and four columns (eight equal cells), thin white grid lines separating cells, solid light cream background inside each cell, hand-drawn 2D anime bust portraits with clean thin outlines, soft warm low-saturation colors, soft cel shading, large friendly eyes with small highlights, chest-up framing only.
+
+Your task: output ONE new image with the SAME layout as the attachment: same 2-by-4 grid, same cell proportions, same white dividers, same cream fill, same overall aspect and bust scale inside a cell. Do not change grid geometry.
+
+Replace the character art as follows, in reading order left to right, top row then bottom row:
+
+Cell 1 top-left: Romantic couple — young man and woman side by side, bust only, soft pastel casual clothes, warm smiles, both fully inside this cell, flat bottom aligned with the cell bottom edge.
+
+Cell 2 top row second: Birthday guest — mid-20s, tiny pastel party hat or festive clip, cheerful face, pastel top, bust only, flat bottom at cell bottom.
+
+Cell 3 top row third: Influencer blogger — trendy pastel layered outfit to upper chest, confident smile, optional small phone held low, bust only, flat bottom at cell bottom.
+
+Cell 4 top row fourth: Elegant noblewoman — refined pastel dress or blouse to upper chest, subtle jewelry, graceful smile, chibi-anime style matching the template, flat bottom at cell bottom.
+
+Bottom row, first column (second row, leftmost cell): leave EMPTY — cream and grid lines only.
+
+Bottom row, second column (second row, second from left): Collector connoisseur — vest or blazer to upper chest, thin glasses, calm smile, refined muted colors, bust only, flat bottom at cell bottom.
+
+Bottom row, third and fourth columns: leave EMPTY — cream and grid lines only; no people.
+
+Framing rules for every drawn cell: bust ends with a straight horizontal cutoff flush with the bottom of that cell, like the template. No rounded bottom, no oval fade, no extra empty body height below the bust inside the cell. Head size and vertical placement should match the scale of the characters in the template.
+
+NO TEXT, no labels, no captions, no writing, no numbers anywhere in the image.

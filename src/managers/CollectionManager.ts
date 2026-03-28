@@ -150,7 +150,7 @@ class CollectionManagerClass {
     if (this.progressPercent < percent) return false;
 
     this._claimedMilestones.add(percent);
-    CurrencyManager.addGold(ms.gold);
+    CurrencyManager.addHuayuan(ms.gold);
     CurrencyManager.addDiamond(ms.diamond);
     if (ms.huayuan > 0) CurrencyManager.addHuayuan(ms.huayuan);
 

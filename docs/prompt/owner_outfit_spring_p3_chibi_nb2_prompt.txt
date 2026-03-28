@@ -1,0 +1,17 @@
+REFERENCE IMAGE — attached default owner bust: same character base — preserve its exact bust framing, line quality, and soft 3D shading; redraw spring kimono twin-tails and accessories per text. No SD full body, no double exposure, no magenta smear behind hair.
+
+BUST PORTRAIT — must match huahua customer bust sprites beside orders: same 2D anime soft-volume look as `customer_*` portraits.
+
+ART STYLE:
+Hand-drawn 2D anime, soft 3D volume, low saturation warm pastel, soft warm brown outlines. Large sparkling brown eyes, rosy cheeks, sweet smile. Same shading depth as customer dialogue busts — not flat merge-board sprite.
+
+CAMERA SCALE — critical:
+UI hero bust close-up. Head plus hair occupies about 58% to 72% of canvas height. Waist-up mid-chest to hair top; shoulders wide in frame. Match the face and head prominence of the attached default bust — do NOT shrink the face.
+
+POSE: slight 3/4 toward viewer's right, both eyes visible, warm expression (same general angle as customers).
+
+IDENTITY: twin tails, pink ribbons, sakura pins, small cherry earrings, pink kimono-style dress with sakura print, lace sleeves.
+
+LAYOUT: Portrait 9:16, one figure. Hair top ~12% to 18% from canvas top; crop bottom ~18% to 24% from canvas bottom; thin FF00FF margins. Centered, ~6% to 10% side magenta. Background solid magenta only. No text.
+
+Spring colors and accessories from text; painting style from attached default bust.

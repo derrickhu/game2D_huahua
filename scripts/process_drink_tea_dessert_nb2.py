@@ -144,8 +144,8 @@ def main() -> None:
     )
     ap.add_argument(
         "--model",
-        default="birefnet-general-lite",
-        help="rembg model (default birefnet-general-lite)",
+        default="birefnet-general",
+        help="rembg model (default birefnet-general, 与全项目抠图规范一致)",
     )
     args = ap.parse_args()
     levels: list[int] | None = None

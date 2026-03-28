@@ -1,0 +1,27 @@
+MANDATORY LAYOUT — automatic code will slice the image into three equal pixel-width vertical strips: left 0 to W/3, middle W/3 to 2W/3, right 2W/3 to W.
+
+FORBIDDEN: Do not draw any vertical lines, black lines, white lines, panel borders, frames, rulers, grid, or separators between characters. Only solid magenta background and the characters — no extra lines on the image.
+
+Rule A — Pixel zones: Left character: every painted pixel must have x strictly less than W/3. Middle character: every painted pixel must have W/3 <= x < 2W/3. Right character: every painted pixel must have x >= 2W/3. Hair, hands, feet, apron ties, tools, and cast shadows must never cross these x positions.
+
+Rule B — Horizontal center of each character: The horizontal center of the tight bounding box of each figure (including hair width) must coincide with the horizontal center of that strip: at x = W/6 for the left strip, x = W/2 for the middle strip, x = 5W/6 for the right strip, within a small margin only.
+
+Rule C — Vertical alignment for full bodies: In the left and middle strips, place both full-body figures so their feet rest on the same baseline near the bottom of the canvas, and their heads reach similar height.
+
+Rule D — Right strip scale: Bust portrait only from mid-chest up. Head size in the right strip should be visually similar to the head size of the full-body figures in the left strips (not oversized), still centered on x = 5W/6.
+
+Rule E — Background: Entire canvas flat solid magenta RGB 255 0 255 FF00FF only. No gradients on background. No white gray black. Character shading OK on body only.
+
+Same girl all strips: warm light brown bob, pink flower clip viewer left, brown eyes when open, soft face, Q chibi 4 to 4.5 heads tall in full body strips.
+
+Outfit: dark green florist apron pockets over cream puff blouse, brown belt, olive A-line skirt, brown boots, small shears in pocket, dried flower on apron.
+
+Style: hand-drawn 2D anime soft pastel cozy storybook. No text no watermark.
+
+Left strip: full body slight 3/4 facing right, arms relaxed, eyes open smile.
+
+Middle strip: same pose outfit only eyes closed happy.
+
+Right strip: bust mid-chest up, front face both eyes gentle smile, optional very slight turn right.
+
+Final: three equal-width columns by pixel math, zero divider lines drawn, figures perfectly contained and centered in each third.

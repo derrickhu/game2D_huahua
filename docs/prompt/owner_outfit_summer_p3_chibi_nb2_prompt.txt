@@ -1,0 +1,19 @@
+REFERENCE IMAGE — attached = canonical DEFAULT owner bust portrait (approved in-game asset):
+Copy its art language exactly: soft warm brown outlines, soft 3D volume, eye style, head-to-torso ratio, and bust framing distance. Swap in summer outfit (ponytail, sunflower, overalls bib, etc.) per text only. Forbidden: SD full-body doll proportions, second faint duplicate of the character, smeared magenta patches behind the head, or a different painting style than the reference.
+
+FRAMING — mandatory bust-only, reject full body:
+WAIST-UP bust portrait for game UI only. Visible range: from mid-chest / top of overalls bib upward through hair and ponytail — NOT lower than natural waist. The bottom of the 9:16 canvas must cut through torso so that hips, thighs, shorts hem, shoes, and feet are completely OUT of frame and NOT drawn. If any legs or feet appear, the output is invalid. No full-body chibi with huge head and tiny legs.
+
+STYLE — identical art language to huahua `customer_*` customer bust portraits:
+2D anime, soft 3D volume, warm low-saturation pastel, soft brown line art. Big bright brown eyes, cheerful smile, blush. Same as order-queue NPC heads — dimensional soft shading, NOT flat merge-board token, NOT isometric shop sprite.
+
+TORSO SCALE:
+Head large and appealing but visible shoulders and chest feel like a standard anime bust panel (like customers), not a microscopic body under an oversized cranium.
+
+POSE: 3/4 facing slightly right, both eyes visible.
+
+IDENTITY (reference = colors and hair only): high ponytail, large sunflower clip, gold hoops, white tee and denim overalls straps and bib visible in upper frame only — straw hat may peek at upper sides; do NOT show full shorts legs or sneakers.
+
+LAYOUT: 9:16, bust crop. Top of hair ~10% to 16% from top; bottom ~10% to 16% magenta below bust line. Centered, 6% to 10% side magenta. Solid FF00FF only. No text.
+
+Attached reference is already a bust — keep the same composition class; only the outfit changes.

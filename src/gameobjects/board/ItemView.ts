@@ -12,6 +12,7 @@ import {
   createToolEnergySprite,
 } from '@/utils/ToolEnergyBadge';
 import { ToolSparkleLayer } from '@/utils/ToolSparkleLayer';
+import { createCurrencyIconCluster } from '@/utils/CurrencyCellIcons';
 
 /** 格子内物品最大边长占格子的比例（其余为边距） */
 const ITEM_CELL_FILL = 0.72;
@@ -38,6 +39,12 @@ export class ItemView extends PIXI.Container {
   private _orderBadge: PIXI.Sprite | null = null;
   /** 半解锁(PEEK) 丝带：必须在体力标等之上，放本容器内并始终置顶 */
   private _peekRibbon: PIXI.Sprite | null = null;
+  /** 宝箱：叠在物品下方的待散落进度条（无文字） */
+  private _chestProgressBg: PIXI.Graphics;
+  private _chestProgressFill: PIXI.Graphics;
+
+  /** 货币物品多图标容器 */
+  private _currencyContainer: PIXI.Container | null = null;
 
   private _itemId: string = '';
 
@@ -126,6 +133,13 @@ export class ItemView extends PIXI.Container {
     this._chargeText.position.set(cs / 2, 3);
     this._chargeText.visible = false;
     this.addChild(this._chargeText);
+
+    this._chestProgressBg = new PIXI.Graphics();
+    this._chestProgressBg.visible = false;
+    this.addChild(this._chestProgressBg);
+    this._chestProgressFill = new PIXI.Graphics();
+    this._chestProgressFill.visible = false;
+    this.addChild(this._chestProgressFill);
   }
 
   setItem(itemId: string | null): void {
@@ -137,6 +151,8 @@ export class ItemView extends PIXI.Container {
       this._hideToolEnergy();
       this._hideToolSparkle();
       this._hideOrderBadge();
+      this._clearCurrencyContainer();
+      this.setChestDispatch(0, 0);
       return;
     }
 
@@ -144,10 +160,13 @@ export class ItemView extends PIXI.Container {
     if (!def) {
       this.setPeekRibbon(false);
       this.visible = false;
+      this._itemId = '';
       this._chargeText.visible = false;
       this._hideToolEnergy();
       this._hideToolSparkle();
       this._hideOrderBadge();
+      this._clearCurrencyContainer();
+      this.setChestDispatch(0, 0);
       return;
     }
 
@@ -157,15 +176,18 @@ export class ItemView extends PIXI.Container {
 
     const lineColor = this._getLineColor(def.line);
 
-    // 清理旧 sprite
+    // 清理旧 sprite / 货币容器
     if (this._iconSprite) {
       this.removeChild(this._iconSprite);
       this._iconSprite.destroy();
       this._iconSprite = null;
     }
+    this._clearCurrencyContainer();
 
-    const texture = TextureCache.get(def.icon);
-    if (texture) {
+    if (def.category === Category.CURRENCY) {
+      this._renderCurrencyIcons(def, cs);
+    } else if (TextureCache.get(def.icon)) {
+      const texture = TextureCache.get(def.icon)!;
       // 有纹理：显示图片
       this._iconBg.clear();
       this._nameText.visible = false;
@@ -255,6 +277,76 @@ export class ItemView extends PIXI.Container {
     sp.position.set(cs - pad, cs - pad);
     this.addChild(sp);
     this._orderBadge = sp;
+    this._bringToolEnergyThenPeekOnTop();
+  }
+
+  /**
+   * 宝箱待散落进度：`remaining` 件仍在宝箱内，`total` 为本轮总件数。
+   * 传 (0,0) 隐藏。条带短粗、偏上，压住物品图下缘，无数字文案。
+   */
+  setChestDispatch(remaining: number, total: number): void {
+    const cs = BoardMetrics.cellSize;
+    if (remaining <= 0 || total <= 0) {
+      this._chestProgressBg.visible = false;
+      this._chestProgressFill.visible = false;
+      return;
+    }
+    const frac = Math.min(1, remaining / total);
+    const barH = Math.max(8, Math.round(cs * 0.15));
+    const bw = Math.round(cs * 0.48);
+    const bx = Math.round((cs - bw) / 2);
+    const by = Math.round(cs * 0.54);
+    const rOut = Math.max(4, Math.floor(barH / 2) - 1);
+    const inset = 3;
+    const innerW = bw - inset * 2;
+    const innerH = barH - inset * 2;
+    const innerX = bx + inset;
+    const innerY = by + inset;
+    const rIn = Math.max(2, rOut - 2);
+    const fillW = Math.max(0, innerW * frac);
+    const fillR = Math.max(2, innerH / 2 - 0.5);
+
+    this._chestProgressBg.visible = true;
+    this._chestProgressFill.visible = true;
+
+    this._chestProgressBg.clear();
+    this._chestProgressBg.lineStyle(1.5, 0x6b4a38, 1);
+    this._chestProgressBg.beginFill(0x3d2a22, 0.95);
+    this._chestProgressBg.drawRoundedRect(bx, by, bw, barH, rOut);
+    this._chestProgressBg.endFill();
+    this._chestProgressBg.lineStyle(0);
+    this._chestProgressBg.beginFill(0x140c09, 0.98);
+    this._chestProgressBg.drawRoundedRect(innerX, innerY, innerW, innerH, rIn);
+    this._chestProgressBg.endFill();
+    this._chestProgressBg.beginFill(0xffffff, 0.1);
+    this._chestProgressBg.drawRoundedRect(innerX + 1, innerY + 1, innerW - 2, Math.max(2, innerH * 0.38), 2);
+    this._chestProgressBg.endFill();
+
+    this._chestProgressFill.clear();
+    if (fillW > 0.5) {
+      this._chestProgressFill.beginFill(0xb86a18, 1);
+      this._chestProgressFill.drawRoundedRect(innerX, innerY, fillW, innerH, fillR);
+      this._chestProgressFill.endFill();
+      this._chestProgressFill.beginFill(0xf0c14d, 0.65);
+      this._chestProgressFill.drawRoundedRect(
+        innerX + 1,
+        innerY + 1,
+        Math.max(0, fillW - 2),
+        Math.max(1, innerH * 0.42),
+        2,
+      );
+      this._chestProgressFill.endFill();
+      this._chestProgressFill.beginFill(0x4a2406, 0.4);
+      this._chestProgressFill.drawRoundedRect(
+        innerX,
+        innerY + innerH * 0.52,
+        fillW,
+        Math.max(1, innerH * 0.48),
+        1,
+      );
+      this._chestProgressFill.endFill();
+    }
+
     this._bringToolEnergyThenPeekOnTop();
   }
 
@@ -351,6 +443,26 @@ export class ItemView extends PIXI.Container {
     this._bringToolEnergyThenPeekOnTop();
   }
 
+  // ═══════════════ 货币物品多图标渲染 ═══════════════
+
+  private _clearCurrencyContainer(): void {
+    if (this._currencyContainer) {
+      this.removeChild(this._currencyContainer);
+      this._currencyContainer.destroy({ children: true });
+      this._currencyContainer = null;
+    }
+  }
+
+  private _renderCurrencyIcons(def: import('@/config/ItemConfig').ItemDef, cs: number): void {
+    this._iconBg.clear();
+    this._nameText.visible = false;
+
+    const cluster = createCurrencyIconCluster(def, cs);
+    if (!cluster) return;
+    this.addChildAt(cluster, 1);
+    this._currencyContainer = cluster;
+  }
+
   /**
    * 半解锁格丝带（原在 BoardView 上易被体力标 sibling 顺序影响；放入本视图并强制最上层）
    */
@@ -410,6 +522,10 @@ export class ItemView extends PIXI.Container {
   /** 体力标置顶后仍要保证丝带盖住角标（每帧 CD 等会反复顶体力） */
   private _bringToolEnergyThenPeekOnTop(): void {
     bringToolEnergyToFront(this, this._toolEnergySprite);
+    if (this._chestProgressBg.visible) {
+      this.setChildIndex(this._chestProgressBg, this.children.length - 1);
+      this.setChildIndex(this._chestProgressFill, this.children.length - 1);
+    }
     this._ensurePeekRibbonOnTop();
   }
 
@@ -425,6 +541,7 @@ export class ItemView extends PIXI.Container {
       case Category.DRINK: return '🍵';
       case Category.BUILDING: return '🏠';
       case Category.CHEST: return '📦';
+      case Category.CURRENCY: return '💰';
       default: return '❓';
     }
   }
@@ -435,6 +552,7 @@ export class ItemView extends PIXI.Container {
       case Category.DRINK: return this._getLineColor(line);
       case Category.BUILDING: return 0x8B4513;
       case Category.CHEST: return 0xDAA520;
+      case Category.CURRENCY: return 0x4CAF50;
       default: return 0xCCCCCC;
     }
   }

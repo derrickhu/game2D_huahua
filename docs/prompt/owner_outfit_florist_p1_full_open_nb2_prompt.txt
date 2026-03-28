@@ -1,0 +1,17 @@
+CHIBI PROPORTION — critical, same as default shop owner: super-deformed SD chibi for isometric flower shop scene.
+Full height top of hair to feet = only 2 to 2.8 heads. Head very large, about 42% to 52% of total height. Short neck, compact torso, short chunky arms and legs, simplified cute hands and feet. Same toy-like readability as merge-game NPC sprites. NOT 4-head-tall anime teen, NOT realistic young woman, NOT slim long legs.
+
+ART STYLE:
+2D cute mobile game character, soft pastel, rosy cheeks, huge round brown eyes with highlight, warm brown soft outlines. Cozy casual game. No realism, no fashion illustration.
+
+LAYOUT STANDARD for game sprites — follow exactly:
+Portrait 9:16, exactly one character with CHIBI PROPORTION above.
+Vertical: soles in bottom 10% to 14% band; top of hair in top 16% to 22% band; magenta padding above and below figure.
+Horizontal: centered; 8% to 12% magenta margin left and right.
+Background: flat magenta RGB 255 0 255 FF00FF only. No lines, frames, text.
+
+Identity — same face type as default shopkeeper girl: big warm eyes, gentle smile, slight 3/4 toward viewer's right. Hair: light brown low side ponytail tied with thin sage-green ribbon, small wildflower or leaf tuck behind ear (viewer left side), NOT the same short bob as default but still simple cute shapes.
+
+Outfit florist: cream puff-sleeve blouse, dark forest green florist apron with pockets and brown belt, olive A-line skirt, brown ankle boots, tiny simplified pruning shears in apron pocket, small dried flower on apron.
+
+Full body head to feet, eyes open.

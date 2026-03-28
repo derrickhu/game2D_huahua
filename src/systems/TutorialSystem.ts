@@ -20,6 +20,7 @@ import { CurrencyManager } from '@/managers/CurrencyManager';
 import { BoardManager } from '@/managers/BoardManager';
 import { DESIGN_WIDTH, FONT_FAMILY, COLORS, BoardMetrics, BOARD_COLS, CELL_GAP } from '@/config/Constants';
 import { ITEM_DEFS } from '@/config/ItemConfig';
+import { TextureCache } from '@/utils/TextureCache';
 
 declare const wx: any;
 declare const tt: any;
@@ -157,7 +158,7 @@ export class TutorialSystem {
     const spotlightTop = minY;
     const spotlightBottom = maxY;
     this._showSmartDialog(
-      '🌼 欢迎来到花语小筑！',
+      '欢迎来到花语小筑',
       '把两朵相同的花拖到一起，合成更高级的花束吧~',
       null,
       undefined,
@@ -181,7 +182,7 @@ export class TutorialSystem {
     this._drawSpotlightMask([], 0.5); // 全遮罩，无镂空
 
     this._showSmartDialog(
-      '✨ 太棒了！',
+      '太棒了',
       '合成成功！每种花都有独特的花语和故事哦~\n继续合成吧，客人马上就到！',
       '继续',
       () => this._advanceTo(TutorialStep.CUSTOMER_INTRO),
@@ -195,8 +196,8 @@ export class TutorialSystem {
     this._drawSpotlightMask([], 0.5);
 
     this._showSmartDialog(
-      '👋 客人来啦！',
-      '看到上方的客人了吗？他们需要特定的花束。\n当花束在棋盘上时会自动锁定，\n点击客人旁边的"✓"按钮即可交付哦！',
+      '客人来啦',
+      '看到上方的客人了吗？他们需要特定的花束。\n当花束在棋盘上时会自动锁定，\n点击客人旁边的「完成」按钮即可交付哦！',
       '知道了',
       () => this._advanceTo(TutorialStep.WAIT_DELIVER),
     );
@@ -219,8 +220,8 @@ export class TutorialSystem {
     this._drawSpotlightMask([], 0.5);
 
     this._showSmartDialog(
-      '💰 赚到了第一笔钱！',
-      '客人满意离开了！金币可以用来解锁新区域。\n接下来认识一下建筑吧~',
+      '赚到了第一笔钱',
+      '客人满意离开了！花愿可以用来解锁新区域。\n接下来认识一下建筑吧~',
       '继续',
       () => this._advanceTo(TutorialStep.BUILDING_INTRO),
     );
@@ -261,7 +262,7 @@ export class TutorialSystem {
     const spotlightTop = rect.y - pad;
     const spotlightBottom = rect.y + rect.h + pad;
     this._showSmartDialog(
-      '🏠 认识建筑',
+      '认识建筑',
       '点击建筑可以产出新的花束哦~\n试试点一下吧！',
       null,
       undefined,
@@ -292,7 +293,7 @@ export class TutorialSystem {
     this._drawSpotlightMask([], 0.5);
 
     this._showSmartDialog(
-      '🌸 很好！',
+      '很好',
       '建筑是获取花束的主要方式。\n合成更多花束来满足客人吧！',
       '继续',
       () => this._advanceTo(TutorialStep.FREE_EXPLORE),
@@ -306,12 +307,12 @@ export class TutorialSystem {
     this._drawSpotlightMask([], 0.55);
 
     CurrencyManager.addStamina(50);
-    CurrencyManager.addGold(200);
+    CurrencyManager.addHuayuan(200);
     CurrencyManager.addDiamond(20);
 
     this._showSmartDialog(
-      '🎁 新手礼包',
-      '恭喜完成引导！获得：\n💖 体力 +50   💰 金币 +200   💎 钻石 +20\n\n💡 小贴士：长按物品可查看合成路线哦！',
+      '新手礼包',
+      '恭喜完成引导！获得：\n体力 +50　花愿 +200　钻石 +20\n\n小贴士：长按物品可查看合成路线哦！',
       '开始游戏',
       () => this._complete(),
     );
@@ -432,8 +433,21 @@ export class TutorialSystem {
   ): void {
     const dialog = new PIXI.Container();
     const cx = DESIGN_WIDTH / 2;
-    const cardW = 520;
-    const cardH = buttonText ? 200 : 160;
+    /** 所有新手指引统一用花蛋奖励条 + 绿按钮（资源缺失时回退旧样式） */
+    const rewardTex = TextureCache.get('flower_egg_reward_bg');
+    const claimBtnTex =
+      buttonText && onButton ? TextureCache.get('flower_egg_btn_claim') : null;
+
+    let cardW = 520;
+    let cardH = buttonText ? 200 : 175;
+    if (rewardTex) {
+      cardW = Math.min(520, DESIGN_WIDTH - 36);
+      const ratioH = Math.round((cardW * rewardTex.height) / rewardTex.width);
+      const extraLines = Math.max(0, body.split('\n').length - 2);
+      const lineBoost = extraLines * 24;
+      cardH = Math.max(buttonText ? 178 : 188, ratioH + lineBoost);
+      cardH = Math.min(340, cardH);
+    }
     const margin = 20; // 对话框与 spotlight 的间距
 
     // 计算对话框 Y 位置
@@ -461,72 +475,147 @@ export class TutorialSystem {
     // 确保不超出屏幕
     cardY = Math.max(30, Math.min(cardY, Game.logicHeight - cardH - 30));
 
-    // 背景卡片 —— 奶油底 + 金色边框 + 圆角
-    const bg = new PIXI.Graphics();
-    bg.beginFill(0xFFFBF0, 0.96);
-    bg.drawRoundedRect(cx - cardW / 2, cardY, cardW, cardH, 20);
-    bg.endFill();
-    bg.lineStyle(2.5, 0xFFD700, 0.7);
-    bg.drawRoundedRect(cx - cardW / 2, cardY, cardW, cardH, 20);
-    dialog.addChild(bg);
+    const cardLeft = cx - cardW / 2;
 
-    // 标题
-    const titleText = new PIXI.Text(title, {
-      fontSize: 22,
-      fill: COLORS.TEXT_DARK,
-      fontFamily: FONT_FAMILY,
-      fontWeight: 'bold',
-    });
+    if (rewardTex) {
+      const bgSp = new PIXI.Sprite(rewardTex);
+      bgSp.position.set(cardLeft, cardY);
+      bgSp.width = cardW;
+      bgSp.height = cardH;
+      dialog.addChild(bgSp);
+    } else {
+      const bg = new PIXI.Graphics();
+      bg.beginFill(0xFFFBF0, 0.96);
+      bg.drawRoundedRect(cardLeft, cardY, cardW, cardH, 20);
+      bg.endFill();
+      bg.lineStyle(2.5, 0xFFD700, 0.7);
+      bg.drawRoundedRect(cardLeft, cardY, cardW, cardH, 20);
+      dialog.addChild(bg);
+    }
+
+    const innerPad = 28;
+    const wrapW = Math.max(200, cardW - innerPad * 2);
+    /** 绿底条：深绿字 + 浅描边；奶油底：暖棕系、少描边，与游戏 UI 统一 */
+    const titleStyle = rewardTex
+      ? {
+          fontSize: 25,
+          fill: 0x0f2414,
+          fontFamily: FONT_FAMILY,
+          fontWeight: 'bold' as const,
+          stroke: 0xfffef8,
+          strokeThickness: 3.5,
+          align: 'center' as const,
+        }
+      : {
+          fontSize: 25,
+          fill: 0x4a3728,
+          fontFamily: FONT_FAMILY,
+          fontWeight: 'bold' as const,
+          stroke: 0xfffcf8,
+          strokeThickness: 2.2,
+          align: 'center' as const,
+        };
+    const bodyStyle = rewardTex
+      ? {
+          fontSize: 17,
+          fill: 0x1a2e1f,
+          fontFamily: FONT_FAMILY,
+          fontWeight: 'normal' as const,
+          wordWrap: true,
+          wordWrapWidth: wrapW,
+          lineHeight: 27,
+          stroke: 0xf7fff9,
+          strokeThickness: 2.4,
+          align: 'center' as const,
+        }
+      : {
+          fontSize: 17,
+          fill: 0x5c4a3d,
+          fontFamily: FONT_FAMILY,
+          fontWeight: 'normal' as const,
+          wordWrap: true,
+          wordWrapWidth: wrapW,
+          lineHeight: 26,
+          align: 'center' as const,
+        };
+
+    const titleText = new PIXI.Text(title, titleStyle);
     titleText.anchor.set(0.5, 0);
-    titleText.position.set(cx, cardY + 18);
+    titleText.position.set(cx, cardY + (rewardTex ? 24 : 22));
     dialog.addChild(titleText);
 
-    // 正文
-    const bodyText = new PIXI.Text(body, {
-      fontSize: 15,
-      fill: COLORS.TEXT_LIGHT,
-      fontFamily: FONT_FAMILY,
-      wordWrap: true,
-      wordWrapWidth: cardW - 60,
-      lineHeight: 22,
-    });
+    const bodyText = new PIXI.Text(body, bodyStyle);
     bodyText.anchor.set(0.5, 0);
-    bodyText.position.set(cx, cardY + 52);
+    bodyText.position.set(cx, cardY + (rewardTex ? 62 : 58));
     dialog.addChild(bodyText);
 
-    // 按钮
     if (buttonText && onButton) {
-      const btnW = 160;
-      const btnH = 44;
-      const btnY = cardY + cardH - btnH - 16;
+      let btnW = 160;
+      let btnH = 44;
+      let btnY = cardY + cardH - btnH - 16;
 
-      const btn = new PIXI.Graphics();
-      btn.beginFill(COLORS.BUTTON_PRIMARY);
-      btn.drawRoundedRect(cx - btnW / 2, btnY, btnW, btnH, 22);
-      btn.endFill();
-      dialog.addChild(btn);
+      if (claimBtnTex) {
+        btnW = 200;
+        btnH = Math.round((btnW * claimBtnTex.height) / claimBtnTex.width);
+        btnH = Math.max(46, Math.min(56, btnH));
+        btnY = cardY + cardH - btnH - 14;
+        const btnSp = new PIXI.Sprite(claimBtnTex);
+        btnSp.anchor.set(0.5, 0.5);
+        btnSp.position.set(cx, btnY + btnH / 2);
+        btnSp.width = btnW;
+        btnSp.height = btnH;
+        dialog.addChild(btnSp);
 
-      const btnLabel = new PIXI.Text(buttonText, {
-        fontSize: 17,
-        fill: 0xFFFFFF,
-        fontFamily: FONT_FAMILY,
-        fontWeight: 'bold',
-      });
-      btnLabel.anchor.set(0.5, 0.5);
-      btnLabel.position.set(cx, btnY + btnH / 2);
-      dialog.addChild(btnLabel);
+        const btnLabel = new PIXI.Text(buttonText, {
+          fontSize: 19,
+          fill: 0xffffff,
+          fontFamily: FONT_FAMILY,
+          fontWeight: 'bold',
+          stroke: 0x1b5e20,
+          strokeThickness: 3.2,
+        });
+        btnLabel.anchor.set(0.5, 0.5);
+        btnLabel.position.set(cx, btnY + btnH / 2);
+        dialog.addChild(btnLabel);
 
-      const hitArea = new PIXI.Container();
-      hitArea.hitArea = new PIXI.Rectangle(cx - btnW / 2, btnY, btnW, btnH);
-      hitArea.eventMode = 'static';
-      hitArea.cursor = 'pointer';
-      hitArea.on('pointerdown', () => {
-        // 点击反馈
-        btn.tint = 0xFFFFFF;
-        setTimeout(() => { btn.tint = 0xFFFFFF; }, 120);
-        onButton();
-      });
-      dialog.addChild(hitArea);
+        const hitArea = new PIXI.Container();
+        hitArea.hitArea = new PIXI.Rectangle(cx - btnW / 2, btnY, btnW, btnH);
+        hitArea.eventMode = 'static';
+        hitArea.cursor = 'pointer';
+        hitArea.on('pointerdown', () => {
+          btnSp.tint = 0xdddddd;
+          setTimeout(() => { btnSp.tint = 0xffffff; }, 100);
+          onButton();
+        });
+        dialog.addChild(hitArea);
+      } else {
+        const btn = new PIXI.Graphics();
+        btn.beginFill(COLORS.BUTTON_PRIMARY);
+        btn.drawRoundedRect(cx - btnW / 2, btnY, btnW, btnH, 22);
+        btn.endFill();
+        dialog.addChild(btn);
+
+        const btnLabel = new PIXI.Text(buttonText, {
+          fontSize: 17,
+          fill: 0xFFFFFF,
+          fontFamily: FONT_FAMILY,
+          fontWeight: 'bold',
+        });
+        btnLabel.anchor.set(0.5, 0.5);
+        btnLabel.position.set(cx, btnY + btnH / 2);
+        dialog.addChild(btnLabel);
+
+        const hitArea = new PIXI.Container();
+        hitArea.hitArea = new PIXI.Rectangle(cx - btnW / 2, btnY, btnW, btnH);
+        hitArea.eventMode = 'static';
+        hitArea.cursor = 'pointer';
+        hitArea.on('pointerdown', () => {
+          btn.tint = 0xFFFFFF;
+          setTimeout(() => { btn.tint = 0xFFFFFF; }, 120);
+          onButton();
+        });
+        dialog.addChild(hitArea);
+      }
     }
 
     // 入场动画 —— 从透明 + 小缩放弹入

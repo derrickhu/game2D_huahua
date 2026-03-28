@@ -1,0 +1,39 @@
+---
+description: 店主换装全身/半身 sprite 画风、生图流程与 rembg 入库强制规范；凡涉及 minigame/images/owner 或 owner_outfit 提示词必须遵循
+globs: minigame/images/owner/**, docs/prompt/owner_outfit_*, docs/owner_sprite_art_spec.md, scripts/gen_owner_outfit_panels.py, scripts/rembg_owner_full_sprites.sh, scripts/owner_sprite_post_rembg.py
+alwaysApply: true
+---
+
+# 店主形象 sprite — 项目强制规范
+
+完整条文与示例命令见仓库 **`docs/owner_sprite_art_spec.md`**。本规则摘要**不可省略**的操作约束。
+
+## 全身像（P1 / P2）画风
+
+- **SD 超 Q**：约 **2～2.8 头身**，头大（约占全身 42%～52%）、短颈、短粗四肢；**禁止** 4～5 头身写实少女体、时尚插画比例。
+- **画风**：2D merge 类休闲 NPC、暖 pastel、棕褐软线、大眼棕瞳+高光；**禁止**油画/电影 3D 写实立绘。
+- **画布**：9:16 单人；脚底约在画面**下 10%～14%**；发顶约在**上 16%～22%**；左右各约 **8%～12%** 边距；背景生图用 **#FF00FF 品红**。
+- **P1** 睁眼 3/4 朝右；**P2** 与 P1 同姿同景，仅闭眼微笑，以 P1 为参考图。
+- **英文提示词**须按 `docs/prompt/owner_outfit_<id>_p1_*.txt` 四段结构：CHIBI PROPORTION → ART STYLE → LAYOUT STANDARD → Identity + Outfit（女王套须写低矮冠、Q 版裙摆、脚底仍在底部条带）。
+
+## 半身像（P3）
+
+- **与订单区 `customer_*` 客人半身一致**：2D anime、**软 3D 体积**、低饱和 pastel、大眼、略朝右 **3/4**，勿用等距全身扁平面片风。
+- **构图**：**腰以上胸像**，**禁止**胯、腿、脚、鞋入画；**头+发**约占画面高度 **58%～72%**；勿画成全身 SD。
+- **生图参考**：`outfit_default` 的 P3 仍附 P1；**其它套装 P3** 附 **`minigame/images/owner/chibi_default.png`**（`gen_owner_outfit_panels.py` 自动）；Gemini 模型与 **`--only-panel 3`** 批量示例见 **`docs/owner_sprite_art_spec.md` §1.3**。
+- 提示词：`docs/prompt/owner_outfit_<id>_p3_chibi_nb2_prompt.txt`；入库 **249×384**；生成后 **必须** 跑 **`./scripts/rembg_owner_full_sprites.sh`**（**`birefnet-general`** + 内置 **品红渗色清理** `owner_sprite_post_rembg.py`，见主文档 **§1.2**）。
+
+## 生产与尺寸
+
+- 脚本：`scripts/gen_owner_outfit_panels.py`；全身 **197×384**、半身 **249×384**（与 `TextureCache` 一致）；自 raw 缩放入库须 **等比 letterbox**（脚本已内置），勿非等比拉伸导致半身变扁。
+- 仅全身时用 **`--full-only`**，可不传 P3 路径（见主文档 §0.6）。
+- 脚本内品红 **色键去底仅为自动化初稿**，**不得**作为最终全身资源唯一去底手段。
+
+## 抠底入库（全身 + 半身，强制）
+
+`gen_owner_outfit_panels.py` 的色键**不是**最终资源。凡 **`minigame/images/owner/full_*.png`** 与 **`chibi_*.png`**，入库前**必须**再跑 **rembg + `birefnet-general`**，脚本写回前自动跑 **`owner_sprite_post_rembg.py`** 减轻 **品红底渗入半透明边**（仍偶发时可单张再执行该脚本）。
+
+- **禁止**仅靠品红色键/魔棒作为最终去底。
+- **跳过备份**：`full_*_original.png` 勿覆盖。
+- **一键**：`./scripts/rembg_owner_full_sprites.sh`（`full_` + `chibi_`；可设 `REMBG_BATCH`）。
+- **全项目抠图默认**：凡 rembg **一律 `birefnet-general`**（工具图标等见 **`tool-icon-art-style.mdc`**，已与店主规范对齐）。

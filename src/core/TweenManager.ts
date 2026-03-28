@@ -71,6 +71,7 @@ class TweenManagerClass {
 
   update(dt: number): void {
     const completed: ActiveTween[] = [];
+    const aborted: ActiveTween[] = [];
 
     for (const tween of this._tweens) {
       if (tween.delayRemaining > 0) {
@@ -78,23 +79,50 @@ class TweenManagerClass {
         continue;
       }
 
-      tween.elapsed += dt;
       const { config, startValues } = tween;
+      const tgt = config.target;
+      if (
+        tgt == null ||
+        (typeof (tgt as { destroyed?: boolean }).destroyed === 'boolean' &&
+          (tgt as { destroyed: boolean }).destroyed)
+      ) {
+        aborted.push(tween);
+        continue;
+      }
+
+      tween.elapsed += dt;
       const ease = config.ease || Ease.linear;
       const progress = Math.min(tween.elapsed / config.duration, 1);
       const easedProgress = ease(progress);
 
-      for (const key in config.props) {
-        const start = startValues[key];
-        const end = config.props[key];
-        config.target[key] = start + (end - start) * easedProgress;
+      try {
+        for (const key in config.props) {
+          const start = startValues[key];
+          const end = config.props[key];
+          config.target[key] = start + (end - start) * easedProgress;
+        }
+      } catch {
+        aborted.push(tween);
+        continue;
       }
 
-      if (config.onUpdate) config.onUpdate();
+      if (config.onUpdate) {
+        try {
+          config.onUpdate();
+        } catch {
+          aborted.push(tween);
+          continue;
+        }
+      }
 
       if (progress >= 1) {
         completed.push(tween);
       }
+    }
+
+    for (const tween of aborted) {
+      const idx = this._tweens.indexOf(tween);
+      if (idx !== -1) this._tweens.splice(idx, 1);
     }
 
     for (const tween of completed) {

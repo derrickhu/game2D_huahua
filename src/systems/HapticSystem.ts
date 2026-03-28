@@ -174,7 +174,9 @@ export class HapticSystem {
     if (this._vibrationEnabled) Platform.vibrateShort('heavy');
 
     if (this._effectsEnabled) {
-      const pos = this._getCellWorldPos(cellIndex);
+      const pos = cellIndex >= 0
+        ? this._getCellWorldPos(cellIndex)
+        : { x: DESIGN_WIDTH / 2, y: Game.logicHeight / 2 };
       this._spawnMergeParticles(pos.x, pos.y, 12, FRENZY_PARTICLE_COLORS, 1.5);
     }
   }

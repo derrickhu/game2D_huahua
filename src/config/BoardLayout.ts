@@ -50,7 +50,8 @@ export const BOARD_PRESETS: CellPreset[] = [
   { row: 2, col: 2, state: CellState.FOG,  itemId: 'tool_plant_1',        keyPrice: 0, unlockPriority: 10 },
   { row: 2, col: 3, state: CellState.OPEN, itemId: 'flower_fresh_1',      keyPrice: 0, unlockPriority: 0 },
   { row: 2, col: 4, state: CellState.FOG,  itemId: 'tool_plant_1',        keyPrice: 0, unlockPriority: 11 },
-  { row: 2, col: 5, state: CellState.PEEK, itemId: 'drink_cold_2',        keyPrice: 0, unlockPriority: 18 },
+  /** 冷饮线一级工具（量杯）半解锁，便于与 Lv.3 收纳盒奖励合成出 Lv.3 产出冷饮 */
+  { row: 2, col: 5, state: CellState.PEEK, itemId: 'tool_mixer_1',      keyPrice: 0, unlockPriority: 18 },
   { row: 2, col: 6, state: CellState.FOG,  itemId: null,                  keyPrice: 0, unlockPriority: 39 },
 
   // ── 第3行 - 初始核心区 ──
@@ -59,7 +60,8 @@ export const BOARD_PRESETS: CellPreset[] = [
   { row: 3, col: 2, state: CellState.OPEN, itemId: 'flower_fresh_1',      keyPrice: 0, unlockPriority: 0 },
   { row: 3, col: 3, state: CellState.OPEN, itemId: 'tool_plant_1',        keyPrice: 0, unlockPriority: 0 },
   { row: 3, col: 4, state: CellState.OPEN, itemId: 'flower_fresh_1',      keyPrice: 0, unlockPriority: 0 },
-  { row: 3, col: 5, state: CellState.FOG,  itemId: null,                  keyPrice: 0, unlockPriority: 13 },
+  /** 迷雾中藏花艺剪刀（tool_arrange_2），与 Lv.6 收纳盒奖励可合成升级 */
+  { row: 3, col: 5, state: CellState.FOG,  itemId: 'tool_arrange_2',    keyPrice: 0, unlockPriority: 13 },
   { row: 3, col: 6, state: CellState.FOG,  itemId: 'drink_tea_2',         keyPrice: 0, unlockPriority: 29 },
 
   // ── 第4行 - 初始核心区 ──
@@ -67,7 +69,7 @@ export const BOARD_PRESETS: CellPreset[] = [
   { row: 4, col: 1, state: CellState.PEEK, itemId: 'flower_fresh_2',      keyPrice: 0, unlockPriority: 14 },
   { row: 4, col: 2, state: CellState.OPEN, itemId: 'tool_plant_1',        keyPrice: 0, unlockPriority: 0 },
   { row: 4, col: 3, state: CellState.OPEN, itemId: 'flower_fresh_1',      keyPrice: 0, unlockPriority: 0 },
-  { row: 4, col: 4, state: CellState.OPEN, itemId: null,                  keyPrice: 0, unlockPriority: 0 },
+  { row: 4, col: 4, state: CellState.OPEN, itemId: 'chest_1',             keyPrice: 0, unlockPriority: 0 },
   { row: 4, col: 5, state: CellState.PEEK, itemId: 'drink_tea_1',         keyPrice: 0, unlockPriority: 19 },
   { row: 4, col: 6, state: CellState.KEY,  itemId: null,                  keyPrice: 200, unlockPriority: 31 },
 

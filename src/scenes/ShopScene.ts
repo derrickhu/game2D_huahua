@@ -25,6 +25,8 @@ import { CheckInManager } from '@/managers/CheckInManager';
 import { QuestManager } from '@/managers/QuestManager';
 import { RegularCustomerManager } from '@/managers/RegularCustomerManager';
 import { SaveManager } from '@/managers/SaveManager';
+import { DressUpManager } from '@/managers/DressUpManager';
+import { getOwnerShopDisplayScale } from '@/config/DressUpConfig';
 import { FurnitureDragSystem } from '@/systems/FurnitureDragSystem';
 import { FurnitureTray, FURNITURE_TRAY_H } from '@/gameobjects/ui/FurnitureTray';
 import { RoomEditToolbar } from '@/gameobjects/ui/RoomEditToolbar';
@@ -49,6 +51,12 @@ const EDIT_MAIN_BTN_R = 18;
 /** 花店建筑竖直位置：中心 Y ≈ logicH * ratio + offset，ratio 增大则整体下移（原 0.405 偏上易顶到进度条） */
 const SHOP_BUILDING_CENTER_Y_RATIO = 0.442;
 const SHOP_BUILDING_ANCHOR_OFFSET_Y = 18;
+
+/** 装修/花店场景中店主全身像目标高度（设计分辨率）。基准原为 150，现为 ×1.1。 */
+const SHOP_OWNER_TARGET_H = 165;
+/** 店主点击热区（锚点在脚底）：相对原 Circle(0,-40,60) 同比例 ×1.1 */
+const SHOP_OWNER_HIT_CY = -44;
+const SHOP_OWNER_HIT_R = 66;
 
 // ── 颜色（偏白天花店，与合成页明度更接近；无 house_bg 时 fallback 不再用夜间深蓝） ──
 const C = {
@@ -119,6 +127,10 @@ export class ShopScene implements Scene {
   // ── 店主 ──
   private _ownerContainer: PIXI.Container | null = null;
   private _ownerSprite: PIXI.Sprite | null = null;
+
+  private readonly _onDressUpEquipped = (): void => {
+    this._refreshShopOwnerOutfitTextures();
+  };
   private _blinkTimer = 0;
   private _blinkInterval = 3.5;
   private _isBlinking = false;
@@ -176,6 +188,7 @@ export class ShopScene implements Scene {
 
   onExit(): void {
     EventBus.off('decoration:room_style', this._refreshShopBuildingTexture);
+    EventBus.off('dressup:equipped', this._onDressUpEquipped);
     // 如果在编辑模式，退出时自动保存
     if (this._isEditMode) {
       this._exitEditMode();
@@ -406,17 +419,45 @@ export class ShopScene implements Scene {
     this._roomContainer.sortChildren();
   }
 
+  private _ownerFullOpenTexKey(): string {
+    const id = DressUpManager.getEquipped()?.id ?? 'outfit_default';
+    return id === 'outfit_default' ? 'owner_full_default' : `owner_full_${id}`;
+  }
+
+  private _ownerFullBlinkTexKey(): string {
+    const id = DressUpManager.getEquipped()?.id ?? 'outfit_default';
+    return id === 'outfit_default' ? 'owner_full_default_blink' : `owner_full_${id}_blink`;
+  }
+
+  /** 按当前换装刷新花店店主全身贴图与缩放（含眨眼所用睁眼/闭眼键） */
+  private _refreshShopOwnerOutfitTextures(): void {
+    if (!this._ownerSprite) return;
+    const openKey = this._ownerFullOpenTexKey();
+    const blinkKey = this._ownerFullBlinkTexKey();
+    const openTex = TextureCache.get(openKey) ?? TextureCache.get('owner_full_default');
+    const blinkTex = TextureCache.get(blinkKey) ?? TextureCache.get('owner_full_default_blink');
+    if (!openTex?.width) return;
+    const useClosed = this._isBlinking && blinkTex?.width;
+    this._ownerSprite.texture = useClosed ? blinkTex! : openTex;
+    const outfitId = DressUpManager.getEquipped()?.id ?? 'outfit_default';
+    const targetH = SHOP_OWNER_TARGET_H * getOwnerShopDisplayScale(outfitId);
+    const scale = targetH / this._ownerSprite.texture.height;
+    this._ownerSprite.scale.set(scale);
+  }
+
   /** 绘制店主形象 */
   private _drawShopOwner(cx: number, cy: number): void {
     const owner = new PIXI.Container();
     owner.position.set(cx, cy);
     this._ownerContainer = owner;
 
-    const tex = TextureCache.get('owner_full_default');
+    const openKey = this._ownerFullOpenTexKey();
+    const tex = TextureCache.get(openKey) ?? TextureCache.get('owner_full_default');
     if (tex) {
       this._ownerSprite = new PIXI.Sprite(tex);
       this._ownerSprite.anchor.set(0.5, 1);
-      const targetH = 150;
+      const outfitId = DressUpManager.getEquipped()?.id ?? 'outfit_default';
+      const targetH = SHOP_OWNER_TARGET_H * getOwnerShopDisplayScale(outfitId);
       const scale = targetH / tex.height;
       this._ownerSprite.scale.set(scale);
       owner.addChild(this._ownerSprite);
@@ -425,7 +466,7 @@ export class ShopScene implements Scene {
     owner.zIndex = Math.floor(cy);
     owner.eventMode = 'static';
     owner.cursor = 'pointer';
-    owner.hitArea = new PIXI.Circle(0, -40, 60);
+    owner.hitArea = new PIXI.Circle(0, SHOP_OWNER_HIT_CY, SHOP_OWNER_HIT_R);
 
     // 交互：普通模式点击对话，编辑模式拖拽移动
     owner.on('pointerdown', (e: PIXI.FederatedPointerEvent) => {
@@ -862,6 +903,7 @@ export class ShopScene implements Scene {
 
   private _bindEvents(): void {
     EventBus.on('decoration:room_style', this._refreshShopBuildingTexture);
+    EventBus.on('dressup:equipped', this._onDressUpEquipped);
 
     // 监听布局变化 — 仅在非编辑模式下才完整重渲染
     // 编辑模式下由 FurnitureDragSystem 直接操控 Sprite
@@ -1088,7 +1130,7 @@ export class ShopScene implements Scene {
     this._enablePinchZoom();
 
     ToastMessage.show('🔨 装修模式：拖动家具；右侧滑杆需长按或滑动后拖动缩放；双击滑杆恢复 1×');
-    EventBus.emit('furniture:edit_mode_enter');
+    EventBus.emit('furniture:edit_enabled');
   }
 
   /** 退出编辑模式 */
@@ -1161,7 +1203,7 @@ export class ShopScene implements Scene {
     this._renderFurnitureLayout();
 
     ToastMessage.show('💾 布局已保存');
-    EventBus.emit('furniture:edit_mode_exit');
+    EventBus.emit('furniture:edit_disabled');
   }
 
   // ─────────────────── 编辑模式缩放控制 ───────────────────
@@ -1587,14 +1629,16 @@ export class ShopScene implements Scene {
         this._isBlinking = false;
         this._blinkTimer = 0;
         this._blinkInterval = 2.5 + Math.random() * 3;
-        const openTex = TextureCache.get('owner_full_default');
+        const openTex = TextureCache.get(this._ownerFullOpenTexKey())
+          ?? TextureCache.get('owner_full_default');
         if (openTex) this._ownerSprite.texture = openTex;
       }
     } else {
       if (this._blinkTimer >= this._blinkInterval) {
         this._isBlinking = true;
         this._blinkTimer = 0;
-        const closedTex = TextureCache.get('owner_full_default_blink');
+        const closedTex = TextureCache.get(this._ownerFullBlinkTexKey())
+          ?? TextureCache.get('owner_full_default_blink');
         if (closedTex) this._ownerSprite.texture = closedTex;
       }
     }

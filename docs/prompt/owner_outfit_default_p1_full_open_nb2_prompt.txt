@@ -1,0 +1,17 @@
+CHIBI PROPORTION — critical, match original huahua default shop owner in-game sprite (merge-game NPC), NOT realistic illustration:
+Super-deformed SD chibi. Full standing height from top of hair to soles equals only 2 to 2.8 head-heights. One head = size of cranium plus hair volume. The head must be very large: roughly 42% to 52% of total body height. Very short neck. Tiny compact torso. Arms and legs short, slightly chunky tubes, simplified joints, no slim realistic legs. Small rounded hands and feet. Cute toy-like silhouette readable when scaled small in an isometric room. Absolutely forbid semi-realistic 4-head or 5-head teen anime proportions, forbid fashion-model body, forbid detailed anatomy.
+
+ART STYLE:
+2D cute casual mobile game character, soft pastel, gentle flat-to-soft shading, rosy cheek blush, huge round brown eyes with white sparkle highlight, warm brown soft line art not pure black. Cozy flower shop vibe. Not oil painting, not cinematic 3D render, not portrait illustration realism.
+
+LAYOUT STANDARD for game sprites — follow exactly:
+Portrait 9:16, exactly one character. Apply the CHIBI PROPORTION above to this full-body shot.
+Vertical: soles of shoes rest in the bottom 10% to 14% band of canvas height; top of hair reaches roughly the top 16% to 22% band. Keep clear magenta padding above head and below feet.
+Horizontal: figure centered; at least 8% to 12% of canvas width as solid magenta margin on both left and right of the silhouette.
+Background: flat magenta RGB 255 0 255 FF00FF only. No gradients, lines, frames, text, watermark.
+
+Identity — default "natural girl" shopkeeper: warm light brown chin-length bob with bangs, small pink five-petal flower hair clip on the character right side of head (viewer's left). Large brown eyes open, gentle smile. Slight 3/4 view facing toward viewer's right. Arms relaxed at sides slightly away from body.
+
+Outfit default: light pink short puff-sleeve blouse, white pinafore apron with two rounded front pockets, dusty blue knee-length A-line skirt, simple white Mary Jane shoes with one thin strap.
+
+Full body head to feet, eyes open.

@@ -8,6 +8,7 @@ import { Game } from '@/core/Game';
 import { EventBus } from '@/core/EventBus';
 import { TweenManager, Ease } from '@/core/TweenManager';
 import { DressUpManager, Outfit } from '@/managers/DressUpManager';
+import { getOwnerChibiTextureKey, getOwnerFullOpenTextureKey } from '@/config/DressUpConfig';
 import { CurrencyManager } from '@/managers/CurrencyManager';
 import { TextureCache } from '@/utils/TextureCache';
 import { checkRequirement } from '@/utils/UnlockChecker';
@@ -61,6 +62,7 @@ function dressGridListTopPad(availH: number, totalRows: number, ch: number): num
 export class DressUpPanel extends PIXI.Container {
   private _bg!: PIXI.Graphics;
   private _content!: PIXI.Container;
+  private _gridViewport!: PIXI.Container;
   private _gridContainer!: PIXI.Container;
   private _gridMask!: PIXI.Graphics;
   private _titleText!: PIXI.Text;
@@ -129,6 +131,7 @@ export class DressUpPanel extends PIXI.Container {
   }
 
   private _rebuildGrid(): void {
+    this._syncDressGridClip();
     this._gridContainer.removeChildren();
     const h = Game.logicHeight;
     const panelH = Math.round(h * PANEL_H_RATIO);
@@ -321,30 +324,52 @@ export class DressUpPanel extends PIXI.Container {
     const isEquipped = outfit.equipped;
     const isUnlocked = outfit.unlocked;
     const reqResult = checkRequirement(outfit.unlockRequirement);
+    const reqMet = reqResult.met;
 
-    this._drawCardBg(card, cw, ch, isUnlocked, isEquipped);
+    this._drawCardBg(card, cw, ch, isUnlocked || reqMet, isEquipped);
 
-    const iconCy = Math.round((ch * 54) / CARD_BASE_H);
-    const maxIcon = Math.round((72 * cw) / CARD_BASE_W);
-    const icon = new PIXI.Text(outfit.icon, { fontSize: Math.round((44 * cw) / CARD_BASE_W), fontFamily: FONT_FAMILY });
-    icon.anchor.set(0.5, 0.5);
-    icon.position.set(cw / 2, iconCy);
-    if (!isUnlocked) icon.alpha = 0.35;
-    card.addChild(icon);
+    const nameY = Math.round((ch * 88) / CARD_BASE_H);
+    const portraitTop = 10;
+    const portraitBottom = nameY - 6;
+    const maxPortraitH = Math.max(40, portraitBottom - portraitTop);
+    const maxPortraitW = cw - 16;
+    const portraitCy = portraitTop + maxPortraitH / 2;
 
-    if (!isUnlocked) {
+    const chibiTex = TextureCache.get(getOwnerChibiTextureKey(outfit.id));
+    const fullTex = TextureCache.get(getOwnerFullOpenTextureKey(outfit.id));
+    const previewTex =
+      chibiTex && chibiTex.width > 0 ? chibiTex
+        : fullTex && fullTex.width > 0 ? fullTex
+          : null;
+
+    if (previewTex) {
+      const sp = new PIXI.Sprite(previewTex);
+      sp.anchor.set(0.5, 0.5);
+      const s = Math.min(maxPortraitW / previewTex.width, maxPortraitH / previewTex.height);
+      sp.scale.set(s);
+      sp.position.set(cw / 2, portraitCy);
+      if (!reqMet) sp.alpha = 0.35;
+      card.addChild(sp);
+    } else {
+      const iconCy = Math.round((ch * 54) / CARD_BASE_H);
+      const icon = new PIXI.Text(outfit.icon, { fontSize: Math.round((44 * cw) / CARD_BASE_W), fontFamily: FONT_FAMILY });
+      icon.anchor.set(0.5, 0.5);
+      icon.position.set(cw / 2, iconCy);
+      if (!reqMet) icon.alpha = 0.35;
+      card.addChild(icon);
+    }
+
+    if (!reqMet) {
       const lock = new PIXI.Text('🔒', { fontSize: 22, fontFamily: FONT_FAMILY });
       lock.anchor.set(0.5, 0.5);
-      lock.position.set(cw / 2, iconCy);
+      lock.position.set(cw / 2, portraitCy);
       card.addChild(lock);
     }
 
     if (isEquipped) this._addEquipBadge(card, cw);
-
-    const nameY = Math.max(iconCy + Math.ceil(maxIcon * 0.35) + 4, Math.round((ch * 88) / CARD_BASE_H));
     const name = new PIXI.Text(outfit.name, {
       fontSize: 15,
-      fill: isUnlocked ? COLORS.TEXT_DARK : COLORS.TEXT_LIGHT,
+      fill: isUnlocked || reqMet ? COLORS.TEXT_DARK : COLORS.TEXT_LIGHT,
       fontFamily: FONT_FAMILY,
       fontWeight: 'bold',
       align: 'center',
@@ -511,16 +536,21 @@ export class DressUpPanel extends PIXI.Container {
     const gridW = PANEL_W - GRID_MARGIN_H * 2;
     const gridH = panelH - this._contentTopY - CONTENT_BOTTOM;
 
-    this._gridContainer = new PIXI.Container();
-    this._gridContainer.position.set(GRID_MARGIN_H, this._contentTopY);
-    this._content.addChild(this._gridContainer);
+    this._gridViewport = new PIXI.Container();
+    this._gridViewport.position.set(GRID_MARGIN_H, this._contentTopY);
+    this._gridViewport.eventMode = 'static';
+    this._gridViewport.hitArea = new PIXI.Rectangle(0, 0, gridW, gridH);
+    this._content.addChild(this._gridViewport);
 
     this._gridMask = new PIXI.Graphics();
     this._gridMask.beginFill(0xffffff);
-    this._gridMask.drawRect(GRID_MARGIN_H, this._contentTopY, gridW, gridH);
+    this._gridMask.drawRect(0, 0, gridW, gridH);
     this._gridMask.endFill();
     this._gridMask.eventMode = 'none';
-    this._content.addChild(this._gridMask);
+    this._gridViewport.addChild(this._gridMask);
+
+    this._gridContainer = new PIXI.Container();
+    this._gridViewport.addChild(this._gridContainer);
     this._gridContainer.mask = this._gridMask;
 
     this._gridContainer.eventMode = 'static';
@@ -559,6 +589,18 @@ export class DressUpPanel extends PIXI.Container {
     this._panelHBuilt = panelH;
   }
 
+  private _syncDressGridClip(): void {
+    const panelH = Math.round(Game.logicHeight * PANEL_H_RATIO);
+    const gridW = PANEL_W - GRID_MARGIN_H * 2;
+    const gridH = panelH - this._contentTopY - CONTENT_BOTTOM;
+    this._gridViewport.position.set(GRID_MARGIN_H, this._contentTopY);
+    this._gridViewport.hitArea = new PIXI.Rectangle(0, 0, gridW, gridH);
+    this._gridMask.clear();
+    this._gridMask.beginFill(0xffffff);
+    this._gridMask.drawRect(0, 0, gridW, gridH);
+    this._gridMask.endFill();
+  }
+
   private _resizePanelIfNeeded(): void {
     const h = Game.logicHeight;
     const panelH = Math.round(h * PANEL_H_RATIO);
@@ -567,11 +609,7 @@ export class DressUpPanel extends PIXI.Container {
     if (bg instanceof PIXI.Sprite) {
       bg.height = panelH;
     }
-    const gridW = PANEL_W - GRID_MARGIN_H * 2;
-    this._gridMask.clear();
-    this._gridMask.beginFill(0xffffff);
-    this._gridMask.drawRect(GRID_MARGIN_H, this._contentTopY, gridW, panelH - this._contentTopY - CONTENT_BOTTOM);
-    this._gridMask.endFill();
+    this._syncDressGridClip();
     this._panelHBuilt = panelH;
   }
 }

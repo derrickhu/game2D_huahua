@@ -1,0 +1,11 @@
+Single isolated horizontal progress bar TRACK (empty groove only) on flat solid magenta FF00FF background for chroma-key cutout.
+
+COMPOSITION AND PROPORTIONS: Design for a wide landscape frame. The capsule track must stretch almost edge-to-edge horizontally: the pill occupies roughly 92 to 96 percent of the total image width, with only slim vertical strips of solid magenta on the left and right. Vertically, the pill sits centered with comfortable padding: the pill height should be about 10 to 14 percent of the image height (the bar is a long thin strip, much wider than tall — visually about 18:1 to 28:1 width-to-height for the pill shape itself). Do not draw a short stubby bar in the middle of a large empty canvas; the bar must read as one continuous long strip suitable for a mobile HUD.
+
+SHAPE: One symmetrical horizontal pill or capsule. Both ends are perfect semicircle caps. Straight parallel top and bottom edges along the middle section.
+
+EXTERIOR: Thin warm brown or soft tan outline, 1.5 to 2 pixels at game scale. Optional very soft shadow under the pill on the magenta.
+
+INTERIOR: Soft horizontal gradient inside the groove — muted sage green or pale mint on the left easing to lighter cream-mint on the right (roughly DCEDC8 through E8F5E9). Subtle inner highlight along the upper inner edge; very faint darker line along the bottom inner edge for a slight inset groove. The slot must stay empty — no fill, no percentage, no tick marks — game code will draw the green progress on top.
+
+STYLE: Flat friendly 2D casual game UI, hand-painted softness, cozy flower-shop merge game. Not photorealistic, not chunky 3D plastic. No text, no numbers, no icons, no Chinese characters, no watermark. Only the long empty track pill on magenta.

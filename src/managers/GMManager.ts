@@ -182,22 +182,22 @@ class GMManagerClass {
     this._commands.push({
       id: 'add_gold_1000',
       group: '💰 货币调整',
-      name: '💰 +1000 金币',
-      desc: '增加1000金币',
+      name: '💰 +1000 花愿',
+      desc: '增加1000花愿',
       execute: () => {
-        CurrencyManager.addGold(1000);
-        return `✅ +1000金币，当前: ${CurrencyManager.state.gold}`;
+        CurrencyManager.addHuayuan(1000);
+        return `✅ +1000花愿，当前: ${CurrencyManager.state.huayuan}`;
       },
     });
 
     this._commands.push({
       id: 'add_gold_10000',
       group: '💰 货币调整',
-      name: '💰 +10000 金币',
-      desc: '增加10000金币',
+      name: '💰 +10000 花愿',
+      desc: '增加10000花愿',
       execute: () => {
-        CurrencyManager.addGold(10000);
-        return `✅ +10000金币，当前: ${CurrencyManager.state.gold}`;
+        CurrencyManager.addHuayuan(10000);
+        return `✅ +10000花愿，当前: ${CurrencyManager.state.huayuan}`;
       },
     });
 
@@ -425,7 +425,7 @@ class GMManagerClass {
       name: '🎉 测试升级弹窗',
       desc: '模拟一次升级动画',
       execute: () => {
-        EventBus.emit('level:up', LevelManager.level, { gold: 200, stamina: 30, diamond: 10 });
+        EventBus.emit('level:up', LevelManager.level, { huayuan: 200, stamina: 30, diamond: 10 });
         return '✅ 已触发升级弹窗';
       },
     });
@@ -526,7 +526,7 @@ class GMManagerClass {
       desc: '在花店场景中进入编辑模式',
       execute: () => {
         EventBus.emit('nav:switchToShop');
-        setTimeout(() => EventBus.emit('furniture:edit_mode_enter'), 500);
+        setTimeout(() => EventBus.emit('furniture:edit_enabled'), 500);
         return '✅ 切换到花店场景并进入编辑模式';
       },
     });

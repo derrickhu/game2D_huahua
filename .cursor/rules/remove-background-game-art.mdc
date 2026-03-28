@@ -1,0 +1,38 @@
+---
+description: 游戏立绘/UI 等 PNG 抠图强制使用 remove-background skill 与 birefnet-general，禁止以色键替代主抠图流程
+alwaysApply: true
+---
+
+# 抠图（remove-background）— 项目强制规范
+
+凡需将 **AI 生图 / 格切 / 带底图 PNG** 转为 **透明底游戏资源**（客人胸像、店主、工具图标、UI 切图等），**必须**按 Cursor **`remove-background`** skill 执行，**不得**用奶油色/品红等 **色键当唯一或主要去底手段**（色键仅可作自动化初稿辅助，最终入库仍以 rembg 为准）。
+
+完整说明见技能：`~/.cursor/skills/remove-background/SKILL.md`（路径以本机 Cursor skills 为准）。
+
+## 脚本入口（唯一推荐）
+
+| 场景 | 命令 |
+|------|------|
+| 单张 | `python3 ~/.cursor/skills/remove-background/scripts/rembg_single.py <输入> -o <输出.png> -m birefnet-general` |
+| 批量 | `python3 ~/.cursor/skills/remove-background/scripts/rembg_batch.py <输入目录> -o <输出目录> -m birefnet-general` |
+
+## 模型选择（默认）
+
+- **默认且全项目抠图首选**：**`birefnet-general`**（BiRefNet 最高质量档，与店主 sprite、工具图标规范一致）。
+- **`birefnet-general-lite`**：仅当批量极大、可接受略降质时再用。
+- **`isnet-anime`**：仅当 skill 表格中明确适用、且 `birefnet-general` 效果明显不佳时再用，**不得**作为绕过本规范的常规替代。
+- **`u2net`**：非本仓库主流程，勿用于入库资源。
+
+## 禁止与注意
+
+- **禁止**：仅靠 `#FFF8F0` / 品红等 **颜色阈值** 当最终去底（易产生锯齿、半透明边、与底图色差失效）。
+- **允许**：rembg 之后用 **`game-art-pipeline` 的 `crop_trim.py`** 按 **alpha** 裁透明边（`--padding 4` 等）。
+- skill 要求：**勿用 CoreMLExecutionProvider**；脚本已固定 **CPUExecutionProvider** 与 `OMP_NUM_THREADS`，勿改 provider 以免卡死。
+
+## 与本仓库脚本对齐
+
+- 客人 2×4 表切图后批量抠图：见仓库 **`scripts/process_customer_busts_new5_rembg.sh`**（split → `rembg_batch -m birefnet-general` → `crop_trim` → 缩放写入 `minigame/images/customer/`）。
+
+## 依赖
+
+本机需已安装 **`rembg`**、**`onnxruntime`**、**`Pillow`**（见 remove-background skill 安装说明）；模型首次运行自动下载到 `~/.u2net/`。

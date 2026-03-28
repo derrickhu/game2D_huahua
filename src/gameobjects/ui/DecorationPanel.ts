@@ -12,6 +12,7 @@ import * as PIXI from 'pixi.js';
 import { Game } from '@/core/Game';
 import { TweenManager, Ease } from '@/core/TweenManager';
 import { EventBus } from '@/core/EventBus';
+import { ToastMessage } from '@/gameobjects/ui/ToastMessage';
 import { DecorationManager } from '@/managers/DecorationManager';
 import { TextureCache } from '@/utils/TextureCache';
 import { checkRequirement } from '@/utils/UnlockChecker';
@@ -109,6 +110,8 @@ export class DecorationPanel extends PIXI.Container {
   private _bg!: PIXI.Graphics;
   private _content!: PIXI.Container;
   private _tabContainer!: PIXI.Container;
+  /** 网格裁剪视口：与遮罩同父，避免兄弟遮罩在部分环境下不生效 */
+  private _gridViewport!: PIXI.Container;
   private _gridContainer!: PIXI.Container;
   private _gridMask!: PIXI.Graphics;
   private _headerDivider!: PIXI.Graphics;
@@ -129,6 +132,8 @@ export class DecorationPanel extends PIXI.Container {
   private _pendingGridTap: DecoGridPendingTap | null = null;
   /** Tab 列在网格可视高度内垂直居中的上边距 */
   private _tabVerticalPad = 0;
+  /** 与 DressUp 一致：logicHeight 变化时拉伸手绘底图并重画裁剪区 */
+  private _panelHBuilt = 0;
 
   constructor() {
     super();
@@ -211,6 +216,7 @@ export class DecorationPanel extends PIXI.Container {
     this._isOpen = true;
     this.visible = true;
     this._activeTab = DecoSlot.SHELF;
+    this._resizePanelIfNeeded();
     this._refreshAll();
 
     const h = Game.logicHeight;
@@ -364,18 +370,21 @@ export class DecorationPanel extends PIXI.Container {
       this._contentTopY + this._tabVerticalPad - TAB_COLUMN_NUDGE_Y,
     );
 
-    // grid container (right side)
-    this._gridContainer = new PIXI.Container();
-    this._gridContainer.position.set(gridX, this._contentTopY);
-    this._content.addChild(this._gridContainer);
+    this._gridViewport = new PIXI.Container();
+    this._gridViewport.position.set(gridX, this._contentTopY);
+    this._gridViewport.eventMode = 'static';
+    this._gridViewport.hitArea = new PIXI.Rectangle(0, 0, gridW, gridH);
+    this._content.addChild(this._gridViewport);
 
-    // mask in _content coords covering exactly the grid area
     this._gridMask = new PIXI.Graphics();
-    this._gridMask.beginFill(0xFFFFFF);
-    this._gridMask.drawRect(gridX, this._contentTopY, gridW, gridH);
+    this._gridMask.beginFill(0xffffff);
+    this._gridMask.drawRect(0, 0, gridW, gridH);
     this._gridMask.endFill();
     this._gridMask.eventMode = 'none';
-    this._content.addChild(this._gridMask);
+    this._gridViewport.addChild(this._gridMask);
+
+    this._gridContainer = new PIXI.Container();
+    this._gridViewport.addChild(this._gridContainer);
     this._gridContainer.mask = this._gridMask;
 
     // wheel scroll
@@ -412,6 +421,34 @@ export class DecorationPanel extends PIXI.Container {
       this._closeBtn = closeBtn;
     }
     this._layoutCloseButton();
+    this._panelHBuilt = panelH;
+  }
+
+  private _gridLayoutMetrics(): { gridX: number; gridW: number; gridH: number } {
+    const panelH = Math.round(Game.logicHeight * PANEL_H_RATIO);
+    const gridX = TAB_COLUMN_LEFT + TAB_W + TAB_GAP;
+    const gridW = PANEL_W - gridX - GRID_MARGIN_RIGHT;
+    const gridH = panelH - this._contentTopY - CONTENT_BOTTOM;
+    return { gridX, gridW, gridH };
+  }
+
+  private _syncGridViewportClip(): void {
+    const { gridX, gridW, gridH } = this._gridLayoutMetrics();
+    this._gridViewport.position.set(gridX, this._contentTopY);
+    this._gridViewport.hitArea = new PIXI.Rectangle(0, 0, gridW, gridH);
+    this._gridMask.clear();
+    this._gridMask.beginFill(0xffffff);
+    this._gridMask.drawRect(0, 0, gridW, gridH);
+    this._gridMask.endFill();
+  }
+
+  private _resizePanelIfNeeded(): void {
+    const panelH = Math.round(Game.logicHeight * PANEL_H_RATIO);
+    if (panelH === this._panelHBuilt) return;
+    const bg = this._content.children[0];
+    if (bg instanceof PIXI.Sprite) bg.height = panelH;
+    this._panelHBuilt = panelH;
+    this._syncGridViewportClip();
   }
 
   // ─── tabs (left column, pill-shaped text buttons) ─────────
@@ -503,6 +540,7 @@ export class DecorationPanel extends PIXI.Container {
       TAB_COLUMN_LEFT,
       this._contentTopY + this._tabVerticalPad - TAB_COLUMN_NUDGE_Y,
     );
+    this._syncGridViewportClip();
     this._buildGrid(gridH);
     this._updateProgress();
   }
@@ -763,8 +801,10 @@ export class DecorationPanel extends PIXI.Container {
 
     const isUnlocked = DecorationManager.isUnlocked(deco.id);
     const isEquipped = DecorationManager.getEquipped(deco.slot) === deco.id;
+    const reqResult = checkRequirement(deco.unlockRequirement);
+    const reqMet = reqResult.met;
 
-    this._drawCardBg(card, cw, ch, isUnlocked, isEquipped);
+    this._drawCardBg(card, cw, ch, isUnlocked || reqMet, isEquipped);
 
     const maxIcon = Math.round((82 * cw) / CARD_BASE_W);
     const iconCy = Math.round((ch * 54) / CARD_BASE_H);
@@ -783,18 +823,18 @@ export class DecorationPanel extends PIXI.Container {
       const s = Math.min(maxIcon / texture.width, maxIcon / texture.height);
       sprite.scale.set(s);
       sprite.anchor.set(0.5, 0.5);
-      if (!isUnlocked) sprite.alpha = 0.4;
+      if (!reqMet) sprite.alpha = 0.4;
       iconArea.addChild(sprite);
     } else {
       const emoji = new PIXI.Text(DECO_SLOT_INFO[deco.slot].emoji, {
         fontSize: Math.round((40 * cw) / CARD_BASE_W), fontFamily: FONT_FAMILY,
       });
       emoji.anchor.set(0.5, 0.5);
-      if (!isUnlocked) emoji.alpha = 0.4;
+      if (!reqMet) emoji.alpha = 0.4;
       iconArea.addChild(emoji);
     }
 
-    if (!isUnlocked) {
+    if (!reqMet) {
       const lock = new PIXI.Text('🔒', { fontSize: 22, fontFamily: FONT_FAMILY });
       lock.anchor.set(0.5, 0.5);
       lock.position.set(cw / 2, iconCy);
@@ -812,7 +852,6 @@ export class DecorationPanel extends PIXI.Container {
     nameText.position.set(cw / 2, nameY);
     card.addChild(nameText);
 
-    const reqResult = checkRequirement(deco.unlockRequirement);
     if (isEquipped) this._addFooter(card, cw, ch, 'equipped', undefined, '装备');
     else if (isUnlocked) this._addFooter(card, cw, ch, 'ready', undefined, '装备');
     else if (!reqResult.met) this._addFooter(card, cw, ch, 'locked', undefined, reqResult.text);
@@ -836,8 +875,10 @@ export class DecorationPanel extends PIXI.Container {
 
     const unlocked = DecorationManager.isRoomStyleUnlocked(style.id);
     const equipped = DecorationManager.roomStyleId === style.id;
+    const styleReq = checkRequirement(style.unlockRequirement);
+    const styleReqMet = styleReq.met;
 
-    this._drawCardBg(card, cw, ch, unlocked, equipped);
+    this._drawCardBg(card, cw, ch, unlocked || styleReqMet, equipped);
 
     const previewCy = Math.round((ch * 54) / CARD_BASE_H);
 
@@ -855,12 +896,12 @@ export class DecorationPanel extends PIXI.Container {
       previewHalfH = Math.ceil((tex.height * s) / 2);
       sp.scale.set(s);
       sp.anchor.set(0.5, 0.5);
-      if (!unlocked) sp.alpha = 0.45;
+      if (!styleReqMet) sp.alpha = 0.45;
       preview.addChild(sp);
     } else {
       const ph = new PIXI.Text('🏠', { fontSize: Math.round((40 * cw) / CARD_BASE_W), fontFamily: FONT_FAMILY });
       ph.anchor.set(0.5, 0.5);
-      if (!unlocked) ph.alpha = 0.45;
+      if (!styleReqMet) ph.alpha = 0.45;
       preview.addChild(ph);
       previewHalfH = Math.ceil(ph.height / 2) || 20;
     }
@@ -870,7 +911,7 @@ export class DecorationPanel extends PIXI.Container {
       previewCy + (previewHalfH || 28) + 8,
     );
 
-    if (!unlocked) {
+    if (!styleReqMet) {
       const lock = new PIXI.Text('🔒', { fontSize: 22, fontFamily: FONT_FAMILY });
       lock.anchor.set(0.5, 0.5);
       lock.position.set(cw / 2, previewCy);
@@ -888,10 +929,9 @@ export class DecorationPanel extends PIXI.Container {
     nameText.position.set(cw / 2, nameY);
     card.addChild(nameText);
 
-    const reqResult = checkRequirement(style.unlockRequirement);
     if (equipped) this._addFooter(card, cw, ch, 'equipped', undefined, '使用');
     else if (unlocked) this._addFooter(card, cw, ch, 'ready', undefined, '使用');
-    else if (!reqResult.met) this._addFooter(card, cw, ch, 'locked', undefined, reqResult.text);
+    else if (!styleReqMet) this._addFooter(card, cw, ch, 'locked', undefined, styleReq.text);
     else if (style.cost > 0) this._addFooter(card, cw, ch, 'purchase', style.cost, '使用');
     else this._addFooter(card, cw, ch, 'ready', undefined, '领取');
 
@@ -916,15 +956,15 @@ export class DecorationPanel extends PIXI.Container {
     } else {
       const req = checkRequirement(deco.unlockRequirement);
       if (!req.met) {
-        EventBus.emit('toast:show', `🔒 ${req.text}`);
+        ToastMessage.show( `🔒 ${req.text}`);
         return;
       }
       if (DecorationManager.unlock(deco.id)) {
         DecorationManager.equip(deco.id);
-        EventBus.emit('toast:show', `✨ 解锁了「${deco.name}」！`);
+        ToastMessage.show( `✨ 解锁了「${deco.name}」！`);
         this._refreshAll();
       } else {
-        EventBus.emit('toast:show', `🌸 花愿不足，需要 ${deco.cost} 花愿`);
+        ToastMessage.show( `🌸 花愿不足，需要 ${deco.cost} 花愿`);
       }
     }
   }
@@ -935,21 +975,21 @@ export class DecorationPanel extends PIXI.Container {
     if (equipped) return;
     if (unlocked) {
       if (DecorationManager.equipRoomStyle(style.id)) {
-        EventBus.emit('toast:show', `已切换为「${style.name}」`);
+        ToastMessage.show( `已切换为「${style.name}」`);
         this._refreshAll();
       }
     } else {
       const req = checkRequirement(style.unlockRequirement);
       if (!req.met) {
-        EventBus.emit('toast:show', `🔒 ${req.text}`);
+        ToastMessage.show( `🔒 ${req.text}`);
         return;
       }
       if (DecorationManager.unlockRoomStyle(style.id)) {
         DecorationManager.equipRoomStyle(style.id);
-        EventBus.emit('toast:show', `✨ 解锁「${style.name}」！`);
+        ToastMessage.show( `✨ 解锁「${style.name}」！`);
         this._refreshAll();
       } else {
-        EventBus.emit('toast:show', `🌸 花愿不足，需要 ${style.cost} 花愿`);
+        ToastMessage.show( `🌸 花愿不足，需要 ${style.cost} 花愿`);
       }
     }
   }

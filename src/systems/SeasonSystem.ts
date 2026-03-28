@@ -96,9 +96,6 @@ export class SeasonSystem {
   private _currentSeason: Season;
   private _spawnTimer = 0;
 
-  /** 上次记录的季节(用于检测切换) */
-  private _lastSavedSeason: Season | null = null;
-
   constructor(parent: PIXI.Container) {
     this._parent = parent;
     this._currentSeason = SeasonSystem.getCurrentSeason();
@@ -122,7 +119,6 @@ export class SeasonSystem {
 
     this._drawBgOverlay();
     this._drawSeasonBadge();
-    this._lastSavedSeason = this._currentSeason;
 
     // 广播当前季节
     EventBus.emit('season:changed', this._currentSeason, this.getConfig());

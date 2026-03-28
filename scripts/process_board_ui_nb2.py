@@ -25,7 +25,7 @@ OUT_GAME = "/Users/huyi/rosa_games/huahua/minigame/images/ui"
 REMBG = os.path.expanduser("~/.cursor/skills/remove-background/scripts/rembg_batch.py")
 TRIM = os.path.expanduser("~/.cursor/skills/game-art-pipeline/scripts/crop_trim.py")
 
-# 默认用完整 BiRefNet（比 lite 更细边缘）；可用 --model birefnet-general-lite 加速
+# 默认 birefnet-general（全项目抠图统一）；仅本地试跑可加 --model birefnet-general-lite 加速
 DEFAULT_REMBG_MODEL = "birefnet-general"
 
 OUTPUT_NAMES = {

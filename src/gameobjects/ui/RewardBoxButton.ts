@@ -1,8 +1,8 @@
 /**
  * 奖励收纳框 — 收起态按钮
  *
- * 底图 cell_locked_v2 礼盒放大显示；有物品时礼盒呼吸 + 外发光；
- * 右上角数量角标。
+ * 礼包图常驻；有物品时礼盒呼吸 + 外发光 + 右上角红角标。
+ * 空盒时仅静态礼包，无角标、无发光、无呼吸。
  */
 import * as PIXI from 'pixi.js';
 import { EventBus } from '@/core/EventBus';
@@ -37,6 +37,8 @@ export class RewardBoxButton extends PIXI.Container {
   private _hasBoxTexture = false;
   /** 与 PIXI Container 的 _destroyed 区分，避免 TS 子类属性不兼容 */
   private _breathStopped = false;
+  /** 收纳框内是否有可领物品（决定角标/发光/呼吸） */
+  private _rewardActive = false;
 
   constructor() {
     super();
@@ -159,6 +161,15 @@ export class RewardBoxButton extends PIXI.Container {
 
   private _onBreathTick(): void {
     if (this._breathStopped || !this.visible) return;
+    if (!this._rewardActive) {
+      if (this._hasBoxTexture) {
+        this._boxSprite.scale.set(this._boxBaseScale);
+      } else if (this._bg.visible) {
+        this._bg.scale.set(1);
+      }
+      return;
+    }
+
     const t = performance.now() * 0.0028;
     const breathe = 1 + Math.sin(t) * BREATH_AMP;
     if (this._hasBoxTexture) {
@@ -184,13 +195,28 @@ export class RewardBoxButton extends PIXI.Container {
   private _refresh(): void {
     const S = REWARD_BOX_BTN_SIZE;
     const total = RewardBoxManager.totalCount;
-    this.visible = total > 0;
-    if (total <= 0) return;
+    this.visible = true;
+    this._rewardActive = total > 0;
 
     const cx = S / 2;
     const cy = S / 2;
 
-    this._drawOuterGlowRings(S);
+    if (this._rewardActive) {
+      this._drawOuterGlowRings(S);
+      this._outerGlow.visible = true;
+      this._glowTint.visible = true;
+      this._midGlow.visible = true;
+    } else {
+      this._outerGlow.clear();
+      this._glowTint.clear();
+      this._midGlow.clear();
+      this._outerGlow.visible = false;
+      this._glowTint.visible = false;
+      this._midGlow.visible = false;
+      this._outerGlow.scale.set(1);
+      this._glowTint.scale.set(1);
+      this._midGlow.scale.set(1);
+    }
 
     this._boxMask.clear();
     this._boxMask.beginFill(0xffffff);
@@ -222,18 +248,29 @@ export class RewardBoxButton extends PIXI.Container {
       this._bg.beginFill(FILL_COLOR, FILL_ALPHA);
       this._bg.drawRoundedRect(-cx, -cy, S, S, CORNER_R);
       this._bg.endFill();
-      this._innerLight.visible = true;
-      this._drawInnerLight(cx, cy, S);
+      this._innerLight.visible = this._rewardActive;
+      if (this._rewardActive) {
+        this._drawInnerLight(cx, cy, S);
+      } else {
+        this._innerLight.clear();
+      }
     }
 
     const badgeX = S - 3;
     const badgeY = 3;
     this._badge.clear();
-    this._badge.beginFill(0xe53935);
-    this._badge.drawCircle(badgeX, badgeY, BADGE_R);
-    this._badge.endFill();
-
-    this._badgeText.text = total > 99 ? '99+' : `${total}`;
-    this._badgeText.position.set(badgeX, badgeY);
+    if (this._rewardActive) {
+      this._badge.visible = true;
+      this._badgeText.visible = true;
+      this._badge.beginFill(0xe53935);
+      this._badge.drawCircle(badgeX, badgeY, BADGE_R);
+      this._badge.endFill();
+      this._badgeText.text = total > 99 ? '99+' : `${total}`;
+      this._badgeText.position.set(badgeX, badgeY);
+    } else {
+      this._badge.visible = false;
+      this._badgeText.visible = false;
+      this._badgeText.text = '';
+    }
   }
 }

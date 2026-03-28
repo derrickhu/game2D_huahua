@@ -5,16 +5,23 @@ import * as PIXI from 'pixi.js';
 import { TweenManager, Ease } from '@/core/TweenManager';
 import { Game } from '@/core/Game';
 import { CELL_GAP, DESIGN_WIDTH, COLORS, FONT_FAMILY, BoardMetrics } from '@/config/Constants';
-import { getSourceToolsForProductLine } from '@/config/BuildingConfig';
-import { ITEM_DEFS, getMergeChain, Category, FlowerLine, type ItemDef } from '@/config/ItemConfig';
+import {
+  getSourceToolsForProductLine,
+  findBoardProducerDef,
+  getBoardProducerOutcomePercents,
+  type ToolProduceDisplayEntry,
+  type ToolDef,
+} from '@/config/BuildingConfig';
+import { ITEM_DEFS, getMergeChain, Category, InteractType, FlowerLine, type ItemDef } from '@/config/ItemConfig';
+import {
+  findRepresentativeChestForDrop,
+  getChestProduceOutcomePercents,
+} from '@/managers/BuildingManager';
 import { BoardManager } from '@/managers/BoardManager';
 import { CollectionManager, CollectionCategory } from '@/managers/CollectionManager';
 import { TextureCache } from '@/utils/TextureCache';
-import {
-  bringToolEnergyToFront,
-  createToolEnergySprite,
-  isBoardToolCategory,
-} from '@/utils/ToolEnergyBadge';
+import { createCurrencyIconCluster } from '@/utils/CurrencyCellIcons';
+import { bringToolEnergyToFront, createToolEnergySprite } from '@/utils/ToolEnergyBadge';
 import { ToolSparkleLayer } from '@/utils/ToolSparkleLayer';
 
 /** 弹窗最小高度（过矮时仍可读） */
@@ -59,6 +66,15 @@ const MERGE_CLOSE_BTN_HIT_PAD = 12;
 const MERGE_CLOSE_BTN_SHIFT_X = 42;
 const MERGE_CLOSE_BTN_SHIFT_Y = 26;
 
+/** 获取来源里尚未获得（棋盘无、图鉴未收录）的工具图标透明度 */
+const SOURCE_TOOL_NOT_OBTAINED_ALPHA = 0.48;
+
+/** 可产出工具：产出预览悬浮框（偏大便于阅读） */
+const PRODUCE_POPOVER_PAD = 18;
+const PRODUCE_POPOVER_ICON = 66;
+const PRODUCE_POPOVER_CELL_GAP = 12;
+const PRODUCE_POPOVER_PCT_FONT = 17;
+
 export class MergeChainPanel extends PIXI.Container {
   private _overlay!: PIXI.Graphics;
   private _panel!: PIXI.Container;
@@ -81,6 +97,10 @@ export class MergeChainPanel extends PIXI.Container {
   private _chainIds: string[] = [];
   /** 用户选中的链上物品（可点击已解锁格切换） */
   private _selectedItemId = '';
+  /** 产出预览悬浮层：挂在面板根节点上，避免与滚动区/mask/工具星光混合模式产生错误叠放 */
+  private _producePopoverLayer!: PIXI.Container;
+  /** 当前正在展示产出列表的工具 id；与选中一致时再次点击可收起 */
+  private _producePopoverForId: string | null = null;
 
   constructor() {
     super();
@@ -90,6 +110,7 @@ export class MergeChainPanel extends PIXI.Container {
     this._buildCloseBtn();
     this._buildScrollArea();
     this._buildSourcesLayer();
+    this._buildProducePopoverLayer();
     this._syncPanelFrame();
   }
 
@@ -149,6 +170,8 @@ export class MergeChainPanel extends PIXI.Container {
       g.lineStyle(2, 0xd97b00, 0.92);
       g.drawRoundedRect(x + inset, y0 + inset, w - inset * 2, cardMaxH - inset * 2, Math.max(12, rOut - inset));
     }
+
+    this._layoutProducePopoverPosition();
   }
 
   private _buildOverlay(): void {
@@ -320,6 +343,16 @@ export class MergeChainPanel extends PIXI.Container {
     this._panel.addChild(this._sourcesLayer);
   }
 
+  private _buildProducePopoverLayer(): void {
+    this._producePopoverLayer = new PIXI.Container();
+    this._producePopoverLayer.visible = false;
+    this._producePopoverLayer.eventMode = 'static';
+    this._producePopoverLayer.on('pointerdown', (e: PIXI.FederatedPointerEvent) => e.stopPropagation());
+    /** 与 _panel 同级且在其后 addChild，保证整块浮层画在链格子/来源行之上（不受 scroll mask 批次影响） */
+    this.addChild(this._producePopoverLayer);
+    this._panel.setChildIndex(this._closeBtn, this._panel.children.length - 1);
+  }
+
   open(itemId: string): void {
     const chain = getMergeChain(itemId);
     if (chain.length === 0) return;
@@ -328,6 +361,7 @@ export class MergeChainPanel extends PIXI.Container {
     this.visible = true;
     this._chainIds = chain;
     this._selectedItemId = itemId;
+    this._hideProducePopover();
 
     this._refreshOwnedFromBoard();
     this._applySelectedItemUi();
@@ -371,6 +405,7 @@ export class MergeChainPanel extends PIXI.Container {
         this.visible = false;
         this._chainIds = [];
         this._selectedItemId = '';
+        this._hideProducePopover();
         this._clearSourcesLayer();
         this._clearChain();
       },
@@ -397,6 +432,8 @@ export class MergeChainPanel extends PIXI.Container {
         return CollectionManager.isDiscovered(CollectionCategory.BUILDING, def.id);
       case Category.CHEST:
         return CollectionManager.isDiscovered(CollectionCategory.CHEST, def.id);
+      case Category.CURRENCY:
+        return true;
       default:
         return false;
     }
@@ -416,6 +453,7 @@ export class MergeChainPanel extends PIXI.Container {
     const itemId = this._selectedItemId;
     const def = ITEM_DEFS.get(itemId);
     this._titleText.text = def?.name ?? '';
+
     if (def && def.level >= def.maxLevel) {
       this._subtitleText.text = '✨ 已达到最高等级！';
     } else if (def) {
@@ -426,21 +464,236 @@ export class MergeChainPanel extends PIXI.Container {
     } else {
       this._subtitleText.text = '';
     }
-    if (def) this._renderSources(def.category, def.line);
+    if (def) this._renderSources(def.category, def.line, def.id);
     else this._clearSourcesLayer();
   }
 
   private _onChainCellPointerTap(itemId: string): void {
-    if (!this._isOpen || itemId === this._selectedItemId) return;
+    if (!this._isOpen) return;
     const def = ITEM_DEFS.get(itemId);
     if (!def) return;
     const revealed = this._ownedItems.has(itemId) || this._isDiscoveredInAlbum(def);
     if (!revealed) return;
 
+    const prod = findBoardProducerDef(itemId);
+    const isProducer = !!(prod?.canProduce);
+    const isChest = def.interactType === InteractType.CHEST;
+    const chestEntries = isChest ? getChestProduceOutcomePercents(itemId) : [];
+    const hasChestPopover = chestEntries.length > 0;
+
+    if (itemId === this._selectedItemId) {
+      if (isProducer && prod) {
+        if (this._producePopoverForId === itemId) {
+          this._hideProducePopover();
+        } else {
+          this._showProducePopover(itemId, prod);
+        }
+      } else if (hasChestPopover) {
+        if (this._producePopoverForId === itemId) {
+          this._hideProducePopover();
+        } else {
+          this._showChestProducePopover(itemId);
+        }
+      }
+      return;
+    }
+
     this._selectedItemId = itemId;
     this._refreshOwnedFromBoard();
     this._applySelectedItemUi();
     this._renderChain(this._chainIds, this._selectedItemId);
+    if (isProducer && prod) {
+      this._showProducePopover(itemId, prod);
+    } else if (hasChestPopover) {
+      this._showChestProducePopover(itemId);
+    } else {
+      this._hideProducePopover();
+    }
+  }
+
+  private _hideProducePopover(): void {
+    this._producePopoverForId = null;
+    if (!this._producePopoverLayer) return;
+    this._producePopoverLayer.visible = false;
+    this._producePopoverLayer.removeChildren();
+  }
+
+  private _formatOutcomePercent(p: number): string {
+    const r = Math.round(p * 10) / 10;
+    if (Math.abs(r - Math.round(r)) < 1e-5) return `${Math.round(r)}%`;
+    return `${r.toFixed(1)}%`;
+  }
+
+  /** 白底圆角卡片 + 产出图标列，锚点在卡片中心 */
+  private _buildProducePopoverContent(entries: ToolProduceDisplayEntry[]): {
+    w: number;
+    h: number;
+    root: PIXI.Container;
+  } {
+    const pad = PRODUCE_POPOVER_PAD;
+    const iconBox = PRODUCE_POPOVER_ICON;
+    const gap = PRODUCE_POPOVER_CELL_GAP;
+    const maxInnerW = DESIGN_WIDTH - 40;
+
+    const content = new PIXI.Container();
+    let rowX = 0;
+    let rowY = 0;
+    let rowH = 0;
+    let maxRowW = 0;
+
+    for (const { itemId, percent } of entries) {
+      const odef = ITEM_DEFS.get(itemId);
+      if (!odef) continue;
+
+      if (rowX + iconBox > maxInnerW && rowX > 0) {
+        maxRowW = Math.max(maxRowW, rowX - gap);
+        rowX = 0;
+        rowY += rowH + gap;
+        rowH = 0;
+      }
+
+      const col = new PIXI.Container();
+      col.position.set(rowX, rowY);
+
+      const cellBg = new PIXI.Graphics();
+      cellBg.beginFill(0xfff5ee, 0.95);
+      cellBg.drawRoundedRect(0, 0, iconBox, iconBox, 10);
+      cellBg.endFill();
+      col.addChild(cellBg);
+
+      let iconAdded = false;
+      if (odef.category === Category.CURRENCY) {
+        const cluster = createCurrencyIconCluster(odef, iconBox);
+        if (cluster) {
+          col.addChild(cluster);
+          iconAdded = true;
+        }
+      }
+      if (!iconAdded) {
+        const tex = TextureCache.get(odef.icon);
+        if (tex && tex.width > 0) {
+          const sp = new PIXI.Sprite(tex);
+          const fill =
+            odef.line === FlowerLine.BOUQUET || odef.line === FlowerLine.WRAP
+              ? BOUQUET_CELL_FILL
+              : ITEM_CELL_FILL;
+          const maxS = iconBox * fill;
+          const sc = Math.min(maxS / tex.width, maxS / tex.height);
+          sp.scale.set(sc);
+          sp.anchor.set(0.5, 0.5);
+          sp.position.set(iconBox / 2, iconBox / 2);
+          col.addChild(sp);
+        }
+      }
+
+      const pct = new PIXI.Text(this._formatOutcomePercent(percent), {
+        fontSize: PRODUCE_POPOVER_PCT_FONT,
+        fill: 0x3d3530,
+        fontFamily: FONT_FAMILY,
+        fontWeight: 'bold',
+      });
+      pct.anchor.set(0.5, 0);
+      pct.position.set(iconBox / 2, iconBox + 5);
+      col.addChild(pct);
+
+      content.addChild(col);
+      rowH = Math.max(rowH, iconBox + Math.round(PRODUCE_POPOVER_PCT_FONT * 1.35));
+      rowX += iconBox + gap;
+    }
+
+    maxRowW = Math.max(maxRowW, rowX > 0 ? rowX - gap : 0, iconBox);
+    const totalInnerW = Math.min(maxInnerW, maxRowW);
+    const totalInnerH = rowY + rowH;
+
+    const w = totalInnerW + pad * 2;
+    const h = totalInnerH + pad * 2;
+
+    const shadow = new PIXI.Graphics();
+    shadow.beginFill(0x2a2018, 0.22);
+    shadow.drawRoundedRect(4, 5, w, h, 20);
+    shadow.endFill();
+
+    const card = new PIXI.Graphics();
+    card.lineStyle(3, 0xc4a882, 0.95);
+    card.beginFill(0xffffff, 0.98);
+    card.drawRoundedRect(0, 0, w, h, 18);
+    card.endFill();
+
+    content.position.set(pad, pad);
+
+    const root = new PIXI.Container();
+    root.addChild(shadow);
+    root.addChild(card);
+    root.addChild(content);
+
+    return { w, h, root };
+  }
+
+  private _showProducePopover(itemId: string, toolDef: ToolDef): void {
+    const entries = getBoardProducerOutcomePercents(toolDef);
+    this._producePopoverLayer.removeChildren();
+    if (entries.length === 0) {
+      this._producePopoverForId = null;
+      this._producePopoverLayer.visible = false;
+      return;
+    }
+    const { w, h, root } = this._buildProducePopoverContent(entries);
+    root.position.set(-w / 2, -h / 2);
+    this._producePopoverLayer.addChild(root);
+    this._producePopoverForId = itemId;
+    this._producePopoverLayer.visible = true;
+    this._layoutProducePopoverPosition();
+  }
+
+  private _showChestProducePopover(chestItemId: string): void {
+    const entries = getChestProduceOutcomePercents(chestItemId);
+    this._producePopoverLayer.removeChildren();
+    if (entries.length === 0) {
+      this._producePopoverForId = null;
+      this._producePopoverLayer.visible = false;
+      return;
+    }
+    const { w, h, root } = this._buildProducePopoverContent(entries);
+    root.position.set(-w / 2, -h / 2);
+    this._producePopoverLayer.addChild(root);
+    this._producePopoverForId = chestItemId;
+    this._producePopoverLayer.visible = true;
+    this._layoutProducePopoverPosition();
+  }
+
+  private _layoutProducePopoverPosition(): void {
+    if (!this._producePopoverLayer?.visible) return;
+    const innerH = this._scrollInnerHeight();
+    const px = this._panel.position.x + DESIGN_WIDTH / 2;
+    const py = this._panel.position.y + SCROLL_TOP + innerH * 0.52;
+    this._producePopoverLayer.position.set(px, py);
+    /** 防止外部或后续改动打乱子节点顺序 */
+    this.setChildIndex(this._producePopoverLayer, this.children.length - 1);
+  }
+
+  /** 点击「获取来源」中的工具：若该工具有合成线则切换面板内容（等同关闭再打开） */
+  private _switchToSourceToolIfChain(toolItemId: string): void {
+    const chain = getMergeChain(toolItemId);
+    if (chain.length === 0) return;
+    this._hideProducePopover();
+    this._chainIds = chain;
+    this._selectedItemId = toolItemId;
+    this._refreshOwnedFromBoard();
+    this._applySelectedItemUi();
+    this._renderChain(chain, toolItemId);
+  }
+
+  /** 点击「获取来源」中的宝箱：切换到该档宝箱合成线并展示开箱掉落概率 */
+  private _switchToSourceChest(chestItemId: string): void {
+    const chain = getMergeChain(chestItemId);
+    if (chain.length === 0) return;
+    this._hideProducePopover();
+    this._chainIds = chain;
+    this._selectedItemId = chestItemId;
+    this._refreshOwnedFromBoard();
+    this._applySelectedItemUi();
+    this._renderChain(chain, chestItemId);
+    this._showChestProducePopover(chestItemId);
   }
 
   private _renderChain(chain: string[], currentItemId: string): void {
@@ -542,6 +795,14 @@ export class MergeChainPanel extends PIXI.Container {
 
   /** 棋盘格内绘制物品图标 + 工具闪光/体力（与 ItemView 一致） */
   private _addBoardLikeItemIcon(parent: PIXI.Container, def: ItemDef, cs: number): void {
+    if (def.category === Category.CURRENCY) {
+      const cluster = createCurrencyIconCluster(def, cs);
+      if (cluster) {
+        parent.addChild(cluster);
+        return;
+      }
+    }
+
     const tex = TextureCache.get(def.icon);
     if (tex) {
       const sprite = new PIXI.Sprite(tex);
@@ -553,7 +814,9 @@ export class MergeChainPanel extends PIXI.Container {
       sprite.position.set(cs / 2, cs / 2);
       parent.addChild(sprite);
 
-      if (isBoardToolCategory(def.category)) {
+      /** 与 ItemView 一致：tool_* 与 flower_wrap_4 等均在 BOARD_PRODUCER / TOOL_DEFS，品类不一定是 BUILDING */
+      const producerDef = findBoardProducerDef(def.id);
+      if (producerDef?.canProduce) {
         const sparkle = new ToolSparkleLayer(cs, cs);
         sparkle.position.set(0, 0);
         parent.addChild(sparkle);
@@ -665,7 +928,7 @@ export class MergeChainPanel extends PIXI.Container {
     }
   }
 
-  private _renderSources(category: Category, productLine: string): void {
+  private _renderSources(category: Category, productLine: string, selectedItemId: string): void {
     this._clearSourcesLayer();
     const root = new PIXI.Container();
     root.position.y = SOURCES_ROOT_OFFSET_Y;
@@ -695,21 +958,29 @@ export class MergeChainPanel extends PIXI.Container {
 
     const cs = BoardMetrics.cellSize;
     const rowY = 30;
-    const ids = getSourceToolsForProductLine(category, productLine);
-    if (ids.length === 0) {
-      const hint = new PIXI.Text('无固定建筑来源', {
-        fontSize: 15,
-        fill: 0xaaaaaa,
-        fontFamily: FONT_FAMILY,
-      });
-      hint.anchor.set(0.5, 0);
-      hint.position.set(mid, rowY + Math.round(cs / 2));
-      root.addChild(hint);
+
+    let ids: string[] = [];
+    const selectedDef = ITEM_DEFS.get(this._selectedItemId ?? '');
+    if (!selectedDef || selectedDef.interactType === InteractType.NONE) {
+      ids = getSourceToolsForProductLine(category, productLine);
+    }
+
+    const chainItemDef = ITEM_DEFS.get(selectedItemId);
+    const representativeChestId =
+      chainItemDef &&
+      chainItemDef.interactType === InteractType.NONE
+        ? findRepresentativeChestForDrop(category, productLine, chainItemDef.level)
+        : null;
+    const showChest = representativeChestId !== null;
+
+    const nSlots = ids.length + (showChest ? 1 : 0);
+    if (nSlots === 0) {
+      this._appendSourcesFooterHint(root, rowY + 8, mid);
       return;
     }
 
     const availW = DESIGN_WIDTH - 48;
-    const totalW = ids.length * cs + (ids.length - 1) * SOURCE_CELL_GAP;
+    const totalW = nSlots * cs + (nSlots - 1) * SOURCE_CELL_GAP;
     const row = new PIXI.Container();
     row.position.set(0, rowY);
 
@@ -719,6 +990,11 @@ export class MergeChainPanel extends PIXI.Container {
       slot.position.set(x, 0);
       row.addChild(slot);
       x += cs + SOURCE_CELL_GAP;
+    }
+    if (showChest && representativeChestId) {
+      const chestSlot = this._createChestSourceIconCell(representativeChestId);
+      chestSlot.position.set(x, 0);
+      row.addChild(chestSlot);
     }
 
     if (totalW <= availW) {
@@ -736,6 +1012,60 @@ export class MergeChainPanel extends PIXI.Container {
     }
 
     root.addChild(row);
+    this._appendSourcesFooterHint(root, rowY + cs + 18, mid);
+  }
+
+  /** 获取来源下方：活动/任务等补充说明（非工具链查看时） */
+  private _appendSourcesFooterHint(root: PIXI.Container, y0: number, mid: number): void {
+    const selDef = ITEM_DEFS.get(this._selectedItemId ?? '');
+    if (selDef && selDef.interactType !== InteractType.NONE) return;
+    const style = { fontSize: 14, fill: 0x9a8b7a, fontFamily: FONT_FAMILY };
+    const ev = new PIXI.Text('· 限时活动、任务等可能产出额外奖励', style);
+    ev.anchor.set(0.5, 0);
+    ev.position.set(mid, y0);
+    root.addChild(ev);
+  }
+
+  /** 获取来源：可点击切换到对应档位宝箱合成线并查看开箱掉落概率 */
+  private _createChestSourceIconCell(chestItemId: string): PIXI.Container {
+    const cell = new PIXI.Container();
+    const cs = BoardMetrics.cellSize;
+    const bg = new PIXI.Graphics();
+    bg.beginFill(0xfffbf5, 0.55);
+    bg.drawRoundedRect(0, 0, cs, cs, 8);
+    bg.endFill();
+    cell.addChild(bg);
+
+    const chestDef = ITEM_DEFS.get(chestItemId);
+    const iconKey = chestDef?.icon ?? 'icon_gift';
+    const tex = TextureCache.get(iconKey);
+    if (tex) {
+      const sp = new PIXI.Sprite(tex);
+      const maxSize = cs * ITEM_CELL_FILL;
+      const s = Math.min(maxSize / tex.width, maxSize / tex.height);
+      sp.scale.set(s);
+      sp.anchor.set(0.5, 0.5);
+      sp.position.set(cs / 2, cs / 2);
+      cell.addChild(sp);
+    } else {
+      const q = new PIXI.Text('📦', {
+        fontSize: Math.round(cs * 0.42),
+        fontFamily: FONT_FAMILY,
+      });
+      q.anchor.set(0.5, 0.5);
+      q.position.set(cs / 2, cs / 2);
+      cell.addChild(q);
+    }
+
+    cell.eventMode = 'static';
+    cell.cursor = 'pointer';
+    cell.hitArea = new PIXI.Rectangle(0, 0, cs, cs);
+    cell.on('pointertap', (e: PIXI.FederatedPointerEvent) => {
+      e.stopPropagation();
+      this._switchToSourceChest(chestItemId);
+    });
+
+    return cell;
   }
 
   private _createSourceBoardCell(toolItemId: string): PIXI.Container {
@@ -750,7 +1080,24 @@ export class MergeChainPanel extends PIXI.Container {
     bg.endFill();
     cell.addChild(bg);
 
-    this._addBoardLikeItemIcon(cell, def, cs);
+    const obtained =
+      this._ownedItems.has(toolItemId) || this._isDiscoveredInAlbum(def);
+    const iconLayer = new PIXI.Container();
+    this._addBoardLikeItemIcon(iconLayer, def, cs);
+    iconLayer.alpha = obtained ? 1 : SOURCE_TOOL_NOT_OBTAINED_ALPHA;
+    cell.addChild(iconLayer);
+
+    const canOpenChain = getMergeChain(toolItemId).length > 1;
+    if (canOpenChain) {
+      cell.eventMode = 'static';
+      cell.cursor = 'pointer';
+      cell.hitArea = new PIXI.Rectangle(0, 0, cs, cs);
+      cell.on('pointertap', (e: PIXI.FederatedPointerEvent) => {
+        e.stopPropagation();
+        this._switchToSourceToolIfChain(toolItemId);
+      });
+    }
+
     return cell;
   }
 
@@ -803,6 +1150,7 @@ export class MergeChainPanel extends PIXI.Container {
       case Category.DRINK: return '🍵';
       case Category.BUILDING: return '🏠';
       case Category.CHEST: return '📦';
+      case Category.CURRENCY: return '💰';
       default: return '❓';
     }
   }

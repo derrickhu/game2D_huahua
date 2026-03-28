@@ -34,7 +34,7 @@
 - **无热气、无文字**（蛋糕装饰牌仅空白造型）。
 - **抠图后处理**：甜品 Lv4–8 进包时走与茶饮类似的**浅外缘 defringe**（见 `process_drink_tea_dessert_nb2.py`）。
 - **Lv6**：**Lv5 花瓣蛋糕切片的进阶版**，**仅两块**三角切片 + **一只**盘子，禁止散点浆果/小蛋糕/塔派把画面堆满；构图留白、高级西点感。
-- **Lv5 / Lv6 重抠**：切片+椭圆盘易出白边/盘沿断裂；原画提示里已强调**完整盘沿、禁止整圈粗深描边**；若默认 `birefnet-general-lite` 不理想，可对单级使用 `--model birefnet-general`：`python3 scripts/process_drink_tea_dessert_nb2.py --line dessert --levels 5,6 --model birefnet-general`。
+- **Lv5 / Lv6 重抠**：切片+椭圆盘易出白边/盘沿断裂；原画提示里已强调**完整盘沿、禁止整圈粗深描边**。管线默认已用 **`birefnet-general`**；若本地仅想加速试跑可 `--model birefnet-general-lite`。
 
 ## 输出目录（仓库外）
 

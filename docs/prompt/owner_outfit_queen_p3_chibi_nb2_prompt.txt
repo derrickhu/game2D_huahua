@@ -1,0 +1,17 @@
+REFERENCE IMAGE — attached canonical DEFAULT owner bust: keep identical rendering style, line art, shading depth, and bust scale; apply queen hair, crown, and gown from text only. No full-body SD, no ghost duplicate, no dirty magenta blobs behind the figure.
+
+BUST PORTRAIT — same series as huahua customer bust sprites: regal but soft 3D anime volume like `customer_*` order portraits.
+
+ART STYLE:
+Hand-drawn 2D anime with soft 3D volume, warm pastel with restrained gold accents on costume and crown, soft brown outlines. Large brown eyes with subtle warm shimmer, serene confident smile. Dimensional portrait — not flat SD token.
+
+CAMERA SCALE — critical:
+Hero bust for UI. Head, crown, and hair together occupy about 58% to 72% of canvas height (crown included in that span). Upper chest, shoulders, gown bodice, petal cape hints; golden crown compact but readable. Match the head scale of the attached default bust reference — NOT a tiny queen head floating in magenta.
+
+POSE: slight 3/4 toward viewer's right, both eyes visible, warm regal expression.
+
+IDENTITY: long wavy warm brown hair, golden floral crown, gold crystal flower earrings, white-lavender-pink gown bodice with gold vine embroidery, translucent petal shoulders, scepter tip may peek low or stay out of frame.
+
+LAYOUT: 9:16, single character. Crown top ~10% to 16% from canvas top; lower crop ~18% to 24%; centered; 6% to 10% side magenta. Solid FF00FF background. No text.
+
+Identity details for queen outfit are in the text above; visual pipeline must match the attached default bust reference.

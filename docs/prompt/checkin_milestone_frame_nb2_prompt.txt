@@ -1,0 +1,11 @@
+Single isolated horizontal rounded PANEL frame (milestone / progress section background plate) on flat solid magenta FF00FF background for chroma-key cutout.
+
+COMPOSITION AND PROPORTIONS: This is a wide low strip, not a square card. The panel must span almost the full width of the image: about 90 to 95 percent of image width, centered horizontally. Vertically the panel is shallow — its height should be roughly 18 to 26 percent of the image height — so the overall panel feels like a long ribbon or tray (approximately 6:1 to 10:1 width-to-height). Do not draw a tall box with wasted empty magenta above and below; the cream panel should dominate the horizontal band like a banner backing for a progress row.
+
+EXTERIOR: Thin warm golden-brown stroke, about 2 pixels at game resolution. Very soft drop shadow on the magenta below the panel.
+
+INTERIOR: Warm cream to soft ivory fill (FFFCF5 to FFF5E8), subtle gradient slightly lighter in the center. Completely empty inside — no bar, no gifts, no text — only the plate for UI to overlay.
+
+CORNERS: All corners generously rounded; left and right ends may be slightly more pill-like than the top and bottom. Optional faint inner inset shadow along the rim, subtle only.
+
+STYLE: Flat 2D casual game UI, soft hand-painted, warm cozy merge-game aesthetic. Not photorealistic. No progress bar drawn inside, no icons, no gift boxes, no text, no numbers, no Chinese characters, no watermark. Only the long shallow panel on magenta.

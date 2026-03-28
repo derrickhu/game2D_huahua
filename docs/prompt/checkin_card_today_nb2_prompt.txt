@@ -1,0 +1,21 @@
+Single isolated empty highlighted card frame asset on flat solid magenta FF00FF background for chroma-key cutout.
+
+One vertical rounded rectangle card, portrait orientation approximately 3:4 width-to-height ratio, centered in the canvas. The card fills about 80 percent of the canvas.
+
+This card represents the current-day highlight state and should feel bright, inviting, and special compared to normal cards.
+
+The card has a two-part structure:
+
+TOP HEADER ZONE: The upper 18 percent of the card is a distinct header strip with a warm golden-green tone, hex approximately B8D86A to A5C84A. This area has a gentle gradient from lighter at top to slightly deeper at bottom. Cheerful and spring-like.
+
+MAIN BODY: The remaining lower 82 percent is the card content area. Fill color is very light warm green to soft cream-green, hex F5FBE8 to EDFADF. Clean, bright, fresh, empty, ready for item icon overlays. The overall feel should be spring-fresh and inviting.
+
+BORDER: A prominent golden-yellow outline, approximately 3 pixels, hex FFD54F to FFC107. This golden border makes the card stand out as special. The border has a very subtle warm glow or outer shine effect extending 2-3 pixels beyond the outline, like a soft golden aura.
+
+CORNERS: Moderately rounded, approximately 12 percent of card width as corner radius. Soft and friendly.
+
+A warm golden-tinted soft drop shadow falls behind the card onto the magenta, slightly more prominent than a normal card shadow, enhancing the elevated special feel.
+
+No icons inside, no text, no numbers, no Chinese characters, no glow particles, no watermark. Only the empty highlighted card frame on magenta.
+
+High quality 2D casual game UI illustration, soft hand-painted feel, warm cheerful lighting, cute cozy merge-game aesthetic. Not photorealistic. Flat style with gentle gradients, the golden glow border being the key visual distinction.

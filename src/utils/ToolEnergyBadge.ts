@@ -1,13 +1,13 @@
 /**
- * 工具（BUILDING 品类）图标右下角叠加体力标 icon_energy
+ * 工具图标右下角叠加体力标 icon_energy
  */
 import * as PIXI from 'pixi.js';
-import { Category } from '@/config/ItemConfig';
+import { InteractType } from '@/config/ItemConfig';
 import { TextureCache } from '@/utils/TextureCache';
 
-/** 是否为棋盘上的「工具」物品（与宝箱 CHEST 区分） */
-export function isBoardToolCategory(category: Category): boolean {
-  return category === Category.BUILDING;
+/** 是否为棋盘上的「工具」物品（TOOL 交互类型，含 flower_wrap_4 等非 BUILDING 品类的工具） */
+export function isBoardToolInteract(interactType: InteractType): boolean {
+  return interactType === InteractType.TOOL;
 }
 
 export type ToolEnergyBadgeOptions = {

@@ -12,7 +12,6 @@ declare const tt: any;
 const _api = typeof wx !== 'undefined' ? wx : typeof tt !== 'undefined' ? tt : null;
 
 const QUEST_STORAGE_KEY = 'huahua_quests';
-const ACHIEVEMENT_STORAGE_KEY = 'huahua_achievements';
 
 // ====== 每日任务定义 ======
 
@@ -23,21 +22,21 @@ export interface QuestDef {
   target: number;
   /** 监听的事件名 */
   event: string;
-  reward: { gold?: number; stamina?: number; diamond?: number; huayuan?: number };
+  reward: { huayuan?: number; stamina?: number; diamond?: number };
 }
 
 /** 每日任务池（随机选取3个） */
 const QUEST_POOL: QuestDef[] = [
-  { id: 'merge_3', name: '合成新手', desc: '完成3次合成', target: 3, event: 'board:merged', reward: { gold: 50 } },
-  { id: 'merge_5', name: '合成达人', desc: '完成5次合成', target: 5, event: 'board:merged', reward: { gold: 100, huayuan: 5 } },
-  { id: 'merge_10', name: '合成大师', desc: '完成10次合成', target: 10, event: 'board:merged', reward: { gold: 200, diamond: 5 } },
-  { id: 'deliver_1', name: '客似云来', desc: '交付1位客人', target: 1, event: 'customer:delivered', reward: { gold: 80 } },
-  { id: 'deliver_2', name: '人气花店', desc: '交付2位客人', target: 2, event: 'customer:delivered', reward: { gold: 150, huayuan: 5 } },
+  { id: 'merge_3', name: '合成新手', desc: '完成3次合成', target: 3, event: 'board:merged', reward: { huayuan: 50 } },
+  { id: 'merge_5', name: '合成达人', desc: '完成5次合成', target: 5, event: 'board:merged', reward: { huayuan: 100 } },
+  { id: 'merge_10', name: '合成大师', desc: '完成10次合成', target: 10, event: 'board:merged', reward: { huayuan: 200, diamond: 5 } },
+  { id: 'deliver_1', name: '客似云来', desc: '交付1位客人', target: 1, event: 'customer:delivered', reward: { huayuan: 80 } },
+  { id: 'deliver_2', name: '人气花店', desc: '交付2位客人', target: 2, event: 'customer:delivered', reward: { huayuan: 150 } },
   { id: 'building_2', name: '勤劳花匠', desc: '使用建筑产出2次', target: 2, event: 'building:produced', reward: { stamina: 20 } },
-  { id: 'building_5', name: '产出大师', desc: '使用建筑产出5次', target: 5, event: 'building:produced', reward: { gold: 100, stamina: 10 } },
-  { id: 'combo_3', name: '连击初学', desc: '达成3连击', target: 3, event: 'quest:comboReached', reward: { gold: 80, huayuan: 3 } },
-  { id: 'unlock_1', name: '探索之路', desc: '解锁1个新格子', target: 1, event: 'board:cellUnlocked', reward: { gold: 60 } },
-  { id: 'sell_1', name: '精明店主', desc: '出售1个物品', target: 1, event: 'board:itemSold', reward: { gold: 50 } },
+  { id: 'building_5', name: '产出大师', desc: '使用建筑产出5次', target: 5, event: 'building:produced', reward: { huayuan: 100, stamina: 10 } },
+  { id: 'combo_3', name: '连击初学', desc: '达成3连击', target: 3, event: 'quest:comboReached', reward: { huayuan: 80 } },
+  { id: 'unlock_1', name: '探索之路', desc: '解锁1个新格子', target: 1, event: 'board:cellUnlocked', reward: { huayuan: 60 } },
+  { id: 'sell_1', name: '精明店主', desc: '出售1个物品', target: 1, event: 'board:itemSold', reward: { huayuan: 50 } },
 ];
 
 // ====== 成就定义 ======
@@ -47,7 +46,7 @@ export interface AchievementDef {
   name: string;
   desc: string;
   icon: string;
-  tiers: { target: number; reward: { gold?: number; diamond?: number; huayuan?: number } }[];
+  tiers: { target: number; reward: { huayuan?: number; diamond?: number } }[];
   /** 累计统计的事件名 */
   event: string;
 }
@@ -59,11 +58,11 @@ const ACHIEVEMENT_DEFS: AchievementDef[] = [
     desc: '累计合成次数',
     icon: '🔨',
     tiers: [
-      { target: 10, reward: { gold: 100 } },
-      { target: 50, reward: { gold: 300, diamond: 5 } },
-      { target: 200, reward: { gold: 500, diamond: 10 } },
-      { target: 500, reward: { gold: 1000, diamond: 20, huayuan: 50 } },
-      { target: 2000, reward: { gold: 2000, diamond: 50, huayuan: 100 } },
+      { target: 10, reward: { huayuan: 100 } },
+      { target: 50, reward: { huayuan: 300, diamond: 5 } },
+      { target: 200, reward: { huayuan: 500, diamond: 10 } },
+      { target: 500, reward: { huayuan: 1000, diamond: 20 } },
+      { target: 2000, reward: { huayuan: 2000, diamond: 50 } },
     ],
     event: 'board:merged',
   },
@@ -73,11 +72,11 @@ const ACHIEVEMENT_DEFS: AchievementDef[] = [
     desc: '累计交付客人',
     icon: '👥',
     tiers: [
-      { target: 5, reward: { gold: 100 } },
-      { target: 20, reward: { gold: 300, diamond: 5 } },
-      { target: 50, reward: { gold: 500, diamond: 10 } },
-      { target: 200, reward: { gold: 1000, diamond: 20 } },
-      { target: 1000, reward: { gold: 3000, diamond: 50, huayuan: 100 } },
+      { target: 5, reward: { huayuan: 100 } },
+      { target: 20, reward: { huayuan: 300, diamond: 5 } },
+      { target: 50, reward: { huayuan: 500, diamond: 10 } },
+      { target: 200, reward: { huayuan: 1000, diamond: 20 } },
+      { target: 1000, reward: { huayuan: 3000, diamond: 50 } },
     ],
     event: 'customer:delivered',
   },
@@ -87,9 +86,9 @@ const ACHIEVEMENT_DEFS: AchievementDef[] = [
     desc: '达成最高连击',
     icon: '🔥',
     tiers: [
-      { target: 3, reward: { gold: 50 } },
-      { target: 5, reward: { gold: 100, diamond: 3 } },
-      { target: 10, reward: { gold: 300, diamond: 10 } },
+      { target: 3, reward: { huayuan: 50 } },
+      { target: 5, reward: { huayuan: 100, diamond: 3 } },
+      { target: 10, reward: { huayuan: 300, diamond: 10 } },
       { target: 20, reward: { diamond: 30 } },
     ],
     event: 'quest:comboReached',
@@ -100,23 +99,23 @@ const ACHIEVEMENT_DEFS: AchievementDef[] = [
     desc: '累计解锁格子数',
     icon: '🗺️',
     tiers: [
-      { target: 5, reward: { gold: 100 } },
-      { target: 15, reward: { gold: 300, diamond: 5 } },
-      { target: 30, reward: { gold: 500, diamond: 15 } },
+      { target: 5, reward: { huayuan: 100 } },
+      { target: 15, reward: { huayuan: 300, diamond: 5 } },
+      { target: 30, reward: { huayuan: 500, diamond: 15 } },
     ],
     event: 'board:cellUnlocked',
   },
   {
-    id: 'total_gold',
+    id: 'total_huayuan',
     name: '商业奇才',
-    desc: '累计获得金币',
+    desc: '累计获得花愿',
     icon: '💰',
     tiers: [
       { target: 500, reward: { diamond: 5 } },
       { target: 2000, reward: { diamond: 10 } },
-      { target: 10000, reward: { diamond: 30, huayuan: 50 } },
+      { target: 10000, reward: { diamond: 30 } },
     ],
-    event: 'quest:goldEarned',
+    event: 'quest:huayuanEarned',
   },
 ];
 
@@ -227,11 +226,9 @@ class QuestManagerClass {
       this._onComboReached(count);
     });
 
-    // 金币变化追踪（用于成就）
-    EventBus.on('currency:changed', (type: string, _value: number) => {
-      if (type === 'gold') {
-        // 金币增加时通知成就系统（简化：每次加的金额）
-      }
+    // 累计花愿获得（用于成就「商业奇才」）
+    EventBus.on('quest:huayuanEarned', (amount: number) => {
+      this._incrementAchievementBy('quest:huayuanEarned', amount);
     });
   }
 
@@ -285,13 +282,18 @@ class QuestManagerClass {
     }
   }
 
-  /** 递增成就进度 */
+  /** 递增成就进度（+1） */
   private _incrementAchievement(eventName: string): void {
+    this._incrementAchievementBy(eventName, 1);
+  }
+
+  /** 递增成就进度（指定增量） */
+  private _incrementAchievementBy(eventName: string, amount: number): void {
     let updated = false;
     for (const ach of this._achievements) {
       const def = this.getAchievementDef(ach.defId);
       if (!def || def.event !== eventName) continue;
-      ach.current++;
+      ach.current += amount;
       updated = true;
       this._checkAchievementTiers(ach);
     }
@@ -322,10 +324,9 @@ class QuestManagerClass {
     if (quest.current < def.target || quest.claimed) return false;
 
     quest.claimed = true;
-    if (def.reward.gold) CurrencyManager.addGold(def.reward.gold);
+    if (def.reward.huayuan) CurrencyManager.addHuayuan(def.reward.huayuan);
     if (def.reward.stamina) CurrencyManager.addStamina(def.reward.stamina);
     if (def.reward.diamond) CurrencyManager.addDiamond(def.reward.diamond);
-    if (def.reward.huayuan) CurrencyManager.addHuayuan(def.reward.huayuan);
 
     this._save();
     EventBus.emit('quest:claimed', defId);
@@ -342,9 +343,8 @@ class QuestManagerClass {
     if (ach.current < def.tiers[tierIndex].target) return false;
 
     const reward = def.tiers[tierIndex].reward;
-    if (reward.gold) CurrencyManager.addGold(reward.gold);
-    if (reward.diamond) CurrencyManager.addDiamond(reward.diamond);
     if (reward.huayuan) CurrencyManager.addHuayuan(reward.huayuan);
+    if (reward.diamond) CurrencyManager.addDiamond(reward.diamond);
 
     ach.claimedTier = tierIndex;
     this._save();

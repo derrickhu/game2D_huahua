@@ -541,15 +541,13 @@ export class RegularCustomerPanel extends PIXI.Container {
   /** 根据奖励描述发放奖励 */
   private _grantStoryReward(desc: string): void {
     // 简单解析奖励描述
-    const goldMatch = desc.match(/金币\s*[×x]\s*(\d+)/i);
+    const huayuanMatch = desc.match(/(?:花愿|金币)\s*[×x]\s*(\d+)/i);
     const diamondMatch = desc.match(/钻石\s*[×x]\s*(\d+)/i);
-    const huayuanMatch = desc.match(/花愿\s*[×x]\s*(\d+)/i);
     const hualuMatch = desc.match(/花露\s*[×x]\s*(\d+)/i);
     const staminaMatch = desc.match(/体力\s*[×x]\s*(\d+)/i);
 
-    if (goldMatch) CurrencyManager.addGold(parseInt(goldMatch[1]));
-    if (diamondMatch) CurrencyManager.addDiamond(parseInt(diamondMatch[1]));
     if (huayuanMatch) CurrencyManager.addHuayuan(parseInt(huayuanMatch[1]));
+    if (diamondMatch) CurrencyManager.addDiamond(parseInt(diamondMatch[1]));
     if (hualuMatch) CurrencyManager.addHualu(parseInt(hualuMatch[1]));
     if (staminaMatch) CurrencyManager.addStamina(parseInt(staminaMatch[1]));
 

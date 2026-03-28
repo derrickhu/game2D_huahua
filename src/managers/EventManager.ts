@@ -98,7 +98,7 @@ const EVENT_TEMPLATES: Omit<GameEvent, 'startTime' | 'endTime'>[] = [
       { id: 'e_daily_login', name: '每日登录', desc: '活动期间登录3天', icon: '📅', target: 3, current: 0, pointReward: 150, completed: false, claimed: false },
     ],
     shop: [
-      { id: 'es_gold_500', name: '金币×500', icon: '💰', desc: '', pointCost: 100, stock: -1, bought: 0, rewardType: 'gold', rewardAmount: 500 },
+      { id: 'es_huayuan_500', name: '花愿×500', icon: '💰', desc: '', pointCost: 100, stock: -1, bought: 0, rewardType: 'gold', rewardAmount: 500 },
       { id: 'es_diamond_10', name: '钻石×10', icon: '💎', desc: '', pointCost: 200, stock: 3, bought: 0, rewardType: 'diamond', rewardAmount: 10 },
       { id: 'es_huayuan_3', name: '花愿×3', icon: '🌸', desc: '', pointCost: 300, stock: 2, bought: 0, rewardType: 'huayuan', rewardAmount: 3 },
       { id: 'es_hualu_5', name: '花露×5', icon: '💧', desc: '稀缺换装货币', pointCost: 500, stock: 1, bought: 0, rewardType: 'hualu', rewardAmount: 5 },
@@ -115,11 +115,11 @@ const EVENT_TEMPLATES: Omit<GameEvent, 'startTime' | 'endTime'>[] = [
       { id: 'e_merge_20', name: '合成冲刺', desc: '完成20次合成', icon: '🧩', target: 20, current: 0, pointReward: 80, completed: false, claimed: false },
       { id: 'e_frenzy', name: '狂热达人', desc: '触发1次合成狂热', icon: '🔥', target: 1, current: 0, pointReward: 250, completed: false, claimed: false },
       { id: 'e_drink_3', name: '饮品师', desc: '合成3杯3级花饮', icon: '🍵', target: 3, current: 0, pointReward: 150, completed: false, claimed: false },
-      { id: 'e_gold_1000', name: '小富翁', desc: '累计获得1000金币', icon: '💰', target: 1000, current: 0, pointReward: 120, completed: false, claimed: false },
+      { id: 'e_huayuan_1000', name: '小富翁', desc: '累计获得1000花愿', icon: '💰', target: 1000, current: 0, pointReward: 120, completed: false, claimed: false },
       { id: 'e_daily_login', name: '每日签到', desc: '活动期间登录5天', icon: '📅', target: 5, current: 0, pointReward: 200, completed: false, claimed: false },
     ],
     shop: [
-      { id: 'es_gold_800', name: '金币×800', icon: '💰', desc: '', pointCost: 120, stock: -1, bought: 0, rewardType: 'gold', rewardAmount: 800 },
+      { id: 'es_huayuan_800', name: '花愿×800', icon: '💰', desc: '', pointCost: 120, stock: -1, bought: 0, rewardType: 'gold', rewardAmount: 800 },
       { id: 'es_diamond_15', name: '钻石×15', icon: '💎', desc: '', pointCost: 250, stock: 3, bought: 0, rewardType: 'diamond', rewardAmount: 15 },
       { id: 'es_outfit_summer', name: '🌻 夏日向日葵形象', icon: '🌻', desc: '限定整套形象', pointCost: 900, stock: 1, bought: 0, rewardType: 'outfit', rewardId: 'outfit_summer' },
     ],
@@ -141,47 +141,60 @@ class EventManagerClass {
   private _points = 0;
   /** 每日登录记录 */
   private _dailyLoginDays: Set<string> = new Set();
+  /** 事件回调引用，用于 off */
+  private _boundHandlers: Array<{ event: string; handler: (...args: any[]) => void }> = [];
+
+  private _initialized = false;
 
   init(): void {
+    if (this._initialized) return;
+    this._initialized = true;
     this._loadState();
     this._checkEventStatus();
     this._bindEvents();
     console.log(`[EventManager] 初始化完成, 活动: ${this._activeEvent?.name || '无'}, 积分: ${this._points}`);
   }
 
+  private _unbindEvents(): void {
+    for (const { event, handler } of this._boundHandlers) {
+      EventBus.off(event, handler);
+    }
+    this._boundHandlers.length = 0;
+  }
+
+  private _on(event: string, handler: (...args: any[]) => void): void {
+    EventBus.on(event, handler);
+    this._boundHandlers.push({ event, handler });
+  }
+
   private _bindEvents(): void {
+    this._unbindEvents();
     if (!this._activeEvent) return;
 
-    // 合成计数
-    EventBus.on('board:merged', () => {
+    this._on('board:merged', () => {
       this._incrementTask('e_merge_10', 1);
       this._incrementTask('e_merge_20', 1);
       this._incrementTask('e_merge_50', 1);
     });
 
-    // 连击
-    EventBus.on('combo:hit', (count: number) => {
+    this._on('combo:hit', (count: number) => {
       this._updateTaskMax('e_combo_5', count);
     });
 
-    // 狂热
-    EventBus.on('combo:frenzyStart', () => {
+    this._on('combo:frenzyStart', () => {
       this._incrementTask('e_frenzy', 1);
     });
 
-    // 客人服务
-    EventBus.on('customer:delivered', () => {
+    this._on('customer:delivered', () => {
       this._incrementTask('e_customer_5', 1);
     });
 
-    // 金币获得
-    EventBus.on('currency:changed', (type: string, value: number) => {
+    this._on('currency:changed', (type: string, value: number) => {
       if (type === 'gold') {
         this._updateTaskMax('e_gold_1000', value);
       }
     });
 
-    // 每日登录
     this._recordDailyLogin();
   }
 
@@ -249,7 +262,7 @@ class EventManagerClass {
 
     // 发放奖励
     switch (item.rewardType) {
-      case 'gold': CurrencyManager.addGold(item.rewardAmount || 0); break;
+      case 'gold': CurrencyManager.addHuayuan(item.rewardAmount || 0); break;
       case 'diamond': CurrencyManager.addDiamond(item.rewardAmount || 0); break;
       case 'huayuan': CurrencyManager.addHuayuan(item.rewardAmount || 0); break;
       case 'hualu': CurrencyManager.addHualu(item.rewardAmount || 0); break;

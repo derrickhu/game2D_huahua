@@ -1,7 +1,7 @@
 /**
  * 顶部信息栏
  *
- * 布局：[🌿花露]  [💎花愿]  [⚡体力胶囊 … +]  [💠钻石条+加号]（无等级星，四区垂直中线对齐）
+ * 布局：[🌿花露]  [💎花愿]  [⚡体力胶囊 … +]  [💠钻石条+加号]  [🛠️GM*] …系统菜单预留（*GM 激活后可见）
  *
  * - 体力：粉米色圆角外框 + 内绿进度 + 左侧闪电叠压 + 闪电右下绿圆加号 + 居中数值 + 条下倒计时
  * - 花露/花愿：图标 + 数值叠在底边，图标中心与体力闪电/钻石宝石同一水平中线
@@ -9,7 +9,8 @@
 import * as PIXI from 'pixi.js';
 import { EventBus } from '@/core/EventBus';
 import { CurrencyManager } from '@/managers/CurrencyManager';
-import { FONT_FAMILY } from '@/config/Constants';
+import { GMManager } from '@/managers/GMManager';
+import { DESIGN_WIDTH, FONT_FAMILY } from '@/config/Constants';
 import { TextureCache } from '@/utils/TextureCache';
 import { TweenManager, Ease } from '@/core/TweenManager';
 
@@ -47,6 +48,8 @@ const GEM_BAR_H = 38;
 const GEM_BAR_W = 86;
 const GEM_BAR_R = 12;
 const GEM_ICON_SIZE = 48;
+/** 顶栏右侧为系统菜单胶囊预留，GM 入口放在钻石条右缘与此之间 */
+const RIGHT_MENU_RESERVE = 172;
 // ── 颜色（体力胶囊参考：浅粉框 + 鲜绿填充 + 绿圆加号）──
 const C = {
   /** 胶囊外沿浅粉米 */
@@ -84,6 +87,7 @@ export class TopBar extends PIXI.Container {
     this._buildHuayuan();
     this._buildStaminaPill();
     this._buildDiamondPill();
+    this._buildGmButton();
     this._bindEvents();
     this._updateAll();
   }
@@ -303,6 +307,36 @@ export class TopBar extends PIXI.Container {
     this.addChild(root);
   }
 
+  /** GM 调试入口：钻石条与右侧系统菜单之间的空位，避免压在店主区被父级 hitArea 挡点击 */
+  private _buildGmButton(): void {
+    const barW = GEM_BAR_W + 4;
+    const diamondBarRight = DIAMOND_LP + 16 + barW;
+    const slotLeft = diamondBarRight + 10;
+    const slotRight = DESIGN_WIDTH - RIGHT_MENU_RESERVE;
+    if (slotRight - slotLeft < 36) return;
+
+    const cx = (slotLeft + slotRight) / 2;
+    const wrap = new PIXI.Container();
+    wrap.position.set(cx, BAR_MID_Y);
+    const hit = 44;
+    wrap.hitArea = new PIXI.Rectangle(-hit / 2, -hit / 2, hit, hit);
+    wrap.eventMode = 'static';
+    wrap.cursor = 'pointer';
+    wrap.visible = GMManager.isEnabled;
+    wrap.name = 'gmBtn';
+
+    const icon = new PIXI.Text('🛠️', { fontSize: 22, fontFamily: FONT_FAMILY });
+    icon.anchor.set(0.5);
+    wrap.addChild(icon);
+
+    wrap.on('pointertap', (e: PIXI.FederatedPointerEvent) => {
+      e.stopPropagation();
+      GMManager.openPanel();
+    });
+    this.addChild(wrap);
+    EventBus.on('gm:activated', () => { wrap.visible = true; });
+  }
+
   /**
    * 体力闪电角 / 钻石宝石角共用的绿圆白「+」（与参考图一致：亮绿圆 + 底侧略深 + 细描边）
    */
@@ -350,7 +384,8 @@ export class TopBar extends PIXI.Container {
     this._hualuText.text = this._fmtNum(s.hualu);
     this._huayuanText.text = this._fmtNum(s.huayuan);
     this._diamondText.text = this._fmtNum(s.diamond);
-    this._drawStaminaBar(s.stamina / cap);
+    const barRatio = cap > 0 ? Math.min(1, s.stamina / cap) : 0;
+    this._drawStaminaBar(barRatio);
   }
 
   /** 由外部 ticker 调用，刷新体力倒计时 */
@@ -386,6 +421,11 @@ export class TopBar extends PIXI.Container {
     return n.toString();
   }
 
+  /** 获取体力闪电图标在 TopBar 内的中心坐标 */
+  getStaminaIconPos(): { x: number; y: number } {
+    return { x: STA_X + 6, y: BAR_MID_Y };
+  }
+
   /** 获取花愿图标在 TopBar 内的中心坐标 */
   getHuayuanIconPos(): { x: number; y: number } {
     return { x: HYUAN_CX, y: CURRENCY_ICON_CY };
@@ -409,6 +449,16 @@ export class TopBar extends PIXI.Container {
   /** 花露数值闪烁弹跳效果 */
   flashHualu(): void {
     this._flashText(this._hualuText);
+  }
+
+  /** 体力数值闪烁弹跳（超过上限时同样可触发） */
+  flashStamina(): void {
+    this._flashText(this._staminaText);
+  }
+
+  /** 钻石数值闪烁弹跳 */
+  flashDiamond(): void {
+    this._flashText(this._diamondText);
   }
 
   private _flashText(txt: PIXI.Text): void {

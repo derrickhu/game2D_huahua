@@ -6,7 +6,7 @@
  * - 仓库物品不可在仓库内合成
  */
 import { EventBus } from '@/core/EventBus';
-import { ITEM_DEFS, Category } from '@/config/ItemConfig';
+import { ITEM_DEFS } from '@/config/ItemConfig';
 import { CurrencyManager } from './CurrencyManager';
 
 /** 扩容价格表：第 N 格的钻石价格 */
@@ -49,7 +49,7 @@ class WarehouseManagerClass {
     // 验证可存入类型
     const def = ITEM_DEFS.get(itemId);
     if (!def) return false;
-    if (def.category === Category.BUILDING) return false;
+    if (!def.storable) return false;
 
     if (this.isFull) {
       EventBus.emit('warehouse:full');

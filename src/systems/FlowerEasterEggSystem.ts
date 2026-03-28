@@ -1,57 +1,67 @@
 /**
- * 花语合成彩蛋系统
+ * 首次合成解锁弹窗
  *
- * - 首次合成某种花束时触发花语文案弹窗
- * - 显示花语寓意 + 小奖励（金币/钻石/经验）
- * - 记录已触发的花语，不重复触发
+ * 任意棋盘物品（花、饮品、工具等）第一次合成出该 id 时弹出：遮罩 + 标题「新解锁」+ 物品图 + 名称 + 首次合成奖励 + 收下按钮。
+ * 花系仍可用 FLOWER_QUOTES 覆盖奖励数值；其余物品按等级给默认花露/花愿。
  */
 import * as PIXI from 'pixi.js';
 import { EventBus } from '@/core/EventBus';
 import { TweenManager, Ease } from '@/core/TweenManager';
 import { Game } from '@/core/Game';
 import { DESIGN_WIDTH, FONT_FAMILY } from '@/config/Constants';
-import { ITEM_DEFS, Category } from '@/config/ItemConfig';
-import { CurrencyManager } from '@/managers/CurrencyManager';
+import { ITEM_DEFS, Category, type ItemDef } from '@/config/ItemConfig';
+import { TextureCache } from '@/utils/TextureCache';
+import { createCurrencyIconCluster } from '@/utils/CurrencyCellIcons';
 
-/** 花语配置 */
+interface UnlockRewards {
+  hualuReward: number;
+  huayuanReward: number;
+}
+
+/** 仅用于花系奖励数值覆盖（文案不再展示） */
 interface FlowerQuote {
   name: string;
   quote: string;
+  hualuReward: number;
   huayuanReward: number;
-  expReward: number;
 }
 
 const FLOWER_QUOTES: Record<string, FlowerQuote> = {
-  // 鲜花线
-  flower_fresh_1: { name: '花种子', quote: '纯真无邪，藏在心底的小美好。', huayuanReward: 10, expReward: 5 },
-  flower_fresh_2: { name: '花苞', quote: '沉默的爱，追随着你的光芒。', huayuanReward: 15, expReward: 8 },
-  flower_fresh_3: { name: '小雏菊', quote: '温馨的祝福，感恩每一份爱。', huayuanReward: 20, expReward: 12 },
-  flower_fresh_4: { name: '向日葵', quote: '甘愿做配角，只为衬托你的美。', huayuanReward: 30, expReward: 18 },
-  flower_fresh_5: { name: '康乃馨', quote: '缤纷世界，每一种美都值得。', huayuanReward: 40, expReward: 25 },
-  flower_fresh_6: { name: '玫瑰', quote: '最好的礼物，是用心准备的惊喜。', huayuanReward: 60, expReward: 35 },
-
-  // 花束线
-  flower_bouquet_1: { name: '一小捧散花', quote: '初恋的感觉，心跳如花绽放。', huayuanReward: 12, expReward: 6 },
-  flower_bouquet_2: { name: '迷你花束', quote: '百年好合，纯洁的守候。', huayuanReward: 18, expReward: 10 },
-  flower_bouquet_3: { name: '郁金香花束', quote: '高贵的爱恋，无可救药的浪漫。', huayuanReward: 25, expReward: 15 },
-  flower_bouquet_4: { name: '玫瑰满天星', quote: '等待爱情，紫色的承诺。', huayuanReward: 35, expReward: 22 },
-  flower_bouquet_5: { name: '田园混搭花束', quote: '鼓起勇气说出口，你是我的唯一。', huayuanReward: 50, expReward: 30 },
-  flower_bouquet_6: { name: '精美花盒', quote: '执子之手，与子偕老。', huayuanReward: 80, expReward: 45 },
-
-  // 绿植线
-  flower_green_1: { name: '小芽苗', quote: '小小的芽，蕴含着生命的力量。', huayuanReward: 15, expReward: 8 },
-  flower_green_2: { name: '多肉盆栽', quote: '圆润饱满，安静而治愈。', huayuanReward: 22, expReward: 13 },
-  flower_green_3: { name: '绿萝', quote: '顽强生长，为你带来好运。', huayuanReward: 30, expReward: 20 },
-  flower_green_4: { name: '波士顿蕨', quote: '优雅的弧线，如绿色瀑布。', huayuanReward: 45, expReward: 28 },
-  flower_green_5: { name: '虎皮兰', quote: '坚韧挺拔，守护者的姿态。', huayuanReward: 65, expReward: 38 },
-  flower_green_6: { name: '龟背竹', quote: '独一无二的裂叶，大自然的艺术。', huayuanReward: 100, expReward: 55 },
+  flower_fresh_1: { name: '花种子', quote: '纯真无邪，藏在心底的小美好。', hualuReward: 3, huayuanReward: 10 },
+  flower_fresh_2: { name: '花苞', quote: '沉默的爱，追随着你的光芒。', hualuReward: 5, huayuanReward: 15 },
+  flower_fresh_3: { name: '小雏菊', quote: '温馨的祝福，感恩每一份爱。', hualuReward: 7, huayuanReward: 20 },
+  flower_fresh_4: { name: '向日葵', quote: '甘愿做配角，只为衬托你的美。', hualuReward: 10, huayuanReward: 30 },
+  flower_fresh_5: { name: '康乃馨', quote: '缤纷世界，每一种美都值得。', hualuReward: 14, huayuanReward: 40 },
+  flower_fresh_6: { name: '玫瑰', quote: '最好的礼物，是用心准备的惊喜。', hualuReward: 18, huayuanReward: 60 },
+  flower_bouquet_1: { name: '一小捧散花', quote: '初恋的感觉，心跳如花绽放。', hualuReward: 4, huayuanReward: 12 },
+  flower_bouquet_2: { name: '迷你花束', quote: '百年好合，纯洁的守候。', hualuReward: 6, huayuanReward: 18 },
+  flower_bouquet_3: { name: '郁金香花束', quote: '高贵的爱恋，无可救药的浪漫。', hualuReward: 9, huayuanReward: 25 },
+  flower_bouquet_4: { name: '玫瑰满天星', quote: '等待爱情，紫色的承诺。', hualuReward: 12, huayuanReward: 35 },
+  flower_bouquet_5: { name: '田园混搭花束', quote: '鼓起勇气说出口，你是我的唯一。', hualuReward: 16, huayuanReward: 50 },
+  flower_bouquet_6: { name: '精美花盒', quote: '执子之手，与子偕老。', hualuReward: 24, huayuanReward: 80 },
+  flower_green_1: { name: '小芽苗', quote: '小小的芽，蕴含着生命的力量。', hualuReward: 5, huayuanReward: 15 },
+  flower_green_2: { name: '多肉盆栽', quote: '圆润饱满，安静而治愈。', hualuReward: 8, huayuanReward: 22 },
+  flower_green_3: { name: '绿萝', quote: '顽强生长，为你带来好运。', hualuReward: 11, huayuanReward: 30 },
+  flower_green_4: { name: '波士顿蕨', quote: '优雅的弧线，如绿色瀑布。', hualuReward: 15, huayuanReward: 45 },
+  flower_green_5: { name: '虎皮兰', quote: '坚韧挺拔，守护者的姿态。', hualuReward: 20, huayuanReward: 65 },
+  flower_green_6: { name: '龟背竹', quote: '独一无二的裂叶，大自然的艺术。', hualuReward: 30, huayuanReward: 100 },
 };
+
+function getUnlockRewards(itemId: string, def: ItemDef): UnlockRewards {
+  const fq = FLOWER_QUOTES[itemId];
+  if (fq) {
+    return { hualuReward: fq.hualuReward, huayuanReward: fq.huayuanReward };
+  }
+  const lv = Math.max(1, def.level);
+  return {
+    hualuReward: Math.min(40, 2 + Math.floor(lv * 2)),
+    huayuanReward: Math.min(100, 5 + lv * 4),
+  };
+}
 
 export class FlowerEasterEggSystem {
   private _parent: PIXI.Container;
-  /** 已触发过的花语ID集合 */
   private _triggered: Set<string> = new Set();
-  /** 当前是否正在显示弹窗 */
   private _isShowing = false;
 
   constructor(parent: PIXI.Container) {
@@ -62,173 +72,276 @@ export class FlowerEasterEggSystem {
 
   private _bindEvents(): void {
     EventBus.on('board:merged', (_src: number, _dst: number, resultId: string, _resultCell: number) => {
-      this._checkEasterEgg(resultId);
+      this._checkFirstMergeUnlock(resultId);
     });
   }
 
-  private _checkEasterEgg(itemId: string): void {
+  private _checkFirstMergeUnlock(itemId: string): void {
     if (this._isShowing) return;
 
     const def = ITEM_DEFS.get(itemId);
     if (!def) return;
-
-    // 只有花束品类触发彩蛋
-    if (def.category !== Category.FLOWER) return;
-
-    // 已触发过不重复
     if (this._triggered.has(itemId)) return;
-
-    const quoteData = FLOWER_QUOTES[itemId];
-    if (!quoteData) return;
 
     this._triggered.add(itemId);
     this._saveTriggered();
-    // 延迟一小段时间显示，让合成动画先播放完
+    const rewards = getUnlockRewards(itemId, def);
     setTimeout(() => {
-      this._showQuotePanel(itemId, quoteData);
+      this._showUnlockPanel(itemId, def.name, rewards);
     }, 600);
   }
 
-  private _showQuotePanel(itemId: string, data: FlowerQuote): void {
+  /* ====== 弹窗 UI ====== */
+
+  private _showUnlockPanel(itemId: string, displayName: string, rewards: UnlockRewards): void {
     this._isShowing = true;
+
+    const W = DESIGN_WIDTH;
+    const H = Game.logicHeight;
+    const cx = W / 2;
 
     const overlay = new PIXI.Container();
 
-    // 半透明遮罩
+    // ---- 全屏遮罩 ----
     const mask = new PIXI.Graphics();
-    mask.beginFill(0x000000, 0.45);
-    mask.drawRect(0, 0, DESIGN_WIDTH, Game.logicHeight);
+    mask.beginFill(0x000000, 0.52);
+    mask.drawRect(0, 0, W, H);
     mask.endFill();
     mask.eventMode = 'static';
     overlay.addChild(mask);
 
-    // 卡片
-    const cardW = 300;
-    const cardH = 280;
-    const cx = DESIGN_WIDTH / 2;
-    const cy = Game.logicHeight / 2 - 30;
+    // ---- 散落装饰粒子（樱花瓣 / 星星）----
+    this._addDecoParticles(overlay, W, H);
 
-    const card = new PIXI.Graphics();
-    card.beginFill(0xFFFDF5);
-    card.drawRoundedRect(cx - cardW / 2, cy - cardH / 2, cardW, cardH, 20);
-    card.endFill();
-    // 装饰边框
-    card.lineStyle(2, 0xE8C8A0, 0.6);
-    card.drawRoundedRect(cx - cardW / 2 + 6, cy - cardH / 2 + 6, cardW - 12, cardH - 12, 16);
-    overlay.addChild(card);
+    const CARD_W = 380;
+    const FRAME_PAD = 20;
 
-    // 标题
-    const titleBg = new PIXI.Graphics();
-    titleBg.beginFill(0xFFF0D4);
-    titleBg.drawRoundedRect(cx - 80, cy - cardH / 2 - 8, 160, 32, 16);
-    titleBg.endFill();
-    overlay.addChild(titleBg);
+    let curY = H * 0.155;
 
-    const title = new PIXI.Text('🌸 花语彩蛋 🌸', {
-      fontSize: 16,
-      fill: 0xC97B3A,
-      fontFamily: FONT_FAMILY,
-      fontWeight: 'bold',
-    });
-    title.anchor.set(0.5, 0.5);
-    title.position.set(cx, cy - cardH / 2 + 8);
-    overlay.addChild(title);
+    curY = this._drawTitleBanner(overlay, cx, curY);
 
-    // 花名
-    const name = new PIXI.Text(data.name, {
-      fontSize: 22,
+    curY += 16;
+
+    const cardTop = curY;
+    const cardBgTex = TextureCache.get('flower_egg_card_bg');
+    let cardH: number;
+    let cardContentW = CARD_W;
+
+    if (cardBgTex) {
+      let dispW = CARD_W;
+      cardH = Math.round((dispW * cardBgTex.height) / cardBgTex.width);
+      const maxCardH = Math.floor(H * 0.52);
+      if (cardH > maxCardH) {
+        const s = maxCardH / cardH;
+        cardH = maxCardH;
+        dispW = Math.round(CARD_W * s);
+      }
+      cardContentW = dispW;
+      const csp = new PIXI.Sprite(cardBgTex);
+      csp.anchor.set(0.5, 0);
+      csp.position.set(cx, cardTop);
+      csp.width = dispW;
+      csp.height = cardH;
+      overlay.addChild(csp);
+    } else {
+      const ITEM_PREVIEW_SZ = 200;
+      const NAME_BELOW_H = 40;
+      cardH = ITEM_PREVIEW_SZ + FRAME_PAD * 2 + NAME_BELOW_H;
+      const cardBg = new PIXI.Graphics();
+      cardBg.beginFill(0xFFFDF5, 0.96);
+      cardBg.drawRoundedRect(cx - CARD_W / 2, cardTop, CARD_W, cardH, 22);
+      cardBg.endFill();
+      cardBg.lineStyle(2.5, 0xE8C8A0, 0.55);
+      cardBg.drawRoundedRect(cx - CARD_W / 2 + 7, cardTop + 7, CARD_W - 14, cardH - 14, 17);
+      overlay.addChild(cardBg);
+    }
+
+    const maxIconBox = Math.min(
+      cardContentW * 0.44,
+      Math.max(80, Math.floor(cardH * 0.42)),
+    );
+    /** 图标 + 名称整体在卡背矩形内垂直居中（略偏上补偿花边上沿） */
+    const nameGap = 14;
+    const nameLineApprox = 32;
+    const halfIcon = maxIconBox * 0.5;
+    let previewCy =
+      cardTop + cardH * 0.5 - (nameGap + nameLineApprox) * 0.5;
+    const minCy = cardTop + halfIcon + Math.max(22, cardH * 0.08);
+    const maxCy =
+      cardTop + cardH - halfIcon - nameGap - nameLineApprox - Math.max(20, cardH * 0.1);
+    previewCy = Math.max(minCy, Math.min(maxCy, previewCy));
+    const nameY = Math.round(previewCy + halfIcon + nameGap);
+
+    // 物品图（叠在底板奶油区；货币线与棋盘一致用多枚簇，避免 L2 只显示单闪电）
+    const def = ITEM_DEFS.get(itemId);
+    const csPreview = Math.round(maxIconBox);
+    const currencyCluster =
+      def?.category === Category.CURRENCY ? createCurrencyIconCluster(def, csPreview) : null;
+
+    if (currencyCluster) {
+      currencyCluster.pivot.set(csPreview / 2, csPreview / 2);
+      currencyCluster.position.set(cx, previewCy);
+      currencyCluster.scale.set(0);
+      currencyCluster.rotation = -0.12;
+      overlay.addChild(currencyCluster);
+      TweenManager.to({
+        target: currencyCluster.scale,
+        props: { x: 1, y: 1 },
+        duration: 0.5,
+        ease: Ease.easeOutBack,
+      });
+      TweenManager.to({
+        target: currencyCluster,
+        props: { rotation: 0 },
+        duration: 0.5,
+        ease: Ease.easeOutBack,
+      });
+    } else {
+      const iconKey = def ? def.icon : itemId;
+      const flowerTex = TextureCache.get(iconKey);
+      if (flowerTex) {
+        const sp = new PIXI.Sprite(flowerTex);
+        const maxSz = maxIconBox;
+        const sc = Math.min(maxSz / flowerTex.width, maxSz / flowerTex.height);
+        sp.scale.set(sc);
+        sp.anchor.set(0.5, 0.5);
+        sp.position.set(cx, previewCy);
+        overlay.addChild(sp);
+
+        sp.scale.set(0);
+        sp.rotation = -0.15;
+        TweenManager.to({ target: sp.scale, props: { x: sc, y: sc }, duration: 0.5, ease: Ease.easeOutBack });
+        TweenManager.to({ target: sp, props: { rotation: 0 }, duration: 0.5, ease: Ease.easeOutBack });
+      } else {
+        const placeholder = new PIXI.Text('🌸', { fontSize: Math.min(88, Math.round(maxIconBox * 0.55)) });
+        placeholder.anchor.set(0.5, 0.5);
+        placeholder.position.set(cx, previewCy);
+        overlay.addChild(placeholder);
+      }
+    }
+
+    const nameText = new PIXI.Text(displayName, {
+      fontSize: 26,
       fill: 0x5A3E2B,
       fontFamily: FONT_FAMILY,
       fontWeight: 'bold',
     });
-    name.anchor.set(0.5, 0);
-    name.position.set(cx, cy - cardH / 2 + 40);
-    overlay.addChild(name);
+    nameText.anchor.set(0.5, 0);
+    nameText.position.set(cx, nameY);
+    overlay.addChild(nameText);
 
-    // 分隔线
-    const sep = new PIXI.Graphics();
-    sep.lineStyle(1, 0xE8C8A0, 0.5);
-    sep.moveTo(cx - 100, cy - cardH / 2 + 72);
-    sep.lineTo(cx + 100, cy - cardH / 2 + 72);
-    overlay.addChild(sep);
+    curY = cardTop + cardH + 24;
 
-    // 花语文案
-    const quote = new PIXI.Text(`「${data.quote}」`, {
-      fontSize: 16,
-      fill: 0x7D6B5D,
-      fontFamily: FONT_FAMILY,
-      fontStyle: 'italic',
-      wordWrap: true,
-      wordWrapWidth: cardW - 60,
-      align: 'center',
-    });
-    quote.anchor.set(0.5, 0);
-    quote.position.set(cx, cy - cardH / 2 + 86);
-    overlay.addChild(quote);
+    const rewardLayout = this._drawRewardSection(overlay, cx, curY, rewards, CARD_W);
+    curY = rewardLayout.nextY;
 
-    // 奖励信息
-    const rewardText = new PIXI.Text(
-      `🎁 首次合成奖励\n🌸 花愿 +${data.huayuanReward}  ⭐ 经验 +${data.expReward}`,
-      {
-        fontSize: 14,
-        fill: 0x8B7355,
-        fontFamily: FONT_FAMILY,
-        align: 'center',
-        lineHeight: 22,
-      }
-    );
-    rewardText.anchor.set(0.5, 0);
-    rewardText.position.set(cx, cy + 20);
-    overlay.addChild(rewardText);
+    curY += 24;
 
-    // 关闭按钮
-    const btnW = 120;
-    const btnH = 38;
-    const btnY = cy + cardH / 2 - 52;
+    // ---- "收下奖励" 按钮 ----
+    const btnW = 200;
+    const btnH = 50;
+    const btnY = curY;
+    const btnClaimTex = TextureCache.get('flower_egg_btn_claim');
 
-    const btn = new PIXI.Graphics();
-    btn.beginFill(0xE8A87C);
-    btn.drawRoundedRect(cx - btnW / 2, btnY, btnW, btnH, 12);
-    btn.endFill();
-    btn.eventMode = 'static';
-    btn.cursor = 'pointer';
-    btn.hitArea = new PIXI.Rectangle(cx - btnW / 2, btnY, btnW, btnH);
-    overlay.addChild(btn);
+    const btnWrap = new PIXI.Container();
+    btnWrap.position.set(cx, btnY + btnH / 2);
+    btnWrap.eventMode = 'static';
+    btnWrap.cursor = 'pointer';
+    btnWrap.hitArea = new PIXI.Rectangle(-btnW / 2, -btnH / 2, btnW, btnH);
+
+    if (btnClaimTex) {
+      const bsp = new PIXI.Sprite(btnClaimTex);
+      bsp.anchor.set(0.5, 0.5);
+      bsp.width = btnW;
+      bsp.height = btnH;
+      btnWrap.addChild(bsp);
+    } else {
+      const btnShadow = new PIXI.Graphics();
+      btnShadow.beginFill(0x3E8E41, 0.35);
+      btnShadow.drawRoundedRect(-btnW / 2 + 2, -btnH / 2 + 3, btnW, btnH, 14);
+      btnShadow.endFill();
+      btnWrap.addChild(btnShadow);
+
+      const btn = new PIXI.Graphics();
+      btn.beginFill(0x66BB6A);
+      btn.drawRoundedRect(-btnW / 2, -btnH / 2, btnW, btnH, 14);
+      btn.endFill();
+      btn.lineStyle(2, 0x81C784, 1);
+      btn.drawRoundedRect(-btnW / 2, -btnH / 2, btnW, btnH, 14);
+      btnWrap.addChild(btn);
+
+      const btnHighlight = new PIXI.Graphics();
+      btnHighlight.beginFill(0xFFFFFF, 0.18);
+      btnHighlight.drawRoundedRect(-btnW / 2 + 4, -btnH / 2 + 3, btnW - 8, btnH * 0.4, 10);
+      btnHighlight.endFill();
+      btnWrap.addChild(btnHighlight);
+    }
 
     const btnText = new PIXI.Text('收下奖励', {
-      fontSize: 15,
+      fontSize: 20,
       fill: 0xFFFFFF,
       fontFamily: FONT_FAMILY,
       fontWeight: 'bold',
+      stroke: 0x388E3C,
+      strokeThickness: 2,
     });
     btnText.anchor.set(0.5, 0.5);
-    btnText.position.set(cx, btnY + btnH / 2);
-    // 文字叠在按钮之上时会抢走命中；须穿透到下层 Graphics（与 TutorialSystem 按钮做法一致）
+    btnText.position.set(0, 0);
     btnText.eventMode = 'none';
-    overlay.addChild(btnText);
+    btnWrap.addChild(btnText);
 
-    // 入场动画
+    overlay.addChild(btnWrap);
+
+    const breathObj = { s: 1 };
+    const applyBreathScale = (): void => {
+      if (btnWrap.destroyed || !btnWrap.scale) return;
+      btnWrap.scale.set(breathObj.s);
+    };
+    const breathe = (): void => {
+      TweenManager.to({
+        target: breathObj, props: { s: 1.04 }, duration: 0.8, ease: Ease.easeInOutQuad,
+        onUpdate: applyBreathScale,
+        onComplete: () => {
+          TweenManager.to({
+            target: breathObj, props: { s: 1 }, duration: 0.8, ease: Ease.easeInOutQuad,
+            onUpdate: applyBreathScale,
+            onComplete: breathe,
+          });
+        },
+      });
+    };
+    breathe();
+
+    curY = btnY + btnH + 24;
+
+    // ---- 底部提示 ----
+    const hint = new PIXI.Text('点击空白区域关闭', {
+      fontSize: 14,
+      fill: 0xFFFFFF,
+      fontFamily: FONT_FAMILY,
+    });
+    hint.anchor.set(0.5, 0);
+    hint.position.set(cx, curY);
+    hint.alpha = 0.6;
+    overlay.addChild(hint);
+
+    // ---- 入场 ----
     overlay.alpha = 0;
     this._parent.addChild(overlay);
+    TweenManager.to({ target: overlay, props: { alpha: 1 }, duration: 0.35, ease: Ease.easeOutQuad });
 
-    TweenManager.to({
-      target: overlay,
-      props: { alpha: 1 },
-      duration: 0.3,
-      ease: Ease.easeOutQuad,
-    });
-
-    // 关闭面板的逻辑
-    const closePanel = () => {
-      CurrencyManager.addHuayuan(data.huayuanReward);
-      CurrencyManager.addExp(data.expReward);
-
+    // ---- 关闭 & 发奖（花露/花愿弧线飞入 TopBar，到账在飞入结束后；与客人交付一致）----
+    let claimStarted = false;
+    const finishClose = (): void => {
+      TweenManager.cancelTarget(breathObj);
+      TweenManager.cancelTarget(overlay);
       TweenManager.to({
         target: overlay,
         props: { alpha: 0 },
         duration: 0.25,
         ease: Ease.easeInQuad,
         onComplete: () => {
+          TweenManager.cancelTarget(breathObj);
           this._parent.removeChild(overlay);
           overlay.destroy({ children: true });
           this._isShowing = false;
@@ -236,24 +349,223 @@ export class FlowerEasterEggSystem {
       });
     };
 
-    // 点击收下奖励
-    btn.on('pointerdown', closePanel);
+    const closePanel = (): void => {
+      if (claimStarted) return;
+      claimStarted = true;
+      TweenManager.cancelTarget(breathObj);
+      btnWrap.eventMode = 'none';
+      mask.eventMode = 'none';
 
-    // 点遮罩也关闭
+      const gp = overlay.toGlobal(new PIXI.Point(cx, rewardLayout.flyCenterY));
+      const lp = this._parent.toLocal(gp);
+
+      EventBus.emit('firstMergeUnlock:claimFly', {
+        source: { x: lp.x, y: lp.y },
+        hualuReward: rewards.hualuReward,
+        huayuanReward: rewards.huayuanReward,
+        onComplete: finishClose,
+      });
+    };
+
+    btnWrap.on('pointerdown', closePanel);
     mask.on('pointerdown', closePanel);
   }
 
-  /** 导出已触发的花语（用于存档） */
+  /* ---- 标题横幅（与装修面板同款 deco_panel_title_ribbon）---- */
+  private _drawTitleBanner(container: PIXI.Container, cx: number, y: number): number {
+    const decoRibbon = TextureCache.get('deco_panel_title_ribbon');
+    const eggBanner = TextureCache.get('flower_egg_title_banner');
+
+    let BW: number;
+    let BH: number;
+    let onRedRibbon: boolean;
+
+    if (decoRibbon) {
+      BW = 440;
+      BH = Math.round((BW * decoRibbon.height) / decoRibbon.width);
+      BH = Math.max(52, Math.min(86, BH));
+      const sp = new PIXI.Sprite(decoRibbon);
+      sp.anchor.set(0.5, 0.5);
+      sp.position.set(cx, y + BH / 2);
+      sp.width = BW;
+      sp.height = BH;
+      container.addChild(sp);
+      onRedRibbon = true;
+    } else if (eggBanner) {
+      BW = 220;
+      BH = 44;
+      const sp = new PIXI.Sprite(eggBanner);
+      sp.anchor.set(0.5, 0.5);
+      sp.position.set(cx, y + BH / 2);
+      sp.width = BW;
+      sp.height = BH;
+      container.addChild(sp);
+      onRedRibbon = false;
+    } else {
+      BW = 300;
+      BH = 48;
+      const ribbon = new PIXI.Graphics();
+      ribbon.beginFill(0xFFF0D4, 0.95);
+      ribbon.lineStyle(2, 0xD4A054, 0.8);
+      ribbon.drawRoundedRect(cx - BW / 2, y, BW, BH, BH / 2);
+      ribbon.endFill();
+      ribbon.lineStyle(1, 0xE8C8A0, 0.45);
+      ribbon.drawRoundedRect(cx - BW / 2 + 4, y + 4, BW - 8, BH - 8, (BH - 8) / 2);
+      container.addChild(ribbon);
+      onRedRibbon = false;
+    }
+
+    const title = new PIXI.Text('新解锁', onRedRibbon
+      ? {
+          fontSize: 24,
+          fill: 0xFFFFFF,
+          fontFamily: FONT_FAMILY,
+          fontWeight: 'bold',
+          stroke: 0x4E2018,
+          strokeThickness: 3,
+        }
+      : {
+          fontSize: 20,
+          fill: 0xC97B3A,
+          fontFamily: FONT_FAMILY,
+          fontWeight: 'bold',
+        });
+    title.anchor.set(0.5, 0.5);
+    title.position.set(cx, y + BH / 2);
+    container.addChild(title);
+
+    return y + BH;
+  }
+
+  /**
+   * 「首次合成奖励」：无长条底图；左花露右花愿，大号描边框格（中间透明），格内图标、格下 × 数量。
+   */
+  private _drawRewardSection(
+    container: PIXI.Container,
+    cx: number,
+    y: number,
+    data: UnlockRewards,
+    _cardW: number,
+  ): { nextY: number; flyCenterY: number } {
+    const CELL = 78;
+    const GAP = 32;
+
+    const labelText = new PIXI.Text('首次合成奖励', {
+      fontSize: 23,
+      fill: 0xfffef5,
+      fontFamily: FONT_FAMILY,
+      fontWeight: 'bold',
+      stroke: 0x3e2723,
+      strokeThickness: 2.2,
+    });
+    labelText.anchor.set(0.5, 0);
+    labelText.position.set(cx, y);
+    container.addChild(labelText);
+
+    const cellTop = y + 34;
+    const leftCx = cx - (CELL + GAP) / 2;
+    const rightCx = cx + (CELL + GAP) / 2;
+
+    this._drawRewardFramedCell(container, leftCx, cellTop, CELL, 'icon_hualu', data.hualuReward);
+    this._drawRewardFramedCell(container, rightCx, cellTop, CELL, 'icon_huayuan', data.huayuanReward);
+
+    const flyCenterY = cellTop + CELL * 0.5;
+    return { nextY: cellTop + CELL + 38, flyCenterY };
+  }
+
+  /** 仅圆角描边框，内部透明（透出遮罩）；格内图标 + 格下数量 */
+  private _drawRewardFramedCell(
+    parent: PIXI.Container,
+    centerX: number,
+    topY: number,
+    cellSize: number,
+    textureKey: string,
+    amount: number,
+  ): void {
+    const half = cellSize / 2;
+    const left = centerX - half;
+    const rr = 10;
+
+    const frame = new PIXI.Graphics();
+    frame.lineStyle(2.8, 0xb8956a, 0.92);
+    frame.drawRoundedRect(left, topY, cellSize, cellSize, rr);
+    frame.lineStyle(1.2, 0xfff5e6, 0.45);
+    frame.drawRoundedRect(left + 2.5, topY + 2.5, cellSize - 5, cellSize - 5, Math.max(6, rr - 2));
+    parent.addChild(frame);
+
+    const pad = 10;
+    const iconMax = cellSize - pad * 2;
+    const cy = topY + cellSize / 2;
+    const tex = TextureCache.get(textureKey);
+    if (tex) {
+      const sp = new PIXI.Sprite(tex);
+      sp.anchor.set(0.5);
+      const sc = iconMax / Math.max(tex.width, tex.height);
+      sp.scale.set(sc);
+      sp.position.set(centerX, cy);
+      parent.addChild(sp);
+    } else {
+      const fb = new PIXI.Graphics();
+      fb.beginFill(0x888888);
+      fb.drawCircle(centerX, cy, iconMax / 2);
+      fb.endFill();
+      parent.addChild(fb);
+    }
+
+    const amt = new PIXI.Text(`×${amount}`, {
+      fontSize: 26,
+      fill: 0xfff8e8,
+      fontFamily: FONT_FAMILY,
+      fontWeight: 'bold',
+      stroke: 0x3e2723,
+      strokeThickness: 2.2,
+    });
+    amt.anchor.set(0.5, 0);
+    amt.position.set(centerX, topY + cellSize + 10);
+    parent.addChild(amt);
+  }
+
+  /* ---- 装饰粒子 ---- */
+  private _addDecoParticles(container: PIXI.Container, W: number, H: number): void {
+    const petals = ['🌸', '✨', '🌿', '💮', '🍃'];
+    for (let i = 0; i < 12; i++) {
+      const t = new PIXI.Text(petals[i % petals.length], { fontSize: 16 + Math.random() * 14 });
+      t.anchor.set(0.5);
+      t.alpha = 0.35 + Math.random() * 0.25;
+      t.rotation = Math.random() * Math.PI * 2;
+      const px = 30 + Math.random() * (W - 60);
+      const py = H * 0.08 + Math.random() * (H * 0.82);
+      t.position.set(px, py);
+      container.addChild(t);
+
+      const drift = 8 + Math.random() * 14;
+      const dur = 2 + Math.random() * 3;
+      const startY = py;
+      const floatUp = (): void => {
+        TweenManager.to({
+          target: t, props: { y: startY - drift }, duration: dur, ease: Ease.easeInOutQuad,
+          onComplete: () => {
+            TweenManager.to({
+              target: t, props: { y: startY + drift * 0.5 }, duration: dur * 0.8, ease: Ease.easeInOutQuad,
+              onComplete: floatUp,
+            });
+          },
+        });
+      };
+      floatUp();
+    }
+  }
+
+  /* ====== 持久化 ====== */
+
   exportTriggered(): string[] {
     return Array.from(this._triggered);
   }
 
-  /** 加载已触发的花语 */
   loadTriggered(ids: string[]): void {
     this._triggered = new Set(ids);
   }
 
-  /** 自动持久化到本地存储 */
   private _saveTriggered(): void {
     try {
       const _api = typeof (globalThis as any).wx !== 'undefined' ? (globalThis as any).wx :
@@ -261,10 +573,9 @@ export class FlowerEasterEggSystem {
       if (_api) {
         _api.setStorageSync('huahua_flower_quotes', JSON.stringify(this.exportTriggered()));
       }
-    } catch (_) {}
+    } catch (_) { /* ignore */ }
   }
 
-  /** 从本地存储加载 */
   private _loadTriggered(): void {
     try {
       const _api = typeof (globalThis as any).wx !== 'undefined' ? (globalThis as any).wx :
@@ -278,6 +589,6 @@ export class FlowerEasterEggSystem {
           }
         }
       }
-    } catch (_) {}
+    } catch (_) { /* ignore */ }
   }
 }

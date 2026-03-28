@@ -135,9 +135,8 @@ export class OfflineRewardPanel extends PIXI.Container {
       y += lineH;
     }
 
-    // 金币
-    if (this._reward.goldEarned > 0) {
-      this._drawRewardLine(panelX + 60, y, '💰', `金币收入 +${this._reward.goldEarned}`);
+    if (this._reward.huayuanEarned > 0) {
+      this._drawRewardLine(panelX + 60, y, '💰', `花愿收入 +${this._reward.huayuanEarned}`);
       y += lineH;
     }
 

@@ -58,6 +58,17 @@ class PlatformServiceClass {
     } catch (_) {}
   }
 
+  /** 异步写入本地存储（避免阻塞主线程） */
+  setStorageAsync(key: string, value: string): void {
+    try {
+      if (this._api?.setStorage) {
+        this._api.setStorage({ key, data: value, fail() {} });
+      } else {
+        this._api?.setStorageSync(key, value);
+      }
+    } catch (_) {}
+  }
+
   removeStorageSync(key: string): void {
     try {
       this._api?.removeStorageSync(key);

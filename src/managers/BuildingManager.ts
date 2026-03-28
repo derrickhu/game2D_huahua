@@ -1,48 +1,63 @@
 /**
  * 建筑管理器 - 处理工具点击产出、CD 冷却、宝箱系统
  *
- * 工具/宝箱/花束包装纸：种植线随机鲜花或绿植；包装线工具产出包装中间品；花束包装纸消耗次数产出花束后消失。
- * 合成两个同级工具升级为下一级（在 BoardManager 中处理）。
+ * 宝箱：首次点击扣体力并掷出固定件数；每次点击向全棋盘空格散落，未散完保留宝箱并显示进度条。
+ * 工具/花束包装纸逻辑不变。
  */
 import { EventBus } from '@/core/EventBus';
 import { BoardManager } from './BoardManager';
 import { CurrencyManager } from './CurrencyManager';
-import { ITEM_DEFS, Category, findItemId, FlowerLine, DrinkLine, ToolLine } from '@/config/ItemConfig';
-import { findBoardProducerDef, type ToolProduceOutcome } from '@/config/BuildingConfig';
+import { ITEM_DEFS, Category, InteractType, CurrencyLine, findItemId, FlowerLine, DrinkLine, ToolLine } from '@/config/ItemConfig';
+import {
+  findBoardProducerDef,
+  mergeOutcomePercents,
+  type ToolProduceOutcome,
+  type ToolProduceDisplayEntry,
+} from '@/config/BuildingConfig';
 import { BOARD_COLS, BOARD_ROWS } from '@/config/Constants';
+
+/** 单次点击产出结果（工具 1 件；宝箱可能多件） */
+export type ProducePlacement = { itemId: string; targetIndex: number };
 
 /** 宝箱配置 */
 interface ChestDef {
   itemId: string;
-  /** 产出内容列表（随机选取一项） */
+  /** 每次点击开箱时，按权重独立随机出的「棋盘物品」件数（固定；不含直接入账的金币） */
+  boardDropCount: number;
+  /** 每一件棋盘掉落按权重随机类型（tool/product/gold 等） */
   produceItems: ChestProduceOption[];
   staminaCost: number;
-  maxUses: number;
 }
 
 interface ChestProduceOption {
-  type: 'tool' | 'product' | 'gold';
-  /** tool: 随机Lv1工具；product: 指定品类+线+等级范围 */
+  type: 'tool' | 'product';
+  /** product: 指定品类+线+等级范围 */
   category?: Category;
   lines?: string[];
   levelRange?: [number, number];
-  /** gold: 金币数量范围 */
-  goldRange?: [number, number];
-  /** 该选项的权重 */
   weight: number;
 }
 
-/** 运行时建筑状态（CD / 剩余次数 / 本周期剩余产出次数） */
+/** 运行时建筑状态（CD / 剩余次数 / 本周期剩余产出次数 / 宝箱待散落队列） */
 interface BuildingState {
-  /** 与当前格子物品绑定，合成升级等换物时丢弃旧状态 */
   boundItemId: string;
   cdRemaining: number;
   usesLeft: number;
-  /**
-   * 进入 CD 前还可产出的次数（仅 cooldown>0 的工具）。
-   * CD 结束后重置为 producesBeforeCooldown。
-   */
   freeProducesLeft: number;
+  /** 宝箱：`undefined` 未开箱；有数组则为待落到棋盘的物品 id */
+  chestQueue?: string[];
+  chestTotalBoardDrops?: number;
+}
+
+/** 存档用 */
+export interface BuildingPersistEntry {
+  cellIndex: number;
+  boundItemId: string;
+  cdRemaining: number;
+  usesLeft: number;
+  freeProducesLeft: number;
+  chestQueue?: string[];
+  chestTotalBoardDrops?: number;
 }
 
 // ═══════════════ 宝箱定义 ═══════════════
@@ -50,58 +65,198 @@ interface BuildingState {
 const CHEST_DEFS: ChestDef[] = [
   {
     itemId: 'chest_1',
+    boardDropCount: 6,
     produceItems: [
-      { type: 'tool', weight: 40 },
-      { type: 'product', category: Category.FLOWER, lines: [FlowerLine.FRESH], levelRange: [1, 1], weight: 40 },
-      { type: 'gold', goldRange: [20, 50], weight: 20 },
+      {
+        type: 'product',
+        category: Category.FLOWER,
+        lines: [FlowerLine.FRESH, FlowerLine.GREEN],
+        levelRange: [1, 1],
+        weight: 52,
+      },
+      {
+        type: 'product',
+        category: Category.DRINK,
+        lines: [DrinkLine.TEA, DrinkLine.COLD, DrinkLine.DESSERT],
+        levelRange: [1, 1],
+        weight: 42,
+      },
+      { type: 'product', category: Category.CURRENCY, lines: [CurrencyLine.STAMINA], levelRange: [1, 1], weight: 3 },
+      { type: 'product', category: Category.CURRENCY, lines: [CurrencyLine.HUAYUAN], levelRange: [1, 1], weight: 3 },
     ],
     staminaCost: 2,
-    maxUses: 3,
   },
   {
     itemId: 'chest_2',
+    boardDropCount: 6,
     produceItems: [
-      { type: 'tool', weight: 35 },
-      { type: 'product', category: Category.FLOWER, lines: [FlowerLine.FRESH, FlowerLine.BOUQUET], levelRange: [1, 2], weight: 40 },
-      { type: 'gold', goldRange: [40, 100], weight: 25 },
+      {
+        type: 'product',
+        category: Category.FLOWER,
+        lines: [FlowerLine.FRESH, FlowerLine.GREEN],
+        levelRange: [1, 2],
+        weight: 48,
+      },
+      {
+        type: 'product',
+        category: Category.DRINK,
+        lines: [DrinkLine.TEA, DrinkLine.COLD, DrinkLine.DESSERT],
+        levelRange: [1, 2],
+        weight: 36,
+      },
+      { type: 'product', category: Category.CURRENCY, lines: [CurrencyLine.STAMINA], levelRange: [1, 2], weight: 8 },
+      { type: 'product', category: Category.CURRENCY, lines: [CurrencyLine.HUAYUAN], levelRange: [1, 2], weight: 8 },
     ],
     staminaCost: 3,
-    maxUses: 4,
   },
   {
     itemId: 'chest_3',
+    boardDropCount: 7,
     produceItems: [
-      { type: 'tool', weight: 30 },
-      { type: 'product', category: Category.FLOWER, lines: [FlowerLine.FRESH, FlowerLine.BOUQUET, FlowerLine.GREEN], levelRange: [1, 3], weight: 40 },
-      { type: 'gold', goldRange: [80, 200], weight: 30 },
+      { type: 'tool', weight: 8 },
+      {
+        type: 'product',
+        category: Category.FLOWER,
+        lines: [FlowerLine.FRESH, FlowerLine.BOUQUET],
+        levelRange: [1, 3],
+        weight: 28,
+      },
+      { type: 'product', category: Category.FLOWER, lines: [FlowerLine.GREEN], levelRange: [2, 3], weight: 12 },
+      {
+        type: 'product',
+        category: Category.DRINK,
+        lines: [DrinkLine.TEA, DrinkLine.COLD, DrinkLine.DESSERT],
+        levelRange: [1, 3],
+        weight: 22,
+      },
+      { type: 'product', category: Category.CURRENCY, lines: [CurrencyLine.STAMINA], levelRange: [1, 2], weight: 9 },
+      { type: 'product', category: Category.CURRENCY, lines: [CurrencyLine.HUAYUAN], levelRange: [1, 2], weight: 11 },
+      { type: 'product', category: Category.CURRENCY, lines: [CurrencyLine.DIAMOND], levelRange: [1, 2], weight: 10 },
     ],
     staminaCost: 5,
-    maxUses: 3,
   },
   {
     itemId: 'chest_4',
+    boardDropCount: 7,
     produceItems: [
-      { type: 'tool', weight: 30 },
-      { type: 'product', category: Category.DRINK, lines: [DrinkLine.TEA, DrinkLine.COLD, DrinkLine.DESSERT], levelRange: [1, 3], weight: 35 },
-      { type: 'gold', goldRange: [150, 400], weight: 35 },
+      { type: 'tool', weight: 8 },
+      {
+        type: 'product',
+        category: Category.FLOWER,
+        lines: [FlowerLine.FRESH, FlowerLine.BOUQUET, FlowerLine.GREEN],
+        levelRange: [1, 4],
+        weight: 24,
+      },
+      {
+        type: 'product',
+        category: Category.DRINK,
+        lines: [DrinkLine.TEA, DrinkLine.COLD, DrinkLine.DESSERT],
+        levelRange: [1, 3],
+        weight: 20,
+      },
+      { type: 'product', category: Category.CURRENCY, lines: [CurrencyLine.STAMINA], levelRange: [1, 3], weight: 11 },
+      { type: 'product', category: Category.CURRENCY, lines: [CurrencyLine.HUAYUAN], levelRange: [1, 3], weight: 13 },
+      { type: 'product', category: Category.CURRENCY, lines: [CurrencyLine.DIAMOND], levelRange: [1, 3], weight: 14 },
+      { type: 'product', category: Category.CURRENCY, lines: [CurrencyLine.HUALU], levelRange: [1, 2], weight: 10 },
     ],
     staminaCost: 8,
-    maxUses: 3,
   },
   {
     itemId: 'chest_5',
+    boardDropCount: 8,
     produceItems: [
-      { type: 'tool', weight: 25 },
-      { type: 'product', category: Category.FLOWER, lines: [FlowerLine.FRESH, FlowerLine.BOUQUET, FlowerLine.GREEN], levelRange: [2, 5], weight: 35 },
-      { type: 'gold', goldRange: [300, 800], weight: 40 },
+      { type: 'tool', weight: 8 },
+      {
+        type: 'product',
+        category: Category.FLOWER,
+        lines: [FlowerLine.FRESH, FlowerLine.BOUQUET, FlowerLine.GREEN],
+        levelRange: [2, 5],
+        weight: 25,
+      },
+      {
+        type: 'product',
+        category: Category.DRINK,
+        lines: [DrinkLine.TEA, DrinkLine.COLD, DrinkLine.DESSERT],
+        levelRange: [2, 4],
+        weight: 17,
+      },
+      { type: 'product', category: Category.CURRENCY, lines: [CurrencyLine.STAMINA], levelRange: [1, 3], weight: 13 },
+      { type: 'product', category: Category.CURRENCY, lines: [CurrencyLine.HUAYUAN], levelRange: [1, 3], weight: 16 },
+      { type: 'product', category: Category.CURRENCY, lines: [CurrencyLine.DIAMOND], levelRange: [1, 3], weight: 15 },
+      { type: 'product', category: Category.CURRENCY, lines: [CurrencyLine.HUALU], levelRange: [1, 3], weight: 6 },
     ],
     staminaCost: 12,
-    maxUses: 3,
   },
 ];
 
 /** 所有 Lv1 工具ID列表，用于宝箱随机产出 */
 const ALL_LV1_TOOLS: string[] = Object.values(ToolLine).map(tl => `tool_${tl}_1`);
+
+/**
+ * 是否有宝箱在随机掉落中可能产出「该品类 + 产品线 + 等级」的物品。
+ * 须同时命中 lines 与 levelRange（旧逻辑只看线，会把小芽苗等 Lv1 绿植误标成可自宝箱出）。
+ */
+export function chestMayDropItem(
+  category: Category,
+  productLine: string,
+  level: number,
+): boolean {
+  return findRepresentativeChestForDrop(category, productLine, level) !== null;
+}
+
+/**
+ * 合成线「获取来源」里点宝箱时：取第一个（通常最低档）能按产品规则掉出该等级该线的宝箱 id（chest_1…5）。
+ */
+export function findRepresentativeChestForDrop(
+  category: Category,
+  productLine: string,
+  level: number,
+): string | null {
+  for (const chest of CHEST_DEFS) {
+    for (const p of chest.produceItems) {
+      if (p.type !== 'product' || !p.lines || !p.levelRange) continue;
+      if (p.category !== category || !p.lines.some(l => l === productLine)) continue;
+      const [minL, maxL] = p.levelRange;
+      if (level >= minL && level <= maxL) return chest.itemId;
+    }
+  }
+  return null;
+}
+
+/**
+ * 与单次 `_rollChestProduce` 一致：先按 weight 选条目，再 tool 均匀抽 Lv1 工具 / product 均匀抽线+等级。
+ * 用于合成线面板产出概率悬浮窗。
+ */
+export function getChestProduceOutcomePercents(chestItemId: string): ToolProduceDisplayEntry[] {
+  const chest = CHEST_DEFS.find(c => c.itemId === chestItemId);
+  if (!chest) return [];
+  const total = chest.produceItems.reduce((s, p) => s + p.weight, 0);
+  if (total <= 0) return [];
+  const raw: ToolProduceDisplayEntry[] = [];
+  for (const p of chest.produceItems) {
+    const share = (p.weight / total) * 100;
+    if (p.type === 'tool') {
+      const n = ALL_LV1_TOOLS.length;
+      if (n <= 0) continue;
+      for (const tid of ALL_LV1_TOOLS) {
+        raw.push({ itemId: tid, percent: share / n });
+      }
+    } else if (p.type === 'product' && p.category && p.lines && p.levelRange) {
+      const [minL, maxL] = p.levelRange;
+      const nLevels = maxL - minL + 1;
+      const nLines = p.lines.length;
+      if (nLines <= 0 || nLevels <= 0) continue;
+      const each = share / (nLines * nLevels);
+      for (const line of p.lines) {
+        for (let lv = minL; lv <= maxL; lv++) {
+          const id = findItemId(p.category, line, lv);
+          if (id) raw.push({ itemId: id, percent: each });
+        }
+      }
+    }
+  }
+  return mergeOutcomePercents(raw);
+}
 
 class BuildingManagerClass {
   private _states = new Map<number, BuildingState>();
@@ -117,19 +272,22 @@ class BuildingManagerClass {
     });
   }
 
-  /** 判断某个物品是否是可产出建筑（tool_* 或花束包装纸等） */
+  /** 判断某个物品是否是工具类交互（tool_* 或花束包装纸等） */
   isToolItem(itemId: string): boolean {
-    return !!findBoardProducerDef(itemId);
+    const def = ITEM_DEFS.get(itemId);
+    return !!def && def.interactType === InteractType.TOOL;
   }
 
   /** 判断某个物品是否是宝箱 */
   isChestItem(itemId: string): boolean {
-    return !!this._findChestDef(itemId);
+    const def = ITEM_DEFS.get(itemId);
+    return !!def && def.interactType === InteractType.CHEST;
   }
 
   /** 判断某个物品是否可点击交互（工具 / 宝箱） */
   isInteractable(itemId: string): boolean {
-    return this.isToolItem(itemId) || this.isChestItem(itemId);
+    const def = ITEM_DEFS.get(itemId);
+    return !!def && def.interactType !== InteractType.NONE;
   }
 
   /** @deprecated 兼容旧接口 */
@@ -154,10 +312,10 @@ class BuildingManagerClass {
   }
 
   /**
-   * 点击工具/宝箱产出物品
-   * @returns 产出结果，null 表示失败
+   * 点击工具/宝箱产出物品（宝箱可能一次落多格）
+   * @returns placements 可能为空（如仅金币）；null 表示失败
    */
-  produce(cellIndex: number): { itemId: string; targetIndex: number } | null {
+  produce(cellIndex: number): { placements: ProducePlacement[] } | null {
     const cell = BoardManager.getCellByIndex(cellIndex);
     if (!cell?.itemId || cell.state !== 'open') return null;
 
@@ -166,8 +324,12 @@ class BuildingManagerClass {
     if (!toolDef && !chestDef) return null;
     if (toolDef && !toolDef.canProduce) return null;
 
-    const staminaCost = toolDef?.staminaCost ?? chestDef!.staminaCost;
+    /** 仅 `chest_*` 走批量散落；花艺材料篮等 `BOARD_PRODUCER` 仍单次产出 + exhaustAfterProduces 用尽消失 */
+    if (chestDef) {
+      return this._produceChest(cellIndex, chestDef);
+    }
 
+    const staminaCost = toolDef!.staminaCost;
     const state = this._getOrCreateState(cellIndex, cell.itemId);
     if (state.cdRemaining > 0) {
       console.log(`[Building] CD 冷却中，剩余 ${state.cdRemaining.toFixed(0)}s`);
@@ -191,21 +353,16 @@ class BuildingManagerClass {
     }
 
     let producedId: string | null = null;
-
-    if (chestDef) {
-      producedId = this._rollChestProduce(chestDef, cellIndex);
-    } else if (toolDef) {
-      if (toolDef.produceOutcomes && toolDef.produceOutcomes.length > 0) {
-        producedId = this._rollToolProduceOutcome(toolDef.produceOutcomes);
-      } else {
-        const level = this._rollLevel(toolDef.produceTable);
-        const lines = toolDef.produceLinesRandom;
-        const line =
-          lines && lines.length > 0
-            ? lines[Math.floor(Math.random() * lines.length)]
-            : toolDef.produceLine;
-        producedId = findItemId(toolDef.produceCategory, line, level);
-      }
+    if (toolDef!.produceOutcomes && toolDef!.produceOutcomes.length > 0) {
+      producedId = this._rollToolProduceOutcome(toolDef!.produceOutcomes);
+    } else {
+      const level = this._rollLevel(toolDef!.produceTable);
+      const lines = toolDef!.produceLinesRandom;
+      const line =
+        lines && lines.length > 0
+          ? lines[Math.floor(Math.random() * lines.length)]
+          : toolDef!.produceLine;
+      producedId = findItemId(toolDef!.produceCategory, line, level);
     }
 
     if (!producedId) {
@@ -214,29 +371,93 @@ class BuildingManagerClass {
       return null;
     }
 
-    // 金币奖励特殊处理：不放到棋盘上
-    if (producedId === '__gold__') {
-      // 金币已在 _rollChestProduce 中发放
-      this._consumeUse(cellIndex, cell.itemId, state, !!chestDef, toolDef);
-      return { itemId: producedId, targetIndex: -1 };
-    }
-
     BoardManager.placeItem(targetIndex, producedId);
-
-    // 更新状态：Lv2/Lv3 先消耗「周期内次数」，用尽后再进入 CD
-    if (toolDef && toolDef.cooldown > 0) {
+    if (toolDef!.cooldown > 0) {
       state.freeProducesLeft--;
       if (state.freeProducesLeft <= 0) {
-        state.cdRemaining = toolDef.cooldown;
+        state.cdRemaining = toolDef!.cooldown;
       }
     }
-    this._consumeUse(cellIndex, cell.itemId, state, !!chestDef, toolDef);
+    this._consumeExhaustibleTool(cellIndex, cell.itemId, state, toolDef!);
 
     const resultDef = ITEM_DEFS.get(producedId);
     console.log(`[Building] 产出: ${resultDef?.name}(Lv.${resultDef?.level}) → 格子${targetIndex}`);
     EventBus.emit('building:produced', cellIndex, targetIndex, producedId);
 
-    return { itemId: producedId, targetIndex };
+    return { placements: [{ itemId: producedId, targetIndex }] };
+  }
+
+  /** 宝箱：首次点击扣体力并掷出固定件数；每次点击往全棋盘空格散落，未散完保留宝箱并显示进度 */
+  private _produceChest(cellIndex: number, chestDef: ChestDef): { placements: ProducePlacement[] } | null {
+    const cell = BoardManager.getCellByIndex(cellIndex);
+    if (!cell?.itemId) return null;
+
+    const state = this._getOrCreateState(cellIndex, cell.itemId);
+    const staminaCost = chestDef.staminaCost;
+
+    if (state.chestQueue === undefined) {
+      if (!CurrencyManager.consumeStamina(staminaCost)) {
+        EventBus.emit('building:noStamina', cellIndex, staminaCost);
+        return null;
+      }
+      const queue: string[] = [];
+      for (let i = 0; i < chestDef.boardDropCount; i++) {
+        const id = this._rollChestProduce(chestDef, cellIndex);
+        if (!id) continue;
+        queue.push(id);
+      }
+      state.chestQueue = queue;
+      state.chestTotalBoardDrops = queue.length;
+      if (queue.length === 0) {
+        BoardManager.removeItem(cellIndex);
+        this._states.delete(cellIndex);
+        EventBus.emit('building:exhausted', cellIndex);
+        return { placements: [] };
+      }
+    }
+
+    const queue = state.chestQueue!;
+    if (queue.length === 0) {
+      BoardManager.removeItem(cellIndex);
+      this._states.delete(cellIndex);
+      EventBus.emit('building:exhausted', cellIndex);
+      return { placements: [] };
+    }
+
+    const empties = BoardManager.getEmptyOpenCellIndices();
+    const targets = empties.filter(i => i !== cellIndex);
+    const placements: ProducePlacement[] = [];
+
+    while (queue.length > 0 && targets.length > 0) {
+      const itemId = queue[0];
+      let placed = false;
+      while (!placed && targets.length > 0) {
+        const ti = targets.shift()!;
+        if (BoardManager.placeItem(ti, itemId)) {
+          queue.shift();
+          placements.push({ itemId, targetIndex: ti });
+          const resultDef = ITEM_DEFS.get(itemId);
+          console.log(`[Building] 宝箱散落: ${resultDef?.name} → 格子${ti}`);
+          EventBus.emit('building:produced', cellIndex, ti, itemId);
+          placed = true;
+        }
+      }
+      if (!placed) break;
+    }
+
+    if (queue.length > 0 && placements.length === 0) {
+      EventBus.emit('building:chestNeedsSpace', cellIndex, queue.length);
+    } else if (queue.length > 0) {
+      EventBus.emit('building:chestPartial', cellIndex, queue.length);
+    }
+
+    if (queue.length === 0) {
+      BoardManager.removeItem(cellIndex);
+      this._states.delete(cellIndex);
+      EventBus.emit('building:exhausted', cellIndex);
+    }
+
+    return { placements };
   }
 
   /** 每帧更新 CD */
@@ -298,20 +519,15 @@ class BuildingManagerClass {
     };
   }
 
-  /** 获取宝箱剩余次数（-1 表示永久型工具） */
+  /** 获取消耗型次数（-1 表示不显示；宝箱已改用进度条） */
   getUsesLeft(cellIndex: number): number {
     const cell = BoardManager.getCellByIndex(cellIndex);
     if (!cell?.itemId) return -1;
 
-    const chestDef = this._findChestDef(cell.itemId);
+    if (this._findChestDef(cell.itemId)) return -1;
+
     const wrapDef = findBoardProducerDef(cell.itemId);
     const wrapMax = wrapDef?.exhaustAfterProduces;
-
-    if (chestDef) {
-      const state = this._states.get(cellIndex);
-      if (!state) return chestDef.maxUses;
-      return state.usesLeft;
-    }
 
     if (wrapMax && wrapMax > 0) {
       const state = this._states.get(cellIndex);
@@ -320,6 +536,60 @@ class BuildingManagerClass {
     }
 
     return -1;
+  }
+
+  /** 宝箱内仍待落到棋盘的件数与总件数（用于进度条）；非宝箱或未开箱返回 null */
+  getChestDispatchProgress(cellIndex: number): { remaining: number; total: number } | null {
+    const cell = BoardManager.getCellByIndex(cellIndex);
+    if (!cell?.itemId || !this._findChestDef(cell.itemId)) return null;
+    const state = this._states.get(cellIndex);
+    if (!state || state.chestQueue === undefined) return null;
+    const total = state.chestTotalBoardDrops ?? state.chestQueue.length;
+    return { remaining: state.chestQueue.length, total: Math.max(1, total) };
+  }
+
+  exportState(): BuildingPersistEntry[] {
+    const out: BuildingPersistEntry[] = [];
+    for (const [cellIndex, s] of this._states) {
+      out.push({
+        cellIndex,
+        boundItemId: s.boundItemId,
+        cdRemaining: s.cdRemaining,
+        usesLeft: s.usesLeft,
+        freeProducesLeft: s.freeProducesLeft,
+        chestQueue: s.chestQueue ? [...s.chestQueue] : undefined,
+        chestTotalBoardDrops: s.chestTotalBoardDrops,
+      });
+    }
+    return out;
+  }
+
+  loadState(entries: BuildingPersistEntry[] | undefined): void {
+    this._states.clear();
+    if (!entries?.length) return;
+    for (const e of entries) {
+      const cell = BoardManager.getCellByIndex(e.cellIndex);
+      if (!cell || cell.itemId !== e.boundItemId) continue;
+      const q = e.chestQueue
+        ? e.chestQueue.filter(id => ITEM_DEFS.has(id))
+        : undefined;
+      if (this._findChestDef(e.boundItemId) && q !== undefined && q.length === 0) {
+        BoardManager.removeItem(e.cellIndex);
+        continue;
+      }
+      this._states.set(e.cellIndex, {
+        boundItemId: e.boundItemId,
+        cdRemaining: e.cdRemaining,
+        usesLeft: e.usesLeft,
+        freeProducesLeft: e.freeProducesLeft,
+        chestQueue: q,
+        chestTotalBoardDrops: e.chestTotalBoardDrops,
+      });
+    }
+  }
+
+  reset(): void {
+    this._states.clear();
   }
 
   // ═══════════════ 私有方法 ═══════════════
@@ -343,7 +613,7 @@ class BuildingManagerClass {
       }
       let usesLeftInit = -1;
       if (chestDef) {
-        usesLeftInit = chestDef.maxUses;
+        usesLeftInit = -1;
       } else if (toolDef?.exhaustAfterProduces && toolDef.exhaustAfterProduces > 0) {
         usesLeftInit = toolDef.exhaustAfterProduces;
       }
@@ -358,23 +628,13 @@ class BuildingManagerClass {
     return state;
   }
 
-  private _consumeUse(
+  private _consumeExhaustibleTool(
     cellIndex: number,
-    itemId: string,
+    _itemId: string,
     state: BuildingState,
-    isChest: boolean,
-    toolDef: ReturnType<typeof findBoardProducerDef>,
+    toolDef: NonNullable<ReturnType<typeof findBoardProducerDef>>,
   ): void {
-    if (isChest) {
-      state.usesLeft--;
-      if (state.usesLeft <= 0) {
-        BoardManager.removeItem(cellIndex);
-        this._states.delete(cellIndex);
-        EventBus.emit('building:exhausted', cellIndex);
-      }
-      return;
-    }
-    const n = toolDef?.exhaustAfterProduces;
+    const n = toolDef.exhaustAfterProduces;
     if (n && n > 0) {
       state.usesLeft--;
       if (state.usesLeft <= 0) {
@@ -399,14 +659,6 @@ class BuildingManagerClass {
         const [minLv, maxLv] = option.levelRange;
         const level = minLv + Math.floor(Math.random() * (maxLv - minLv + 1));
         return findItemId(option.category, line, level);
-      }
-      case 'gold': {
-        if (!option.goldRange) return null;
-        const [minG, maxG] = option.goldRange;
-        const amount = minG + Math.floor(Math.random() * (maxG - minG + 1));
-        CurrencyManager.addGold(amount);
-        EventBus.emit('chest:goldReward', amount);
-        return '__gold__';
       }
       default:
         return null;

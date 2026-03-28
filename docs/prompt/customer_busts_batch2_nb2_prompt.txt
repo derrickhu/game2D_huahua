@@ -1,0 +1,29 @@
+The attached reference strip shows five finished game NPC busts. Copy ONLY the rendering recipe: hand-drawn 2D anime, soft 3D volume, low-saturation warm pastels, cute chibi proportions, big eyes, thin brown-gray outlines, soft cel shading. Same friendly 3/4 view toward the right. Background: one flat warm cream color hex FFF8F0 everywhere, no texture, no gradient.
+
+Draw five brand-new characters (different from the reference people). Do not copy the reference faces.
+
+GRID: 5 columns by 2 rows (10 cells total). This is intentional so each cell is shorter vertically. The TOP row and the BOTTOM row must show the SAME five characters in the SAME left-to-right order, with the SAME poses, outfits, and expressions, like a duplicated row. Only layout repetition for a compact sheet; both rows should match as closely as possible.
+
+No visible grid: no white lines, black borders, gutters, or panel frames between cells. Only seamless cream between figures.
+
+Bust only: from top of head down to upper chest or mid-chest. Shoulders visible. No waist, no stomach, no hips. Not a tall half-body.
+
+Within EACH cell, center the bust with modest equal cream padding on left, right, top, and bottom. Do NOT leave a huge empty band only below the character; keep whitespace balanced on all sides inside the cell.
+
+Bottom edge rule: where the drawing ends at the chest, use a straight horizontal cutoff. The lower silhouette must be flat like a straight cut, not a rounded arc, not an oval vignette, not a semicircular fade, not a bubble bottom.
+
+Keep hair and shoulders inside each cell with safe margin; do not cross into the neighbor column.
+
+Match head size across all five character types.
+
+NO TEXT, no labels, no captions, no writing, no numbers.
+
+Column 1 - Couple: man and woman side by side, bust only, pastel casual clothes, warm smiles, both fully inside column 1.
+
+Column 2 - Birthday guest: small party hat or clip, cheerful, pastel top to upper chest.
+
+Column 3 - Blogger: trendy pastel layers to upper chest, optional small phone low, bright smile.
+
+Column 4 - Noblewoman: elegant pastel top or dress to upper chest, subtle jewelry, graceful smile, still chibi anime.
+
+Column 5 - Collector: vest or blazer to upper chest, thin glasses, calm smile, refined muted colors.

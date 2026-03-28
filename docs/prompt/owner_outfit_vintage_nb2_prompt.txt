@@ -1,0 +1,17 @@
+Single horizontal image: exactly 3 equal columns in one row. Same girl in all 3 cells, identical face hair outfit accessories, same art style. Column 1 and 2 match pose except eyes; column 3 is different pose allowed.
+
+Background for entire image: one solid flat chroma key color only, exact pure magenta RGB 255 0 255 hex FF00FF. No gradients, no vignette, no white gray or black backdrop, no checkerboard, no floor shadow painted on background. Characters may have normal soft shadows only on their own bodies, not a large white or black card behind them.
+
+Character: cute young flower shop girl about 18, warm light brown chin-length bob with gentle waves, burgundy velvet ribbon bow on viewer left, large brown eyes when open, soft round face, Q-version chibi about 4 to 4.5 heads tall in full body columns.
+
+Outfit: European vintage florist, cream Victorian high-collar lace blouse puff sleeves pearl buttons, burgundy corset vest laced front, long dusty rose A-line skirt subtle floral jacquard, brown lace-up ankle boots small heel, cameo brooch at collar, thin brown gloves.
+
+Style: hand-drawn 2D anime, soft shading, muted burgundy cream rose vintage palette, cozy refined storybook. No text no watermark.
+
+Column 1: full body standing 3/4 right, arms relaxed, eyes open gentle refined smile, head to feet centered.
+
+Column 2: same as column 1 only eyes closed happy, identical otherwise.
+
+Column 3: bust mid-chest up, same outfit hair ribbon cameo visible. Front-facing portrait, both eyes visible, dominant frontal face, may angle slightly right as mild 3/4 only, still not profile. Eyes open gentle smile. Pose may differ from full body. Larger scale centered.
+
+Critical: three equal width columns clear separation no overlap.

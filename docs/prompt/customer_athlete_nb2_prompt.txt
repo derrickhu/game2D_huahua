@@ -1,0 +1,5 @@
+The attached reference is an existing male customer bust from the same game. Match it EXACTLY in art style and layout: hand-drawn 2D anime with soft 3D volume, warm low-saturation pastel palette, cute chibi proportions, large expressive eyes, thin brown-gray outlines, soft cel shading, friendly 3/4 view slightly toward the right. Same bust framing: head, neck, tops of shoulders and upper chest only. Bottom edge must be a perfectly straight horizontal cut across the torso like a UI crop, not rounded or oval. Same solid flat warm cream background hex FFF8F0, no texture, no gradient.
+
+Draw ONE new young man, athletic sporty college age, short messy dark brown hair, healthy light tan skin, bright confident smile, wearing a pastel zip-up track jacket or team hoodie in soft blue and white accents, optional small towel on shoulder. Energetic wholesome sunshine boy look, handsome but approachable. Single character centered, modest padding from all edges.
+
+NO TEXT, no labels, no captions, no writing, no numbers.
