@@ -199,15 +199,10 @@ export class BoardView extends PIXI.Container {
         }
       }
 
-      // 消耗型建筑剩余次数（宝箱/红包待散落用右下角角标）
+      // 消耗型建筑剩余次数（宝箱/红包待散落不在格子上显示角标）
       const usesLeft = BuildingManager.getUsesLeft(i);
       itemView.setUsesLeft(usesLeft > 0 ? usesLeft : 0);
-      const chestProg = BuildingManager.getChestDispatchProgress(i);
-      if (chestProg) {
-        itemView.setChestDispatch(chestProg.remaining, chestProg.total);
-      } else {
-        itemView.setChestDispatch(0, 0);
-      }
+      itemView.setChestDispatch(0, 0);
 
       // 客人锁定标记
       itemView.setLocked(cell.reserved);

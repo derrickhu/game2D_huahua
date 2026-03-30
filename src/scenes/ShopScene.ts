@@ -5,7 +5,7 @@
  * - 全屏展示花店内部，有角色、装饰家具、温馨氛围
  * - 装修进度条（解锁装饰的收集进度）
  * - 可交互元素：装修入口、装扮入口、图鉴入口
- * - 左侧活动入口（签到、任务、熟客等）
+ * - 左侧活动入口（签到、任务等）
  * - 右下角大的返回按钮，切回合成棋盘
  * - 顶部复用 TopBar（花愿/体力/钻石；星星进度在下方进度条）
  *
@@ -25,7 +25,6 @@ import { RoomLayoutManager } from '@/managers/RoomLayoutManager';
 import { CurrencyManager } from '@/managers/CurrencyManager';
 import { CheckInManager } from '@/managers/CheckInManager';
 import { QuestManager } from '@/managers/QuestManager';
-import { RegularCustomerManager } from '@/managers/RegularCustomerManager';
 import { SaveManager } from '@/managers/SaveManager';
 import { DressUpManager } from '@/managers/DressUpManager';
 import { getOwnerShopDisplayScale } from '@/config/DressUpConfig';
@@ -105,10 +104,9 @@ const DECO_PAIR_BUTTONS: SideBtnDef[] = [
   { id: 'dressup', icon: '👗', texKey: 'icon_dress',      label: '装扮', event: 'nav:openDressup', iconBg: 0xFF7EB3, labelColor: 0xE0559C },
 ];
 
-/** 左上角 — 图鉴 + 熟客（竖排） */
+/** 左上角 — 图鉴（竖排） */
 const LEFT_TOP_BUTTONS: SideBtnDef[] = [
   { id: 'album',   icon: '📖', texKey: 'icon_book',  label: '图鉴', event: 'nav:openAlbum',   iconBg: 0xA78BFA, labelColor: 0x7C5FC5 },
-  { id: 'regular', icon: '💝', texKey: 'icon_heart', label: '熟客', event: 'nav:openRegular', iconBg: 0xEF5350, labelColor: 0xC62828 },
 ];
 
 /** 右侧 — 活动快捷按钮（签到/任务） */
@@ -322,10 +320,10 @@ export class ShopScene implements Scene {
     // ============== 4. 装修进度条（TopBar 下方） ==============
     this._buildProgressBar(w);
 
-    // ============== 5. 左上角按钮（图鉴 + 熟客） ==============
+    // ============== 5. 左上角按钮（图鉴） ==============
     this._buildLeftTopButtons();
 
-    // ============== 6. 右侧快捷按钮（签到/任务/熟客） ==============
+    // ============== 6. 右侧快捷按钮（签到/任务） ==============
     this._buildQuickButtons();
 
     // ============== 7. 左下横排装修/装扮按钮（无遮罩，大图标） ==============
@@ -1017,7 +1015,7 @@ export class ShopScene implements Scene {
     });
   }
 
-  // ─────────────────── 左上角按钮（图鉴 + 熟客） ───────────────────
+  // ─────────────────── 左上角按钮（图鉴） ───────────────────
 
   private _buildLeftTopButtons(): void {
     const btnW = 84;
@@ -1105,7 +1103,7 @@ export class ShopScene implements Scene {
     return { container, redDot };
   }
 
-  // ─────────────────── 右侧快捷按钮（签到/任务/熟客） ───────────────────
+  // ─────────────────── 右侧快捷按钮（签到/任务） ───────────────────
 
   private _buildQuickButtons(): void {
     const btnW = 84;
@@ -2199,15 +2197,6 @@ export class ShopScene implements Scene {
     // 任务红点
     const questBtn = this._activityBtns.get('quest');
     if (questBtn) questBtn.redDot.visible = QuestManager.hasClaimableQuest || QuestManager.hasClaimableAchievement;
-
-    // 熟客红点
-    const regularBtn = this._activityBtns.get('regular');
-    if (regularBtn) {
-      const hasNewStory = RegularCustomerManager.getAllRegulars().some(d => {
-        return RegularCustomerManager.getUnlockableStory(d.typeId) !== null;
-      });
-      regularBtn.redDot.visible = hasNewStory;
-    }
 
     // 装修红点（有可购买的新装饰）
     const decoBtn = this._activityBtns.get('deco');

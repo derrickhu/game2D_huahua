@@ -635,7 +635,7 @@ class BuildingManagerClass {
     };
   }
 
-  /** 获取消耗型次数（-1 表示不显示；宝箱/红包待散落件数走 getChestDispatchProgress 角标） */
+  /** 获取消耗型次数（-1 表示不显示；宝箱/红包待散落件数见 getChestDispatchProgress，棋盘不展示） */
   getUsesLeft(cellIndex: number): number {
     const cell = BoardManager.getCellByIndex(cellIndex);
     if (!cell?.itemId) return -1;
@@ -654,7 +654,7 @@ class BuildingManagerClass {
     return -1;
   }
 
-  /** 宝箱/红包内仍待落到棋盘的件数与总件数（用于右下角角标）；非容器或未开箱返回 null */
+  /** 宝箱/红包内仍待落到棋盘的件数与总件数（逻辑用，棋盘 UI 不显示）；非容器或未开箱返回 null */
   getChestDispatchProgress(cellIndex: number): { remaining: number; total: number } | null {
     const cell = BoardManager.getCellByIndex(cellIndex);
     if (!cell?.itemId || !this._findChestDef(cell.itemId)) return null;

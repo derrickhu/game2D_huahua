@@ -1,7 +1,7 @@
 /**
  * 订单分级配置 — C(初) / B(中) / A(高) / S(特) 四档
  *
- * 每档定义需求槽数、物品等级范围、可用产线、奖励区间。
+ * 每档定义需求槽数、物品等级范围、可用产线。花愿由物品单价 + 多槽加成计算。
  * CustomerManager 按玩家等级 + 已解锁产线动态选档后生成具体需求。
  */
 import { Category, FlowerLine, DrinkLine } from './ItemConfig';
@@ -17,7 +17,6 @@ export interface OrderTierDef {
   slotRange: [number, number];
   /** 该档可选的需求池（每个槽位从中随机取一条） */
   demandPool: CustomerDemandDef[];
-  huayuanRange: [number, number];
   /** 预留：限时秒数，null = 不限时 */
   timeLimit: number | null;
   /** 预留：订单子类型 */
@@ -32,7 +31,6 @@ export const ORDER_TIERS: Record<OrderTier, OrderTierDef> = {
     demandPool: [
       { category: Category.FLOWER, lines: [FlowerLine.FRESH], levelRange: [1, 3] },
     ],
-    huayuanRange: [10, 30],
     timeLimit: null,
     orderType: 'normal',
   },
@@ -44,7 +42,6 @@ export const ORDER_TIERS: Record<OrderTier, OrderTierDef> = {
       { category: Category.FLOWER, lines: [FlowerLine.FRESH, FlowerLine.BOUQUET], levelRange: [2, 5] },
       { category: Category.DRINK, lines: [DrinkLine.TEA, DrinkLine.COLD], levelRange: [2, 4] },
     ],
-    huayuanRange: [30, 80],
     timeLimit: null,
     orderType: 'normal',
   },
@@ -56,7 +53,6 @@ export const ORDER_TIERS: Record<OrderTier, OrderTierDef> = {
       { category: Category.FLOWER, lines: [FlowerLine.FRESH, FlowerLine.BOUQUET, FlowerLine.GREEN], levelRange: [4, 7] },
       { category: Category.DRINK, lines: [DrinkLine.TEA, DrinkLine.COLD, DrinkLine.DESSERT], levelRange: [3, 6] },
     ],
-    huayuanRange: [60, 150],
     timeLimit: null,
     orderType: 'normal',
   },
@@ -68,7 +64,6 @@ export const ORDER_TIERS: Record<OrderTier, OrderTierDef> = {
       { category: Category.FLOWER, lines: [FlowerLine.BOUQUET, FlowerLine.GREEN], levelRange: [6, 10] },
       { category: Category.DRINK, lines: [DrinkLine.COLD, DrinkLine.DESSERT], levelRange: [5, 8] },
     ],
-    huayuanRange: [120, 300],
     timeLimit: null,
     orderType: 'normal',
   },

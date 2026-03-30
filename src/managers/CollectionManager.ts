@@ -6,7 +6,7 @@
  * - 🍵 花饮图鉴（9种）
  * - 🏠 建筑图鉴（13种）
  * - 📦 宝箱图鉴（宝箱5级 + 红包4级，合成或散落至棋盘时解锁）
- * - 👤 客人图鉴（基于熟客系统）
+ * - 👤 客人图鉴（来访即解锁）
  * - 🪑 装饰图鉴（基于装修系统）
  * - 🌸 花语卡片（18张，首次合成解锁）
  *
@@ -15,6 +15,7 @@
 import { EventBus } from '@/core/EventBus';
 import { Platform } from '@/core/PlatformService';
 import { ITEM_DEFS, Category } from '@/config/ItemConfig';
+import { CUSTOMER_TYPES } from '@/config/CustomerConfig';
 import { CurrencyManager } from './CurrencyManager';
 
 const STORAGE_KEY = 'huahua_collection';
@@ -95,10 +96,6 @@ class CollectionManagerClass {
       this._discover(CollectionCategory.DECORATION, decoId);
     });
 
-    // 熟客关系升级
-    EventBus.on('regular:favorLevelUp', (typeId: string) => {
-      this._discover(CollectionCategory.CUSTOMER, typeId);
-    });
   }
 
   /**
@@ -183,7 +180,7 @@ class CollectionManagerClass {
       case CollectionCategory.DRINK: return 9;
       case CollectionCategory.BUILDING: return 13;
       case CollectionCategory.CHEST: return 9;
-      case CollectionCategory.CUSTOMER: return 6; // 6种熟客
+      case CollectionCategory.CUSTOMER: return CUSTOMER_TYPES.length;
       case CollectionCategory.DECORATION: return 72; // 装饰总数
       case CollectionCategory.FLOWER_CARD: return 18;
       default: return 0;

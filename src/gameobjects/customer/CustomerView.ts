@@ -20,15 +20,6 @@ import { ToolSparkleLayer } from '@/utils/ToolSparkleLayer';
 import { TweenManager, Ease } from '@/core/TweenManager';
 import { EventBus } from '@/core/EventBus';
 import { CustomerInstance } from '@/managers/CustomerManager';
-import { RegularCustomerManager, FAVOR_LEVEL_COLORS, FavorLevel } from '@/managers/RegularCustomerManager';
-
-const FAVOR_ABBREV: Record<FavorLevel, string> = {
-  [FavorLevel.STRANGER]: '陌',
-  [FavorLevel.FAMILIAR]: '熟',
-  [FavorLevel.CLOSE]: '密',
-  [FavorLevel.BESTIE]: '挚',
-};
-
 /** 单格物品显示边长（3 个并排仍落在 PANEL_W 内） */
 const SLOT_SIZE = 66;
 const SLOT_GAP = 8;
@@ -209,15 +200,11 @@ export class CustomerView extends PIXI.Container {
     this._clearCompleteBtn();
     this._clearRewardBadge();
     this._clearTierBadge();
-    this._clearFavorBadge();
     if (!this._customer) return;
 
     const allDone = this._customer.allSatisfied && this._queueIndex < CustomerManager.maxCustomers;
 
-    // 熟客关系角标（半身像左上）
-    this._buildFavorBadge();
-
-    // 奖励徽章（头像底部，半透明深色遮罩；花愿为含熟客加成后的预计到账）
+    // 奖励徽章（头像底部；花愿与交付到账一致）
     this._buildRewardBadge();
 
     // 档位角标（需求面板左上角小圆标）
@@ -281,11 +268,7 @@ export class CustomerView extends PIXI.Container {
     let offsetX = 0;
     const items: { icon: string; value: number }[] = [];
 
-    const hyDisplay = RegularCustomerManager.getExpectedHuayuanReward(
-      this._customer.huayuanReward,
-      this._customer.typeId,
-    );
-    items.push({ icon: 'icon_huayuan', value: hyDisplay });
+    items.push({ icon: 'icon_huayuan', value: this._customer.huayuanReward });
 
     const content = new PIXI.Container();
     for (const item of items) {
@@ -342,7 +325,6 @@ export class CustomerView extends PIXI.Container {
   }
 
   private _tierBadge: PIXI.Container | null = null;
-  private _favorBadge: PIXI.Container | null = null;
 
   private _buildTierBadge(): void {
     this._clearTierBadge();
@@ -378,53 +360,6 @@ export class CustomerView extends PIXI.Container {
       if (this._tierBadge.parent) this._tierBadge.parent.removeChild(this._tierBadge);
       this._tierBadge.destroy({ children: true });
       this._tierBadge = null;
-    }
-  }
-
-  /** 熟客：关系简称 + 花愿加成比例（非熟客类型不显示） */
-  private _buildFavorBadge(): void {
-    if (!this._customer) return;
-    if (!RegularCustomerManager.isRegularType(this._customer.typeId)) return;
-
-    const data = RegularCustomerManager.getData(this._customer.typeId);
-    const lv = data.favorLevel;
-    const color = FAVOR_LEVEL_COLORS[lv];
-    const abbr = FAVOR_ABBREV[lv];
-    const bonus = RegularCustomerManager.getRewardBonus(this._customer.typeId);
-    const pct = Math.round(bonus * 100);
-    const labelStr = pct > 0 ? `${abbr}+${pct}%` : `${abbr}`;
-
-    const badge = new PIXI.Container();
-    const label = new PIXI.Text(labelStr, {
-      fontSize: 10,
-      fill: 0xFFFFFF,
-      fontFamily: FONT_FAMILY,
-      fontWeight: 'bold',
-      stroke: 0x000000,
-      strokeThickness: 2.5,
-    });
-    label.anchor.set(0.5, 0.5);
-    const padX = 5;
-    const padY = 3;
-    const bw = Math.max(36, label.width + padX * 2);
-    const bh = label.height + padY * 2;
-    const bg = new PIXI.Graphics();
-    bg.beginFill(color, 0.88);
-    bg.drawRoundedRect(-bw / 2, -bh / 2, bw, bh, 6);
-    bg.endFill();
-    badge.addChild(bg);
-    badge.addChild(label);
-    badge.position.set(-56, -156);
-    badge.zIndex = 12;
-    this.addChild(badge);
-    this._favorBadge = badge;
-  }
-
-  private _clearFavorBadge(): void {
-    if (this._favorBadge) {
-      if (this._favorBadge.parent) this._favorBadge.parent.removeChild(this._favorBadge);
-      this._favorBadge.destroy({ children: true });
-      this._favorBadge = null;
     }
   }
 

@@ -7,8 +7,8 @@
 import { EventBus } from '@/core/EventBus';
 import { BoardManager } from './BoardManager';
 import { CurrencyManager } from './CurrencyManager';
-import { RegularCustomerManager } from './RegularCustomerManager';
 import { LevelManager } from './LevelManager';
+import { MULTI_SLOT_BONUS_RATE } from '@/config/OrderHuayuanConfig';
 import { CUSTOMER_TYPES, type CustomerDemandDef } from '@/config/CustomerConfig';
 import { CellState } from '@/config/BoardLayout';
 import { TOOL_DEFS } from '@/config/BuildingConfig';
@@ -45,8 +45,6 @@ export interface CustomerInstance {
   chainIndex?: number;
   /** 预留：奖励倍率 */
   bonusMultiplier?: number;
-  /** 本单交付时应用的熟客花愿加成比例（仅 emit 前写入，供 Toast 等；非熟客或未加成不设） */
-  settledRegularBonus?: number;
 }
 
 /** 存档用需求槽（无 lockedCellIndex，读档后由 _rescanAll 绑定棋盘） */
@@ -212,7 +210,7 @@ class CustomerManagerClass {
         emoji: e.emoji,
         slots: e.slots.map(s => ({ itemId: s.itemId, lockedCellIndex: -1 })),
         allSatisfied: false,
-        huayuanReward: e.huayuanReward,
+        huayuanReward: CustomerManagerClass._computeOrderHuayuanFromSlots(e.slots),
         tier: e.tier,
         orderType: e.orderType,
         timeLimit: e.timeLimit,
@@ -255,6 +253,17 @@ class CustomerManagerClass {
     }
   }
 
+  /** 订单花愿 = 各需求物品 orderHuayuan 之和 × (1 + 多槽加成) */
+  private static _computeOrderHuayuanFromSlots(slots: { itemId: string }[]): number {
+    let sum = 0;
+    for (const s of slots) {
+      sum += ITEM_DEFS.get(s.itemId)?.orderHuayuan ?? 0;
+    }
+    const n = slots.length;
+    if (n <= 0) return 0;
+    return Math.max(1, Math.round(sum * (1 + MULTI_SLOT_BONUS_RATE * (n - 1))));
+  }
+
   deliver(uid: number): boolean {
     const idx = this._customers.findIndex(c => c.uid === uid);
     if (idx < 0) return false;
@@ -267,15 +276,10 @@ class CustomerManagerClass {
       }
     }
 
-    const bonus = RegularCustomerManager.getRewardBonus(customer.typeId);
-    customer.settledRegularBonus =
-      RegularCustomerManager.isRegularType(customer.typeId) && bonus > 0 ? bonus : undefined;
-    const finalHuayuan = Math.round(customer.huayuanReward * (1 + bonus));
-    CurrencyManager.addHuayuan(finalHuayuan);
+    const hy = customer.huayuanReward;
+    CurrencyManager.addHuayuan(hy);
 
-    customer.huayuanReward = finalHuayuan;
-
-    console.log(`[Customer] 交付完成: ${customer.name}(${customer.tier}), 花愿+${finalHuayuan}${bonus > 0 ? ` (熟客加成+${Math.round(bonus * 100)}%)` : ''}`);
+    console.log(`[Customer] 交付完成: ${customer.name}(${customer.tier}), 花愿+${hy}`);
 
     this._customers.splice(idx, 1);
     EventBus.emit('customer:delivered', uid, customer);
@@ -385,8 +389,7 @@ class CustomerManagerClass {
     const slots = this._generateDemands(tierDef.demandPool, tierDef.slotRange, lines);
     if (slots.length === 0) return;
 
-    const [minHy, maxHy] = tierDef.huayuanRange;
-    const huayuan = minHy + Math.floor(Math.random() * (maxHy - minHy + 1));
+    const huayuan = CustomerManagerClass._computeOrderHuayuanFromSlots(slots);
 
     const customer: CustomerInstance = {
       uid: this._nextUid++,

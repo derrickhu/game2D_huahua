@@ -6,6 +6,11 @@
  * 宝箱：5级；红包：4级（散落花愿利是，双击入账花愿）
  */
 
+import {
+  drinkDeliverHuayuanForLevel,
+  flowerDeliverHuayuanForLevel,
+} from './OrderHuayuanConfig';
+
 export enum Category {
   FLOWER = 'flower',
   DRINK = 'drink',
@@ -81,6 +86,8 @@ export interface ItemDef {
   storable: boolean;
   /** 货币物品双击使用时获得的奖励 */
   currencyReward?: { type: 'stamina' | 'huayuan' | 'diamond'; amount: number };
+  /** 订单需求交付时该物品贡献的花愿（固定单价；多槽订单另有加成） */
+  orderHuayuan?: number;
 }
 
 // ═══════════════ 产品数据 ═══════════════
@@ -151,17 +158,19 @@ function buildItemDefs(): Map<string, ItemDef> {
     const maxLv = line === FlowerLine.WRAP ? names.length : 10;
     for (let i = 0; i < names.length; i++) {
       const id = `flower_${line}_${i + 1}`;
+      const lv = i + 1;
       map.set(id, {
         id,
         name: names[i],
         category: Category.FLOWER,
         line,
-        level: i + 1,
+        level: lv,
         maxLevel: maxLv,
         icon: `flower_${line}_${i + 1}`,
         interactType: InteractType.NONE,
         sellable: true,
         storable: true,
+        ...(line !== FlowerLine.WRAP ? { orderHuayuan: flowerDeliverHuayuanForLevel(lv) } : {}),
       });
     }
   }
@@ -170,17 +179,19 @@ function buildItemDefs(): Map<string, ItemDef> {
   for (const [line, names] of DRINK_DATA) {
     for (let i = 0; i < names.length; i++) {
       const id = `drink_${line}_${i + 1}`;
+      const lv = i + 1;
       map.set(id, {
         id,
         name: names[i],
         category: Category.DRINK,
         line,
-        level: i + 1,
+        level: lv,
         maxLevel: 8,
         icon: `drink_${line}_${i + 1}`,
         interactType: InteractType.NONE,
         sellable: true,
         storable: true,
+        orderHuayuan: drinkDeliverHuayuanForLevel(lv),
       });
     }
   }

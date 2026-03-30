@@ -42,15 +42,11 @@ import { TutorialSystem } from '@/systems/TutorialSystem';
 import { SoundSystem } from '@/systems/SoundSystem';
 import { GMManager } from '@/managers/GMManager';
 import { GMPanel } from '@/gameobjects/ui/GMPanel';
-import { RegularCustomerManager } from '@/managers/RegularCustomerManager';
 import { DecorationManager } from '@/managers/DecorationManager';
 import { StaminaPanel } from '@/gameobjects/ui/StaminaPanel';
-import { RegularCustomerPanel } from '@/gameobjects/ui/RegularCustomerPanel';
-import { StoryPopup } from '@/gameobjects/ui/StoryPopup';
 import { DecorationPanel } from '@/gameobjects/ui/DecorationPanel';
 import { FloatingMenu } from '@/gameobjects/ui/FloatingMenu';
 import { SceneSwitch } from '@/gameobjects/ui/SceneSwitch';
-import { CUSTOMER_TYPES } from '@/config/CustomerConfig';
 import { DESIGN_WIDTH, COLORS, FONT_FAMILY, INFO_BAR_HEIGHT, BoardMetrics } from '@/config/Constants';
 import { ITEM_DEFS } from '@/config/ItemConfig';
 import { TextureCache } from '@/utils/TextureCache';
@@ -116,8 +112,6 @@ export class MainScene implements Scene {
 
   // ---- 新增系统 ----
   private _staminaPanel!: StaminaPanel;
-  private _regularPanel!: RegularCustomerPanel;
-  private _storyPopup!: StoryPopup;
   private _decoPanel!: DecorationPanel;
 
   // ---- 新UI架构 ----
@@ -162,7 +156,6 @@ export class MainScene implements Scene {
       CheckInManager.init();
       IdleManager.init();
       LevelManager.init();
-      RegularCustomerManager.init();
       DecorationManager.init();
       RoomLayoutManager.init();
       SoundSystem.init();
@@ -301,7 +294,7 @@ export class MainScene implements Scene {
     // 传入 this.container 作为抖动目标，避免修改 Game.stage.pivot 导致场景切换后坐标错乱
     this._hapticSystem = new HapticSystem(this.container, this.container);
 
-    // 左侧悬浮功能按钮组（签到/任务/熟客，纵向排列在棋盘左侧）
+    // 左侧悬浮功能按钮组（签到/任务等，纵向排列在棋盘左侧）
     // 参考 Merge Mansion / Travel Town：功能入口悬浮在棋盘边缘，不占用独立行空间
     this._floatingMenu = new FloatingMenu();
     this.container.addChild(this._floatingMenu);
@@ -337,14 +330,6 @@ export class MainScene implements Scene {
     // 体力不足面板
     this._staminaPanel = new StaminaPanel();
     overlay.addChild(this._staminaPanel);
-
-    // 熟客档案面板
-    this._regularPanel = new RegularCustomerPanel();
-    overlay.addChild(this._regularPanel);
-
-    // 花语故事弹窗
-    this._storyPopup = new StoryPopup();
-    overlay.addChild(this._storyPopup);
 
     // 花店装修面板
     this._decoPanel = new DecorationPanel();
@@ -532,11 +517,7 @@ export class MainScene implements Scene {
         });
       }
 
-      // 花愿飞行动画（与交付到账一致：含熟客加成后的预计值）
-      const hyFly = RegularCustomerManager.getExpectedHuayuanReward(
-        customer.huayuanReward,
-        customer.typeId,
-      );
+      const hyFly = customer.huayuanReward;
       if (hyFly > 0) {
         pendingAnims++;
         const targetPos = this._topBar.getHuayuanIconPos();
@@ -556,10 +537,7 @@ export class MainScene implements Scene {
 
     // 交付完成后的 Toast 提示
     EventBus.on('customer:delivered', (_uid: number, customer: any) => {
-      const br = customer.settledRegularBonus as number | undefined;
-      const bonusHint =
-        typeof br === 'number' && br > 0 ? `（含熟客+${Math.round(br * 100)}%）` : '';
-      ToastMessage.show(`${customer.name} 满意离开！🌸花愿+${customer.huayuanReward}${bonusHint}`);
+      ToastMessage.show(`${customer.name} 满意离开！🌸花愿+${customer.huayuanReward}`);
     });
   }
 
@@ -884,43 +862,6 @@ export class MainScene implements Scene {
     // 体力不足 → 弹出体力面板引导
     EventBus.on('building:noStamina', () => {
       this._staminaPanel.open();
-    });
-
-    // ---- 熟客系统事件 ----
-
-    // 打开熟客面板
-    EventBus.on('nav:openRegular', () => this._regularPanel.open());
-
-    // 熟客问候（到店时的对话气泡）
-    EventBus.on('regular:greeting', (_typeId: string, name: string, greeting: string) => {
-      ToastMessage.show(`💬 ${name}：「${greeting}」`);
-    });
-
-    // 熟客感谢（交付后的对话）
-    EventBus.on('regular:thanks', (_typeId: string, name: string, thanks: string) => {
-      ToastMessage.show(`💝 ${name}：「${thanks}」`);
-    });
-
-    // 好感度升级提示
-    EventBus.on('regular:favorLevelUp', (typeId: string, level: number) => {
-      const type = CUSTOMER_TYPES.find(t => t.id === typeId);
-      if (type) {
-        const levelNames = ['陌生', '熟悉', '亲密', '挚友'];
-        ToastMessage.show(`✨ ${type.name}的好感度升至「${levelNames[level] || ''}」！`);
-      }
-    });
-
-    // 新故事可解锁提示
-    EventBus.on('regular:storyAvailable', (typeId: string, _chapterIdx: number) => {
-      const type = CUSTOMER_TYPES.find(t => t.id === typeId);
-      if (type) {
-        ToastMessage.show(`📖 ${type.name}的新花语故事可以阅读了！`);
-      }
-    });
-
-    // 展示故事弹窗
-    EventBus.on('regular:showStory', (typeId: string, chapterIdx: number, chapter: any) => {
-      this._storyPopup.show(typeId, chapterIdx, chapter);
     });
 
     // ---- 装修系统事件 ----
