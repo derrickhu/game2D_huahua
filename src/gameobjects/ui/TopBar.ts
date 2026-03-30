@@ -1,10 +1,12 @@
 /**
  * 顶部信息栏
  *
- * 布局：[🌿花露]  [💎花愿]  [⚡体力胶囊 … +]  [💠钻石条+加号]  [🛠️GM*] …系统菜单预留（*GM 激活后可见）
+ * 布局：[🌸花愿]  [⚡体力胶囊 … +]  [💠钻石条+加号]  [🛠️GM*] …系统菜单预留（*GM 激活后可见）
+ *
+ * 星星进度仅在花店装修场景进度条展示，顶栏不再显示星星槽位。
  *
  * - 体力：粉米色圆角外框 + 内绿进度 + 左侧闪电叠压 + 闪电右下绿圆加号 + 居中数值 + 条下倒计时
- * - 花露/花愿：图标 + 数值叠在底边，图标中心与体力闪电/钻石宝石同一水平中线
+ * - 花愿：图标 + 数值叠在底边，图标中心与体力闪电/钻石宝石同一水平中线
  */
 import * as PIXI from 'pixi.js';
 import { EventBus } from '@/core/EventBus';
@@ -20,19 +22,16 @@ export const TOP_BAR_HEIGHT = 76;
 const PILL_H = 42;
 const PILL_R = PILL_H / 2;
 const PY = Math.round((TOP_BAR_HEIGHT - PILL_H) / 2);
-/** 顶栏内统一垂直中线（花露/花愿图标、闪电、钻石宝石中心对齐） */
+/** 顶栏内统一垂直中线（花愿图标、闪电、钻石宝石中心对齐） */
 const BAR_MID_Y = TOP_BAR_HEIGHT / 2;
 
-// ── 水平布局（花露 → 花愿 → 体力 → 钻石，间距放宽）──
+// ── 水平布局（花愿 → 体力 → 钻石，间距放宽）──
 const LEFT_MARGIN = 28;
 const CURRENCY_ICON    = 46;
-const HUALU_CX = LEFT_MARGIN + CURRENCY_ICON / 2;
-/** 花露/花愿图标中心 y：与体力闪电、钻石宝石同中线 */
+const HYUAN_CX = LEFT_MARGIN + CURRENCY_ICON / 2;
+/** 花愿图标中心 y：与体力闪电、钻石宝石同中线 */
 const CURRENCY_ICON_CY = BAR_MID_Y;
 const CURRENCY_TEXT_CY = CURRENCY_ICON_CY + CURRENCY_ICON / 2 - 5;
-
-const GAP_HUALU_HYUAN = 74;
-const HYUAN_CX = HUALU_CX + GAP_HUALU_HYUAN;
 
 const GAP_HYUAN_TO_STAMINA = 36;
 const STA_X = HYUAN_CX + CURRENCY_ICON / 2 + GAP_HYUAN_TO_STAMINA;
@@ -76,14 +75,12 @@ export class TopBar extends PIXI.Container {
   private _staminaFill!: PIXI.Graphics;
   /** 体力内槽尺寸（用于绘制进度） */
   private _staminaInner = { x: 0, y: 0, w: 0, h: 0 };
-  private _hualuText!: PIXI.Text;
   private _huayuanText!: PIXI.Text;
   private _diamondBar!: PIXI.Container;
   private _diamondText!: PIXI.Text;
 
   constructor() {
     super();
-    this._buildHualu();
     this._buildHuayuan();
     this._buildStaminaPill();
     this._buildDiamondPill();
@@ -98,7 +95,7 @@ export class TopBar extends PIXI.Container {
     const BOLT_W = 50;
     const BOLT_H = 54;
     const ix = STA_X + 6;
-    /** 闪电中心与花露/花愿/钻石宝石同一中线 */
+    /** 闪电中心与花愿/钻石宝石同一中线 */
     const iy = BAR_MID_Y;
 
     // 外框：浅粉米胶囊 + 粉描边
@@ -186,33 +183,7 @@ export class TopBar extends PIXI.Container {
     this.addChild(this._staminaTimer);
   }
 
-  /* ============== 花露（上图标 + 下文字叠压，参考星星样式） ============== */
-
-  private _buildHualu(): void {
-    const tex = TextureCache.get('icon_hualu');
-    if (tex) {
-      const sp = new PIXI.Sprite(tex);
-      sp.anchor.set(0.5);
-      sp.width = CURRENCY_ICON;
-      sp.height = CURRENCY_ICON;
-      sp.position.set(HUALU_CX, CURRENCY_ICON_CY);
-      this.addChild(sp);
-    }
-
-    this._hualuText = new PIXI.Text('0', {
-      fontSize: 19,
-      fontWeight: 'bold',
-      fill: 0xFFFFFF,
-      fontFamily: FONT_FAMILY,
-      stroke: 0x1565C0,
-      strokeThickness: 3,
-    });
-    this._hualuText.anchor.set(0.5, 0.5);
-    this._hualuText.position.set(HUALU_CX, CURRENCY_TEXT_CY);
-    this.addChild(this._hualuText);
-  }
-
-  /* ============== 花愿（上图标 + 下文字叠压，参考星星样式） ============== */
+  /* ============== 花愿（上图标 + 下文字叠压） ============== */
 
   private _buildHuayuan(): void {
     const tex = TextureCache.get('icon_huayuan');
@@ -381,7 +352,6 @@ export class TopBar extends PIXI.Container {
     const s = CurrencyManager.state;
     const cap = CurrencyManager.staminaCap;
     this._staminaText.text = `${s.stamina}/${cap}`;
-    this._hualuText.text = this._fmtNum(s.hualu);
     this._huayuanText.text = this._fmtNum(s.huayuan);
     this._diamondText.text = this._fmtNum(s.diamond);
     const barRatio = cap > 0 ? Math.min(1, s.stamina / cap) : 0;
@@ -431,9 +401,9 @@ export class TopBar extends PIXI.Container {
     return { x: HYUAN_CX, y: CURRENCY_ICON_CY };
   }
 
-  /** 获取花露图标在 TopBar 内的中心坐标 */
+  /** @deprecated 花露/星星顶栏已移除，飞入花愿槽位 */
   getHualuIconPos(): { x: number; y: number } {
-    return { x: HUALU_CX, y: CURRENCY_ICON_CY };
+    return this.getHuayuanIconPos();
   }
 
   /** 获取钻石图标在 TopBar 内的中心坐标（与 _buildDiamondPill 内宝石精灵对齐） */
@@ -446,9 +416,9 @@ export class TopBar extends PIXI.Container {
     this._flashText(this._huayuanText);
   }
 
-  /** 花露数值闪烁弹跳效果 */
+  /** @deprecated 花露/星星顶栏已移除 */
   flashHualu(): void {
-    this._flashText(this._hualuText);
+    this.flashHuayuan();
   }
 
   /** 体力数值闪烁弹跳（超过上限时同样可触发） */

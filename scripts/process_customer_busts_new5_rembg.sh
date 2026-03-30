@@ -8,7 +8,7 @@ WORK="$HOME/rosa_games/game_assets/huahua/assets"
 SPLIT="$WORK/split/customer_rembg_birefnet"
 NOBG="$WORK/nobg/customer_rembg_birefnet"
 FINAL="$WORK/final/customer_rembg_birefnet"
-OUT_GAME="$(cd "$(dirname "$0")/.." && pwd)/minigame/images/customer"
+OUT_GAME="$(cd "$(dirname "$0")/.." && pwd)/minigame/subpkg_chars/images/customer"
 
 mkdir -p "$SPLIT" "$NOBG" "$FINAL"
 python3 "$SKILL/game-art-pipeline/scripts/split_grid.py" "$GRID" 4 2 -o "$SPLIT" \

@@ -550,8 +550,8 @@ export class CheckInPanel extends PIXI.Container {
     if (!result) return;
 
     const flyItems = [...result.reward.items];
-    if (result.streakBonusHualu > 0) {
-      flyItems.push({ type: 'hualu', amount: result.streakBonusHualu, textureKey: 'icon_hualu' });
+    if (result.streakBonus > 0) {
+      flyItems.push({ type: 'diamond', amount: result.streakBonus, textureKey: 'icon_gem' });
     }
     if (center && flyItems.length > 0) {
       EventBus.emit('checkin:flyReward', { items: flyItems, autoClosePanel: true }, center);

@@ -2,9 +2,9 @@
 """
 将客人 / 店主 PNG 规范到工程既有「压缩」上限（与入库脚本一致），避免超大原图进主包。
 
-- 客人 `minigame/images/customer/*.png`：与 `scripts/process_customer_busts_new5_rembg.sh` 内联逻辑一致
+- 客人 `minigame/subpkg_chars/images/customer/*.png`：与 `scripts/process_customer_busts_new5_rembg.sh` 内联逻辑一致
   — 先按高度 256 等比缩放，若宽 > 240 再按最大宽 240 约束（CustomerView 里半身像目标高约 160 逻辑像素，256≈1.6×，再缩易糊）。
-- 店主 `minigame/images/owner/`：`full_*` → 画布 197×384，`chibi_*` → 249×384，仅当任一边 **超过** 对应画布边时，
+- 店主 `minigame/subpkg_chars/images/owner/`：`full_*` → 画布 197×384，`chibi_*` → 249×384，仅当任一边 **超过** 对应画布边时，
   按 `gen_owner_outfit_panels.fit_resize_to_canvas` 等比缩入画布（与 `scripts/gen_owner_outfit_panels.py` 一致）。
 - 跳过文件名含 `original` 的备份。
 
@@ -23,8 +23,8 @@ from pathlib import Path
 from PIL import Image
 
 REPO = Path(__file__).resolve().parents[1]
-CUSTOMER_DIR = REPO / "minigame/images/customer"
-OWNER_DIR = REPO / "minigame/images/owner"
+CUSTOMER_DIR = REPO / "minigame/subpkg_chars/images/customer"
+OWNER_DIR = REPO / "minigame/subpkg_chars/images/owner"
 
 FULL_W, FULL_H = 197, 384
 CHIBI_W, CHIBI_H = 249, 384

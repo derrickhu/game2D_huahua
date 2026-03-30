@@ -16,8 +16,6 @@ import { CurrencyManager } from '@/managers/CurrencyManager';
 interface StatsData {
   /** 今日合成次数 */
   todayMerges: number;
-  /** 今日最高连击 */
-  todayBestCombo: number;
   /** 今日合成最高级物品ID */
   todayBestItemId: string;
   /** 今日交付订单数 */
@@ -26,8 +24,6 @@ interface StatsData {
   todayStamina: number;
   /** 累计合成次数 */
   totalMerges: number;
-  /** 历史最高连击 */
-  bestCombo: number;
   /** 已合成出的最高级物品ID */
   bestItemId: string;
   /** 累计交付订单数 */
@@ -36,12 +32,8 @@ interface StatsData {
   totalDays: number;
   /** 本周合成次数 */
   weekMerges: number;
-  /** 本周最高连击 */
-  weekBestCombo: number;
   /** 本月合成次数 */
   monthMerges: number;
-  /** 本月最高连击 */
-  monthBestCombo: number;
   /** 上次记录的日期 (YYYY-MM-DD) */
   lastDate: string;
   /** 上次记录的周号 */
@@ -59,32 +51,32 @@ interface GoalDef {
   name: string;
   type: 'weekly' | 'monthly';
   condition: (stats: StatsData) => boolean;
-  reward: { huayuan?: number; hualu?: number; diamond?: number };
+  reward: { huayuan?: number; diamond?: number };
   desc: string;
 }
 
 const WEEKLY_GOALS: GoalDef[] = [
   { id: 'w1', name: '初级合成师', type: 'weekly',
     condition: s => s.weekMerges >= 100,
-    reward: { huayuan: 50 }, desc: '本周合成100次' },
+    reward: { diamond: 12 }, desc: '本周合成100次' },
   { id: 'w2', name: '中级合成师', type: 'weekly',
     condition: s => s.weekMerges >= 300,
-    reward: { huayuan: 200 }, desc: '本周合成300次' },
+    reward: { diamond: 28 }, desc: '本周合成300次' },
   { id: 'w3', name: '高级合成师', type: 'weekly',
     condition: s => s.weekMerges >= 500,
-    reward: { huayuan: 50 }, desc: '本周合成500次' },
+    reward: { diamond: 15 }, desc: '本周合成500次' },
   { id: 'w4', name: '合成大师', type: 'weekly',
-    condition: s => s.weekBestCombo >= 8,
-    reward: { hualu: 20 }, desc: '本周最高连击达8连' },
+    condition: s => s.weekMerges >= 400,
+    reward: { diamond: 18 }, desc: '本周合成400次' },
 ];
 
 const MONTHLY_GOALS: GoalDef[] = [
   { id: 'm1', name: '月度合成达人', type: 'monthly',
     condition: s => s.monthMerges >= 2000,
-    reward: { huayuan: 100 }, desc: '本月合成2000次' },
-  { id: 'm2', name: '月度连击王', type: 'monthly',
-    condition: s => s.monthBestCombo >= 15,
-    reward: { hualu: 50, diamond: 20 }, desc: '本月最高连击达15连' },
+    reward: { diamond: 35 }, desc: '本月合成2000次' },
+  { id: 'm2', name: '月度合成王', type: 'monthly',
+    condition: s => s.monthMerges >= 3500,
+    reward: { diamond: 45 }, desc: '本月合成3500次' },
 ];
 
 const STORAGE_KEY = 'huahua_merge_stats';
@@ -106,19 +98,15 @@ export class MergeStatsSystem {
   private _createDefaultStats(): StatsData {
     return {
       todayMerges: 0,
-      todayBestCombo: 0,
       todayBestItemId: '',
       todayOrders: 0,
       todayStamina: 0,
       totalMerges: 0,
-      bestCombo: 0,
       bestItemId: '',
       totalOrders: 0,
       totalDays: 1,
       weekMerges: 0,
-      weekBestCombo: 0,
       monthMerges: 0,
-      monthBestCombo: 0,
       lastDate: this._getDateStr(),
       lastWeek: this._getWeekNum(),
       lastMonth: new Date().getMonth(),
@@ -149,7 +137,6 @@ export class MergeStatsSystem {
       // 新的一天
       this._stats.totalDays++;
       this._stats.todayMerges = 0;
-      this._stats.todayBestCombo = 0;
       this._stats.todayBestItemId = '';
       this._stats.todayOrders = 0;
       this._stats.todayStamina = 0;
@@ -158,14 +145,12 @@ export class MergeStatsSystem {
 
     if (this._stats.lastWeek !== thisWeek) {
       this._stats.weekMerges = 0;
-      this._stats.weekBestCombo = 0;
       this._stats.claimedWeekly = [];
       this._stats.lastWeek = thisWeek;
     }
 
     if (this._stats.lastMonth !== thisMonth) {
       this._stats.monthMerges = 0;
-      this._stats.monthBestCombo = 0;
       this._stats.claimedMonthly = [];
       this._stats.lastMonth = thisMonth;
     }
@@ -194,15 +179,6 @@ export class MergeStatsSystem {
         }
       }
 
-      this._saveStats();
-    });
-
-    // 连击
-    EventBus.on('combo:hit', (count: number) => {
-      if (count > this._stats.todayBestCombo) this._stats.todayBestCombo = count;
-      if (count > this._stats.bestCombo) this._stats.bestCombo = count;
-      if (count > this._stats.weekBestCombo) this._stats.weekBestCombo = count;
-      if (count > this._stats.monthBestCombo) this._stats.monthBestCombo = count;
       this._saveStats();
     });
 
@@ -276,7 +252,6 @@ export class MergeStatsSystem {
     const todayBestName = ITEM_DEFS.get(this._stats.todayBestItemId)?.name || '-';
     const todayItems = [
       `合成次数：${this._stats.todayMerges} 次`,
-      `最高连击：${this._stats.todayBestCombo} 连`,
       `最佳合成：${todayBestName}`,
       `交付订单：${this._stats.todayOrders} 单`,
     ];
@@ -291,7 +266,6 @@ export class MergeStatsSystem {
     const histBestName = ITEM_DEFS.get(this._stats.bestItemId)?.name || '-';
     const histItems = [
       `累计合成：${this._stats.totalMerges} 次`,
-      `历史最高连击：${this._stats.bestCombo} 连`,
       `最高合成物品：${histBestName}`,
       `累计订单：${this._stats.totalOrders} 单`,
       `经营天数：${this._stats.totalDays} 天`,
@@ -455,9 +429,6 @@ export class MergeStatsSystem {
       this._stats.claimedMonthly.push(goal.id);
     }
 
-    // 发放奖励
-    if (goal.reward.huayuan) CurrencyManager.addHuayuan(goal.reward.huayuan);
-    if (goal.reward.hualu) CurrencyManager.addHualu(goal.reward.hualu);
     if (goal.reward.diamond) CurrencyManager.addDiamond(goal.reward.diamond);
 
     this._saveStats();

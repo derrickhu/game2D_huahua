@@ -1,11 +1,11 @@
 /**
- * 主场景店铺整行横向滑动：默认看店主+礼包+客人；向右滑露出左侧大号活动入口。
+ * 主场景店铺整行：默认看店主+礼包+客人，左侧大号活动入口藏在屏外。
  *
- * 底层全宽 underlay 接收横向拖动；活动图标、店主、礼包、客人需求区等叠在上方各自处理点击。
+ * **不再支持横向滑动展开左侧**——只能点「展开 / 收起」；避免与客人区横向滑动抢手势、拖动手感割裂。
+ * 客人列表的滑动由 `CustomerScrollArea` 单独处理。
  */
 import * as PIXI from 'pixi.js';
 import { EventBus } from '@/core/EventBus';
-import { Game } from '@/core/Game';
 import { TweenManager, Ease } from '@/core/TweenManager';
 import { EventManager } from '@/managers/EventManager';
 import { FloatingMenu } from './FloatingMenu';
@@ -16,10 +16,6 @@ import { DESIGN_WIDTH, FONT_FAMILY } from '@/config/Constants';
 export const SHOP_PANORAMA_ACTIVITY_W = 232;
 /** 与 CustomerScrollArea 高度对齐，避免裁切需求面板 */
 export const SHOP_PANORAMA_VIEW_H = 310;
-
-const FRICTION = 0.92;
-const MIN_VEL = 0.35;
-const BOUNCE = 0.18;
 
 const BIG_BTN = 92;
 const BIG_ICON = 72;
@@ -74,15 +70,6 @@ export class ShopRowPanoramaScroll extends PIXI.Container {
   private _minScrollX = 0;
   private _maxScrollX = 0;
 
-  private _isDragging = false;
-  private _dragStartX = 0;
-  private _scrollStartX = 0;
-  private _velocity = 0;
-  private _lastDragX = 0;
-  private _lastDragTime = 0;
-  private _onRawMove: ((e: any) => void) | null = null;
-  private _onRawUp: ((e: any) => void) | null = null;
-
   private _arrowPhase = 0;
   private _stopped = false;
 
@@ -97,8 +84,8 @@ export class ShopRowPanoramaScroll extends PIXI.Container {
     this._scrollContent.mask = this._maskG;
 
     this._underlay = new PIXI.Graphics();
-    this._underlay.eventMode = 'static';
-    this._underlay.cursor = 'grab';
+    /** 仅作占位/层次底图，不接收指针（整行滑动已关闭） */
+    this._underlay.eventMode = 'none';
 
     this._activityRoot = new PIXI.Container();
 
@@ -121,7 +108,6 @@ export class ShopRowPanoramaScroll extends PIXI.Container {
     this._buildActivityColumn();
     this._redrawUnderlay();
     this._drawViewportMask();
-    this._setupUnderlayPan();
     this._scrollContent.x = -this._activityW;
     this._refreshScrollBounds();
     this._updateToggleVisibility();
@@ -158,29 +144,13 @@ export class ShopRowPanoramaScroll extends PIXI.Container {
     this._arrowPhase += dt * 2.6;
     this._updateArrowHints();
     this._updateToggleVisibility();
-
-    if (this._isDragging) return;
-    if (Math.abs(this._velocity) > MIN_VEL) {
-      let nx = this._scrollContent.x + this._velocity;
-      this._velocity *= FRICTION;
-      if (nx > this._maxScrollX) {
-        nx += (this._maxScrollX - nx) * BOUNCE;
-        this._velocity = 0;
-      } else if (nx < this._minScrollX) {
-        nx += (this._minScrollX - nx) * BOUNCE;
-        this._velocity = 0;
-      }
-      this._scrollContent.x = nx;
-    } else {
-      this._velocity = 0;
-    }
+    /** 整行位置仅由展开/收起 tween 驱动，无惯性滑动 */
     this._clampScroll(true);
   }
 
   destroy(options?: PIXI.IDestroyOptions | boolean): void {
     this._stopped = true;
     TweenManager.cancelTarget(this._scrollContent);
-    this._cleanupRawEvents();
     super.destroy(options);
   }
 
@@ -244,7 +214,6 @@ export class ShopRowPanoramaScroll extends PIXI.Container {
   }
 
   private _animateScrollTo(targetX: number): void {
-    this._velocity = 0;
     TweenManager.cancelTarget(this._scrollContent);
     TweenManager.to({
       target: this._scrollContent,
@@ -387,67 +356,4 @@ export class ShopRowPanoramaScroll extends PIXI.Container {
     this._arrowHintR.visible = false;
   }
 
-  private _setupUnderlayPan(): void {
-    const canvas = Game.app.view as any;
-
-    this._underlay.on('pointerdown', (e: PIXI.FederatedPointerEvent) => {
-      TweenManager.cancelTarget(this._scrollContent);
-      this._velocity = 0;
-      this._isDragging = true;
-      this._dragStartX = e.globalX;
-      this._scrollStartX = this._scrollContent.x;
-      this._lastDragX = e.globalX;
-      this._lastDragTime = Date.now();
-      this._velocity = 0;
-      this._cleanupRawEvents();
-
-      this._onRawMove = (rawE: any) => {
-        if (!this._isDragging) return;
-        const gx = this._rawToDesignX(rawE);
-        const dx = gx - this._dragStartX;
-        const now = Date.now();
-        const dtMs = Math.max(1, now - this._lastDragTime);
-        this._velocity = (gx - this._lastDragX) / dtMs * 16;
-        this._lastDragX = gx;
-        this._lastDragTime = now;
-
-        let newX = this._scrollStartX + dx;
-        if (newX > this._maxScrollX) newX = this._maxScrollX + (newX - this._maxScrollX) * 0.35;
-        if (newX < this._minScrollX) newX = this._minScrollX + (newX - this._minScrollX) * 0.35;
-        this._scrollContent.x = newX;
-        this._updateArrowHints();
-      };
-
-      this._onRawUp = () => {
-        this._isDragging = false;
-        this._cleanupRawEvents();
-      };
-
-      canvas.addEventListener('pointermove', this._onRawMove);
-      canvas.addEventListener('pointerup', this._onRawUp);
-      canvas.addEventListener('pointercancel', this._onRawUp);
-    });
-  }
-
-  private _rawToDesignX(e: any): number {
-    const rect = (Game.app.view as any).getBoundingClientRect
-      ? (Game.app.view as any).getBoundingClientRect()
-      : { left: 0, width: Game.screenWidth };
-    const clientX = e.clientX ?? e.pageX ?? (e.changedTouches?.[0]?.clientX ?? 0);
-    const ratio = Game.designWidth / (rect.width || Game.screenWidth);
-    return (clientX - rect.left) * ratio;
-  }
-
-  private _cleanupRawEvents(): void {
-    const canvas = Game.app.view as any;
-    if (this._onRawMove) {
-      canvas.removeEventListener('pointermove', this._onRawMove);
-      this._onRawMove = null;
-    }
-    if (this._onRawUp) {
-      canvas.removeEventListener('pointerup', this._onRawUp);
-      canvas.removeEventListener('pointercancel', this._onRawUp);
-      this._onRawUp = null;
-    }
-  }
 }

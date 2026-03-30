@@ -6,10 +6,6 @@
  *
  * 震动等级：
  * - 普通合成：轻震 + 微抖 + 小粒子
- * - 连击合成(3+)：中震 + 中抖 + 中粒子
- * - 大连击(5+)：中震 + 大抖 + 大粒子 + 缩放脉冲
- * - 狂热模式(10+)：长震 + 强抖 + 超大粒子 + 全屏闪光
- * - 传说连击(15+)：长震×2 + 持续抖动 + 星爆粒子
  */
 import * as PIXI from 'pixi.js';
 import { Platform } from '@/core/PlatformService';
@@ -22,7 +18,6 @@ import {
 
 /** 粒子颜色组 */
 const MERGE_PARTICLE_COLORS = [0xFFD700, 0xFF8C00, 0xFFB74D, 0xFFE4B5, 0xFF6B6B];
-const FRENZY_PARTICLE_COLORS = [0xFF4500, 0xFF6347, 0xFFD700, 0xFF8C00, 0xFFA07A, 0xFF69B4];
 const LEGENDARY_PARTICLE_COLORS = [0xFF00FF, 0x00FFFF, 0xFFD700, 0xFF4500, 0x7B68EE, 0x00FF00];
 
 /** 单个粒子 */
@@ -75,21 +70,6 @@ export class HapticSystem {
       this._onMergeSuccess(resultCell);
     });
 
-    // 连击
-    EventBus.on('combo:hit', (count: number) => {
-      this._onComboHit(count);
-    });
-
-    // 狂热开始
-    EventBus.on('combo:frenzyStart', () => {
-      this._onFrenzyStart();
-    });
-
-    // 合成溢出
-    EventBus.on('combo:overflow', (cellIndex: number, _resultId: string) => {
-      this._onOverflow(cellIndex);
-    });
-
     // 升级
     EventBus.on('level:up', () => {
       this._onLevelUp();
@@ -128,57 +108,6 @@ export class HapticSystem {
 
     // 微抖
     this._shakeScreen(0.08, 2);
-  }
-
-  /** 连击反馈 */
-  private _onComboHit(count: number): void {
-    if (count < 2) return;
-
-    if (count >= 15) {
-      // 传说连击
-      if (this._vibrationEnabled) Platform.vibrateLong();
-      this._shakeScreen(0.4, 6);
-      if (this._effectsEnabled) this._flashScreen(0xFFD700, 0.15, 0.5);
-    } else if (count >= 10) {
-      // 狂热连击
-      if (this._vibrationEnabled) Platform.vibrateLong();
-      this._shakeScreen(0.3, 5);
-    } else if (count >= 5) {
-      // 大连击
-      if (this._vibrationEnabled) Platform.vibrateShort('heavy');
-      this._shakeScreen(0.2, 4);
-    } else if (count >= 3) {
-      // 小连击
-      if (this._vibrationEnabled) Platform.vibrateShort('medium');
-      this._shakeScreen(0.12, 3);
-    }
-  }
-
-  /** 狂热模式开始 */
-  private _onFrenzyStart(): void {
-    if (this._vibrationEnabled) Platform.vibrateLong();
-
-    if (this._effectsEnabled) {
-      // 全屏金色闪光
-      this._flashScreen(0xFFD700, 0.2, 0.8);
-
-      // 全屏粒子爆发
-      const cx = DESIGN_WIDTH / 2;
-      const cy = Game.logicHeight / 2;
-      this._spawnMergeParticles(cx, cy, 30, FRENZY_PARTICLE_COLORS, 2.5);
-    }
-  }
-
-  /** 合成溢出 */
-  private _onOverflow(cellIndex: number): void {
-    if (this._vibrationEnabled) Platform.vibrateShort('heavy');
-
-    if (this._effectsEnabled) {
-      const pos = cellIndex >= 0
-        ? this._getCellWorldPos(cellIndex)
-        : { x: DESIGN_WIDTH / 2, y: Game.logicHeight / 2 };
-      this._spawnMergeParticles(pos.x, pos.y, 12, FRENZY_PARTICLE_COLORS, 1.5);
-    }
   }
 
   /** 升级 */

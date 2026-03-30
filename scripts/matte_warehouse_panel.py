@@ -2,7 +2,7 @@
 """
 仓库花篮整图：品红底抠图 + 去边（压品红）、轻微收缩 alpha 去毛边。
 源图优先 game_assets，否则 minigame 现有 PNG。
-输出：minigame/images/ui/warehouse_panel_bg.png
+输出：minigame/subpkg_panels/images/ui/warehouse_panel_bg.png
 """
 from __future__ import annotations
 
@@ -17,11 +17,11 @@ except ImportError:
     sys.exit(1)
 
 ROOT = Path(__file__).resolve().parents[1]
-OUT = ROOT / "minigame/images/ui/warehouse_panel_bg.png"
+OUT = ROOT / "minigame/subpkg_panels/images/ui/warehouse_panel_bg.png"
 
 CANDIDATES = [
     Path.home() / "rosa_games/game_assets/huahua/assets/warehouse_ui_nb2/for_review/warehouse_flower_basket_panel_nb2_v2_9x16.png",
-    ROOT / "minigame/images/ui/warehouse_panel_bg.png",
+    ROOT / "minigame/subpkg_panels/images/ui/warehouse_panel_bg.png",
 ]
 
 

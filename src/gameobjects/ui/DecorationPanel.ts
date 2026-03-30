@@ -5,8 +5,8 @@
  * - 底图复用 merge_chain_panel（金边奶油底）
  * - 顶部彩带 + 标题；其下居中「已收集」进度 + 分割线；右上角关闭
  * - 左侧：分类 Tab 栏（药丸式纯文字）
- * - 右侧：家具/房间风格卡网格（2 列，可纵向滑动）
- * - 卡片为程序绘制双层金边圆角 + 贴图按钮 + 稀有度标签
+ * - 右侧：家具/房间风格卡网格（2 列，可纵向滑动；move/up 绑 canvas，兼容微信小游戏）
+ * - 卡片为程序绘制双层金边圆角 + 贴图按钮 + 左上角星星值（购买后获得的星星数）
  */
 import * as PIXI from 'pixi.js';
 import { Game } from '@/core/Game';
@@ -17,11 +17,20 @@ import { DecorationManager } from '@/managers/DecorationManager';
 import { TextureCache } from '@/utils/TextureCache';
 import { checkRequirement } from '@/utils/UnlockChecker';
 import {
-  DecoSlot, DecoRarity, DECO_SLOT_INFO, DECO_RARITY_INFO,
-  getSlotDecos, DecoDef,
+  DecoSlot, DECO_SLOT_INFO,
+  DecoDef,
   ROOM_STYLES, RoomStyleDef,
+  DECO_PANEL_TABS,
+  type DecoPanelTabId,
+  getDecorationTabLabel,
+  getDecosForDecorationPanelTab,
+  isDecoAllowedInScene,
+  formatAllowedScenesShort,
 } from '@/config/DecorationConfig';
+import { CurrencyManager } from '@/managers/CurrencyManager';
 import { DESIGN_WIDTH, FONT_FAMILY, COLORS } from '@/config/Constants';
+import { RoomLayoutManager } from '@/managers/RoomLayoutManager';
+import { setPendingPlaceDeco } from '@/core/DecoPlaceIntent';
 
 const PANEL_W = DESIGN_WIDTH - 40;
 const PANEL_MARGIN_LEFT = 36;
@@ -43,7 +52,8 @@ const PROGRESS_TO_DIVIDER = 14;
 const DIVIDER_TO_CONTENT = 6;
 /** 顶部分割线长度占面板内宽比例（居中，避免顶到金边） */
 const HEADER_DIVIDER_WIDTH_RATIO = 0.56;
-const CONTENT_BOTTOM = 10;
+/** 网格区距面板底边的留白，避免卡片贴到金边外；略大以保证裁切在画框内 */
+const CONTENT_BOTTOM = 36;
 
 /** 左侧分类栏宽度（加大、避免贴边显得「偏」） */
 const TAB_W = 108;
@@ -72,13 +82,6 @@ const GOLD_INNER = 0xd4a84b;
 const CREAM_FILL = 0xfff9ec;
 const SHADOW_COLOR = 0x8b7355;
 
-const DECO_RARITY_TAG_KEYS: Record<DecoRarity, string> = {
-  [DecoRarity.COMMON]: 'deco_rarity_tag_common',
-  [DecoRarity.FINE]: 'deco_rarity_tag_fine',
-  [DecoRarity.RARE]: 'deco_rarity_tag_rare',
-  [DecoRarity.LIMITED]: 'deco_rarity_tag_limited',
-};
-
 function measureCardGrid(gridW: number): { cw: number; ch: number; cols: number; startX: number } {
   const cwRaw = Math.floor((gridW - CARD_GAP * (GRID_COLS + 1)) / GRID_COLS);
   const cw = Math.max(110, Math.min(CARD_MAX_W, cwRaw));
@@ -101,10 +104,22 @@ function globalToDesignY(globalY: number): number {
   return globalY / Game.scale;
 }
 
-type DecoPanelTab = 'room_styles' | DecoSlot;
+/** 与 BoardView / FurnitureDragSystem 一致：原生 clientY → 设计坐标纵轴 */
+function nativeClientToDesignY(clientY: number): number {
+  return (clientY * Game.designHeight) / Game.screenHeight;
+}
+
+function federatedPointerToDesignY(e: PIXI.FederatedPointerEvent): number {
+  const n = e.nativeEvent as PointerEvent | MouseEvent | undefined;
+  if (n != null && typeof (n as PointerEvent).clientY === 'number') {
+    return nativeClientToDesignY((n as PointerEvent).clientY);
+  }
+  return globalToDesignY(e.global.y);
+}
+
 type DecoGridPendingTap =
-  | { type: 'deco'; deco: DecoDef }
-  | { type: 'room'; style: RoomStyleDef };
+  | { type: 'deco'; deco: DecoDef; flyCard: PIXI.Container }
+  | { type: 'room'; style: RoomStyleDef; flyCard: PIXI.Container };
 
 export class DecorationPanel extends PIXI.Container {
   private _bg!: PIXI.Graphics;
@@ -123,7 +138,7 @@ export class DecorationPanel extends PIXI.Container {
   /** Tab / 网格顶边（分割线以下，_build 内按彩带高度计算） */
   private _contentTopY = 168;
   private _isOpen = false;
-  private _activeTab: DecoPanelTab = DecoSlot.SHELF;
+  private _activeTab: DecoPanelTabId = 'flower_room';
   private _scrollY = 0;
   private _maxScrollY = 0;
   private _gridScrollListening = false;
@@ -134,61 +149,69 @@ export class DecorationPanel extends PIXI.Container {
   private _tabVerticalPad = 0;
   /** 与 DressUp 一致：logicHeight 变化时拉伸手绘底图并重画裁剪区 */
   private _panelHBuilt = 0;
+  /** 购买成功后「获得新家具」浮层 */
+  private _unlockOverlay: PIXI.Container | null = null;
 
   constructor() {
     super();
     this.visible = false;
     this.zIndex = 5000;
+    this.sortableChildren = true;
     this._build();
   }
 
-  // ─── touch scroll (stage-level, design coords) ────────────
+  // ─── touch scroll：pointermove/up 绑 canvas（微信小游戏上 stage 级 move 常丢失）────
 
-  private readonly _onStageMove = (e: PIXI.FederatedPointerEvent): void => {
+  private readonly _onCanvasGridMove = (ev: PointerEvent): void => {
     if (!this._isOpen || !this._gridScrollListening) return;
-    const dy = globalToDesignY(e.global.y) - this._gridScrollStartDesignY;
+    const dy = nativeClientToDesignY(ev.clientY) - this._gridScrollStartDesignY;
     this._scrollY = Math.max(-this._maxScrollY, Math.min(0, this._gridScrollStartScrollY + dy));
     this._applyScroll();
   };
 
-  private readonly _onStageUp = (e?: PIXI.FederatedPointerEvent): void => {
+  private readonly _onCanvasGridUp = (ev: PointerEvent): void => {
+    this._finishGridScroll(ev);
+  };
+
+  private _unbindCanvasGridScroll(): void {
+    const canvas = Game.app.view as unknown as HTMLCanvasElement | undefined;
+    if (!canvas?.removeEventListener) return;
+    canvas.removeEventListener('pointermove', this._onCanvasGridMove);
+    canvas.removeEventListener('pointerup', this._onCanvasGridUp);
+    canvas.removeEventListener('pointercancel', this._onCanvasGridUp);
+  }
+
+  private _finishGridScroll(ev?: PointerEvent): void {
     if (!this._gridScrollListening) return;
-    const st = Game.app.stage;
-    st.off('pointermove', this._onStageMove);
-    st.off('pointerup', this._onStageUp);
-    st.off('pointerupoutside', this._onStageUp);
-    st.off('pointercancel', this._onStageUp);
+    this._unbindCanvasGridScroll();
     this._gridScrollListening = false;
 
-    const endDesignY = e ? globalToDesignY(e.global.y) : this._gridScrollStartDesignY;
+    const endDesignY = ev != null ? nativeClientToDesignY(ev.clientY) : this._gridScrollStartDesignY;
     const movedPx = Math.abs(endDesignY - this._gridScrollStartDesignY);
     const pending = this._pendingGridTap;
     this._pendingGridTap = null;
     if (movedPx < 12 && pending) {
-      if (pending.type === 'deco') this._onCardTap(pending.deco);
-      else this._onRoomStyleTap(pending.style);
+      if (pending.type === 'deco') this._onCardTap(pending.deco, pending.flyCard);
+      else this._onRoomStyleTap(pending.style, pending.flyCard);
     }
-  };
+  }
 
   private _beginScroll(e: PIXI.FederatedPointerEvent): void {
     if (this._gridScrollListening || !this._isOpen) return;
     this._gridScrollListening = true;
-    this._gridScrollStartDesignY = globalToDesignY(e.global.y);
+    this._gridScrollStartDesignY = federatedPointerToDesignY(e);
     this._gridScrollStartScrollY = this._scrollY;
-    const st = Game.app.stage;
-    st.on('pointermove', this._onStageMove);
-    st.on('pointerup', this._onStageUp);
-    st.on('pointerupoutside', this._onStageUp);
-    st.on('pointercancel', this._onStageUp);
+    const canvas = Game.app.view as unknown as HTMLCanvasElement | undefined;
+    if (canvas?.addEventListener) {
+      canvas.addEventListener('pointermove', this._onCanvasGridMove);
+      canvas.addEventListener('pointerup', this._onCanvasGridUp);
+      canvas.addEventListener('pointercancel', this._onCanvasGridUp);
+    }
   }
 
   private _teardownScroll(): void {
     if (!this._gridScrollListening) return;
-    const st = Game.app.stage;
-    st.off('pointermove', this._onStageMove);
-    st.off('pointerup', this._onStageUp);
-    st.off('pointerupoutside', this._onStageUp);
-    st.off('pointercancel', this._onStageUp);
+    this._unbindCanvasGridScroll();
     this._gridScrollListening = false;
     this._pendingGridTap = null;
   }
@@ -215,7 +238,7 @@ export class DecorationPanel extends PIXI.Container {
     if (this._isOpen) return;
     this._isOpen = true;
     this.visible = true;
-    this._activeTab = DecoSlot.SHELF;
+    this._activeTab = 'flower_room';
     this._resizePanelIfNeeded();
     this._refreshAll();
 
@@ -233,6 +256,7 @@ export class DecorationPanel extends PIXI.Container {
 
   close(): void {
     if (!this._isOpen) return;
+    this._dismissUnlockPopup();
     this._teardownScroll();
     this._isOpen = false;
     const h = Game.logicHeight;
@@ -362,6 +386,7 @@ export class DecorationPanel extends PIXI.Container {
 
     // tab container：y 在 _buildTabs 内写入 _tabVerticalPad 后对齐
     this._tabContainer = new PIXI.Container();
+    this._tabContainer.zIndex = 4;
     this._content.addChild(this._tabContainer);
 
     this._buildTabs(gridH);
@@ -374,17 +399,19 @@ export class DecorationPanel extends PIXI.Container {
     this._gridViewport.position.set(gridX, this._contentTopY);
     this._gridViewport.eventMode = 'static';
     this._gridViewport.hitArea = new PIXI.Rectangle(0, 0, gridW, gridH);
+    this._gridViewport.zIndex = 4;
     this._content.addChild(this._gridViewport);
 
+    this._gridContainer = new PIXI.Container();
+    this._gridViewport.addChild(this._gridContainer);
+
+    // 遮罩作为 gridContainer 子节点，避免 refresh 时 removeChildren 删掉；与部分 WebGL 裁剪更稳
     this._gridMask = new PIXI.Graphics();
     this._gridMask.beginFill(0xffffff);
     this._gridMask.drawRect(0, 0, gridW, gridH);
     this._gridMask.endFill();
     this._gridMask.eventMode = 'none';
-    this._gridViewport.addChild(this._gridMask);
-
-    this._gridContainer = new PIXI.Container();
-    this._gridViewport.addChild(this._gridContainer);
+    this._gridContainer.addChild(this._gridMask);
     this._gridContainer.mask = this._gridMask;
 
     // wheel scroll
@@ -456,13 +483,13 @@ export class DecorationPanel extends PIXI.Container {
   private _buildTabs(availH: number): void {
     this._tabContainer.removeChildren();
 
-    const slots = Object.values(DecoSlot);
-    const tabCount = 1 + slots.length;
+    const tabCount = DECO_PANEL_TABS.length;
     const tabH = Math.min(Math.floor(availH / tabCount), 66);
     const spare = Math.max(0, availH - tabCount * tabH);
     this._tabVerticalPad = Math.floor(spare * 0.2);
     const pad = 4;
     const bw = TAB_W - pad * 2;
+    const sceneId = CurrencyManager.state.sceneId;
 
     const makeTab = (row: number, isCurrent: boolean, title: string, onTap: () => void, footer?: string): void => {
       const tab = new PIXI.Container();
@@ -518,14 +545,13 @@ export class DecorationPanel extends PIXI.Container {
       this._tabContainer.addChild(tab);
     };
 
-    makeTab(0, this._activeTab === 'room_styles', '房间风格', () => { this._activeTab = 'room_styles'; });
-
-    slots.forEach((slot, i) => {
-      const info = DECO_SLOT_INFO[slot];
-      const isCurrent = this._activeTab === slot;
-      const prog = DecorationManager.getSlotProgress(slot);
-      const footer = prog.unlocked > 1 ? `${prog.unlocked}/${prog.total}` : undefined;
-      makeTab(i + 1, isCurrent, info.name, () => { this._activeTab = slot; }, footer);
+    DECO_PANEL_TABS.forEach((tab, i) => {
+      const label = getDecorationTabLabel(tab);
+      const isCurrent = this._activeTab === tab;
+      const title = label.name;
+      const prog = DecorationManager.getDecorationTabProgress(tab, sceneId);
+      const footer = prog.total > 0 ? `${prog.unlocked}/${prog.total}` : undefined;
+      makeTab(i, isCurrent, title, () => { this._activeTab = tab; }, footer);
     });
   }
 
@@ -547,16 +573,41 @@ export class DecorationPanel extends PIXI.Container {
 
   // ─── grid ─────────────────────────────────────────────────
 
+  /** 保留索引 0 的裁剪遮罩，仅清除家具网格内容 */
+  private _clearGridScrollContent(): void {
+    while (this._gridContainer.children.length > 1) {
+      this._gridContainer.removeChildAt(this._gridContainer.children.length - 1);
+    }
+  }
+
   private _buildGrid(availH: number): void {
-    this._gridContainer.removeChildren();
+    this._clearGridScrollContent();
     if (this._activeTab === 'room_styles') { this._buildRoomStyleGrid(availH); return; }
 
-    const decos = getSlotDecos(this._activeTab);
+    const sceneId = CurrencyManager.state.sceneId;
+    const decos = getDecosForDecorationPanelTab(this._activeTab, sceneId);
     const gridW = PANEL_W - TAB_COLUMN_LEFT - TAB_W - TAB_GAP - GRID_MARGIN_RIGHT;
     const { cw, ch, cols, startX } = measureCardGrid(gridW);
 
     const inner = new PIXI.Container();
     this._gridContainer.addChild(inner);
+
+    if (decos.length === 0) {
+      const hint = '该分类下暂无家具';
+      const empty = new PIXI.Text(hint, {
+        fontSize: 15,
+        fill: COLORS.TEXT_LIGHT,
+        fontFamily: FONT_FAMILY,
+        align: 'center',
+      });
+      empty.anchor.set(0.5, 0.5);
+      empty.position.set(gridW / 2, availH / 2);
+      inner.addChild(empty);
+      this._addScrollPlate(inner, gridW, availH);
+      this._maxScrollY = 0;
+      this._scrollY = 0;
+      return;
+    }
 
     const totalRows = Math.ceil(decos.length / cols);
     const listTopPad = decoGridListTopPad(availH, totalRows, ch);
@@ -623,45 +674,60 @@ export class DecorationPanel extends PIXI.Container {
     card.addChild(bg);
   }
 
-  // ─── rarity tag ───────────────────────────────────────────
+  // ─── 星星值角标（购买后获得的 ⭐，与稀有度无关）────────────────
 
-  private _addRarityTag(card: PIXI.Container, cw: number, rarity: DecoRarity): void {
-    const info = DECO_RARITY_INFO[rarity];
-    const key = DECO_RARITY_TAG_KEYS[rarity];
-    const tex = TextureCache.get(key);
+  private _addStarValueBadge(card: PIXI.Container, cw: number, starValue: number): void {
     const tagPad = 4;
-    const labelFont = 12;
-    if (tex?.width) {
-      const maxW = Math.min(102, Math.round(cw * 0.52));
-      const maxH = 28;
-      const s = Math.min(maxW / tex.width, maxH / tex.height);
-      const sp = new PIXI.Sprite(tex);
-      sp.scale.set(s);
-      sp.position.set(tagPad, tagPad);
-      card.addChild(sp);
-      const label = new PIXI.Text(info.name, {
-        fontSize: labelFont, fill: 0xffffff, fontFamily: FONT_FAMILY, fontWeight: 'bold',
-        stroke: 0x333333, strokeThickness: 2,
-      } as any);
-      label.anchor.set(0.5, 0.5);
-      label.position.set(tagPad + (tex.width * s) / 2, tagPad + (tex.height * s) / 2);
-      card.addChild(label);
-      return;
+    const iconH = Math.min(19, Math.max(14, Math.round(cw * 0.11)));
+    const gap = 4;
+    const fontSize = Math.round(Math.min(13, Math.max(11, cw * 0.085)));
+
+    const wrap = new PIXI.Container();
+    wrap.position.set(tagPad, tagPad);
+
+    const content = new PIXI.Container();
+    let iconW = iconH;
+    const starTex = TextureCache.get('icon_star');
+    if (starTex?.width) {
+      const sp = new PIXI.Sprite(starTex);
+      sp.height = iconH;
+      sp.width = (starTex.width / starTex.height) * iconH;
+      sp.position.set(0, 0);
+      content.addChild(sp);
+      iconW = sp.width;
+    } else {
+      const fb = new PIXI.Text('⭐', { fontSize: Math.round(iconH * 0.9), fontFamily: FONT_FAMILY });
+      content.addChild(fb);
+      iconW = fb.width;
     }
-    const rw = 56;
-    const rh = 24;
-    const bg = new PIXI.Graphics();
-    bg.beginFill(info.color, 0.85);
-    bg.drawRoundedRect(tagPad, tagPad, rw, rh, 6);
-    bg.endFill();
-    card.addChild(bg);
-    const t = new PIXI.Text(info.name, {
-      fontSize: labelFont, fill: 0xffffff, fontFamily: FONT_FAMILY, fontWeight: 'bold',
-      stroke: 0x333333, strokeThickness: 2,
+
+    const num = new PIXI.Text(String(starValue), {
+      fontSize,
+      fill: 0x8D4A1A,
+      fontFamily: FONT_FAMILY,
+      fontWeight: 'bold',
+      stroke: 0xFFFFFF,
+      strokeThickness: 2,
     } as any);
-    t.anchor.set(0.5, 0.5);
-    t.position.set(tagPad + rw / 2, tagPad + rh / 2);
-    card.addChild(t);
+    num.anchor.set(0, 0.5);
+    num.position.set(iconW + gap, iconH / 2);
+    content.addChild(num);
+
+    const pillPadX = 6;
+    const pillPadY = 3;
+    const pillW = pillPadX * 2 + iconW + gap + num.width;
+    const pillH = pillPadY * 2 + iconH;
+
+    const pill = new PIXI.Graphics();
+    pill.beginFill(0xFFF3E0, 0.95);
+    pill.lineStyle(1.2, 0xFFB74D, 0.88);
+    pill.drawRoundedRect(0, 0, pillW, pillH, 9);
+    pill.endFill();
+    wrap.addChild(pill);
+    content.position.set(pillPadX, pillPadY);
+    wrap.addChild(content);
+
+    card.addChild(wrap);
   }
 
   // ─── equipped badge ───────────────────────────────────────
@@ -682,11 +748,22 @@ export class DecorationPanel extends PIXI.Container {
 
   private _addFooter(
     card: PIXI.Container, cw: number, ch: number,
-    mode: 'equipped' | 'ready' | 'purchase' | 'locked',
+    mode:
+      | 'equipped'
+      | 'ready'
+      | 'purchase'
+      | 'locked'
+      | 'furniture_placed'
+      | 'furniture_go_place',
     cost: number | undefined,
     actionLabel: string,
   ): void {
-    const key = mode === 'equipped' ? 'deco_card_btn_1' : mode === 'locked' ? 'deco_card_btn_2' : 'deco_card_btn_3';
+    const key =
+      mode === 'equipped' || mode === 'furniture_placed'
+        ? 'deco_card_btn_1'
+        : mode === 'locked'
+          ? 'deco_card_btn_2'
+          : 'deco_card_btn_3';
     const tex = TextureCache.get(key);
     const bottomPad = 10;
     const maxBtnW = cw - 12;
@@ -700,7 +777,14 @@ export class DecorationPanel extends PIXI.Container {
       stroke: 0x333333,
       strokeThickness: 2,
     };
-    const lineText = mode === 'equipped' ? '使用中' : actionLabel;
+    let lineText: string;
+    if (mode === 'furniture_placed') lineText = '已放置';
+    else if (mode === 'furniture_go_place') lineText = '去放置';
+    else {
+      const ownedAsReady =
+        mode === 'ready' && (actionLabel === '装备' || actionLabel === '使用');
+      lineText = mode === 'equipped' || ownedAsReady ? '已拥有' : actionLabel;
+    }
     const pillCenterY = (btnHScaled: number) => ch - bottomPad - btnHScaled / 2;
 
     if (tex?.width) {
@@ -750,7 +834,14 @@ export class DecorationPanel extends PIXI.Container {
       const btnW = Math.min(maxBtnW, 100);
       const btnH = targetH;
       const btnY = ch - bottomPad - btnH;
-      const color = mode === 'equipped' ? 0xbb88dd : mode === 'locked' ? 0xf0a030 : mode === 'ready' ? COLORS.BUTTON_PRIMARY : 0x4caf50;
+      const color =
+        mode === 'equipped' || mode === 'furniture_placed'
+          ? 0xbb88dd
+          : mode === 'locked'
+            ? 0xf0a030
+            : mode === 'ready' || mode === 'furniture_go_place'
+              ? COLORS.BUTTON_PRIMARY
+              : 0x4caf50;
       const g = new PIXI.Graphics();
       g.beginFill(color);
       g.drawRoundedRect(cw / 2 - btnW / 2, btnY, btnW, btnH, btnH / 2);
@@ -800,11 +891,13 @@ export class DecorationPanel extends PIXI.Container {
     card.position.set(x, y);
 
     const isUnlocked = DecorationManager.isUnlocked(deco.id);
-    const isEquipped = DecorationManager.getEquipped(deco.slot) === deco.id;
+    const isPlaced = !!RoomLayoutManager.getPlacement(deco.id);
     const reqResult = checkRequirement(deco.unlockRequirement);
     const reqMet = reqResult.met;
+    const sceneOk = isDecoAllowedInScene(deco, CurrencyManager.state.sceneId);
+    const cardUnlockedLook = (isUnlocked || reqMet) && sceneOk;
 
-    this._drawCardBg(card, cw, ch, isUnlocked || reqMet, isEquipped);
+    this._drawCardBg(card, cw, ch, cardUnlockedLook, isPlaced);
 
     const maxIcon = Math.round((82 * cw) / CARD_BASE_W);
     const iconCy = Math.round((ch * 54) / CARD_BASE_H);
@@ -823,26 +916,26 @@ export class DecorationPanel extends PIXI.Container {
       const s = Math.min(maxIcon / texture.width, maxIcon / texture.height);
       sprite.scale.set(s);
       sprite.anchor.set(0.5, 0.5);
-      if (!reqMet) sprite.alpha = 0.4;
+      if (!reqMet || !sceneOk) sprite.alpha = 0.4;
       iconArea.addChild(sprite);
     } else {
       const emoji = new PIXI.Text(DECO_SLOT_INFO[deco.slot].emoji, {
         fontSize: Math.round((40 * cw) / CARD_BASE_W), fontFamily: FONT_FAMILY,
       });
       emoji.anchor.set(0.5, 0.5);
-      if (!reqMet) emoji.alpha = 0.4;
+      if (!reqMet || !sceneOk) emoji.alpha = 0.4;
       iconArea.addChild(emoji);
     }
 
-    if (!reqMet) {
+    if (!reqMet || !sceneOk) {
       const lock = new PIXI.Text('🔒', { fontSize: 22, fontFamily: FONT_FAMILY });
       lock.anchor.set(0.5, 0.5);
       lock.position.set(cw / 2, iconCy);
       card.addChild(lock);
     }
 
-    this._addRarityTag(card, cw, deco.rarity);
-    if (isEquipped) this._addEquipBadge(card, cw);
+    this._addStarValueBadge(card, cw, deco.starValue);
+    if (isPlaced) this._addEquipBadge(card, cw);
 
     const nameText = new PIXI.Text(deco.name, {
       fontSize: 15, fill: COLORS.TEXT_DARK, fontFamily: FONT_FAMILY, fontWeight: 'bold',
@@ -852,17 +945,19 @@ export class DecorationPanel extends PIXI.Container {
     nameText.position.set(cw / 2, nameY);
     card.addChild(nameText);
 
-    if (isEquipped) this._addFooter(card, cw, ch, 'equipped', undefined, '装备');
-    else if (isUnlocked) this._addFooter(card, cw, ch, 'ready', undefined, '装备');
+    if (!sceneOk) {
+      this._addFooter(card, cw, ch, 'locked', undefined, formatAllowedScenesShort(deco));
+    } else if (isUnlocked && isPlaced) this._addFooter(card, cw, ch, 'furniture_placed', undefined, '');
+    else if (isUnlocked) this._addFooter(card, cw, ch, 'furniture_go_place', undefined, '');
     else if (!reqResult.met) this._addFooter(card, cw, ch, 'locked', undefined, reqResult.text);
     else if (deco.cost > 0) this._addFooter(card, cw, ch, 'purchase', deco.cost, '装备');
-    else this._addFooter(card, cw, ch, 'ready', undefined, '领取');
+    else this._addFooter(card, cw, ch, 'furniture_go_place', undefined, '');
 
     card.eventMode = 'static';
     card.cursor = 'pointer';
     card.on('pointerdown', (e: PIXI.FederatedPointerEvent) => {
       this._beginScroll(e);
-      this._pendingGridTap = { type: 'deco', deco };
+      this._pendingGridTap = { type: 'deco', deco, flyCard: card };
     });
     return card;
   }
@@ -918,7 +1013,7 @@ export class DecorationPanel extends PIXI.Container {
       card.addChild(lock);
     }
 
-    this._addRarityTag(card, cw, style.rarity);
+    this._addStarValueBadge(card, cw, style.starValue);
     if (equipped) this._addEquipBadge(card, cw);
 
     const nameText = new PIXI.Text(style.name, {
@@ -939,37 +1034,163 @@ export class DecorationPanel extends PIXI.Container {
     card.cursor = 'pointer';
     card.on('pointerdown', (e: PIXI.FederatedPointerEvent) => {
       this._beginScroll(e);
-      this._pendingGridTap = { type: 'room', style };
+      this._pendingGridTap = { type: 'room', style, flyCard: card };
     });
     return card;
   }
 
   // ─── tap handlers ─────────────────────────────────────────
 
-  private _onCardTap(deco: DecoDef): void {
+  private _emitShopStarFly(flyCard: PIXI.Container, starAmount: number): void {
+    if (starAmount <= 0) return;
+    const b = flyCard.getBounds();
+    const globalX = b.x + b.width / 2;
+    const globalY = b.y + b.height / 2;
+    EventBus.emit('decoration:shopStarFly', { globalX, globalY, amount: starAmount });
+  }
+
+  /** 关闭装修面板并切花店场景，携带待摆放家具（编辑模式 + 托盘拖入） */
+  private _goToPlaceDeco(decoId: string): void {
+    setPendingPlaceDeco(decoId);
+    this.close();
+    EventBus.emit('scene:switchToShop');
+  }
+
+  private _onCardTap(deco: DecoDef, flyCard: PIXI.Container): void {
+    if (!isDecoAllowedInScene(deco, CurrencyManager.state.sceneId)) {
+      ToastMessage.show(`🔒 当前场景不可用（${formatAllowedScenesShort(deco)}）`);
+      return;
+    }
     const isUnlocked = DecorationManager.isUnlocked(deco.id);
-    const isEquipped = DecorationManager.getEquipped(deco.slot) === deco.id;
-    if (isEquipped) return;
+    const isPlaced = !!RoomLayoutManager.getPlacement(deco.id);
     if (isUnlocked) {
-      DecorationManager.equip(deco.id);
+      this._goToPlaceDeco(deco.id);
+      return;
+    }
+    const req = checkRequirement(deco.unlockRequirement);
+    if (!req.met) {
+      ToastMessage.show(`🔒 ${req.text}`);
+      return;
+    }
+    if (DecorationManager.unlock(deco.id)) {
+      this._emitShopStarFly(flyCard, deco.starValue);
       this._refreshAll();
+      this._showNewDecoUnlockPopup(deco);
     } else {
-      const req = checkRequirement(deco.unlockRequirement);
-      if (!req.met) {
-        ToastMessage.show( `🔒 ${req.text}`);
-        return;
-      }
-      if (DecorationManager.unlock(deco.id)) {
-        DecorationManager.equip(deco.id);
-        ToastMessage.show( `✨ 解锁了「${deco.name}」！`);
-        this._refreshAll();
-      } else {
-        ToastMessage.show( `🌸 花愿不足，需要 ${deco.cost} 花愿`);
-      }
+      ToastMessage.show(`🌸 花愿不足，需要 ${deco.cost} 花愿`);
     }
   }
 
-  private _onRoomStyleTap(style: RoomStyleDef): void {
+  private _dismissUnlockPopup(): void {
+    if (this._unlockOverlay) {
+      this.removeChild(this._unlockOverlay);
+      this._unlockOverlay.destroy({ children: true });
+      this._unlockOverlay = null;
+    }
+  }
+
+  /** 购买成功后：类似合成解锁的获得提示，可立即进店摆放 */
+  private _showNewDecoUnlockPopup(deco: DecoDef): void {
+    this._dismissUnlockPopup();
+    const W = DESIGN_WIDTH;
+    const H = Game.logicHeight;
+    const cx = W / 2;
+
+    const root = new PIXI.Container();
+    root.zIndex = 12000;
+    this._unlockOverlay = root;
+    this.addChild(root);
+
+    const mask = new PIXI.Graphics();
+    mask.beginFill(0x000000, 0.55);
+    mask.drawRect(0, 0, W, H);
+    mask.endFill();
+    mask.eventMode = 'static';
+    root.addChild(mask);
+
+    const cardW = Math.min(400, W - 48);
+    const cardTop = H * 0.2;
+    const cardH = 280;
+
+    const card = new PIXI.Graphics();
+    card.beginFill(0xfffdf7, 0.98);
+    card.lineStyle(2.5, 0xd4a574, 0.9);
+    card.drawRoundedRect(cx - cardW / 2, cardTop, cardW, cardH, 20);
+    card.endFill();
+    root.addChild(card);
+
+    const title = new PIXI.Text('获得新家具', {
+      fontSize: 26,
+      fill: 0x5a3e2b,
+      fontFamily: FONT_FAMILY,
+      fontWeight: 'bold',
+    });
+    title.anchor.set(0.5, 0);
+    title.position.set(cx, cardTop + 22);
+    root.addChild(title);
+
+    const sub = new PIXI.Text(`「${deco.name}」`, {
+      fontSize: 18,
+      fill: 0x6d4c41,
+      fontFamily: FONT_FAMILY,
+      fontWeight: 'bold',
+    });
+    sub.anchor.set(0.5, 0);
+    sub.position.set(cx, cardTop + 58);
+    root.addChild(sub);
+
+    const iconCy = cardTop + 118;
+    const tex = TextureCache.get(deco.icon);
+    if (tex?.width) {
+      const sp = new PIXI.Sprite(tex);
+      const ms = Math.min(100 / tex.width, 100 / tex.height);
+      sp.scale.set(ms);
+      sp.anchor.set(0.5);
+      sp.position.set(cx, iconCy);
+      root.addChild(sp);
+    }
+
+    const btnW = 148;
+    const btnH = 46;
+    const btnY = cardTop + cardH - btnH - 20;
+    const gap = 14;
+
+    const mkBtn = (label: string, bx: number, onTap: () => void): void => {
+      const hit = new PIXI.Container();
+      hit.position.set(bx, btnY);
+      hit.eventMode = 'static';
+      hit.cursor = 'pointer';
+      const g = new PIXI.Graphics();
+      g.beginFill(0xe57373);
+      g.drawRoundedRect(-btnW / 2, 0, btnW, btnH, btnH / 2);
+      g.endFill();
+      hit.addChild(g);
+      const t = new PIXI.Text(label, {
+        fontSize: 17,
+        fill: 0xffffff,
+        fontFamily: FONT_FAMILY,
+        fontWeight: 'bold',
+      });
+      t.anchor.set(0.5, 0.5);
+      t.position.set(0, btnH / 2);
+      hit.addChild(t);
+      hit.on('pointertap', e => {
+        e.stopPropagation();
+        onTap();
+      });
+      root.addChild(hit);
+    };
+
+    mkBtn('稍后', cx - btnW / 2 - gap / 2, () => {
+      this._dismissUnlockPopup();
+    });
+    mkBtn('放入房间', cx + btnW / 2 + gap / 2, () => {
+      this._dismissUnlockPopup();
+      this._goToPlaceDeco(deco.id);
+    });
+  }
+
+  private _onRoomStyleTap(style: RoomStyleDef, flyCard: PIXI.Container): void {
     const unlocked = DecorationManager.isRoomStyleUnlocked(style.id);
     const equipped = DecorationManager.roomStyleId === style.id;
     if (equipped) return;
@@ -986,6 +1207,7 @@ export class DecorationPanel extends PIXI.Container {
       }
       if (DecorationManager.unlockRoomStyle(style.id)) {
         DecorationManager.equipRoomStyle(style.id);
+        this._emitShopStarFly(flyCard, style.starValue);
         ToastMessage.show( `✨ 解锁「${style.name}」！`);
         this._refreshAll();
       } else {
@@ -1001,7 +1223,7 @@ export class DecorationPanel extends PIXI.Container {
   }
 
   private _applyScroll(): void {
-    const inner = this._gridContainer.children[0];
+    const inner = this._gridContainer.children[1] as PIXI.Container | undefined;
     if (inner) inner.y = this._scrollY;
   }
 }

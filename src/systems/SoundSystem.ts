@@ -33,18 +33,6 @@ class SoundSystemClass {
       AudioManager.play('merge_success');
     });
 
-    // 连击
-    EventBus.on('combo:hit', (count: number) => {
-      if (count >= 3) {
-        AudioManager.play('merge_combo');
-      }
-    });
-
-    // 狂热模式
-    EventBus.on('combo:frenzyStart', () => {
-      AudioManager.play('merge_frenzy');
-    });
-
     // 建筑产出（点击建筑成功产出时）
     EventBus.on('building:produced', () => {
       AudioManager.play('tap_building');

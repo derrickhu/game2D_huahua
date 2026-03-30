@@ -7,6 +7,7 @@
  * - 累计签到天数触发里程碑奖励
  */
 import { EventBus } from '@/core/EventBus';
+import { ITEM_DEFS } from '@/config/ItemConfig';
 import { CurrencyManager } from './CurrencyManager';
 
 declare const wx: any;
@@ -16,17 +17,20 @@ const _api = typeof wx !== 'undefined' ? wx : typeof tt !== 'undefined' ? tt : n
 const CHECKIN_STORAGE_KEY = 'huahua_checkin';
 
 export interface RewardItem {
-  type: 'hualu' | 'stamina' | 'diamond' | 'huayuan';
+  type: 'stamina' | 'diamond' | 'huayuan' | 'board';
   amount: number;
   textureKey: string;
+  /** type === board 时发放的物品 id */
+  itemId?: string;
 }
 
 export interface CheckInReward {
   day: number;
-  hualu?: number;
   stamina?: number;
   diamond?: number;
   huayuan?: number;
+  /** 棋盘物品（飞入空格子后落子；不可入仓类亦走此逻辑） */
+  boardGrants?: Array<{ itemId: string; count: number }>;
   desc: string;
   icon: string;
   items: RewardItem[];
@@ -34,36 +38,53 @@ export interface CheckInReward {
 
 function _buildItems(r: Omit<CheckInReward, 'items'>): RewardItem[] {
   const items: RewardItem[] = [];
-  if (r.hualu) items.push({ type: 'hualu', amount: r.hualu, textureKey: 'icon_hualu' });
   if (r.stamina) items.push({ type: 'stamina', amount: r.stamina, textureKey: 'icon_energy' });
   if (r.diamond) items.push({ type: 'diamond', amount: r.diamond, textureKey: 'icon_gem' });
   if (r.huayuan) items.push({ type: 'huayuan', amount: r.huayuan, textureKey: 'icon_huayuan' });
+  if (r.boardGrants?.length) {
+    for (const g of r.boardGrants) {
+      const def = ITEM_DEFS.get(g.itemId);
+      if (!def || g.count <= 0) continue;
+      items.push({
+        type: 'board',
+        amount: g.count,
+        textureKey: def.icon,
+        itemId: g.itemId,
+      });
+    }
+  }
   return items;
 }
 
-/** 7日签到奖励表（花露投放量压缩至原 40%，延长服装攒币周期） */
+/** 7日签到 */
 export const CHECK_IN_REWARDS: CheckInReward[] = [
-  { day: 1, hualu: 40,  desc: '花露×40',  icon: '💧' },
+  {
+    day: 1,
+    diamond: 8,
+    boardGrants: [{ itemId: 'hongbao_1', count: 1 }],
+    desc: '钻石×8 迎春红包×1',
+    icon: '🧧',
+  },
   { day: 2, stamina: 30, desc: '体力×30', icon: '💖' },
-  { day: 3, hualu: 60,  huayuan: 5, desc: '花露×60 花愿×5', icon: '🎁' },
-  { day: 4, hualu: 40,  diamond: 5, desc: '花露×40 钻石×5', icon: '💎' },
-  { day: 5, hualu: 80,  stamina: 20, desc: '花露×80 体力×20', icon: '🌟' },
-  { day: 6, diamond: 10, desc: '钻石×10', icon: '💎' },
-  { day: 7, hualu: 200, diamond: 15, huayuan: 20, desc: '花露×200 钻石×15 花愿×20', icon: '🏆' },
+  { day: 3, diamond: 12, desc: '钻石×12', icon: '🎁' },
+  { day: 4, diamond: 10, stamina: 15, desc: '钻石×10 体力×15', icon: '💎' },
+  { day: 5, diamond: 15, stamina: 25, desc: '钻石×15 体力×25', icon: '🌟' },
+  { day: 6, diamond: 12, desc: '钻石×12', icon: '💎' },
+  { day: 7, diamond: 35, stamina: 30, desc: '钻石×35 体力×30', icon: '🏆' },
 ].map(r => ({ ...r, items: _buildItems(r as any) }));
 
 /** 里程碑配置 */
 export interface MilestoneDef {
   threshold: number;
-  reward: { hualu?: number; diamond?: number; huayuan?: number };
+  reward: { diamond?: number; huayuan?: number };
   items: RewardItem[];
 }
 
 export const MILESTONES: MilestoneDef[] = [
-  { threshold: 8,  reward: { hualu: 120, diamond: 5 } },
-  { threshold: 15, reward: { hualu: 200, huayuan: 10 } },
-  { threshold: 22, reward: { hualu: 300, diamond: 15 } },
-  { threshold: 30, reward: { hualu: 500, diamond: 30, huayuan: 30 } },
+  { threshold: 8,  reward: { diamond: 25 } },
+  { threshold: 15, reward: { diamond: 40 } },
+  { threshold: 22, reward: { diamond: 60 } },
+  { threshold: 30, reward: { diamond: 100 } },
 ].map(m => ({
   ...m,
   items: _buildItems({ day: 0, desc: '', icon: '', ...m.reward }),
@@ -113,8 +134,8 @@ class CheckInManagerClass {
 
   get streakBonusDesc(): string {
     if (this._state.consecutiveDays >= 30) return '限定店主服装解锁';
-    if (this._state.consecutiveDays >= 7) return '每日额外+40花露';
-    if (this._state.consecutiveDays >= 3) return '每日额外+20花露';
+    if (this._state.consecutiveDays >= 7) return '每日签到额外+5钻石';
+    if (this._state.consecutiveDays >= 3) return '每日签到额外+2钻石';
     return '';
   }
 
@@ -142,20 +163,17 @@ class CheckInManagerClass {
     this._checkNewDay();
   }
 
-  /** 签到结果：用于 UI 飞入动效（含连续签到花露加成） */
-  checkIn(): { reward: CheckInReward; streakBonusHualu: number } | null {
+  /** 签到结果：用于 UI 飞入动效（含连续签到钻石加成） */
+  checkIn(): { reward: CheckInReward; streakBonus: number } | null {
     if (this._state.signedToday) return null;
 
     const reward = this.todayReward;
 
-    if (reward.hualu) CurrencyManager.addHualu(reward.hualu);
     if (reward.stamina) CurrencyManager.addStamina(reward.stamina);
     if (reward.diamond) CurrencyManager.addDiamond(reward.diamond);
-    if (reward.huayuan) CurrencyManager.addHuayuan(reward.huayuan);
-
-    const streakBonusHualu = this._getStreakBonus();
-    if (streakBonusHualu > 0) {
-      CurrencyManager.addHualu(streakBonusHualu);
+    const streakBonus = this._getStreakBonus();
+    if (streakBonus > 0) {
+      CurrencyManager.addDiamond(streakBonus);
     }
 
     this._state.signedDays++;
@@ -169,8 +187,8 @@ class CheckInManagerClass {
     }
 
     this._saveState();
-    EventBus.emit('checkin:signed', reward, streakBonusHualu);
-    return { reward, streakBonusHualu };
+    EventBus.emit('checkin:signed', reward, streakBonus);
+    return { reward, streakBonus };
   }
 
   /** 领取里程碑奖励 */
@@ -179,9 +197,7 @@ class CheckInManagerClass {
     if (!ms) return null;
     if (!this.canClaimMilestone(threshold)) return null;
 
-    if (ms.reward.hualu) CurrencyManager.addHualu(ms.reward.hualu);
     if (ms.reward.diamond) CurrencyManager.addDiamond(ms.reward.diamond);
-    if (ms.reward.huayuan) CurrencyManager.addHuayuan(ms.reward.huayuan);
 
     this._state.claimedMilestones.push(threshold);
     this._saveState();
@@ -190,8 +206,8 @@ class CheckInManagerClass {
   }
 
   private _getStreakBonus(): number {
-    if (this._state.consecutiveDays >= 7) return 40;
-    if (this._state.consecutiveDays >= 3) return 20;
+    if (this._state.consecutiveDays >= 7) return 5;
+    if (this._state.consecutiveDays >= 3) return 2;
     return 0;
   }
 

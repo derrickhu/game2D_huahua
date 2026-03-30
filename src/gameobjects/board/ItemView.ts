@@ -39,9 +39,11 @@ export class ItemView extends PIXI.Container {
   private _orderBadge: PIXI.Sprite | null = null;
   /** 半解锁(PEEK) 丝带：必须在体力标等之上，放本容器内并始终置顶 */
   private _peekRibbon: PIXI.Sprite | null = null;
-  /** 宝箱：叠在物品下方的待散落进度条（无文字） */
-  private _chestProgressBg: PIXI.Graphics;
-  private _chestProgressFill: PIXI.Graphics;
+  /** 宝箱/红包：右下角待散落件数（小表盘 + 数字，无横向进度条） */
+  private _chestBadgeRoot: PIXI.Container;
+  private _chestBadgeBg: PIXI.Graphics;
+  private _chestBadgeClock: PIXI.Graphics;
+  private _chestBadgeLabel: PIXI.Text;
 
   /** 货币物品多图标容器 */
   private _currencyContainer: PIXI.Container | null = null;
@@ -134,12 +136,23 @@ export class ItemView extends PIXI.Container {
     this._chargeText.visible = false;
     this.addChild(this._chargeText);
 
-    this._chestProgressBg = new PIXI.Graphics();
-    this._chestProgressBg.visible = false;
-    this.addChild(this._chestProgressBg);
-    this._chestProgressFill = new PIXI.Graphics();
-    this._chestProgressFill.visible = false;
-    this.addChild(this._chestProgressFill);
+    this._chestBadgeRoot = new PIXI.Container();
+    this._chestBadgeRoot.visible = false;
+    this._chestBadgeBg = new PIXI.Graphics();
+    this._chestBadgeClock = new PIXI.Graphics();
+    this._chestBadgeLabel = new PIXI.Text('', {
+      fontSize: 11,
+      fill: 0xfff8e8,
+      fontFamily: FONT_FAMILY,
+      fontWeight: 'bold',
+      stroke: 0x1a0f08,
+      strokeThickness: 3,
+    });
+    this._chestBadgeLabel.anchor.set(1, 0.5);
+    this._chestBadgeRoot.addChild(this._chestBadgeBg);
+    this._chestBadgeRoot.addChild(this._chestBadgeClock);
+    this._chestBadgeRoot.addChild(this._chestBadgeLabel);
+    this.addChild(this._chestBadgeRoot);
   }
 
   setItem(itemId: string | null): void {
@@ -281,71 +294,52 @@ export class ItemView extends PIXI.Container {
   }
 
   /**
-   * 宝箱待散落进度：`remaining` 件仍在宝箱内，`total` 为本轮总件数。
-   * 传 (0,0) 隐藏。条带短粗、偏上，压住物品图下缘，无数字文案。
+   * 宝箱/红包待散落：`remaining` 为仍待落到棋盘的件数（`total` 仅校验用）。
+   * 右下角小角标：表盘图标 + 剩余件数；传 (0,0) 隐藏。
    */
   setChestDispatch(remaining: number, total: number): void {
     const cs = BoardMetrics.cellSize;
     if (remaining <= 0 || total <= 0) {
-      this._chestProgressBg.visible = false;
-      this._chestProgressFill.visible = false;
+      this._chestBadgeRoot.visible = false;
       return;
     }
-    const frac = Math.min(1, remaining / total);
-    const barH = Math.max(8, Math.round(cs * 0.15));
-    const bw = Math.round(cs * 0.48);
-    const bx = Math.round((cs - bw) / 2);
-    const by = Math.round(cs * 0.54);
-    const rOut = Math.max(4, Math.floor(barH / 2) - 1);
-    const inset = 3;
-    const innerW = bw - inset * 2;
-    const innerH = barH - inset * 2;
-    const innerX = bx + inset;
-    const innerY = by + inset;
-    const rIn = Math.max(2, rOut - 2);
-    const fillW = Math.max(0, innerW * frac);
-    const fillR = Math.max(2, innerH / 2 - 0.5);
 
-    this._chestProgressBg.visible = true;
-    this._chestProgressFill.visible = true;
+    const pad = Math.max(4, Math.round(cs * 0.055));
+    const h = Math.max(16, Math.round(cs * 0.2));
+    const clockR = Math.max(4, Math.round(h * 0.28));
+    const gap = 3;
+    const padX = 5;
 
-    this._chestProgressBg.clear();
-    this._chestProgressBg.lineStyle(1.5, 0x6b4a38, 1);
-    this._chestProgressBg.beginFill(0x3d2a22, 0.95);
-    this._chestProgressBg.drawRoundedRect(bx, by, bw, barH, rOut);
-    this._chestProgressBg.endFill();
-    this._chestProgressBg.lineStyle(0);
-    this._chestProgressBg.beginFill(0x140c09, 0.98);
-    this._chestProgressBg.drawRoundedRect(innerX, innerY, innerW, innerH, rIn);
-    this._chestProgressBg.endFill();
-    this._chestProgressBg.beginFill(0xffffff, 0.1);
-    this._chestProgressBg.drawRoundedRect(innerX + 1, innerY + 1, innerW - 2, Math.max(2, innerH * 0.38), 2);
-    this._chestProgressBg.endFill();
+    this._chestBadgeLabel.text = String(remaining);
+    const tw = Math.max(this._chestBadgeLabel.width, 8);
+    const innerW = padX + (clockR * 2 + 2) + gap + tw + padX;
+    const r = Math.floor(h / 2);
 
-    this._chestProgressFill.clear();
-    if (fillW > 0.5) {
-      this._chestProgressFill.beginFill(0xb86a18, 1);
-      this._chestProgressFill.drawRoundedRect(innerX, innerY, fillW, innerH, fillR);
-      this._chestProgressFill.endFill();
-      this._chestProgressFill.beginFill(0xf0c14d, 0.65);
-      this._chestProgressFill.drawRoundedRect(
-        innerX + 1,
-        innerY + 1,
-        Math.max(0, fillW - 2),
-        Math.max(1, innerH * 0.42),
-        2,
-      );
-      this._chestProgressFill.endFill();
-      this._chestProgressFill.beginFill(0x4a2406, 0.4);
-      this._chestProgressFill.drawRoundedRect(
-        innerX,
-        innerY + innerH * 0.52,
-        fillW,
-        Math.max(1, innerH * 0.48),
-        1,
-      );
-      this._chestProgressFill.endFill();
-    }
+    this._chestBadgeBg.clear();
+    this._chestBadgeBg.lineStyle(1, 0x8b6914, 0.95);
+    this._chestBadgeBg.beginFill(0x2a1810, 0.9);
+    this._chestBadgeBg.drawRoundedRect(-innerW, -h, innerW, h, r);
+    this._chestBadgeBg.endFill();
+
+    const cx = -innerW + padX + clockR + 1;
+    const cy = -h / 2;
+    this._chestBadgeClock.clear();
+    this._chestBadgeClock.lineStyle(1.1, 0xf5e6a8, 1);
+    this._chestBadgeClock.drawCircle(cx, cy, clockR);
+    this._chestBadgeClock.lineStyle(0);
+    this._chestBadgeClock.beginFill(0xf5e6a8, 1);
+    this._chestBadgeClock.drawCircle(cx, cy - clockR * 0.35, 1.1);
+    this._chestBadgeClock.endFill();
+    this._chestBadgeClock.lineStyle(1, 0xf5e6a8, 1);
+    this._chestBadgeClock.moveTo(cx, cy - 1);
+    this._chestBadgeClock.lineTo(cx, cy - clockR * 0.55);
+    this._chestBadgeClock.moveTo(cx, cy - 1);
+    this._chestBadgeClock.lineTo(cx + clockR * 0.45, cy + clockR * 0.15);
+
+    this._chestBadgeLabel.position.set(-padX, cy);
+
+    this._chestBadgeRoot.position.set(cs - pad, cs - pad);
+    this._chestBadgeRoot.visible = true;
 
     this._bringToolEnergyThenPeekOnTop();
   }
@@ -522,9 +516,11 @@ export class ItemView extends PIXI.Container {
   /** 体力标置顶后仍要保证丝带盖住角标（每帧 CD 等会反复顶体力） */
   private _bringToolEnergyThenPeekOnTop(): void {
     bringToolEnergyToFront(this, this._toolEnergySprite);
-    if (this._chestProgressBg.visible) {
-      this.setChildIndex(this._chestProgressBg, this.children.length - 1);
-      this.setChildIndex(this._chestProgressFill, this.children.length - 1);
+    if (this._chestBadgeRoot.visible) {
+      this.setChildIndex(this._chestBadgeRoot, this.children.length - 1);
+    }
+    if (this._orderBadge) {
+      this.setChildIndex(this._orderBadge, this.children.length - 1);
     }
     this._ensurePeekRibbonOnTop();
   }

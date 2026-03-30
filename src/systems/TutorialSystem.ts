@@ -7,7 +7,7 @@
  * 3. 手指拖拽动画 —— 模拟手指从源拖到目标的循环动画，替代静态箭头
  * 4. 精准事件穿透 —— 只有镂空区域允许交互（防误触 + 聚焦注意力）
  *
- * Step 1: 首次合成引导（拖拽两朵相同花合成）
+ * Step 1: 首次合成引导（拖拽两个相同物品，开局多为双铲→水壶）
  * Step 2: 首位客人（引导交付订单赚取金币）
  * Step 3: 建筑认知（点击建筑产出新花束）
  * Step 4: 自由探索（关闭引导，给予新手礼包）
@@ -159,7 +159,7 @@ export class TutorialSystem {
     const spotlightBottom = maxY;
     this._showSmartDialog(
       '欢迎来到花语小筑',
-      '把两朵相同的花拖到一起，合成更高级的花束吧~',
+      '把两个相同的物品拖到一起就能合成升级~\n先试一把铲子合成水壶吧！',
       null,
       undefined,
       spotlightTop,
@@ -183,7 +183,7 @@ export class TutorialSystem {
 
     this._showSmartDialog(
       '太棒了',
-      '合成成功！每种花都有独特的花语和故事哦~\n继续合成吧，客人马上就到！',
+      '合成成功！旁边的半锁格子也会随合成慢慢解锁~\n继续合成，客人马上就到！',
       '继续',
       () => this._advanceTo(TutorialStep.CUSTOMER_INTRO),
     );
@@ -307,12 +307,11 @@ export class TutorialSystem {
     this._drawSpotlightMask([], 0.55);
 
     CurrencyManager.addStamina(50);
-    CurrencyManager.addHuayuan(200);
-    CurrencyManager.addDiamond(20);
+    CurrencyManager.addDiamond(32);
 
     this._showSmartDialog(
       '新手礼包',
-      '恭喜完成引导！获得：\n体力 +50　花愿 +200　钻石 +20\n\n小贴士：长按物品可查看合成路线哦！',
+      '恭喜完成引导！获得：\n体力 +50　钻石 +32\n\n小贴士：长按物品可查看合成路线哦！',
       '开始游戏',
       () => this._complete(),
     );

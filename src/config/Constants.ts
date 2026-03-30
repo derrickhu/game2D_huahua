@@ -70,7 +70,8 @@ export const CUSTOMER_REFRESH_MAX = 30;
 
 // 体力
 export const STAMINA_MAX = 100;
-export const STAMINA_RECOVER_INTERVAL = 180; // 3分钟恢复1点
+/** 自然恢复：每满该秒数 +1 点体力（在线 ticker 与离线读档共用） */
+export const STAMINA_RECOVER_INTERVAL = 180; // 3 分钟 1 点
 
 // 挂机
 export const IDLE_PRODUCE_INTERVAL = 60; // 60秒产出一个1级物品

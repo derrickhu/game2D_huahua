@@ -2,7 +2,7 @@
 # 店主全身 + 半身 rembg 入库：统一 birefnet-general（规范见 docs/owner_sprite_art_spec.md §1.1）
 set -euo pipefail
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
-OWNER="$ROOT/minigame/images/owner"
+OWNER="$ROOT/minigame/subpkg_chars/images/owner"
 SCRIPT="${REMBG_BATCH:-$HOME/.cursor/skills/remove-background/scripts/rembg_batch.py}"
 if [[ ! -f "$SCRIPT" ]]; then
   echo "未找到 rembg_batch.py: $SCRIPT（可设环境变量 REMBG_BATCH）" >&2

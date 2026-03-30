@@ -2,7 +2,7 @@
  * 家具托盘（编辑模式底部抽屉）
  *
  * 编辑模式下从底部弹出，展示所有已解锁家具的缩略图网格。
- * 按槽位分类 Tab，支持向上拖出家具到房间。
+ * 分类与装修面板一致（花房/家电/…），支持向上拖出家具到房间。
  */
 import * as PIXI from 'pixi.js';
 import { Game } from '@/core/Game';
@@ -13,9 +13,20 @@ import { RoomLayoutManager } from '@/managers/RoomLayoutManager';
 import { FurnitureDragSystem } from '@/systems/FurnitureDragSystem';
 import { TextureCache } from '@/utils/TextureCache';
 import {
-  DecoSlot, DECO_SLOT_INFO, DECO_RARITY_INFO,
-  getSlotDecos, DecoDef,
+  DecoSlot,
+  DECO_MAP,
+  DECO_RARITY_INFO,
+  DecoDef,
+  FURNITURE_TRAY_TABS,
+  type FurnitureTrayTabId,
+  type DecoPanelTabId,
+  getDecorationTabLabel,
+  getDecosForDecorationPanelTab,
+  isDecoAllowedInScene,
+  furnitureTrayTabFromSlot,
+  furnitureTrayTabForDeco,
 } from '@/config/DecorationConfig';
+import { CurrencyManager } from '@/managers/CurrencyManager';
 import { DESIGN_WIDTH, FONT_FAMILY, COLORS } from '@/config/Constants';
 
 // ---- 布局常量 ----
@@ -32,6 +43,31 @@ const BG_COLOR = 0xFFF8F0;
 const BG_ALPHA = 0.97;
 const TRAY_RADIUS = 20;
 
+/** 与 DecorationPanel 一致：原生 client → 设计坐标（微信小游戏上子节点 pointermove 不可靠，需绑 canvas） */
+function nativeClientToDesignX(clientX: number): number {
+  return (clientX * Game.designWidth) / Game.screenWidth;
+}
+function nativeClientToDesignY(clientY: number): number {
+  return (clientY * Game.designHeight) / Game.screenHeight;
+}
+
+function federatedPointerToDesign(e: PIXI.FederatedPointerEvent): { x: number; y: number } {
+  const n = e.nativeEvent as PointerEvent | MouseEvent | undefined;
+  if (n != null && typeof (n as PointerEvent).clientX === 'number') {
+    const pe = n as PointerEvent;
+    return { x: nativeClientToDesignX(pe.clientX), y: nativeClientToDesignY(pe.clientY) };
+  }
+  return {
+    x: (e.global.x / Game.dpr) * Game.designWidth / Game.screenWidth,
+    y: (e.global.y / Game.dpr) * Game.designHeight / Game.screenHeight,
+  };
+}
+
+/** 滑动与点击区分：小于此位移视为点击 */
+const TRAY_TAP_SLOP_PX = 12;
+
+type TrayScrollMode = 'scroll' | 'drag' | 'neutral';
+
 export class FurnitureTray extends PIXI.Container {
   private _bg!: PIXI.Graphics;
   private _handle!: PIXI.Container;
@@ -39,11 +75,59 @@ export class FurnitureTray extends PIXI.Container {
   private _gridContainer!: PIXI.Container;
   private _gridMask!: PIXI.Graphics;
   private _isOpen = false;
-  private _currentSlot: DecoSlot = DecoSlot.SHELF;
+  private _currentTab: FurnitureTrayTabId = 'flower_room';
   private _closedY = 0;
   private _openY = 0;
   private _scrollX = 0;
   private _maxScrollX = 0;
+
+  /** 横向列表内层（改 x 实现滚动） */
+  private _trayScrollInner: PIXI.Container | null = null;
+  private _trayScrollListening = false;
+  private _trayStartDesignX = 0;
+  private _trayStartDesignY = 0;
+  private _trayStartScrollX = 0;
+  private _trayMode: TrayScrollMode | null = null;
+  private _trayDragStarted = false;
+  private _trayPending: { decoId: string; isPlaced: boolean } | null = null;
+
+  private readonly _onCanvasTrayMove = (ev: PointerEvent): void => {
+    if (!this._isOpen || !this._trayScrollListening) return;
+    const designX = nativeClientToDesignX(ev.clientX);
+    const designY = nativeClientToDesignY(ev.clientY);
+    const tdx = designX - this._trayStartDesignX;
+    const tdy = designY - this._trayStartDesignY;
+
+    if (this._trayMode == null) {
+      if (Math.abs(tdx) < TRAY_TAP_SLOP_PX && Math.abs(tdy) < TRAY_TAP_SLOP_PX) return;
+      if (Math.abs(tdx) >= Math.abs(tdy)) {
+        this._trayMode = 'scroll';
+      } else if (this._trayPending && !this._trayPending.isPlaced) {
+        this._trayMode = 'drag';
+      } else {
+        this._trayMode = 'neutral';
+      }
+    }
+
+    if (this._trayMode === 'scroll') {
+      this._scrollX = Math.max(-this._maxScrollX, Math.min(0, this._trayStartScrollX + tdx));
+      if (this._trayScrollInner) this._trayScrollInner.x = this._scrollX;
+      return;
+    }
+
+    if (this._trayMode === 'drag' && this._trayPending && !this._trayDragStarted) {
+      this._trayDragStarted = true;
+      FurnitureDragSystem.startDragFromTray(this._trayPending.decoId, designX, designY);
+      this._trayPending = null;
+      this._trayScrollListening = false;
+      this._trayMode = null;
+      this._unbindCanvasTrayScroll();
+    }
+  };
+
+  private readonly _onCanvasTrayUp = (ev: PointerEvent): void => {
+    this._finishTrayScroll(ev);
+  };
 
   constructor() {
     super();
@@ -52,8 +136,11 @@ export class FurnitureTray extends PIXI.Container {
     this._build();
   }
 
-  /** 打开托盘（滑入动画） */
-  open(): void {
+  /**
+   * 打开托盘（滑入动画）
+   * @param trayArg 不传默认花房；传槽位则按槽位选 Tab；传 `{ deco }` 时尊重 decorationPanelTab（如家具）
+   */
+  open(trayArg?: DecoSlot | { deco: DecoDef }): void {
     if (this._isOpen) return;
     this._isOpen = true;
     this.visible = true;
@@ -63,7 +150,13 @@ export class FurnitureTray extends PIXI.Container {
     this._openY = logicH - TRAY_H;
 
     this.y = this._closedY;
-    this._currentSlot = DecoSlot.SHELF;
+    if (trayArg != null && typeof trayArg === 'object' && 'deco' in trayArg) {
+      this._currentTab = furnitureTrayTabForDeco(trayArg.deco);
+    } else if (trayArg != null) {
+      this._currentTab = furnitureTrayTabFromSlot(trayArg as DecoSlot);
+    } else {
+      this._currentTab = 'flower_room';
+    }
     this._refreshAll();
 
     TweenManager.to({
@@ -78,6 +171,7 @@ export class FurnitureTray extends PIXI.Container {
   close(): void {
     if (!this._isOpen) return;
     this._isOpen = false;
+    this._teardownTrayScroll();
 
     TweenManager.to({
       target: this,
@@ -149,15 +243,88 @@ export class FurnitureTray extends PIXI.Container {
     this._gridContainer.hitArea = new PIXI.Rectangle(0, 0, w, gridH);
   }
 
+  private _unbindCanvasTrayScroll(): void {
+    const canvas = Game.app.view as unknown as HTMLCanvasElement | undefined;
+    if (!canvas?.removeEventListener) return;
+    canvas.removeEventListener('pointermove', this._onCanvasTrayMove);
+    canvas.removeEventListener('pointerup', this._onCanvasTrayUp);
+    canvas.removeEventListener('pointercancel', this._onCanvasTrayUp);
+  }
+
+  /** 结束托盘上的滑动跟踪（不关闭托盘） */
+  private _teardownTrayScroll(): void {
+    if (this._trayScrollListening) {
+      this._unbindCanvasTrayScroll();
+      this._trayScrollListening = false;
+    }
+    this._trayPending = null;
+    this._trayMode = null;
+    this._trayDragStarted = false;
+  }
+
+  private _beginTrayScroll(
+    e: PIXI.FederatedPointerEvent,
+    pending: { decoId: string; isPlaced: boolean } | null,
+  ): void {
+    if (this._trayScrollListening || !this._isOpen) return;
+    const p = federatedPointerToDesign(e);
+    this._trayScrollListening = true;
+    this._trayPending = pending;
+    this._trayMode = null;
+    this._trayDragStarted = false;
+    this._trayStartDesignX = p.x;
+    this._trayStartDesignY = p.y;
+    this._trayStartScrollX = this._scrollX;
+
+    const canvas = Game.app.view as unknown as HTMLCanvasElement | undefined;
+    if (canvas?.addEventListener) {
+      canvas.addEventListener('pointermove', this._onCanvasTrayMove);
+      canvas.addEventListener('pointerup', this._onCanvasTrayUp);
+      canvas.addEventListener('pointercancel', this._onCanvasTrayUp);
+    }
+  }
+
+  private _finishTrayScroll(ev?: PointerEvent): void {
+    if (!this._trayScrollListening) return;
+
+    const endX = ev != null ? nativeClientToDesignX(ev.clientX) : this._trayStartDesignX;
+    const endY = ev != null ? nativeClientToDesignY(ev.clientY) : this._trayStartDesignY;
+    const tdx = endX - this._trayStartDesignX;
+    const tdy = endY - this._trayStartDesignY;
+    const moved = Math.hypot(tdx, tdy);
+
+    this._unbindCanvasTrayScroll();
+    this._trayScrollListening = false;
+
+    const pending = this._trayPending;
+    const mode = this._trayMode;
+    this._trayPending = null;
+    this._trayMode = null;
+    this._trayDragStarted = false;
+
+    if (mode === 'drag') return;
+
+    if (pending && moved < TRAY_TAP_SLOP_PX) {
+      if (pending.isPlaced) {
+        FurnitureDragSystem.select(pending.decoId);
+        const name = DECO_MAP.get(pending.decoId)?.name ?? '家具';
+        ToastMessage.show(`已选中「${name}」，可在房间中拖动`);
+      } else {
+        ToastMessage.show('拖住图标向上拖入房间即可放置');
+      }
+    }
+  }
+
   private _buildTabs(): void {
     this._tabContainer.removeChildren();
 
-    const slots = Object.values(DecoSlot);
-    const tabW = Math.floor(DESIGN_WIDTH / slots.length);
+    const tabs = FURNITURE_TRAY_TABS;
+    const tabW = Math.floor(DESIGN_WIDTH / tabs.length);
+    const sceneId = CurrencyManager.state.sceneId;
 
-    slots.forEach((slot, i) => {
-      const info = DECO_SLOT_INFO[slot];
-      const isCurrent = slot === this._currentSlot;
+    tabs.forEach((tabId, i) => {
+      const meta = getDecorationTabLabel(tabId as DecoPanelTabId);
+      const isCurrent = tabId === this._currentTab;
 
       const tab = new PIXI.Container();
       tab.position.set(i * tabW, 0);
@@ -173,34 +340,34 @@ export class FurnitureTray extends PIXI.Container {
       }
       tab.addChild(bg);
 
-      // 图标 + 名称（加大）
-      const label = new PIXI.Text(`${info.emoji}`, {
-        fontSize: 22, fontFamily: FONT_FAMILY,
-      });
-      label.anchor.set(0.5, 0.3);
-      label.position.set(tabW / 2, TAB_BAR_H / 2);
+      const label = new PIXI.Text(`${meta.emoji}\n${meta.name}`, {
+        fontSize: 11,
+        fontFamily: FONT_FAMILY,
+        fill: COLORS.TEXT_DARK,
+        align: 'center',
+      } as any);
+      label.anchor.set(0.5, 0.5);
+      label.position.set(tabW / 2, TAB_BAR_H / 2 - 4);
       tab.addChild(label);
 
-      // 已解锁数量（加大）
-      const unlocked = DecorationManager.getUnlockedBySlot(slot);
-      const placed = RoomLayoutManager.getLayout().filter(p => {
-        const d = DECO_MAP.get(p.decoId);
-        return d && d.slot === slot;
-      });
+      const tabDecos = getDecosForDecorationPanelTab(tabId as DecoPanelTabId, sceneId);
+      const unlocked = tabDecos.filter(d => DecorationManager.isUnlocked(d.id) && isDecoAllowedInScene(d, sceneId));
+      const unlockedIds = new Set(unlocked.map(d => d.id));
+      const placedN = RoomLayoutManager.getLayout().filter(p => unlockedIds.has(p.decoId)).length;
 
       if (unlocked.length > 0) {
-        const countText = new PIXI.Text(`${placed.length}/${unlocked.length}`, {
-          fontSize: 10, fill: COLORS.TEXT_LIGHT, fontFamily: FONT_FAMILY,
+        const countText = new PIXI.Text(`${placedN}/${unlocked.length}`, {
+          fontSize: 9, fill: COLORS.TEXT_LIGHT, fontFamily: FONT_FAMILY,
         });
         countText.anchor.set(0.5, 0);
-        countText.position.set(tabW / 2, TAB_BAR_H - 16);
+        countText.position.set(tabW / 2, TAB_BAR_H - 14);
         tab.addChild(countText);
       }
 
       tab.eventMode = 'static';
       tab.cursor = 'pointer';
       tab.on('pointertap', () => {
-        this._currentSlot = slot;
+        this._currentTab = tabId;
         this._scrollX = 0;
         this._refreshAll();
       });
@@ -210,9 +377,15 @@ export class FurnitureTray extends PIXI.Container {
   }
 
   private _buildGrid(): void {
+    this._teardownTrayScroll();
+    this._trayScrollInner = null;
     this._gridContainer.removeChildren();
 
-    const decos = DecorationManager.getUnlockedBySlot(this._currentSlot);
+    const sceneId = CurrencyManager.state.sceneId;
+    const candidates = getDecosForDecorationPanelTab(this._currentTab as DecoPanelTabId, sceneId);
+    const decos = candidates.filter(
+      d => DecorationManager.isUnlocked(d.id) && isDecoAllowedInScene(d, sceneId),
+    );
     if (decos.length === 0) {
       // 空状态
       const emptyText = new PIXI.Text('暂无已解锁的装饰\n去装修面板解锁吧~', {
@@ -228,6 +401,21 @@ export class FurnitureTray extends PIXI.Container {
 
     const innerContainer = new PIXI.Container();
     this._gridContainer.addChild(innerContainer);
+    this._trayScrollInner = innerContainer;
+
+    const gridH = TRAY_H - HANDLE_H - TAB_BAR_H;
+    const n = decos.length;
+    const contentW = PADDING + n * CARD_SIZE + (n > 0 ? (n - 1) * CARD_GAP : 0) + PADDING;
+    const plateW = Math.max(DESIGN_WIDTH, contentW);
+
+    // 底层透明承接区：点在卡片间隙或右侧留白时也能横向滑动
+    const scrollPlate = new PIXI.Container();
+    scrollPlate.eventMode = 'static';
+    scrollPlate.hitArea = new PIXI.Rectangle(0, 0, plateW, gridH);
+    scrollPlate.on('pointerdown', (e: PIXI.FederatedPointerEvent) => {
+      this._beginTrayScroll(e, null);
+    });
+    innerContainer.addChild(scrollPlate);
 
     const currentLayout = RoomLayoutManager.getLayout();
 
@@ -238,13 +426,9 @@ export class FurnitureTray extends PIXI.Container {
       innerContainer.addChild(card);
     });
 
-    // 计算横向滚动范围
-    const totalW = PADDING + decos.length * (CARD_SIZE + CARD_GAP);
-    this._maxScrollX = Math.max(0, totalW - DESIGN_WIDTH);
-    this._scrollX = 0;
-
-    // 横向拖拽滚动
-    this._setupHorizontalScroll(innerContainer);
+    this._maxScrollX = Math.max(0, contentW - DESIGN_WIDTH);
+    this._scrollX = Math.max(-this._maxScrollX, Math.min(0, this._scrollX));
+    innerContainer.x = this._scrollX;
   }
 
   private _buildCard(
@@ -310,73 +494,19 @@ export class FurnitureTray extends PIXI.Container {
     nameText.position.set(CARD_SIZE / 2, CARD_SIZE - 4);
     card.addChild(nameText);
 
-    // 交互
+    // 交互：pointerdown 起手势，横向滑 = 列表滚动，纵向滑 = 未放置则从托盘拖入房间
     card.eventMode = 'static';
     card.cursor = 'pointer';
 
-    // 点击：如果已放置则选中/移除；未放置则开始拖拽放入
     card.on('pointerdown', (e: PIXI.FederatedPointerEvent) => {
-      if (isPlaced) {
-        // 已在房间中：选中它
-        FurnitureDragSystem.select(deco.id);
-        ToastMessage.show( `已选中「${deco.name}」，可在房间中拖动`);
-      } else {
-        // 从托盘拖入房间
-        const designPos = this._eventToDesign(e);
-        FurnitureDragSystem.startDragFromTray(deco.id, designPos.x, designPos.y);
-      }
+      this._beginTrayScroll(e, { decoId: deco.id, isPlaced });
     });
 
     return card;
-  }
-
-  private _setupHorizontalScroll(inner: PIXI.Container): void {
-    let startX = 0;
-    let startScrollX = 0;
-    let dragging = false;
-
-    const canvas = Game.app.view as any;
-
-    const onDown = () => {
-      dragging = false;
-      startScrollX = this._scrollX;
-    };
-
-    const onMove = (e: any) => {
-      if (!this._isOpen) return;
-      const clientX = e.clientX ?? e.pageX ?? 0;
-      const designX = clientX * Game.designWidth / Game.screenWidth;
-
-      if (!dragging) {
-        startX = designX;
-        dragging = true;
-        return;
-      }
-
-      const dx = designX - startX;
-      this._scrollX = Math.max(-this._maxScrollX, Math.min(0, startScrollX + dx));
-      inner.x = this._scrollX;
-    };
-
-    this._gridContainer.on('pointerdown', onDown);
-
-    // 使用 canvas 级别事件做滚动（与 BoardView 一致的策略）
-    // 但仅在托盘区域内响应，通过 _isOpen + dragging 控制
   }
 
   private _refreshAll(): void {
     this._buildTabs();
     this._buildGrid();
   }
-
-  private _eventToDesign(e: PIXI.FederatedPointerEvent): { x: number; y: number } {
-    // global 坐标是 canvas 物理像素空间，转为设计坐标
-    return {
-      x: (e.global.x / Game.dpr) * Game.designWidth / Game.screenWidth,
-      y: (e.global.y / Game.dpr) * Game.designHeight / Game.screenHeight,
-    };
-  }
 }
-
-// 需要引入 DECO_MAP
-import { DECO_MAP } from '@/config/DecorationConfig';

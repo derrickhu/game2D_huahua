@@ -9,6 +9,7 @@
 import { BoardManager } from './BoardManager';
 import { BuildingManager, type BuildingPersistEntry } from './BuildingManager';
 import { CurrencyManager } from './CurrencyManager';
+import { CustomerManager, type CustomerPersistState } from './CustomerManager';
 import { WarehouseManager, WarehouseState } from './WarehouseManager';
 import { RewardBoxManager, RewardBoxState } from './RewardBoxManager';
 import { Platform } from '@/core/PlatformService';
@@ -55,6 +56,8 @@ interface SaveData {
   buildings?: BuildingPersistEntry[];
   warehouse?: WarehouseState;
   rewardBox?: RewardBoxState;
+  /** 当前订单队列（与棋盘独立保存；读档后由 CustomerManager.init 绑定格子） */
+  customers?: CustomerPersistState;
 }
 
 class SaveManagerClass {
@@ -64,12 +67,13 @@ class SaveManagerClass {
     const data: SaveData = {
       fingerprint: CONFIG_FINGERPRINT,
       timestamp: Date.now(),
-      version: 3,
+      version: 5,
       currency: CurrencyManager.exportState(),
       board: BoardManager.exportState(),
       buildings: BuildingManager.exportState(),
       warehouse: WarehouseManager.exportState(),
       rewardBox: RewardBoxManager.exportState(),
+      customers: CustomerManager.exportState(),
     };
     return JSON.stringify(data);
   }
@@ -132,6 +136,8 @@ class SaveManagerClass {
 
       BuildingManager.reset();
       CurrencyManager.loadState(data.currency);
+      const offlineSec = Math.max(0, Math.floor((Date.now() - data.timestamp) / 1000));
+      CurrencyManager.applyElapsedStaminaRecovery(offlineSec);
       BoardManager.loadState(data.board);
       BuildingManager.loadState(data.buildings);
       if (data.warehouse) {
@@ -140,6 +146,7 @@ class SaveManagerClass {
       if (data.rewardBox) {
         RewardBoxManager.loadState(data.rewardBox);
       }
+      CustomerManager.prepareFromSave(data.customers);
 
       console.log('[Save] 读档成功, 距上次存档:', Math.round((Date.now() - data.timestamp) / 1000), '秒');
       return true;

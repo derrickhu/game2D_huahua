@@ -11,7 +11,9 @@
  */
 
 import { EventBus } from '@/core/EventBus';
-import { DECO_MAP, DecoSlot } from '@/config/DecorationConfig';
+import { DECO_MAP, DecoSlot, isDecoAllowedInScene } from '@/config/DecorationConfig';
+import { ROOM_DEPTH_AUX_MAX } from '@/config/RoomDepthSort';
+import { CurrencyManager } from './CurrencyManager';
 import { DESIGN_WIDTH, DESIGN_HEIGHT } from '@/config/Constants';
 
 declare const wx: any;
@@ -19,6 +21,17 @@ declare const tt: any;
 const _api = typeof wx !== 'undefined' ? wx : typeof tt !== 'undefined' ? tt : null;
 
 const SAVE_KEY = 'huahua_room_layout';
+
+/** 存档版本：2 = 家具贴图统一折半后，placement.scale 语义与 v1 对齐（见 _load 迁移） */
+const LAYOUT_SAVE_VERSION = 2;
+
+/** placement.scale 合法区间（小贴图 defaultScale 可低于 0.5） */
+const PLACEMENT_SCALE_MIN = 0.1;
+const PLACEMENT_SCALE_MAX = 2;
+
+function clampPlacementScale(s: number): number {
+  return Math.max(PLACEMENT_SCALE_MIN, Math.min(PLACEMENT_SCALE_MAX, s));
+}
 
 // ---- 数据结构 ----
 
@@ -29,12 +42,17 @@ export interface FurniturePlacement {
   x: number;
   /** 设计坐标 y */
   y: number;
-  /** 缩放系数 (0.5~2.0) */
+  /** 缩放系数（约 0.1~2.0，与贴图分辨率配套） */
   scale: number;
   /** 是否水平翻转 */
   flipped: boolean;
   /** 图层偏移（默认 0，正数=置前/更靠前，负数=置后） */
   zLayer?: number;
+  /**
+   * 手动深度前移累加（与 getDepthSortTypeLift 相加后参与排序，有上限，见 RoomDepthSort）。
+   * 「图层前移」会增大此值，解决同格 y 下 zLayer 权重不足以压过桌子的问题。
+   */
+  depthManualBias?: number;
 }
 
 export interface RoomLayoutSave {
@@ -47,12 +65,12 @@ export interface RoomLayoutSave {
 // 基于 shop.png 2.5D 花店的开放式室内区域
 
 const DEFAULT_POSITIONS: Record<string, { x: number; y: number; scale: number }> = {
-  [DecoSlot.SHELF]:    { x: 180, y: 520, scale: 0.9 },
-  [DecoSlot.TABLE]:    { x: 375, y: 620, scale: 0.85 },
-  [DecoSlot.LIGHT]:    { x: 400, y: 380, scale: 0.7 },
-  [DecoSlot.ORNAMENT]: { x: 560, y: 560, scale: 0.8 },
-  [DecoSlot.WALLART]:  { x: 260, y: 420, scale: 0.65 },
-  [DecoSlot.GARDEN]:   { x: 200, y: 780, scale: 0.85 },
+  [DecoSlot.SHELF]:    { x: 180, y: 520, scale: 0.45 },
+  [DecoSlot.TABLE]:    { x: 375, y: 620, scale: 0.425 },
+  [DecoSlot.LIGHT]:    { x: 400, y: 380, scale: 0.35 },
+  [DecoSlot.ORNAMENT]: { x: 560, y: 560, scale: 0.4 },
+  [DecoSlot.WALLART]:  { x: 260, y: 420, scale: 0.325 },
+  [DecoSlot.GARDEN]:   { x: 200, y: 780, scale: 0.425 },
 };
 
 // ---- 房间可摆放区域边界 (设计坐标) ----
@@ -84,8 +102,6 @@ class RoomLayoutManagerClass {
       this._generateEmptyLayout();
     }
 
-    // 监听装饰装备变化，自动更新布局
-    EventBus.on('decoration:equipped', this._onDecoEquipped.bind(this));
     EventBus.on('decoration:reset', this._onDecoReset.bind(this));
 
     console.log(`[RoomLayout] 初始化: ${this._placements.length} 件家具已放置`);
@@ -163,15 +179,29 @@ class RoomLayoutManagerClass {
     const deco = DECO_MAP.get(decoId);
     if (!deco) return null;
 
+    if (!isDecoAllowedInScene(deco, CurrencyManager.state.sceneId)) {
+      console.warn(`[RoomLayout] 装饰 ${decoId} 不可在当前场景摆放`);
+      return null;
+    }
+
     // 默认位置
-    const defaults = DEFAULT_POSITIONS[deco.slot] || { x: 375, y: 550, scale: 0.8 };
+    const defaults = DEFAULT_POSITIONS[deco.slot] || { x: 375, y: 550, scale: 0.4 };
+    // 新放入的家具：zLayer 比当前房间里任意一件 +1（封顶），同脚点 Y 附近后放的略靠前。
+    // 深度排序以 Y 为主（RoomDepthSort），zLayer 权重远小于 Y 台阶，不会压过人物。
+    const maxZExisting = this._placements.reduce(
+      (m, p) => Math.max(m, p.zLayer ?? 0),
+      -1,
+    );
+    const zLayerForNew = Math.min(8, maxZExisting + 1);
+
     const placement: FurniturePlacement = {
       decoId,
       x: this._clampX(x ?? defaults.x),
       y: this._clampY(y ?? defaults.y),
-      scale: Math.max(0.5, Math.min(2.0, scale ?? defaults.scale)),
+      scale: clampPlacementScale(scale ?? deco.defaultScale ?? defaults.scale),
       flipped: flipped ?? false,
-      zLayer: 0,
+      zLayer: zLayerForNew,
+      depthManualBias: 0,
     };
 
     this._placements.push(placement);
@@ -220,7 +250,7 @@ class RoomLayoutManagerClass {
     const p = this._placements.find(p => p.decoId === decoId);
     if (!p) return false;
 
-    p.scale = Math.max(0.5, Math.min(2.0, scale));
+    p.scale = clampPlacementScale(scale);
     this._debounceSave();
 
     EventBus.emit('roomlayout:updated', p);
@@ -248,11 +278,18 @@ class RoomLayoutManagerClass {
     const p = this._placements.find(p => p.decoId === decoId);
     if (!p) return false;
 
-    p.zLayer = Math.min(5, (p.zLayer ?? 0) + 1);
+    const step = 100;
+    p.depthManualBias = Math.min(
+      ROOM_DEPTH_AUX_MAX,
+      (p.depthManualBias ?? 0) + step,
+    );
+    p.zLayer = Math.min(8, (p.zLayer ?? 0) + 1);
     this._debounceSave();
 
     EventBus.emit('roomlayout:updated', p);
-    console.log(`[RoomLayout] ${decoId} 图层前移 → zLayer=${p.zLayer}`);
+    console.log(
+      `[RoomLayout] ${decoId} 图层前移 → zLayer=${p.zLayer} depthManualBias=${p.depthManualBias}`,
+    );
     return true;
   }
 
@@ -263,11 +300,15 @@ class RoomLayoutManagerClass {
     const p = this._placements.find(p => p.decoId === decoId);
     if (!p) return false;
 
+    const step = 100;
+    p.depthManualBias = Math.max(0, (p.depthManualBias ?? 0) - step);
     p.zLayer = Math.max(-5, (p.zLayer ?? 0) - 1);
     this._debounceSave();
 
     EventBus.emit('roomlayout:updated', p);
-    console.log(`[RoomLayout] ${decoId} 图层后移 → zLayer=${p.zLayer}`);
+    console.log(
+      `[RoomLayout] ${decoId} 图层后移 → zLayer=${p.zLayer} depthManualBias=${p.depthManualBias}`,
+    );
     return true;
   }
 
@@ -279,9 +320,10 @@ class RoomLayoutManagerClass {
       decoId: p.decoId,
       x: this._clampX(p.x),
       y: this._clampY(p.y),
-      scale: Math.max(0.5, Math.min(2.0, p.scale)),
+      scale: clampPlacementScale(p.scale),
       flipped: p.flipped,
       zLayer: p.zLayer ?? 0,
+      depthManualBias: p.depthManualBias ?? 0,
     }));
     this._debounceSave();
 
@@ -302,7 +344,7 @@ class RoomLayoutManagerClass {
   /** 导出布局数据 */
   exportState(): RoomLayoutSave {
     return {
-      version: 1,
+      version: LAYOUT_SAVE_VERSION,
       placements: this._placements.map(p => ({ ...p })),
     };
   }
@@ -323,26 +365,6 @@ class RoomLayoutManagerClass {
     this._save();
   }
 
-  /** 装饰装备变化时：仅当「旧装饰已在房间内」时替换为新装饰并保留坐标；不自动把新装饰摆进房间 */
-  private _onDecoEquipped(_slot: string, newDecoId: string, prevDecoId: string | null): void {
-    if (prevDecoId) {
-      const idx = this._placements.findIndex(p => p.decoId === prevDecoId);
-      if (idx !== -1) {
-        const old = this._placements[idx];
-        this._placements[idx] = {
-          decoId: newDecoId,
-          x: old.x,
-          y: old.y,
-          scale: old.scale,
-          flipped: old.flipped,
-          zLayer: old.zLayer ?? 0,
-        };
-        this._debounceSave();
-        EventBus.emit('roomlayout:changed');
-      }
-    }
-  }
-
   /** 装饰数据重置时重建布局 */
   private _onDecoReset(): void {
     this.reset();
@@ -360,7 +382,7 @@ class RoomLayoutManagerClass {
   private _save(): void {
     try {
       const data: RoomLayoutSave = {
-        version: 1,
+        version: LAYOUT_SAVE_VERSION,
         placements: this._placements,
         ownerPos: this._ownerPos ?? undefined,
       };
@@ -389,27 +411,46 @@ class RoomLayoutManagerClass {
       const data: RoomLayoutSave = JSON.parse(raw);
       if (!data.placements || !Array.isArray(data.placements)) return false;
 
+      const fileVersion = data.version ?? 1;
+      const needsScaleMigration = fileVersion < LAYOUT_SAVE_VERSION;
+
       // 加载店主位置
       if (data.ownerPos && typeof data.ownerPos.x === 'number') {
         this._ownerPos = { x: data.ownerPos.x, y: data.ownerPos.y };
       }
 
       // 验证并过滤无效数据（装饰不存在或未解锁的跳过）
-      this._placements = data.placements.filter(p => {
+      let rows = data.placements.filter(p => {
         const deco = DECO_MAP.get(p.decoId);
         if (!deco) {
           console.warn(`[RoomLayout] 跳过无效装饰: ${p.decoId}`);
           return false;
         }
         return true;
-      }).map(p => ({
+      });
+
+      if (needsScaleMigration) {
+        // 贴图折半后 min(130/w,130/h) 翻倍，旧存档 scale 乘 0.5 维持屏上大小
+        rows = rows.map(p => ({
+          ...p,
+          scale: (typeof p.scale === 'number' ? p.scale : 1) * 0.5,
+        }));
+        console.log('[RoomLayout] 存档 v1→v2：已按贴图折半迁移 placement.scale');
+      }
+
+      this._placements = rows.map(p => ({
         decoId: p.decoId,
         x: p.x,
         y: p.y,
-        scale: Math.max(0.5, Math.min(2.0, p.scale ?? 1)),
+        scale: clampPlacementScale(p.scale ?? 1),
         flipped: !!p.flipped,
         zLayer: p.zLayer ?? 0,
+        depthManualBias: typeof p.depthManualBias === 'number' ? p.depthManualBias : 0,
       }));
+
+      if (needsScaleMigration) {
+        this._save();
+      }
 
       return true;
     } catch (e) {

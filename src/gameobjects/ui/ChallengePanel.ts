@@ -13,7 +13,6 @@ const TYPE_DISPLAY: Record<string, { icon: string; name: string }> = {
   [ChallengeType.TIMED]: { icon: '⏱️', name: '限时' },
   [ChallengeType.LIMITED_MOVES]: { icon: '📏', name: '限步' },
   [ChallengeType.TARGET]: { icon: '🎯', name: '目标' },
-  [ChallengeType.COMBO]: { icon: '🔥', name: '连击' },
 };
 
 export class ChallengePanel extends PIXI.Container {

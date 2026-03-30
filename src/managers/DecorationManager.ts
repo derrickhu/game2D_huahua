@@ -11,6 +11,9 @@ import {
   DECO_DEFS, DECO_MAP, DecoSlot, DecoDef, DecoRarity,
   getSlotDecos, DECO_SLOT_INFO,
   ROOM_STYLES, ROOM_STYLE_MAP,
+  getDecosForDecorationPanelTab,
+  isDecoAllowedInScene,
+  type DecoPanelTabId,
 } from '@/config/DecorationConfig';
 
 export interface DecoSaveData {
@@ -89,9 +92,12 @@ class DecorationManagerClass {
     if (st.cost > 0) {
       CurrencyManager.addHuayuan(-st.cost);
     }
+    if (st.starValue > 0) {
+      CurrencyManager.addStar(st.starValue);
+    }
     this._unlockedRoomStyles.add(styleId);
     this._save();
-    console.log(`[Decoration] 解锁房间风格: ${st.name}${st.cost > 0 ? ` (-${st.cost}花愿)` : ''}`);
+    console.log(`[Decoration] 解锁房间风格: ${st.name}${st.cost > 0 ? ` (-${st.cost}花愿)` : ''} +${st.starValue}⭐`);
     return true;
   }
 
@@ -128,6 +134,14 @@ class DecorationManagerClass {
     return { unlocked, total: all.length };
   }
 
+  /** 装修面板合并 Tab（花房/家电/特殊等）的收集进度 */
+  getDecorationTabProgress(tab: DecoPanelTabId, sceneId: string): { unlocked: number; total: number } {
+    if (tab === 'room_styles') return { unlocked: 0, total: 0 };
+    const list = getDecosForDecorationPanelTab(tab, sceneId);
+    const unlocked = list.filter(d => this._unlocked.has(d.id)).length;
+    return { unlocked, total: list.length };
+  }
+
   /**
    * 花愿购买解锁装饰
    * @returns true 购买成功
@@ -138,36 +152,33 @@ class DecorationManagerClass {
     const deco = DECO_MAP.get(decoId);
     if (!deco) return false;
 
+    if (!isDecoAllowedInScene(deco, CurrencyManager.state.sceneId)) {
+      return false;
+    }
+
     const req = checkRequirement(deco.unlockRequirement);
     if (!req.met) return false;
 
     if (CurrencyManager.state.huayuan < deco.cost) return false;
 
     CurrencyManager.addHuayuan(-deco.cost);
+    if (deco.starValue > 0) {
+      CurrencyManager.addStar(deco.starValue);
+    }
     this._unlocked.add(decoId);
     this._save();
 
-    console.log(`[Decoration] 解锁装饰: ${deco.name} (-${deco.cost}花愿)`);
+    console.log(`[Decoration] 解锁装饰: ${deco.name} (-${deco.cost}花愿, +${deco.starValue}⭐)`);
     EventBus.emit('decoration:unlocked', decoId, deco);
     return true;
   }
 
   /**
-   * 装备装饰到对应槽位
+   * 已废弃：家具是否进房以 RoomLayoutManager 为准，不再维护槽位互斥装备。
+   * 保留方法签名，避免外部旧代码调用时报错。
    */
   equip(decoId: string): boolean {
-    if (!this._unlocked.has(decoId)) return false;
-
-    const deco = DECO_MAP.get(decoId);
-    if (!deco) return false;
-
-    const prev = this._equipped.get(deco.slot);
-    this._equipped.set(deco.slot, decoId);
-    this._save();
-
-    console.log(`[Decoration] 装备: ${deco.name} → ${DECO_SLOT_INFO[deco.slot].name}`);
-    EventBus.emit('decoration:equipped', deco.slot, decoId, prev || null);
-    return true;
+    return this._unlocked.has(decoId) && DECO_MAP.has(decoId);
   }
 
   /**
@@ -214,7 +225,7 @@ class DecorationManagerClass {
     try {
       const data: DecoSaveData = {
         unlocked: [...this._unlocked],
-        equipped: Object.fromEntries(this._equipped),
+        equipped: {},
         roomStyleId: this._roomStyleId,
         unlockedRoomStyles: [...this._unlockedRoomStyles],
       };
@@ -248,14 +259,7 @@ class DecorationManagerClass {
           this._unlocked.add(id);
         }
       }
-      if (data.equipped) {
-        for (const [slot, id] of Object.entries(data.equipped)) {
-          // 验证装饰存在且已解锁
-          if (this._unlocked.has(id) && DECO_MAP.has(id)) {
-            this._equipped.set(slot, id);
-          }
-        }
-      }
+      // 旧版 equipped（槽位互斥）已废弃，不再读入，避免覆盖房间内多件同槽布局
       if (data.unlockedRoomStyles) {
         for (const id of data.unlockedRoomStyles) {
           if (ROOM_STYLE_MAP.has(id)) this._unlockedRoomStyles.add(id);
@@ -277,7 +281,7 @@ class DecorationManagerClass {
   exportState(): DecoSaveData {
     return {
       unlocked: [...this._unlocked],
-      equipped: Object.fromEntries(this._equipped),
+      equipped: {},
       roomStyleId: this._roomStyleId,
       unlockedRoomStyles: [...this._unlockedRoomStyles],
     };

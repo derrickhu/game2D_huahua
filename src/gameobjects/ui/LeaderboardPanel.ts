@@ -12,7 +12,6 @@ import { DESIGN_WIDTH, FONT_FAMILY, COLORS } from '@/config/Constants';
 const LB_TABS: { type: LeaderboardType; icon: string }[] = [
   { type: LeaderboardType.LEVEL, icon: '🏆' },
   { type: LeaderboardType.COLLECTION, icon: '📖' },
-  { type: LeaderboardType.COMBO, icon: '🔥' },
   { type: LeaderboardType.DECORATION, icon: '🏠' },
 ];
 

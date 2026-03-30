@@ -3,7 +3,7 @@
  *
  * 提供游戏内调试功能：
  * - 清除所有数据 / 重置游戏
- * - 增减货币（金币、钻石、体力、花愿、花露）
+ * - 增减货币（金币、钻石、体力、花愿）
  * - 设置等级/经验
  * - 跳过/重置新手引导
  * - 解锁/锁定所有格子
@@ -16,6 +16,7 @@
  * 激活方式：连按招牌 5 次 → 弹出 GM 面板
  */
 import { EventBus } from '@/core/EventBus';
+import { Platform } from '@/core/PlatformService';
 import { BoardManager } from './BoardManager';
 import { CurrencyManager } from './CurrencyManager';
 import { SaveManager } from './SaveManager';
@@ -24,8 +25,12 @@ import { QuestManager } from './QuestManager';
 import { IdleManager } from './IdleManager';
 import { LevelManager } from './LevelManager';
 import { DecorationManager } from './DecorationManager';
+import { EventManager } from './EventManager';
+import { RoomLayoutManager } from './RoomLayoutManager';
 import { CellState } from '@/config/BoardLayout';
-import { ITEM_DEFS, Category, FlowerLine, findItemId } from '@/config/ItemConfig';
+import { DECO_DEFS } from '@/config/DecorationConfig';
+import { ITEM_DEFS, Category, FlowerLine, findItemId, LUCKY_COIN_ITEM_ID } from '@/config/ItemConfig';
+import { RewardBoxManager } from './RewardBoxManager';
 import { STAMINA_MAX } from '@/config/Constants';
 
 declare const wx: any;
@@ -33,6 +38,36 @@ declare const tt: any;
 const _api = typeof wx !== 'undefined' ? wx : typeof tt !== 'undefined' ? tt : null;
 
 const GM_STORAGE_KEY = 'huahua_gm';
+
+/** 「导出缩放」落盘键：无需剪贴板隐私，微信开发者工具 → 调试 → Storage 里可复制全文 */
+const GM_STORAGE_EXPORT_SCALES = 'huahua_gm_export_scales';
+
+const LOG_CHUNK = 3200;
+
+/** 长 JSON 分段写入 console，避免单条日志被截断 */
+function logLongStringToConsole(title: string, text: string): void {
+  if (text.length <= LOG_CHUNK) {
+    console.log(`${title}\n${text}`);
+    return;
+  }
+  const n = Math.ceil(text.length / LOG_CHUNK);
+  console.log(`${title}（共 ${n} 段，按序号拼接）`);
+  for (let i = 0; i < n; i++) {
+    console.log(`[GM export ${i + 1}/${n}]\n${text.slice(i * LOG_CHUNK, (i + 1) * LOG_CHUNK)}`);
+  }
+}
+
+/** GM 面板分组显示顺序（按注册顺序时「装修」会排在「系统测试」之后，首屏看不到） */
+const GM_GROUP_ORDER: readonly string[] = [
+  '🗑️ 数据重置',
+  '💰 货币调整',
+  '📊 等级调整',
+  '🎮 棋盘操作',
+  '🏠 装修系统',
+  '🔧 系统测试',
+  '🎪 新系统',
+  '⚙️ GM设置',
+];
 
 /** GM 指令定义 */
 export interface GMCommand {
@@ -59,9 +94,17 @@ class GMManagerClass {
 
   /** 获取分组列表 */
   get groups(): string[] {
-    const set = new Set<string>();
-    for (const cmd of this._commands) set.add(cmd.group);
-    return [...set];
+    const present = new Set<string>();
+    for (const cmd of this._commands) present.add(cmd.group);
+    const ordered: string[] = [];
+    for (const g of GM_GROUP_ORDER) {
+      if (present.has(g)) {
+        ordered.push(g);
+        present.delete(g);
+      }
+    }
+    for (const g of present) ordered.push(g);
+    return ordered;
   }
 
   /** 按分组获取指令 */
@@ -241,8 +284,8 @@ class GMManagerClass {
       name: '✨ +500 经验',
       desc: '增加500经验值（可能触发升级）',
       execute: () => {
-        LevelManager.addExp(500);
-        return `✅ +500经验，当前 Lv.${LevelManager.level} Exp:${LevelManager.exp}/${LevelManager.expToNextLevel}`;
+        CurrencyManager.addStar(10);
+        return `✅ +10星星，当前 ${LevelManager.level}星 ⭐${CurrencyManager.state.star}`;
       },
     });
 
@@ -254,7 +297,6 @@ class GMManagerClass {
       desc: '直接设置等级为5',
       execute: () => {
         CurrencyManager.setLevel(5);
-        CurrencyManager.setExp(0);
         return `✅ 等级已设为 Lv.5`;
       },
     });
@@ -266,7 +308,6 @@ class GMManagerClass {
       desc: '直接设置等级为10',
       execute: () => {
         CurrencyManager.setLevel(10);
-        CurrencyManager.setExp(0);
         return `✅ 等级已设为 Lv.10`;
       },
     });
@@ -278,7 +319,6 @@ class GMManagerClass {
       desc: '直接设置等级为20',
       execute: () => {
         CurrencyManager.setLevel(20);
-        CurrencyManager.setExp(0);
         return `✅ 等级已设为 Lv.20`;
       },
     });
@@ -385,6 +425,17 @@ class GMManagerClass {
       },
     });
 
+    this._commands.push({
+      id: 'give_lucky_coin',
+      group: '🎮 棋盘操作',
+      name: '🪙 送幸运金币×1',
+      desc: '发放 1 枚幸运金币到奖励收纳盒（取出后可拖至物品上随机升/降一级）',
+      execute: () => {
+        RewardBoxManager.addItem(LUCKY_COIN_ITEM_ID, 1);
+        return '✅ 已发放 1 枚幸运金币到收纳盒';
+      },
+    });
+
     // ========== 系统测试 ==========
     this._commands.push({
       id: 'skip_tutorial',
@@ -452,7 +503,7 @@ class GMManagerClass {
         const openCount = cells.filter(c => c.state === CellState.OPEN).length;
         const itemCount = cells.filter(c => c.itemId).length;
         const lines = [
-          `Lv.${cs.level} Exp:${cs.exp}`,
+          `${cs.level}星 ⭐${cs.star}`,
           `💰${cs.gold} 💎${cs.diamond} ⚡${cs.stamina} 🌸${cs.huayuan}`,
           `棋盘: ${openCount}格开放, ${itemCount}物品`,
           `签到: 连续${CheckInManager.consecutiveDays}天`,
@@ -493,8 +544,6 @@ class GMManagerClass {
       name: '🔓 解锁全部装修',
       desc: '解锁所有装饰（不扣货币）',
       execute: () => {
-        // 直接调用内部方法添加大量花愿后逐个解锁
-        const { DECO_DEFS } = require('@/config/DecorationConfig');
         let count = 0;
         for (const deco of DECO_DEFS) {
           if (!DecorationManager.isUnlocked(deco.id)) {
@@ -538,7 +587,6 @@ class GMManagerClass {
       desc: '清除家具摆放数据，恢复默认布局',
       execute: () => {
         try { _api?.removeStorageSync('huahua_room_layout'); } catch (_) {}
-        const { RoomLayoutManager } = require('@/managers/RoomLayoutManager');
         RoomLayoutManager.reset();
         return '✅ 房间布局已重置为默认';
       },
@@ -550,20 +598,69 @@ class GMManagerClass {
       name: '🛋️ 填充全部家具',
       desc: '解锁所有装饰并全部放入房间',
       execute: () => {
-        const { DECO_DEFS: allDecos } = require('@/config/DecorationConfig');
         // 先给足够花愿
         CurrencyManager.addHuayuan(50000);
         let count = 0;
-        for (const d of allDecos) {
+        for (const d of DECO_DEFS) {
           if (!DecorationManager.isUnlocked(d.id)) {
             DecorationManager.unlock(d.id);
           }
           count++;
         }
         // 重建房间布局
-        const { RoomLayoutManager } = require('@/managers/RoomLayoutManager');
         RoomLayoutManager.reset();
         return `✅ 已解锁并放置 ${count} 件家具`;
+      },
+    });
+
+    this._commands.push({
+      id: 'calibrate_deco_scales',
+      group: '🏠 装修系统',
+      name: '📐 校准：全解锁+全摆放',
+      desc: '解锁全部家具并补充放入房间（不清空已调好的），然后进花店编辑',
+      execute: () => {
+        CurrencyManager.addHuayuan(99999);
+        let unlocked = 0;
+        let placed = 0;
+        for (const d of DECO_DEFS) {
+          if (!DecorationManager.isUnlocked(d.id)) {
+            DecorationManager.unlock(d.id);
+            unlocked++;
+          }
+          if (!RoomLayoutManager.getPlacement(d.id)) {
+            RoomLayoutManager.addFurniture(d.id);
+            placed++;
+          }
+        }
+        SaveManager.save();
+        EventBus.emit('scene:switchToShop');
+        return `✅ 解锁 ${unlocked} 件，新放入 ${placed} 件，请在花店编辑模式逐件调整缩放`;
+      },
+    });
+
+    this._commands.push({
+      id: 'export_furniture_scales',
+      group: '🏠 装修系统',
+      name: '📋 导出缩放配置',
+      desc: 'Console 分段日志 + 本地 Storage（不需剪贴板隐私）',
+      execute: () => {
+        const layout = RoomLayoutManager.getLayout();
+        if (!layout || layout.length === 0) {
+          return '❌ 房间内没有家具';
+        }
+        const scaleMap: Record<string, number> = {};
+        for (const p of layout) {
+          scaleMap[p.decoId] = Math.round(p.scale * 100) / 100;
+        }
+        const json = JSON.stringify(scaleMap, null, 2);
+        logLongStringToConsole('[GM] 家具缩放 defaultScale JSON', json);
+        console.log('[GM] ===== END =====');
+        try {
+          Platform.setStorageSync(GM_STORAGE_EXPORT_SCALES, json);
+        } catch (_) {
+          console.warn('[GM] 写入本地存储失败');
+        }
+        return `✅ ${layout.length} 件已导出：① 看 Console 分段 [GM export i/n] ② 开发者工具→调试→Storage→键「${GM_STORAGE_EXPORT_SCALES}」可复制全文`;
       },
     });
 
@@ -571,24 +668,12 @@ class GMManagerClass {
 
     // ========== 🎪 新系统调试 ==========
     this._commands.push({
-      id: 'add_hualu_100',
-      group: '🎪 新系统',
-      name: '💧 +100 花露',
-      desc: '换装用稀缺货币',
-      execute: () => {
-        CurrencyManager.addHualu(100);
-        return `✅ +100花露，当前: ${CurrencyManager.state.hualu}`;
-      },
-    });
-
-    this._commands.push({
       id: 'start_event',
       group: '🎪 新系统',
       name: '🎪 开启限时活动',
       desc: '开启春·樱花祭活动(7天)',
       execute: () => {
-        const { EventManager: EM } = require('@/managers/EventManager');
-        EM.startEvent(0, 7);
+        EventManager.startEvent(0, 7);
         return '✅ 春·樱花祭活动已开启！';
       },
     });
@@ -599,8 +684,7 @@ class GMManagerClass {
       name: '🎟️ +500 活动积分',
       desc: '增加活动积分',
       execute: () => {
-        const { EventManager: EM } = require('@/managers/EventManager');
-        if (!EM.hasActiveEvent) return '❌ 没有进行中的活动';
+        if (!EventManager.hasActiveEvent) return '❌ 没有进行中的活动';
         // 通过完成任务间接增加（直接设置积分需要内部方法）
         return '请通过完成活动任务获取积分';
       },

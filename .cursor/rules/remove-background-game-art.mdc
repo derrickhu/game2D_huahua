@@ -31,7 +31,7 @@ alwaysApply: true
 
 ## 与本仓库脚本对齐
 
-- 客人 2×4 表切图后批量抠图：见仓库 **`scripts/process_customer_busts_new5_rembg.sh`**（split → `rembg_batch -m birefnet-general` → `crop_trim` → 缩放写入 `minigame/images/customer/`）。
+- 客人 2×4 表切图后批量抠图：见仓库 **`scripts/process_customer_busts_new5_rembg.sh`**（split → `rembg_batch -m birefnet-general` → `crop_trim` → 缩放写入 `minigame/subpkg_chars/images/customer/`）。
 
 ## 依赖
 

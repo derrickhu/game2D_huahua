@@ -7,14 +7,15 @@ import { Game } from '@/core/Game';
 import { TweenManager, Ease } from '@/core/TweenManager';
 import { BOARD_COLS, BOARD_ROWS, CELL_GAP, BoardMetrics, COLORS, DESIGN_WIDTH } from '@/config/Constants';
 import { CellState } from '@/config/BoardLayout';
-import { ITEM_DEFS, Category, getMergeChain } from '@/config/ItemConfig';
+import { findBoardProducerDef } from '@/config/BuildingConfig';
+import { ITEM_DEFS, Category, getMergeChain, isLuckyCoinItem } from '@/config/ItemConfig';
 import { BoardManager } from '@/managers/BoardManager';
 import { MergeManager } from '@/managers/MergeManager';
 import { BuildingManager } from '@/managers/BuildingManager';
 import { CurrencyManager } from '@/managers/CurrencyManager';
 import { Platform } from '@/core/PlatformService';
 import { TextureCache } from '@/utils/TextureCache';
-import { createToolEnergySprite, isBoardToolInteract } from '@/utils/ToolEnergyBadge';
+import { createToolEnergySprite } from '@/utils/ToolEnergyBadge';
 import { ToolSparkleLayer } from '@/utils/ToolSparkleLayer';
 import { CellView } from './CellView';
 import { ItemView } from './ItemView';
@@ -23,7 +24,6 @@ import { ToastMessage } from '../ui/ToastMessage';
 import { WarehouseManager } from '@/managers/WarehouseManager';
 import { MergeGuideLineSystem } from '@/systems/MergeGuideLineSystem';
 import { MergeHintSystem } from '@/systems/MergeHintSystem';
-import { getItemSellPrice } from '@/utils/ItemSellPrice';
 
 export class BoardView extends PIXI.Container {
   /** 仅格子底与雾等，必须在物品下层，避免交错 addChild 导致右侧/下方格子盖住左侧物品 */
@@ -199,7 +199,7 @@ export class BoardView extends PIXI.Container {
         }
       }
 
-      // 消耗型建筑/宝箱剩余次数（宝箱改为进度条）
+      // 消耗型建筑剩余次数（宝箱/红包待散落用右下角角标）
       const usesLeft = BuildingManager.getUsesLeft(i);
       itemView.setUsesLeft(usesLeft > 0 ? usesLeft : 0);
       const chestProg = BuildingManager.getChestDispatchProgress(i);
@@ -294,10 +294,10 @@ export class BoardView extends PIXI.Container {
       ToastMessage.show('周围没有空格！');
     });
     EventBus.on('building:chestNeedsSpace', (_idx: number, n: number) => {
-      ToastMessage.show(`棋盘空格不足，宝箱内还剩 ${n} 件，腾出格子后再点宝箱`);
+      ToastMessage.show(`棋盘空格不足，还剩 ${n} 件待发，腾出格子后再试`);
     });
     EventBus.on('building:chestPartial', (_idx: number, n: number) => {
-      ToastMessage.show(`已散落部分奖励，宝箱内还剩 ${n} 件`);
+      ToastMessage.show(`已散落部分奖励，还剩 ${n} 件待发`);
     });
     EventBus.on('customer:lockChanged', () => this.refresh());
     EventBus.on('customer:delivered', () => this.refresh());
@@ -319,10 +319,8 @@ export class BoardView extends PIXI.Container {
     const def = ITEM_DEFS.get(cell.itemId);
     if (!def) return;
 
-    const sellPrice = getItemSellPrice(def);
-    CurrencyManager.addHuayuan(sellPrice);
     BoardManager.removeItem(cellIndex);
-    ToastMessage.show(`出售 ${def.name}，获得 ${sellPrice}💰`);
+    ToastMessage.show(`已出售 ${def.name}（腾出棋盘一格）`);
     EventBus.emit('board:itemSold', cellIndex);
   }
 
@@ -419,7 +417,8 @@ export class BoardView extends PIXI.Container {
           if (cell?.itemId) {
             const def = ITEM_DEFS.get(cell.itemId);
             if (def && def.storable) {
-              if (WarehouseManager.storeItem(cell.itemId)) {
+              const toolState = BuildingManager.snapshotToolStateAt(srcIdx);
+              if (WarehouseManager.storeItem(cell.itemId, toolState ?? undefined)) {
                 BoardManager.removeItem(srcIdx);
                 MergeManager.cancelDrag();
                 this._endDrag();
@@ -435,11 +434,22 @@ export class BoardView extends PIXI.Container {
 
         if (targetIdx >= 0 && targetIdx !== srcIdx) {
           const result = MergeManager.endDrag(targetIdx);
-          if (result === 'merged' || result === 'moved' || result === 'swapped') {
+          if (
+            result.kind === 'merged'
+            || result.kind === 'moved'
+            || result.kind === 'swapped'
+            || result.kind === 'lucky_coin'
+          ) {
             this._playDropBounce(targetIdx);
           }
+          if (result.kind === 'lucky_coin') {
+            ToastMessage.show(result.direction === 'up' ? '幸运升级！' : '降级了…');
+          }
+          if (result.kind === 'lucky_coin_fail') {
+            ToastMessage.show(result.toast);
+          }
           // 移入空格 / 互换：选中框跟到目标格上的物品
-          if (result === 'moved' || result === 'swapped') {
+          if (result.kind === 'moved' || result.kind === 'swapped') {
             const cellAfter = BoardManager.getCellByIndex(targetIdx);
             if (cellAfter?.itemId) {
               this._selectItem(targetIdx, cellAfter.itemId);
@@ -599,17 +609,21 @@ export class BoardView extends PIXI.Container {
       return;
     }
 
-    // 双击检测：同一格子在 300ms 内连续点击 → 快速合成
+    // 双击检测：同一格子在 300ms 内连续点击 → 仅货币类快速使用；合成只能拖拽
     const now = Date.now();
     if (cellIndex === this._lastTapIndex && now - this._lastTapTime < 300) {
-      // 清除单击延迟
       if (this._tapTimer) {
         clearTimeout(this._tapTimer);
         this._tapTimer = null;
       }
       this._lastTapIndex = -1;
       this._lastTapTime = 0;
-      this._handleDoubleTap(cellIndex);
+      const defTap = ITEM_DEFS.get(cell.itemId!);
+      if (defTap?.category === Category.CURRENCY && defTap.currencyReward) {
+        this._useCurrencyItem(cellIndex, defTap);
+      } else {
+        this._selectItem(cellIndex, cell.itemId!);
+      }
       return;
     }
 
@@ -621,58 +635,6 @@ export class BoardView extends PIXI.Container {
       this._tapTimer = null;
       this._selectItem(cellIndex, cell.itemId!);
     }, 300);
-  }
-
-  /** 双击：货币物品 → 使用；其他 → 快速合成 */
-  private _handleDoubleTap(cellIndex: number): void {
-    const cell = BoardManager.getCellByIndex(cellIndex);
-    if (!cell?.itemId) return;
-
-    const def = ITEM_DEFS.get(cell.itemId);
-    if (!def) return;
-
-    // 货币物品：双击直接使用
-    if (def.category === Category.CURRENCY && def.currencyReward) {
-      this._useCurrencyItem(cellIndex, def);
-      return;
-    }
-
-    if (def.level >= def.maxLevel) {
-      this._selectItem(cellIndex, cell.itemId);
-      return;
-    }
-
-    const srcCol = cellIndex % BOARD_COLS;
-    const srcRow = Math.floor(cellIndex / BOARD_COLS);
-    let bestIdx = -1;
-    let bestDist = Infinity;
-
-    for (let i = 0; i < BoardManager.cells.length; i++) {
-      if (i === cellIndex) continue;
-      const other = BoardManager.cells[i];
-      if (other.state !== CellState.OPEN || other.itemId !== cell.itemId) continue;
-
-      const col = i % BOARD_COLS;
-      const row = Math.floor(i / BOARD_COLS);
-      const dist = Math.abs(col - srcCol) + Math.abs(row - srcRow);
-      if (dist < bestDist) {
-        bestDist = dist;
-        bestIdx = i;
-      }
-    }
-
-    if (bestIdx >= 0) {
-      if (MergeManager.startDrag(cellIndex)) {
-        const result = MergeManager.endDrag(bestIdx);
-        if (result === 'merged') {
-          this._playDropBounce(bestIdx);
-          ToastMessage.show('快速合成！');
-        }
-      }
-    } else {
-      this._selectItem(cellIndex, cell.itemId);
-      ToastMessage.show('没有可合成的同类物品');
-    }
   }
 
   /**
@@ -948,9 +910,11 @@ export class BoardView extends PIXI.Container {
 
   /** 格子抖动反馈（基于 TweenManager，不依赖原生定时器） */
   private _shakeCell(cellIndex: number): void {
-    const view = this._cellViews[cellIndex];
-    if (!view) return;
-    const origX = view.x;
+    const cellView = this._cellViews[cellIndex];
+    if (!cellView) return;
+    const itemView = this._itemViews[cellIndex];
+    const origCellX = cellView.x;
+    const origItemX = itemView ? itemView.x : origCellX;
     const steps = [4, -4, 3, -3, 1, -1, 0];
     const stepDuration = 0.035;
     const proxy = { t: 0 };
@@ -960,9 +924,14 @@ export class BoardView extends PIXI.Container {
       duration: steps.length * stepDuration,
       onUpdate: () => {
         const idx = Math.min(Math.floor(proxy.t * steps.length), steps.length - 1);
-        view.x = origX + steps[idx];
+        const dx = steps[idx];
+        cellView.x = origCellX + dx;
+        if (itemView) itemView.x = origItemX + dx;
       },
-      onComplete: () => { view.x = origX; },
+      onComplete: () => {
+        cellView.x = origCellX;
+        if (itemView) itemView.x = origItemX;
+      },
     });
   }
 
@@ -1019,7 +988,9 @@ export class BoardView extends PIXI.Container {
       sprite.scale.set(s);
       sprite.anchor.set(0.5, 0.5);
       ghost.addChild(sprite);
-      if (def && isBoardToolInteract(def.interactType)) {
+      // 与 ItemView 一致：仅可产出工具叠闪光与体力角标
+      const producerDef = def ? findBoardProducerDef(def.id) : undefined;
+      if (producerDef?.canProduce) {
         const spark = new ToolSparkleLayer(cs, cs);
         spark.position.set(-cs / 2, -cs / 2);
         ghost.addChild(spark);
@@ -1103,12 +1074,17 @@ export class BoardView extends PIXI.Container {
     }
   }
 
-  /** 缓存可合成目标（仅计算一次） */
+  /** 缓存可合成目标（仅计算一次）；幸运金币额外包含可升降一级的合法目标格 */
   private _cacheAndHighlightTargets(srcIndex: number): void {
     this._mergeTargets.clear();
+    const src = BoardManager.getCellByIndex(srcIndex);
+    const dragLuckyCoin = !!(src?.itemId && isLuckyCoinItem(src.itemId));
     for (let i = 0; i < BoardManager.cells.length; i++) {
       if (i === srcIndex) continue;
       if (BoardManager.canMerge(srcIndex, i)) {
+        this._mergeTargets.add(i);
+      }
+      if (dragLuckyCoin && BoardManager.isLuckyCoinHighlightTarget(srcIndex, i)) {
         this._mergeTargets.add(i);
       }
     }
@@ -1122,6 +1098,14 @@ export class BoardView extends PIXI.Container {
   getCellCenterLocal(cellIdx: number): { x: number; y: number } | null {
     if (cellIdx < 0 || cellIdx >= this._cellViews.length) return null;
     return this._getCellCenter(cellIdx);
+  }
+
+  /** 格子中心在任意祖先容器内的局部坐标（签到奖励等飞入棋盘） */
+  getCellCenterInAncestor(ancestor: PIXI.Container, cellIdx: number): PIXI.Point | null {
+    const local = this.getCellCenterLocal(cellIdx);
+    if (!local) return null;
+    const g = this.toGlobal(new PIXI.Point(local.x, local.y));
+    return ancestor.toLocal(g);
   }
 
   /** 交付飞行动画期间暂时隐藏格内物品，避免与飞行图标重叠 */

@@ -4,7 +4,7 @@
  * 功能：
  * - 好友花店互访（分享卡片链接）
  * - 互赠体力（每日限3次）
- * - 排行榜（花店等级/收集进度/最高连击）
+ * - 排行榜（花店等级/收集进度/装修进度）
  * - 花语卡片分享
  *
  * 注意：微信和抖音的社交 API 差异较大，
@@ -21,7 +21,6 @@ const STORAGE_KEY = 'huahua_social';
 export enum LeaderboardType {
   LEVEL = 'level',               // 花店等级
   COLLECTION = 'collection',      // 收集进度
-  COMBO = 'combo',               // 最高连击
   DECORATION = 'decoration',      // 装修进度
 }
 
@@ -155,7 +154,6 @@ class SocialManagerClass {
     return {
       [LeaderboardType.LEVEL]: CurrencyManager.state.level,
       [LeaderboardType.COLLECTION]: CollectionManager.totalDiscovered,
-      [LeaderboardType.COMBO]: 0, // 由 ComboSystem 提供
       [LeaderboardType.DECORATION]: 0, // 由 DecorationManager 提供
     };
   }
@@ -195,7 +193,6 @@ class SocialManagerClass {
     switch (type) {
       case LeaderboardType.LEVEL: return '🏆 花店等级榜';
       case LeaderboardType.COLLECTION: return '📖 收集进度榜';
-      case LeaderboardType.COMBO: return '🔥 最高连击榜';
       case LeaderboardType.DECORATION: return '🏠 装修进度榜';
     }
   }

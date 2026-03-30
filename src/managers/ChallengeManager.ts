@@ -5,7 +5,6 @@
  * - ⏱️ 限时挑战：30/60/90秒内合成指定目标
  * - 📏 限步挑战：限定操作步数内完成合成
  * - 🎯 目标挑战：合成指定数量/等级的物品
- * - 🔥 连击挑战：在限时内达到指定连击数
  *
  * 奖励：
  * - 每个关卡首次通关奖励（金币/钻石/花愿/限定装饰）
@@ -24,7 +23,6 @@ export enum ChallengeType {
   TIMED = 'timed',         // 限时
   LIMITED_MOVES = 'moves', // 限步
   TARGET = 'target',       // 目标
-  COMBO = 'combo',         // 连击
 }
 
 /** 星级评价 */
@@ -84,7 +82,6 @@ export interface ChallengeState {
   currentLevelId: string | null;
   timeRemaining: number;
   movesUsed: number;
-  comboMax: number;
   targets: ChallengeTarget[];
 }
 
@@ -109,10 +106,10 @@ const CHALLENGE_LEVELS: ChallengeLevel[] = [
     unlockStars: 1,
   },
   {
-    id: 'c1_3', chapter: 1, level: 3, name: '连击初体验', desc: '达成3连击',
-    icon: '🔥', type: ChallengeType.COMBO, timeLimit: 45,
-    targets: [{ desc: '达成3连击', count: 3, current: 0 }],
-    star1: '达成3连击', star2: '达成5连击', star3: '达成8连击',
+    id: 'c1_3', chapter: 1, level: 3, name: '节奏合成', desc: '45秒内完成8次合成',
+    icon: '⚡', type: ChallengeType.TIMED, timeLimit: 45,
+    targets: [{ desc: '完成8次合成', count: 8, current: 0 }],
+    star1: '完成目标', star2: '剩余20秒以上', star3: '剩余30秒以上',
     reward: { gold: 200, diamond: 5, huayuan: 1 },
     unlockStars: 2,
   },
@@ -143,10 +140,10 @@ const CHALLENGE_LEVELS: ChallengeLevel[] = [
     unlockStars: 8,
   },
   {
-    id: 'c2_2', chapter: 2, level: 2, name: '狂热挑战', desc: '触发合成狂热模式',
-    icon: '💥', type: ChallengeType.COMBO, timeLimit: 90,
-    targets: [{ desc: '达成10连击(狂热)', count: 10, current: 0 }],
-    star1: '达成10连击', star2: '达成15连击', star3: '触发溢出效果',
+    id: 'c2_2', chapter: 2, level: 2, name: '高速合成', desc: '90秒内完成15次合成',
+    icon: '💥', type: ChallengeType.TIMED, timeLimit: 90,
+    targets: [{ desc: '完成15次合成', count: 15, current: 0 }],
+    star1: '完成目标', star2: '剩余45秒以上', star3: '剩余60秒以上',
     reward: { gold: 500, diamond: 10, huayuan: 3 },
     unlockStars: 10,
   },
@@ -246,7 +243,6 @@ class ChallengeManagerClass {
     currentLevelId: null,
     timeRemaining: 0,
     movesUsed: 0,
-    comboMax: 0,
     targets: [],
   };
 
@@ -312,7 +308,6 @@ class ChallengeManagerClass {
       currentLevelId: levelId,
       timeRemaining: level.timeLimit || 999,
       movesUsed: 0,
-      comboMax: 0,
       targets: level.targets.map(t => ({ ...t, current: 0 })),
     };
 
@@ -377,16 +372,13 @@ class ChallengeManagerClass {
   // ═══════════════ 内部逻辑 ═══════════════
 
   private _mergeHandler = () => { this._onMerge(); };
-  private _comboHandler = (count: number) => { this._onCombo(count); };
 
   private _bindChallengeEvents(): void {
     EventBus.on('board:merged', this._mergeHandler);
-    EventBus.on('combo:hit', this._comboHandler);
   }
 
   private _unbindChallengeEvents(): void {
     EventBus.off('board:merged', this._mergeHandler);
-    EventBus.off('combo:hit', this._comboHandler);
   }
 
   private _onMerge(): void {
@@ -414,22 +406,6 @@ class ChallengeManagerClass {
     }
 
     // 检查目标模式
-    if (this._checkComplete()) {
-      this._endChallenge(true);
-    }
-  }
-
-  private _onCombo(count: number): void {
-    if (!this._state.isActive) return;
-    this._state.comboMax = Math.max(this._state.comboMax, count);
-
-    // 连击挑战目标
-    for (const t of this._state.targets) {
-      if (t.desc.includes('连击') && count >= t.count) {
-        t.current = t.count;
-      }
-    }
-
     if (this._checkComplete()) {
       this._endChallenge(true);
     }
@@ -470,12 +446,12 @@ class ChallengeManagerClass {
         this._stars.set(levelId, stars);
       }
 
-      // 首次通关奖励
+      // 首次通关奖励（花愿仅订单+离线；挑战关「gold」字段按钻石折算发放）
       if (!this._claimed.has(levelId)) {
         this._claimed.add(levelId);
-        CurrencyManager.addHuayuan(level.reward.gold);
-        CurrencyManager.addDiamond(level.reward.diamond);
-        if (level.reward.huayuan > 0) CurrencyManager.addHuayuan(level.reward.huayuan);
+        const goldAsDiamond = Math.min(45, Math.floor((level.reward.gold || 0) / 80));
+        const extraHyTier = (level.reward.huayuan || 0) * 4;
+        CurrencyManager.addDiamond(level.reward.diamond + goldAsDiamond + extraHyTier);
       }
 
       this._saveState();

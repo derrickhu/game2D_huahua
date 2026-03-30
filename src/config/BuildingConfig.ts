@@ -116,7 +116,7 @@ const arrangeToolTemplate = (): Omit<ToolDef, 'itemId' | 'level'>[] => [
     produceOutcomes: ARRANGE_WRAP_OUTCOME_T3,
     cooldown: 0,
     producesBeforeCooldown: 0,
-    staminaCost: 3,
+    staminaCost: 1,
   },
   {
     toolLine: ToolLine.ARRANGE,
@@ -125,9 +125,9 @@ const arrangeToolTemplate = (): Omit<ToolDef, 'itemId' | 'level'>[] => [
     canProduce: true,
     produceTable: [],
     produceOutcomes: ARRANGE_WRAP_OUTCOME_T4,
-    cooldown: 120,
-    producesBeforeCooldown: 20,
-    staminaCost: 5,
+    cooldown: 0,
+    producesBeforeCooldown: 0,
+    staminaCost: 1,
   },
   {
     toolLine: ToolLine.ARRANGE,
@@ -138,35 +138,32 @@ const arrangeToolTemplate = (): Omit<ToolDef, 'itemId' | 'level'>[] => [
     produceOutcomes: ARRANGE_WRAP_OUTCOME_T5,
     cooldown: 300,
     producesBeforeCooldown: 10,
-    staminaCost: 8,
+    staminaCost: 1,
   },
 ];
 
-/** 种植线产出档 A（原 1 级种植工具） */
-const PLANT_OUTCOMES_LV1: ToolProduceOutcome[] = [
+/** 园艺 L3 工具：仅鲜花线 1 级 */
+const PLANT_OUTCOMES_TOOL_L3: ToolProduceOutcome[] = [
+  { category: Category.FLOWER, line: FlowerLine.FRESH, level: 1, weight: 100 },
+];
+
+/** 园艺 L4 工具：沿用改版前 L3 园艺产出（鲜花1 / 绿植1 / 少量鲜花2） */
+const PLANT_OUTCOMES_TOOL_L4: ToolProduceOutcome[] = [
   { category: Category.FLOWER, line: FlowerLine.FRESH, level: 1, weight: 50 },
   { category: Category.FLOWER, line: FlowerLine.GREEN, level: 1, weight: 40 },
   { category: Category.FLOWER, line: FlowerLine.FRESH, level: 2, weight: 10 },
 ];
 
-/** 种植线产出档 B（原 2 级种植工具） */
-const PLANT_OUTCOMES_LV2: ToolProduceOutcome[] = [
-  { category: Category.FLOWER, line: FlowerLine.FRESH, level: 3, weight: 50 },
-  { category: Category.FLOWER, line: FlowerLine.GREEN, level: 2, weight: 40 },
-  { category: Category.FLOWER, line: FlowerLine.GREEN, level: 3, weight: 10 },
+/** 园艺 L5 工具：鲜花/绿植 1～2 级为主，极低概率鲜花 3 级 */
+const PLANT_OUTCOMES_TOOL_L5: ToolProduceOutcome[] = [
+  { category: Category.FLOWER, line: FlowerLine.FRESH, level: 1, weight: 27 },
+  { category: Category.FLOWER, line: FlowerLine.FRESH, level: 2, weight: 27 },
+  { category: Category.FLOWER, line: FlowerLine.GREEN, level: 1, weight: 23 },
+  { category: Category.FLOWER, line: FlowerLine.GREEN, level: 2, weight: 23 },
+  { category: Category.FLOWER, line: FlowerLine.FRESH, level: 3, weight: 2 },
 ];
 
-/** 种植线产出档 C（原 3 级种植工具） */
-const PLANT_OUTCOMES_LV3: ToolProduceOutcome[] = [
-  { category: Category.FLOWER, line: FlowerLine.FRESH, level: 4, weight: 30 },
-  { category: Category.FLOWER, line: FlowerLine.GREEN, level: 3, weight: 30 },
-  { category: Category.FLOWER, line: FlowerLine.FRESH, level: 5, weight: 20 },
-  { category: Category.FLOWER, line: FlowerLine.GREEN, level: 4, weight: 10 },
-  { category: Category.FLOWER, line: FlowerLine.FRESH, level: 6, weight: 5 },
-  { category: Category.FLOWER, line: FlowerLine.GREEN, level: 5, weight: 5 },
-];
-
-/** 种植线产出档 D：高级温室 — 偏高等级鲜花/绿植 */
+/** 园艺 L6 工具：高级温室 — 偏高等级鲜花/绿植 */
 const PLANT_OUTCOMES_LV4: ToolProduceOutcome[] = [
   { category: Category.FLOWER, line: FlowerLine.FRESH, level: 5, weight: 28 },
   { category: Category.FLOWER, line: FlowerLine.GREEN, level: 4, weight: 25 },
@@ -203,10 +200,10 @@ const plantToolTemplate = (): Omit<ToolDef, 'itemId' | 'level'>[] => [
     produceLine: FlowerLine.FRESH,
     canProduce: true,
     produceTable: [],
-    produceOutcomes: PLANT_OUTCOMES_LV1,
+    produceOutcomes: PLANT_OUTCOMES_TOOL_L3,
     cooldown: 0,
     producesBeforeCooldown: 0,
-    staminaCost: 3,
+    staminaCost: 1,
   },
   {
     toolLine: ToolLine.PLANT,
@@ -214,10 +211,10 @@ const plantToolTemplate = (): Omit<ToolDef, 'itemId' | 'level'>[] => [
     produceLine: FlowerLine.FRESH,
     canProduce: true,
     produceTable: [],
-    produceOutcomes: PLANT_OUTCOMES_LV2,
-    cooldown: 120,
-    producesBeforeCooldown: 20,
-    staminaCost: 5,
+    produceOutcomes: PLANT_OUTCOMES_TOOL_L4,
+    cooldown: 0,
+    producesBeforeCooldown: 0,
+    staminaCost: 1,
   },
   {
     toolLine: ToolLine.PLANT,
@@ -225,10 +222,10 @@ const plantToolTemplate = (): Omit<ToolDef, 'itemId' | 'level'>[] => [
     produceLine: FlowerLine.FRESH,
     canProduce: true,
     produceTable: [],
-    produceOutcomes: PLANT_OUTCOMES_LV3,
+    produceOutcomes: PLANT_OUTCOMES_TOOL_L5,
     cooldown: 300,
     producesBeforeCooldown: 10,
-    staminaCost: 8,
+    staminaCost: 1,
   },
   {
     toolLine: ToolLine.PLANT,
@@ -239,7 +236,7 @@ const plantToolTemplate = (): Omit<ToolDef, 'itemId' | 'level'>[] => [
     produceOutcomes: PLANT_OUTCOMES_LV4,
     cooldown: 360,
     producesBeforeCooldown: 8,
-    staminaCost: 10,
+    staminaCost: 1,
   },
 ];
 
@@ -262,19 +259,19 @@ const drinkToolTemplate = (toolLine: ToolLine, produceLine: DrinkLine): Omit<Too
     toolLine, produceCategory: Category.DRINK, produceLine,
     canProduce: true,
     produceTable: SHARED_PRODUCE_TABLE_LV1,
-    cooldown: 0, producesBeforeCooldown: 0, staminaCost: 3,
+    cooldown: 0, producesBeforeCooldown: 0, staminaCost: 1,
   },
   {
     toolLine, produceCategory: Category.DRINK, produceLine,
     canProduce: true,
     produceTable: SHARED_PRODUCE_TABLE_LV2,
-    cooldown: 120, producesBeforeCooldown: 20, staminaCost: 5,
+    cooldown: 0, producesBeforeCooldown: 0, staminaCost: 1,
   },
   {
     toolLine, produceCategory: Category.DRINK, produceLine,
     canProduce: true,
     produceTable: SHARED_PRODUCE_TABLE_LV3,
-    cooldown: 300, producesBeforeCooldown: 10, staminaCost: 8,
+    cooldown: 300, producesBeforeCooldown: 10, staminaCost: 1,
   },
 ];
 
@@ -319,7 +316,7 @@ function buildBoardProducerDefs(): Map<string, ToolDef> {
     produceTable: SHARED_PRODUCE_TABLE_LV1,
     cooldown: 0,
     producesBeforeCooldown: 0,
-    staminaCost: 3,
+    staminaCost: 1,
     exhaustAfterProduces: 15,
   });
   return map;

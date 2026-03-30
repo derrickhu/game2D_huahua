@@ -1,6 +1,6 @@
 ---
 description: 工具物品图标的标准画风提示词与生成流程，所有工具线图标生成必须遵循
-globs: docs/prompt/tool_*_nb2_prompt.txt, docs/prompt/flower_wrap_*_nb2_prompt.txt
+globs: docs/prompt/tool_*_nb2_prompt.txt, docs/prompt/flower_wrap_*_nb2_prompt.txt, docs/prompt/hongbao_*_nb2_prompt.txt
 alwaysApply: false
 ---
 

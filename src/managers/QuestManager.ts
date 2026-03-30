@@ -27,16 +27,15 @@ export interface QuestDef {
 
 /** 每日任务池（随机选取3个） */
 const QUEST_POOL: QuestDef[] = [
-  { id: 'merge_3', name: '合成新手', desc: '完成3次合成', target: 3, event: 'board:merged', reward: { huayuan: 50 } },
-  { id: 'merge_5', name: '合成达人', desc: '完成5次合成', target: 5, event: 'board:merged', reward: { huayuan: 100 } },
-  { id: 'merge_10', name: '合成大师', desc: '完成10次合成', target: 10, event: 'board:merged', reward: { huayuan: 200, diamond: 5 } },
-  { id: 'deliver_1', name: '客似云来', desc: '交付1位客人', target: 1, event: 'customer:delivered', reward: { huayuan: 80 } },
-  { id: 'deliver_2', name: '人气花店', desc: '交付2位客人', target: 2, event: 'customer:delivered', reward: { huayuan: 150 } },
+  { id: 'merge_3', name: '合成新手', desc: '完成3次合成', target: 3, event: 'board:merged', reward: { diamond: 5 } },
+  { id: 'merge_5', name: '合成达人', desc: '完成5次合成', target: 5, event: 'board:merged', reward: { diamond: 8 } },
+  { id: 'merge_10', name: '合成大师', desc: '完成10次合成', target: 10, event: 'board:merged', reward: { diamond: 12 } },
+  { id: 'deliver_1', name: '客似云来', desc: '交付1位客人', target: 1, event: 'customer:delivered', reward: { diamond: 6 } },
+  { id: 'deliver_2', name: '人气花店', desc: '交付2位客人', target: 2, event: 'customer:delivered', reward: { diamond: 10 } },
   { id: 'building_2', name: '勤劳花匠', desc: '使用建筑产出2次', target: 2, event: 'building:produced', reward: { stamina: 20 } },
-  { id: 'building_5', name: '产出大师', desc: '使用建筑产出5次', target: 5, event: 'building:produced', reward: { huayuan: 100, stamina: 10 } },
-  { id: 'combo_3', name: '连击初学', desc: '达成3连击', target: 3, event: 'quest:comboReached', reward: { huayuan: 80 } },
-  { id: 'unlock_1', name: '探索之路', desc: '解锁1个新格子', target: 1, event: 'board:cellUnlocked', reward: { huayuan: 60 } },
-  { id: 'sell_1', name: '精明店主', desc: '出售1个物品', target: 1, event: 'board:itemSold', reward: { huayuan: 50 } },
+  { id: 'building_5', name: '产出大师', desc: '使用建筑产出5次', target: 5, event: 'building:produced', reward: { diamond: 8, stamina: 10 } },
+  { id: 'unlock_1', name: '探索之路', desc: '解锁1个新格子', target: 1, event: 'board:cellUnlocked', reward: { diamond: 5 } },
+  { id: 'sell_1', name: '精明店主', desc: '出售1个物品', target: 1, event: 'board:itemSold', reward: { diamond: 3 } },
 ];
 
 // ====== 成就定义 ======
@@ -58,11 +57,11 @@ const ACHIEVEMENT_DEFS: AchievementDef[] = [
     desc: '累计合成次数',
     icon: '🔨',
     tiers: [
-      { target: 10, reward: { huayuan: 100 } },
-      { target: 50, reward: { huayuan: 300, diamond: 5 } },
-      { target: 200, reward: { huayuan: 500, diamond: 10 } },
-      { target: 500, reward: { huayuan: 1000, diamond: 20 } },
-      { target: 2000, reward: { huayuan: 2000, diamond: 50 } },
+      { target: 10, reward: { diamond: 8 } },
+      { target: 50, reward: { diamond: 18 } },
+      { target: 200, reward: { diamond: 35 } },
+      { target: 500, reward: { diamond: 55 } },
+      { target: 2000, reward: { diamond: 90 } },
     ],
     event: 'board:merged',
   },
@@ -72,26 +71,13 @@ const ACHIEVEMENT_DEFS: AchievementDef[] = [
     desc: '累计交付客人',
     icon: '👥',
     tiers: [
-      { target: 5, reward: { huayuan: 100 } },
-      { target: 20, reward: { huayuan: 300, diamond: 5 } },
-      { target: 50, reward: { huayuan: 500, diamond: 10 } },
-      { target: 200, reward: { huayuan: 1000, diamond: 20 } },
-      { target: 1000, reward: { huayuan: 3000, diamond: 50 } },
+      { target: 5, reward: { diamond: 8 } },
+      { target: 20, reward: { diamond: 18 } },
+      { target: 50, reward: { diamond: 35 } },
+      { target: 200, reward: { diamond: 55 } },
+      { target: 1000, reward: { diamond: 100 } },
     ],
     event: 'customer:delivered',
-  },
-  {
-    id: 'best_combo',
-    name: '连击达人',
-    desc: '达成最高连击',
-    icon: '🔥',
-    tiers: [
-      { target: 3, reward: { huayuan: 50 } },
-      { target: 5, reward: { huayuan: 100, diamond: 3 } },
-      { target: 10, reward: { huayuan: 300, diamond: 10 } },
-      { target: 20, reward: { diamond: 30 } },
-    ],
-    event: 'quest:comboReached',
   },
   {
     id: 'total_unlock',
@@ -99,9 +85,9 @@ const ACHIEVEMENT_DEFS: AchievementDef[] = [
     desc: '累计解锁格子数',
     icon: '🗺️',
     tiers: [
-      { target: 5, reward: { huayuan: 100 } },
-      { target: 15, reward: { huayuan: 300, diamond: 5 } },
-      { target: 30, reward: { huayuan: 500, diamond: 15 } },
+      { target: 5, reward: { diamond: 8 } },
+      { target: 15, reward: { diamond: 20 } },
+      { target: 30, reward: { diamond: 40 } },
     ],
     event: 'board:cellUnlocked',
   },
@@ -221,43 +207,10 @@ class QuestManagerClass {
       this._incrementQuest('board:itemSold');
     });
 
-    // 连击通知
-    EventBus.on('combo:end', (count: number) => {
-      this._onComboReached(count);
-    });
-
     // 累计花愿获得（用于成就「商业奇才」）
     EventBus.on('quest:huayuanEarned', (amount: number) => {
       this._incrementAchievementBy('quest:huayuanEarned', amount);
     });
-  }
-
-  private _onComboReached(count: number): void {
-    // 每日任务：检查连击任务
-    for (const quest of this._dailyQuests) {
-      const def = this.getQuestDef(quest.defId);
-      if (def && def.event === 'quest:comboReached') {
-        if (count > quest.current) {
-          quest.current = Math.min(count, def.target);
-          if (quest.current >= def.target && !quest.claimed) {
-            EventBus.emit('quest:taskCompleted', quest.defId);
-          }
-        }
-      }
-    }
-
-    // 成就：最高连击
-    for (const ach of this._achievements) {
-      if (ach.defId === 'best_combo') {
-        if (count > ach.current) {
-          ach.current = count;
-          this._checkAchievementTiers(ach);
-        }
-      }
-    }
-
-    this._save();
-    EventBus.emit('quest:updated');
   }
 
   /** 递增每日任务进度 */
@@ -390,10 +343,18 @@ class QuestManagerClass {
       if (raw) {
         const data: QuestSaveData = JSON.parse(raw);
         this._todayDate = data.date || '';
-        this._dailyQuests = data.quests || [];
-        this._achievements = data.achievements || [];
+        this._dailyQuests = (data.quests || []).filter(q => !!this.getQuestDef(q.defId));
+        this._achievements = (data.achievements || []).filter(a =>
+          ACHIEVEMENT_DEFS.some(d => d.id === a.defId),
+        );
       }
     } catch (_) {}
+
+    const today = new Date().toISOString().slice(0, 10);
+    if (this._dailyQuests.length === 0 && this._todayDate === today) {
+      this._todayDate = today;
+      this._generateDailyQuests();
+    }
 
     // 确保所有成就都有进度记录
     for (const def of ACHIEVEMENT_DEFS) {

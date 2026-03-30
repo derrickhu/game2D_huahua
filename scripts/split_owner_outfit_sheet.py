@@ -50,7 +50,7 @@ def main() -> None:
     outfit_id = sys.argv[1]
     src = Path(sys.argv[2])
     root = Path(__file__).resolve().parents[1]
-    out_dir = Path(sys.argv[3]) if len(sys.argv) > 3 else root / "minigame/images/owner"
+    out_dir = Path(sys.argv[3]) if len(sys.argv) > 3 else root / "minigame/subpkg_chars/images/owner"
     out_dir.mkdir(parents=True, exist_ok=True)
     chroma_off = os.environ.get("CHROMA_OFF", "").strip() in ("1", "true", "yes")
 

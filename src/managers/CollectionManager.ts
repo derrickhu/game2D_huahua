@@ -5,7 +5,7 @@
  * - 🌸 花束图鉴（18种）
  * - 🍵 花饮图鉴（9种）
  * - 🏠 建筑图鉴（13种）
- * - 📦 宝箱图鉴（5级，合成产出时解锁）
+ * - 📦 宝箱图鉴（宝箱5级 + 红包4级，合成或散落至棋盘时解锁）
  * - 👤 客人图鉴（基于熟客系统）
  * - 🪑 装饰图鉴（基于装修系统）
  * - 🌸 花语卡片（18张，首次合成解锁）
@@ -40,10 +40,10 @@ interface MilestoneReward {
 }
 
 const MILESTONES: MilestoneReward[] = [
-  { percent: 25,  gold: 200,  diamond: 5,  huayuan: 0,  desc: '🌱 初识花语' },
-  { percent: 50,  gold: 500,  diamond: 15, huayuan: 3,  desc: '🌿 花艺学徒' },
-  { percent: 75,  gold: 1000, diamond: 30, huayuan: 8,  desc: '🌺 花艺大师' },
-  { percent: 100, gold: 2000, diamond: 50, huayuan: 20, desc: '🌸 花语传说' },
+  { percent: 25,  gold: 0,  diamond: 18,  huayuan: 0,  desc: '🌱 初识花语' },
+  { percent: 50,  gold: 0,  diamond: 35, huayuan: 0,  desc: '🌿 花艺学徒' },
+  { percent: 75,  gold: 0, diamond: 55, huayuan: 0,  desc: '🌺 花艺大师' },
+  { percent: 100, gold: 0, diamond: 85, huayuan: 0, desc: '🌸 花语传说' },
 ];
 
 interface CollectionSave {
@@ -68,33 +68,19 @@ class CollectionManagerClass {
   }
 
   private _bindEvents(): void {
-    // 合成成功→记录花束/花饮
+    // 合成结果（merge 直接改格子，不走 placeItem）
     EventBus.on('board:merged', (_s: number, _d: number, resultId: string) => {
-      const def = ITEM_DEFS.get(resultId);
-      if (!def) return;
+      this._registerItemDiscoveryFromBoard(resultId);
+    });
 
-      if (def.category === Category.FLOWER) {
-        this._discover(CollectionCategory.FLOWER, resultId);
-      } else if (def.category === Category.DRINK) {
-        this._discover(CollectionCategory.DRINK, resultId);
-      } else if (def.category === Category.BUILDING) {
-        this._discover(CollectionCategory.BUILDING, resultId);
-      } else if (def.category === Category.CHEST) {
-        this._discover(CollectionCategory.CHEST, resultId);
-      }
+    // 工具产出 / 宝箱散落 / 仓库取出等 → BoardManager.placeItem
+    EventBus.on('board:itemPlaced', (_index: number, itemId: string) => {
+      this._registerItemDiscoveryFromBoard(itemId);
     });
 
     // 建筑放置
     EventBus.on('board:buildingConverted', (_idx: number, _matId: string, buildingId: string) => {
       this._discover(CollectionCategory.BUILDING, buildingId);
-    });
-
-    // 花语彩蛋触发→记录花语卡片
-    EventBus.on('board:merged', (_s: number, _d: number, resultId: string) => {
-      const def = ITEM_DEFS.get(resultId);
-      if (def && def.category === Category.FLOWER) {
-        this._discover(CollectionCategory.FLOWER_CARD, resultId);
-      }
     });
 
     // 客人来访→记录客人
@@ -113,6 +99,26 @@ class CollectionManagerClass {
     EventBus.on('regular:favorLevelUp', (typeId: string) => {
       this._discover(CollectionCategory.CUSTOMER, typeId);
     });
+  }
+
+  /**
+   * 棋盘上首次出现该物品时记入图鉴：合成结果 + 任意 placeItem（含 1 级工具产出）。
+   * 与 board:merged 规则一致；花束额外记花语卡片分类。
+   */
+  private _registerItemDiscoveryFromBoard(itemId: string): void {
+    const def = ITEM_DEFS.get(itemId);
+    if (!def) return;
+
+    if (def.category === Category.FLOWER) {
+      this._discover(CollectionCategory.FLOWER, itemId);
+      this._discover(CollectionCategory.FLOWER_CARD, itemId);
+    } else if (def.category === Category.DRINK) {
+      this._discover(CollectionCategory.DRINK, itemId);
+    } else if (def.category === Category.BUILDING) {
+      this._discover(CollectionCategory.BUILDING, itemId);
+    } else if (def.category === Category.CHEST) {
+      this._discover(CollectionCategory.CHEST, itemId);
+    }
   }
 
   /** 发现新物品 */
@@ -150,9 +156,7 @@ class CollectionManagerClass {
     if (this.progressPercent < percent) return false;
 
     this._claimedMilestones.add(percent);
-    CurrencyManager.addHuayuan(ms.gold);
     CurrencyManager.addDiamond(ms.diamond);
-    if (ms.huayuan > 0) CurrencyManager.addHuayuan(ms.huayuan);
 
     this._saveState();
     EventBus.emit('collection:milestoneClaimed', percent, ms);
@@ -178,7 +182,7 @@ class CollectionManagerClass {
       case CollectionCategory.FLOWER: return 18;
       case CollectionCategory.DRINK: return 9;
       case CollectionCategory.BUILDING: return 13;
-      case CollectionCategory.CHEST: return 5;
+      case CollectionCategory.CHEST: return 9;
       case CollectionCategory.CUSTOMER: return 6; // 6种熟客
       case CollectionCategory.DECORATION: return 72; // 装饰总数
       case CollectionCategory.FLOWER_CARD: return 18;

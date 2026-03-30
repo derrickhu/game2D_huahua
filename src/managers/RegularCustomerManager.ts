@@ -11,12 +11,27 @@
  */
 import { EventBus } from '@/core/EventBus';
 import { CUSTOMER_TYPES } from '@/config/CustomerConfig';
+import {
+  REGULAR_CUSTOMER_SAVE_VERSION,
+  LEGACY_FAVOR_BESTIE_THRESHOLD,
+  REGULAR_CUSTOMER_FAVOR_THRESHOLDS,
+  REGULAR_CUSTOMER_DELIVER_FAVOR,
+  REGULAR_CUSTOMER_REWARD_BONUS,
+} from '@/config/RegularCustomerConfig';
 
 declare const wx: any;
 declare const tt: any;
 const _api = typeof wx !== 'undefined' ? wx : typeof tt !== 'undefined' ? tt : null;
 
 const STORAGE_KEY = 'huahua_regulars';
+
+const FAVOR_TH = REGULAR_CUSTOMER_FAVOR_THRESHOLDS;
+
+/** 持久化 v2：带版本号，便于迁移 */
+interface RegularCustomerPersistV2 {
+  v: number;
+  regulars: Record<string, RegularCustomerData>;
+}
 
 /** 好感度等级 */
 export enum FavorLevel {
@@ -41,9 +56,6 @@ export const FAVOR_LEVEL_COLORS: Record<FavorLevel, number> = {
   [FavorLevel.CLOSE]: 0xFF9800,
   [FavorLevel.BESTIE]: 0xE91E63,
 };
-
-/** 好感度等级所需累计好感值 */
-const FAVOR_THRESHOLDS = [0, 30, 100, 250];
 
 /** 熟客个人数据 */
 export interface RegularCustomerData {
@@ -90,19 +102,19 @@ const STORY_CHAPTERS: Record<string, StoryChapter[]> = {
       requiredLevel: FavorLevel.FAMILIAR,
       title: '她总买一朵小雏菊',
       content: '每次来店里，少女总是选最小的那束雏菊。\n"送给奶奶的，她最喜欢简单的花。"\n雏菊花语：天真、和平、希望。',
-      rewardDesc: '花愿 ×10',
+      rewardDesc: '钻石 ×8',
     },
     {
       requiredLevel: FavorLevel.CLOSE,
       title: '奶奶的花园',
       content: '"小时候，奶奶家有一个大花园。"\n"每到春天，满园的雏菊就像铺了一层白雪。"\n"现在奶奶住进了城里的小公寓……"\n少女笑着说，但眼里有点湿润。',
-      rewardDesc: '花愿 ×20 + 钻石 ×5',
+      rewardDesc: '钻石 ×25',
     },
     {
       requiredLevel: FavorLevel.BESTIE,
       title: '在阳台种一片花园',
       content: '"谢谢你一直帮我选花！"\n"我在奶奶的阳台上种了好多雏菊。"\n"奶奶说——这才是家的味道。"\n少女递来一张照片，阳光下的小阳台开满了白色的花。',
-      rewardDesc: '花愿 ×50 + 限定头框「雏菊守护」',
+      rewardDesc: '钻石 ×40 + 限定头框「雏菊守护」',
     },
   ],
   worker: [
@@ -110,19 +122,19 @@ const STORY_CHAPTERS: Record<string, StoryChapter[]> = {
       requiredLevel: FavorLevel.FAMILIAR,
       title: '每周五的康乃馨',
       content: '他总是在周五来，固定买一束康乃馨。\n"给妈妈的，周末回家。"\n康乃馨花语：母爱、感恩、尊敬。',
-      rewardDesc: '花愿 ×200',
+      rewardDesc: '钻石 ×45',
     },
     {
       requiredLevel: FavorLevel.CLOSE,
       title: '加班到深夜',
       content: '"最近太忙了，上周没来得及回家。"\n"妈妈打电话说花都谢了，等不到我了。"\n他苦笑了一下，又看了看手机里妈妈的消息。',
-      rewardDesc: '花愿 ×500',
+      rewardDesc: '钻石 ×110',
     },
     {
       requiredLevel: FavorLevel.BESTIE,
       title: '把花带到公司',
       content: '"我在工位上也放了一小束。"\n"同事问我是不是恋爱了，我说是想妈妈了。"\n他笑了。\n"以后不只周五来了，心情不好的时候也来，闻闻花就好多了。"',
-      rewardDesc: '花愿 ×1000 + 钻石 ×10',
+      rewardDesc: '钻石 ×220',
     },
   ],
   mom: [
@@ -136,13 +148,13 @@ const STORY_CHAPTERS: Record<string, StoryChapter[]> = {
       requiredLevel: FavorLevel.CLOSE,
       title: '两束花的秘密',
       content: '"今天多买一束吧。"\n"一束给女儿，一束……给自己。"\n"当了妈妈以后，好久没给自己买过花了。"\n她挑了一束向日葵，笑得像阳光。',
-      rewardDesc: '体力 ×50 + 花愿 ×20',
+      rewardDesc: '体力 ×50 + 钻石 ×15',
     },
     {
       requiredLevel: FavorLevel.BESTIE,
       title: '教女儿种花',
       content: '"你猜怎么着？"\n"我女儿说长大了也要开一家花店！"\n"谢谢你让我们爱上了花。"\n她带着女儿来了，小女孩手里紧紧攥着一朵自己画的花。',
-      rewardDesc: '花愿 ×80 + 限定头框「温暖花语」',
+      rewardDesc: '钻石 ×45 + 限定头框「温暖花语」',
     },
   ],
   youth: [
@@ -150,19 +162,19 @@ const STORY_CHAPTERS: Record<string, StoryChapter[]> = {
       requiredLevel: FavorLevel.FAMILIAR,
       title: '诗人与花',
       content: '"你知道吗？每朵花都是一首诗。"\n他拿起一枝薰衣草深深闻了闻。\n薰衣草花语：等待、浪漫、安静。\n"我在写一本关于花的诗集。"',
-      rewardDesc: '花愿 ×15',
+      rewardDesc: '钻石 ×12',
     },
     {
       requiredLevel: FavorLevel.CLOSE,
       title: '尚未寄出的花',
       content: `"有没有一种花，代表'对不起我还爱你'？"\n他苦笑了一下。\n"朋友让我放下，可是看到勿忘我就会想起她。"\n勿忘我花语：不要忘记我、真挚的爱。`,
-      rewardDesc: '花愿 ×30 + 花露 ×10',
+      rewardDesc: '钻石 ×28',
     },
     {
       requiredLevel: FavorLevel.BESTIE,
       title: '新的春天',
       content: `"诗集出版了！"\n他兴奋地递来一本小册子。\n封面画着一朵正在绽放的花。\n"献辞是'给花语小筑——教我重新看见春天'。"\n翻开第一页：\n「花谢了会再开，心碎了会愈合，\n　在一朵花里，我学会了耐心等。」`,
-      rewardDesc: '花愿 ×100 + 钻石 ×15 + 限定头框「诗意花间」',
+      rewardDesc: '钻石 ×50 + 限定头框「诗意花间」',
     },
   ],
   couple: [
@@ -170,19 +182,19 @@ const STORY_CHAPTERS: Record<string, StoryChapter[]> = {
       requiredLevel: FavorLevel.FAMILIAR,
       title: '那束求婚的花',
       content: '他们总是手牵手来，她挑花，他付钱。\n"我们第一次约会就是在花店。"\n"他送了我99朵玫瑰，结果第二天都蔫了。"\n两人笑作一团。\n红玫瑰花语：热烈的爱。',
-      rewardDesc: '花愿 ×300',
+      rewardDesc: '钻石 ×65',
     },
     {
       requiredLevel: FavorLevel.CLOSE,
       title: '纪念日的惊喜',
       content: '"嘘！别让她看到！"\n他偷偷来买了一束满天星。\n"明天是我们认识1000天。"\n"我想在花里藏一枚戒指。"\n满天星花语：甘愿做配角，默默守护。',
-      rewardDesc: '花愿 ×800 + 花露 ×15',
+      rewardDesc: '钻石 ×170',
     },
     {
       requiredLevel: FavorLevel.BESTIE,
       title: '婚礼的花',
       content: '"你愿意帮我们布置婚礼的花吗？"\n她眼眶红红的，举着手给你看无名指上的戒指。\n"我们想让整个会场都是花的香味。"\n"因为我们的故事，是从一朵花开始的。"',
-      rewardDesc: '花愿 ×2000 + 钻石 ×20 + 限定头框「花语誓约」',
+      rewardDesc: '钻石 ×420 + 限定头框「花语誓约」',
     },
   ],
   blogger: [
@@ -190,19 +202,19 @@ const STORY_CHAPTERS: Record<string, StoryChapter[]> = {
       requiredLevel: FavorLevel.FAMILIAR,
       title: '镜头里的花',
       content: '"哇！这束花太上镜了！"\n她咔咔拍了几十张照片。\n"我的粉丝们一定会爱上这家店的。"\n她给花店做了一条短视频，播放量破了万。',
-      rewardDesc: '花愿 ×20',
+      rewardDesc: '钻石 ×15',
     },
     {
       requiredLevel: FavorLevel.CLOSE,
       title: '不用拍照的那一束',
       content: '"今天不拍了。"\n她安静地选了一束白色雏菊。\n"有时候总在镜头前，就忘了自己真正喜欢什么了。"\n"这束是买给自己的，不发朋友圈。"',
-      rewardDesc: '花愿 ×40 + 花露 ×10',
+      rewardDesc: '钻石 ×35',
     },
     {
       requiredLevel: FavorLevel.BESTIE,
       title: '「花与真实」',
       content: `"我拍了一个新系列叫'花与真实'。"\n"不修图、不摆拍，就拍花自然的样子。"\n"比我之前所有视频都火。"\n她笑了。"花教会我，真实比完美更美。"`,
-      rewardDesc: '花愿 ×80 + 钻石 ×10 + 限定头框「真实花语」',
+      rewardDesc: '钻石 ×55 + 限定头框「真实花语」',
     },
   ],
   noble: [
@@ -210,19 +222,19 @@ const STORY_CHAPTERS: Record<string, StoryChapter[]> = {
       requiredLevel: FavorLevel.FAMILIAR,
       title: '品味之人',
       content: '"这束花的色彩搭配还不错。"\n她戴着珍珠项链，眼光挑剔而精准。\n"我每周都需要鲜花装点客厅。"\n兰花花语：高洁、优雅、美好。',
-      rewardDesc: '花愿 ×500',
+      rewardDesc: '钻石 ×110',
     },
     {
       requiredLevel: FavorLevel.CLOSE,
       title: '空荡荡的大房子',
       content: '"你知道大房子最需要什么吗？"\n"不是名画，不是水晶灯。"\n"是一束会枯萎的花。"\n"因为它提醒我，美好的东西需要珍惜。"\n她轻轻抚摸花瓣，眼神意外地柔软。',
-      rewardDesc: '花愿 ×1000 + 花露 ×20',
+      rewardDesc: '钻石 ×220',
     },
     {
       requiredLevel: FavorLevel.BESTIE,
       title: '共享的花园',
       content: '"我决定把后花园开放了。"\n"让社区的孩子们都来种花、看花。"\n"花不该只属于买得起的人。"\n她第一次笑得像个普通的邻家阿姨。\n"谢谢你让我想起——花是送给所有人的。"',
-      rewardDesc: '花愿 ×3000 + 花露 ×50 + 限定头框「花之贵族」',
+      rewardDesc: '钻石 ×600 + 限定头框「花之贵族」',
     },
   ],
 };
@@ -298,8 +310,8 @@ class RegularCustomerManagerClass {
     const data = this.getData(typeId);
     if (data.favorLevel >= FavorLevel.BESTIE) return 1;
 
-    const currentThreshold = FAVOR_THRESHOLDS[data.favorLevel];
-    const nextThreshold = FAVOR_THRESHOLDS[data.favorLevel + 1];
+    const currentThreshold = FAVOR_TH[data.favorLevel];
+    const nextThreshold = FAVOR_TH[data.favorLevel + 1];
     const progress = (data.favorPoints - currentThreshold) / (nextThreshold - currentThreshold);
     return Math.min(1, Math.max(0, progress));
   }
@@ -308,20 +320,34 @@ class RegularCustomerManagerClass {
   getFavorToNextLevel(typeId: string): number {
     const data = this.getData(typeId);
     if (data.favorLevel >= FavorLevel.BESTIE) return 0;
-    return FAVOR_THRESHOLDS[data.favorLevel + 1] - data.favorPoints;
+    return FAVOR_TH[data.favorLevel + 1] - data.favorPoints;
   }
 
-  /** 获取订单奖励加成比例 (0 = 无加成, 0.1 = +10%, ...) */
+  /** 获取订单奖励加成比例 (0 = 无加成, 0.06 = +6%, …) */
   getRewardBonus(typeId: string): number {
     if (!this.isRegularType(typeId)) return 0;
     const data = this.getData(typeId);
-    switch (data.favorLevel) {
-      case FavorLevel.STRANGER: return 0;
-      case FavorLevel.FAMILIAR: return 0.1;
-      case FavorLevel.CLOSE: return 0.2;
-      case FavorLevel.BESTIE: return 0.35;
-      default: return 0;
-    }
+    return REGULAR_CUSTOMER_REWARD_BONUS[data.favorLevel] ?? 0;
+  }
+
+  /**
+   * 与 `CustomerManager.deliver` 一致：基础花愿 × (1 + 熟客加成)，用于 UI 展示预计到账。
+   */
+  getExpectedHuayuanReward(baseHuayuan: number, typeId: string): number {
+    const b = this.getRewardBonus(typeId);
+    return Math.round(baseHuayuan * (1 + b));
+  }
+
+  /**
+   * 下一档花愿加成说明；已满级或非熟客类型返回 null。
+   */
+  getNextRewardBonusHint(typeId: string): string | null {
+    if (!this.isRegularType(typeId)) return null;
+    const data = this.getData(typeId);
+    if (data.favorLevel >= FavorLevel.BESTIE) return null;
+    const nextLv = (data.favorLevel + 1) as FavorLevel;
+    const pct = Math.round((REGULAR_CUSTOMER_REWARD_BONUS[nextLv] ?? 0) * 100);
+    return `升至「${FAVOR_LEVEL_NAMES[nextLv]}」后，订单花愿 +${pct}%`;
   }
 
   /** 获取可触发特殊订单的概率 */
@@ -384,18 +410,12 @@ class RegularCustomerManagerClass {
   // ====== 私有方法 ======
 
   private _bindEvents(): void {
-    // 客人到来 → 增加来店次数
+    // 客人到来 → 仅统计来店次数与问候（好感只在交付时增加）
     EventBus.on('customer:arrived', (customer: any) => {
       if (!this.isRegularType(customer.typeId)) return;
       const data = this.getData(customer.typeId);
       data.visitCount++;
-
-      const today = new Date().toISOString().slice(0, 10);
-      const isFirstVisitToday = data.lastVisitDate !== today;
-      data.lastVisitDate = today;
-
-      // 每次来店 +2 好感，首日来店 +5
-      this._addFavorPoints(customer.typeId, isFirstVisitToday ? 5 : 2);
+      data.lastVisitDate = new Date().toISOString().slice(0, 10);
 
       // 触发问候对话
       const greeting = this.getGreeting(customer.typeId);
@@ -408,9 +428,10 @@ class RegularCustomerManagerClass {
     EventBus.on('customer:delivered', (_uid: number, customer: any) => {
       if (!this.isRegularType(customer.typeId)) return;
 
-      // 交付订单 +10 好感 + 需求数量 ×3
-      const bonus = 10 + (customer.slots?.length || 1) * 3;
-      this._addFavorPoints(customer.typeId, bonus);
+      const n = customer.slots?.length || 1;
+      const deliverPts =
+        REGULAR_CUSTOMER_DELIVER_FAVOR.base + n * REGULAR_CUSTOMER_DELIVER_FAVOR.perSlot;
+      this._addFavorPoints(customer.typeId, deliverPts);
 
       // 触发感谢对话
       const thanks = this.getThanks(customer.typeId);
@@ -430,7 +451,7 @@ class RegularCustomerManagerClass {
     // 检查好感度升级
     let leveledUp = false;
     while (data.favorLevel < FavorLevel.BESTIE) {
-      const nextThreshold = FAVOR_THRESHOLDS[data.favorLevel + 1];
+      const nextThreshold = FAVOR_TH[data.favorLevel + 1];
       if (data.favorPoints >= nextThreshold) {
         data.favorLevel++;
         leveledUp = true;
@@ -459,25 +480,71 @@ class RegularCustomerManagerClass {
   // ====== 存档 ======
 
   private _saveState(): void {
-    const obj: Record<string, RegularCustomerData> = {};
+    const regulars: Record<string, RegularCustomerData> = {};
     for (const [k, v] of this._data) {
-      obj[k] = v;
+      regulars[k] = v;
     }
+    const payload: RegularCustomerPersistV2 = {
+      v: REGULAR_CUSTOMER_SAVE_VERSION,
+      regulars,
+    };
     try {
-      _api?.setStorageSync(STORAGE_KEY, JSON.stringify(obj));
+      _api?.setStorageSync(STORAGE_KEY, JSON.stringify(payload));
     } catch (_) {}
   }
 
   private _loadState(): void {
     try {
       const raw = _api?.getStorageSync(STORAGE_KEY);
-      if (raw) {
-        const obj = JSON.parse(raw) as Record<string, RegularCustomerData>;
-        for (const [k, v] of Object.entries(obj)) {
-          this._data.set(k, v);
-        }
+      if (!raw) return;
+      const parsed = JSON.parse(raw) as unknown;
+      let regulars: Record<string, RegularCustomerData>;
+      let migrated = false;
+
+      if (
+        parsed
+        && typeof parsed === 'object'
+        && (parsed as RegularCustomerPersistV2).v === REGULAR_CUSTOMER_SAVE_VERSION
+        && typeof (parsed as RegularCustomerPersistV2).regulars === 'object'
+      ) {
+        regulars = (parsed as RegularCustomerPersistV2).regulars;
+      } else if (parsed && typeof parsed === 'object') {
+        regulars = parsed as Record<string, RegularCustomerData>;
+        migrated = true;
+        this._migrateLegacyFavorEconomy(regulars);
+      } else {
+        return;
       }
+
+      this._data.clear();
+      for (const [k, v] of Object.entries(regulars)) {
+        if (!v || typeof v !== 'object') continue;
+        const row = { ...v } as RegularCustomerData;
+        if (typeof row.typeId !== 'string') row.typeId = k;
+        this._data.set(k, row);
+      }
+      if (migrated) this._saveState();
     } catch (_) {}
+  }
+
+  /** v1 扁平存档：好感按旧阈值累计，按比例映射到新阈值并校正等级 */
+  private _migrateLegacyFavorEconomy(regulars: Record<string, RegularCustomerData>): void {
+    const newCap = FAVOR_TH[FavorLevel.BESTIE];
+    const mult = newCap / LEGACY_FAVOR_BESTIE_THRESHOLD;
+    for (const d of Object.values(regulars)) {
+      if (!d || typeof d !== 'object') continue;
+      const fp = Math.max(0, Math.round((d.favorPoints || 0) * mult));
+      d.favorPoints = fp;
+      d.favorLevel = this._favorLevelFromPoints(fp);
+    }
+  }
+
+  private _favorLevelFromPoints(points: number): FavorLevel {
+    let lv = FavorLevel.STRANGER;
+    while (lv < FavorLevel.BESTIE && points >= FAVOR_TH[lv + 1]) {
+      lv++;
+    }
+    return lv;
   }
 
   /** 清除全部数据（GM用） */

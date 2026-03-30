@@ -3,7 +3,7 @@
  *
  * 产品线：花系（鲜花/花束/绿植各10级 + 包装中间品4级）+ 饮品 3线x8级
  * 工具线：园艺6级、包装5级、茶饮/冷饮/烘焙各5级；工具1–2级仅合成，其后可产出
- * 宝箱：5级
+ * 宝箱：5级；红包：4级（散落花愿利是，双击入账花愿）
  */
 
 export enum Category {
@@ -40,8 +40,8 @@ export enum DrinkLine {
 
 export enum CurrencyLine {
   STAMINA = 'stamina',
-  HUAYUAN = 'huayuan',
-  HUALU = 'hualu',
+  /** 棋盘花愿利是（红包等产出；双击入账花愿） */
+  HUAYUAN_PICKUP = 'huayuan_pickup',
   DIAMOND = 'diamond',
 }
 
@@ -80,7 +80,7 @@ export interface ItemDef {
   /** 是否可存入仓库 */
   storable: boolean;
   /** 货币物品双击使用时获得的奖励 */
-  currencyReward?: { type: 'stamina' | 'huayuan' | 'hualu' | 'diamond'; amount: number };
+  currencyReward?: { type: 'stamina' | 'huayuan' | 'diamond'; amount: number };
 }
 
 // ═══════════════ 产品数据 ═══════════════
@@ -137,6 +137,9 @@ const TOOL_DATA: [ToolLine, string[]][] = [
     '擀面杖', '打蛋器', '烤箱', '装裱台', '高级装裱台',
   ]],
 ];
+
+/** 棋盘幸运金币 itemId（单级，不可两枚合成） */
+export const LUCKY_COIN_ITEM_ID = 'lucky_coin_1';
 
 // ═══════════════ 生成物品定义 ═══════════════
 
@@ -197,7 +200,7 @@ function buildItemDefs(): Map<string, ItemDef> {
         icon: `tool_${line}_${i + 1}`,
         interactType: InteractType.TOOL,
         sellable: true,
-        storable: false,
+        storable: true,
       });
     }
   }
@@ -206,15 +209,13 @@ function buildItemDefs(): Map<string, ItemDef> {
   const wrapTool = map.get('flower_wrap_4');
   if (wrapTool) {
     wrapTool.interactType = InteractType.TOOL;
-    wrapTool.storable = false;
+    wrapTool.storable = true;
   }
 
-  // 货币物品（4 种 x 3 级 = 12 个）
-  const CURRENCY_DATA: [CurrencyLine, string[], 'stamina' | 'huayuan' | 'hualu' | 'diamond', string, number[]][] = [
-    [CurrencyLine.STAMINA,  ['体力瓶', '体力罐', '体力桶'],   'stamina',  'icon_energy',  [2, 5, 12]],
-    [CurrencyLine.HUAYUAN,  ['花愿袋', '花愿包', '花愿箱'],   'huayuan',  'icon_huayuan', [10, 25, 60]],
-    [CurrencyLine.HUALU,    ['花露滴', '花露瓶', '花露壶'],   'hualu',    'icon_hualu',   [3, 8, 20]],
-    [CurrencyLine.DIAMOND,  ['碎钻', '钻石', '大钻石'],       'diamond',  'icon_gem',     [1, 3, 8]],
+  // 货币物品：体力 / 钻石 各 4 级；花愿利是为独立块（见下）
+  const CURRENCY_DATA: [CurrencyLine, string[], 'stamina' | 'huayuan' | 'diamond', string, number[]][] = [
+    [CurrencyLine.STAMINA, ['体力瓶', '体力罐', '体力桶', '体力宝箱'], 'stamina', 'icon_energy', [2, 5, 12, 25]],
+    [CurrencyLine.DIAMOND, ['碎钻', '钻石', '大钻石', '璨钻'], 'diamond', 'icon_gem', [1, 3, 8, 18]],
   ];
   for (const [line, names, rewardType, icon, amounts] of CURRENCY_DATA) {
     for (let i = 0; i < names.length; i++) {
@@ -235,6 +236,27 @@ function buildItemDefs(): Map<string, ItemDef> {
     }
   }
 
+  // 花愿利是（4级，仅红包线等产出；入账花愿）
+  const huayuanPickupNames = ['碎愿利是', '花愿小利是', '花愿大利是', '花愿豪利是'];
+  const huayuanPickupAmounts = [6, 16, 42, 110];
+  for (let i = 0; i < huayuanPickupNames.length; i++) {
+    const line = CurrencyLine.HUAYUAN_PICKUP;
+    const id = `currency_${line}_${i + 1}`;
+    map.set(id, {
+      id,
+      name: huayuanPickupNames[i],
+      category: Category.CURRENCY,
+      line,
+      level: i + 1,
+      maxLevel: huayuanPickupNames.length,
+      icon: 'icon_huayuan',
+      interactType: InteractType.NONE,
+      sellable: false,
+      storable: true,
+      currencyReward: { type: 'huayuan', amount: huayuanPickupAmounts[i] },
+    });
+  }
+
   // 宝箱（5级）
   const chestNames = ['铜宝箱', '银宝箱', '金宝箱', '钻石宝箱', '传说宝箱'];
   for (let i = 0; i < chestNames.length; i++) {
@@ -249,9 +271,41 @@ function buildItemDefs(): Map<string, ItemDef> {
       icon: id,
       interactType: InteractType.CHEST,
       sellable: false,
-      storable: false,
+      storable: true,
     });
   }
+
+  // 红包（4级，交互同宝箱，散落 huayuan_pickup 线花愿利是）
+  const hongbaoNames = ['迎春红包', '吉祥红包', '鸿运红包', '福满红包'];
+  for (let i = 0; i < hongbaoNames.length; i++) {
+    const id = `hongbao_${i + 1}`;
+    map.set(id, {
+      id,
+      name: hongbaoNames[i],
+      category: Category.CHEST,
+      line: 'hongbao',
+      level: i + 1,
+      maxLevel: 4,
+      icon: id,
+      interactType: InteractType.CHEST,
+      sellable: false,
+      storable: true,
+    });
+  }
+
+  // 幸运金币（棋盘消耗品：拖到合成链物品上随机升/降一级）
+  map.set(LUCKY_COIN_ITEM_ID, {
+    id: LUCKY_COIN_ITEM_ID,
+    name: '幸运金币',
+    category: Category.BUILDING,
+    line: 'lucky_coin',
+    level: 1,
+    maxLevel: 1,
+    icon: 'icon_coin',
+    interactType: InteractType.NONE,
+    sellable: false,
+    storable: true,
+  });
 
   return map;
 }
@@ -266,12 +320,64 @@ export function findItemId(category: Category, line: string, level: number): str
   return null;
 }
 
+/** 该品类+产品线下物品的最大等级（用于工具产出升档封顶） */
+export function getMaxLevelForLine(category: Category, line: string): number {
+  let max = 0;
+  for (const def of ITEM_DEFS.values()) {
+    if (def.category === category && def.line === line) {
+      max = Math.max(max, def.maxLevel);
+    }
+  }
+  return max;
+}
+
 /** 获取合成后的物品ID（同品类同线，等级+1） */
 export function getMergeResultId(itemId: string): string | null {
   const def = ITEM_DEFS.get(itemId);
   if (!def) return null;
   if (def.level >= def.maxLevel) return null;
   return findItemId(def.category, def.line, def.level + 1);
+}
+
+/** 幸运金币：降一级（同品类同线，等级-1） */
+export function getDowngradeResultId(itemId: string): string | null {
+  const def = ITEM_DEFS.get(itemId);
+  if (!def) return null;
+  if (def.level <= 1) return null;
+  return findItemId(def.category, def.line, def.level - 1);
+}
+
+export function isLuckyCoinItem(itemId: string): boolean {
+  return itemId === LUCKY_COIN_ITEM_ID;
+}
+
+/** 幸运金币可作用的棋盘物品：鲜花/饮品可合成链 + 工具；排除宝箱、货币、金币自身 */
+export function isLuckyCoinValidTarget(def: ItemDef): boolean {
+  if (isLuckyCoinItem(def.id)) return false;
+  if (def.category === Category.CHEST || def.category === Category.CURRENCY) return false;
+  if (def.category === Category.FLOWER || def.category === Category.DRINK) return true;
+  if (def.category === Category.BUILDING && def.interactType === InteractType.TOOL) return true;
+  return false;
+}
+
+/**
+ * 随机升一级或降一级；仅一侧合法则用该侧；皆不合法返回 null（不消耗金币）。
+ */
+export function pickLuckyCoinNewItemId(targetItemId: string): string | null {
+  const upId = getMergeResultId(targetItemId);
+  const downId = getDowngradeResultId(targetItemId);
+  if (upId && downId) return Math.random() < 0.5 ? upId : downId;
+  if (upId) return upId;
+  if (downId) return downId;
+  return null;
+}
+
+/** 用于结算展示：已知 newId 时判断相对原物品是升还是降 */
+export function getLuckyCoinDirection(oldItemId: string, newItemId: string): 'up' | 'down' {
+  const oldDef = ITEM_DEFS.get(oldItemId);
+  const newDef = ITEM_DEFS.get(newItemId);
+  if (!oldDef || !newDef) return 'up';
+  return newDef.level > oldDef.level ? 'up' : 'down';
 }
 
 /** 获取物品所在的完整合成链（从1级到满级的所有物品ID） */
@@ -304,10 +410,11 @@ export function getMergeChainName(itemId: string): string {
     [ToolLine.MIXER]: '饮品器具',
     [ToolLine.BAKE]: '烘焙工具',
     chest: '宝箱',
+    hongbao: '红包',
     [CurrencyLine.STAMINA]: '体力',
-    [CurrencyLine.HUAYUAN]: '花愿',
-    [CurrencyLine.HUALU]: '花露',
+    [CurrencyLine.HUAYUAN_PICKUP]: '花愿利是',
     [CurrencyLine.DIAMOND]: '钻石',
+    lucky_coin: '幸运金币',
   };
   return (lineNames[def.line] || def.line) + '合成线';
 }

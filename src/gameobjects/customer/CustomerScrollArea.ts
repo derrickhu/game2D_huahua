@@ -12,7 +12,7 @@ import { Game } from '@/core/Game';
 import { CustomerView, CARD_W } from './CustomerView';
 import { CustomerInstance, CustomerManager } from '@/managers/CustomerManager';
 import { EventBus } from '@/core/EventBus';
-import { COLORS, FONT_FAMILY, MAX_VISIBLE_CUSTOMERS } from '@/config/Constants';
+import { COLORS, FONT_FAMILY } from '@/config/Constants';
 
 /** 卡片间距（客人之间额外留白；中心距主要由 CustomerView.CARD_W 决定） */
 const CARD_GAP = 0;

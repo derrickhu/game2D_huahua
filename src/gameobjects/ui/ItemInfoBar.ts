@@ -5,10 +5,11 @@ import * as PIXI from 'pixi.js';
 import { EventBus } from '@/core/EventBus';
 import { TweenManager, Ease } from '@/core/TweenManager';
 import { DESIGN_WIDTH, COLORS, FONT_FAMILY } from '@/config/Constants';
-import { ITEM_DEFS, ItemDef, Category, InteractType, FlowerLine, getMergeChain } from '@/config/ItemConfig';
+import { ITEM_DEFS, ItemDef, Category, InteractType, FlowerLine, getMergeChain, isLuckyCoinItem } from '@/config/ItemConfig';
 import { findBoardProducerDef } from '@/config/BuildingConfig';
 import { CellState } from '@/config/BoardLayout';
 import { BoardManager } from '@/managers/BoardManager';
+import { ToolProducePolicy } from '@/managers/ToolProducePolicy';
 import { DecorationManager } from '@/managers/DecorationManager';
 import { TextureCache } from '@/utils/TextureCache';
 import { getItemSellPrice } from '@/utils/ItemSellPrice';
@@ -548,6 +549,19 @@ export class ItemInfoBar extends PIXI.Container {
     EventBus.on('board:moved', () => this._clearSelection());
     EventBus.on('board:itemRemoved', () => this._clearSelection());
     EventBus.on('board:itemSold', () => this._clearSelection());
+    EventBus.on('toolproduce:policyChanged', () => this._refreshToolStaminaLabel());
+  }
+
+  /** 全局工具体力倍率变化时刷新底栏文案（不重播入场动画） */
+  private _refreshToolStaminaLabel(): void {
+    if (this._selectedCellIndex < 0 || !this._selectedItemId) return;
+    const def = ITEM_DEFS.get(this._selectedItemId);
+    if (!def) return;
+    const producerDef = findBoardProducerDef(def.id);
+    if (def.interactType !== InteractType.TOOL || !producerDef?.canProduce) return;
+    if (!this._staminaDescRow.visible) return;
+    const cost = ToolProducePolicy.getEffectiveStaminaCost(producerDef.staminaCost);
+    this._staminaDescLabel.text = `消耗体力 ${cost}`;
   }
 
   private _onItemSelected(cellIndex: number, itemId: string | null): void {
@@ -584,7 +598,7 @@ export class ItemInfoBar extends PIXI.Container {
     const showStaminaRow = def.interactType === InteractType.TOOL && !!producerDef?.canProduce;
 
     if (showStaminaRow) {
-      const cost = producerDef!.staminaCost;
+      const cost = ToolProducePolicy.getEffectiveStaminaCost(producerDef!.staminaCost);
       this._descText.visible = false;
       this._staminaDescRow.visible = true;
       this._staminaDescLabel.text = `消耗体力 ${cost}`;
@@ -597,9 +611,10 @@ export class ItemInfoBar extends PIXI.Container {
     const canSell = !!cell && cell.state === CellState.OPEN && def.sellable;
     this._sellBtn.visible = canSell;
     if (canSell) {
+      const price = getItemSellPrice(def);
       const hyTex = TextureCache.get('icon_huayuan');
-      this._sellHuayuanSp.visible = !!(hyTex && hyTex.width > 0);
-      this._sellPriceText.text = String(getItemSellPrice(def));
+      this._sellHuayuanSp.visible = price > 0 && !!(hyTex && hyTex.width > 0);
+      this._sellPriceText.text = price > 0 ? String(price) : '腾格';
       this._layoutSellPriceRow();
     } else {
       this._sellPriceText.text = '';
@@ -645,6 +660,9 @@ export class ItemInfoBar extends PIXI.Container {
   }
 
   private _getDescription(def: ItemDef): string {
+    if (isLuckyCoinItem(def.id)) {
+      return '拖到鲜花或饮品上试试，会有惊喜。';
+    }
     if (def.interactType === InteractType.TOOL) {
       const pd = findBoardProducerDef(def.id);
       if (pd && !pd.canProduce) return '合成后可获得更高级物品。';

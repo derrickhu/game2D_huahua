@@ -1,0 +1,17 @@
+Batch of 10 new flower-shop furniture (NB2). Raw: game_assets/huahua/assets/raw/furniture_<key>_nb2.png. Game: minigame/subpkg_deco/images/furniture/<key>.png
+
+一键生成（本机可连 Gemini 时）: ./scripts/gen_furniture_batch10_nb2.sh
+若 CI/沙箱 API 不可用，仓库内可能暂为同槽位旧图占位；跑完脚本并 rembg 后即替换为正式资源。
+
+1 shelf_terracotta   陶盆阶梯花架   SHELF    pastel coral terracotta tiers + sage herbs, warm Mediterranean-cute
+2 orn_window_garden  窗台花园组     ORNAMENT white sill + three small pots with mixed blooms
+3 orn_awaken_bucket  金属醒花桶     ORNAMENT galvanized bucket, water line, stems peeking
+4 table_wrap_station 花艺包装台     TABLE    kraft paper, ribbons, scissors, soft pastels
+5 orn_floral_chest   花艺工具箱     ORNAMENT open wooden crate, shears, twine, small blooms
+6 wallart_lace_curtain 柔纱短帘    WALLART  cream rod + lace cafe curtain panel
+7 garden_wood_trough 木质长花箱    GARDEN   long wooden planter, pastel flowers
+8 orn_pastel_bench   马卡龙长凳     ORNAMENT mint wood + coral cushion, compact bench
+9 light_plant_strip  植物补光灯     LIGHT    cute pink-white LED grow bar for plants
+10 table_rattan_twoset 藤编边桌凳组 TABLE   small rattan round table + two matching stools
+
+Shared: 2.5D isometric upper-left ~45°, hand-painted merge-game, soft brown outlines, bright pastels, white BG for cutout.

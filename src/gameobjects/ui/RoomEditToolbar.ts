@@ -51,7 +51,9 @@ export class RoomEditToolbar extends PIXI.Container {
     const deco = DECO_MAP.get(decoId);
     if (!deco) return;
 
-    this._nameLabel.text = `✏️ ${deco.name}`;
+    const placement = RoomLayoutManager.getPlacement(decoId);
+    const scaleStr = placement ? ` (${Math.round(placement.scale * 100) / 100})` : '';
+    this._nameLabel.text = `✏️ ${deco.name}${scaleStr}`;
     this.visible = true;
 
     // 固定在屏幕水平居中、roomBounds 上方（不遮挡家具）
@@ -212,7 +214,7 @@ export class RoomEditToolbar extends PIXI.Container {
     const placement = RoomLayoutManager.getPlacement(this._currentDecoId);
     if (!placement) return;
 
-    const newScale = Math.max(0.5, Math.min(2.0, placement.scale + delta));
+    const newScale = Math.max(0.1, Math.min(2.0, placement.scale + delta));
     RoomLayoutManager.scaleFurniture(this._currentDecoId, newScale);
 
     // roomlayout:updated 事件已由 RoomLayoutManager 内部发射

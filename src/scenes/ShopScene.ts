@@ -7,15 +7,17 @@
  * - 可交互元素：装修入口、装扮入口、图鉴入口
  * - 左侧活动入口（签到、任务、熟客等）
  * - 右下角大的返回按钮，切回合成棋盘
- * - 顶部复用 TopBar（花露/花愿/体力/钻石）
+ * - 顶部复用 TopBar（花愿/体力/钻石；星星进度在下方进度条）
  *
  * 对标四季物语第二张截图的交互体验
  */
 import * as PIXI from 'pixi.js';
-import { Scene } from '@/core/SceneManager';
-import { SceneManager } from '@/core/SceneManager';
+import { Scene, SceneManager } from '@/core/SceneManager';
 import { Game } from '@/core/Game';
+import { getNextLevelStarRequired } from '@/config/StarLevelConfig';
+import { LevelManager } from '@/managers/LevelManager';
 import { EventBus } from '@/core/EventBus';
+import { RewardFlyCoordinator, type RewardFlyBindings } from '@/core/RewardFlyCoordinator';
 import { TweenManager, Ease } from '@/core/TweenManager';
 import { TopBar, TOP_BAR_HEIGHT } from '@/gameobjects/ui/TopBar';
 import { DecorationManager } from '@/managers/DecorationManager';
@@ -31,9 +33,15 @@ import { FurnitureDragSystem } from '@/systems/FurnitureDragSystem';
 import { FurnitureTray, FURNITURE_TRAY_H } from '@/gameobjects/ui/FurnitureTray';
 import { RoomEditToolbar } from '@/gameobjects/ui/RoomEditToolbar';
 import { TextureCache } from '@/utils/TextureCache';
-import { DECO_MAP } from '@/config/DecorationConfig';
+import { DECO_MAP, DecoDef, DecoSlot, SHOP_FURNITURE_TEX_BASE_PX } from '@/config/DecorationConfig';
 import { DESIGN_WIDTH, COLORS, FONT_FAMILY } from '@/config/Constants';
+import { roomDepthZForPlacement, roomDepthZForOwner } from '@/config/RoomDepthSort';
 import { ToastMessage } from '@/gameobjects/ui/ToastMessage';
+import { LevelUpPopup } from '@/gameobjects/ui/LevelUpPopup';
+import { RewardBoxManager } from '@/managers/RewardBoxManager';
+import { WarehouseManager } from '@/managers/WarehouseManager';
+import { ITEM_DEFS } from '@/config/ItemConfig';
+import { takePendingPlaceDeco } from '@/core/DecoPlaceIntent';
 
 // ── 布局常量 ──
 const PROGRESS_BAR_W = 400;
@@ -57,6 +65,11 @@ const SHOP_OWNER_TARGET_H = 165;
 /** 店主点击热区（锚点在脚底）：相对原 Circle(0,-40,60) 同比例 ×1.1 */
 const SHOP_OWNER_HIT_CY = -44;
 const SHOP_OWNER_HIT_R = 66;
+
+/** 非编辑模式：家具双击进装修的连点间隔（ms） */
+const SHOP_DOUBLE_TAP_MS = 300;
+/** 非编辑模式：在店主上按下后，手指移动超过该屏幕像素即开始拖动（跟手，无需长按等待） */
+const SHOP_OWNER_DRAG_THRESHOLD_PX = 12;
 
 // ── 颜色（偏白天花店，与合成页明度更接近；无 house_bg 时 fallback 不再用夜间深蓝） ──
 const C = {
@@ -112,6 +125,15 @@ export class ShopScene implements Scene {
   private _progressText!: PIXI.Text;
   private _progressBar!: PIXI.Graphics;
   private _progressFill!: PIXI.Graphics;
+  /** 进度条整行容器（用于星星飞入目标定位） */
+  private _progressBarRoot!: PIXI.Container;
+  /** 左侧星标 + 中央等级数字（脉冲整组） */
+  private _progressStarGroup: PIXI.Container | null = null;
+  private _progressLevelText: PIXI.Text | null = null;
+  /** 飞星动画层（盖在房间之上） */
+  private _starFlyLayer!: PIXI.Container;
+  /** 升星/星级礼包预览弹窗 */
+  private _levelUpPopup!: LevelUpPopup;
   private _returnBtn!: PIXI.Container;
   private _roomContainer!: PIXI.Container;
   private _activityBtns: Map<string, { container: PIXI.Container; redDot: PIXI.Graphics }> = new Map();
@@ -131,6 +153,43 @@ export class ShopScene implements Scene {
   private readonly _onDressUpEquipped = (): void => {
     this._refreshShopOwnerOutfitTextures();
   };
+
+  private readonly _onDecorationShopStarFly = (payload: { globalX: number; globalY: number; amount: number }): void => {
+    if (SceneManager.current?.name !== 'shop') return;
+    this._playStarFlyFromGlobal(payload.globalX, payload.globalY, payload.amount);
+  };
+
+  private readonly _onShopCurrencyForProgress = (): void => {
+    this._updateProgressBar();
+  };
+
+  /** 花店内升星：弹窗展示奖励并发收纳盒（与合成页逻辑一致，无飞入目标则关闭时直接入库） */
+  private readonly _onShopLevelUp = (level: number, reward: any): void => {
+    if (SceneManager.current?.name !== 'shop') return;
+    this._levelUpPopup.show(
+      level,
+      {
+        huayuan: 0,
+        stamina: reward.stamina ?? 0,
+        diamond: reward.diamond ?? 0,
+        rewardBoxItems: reward.rewardBoxItems,
+      },
+      {
+        bannerTitle: `恭喜升至 ${level}星`,
+        onGrantRewardBoxItems: entries => {
+          let any = false;
+          for (const { itemId, count } of entries) {
+            if (ITEM_DEFS.has(itemId) && count > 0) {
+              RewardBoxManager.addItem(itemId, count);
+              any = true;
+            }
+          }
+          if (any) SaveManager.save();
+        },
+      },
+    );
+  };
+
   private _blinkTimer = 0;
   private _blinkInterval = 3.5;
   private _isBlinking = false;
@@ -138,11 +197,32 @@ export class ShopScene implements Scene {
   private _ownerDragOffset = { x: 0, y: 0 };
   private _onOwnerRawMove: ((e: any) => void) | null = null;
   private _onOwnerRawUp: ((e: any) => void) | null = null;
+  /** 非编辑模式：在店主上按下待判定（点按对话 vs 移动拖动） */
+  private _ownerPointerDownOwner: PIXI.Container | null = null;
+  private _ownerPointerDownId: number | null = null;
+  private _ownerPressStartClient: { x: number; y: number } | null = null;
+  /** 非编辑模式：家具双击进装修的第一下计时 */
+  private _furnitureBrowseTapTimer: ReturnType<typeof setTimeout> | null = null;
+  private _furnitureBrowsePendingDecoId: string | null = null;
 
   // ── 编辑模式缩放相关 ──
   private _viewScale = 1.0;                   // 当前视图缩放倍数
   private _viewScaleMin = 1.0;
   private _viewScaleMax = 2.0;
+  /** 装修模式缩放后平移视图（设计坐标，叠在 position 上） */
+  private _roomPanX = 0;
+  private _roomPanY = 0;
+  /** 单指拖场景平移（点在底板/空白处） */
+  private _roomPanDragging = false;
+  private _roomPanPointerId = 0;
+  private _roomPanDragStartClientX = 0;
+  private _roomPanDragStartClientY = 0;
+  private _roomPanDragStartPanX = 0;
+  private _roomPanDragStartPanY = 0;
+  private _onRoomPanCanvasMove: ((ev: PointerEvent) => void) | null = null;
+  private _onRoomPanCanvasUp: ((ev: PointerEvent) => void) | null = null;
+  /** 编辑模式下垫在建筑背后的全屏命中层，便于点在留白处也能平移 */
+  private _roomPanHitLayer: PIXI.Graphics | null = null;
   /** 编辑模式：贴右缘的缩放滑杆 */
   private _zoomSlider: PIXI.Container | null = null;
   private _zoomSliderThumb: PIXI.Graphics | null = null;
@@ -152,10 +232,6 @@ export class ShopScene implements Scene {
   /** 已为 true 时才开始改缩放（长按或滑出阈值后） */
   private _zoomSliderDragActive = false;
   private _zoomSliderLastTap = 0;
-  private _zoomSliderLongPressTimer: ReturnType<typeof setTimeout> | null = null;
-  private _zoomSliderPressClient = { x: 0, y: 0 };
-  /** 按下时手指在轨道上的 y（0~H），长按到期时用 */
-  private _zoomSliderArmLocalY = 0;
   private _zoomSliderPointerId = 0;
   private _onZoomSliderCanvasMove: ((e: PointerEvent) => void) | null = null;
   private _onZoomSliderCanvasUp: ((e: PointerEvent) => void) | null = null;
@@ -184,11 +260,23 @@ export class ShopScene implements Scene {
     this._build();
     this._playEnterAnim();
     Game.ticker.add(this._update, this);
+
+    const pendingPlace = takePendingPlaceDeco();
+    if (pendingPlace) {
+      requestAnimationFrame(() => this._consumePendingPlaceDeco(pendingPlace));
+    }
+
+    RewardFlyCoordinator.setBindings(this._createShopRewardFlyBindings());
   }
 
   onExit(): void {
+    RewardFlyCoordinator.setBindings(null);
+    this._clearPendingDoubleTapStates();
     EventBus.off('decoration:room_style', this._refreshShopBuildingTexture);
     EventBus.off('dressup:equipped', this._onDressUpEquipped);
+    EventBus.off('decoration:shopStarFly', this._onDecorationShopStarFly);
+    EventBus.off('currency:changed', this._onShopCurrencyForProgress);
+    EventBus.off('level:up', this._onShopLevelUp);
     // 如果在编辑模式，退出时自动保存
     if (this._isEditMode) {
       this._exitEditMode();
@@ -262,6 +350,16 @@ export class ShopScene implements Scene {
     this.container.addChild(this._particleContainer);
     this._spawnAmbientParticles(w, h);
 
+    // ============== 11b. 飞星层（购买家具 → 飞入进度条） ==============
+    this.container.sortableChildren = true;
+    this._starFlyLayer = new PIXI.Container();
+    this._starFlyLayer.zIndex = 8000;
+    this.container.addChild(this._starFlyLayer);
+
+    this._levelUpPopup = new LevelUpPopup();
+    this._levelUpPopup.zIndex = 8500;
+    this.container.addChild(this._levelUpPopup);
+
     // ============== 12. 绑定事件 ==============
     this._bindEvents();
   }
@@ -269,7 +367,7 @@ export class ShopScene implements Scene {
   // ─────────────────── 背景 ───────────────────
 
   private _buildBackground(w: number, h: number): void {
-    // 使用 house/bg.png 作为背景
+    // 使用 house/bg.jpg（室外草地，TextureCache.house_bg）作为背景
     const bgTex = TextureCache.get('house_bg');
     if (bgTex) {
       const bgSprite = new PIXI.Sprite(bgTex);
@@ -377,6 +475,7 @@ export class ShopScene implements Scene {
     if (!tex) return;
     this._shopBuildingSprite.texture = tex;
     this._layoutShopBuildingSprite(w, h, centerX, centerY);
+    this._refreshShopBuildingPanHitAreaIfNeeded();
   };
 
   /** 从 RoomLayoutManager 渲染家具布局 */
@@ -392,7 +491,8 @@ export class ShopScene implements Scene {
     this._roomContainer.sortableChildren = true;
 
     const layout = RoomLayoutManager.getLayout();
-    for (const placement of layout) {
+    for (let pi = 0; pi < layout.length; pi++) {
+      const placement = layout[pi];
       const deco = DECO_MAP.get(placement.decoId);
       if (!deco) continue;
 
@@ -400,7 +500,7 @@ export class ShopScene implements Scene {
       if (!texture) continue;
 
       const sprite = new PIXI.Sprite(texture);
-      const baseSize = 100;
+      const baseSize = SHOP_FURNITURE_TEX_BASE_PX;
       const s = Math.min(baseSize / texture.width, baseSize / texture.height) * placement.scale;
       sprite.scale.set(
         placement.flipped ? -s : s,
@@ -408,15 +508,128 @@ export class ShopScene implements Scene {
       );
       sprite.anchor.set(0.5, 0.8); // 底部偏中心
       sprite.position.set(placement.x, placement.y);
-      sprite.zIndex = Math.floor(placement.y) + (placement.zLayer ?? 0) * 1000; // 2.5D 遮挡排序 + 手动图层偏移
+      // 2.5D：Y 为主；台面小物 typeLift + depthManualBias + zLayer/stackTie（见 RoomDepthSort）
+      const stackTie = Math.min(pi, 999);
+      sprite.zIndex = roomDepthZForPlacement(
+        placement.y,
+        placement.zLayer ?? 0,
+        stackTie,
+        deco,
+        placement.depthManualBias,
+      );
 
       // 标记 decoId（用于拖拽系统识别）
       (sprite as any)._decoId = placement.decoId;
 
       this._roomContainer.addChild(sprite);
+
+      if (!this._isEditMode) {
+        this._attachFurnitureBrowseDoubleTap(sprite, placement.decoId);
+      }
     }
 
     this._roomContainer.sortChildren();
+  }
+
+  /** 取消家具/店主的「待判定单击」定时器（进编辑或离场景时调用） */
+  private _clearPendingDoubleTapStates(): void {
+    if (this._furnitureBrowseTapTimer != null) {
+      clearTimeout(this._furnitureBrowseTapTimer);
+      this._furnitureBrowseTapTimer = null;
+    }
+    this._furnitureBrowsePendingDecoId = null;
+    this._clearOwnerPressTracking();
+  }
+
+  /** 非编辑模式：双击家具进入装修并选中该件 */
+  private _attachFurnitureBrowseDoubleTap(sprite: PIXI.Sprite, decoId: string): void {
+    sprite.eventMode = 'static';
+    sprite.cursor = 'pointer';
+    sprite.on('pointertap', () => {
+      if (this._isEditMode) return;
+      if (this._furnitureBrowseTapTimer != null) {
+        clearTimeout(this._furnitureBrowseTapTimer);
+        this._furnitureBrowseTapTimer = null;
+        if (this._furnitureBrowsePendingDecoId === decoId) {
+          this._furnitureBrowsePendingDecoId = null;
+          this._enterEditModeForFurniture(decoId);
+          return;
+        }
+      }
+      this._furnitureBrowsePendingDecoId = decoId;
+      this._furnitureBrowseTapTimer = setTimeout(() => {
+        this._furnitureBrowseTapTimer = null;
+        this._furnitureBrowsePendingDecoId = null;
+      }, SHOP_DOUBLE_TAP_MS);
+    });
+  }
+
+  private _enterEditModeForFurniture(decoId: string): void {
+    if (this._isEditMode) return;
+    const deco = DECO_MAP.get(decoId);
+    this._enterEditMode(deco ? { deco } : undefined);
+    FurnitureDragSystem.select(decoId);
+  }
+
+  private _designPosFromFederated(e: PIXI.FederatedPointerEvent): { x: number; y: number } {
+    const designX = (e.global.x / Game.dpr) * Game.designWidth / Game.screenWidth;
+    const designY = (e.global.y / Game.dpr) * Game.designHeight / Game.screenHeight;
+    return { x: designX, y: designY };
+  }
+
+  private _roomLocalFromDesign(designX: number, designY: number): { x: number; y: number } {
+    const c = this._roomContainer;
+    const s = c.scale.x || 1;
+    return {
+      x: (designX - c.position.x) / s + c.pivot.x,
+      y: (designY - c.position.y) / s + c.pivot.y,
+    };
+  }
+
+  private _clientXYFromFederated(e: PIXI.FederatedPointerEvent): { x: number; y: number } {
+    const native = e.nativeEvent as PointerEvent | MouseEvent | undefined;
+    if (native && typeof (native as PointerEvent).clientX === 'number') {
+      return { x: (native as PointerEvent).clientX, y: (native as PointerEvent).clientY };
+    }
+    const g = this._designPosFromFederated(e);
+    return {
+      x: (g.x / Game.designWidth) * Game.screenWidth,
+      y: (g.y / Game.designHeight) * Game.screenHeight,
+    };
+  }
+
+  private _beginOwnerDragFromClient(clientX: number, clientY: number, owner: PIXI.Container): void {
+    if (this._ownerDragging) return;
+    this._ownerDragging = true;
+    const designX = clientX * Game.designWidth / Game.screenWidth;
+    const designY = clientY * Game.designHeight / Game.screenHeight;
+    const local = this._roomLocalFromDesign(designX, designY);
+    this._ownerDragOffset.x = owner.x - local.x;
+    this._ownerDragOffset.y = owner.y - local.y;
+    owner.alpha = 0.7;
+  }
+
+  private _beginOwnerDrag(e: PIXI.FederatedPointerEvent, owner: PIXI.Container): void {
+    const { x, y } = this._clientXYFromFederated(e);
+    this._beginOwnerDragFromClient(x, y, owner);
+  }
+
+  private _clearOwnerPressTracking(): void {
+    this._ownerPointerDownOwner = null;
+    this._ownerPointerDownId = null;
+    this._ownerPressStartClient = null;
+    if (!this._ownerDragging && this._ownerSprite) {
+      this._ownerSprite.tint = 0xffffff;
+    }
+  }
+
+  /** 非编辑：按下店主，移动超过阈值则开始跟手拖动 */
+  private _armOwnerPressForDragOrTap(e: PIXI.FederatedPointerEvent, owner: PIXI.Container): void {
+    this._clearOwnerPressTracking();
+    const { x: cx, y: cy } = this._clientXYFromFederated(e);
+    this._ownerPressStartClient = { x: cx, y: cy };
+    this._ownerPointerDownOwner = owner;
+    this._ownerPointerDownId = e.pointerId;
   }
 
   private _ownerFullOpenTexKey(): string {
@@ -463,51 +676,45 @@ export class ShopScene implements Scene {
       owner.addChild(this._ownerSprite);
     }
 
-    owner.zIndex = Math.floor(cy);
+    owner.zIndex = roomDepthZForOwner(cy);
     owner.eventMode = 'static';
     owner.cursor = 'pointer';
     owner.hitArea = new PIXI.Circle(0, SHOP_OWNER_HIT_CY, SHOP_OWNER_HIT_R);
 
-    // 交互：普通模式点击对话，编辑模式拖拽移动
+    // 交互：编辑模式下单击拖动；非编辑下轻点对话、按住并滑动即跟手拖动（不进装修）
     owner.on('pointerdown', (e: PIXI.FederatedPointerEvent) => {
       if (this._isEditMode) {
-        this._ownerDragging = true;
-        const designX = (e.global.x / Game.dpr) * Game.designWidth / Game.screenWidth;
-        const designY = (e.global.y / Game.dpr) * Game.designHeight / Game.screenHeight;
-        const c = this._roomContainer;
-        const s = c.scale.x || 1;
-        const localX = (designX - c.position.x) / s + c.pivot.x;
-        const localY = (designY - c.position.y) / s + c.pivot.y;
-        this._ownerDragOffset.x = owner.x - localX;
-        this._ownerDragOffset.y = owner.y - localY;
-        owner.alpha = 0.7;
+        this._beginOwnerDrag(e, owner);
         return;
       }
-      const greetings = [
-        '欢迎来到花语小筑~ 🌸',
-        '今天想做什么呢？可以装修花店哦！',
-        '新的花材到了，快去合成吧~',
-        '花店越来越漂亮了呢！💕',
-        '记得每天签到领奖励呀~',
-      ];
-      const msg = greetings[Math.floor(Math.random() * greetings.length)];
-      ToastMessage.show(`💬 店主：「${msg}」`);
-      TweenManager.cancelTarget(owner.scale);
-      owner.scale.set(0.9);
-      TweenManager.to({
-        target: owner.scale,
-        props: { x: 1, y: 1 },
-        duration: 0.3,
-        ease: Ease.easeOutBack,
-      });
+      this._armOwnerPressForDragOrTap(e, owner);
+      if (this._ownerSprite) {
+        this._ownerSprite.tint = 0xe8f2ff;
+      }
     });
 
     // 使用 canvas 级别事件处理拖拽（与 FurnitureDragSystem 一致，兼容微信小游戏）
     const canvas = Game.app.view as any;
     this._onOwnerRawMove = (rawEvt: any) => {
-      if (!this._ownerDragging) return;
       const clientX = rawEvt.clientX ?? rawEvt.pageX ?? 0;
       const clientY = rawEvt.clientY ?? rawEvt.pageY ?? 0;
+
+      if (
+        !this._ownerDragging
+        && this._ownerPointerDownOwner
+        && this._ownerPressStartClient
+        && (this._ownerPointerDownId == null || rawEvt.pointerId === this._ownerPointerDownId)
+      ) {
+        const dx = clientX - this._ownerPressStartClient.x;
+        const dy = clientY - this._ownerPressStartClient.y;
+        if (Math.hypot(dx, dy) > SHOP_OWNER_DRAG_THRESHOLD_PX) {
+          const o = this._ownerPointerDownOwner;
+          this._clearOwnerPressTracking();
+          this._beginOwnerDragFromClient(clientX, clientY, o);
+        }
+      }
+
+      if (!this._ownerDragging) return;
       const designX = clientX * Game.designWidth / Game.screenWidth;
       const designY = clientY * Game.designHeight / Game.screenHeight;
       const c = this._roomContainer;
@@ -516,14 +723,56 @@ export class ShopScene implements Scene {
       const localY = (designY - c.position.y) / s + c.pivot.y;
       owner.x = localX + this._ownerDragOffset.x;
       owner.y = localY + this._ownerDragOffset.y;
-      owner.zIndex = Math.floor(owner.y);
+      owner.zIndex = roomDepthZForOwner(owner.y);
       this._roomContainer.sortChildren();
     };
-    this._onOwnerRawUp = () => {
-      if (!this._ownerDragging) return;
-      this._ownerDragging = false;
-      owner.alpha = 1;
-      RoomLayoutManager.setOwnerPos(owner.x, owner.y);
+    this._onOwnerRawUp = (rawEvt: any) => {
+      if (this._ownerDragging) {
+        this._ownerDragging = false;
+        owner.alpha = 1;
+        if (this._ownerSprite) {
+          this._ownerSprite.tint = 0xffffff;
+        }
+        RoomLayoutManager.setOwnerPos(owner.x, owner.y);
+        return;
+      }
+      const upId = rawEvt?.pointerId;
+      if (rawEvt?.type === 'pointercancel') {
+        if (
+          this._ownerPointerDownOwner
+          && (this._ownerPointerDownId == null || upId === this._ownerPointerDownId)
+        ) {
+          this._clearOwnerPressTracking();
+        }
+        return;
+      }
+      // 轻点：未触发拖动阈值就松手 → 播对话
+      if (
+        this._ownerPointerDownOwner
+        && (this._ownerPointerDownId == null || upId === this._ownerPointerDownId)
+      ) {
+        const tapped = this._ownerPointerDownOwner;
+        this._clearOwnerPressTracking();
+        if (!this._isEditMode) {
+          const greetings = [
+            '欢迎来到花语小筑~ 🌸',
+            '今天想做什么呢？可以装修花店哦！',
+            '新的花材到了，快去合成吧~',
+            '花店越来越漂亮了呢！💕',
+            '记得每天签到领奖励呀~',
+          ];
+          const msg = greetings[Math.floor(Math.random() * greetings.length)];
+          ToastMessage.show(`💬 店主：「${msg}」`);
+          TweenManager.cancelTarget(tapped.scale);
+          tapped.scale.set(0.9);
+          TweenManager.to({
+            target: tapped.scale,
+            props: { x: 1, y: 1 },
+            duration: 0.3,
+            ease: Ease.easeOutBack,
+          });
+        }
+      }
     };
     canvas.addEventListener('pointermove', this._onOwnerRawMove);
     canvas.addEventListener('pointerup', this._onOwnerRawUp);
@@ -538,25 +787,39 @@ export class ShopScene implements Scene {
     const y = Game.safeTop + TOP_BAR_HEIGHT + 16;
     const cx = w / 2;
 
-    // 进度条容器
     const barContainer = new PIXI.Container();
+    this._progressBarRoot = barContainer;
     barContainer.position.set(cx - PROGRESS_BAR_W / 2, y);
+    barContainer.zIndex = 7000;
 
-    // 等级徽章图标
-    const badgeTex = TextureCache.get('icon_level_badge');
-    if (badgeTex) {
-      const badgeSp = new PIXI.Sprite(badgeTex);
-      badgeSp.anchor.set(0.5, 0.5);
-      badgeSp.width = 32;
-      badgeSp.height = 32;
-      badgeSp.position.set(-20, PROGRESS_BAR_H / 2);
-      barContainer.addChild(badgeSp);
+    // 星星图标 + 星心等级数字（level，非累积 star）
+    const starGroup = new PIXI.Container();
+    starGroup.position.set(-22, PROGRESS_BAR_H / 2);
+    this._progressStarGroup = starGroup;
+    const starTex = TextureCache.get('icon_star');
+    if (starTex) {
+      const starSp = new PIXI.Sprite(starTex);
+      starSp.anchor.set(0.5, 0.5);
+      starSp.width = 36;
+      starSp.height = 36;
+      starGroup.addChild(starSp);
     } else {
-      const levelIcon = new PIXI.Text('🐱', { fontSize: 24, fontFamily: FONT_FAMILY });
-      levelIcon.anchor.set(0.5, 0.5);
-      levelIcon.position.set(-20, PROGRESS_BAR_H / 2);
-      barContainer.addChild(levelIcon);
+      const fb = new PIXI.Text('⭐', { fontSize: 28, fontFamily: FONT_FAMILY });
+      fb.anchor.set(0.5, 0.5);
+      starGroup.addChild(fb);
     }
+    const lv0 = CurrencyManager.state.level;
+    this._progressLevelText = new PIXI.Text(String(lv0), {
+      fontSize: 15,
+      fill: 0xffffff,
+      fontFamily: FONT_FAMILY,
+      fontWeight: 'bold',
+      stroke: 0x8B4513,
+      strokeThickness: 3,
+    } as any);
+    this._progressLevelText.anchor.set(0.5, 0.52);
+    starGroup.addChild(this._progressLevelText);
+    barContainer.addChild(starGroup);
 
     // 进度条背景
     this._progressBar = new PIXI.Graphics();
@@ -572,19 +835,13 @@ export class ShopScene implements Scene {
     barContainer.addChild(this._progressFill);
     this._updateProgressBar();
 
-    // 等级数字（进度条左侧）
-    const unlocked = DecorationManager.unlockedCount;
-    const total = DecorationManager.totalCount;
-    const level = Math.floor(unlocked / 4) + 1; // 每4个装饰算一级
-    const levelText = new PIXI.Text(`${level}`, {
-      fontSize: 16, fill: COLORS.TEXT_DARK, fontFamily: FONT_FAMILY, fontWeight: 'bold',
-    });
-    levelText.anchor.set(0.5, 0.5);
-    levelText.position.set(-20, PROGRESS_BAR_H / 2);
-    barContainer.addChild(levelText);
-
-    // 进度文字
-    this._progressText = new PIXI.Text(`${unlocked}/${total}`, {
+    // 星级进度文字（累积星星 / 下一星级门槛）
+    const star = CurrencyManager.state.star;
+    const lv = CurrencyManager.state.level;
+    const sceneId = CurrencyManager.state.sceneId;
+    const nextReq = getNextLevelStarRequired(sceneId, lv);
+    const label = nextReq >= 0 ? `${star}/${nextReq}` : `${star}`;
+    this._progressText = new PIXI.Text(label, {
       fontSize: 17, fill: COLORS.TEXT_DARK, fontFamily: FONT_FAMILY, fontWeight: 'bold',
       stroke: 0xFFFFFF, strokeThickness: 2,
     });
@@ -592,29 +849,37 @@ export class ShopScene implements Scene {
     this._progressText.position.set(PROGRESS_BAR_W / 2, PROGRESS_BAR_H / 2);
     barContainer.addChild(this._progressText);
 
-    // 右端礼盒图标（满级奖励）
+    // 右端礼盒：点击预览「下一星级」礼包内容
+    const giftTap = new PIXI.Container();
+    giftTap.position.set(PROGRESS_BAR_W + 24, PROGRESS_BAR_H / 2);
+    const giftHit = 44;
+    giftTap.hitArea = new PIXI.Rectangle(-giftHit / 2, -giftHit / 2, giftHit, giftHit);
+    giftTap.eventMode = 'static';
+    giftTap.cursor = 'pointer';
     const giftTex = TextureCache.get('icon_gift');
     if (giftTex) {
       const giftSp = new PIXI.Sprite(giftTex);
       giftSp.anchor.set(0.5, 0.5);
       giftSp.width = 30;
       giftSp.height = 30;
-      giftSp.position.set(PROGRESS_BAR_W + 24, PROGRESS_BAR_H / 2);
-      barContainer.addChild(giftSp);
+      giftTap.addChild(giftSp);
     } else {
       const gift = new PIXI.Text('🎁', { fontSize: 22, fontFamily: FONT_FAMILY });
       gift.anchor.set(0.5, 0.5);
-      gift.position.set(PROGRESS_BAR_W + 24, PROGRESS_BAR_H / 2);
-      barContainer.addChild(gift);
+      giftTap.addChild(gift);
     }
+    giftTap.on('pointertap', () => this._showNextStarGiftPreview());
+    barContainer.addChild(giftTap);
 
     this.container.addChild(barContainer);
   }
 
   private _updateProgressBar(): void {
-    const unlocked = DecorationManager.unlockedCount;
-    const total = DecorationManager.totalCount;
-    const ratio = total > 0 ? unlocked / total : 0;
+    const ratio = LevelManager.starProgress;
+    const star = CurrencyManager.state.star;
+    const lv = CurrencyManager.state.level;
+    const sceneId = CurrencyManager.state.sceneId;
+    const nextReq = getNextLevelStarRequired(sceneId, lv);
 
     this._progressFill.clear();
     if (ratio > 0) {
@@ -625,8 +890,131 @@ export class ShopScene implements Scene {
     }
 
     if (this._progressText) {
-      this._progressText.text = `${unlocked}/${total}`;
+      this._progressText.text = nextReq >= 0 ? `${star}/${nextReq}` : `${star}`;
     }
+    if (this._progressLevelText) {
+      this._progressLevelText.text = String(lv);
+    }
+  }
+
+  /** 点击进度条旁礼包：预览升至下一星级时的礼包（与实际升星发放一致） */
+  private _showNextStarGiftPreview(): void {
+    const preview = LevelManager.getNextStarLevelRewardPreview();
+    if (!preview) {
+      ToastMessage.show('当前场景已满星，暂无下一档礼包~');
+      return;
+    }
+    const nextLv = CurrencyManager.state.level + 1;
+    this._levelUpPopup.show(
+      nextLv,
+      {
+        huayuan: 0,
+        stamina: preview.stamina,
+        diamond: preview.diamond,
+        rewardBoxItems: preview.rewardBoxItems,
+      },
+      {
+        previewOnly: true,
+        bannerTitle: `升至 ${nextLv}星 · 礼包预览`,
+      },
+    );
+  }
+
+  /** 家具购买后：星星从全局坐标飞入进度条左侧星标 */
+  private _playStarFlyFromGlobal(globalX: number, globalY: number, amount: number): void {
+    if (!this._starFlyLayer || !this._progressBarRoot) return;
+    const tex = TextureCache.get('icon_star');
+    const targetLocal = new PIXI.Point(
+      this._progressBarRoot.x - 22,
+      this._progressBarRoot.y + PROGRESS_BAR_H / 2,
+    );
+    const startLocal = new PIXI.Point();
+    this.container.toLocal({ x: globalX, y: globalY }, undefined, startLocal);
+
+    const ICON_SIZE = 30;
+    const COUNT = Math.min(Math.max(1, Math.ceil(amount / 2)), 10);
+    const FLY_DURATION = 0.52;
+    const STAGGER = 0.045;
+    let arrived = 0;
+
+    for (let i = 0; i < COUNT; i++) {
+      const icon = tex
+        ? new PIXI.Sprite(tex)
+        : new PIXI.Text('⭐', { fontSize: 22, fontFamily: FONT_FAMILY });
+      icon.anchor.set(0.5);
+      let targetScale = 1;
+      if (icon instanceof PIXI.Sprite && tex) {
+        targetScale = ICON_SIZE / Math.max(tex.width, tex.height);
+      }
+      const randX = (Math.random() - 0.5) * 48;
+      const randY = (Math.random() - 0.5) * 36;
+      icon.position.set(startLocal.x + randX, startLocal.y + randY);
+      icon.alpha = 0;
+      icon.scale.set(targetScale * 0.35);
+      this._starFlyLayer.addChild(icon);
+
+      const delay = i * STAGGER;
+      TweenManager.to({
+        target: icon,
+        props: { alpha: 1 },
+        duration: 0.12,
+        delay,
+      });
+      TweenManager.to({
+        target: icon.scale,
+        props: { x: targetScale, y: targetScale },
+        duration: 0.2,
+        delay,
+        ease: Ease.easeOutBack,
+        onComplete: () => {
+          const cpx = (icon.x + targetLocal.x) / 2 + (Math.random() - 0.5) * 70;
+          const cpy = Math.min(icon.y, targetLocal.y) - 28 - Math.random() * 36;
+          const startX = icon.x;
+          const startY = icon.y;
+          const progress = { t: 0 };
+          TweenManager.to({
+            target: progress,
+            props: { t: 1 },
+            duration: FLY_DURATION,
+            ease: Ease.easeInQuad,
+            onUpdate: () => {
+              const t = progress.t;
+              const mt = 1 - t;
+              icon.x = mt * mt * startX + 2 * mt * t * cpx + t * t * targetLocal.x;
+              icon.y = mt * mt * startY + 2 * mt * t * cpy + t * t * targetLocal.y;
+              icon.scale.set(targetScale * (1 - t * 0.45));
+              icon.alpha = t < 0.82 ? 1 : 1 - (t - 0.82) / 0.18;
+            },
+            onComplete: () => {
+              icon.destroy();
+              arrived++;
+              if (arrived >= COUNT) this._pulseProgressStar();
+            },
+          });
+        },
+      });
+    }
+  }
+
+  private _pulseProgressStar(): void {
+    const g = this._progressStarGroup;
+    if (!g) return;
+    const ox = g.scale.x;
+    const oy = g.scale.y;
+    TweenManager.to({
+      target: g.scale,
+      props: { x: ox * 1.18, y: oy * 1.18 },
+      duration: 0.12,
+      ease: Ease.easeOutQuad,
+      onComplete: () => {
+        TweenManager.to({
+          target: g.scale,
+          props: { x: ox, y: oy },
+          duration: 0.28,
+          ease: Ease.easeOutBounce,
+        });
+      },
+    });
   }
 
   // ─────────────────── 左上角按钮（图鉴 + 熟客） ───────────────────
@@ -904,6 +1292,9 @@ export class ShopScene implements Scene {
   private _bindEvents(): void {
     EventBus.on('decoration:room_style', this._refreshShopBuildingTexture);
     EventBus.on('dressup:equipped', this._onDressUpEquipped);
+    EventBus.on('decoration:shopStarFly', this._onDecorationShopStarFly);
+    EventBus.on('currency:changed', this._onShopCurrencyForProgress);
+    EventBus.on('level:up', this._onShopLevelUp);
 
     // 监听布局变化 — 仅在非编辑模式下才完整重渲染
     // 编辑模式下由 FurnitureDragSystem 直接操控 Sprite
@@ -933,8 +1324,31 @@ export class ShopScene implements Scene {
     EventBus.on('roomlayout:updated', (placement: any) => {
       if (this._isEditMode && placement && placement.decoId) {
         this._updateSpriteVisual(placement);
+        // 置前/置后改的是 zLayer、depthManualBias，须重算 zIndex（不仅依赖工具栏里的 sortByDepth）
+        FurnitureDragSystem.sortByDepth();
       }
     });
+  }
+
+  /**
+   * 装修面板「去放置 / 放入房间」进店后：进编辑模式、托盘切到对应槽位；
+   * 若该 deco 尚未摆放则自动从屏幕中心拉起拖入。
+   */
+  private _consumePendingPlaceDeco(decoId: string): void {
+    if (SceneManager.current?.name !== 'shop') return;
+    const deco = DECO_MAP.get(decoId);
+    if (!deco || this._isEditMode) return;
+
+    this._enterEditMode({ deco });
+
+    if (RoomLayoutManager.getPlacement(decoId)) {
+      ToastMessage.show('该家具已在房间中，可在装修模式下调整位置');
+      return;
+    }
+
+    const cx = DESIGN_WIDTH / 2;
+    const cy = Game.logicHeight * 0.42;
+    FurnitureDragSystem.startDragFromTray(decoId, cx, cy);
   }
 
   /** 编辑模式下实时更新家具 Sprite 的缩放/翻转视觉（不重建） */
@@ -942,7 +1356,7 @@ export class ShopScene implements Scene {
     for (const child of this._roomContainer.children) {
       if ((child as any)._decoId === placement.decoId && child instanceof PIXI.Sprite) {
         const texture = child.texture;
-        const baseSize = 100;
+        const baseSize = SHOP_FURNITURE_TEX_BASE_PX;
         const s = Math.min(baseSize / texture.width, baseSize / texture.height) * placement.scale;
         child.scale.set(
           placement.flipped ? -s : s,
@@ -1059,9 +1473,13 @@ export class ShopScene implements Scene {
     pulse();
   }
 
-  /** 进入编辑模式 */
-  private _enterEditMode(): void {
+  /**
+   * 进入编辑模式
+   * @param trayArg 不传则托盘默认花房；传 `{ deco }` 时与装修面板「去放置」一致（含家具 Tab）
+   */
+  private _enterEditMode(trayArg?: DecoSlot | { deco: DecoDef }): void {
     if (this._isEditMode) return;
+    this._clearPendingDoubleTapStates();
     this._isEditMode = true;
 
     // 停止脉冲动画
@@ -1117,7 +1535,11 @@ export class ShopScene implements Scene {
     FurnitureDragSystem.enable(this._roomContainer);
 
     // 打开家具托盘
-    this._furnitureTray.open();
+    if (trayArg != null && typeof trayArg === 'object' && 'deco' in trayArg) {
+      this._furnitureTray.open(trayArg);
+    } else {
+      this._furnitureTray.open(trayArg as DecoSlot | undefined);
+    }
 
     // 隐藏返回按钮和侧边按钮（编辑模式下不能退出场景）
     this._returnBtn.visible = false;
@@ -1128,8 +1550,9 @@ export class ShopScene implements Scene {
     // 添加缩放控件 + 双指缩放手势
     this._buildZoomControls();
     this._enablePinchZoom();
+    this._enableRoomPanSurface();
 
-    ToastMessage.show('🔨 装修模式：拖动家具；右侧滑杆需长按或滑动后拖动缩放；双击滑杆恢复 1×');
+    ToastMessage.show('🔨 装修模式：拖动家具；放大后可拖底板/空白平移；拖右侧圆点缩放，双击圆点恢复 1×');
     EventBus.emit('furniture:edit_enabled');
   }
 
@@ -1189,6 +1612,7 @@ export class ShopScene implements Scene {
     this._editToolbar.hide();
 
     // 恢复视图缩放 + 移除缩放控件
+    this._disableRoomPanSurface();
     this._resetViewZoom();
     this._removeZoomControls();
     this._disablePinchZoom();
@@ -1208,26 +1632,170 @@ export class ShopScene implements Scene {
 
   // ─────────────────── 编辑模式缩放控制 ───────────────────
 
+  /** 放大后限制平移范围，避免拉出过多留白 */
+  private _clampRoomPan(): void {
+    const s = this._viewScale;
+    if (s <= 1.001) {
+      this._roomPanX = 0;
+      this._roomPanY = 0;
+      return;
+    }
+    const maxX = DESIGN_WIDTH * 0.44 * (s - 1);
+    const maxY = Game.logicHeight * 0.32 * (s - 1);
+    this._roomPanX = Math.max(-maxX, Math.min(maxX, this._roomPanX));
+    this._roomPanY = Math.max(-maxY, Math.min(maxY, this._roomPanY));
+  }
+
+  /** 以屏幕中心为缩放基点，并叠加大画面平移 */
+  private _syncRoomContainerTransform(): void {
+    this._clampRoomPan();
+    const cx = DESIGN_WIDTH / 2;
+    const cy = Game.logicHeight * SHOP_BUILDING_CENTER_Y_RATIO + SHOP_BUILDING_ANCHOR_OFFSET_Y;
+    this._roomContainer.pivot.set(cx, cy);
+    this._roomContainer.position.set(cx + this._roomPanX, cy + this._roomPanY);
+    this._roomContainer.scale.set(this._viewScale);
+  }
+
+  private _ensureRoomPanHitLayer(): void {
+    if (this._roomPanHitLayer) return;
+    const g = new PIXI.Graphics();
+    g.eventMode = 'static';
+    g.cursor = 'grab';
+    g.hitArea = new PIXI.Rectangle(0, 0, DESIGN_WIDTH, Game.logicHeight);
+    g.zIndex = -8000;
+    this._roomPanHitLayer = g;
+    this._roomContainer.addChildAt(g, 0);
+  }
+
+  private _refreshShopBuildingPanHitAreaIfNeeded(): void {
+    if (!this._isEditMode || !this._shopBuildingSprite) return;
+    const sp = this._shopBuildingSprite;
+    const bw = sp.width;
+    const bh = sp.height;
+    sp.hitArea = new PIXI.Rectangle(-bw / 2, -bh / 2, bw, bh);
+  }
+
+  private _enableRoomPanSurface(): void {
+    this._ensureRoomPanHitLayer();
+    const layer = this._roomPanHitLayer!;
+    layer.eventMode = 'static';
+    layer.cursor = 'grab';
+    layer.removeAllListeners('pointerdown');
+    layer.on('pointerdown', this._handleRoomPanSurfaceDown);
+
+    const sp = this._shopBuildingSprite;
+    if (sp) {
+      sp.eventMode = 'static';
+      sp.cursor = 'grab';
+      this._refreshShopBuildingPanHitAreaIfNeeded();
+      sp.removeAllListeners('pointerdown');
+      sp.on('pointerdown', this._handleRoomPanSurfaceDown);
+    }
+  }
+
+  private _disableRoomPanSurface(): void {
+    this._cleanupRoomPanCanvasListeners();
+    if (this._roomPanHitLayer) {
+      this._roomPanHitLayer.eventMode = 'none';
+      this._roomPanHitLayer.cursor = 'default';
+      this._roomPanHitLayer.removeAllListeners('pointerdown');
+    }
+    const sp = this._shopBuildingSprite;
+    if (sp) {
+      sp.off('pointerdown', this._handleRoomPanSurfaceDown);
+      sp.eventMode = 'auto';
+      sp.cursor = 'default';
+      sp.hitArea = null;
+    }
+  }
+
+  private _cleanupRoomPanCanvasListeners(): void {
+    const canvas = Game.app.view as HTMLCanvasElement;
+    if (this._onRoomPanCanvasMove) {
+      canvas.removeEventListener('pointermove', this._onRoomPanCanvasMove);
+      this._onRoomPanCanvasMove = null;
+    }
+    if (this._onRoomPanCanvasUp) {
+      canvas.removeEventListener('pointerup', this._onRoomPanCanvasUp);
+      canvas.removeEventListener('pointercancel', this._onRoomPanCanvasUp);
+      this._onRoomPanCanvasUp = null;
+    }
+    this._roomPanDragging = false;
+  }
+
+  /** 点在建筑底板或房间底层留白处时平移镜头（需已放大） */
+  private _handleRoomPanSurfaceDown = (e: PIXI.FederatedPointerEvent): void => {
+    if (!this._isEditMode || this._viewScale <= 1.001) return;
+    if (this._roomPanDragging) return;
+    const native = e.nativeEvent as PointerEvent | undefined;
+    if (!native) return;
+    e.stopPropagation();
+    this._roomPanDragging = true;
+    this._roomPanPointerId = native.pointerId;
+    this._roomPanDragStartClientX = native.clientX;
+    this._roomPanDragStartClientY = native.clientY;
+    this._roomPanDragStartPanX = this._roomPanX;
+    this._roomPanDragStartPanY = this._roomPanY;
+
+    const canvas = Game.app.view as HTMLCanvasElement;
+    if (canvas.setPointerCapture) {
+      try {
+        canvas.setPointerCapture(native.pointerId);
+      } catch (_) { /* 部分环境不支持 */ }
+    }
+
+    this._onRoomPanCanvasMove = (ev: PointerEvent) => {
+      if (!this._roomPanDragging || ev.pointerId !== this._roomPanPointerId) return;
+      const dxClient = ev.clientX - this._roomPanDragStartClientX;
+      const dyClient = ev.clientY - this._roomPanDragStartClientY;
+      this._roomPanX = this._roomPanDragStartPanX + dxClient * Game.designWidth / Game.screenWidth;
+      this._roomPanY = this._roomPanDragStartPanY + dyClient * Game.designHeight / Game.screenHeight;
+      this._syncRoomContainerTransform();
+    };
+
+    this._onRoomPanCanvasUp = (ev: PointerEvent) => {
+      if (ev.pointerId !== this._roomPanPointerId) return;
+      this._roomPanDragging = false;
+      if (canvas.releasePointerCapture) {
+        try {
+          canvas.releasePointerCapture(ev.pointerId);
+        } catch (_) { /* */ }
+      }
+      if (this._onRoomPanCanvasMove) {
+        canvas.removeEventListener('pointermove', this._onRoomPanCanvasMove);
+        this._onRoomPanCanvasMove = null;
+      }
+      if (this._onRoomPanCanvasUp) {
+        canvas.removeEventListener('pointerup', this._onRoomPanCanvasUp);
+        canvas.removeEventListener('pointercancel', this._onRoomPanCanvasUp);
+        this._onRoomPanCanvasUp = null;
+      }
+    };
+
+    canvas.addEventListener('pointermove', this._onRoomPanCanvasMove);
+    canvas.addEventListener('pointerup', this._onRoomPanCanvasUp);
+    canvas.addEventListener('pointercancel', this._onRoomPanCanvasUp);
+  };
+
   /** 应用视图缩放 — 以屏幕中心为基点缩放 roomContainer */
   private _applyViewZoom(newScale: number): void {
     const s = Math.max(this._viewScaleMin, Math.min(this._viewScaleMax, newScale));
     this._viewScale = s;
-
-    // 以屏幕中心为缩放基点
-    const cx = DESIGN_WIDTH / 2;
-    const cy = Game.logicHeight * SHOP_BUILDING_CENTER_Y_RATIO + SHOP_BUILDING_ANCHOR_OFFSET_Y;
-
-    // 调整容器 pivot + position 实现中心缩放
-    this._roomContainer.pivot.set(cx, cy);
-    this._roomContainer.position.set(cx, cy);
-    this._roomContainer.scale.set(s);
-
+    if (s <= 1.001) {
+      this._roomPanX = 0;
+      this._roomPanY = 0;
+    } else {
+      this._clampRoomPan();
+    }
+    this._syncRoomContainerTransform();
     this._syncZoomSliderThumb();
   }
 
   /** 重置缩放 */
   private _resetViewZoom(): void {
     this._viewScale = 1.0;
+    this._roomPanX = 0;
+    this._roomPanY = 0;
     this._roomContainer.pivot.set(0, 0);
     this._roomContainer.position.set(0, 0);
     this._roomContainer.scale.set(1);
@@ -1244,27 +1812,24 @@ export class ShopScene implements Scene {
     return Math.max(0, Math.min(H, gh - topY));
   }
 
-  /** 构建缩放滑杆（编辑模式：靠右但内缩，大触摸区） */
+  /** 构建缩放滑杆：整体靠右减少挡家具；仅圆形滑块可交互，轨道不响应 */
   private _buildZoomControls(): void {
     if (this._zoomSlider) return;
 
-    /** 距屏幕右缘留白，避免贴边难点 */
-    const EDGE_INSET = 36;
+    /** 尽量贴右，竖条少盖住房间画面 */
+    const EDGE_INSET = 6;
     const TRACK_W = 16;
-    /** 触摸热区宽度（约两指宽，易拖） */
-    const HIT_W = 88;
-    /** 轨道上下各扩一点也算可点区域 */
-    const HIT_PAD_Y = 20;
     const H = this._zoomSliderTrackH;
     const cy = (Game.logicHeight - H) / 2;
 
     const root = new PIXI.Container();
     root.position.set(DESIGN_WIDTH - EDGE_INSET, cy);
-    root.eventMode = 'static';
-    root.cursor = 'pointer';
-    root.hitArea = new PIXI.Rectangle(-HIT_W, -HIT_PAD_Y, HIT_W, H + HIT_PAD_Y * 2);
+    root.eventMode = 'none';
+    /** 高于房间与飞星，低于升星弹窗(8500) */
+    root.zIndex = 8300;
 
     const track = new PIXI.Graphics();
+    track.eventMode = 'none';
     track.beginFill(0xFFFFFF, 0.38);
     track.drawRoundedRect(-TRACK_W, 0, TRACK_W, H, Math.min(8, TRACK_W / 2));
     track.endFill();
@@ -1273,7 +1838,8 @@ export class ShopScene implements Scene {
     root.addChild(track);
 
     const thumb = new PIXI.Graphics();
-    thumb.eventMode = 'none';
+    thumb.eventMode = 'static';
+    thumb.cursor = 'pointer';
     root.addChild(thumb);
     this._zoomSliderThumb = thumb;
 
@@ -1281,32 +1847,10 @@ export class ShopScene implements Scene {
     this.container.addChild(root);
     this._syncZoomSliderThumb();
 
-    const LONG_PRESS_MS = 320;
-    const MOVE_START_PX = 14;
-
-    const clearLongPressTimer = () => {
-      if (this._zoomSliderLongPressTimer) {
-        clearTimeout(this._zoomSliderLongPressTimer);
-        this._zoomSliderLongPressTimer = null;
-      }
-    };
-
-    const beginDragFromPointerEvent = (ev: PointerEvent) => {
-      if (!this._zoomSlider || this._zoomSliderDragActive) return;
-      this._zoomSliderDragActive = true;
-      const cvs = Game.app.view as HTMLCanvasElement;
-      if (cvs.setPointerCapture) {
-        try {
-          cvs.setPointerCapture(ev.pointerId);
-        } catch (_) { /* */ }
-      }
-      const ly0 = this._sliderLocalYFromClientY(ev.clientY);
-      this._applyViewZoom(this._scaleFromTrackY(ly0));
-    };
-
-    root.on('pointerdown', (e: PIXI.FederatedPointerEvent) => {
+    thumb.on('pointerdown', (e: PIXI.FederatedPointerEvent) => {
       e.stopPropagation();
       const native = e.nativeEvent as PointerEvent | undefined;
+      if (!native) return;
 
       const now = Date.now();
       if (now - this._zoomSliderLastTap < 280) {
@@ -1318,53 +1862,28 @@ export class ShopScene implements Scene {
 
       if (this._zoomSliderDragging) return;
       this._zoomSliderDragging = true;
-      this._zoomSliderDragActive = false;
-      this._zoomSliderPointerId = native?.pointerId ?? 0;
-      this._zoomSliderPressClient.x = native?.clientX ?? 0;
-      this._zoomSliderPressClient.y = native?.clientY ?? 0;
-
-      this._zoomSliderArmLocalY = native?.clientY != null
-        ? this._sliderLocalYFromClientY(native.clientY)
-        : Math.max(0, Math.min(H, root.toLocal(e.global).y));
+      this._zoomSliderDragActive = true;
+      this._zoomSliderPointerId = native.pointerId ?? 0;
 
       const canvas = Game.app.view as HTMLCanvasElement;
+      if (canvas.setPointerCapture && native.pointerId != null) {
+        try {
+          canvas.setPointerCapture(native.pointerId);
+        } catch (_) { /* */ }
+      }
 
-      clearLongPressTimer();
-      this._zoomSliderLongPressTimer = setTimeout(() => {
-        this._zoomSliderLongPressTimer = null;
-        if (!this._zoomSliderDragging || this._zoomSliderDragActive) return;
-        this._zoomSliderDragActive = true;
-        if (native?.pointerId != null && canvas.setPointerCapture) {
-          try {
-            canvas.setPointerCapture(native.pointerId);
-          } catch (_) { /* */ }
-        }
-        this._applyViewZoom(this._scaleFromTrackY(this._zoomSliderArmLocalY));
-      }, LONG_PRESS_MS);
+      const ly0 = this._sliderLocalYFromClientY(native.clientY);
+      this._applyViewZoom(this._scaleFromTrackY(ly0));
 
       this._onZoomSliderCanvasMove = (ev: PointerEvent) => {
         if (!this._zoomSliderDragging || !this._zoomSlider) return;
         if (this._zoomSliderPointerId && ev.pointerId !== this._zoomSliderPointerId) return;
-
         const ly2 = this._sliderLocalYFromClientY(ev.clientY);
-
-        if (!this._zoomSliderDragActive) {
-          const dxp = ev.clientX - this._zoomSliderPressClient.x;
-          const dyp = ev.clientY - this._zoomSliderPressClient.y;
-          if (dxp * dxp + dyp * dyp >= MOVE_START_PX * MOVE_START_PX) {
-            clearLongPressTimer();
-            beginDragFromPointerEvent(ev);
-          } else {
-            return;
-          }
-        }
-
         this._applyViewZoom(this._scaleFromTrackY(ly2));
       };
 
       this._onZoomSliderCanvasUp = (ev: PointerEvent) => {
         if (this._zoomSliderPointerId && ev.pointerId !== this._zoomSliderPointerId) return;
-        clearLongPressTimer();
         this._zoomSliderDragging = false;
         this._zoomSliderDragActive = false;
         this._zoomSliderPointerId = 0;
@@ -1412,14 +1931,12 @@ export class ShopScene implements Scene {
     g.beginFill(0xFFFFFF, 0.45);
     g.drawCircle(cx - 5, y - 5, r * 0.35);
     g.endFill();
+    const hitR = 28;
+    g.hitArea = new PIXI.Circle(cx, y, hitR);
   }
 
   /** 移除缩放滑杆 */
   private _removeZoomControls(): void {
-    if (this._zoomSliderLongPressTimer) {
-      clearTimeout(this._zoomSliderLongPressTimer);
-      this._zoomSliderLongPressTimer = null;
-    }
     this._zoomSliderDragging = false;
     this._zoomSliderDragActive = false;
     const canvas = Game.app.view as HTMLCanvasElement;
@@ -1607,11 +2124,41 @@ export class ShopScene implements Scene {
     });
   }
 
+  /** 花店场景：货币飞当前 TopBar；棋盘类奖励飞回合成入口并入收纳盒 */
+  private _createShopRewardFlyBindings(): RewardFlyBindings {
+    const topBar = this._topBar;
+    const returnBtn = this._returnBtn;
+    return {
+      getCurrencyTarget(type: string) {
+        const posMap: Record<string, { pos: { x: number; y: number }; flash: () => void }> = {
+          gold: { pos: topBar.getHuayuanIconPos(), flash: () => topBar.flashHuayuan() },
+          huayuan: { pos: topBar.getHuayuanIconPos(), flash: () => topBar.flashHuayuan() },
+          diamond: { pos: topBar.getDiamondIconPos(), flash: () => topBar.flashDiamond() },
+          stamina: { pos: topBar.getStaminaIconPos(), flash: () => topBar.flashStamina() },
+        };
+        const info = posMap[type];
+        if (!info) return null;
+        const endGlobal = topBar.toGlobal(new PIXI.Point(info.pos.x, info.pos.y));
+        return { endGlobal, onArrived: info.flash };
+      },
+      planBoardPieces(pieces) {
+        const endGlobal = returnBtn.toGlobal(new PIXI.Point(0, 0));
+        const plans = pieces.map(p => ({
+          textureKey: p.textureKey,
+          endGlobal,
+          onLand: () => { RewardBoxManager.addItem(p.itemId, 1); },
+        }));
+        return { plans, overflowCount: 0 };
+      },
+    };
+  }
+
   // ─────────────────── 更新 ───────────────────
 
   private _update = (): void => {
     const dt = Game.ticker.deltaMS / 1000;
     CurrencyManager.update(dt);
+    WarehouseManager.updateWarehouseCooldownsFromRealTime();
     SaveManager.update(dt);
     this._topBar.updateTimer();
     this._updateRedDots();

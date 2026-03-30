@@ -2,7 +2,7 @@
 """
 花语彩蛋弹窗 NB2 原图：品红抠图 + alpha 裁边。
 读 ~/rosa_games/game_assets/huahua/assets/raw/flower_egg_*_nb2.png
-写入 minigame/images/ui/
+写入 minigame/subpkg_panels/images/ui/
 """
 from __future__ import annotations
 
@@ -17,7 +17,7 @@ except ImportError:
 
 ROOT = Path(__file__).resolve().parents[1]
 RAW = Path.home() / "rosa_games/game_assets/huahua/assets/raw"
-OUT_DIR = ROOT / "minigame/images/ui"
+OUT_DIR = ROOT / "minigame/subpkg_panels/images/ui"
 
 PAIRS: list[tuple[str, str]] = [
     ("flower_egg_title_banner_nb2.png", "flower_egg_title_banner.png"),

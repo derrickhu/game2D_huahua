@@ -19,8 +19,16 @@ import { Game } from '@/core/Game';
 import { EventBus } from '@/core/EventBus';
 import { TweenManager, Ease } from '@/core/TweenManager';
 import { RoomLayoutManager, FurniturePlacement } from '@/managers/RoomLayoutManager';
-import { DECO_MAP } from '@/config/DecorationConfig';
+import {
+  DECO_MAP,
+  SHOP_FURNITURE_TEX_BASE_PX,
+  isDecoAllowedInScene,
+  formatAllowedScenesShort,
+} from '@/config/DecorationConfig';
+import { CurrencyManager } from '@/managers/CurrencyManager';
+import { ToastMessage } from '@/gameobjects/ui/ToastMessage';
 import { TextureCache } from '@/utils/TextureCache';
+import { roomDepthZForPlacement } from '@/config/RoomDepthSort';
 
 // ---- 常量 ----
 
@@ -242,16 +250,21 @@ class FurnitureDragSystemClass {
     const deco = DECO_MAP.get(decoId);
     if (!deco) return;
 
+    if (!isDecoAllowedInScene(deco, CurrencyManager.state.sceneId)) {
+      ToastMessage.show(`🔒 当前场景不可用（${formatAllowedScenesShort(deco)}）`);
+      return;
+    }
+
     const tex = TextureCache.get(deco.icon);
     if (!tex) return;
 
     // 将设计坐标转为容器本地坐标（支持 roomContainer 缩放后拖入）
     const localPos = this._designToLocal(globalX, globalY);
 
-    // 计算与 _renderFurnitureLayout 一致的 baseScale
-    const BASE_SIZE = 100;
-    const defaultPlacementScale = 0.8; // 默认 placement.scale
-    const baseScale = Math.min(BASE_SIZE / tex.width, BASE_SIZE / tex.height) * defaultPlacementScale;
+    const defaultPlacementScale = deco.defaultScale ?? 0.4;
+    const baseScale =
+      Math.min(SHOP_FURNITURE_TEX_BASE_PX / tex.width, SHOP_FURNITURE_TEX_BASE_PX / tex.height)
+      * defaultPlacementScale;
 
     const sprite = new PIXI.Sprite(tex);
     sprite.anchor.set(0.5, 0.8); // 底部偏中心作为锚点
@@ -281,11 +294,29 @@ class FurnitureDragSystemClass {
    */
   sortByDepth(): void {
     if (!this._roomContainer) return;
+    const layout = RoomLayoutManager.getLayout();
+    const stackOrder = new Map<string, number>();
+    for (let i = 0; i < layout.length; i++) {
+      stackOrder.set(layout[i].decoId, i);
+    }
     for (const child of this._roomContainer.children) {
       if (child instanceof PIXI.Sprite && (child as any)._decoId) {
-        const placement = RoomLayoutManager.getPlacement((child as any)._decoId);
-        const zLayer = placement?.zLayer ?? 0;
-        child.zIndex = Math.floor(child.y) + zLayer * 1000;
+        const decoId = (child as any)._decoId as string;
+        const placement = RoomLayoutManager.getPlacement(decoId);
+        const deco = DECO_MAP.get(decoId);
+        if (!placement || !deco) continue;
+        const zLayer = placement.zLayer ?? 0;
+        const pi = stackOrder.get(decoId) ?? 0;
+        const stackTie = Math.min(pi, 999);
+        // 拖拽中 placement 可能未落盘，须用 Sprite 当前 y 参与排序
+        const feetY = child.y;
+        child.zIndex = roomDepthZForPlacement(
+          feetY,
+          zLayer,
+          stackTie,
+          deco,
+          placement.depthManualBias,
+        );
       }
     }
     this._roomContainer.sortChildren();
@@ -382,8 +413,24 @@ class FurnitureDragSystemClass {
     if (ctx.isNew) {
       if (inBounds) {
         // 从托盘拖入成功 → 添加到布局
+        // placement.scale 存的是「相对纹理基准」倍率（与 ShopScene 渲染一致），
+        // 不是 PIXI 上的绝对 scale（后者 = baseRatio * 倍率）。
+        const deco = DECO_MAP.get(ctx.decoId);
+        const tex = deco ? TextureCache.get(deco.icon) : null;
+        let placementScaleMult = deco?.defaultScale ?? 0.4;
+        if (deco && tex) {
+          const baseRatio = Math.min(
+            SHOP_FURNITURE_TEX_BASE_PX / tex.width,
+            SHOP_FURNITURE_TEX_BASE_PX / tex.height,
+          );
+          if (baseRatio > 1e-6) {
+            placementScaleMult = ctx.originalScale / baseRatio;
+          }
+        }
+        placementScaleMult = Math.max(0.1, Math.min(2.0, placementScaleMult));
+
         const placement = RoomLayoutManager.addFurniture(
-          ctx.decoId, finalX, finalY, ctx.originalScale, false
+          ctx.decoId, finalX, finalY, placementScaleMult, false
         );
         if (placement) {
           this.registerSprite(ctx.sprite, ctx.decoId);

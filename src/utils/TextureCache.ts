@@ -1,7 +1,9 @@
 /**
  * 纹理缓存 - 管理图片加载和 PIXI.Texture 缓存
  * 支持微信小游戏分包加载：
- *   - 主包：UI + 角色等核心小图（images/）
+ *   - 主包：棋盘/顶栏等小图标与启动必需 UI（images/）
+ *   - 分包 chars：店主全身/半身 + 客人胸像（subpkg_chars/images/）
+ *   - 分包 panels：签到/花语彩蛋/仓库/合成线/装修大卡等面板底图（subpkg_panels/images/ui/）
  *   - 分包 items：花朵 + 饮品 + 工具物品图标（subpkg_items/images/）
  *   - 分包 deco：家具 + 房间背景 + 旧 room 素材（subpkg_deco/images/）
  */
@@ -9,49 +11,8 @@ import * as PIXI from 'pixi.js';
 
 // ================================================================
 // 主包资源（随主包一起下载，无需等待分包）
-// 仅保留 UI 图标、角色形象等启动必需资源
 // ================================================================
 const MAIN_IMAGE_MAP: Record<string, string> = {
-  // ---- 店主形象 ----
-  owner_chibi_default:  'images/owner/chibi_default.png',
-  owner_full_default:   'images/owner/full_default.png',
-  owner_full_default_blink: 'images/owner/full_default_eyesclosed.png',
-
-  owner_full_outfit_florist: 'images/owner/full_outfit_florist.png',
-  owner_full_outfit_florist_blink: 'images/owner/full_outfit_florist_eyesclosed.png',
-  owner_chibi_outfit_florist: 'images/owner/chibi_outfit_florist.png',
-
-  owner_full_outfit_spring: 'images/owner/full_outfit_spring.png',
-  owner_full_outfit_spring_blink: 'images/owner/full_outfit_spring_eyesclosed.png',
-  owner_chibi_outfit_spring: 'images/owner/chibi_outfit_spring.png',
-
-  owner_full_outfit_summer: 'images/owner/full_outfit_summer.png',
-  owner_full_outfit_summer_blink: 'images/owner/full_outfit_summer_eyesclosed.png',
-  owner_chibi_outfit_summer: 'images/owner/chibi_outfit_summer.png',
-
-  owner_full_outfit_vintage: 'images/owner/full_outfit_vintage.png',
-  owner_full_outfit_vintage_blink: 'images/owner/full_outfit_vintage_eyesclosed.png',
-  owner_chibi_outfit_vintage: 'images/owner/chibi_outfit_vintage.png',
-
-  owner_full_outfit_queen: 'images/owner/full_outfit_queen.png',
-  owner_full_outfit_queen_blink: 'images/owner/full_outfit_queen_eyesclosed.png',
-  owner_chibi_outfit_queen: 'images/owner/chibi_outfit_queen.png',
-
-  // ---- 客人半身像 ----
-  customer_child:   'images/customer/child.png',
-  customer_student: 'images/customer/student.png',
-  customer_worker:  'images/customer/worker.png',
-  customer_mom:     'images/customer/mom.png',
-  customer_youth:   'images/customer/youth.png',
-  customer_couple:   'images/customer/couple.png',
-  customer_birthday: 'images/customer/birthday.png',
-  customer_blogger:  'images/customer/blogger.png',
-  customer_noble:    'images/customer/noble.png',
-  customer_collector: 'images/customer/collector.png',
-  customer_athlete:   'images/customer/athlete.png',
-  customer_mystery:   'images/customer/mystery.png',
-  customer_celebrity: 'images/customer/celebrity.png',
-
   // ---- UI 图标 ----
   icon_energy: 'images/ui/icon_energy.png',
   icon_coin:   'images/ui/icon_coin.png',
@@ -70,28 +31,10 @@ const MAIN_IMAGE_MAP: Record<string, string> = {
   ui_cell_selection_corners: 'images/ui/ui_cell_selection_corners.png',
   ui_order_check_badge: 'images/ui/ui_order_check_badge.png',
   ui_complete_btn: 'images/ui/ui_complete_btn.png',
-  icon_hualu:    'images/ui/icon_hualu.png',
   icon_huayuan:  'images/ui/icon_huayuan.png',
   icon_furniture: 'images/ui/icon_furniture.png',
   icon_dress:     'images/ui/icon_dress.png',
   icon_checkin:   'images/ui/icon_checkin.png',
-  /** NB2 签到 UI：品红抠图裁边；里程碑礼包为 2×2 切分 */
-  checkin_title_banner: 'images/ui/checkin_title_banner.png',
-  checkin_milestone_panel: 'images/ui/checkin_milestone_panel.png',
-  checkin_progress_track: 'images/ui/checkin_progress_track.png',
-  checkin_card_future: 'images/ui/checkin_card_future.png',
-  checkin_card_today: 'images/ui/checkin_card_today.png',
-  checkin_card_signed: 'images/ui/checkin_card_signed.png',
-  checkin_card_day7: 'images/ui/checkin_card_day7.png',
-  checkin_milestone_gift_1: 'images/ui/checkin_milestone_gift_1.png',
-  checkin_milestone_gift_2: 'images/ui/checkin_milestone_gift_2.png',
-  checkin_milestone_gift_3: 'images/ui/checkin_milestone_gift_3.png',
-  checkin_milestone_gift_4: 'images/ui/checkin_milestone_gift_4.png',
-  /** NB2 花语彩蛋弹窗：品红抠图裁边 */
-  flower_egg_title_banner: 'images/ui/flower_egg_title_banner.png',
-  flower_egg_btn_claim: 'images/ui/flower_egg_btn_claim.png',
-  flower_egg_card_bg: 'images/ui/flower_egg_card_bg.png',
-  flower_egg_reward_bg: 'images/ui/flower_egg_reward_bg.png',
   icon_quest:     'images/ui/icon_quest.png',
   /** 挑战关卡入口占位（正式图标就绪后替换路径或 key） */
   icon_challenge: 'images/ui/icon_level_badge.png',
@@ -107,35 +50,88 @@ const MAIN_IMAGE_MAP: Record<string, string> = {
   cell_peek:      'images/ui/cell_peek.png',
   cell_key:       'images/ui/cell_key.png',
   shop_scene_bg:  'images/ui/shop_scene_bg.png',
-  /** NB2 花篮仓库整屏底图（v2：无关闭钮/黄条/格线/底按钮，品红已抠底） */
-  warehouse_panel_bg: 'images/ui/warehouse_panel_bg.png',
-  /** NB2 拆件：仓库弹窗右上角关闭钮（来自 warehouse_nb2_close_btn_1x1） */
-  warehouse_close_btn: 'images/ui/warehouse_close_btn.png',
-  /** 仓库未解锁格：金色挂锁图标 `minigame/images/ui/warehouse_slot_lock.png` */
-  warehouse_slot_lock: 'images/ui/warehouse_slot_lock.png',
-  /** 合成线弹窗标题彩带（桃/珊瑚渐变，原版） */
-  merge_chain_ribbon: 'images/ui/merge_chain_ribbon.png',
   /** 仅底栏 ItemInfoBar 叶形标题条（与合成线弹窗彩带分离） */
   item_info_leaf_bar: 'images/ui/item_info_leaf_bar.png',
-  merge_chain_panel: 'images/ui/merge_chain_panel.png',
-  /** NB2 花店装修抽屉弹层底图（deco_panel_main_panel_nb2 品红抠图裁边） */
-  deco_panel_popup_frame: 'images/ui/deco_panel_popup_frame.png',
-  /** NB2 家具/房间风格卡底框（deco_panel_furniture_card_nb2 抠图裁边） */
-  deco_furniture_card: 'images/ui/deco_furniture_card.png',
-  /** 可选：装修专用顶栏彩带资源（花店装修 UI 现复用 `merge_chain_ribbon`） */
-  deco_panel_title_ribbon: 'images/ui/deco_panel_title_ribbon.png',
-  /** 底部物品信息栏标题彩带（与合成线/装修顶栏资源解耦） */
-  item_info_title_ribbon: 'images/ui/item_info_title_ribbon.png',
-  /** 花店装修家具卡底部：1 使用中 / 2 待使用(可装备) / 3 购买花愿（assets/button 1–3 抠图） */
-  deco_card_btn_1: 'images/ui/deco_card_btn_1.png',
-  deco_card_btn_2: 'images/ui/deco_card_btn_2.png',
-  deco_card_btn_3: 'images/ui/deco_card_btn_3.png',
-  deco_card_btn_4: 'images/ui/deco_card_btn_4.png',
-  /** 家具/房间卡稀有度角标（button/tag.png 2×2 切分抠图） */
-  deco_rarity_tag_common: 'images/ui/deco_rarity_tag_common.png',
-  deco_rarity_tag_fine: 'images/ui/deco_rarity_tag_fine.png',
-  deco_rarity_tag_rare: 'images/ui/deco_rarity_tag_rare.png',
-  deco_rarity_tag_limited: 'images/ui/deco_rarity_tag_limited.png',
+};
+
+// ================================================================
+// chars 分包：店主 + 客人（需先 loadSubpackage('chars')）
+// ================================================================
+const CHARS_IMAGE_MAP: Record<string, string> = {
+  owner_chibi_default:  'subpkg_chars/images/owner/chibi_default.png',
+  owner_full_default:   'subpkg_chars/images/owner/full_default.png',
+  owner_full_default_blink: 'subpkg_chars/images/owner/full_default_eyesclosed.png',
+
+  owner_full_outfit_florist: 'subpkg_chars/images/owner/full_outfit_florist.png',
+  owner_full_outfit_florist_blink: 'subpkg_chars/images/owner/full_outfit_florist_eyesclosed.png',
+  owner_chibi_outfit_florist: 'subpkg_chars/images/owner/chibi_outfit_florist.png',
+
+  owner_full_outfit_spring: 'subpkg_chars/images/owner/full_outfit_spring.png',
+  owner_full_outfit_spring_blink: 'subpkg_chars/images/owner/full_outfit_spring_eyesclosed.png',
+  owner_chibi_outfit_spring: 'subpkg_chars/images/owner/chibi_outfit_spring.png',
+
+  owner_full_outfit_summer: 'subpkg_chars/images/owner/full_outfit_summer.png',
+  owner_full_outfit_summer_blink: 'subpkg_chars/images/owner/full_outfit_summer_eyesclosed.png',
+  owner_chibi_outfit_summer: 'subpkg_chars/images/owner/chibi_outfit_summer.png',
+
+  owner_full_outfit_vintage: 'subpkg_chars/images/owner/full_outfit_vintage.png',
+  owner_full_outfit_vintage_blink: 'subpkg_chars/images/owner/full_outfit_vintage_eyesclosed.png',
+  owner_chibi_outfit_vintage: 'subpkg_chars/images/owner/chibi_outfit_vintage.png',
+
+  owner_full_outfit_queen: 'subpkg_chars/images/owner/full_outfit_queen.png',
+  owner_full_outfit_queen_blink: 'subpkg_chars/images/owner/full_outfit_queen_eyesclosed.png',
+  owner_chibi_outfit_queen: 'subpkg_chars/images/owner/chibi_outfit_queen.png',
+
+  customer_child:   'subpkg_chars/images/customer/child.png',
+  customer_student: 'subpkg_chars/images/customer/student.png',
+  customer_worker:  'subpkg_chars/images/customer/worker.png',
+  customer_mom:     'subpkg_chars/images/customer/mom.png',
+  customer_youth:   'subpkg_chars/images/customer/youth.png',
+  customer_couple:   'subpkg_chars/images/customer/couple.png',
+  customer_birthday: 'subpkg_chars/images/customer/birthday.png',
+  customer_blogger:  'subpkg_chars/images/customer/blogger.png',
+  customer_noble:    'subpkg_chars/images/customer/noble.png',
+  customer_collector: 'subpkg_chars/images/customer/collector.png',
+  customer_athlete:   'subpkg_chars/images/customer/athlete.png',
+  customer_mystery:   'subpkg_chars/images/customer/mystery.png',
+  customer_celebrity: 'subpkg_chars/images/customer/celebrity.png',
+};
+
+// ================================================================
+// panels 分包：大卡面 UI（需先 loadSubpackage('panels')）
+// ================================================================
+const PANELS_IMAGE_MAP: Record<string, string> = {
+  checkin_title_banner: 'subpkg_panels/images/ui/checkin_title_banner.png',
+  checkin_milestone_panel: 'subpkg_panels/images/ui/checkin_milestone_panel.png',
+  checkin_card_future: 'subpkg_panels/images/ui/checkin_card_future.png',
+  checkin_card_today: 'subpkg_panels/images/ui/checkin_card_today.png',
+  checkin_card_signed: 'subpkg_panels/images/ui/checkin_card_signed.png',
+  checkin_card_day7: 'subpkg_panels/images/ui/checkin_card_day7.png',
+  checkin_milestone_gift_1: 'subpkg_panels/images/ui/checkin_milestone_gift_1.png',
+  checkin_milestone_gift_2: 'subpkg_panels/images/ui/checkin_milestone_gift_2.png',
+  checkin_milestone_gift_3: 'subpkg_panels/images/ui/checkin_milestone_gift_3.png',
+  checkin_milestone_gift_4: 'subpkg_panels/images/ui/checkin_milestone_gift_4.png',
+  flower_egg_title_banner: 'subpkg_panels/images/ui/flower_egg_title_banner.png',
+  flower_egg_btn_claim: 'subpkg_panels/images/ui/flower_egg_btn_claim.png',
+  flower_egg_card_bg: 'subpkg_panels/images/ui/flower_egg_card_bg.png',
+  flower_egg_reward_bg: 'subpkg_panels/images/ui/flower_egg_reward_bg.png',
+  warehouse_panel_bg: 'subpkg_panels/images/ui/warehouse_panel_bg.png',
+  warehouse_close_btn: 'subpkg_panels/images/ui/warehouse_close_btn.png',
+  warehouse_slot_lock: 'subpkg_panels/images/ui/warehouse_slot_lock.png',
+  merge_chain_ribbon: 'subpkg_panels/images/ui/merge_chain_ribbon.png',
+  merge_chain_panel: 'subpkg_panels/images/ui/merge_chain_panel.png',
+  deco_panel_popup_frame: 'subpkg_panels/images/ui/deco_panel_popup_frame.png',
+  deco_furniture_card: 'subpkg_panels/images/ui/deco_furniture_card.png',
+  deco_panel_title_ribbon: 'subpkg_panels/images/ui/deco_panel_title_ribbon.png',
+  item_info_title_ribbon: 'subpkg_panels/images/ui/item_info_title_ribbon.png',
+  deco_card_btn_1: 'subpkg_panels/images/ui/deco_card_btn_1.png',
+  deco_card_btn_2: 'subpkg_panels/images/ui/deco_card_btn_2.png',
+  deco_card_btn_3: 'subpkg_panels/images/ui/deco_card_btn_3.png',
+  deco_card_btn_4: 'subpkg_panels/images/ui/deco_card_btn_4.png',
+  deco_rarity_tag_common: 'subpkg_panels/images/ui/deco_rarity_tag_common.png',
+  deco_rarity_tag_fine: 'subpkg_panels/images/ui/deco_rarity_tag_fine.png',
+  deco_rarity_tag_rare: 'subpkg_panels/images/ui/deco_rarity_tag_rare.png',
+  deco_rarity_tag_limited: 'subpkg_panels/images/ui/deco_rarity_tag_limited.png',
 };
 
 // ================================================================
@@ -256,6 +252,12 @@ const ITEMS_IMAGE_MAP: Record<string, string> = {
   chest_3: 'subpkg_items/images/chest/chest_3.png',
   chest_4: 'subpkg_items/images/chest/chest_4.png',
   chest_5: 'subpkg_items/images/chest/chest_5.png',
+
+  // ---- 红包 4 档（工具线画风 1:1 白底生图 + rembg，见 docs/prompt/hongbao_*_nb2_prompt.txt）----
+  hongbao_1: 'subpkg_items/images/hongbao/hongbao_1.png',
+  hongbao_2: 'subpkg_items/images/hongbao/hongbao_2.png',
+  hongbao_3: 'subpkg_items/images/hongbao/hongbao_3.png',
+  hongbao_4: 'subpkg_items/images/hongbao/hongbao_4.png',
 };
 
 // ================================================================
@@ -264,7 +266,7 @@ const ITEMS_IMAGE_MAP: Record<string, string> = {
 const DECO_IMAGE_MAP: Record<string, string> = {
   // ---- 花店建筑场景 ----
   house_shop: 'subpkg_deco/images/house/shop.png',
-  house_bg:   'subpkg_deco/images/house/bg.png',
+  house_bg:   'subpkg_deco/images/house/bg.jpg',
 
   // ---- 装修家具素材 room_items (36张) ----
   ...buildRoomMap('room', 36),
@@ -272,7 +274,7 @@ const DECO_IMAGE_MAP: Record<string, string> = {
   // ---- 装修家具素材 room2_items (36张) ----
   ...buildRoomMap('room2', 36),
 
-  // ---- 新家具素材 furniture/ (35张, 已扣底) ----
+  // ---- 新家具素材 furniture/ (含 NB2 扩展，已扣底) ----
   // 花架
   shelf_wood:    'subpkg_deco/images/furniture/shelf_wood.png',
   shelf_step:    'subpkg_deco/images/furniture/shelf_step.png',
@@ -280,18 +282,29 @@ const DECO_IMAGE_MAP: Record<string, string> = {
   shelf_iron:    'subpkg_deco/images/furniture/shelf_iron.png',
   shelf_glass:   'subpkg_deco/images/furniture/shelf_glass.png',
   shelf_spring:  'subpkg_deco/images/furniture/shelf_spring.png',
+  shelf_terracotta: 'subpkg_deco/images/furniture/shelf_terracotta.png',
   // 桌台
   table_counter: 'subpkg_deco/images/furniture/table_counter.png',
   table_drawer:  'subpkg_deco/images/furniture/table_drawer.png',
   table_work:    'subpkg_deco/images/furniture/table_work.png',
   table_marble:  'subpkg_deco/images/furniture/table_marble.png',
   table_autumn:  'subpkg_deco/images/furniture/table_autumn.png',
+  table_wrap_station: 'subpkg_deco/images/furniture/table_wrap_station.png',
+  table_rattan_twoset: 'subpkg_deco/images/furniture/table_rattan_twoset.png',
+  table_round_cafe: 'subpkg_deco/images/furniture/table_round_cafe.png',
+  table_square_bistro: 'subpkg_deco/images/furniture/table_square_bistro.png',
+  table_side_round: 'subpkg_deco/images/furniture/table_side_round.png',
   // 灯具
   light_desk:    'subpkg_deco/images/furniture/light_desk.png',
   light_floor:   'subpkg_deco/images/furniture/light_floor.png',
   light_pendant: 'subpkg_deco/images/furniture/light_pendant.png',
   light_crystal: 'subpkg_deco/images/furniture/light_crystal.png',
   light_summer:  'subpkg_deco/images/furniture/light_summer.png',
+  light_plant_strip: 'subpkg_deco/images/furniture/light_plant_strip.png',
+  light_radio_vintage: 'subpkg_deco/images/furniture/light_radio_vintage.png',
+  light_fan_desk: 'subpkg_deco/images/furniture/light_fan_desk.png',
+  light_kettle_pastel: 'subpkg_deco/images/furniture/light_kettle_pastel.png',
+  light_humidifier_cute: 'subpkg_deco/images/furniture/light_humidifier_cute.png',
   // 摆件
   orn_pot:       'subpkg_deco/images/furniture/orn_pot.png',
   orn_vase:      'subpkg_deco/images/furniture/orn_vase.png',
@@ -301,6 +314,13 @@ const DECO_IMAGE_MAP: Record<string, string> = {
   orn_fireplace: 'subpkg_deco/images/furniture/orn_fireplace.png',
   orn_pumpkin:   'subpkg_deco/images/furniture/orn_pumpkin.png',
   orn_christmas: 'subpkg_deco/images/furniture/orn_christmas.png',
+  orn_window_garden: 'subpkg_deco/images/furniture/orn_window_garden.png',
+  orn_awaken_bucket: 'subpkg_deco/images/furniture/orn_awaken_bucket.png',
+  orn_floral_chest: 'subpkg_deco/images/furniture/orn_floral_chest.png',
+  orn_pastel_bench: 'subpkg_deco/images/furniture/orn_pastel_bench.png',
+  orn_lounge_chaise: 'subpkg_deco/images/furniture/orn_lounge_chaise.png',
+  orn_wood_stools_pair: 'subpkg_deco/images/furniture/orn_wood_stools_pair.png',
+  orn_rocking_chair: 'subpkg_deco/images/furniture/orn_rocking_chair.png',
   // 墙饰
   wallart_plant:  'subpkg_deco/images/furniture/wallart_plant.png',
   wallart_frame:  'subpkg_deco/images/furniture/wallart_frame.png',
@@ -308,19 +328,18 @@ const DECO_IMAGE_MAP: Record<string, string> = {
   wallart_relief: 'subpkg_deco/images/furniture/wallart_relief.png',
   wallart_spring: 'subpkg_deco/images/furniture/wallart_spring.png',
   wallart_winter: 'subpkg_deco/images/furniture/wallart_winter.png',
+  wallart_lace_curtain: 'subpkg_deco/images/furniture/wallart_lace_curtain.png',
   // 庭院
   garden_flowerbed: 'subpkg_deco/images/furniture/garden_flowerbed.png',
   garden_arbor:     'subpkg_deco/images/furniture/garden_arbor.png',
   garden_arch:      'subpkg_deco/images/furniture/garden_arch.png',
   garden_zen:       'subpkg_deco/images/furniture/garden_zen.png',
   garden_summer:    'subpkg_deco/images/furniture/garden_summer.png',
+  garden_wood_trough: 'subpkg_deco/images/furniture/garden_wood_trough.png',
 
   // ---- 房间背景 ----
   bg_room_default: 'subpkg_deco/images/house/bg_room_default.png',
   bg_room_candy_nb2: 'subpkg_deco/images/house/bg_room_candy_nb2.png',
-  bg_room_white:   'subpkg_deco/images/house/bg_room_white.png',
-  bg_room_vintage: 'subpkg_deco/images/house/bg_room_vintage.png',
-  bg_room_spring:  'subpkg_deco/images/house/bg_room_spring.png',
   bg_room_bloom_nb2: 'subpkg_deco/images/house/bg_room_bloom_nb2.png',
   bg_room_lagoon_nb2: 'subpkg_deco/images/house/bg_room_lagoon_nb2.png',
   bg_room_confetti_nb2: 'subpkg_deco/images/house/bg_room_confetti_nb2.png',
@@ -330,6 +349,8 @@ const DECO_IMAGE_MAP: Record<string, string> = {
 /** 合并后的完整映射（用于统一查询） */
 const IMAGE_MAP: Record<string, string> = {
   ...MAIN_IMAGE_MAP,
+  ...CHARS_IMAGE_MAP,
+  ...PANELS_IMAGE_MAP,
   ...ITEMS_IMAGE_MAP,
   ...DECO_IMAGE_MAP,
 };
@@ -351,6 +372,8 @@ class TextureCacheClass {
   private _failed = new Set<string>();
   private _decoLoaded = false;
   private _itemsLoaded = false;
+  private _charsLoaded = false;
+  private _panelsLoaded = false;
 
   /**
    * 预加载主包图片（UI + 角色等核心资源）
@@ -374,6 +397,34 @@ class TextureCacheClass {
 
     return Promise.all(promises).then(() => {
       console.log(`[TextureCache] 主包预加载完成: ${this._cache.size}/${total} 张纹理`);
+    });
+  }
+
+  /**
+   * 加载 chars 分包（店主 + 客人），然后预加载图片
+   */
+  loadCharsSubpackage(onProgress?: (loaded: number, total: number) => void): Promise<void> {
+    if (this._charsLoaded) {
+      return this._preloadImageMap(CHARS_IMAGE_MAP, 'chars', onProgress);
+    }
+
+    return this._loadSubpackage('chars').then(() => {
+      this._charsLoaded = true;
+      return this._preloadImageMap(CHARS_IMAGE_MAP, 'chars', onProgress);
+    });
+  }
+
+  /**
+   * 加载 panels 分包（签到/仓库/合成线/装修大卡等），然后预加载图片
+   */
+  loadPanelsSubpackage(onProgress?: (loaded: number, total: number) => void): Promise<void> {
+    if (this._panelsLoaded) {
+      return this._preloadImageMap(PANELS_IMAGE_MAP, 'panels', onProgress);
+    }
+
+    return this._loadSubpackage('panels').then(() => {
+      this._panelsLoaded = true;
+      return this._preloadImageMap(PANELS_IMAGE_MAP, 'panels', onProgress);
     });
   }
 
@@ -408,7 +459,7 @@ class TextureCacheClass {
   }
 
   /**
-   * 兼容旧接口：预加载所有资源（主包 → items 分包 → deco 分包）
+   * 兼容旧接口：预加载所有资源（主包 → chars → panels → items → deco）
    */
   preloadAll(onProgress?: (loaded: number, total: number) => void): Promise<void> {
     const totalKeys = Object.keys(IMAGE_MAP).length;
@@ -420,6 +471,8 @@ class TextureCacheClass {
     };
 
     return this.preloadMain(() => wrapProgress())
+      .then(() => this.loadCharsSubpackage(() => wrapProgress()))
+      .then(() => this.loadPanelsSubpackage(() => wrapProgress()))
       .then(() => this.loadItemsSubpackage(() => wrapProgress()))
       .then(() => this.loadDecoSubpackage(() => wrapProgress()))
       .then(() => {
@@ -440,6 +493,14 @@ class TextureCacheClass {
   /** items 分包是否已加载 */
   get isItemsLoaded(): boolean {
     return this._itemsLoaded;
+  }
+
+  get isCharsLoaded(): boolean {
+    return this._charsLoaded;
+  }
+
+  get isPanelsLoaded(): boolean {
+    return this._panelsLoaded;
   }
 
   /**

@@ -40,7 +40,7 @@ class DressUpManagerClass {
     }));
   }
 
-  /** 花露购买解锁，成功后自动装备 */
+  /** 花愿购买解锁，成功后自动装备 */
   unlock(outfitId: string): boolean {
     if (this._unlocked.has(outfitId)) return false;
 
@@ -50,9 +50,12 @@ class DressUpManagerClass {
     const req = checkRequirement(outfit.unlockRequirement);
     if (!req.met) return false;
 
-    if (outfit.hualuCost > 0) {
-      if (CurrencyManager.state.hualu < outfit.hualuCost) return false;
-      CurrencyManager.addHualu(-outfit.hualuCost);
+    if (outfit.huayuanCost > 0) {
+      if (CurrencyManager.state.huayuan < outfit.huayuanCost) return false;
+      CurrencyManager.addHuayuan(-outfit.huayuanCost);
+    }
+    if (outfit.starValue > 0) {
+      CurrencyManager.addStar(outfit.starValue);
     }
 
     this._unlocked.add(outfitId);

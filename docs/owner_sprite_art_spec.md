@@ -52,18 +52,18 @@ python3 scripts/gen_owner_outfit_panels.py outfit_spring \
   --full-only
 ```
 
-可省略第三个参数（P3 提示词路径）。仍会写入 `minigame/images/owner/full_<id>.png` 与 `full_<id>_eyesclosed.png`，**不会**重写 `chibi_<id>.png`。
+可省略第三个参数（P3 提示词路径）。仍会写入 `minigame/subpkg_chars/images/owner/full_<id>.png` 与 `full_<id>_eyesclosed.png`，**不会**重写 `chibi_<id>.png`。
 
 ## 1. 生产流程
 
-- 使用 **三张竖图 9:16** 分别生成（见 `docs/prompt/owner_outfit_*_p{1,2,3}_*.txt`）。**P2** 以 **P1 全身** 为参考（闭眼与睁眼一致）。**P3（半身）**：`outfit_default` 仍以 P1 为参考；**其余套装**以已通过验收的 **`minigame/images/owner/chibi_default.png`** 为 Gemini 参考图，强制对齐默认半身的画风与胸像比例，避免 P1 的 SD 全身比把半身带偏。**若暂不需要半身，可加 `--full-only` 只出 P1+P2**（见 §0.6）。若仓库中缺少 `chibi_default.png`，脚本会回退为 P1 参考并打印警告。
+- 使用 **三张竖图 9:16** 分别生成（见 `docs/prompt/owner_outfit_*_p{1,2,3}_*.txt`）。**P2** 以 **P1 全身** 为参考（闭眼与睁眼一致）。**P3（半身）**：`outfit_default` 仍以 P1 为参考；**其余套装**以已通过验收的 **`minigame/subpkg_chars/images/owner/chibi_default.png`** 为 Gemini 参考图，强制对齐默认半身的画风与胸像比例，避免 P1 的 SD 全身比把半身带偏。**若暂不需要半身，可加 `--full-only` 只出 P1+P2**（见 §0.6）。若仓库中缺少 `chibi_default.png`，脚本会回退为 P1 参考并打印警告。
 - 脚本：`scripts/gen_owner_outfit_panels.py`（品红底 → 缩放 → **色键去底**，仅作自动化初稿）。
 - **入库尺寸**：全身 `197×384`，半身 `249×384`（与现有 `TextureCache` 一致）。
 
 ### 1.1 抠底入库（全身 + 半身，强制）
 
 **`gen_owner_outfit_panels.py` 里的品红缩放 + 色键仅为自动化初稿，不得作为最终入库资源。**  
-凡写入 `minigame/images/owner/` 的 **`full_*.png`（睁眼/闭眼）与 `chibi_*.png`（半身）**，在入库 / 提交前 **一律** 再经 **`rembg` + `birefnet-general`**（BiRefNet 通用高精度，本项目抠图**唯一默认档**）。
+凡写入 `minigame/subpkg_chars/images/owner/` 的 **`full_*.png`（睁眼/闭眼）与 `chibi_*.png`（半身）**，在入库 / 提交前 **一律** 再经 **`rembg` + `birefnet-general`**（BiRefNet 通用高精度，本项目抠图**唯一默认档**）。
 
 - **禁止**仅以品红/粉色色键、魔棒或按背景色抠图作为最终去底（易留品红边、吃发丝；API 若非品红底则色键失效）。
 - **全项目一致**：工具图标、宝箱等其它资源凡用 rembg，**默认同样 `birefnet-general`**，勿改用 lite 以免边质量不一致。
@@ -86,8 +86,8 @@ REMBG_BATCH=/path/to/remove-background/scripts/rembg_batch.py ./scripts/rembg_ow
 **单张示例**：
 
 ```bash
-python3 ~/.cursor/skills/remove-background/scripts/rembg_single.py minigame/images/owner/chibi_outfit_florist.png \
-  -o minigame/images/owner/chibi_outfit_florist.png -m birefnet-general
+python3 ~/.cursor/skills/remove-background/scripts/rembg_single.py minigame/subpkg_chars/images/owner/chibi_outfit_florist.png \
+  -o minigame/subpkg_chars/images/owner/chibi_outfit_florist.png -m birefnet-general
 ```
 
 （建议先输出到临时文件再 `mv` 覆盖。）**手工 rembg 后须再跑** `python3 scripts/owner_sprite_post_rembg.py <同一路径>`，与批量脚本一致。
@@ -101,7 +101,7 @@ python3 ~/.cursor/skills/remove-background/scripts/rembg_single.py minigame/imag
 批量脚本在写回前会再跑 **`scripts/owner_sprite_post_rembg.py`**（与 `process_board_ui_nb2.py` 的 chroma 清理同思路）：在仍可见的像素上检测品红倾向并 **置透明**。若个别资源仍明显，可单张再执行：
 
 ```bash
-python3 scripts/owner_sprite_post_rembg.py minigame/images/owner/chibi_outfit_summer.png
+python3 scripts/owner_sprite_post_rembg.py minigame/subpkg_chars/images/owner/chibi_outfit_summer.png
 ```
 
 ### 1.3 半身像（P3）生成方法（固化，须遵守）
@@ -111,7 +111,7 @@ python3 scripts/owner_sprite_post_rembg.py minigame/images/owner/chibi_outfit_su
 | 步骤 | 要求 |
 |------|------|
 | 模型与画幅 | 由 `scripts/gen_owner_outfit_panels.py` 调用 Gemini **`gemini-3.1-flash-image-preview`**，**`--aspect-ratio 9:16`**（与 NB2 流程一致） |
-| P3 参考图 | **`outfit_default`**：附 **P1 全身** 缩略图。其余 **`outfit_*`**：附 **`minigame/images/owner/chibi_default.png`**（已通过验收的默认半身）；仓库缺该文件时脚本回退 P1 并 **警告** |
+| P3 参考图 | **`outfit_default`**：附 **P1 全身** 缩略图。其余 **`outfit_*`**：附 **`minigame/subpkg_chars/images/owner/chibi_default.png`**（已通过验收的默认半身）；仓库缺该文件时脚本回退 P1 并 **警告** |
 | 英文提示词 | 每套 **`docs/prompt/owner_outfit_<id>_p3_chibi_nb2_prompt.txt`**，须含「以默认半身为画风锚、仅换装发」等约束（与仓库现稿一致） |
 | 缩放与初稿去底 | API 出图为 **9:16**，入库 **249×384（半身）** / **197×384（全身）** 的框 **比 9:16 更宽**，须 **等比缩放后居中 letterbox** 进目标画布（`gen_owner_outfit_panels.py` 内 `fit_resize_to_canvas`），**禁止** 直接非等比 `resize` 以免半身横向拉扁；再品红色键 → **仅自动化初稿** |
 | 最终入库 | **必须** `./scripts/rembg_owner_full_sprites.sh`（**`birefnet-general`** + **§1.2** 品红渗色清理） |

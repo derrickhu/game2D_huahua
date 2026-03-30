@@ -1,7 +1,8 @@
 /**
  * 离线挂机收益系统
  *
- * 离线期间按规则产出收纳框物品 + 花愿；体力仅走在线自然回复，不计入本系统。
+ * 离线期间按规则产出收纳框物品 + 花愿；体力自然回复在读档时由 CurrencyManager
+ * 按存档 timestamp 与 STAMINA_RECOVER_INTERVAL 结算，与在线 ticker 规则一致。
  * 回归时展示「离线收益报告」，领取无广告翻倍。
  */
 import { EventBus } from '@/core/EventBus';
@@ -22,7 +23,7 @@ export interface OfflineReward {
   offlineSeconds: number;
   /** 产出的物品 [{itemId, name}] */
   producedItems: { itemId: string; name: string }[];
-  /** 花愿（体力由在线/自然回复单独结算，不计入离线） */
+  /** 花愿（体力不计入本面板，由 SaveManager 读档时单独结算） */
   huayuanEarned: number;
 }
 

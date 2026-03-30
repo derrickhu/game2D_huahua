@@ -185,7 +185,7 @@ export class RegularCustomerPanel extends PIXI.Container {
       } else {
         rowBg.beginFill(0x000000, 0.001);
       }
-      rowBg.drawRoundedRect(0, y, LIST_W, 52, 8);
+      rowBg.drawRoundedRect(0, y, LIST_W, 60, 8);
       rowBg.endFill();
       rowBg.eventMode = 'static';
       rowBg.cursor = 'pointer';
@@ -195,7 +195,7 @@ export class RegularCustomerPanel extends PIXI.Container {
       // emoji 头像
       const emoji = new PIXI.Text(type.emoji, { fontSize: 22 });
       emoji.anchor.set(0.5, 0.5);
-      emoji.position.set(22, y + 26);
+      emoji.position.set(22, y + 30);
       this._listContainer.addChild(emoji);
 
       // 名字
@@ -209,14 +209,16 @@ export class RegularCustomerPanel extends PIXI.Container {
       name.position.set(44, y + 18);
       this._listContainer.addChild(name);
 
-      // 好感度标签
+      // 好感度标签 + 花愿加成说明
       const favorColor = FAVOR_LEVEL_COLORS[data.favorLevel];
       const favorName = FAVOR_LEVEL_NAMES[data.favorLevel];
+      const hyBonus = RegularCustomerManager.getRewardBonus(type.id);
+      const hyPct = Math.round(hyBonus * 100);
 
       if (data.visitCount > 0) {
         const badge = new PIXI.Graphics();
         badge.beginFill(favorColor, 0.2);
-        badge.drawRoundedRect(44, y + 30, 60, 16, 4);
+        badge.drawRoundedRect(44, y + 26, 72, 15, 4);
         badge.endFill();
         this._listContainer.addChild(badge);
 
@@ -226,17 +228,35 @@ export class RegularCustomerPanel extends PIXI.Container {
           fontFamily: FONT_FAMILY,
           fontWeight: 'bold',
         });
-        favorText.anchor.set(0.5, 0.5);
-        favorText.position.set(74, y + 38);
+        favorText.anchor.set(0, 0.5);
+        favorText.position.set(48, y + 33);
         this._listContainer.addChild(favorText);
+
+        const hyLine = new PIXI.Text(
+          hyPct > 0 ? `订单花愿 +${hyPct}%` : '订单花愿暂无加成',
+          {
+            fontSize: 8,
+            fill: hyPct > 0 ? 0xE65100 : 0xAAAAAA,
+            fontFamily: FONT_FAMILY,
+          },
+        );
+        hyLine.position.set(44, y + 44);
+        this._listContainer.addChild(hyLine);
       } else {
         const noVisit = new PIXI.Text('未来访', {
           fontSize: 9,
           fill: 0xCCCCCC,
           fontFamily: FONT_FAMILY,
         });
-        noVisit.position.set(44, y + 32);
+        noVisit.position.set(44, y + 28);
         this._listContainer.addChild(noVisit);
+        const hyHint = new PIXI.Text('完成订单累计好感解锁花愿加成', {
+          fontSize: 8,
+          fill: 0xCCCCCC,
+          fontFamily: FONT_FAMILY,
+        });
+        hyHint.position.set(44, y + 42);
+        this._listContainer.addChild(hyHint);
       }
 
       // 有未读故事红点
@@ -244,12 +264,12 @@ export class RegularCustomerPanel extends PIXI.Container {
       if (unlockable) {
         const dot = new PIXI.Graphics();
         dot.beginFill(0xFF3333);
-        dot.drawCircle(LIST_W - 12, y + 16, 5);
+        dot.drawCircle(LIST_W - 12, y + 18, 5);
         dot.endFill();
         this._listContainer.addChild(dot);
       }
 
-      y += 56;
+      y += 64;
     }
   }
 
@@ -367,17 +387,41 @@ export class RegularCustomerPanel extends PIXI.Container {
 
     y += 42;
 
-    // 奖励加成
+    // 订单花愿加成（始终说明，与交付公式一致）
     const bonus = RegularCustomerManager.getRewardBonus(typeId);
-    if (bonus > 0) {
-      const bonusText = new PIXI.Text(`📈 订单奖励加成 +${Math.round(bonus * 100)}%`, {
+    const pct = Math.round(bonus * 100);
+    const ruleText = new PIXI.Text('完成订单时：花愿 × (1 + 下方加成比例)。', {
+      fontSize: 10,
+      fill: COLORS.TEXT_LIGHT,
+      fontFamily: FONT_FAMILY,
+    });
+    ruleText.position.set(0, y);
+    this._detailContainer.addChild(ruleText);
+    y += 18;
+
+    const bonusText = new PIXI.Text(
+      pct > 0 ? `当前订单花愿加成：+${pct}%` : '当前订单花愿加成：无（陌生关系）',
+      {
         fontSize: 12,
-        fill: 0xFF9800,
+        fill: pct > 0 ? 0xE65100 : COLORS.TEXT_LIGHT,
+        fontFamily: FONT_FAMILY,
+        fontWeight: 'bold',
+      },
+    );
+    bonusText.position.set(0, y);
+    this._detailContainer.addChild(bonusText);
+    y += 22;
+
+    const nextHint = RegularCustomerManager.getNextRewardBonusHint(typeId);
+    if (nextHint) {
+      const nextText = new PIXI.Text(nextHint, {
+        fontSize: 10,
+        fill: COLORS.TEXT_LIGHT,
         fontFamily: FONT_FAMILY,
       });
-      bonusText.position.set(0, y);
-      this._detailContainer.addChild(bonusText);
-      y += 22;
+      nextText.position.set(0, y);
+      this._detailContainer.addChild(nextText);
+      y += 20;
     }
 
     y += 8;
@@ -541,14 +585,10 @@ export class RegularCustomerPanel extends PIXI.Container {
   /** 根据奖励描述发放奖励 */
   private _grantStoryReward(desc: string): void {
     // 简单解析奖励描述
-    const huayuanMatch = desc.match(/(?:花愿|金币)\s*[×x]\s*(\d+)/i);
     const diamondMatch = desc.match(/钻石\s*[×x]\s*(\d+)/i);
-    const hualuMatch = desc.match(/花露\s*[×x]\s*(\d+)/i);
     const staminaMatch = desc.match(/体力\s*[×x]\s*(\d+)/i);
 
-    if (huayuanMatch) CurrencyManager.addHuayuan(parseInt(huayuanMatch[1]));
     if (diamondMatch) CurrencyManager.addDiamond(parseInt(diamondMatch[1]));
-    if (hualuMatch) CurrencyManager.addHualu(parseInt(hualuMatch[1]));
     if (staminaMatch) CurrencyManager.addStamina(parseInt(staminaMatch[1]));
 
     ToastMessage.show(`🎁 故事奖励已领取：${desc}`);

@@ -1,5 +1,5 @@
 /**
- * 升级弹窗 —— 视觉与首次解锁弹窗一致：红横幅 + 花蛋奖励条底图 + 描边透明格展示奖励 + deco 红按钮。
+ * 升级弹窗 —— 红横幅 + 花蛋奖励条底图；礼包内货币与收纳物品同一流式横排（可换行）+ 数量，无内文说明。
  */
 import * as PIXI from 'pixi.js';
 import { Game } from '@/core/Game';
@@ -21,10 +21,15 @@ export interface LevelUpPopupShowOptions {
   rewardFlyTargetGlobal?: PIXI.Point;
   /** 飞入结束（或无动画）后写入收纳盒 */
   onGrantRewardBoxItems?: (entries: Array<{ itemId: string; count: number }>) => void;
+  /** 仅预览礼包，关闭时不写入收纳盒、不播放飞入 */
+  previewOnly?: boolean;
+  /** 顶栏标题；默认「恭喜升至 N 星」 */
+  bannerTitle?: string;
 }
 
 export class LevelUpPopup extends PIXI.Container {
   private _dismissing = false;
+  private _previewOnly = false;
   private _pendingBoxItems: Array<{ itemId: string; count: number }> = [];
   private _flySources: Array<{ x: number; y: number; texKey: string; count: number }> = [];
   private _rewardFlyTargetGlobal: PIXI.Point | null = null;
@@ -43,8 +48,9 @@ export class LevelUpPopup extends PIXI.Container {
   ): void {
     this.visible = true;
     this._dismissing = false;
+    this._previewOnly = options?.previewOnly ?? false;
     this.removeChildren();
-    this._pendingBoxItems = [...(reward.rewardBoxItems ?? [])];
+    this._pendingBoxItems = this._previewOnly ? [] : [...(reward.rewardBoxItems ?? [])];
     this._flySources = [];
     this._rewardFlyTargetGlobal = options?.rewardFlyTargetGlobal ?? null;
     this._onGrantRewardBoxItems = options?.onGrantRewardBoxItems;
@@ -66,39 +72,72 @@ export class LevelUpPopup extends PIXI.Container {
     this.addChild(mask);
 
     let curY = H * 0.155;
-    curY = this._drawTitleBanner(this, cx, curY, `升级 Lv.${level}`);
+    const bannerTitle = options?.bannerTitle ?? `恭喜升至 ${level}星`;
+    curY = this._drawTitleBanner(this, cx, curY, bannerTitle);
 
     curY += 16;
 
     const barW = Math.min(520, W - 36);
     const rewardTex = TextureCache.get('flower_egg_reward_bg');
 
-    type RowItem = { texKey: string; amount: number };
-    const rowItems: RowItem[] = [];
-    if (huayuan > 0) rowItems.push({ texKey: 'icon_huayuan', amount: huayuan });
-    if (stamina > 0) rowItems.push({ texKey: 'icon_energy', amount: stamina });
-    if (diamond > 0) rowItems.push({ texKey: 'icon_gem', amount: diamond });
-
-    const n = rowItems.length;
-    const CELL = n >= 3 ? 54 : 68;
-    const GAP = n >= 3 ? 16 : 26;
-    const BOX_CELL = 56;
-    const BOX_GAP = 18;
-    const boxCount = rewardBoxItems.length;
-
-    let barH = 150;
-    if (rewardTex) {
-      barH = Math.round((barW * rewardTex.height) / rewardTex.width);
-      barH = Math.max(188, Math.min(228, barH));
-    } else {
-      barH = 172;
+    type RewardEntry = { texKey: string; amount: number; flyToBox: boolean };
+    const entries: RewardEntry[] = [];
+    if (huayuan > 0) entries.push({ texKey: 'icon_huayuan', amount: huayuan, flyToBox: false });
+    if (stamina > 0) entries.push({ texKey: 'icon_energy', amount: stamina, flyToBox: false });
+    if (diamond > 0) entries.push({ texKey: 'icon_gem', amount: diamond, flyToBox: false });
+    for (const { itemId, count } of rewardBoxItems) {
+      const def = ITEM_DEFS.get(itemId);
+      entries.push({ texKey: def?.icon ?? itemId, amount: count, flyToBox: true });
     }
-    const innerMin =
-      30 + 36 + (n > 0 ? CELL + 36 : 0) +
-      (boxCount > 0 ? 22 + BOX_CELL + 36 : 0) + 16;
-    barH = Math.max(barH, innerMin);
+
+    const PAD_X = 28;
+    const PAD_TOP = 22;
+    const PAD_BOT = 28;
+    const CELL = 56;
+    const HGAP = 12;
+    const VGAP = 10;
+
+    const innerLeft = cx - barW / 2 + PAD_X;
+    const innerRight = cx + barW / 2 - PAD_X;
 
     const barTop = curY;
+
+    let x = innerLeft;
+    let rowTop = barTop + PAD_TOP;
+    let rowH = 0;
+    type Placement = { cx: number; ty: number; e: RewardEntry };
+    const placements: Placement[] = [];
+
+    for (const e of entries) {
+      if (x + CELL > innerRight && x > innerLeft + 0.5) {
+        rowTop += rowH + VGAP;
+        x = innerLeft;
+        rowH = 0;
+      }
+      const cxCell = x + CELL / 2;
+      placements.push({ cx: cxCell, ty: rowTop, e });
+      if (e.flyToBox) {
+        this._flySources.push({ x: cxCell, y: rowTop + CELL / 2, texKey: e.texKey, count: e.amount });
+      }
+      rowH = Math.max(rowH, CELL + 36);
+      x += CELL + HGAP;
+    }
+
+    let barH: number;
+    if (entries.length === 0) {
+      barH = rewardTex ? Math.round((barW * rewardTex.height) / rewardTex.width) : 120;
+      barH = Math.max(120, Math.min(228, barH));
+    } else {
+      const contentBottom = rowTop + rowH;
+      barH = contentBottom - barTop + PAD_BOT;
+      if (rewardTex) {
+        const texH = Math.round((barW * rewardTex.height) / rewardTex.width);
+        barH = Math.max(barH, Math.max(160, Math.min(260, texH)));
+      } else {
+        barH = Math.max(barH, 140);
+      }
+    }
+
     if (rewardTex) {
       const barSp = new PIXI.Sprite(rewardTex);
       barSp.anchor.set(0.5, 0);
@@ -116,54 +155,8 @@ export class LevelUpPopup extends PIXI.Container {
       this.addChild(g);
     }
 
-    const labelText = new PIXI.Text('升级奖励', {
-      fontSize: 23,
-      fill: 0x0f2414,
-      fontFamily: FONT_FAMILY,
-      fontWeight: 'bold',
-      stroke: 0xfffef8,
-      strokeThickness: 4,
-    });
-    labelText.anchor.set(0.5, 0);
-    labelText.position.set(cx, barTop + 30);
-    this.addChild(labelText);
-
-    const cellTop = barTop + 66;
-    if (n > 0) {
-      const rowW = n * CELL + Math.max(0, n - 1) * GAP;
-      const rowLeft = cx - rowW / 2;
-      for (let i = 0; i < n; i++) {
-        const cellCx = rowLeft + CELL / 2 + i * (CELL + GAP);
-        this._drawFramedRewardCell(this, cellCx, cellTop, CELL, rowItems[i].texKey, rowItems[i].amount);
-      }
-    }
-
-    if (boxCount > 0) {
-      const afterCurrencyY = cellTop + (n > 0 ? CELL + 36 : 0) + 8;
-      const hint = new PIXI.Text('确定后将飞入奖励收纳盒', {
-        fontSize: 17,
-        fill: 0x2e4a38,
-        fontFamily: FONT_FAMILY,
-        fontWeight: 'bold',
-        stroke: 0xfffef8,
-        strokeThickness: 2.5,
-      });
-      hint.anchor.set(0.5, 0);
-      hint.position.set(cx, afterCurrencyY);
-      this.addChild(hint);
-
-      const boxRowTop = afterCurrencyY + 22;
-      const boxRowW = boxCount * BOX_CELL + Math.max(0, boxCount - 1) * BOX_GAP;
-      const boxLeft = cx - boxRowW / 2;
-      for (let i = 0; i < boxCount; i++) {
-        const { itemId, count } = rewardBoxItems[i];
-        const def = ITEM_DEFS.get(itemId);
-        const texKey = def?.icon ?? itemId;
-        const cellCx = boxLeft + BOX_CELL / 2 + i * (BOX_CELL + BOX_GAP);
-        this._drawFramedRewardCell(this, cellCx, boxRowTop, BOX_CELL, texKey, count);
-        const iconY = boxRowTop + BOX_CELL / 2;
-        this._flySources.push({ x: cellCx, y: iconY, texKey, count });
-      }
+    for (const p of placements) {
+      this._drawFramedRewardCell(this, p.cx, p.ty, CELL, p.e.texKey, p.e.amount);
     }
 
     curY = barTop + barH + 22;
@@ -182,7 +175,7 @@ export class LevelUpPopup extends PIXI.Container {
       btnSp.height = btnH;
       this.addChild(btnSp);
 
-      const btnLabel = new PIXI.Text('确定', {
+      const btnLabel = new PIXI.Text(this._previewOnly ? '知道了' : '确定', {
         fontSize: 21,
         fill: 0xffffff,
         fontFamily: FONT_FAMILY,
@@ -206,7 +199,7 @@ export class LevelUpPopup extends PIXI.Container {
       btn.drawRoundedRect(cx - btnW / 2, btnY, btnW, btnH, btnH / 2);
       btn.endFill();
       this.addChild(btn);
-      const btnLabel = new PIXI.Text('确定', {
+      const btnLabel = new PIXI.Text(this._previewOnly ? '知道了' : '确定', {
         fontSize: 20,
         fill: 0xffffff,
         fontFamily: FONT_FAMILY,
@@ -349,6 +342,7 @@ export class LevelUpPopup extends PIXI.Container {
 
     const pending = this._pendingBoxItems;
     const hasFly =
+      !this._previewOnly &&
       pending.length > 0 &&
       this._flySources.length > 0 &&
       this._rewardFlyTargetGlobal !== null &&
@@ -363,7 +357,7 @@ export class LevelUpPopup extends PIXI.Container {
       return;
     }
 
-    if (pending.length > 0) {
+    if (pending.length > 0 && !this._previewOnly) {
       this._onGrantRewardBoxItems?.(pending);
     }
     this._fadeOutAndClose();
@@ -387,6 +381,7 @@ export class LevelUpPopup extends PIXI.Container {
         this.visible = false;
         this.removeChildren();
         this._dismissing = false;
+        this._previewOnly = false;
         this._pendingBoxItems = [];
         this._flySources = [];
         this._rewardFlyTargetGlobal = null;

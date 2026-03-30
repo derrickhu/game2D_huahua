@@ -1,43 +1,37 @@
 /**
- * 等级经验管理器
+ * 等级管理器（v2 星级重构）
  *
- * 管理玩家等级、经验值、升级奖励。
- * 等级提升会增加体力上限、解锁新功能等。
+ * 等级 = 星级，由购买家具/换装累积星星驱动。
+ * 已移除：合成/订单直接给经验的旧逻辑。
+ * 升级奖励：体力 + 钻石 + 宝箱（不发花愿，防止短路循环）。
  */
 import { EventBus } from '@/core/EventBus';
 import { getLevelExtraRewards } from '@/config/LevelRewardsConfig';
-import { ITEM_DEFS } from '@/config/ItemConfig';
-import { STAMINA_MAX } from '@/config/Constants';
+import {
+  getStarLevel,
+  getStarLevelLabel,
+  getNextLevelStarRequired,
+  isSceneCompleted,
+  buildStarLevelUpReward,
+} from '@/config/StarLevelConfig';
 import { CurrencyManager } from './CurrencyManager';
 
-/** 每个等级需要的经验值（大幅拉高，确保前期也有明显积累感） */
-function expForLevel(level: number): number {
-  if (level <= 0) return 0;
-  if (level <= 5) return level * 100;           // 100, 200, 300, 400, 500
-  if (level <= 10) return level * 140 + 100;    // 940, 1080, 1220, 1360, 1500
-  if (level <= 20) return level * 200 + 300;    // 2500, 2700, …, 4300
-  return level * 320 + 500;                     // L21→7220, L30→10100
-}
-
-/** 每级升级奖励（弹窗 + 结算） */
 export interface LevelUpReward {
-  huayuan: number;
   stamina: number;
   diamond: number;
-  /** 已写入收纳盒，仅用于 UI 展示 */
   rewardBoxItems: Array<{ itemId: string; count: number }>;
 }
 
-function buildLevelUpReward(level: number): LevelUpReward {
-  const extra = getLevelExtraRewards(level);
-  const rewardBoxItems = (extra.rewardBoxItems ?? []).map(e => ({
-    itemId: e.itemId,
-    count: e.count,
-  }));
+function buildReward(newLevel: number): LevelUpReward {
+  const base = buildStarLevelUpReward(newLevel);
+  const extra = getLevelExtraRewards(newLevel);
+  const rewardBoxItems = [
+    ...base.rewardBoxItems,
+    ...(extra.rewardBoxItems ?? []),
+  ];
   return {
-    huayuan: 20 + level * 8,
-    stamina: Math.min(30, 10 + level),
-    diamond: level % 10 === 0 ? 10 : (level % 5 === 0 ? 5 : 0),
+    stamina: base.stamina,
+    diamond: base.diamond,
     rewardBoxItems,
   };
 }
@@ -51,77 +45,77 @@ class LevelManagerClass {
     this._bindEvents();
   }
 
-  /** 获取当前等级 */
   get level(): number {
     return CurrencyManager.state.level;
   }
 
-  /** 获取当前经验 */
-  get exp(): number {
-    return CurrencyManager.state.exp;
+  /** 当前累积星星 */
+  get star(): number {
+    return CurrencyManager.state.star;
   }
 
-  /** 获取当前等级所需总经验 */
-  get expToNextLevel(): number {
-    return expForLevel(this.level);
+  /** 当前星级标签（一星、二星...） */
+  get starLevelLabel(): string {
+    return getStarLevelLabel(CurrencyManager.state.sceneId, this.level);
   }
 
-  /** 获取经验进度百分比 (0-1) */
-  get expProgress(): number {
-    const needed = this.expToNextLevel;
-    if (needed <= 0) return 1;
-    return Math.min(this.exp / needed, 1);
+  /** 下一星级所需星星数，满星返回 -1 */
+  get nextLevelStarRequired(): number {
+    return getNextLevelStarRequired(CurrencyManager.state.sceneId, this.level);
   }
 
-  /** 获取体力上限（随等级提升） */
-  get staminaCap(): number {
-    return STAMINA_MAX + Math.floor(this.level / 3) * 5;
+  /** 星星进度百分比 (0-1)，满星返回 1 */
+  get starProgress(): number {
+    const next = this.nextLevelStarRequired;
+    if (next < 0) return 1;
+    const currentThreshold = this._getCurrentThreshold();
+    const range = next - currentThreshold;
+    if (range <= 0) return 1;
+    return Math.min((this.star - currentThreshold) / range, 1);
   }
 
-  /** 增加经验值并检查升级 */
-  addExp(amount: number): void {
-    CurrencyManager.addExp(amount);
-    this._checkLevelUp();
+  /** 是否已满星（当前场景） */
+  get isCompleted(): boolean {
+    return isSceneCompleted(CurrencyManager.state.sceneId, this.level);
   }
 
-  /** 绑定事件 */
+  /**
+   * 下一星级（当前星级+1）的礼包内容预览；已满星返回 null。
+   * 与实际升星时 LevelManager 发放+弹窗展示一致。
+   */
+  getNextStarLevelRewardPreview(): LevelUpReward | null {
+    const nextReq = getNextLevelStarRequired(CurrencyManager.state.sceneId, this.level);
+    if (nextReq < 0) return null;
+    return buildReward(this.level + 1);
+  }
+
+  /** @deprecated 经验系统已移除 */
+  get exp(): number { return 0; }
+  /** @deprecated */
+  get expToNextLevel(): number { return 0; }
+  /** @deprecated */
+  get expProgress(): number { return 0; }
+  /** @deprecated */
+  addExp(_amount: number): void {}
+
+  private _getCurrentThreshold(): number {
+    const sceneId = CurrencyManager.state.sceneId;
+    const prevRequired = getNextLevelStarRequired(sceneId, this.level - 1);
+    return prevRequired >= 0 ? prevRequired : 0;
+  }
+
   private _bindEvents(): void {
-    // 合成给经验
-    EventBus.on('board:merged', (_srcIdx: number, _dstIdx: number, resultId: string) => {
-      const def = ITEM_DEFS.get(resultId);
-      if (def) {
-        // 经验 = 合成产物等级 × 5
-        this.addExp(def.level * 5);
-      }
-    });
-
-    // 交付客人给经验（由订单档位决定）
-    EventBus.on('customer:delivered', (_uid: number, customer: any) => {
-      const baseExp = customer.expReward ?? (10 + (customer.slots?.length || 1) * 5);
-      this.addExp(baseExp);
-    });
-  }
-
-  /** 检查是否可以升级 */
-  private _checkLevelUp(): void {
-    while (this.exp >= this.expToNextLevel && this.expToNextLevel > 0) {
-      const needed = this.expToNextLevel;
-      CurrencyManager.setExp(CurrencyManager.state.exp - needed);
-      CurrencyManager.setLevel(CurrencyManager.state.level + 1);
-
-      const reward = buildLevelUpReward(this.level);
-      CurrencyManager.addHuayuan(reward.huayuan);
+    EventBus.on('star:levelUp', (newLevel: number, _oldLevel: number) => {
+      const reward = buildReward(newLevel);
       CurrencyManager.addStamina(reward.stamina);
       if (reward.diamond > 0) CurrencyManager.addDiamond(reward.diamond);
-
-      // 收纳盒物品在升级弹窗「飞入礼包」动画结束后再写入（MainScene 回调）
 
       const boxLog = reward.rewardBoxItems.length
         ? ` 收纳盒:${reward.rewardBoxItems.map(b => `${b.itemId}×${b.count}`).join(',')}`
         : '';
-      console.log(`[Level] 升级！等级 ${this.level}, 奖励: 花愿+${reward.huayuan} 体力+${reward.stamina} 钻石+${reward.diamond}${boxLog}`);
-      EventBus.emit('level:up', this.level, reward);
-    }
+      console.log(`[Level] 星级提升！${newLevel}星, 奖励: 体力+${reward.stamina} 钻石+${reward.diamond}${boxLog}`);
+      EventBus.emit('level:up', newLevel, reward);
+    });
   }
 }
 

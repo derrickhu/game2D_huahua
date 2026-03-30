@@ -10,10 +10,12 @@ import { Game } from '@/core/Game';
 import { CELL_GAP, DESIGN_WIDTH, COLORS, FONT_FAMILY } from '@/config/Constants';
 import { ITEM_DEFS, Category, FlowerLine } from '@/config/ItemConfig';
 import { WarehouseManager } from '@/managers/WarehouseManager';
+import { BuildingManager } from '@/managers/BuildingManager';
 import { BoardManager } from '@/managers/BoardManager';
 import { CurrencyManager } from '@/managers/CurrencyManager';
+import { findBoardProducerDef } from '@/config/BuildingConfig';
 import { TextureCache } from '@/utils/TextureCache';
-import { createToolEnergySprite, isBoardToolInteract } from '@/utils/ToolEnergyBadge';
+import { bringToolEnergyToFront, createToolEnergySprite } from '@/utils/ToolEnergyBadge';
 import { ToolSparkleLayer } from '@/utils/ToolSparkleLayer';
 import { ToastMessage } from './ToastMessage';
 import { ConfirmDialog } from './ConfirmDialog';
@@ -510,10 +512,15 @@ export class WarehousePanel extends PIXI.Container {
           sprite.anchor.set(0.5, 0.5);
           sprite.position.set(s / 2, s / 2);
           slot.addChild(sprite);
-          if (isBoardToolInteract(def.interactType)) {
+          // 与 ItemView 一致：仅 BOARD_PRODUCER 且 canProduce 才叠闪光与体力角标
+          const producerDef = findBoardProducerDef(def.id);
+          if (producerDef?.canProduce) {
             slot.addChild(new ToolSparkleLayer(s, s));
             const energy = createToolEnergySprite(s, s, { maxSideFrac: 0.30, pad: 4 });
-            if (energy) slot.addChild(energy);
+            if (energy) {
+              slot.addChild(energy);
+              bringToolEnergyToFront(slot, energy);
+            }
           }
         } else {
           const iconColor = this._getLineColor(def.line);
@@ -558,9 +565,10 @@ export class WarehousePanel extends PIXI.Container {
       return;
     }
 
-    const itemId = WarehouseManager.retrieveItem(index);
-    if (itemId) {
-      BoardManager.placeItem(emptyCell, itemId);
+    const entry = WarehouseManager.withdrawSlot(index);
+    if (entry) {
+      BoardManager.placeItem(emptyCell, entry.itemId);
+      BuildingManager.restoreStateFromWarehouse(emptyCell, entry.itemId, entry.toolState);
       ToastMessage.show('已取出到棋盘');
     }
   }

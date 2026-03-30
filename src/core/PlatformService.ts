@@ -111,7 +111,7 @@ class PlatformServiceClass {
 
   /**
    * 长震动（400ms）— 强调反馈
-   * 适用场景：升级、狂热模式、重要成就
+   * 适用场景：升级、重要成就
    */
   vibrateLong(): void {
     try {
@@ -259,11 +259,28 @@ class PlatformServiceClass {
     } catch (_) {}
   }
 
-  /** 设置剪贴板 */
+  /**
+   * 写入剪贴板（异步 API，失败走 fail 回调，不会 throw）
+   * 微信需：公众平台 → 设置 → 基本设置 → 用户隐私保护指引 中声明剪贴板用途，
+   * 否则 fail（如 errno 1026）；仍可从开发者工具 Console 手动复制。
+   */
   setClipboardData(data: string): void {
     try {
-      this._api?.setClipboardData?.({ data });
-    } catch (_) {}
+      const fn = this._api?.setClipboardData;
+      if (typeof fn !== 'function') return;
+      fn.call(this._api, {
+        data,
+        success() {},
+        fail(err: any) {
+          console.warn(
+            '[Platform] setClipboardData 失败（多因未配置剪贴板隐私）：',
+            err?.errMsg || err,
+          );
+        },
+      });
+    } catch (e) {
+      console.warn('[Platform] setClipboardData:', e);
+    }
   }
 }
 

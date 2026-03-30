@@ -16,7 +16,7 @@ except ImportError:
     sys.exit(1)
 
 ROOT = Path(__file__).resolve().parents[1]
-OUT = ROOT / "minigame/images/ui/warehouse_slot_lock.png"
+OUT = ROOT / "minigame/subpkg_panels/images/ui/warehouse_slot_lock.png"
 SIZE = 512
 S = 4  # 超采样
 

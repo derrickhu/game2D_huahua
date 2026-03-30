@@ -21,8 +21,6 @@ export interface SoundDef {
 export const SOUND_DEFS: SoundDef[] = [
   // ---- 核心操作 ----
   { name: 'merge_success', src: 'subpkg_audio/merge_success.mp3', volume: 0.8, desc: '合成成功 - 清脆叮咚' },
-  { name: 'merge_combo', src: 'subpkg_audio/merge_combo.mp3', volume: 0.7, desc: '连击 - 递进音阶' },
-  { name: 'merge_frenzy', src: 'subpkg_audio/merge_frenzy.mp3', volume: 0.6, desc: '狂热模式 - 欢快加速' },
   { name: 'tap_building', src: 'subpkg_audio/tap_building.mp3', volume: 0.6, desc: '点击建筑 - 轻柔按键' },
 
   // ---- 经营 ----

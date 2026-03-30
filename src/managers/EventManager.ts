@@ -58,7 +58,7 @@ export interface EventShopItem {
   /** 已购买数量 */
   bought: number;
   /** 奖励类型 */
-  rewardType: 'gold' | 'diamond' | 'huayuan' | 'hualu' | 'decoration' | 'outfit' | 'card';
+  rewardType: 'gold' | 'diamond' | 'huayuan' | 'decoration' | 'outfit' | 'card';
   rewardId?: string;
   rewardAmount?: number;
 }
@@ -92,7 +92,7 @@ const EVENT_TEMPLATES: Omit<GameEvent, 'startTime' | 'endTime'>[] = [
     tasks: [
       { id: 'e_merge_10', name: '合成达人', desc: '完成10次合成', icon: '🧩', target: 10, current: 0, pointReward: 50, completed: false, claimed: false },
       { id: 'e_merge_50', name: '合成大师', desc: '完成50次合成', icon: '🧩', target: 50, current: 0, pointReward: 200, completed: false, claimed: false },
-      { id: 'e_combo_5', name: '连击挑战', desc: '达成5连击', icon: '🔥', target: 5, current: 0, pointReward: 100, completed: false, claimed: false },
+      { id: 'e_merge_25', name: '合成进阶', desc: '完成25次合成', icon: '🧩', target: 25, current: 0, pointReward: 100, completed: false, claimed: false },
       { id: 'e_customer_5', name: '花店人气', desc: '服务5位客人', icon: '👤', target: 5, current: 0, pointReward: 80, completed: false, claimed: false },
       { id: 'e_lv6_flower', name: '满级花束', desc: '合成1个6级花束', icon: '💐', target: 1, current: 0, pointReward: 300, completed: false, claimed: false },
       { id: 'e_daily_login', name: '每日登录', desc: '活动期间登录3天', icon: '📅', target: 3, current: 0, pointReward: 150, completed: false, claimed: false },
@@ -101,7 +101,6 @@ const EVENT_TEMPLATES: Omit<GameEvent, 'startTime' | 'endTime'>[] = [
       { id: 'es_huayuan_500', name: '花愿×500', icon: '💰', desc: '', pointCost: 100, stock: -1, bought: 0, rewardType: 'gold', rewardAmount: 500 },
       { id: 'es_diamond_10', name: '钻石×10', icon: '💎', desc: '', pointCost: 200, stock: 3, bought: 0, rewardType: 'diamond', rewardAmount: 10 },
       { id: 'es_huayuan_3', name: '花愿×3', icon: '🌸', desc: '', pointCost: 300, stock: 2, bought: 0, rewardType: 'huayuan', rewardAmount: 3 },
-      { id: 'es_hualu_5', name: '花露×5', icon: '💧', desc: '稀缺换装货币', pointCost: 500, stock: 1, bought: 0, rewardType: 'hualu', rewardAmount: 5 },
       { id: 'es_deco_sakura', name: '🌸 樱花窗帘', icon: '🌸', desc: '限定装饰', pointCost: 800, stock: 1, bought: 0, rewardType: 'decoration', rewardId: 'deco_sakura_curtain' },
     ],
   },
@@ -113,7 +112,7 @@ const EVENT_TEMPLATES: Omit<GameEvent, 'startTime' | 'endTime'>[] = [
     themeColor: 0xFF8C00,
     tasks: [
       { id: 'e_merge_20', name: '合成冲刺', desc: '完成20次合成', icon: '🧩', target: 20, current: 0, pointReward: 80, completed: false, claimed: false },
-      { id: 'e_frenzy', name: '狂热达人', desc: '触发1次合成狂热', icon: '🔥', target: 1, current: 0, pointReward: 250, completed: false, claimed: false },
+      { id: 'e_merge_40', name: '合成狂飙', desc: '完成40次合成', icon: '🧩', target: 40, current: 0, pointReward: 250, completed: false, claimed: false },
       { id: 'e_drink_3', name: '饮品师', desc: '合成3杯3级花饮', icon: '🍵', target: 3, current: 0, pointReward: 150, completed: false, claimed: false },
       { id: 'e_huayuan_1000', name: '小富翁', desc: '累计获得1000花愿', icon: '💰', target: 1000, current: 0, pointReward: 120, completed: false, claimed: false },
       { id: 'e_daily_login', name: '每日签到', desc: '活动期间登录5天', icon: '📅', target: 5, current: 0, pointReward: 200, completed: false, claimed: false },
@@ -174,15 +173,9 @@ class EventManagerClass {
     this._on('board:merged', () => {
       this._incrementTask('e_merge_10', 1);
       this._incrementTask('e_merge_20', 1);
+      this._incrementTask('e_merge_25', 1);
+      this._incrementTask('e_merge_40', 1);
       this._incrementTask('e_merge_50', 1);
-    });
-
-    this._on('combo:hit', (count: number) => {
-      this._updateTaskMax('e_combo_5', count);
-    });
-
-    this._on('combo:frenzyStart', () => {
-      this._incrementTask('e_frenzy', 1);
     });
 
     this._on('customer:delivered', () => {
@@ -260,12 +253,15 @@ class EventManagerClass {
     this._points -= item.pointCost;
     item.bought++;
 
-    // 发放奖励
+    // 发放奖励（花愿仅订单+离线；活动商店原「花愿/金币」类改为钻石）
     switch (item.rewardType) {
-      case 'gold': CurrencyManager.addHuayuan(item.rewardAmount || 0); break;
+      case 'gold':
+        CurrencyManager.addDiamond(Math.max(1, Math.floor((item.rewardAmount || 0) / 40)));
+        break;
       case 'diamond': CurrencyManager.addDiamond(item.rewardAmount || 0); break;
-      case 'huayuan': CurrencyManager.addHuayuan(item.rewardAmount || 0); break;
-      case 'hualu': CurrencyManager.addHualu(item.rewardAmount || 0); break;
+      case 'huayuan':
+        CurrencyManager.addDiamond(Math.max(1, item.rewardAmount || 0));
+        break;
       case 'decoration':
         EventBus.emit('event:grantDecoration', item.rewardId);
         break;

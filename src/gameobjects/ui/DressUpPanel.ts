@@ -1,7 +1,7 @@
 /**
  * 换装面板 — 复用装修面板的金边抽屉壳与资源（merge_chain_panel / ribbon / 关闭钮 / 卡片底）
  *
- * 2 列形象卡：花露解锁 / 条件解锁 / 切换穿戴（顶栏不展示花露，与 TopBar 同源 icon_hualu 用于购买按钮）
+ * 2 列形象卡：花愿解锁 / 条件解锁 / 切换穿戴
  */
 import * as PIXI from 'pixi.js';
 import { Game } from '@/core/Game';
@@ -235,7 +235,7 @@ export class DressUpPanel extends PIXI.Container {
       const cy = pillCenterY(scaledH);
 
       if (mode === 'purchase' && purchaseHualuCost !== undefined) {
-        const iconTex = TextureCache.get('icon_hualu');
+        const iconTex = TextureCache.get('icon_huayuan');
         const gap = 5;
         const iconH = Math.max(16, Math.min(28, Math.round(scaledH * 0.62)));
         let iconW = 0;
@@ -283,7 +283,7 @@ export class DressUpPanel extends PIXI.Container {
         row.position.set(cw / 2, cy);
         const gap = 5;
         const iconH = Math.max(16, Math.min(26, Math.round(btnH * 0.58)));
-        const iconTex = TextureCache.get('icon_hualu');
+        const iconTex = TextureCache.get('icon_huayuan');
         let iconW = 0;
         if (iconTex?.width) {
           const iconSp = new PIXI.Sprite(iconTex);
@@ -386,8 +386,8 @@ export class DressUpPanel extends PIXI.Container {
       this._addDressFooter(card, cw, ch, 'ready', '换装');
     } else if (!reqResult.met) {
       this._addDressFooter(card, cw, ch, 'locked', reqResult.text);
-    } else if (outfit.hualuCost > 0) {
-      this._addDressFooter(card, cw, ch, 'purchase', '', outfit.hualuCost);
+    } else if (outfit.huayuanCost > 0) {
+      this._addDressFooter(card, cw, ch, 'purchase', '', outfit.huayuanCost);
     } else {
       this._addDressFooter(card, cw, ch, 'ready', '领取');
     }
@@ -395,7 +395,7 @@ export class DressUpPanel extends PIXI.Container {
     card.eventMode = 'static';
     card.hitArea = new PIXI.Rectangle(0, 0, cw, ch);
     if (!isEquipped) {
-      card.cursor = (isUnlocked || (reqResult.met && CurrencyManager.state.hualu >= outfit.hualuCost)) ? 'pointer' : 'default';
+      card.cursor = (isUnlocked || (reqResult.met && CurrencyManager.state.huayuan >= outfit.huayuanCost)) ? 'pointer' : 'default';
       card.on('pointertap', (e: PIXI.FederatedPointerEvent) => {
         e.stopPropagation();
         if (isUnlocked) {
@@ -410,8 +410,8 @@ export class DressUpPanel extends PIXI.Container {
             ToastMessage.show(`🔒 ${req.text}`);
             return;
           }
-          if (CurrencyManager.state.hualu < outfit.hualuCost) {
-            ToastMessage.show('💧 花露不足');
+          if (CurrencyManager.state.huayuan < outfit.huayuanCost) {
+            ToastMessage.show('🌸 花愿不足');
             return;
           }
           if (DressUpManager.unlock(outfit.id)) {

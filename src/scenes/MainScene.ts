@@ -4,7 +4,7 @@
  * 集成所有系统：
  * - 核心玩法：棋盘、合成、建筑、客人
  * - 留存系统：新手引导、每日任务、成就、签到、离线收益
- * - 体验增强：连击、季节、彩蛋、提示、统计
+ * - 体验增强：季节、彩蛋、提示、统计
  * - 等级经验系统
  */
 import * as PIXI from 'pixi.js';
@@ -12,9 +12,11 @@ import { Scene, SceneManager } from '@/core/SceneManager';
 import { Game } from '@/core/Game';
 import { EventBus } from '@/core/EventBus';
 import { OverlayManager } from '@/core/OverlayManager';
+import { RewardFlyCoordinator, type RewardFlyBindings } from '@/core/RewardFlyCoordinator';
 import { BoardManager } from '@/managers/BoardManager';
 import { CurrencyManager } from '@/managers/CurrencyManager';
 import { BuildingManager } from '@/managers/BuildingManager';
+import { WarehouseManager } from '@/managers/WarehouseManager';
 import { CustomerManager, DemandSlot } from '@/managers/CustomerManager';
 import { SaveManager } from '@/managers/SaveManager';
 import { QuestManager } from '@/managers/QuestManager';
@@ -34,7 +36,6 @@ import { QuestPanel } from '@/gameobjects/ui/QuestPanel';
 import { OfflineRewardPanel } from '@/gameobjects/ui/OfflineRewardPanel';
 import { LevelUpPopup } from '@/gameobjects/ui/LevelUpPopup';
 import { ShopRowPanoramaScroll, SHOP_PANORAMA_VIEW_H } from '@/gameobjects/ui/ShopRowPanoramaScroll';
-import { ComboSystem } from '@/systems/ComboSystem';
 import { FlowerEasterEggSystem } from '@/systems/FlowerEasterEggSystem';
 import { MergeStatsSystem } from '@/systems/MergeStatsSystem';
 import { TutorialSystem } from '@/systems/TutorialSystem';
@@ -100,7 +101,6 @@ export class MainScene implements Scene {
   private _shopMainBlock!: PIXI.Container;
 
   // ---- 体验增强系统 ----
-  private _comboSystem!: ComboSystem;
   private _flowerEasterEgg!: FlowerEasterEggSystem;
   private _mergeStats!: MergeStatsSystem;
 
@@ -192,10 +192,15 @@ export class MainScene implements Scene {
     }
 
     Game.ticker.add(this._update, this);
+
+    if (this._initialized) {
+      RewardFlyCoordinator.setBindings(this._createMainRewardFlyBindings());
+    }
   }
 
   onExit(): void {
     Game.ticker.remove(this._update, this);
+    RewardFlyCoordinator.setBindings(null);
 
     // 停止所有触觉反馈效果，恢复容器位置（防止抖动残留导致坐标错乱）
     if (this._hapticSystem) {
@@ -286,9 +291,6 @@ export class MainScene implements Scene {
       this._warehousePanel.open();
     });
 
-    // 连击系统
-    this._comboSystem = new ComboSystem(this.container);
-
     // 花语合成彩蛋系统
     this._flowerEasterEgg = new FlowerEasterEggSystem(this.container);
 
@@ -317,6 +319,8 @@ export class MainScene implements Scene {
     // 签到面板
     this._checkInPanel = new CheckInPanel();
     overlay.addChild(this._checkInPanel);
+    RewardFlyCoordinator.setCheckInPanel(this._checkInPanel);
+    RewardFlyCoordinator.initCheckInFlyListeners();
 
     // 每日任务面板
     this._questPanel = new QuestPanel();
@@ -450,8 +454,8 @@ export class MainScene implements Scene {
     this._rewardBoxButton.zIndex = 5;
 
     const customerAreaW = W - CUSTOMER_LEFT - PAD;
-    // 上半身区域不抢横向拖动，便于整行右滑露出左侧活动列
-    this._customerScrollArea = new CustomerScrollArea(customerAreaW, 128);
+    // 左侧活动列仅按钮展开；客人区全高可横向拖，避免与整行滑动抢手势
+    this._customerScrollArea = new CustomerScrollArea(customerAreaW, 0);
     this._customerScrollArea.position.set(CUSTOMER_LEFT, 0);
     this._shopMainBlock.addChild(this._customerScrollArea);
     this._customerScrollArea.zIndex = 10;
@@ -528,28 +532,20 @@ export class MainScene implements Scene {
         });
       }
 
-      // 花愿飞行动画
-      if (customer.huayuanReward > 0) {
+      // 花愿飞行动画（与交付到账一致：含熟客加成后的预计值）
+      const hyFly = RegularCustomerManager.getExpectedHuayuanReward(
+        customer.huayuanReward,
+        customer.typeId,
+      );
+      if (hyFly > 0) {
         pendingAnims++;
         const targetPos = this._topBar.getHuayuanIconPos();
         const endX = this._topBar.x + targetPos.x;
         const endY = this._topBar.y + targetPos.y;
-        this._playRewardFly('icon_huayuan', startLocal.x, startLocal.y, endX, endY, customer.huayuanReward, () => {
+        this._playRewardFly('icon_huayuan', startLocal.x, startLocal.y, endX, endY, hyFly, () => {
           this._topBar.flashHuayuan();
           onAnimDone();
         });
-      }
-
-      // 花露飞行动画（略微延迟）
-      if (customer.hualuReward > 0) {
-        pendingAnims++;
-        const targetPos = this._topBar.getHualuIconPos();
-        const endX = this._topBar.x + targetPos.x;
-        const endY = this._topBar.y + targetPos.y;
-        this._playRewardFly('icon_hualu', startLocal.x, startLocal.y - 10, endX, endY, customer.hualuReward, () => {
-          this._topBar.flashHualu();
-          onAnimDone();
-        }, 0.08);
       }
 
       // 无奖励时直接交付
@@ -560,16 +556,19 @@ export class MainScene implements Scene {
 
     // 交付完成后的 Toast 提示
     EventBus.on('customer:delivered', (_uid: number, customer: any) => {
-      ToastMessage.show(`${customer.name} 满意离开！🌸花愿+${customer.huayuanReward}${customer.hualuReward > 0 ? ` 💧花露+${customer.hualuReward}` : ''}`);
+      const br = customer.settledRegularBonus as number | undefined;
+      const bonusHint =
+        typeof br === 'number' && br > 0 ? `（含熟客+${Math.round(br * 100)}%）` : '';
+      ToastMessage.show(`${customer.name} 满意离开！🌸花愿+${customer.huayuanReward}${bonusHint}`);
     });
   }
 
-  /** 棋盘货币物品双击：弧线飞入 TopBar（与客人花愿/花露飞入同一套），到账在动画结束后执行 */
+  /** 棋盘货币物品双击：弧线飞入 TopBar（与客人花愿飞入同一套），到账在动画结束后执行 */
   private _bindBoardCurrencyFly(): void {
     EventBus.on('board:currencyUseFly', (payload: {
       cellIndex: number;
       itemId: string;
-      currencyType: 'stamina' | 'huayuan' | 'hualu' | 'diamond';
+      currencyType: 'stamina' | 'huayuan' | 'diamond';
       iconKey: string;
       amount: number;
     }) => {
@@ -587,7 +586,6 @@ export class MainScene implements Scene {
       const posMap: Record<string, { x: number; y: number }> = {
         stamina: this._topBar.getStaminaIconPos(),
         huayuan: this._topBar.getHuayuanIconPos(),
-        hualu: this._topBar.getHualuIconPos(),
         diamond: this._topBar.getDiamondIconPos(),
       };
       const lp = posMap[currencyType];
@@ -601,7 +599,6 @@ export class MainScene implements Scene {
       const labelMap: Record<string, string> = {
         stamina: '体力',
         huayuan: '花愿',
-        hualu: '花露',
         diamond: '钻石',
       };
 
@@ -609,7 +606,6 @@ export class MainScene implements Scene {
         switch (currencyType) {
           case 'stamina': CurrencyManager.addStamina(amount); break;
           case 'huayuan': CurrencyManager.addHuayuan(amount); break;
-          case 'hualu': CurrencyManager.addHualu(amount); break;
           case 'diamond': CurrencyManager.addDiamond(amount); break;
         }
         ToastMessage.show(`+${amount} ${labelMap[currencyType] ?? currencyType}`);
@@ -622,140 +618,73 @@ export class MainScene implements Scene {
 
         if (currencyType === 'stamina') this._topBar.flashStamina();
         else if (currencyType === 'huayuan') this._topBar.flashHuayuan();
-        else if (currencyType === 'hualu') this._topBar.flashHualu();
         else if (currencyType === 'diamond') this._topBar.flashDiamond();
       });
     });
   }
 
   /**
-   * 播放奖励图标飞行动画
-   * 生成多个小图标从起点散开，沿弧线飞向终点
+   * 合成页内奖励飞入：起点/终点为 MainScene.container 局部坐标，实际绘制在 Overlay 层。
    */
   private _playRewardFly(
     texKey: string,
-    sx: number, sy: number,
-    ex: number, ey: number,
+    sx: number,
+    sy: number,
+    ex: number,
+    ey: number,
     _amount: number,
     onAllArrived: () => void,
     initialDelay = 0,
   ): void {
-    const tex = TextureCache.get(texKey);
-    const COUNT = Math.min(Math.max(3, Math.ceil(_amount / 5)), 8);
-    const ICON_SIZE = 28;
-    const FLY_DURATION = 0.5;
-    const STAGGER = 0.04;
-    let arrived = 0;
-
-    for (let i = 0; i < COUNT; i++) {
-      const icon = tex
-        ? new PIXI.Sprite(tex)
-        : new PIXI.Text('🌸', { fontSize: 20 });
-
-      icon.anchor.set(0.5);
-
-      // 计算目标 scale（让图标显示为 ICON_SIZE x ICON_SIZE）
-      let targetScale = 1;
-      if (icon instanceof PIXI.Sprite && tex) {
-        targetScale = ICON_SIZE / Math.max(tex.width, tex.height);
-      }
-
-      const randX = (Math.random() - 0.5) * 60;
-      const randY = (Math.random() - 0.5) * 40;
-      icon.position.set(sx + randX, sy + randY);
-      icon.alpha = 0;
-      icon.scale.set(targetScale * 0.3);
-
-      this.container.addChild(icon);
-
-      const delay = initialDelay + i * STAGGER;
-
-      TweenManager.to({
-        target: icon,
-        props: { alpha: 1 },
-        duration: 0.12,
-        delay,
-      });
-      TweenManager.to({
-        target: icon.scale,
-        props: { x: targetScale, y: targetScale },
-        duration: 0.2,
-        delay,
-        ease: Ease.easeOutBack,
-        onComplete: () => {
-          const cpx = (icon.x + ex) / 2 + (Math.random() - 0.5) * 80;
-          const cpy = Math.min(icon.y, ey) - 30 - Math.random() * 40;
-          const startX = icon.x;
-          const startY = icon.y;
-          const progress = { t: 0 };
-
-          TweenManager.to({
-            target: progress,
-            props: { t: 1 },
-            duration: FLY_DURATION,
-            ease: Ease.easeInQuad,
-            onUpdate: () => {
-              const t = progress.t;
-              const mt = 1 - t;
-              icon.x = mt * mt * startX + 2 * mt * t * cpx + t * t * ex;
-              icon.y = mt * mt * startY + 2 * mt * t * cpy + t * t * ey;
-              icon.scale.set(targetScale * (1 - t * 0.5));
-              icon.alpha = t < 0.8 ? 1 : 1 - (t - 0.8) / 0.2;
-            },
-            onComplete: () => {
-              icon.destroy();
-              arrived++;
-              if (arrived === COUNT) {
-                onAllArrived();
-              }
-            },
-          });
-        },
-      });
-    }
+    const layer = OverlayManager.container;
+    const startL = layer.toLocal(this.container.toGlobal(new PIXI.Point(sx, sy)));
+    const endL = layer.toLocal(this.container.toGlobal(new PIXI.Point(ex, ey)));
+    RewardFlyCoordinator.playRewardFlyLayerLocal(
+      texKey,
+      startL.x,
+      startL.y,
+      endL.x,
+      endL.y,
+      _amount,
+      onAllArrived,
+      initialDelay,
+    );
   }
 
-  /**
-   * 签到/里程碑奖励飞入：每种货币分别飞向 TopBar 对应图标。
-   * @param onAllComplete 所有批次飞入结束后的回调（用于关闭签到面板等）
-   */
-  private _playCheckinFly(
-    items: { type: string; textureKey: string; amount: number }[],
-    source: { x: number; y: number },
-    onAllComplete?: () => void,
-  ): void {
-    const posMap: Record<string, { pos: { x: number; y: number }; flash: () => void }> = {
-      hualu:   { pos: this._topBar.getHualuIconPos(),    flash: () => this._topBar.flashHualu() },
-      gold:    { pos: this._topBar.getHualuIconPos(),    flash: () => this._topBar.flashHualu() },
-      huayuan: { pos: this._topBar.getHuayuanIconPos(),  flash: () => this._topBar.flashHuayuan() },
-      diamond: { pos: this._topBar.getDiamondIconPos(),  flash: () => this._topBar.flashDiamond() },
-      stamina: { pos: this._topBar.getStaminaIconPos(),  flash: () => this._topBar.flashStamina() },
+  private _createMainRewardFlyBindings(): RewardFlyBindings {
+    const topBar = this._topBar;
+    const boardView = this._boardView;
+    return {
+      getCurrencyTarget(type: string) {
+        const posMap: Record<string, { pos: { x: number; y: number }; flash: () => void }> = {
+          gold: { pos: topBar.getHuayuanIconPos(), flash: () => topBar.flashHuayuan() },
+          huayuan: { pos: topBar.getHuayuanIconPos(), flash: () => topBar.flashHuayuan() },
+          diamond: { pos: topBar.getDiamondIconPos(), flash: () => topBar.flashDiamond() },
+          stamina: { pos: topBar.getStaminaIconPos(), flash: () => topBar.flashStamina() },
+        };
+        const info = posMap[type];
+        if (!info) return null;
+        const endGlobal = topBar.toGlobal(new PIXI.Point(info.pos.x, info.pos.y));
+        return { endGlobal, onArrived: info.flash };
+      },
+      planBoardPieces(pieces) {
+        const empties = BoardManager.getEmptyOpenCellIndices();
+        const plans: { textureKey: string; endGlobal: PIXI.IPointData; onLand: () => void }[] = [];
+        for (let b = 0; b < pieces.length && b < empties.length; b++) {
+          const cellIdx = empties[b];
+          const local = boardView.getCellCenterLocal(cellIdx);
+          if (!local) continue;
+          const endGlobal = boardView.toGlobal(new PIXI.Point(local.x, local.y));
+          const itemId = pieces[b].itemId;
+          plans.push({
+            textureKey: pieces[b].textureKey,
+            endGlobal,
+            onLand: () => { BoardManager.placeItem(cellIdx, itemId); },
+          });
+        }
+        return { plans, overflowCount: pieces.length - plans.length };
+      },
     };
-
-    let remaining = 0;
-    const doneOne = (): void => {
-      remaining--;
-      if (remaining <= 0) onAllComplete?.();
-    };
-
-    if (!items?.length) {
-      onAllComplete?.();
-      return;
-    }
-
-    items.forEach((item, idx) => {
-      const info = posMap[item.type];
-      if (!info) return;
-      remaining++;
-      const endX = this._topBar.x + info.pos.x;
-      const endY = this._topBar.y + info.pos.y;
-      this._playRewardFly(item.textureKey, source.x, source.y, endX, endY, item.amount, () => {
-        info.flash();
-        doneOne();
-      }, idx * 0.08);
-    });
-
-    if (remaining <= 0) onAllComplete?.();
   }
 
   /**
@@ -841,34 +770,19 @@ export class MainScene implements Scene {
     // 签到面板
     EventBus.on('nav:openCheckIn', () => this._checkInPanel.open());
 
-    // 签到飞入动效
-    EventBus.on('checkin:flyReward', (payload: {
-      items: { type: string; textureKey: string; amount: number }[];
-      autoClosePanel?: boolean;
-    }, sourcePos: { x: number; y: number }) => {
-      const globalP = this._checkInPanel.contentToGlobal(sourcePos);
-      const lp = this.container.toLocal(globalP);
-      this._playCheckinFly(
-        payload.items,
-        { x: lp.x, y: lp.y },
-        payload.autoClosePanel ? () => { this._checkInPanel.close(); } : undefined,
-      );
-    });
+    // 签到飞入由 RewardFlyCoordinator 统一处理（粒子挂在 Overlay）
 
-    EventBus.on('checkin:flyMilestone', (ms: any, sourcePos: { x: number; y: number }) => {
-      const globalP = this._checkInPanel.contentToGlobal(sourcePos);
-      const lp = this.container.toLocal(globalP);
-      this._playCheckinFly(ms.items, { x: lp.x, y: lp.y });
-    });
-
-    // 首次合成解锁：收下后花露/花愿飞向顶栏，到账在飞入结束（与棋盘货币双击一致）
+    // 首次合成解锁：若有花愿则飞向顶栏（当前为 0，仅回调完成）
     EventBus.on('firstMergeUnlock:claimFly', (payload: {
       source: { x: number; y: number };
-      hualuReward: number;
       huayuanReward: number;
       onComplete: () => void;
     }) => {
-      const { source, hualuReward, huayuanReward, onComplete } = payload;
+      const { source, huayuanReward, onComplete } = payload;
+      if (huayuanReward <= 0) {
+        onComplete();
+        return;
+      }
       let pending = 0;
       const doneOne = (): void => {
         pending--;
@@ -895,23 +809,13 @@ export class MainScene implements Scene {
       };
 
       runFly(
-        'icon_hualu',
-        hualuReward,
-        this._topBar.getHualuIconPos(),
-        () => CurrencyManager.addHualu(hualuReward),
-        () => this._topBar.flashHualu(),
-        0,
-      );
-      runFly(
         'icon_huayuan',
         huayuanReward,
         this._topBar.getHuayuanIconPos(),
         () => CurrencyManager.addHuayuan(huayuanReward),
         () => this._topBar.flashHuayuan(),
-        0.1,
+        0,
       );
-
-      if (pending === 0) onComplete();
     });
 
     // 任务面板
@@ -936,8 +840,9 @@ export class MainScene implements Scene {
       }
     });
 
-    // 升级弹窗（收纳盒物品在飞入礼包动画结束后再写入）
+    // 升级弹窗（收纳盒物品在飞入礼包动画结束后再写入）；仅主场景处理，避免与花店场景重复弹窗/重复入库
     EventBus.on('level:up', (level: number, reward: any) => {
+      if (SceneManager.current?.name !== 'main') return;
       const g = this._rewardBoxButton.toGlobal(
         new PIXI.Point(REWARD_BOX_BTN_SIZE / 2, REWARD_BOX_BTN_SIZE / 2),
       );
@@ -1020,14 +925,6 @@ export class MainScene implements Scene {
 
     // ---- 装修系统事件 ----
     EventBus.on('nav:openDeco', () => this._decoPanel.open());
-
-    EventBus.on('decoration:unlocked', (_decoId: string, deco: any) => {
-      ToastMessage.show(`✨ 解锁新装饰：「${deco.name}」！`);
-    });
-
-    EventBus.on('decoration:equipped', (slot: string, _decoId: string) => {
-      ToastMessage.show(`🏠 已装备新${slot}装饰！`);
-    });
 
     // ---- 场景入口事件（左侧浮动按钮） ----
     EventBus.on('nav:openDressup', () => {
@@ -1128,6 +1025,7 @@ export class MainScene implements Scene {
     const dt = Game.ticker.deltaMS / 1000;
     CurrencyManager.update(dt);
     BuildingManager.update(dt);
+    WarehouseManager.updateWarehouseCooldownsFromRealTime();
     CustomerManager.update(dt);
     // 注意：TweenManager.update 已在 Game.init 的全局 ticker 中注册，
     // 此处不再重复调用，避免动画速度翻倍
@@ -1136,7 +1034,6 @@ export class MainScene implements Scene {
     this._boardView.updateCdDisplay();
     this._topBar.updateTimer();
     this._staminaPanel.updateTimer();
-    this._comboSystem.update(dt);
     this._hapticSystem.update(dt);
     ChallengeManager.update(dt);
 

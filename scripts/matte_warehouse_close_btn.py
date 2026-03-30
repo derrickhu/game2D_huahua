@@ -2,7 +2,7 @@
 """
 仓库 NB2 关闭钮：品红底抠图 + 压边 + 轻微柔化。
 源：game_assets for_review 或 minigame 当前文件（可为误扩展名的 JPG）。
-输出：minigame/images/ui/warehouse_close_btn.png
+输出：minigame/subpkg_panels/images/ui/warehouse_close_btn.png
 """
 from __future__ import annotations
 
@@ -16,12 +16,12 @@ except ImportError:
     sys.exit(1)
 
 ROOT = Path(__file__).resolve().parents[1]
-OUT = ROOT / "minigame/images/ui/warehouse_close_btn.png"
+OUT = ROOT / "minigame/subpkg_panels/images/ui/warehouse_close_btn.png"
 
 CANDIDATES = [
     Path.home()
     / "rosa_games/game_assets/huahua/assets/warehouse_ui_nb2/for_review/warehouse_nb2_close_btn_1x1.png",
-    ROOT / "minigame/images/ui/warehouse_close_btn.png",
+    ROOT / "minigame/subpkg_panels/images/ui/warehouse_close_btn.png",
 ]
 
 

@@ -47,7 +47,7 @@ if [ -f "$SOURCE_DIR/house/house_nobg.png" ]; then
     sips -z 512 512 "$SOURCE_DIR/house/house_nobg.png" --out "$TARGET_DIR/images/house/shop.png" 2>/dev/null
 fi
 if [ -f "$SOURCE_DIR/house/bg.png" ]; then
-    sips -Z 750 "$SOURCE_DIR/house/bg.png" --out "$TARGET_DIR/images/house/bg.png" 2>/dev/null
+    sips -Z 750 "$SOURCE_DIR/house/bg.png" --out "$TARGET_DIR/images/house/bg.jpg" 2>/dev/null
 fi
 
 # ---- 3. 同步花朵装饰图标 ----

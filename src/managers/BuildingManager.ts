@@ -7,7 +7,17 @@
 import { EventBus } from '@/core/EventBus';
 import { BoardManager } from './BoardManager';
 import { CurrencyManager } from './CurrencyManager';
-import { ITEM_DEFS, Category, InteractType, CurrencyLine, findItemId, FlowerLine, DrinkLine, ToolLine } from '@/config/ItemConfig';
+import {
+  ITEM_DEFS,
+  Category,
+  InteractType,
+  CurrencyLine,
+  findItemId,
+  getMaxLevelForLine,
+  FlowerLine,
+  DrinkLine,
+  ToolLine,
+} from '@/config/ItemConfig';
 import {
   findBoardProducerDef,
   mergeOutcomePercents,
@@ -15,6 +25,7 @@ import {
   type ToolProduceDisplayEntry,
 } from '@/config/BuildingConfig';
 import { BOARD_COLS, BOARD_ROWS } from '@/config/Constants';
+import { ToolProducePolicy } from '@/managers/ToolProducePolicy';
 
 /** 单次点击产出结果（工具 1 件；宝箱可能多件） */
 export type ProducePlacement = { itemId: string; targetIndex: number };
@@ -60,6 +71,9 @@ export interface BuildingPersistEntry {
   chestTotalBoardDrops?: number;
 }
 
+/** 入仓时随物品保存（无格索引），取出后写回 BuildingManager */
+export type ToolStateSnapshot = Omit<BuildingPersistEntry, 'cellIndex'>;
+
 // ═══════════════ 宝箱定义 ═══════════════
 
 const CHEST_DEFS: ChestDef[] = [
@@ -81,8 +95,7 @@ const CHEST_DEFS: ChestDef[] = [
         levelRange: [1, 1],
         weight: 42,
       },
-      { type: 'product', category: Category.CURRENCY, lines: [CurrencyLine.STAMINA], levelRange: [1, 1], weight: 3 },
-      { type: 'product', category: Category.CURRENCY, lines: [CurrencyLine.HUAYUAN], levelRange: [1, 1], weight: 3 },
+      { type: 'product', category: Category.CURRENCY, lines: [CurrencyLine.STAMINA], levelRange: [1, 1], weight: 6 },
     ],
     staminaCost: 2,
   },
@@ -104,8 +117,7 @@ const CHEST_DEFS: ChestDef[] = [
         levelRange: [1, 2],
         weight: 36,
       },
-      { type: 'product', category: Category.CURRENCY, lines: [CurrencyLine.STAMINA], levelRange: [1, 2], weight: 8 },
-      { type: 'product', category: Category.CURRENCY, lines: [CurrencyLine.HUAYUAN], levelRange: [1, 2], weight: 8 },
+      { type: 'product', category: Category.CURRENCY, lines: [CurrencyLine.STAMINA], levelRange: [1, 2], weight: 16 },
     ],
     staminaCost: 3,
   },
@@ -130,8 +142,7 @@ const CHEST_DEFS: ChestDef[] = [
         weight: 22,
       },
       { type: 'product', category: Category.CURRENCY, lines: [CurrencyLine.STAMINA], levelRange: [1, 2], weight: 9 },
-      { type: 'product', category: Category.CURRENCY, lines: [CurrencyLine.HUAYUAN], levelRange: [1, 2], weight: 11 },
-      { type: 'product', category: Category.CURRENCY, lines: [CurrencyLine.DIAMOND], levelRange: [1, 2], weight: 10 },
+      { type: 'product', category: Category.CURRENCY, lines: [CurrencyLine.DIAMOND], levelRange: [1, 2], weight: 21 },
     ],
     staminaCost: 5,
   },
@@ -154,10 +165,8 @@ const CHEST_DEFS: ChestDef[] = [
         levelRange: [1, 3],
         weight: 20,
       },
-      { type: 'product', category: Category.CURRENCY, lines: [CurrencyLine.STAMINA], levelRange: [1, 3], weight: 11 },
-      { type: 'product', category: Category.CURRENCY, lines: [CurrencyLine.HUAYUAN], levelRange: [1, 3], weight: 13 },
-      { type: 'product', category: Category.CURRENCY, lines: [CurrencyLine.DIAMOND], levelRange: [1, 3], weight: 14 },
-      { type: 'product', category: Category.CURRENCY, lines: [CurrencyLine.HUALU], levelRange: [1, 2], weight: 10 },
+      { type: 'product', category: Category.CURRENCY, lines: [CurrencyLine.STAMINA], levelRange: [1, 4], weight: 16 },
+      { type: 'product', category: Category.CURRENCY, lines: [CurrencyLine.DIAMOND], levelRange: [1, 4], weight: 32 },
     ],
     staminaCost: 8,
   },
@@ -180,12 +189,109 @@ const CHEST_DEFS: ChestDef[] = [
         levelRange: [2, 4],
         weight: 17,
       },
-      { type: 'product', category: Category.CURRENCY, lines: [CurrencyLine.STAMINA], levelRange: [1, 3], weight: 13 },
-      { type: 'product', category: Category.CURRENCY, lines: [CurrencyLine.HUAYUAN], levelRange: [1, 3], weight: 16 },
-      { type: 'product', category: Category.CURRENCY, lines: [CurrencyLine.DIAMOND], levelRange: [1, 3], weight: 15 },
-      { type: 'product', category: Category.CURRENCY, lines: [CurrencyLine.HUALU], levelRange: [1, 3], weight: 6 },
+      { type: 'product', category: Category.CURRENCY, lines: [CurrencyLine.STAMINA], levelRange: [1, 4], weight: 16 },
+      { type: 'product', category: Category.CURRENCY, lines: [CurrencyLine.DIAMOND], levelRange: [1, 4], weight: 34 },
     ],
     staminaCost: 12,
+  },
+  // ═══ 红包线（4级）：仅散落「花愿利是」，双击入账花愿 ═══
+  {
+    itemId: 'hongbao_1',
+    boardDropCount: 4,
+    produceItems: [
+      {
+        type: 'product',
+        category: Category.CURRENCY,
+        lines: [CurrencyLine.HUAYUAN_PICKUP],
+        levelRange: [1, 1],
+        weight: 100,
+      },
+    ],
+    staminaCost: 1,
+  },
+  {
+    itemId: 'hongbao_2',
+    boardDropCount: 5,
+    produceItems: [
+      {
+        type: 'product',
+        category: Category.CURRENCY,
+        lines: [CurrencyLine.HUAYUAN_PICKUP],
+        levelRange: [1, 1],
+        weight: 35,
+      },
+      {
+        type: 'product',
+        category: Category.CURRENCY,
+        lines: [CurrencyLine.HUAYUAN_PICKUP],
+        levelRange: [2, 2],
+        weight: 65,
+      },
+    ],
+    staminaCost: 2,
+  },
+  {
+    itemId: 'hongbao_3',
+    boardDropCount: 6,
+    produceItems: [
+      {
+        type: 'product',
+        category: Category.CURRENCY,
+        lines: [CurrencyLine.HUAYUAN_PICKUP],
+        levelRange: [1, 1],
+        weight: 20,
+      },
+      {
+        type: 'product',
+        category: Category.CURRENCY,
+        lines: [CurrencyLine.HUAYUAN_PICKUP],
+        levelRange: [2, 2],
+        weight: 35,
+      },
+      {
+        type: 'product',
+        category: Category.CURRENCY,
+        lines: [CurrencyLine.HUAYUAN_PICKUP],
+        levelRange: [3, 3],
+        weight: 45,
+      },
+    ],
+    staminaCost: 3,
+  },
+  {
+    itemId: 'hongbao_4',
+    boardDropCount: 7,
+    produceItems: [
+      {
+        type: 'product',
+        category: Category.CURRENCY,
+        lines: [CurrencyLine.HUAYUAN_PICKUP],
+        levelRange: [1, 1],
+        weight: 8,
+      },
+      {
+        type: 'product',
+        category: Category.CURRENCY,
+        lines: [CurrencyLine.HUAYUAN_PICKUP],
+        levelRange: [2, 2],
+        weight: 22,
+      },
+      {
+        type: 'product',
+        category: Category.CURRENCY,
+        lines: [CurrencyLine.HUAYUAN_PICKUP],
+        levelRange: [3, 3],
+        weight: 35,
+      },
+      {
+        type: 'product',
+        category: Category.CURRENCY,
+        lines: [CurrencyLine.HUAYUAN_PICKUP],
+        levelRange: [4, 4],
+        weight: 35,
+      },
+    ],
+    staminaCost: 5,
   },
 ];
 
@@ -205,7 +311,7 @@ export function chestMayDropItem(
 }
 
 /**
- * 合成线「获取来源」里点宝箱时：取第一个（通常最低档）能按产品规则掉出该等级该线的宝箱 id（chest_1…5）。
+ * 合成线「获取来源」里点宝箱/红包时：取第一个能按规则掉出该等级该线的容器 id（chest_1…5、hongbao_1…4）。
  */
 export function findRepresentativeChestForDrop(
   category: Category,
@@ -270,6 +376,11 @@ class BuildingManagerClass {
       this._states.delete(srcIndex);
       this._states.delete(dstIndex);
     });
+    /** 幸运金币改级：源格清空、目标格 itemId 替换，须丢弃两侧工具/宝箱状态 */
+    EventBus.on('board:luckyCoinApplied', (srcIndex: number, dstIndex: number) => {
+      this._states.delete(srcIndex);
+      this._states.delete(dstIndex);
+    });
   }
 
   /** 判断某个物品是否是工具类交互（tool_* 或花束包装纸等） */
@@ -329,7 +440,7 @@ class BuildingManagerClass {
       return this._produceChest(cellIndex, chestDef);
     }
 
-    const staminaCost = toolDef!.staminaCost;
+    const staminaCost = ToolProducePolicy.getEffectiveStaminaCost(toolDef!.staminaCost);
     const state = this._getOrCreateState(cellIndex, cell.itemId);
     if (state.cdRemaining > 0) {
       console.log(`[Building] CD 冷却中，剩余 ${state.cdRemaining.toFixed(0)}s`);
@@ -356,12 +467,17 @@ class BuildingManagerClass {
     if (toolDef!.produceOutcomes && toolDef!.produceOutcomes.length > 0) {
       producedId = this._rollToolProduceOutcome(toolDef!.produceOutcomes);
     } else {
-      const level = this._rollLevel(toolDef!.produceTable);
+      let level = this._rollLevel(toolDef!.produceTable);
       const lines = toolDef!.produceLinesRandom;
       const line =
         lines && lines.length > 0
           ? lines[Math.floor(Math.random() * lines.length)]
           : toolDef!.produceLine;
+      level = this._clampProduceLevel(
+        toolDef!.produceCategory,
+        line,
+        level + ToolProducePolicy.getProduceLevelBonus(),
+      );
       producedId = findItemId(toolDef!.produceCategory, line, level);
     }
 
@@ -519,7 +635,7 @@ class BuildingManagerClass {
     };
   }
 
-  /** 获取消耗型次数（-1 表示不显示；宝箱已改用进度条） */
+  /** 获取消耗型次数（-1 表示不显示；宝箱/红包待散落件数走 getChestDispatchProgress 角标） */
   getUsesLeft(cellIndex: number): number {
     const cell = BoardManager.getCellByIndex(cellIndex);
     if (!cell?.itemId) return -1;
@@ -538,7 +654,7 @@ class BuildingManagerClass {
     return -1;
   }
 
-  /** 宝箱内仍待落到棋盘的件数与总件数（用于进度条）；非宝箱或未开箱返回 null */
+  /** 宝箱/红包内仍待落到棋盘的件数与总件数（用于右下角角标）；非容器或未开箱返回 null */
   getChestDispatchProgress(cellIndex: number): { remaining: number; total: number } | null {
     const cell = BoardManager.getCellByIndex(cellIndex);
     if (!cell?.itemId || !this._findChestDef(cell.itemId)) return null;
@@ -586,6 +702,47 @@ class BuildingManagerClass {
         chestTotalBoardDrops: e.chestTotalBoardDrops,
       });
     }
+  }
+
+  /**
+   * 移入仓库前拷贝本格工具/交互物状态（不删 Map）。
+   * 随后 BoardManager.removeItem → board:itemRemoved 会清掉棋盘上的 runtime。
+   */
+  snapshotToolStateAt(cellIndex: number): ToolStateSnapshot | null {
+    const cell = BoardManager.getCellByIndex(cellIndex);
+    if (!cell?.itemId) return null;
+    const s = this._states.get(cellIndex);
+    if (!s || s.boundItemId !== cell.itemId) return null;
+    return {
+      boundItemId: s.boundItemId,
+      cdRemaining: s.cdRemaining,
+      usesLeft: s.usesLeft,
+      freeProducesLeft: s.freeProducesLeft,
+      chestQueue: s.chestQueue ? [...s.chestQueue] : undefined,
+      chestTotalBoardDrops: s.chestTotalBoardDrops,
+    };
+  }
+
+  /** 从仓库取回并 placeItem 之后恢复 CD、周期内免费次数、消耗剩余次数、宝箱队列 */
+  restoreStateFromWarehouse(
+    cellIndex: number,
+    itemId: string,
+    snap: ToolStateSnapshot | null | undefined,
+  ): void {
+    if (!snap) return;
+    if (snap.boundItemId !== itemId) return;
+    const q = snap.chestQueue
+      ? snap.chestQueue.filter(id => ITEM_DEFS.has(id))
+      : undefined;
+    if (this._findChestDef(itemId) && q !== undefined && q.length === 0) return;
+    this._states.set(cellIndex, {
+      boundItemId: snap.boundItemId,
+      cdRemaining: snap.cdRemaining,
+      usesLeft: snap.usesLeft,
+      freeProducesLeft: snap.freeProducesLeft,
+      chestQueue: q,
+      chestTotalBoardDrops: snap.chestTotalBoardDrops,
+    });
   }
 
   reset(): void {
@@ -683,11 +840,27 @@ class BuildingManagerClass {
     for (const o of outcomes) {
       roll -= o.weight;
       if (roll <= 0) {
-        return findItemId(o.category, o.line, o.level);
+        const lv = this._clampProduceLevel(
+          o.category,
+          o.line,
+          o.level + ToolProducePolicy.getProduceLevelBonus(),
+        );
+        return findItemId(o.category, o.line, lv);
       }
     }
     const last = outcomes[outcomes.length - 1];
-    return findItemId(last.category, last.line, last.level);
+    const lv = this._clampProduceLevel(
+      last.category,
+      last.line,
+      last.level + ToolProducePolicy.getProduceLevelBonus(),
+    );
+    return findItemId(last.category, last.line, lv);
+  }
+
+  private _clampProduceLevel(category: Category, line: string, level: number): number {
+    const maxLv = getMaxLevelForLine(category, line);
+    if (maxLv <= 0) return Math.max(1, level);
+    return Math.min(maxLv, Math.max(1, level));
   }
 
   private _rollLevel(table: [number, number][]): number {

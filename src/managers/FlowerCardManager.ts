@@ -97,8 +97,7 @@ class FlowerCardManagerClass {
     // 检查是否集齐
     if (this._cards.size === 18) {
       EventBus.emit('flowerCard:complete');
-      CurrencyManager.addDiamond(100);
-      CurrencyManager.addHuayuan(20);
+      CurrencyManager.addDiamond(120);
     }
   }
 

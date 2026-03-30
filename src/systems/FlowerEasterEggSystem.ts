@@ -1,8 +1,8 @@
 /**
  * 首次合成解锁弹窗
  *
- * 任意棋盘物品（花、饮品、工具等）第一次合成出该 id 时弹出：遮罩 + 标题「新解锁」+ 物品图 + 名称 + 首次合成奖励 + 收下按钮。
- * 花系仍可用 FLOWER_QUOTES 覆盖奖励数值；其余物品按等级给默认花露/花愿。
+ * 任意棋盘物品（花、饮品、工具等）第一次合成出该 id 时弹出：遮罩 + 标题「新解锁」+ 物品图 + 名称 + 收下按钮。
+ * 花愿仅订单+离线，本弹窗不再发放花愿。
  */
 import * as PIXI from 'pixi.js';
 import { EventBus } from '@/core/EventBus';
@@ -14,49 +14,12 @@ import { TextureCache } from '@/utils/TextureCache';
 import { createCurrencyIconCluster } from '@/utils/CurrencyCellIcons';
 
 interface UnlockRewards {
-  hualuReward: number;
   huayuanReward: number;
 }
 
-/** 仅用于花系奖励数值覆盖（文案不再展示） */
-interface FlowerQuote {
-  name: string;
-  quote: string;
-  hualuReward: number;
-  huayuanReward: number;
-}
-
-const FLOWER_QUOTES: Record<string, FlowerQuote> = {
-  flower_fresh_1: { name: '花种子', quote: '纯真无邪，藏在心底的小美好。', hualuReward: 3, huayuanReward: 10 },
-  flower_fresh_2: { name: '花苞', quote: '沉默的爱，追随着你的光芒。', hualuReward: 5, huayuanReward: 15 },
-  flower_fresh_3: { name: '小雏菊', quote: '温馨的祝福，感恩每一份爱。', hualuReward: 7, huayuanReward: 20 },
-  flower_fresh_4: { name: '向日葵', quote: '甘愿做配角，只为衬托你的美。', hualuReward: 10, huayuanReward: 30 },
-  flower_fresh_5: { name: '康乃馨', quote: '缤纷世界，每一种美都值得。', hualuReward: 14, huayuanReward: 40 },
-  flower_fresh_6: { name: '玫瑰', quote: '最好的礼物，是用心准备的惊喜。', hualuReward: 18, huayuanReward: 60 },
-  flower_bouquet_1: { name: '一小捧散花', quote: '初恋的感觉，心跳如花绽放。', hualuReward: 4, huayuanReward: 12 },
-  flower_bouquet_2: { name: '迷你花束', quote: '百年好合，纯洁的守候。', hualuReward: 6, huayuanReward: 18 },
-  flower_bouquet_3: { name: '郁金香花束', quote: '高贵的爱恋，无可救药的浪漫。', hualuReward: 9, huayuanReward: 25 },
-  flower_bouquet_4: { name: '玫瑰满天星', quote: '等待爱情，紫色的承诺。', hualuReward: 12, huayuanReward: 35 },
-  flower_bouquet_5: { name: '田园混搭花束', quote: '鼓起勇气说出口，你是我的唯一。', hualuReward: 16, huayuanReward: 50 },
-  flower_bouquet_6: { name: '精美花盒', quote: '执子之手，与子偕老。', hualuReward: 24, huayuanReward: 80 },
-  flower_green_1: { name: '小芽苗', quote: '小小的芽，蕴含着生命的力量。', hualuReward: 5, huayuanReward: 15 },
-  flower_green_2: { name: '多肉盆栽', quote: '圆润饱满，安静而治愈。', hualuReward: 8, huayuanReward: 22 },
-  flower_green_3: { name: '绿萝', quote: '顽强生长，为你带来好运。', hualuReward: 11, huayuanReward: 30 },
-  flower_green_4: { name: '波士顿蕨', quote: '优雅的弧线，如绿色瀑布。', hualuReward: 15, huayuanReward: 45 },
-  flower_green_5: { name: '虎皮兰', quote: '坚韧挺拔，守护者的姿态。', hualuReward: 20, huayuanReward: 65 },
-  flower_green_6: { name: '龟背竹', quote: '独一无二的裂叶，大自然的艺术。', hualuReward: 30, huayuanReward: 100 },
-};
-
-function getUnlockRewards(itemId: string, def: ItemDef): UnlockRewards {
-  const fq = FLOWER_QUOTES[itemId];
-  if (fq) {
-    return { hualuReward: fq.hualuReward, huayuanReward: fq.huayuanReward };
-  }
-  const lv = Math.max(1, def.level);
-  return {
-    hualuReward: Math.min(40, 2 + Math.floor(lv * 2)),
-    huayuanReward: Math.min(100, 5 + lv * 4),
-  };
+function getUnlockRewards(_itemId: string, _def: ItemDef): UnlockRewards {
+  /** 花愿仅订单+离线发放，首次合成弹窗不再塞花愿 */
+  return { huayuanReward: 0 };
 }
 
 export class FlowerEasterEggSystem {
@@ -277,7 +240,7 @@ export class FlowerEasterEggSystem {
       btnWrap.addChild(btnHighlight);
     }
 
-    const btnText = new PIXI.Text('收下奖励', {
+    const btnText = new PIXI.Text(rewards.huayuanReward > 0 ? '收下奖励' : '知道了', {
       fontSize: 20,
       fill: 0xFFFFFF,
       fontFamily: FONT_FAMILY,
@@ -330,7 +293,7 @@ export class FlowerEasterEggSystem {
     this._parent.addChild(overlay);
     TweenManager.to({ target: overlay, props: { alpha: 1 }, duration: 0.35, ease: Ease.easeOutQuad });
 
-    // ---- 关闭 & 发奖（花露/花愿弧线飞入 TopBar，到账在飞入结束后；与客人交付一致）----
+    // ---- 关闭 & 回调（花愿为 0 时仅关窗；若有花愿则经 EventBus 飞入顶栏）----
     let claimStarted = false;
     const finishClose = (): void => {
       TweenManager.cancelTarget(breathObj);
@@ -361,7 +324,6 @@ export class FlowerEasterEggSystem {
 
       EventBus.emit('firstMergeUnlock:claimFly', {
         source: { x: lp.x, y: lp.y },
-        hualuReward: rewards.hualuReward,
         huayuanReward: rewards.huayuanReward,
         onComplete: finishClose,
       });
@@ -438,7 +400,7 @@ export class FlowerEasterEggSystem {
   }
 
   /**
-   * 「首次合成奖励」：无长条底图；左花露右花愿，大号描边框格（中间透明），格内图标、格下 × 数量。
+   * 「首次合成奖励」：无长条底图；居中花愿一格，大号描边框格（中间透明），格内图标、格下 × 数量。
    */
   private _drawRewardSection(
     container: PIXI.Container,
@@ -448,7 +410,25 @@ export class FlowerEasterEggSystem {
     _cardW: number,
   ): { nextY: number; flyCenterY: number } {
     const CELL = 78;
-    const GAP = 32;
+
+    if (data.huayuanReward <= 0) {
+      const hint = new PIXI.Text('花愿请通过完成订单、领取离线收益获得', {
+        fontSize: 17,
+        fill: 0xfffef5,
+        fontFamily: FONT_FAMILY,
+        fontWeight: 'bold',
+        stroke: 0x3e2723,
+        strokeThickness: 2,
+        align: 'center',
+        wordWrap: true,
+        wordWrapWidth: Math.min(340, _cardW + 40),
+      });
+      hint.anchor.set(0.5, 0);
+      hint.position.set(cx, y);
+      container.addChild(hint);
+      const h = Math.max(44, hint.height + 8);
+      return { nextY: y + h + 12, flyCenterY: y + h * 0.45 };
+    }
 
     const labelText = new PIXI.Text('首次合成奖励', {
       fontSize: 23,
@@ -463,11 +443,8 @@ export class FlowerEasterEggSystem {
     container.addChild(labelText);
 
     const cellTop = y + 34;
-    const leftCx = cx - (CELL + GAP) / 2;
-    const rightCx = cx + (CELL + GAP) / 2;
 
-    this._drawRewardFramedCell(container, leftCx, cellTop, CELL, 'icon_hualu', data.hualuReward);
-    this._drawRewardFramedCell(container, rightCx, cellTop, CELL, 'icon_huayuan', data.huayuanReward);
+    this._drawRewardFramedCell(container, cx, cellTop, CELL, 'icon_huayuan', data.huayuanReward);
 
     const flyCenterY = cellTop + CELL * 0.5;
     return { nextY: cellTop + CELL + 38, flyCenterY };

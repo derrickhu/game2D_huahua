@@ -4,14 +4,14 @@
 
 注意：入库尺寸 **249×384（半身）**、**197×384（全身）** 的宽高比 **宽于** API 的 **9:16**；若直接 `resize(tw,th)` 非等比拉伸，半身会像被横向压扁。现改为 `fit_resize_to_canvas` 保持原图比例，不足区域透明。
 
-参考图策略：P2 仍附 P1 全身以保持闭眼姿态一致；P3（半身）对 **非 outfit_default** 套附 `minigame/images/owner/chibi_default.png`（已通过验收的默认半身）以对齐胸像比例与画风，避免 P1 SD 全身把模型带偏。
+参考图策略：P2 仍附 P1 全身以保持闭眼姿态一致；P3（半身）对 **非 outfit_default** 套附 `minigame/subpkg_chars/images/owner/chibi_default.png`（已通过验收的默认半身）以对齐胸像比例与画风，避免 P1 SD 全身把模型带偏。
 
 用法:
   python3 scripts/gen_owner_outfit_panels.py <outfit_id> <p1.txt> <p2.txt> [p3.txt] [--preview-root DIR] [--only-panel N] [--full-only]
 
   --full-only  只生成全身睁眼/闭眼（P1+P2），跳过半身 P3，不写 chibi PNG；可不传 p3 路径。
 
-默认写入仓库内 minigame/images/owner/。
+默认写入仓库内 minigame/subpkg_chars/images/owner/。
 若指定 --preview-root，则写入 DIR/<outfit_id>/（含 raw/ 与最终 full/chibi），不修改 minigame。
 
 环境变量:
@@ -151,7 +151,7 @@ def main() -> None:
         "--preview-root",
         type=Path,
         default=None,
-        help="Write to ROOT/<outfit_id>/ (+ raw/) only; do not write minigame/images/owner",
+        help="Write to ROOT/<outfit_id>/ (+ raw/) only; do not write minigame/subpkg_chars/images/owner",
     )
     parser.add_argument(
         "--only-panel",
@@ -185,7 +185,7 @@ def main() -> None:
         raw_copy_dir = final_dest / "raw"
         raw_copy_dir.mkdir(parents=True, exist_ok=True)
     else:
-        final_dest = root / "minigame/images/owner"
+        final_dest = root / "minigame/subpkg_chars/images/owner"
         final_dest.mkdir(parents=True, exist_ok=True)
         raw_copy_dir = None
 
@@ -208,12 +208,12 @@ def main() -> None:
     if outfit_id == "outfit_default":
         ref_for_p3 = ref_for_p2
     else:
-        canon_bust = root / "minigame/images/owner/chibi_default.png"
+        canon_bust = root / "minigame/subpkg_chars/images/owner/chibi_default.png"
         if canon_bust.is_file():
             ref_for_p3 = shrink_for_api_ref(canon_bust)
         else:
             print(
-                "[warn] minigame/images/owner/chibi_default.png missing; P3 falls back to P1 full-body ref",
+                "[warn] minigame/subpkg_chars/images/owner/chibi_default.png missing; P3 falls back to P1 full-body ref",
                 flush=True,
             )
             ref_for_p3 = ref_for_p2
@@ -276,7 +276,7 @@ def main() -> None:
         if not note.exists():
             note.write_text(
                 "店主形象规范试做输出。美术说明见仓库 docs/owner_sprite_art_spec.md\n"
-                "验收后再拷贝到 minigame/images/owner/ 并确保 TextureCache 已注册。\n",
+                "验收后再拷贝到 minigame/subpkg_chars/images/owner/ 并确保 TextureCache 已注册。\n",
                 encoding="utf-8",
             )
         print(f"[preview] bundle under {final_dest}", flush=True)

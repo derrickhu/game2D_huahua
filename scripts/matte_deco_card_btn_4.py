@@ -14,7 +14,7 @@ except ImportError:
     sys.exit(1)
 
 ROOT = Path(__file__).resolve().parents[1]
-PATH = ROOT / "minigame/images/ui/deco_card_btn_4.png"
+PATH = ROOT / "minigame/subpkg_panels/images/ui/deco_card_btn_4.png"
 
 
 def is_cream_bg(r: int, g: int, b: int, a: int) -> bool:

@@ -3,8 +3,20 @@
  */
 import { EventBus } from '@/core/EventBus';
 import { BOARD_COLS, BOARD_ROWS, BOARD_TOTAL } from '@/config/Constants';
+
+/** 开局棋盘迷雾水壶格（与 BoardLayout BOARD_PRESETS 一致），保证任意位置合铲后必能半解锁 */
+const STARTER_KETTLE_ROW = 2;
+const STARTER_KETTLE_COL = 3;
 import { CellState, BOARD_PRESETS, KeyUnlockMode } from '@/config/BoardLayout';
-import { ITEM_DEFS, getMergeResultId, Category, InteractType, FlowerLine } from '@/config/ItemConfig';
+import {
+  ITEM_DEFS,
+  getDowngradeResultId,
+  getLuckyCoinDirection,
+  getMergeResultId,
+  isLuckyCoinItem,
+  isLuckyCoinValidTarget,
+  pickLuckyCoinNewItemId,
+} from '@/config/ItemConfig';
 import { SeasonSystem } from '@/systems/SeasonSystem';
 
 export interface CellData {
@@ -19,7 +31,15 @@ export interface CellData {
   keyUnlockMode: KeyUnlockMode;
   /** 是否被客人锁定 */
   reserved: boolean;
+  /** 当前格物品是否已被幸运金币作用过（参与合成后由 doMerge 重置） */
+  luckyCoinConsumed: boolean;
 }
+
+/** 尝试用幸运金币作用目标格（源格须为金币）；非金币源返回 not_applicable */
+export type LuckyCoinApplyResult =
+  | { kind: 'not_applicable' }
+  | { kind: 'fail'; toast: string }
+  | { kind: 'ok'; direction: 'up' | 'down'; newId: string };
 
 class BoardManagerClass {
   cells: CellData[] = [];
@@ -48,12 +68,10 @@ class BoardManagerClass {
           unlockPriority: preset?.unlockPriority ?? prioritySeed++,
           keyUnlockMode: preset?.keyUnlockMode ?? 'huayuan',
           reserved: false,
+          luckyCoinConsumed: false,
         });
       }
     }
-
-    this._randomizeInitialOpenItems();
-    this._ensureAtLeastOneMergePair();
 
     const itemCount = this.cells.filter(c => c.itemId).length;
     if (itemCount === 0) {
@@ -83,84 +101,6 @@ class BoardManagerClass {
 
   getCellByIndex(index: number): CellData | null {
     return this.cells[index] || null;
-  }
-
-  /** 初始化随机开局：保留预设的建筑/宝箱，仅随机填充花/饮品类空位 */
-  private _randomizeInitialOpenItems(): void {
-    const openCells = this.cells.filter(c => c.state === CellState.OPEN);
-    if (openCells.length < 2) return;
-
-    const mergeableLv1 = this._buildMergeableLv1Pool();
-    if (mergeableLv1.length === 0) {
-      console.warn('[Board] 可合成物品池为空，保留预设物品, ITEM_DEFS.size:', ITEM_DEFS.size);
-      return;
-    }
-
-    const fillable = openCells.filter(c => {
-      if (!c.itemId) return true;
-      const def = ITEM_DEFS.get(c.itemId);
-      if (!def) return false;
-      return def.interactType === InteractType.NONE;
-    });
-
-    if (fillable.length < 2) return;
-
-    for (const c of fillable) c.itemId = null;
-
-    const emptyReserve = 2;
-    const maxFill = Math.max(2, fillable.length - emptyReserve);
-
-    const pairId = this._pickRandom(mergeableLv1);
-    fillable[0].itemId = pairId;
-    fillable[1].itemId = pairId;
-
-    if (fillable[2] && maxFill > 2) fillable[2].itemId = pairId;
-
-    for (let i = 3; i < maxFill; i++) {
-      fillable[i].itemId = Math.random() < 0.35 ? pairId : this._pickRandom(mergeableLv1);
-    }
-  }
-
-  private _buildMergeableLv1Pool(): string[] {
-    return [...ITEM_DEFS.values()]
-      .filter(def => def.level === 1 && def.maxLevel > 1)
-      .filter(def => def.category === Category.FLOWER && def.line === FlowerLine.FRESH)
-      .map(def => def.id);
-  }
-
-  private _pickRandom<T>(arr: T[]): T {
-    return arr[Math.floor(Math.random() * arr.length)];
-  }
-
-  private _hasMergeablePair(): boolean {
-    const countMap = new Map<string, number>();
-    for (const c of this.cells) {
-      if (c.state !== CellState.OPEN || !c.itemId) continue;
-      const def = ITEM_DEFS.get(c.itemId);
-      if (!def || def.level >= def.maxLevel) continue;
-      countMap.set(c.itemId, (countMap.get(c.itemId) || 0) + 1);
-      if ((countMap.get(c.itemId) || 0) >= 2) return true;
-    }
-    return false;
-  }
-
-  /** 兜底：如果当前开放格没有可合成对，则注入一对 */
-  private _ensureAtLeastOneMergePair(): void {
-    if (this._hasMergeablePair()) return;
-
-    const openCells = this.cells.filter(c => c.state === CellState.OPEN);
-    if (openCells.length < 2) return;
-
-    const pool = this._buildMergeableLv1Pool();
-    if (pool.length === 0) return;
-
-    const pairId = this._pickRandom(pool);
-    const first = openCells.find(c => !c.itemId) ?? openCells[0];
-    const second = openCells.find(c => c.index !== first.index && !c.itemId) ?? openCells.find(c => c.index !== first.index);
-    if (!second) return;
-
-    first.itemId = pairId;
-    second.itemId = pairId;
   }
 
   /** 判断两个物品是否可以合成 */
@@ -208,11 +148,13 @@ class BoardManagerClass {
 
     src.itemId = null;
     src.reserved = false;
+    src.luckyCoinConsumed = false;
 
     if (isPeekMerge) {
       dst.state = CellState.OPEN;
       dst.itemId = resultId;
       dst.reserved = false;
+      dst.luckyCoinConsumed = false;
       resultCellIndex = dstIndex;
       EventBus.emit('board:merged', srcIndex, dstIndex, resultId, resultCellIndex);
       EventBus.emit('board:cellUnlocked', dstIndex);
@@ -220,12 +162,25 @@ class BoardManagerClass {
     } else {
       dst.itemId = resultId;
       dst.reserved = false;
+      dst.luckyCoinConsumed = false;
       resultCellIndex = dstIndex;
       EventBus.emit('board:merged', srcIndex, dstIndex, resultId, resultCellIndex);
       this._checkRippleUnlock(dstIndex);
     }
 
+    this._ensureStarterKettlePeeked(resultId);
     return resultId;
+  }
+
+  /** 首次合出水壶时，若固定格仍为藏雾水壶，强制半锁（避免合铲目标格不在其 3×3 波及内） */
+  private _ensureStarterKettlePeeked(resultId: string): void {
+    if (resultId !== 'tool_plant_2') return;
+    const idx = STARTER_KETTLE_ROW * BOARD_COLS + STARTER_KETTLE_COL;
+    const cell = this.cells[idx];
+    if (!cell || cell.state !== CellState.FOG) return;
+    if (cell.itemId !== 'tool_plant_2') return;
+    cell.state = CellState.PEEK;
+    EventBus.emit('board:cellsPeeked', [idx]);
   }
 
   /** 判断两个格子是否相邻（上下左右） */
@@ -245,8 +200,10 @@ class BoardManagerClass {
 
     dst.itemId = src.itemId;
     dst.reserved = src.reserved;
+    dst.luckyCoinConsumed = src.luckyCoinConsumed;
     src.itemId = null;
     src.reserved = false;
+    src.luckyCoinConsumed = false;
 
     EventBus.emit('board:moved', srcIndex, dstIndex);
     return true;
@@ -264,10 +221,13 @@ class BoardManagerClass {
 
     const itemA = src.itemId;
     const resA = src.reserved;
+    const luckA = src.luckyCoinConsumed;
     src.itemId = dst.itemId;
     src.reserved = dst.reserved;
+    src.luckyCoinConsumed = dst.luckyCoinConsumed;
     dst.itemId = itemA;
     dst.reserved = resA;
+    dst.luckyCoinConsumed = luckA;
 
     EventBus.emit('board:swapped', srcIndex, dstIndex);
     return true;
@@ -278,6 +238,7 @@ class BoardManagerClass {
     const cell = this.cells[index];
     if (!cell || cell.state !== CellState.OPEN || cell.itemId) return false;
     cell.itemId = itemId;
+    cell.luckyCoinConsumed = false;
     EventBus.emit('board:itemPlaced', index, itemId);
     return true;
   }
@@ -289,6 +250,7 @@ class BoardManagerClass {
     const removed = cell.itemId;
     cell.itemId = null;
     cell.reserved = false;
+    cell.luckyCoinConsumed = false;
     EventBus.emit('board:itemRemoved', index, removed);
     return removed;
   }
@@ -364,18 +326,84 @@ class BoardManagerClass {
     return result;
   }
 
+  /**
+   * 拖拽幸运金币时，目标格是否应高亮为可吸附（与 tryApplyLuckyCoin 成功条件一致，且至少可升或可降）
+   */
+  isLuckyCoinHighlightTarget(srcIndex: number, dstIndex: number): boolean {
+    if (srcIndex === dstIndex) return false;
+    const src = this.cells[srcIndex];
+    const dst = this.cells[dstIndex];
+    if (!src?.itemId || !isLuckyCoinItem(src.itemId)) return false;
+    if (src.state !== CellState.OPEN || dst?.state !== CellState.OPEN) return false;
+    if (!dst?.itemId) return false;
+    if (dst.reserved || dst.luckyCoinConsumed) return false;
+    const def = ITEM_DEFS.get(dst.itemId);
+    if (!def || !isLuckyCoinValidTarget(def)) return false;
+    return !!(getMergeResultId(dst.itemId) || getDowngradeResultId(dst.itemId));
+  }
+
+  /**
+   * 源格为幸运金币时尝试作用目标格；非金币源返回 not_applicable。
+   * 目标为空、非 OPEN、非合法合成链物品时返回 not_applicable，以便走移动/互换。
+   */
+  tryApplyLuckyCoin(srcIndex: number, dstIndex: number): LuckyCoinApplyResult {
+    const src = this.cells[srcIndex];
+    const dst = this.cells[dstIndex];
+    if (!src?.itemId || !isLuckyCoinItem(src.itemId)) return { kind: 'not_applicable' };
+    if (!dst) return { kind: 'not_applicable' };
+    if (src.state !== CellState.OPEN) return { kind: 'not_applicable' };
+    if (dst.state !== CellState.OPEN) return { kind: 'not_applicable' };
+    if (!dst.itemId) return { kind: 'not_applicable' };
+
+    if (dst.reserved) {
+      return { kind: 'fail', toast: '客人预定的物品无法使用幸运金币' };
+    }
+    if (dst.luckyCoinConsumed) {
+      return { kind: 'fail', toast: '这件物品已使用过幸运金币，合成后可再次使用' };
+    }
+
+    const def = ITEM_DEFS.get(dst.itemId);
+    if (!def || !isLuckyCoinValidTarget(def)) return { kind: 'not_applicable' };
+
+    const newId = pickLuckyCoinNewItemId(dst.itemId);
+    if (!newId) {
+      return { kind: 'fail', toast: '该物品无法再升或降级' };
+    }
+
+    const oldTargetId = dst.itemId;
+    const direction = getLuckyCoinDirection(oldTargetId, newId);
+    const coinId = src.itemId;
+
+    src.itemId = null;
+    src.reserved = false;
+    src.luckyCoinConsumed = false;
+    EventBus.emit('board:itemRemoved', srcIndex, coinId);
+
+    dst.itemId = newId;
+    dst.luckyCoinConsumed = true;
+    dst.reserved = false;
+
+    EventBus.emit('board:luckyCoinApplied', srcIndex, dstIndex, newId, direction);
+    EventBus.emit('board:itemPlaced', dstIndex, newId);
+
+    return { kind: 'ok', direction, newId };
+  }
+
   /** 导出存档 */
-  exportState(): { index: number; state: CellState; itemId: string | null; reserved: boolean }[] {
+  exportState(): { index: number; state: CellState; itemId: string | null; reserved: boolean; luckyCoinConsumed: boolean }[] {
     return this.cells.map(c => ({
       index: c.index,
       state: c.state,
       itemId: c.itemId,
       reserved: c.reserved,
+      luckyCoinConsumed: c.luckyCoinConsumed,
     }));
   }
 
   /** 加载存档 */
-  loadState(savedCells: { index: number; state: CellState; itemId: string | null; reserved: boolean }[]): void {
+  loadState(
+    savedCells: { index: number; state: CellState; itemId: string | null; reserved: boolean; luckyCoinConsumed?: boolean }[],
+  ): void {
     for (const saved of savedCells) {
       const cell = this.cells[saved.index];
       if (cell) {
@@ -383,10 +411,9 @@ class BoardManagerClass {
         cell.itemId = saved.itemId;
         // reserved 由 CustomerManager 按当前客人队列实时计算，不读档（客人未持久化时会导致幽灵锁格+假满足标）
         cell.reserved = false;
+        cell.luckyCoinConsumed = saved.luckyCoinConsumed === true;
       }
     }
-
-    this._ensureAtLeastOneMergePair();
 
     const openCells = this.cells.filter(c => c.state === CellState.OPEN);
     const itemCount = openCells.filter(c => c.itemId).length;
