@@ -43,7 +43,8 @@ export const BOARD_PRESETS: CellPreset[] = [
   { row: 1, col: 2, state: CellState.FOG,  itemId: 'flower_bouquet_4', keyPrice: 0, unlockPriority: 72 },
   { row: 1, col: 3, state: CellState.FOG,  itemId: 'drink_tea_4',      keyPrice: 0, unlockPriority: 73 },
   { row: 1, col: 4, state: CellState.FOG,  itemId: 'flower_green_4',   keyPrice: 0, unlockPriority: 74 },
-  { row: 1, col: 5, state: CellState.FOG,  itemId: 'tool_mixer_3',     keyPrice: 0, unlockPriority: 75 },
+  /** 冷饮 Lv3 器具：置于最外沿底行，依赖合成 3×3 波及从中央向外推进，通常最后才半解锁 */
+  { row: 1, col: 5, state: CellState.FOG,  itemId: 'drink_cold_7',     keyPrice: 0, unlockPriority: 75 },
   { row: 1, col: 6, state: CellState.FOG,  itemId: 'flower_fresh_7',   keyPrice: 0, unlockPriority: 76 },
 
   { row: 2, col: 0, state: CellState.FOG,  itemId: 'drink_tea_5',      keyPrice: 0, unlockPriority: 60 },
@@ -99,6 +100,6 @@ export const BOARD_PRESETS: CellPreset[] = [
   { row: 8, col: 2, state: CellState.FOG,  itemId: 'flower_fresh_7',   keyPrice: 0, unlockPriority: 92 },
   { row: 8, col: 3, state: CellState.FOG,  itemId: 'drink_tea_7',      keyPrice: 0, unlockPriority: 93 },
   { row: 8, col: 4, state: CellState.FOG,  itemId: 'flower_bouquet_7', keyPrice: 0, unlockPriority: 94 },
-  { row: 8, col: 5, state: CellState.FOG,  itemId: 'drink_cold_7',     keyPrice: 0, unlockPriority: 95 },
+  { row: 8, col: 5, state: CellState.FOG,  itemId: 'tool_mixer_3',     keyPrice: 0, unlockPriority: 99 },
   { row: 8, col: 6, state: CellState.KEY,  itemId: null,               keyPrice: 500, unlockPriority: 96 },
 ];

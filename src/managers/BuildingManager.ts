@@ -381,6 +381,11 @@ class BuildingManagerClass {
       this._states.delete(srcIndex);
       this._states.delete(dstIndex);
     });
+    /** 水晶球 / 金剪刀：同 luckyCoin，清 src、dst 建筑状态 */
+    EventBus.on('board:specialConsumableApplied', (srcIndex: number, dstIndex: number) => {
+      this._states.delete(srcIndex);
+      this._states.delete(dstIndex);
+    });
   }
 
   /** 判断某个物品是否是工具类交互（tool_* 或花束包装纸等） */

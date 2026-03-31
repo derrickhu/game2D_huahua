@@ -4,7 +4,7 @@
  *   - 主包：棋盘/顶栏等小图标与启动必需 UI（images/）
  *   - 分包 chars：店主全身/半身 + 客人胸像（subpkg_chars/images/）
  *   - 分包 panels：签到/花语彩蛋/仓库/合成线/装修大卡等面板底图（subpkg_panels/images/ui/）
- *   - 分包 items：花朵 + 饮品 + 工具物品图标（subpkg_items/images/）
+ *   - 分包 items：花朵 + 饮品 + 工具 + 棋盘消耗品等（subpkg_items/images/）；PNG 入库规范见 .cursor/rules/board-item-png-spec.mdc → compress_subpkg_items_pngs.py
  *   - 分包 deco：家具 + 房间背景 + 旧 room 素材（subpkg_deco/images/）
  */
 import * as PIXI from 'pixi.js';
@@ -15,7 +15,6 @@ import * as PIXI from 'pixi.js';
 const MAIN_IMAGE_MAP: Record<string, string> = {
   // ---- UI 图标 ----
   icon_energy: 'images/ui/icon_energy.png',
-  icon_coin:   'images/ui/icon_coin.png',
   icon_gem:    'images/ui/icon_gem.png',
   icon_star:   'images/ui/icon_star.png',
   icon_plus:   'images/ui/icon_plus.png',
@@ -120,6 +119,9 @@ const PANELS_IMAGE_MAP: Record<string, string> = {
   warehouse_slot_lock: 'subpkg_panels/images/ui/warehouse_slot_lock.png',
   merge_chain_ribbon: 'subpkg_panels/images/ui/merge_chain_ribbon.png',
   merge_chain_panel: 'subpkg_panels/images/ui/merge_chain_panel.png',
+  /** 水晶球/金剪刀确认弹窗：NB2+rembg，与合成线彩带同风格 */
+  special_consumable_panel_bg: 'subpkg_panels/images/ui/special_consumable_panel_bg.png',
+  special_consumable_use_btn: 'subpkg_panels/images/ui/special_consumable_use_btn.png',
   deco_panel_popup_frame: 'subpkg_panels/images/ui/deco_panel_popup_frame.png',
   deco_furniture_card: 'subpkg_panels/images/ui/deco_furniture_card.png',
   deco_panel_title_ribbon: 'subpkg_panels/images/ui/deco_panel_title_ribbon.png',
@@ -246,7 +248,7 @@ const ITEMS_IMAGE_MAP: Record<string, string> = {
   tool_mixer_4: 'subpkg_items/images/tools/mixer/tool_mixer_4.png',
   tool_mixer_5: 'subpkg_items/images/tools/mixer/tool_mixer_5.png',
 
-  // ---- 宝箱 5 档（NB2 品红底抠图，与工具线同 256 逻辑像素规范）----
+  // ---- 宝箱 5 档（棋盘物品图统一最长边 128px + 256 色调色板，见 scripts/compress_subpkg_items_pngs.py）----
   chest_1: 'subpkg_items/images/chest/chest_1.png',
   chest_2: 'subpkg_items/images/chest/chest_2.png',
   chest_3: 'subpkg_items/images/chest/chest_3.png',
@@ -258,6 +260,11 @@ const ITEMS_IMAGE_MAP: Record<string, string> = {
   hongbao_2: 'subpkg_items/images/hongbao/hongbao_2.png',
   hongbao_3: 'subpkg_items/images/hongbao/hongbao_3.png',
   hongbao_4: 'subpkg_items/images/hongbao/hongbao_4.png',
+
+  // ---- 棋盘消耗品（幸运金币 / 水晶球 / 金剪刀，与 icon_coin 同 122×128，items 分包）----
+  icon_coin: 'subpkg_items/images/special/special_lucky_coin.png',
+  icon_crystal_ball: 'subpkg_items/images/special/special_crystal_ball.png',
+  icon_golden_scissors: 'subpkg_items/images/special/special_golden_scissors.png',
 };
 
 // ================================================================
@@ -336,6 +343,24 @@ const DECO_IMAGE_MAP: Record<string, string> = {
   garden_zen:       'subpkg_deco/images/furniture/garden_zen.png',
   garden_summer:    'subpkg_deco/images/furniture/garden_summer.png',
   garden_wood_trough: 'subpkg_deco/images/furniture/garden_wood_trough.png',
+
+  // 花房主题家具（NB2）
+  wallart_greenhouse_chalkboard: 'subpkg_deco/images/furniture/wallart_greenhouse_chalkboard.png',
+  orn_greenhouse_cart: 'subpkg_deco/images/furniture/orn_greenhouse_cart.png',
+  garden_flower_stall: 'subpkg_deco/images/furniture/garden_flower_stall.png',
+  orn_greenhouse_rug: 'subpkg_deco/images/furniture/orn_greenhouse_rug.png',
+  orn_greenhouse_coat_rack: 'subpkg_deco/images/furniture/orn_greenhouse_coat_rack.png',
+  orn_greenhouse_flower_cart: 'subpkg_deco/images/furniture/orn_greenhouse_flower_cart.png',
+  greenhouse_pot_sprout: 'subpkg_deco/images/furniture/greenhouse_pot_sprout.png',
+  greenhouse_pot_bud: 'subpkg_deco/images/furniture/greenhouse_pot_bud.png',
+  greenhouse_pot_daisy: 'subpkg_deco/images/furniture/greenhouse_pot_daisy.png',
+  greenhouse_pot_sunflower: 'subpkg_deco/images/furniture/greenhouse_pot_sunflower.png',
+  greenhouse_pot_carnation: 'subpkg_deco/images/furniture/greenhouse_pot_carnation.png',
+  greenhouse_pot_rose: 'subpkg_deco/images/furniture/greenhouse_pot_rose.png',
+  greenhouse_pot_lily: 'subpkg_deco/images/furniture/greenhouse_pot_lily.png',
+  greenhouse_pot_hydrangea: 'subpkg_deco/images/furniture/greenhouse_pot_hydrangea.png',
+  greenhouse_pot_orchid: 'subpkg_deco/images/furniture/greenhouse_pot_orchid.png',
+  greenhouse_pot_peony_gold: 'subpkg_deco/images/furniture/greenhouse_pot_peony_gold.png',
 
   // ---- 房间背景 ----
   bg_room_default: 'subpkg_deco/images/house/bg_room_default.png',

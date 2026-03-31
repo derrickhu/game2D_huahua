@@ -10,9 +10,13 @@ const STARTER_KETTLE_COL = 3;
 import { CellState, BOARD_PRESETS, KeyUnlockMode } from '@/config/BoardLayout';
 import {
   ITEM_DEFS,
+  findItemId,
   getDowngradeResultId,
   getLuckyCoinDirection,
   getMergeResultId,
+  isCrystalBallItem,
+  isCrystalScissorsValidTargetDef,
+  isGoldenScissorsItem,
   isLuckyCoinItem,
   isLuckyCoinValidTarget,
   pickLuckyCoinNewItemId,
@@ -40,6 +44,16 @@ export type LuckyCoinApplyResult =
   | { kind: 'not_applicable' }
   | { kind: 'fail'; toast: string }
   | { kind: 'ok'; direction: 'up' | 'down'; newId: string };
+
+export type CrystalBallPreviewResult =
+  | { kind: 'not_applicable' }
+  | { kind: 'fail'; toast: string }
+  | { kind: 'ok'; newId: string };
+
+export type GoldenScissorsPreviewResult =
+  | { kind: 'not_applicable' }
+  | { kind: 'fail'; toast: string }
+  | { kind: 'ok'; splitId: string };
 
 class BoardManagerClass {
   cells: CellData[] = [];
@@ -336,7 +350,7 @@ class BoardManagerClass {
     if (!src?.itemId || !isLuckyCoinItem(src.itemId)) return false;
     if (src.state !== CellState.OPEN || dst?.state !== CellState.OPEN) return false;
     if (!dst?.itemId) return false;
-    if (dst.reserved || dst.luckyCoinConsumed) return false;
+    if (dst.luckyCoinConsumed) return false;
     const def = ITEM_DEFS.get(dst.itemId);
     if (!def || !isLuckyCoinValidTarget(def)) return false;
     return !!(getMergeResultId(dst.itemId) || getDowngradeResultId(dst.itemId));
@@ -355,9 +369,6 @@ class BoardManagerClass {
     if (dst.state !== CellState.OPEN) return { kind: 'not_applicable' };
     if (!dst.itemId) return { kind: 'not_applicable' };
 
-    if (dst.reserved) {
-      return { kind: 'fail', toast: '客人预定的物品无法使用幸运金币' };
-    }
     if (dst.luckyCoinConsumed) {
       return { kind: 'fail', toast: '这件物品已使用过幸运金币，合成后可再次使用' };
     }
@@ -387,6 +398,123 @@ class BoardManagerClass {
     EventBus.emit('board:itemPlaced', dstIndex, newId);
 
     return { kind: 'ok', direction, newId };
+  }
+
+  /** 第一个空的 OPEN 格（不含指定索引），无则 -1 */
+  findEmptyOpenCellExcluding(excludeIndex: number): number {
+    for (const cell of this.cells) {
+      if (cell.index === excludeIndex) continue;
+      if (cell.state === CellState.OPEN && !cell.itemId) return cell.index;
+    }
+    return -1;
+  }
+
+  isCrystalBallHighlightTarget(srcIndex: number, dstIndex: number): boolean {
+    if (srcIndex === dstIndex) return false;
+    const src = this.cells[srcIndex];
+    const dst = this.cells[dstIndex];
+    if (!src?.itemId || !isCrystalBallItem(src.itemId)) return false;
+    if (src.state !== CellState.OPEN || dst?.state !== CellState.OPEN) return false;
+    if (!dst?.itemId) return false;
+    const def = ITEM_DEFS.get(dst.itemId);
+    if (!def || !isCrystalScissorsValidTargetDef(def)) return false;
+    return !!getMergeResultId(dst.itemId);
+  }
+
+  isGoldenScissorsHighlightTarget(srcIndex: number, dstIndex: number): boolean {
+    if (srcIndex === dstIndex) return false;
+    const src = this.cells[srcIndex];
+    const dst = this.cells[dstIndex];
+    if (!src?.itemId || !isGoldenScissorsItem(src.itemId)) return false;
+    if (src.state !== CellState.OPEN || dst?.state !== CellState.OPEN) return false;
+    if (!dst?.itemId) return false;
+    const def = ITEM_DEFS.get(dst.itemId);
+    if (!def || !isCrystalScissorsValidTargetDef(def)) return false;
+    if (def.level < 2) return false;
+    const splitId = findItemId(def.category, def.line, def.level - 1);
+    if (!splitId) return false;
+    return this.findEmptyOpenCellExcluding(dstIndex) >= 0;
+  }
+
+  previewCrystalBallApply(srcIndex: number, dstIndex: number): CrystalBallPreviewResult {
+    const src = this.cells[srcIndex];
+    const dst = this.cells[dstIndex];
+    if (!src?.itemId || !isCrystalBallItem(src.itemId)) return { kind: 'not_applicable' };
+    if (!dst) return { kind: 'not_applicable' };
+    if (src.state !== CellState.OPEN) return { kind: 'not_applicable' };
+    if (dst.state !== CellState.OPEN) return { kind: 'not_applicable' };
+    if (!dst.itemId) return { kind: 'not_applicable' };
+    const def = ITEM_DEFS.get(dst.itemId);
+    if (!def || !isCrystalScissorsValidTargetDef(def)) return { kind: 'not_applicable' };
+    const newId = getMergeResultId(dst.itemId);
+    if (!newId) return { kind: 'fail', toast: '该物品已满级，无法升级' };
+    return { kind: 'ok', newId };
+  }
+
+  previewGoldenScissorsApply(srcIndex: number, dstIndex: number): GoldenScissorsPreviewResult {
+    const src = this.cells[srcIndex];
+    const dst = this.cells[dstIndex];
+    if (!src?.itemId || !isGoldenScissorsItem(src.itemId)) return { kind: 'not_applicable' };
+    if (!dst) return { kind: 'not_applicable' };
+    if (src.state !== CellState.OPEN) return { kind: 'not_applicable' };
+    if (dst.state !== CellState.OPEN) return { kind: 'not_applicable' };
+    if (!dst.itemId) return { kind: 'not_applicable' };
+    const def = ITEM_DEFS.get(dst.itemId);
+    if (!def || !isCrystalScissorsValidTargetDef(def)) return { kind: 'not_applicable' };
+    if (def.level < 2) return { kind: 'fail', toast: '一级物品无法再拆分' };
+    const splitId = findItemId(def.category, def.line, def.level - 1);
+    if (!splitId) return { kind: 'fail', toast: '无法拆出低一级的物品' };
+    if (this.findEmptyOpenCellExcluding(dstIndex) < 0) {
+      return { kind: 'fail', toast: '棋盘没有空位放置第二件' };
+    }
+    return { kind: 'ok', splitId };
+  }
+
+  commitCrystalBallApply(srcIndex: number, dstIndex: number): boolean {
+    const prev = this.previewCrystalBallApply(srcIndex, dstIndex);
+    if (prev.kind !== 'ok') return false;
+    const src = this.cells[srcIndex];
+    const dst = this.cells[dstIndex];
+    const toolId = src.itemId!;
+    const newId = prev.newId;
+
+    src.itemId = null;
+    src.reserved = false;
+    src.luckyCoinConsumed = false;
+    EventBus.emit('board:itemRemoved', srcIndex, toolId);
+
+    dst.itemId = newId;
+    dst.reserved = false;
+
+    EventBus.emit('board:specialConsumableApplied', srcIndex, dstIndex);
+    EventBus.emit('board:itemPlaced', dstIndex, newId);
+    return true;
+  }
+
+  commitGoldenScissorsApply(srcIndex: number, dstIndex: number): boolean {
+    const prev = this.previewGoldenScissorsApply(srcIndex, dstIndex);
+    if (prev.kind !== 'ok') return false;
+    const secondIdx = this.findEmptyOpenCellExcluding(dstIndex);
+    if (secondIdx < 0) return false;
+
+    const src = this.cells[srcIndex];
+    const dst = this.cells[dstIndex];
+    const toolId = src.itemId!;
+    const splitId = prev.splitId;
+
+    src.itemId = null;
+    src.reserved = false;
+    src.luckyCoinConsumed = false;
+    EventBus.emit('board:itemRemoved', srcIndex, toolId);
+
+    dst.itemId = splitId;
+    dst.reserved = false;
+    EventBus.emit('board:itemPlaced', dstIndex, splitId);
+
+    this.placeItem(secondIdx, splitId);
+
+    EventBus.emit('board:specialConsumableApplied', srcIndex, dstIndex);
+    return true;
   }
 
   /** 导出存档 */

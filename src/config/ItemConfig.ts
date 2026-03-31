@@ -7,6 +7,7 @@
  */
 
 import {
+  computeSellHuayuan,
   drinkDeliverHuayuanForLevel,
   flowerDeliverHuayuanForLevel,
 } from './OrderHuayuanConfig';
@@ -88,6 +89,8 @@ export interface ItemDef {
   currencyReward?: { type: 'stamina' | 'huayuan' | 'diamond'; amount: number };
   /** 订单需求交付时该物品贡献的花愿（固定单价；多槽订单另有加成） */
   orderHuayuan?: number;
+  /** 棋盘出售花愿（固定，远低于 orderHuayuan）；无则出售仅腾格 */
+  sellHuayuan?: number;
 }
 
 // ═══════════════ 产品数据 ═══════════════
@@ -147,6 +150,10 @@ const TOOL_DATA: [ToolLine, string[]][] = [
 
 /** 棋盘幸运金币 itemId（单级，不可两枚合成） */
 export const LUCKY_COIN_ITEM_ID = 'lucky_coin_1';
+/** 棋盘水晶球：确认后目标升一级（同线） */
+export const CRYSTAL_BALL_ITEM_ID = 'crystal_ball_1';
+/** 棋盘金剪刀：确认后目标变为同线「低一级」×2（目标格一件 + 另一空位一件） */
+export const GOLDEN_SCISSORS_ITEM_ID = 'golden_scissors_1';
 
 // ═══════════════ 生成物品定义 ═══════════════
 
@@ -159,6 +166,7 @@ function buildItemDefs(): Map<string, ItemDef> {
     for (let i = 0; i < names.length; i++) {
       const id = `flower_${line}_${i + 1}`;
       const lv = i + 1;
+      const orderHy = line !== FlowerLine.WRAP ? flowerDeliverHuayuanForLevel(lv) : 0;
       map.set(id, {
         id,
         name: names[i],
@@ -170,7 +178,9 @@ function buildItemDefs(): Map<string, ItemDef> {
         interactType: InteractType.NONE,
         sellable: true,
         storable: true,
-        ...(line !== FlowerLine.WRAP ? { orderHuayuan: flowerDeliverHuayuanForLevel(lv) } : {}),
+        ...(line !== FlowerLine.WRAP
+          ? { orderHuayuan: orderHy, sellHuayuan: computeSellHuayuan(orderHy) }
+          : {}),
       });
     }
   }
@@ -180,6 +190,7 @@ function buildItemDefs(): Map<string, ItemDef> {
     for (let i = 0; i < names.length; i++) {
       const id = `drink_${line}_${i + 1}`;
       const lv = i + 1;
+      const orderHy = drinkDeliverHuayuanForLevel(lv);
       map.set(id, {
         id,
         name: names[i],
@@ -191,7 +202,8 @@ function buildItemDefs(): Map<string, ItemDef> {
         interactType: InteractType.NONE,
         sellable: true,
         storable: true,
-        orderHuayuan: drinkDeliverHuayuanForLevel(lv),
+        orderHuayuan: orderHy,
+        sellHuayuan: computeSellHuayuan(orderHy),
       });
     }
   }
@@ -318,6 +330,32 @@ function buildItemDefs(): Map<string, ItemDef> {
     storable: true,
   });
 
+  map.set(CRYSTAL_BALL_ITEM_ID, {
+    id: CRYSTAL_BALL_ITEM_ID,
+    name: '水晶球',
+    category: Category.BUILDING,
+    line: 'special_crystal',
+    level: 1,
+    maxLevel: 1,
+    icon: 'icon_crystal_ball',
+    interactType: InteractType.NONE,
+    sellable: false,
+    storable: true,
+  });
+
+  map.set(GOLDEN_SCISSORS_ITEM_ID, {
+    id: GOLDEN_SCISSORS_ITEM_ID,
+    name: '金剪刀',
+    category: Category.BUILDING,
+    line: 'special_scissors',
+    level: 1,
+    maxLevel: 1,
+    icon: 'icon_golden_scissors',
+    interactType: InteractType.NONE,
+    sellable: false,
+    storable: true,
+  });
+
   return map;
 }
 
@@ -360,6 +398,30 @@ export function getDowngradeResultId(itemId: string): string | null {
 
 export function isLuckyCoinItem(itemId: string): boolean {
   return itemId === LUCKY_COIN_ITEM_ID;
+}
+
+export function isCrystalBallItem(itemId: string): boolean {
+  return itemId === CRYSTAL_BALL_ITEM_ID;
+}
+
+export function isGoldenScissorsItem(itemId: string): boolean {
+  return itemId === GOLDEN_SCISSORS_ITEM_ID;
+}
+
+/** 棋盘消耗品（金币 / 水晶球 / 金剪刀） */
+export function isSpecialConsumableItem(itemId: string): boolean {
+  return isLuckyCoinItem(itemId) || isCrystalBallItem(itemId) || isGoldenScissorsItem(itemId);
+}
+
+/**
+ * 水晶球与金剪刀允许作用的物品：仅 FLOWER / DRINK 且非 TOOL；排除宝箱、货币、消耗品自身。
+ */
+export function isCrystalScissorsValidTargetDef(def: ItemDef): boolean {
+  if (isSpecialConsumableItem(def.id)) return false;
+  if (def.category === Category.CHEST || def.category === Category.CURRENCY) return false;
+  if (def.category !== Category.FLOWER && def.category !== Category.DRINK) return false;
+  if (def.interactType === InteractType.TOOL) return false;
+  return true;
 }
 
 /** 幸运金币可作用的棋盘物品：鲜花/饮品可合成链 + 工具；排除宝箱、货币、金币自身 */
@@ -426,6 +488,8 @@ export function getMergeChainName(itemId: string): string {
     [CurrencyLine.HUAYUAN_PICKUP]: '花愿利是',
     [CurrencyLine.DIAMOND]: '钻石',
     lucky_coin: '幸运金币',
+    special_crystal: '水晶球',
+    special_scissors: '金剪刀',
   };
   return (lineNames[def.line] || def.line) + '合成线';
 }

@@ -5,7 +5,17 @@ import * as PIXI from 'pixi.js';
 import { EventBus } from '@/core/EventBus';
 import { TweenManager, Ease } from '@/core/TweenManager';
 import { DESIGN_WIDTH, COLORS, FONT_FAMILY } from '@/config/Constants';
-import { ITEM_DEFS, ItemDef, Category, InteractType, FlowerLine, getMergeChain, isLuckyCoinItem } from '@/config/ItemConfig';
+import {
+  ITEM_DEFS,
+  ItemDef,
+  Category,
+  InteractType,
+  FlowerLine,
+  getMergeChain,
+  isCrystalBallItem,
+  isGoldenScissorsItem,
+  isLuckyCoinItem,
+} from '@/config/ItemConfig';
 import { findBoardProducerDef } from '@/config/BuildingConfig';
 import { CellState } from '@/config/BoardLayout';
 import { BoardManager } from '@/managers/BoardManager';
@@ -440,7 +450,7 @@ export class ItemInfoBar extends PIXI.Container {
     );
     this._chainBtn.addChild(bg);
 
-    const text = new PIXI.Text('合成线', {
+    const text = new PIXI.Text('查看', {
       fontSize: 17,
       fill: 0xffffff,
       fontFamily: FONT_FAMILY,
@@ -662,6 +672,12 @@ export class ItemInfoBar extends PIXI.Container {
   private _getDescription(def: ItemDef): string {
     if (isLuckyCoinItem(def.id)) {
       return '拖到鲜花或饮品上试试，会有惊喜。';
+    }
+    if (isCrystalBallItem(def.id)) {
+      return '拖到鲜花或饮品上，确认后可稳定升一级（满级不可用）。';
+    }
+    if (isGoldenScissorsItem(def.id)) {
+      return '拖到 2 级及以上的鲜花或饮品上，确认后拆成两个低一级的同线物品。';
     }
     if (def.interactType === InteractType.TOOL) {
       const pd = findBoardProducerDef(def.id);

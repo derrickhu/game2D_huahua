@@ -1,0 +1,42 @@
+---
+description: 棋盘格物品图（items 分包）统一尺寸与 PNG 压缩 — 入库前强制流程
+globs: minigame/subpkg_items/images/**/*.png, scripts/compress_subpkg_items_pngs.py, src/utils/TextureCache.ts, docs/prompt/*_nb2_prompt.txt
+alwaysApply: true
+---
+
+# 棋盘格物品 PNG 规范（`subpkg_items/images`）
+
+凡落入 **`minigame/subpkg_items/images/`**、在棋盘上以 `ItemView` / `TextureCache` **items 分包** 显示的图标（鲜花、饮品、工具、宝箱、红包、棋盘消耗品等），**入库 Git 前**须满足下列压缩标准，与当前 **幸运金币** 体量一致（约数 KB 级、最长边 128px）。
+
+## 强制流程
+
+1. 生图 → **rembg**（`birefnet-general`）→ **`crop_trim.py --padding 4`**（见 `remove-background-game-art.mdc`、工具线见 `tool-icon-art-style.mdc`）。
+2. 拷贝到 `minigame/subpkg_items/images/` 下对应子目录，`TextureCache` 的 `ITEMS_IMAGE_MAP` 已注册 key。
+3. **整目录跑压缩脚本**（仓库根）：
+
+```bash
+python3 scripts/compress_subpkg_items_pngs.py
+```
+
+- 可先 `python3 scripts/compress_subpkg_items_pngs.py --dry-run` 看体积变化。
+- 仅新增/替换少数文件时，仍建议对**整个** `subpkg_items/images` 执行一次，保证与全量规范一致。
+- 脚本将中间 PNG 写入**系统临时目录**，不会在 `subpkg_items` 下产生 `tmp*.png`；若曾在资源目录内写临时文件，微信开发者工具可能缓存该路径并在文件消失后报 `ENOENT`。
+
+## 脚本等价参数（勿在业务代码里重复实现另一套）
+
+| 项 | 值 |
+|----|-----|
+| 最长边上限 | **128 px**（`--max-side 128`），不足则不放大 |
+| 缩放算法 | LANCZOS |
+| 调色板 | **256 色**，`FASTOCTREE` + **Floyd–Steinberg** 抖动 |
+| PNG | `optimize=True`，`compress_level=9` |
+
+## 例外
+
+- **`special/special_lucky_coin.png`**：脚本**默认跳过**，保持既有 P 模式小图；勿随意覆盖。
+- 若个别资源验收不通过，可临时调高 `--max-side` 或改脚本参数，但**须同步更新本规则与脚本头部说明**，避免规范漂移。
+
+## 相关文件
+
+- 脚本：`scripts/compress_subpkg_items_pngs.py`
+- 纹理映射：`src/utils/TextureCache.ts` → `ITEMS_IMAGE_MAP`

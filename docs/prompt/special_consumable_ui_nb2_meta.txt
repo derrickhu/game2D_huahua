@@ -1,0 +1,38 @@
+# 水晶球/金剪刀确认弹窗 UI（NB2）— 流程说明（非 API 提示词）
+
+标题条复用现有 `merge_chain_ribbon.png`（与合成线弹窗一致）。本任务仅生成：面板底 + 「使用」按钮。
+
+## 提示词（入 Git）
+
+- `special_consumable_panel_bg_nb2_prompt.txt` — 横版奶油圆角面板，品红底
+- `special_consumable_use_btn_nb2_prompt.txt` — 绿色圆角主按钮，无字，品红底
+
+## 生成（NB2）
+
+```bash
+mkdir -p ~/rosa_games/game_assets/huahua/assets/raw
+GEMINI_IMAGE_REST_ONLY=1 python3 ~/.cursor/skills/gemini-image-gen/scripts/generate_images.py \
+  --prompt-file "{workspace}/docs/prompt/special_consumable_panel_bg_nb2_prompt.txt" \
+  --output ~/rosa_games/game_assets/huahua/assets/raw/special_consumable_panel_bg_nb2.png \
+  --model gemini-3.1-flash-image-preview \
+  --aspect-ratio 16:9
+
+GEMINI_IMAGE_REST_ONLY=1 python3 ~/.cursor/skills/gemini-image-gen/scripts/generate_images.py \
+  --prompt-file "{workspace}/docs/prompt/special_consumable_use_btn_nb2_prompt.txt" \
+  --output ~/rosa_games/game_assets/huahua/assets/raw/special_consumable_use_btn_nb2.png \
+  --model gemini-3.1-flash-image-preview \
+  --aspect-ratio 4:3
+```
+
+## 抠图入库
+
+```bash
+cd {workspace}
+python3 scripts/process_special_consumable_ui_nb2.py
+```
+
+→ `minigame/subpkg_panels/images/ui/special_consumable_panel_bg.png`  
+→ `minigame/subpkg_panels/images/ui/special_consumable_use_btn.png`
+
+`TextureCache`：`special_consumable_panel_bg`、`special_consumable_use_btn`  
+`SpecialConsumableConfirmPanel.ts`：底图 + 按钮贴图；标题 `merge_chain_ribbon`。

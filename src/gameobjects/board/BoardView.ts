@@ -8,9 +8,16 @@ import { TweenManager, Ease } from '@/core/TweenManager';
 import { BOARD_COLS, BOARD_ROWS, CELL_GAP, BoardMetrics, COLORS, DESIGN_WIDTH } from '@/config/Constants';
 import { CellState } from '@/config/BoardLayout';
 import { findBoardProducerDef } from '@/config/BuildingConfig';
-import { ITEM_DEFS, Category, getMergeChain, isLuckyCoinItem } from '@/config/ItemConfig';
+import {
+  ITEM_DEFS,
+  Category,
+  getMergeChain,
+  isCrystalBallItem,
+  isGoldenScissorsItem,
+  isLuckyCoinItem,
+} from '@/config/ItemConfig';
 import { BoardManager } from '@/managers/BoardManager';
-import { MergeManager } from '@/managers/MergeManager';
+import { MergeManager, type MergeEndDragResult } from '@/managers/MergeManager';
 import { BuildingManager } from '@/managers/BuildingManager';
 import { CurrencyManager } from '@/managers/CurrencyManager';
 import { Platform } from '@/core/PlatformService';
@@ -20,8 +27,10 @@ import { ToolSparkleLayer } from '@/utils/ToolSparkleLayer';
 import { CellView } from './CellView';
 import { ItemView } from './ItemView';
 import { ConfirmDialog } from '../ui/ConfirmDialog';
+import { SpecialConsumableConfirmPanel } from '../ui/SpecialConsumableConfirmPanel';
 import { ToastMessage } from '../ui/ToastMessage';
 import { WarehouseManager } from '@/managers/WarehouseManager';
+import { getItemSellPrice } from '@/utils/ItemSellPrice';
 import { MergeGuideLineSystem } from '@/systems/MergeGuideLineSystem';
 import { MergeHintSystem } from '@/systems/MergeHintSystem';
 
@@ -51,6 +60,8 @@ export class BoardView extends PIXI.Container {
   private _guideLineSystem: MergeGuideLineSystem;
   /** 空闲合成提示系统 */
   private _mergeHintSystem!: MergeHintSystem;
+  /** 每格抖动动画专用 target，用于 cancelTarget，避免连点多个 shake 补间互相写 x 导致格底与物品错位 */
+  private _shakeProxies: { t: number }[] = [];
 
   /** 将拖拽幽灵挂到场景根容器，保证拖向仓库等区域时仍盖在所有 UI 之上 */
   setDragGhostParent(parent: PIXI.Container | null): void {
@@ -141,6 +152,7 @@ export class BoardView extends PIXI.Container {
         itemView.position.set(p.x, p.y);
         this._itemsLayer.addChild(itemView);
         this._itemViews.push(itemView);
+        this._shakeProxies.push({ t: 0 });
       }
     }
   }
@@ -158,6 +170,9 @@ export class BoardView extends PIXI.Container {
 
   /** 根据 BoardManager 数据刷新所有视图 */
   refresh(): void {
+    for (const p of this._shakeProxies) {
+      TweenManager.cancelTarget(p);
+    }
     for (let i = 0; i < BoardManager.cells.length; i++) {
       const cell = BoardManager.cells[i];
       const cellView = this._cellViews[i];
@@ -210,8 +225,10 @@ export class BoardView extends PIXI.Container {
       // 半解锁丝带：挂在 ItemView 内并强制盖在体力角标之上
       itemView.setPeekRibbon(cell.state === CellState.PEEK);
 
-      // 每帧数据刷新时强制对齐格位，避免合成弹出 pivot 被打断等导致物品漂在格缝间
+      // 每帧数据刷新时强制对齐格位，避免合成弹出 pivot 被打断等导致物品漂在格缝间；
+      // 格底 CellView 也要复位：抖动 _shakeCell 在 refresh 里被 cancel 时不会走 onComplete，否则白底与物品层错位
       const pos = this._cellPositionForIndex(i);
+      cellView.position.set(pos.x, pos.y);
       itemView.snapToCellLayout();
       itemView.position.set(pos.x, pos.y);
     }
@@ -314,8 +331,14 @@ export class BoardView extends PIXI.Container {
     const def = ITEM_DEFS.get(cell.itemId);
     if (!def) return;
 
+    const price = getItemSellPrice(def);
     BoardManager.removeItem(cellIndex);
-    ToastMessage.show(`已出售 ${def.name}（腾出棋盘一格）`);
+    if (price > 0) {
+      CurrencyManager.addHuayuan(price);
+      ToastMessage.show(`已出售 ${def.name}，+${price} 花愿，腾出棋盘一格`);
+    } else {
+      ToastMessage.show(`已出售 ${def.name}（腾出棋盘一格）`);
+    }
     EventBus.emit('board:itemSold', cellIndex);
   }
 
@@ -429,6 +452,18 @@ export class BoardView extends PIXI.Container {
 
         if (targetIdx >= 0 && targetIdx !== srcIdx) {
           const result = MergeManager.endDrag(targetIdx);
+          if (result.kind === 'crystal_ball_confirm' || result.kind === 'golden_scissors_confirm') {
+            this._endDrag();
+            void this._runSpecialConsumableConfirm(result);
+            this._dragSrcIndex = -1;
+            return;
+          }
+          if (result.kind === 'special_consumable_fail') {
+            ToastMessage.show(result.toast);
+            this._endDrag();
+            this._dragSrcIndex = -1;
+            return;
+          }
           if (
             result.kind === 'merged'
             || result.kind === 'moved'
@@ -908,11 +943,20 @@ export class BoardView extends PIXI.Container {
     const cellView = this._cellViews[cellIndex];
     if (!cellView) return;
     const itemView = this._itemViews[cellIndex];
-    const origCellX = cellView.x;
-    const origItemX = itemView ? itemView.x : origCellX;
+    const proxy = this._shakeProxies[cellIndex];
+    if (!proxy) return;
+    TweenManager.cancelTarget(proxy);
+
+    const pos = this._cellPositionForIndex(cellIndex);
+    cellView.position.set(pos.x, pos.y);
+    if (itemView) {
+      itemView.position.set(pos.x, pos.y);
+    }
+    const origCellX = pos.x;
+    const origItemX = pos.x;
     const steps = [4, -4, 3, -3, 1, -1, 0];
     const stepDuration = 0.035;
-    const proxy = { t: 0 };
+    proxy.t = 0;
     TweenManager.to({
       target: proxy,
       props: { t: 1 },
@@ -924,8 +968,8 @@ export class BoardView extends PIXI.Container {
         if (itemView) itemView.x = origItemX + dx;
       },
       onComplete: () => {
-        cellView.x = origCellX;
-        if (itemView) itemView.x = origItemX;
+        cellView.position.set(origCellX, pos.y);
+        if (itemView) itemView.position.set(origItemX, pos.y);
       },
     });
   }
@@ -1069,11 +1113,13 @@ export class BoardView extends PIXI.Container {
     }
   }
 
-  /** 缓存可合成目标（仅计算一次）；幸运金币额外包含可升降一级的合法目标格 */
+  /** 缓存可合成目标（仅计算一次）；幸运金币 / 水晶球 / 金剪刀的合法目标格 */
   private _cacheAndHighlightTargets(srcIndex: number): void {
     this._mergeTargets.clear();
     const src = BoardManager.getCellByIndex(srcIndex);
     const dragLuckyCoin = !!(src?.itemId && isLuckyCoinItem(src.itemId));
+    const dragCrystal = !!(src?.itemId && isCrystalBallItem(src.itemId));
+    const dragScissors = !!(src?.itemId && isGoldenScissorsItem(src.itemId));
     for (let i = 0; i < BoardManager.cells.length; i++) {
       if (i === srcIndex) continue;
       if (BoardManager.canMerge(srcIndex, i)) {
@@ -1082,7 +1128,44 @@ export class BoardView extends PIXI.Container {
       if (dragLuckyCoin && BoardManager.isLuckyCoinHighlightTarget(srcIndex, i)) {
         this._mergeTargets.add(i);
       }
+      if (dragCrystal && BoardManager.isCrystalBallHighlightTarget(srcIndex, i)) {
+        this._mergeTargets.add(i);
+      }
+      if (dragScissors && BoardManager.isGoldenScissorsHighlightTarget(srcIndex, i)) {
+        this._mergeTargets.add(i);
+      }
     }
+  }
+
+  /** 水晶球 / 金剪刀：弹窗确认后再提交棋盘数据 */
+  private async _runSpecialConsumableConfirm(
+    result:
+      | Extract<MergeEndDragResult, { kind: 'crystal_ball_confirm' }>
+      | Extract<MergeEndDragResult, { kind: 'golden_scissors_confirm' }>,
+  ): Promise<void> {
+    const dstCell = BoardManager.getCellByIndex(result.dstIndex);
+    const targetId = dstCell?.itemId;
+    if (!targetId) {
+      this.refresh();
+      return;
+    }
+
+    if (result.kind === 'crystal_ball_confirm') {
+      const ok = await SpecialConsumableConfirmPanel.showCrystalBall(targetId, result.newId);
+      if (ok && BoardManager.commitCrystalBallApply(result.srcIndex, result.dstIndex)) {
+        ToastMessage.show('升级成功');
+        this._playDropBounce(result.dstIndex);
+      }
+      this.refresh();
+      return;
+    }
+
+    const ok = await SpecialConsumableConfirmPanel.showGoldenScissors(targetId, result.splitId);
+    if (ok && BoardManager.commitGoldenScissorsApply(result.srcIndex, result.dstIndex)) {
+      ToastMessage.show('拆分完成');
+      this._playDropBounce(result.dstIndex);
+    }
+    this.refresh();
   }
 
   private _clearHighlights(): void {

@@ -9,7 +9,10 @@ import { ITEM_DEFS } from '@/config/ItemConfig';
 export type MergeEndDragResult =
   | { kind: 'merged' | 'moved' | 'swapped' | 'cancelled' }
   | { kind: 'lucky_coin'; direction: 'up' | 'down' }
-  | { kind: 'lucky_coin_fail'; toast: string };
+  | { kind: 'lucky_coin_fail'; toast: string }
+  | { kind: 'crystal_ball_confirm'; srcIndex: number; dstIndex: number; newId: string }
+  | { kind: 'golden_scissors_confirm'; srcIndex: number; dstIndex: number; splitId: string }
+  | { kind: 'special_consumable_fail'; toast: string };
 
 class MergeManagerClass {
   /** 当前正在拖拽的格子索引 */
@@ -42,6 +45,29 @@ class MergeManagerClass {
     if (lucky.kind === 'fail') {
       EventBus.emit('merge:dragCancel', srcIndex);
       return { kind: 'lucky_coin_fail', toast: lucky.toast };
+    }
+
+    const crystalPrev = BoardManager.previewCrystalBallApply(srcIndex, targetIndex);
+    if (crystalPrev.kind === 'ok') {
+      return { kind: 'crystal_ball_confirm', srcIndex, dstIndex: targetIndex, newId: crystalPrev.newId };
+    }
+    if (crystalPrev.kind === 'fail') {
+      EventBus.emit('merge:dragCancel', srcIndex);
+      return { kind: 'special_consumable_fail', toast: crystalPrev.toast };
+    }
+
+    const scissorsPrev = BoardManager.previewGoldenScissorsApply(srcIndex, targetIndex);
+    if (scissorsPrev.kind === 'ok') {
+      return {
+        kind: 'golden_scissors_confirm',
+        srcIndex,
+        dstIndex: targetIndex,
+        splitId: scissorsPrev.splitId,
+      };
+    }
+    if (scissorsPrev.kind === 'fail') {
+      EventBus.emit('merge:dragCancel', srcIndex);
+      return { kind: 'special_consumable_fail', toast: scissorsPrev.toast };
     }
 
     // 尝试合成（BoardManager.canMerge 已支持 PEEK 跨格合成）

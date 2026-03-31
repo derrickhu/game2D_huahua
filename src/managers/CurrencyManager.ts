@@ -299,6 +299,16 @@ class CurrencyManagerClass {
     delete (this._state as any).hualu;
     delete (this._state as any).exp;
 
+    // 星级必须与累计星数一致，否则会出现「星级虚高」导致再也无法触发升星与 level:up
+    const derived = getStarLevel(this._state.sceneId, this._state.star);
+    this._state.level = derived;
+    for (const sp of this._state.sceneProgresses) {
+      if (sp.sceneId === this._state.sceneId) {
+        sp.star = this._state.star;
+      }
+      sp.starLevel = getStarLevel(sp.sceneId, sp.star);
+    }
+
     EventBus.emit('currency:loaded');
   }
 

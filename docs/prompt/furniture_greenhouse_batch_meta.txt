@@ -1,0 +1,26 @@
+花房 / 花店场景专属家具 — NB2 批次（与 furniture_batch10 同画风）
+
+共 13 件：小黑板、小推车、户外花摊、鲜花线 10 级对应小花盆各一。
+Raw: /Users/huyi/rosa_games/game_assets/huahua/assets/raw/furniture_<key>_nb2.png
+Game: minigame/subpkg_deco/images/furniture/<key>.png
+
+一键（本机可连 Gemini 时）:
+  ./scripts/gen_furniture_greenhouse_nb2.sh
+
+风格锚点（与 docs/prompt/furniture_*_nb2_prompt.txt 一致）:
+  Square 1:1, upper-left ~45° cute 2.5D isometric, hand-painted merge-game flower shop,
+  soft brown outlines, bright pastels, chibi-friendly props, readable silhouette.
+  No text, no watermark, no characters. Background pure #FFFFFF for cutout.
+
+后处理: rembg birefnet-general → crop_trim.py --padding 4
+
+键名与鲜花线（flower_fresh_1..10）对应见 docs/furniture_greenhouse_nb2.md
+
+
+贴图挪用（房间层 → furniture）：
+  room_26 → orn_greenhouse_cart
+  room_27 → garden_flower_stall
+  room_30 → greenhouse_pot_sprout
+  room_32 → greenhouse_pot_bud
+  room_07 → greenhouse_pot_daisy
+落地小黑板：见 furniture_wallart_greenhouse_chalkboard_nb2_prompt.txt（A 字板 + 粉笔「花花」）

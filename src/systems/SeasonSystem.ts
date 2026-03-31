@@ -9,7 +9,7 @@
  *   春天 → 日常花系 → 合成有20%概率跳级(产物额外+1级)
  *   夏天 → 冷饮线   → 生成器产出数量×2
  *   秋天 → 浪漫花系 → 合成经验×1.5
- *   冬天 → 甜品线   → 出售价格×2
+ *   冬天 → 甜品线   → 出售价格×2（getSellPriceMultiplier 当前未接入棋盘出售，API 保留）
  */
 import * as PIXI from 'pixi.js';
 import { EventBus } from '@/core/EventBus';
@@ -79,7 +79,7 @@ const SEASON_CONFIGS: Record<Season, SeasonConfig> = {
     particleColor: 0xE0E0E0,
     particleEmoji: '❄️',
     bonusLine: 'dessert',
-    bonusDesc: '甜品线售价×2',
+    bonusDesc: '甜品线售价×2（棋盘出售未接入）',
   },
 };
 
@@ -173,7 +173,9 @@ export class SeasonSystem {
     return 1;
   }
 
-  /** 冬天甜品线售价倍数 */
+  /**
+   * 冬天甜品线售价倍数（预留；棋盘出售未调用，出售价为 ItemDef.sellHuayuan 固定值）
+   */
   static getSellPriceMultiplier(line: string): number {
     const season = SeasonSystem.getCurrentSeason();
     if (season === Season.WINTER && line === 'dessert') return 2;

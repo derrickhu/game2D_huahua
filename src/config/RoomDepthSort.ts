@@ -23,8 +23,14 @@ const STACK_TIE_CLAMP = 999;
 export const ROOM_DEPTH_AUX_MAX =
   ROOM_DEPTH_Y_MULT - 1 - Z_LAYER_CLAMP * Z_LAYER_WEIGHT - STACK_TIE_CLAMP;
 
-/** 店主相对同 floor(y) 的家具靠前；须 > max(zLayer)*40 + max(stackTie)（约 1319） */
-const OWNER_FRONT_BIAS = 1500;
+/**
+ * 同 floor(y) 一层内：店主须恒高于任意家具后缀（aux+zLayer*40+stackTie 理论上可达 1999），
+ * 否则会出现地毯等盖住人物腿部穿模。
+ */
+const OWNER_FRONT_BIAS = ROOM_DEPTH_Y_MULT - 1;
+
+/** 家具在同一 floor(y) 下的 z 后缀上限，须比 OWNER_FRONT_BIAS 至少小 1 */
+const FURNITURE_Z_SUFFIX_MAX = OWNER_FRONT_BIAS - 1;
 
 export function roomDepthZForFurniture(
   feetY: number,
@@ -35,7 +41,9 @@ export function roomDepthZForFurniture(
   const zc = Math.min(Math.max(zLayer, 0), Z_LAYER_CLAMP);
   const tie = Math.min(Math.max(stackTie, 0), STACK_TIE_CLAMP);
   const aux = Math.min(Math.max(auxSortBoost, 0), ROOM_DEPTH_AUX_MAX);
-  return Math.floor(feetY) * ROOM_DEPTH_Y_MULT + aux + zc * Z_LAYER_WEIGHT + tie;
+  const suffix = aux + zc * Z_LAYER_WEIGHT + tie;
+  const clamped = Math.min(suffix, FURNITURE_Z_SUFFIX_MAX);
+  return Math.floor(feetY) * ROOM_DEPTH_Y_MULT + clamped;
 }
 
 /** 按装饰类型与手动前移累加计算完整深度键（ShopScene / FurnitureDragSystem 使用） */

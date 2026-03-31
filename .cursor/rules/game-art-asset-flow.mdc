@@ -14,6 +14,7 @@ alwaysApply: true
 | 提示词（入 Git 仓库） | `{workspace}/docs/prompt/{任务名}_nb2_prompt.txt` |
 | 生成原图（仓库外资产库） | `/Users/huyi/rosa_games/game_assets/huahua/assets/raw/{任务名}.png` |
 | 游戏内运行时资源 | `{workspace}/minigame/subpkg_deco/images/...`（以 `TextureCache` 或策划路径为准） |
+| **棋盘物品图标（items 分包）** | `{workspace}/minigame/subpkg_items/images/...`；入库前**必须**按 **`board-item-png-spec.mdc`** 运行 `scripts/compress_subpkg_items_pngs.py` |
 | 可选：与旧 sync 脚本对齐 | `/Users/huyi/rosa_games/game_assets/huahua/assets/house/bg.png` 等 |
 | **UI / 界面原型图（非运行时）** | `/Users/huyi/rosa_games/game_assets/huahua/assets/ui_prototypes/`（含 `*_prompt.txt`）；**勿**将此类 PNG 放入 `huahua` 的 `minigame/` 或 `docs/design/` |
 

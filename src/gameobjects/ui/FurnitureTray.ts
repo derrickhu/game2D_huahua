@@ -138,7 +138,7 @@ export class FurnitureTray extends PIXI.Container {
 
   /**
    * 打开托盘（滑入动画）
-   * @param trayArg 不传默认花房；传槽位则按槽位选 Tab；传 `{ deco }` 时尊重 decorationPanelTab（如家具）
+   * @param trayArg 不传默认花房；传槽位则按槽位选 Tab；传 `{ deco }` 时尊重 decorationPanelTab（家具 / 花房 / 庭院）
    */
   open(trayArg?: DecoSlot | { deco: DecoDef }): void {
     if (this._isOpen) return;

@@ -8,6 +8,7 @@
  * - 跳过/重置新手引导
  * - 解锁/锁定所有格子
  * - 填充棋盘物品
+ * - 增加物品（收纳盒 / 棋盘首空格：幸运金币、水晶球、金剪刀）
  * - 清空棋盘
  * - 模拟离线收益
  * - 完成所有每日任务
@@ -29,7 +30,15 @@ import { EventManager } from './EventManager';
 import { RoomLayoutManager } from './RoomLayoutManager';
 import { CellState } from '@/config/BoardLayout';
 import { DECO_DEFS } from '@/config/DecorationConfig';
-import { ITEM_DEFS, Category, FlowerLine, findItemId, LUCKY_COIN_ITEM_ID } from '@/config/ItemConfig';
+import {
+  ITEM_DEFS,
+  Category,
+  FlowerLine,
+  findItemId,
+  CRYSTAL_BALL_ITEM_ID,
+  GOLDEN_SCISSORS_ITEM_ID,
+  LUCKY_COIN_ITEM_ID,
+} from '@/config/ItemConfig';
 import { RewardBoxManager } from './RewardBoxManager';
 import { STAMINA_MAX } from '@/config/Constants';
 
@@ -63,6 +72,7 @@ const GM_GROUP_ORDER: readonly string[] = [
   '💰 货币调整',
   '📊 等级调整',
   '🎮 棋盘操作',
+  '➕ 增加物品',
   '🏠 装修系统',
   '🔧 系统测试',
   '🎪 新系统',
@@ -425,14 +435,76 @@ class GMManagerClass {
       },
     });
 
+    // ========== 增加物品（收纳盒 / 棋盘）==========
     this._commands.push({
       id: 'give_lucky_coin',
-      group: '🎮 棋盘操作',
-      name: '🪙 送幸运金币×1',
-      desc: '发放 1 枚幸运金币到奖励收纳盒（取出后可拖至物品上随机升/降一级）',
+      group: '➕ 增加物品',
+      name: '🪙 幸运金币 → 收纳盒×1',
+      desc: '发放到奖励收纳盒，取出后可拖至鲜花/饮品上随机升或降一级',
       execute: () => {
         RewardBoxManager.addItem(LUCKY_COIN_ITEM_ID, 1);
         return '✅ 已发放 1 枚幸运金币到收纳盒';
+      },
+    });
+
+    this._commands.push({
+      id: 'give_crystal_ball',
+      group: '➕ 增加物品',
+      name: '🔮 水晶球 → 收纳盒×1',
+      desc: '发放到收纳盒；拖到鲜花/饮品（非工具）上确认后稳定升一级',
+      execute: () => {
+        RewardBoxManager.addItem(CRYSTAL_BALL_ITEM_ID, 1);
+        return '✅ 已发放 1 个水晶球到收纳盒';
+      },
+    });
+
+    this._commands.push({
+      id: 'give_golden_scissors',
+      group: '➕ 增加物品',
+      name: '✂️ 金剪刀 → 收纳盒×1',
+      desc: '发放到收纳盒；拖到 2 级及以上鲜花/饮品上确认后拆成两个低一级同线物品',
+      execute: () => {
+        RewardBoxManager.addItem(GOLDEN_SCISSORS_ITEM_ID, 1);
+        return '✅ 已发放 1 把金剪刀到收纳盒';
+      },
+    });
+
+    this._commands.push({
+      id: 'board_place_lucky_coin',
+      group: '➕ 增加物品',
+      name: '🪙 幸运金币 → 棋盘首空格',
+      desc: '在第一个空的已开放格放置 1 枚（无空格则失败）',
+      execute: () => {
+        const idx = BoardManager.findEmptyOpenCell();
+        if (idx < 0) return '❌ 没有空的已开放格';
+        if (!BoardManager.placeItem(idx, LUCKY_COIN_ITEM_ID)) return '❌ 放置失败';
+        return `✅ 已在格子 #${idx} 放置幸运金币`;
+      },
+    });
+
+    this._commands.push({
+      id: 'board_place_crystal_ball',
+      group: '➕ 增加物品',
+      name: '🔮 水晶球 → 棋盘首空格',
+      desc: '在第一个空的已开放格放置 1 个（无空格则失败）',
+      execute: () => {
+        const idx = BoardManager.findEmptyOpenCell();
+        if (idx < 0) return '❌ 没有空的已开放格';
+        if (!BoardManager.placeItem(idx, CRYSTAL_BALL_ITEM_ID)) return '❌ 放置失败';
+        return `✅ 已在格子 #${idx} 放置水晶球`;
+      },
+    });
+
+    this._commands.push({
+      id: 'board_place_golden_scissors',
+      group: '➕ 增加物品',
+      name: '✂️ 金剪刀 → 棋盘首空格',
+      desc: '在第一个空的已开放格放置 1 把（无空格则失败）',
+      execute: () => {
+        const idx = BoardManager.findEmptyOpenCell();
+        if (idx < 0) return '❌ 没有空的已开放格';
+        if (!BoardManager.placeItem(idx, GOLDEN_SCISSORS_ITEM_ID)) return '❌ 放置失败';
+        return `✅ 已在格子 #${idx} 放置金剪刀`;
       },
     });
 
