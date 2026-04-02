@@ -137,6 +137,8 @@ const PANELS_IMAGE_MAP: Record<string, string> = {
 
   // ---- 大地图 ----
   worldmap_bg: 'subpkg_panels/images/ui/worldmap_bg.png',
+  /** 大地图「花语小筑」静态花坊外观（与装修房壳同系粉瓦白墙，完整店面） */
+  worldmap_house_flower_shop: 'subpkg_panels/images/ui/worldmap_house_flower_shop.png',
   worldmap_thumb_flower_shop: 'subpkg_panels/images/ui/worldmap_thumb_flower_shop.png',
   worldmap_thumb_flower_market: 'subpkg_panels/images/ui/worldmap_thumb_flower_market.png',
   worldmap_thumb_tea_house: 'subpkg_panels/images/ui/worldmap_thumb_tea_house.png',

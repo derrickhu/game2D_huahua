@@ -385,7 +385,9 @@ export class WorldMapPanel extends PIXI.Container {
       if (!sp || sp.destroyed) continue;
 
       const thumbSize = node.thumbSize ?? 150;
-      const useLive = !!live
+      const allowLive = node.useLiveMapThumb !== false;
+      const useLive = allowLive
+        && !!live
         && node.targetSceneId === currentSceneId
         && node.type !== 'popup_shop'
         && node.type !== 'locked';

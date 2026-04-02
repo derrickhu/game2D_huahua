@@ -1,0 +1,9 @@
+Single game asset on a flat solid background #FF00FF pure magenta only behind the subject (no gradient), full bleed subject centered with modest margin for cutout.
+
+Complete exterior of a cozy operating flower boutique in the same art family as a casual merge mobile game world map: soft pastel greens and earth tones in the environment strip at the bottom, bright high-key daylight, gentle soft brown outlines, slightly chunky cute shapes, isometric three-quarter view from upper-left (~45°), NOT photorealistic, NOT gritty.
+
+Architecture must feel like the OUTSIDE of the same shop as the default in-game flower room shell: pastel pink scalloped S-curve clay roof tiles (kawaii pink #F4C2CC–#E8A8B8), clear roof ridge, warm white plaster walls (#FFFBF7), warm caramel wood window frames and slender corner posts (#6B4423 family), light stone or cobble foundation. This is a FULL closed building with front facade and visible side wall — NOT an empty L-shaped interior shell, NOT a dollhouse cutaway, NOT a floor plan. Show a real storefront: wide display windows suggesting a bright interior, maybe a small wooden door, shallow entry awning or deep eaves — all readable as one finished house.
+
+Business vibe: clearly open and welcoming. The front and sides are packed with flower retail: wooden crates and buckets of roses, tulips, daisies, hanging baskets, potted greens on steps and along the wall, small chalkboard or wooden sign area left BLANK (no readable text). Tiny string lights or bunting optional, very subtle. No people, no hands, no UI, no watermark, no logo text.
+
+Overall mood: warm, busy-but-tidy village flower shop you would tap on a map. Keep the building silhouette simple and iconic so it reads at small size on a green countryside map.

@@ -9,10 +9,12 @@ alwaysApply: true
 
 ## 路径约定
 
+**强制**：凡 AI 生成的**原图**（NB2、Cursor GenerateImage、或其它工具直出、**尚未**按规范抠图/裁切/压缩写入 `minigame/` 之前），必须先落盘到 **`../game_assets/huahua/assets/`** 下表约定子目录（默认 **`raw/`**）。禁止长期只留在 Cursor 会话 `assets/`、`/tmp`、或跳过归档直接覆盖 `minigame/`（避免丢失可再加工的源文件）。
+
 | 用途 | 路径 |
 |------|------|
 | 提示词（入 Git 仓库） | `{workspace}/docs/prompt/{任务名}_nb2_prompt.txt` |
-| 生成原图（仓库外资产库） | `../game_assets/huahua/assets/raw/{任务名}.png`（自 `{workspace}`） |
+| 生成原图（仓库外资产库，默认） | `../game_assets/huahua/assets/raw/{任务名}.png`（自 `{workspace}`） |
 | 游戏内运行时资源 | `{workspace}/minigame/subpkg_deco/images/...`（以 `TextureCache` 或策划路径为准） |
 | **棋盘物品图标（items 分包）** | `{workspace}/minigame/subpkg_items/images/...`；入库前**必须**按 **`board-item-png-spec.mdc`** 运行 `scripts/compress_subpkg_items_pngs.py` |
 | 可选：与旧 sync 脚本对齐 | `../game_assets/huahua/assets/house/bg.png` 等 |
@@ -56,7 +58,7 @@ cp "../game_assets/huahua/assets/raw/house_yard_bg_nb2.png" \
 
 - `prompt.txt` 内**只写发送给模型的正文**，不要夹带 `#` 注释行（会一并提交给 API）。
 - 流程说明、任务元数据写在 `docs/游戏资产生图与入库流程.md` 或本规则中即可。
-- API/代理失败时：可改用 Cursor `GenerateImage` 等兜底，仍将**最终原图**保存到 `game_assets/.../raw/` 再拷贝进 `minigame/`。
+- API/代理失败时：可改用 Cursor `GenerateImage` 等兜底；**原图须立即** `cp`/`mv` 到 `../game_assets/huahua/assets/raw/{任务名}.png`（或与下表一致的子目录），再执行抠图/裁切后拷贝进 `minigame/`。
 
 ## 花店草地背景（当前任务映射）
 

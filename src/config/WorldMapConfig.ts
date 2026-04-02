@@ -32,6 +32,11 @@ export interface MapNodeDef {
   popupEvent?: string;
   /** type=popup_shop 时：商店 ID */
   shopId?: string;
+  /**
+   * 为 false 时大地图该节点始终用静态 thumbKey，不用花店实时截图（RenderTexture）。
+   * 默认 true：与当前 sceneId 匹配的 house / current_house 仍可显示实时缩略图。
+   */
+  useLiveMapThumb?: boolean;
 }
 
 /** 横向由几屏 9:16 宽度拼接（默认 3 屏 ≈ 2250 设计 px） */
@@ -52,7 +57,7 @@ export const WORLD_MAP_CONTENT_H = DESIGN_HEIGHT;
 export const WORLD_MAP_UNLOCK_LEVEL = 10;
 
 /** 大地图「当前店铺」实时缩略图：截取最长边像素（略小于节点 thumbSize，省显存） */
-export const LIVE_HOUSE_THUMB_CAPTURE_MAX = 270;
+export const LIVE_HOUSE_THUMB_CAPTURE_MAX = 160;
 
 export const MAP_NODES: MapNodeDef[] = [
   {
@@ -61,8 +66,9 @@ export const MAP_NODES: MapNodeDef[] = [
     label: '花语小筑',
     x: 320,
     y: 455,
-    thumbKey: 'worldmap_thumb_flower_shop',
+    thumbKey: 'worldmap_house_flower_shop',
     thumbSize: 320,
+    useLiveMapThumb: false,
     unlockLevel: 1,
     targetSceneId: 'flower_shop',
   },
