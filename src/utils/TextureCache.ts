@@ -134,6 +134,15 @@ const PANELS_IMAGE_MAP: Record<string, string> = {
   deco_rarity_tag_fine: 'subpkg_panels/images/ui/deco_rarity_tag_fine.png',
   deco_rarity_tag_rare: 'subpkg_panels/images/ui/deco_rarity_tag_rare.png',
   deco_rarity_tag_limited: 'subpkg_panels/images/ui/deco_rarity_tag_limited.png',
+
+  // ---- 大地图 ----
+  worldmap_bg: 'subpkg_panels/images/ui/worldmap_bg.png',
+  worldmap_thumb_flower_shop: 'subpkg_panels/images/ui/worldmap_thumb_flower_shop.png',
+  worldmap_thumb_flower_market: 'subpkg_panels/images/ui/worldmap_thumb_flower_market.png',
+  worldmap_thumb_tea_house: 'subpkg_panels/images/ui/worldmap_thumb_tea_house.png',
+  worldmap_thumb_tool_shop: 'subpkg_panels/images/ui/worldmap_thumb_tool_shop.png',
+  worldmap_thumb_garden_villa: 'subpkg_panels/images/ui/worldmap_thumb_garden_villa.png',
+  icon_worldmap: 'subpkg_panels/images/ui/icon_worldmap.png',
 };
 
 // ================================================================
@@ -260,6 +269,14 @@ const ITEMS_IMAGE_MAP: Record<string, string> = {
   hongbao_2: 'subpkg_items/images/hongbao/hongbao_2.png',
   hongbao_3: 'subpkg_items/images/hongbao/hongbao_3.png',
   hongbao_4: 'subpkg_items/images/hongbao/hongbao_4.png',
+
+  // ---- 钻石袋 / 体力宝箱 各 3 档（参考 minigame/images/ui/icon_gem / icon_energy + rembg，见 docs/prompt/）----
+  diamond_bag_1: 'subpkg_items/images/diamond_bag/diamond_bag_1.png',
+  diamond_bag_2: 'subpkg_items/images/diamond_bag/diamond_bag_2.png',
+  diamond_bag_3: 'subpkg_items/images/diamond_bag/diamond_bag_3.png',
+  stamina_chest_1: 'subpkg_items/images/stamina_chest/stamina_chest_1.png',
+  stamina_chest_2: 'subpkg_items/images/stamina_chest/stamina_chest_2.png',
+  stamina_chest_3: 'subpkg_items/images/stamina_chest/stamina_chest_3.png',
 
   // ---- 棋盘消耗品（幸运金币 / 水晶球 / 金剪刀，与 icon_coin 同 122×128，items 分包）----
   icon_coin: 'subpkg_items/images/special/special_lucky_coin.png',

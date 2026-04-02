@@ -14,8 +14,10 @@ import sys
 import numpy as np
 from PIL import Image
 
-ASSETS = "/Users/huyi/rosa_games/game_assets/huahua/assets"
-PROJ = "/Users/huyi/rosa_games/huahua/minigame/images/drinks"
+from huahua_paths import game_assets_dir, repo_root
+
+ASSETS = game_assets_dir()
+PROJ = repo_root() / "minigame/images/drinks"
 REMBG = os.path.expanduser("~/.cursor/skills/remove-background/scripts/rembg_batch.py")
 TRIM = os.path.expanduser("~/.cursor/skills/game-art-pipeline/scripts/crop_trim.py")
 

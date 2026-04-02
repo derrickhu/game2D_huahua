@@ -29,6 +29,8 @@ import sys
 import time
 from pathlib import Path
 
+from huahua_paths import game_assets_dir
+
 from PIL import Image
 
 FULL_W, FULL_H = 197, 384
@@ -172,7 +174,7 @@ def main() -> None:
         sys.exit(2)
 
     root = Path(__file__).resolve().parents[1]
-    default_raw = Path("/Users/huyi/rosa_games/game_assets/huahua/assets/raw")
+    default_raw = game_assets_dir() / "raw"
     raw_dir = Path(os.environ.get("RAW_DIR", str(default_raw)))
     raw_dir.mkdir(parents=True, exist_ok=True)
 

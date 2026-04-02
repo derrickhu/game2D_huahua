@@ -1,0 +1,9 @@
+One single continuous mobile game world map illustration. Exact canvas width:height = 2250:1334. Think of three equal vertical columns (each 750×1334, 9:16) only as layout guides in your mind — the image must be painted as one unified landscape with zero visual breaks.
+
+CRITICAL — no seams: absolutely no vertical white lines, pale gaps, gutters, panel dividers, column borders, or “stitched collage” edges anywhere. No blank strips between left, middle, and right thirds. Grass, soil, road, sky, and lighting must flow uninterrupted across the full width at every row; colors and brush continuity must match perfectly at the invisible boundaries around x = one-third and two-thirds of the width. If you would draw a line between zones, do not — blend them instead.
+
+Rural countryside pastoral style across the full width: rolling green meadows, soft warm daylight, gentle hills, scattered trees and wildflowers.
+
+A winding dirt or gravel road runs left to right across the entire image as one continuous path. Reserve five flat circular or oval grass clearings along the road for later building icons: toward the left third, between first and second third, center third, between second and third third, and toward the right third. Clearings are only slightly lighter grass; do not draw buildings.
+
+2D casual merge-game art: soft pastel greens and earth tones, clean shapes, gentle outlines, top-down to slight three-quarter view. No text, no UI, no characters, no watermark, no signature. Fill the entire 2250×1334 frame edge to edge with artwork — no empty margin, no frame, no letterboxing inside the image.

@@ -5,7 +5,7 @@
 | 项目 | 路径 |
 |------|------|
 | 提示词（仅正文） | `docs/prompt/deco_panel_popup_frame_nb2_prompt.txt` |
-| 推荐输出（仓库外） | `/Users/huyi/rosa_games/game_assets/huahua/assets/raw/deco_panel_popup_frame_proto_nb2.png` |
+| 推荐输出（仓库外） | `../game_assets/huahua/assets/raw/deco_panel_popup_frame_proto_nb2.png` |
 
 历史文件：`deco_panel_popup_frame_nb2.png`（厚边）、`deco_panel_popup_frame_thin_nb2.png`（旧细边 9:16）可保留对比。
 
@@ -14,11 +14,11 @@
 脚本支持的竖版比例中与 **2:3** 最接近为 **`3:4`**（略宽于纯 2:3，可在提示词中约束画幅）。若你本地 API 支持 `2:3` 可自行替换 `--aspect-ratio`。
 
 ```bash
-mkdir -p /Users/huyi/rosa_games/game_assets/huahua/assets/raw
+mkdir -p ../game_assets/huahua/assets/raw
 
 python3 ~/.cursor/skills/gemini-image-gen/scripts/generate_images.py \
-  --prompt-file "/Users/huyi/rosa_games/huahua/docs/prompt/deco_panel_popup_frame_nb2_prompt.txt" \
-  --output "/Users/huyi/rosa_games/game_assets/huahua/assets/raw/deco_panel_popup_frame_proto_nb2.png" \
+  --prompt-file "docs/prompt/deco_panel_popup_frame_nb2_prompt.txt" \
+  --output "../game_assets/huahua/assets/raw/deco_panel_popup_frame_proto_nb2.png" \
   --model gemini-3.1-flash-image-preview \
   --aspect-ratio 3:4
 ```

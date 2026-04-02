@@ -16,11 +16,13 @@ except ImportError:
     print("需要: pip install Pillow", file=sys.stderr)
     sys.exit(1)
 
+from huahua_paths import game_assets_dir
+
 ROOT = Path(__file__).resolve().parents[1]
 OUT = ROOT / "minigame/subpkg_panels/images/ui/warehouse_panel_bg.png"
 
 CANDIDATES = [
-    Path.home() / "rosa_games/game_assets/huahua/assets/warehouse_ui_nb2/for_review/warehouse_flower_basket_panel_nb2_v2_9x16.png",
+    game_assets_dir() / "warehouse_ui_nb2/for_review/warehouse_flower_basket_panel_nb2_v2_9x16.png",
     ROOT / "minigame/subpkg_panels/images/ui/warehouse_panel_bg.png",
 ]
 

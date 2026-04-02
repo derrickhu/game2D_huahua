@@ -2,7 +2,7 @@
 
 ## 输出目录（不入游戏仓库）
 
-`/Users/huyi/rosa_games/game_assets/huahua/assets/merge_item_info_ui_nb2/`
+`../game_assets/huahua/assets/merge_item_info_ui_nb2/`
 
 | 提示词文件 | 建议输出 PNG | 比例 | 用途 |
 |-----------|----------------|------|------|
@@ -18,27 +18,27 @@
 模型：**NB2** = `gemini-3.1-flash-image-preview`
 
 ```bash
-OUT="/Users/huyi/rosa_games/game_assets/huahua/assets/merge_item_info_ui_nb2"
+# 在仓库根目录执行（game_assets 与本仓库同级：../game_assets/huahua/）
+OUT="../game_assets/huahua/assets/merge_item_info_ui_nb2"
 mkdir -p "$OUT"
-WS="/Users/huyi/rosa_games/huahua"
 GEN="$HOME/.cursor/skills/gemini-image-gen/scripts/generate_images.py"
 
-python3 "$GEN" --prompt-file "$WS/docs/prompt/merge_item_info_panel_nb2_prompt.txt" \
+python3 "$GEN" --prompt-file "docs/prompt/merge_item_info_panel_nb2_prompt.txt" \
   --output "$OUT/panel_cream_nb2.png" --model gemini-3.1-flash-image-preview --aspect-ratio 16:9
 sleep 5
-python3 "$GEN" --prompt-file "$WS/docs/prompt/merge_item_info_ribbon_nb2_prompt.txt" \
+python3 "$GEN" --prompt-file "docs/prompt/merge_item_info_ribbon_nb2_prompt.txt" \
   --output "$OUT/title_ribbon_coral_nb2.png" --model gemini-3.1-flash-image-preview --aspect-ratio 1:1
 sleep 5
-python3 "$GEN" --prompt-file "$WS/docs/prompt/merge_item_info_exclaim_badge_nb2_prompt.txt" \
+python3 "$GEN" --prompt-file "docs/prompt/merge_item_info_exclaim_badge_nb2_prompt.txt" \
   --output "$OUT/badge_exclaim_coral_nb2.png" --model gemini-3.1-flash-image-preview --aspect-ratio 1:1
 sleep 5
-python3 "$GEN" --prompt-file "$WS/docs/prompt/merge_item_info_btn_merge_line_nb2_prompt.txt" \
+python3 "$GEN" --prompt-file "docs/prompt/merge_item_info_btn_merge_line_nb2_prompt.txt" \
   --output "$OUT/btn_merge_line_blue_nb2.png" --model gemini-3.1-flash-image-preview --aspect-ratio 1:1
 sleep 5
-python3 "$GEN" --prompt-file "$WS/docs/prompt/merge_item_info_btn_sell_nb2_prompt.txt" \
+python3 "$GEN" --prompt-file "docs/prompt/merge_item_info_btn_sell_nb2_prompt.txt" \
   --output "$OUT/btn_sell_lime_nb2.png" --model gemini-3.1-flash-image-preview --aspect-ratio 1:1
 sleep 5
-python3 "$GEN" --prompt-file "$WS/docs/prompt/merge_item_info_sheet_nb2_prompt.txt" \
+python3 "$GEN" --prompt-file "docs/prompt/merge_item_info_sheet_nb2_prompt.txt" \
   --output "$OUT/ui_parts_sheet_nb2.png" --model gemini-3.1-flash-image-preview --aspect-ratio 16:9
 ```
 

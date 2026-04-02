@@ -2,7 +2,7 @@
 
 ## 输出目录
 
-`~/rosa_games/game_assets/huahua/assets/merge_chain_ui_nb2/for_review/`
+`../game_assets/huahua/assets/merge_chain_ui_nb2/for_review/`（自仓库根）
 
 | 文件 | 比例 | 内容 |
 |------|------|------|
@@ -14,7 +14,7 @@
 ## 生成（NB2）
 
 ```bash
-cd /Users/huyi/rosa_games/huahua
+# 在仓库根目录执行
 python3 scripts/gen_merge_chain_ui_nb2.py
 # 单张：--only merge_chain_ribbon  /  --only merge_chain_panel
 ```

@@ -50,10 +50,12 @@ Cute small mobile game item icon, 3/4 top-down isometric view. Rounded chunky pr
 
 ## 生成命令模板
 
+（在仓库根执行；原图落在与本仓库同级的 `game_assets/huahua/assets/raw/`。）
+
 ```bash
 GEMINI_IMAGE_REST_ONLY=1 HTTPS_PROXY=http://127.0.0.1:7890 python3 ~/.cursor/skills/gemini-image-gen/scripts/generate_images.py \
   --prompt-file docs/prompt/{item_name}_nb2_prompt.txt \
-  --output /Users/huyi/rosa_games/game_assets/huahua/assets/raw/{item_name}_nb2.png \
+  --output ../game_assets/huahua/assets/raw/{item_name}_nb2.png \
   --model gemini-2.5-flash-image \
   --image minigame/subpkg_items/images/tools/bake/tool_bake_2.png
 ```

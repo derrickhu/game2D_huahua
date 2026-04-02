@@ -3,7 +3,7 @@
  *
  * 集成所有系统：
  * - 核心玩法：棋盘、合成、建筑、客人
- * - 留存系统：新手引导、每日任务、成就、签到、离线收益
+ * - 留存系统：新手引导、每日任务、成就、签到、离线收益（`OFFLINE_REWARD_UI_ENABLED` 关闭时不弹窗）
  * - 体验增强：季节、彩蛋、提示、统计
  * - 等级经验系统
  */
@@ -67,6 +67,10 @@ import { ChallengePanel } from '@/gameobjects/ui/ChallengePanel';
 import { LeaderboardPanel } from '@/gameobjects/ui/LeaderboardPanel';
 import { RewardBoxButton, REWARD_BOX_BTN_SIZE } from '@/gameobjects/ui/RewardBoxButton';
 import { RewardBoxPanel } from '@/gameobjects/ui/RewardBoxPanel';
+import { PopupShopPanel } from '@/gameobjects/ui/PopupShopPanel';
+import { WorldMapPanel } from '@/gameobjects/ui/WorldMapPanel';
+import { ShopScene } from '@/scenes/ShopScene';
+import { LIVE_HOUSE_THUMB_CAPTURE_MAX } from '@/config/WorldMapConfig';
 import { RewardBoxManager } from '@/managers/RewardBoxManager';
 import { RoomLayoutManager } from '@/managers/RoomLayoutManager';
 
@@ -130,6 +134,12 @@ export class MainScene implements Scene {
   // ---- 奖励收纳框 ----
   private _rewardBoxButton!: RewardBoxButton;
   private _rewardBoxPanel!: RewardBoxPanel;
+
+  // ---- 大地图弹框商店 ----
+  private _popupShopPanel!: PopupShopPanel;
+
+  /** 大地图全屏页（覆盖层，非花店子节点） */
+  private _worldMapPanel!: WorldMapPanel;
 
   // ---- 离线计时 ----
   private _idleSaveTimer = 0;
@@ -195,7 +205,7 @@ export class MainScene implements Scene {
     Game.ticker.remove(this._update, this);
     RewardFlyCoordinator.setBindings(null);
 
-    // 停止所有触觉反馈效果，恢复容器位置（防止抖动残留导致坐标错乱）
+    // 停止触觉反馈层上的粒子等效果
     if (this._hapticSystem) {
       this._hapticSystem.stopAll();
     }
@@ -203,7 +213,7 @@ export class MainScene implements Scene {
 
   /** 游戏就绪后的启动流程 */
   private _onGameReady(): void {
-    // 1. 检查离线收益
+    // 1. 离线收益（关闭时 IdleManager 仅同步时间戳，此处恒为 null）
     const offlineReward = IdleManager.calculateOfflineReward();
     if (offlineReward) {
       this._offlineRewardPanel.show(offlineReward);
@@ -290,9 +300,8 @@ export class MainScene implements Scene {
     // 合成统计系统
     this._mergeStats = new MergeStatsSystem(this.container);
 
-    // 触觉反馈系统（震动+粒子+屏幕抖动）
-    // 传入 this.container 作为抖动目标，避免修改 Game.stage.pivot 导致场景切换后坐标错乱
-    this._hapticSystem = new HapticSystem(this.container, this.container);
+    // 触觉反馈系统（合成粒子等；合成本身不再触发震动/全屏抖）
+    this._hapticSystem = new HapticSystem(this.container);
 
     // 左侧悬浮功能按钮组（签到/任务等，纵向排列在棋盘左侧）
     // 参考 Merge Mansion / Travel Town：功能入口悬浮在棋盘边缘，不占用独立行空间
@@ -361,6 +370,14 @@ export class MainScene implements Scene {
     // 奖励收纳框面板
     this._rewardBoxPanel = new RewardBoxPanel();
     overlay.addChild(this._rewardBoxPanel);
+
+    // 大地图弹框商店
+    this._popupShopPanel = new PopupShopPanel();
+    overlay.addChild(this._popupShopPanel);
+
+    // 大地图全屏页（盖住花店/顶栏；惯性滚动在面板内自注册 ticker）
+    this._worldMapPanel = new WorldMapPanel();
+    overlay.addChild(this._worldMapPanel);
 
     EventBus.on('rewardBox:open', () => {
       const parent = this._rewardBoxPanel.parent;
@@ -932,6 +949,25 @@ export class MainScene implements Scene {
     // ---- 场景切换事件（切换到花店场景） ----
     EventBus.on('scene:switchToShop', () => {
       this._switchToShopScene();
+    });
+
+    // ---- 大地图（花店按钮 → 全屏覆盖层） ----
+    EventBus.on('worldmap:open', () => {
+      const cur = SceneManager.current;
+      const finish = (liveRt: PIXI.RenderTexture | null) => {
+        OverlayManager.bringToFront();
+        this._worldMapPanel.setLiveHouseThumbnail(liveRt);
+        this._worldMapPanel.open();
+      };
+      // 延后一帧再截屏，避免与当帧主渲染竞争导致部分机型截到透明空图
+      if (cur?.name === 'shop') {
+        Game.ticker.addOnce(() => {
+          const liveRt = (cur as ShopScene).captureRoomThumbnailForMap(LIVE_HOUSE_THUMB_CAPTURE_MAX);
+          finish(liveRt);
+        });
+      } else {
+        finish(null);
+      }
     });
   }
 

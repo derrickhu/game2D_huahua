@@ -8,7 +8,7 @@
  * - 跳过/重置新手引导
  * - 解锁/锁定所有格子
  * - 填充棋盘物品
- * - 增加物品（收纳盒 / 棋盘首空格：幸运金币、水晶球、金剪刀）
+ * - 增加物品（收纳盒 / 棋盘首空格：幸运金币、水晶球、金剪刀、钻石袋与体力箱全套）
  * - 清空棋盘
  * - 模拟离线收益
  * - 完成所有每日任务
@@ -31,6 +31,12 @@ import { RoomLayoutManager } from './RoomLayoutManager';
 import { CellState } from '@/config/BoardLayout';
 import { DECO_DEFS } from '@/config/DecorationConfig';
 import {
+  getNextLevelStarRequired,
+  getStarLevelLabel,
+  getMaxStar,
+  isSceneCompleted,
+} from '@/config/StarLevelConfig';
+import {
   ITEM_DEFS,
   Category,
   FlowerLine,
@@ -45,6 +51,9 @@ import { STAMINA_MAX } from '@/config/Constants';
 declare const wx: any;
 declare const tt: any;
 const _api = typeof wx !== 'undefined' ? wx : typeof tt !== 'undefined' ? tt : null;
+
+const GM_DIAMOND_BAG_IDS = ['diamond_bag_1', 'diamond_bag_2', 'diamond_bag_3'] as const;
+const GM_STAMINA_CHEST_IDS = ['stamina_chest_1', 'stamina_chest_2', 'stamina_chest_3'] as const;
 
 const GM_STORAGE_KEY = 'huahua_gm';
 
@@ -333,6 +342,54 @@ class GMManagerClass {
       },
     });
 
+    this._commands.push({
+      id: 'gm_star_up_one',
+      group: '📊 等级调整',
+      name: '⭐ 当前场景升 1 星级',
+      desc: '按装修进度条：补足星星升到下一星级（花店/茶屋等当前房）',
+      execute: () => {
+        const sid = CurrencyManager.state.sceneId;
+        const star = CurrencyManager.state.star;
+        const level = CurrencyManager.state.level;
+        if (isSceneCompleted(sid, level)) {
+          return '❌ 当前装修场景已满星';
+        }
+        const nextReq = getNextLevelStarRequired(sid, level);
+        if (nextReq < 0) {
+          return '❌ 无法解析下一星级阈值';
+        }
+        const delta = Math.max(1, nextReq - star);
+        const labelBefore = getStarLevelLabel(sid, level);
+        CurrencyManager.addStar(delta);
+        const afterLv = CurrencyManager.state.level;
+        const labelAfter = getStarLevelLabel(sid, afterLv);
+        return `✅ +${delta}⭐ → ${labelBefore}→${labelAfter}，累计 ${CurrencyManager.state.star}⭐`;
+      },
+    });
+
+    this._commands.push({
+      id: 'gm_star_max_scene',
+      group: '📊 等级调整',
+      name: '⭐ 当前场景一键满星',
+      desc: '将当前装修场景星星拉到该场景满星阈值',
+      execute: () => {
+        const sid = CurrencyManager.state.sceneId;
+        const maxStar = getMaxStar(sid);
+        if (maxStar <= 0) {
+          return '❌ 未知场景';
+        }
+        const cur = CurrencyManager.state.star;
+        if (cur >= maxStar) {
+          return '❌ 当前场景已满星';
+        }
+        const delta = maxStar - cur;
+        const labelBefore = getStarLevelLabel(sid, CurrencyManager.state.level);
+        CurrencyManager.addStar(delta);
+        const labelAfter = getStarLevelLabel(sid, CurrencyManager.state.level);
+        return `✅ +${delta}⭐ → ${labelBefore}→${labelAfter}（满星 ${maxStar}⭐）`;
+      },
+    });
+
     // ========== 棋盘操作 ==========
     this._commands.push({
       id: 'clear_board',
@@ -508,6 +565,92 @@ class GMManagerClass {
       },
     });
 
+    this._commands.push({
+      id: 'give_diamond_bags_all',
+      group: '➕ 增加物品',
+      name: '💎 钻石袋 1–3 级 → 收纳盒',
+      desc: '各等级 1 个（碎钻小袋 / 晶钻布袋 / 璨钻锦袋）',
+      execute: () => {
+        const names: string[] = [];
+        for (const id of GM_DIAMOND_BAG_IDS) {
+          if (!ITEM_DEFS.has(id)) return `❌ 未注册物品 ${id}`;
+          RewardBoxManager.addItem(id, 1);
+          names.push(ITEM_DEFS.get(id)!.name);
+        }
+        return `✅ 已发放到收纳盒：${names.join('、')}`;
+      },
+    });
+
+    this._commands.push({
+      id: 'give_stamina_chests_all',
+      group: '➕ 增加物品',
+      name: '⚡ 体力箱 1–3 级 → 收纳盒',
+      desc: '各等级 1 个（元气小箱 / 能量补给箱 / 澎湃体力宝箱）',
+      execute: () => {
+        const names: string[] = [];
+        for (const id of GM_STAMINA_CHEST_IDS) {
+          if (!ITEM_DEFS.has(id)) return `❌ 未注册物品 ${id}`;
+          RewardBoxManager.addItem(id, 1);
+          names.push(ITEM_DEFS.get(id)!.name);
+        }
+        return `✅ 已发放到收纳盒：${names.join('、')}`;
+      },
+    });
+
+    this._commands.push({
+      id: 'board_place_diamond_bags_all',
+      group: '➕ 增加物品',
+      name: '💎 钻石袋 1–3 级 → 棋盘',
+      desc: '按 1→2→3 顺序各占一格，需至少 3 个空已开放格',
+      execute: () => {
+        const placed: string[] = [];
+        for (const id of GM_DIAMOND_BAG_IDS) {
+          if (!ITEM_DEFS.has(id)) return `❌ 未注册物品 ${id}`;
+          const idx = BoardManager.findEmptyOpenCell();
+          if (idx < 0) {
+            return placed.length === 0
+              ? '❌ 没有空的已开放格'
+              : `⚠️ 仅放置 ${placed.length}/3（空格不足）：${placed.join('；')}`;
+          }
+          if (!BoardManager.placeItem(idx, id)) {
+            return placed.length === 0
+              ? '❌ 放置失败'
+              : `⚠️ 部分放置后失败：${placed.join('；')}`;
+          }
+          const nm = ITEM_DEFS.get(id)!.name;
+          placed.push(`#${idx} ${nm}`);
+        }
+        return `✅ 已放置 3 个钻石袋：${placed.join('；')}`;
+      },
+    });
+
+    this._commands.push({
+      id: 'board_place_stamina_chests_all',
+      group: '➕ 增加物品',
+      name: '⚡ 体力箱 1–3 级 → 棋盘',
+      desc: '按 1→2→3 顺序各占一格，需至少 3 个空已开放格',
+      execute: () => {
+        const placed: string[] = [];
+        for (const id of GM_STAMINA_CHEST_IDS) {
+          if (!ITEM_DEFS.has(id)) return `❌ 未注册物品 ${id}`;
+          const idx = BoardManager.findEmptyOpenCell();
+          if (idx < 0) {
+            return placed.length === 0
+              ? '❌ 没有空的已开放格'
+              : `⚠️ 仅放置 ${placed.length}/3（空格不足）：${placed.join('；')}`;
+          }
+          if (!BoardManager.placeItem(idx, id)) {
+            return placed.length === 0
+              ? '❌ 放置失败'
+              : `⚠️ 部分放置后失败：${placed.join('；')}`;
+          }
+          const nm = ITEM_DEFS.get(id)!.name;
+          placed.push(`#${idx} ${nm}`);
+        }
+        return `✅ 已放置 3 个体力箱：${placed.join('；')}`;
+      },
+    });
+
     // ========== 系统测试 ==========
     this._commands.push({
       id: 'skip_tutorial',
@@ -548,8 +691,11 @@ class GMManagerClass {
       name: '🎉 测试升级弹窗',
       desc: '模拟一次升级动画',
       execute: () => {
+        CurrencyManager.addHuayuan(200);
+        CurrencyManager.addStamina(30);
+        CurrencyManager.addDiamond(10);
         EventBus.emit('level:up', LevelManager.level, { huayuan: 200, stamina: 30, diamond: 10 });
-        return '✅ 已触发升级弹窗';
+        return '✅ 已触发升级弹窗（已入账+飞入预览）';
       },
     });
 
@@ -614,17 +760,12 @@ class GMManagerClass {
       id: 'unlock_all_deco',
       group: '🏠 装修系统',
       name: '🔓 解锁全部装修',
-      desc: '解锁所有装饰（不扣货币）',
+      desc: '解锁所有家具装饰 + 全部房间风格（无视场景/等级/花愿，不扣款不加星）',
       execute: () => {
-        let count = 0;
-        for (const deco of DECO_DEFS) {
-          if (!DecorationManager.isUnlocked(deco.id)) {
-            // 给足花愿再解锁
-            CurrencyManager.addHuayuan(deco.cost);
-            if (DecorationManager.unlock(deco.id)) count++;
-          }
-        }
-        return `✅ 解锁了 ${count} 个装饰`;
+        const decos = DecorationManager.gmUnlockAllDecos();
+        const styles = DecorationManager.gmUnlockAllRoomStyles();
+        SaveManager.save();
+        return `✅ 装饰 +${decos} 件，房间风格 +${styles} 套（总计已解锁 ${DecorationManager.unlockedCount}/${DecorationManager.totalCount} 装饰）`;
       },
     });
 
@@ -668,20 +809,18 @@ class GMManagerClass {
       id: 'fill_room',
       group: '🏠 装修系统',
       name: '🛋️ 填充全部家具',
-      desc: '解锁所有装饰并全部放入房间',
+      desc: 'GM 解锁全部装饰与风格，清空房间后尽量摆入（仅当前场景允许的家具会进房）',
       execute: () => {
-        // 先给足够花愿
-        CurrencyManager.addHuayuan(50000);
-        let count = 0;
-        for (const d of DECO_DEFS) {
-          if (!DecorationManager.isUnlocked(d.id)) {
-            DecorationManager.unlock(d.id);
-          }
-          count++;
-        }
-        // 重建房间布局
+        DecorationManager.gmUnlockAllDecos();
+        DecorationManager.gmUnlockAllRoomStyles();
         RoomLayoutManager.reset();
-        return `✅ 已解锁并放置 ${count} 件家具`;
+        let placed = 0;
+        for (const d of DECO_DEFS) {
+          if (RoomLayoutManager.getPlacement(d.id)) continue;
+          if (RoomLayoutManager.addFurniture(d.id)) placed++;
+        }
+        SaveManager.save();
+        return `✅ 已解锁全部装饰，新放入房间 ${placed} 件（其余因场景限制仅解锁未摆放）`;
       },
     });
 
@@ -689,24 +828,18 @@ class GMManagerClass {
       id: 'calibrate_deco_scales',
       group: '🏠 装修系统',
       name: '📐 校准：全解锁+全摆放',
-      desc: '解锁全部家具并补充放入房间（不清空已调好的），然后进花店编辑',
+      desc: 'GM 解锁全部家具与房间风格并补充放入房间（不清空已有摆放），然后进花店',
       execute: () => {
-        CurrencyManager.addHuayuan(99999);
-        let unlocked = 0;
+        const unlocked = DecorationManager.gmUnlockAllDecos();
+        const styles = DecorationManager.gmUnlockAllRoomStyles();
         let placed = 0;
         for (const d of DECO_DEFS) {
-          if (!DecorationManager.isUnlocked(d.id)) {
-            DecorationManager.unlock(d.id);
-            unlocked++;
-          }
-          if (!RoomLayoutManager.getPlacement(d.id)) {
-            RoomLayoutManager.addFurniture(d.id);
-            placed++;
-          }
+          if (RoomLayoutManager.getPlacement(d.id)) continue;
+          if (RoomLayoutManager.addFurniture(d.id)) placed++;
         }
         SaveManager.save();
         EventBus.emit('scene:switchToShop');
-        return `✅ 解锁 ${unlocked} 件，新放入 ${placed} 件，请在花店编辑模式逐件调整缩放`;
+        return `✅ 装饰 +${unlocked}，风格 +${styles}，新放入 ${placed} 件，请在花店编辑模式逐件调整缩放`;
       },
     });
 

@@ -13,10 +13,11 @@ from pathlib import Path
 # 与工具线 pilot 共用抠图逻辑
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 from chroma_magenta_nb2 import chroma_clean_path as chroma_clean  # noqa: E402
+from huahua_paths import game_assets_dir, repo_root  # noqa: E402
 
-ASSETS = "/Users/huyi/rosa_games/game_assets/huahua/assets"
-SRC_DIR = f"{ASSETS}/board_cell_nb2/for_review"
-DEST_DIR = "/Users/huyi/rosa_games/huahua/minigame/images/ui"
+ASSETS = game_assets_dir()
+SRC_DIR = ASSETS / "board_cell_nb2/for_review"
+DEST_DIR = repo_root() / "minigame/images/ui"
 
 NAMES = ("cell_locked", "cell_peek", "cell_key")
 

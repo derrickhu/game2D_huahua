@@ -1,0 +1,64 @@
+---
+description: 花店室内家具（subpkg_deco/furniture）NB2 生图 — 与房间壳一致的等距视角；配色按单品需求；入库须压缩对齐体量
+globs: docs/prompt/furniture_*.txt,minigame/subpkg_deco/images/furniture/**,src/config/DecorationConfig.ts
+alwaysApply: false
+---
+
+# 室内家具贴图 — 画风与视角规范（花语小筑）
+
+凡新增或重绘 **`minigame/subpkg_deco/images/furniture/`** 下、用于花店 **L 形房间** 内摆放的家具单件贴图，须与当前 **房间背景壳**（`house_bg_room_*`）及已验收参考批次 **花房盆栽线**（`greenhouse_pot_*`）、**柔色长凳**（`orn_pastel_bench`）等在 **视角与线稿气质** 上一致；**配色不强制马卡龙**，可按房间主题、单品设定使用多样色相与饱和度，只要仍是 merge 花店道具可读剪影即可。
+
+## 视角（与房间一致）
+
+- 使用 **2.5D 等距视角**：**从左上方俯视的「经典等距」**，文档与提示词中写作 **upper-left ~45°**（与房间壳 `house_bg_room_default_v2_nb2_prompt.txt` 等中的 *Viewpoint: classic isometric from upper-left (~45°), consistent vanishing* 同一条视线）。
+- **禁止**：纯正面平视、纯侧视、强烈透视广角、室内全景带墙（家具图仅为 **单件道具**，不带房间几何）。
+- 物体摆放须能在该视角下读出 **顶面 + 朝向右下/右前的立面**，与房间内「后墙 + 右墙」的 L 形空间逻辑一致，避免像贴画一样只有一片平面。
+
+## 画风（锚点：花房盆栽线 + 长凳批次 — 视角与线稿为主）
+
+以下与 `docs/prompt/furniture_batch10_meta.txt`、`furniture_greenhouse_batch_meta.txt` 及 **`furniture_orn_pastel_bench_nb2_prompt.txt` / `furniture_greenhouse_pot_*_nb2_prompt.txt`** 在 **透视与笔触** 上对齐；**色彩可按策划单独立项**，不必复刻马卡龙或高明度 pastel。
+
+| 维度 | 要求 |
+|------|------|
+| 品类气质 | **Hand-painted mobile merge-game flower shop**，偏 **kawaii / chibi-friendly** 道具比例，非写实照片、非厚重 3D 渲染。 |
+| 线稿 | **Soft brown outlines**（略粗于头发丝、圆润转角），与房间壳 *soft brown line art slightly thicker than hairline* 一档。 |
+| 色彩 | **按单品/房间主题自选**：可深可浅、可饱和可柔和；木质、金属、布艺等材质真实可信即可。**不强制**马卡龙或 bright pastels；需与房间木作/瓷砖呼应时在提示词中点明即可。 |
+| 光照 | **Upper-left 主光**，柔和高光 + 轻微体积感；避免整图聚光灯圆斑、重暗角。 |
+| 剪影 | **Readable silhouette**，小尺寸在装修格子内仍可辨认。 |
+| 盆栽类 | 花材 **可爱风格化**，与鲜花合成线意象一致即可，**勿**写实摄影盆栽。 |
+
+## 画布与背景
+
+- **比例**：**1:1 方图**，单件道具 **居中**，四周 **留白**（提示词常用 *generous margin*）。
+- **背景**：**纯实心白 `#FFFFFF`**，供 rembg / 抠图流水线使用；**禁止**灰底、渐变底、地面投影条带假装地面。
+- **禁止**：文字、水印、角色、二维码；需要「招牌字」类内容时用抽象图形替代或留空。
+
+## 提示词写法（英文正文）
+
+1. 每条家具 **独立** `docs/prompt/furniture_<id>_nb2_prompt.txt`，**仅英文正文**（不要 `#` 注释行，避免打进 API）。
+2. 建议结构：**画布句**（Square 1:1…）→ **视角句**（Cute kawaii 2.5D isometric from upper-left about 45 degrees…）→ **风格句**（soft brown outlines + 该件具体配色与材质…）→ **主体描述** → **禁忌句**（No text…）→ **背景句**（Background pure solid white #FFFFFF…）。
+3. 与房间木作、窗框颜色需呼应时，可点明 *matching pink-tile / warm wood flower shop rooms* 等，但勿把整间房间画进图里。
+
+## 入库与流程
+
+- 原图、脚本与 `TextureCache` / `DecorationConfig` 登记见 **`docs/furniture_greenhouse_nb2.md`**、`game-art-asset-flow.mdc`（**deco 分包**，非 `subpkg_items`）。
+- 抠图默认 **`birefnet-general`**，裁切 **`crop_trim.py --padding 4`**（与花房批次 README 一致）；`defaultScale` 在 `DecorationConfig` 中按格子单独调校。
+
+## 压缩与像素规格（须对齐现有家具）
+
+- **像素**：等比缩放后 **最长边不宜超过 171 px**（与 `scripts/normalize_greenhouse_furniture_pngs.py` 中 `MAX_SIDE` 及当前多数已验收家具一致）。勿将未缩放的高分辨率生图直接长期留在 `furniture/`。
+- **编码**：RGBA PNG，`optimize=True`、`compress_level=9`（与花房归一化脚本写入方式一致）；**不使用**棋盘物品那套 256 色量化（`compress_subpkg_items_pngs.py`），以免装修大图色带。
+- **体积参考**：同目录现有成品中，简单小件约 **8～20 KB**，桌架类复杂件常见 **35～55 KB**；若同类单品 **显著偏大**（例如远大于 100 KB 且无特殊理由），应检查是否未缩放或未优化。
+- **入库前整目录（推荐）**：
+
+```bash
+python3 scripts/compress_furniture_deco_pngs.py
+# 或先看变化：
+python3 scripts/compress_furniture_deco_pngs.py --dry-run
+```
+
+## 反例（勿做）
+
+- 棋盘 **工具图标** 那套 **3/4 俯视小物件**（见 `tool-icon-art-style.mdc`）— **家具用等距花店风，二者勿混用为同一参考图。**
+- 写实 IKEA 照片风、暗黑低饱和、细黑线稿扁平 UI 图标风。
+- 带第四面墙或透视地板的「小场景」而非单件家具。

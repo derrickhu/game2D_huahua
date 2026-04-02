@@ -18,12 +18,14 @@ from pathlib import Path
 
 from PIL import Image
 
+from huahua_paths import game_assets_dir
+
 _REPO = Path(__file__).resolve().parent.parent
 GEN = os.path.expanduser("~/.cursor/skills/gemini-image-gen/scripts/generate_images.py")
 # 3.1 预览版易 503/400 时可改用 gemini-2.5-flash-image（与 generate_images 默认一致）
 MODEL = "gemini-2.5-flash-image"
 PROMPT_FILE = _REPO / "docs" / "prompt" / "tool_line_tea_set_nb2_prompt.txt"
-ASSETS = Path("/Users/huyi/rosa_games/game_assets/huahua/assets")
+ASSETS = game_assets_dir()
 REVIEW_DIR = ASSETS / "tool_lines" / "for_review"
 SHEET_OUT = REVIEW_DIR / "tool_tea_set_sheet_16x9.png"
 DEST_DIR = _REPO / "minigame" / "images" / "tools" / "tea_set"

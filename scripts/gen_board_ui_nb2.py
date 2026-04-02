@@ -20,8 +20,10 @@ GEN = os.path.expanduser("~/.cursor/skills/gemini-image-gen/scripts/generate_ima
 MODEL = "gemini-3.1-flash-image-preview"
 SLEEP = 6
 
-ASSETS = "/Users/huyi/rosa_games/game_assets/huahua/assets"
-OUT_DIR = f"{ASSETS}/board_ui_nb2/for_review/1x1"
+from huahua_paths import game_assets_dir
+
+ASSETS = game_assets_dir()
+OUT_DIR = ASSETS / "board_ui_nb2/for_review/1x1"
 
 SHARED = """
 Game UI texture asset for a cozy flower-shop MERGE mobile game.

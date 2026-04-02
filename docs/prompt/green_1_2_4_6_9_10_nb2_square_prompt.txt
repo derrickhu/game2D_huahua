@@ -1,6 +1,6 @@
 # 绿植线 Lv1/2/4/6/9/10 — BN2 单图 1:1（与 green_3_5_7_8 同风格）
 # 模型: gemini-3.1-flash-image-preview，--aspect-ratio 1:1
-# 原始 PNG 输出目录（勿放游戏仓库）: /Users/huyi/rosa_games/game_assets/huahua/assets/green_plant_nb2/raw/
+# 原始 PNG 输出目录（勿放游戏仓库）: ../game_assets/huahua/assets/green_plant_nb2/raw/
 
 SHARED_STYLE:
 ---

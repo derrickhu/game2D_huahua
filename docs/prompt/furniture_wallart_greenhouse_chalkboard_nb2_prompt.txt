@@ -1,10 +1,13 @@
 Square game asset 1:1. Single prop centered with generous margin.
 
-Cute kawaii 2.5D isometric view from upper-left about 45 degrees, hand-painted mobile merge-game flower shop style. Soft brown outlines, bright pastel colors, gentle highlights, chibi-friendly scale.
+Cute kawaii 2.5D isometric view from upper-left about 45 degrees, hand-painted mobile merge-game flower shop style. Soft brown outlines, bright pastel colors, gentle highlights, chibi-friendly scale. Readable silhouette.
 
-Wall-mounted greenhouse chalkboard: dark charcoal panel with only soft chalk dust smudges, absolutely no letters or symbols. Pastel wooden frame in mint or butter yellow, small cute corners, optional tiny hanging hook.
+OUTDOOR FLOOR STANDING SIGN — NOT wall-mounted. A freestanding A-frame / sandwich-board easel that sits on the ground in front of a shop, like a sidewalk chalkboard sign. Two panels meet at the top with a simple hinge or strap; both faces visible from this angle (front panel dominant, slight read of the opposite side). Warm honey or natural wood frame and legs, sturdy cute proportions, small feet touching an implied ground plane.
 
+BOARD SURFACES: classic sidewalk chalkboard look — matte black chalk panel on the main visible face with soft white / pale gray chalk handwriting. The Chinese shop name must appear clearly in chalk: exactly two characters 花花 (hand-drawn chalk strokes, slightly uneven and cute, not a digital font). Optional second smaller line of illegible chalk doodles or a tiny drawn flower. The other visible face may be a smaller white menu strip or pale cream panel with faint chalk smudge for contrast (black + white / cream areas on the same stand).
 
-Readable silhouette. No text, no watermark, no characters, no real room.
+DECORATIONS: cute flower-shop accents — small potted bloom or ribbon bow tied on the frame corner, or a tiny hanging basket with one stylized flower, or miniature chalk and eraser on the shelf ledge of the A-frame. Keep decorations secondary so the sign and 花花 remain the focal point.
+
+FORBIDDEN: wall mount only, floating board with no stand, full storefront building, readable text other than 花花, QR codes, watermark, human characters, fourth-wall interior scene.
 
 Background pure solid white #FFFFFF only for cutout.

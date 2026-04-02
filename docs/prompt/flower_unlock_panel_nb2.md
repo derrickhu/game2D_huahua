@@ -13,17 +13,17 @@
 
 ## 输出路径（非运行时，不入 minigame）
 
-`/Users/huyi/rosa_games/game_assets/huahua/assets/ui_prototypes/flower_unlock_panel_prototype_nb2.png`
+`../game_assets/huahua/assets/ui_prototypes/flower_unlock_panel_prototype_nb2.png`
 
 ## NB2 生成命令
 
 模型：`gemini-3.1-flash-image-preview`
 
 ```bash
-mkdir -p /Users/huyi/rosa_games/game_assets/huahua/assets/ui_prototypes
+mkdir -p ../game_assets/huahua/assets/ui_prototypes
 python3 ~/.cursor/skills/gemini-image-gen/scripts/generate_images.py \
-  --prompt-file /Users/huyi/rosa_games/huahua/docs/prompt/flower_unlock_panel_prototype_nb2_prompt.txt \
-  --output /Users/huyi/rosa_games/game_assets/huahua/assets/ui_prototypes/flower_unlock_panel_prototype_nb2.png \
+  --prompt-file docs/prompt/flower_unlock_panel_prototype_nb2_prompt.txt \
+  --output ../game_assets/huahua/assets/ui_prototypes/flower_unlock_panel_prototype_nb2.png \
   --model gemini-3.1-flash-image-preview \
   --aspect-ratio 9:16
 ```

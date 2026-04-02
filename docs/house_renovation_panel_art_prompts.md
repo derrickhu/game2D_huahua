@@ -9,7 +9,7 @@
 |------|------|
 | 风格参考图（原型） | `docs/prompt/refs/house_renovation_panel_prototype.png` |
 | 各组件提示词（仅正文，无 `#` 注释） | `docs/prompt/deco_panel_*_nb2_prompt.txt` |
-| **预览出图（不入 minigame）** | `/Users/huyi/rosa_games/game_assets/huahua/assets/preview_house_renovation_nb2/` |
+| **预览出图（不入 minigame）** | `../game_assets/huahua/assets/preview_house_renovation_nb2/` |
 
 ## 组件清单与输出文件名
 
@@ -32,14 +32,14 @@
 在项目根目录执行（每条间隔约 5s 防限流）：
 
 ```bash
-REF="/Users/huyi/rosa_games/huahua/docs/prompt/refs/house_renovation_panel_prototype.png"
-OUT="/Users/huyi/rosa_games/game_assets/huahua/assets/preview_house_renovation_nb2"
+REF="docs/prompt/refs/house_renovation_panel_prototype.png"
+OUT="../game_assets/huahua/assets/preview_house_renovation_nb2"
 PY="$HOME/.cursor/skills/gemini-image-gen/scripts/generate_images.py"
 MODEL="gemini-3.1-flash-image-preview"
 
 gen() {
   local name="$1" ratio="${2:-1:1}"
-  python3 "$PY" --prompt-file "/Users/huyi/rosa_games/huahua/docs/prompt/${name}_nb2_prompt.txt" \
+  python3 "$PY" --prompt-file "docs/prompt/${name}_nb2_prompt.txt" \
     --output "$OUT/${name}.png" --model "$MODEL" --aspect-ratio "$ratio" --image "$REF"
   sleep 5
 }

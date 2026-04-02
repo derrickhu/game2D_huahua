@@ -19,10 +19,12 @@ GEN = os.path.expanduser("~/.cursor/skills/gemini-image-gen/scripts/generate_ima
 MODEL = "gemini-3.1-flash-image-preview"
 SLEEP = 8
 
-ASSETS = "/Users/huyi/rosa_games/game_assets/huahua/assets"
-OUT_DIR = f"{ASSETS}/deco_panel_ui_nb2/for_review"
+from huahua_paths import game_assets_dir
 
-DEFAULT_REF = f"{ASSETS}/ui_prototypes/house_renovation_panel_prototype_nb2.png"
+ASSETS = game_assets_dir()
+OUT_DIR = ASSETS / "deco_panel_ui_nb2/for_review"
+
+DEFAULT_REF = str(ASSETS / "ui_prototypes/house_renovation_panel_prototype_nb2.png")
 
 SHARED = """
 REFERENCE IMAGE (small preview): same flower-shop DECORATION PANEL style — cream bottom sheet, golden bevel, salmon/mint accents, merge-game 3D UI. Match its colors, saturation, bevels, outline quality.

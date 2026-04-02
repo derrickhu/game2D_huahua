@@ -280,31 +280,30 @@ Each garden item includes a small patch of ground/grass beneath it. Centered in 
 
 - **提示词**：`docs/prompt/house_bg_room_default_v2_nb2_prompt.txt`
 - **预览图**：`minigame/subpkg_deco/images/house/preview/bg_room_default_v2_nb2.png`
-- **原图目录**：`/Users/huyi/rosa_games/game_assets/huahua/assets/preview_house_room/bg_room_default_v2_nb2.png`
+- **原图目录**：`../game_assets/huahua/assets/preview_house_room/bg_room_default_v2_nb2.png`
 - 验收通过后：将正式文件覆盖 `minigame/subpkg_deco/images/house/bg_room_default.png`（并保持 1024×1024 或与 `shop.png` 缩放策略一致）
 
 #### 7a-candy（糖果 pastel · 单套，多分区硬装）
 
 与 **7a-alt 薄荷北欧** 等冷灰/单主导色方案区分：同一 **`bg_room_default.png`** 布局参考（`--image`），硬装改为 **多色糖果 pastel**（屋顶粉/黄/薄荷分区、墙饰条纹或圆点、木构与窗框撞色、人字拼多色木条等），对齐全局 **清新柔和、温馨明亮、Q 版可爱**。
 
-- **提示词**：`docs/prompt/house_bg_room_candy_nb2_prompt.txt`
-- **建议输出文件名**：`bg_room_candy_nb2.png`（**原始生图**目录：`/Users/huyi/rosa_games/game_assets/huahua/assets/preview_house_room/`，勿将未抠图中间产物放入 minigame）
+- **整房首版提示词**：`docs/prompt/house_bg_room_candy_nb2_prompt.txt`
+- **仅换地板（迭代）**：`docs/prompt/house_bg_room_candy_nb2_floor_only_prompt.txt`，`--image` 用已入库的 **`minigame/.../house/bg_room_candy_nb2.png`**；一键 `scripts/ingest_house_room_candy_floor_nb2.sh`（NB2 + rembg → 覆盖 `bg_room_candy_nb2.png`）。
+- **建议输出文件名**：`bg_room_candy_nb2.png`（**原始生图**目录：`../game_assets/huahua/assets/preview_house_room/`，勿将未抠图中间产物放入 minigame）
 - 验收抠图后可覆盖 `minigame/.../bg_room_default.png`（当前默认 **糖果花坊** 即此管线）；与四套 alt 的说明见 **`docs/prompt/house_bg_room_alt_variants_README.md`**（顶部亦指向本提示词）。
 
-#### 7a-nb2 · 三套扩展房壳（花境 / 海岛 / 彩屑）
+#### 7a-nb2 · 三套扩展房壳（花境 / 海岛 / 复古花坊）
 
-**NB2** `gemini-3.1-flash-image-preview`；**原始生图输出目录**（勿写入 minigame）：`/Users/huyi/rosa_games/game_assets/huahua/assets/preview_house_room/`；验收抠图后再放入 `minigame/subpkg_deco/images/house/`。
+**NB2** `gemini-3.1-flash-image-preview`；raw 白底建议落在 `../game_assets/huahua/assets/preview_house_room/*_raw.png`。**入库游戏内 `minigame/.../house/` 须透明底**：`birefnet-general` rembg（与全项目抠图规范一致），保持 **1024×1024** 画布。一键：`scripts/gen_house_room_mirror_crystal_nb2.sh`（NB2 + rembg + 拷入 minigame）。
 
-**首次整房生成**：可用 **`bg_room_default.png`** 作 `--image` 锁布局（与 7a-candy 相同思路）。
+**布局参考**：`--image` 用 **`bg_room_default.png`** 锁 L 形房壳。**花境小筑**：建筑本身 **鲜花主题**（花箱、檐口花、墙面花卉装饰），**仅室内地坪**纯色大板。**复古花坊**（`bg_room_confetti_nb2`）：**明亮复古**层次（奶黄、豆沙绿、浅橡木、大格地面），避免暗沉。
 
-**仅改地板（局部重绘）**：提示词已改为「以当前成品为母图、只替换室内地板多边形」。`--image` **须对应该套已入库的 PNG**（墙顶窗不变、地板形制三者互斥：花境 = 编织木纹块、海岛 = 大砖釉面带水光、彩屑 = 彩色六边形马赛克），便于模型在统一硬装下区分地板：
-
-| 提示词文件 | 风格 | `--image`（地板迭代时） | 建议 raw 输出名 | 游戏内贴图键 |
-|------------|------|-------------------------|-----------------|--------------|
-| `house_bg_room_bloom_parade_nb2_prompt.txt` | 花境 | `minigame/.../house/bg_room_bloom_nb2.png` | `bg_room_bloom_nb2.png` | `bg_room_bloom_nb2` |
-| `house_bg_room_lagoon_punch_nb2_prompt.txt` | 海岛 | `minigame/.../house/bg_room_lagoon_nb2.png` | `bg_room_lagoon_nb2.png` | `bg_room_lagoon_nb2` |
-| `house_bg_room_confetti_cottage_nb2_prompt.txt` | 彩屑 | `minigame/.../house/bg_room_confetti_nb2.png` | `bg_room_confetti_nb2.png` | `bg_room_confetti_nb2` |
-| `house_bg_room_pinkblue_nb2_prompt.txt` | 粉蓝可爱（粉白蓝主色、温馨温柔） | `minigame/.../house/bg_room_default.png`（首版锁布局）；迭代可用已生成的 `bg_room_pinkblue_nb2.png` | `bg_room_pinkblue_nb2.png` | `bg_room_pinkblue_nb2` |
+| 提示词文件 | 风格 | `--image`（推荐） | 游戏内贴图键 |
+|------------|------|-----------------|--------------|
+| `house_bg_room_bloom_parade_nb2_prompt.txt` | 花境小筑 | `bg_room_default.png` | `bg_room_bloom_nb2` |
+| `house_bg_room_lagoon_punch_nb2_prompt.txt` | 海岛 | `bg_room_default.png` 或已生成 `bg_room_lagoon_nb2.png`（若迭代地板） | `bg_room_lagoon_nb2` |
+| `house_bg_room_confetti_cottage_nb2_prompt.txt` | 复古花坊 | `bg_room_default.png` | `bg_room_confetti_nb2` |
+| `house_bg_room_pinkblue_nb2_prompt.txt` | 粉蓝可爱（粉白蓝主色、温馨温柔） | `bg_room_default.png`（首版锁布局）；迭代可用已生成的 `bg_room_pinkblue_nb2.png` | `bg_room_pinkblue_nb2` |
 
 粉蓝套 v2 约束（已写入提示词）：**整铺短绒地毯**（禁人字木地板）、**地面无投影/无接触暗角**、**新瓦型**（鱼鳞或平瓦曲边等，禁默认半圆筒瓦）、**樱花轮廓窗框**。
 

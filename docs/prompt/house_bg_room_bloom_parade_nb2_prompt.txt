@@ -1,16 +1,29 @@
-Attached reference image: this PNG is the APPROVED Bloom room shell — use it as the master layout. Your task is a LOCAL FLOOR-ONLY revision, not a full redesign from scratch.
+Attached reference image: use it ONLY to lock geometry — replicate EXACTLY the same isometric L-shaped open flower shop shell in a 1:1 square canvas: same footprint, centering, vertical band, margins, two walls (back + right), three windows in the same sizes and positions, front-left steps, stone foundation scale, outdoor sand patch placement. Full decorative redesign.
 
-EDIT SCOPE (critical):
-- KEEP unchanged: 1:1 canvas, building position/scale/margins, L-shaped two walls, three windows (sizes + positions), roof, wall patterns, posts/beams, window frames + glass, window boxes + hanging florals, stone foundation, steps, outdoor sand patch, lighting, outlines, and all colors OUTSIDE the interior floor polygon.
-- CHANGE ONLY: the interior walkable floor surface (the empty diamond-shaped wooden area inside the room) — replace it entirely with the new floor spec below. Do NOT redraw herringbone/chevron wood planks.
+FLORAL SHOWCASE flower shop (Chinese mobile merge game — lush garden-boutique mood). The building must feel ROMANTIC, LUSH, and FLOWER-FORWARD: abundant blooms and greenery on the architecture itself. This is NOT a plain monochrome façade — walls, roof, windows, and eaves should be beautiful and flower-themed. Only the interior walkable floor stays simple.
 
-BLOOM — new floor must feel like a garden terrace, organic and floral-adjacent, clearly different shape language from wood herringbone:
-- Pattern: BASKET-WEAVE or DOUBLE-BASKET parquet — short rectangular blocks woven in over-under rows (orthogonal weave), NOT V-shaped herringbone, NOT plain parallel planks.
-- Materials/colors: three visible tints in the weave — warm honey oak (#E8C9A0), blush rosewood (#E8B8C0), and pale sage wash (#D8E8D8); soft matte finish with gentle grain; optional tiny debossed petal or quatrefoil shapes at a few tile centers (very subtle, not a busy rug print).
-- Perspective: follow the same isometric grid as the reference floor edges; meet baseboards cleanly.
+Hand-painted 2D kawaii, soft warm-brown line art slightly thicker than hairline, single soft light from upper-left, gentle volume, no circular spotlight, no heavy vignette.
 
-Interior must stay empty — no furniture, no vases on the floor, no characters, no text.
+ROOF: warm romantic scalloped ceramic tiles — soft coral-rose, warm terracotta, or dusty mint-green courses (pick a coherent cute combo); gentle highlights; friendly and inviting, not cold all-gray slate.
 
-FORBIDDEN on the floor: herringbone/chevron; single flat brown slab; checkerboard; ceramic bathroom tiles; water ripples (those belong to Lagoon).
+WALLS: inviting cream, blush-cream, or very soft sage plaster — with READABLE tasteful floral decoration: large loose watercolor rose/peony motifs, or vertical trellis with painted blossoms, or delicate botanical stripe wallpaper. The walls must clearly read as a flower boutique, not flat empty white.
 
-BACKGROUND outside the building: pure solid white #FFFFFF.
+WINDOW FRAMES: warm oak or caramel wood; glass with pale spring mint-aqua inner glow.
+
+WINDOW BOXES & PLANTS: each window has a FULL window box PACKED with cute stylized mixed blooms — pink roses, yellow daisies, lavender sprigs, white baby’s-breath clusters — trailing vines optional; hanging baskets or eave garlands with flowers welcome; optional small floral wreath on a corner post. Cute clustered shapes, not photoreal bouquet photography.
+
+POSTS / BEAMS: slender warm natural wood.
+
+BASEBOARD: soft peach-wood band between wall and floor.
+
+FLOOR (critical — gameplay clarity): ONLY the interior diamond-shaped walkable floor is a CALM SOLID matte surface — warm sand stone (#E8D8CC), soft matte sage (#D0DCD4), or pale blush slab. At most TWO to FOUR very large panel divisions with whisper-soft joints; reads almost as one continuous plane. Absolutely FORBIDDEN on the floor: herringbone, chevron, basket-weave, small tiles, mosaic, checkerboard, or any pattern whose repeat is smaller than one fifth of the floor width. The rest of the building may be rich and floral; the floor alone stays plain.
+
+FOUNDATION: warm friendly cobble brown-gray.
+
+OUTDOOR PATCH: light sand; small grass tufts; optional one or two tiny outdoor potted flowers by the steps.
+
+Interior polygon completely EMPTY — no furniture, no indoor pots, no characters, no text, no watermark.
+
+FORBIDDEN: fourth wall; making the whole house look like one flat single color; candy-shop rainbow dot wallpaper identical to a multi-pink party shop.
+
+BACKGROUND outside the building: pure solid white #FFFFFF for rembg cutout pipeline.

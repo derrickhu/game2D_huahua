@@ -4,13 +4,13 @@
 
 默认路径：
 
-`/Users/huyi/rosa_games/game_assets/huahua/assets/ui_prototypes/house_renovation_panel_prototype_nb2.png`
+`../game_assets/huahua/assets/ui_prototypes/house_renovation_panel_prototype_nb2.png`
 
 拆件生成时将该图作为 `--image` 传入，保证配色、体积感、描边与整图一致。
 
 ## 输出目录
 
-`/Users/huyi/rosa_games/game_assets/huahua/assets/deco_panel_ui_nb2/for_review/`
+`../game_assets/huahua/assets/deco_panel_ui_nb2/for_review/`
 
 - 背景：**品红 `#FF00FF`** 便于抠图；提示词内要求主体外纯品红。
 - **无任何可读文字**（中英数字），游戏里用 Pixi 叠字。
@@ -39,7 +39,7 @@
 依赖：`~/.cursor/skills/gemini-image-gen/scripts/generate_images.py`，模型默认 **NB2**（`gemini-3.1-flash-image-preview`）。
 
 ```bash
-cd /Users/huyi/rosa_games/huahua
+# 在仓库根目录执行
 
 # 全部拆件（每张间隔约 8s，总耗时较长）
 python3 scripts/gen_deco_panel_ui_nb2.py

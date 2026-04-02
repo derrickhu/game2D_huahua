@@ -3,7 +3,7 @@
 NB2 原稿（品红底）→ rembg birefnet-general → 品红晕边清理 → crop_trim
 → minigame/subpkg_panels/images/ui/special_consumable_*.png
 
-前置：已将原图存于 ~/rosa_games/game_assets/huahua/assets/raw/
+前置：已将原图存于 ../game_assets/huahua/assets/raw/（相对仓库根，或见 GAME_ASSETS_HUAHUA）
   - special_consumable_panel_bg_nb2.png
   - special_consumable_use_btn_nb2.png
 
@@ -20,8 +20,10 @@ import sys
 import numpy as np
 from PIL import Image, ImageFilter
 
+from huahua_paths import game_assets_dir
+
 REPO = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-RAW = os.path.expanduser("~/rosa_games/game_assets/huahua/assets/raw")
+RAW = str(game_assets_dir() / "raw")
 OUT = os.path.join(REPO, "minigame/subpkg_panels/images/ui")
 REMBG = os.path.expanduser("~/.cursor/skills/remove-background/scripts/rembg_single.py")
 TRIM = os.path.expanduser("~/.cursor/skills/game-art-pipeline/scripts/crop_trim.py")

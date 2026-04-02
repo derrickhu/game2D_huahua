@@ -2,7 +2,7 @@
 
 ## 输出目录
 
-`~/rosa_games/game_assets/huahua/assets/warehouse_ui_nb2/for_review/`
+`../game_assets/huahua/assets/warehouse_ui_nb2/for_review/`（自仓库根）
 
 - **拆件**：每张子图单独生成，品红底 `#FF00FF`，便于 rembg / chroma 抠图后在游戏里**拼层**。
 - **中间面板**：单独一张 **纯色圆角矩形、无格子**；格子由程序绘制（与棋盘一致）。
@@ -49,7 +49,7 @@
 - **参考图**：默认使用 `for_review/warehouse_flower_basket_panel_nb2_9x16.png`；也可用 `--ref` 指定你当前满意的那一版 PNG。
 
 ```bash
-cd /Users/huyi/rosa_games/huahua
+# 在仓库根目录执行
 python3 scripts/gen_warehouse_ui_nb2.py --panel-v2
 python3 scripts/gen_warehouse_ui_nb2.py --panel-v2 --ref /path/to/your_reference.png
 ```
@@ -88,7 +88,7 @@ python3 scripts/matte_warehouse_slot_lock.py
 ## 生成命令
 
 ```bash
-cd /Users/huyi/rosa_games/huahua
+# 在仓库根目录执行
 
 # 一次性生成全部拆件（8 张，耗时较长）
 python3 scripts/gen_warehouse_ui_nb2.py

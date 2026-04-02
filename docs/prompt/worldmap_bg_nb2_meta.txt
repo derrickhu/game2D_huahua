@@ -1,0 +1,20 @@
+大地图底图 worldmap_bg — 9:16 竖幅拼接
+
+提示词：worldmap_bg_nb2_prompt.txt
+
+重要：仅修改 prompt 文件不会更新游戏内 PNG；必须在能访问 Google API 的本机终端执行 generate_images.py。生图输出可先存为 minigame/subpkg_panels/images/ui/worldmap_nb2_raw.png，再裁切覆盖 worldmap_bg.png；入库后可删除该 raw，原图保留在 ../game_assets/huahua/assets/raw/worldmap_bg_nb2.png。
+
+目标像素（与 WorldMapConfig 一致）：
+  宽 WORLD_MAP_CONTENT_W = DESIGN_WIDTH × WORLD_MAP_PANEL_COUNT（默认 750×3 = 2250）
+  高 WORLD_MAP_CONTENT_H = DESIGN_HEIGHT（默认 1334），单屏即 9:16（750:1334）
+
+游戏内路径：
+  minigame/subpkg_panels/images/ui/worldmap_bg.png
+
+NB2 建议参数：
+  gemini-image-gen 常用固定比例；宽图可用 --aspect-ratio 16:9 出图后再按 2250×1334 等比 cover + 居中裁剪（见工程内此前流程）。提示词已强调禁止竖向白条/分栏缝，若仍出现接缝可对 PNG 做列向融合或再生成。
+
+原图落盘后可自检：整图是否存在「整列高亮白」竖带（易出现在约 1/3、2/3 宽度附近），有则改提示词或后处理。
+
+原图资产库：
+  ../game_assets/huahua/assets/raw/worldmap_bg_nb2.png

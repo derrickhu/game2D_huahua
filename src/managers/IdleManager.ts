@@ -4,12 +4,19 @@
  * 离线期间按规则产出收纳框物品 + 花愿；体力自然回复在读档时由 CurrencyManager
  * 按存档 timestamp 与 STAMINA_RECOVER_INTERVAL 结算，与在线 ticker 规则一致。
  * 回归时展示「离线收益报告」，领取无广告翻倍。
+ *
+ * 是否参与启动流程由 `Constants.OFFLINE_REWARD_UI_ENABLED` 控制；关闭时本类仍负责时间戳同步，便于日后活动/推送等复用。
  */
 import { EventBus } from '@/core/EventBus';
 import { BoardManager } from './BoardManager';
 import { CurrencyManager } from './CurrencyManager';
 import { RewardBoxManager } from './RewardBoxManager';
-import { IDLE_PRODUCE_INTERVAL, OFFLINE_MAX_HOURS, OFFLINE_HUAYUAN_INTERVAL_SEC } from '@/config/Constants';
+import {
+  IDLE_PRODUCE_INTERVAL,
+  OFFLINE_MAX_HOURS,
+  OFFLINE_HUAYUAN_INTERVAL_SEC,
+  OFFLINE_REWARD_UI_ENABLED,
+} from '@/config/Constants';
 import { ITEM_DEFS, Category, findItemId, FlowerLine } from '@/config/ItemConfig';
 
 declare const wx: any;
@@ -43,6 +50,12 @@ class IdleManagerClass {
 
   /** 计算离线收益（在游戏启动时调用） */
   calculateOfflineReward(): OfflineReward | null {
+    if (!OFFLINE_REWARD_UI_ENABLED) {
+      this._pendingReward = null;
+      this._updateTimestamp();
+      return null;
+    }
+
     if (this._lastOnlineTimestamp <= 0) {
       // 首次进入，无离线收益
       this._updateTimestamp();

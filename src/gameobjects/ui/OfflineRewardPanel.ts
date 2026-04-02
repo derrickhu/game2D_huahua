@@ -1,5 +1,7 @@
 /**
  * 离线收益面板 - 展示离线期间的收益报告
+ *
+ * 启动是否弹出由 `Constants.OFFLINE_REWARD_UI_ENABLED` 控制；类保留供日后复用。
  */
 import * as PIXI from 'pixi.js';
 import { Game } from '@/core/Game';

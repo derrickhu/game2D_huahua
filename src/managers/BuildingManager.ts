@@ -1,7 +1,7 @@
 /**
  * 建筑管理器 - 处理工具点击产出、CD 冷却、宝箱系统
  *
- * 宝箱：首次点击扣体力并掷出固定件数；每次点击向全棋盘空格散落，未散完保留宝箱并显示进度条。
+ * 宝箱：首次点击扣 1 点体力并掷出固定件数；每次点击向全棋盘空格散落，未散完保留宝箱并显示进度条（开箱体力与容器等级无关）。
  * 工具/花束包装纸逻辑不变。
  */
 import { EventBus } from '@/core/EventBus';
@@ -37,7 +37,6 @@ interface ChestDef {
   boardDropCount: number;
   /** 每一件棋盘掉落按权重随机类型（tool/product/gold 等） */
   produceItems: ChestProduceOption[];
-  staminaCost: number;
 }
 
 interface ChestProduceOption {
@@ -86,18 +85,16 @@ const CHEST_DEFS: ChestDef[] = [
         category: Category.FLOWER,
         lines: [FlowerLine.FRESH, FlowerLine.GREEN],
         levelRange: [1, 1],
-        weight: 52,
+        weight: 55,
       },
       {
         type: 'product',
         category: Category.DRINK,
         lines: [DrinkLine.TEA, DrinkLine.COLD, DrinkLine.DESSERT],
         levelRange: [1, 1],
-        weight: 42,
+        weight: 45,
       },
-      { type: 'product', category: Category.CURRENCY, lines: [CurrencyLine.STAMINA], levelRange: [1, 1], weight: 6 },
     ],
-    staminaCost: 2,
   },
   {
     itemId: 'chest_2',
@@ -108,91 +105,202 @@ const CHEST_DEFS: ChestDef[] = [
         category: Category.FLOWER,
         lines: [FlowerLine.FRESH, FlowerLine.GREEN],
         levelRange: [1, 2],
-        weight: 48,
+        weight: 57,
       },
       {
         type: 'product',
         category: Category.DRINK,
         lines: [DrinkLine.TEA, DrinkLine.COLD, DrinkLine.DESSERT],
         levelRange: [1, 2],
-        weight: 36,
+        weight: 43,
       },
-      { type: 'product', category: Category.CURRENCY, lines: [CurrencyLine.STAMINA], levelRange: [1, 2], weight: 16 },
     ],
-    staminaCost: 3,
   },
   {
     itemId: 'chest_3',
     boardDropCount: 7,
     produceItems: [
-      { type: 'tool', weight: 8 },
+      { type: 'tool', weight: 11 },
       {
         type: 'product',
         category: Category.FLOWER,
         lines: [FlowerLine.FRESH, FlowerLine.BOUQUET],
         levelRange: [1, 3],
-        weight: 28,
+        weight: 40,
       },
-      { type: 'product', category: Category.FLOWER, lines: [FlowerLine.GREEN], levelRange: [2, 3], weight: 12 },
+      { type: 'product', category: Category.FLOWER, lines: [FlowerLine.GREEN], levelRange: [2, 3], weight: 17 },
       {
         type: 'product',
         category: Category.DRINK,
         lines: [DrinkLine.TEA, DrinkLine.COLD, DrinkLine.DESSERT],
         levelRange: [1, 3],
-        weight: 22,
+        weight: 32,
       },
-      { type: 'product', category: Category.CURRENCY, lines: [CurrencyLine.STAMINA], levelRange: [1, 2], weight: 9 },
-      { type: 'product', category: Category.CURRENCY, lines: [CurrencyLine.DIAMOND], levelRange: [1, 2], weight: 21 },
     ],
-    staminaCost: 5,
   },
   {
     itemId: 'chest_4',
     boardDropCount: 7,
     produceItems: [
-      { type: 'tool', weight: 8 },
+      { type: 'tool', weight: 15 },
       {
         type: 'product',
         category: Category.FLOWER,
         lines: [FlowerLine.FRESH, FlowerLine.BOUQUET, FlowerLine.GREEN],
         levelRange: [1, 4],
-        weight: 24,
+        weight: 46,
       },
       {
         type: 'product',
         category: Category.DRINK,
         lines: [DrinkLine.TEA, DrinkLine.COLD, DrinkLine.DESSERT],
         levelRange: [1, 3],
-        weight: 20,
+        weight: 39,
       },
-      { type: 'product', category: Category.CURRENCY, lines: [CurrencyLine.STAMINA], levelRange: [1, 4], weight: 16 },
-      { type: 'product', category: Category.CURRENCY, lines: [CurrencyLine.DIAMOND], levelRange: [1, 4], weight: 32 },
     ],
-    staminaCost: 8,
   },
   {
     itemId: 'chest_5',
     boardDropCount: 8,
     produceItems: [
-      { type: 'tool', weight: 8 },
+      { type: 'tool', weight: 16 },
       {
         type: 'product',
         category: Category.FLOWER,
         lines: [FlowerLine.FRESH, FlowerLine.BOUQUET, FlowerLine.GREEN],
         levelRange: [2, 5],
-        weight: 25,
+        weight: 50,
       },
       {
         type: 'product',
         category: Category.DRINK,
         lines: [DrinkLine.TEA, DrinkLine.COLD, DrinkLine.DESSERT],
         levelRange: [2, 4],
-        weight: 17,
+        weight: 34,
       },
-      { type: 'product', category: Category.CURRENCY, lines: [CurrencyLine.STAMINA], levelRange: [1, 4], weight: 16 },
-      { type: 'product', category: Category.CURRENCY, lines: [CurrencyLine.DIAMOND], levelRange: [1, 4], weight: 34 },
     ],
-    staminaCost: 12,
+  },
+  // ═══ 钻石袋线（3级）：仅散落棋盘钻石货币块 ═══
+  {
+    itemId: 'diamond_bag_1',
+    boardDropCount: 4,
+    produceItems: [
+      {
+        type: 'product',
+        category: Category.CURRENCY,
+        lines: [CurrencyLine.DIAMOND],
+        levelRange: [1, 1],
+        weight: 100,
+      },
+    ],
+  },
+  {
+    itemId: 'diamond_bag_2',
+    boardDropCount: 5,
+    produceItems: [
+      {
+        type: 'product',
+        category: Category.CURRENCY,
+        lines: [CurrencyLine.DIAMOND],
+        levelRange: [1, 1],
+        weight: 28,
+      },
+      {
+        type: 'product',
+        category: Category.CURRENCY,
+        lines: [CurrencyLine.DIAMOND],
+        levelRange: [2, 2],
+        weight: 72,
+      },
+    ],
+  },
+  {
+    itemId: 'diamond_bag_3',
+    boardDropCount: 6,
+    produceItems: [
+      {
+        type: 'product',
+        category: Category.CURRENCY,
+        lines: [CurrencyLine.DIAMOND],
+        levelRange: [1, 1],
+        weight: 10,
+      },
+      {
+        type: 'product',
+        category: Category.CURRENCY,
+        lines: [CurrencyLine.DIAMOND],
+        levelRange: [2, 2],
+        weight: 35,
+      },
+      {
+        type: 'product',
+        category: Category.CURRENCY,
+        lines: [CurrencyLine.DIAMOND],
+        levelRange: [3, 3],
+        weight: 55,
+      },
+    ],
+  },
+  // ═══ 体力宝箱线（3级）：仅散落棋盘体力货币块 ═══
+  {
+    itemId: 'stamina_chest_1',
+    boardDropCount: 4,
+    produceItems: [
+      {
+        type: 'product',
+        category: Category.CURRENCY,
+        lines: [CurrencyLine.STAMINA],
+        levelRange: [1, 1],
+        weight: 100,
+      },
+    ],
+  },
+  {
+    itemId: 'stamina_chest_2',
+    boardDropCount: 5,
+    produceItems: [
+      {
+        type: 'product',
+        category: Category.CURRENCY,
+        lines: [CurrencyLine.STAMINA],
+        levelRange: [1, 1],
+        weight: 30,
+      },
+      {
+        type: 'product',
+        category: Category.CURRENCY,
+        lines: [CurrencyLine.STAMINA],
+        levelRange: [2, 2],
+        weight: 70,
+      },
+    ],
+  },
+  {
+    itemId: 'stamina_chest_3',
+    boardDropCount: 6,
+    produceItems: [
+      {
+        type: 'product',
+        category: Category.CURRENCY,
+        lines: [CurrencyLine.STAMINA],
+        levelRange: [1, 1],
+        weight: 12,
+      },
+      {
+        type: 'product',
+        category: Category.CURRENCY,
+        lines: [CurrencyLine.STAMINA],
+        levelRange: [2, 2],
+        weight: 33,
+      },
+      {
+        type: 'product',
+        category: Category.CURRENCY,
+        lines: [CurrencyLine.STAMINA],
+        levelRange: [3, 3],
+        weight: 55,
+      },
+    ],
   },
   // ═══ 红包线（4级）：仅散落「花愿利是」，双击入账花愿 ═══
   {
@@ -207,7 +315,6 @@ const CHEST_DEFS: ChestDef[] = [
         weight: 100,
       },
     ],
-    staminaCost: 1,
   },
   {
     itemId: 'hongbao_2',
@@ -228,7 +335,6 @@ const CHEST_DEFS: ChestDef[] = [
         weight: 65,
       },
     ],
-    staminaCost: 2,
   },
   {
     itemId: 'hongbao_3',
@@ -256,7 +362,6 @@ const CHEST_DEFS: ChestDef[] = [
         weight: 45,
       },
     ],
-    staminaCost: 3,
   },
   {
     itemId: 'hongbao_4',
@@ -291,7 +396,6 @@ const CHEST_DEFS: ChestDef[] = [
         weight: 35,
       },
     ],
-    staminaCost: 5,
   },
 ];
 
@@ -311,7 +415,7 @@ export function chestMayDropItem(
 }
 
 /**
- * 合成线「获取来源」里点宝箱/红包时：取第一个能按规则掉出该等级该线的容器 id（chest_1…5、hongbao_1…4）。
+ * 合成线「获取来源」里点宝箱/红包时：取第一个能按规则掉出该等级该线的容器 id（chest_1…5、hongbao_1…4、diamond_bag_1…3、stamina_chest_1…3）。
  */
 export function findRepresentativeChestForDrop(
   category: Category,
@@ -514,7 +618,8 @@ class BuildingManagerClass {
     if (!cell?.itemId) return null;
 
     const state = this._getOrCreateState(cellIndex, cell.itemId);
-    const staminaCost = chestDef.staminaCost;
+    /** 宝箱 / 红包 / 钻石袋 / 体力箱：统一每次开启消耗 1 体力（不按等级） */
+    const staminaCost = 1;
 
     if (state.chestQueue === undefined) {
       if (!CurrencyManager.consumeStamina(staminaCost)) {

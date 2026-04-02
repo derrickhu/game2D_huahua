@@ -1,6 +1,6 @@
 # 绿植线 Lv3/5/7/8 — BN2 单图 1:1 方形重绘（共用风格说明）
 # 每张图单独调用 generate_images.py，--aspect-ratio 1:1 --model gemini-3.1-flash-image-preview
-# 原始/中间资源目录（勿放游戏仓库）: /Users/huyi/rosa_games/game_assets/huahua/assets/green_plant_nb2/
+# 原始/中间资源目录（勿放游戏仓库）: ../game_assets/huahua/assets/green_plant_nb2/
 
 SHARED_STYLE (prepend to each item prompt below):
 ---

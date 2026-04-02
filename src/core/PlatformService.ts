@@ -176,12 +176,30 @@ class PlatformServiceClass {
    * 主动分享并等待结果（通过 onHide/onShow 时间差判断）。
    * 微信已移除分享成功回调，此方法用时间差启发式判断：
    * 离开 >2s 视为分享成功，否则视为取消。
+   *
+   * 微信开发者工具：`platform === 'devtools'` 时分享往往不触发与真机一致的前后台切换，
+   * 或回到前台间隔 <2s，导致恒为「取消」。工具内调用 `shareAppMessage` 成功后直接视为成功，便于测转发解锁格等流程。
+   *
    * @returns true = 可能已分享，false = 取消或未分享
    */
   shareAndWait(opts: { title: string; imageUrl?: string; query?: string }): Promise<boolean> {
     return new Promise<boolean>((resolve) => {
       if (!this._api) {
         resolve(true);
+        return;
+      }
+
+      const sys = this.getSystemInfoSync();
+      const isDevtools = sys?.platform === 'devtools';
+
+      if (isDevtools) {
+        try {
+          this._api.shareAppMessage(opts);
+          console.log('[Platform] shareAndWait: devtools 环境，分享调用后视为成功（真机仍走 onHide/onShow 启发式）');
+          resolve(true);
+        } catch (_) {
+          resolve(false);
+        }
         return;
       }
 

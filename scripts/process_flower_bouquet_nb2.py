@@ -18,10 +18,12 @@ import sys
 import numpy as np
 from PIL import Image
 
-ASSETS = "/Users/huyi/rosa_games/game_assets/huahua/assets"
-OUT_GAME = "/Users/huyi/rosa_games/huahua/minigame/images/flowers/bouquet"
-RAW_DIR = f"{ASSETS}/flower_bouquet_nb2/for_review/1x1"
-PROCESSED_DIR = f"{ASSETS}/flower_bouquet_nb2/for_review/processed"
+from huahua_paths import game_assets_dir, repo_root
+
+ASSETS = game_assets_dir()
+OUT_GAME = repo_root() / "minigame/images/flowers/bouquet"
+RAW_DIR = ASSETS / "flower_bouquet_nb2/for_review/1x1"
+PROCESSED_DIR = ASSETS / "flower_bouquet_nb2/for_review/processed"
 PREFIX = "flower_bouquet"
 REMBG = os.path.expanduser("~/.cursor/skills/remove-background/scripts/rembg_batch.py")
 TRIM = os.path.expanduser("~/.cursor/skills/game-art-pipeline/scripts/crop_trim.py")

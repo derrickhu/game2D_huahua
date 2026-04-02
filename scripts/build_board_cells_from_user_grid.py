@@ -27,8 +27,10 @@ from PIL import Image
 
 _REPO = Path(__file__).resolve().parent.parent
 GRID_REF = _REPO / "docs" / "prompt" / "refs" / "board_cell_user_approved_grid.png"
-ASSETS = "/Users/huyi/rosa_games/game_assets/huahua/assets"
-OUT_DIR = f"{ASSETS}/board_cell_nb2/for_review"
+from huahua_paths import game_assets_dir
+
+ASSETS = game_assets_dir()
+OUT_DIR = ASSETS / "board_cell_nb2/for_review"
 
 # 网格划分（与当前 270×188 参考图一致：3 列 × 2 行）
 GRID_COLS = 3

@@ -18,11 +18,13 @@ from pathlib import Path
 
 from PIL import Image
 
+from huahua_paths import game_assets_dir
+
 _REPO = Path(__file__).resolve().parent.parent
 GEN = os.path.expanduser("~/.cursor/skills/gemini-image-gen/scripts/generate_images.py")
 MODEL = "gemini-3.1-flash-image-preview"
 PROMPT_FILE = _REPO / "docs" / "prompt" / "tool_line_arrange_nb2_prompt.txt"
-ASSETS = Path("/Users/huyi/rosa_games/game_assets/huahua/assets")
+ASSETS = game_assets_dir()
 REVIEW_DIR = ASSETS / "tool_lines" / "for_review"
 SHEET_OUT = REVIEW_DIR / "tool_arrange_sheet_16x9.png"
 DEST_DIR = _REPO / "minigame" / "images" / "tools" / "arrange"

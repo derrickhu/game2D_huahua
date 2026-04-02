@@ -2,7 +2,7 @@
 
 **用途**：`ItemInfoBar` 右侧两个操作按钮的**纯图形**皮肤（无文字）；游戏里仍用代码叠中文标签或仅用图标。  
 **出图后保存位置（勿直接进游戏仓库）**：  
-`/Users/huyi/rosa_games/game_assets/huahua/assets/item_info_bar_nb2/for_review/`
+`../game_assets/huahua/assets/item_info_bar_nb2/for_review/`
 
 建议文件名：
 - `btn_merge_chain_nb2.png` — 合成线

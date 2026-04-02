@@ -10,8 +10,10 @@ import subprocess
 import sys
 import time
 
+from huahua_paths import game_assets_dir
+
 GEN = os.path.expanduser("~/.cursor/skills/gemini-image-gen/scripts/generate_images.py")
-OUT_DIR = "/Users/huyi/rosa_games/game_assets/huahua/assets/drink_cold_nb2/for_review/progression_1x1"
+OUT_DIR = str(game_assets_dir() / "drink_cold_nb2/for_review/progression_1x1")
 MODEL = "gemini-3.1-flash-image-preview"
 
 SHARED = """

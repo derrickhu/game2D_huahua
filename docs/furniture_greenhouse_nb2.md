@@ -6,7 +6,7 @@
 2. 生图到仓库外资源库：
 
 ```bash
-mkdir -p /Users/huyi/rosa_games/game_assets/huahua/assets/raw
+mkdir -p ../game_assets/huahua/assets/raw
 ./scripts/gen_furniture_greenhouse_nb2.sh
 ```
 
@@ -25,7 +25,7 @@ mkdir -p /Users/huyi/rosa_games/game_assets/huahua/assets/raw
 
 | 纹理 key | 中文名 | 槽位 | 备注 |
 |----------|--------|------|------|
-| `wallart_greenhouse_chalkboard` | 花房落地小黑板 | 摆件 | NB2：落地 A 字粉笔板，板上仅手写「花花」；木框风格对齐 `room/room_11.png` 一类房间小物 |
+| `wallart_greenhouse_chalkboard` | 花房落地小黑板 | 摆件 | NB2：**户外**落地 A 字招牌架（非上墙），黑白板面 + 粉笔「花花」+ 小花/丝带装饰；提示词 `furniture_wallart_greenhouse_chalkboard_nb2_prompt.txt` |
 | `orn_greenhouse_cart` | 花店小推车 | 摆件 | 贴图来自 `room/room_26.png` |
 | `garden_flower_stall` | 户外小花摊 | 庭院 | 贴图来自 `room/room_27.png` |
 | `greenhouse_pot_sprout` | 种子小盆栽 | 摆件 | 贴图来自 `room/room_30.png` |
@@ -41,4 +41,4 @@ mkdir -p /Users/huyi/rosa_games/game_assets/huahua/assets/raw
 
 ## 与昨日家具批次的关系
 
-画风与 `furniture_batch10_meta.txt` 及同目录下 `furniture_light_kettle_pastel_nb2_prompt.txt`、`furniture_orn_awaken_bucket_nb2_prompt.txt` 等一致：同一段 isometric / pastel / brown outline / white background 描述，仅替换主体物。落地小黑板额外对齐房间内已有木框告示板（如 `room_11.png`）的线宽与暖木色，但主体为**立地 A 字粉笔板**而非上墙款。
+画风与 `furniture_batch10_meta.txt` 及同目录下 `furniture_light_kettle_pastel_nb2_prompt.txt`、`furniture_orn_awaken_bucket_nb2_prompt.txt` 等一致：同一段 isometric / pastel / brown outline / white background 描述，仅替换主体物。落地小黑板为**户外店前立地 A 字招牌**（非上墙），暖木框 + 黑白板面 + 粉笔「花花」+ 小花/丝带等点缀，线宽可与 `room/room_11.png` 一类木框小物对齐。

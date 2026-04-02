@@ -17,7 +17,9 @@ GEN = os.path.expanduser("~/.cursor/skills/gemini-image-gen/scripts/generate_ima
 MODEL = "gemini-2.5-flash-image"
 SLEEP = 6
 
-ASSETS = "/Users/huyi/rosa_games/game_assets/huahua/assets"
+from huahua_paths import game_assets_dir
+
+ASSETS = game_assets_dir()
 
 SHARED = """
 Game merge item icon, ONE single object only, centered, flat solid #FF00FF magenta background ONLY.
@@ -215,12 +217,12 @@ Same anti-white-outer-edge as DESSERT_GLOBAL: colored cake/frosting edge meets #
 def run_line(line: str, levels: list[int] | None = None) -> None:
     if line == "tea":
         category = "FLOWER TEA drink line (茶饮)"
-        out_dir = f"{ASSETS}/drink_tea_nb2/for_review/1x1"
+        out_dir = str(ASSETS / "drink_tea_nb2/for_review/1x1")
         prefix = "drink_tea"
         subjects = TEA_SUBJECTS
     elif line == "dessert":
         category = "FLOWER DESSERT pastry line (甜品)"
-        out_dir = f"{ASSETS}/drink_dessert_nb2/for_review/1x1"
+        out_dir = str(ASSETS / "drink_dessert_nb2/for_review/1x1")
         prefix = "drink_dessert"
         subjects = DESSERT_SUBJECTS
     else:

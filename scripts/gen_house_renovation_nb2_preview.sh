@@ -1,8 +1,9 @@
 #!/usr/bin/env bash
 set -euo pipefail
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
+GA="${GAME_ASSETS_HUAHUA:-"$ROOT/../game_assets/huahua"}"
 REF="$ROOT/docs/prompt/refs/house_renovation_panel_prototype.png"
-OUT="/Users/huyi/rosa_games/game_assets/huahua/assets/preview_house_renovation_nb2"
+OUT="$GA/assets/preview_house_renovation_nb2"
 PY="${HOME}/.cursor/skills/gemini-image-gen/scripts/generate_images.py"
 MODEL="gemini-3.1-flash-image-preview"
 

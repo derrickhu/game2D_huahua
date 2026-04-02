@@ -10,6 +10,7 @@
  */
 import * as PIXI from 'pixi.js';
 import { Game } from '@/core/Game';
+import { SceneManager } from '@/core/SceneManager';
 import { TweenManager, Ease } from '@/core/TweenManager';
 import { EventBus } from '@/core/EventBus';
 import { ToastMessage } from '@/gameobjects/ui/ToastMessage';
@@ -151,6 +152,10 @@ export class DecorationPanel extends PIXI.Container {
   private _panelHBuilt = 0;
   /** 购买成功后「获得新家具」浮层 */
   private _unlockOverlay: PIXI.Container | null = null;
+  /** 飞星结束前暂存，用于到账加星与弹窗顺序 */
+  private _pendingDecoGrantStar: DecoDef | null = null;
+  /** 升星弹窗关闭后再弹出「获得新家具」 */
+  private _pendingNewDecoAfterLevelUp: DecoDef | null = null;
 
   constructor() {
     super();
@@ -158,6 +163,8 @@ export class DecorationPanel extends PIXI.Container {
     this.zIndex = 5000;
     this.sortableChildren = true;
     this._build();
+    EventBus.on('decoration:shopStarFlyComplete', this._onShopStarFlyComplete);
+    EventBus.on('shop:levelUpPopupClosed', this._onShopLevelUpPopupClosed);
   }
 
   // ─── touch scroll：pointermove/up 绑 canvas（微信小游戏上 stage 级 move 常丢失）────
@@ -238,7 +245,9 @@ export class DecorationPanel extends PIXI.Container {
     if (this._isOpen) return;
     this._isOpen = true;
     this.visible = true;
+    EventBus.emit('decoration:decoPanelBackdrop', { open: true });
     this._activeTab = 'flower_room';
+    this._redrawDimMask();
     this._resizePanelIfNeeded();
     this._refreshAll();
 
@@ -256,6 +265,9 @@ export class DecorationPanel extends PIXI.Container {
 
   close(): void {
     if (!this._isOpen) return;
+    EventBus.emit('decoration:decoPanelBackdrop', { open: false });
+    this._flushDeferredStarOnClose();
+    this._pendingNewDecoAfterLevelUp = null;
     this._dismissUnlockPopup();
     this._teardownScroll();
     this._isOpen = false;
@@ -274,11 +286,9 @@ export class DecorationPanel extends PIXI.Container {
     const w = DESIGN_WIDTH;
     const h = Game.logicHeight;
 
-    // dim overlay
+    // dim overlay（全屏；花店星/进度条/礼包由 ShopScene 提到 overlay 更高层显示在遮罩上）
     this._bg = new PIXI.Graphics();
-    this._bg.beginFill(0x000000, 0.5);
-    this._bg.drawRect(0, 0, w, h);
-    this._bg.endFill();
+    this._redrawDimMask();
     this._bg.eventMode = 'static';
     this._bg.on('pointertap', () => this.close());
     this.addChild(this._bg);
@@ -1039,14 +1049,58 @@ export class DecorationPanel extends PIXI.Container {
     return card;
   }
 
+  /** 全屏半透明遮罩 */
+  private _redrawDimMask(): void {
+    const w = DESIGN_WIDTH;
+    const h = Game.logicHeight;
+    this._bg.clear();
+    this._bg.beginFill(0x000000, 0.5);
+    this._bg.drawRect(0, 0, w, h);
+    this._bg.endFill();
+  }
+
+  /** 关面板时若飞星未完成，立即加星避免丢进度 */
+  private _flushDeferredStarOnClose(): void {
+    if (!this._pendingDecoGrantStar) return;
+    const deco = this._pendingDecoGrantStar;
+    this._pendingDecoGrantStar = null;
+    if (deco.starValue > 0) {
+      CurrencyManager.addStar(deco.starValue);
+    }
+  }
+
+  private readonly _onShopStarFlyComplete = (): void => {
+    if (!this._isOpen) return;
+    const deco = this._pendingDecoGrantStar;
+    if (!deco) return;
+    this._pendingDecoGrantStar = null;
+    if (deco.starValue > 0) {
+      const oldLv = CurrencyManager.state.level;
+      CurrencyManager.addStar(deco.starValue);
+      if (CurrencyManager.state.level > oldLv) {
+        this._pendingNewDecoAfterLevelUp = deco;
+        this._refreshAll();
+        return;
+      }
+    }
+    this._refreshAll();
+    this._showNewDecoUnlockPopup(deco);
+  };
+
+  private readonly _onShopLevelUpPopupClosed = (): void => {
+    if (!this._isOpen || !this._pendingNewDecoAfterLevelUp) return;
+    const deco = this._pendingNewDecoAfterLevelUp;
+    this._pendingNewDecoAfterLevelUp = null;
+    this._showNewDecoUnlockPopup(deco);
+  };
+
   // ─── tap handlers ─────────────────────────────────────────
 
   private _emitShopStarFly(flyCard: PIXI.Container, starAmount: number): void {
     if (starAmount <= 0) return;
-    const b = flyCard.getBounds();
-    const globalX = b.x + b.width / 2;
-    const globalY = b.y + b.height / 2;
-    EventBus.emit('decoration:shopStarFly', { globalX, globalY, amount: starAmount });
+    const lp = new PIXI.Point(14, 14);
+    const gp = flyCard.toGlobal(lp);
+    EventBus.emit('decoration:shopStarFly', { globalX: gp.x, globalY: gp.y, amount: starAmount });
   }
 
   /** 关闭装修面板并切花店场景，携带待摆放家具（编辑模式 + 托盘拖入） */
@@ -1072,12 +1126,27 @@ export class DecorationPanel extends PIXI.Container {
       ToastMessage.show(`🔒 ${req.text}`);
       return;
     }
-    if (DecorationManager.unlock(deco.id)) {
+    if (this._pendingDecoGrantStar) {
+      ToastMessage.show('请稍候，星级正在飞入~');
+      return;
+    }
+    const onShopScene = SceneManager.current?.name === 'shop';
+    if (deco.starValue > 0 && onShopScene) {
+      if (!DecorationManager.unlock(deco.id, { deferStarGrant: true })) {
+        ToastMessage.show(`🌸 花愿不足，需要 ${deco.cost} 花愿`);
+        return;
+      }
+      this._pendingDecoGrantStar = deco;
+      this._emitShopStarFly(flyCard, deco.starValue);
+      this._refreshAll();
+    } else {
+      if (!DecorationManager.unlock(deco.id)) {
+        ToastMessage.show(`🌸 花愿不足，需要 ${deco.cost} 花愿`);
+        return;
+      }
       this._emitShopStarFly(flyCard, deco.starValue);
       this._refreshAll();
       this._showNewDecoUnlockPopup(deco);
-    } else {
-      ToastMessage.show(`🌸 花愿不足，需要 ${deco.cost} 花愿`);
     }
   }
 

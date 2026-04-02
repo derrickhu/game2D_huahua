@@ -4,7 +4,7 @@
 
 **粉白蓝房壳**：`house_bg_room_pinkblue_nb2_prompt.txt` → `bg_room_pinkblue_nb2.png`（`style_pinkblue_nb2`）。
 
-**三套 NB2 扩展房壳**（花境 / 海岛 / 彩屑）：`house_bg_room_bloom_parade_nb2_prompt.txt`、`house_bg_room_lagoon_punch_nb2_prompt.txt`、`house_bg_room_confetti_cottage_nb2_prompt.txt`；**原始 PNG 输出到** `game_assets/huahua/assets/preview_house_room/`，抠图后再拷贝至 `minigame/.../house/`。迭代地板时 `--image` 用对应成品 `bg_room_*_nb2.png`（提示词为局部改地板）。索引见 **7a-nb2**。
+**三套 NB2 扩展房壳**（花境小筑 / 海岛 / 复古花坊）：`house_bg_room_bloom_parade_nb2_prompt.txt`（**鲜花主题**硬装与窗景，**仅室内地坪**纯色大板）、`house_bg_room_lagoon_punch_nb2_prompt.txt`、`house_bg_room_confetti_cottage_nb2_prompt.txt`（**明亮复古**花店：奶黄/豆沙绿/浅橡木，大格地面，贴图键仍为 `bg_room_confetti_nb2`）。**布局参考** `bg_room_default.png`（`--image`）。**入库须抠图**：白底 NB2 → `birefnet-general` rembg → 透明底写入 `minigame/.../house/`（保持 1024×1024 画布，勿 crop 掉留白以免影响店内缩放）。一键：`scripts/gen_house_room_mirror_crystal_nb2.sh`（内含 NB2 + rembg）。索引见 **7a-nb2**。
 
 以当前默认房 [`bg_room_default.png`](../../minigame/subpkg_deco/images/house/bg_room_default.png) 为 **唯一布局参考**（`--image`），要求 **1:1 画幅、体量与在画面中的位置一致**，只换配色与材质气质。
 
@@ -15,19 +15,19 @@
 | `house_bg_room_alt_lilac_nb2_prompt.txt` | 淡紫童话 | `bg_room_alt_lilac_nb2.png` |
 | `house_bg_room_alt_lagoon_nb2_prompt.txt` | 热带泻湖 | `bg_room_alt_lagoon_nb2.png` |
 
-原图目录：`/Users/huyi/rosa_games/game_assets/huahua/assets/preview_house_room/`  
+原图目录：`../game_assets/huahua/assets/preview_house_room/`  
 仓库对比：`minigame/subpkg_deco/images/house/preview/`
 
 批量命令（NB2 + 参考图）：
 
 ```bash
-REF="/Users/huyi/rosa_games/huahua/minigame/subpkg_deco/images/house/bg_room_default.png"
-OUT="/Users/huyi/rosa_games/game_assets/huahua/assets/preview_house_room"
-PR="/Users/huyi/rosa_games/huahua/docs/prompt"
+REF="minigame/subpkg_deco/images/house/bg_room_default.png"
+OUT="../game_assets/huahua/assets/preview_house_room"
+PR="docs/prompt"
 PY="$HOME/.cursor/skills/gemini-image-gen/scripts/generate_images.py"
 M="gemini-3.1-flash-image-preview"
 
-PREV="/Users/huyi/rosa_games/huahua/minigame/subpkg_deco/images/house/preview"
+PREV="minigame/subpkg_deco/images/house/preview"
 mkdir -p "$OUT" "$PREV"
 
 run() {

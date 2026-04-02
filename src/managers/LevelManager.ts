@@ -36,6 +36,26 @@ function buildReward(newLevel: number): LevelUpReward {
   };
 }
 
+/** 一次升多级时合并各星级档奖励（避免只领到最高一档） */
+function aggregateStarLevelUpRewards(oldLevel: number, newLevel: number): LevelUpReward {
+  let stamina = 0;
+  let diamond = 0;
+  const boxCounts = new Map<string, number>();
+  for (let L = oldLevel + 1; L <= newLevel; L++) {
+    const r = buildReward(L);
+    stamina += r.stamina;
+    diamond += r.diamond;
+    for (const b of r.rewardBoxItems) {
+      boxCounts.set(b.itemId, (boxCounts.get(b.itemId) ?? 0) + b.count);
+    }
+  }
+  const rewardBoxItems = Array.from(boxCounts.entries()).map(([itemId, count]) => ({
+    itemId,
+    count,
+  }));
+  return { stamina, diamond, rewardBoxItems };
+}
+
 class LevelManagerClass {
   private _initialized = false;
 
@@ -105,15 +125,17 @@ class LevelManagerClass {
   }
 
   private _bindEvents(): void {
-    EventBus.on('star:levelUp', (newLevel: number, _oldLevel: number) => {
-      const reward = buildReward(newLevel);
+    EventBus.on('star:levelUp', (newLevel: number, oldLevel: number) => {
+      const reward = aggregateStarLevelUpRewards(oldLevel, newLevel);
       CurrencyManager.addStamina(reward.stamina);
       if (reward.diamond > 0) CurrencyManager.addDiamond(reward.diamond);
 
       const boxLog = reward.rewardBoxItems.length
         ? ` 收纳盒:${reward.rewardBoxItems.map(b => `${b.itemId}×${b.count}`).join(',')}`
         : '';
-      console.log(`[Level] 星级提升！${newLevel}星, 奖励: 体力+${reward.stamina} 钻石+${reward.diamond}${boxLog}`);
+      console.log(
+        `[Level] 星级提升！${oldLevel}→${newLevel}星, 奖励: 体力+${reward.stamina} 钻石+${reward.diamond}${boxLog}`,
+      );
       EventBus.emit('level:up', newLevel, reward);
     });
   }

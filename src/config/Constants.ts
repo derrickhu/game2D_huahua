@@ -79,6 +79,13 @@ export const OFFLINE_MAX_HOURS = 4;
 /** 离线收益：每满该秒数得 1 花愿（与 OFFLINE_MAX_HOURS 叠乘后满档 = 4×60÷5 = 48） */
 export const OFFLINE_HUAYUAN_INTERVAL_SEC = 300; // 5 分钟 1 点
 
+/**
+ * 是否启用启动时的「离线收益报告」及花愿/收纳盒挂机产出。
+ * false：`IdleManager.calculateOfflineReward()` 仅同步离线时间戳、清空待领取，不弹窗、不发奖；`IdleManager` / `OfflineRewardPanel` 实现仍保留，改 true 即可恢复。
+ * 体力随真实时间自然回复仍由读档 `SaveManager` + `CurrencyManager` 处理，不受此项影响。
+ */
+export const OFFLINE_REWARD_UI_ENABLED = false;
+
 // 颜色主题
 export const COLORS = {
   BG: 0xFFF5EE,

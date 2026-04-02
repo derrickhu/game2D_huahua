@@ -15,7 +15,9 @@ from io import BytesIO
 
 from PIL import Image
 
-RAW_DIR = "/Users/huyi/rosa_games/game_assets/huahua/assets/raw"
+from huahua_paths import game_assets_dir
+
+RAW_DIR = str(game_assets_dir() / "raw")
 OUT_DIR = os.path.join(
     os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
     "minigame/subpkg_items/images/hongbao",

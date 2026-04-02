@@ -5,13 +5,13 @@
 棋盘格为 **1:1**，工具图标应 **尽量占满格子**。整网 **1×6 横条** 容易比例不均，故改为 **每张单独生成**，比例 **`--aspect-ratio 1:1`**，模型 **`gemini-3.1-flash-image-preview`（NB2）**。
 
 - 提示词：`docs/prompt/tool_plant_{1..6}_nb2_prompt.txt`
-- 原图输出目录（**仓库外**）：`/Users/huyi/rosa_games/game_assets/huahua/assets/raw/tool_plant_{1..6}.png`
+- 原图输出目录（**仓库外**）：`../game_assets/huahua/assets/raw/tool_plant_{1..6}.png`
 
 入库到游戏工程时（路径以 `TextureCache` / `subpkg_items` 为准）：
 
 ```bash
-cp "/Users/huyi/rosa_games/game_assets/huahua/assets/raw/tool_plant_1.png" \
-  "{workspace}/minigame/subpkg_items/images/tools/plant/tool_plant_1.png"
+cp "../game_assets/huahua/assets/raw/tool_plant_1.png" \
+  "minigame/subpkg_items/images/tools/plant/tool_plant_1.png"
 # … 对 2–6 重复
 ```
 

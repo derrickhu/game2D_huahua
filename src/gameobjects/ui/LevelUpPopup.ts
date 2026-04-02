@@ -7,6 +7,7 @@ import { TweenManager, Ease } from '@/core/TweenManager';
 import { DESIGN_WIDTH, FONT_FAMILY } from '@/config/Constants';
 import { ITEM_DEFS } from '@/config/ItemConfig';
 import { TextureCache } from '@/utils/TextureCache';
+import { RewardFlyCoordinator, type RewardFlyItem } from '@/core/RewardFlyCoordinator';
 
 export interface LevelUpRewardPayload {
   huayuan: number;
@@ -25,6 +26,8 @@ export interface LevelUpPopupShowOptions {
   previewOnly?: boolean;
   /** 顶栏标题；默认「恭喜升至 N 星」 */
   bannerTitle?: string;
+  /** 淡出并从舞台移除完毕后回调（用于衔接后续弹窗，如花店「获得新家具」） */
+  onFullyClosed?: () => void;
 }
 
 export class LevelUpPopup extends PIXI.Container {
@@ -34,6 +37,11 @@ export class LevelUpPopup extends PIXI.Container {
   private _flySources: Array<{ x: number; y: number; texKey: string; count: number }> = [];
   private _rewardFlyTargetGlobal: PIXI.Point | null = null;
   private _onGrantRewardBoxItems: LevelUpPopupShowOptions['onGrantRewardBoxItems'];
+  private _onFullyClosed: LevelUpPopupShowOptions['onFullyClosed'];
+  /** 弹窗展示用（与已入账数值一致；确定后用于飞入顶栏特效） */
+  private _showHuayuan = 0;
+  private _showStamina = 0;
+  private _showDiamond = 0;
 
   constructor() {
     super();
@@ -54,6 +62,7 @@ export class LevelUpPopup extends PIXI.Container {
     this._flySources = [];
     this._rewardFlyTargetGlobal = options?.rewardFlyTargetGlobal ?? null;
     this._onGrantRewardBoxItems = options?.onGrantRewardBoxItems;
+    this._onFullyClosed = options?.onFullyClosed;
 
     const W = DESIGN_WIDTH;
     const H = Game.logicHeight;
@@ -63,12 +72,17 @@ export class LevelUpPopup extends PIXI.Container {
     const stamina = reward.stamina ?? 0;
     const diamond = reward.diamond ?? 0;
     const rewardBoxItems = reward.rewardBoxItems ?? [];
+    this._showHuayuan = huayuan;
+    this._showStamina = stamina;
+    this._showDiamond = diamond;
 
     const mask = new PIXI.Graphics();
     mask.beginFill(0x000000, 0.52);
     mask.drawRect(0, 0, W, H);
     mask.endFill();
     mask.eventMode = 'static';
+    mask.cursor = 'pointer';
+    mask.on('pointertap', () => this._dismiss());
     this.addChild(mask);
 
     let curY = H * 0.155;
@@ -341,26 +355,61 @@ export class LevelUpPopup extends PIXI.Container {
     this._dismissing = true;
 
     const pending = this._pendingBoxItems;
-    const hasFly =
-      !this._previewOnly &&
-      pending.length > 0 &&
-      this._flySources.length > 0 &&
-      this._rewardFlyTargetGlobal !== null &&
-      this.parent;
+    const preview = this._previewOnly;
 
-    if (hasFly) {
-      this._setPopupInteractive(false);
-      this._playRewardFlyToBox(() => {
+    const finishClose = (): void => {
+      this._fadeOutAndClose();
+    };
+
+    const grantBoxIfNeeded = (): void => {
+      if (pending.length > 0 && !preview) {
         this._onGrantRewardBoxItems?.(pending);
-        this._fadeOutAndClose();
-      });
-      return;
+      }
+    };
+
+    /** 收纳盒物品飞入目标点后再入库 */
+    const tryBoxFly = (after: () => void): void => {
+      if (
+        !preview &&
+        pending.length > 0 &&
+        this._flySources.length > 0 &&
+        this._rewardFlyTargetGlobal !== null &&
+        this.parent
+      ) {
+        this._setPopupInteractive(false);
+        this._playRewardFlyToBox(() => {
+          grantBoxIfNeeded();
+          after();
+        });
+      } else {
+        grantBoxIfNeeded();
+        after();
+      }
+    };
+
+    const currencyItems: RewardFlyItem[] = [];
+    if (!preview) {
+      if (this._showHuayuan > 0) {
+        currencyItems.push({ type: 'huayuan', textureKey: 'icon_huayuan', amount: this._showHuayuan });
+      }
+      if (this._showStamina > 0) {
+        currencyItems.push({ type: 'stamina', textureKey: 'icon_energy', amount: this._showStamina });
+      }
+      if (this._showDiamond > 0) {
+        currencyItems.push({ type: 'diamond', textureKey: 'icon_gem', amount: this._showDiamond });
+      }
     }
 
-    if (pending.length > 0 && !this._previewOnly) {
-      this._onGrantRewardBoxItems?.(pending);
+    const startGlobal = this.toGlobal(new PIXI.Point(DESIGN_WIDTH / 2, Game.logicHeight * 0.36));
+
+    if (currencyItems.length > 0) {
+      this._setPopupInteractive(false);
+      RewardFlyCoordinator.playBatch(currencyItems, startGlobal, () => {
+        tryBoxFly(finishClose);
+      });
+    } else {
+      tryBoxFly(finishClose);
     }
-    this._fadeOutAndClose();
   }
 
   private _setPopupInteractive(active: boolean): void {
@@ -378,6 +427,7 @@ export class LevelUpPopup extends PIXI.Container {
       duration: 0.28,
       ease: Ease.easeInQuad,
       onComplete: () => {
+        const closedCb = this._onFullyClosed;
         this.visible = false;
         this.removeChildren();
         this._dismissing = false;
@@ -386,6 +436,11 @@ export class LevelUpPopup extends PIXI.Container {
         this._flySources = [];
         this._rewardFlyTargetGlobal = null;
         this._onGrantRewardBoxItems = undefined;
+        this._onFullyClosed = undefined;
+        this._showHuayuan = 0;
+        this._showStamina = 0;
+        this._showDiamond = 0;
+        closedCb?.();
       },
     });
   }

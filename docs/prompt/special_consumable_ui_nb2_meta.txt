@@ -10,16 +10,17 @@
 ## 生成（NB2）
 
 ```bash
-mkdir -p ~/rosa_games/game_assets/huahua/assets/raw
+# 在仓库根目录执行
+mkdir -p ../game_assets/huahua/assets/raw
 GEMINI_IMAGE_REST_ONLY=1 python3 ~/.cursor/skills/gemini-image-gen/scripts/generate_images.py \
-  --prompt-file "{workspace}/docs/prompt/special_consumable_panel_bg_nb2_prompt.txt" \
-  --output ~/rosa_games/game_assets/huahua/assets/raw/special_consumable_panel_bg_nb2.png \
+  --prompt-file docs/prompt/special_consumable_panel_bg_nb2_prompt.txt \
+  --output ../game_assets/huahua/assets/raw/special_consumable_panel_bg_nb2.png \
   --model gemini-3.1-flash-image-preview \
   --aspect-ratio 16:9
 
 GEMINI_IMAGE_REST_ONLY=1 python3 ~/.cursor/skills/gemini-image-gen/scripts/generate_images.py \
-  --prompt-file "{workspace}/docs/prompt/special_consumable_use_btn_nb2_prompt.txt" \
-  --output ~/rosa_games/game_assets/huahua/assets/raw/special_consumable_use_btn_nb2.png \
+  --prompt-file docs/prompt/special_consumable_use_btn_nb2_prompt.txt \
+  --output ../game_assets/huahua/assets/raw/special_consumable_use_btn_nb2.png \
   --model gemini-3.1-flash-image-preview \
   --aspect-ratio 4:3
 ```
@@ -27,7 +28,7 @@ GEMINI_IMAGE_REST_ONLY=1 python3 ~/.cursor/skills/gemini-image-gen/scripts/gener
 ## 抠图入库
 
 ```bash
-cd {workspace}
+# 在仓库根目录执行
 python3 scripts/process_special_consumable_ui_nb2.py
 ```
 

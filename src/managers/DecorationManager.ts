@@ -23,6 +23,8 @@ export interface DecoSaveData {
   equipped: Record<string, string>;
   /** 当前房间整体风格（对应 ROOM_STYLES） */
   roomStyleId?: string;
+  /** 各装修场景独立的房间风格 id（大地图多房） */
+  roomStyleByScene?: Record<string, string>;
   /** 已解锁的房间风格 id */
   unlockedRoomStyles?: string[];
 }
@@ -32,13 +34,16 @@ class DecorationManagerClass {
   private _unlocked = new Set<string>();
   /** 当前装备：slot → decoId */
   private _equipped = new Map<string, string>();
-  /** 当前房间风格 id（如 style_default） */
+  /** 当前房间风格 id（如 style_default），与当前场景装备同步 */
   private _roomStyleId = 'style_default';
+  /** 场景 → 已装备房间风格 */
+  private _roomStyleByScene = new Map<string, string>();
   /** 已解锁的房间风格 */
   private _unlockedRoomStyles = new Set<string>();
 
   private _initRoomStyleDefaults(): void {
     this._roomStyleId = 'style_default';
+    this._roomStyleByScene.clear();
     this._unlockedRoomStyles.clear();
     for (const s of ROOM_STYLES) {
       if (s.cost === 0 && !s.unlockRequirement) this._unlockedRoomStyles.add(s.id);
@@ -55,14 +60,24 @@ class DecorationManagerClass {
     console.log(`[Decoration] 初始化: ${this._unlocked.size} 个装饰已解锁, 房间风格: ${this._roomStyleId}`);
   }
 
+  /** 当前装修场景下已装备的房间风格 id */
+  private _effectiveRoomStyleId(): string {
+    const sid = CurrencyManager.state.sceneId;
+    const fromMap = this._roomStyleByScene.get(sid);
+    if (fromMap && ROOM_STYLE_MAP.has(fromMap) && this._unlockedRoomStyles.has(fromMap)) {
+      return fromMap;
+    }
+    return 'style_default';
+  }
+
   /** TextureCache 键：当前房间背景 / 花店建筑底板图 */
   getRoomBgTextureKey(): string {
-    const st = ROOM_STYLE_MAP.get(this._roomStyleId);
+    const st = ROOM_STYLE_MAP.get(this._effectiveRoomStyleId());
     return st?.bgTexture ?? 'bg_room_default';
   }
 
   get roomStyleId(): string {
-    return this._roomStyleId;
+    return this._effectiveRoomStyleId();
   }
 
   isRoomStyleUnlocked(styleId: string): boolean {
@@ -74,6 +89,8 @@ class DecorationManagerClass {
    */
   equipRoomStyle(styleId: string): boolean {
     if (!ROOM_STYLE_MAP.has(styleId) || !this._unlockedRoomStyles.has(styleId)) return false;
+    const sid = CurrencyManager.state.sceneId;
+    this._roomStyleByScene.set(sid, styleId);
     this._roomStyleId = styleId;
     this._save();
     EventBus.emit('decoration:room_style', styleId);
@@ -144,9 +161,10 @@ class DecorationManagerClass {
 
   /**
    * 花愿购买解锁装饰
+   * @param options.deferStarGrant 为 true 时不立即加星（用于先播飞星动画，再由装修面板在动画结束后加星）
    * @returns true 购买成功
    */
-  unlock(decoId: string): boolean {
+  unlock(decoId: string, options?: { deferStarGrant?: boolean }): boolean {
     if (this._unlocked.has(decoId)) return false;
 
     const deco = DECO_MAP.get(decoId);
@@ -162,7 +180,7 @@ class DecorationManagerClass {
     if (CurrencyManager.state.huayuan < deco.cost) return false;
 
     CurrencyManager.addHuayuan(-deco.cost);
-    if (deco.starValue > 0) {
+    if (deco.starValue > 0 && !options?.deferStarGrant) {
       CurrencyManager.addStar(deco.starValue);
     }
     this._unlocked.add(decoId);
@@ -171,6 +189,41 @@ class DecorationManagerClass {
     console.log(`[Decoration] 解锁装饰: ${deco.name} (-${deco.cost}花愿, +${deco.starValue}⭐)`);
     EventBus.emit('decoration:unlocked', decoId, deco);
     return true;
+  }
+
+  /**
+   * GM：无视场景、解锁条件与花愿，直接标记装饰已拥有（不扣款、不因此加星）。
+   */
+  gmUnlockDeco(decoId: string): boolean {
+    if (this._unlocked.has(decoId)) return false;
+    const deco = DECO_MAP.get(decoId);
+    if (!deco) return false;
+    this._unlocked.add(decoId);
+    this._save();
+    EventBus.emit('decoration:unlocked', decoId, deco);
+    return true;
+  }
+
+  /** GM：解锁配置中全部装饰件 */
+  gmUnlockAllDecos(): number {
+    let n = 0;
+    for (const d of DECO_DEFS) {
+      if (this.gmUnlockDeco(d.id)) n++;
+    }
+    return n;
+  }
+
+  /** GM：解锁全部房间风格（不扣花愿） */
+  gmUnlockAllRoomStyles(): number {
+    let n = 0;
+    for (const s of ROOM_STYLES) {
+      if (!this._unlockedRoomStyles.has(s.id)) {
+        this._unlockedRoomStyles.add(s.id);
+        n++;
+      }
+    }
+    if (n > 0) this._save();
+    return n;
   }
 
   /**
@@ -223,10 +276,15 @@ class DecorationManagerClass {
 
   private _save(): void {
     try {
+      const roomStyleByScene: Record<string, string> = {};
+      for (const [k, v] of this._roomStyleByScene) {
+        roomStyleByScene[k] = v;
+      }
       const data: DecoSaveData = {
         unlocked: [...this._unlocked],
         equipped: {},
         roomStyleId: this._roomStyleId,
+        roomStyleByScene: Object.keys(roomStyleByScene).length ? roomStyleByScene : undefined,
         unlockedRoomStyles: [...this._unlockedRoomStyles],
       };
       const platform = typeof wx !== 'undefined' ? wx : typeof tt !== 'undefined' ? tt : null;
@@ -265,12 +323,22 @@ class DecorationManagerClass {
           if (ROOM_STYLE_MAP.has(id)) this._unlockedRoomStyles.add(id);
         }
       }
+      if (data.roomStyleByScene && typeof data.roomStyleByScene === 'object') {
+        for (const [sid, rid] of Object.entries(data.roomStyleByScene)) {
+          if (typeof rid === 'string' && ROOM_STYLE_MAP.has(rid) && this._unlockedRoomStyles.has(rid)) {
+            this._roomStyleByScene.set(sid, rid);
+          }
+        }
+      }
       if (
         data.roomStyleId
         && ROOM_STYLE_MAP.has(data.roomStyleId)
         && this._unlockedRoomStyles.has(data.roomStyleId)
       ) {
         this._roomStyleId = data.roomStyleId;
+        if (!this._roomStyleByScene.has('flower_shop')) {
+          this._roomStyleByScene.set('flower_shop', data.roomStyleId);
+        }
       }
     } catch (e) {
       console.warn('[Decoration] 加载失败:', e);
@@ -279,10 +347,15 @@ class DecorationManagerClass {
 
   /** 导出存档数据 */
   exportState(): DecoSaveData {
+    const roomStyleByScene: Record<string, string> = {};
+    for (const [k, v] of this._roomStyleByScene) {
+      roomStyleByScene[k] = v;
+    }
     return {
       unlocked: [...this._unlocked],
       equipped: {},
       roomStyleId: this._roomStyleId,
+      roomStyleByScene: Object.keys(roomStyleByScene).length ? roomStyleByScene : undefined,
       unlockedRoomStyles: [...this._unlockedRoomStyles],
     };
   }

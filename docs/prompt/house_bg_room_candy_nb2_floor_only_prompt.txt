@@ -1,0 +1,21 @@
+Attached reference image: this PNG is the APPROVED Candy Flower Shop room shell — your task is a LOCAL FLOOR-ONLY revision, not a full redesign.
+
+EDIT SCOPE (critical):
+- KEEP unchanged: 1:1 canvas, building position/scale/margins, L-shaped two walls, three windows (sizes + positions), roof with candy pastel scallops and accents, wall wallpaper stripes/dots, wood posts/beams, window frames + mint/aqua glass, baseboard/wainscot band, stone foundation, steps, outdoor sand patch, lighting, outlines, and all colors OUTSIDE the interior floor polygon.
+- CHANGE ONLY: the interior walkable floor surface (the empty diamond-shaped area inside the room). Replace the current fine multicolor herringbone / narrow-strip parquet entirely.
+
+NEW CANDY FLOOR — must stay cute and on-brand for this shop, but CALM and READABLE for gameplay — clearly different from other house styles in the game:
+- NOT fine herringbone or chevron with many thin strips.
+- NOT a single flat solid slab (that is used elsewhere).
+- NOT honeycomb hex mosaic or retro checkerboard (those belong to other styles).
+- NOT lagoon water-gloss ceramics.
+
+Choose ONE clear candy-floor language:
+- PREFERRED: WIDE CANDY RIBBON STRIPES — bold isometric bands alternating strawberry-milk pink (#F8B8C8) and vanilla cream (#FFF6E8), or pink + soft butter (#FFF0C8), following the floor perspective; across the entire interior diamond show only about 4 to 7 wide stripes total (each stripe much wider than a window sill), soft matte with gentle highlight, thin warm brown edge lines between bands. At most TWO stripe colors plus optional whisper of mint in grout lines only — do NOT add a third plank color in small chips.
+- ALTERNATIVE if stripes fight the perspective: LARGE SCALLOPED "icing tile" modules — big rounded pillow shapes in one dominant pink field with cream grout; few modules visible (large scale), still hand-painted kawaii.
+
+The floor must feel sweeter and more graphic than plain wood shops, but the color blocks must be LARGE and simple so furniture placement does not look noisy.
+
+Interior must stay empty — no furniture, no pots, no characters, no text.
+
+BACKGROUND outside the building: pure solid white #FFFFFF for rembg cutout pipeline.

@@ -22,8 +22,10 @@ GEN = os.path.expanduser("~/.cursor/skills/gemini-image-gen/scripts/generate_ima
 MODEL = "gemini-3.1-flash-image-preview"
 SLEEP = 6
 
-ASSETS = "/Users/huyi/rosa_games/game_assets/huahua/assets"
-OUT_DIR = f"{ASSETS}/warehouse_ui_nb2/for_review"
+from huahua_paths import game_assets_dir
+
+ASSETS = game_assets_dir()
+OUT_DIR = ASSETS / "warehouse_ui_nb2/for_review"
 
 SHARED = """
 Game UI texture asset for a cozy flower-shop MERGE mobile game (warehouse / storage popup).
@@ -208,10 +210,6 @@ Outer margin: basket weave and flowers are opaque; beyond basket edge = #FF00FF.
 def _default_ref_path() -> str | None:
     candidates = [
         os.path.join(OUT_DIR, "warehouse_flower_basket_panel_nb2_9x16.png"),
-        os.path.expanduser(
-            "~/.cursor/projects/Users-huyi-rosa-games-huahua/assets/"
-            "warehouse_flower_basket_panel_nb2_9x16-a98348f9-4980-4420-9669-0ff3aca638cd.png"
-        ),
     ]
     for p in candidates:
         if os.path.isfile(p):
@@ -259,7 +257,7 @@ def run_panel_v2(model: str, ref_path: str | None) -> None:
     if not ref or not os.path.isfile(ref):
         print(
             "panel-v2 needs a reference PNG. Place warehouse_flower_basket_panel_nb2_9x16.png in:\n  "
-            + OUT_DIR
+            + str(OUT_DIR)
             + "\n or pass:  --ref /path/to/reference.png",
             file=sys.stderr,
         )

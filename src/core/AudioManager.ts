@@ -47,15 +47,45 @@ class AudioManagerClass {
     this._lastPlayTime.set(name, now);
 
     try {
-      const audio = _api.createInnerAudioContext();
-      audio.src = entry.src;
+      const create = _api.createInnerAudioContext;
+      if (typeof create !== 'function') return;
+      const audio = create.call(_api);
+      if (!audio || typeof audio.play !== 'function') return;
+
+      let done = false;
+      let started = false;
+      const cleanup = () => {
+        if (done) return;
+        done = true;
+        try {
+          audio.destroy();
+        } catch (_) { /* */ }
+      };
+
+      const tryPlay = () => {
+        if (done || started) return;
+        started = true;
+        try {
+          audio.play();
+        } catch (e) {
+          console.warn(TAG, `音效 "${name}" play():`, e);
+          cleanup();
+        }
+      };
+
       audio.volume = entry.volume;
       audio.onError((err: any) => {
         console.warn(TAG, `音效 "${name}" 播放失败:`, err?.errMsg || err);
-        audio.destroy();
+        cleanup();
       });
-      audio.onEnded(() => audio.destroy());
-      audio.play();
+      audio.onEnded(() => cleanup());
+      if (typeof audio.onCanplay === 'function') {
+        audio.onCanplay(() => tryPlay());
+      }
+      audio.src = entry.src;
+      if (typeof audio.onCanplay !== 'function') {
+        setTimeout(tryPlay, 0);
+      }
     } catch (e) {
       console.warn(TAG, `音效 "${name}" 创建异常:`, e);
     }
@@ -72,23 +102,51 @@ class AudioManagerClass {
     this._bgmPending = { src, volume };
 
     try {
-      this._bgm = _api.createInnerAudioContext();
-      this._bgm.src = src;
+      const create = _api.createInnerAudioContext;
+      if (typeof create !== 'function') {
+        console.warn(TAG, 'createInnerAudioContext 不可用');
+        return;
+      }
+      this._bgm = create.call(_api);
+      if (!this._bgm || typeof this._bgm.play !== 'function') {
+        this._bgm = null;
+        return;
+      }
+
       this._bgm.loop = true;
       this._bgm.volume = volume;
       this._bgm.onError((err: any) => {
         console.warn(TAG, `BGM "${src}" 播放失败:`, err?.errMsg || err);
+        try {
+          this._bgm?.destroy?.();
+        } catch (_) { /* */ }
+        this._bgm = null;
       });
       this._bgm.onPlay(() => {
         console.log(TAG, `BGM "${src}" 开始播放`);
         this._bgmPending = null;
       });
-      if (!this._muted) {
-        this._bgm.play();
-        console.log(TAG, `BGM "${src}" 尝试播放...`);
+
+      const tryPlayBgm = () => {
+        if (this._muted || !this._bgm) return;
+        try {
+          this._bgm.play();
+          console.log(TAG, `BGM "${src}" 尝试播放...`);
+        } catch (e) {
+          console.warn(TAG, `BGM play():`, e);
+        }
+      };
+
+      if (typeof this._bgm.onCanplay === 'function') {
+        this._bgm.onCanplay(() => tryPlayBgm());
+      }
+      this._bgm.src = src;
+      if (typeof this._bgm.onCanplay !== 'function' && !this._muted) {
+        setTimeout(tryPlayBgm, 0);
       }
     } catch (e) {
       console.warn(TAG, `BGM "${src}" 创建异常:`, e);
+      this._bgm = null;
     }
   }
 

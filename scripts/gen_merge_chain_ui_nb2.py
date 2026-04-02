@@ -2,7 +2,7 @@
 """
 合成线面板 UI 拆件 — NB2 品红底生图（标题彩带 + 主面板卡）。
 
-输出：~/rosa_games/game_assets/huahua/assets/merge_chain_ui_nb2/for_review/
+输出：../game_assets/huahua/assets/merge_chain_ui_nb2/for_review/（相对仓库根，见 huahua_paths）
 入库：python3 scripts/matte_merge_chain_ui.py
 
 默认模型：gemini-3.1-flash-image-preview（NB2）
@@ -19,8 +19,10 @@ GEN = os.path.expanduser("~/.cursor/skills/gemini-image-gen/scripts/generate_ima
 MODEL = "gemini-3.1-flash-image-preview"
 SLEEP = 6
 
-ASSETS = "/Users/huyi/rosa_games/game_assets/huahua/assets"
-OUT_DIR = f"{ASSETS}/merge_chain_ui_nb2/for_review"
+from huahua_paths import game_assets_dir
+
+ASSETS = game_assets_dir()
+OUT_DIR = ASSETS / "merge_chain_ui_nb2/for_review"
 
 SHARED = """
 Game UI texture asset for a cozy flower-shop MERGE mobile game (merge chain / synthesis line popup).

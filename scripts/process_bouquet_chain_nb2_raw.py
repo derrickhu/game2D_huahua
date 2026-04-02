@@ -20,9 +20,10 @@ from PIL import Image
 
 _REPO = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(_REPO / "scripts"))
+from huahua_paths import game_assets_dir  # noqa: E402
 from image_trim import DEFAULT_TRIM_PADDING, trim_rgba_padding  # noqa: E402
 
-_DEFAULT_RAW = Path.home() / "rosa_games/game_assets/huahua/assets/raw"
+_DEFAULT_RAW = game_assets_dir() / "raw"
 _TRIM_PAD = max(DEFAULT_TRIM_PADDING, 4)
 _REMBG_SCRIPT = Path.home() / ".cursor/skills/remove-background/scripts/rembg_single.py"
 

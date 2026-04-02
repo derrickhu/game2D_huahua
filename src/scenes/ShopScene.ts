@@ -17,6 +17,7 @@ import { Game } from '@/core/Game';
 import { getNextLevelStarRequired } from '@/config/StarLevelConfig';
 import { LevelManager } from '@/managers/LevelManager';
 import { EventBus } from '@/core/EventBus';
+import { OverlayManager } from '@/core/OverlayManager';
 import { RewardFlyCoordinator, type RewardFlyBindings } from '@/core/RewardFlyCoordinator';
 import { TweenManager, Ease } from '@/core/TweenManager';
 import { TopBar, TOP_BAR_HEIGHT } from '@/gameobjects/ui/TopBar';
@@ -37,6 +38,7 @@ import { DESIGN_WIDTH, COLORS, FONT_FAMILY } from '@/config/Constants';
 import { roomDepthZForPlacement, roomDepthZForOwner } from '@/config/RoomDepthSort';
 import { ToastMessage } from '@/gameobjects/ui/ToastMessage';
 import { LevelUpPopup } from '@/gameobjects/ui/LevelUpPopup';
+import { LIVE_HOUSE_THUMB_CAPTURE_MAX, WORLD_MAP_UNLOCK_LEVEL } from '@/config/WorldMapConfig';
 import { RewardBoxManager } from '@/managers/RewardBoxManager';
 import { WarehouseManager } from '@/managers/WarehouseManager';
 import { ITEM_DEFS } from '@/config/ItemConfig';
@@ -130,6 +132,9 @@ export class ShopScene implements Scene {
   private _progressLevelText: PIXI.Text | null = null;
   /** 飞星动画层（盖在房间之上） */
   private _starFlyLayer!: PIXI.Container;
+  /** 装修全屏遮罩打开时，进度条+飞星曾挂到 overlay，关闭时还原 */
+  private _shopHudLiftedForDeco = false;
+  private _shopHudSavedIndices: { progress: number; star: number } | null = null;
   /** 升星/星级礼包预览弹窗 */
   private _levelUpPopup!: LevelUpPopup;
   private _returnBtn!: PIXI.Container;
@@ -143,6 +148,9 @@ export class ShopScene implements Scene {
   private _editToolbar!: RoomEditToolbar;
   private _particleContainer!: PIXI.Container;
   private _shopBuildingSprite: PIXI.Sprite | null = null;
+
+  // ── 大地图（面板在 OverlayManager，此处仅入口按钮） ──
+  private _worldMapBtn: PIXI.Container | null = null;
 
   // ── 店主 ──
   private _ownerContainer: PIXI.Container | null = null;
@@ -161,9 +169,34 @@ export class ShopScene implements Scene {
     this._updateProgressBar();
   };
 
-  /** 花店内升星：弹窗展示奖励并发收纳盒（与合成页逻辑一致，无飞入目标则关闭时直接入库） */
+  /** 大地图切换装修房后刷新房间底板、家具与店主站位 */
+  private readonly _onRenovationSceneChanged = (): void => {
+    if (SceneManager.current?.name !== 'shop') return;
+    this._refreshShopBuildingTexture();
+    this._renderFurnitureLayout();
+    this._updateProgressBar();
+    const w = DESIGN_WIDTH;
+    const h = Game.logicHeight;
+    const centerX = w / 2;
+    const centerY = h * SHOP_BUILDING_CENTER_Y_RATIO;
+    const savedPos = RoomLayoutManager.ownerPos;
+    const ownerX = savedPos?.x ?? (centerX + 140);
+    const ownerY = savedPos?.y ?? (centerY + 120);
+    if (this._ownerContainer) {
+      this._ownerContainer.position.set(ownerX, ownerY);
+      this._ownerContainer.zIndex = roomDepthZForOwner(ownerY);
+      this._roomContainer.sortChildren();
+    }
+  };
+
+  private readonly _onWorldMapSwitchScene = (sceneId: string): void => {
+    CurrencyManager.setActiveRenovationScene(sceneId);
+  };
+
+  /** 花店内升星：弹窗展示奖励；确定后货币飞顶栏、宝箱飞回「营业返回」钮再入库 */
   private readonly _onShopLevelUp = (level: number, reward: any): void => {
     if (SceneManager.current?.name !== 'shop') return;
+    const flyTarget = this._returnBtn?.toGlobal(new PIXI.Point(0, 0));
     this._levelUpPopup.show(
       level,
       {
@@ -174,6 +207,7 @@ export class ShopScene implements Scene {
       },
       {
         bannerTitle: `恭喜升至 ${level}星`,
+        rewardFlyTargetGlobal: flyTarget ?? undefined,
         onGrantRewardBoxItems: entries => {
           let any = false;
           for (const { itemId, count } of entries) {
@@ -184,8 +218,20 @@ export class ShopScene implements Scene {
           }
           if (any) SaveManager.save();
         },
+        onFullyClosed: () => {
+          EventBus.emit('shop:levelUpPopupClosed');
+        },
       },
     );
+    OverlayManager.bringToFront();
+    this._levelUpPopup.parent?.sortChildren();
+  };
+
+  /** 装修面板全屏遮罩：把星级进度条+飞星层提到 overlay，盖在遮罩之上 */
+  private readonly _onDecoPanelBackdrop = (payload: { open: boolean }): void => {
+    if (SceneManager.current?.name !== 'shop') return;
+    if (payload.open) this._liftShopHudOverDecoBackdrop();
+    else this._restoreShopHudAfterDecoPanel();
   };
 
   private _blinkTimer = 0;
@@ -268,13 +314,17 @@ export class ShopScene implements Scene {
   }
 
   onExit(): void {
+    this._restoreShopHudAfterDecoPanel();
     RewardFlyCoordinator.setBindings(null);
     this._clearPendingDoubleTapStates();
     EventBus.off('decoration:room_style', this._refreshShopBuildingTexture);
+    EventBus.off('decoration:decoPanelBackdrop', this._onDecoPanelBackdrop);
     EventBus.off('dressup:equipped', this._onDressUpEquipped);
     EventBus.off('decoration:shopStarFly', this._onDecorationShopStarFly);
     EventBus.off('currency:changed', this._onShopCurrencyForProgress);
     EventBus.off('level:up', this._onShopLevelUp);
+    EventBus.off('renovation:sceneChanged', this._onRenovationSceneChanged);
+    EventBus.off('worldmap:switchScene', this._onWorldMapSwitchScene);
     // 如果在编辑模式，退出时自动保存
     if (this._isEditMode) {
       this._exitEditMode();
@@ -284,6 +334,10 @@ export class ShopScene implements Scene {
     // 无论是否编辑模式，都强制刷写布局存档（防止防抖 timer 未触发）
     RoomLayoutManager.saveNow();
     Game.ticker.remove(this._update, this);
+    if (this._levelUpPopup) {
+      this._levelUpPopup.parent?.removeChild(this._levelUpPopup);
+      this._levelUpPopup.destroy({ children: true });
+    }
     this.container.removeChildren();
   }
 
@@ -332,6 +386,9 @@ export class ShopScene implements Scene {
     // ============== 8. 右下角返回按钮（参考四季物语的大箭头） ==============
     this._buildReturnButton(w, h);
 
+    // ============== 8b. 大地图按钮（返回按钮上方，10 星解锁） ==============
+    this._buildWorldMapButton(w, h);
+
     // ============== 9. 编辑模式组件（初始隐藏） ==============
     this._furnitureTray = new FurnitureTray();
     this.container.addChild(this._furnitureTray);
@@ -355,8 +412,10 @@ export class ShopScene implements Scene {
     this.container.addChild(this._starFlyLayer);
 
     this._levelUpPopup = new LevelUpPopup();
-    this._levelUpPopup.zIndex = 8500;
-    this.container.addChild(this._levelUpPopup);
+    this._levelUpPopup.zIndex = ShopScene._LEVEL_UP_OVERLAY_Z;
+    const ov = OverlayManager.container;
+    ov.addChild(this._levelUpPopup);
+    ov.sortChildren();
 
     // ============== 12. 绑定事件 ==============
     this._bindEvents();
@@ -895,6 +954,65 @@ export class ShopScene implements Scene {
     }
   }
 
+  /** 高于 DecorationPanel(5000)，低于同 overlay 内升星弹窗等 */
+  private static readonly _HUD_OVER_DECO_Z_PROGRESS = 5600;
+  private static readonly _HUD_OVER_DECO_Z_STARFLY = 5610;
+  /** 升星奖励：盖住装修面板与抬升的进度条，略低于 GM(9000) */
+  private static readonly _LEVEL_UP_OVERLAY_Z = 8800;
+
+  private _liftShopHudOverDecoBackdrop(): void {
+    if (this._shopHudLiftedForDeco) return;
+    if (!this._progressBarRoot || !this._starFlyLayer) return;
+    if (this._progressBarRoot.parent !== this.container || this._starFlyLayer.parent !== this.container) {
+      return;
+    }
+
+    const pIdx = this.container.getChildIndex(this._progressBarRoot);
+    const sIdx = this.container.getChildIndex(this._starFlyLayer);
+    this._shopHudSavedIndices = { progress: pIdx, star: sIdx };
+
+    this.container.removeChild(this._progressBarRoot);
+    this.container.removeChild(this._starFlyLayer);
+
+    const ov = OverlayManager.container;
+    this._progressBarRoot.zIndex = ShopScene._HUD_OVER_DECO_Z_PROGRESS;
+    this._starFlyLayer.zIndex = ShopScene._HUD_OVER_DECO_Z_STARFLY;
+    ov.addChild(this._progressBarRoot);
+    ov.addChild(this._starFlyLayer);
+    ov.sortChildren();
+
+    this._shopHudLiftedForDeco = true;
+    OverlayManager.bringToFront();
+  }
+
+  private _restoreShopHudAfterDecoPanel(): void {
+    if (!this._shopHudLiftedForDeco) return;
+    this._shopHudLiftedForDeco = false;
+    const saved = this._shopHudSavedIndices;
+    this._shopHudSavedIndices = null;
+
+    const ov = OverlayManager.container;
+    if (this._progressBarRoot.parent === ov) ov.removeChild(this._progressBarRoot);
+    if (this._starFlyLayer.parent === ov) ov.removeChild(this._starFlyLayer);
+
+    this._progressBarRoot.zIndex = 7000;
+    this._starFlyLayer.zIndex = 8000;
+    if (saved) {
+      const moves = [
+        { c: this._starFlyLayer, i: saved.star },
+        { c: this._progressBarRoot, i: saved.progress },
+      ].sort((a, b) => b.i - a.i);
+      for (const { c, i } of moves) {
+        const n = this.container.children.length;
+        this.container.addChildAt(c, Math.min(i, n));
+      }
+    } else {
+      this.container.addChild(this._progressBarRoot);
+      this.container.addChild(this._starFlyLayer);
+    }
+    this.container.sortChildren();
+  }
+
   /** 点击进度条旁礼包：预览升至下一星级时的礼包（与实际升星发放一致） */
   private _showNextStarGiftPreview(): void {
     const preview = LevelManager.getNextStarLevelRewardPreview();
@@ -986,7 +1104,10 @@ export class ShopScene implements Scene {
             onComplete: () => {
               icon.destroy();
               arrived++;
-              if (arrived >= COUNT) this._pulseProgressStar();
+              if (arrived >= COUNT) {
+                this._pulseProgressStar();
+                EventBus.emit('decoration:shopStarFlyComplete');
+              }
             },
           });
         },
@@ -1285,14 +1406,81 @@ export class ShopScene implements Scene {
     pulse();
   }
 
+  // ─────────────────── 大地图入口 ───────────────────
+
+  private _buildWorldMapButton(w: number, h: number): void {
+    const btn = new PIXI.Container();
+    // 与右下角「营业」按钮同一行，在其左侧（示意图红框区域）
+    const cx = w - 72 - 82;
+    const cy = h - 90;
+    const r = 32;
+
+    const tex = TextureCache.get('icon_worldmap');
+    if (tex && tex.width > 1) {
+      const sp = new PIXI.Sprite(tex);
+      sp.anchor.set(0.5);
+      sp.width = r * 2;
+      sp.height = r * 2;
+      btn.addChild(sp);
+    } else {
+      const bg = new PIXI.Graphics();
+      bg.beginFill(0x4DB6AC, 0.85);
+      bg.drawCircle(0, 0, r);
+      bg.endFill();
+      bg.lineStyle(2.5, 0xFFFFFF, 0.6);
+      bg.drawCircle(0, 0, r);
+      btn.addChild(bg);
+
+      const icon = new PIXI.Text('🗺️', { fontSize: 28, fontFamily: FONT_FAMILY });
+      icon.anchor.set(0.5);
+      btn.addChild(icon);
+    }
+
+    const label = new PIXI.Text('地图', {
+      fontSize: 12, fill: 0xFFFFFF, fontFamily: FONT_FAMILY, fontWeight: 'bold',
+      stroke: 0x3E2723, strokeThickness: 2,
+    });
+    label.anchor.set(0.5, 0);
+    label.y = r + 4;
+    btn.addChild(label);
+
+    btn.position.set(cx, cy);
+    btn.eventMode = 'static';
+    btn.cursor = 'pointer';
+    btn.hitArea = new PIXI.Circle(0, 0, r + 12);
+    btn.on('pointerdown', () => {
+      TweenManager.cancelTarget(btn.scale);
+      btn.scale.set(0.85);
+      TweenManager.to({
+        target: btn.scale, props: { x: 1, y: 1 },
+        duration: 0.25, ease: Ease.easeOutBack,
+      });
+      EventBus.emit('worldmap:open');
+    });
+
+    btn.visible = CurrencyManager.state.level >= WORLD_MAP_UNLOCK_LEVEL;
+    this._worldMapBtn = btn;
+    this.container.addChild(btn);
+  }
+
+  private _refreshWorldMapBtnVisibility(): void {
+    if (this._worldMapBtn) {
+      this._worldMapBtn.visible = CurrencyManager.state.level >= WORLD_MAP_UNLOCK_LEVEL;
+    }
+  }
+
   // ─────────────────── 事件 ───────────────────
 
   private _bindEvents(): void {
+    EventBus.on('decoration:decoPanelBackdrop', this._onDecoPanelBackdrop);
     EventBus.on('decoration:room_style', this._refreshShopBuildingTexture);
     EventBus.on('dressup:equipped', this._onDressUpEquipped);
     EventBus.on('decoration:shopStarFly', this._onDecorationShopStarFly);
     EventBus.on('currency:changed', this._onShopCurrencyForProgress);
     EventBus.on('level:up', this._onShopLevelUp);
+
+    EventBus.on('renovation:sceneChanged', this._onRenovationSceneChanged);
+    EventBus.on('worldmap:switchScene', this._onWorldMapSwitchScene);
 
     // 监听布局变化 — 仅在非编辑模式下才完整重渲染
     // 编辑模式下由 FurnitureDragSystem 直接操控 Sprite
@@ -1541,6 +1729,7 @@ export class ShopScene implements Scene {
 
     // 隐藏返回按钮和侧边按钮（编辑模式下不能退出场景）
     this._returnBtn.visible = false;
+    if (this._worldMapBtn) this._worldMapBtn.visible = false;
     for (const { container } of this._activityBtns.values()) {
       container.visible = false;
     }
@@ -1617,6 +1806,7 @@ export class ShopScene implements Scene {
 
     // 恢复按钮显示
     this._returnBtn.visible = true;
+    this._refreshWorldMapBtnVisibility();
     for (const { container } of this._activityBtns.values()) {
       container.visible = true;
     }
@@ -2201,6 +2391,101 @@ export class ShopScene implements Scene {
     // 装修红点（有可购买的新装饰）
     const decoBtn = this._activityBtns.get('deco');
     if (decoBtn) decoBtn.redDot.visible = DecorationManager.hasAffordableNew();
+
+    this._refreshWorldMapBtnVisibility();
+  }
+
+  /**
+   * 截取当前装修房间（建筑底板 + 家具 + 店主）供大地图「花语小筑」节点展示。
+   * 仅在花店场景内调用；返回的 RenderTexture 由调用方（WorldMapPanel）负责 destroy。
+   *
+   * 微信等环境下 `generateTexture` 偶发空图/失败，故优先用 **world getBounds + render(transform)**。
+   */
+  captureRoomThumbnailForMap(maxSide: number = LIVE_HOUSE_THUMB_CAPTURE_MAX): PIXI.RenderTexture | null {
+    const room = this._roomContainer;
+    if (!room || room.destroyed || !this._shopBuildingSprite) return null;
+    const renderer = Game.app.renderer as PIXI.Renderer;
+    try {
+      // 勿对 Game.stage 链式调用 updateTransform：stage.parent 为 null 时 Pixi Container 会读 parent.transform 崩溃。
+      // 变换已由每帧 render(stage) 更新；getBounds/getLocalBounds 会自根向上 _recursivePostUpdateTransform。
+
+      const manual = this._captureRoomToRtViaWorldBounds(renderer, room, maxSide);
+      if (manual) return manual;
+
+      const lb = room.getLocalBounds();
+      if (lb.width < 4 || lb.height < 4) {
+        console.warn('[ShopScene] captureRoomThumbnailForMap: empty local bounds', lb.x, lb.y, lb.width, lb.height);
+        return null;
+      }
+
+      let fullRt: PIXI.RenderTexture | null = null;
+      try {
+        fullRt = renderer.generateTexture(room, { resolution: 1 });
+      } catch (e) {
+        console.warn('[ShopScene] generateTexture failed', e);
+        return null;
+      }
+      if (!fullRt || fullRt.destroyed || fullRt.width < 2 || fullRt.height < 2) {
+        fullRt?.destroy(true);
+        return null;
+      }
+      return this._downscaleRenderTextureToMaxSide(renderer, fullRt, maxSide);
+    } catch (e) {
+      console.warn('[ShopScene] captureRoomThumbnailForMap failed', e);
+      return null;
+    }
+  }
+
+  /**
+   * 用世界轴对齐包围盒截图（与 generateTexture 内部 tempTransform 路径解耦）。
+   */
+  private _captureRoomToRtViaWorldBounds(
+    renderer: PIXI.Renderer,
+    room: PIXI.Container,
+    maxSide: number,
+  ): PIXI.RenderTexture | null {
+    try {
+      const b = room.getBounds(false);
+      if (!b || b.width < 4 || b.height < 4) {
+        console.warn('[ShopScene] world bounds too small for thumb', b?.width, b?.height);
+        return null;
+      }
+      const rw = Math.min(2048, Math.max(2, Math.ceil(b.width)));
+      const rh = Math.min(2048, Math.max(2, Math.ceil(b.height)));
+      const cap = PIXI.RenderTexture.create({ width: rw, height: rh });
+      const m = new PIXI.Matrix();
+      m.translate(-b.x, -b.y);
+      renderer.render(room, { renderTexture: cap, clear: true, transform: m });
+      return this._downscaleRenderTextureToMaxSide(renderer, cap, maxSide);
+    } catch (e) {
+      console.warn('[ShopScene] _captureRoomToRtViaWorldBounds failed', e);
+      return null;
+    }
+  }
+
+  /** 将已生成的 RT 最长边压到 maxSide；若已足够小则原样返回 */
+  private _downscaleRenderTextureToMaxSide(
+    renderer: PIXI.Renderer,
+    src: PIXI.RenderTexture,
+    maxSide: number,
+  ): PIXI.RenderTexture {
+    const fw = src.width;
+    const fh = src.height;
+    const maxD = Math.max(fw, fh);
+    if (maxD <= maxSide) return src;
+
+    const scale = maxSide / maxD;
+    const outW = Math.max(2, Math.round(fw * scale));
+    const outH = Math.max(2, Math.round(fh * scale));
+    const outRt = PIXI.RenderTexture.create({ width: outW, height: outH });
+    const spr = new PIXI.Sprite(src);
+    spr.position.set(0, 0);
+    spr.scale.set(scale, scale);
+    renderer.render(spr, { renderTexture: outRt, clear: true });
+    spr.texture = PIXI.Texture.EMPTY;
+    spr.destroy({ children: true });
+    src.destroy(true);
+    return outRt;
   }
 
 }

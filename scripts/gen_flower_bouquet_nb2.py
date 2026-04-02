@@ -19,8 +19,10 @@ GEN = os.path.expanduser("~/.cursor/skills/gemini-image-gen/scripts/generate_ima
 MODEL = "gemini-2.5-flash-image"
 SLEEP = 6
 
-ASSETS = "/Users/huyi/rosa_games/game_assets/huahua/assets"
-OUT_DIR = f"{ASSETS}/flower_bouquet_nb2/for_review/1x1"
+from huahua_paths import game_assets_dir
+
+ASSETS = game_assets_dir()
+OUT_DIR = ASSETS / "flower_bouquet_nb2/for_review/1x1"
 PREFIX = "flower_bouquet"
 
 SHARED = """

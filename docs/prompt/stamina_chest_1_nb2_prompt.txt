@@ -1,0 +1,5 @@
+Cute small mobile game item icon, 3/4 top-down isometric view. Rounded chunky wooden chest. Soft smooth shading on wood and metal. Clean simple white background. No text, no labels, no UI elements.
+
+CRITICAL — energy emblem: on the front of the chest, display the lightning bolt from the supplied reference image exactly — same zig-zag shape, lime-green to bright yellow gradient, thick dark green outline, 3D beveled thickness, and white four-point star sparkles like the reference. The bolt should read as the same in-game stamina icon, scaled as a chest plaque.
+
+Subject: a tiny mint-wash wooden reward chest, very rounded corners, small silver latch; the reference lightning emblem centered on the front. Beginner tier, centered, fills about 70% to 78% of frame width.

@@ -65,6 +65,27 @@ const FLOWER_SHOP_MILESTONES: StarMilestoneDef[] = [
   { star: 160, rewards: [{ type: 'diamond', amount: 20 }, { type: 'stamina', amount: 50 }] },
 ];
 
+const TEA_HOUSE_THRESHOLDS: StarLevelThreshold[] = [
+  { level: 1,  starRequired: 0,   label: '一星' },
+  { level: 2,  starRequired: 8,   label: '二星' },
+  { level: 3,  starRequired: 18,  label: '三星' },
+  { level: 4,  starRequired: 30,  label: '四星' },
+  { level: 5,  starRequired: 45,  label: '五星' },
+  { level: 6,  starRequired: 65,  label: '六星' },
+  { level: 7,  starRequired: 90,  label: '七星' },
+  { level: 8,  starRequired: 120, label: '八星' },
+];
+
+const TEA_HOUSE_MILESTONES: StarMilestoneDef[] = [
+  { star: 8,   rewards: [{ type: 'stamina', amount: 25 }] },
+  { star: 18,  rewards: [{ type: 'chest', amount: 1, itemId: 'chest_1' }] },
+  { star: 30,  rewards: [{ type: 'diamond', amount: 8 }, { type: 'chest', amount: 1, itemId: 'chest_2' }] },
+  { star: 45,  rewards: [{ type: 'stamina', amount: 35 }, { type: 'diamond', amount: 10 }] },
+  { star: 65,  rewards: [{ type: 'chest', amount: 1, itemId: 'chest_3' }] },
+  { star: 90,  rewards: [{ type: 'diamond', amount: 15 }, { type: 'stamina', amount: 45 }] },
+  { star: 120, rewards: [{ type: 'diamond', amount: 25 }, { type: 'chest', amount: 1, itemId: 'chest_4' }] },
+];
+
 export const SCENE_DEFS: SceneDef[] = [
   {
     sceneId: 'flower_shop',
@@ -72,6 +93,13 @@ export const SCENE_DEFS: SceneDef[] = [
     maxStarLevel: 10,
     thresholds: FLOWER_SHOP_THRESHOLDS,
     milestones: FLOWER_SHOP_MILESTONES,
+  },
+  {
+    sceneId: 'tea_house',
+    name: '茶屋',
+    maxStarLevel: 8,
+    thresholds: TEA_HOUSE_THRESHOLDS,
+    milestones: TEA_HOUSE_MILESTONES,
   },
 ];
 

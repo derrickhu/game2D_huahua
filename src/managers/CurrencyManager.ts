@@ -14,8 +14,10 @@ import { EventBus } from '@/core/EventBus';
 import { STAMINA_MAX, STAMINA_RECOVER_INTERVAL } from '@/config/Constants';
 import {
   DEFAULT_SCENE_ID,
+  SCENE_MAP,
   getStarLevel,
   getGlobalLevel,
+  isSceneCompleted,
   type SceneStarProgress,
 } from '@/config/StarLevelConfig';
 
@@ -209,6 +211,44 @@ class CurrencyManagerClass {
     console.log(`[Currency] 广告恢复体力: +${STAMINA_AD_AMOUNT}⚡ (今日第${this._dailyStaminaAdCount}次)`);
     EventBus.emit('stamina:adRecovered', STAMINA_AD_AMOUNT, this._dailyStaminaAdCount);
     return true;
+  }
+
+  /**
+   * 切换当前活跃装修场景。
+   * 同步 star / level 到目标场景的进度值。
+   * 首次进入新场景时自动补齐 sceneProgresses 条目。
+   */
+  setActiveRenovationScene(sceneId: string): void {
+    if (sceneId === this._state.sceneId) return;
+    if (!SCENE_MAP.has(sceneId)) {
+      console.warn(`[Currency] unknown sceneId: ${sceneId}`);
+      return;
+    }
+
+    const oldId = this._state.sceneId;
+    const oldSp = this._state.sceneProgresses.find(p => p.sceneId === oldId);
+    if (oldSp) {
+      oldSp.star = this._state.star;
+      oldSp.starLevel = getStarLevel(oldId, oldSp.star);
+      oldSp.completed = isSceneCompleted(oldId, oldSp.starLevel);
+    }
+
+    let sp = this._state.sceneProgresses.find(p => p.sceneId === sceneId);
+    if (!sp) {
+      sp = { sceneId, star: 0, starLevel: 1, completed: false };
+      this._state.sceneProgresses.push(sp);
+    }
+
+    this._state.sceneId = sceneId;
+    this._state.star = sp.star;
+    this._state.level = getStarLevel(sceneId, sp.star);
+    sp.starLevel = this._state.level;
+    sp.completed = isSceneCompleted(sceneId, sp.starLevel);
+
+    console.log(`[Currency] 切换装修场景 → ${sceneId}, star=${sp.star}, level=${sp.starLevel}`);
+    EventBus.emit('currency:changed', 'level', this._state.level);
+    EventBus.emit('currency:changed', 'star', this._state.star);
+    EventBus.emit('renovation:sceneChanged', sceneId);
   }
 
   /** @deprecated 经验系统已移除，星级由星星阈值驱动 */

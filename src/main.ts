@@ -10,6 +10,7 @@ import { BuildingManager } from '@/managers/BuildingManager';
 import { SaveManager } from '@/managers/SaveManager';
 import { IdleManager } from '@/managers/IdleManager';
 import { RoomLayoutManager } from '@/managers/RoomLayoutManager';
+import { LevelManager } from '@/managers/LevelManager';
 import { TextureCache } from '@/utils/TextureCache';
 import { MainScene } from '@/scenes/MainScene';
 import { ShopScene } from '@/scenes/ShopScene';
@@ -75,15 +76,25 @@ async function main(): Promise<void> {
       console.log(`[main] 加载纹理: ${loaded}/${total}`);
     });
 
-    // 异步加载 audio 分包（不阻塞游戏启动，音效延迟可接受）
+    // 先等 audio 分包就绪再进主场景，避免 InnerAudioContext 在文件未落地时解码报错
     const _apiAudio: any = typeof wx !== 'undefined' ? wx : typeof tt !== 'undefined' ? tt : null;
-    if (_apiAudio?.loadSubpackage) {
+    await new Promise<void>((resolve) => {
+      if (!_apiAudio?.loadSubpackage) {
+        resolve();
+        return;
+      }
       _apiAudio.loadSubpackage({
         name: 'audio',
-        success: () => console.log('[main] audio 分包加载成功'),
-        fail: (err: any) => console.warn('[main] audio 分包加载失败:', err),
+        success: () => {
+          console.log('[main] audio 分包加载成功');
+          resolve();
+        },
+        fail: (err: any) => {
+          console.warn('[main] audio 分包加载失败:', err);
+          resolve();
+        },
       });
-    }
+    });
 
     // 初始化棋盘数据
     BoardManager.init();
@@ -95,6 +106,9 @@ async function main(): Promise<void> {
       BuildingManager.reset();
     }
     console.log('[main]', loaded ? '存档加载成功' : '无存档，使用默认数据');
+
+    // 星级升档奖励须在首帧 addStar 前就绪（不依赖 MainScene 是否已构建）
+    LevelManager.init();
 
     // 再次确认棋盘状态
     const cells = BoardManager.cells;

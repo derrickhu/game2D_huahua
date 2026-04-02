@@ -1,10 +1,11 @@
 #!/usr/bin/env bash
 # 将 game_assets raw 中的 furniture_greenhouse_pot_*_nb2.png 抠图、裁边、缩放到 MAX_SIDE 写入 minigame 家具目录。
 set -euo pipefail
-RAW="${RAW:-/Users/huyi/rosa_games/game_assets/huahua/assets/raw}"
+ROOT="$(cd "$(dirname "$0")/.." && pwd)"
+GA="${GAME_ASSETS_HUAHUA:-"$ROOT/../game_assets/huahua"}"
+RAW="${RAW:-$GA/assets/raw}"
 REMBG="${HOME}/.cursor/skills/remove-background/scripts/rembg_single.py"
 CROP="${HOME}/.cursor/skills/game-art-pipeline/scripts/crop_trim.py"
-ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 OUT="${ROOT}/minigame/subpkg_deco/images/furniture"
 MAX="${MAX_SIDE:-171}"
 TMP="$(mktemp -d)"

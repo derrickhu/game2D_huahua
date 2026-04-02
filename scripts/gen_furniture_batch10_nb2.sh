@@ -2,7 +2,8 @@
 # NB2 生成 10 件扩展家具 + rembg 入库（需在可访问 Gemini 的环境执行，建议 GEMINI_IMAGE_REST_ONLY=1）
 set -euo pipefail
 WS="$(cd "$(dirname "$0")/.." && pwd)"
-RAW="${GAME_ASSETS_HUAHUA:-/Users/huyi/rosa_games/game_assets/huahua}/assets/raw"
+GA="${GAME_ASSETS_HUAHUA:-"$WS/../game_assets/huahua"}"
+RAW="$GA/assets/raw"
 mkdir -p "$RAW"
 GEN="${HOME}/.cursor/skills/gemini-image-gen/scripts/generate_images.py"
 REMBG="${HOME}/.cursor/skills/remove-background/scripts/rembg_single.py"

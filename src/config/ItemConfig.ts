@@ -3,7 +3,7 @@
  *
  * 产品线：花系（鲜花/花束/绿植各10级 + 包装中间品4级）+ 饮品 3线x8级
  * 工具线：园艺6级、包装5级、茶饮/冷饮/烘焙各5级；工具1–2级仅合成，其后可产出
- * 宝箱：5级；红包：4级（散落花愿利是，双击入账花愿）
+ * 宝箱：5级；红包：4级（散落花愿利是，双击入账花愿）；钻石袋 / 体力宝箱：各 3 级（散落对应货币块）
  */
 
 import {
@@ -316,6 +316,42 @@ function buildItemDefs(): Map<string, ItemDef> {
     });
   }
 
+  // 钻石袋（3级，散落 currency_diamond_*）
+  const diamondBagNames = ['碎钻小袋', '晶钻布袋', '璨钻锦袋'];
+  for (let i = 0; i < diamondBagNames.length; i++) {
+    const id = `diamond_bag_${i + 1}`;
+    map.set(id, {
+      id,
+      name: diamondBagNames[i],
+      category: Category.CHEST,
+      line: 'diamond_bag',
+      level: i + 1,
+      maxLevel: 3,
+      icon: id,
+      interactType: InteractType.CHEST,
+      sellable: false,
+      storable: true,
+    });
+  }
+
+  // 体力宝箱（3级，散落 currency_stamina_*）
+  const staminaChestNames = ['元气小箱', '能量补给箱', '澎湃体力宝箱'];
+  for (let i = 0; i < staminaChestNames.length; i++) {
+    const id = `stamina_chest_${i + 1}`;
+    map.set(id, {
+      id,
+      name: staminaChestNames[i],
+      category: Category.CHEST,
+      line: 'stamina_chest',
+      level: i + 1,
+      maxLevel: 3,
+      icon: id,
+      interactType: InteractType.CHEST,
+      sellable: false,
+      storable: true,
+    });
+  }
+
   // 幸运金币（棋盘消耗品：拖到合成链物品上随机升/降一级）
   map.set(LUCKY_COIN_ITEM_ID, {
     id: LUCKY_COIN_ITEM_ID,
@@ -484,6 +520,8 @@ export function getMergeChainName(itemId: string): string {
     [ToolLine.BAKE]: '烘焙工具',
     chest: '宝箱',
     hongbao: '红包',
+    diamond_bag: '钻石袋',
+    stamina_chest: '体力宝箱',
     [CurrencyLine.STAMINA]: '体力',
     [CurrencyLine.HUAYUAN_PICKUP]: '花愿利是',
     [CurrencyLine.DIAMOND]: '钻石',

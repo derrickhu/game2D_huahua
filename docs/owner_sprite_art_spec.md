@@ -198,7 +198,7 @@ done
 
 规范试做资源放在仓库外（本批已生成）：
 
-`/Users/huyi/rosa_games/game_assets/huahua/assets/owner_sprite_spec_v1/<outfit_id>/`
+`../game_assets/huahua/assets/owner_sprite_spec_v1/<outfit_id>/`
 
 - `raw/`：API 直出 9:16 与参考缩略图  
 - 根目录：`full_<outfit_id>.png`、`full_<outfit_id>_eyesclosed.png`、`chibi_<outfit_id>.png`（已缩放至 197×384 / 249×384 并去底）
@@ -212,7 +212,7 @@ python3 scripts/gen_owner_outfit_panels.py outfit_default \
   docs/prompt/owner_outfit_default_p1_full_open_nb2_prompt.txt \
   docs/prompt/owner_outfit_default_p2_full_closed_nb2_prompt.txt \
   docs/prompt/owner_outfit_default_p3_chibi_nb2_prompt.txt \
-  --preview-root /Users/huyi/rosa_games/game_assets/huahua/assets/owner_sprite_spec_v1
+  --preview-root ../game_assets/huahua/assets/owner_sprite_spec_v1
 ```
 
 ## 7. 与程序显示倍率

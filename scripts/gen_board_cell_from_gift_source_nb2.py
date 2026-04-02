@@ -24,10 +24,12 @@ from pathlib import Path
 
 from PIL import Image
 
+from huahua_paths import game_assets_dir
+
 GEN = os.path.expanduser("~/.cursor/skills/gemini-image-gen/scripts/generate_images.py")
 MODEL = "gemini-3.1-flash-image-preview"
-ASSETS = "/Users/huyi/rosa_games/game_assets/huahua/assets"
-OUT_DIR = f"{ASSETS}/board_cell_nb2/for_review"
+ASSETS = game_assets_dir()
+OUT_DIR = ASSETS / "board_cell_nb2/for_review"
 
 _REPO = Path(__file__).resolve().parent.parent
 REF_GIFT = _REPO / "docs" / "prompt" / "refs" / "board_cell_gift_source.png"
