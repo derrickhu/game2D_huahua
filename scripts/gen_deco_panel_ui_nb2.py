@@ -2,7 +2,8 @@
 """
 花店装修面板 UI — NB2 拆件（品红底），参考已定稿的整屏原型 PNG。
 
-参考图默认：game_assets/.../ui_prototypes/house_renovation_panel_prototype_nb2.png
+参考图默认：game_assets/.../ui_prototypes/decoration_panel_bottom_sheet_prototype_nb2_portrait.png
+（竖版、与游戏 9:16 画幅比例一致；横版旧稿见 decoration_panel_bottom_sheet_prototype_nb2.png。）
 输出：game_assets/huahua/assets/deco_panel_ui_nb2/for_review/
 
 每张子图单独生成，便于品红抠图 / rembg 后拼层；无文字，游戏里叠字。
@@ -24,79 +25,89 @@ from huahua_paths import game_assets_dir
 ASSETS = game_assets_dir()
 OUT_DIR = ASSETS / "deco_panel_ui_nb2/for_review"
 
-DEFAULT_REF = str(ASSETS / "ui_prototypes/house_renovation_panel_prototype_nb2.png")
+DEFAULT_REF = str(ASSETS / "ui_prototypes/decoration_panel_bottom_sheet_prototype_nb2_portrait.png")
 
 SHARED = """
-REFERENCE IMAGE (small preview): same flower-shop DECORATION PANEL style — cream bottom sheet, golden bevel, salmon/mint accents, merge-game 3D UI. Match its colors, saturation, bevels, outline quality.
+REFERENCE IMAGE: the PROVIDED mockup is the portrait decoration bottom sheet (decoration_panel_bottom_sheet_prototype_nb2_portrait) — full-bleed bottom sheet (~lower half), NO heavy yellow double-gold frame. Palette: juicy peach-to-apricot / soft coral-pink header strip with ONE thin warm champagne-gold hairline rim (single stroke, refined); main body warm ivory with a faint peach or blush tint (sunlit, not muddy gray-cream); hairline dividers in warm rose-taupe (not cold gray). Cozy merge-game pseudo-3D: soft upward diffuse shadow on the blurred scene, top inner highlight on the sheet, content well slightly recessed, tab pills pillow-bevel. IMPORTANT: avoid large sage / mint / olive green UI fields — do not echo renovation grass.
+
+Match that mockup's saturation, warmth, and bevel language.
 
 Draw ONLY the isolated asset below — not the full screen.
 
-CHROMA: flat #FF00FF outside the subject. Crisp edge for matting. No #FF00FF inside shapes except a magenta "hole" if the prompt says so.
+CHROMA: For small isolated icons/buttons: flat #FF00FF outside the subject. For the full 9:16 main panel blank asset: NO magenta void — use a short soft blurred flower-shop strip at the top if needed, then the panel full width; crisp edges only where the panel meets the scene.
 
-NO text (any language), NO numbers, NO watermark. Soft 3D, colored outlines, top-left highlights.
+NO text (any language), NO numbers, NO watermark, NO callout circles. If the reference shows red rectangles or annotation boxes, IGNORE them — do not draw red boxes. Soft 3D, colored outlines, top-left highlights.
 """.strip()
 
 
-BODY_BOTTOM_SHEET = """
-ASSET: Bottom decoration panel chrome for portrait mobile game — ONE horizontal plate only.
+BODY_MAIN_PANEL_BLANK = """
+ASSET: ONE complete EMPTY shell of the flower-shop DECORATION bottom sheet — portrait mobile framing, aspect ratio 9:16, matching the REFERENCE image layout, color, corner radii, and proportions (panel ~lower two-thirds feel, full width, no side margins on the sheet).
 
-Shape: wide rounded rectangle filling the canvas width; ONLY the top-left and top-right corners are strongly rounded; bottom edge can be flat (flush to screen bottom) or slightly rounded — like a bottom sheet drawer.
+Include ONLY structural chrome; everything interactive or content is stripped:
 
-Visual: thick golden-yellow beveled outer frame with glossy highlight; inner fill warm cream / ivory. LEFT zone ~18% width: vertical cream band with subtle inner shadow (empty category rail — no icons, no pills drawn). RIGHT zone ~82%: the main content area must be a SINGLE flat rectangular HOLE filled with solid #FF00FF — this is where the furniture card grid will be composited in code. The hole has rounded inner corners matching the panel.
+• TOP: wide header band — juicy peach-to-coral or apricot soft gradient, gentle 3D pillow volume, ONE thin warm champagne-gold hairline along the top edge (single stroke). Header must be completely blank — NO Chinese/English title, NO circular close button, NO icons.
 
-NO furniture cards, NO grid lines, NO icons, NO ribbon, NO close button — panel body only. If a thin header ribbon area is visible at top of this crop, leave it blank cream or omit; prefer this asset to be ONLY the large sheet below any ribbon.
+• MAIN BODY: warm cream / pale ivory with faint peach tint; soft inner highlight along top lip of body, subtle upward diffuse shadow separating from blurred scene if a thin upper strip of background exists (~8–12% of height max).
 
-Subject should occupy most of the frame; margins outside the panel silhouette = #FF00FF.
+• LEFT column ~20–25% of panel width: plain vertical zone (cream/peach-ivory). NO pill tabs, NO stacked buttons, NO text, NO icons — only empty space where tabs would sit.
+
+• RIGHT area ~75–80%: ONE large inset rounded rectangle (slightly darker warm tan / beige than body) — the recessed grid viewport. Interior must be perfectly empty: NO furniture thumbnails, NO cards, NO stars, NO green CTAs, NO grid slot drawings, NO placeholder photos.
+
+• FORBIDDEN: progress bar, “已收集” row, any numbers, any labels, red markup rectangles from the reference, watermarks.
+
+• NO heavy yellow double-gold outer frame. Rounded top corners of the whole sheet (~large radius); bottom edge straight and flush to bottom of canvas.
+
+Output is a clean UI illustration ready for engineers to overlay text and icons in code. Do NOT fill the viewport with chroma #FF00FF unless you must; prefer real beige/tan empty inset.
 """.strip()
 
 
 BODY_HEADER_RIBBON = """
-ASSET: ONLY a decorative salmon / coral-red folded ribbon banner (title bar) — 3D soft volume, gradient, shadow underneath, cute merge-game style.
+ASSET: ONLY the header title strip from the same bottom sheet — wide peach-to-apricot or soft coral-pink gradient band, soft 3D pillow volume, lighter highlight along top, ONE thin warm champagne-gold hairline rim (single stroke), tiny shadow underneath separating from body.
 
-Blank center — no text. Ends may fold behind. No house icon, no close button attached.
+Blank center — no text. No close button attached, no house icon.
 
-Flat #FF00FF around the ribbon. Ribbon occupies ~40–55% of canvas height centered.
+Flat #FF00FF around the strip. Strip occupies ~35–50% of canvas height centered horizontally.
 """.strip()
 
 
 BODY_CLOSE_BTN = """
-ASSET: ONLY the small circular CLOSE button — chunky red glossy circle, thick rim, decorative white X made of two soft 3D bars (not typography).
+ASSET: ONLY the small circular CLOSE button matching the mockup — glossy coral-red or warm red disk (not neon), modest rim, decorative white X from two soft 3D bars (not typography).
 
 ~50–60% of canvas height centered. Nothing else. Background #FF00FF.
 """.strip()
 
 
 BODY_FURNITURE_CARD_BLANK = """
-ASSET: ONE empty furniture item card template — portrait rounded rectangle, soft inner recessed well for future item art.
+ASSET: ONE empty furniture item card template — portrait rounded rectangle, modest embossed lift, soft shadow under card, tiny white specular strip on top edge (cozy shop card).
 
-Top-left: small blank rounded "pill" or tag shape (for rarity color overlay) — absolutely no letters.
+Top-left: small blank rounded pill or tag for future rarity tint — absolutely no letters.
 
-Center: large empty light area (cream / very pale gray) for item illustration — leave blank or extremely subtle paper texture only.
+Center: large empty warm ivory / pale peach area for item art — blank or extremely subtle paper texture only.
 
-Bottom: reserved empty strip for future price / status text — no glyphs.
+Bottom: reserved empty strip for future price / status — no glyphs.
 
-Soft drop shadow under card. No lock, no checkmark, no furniture drawing. Single card only, centered with generous #FF00FF margin.
+No lock, no checkmark, no furniture illustration. Single card only, centered with generous #FF00FF margin.
 """.strip()
 
 
 BODY_TAB_SELECTED = """
-ASSET: ONE horizontal rounded "pill" or capsule — SELECTED tab background only: vibrant coral-orange OR saturated mint-teal gradient, glossy highlight, blank — no icons, no text.
+ASSET: ONE horizontal rounded pill — SELECTED tab background only: vibrant coral / warm orange / peach gradient with glossy highlight, pillow bevel — blank, no icons, no text. Do NOT use mint, teal, or sage green as the main fill.
 
 ~70% of canvas width centered, ~35–45% of canvas height. #FF00FF elsewhere.
 """.strip()
 
 
 BODY_TAB_INACTIVE = """
-ASSET: ONE horizontal rounded "pill" — INACTIVE tab background: pale beige / cream, subtle border, blank — no icons, no text.
+ASSET: ONE horizontal rounded pill — INACTIVE tab background: pale warm gray or light beige, subtle warm border, slight inner shadow, blank — no icons, no text.
 
 Same proportions as selected tab. #FF00FF elsewhere.
 """.strip()
 
 
 BODY_DIVIDER = """
-ASSET: ONE thin horizontal decorative divider line — warm tan / gold, subtle emboss, optional tiny center diamond or dot ornament — NO text.
+ASSET: ONE thin horizontal decorative divider — warm rose-taupe or soft champagne line, subtle emboss, optional tiny center dot ornament — NO text.
 
-Spans ~85% of canvas width, vertically centered. Height of line very small. Rest #FF00FF.
+Spans ~85% of canvas width, vertically centered. Rest #FF00FF.
 """.strip()
 
 
@@ -104,14 +115,14 @@ def _icon_body(subject: str) -> str:
     return f"""
 ASSET: ONE small category icon ONLY — {subject}
 
-Cute merge-game hand-painted icon style, soft 3D, colored outline, bold readable silhouette at small size. Centered, ~55–65% of canvas height. Flat #FF00FF background. NO text, NO label, NO circle plate unless the icon itself needs a soft colored backing squircle.
+Cute merge-game hand-painted icon style, soft 3D, warm outlines, bold readable silhouette at small size; accents compatible with peach-coral-cream UI (avoid mint/sage dominance). Centered, ~55–65% of canvas height. Flat #FF00FF background. NO text, NO label, NO circle plate unless the icon needs a soft colored backing squircle.
 
 NO other UI chrome.
 """.strip()
 
 
 JOBS: list[tuple[str, str, str]] = [
-    ("deco_nb2_bottom_sheet_16x9.png", "16:9", BODY_BOTTOM_SHEET),
+    ("deco_nb2_main_panel_blank_9x16.png", "9:16", BODY_MAIN_PANEL_BLANK),
     ("deco_nb2_header_ribbon_16x9.png", "16:9", BODY_HEADER_RIBBON),
     ("deco_nb2_close_btn_1x1.png", "1:1", BODY_CLOSE_BTN),
     ("deco_nb2_furniture_card_blank_3x4.png", "3:4", BODY_FURNITURE_CARD_BLANK),

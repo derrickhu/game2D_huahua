@@ -589,33 +589,58 @@ export class ItemInfoBar extends PIXI.Container {
       return;
     }
 
-    this._nameText.text = def.name;
-    this._levelText.text = `Lv.${def.level}`;
-    this._levelText.position.x = this._nameText.position.x + this._nameText.width + 6;
-    const ribbonLeftWorld = this._cardLeft - LEAF_LEFT_OVERHANG + LEAF_INSET_X;
-    const titleRightWorld =
-      this._levelText.position.x + this._levelText.width;
-    const neededRibbonW = Math.ceil(
-      titleRightWorld + RIBBON_PAD_RIGHT - ribbonLeftWorld,
-    );
-    this._leafDisplayW = Math.min(
-      LEAF_MAX_W,
-      Math.max(this._leafDisplayWMin, neededRibbonW),
-    );
-
     const cell = BoardManager.getCellByIndex(cellIndex);
-    const producerDef = findBoardProducerDef(def.id);
-    const showStaminaRow = def.interactType === InteractType.TOOL && !!producerDef?.canProduce;
+    const isLockedOrPeek =
+      !!cell && (cell.state === CellState.FOG || cell.state === CellState.PEEK);
 
-    if (showStaminaRow) {
-      const cost = ToolProducePolicy.getEffectiveStaminaCost(producerDef!.staminaCost);
-      this._descText.visible = false;
-      this._staminaDescRow.visible = true;
-      this._staminaDescLabel.text = `消耗体力 ${cost}`;
-    } else {
+    if (isLockedOrPeek) {
+      this._nameText.text = cell!.state === CellState.FOG ? '迷雾格子' : '半解锁';
+      this._levelText.visible = false;
+      this._levelText.text = '';
       this._descText.visible = true;
       this._staminaDescRow.visible = false;
-      this._descText.text = this._getDescription(def);
+      this._descText.text =
+        cell!.state === CellState.FOG
+          ? '迷雾未揭开，暂不可操作。'
+          : '将相同物品从已开放格拖来合成后即可打开。';
+      const ribbonLeftWorld = this._cardLeft - LEAF_LEFT_OVERHANG + LEAF_INSET_X;
+      const titleRightWorld = this._nameText.position.x + this._nameText.width;
+      const neededRibbonW = Math.ceil(
+        titleRightWorld + RIBBON_PAD_RIGHT - ribbonLeftWorld,
+      );
+      this._leafDisplayW = Math.min(
+        LEAF_MAX_W,
+        Math.max(this._leafDisplayWMin, neededRibbonW),
+      );
+    } else {
+      this._levelText.visible = true;
+      this._nameText.text = def.name;
+      this._levelText.text = `Lv.${def.level}`;
+      this._levelText.position.x = this._nameText.position.x + this._nameText.width + 6;
+      const ribbonLeftWorld = this._cardLeft - LEAF_LEFT_OVERHANG + LEAF_INSET_X;
+      const titleRightWorld =
+        this._levelText.position.x + this._levelText.width;
+      const neededRibbonW = Math.ceil(
+        titleRightWorld + RIBBON_PAD_RIGHT - ribbonLeftWorld,
+      );
+      this._leafDisplayW = Math.min(
+        LEAF_MAX_W,
+        Math.max(this._leafDisplayWMin, neededRibbonW),
+      );
+
+      const producerDef = findBoardProducerDef(def.id);
+      const showStaminaRow = def.interactType === InteractType.TOOL && !!producerDef?.canProduce;
+
+      if (showStaminaRow) {
+        const cost = ToolProducePolicy.getEffectiveStaminaCost(producerDef!.staminaCost);
+        this._descText.visible = false;
+        this._staminaDescRow.visible = true;
+        this._staminaDescLabel.text = `消耗体力 ${cost}`;
+      } else {
+        this._descText.visible = true;
+        this._staminaDescRow.visible = false;
+        this._descText.text = this._getDescription(def);
+      }
     }
 
     const canSell = !!cell && cell.state === CellState.OPEN && def.sellable;
@@ -630,7 +655,8 @@ export class ItemInfoBar extends PIXI.Container {
       this._sellPriceText.text = '';
     }
 
-    const showChain = getMergeChain(def.id).length > 1;
+    const showChain =
+      !isLockedOrPeek && getMergeChain(def.id).length > 1;
     this._chainBtn.visible = showChain;
 
     const descReserveW =
@@ -666,6 +692,7 @@ export class ItemInfoBar extends PIXI.Container {
     this._chainBtn.visible = false;
     this._staminaDescRow.visible = false;
     this._descText.visible = true;
+    this._levelText.visible = true;
     this._hintContainer.visible = true;
   }
 

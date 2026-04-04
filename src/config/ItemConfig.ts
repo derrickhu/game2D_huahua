@@ -405,7 +405,9 @@ export function findItemId(category: Category, line: string, level: number): str
   return null;
 }
 
-/** 该品类+产品线下物品的最大等级（用于工具产出升档封顶） */
+/**
+ * 该品类+产品线下物品的 maxLevel 上限（扫 ITEM_DEFS；扩行/加等级后订单与工具封顶自动跟上）
+ */
 export function getMaxLevelForLine(category: Category, line: string): number {
   let max = 0;
   for (const def of ITEM_DEFS.values()) {

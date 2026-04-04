@@ -4,9 +4,9 @@
 
 默认路径：
 
-`../game_assets/huahua/assets/ui_prototypes/house_renovation_panel_prototype_nb2.png`
+默认参考：`../game_assets/huahua/assets/ui_prototypes/decoration_panel_bottom_sheet_prototype_nb2_portrait.png`（竖版，与 9:16 手游画幅一致）。横版整页稿仍可作美术备份：`decoration_panel_bottom_sheet_prototype_nb2.png`。勿用 `house_renovation_panel_prototype_nb2.png` 占位文本。
 
-拆件生成时将该图作为 `--image` 传入，保证配色、体积感、描边与整图一致。
+拆件生成时将该图作为参考图传入（脚本默认已指向本文件）。**具体英文拆件段落**在仓库 `scripts/gen_deco_panel_ui_nb2.py` 的 `SHARED` / `BODY_*` 中，已与 `decoration_panel_bottom_sheet_prototype_nb2_prompt.txt` 的桃杏珊瑚底栏、去厚重金框、避免大绿块等要求对齐。
 
 ## 输出目录
 
@@ -19,7 +19,7 @@
 
 | 文件 | 比例 | 内容 |
 |------|------|------|
-| `deco_nb2_bottom_sheet_16x9.png` | 16:9 | 底部大面板：金边奶油底、左侧留白轨、右侧 **品红洞**（格子区程序拼） |
+| `deco_nb2_main_panel_blank_9x16.png` | 9:16 | **空白大面板整壳**（桃珊瑚顶条 + 奶油主体 + 左留白轨 + 右内凹空 viewport），无字无 Tab 无进度条无关闭钮；与竖版原型比例一致 |
 | `deco_nb2_header_ribbon_16x9.png` | 16:9 | 鲑红丝带标题条（空白） |
 | `deco_nb2_close_btn_1x1.png` | 1:1 | 红底白叉关闭钮 |
 | `deco_nb2_furniture_card_blank_3x4.png` | 3:4 | 空白家具卡模板（稀有角标位留白） |
@@ -54,6 +54,7 @@ python3 scripts/gen_deco_panel_ui_nb2.py --ref-max-side 384
 python3 scripts/gen_deco_panel_ui_nb2.py --no-ref
 
 # 只生成某一类（前缀匹配）
+python3 scripts/gen_deco_panel_ui_nb2.py --only deco_nb2_main_panel_blank
 python3 scripts/gen_deco_panel_ui_nb2.py --only deco_nb2_bottom
 python3 scripts/gen_deco_panel_ui_nb2.py --only deco_nb2_icon_
 ```

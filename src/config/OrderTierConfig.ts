@@ -88,6 +88,30 @@ function _maxToolLevel(lines: UnlockedLines): number {
   return Math.max(lines.maxPlantToolLevel, lines.maxArrangeToolLevel, lines.maxDrinkToolLevel);
 }
 
+/** 订单档位权重的会话修正（如解锁新产线后短期偏置） */
+export interface OrderTierWeightModifiers {
+  /** 解锁绿植后剩余「加成刷次」：提高 A/S 权重，便于尽快见到绿植单 */
+  greenLineUnlockBoostSpawns?: number;
+}
+
+function _applyGreenBoost(
+  w: Record<OrderTier, number>,
+  lines: UnlockedLines,
+  boostSpawns: number | undefined,
+): Record<OrderTier, number> {
+  if (!boostSpawns || boostSpawns <= 0 || !lines.hasGreen) return w;
+  const out = { ...w };
+  // 从 B/C 挪到 A/S，让含绿植池的档位更容易出现
+  const takeB = Math.min(out.B, 12);
+  const takeC = Math.min(out.C, 8);
+  out.B = out.B - takeB;
+  out.C = out.C - takeC;
+  const add = takeB + takeC;
+  out.A = out.A + Math.floor(add * 0.65);
+  out.S = out.S + (add - Math.floor(add * 0.65));
+  return out;
+}
+
 /**
  * 按玩家等级 + 已解锁产线 + 工具等级综合计算各档出现权重。
  * 核心原则：只要棋盘上有产出工具就不应该全出 C 档；工具越高级、高档订单越多。
@@ -95,27 +119,29 @@ function _maxToolLevel(lines: UnlockedLines): number {
 export function getOrderTierWeights(
   playerLevel: number,
   lines: UnlockedLines,
+  modifiers?: OrderTierWeightModifiers,
 ): Record<OrderTier, number> {
   const maxTool = _maxToolLevel(lines);
   const hasAnyProducer = maxTool >= 3;
 
+  let base: Record<OrderTier, number>;
   if (playerLevel <= 2) {
-    if (!hasAnyProducer) return { C: 100, B: 0, A: 0, S: 0 };
-    if (maxTool >= 4 || lines.hasBouquet || lines.hasDrink) return { C: 30, B: 60, A: 10, S: 0 };
-    return { C: 60, B: 40, A: 0, S: 0 };
+    if (!hasAnyProducer) base = { C: 100, B: 0, A: 0, S: 0 };
+    else if (maxTool >= 4 || lines.hasBouquet || lines.hasDrink) base = { C: 30, B: 60, A: 10, S: 0 };
+    else base = { C: 60, B: 40, A: 0, S: 0 };
+  } else if (playerLevel <= 4) {
+    if (lines.hasBouquet || lines.hasDrink) base = { C: 20, B: 50, A: 30, S: 0 };
+    else if (maxTool >= 4) base = { C: 30, B: 50, A: 20, S: 0 };
+    else base = { C: 40, B: 50, A: 10, S: 0 };
+  } else if (playerLevel <= 7) {
+    base = { C: 10, B: 30, A: 40, S: lines.hasGreen ? 20 : 10 };
+  } else if (playerLevel <= 9) {
+    base = { C: 5, B: 25, A: 40, S: 30 };
+  } else {
+    base = { C: 5, B: 20, A: 40, S: 35 };
   }
-  if (playerLevel <= 4) {
-    if (lines.hasBouquet || lines.hasDrink) return { C: 20, B: 50, A: 30, S: 0 };
-    if (maxTool >= 4) return { C: 30, B: 50, A: 20, S: 0 };
-    return { C: 40, B: 50, A: 10, S: 0 };
-  }
-  if (playerLevel <= 7) {
-    return { C: 10, B: 30, A: 40, S: lines.hasGreen ? 20 : 10 };
-  }
-  if (playerLevel <= 9) {
-    return { C: 5, B: 25, A: 40, S: 30 };
-  }
-  return { C: 5, B: 20, A: 40, S: 35 };
+
+  return _applyGreenBoost(base, lines, modifiers?.greenLineUnlockBoostSpawns);
 }
 
 /** 按权重随机选一个档位 */

@@ -50,16 +50,8 @@ def main() -> None:
     ding = sine_burst(523, 0.08, 0.3) + silence(0.03) + sine_burst(659, 0.12, 0.35) + silence(0.05)
     write_wav(ROOT / "merge_success.wav", [int(x) for x in ding])
 
-    loop_len = int(RATE * 3)
-    ambient: list[float] = []
-    for i in range(loop_len):
-        t = i / RATE
-        ambient.append(
-            800 * math.sin(2 * math.pi * 1.5 * t) * (0.45 + 0.55 * math.sin(2 * math.pi * 0.12 * t))
-        )
-    write_wav(ROOT / "bgm_main.wav", [int(x) for x in ambient])
-
-    print("Wrote:", ROOT / "button_click.wav", ROOT / "merge_success.wav", ROOT / "bgm_main.wav")
+    print("Wrote:", ROOT / "button_click.wav", ROOT / "merge_success.wav")
+    print("Note: 正式工程用 MP3（button_click/merge_success/bgm_main.mp3）；本脚本仅本地无资源时占位。")
 
 
 if __name__ == "__main__":

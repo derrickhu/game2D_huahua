@@ -27,16 +27,17 @@ export interface CellPreset {
  * **圈层**：`layer = max(|row - 4|, |col - 3|)`（以几何中心为「内」），layer 越大越靠外，
  * 迷雾内物品**倾向更高等级**（首版大致：layer4→Lv7–8 档，layer3→5–6，layer2→3–5，layer1→1–3）。
  * **例外**：中央 2×2 OPEN 仍为双铲 + 两空格；`(2,3)` 迷雾水壶为合成链，`BoardManager` 会在首次合铲后兜底半锁。
+ * **约束**：`FOG` / `PEEK` 内不得放合成链**顶格**（`getMergeResultId` 为 null 的产品/工具），否则半解锁后无法在开放格再凑一对合成，格子永远打不开。
  */
 export const BOARD_PRESETS: CellPreset[] = [
   // layer 4 外圈
-  { row: 0, col: 0, state: CellState.FOG,  itemId: 'tool_plant_6',     keyPrice: 0, unlockPriority: 80 },
+  { row: 0, col: 0, state: CellState.FOG,  itemId: 'tool_plant_5',     keyPrice: 0, unlockPriority: 80 },
   { row: 0, col: 1, state: CellState.KEY,  itemId: null,               keyPrice: 500, unlockPriority: 81 },
   { row: 0, col: 2, state: CellState.FOG,  itemId: 'flower_fresh_8',   keyPrice: 0, unlockPriority: 82 },
-  { row: 0, col: 3, state: CellState.FOG,  itemId: 'drink_tea_8',      keyPrice: 0, unlockPriority: 83 },
+  { row: 0, col: 3, state: CellState.FOG,  itemId: 'drink_tea_7',      keyPrice: 0, unlockPriority: 83 },
   { row: 0, col: 4, state: CellState.FOG,  itemId: 'flower_bouquet_8', keyPrice: 0, unlockPriority: 84 },
   { row: 0, col: 5, state: CellState.KEY,  itemId: null,               keyPrice: 500, unlockPriority: 85 },
-  { row: 0, col: 6, state: CellState.FOG,  itemId: 'tool_tea_set_5',   keyPrice: 0, unlockPriority: 86 },
+  { row: 0, col: 6, state: CellState.FOG,  itemId: 'tool_tea_set_4',   keyPrice: 0, unlockPriority: 86 },
 
   { row: 1, col: 0, state: CellState.FOG,  itemId: 'drink_dessert_6', keyPrice: 0, unlockPriority: 70 },
   { row: 1, col: 1, state: CellState.FOG,  itemId: 'flower_fresh_6',   keyPrice: 0, unlockPriority: 71 },

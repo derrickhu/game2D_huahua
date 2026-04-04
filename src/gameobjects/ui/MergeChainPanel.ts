@@ -17,8 +17,10 @@ import {
   findRepresentativeChestForDrop,
   getChestProduceOutcomePercents,
 } from '@/managers/BuildingManager';
+import { CellState } from '@/config/BoardLayout';
 import { BoardManager } from '@/managers/BoardManager';
 import { CollectionManager, CollectionCategory } from '@/managers/CollectionManager';
+import { WarehouseManager } from '@/managers/WarehouseManager';
 import { TextureCache } from '@/utils/TextureCache';
 import { createCurrencyIconCluster } from '@/utils/CurrencyCellIcons';
 import { bringToolEnergyToFront, createToolEnergySprite } from '@/utils/ToolEnergyBadge';
@@ -66,8 +68,8 @@ const MERGE_CLOSE_BTN_HIT_PAD = 12;
 const MERGE_CLOSE_BTN_SHIFT_X = 42;
 const MERGE_CLOSE_BTN_SHIFT_Y = 26;
 
-/** 获取来源里尚未获得（棋盘无、图鉴未收录）的工具图标透明度 */
-const SOURCE_TOOL_NOT_OBTAINED_ALPHA = 0.48;
+/** 获取来源里尚未解锁的工具：仅底图+图标，不用 ADD 星光（否则半透明也像「亮」） */
+const SOURCE_TOOL_NOT_OBTAINED_ALPHA = 0.4;
 
 /** 可产出工具：产出预览悬浮框（偏大便于阅读） */
 const PRODUCE_POPOVER_PAD = 18;
@@ -414,11 +416,29 @@ export class MergeChainPanel extends PIXI.Container {
 
   get isOpen(): boolean { return this._isOpen; }
 
+  /**
+   * 仅统计「已开放格」上的物品：迷雾 / 半解锁格内物尚未可操作、也未视为已产出，
+   * 合成链展示与图鉴外的「已持有」判定均不采用（链上显示问号，除非图鉴已收录）。
+   */
   private _refreshOwnedFromBoard(): void {
     this._ownedItems.clear();
     for (const cell of BoardManager.cells) {
-      if (cell.itemId) this._ownedItems.add(cell.itemId);
+      if (cell.itemId && cell.state === CellState.OPEN) {
+        this._ownedItems.add(cell.itemId);
+      }
     }
+  }
+
+  /**
+   * 「获取来源」工具栏：已解锁 = 当前开放棋盘上有 / 仓库槽位中有 / 图鉴已收录该物品。
+   * （与合成链格子问号规则一致，并含仓库，避免仅入仓却被当成未获得。）
+   */
+  private _isSourceToolUnlocked(toolItemId: string, def: ItemDef): boolean {
+    if (this._ownedItems.has(toolItemId)) return true;
+    for (const id of WarehouseManager.items) {
+      if (id === toolItemId) return true;
+    }
+    return this._isDiscoveredInAlbum(def);
   }
 
   /** 图鉴已收录（花束/花饮/建筑）；宝箱线等未进图鉴的仍只看棋盘 */
@@ -439,7 +459,7 @@ export class MergeChainPanel extends PIXI.Container {
     }
   }
 
-  /** 链上格子是否展示为已解锁（棋盘上有 / 图鉴有 / 当前选中） */
+  /** 链上格子是否展示为已解锁（已开放棋盘上有 / 图鉴有 / 当前选中；半解锁与迷雾不算） */
   private _isChainSlotRevealed(itemId: string, isCurrent: boolean): boolean {
     if (isCurrent) return true;
     if (this._ownedItems.has(itemId)) return true;
@@ -472,8 +492,7 @@ export class MergeChainPanel extends PIXI.Container {
     if (!this._isOpen) return;
     const def = ITEM_DEFS.get(itemId);
     if (!def) return;
-    const revealed = this._ownedItems.has(itemId) || this._isDiscoveredInAlbum(def);
-    if (!revealed) return;
+    if (!this._isChainSlotRevealed(itemId, itemId === this._selectedItemId)) return;
 
     const prod = findBoardProducerDef(itemId);
     const isProducer = !!(prod?.canProduce);
@@ -793,8 +812,16 @@ export class MergeChainPanel extends PIXI.Container {
     return cell;
   }
 
-  /** 棋盘格内绘制物品图标 + 工具闪光/体力（与 ItemView 一致） */
-  private _addBoardLikeItemIcon(parent: PIXI.Container, def: ItemDef, cs: number): void {
+  /**
+   * 棋盘格内绘制物品图标；可产出工具默认加闪光/体力（与 ItemView 一致）。
+   * `toolProduceDecor === false` 时跳过星光与体力角标（用于获取来源里未解锁工具的弱显）。
+   */
+  private _addBoardLikeItemIcon(
+    parent: PIXI.Container,
+    def: ItemDef,
+    cs: number,
+    toolProduceDecor = true,
+  ): void {
     if (def.category === Category.CURRENCY) {
       const cluster = createCurrencyIconCluster(def, cs);
       if (cluster) {
@@ -816,7 +843,7 @@ export class MergeChainPanel extends PIXI.Container {
 
       /** 与 ItemView 一致：tool_* 与 flower_wrap_4 等均在 BOARD_PRODUCER / TOOL_DEFS，品类不一定是 BUILDING */
       const producerDef = findBoardProducerDef(def.id);
-      if (producerDef?.canProduce) {
+      if (toolProduceDecor && producerDef?.canProduce) {
         const sparkle = new ToolSparkleLayer(cs, cs);
         sparkle.position.set(0, 0);
         parent.addChild(sparkle);
@@ -1080,11 +1107,10 @@ export class MergeChainPanel extends PIXI.Container {
     bg.endFill();
     cell.addChild(bg);
 
-    const obtained =
-      this._ownedItems.has(toolItemId) || this._isDiscoveredInAlbum(def);
+    const unlocked = this._isSourceToolUnlocked(toolItemId, def);
     const iconLayer = new PIXI.Container();
-    this._addBoardLikeItemIcon(iconLayer, def, cs);
-    iconLayer.alpha = obtained ? 1 : SOURCE_TOOL_NOT_OBTAINED_ALPHA;
+    this._addBoardLikeItemIcon(iconLayer, def, cs, unlocked);
+    iconLayer.alpha = unlocked ? 1 : SOURCE_TOOL_NOT_OBTAINED_ALPHA;
     cell.addChild(iconLayer);
 
     const canOpenChain = getMergeChain(toolItemId).length > 1;

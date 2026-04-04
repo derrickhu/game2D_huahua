@@ -1,22 +1,18 @@
 /**
  * 客人管理器 - 客人刷新、需求生成、自动锁定棋盘物品、交付结算
  *
- * 重构：需求由 OrderTierConfig 档位模板驱动，不再依赖 CustomerConfig 写死的 demands。
- * 棋盘匹配：盘上有所需物品则每位客人都可完成；多客人可共用同一格（交付时再消耗）；同一客人多槽不得抢同一格。
+ * 需求由 OrderGeneratorRegistry + OrderTierConfig 驱动；产线解锁见 orders/unlockedLines（与 BuildingConfig 一致）。
  */
 import { EventBus } from '@/core/EventBus';
 import { BoardManager } from './BoardManager';
 import { CurrencyManager } from './CurrencyManager';
 import { LevelManager } from './LevelManager';
 import { MULTI_SLOT_BONUS_RATE } from '@/config/OrderHuayuanConfig';
-import { CUSTOMER_TYPES, type CustomerDemandDef } from '@/config/CustomerConfig';
-import { CellState } from '@/config/BoardLayout';
-import { TOOL_DEFS } from '@/config/BuildingConfig';
-import { findItemId, Category, FlowerLine, ToolLine, ITEM_DEFS } from '@/config/ItemConfig';
+import { CUSTOMER_TYPES } from '@/config/CustomerConfig';
+import { Category, ITEM_DEFS } from '@/config/ItemConfig';
 import {
   ORDER_TIERS,
   getOrderTierWeights,
-  getEffectiveMaxLevel,
   getDynamicMaxCustomers,
   pickTierByWeight,
   type OrderTier,
@@ -24,6 +20,8 @@ import {
   type UnlockedLines,
 } from '@/config/OrderTierConfig';
 import { CUSTOMER_REFRESH_MIN, CUSTOMER_REFRESH_MAX } from '@/config/Constants';
+import { computeUnlockedLines } from '@/orders/unlockedLines';
+import { generateOrderDemands } from '@/orders/OrderGeneratorRegistry';
 
 export interface DemandSlot {
   itemId: string;
@@ -75,6 +73,9 @@ export interface CustomerPersistState {
 const VALID_ORDER_TIERS = new Set<OrderTier>(['C', 'B', 'A', 'S']);
 const VALID_ORDER_TYPES = new Set<OrderType>(['normal', 'timed', 'chain', 'challenge']);
 
+const GREEN_PITY_THRESHOLD = 3;
+const GREEN_UNLOCK_BOOST_SPAWNS = 5;
+
 function normalizeCustomerPersistState(raw: unknown): CustomerPersistState | null {
   if (!raw || typeof raw !== 'object') return null;
   const o = raw as Record<string, unknown>;
@@ -106,10 +107,14 @@ function normalizeCustomerPersistState(raw: unknown): CustomerPersistState | nul
     const orderType = VALID_ORDER_TYPES.has(r.orderType as OrderType)
       ? (r.orderType as OrderType)
       : 'normal';
+    const bonusMultiplier =
+      typeof r.bonusMultiplier === 'number' && Number.isFinite(r.bonusMultiplier)
+        ? r.bonusMultiplier
+        : undefined;
     const huayuanReward =
       typeof r.huayuanReward === 'number' && Number.isFinite(r.huayuanReward) && r.huayuanReward >= 0
         ? Math.floor(r.huayuanReward)
-        : 10;
+        : CustomerManagerClass.computeOrderHuayuan(slots, bonusMultiplier);
     const timeLimit =
       r.timeLimit === null || (typeof r.timeLimit === 'number' && Number.isFinite(r.timeLimit))
         ? (r.timeLimit as number | null)
@@ -128,7 +133,7 @@ function normalizeCustomerPersistState(raw: unknown): CustomerPersistState | nul
       orderType,
       timeLimit,
       chainIndex: typeof r.chainIndex === 'number' ? r.chainIndex : undefined,
-      bonusMultiplier: typeof r.bonusMultiplier === 'number' ? r.bonusMultiplier : undefined,
+      bonusMultiplier,
     });
   }
 
@@ -154,14 +159,17 @@ class CustomerManagerClass {
   private _started = false;
   /** SaveManager.load 在 MainScene 初始化前写入；init() 消费后清空 */
   private _preparedFromSave: CustomerPersistState | null = null;
+  /** 解锁绿植后若干次刷单的档位偏置 */
+  private _greenLineUnlockBoostSpawns = 0;
+  /** 上一帧棋盘产线快照（用于检测解锁） */
+  private _unlockSnapshot: UnlockedLines | null = null;
+  /** 已解锁绿植但连续多单一株绿植都不要时的保底计数 */
+  private _spawnsWithoutGreenDemand = 0;
 
   get customers(): readonly CustomerInstance[] {
     return this._customers;
   }
 
-  /**
-   * 读档后、init 前调用：恢复队列与刷怪计时（棋盘须已 loadState）
-   */
   prepareFromSave(raw: unknown): void {
     this._preparedFromSave = normalizeCustomerPersistState(raw);
   }
@@ -210,7 +218,7 @@ class CustomerManagerClass {
         emoji: e.emoji,
         slots: e.slots.map(s => ({ itemId: s.itemId, lockedCellIndex: -1 })),
         allSatisfied: false,
-        huayuanReward: CustomerManagerClass._computeOrderHuayuanFromSlots(e.slots),
+        huayuanReward: CustomerManagerClass.computeOrderHuayuan(e.slots, e.bonusMultiplier),
         tier: e.tier,
         orderType: e.orderType,
         timeLimit: e.timeLimit,
@@ -219,7 +227,7 @@ class CustomerManagerClass {
       }));
       this._nextUid = p.nextUid;
       this._refreshTimer = p.refreshTimer;
-      const maxCap = getDynamicMaxCustomers(this._getUnlockedLines());
+      const maxCap = getDynamicMaxCustomers(computeUnlockedLines(BoardManager.cells));
       if (this._customers.length > maxCap) {
         this._customers = this._customers.slice(0, maxCap);
         console.warn(`[Customer] 读档客人超过当前上限 ${maxCap}，已截断`);
@@ -234,9 +242,8 @@ class CustomerManagerClass {
     this._rescanAll();
   }
 
-  /** 当前动态客人上限（基于已解锁产线数） */
   get maxCustomers(): number {
-    return getDynamicMaxCustomers(this._getUnlockedLines());
+    return getDynamicMaxCustomers(computeUnlockedLines(BoardManager.cells));
   }
 
   update(dt: number): void {
@@ -253,15 +260,19 @@ class CustomerManagerClass {
     }
   }
 
-  /** 订单花愿 = 各需求物品 orderHuayuan 之和 × (1 + 多槽加成) */
-  private static _computeOrderHuayuanFromSlots(slots: { itemId: string }[]): number {
+  /** 订单花愿 = 各需求物品 orderHuayuan 之和 × (1 + 多槽加成) × 成长倍率（读档归一化亦用） */
+  static computeOrderHuayuan(slots: { itemId: string }[], bonusMultiplier?: number): number {
     let sum = 0;
     for (const s of slots) {
       sum += ITEM_DEFS.get(s.itemId)?.orderHuayuan ?? 0;
     }
     const n = slots.length;
     if (n <= 0) return 0;
-    return Math.max(1, Math.round(sum * (1 + MULTI_SLOT_BONUS_RATE * (n - 1))));
+    const base = Math.max(1, Math.round(sum * (1 + MULTI_SLOT_BONUS_RATE * (n - 1))));
+    if (bonusMultiplier && bonusMultiplier > 0 && bonusMultiplier !== 1) {
+      return Math.max(1, Math.round(base * bonusMultiplier));
+    }
+    return base;
   }
 
   deliver(uid: number): boolean {
@@ -288,8 +299,6 @@ class CustomerManagerClass {
     return true;
   }
 
-  // ---- private ----
-
   private _bindBoardEvents(): void {
     const rescan = () => this._rescanAll();
     EventBus.on('board:merged', rescan);
@@ -303,93 +312,39 @@ class CustomerManagerClass {
     EventBus.on('building:exhausted', rescan);
   }
 
-  // ---------- 产线解锁检测 ----------
-
-  private _getUnlockedLines(): UnlockedLines {
-    let maxPlantToolLevel = 0;
-    let maxArrangeToolLevel = 0;
-    let maxDrinkToolLevel = 0;
-    let hasBouquet = false;
-    let hasGreen = false;
-    let hasDrink = false;
-    const drinkLinesOnBoard = new Set<string>();
-
-    for (const c of BoardManager.cells) {
-      if (c.state !== CellState.OPEN || !c.itemId) continue;
-
-      if (c.itemId === 'flower_wrap_4') {
-        hasBouquet = true;
-        continue;
-      }
-
-      const def = TOOL_DEFS.get(c.itemId);
-      if (!def) continue;
-
-      if (def.toolLine === ToolLine.PLANT) {
-        maxPlantToolLevel = Math.max(maxPlantToolLevel, def.level);
-        if (def.canProduce) hasGreen = true;
-      } else if (def.toolLine === ToolLine.ARRANGE) {
-        maxArrangeToolLevel = Math.max(maxArrangeToolLevel, def.level);
-        if (def.level >= 3) hasBouquet = true;
-      } else if (def.produceCategory === Category.DRINK && def.canProduce) {
-        hasDrink = true;
-        maxDrinkToolLevel = Math.max(maxDrinkToolLevel, def.level);
-        drinkLinesOnBoard.add(def.produceLine);
-      }
-    }
-
-    let unlockedLineCount = 0;
-    if (hasBouquet) unlockedLineCount++;
-    if (hasGreen) unlockedLineCount++;
-    unlockedLineCount += drinkLinesOnBoard.size;
-
-    return {
-      hasBouquet, hasGreen, hasDrink,
-      maxPlantToolLevel, maxArrangeToolLevel, maxDrinkToolLevel,
-      unlockedLineCount,
-    };
-  }
-
-  // ---------- 产线过滤 ----------
-
-  private _eligibleFlowerLines(demandLines: readonly string[], ulk: UnlockedLines): string[] {
-    return demandLines.filter(line => {
-      if (line === FlowerLine.BOUQUET) return ulk.hasBouquet;
-      if (line === FlowerLine.GREEN) return ulk.hasGreen;
-      return true;
-    });
-  }
-
-  private _eligibleDemandLines(demandDef: CustomerDemandDef, ulk: UnlockedLines): string[] {
-    if (demandDef.category === Category.DRINK) {
-      if (!ulk.hasDrink) return [];
-      return [...demandDef.lines];
-    }
-    if (demandDef.category === Category.FLOWER) {
-      return this._eligibleFlowerLines(demandDef.lines, ulk);
-    }
-    return [...demandDef.lines];
-  }
-
-  // ---------- 新的刷客流程 ----------
-
   private _spawnCustomer(): void {
     const level = LevelManager.level;
-    const lines = this._getUnlockedLines();
-    const weights = getOrderTierWeights(level, lines);
-    const tier = pickTierByWeight(weights);
-    const tierDef = ORDER_TIERS[tier];
+    const lines = computeUnlockedLines(BoardManager.cells);
+    const weights = getOrderTierWeights(level, lines, {
+      greenLineUnlockBoostSpawns: this._greenLineUnlockBoostSpawns,
+    });
 
+    const tier = pickTierByWeight(weights);
     const pool = CUSTOMER_TYPES.filter(t =>
       t.tiers.includes(tier) && this._isTypeAvailableForTier(t.id, tier, lines),
     );
     if (pool.length === 0) return;
 
-    const type = pool[Math.floor(Math.random() * pool.length)];
-    const slots = this._generateDemands(tierDef.demandPool, tierDef.slotRange, lines);
-    if (slots.length === 0) return;
+    const type = pool[Math.floor(Math.random() * pool.length)]!;
+    const forceGreen =
+      lines.hasGreen &&
+      this._spawnsWithoutGreenDemand >= GREEN_PITY_THRESHOLD;
 
-    const huayuan = CustomerManagerClass._computeOrderHuayuanFromSlots(slots);
+    const gen = generateOrderDemands({
+      tier,
+      lines,
+      playerLevel: level,
+      forceGreenFlowerSlot: forceGreen,
+      rng: Math.random,
+    });
+    if (!gen || gen.slots.length === 0) return;
+
+    const slots: DemandSlot[] = gen.slots.map(s => ({
+      itemId: s.itemId,
+      lockedCellIndex: -1,
+    }));
+
+    const huayuan = CustomerManagerClass.computeOrderHuayuan(slots, gen.bonusMultiplier);
 
     const customer: CustomerInstance = {
       uid: this._nextUid++,
@@ -400,21 +355,29 @@ class CustomerManagerClass {
       allSatisfied: false,
       huayuanReward: huayuan,
       tier,
-      orderType: tierDef.orderType,
-      timeLimit: tierDef.timeLimit,
+      orderType: gen.orderType,
+      timeLimit: gen.timeLimit,
+      bonusMultiplier: gen.bonusMultiplier,
     };
 
+    if (lines.hasGreen) {
+      const hasGreenItem = slots.some(s => s.itemId.startsWith('flower_green_'));
+      if (hasGreenItem) this._spawnsWithoutGreenDemand = 0;
+      else this._spawnsWithoutGreenDemand++;
+    }
+
     this._customers.push(customer);
-    console.log(`[Customer] 新客人: ${customer.name}(${customer.emoji}) [${tier}], 需求: ${customer.slots.map(s => s.itemId).join(', ')}`);
+    if (this._greenLineUnlockBoostSpawns > 0) {
+      this._greenLineUnlockBoostSpawns--;
+    }
+    console.log(
+      `[Customer] 新客人: ${customer.name}(${customer.emoji}) [${tier}] ${gen.generationKind}, 需求: ${customer.slots.map(s => s.itemId).join(', ')}`,
+    );
     EventBus.emit('customer:arrived', customer);
 
     this._rescanAll();
   }
 
-  /**
-   * 判断某客人类型在指定档位下是否可用（检查该档位需求池的产线是否已解锁）。
-   * 如果档位 demandPool 含饮品但棋盘无饮品工具 → 不可用（防止无法完成的订单）。
-   */
   private _isTypeAvailableForTier(_typeId: string, tier: OrderTier, ulk: UnlockedLines): boolean {
     const tierDef = ORDER_TIERS[tier];
     const hasDrinkInPool = tierDef.demandPool.some(d => d.category === Category.DRINK);
@@ -425,66 +388,15 @@ class CustomerManagerClass {
     return true;
   }
 
-  /**
-   * 根据需求品类 + 产品线，查棋盘上对应工具等级 → 推算订单可要求的物品等级上限。
-   * 游戏核心是合成，工具等级越高 → 订单可出越高级的物品（玩家多合成几次即可达到）。
-   */
-  private _getEffectiveMaxLevelForLine(category: Category, line: string, lines: UnlockedLines): number {
-    let toolLevel = 0;
-    if (category === Category.FLOWER) {
-      if (line === FlowerLine.FRESH || line === FlowerLine.GREEN) {
-        toolLevel = lines.maxPlantToolLevel;
-      } else if (line === FlowerLine.BOUQUET) {
-        toolLevel = Math.max(lines.maxArrangeToolLevel, lines.maxPlantToolLevel);
-      }
-    } else if (category === Category.DRINK) {
-      toolLevel = lines.maxDrinkToolLevel;
-    }
-    const maxItemLevel = (category === Category.DRINK) ? 8 : 10;
-    return getEffectiveMaxLevel(toolLevel, maxItemLevel);
-  }
-
-  /** 从档位的 demandPool 和 slotRange 生成具体需求（levelRange 根据工具等级动态提升） */
-  private _generateDemands(
-    demandPool: CustomerDemandDef[],
-    slotRange: [number, number],
-    lines: UnlockedLines,
-  ): DemandSlot[] {
-    const [minSlots, maxSlots] = slotRange;
-    const slotCount = minSlots + Math.floor(Math.random() * (maxSlots - minSlots + 1));
-    const slots: DemandSlot[] = [];
-
-    for (let i = 0; i < slotCount; i++) {
-      const demandDef = demandPool[i % demandPool.length];
-      const eligibleLines = this._eligibleDemandLines(demandDef, lines);
-      if (eligibleLines.length === 0) {
-        if (demandPool.length > 1) continue;
-        return [];
-      }
-
-      const [minLv, tierMaxLv] = demandDef.levelRange;
-      let itemId: string | null = null;
-      for (let attempt = 0; attempt < 16; attempt++) {
-        const line = eligibleLines[Math.floor(Math.random() * eligibleLines.length)];
-        const effectiveMax = Math.max(tierMaxLv, this._getEffectiveMaxLevelForLine(demandDef.category, line, lines));
-        const range = effectiveMax - minLv + 1;
-        const level = minLv + Math.floor(Math.pow(Math.random(), 1.4) * range);
-        const cand = findItemId(demandDef.category, line, level);
-        if (cand && !slots.some(s => s.itemId === cand)) {
-          itemId = cand;
-          break;
-        }
-      }
-      if (itemId) {
-        slots.push({ itemId, lockedCellIndex: -1 });
-      }
-    }
-
-    return slots;
-  }
-
-  /** 重新扫描所有客人需求并锁定棋盘物品 */
   private _rescanAll(): void {
+    const prevSnap = this._unlockSnapshot;
+    const nextLines = computeUnlockedLines(BoardManager.cells);
+    if (this._started && prevSnap && !prevSnap.hasGreen && nextLines.hasGreen) {
+      this._greenLineUnlockBoostSpawns = GREEN_UNLOCK_BOOST_SPAWNS;
+      this._refreshTimer = Math.min(this._refreshTimer, 2);
+    }
+    this._unlockSnapshot = nextLines;
+
     for (const cust of this._customers) {
       for (const slot of cust.slots) {
         if (slot.lockedCellIndex >= 0) {
@@ -499,7 +411,6 @@ class CustomerManagerClass {
     const activeCount = Math.min(this._customers.length, this.maxCustomers);
     for (let ci = 0; ci < activeCount; ci++) {
       const cust = this._customers[ci];
-      /** 仅同一客人多槽时互斥：不能两格需求指向棋盘同一格；不同客人可共用盘上同一物品 */
       const usedCellsThisCustomer = new Set<number>();
       for (const slot of cust.slots) {
         let bestIndex = -1;

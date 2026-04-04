@@ -400,6 +400,16 @@ function toolMatchesProductLine(def: ToolDef, category: Category, productLine: s
   return lines.includes(productLine);
 }
 
+/** 棋盘产出物是否可出现指定品类+产品线（订单产线解锁与 BuildingManager 一致） */
+export function boardProducerOutputsProductLine(
+  def: ToolDef,
+  category: Category,
+  productLine: string,
+): boolean {
+  if (!def.canProduce) return false;
+  return toolMatchesProductLine(def, category, productLine);
+}
+
 /**
  * 可产出指定产品线物品的「该线最低等级」工具 ID（按 toolLine 去重）。
  * 用于合成线面板「获取来源」；宝箱等无对应工具时返回空数组。

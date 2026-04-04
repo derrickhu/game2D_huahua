@@ -22,7 +22,8 @@ done < <(find minigame/images/ui minigame/subpkg_panels/images/ui -name '*.png' 
 echo "== 室外草地：若仍为伪 PNG 的 JPEG，可改为真 JPG（需 TextureCache house_bg 指向 .jpg）=="
 # 手动：ffmpeg -y -i minigame/subpkg_deco/images/house/bg.png -qscale:v 2 minigame/subpkg_deco/images/house/bg.jpg
 
-echo "== BGM：96kbps MP3（按需调整 -b:a）=="
-# 手动：ffmpeg -y -i minigame/subpkg_audio/bgm_main.mp3 -codec:a libmp3lame -b:a 96k /tmp/bgm.mp3 && mv /tmp/bgm.mp3 minigame/subpkg_audio/bgm_main.mp3
+echo "== BGM 体积：可转 AAC m4a 或低码率 MP3（按需）=="
+# afconvert in.mp3 minigame/subpkg_audio/bgm_main.m4a -f m4af -d aac -b 64000
+# ffmpeg -y -i in.mp3 -codec:a libmp3lame -b:a 96k minigame/subpkg_audio/bgm_main.mp3
 
 echo "完成。请 du -sh minigame 自检。"
