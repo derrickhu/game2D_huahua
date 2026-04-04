@@ -259,8 +259,41 @@ class CurrencyManagerClass {
   /** @deprecated */
   setExp(_val: number): void {}
 
-  /** @deprecated */
-  setLevel(_val: number): void {}
+  /**
+   * GM/调试：将**当前装修场景**的星级设为指定值，并把累计星星调到该星级阈值。
+   * 气泡等门控使用 `globalLevel`（多场景星级之和）；单花店档下把当前房调到 ≥3 星即可出合成气泡。
+   * 正式玩法请用 `addStar`，勿对玩家开放此接口。
+   */
+  setLevel(val: number): void {
+    const sid = this._state.sceneId;
+    const scene = SCENE_MAP.get(sid);
+    if (!scene) return;
+    const clamped = Math.max(1, Math.min(Math.floor(val), scene.maxStarLevel));
+    const row = scene.thresholds.find(t => t.level === clamped);
+    const star = row?.starRequired ?? 0;
+
+    this._state.star = star;
+    this._state.level = clamped;
+
+    let sp = this._getActiveSceneProgress();
+    if (!sp) {
+      sp = {
+        sceneId: sid,
+        star,
+        starLevel: clamped,
+        completed: isSceneCompleted(sid, clamped),
+      };
+      this._state.sceneProgresses.push(sp);
+    } else {
+      sp.star = star;
+      sp.starLevel = clamped;
+      sp.completed = isSceneCompleted(sid, clamped);
+    }
+
+    EventBus.emit('currency:changed', 'star', this._state.star);
+    EventBus.emit('currency:changed', 'level', this._state.level);
+    console.log(`[Currency] GM setLevel → ${sid} 星级=${clamped} 累计⭐=${star}，globalLevel=${getGlobalLevel(this._state.sceneProgresses)}`);
+  }
 
   /** @deprecated 花露已移除，统一使用花愿 */
   addHualu(_amount: number): void {}

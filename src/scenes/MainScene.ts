@@ -75,10 +75,12 @@ import { LeaderboardPanel } from '@/gameobjects/ui/LeaderboardPanel';
 import { RewardBoxButton, REWARD_BOX_BTN_SIZE } from '@/gameobjects/ui/RewardBoxButton';
 import { RewardBoxPanel } from '@/gameobjects/ui/RewardBoxPanel';
 import { PopupShopPanel } from '@/gameobjects/ui/PopupShopPanel';
+import { MerchShopPanel } from '@/gameobjects/ui/MerchShopPanel';
 import { WorldMapPanel } from '@/gameobjects/ui/WorldMapPanel';
 import { ShopScene } from '@/scenes/ShopScene';
 import { LIVE_HOUSE_THUMB_CAPTURE_MAX } from '@/config/WorldMapConfig';
 import { RewardBoxManager } from '@/managers/RewardBoxManager';
+import { MERGE_BUBBLE_DISPLAY_NAME } from '@/config/MergeCompanionConfig';
 import { MergeCompanionManager } from '@/managers/MergeCompanionManager';
 import { RoomLayoutManager } from '@/managers/RoomLayoutManager';
 
@@ -145,6 +147,9 @@ export class MainScene implements Scene {
 
   // ---- 大地图弹框商店 ----
   private _popupShopPanel!: PopupShopPanel;
+
+  /** 合成顶栏 · 全屏摊位购买商店（NB2 框体） */
+  private _merchShopPanel!: MerchShopPanel;
 
   /** 大地图全屏页（覆盖层，非花店子节点） */
   private _worldMapPanel!: WorldMapPanel;
@@ -383,6 +388,9 @@ export class MainScene implements Scene {
     // 大地图弹框商店
     this._popupShopPanel = new PopupShopPanel();
     overlay.addChild(this._popupShopPanel);
+
+    this._merchShopPanel = new MerchShopPanel();
+    overlay.addChild(this._merchShopPanel);
 
     // 大地图全屏页（盖住花店/顶栏；惯性滚动在面板内自注册 ticker）
     this._worldMapPanel = new WorldMapPanel();
@@ -640,7 +648,7 @@ export class MainScene implements Scene {
       const endY = this._topBar.y + lp.y;
       this._playRewardFly('icon_energy', sx, sy, endX, endY, payload.amount, () => {
         CurrencyManager.addStamina(payload.amount);
-        ToastMessage.show(`气泡破裂，+${payload.amount} 体力`);
+        ToastMessage.show(`${MERGE_BUBBLE_DISPLAY_NAME}散了，+${payload.amount} 体力`);
         this._topBar.flashStamina();
       });
     });
@@ -909,6 +917,12 @@ export class MainScene implements Scene {
       this._staminaPanel.open();
     });
 
+    // 顶栏商店胶囊 → 全屏摊位购买面板（仅合成主界面）
+    EventBus.on('panel:openMerchShop', () => {
+      if (SceneManager.current?.name !== 'main') return;
+      this._merchShopPanel.open();
+    });
+
     // ---- 装修系统事件 ----
     EventBus.on('nav:openDeco', () => this._decoPanel.open());
 
@@ -974,8 +988,9 @@ export class MainScene implements Scene {
       }
     });
 
-    // ---- 场景切换事件（切换到花店场景） ----
+    // ---- 进入花店/房屋装修场景（底栏 🏡，非「购买商店」；购买商店为顶栏 panel:openMerchShop） ----
     EventBus.on('scene:switchToShop', () => {
+      if (SceneManager.current?.name !== 'main') return;
       this._switchToShopScene();
     });
 
@@ -1013,6 +1028,7 @@ export class MainScene implements Scene {
 
   /** 切换到花店场景（带过渡动画） */
   private _switchToShopScene(): void {
+    if (SceneManager.current?.name === 'shop') return;
     // 淡出当前场景 → 切换到花店场景
     TweenManager.to({
       target: this.container,
@@ -1030,7 +1046,7 @@ export class MainScene implements Scene {
     const dt = Game.ticker.deltaMS / 1000;
     CurrencyManager.update(dt);
     BuildingManager.update(dt);
-    WarehouseManager.updateWarehouseCooldownsFromRealTime();
+    WarehouseManager.updateWarehouseCooldowns(dt);
     CustomerManager.update(dt);
     // 注意：TweenManager.update 已在 Game.init 的全局 ticker 中注册，
     // 此处不再重复调用，避免动画速度翻倍
@@ -1040,6 +1056,8 @@ export class MainScene implements Scene {
     );
     MergeCompanionManager.update(dt);
 
+    this._infoBar.tickMergeBubbleCountdown();
+    this._boardView.refreshMergeCompanionHud();
     this._boardView.updateCdDisplay();
     this._topBar.updateTimer();
     this._staminaPanel.updateTimer();

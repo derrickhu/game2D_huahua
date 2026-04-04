@@ -1,0 +1,11 @@
+Full-screen vertical mobile game SHOP interface prototype, 9:16 aspect, high polish casual merge-game UI illustration. Theme: cozy flower shop / florist merge game — NOT a beach or ferris wheel vacation scene. Background is a soft heavy blur of indoor flower shop or sunlit greenhouse: pastel flower color bokeh, warm greens and pinks, dreamy defocus — same cozy pastel mood as merge-game panels (warm cream, soft mint, blush pink, light gold trim).
+
+LAYOUT PROPORTION IS CRITICAL — READ CAREFULLY. The decorative stall header must be SHORT. The entire block containing (wooden sign + awning + rope with two clothespin tabs + thin counter lip) together must use ONLY about 15% to 18% of the total image height — a compact top strip, NOT a tall hero. Make the wooden sign shallower, the awning a narrow band, the hanging tabs small, the rope tight, the counter lip slim — everything vertically compressed so it feels like a slim title bar, not half the screen.
+
+The MAIN FOCUS is the shop item area below: it must occupy roughly 78% to 85% of the frame height. Start the dark plum or deep mauve wood plank shelf backdrop almost immediately under the thin counter lip. Show MORE vertical room for product listings: prefer THREE stacked shop sections if they fit cleanly, each with a pink scalloped section header, empty gold ribbon with NO text, a large cream rounded card, three empty gray rounded item slots in a row, green pill buy buttons under slots, and optional timer footer on the first section only. Item cards should be large and readable; slots are the visual priority.
+
+Each section’s cream card should feel spacious — generous padding, big rounded corners, clear empty gray placeholders — because this prototype is for reviewing the merchandise layout, not the stall decoration.
+
+Overall layout: layered 2.5D with soft drop shadows and rounded shapes. Top-right red circular close button with white X stays on the compact header.
+
+Art style: 2D illustrated mobile game UI, clean vectors with soft gradients only for depth, cute and premium, high saturation pastels. No photoreal people, no watermark, no brand logos, no readable words in any language anywhere on the image.

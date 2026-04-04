@@ -2,7 +2,7 @@
  * 合成伴生物：概率 roll、漂浮气泡状态、钻石解锁 / 移除 / 到期、存档、活动规则注册
  */
 import { EventBus } from '@/core/EventBus';
-import { ITEM_DEFS } from '@/config/ItemConfig';
+import { ITEM_DEFS, InteractType } from '@/config/ItemConfig';
 import {
   MERGE_COMPANION_ENABLED,
   MERGE_COMPANION_MAX_ACTIVE_FLOAT,
@@ -11,6 +11,9 @@ import {
   MERGE_COMPANION_DEFAULT_CHANCE_MULT,
   MERGE_BUBBLE_EXPIRE_STAMINA,
   MERGE_BUBBLE_FREE_DIAMOND_MAX_ITEM_LEVEL,
+  MERGE_BUBBLE_TOOL_DIAMOND_BASE,
+  MERGE_BUBBLE_TOOL_DIAMOND_PER_LEVEL,
+  MERGE_BUBBLE_TOOL_DIAMOND_MIN,
   MERGE_COMPANION_RULES,
   MERGE_COMPANION_SAMPLE_ACTIVITY_RULES,
   type MergeCompanionRuleDef,
@@ -41,8 +44,8 @@ export interface MergeCompanionFloatBubble {
   boardX: number;
   boardY: number;
   payloadItemId: string;
-  expireAt: number;
-  offlineTimerBehavior: 'run' | 'pause';
+  /** 剩余存在时间（秒），仅在局内 `update(dt)` 递减，离线暂停 */
+  expireRemainingSec: number;
   diamondPrice: number;
   dismissEnabled: boolean;
   dismissHuayuanAmount: number;
@@ -56,8 +59,11 @@ export interface MergeCompanionPersistState {
     boardX?: number;
     boardY?: number;
     payloadItemId: string;
-    expireAt: number;
-    offlineTimerBehavior: 'run' | 'pause';
+    /** 新存档：局内剩余秒 */
+    expireRemainingSec?: number;
+    /** 旧存档：绝对到期时间 ms（读档时一次性折算为剩余秒） */
+    expireAt?: number;
+    offlineTimerBehavior?: 'run' | 'pause';
     diamondPrice: number;
     dismissEnabled?: boolean;
     dismissHuayuanAmount?: number;
@@ -79,6 +85,9 @@ function _matchRule(rule: MergeCompanionRuleDef, ctx: MergeCompanionContext): bo
     return false;
   }
   if (m.lines && m.lines.length > 0 && !m.lines.includes(def.line)) {
+    return false;
+  }
+  if (m.interactTypes && m.interactTypes.length > 0 && !m.interactTypes.includes(def.interactType)) {
     return false;
   }
   if (m.resultLevelMin !== undefined && def.level < m.resultLevelMin) return false;
@@ -117,10 +126,18 @@ function _resolvePayloadItemId(rule: MergeCompanionRuleDef, ctx: MergeCompanionC
   return null;
 }
 
-/** 低等级物品气泡解锁免钻；否则使用规则配置的钻石价 */
+/**
+ * 钻石解锁价：工具单独高价（不吃 ≤7 免费）；鲜花/饮品等低等级免费，否则用规则表 base。
+ */
 function _effectiveBubbleDiamond(payloadItemId: string, ruleDiamond: number): number {
   const def = ITEM_DEFS.get(payloadItemId);
-  if (def && def.level <= MERGE_BUBBLE_FREE_DIAMOND_MAX_ITEM_LEVEL) return 0;
+  if (!def) return Math.max(0, ruleDiamond);
+  if (def.interactType === InteractType.TOOL) {
+    const tier = Math.max(1, def.level);
+    const raw = MERGE_BUBBLE_TOOL_DIAMOND_BASE + tier * MERGE_BUBBLE_TOOL_DIAMOND_PER_LEVEL;
+    return Math.max(MERGE_BUBBLE_TOOL_DIAMOND_MIN, raw);
+  }
+  if (def.level <= MERGE_BUBBLE_FREE_DIAMOND_MAX_ITEM_LEVEL) return 0;
   return Math.max(0, ruleDiamond);
 }
 
@@ -235,8 +252,7 @@ class MergeCompanionManagerClass {
         boardX: b.boardX,
         boardY: b.boardY,
         payloadItemId: b.payloadItemId,
-        expireAt: b.expireAt,
-        offlineTimerBehavior: b.offlineTimerBehavior,
+        expireRemainingSec: Math.max(0, b.expireRemainingSec),
         diamondPrice: b.diamondPrice,
         dismissEnabled: b.dismissEnabled,
         dismissHuayuanAmount: b.dismissHuayuanAmount,
@@ -253,11 +269,12 @@ class MergeCompanionManagerClass {
     const now = Date.now();
     for (const raw of state.bubbles) {
       if (!raw.payloadItemId || !ITEM_DEFS.has(raw.payloadItemId)) continue;
-      let expireAt = raw.expireAt;
-      if (raw.offlineTimerBehavior === 'pause') {
-        // MVP：pause 未实现，视为剩余时间保留在 expireAt 之前已写入的绝对时间即可
+      let remain = Number(raw.expireRemainingSec);
+      if (!Number.isFinite(remain) || remain < 0) {
+        const exp = Number(raw.expireAt);
+        remain = Number.isFinite(exp) ? Math.max(0, (exp - now) / 1000) : 0;
       }
-      if (expireAt <= now) continue;
+      if (remain <= 0) continue;
       const defPos = _defaultBoardPos(raw.anchorCellIndex);
       const boardX = raw.boardX ?? defPos.boardX;
       const boardY = raw.boardY ?? defPos.boardY;
@@ -269,11 +286,10 @@ class MergeCompanionManagerClass {
         boardX: clamped.boardX,
         boardY: clamped.boardY,
         payloadItemId: raw.payloadItemId,
-        expireAt,
-        offlineTimerBehavior: raw.offlineTimerBehavior ?? 'run',
+        expireRemainingSec: remain,
         diamondPrice: _effectiveBubbleDiamond(raw.payloadItemId, raw.diamondPrice),
-        dismissEnabled: raw.dismissEnabled === true,
-        dismissHuayuanAmount: raw.dismissHuayuanAmount ?? 0,
+        dismissEnabled: false,
+        dismissHuayuanAmount: 0,
       });
     }
     EventBus.emit('mergeCompanion:changed');
@@ -288,9 +304,12 @@ class MergeCompanionManagerClass {
     EventBus.emit('mergeCompanion:changed');
   }
 
-  update(_dt: number): void {
-    const now = Date.now();
-    const expired = this._bubbles.filter(b => now >= b.expireAt).map(b => b.id);
+  update(dt: number): void {
+    if (dt <= 0) return;
+    for (const b of this._bubbles) {
+      b.expireRemainingSec -= dt;
+    }
+    const expired = this._bubbles.filter(b => b.expireRemainingSec <= 0).map(b => b.id);
     for (const id of expired) {
       this._expireBubble(id);
     }
@@ -418,7 +437,7 @@ class MergeCompanionManagerClass {
         if (!payloadItemId || !ITEM_DEFS.has(payloadItemId)) continue;
 
         const id = _newId();
-        const durationMs = Math.max(5, bubbleOpt.durationSec) * 1000;
+        const durationSec = Math.max(5, bubbleOpt.durationSec);
         const pos = _defaultBoardPos(resultCellIndex);
         const bubble: MergeCompanionFloatBubble = {
           id,
@@ -427,8 +446,7 @@ class MergeCompanionManagerClass {
           boardX: pos.boardX,
           boardY: pos.boardY,
           payloadItemId,
-          expireAt: Date.now() + durationMs,
-          offlineTimerBehavior: bubbleOpt.offlineTimerBehavior,
+          expireRemainingSec: durationSec,
           diamondPrice: _effectiveBubbleDiamond(payloadItemId, bubbleOpt.diamondPrice),
           dismissEnabled: bubbleOpt.dismissEnabled === true,
           dismissHuayuanAmount: bubbleOpt.dismissHuayuanAmount ?? 0,

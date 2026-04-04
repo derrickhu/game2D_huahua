@@ -13,7 +13,7 @@ import { CustomerManager, type CustomerPersistState } from './CustomerManager';
 import { WarehouseManager, WarehouseState } from './WarehouseManager';
 import { RewardBoxManager, RewardBoxState } from './RewardBoxManager';
 import { MergeCompanionManager, type MergeCompanionPersistState } from './MergeCompanionManager';
-import { Platform } from '@/core/PlatformService';
+import { EventBus } from '@/core/EventBus';
 import { BOARD_TOTAL } from '@/config/Constants';
 import { BOARD_PRESETS } from '@/config/BoardLayout';
 import { ITEM_DEFS } from '@/config/ItemConfig';
@@ -65,6 +65,18 @@ interface SaveData {
 
 class SaveManagerClass {
   private _lastSave = 0;
+  private _mergeCompanionSaveTimer: ReturnType<typeof setTimeout> | null = null;
+
+  constructor() {
+    /** 花语泡泡等伴生物变化后尽快落盘，避免仅依赖 30s 异步档或未触发 onHide 时丢档 */
+    EventBus.on('mergeCompanion:changed', () => {
+      if (this._mergeCompanionSaveTimer) clearTimeout(this._mergeCompanionSaveTimer);
+      this._mergeCompanionSaveTimer = setTimeout(() => {
+        this._mergeCompanionSaveTimer = null;
+        this._persistToStorage(false);
+      }, 200);
+    });
+  }
 
   private _buildSaveData(): string {
     const data: SaveData = {
@@ -82,23 +94,24 @@ class SaveManagerClass {
     return JSON.stringify(data);
   }
 
-  /** 同步存档（onHide / 手动触发时使用，确保数据不丢） */
-  save(): void {
+  /**
+   * 写入本地存储。定时自动档用 `log=false` 减少刷屏。
+   * 统一用同步 `setStorageSync`，避免微信 `setStorage` 乱序完成覆盖较新存档（曾导致花语泡泡重进消失）。
+   */
+  private _persistToStorage(log: boolean): void {
     try {
       _api?.setStorageSync(SAVE_SLOT, this._buildSaveData());
-      console.log('[Save] 存档成功(sync), fingerprint:', CONFIG_FINGERPRINT);
+      if (log) {
+        console.log('[Save] 存档成功(sync), fingerprint:', CONFIG_FINGERPRINT);
+      }
     } catch (e) {
       console.error('[Save] 存档失败:', e);
     }
   }
 
-  /** 异步存档（自动存档定时器使用，不阻塞主线程） */
-  private _saveAsync(): void {
-    try {
-      Platform.setStorageAsync(SAVE_SLOT, this._buildSaveData());
-    } catch (e) {
-      console.error('[Save] 异步存档失败:', e);
-    }
+  /** 同步存档（onHide / 手动触发时使用，确保数据不丢） */
+  save(): void {
+    this._persistToStorage(true);
   }
 
   load(): boolean {
@@ -161,12 +174,12 @@ class SaveManagerClass {
     }
   }
 
-  /** 每帧调用，处理自动存档（使用异步写入避免卡帧） */
+  /** 每帧调用，定时自动存档（同步写入，避免异步竞态丢花语泡泡等状态） */
   update(dt: number): void {
     this._lastSave += dt;
     if (this._lastSave >= AUTO_SAVE_INTERVAL) {
       this._lastSave = 0;
-      this._saveAsync();
+      this._persistToStorage(false);
     }
   }
 

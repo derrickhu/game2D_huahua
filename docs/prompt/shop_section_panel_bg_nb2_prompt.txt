@@ -1,0 +1,7 @@
+Single isolated UI panel asset for a cute merge flower-shop mobile game — NOT a full phone screen, NOT multiple panels, only ONE section card.
+
+Subject: one wide rounded-rectangle shop section panel. Top has a short pink and cream striped fabric awning with scalloped bottom edge (keep the awning compact vertically — thin band, do not make a tall header). Centered on the awning, a small empty golden-yellow 3D ribbon banner with NO text. Main body is one large warm cream or off-white rounded rectangle with generous corner radius, soft inner shadow and thin warm beige border — the interior must be completely EMPTY: NO gray item squares, NO slots, NO grid, NO green buttons, NO price pills, NO icons, NO numbers. Optional: a tiny rounded beige footer tab centered on the bottom edge with only a simple clock glyph silhouette and NO readable timer text.
+
+Flat solid background chroma key: exact uniform magenta FF00FF everywhere outside the panel shape so the panel can be cut out cleanly. No blurred garden photo filling the frame — only FF00FF behind the panel.
+
+Style: polished 2D casual game UI, soft highlights, cozy pastel, same family as merge-game deco panels. No characters, no watermark, no readable words in any language.

@@ -1,7 +1,7 @@
 /**
  * 顶部信息栏
  *
- * 布局：[🌸花愿]  [⚡体力胶囊 … +]  [💠钻石条+加号]  [🛠️GM*] …系统菜单预留（*GM 激活后可见）
+ * 布局：[🌸花愿]  [⚡体力胶囊 … +]  [💠钻石条+加号]  [🏪内购商店图标*]  [🛠️GM*] …（*无白底，仅大图；GM 激活后可见）
  *
  * 星星进度仅在花店装修场景进度条展示，顶栏不再显示星星槽位。
  *
@@ -15,6 +15,9 @@ import { GMManager } from '@/managers/GMManager';
 import { DESIGN_WIDTH, FONT_FAMILY } from '@/config/Constants';
 import { TextureCache } from '@/utils/TextureCache';
 import { TweenManager, Ease } from '@/core/TweenManager';
+
+/** 顶栏选项：花店场景可隐藏内购商店图标（已在店内） */
+export type TopBarOptions = { hideShopPill?: boolean };
 
 /** 含体力条下方倒计时，略高于原 60 */
 export const TOP_BAR_HEIGHT = 76;
@@ -47,7 +50,16 @@ const GEM_BAR_H = 38;
 const GEM_BAR_W = 86;
 const GEM_BAR_R = 12;
 const GEM_ICON_SIZE = 48;
-/** 顶栏右侧为系统菜单胶囊预留，GM 入口放在钻石条右缘与此之间 */
+/** 钻石条右缘（root 内 bar 起点 16 + 宽 GEM_BAR_W+4） */
+const DIAMOND_BAR_RIGHT = DIAMOND_LP + 16 + (GEM_BAR_W + 4);
+const GAP_DIAMOND_TO_SHOP = 10;
+/** 内购商店：无胶囊底，仅图标；左缘与钻石条间距 */
+const SHOP_PILL_LEFT = DIAMOND_BAR_RIGHT + GAP_DIAMOND_TO_SHOP;
+/** 摊位图标显示尺寸（较原胶囊内 42px 更大） */
+const SHOP_ICON = 56;
+/** 点击热区 = 图标 + 外扩，避免难点 */
+const SHOP_HIT = SHOP_ICON + 18;
+/** 顶栏右侧为系统菜单胶囊预留，GM 入口在商店/钻石条右缘与此之间 */
 const RIGHT_MENU_RESERVE = 172;
 // ── 颜色（体力胶囊参考：浅粉框 + 鲜绿填充 + 绿圆加号）──
 const C = {
@@ -78,12 +90,19 @@ export class TopBar extends PIXI.Container {
   private _huayuanText!: PIXI.Text;
   private _diamondBar!: PIXI.Container;
   private _diamondText!: PIXI.Text;
+  private readonly _opts: TopBarOptions;
+  /** GM 左侧起点：钻石条右缘，或商店图标热区右缘 */
+  private _gmSlotLeft = DIAMOND_BAR_RIGHT + 10;
 
-  constructor() {
+  constructor(opts?: TopBarOptions) {
     super();
+    this._opts = opts ?? {};
     this._buildHuayuan();
     this._buildStaminaPill();
     this._buildDiamondPill();
+    if (!this._opts.hideShopPill) {
+      this._buildShopPill();
+    }
     this._buildGmButton();
     this._bindEvents();
     this._updateAll();
@@ -278,11 +297,41 @@ export class TopBar extends PIXI.Container {
     this.addChild(root);
   }
 
+  /** 内购商店：仅 icon_shop_nb2，无白底胶囊 → MerchShopPanel；与底栏进屋门面图分离 */
+  private _buildShopPill(): void {
+    const root = new PIXI.Container();
+    root.position.set(SHOP_PILL_LEFT + SHOP_HIT / 2, BAR_MID_Y);
+
+    const shopTex = TextureCache.get('icon_shop_nb2');
+    if (shopTex) {
+      const sp = new PIXI.Sprite(shopTex);
+      sp.anchor.set(0.5);
+      sp.width = SHOP_ICON;
+      sp.height = SHOP_ICON;
+      sp.position.set(0, 0);
+      root.addChild(sp);
+    } else {
+      const fb = new PIXI.Text('🏪', { fontSize: 34 });
+      fb.anchor.set(0.5);
+      fb.position.set(0, 0);
+      root.addChild(fb);
+    }
+
+    root.eventMode = 'static';
+    root.cursor = 'pointer';
+    root.hitArea = new PIXI.Rectangle(-SHOP_HIT / 2, -SHOP_HIT / 2, SHOP_HIT, SHOP_HIT);
+    root.on('pointertap', (e: PIXI.FederatedPointerEvent) => {
+      e.stopPropagation();
+      EventBus.emit('panel:openMerchShop');
+    });
+
+    this.addChild(root);
+    this._gmSlotLeft = SHOP_PILL_LEFT + SHOP_HIT + 10;
+  }
+
   /** GM 调试入口：钻石条与右侧系统菜单之间的空位，避免压在店主区被父级 hitArea 挡点击 */
   private _buildGmButton(): void {
-    const barW = GEM_BAR_W + 4;
-    const diamondBarRight = DIAMOND_LP + 16 + barW;
-    const slotLeft = diamondBarRight + 10;
+    const slotLeft = this._gmSlotLeft;
     const slotRight = DESIGN_WIDTH - RIGHT_MENU_RESERVE;
     if (slotRight - slotLeft < 36) return;
 
@@ -409,6 +458,17 @@ export class TopBar extends PIXI.Container {
   /** 获取钻石图标在 TopBar 内的中心坐标（与 _buildDiamondPill 内宝石精灵对齐） */
   getDiamondIconPos(): { x: number; y: number } {
     return { x: DIAMOND_LP + 22, y: BAR_MID_Y };
+  }
+
+  /** 顶栏商店图标中心（无胶囊；未建时与钻石宝石对齐） */
+  getShopPillIconPos(): { x: number; y: number } {
+    if (this._opts.hideShopPill) {
+      return this.getDiamondIconPos();
+    }
+    return {
+      x: SHOP_PILL_LEFT + SHOP_HIT / 2,
+      y: BAR_MID_Y,
+    };
   }
 
   /** 花愿数值闪烁弹跳效果 */

@@ -18,7 +18,16 @@ const MAIN_IMAGE_MAP: Record<string, string> = {
   icon_gem:    'images/ui/icon_gem.png',
   icon_star:   'images/ui/icon_star.png',
   icon_plus:   'images/ui/icon_plus.png',
-  icon_shop:   'images/ui/icon_shop.png',
+  /** 合成底栏「进屋/花店」门面图（原 icon_shop.png 重命名，语义非内购商店） */
+  icon_enter_house: 'images/ui/icon_enter_house.png',
+  /** NB2+rembg：顶栏内购商店胶囊图标 */
+  icon_shop_nb2: 'images/ui/icon_shop_nb2.png',
+  /** NB2 单层货架条（奶油区空，由代码叠槽位；rembg+裁边） */
+  shop_section_panel_bg: 'images/ui/shop_section_panel_bg.png',
+  /** NB2 单格灰槽位（rembg+裁边） */
+  shop_item_slot: 'images/ui/shop_item_slot.png',
+  /** 商店弹窗外框底板（紫木+楣棚绳）；货架组件叠在其内 `FRAME_INNER` 区，见 MerchShopPanel */
+  shop_merch_panel_frame: 'images/ui/shop_merch_panel_frame.png',
   icon_heart:  'images/ui/icon_heart.png',
   icon_book:   'images/ui/icon_book.png',
   icon_basket: 'images/ui/icon_basket.png',
@@ -121,7 +130,9 @@ const PANELS_IMAGE_MAP: Record<string, string> = {
   warehouse_slot_lock: 'subpkg_panels/images/ui/warehouse_slot_lock.png',
   merge_chain_ribbon: 'subpkg_panels/images/ui/merge_chain_ribbon.png',
   merge_chain_panel: 'subpkg_panels/images/ui/merge_chain_panel.png',
-  /** 花店装修面板底图：NB2 空白壳 + rembg（仅 DecorationPanel 使用；合成线仍用 merge_chain_panel） */
+  /** 花语泡泡外框：NB2 淡粉花瓣形 + 白底 rembg；局内再叠 alpha 透出棋盘 */
+  merge_companion_flower_bubble: 'subpkg_panels/images/ui/merge_companion_flower_bubble_nb2.png',
+  /** 花店装修面板底图：NB2 空白壳 + rembg（仅 DecorationPanel；合成线仍用 merge_chain_panel） */
   decoration_panel_bg_nb2: 'subpkg_panels/images/ui/decoration_panel_bg_nb2.png',
   /** 装修面板左侧分类 Tab：NB2 品红底 + rembg；未选中 / 选中 */
   deco_panel_tab_idle_nb2: 'subpkg_panels/images/ui/deco_panel_tab_idle_nb2.png',

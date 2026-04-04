@@ -1,117 +1,231 @@
 /**
- * 合成伴生物：漂浮气泡（棋盘内任意悬浮位置，可遮挡下方格子；点选后底栏说明解锁）
+ * 合成伴生物：漂浮「花语泡泡」
+ * 主视觉用 panels 分包 NB2 贴图（实心粉玻璃气泡，见 docs/prompt/merge_companion_flower_bubble_nb2_v2_prompt.txt）；缺图时矢量回退。
  */
 import * as PIXI from 'pixi.js';
 import { EventBus } from '@/core/EventBus';
-import { BoardMetrics, COLORS, FONT_FAMILY } from '@/config/Constants';
+import { BoardMetrics, FONT_FAMILY } from '@/config/Constants';
 import { ITEM_DEFS } from '@/config/ItemConfig';
 import { TextureCache } from '@/utils/TextureCache';
 import {
   MergeCompanionManager,
   type MergeCompanionFloatBubble,
 } from '@/managers/MergeCompanionManager';
-import { ConfirmDialog } from '../ui/ConfirmDialog';
-import { ToastMessage } from '../ui/ToastMessage';
 
-function _fmtCountdown(sec: number): string {
-  const s = Math.max(0, Math.floor(sec));
-  const m = Math.floor(s / 60);
-  const r = s % 60;
-  return `${m}:${r.toString().padStart(2, '0')}`;
+const MERGE_BUBBLE_FRAME_TEX = 'merge_companion_flower_bubble';
+/** 略透明，粉泡作底衬（物品改到上层后仍可保留一点雾感） */
+const MERGE_BUBBLE_FRAME_ALPHA = 0.58;
+
+/** 物品图标叠在气泡之上时的透明度（略透与粉泡融合） */
+const MERGE_BUBBLE_ITEM_ICON_ALPHA = 0.88;
+
+/** 与棋子格对齐的视觉比例 */
+function _bubbleRadiusPx(): number {
+  const cs = BoardMetrics.cellSize;
+  return Math.max(44, cs * 0.52);
+}
+
+function _formatRemainSec(remainSec: number): string {
+  const left = Math.max(0, Math.ceil(remainSec));
+  const mm = Math.floor(left / 60);
+  const ss = left % 60;
+  return `${mm}:${ss.toString().padStart(2, '0')}`;
+}
+
+/** TextureCache 未加载到贴图时的矢量回退（实心粉泡 + 边沿 + 高光） */
+function _drawBubbleBodyVectorFallback(container: PIXI.Container, R: number): void {
+  container.removeChildren().forEach(ch => ch.destroy({ children: true }));
+
+  for (let i = 3; i >= 1; i--) {
+    const g = new PIXI.Graphics();
+    const rr = R + i * 2.2;
+    const a = 0.02 + (4 - i) * 0.015;
+    g.beginFill(0xff6eb4, a);
+    g.drawCircle(0, 0, rr);
+    g.endFill();
+    container.addChild(g);
+  }
+
+  const core = new PIXI.Graphics();
+  core.beginFill(0xff8cc8, 0.5);
+  core.drawCircle(0, 0, R * 0.98);
+  core.endFill();
+  core.beginFill(0xffb3d9, 0.36);
+  core.drawCircle(0, 0, R * 0.82);
+  core.endFill();
+  core.beginFill(0xffd6ea, 0.26);
+  core.drawCircle(0, 0, R * 0.58);
+  core.endFill();
+  container.addChild(core);
+
+  const shadow = new PIXI.Graphics();
+  shadow.beginFill(0xad1457, 0.09);
+  shadow.drawCircle(2.5, 4.5, R * 0.94);
+  shadow.endFill();
+  container.addChild(shadow);
+
+  const rim = new PIXI.Graphics();
+  rim.lineStyle(2.6, 0xffffff, 0.58);
+  rim.drawCircle(0, 0, R - 1.1);
+  rim.lineStyle(3.2, 0xff79b0, 0.38);
+  rim.drawCircle(0, 0, R + 0.85);
+  container.addChild(rim);
+
+  const sheen = new PIXI.Graphics();
+  sheen.lineStyle(2.5, 0xffffff, 0.52);
+  sheen.arc(0, 0, R - 2.8, Math.PI * 0.98, Math.PI * 1.88, false);
+  container.addChild(sheen);
+
+  const hi = new PIXI.Graphics();
+  hi.beginFill(0xffffff, 0.48);
+  hi.drawEllipse(-R * 0.34, -R * 0.36, R * 0.5, R * 0.3);
+  hi.endFill();
+  hi.beginFill(0xffffff, 0.16);
+  hi.drawEllipse(R * 0.3, R * 0.28, R * 0.26, R * 0.17);
+  hi.endFill();
+  container.addChild(hi);
+}
+
+function _buildBubbleBody(container: PIXI.Container, R: number): void {
+  const frameTex = TextureCache.get(MERGE_BUBBLE_FRAME_TEX);
+  if (frameTex && frameTex.width > 0 && frameTex.height > 0) {
+    container.removeChildren().forEach(ch => ch.destroy({ children: true }));
+    const sp = new PIXI.Sprite(frameTex);
+    const targetD = 2 * R * 1.08;
+    const sc = targetD / Math.max(frameTex.width, frameTex.height);
+    sp.scale.set(sc);
+    sp.anchor.set(0.5, 0.5);
+    sp.position.set(0, 0);
+    sp.alpha = MERGE_BUBBLE_FRAME_ALPHA;
+    container.addChild(sp);
+    return;
+  }
+  _drawBubbleBodyVectorFallback(container, R);
+}
+
+/**
+ * 与棋盘上花语泡泡同结构的跟手幽灵（泡在下、物品在上），供 BoardView 拖拽时使用。
+ * @param expireRemainingSec 若有则显示底部倒计时条（无解锁钮）
+ */
+export function createMergeBubbleDragReplica(
+  payloadItemId: string,
+  expireRemainingSec?: number,
+): PIXI.Container {
+  const root = new PIXI.Container();
+  root.sortableChildren = true;
+  const R = _bubbleRadiusPx();
+
+  const shadow = new PIXI.Graphics();
+  shadow.zIndex = -1;
+  shadow.beginFill(0x000000, 0.11);
+  shadow.drawEllipse(0, R * 0.44, R * 0.38, R * 0.11);
+  shadow.endFill();
+  root.addChild(shadow);
+
+  const bodyRoot = new PIXI.Container();
+  bodyRoot.zIndex = 0;
+  _buildBubbleBody(bodyRoot, R);
+  root.addChild(bodyRoot);
+
+  const def = ITEM_DEFS.get(payloadItemId);
+  const tex = def && TextureCache.get(def.icon);
+  if (tex && def) {
+    const sp = new PIXI.Sprite(tex);
+    const maxS = R * 1.28;
+    const sc = maxS / Math.max(tex.width, tex.height);
+    sp.scale.set(sc);
+    sp.anchor.set(0.5, 0.5);
+    sp.position.set(0, 0);
+    sp.alpha = MERGE_BUBBLE_ITEM_ICON_ALPHA;
+    sp.zIndex = 1;
+    root.addChild(sp);
+  }
+
+  if (expireRemainingSec !== undefined && Number.isFinite(expireRemainingSec)) {
+    const hud = new PIXI.Container();
+    hud.zIndex = 2;
+    hud.position.set(0, R * 0.58);
+    const label = new PIXI.Text(_formatRemainSec(expireRemainingSec), {
+      fontSize: 14,
+      fill: 0x004d40,
+      fontFamily: FONT_FAMILY,
+      fontWeight: 'bold',
+      stroke: 0xffffff,
+      strokeThickness: 2,
+    });
+    label.anchor.set(0.5, 0.5);
+    const cw = Math.max(label.width + 16, 48);
+    const ch = 22;
+    const bg = new PIXI.Graphics();
+    bg.lineStyle(1, 0xffffff, 0.5);
+    bg.beginFill(0xfffdf7, 0.94);
+    bg.drawRoundedRect(-cw / 2, -ch / 2, cw, ch, ch / 2);
+    bg.endFill();
+    hud.addChild(bg, label);
+    root.addChild(hud);
+  }
+
+  return root;
 }
 
 class BubbleWidget {
   readonly root: PIXI.Container;
   private _bubble: MergeCompanionFloatBubble;
-  private _timerText: PIXI.Text;
-  private _tapHint: PIXI.Text;
-  private _dragHint: PIXI.Text;
-  private _dismissText: PIXI.Text | null = null;
+  private _bodyRoot: PIXI.Container;
   private _icon: PIXI.Sprite | null = null;
-  private _selRing: PIXI.Graphics;
-  private _busy = false;
-  private readonly _onSync: () => void;
+  private _hudRoot: PIXI.Container;
+  private _countBg: PIXI.Graphics;
+  private _countLabel: PIXI.Text;
 
-  constructor(b: MergeCompanionFloatBubble, onSync: () => void) {
+  constructor(b: MergeCompanionFloatBubble) {
     this._bubble = b;
-    this._onSync = onSync;
     this.root = new PIXI.Container();
     this.root.eventMode = 'static';
     this.root.cursor = 'pointer';
+    this.root.sortableChildren = true;
 
-    const cs = BoardMetrics.cellSize;
-    const R = Math.max(26, cs * 0.36);
+    const R = _bubbleRadiusPx();
 
-    this._selRing = new PIXI.Graphics();
-    this._selRing.visible = false;
-    this.root.addChild(this._selRing);
-
-    const g = new PIXI.Graphics();
-    g.beginFill(0xffffff, 0.42);
-    g.lineStyle(2.5, 0xa8d4f0, 0.95);
-    g.drawCircle(0, 0, R);
-    g.endFill();
-    this.root.addChild(g);
+    this._bodyRoot = new PIXI.Container();
+    this._bodyRoot.zIndex = 0;
+    _buildBubbleBody(this._bodyRoot, R);
+    this.root.addChild(this._bodyRoot);
 
     const def = ITEM_DEFS.get(b.payloadItemId);
     const tex = def && TextureCache.get(def.icon);
     if (tex && def) {
       const sp = new PIXI.Sprite(tex);
-      const maxS = R * 1.25;
+      const maxS = R * 1.28;
       const sc = maxS / Math.max(tex.width, tex.height);
       sp.scale.set(sc);
       sp.anchor.set(0.5, 0.5);
-      sp.position.set(0, -R * 0.08);
+      sp.position.set(0, 0);
+      sp.alpha = MERGE_BUBBLE_ITEM_ICON_ALPHA;
+      sp.zIndex = 1;
       this.root.addChild(sp);
       this._icon = sp;
     }
 
-    this._timerText = new PIXI.Text(_fmtCountdown((b.expireAt - Date.now()) / 1000), {
-      fontSize: 11,
-      fill: 0x2a4a5c,
+    this._hudRoot = new PIXI.Container();
+    this._hudRoot.zIndex = 2;
+
+    const countRow = new PIXI.Container();
+    countRow.position.set(0, R * 0.62);
+    this._countBg = new PIXI.Graphics();
+    this._countLabel = new PIXI.Text('', {
+      fontSize: 15,
+      fill: 0x004d40,
       fontFamily: FONT_FAMILY,
       fontWeight: 'bold',
+      stroke: 0xffffff,
+      strokeThickness: 2,
     });
-    this._timerText.anchor.set(0.5, 0.5);
-    this._timerText.position.set(0, R * 0.52);
-    this.root.addChild(this._timerText);
+    this._countLabel.anchor.set(0.5, 0.5);
+    countRow.addChild(this._countBg, this._countLabel);
+    this._hudRoot.addChild(countRow);
 
-    this._tapHint = new PIXI.Text('点选 · 解锁说明', {
-      fontSize: 8,
-      fill: COLORS.TEXT_DARK,
-      fontFamily: FONT_FAMILY,
-    });
-    this._tapHint.anchor.set(0.5, 0.5);
-    this._tapHint.position.set(0, R * 0.72);
-    this.root.addChild(this._tapHint);
-
-    this._dragHint = new PIXI.Text('按住拖动换位置', {
-      fontSize: 8,
-      fill: 0x4a6a8a,
-      fontFamily: FONT_FAMILY,
-    });
-    this._dragHint.anchor.set(0.5, 0.5);
-    this._dragHint.position.set(0, R * 0.9);
-    this.root.addChild(this._dragHint);
-
-    if (b.dismissEnabled && b.dismissHuayuanAmount > 0) {
-      const dt = new PIXI.Text(`换 ${b.dismissHuayuanAmount} 花愿`, {
-        fontSize: 9,
-        fill: 0x6a8a6a,
-        fontFamily: FONT_FAMILY,
-      });
-      dt.anchor.set(0.5, 0.5);
-      dt.position.set(0, R * 1.22);
-      dt.eventMode = 'static';
-      dt.cursor = 'pointer';
-      dt.on('pointerdown', e => e.stopPropagation());
-      dt.on('pointertap', e => {
-        e.stopPropagation();
-        void this._onDismissTap();
-      });
-      this.root.addChild(dt);
-      this._dismissText = dt;
-    }
+    this.root.addChild(this._hudRoot);
+    this.refreshHudFromManager();
 
     this.root.on('pointerdown', e => {
       e.stopPropagation();
@@ -127,62 +241,44 @@ class BubbleWidget {
     });
 
     this._layout();
-    this._drawSelRing(R, false);
-  }
-
-  setSelected(selected: boolean): void {
-    const cs = BoardMetrics.cellSize;
-    const R = Math.max(26, cs * 0.36);
-    this._drawSelRing(R, selected);
-  }
-
-  private _drawSelRing(R: number, on: boolean): void {
-    this._selRing.visible = on;
-    this._selRing.clear();
-    if (!on) return;
-    this._selRing.lineStyle(3, 0xffc107, 0.95);
-    this._selRing.drawCircle(0, 0, R + 6);
   }
 
   updateData(b: MergeCompanionFloatBubble): void {
     this._bubble = b;
-    if (this._dismissText && b.dismissEnabled && b.dismissHuayuanAmount > 0) {
-      this._dismissText.text = `换 ${b.dismissHuayuanAmount} 花愿`;
-    }
     this._layout();
+    const R = _bubbleRadiusPx();
+    _buildBubbleBody(this._bodyRoot, R);
+    if (this._icon && ITEM_DEFS.has(b.payloadItemId)) {
+      const def = ITEM_DEFS.get(b.payloadItemId)!;
+      const itex = TextureCache.get(def.icon);
+      if (itex) {
+        this._icon.texture = itex;
+        const maxS = R * 1.28;
+        const sc = maxS / Math.max(itex.width, itex.height);
+        this._icon.scale.set(sc);
+        this._icon.alpha = MERGE_BUBBLE_ITEM_ICON_ALPHA;
+      }
+    }
+    this.refreshHudFromManager();
   }
 
-  refreshTimer(): void {
-    const left = Math.max(0, (this._bubble.expireAt - Date.now()) / 1000);
-    this._timerText.text = _fmtCountdown(left);
+  refreshHudFromManager(): void {
+    const b = MergeCompanionManager.getFloatBubble(this._bubble.id);
+    if (!b) return;
+    this._bubble = b;
+    const t = _formatRemainSec(b.expireRemainingSec);
+    this._countLabel.text = t;
+    const cw = Math.max(this._countLabel.width + 18, 52);
+    const ch = 24;
+    this._countBg.clear();
+    this._countBg.lineStyle(1.2, 0xffffff, 0.55);
+    this._countBg.beginFill(0xfffdf7, 0.94);
+    this._countBg.drawRoundedRect(-cw / 2, -ch / 2, cw, ch, ch / 2);
+    this._countBg.endFill();
   }
 
   private _layout(): void {
     this.root.position.set(this._bubble.boardX, this._bubble.boardY);
-  }
-
-  private async _onDismissTap(): Promise<void> {
-    if (this._busy) return;
-    const b = this._bubble;
-    if (!b.dismissEnabled || b.dismissHuayuanAmount <= 0) return;
-    this._busy = true;
-    try {
-      const ok = await ConfirmDialog.show(
-        '移除气泡',
-        `移除后获得 ${b.dismissHuayuanAmount} 花愿，不会得到气泡内物品。`,
-        '确认',
-        '取消',
-      );
-      if (!ok) return;
-      if (!MergeCompanionManager.dismissBubbleForHuayuan(b.id)) {
-        ToastMessage.show('无法移除');
-      } else {
-        ToastMessage.show(`+${b.dismissHuayuanAmount} 花愿`);
-      }
-      this._onSync();
-    } finally {
-      this._busy = false;
-    }
   }
 }
 
@@ -204,10 +300,16 @@ export class MergeCompanionOverlay extends PIXI.Container {
     }
   }
 
+  /** 主循环刷新棋盘泡泡上的倒计时 */
+  refreshBubbleHuds(): void {
+    for (const w of this._widgets.values()) {
+      w.refreshHudFromManager();
+    }
+  }
+
   sync(): void {
     const list = MergeCompanionManager.getFloatBubbles();
     const ids = new Set(list.map(b => b.id));
-    const sel = MergeCompanionManager.getSelectedBubbleId();
 
     for (const [id, w] of this._widgets) {
       if (!ids.has(id)) {
@@ -220,20 +322,13 @@ export class MergeCompanionOverlay extends PIXI.Container {
     for (const b of list) {
       let w = this._widgets.get(b.id);
       if (!w) {
-        w = new BubbleWidget(b, () => this.sync());
+        w = new BubbleWidget(b);
         this._widgets.set(b.id, w);
         this.addChild(w.root);
         w.root.zIndex = 10;
       } else {
         w.updateData(b);
       }
-      w.setSelected(b.id === sel);
-    }
-  }
-
-  tickTimers(): void {
-    for (const w of this._widgets.values()) {
-      w.refreshTimer();
     }
   }
 }

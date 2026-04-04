@@ -1,0 +1,9 @@
+Game UI frame asset, top-down view, one single isolated object centered on canvas.
+
+A soft pastel pink flower-shaped bubble frame for a merge match-3 mobile game: the silhouette is like a round flower with 6 to 8 gentle rounded petals forming an outer ring. The CENTER must be fully empty (a clear circular or soft flower-shaped hole) so a separate item icon can be placed behind or inside in the engine. Only the petal ring and thin inner rim are drawn; no icon, no text, no numbers.
+
+Style: cute casual 2D game art, soft gradients on petals, subtle lighter pink highlights, thin soft outline in slightly deeper pink, no photorealism, no 3D render look.
+
+Background: pure flat solid white only (hex FFFFFF), no gradient on background, no floor, no shadow cast on background, no vignette. The frame must not touch the image edge; leave comfortable margin for cropping.
+
+Output: one PNG-friendly illustration, high contrast between pink frame and white background for easy background removal.

@@ -313,10 +313,10 @@ class GMManagerClass {
       id: 'set_level_5',
       group: '📊 等级调整',
       name: '⭐ 设为 Lv.5',
-      desc: '直接设置等级为5',
+      desc: '当前装修场景星级→5（并同步星星）；globalLevel 用于合成气泡等门控',
       execute: () => {
         CurrencyManager.setLevel(5);
-        return `✅ 等级已设为 Lv.5`;
+        return `✅ 当前房 Lv.5，globalLevel=${CurrencyManager.globalLevel}（合成气泡需≥3）`;
       },
     });
 
@@ -324,10 +324,10 @@ class GMManagerClass {
       id: 'set_level_10',
       group: '📊 等级调整',
       name: '⭐ 设为 Lv.10',
-      desc: '直接设置等级为10',
+      desc: '当前装修场景星级→10（花店满星会钳制在 10）',
       execute: () => {
         CurrencyManager.setLevel(10);
-        return `✅ 等级已设为 Lv.10`;
+        return `✅ 当前房 Lv.${CurrencyManager.state.level}，globalLevel=${CurrencyManager.globalLevel}`;
       },
     });
 
@@ -335,10 +335,10 @@ class GMManagerClass {
       id: 'set_level_20',
       group: '📊 等级调整',
       name: '⭐ 设为 Lv.20',
-      desc: '直接设置等级为20',
+      desc: '按当前场景上限钳制（花店最高 10 星）',
       execute: () => {
         CurrencyManager.setLevel(20);
-        return `✅ 等级已设为 Lv.20`;
+        return `✅ 当前房 Lv.${CurrencyManager.state.level}，globalLevel=${CurrencyManager.globalLevel}`;
       },
     });
 

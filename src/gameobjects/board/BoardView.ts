@@ -41,7 +41,7 @@ import { WarehouseManager } from '@/managers/WarehouseManager';
 import { getItemSellPrice } from '@/utils/ItemSellPrice';
 import { MergeGuideLineSystem } from '@/systems/MergeGuideLineSystem';
 import { MergeHintSystem } from '@/systems/MergeHintSystem';
-import { MergeCompanionOverlay } from './MergeCompanionOverlay';
+import { MergeCompanionOverlay, createMergeBubbleDragReplica } from './MergeCompanionOverlay';
 import { MergeCompanionManager } from '@/managers/MergeCompanionManager';
 
 export class BoardView extends PIXI.Container {
@@ -278,7 +278,11 @@ export class BoardView extends PIXI.Container {
     const dt = Game.ticker.deltaMS / 1000;
     this._guideLineSystem.update(dt);
     this._mergeHintSystem.update(dt);
-    this._mergeCompanionLayer.tickTimers();
+  }
+
+  /** 花语泡泡 HUD：倒计时与解锁文案（主循环调用） */
+  refreshMergeCompanionHud(): void {
+    this._mergeCompanionLayer.refreshBubbleHuds();
   }
 
   // ========== 事件绑定 ==========
@@ -1098,38 +1102,11 @@ export class BoardView extends PIXI.Container {
     const b = MergeCompanionManager.getFloatBubble(bubbleId);
     if (!b) return;
     this._clearBubbleDragGhost();
-    const itemId = b.payloadItemId;
-    const cs = BoardMetrics.cellSize;
-    const def = ITEM_DEFS.get(itemId);
-    const ghost = new PIXI.Container();
-    const shadow = new PIXI.Graphics();
-    shadow.beginFill(0x000000, 0.12);
-    shadow.drawEllipse(0, cs * 0.38, cs * 0.32, cs * 0.08);
-    shadow.endFill();
-    ghost.addChild(shadow);
-    const tex = def ? TextureCache.get(def.icon) : null;
-    if (tex) {
-      const sprite = new PIXI.Sprite(tex);
-      const maxS = cs - 8;
-      const s = Math.min(maxS / tex.width, maxS / tex.height);
-      sprite.scale.set(s);
-      sprite.anchor.set(0.5, 0.5);
-      ghost.addChild(sprite);
-    } else {
-      const fallback = new PIXI.Graphics();
-      fallback.beginFill(0xb3e5fc, 0.65);
-      fallback.drawCircle(0, 0, cs * 0.28);
-      fallback.endFill();
-      ghost.addChild(fallback);
-    }
-    const ring = new PIXI.Graphics();
-    ring.lineStyle(2, 0x7ec8e8, 0.9);
-    ring.drawCircle(0, -cs * 0.02, cs * 0.34);
-    ghost.addChild(ring);
+    const ghost = createMergeBubbleDragReplica(b.payloadItemId, b.expireRemainingSec);
 
     const p0 = this._ghostPosInParent(b.boardX, b.boardY);
     ghost.position.set(p0.x, p0.y);
-    ghost.scale.set(0.72);
+    ghost.scale.set(0.88);
     ghost.alpha = 0.95;
     if (this._dragGhostParent) {
       this._dragGhostParent.addChild(ghost);

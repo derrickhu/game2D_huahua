@@ -4,7 +4,7 @@
  * MVP 默认：spatialMode=float（四季物语式，不占格），气泡载荷 clone_result。
  * grid（MM/L&P 占格）仅占位枚举，后续实现。
  */
-import { Category } from './ItemConfig';
+import { Category, InteractType } from './ItemConfig';
 
 /** 全局开关（策划可关） */
 export const MERGE_COMPANION_ENABLED = true;
@@ -21,10 +21,19 @@ export const MERGE_COMPANION_MIN_GLOBAL_LEVEL = 3;
 /** 倒计时结束且未钻石解锁时补偿体力（飞入顶栏后入账） */
 export const MERGE_BUBBLE_EXPIRE_STAMINA = 2;
 
+/** 玩家可见名称（底栏标题、Toast 等，与系统内「merge 伴生气泡」代码概念区分） */
+export const MERGE_BUBBLE_DISPLAY_NAME = '花语泡泡';
+
 /**
- * 气泡内物品 `ItemDef.level` ≤ 此值时，钻石解锁免费（规则表里的 diamondPrice 视为对高等级物品生效）
+ * 气泡内物品 `ItemDef.level` ≤ 此值时，钻石解锁免费（**仅非工具**；工具见下述工具价）
+ * 规则表 `bubble.diamondPrice` 为鲜花/饮品等的基础价（等级超过此阈值时收取）
  */
 export const MERGE_BUBBLE_FREE_DIAMOND_MAX_ITEM_LEVEL = 7;
+
+/** 气泡载荷为「工具」时的钻石价：底分 + level×系数，且不低于下限（大幅高于鲜花） */
+export const MERGE_BUBBLE_TOOL_DIAMOND_BASE = 52;
+export const MERGE_BUBBLE_TOOL_DIAMOND_PER_LEVEL = 18;
+export const MERGE_BUBBLE_TOOL_DIAMOND_MIN = 64;
 
 /** 概率乘数（调试或活动 Buff） */
 export const MERGE_COMPANION_DEFAULT_CHANCE_MULT = 1;
@@ -45,9 +54,12 @@ export type MergeCompanionPayload =
 export interface MergeCompanionBubbleOptions {
   durationSec: number;
   diamondPrice: number;
-  /** 离线计时：run=照常倒计时；pause=未实现，读档后按 run 处理 */
+  /**
+   * 保留字段（策划表兼容）；花语泡泡倒计时**仅在局内**递减，离线暂停，不再按墙钟。
+   * @deprecated 逻辑已忽略，可填 `run`
+   */
   offlineTimerBehavior: 'run' | 'pause';
-  /** 主动移除换花愿（L&P 式「换硬币」） */
+  /** 已下线：花愿移除泡泡（底栏不再展示；读档时强制关闭） */
   dismissEnabled?: boolean;
   dismissHuayuanAmount?: number;
 }
@@ -57,6 +69,8 @@ export interface MergeCompanionMatch {
   categories?: Category[];
   /** FlowerLine / DrinkLine 等 */
   lines?: string[];
+  /** 若填写，合成结果的 `ItemDef.interactType` 须命中其一（如仅工具） */
+  interactTypes?: InteractType[];
   resultLevelMin?: number;
   resultLevelMax?: number;
   /** 是否允许半锁格跨格合成触发；默认 true */
@@ -104,8 +118,49 @@ export const MERGE_COMPANION_RULES: MergeCompanionRuleDef[] = [
       durationSec: 180,
       diamondPrice: 12,
       offlineTimerBehavior: 'run',
-      dismissEnabled: true,
-      dismissHuayuanAmount: 4,
+    },
+  },
+  {
+    id: 'tool_float_bubble_clone',
+    priority: 10,
+    groupId: 'merge_bonus',
+    baseChance: 0.06,
+    match: {
+      categories: [Category.BUILDING],
+      interactTypes: [InteractType.TOOL],
+      resultLevelMin: 1,
+      resultLevelMax: 24,
+      allowPeekMerge: true,
+    },
+    carrier: 'bubble',
+    spatialMode: 'float',
+    payload: { kind: 'clone_result' },
+    bubble: {
+      durationSec: 180,
+      diamondPrice: 12,
+      offlineTimerBehavior: 'run',
+    },
+  },
+  /**
+   * 兜底：饮品、宝箱、货币块、非工具建筑等。同组 `merge_bonus` 内仅保留一条规则参与当次合成，
+   * 故须排在鲜花/工具之后，避免覆盖专类概率。
+   */
+  {
+    id: 'misc_float_bubble_clone',
+    priority: 10,
+    groupId: 'merge_bonus',
+    baseChance: 0.07,
+    match: {
+      resultLevelMin: 1,
+      allowPeekMerge: true,
+    },
+    carrier: 'bubble',
+    spatialMode: 'float',
+    payload: { kind: 'clone_result' },
+    bubble: {
+      durationSec: 180,
+      diamondPrice: 12,
+      offlineTimerBehavior: 'run',
     },
   },
 ];

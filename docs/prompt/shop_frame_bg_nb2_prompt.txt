@@ -1,0 +1,13 @@
+Full-screen vertical mobile game shop CHROME ONLY, 9:16 aspect, cute merge flower-shop market stall. High polish 2D illustrated UI, soft shadows, rounded shapes, cozy pastel.
+
+OUTER SHELL: thick rounded-rectangle frame in dark desaturated plum or deep mauve vertical wood plank texture with subtle grain and soft inner lavender highlight on the inner lip — this is the main window border.
+
+TOP HEADER (keep compact, roughly upper 15% to 20% of frame height): shallow light warm wooden sign board with rounded ends and empty center (no title text). Below it, a pink and cream white striped scalloped fabric awning spanning full inner width. Below awning, a simple thick tan rope with shallow curve and two small wooden clothespins — no hanging paper tags. Top-right corner: circular red close button with white X.
+
+MIDDLE AND LOWER BODY — CRITICAL: the entire inner area below the rope must be ONE continuous EMPTY shelf backdrop: same dark purple-brown vertical wood planks as the frame, clean and uniform, NO cream or yellow-beige cards, NO section panels, NO mini awnings on cards, NO gold ribbon banners, NO gray item squares, NO green buy buttons, NO rows of UI widgets. Only empty wooden board texture ready for later UI to be placed on top. The empty region should read as a large hollow display wall.
+
+Behind the stall (optional soft layer): very blurred garden or flower-shop bokeh peeking around edges — keep subtle, focus on the stall frame.
+
+Flat solid chroma key magenta FF00FF only outside the entire stall shape if you isolate it; if rendering full bleed portrait, fill unused letterbox with FF00FF OR keep full composition with blurred BG — prefer full 9:16 composition with stall centered and empty wood interior.
+
+No readable text, no watermark, no logos, no characters.

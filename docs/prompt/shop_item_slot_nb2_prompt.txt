@@ -1,0 +1,9 @@
+Single isolated empty item slot icon for a cute merge mobile game shop — one module only, centered in frame.
+
+Shape: rounded square “squircle” — medium gray fill, soft inset shadow along top and left so it looks slightly recessed, subtle highlight on bottom-right, clean vector game UI. Empty inside: NO icon, NO product, NO text.
+
+Absolutely NO green button below, NO buy pill, NO price tag, NO second layer — only the one gray slot shape.
+
+Flat solid background chroma key: exact uniform magenta FF00FF filling the entire canvas outside the squircle. No other UI chrome.
+
+Style: polished 2D casual game UI, consistent with cozy flower-shop merge aesthetic. No watermark, no readable text.

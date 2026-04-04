@@ -1,0 +1,9 @@
+Game UI overlay asset for a merge match-3 casual mobile game. Single isolated object centered on canvas, orthographic top-down view.
+
+Design a cute pastel pink “flower bubble”: outer silhouette like a soft round flower with 6 to 8 gentle rounded petals. The whole graphic is one continuous bubble, not a hollow ring. The center must be fully filled with soft milky frosted pink glass—semi-translucent appearance, slightly lighter toward the middle and a bit deeper pink toward the petal rims, subtle inner softness. Add a clear white specular highlight on the upper-left (small bright blob) plus a tiny secondary glint for a glossy spherical bubble read. Thin soft outline in slightly deeper rose pink.
+
+No item or icon inside the bubble, no text, no numbers. Style: 2D cute casual game illustration, smooth gradients, soft shading, not photoreal, not cinematic 3D render.
+
+Background: pure flat solid white only, hex FFFFFF. No gradient on the background, no floor, no cast shadow on the background, no vignette. Leave comfortable margin between the bubble and the image edge for cropping.
+
+The artwork should separate cleanly from white for matting: high contrast between the pink bubble and the white background outside the bubble shape.

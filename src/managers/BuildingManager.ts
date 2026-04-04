@@ -3,6 +3,8 @@
  *
  * 宝箱：首次点击扣 1 点体力并掷出固定件数；每次点击向全棋盘空格散落，未散完保留宝箱并显示进度条（开箱体力与容器等级无关）。
  * 工具/花束包装纸逻辑不变。
+ *
+ * 工具 CD：仅在 `update(dt)` 中按局内时间递减，离线/退后台不扣减（与仓库、花语泡泡一致）。
  */
 import { EventBus } from '@/core/EventBus';
 import { BoardManager } from './BoardManager';

@@ -173,6 +173,46 @@ def despill_white_fringe(
     rgba_arr[:, :, :3] = np.clip(d[:, :, :3], 0, 255).astype(np.uint8)
 
 
+def scrub_dark_semi_transparent(rgba_arr: np.ndarray) -> None:
+    """
+    rembg / 压缩后偶发：角部 RGB 近黑但 alpha 仍中等，叠在场景上会呈黑三角。
+    将「很暗 + 偏低 alpha」的像素直接清为全透明。
+    """
+    d = rgba_arr.astype(np.float32)
+    r, g, b, a = d[:, :, 0], d[:, :, 1], d[:, :, 2], d[:, :, 3]
+    lum = (r + g + b) / 3.0
+    bad = (lum < 20.0) & (a > 2.0) & (a < 72.0)
+    rgba_arr[bad, 3] = 0
+    a2 = rgba_arr[:, :, 3].astype(np.float32)
+    rgba_arr[a2 < 4.0, 3] = 0
+
+
+def crush_rembg_white_halo(
+    rgba_arr: np.ndarray,
+    *,
+    lum_min: float = 233.0,
+    sat_max: float = 46.0,
+    alpha_scale: float = 0.45,
+    alpha_cap: float = 24.0,
+) -> None:
+    """
+    rembg 在饱和色（桃头图）与 #FFFFFF 底板交界处常留灰白半透明渣；
+    压低这类像素的 alpha，减轻顶栏/圆角外沿毛边（不改变面板内部实色）。
+
+    装修大面板（桃色头 + 白底）若参数过宽，会把圆角附近的淡桃边一起压碎，抠边发脏；
+    可在 build_decoration_panel_bg_nb2 里传入更严的 sat_max / 更高的 lum_min。
+    """
+    d = rgba_arr.astype(np.float32)
+    r, g, b, a = d[:, :, 0], d[:, :, 1], d[:, :, 2], d[:, :, 3]
+    lum = (r + g + b) / 3.0
+    mx = np.maximum(np.maximum(r, g), b)
+    mn = np.minimum(np.minimum(r, g), b)
+    sat = mx - mn
+    fringe = (a > 5) & (a < 252) & (lum > lum_min) & (sat < sat_max)
+    new_a = np.where(fringe, np.minimum(a * alpha_scale, alpha_cap), a)
+    rgba_arr[:, :, 3] = np.clip(new_a, 0, 255).astype(np.uint8)
+
+
 def despill_magenta_fringe(
     rgba_arr: np.ndarray,
     *,

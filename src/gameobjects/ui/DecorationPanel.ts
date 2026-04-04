@@ -2,8 +2,8 @@
  * 花店装修面板
  *
  * 布局：
- * - 底图优先 decoration_panel_bg_nb2（桃珊瑚底栏 NB2+抠图），缺资源时回退 merge_chain_panel
- * - 顶栏标题「家具」叠在底板粉区；其下右侧为库存筛选（全部/已购买/未购买/未解锁），再下分割线；点遮罩关闭
+ * - 底图优先 decoration_panel_bg_nb2（NB2+rembg）；缺底板时回退 merge_chain_panel
+ * - 顶栏标题「家具」叠在底板粉区；筛选条整体上移贴粉区下沿/头身过渡带（见 FILTER_ROW_GAP_BELOW_PINK）；再下分割线；点遮罩关闭
  * - 左侧：分类 Tab 栏（药丸底图 NB2 + 程序叠字；不显示 x/y 计数；缺图时回退矢量圆角）
  * - 右侧：家具/房间风格 3 列网格（视口下移 GRID_VIEWPORT_TOP_INSET；列表按解锁等级、花愿价排序）
  * - 卡片：双层金边圆角 + 贴图按钮 + 家具卡左上角星星值角标（房间风格卡同）
@@ -38,34 +38,47 @@ const PANEL_W = DESIGN_WIDTH;
 const PANEL_MARGIN_LEFT = 0;
 const PANEL_H_RATIO = 0.74;
 const PANEL_TOP_R = 20;
+/** 粉区下沿占面板高度（恢复较早「头带 + 标题」形态，与常见底图对齐） */
+const PANEL_PINK_BAND_BOTTOM_RATIO = 0.132;
+/** 标题「家具」中心 Y（略偏上，落在粉区内） */
+const PANEL_TITLE_Y_RATIO = 0.059;
 
-/** 粉区下沿到筛选条顶部的间距 */
-const FILTER_ROW_GAP_BELOW_PINK = 8;
+/**
+ * 相对粉区下沿的竖向偏移（可负）。
+ * 负值：筛选条整体上移，叠到头图与米色区的过渡/阴影带之上，避免落在内凹阴影下方。
+ */
+/** 粉区下沿到筛选条顶（正值：筛选在米色区，头带层次更清晰） */
+const FILTER_ROW_GAP_BELOW_PINK = 6;
 /** 筛选条高度（与 divider 间距见下） */
 const FILTER_BAR_H = 38;
 /** 筛选条底到分割线 */
-const DIVIDER_BELOW_FILTER_GAP = 8;
-/** 分割线与家具区顶边（小一点让网格更贴上分割线） */
-const DIVIDER_TO_CONTENT = 6;
-/** 顶部分割线长度占面板内宽比例（居中，避免顶到金边） */
+const DIVIDER_BELOW_FILTER_GAP = 10;
+/** 分割线与家具区顶边 */
+const DIVIDER_TO_CONTENT = 10;
+/** 顶部分割线长度占面板内宽比例（居中，避免顶到两侧装饰边） */
 const HEADER_DIVIDER_WIDTH_RATIO = 0.56;
 /** 网格区距面板底边的留白，避免卡片贴到金边外；略大以保证裁切在画框内 */
 const CONTENT_BOTTOM = 36;
 
 /**
- * 家具网格视口相对「内容顶」再下移，对齐 NB2 底板内凹/阴影带下沿；
- * 裁剪框整体落在阴影下方，上滑时卡片不会画进阴影区（微信上仅靠 mask 仍可能顶穿时序）。
+ * 家具网格视口相对「内容顶」再下移：对齐底图凹槽 + 筛选条与首行卡片之间多留呼吸空间。
  */
-const GRID_VIEWPORT_TOP_INSET = 22;
+const GRID_VIEWPORT_TOP_INSET = 30;
 
-/** 左侧分类栏（与 NB2 窄左轨底图对齐；略窄以让出家具网格宽度） */
-const TAB_W = 112;
-const TAB_GAP = 8;
+/** 左侧分类药丸宽度（与底图左象牙带大致对齐；勿过宽以免压到家具槽视觉） */
+const TAB_W = 108;
+/** Tab 与家具网格之间明确缝，避免药丸阴影/网格互相挡 */
+const TAB_GAP = 12;
+/** 左侧 Tab 每行固定高度（不随面板变高纵向拉长，仅加宽左右） */
+const TAB_ROW_H = 88;
+/** 左侧 Tab 行高下限（可用高度不足时按比例压缩） */
+const TAB_ROW_MIN_H = 40;
 /** Tab 列左边距 */
-const TAB_COLUMN_LEFT = 18;
+const TAB_COLUMN_LEFT = 4;
 /** Tab 列整体上移（像素） */
 const TAB_COLUMN_NUDGE_Y = 6;
-const GRID_MARGIN_RIGHT = 14;
+/** 家具槽距面板右缘（1px 防裁切） */
+const GRID_MARGIN_RIGHT = 1;
 
 /** 侧边 Tab：选中态暖色底 / 未选中灰奶油 */
 const TAB_BG_SELECTED = 0xffc9a8;
@@ -74,21 +87,27 @@ const TAB_BG_IDLE = 0xefebe5;
 const TAB_BORDER_IDLE = 0xc4b8ae;
 
 const GRID_COLS = 3;
-const CARD_GAP = 8;
+const CARD_GAP = 6;
 const CARD_BASE_W = 140;
 const CARD_BASE_H = 160;
-/** 三列时略压卡片宽度，避免挤爆 */
-const CARD_MAX_W = 168;
+/**
+ * 卡片最大宽度上限（仅防极端宽屏异常大；此前 176 会把三列卡锁死变「永远不大」）。
+ * 750 设计宽下 grid 变宽后应吃满 cwRaw。
+ */
+const CARD_MAX_W = 256;
 const CARD_R = 10;
 
 const GOLD_LINE = 0xe8c078;
 const GOLD_INNER = 0xd4a84b;
+/** 顶部分割线：马卡龙薄荷影 + 淡粉高光（立体感，非金） */
+const HEADER_DIVIDER_SHADOW_MACARON = 0x8fb0a3;
+const HEADER_DIVIDER_HIGHLIGHT_MACARON = 0xfff2f6;
 const CREAM_FILL = 0xfff9ec;
 const SHADOW_COLOR = 0x8b7355;
 
 function measureCardGrid(gridW: number): { cw: number; ch: number; cols: number; startX: number } {
   const cwRaw = Math.floor((gridW - CARD_GAP * (GRID_COLS + 1)) / GRID_COLS);
-  const cw = Math.max(100, Math.min(CARD_MAX_W, cwRaw));
+  const cw = Math.max(94, Math.min(CARD_MAX_W, cwRaw));
   const ch = Math.round((cw * CARD_BASE_H) / CARD_BASE_W);
   const blockW = GRID_COLS * cw + (GRID_COLS - 1) * CARD_GAP;
   const startX = Math.floor((gridW - blockW) / 2);
@@ -98,10 +117,10 @@ function measureCardGrid(gridW: number): { cw: number; ch: number; cols: number;
 /** 列表顶留白：避免首行卡片贴上分割线 */
 function decoGridListTopPad(availH: number, totalRows: number, ch: number): number {
   const baseH = CARD_GAP + totalRows * (ch + CARD_GAP);
-  const minPad = 24;
+  const minPad = 32;
   if (baseH >= availH) return minPad;
   const spare = availH - baseH;
-  return Math.min(32, Math.max(minPad, Math.floor(spare * 0.32)));
+  return Math.min(40, Math.max(minPad, Math.floor(spare * 0.32)));
 }
 
 /** 装修面板：解锁等级升序，同级按花愿价升序 */
@@ -201,6 +220,8 @@ export class DecorationPanel extends PIXI.Container {
   private _tabVerticalPad = 0;
   /** 与 DressUp 一致：logicHeight 变化时拉伸手绘底图并重画裁剪区 */
   private _panelHBuilt = 0;
+  /** NB2 底板精灵（resize 时改 height） */
+  private _panelBaseSprite: PIXI.Sprite | null = null;
   /** 购买成功后「获得新家具」浮层 */
   private _unlockOverlay: PIXI.Container | null = null;
   /** 飞星结束前暂存，用于到账加星与弹窗顺序 */
@@ -327,6 +348,62 @@ export class DecorationPanel extends PIXI.Container {
     });
   }
 
+  /** 顶栏粉区下沿、筛选条、分割线、内容顶与网格几何（随 panel 高度变化） */
+  private _headerLayout(panelH: number): {
+    filterBarTop: number;
+    dividerY: number;
+    contentTopY: number;
+    tabColumnH: number;
+    gridViewportTop: number;
+    gridH: number;
+    gridX: number;
+    gridW: number;
+  } {
+    const pinkBandBottom = Math.round(panelH * PANEL_PINK_BAND_BOTTOM_RATIO);
+    const filterBarTop = Math.round(pinkBandBottom + FILTER_ROW_GAP_BELOW_PINK);
+    const dividerY = Math.round(filterBarTop + FILTER_BAR_H + DIVIDER_BELOW_FILTER_GAP);
+    const contentTopY = Math.round(dividerY + DIVIDER_TO_CONTENT);
+    const tabColumnH = panelH - contentTopY - CONTENT_BOTTOM;
+    const gridViewportTop = contentTopY + GRID_VIEWPORT_TOP_INSET;
+    const gridH = Math.max(48, panelH - gridViewportTop - CONTENT_BOTTOM);
+    const gridX = TAB_COLUMN_LEFT + TAB_W + TAB_GAP;
+    const gridW = PANEL_W - gridX - GRID_MARGIN_RIGHT;
+    return {
+      filterBarTop,
+      dividerY,
+      contentTopY,
+      tabColumnH,
+      gridViewportTop,
+      gridH,
+      gridX,
+      gridW,
+    };
+  }
+
+  /** 筛选条下方短分隔：浅沟立体感，粉系非金 */
+  private _redrawHeaderDivider(dividerY: number): void {
+    const divHalfW = Math.round((PANEL_W * HEADER_DIVIDER_WIDTH_RATIO) / 2);
+    const cx = Math.round(PANEL_W / 2);
+    const x0 = cx - divHalfW;
+    const x1 = cx + divHalfW;
+    this._headerDivider.clear();
+    this._headerDivider.lineStyle(2, HEADER_DIVIDER_SHADOW_MACARON, 0.45);
+    this._headerDivider.moveTo(x0, dividerY + 1);
+    this._headerDivider.lineTo(x1, dividerY + 1);
+    this._headerDivider.lineStyle(1.5, HEADER_DIVIDER_HIGHLIGHT_MACARON, 0.92);
+    this._headerDivider.moveTo(x0, dividerY - 0.5);
+    this._headerDivider.lineTo(x1, dividerY - 0.5);
+  }
+
+  /** 仅同步顶区与分割线（resize 时用；open 内会再 _refreshAll 重建 Tab/网格） */
+  private _applyHeaderChrome(panelH: number): void {
+    const L = this._headerLayout(panelH);
+    this._contentTopY = L.contentTopY;
+    this._filterBar.position.set(L.gridX, L.filterBarTop);
+    this._titleText.position.y = Math.round(panelH * PANEL_TITLE_Y_RATIO);
+    this._redrawHeaderDivider(L.dividerY);
+  }
+
   // ─── build ────────────────────────────────────────────────
 
   private _build(): void {
@@ -349,16 +426,19 @@ export class DecorationPanel extends PIXI.Container {
     this._content.position.set(panelX, panelY);
     this.addChild(this._content);
 
-    // --- panel background: NB2 装修壳 or merge_chain_panel ---
+    // --- panel background: NB2 底板 or merge_chain_panel ---
     const nb2Tex = TextureCache.get('decoration_panel_bg_nb2');
     const mergeTex = TextureCache.get('merge_chain_panel');
     const basePanelTex = nb2Tex ?? mergeTex;
+    this._panelBaseSprite = null;
     if (basePanelTex?.width) {
       const panelBg = new PIXI.Sprite(basePanelTex);
       panelBg.width = PANEL_W;
       panelBg.height = panelH;
       panelBg.eventMode = 'static';
+      panelBg.zIndex = 0;
       this._content.addChild(panelBg);
+      this._panelBaseSprite = panelBg;
     } else {
       const g = new PIXI.Graphics();
       g.lineStyle(3, 0xd97b00);
@@ -368,12 +448,13 @@ export class DecorationPanel extends PIXI.Container {
       g.lineStyle(2, 0xffd700);
       g.drawRoundedRect(3, 3, PANEL_W - 6, panelH - 6, PANEL_TOP_R - 2);
       g.eventMode = 'static';
+      g.zIndex = 0;
       this._content.addChild(g);
     }
 
     // --- 顶栏：无彩带；标题「家具」叠在底板粉区 ---
-    const titleCenterY = Math.round(panelH * 0.059);
-    const pinkBandBottom = Math.round(panelH * 0.132);
+    const titleCenterY = Math.round(panelH * PANEL_TITLE_Y_RATIO);
+    const L = this._headerLayout(panelH);
 
     this._titleText = new PIXI.Text('家具', {
       fontSize: 34,
@@ -393,37 +474,26 @@ export class DecorationPanel extends PIXI.Container {
     this._content.addChild(this._titleText);
 
     // --- 右侧库存筛选条（仅家具网格列宽；「房间风格」时隐藏） ---
-    const filterBarTop = Math.round(pinkBandBottom + FILTER_ROW_GAP_BELOW_PINK);
-    const gridXEarly = TAB_COLUMN_LEFT + TAB_W + TAB_GAP;
-    const gridWEarly = PANEL_W - gridXEarly - GRID_MARGIN_RIGHT;
     this._filterBar = new PIXI.Container();
-    this._filterBar.position.set(gridXEarly, filterBarTop);
+    this._filterBar.position.set(L.gridX, L.filterBarTop);
     this._filterBar.zIndex = 11;
     this._content.addChild(this._filterBar);
-    this._buildInventoryFilterBar(gridWEarly);
+    this._buildInventoryFilterBar(L.gridW);
 
-    // --- 顶部分割线：居中短横，不顶到两侧金边 ---
-    const dividerY = Math.round(filterBarTop + FILTER_BAR_H + DIVIDER_BELOW_FILTER_GAP);
-    const divHalfW = Math.round((PANEL_W * HEADER_DIVIDER_WIDTH_RATIO) / 2);
+    // --- 顶部分割线：粉系浅沟，不顶到两侧装饰边 ---
     this._headerDivider = new PIXI.Graphics();
     this._headerDivider.zIndex = 11;
-    this._headerDivider.lineStyle(2, GOLD_LINE, 0.75);
-    this._headerDivider.moveTo(Math.round(PANEL_W / 2) - divHalfW, dividerY);
-    this._headerDivider.lineTo(Math.round(PANEL_W / 2) + divHalfW, dividerY);
+    this._redrawHeaderDivider(L.dividerY);
     this._content.addChild(this._headerDivider);
 
-    this._contentTopY = Math.round(dividerY + DIVIDER_TO_CONTENT);
+    this._contentTopY = L.contentTopY;
 
     // --- layout zones（Tab 列与网格之间留白对称） ---
-    const gridX = TAB_COLUMN_LEFT + TAB_W + TAB_GAP;
-    const gridW = PANEL_W - gridX - GRID_MARGIN_RIGHT;
-    const tabColumnH = panelH - this._contentTopY - CONTENT_BOTTOM;
-    const gridViewportTop = this._contentTopY + GRID_VIEWPORT_TOP_INSET;
-    const gridH = Math.max(48, panelH - gridViewportTop - CONTENT_BOTTOM);
+    const { gridX, gridW, tabColumnH, gridViewportTop, gridH } = L;
 
     // tab container：y 在 _buildTabs 内写入 _tabVerticalPad 后对齐
     this._tabContainer = new PIXI.Container();
-    this._tabContainer.zIndex = 4;
+    this._tabContainer.zIndex = 8;
     this._content.addChild(this._tabContainer);
 
     this._buildTabs(tabColumnH);
@@ -436,7 +506,7 @@ export class DecorationPanel extends PIXI.Container {
     this._gridViewport.position.set(gridX, gridViewportTop);
     this._gridViewport.eventMode = 'static';
     this._gridViewport.hitArea = new PIXI.Rectangle(0, 0, gridW, gridH);
-    this._gridViewport.zIndex = 4;
+    this._gridViewport.zIndex = 5;
     this._content.addChild(this._gridViewport);
 
     // 遮罩挂在 viewport 上：滚动时 inner.y 为负，仍能裁掉超出网格矩形的像素（避免顶穿筛选条/阴影区）
@@ -533,9 +603,14 @@ export class DecorationPanel extends PIXI.Container {
   private _resizePanelIfNeeded(): void {
     const panelH = Math.round(Game.logicHeight * PANEL_H_RATIO);
     if (panelH === this._panelHBuilt) return;
-    const bg = this._content.children[0];
-    if (bg instanceof PIXI.Sprite) bg.height = panelH;
+    if (this._panelBaseSprite) {
+      this._panelBaseSprite.height = panelH;
+    } else {
+      const bg = this._content.children[0];
+      if (bg instanceof PIXI.Sprite) bg.height = panelH;
+    }
     this._panelHBuilt = panelH;
+    this._applyHeaderChrome(panelH);
     this._syncGridViewportClip();
   }
 
@@ -545,10 +620,18 @@ export class DecorationPanel extends PIXI.Container {
     this._tabContainer.removeChildren();
 
     const tabCount = DECO_PANEL_TABS.length;
-    const tabH = Math.min(Math.floor(availH / tabCount), 96);
-    const spare = Math.max(0, availH - tabCount * tabH);
-    this._tabVerticalPad = Math.floor(spare * 0.2);
-    const pad = 3;
+    const idealBlock = tabCount * TAB_ROW_H;
+    let tabH: number;
+    let spare: number;
+    if (availH >= idealBlock) {
+      tabH = TAB_ROW_H;
+      spare = availH - idealBlock;
+    } else {
+      tabH = Math.max(TAB_ROW_MIN_H, Math.floor(availH / tabCount));
+      spare = Math.max(0, availH - tabCount * tabH);
+    }
+    this._tabVerticalPad = Math.floor(spare * 0.5);
+    const pad = 2;
     const bw = TAB_W - pad * 2;
 
     const idleTabTex = TextureCache.get('deco_panel_tab_idle_nb2');
@@ -597,12 +680,15 @@ export class DecorationPanel extends PIXI.Container {
       }
 
       const label = new PIXI.Text(title, {
-        fontSize: isCurrent ? 24 : 22,
+        fontSize: isCurrent ? 16 : 15,
         fill: isCurrent ? 0x5a3528 : COLORS.TEXT_LIGHT,
         fontFamily: FONT_FAMILY,
         fontWeight: isCurrent ? 'bold' : 'normal',
-        lineHeight: isCurrent ? 28 : 26,
-      });
+        lineHeight: isCurrent ? 21 : 19,
+        wordWrap: true,
+        wordWrapWidth: Math.max(44, bw - 4),
+        align: 'center',
+      } as any);
       label.anchor.set(0.5, 0.5);
       label.position.set(TAB_W / 2, tabH / 2);
       tab.addChild(label);

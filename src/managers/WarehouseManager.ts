@@ -4,7 +4,7 @@
  * - 初始 4 格，最大扩容至 8 格
  * - 仓库物品不参与客人订单锁定
  * - 仓库物品不可在仓库内合成
- * - 工具在 CD 中入仓时记录 cdDeadlineMs（真实时间戳），在仓内与离线均按墙钟流逝；CD 结束时写回 toolState（与棋盘 BuildingManager.update 一致）
+ * - 工具 CD：与棋盘一致，仅在 `updateWarehouseCooldowns(dt)` 局内递减，离线不流逝
  */
 import { EventBus } from '@/core/EventBus';
 import { ITEM_DEFS } from '@/config/ItemConfig';
@@ -26,7 +26,9 @@ const MAX_CAPACITY = 8;
 export interface WarehouseSlotEntry {
   itemId: string;
   toolState?: ToolStateSnapshot;
-  /** 工具在 CD 中时：CD 结束的 epoch 毫秒时间戳（与 cdRemaining 墙钟对齐） */
+  /**
+   * @deprecated 旧存档墙钟 CD；读档时一次性折算进 toolState.cdRemaining 后清除
+   */
   cdDeadlineMs?: number;
 }
 
@@ -52,13 +54,16 @@ function applyCooldownFinishedToToolState(itemId: string, ts: ToolStateSnapshot)
   }
 }
 
-/** 若已过截止时刻，将槽位 toolState 更新为「CD 结束」并清除 deadline */
-function reconcileDeadlineIfPast(entry: WarehouseSlotEntry): boolean {
-  if (!entry.toolState || entry.cdDeadlineMs === undefined) return false;
-  if (Date.now() < entry.cdDeadlineMs) return false;
-  applyCooldownFinishedToToolState(entry.itemId, entry.toolState);
+/** 将旧版墙钟 deadline 折成剩余秒写入 toolState，并去掉 deadline */
+function migrateLegacyDeadline(entry: WarehouseSlotEntry): void {
+  if (!entry.toolState || entry.cdDeadlineMs === undefined) return;
+  const now = Date.now();
+  if (now >= entry.cdDeadlineMs) {
+    applyCooldownFinishedToToolState(entry.itemId, entry.toolState);
+  } else {
+    entry.toolState.cdRemaining = Math.max(0, (entry.cdDeadlineMs - now) / 1000);
+  }
   entry.cdDeadlineMs = undefined;
-  return true;
 }
 
 function normalizeSlot(raw: unknown): WarehouseSlotEntry | null {
@@ -74,10 +79,6 @@ function normalizeSlot(raw: unknown): WarehouseSlotEntry | null {
       const entry: WarehouseSlotEntry = { itemId, toolState: cloneToolState(toolState) };
       const d = (raw as WarehouseSlotEntry).cdDeadlineMs;
       if (typeof d === 'number' && d > 0) entry.cdDeadlineMs = d;
-      // 旧存档仅有 cdRemaining、无 deadline：从加载时刻起按真实时间倒计时
-      if (entry.toolState.cdRemaining > 0 && entry.cdDeadlineMs === undefined) {
-        entry.cdDeadlineMs = Date.now() + entry.toolState.cdRemaining * 1000;
-      }
       return entry;
     }
     return { itemId };
@@ -112,13 +113,19 @@ class WarehouseManagerClass {
   }
 
   /**
-   * 每帧调用：仓库内工具 CD 到点则刷新 toolState（与棋盘 CD 结束行为一致）
+   * 每帧调用：仓库内工具 CD 按局内 dt 递减（与 BuildingManager.update 一致）
    */
-  updateWarehouseCooldownsFromRealTime(): void {
+  updateWarehouseCooldowns(dt: number): void {
+    if (dt <= 0) return;
     let changed = false;
     for (const entry of this._items) {
-      if (!entry) continue;
-      if (reconcileDeadlineIfPast(entry)) changed = true;
+      if (!entry?.toolState || entry.toolState.cdRemaining <= 0) continue;
+      const prev = entry.toolState.cdRemaining;
+      entry.toolState.cdRemaining = Math.max(0, entry.toolState.cdRemaining - dt);
+      if (prev > 0 && entry.toolState.cdRemaining <= 0) {
+        applyCooldownFinishedToToolState(entry.itemId, entry.toolState);
+        changed = true;
+      }
     }
     if (changed) EventBus.emit('warehouse:changed');
   }
@@ -143,37 +150,19 @@ class WarehouseManagerClass {
     const entry: WarehouseSlotEntry = { itemId };
     if (toolState && toolState.boundItemId === itemId) {
       entry.toolState = cloneToolState(toolState);
-      if (entry.toolState.cdRemaining > 0) {
-        entry.cdDeadlineMs = Date.now() + entry.toolState.cdRemaining * 1000;
-      }
     }
     this._items[emptyIdx] = entry;
     EventBus.emit('warehouse:changed');
     return true;
   }
 
-  /** 将 deadline 合并进 toolState，供取回棋盘使用 */
-  private _finalizeToolStateForWithdraw(entry: WarehouseSlotEntry): void {
-    if (!entry.toolState || entry.toolState.boundItemId !== entry.itemId) {
-      entry.cdDeadlineMs = undefined;
-      return;
-    }
-    if (entry.cdDeadlineMs === undefined) return;
-
-    const now = Date.now();
-    if (now >= entry.cdDeadlineMs) {
-      applyCooldownFinishedToToolState(entry.itemId, entry.toolState);
-    } else {
-      entry.toolState.cdRemaining = Math.max(0, (entry.cdDeadlineMs - now) / 1000);
-    }
-    entry.cdDeadlineMs = undefined;
-  }
-
   withdrawSlot(slotIndex: number): WarehouseSlotEntry | null {
     if (slotIndex < 0 || slotIndex >= this._capacity) return null;
     const entry = this._items[slotIndex];
     if (!entry) return null;
-    this._finalizeToolStateForWithdraw(entry);
+    if (entry.cdDeadlineMs !== undefined) {
+      migrateLegacyDeadline(entry);
+    }
     this._items[slotIndex] = null;
     EventBus.emit('warehouse:changed');
     return entry;
@@ -205,7 +194,6 @@ class WarehouseManagerClass {
           ? {
             itemId: e.itemId,
             toolState: e.toolState,
-            cdDeadlineMs: e.cdDeadlineMs,
           }
           : null
       )),
@@ -219,7 +207,9 @@ class WarehouseManagerClass {
       for (let i = 0; i < Math.min(state.items.length, this._capacity); i++) {
         const entry = normalizeSlot(state.items[i]);
         if (entry) {
-          reconcileDeadlineIfPast(entry);
+          if (entry.cdDeadlineMs !== undefined) {
+            migrateLegacyDeadline(entry);
+          }
           this._items[i] = entry;
         }
       }

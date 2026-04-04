@@ -367,7 +367,7 @@ export class ShopScene implements Scene {
     this.container.addChild(this._roomContainer);
 
     // ============== 3. 顶部 TopBar ==============
-    this._topBar = new TopBar();
+    this._topBar = new TopBar({ hideShopPill: true });
     this._topBar.position.set(0, Game.safeTop);
     this.container.addChild(this._topBar);
 
@@ -2346,7 +2346,7 @@ export class ShopScene implements Scene {
   private _update = (): void => {
     const dt = Game.ticker.deltaMS / 1000;
     CurrencyManager.update(dt);
-    WarehouseManager.updateWarehouseCooldownsFromRealTime();
+    WarehouseManager.updateWarehouseCooldowns(dt);
     SaveManager.update(dt);
     this._topBar.updateTimer();
     this._updateRedDots();

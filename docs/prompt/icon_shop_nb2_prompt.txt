@@ -1,0 +1,11 @@
+Single mobile game HUD icon, square 1:1 canvas, one cute object centered with generous margin. Subject: a miniature MARKET STALL / VENDOR CART where players buy in-game items — NOT a house, NOT a building facade, NOT a flower shop storefront, NOT an isometric shop building.
+
+Structure:
+- Top: rounded red-and-white striped awning canopy (several stripes), soft puffy toy-like shape.
+- Below: open tan wooden or wicker counter bin with rounded corners and simple depth shading.
+- Inside the bin: colorful purchasable loot — one shiny pink faceted gem, a small cluster of green crystals or leaves, AND a short stack of bright gold coins with one tiny star sparkle (no numbers, no currency symbols as text).
+- Optional: a small blank yellow price-tag shape (no letters, no digits) clipped to the awning corner.
+
+Art style: thick soft outline in warm dark brown or chocolate (never pure black), chunky rounded forms, gentle cel shading with soft gradients, bright white specular edge highlights, polished casual 2D vector merge-game icon. Add a few tiny white four-pointed star sparkles near the stall. Isometric three-quarter view from front-above, must read clearly at about 128 pixels.
+
+NO text, NO letters, NO watermark, NO UI frame, NO ground tiles — only the stall object. Background must be flat uniform magenta chroma key exactly FF00FF, no gradient in the backdrop.

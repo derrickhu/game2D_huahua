@@ -6,7 +6,8 @@
 （竖版、与游戏 9:16 画幅比例一致；横版旧稿见 decoration_panel_bottom_sheet_prototype_nb2.png。）
 输出：game_assets/huahua/assets/deco_panel_ui_nb2/for_review/
 
-大面板：`#FFFFFF` 底板 + rembg；其余拆件：品红底；无文字，游戏里叠字。
+大面板底图：`#FFFFFF` 外圈 + rembg — 立体可爱标题 + 身区按装修参考：左窄象牙带、右大暖 parchment/浅杏区（无痕交界），右侧平面、无凹槽内阴影；不画按钮/筛选/格子/家具。
+其余拆件：品红底；无文字，游戏里叠字。
 """
 from __future__ import annotations
 
@@ -28,7 +29,7 @@ OUT_DIR = ASSETS / "deco_panel_ui_nb2/for_review"
 DEFAULT_REF = str(ASSETS / "ui_prototypes/decoration_panel_bottom_sheet_prototype_nb2_portrait.png")
 
 SHARED = """
-REFERENCE IMAGE: the PROVIDED mockup is the portrait decoration bottom sheet (decoration_panel_bottom_sheet_prototype_nb2_portrait) — full-bleed bottom sheet (~lower half), NO heavy yellow double-gold frame. Palette: juicy peach-to-apricot / soft coral-pink header strip with ONE thin warm champagne-gold hairline rim (single stroke, refined); main body warm ivory with a faint peach or blush tint (sunlit, not muddy gray-cream); hairline dividers in warm rose-taupe (not cold gray). Cozy merge-game pseudo-3D: soft upward diffuse shadow on the blurred scene, top inner highlight on the sheet, content well slightly recessed, tab pills pillow-bevel. IMPORTANT: avoid large sage / mint / olive green UI fields — do not echo renovation grass.
+REFERENCE IMAGE: the PROVIDED mockup is the portrait decoration bottom sheet (decoration_panel_bottom_sheet_prototype_nb2_portrait) — full-bleed bottom sheet (~lower half), NO heavy yellow double-gold frame. Palette: juicy peach-to-apricot / soft coral-pink header; accents in **milky blush pink** or **soft strawberry-cream** — **NO champagne gold**, **NO metallic yellow rim** on the main sheet. Main body warm ivory with faint peach tint; optional accents pastel only. Cozy merge-game pseudo-3D: soft diffuse shadow, inner highlights, recessed content well. IMPORTANT: avoid large sage / mint / olive green UI fields — do not echo renovation grass.
 
 Match that mockup's saturation, warmth, and bevel language.
 
@@ -39,26 +40,44 @@ CHROMA: The separate “main panel blank” asset uses pure white #FFFFFF mattin
 NO text (any language), NO numbers, NO watermark, NO callout circles. If the reference shows red rectangles or annotation boxes, IGNORE them — do not draw red boxes. Soft 3D, colored outlines, top-left highlights.
 """.strip()
 
+# 大面板空白壳单独用此段，避免与 SHARED 里「参考整屏原型 / 香槟金边」等描述冲突
+SHARED_MAIN_PANEL_BLANK = """
+GLOBAL — THIS ASSET ONLY:
+Cute kawaii merge-game mobile UI: warm SATURATED soft pastels (juicy peach, strawberry-milk pink, apricot blush, warm cream — keep chroma sweet, NOT washed-out gray-beige, NOT desaturated dead UI). Stereoscopic but soft: smooth gradients, satin highlights, pillow/bevel language, diffuse shadows — cozy pseudo-3D like hit merge games, NOT flat Material slabs, NOT photoreal metal.
+
+EMPTY SHELL: The game adds ALL text, sidebar pills, filter chips, and item cards later. Your image must be ONLY the background plate — large flat color regions plus lighting. NO drawn buttons, pills, tabs, filter bar, chip row under the title, grids, squares, sample icons, stars, prices, glyphs, watermarks, house/couch icons. NO inner inset frames, NO recessed “slot” panels with inner shadow, NO horizontal divider lines or hairlines on the body, NO extra top-left title bubbles (title is only the main salmon band).
+
+NO gold, NO yellow chrome, NO metallic rim lines anywhere on this panel. Edge under title band = soft shadow + color blend only. Title salmon band: top corners must be heavily rounded (large radius bubble look), never a flat strip with only slight corner rounding.
+
+MATTING: Every pixel outside the rounded panel = solid #FFFFFF. Zero peach/pink/coral spill into the outer margin — the white surround must stay perfectly neutral. Tight clean silhouette (1–2px AA only); no smoky gradient leaking into white. All shadows and 3D lighting stay INSIDE the panel shape only.
+""".strip()
+
 
 BODY_MAIN_PANEL_BLANK = """
-ASSET: ONE complete EMPTY shell of the flower-shop DECORATION bottom sheet — portrait 9:16, cream body + a DISTINCT header band. Match reference warmth, but OVERRIDE the reference if it shows a gradient header.
+ASSET: Portrait 9:16 empty flower-shop DECORATION bottom sheet — same cute merge-game look as the shipped furniture panel reference, but stripped to a clean plate: keep the outer rounded card + stereo salmon header; the body is only soft flat color fields. Full-bleed left/right/bottom; rounded top corners.
 
-MATTING (HIGHEST PRIORITY): Every pixel OUTSIDE the painted panel must be EXACTLY solid #FFFFFF (RGB 255,255,255) — pure white only, no grey, no gradient. This is for AI background removal — white is NOT allowed inside the panel fill.
+(1) TOP TITLE ZONE ONLY — full-width stereo cute header with SUPER-ROUNDED BUBBLY top geometry (the ONLY title chrome):
+About 11–13% of canvas height. Salmon-peach / apricot pillow bar spanning full width. CRITICAL SHAPE: the header top-left and top-right corners MUST use a VERY LARGE border radius — deep smooth arcs, bubble-like capsule-cap cute (soft vertical card: orange top looks rounded and plump, NOT a stiff near-rectangle with tiny corner nibs). Maximum cute rounding on the top two corners; forbid “square strip with small rounded corners”. Top outer edge continuously curved and friendly like plush mobile bottom-sheet headers. Juicy gradient, white satin highlight along the top curve, soft shadow where salmon meets cream — volumetric, candy-like. No text. Do NOT add any extra title widget on the cream area (no small top-left pill bubble, no badge, no secondary title capsule).
 
-FORBIDDEN outside the panel: grass, roof, blur, screenshot, letterbox, vignette, icons, any scene. No strip above the header except white. Rounded top corners of the sheet may sit against white above.
+(2) MAIN BODY BELOW HEADER — two soft flat color zones (like reference left rail + right block), no decoration:
+LEFT RAIL ~9–11% width: warm ivory or soft warm gray-cream. Must be flat — no pills, no faux buttons, no floating shapes.
 
-NO pink/magenta glow leaking from the panel edge into the white (minimal anti-alias only).
+RIGHT BLOCK: warm parchment / light tan-cream, slightly deeper than the rail. Must be one continuous flat fill from the boundary to the panel’s inner right and bottom — no “picture frame”, no second nested rounded rectangle, no inner mat.
 
-FULL BLEED: Opaque UI paint touches LEFT, RIGHT, and BOTTOM canvas edges (no floating card, no white gutters on those three sides).
+BOUNDARY between rail and block: smooth color step only — zero vertical stroke, zero groove.
 
-LAYOUT TWEAKS (empty chrome):
-• LEFT category rail (critical — OVERRIDE mockup): **VERY SLIM** — only **~8–11%** of total panel width (narrower than a typical sidebar; no wide empty margin). **Only a continuous flat color block** — same warm ivory / pale peach-cream as the body, or one uniform slightly different flat tint. **Absolutely NO** tab pills, NO stacked rounded-rectangle “buttons”, NO empty slot frames, NO vertical list of panels, NO embossed capsules, NO fake placeholders for future icons, NO inner shadows that read as separate widgets, NO icons or glyphs. The left column must look like **a thin plain gutter** where code will draw tabs later — zero UI chrome, **not** a broad shaded band. Optional: ONE hairline vertical rule at the **right** edge of this rail (separating rail from main area) is allowed; nothing else in the rail.
-• RIGHT main area (furniture grid well): **~89–92%** of total width — **dominant wide** zone — ONE flat filled rectangle, slightly warmer flat tan / sand than the left strip so the big content “shadow” or sheet reads clearly — absolutely NO recessed “well”, NO inner drop shadow, NO 3D pit, NO bevel that looks carved in. Flat color only; optional single 1px soft divider at the boundary with the slim left rail.
-• HEADER BAND (critical): ONE solid, uniform fill — a single warm peach-coral OR soft apricot (choose ONE hue, one apparent color). **NO horizontal gradient**, NO left-to-right color fade, NO second color blended across the band, NO “sunset” wash, NO sky or atmospheric blend. Depth comes ONLY from **hand-painted UI volume**: soft pillow/bevel, gentle highlight along the top inner edge, subtle shadow where the header meets the body, optional ONE thin champagne-gold hairline rim — cozy merge-game panel, not a photo. **FORBIDDEN inside the header:** roof shapes, building silhouettes, dark blobs, skylines, wood planks that read as exterior architecture, any “scene” behind the UI.
-• NO text, NO close button on this asset.
-• NO furniture, NO progress bar, NO numbers, NO watermark.
+(3) STRICT FORBIDDEN — the model keeps drawing these by mistake; do NOT include any of them:
+- Any pill, capsule, lozenge, bubble, or chip shape anywhere on the body.
+- Any inner inset panel, sunken tray, large recessed rectangle with inner shadow or inner highlight rim.
+- Any horizontal rule, divider line, hairline, thin brown stroke, or “footer strip” separated by a line.
+- Any double-border frame around a central content hole; any card-slot grid hints.
+- Any extra 3D bevel loops inside the body (save stereo for the header + gentle whole-panel edge only).
 
-Interior = UI colors only; exterior = #FFFFFF only.
+(4) Whole panel: only the outer big rounded silhouette may have a whisper of edge depth; the interior body stays visually flat pastel fields.
+
+(5) No grids, furniture, stars, prices, text, icons.
+
+Quality bar: reads like the reference sheet with clutter removed — cute header, boring-clean flat body.
 """.strip()
 
 
@@ -188,7 +207,10 @@ def run_one(
     else:
         api_ref = ref_path
 
-    prompt = SHARED + "\n\n" + body
+    if fname == "deco_nb2_main_panel_blank_9x16.png":
+        prompt = SHARED_MAIN_PANEL_BLANK + "\n\n" + body
+    else:
+        prompt = SHARED + "\n\n" + body
     out = os.path.join(OUT_DIR, fname)
     print(f"\n=== deco_panel_ui -> {out} ===", flush=True)
     print(f"  reference: {api_ref if use_ref else '(none)'}", flush=True)
