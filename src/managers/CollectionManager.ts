@@ -2,13 +2,13 @@
  * 图鉴收集管理器
  *
  * 7 大收集分类：
- * - 🌸 花束图鉴（18种）
+ * - 🌸 花系图鉴（鲜花/花束/绿植/包装，总数随 ItemConfig）
  * - 🍵 花饮图鉴（9种）
  * - 🏠 建筑图鉴（13种）
  * - 📦 宝箱图鉴（宝箱5级 + 红包4级，合成或散落至棋盘时解锁）
  * - 👤 客人图鉴（来访即解锁）
  * - 🪑 装饰图鉴（基于装修系统）
- * - 🌸 花语卡片（18张，首次合成解锁）
+ * - 🌸 花语卡片（与 FlowerCardManager.FLOWER_QUOTES 条目一致，首次合成解锁）
  *
  * 收集里程碑奖励：25% / 50% / 75% / 100%
  */
@@ -17,6 +17,7 @@ import { Platform } from '@/core/PlatformService';
 import { ITEM_DEFS, Category } from '@/config/ItemConfig';
 import { CUSTOMER_TYPES } from '@/config/CustomerConfig';
 import { CurrencyManager } from './CurrencyManager';
+import { FLOWER_CARD_TRACKED_TOTAL } from './FlowerCardManager';
 
 const STORAGE_KEY = 'huahua_collection';
 
@@ -176,13 +177,19 @@ class CollectionManagerClass {
   /** 获取某分类的总数 */
   getCategoryTotal(cat: CollectionCategory): number {
     switch (cat) {
-      case CollectionCategory.FLOWER: return 18;
+      case CollectionCategory.FLOWER: {
+        let n = 0;
+        for (const def of ITEM_DEFS.values()) {
+          if (def.category === Category.FLOWER) n++;
+        }
+        return n;
+      }
       case CollectionCategory.DRINK: return 9;
       case CollectionCategory.BUILDING: return 13;
       case CollectionCategory.CHEST: return 9;
       case CollectionCategory.CUSTOMER: return CUSTOMER_TYPES.length;
       case CollectionCategory.DECORATION: return 72; // 装饰总数
-      case CollectionCategory.FLOWER_CARD: return 18;
+      case CollectionCategory.FLOWER_CARD: return FLOWER_CARD_TRACKED_TOTAL;
       default: return 0;
     }
   }

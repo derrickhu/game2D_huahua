@@ -1,9 +1,5 @@
-Single square 1:1 game icon for a merge flower-shop game. ONE object only — a premium advanced greenhouse (高级温室) — larger/more complete than a basic greenhouse — centered; must occupy 88–92% of the frame, almost filling the square.
+Cute small mobile game item icon, 3/4 top-down isometric view. Rounded chunky proportions, slightly chibi/compact. Soft smooth gradient shading with small bright highlight spots on surfaces. No hard black outlines — edges defined by color transitions and subtle darker-tone borders only. Warm cozy color palette with realistic material colors. Clean simple white background. No text, no labels, no UI elements. The item should look like a tiny desktop ornament.
 
-LINE: Same identity as L5 but more glass panels, neater frame, optional small vent or peak; richer wood staging; muted greens and grays, no colorful blooms as focus. Premium but NOT gaudy or high-saturation.
+ONE object only — a medium greenhouse (温室) for a merge flower-shop game: a small walk-in or boxy greenhouse with more glass panels and neater frame than the simple lean-to; frosted glass as cool blue-gray or cyan-gray (NO purple/pink in glass), dark green or gray metal frame, richer wood staging at base. Inside: small seedlings, muted greens only, no colorful blooms. Bigger and more complete than 简易温室, not yet the top-tier premium build. Centered; fills about 88–92% of the square.
 
-STYLE: Cute hand-painted 2D; clear volume; NO text, logos.
-
-BACKGROUND: ONLY solid #FF00FF outside the object.
-
-CHROMA-SAFE: No purple/magenta/pink in glass.
+LINE palette: warm wood, gray-green metal, cool-tinted glass. NO magenta in glass.

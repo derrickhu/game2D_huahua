@@ -11,6 +11,8 @@ export const BOARD_COLS = 7;
 export const BOARD_ROWS = 9;
 export const BOARD_TOTAL = BOARD_COLS * BOARD_ROWS;
 export const CELL_GAP = 4;
+/** 棋盘区上下装饰横条高度（与 `images/ui/board_bar.png`、MainScene 底栏间距一致） */
+export const BOARD_BAR_HEIGHT = 36;
 
 /**
  * 棋盘动态布局参数（用对象包裹防止 Terser 常量内联）
@@ -95,21 +97,23 @@ export const COLORS = {
   CELL_KEY: 0xFFD700,
   CELL_BORDER: 0xD4C4B0,
   CELL_HIGHLIGHT: 0xFFE4B5,
-  /** 订单满足：叠在米白格底上的淡绿遮罩颜色 */
-  CELL_ORDER_MATCH_OVERLAY: 0xA5D6A7,
-  /** 淡绿遮罩透明度（越大越绿） */
-  CELL_ORDER_MATCH_OVERLAY_ALPHA: 0.32,
-  /** 拿起物品时：棋盘上同种物品所在格提示可合成（与订单浅绿区分，偏暖黄） */
+  /** 订单满足：叠在格底上的薄荷绿（比旧版略深一档，避免与奶油格底糊成一片） */
+  CELL_ORDER_MATCH_OVERLAY: 0x7EBE9E,
+  CELL_ORDER_MATCH_OVERLAY_ALPHA: 0.42,
+  /** 订单满足：内缘描边（与对钩绿、FLOWER_GREEN 呼应，便于一眼辨认） */
+  CELL_ORDER_MATCH_RING: 0x58B878,
+  CELL_ORDER_MATCH_RING_ALPHA: 0.9,
+  /** 拿起物品时：棋盘上同种物品所在格提示可合成（偏亮黄，与订单满足薄荷绿区分） */
   CELL_MERGE_PARTNER_HINT: 0xFFF59D,
   CELL_MERGE_PARTNER_HINT_ALPHA: 0.42,
-  /** 顾客需求槽：未满足时的浅底（与已满足浅绿区分） */
+  /** 顾客需求槽：未满足时的浅底（与已满足薄荷底区分） */
   CUSTOMER_DEMAND_PENDING_BG: 0xEBE0D4,
   CUSTOMER_DEMAND_PENDING_BG_ALPHA: 0.72,
   CUSTOMER_DEMAND_PENDING_BORDER: 0xC9B8A4,
   CUSTOMER_DEMAND_PENDING_BORDER_ALPHA: 0.65,
-  /** 顾客需求槽：已满足（浅绿底）时的描边，与未满足槽线宽一致 */
-  CUSTOMER_DEMAND_SATISFIED_BORDER: 0x4a8f4a,
-  CUSTOMER_DEMAND_SATISFIED_BORDER_ALPHA: 0.82,
+  /** 顾客需求槽：已满足（与棋盘一致薄荷底 + 绿描边） */
+  CUSTOMER_DEMAND_SATISFIED_BORDER: 0x4A9E62,
+  CUSTOMER_DEMAND_SATISFIED_BORDER_ALPHA: 0.88,
 
   // 花系色标
   FLOWER_FRESH: 0xFFB347,    // 鲜花线 - 暖橙

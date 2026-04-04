@@ -1,0 +1,5 @@
+Single isolated game item icon, ONE pink garden peony only, square 1:1, centered. Match the EXACT art style of the existing huahua merge game flower_fresh line (same as sunflower, carnation, rose in-game): bold layered petals, ruffled or wavy petal outer edges like the carnation asset, rich pink gradients from light bubblegum to deep magenta in recesses, glossy edge highlights, cel-shaded volume. Thick-ish clean outline in deep maroon-brown or wine red — same warmth as rose outline, NOT pure black. Green calyx or sepals at base and short stem with small leaf, same green treatment as other flower_fresh items.
+
+Background: solid flat magenta #FF00FF only outside the flower. Hard cut at edge of art — no milky outer rim, no white outer stroke, no drop shadow that fades into non-magenta. Subject must not use #FF00FF.
+
+PEONY: Large round lush bloom built from many overlapping rounded petals in a bowl shape — clearly NOT a flat rose spiral pinwheel. This is the pink peony tier, NOT the final gold peony — use pink and rose tones only, no gold or yellow petals. Fills ~75–85% of frame. NO text, NO watermark.

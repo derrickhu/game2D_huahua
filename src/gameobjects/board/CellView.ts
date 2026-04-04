@@ -14,7 +14,7 @@ export class CellView extends PIXI.Container {
   private _fogOverlay: PIXI.Container | null = null;
   private _keyIcon: PIXI.Container | null = null;
   private _state: CellState = CellState.OPEN;
-  /** 该格物品已被客人订单锁定（已满足需求）→ 浅绿底 */
+  /** 该格物品已被客人订单锁定（已满足需求）→ 薄荷浅底 + 绿描边 */
   private _orderReserved = false;
   /** 拖拽中：与拿起物品同 id 的其他已解锁格，提示可合成 */
   private _mergePartnerHint = false;
@@ -40,7 +40,7 @@ export class CellView extends PIXI.Container {
   }
 
   /**
-   * 订单已占用该格且需求匹配完成：格底变绿（仅 OPEN / PEEK 可见格）
+   * 订单已占用该格且需求匹配完成：薄荷浅底 + 绿描边（仅 OPEN / PEEK 可见格）
    */
   setOrderReserved(on: boolean): void {
     if (this._orderReserved === on) return;
@@ -124,6 +124,20 @@ export class CellView extends PIXI.Container {
       );
       this._bg.drawRoundedRect(0, 0, cs, cs, 8);
       this._bg.endFill();
+      const ringW = 2.25;
+      const inset = ringW / 2;
+      this._bg.lineStyle(
+        ringW,
+        COLORS.CELL_ORDER_MATCH_RING,
+        COLORS.CELL_ORDER_MATCH_RING_ALPHA,
+      );
+      this._bg.drawRoundedRect(
+        inset,
+        inset,
+        cs - ringW,
+        cs - ringW,
+        Math.max(4, 8 - Math.round(inset)),
+      );
     }
 
     if (

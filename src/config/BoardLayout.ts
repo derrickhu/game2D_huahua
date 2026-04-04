@@ -52,7 +52,7 @@ export const BOARD_PRESETS: CellPreset[] = [
   { row: 2, col: 1, state: CellState.FOG,  itemId: 'flower_fresh_3',   keyPrice: 0, unlockPriority: 61 },
   { row: 2, col: 2, state: CellState.FOG,  itemId: 'flower_bouquet_1', keyPrice: 0, unlockPriority: 62 },
   { row: 2, col: 3, state: CellState.FOG,  itemId: 'tool_plant_2',     keyPrice: 0, unlockPriority: 63 },
-  { row: 2, col: 4, state: CellState.FOG,  itemId: 'flower_green_2',   keyPrice: 0, unlockPriority: 64 },
+  { row: 2, col: 4, state: CellState.FOG,  itemId: 'flower_green_3',   keyPrice: 0, unlockPriority: 64 },
   { row: 2, col: 5, state: CellState.FOG,  itemId: 'tool_mixer_2',     keyPrice: 0, unlockPriority: 65 },
   { row: 2, col: 6, state: CellState.FOG,  itemId: 'drink_dessert_5',  keyPrice: 0, unlockPriority: 66 },
 
@@ -81,7 +81,7 @@ export const BOARD_PRESETS: CellPreset[] = [
   { row: 5, col: 6, state: CellState.FOG,  itemId: 'drink_dessert_3',  keyPrice: 0, unlockPriority: 39 },
 
   { row: 6, col: 0, state: CellState.FOG,  itemId: 'flower_fresh_5',   keyPrice: 0, unlockPriority: 20 },
-  { row: 6, col: 1, state: CellState.FOG,  itemId: 'flower_green_2',   keyPrice: 0, unlockPriority: 21 },
+  { row: 6, col: 1, state: CellState.FOG,  itemId: 'flower_green_3',   keyPrice: 0, unlockPriority: 21 },
   { row: 6, col: 2, state: CellState.FOG,  itemId: 'tool_arrange_1',     keyPrice: 0, unlockPriority: 22 },
   { row: 6, col: 3, state: CellState.KEY,  itemId: null,               keyPrice: 300, unlockPriority: 23 },
   { row: 6, col: 4, state: CellState.FOG,  itemId: 'drink_dessert_3',  keyPrice: 0, unlockPriority: 24 },
@@ -97,7 +97,7 @@ export const BOARD_PRESETS: CellPreset[] = [
   { row: 7, col: 6, state: CellState.FOG,  itemId: 'drink_dessert_6',  keyPrice: 0, unlockPriority: 16 },
 
   { row: 8, col: 0, state: CellState.KEY,  itemId: null,               keyPrice: 500, unlockPriority: 90 },
-  { row: 8, col: 1, state: CellState.FOG,  itemId: 'flower_green_7',   keyPrice: 0, unlockPriority: 91 },
+  { row: 8, col: 1, state: CellState.FOG,  itemId: 'flower_green_8',   keyPrice: 0, unlockPriority: 91 },
   { row: 8, col: 2, state: CellState.FOG,  itemId: 'flower_fresh_7',   keyPrice: 0, unlockPriority: 92 },
   { row: 8, col: 3, state: CellState.FOG,  itemId: 'drink_tea_7',      keyPrice: 0, unlockPriority: 93 },
   { row: 8, col: 4, state: CellState.FOG,  itemId: 'flower_bouquet_7', keyPrice: 0, unlockPriority: 94 },

@@ -19,7 +19,7 @@
 
 | 文件 | 比例 | 内容 |
 |------|------|------|
-| `deco_nb2_main_panel_blank_9x16.png` | 9:16 | **空白大面板整壳**（桃珊瑚顶条 + 奶油主体 + 左留白轨 + 右内凹空 viewport），无字无 Tab 无进度条无关闭钮；与竖版原型比例一致 |
+| `deco_nb2_main_panel_blank_9x16.png` | 9:16 | **空白大面板**：白底抠图；顶栏纯色立体；左轨 **仅占位**：**整块平涂**，**禁止**胶囊/按钮框/竖向槽位（程序自绘 Tab）；右侧平面；无字；头图无屋顶剪影 |
 | `deco_nb2_header_ribbon_16x9.png` | 16:9 | 鲑红丝带标题条（空白） |
 | `deco_nb2_close_btn_1x1.png` | 1:1 | 红底白叉关闭钮 |
 | `deco_nb2_furniture_card_blank_3x4.png` | 3:4 | 空白家具卡模板（稀有角标位留白） |
@@ -58,6 +58,18 @@ python3 scripts/gen_deco_panel_ui_nb2.py --only deco_nb2_main_panel_blank
 python3 scripts/gen_deco_panel_ui_nb2.py --only deco_nb2_bottom
 python3 scripts/gen_deco_panel_ui_nb2.py --only deco_nb2_icon_
 ```
+
+## 入库游戏底图（空白大面板）
+
+大面板 NB2：**除面板外整图纯色 `#FFFFFF`**（白底比品红更好抠，避免啃桃色头图）。禁止草地/屋顶/模糊截图。
+
+默认：`rembg`（`birefnet-general`）→ `crop_trim` → 白边 despill：
+
+```bash
+python3 scripts/build_decoration_panel_bg_nb2.py
+```
+
+兜底：`--chroma-white`（白底软色键）；旧品红稿：`--chroma`。输出：`minigame/subpkg_panels/images/ui/decoration_panel_bg_nb2.png`。
 
 ## 拼层建议（实现时）
 

@@ -26,15 +26,22 @@ export interface FlowerCard {
   discoveredAt: number; // 发现时间戳
 }
 
-/** 完整的花语数据库 */
+/** 完整的花语数据库（键须与 ItemConfig 物品 id 一致） */
 const FLOWER_QUOTES: Record<string, { name: string; quote: string }> = {
-  // 鲜花线
+  // 鲜花线 Lv1–13：花种子→…→金色牡丹
   flower_fresh_1: { name: '花种子', quote: '纯真无邪，藏在心底的小美好。' },
   flower_fresh_2: { name: '花苞', quote: '沉默的爱，追随着你的光芒。' },
   flower_fresh_3: { name: '小雏菊', quote: '温馨的祝福，感恩每一份爱。' },
   flower_fresh_4: { name: '向日葵', quote: '甘愿做配角，只为衬托你的美。' },
   flower_fresh_5: { name: '康乃馨', quote: '缤纷世界，每一种美都值得。' },
   flower_fresh_6: { name: '玫瑰', quote: '最好的礼物，是用心准备的惊喜。' },
+  flower_fresh_7: { name: '百合', quote: '百年好合，纯洁如初的心意。' },
+  flower_fresh_8: { name: '郁金香', quote: '热烈的爱意，杯盏中盛放的春天。' },
+  flower_fresh_9: { name: '绣球花', quote: '团聚与希望，团团圆圆的美好。' },
+  flower_fresh_10: { name: '蝴蝶兰', quote: '幸福飞来，优雅如风。' },
+  flower_fresh_11: { name: '荷花', quote: '出泥不染，心若清莲。' },
+  flower_fresh_12: { name: '芍药', quote: '依依惜别，难舍的温柔。' },
+  flower_fresh_13: { name: '金色牡丹', quote: '富贵吉祥，国色天香。' },
   // 花束线
   flower_bouquet_1: { name: '一小捧散花', quote: '初恋的感觉，心跳如花绽放。' },
   flower_bouquet_2: { name: '迷你花束', quote: '百年好合，纯洁的守候。' },
@@ -42,14 +49,24 @@ const FLOWER_QUOTES: Record<string, { name: string; quote: string }> = {
   flower_bouquet_4: { name: '玫瑰满天星', quote: '等待爱情，紫色的承诺。' },
   flower_bouquet_5: { name: '田园混搭花束', quote: '鼓起勇气说出口，你是我的唯一。' },
   flower_bouquet_6: { name: '精美花盒', quote: '执子之手，与子偕老。' },
-  // 绿植线
+  // 绿植线 Lv1–13：小芽苗→…→松树盆景
   flower_green_1: { name: '小芽苗', quote: '小小的芽，蕴含着生命的力量。' },
-  flower_green_2: { name: '多肉盆栽', quote: '圆润饱满，安静而治愈。' },
-  flower_green_3: { name: '绿萝', quote: '顽强生长，为你带来好运。' },
-  flower_green_4: { name: '波士顿蕨', quote: '优雅的弧线，如绿色瀑布。' },
-  flower_green_5: { name: '虎皮兰', quote: '坚韧挺拔，守护者的姿态。' },
-  flower_green_6: { name: '龟背竹', quote: '独一无二的裂叶，大自然的艺术。' },
+  flower_green_2: { name: '铜钱草', quote: '圆圆铜钱叶，一汪清水里的好运气。' },
+  flower_green_3: { name: '多肉盆栽', quote: '圆润饱满，安静而治愈。' },
+  flower_green_4: { name: '绿萝', quote: '顽强生长，为你带来好运。' },
+  flower_green_5: { name: '波士顿蕨', quote: '优雅的弧线，如绿色瀑布。' },
+  flower_green_6: { name: '虎皮兰', quote: '坚韧挺拔，守护者的姿态。' },
+  flower_green_7: { name: '龟背竹', quote: '独一无二的裂叶，大自然的艺术。' },
+  flower_green_8: { name: '琴叶榕', quote: '大叶如琴，奏响一室绿意。' },
+  flower_green_9: { name: '仙人掌', quote: '小小刺里，也藏着一朵温柔的勇气。' },
+  flower_green_10: { name: '发财树', quote: '枝繁叶茂，财源滚滚来。' },
+  flower_green_11: { name: '红掌', quote: '红烛高照，一片炽热心。' },
+  flower_green_12: { name: '三角梅', quote: '热情奔放，阳光下的火焰。' },
+  flower_green_13: { name: '松树盆景', quote: '岁寒长青，风骨自成。' },
 };
+
+/** 花语卡片集齐目标张数（与图鉴「花语卡片」分类总数一致） */
+export const FLOWER_CARD_TRACKED_TOTAL = Object.keys(FLOWER_QUOTES).length;
 
 class FlowerCardManagerClass {
   /** 已收集的花语卡片 */
@@ -58,7 +75,7 @@ class FlowerCardManagerClass {
   init(): void {
     this._loadState();
     this._bindEvents();
-    console.log(`[FlowerCard] 初始化完成, 已收集 ${this._cards.size}/18 张花语卡片`);
+    console.log(`[FlowerCard] 初始化完成, 已收集 ${this._cards.size}/${FLOWER_CARD_TRACKED_TOTAL} 张花语卡片`);
   }
 
   private _bindEvents(): void {
@@ -95,7 +112,7 @@ class FlowerCardManagerClass {
     console.log(`[FlowerCard] 新收集: ${card.name} - 「${card.quote}」`);
 
     // 检查是否集齐
-    if (this._cards.size === 18) {
+    if (this._cards.size === FLOWER_CARD_TRACKED_TOTAL) {
       EventBus.emit('flowerCard:complete');
       CurrencyManager.addDiamond(120);
     }
@@ -138,8 +155,8 @@ class FlowerCardManagerClass {
 
   /** 收集进度 */
   get collectedCount(): number { return this._cards.size; }
-  get totalCount(): number { return 18; }
-  get isComplete(): boolean { return this._cards.size >= 18; }
+  get totalCount(): number { return FLOWER_CARD_TRACKED_TOTAL; }
+  get isComplete(): boolean { return this._cards.size >= FLOWER_CARD_TRACKED_TOTAL; }
 
   /** 获取分享文案 */
   getShareText(card: FlowerCard): string {

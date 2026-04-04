@@ -3,9 +3,10 @@
  *
  * 布局（以 center(0,0) 为原点）:
  *
- *       大半身像            ┌完成┐   <- 满足后：按钮在半身像右侧偏下（颈肩下，不与面板并排）
+ *       大半身像（脚底略下移）            <- 需求面板与胸像下沿略有重叠，整体略下移近棋盘
  *
- *   ┌──── 需求面板（放大，最多3格）────┐
+ *        ┌──完成──┐
+ *   ┌──── 需求面板（放大，最多3格）──────── [花愿]
  *   │      [🌸] [🌸] [🌸]            │
  *   └────────────────────────────────┘
  */
@@ -27,25 +28,27 @@ const SLOT_GAP = 8;
 const PANEL_W = SLOT_SIZE * 3 + SLOT_GAP * 2 + 24;
 /** 比槽位略高，避免角标贴边 */
 const PANEL_H = SLOT_SIZE + 30;
-const COMPLETE_BTN_W = 88;
-const COMPLETE_BTN_H = 34;
 /**
- * 「完成」按钮锚点在半身像右侧（脚点为 y=0，头像约高 160px 向上）
- * 纵向约在颈肩下方；不与底部需求面板同一行
+ * 胸像脚底锚点在容器中的 y（>0 则整体下移，让面板能叠住胸像下沿直边）
  */
-const COMPLETE_BTN_X = 56;
-/** 约在颈肩下缘；下移约 2×按钮高度，避免贴额头 */
-const COMPLETE_BTN_Y = -45;
+const AVATAR_FEET_Y = 22;
+/** 需求面板 y：略负可与胸像底重叠；增大则整体下移靠近棋盘（胸像锚点不变） */
+const PANEL_Y = 4;
 
-/** 卡片水平占位：取「面板半宽」与「完成按钮右缘」较大者；不再用 300 下限以免客人间空一大截 */
-const CARD_LAYOUT_HALF = Math.max(PANEL_W / 2, COMPLETE_BTN_X + COMPLETE_BTN_W / 2);
+/** 「完成」：放大、水平居中，中心略低于面板上沿以压住面板与腰线 */
+const COMPLETE_BTN_W = 118;
+const COMPLETE_BTN_H = 42;
+const COMPLETE_BTN_X = 0;
+const COMPLETE_BTN_Y = PANEL_Y + 16 - Math.round(COMPLETE_BTN_H / 2);
+
+/** 卡片水平占位：取「面板半宽」与「完成按钮半宽」较大者 */
+const CARD_LAYOUT_HALF = Math.max(PANEL_W / 2, COMPLETE_BTN_W / 2);
 export const CARD_W = Math.max(
   Math.ceil(PANEL_W + 4),
   Math.ceil(CARD_LAYOUT_HALF * 2 + 8),
 );
 export const CARD_H = 278;
 
-const PANEL_Y = 8;
 const REWARD_BADGE_Y = -12;
 
 export class CustomerView extends PIXI.Container {
@@ -66,19 +69,21 @@ export class CustomerView extends PIXI.Container {
 
     this._avatarSprite = new PIXI.Sprite();
     this._avatarSprite.anchor.set(0.5, 1.0);
-    this._avatarSprite.position.set(0, 0);
+    this._avatarSprite.position.set(0, AVATAR_FEET_Y);
     this._avatarSprite.visible = false;
     this.addChild(this._avatarSprite);
 
     this._avatar = new PIXI.Text('', { fontSize: 52 });
     this._avatar.anchor.set(0.5, 1.0);
-    this._avatar.position.set(0, 0);
+    this._avatar.position.set(0, AVATAR_FEET_Y);
     this.addChild(this._avatar);
 
     this._infoPanel = new PIXI.Container();
     this._infoPanel.position.set(0, PANEL_Y);
+    this._infoPanel.zIndex = 5;
     this.addChild(this._infoPanel);
 
+    this.sortChildren();
     this.visible = false;
   }
 
@@ -261,7 +266,7 @@ export class CustomerView extends PIXI.Container {
   private _buildRewardBadge(): void {
     if (!this._customer) return;
     const badge = new PIXI.Container();
-    badge.position.set(0, REWARD_BADGE_Y);
+    badge.position.set(PANEL_W / 2, REWARD_BADGE_Y);
 
     const iconSize = 22;
     const gap = 4;
@@ -309,9 +314,11 @@ export class CustomerView extends PIXI.Container {
     content.position.set(padX, bh / 2);
     badge.addChild(bg);
     badge.addChild(content);
-    badge.pivot.set(bw / 2, bh / 2);
+    badge.pivot.set(bw, bh / 2);
+    badge.zIndex = 8;
     this.addChild(badge);
     this._rewardBadge = badge;
+    this.sortChildren();
   }
 
   private _clearRewardBadge(): void {
@@ -370,10 +377,10 @@ export class CustomerView extends PIXI.Container {
 
     const slotCornerR = Math.max(8, Math.round(cs * 0.12));
     const checkPad = Math.max(4, Math.round(cs * 0.07));
-    /** 满足：与棋盘订单格一致的浅绿底 + 更大对钩 */
+    /** 满足：与棋盘订单格一致的薄荷浅底 + 绿描边 + 更大对钩 */
     const checkTarget = Math.min(40, Math.max(28, Math.round(cs * 0.46)));
 
-    // 每个需求槽都有圆角底框 + 描边：未满足浅米底，已满足浅绿底
+    // 每个需求槽都有圆角底框 + 描边：未满足浅米底，已满足暖黄底
     const slotBg = new PIXI.Graphics();
     if (filled) {
       slotBg.lineStyle(
@@ -508,7 +515,7 @@ export class CustomerView extends PIXI.Container {
     }
 
     const txt = new PIXI.Text('完成', {
-      fontSize: 15,
+      fontSize: 18,
       fill: 0xFFFFFF,
       fontFamily: FONT_FAMILY,
       fontWeight: 'bold',
@@ -526,7 +533,7 @@ export class CustomerView extends PIXI.Container {
     const btnCenterX = COMPLETE_BTN_X;
     const btnCenterY = COMPLETE_BTN_Y;
     btn.position.set(btnCenterX, btnCenterY);
-    btn.zIndex = 999;
+    btn.zIndex = 2000;
     btn.on('pointertap', () => {
       if (this._customer) {
         const globalPos = this.toGlobal(new PIXI.Point(0, 0));
@@ -536,6 +543,7 @@ export class CustomerView extends PIXI.Container {
     });
 
     this.addChild(btn);
+    this.sortChildren();
     this._completeBtn = btn;
 
     const proxy = { t: 0 };

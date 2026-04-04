@@ -147,14 +147,14 @@ const PLANT_OUTCOMES_TOOL_L3: ToolProduceOutcome[] = [
   { category: Category.FLOWER, line: FlowerLine.FRESH, level: 1, weight: 100 },
 ];
 
-/** 园艺 L4 工具：沿用改版前 L3 园艺产出（鲜花1 / 绿植1 / 少量鲜花2） */
+/** 园艺 L4 工具：育苗仓 — 鲜花/绿植入门混产 */
 const PLANT_OUTCOMES_TOOL_L4: ToolProduceOutcome[] = [
   { category: Category.FLOWER, line: FlowerLine.FRESH, level: 1, weight: 50 },
   { category: Category.FLOWER, line: FlowerLine.GREEN, level: 1, weight: 40 },
   { category: Category.FLOWER, line: FlowerLine.FRESH, level: 2, weight: 10 },
 ];
 
-/** 园艺 L5 工具：鲜花/绿植 1～2 级为主，极低概率鲜花 3 级 */
+/** 园艺 L5 工具：简易温室 — 鲜花/绿植 1～2 级为主，极低鲜花 3 级 */
 const PLANT_OUTCOMES_TOOL_L5: ToolProduceOutcome[] = [
   { category: Category.FLOWER, line: FlowerLine.FRESH, level: 1, weight: 27 },
   { category: Category.FLOWER, line: FlowerLine.FRESH, level: 2, weight: 27 },
@@ -163,7 +163,7 @@ const PLANT_OUTCOMES_TOOL_L5: ToolProduceOutcome[] = [
   { category: Category.FLOWER, line: FlowerLine.FRESH, level: 3, weight: 2 },
 ];
 
-/** 园艺 L6 工具：高级温室 — 偏高等级鲜花/绿植 */
+/** 园艺 L6 工具：温室 — 偏高等级鲜花/绿植 */
 const PLANT_OUTCOMES_LV4: ToolProduceOutcome[] = [
   { category: Category.FLOWER, line: FlowerLine.FRESH, level: 5, weight: 28 },
   { category: Category.FLOWER, line: FlowerLine.GREEN, level: 4, weight: 25 },
@@ -171,6 +171,17 @@ const PLANT_OUTCOMES_LV4: ToolProduceOutcome[] = [
   { category: Category.FLOWER, line: FlowerLine.GREEN, level: 5, weight: 12 },
   { category: Category.FLOWER, line: FlowerLine.FRESH, level: 7, weight: 8 },
   { category: Category.FLOWER, line: FlowerLine.GREEN, level: 6, weight: 5 },
+];
+
+/** 园艺 L7 工具：高级温室 — 向高等级鲜花/绿植倾斜（对齐 13 级链末端） */
+const PLANT_OUTCOMES_TOOL_L7: ToolProduceOutcome[] = [
+  { category: Category.FLOWER, line: FlowerLine.FRESH, level: 7, weight: 24 },
+  { category: Category.FLOWER, line: FlowerLine.GREEN, level: 6, weight: 22 },
+  { category: Category.FLOWER, line: FlowerLine.FRESH, level: 8, weight: 18 },
+  { category: Category.FLOWER, line: FlowerLine.GREEN, level: 7, weight: 14 },
+  { category: Category.FLOWER, line: FlowerLine.FRESH, level: 9, weight: 12 },
+  { category: Category.FLOWER, line: FlowerLine.GREEN, level: 8, weight: 7 },
+  { category: Category.FLOWER, line: FlowerLine.FRESH, level: 10, weight: 3 },
 ];
 
 const plantToolTemplate = (): Omit<ToolDef, 'itemId' | 'level'>[] => [
@@ -236,6 +247,17 @@ const plantToolTemplate = (): Omit<ToolDef, 'itemId' | 'level'>[] => [
     produceOutcomes: PLANT_OUTCOMES_LV4,
     cooldown: 360,
     producesBeforeCooldown: 8,
+    staminaCost: 1,
+  },
+  {
+    toolLine: ToolLine.PLANT,
+    produceCategory: Category.FLOWER,
+    produceLine: FlowerLine.FRESH,
+    canProduce: true,
+    produceTable: [],
+    produceOutcomes: PLANT_OUTCOMES_TOOL_L7,
+    cooldown: 420,
+    producesBeforeCooldown: 6,
     staminaCost: 1,
   },
 ];

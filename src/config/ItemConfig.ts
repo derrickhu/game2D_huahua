@@ -1,9 +1,9 @@
 /**
  * 物品配置
  *
- * 产品线：花系（鲜花/花束/绿植各10级 + 包装中间品4级）+ 饮品 3线x8级
+ * 产品线：花系（鲜花/绿植各13级、花束10级 + 包装中间品4级）+ 饮品 3线x8级
  * 工具线：园艺6级、包装5级、茶饮/冷饮/烘焙各5级；工具1–2级仅合成，其后可产出
- * 宝箱：5级；红包：4级（散落花愿利是，双击入账花愿）；钻石袋 / 体力宝箱：各 3 级（散落对应货币块）
+ * 宝箱：5级；红包：4级（散落花愿利是，双击入账花愿）；钻石袋 / 体力箱工具：各 3 级（散落货币块）
  */
 
 import {
@@ -98,15 +98,17 @@ export interface ItemDef {
 const FLOWER_DATA: [FlowerLine, string[]][] = [
   [FlowerLine.FRESH, [
     '花种子', '花苞', '小雏菊', '向日葵', '康乃馨',
-    '玫瑰', '百合', '绣球花', '蝴蝶兰', '金色牡丹',
+    '玫瑰', '百合', '郁金香', '绣球花', '蝴蝶兰',
+    '荷花', '芍药', '金色牡丹',
   ]],
   [FlowerLine.BOUQUET, [
     '一小捧散花', '迷你花束', '郁金香花束', '玫瑰满天星', '田园混搭花束',
     '精美花盒', '红玫瑰大束', '花艺礼篮', '鎏金花束', '传说花束',
   ]],
   [FlowerLine.GREEN, [
-    '小芽苗', '多肉盆栽', '绿萝', '波士顿蕨', '虎皮兰',
-    '龟背竹', '琴叶榕', '柠檬树', '三角梅', '松树盆景',
+    '小芽苗', '铜钱草', '多肉盆栽', '绿萝', '波士顿蕨',
+    '虎皮兰', '龟背竹', '琴叶榕', '仙人掌', '发财树',
+    '红掌', '三角梅', '松树盆景',
   ]],
   [FlowerLine.WRAP, [
     '丝带卷', '丝带条', '包装纸', '花艺材料篮',
@@ -132,7 +134,7 @@ const DRINK_DATA: [DrinkLine, string[]][] = [
 
 const TOOL_DATA: [ToolLine, string[]][] = [
   [ToolLine.PLANT, [
-    '铲子', '水壶', '育苗盘', '简易温室', '温室', '高级温室',
+    '铲子', '水壶', '育苗盘', '育苗仓', '简易温室', '温室', '高级温室',
   ]],
   [ToolLine.ARRANGE, [
     '铁丝', '铁丝剪刀', '简易包装台', '包装台', '高级包装台',
@@ -162,7 +164,7 @@ function buildItemDefs(): Map<string, ItemDef> {
 
   // 花系
   for (const [line, names] of FLOWER_DATA) {
-    const maxLv = line === FlowerLine.WRAP ? names.length : 10;
+    const maxLv = names.length;
     for (let i = 0; i < names.length; i++) {
       const id = `flower_${line}_${i + 1}`;
       const lv = i + 1;
@@ -236,8 +238,9 @@ function buildItemDefs(): Map<string, ItemDef> {
   }
 
   // 货币物品：体力 / 钻石 各 4 级；花愿利是为独立块（见下）
+  // 棋盘货币双击入账：无单独「合成奖励」，故每级 amount 须严格 > 2×上一级，合成到顶才不亏于全点低级（体力曾违反此条已修正）
   const CURRENCY_DATA: [CurrencyLine, string[], 'stamina' | 'huayuan' | 'diamond', string, number[]][] = [
-    [CurrencyLine.STAMINA, ['体力瓶', '体力罐', '体力桶', '体力宝箱'], 'stamina', 'icon_energy', [2, 5, 12, 25]],
+    [CurrencyLine.STAMINA, ['体力瓶', '体力罐', '体力桶', '精粹体力壶'], 'stamina', 'icon_energy', [8, 18, 38, 80]],
     [CurrencyLine.DIAMOND, ['碎钻', '钻石', '大钻石', '璨钻'], 'diamond', 'icon_gem', [1, 3, 8, 18]],
   ];
   for (const [line, names, rewardType, icon, amounts] of CURRENCY_DATA) {
@@ -334,7 +337,7 @@ function buildItemDefs(): Map<string, ItemDef> {
     });
   }
 
-  // 体力宝箱（3级，散落 currency_stamina_*）
+  // 体力箱工具 stamina_chest_*（3 级，散落 currency_stamina_*）
   const staminaChestNames = ['元气小箱', '能量补给箱', '澎湃体力宝箱'];
   for (let i = 0; i < staminaChestNames.length; i++) {
     const id = `stamina_chest_${i + 1}`;

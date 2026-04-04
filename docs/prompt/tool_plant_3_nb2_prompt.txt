@@ -1,9 +1,5 @@
-Single square 1:1 game icon for a merge flower-shop game — **same art style as the shovel and watering can** in this plant tool line: **isometric / three-quarter view**, **very thin tonal outlines** (slightly darker same hue as each surface — **not** black), soft cel-shading, top-left light, matte materials.
+Cute small mobile game item icon, 3/4 top-down isometric view. Rounded chunky proportions, slightly chibi/compact. Soft smooth gradient shading with small bright highlight spots on surfaces. No hard black outlines — edges defined by color transitions and subtle darker-tone borders only. Warm cozy color palette with realistic material colors. Clean simple white background. No text, no labels, no UI elements. The item should look like a tiny desktop ornament.
 
-ONE object only: a **seedling tray (育苗盘)** — **low flat rectangular plastic tray** with a **grid of small square cells** (6–12 cells visible), each cell filled with **dark brown soil**, **no** tall plants — optional **tiny barely visible sprouts** only. Tray body **muted forest green** or **warm gray-green** recycled plastic look; **clear, not muddy** colors.
+ONE object only — a seedling tray (育苗盘) for a merge flower-shop game: a shallow rectangular or softly rounded tray with 6–9 small planting cells, dark brown soil in each, 2–4 cells showing tiny lime-green twin-leaf sprouts only (no big flowers). Warm terracotta or recycled-plastic tray rim (#C67B5C or muted gray-brown). Reads as early-stage nursery, not a greenhouse. Centered; fills about 88–92% of the square.
 
-**COMPOSITION:** tray centered, fills **~80–88%** of the square frame.
-
-**BACKGROUND:** ONLY solid **#FF00FF** outside the object.
-
-**NO** text, logos. **CHROMA-SAFE:** no purple/magenta/pink on the tray.
+LINE palette: terracotta, earthy brown soil, soft sprout green, muted gray-green for any plastic frame. NO purple, magenta, or hot pink.

@@ -1,0 +1,7 @@
+Wide background plate for a cozy merge flower-shop game — the zone BEHIND customer bust portraits. Style must read clearly as **2D Japanese comic / shōjo manga color background** (少女漫画・手游过场底图): clean digital cel shading, soft flat color blocks, gentle airbrush gradients, optional very subtle printed screentone or halftone dots in midtones — NOT 3D render, NOT photoreal, NOT painterly oil. Thin to medium linework on architecture and flower masses is OK only if those lines will be **completely obliterated** by the blur described below.
+
+Blur requirement (critical): the **entire** final image must look like a manga BG panel shot with a **very strong camera blur** — extreme shallow depth of field, huge soft bokeh orbs, heavy gaussian-style smear so almost NO edge survives. Flower colors become bright fuzzy clouds; shelves and windows become vague rectangles of color. One step **more defocused** than a typical soft bokeh photo — closer to “only saturated color fog + light blobs”. No readable text, no sharp glass, no crisp petals anywhere.
+
+Subject (seen only as blurred color): hyper-dense indoor flower shop or greenhouse — buckets, tiers, hanging baskets exploding with roses, tulips, peonies, hydrangeas, sunflowers, lilies — vivid reds, corals, yellows, magentas, purples, fresh greens. Sunny warm high-key, 花团锦簇, much richer than a plain pastel wall.
+
+Technical: single image, no UI, no characters, no black bars. Blur is baked into the image.

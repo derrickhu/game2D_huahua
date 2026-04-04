@@ -1,9 +1,5 @@
-Single square 1:1 game icon for a merge flower-shop game. ONE object only — a metal watering can (水壶) — centered; it must occupy 88–92% of the frame, almost filling the square, thin margin of #FF00FF only.
+Cute small mobile game item icon, 3/4 top-down isometric view. Rounded chunky proportions, slightly chibi/compact. Soft smooth gradient shading with small bright highlight spots on surfaces. No hard black outlines — edges defined by color transitions and subtle darker-tone borders only. Warm cozy color palette with realistic material colors. Clean simple white background. No text, no labels, no UI elements. The item should look like a tiny desktop ornament.
 
-LINE — deep forest green matte enamel body (#2D4A3E), cream or pale clay accent band, dark gray spout (#5A6B66), classic shape — clearly heavier than a shovel icon. Muted — NOT vivid candy colors.
+ONE object only — a small round watering can for a merge flower-shop game: chubby enamel or painted metal body in soft sage or gray-green (#5A6B66 to #7A8F88), short spout with gentle curve, rounded handle, maybe a tiny embossed droplet shape (no text). Cozy cottage style. Centered; fills about 88–92% of the square.
 
-STYLE: Cute hand-painted 2D; clear volume; soft outline. NO text, logos.
-
-BACKGROUND: ONLY solid #FF00FF outside the object.
-
-CHROMA-SAFE: No purple/magenta/pink in highlights or metal.
+LINE palette (whole plant tool series): terracotta accents allowed on rim; slate gray-green metal, forest green (#2D4A3E), warm wood if any grip detail. NO purple, magenta, or hot pink.

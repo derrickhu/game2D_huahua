@@ -1,12 +1,12 @@
 #!/usr/bin/env python3
 """
-花店装修面板 UI — NB2 拆件（品红底），参考已定稿的整屏原型 PNG。
+花店装修面板 UI — NB2 拆件；大面板空白壳用**纯白底**便于 rembg，小件仍用品红底。
 
 参考图默认：game_assets/.../ui_prototypes/decoration_panel_bottom_sheet_prototype_nb2_portrait.png
 （竖版、与游戏 9:16 画幅比例一致；横版旧稿见 decoration_panel_bottom_sheet_prototype_nb2.png。）
 输出：game_assets/huahua/assets/deco_panel_ui_nb2/for_review/
 
-每张子图单独生成，便于品红抠图 / rembg 后拼层；无文字，游戏里叠字。
+大面板：`#FFFFFF` 底板 + rembg；其余拆件：品红底；无文字，游戏里叠字。
 """
 from __future__ import annotations
 
@@ -34,37 +34,38 @@ Match that mockup's saturation, warmth, and bevel language.
 
 Draw ONLY the isolated asset below — not the full screen.
 
-CHROMA: For small isolated icons/buttons: flat #FF00FF outside the subject. For the full 9:16 main panel blank asset: NO magenta void — use a short soft blurred flower-shop strip at the top if needed, then the panel full width; crisp edges only where the panel meets the scene.
+CHROMA: The separate “main panel blank” asset uses pure white #FFFFFF matting (see its block). All other small icons/buttons in this batch: flat #FF00FF outside the subject.
 
 NO text (any language), NO numbers, NO watermark, NO callout circles. If the reference shows red rectangles or annotation boxes, IGNORE them — do not draw red boxes. Soft 3D, colored outlines, top-left highlights.
 """.strip()
 
 
 BODY_MAIN_PANEL_BLANK = """
-ASSET: ONE complete EMPTY shell of the flower-shop DECORATION bottom sheet — portrait mobile framing, aspect ratio 9:16, matching the REFERENCE image layout, color, corner radii, and proportions (panel ~lower two-thirds feel, full width, no side margins on the sheet).
+ASSET: ONE complete EMPTY shell of the flower-shop DECORATION bottom sheet — portrait 9:16, cream body + a DISTINCT header band. Match reference warmth, but OVERRIDE the reference if it shows a gradient header.
 
-Include ONLY structural chrome; everything interactive or content is stripped:
+MATTING (HIGHEST PRIORITY): Every pixel OUTSIDE the painted panel must be EXACTLY solid #FFFFFF (RGB 255,255,255) — pure white only, no grey, no gradient. This is for AI background removal — white is NOT allowed inside the panel fill.
 
-• TOP: wide header band — juicy peach-to-coral or apricot soft gradient, gentle 3D pillow volume, ONE thin warm champagne-gold hairline along the top edge (single stroke). Header must be completely blank — NO Chinese/English title, NO circular close button, NO icons.
+FORBIDDEN outside the panel: grass, roof, blur, screenshot, letterbox, vignette, icons, any scene. No strip above the header except white. Rounded top corners of the sheet may sit against white above.
 
-• MAIN BODY: warm cream / pale ivory with faint peach tint; soft inner highlight along top lip of body, subtle upward diffuse shadow separating from blurred scene if a thin upper strip of background exists (~8–12% of height max).
+NO pink/magenta glow leaking from the panel edge into the white (minimal anti-alias only).
 
-• LEFT column ~20–25% of panel width: plain vertical zone (cream/peach-ivory). NO pill tabs, NO stacked buttons, NO text, NO icons — only empty space where tabs would sit.
+FULL BLEED: Opaque UI paint touches LEFT, RIGHT, and BOTTOM canvas edges (no floating card, no white gutters on those three sides).
 
-• RIGHT area ~75–80%: ONE large inset rounded rectangle (slightly darker warm tan / beige than body) — the recessed grid viewport. Interior must be perfectly empty: NO furniture thumbnails, NO cards, NO stars, NO green CTAs, NO grid slot drawings, NO placeholder photos.
+LAYOUT TWEAKS (empty chrome):
+• LEFT category rail (critical — OVERRIDE mockup): NARROW ~12–15% of total panel width. **Only a continuous flat color block** — same warm ivory / pale peach-cream as the body, or one uniform slightly different flat tint. **Absolutely NO** tab pills, NO stacked rounded-rectangle “buttons”, NO empty slot frames, NO vertical list of panels, NO embossed capsules, NO fake placeholders for future icons, NO inner shadows that read as separate widgets, NO icons or glyphs. The left column must look like **plain unpainted gutter** where code will draw tabs later — zero UI chrome. Optional: ONE hairline vertical rule at the **right** edge of this rail (separating rail from main area) is allowed; nothing else in the rail.
+• RIGHT main area: ~85–88% width — ONE flat filled rectangle, same warm ivory or pale peach-cream as the main body OR a single slightly warmer flat tan — absolutely NO recessed “well”, NO inner drop shadow, NO 3D pit, NO bevel that looks carved in. Flat color only; optional single 1px soft divider line between left rail and right zone.
+• HEADER BAND (critical): ONE solid, uniform fill — a single warm peach-coral OR soft apricot (choose ONE hue, one apparent color). **NO horizontal gradient**, NO left-to-right color fade, NO second color blended across the band, NO “sunset” wash, NO sky or atmospheric blend. Depth comes ONLY from **hand-painted UI volume**: soft pillow/bevel, gentle highlight along the top inner edge, subtle shadow where the header meets the body, optional ONE thin champagne-gold hairline rim — cozy merge-game panel, not a photo. **FORBIDDEN inside the header:** roof shapes, building silhouettes, dark blobs, skylines, wood planks that read as exterior architecture, any “scene” behind the UI.
+• NO text, NO close button on this asset.
+• NO furniture, NO progress bar, NO numbers, NO watermark.
 
-• FORBIDDEN: progress bar, “已收集” row, any numbers, any labels, red markup rectangles from the reference, watermarks.
-
-• NO heavy yellow double-gold outer frame. Rounded top corners of the whole sheet (~large radius); bottom edge straight and flush to bottom of canvas.
-
-Output is a clean UI illustration ready for engineers to overlay text and icons in code. Do NOT fill the viewport with chroma #FF00FF unless you must; prefer real beige/tan empty inset.
+Interior = UI colors only; exterior = #FFFFFF only.
 """.strip()
 
 
 BODY_HEADER_RIBBON = """
-ASSET: ONLY the header title strip from the same bottom sheet — wide peach-to-apricot or soft coral-pink gradient band, soft 3D pillow volume, lighter highlight along top, ONE thin warm champagne-gold hairline rim (single stroke), tiny shadow underneath separating from body.
+ASSET: ONLY the header title strip from the same bottom sheet — wide band with ONE solid warm peach-coral or apricot fill (no horizontal gradient). Soft 3D pillow volume, lighter highlight along top inner edge, ONE thin warm champagne-gold hairline rim (single stroke), tiny shadow underneath separating from body.
 
-Blank center — no text. No close button attached, no house icon.
+Blank center — no text. No close button attached, no house icon, no roof or scene shapes.
 
 Flat #FF00FF around the strip. Strip occupies ~35–50% of canvas height centered horizontally.
 """.strip()

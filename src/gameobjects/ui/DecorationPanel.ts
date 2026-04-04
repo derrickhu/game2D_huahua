@@ -2,9 +2,9 @@
  * 花店装修面板
  *
  * 布局：
- * - 底图复用 merge_chain_panel（金边奶油底）
- * - 顶部彩带 + 标题；其下居中「已收集」进度 + 分割线；右上角关闭
- * - 左侧：分类 Tab 栏（药丸式纯文字）
+ * - 底图优先 decoration_panel_bg_nb2（桃珊瑚底栏 NB2+抠图），缺资源时回退 merge_chain_panel
+ * - 顶栏标题「家具」叠在底板粉区；其下「已收集」进度 + 分割线；点遮罩关闭（无彩带/无关闭钮）
+ * - 左侧：分类 Tab 栏（药丸底图 NB2 + 程序叠字；缺图时回退矢量圆角）
  * - 右侧：家具/房间风格卡网格（2 列，可纵向滑动；move/up 绑 canvas，兼容微信小游戏）
  * - 卡片为程序绘制双层金边圆角 + 贴图按钮 + 左上角星星值（购买后获得的星星数）
  */
@@ -33,20 +33,14 @@ import { DESIGN_WIDTH, FONT_FAMILY, COLORS } from '@/config/Constants';
 import { RoomLayoutManager } from '@/managers/RoomLayoutManager';
 import { setPendingPlaceDeco } from '@/core/DecoPlaceIntent';
 
-const PANEL_W = DESIGN_WIDTH - 40;
-const PANEL_MARGIN_LEFT = 36;
+/** 全宽底栏：与 NB2 全幅贴边原型一致（旧版左右各留边会造成左侧大缝） */
+const PANEL_W = DESIGN_WIDTH;
+const PANEL_MARGIN_LEFT = 0;
 const PANEL_H_RATIO = 0.74;
 const PANEL_TOP_R = 20;
 
-const RIBBON_MAX_W = Math.min(PANEL_W - 8, Math.round(PANEL_W * 0.98));
-const RIBBON_MAX_H = 124;
-/** 彩带相对面板顶的位置（与 _contentTopY 联动） */
-const RIBBON_Y = 34;
-
-/** 关闭钮：面板右上角，距右边缘（锚点为中心；数值越大越靠左） */
-const CLOSE_BTN_INSET_RIGHT = 56;
-/** 彩带底到收集进度文字 */
-const PROGRESS_BELOW_RIBBON = 8;
+/** 粉区下沿到「已收集」文字中心的额外间距 */
+const PROGRESS_BELOW_HEADER = 8;
 /** 进度文字基线与分割线间距 */
 const PROGRESS_TO_DIVIDER = 14;
 /** 分割线与家具区顶边（小一点让网格更贴上分割线） */
@@ -56,13 +50,13 @@ const HEADER_DIVIDER_WIDTH_RATIO = 0.56;
 /** 网格区距面板底边的留白，避免卡片贴到金边外；略大以保证裁切在画框内 */
 const CONTENT_BOTTOM = 36;
 
-/** 左侧分类栏宽度（加大、避免贴边显得「偏」） */
-const TAB_W = 108;
+/** 左侧分类栏（加宽药丸，更易点） */
+const TAB_W = 122;
 const TAB_GAP = 10;
-/** Tab 列左边距（再往右，完全落在奶油区内） */
-const TAB_COLUMN_LEFT = 60;
+/** Tab 列左边距 */
+const TAB_COLUMN_LEFT = 40;
 /** Tab 列整体上移（像素） */
-const TAB_COLUMN_NUDGE_Y = 12;
+const TAB_COLUMN_NUDGE_Y = 8;
 const GRID_MARGIN_RIGHT = 14;
 
 /** 侧边 Tab：选中态暖色底 / 未选中灰奶油 */
@@ -133,10 +127,7 @@ export class DecorationPanel extends PIXI.Container {
   private _headerDivider!: PIXI.Graphics;
   private _titleText!: PIXI.Text;
   private _progressText!: PIXI.Text;
-  private _closeBtn: PIXI.Sprite | PIXI.Text | null = null;
-  /** 标题/彩带行中心 y，供关闭钮对齐 */
-  private _titleCenterY = 58;
-  /** Tab / 网格顶边（分割线以下，_build 内按彩带高度计算） */
+  /** Tab / 网格顶边（分割线以下，_build 内按顶栏比例计算） */
   private _contentTopY = 168;
   private _isOpen = false;
   private _activeTab: DecoPanelTabId = 'flower_room';
@@ -223,11 +214,6 @@ export class DecorationPanel extends PIXI.Container {
     this._pendingGridTap = null;
   }
 
-  private _layoutCloseButton(): void {
-    if (!this._closeBtn) return;
-    this._closeBtn.position.set(PANEL_W - CLOSE_BTN_INSET_RIGHT, this._titleCenterY);
-  }
-
   private _addScrollPlate(inner: PIXI.Container, w: number, h: number): void {
     const plate = new PIXI.Container();
     plate.eventMode = 'static';
@@ -302,10 +288,12 @@ export class DecorationPanel extends PIXI.Container {
     this._content.position.set(panelX, panelY);
     this.addChild(this._content);
 
-    // --- panel background: merge_chain_panel or fallback ---
-    const panelTex = TextureCache.get('merge_chain_panel');
-    if (panelTex?.width) {
-      const panelBg = new PIXI.Sprite(panelTex);
+    // --- panel background: NB2 装修壳 or merge_chain_panel ---
+    const nb2Tex = TextureCache.get('decoration_panel_bg_nb2');
+    const mergeTex = TextureCache.get('merge_chain_panel');
+    const basePanelTex = nb2Tex ?? mergeTex;
+    if (basePanelTex?.width) {
+      const panelBg = new PIXI.Sprite(basePanelTex);
       panelBg.width = PANEL_W;
       panelBg.height = panelH;
       panelBg.eventMode = 'static';
@@ -322,27 +310,12 @@ export class DecorationPanel extends PIXI.Container {
       this._content.addChild(g);
     }
 
-    // --- ribbon（加大、下移） ---
-    const ribbonTex = TextureCache.get('merge_chain_ribbon');
-    let titleCenterY = 58;
-    let ribbonBottom = titleCenterY + 36;
-    if (ribbonTex?.width) {
-      const rib = new PIXI.Sprite(ribbonTex);
-      const s = Math.min(RIBBON_MAX_W / ribbonTex.width, RIBBON_MAX_H / ribbonTex.height);
-      rib.scale.set(s);
-      rib.anchor.set(0.5, 0);
-      rib.position.set(PANEL_W / 2, RIBBON_Y);
-      rib.eventMode = 'static';
-      rib.zIndex = 5;
-      this._content.addChild(rib);
-      titleCenterY = RIBBON_Y + (ribbonTex.height * s) * 0.45;
-      ribbonBottom = RIBBON_Y + ribbonTex.height * s;
-    }
-    this._titleCenterY = titleCenterY;
+    // --- 顶栏：无彩带；标题「家具」叠在底板粉区 ---
+    const titleCenterY = Math.round(panelH * 0.059);
+    const pinkBandBottom = Math.round(panelH * 0.132);
 
-    // --- title (outlined white text like MergeChainPanel) ---
-    this._titleText = new PIXI.Text('花店装修', {
-      fontSize: 30,
+    this._titleText = new PIXI.Text('家具', {
+      fontSize: 34,
       fill: 0xffffff,
       fontFamily: FONT_FAMILY,
       fontWeight: 'bold',
@@ -358,8 +331,8 @@ export class DecorationPanel extends PIXI.Container {
     this._titleText.zIndex = 6;
     this._content.addChild(this._titleText);
 
-    // --- 收集进度：彩带正下方居中（红框区域） ---
-    const progressY = Math.round(ribbonBottom + PROGRESS_BELOW_RIBBON);
+    // --- 收集进度：粉区下、分割线之上 ---
+    const progressY = Math.round(pinkBandBottom + PROGRESS_BELOW_HEADER);
     this._progressText = new PIXI.Text('', {
       fontSize: 20,
       fill: 0xfff5e8,
@@ -431,33 +404,6 @@ export class DecorationPanel extends PIXI.Container {
       this._applyScroll();
     });
 
-    // 关闭钮：右上角，最后加入保证盖在 Tab/网格之上
-    const closeTex = TextureCache.get('warehouse_close_btn');
-    if (closeTex?.width) {
-      const closeBtn = new PIXI.Sprite(closeTex);
-      const cs = Math.min(54 / closeTex.width, 54 / closeTex.height);
-      closeBtn.scale.set(cs);
-      closeBtn.anchor.set(0.5, 0.5);
-      closeBtn.eventMode = 'static';
-      closeBtn.cursor = 'pointer';
-      closeBtn.zIndex = 2000;
-      closeBtn.on('pointertap', () => this.close());
-      this._content.addChild(closeBtn);
-      this._closeBtn = closeBtn;
-    } else {
-      const closeBtn = new PIXI.Text('✕', {
-        fontSize: 34, fill: 0xffffff, fontFamily: FONT_FAMILY, fontWeight: 'bold',
-        stroke: 0x7a4530, strokeThickness: 4,
-      } as any);
-      closeBtn.anchor.set(0.5, 0.5);
-      closeBtn.eventMode = 'static';
-      closeBtn.cursor = 'pointer';
-      closeBtn.zIndex = 2000;
-      closeBtn.on('pointertap', () => this.close());
-      this._content.addChild(closeBtn);
-      this._closeBtn = closeBtn;
-    }
-    this._layoutCloseButton();
     this._panelHBuilt = panelH;
   }
 
@@ -494,12 +440,16 @@ export class DecorationPanel extends PIXI.Container {
     this._tabContainer.removeChildren();
 
     const tabCount = DECO_PANEL_TABS.length;
-    const tabH = Math.min(Math.floor(availH / tabCount), 66);
+    const tabH = Math.min(Math.floor(availH / tabCount), 82);
     const spare = Math.max(0, availH - tabCount * tabH);
     this._tabVerticalPad = Math.floor(spare * 0.2);
-    const pad = 4;
+    const pad = 3;
     const bw = TAB_W - pad * 2;
     const sceneId = CurrencyManager.state.sceneId;
+
+    const idleTabTex = TextureCache.get('deco_panel_tab_idle_nb2');
+    const selTabTex = TextureCache.get('deco_panel_tab_selected_nb2');
+    const useNb2TabSprites = idleTabTex != null && selTabTex != null;
 
     const makeTab = (row: number, isCurrent: boolean, title: string, onTap: () => void, footer?: string): void => {
       const tab = new PIXI.Container();
@@ -513,37 +463,47 @@ export class DecorationPanel extends PIXI.Container {
       drop.endFill();
       tab.addChild(drop);
 
-      const bg = new PIXI.Graphics();
-      if (isCurrent) {
-        bg.beginFill(TAB_BG_SELECTED);
-        bg.drawRoundedRect(pad, pad, bw, bh, r);
-        bg.endFill();
-        bg.lineStyle(2.5, COLORS.BUTTON_PRIMARY);
-        bg.drawRoundedRect(pad, pad, bw, bh, r);
-        const ir = Math.max(5, r - 3);
-        bg.lineStyle(1.2, TAB_BG_SELECTED_INNER, 0.85);
-        bg.drawRoundedRect(pad + 2, pad + 2, bw - 4, bh - 4, ir);
+      if (useNb2TabSprites) {
+        const tex = isCurrent ? selTabTex! : idleTabTex!;
+        const bg = new PIXI.Sprite(tex);
+        bg.anchor.set(0.5, 0.5);
+        bg.position.set(TAB_W / 2, tabH / 2);
+        bg.width = bw;
+        bg.height = bh;
+        tab.addChild(bg);
       } else {
-        bg.beginFill(TAB_BG_IDLE);
-        bg.drawRoundedRect(pad, pad, bw, bh, r);
-        bg.endFill();
-        bg.lineStyle(1.25, TAB_BORDER_IDLE, 0.95);
-        bg.drawRoundedRect(pad, pad, bw, bh, r);
+        const bg = new PIXI.Graphics();
+        if (isCurrent) {
+          bg.beginFill(TAB_BG_SELECTED);
+          bg.drawRoundedRect(pad, pad, bw, bh, r);
+          bg.endFill();
+          bg.lineStyle(2.5, COLORS.BUTTON_PRIMARY);
+          bg.drawRoundedRect(pad, pad, bw, bh, r);
+          const ir = Math.max(5, r - 3);
+          bg.lineStyle(1.2, TAB_BG_SELECTED_INNER, 0.85);
+          bg.drawRoundedRect(pad + 2, pad + 2, bw - 4, bh - 4, ir);
+        } else {
+          bg.beginFill(TAB_BG_IDLE);
+          bg.drawRoundedRect(pad, pad, bw, bh, r);
+          bg.endFill();
+          bg.lineStyle(1.25, TAB_BORDER_IDLE, 0.95);
+          bg.drawRoundedRect(pad, pad, bw, bh, r);
+        }
+        tab.addChild(bg);
       }
-      tab.addChild(bg);
 
       const label = new PIXI.Text(title, {
-        fontSize: isCurrent ? 17 : 15,
+        fontSize: isCurrent ? 19 : 17,
         fill: isCurrent ? 0x5a3528 : COLORS.TEXT_LIGHT,
         fontFamily: FONT_FAMILY,
         fontWeight: isCurrent ? 'bold' : 'normal',
       });
       label.anchor.set(0.5, 0.5);
-      label.position.set(TAB_W / 2, tabH / 2 - (footer ? 7 : 0));
+      label.position.set(TAB_W / 2, tabH / 2 - (footer ? 8 : 0));
       tab.addChild(label);
 
       if (footer) {
-        const ft = new PIXI.Text(footer, { fontSize: 11, fill: 0x888888, fontFamily: FONT_FAMILY });
+        const ft = new PIXI.Text(footer, { fontSize: 12, fill: 0x888888, fontFamily: FONT_FAMILY });
         ft.anchor.set(0.5, 1);
         ft.position.set(TAB_W / 2, tabH - 3);
         tab.addChild(ft);
@@ -569,7 +529,6 @@ export class DecorationPanel extends PIXI.Container {
 
   private _refreshAll(): void {
     const panelH = Math.round(Game.logicHeight * PANEL_H_RATIO);
-    this._layoutCloseButton();
     const gridH = panelH - this._contentTopY - CONTENT_BOTTOM;
     this._buildTabs(gridH);
     this._tabContainer.position.set(

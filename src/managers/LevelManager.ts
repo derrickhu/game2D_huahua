@@ -127,14 +127,15 @@ class LevelManagerClass {
   private _bindEvents(): void {
     EventBus.on('star:levelUp', (newLevel: number, oldLevel: number) => {
       const reward = aggregateStarLevelUpRewards(oldLevel, newLevel);
-      CurrencyManager.addStamina(reward.stamina);
+      if (reward.stamina > 0) CurrencyManager.addStamina(reward.stamina);
       if (reward.diamond > 0) CurrencyManager.addDiamond(reward.diamond);
 
       const boxLog = reward.rewardBoxItems.length
         ? ` 收纳盒:${reward.rewardBoxItems.map(b => `${b.itemId}×${b.count}`).join(',')}`
         : '';
+      const stLog = reward.stamina > 0 ? `体力+${reward.stamina} ` : '';
       console.log(
-        `[Level] 星级提升！${oldLevel}→${newLevel}星, 奖励: 体力+${reward.stamina} 钻石+${reward.diamond}${boxLog}`,
+        `[Level] 星级提升！${oldLevel}→${newLevel}星, 奖励: ${stLog}钻石+${reward.diamond}${boxLog}`,
       );
       EventBus.emit('level:up', newLevel, reward);
     });

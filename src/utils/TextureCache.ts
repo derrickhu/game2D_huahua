@@ -49,6 +49,8 @@ const MAIN_IMAGE_MAP: Record<string, string> = {
   cell_peek:      'images/ui/cell_peek.png',
   cell_key:       'images/ui/cell_key.png',
   shop_scene_bg:  'images/ui/shop_scene_bg.png',
+  /** 主界面客区试看：花团锦簇强虚化 NB2 稿（缺省回退 shop_scene_bg） */
+  shop_scene_bg_floral_nb2: 'images/ui/shop_scene_bg_floral_nb2.png',
   /** 仅底栏 ItemInfoBar 叶形标题条（与合成线弹窗彩带分离） */
   item_info_leaf_bar: 'images/ui/item_info_leaf_bar.png',
 };
@@ -119,6 +121,11 @@ const PANELS_IMAGE_MAP: Record<string, string> = {
   warehouse_slot_lock: 'subpkg_panels/images/ui/warehouse_slot_lock.png',
   merge_chain_ribbon: 'subpkg_panels/images/ui/merge_chain_ribbon.png',
   merge_chain_panel: 'subpkg_panels/images/ui/merge_chain_panel.png',
+  /** 花店装修面板底图：NB2 空白壳 + rembg（仅 DecorationPanel 使用；合成线仍用 merge_chain_panel） */
+  decoration_panel_bg_nb2: 'subpkg_panels/images/ui/decoration_panel_bg_nb2.png',
+  /** 装修面板左侧分类 Tab：NB2 品红底 + rembg；未选中 / 选中 */
+  deco_panel_tab_idle_nb2: 'subpkg_panels/images/ui/deco_panel_tab_idle_nb2.png',
+  deco_panel_tab_selected_nb2: 'subpkg_panels/images/ui/deco_panel_tab_selected_nb2.png',
   /** 水晶球/金剪刀确认弹窗：NB2+rembg，与合成线彩带同风格 */
   special_consumable_panel_bg: 'subpkg_panels/images/ui/special_consumable_panel_bg.png',
   special_consumable_use_btn: 'subpkg_panels/images/ui/special_consumable_use_btn.png',
@@ -162,6 +169,9 @@ const ITEMS_IMAGE_MAP: Record<string, string> = {
   flower_fresh_8:  'subpkg_items/images/flowers/fresh/flower_fresh_8.png',
   flower_fresh_9:  'subpkg_items/images/flowers/fresh/flower_fresh_9.png',
   flower_fresh_10: 'subpkg_items/images/flowers/fresh/flower_fresh_10.png',
+  flower_fresh_11: 'subpkg_items/images/flowers/fresh/flower_fresh_11.png',
+  flower_fresh_12: 'subpkg_items/images/flowers/fresh/flower_fresh_12.png',
+  flower_fresh_13: 'subpkg_items/images/flowers/fresh/flower_fresh_13.png',
 
   // ---- 花束线 (10张) ----
   flower_bouquet_1:  'subpkg_items/images/flowers/bouquet/flower_bouquet_1.png',
@@ -192,6 +202,9 @@ const ITEMS_IMAGE_MAP: Record<string, string> = {
   flower_green_8:  'subpkg_items/images/flowers/green/flower_green_8.png',
   flower_green_9:  'subpkg_items/images/flowers/green/flower_green_9.png',
   flower_green_10: 'subpkg_items/images/flowers/green/flower_green_10.png',
+  flower_green_11: 'subpkg_items/images/flowers/green/flower_green_11.png',
+  flower_green_12: 'subpkg_items/images/flowers/green/flower_green_12.png',
+  flower_green_13: 'subpkg_items/images/flowers/green/flower_green_13.png',
 
   // ---- 茶饮线 (8张) ----
   drink_tea_1: 'subpkg_items/images/drinks/tea/drink_tea_1.png',
@@ -230,6 +243,7 @@ const ITEMS_IMAGE_MAP: Record<string, string> = {
   tool_plant_4: 'subpkg_items/images/tools/plant/tool_plant_4.png',
   tool_plant_5: 'subpkg_items/images/tools/plant/tool_plant_5.png',
   tool_plant_6: 'subpkg_items/images/tools/plant/tool_plant_6.png',
+  tool_plant_7: 'subpkg_items/images/tools/plant/tool_plant_7.png',
 
   // ---- 工具：花艺线 ----
   tool_arrange_1: 'subpkg_items/images/tools/arrange/tool_arrange_1.png',

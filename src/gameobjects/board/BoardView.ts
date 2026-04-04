@@ -5,7 +5,15 @@ import * as PIXI from 'pixi.js';
 import { EventBus } from '@/core/EventBus';
 import { Game } from '@/core/Game';
 import { TweenManager, Ease } from '@/core/TweenManager';
-import { BOARD_COLS, BOARD_ROWS, CELL_GAP, BoardMetrics, COLORS, DESIGN_WIDTH } from '@/config/Constants';
+import {
+  BOARD_COLS,
+  BOARD_ROWS,
+  BOARD_BAR_HEIGHT,
+  CELL_GAP,
+  BoardMetrics,
+  COLORS,
+  DESIGN_WIDTH,
+} from '@/config/Constants';
 import { CellState } from '@/config/BoardLayout';
 import { findBoardProducerDef } from '@/config/BuildingConfig';
 import {
@@ -86,7 +94,7 @@ export class BoardView extends PIXI.Container {
   private _drawBoardArea(): void {
     const w = DESIGN_WIDTH;
     const h = BoardMetrics.areaHeight;
-    const BAR_H = 18;
+    const BAR_H = BOARD_BAR_HEIGHT;
 
     const tex = TextureCache.get('board_bg');
     if (tex) {
@@ -122,7 +130,9 @@ export class BoardView extends PIXI.Container {
       botBar.width = w;
       botBar.height = BAR_H;
       botBar.anchor.set(0, 0);
-      botBar.position.set(0, h);
+      // 与顶栏镜像：重暗部与底投影朝向棋盘一侧，上下两条观感一致
+      botBar.scale.y = -1;
+      botBar.position.set(0, h + BAR_H);
       this.addChild(botBar);
     } else {
       const fallbackBar = new PIXI.Graphics();

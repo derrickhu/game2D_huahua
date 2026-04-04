@@ -7,9 +7,13 @@ import { EventBus } from '@/core/EventBus';
 import { BoardManager } from './BoardManager';
 import { CurrencyManager } from './CurrencyManager';
 import { LevelManager } from './LevelManager';
-import { MULTI_SLOT_BONUS_RATE } from '@/config/OrderHuayuanConfig';
+import {
+  CHALLENGE_ORDER_HUAYUAN_MULT,
+  MULTI_SLOT_BONUS_RATE,
+  SINGLE_SLOT_MERGE_PARITY_FACTOR,
+} from '@/config/OrderHuayuanConfig';
 import { CUSTOMER_TYPES } from '@/config/CustomerConfig';
-import { Category, ITEM_DEFS } from '@/config/ItemConfig';
+import { Category, ITEM_DEFS, findItemId } from '@/config/ItemConfig';
 import {
   ORDER_TIERS,
   getOrderTierWeights,
@@ -114,7 +118,7 @@ function normalizeCustomerPersistState(raw: unknown): CustomerPersistState | nul
     const huayuanReward =
       typeof r.huayuanReward === 'number' && Number.isFinite(r.huayuanReward) && r.huayuanReward >= 0
         ? Math.floor(r.huayuanReward)
-        : CustomerManagerClass.computeOrderHuayuan(slots, bonusMultiplier);
+        : CustomerManagerClass.computeOrderHuayuan(slots, bonusMultiplier, orderType);
     const timeLimit =
       r.timeLimit === null || (typeof r.timeLimit === 'number' && Number.isFinite(r.timeLimit))
         ? (r.timeLimit as number | null)
@@ -218,7 +222,7 @@ class CustomerManagerClass {
         emoji: e.emoji,
         slots: e.slots.map(s => ({ itemId: s.itemId, lockedCellIndex: -1 })),
         allSatisfied: false,
-        huayuanReward: CustomerManagerClass.computeOrderHuayuan(e.slots, e.bonusMultiplier),
+        huayuanReward: CustomerManagerClass.computeOrderHuayuan(e.slots, e.bonusMultiplier, e.orderType),
         tier: e.tier,
         orderType: e.orderType,
         timeLimit: e.timeLimit,
@@ -260,19 +264,48 @@ class CustomerManagerClass {
     }
   }
 
-  /** 订单花愿 = 各需求物品 orderHuayuan 之和 × (1 + 多槽加成) × 成长倍率（读档归一化亦用） */
-  static computeOrderHuayuan(slots: { itemId: string }[], bonusMultiplier?: number): number {
+  /**
+   * 订单花愿 = ΣorderHuayuan×(1+多槽加成) → 单槽合成软保底 → 成长倍率 → 组合单倍率。
+   * 读档缺 huayuanReward 时与新生成共用本函数。
+   */
+  static computeOrderHuayuan(
+    slots: { itemId: string }[],
+    bonusMultiplier?: number,
+    orderType?: OrderType,
+  ): number {
     let sum = 0;
     for (const s of slots) {
       sum += ITEM_DEFS.get(s.itemId)?.orderHuayuan ?? 0;
     }
     const n = slots.length;
     if (n <= 0) return 0;
-    const base = Math.max(1, Math.round(sum * (1 + MULTI_SLOT_BONUS_RATE * (n - 1))));
+    let base = Math.max(1, Math.round(sum * (1 + MULTI_SLOT_BONUS_RATE * (n - 1))));
+    base = CustomerManagerClass._applySingleSlotMergeParityFloor(slots, base);
     if (bonusMultiplier && bonusMultiplier > 0 && bonusMultiplier !== 1) {
-      return Math.max(1, Math.round(base * bonusMultiplier));
+      base = Math.max(1, Math.round(base * bonusMultiplier));
+    }
+    if (orderType === 'challenge') {
+      base = Math.max(1, Math.round(base * CHALLENGE_ORDER_HUAYUAN_MULT));
     }
     return base;
+  }
+
+  /** 单槽 FLOWER/DRINK：不低于 0.9×2×H(L−1)，避免相对「两单 L−1」过亏 */
+  private static _applySingleSlotMergeParityFloor(
+    slots: { itemId: string }[],
+    preliminaryBase: number,
+  ): number {
+    if (slots.length !== 1) return preliminaryBase;
+    const def = ITEM_DEFS.get(slots[0]!.itemId);
+    if (!def?.orderHuayuan || def.level <= 1) return preliminaryBase;
+    if (def.category !== Category.FLOWER && def.category !== Category.DRINK) {
+      return preliminaryBase;
+    }
+    const prevId = findItemId(def.category, def.line, def.level - 1);
+    const prevHy = prevId ? ITEM_DEFS.get(prevId)?.orderHuayuan : undefined;
+    if (prevHy === undefined || prevHy < 1) return preliminaryBase;
+    const floor = Math.round(SINGLE_SLOT_MERGE_PARITY_FACTOR * 2 * prevHy);
+    return Math.max(preliminaryBase, floor);
   }
 
   deliver(uid: number): boolean {
@@ -344,7 +377,11 @@ class CustomerManagerClass {
       lockedCellIndex: -1,
     }));
 
-    const huayuan = CustomerManagerClass.computeOrderHuayuan(slots, gen.bonusMultiplier);
+    const huayuan = CustomerManagerClass.computeOrderHuayuan(
+      slots,
+      gen.bonusMultiplier,
+      gen.orderType,
+    );
 
     const customer: CustomerInstance = {
       uid: this._nextUid++,

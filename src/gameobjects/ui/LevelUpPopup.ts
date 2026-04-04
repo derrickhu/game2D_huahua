@@ -97,7 +97,10 @@ export class LevelUpPopup extends PIXI.Container {
     type RewardEntry = { texKey: string; amount: number; flyToBox: boolean };
     const entries: RewardEntry[] = [];
     if (huayuan > 0) entries.push({ texKey: 'icon_huayuan', amount: huayuan, flyToBox: false });
-    if (stamina > 0) entries.push({ texKey: 'icon_energy', amount: stamina, flyToBox: false });
+    if (stamina > 0) {
+      const chestCount = Math.max(1, Math.ceil(stamina / 20));
+      entries.push({ texKey: 'stamina_chest_1', amount: chestCount, flyToBox: false });
+    }
     if (diamond > 0) entries.push({ texKey: 'icon_gem', amount: diamond, flyToBox: false });
     for (const { itemId, count } of rewardBoxItems) {
       const def = ITEM_DEFS.get(itemId);
@@ -110,31 +113,49 @@ export class LevelUpPopup extends PIXI.Container {
     const CELL = 56;
     const HGAP = 12;
     const VGAP = 10;
+    const rowH = CELL + 36;
 
     const innerLeft = cx - barW / 2 + PAD_X;
     const innerRight = cx + barW / 2 - PAD_X;
 
     const barTop = curY;
 
-    let x = innerLeft;
-    let rowTop = barTop + PAD_TOP;
-    let rowH = 0;
+    /** 按行打包后每行在条内水平居中 */
+    const rows: RewardEntry[][] = [];
+    let curRow: RewardEntry[] = [];
+    let rowUsedW = 0;
+    for (const e of entries) {
+      const needW = (curRow.length > 0 ? HGAP : 0) + CELL;
+      if (curRow.length > 0 && innerLeft + rowUsedW + needW > innerRight + 0.5) {
+        rows.push(curRow);
+        curRow = [];
+        rowUsedW = 0;
+      }
+      if (curRow.length > 0) rowUsedW += HGAP;
+      rowUsedW += CELL;
+      curRow.push(e);
+    }
+    if (curRow.length > 0) rows.push(curRow);
+
     type Placement = { cx: number; ty: number; e: RewardEntry };
     const placements: Placement[] = [];
-
-    for (const e of entries) {
-      if (x + CELL > innerRight && x > innerLeft + 0.5) {
-        rowTop += rowH + VGAP;
-        x = innerLeft;
-        rowH = 0;
+    let y = barTop + PAD_TOP;
+    for (let r = 0; r < rows.length; r++) {
+      const row = rows[r]!;
+      const n = row.length;
+      const rowW = n * CELL + (n - 1) * HGAP;
+      const avail = innerRight - innerLeft;
+      const rowStartLeft = innerLeft + Math.max(0, (avail - rowW) / 2);
+      for (let i = 0; i < n; i++) {
+        const cxCell = rowStartLeft + CELL / 2 + i * (CELL + HGAP);
+        const e = row[i]!;
+        placements.push({ cx: cxCell, ty: y, e });
+        if (e.flyToBox) {
+          this._flySources.push({ x: cxCell, y: y + CELL / 2, texKey: e.texKey, count: e.amount });
+        }
       }
-      const cxCell = x + CELL / 2;
-      placements.push({ cx: cxCell, ty: rowTop, e });
-      if (e.flyToBox) {
-        this._flySources.push({ x: cxCell, y: rowTop + CELL / 2, texKey: e.texKey, count: e.amount });
-      }
-      rowH = Math.max(rowH, CELL + 36);
-      x += CELL + HGAP;
+      y += rowH;
+      if (r < rows.length - 1) y += VGAP;
     }
 
     let barH: number;
@@ -142,7 +163,7 @@ export class LevelUpPopup extends PIXI.Container {
       barH = rewardTex ? Math.round((barW * rewardTex.height) / rewardTex.width) : 120;
       barH = Math.max(120, Math.min(228, barH));
     } else {
-      const contentBottom = rowTop + rowH;
+      const contentBottom = y;
       barH = contentBottom - barTop + PAD_BOT;
       if (rewardTex) {
         const texH = Math.round((barW * rewardTex.height) / rewardTex.width);
@@ -393,7 +414,11 @@ export class LevelUpPopup extends PIXI.Container {
         currencyItems.push({ type: 'huayuan', textureKey: 'icon_huayuan', amount: this._showHuayuan });
       }
       if (this._showStamina > 0) {
-        currencyItems.push({ type: 'stamina', textureKey: 'icon_energy', amount: this._showStamina });
+        currencyItems.push({
+          type: 'stamina',
+          textureKey: 'stamina_chest_1',
+          amount: this._showStamina,
+        });
       }
       if (this._showDiamond > 0) {
         currencyItems.push({ type: 'diamond', textureKey: 'icon_gem', amount: this._showDiamond });

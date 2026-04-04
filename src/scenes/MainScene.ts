@@ -47,7 +47,14 @@ import { StaminaPanel } from '@/gameobjects/ui/StaminaPanel';
 import { DecorationPanel } from '@/gameobjects/ui/DecorationPanel';
 import { FloatingMenu } from '@/gameobjects/ui/FloatingMenu';
 import { SceneSwitch } from '@/gameobjects/ui/SceneSwitch';
-import { DESIGN_WIDTH, COLORS, FONT_FAMILY, INFO_BAR_HEIGHT, BoardMetrics } from '@/config/Constants';
+import {
+  DESIGN_WIDTH,
+  COLORS,
+  FONT_FAMILY,
+  INFO_BAR_HEIGHT,
+  BOARD_BAR_HEIGHT,
+  BoardMetrics,
+} from '@/config/Constants';
 import { ITEM_DEFS } from '@/config/ItemConfig';
 import { TextureCache } from '@/utils/TextureCache';
 import { AdManager } from '@/managers/AdManager';
@@ -246,7 +253,8 @@ export class MainScene implements Scene {
     let y = Game.safeTop;
 
     // 上半部分花店场景背景（从屏幕顶部 y=0 覆盖到棋盘顶部）
-    const sceneBgTex = TextureCache.get('shop_scene_bg');
+    const sceneBgTex =
+      TextureCache.get('shop_scene_bg_floral_nb2') ?? TextureCache.get('shop_scene_bg');
     if (sceneBgTex) {
       const sceneBg = new PIXI.Sprite(sceneBgTex);
       sceneBg.position.set(0, 0);
@@ -272,7 +280,7 @@ export class MainScene implements Scene {
     this.container.addChild(this._boardView);
 
     // 底部物品信息栏（紧贴棋盘下方装饰条之后，填满剩余空间）
-    const barY = BoardMetrics.topY + BoardMetrics.areaHeight + 18;
+    const barY = BoardMetrics.topY + BoardMetrics.areaHeight + BOARD_BAR_HEIGHT;
     const barH = Game.logicHeight - barY;
     this._infoBar = new ItemInfoBar(barH);
     this._infoBar.position.set(0, barY);

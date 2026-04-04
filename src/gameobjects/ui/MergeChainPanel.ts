@@ -4,7 +4,14 @@
 import * as PIXI from 'pixi.js';
 import { TweenManager, Ease } from '@/core/TweenManager';
 import { Game } from '@/core/Game';
-import { CELL_GAP, DESIGN_WIDTH, COLORS, FONT_FAMILY, BoardMetrics } from '@/config/Constants';
+import {
+  CELL_GAP,
+  DESIGN_WIDTH,
+  COLORS,
+  FONT_FAMILY,
+  BOARD_BAR_HEIGHT,
+  BoardMetrics,
+} from '@/config/Constants';
 import {
   getSourceToolsForProductLine,
   findBoardProducerDef,
@@ -118,7 +125,7 @@ export class MergeChainPanel extends PIXI.Container {
 
   /** 与截图红框一致：纵向占满棋盘区，上沿贴近棋盘、下沿在底部信息栏之上 */
   private _computePanelGeometry(): { y: number; h: number } {
-    const barY = BoardMetrics.topY + BoardMetrics.areaHeight + 18;
+    const barY = BoardMetrics.topY + BoardMetrics.areaHeight + BOARD_BAR_HEIGHT;
     const top = Math.max(12, BoardMetrics.topY - 14);
     const bottom = Math.min(Game.logicHeight - 12, barY - 8);
     const h = Math.max(PANEL_MIN_HEIGHT, Math.round(bottom - top));

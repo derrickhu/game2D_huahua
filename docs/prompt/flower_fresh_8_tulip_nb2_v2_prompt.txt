@@ -1,0 +1,15 @@
+Single isolated game item icon, ONE tulip only, square 1:1, centered. Base recipe matches the first huahua flower_fresh NB2 brief: polished 2D casual merge-game illustration in the same family as in-game sunflower, rose, lily — vibrant high saturation, soft gradients, clear cel-style light blocks, visible volume where petals overlap. Short green stem and one or two simple green leaves with matching game shading.
+
+YELLOW TULIP COLOR: Entire bloom is yellow-gold, NOT pink. Gradient from pale lemon or butter yellow on outer petal tops to rich golden yellow and warm amber toward the cup base and throat. Green stem and leaves as usual.
+
+REAL TULIP SILHOUETTE (must read as Tulipa): Six smooth tepals in one whorl forming a vertical CUP or goblet — petals join at the base and curve up to a rounded opening, like an upright egg or wine glass. Compact cup, smooth broad petals with slightly pointed tips. NOT a lily (no six long rays in a flat star), NOT a rose spiral, NOT a ruffled peony ball. Gentle three-quarter view is fine.
+
+Outline: THIN to medium line only — dark golden-ochre or deep yellow-green slightly darker than the local petal fill. Do NOT use a thick dark burgundy or near-black band around the flower.
+
+HIGHLIGHTS: Use light yellow or cream specular patches strictly INSIDE the petal surfaces. Do NOT place pure white along the outer silhouette; highlights must not read as a white border or halo against #FF00FF.
+
+ABSOLUTE BAN ON WHITE EDGES: No white outline, stroke, ring, outer glow, milky fringe, or light-gray anti-alias halo around the whole icon. Outermost pixels must be yellow, gold, amber, green, or flat background magenta #FF00FF only — never pure white or off-white at the silhouette edge.
+
+Background: flat solid #FF00FF only outside the tulip. Hard cut to magenta, no fog. Tulip must not use #FF00FF in petals.
+
+NO text, NO watermark. Bloom fills ~75–85% of frame.

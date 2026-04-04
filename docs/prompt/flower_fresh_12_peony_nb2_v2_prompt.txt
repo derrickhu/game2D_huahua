@@ -1,0 +1,15 @@
+Single isolated game item icon, TWO pink peony blooms on ONE stem, square 1:1, centered. Cut-flower bouquet feel with clear SIZE HIERARCHY: one LARGE dominant peony (main focus, ~60–70% of total floral mass) and one SMALLER secondary peony (side or slightly behind, clearly subordinate) for layered depth — not two equal heads.
+
+STEM: SHORT relative to the blooms — stem segment visible below the flowers should be compact, roughly 12–18% of total image height, not a tall florist stem. Thick enough to read clearly, green with soft shading.
+
+Blooms: lush pink herbaceous peonies only — rose, blush, magenta in recesses, ruffled many-petal bowls. The large bloom is the hero; the small bloom echoes it. Slight angle difference between them for depth. NOT gold, NOT yellow petals. NOT a single flat frontal rosette only — two overlapping spheres of petals.
+
+Leaves: 2–3 peony leaves near the short stem, soft veins as color gradients.
+
+ABSOLUTE BAN ON WHITE EDGES: no white outline, stroke, ring, outer glow, milky rim, light-gray fringe, or white anti-alias halo. Pure white must not touch the outer silhouette. Outermost pixels must be pink, rose, deep magenta shadow, green, or #FF00FF only. Internal highlights must stay inside petals, creamy pink or pale rose — not a white band at the edge.
+
+Outline: thin dusty rose on petals, thin deeper green on stem and leaves — not thick, not near-black.
+
+Background: flat #FF00FF outside; crisp silhouette.
+
+NO text, NO watermark. Pair of blooms dominates the frame ~75–85%.

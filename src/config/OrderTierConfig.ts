@@ -61,7 +61,7 @@ export const ORDER_TIERS: Record<OrderTier, OrderTierDef> = {
     label: '特级',
     slotRange: [2, 3],
     demandPool: [
-      { category: Category.FLOWER, lines: [FlowerLine.BOUQUET, FlowerLine.GREEN], levelRange: [6, 10] },
+      { category: Category.FLOWER, lines: [FlowerLine.BOUQUET, FlowerLine.GREEN], levelRange: [6, 13] },
       { category: Category.DRINK, lines: [DrinkLine.COLD, DrinkLine.DESSERT], levelRange: [5, 8] },
     ],
     timeLimit: null,
@@ -101,20 +101,20 @@ function _applyGreenBoost(
 ): Record<OrderTier, number> {
   if (!boostSpawns || boostSpawns <= 0 || !lines.hasGreen) return w;
   const out = { ...w };
-  // 从 B/C 挪到 A/S，让含绿植池的档位更容易出现
+  // 从 B/C 挪到 A：抬高含绿植池档位，但不抬 S（S 保持稀有）
   const takeB = Math.min(out.B, 12);
   const takeC = Math.min(out.C, 8);
   out.B = out.B - takeB;
   out.C = out.C - takeC;
   const add = takeB + takeC;
-  out.A = out.A + Math.floor(add * 0.65);
-  out.S = out.S + (add - Math.floor(add * 0.65));
+  out.A = out.A + add;
   return out;
 }
 
 /**
  * 按玩家等级 + 已解锁产线 + 工具等级综合计算各档出现权重。
- * 核心原则：只要棋盘上有产出工具就不应该全出 C 档；工具越高级、高档订单越多。
+ * - 玩家等级 1–3：不出现 S；4 级起微量 S 并逐步抬高；5 级起为「常态」分布。
+ * - S 档整体保持低权重，偶发惊喜，避免高等级刷屏。
  */
 export function getOrderTierWeights(
   playerLevel: number,
@@ -125,20 +125,31 @@ export function getOrderTierWeights(
   const hasAnyProducer = maxTool >= 3;
 
   let base: Record<OrderTier, number>;
-  if (playerLevel <= 2) {
-    if (!hasAnyProducer) base = { C: 100, B: 0, A: 0, S: 0 };
-    else if (maxTool >= 4 || lines.hasBouquet || lines.hasDrink) base = { C: 30, B: 60, A: 10, S: 0 };
-    else base = { C: 60, B: 40, A: 0, S: 0 };
-  } else if (playerLevel <= 4) {
-    if (lines.hasBouquet || lines.hasDrink) base = { C: 20, B: 50, A: 30, S: 0 };
-    else if (maxTool >= 4) base = { C: 30, B: 50, A: 20, S: 0 };
-    else base = { C: 40, B: 50, A: 10, S: 0 };
+  if (playerLevel <= 3) {
+    if (playerLevel <= 2) {
+      if (!hasAnyProducer) base = { C: 100, B: 0, A: 0, S: 0 };
+      else if (maxTool >= 4 || lines.hasBouquet || lines.hasDrink) {
+        base = { C: 30, B: 60, A: 10, S: 0 };
+      } else {
+        base = { C: 60, B: 40, A: 0, S: 0 };
+      }
+    } else {
+      // 等级 3：仍无 S
+      if (lines.hasBouquet || lines.hasDrink) base = { C: 20, B: 50, A: 30, S: 0 };
+      else if (maxTool >= 4) base = { C: 30, B: 50, A: 20, S: 0 };
+      else base = { C: 40, B: 50, A: 10, S: 0 };
+    }
+  } else if (playerLevel === 4) {
+    // 首次引入 S（约 2%），主力仍为 B/A
+    if (lines.hasBouquet || lines.hasDrink) base = { C: 20, B: 48, A: 30, S: 2 };
+    else if (maxTool >= 4) base = { C: 30, B: 48, A: 20, S: 2 };
+    else base = { C: 40, B: 48, A: 10, S: 2 };
   } else if (playerLevel <= 7) {
-    base = { C: 10, B: 30, A: 40, S: lines.hasGreen ? 20 : 10 };
+    base = { C: 12, B: 32, A: 52, S: lines.hasGreen ? 4 : 3 };
   } else if (playerLevel <= 9) {
-    base = { C: 5, B: 25, A: 40, S: 30 };
+    base = { C: 8, B: 28, A: 58, S: 6 };
   } else {
-    base = { C: 5, B: 20, A: 40, S: 35 };
+    base = { C: 8, B: 26, A: 60, S: 6 };
   }
 
   return _applyGreenBoost(base, lines, modifiers?.greenLineUnlockBoostSpawns);
@@ -168,7 +179,7 @@ export const TIER_COLORS: Record<OrderTier, number> = {
 /**
  * 根据工具等级推算订单可要求的物品等级上限。
  * 游戏核心是合成——工具产出低级品，玩家多次合成即可达到高级品，因此不以工具直产等级为上限。
- * 公式: min(toolLevel * 2 − 1, maxItemLevel)
+ * 公式: min(toolLevel * 2 − 1, maxItemLevel)；7 级园艺工具时封顶 13，与鲜花/绿植满级对齐
  */
 export function getEffectiveMaxLevel(toolLevel: number, maxItemLevel: number): number {
   if (toolLevel <= 0) return 0;

@@ -1,9 +1,5 @@
-Single square 1:1 game icon for a merge flower-shop game. ONE object only — a small greenhouse (温室) — small walk-in or lean-to — centered; must occupy 88–92% of the frame, almost filling the square (scale the building to fit).
+Cute small mobile game item icon, 3/4 top-down isometric view. Rounded chunky proportions, slightly chibi/compact. Soft smooth gradient shading with small bright highlight spots on surfaces. No hard black outlines — edges defined by color transitions and subtle darker-tone borders only. Warm cozy color palette with realistic material colors. Clean simple white background. No text, no labels, no UI elements. The item should look like a tiny desktop ornament.
 
-LINE: frosted glass as cool blue-gray or cyan-gray (no purple/pink in glass), dark green or gray metal frame, wooden base or door trim; inside: only small seedlings / muted greens, no colorful blooms.
+ONE object only — a simple small greenhouse (简易温室) for a merge flower-shop game: a modest lean-to or gable mini greenhouse — more glass and frame than the round nursery pod, but smaller and plainer than a full premium house. Frosted or clear glass panels in cool blue-gray or cyan-gray (NO purple/pink in glass), dark green or gray metal frame, wooden base or door trim. Inside: only small seedlings and muted greens, no bright flower colors. Clear upgrade from a tabletop dome — reads as first walk-in or lean-to structure. Centered; fills about 88–92% of the square.
 
-STYLE: Cute hand-painted 2D isometric or slight 3/4 view; no neon. NO text, logos.
-
-BACKGROUND: ONLY solid #FF00FF outside the structure.
-
-CHROMA-SAFE: No magenta/purple/violet in glass or reflections.
+LINE palette: terracotta wood trim, gray-green metal, muted glass. NO magenta in glass.

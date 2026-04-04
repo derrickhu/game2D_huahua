@@ -1,9 +1,5 @@
-Single square 1:1 game icon for a merge flower-shop game. ONE object only — a garden shovel (铲子) — centered; the shovel must occupy 88–92% of the image width or height (whichever constrains), so it almost fills the square with only a thin margin of background.
+Cute small mobile game item icon, 3/4 top-down isometric view. Rounded chunky proportions, slightly chibi/compact. Soft smooth gradient shading with small bright highlight spots on surfaces. No hard black outlines — edges defined by color transitions and subtle darker-tone borders only. Warm cozy color palette with realistic material colors. Clean simple white background. No text, no labels, no UI elements. The item should look like a tiny desktop ornament.
 
-LINE — gardening tools (flower+plant) low-saturation palette: terracotta/clay (#C67B5C), slate gray-green metal (#5A6B66), deep forest green (#2D4A3E), warm brown wood handle (#6D4C3B), cast-iron (#3A3A3A). Muted earth tones — NOT flower-petal saturation.
+ONE object only — a small garden hand shovel (铲) for a merge flower-shop game: short wooden handle in warm brown (#6D4C3B), matte gray-green metal blade (#5A6B66), compact and sturdy. Centered; the shovel fills about 88–92% of the square frame.
 
-STYLE: Cute hand-painted 2D; clear volume; heavier shading than flower icons; soft colored outline (not black). Matte metal and wood. NO text, logos, numbers.
-
-BACKGROUND: ONLY solid flat bright magenta #FF00FF outside the object. Do not tint the shovel magenta.
-
-CHROMA-SAFE: No purple/magenta/pink in materials or reflections.
+LINE palette (whole plant tool series): terracotta (#C67B5C), slate gray-green metal (#5A6B66), deep forest green (#2D4A3E), warm wood, cast-iron gray (#3A3A3A). Muted earth tones — not flower-petal saturation. NO purple, magenta, or hot pink in materials.

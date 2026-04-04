@@ -105,7 +105,7 @@ function fallbackFlowerDemand(tier: OrderTier, ulk: UnlockedLines): CustomerDema
       return {
         category: Category.FLOWER,
         lines: [FlowerLine.BOUQUET, ...(ulk.hasGreen ? [FlowerLine.GREEN] : [])],
-        levelRange: [6, 10],
+        levelRange: [6, 13],
       };
     default:
       return { category: Category.FLOWER, lines: [FlowerLine.FRESH], levelRange: [1, 3] };
@@ -212,7 +212,7 @@ function comboSpecsForTier(tier: OrderTier, ulk: UnlockedLines): ComboSpec[] {
     C: { flower: [1, 3], drink: [1, 3] },
     B: { flower: [2, 4], drink: [2, 3] },
     A: { flower: [4, 6], drink: [3, 5] },
-    S: { flower: [6, 9], drink: [5, 7] },
+    S: { flower: [6, 13], drink: [5, 7] },
   };
   const r = ranges[tier];
   const out: ComboSpec[] = [];

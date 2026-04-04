@@ -181,11 +181,16 @@ export function buildStarLevelUpReward(newLevel: number): StarLevelUpReward {
   let diamond = 10;
   if (newLevel === 5 || newLevel === 10) diamond += 10;
 
+  const rewardBoxItems: Array<{ itemId: string; count: number }> = [
+    { itemId: 'stamina_chest_1', count: 1 },
+  ];
+  if (newLevel % 5 === 0) {
+    rewardBoxItems.push({ itemId: newLevel >= 8 ? 'chest_2' : 'chest_1', count: 1 });
+  }
+
   return {
-    stamina: 20,
+    stamina: 0,
     diamond,
-    rewardBoxItems: newLevel % 5 === 0
-      ? [{ itemId: newLevel >= 8 ? 'chest_2' : 'chest_1', count: 1 }]
-      : [],
+    rewardBoxItems,
   };
 }
