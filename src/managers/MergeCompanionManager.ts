@@ -19,6 +19,7 @@ import {
   type MergeCompanionRuleDef,
 } from '@/config/MergeCompanionConfig';
 import { BOARD_COLS, CELL_GAP, BoardMetrics, DESIGN_WIDTH } from '@/config/Constants';
+import { CellState } from '@/config/BoardLayout';
 import { BoardManager } from './BoardManager';
 import { RewardBoxManager } from './RewardBoxManager';
 import { CurrencyManager } from './CurrencyManager';
@@ -315,27 +316,41 @@ class MergeCompanionManagerClass {
     }
   }
 
-  /** 钻石解锁：物品进空格或收纳箱 */
+  /**
+   * 钻石解锁：扣钻并移除泡泡，由 `mergeCompanion:bubbleUnlockVfx` 播放破裂与飞入；
+   * 动画结束后须调用 {@link completeBubbleUnlockGrant} 将物品写入棋盘或收纳箱。
+   */
   unlockBubbleWithDiamond(id: string): boolean {
     const b = this._bubbles.find(x => x.id === id);
     if (!b) return false;
     if (CurrencyManager.state.diamond < b.diamondPrice) return false;
 
     CurrencyManager.addDiamond(-b.diamondPrice);
-    const dest = this._grantItemToBoardOrBox(b.payloadItemId);
+    const payload = {
+      bubbleId: id,
+      ruleId: b.ruleId,
+      diamondPrice: b.diamondPrice,
+      itemId: b.payloadItemId,
+      boardLocalX: b.boardX,
+      boardLocalY: b.boardY,
+    };
     this._removeBubble(id);
-    EventBus.emit(
-      'mergeCompanion:unlockDiamond',
-      id,
-      b.ruleId,
-      b.diamondPrice,
-      b.payloadItemId,
-      dest,
-    );
-    console.log(
-      `[MergeCompanion] 埋点 unlockDiamond id=${id} rule=${b.ruleId} price=${b.diamondPrice} item=${b.payloadItemId} dest=${dest}`,
-    );
+    EventBus.emit('mergeCompanion:bubbleUnlockVfx', payload);
     return true;
+  }
+
+  /**
+   * 花语泡泡破裂飞入动画结束后发放物品。
+   * 若 `preferredCellIndex` 仍为空已开放格则落该格，否则与 {@link _grantItemToBoardOrBox} 相同。
+   */
+  completeBubbleUnlockGrant(itemId: string, preferredCellIndex?: number): 'board' | 'box' {
+    if (preferredCellIndex != null && preferredCellIndex >= 0) {
+      const cell = BoardManager.getCellByIndex(preferredCellIndex);
+      if (cell && cell.state === CellState.OPEN && !cell.itemId) {
+        if (BoardManager.placeItem(preferredCellIndex, itemId)) return 'board';
+      }
+    }
+    return this._grantItemToBoardOrBox(itemId);
   }
 
   /** 移除换花愿 */

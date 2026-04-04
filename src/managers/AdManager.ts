@@ -34,6 +34,7 @@ export enum AdScene {
   EXTRA_REWARD     = 'extra_reward',      // 额外奖励
   REVIVE           = 'revive',            // 挑战复活
   FREE_CHEST       = 'free_chest',        // 免费开箱
+  MERCH_SHOP       = 'merch_shop',        // 主场景内购商店广告购
 }
 
 type AdCallback = (success: boolean) => void;

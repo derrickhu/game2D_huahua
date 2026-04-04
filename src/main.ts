@@ -9,6 +9,7 @@ import { BoardManager } from '@/managers/BoardManager';
 import { MergeCompanionManager } from '@/managers/MergeCompanionManager';
 import { BuildingManager } from '@/managers/BuildingManager';
 import { SaveManager } from '@/managers/SaveManager';
+import { MerchShopManager } from '@/managers/MerchShopManager';
 import { IdleManager } from '@/managers/IdleManager';
 import { RoomLayoutManager } from '@/managers/RoomLayoutManager';
 import { LevelManager } from '@/managers/LevelManager';
@@ -107,6 +108,8 @@ async function main(): Promise<void> {
     const loaded = SaveManager.load();
     if (!loaded) {
       BuildingManager.reset();
+      MerchShopManager.init();
+      MerchShopManager.bootstrapFresh();
     }
     console.log('[main]', loaded ? '存档加载成功' : '无存档，使用默认数据');
 
@@ -141,6 +144,9 @@ async function main(): Promise<void> {
       });
       _apiMain.onShow?.(() => {
         console.log('[main] 游戏回到前台');
+        if (MerchShopManager.ensureUpToDate()) {
+          SaveManager.save();
+        }
       });
     }
 

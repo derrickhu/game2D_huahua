@@ -6,7 +6,9 @@
 （竖版、与游戏 9:16 画幅比例一致；横版旧稿见 decoration_panel_bottom_sheet_prototype_nb2.png。）
 输出：game_assets/huahua/assets/deco_panel_ui_nb2/for_review/
 
-大面板底图：`#FFFFFF` 外圈 + rembg — 立体可爱标题 + 身区按装修参考：左窄象牙带、右大暖 parchment/浅杏区（无痕交界），右侧平面、无凹槽内阴影；不画按钮/筛选/格子/家具。
+大面板气质要对齐原型时：去掉 --no-ref，让默认 decoration_panel_bottom_sheet_prototype_nb2_portrait.png 参与生图（只锁色与比例感，提示词仍禁止画按钮/字）。
+
+大面板底图：`#FFFFFF` 外圈 + rembg — 有质感薄顶栏 + **整块纯色**身区（无分栏、无身区内阴影/羽化）；气质对齐装修底栏原型色温，不抄 UI 细件。
 其余拆件：品红底；无文字，游戏里叠字。
 """
 from __future__ import annotations
@@ -43,41 +45,41 @@ NO text (any language), NO numbers, NO watermark, NO callout circles. If the ref
 # 大面板空白壳单独用此段，避免与 SHARED 里「参考整屏原型 / 香槟金边」等描述冲突
 SHARED_MAIN_PANEL_BLANK = """
 GLOBAL — THIS ASSET ONLY:
-Cute kawaii merge-game mobile UI: warm SATURATED soft pastels (juicy peach, strawberry-milk pink, apricot blush, warm cream — keep chroma sweet, NOT washed-out gray-beige, NOT desaturated dead UI). Stereoscopic but soft: smooth gradients, satin highlights, pillow/bevel language, diffuse shadows — cozy pseudo-3D like hit merge games, NOT flat Material slabs, NOT photoreal metal.
+STYLE ANCHOR (ignore reference UI chrome): Premium portrait bottom-sheet mood — warm, breathable, not toy-plastic. Header strip = refined coral / peach / rose with real material quality (silky gradient, optional micro grain, soft diffuse highlight on the top curve only — elegant, not a white gloss bar, not jelly puff). Body = one continuous flat warm cream-beige field — no painted sidebar lane, no inner panels, no inner shadows anywhere on the body.
 
-EMPTY SHELL: The game adds ALL text, sidebar pills, filter chips, and item cards later. Your image must be ONLY the background plate — large flat color regions plus lighting. NO drawn buttons, pills, tabs, filter bar, chip row under the title, grids, squares, sample icons, stars, prices, glyphs, watermarks, house/couch icons. NO inner inset frames, NO recessed “slot” panels with inner shadow, NO horizontal divider lines or hairlines on the body, NO extra top-left title bubbles (title is only the main salmon band).
+EMPTY SHELL: The game adds ALL UI later. Image = header + flat body only. NO buttons, tabs, cards, text, grids, icons. NO second color column in the body, NO vertical divider, NO feather or mist between fake “left rail” and “right block”, NO inset rounded rectangles inside the body, NO recessed wells, NO vignette on the body.
 
-NO gold, NO yellow chrome, NO metallic rim lines anywhere on this panel. Edge under title band = soft shadow + color blend only. Title salmon band: top corners must be heavily rounded (large radius bubble look), never a flat strip with only slight corner rounding.
+NO gold, NO yellow chrome, NO metallic rims. Title band: slim height, large rounded top corners; where header meets body use a **clean color transition** only — **forbidden**: cast shadow band onto the body, dark underlip, 3D step.
 
-MATTING: Every pixel outside the rounded panel = solid #FFFFFF. Zero peach/pink/coral spill into the outer margin — the white surround must stay perfectly neutral. Tight clean silhouette (1–2px AA only); no smoky gradient leaking into white. All shadows and 3D lighting stay INSIDE the panel shape only.
+Header material quality is encouraged; body must stay matte flat uniform fill.
+
+MATTING: Every pixel outside the rounded panel = solid #FFFFFF. Zero coral/peach spill into the outer margin — surround must read as clean pure white for extraction. Sharp panel edge against white (minimal gray fog). All soft shading stays INSIDE the panel silhouette only.
 """.strip()
 
 
 BODY_MAIN_PANEL_BLANK = """
-ASSET: Portrait 9:16 empty flower-shop DECORATION bottom sheet — same cute merge-game look as the shipped furniture panel reference, but stripped to a clean plate: keep the outer rounded card + stereo salmon header; the body is only soft flat color fields. Full-bleed left/right/bottom; rounded top corners.
+ASSET: Portrait 9:16 empty flower-shop DECORATION bottom sheet — exactly two painted layers: (A) one quality header strip, (B) one solid flat body color. Nothing else. No close button, tabs, cards, text. Full-bleed left/right/bottom; outer rounded top corners; bottom may be rounded in file (game crops).
 
-(1) TOP TITLE ZONE ONLY — full-width stereo cute header with SUPER-ROUNDED BUBBLY top geometry (the ONLY title chrome):
-About 11–13% of canvas height. Salmon-peach / apricot pillow bar spanning full width. CRITICAL SHAPE: the header top-left and top-right corners MUST use a VERY LARGE border radius — deep smooth arcs, bubble-like capsule-cap cute (soft vertical card: orange top looks rounded and plump, NOT a stiff near-rectangle with tiny corner nibs). Maximum cute rounding on the top two corners; forbid “square strip with small rounded corners”. Top outer edge continuously curved and friendly like plush mobile bottom-sheet headers. Juicy gradient, white satin highlight along the top curve, soft shadow where salmon meets cream — volumetric, candy-like. No text. Do NOT add any extra title widget on the cream area (no small top-left pill bubble, no badge, no secondary title capsule).
+(1) TOP TITLE ZONE — thin header with real material quality (must feel designed, not a flat pink rectangle):
+Height ~6–9% of canvas, full width, large smooth top corner arcs. Build **visual richness only here**: smooth multi-stop gradient (warm coral → peach → soft rose / blush), like quality app chrome; add **very subtle** film grain or fine paper noise at low strength so the strip feels tactile; a **soft diffuse** highlight hugging the **upper** rounded curve (broad and gentle, NOT a sharp white stripe, NOT chrome). The strip should read **silky / premium**, still **slim** — not a tall puffy pillow, not thick black outline, not heavy drop shadow **onto the body below**.
 
-(2) MAIN BODY BELOW HEADER — two soft flat color zones (like reference left rail + right block), no decoration:
-LEFT RAIL ~9–11% width: warm ivory or soft warm gray-cream. Must be flat — no pills, no faux buttons, no floating shapes.
+Bottom edge of the coral strip: **straight horizontal** meeting the body — **only** a clean hue blend at the seam, **zero** shadow pool, **zero** dark band on the cream.
 
-RIGHT BLOCK: warm parchment / light tan-cream, slightly deeper than the rail. Must be one continuous flat fill from the boundary to the panel’s inner right and bottom — no “picture frame”, no second nested rounded rectangle, no inner mat.
+No text. No icons.
 
-BOUNDARY between rail and block: smooth color step only — zero vertical stroke, zero groove.
+(2) MAIN BODY — pure flat base, one color only, full width below the header:
+Fill **100%** of the area under the header with **one uniform** warm wheat-beige or light butter-cream (pick one hex-feel, stick to it wall-to-wall). **Absolutely flat**: no gradient on the body, no left sidebar strip of different color, no right “card field”, no vertical mist, no inner rounded rectangles, **no inner shadow**, **no inset depth**, **no** second panel inside the panel. If you add noise, keep it **even** across the whole body (no zoning).
 
-(3) STRICT FORBIDDEN — the model keeps drawing these by mistake; do NOT include any of them:
-- Any pill, capsule, lozenge, bubble, or chip shape anywhere on the body.
-- Any inner inset panel, sunken tray, large recessed rectangle with inner shadow or inner highlight rim.
-- Any horizontal rule, divider line, hairline, thin brown stroke, or “footer strip” separated by a line.
-- Any double-border frame around a central content hole; any card-slot grid hints.
-- Any extra 3D bevel loops inside the body (save stereo for the header + gentle whole-panel edge only).
+(3) STRICT FORBIDDEN on the body:
+- Two-tone columns, rail vs block, vertical feather, soft shadow along a fake seam.
+- Any rounded-rect “slots”, trays, wells, card outlines.
+- Horizontal divider lines, footer bars, pills, chips.
 
-(4) Whole panel: only the outer big rounded silhouette may have a whisper of edge depth; the interior body stays visually flat pastel fields.
+(4) Outer panel silhouette: at most a hair of outer edge definition; **no** interior 3D except what is described for the header strip only.
 
-(5) No grids, furniture, stars, prices, text, icons.
+(5) No grids, furniture, stars, prices, text.
 
-Quality bar: reads like the reference sheet with clutter removed — cute header, boring-clean flat body.
+Quality bar: rich slim header plus dead-flat single-color body; crisp #FFFFFF matting outside the outer rounded card.
 """.strip()
 
 

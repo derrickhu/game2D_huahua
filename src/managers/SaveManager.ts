@@ -13,6 +13,7 @@ import { CustomerManager, type CustomerPersistState } from './CustomerManager';
 import { WarehouseManager, WarehouseState } from './WarehouseManager';
 import { RewardBoxManager, RewardBoxState } from './RewardBoxManager';
 import { MergeCompanionManager, type MergeCompanionPersistState } from './MergeCompanionManager';
+import { MerchShopManager, type MerchShopPersistState } from './MerchShopManager';
 import { EventBus } from '@/core/EventBus';
 import { BOARD_TOTAL } from '@/config/Constants';
 import { BOARD_PRESETS } from '@/config/BoardLayout';
@@ -61,6 +62,8 @@ interface SaveData {
   mergeCompanions?: MergeCompanionPersistState;
   /** 当前订单队列（与棋盘独立保存；读档后由 CustomerManager.init 绑定格子） */
   customers?: CustomerPersistState;
+  /** 主场景内购商店货架与刷新时间 */
+  merchShop?: MerchShopPersistState;
 }
 
 class SaveManagerClass {
@@ -82,7 +85,8 @@ class SaveManagerClass {
     const data: SaveData = {
       fingerprint: CONFIG_FINGERPRINT,
       timestamp: Date.now(),
-      version: 6,
+      /** v7：新增 `merchShop`（内购商店货架）；规则与策划改表见 MerchShopConfig */
+      version: 7,
       currency: CurrencyManager.exportState(),
       board: BoardManager.exportState(),
       buildings: BuildingManager.exportState(),
@@ -90,6 +94,7 @@ class SaveManagerClass {
       rewardBox: RewardBoxManager.exportState(),
       mergeCompanions: MergeCompanionManager.exportState(),
       customers: CustomerManager.exportState(),
+      merchShop: MerchShopManager.exportState(),
     };
     return JSON.stringify(data);
   }
@@ -165,6 +170,8 @@ class SaveManagerClass {
       }
       MergeCompanionManager.loadState(data.mergeCompanions);
       CustomerManager.prepareFromSave(data.customers);
+      MerchShopManager.init();
+      MerchShopManager.loadState(data.merchShop);
 
       console.log('[Save] 读档成功, 距上次存档:', Math.round((Date.now() - data.timestamp) / 1000), '秒');
       return true;

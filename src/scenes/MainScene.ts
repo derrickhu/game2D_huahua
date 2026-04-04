@@ -14,6 +14,7 @@ import { EventBus } from '@/core/EventBus';
 import { OverlayManager } from '@/core/OverlayManager';
 import { RewardFlyCoordinator, type RewardFlyBindings } from '@/core/RewardFlyCoordinator';
 import { BoardManager } from '@/managers/BoardManager';
+import { MergeCompanionManager } from '@/managers/MergeCompanionManager';
 import { CurrencyManager } from '@/managers/CurrencyManager';
 import { BuildingManager } from '@/managers/BuildingManager';
 import { WarehouseManager } from '@/managers/WarehouseManager';
@@ -81,7 +82,6 @@ import { ShopScene } from '@/scenes/ShopScene';
 import { LIVE_HOUSE_THUMB_CAPTURE_MAX } from '@/config/WorldMapConfig';
 import { RewardBoxManager } from '@/managers/RewardBoxManager';
 import { MERGE_BUBBLE_DISPLAY_NAME } from '@/config/MergeCompanionConfig';
-import { MergeCompanionManager } from '@/managers/MergeCompanionManager';
 import { RoomLayoutManager } from '@/managers/RoomLayoutManager';
 
 /** 合成页左侧店主半身：目标高度与最大宽度（设计 px），统一 scale=min(宽限,高限) 保持宽高比、避免栏内「压扁」感 */
@@ -652,6 +652,89 @@ export class MainScene implements Scene {
         this._topBar.flashStamina();
       });
     });
+
+    /** 钻石解锁花语泡泡：破裂特效 → 物品出现并弧线飞入空格或收纳礼包，落地后再入库 */
+    EventBus.on(
+      'mergeCompanion:bubbleUnlockVfx',
+      (payload: {
+        bubbleId: string;
+        ruleId: string;
+        diamondPrice: number;
+        itemId: string;
+        boardLocalX: number;
+        boardLocalY: number;
+      }) => {
+        if (SceneManager.current?.name !== 'main') {
+          const dest = MergeCompanionManager.completeBubbleUnlockGrant(payload.itemId);
+          EventBus.emit(
+            'mergeCompanion:unlockDiamond',
+            payload.bubbleId,
+            payload.ruleId,
+            payload.diamondPrice,
+            payload.itemId,
+            dest,
+          );
+          console.log(
+            `[MergeCompanion] 埋点 unlockDiamond id=${payload.bubbleId} rule=${payload.ruleId} price=${payload.diamondPrice} item=${payload.itemId} dest=${dest} (no main scene)`,
+          );
+          SaveManager.save();
+          return;
+        }
+
+        const sg = this._boardView.toGlobal(
+          new PIXI.Point(payload.boardLocalX, payload.boardLocalY),
+        );
+        const sx = this.container.toLocal(sg).x;
+        const sy = this.container.toLocal(sg).y;
+
+        let predictedIdx = BoardManager.findEmptyOpenCell();
+        let ex = 0;
+        let ey = 0;
+        if (predictedIdx >= 0) {
+          const local = this._boardView.getCellCenterLocal(predictedIdx);
+          if (local) {
+            const eg = this._boardView.toGlobal(new PIXI.Point(local.x, local.y));
+            const el = this.container.toLocal(eg);
+            ex = el.x;
+            ey = el.y;
+          } else {
+            predictedIdx = -1;
+          }
+        }
+        if (predictedIdx < 0) {
+          const g = this._rewardBoxButton.toGlobal(
+            new PIXI.Point(REWARD_BOX_BTN_SIZE / 2, REWARD_BOX_BTN_SIZE / 2),
+          );
+          const el = this.container.toLocal(g);
+          ex = el.x;
+          ey = el.y;
+        }
+
+        const def = ITEM_DEFS.get(payload.itemId);
+        const texKey = def?.icon ?? '';
+
+        this._playBubblePopBurst(sx, sy, () => {
+          this._playDeliverItemFly(texKey, sx, sy, ex, ey, () => {
+            const dest = MergeCompanionManager.completeBubbleUnlockGrant(
+              payload.itemId,
+              predictedIdx >= 0 ? predictedIdx : undefined,
+            );
+            EventBus.emit(
+              'mergeCompanion:unlockDiamond',
+              payload.bubbleId,
+              payload.ruleId,
+              payload.diamondPrice,
+              payload.itemId,
+              dest,
+            );
+            console.log(
+              `[MergeCompanion] 埋点 unlockDiamond id=${payload.bubbleId} rule=${payload.ruleId} price=${payload.diamondPrice} item=${payload.itemId} dest=${dest}`,
+            );
+            SaveManager.save();
+          });
+        });
+      },
+    );
   }
 
   /**
@@ -716,6 +799,58 @@ export class MainScene implements Scene {
         return { plans, overflowCount: pieces.length - plans.length };
       },
     };
+  }
+
+  /** 花语泡泡破裂：局部坐标为 MainScene.container */
+  private _playBubblePopBurst(cx: number, cy: number, onDone: () => void): void {
+    const root = new PIXI.Container();
+    root.position.set(cx, cy);
+    this.container.addChild(root);
+
+    const n = 12;
+    for (let i = 0; i < n; i++) {
+      const g = new PIXI.Graphics();
+      const r = 2.5 + (i % 4) * 1.2;
+      g.beginFill(0xfff5e6, 0.92);
+      g.drawCircle(0, 0, r);
+      g.endFill();
+      const ang = (i / n) * Math.PI * 2;
+      g.position.set(Math.cos(ang) * 10, Math.sin(ang) * 10);
+      root.addChild(g);
+      const dist = 44 + (i % 4) * 10;
+      const tx = Math.cos(ang) * dist;
+      const ty = Math.sin(ang) * dist;
+      const o = { x: g.x, y: g.y, a: 1 };
+      TweenManager.to({
+        target: o,
+        props: { x: tx, y: ty, a: 0 },
+        duration: 0.4,
+        ease: Ease.easeOutQuad,
+        onUpdate: () => {
+          g.position.set(o.x, o.y);
+          g.alpha = o.a;
+        },
+      });
+    }
+
+    const ring = new PIXI.Graphics();
+    root.addChildAt(ring, 0);
+    const ro = { rad: 14, a: 0.75 };
+    TweenManager.to({
+      target: ro,
+      props: { rad: 56, a: 0 },
+      duration: 0.36,
+      ease: Ease.easeOutQuad,
+      onUpdate: () => {
+        ring.clear();
+        ring.lineStyle(2.5, 0xffe4c4, ro.a);
+        ring.drawCircle(0, 0, ro.rad);
+      },
+      onComplete: () => {
+        root.destroy({ children: true });
+        onDone();
+      },
+    });
   }
 
   /**

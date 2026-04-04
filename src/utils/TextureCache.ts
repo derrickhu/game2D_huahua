@@ -152,6 +152,8 @@ const PANELS_IMAGE_MAP: Record<string, string> = {
   deco_rarity_tag_fine: 'subpkg_panels/images/ui/deco_rarity_tag_fine.png',
   deco_rarity_tag_rare: 'subpkg_panels/images/ui/deco_rarity_tag_rare.png',
   deco_rarity_tag_limited: 'subpkg_panels/images/ui/deco_rarity_tag_limited.png',
+  /** 装修面板右上角关闭（NB2 1:1 抠图入库；缺省时可与 warehouse 关闭钮同流程） */
+  deco_nb2_close_btn_1x1: 'subpkg_panels/images/ui/deco_nb2_close_btn_1x1.png',
 
   // ---- 大地图 ----
   worldmap_bg: 'subpkg_panels/images/ui/worldmap_bg.png',

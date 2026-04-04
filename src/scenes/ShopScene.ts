@@ -409,6 +409,8 @@ export class ShopScene implements Scene {
     this.container.sortableChildren = true;
     this._starFlyLayer = new PIXI.Container();
     this._starFlyLayer.zIndex = 8000;
+    this._starFlyLayer.eventMode = 'none';
+    this._starFlyLayer.interactiveChildren = true;
     this.container.addChild(this._starFlyLayer);
 
     this._levelUpPopup = new LevelUpPopup();
@@ -848,9 +850,13 @@ export class ShopScene implements Scene {
     this._progressBarRoot = barContainer;
     barContainer.position.set(cx - PROGRESS_BAR_W / 2, y);
     barContainer.zIndex = 7000;
+    /** 家具面板遮罩在面板之下、进度条抬升到 overlay 之上；条身穿透点击以落到遮罩关闭 */
+    barContainer.eventMode = 'none';
+    barContainer.interactiveChildren = true;
 
     // 星星图标 + 星心等级数字（level，非累积 star）
     const starGroup = new PIXI.Container();
+    starGroup.eventMode = 'none';
     starGroup.position.set(-22, PROGRESS_BAR_H / 2);
     this._progressStarGroup = starGroup;
     const starTex = TextureCache.get('icon_star');
@@ -859,10 +865,12 @@ export class ShopScene implements Scene {
       starSp.anchor.set(0.5, 0.5);
       starSp.width = 36;
       starSp.height = 36;
+      starSp.eventMode = 'none';
       starGroup.addChild(starSp);
     } else {
       const fb = new PIXI.Text('⭐', { fontSize: 28, fontFamily: FONT_FAMILY });
       fb.anchor.set(0.5, 0.5);
+      fb.eventMode = 'none';
       starGroup.addChild(fb);
     }
     const lv0 = CurrencyManager.state.level;
@@ -875,11 +883,13 @@ export class ShopScene implements Scene {
       strokeThickness: 3,
     } as any);
     this._progressLevelText.anchor.set(0.5, 0.52);
+    this._progressLevelText.eventMode = 'none';
     starGroup.addChild(this._progressLevelText);
     barContainer.addChild(starGroup);
 
     // 进度条背景
     this._progressBar = new PIXI.Graphics();
+    this._progressBar.eventMode = 'none';
     this._progressBar.beginFill(C.PROGRESS_BG);
     this._progressBar.drawRoundedRect(0, 0, PROGRESS_BAR_W, PROGRESS_BAR_H, PROGRESS_BAR_H / 2);
     this._progressBar.endFill();
@@ -889,6 +899,7 @@ export class ShopScene implements Scene {
 
     // 进度条填充
     this._progressFill = new PIXI.Graphics();
+    this._progressFill.eventMode = 'none';
     barContainer.addChild(this._progressFill);
     this._updateProgressBar();
 
@@ -904,6 +915,7 @@ export class ShopScene implements Scene {
     });
     this._progressText.anchor.set(0.5, 0.5);
     this._progressText.position.set(PROGRESS_BAR_W / 2, PROGRESS_BAR_H / 2);
+    this._progressText.eventMode = 'none';
     barContainer.addChild(this._progressText);
 
     // 右端礼盒：点击预览「下一星级」礼包内容
@@ -919,10 +931,12 @@ export class ShopScene implements Scene {
       giftSp.anchor.set(0.5, 0.5);
       giftSp.width = 30;
       giftSp.height = 30;
+      giftSp.eventMode = 'none';
       giftTap.addChild(giftSp);
     } else {
       const gift = new PIXI.Text('🎁', { fontSize: 22, fontFamily: FONT_FAMILY });
       gift.anchor.set(0.5, 0.5);
+      gift.eventMode = 'none';
       giftTap.addChild(gift);
     }
     giftTap.on('pointertap', () => this._showNextStarGiftPreview());
@@ -1058,6 +1072,7 @@ export class ShopScene implements Scene {
         ? new PIXI.Sprite(tex)
         : new PIXI.Text('⭐', { fontSize: 22, fontFamily: FONT_FAMILY });
       icon.anchor.set(0.5);
+      icon.eventMode = 'none';
       let targetScale = 1;
       if (icon instanceof PIXI.Sprite && tex) {
         targetScale = ICON_SIZE / Math.max(tex.width, tex.height);
