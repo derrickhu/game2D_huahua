@@ -3,10 +3,10 @@
  *
  * 布局：
  * - 底图优先 decoration_panel_bg_nb2（桃珊瑚底栏 NB2+抠图），缺资源时回退 merge_chain_panel
- * - 顶栏标题「家具」叠在底板粉区；其下「已收集」进度 + 分割线；点遮罩关闭（无彩带/无关闭钮）
- * - 左侧：分类 Tab 栏（药丸底图 NB2 + 程序叠字；缺图时回退矢量圆角）
- * - 右侧：家具/房间风格卡网格（2 列，可纵向滑动；move/up 绑 canvas，兼容微信小游戏）
- * - 卡片为程序绘制双层金边圆角 + 贴图按钮 + 左上角星星值（购买后获得的星星数）
+ * - 顶栏标题「家具」叠在底板粉区；其下右侧为库存筛选（全部/已购买/未购买/未解锁），再下分割线；点遮罩关闭
+ * - 左侧：分类 Tab 栏（药丸底图 NB2 + 程序叠字；不显示 x/y 计数；缺图时回退矢量圆角）
+ * - 右侧：家具/房间风格 3 列网格（视口下移 GRID_VIEWPORT_TOP_INSET；列表按解锁等级、花愿价排序）
+ * - 卡片：双层金边圆角 + 贴图按钮 + 家具卡左上角星星值角标（房间风格卡同）
  */
 import * as PIXI from 'pixi.js';
 import { Game } from '@/core/Game';
@@ -39,10 +39,12 @@ const PANEL_MARGIN_LEFT = 0;
 const PANEL_H_RATIO = 0.74;
 const PANEL_TOP_R = 20;
 
-/** 粉区下沿到「已收集」文字中心的额外间距 */
-const PROGRESS_BELOW_HEADER = 8;
-/** 进度文字基线与分割线间距 */
-const PROGRESS_TO_DIVIDER = 14;
+/** 粉区下沿到筛选条顶部的间距 */
+const FILTER_ROW_GAP_BELOW_PINK = 8;
+/** 筛选条高度（与 divider 间距见下） */
+const FILTER_BAR_H = 38;
+/** 筛选条底到分割线 */
+const DIVIDER_BELOW_FILTER_GAP = 8;
 /** 分割线与家具区顶边（小一点让网格更贴上分割线） */
 const DIVIDER_TO_CONTENT = 6;
 /** 顶部分割线长度占面板内宽比例（居中，避免顶到金边） */
@@ -50,13 +52,19 @@ const HEADER_DIVIDER_WIDTH_RATIO = 0.56;
 /** 网格区距面板底边的留白，避免卡片贴到金边外；略大以保证裁切在画框内 */
 const CONTENT_BOTTOM = 36;
 
-/** 左侧分类栏（加宽药丸，更易点） */
-const TAB_W = 122;
-const TAB_GAP = 10;
+/**
+ * 家具网格视口相对「内容顶」再下移，对齐 NB2 底板内凹/阴影带下沿；
+ * 裁剪框整体落在阴影下方，上滑时卡片不会画进阴影区（微信上仅靠 mask 仍可能顶穿时序）。
+ */
+const GRID_VIEWPORT_TOP_INSET = 22;
+
+/** 左侧分类栏（与 NB2 窄左轨底图对齐；略窄以让出家具网格宽度） */
+const TAB_W = 112;
+const TAB_GAP = 8;
 /** Tab 列左边距 */
-const TAB_COLUMN_LEFT = 40;
+const TAB_COLUMN_LEFT = 18;
 /** Tab 列整体上移（像素） */
-const TAB_COLUMN_NUDGE_Y = 8;
+const TAB_COLUMN_NUDGE_Y = 6;
 const GRID_MARGIN_RIGHT = 14;
 
 /** 侧边 Tab：选中态暖色底 / 未选中灰奶油 */
@@ -65,11 +73,12 @@ const TAB_BG_SELECTED_INNER = 0xffe8d8;
 const TAB_BG_IDLE = 0xefebe5;
 const TAB_BORDER_IDLE = 0xc4b8ae;
 
-const GRID_COLS = 2;
-const CARD_GAP = 10;
+const GRID_COLS = 3;
+const CARD_GAP = 8;
 const CARD_BASE_W = 140;
 const CARD_BASE_H = 160;
-const CARD_MAX_W = 200;
+/** 三列时略压卡片宽度，避免挤爆 */
+const CARD_MAX_W = 168;
 const CARD_R = 10;
 
 const GOLD_LINE = 0xe8c078;
@@ -79,19 +88,68 @@ const SHADOW_COLOR = 0x8b7355;
 
 function measureCardGrid(gridW: number): { cw: number; ch: number; cols: number; startX: number } {
   const cwRaw = Math.floor((gridW - CARD_GAP * (GRID_COLS + 1)) / GRID_COLS);
-  const cw = Math.max(110, Math.min(CARD_MAX_W, cwRaw));
+  const cw = Math.max(100, Math.min(CARD_MAX_W, cwRaw));
   const ch = Math.round((cw * CARD_BASE_H) / CARD_BASE_W);
   const blockW = GRID_COLS * cw + (GRID_COLS - 1) * CARD_GAP;
   const startX = Math.floor((gridW - blockW) / 2);
   return { cw, ch, cols: GRID_COLS, startX };
 }
 
-/** 列表顶留白：可一屏放下时少留空，整体上移贴近分割线；需滚动时略收紧 */
+/** 列表顶留白：避免首行卡片贴上分割线 */
 function decoGridListTopPad(availH: number, totalRows: number, ch: number): number {
   const baseH = CARD_GAP + totalRows * (ch + CARD_GAP);
-  if (baseH >= availH) return 10;
+  const minPad = 24;
+  if (baseH >= availH) return minPad;
   const spare = availH - baseH;
-  return Math.min(10, Math.max(0, Math.floor(spare * 0.28)));
+  return Math.min(32, Math.max(minPad, Math.floor(spare * 0.32)));
+}
+
+/** 装修面板：解锁等级升序，同级按花愿价升序 */
+function sortDecosByUnlockLevelThenCost(decos: DecoDef[]): DecoDef[] {
+  return [...decos].sort((a, b) => {
+    const la = a.unlockRequirement?.level ?? 0;
+    const lb = b.unlockRequirement?.level ?? 0;
+    if (la !== lb) return la - lb;
+    return a.cost - b.cost;
+  });
+}
+
+function sortRoomStylesByUnlockLevelThenCost(styles: RoomStyleDef[]): RoomStyleDef[] {
+  return [...styles].sort((a, b) => {
+    const la = a.unlockRequirement?.level ?? 0;
+    const lb = b.unlockRequirement?.level ?? 0;
+    if (la !== lb) return la - lb;
+    return a.cost - b.cost;
+  });
+}
+
+/** 家具列表库存筛选（默认打开面板为「未购买」） */
+type DecoInvFilter = 'all' | 'purchased' | 'not_purchased' | 'locked';
+
+const DECO_INV_FILTER_SPECS: ReadonlyArray<{ id: DecoInvFilter; label: string }> = [
+  { id: 'all', label: '全部' },
+  { id: 'purchased', label: '已购买' },
+  { id: 'not_purchased', label: '未购买' },
+  { id: 'locked', label: '未解锁' },
+];
+
+function decoMatchesInvFilter(deco: DecoDef, filter: DecoInvFilter, sceneId: string): boolean {
+  const owned = DecorationManager.isUnlocked(deco.id);
+  const reqMet = checkRequirement(deco.unlockRequirement).met;
+  const sceneOk = isDecoAllowedInScene(deco, sceneId);
+  const blocked = !reqMet || !sceneOk;
+  switch (filter) {
+    case 'all':
+      return true;
+    case 'purchased':
+      return owned;
+    case 'not_purchased':
+      return !owned && !blocked;
+    case 'locked':
+      return !owned && blocked;
+    default:
+      return true;
+  }
 }
 
 /** global pixel -> design coordinate */
@@ -126,11 +184,13 @@ export class DecorationPanel extends PIXI.Container {
   private _gridMask!: PIXI.Graphics;
   private _headerDivider!: PIXI.Graphics;
   private _titleText!: PIXI.Text;
-  private _progressText!: PIXI.Text;
+  /** 右侧家具库存筛选（全部 / 已购买 / 未购买 / 未解锁） */
+  private _filterBar!: PIXI.Container;
   /** Tab / 网格顶边（分割线以下，_build 内按顶栏比例计算） */
   private _contentTopY = 168;
   private _isOpen = false;
   private _activeTab: DecoPanelTabId = 'flower_room';
+  private _decoInvFilter: DecoInvFilter = 'not_purchased';
   private _scrollY = 0;
   private _maxScrollY = 0;
   private _gridScrollListening = false;
@@ -233,6 +293,7 @@ export class DecorationPanel extends PIXI.Container {
     this.visible = true;
     EventBus.emit('decoration:decoPanelBackdrop', { open: true });
     this._activeTab = 'flower_room';
+    this._decoInvFilter = 'not_purchased';
     this._redrawDimMask();
     this._resizePanelIfNeeded();
     this._refreshAll();
@@ -328,33 +389,24 @@ export class DecorationPanel extends PIXI.Container {
     } as any);
     this._titleText.anchor.set(0.5, 0.5);
     this._titleText.position.set(PANEL_W / 2, titleCenterY);
-    this._titleText.zIndex = 6;
+    this._titleText.zIndex = 12;
     this._content.addChild(this._titleText);
 
-    // --- 收集进度：粉区下、分割线之上 ---
-    const progressY = Math.round(pinkBandBottom + PROGRESS_BELOW_HEADER);
-    this._progressText = new PIXI.Text('', {
-      fontSize: 20,
-      fill: 0xfff5e8,
-      fontFamily: FONT_FAMILY,
-      fontWeight: 'bold',
-      stroke: 0xb86b4a,
-      strokeThickness: 3,
-      dropShadow: true,
-      dropShadowColor: 0x4a3020,
-      dropShadowBlur: 2,
-      dropShadowDistance: 1,
-    } as any);
-    this._progressText.anchor.set(0.5, 0.5);
-    this._progressText.position.set(PANEL_W / 2, progressY);
-    this._progressText.zIndex = 6;
-    this._content.addChild(this._progressText);
+    // --- 右侧库存筛选条（仅家具网格列宽；「房间风格」时隐藏） ---
+    const filterBarTop = Math.round(pinkBandBottom + FILTER_ROW_GAP_BELOW_PINK);
+    const gridXEarly = TAB_COLUMN_LEFT + TAB_W + TAB_GAP;
+    const gridWEarly = PANEL_W - gridXEarly - GRID_MARGIN_RIGHT;
+    this._filterBar = new PIXI.Container();
+    this._filterBar.position.set(gridXEarly, filterBarTop);
+    this._filterBar.zIndex = 11;
+    this._content.addChild(this._filterBar);
+    this._buildInventoryFilterBar(gridWEarly);
 
     // --- 顶部分割线：居中短横，不顶到两侧金边 ---
-    const dividerY = Math.round(progressY + PROGRESS_TO_DIVIDER);
+    const dividerY = Math.round(filterBarTop + FILTER_BAR_H + DIVIDER_BELOW_FILTER_GAP);
     const divHalfW = Math.round((PANEL_W * HEADER_DIVIDER_WIDTH_RATIO) / 2);
     this._headerDivider = new PIXI.Graphics();
-    this._headerDivider.zIndex = 5;
+    this._headerDivider.zIndex = 11;
     this._headerDivider.lineStyle(2, GOLD_LINE, 0.75);
     this._headerDivider.moveTo(Math.round(PANEL_W / 2) - divHalfW, dividerY);
     this._headerDivider.lineTo(Math.round(PANEL_W / 2) + divHalfW, dividerY);
@@ -365,37 +417,39 @@ export class DecorationPanel extends PIXI.Container {
     // --- layout zones（Tab 列与网格之间留白对称） ---
     const gridX = TAB_COLUMN_LEFT + TAB_W + TAB_GAP;
     const gridW = PANEL_W - gridX - GRID_MARGIN_RIGHT;
-    const gridH = panelH - this._contentTopY - CONTENT_BOTTOM;
+    const tabColumnH = panelH - this._contentTopY - CONTENT_BOTTOM;
+    const gridViewportTop = this._contentTopY + GRID_VIEWPORT_TOP_INSET;
+    const gridH = Math.max(48, panelH - gridViewportTop - CONTENT_BOTTOM);
 
     // tab container：y 在 _buildTabs 内写入 _tabVerticalPad 后对齐
     this._tabContainer = new PIXI.Container();
     this._tabContainer.zIndex = 4;
     this._content.addChild(this._tabContainer);
 
-    this._buildTabs(gridH);
+    this._buildTabs(tabColumnH);
     this._tabContainer.position.set(
       TAB_COLUMN_LEFT,
       this._contentTopY + this._tabVerticalPad - TAB_COLUMN_NUDGE_Y,
     );
 
     this._gridViewport = new PIXI.Container();
-    this._gridViewport.position.set(gridX, this._contentTopY);
+    this._gridViewport.position.set(gridX, gridViewportTop);
     this._gridViewport.eventMode = 'static';
     this._gridViewport.hitArea = new PIXI.Rectangle(0, 0, gridW, gridH);
     this._gridViewport.zIndex = 4;
     this._content.addChild(this._gridViewport);
 
-    this._gridContainer = new PIXI.Container();
-    this._gridViewport.addChild(this._gridContainer);
-
-    // 遮罩作为 gridContainer 子节点，避免 refresh 时 removeChildren 删掉；与部分 WebGL 裁剪更稳
+    // 遮罩挂在 viewport 上：滚动时 inner.y 为负，仍能裁掉超出网格矩形的像素（避免顶穿筛选条/阴影区）
     this._gridMask = new PIXI.Graphics();
     this._gridMask.beginFill(0xffffff);
     this._gridMask.drawRect(0, 0, gridW, gridH);
     this._gridMask.endFill();
     this._gridMask.eventMode = 'none';
-    this._gridContainer.addChild(this._gridMask);
-    this._gridContainer.mask = this._gridMask;
+    this._gridViewport.addChild(this._gridMask);
+    this._gridViewport.mask = this._gridMask;
+
+    this._gridContainer = new PIXI.Container();
+    this._gridViewport.addChild(this._gridContainer);
 
     // wheel scroll
     this._gridContainer.eventMode = 'static';
@@ -407,17 +461,68 @@ export class DecorationPanel extends PIXI.Container {
     this._panelHBuilt = panelH;
   }
 
-  private _gridLayoutMetrics(): { gridX: number; gridW: number; gridH: number } {
+  private _gridLayoutMetrics(): { gridX: number; gridW: number; gridH: number; gridViewportTop: number } {
     const panelH = Math.round(Game.logicHeight * PANEL_H_RATIO);
     const gridX = TAB_COLUMN_LEFT + TAB_W + TAB_GAP;
     const gridW = PANEL_W - gridX - GRID_MARGIN_RIGHT;
-    const gridH = panelH - this._contentTopY - CONTENT_BOTTOM;
-    return { gridX, gridW, gridH };
+    const gridViewportTop = this._contentTopY + GRID_VIEWPORT_TOP_INSET;
+    const gridH = Math.max(48, panelH - gridViewportTop - CONTENT_BOTTOM);
+    return { gridX, gridW, gridH, gridViewportTop };
+  }
+
+  /** 右侧四格筛选：全部 / 已购买 / 未购买 / 未解锁 */
+  private _buildInventoryFilterBar(gridW: number): void {
+    this._filterBar.removeChildren();
+    const n = DECO_INV_FILTER_SPECS.length;
+    const gap = 5;
+    const cellW = (gridW - gap * (n - 1)) / n;
+    const rowH = FILTER_BAR_H - 4;
+    DECO_INV_FILTER_SPECS.forEach((spec, i) => {
+      const cell = new PIXI.Container();
+      cell.position.set(i * (cellW + gap), 2);
+      const sel = this._decoInvFilter === spec.id;
+      const bg = new PIXI.Graphics();
+      if (sel) {
+        bg.beginFill(TAB_BG_SELECTED);
+        bg.drawRoundedRect(0, 0, cellW, rowH, rowH / 2);
+        bg.endFill();
+        bg.lineStyle(1.5, COLORS.BUTTON_PRIMARY, 0.9);
+        bg.drawRoundedRect(0, 0, cellW, rowH, rowH / 2);
+      } else {
+        bg.beginFill(TAB_BG_IDLE);
+        bg.drawRoundedRect(0, 0, cellW, rowH, rowH / 2);
+        bg.endFill();
+        bg.lineStyle(1, TAB_BORDER_IDLE, 0.85);
+        bg.drawRoundedRect(0, 0, cellW, rowH, rowH / 2);
+      }
+      cell.addChild(bg);
+      const t = new PIXI.Text(spec.label, {
+        fontSize: sel ? 14 : 13,
+        fill: sel ? 0x5a3528 : COLORS.TEXT_LIGHT,
+        fontFamily: FONT_FAMILY,
+        fontWeight: sel ? 'bold' : 'normal',
+      });
+      t.anchor.set(0.5, 0.5);
+      t.position.set(cellW / 2, rowH / 2);
+      cell.addChild(t);
+      cell.eventMode = 'static';
+      cell.cursor = 'pointer';
+      const fid = spec.id;
+      cell.on('pointertap', () => {
+        if (this._decoInvFilter === fid) return;
+        this._decoInvFilter = fid;
+        this._scrollY = 0;
+        this._buildInventoryFilterBar(gridW);
+        const { gridH } = this._gridLayoutMetrics();
+        this._buildGrid(gridH);
+      });
+      this._filterBar.addChild(cell);
+    });
   }
 
   private _syncGridViewportClip(): void {
-    const { gridX, gridW, gridH } = this._gridLayoutMetrics();
-    this._gridViewport.position.set(gridX, this._contentTopY);
+    const { gridX, gridW, gridH, gridViewportTop } = this._gridLayoutMetrics();
+    this._gridViewport.position.set(gridX, gridViewportTop);
     this._gridViewport.hitArea = new PIXI.Rectangle(0, 0, gridW, gridH);
     this._gridMask.clear();
     this._gridMask.beginFill(0xffffff);
@@ -440,18 +545,17 @@ export class DecorationPanel extends PIXI.Container {
     this._tabContainer.removeChildren();
 
     const tabCount = DECO_PANEL_TABS.length;
-    const tabH = Math.min(Math.floor(availH / tabCount), 82);
+    const tabH = Math.min(Math.floor(availH / tabCount), 96);
     const spare = Math.max(0, availH - tabCount * tabH);
     this._tabVerticalPad = Math.floor(spare * 0.2);
     const pad = 3;
     const bw = TAB_W - pad * 2;
-    const sceneId = CurrencyManager.state.sceneId;
 
     const idleTabTex = TextureCache.get('deco_panel_tab_idle_nb2');
     const selTabTex = TextureCache.get('deco_panel_tab_selected_nb2');
     const useNb2TabSprites = idleTabTex != null && selTabTex != null;
 
-    const makeTab = (row: number, isCurrent: boolean, title: string, onTap: () => void, footer?: string): void => {
+    const makeTab = (row: number, isCurrent: boolean, title: string, onTap: () => void): void => {
       const tab = new PIXI.Container();
       tab.position.set(0, row * tabH);
       const bh = tabH - pad * 2;
@@ -493,21 +597,15 @@ export class DecorationPanel extends PIXI.Container {
       }
 
       const label = new PIXI.Text(title, {
-        fontSize: isCurrent ? 19 : 17,
+        fontSize: isCurrent ? 24 : 22,
         fill: isCurrent ? 0x5a3528 : COLORS.TEXT_LIGHT,
         fontFamily: FONT_FAMILY,
         fontWeight: isCurrent ? 'bold' : 'normal',
+        lineHeight: isCurrent ? 28 : 26,
       });
       label.anchor.set(0.5, 0.5);
-      label.position.set(TAB_W / 2, tabH / 2 - (footer ? 8 : 0));
+      label.position.set(TAB_W / 2, tabH / 2);
       tab.addChild(label);
-
-      if (footer) {
-        const ft = new PIXI.Text(footer, { fontSize: 12, fill: 0x888888, fontFamily: FONT_FAMILY });
-        ft.anchor.set(0.5, 1);
-        ft.position.set(TAB_W / 2, tabH - 3);
-        tab.addChild(ft);
-      }
 
       tab.eventMode = 'static';
       tab.cursor = 'pointer';
@@ -519,9 +617,7 @@ export class DecorationPanel extends PIXI.Container {
       const label = getDecorationTabLabel(tab);
       const isCurrent = this._activeTab === tab;
       const title = label.name;
-      const prog = DecorationManager.getDecorationTabProgress(tab, sceneId);
-      const footer = prog.total > 0 ? `${prog.unlocked}/${prog.total}` : undefined;
-      makeTab(i, isCurrent, title, () => { this._activeTab = tab; }, footer);
+      makeTab(i, isCurrent, title, () => { this._activeTab = tab; });
     });
   }
 
@@ -529,24 +625,24 @@ export class DecorationPanel extends PIXI.Container {
 
   private _refreshAll(): void {
     const panelH = Math.round(Game.logicHeight * PANEL_H_RATIO);
-    const gridH = panelH - this._contentTopY - CONTENT_BOTTOM;
-    this._buildTabs(gridH);
+    const tabColumnH = panelH - this._contentTopY - CONTENT_BOTTOM;
+    const { gridH, gridW } = this._gridLayoutMetrics();
+    this._buildTabs(tabColumnH);
     this._tabContainer.position.set(
       TAB_COLUMN_LEFT,
       this._contentTopY + this._tabVerticalPad - TAB_COLUMN_NUDGE_Y,
     );
+    this._buildInventoryFilterBar(gridW);
+    this._filterBar.visible = this._activeTab !== 'room_styles';
     this._syncGridViewportClip();
     this._buildGrid(gridH);
-    this._updateProgress();
   }
 
   // ─── grid ─────────────────────────────────────────────────
 
-  /** 保留索引 0 的裁剪遮罩，仅清除家具网格内容 */
+  /** 仅清除滚动内容（遮罩在 viewport 上，不在 gridContainer 内） */
   private _clearGridScrollContent(): void {
-    while (this._gridContainer.children.length > 1) {
-      this._gridContainer.removeChildAt(this._gridContainer.children.length - 1);
-    }
+    this._gridContainer.removeChildren();
   }
 
   private _buildGrid(availH: number): void {
@@ -554,7 +650,10 @@ export class DecorationPanel extends PIXI.Container {
     if (this._activeTab === 'room_styles') { this._buildRoomStyleGrid(availH); return; }
 
     const sceneId = CurrencyManager.state.sceneId;
-    const decos = getDecosForDecorationPanelTab(this._activeTab, sceneId);
+    let decos = sortDecosByUnlockLevelThenCost(
+      getDecosForDecorationPanelTab(this._activeTab, sceneId),
+    );
+    decos = decos.filter((d) => decoMatchesInvFilter(d, this._decoInvFilter, sceneId));
     const gridW = PANEL_W - TAB_COLUMN_LEFT - TAB_W - TAB_GAP - GRID_MARGIN_RIGHT;
     const { cw, ch, cols, startX } = measureCardGrid(gridW);
 
@@ -562,7 +661,7 @@ export class DecorationPanel extends PIXI.Container {
     this._gridContainer.addChild(inner);
 
     if (decos.length === 0) {
-      const hint = '该分类下暂无家具';
+      const hint = '该筛选下暂无家具';
       const empty = new PIXI.Text(hint, {
         fontSize: 15,
         fill: COLORS.TEXT_LIGHT,
@@ -601,10 +700,11 @@ export class DecorationPanel extends PIXI.Container {
     const inner = new PIXI.Container();
     this._gridContainer.addChild(inner);
 
-    const totalRows = Math.ceil(ROOM_STYLES.length / cols);
+    const stylesSorted = sortRoomStylesByUnlockLevelThenCost(ROOM_STYLES);
+    const totalRows = Math.ceil(stylesSorted.length / cols);
     const listTopPad = decoGridListTopPad(availH, totalRows, ch);
 
-    ROOM_STYLES.forEach((style, i) => {
+    stylesSorted.forEach((style, i) => {
       const col = i % cols;
       const row = Math.floor(i / cols);
       const y = listTopPad + CARD_GAP + row * (ch + CARD_GAP);
@@ -736,8 +836,8 @@ export class DecorationPanel extends PIXI.Container {
     const tex = TextureCache.get(key);
     const bottomPad = 10;
     const maxBtnW = cw - 12;
-    const targetH = Math.min(44, Math.round((34 * ch) / CARD_BASE_H));
-    const labelFont = 16;
+    const targetH = Math.min(48, Math.round((38 * ch) / CARD_BASE_H));
+    const labelFont = 18;
     const labelStyle = {
       fontSize: labelFont,
       fill: 0xffffff,
@@ -793,7 +893,7 @@ export class DecorationPanel extends PIXI.Container {
         price.position.set(xLeft + price.width / 2, 0);
         card.addChild(row);
       } else {
-        const lockStyle = mode === 'locked' ? { ...labelStyle, fontSize: 13 } : labelStyle;
+        const lockStyle = mode === 'locked' ? { ...labelStyle, fontSize: 15 } : labelStyle;
         const label = new PIXI.Text(lineText, lockStyle as any);
         label.anchor.set(0.5, 0.5);
         label.position.set(cw / 2, cy);
@@ -844,7 +944,7 @@ export class DecorationPanel extends PIXI.Container {
         price.position.set(xLeft + price.width / 2, 0);
         card.addChild(row);
       } else {
-        const fs = mode === 'locked' ? 12 : 14;
+        const fs = mode === 'locked' ? 15 : 17;
         const t = new PIXI.Text(lineText, { fontSize: fs, fill: 0xffffff, fontFamily: FONT_FAMILY, fontWeight: 'bold' });
         t.anchor.set(0.5, 0.5);
         t.position.set(cw / 2, cy);
@@ -1246,12 +1346,8 @@ export class DecorationPanel extends PIXI.Container {
 
   // ─── utils ────────────────────────────────────────────────
 
-  private _updateProgress(): void {
-    this._progressText.text = `已收集 ${DecorationManager.unlockedCount}/${DecorationManager.totalCount}`;
-  }
-
   private _applyScroll(): void {
-    const inner = this._gridContainer.children[1] as PIXI.Container | undefined;
+    const inner = this._gridContainer.children[0] as PIXI.Container | undefined;
     if (inner) inner.y = this._scrollY;
   }
 }

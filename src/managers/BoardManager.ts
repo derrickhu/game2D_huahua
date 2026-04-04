@@ -170,7 +170,7 @@ class BoardManagerClass {
       dst.reserved = false;
       dst.luckyCoinConsumed = false;
       resultCellIndex = dstIndex;
-      EventBus.emit('board:merged', srcIndex, dstIndex, resultId, resultCellIndex);
+      EventBus.emit('board:merged', srcIndex, dstIndex, resultId, resultCellIndex, isPeekMerge);
       EventBus.emit('board:cellUnlocked', dstIndex);
       this._checkRippleUnlock(dstIndex);
     } else {
@@ -178,7 +178,7 @@ class BoardManagerClass {
       dst.reserved = false;
       dst.luckyCoinConsumed = false;
       resultCellIndex = dstIndex;
-      EventBus.emit('board:merged', srcIndex, dstIndex, resultId, resultCellIndex);
+      EventBus.emit('board:merged', srcIndex, dstIndex, resultId, resultCellIndex, isPeekMerge);
       this._checkRippleUnlock(dstIndex);
     }
 

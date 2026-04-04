@@ -41,11 +41,14 @@ import { WarehouseManager } from '@/managers/WarehouseManager';
 import { getItemSellPrice } from '@/utils/ItemSellPrice';
 import { MergeGuideLineSystem } from '@/systems/MergeGuideLineSystem';
 import { MergeHintSystem } from '@/systems/MergeHintSystem';
+import { MergeCompanionOverlay } from './MergeCompanionOverlay';
+import { MergeCompanionManager } from '@/managers/MergeCompanionManager';
 
 export class BoardView extends PIXI.Container {
   /** 仅格子底与雾等，必须在物品下层，避免交错 addChild 导致右侧/下方格子盖住左侧物品 */
   private _cellsLayer!: PIXI.Container;
   private _itemsLayer!: PIXI.Container;
+  private _mergeCompanionLayer!: MergeCompanionOverlay;
   private _cellViews: CellView[] = [];
   private _itemViews: ItemView[] = [];
   private _dragGhost: PIXI.Container | null = null;
@@ -53,6 +56,14 @@ export class BoardView extends PIXI.Container {
   private _dragGhostParent: PIXI.Container | null = null;
   private _dragSrcIndex = -1;
   private _dragHoverIndex = -1;
+  /** 合成气泡按下 → canvas 上区分短按（钻石）与拖到空格落地 */
+  private _mergeBubblePtr: {
+    id: string;
+    startClientX: number;
+    startClientY: number;
+    dragStarted: boolean;
+  } | null = null;
+  private _bubbleDragGhost: PIXI.Container | null = null;
   private _mergeTargets: Set<number> = new Set();
   private _gridOffsetY = 0;
   /** 当前选中的格子索引（用于底部信息栏） */
@@ -84,6 +95,8 @@ export class BoardView extends PIXI.Container {
     this._itemsLayer = new PIXI.Container();
     this.addChild(this._cellsLayer);
     this.addChild(this._itemsLayer);
+    this._mergeCompanionLayer = new MergeCompanionOverlay();
+    this.addChild(this._mergeCompanionLayer);
     this._buildGrid();
     this._bindEvents();
     this._setupInteraction();
@@ -242,6 +255,7 @@ export class BoardView extends PIXI.Container {
       itemView.snapToCellLayout();
       itemView.position.set(pos.x, pos.y);
     }
+    this._mergeCompanionLayer.sync();
   }
 
   /** 定时刷新建筑 CD 显示（由外部 ticker 调用） */
@@ -264,11 +278,22 @@ export class BoardView extends PIXI.Container {
     const dt = Game.ticker.deltaMS / 1000;
     this._guideLineSystem.update(dt);
     this._mergeHintSystem.update(dt);
+    this._mergeCompanionLayer.tickTimers();
   }
 
   // ========== 事件绑定 ==========
 
   private _bindEvents(): void {
+    EventBus.on('mergeCompanion:bubblePointerDown', (id: string, cx: number, cy: number) => {
+      this._beginMergeBubblePointer(id, cx, cy);
+    });
+    EventBus.on('mergeCompanion:bubbleSelected', () => {
+      if (this._selectedIndex >= 0 && this._selectedIndex < this._cellViews.length) {
+        this._cellViews[this._selectedIndex].setHighlight(false);
+      }
+      this._selectedIndex = -1;
+    });
+
     EventBus.on('board:merged', (_src: number, _dst: number, resultId: string, resultCell: number) => {
       this._mergeHintSystem.resetIdle();
       this.refresh();
@@ -369,6 +394,7 @@ export class BoardView extends PIXI.Container {
     // ---- pointerdown：通过 PixiJS 容器事件做命中测试 ----
     this.on('pointerdown', (e: PIXI.FederatedPointerEvent) => {
       this._mergeHintSystem.resetIdle();
+      MergeCompanionManager.clearBubbleSelectionForBoardInteraction();
 
       const localPos = this.toLocal(e.global);
       const cellIdx = this._hitTestCell(localPos.x, localPos.y);
@@ -416,6 +442,28 @@ export class BoardView extends PIXI.Container {
     const canvas = Game.app.view as any;
 
     canvas.addEventListener('pointermove', (e: any) => {
+      if (this._mergeBubblePtr) {
+        const te = e as { clientX?: number; clientY?: number; touches?: TouchList };
+        const t0 = te.touches?.[0];
+        const cx = te.clientX ?? t0?.clientX ?? te.x ?? 0;
+        const cy = te.clientY ?? t0?.clientY ?? te.y ?? 0;
+        const localPos = this._rawToLocal(e);
+        if (!this._mergeBubblePtr.dragStarted) {
+          const dx = cx - this._mergeBubblePtr.startClientX;
+          const dy = cy - this._mergeBubblePtr.startClientY;
+          if (dx * dx + dy * dy >= 14 * 14) {
+            this._mergeBubblePtr.dragStarted = true;
+            this._startBubbleDragGhost(this._mergeBubblePtr.id);
+            this._mergeCompanionLayer.setDraggingBubbleId(this._mergeBubblePtr.id);
+          }
+        }
+        if (this._mergeBubblePtr.dragStarted && this._bubbleDragGhost) {
+          this._clearLongPress();
+          this._moveBubbleDragGhostFree(localPos);
+        }
+        return;
+      }
+
       if (this._dragSrcIndex < 0 || !this._dragGhost) return;
       // 开始拖动后取消长按检测
       this._clearLongPress();
@@ -425,6 +473,13 @@ export class BoardView extends PIXI.Container {
 
     const handleRawUp = (e: any) => {
       this._clearLongPress();
+
+      if (this._mergeBubblePtr) {
+        const localPos = this._rawToLocal(e);
+        this._finishMergeBubblePointer(localPos);
+        return;
+      }
+
       if (this._dragSrcIndex < 0) return;
       // 长按已触发合成线面板，忽略抬手操作
       if (this._longPressTriggered) {
@@ -514,6 +569,9 @@ export class BoardView extends PIXI.Container {
     canvas.addEventListener('pointerup', handleRawUp);
     canvas.addEventListener('pointercancel', () => {
       this._clearLongPress();
+      if (this._mergeBubblePtr) {
+        this._cancelMergeBubblePointer();
+      }
       if (this._dragGhost) {
         MergeManager.cancelDrag();
         this._endDrag();
@@ -701,6 +759,7 @@ export class BoardView extends PIXI.Container {
 
   /** 选中物品 */
   private _selectItem(cellIndex: number, itemId: string): void {
+    MergeCompanionManager.clearBubbleSelectionForBoardInteraction();
     // 取消旧选中高亮
     if (this._selectedIndex >= 0 && this._selectedIndex < this._cellViews.length) {
       this._cellViews[this._selectedIndex].setHighlight(false);
@@ -717,6 +776,7 @@ export class BoardView extends PIXI.Container {
 
   /** 取消选中 */
   private _deselectItem(): void {
+    MergeCompanionManager.clearBubbleSelectionForBoardInteraction();
     if (this._selectedIndex >= 0 && this._selectedIndex < this._cellViews.length) {
       this._cellViews[this._selectedIndex].setHighlight(false);
     }
@@ -992,6 +1052,107 @@ export class BoardView extends PIXI.Container {
       clearTimeout(this._longPressTimer);
       this._longPressTimer = null;
     }
+  }
+
+  private _beginMergeBubblePointer(id: string, cx: number, cy: number): void {
+    if (!MergeCompanionManager.getFloatBubble(id)) return;
+    this._clearLongPress();
+    this._mergeBubblePtr = { id, startClientX: cx, startClientY: cy, dragStarted: false };
+  }
+
+  private _cancelMergeBubblePointer(): void {
+    this._mergeBubblePtr = null;
+    this._endBubbleDragVisuals();
+  }
+
+  private _finishMergeBubblePointer(localPos: PIXI.IPointData): void {
+    const ptr = this._mergeBubblePtr;
+    this._mergeBubblePtr = null;
+    if (!ptr) return;
+
+    if (ptr.dragStarted && this._bubbleDragGhost) {
+      MergeCompanionManager.setBubbleBoardPosition(ptr.id, localPos.x, localPos.y);
+      this._endBubbleDragVisuals();
+      return;
+    }
+
+    MergeCompanionManager.selectBubble(ptr.id);
+    this._mergeCompanionLayer.setDraggingBubbleId(null);
+  }
+
+  private _endBubbleDragVisuals(): void {
+    this._clearBubbleDragGhost();
+    this._mergeCompanionLayer.setDraggingBubbleId(null);
+  }
+
+  private _moveBubbleDragGhostFree(localPos: PIXI.IPointData): void {
+    if (!this._bubbleDragGhost) return;
+    const cs = BoardMetrics.cellSize;
+    const gx = localPos.x;
+    const gy = localPos.y - cs * 0.4;
+    const p = this._ghostPosInParent(gx, gy);
+    this._bubbleDragGhost.position.set(p.x, p.y);
+  }
+
+  private _startBubbleDragGhost(bubbleId: string): void {
+    const b = MergeCompanionManager.getFloatBubble(bubbleId);
+    if (!b) return;
+    this._clearBubbleDragGhost();
+    const itemId = b.payloadItemId;
+    const cs = BoardMetrics.cellSize;
+    const def = ITEM_DEFS.get(itemId);
+    const ghost = new PIXI.Container();
+    const shadow = new PIXI.Graphics();
+    shadow.beginFill(0x000000, 0.12);
+    shadow.drawEllipse(0, cs * 0.38, cs * 0.32, cs * 0.08);
+    shadow.endFill();
+    ghost.addChild(shadow);
+    const tex = def ? TextureCache.get(def.icon) : null;
+    if (tex) {
+      const sprite = new PIXI.Sprite(tex);
+      const maxS = cs - 8;
+      const s = Math.min(maxS / tex.width, maxS / tex.height);
+      sprite.scale.set(s);
+      sprite.anchor.set(0.5, 0.5);
+      ghost.addChild(sprite);
+    } else {
+      const fallback = new PIXI.Graphics();
+      fallback.beginFill(0xb3e5fc, 0.65);
+      fallback.drawCircle(0, 0, cs * 0.28);
+      fallback.endFill();
+      ghost.addChild(fallback);
+    }
+    const ring = new PIXI.Graphics();
+    ring.lineStyle(2, 0x7ec8e8, 0.9);
+    ring.drawCircle(0, -cs * 0.02, cs * 0.34);
+    ghost.addChild(ring);
+
+    const p0 = this._ghostPosInParent(b.boardX, b.boardY);
+    ghost.position.set(p0.x, p0.y);
+    ghost.scale.set(0.72);
+    ghost.alpha = 0.95;
+    if (this._dragGhostParent) {
+      this._dragGhostParent.addChild(ghost);
+    } else {
+      this.addChild(ghost);
+    }
+    this._bubbleDragGhost = ghost;
+    TweenManager.to({
+      target: ghost.scale,
+      props: { x: 1.06, y: 1.06 },
+      duration: 0.1,
+      ease: Ease.easeOutBack,
+    });
+  }
+
+  private _clearBubbleDragGhost(): void {
+    if (!this._bubbleDragGhost) return;
+    const g = this._bubbleDragGhost;
+    TweenManager.cancelTarget(g.scale);
+    TweenManager.cancelTarget(g);
+    g.parent?.removeChild(g);
+    g.destroy({ children: true });
+    this._bubbleDragGhost = null;
   }
 
   private _hitTestCell(x: number, y: number): number {

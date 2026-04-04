@@ -6,6 +6,7 @@ import '@/core/pixiUnsafeEvalPatch';
 import { Game } from '@/core/Game';
 import { SceneManager } from '@/core/SceneManager';
 import { BoardManager } from '@/managers/BoardManager';
+import { MergeCompanionManager } from '@/managers/MergeCompanionManager';
 import { BuildingManager } from '@/managers/BuildingManager';
 import { SaveManager } from '@/managers/SaveManager';
 import { IdleManager } from '@/managers/IdleManager';
@@ -99,6 +100,8 @@ async function main(): Promise<void> {
     // 初始化棋盘数据
     BoardManager.init();
     console.log('[main] BoardManager.init 完成');
+
+    MergeCompanionManager.init();
 
     // 尝试加载存档（开发阶段已在启动时清除，此处应返回 false）
     const loaded = SaveManager.load();

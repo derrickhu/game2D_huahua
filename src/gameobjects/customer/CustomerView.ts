@@ -66,21 +66,27 @@ export class CustomerView extends PIXI.Container {
   constructor() {
     super();
     this.sortableChildren = true;
+    // 自身不抢点：横向滑动由底层 CustomerScrollArea 命中条接收；仅「完成」等子节点保持 static
+    this.eventMode = 'passive';
+    this.interactiveChildren = true;
 
     this._avatarSprite = new PIXI.Sprite();
     this._avatarSprite.anchor.set(0.5, 1.0);
     this._avatarSprite.position.set(0, AVATAR_FEET_Y);
     this._avatarSprite.visible = false;
+    this._avatarSprite.eventMode = 'none';
     this.addChild(this._avatarSprite);
 
     this._avatar = new PIXI.Text('', { fontSize: 52 });
     this._avatar.anchor.set(0.5, 1.0);
     this._avatar.position.set(0, AVATAR_FEET_Y);
+    this._avatar.eventMode = 'none';
     this.addChild(this._avatar);
 
     this._infoPanel = new PIXI.Container();
     this._infoPanel.position.set(0, PANEL_Y);
     this._infoPanel.zIndex = 5;
+    this._infoPanel.eventMode = 'none';
     this.addChild(this._infoPanel);
 
     this.sortChildren();
@@ -267,6 +273,7 @@ export class CustomerView extends PIXI.Container {
     if (!this._customer) return;
     const badge = new PIXI.Container();
     badge.position.set(PANEL_W / 2, REWARD_BADGE_Y);
+    badge.eventMode = 'none';
 
     const iconSize = 22;
     const gap = 4;
@@ -358,6 +365,7 @@ export class CustomerView extends PIXI.Container {
 
     badge.position.set(-PANEL_W / 2 + r + 2, PANEL_Y - r - 2);
     badge.zIndex = 10;
+    badge.eventMode = 'none';
     this.addChild(badge);
     this._tierBadge = badge;
   }

@@ -12,6 +12,7 @@ import { CurrencyManager } from './CurrencyManager';
 import { CustomerManager, type CustomerPersistState } from './CustomerManager';
 import { WarehouseManager, WarehouseState } from './WarehouseManager';
 import { RewardBoxManager, RewardBoxState } from './RewardBoxManager';
+import { MergeCompanionManager, type MergeCompanionPersistState } from './MergeCompanionManager';
 import { Platform } from '@/core/PlatformService';
 import { BOARD_TOTAL } from '@/config/Constants';
 import { BOARD_PRESETS } from '@/config/BoardLayout';
@@ -56,6 +57,8 @@ interface SaveData {
   buildings?: BuildingPersistEntry[];
   warehouse?: WarehouseState;
   rewardBox?: RewardBoxState;
+  /** 合成伴生物（漂浮气泡等） */
+  mergeCompanions?: MergeCompanionPersistState;
   /** 当前订单队列（与棋盘独立保存；读档后由 CustomerManager.init 绑定格子） */
   customers?: CustomerPersistState;
 }
@@ -67,12 +70,13 @@ class SaveManagerClass {
     const data: SaveData = {
       fingerprint: CONFIG_FINGERPRINT,
       timestamp: Date.now(),
-      version: 5,
+      version: 6,
       currency: CurrencyManager.exportState(),
       board: BoardManager.exportState(),
       buildings: BuildingManager.exportState(),
       warehouse: WarehouseManager.exportState(),
       rewardBox: RewardBoxManager.exportState(),
+      mergeCompanions: MergeCompanionManager.exportState(),
       customers: CustomerManager.exportState(),
     };
     return JSON.stringify(data);
@@ -146,6 +150,7 @@ class SaveManagerClass {
       if (data.rewardBox) {
         RewardBoxManager.loadState(data.rewardBox);
       }
+      MergeCompanionManager.loadState(data.mergeCompanions);
       CustomerManager.prepareFromSave(data.customers);
 
       console.log('[Save] 读档成功, 距上次存档:', Math.round((Date.now() - data.timestamp) / 1000), '秒');

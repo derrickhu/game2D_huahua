@@ -38,7 +38,7 @@ import { LevelUpPopup } from '@/gameobjects/ui/LevelUpPopup';
 import { ShopRowPanoramaScroll, SHOP_PANORAMA_VIEW_H } from '@/gameobjects/ui/ShopRowPanoramaScroll';
 import { FlowerEasterEggSystem } from '@/systems/FlowerEasterEggSystem';
 import { MergeStatsSystem } from '@/systems/MergeStatsSystem';
-import { TutorialSystem } from '@/systems/TutorialSystem';
+import { TutorialSystem, TutorialStep } from '@/systems/TutorialSystem';
 import { SoundSystem } from '@/systems/SoundSystem';
 import { GMManager } from '@/managers/GMManager';
 import { GMPanel } from '@/gameobjects/ui/GMPanel';
@@ -79,6 +79,7 @@ import { WorldMapPanel } from '@/gameobjects/ui/WorldMapPanel';
 import { ShopScene } from '@/scenes/ShopScene';
 import { LIVE_HOUSE_THUMB_CAPTURE_MAX } from '@/config/WorldMapConfig';
 import { RewardBoxManager } from '@/managers/RewardBoxManager';
+import { MergeCompanionManager } from '@/managers/MergeCompanionManager';
 import { RoomLayoutManager } from '@/managers/RoomLayoutManager';
 
 /** 合成页左侧店主半身：目标高度与最大宽度（设计 px），统一 scale=min(宽限,高限) 保持宽高比、避免栏内「压扁」感 */
@@ -624,6 +625,25 @@ export class MainScene implements Scene {
         else if (currencyType === 'diamond') this._topBar.flashDiamond();
       });
     });
+
+    /** 合成气泡倒计时结束未购买：体力从气泡位置飞入顶栏后再入账 */
+    EventBus.on('mergeCompanion:expireStaminaFly', (payload: {
+      boardLocalX: number;
+      boardLocalY: number;
+      amount: number;
+    }) => {
+      const sg = this._boardView.toGlobal(new PIXI.Point(payload.boardLocalX, payload.boardLocalY));
+      const sx = this.container.toLocal(sg).x;
+      const sy = this.container.toLocal(sg).y;
+      const lp = this._topBar.getStaminaIconPos();
+      const endX = this._topBar.x + lp.x;
+      const endY = this._topBar.y + lp.y;
+      this._playRewardFly('icon_energy', sx, sy, endX, endY, payload.amount, () => {
+        CurrencyManager.addStamina(payload.amount);
+        ToastMessage.show(`气泡破裂，+${payload.amount} 体力`);
+        this._topBar.flashStamina();
+      });
+    });
   }
 
   /**
@@ -1015,6 +1035,10 @@ export class MainScene implements Scene {
     // 注意：TweenManager.update 已在 Game.init 的全局 ticker 中注册，
     // 此处不再重复调用，避免动画速度翻倍
     SaveManager.update(dt);
+    MergeCompanionManager.setMergeCompanionBlocked(
+      this._tutorialSystem.isActive && this._tutorialSystem.currentStep < TutorialStep.FREE_EXPLORE,
+    );
+    MergeCompanionManager.update(dt);
 
     this._boardView.updateCdDisplay();
     this._topBar.updateTimer();

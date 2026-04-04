@@ -58,11 +58,14 @@ export class CustomerScrollArea extends PIXI.Container {
     // 遮罩
     this._maskGraphics = new PIXI.Graphics();
     this._updateMask();
+    this._maskGraphics.eventMode = 'none';
     this.addChild(this._maskGraphics);
 
-    // 滚动容器
+    // 滚动容器（passive：不把整条内容区当可点目标，避免挡住底层横向滑动命中层）
     this._scrollContent = new PIXI.Container();
     this._scrollContent.mask = this._maskGraphics;
+    this._scrollContent.eventMode = 'passive';
+    this._scrollContent.interactiveChildren = true;
     this.addChild(this._scrollContent);
 
     // 空状态
@@ -74,6 +77,7 @@ export class CustomerScrollArea extends PIXI.Container {
     this._emptyHint.anchor.set(0.5, 0.5);
     this._emptyHint.position.set(this._viewWidth / 2, 120);
     this._emptyHint.alpha = 0.5;
+    this._emptyHint.eventMode = 'none';
     this.addChild(this._emptyHint);
 
     // 触控交互区域

@@ -17,8 +17,16 @@ import {
   isLuckyCoinItem,
 } from '@/config/ItemConfig';
 import { findBoardProducerDef } from '@/config/BuildingConfig';
+import { MERGE_BUBBLE_EXPIRE_STAMINA } from '@/config/MergeCompanionConfig';
 import { CellState } from '@/config/BoardLayout';
 import { BoardManager } from '@/managers/BoardManager';
+import {
+  MergeCompanionManager,
+  type MergeCompanionFloatBubble,
+} from '@/managers/MergeCompanionManager';
+import { CurrencyManager } from '@/managers/CurrencyManager';
+import { ConfirmDialog } from './ConfirmDialog';
+import { ToastMessage } from './ToastMessage';
 import { ToolProducePolicy } from '@/managers/ToolProducePolicy';
 import { DecorationManager } from '@/managers/DecorationManager';
 import { TextureCache } from '@/utils/TextureCache';
@@ -124,6 +132,7 @@ export class ItemInfoBar extends PIXI.Container {
 
   private _sellBtn!: PIXI.Container;
   private _chainBtn!: PIXI.Container;
+  private _chainBtnLabel!: PIXI.Text;
   private _sellPriceRow!: PIXI.Container;
   private _sellHuayuanSp!: PIXI.Sprite;
   private _sellPriceText!: PIXI.Text;
@@ -157,6 +166,8 @@ export class ItemInfoBar extends PIXI.Container {
 
   private _selectedItemId: string | null = null;
   private _selectedCellIndex = -1;
+  /** 底部栏展示合成气泡说明时 */
+  private _selectedMergeBubbleId: string | null = null;
 
   constructor(actualHeight?: number) {
     super();
@@ -450,7 +461,7 @@ export class ItemInfoBar extends PIXI.Container {
     );
     this._chainBtn.addChild(bg);
 
-    const text = new PIXI.Text('查看', {
+    this._chainBtnLabel = new PIXI.Text('查看', {
       fontSize: 17,
       fill: 0xffffff,
       fontFamily: FONT_FAMILY,
@@ -458,8 +469,8 @@ export class ItemInfoBar extends PIXI.Container {
       stroke: 0x2d5a55,
       strokeThickness: 3,
     });
-    text.anchor.set(0.5, 0.5);
-    this._chainBtn.addChild(text);
+    this._chainBtnLabel.anchor.set(0.5, 0.5);
+    this._chainBtn.addChild(this._chainBtnLabel);
 
     this._chainBtn.eventMode = 'static';
     this._chainBtn.cursor = 'pointer';
@@ -551,6 +562,20 @@ export class ItemInfoBar extends PIXI.Container {
   }
 
   private _bindEvents(): void {
+    EventBus.on('mergeCompanion:bubbleSelected', (id: string) => {
+      this._onMergeBubbleSelected(id);
+    });
+    EventBus.on('mergeCompanion:bubbleDeselect', () => {
+      if (!this._selectedMergeBubbleId) return;
+      this._selectedMergeBubbleId = null;
+      this._chainBtnLabel.text = '查看';
+      if (!this._selectedItemId) {
+        this._clearSelection();
+      }
+    });
+    EventBus.on('mergeCompanion:changed', () => {
+      this._refreshSelectedBubblePanel();
+    });
     EventBus.on('board:itemSelected', (cellIndex: number, itemId: string | null) => {
       this._onItemSelected(cellIndex, itemId);
     });
@@ -579,6 +604,9 @@ export class ItemInfoBar extends PIXI.Container {
       this._clearSelection();
       return;
     }
+
+    this._selectedMergeBubbleId = null;
+    this._chainBtnLabel.text = '查看';
 
     this._selectedItemId = itemId;
     this._selectedCellIndex = cellIndex;
@@ -686,6 +714,8 @@ export class ItemInfoBar extends PIXI.Container {
   private _clearSelection(): void {
     this._selectedItemId = null;
     this._selectedCellIndex = -1;
+    this._selectedMergeBubbleId = null;
+    this._chainBtnLabel.text = '查看';
 
     this._infoContainer.visible = false;
     this._sellBtn.visible = false;
@@ -729,9 +759,114 @@ export class ItemInfoBar extends PIXI.Container {
   }
 
   private _onChainTap(): void {
+    if (this._selectedMergeBubbleId) {
+      void this._onMergeBubbleUnlockTap();
+      return;
+    }
     if (!this._selectedItemId) return;
     this._playBtnBounce(this._chainBtn);
     EventBus.emit('mergeChain:open', this._selectedItemId);
+  }
+
+  private _mergeBubbleDescLines(b: MergeCompanionFloatBubble): string {
+    const left = Math.max(0, Math.ceil((b.expireAt - Date.now()) / 1000));
+    const mm = Math.floor(left / 60);
+    const ss = left % 60;
+    const timeStr = `${mm}:${ss.toString().padStart(2, '0')}`;
+    const pay =
+      b.diamondPrice <= 0
+        ? `可免费立即解锁，物品将进入棋盘空格（满格时进入收纳箱）。`
+        : `花费 ${b.diamondPrice} 钻石可立即解锁，物品将进入棋盘空格（满格时进入收纳箱）。`;
+    const wait = `倒计时结束（剩余 ${timeStr}）若仍未解锁：气泡破裂，+${MERGE_BUBBLE_EXPIRE_STAMINA} 体力将飞向顶栏。`;
+    const drag = `可按住气泡拖动到棋盘上任意位置，悬浮在格子上方，会挡住下方物品。`;
+    return `${pay}\n${wait}\n${drag}`;
+  }
+
+  private _onMergeBubbleSelected(id: string): void {
+    const b = MergeCompanionManager.getFloatBubble(id);
+    if (!b) {
+      this._clearSelection();
+      return;
+    }
+
+    this._selectedMergeBubbleId = id;
+    this._selectedItemId = null;
+    this._selectedCellIndex = -1;
+
+    const def = ITEM_DEFS.get(b.payloadItemId);
+    this._nameText.text = '合成气泡';
+    this._levelText.visible = true;
+    this._levelText.text = def ? `${def.name} · Lv.${def.level}` : b.payloadItemId;
+    this._levelText.position.x = this._nameText.position.x + this._nameText.width + 6;
+
+    const ribbonLeftWorld = this._cardLeft - LEAF_LEFT_OVERHANG + LEAF_INSET_X;
+    const titleRightWorld = this._levelText.position.x + this._levelText.width;
+    const neededRibbonW = Math.ceil(titleRightWorld + RIBBON_PAD_RIGHT - ribbonLeftWorld);
+    this._leafDisplayW = Math.min(LEAF_MAX_W, Math.max(this._leafDisplayWMin, neededRibbonW));
+
+    this._descText.visible = true;
+    this._staminaDescRow.visible = false;
+    this._descText.text = this._mergeBubbleDescLines(b);
+
+    this._sellBtn.visible = false;
+    this._chainBtn.visible = true;
+    this._chainBtnLabel.text = b.diamondPrice <= 0 ? '免费解锁' : `💎${b.diamondPrice} 解锁`;
+
+    this._descText.style.wordWrapWidth = Math.max(72, this._cardW - 20 - CHAIN_W - 32);
+    this._syncActionButtonPositions(true, false);
+
+    this._syncLeafStrip();
+    this._infoContainer.visible = true;
+    this._hintContainer.visible = false;
+    this._infoContainer.alpha = 0;
+    TweenManager.to({
+      target: this._infoContainer,
+      props: { alpha: 1 },
+      duration: 0.2,
+      ease: Ease.easeOutQuad,
+    });
+  }
+
+  private _refreshSelectedBubblePanel(): void {
+    if (!this._selectedMergeBubbleId || !this._infoContainer.visible) return;
+    const b = MergeCompanionManager.getFloatBubble(this._selectedMergeBubbleId);
+    if (!b) {
+      this._clearSelection();
+      return;
+    }
+    this._descText.text = this._mergeBubbleDescLines(b);
+  }
+
+  private async _onMergeBubbleUnlockTap(): Promise<void> {
+    const id = this._selectedMergeBubbleId;
+    if (!id) return;
+    const b = MergeCompanionManager.getFloatBubble(id);
+    if (!b) {
+      this._clearSelection();
+      return;
+    }
+    this._playBtnBounce(this._chainBtn);
+    const def = ITEM_DEFS.get(b.payloadItemId);
+    const name = def?.name ?? b.payloadItemId;
+    if (b.diamondPrice > 0) {
+      if (CurrencyManager.state.diamond < b.diamondPrice) {
+        ToastMessage.show('钻石不足');
+        return;
+      }
+      const ok = await ConfirmDialog.show(
+        '解锁合成气泡',
+        `花费 ${b.diamondPrice} 钻石获得「${name}」？\n（棋盘满时物品进入收纳箱）`,
+        '支付',
+        '取消',
+      );
+      if (!ok) return;
+    }
+    if (!MergeCompanionManager.unlockBubbleWithDiamond(id)) {
+      ToastMessage.show('钻石不足或气泡已消失');
+    } else {
+      ToastMessage.show('已获得气泡中的物品');
+      this._clearSelection();
+    }
   }
 
   private _playBtnBounce(btn: PIXI.Container): void {

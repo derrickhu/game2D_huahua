@@ -12,7 +12,7 @@ export const BOARD_ROWS = 9;
 export const BOARD_TOTAL = BOARD_COLS * BOARD_ROWS;
 export const CELL_GAP = 4;
 /** 棋盘区上下装饰横条高度（与 `images/ui/board_bar.png`、MainScene 底栏间距一致） */
-export const BOARD_BAR_HEIGHT = 36;
+export const BOARD_BAR_HEIGHT = 22;
 
 /**
  * 棋盘动态布局参数（用对象包裹防止 Terser 常量内联）
