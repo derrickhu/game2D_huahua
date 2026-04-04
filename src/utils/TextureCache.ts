@@ -137,7 +137,7 @@ const PANELS_IMAGE_MAP: Record<string, string> = {
   /** 装修面板左侧分类 Tab：NB2 品红底 + rembg；未选中 / 选中 */
   deco_panel_tab_idle_nb2: 'subpkg_panels/images/ui/deco_panel_tab_idle_nb2.png',
   deco_panel_tab_selected_nb2: 'subpkg_panels/images/ui/deco_panel_tab_selected_nb2.png',
-  /** 水晶球/金剪刀确认弹窗：NB2+rembg，与合成线彩带同风格 */
+  /** 万能水晶/金剪刀确认弹窗：NB2+rembg，与合成线彩带同风格 */
   special_consumable_panel_bg: 'subpkg_panels/images/ui/special_consumable_panel_bg.png',
   special_consumable_use_btn: 'subpkg_panels/images/ui/special_consumable_use_btn.png',
   deco_panel_popup_frame: 'subpkg_panels/images/ui/deco_panel_popup_frame.png',
@@ -307,7 +307,7 @@ const ITEMS_IMAGE_MAP: Record<string, string> = {
   stamina_chest_2: 'subpkg_items/images/stamina_chest/stamina_chest_2.png',
   stamina_chest_3: 'subpkg_items/images/stamina_chest/stamina_chest_3.png',
 
-  // ---- 棋盘消耗品（幸运金币 / 水晶球 / 金剪刀，与 icon_coin 同 122×128，items 分包）----
+  // ---- 棋盘消耗品（幸运金币 / 万能水晶 / 金剪刀，与 icon_coin 同 122×128，items 分包）----
   icon_coin: 'subpkg_items/images/special/special_lucky_coin.png',
   icon_crystal_ball: 'subpkg_items/images/special/special_crystal_ball.png',
   icon_golden_scissors: 'subpkg_items/images/special/special_golden_scissors.png',
@@ -407,6 +407,9 @@ const DECO_IMAGE_MAP: Record<string, string> = {
   greenhouse_pot_hydrangea: 'subpkg_deco/images/furniture/greenhouse_pot_hydrangea.png',
   greenhouse_pot_orchid: 'subpkg_deco/images/furniture/greenhouse_pot_orchid.png',
   greenhouse_pot_peony_gold: 'subpkg_deco/images/furniture/greenhouse_pot_peony_gold.png',
+  greenhouse_vase_tulip: 'subpkg_deco/images/furniture/greenhouse_vase_tulip.png',
+  greenhouse_vase_peony: 'subpkg_deco/images/furniture/greenhouse_vase_peony.png',
+  greenhouse_vase_lotus: 'subpkg_deco/images/furniture/greenhouse_vase_lotus.png',
 
   // ---- 房间背景 ----
   bg_room_default: 'subpkg_deco/images/house/bg_room_default.png',

@@ -44,6 +44,9 @@ OTHER_GREENHOUSE = [
     "greenhouse_pot_sunflower.png",
     "greenhouse_pot_carnation.png",
     "greenhouse_pot_rose.png",
+    "greenhouse_vase_tulip.png",
+    "greenhouse_vase_peony.png",
+    "greenhouse_vase_lotus.png",
 ]
 
 

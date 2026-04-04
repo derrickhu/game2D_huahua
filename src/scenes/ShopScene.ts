@@ -7,7 +7,7 @@
  * - 可交互元素：装修入口、装扮入口、图鉴入口
  * - 左侧活动入口（签到、任务等）
  * - 右下角大的返回按钮，切回合成棋盘
- * - 顶部复用 TopBar（花愿/体力/钻石；星星进度在下方进度条）
+ * - 顶部复用 TopBar（花愿/体力/钻石/内购商店；星星进度在下方进度条）
  *
  * 对标四季物语第二张截图的交互体验
  */
@@ -367,7 +367,7 @@ export class ShopScene implements Scene {
     this.container.addChild(this._roomContainer);
 
     // ============== 3. 顶部 TopBar ==============
-    this._topBar = new TopBar({ hideShopPill: true });
+    this._topBar = new TopBar();
     this._topBar.position.set(0, Game.safeTop);
     this.container.addChild(this._topBar);
 

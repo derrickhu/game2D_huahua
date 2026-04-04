@@ -1,5 +1,5 @@
 /**
- * 棋盘消耗品（水晶球 / 金剪刀）确认面板：图标公式 + NB2 面板底与「使用」按钮贴图，标题复用 merge_chain_ribbon。
+ * 棋盘消耗品（万能水晶 / 金剪刀）确认面板：图标公式 + NB2 面板底与「使用」按钮贴图，标题复用 merge_chain_ribbon。
  */
 import * as PIXI from 'pixi.js';
 import { Game } from '@/core/Game';
@@ -105,7 +105,7 @@ export class SpecialConsumableConfirmPanel extends PIXI.Container {
     c.position.set(x, 0);
     row.addChild(c);
 
-    this._buildShell('水晶球', row);
+    this._buildShell('万能水晶', row);
   }
 
   private _buildScissors(targetItemId: string, splitItemId: string): void {

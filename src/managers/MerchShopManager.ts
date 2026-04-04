@@ -5,13 +5,46 @@
  */
 import { Game } from '@/core/Game';
 import { EventBus } from '@/core/EventBus';
-import { ITEM_DEFS } from '@/config/ItemConfig';
 import {
+  Category,
+  CRYSTAL_BALL_ITEM_ID,
+  GOLDEN_SCISSORS_ITEM_ID,
+  ITEM_DEFS,
+  LUCKY_COIN_ITEM_ID,
+  type ItemDef,
+} from '@/config/ItemConfig';
+import {
+  MERCH_FREE_SHOP_BASE_WEIGHT,
+  MERCH_FREE_SHOP_RARE_WEIGHT,
+  MERCH_MYSTERY_DIAMOND_BASE,
+  MERCH_MYSTERY_DIAMOND_CURVE_DIV,
+  MERCH_MYSTERY_DIAMOND_EXTRA_PER_CHEST_LEVEL,
+  MERCH_MYSTERY_DIAMOND_PER_LEVEL,
+  MERCH_MYSTERY_HUAYUAN_CHANCE_LOCKED,
+  MERCH_MYSTERY_HUAYUAN_CHANCE_UNLOCKED,
+  MERCH_MYSTERY_HUAYUAN_FALLBACK_BASE,
+  MERCH_MYSTERY_HUAYUAN_FALLBACK_PER_LEVEL,
+  MERCH_MYSTERY_HUAYUAN_LOCKED_MULT,
+  MERCH_MYSTERY_HUAYUAN_MAX_LEVEL,
+  MERCH_MYSTERY_HUAYUAN_MIN,
+  MERCH_MYSTERY_LOCKED_DIAMOND_ADD,
+  MERCH_MYSTERY_LOCKED_DIAMOND_MULT,
+  MERCH_MYSTERY_LOCKED_LINE_WEIGHT_FACTOR,
+  MERCH_MYSTERY_LOCKED_STOCK_FACTOR,
+  MERCH_MYSTERY_PRICE_MULT_MAX,
+  MERCH_MYSTERY_PRICE_MULT_MIN,
+  MERCH_MYSTERY_STOCK_CAP,
+  MERCH_MYSTERY_STOCK_DIVISOR,
+  MERCH_MYSTERY_TOOL_L1_DIAMOND_BASE,
+  MERCH_MYSTERY_TOOL_L1_DIAMOND_SPREAD,
+  MERCH_MYSTERY_TOOL_L1_WEIGHT,
+  MERCH_MYSTERY_UNLOCKED_LEVEL_NUM,
   MERCH_SHELVES,
   type MerchPoolEntry,
   type MerchPriceType,
   type MerchShelfDef,
 } from '@/config/MerchShopConfig';
+import { CollectionCategory, CollectionManager } from '@/managers/CollectionManager';
 import { CurrencyManager } from '@/managers/CurrencyManager';
 import { BoardManager } from '@/managers/BoardManager';
 import { RewardBoxManager } from '@/managers/RewardBoxManager';
@@ -54,6 +87,9 @@ function clampPurchaseStock(raw: number | undefined): number {
   return Math.max(1, Math.min(99, n));
 }
 
+/** 免费商店每格可购买次数上限（含读档钳制） */
+const FREE_SHOP_MAX_PURCHASE_PER_SLOT = 1;
+
 function weightedPickIndex(weights: number[]): number {
   let total = 0;
   for (const w of weights) total += Math.max(0, w);
@@ -66,8 +102,287 @@ function weightedPickIndex(weights: number[]): number {
   return weights.length - 1;
 }
 
+function mysteryPriceFluctuationMult(): number {
+  return (
+    MERCH_MYSTERY_PRICE_MULT_MIN +
+    Math.random() * (MERCH_MYSTERY_PRICE_MULT_MAX - MERCH_MYSTERY_PRICE_MULT_MIN)
+  );
+}
+
+/** 图鉴分类（与 CollectionManager 登记一致）；未进图鉴的品类不参与免费商店动态池 */
+function collectionCategoryForItemDef(def: ItemDef): CollectionCategory | null {
+  switch (def.category) {
+    case Category.FLOWER:
+      return CollectionCategory.FLOWER;
+    case Category.DRINK:
+      return CollectionCategory.DRINK;
+    case Category.BUILDING:
+      return CollectionCategory.BUILDING;
+    case Category.CHEST:
+      return CollectionCategory.CHEST;
+    default:
+      return null;
+  }
+}
+
+function isDiscoveredForFreeShop(itemId: string): boolean {
+  const def = ITEM_DEFS.get(itemId);
+  if (!def) return false;
+  const cat = collectionCategoryForItemDef(def);
+  if (!cat) return false;
+  return CollectionManager.isDiscovered(cat, itemId);
+}
+
+/** 该物品所在合成线（同 category + line）是否已有任意一级被图鉴收录 */
+function isMergeLineUnlocked(def: ItemDef): boolean {
+  const cat = collectionCategoryForItemDef(def);
+  if (!cat) return false;
+  for (const [, d] of ITEM_DEFS) {
+    if (d.category !== def.category || d.line !== def.line) continue;
+    if (CollectionManager.isDiscovered(cat, d.id)) return true;
+  }
+  return false;
+}
+
+interface MysteryCandidate {
+  itemId: string;
+  weight: number;
+  isToolL1: boolean;
+  lockedLine: boolean;
+  def: ItemDef;
+}
+
+const MYSTERY_BLOCKED_IDS = new Set<string>([
+  LUCKY_COIN_ITEM_ID,
+  CRYSTAL_BALL_ITEM_ID,
+  GOLDEN_SCISSORS_ITEM_ID,
+]);
+
+function buildMysteryCandidates(): MysteryCandidate[] {
+  const out: MysteryCandidate[] = [];
+  for (const [id, def] of ITEM_DEFS) {
+    if (MYSTERY_BLOCKED_IDS.has(id)) continue;
+    if (def.category === Category.CURRENCY) continue;
+
+    if (def.category === Category.BUILDING) {
+      if (id.startsWith('tool_') && def.level === 1) {
+        const lockedLine = !isMergeLineUnlocked(def);
+        let w = MERCH_MYSTERY_TOOL_L1_WEIGHT;
+        if (lockedLine) w *= 0.72;
+        out.push({
+          itemId: id,
+          weight: Math.max(1, Math.round(w)),
+          isToolL1: true,
+          lockedLine,
+          def,
+        });
+      }
+      continue;
+    }
+
+    if (
+      def.category === Category.FLOWER ||
+      def.category === Category.DRINK ||
+      def.category === Category.CHEST
+    ) {
+      const lockedLine = !isMergeLineUnlocked(def);
+      let w = Math.max(
+        1,
+        Math.round(MERCH_MYSTERY_UNLOCKED_LEVEL_NUM / (def.level * def.level)),
+      );
+      if (lockedLine) {
+        w = Math.max(
+          1,
+          Math.round(w * MERCH_MYSTERY_LOCKED_LINE_WEIGHT_FACTOR),
+        );
+      }
+      out.push({ itemId: id, weight: w, isToolL1: false, lockedLine, def });
+    }
+  }
+  return out;
+}
+
+function finalizeMysterySlot(c: MysteryCandidate): MerchSlotState {
+  const { def, lockedLine, isToolL1 } = c;
+  const fluct = mysteryPriceFluctuationMult();
+
+  let stock: number;
+  if (isToolL1) {
+    stock = 1;
+  } else {
+    let s = Math.ceil(MERCH_MYSTERY_STOCK_DIVISOR / def.level);
+    s = Math.min(MERCH_MYSTERY_STOCK_CAP, Math.max(1, s));
+    if (lockedLine) {
+      s = Math.max(1, Math.ceil(s * MERCH_MYSTERY_LOCKED_STOCK_FACTOR));
+    }
+    stock = clampPurchaseStock(s);
+  }
+
+  const hyChance = lockedLine
+    ? MERCH_MYSTERY_HUAYUAN_CHANCE_LOCKED
+    : MERCH_MYSTERY_HUAYUAN_CHANCE_UNLOCKED;
+  const tryHuayuan =
+    !isToolL1 &&
+    def.level <= MERCH_MYSTERY_HUAYUAN_MAX_LEVEL &&
+    Math.random() < hyChance;
+
+  if (tryHuayuan) {
+    const ref =
+      def.orderHuayuan ??
+      MERCH_MYSTERY_HUAYUAN_FALLBACK_BASE +
+        def.level * MERCH_MYSTERY_HUAYUAN_FALLBACK_PER_LEVEL;
+    let hy = ref * (0.9 + Math.random() * 0.2);
+    if (lockedLine) hy *= MERCH_MYSTERY_HUAYUAN_LOCKED_MULT;
+    const priceAmount = Math.max(
+      MERCH_MYSTERY_HUAYUAN_MIN,
+      Math.round(hy * fluct),
+    );
+    return {
+      itemId: c.itemId,
+      remaining: stock,
+      priceType: 'huayuan',
+      priceAmount,
+    };
+  }
+
+  let baseDia =
+    MERCH_MYSTERY_DIAMOND_BASE +
+    def.level * MERCH_MYSTERY_DIAMOND_PER_LEVEL +
+    Math.floor((def.level * def.level) / MERCH_MYSTERY_DIAMOND_CURVE_DIV);
+  if (def.category === Category.CHEST) {
+    baseDia += def.level * MERCH_MYSTERY_DIAMOND_EXTRA_PER_CHEST_LEVEL;
+  }
+  if (lockedLine) {
+    baseDia =
+      Math.floor(baseDia * MERCH_MYSTERY_LOCKED_DIAMOND_MULT) +
+      MERCH_MYSTERY_LOCKED_DIAMOND_ADD;
+  }
+  if (isToolL1) {
+    baseDia =
+      MERCH_MYSTERY_TOOL_L1_DIAMOND_BASE +
+      Math.floor(Math.random() * MERCH_MYSTERY_TOOL_L1_DIAMOND_SPREAD);
+    if (lockedLine) {
+      baseDia = Math.floor(baseDia * 1.12) + 4;
+    }
+  }
+  const priceAmount = Math.max(1, Math.round(baseDia * fluct));
+  return {
+    itemId: c.itemId,
+    remaining: stock,
+    priceType: 'diamond',
+    priceAmount,
+  };
+}
+
+function rollMysteryShopSlots(def: MerchShelfDef): MerchSlotState[] {
+  const fullBag = (): MysteryCandidate[] =>
+    buildMysteryCandidates().filter((c) => ITEM_DEFS.has(c.itemId));
+
+  let bag = fullBag();
+  if (bag.length === 0) {
+    console.warn('[MerchShop] mystery shelf has no candidates');
+    const f = mysteryPriceFluctuationMult();
+    return [
+      {
+        itemId: 'flower_fresh_1',
+        remaining: 2,
+        priceType: 'diamond',
+        priceAmount: Math.max(1, Math.round(5 * f)),
+      },
+      {
+        itemId: 'drink_tea_1',
+        remaining: 2,
+        priceType: 'huayuan',
+        priceAmount: Math.max(MERCH_MYSTERY_HUAYUAN_MIN, Math.round(14 * f)),
+      },
+      {
+        itemId: 'flower_green_1',
+        remaining: 2,
+        priceType: 'diamond',
+        priceAmount: Math.max(1, Math.round(4 * f)),
+      },
+    ];
+  }
+
+  const n = def.slotCount;
+  const picked: MysteryCandidate[] = [];
+  for (let k = 0; k < n; k++) {
+    if (bag.length === 0) bag = fullBag();
+    const weights = bag.map((c) => c.weight);
+    const idx = weightedPickIndex(weights);
+    const choice = bag[idx]!;
+    picked.push(choice);
+    if (def.pickWithoutReplacement && bag.length > 1) {
+      bag = bag.filter((_, j) => j !== idx);
+    }
+  }
+  return picked.map((c) => finalizeMysterySlot(c));
+}
+
+const FREE_SHOP_RARE_IDS = ['hongbao_1', 'stamina_chest_1', 'diamond_bag_1'] as const;
+
+/**
+ * 免费商店：已解锁（图鉴）、等级 1～5、排除 `tool_*`；另混入低权重 1 级红包/体力宝箱/宝石袋。
+ * 图鉴尚无收录时用固定低级花饮占位，避免空池。
+ */
+function buildFreeShopDynamicPool(): MerchPoolEntry[] {
+  const rareSet = new Set<string>(FREE_SHOP_RARE_IDS);
+  const main: MerchPoolEntry[] = [];
+  for (const [id, def] of ITEM_DEFS) {
+    if (def.level >= 6) continue;
+    if (id.startsWith('tool_')) continue;
+    if (rareSet.has(id)) continue;
+    if (!isDiscoveredForFreeShop(id)) continue;
+    main.push({
+      itemId: id,
+      weight: MERCH_FREE_SHOP_BASE_WEIGHT,
+      priceType: 'free',
+      purchaseStock: 1,
+    });
+  }
+  const rare: MerchPoolEntry[] = [];
+  for (const rid of FREE_SHOP_RARE_IDS) {
+    if (ITEM_DEFS.has(rid)) {
+      rare.push({
+        itemId: rid,
+        weight: MERCH_FREE_SHOP_RARE_WEIGHT,
+        priceType: 'free',
+        purchaseStock: 1,
+      });
+    }
+  }
+  if (main.length === 0) {
+    return [
+      {
+        itemId: 'flower_fresh_1',
+        weight: MERCH_FREE_SHOP_BASE_WEIGHT,
+        priceType: 'free',
+        purchaseStock: 1,
+      },
+      {
+        itemId: 'flower_green_1',
+        weight: MERCH_FREE_SHOP_BASE_WEIGHT,
+        priceType: 'free',
+        purchaseStock: 1,
+      },
+      {
+        itemId: 'drink_tea_1',
+        weight: MERCH_FREE_SHOP_BASE_WEIGHT,
+        priceType: 'free',
+        purchaseStock: 1,
+      },
+      ...rare,
+    ];
+  }
+  return [...main, ...rare];
+}
+
 function rollSlotsForShelf(def: MerchShelfDef): MerchSlotState[] {
-  const valid = def.pool.filter((p) => ITEM_DEFS.has(p.itemId));
+  if (def.dynamicMysteryShopPool) {
+    return rollMysteryShopSlots(def);
+  }
+  const poolSource = def.dynamicFreeShopPool ? buildFreeShopDynamicPool() : def.pool;
+  const valid = poolSource.filter((p) => ITEM_DEFS.has(p.itemId));
   if (valid.length === 0) {
     console.warn(`[MerchShop] shelf ${def.id} has no valid pool entries`);
     return [];
@@ -87,7 +402,9 @@ function rollSlotsForShelf(def: MerchShelfDef): MerchSlotState[] {
   }
   return out.map((e) => ({
     itemId: e.itemId,
-    remaining: clampPurchaseStock(e.purchaseStock),
+    remaining: def.dynamicFreeShopPool
+      ? FREE_SHOP_MAX_PURCHASE_PER_SLOT
+      : clampPurchaseStock(e.purchaseStock),
     priceType: e.priceType,
     priceAmount: Math.max(0, e.priceAmount ?? 0),
   }));
@@ -142,15 +459,20 @@ class MerchShopManagerClass {
       this.bootstrapFresh();
       return;
     }
-    this._shelves = state!.shelves.map((s) => ({
-      nextRefreshAt: s.nextRefreshAt,
-      slots: s.slots.map((sl) => ({
-        itemId: sl.itemId,
-        remaining: sl.remaining,
-        priceType: sl.priceType,
-        priceAmount: Math.max(0, sl.priceAmount ?? 0),
-      })),
-    }));
+    this._shelves = state!.shelves.map((s, shelfIdx) => {
+      const def = MERCH_SHELVES[shelfIdx]!;
+      return {
+        nextRefreshAt: s.nextRefreshAt,
+        slots: s.slots.map((sl) => ({
+          itemId: sl.itemId,
+          remaining: def.dynamicFreeShopPool
+            ? Math.min(FREE_SHOP_MAX_PURCHASE_PER_SLOT, Math.max(0, sl.remaining))
+            : sl.remaining,
+          priceType: sl.priceType,
+          priceAmount: Math.max(0, sl.priceAmount ?? 0),
+        })),
+      };
+    });
     this.ensureUpToDate();
   }
 

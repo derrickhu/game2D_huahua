@@ -152,7 +152,7 @@ const TOOL_DATA: [ToolLine, string[]][] = [
 
 /** 棋盘幸运金币 itemId（单级，不可两枚合成） */
 export const LUCKY_COIN_ITEM_ID = 'lucky_coin_1';
-/** 棋盘水晶球：确认后目标升一级（同线） */
+/** 棋盘万能水晶：确认后目标升一级（同线） */
 export const CRYSTAL_BALL_ITEM_ID = 'crystal_ball_1';
 /** 棋盘金剪刀：确认后目标变为同线「低一级」×2（目标格一件 + 另一空位一件） */
 export const GOLDEN_SCISSORS_ITEM_ID = 'golden_scissors_1';
@@ -371,7 +371,7 @@ function buildItemDefs(): Map<string, ItemDef> {
 
   map.set(CRYSTAL_BALL_ITEM_ID, {
     id: CRYSTAL_BALL_ITEM_ID,
-    name: '水晶球',
+    name: '万能水晶',
     category: Category.BUILDING,
     line: 'special_crystal',
     level: 1,
@@ -449,13 +449,13 @@ export function isGoldenScissorsItem(itemId: string): boolean {
   return itemId === GOLDEN_SCISSORS_ITEM_ID;
 }
 
-/** 棋盘消耗品（金币 / 水晶球 / 金剪刀） */
+/** 棋盘消耗品（金币 / 万能水晶 / 金剪刀） */
 export function isSpecialConsumableItem(itemId: string): boolean {
   return isLuckyCoinItem(itemId) || isCrystalBallItem(itemId) || isGoldenScissorsItem(itemId);
 }
 
 /**
- * 水晶球与金剪刀允许作用的物品：仅 FLOWER / DRINK 且非 TOOL；排除宝箱、货币、消耗品自身。
+ * 万能水晶与金剪刀允许作用的物品：仅 FLOWER / DRINK 且非 TOOL；排除宝箱、货币、消耗品自身。
  */
 export function isCrystalScissorsValidTargetDef(def: ItemDef): boolean {
   if (isSpecialConsumableItem(def.id)) return false;
@@ -531,7 +531,7 @@ export function getMergeChainName(itemId: string): string {
     [CurrencyLine.HUAYUAN_PICKUP]: '花愿利是',
     [CurrencyLine.DIAMOND]: '钻石',
     lucky_coin: '幸运金币',
-    special_crystal: '水晶球',
+    special_crystal: '万能水晶',
     special_scissors: '金剪刀',
   };
   return (lineNames[def.line] || def.line) + '合成线';

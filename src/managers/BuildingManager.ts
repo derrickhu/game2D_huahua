@@ -487,7 +487,7 @@ class BuildingManagerClass {
       this._states.delete(srcIndex);
       this._states.delete(dstIndex);
     });
-    /** 水晶球 / 金剪刀：同 luckyCoin，清 src、dst 建筑状态 */
+    /** 万能水晶 / 金剪刀：同 luckyCoin，清 src、dst 建筑状态 */
     EventBus.on('board:specialConsumableApplied', (srcIndex: number, dstIndex: number) => {
       this._states.delete(srcIndex);
       this._states.delete(dstIndex);

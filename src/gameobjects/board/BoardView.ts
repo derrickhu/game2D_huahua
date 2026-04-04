@@ -1261,7 +1261,7 @@ export class BoardView extends PIXI.Container {
     }
   }
 
-  /** 缓存可合成目标（仅计算一次）；幸运金币 / 水晶球 / 金剪刀的合法目标格 */
+  /** 缓存可合成目标（仅计算一次）；幸运金币 / 万能水晶 / 金剪刀的合法目标格 */
   private _cacheAndHighlightTargets(srcIndex: number): void {
     this._mergeTargets.clear();
     const src = BoardManager.getCellByIndex(srcIndex);
@@ -1285,7 +1285,7 @@ export class BoardView extends PIXI.Container {
     }
   }
 
-  /** 水晶球 / 金剪刀：弹窗确认后再提交棋盘数据 */
+  /** 万能水晶 / 金剪刀：弹窗确认后再提交棋盘数据 */
   private async _runSpecialConsumableConfirm(
     result:
       | Extract<MergeEndDragResult, { kind: 'crystal_ball_confirm' }>

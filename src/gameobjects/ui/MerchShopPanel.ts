@@ -1,7 +1,7 @@
 /**
  * 游戏内「购买物品」商店弹窗：
  * - **底板**：`shop_merch_panel_frame`（紫木外框 + 楣/棚/绳），顶带标题「商店」（与装修面板顶栏同族白字+赭描边+投影；`MERCH_FRAME_TITLE_OFFSET_Y` 可微调垂直）；右上角**透明关闭热区**。
- * - **货架组件**：纵向三行 + 每行三槽位；层板顶黄丝带显示 **免费商店 / 神秘商店 / 钻石商店**（与 `MERCH_SHELVES` 顺序一致）；**刷新说明 + 倒计时（`HH:MM:SS`）+ 钻石刷新**在底板内侧底部；上区**上下拖动**（canvas + 滚轮）。
+ * - **货架组件**：纵向三行 + 每行三槽位；层板顶黄丝带显示 **免费商店 / 神秘商店 / 神秘商店**（第三栏与第二栏同逻辑占位，与 `MERCH_SHELVES` 顺序一致）；**刷新说明 + 倒计时（`HH:MM:SS`）+ 钻石刷新**在底板内侧底部；上区**上下拖动**（canvas + 滚轮）。
  * 底板整图缩放与 `WarehousePanel` 一致。
  */
 import * as PIXI from 'pixi.js';
@@ -108,13 +108,13 @@ const FRAME_CLOSE_TEX = { x: 695, y: 65 };
 /** 顶栏金色标题带文字中心（与底板纹理对齐，约 `FRAME_REF_W×FRAME_REF_H` 空间） */
 const FRAME_TITLE_TEX = { x: 372, y: 122 };
 /** 主标题相对纹理校准点再上移（设计坐标，已乘 Sf 后叠加） */
-const MERCH_FRAME_TITLE_OFFSET_Y = -10;
+const MERCH_FRAME_TITLE_OFFSET_Y = 0;
 /**
  * `shop_section_panel_bg` 顶区黄丝带标题纵向参考（距纹理顶边，与 `REF_SEC_H` 同比缩放）。
  */
 const REF_SECTION_RIBBON_TITLE_CY = 106;
-/** 与 `MERCH_SHELVES` 行顺序一致：免费 / 神秘 / 钻石 */
-const MERCH_SHELF_TITLE_NAMES = ['免费商店', '神秘商店', '钻石商店'] as const;
+/** 与 `MERCH_SHELVES` 行顺序一致：免费 / 神秘 / 神秘（第三栏占位复用第二栏） */
+const MERCH_SHELF_TITLE_NAMES = ['免费商店', '神秘商店', '神秘商店'] as const;
 /** 关闭热区半径（设计坐标，盖住底板上的红叉图即可） */
 const MERCH_CLOSE_HIT_RADIUS = 44;
 

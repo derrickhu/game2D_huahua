@@ -1052,9 +1052,10 @@ export class MainScene implements Scene {
       this._staminaPanel.open();
     });
 
-    // 顶栏商店胶囊 → 全屏摊位购买面板（仅合成主界面）
+    // 顶栏商店图标 → 全屏摊位购买面板（合成主界面与花店场景共用 overlay 上面板）
     EventBus.on('panel:openMerchShop', () => {
-      if (SceneManager.current?.name !== 'main') return;
+      const cur = SceneManager.current?.name;
+      if (cur !== 'main' && cur !== 'shop') return;
       this._merchShopPanel.open();
     });
 

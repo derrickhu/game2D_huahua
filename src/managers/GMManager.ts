@@ -8,7 +8,7 @@
  * - 跳过/重置新手引导
  * - 解锁/锁定所有格子
  * - 填充棋盘物品
- * - 增加物品（收纳盒 / 棋盘首空格：幸运金币、水晶球、金剪刀、钻石袋与体力箱全套）
+ * - 增加物品（收纳盒 / 棋盘首空格：幸运金币、万能水晶、金剪刀、钻石袋与体力箱全套）
  * - 清空棋盘
  * - 模拟离线收益
  * - 完成所有每日任务
@@ -507,11 +507,11 @@ class GMManagerClass {
     this._commands.push({
       id: 'give_crystal_ball',
       group: '➕ 增加物品',
-      name: '🔮 水晶球 → 收纳盒×1',
+      name: '🔮 万能水晶 → 收纳盒×1',
       desc: '发放到收纳盒；拖到鲜花/饮品（非工具）上确认后稳定升一级',
       execute: () => {
         RewardBoxManager.addItem(CRYSTAL_BALL_ITEM_ID, 1);
-        return '✅ 已发放 1 个水晶球到收纳盒';
+        return '✅ 已发放 1 个万能水晶到收纳盒';
       },
     });
 
@@ -542,13 +542,13 @@ class GMManagerClass {
     this._commands.push({
       id: 'board_place_crystal_ball',
       group: '➕ 增加物品',
-      name: '🔮 水晶球 → 棋盘首空格',
+      name: '🔮 万能水晶 → 棋盘首空格',
       desc: '在第一个空的已开放格放置 1 个（无空格则失败）',
       execute: () => {
         const idx = BoardManager.findEmptyOpenCell();
         if (idx < 0) return '❌ 没有空的已开放格';
         if (!BoardManager.placeItem(idx, CRYSTAL_BALL_ITEM_ID)) return '❌ 放置失败';
-        return `✅ 已在格子 #${idx} 放置水晶球`;
+        return `✅ 已在格子 #${idx} 放置万能水晶`;
       },
     });
 

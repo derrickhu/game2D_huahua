@@ -8,6 +8,8 @@
  * - `priceType`: free | diamond | huayuan | ad；后两者填 `priceAmount`，ad 可填 0。
  * - `purchaseStock`：本波该槽位可购买次数（默认 1，范围 1～99）；每次购买 `remaining--`，到 0 售罄至下次刷新。
  * - 所有 `itemId` 须存在于 `ITEM_DEFS`，否则 roll 时跳过。
+ * - `dynamicFreeShopPool`：为 true 时忽略 `pool`，由 `MerchShopManager` 按图鉴动态生成（已解锁、等级小于 6、非 `tool_*`、全部免费；另低权重含 1 级红包/体力宝箱/宝石袋）；**每格可购次数固定为 1**。
+ * - `dynamicMysteryShopPool`：为 true 时忽略 `pool`，由 `MerchShopManager` 生成神秘商店（已解锁线全等级高权；未解锁线低权少货贵价；`tool_*` 仅 1 级极低权高价；钻石售价带波动；低等级可概率花愿）。**第三栏 `shelf_mixed` 当前与第二栏相同规则占位**，后续可单独改配置。
  * - `MERCH_DIAMOND_REFRESH_SHELF_COST`：面板内每层板旁「钻石刷新」仅重 roll 该路货架并重置该路 CD。
  */
 export type MerchPriceType = 'free' | 'diamond' | 'huayuan' | 'ad';
@@ -33,11 +35,62 @@ export interface MerchShelfDef {
   refreshIntervalSec: number;
   /** 槽位数，须与 MerchShopPanel 每行槽数一致 */
   slotCount: number;
-  /** 加权随机池 */
+  /** 加权随机池（`dynamicFreeShopPool` 为 true 时可置空） */
   pool: MerchPoolEntry[];
   /** 池条目够用时是否不放回抽样（尽量不重复） */
   pickWithoutReplacement: boolean;
+  /** 免费商店专用：按图鉴动态池，忽略 `pool` */
+  dynamicFreeShopPool?: boolean;
+  /** 神秘商店专用：按图鉴与合成线动态池，忽略 `pool` */
+  dynamicMysteryShopPool?: boolean;
 }
+
+/** 免费商店：图鉴内普通条目的相对权重（相对下方稀有条目的权重） */
+export const MERCH_FREE_SHOP_BASE_WEIGHT = 28;
+/** 免费商店：1 级红包 / 体力宝箱 / 宝石袋 的相对权重（低概率） */
+export const MERCH_FREE_SHOP_RARE_WEIGHT = 3;
+
+// ─── 神秘商店（`dynamicMysteryShopPool`）───
+/** 已解锁线：权重分子 `≈ num / level²`，等级越高越难出 */
+export const MERCH_MYSTERY_UNLOCKED_LEVEL_NUM = 200;
+/** 未解锁整条合成线时，相对已解锁线的权重倍率（更低） */
+export const MERCH_MYSTERY_LOCKED_LINE_WEIGHT_FACTOR = 0.11;
+/** 工具线仅 1 级入池时的基础权重（相对花饮 L1 很低） */
+export const MERCH_MYSTERY_TOOL_L1_WEIGHT = 6;
+/** 单格库存上限 */
+export const MERCH_MYSTERY_STOCK_CAP = 6;
+/** 已解锁线：`ceil(divisor / level)` 再封顶；等级越高数量越少 */
+export const MERCH_MYSTERY_STOCK_DIVISOR = 6;
+/** 未解锁线相对已解锁线的库存倍率（更少） */
+export const MERCH_MYSTERY_LOCKED_STOCK_FACTOR = 0.38;
+/** 钻石基础价：`base + level*perLv + floor(level²/curveDiv)` */
+export const MERCH_MYSTERY_DIAMOND_BASE = 2;
+export const MERCH_MYSTERY_DIAMOND_PER_LEVEL = 2;
+export const MERCH_MYSTERY_DIAMOND_CURVE_DIV = 2;
+/** 宝箱类额外钻石/级 */
+export const MERCH_MYSTERY_DIAMOND_EXTRA_PER_CHEST_LEVEL = 2;
+/** 未解锁线钻石价倍率与加值（更贵） */
+export const MERCH_MYSTERY_LOCKED_DIAMOND_MULT = 2.28;
+export const MERCH_MYSTERY_LOCKED_DIAMOND_ADD = 6;
+/** 工具 1 级：钻石底价 + 随机 [0, spread) */
+export const MERCH_MYSTERY_TOOL_L1_DIAMOND_BASE = 56;
+export const MERCH_MYSTERY_TOOL_L1_DIAMOND_SPREAD = 38;
+/** 售价随机波动：最终价 × U(min, max) */
+export const MERCH_MYSTERY_PRICE_MULT_MIN = 0.82;
+export const MERCH_MYSTERY_PRICE_MULT_MAX = 1.18;
+/** 低等级可花愿：等级上限（含） */
+export const MERCH_MYSTERY_HUAYUAN_MAX_LEVEL = 3;
+/** 已解锁线：花愿支付概率 */
+export const MERCH_MYSTERY_HUAYUAN_CHANCE_UNLOCKED = 0.38;
+/** 未解锁线：花愿支付概率（更低） */
+export const MERCH_MYSTERY_HUAYUAN_CHANCE_LOCKED = 0.12;
+/** 花愿标价下限 */
+export const MERCH_MYSTERY_HUAYUAN_MIN = 6;
+/** 无 `orderHuayuan` 时的花愿底价参考：`base + level*step` */
+export const MERCH_MYSTERY_HUAYUAN_FALLBACK_BASE = 12;
+export const MERCH_MYSTERY_HUAYUAN_FALLBACK_PER_LEVEL = 10;
+/** 未解锁线花愿在参考值上的额外倍率 */
+export const MERCH_MYSTERY_HUAYUAN_LOCKED_MULT = 1.32;
 
 export const MERCH_SHOP_SLOT_COUNT = 3;
 
@@ -50,42 +103,24 @@ export const MERCH_SHELVES: MerchShelfDef[] = [
     refreshIntervalSec: MERCH_SHOP_REFRESH_INTERVAL_SEC,
     slotCount: MERCH_SHOP_SLOT_COUNT,
     pickWithoutReplacement: true,
-    pool: [
-      { itemId: 'flower_fresh_1', weight: 25, priceType: 'free', purchaseStock: 5 },
-      { itemId: 'flower_fresh_2', weight: 18, priceType: 'huayuan', priceAmount: 12 },
-      { itemId: 'flower_green_1', weight: 20, priceType: 'huayuan', priceAmount: 15 },
-      { itemId: 'drink_tea_1', weight: 15, priceType: 'diamond', priceAmount: 2 },
-      { itemId: 'tool_plant_1', weight: 12, priceType: 'ad' },
-    ],
+    dynamicFreeShopPool: true,
+    pool: [],
   },
   {
     id: 'shelf_drinks_tools',
     refreshIntervalSec: MERCH_SHOP_REFRESH_INTERVAL_SEC,
     slotCount: MERCH_SHOP_SLOT_COUNT,
     pickWithoutReplacement: true,
-    pool: [
-      { itemId: 'drink_cold_1', weight: 20, priceType: 'huayuan', priceAmount: 18, purchaseStock: 3 },
-      { itemId: 'drink_dessert_1', weight: 18, priceType: 'huayuan', priceAmount: 20 },
-      { itemId: 'tool_tea_set_1', weight: 14, priceType: 'diamond', priceAmount: 3 },
-      { itemId: 'tool_mixer_1', weight: 14, priceType: 'diamond', priceAmount: 4 },
-      { itemId: 'flower_bouquet_1', weight: 10, priceType: 'ad' },
-      { itemId: 'flower_fresh_3', weight: 14, priceType: 'free' },
-    ],
+    dynamicMysteryShopPool: true,
+    pool: [],
   },
   {
     id: 'shelf_mixed',
     refreshIntervalSec: MERCH_SHOP_REFRESH_INTERVAL_SEC,
     slotCount: MERCH_SHOP_SLOT_COUNT,
     pickWithoutReplacement: true,
-    pool: [
-      { itemId: 'flower_fresh_4', weight: 16, priceType: 'huayuan', priceAmount: 35 },
-      { itemId: 'drink_tea_2', weight: 14, priceType: 'huayuan', priceAmount: 40 },
-      { itemId: 'tool_plant_2', weight: 12, priceType: 'diamond', priceAmount: 5 },
-      { itemId: 'flower_green_2', weight: 14, priceType: 'ad' },
-      { itemId: 'drink_cold_2', weight: 12, priceType: 'diamond', priceAmount: 6 },
-      { itemId: 'tool_bake_1', weight: 12, priceType: 'free' },
-      { itemId: 'flower_bouquet_2', weight: 10, priceType: 'huayuan', priceAmount: 55 },
-    ],
+    dynamicMysteryShopPool: true,
+    pool: [],
   },
 ];
 
