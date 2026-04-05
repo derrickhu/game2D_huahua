@@ -1,0 +1,11 @@
+Huahua merge-game **board item icon**, perfect square **1:1**, **ONE** butterfly only, centered, wings **mostly open**, wide rounded wing shape. **Same illustration family as `flower_fresh` / `flower_green`**: smooth gradients, cel light panels, bright highlight streaks, top-left light — flat icon, not metal chrome render, not embossed.
+
+**SPECIES HINT (stylized):** **blue morpho** (*Morpho menelaus*) — **big shimmering panels of cyan → electric blue → cobalt** with **pale aqua specular streaks** drawn INSIDE wing shapes only. **NO large black fields**; body slim, cute; wing edges **thin deep teal line** only.
+
+**OUTLINE:** thin teal/indigo darker stroke — not thick black.
+
+**FORBIDDEN PROPS:** flowers, leaves, branches, grass, pots, nets.
+
+**MATTING:** **#FF00FF** only outside; hard edge.
+
+**NO** text, watermark, UI.

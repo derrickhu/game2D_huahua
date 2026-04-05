@@ -160,7 +160,7 @@ class FlowerCardManagerClass {
 
   /** 获取分享文案 */
   getShareText(card: FlowerCard): string {
-    return `🌸 ${card.name}\n「${card.quote}」\n\n—— 来自「花语小筑」，每朵花都有一段故事 💕`;
+    return `🌸 ${card.name}\n「${card.quote}」\n\n—— 来自「花花妙屋」，每朵花都有一段故事 💕`;
   }
 
   /** 分享花语卡片 */

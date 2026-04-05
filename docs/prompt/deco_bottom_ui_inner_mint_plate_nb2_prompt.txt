@@ -1,0 +1,5 @@
+Square 1:1 UI plate, single flat component centered with margin.
+
+Large rounded rectangle content plate in soft mint aqua #C1E1D2, thin outer stroke dark sage green, very subtle inner vignette, empty flat interior for laying a grid on top in code. Cozy casual game UI, soft brown line weight on stroke, no icons, no text, no cards inside.
+
+Background pure solid white #FFFFFF for cutout.

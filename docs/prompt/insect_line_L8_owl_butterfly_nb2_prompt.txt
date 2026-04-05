@@ -1,0 +1,11 @@
+Huahua merge-game **board item icon**, perfect square **1:1**, **ONE** butterfly only, centered, wings **mostly open**. **Same `flower_fresh` / `flower_green` merge illustration style**: cel shading, soft gradients, creamy speculars, top-left light — **NOT** photoreal, **NOT** embossed.
+
+**SPECIES HINT (stylized):** **owl butterfly** (*Caligo*) — **one huge round “eye spot”** on each forewing: **bright orange / amber ring + pale blue inner ring + dark pupil dot** (cartoon readable). Wing ground = **warm cocoa, dusty rose, or soft lavender** (choose cheerful saturated pastel — **NOT** muddy gray-brown fog). Hindwings simpler, harmonious.
+
+**OUTLINE:** thin hue-darkened or wine/maroon.
+
+**FORBIDDEN PROPS:** flowers, leaves, branches, grass, pots, nets.
+
+**MATTING:** **#FF00FF** only outside; hard edge; no outer glow.
+
+**NO** text, watermark, UI.

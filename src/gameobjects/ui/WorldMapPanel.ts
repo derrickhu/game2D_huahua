@@ -183,15 +183,6 @@ export class WorldMapPanel extends PIXI.Container {
       case 'flower_shop':
         keys.push('house_shop', 'bg_room_default');
         break;
-      case 'flower_market':
-        keys.push('flower_fresh_1', 'icon_huayuan');
-        break;
-      case 'tea_house':
-        keys.push('drink_tea_1');
-        break;
-      case 'tool_shop':
-        keys.push('tool_plant_1');
-        break;
       case 'garden_villa':
         keys.push('icon_build');
         break;
@@ -353,7 +344,9 @@ export class WorldMapPanel extends PIXI.Container {
       if (isCurrent && node.type !== 'locked') {
         const badge = this._createBadge('当前');
         (badge as any)._isBadge = true;
-        badge.y = -(node.thumbSize ?? 150) * 0.6 - 16;
+        const thumbSize = node.thumbSize ?? 150;
+        // 徽章贴在缩略图顶缘略上方（中心约在上半边界外），避免过远飘在天上
+        badge.y = -thumbSize * 0.5 - 20;
         nc.addChild(badge);
       }
 
@@ -422,13 +415,28 @@ export class WorldMapPanel extends PIXI.Container {
     const c = new PIXI.Container();
     c.eventMode = 'none';
     const t = new PIXI.Text(text, {
-      fontSize: 14, fill: 0xFFFFFF, fontFamily: FONT_FAMILY, fontWeight: 'bold',
+      fontSize: 17,
+      fill: 0xFFF8F0,
+      fontFamily: FONT_FAMILY,
+      fontWeight: 'bold',
+      stroke: 0x5C1A12,
+      strokeThickness: 3,
+      dropShadow: true,
+      dropShadowColor: 0x3D0D08,
+      dropShadowAlpha: 0.45,
+      dropShadowBlur: 2,
+      dropShadowDistance: 1,
     });
     t.anchor.set(0.5);
-    const pad = 6;
+    const padX = 10;
+    const padY = 7;
+    const rw = t.width + padX * 2;
+    const rh = t.height + padY * 2;
+    const rr = 11;
     const bg = new PIXI.Graphics();
-    bg.beginFill(0xC45C4A, 0.94);
-    bg.drawRoundedRect(-t.width / 2 - pad, -t.height / 2 - 3, t.width + pad * 2, t.height + 6, 8);
+    bg.lineStyle(2.2, 0xFFE8A8, 0.95);
+    bg.beginFill(0xD94A3D, 0.97);
+    bg.drawRoundedRect(-rw / 2, -rh / 2, rw, rh, rr);
     bg.endFill();
     bg.eventMode = 'none';
     t.eventMode = 'none';

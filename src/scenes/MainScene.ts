@@ -314,7 +314,7 @@ export class MainScene implements Scene {
     // 合成统计系统
     this._mergeStats = new MergeStatsSystem(this.container);
 
-    // 触觉反馈系统（合成粒子等；合成本身不再触发震动/全屏抖）
+    // HapticSystem 占位（粒子/闪光/震动均已关闭）
     this._hapticSystem = new HapticSystem(this.container);
 
     // 左侧悬浮功能按钮组（签到/任务等，纵向排列在棋盘左侧）
@@ -1039,7 +1039,7 @@ export class MainScene implements Scene {
 
     // 引导完成
     EventBus.on('tutorial:completed', () => {
-      ToastMessage.show('🌸 欢迎来到花语小筑！');
+      ToastMessage.show('🌸 欢迎来到花花妙屋！');
       if (CheckInManager.canCheckIn) {
         setTimeout(() => this._checkInPanel.open(), 1000);
       }

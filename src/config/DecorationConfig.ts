@@ -369,7 +369,7 @@ export function formatAllowedScenesShort(deco: DecoDef): string {
 
 export function getDecorationTabLabel(tab: DecoPanelTabId): { name: string; emoji: string } {
   if (tab === 'room_styles') return { name: '房间风格', emoji: '🏠' };
-  if (tab === 'flower_room') return { name: '花房', emoji: '🌷' };
+  if (tab === 'flower_room') return { name: '花坊', emoji: '🌷' };
   if (tab === 'furniture') return { name: '家具', emoji: '🪑' };
   if (tab === 'appliance') return { name: '家电', emoji: '🔌' };
   return DECO_SLOT_INFO[tab];

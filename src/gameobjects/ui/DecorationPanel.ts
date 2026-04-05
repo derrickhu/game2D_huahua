@@ -122,6 +122,8 @@ const CARD_BASE_H = 160;
  */
 const CARD_MAX_W = 256;
 const CARD_R = 10;
+/** 花愿不足时购买底图+价签整体透明度（与 Merch 空槽 0.5 同量级，略低以保留绿钮可读） */
+const DECO_PURCHASE_BTN_DISABLED_ALPHA = 0.42;
 
 const GOLD_LINE = 0xe8c078;
 const GOLD_INNER = 0xd4a84b;
@@ -158,7 +160,7 @@ function decoGridListTopPad(availH: number, totalRows: number, ch: number): numb
   return Math.min(40, Math.max(minPad, Math.floor(spare * 0.32)));
 }
 
-/** 装修面板：解锁等级升序，同级按花愿价升序 */
+/** 装修面板：解锁等级升序，同级按花愿价升序（仅「未解锁」筛选用） */
 function sortDecosByUnlockLevelThenCost(decos: DecoDef[]): DecoDef[] {
   return [...decos].sort((a, b) => {
     const la = a.unlockRequirement?.level ?? 0;
@@ -166,6 +168,15 @@ function sortDecosByUnlockLevelThenCost(decos: DecoDef[]): DecoDef[] {
     if (la !== lb) return la - lb;
     return a.cost - b.cost;
   });
+}
+
+/** 已满足条件可展示购买的家具 / 已拥有家具：只按花愿价升序，不看等级 */
+function sortDecosByCostAsc(decos: DecoDef[]): DecoDef[] {
+  return [...decos].sort((a, b) => a.cost - b.cost);
+}
+
+function sortDecosForInvFilter(decos: DecoDef[], filter: DecoInvFilter): DecoDef[] {
+  return filter === 'locked' ? sortDecosByUnlockLevelThenCost(decos) : sortDecosByCostAsc(decos);
 }
 
 function sortRoomStylesByUnlockLevelThenCost(styles: RoomStyleDef[]): RoomStyleDef[] {
@@ -272,6 +283,11 @@ export class DecorationPanel extends PIXI.Container {
   /** 升星弹窗关闭后再弹出「获得新家具」 */
   private _pendingNewDecoAfterLevelUp: DecoDef | null = null;
 
+  private readonly _onCurrencyChangedForGrid = (type?: string): void => {
+    if (!this._isOpen || type !== 'huayuan') return;
+    this._refreshAll();
+  };
+
   constructor() {
     super();
     this.visible = false;
@@ -368,6 +384,7 @@ export class DecorationPanel extends PIXI.Container {
     this._redrawDimMask();
     this._resizePanelIfNeeded();
     this._refreshAll();
+    EventBus.on('currency:changed', this._onCurrencyChangedForGrid);
 
     const h = Game.logicHeight;
     const panelH = Math.round(h * PANEL_H_RATIO);
@@ -383,6 +400,7 @@ export class DecorationPanel extends PIXI.Container {
 
   close(): void {
     if (!this._isOpen) return;
+    EventBus.off('currency:changed', this._onCurrencyChangedForGrid);
     EventBus.emit('decoration:decoPanelBackdrop', { open: false });
     this._sortParentOverlay();
     this._flushDeferredStarOnClose();
@@ -789,8 +807,9 @@ export class DecorationPanel extends PIXI.Container {
       totalRows = Math.max(1, Math.ceil(ROOM_STYLES.length / cols));
     } else {
       const sceneId = CurrencyManager.state.sceneId;
-      let decos = sortDecosByUnlockLevelThenCost(
+      let decos = sortDecosForInvFilter(
         getDecosForDecorationPanelTab(this._activeTab, sceneId),
+        this._decoInvFilter,
       );
       decos = decos.filter((d) => decoMatchesInvFilter(d, this._decoInvFilter, sceneId));
       totalRows = decos.length === 0 ? 1 : Math.ceil(decos.length / cols);
@@ -965,8 +984,9 @@ export class DecorationPanel extends PIXI.Container {
     if (this._activeTab === 'room_styles') { this._buildRoomStyleGrid(availH); return; }
 
     const sceneId = CurrencyManager.state.sceneId;
-    let decos = sortDecosByUnlockLevelThenCost(
+    let decos = sortDecosForInvFilter(
       getDecosForDecorationPanelTab(this._activeTab, sceneId),
+      this._decoInvFilter,
     );
     decos = decos.filter((d) => decoMatchesInvFilter(d, this._decoInvFilter, sceneId));
     const gridW = decoPanelGridWidth();
@@ -1142,6 +1162,9 @@ export class DecorationPanel extends PIXI.Container {
     cost: number | undefined,
     actionLabel: string,
   ): void {
+    const purchaseUnaffordable =
+      mode === 'purchase' && cost !== undefined && cost > 0 && CurrencyManager.state.huayuan < cost;
+    const purchaseFooterAlpha = purchaseUnaffordable ? DECO_PURCHASE_BTN_DISABLED_ALPHA : 1;
     const key =
       mode === 'equipped' || mode === 'furniture_placed'
         ? 'deco_card_btn_1'
@@ -1177,6 +1200,7 @@ export class DecorationPanel extends PIXI.Container {
       sp.scale.set(s);
       sp.anchor.set(0.5, 1);
       sp.position.set(cw / 2, ch - bottomPad);
+      if (mode === 'purchase' && cost !== undefined && cost > 0) sp.alpha = purchaseFooterAlpha;
       card.addChild(sp);
       const scaledH = tex.height * s;
       const cy = pillCenterY(scaledH);
@@ -1206,6 +1230,7 @@ export class DecorationPanel extends PIXI.Container {
           xLeft += iconW + gap;
         }
         price.position.set(xLeft + price.width / 2, 0);
+        row.alpha = purchaseFooterAlpha;
         card.addChild(row);
       } else {
         const lockStyle = mode === 'locked' ? { ...labelStyle, fontSize: 15 } : labelStyle;
@@ -1230,6 +1255,7 @@ export class DecorationPanel extends PIXI.Container {
       g.beginFill(color);
       g.drawRoundedRect(cw / 2 - btnW / 2, btnY, btnW, btnH, btnH / 2);
       g.endFill();
+      if (mode === 'purchase' && cost !== undefined && cost > 0) g.alpha = purchaseFooterAlpha;
       card.addChild(g);
       const cy = btnY + btnH / 2;
       if (mode === 'purchase' && cost !== undefined && cost > 0) {
@@ -1257,6 +1283,7 @@ export class DecorationPanel extends PIXI.Container {
           xLeft += iconW + gap;
         }
         price.position.set(xLeft + price.width / 2, 0);
+        row.alpha = purchaseFooterAlpha;
         card.addChild(row);
       } else {
         const fs = mode === 'locked' ? 15 : 17;
@@ -1353,8 +1380,12 @@ export class DecorationPanel extends PIXI.Container {
     else if (deco.cost > 0) this._addFooter(card, cw, ch, 'purchase', deco.cost, '装备');
     else this._addFooter(card, cw, ch, 'furniture_go_place', undefined, '');
 
+    const showPurchase =
+      sceneOk && !isUnlocked && reqResult.met && deco.cost > 0;
+    const affordPurchase = CurrencyManager.state.huayuan >= deco.cost;
+
     card.eventMode = 'static';
-    card.cursor = 'pointer';
+    card.cursor = showPurchase && !affordPurchase ? 'default' : 'pointer';
     card.on('pointerdown', (e: PIXI.FederatedPointerEvent) => {
       this._beginScroll(e);
       this._pendingGridTap = { type: 'deco', deco, flyCard: card };
@@ -1427,8 +1458,11 @@ export class DecorationPanel extends PIXI.Container {
     else if (style.cost > 0) this._addFooter(card, cw, ch, 'purchase', style.cost, '使用');
     else this._addFooter(card, cw, ch, 'ready', undefined, '领取');
 
+    const showStylePurchase = !unlocked && styleReqMet && style.cost > 0;
+    const affordStylePurchase = CurrencyManager.state.huayuan >= style.cost;
+
     card.eventMode = 'static';
-    card.cursor = 'pointer';
+    card.cursor = showStylePurchase && !affordStylePurchase ? 'default' : 'pointer';
     card.on('pointerdown', (e: PIXI.FederatedPointerEvent) => {
       this._beginScroll(e);
       this._pendingGridTap = { type: 'room', style, flyCard: card };
@@ -1512,6 +1546,10 @@ export class DecorationPanel extends PIXI.Container {
     const req = checkRequirement(deco.unlockRequirement);
     if (!req.met) {
       ToastMessage.show(`🔒 ${req.text}`);
+      return;
+    }
+    if (deco.cost > 0 && CurrencyManager.state.huayuan < deco.cost) {
+      ToastMessage.show(`🌸 花愿不足，需要 ${deco.cost} 花愿`);
       return;
     }
     if (this._pendingDecoGrantStar) {
@@ -1660,6 +1698,10 @@ export class DecorationPanel extends PIXI.Container {
       const req = checkRequirement(style.unlockRequirement);
       if (!req.met) {
         ToastMessage.show( `🔒 ${req.text}`);
+        return;
+      }
+      if (style.cost > 0 && CurrencyManager.state.huayuan < style.cost) {
+        ToastMessage.show(`🌸 花愿不足，需要 ${style.cost} 花愿`);
         return;
       }
       if (DecorationManager.unlockRoomStyle(style.id)) {

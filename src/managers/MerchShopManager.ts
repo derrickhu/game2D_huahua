@@ -158,6 +158,9 @@ const MYSTERY_BLOCKED_IDS = new Set<string>([
   GOLDEN_SCISSORS_ITEM_ID,
 ]);
 
+/** 神秘商店不出现：钻石袋线（棋盘散落钻石块） */
+const MYSTERY_EXCLUDED_CHEST_LINES = new Set<string>(['diamond_bag']);
+
 function buildMysteryCandidates(): MysteryCandidate[] {
   const out: MysteryCandidate[] = [];
   for (const [id, def] of ITEM_DEFS) {
@@ -185,6 +188,12 @@ function buildMysteryCandidates(): MysteryCandidate[] {
       def.category === Category.DRINK ||
       def.category === Category.CHEST
     ) {
+      if (
+        def.category === Category.CHEST &&
+        MYSTERY_EXCLUDED_CHEST_LINES.has(def.line)
+      ) {
+        continue;
+      }
       const lockedLine = !isMergeLineUnlocked(def);
       let w = Math.max(
         1,

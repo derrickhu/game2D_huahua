@@ -63,13 +63,20 @@ const SHARED_PRODUCE_TABLE_LV1: [number, number][] = [[1, 70], [2, 25], [3, 5]];
 const SHARED_PRODUCE_TABLE_LV2: [number, number][] = [[2, 60], [3, 25], [4, 10], [5, 5]];
 /** 产出档 C（原 Lv3 工具表） */
 const SHARED_PRODUCE_TABLE_LV3: [number, number][] = [[4, 70], [5, 20], [6, 9], [7, 1]];
+
+// ═══════════════ 冷饮线工具（tool_mixer）专属产出等级表；茶饮/烘焙仍用 SHARED_PRODUCE_TABLE_* ═══════════════
+/** tool_mixer_3：仅 1 级冷饮 */
+const MIXER_PRODUCE_TABLE_L3: [number, number][] = [[1, 100]];
+/** tool_mixer_4：1～2 级 */
+const MIXER_PRODUCE_TABLE_L4: [number, number][] = [[1, 58], [2, 42]];
+/** tool_mixer_5：1～3 级 */
+const MIXER_PRODUCE_TABLE_L5: [number, number][] = [[1, 45], [2, 35], [3, 20]];
+
 // ═══════════════ 包装线工具 → 产出包装中间品（FlowerLine.WRAP） ═══════════════
 
-/** 简易包装台：丝带卷/条/纸 */
+/** 简易包装台：仅产出包装中间品 Lv1（丝带卷） */
 const ARRANGE_WRAP_OUTCOME_T3: ToolProduceOutcome[] = [
-  { category: Category.FLOWER, line: FlowerLine.WRAP, level: 1, weight: 52 },
-  { category: Category.FLOWER, line: FlowerLine.WRAP, level: 2, weight: 33 },
-  { category: Category.FLOWER, line: FlowerLine.WRAP, level: 3, weight: 15 },
+  { category: Category.FLOWER, line: FlowerLine.WRAP, level: 1, weight: 100 },
 ];
 /** 包装台 */
 const ARRANGE_WRAP_OUTCOME_T4: ToolProduceOutcome[] = [
@@ -264,38 +271,41 @@ const plantToolTemplate = (): Omit<ToolDef, 'itemId' | 'level'>[] => [
 
 // ═══════════════ 饮品工具（产品8级）— 茶饮/冷饮/烘焙线为 5 级，无第 6 档 ═══════════════
 
-const drinkToolTemplate = (toolLine: ToolLine, produceLine: DrinkLine): Omit<ToolDef, 'itemId' | 'level'>[] => [
-  {
-    toolLine, produceCategory: Category.DRINK, produceLine,
-    canProduce: false,
-    produceTable: [],
-    cooldown: 0, producesBeforeCooldown: 0, staminaCost: 0,
-  },
-  {
-    toolLine, produceCategory: Category.DRINK, produceLine,
-    canProduce: false,
-    produceTable: [],
-    cooldown: 0, producesBeforeCooldown: 0, staminaCost: 0,
-  },
-  {
-    toolLine, produceCategory: Category.DRINK, produceLine,
-    canProduce: true,
-    produceTable: SHARED_PRODUCE_TABLE_LV1,
-    cooldown: 0, producesBeforeCooldown: 0, staminaCost: 1,
-  },
-  {
-    toolLine, produceCategory: Category.DRINK, produceLine,
-    canProduce: true,
-    produceTable: SHARED_PRODUCE_TABLE_LV2,
-    cooldown: 0, producesBeforeCooldown: 0, staminaCost: 1,
-  },
-  {
-    toolLine, produceCategory: Category.DRINK, produceLine,
-    canProduce: true,
-    produceTable: SHARED_PRODUCE_TABLE_LV3,
-    cooldown: 300, producesBeforeCooldown: 10, staminaCost: 1,
-  },
-];
+const drinkToolTemplate = (toolLine: ToolLine, produceLine: DrinkLine): Omit<ToolDef, 'itemId' | 'level'>[] => {
+  const isMixer = toolLine === ToolLine.MIXER;
+  return [
+    {
+      toolLine, produceCategory: Category.DRINK, produceLine,
+      canProduce: false,
+      produceTable: [],
+      cooldown: 0, producesBeforeCooldown: 0, staminaCost: 0,
+    },
+    {
+      toolLine, produceCategory: Category.DRINK, produceLine,
+      canProduce: false,
+      produceTable: [],
+      cooldown: 0, producesBeforeCooldown: 0, staminaCost: 0,
+    },
+    {
+      toolLine, produceCategory: Category.DRINK, produceLine,
+      canProduce: true,
+      produceTable: isMixer ? MIXER_PRODUCE_TABLE_L3 : SHARED_PRODUCE_TABLE_LV1,
+      cooldown: 0, producesBeforeCooldown: 0, staminaCost: 1,
+    },
+    {
+      toolLine, produceCategory: Category.DRINK, produceLine,
+      canProduce: true,
+      produceTable: isMixer ? MIXER_PRODUCE_TABLE_L4 : SHARED_PRODUCE_TABLE_LV2,
+      cooldown: 0, producesBeforeCooldown: 0, staminaCost: 1,
+    },
+    {
+      toolLine, produceCategory: Category.DRINK, produceLine,
+      canProduce: true,
+      produceTable: isMixer ? MIXER_PRODUCE_TABLE_L5 : SHARED_PRODUCE_TABLE_LV3,
+      cooldown: 300, producesBeforeCooldown: 10, staminaCost: 1,
+    },
+  ];
+};
 
 // ═══════════════ 构建完整工具定义表 ═══════════════
 
@@ -339,7 +349,7 @@ function buildBoardProducerDefs(): Map<string, ToolDef> {
     cooldown: 0,
     producesBeforeCooldown: 0,
     staminaCost: 1,
-    exhaustAfterProduces: 15,
+    exhaustAfterProduces: 5,
   });
   return map;
 }

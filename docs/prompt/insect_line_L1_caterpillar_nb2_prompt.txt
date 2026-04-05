@@ -1,0 +1,11 @@
+Huahua merge-game **board item icon**, perfect square **1:1**, **ONE** cute caterpillar only, centered. **MUST match the same polished 2D casual mobile merge-game illustration language as existing in-game `flower_fresh` / `flower_green` icons** (hand-painted anime-game props like sunflower / rose / potted pilea in this project): **bright saturated colors**, **soft smooth gradients**, **cel-style flat light blocks** on each body segment, **small creamy-white highlight spots**, lighting from **top-left**. Readable cute proportions; fills **~78–88%** of frame.
+
+**NOT allowed (style):** **embossed / bas-relief / fake 3D extrusion / heavy bevel / pillow-inflate shading / plastic toy depth / photoreal insect skin / scientific specimen.**
+
+**OUTLINE:** **thin** contour — **one step darker than the local fill** in the same hue family, OR **soft deep wine / maroon-brown** line like flower_fresh assets — **NOT** thick black ink.
+
+**OBJECT:** Chubby cartoon caterpillar, side or slight 3/4. **Butter yellow + lime green** segments, tiny pastel dots (coral or mint). **NO leaves, flowers, branches, pots, soil.**
+
+**MATTING:** Flat solid **#FF00FF** magenta **only** outside the creature. **Hard crisp edge** where subject meets background — **NO** outer glow, halo, bloom, sparkles, feathered fog into magenta.
+
+**NO** text, watermark, UI.

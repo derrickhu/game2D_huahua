@@ -1,0 +1,17 @@
+Huahua merge-game **board item icon**, perfect square **1:1**, **ONE butterfly chrysalis (pupa)** only, centered. **MUST read unmistakably as a lepidopteran pupa**, not an egg, not a seed, not a cocoon ball.
+
+**SILHOUETTE (critical):** **Elongated hanging chrysalis** — **gently curved bean / comma shape** or **slender tapered capsule**: **narrower head/thorax end**, **slightly wider abdomen end**, **soft pointed tail tip**. Show **3–5 subtle vertical segment ridges** or **gentle horizontal belly bands** (cel-shaded bands) so it feels like a **real butterfly pupa shell**, not a smooth glass egg.
+
+**ATTACHMENT (minimal, no plant props):** At the **top dorsal** end only, a **small flat cream or pale-yellow silk button / silk pad** (short oval disc) pressed against the pupa — **NO silk threads, NO dangling string, NO twig, NO leaf, NO branch**.
+
+**STYLE:** Same polished 2D casual merge-game illustration as **`flower_fresh` / `flower_green`**: soft gradients, **cel light patches**, small **creamy highlight spots**, top-left light — **flat hand-painted icon**, **NOT** embossed 3D, **NOT** chrome jewel, **NOT** photoreal macro photo.
+
+**COLORS:** **Fresh leaf green → chartreuse → honey-gold** gradients with **soft gold flecks** along ridges (illustrated flecks, not glitter particles).
+
+**OUTLINE:** thin hue-darkened stroke or soft wine/maroon — not thick black.
+
+**NOT allowed:** sparkles, glitter, outer glow, halo, bas-relief plastic.
+
+**MATTING:** flat **#FF00FF** only outside; **hard crisp edge**.
+
+**NO** text, watermark, UI.

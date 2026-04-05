@@ -70,12 +70,12 @@ class SocialManagerClass {
   /** 注册分享菜单 */
   private _setupShareMenu(): void {
     Platform.onShareAppMessage(() => ({
-      title: '🌸 来看看我的花语小筑！每朵花都有一段美丽的故事~',
+      title: '🌸 来看看我的花花妙屋！每朵花都有一段美丽的故事~',
       query: `invite=true&level=${CurrencyManager.state.level}`,
     }));
 
     Platform.onShareTimeline(() => ({
-      title: `花语小筑 Lv.${CurrencyManager.state.level} | 已收集 ${CollectionManager.totalDiscovered} 种花草 🌸`,
+      title: `花花妙屋 Lv.${CurrencyManager.state.level} | 已收集 ${CollectionManager.totalDiscovered} 种花草 🌸`,
     }));
   }
 
@@ -84,7 +84,7 @@ class SocialManagerClass {
   /** 分享花店 */
   shareShop(): void {
     Platform.shareAppMessage({
-      title: `🌸 花语小筑 Lv.${CurrencyManager.state.level}，快来看看~`,
+      title: `🌸 花花妙屋 Lv.${CurrencyManager.state.level}，快来看看~`,
       query: `visit=true&level=${CurrencyManager.state.level}`,
     });
     this._totalShares++;
@@ -130,7 +130,7 @@ class SocialManagerClass {
 
     // 发送给好友（通过分享/社交关系链）
     Platform.shareAppMessage({
-      title: `🎁 花语小筑好友送你 ${GIFT_STAMINA_AMOUNT} 点体力！`,
+      title: `🎁 花花妙屋好友送你 ${GIFT_STAMINA_AMOUNT} 点体力！`,
       query: `gift=stamina&amount=${GIFT_STAMINA_AMOUNT}`,
     });
 
@@ -184,7 +184,7 @@ class SocialManagerClass {
     const myScore = this.getMyScores();
     // 模拟数据（真实环境从开放数据域获取）
     return [
-      { rank: 1, nickname: '花语小筑玩家', avatarUrl: '', score: myScore[_type] || 0, isSelf: true },
+      { rank: 1, nickname: '花花妙屋玩家', avatarUrl: '', score: myScore[_type] || 0, isSelf: true },
     ];
   }
 

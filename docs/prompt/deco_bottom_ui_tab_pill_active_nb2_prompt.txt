@@ -1,0 +1,5 @@
+Square 1:1 UI widget centered.
+
+Active category tab: horizontal pill capsule, soft peach-apricot fill #FFD8B1, same warm brown outline #5E412F, gentle highlight. Empty inside — no text, no icons.
+
+Background pure solid white #FFFFFF for cutout.

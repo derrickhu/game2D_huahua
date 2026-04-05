@@ -3,7 +3,7 @@
 # 用法: ./sync-assets.sh
 # 从原始资源仓库拉取资源，裁剪后同步到 minigame/ 运行时目录
 
-echo "🌸 同步花语小筑游戏资产..."
+echo "🌸 同步花花妙屋游戏资产..."
 
 SOURCE_DIR="/Users/dklighu/p_proj/game_assets/huahua/assets"
 TARGET_DIR="/Users/dklighu/p_proj/game2D_huahua/minigame"

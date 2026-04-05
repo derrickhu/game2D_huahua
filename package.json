@@ -9,7 +9,7 @@
   "keywords": [],
   "author": "",
   "license": "ISC",
-  "description": "花语小筑 - 合成经营微信小游戏",
+  "description": "花花妙屋 - 合成经营微信小游戏",
   "dependencies": {
     "@pixi/unsafe-eval": "^7.3.2",
     "pixi.js": "^7.3.2"

@@ -1,0 +1,13 @@
+Vertical mobile game UI art prototype 9:16, full phone frame. Cozy hand-painted merge-game flower shop style, soft pastel pinks creams mint greens light wood, rounded squircles, kawaii chibi-friendly, NOT flat corporate UI, NOT photoreal.
+
+Upper half: soft blurred isometric glimpse of a cute flower shop room with pink roof wood walls grass hint, keep simple so focus stays on chrome.
+
+Lower half dominant: decoration bottom sheet panel with rounded top corners, cream and pale mint background, subtle paper texture.
+
+Row 1: wide rounded rectangle primary button, fresh spring green fill, soft inner highlight, thin warm brown outline. Left small golden coin pouch icon. White bold Chinese text "完成编辑" and a white checkmark icon to the right of text.
+
+Row 2: horizontal tab bar on pale cream. Tabs as rounded pills with tiny cute icons: active tab warm peach-orange fill, small pink flower icon, Chinese "花房" and small grey "6/6". Inactive tabs pale with thin green outline: "家具" with chair icon, "家电" with lamp, "摆件" with vase, "墙饰" with frame, "庭院" with bush. Soft drop shadow under bar.
+
+Row 3: horizontal scroll strip of square-ish item cards with generous rounding, thin mint-green border, very pale mint card interior. Each card shows a stylized placeholder prop icon area (simple soft shapes suggesting counter, daisy pot, rose pot, tulip vase, peony vase, lotus pond) and small Chinese name under icon: "抽屉式柜台", "雏菊小盆栽", "玫瑰小盆栽", "郁金香花瓶", "芍药花瓶", "户外荷花小池". Two rightmost cards have a small green circular check badge top-right meaning placed. Slight gap between cards, soft shadow.
+
+No real app frame notch, no watermark, no QR, no developer text. Clean prototype for internal review.

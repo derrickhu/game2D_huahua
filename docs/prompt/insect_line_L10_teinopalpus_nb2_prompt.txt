@@ -1,0 +1,11 @@
+Huahua merge-game **board item icon**, perfect square **1:1**, **ONE** butterfly only, centered, wings **mostly open** — **prestige “final tier”** look but still cute merge-game. **Same `flower_fresh` / `flower_green` polished 2D style**: rich gradients, cel light shapes, creamy highlights, top-left light — **NOT** photoreal specimen, **NOT** embossed gold statue.
+
+**SPECIES HINT (stylized):** **Teinopalpus / golden green swallowtail** (*Teinopalpus aureus*) — wings **emerald / jade / spring green** with **bold golden-yellow patches and arcs** (simplified royal pattern). **Champagne-gold thin vein lines**. **Avoid** black or near-black wing fills — use **deep forest green** for darkest accents only. Tiny cute **snout-like head bump** hint OK (simplified).
+
+**OUTLINE:** thin gold-green or wine line — not heavy black contour.
+
+**FORBIDDEN PROPS:** flowers, leaves, branches, grass, pots, nets.
+
+**MATTING:** **#FF00FF** only outside; hard edge.
+
+**NO** text, watermark, UI.

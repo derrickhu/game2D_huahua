@@ -20,6 +20,13 @@ interface SoundEntry {
   volume: number;
 }
 
+export interface PlaySoundOptions {
+  /** 播放速率（约 0.5～2）；用于合成音阶等 */
+  playbackRate?: number;
+  /** 为 true 时不做同名 50ms 节流（连续快速播放各一遍） */
+  bypassThrottle?: boolean;
+}
+
 class AudioManagerClass {
   private _sounds: Map<string, SoundEntry> = new Map();
   private _bgm: any = null;
@@ -32,7 +39,7 @@ class AudioManagerClass {
     this._sounds.set(name, { src, volume });
   }
 
-  play(name: string): void {
+  play(name: string, opts?: PlaySoundOptions): void {
     if (this._muted || !_api) return;
     const entry = this._sounds.get(name);
     if (!entry) {
@@ -40,11 +47,18 @@ class AudioManagerClass {
       return;
     }
 
-    // 节流：同名音效在 THROTTLE_MS 内不重复播放
     const now = Date.now();
-    const last = this._lastPlayTime.get(name) || 0;
-    if (now - last < THROTTLE_MS) return;
-    this._lastPlayTime.set(name, now);
+    if (!opts?.bypassThrottle) {
+      const last = this._lastPlayTime.get(name) || 0;
+      if (now - last < THROTTLE_MS) return;
+      this._lastPlayTime.set(name, now);
+    }
+
+    const rateRaw = opts?.playbackRate;
+    const rate =
+      rateRaw !== undefined && Number.isFinite(rateRaw)
+        ? Math.min(2, Math.max(0.5, rateRaw))
+        : 1;
 
     try {
       const create = _api.createInnerAudioContext;
@@ -66,6 +80,11 @@ class AudioManagerClass {
         if (done || started) return;
         started = true;
         try {
+          if (opts?.playbackRate !== undefined) {
+            try {
+              (audio as { playbackRate?: number }).playbackRate = rate;
+            } catch (_) { /* 部分运行时不支持 */ }
+          }
           audio.play();
         } catch (e) {
           console.warn(TAG, `音效 "${name}" play():`, e);

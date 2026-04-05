@@ -814,7 +814,7 @@ export class ShopScene implements Scene {
         this._clearOwnerPressTracking();
         if (!this._isEditMode) {
           const greetings = [
-            '欢迎来到花语小筑~ 🌸',
+            '欢迎来到花花妙屋~ 🌸',
             '今天想做什么呢？可以装修花店哦！',
             '新的花材到了，快去合成吧~',
             '花店越来越漂亮了呢！💕',
@@ -2411,7 +2411,7 @@ export class ShopScene implements Scene {
   }
 
   /**
-   * 截取当前装修房间（建筑底板 + 家具 + 店主）供大地图「花语小筑」节点展示。
+   * 截取当前装修房间（建筑底板 + 家具 + 店主）供大地图「花花妙屋」节点展示。
    * 仅在花店场景内调用；返回的 RenderTexture 由调用方（WorldMapPanel）负责 destroy。
    *
    * 微信等环境下 `generateTexture` 偶发空图/失败，故优先用 **world getBounds + render(transform)**。

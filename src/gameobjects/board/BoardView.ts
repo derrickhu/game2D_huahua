@@ -799,7 +799,7 @@ export class BoardView extends PIXI.Container {
     if (!confirmed) return;
 
     const shared = await Platform.shareAndWait({
-      title: '花语小筑 — 来帮我解锁新格子吧！',
+      title: '花花妙屋 — 来帮我解锁新格子吧！',
       query: `unlock_cell=${cellIndex}`,
     });
 

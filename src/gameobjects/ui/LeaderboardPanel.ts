@@ -187,7 +187,7 @@ export class LeaderboardPanel extends PIXI.Container {
       this._content.addChild(avatarIcon);
 
       // 昵称
-      const nickname = new PIXI.Text(entry.nickname || '花语小筑玩家', {
+      const nickname = new PIXI.Text(entry.nickname || '花花妙屋玩家', {
         fontSize: 14, fill: COLORS.TEXT_DARK, fontFamily: FONT_FAMILY,
       });
       nickname.position.set(rowX + 100, y + 10);

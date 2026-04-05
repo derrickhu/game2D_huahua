@@ -1,7 +1,7 @@
 /**
  * 平台服务抽象层 - 统一封装微信/抖音双平台 API
  *
- * 所有平台特有调用（存储、震动、广告、分享等）都通过本模块统一访问，
+ * 所有平台特有调用（存储、广告、分享等）都通过本模块统一访问，
  * src/ 中不再需要各自 declare const wx / tt。
  */
 
@@ -93,31 +93,13 @@ class PlatformServiceClass {
     }
   }
 
-  // ═══════════════ 震动反馈 ═══════════════
+  // ═══════════════ 震动反馈（已全局关闭，保留 API 避免调用方报错）════════════════
 
-  /**
-   * 短震动（15ms）— 轻触反馈
-   * 适用场景：按钮点击、物品选中
-   */
-  vibrateShort(type: 'light' | 'medium' | 'heavy' = 'light'): void {
-    try {
-      if (this.name === 'wechat') {
-        this._api?.vibrateShort({ type });
-      } else if (this.name === 'douyin') {
-        this._api?.vibrateShort?.({ success() {}, fail() {} });
-      }
-    } catch (_) {}
-  }
+  /** @deprecated 产品要求关闭全部硬件震动，此方法为空操作 */
+  vibrateShort(_type?: 'light' | 'medium' | 'heavy'): void {}
 
-  /**
-   * 长震动（400ms）— 强调反馈
-   * 适用场景：升级、重要成就
-   */
-  vibrateLong(): void {
-    try {
-      this._api?.vibrateLong?.({ success() {}, fail() {} });
-    } catch (_) {}
-  }
+  /** @deprecated 产品要求关闭全部硬件震动，此方法为空操作 */
+  vibrateLong(): void {}
 
   // ═══════════════ 广告 ═══════════════
 

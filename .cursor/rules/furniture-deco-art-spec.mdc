@@ -4,7 +4,7 @@ globs: docs/prompt/furniture_*.txt,minigame/subpkg_deco/images/furniture/**,src/
 alwaysApply: false
 ---
 
-# 室内家具贴图 — 画风与视角规范（花语小筑）
+# 室内家具贴图 — 画风与视角规范（花花妙屋）
 
 凡新增或重绘 **`minigame/subpkg_deco/images/furniture/`** 下、用于花店 **L 形房间** 内摆放的家具单件贴图，须与当前 **房间背景壳**（`house_bg_room_*`）及已验收参考批次 **花房盆栽线**（`greenhouse_pot_*`）、**柔色长凳**（`orn_pastel_bench`）等在 **视角与线稿气质** 上一致；**配色不强制马卡龙**，可按房间主题、单品设定使用多样色相与饱和度，只要仍是 merge 花店道具可读剪影即可。
 

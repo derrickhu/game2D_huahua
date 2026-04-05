@@ -1,0 +1,5 @@
+Square 1:1 icon centered.
+
+Simple bold white checkmark symbol only, thick rounded arms like a sticker, soft gray drop shadow separated, designed to sit on top of green buttons in UI. No circle, no text.
+
+Background pure chroma magenta #FF00FF only so the mark can be keyed out from the backdrop in tooling.

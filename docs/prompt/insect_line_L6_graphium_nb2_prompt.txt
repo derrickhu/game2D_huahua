@@ -1,0 +1,11 @@
+Huahua merge-game **board item icon**, perfect square **1:1**, **ONE** butterfly only, centered, wings **mostly open**. **Same illustration family as `flower_fresh` / `flower_green`**: soft gradients, cel light blocks, creamy highlights, top-left light — flat merge icon, not photoreal, not embossed.
+
+**SPECIES HINT (stylized):** **Graphium / green bluebottle** (*Graphium sarpedon*) — **strong turquoise / mint / jade diagonal or chevron bands** across blackish-violet wing base; keep base **deep indigo-violet or plum** (not pure black) so **teal stripes pop**. **Small red or coral cheek spot** near thorax OK (tiny). **Avoid** huge black fills — use **deep purple** instead of black.
+
+**OUTLINE:** thin hue-darkened or wine/maroon — not thick black rim.
+
+**FORBIDDEN PROPS:** flowers, leaves, branches, grass, pots, nets.
+
+**MATTING:** **#FF00FF** only outside; hard edge.
+
+**NO** text, watermark, UI.

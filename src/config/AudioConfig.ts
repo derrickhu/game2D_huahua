@@ -18,18 +18,19 @@ export interface SoundDef {
 }
 
 export const SOUND_DEFS: SoundDef[] = [
-  { name: 'merge_success', src: 'subpkg_audio/merge_success.mp3', volume: 0.8, desc: '合成成功' },
+  // merge_success：合成音效；连续合成时由 MergeChimeScale + playbackRate 做音阶
+  { name: 'merge_success', src: 'subpkg_audio/merge_success.mp3', volume: 0.62, desc: '合成成功' },
   { name: 'tap_building', src: 'subpkg_audio/button_click.mp3', volume: 0.6, desc: '点击建筑（暂用 button_click）' },
 
   { name: 'customer_arrive', src: 'subpkg_audio/button_click.mp3', volume: 0.7, desc: '客人到来（占位）' },
-  { name: 'customer_deliver', src: 'subpkg_audio/merge_success.mp3', volume: 0.8, desc: '订单完成（占位）' },
+  { name: 'customer_deliver', src: 'subpkg_audio/button_click.mp3', volume: 0.7, desc: '订单完成（占位）' },
   { name: 'chest_open', src: 'subpkg_audio/button_click.mp3', volume: 0.7, desc: '宝箱（占位）' },
   { name: 'cell_unlock', src: 'subpkg_audio/button_click.mp3', volume: 0.6, desc: '格子解锁（占位）' },
 
   { name: 'button_click', src: 'subpkg_audio/button_click.mp3', volume: 0.5, desc: 'UI 按钮' },
-  { name: 'level_up', src: 'subpkg_audio/merge_success.mp3', volume: 0.8, desc: '升级（占位）' },
-  { name: 'achievement', src: 'subpkg_audio/merge_success.mp3', volume: 0.8, desc: '成就（占位）' },
-  { name: 'checkin', src: 'subpkg_audio/merge_success.mp3', volume: 0.7, desc: '签到（占位）' },
+  { name: 'level_up', src: 'subpkg_audio/button_click.mp3', volume: 0.65, desc: '升级（占位）' },
+  { name: 'achievement', src: 'subpkg_audio/button_click.mp3', volume: 0.65, desc: '成就（占位）' },
+  { name: 'checkin', src: 'subpkg_audio/button_click.mp3', volume: 0.6, desc: '签到（占位）' },
 ];
 
 export const BGM_DEFS: SoundDef[] = [

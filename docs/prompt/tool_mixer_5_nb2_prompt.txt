@@ -1,12 +1,3 @@
-Single square 1:1 game tool icon — **cold drink mixer line**, top tier: **frosted white + sky blue**.
+Match the reference image for palette and line art only: saturated sky blue, pale off-white or light grey-blue panels, thick dark blue-grey outlines, heavily rounded corners, 3/4 front-right view, flat fills with soft top highlights — same casual mobile game vector look as the cold-drink tool family. Clean white background. No text, no labels.
 
-**OBJECT — must read clearly as a FREEZER (冰柜), NOT a wardrobe or cabinet:**
-One **commercial glass-door freezer / ice-cream display freezer** — **horizontal low profile** or **upright double doors**. **CRITICAL — glass must NOT leak chroma key:** **Do NOT** paint **transparent** glass that reveals the **#FF00FF** background. Use **frosted / semi-opaque door panels** with **fully painted interior** — **soft white-blue fog, ice haze, or opaque cold glow** behind the glass — **no magenta visible through doors or windows**. **White metal frame** with **sky-blue** trim; **thick frames**; **bottom vent grille**; **must look like frozen-food retail equipment**.
-
-**STYLE:** 2D merge-game prop; strongest silhouette in series; cool highlights.
-
-**COMPOSITION:** **~90–95%** of frame.
-
-**BACKGROUND:** ONLY **#FF00FF** strictly **outside** the freezer outline — **never** inside glass or interior.
-
-**NO** text, logos. **CHROMA-SAFE:** no magenta/purple/pink on any surface.
+IMPORTANT: Do NOT copy the single-door layout of the reference. Level-5 must be clearly different: a compact premium beverage cooler with TWO doors side by side (double French doors), each door rounded-rect, a thin vertical gap or center seam between them, one small handle on each door or one shared subtle split. Same blue frame and optional window panels on each door — if windows, keep simple stylized contents (ice or bottles) very minimal. Optional small LED or display centered above the doors or on the top edge. Slightly wider silhouette than a single-door unit. Same line weight and corner radius as reference; no photorealistic detail.

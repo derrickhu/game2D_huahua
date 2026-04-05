@@ -1,0 +1,11 @@
+Huahua merge-game **board item icon**, perfect square **1:1**, **ONE** butterfly only, centered, wings **mostly open**. **MUST match the same polished 2D casual merge-game illustration as existing `flower_fresh` / `flower_green` assets**: vivid colors, soft gradients, **cel-style light shapes** on wing panels, **creamy highlight streaks** on upper wings, top-left light — **flat cute illustration**, **NOT** photoreal, **NOT** embossed 3D.
+
+**SPECIES HINT (stylized):** **jade belt swallowtail** (*Papilio polytes* male look) — **one bold horizontal white or pale-lavender “jade belt” band** across each forewing (clear readable band shape). Wing ground color = **bright electric sapphire OR vivid violet-magenta** (pick one, saturated candy tone) — **NO large black wing fields**; dark only **thin contour lines** along veins.
+
+**OUTLINE:** thin stroke per hue OR soft wine/maroon — not heavy black.
+
+**FORBIDDEN PROPS:** flowers, leaves, branches, grass, pots, nets.
+
+**MATTING:** **#FF00FF** only outside; hard edge; no glow, no sparkles.
+
+**NO** text, watermark, UI.

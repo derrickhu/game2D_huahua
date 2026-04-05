@@ -1,0 +1,5 @@
+Square 1:1 mobile UI art, single component.
+
+Cute cozy merge-game flower shop bottom sheet shell only. Large rounded vertical panel body in warm cream #FFF8E1 with very subtle paper grain, thick soft brown outline #5E412F slightly rounded corners on the top two corners only, bottom edge is a straight cut along the bottom of the canvas so the panel reads as rising from the phone bottom. Gentle inner highlight along top inner curve. No buttons, no tabs, no text, no furniture icons, no mint inner block yet.
+
+Background pure solid white #FFFFFF for cutout.

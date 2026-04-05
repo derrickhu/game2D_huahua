@@ -1,0 +1,5 @@
+Square 1:1 furniture picker card frame, empty template centered.
+
+Rounded square slot for an icon: outer thin white card rim, inner well in pale mint #E6F5EC, inner thin sage green stroke then white inset lip, hand-painted cozy UI look, soft brown outer shadow. Center must stay empty — no furniture art, no Chinese labels.
+
+Background pure solid white #FFFFFF for cutout.

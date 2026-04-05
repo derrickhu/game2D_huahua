@@ -1,5 +1,5 @@
 /**
- * 花语小筑 - 游戏入口
+ * 花花妙屋 - 游戏入口
  */
 // unsafe-eval patch 必须最先导入，在 new PIXI.Application() 之前执行
 import '@/core/pixiUnsafeEvalPatch';
@@ -33,7 +33,7 @@ const BUILD_TIME = '__BUILD_' + new Date().toISOString().slice(0, 19) + '__';
 
 async function main(): Promise<void> {
   try {
-    console.log('[main] 花语小筑启动中... BUILD:', BUILD_TIME);
+    console.log('[main] 花花妙屋启动中... BUILD:', BUILD_TIME);
 
     // 注意：不再在启动时无条件清除存档！
     // 旧存档的兼容性由 SaveManager 的指纹校验负责处理
@@ -150,7 +150,7 @@ async function main(): Promise<void> {
       });
     }
 
-    console.log('[main] 花语小筑启动完成 ✿ BUILD:', BUILD_TIME);
+    console.log('[main] 花花妙屋启动完成 ✿ BUILD:', BUILD_TIME);
   } catch (e) {
     console.error('[main] 启动失败:', e);
   }

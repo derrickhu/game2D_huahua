@@ -1,0 +1,5 @@
+Square 1:1 UI widget centered.
+
+Wide horizontal capsule button, spring green fill #A2D970, darker green thin rim, soft glossy highlight on top-left, tiny drop shadow beneath, chibi mobile game style. Completely empty center — no Chinese text, no icons, no checkmark, programmers will overlay labels.
+
+Background pure solid white #FFFFFF for cutout.

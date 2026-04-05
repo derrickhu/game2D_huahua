@@ -1,0 +1,5 @@
+Square 1:1 UI widget centered.
+
+Inactive category tab: horizontal pill capsule, white fill, warm chocolate brown outline #5E412F, mild inner shadow, cute casual deco panel. Empty inside — no text, no icons.
+
+Background pure solid white #FFFFFF for cutout.

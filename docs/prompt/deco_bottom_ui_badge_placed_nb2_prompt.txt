@@ -1,0 +1,5 @@
+Square 1:1 small UI badge centered with generous margin.
+
+Circular placed-state badge: bright grass green #88C37B, darker green ring, chunky white checkmark in middle, cute mobile game sticker style, slight highlight. No text.
+
+Background pure solid white #FFFFFF for cutout.

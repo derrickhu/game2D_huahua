@@ -11,6 +11,7 @@ import { AudioManager } from '@/core/AudioManager';
 import { EventBus } from '@/core/EventBus';
 import { Game } from '@/core/Game';
 import { SOUND_DEFS, BGM_DEFS } from '@/config/AudioConfig';
+import { getNextMergeChimePlaybackRate } from '@/systems/MergeChimeScale';
 
 class SoundSystemClass {
   private _inited = false;
@@ -28,9 +29,11 @@ class SoundSystemClass {
 
     // ---- 绑定事件 → 音效 ----
 
-    // 合成成功
     EventBus.on('board:merged', () => {
-      AudioManager.play('merge_success');
+      AudioManager.play('merge_success', {
+        playbackRate: getNextMergeChimePlaybackRate(),
+        bypassThrottle: true,
+      });
     });
 
     // 建筑产出（点击建筑成功产出时）
@@ -43,29 +46,9 @@ class SoundSystemClass {
       AudioManager.play('customer_arrive');
     });
 
-    // 订单交付
-    EventBus.on('customer:delivered', () => {
-      AudioManager.play('customer_deliver');
-    });
-
     // 格子解锁
     EventBus.on('board:cellUnlocked', () => {
       AudioManager.play('cell_unlock');
-    });
-
-    // 升级
-    EventBus.on('level:up', () => {
-      AudioManager.play('level_up');
-    });
-
-    // 签到
-    EventBus.on('checkin:signed', () => {
-      AudioManager.play('checkin');
-    });
-
-    // 成就解锁
-    EventBus.on('achievement:unlocked', () => {
-      AudioManager.play('achievement');
     });
 
     // ---- 首次交互恢复 BGM ----

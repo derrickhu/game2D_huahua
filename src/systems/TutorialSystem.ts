@@ -158,7 +158,7 @@ export class TutorialSystem {
     const spotlightTop = minY;
     const spotlightBottom = maxY;
     this._showSmartDialog(
-      '欢迎来到花语小筑',
+      '欢迎来到花花妙屋',
       '把两个相同的物品拖到一起就能合成升级~\n先试一把铲子合成水壶吧！',
       null,
       undefined,

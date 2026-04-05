@@ -1,5 +1,5 @@
 ---
-description: 花语小筑 AI 资产生图（NB2）与入库到 game_assets 再拷贝进 minigame 的固定流程
+description: 花花妙屋 AI 资产生图（NB2）与入库到 game_assets 再拷贝进 minigame 的固定流程
 alwaysApply: true
 ---
 
@@ -29,7 +29,7 @@ alwaysApply: true
 | 可选：与旧 sync 脚本对齐 | `../game_assets/huahua/assets/house/bg.png` 等 |
 | **UI / 界面原型图（非运行时）** | `../game_assets/huahua/assets/ui_prototypes/`（含 `*_prompt.txt`）；**勿**将此类 PNG 放入本仓库的 `minigame/` 或 `docs/design/` |
 
-`{workspace}` 为本仓库根目录（花语小筑 huahua）。
+`{workspace}` 为本仓库根目录（花花妙屋 huahua）。
 
 **仓库外资产库**：与本仓库**同级**目录下的 `game_assets/huahua/`（任意机器、任意用户名均适用）。下文 shell 示例均假定在 `{workspace}` 下执行，故写作 **`../game_assets/huahua/...`**（若你的资产库不在同级，可设环境变量 `GAME_ASSETS_HUAHUA` 指向实际根路径，脚本侧与此对齐）。
 

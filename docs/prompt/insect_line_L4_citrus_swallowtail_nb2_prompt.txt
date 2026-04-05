@@ -1,0 +1,11 @@
+Huahua merge-game **board item icon**, perfect square **1:1**, **ONE** butterfly only, centered, wings **mostly open** with **short cute swallow tails** (rounded teardrop tails, merge-game readable). **MUST match the EXACT illustration family of existing huahua `flower_fresh` / `flower_green` item icons**: bright saturated colors, soft gradients, **cel light blocks**, creamy highlight spots, top-left light — **same line weight and shading language as flower icons**, **NOT** photoreal butterfly, **NOT** embossed relief, **NOT** hyper 3D plastic.
+
+**SPECIES HINT (stylized):** citrus swallowtail — **lemon yellow + spring green** wing fields; stripes as **soft teal / jade bands** with rounded edges — **avoid large black fills**; dark accents **thin only**.
+
+**OUTLINE:** thin hue-based darker line or wine/maroon like other huahua items — not thick black rim.
+
+**FORBIDDEN PROPS:** flowers, leaves, branches, grass, pots, nets.
+
+**MATTING:** **#FF00FF** only outside; **hard edge**, no glow, no particles.
+
+**NO** text, watermark, UI.

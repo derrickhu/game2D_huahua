@@ -1,0 +1,11 @@
+Huahua merge-game **board item icon**, perfect square **1:1**, **ONE** large butterfly only, centered, wings **mostly open**. **Same style as `flower_fresh` / `flower_green`**: saturated colors, soft gradients, cel highlights, top-left light — flat illustration, not 3D sculpture.
+
+**SPECIES HINT (stylized):** **golden birdwing** (*Troides aeacus*) — **dominant rich golden yellow and butter gold** on huge hindwings + inner forewings; **black or deep chocolate ONLY as narrow lace border and thin veins** (no giant black panels). Add **small bright gold “A” or triangle marks** simplified as cute merge shapes if readable.
+
+**OUTLINE:** thin warm brown / wine line — not heavy black.
+
+**FORBIDDEN PROPS:** flowers, leaves, branches, grass, pots, nets.
+
+**MATTING:** **#FF00FF** only outside; hard edge.
+
+**NO** text, watermark, UI.

@@ -9,7 +9,7 @@
  * - `purchaseStock`：本波该槽位可购买次数（默认 1，范围 1～99）；每次购买 `remaining--`，到 0 售罄至下次刷新。
  * - 所有 `itemId` 须存在于 `ITEM_DEFS`，否则 roll 时跳过。
  * - `dynamicFreeShopPool`：为 true 时忽略 `pool`，由 `MerchShopManager` 按图鉴动态生成（已解锁、等级小于 6、非 `tool_*`、全部免费；另低权重含 1 级红包/体力宝箱/宝石袋）；**每格可购次数固定为 1**。
- * - `dynamicMysteryShopPool`：为 true 时忽略 `pool`，由 `MerchShopManager` 生成神秘商店（已解锁线全等级高权；未解锁线低权少货贵价；`tool_*` 仅 1 级极低权高价；钻石售价带波动；低等级可概率花愿）。**第三栏 `shelf_mixed` 当前与第二栏相同规则占位**，后续可单独改配置。
+ * - `dynamicMysteryShopPool`：为 true 时忽略 `pool`，由 `MerchShopManager` 生成神秘商店（已解锁线全等级高权；未解锁线低权少货贵价；`tool_*` 仅 1 级极低权高价；钻石售价带波动；低等级可概率花愿；**不含钻石袋线 `diamond_bag_*`**）。**第三栏 `shelf_mixed` 当前与第二栏相同规则占位**，后续可单独改配置。
  * - `MERCH_DIAMOND_REFRESH_SHELF_COST`：面板内每层板旁「钻石刷新」仅重 roll 该路货架并重置该路 CD。
  */
 export type MerchPriceType = 'free' | 'diamond' | 'huayuan' | 'ad';
