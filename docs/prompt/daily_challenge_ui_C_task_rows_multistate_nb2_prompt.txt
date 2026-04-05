@@ -1,0 +1,11 @@
+Mobile game UI asset sheet, 9:16 vertical canvas, cozy pastel kawaii merge flower-shop style.
+
+Show exactly THREE identical horizontal task row cards stacked vertically with even spacing, same width and corner radius, light-beige rounded rectangles with soft drop shadow. All three share the same decorative language for perfect consistency.
+
+Row 1 (completed state): left side large mint-green circular badge with bold white checkmark. Center three faint horizontal gray placeholder lines (no letters). Right side small golden hex coin icon, tiny empty cream pill for value, tiny cute green leaf sparkle icon.
+
+Row 2 (not started state): left side empty circular beige ring outline only, no check. Same center placeholder lines. Same right-side coin, empty pill, small brown treasure chest silhouette instead of leaf.
+
+Row 3 (in progress state): left side same beige ring with a small mint-green arc suggesting partial progress. Same center lines. Same coin and pill, tiny pink flower bud silhouette as reward teaser.
+
+Background outside the three cards: solid flat magenta FF00FF chroma key only. No outer modal frame, no title, no bottom weekly bar, no digits, no readable text, no watermark, no photoreal.

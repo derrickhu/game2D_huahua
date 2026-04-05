@@ -5,7 +5,8 @@
  * 进入收纳框堆叠存储，玩家手动取出放入棋盘。
  */
 import { EventBus } from '@/core/EventBus';
-import { ITEM_DEFS } from '@/config/ItemConfig';
+import { ITEM_DEFS, LEGACY_FLOWER_SIGN_COIN_ITEM_ID } from '@/config/ItemConfig';
+import { FlowerSignTicketManager } from '@/managers/FlowerSignTicketManager';
 
 export interface RewardBoxState {
   items: [string, number][];
@@ -44,6 +45,11 @@ class RewardBoxManagerClass {
   }
 
   addItem(itemId: string, count = 1): void {
+    if (itemId === LEGACY_FLOWER_SIGN_COIN_ITEM_ID) {
+      if (count > 0) FlowerSignTicketManager.add(count);
+      EventBus.emit('rewardBox:changed');
+      return;
+    }
     const existing = this._items.get(itemId) || 0;
     this._items.set(itemId, existing + count);
     if (!this._order.includes(itemId)) {
@@ -75,7 +81,12 @@ class RewardBoxManagerClass {
     this._order = [];
     if (state.items) {
       for (const [itemId, count] of state.items) {
-        if (itemId && ITEM_DEFS.has(itemId) && count > 0) {
+        if (!itemId || count <= 0) continue;
+        if (itemId === LEGACY_FLOWER_SIGN_COIN_ITEM_ID) {
+          FlowerSignTicketManager.add(count);
+          continue;
+        }
+        if (ITEM_DEFS.has(itemId)) {
           this._items.set(itemId, count);
           this._order.push(itemId);
         }

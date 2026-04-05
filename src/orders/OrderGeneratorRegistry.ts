@@ -43,7 +43,7 @@ export function toolCapForLine(category: Category, line: string, ulk: UnlockedLi
       toolLevel = Math.max(ulk.maxArrangeToolLevel, ulk.maxPlantToolLevel);
     }
   } else if (category === Category.DRINK) {
-    toolLevel = ulk.maxDrinkToolLevel;
+    toolLevel = ulk.drinkToolMaxByLine[line as DrinkLine] ?? 0;
   }
   const lineMax = Math.max(1, getMaxLevelForLine(category, line));
   return getEffectiveMaxLevel(toolLevel, lineMax);
@@ -60,7 +60,9 @@ function eligibleFlowerLines(demandLines: readonly string[], ulk: UnlockedLines)
 function eligibleDemandLines(demandDef: CustomerDemandDef, ulk: UnlockedLines): string[] {
   if (demandDef.category === Category.DRINK) {
     if (!ulk.hasDrink) return [];
-    return [...demandDef.lines];
+    return demandDef.lines.filter(
+      ln => (ulk.drinkToolMaxByLine[ln as DrinkLine] ?? 0) > 0,
+    );
   }
   if (demandDef.category === Category.FLOWER) {
     return eligibleFlowerLines(demandDef.lines, ulk);
@@ -232,6 +234,7 @@ function comboSpecsForTier(tier: OrderTier, ulk: UnlockedLines): ComboSpec[] {
   if (ulk.hasDrink) {
     const drinkLines = [DrinkLine.BUTTERFLY, DrinkLine.COLD, DrinkLine.DESSERT];
     for (const dl of drinkLines) {
+      if ((ulk.drinkToolMaxByLine[dl] ?? 0) <= 0) continue;
       out.push({ category: Category.DRINK, line: dl, minLv: r.drink[0], maxLv: r.drink[1] });
     }
   }
@@ -276,10 +279,14 @@ function tryGenerateCombo(
   const pickFromSpec = (spec: ComboSpec): string | null => {
     const toolCap = toolCapForLine(spec.category, spec.line, ulk);
     const lineMax = Math.max(1, getMaxLevelForLine(spec.category, spec.line));
-    const level = pickItemLevel(spec.minLv, spec.maxLv, toolCap, lineMax, rng);
+    const aspirational = toolCap > 0 && rng() < ORDER_ASPIRATIONAL_LEVEL_BONUS_CHANCE;
+    const hi = Math.min(spec.maxLv, toolCap + (aspirational ? 1 : 0), lineMax);
+    const lo = Math.min(spec.minLv, hi);
+    if (hi < lo) return null;
+    const level = lo + Math.floor(Math.pow(rng(), 1.4) * (hi - lo + 1));
     const id = findItemId(spec.category, spec.line, level);
     if (id && !used.has(id)) return id;
-    for (let lv = spec.maxLv; lv >= spec.minLv; lv--) {
+    for (let lv = hi; lv >= lo; lv--) {
       const id2 = findItemId(spec.category, spec.line, lv);
       if (id2 && !used.has(id2)) return id2;
     }

@@ -1,0 +1,50 @@
+---
+description: 游戏内 UI 面板（弹窗/全屏页/分区底板）美风格与 NB2 提示词基准；与工具图标、棋盘物品规范分立。
+alwaysApply: true
+---
+
+# 游戏 UI 面板 — 美风格规范（花花妙屋）
+
+凡涉及**游戏内功能性面板**的生图、拆图、NB2 提示词撰写或验收（如任务、商店、收纳、地图弹层、装修条等），**默认采用本套视觉**，保证全项目面板气质统一。
+
+## 与既有规范的关系
+
+- **不适用**于：棋盘 `ItemView` 工具链图标、消耗品小图标 → 仍遵循 `tool-icon-art-style.mdc` 与 `board-item-png-spec.mdc`。
+- 本规范仅约束：**面板壳体、分区底板、列表行装饰、进度条装饰条** 等 UI 插画层。
+
+## 视觉 DNA（必须对齐）
+
+| 要素 | 要求 |
+|------|------|
+| 外框 | 大圆角竖向弹窗；**厚软薰衣草紫 / 淡丁香**外缘 + **更细的Pastel 粉**内边；边缘干净，可有极轻高光描边感。 |
+| 内底 | **大块奶油色 / 极浅米白**内容区（或与本面板粉边同系的**淡粉纯色平涂**，按页面需求二选一），平涂或极弱渐变，**避免木纹、噪点、重纹理**抢内容。 |
+| 顶栏 | **金黄 / 蜜黄**横向**波浪边 / 扇贝边**标题牌，可爱略膨胀；中心预留给中文标题字（生图阶段可留空）。 |
+| 关闭 | **右上红底圆钮 + 白 X**，略压在外框角外，**圆胖手游风**。 |
+| 辅助条 | 倒计时可用**金小秒表** + **浅棕 / 浅驼圆角胶囊**条；次级信息条可用**浅蓝胶囊进度感**装饰（无具体数字亦可）。 |
+| 列表卡 | **浅米色圆角横条**，软投影，偏贴纸叠层感；状态圈、勾选与奖励区保持同一 pastel 饱和度。 |
+| 整体气质 | **2D 矢量插画手游 UI**、**软萌 kawaii**、**高明度 pastel**（粉紫黄蓝绿协调）；**渐变只用于体积与景深**，忌油腻厚涂、忌写实拟物金属。 |
+
+## 质感与禁忌
+
+- **要**：圆角大、层次清、阴影柔和、色彩干净透亮。
+- **不要**：照片级 UI、水印、品牌 Logo、与花店温馨调性冲突的冷硬科幻风、满屏杂纹背景。
+
+## NB2 提示词撰写
+
+- 正文用 **英文**；**不要**在发给模型的 prompt 文件里写 `#` 注释行（会进 API）。
+- 原型 / 底板类资源：优先要求 **无可读文字与数字**（避免乱码），文案由工程内 `PIXI.Text` 叠加。
+- **模型**：与项目统一，面板整页原型用 **`gemini-3.1-flash-image-preview`**，**`--aspect-ratio 9:16`**（竖屏全屏弹层）。
+- **范本提示词**（可节选合并进新面板 prompt）：`docs/prompt/daily_challenge_panel_shell_nb2_prompt.txt`（粉紫框 + **中间淡粉纯色实底**（非镂空）+ 金标题 + 红关闭 + 空胶囊条；**仅弹窗外围**用绿幕 0,255,0 便于抠图，窗内不得出现绿色）。
+- **分层拆图**：大面板可拆「壳 + 内容区底板 + 列表行 + 底栏进度轨」等多张 PNG 拼接，每张 prompt 须写明 **透明底** 或 **品红底 `#FF00FF`** 以便抠图（入库前仍走 rembg 流程，**勿**以色键为唯一去底手段）。
+
+## 资产落盘
+
+- AI **原图**先落 `../game_assets/huahua/assets/raw/`（相对仓库根），再抠图 / 压缩后写入 `minigame/subpkg_panels/images/ui/` 等；流程总纲见 `game-art-asset-flow.mdc`。
+
+## 英文风格前缀（可选，新面板 prompt 建议置顶）
+
+```
+Clean 2D vector mobile game UI for a cozy pastel flower-shop merge game, kawaii casual style. Modal panel with very rounded corners: thick soft lilac-lavender outer rim, thinner pastel pink inner lip, gentle floating drop shadow. Large flat interior content field — light cream OR soft pastel pink matte fill as needed, smooth, no wood grain. Top: ornate golden-yellow scalloped title banner, empty center. Top-right: chunky circular red close button with simple white X slightly past the frame corner. Pastel high-key palette, soft gradients only for depth, no photoreal, no watermark, no readable text or numbers.
+```
+
+后续新面板在以上前缀后追加**本页专属结构**（列表行数、进度条形态等）即可。

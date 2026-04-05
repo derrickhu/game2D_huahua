@@ -1,5 +1,6 @@
 /**
- * 许愿券（专用抽奖货币，内部名 flowerSign），存档随主档；获取由活动/礼包等调用 add。
+ * 许愿硬币（专用抽奖货币，存档键 flowerSignTickets 兼容旧档），随主档；
+ * 直加用 add()；数量仅在许愿池界面展示（非棋盘物品、不进收纳盒）。
  */
 import { EventBus } from '@/core/EventBus';
 

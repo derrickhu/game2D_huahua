@@ -3,10 +3,11 @@
 将 minigame/subpkg_deco/images/furniture 下 PNG 与现有家具体量对齐：
 - 最长边不超过 MAX_SIDE（默认 171，与 normalize_greenhouse_furniture_pngs.py 一致）
 - RGBA + LANCZOS 缩小（不量化调色板，避免装修大图色带）
-- zlib compress_level=9 + optimize；仅当缩小了分辨率或新文件更小才覆盖
+- zlib compress_level=9 + optimize；默认仅当缩小了分辨率或新文件更小才覆盖；加 --force 则凡成功写出即覆盖（保证全量过一遍规范）
 
 用法（仓库根）:
   python3 scripts/compress_furniture_deco_pngs.py
+  python3 scripts/compress_furniture_deco_pngs.py --force
   python3 scripts/compress_furniture_deco_pngs.py --dry-run
   python3 scripts/compress_furniture_deco_pngs.py --max-side 171 path/to/one.png
 """
@@ -37,7 +38,9 @@ def fit_max_rgba(im: Image.Image, max_side: int) -> Image.Image:
     return im.resize((nw, nh), Image.Resampling.LANCZOS)
 
 
-def process_one(path: Path, max_side: int, dry_run: bool) -> tuple[int, int, bool, str]:
+def process_one(
+    path: Path, max_side: int, dry_run: bool, force: bool
+) -> tuple[int, int, bool, str]:
     """(old_bytes, new_bytes, changed, note)."""
     old = path.stat().st_size
     try:
@@ -54,14 +57,23 @@ def process_one(path: Path, max_side: int, dry_run: bool) -> tuple[int, int, boo
     try:
         out.save(tmp, format="PNG", optimize=True, compress_level=9)
         new = os.path.getsize(tmp)
-        if resized or new < old:
+        # 强制模式：凡可写出且不长胖则覆盖（解决「已 171 边长但从未 zlib 优化」被跳过）
+        write = resized or (new < old) or (force and new <= old)
+        if write:
             if not dry_run:
                 shutil.move(tmp, str(path))
                 tmp = ""
             else:
                 os.unlink(tmp)
                 tmp = ""
-            reason = "resized" if resized else "optimized"
+            if resized:
+                reason = "resized"
+            elif force and new == old:
+                reason = "force-same"
+            elif force:
+                reason = "force-optimize"
+            else:
+                reason = "optimized"
             return old, new, True, reason
         os.unlink(tmp)
         tmp = ""
@@ -75,6 +87,11 @@ def process_one(path: Path, max_side: int, dry_run: bool) -> tuple[int, int, boo
 def main() -> int:
     ap = argparse.ArgumentParser()
     ap.add_argument("--max-side", type=int, default=171)
+    ap.add_argument(
+        "--force",
+        action="store_true",
+        help="凡能写出即覆盖（仍遵守 max-side），避免已达标但未重编码的 PNG 被跳过",
+    )
     ap.add_argument("--dry-run", action="store_true")
     ap.add_argument(
         "paths",
@@ -100,7 +117,7 @@ def main() -> int:
     total_new = 0
     changed = 0
     for p in pngs:
-        o, n, ch, note = process_one(p, args.max_side, args.dry_run)
+        o, n, ch, note = process_one(p, args.max_side, args.dry_run, args.force)
         total_old += o
         total_new += n if ch else o
         if ch:

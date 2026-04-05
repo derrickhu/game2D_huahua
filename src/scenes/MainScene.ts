@@ -3,7 +3,7 @@
  *
  * 集成所有系统：
  * - 核心玩法：棋盘、合成、建筑、客人
- * - 留存系统：新手引导、每日任务、成就、签到、离线收益（`OFFLINE_REWARD_UI_ENABLED` 关闭时不弹窗）
+ * - 留存系统：新手引导、每日挑战（周积分）、签到、离线收益（`OFFLINE_REWARD_UI_ENABLED` 关闭时不弹窗）
  * - 体验增强：季节、彩蛋、提示、统计
  * - 等级经验系统
  */
@@ -249,10 +249,7 @@ export class MainScene implements Scene {
 
     // 4. 任务完成提示
     if (QuestManager.hasClaimableQuest) {
-      ToastMessage.show('📋 有已完成的每日任务可领取！');
-    }
-    if (QuestManager.hasClaimableAchievement) {
-      ToastMessage.show('🏆 有成就奖励可领取！');
+      ToastMessage.show('📋 每日挑战有可领取奖励！');
     }
   }
 
@@ -991,15 +988,9 @@ export class MainScene implements Scene {
     EventBus.on('nav:openQuest', () => this._questPanel.open());
 
     // 任务完成提示
-    EventBus.on('quest:taskCompleted', (defId: string) => {
-      const def = QuestManager.getQuestDef(defId);
-      if (def) ToastMessage.show(`✅ 任务完成：${def.name}！`);
-    });
-
-    // 成就解锁提示
-    EventBus.on('achievement:unlocked', (defId: string, _tierIndex: number) => {
-      const def = QuestManager.getAchievementDef(defId);
-      if (def) ToastMessage.show(`🏆 成就达成：${def.name}！`);
+    EventBus.on('quest:taskCompleted', (templateId: string) => {
+      const t = QuestManager.getTemplate(templateId);
+      if (t) ToastMessage.show(`✅ 任务完成：${QuestManager.describeTemplate(t)}`);
     });
 
     // 活动/任务赠送整套形象
@@ -1157,7 +1148,7 @@ export class MainScene implements Scene {
   private _updateRedDots(): void {
     // 活动红点
     this._floatingMenu.setRedDot('event', EventManager.hasClaimableTask);
-    this._floatingMenu.setRedDot('quest', QuestManager.hasClaimableQuest || QuestManager.hasClaimableAchievement);
+    this._floatingMenu.setRedDot('quest', QuestManager.hasClaimableQuest);
 
     // 底部栏红点（装修按钮）
     this._infoBar.updateQuickBtnRedDots();

@@ -18,7 +18,12 @@ import * as PIXI from 'pixi.js';
 import { Game } from '@/core/Game';
 import { EventBus } from '@/core/EventBus';
 import { TweenManager, Ease } from '@/core/TweenManager';
-import { RoomLayoutManager, FurniturePlacement } from '@/managers/RoomLayoutManager';
+import {
+  RoomLayoutManager,
+  FurniturePlacement,
+  FURNITURE_PLACEMENT_SCALE_MIN,
+  FURNITURE_PLACEMENT_SCALE_MAX,
+} from '@/managers/RoomLayoutManager';
 import {
   DECO_MAP,
   SHOP_FURNITURE_TEX_BASE_PX,
@@ -427,7 +432,10 @@ class FurnitureDragSystemClass {
             placementScaleMult = ctx.originalScale / baseRatio;
           }
         }
-        placementScaleMult = Math.max(0.1, Math.min(2.0, placementScaleMult));
+        placementScaleMult = Math.max(
+          FURNITURE_PLACEMENT_SCALE_MIN,
+          Math.min(FURNITURE_PLACEMENT_SCALE_MAX, placementScaleMult),
+        );
 
         const placement = RoomLayoutManager.addFurniture(
           ctx.decoId, finalX, finalY, placementScaleMult, false

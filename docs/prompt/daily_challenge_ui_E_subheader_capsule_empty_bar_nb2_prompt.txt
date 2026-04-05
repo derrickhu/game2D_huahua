@@ -1,0 +1,9 @@
+Mobile game UI asset, 16:9 horizontal canvas, pastel kawaii merge flower-shop style.
+
+Two elements centered with margin: top = horizontal pastel pink ribbon banner with scalloped lower edge, soft glossy highlight, empty center, subtle shadow OK. Bottom = short horizontal capsule mini progress bar with light lavender-silver frame.
+
+CRITICAL: the mini bar interior must be completely empty — NO cyan fill, NO blue progress fill, NO colored completion segment — only empty muted lavender-gray inner track or flat empty interior inside the frame.
+
+No icons on or above the mini bar. No text, no digits.
+
+Background: solid flat magenta FF00FF outside both shapes. No task list, no modal frame, no watermark, no photoreal.

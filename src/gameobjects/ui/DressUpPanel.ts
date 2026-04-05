@@ -360,10 +360,21 @@ export class DressUpPanel extends PIXI.Container {
     }
 
     if (!reqMet) {
-      const lock = new PIXI.Text('🔒', { fontSize: 22, fontFamily: FONT_FAMILY });
-      lock.anchor.set(0.5, 0.5);
-      lock.position.set(cw / 2, portraitCy);
-      card.addChild(lock);
+      const lockSize = Math.max(24, Math.round((34 * cw) / CARD_BASE_W));
+      const lockTex = TextureCache.get('warehouse_slot_lock') ?? TextureCache.get('cell_locked');
+      if (lockTex?.width) {
+        const sp = new PIXI.Sprite(lockTex);
+        const sc = Math.min(lockSize / lockTex.width, lockSize / lockTex.height);
+        sp.scale.set(sc);
+        sp.anchor.set(0.5, 0.5);
+        sp.position.set(cw / 2, portraitCy);
+        card.addChild(sp);
+      } else {
+        const lock = new PIXI.Text('🔒', { fontSize: 22, fontFamily: FONT_FAMILY });
+        lock.anchor.set(0.5, 0.5);
+        lock.position.set(cw / 2, portraitCy);
+        card.addChild(lock);
+      }
     }
 
     if (isEquipped) this._addEquipBadge(card, cw);

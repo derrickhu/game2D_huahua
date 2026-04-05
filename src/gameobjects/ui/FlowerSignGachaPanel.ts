@@ -9,27 +9,53 @@ import { OverlayManager } from '@/core/OverlayManager';
 import { TextureCache } from '@/utils/TextureCache';
 import { ToastMessage } from '@/gameobjects/ui/ToastMessage';
 import { DESIGN_WIDTH, FONT_FAMILY } from '@/config/Constants';
-import { ITEM_DEFS } from '@/config/ItemConfig';
 import {
   FLOWER_SIGN_DRAW_COST_MULTI,
   FLOWER_SIGN_DRAW_COST_SINGLE,
 } from '@/config/FlowerSignGachaConfig';
-import { FlowerSignGachaManager, type FlowerSignReward } from '@/managers/FlowerSignGachaManager';
+import {
+  FlowerSignGachaManager,
+  grantFlowerSignRewards,
+  type FlowerSignReward,
+} from '@/managers/FlowerSignGachaManager';
 import { FlowerSignTicketManager } from '@/managers/FlowerSignTicketManager';
+import { SaveManager } from '@/managers/SaveManager';
+import { ItemObtainOverlay, type ItemObtainEntry } from '@/gameobjects/ui/ItemObtainOverlay';
+
+function flowerSignRewardsToObtainEntries(rewards: FlowerSignReward[]): ItemObtainEntry[] {
+  return rewards.map((r) => {
+    switch (r.kind) {
+      case 'reward_box_item':
+        return { kind: 'board_item', itemId: r.itemId, count: r.count };
+      case 'direct_stamina':
+        return { kind: 'direct_currency', currency: 'stamina', amount: r.amount };
+      case 'direct_huayuan':
+        return { kind: 'direct_currency', currency: 'huayuan', amount: r.amount };
+      case 'direct_diamond':
+        return { kind: 'direct_currency', currency: 'diamond', amount: r.amount };
+    }
+  });
+}
 
 const Z = 11500;
-const CELL = 72;
-const GAP = 8;
 /** 无场景图时回退用圆角壳 */
 const FALLBACK_CORNER_R = 26;
+/** 全屏立绘：红彩带标题 + 许愿硬币行整体下移 */
+const IMMERSIVE_HEADER_DY = 100;
+/** 全屏立绘：底部提示文案 + 许愿按钮行整体下移 */
+const IMMERSIVE_IDLE_DY = 50;
+/** 回退壳：标题区 / 底部交互区与立绘模式对齐的纵向偏移 */
+const FALLBACK_HEADER_DY = 100;
+const FALLBACK_IDLE_DY = 50;
 
 export class FlowerSignGachaPanel extends PIXI.Container {
   private _isOpen = false;
   private _bg!: PIXI.Graphics;
   private _panelRoot!: PIXI.Container;
   private _idleLayer!: PIXI.Container;
-  private _resultLayer!: PIXI.Container;
   private _ticketText!: PIXI.Text;
+  /** 已扣券、待点击获得遮罩发奖（强关面板时在此补发） */
+  private _pendingRewards: FlowerSignReward[] | null = null;
 
   constructor() {
     super();
@@ -57,6 +83,12 @@ export class FlowerSignGachaPanel extends PIXI.Container {
 
   close(): void {
     if (!this._isOpen) return;
+    ItemObtainOverlay.forceClose();
+    if (this._pendingRewards) {
+      grantFlowerSignRewards(this._pendingRewards);
+      SaveManager.save();
+      this._pendingRewards = null;
+    }
     this._isOpen = false;
     TweenManager.to({
       target: this,
@@ -93,42 +125,23 @@ export class FlowerSignGachaPanel extends PIXI.Container {
 
     const topBand = Game.safeTop + 64;
     const bottomReserve = 96;
-    const maxArtW = W - 16;
-    const maxArtH = Math.max(220, H - topBand - bottomReserve);
+    /** 略增高区：不规则立绘上下留白多，避免缩得过小 */
+    const maxArtW = W - 8;
+    const maxArtH = Math.max(260, H - topBand - bottomReserve);
     const artCenterY = topBand + maxArtH * 0.5;
 
-    const bgTex = TextureCache.get('flower_sign_gacha_bg_nb2');
-    const npcTex = TextureCache.get('flower_sign_gacha_npc_nb2');
-    const fullTex = TextureCache.get('flower_sign_gacha_scene_nb2');
-
-    type ArtMode = 'layered' | 'full' | 'none';
-    let artMode: ArtMode = 'none';
-    if (bgTex && bgTex.width > 2 && npcTex && npcTex.width > 2) {
-      artMode = 'layered';
-      const artRoot = new PIXI.Container();
-      artRoot.position.set(W / 2, artCenterY);
-      artRoot.eventMode = 'none';
-      const tw = bgTex.width;
-      const th = bgTex.height;
+    const sceneTex = TextureCache.get('flower_sign_gacha_scene_nb2');
+    let useSceneArt = false;
+    if (sceneTex && sceneTex.width > 2) {
+      useSceneArt = true;
+      const tw = sceneTex.width;
+      const th = sceneTex.height;
       const scale = Math.min(maxArtW / tw, maxArtH / th);
-      const bgSp = new PIXI.Sprite(bgTex);
-      bgSp.anchor.set(0.5);
-      bgSp.scale.set(scale);
-      artRoot.addChild(bgSp);
-      const npcSp = new PIXI.Sprite(npcTex);
-      npcSp.anchor.set(0.5);
-      npcSp.scale.set(scale);
-      artRoot.addChild(npcSp);
-      this._panelRoot.addChild(artRoot);
-    } else if (fullTex && fullTex.width > 2) {
-      artMode = 'full';
-      const tw = fullTex.width;
-      const th = fullTex.height;
-      const scale = Math.min(maxArtW / tw, maxArtH / th);
-      const sp = new PIXI.Sprite(fullTex);
-      sp.anchor.set(0.5);
+      const sp = new PIXI.Sprite(sceneTex);
+      /** 锚点偏上：喷泉底座下凸时视觉重心与占卜弹窗「台前突出」一致 */
+      sp.anchor.set(0.5, 0.4);
       sp.scale.set(scale);
-      sp.position.set(W / 2, artCenterY);
+      sp.position.set(W / 2, artCenterY + 12);
       sp.eventMode = 'none';
       this._panelRoot.addChild(sp);
     } else {
@@ -141,14 +154,13 @@ export class FlowerSignGachaPanel extends PIXI.Container {
       this._panelRoot.addChild(shell);
     }
 
-    const immersive = artMode === 'layered' || artMode === 'full';
+    const immersive = useSceneArt;
     const closeX = immersive ? W - 36 : px + pw - 20;
     const closeY = immersive ? Game.safeTop + 22 : py + 20;
 
-    if (artMode === 'none') {
-      const titleY = py + 16;
-      const subY = py + 52;
-      const ticketY = py + 86;
+    if (!useSceneArt) {
+      const titleY = py + 16 + FALLBACK_HEADER_DY;
+      const ticketY = py + 52 + FALLBACK_HEADER_DY;
 
       const title = new PIXI.Text('许愿喷泉', {
         fontSize: 28,
@@ -160,18 +172,9 @@ export class FlowerSignGachaPanel extends PIXI.Container {
       title.position.set(W / 2, titleY);
       this._panelRoot.addChild(title);
 
-      const sub = new PIXI.Text('消耗许愿券祈愿，奖励进入收纳盒', {
-        fontSize: 13,
-        fill: 0x6d4c41,
-        fontFamily: FONT_FAMILY,
-      });
-      sub.anchor.set(0.5, 0);
-      sub.position.set(W / 2, subY);
-      this._panelRoot.addChild(sub);
-
       const ticketRow = new PIXI.Container();
       ticketRow.position.set(W / 2, ticketY);
-      const tTex = TextureCache.get('icon_flower_sign_ticket');
+      const tTex = TextureCache.get('icon_flower_sign_coin');
       if (tTex?.width) {
         const tsp = new PIXI.Sprite(tTex);
         tsp.anchor.set(1, 0.5);
@@ -191,10 +194,9 @@ export class FlowerSignGachaPanel extends PIXI.Container {
       ticketRow.addChild(this._ticketText);
       this._panelRoot.addChild(ticketRow);
       this._syncTicketLabel();
-    } else if (artMode === 'layered') {
-      this._buildGachaRibbonHeader(W);
     } else {
-      this._buildFullSceneTitleOverArt(W);
+      /** 单张抠图立绘 + 代码叠红彩带标题（画中不预留标题区、不画远景） */
+      this._buildGachaRibbonHeader(W);
     }
 
     const closeBtn = new PIXI.Container();
@@ -219,20 +221,21 @@ export class FlowerSignGachaPanel extends PIXI.Container {
     this._idleLayer = new PIXI.Container();
     this._panelRoot.addChild(this._idleLayer);
 
-    this._resultLayer = new PIXI.Container();
-    this._resultLayer.visible = false;
-    this._resultLayer.position.set(0, immersive ? Game.safeTop + 88 : py + 100);
-    this._panelRoot.addChild(this._resultLayer);
-
-    this._buildIdleContent(W, H, immersive, immersive ? 0 : py + 118, ph - 130);
+    this._buildIdleContent(
+      W,
+      H,
+      immersive,
+      immersive ? 0 : py + 118 + FALLBACK_IDLE_DY,
+      ph - 130,
+    );
   }
 
   /**
-   * 分层场景：装修同款红彩带标题 + 副标题 + 许愿券（人物/场景为透明底叠层 PNG）
+   * 许愿喷泉：装修同款红彩带标题 + 许愿硬币（与单张透明底立绘搭配）
    */
   private _buildGachaRibbonHeader(W: number): void {
     const cx = W / 2;
-    let y = Game.safeTop + 28;
+    let y = Game.safeTop + 28 + IMMERSIVE_HEADER_DY;
     const decoRibbon = TextureCache.get('deco_panel_title_ribbon');
     let titleCenterY = y + 22;
     let onRedRibbon = false;
@@ -277,26 +280,11 @@ export class FlowerSignGachaPanel extends PIXI.Container {
       this._panelRoot.addChild(titleOnRibbon);
     }
 
-    const sub = new PIXI.Text('消耗许愿券祈愿，奖励进入收纳盒', {
-      fontSize: 13,
-      fill: 0xfff8f0,
-      fontFamily: FONT_FAMILY,
-      stroke: 0x3e2723,
-      strokeThickness: 2,
-      dropShadow: true,
-      dropShadowColor: 0x000000,
-      dropShadowAlpha: 0.35,
-      dropShadowBlur: 2,
-      dropShadowDistance: 1,
-    });
-    sub.anchor.set(0.5, 0);
-    sub.position.set(cx, y);
-    this._panelRoot.addChild(sub);
-    y += sub.height + 12;
+    y += 8;
 
     const ticketRow = new PIXI.Container();
     ticketRow.position.set(cx, y);
-    const tTex = TextureCache.get('icon_flower_sign_ticket');
+    const tTex = TextureCache.get('icon_flower_sign_coin');
     if (tTex?.width) {
       const tsp = new PIXI.Sprite(tTex);
       tsp.anchor.set(1, 0.5);
@@ -325,82 +313,8 @@ export class FlowerSignGachaPanel extends PIXI.Container {
     this._syncTicketLabel();
   }
 
-  /** 单张全幅场景：底图自带花簇标题位时仅叠字（回退用） */
-  private _buildFullSceneTitleOverArt(W: number): void {
-    const header = new PIXI.Container();
-    header.eventMode = 'none';
-    header.position.set(W / 2, Game.safeTop + 78);
-
-    const titleInArt = new PIXI.Text('许愿喷泉', {
-      fontSize: 28,
-      fill: 0xfffbef,
-      fontFamily: FONT_FAMILY,
-      fontWeight: 'bold',
-      stroke: 0x5d3a2a,
-      strokeThickness: 4,
-      dropShadow: true,
-      dropShadowColor: 0x2a1810,
-      dropShadowAlpha: 0.45,
-      dropShadowBlur: 3,
-      dropShadowDistance: 1,
-    });
-    titleInArt.anchor.set(0.5, 0);
-    titleInArt.position.set(0, 0);
-    header.addChild(titleInArt);
-    let belowRibbon = titleInArt.height + 10;
-
-    const sub = new PIXI.Text('消耗许愿券祈愿，奖励进入收纳盒', {
-      fontSize: 13,
-      fill: 0xfff8f0,
-      fontFamily: FONT_FAMILY,
-      stroke: 0x3e2723,
-      strokeThickness: 2,
-      dropShadow: true,
-      dropShadowColor: 0x000000,
-      dropShadowAlpha: 0.35,
-      dropShadowBlur: 2,
-      dropShadowDistance: 1,
-    });
-    sub.anchor.set(0.5, 0);
-    sub.position.set(0, belowRibbon);
-    header.addChild(sub);
-    belowRibbon += sub.height + 12;
-
-    const ticketRow = new PIXI.Container();
-    ticketRow.position.set(0, belowRibbon);
-    const tTex = TextureCache.get('icon_flower_sign_ticket');
-    if (tTex?.width) {
-      const tsp = new PIXI.Sprite(tTex);
-      tsp.anchor.set(1, 0.5);
-      tsp.height = 28;
-      tsp.width = (tTex.width / tTex.height) * 28;
-      tsp.position.set(-6, 0);
-      ticketRow.addChild(tsp);
-    }
-    this._ticketText = new PIXI.Text('', {
-      fontSize: 18,
-      fill: 0xfff8f0,
-      fontFamily: FONT_FAMILY,
-      fontWeight: 'bold',
-      stroke: 0x3e2723,
-      strokeThickness: 2,
-      dropShadow: true,
-      dropShadowColor: 0x000000,
-      dropShadowAlpha: 0.35,
-      dropShadowBlur: 2,
-      dropShadowDistance: 1,
-    });
-    this._ticketText.anchor.set(0, 0.5);
-    this._ticketText.position.set(8, 0);
-    ticketRow.addChild(this._ticketText);
-    header.addChild(ticketRow);
-
-    this._panelRoot.addChild(header);
-    this._syncTicketLabel();
-  }
-
   private _syncTicketLabel(): void {
-    this._ticketText.text = `许愿券：${FlowerSignTicketManager.count}`;
+    this._ticketText.text = `：${FlowerSignTicketManager.count}`;
   }
 
   private _buildIdleContent(
@@ -413,36 +327,17 @@ export class FlowerSignGachaPanel extends PIXI.Container {
     this._idleLayer.removeChildren();
     this._idleLayer.position.set(0, idleLayerY);
 
-    let hintY: number;
     let btnRowY: number;
     if (immersiveArt) {
       /** 上移到画内喷泉石基一带（相对原 H-178 再上移约 70px） */
-      btnRowY = H - 248 - idleLayerY;
-      hintY = btnRowY - 46;
+      btnRowY = H - 248 - idleLayerY + IMMERSIVE_IDLE_DY;
     } else {
-      hintY = Math.min(innerH * 0.4, 228);
-      btnRowY = hintY + 120;
+      btnRowY = Math.min(innerH * 0.4, 228) + 80;
     }
-    const hint = new PIXI.Text('心诚则灵，愿望会开花 ✿', {
-      fontSize: 15,
-      fill: 0xfff5eb,
-      fontFamily: FONT_FAMILY,
-      stroke: 0x4e342e,
-      strokeThickness: 2,
-      dropShadow: true,
-      dropShadowColor: 0x000000,
-      dropShadowAlpha: 0.4,
-      dropShadowBlur: 2,
-      dropShadowDistance: 1,
-    });
-    hint.anchor.set(0.5, 0.5);
-    hint.position.set(W / 2, hintY);
-    this._idleLayer.addChild(hint);
 
     if (!immersiveArt) {
-      const btnY = hintY + 120;
       this._idleLayer.addChild(
-        this._makeStackedGreenBtns(W, btnY, () => this._doDraw('single'), () => this._doDraw('multi')),
+        this._makeStackedGreenBtns(W, btnRowY, () => this._doDraw('single'), () => this._doDraw('multi')),
       );
     } else {
       const row = new PIXI.Container();
@@ -507,7 +402,7 @@ export class FlowerSignGachaPanel extends PIXI.Container {
     }
 
     const costRow = new PIXI.Container();
-    const icTex = TextureCache.get('icon_flower_sign_ticket');
+    const icTex = TextureCache.get('icon_flower_sign_coin');
     if (icTex && icTex.width > 1) {
       const ic = new PIXI.Sprite(icTex);
       ic.anchor.set(1, 0.5);
@@ -603,7 +498,7 @@ export class FlowerSignGachaPanel extends PIXI.Container {
   private _doDraw(kind: 'single' | 'multi'): void {
     const res = kind === 'single' ? FlowerSignGachaManager.drawSingle() : FlowerSignGachaManager.drawMulti();
     if (!res.ok) {
-      if (res.reason === 'no_ticket') ToastMessage.show('许愿券不足');
+      if (res.reason === 'no_ticket') ToastMessage.show('许愿硬币不足');
       else ToastMessage.show('奖池配置异常');
       return;
     }
@@ -612,101 +507,20 @@ export class FlowerSignGachaPanel extends PIXI.Container {
 
   private _showIdle(): void {
     this._idleLayer.visible = true;
-    this._resultLayer.visible = false;
-    this._resultLayer.removeChildren();
     this._syncTicketLabel();
   }
 
   private _showResults(rewards: FlowerSignReward[]): void {
-    this._idleLayer.visible = false;
-    this._resultLayer.visible = true;
-    this._resultLayer.removeChildren();
     this._syncTicketLabel();
-
-    const W = DESIGN_WIDTH;
-    const banner = new PIXI.Text('恭喜获得', {
-      fontSize: 22,
-      fill: 0xffe082,
-      fontFamily: FONT_FAMILY,
-      fontWeight: 'bold',
-      stroke: 0x4e342e,
-      strokeThickness: 3,
-      dropShadow: true,
-      dropShadowColor: 0x000000,
-      dropShadowAlpha: 0.45,
-      dropShadowBlur: 2,
-      dropShadowDistance: 1,
-    });
-    banner.anchor.set(0.5, 0);
-    banner.position.set(W / 2, 0);
-    this._resultLayer.addChild(banner);
-
-    const n = rewards.length;
-    const cols = n <= 1 ? 1 : 5;
-    const rows = Math.ceil(n / cols);
-    const gridW = cols * CELL + (cols - 1) * GAP;
-    const gridH = rows * CELL + (rows - 1) * GAP;
-    const startX = W / 2 - gridW / 2;
-    const startY = 44;
-
-    for (let i = 0; i < n; i++) {
-      const r = Math.floor(i / cols);
-      const c = i % cols;
-      const cell = this._makeRewardCell(rewards[i]!);
-      cell.position.set(startX + c * (CELL + GAP) + CELL / 2, startY + r * (CELL + GAP) + CELL / 2);
-      this._resultLayer.addChild(cell);
-    }
-
-    const cont = new PIXI.Container();
-    cont.position.set(W / 2, startY + gridH + 28);
-    cont.eventMode = 'static';
-    cont.cursor = 'pointer';
-    const bg = new PIXI.Graphics();
-    bg.beginFill(0xffb74d, 0.95);
-    bg.drawRoundedRect(-72, -18, 144, 36, 18);
-    bg.endFill();
-    cont.addChild(bg);
-    const tap = new PIXI.Text('继续许愿', {
-      fontSize: 15,
-      fill: 0xffffff,
-      fontFamily: FONT_FAMILY,
-      fontWeight: 'bold',
-    });
-    tap.anchor.set(0.5);
-    cont.addChild(tap);
-    cont.hitArea = new PIXI.Rectangle(-72, -18, 144, 36);
-    cont.on('pointertap', (e: PIXI.FederatedPointerEvent) => {
-      e.stopPropagation();
+    this._pendingRewards = rewards;
+    ItemObtainOverlay.show(flowerSignRewardsToObtainEntries(rewards), () => {
+      const pending = this._pendingRewards;
+      this._pendingRewards = null;
+      if (pending) {
+        grantFlowerSignRewards(pending);
+        SaveManager.save();
+      }
       this._showIdle();
     });
-    this._resultLayer.addChild(cont);
-  }
-
-  private _makeRewardCell(r: FlowerSignReward): PIXI.Container {
-    const root = new PIXI.Container();
-    const def = ITEM_DEFS.get(r.itemId);
-    const texKey = def?.icon ?? '';
-    const tex = TextureCache.get(texKey);
-    if (tex?.width) {
-      const sp = new PIXI.Sprite(tex);
-      sp.anchor.set(0.5);
-      const sc = Math.min((CELL - 8) / tex.width, (CELL - 8) / tex.height);
-      sp.scale.set(sc);
-      root.addChild(sp);
-    } else {
-      const ph = new PIXI.Text('?', { fontSize: 28, fontFamily: FONT_FAMILY });
-      ph.anchor.set(0.5);
-      root.addChild(ph);
-    }
-    const cnt = new PIXI.Text(`×${r.count}`, {
-      fontSize: 13,
-      fill: 0x5d4037,
-      fontFamily: FONT_FAMILY,
-      fontWeight: 'bold',
-    });
-    cnt.anchor.set(0.5, 0);
-    cnt.position.set(0, CELL * 0.38);
-    root.addChild(cnt);
-    return root;
   }
 }

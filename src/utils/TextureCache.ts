@@ -40,6 +40,8 @@ const MAIN_IMAGE_MAP: Record<string, string> = {
   ui_order_check_badge: 'images/ui/ui_order_check_badge.png',
   ui_complete_btn: 'images/ui/ui_complete_btn.png',
   icon_huayuan:  'images/ui/icon_huayuan.png',
+  /** 许愿喷泉消耗 / 棋盘货币「许愿硬币」（冷银+粉紫偏光，勿与金色幸运金币混淆） */
+  icon_flower_sign_coin: 'images/ui/icon_flower_sign_coin.png',
   icon_furniture: 'images/ui/icon_furniture.png',
   icon_dress:     'images/ui/icon_dress.png',
   icon_checkin:   'images/ui/icon_checkin.png',
@@ -165,17 +167,22 @@ const PANELS_IMAGE_MAP: Record<string, string> = {
   worldmap_thumb_tool_shop: 'subpkg_panels/images/ui/worldmap_thumb_tool_shop.png',
   worldmap_thumb_garden_villa: 'subpkg_panels/images/ui/worldmap_thumb_garden_villa.png',
   icon_worldmap: 'subpkg_panels/images/ui/icon_worldmap.png',
-  /** 许愿池专用券图标（可换专用图；暂用花愿图标占位） */
-  icon_flower_sign_ticket: 'images/ui/icon_huayuan.png',
   /** 大地图许愿喷泉双帧（水流动画） */
   worldmap_thumb_wishing_fountain_1: 'subpkg_panels/images/ui/worldmap_thumb_wishing_fountain_1.png',
   worldmap_thumb_wishing_fountain_2: 'subpkg_panels/images/ui/worldmap_thumb_wishing_fountain_2.png',
-  /** 许愿喷泉：整幅单图回退（有分层 bg+npc 时面板优先叠层） */
+  /** 许愿喷泉：单张立绘（花精灵+喷泉泉水一体，透明底；标题由代码叠 deco_panel_title_ribbon） */
   flower_sign_gacha_scene_nb2: 'subpkg_panels/images/ui/flower_sign_gacha_scene_nb2.png',
-  /** 许愿喷泉：场景层（无精灵；品红底 rembg+crop，与 npc 同尺寸叠放） */
-  flower_sign_gacha_bg_nb2: 'subpkg_panels/images/ui/flower_sign_gacha_bg_nb2.png',
-  /** 许愿喷泉：花精灵单层（品红底 rembg+crop；与 bg 同画布对齐） */
-  flower_sign_gacha_npc_nb2: 'subpkg_panels/images/ui/flower_sign_gacha_npc_nb2.png',
+
+  /** 每日挑战：NB2+rembg 粉紫壳（顶栏标题位、关闭钮、秒表条；中间留白叠列表） */
+  daily_challenge_panel_shell_nb2: 'subpkg_panels/images/ui/daily_challenge_panel_shell_nb2.png',
+  /** 中间浅蓝任务区底板（空，叠在列表背后） */
+  daily_challenge_task_area_nb2: 'subpkg_panels/images/ui/daily_challenge_ui_B_mid_plate_nb2.png',
+  /** 单条任务行纯色底板（无装饰，叠字与进度） */
+  daily_challenge_task_row_blank_nb2: 'subpkg_panels/images/ui/daily_challenge_ui_C_task_row_blank_nb2.png',
+  /** 周进度轨空槽 + 双小鸡（进度填充与刻度仍由代码画在上层） */
+  daily_challenge_weekly_rail_empty_nb2: 'subpkg_panels/images/ui/daily_challenge_ui_D_weekly_rail_empty_nb2.png',
+  /** 顶区粉丝带 + 空小进度条装饰 */
+  daily_challenge_subheader_empty_nb2: 'subpkg_panels/images/ui/daily_challenge_ui_E_subheader_capsule_empty_bar_nb2.png',
 };
 
 // ================================================================
@@ -423,6 +430,22 @@ const DECO_IMAGE_MAP: Record<string, string> = {
   greenhouse_vase_tulip: 'subpkg_deco/images/furniture/greenhouse_vase_tulip.png',
   greenhouse_vase_peony: 'subpkg_deco/images/furniture/greenhouse_vase_peony.png',
   greenhouse_vase_lotus: 'subpkg_deco/images/furniture/greenhouse_vase_lotus.png',
+
+  deco_late_lv7_table_01: 'subpkg_deco/images/furniture/deco_late_lv7_table_01.png',
+  deco_late_lv7_wall_01: 'subpkg_deco/images/furniture/deco_late_lv7_wall_01.png',
+  deco_late_lv8_garden_01: 'subpkg_deco/images/furniture/deco_late_lv8_garden_01.png',
+  deco_late_lv8_shelf_01: 'subpkg_deco/images/furniture/deco_late_lv8_shelf_01.png',
+  deco_late_lv8_light_01: 'subpkg_deco/images/furniture/deco_late_lv8_light_01.png',
+  deco_late_lv9_orn_furn_01: 'subpkg_deco/images/furniture/deco_late_lv9_orn_furn_01.png',
+  deco_late_lv9_wall_01: 'subpkg_deco/images/furniture/deco_late_lv9_wall_01.png',
+  deco_late_lv9_table_01: 'subpkg_deco/images/furniture/deco_late_lv9_table_01.png',
+  deco_late_lv9_garden_01: 'subpkg_deco/images/furniture/deco_late_lv9_garden_01.png',
+  deco_late_lv10_shelf_01: 'subpkg_deco/images/furniture/deco_late_lv10_shelf_01.png',
+  deco_late_lv10_orn_01: 'subpkg_deco/images/furniture/deco_late_lv10_orn_01.png',
+  deco_late_lv10_pachira_01: 'subpkg_deco/images/furniture/deco_late_lv10_pachira_01.png',
+
+  /** 后期家具占位：无独立贴图前可继续用作 fallback */
+  furniture_deco_placeholder: 'subpkg_deco/images/furniture/furniture_deco_placeholder.png',
 
   // ---- 房间背景 ----
   bg_room_default: 'subpkg_deco/images/house/bg_room_default.png',

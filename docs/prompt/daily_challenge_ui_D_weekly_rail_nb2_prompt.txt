@@ -1,0 +1,7 @@
+Mobile game UI asset, 16:9 horizontal canvas, pastel kawaii merge flower-shop style.
+
+One wide weekly progress strip centered vertically in the frame. Horizontal taupe-brown rounded track with soft inner groove. Golden-yellow fill covers about 65% from the left with rounded cap. Six small round gold stud milestones evenly spaced along the track. Above the left four studs, tiny floating reward silhouettes: coin stack, red gift box, wooden chest — some with small mint-green check stickers. Above the right two studs, only empty studs waiting.
+
+Far left and far right ends of the track: cute identical round yellow chick faces with tiny red bows on top, friendly simple eyes, no text.
+
+Background: solid flat magenta FF00FF everywhere outside the strip and chick decorations. No full phone UI frame, no task list, no title banner, no readable numbers or letters, no watermark, no photoreal.

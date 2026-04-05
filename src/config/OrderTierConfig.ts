@@ -80,6 +80,11 @@ export interface UnlockedLines {
   maxArrangeToolLevel: number;
   /** 棋盘上最高的饮品工具等级（捕虫网/冷饮器/烘焙，取三线最大值，0=无） */
   maxDrinkToolLevel: number;
+  /**
+   * 各饮品线独立最高工具等级（仅该线棋盘上有生产工具时 >0）。
+   * 避免仅有蝴蝶网时仍刷冷饮/甜品需求导致无法完成。
+   */
+  drinkToolMaxByLine: Partial<Record<DrinkLine, number>>;
   /** 已解锁可产出的独立产线数（花束/绿植/蝴蝶标本/冷饮/甜品等），用于动态客人上限 */
   unlockedLineCount: number;
 }

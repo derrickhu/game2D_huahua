@@ -1295,9 +1295,9 @@ export class DecorationPanel extends PIXI.Container {
     }
   }
 
-  /** 与棋盘 `CellView` 一致：`cell_locked`；缺纹理时退回 emoji */
+  /** 未解锁家具/房壳：与仓库格锁同一资源 `warehouse_slot_lock`；缺纹理时退回棋盘锁再退回 emoji */
   private _addCardLockOverlay(parent: PIXI.Container, cx: number, cy: number, cw: number): void {
-    const lockTex = TextureCache.get('cell_locked');
+    const lockTex = TextureCache.get('warehouse_slot_lock') ?? TextureCache.get('cell_locked');
     const lockSize = Math.max(24, Math.round((34 * cw) / CARD_BASE_W));
     if (lockTex?.width) {
       const sp = new PIXI.Sprite(lockTex);

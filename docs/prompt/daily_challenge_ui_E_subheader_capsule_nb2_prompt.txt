@@ -1,0 +1,5 @@
+Mobile game UI asset, 16:9 horizontal canvas, pastel kawaii merge flower-shop style.
+
+Small decorative header strip centered in frame. Top: shallow pink satin ribbon banner with soft scalloped lower edge, empty center, subtle highlight. Directly below: short horizontal mini progress widget with thin silver-lilac metallic frame, rounded ends, inner light-blue fill about 55% from left, no tick marks, no digits.
+
+Plenty of margin around the element. Background: solid flat magenta FF00FF only outside the ribbon and bar shapes. No modal frame, no close button, no task rows, no chicks, no readable text, no watermark, no photoreal.

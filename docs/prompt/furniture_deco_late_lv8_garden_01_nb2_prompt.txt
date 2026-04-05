@@ -1,0 +1,5 @@
+Square 1:1 canvas, one large courtyard cherry tree, trunk and canopy fill about 92–98 percent of frame height. Cute kawaii 2.5D isometric from upper-left about 45 degrees, merge-game flower shop yard prop, soft brown outlines slightly thicker than hairline.
+
+BASE (strict): Draw only the tree — trunk widening into a few smooth stylized brown roots as the lowest visible geometry. Absolutely no floor tile, no isometric diamond paver, no stone slab, no courtyard base plate, no ground platform under the roots. Roots end freely with clear separation from the background so matting can remove everything below the wood. No green grass tufts at the foot. Wide round canopy of soft pink Somei-Yoshino cherry blossoms, fresh green leaves on branches, a few drifting petals, not bonsai, no flower pot.
+
+Background pure solid white #FFFFFF only around the tree; no shadow cast onto a fake floor. Upper-left soft key light. Hand-painted mobile game art, not photoreal. No text, no watermark, no characters, no QR.

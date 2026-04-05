@@ -1,0 +1,5 @@
+Square 1:1 canvas, one large courtyard lemon tree, trunk and crown fill about 92–98 percent of frame height. Cute kawaii 2.5D isometric from upper-left about 45 degrees, merge-game tropical yard prop, soft brown outlines slightly thicker than hairline.
+
+BASE (strict): Only the tree — trunk into a few smooth cute brown roots as the bottom of the asset. No isometric floor tile, no paver diamond, no stone slab, no ground platform beneath the roots. Roots are the lowest pixels; white empty space can show between root tips for easy cutout. No grass clumps at the base. Broad dense crown of glossy deep green citrus leaves, cute round green lemons, tiny white-yellow blossoms, not bonsai, no large pot. Tropical lagoon palette in leaves and fruit only.
+
+Background pure solid white #FFFFFF only; do not paint a floor under the tree. Upper-left soft key light. Hand-painted mobile game art, not photoreal. No text, no watermark, no characters, no QR.

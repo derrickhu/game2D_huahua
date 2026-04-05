@@ -1,0 +1,5 @@
+Mobile game UI asset, 9:16 vertical canvas. Cozy pastel flower-shop merge game style, same kawaii vector polish as a lilac-pink framed modal.
+
+One single large rounded-rectangle content plate centered in the middle 60% of the frame: soft baby-blue fill, very rounded corners, subtle inner shadow and thin lighter blue highlight along top inner edge, empty flat interior — no text, no icons, no rows, no coins. The plate floats above a solid flat chroma key background filling the rest of the image: pure magenta FF00FF only outside the blue rounded shape (no gradient on magenta).
+
+No outer purple panel frame, no title banner, no close button, no chicks, no progress bars, no task list content inside the blue area. No watermark, no readable text, no photoreal.

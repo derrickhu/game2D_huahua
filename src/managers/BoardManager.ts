@@ -10,6 +10,7 @@ const STARTER_KETTLE_COL = 3;
 import { CellState, BOARD_PRESETS, KeyUnlockMode } from '@/config/BoardLayout';
 import {
   ITEM_DEFS,
+  LEGACY_FLOWER_SIGN_COIN_ITEM_ID,
   findItemId,
   getDowngradeResultId,
   getLuckyCoinDirection,
@@ -21,6 +22,7 @@ import {
   isLuckyCoinValidTarget,
   pickLuckyCoinNewItemId,
 } from '@/config/ItemConfig';
+import { FlowerSignTicketManager } from '@/managers/FlowerSignTicketManager';
 import { SeasonSystem } from '@/systems/SeasonSystem';
 
 export interface CellData {
@@ -251,6 +253,7 @@ class BoardManagerClass {
   placeItem(index: number, itemId: string): boolean {
     const cell = this.cells[index];
     if (!cell || cell.state !== CellState.OPEN || cell.itemId) return false;
+    if (!ITEM_DEFS.has(itemId)) return false;
     cell.itemId = itemId;
     cell.luckyCoinConsumed = false;
     EventBus.emit('board:itemPlaced', index, itemId);
@@ -536,7 +539,12 @@ class BoardManagerClass {
       const cell = this.cells[saved.index];
       if (cell) {
         cell.state = saved.state;
-        cell.itemId = saved.itemId;
+        if (saved.itemId === LEGACY_FLOWER_SIGN_COIN_ITEM_ID) {
+          FlowerSignTicketManager.add(1);
+          cell.itemId = null;
+        } else {
+          cell.itemId = saved.itemId;
+        }
         // reserved 由 CustomerManager 按当前客人队列实时计算，不读档（客人未持久化时会导致幽灵锁格+假满足标）
         cell.reserved = false;
         cell.luckyCoinConsumed = saved.luckyCoinConsumed === true;

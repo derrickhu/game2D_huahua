@@ -119,6 +119,9 @@ class CurrencyManagerClass {
   addDiamond(amount: number): void {
     this._state.diamond = Math.max(0, this._state.diamond + amount);
     EventBus.emit('currency:changed', 'diamond', this._state.diamond);
+    if (amount < 0) {
+      EventBus.emit('quest:diamondSpent', -amount);
+    }
   }
 
   consumeStamina(amount: number): boolean {

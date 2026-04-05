@@ -1,64 +1,123 @@
 /**
- * 每日任务 + 成就面板
+ * 每日挑战 + 周积分进度条
  */
 import * as PIXI from 'pixi.js';
 import { Game } from '@/core/Game';
 import { TweenManager, Ease } from '@/core/TweenManager';
 import { EventBus } from '@/core/EventBus';
 import { QuestManager } from '@/managers/QuestManager';
+import { TextureCache } from '@/utils/TextureCache';
 import { DESIGN_WIDTH, FONT_FAMILY, COLORS } from '@/config/Constants';
+import type { DailyChallengeReward, DailyQuestTemplate } from '@/config/DailyChallengeConfig';
+import { WEEKLY_MILESTONES } from '@/config/DailyChallengeConfig';
+import {
+  getNextWeekResetTimeMs,
+  msUntilNextDailyResetAt5am,
+} from '@/utils/WeeklyCycle';
 
-type TabType = 'quest' | 'achievement';
+function formatHms(ms: number): string {
+  if (ms <= 0) return '00:00:00';
+  const s = Math.floor(ms / 1000);
+  const h = Math.floor(s / 3600);
+  const m = Math.floor((s % 3600) / 60);
+  const sec = s % 60;
+  return [h, m, sec].map(n => (n < 10 ? `0${n}` : String(n))).join(':');
+}
+
+function formatWeekRemain(ms: number): string {
+  if (ms <= 0) return '即将刷新';
+  const d = Math.floor(ms / 86400000);
+  const h = Math.floor((ms % 86400000) / 3600000);
+  if (d > 0) return `${d}天${h}小时`;
+  const m = Math.floor((ms % 3600000) / 60000);
+  return `${h}小时${m}分`;
+}
+
+function rewardPreview(r: DailyChallengeReward): string {
+  const parts: string[] = [];
+  if (r.stamina) parts.push(`体力+${r.stamina}`);
+  if (r.diamond) parts.push(`💎${r.diamond}`);
+  if (r.huayuan) parts.push(`花愿+${r.huayuan}`);
+  if (r.itemId) parts.push(`道具×${r.itemCount ?? 1}`);
+  return parts.join(' ');
+}
+
+function milestoneRewardEmoji(r: DailyChallengeReward): string {
+  if (r.itemId) return '📦';
+  if (r.stamina) return '💖';
+  if (r.diamond) return '💎';
+  if (r.huayuan) return '💰';
+  return '🎁';
+}
+
+/** 瘦高壳图用 contain 会以高度为准、宽度变窄；按 panelW 缩放使粉框包住任务区 */
+function spriteShellFitPanelWidth(tex: PIXI.Texture, panelX: number, panelY: number, panelW: number, panelH: number): PIXI.Sprite {
+  const s = new PIXI.Sprite(tex);
+  const sc = panelW / tex.width;
+  s.scale.set(sc);
+  const dispH = tex.height * sc;
+  s.position.set(panelX, panelY + (panelH - dispH) / 2);
+  return s;
+}
+
+/** 任务行黄条等比装入 maxW×maxH 并居中（禁止单独拉宽/压扁） */
+function spriteTaskRowUniform(tex: PIXI.Texture, x: number, y: number, maxW: number, maxH: number): PIXI.Sprite {
+  const s = new PIXI.Sprite(tex);
+  const sc = Math.min(maxW / tex.width, maxH / tex.height);
+  s.scale.set(sc);
+  const dw = tex.width * sc;
+  const dh = tex.height * sc;
+  s.position.set(x + (maxW - dw) / 2, y + (maxH - dh) / 2);
+  return s;
+}
 
 export class QuestPanel extends PIXI.Container {
   private _bg!: PIXI.Graphics;
   private _content!: PIXI.Container;
   private _isOpen = false;
-  private _activeTab: TabType = 'quest';
+  private _countdownTimer: ReturnType<typeof setInterval> | null = null;
+  private _dailyCountdownText: PIXI.Text | null = null;
+  private _weeklyCountdownText: PIXI.Text | null = null;
 
   constructor() {
     super();
     this.visible = false;
     this.zIndex = 5000;
     this._build();
+    EventBus.on('quest:updated', () => {
+      if (this._isOpen) this._refresh();
+    });
   }
 
   open(): void {
-    console.log(`[QuestPanel] open() called, _isOpen=${this._isOpen}, visible=${this.visible}, parent=${!!this.parent}, parentVisible=${this.parent?.visible}`);
-    if (this._isOpen) {
-      console.warn('[QuestPanel] open() 提前返回: _isOpen=true');
-      return;
-    }
+    if (this._isOpen) return;
     this._isOpen = true;
     this.visible = true;
     this.alpha = 1;
-    this._activeTab = 'quest';
     this._refresh();
-    console.log(`[QuestPanel] open() 状态设置完成, visible=${this.visible}, worldVisible=${this.worldVisible}, parent=${this.parent?.constructor?.name}, parentParent=${this.parent?.parent?.constructor?.name}`);
 
-    // 取消之前可能残留的关闭动画
     TweenManager.cancelTarget(this._bg);
     TweenManager.cancelTarget(this._content);
     TweenManager.cancelTarget(this._content.scale);
 
-    // 确保面板自身 transform 干净
     this.position.set(0, 0);
     this.scale.set(1, 1);
 
-    // 弹出动画：遮罩淡入 + 面板从缩小弹出
     this._bg.alpha = 0;
     this._content.alpha = 0;
     this._content.scale.set(0.85);
     TweenManager.to({ target: this._bg, props: { alpha: 1 }, duration: 0.2, ease: Ease.easeOutQuad });
     TweenManager.to({ target: this._content, props: { alpha: 1 }, duration: 0.2, ease: Ease.easeOutQuad });
     TweenManager.to({ target: this._content.scale, props: { x: 1, y: 1 }, duration: 0.3, ease: Ease.easeOutBack });
+
+    this._startCountdownTimer();
   }
 
   close(): void {
     if (!this._isOpen) return;
     this._isOpen = false;
+    this._stopCountdownTimer();
 
-    // 取消之前的开启动画
     TweenManager.cancelTarget(this._bg);
     TweenManager.cancelTarget(this._content);
     TweenManager.cancelTarget(this._content.scale);
@@ -75,6 +134,29 @@ export class QuestPanel extends PIXI.Container {
     });
   }
 
+  private _startCountdownTimer(): void {
+    this._stopCountdownTimer();
+    this._countdownTimer = setInterval(() => this._tickCountdowns(), 1000);
+  }
+
+  private _stopCountdownTimer(): void {
+    if (this._countdownTimer !== null) {
+      clearInterval(this._countdownTimer);
+      this._countdownTimer = null;
+    }
+  }
+
+  private _tickCountdowns(): void {
+    const now = Date.now();
+    if (this._dailyCountdownText) {
+      this._dailyCountdownText.text = `距下次刷新（05:00） ${formatHms(msUntilNextDailyResetAt5am(new Date(now)))}`;
+    }
+    if (this._weeklyCountdownText) {
+      const left = getNextWeekResetTimeMs(new Date(now)) - now;
+      this._weeklyCountdownText.text = `本周进度 ${formatWeekRemain(left)} 后重置`;
+    }
+  }
+
   private _build(): void {
     const w = DESIGN_WIDTH;
     const h = Game.logicHeight;
@@ -87,307 +169,386 @@ export class QuestPanel extends PIXI.Container {
     this._bg.on('pointerdown', () => this.close());
     this.addChild(this._bg);
 
-    // 面板内容容器
     this._content = new PIXI.Container();
     this.addChild(this._content);
   }
 
   private _refresh(): void {
+    this._stopCountdownTimer();
+
     while (this._content.children.length > 0) {
-      this._content.removeChild(this._content.children[0]);
+      const child = this._content.children[0];
+      this._content.removeChild(child);
+      child.destroy({ children: true });
     }
 
-    // 设置 _content 的 pivot 和 position 用于缩放动画居中
+    this._dailyCountdownText = null;
+    this._weeklyCountdownText = null;
+
     this._content.pivot.set(DESIGN_WIDTH / 2, Game.logicHeight / 2);
     this._content.position.set(DESIGN_WIDTH / 2, Game.logicHeight / 2);
 
     const cx = DESIGN_WIDTH / 2;
-    const panelW = Math.min(620, DESIGN_WIDTH - 40);
-    const panelH = 560;
+    const panelW = DESIGN_WIDTH - 12;
+    /** 略增高面板底缘，底部小鸡条+倒计时可再下移约 50 而不溢出 */
+    const panelH = Math.min(Game.logicHeight - 16, 1100);
     const panelX = cx - panelW / 2;
-    const panelY = Game.logicHeight / 2 - panelH / 2;
+    const panelY = (Game.logicHeight - panelH) / 2;
 
-    // 面板背景
-    const bg = new PIXI.Graphics();
-    bg.beginFill(0xFFFBF0);
-    bg.drawRoundedRect(panelX, panelY, panelW, panelH, 20);
-    bg.endFill();
-    bg.eventMode = 'static';
-    this._content.addChild(bg);
+    const hasSubheaderDeco = !!TextureCache.get('daily_challenge_subheader_empty_nb2');
+    const headerEndY = panelY + (hasSubheaderDeco ? 112 : 92);
+    /** 蓝板（B_mid_plate）整体下移，避免贴图顶缘与胶囊条（E_subheader）视觉重叠 */
+    const midPlateTopGap = hasSubheaderDeco ? 32 : 12;
 
-    // Tab 按钮
-    const tabY = panelY + 12;
-    this._drawTab('📋 每日任务', panelX + 20, tabY, 160, 'quest');
-    this._drawTab('🏆 成就', panelX + 190, tabY, 120, 'achievement');
+    const shellTex = TextureCache.get('daily_challenge_panel_shell_nb2');
+    if (shellTex) {
+      this._content.addChild(spriteShellFitPanelWidth(shellTex, panelX, panelY, panelW, panelH));
+    } else {
+      const fb = new PIXI.Graphics();
+      fb.beginFill(0xFFFBF0);
+      fb.drawRoundedRect(panelX, panelY, panelW, panelH, 20);
+      fb.endFill();
+      this._content.addChild(fb);
+    }
 
-    // 关闭按钮
+    const hitPlate = new PIXI.Container();
+    hitPlate.hitArea = new PIXI.Rectangle(panelX, panelY, panelW, panelH);
+    hitPlate.eventMode = 'static';
+    this._content.addChild(hitPlate);
+
+    /** 底部周进度 + 里程碑 + 说明文案（含等比周轨道贴图预留高度） */
+    const footerH = 262;
+    const footerTopGap = 16;
+    const scrollAreaY = headerEndY + midPlateTopGap;
+    const scrollAreaH = panelH - (scrollAreaY - panelY) - footerH - footerTopGap;
+
+    /** 中间蓝板（B）：等比放大，不 mask（避免圆角被切）；整体略下移与顶部分开 */
+    const platePadX = 4;
+    const plateW = panelW - platePadX * 2;
+    const midPlateDropY = 36;
+    const areaTex = TextureCache.get('daily_challenge_task_area_nb2');
+    if (areaTex) {
+      const baseSc = Math.min(plateW / areaTex.width, scrollAreaH / areaTex.height);
+      const dwBase = areaTex.width * baseSc;
+      const targetExtraDisplayW = 140;
+      const midPlateUniformBoost = Math.min(1.42, Math.max(1, 1 + targetExtraDisplayW / Math.max(1, dwBase)));
+      const sc = baseSc * midPlateUniformBoost;
+      const dw = areaTex.width * sc;
+      const dh = areaTex.height * sc;
+      const sx = panelX + platePadX + (plateW - dw) / 2;
+      const sy = scrollAreaY + (scrollAreaH - dh) / 2 + midPlateDropY;
+      const areaSp = new PIXI.Sprite(areaTex);
+      areaSp.scale.set(sc);
+      areaSp.position.set(sx, sy);
+      this._content.addChild(areaSp);
+    }
+
+    const taskRowH = 74;
+    const taskRowGap = 8;
+    const listInsetX = 52;
+    const listX = panelX + listInsetX;
+    const listW = panelW - listInsetX * 2;
+    const listInnerPad = 10;
+    const rowDrawW = listW - listInnerPad * 2;
+    const maxListViewportH = scrollAreaH - 56;
+    const listViewportH = Math.min(maxListViewportH, taskRowH * 4 + taskRowGap * 3 + 20);
+    const listViewportY = scrollAreaY + Math.floor((scrollAreaH - listViewportH) / 2);
+
+    const title = new PIXI.Text('每日挑战', {
+      fontSize: 22, fill: COLORS.TEXT_DARK, fontFamily: FONT_FAMILY, fontWeight: 'bold',
+    });
+    title.anchor.set(0.5, 0);
+    title.position.set(cx, panelY + 14);
+    this._content.addChild(title);
+
+    const sub = new PIXI.Text('完成下列任务赢取奖励！', {
+      fontSize: 14, fill: COLORS.TEXT_LIGHT, fontFamily: FONT_FAMILY,
+    });
+    sub.anchor.set(0.5, 0);
+    sub.position.set(cx, panelY + 44);
+    this._content.addChild(sub);
+
+    const subheaderTex = TextureCache.get('daily_challenge_subheader_empty_nb2');
+    if (subheaderTex) {
+      const sh = new PIXI.Sprite(subheaderTex);
+      const shW = Math.min(panelW - 48, subheaderTex.width * 0.82);
+      const subheaderCapsuleShrink = 0.66;
+      sh.scale.set((shW / subheaderTex.width) * subheaderCapsuleShrink);
+      sh.anchor.set(0.5, 0);
+      sh.position.set(cx, panelY + 52);
+      this._content.addChild(sh);
+    }
+
+    const now = Date.now();
+    this._dailyCountdownText = new PIXI.Text(
+      `距下次刷新（05:00） ${formatHms(msUntilNextDailyResetAt5am(new Date(now)))}`,
+      { fontSize: 12, fill: 0x5C6BC0, fontFamily: FONT_FAMILY },
+    );
+    this._dailyCountdownText.anchor.set(0.5, 0);
+    this._dailyCountdownText.position.set(cx, panelY + (hasSubheaderDeco ? 86 : 66));
+    this._content.addChild(this._dailyCountdownText);
+
     const closeBtn = new PIXI.Text('✕', {
       fontSize: 22, fill: COLORS.TEXT_LIGHT, fontFamily: FONT_FAMILY,
     });
     closeBtn.anchor.set(0.5, 0.5);
-    closeBtn.position.set(panelX + panelW - 24, panelY + 24);
+    closeBtn.position.set(panelX + panelW - 24, panelY + 28);
     closeBtn.eventMode = 'static';
     closeBtn.cursor = 'pointer';
-    closeBtn.on('pointerdown', () => this.close());
+    closeBtn.on('pointerdown', (e: PIXI.FederatedPointerEvent) => {
+      e.stopPropagation();
+      this.close();
+    });
     this._content.addChild(closeBtn);
 
-    // 内容区
-    const contentY = tabY + 48;
-    if (this._activeTab === 'quest') {
-      this._drawQuestTab(panelX, contentY, panelW, panelH - (contentY - panelY) - 12);
-    } else {
-      this._drawAchievementTab(panelX, contentY, panelW, panelH - (contentY - panelY) - 12);
-    }
-  }
+    const mask = new PIXI.Graphics();
+    mask.beginFill(0xffffff);
+    mask.drawRect(listX, listViewportY, listW, listViewportH);
+    mask.endFill();
+    this._content.addChild(mask);
 
-  private _drawTab(label: string, x: number, y: number, w: number, tab: TabType): void {
-    const isActive = this._activeTab === tab;
-    const g = new PIXI.Graphics();
-    g.beginFill(isActive ? COLORS.BUTTON_PRIMARY : 0xEEEEEE);
-    g.drawRoundedRect(x, y, w, 36, 18);
-    g.endFill();
-    this._content.addChild(g);
+    const scrollContainer = new PIXI.Container();
+    scrollContainer.mask = mask;
+    this._content.addChild(scrollContainer);
 
-    const text = new PIXI.Text(label, {
-      fontSize: 15, fill: isActive ? 0xFFFFFF : COLORS.TEXT_DARK, fontFamily: FONT_FAMILY,
-      fontWeight: isActive ? 'bold' : 'normal',
-    });
-    text.anchor.set(0.5, 0.5);
-    text.position.set(x + w / 2, y + 18);
-    this._content.addChild(text);
-
-    const hit = new PIXI.Container();
-    hit.hitArea = new PIXI.Rectangle(x, y, w, 36);
-    hit.eventMode = 'static';
-    hit.cursor = 'pointer';
-    hit.on('pointerdown', () => {
-      this._activeTab = tab;
-      this._refresh();
-    });
-    this._content.addChild(hit);
-  }
-
-  // ====== 每日任务 Tab ======
-
-  private _drawQuestTab(panelX: number, startY: number, panelW: number, _height: number): void {
-    const quests = QuestManager.dailyQuests;
-    const cx = panelX + panelW / 2;
-    let y = startY + 10;
-
-    if (quests.length === 0) {
-      const noTask = new PIXI.Text('暂无每日任务', {
-        fontSize: 16, fill: COLORS.TEXT_LIGHT, fontFamily: FONT_FAMILY,
-      });
-      noTask.anchor.set(0.5, 0);
-      noTask.position.set(cx, y);
-      this._content.addChild(noTask);
-      return;
-    }
-
-    for (const quest of quests) {
-      const def = QuestManager.getQuestDef(quest.defId);
+    const firstTaskY = listViewportY + 12;
+    let contentBottom = firstTaskY;
+    const tasks = QuestManager.dailyTasks;
+    for (const q of tasks) {
+      const def = QuestManager.getTemplate(q.templateId);
       if (!def) continue;
-
-      this._drawQuestRow(panelX + 20, y, panelW - 40, quest, def);
-      y += 90;
+      contentBottom = this._drawTaskRow(listX + listInnerPad, contentBottom, rowDrawW, q, def, scrollContainer);
+      contentBottom += taskRowGap;
     }
+
+    const scrollSpan = contentBottom - firstTaskY - taskRowGap;
+    const maxScroll = Math.max(0, scrollSpan - listViewportH);
+    let scrollY = 0;
+    scrollContainer.y = -scrollY;
+
+    const onMove = (e: PIXI.FederatedPointerEvent) => {
+      if (!isDragging) return;
+      const cur = e.globalY / Game.scale;
+      const delta = lastY - cur;
+      lastY = cur;
+      scrollY = Math.max(0, Math.min(maxScroll, scrollY + delta));
+      scrollContainer.y = -scrollY;
+    };
+    let lastY = 0;
+    let isDragging = false;
+
+    hitPlate.on('pointerdown', (e: PIXI.FederatedPointerEvent) => {
+      e.stopPropagation();
+      const ly = e.globalY / Game.scale;
+      const lx = e.globalX / Game.scale;
+      if (
+        ly >= listViewportY && ly <= listViewportY + listViewportH
+        && lx >= listX && lx <= listX + listW
+      ) {
+        lastY = ly;
+        isDragging = true;
+      }
+    });
+    hitPlate.on('pointermove', onMove);
+    hitPlate.on('pointerup', () => { isDragging = false; });
+    hitPlate.on('pointerupoutside', () => { isDragging = false; });
+
+    const footerTop = scrollAreaY + scrollAreaH + footerTopGap;
+    this._drawWeeklyFooter(panelX, footerTop, panelW, footerH);
+
+    if (this._isOpen) this._startCountdownTimer();
   }
 
-  private _drawQuestRow(x: number, y: number, w: number, quest: any, def: any): void {
+  private _drawTaskRow(
+    x: number,
+    y: number,
+    w: number,
+    quest: { templateId: string; current: number; claimed: boolean },
+    def: DailyQuestTemplate,
+    parent: PIXI.Container,
+  ): number {
+    const rowH = 74;
     const isComplete = quest.current >= def.target;
     const isClaimed = quest.claimed;
 
-    // 行背景
-    const bg = new PIXI.Graphics();
-    bg.beginFill(isClaimed ? 0xF0F0F0 : isComplete ? 0xFFF3E0 : 0xFFFFFF);
-    bg.drawRoundedRect(x, y, w, 78, 12);
-    bg.endFill();
-    bg.lineStyle(1, 0xEEEEEE);
-    bg.drawRoundedRect(x, y, w, 78, 12);
-    this._content.addChild(bg);
+    const rowTex = TextureCache.get('daily_challenge_task_row_blank_nb2');
+    if (rowTex) {
+      const rowBg = spriteTaskRowUniform(rowTex, x, y, w, rowH);
+      rowBg.tint = isClaimed ? 0xdddddd : isComplete ? 0xfff8e8 : 0xffffff;
+      parent.addChild(rowBg);
+    } else {
+      const bg = new PIXI.Graphics();
+      bg.beginFill(isClaimed ? 0xECEFF1 : isComplete ? 0xFFF8E1 : 0xFFFFFF);
+      bg.drawRoundedRect(x, y, w, rowH, 12);
+      bg.endFill();
+      bg.lineStyle(1, 0xE0E0E0);
+      bg.drawRoundedRect(x, y, w, rowH, 12);
+      parent.addChild(bg);
+    }
 
-    // 任务名
-    const name = new PIXI.Text(def.name, {
-      fontSize: 16, fill: COLORS.TEXT_DARK, fontFamily: FONT_FAMILY, fontWeight: 'bold',
+    const check = new PIXI.Text(isComplete ? '✓' : ' ', {
+      fontSize: 22, fill: isComplete ? 0x43A047 : 0xE0E0E0, fontFamily: FONT_FAMILY, fontWeight: 'bold',
     });
-    name.position.set(x + 14, y + 10);
-    this._content.addChild(name);
+    check.position.set(x + 10, y + 22);
+    parent.addChild(check);
 
-    // 描述
-    const desc = new PIXI.Text(def.desc, {
-      fontSize: 13, fill: COLORS.TEXT_LIGHT, fontFamily: FONT_FAMILY,
+    const desc = new PIXI.Text(QuestManager.describeTemplate(def), {
+      fontSize: 15, fill: COLORS.TEXT_DARK, fontFamily: FONT_FAMILY, fontWeight: 'bold',
     });
-    desc.position.set(x + 14, y + 32);
-    this._content.addChild(desc);
+    desc.position.set(x + 40, y + 10);
+    parent.addChild(desc);
 
-    // 进度条
-    const barX = x + 14;
-    const barY = y + 54;
-    const barW = w * 0.5;
-    const barH = 12;
+    const barX = x + 40;
+    const barY = y + 36;
+    const barW = w * 0.42;
+    const barH = 10;
     const progress = Math.min(quest.current / def.target, 1);
 
     const barBg = new PIXI.Graphics();
     barBg.beginFill(0xE0E0E0);
-    barBg.drawRoundedRect(barX, barY, barW, barH, 6);
+    barBg.drawRoundedRect(barX, barY, barW, barH, 5);
     barBg.endFill();
-    this._content.addChild(barBg);
+    parent.addChild(barBg);
 
     if (progress > 0) {
       const barFill = new PIXI.Graphics();
       barFill.beginFill(isComplete ? 0x4CAF50 : COLORS.BUTTON_PRIMARY);
-      barFill.drawRoundedRect(barX, barY, barW * progress, barH, 6);
+      barFill.drawRoundedRect(barX, barY, barW * progress, barH, 5);
       barFill.endFill();
-      this._content.addChild(barFill);
+      parent.addChild(barFill);
     }
 
-    const progressText = new PIXI.Text(`${quest.current}/${def.target}`, {
+    const progT = new PIXI.Text(`${quest.current}/${def.target}`, {
       fontSize: 11, fill: COLORS.TEXT_LIGHT, fontFamily: FONT_FAMILY,
     });
-    progressText.position.set(barX + barW + 8, barY - 1);
-    this._content.addChild(progressText);
+    progT.position.set(barX + barW + 6, barY - 2);
+    parent.addChild(progT);
 
-    // 奖励/领取按钮
-    const btnX = x + w - 100;
-    const btnY = y + 20;
+    const pts = new PIXI.Text(`+${def.weeklyPoints} 分`, {
+      fontSize: 13, fill: 0xC49000, fontFamily: FONT_FAMILY, fontWeight: 'bold',
+    });
+    pts.anchor.set(1, 0);
+    pts.position.set(x + w - 12, y + 8);
+    parent.addChild(pts);
 
+    const rw = new PIXI.Text(rewardPreview(def.reward), {
+      fontSize: 11, fill: COLORS.TEXT_LIGHT, fontFamily: FONT_FAMILY,
+    });
+    rw.anchor.set(1, 0);
+    rw.position.set(x + w - 12, y + 28);
+    parent.addChild(rw);
+
+    const btnX = x + w - 96;
+    const btnY = y + 44;
     if (isClaimed) {
-      const claimedText = new PIXI.Text('✅ 已领取', {
-        fontSize: 14, fill: 0x9E9E9E, fontFamily: FONT_FAMILY,
-      });
-      claimedText.position.set(btnX, btnY + 10);
-      this._content.addChild(claimedText);
+      const t = new PIXI.Text('已领', { fontSize: 12, fill: 0x9E9E9E, fontFamily: FONT_FAMILY });
+      t.position.set(btnX, btnY);
+      parent.addChild(t);
     } else if (isComplete) {
       const btn = new PIXI.Graphics();
       btn.beginFill(0x4CAF50);
-      btn.drawRoundedRect(btnX, btnY, 88, 36, 18);
+      btn.drawRoundedRect(btnX, btnY, 84, 28, 14);
       btn.endFill();
-      this._content.addChild(btn);
+      parent.addChild(btn);
 
       const btnText = new PIXI.Text('领取', {
-        fontSize: 16, fill: 0xFFFFFF, fontFamily: FONT_FAMILY, fontWeight: 'bold',
+        fontSize: 14, fill: 0xffffff, fontFamily: FONT_FAMILY, fontWeight: 'bold',
       });
       btnText.anchor.set(0.5, 0.5);
-      btnText.position.set(btnX + 44, btnY + 18);
-      this._content.addChild(btnText);
+      btnText.position.set(btnX + 42, btnY + 14);
+      parent.addChild(btnText);
 
       const hit = new PIXI.Container();
-      hit.hitArea = new PIXI.Rectangle(btnX, btnY, 88, 36);
+      hit.hitArea = new PIXI.Rectangle(btnX, btnY, 84, 28);
       hit.eventMode = 'static';
       hit.cursor = 'pointer';
-      hit.on('pointerdown', () => {
-        QuestManager.claimQuest(quest.defId);
+      hit.on('pointerdown', (e: PIXI.FederatedPointerEvent) => {
+        e.stopPropagation();
+        QuestManager.claimDailyTask(quest.templateId);
         this._refresh();
       });
-      this._content.addChild(hit);
-    } else {
-      // 显示奖励预览
-      const rewardParts: string[] = [];
-      if (def.reward.gold) rewardParts.push(`💰${def.reward.gold}`);
-      if (def.reward.stamina) rewardParts.push(`💖${def.reward.stamina}`);
-      if (def.reward.diamond) rewardParts.push(`💎${def.reward.diamond}`);
-      const rewardText = new PIXI.Text(rewardParts.join(' '), {
-        fontSize: 12, fill: COLORS.TEXT_LIGHT, fontFamily: FONT_FAMILY,
-      });
-      rewardText.position.set(btnX, btnY + 10);
-      this._content.addChild(rewardText);
+      parent.addChild(hit);
     }
+
+    return y + rowH;
   }
 
-  // ====== 成就 Tab ======
+  private _drawWeeklyFooter(panelX: number, footerTop: number, panelW: number, footerH: number): void {
+    const padX = 20;
+    const wp = QuestManager.weeklyPoints;
+    const maxT = WEEKLY_MILESTONES[WEEKLY_MILESTONES.length - 1].threshold;
+    /** 底部区内「本周积分 / 小鸡条」整体再下移约 50（靠加高 footer + 自上而下排布） */
+    const weeklyBlockDropY = 50;
 
-  private _drawAchievementTab(panelX: number, startY: number, panelW: number, _height: number): void {
-    const achievements = QuestManager.achievements;
-    let y = startY + 10;
+    const barW = panelW - padX * 2;
+    const barX = panelX + padX;
 
-    for (const ach of achievements) {
-      const def = QuestManager.getAchievementDef(ach.defId);
-      if (!def) continue;
-
-      this._drawAchievementRow(panelX + 20, y, panelW - 40, ach, def);
-      y += 84;
-    }
-  }
-
-  private _drawAchievementRow(x: number, y: number, w: number, ach: any, def: any): void {
-    const nextTier = ach.claimedTier + 1;
-    const hasNextTier = nextTier < def.tiers.length;
-    const nextTarget = hasNextTier ? def.tiers[nextTier].target : def.tiers[def.tiers.length - 1].target;
-    const progress = Math.min(ach.current / nextTarget, 1);
-    const canClaim = hasNextTier && ach.current >= nextTarget;
-
-    // 背景
-    const bg = new PIXI.Graphics();
-    bg.beginFill(canClaim ? 0xFFF3E0 : 0xFFFFFF);
-    bg.drawRoundedRect(x, y, w, 72, 12);
-    bg.endFill();
-    bg.lineStyle(1, 0xEEEEEE);
-    bg.drawRoundedRect(x, y, w, 72, 12);
-    this._content.addChild(bg);
-
-    // 图标
-    const icon = new PIXI.Text(def.icon, { fontSize: 26, fontFamily: FONT_FAMILY });
-    icon.position.set(x + 14, y + 12);
-    this._content.addChild(icon);
-
-    // 名称 + 描述
-    const name = new PIXI.Text(`${def.name} (${ach.claimedTier + 1}/${def.tiers.length})`, {
-      fontSize: 15, fill: COLORS.TEXT_DARK, fontFamily: FONT_FAMILY, fontWeight: 'bold',
+    const cap = new PIXI.Text(`本周积分 ${wp} / ${maxT}`, {
+      fontSize: 13, fill: COLORS.TEXT_DARK, fontFamily: FONT_FAMILY, fontWeight: 'bold',
     });
-    name.position.set(x + 52, y + 10);
-    this._content.addChild(name);
+    cap.position.set(panelX + padX, footerTop + 6 + weeklyBlockDropY);
+    this._content.addChild(cap);
 
-    const desc = new PIXI.Text(`${def.desc}: ${ach.current}/${nextTarget}`, {
-      fontSize: 12, fill: COLORS.TEXT_LIGHT, fontFamily: FONT_FAMILY,
-    });
-    desc.position.set(x + 52, y + 32);
-    this._content.addChild(desc);
+    const countdownY = footerTop + footerH - 16;
 
-    // 进度条
-    const barX = x + 52;
-    const barY = y + 52;
-    const barW = w * 0.45;
-    const barH = 10;
-    const barBg = new PIXI.Graphics();
-    barBg.beginFill(0xE0E0E0);
-    barBg.drawRoundedRect(barX, barY, barW, barH, 5);
-    barBg.endFill();
-    this._content.addChild(barBg);
-
-    if (progress > 0) {
-      const fill = new PIXI.Graphics();
-      fill.beginFill(canClaim ? 0x4CAF50 : 0x2196F3);
-      fill.drawRoundedRect(barX, barY, barW * progress, barH, 5);
-      fill.endFill();
-      this._content.addChild(fill);
+    const railDecoTex = TextureCache.get('daily_challenge_weekly_rail_empty_nb2');
+    const railTopPreferred = footerTop + 58 + weeklyBlockDropY;
+    let railTop = railTopPreferred;
+    let railH = 56;
+    let railDrawX = barX;
+    let railDrawW = barW;
+    if (railDecoTex) {
+      const railUniformShrink = 0.86;
+      const sc = (barW / railDecoTex.width) * railUniformShrink;
+      railH = railDecoTex.height * sc;
+      railDrawW = railDecoTex.width * sc;
+      railDrawX = barX + (barW - railDrawW) / 2;
+      const railTopMax = countdownY - 10 - railH;
+      railTop = Math.min(railTopPreferred, railTopMax);
+      const deco = new PIXI.Sprite(railDecoTex);
+      deco.scale.set(sc);
+      deco.position.set(railDrawX, railTop);
+      deco.alpha = 0.92;
+      this._content.addChild(deco);
     }
 
-    // 领取按钮
-    if (canClaim) {
-      const btnX = x + w - 90;
-      const btnY = y + 18;
-      const btn = new PIXI.Graphics();
-      btn.beginFill(0x4CAF50);
-      btn.drawRoundedRect(btnX, btnY, 76, 34, 17);
-      btn.endFill();
-      this._content.addChild(btn);
+    const iconY = railTop + railH * 0.34;
 
-      const btnText = new PIXI.Text('领取', {
-        fontSize: 15, fill: 0xFFFFFF, fontFamily: FONT_FAMILY, fontWeight: 'bold',
-      });
-      btnText.anchor.set(0.5, 0.5);
-      btnText.position.set(btnX + 38, btnY + 17);
-      this._content.addChild(btnText);
+    const claimed = QuestManager.weeklyMilestonesClaimed;
+    for (const m of WEEKLY_MILESTONES) {
+      const ratio = m.threshold / maxT;
+      const cx = railDrawX + railDrawW * ratio;
+      const canClaim = wp >= m.threshold && !claimed.has(m.id);
+      const done = claimed.has(m.id);
 
-      const hit = new PIXI.Container();
-      hit.hitArea = new PIXI.Rectangle(btnX, btnY, 76, 34);
-      hit.eventMode = 'static';
-      hit.cursor = 'pointer';
-      hit.on('pointerdown', () => {
-        QuestManager.claimAchievement(ach.defId, nextTier);
-        this._refresh();
+      const emoji = new PIXI.Text(done ? '✓' : milestoneRewardEmoji(m.reward), {
+        fontSize: done ? 16 : 14, fontFamily: FONT_FAMILY, fill: done ? 0x43A047 : COLORS.TEXT_DARK,
       });
-      this._content.addChild(hit);
+      emoji.anchor.set(0.5, 0.5);
+      emoji.position.set(cx, iconY);
+      this._content.addChild(emoji);
+
+      if (canClaim) {
+        const hit = new PIXI.Container();
+        hit.hitArea = new PIXI.Rectangle(cx - 22, iconY - 16, 44, 52);
+        hit.eventMode = 'static';
+        hit.cursor = 'pointer';
+        hit.on('pointerdown', (e: PIXI.FederatedPointerEvent) => {
+          e.stopPropagation();
+          QuestManager.claimWeeklyMilestone(m.id);
+          this._refresh();
+        });
+        this._content.addChild(hit);
+      }
     }
+
+    const now = Date.now();
+    this._weeklyCountdownText = new PIXI.Text(
+      `本周进度 ${formatWeekRemain(getNextWeekResetTimeMs(new Date(now)) - now)} 后重置`,
+      { fontSize: 11, fill: COLORS.TEXT_LIGHT, fontFamily: FONT_FAMILY },
+    );
+    this._weeklyCountdownText.anchor.set(0.5, 0);
+    this._weeklyCountdownText.position.set(panelX + panelW / 2, countdownY);
+    this._content.addChild(this._weeklyCountdownText);
   }
 }

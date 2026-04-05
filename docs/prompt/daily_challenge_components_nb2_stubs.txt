@@ -1,0 +1,50 @@
+以下段落为后续分组件出图时可单独复制给 NB2 的英文正文草稿（非 API 文件）。已完成的底板见 daily_challenge_panel_shell_nb2_prompt.txt。
+
+--- COMPONENT A — PANEL SHELL (DONE) ---
+文件: daily_challenge_panel_shell_nb2_prompt.txt
+输出: ../game_assets/huahua/assets/raw/daily_challenge_panel_shell_nb2.png
+说明: 粉紫框 + 奶油底 + 顶栏黄标题牌 + 右上红关闭 + 秒表与倒计时胶囊；中间与底部大面积留白。
+
+--- COMPONENT B — MID BLUE TASK AREA PLATE (DONE) ---
+提示词: daily_challenge_ui_B_mid_plate_nb2_prompt.txt
+输出: ../game_assets/huahua/assets/raw/daily_challenge_ui_B_mid_plate_nb2.png
+
+--- COMPONENT C — 纯色空任务行底板（当前推荐，程序叠字与图标）---
+提示词: daily_challenge_ui_C_task_row_blank_nb2_prompt.txt
+输出: ../game_assets/huahua/assets/raw/daily_challenge_ui_C_task_row_blank_nb2.png
+说明: 仅圆角奶油矩形 + 可选极细描边；内部完全空，无任何装饰。
+
+--- COMPONENT C — 单条扁平任务行（含勾线与右侧小图标，归档）---
+提示词: daily_challenge_ui_C_task_row_single_flat_nb2_prompt.txt
+输出: ../game_assets/huahua/assets/raw/daily_challenge_ui_C_task_row_single_flat_nb2.png
+
+--- COMPONENT C 旧版 — 三态合一（归档）---
+提示词: daily_challenge_ui_C_task_rows_multistate_nb2_prompt.txt
+输出: ../game_assets/huahua/assets/raw/daily_challenge_ui_C_task_rows_multistate_nb2.png
+
+--- COMPONENT D — 周进度轨空槽 + 双小鸡（当前推荐）---
+提示词: daily_challenge_ui_D_weekly_rail_empty_nb2_prompt.txt
+输出: ../game_assets/huahua/assets/raw/daily_challenge_ui_D_weekly_rail_empty_nb2.png
+说明: 轨内无填充；轨上方无奖励图标。
+
+--- COMPONENT D 旧版（有填充与图标，归档）---
+提示词: daily_challenge_ui_D_weekly_rail_nb2_prompt.txt
+输出: ../game_assets/huahua/assets/raw/daily_challenge_ui_D_weekly_rail_nb2.png
+
+--- COMPONENT E — 丝带 + 空小条（当前推荐）---
+提示词: daily_challenge_ui_E_subheader_capsule_empty_bar_nb2_prompt.txt
+输出: ../game_assets/huahua/assets/raw/daily_challenge_ui_E_subheader_capsule_empty_bar_nb2.png
+说明: 小进度条内无蓝/青填充。
+
+--- COMPONENT E 旧版（有小填充，归档）---
+提示词: daily_challenge_ui_E_subheader_capsule_nb2_prompt.txt
+输出: ../game_assets/huahua/assets/raw/daily_challenge_ui_E_subheader_capsule_nb2.png
+
+--- 以下为最初英文草稿（归档），正式以各 *_nb2_prompt.txt 为准 ---
+Mobile game UI layer only, 9:16 friendly vertical rounded rectangle card zone. One large soft light-blue rounded panel with subtle inner shadow, empty center, no text, no icons, no list rows — just a clean placeholder plate that will sit below a timer row inside a cream modal. Pastel kawaii vector style, matches lilac-pink flower merge game. Transparent background OR solid magenta FF00FF outside the blue plate if you need chroma key. No characters, no watermark.
+
+One isolated horizontal task row asset on transparent background: left circular status badge (empty beige ring OR green check variant as separate export), center three faint gray placeholder lines (no readable text), right side small golden hex coin icon and tiny blank value pill, optional tiny generic leaf icon silhouette. Rounded light-beige card with soft shadow, cute merge-game UI. No full panel frame. No watermark.
+
+Horizontal UI strip on transparent background: taupe track, partial golden-yellow fill, two cute round yellow chick faces with red bows at left and right ends only, six small gold stud milestones along the bar, tiny floating reward silhouettes above some studs (gift, chest) with optional green check stickers — no digits, no letters. Kawaii 2D vector, pastel. No full phone frame.
+
+Small isolated horizontal element: thin pink ribbon banner above a short metallic-silver framed mini progress bar with light blue fill (decorative only), empty — no text. Transparent background. Same pastel cute game style.

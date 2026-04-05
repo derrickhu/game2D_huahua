@@ -2428,7 +2428,7 @@ export class ShopScene implements Scene {
 
     // 任务红点
     const questBtn = this._activityBtns.get('quest');
-    if (questBtn) questBtn.redDot.visible = QuestManager.hasClaimableQuest || QuestManager.hasClaimableAchievement;
+    if (questBtn) questBtn.redDot.visible = QuestManager.hasClaimableQuest;
 
     // 装修红点（有可购买的新装饰）
     const decoBtn = this._activityBtns.get('deco');

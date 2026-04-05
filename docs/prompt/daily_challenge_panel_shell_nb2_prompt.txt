@@ -1,0 +1,19 @@
+Single full-screen vertical mobile game UI asset, 9:16 aspect, one flattened illustration layer for a flower-shop merge game. High resolution, crisp anti-aliased vector edges.
+
+TECHNICAL BACKGROUND FOR CLEAN CUTOUT: ONLY the margins OUTSIDE the rounded modal must be pure bright screen green RGB exactly 0,255,0 (neon green), flat, no gradient. The modal itself including its inner content rectangle must contain ZERO neon green pixels.
+
+INNER CONTENT FIELD: the large central area inside the frame must be completely filled with one flat solid pastel pink color — soft baby pink or blush pink, same pastel family as the thin inner pink border, perfectly uniform matte fill, no texture, no pattern, no gradient, no transparency, no hole, no cutout. This pink field is OPAQUE painted content, not background green showing through.
+
+MAIN FRAME: large rounded-rectangle modal centered, very rounded corners. Thick outer border soft lilac lavender; thinner inner lip pastel pink. No outer drop shadow bleeding into the outside green. UI strokes must stay crisp against the outside green only.
+
+TOP: centered ornate golden-yellow scalloped title banner, empty center, no text.
+
+TOP-RIGHT: circular red close button with white X, slightly past the frame corner.
+
+BELOW BANNER: one wide empty rounded light-tan pill capsule only — no stopwatch, no clock icon, no digits.
+
+BOTTOM: the inner pastel pink field continues to the bottom inner edge — no yellow bar, no second strip.
+
+GOAL: decorative shell only — no task rows, no lists, no progress icons, no chicks, no chests.
+
+Art style: clean 2D vector mobile UI, pastel kawaii, gentle shading only on purple frame, pink lips, gold banner, red button, tan pill — never use neon green inside the modal. No photoreal, no watermark, no readable text or numbers.

@@ -1,0 +1,11 @@
+Mobile game UI asset, 9:16 vertical canvas, pastel kawaii merge flower-shop style.
+
+Exactly ONE single horizontal task row card centered in the frame. The card is a wide rounded rectangle with flat light-cream fill — completely flat graphic design: NO inner shadow, NO bevel, NO emboss, NO wood grain, NO decorative patterns on the card body. Optional single-pixel-thin soft tan outline is allowed, but NO thick brown frame, NO drop shadow on the outer shape, NO glossy plastic rim.
+
+Left: mint-green circle with bold white checkmark.
+
+Center: three horizontal placeholder bars for text — each bar must be an EMPTY outline only (soft gray stroke, hollow inside, no solid gray fill), rounded caps, evenly stacked.
+
+Right: small golden hex coin icon, tiny empty cream pill, small green leaf with sparkles — keep these cute and flat, minimal shading.
+
+Background: solid flat magenta FF00FF only outside the one card. No second or third row, no panel chrome, no title, no watermark, no readable text, no photoreal.

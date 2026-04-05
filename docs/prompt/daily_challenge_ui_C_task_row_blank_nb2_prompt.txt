@@ -1,0 +1,9 @@
+Mobile game UI asset, 9:16 vertical canvas, pastel kawaii merge flower-shop style.
+
+Exactly ONE single horizontal rounded-rectangle card centered in the frame. The card interior is one flat solid light-cream color only — no gradient, no inner shadow, no emboss, no texture, no pattern.
+
+A very thin soft tan or light-brown stroke outline around the rounded rectangle is allowed. Absolutely NO drop shadow outside the card shape.
+
+CRITICAL EMPTY INTERIOR: inside the cream rectangle there must be NOTHING — no checkmark, no circles, no coins, no leaves, no sparkles, no stars, no gray lines, no placeholder bars, no pills, no text, no icons, no UI widgets at all. Only the uniform cream fill.
+
+Background: solid flat magenta FF00FF everywhere outside the one rounded rectangle. No second card, no panel chrome, no title, no watermark, no readable characters, no photoreal.

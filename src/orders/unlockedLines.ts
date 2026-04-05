@@ -6,7 +6,7 @@ import {
   findBoardProducerDef,
   boardProducerOutputsProductLine,
 } from '@/config/BuildingConfig';
-import { Category, FlowerLine, ToolLine } from '@/config/ItemConfig';
+import { Category, DrinkLine, FlowerLine, ToolLine } from '@/config/ItemConfig';
 import type { UnlockedLines } from '@/config/OrderTierConfig';
 
 export interface OrderBoardCell {
@@ -22,6 +22,7 @@ export function computeUnlockedLines(cells: readonly OrderBoardCell[]): Unlocked
   let hasGreen = false;
   let hasDrink = false;
   const drinkLinesOnBoard = new Set<string>();
+  const drinkToolMaxByLine: Partial<Record<DrinkLine, number>> = {};
 
   for (const c of cells) {
     if (c.state !== CellState.OPEN || !c.itemId) continue;
@@ -45,6 +46,8 @@ export function computeUnlockedLines(cells: readonly OrderBoardCell[]): Unlocked
       hasDrink = true;
       maxDrinkToolLevel = Math.max(maxDrinkToolLevel, def.level);
       drinkLinesOnBoard.add(def.produceLine);
+      const dl = def.produceLine as DrinkLine;
+      drinkToolMaxByLine[dl] = Math.max(drinkToolMaxByLine[dl] ?? 0, def.level);
     }
   }
 
@@ -60,6 +63,7 @@ export function computeUnlockedLines(cells: readonly OrderBoardCell[]): Unlocked
     maxPlantToolLevel,
     maxArrangeToolLevel,
     maxDrinkToolLevel,
+    drinkToolMaxByLine,
     unlockedLineCount,
   };
 }

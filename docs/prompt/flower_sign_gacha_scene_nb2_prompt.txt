@@ -1,13 +1,22 @@
-Optional **single-file** composite (fallback when split layers are absent). Prefer **`flower_sign_gacha_bg_nb2` + `flower_sign_gacha_npc_nb2`** prompts for title ribbon + layered art in code.
+Vertical 9:16 mobile game **one transparent-matte PNG prop cluster** — **same production quality as a premium “woven basket warehouse” popup**: **painterly 2.5D depth**, soft bevels, **highlights on bumps** and **soft shadows in crevices**, **corner florals that sit “on top”** with a slight cast shadow — **NOT** a flat paper cutout, **NOT** thin sticker cel only.
 
-Vertical 9:16 mobile game wish-fountain POPUP SCENE — **bright, sunny, cheerful daytime**, high-key lighting, happy mood. **NOT** gloomy dusk, NOT night, NOT heavy shadows, NOT moody blue-gray grading, NOT cinematic darkness.
+COMPOSITION — **match the divination-popup proportions** (replace subjects only):
+- **Upper ~half (~48–55% height of the painted mass)**: **flower fairy** + **tall rear garden frame** (replaces throne back). The **top of wings, hair flowers, and arch crown** may **break upward** past an imaginary title strip — same “pops out of the mask” read as the reference hood/chair top.
+- **Lower ~half (~45–52%)**: **large round wishing fountain** dominates the foreground (replaces the round table + glowing focal object). **Thick mossy stone rim** bulges toward the viewer; **bright turquoise** water; **center** = **soft glowing pink lotus** (gentle bloom light toward the fairy’s face — **NOT** neon green).
+- **Fairy** centered between rear frame and pool, **hands lifted toward the glow** like the diviner toward the ball. **SD super-Q**, warm eyes, elf ears, **petal dress**, **big translucent mint wings** spread wide.
 
-ART STYLE — MATCH SHOPKEEPER / OWNER CHIBI (merge NPC): Same family as a **2D merge-casual shop owner sprite**: **SD super-Q** flower fairy (~2–2.5 heads), **warm brown soft outlines**, **flat to gently cel-shaded** color fills, **minimal 3D sculpt or PBR** — **NO** pseudo-realistic skin shading, **NO** strong rim light sculpture, **NO** anime-cinematic volume painting. Big friendly eyes with simple highlights; short limbs if full body visible; pastel mint, pink, cream, soft yellow. Cohesive **flat illustration** readable at phone size.
+WAREHOUSE-LIKE RENDERING (theme = garden, volume = basket panel):
+- **Stone well**: chunky blocks with **rounded edges**, **warm gray** with **sunlit highlights** and **cool violet-gray** in recesses; **moss** in cracks as **soft fuzzy pillows** with tiny highlight dots.
+- **Rear arch**: **thick braided / rope-like vines** (read as **woven wicker energy**), **not** a flat lattice grid; **clusters of pink roses + white buds** at upper sides like **warehouse corner flowers** — petals with **soft gradient** and **micro shadow** on the vine behind.
+- Optional **large satin-style ribbon bows** in **peach-pink** tucked at **lower left/right** near the fountain rim (same decorative role as warehouse bottom bows) — **fold highlights**, **soft shadow** on stone.
+- **Water**: glossy **turquoise** with **specular sparkles**; **gold four-point stars**; gentle ripples.
 
-BUILT-IN TITLE ZONE (no red ribbon, no separate banner asset): In the **upper 18–22%** of the frame, paint a **lush floral title frame** — roses, peonies, cherry blossoms, small leaves and vines, maybe tiny butterflies — forming a **gentle arch or garland** around a **clear, calm center pocket** (pale sky-blue, soft cream, or very light mint) where game text will sit. The center pocket must stay **uncluttered** and **legible** (no busy petals crossing the middle). **Do NOT** draw a red satin ribbon banner; the decoration is **only flowers and greenery**.
+PALETTE — **Bright, saturated-casual** garden colors (clear pink, mint, coral, aqua, butter) — **NOT** gloomy navy/purple night, **NOT** muddy brown grading.
 
-SCENE LAYOUT: Slightly low player POV. **Foreground**: large round stone fountain rim + bright turquoise water, cheerful sparkles, **soft daylight specular** (subtle). **Center magic**: glowing lotus or blossom on the water — **light, airy glow**, not horror/contrast pool. **Mid**: flower fairy **behind** the fountain, **facing the camera**, welcoming hands toward the glow. **Background**: **sunny** garden — green hills, fluffy trees, maybe a tiny distant cottage — **airy atmospheric perspective**, light bokeh, **warm sun** from upper-left, sky **clear pastel blue** with a few soft clouds.
+SILHOUETTE — **Irregular**; wings, roses, and fountain rim break past a vertical card box. **Generous #FF00FF magenta** elsewhere.
 
-FORBIDDEN: red title ribbon, rectangular UI frame, photoreal CGI, oil painting, 5-head fashion body, night scene, desaturated grim palette, thick black manga ink only.
+**NO TITLE / NO UI** — no banner, Chinese text, moon/stars icons, buttons.
 
-MATTING: Flat **#FF00FF** magenta only outside the painted world to all edges; no white; no magenta bleed stripe along bottom — blend bottom into stone/water. All halos and sky painted opaque on key. NO text, NO watermark, NO buttons in art. Bottom ~20% slightly calmer stone/water for real UI buttons.
+FORBIDDEN: chair, throne, tablecloth, crystal ball, hooded mage, photoreal photo, **pure white (#FFFFFF) outline ring**, **gray sticker halo**, **black** backdrop, harsh black comic ink around the **outer** silhouette.
+
+MATTING: **#FF00FF** magenta only outside. The **outer edge** must be **colored pigment or soft mid-tone fringe blending into magenta** — **never** a continuous **white or near-white stroke** tracing the whole cluster. NO watermark.

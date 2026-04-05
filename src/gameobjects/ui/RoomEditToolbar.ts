@@ -8,7 +8,11 @@ import * as PIXI from 'pixi.js';
 import { EventBus } from '@/core/EventBus';
 import { ToastMessage } from '@/gameobjects/ui/ToastMessage';
 import { TweenManager, Ease } from '@/core/TweenManager';
-import { RoomLayoutManager } from '@/managers/RoomLayoutManager';
+import {
+  RoomLayoutManager,
+  FURNITURE_PLACEMENT_SCALE_MIN,
+  FURNITURE_PLACEMENT_SCALE_MAX,
+} from '@/managers/RoomLayoutManager';
 import { FurnitureDragSystem } from '@/systems/FurnitureDragSystem';
 import { DECO_MAP } from '@/config/DecorationConfig';
 import { FONT_FAMILY, COLORS } from '@/config/Constants';
@@ -214,7 +218,10 @@ export class RoomEditToolbar extends PIXI.Container {
     const placement = RoomLayoutManager.getPlacement(this._currentDecoId);
     if (!placement) return;
 
-    const newScale = Math.max(0.1, Math.min(2.0, placement.scale + delta));
+    const newScale = Math.max(
+      FURNITURE_PLACEMENT_SCALE_MIN,
+      Math.min(FURNITURE_PLACEMENT_SCALE_MAX, placement.scale + delta),
+    );
     RoomLayoutManager.scaleFurniture(this._currentDecoId, newScale);
 
     // roomlayout:updated 事件已由 RoomLayoutManager 内部发射

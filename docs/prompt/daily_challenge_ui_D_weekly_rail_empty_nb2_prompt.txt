@@ -1,0 +1,11 @@
+Mobile game UI asset, 16:9 horizontal canvas, pastel kawaii merge flower-shop style.
+
+One wide weekly progress strip centered. Outer capsule container in warm dark taupe-brown with very subtle flat shading only — keep cute but avoid heavy 3D bevel.
+
+CRITICAL: the inner track must show ZERO progress fill — completely empty track, no yellow bar, no gold fill, no colored progress blob, only the empty groove or muted empty lane.
+
+CRITICAL: absolutely NO icons floating above the track — no coins, no gift boxes, no chests, no check badges, no milestone pictures above the bar.
+
+Keep only: the empty track inside the capsule, and at the far left and far right ends the two cute round yellow chick faces with small red heart bows (same style as before). Small round gold stud dots along the track are allowed as bare milestone markers only if they sit ON the track line, not as separate reward icons above.
+
+Background: solid flat magenta FF00FF outside the strip. No full phone UI, no text, no digits, no watermark, no photoreal.

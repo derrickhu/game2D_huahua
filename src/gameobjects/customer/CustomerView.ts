@@ -211,7 +211,6 @@ export class CustomerView extends PIXI.Container {
     this._clearCompleteBtn();
     this._clearRewardBadge();
     this._clearTierBadge();
-    this._clearOrderKindBadge();
     if (!this._customer) return;
 
     const allDone = this._customer.allSatisfied && this._queueIndex < CustomerManager.maxCustomers;
@@ -219,9 +218,8 @@ export class CustomerView extends PIXI.Container {
     // 奖励徽章（头像底部；花愿与交付到账一致）
     this._buildRewardBadge();
 
-    // 档位角标（需求面板左上角小圆标）+ 组合/成长标签
+    // 档位角标（需求面板左上角小圆标）
     this._buildTierBadge();
-    this._buildOrderKindBadge();
 
     // 需求面板单独居中（宽度不含完成按钮）
     const panelLeft = -PANEL_W / 2;
@@ -377,54 +375,6 @@ export class CustomerView extends PIXI.Container {
       if (this._tierBadge.parent) this._tierBadge.parent.removeChild(this._tierBadge);
       this._tierBadge.destroy({ children: true });
       this._tierBadge = null;
-    }
-  }
-
-  private _orderKindBadge: PIXI.Container | null = null;
-
-  private _buildOrderKindBadge(): void {
-    this._clearOrderKindBadge();
-    if (!this._customer) return;
-    const kind = this._customer.orderKind;
-    const label =
-      kind === 'combo' ? '组合' : kind === 'growth' ? '成长' : '';
-    if (!label) return;
-
-    const padX = 5;
-    const padY = 2;
-    const txt = new PIXI.Text(label, {
-      fontSize: 10,
-      fill: 0x5d4a35,
-      fontFamily: FONT_FAMILY,
-      fontWeight: 'bold',
-    });
-    txt.anchor.set(0, 0.5);
-    const bw = txt.width + padX * 2;
-    const bh = Math.max(16, txt.height + padY * 2);
-
-    const badge = new PIXI.Container();
-    const bg = new PIXI.Graphics();
-    bg.beginFill(kind === 'combo' ? 0xe8d4f0 : 0xd4e8f0, 0.92);
-    bg.lineStyle(1, kind === 'combo' ? 0x9b7aa8 : 0x6a9bb0, 0.55);
-    bg.drawRoundedRect(0, -bh / 2, bw, bh, 6);
-    bg.endFill();
-    badge.addChild(bg);
-    txt.position.set(padX, 0);
-    badge.addChild(txt);
-
-    const tierR = 11;
-    badge.position.set(-PANEL_W / 2 + tierR * 2 + 10, PANEL_Y - tierR - 2);
-    badge.zIndex = 10;
-    badge.eventMode = 'none';
-    this.addChild(badge);
-    this._orderKindBadge = badge;
-  }
-
-  private _clearOrderKindBadge(): void {
-    if (this._orderKindBadge) {
-      if (this._orderKindBadge.parent) this._orderKindBadge.parent.removeChild(this._orderKindBadge);
-      this._orderKindBadge.destroy({ children: true });
-      this._orderKindBadge = null;
     }
   }
 

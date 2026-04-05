@@ -1,175 +1,123 @@
 /**
- * 每日任务 + 成就系统
+ * 每日挑战 + 周积分里程碑（无成就系统）
  *
- * 每日任务：每天刷新3个简单目标，完成获得奖励
- * 成就系统：永久进度里程碑，解锁时发放大额奖励
+ * 每日：本地每天 05:00 刷新，约 16 条梯度任务。
+ * 周：每周一本地 05:00 重置周积分与里程碑领取状态。
  */
 import { EventBus } from '@/core/EventBus';
 import { CurrencyManager } from './CurrencyManager';
+import { RewardBoxManager } from './RewardBoxManager';
+import { SaveManager } from './SaveManager';
+import {
+  DAILY_QUEST_TEMPLATES,
+  WEEKLY_MILESTONES,
+  describeDailyQuest,
+  getDailyQuestTemplate,
+  seededShuffle,
+  type DailyChallengeReward,
+  type DailyQuestKind,
+  type DailyQuestTemplate,
+} from '@/config/DailyChallengeConfig';
+import { getDailyQuestPeriodIdLocal, getWeekIdLocal } from '@/utils/WeeklyCycle';
+import { ITEM_DEFS } from '@/config/ItemConfig';
 
 declare const wx: any;
 declare const tt: any;
 const _api = typeof wx !== 'undefined' ? wx : typeof tt !== 'undefined' ? tt : null;
 
 const QUEST_STORAGE_KEY = 'huahua_quests';
+const SAVE_VERSION = 2;
 
-// ====== 每日任务定义 ======
-
-export interface QuestDef {
-  id: string;
-  name: string;
-  desc: string;
-  target: number;
-  /** 监听的事件名 */
-  event: string;
-  reward: { huayuan?: number; stamina?: number; diamond?: number };
-}
-
-/** 每日任务池（随机选取3个） */
-const QUEST_POOL: QuestDef[] = [
-  { id: 'merge_3', name: '合成新手', desc: '完成3次合成', target: 3, event: 'board:merged', reward: { diamond: 5 } },
-  { id: 'merge_5', name: '合成达人', desc: '完成5次合成', target: 5, event: 'board:merged', reward: { diamond: 8 } },
-  { id: 'merge_10', name: '合成大师', desc: '完成10次合成', target: 10, event: 'board:merged', reward: { diamond: 12 } },
-  { id: 'deliver_1', name: '客似云来', desc: '交付1位客人', target: 1, event: 'customer:delivered', reward: { diamond: 6 } },
-  { id: 'deliver_2', name: '人气花店', desc: '交付2位客人', target: 2, event: 'customer:delivered', reward: { diamond: 10 } },
-  { id: 'building_2', name: '勤劳花匠', desc: '使用建筑产出2次', target: 2, event: 'building:produced', reward: { stamina: 20 } },
-  { id: 'building_5', name: '产出大师', desc: '使用建筑产出5次', target: 5, event: 'building:produced', reward: { diamond: 8, stamina: 10 } },
-  { id: 'unlock_1', name: '探索之路', desc: '解锁1个新格子', target: 1, event: 'board:cellUnlocked', reward: { diamond: 5 } },
-  { id: 'sell_1', name: '精明店主', desc: '出售1个物品', target: 1, event: 'board:itemSold', reward: { diamond: 3 } },
-];
-
-// ====== 成就定义 ======
-
-export interface AchievementDef {
-  id: string;
-  name: string;
-  desc: string;
-  icon: string;
-  tiers: { target: number; reward: { huayuan?: number; diamond?: number } }[];
-  /** 累计统计的事件名 */
-  event: string;
-}
-
-const ACHIEVEMENT_DEFS: AchievementDef[] = [
-  {
-    id: 'total_merge',
-    name: '合成大师',
-    desc: '累计合成次数',
-    icon: '🔨',
-    tiers: [
-      { target: 10, reward: { diamond: 8 } },
-      { target: 50, reward: { diamond: 18 } },
-      { target: 200, reward: { diamond: 35 } },
-      { target: 500, reward: { diamond: 55 } },
-      { target: 2000, reward: { diamond: 90 } },
-    ],
-    event: 'board:merged',
-  },
-  {
-    id: 'total_deliver',
-    name: '人气店主',
-    desc: '累计交付客人',
-    icon: '👥',
-    tiers: [
-      { target: 5, reward: { diamond: 8 } },
-      { target: 20, reward: { diamond: 18 } },
-      { target: 50, reward: { diamond: 35 } },
-      { target: 200, reward: { diamond: 55 } },
-      { target: 1000, reward: { diamond: 100 } },
-    ],
-    event: 'customer:delivered',
-  },
-  {
-    id: 'total_unlock',
-    name: '探索先锋',
-    desc: '累计解锁格子数',
-    icon: '🗺️',
-    tiers: [
-      { target: 5, reward: { diamond: 8 } },
-      { target: 15, reward: { diamond: 20 } },
-      { target: 30, reward: { diamond: 40 } },
-    ],
-    event: 'board:cellUnlocked',
-  },
-  {
-    id: 'total_huayuan',
-    name: '商业奇才',
-    desc: '累计获得花愿',
-    icon: '💰',
-    tiers: [
-      { target: 500, reward: { diamond: 5 } },
-      { target: 2000, reward: { diamond: 10 } },
-      { target: 10000, reward: { diamond: 30 } },
-    ],
-    event: 'quest:huayuanEarned',
-  },
-];
-
-// ====== 运行时状态 ======
-
-export interface QuestProgress {
-  defId: string;
+export interface DailyQuestRuntime {
+  templateId: string;
   current: number;
   claimed: boolean;
 }
 
-export interface AchievementProgress {
-  defId: string;
-  current: number;
-  /** 已领取的最高阶 tier index (-1 = 未领取) */
-  claimedTier: number;
-}
-
-interface QuestSaveData {
-  date: string;
-  quests: QuestProgress[];
-  achievements: AchievementProgress[];
-}
-
 class QuestManagerClass {
-  private _dailyQuests: QuestProgress[] = [];
-  private _achievements: AchievementProgress[] = [];
-  private _todayDate = '';
+  private _dailyLocalDate = '';
+  private _dailyTasks: DailyQuestRuntime[] = [];
+  private _weekId = '';
+  private _weeklyPoints = 0;
+  private _weeklyMilestonesClaimed = new Set<string>();
   private _initialized = false;
 
-  get dailyQuests(): readonly QuestProgress[] { return this._dailyQuests; }
-  get achievements(): readonly AchievementProgress[] { return this._achievements; }
-
-  /** 获取任务定义 */
-  getQuestDef(defId: string): QuestDef | undefined {
-    return QUEST_POOL.find(q => q.id === defId);
+  get dailyTasks(): readonly DailyQuestRuntime[] {
+    return this._dailyTasks;
   }
 
-  /** 获取成就定义 */
-  getAchievementDef(defId: string): AchievementDef | undefined {
-    return ACHIEVEMENT_DEFS.find(a => a.id === defId);
+  get weeklyPoints(): number {
+    return this._weeklyPoints;
   }
 
-  /** 所有成就定义 */
-  get allAchievementDefs(): readonly AchievementDef[] { return ACHIEVEMENT_DEFS; }
+  get weekId(): string {
+    return this._weekId;
+  }
+
+  get weeklyMilestonesClaimed(): ReadonlySet<string> {
+    return this._weeklyMilestonesClaimed;
+  }
+
+  getTemplate(id: string): DailyQuestTemplate | undefined {
+    return getDailyQuestTemplate(id);
+  }
+
+  describeTemplate(t: DailyQuestTemplate): string {
+    return describeDailyQuest(t);
+  }
+
+  get weeklyMilestoneDefs() {
+    return WEEKLY_MILESTONES;
+  }
 
   init(): void {
     if (this._initialized) return;
     this._initialized = true;
-
     this._loadState();
     this._bindEvents();
   }
 
-  /** 检查每日任务是否需要刷新 */
+  private _bindEvents(): void {
+    EventBus.on('board:merged', () => {
+      this._incrementKind('merge', 1);
+    });
+    EventBus.on('customer:delivered', () => {
+      this._incrementKind('deliver', 1);
+    });
+    EventBus.on('quest:huayuanEarned', (amount: number) => {
+      this._incrementKind('huayuan', Math.max(0, Math.floor(amount)));
+    });
+    EventBus.on('quest:diamondSpent', (amount: number) => {
+      this._incrementKind('diamond', Math.max(0, Math.floor(amount)));
+    });
+  }
+
+  private _checkWeekRollover(): void {
+    const wid = getWeekIdLocal();
+    if (this._weekId && this._weekId !== wid) {
+      this._weekId = wid;
+      this._weeklyPoints = 0;
+      this._weeklyMilestonesClaimed.clear();
+      this._save();
+      EventBus.emit('quest:weekReset');
+    } else if (!this._weekId) {
+      this._weekId = wid;
+      this._save();
+    }
+  }
+
   private _checkDailyRefresh(): void {
-    const today = new Date().toISOString().slice(0, 10);
-    if (this._todayDate !== today) {
-      this._todayDate = today;
+    const periodId = getDailyQuestPeriodIdLocal();
+    if (this._dailyLocalDate !== periodId) {
+      this._dailyLocalDate = periodId;
       this._generateDailyQuests();
     }
   }
 
-  /** 随机生成3个每日任务 */
   private _generateDailyQuests(): void {
-    const shuffled = [...QUEST_POOL].sort(() => Math.random() - 0.5);
-    this._dailyQuests = shuffled.slice(0, 3).map(def => ({
-      defId: def.id,
+    const order = seededShuffle(DAILY_QUEST_TEMPLATES, this._dailyLocalDate);
+    this._dailyTasks = order.map(t => ({
+      templateId: t.id,
       current: 0,
       claimed: false,
     }));
@@ -177,55 +125,22 @@ class QuestManagerClass {
     EventBus.emit('quest:refreshed');
   }
 
-  /** 绑定游戏事件监听 */
-  private _bindEvents(): void {
-    // 合成事件
-    EventBus.on('board:merged', () => {
-      this._incrementQuest('board:merged');
-      this._incrementAchievement('board:merged');
-    });
-
-    // 客人交付
-    EventBus.on('customer:delivered', () => {
-      this._incrementQuest('customer:delivered');
-      this._incrementAchievement('customer:delivered');
-    });
-
-    // 建筑产出
-    EventBus.on('building:produced', () => {
-      this._incrementQuest('building:produced');
-    });
-
-    // 格子解锁
-    EventBus.on('board:cellUnlocked', () => {
-      this._incrementQuest('board:cellUnlocked');
-      this._incrementAchievement('board:cellUnlocked');
-    });
-
-    // 物品出售
-    EventBus.on('board:itemSold', () => {
-      this._incrementQuest('board:itemSold');
-    });
-
-    // 累计花愿获得（用于成就「商业奇才」）
-    EventBus.on('quest:huayuanEarned', (amount: number) => {
-      this._incrementAchievementBy('quest:huayuanEarned', amount);
-    });
-  }
-
-  /** 递增每日任务进度 */
-  private _incrementQuest(eventName: string): void {
+  private _incrementKind(kind: DailyQuestKind, delta: number): void {
+    if (delta <= 0) return;
+    this._checkWeekRollover();
     this._checkDailyRefresh();
 
     let updated = false;
-    for (const quest of this._dailyQuests) {
-      const def = this.getQuestDef(quest.defId);
-      if (!def || def.event !== eventName) continue;
-      if (quest.claimed) continue;
-      quest.current = Math.min(quest.current + 1, def.target);
-      updated = true;
-      if (quest.current >= def.target) {
-        EventBus.emit('quest:taskCompleted', quest.defId);
+    for (const q of this._dailyTasks) {
+      const def = getDailyQuestTemplate(q.templateId);
+      if (!def || def.kind !== kind || q.claimed) continue;
+      const next = Math.min(q.current + delta, def.target);
+      if (next !== q.current) {
+        q.current = next;
+        updated = true;
+        if (q.current >= def.target) {
+          EventBus.emit('quest:taskCompleted', q.templateId);
+        }
       }
     }
 
@@ -235,102 +150,84 @@ class QuestManagerClass {
     }
   }
 
-  /** 递增成就进度（+1） */
-  private _incrementAchievement(eventName: string): void {
-    this._incrementAchievementBy(eventName, 1);
-  }
-
-  /** 递增成就进度（指定增量） */
-  private _incrementAchievementBy(eventName: string, amount: number): void {
-    let updated = false;
-    for (const ach of this._achievements) {
-      const def = this.getAchievementDef(ach.defId);
-      if (!def || def.event !== eventName) continue;
-      ach.current += amount;
-      updated = true;
-      this._checkAchievementTiers(ach);
-    }
-
-    if (updated) {
-      this._save();
-      EventBus.emit('achievement:updated');
+  private _applyInstantReward(r: DailyChallengeReward): void {
+    if (r.huayuan) CurrencyManager.addHuayuan(r.huayuan);
+    if (r.stamina) CurrencyManager.addStamina(r.stamina);
+    if (r.diamond) CurrencyManager.addDiamond(r.diamond);
+    if (r.itemId && r.itemCount && ITEM_DEFS.has(r.itemId)) {
+      RewardBoxManager.addItem(r.itemId, r.itemCount);
     }
   }
 
-  /** 检查成就阶梯是否达标 */
-  private _checkAchievementTiers(ach: AchievementProgress): void {
-    const def = this.getAchievementDef(ach.defId);
-    if (!def) return;
-
-    for (let i = ach.claimedTier + 1; i < def.tiers.length; i++) {
-      if (ach.current >= def.tiers[i].target) {
-        EventBus.emit('achievement:unlocked', ach.defId, i);
-      }
-    }
-  }
-
-  /** 领取每日任务奖励 */
-  claimQuest(defId: string): boolean {
-    const quest = this._dailyQuests.find(q => q.defId === defId);
-    const def = this.getQuestDef(defId);
-    if (!quest || !def) return false;
-    if (quest.current < def.target || quest.claimed) return false;
-
-    quest.claimed = true;
-    if (def.reward.huayuan) CurrencyManager.addHuayuan(def.reward.huayuan);
-    if (def.reward.stamina) CurrencyManager.addStamina(def.reward.stamina);
-    if (def.reward.diamond) CurrencyManager.addDiamond(def.reward.diamond);
-
-    this._save();
-    EventBus.emit('quest:claimed', defId);
-    return true;
-  }
-
-  /** 领取成就阶梯奖励 */
-  claimAchievement(defId: string, tierIndex: number): boolean {
-    const ach = this._achievements.find(a => a.defId === defId);
-    const def = this.getAchievementDef(defId);
-    if (!ach || !def) return false;
-    if (tierIndex > ach.claimedTier + 1) return false; // 必须按顺序领
-    if (tierIndex !== ach.claimedTier + 1) return false;
-    if (ach.current < def.tiers[tierIndex].target) return false;
-
-    const reward = def.tiers[tierIndex].reward;
-    if (reward.huayuan) CurrencyManager.addHuayuan(reward.huayuan);
-    if (reward.diamond) CurrencyManager.addDiamond(reward.diamond);
-
-    ach.claimedTier = tierIndex;
-    this._save();
-    EventBus.emit('achievement:claimed', defId, tierIndex);
-    return true;
-  }
-
-  /** 是否有可领取的每日任务 */
-  get hasClaimableQuest(): boolean {
+  /** 领取单条每日挑战奖励（含注入周积分） */
+  claimDailyTask(templateId: string): boolean {
+    this._checkWeekRollover();
     this._checkDailyRefresh();
-    return this._dailyQuests.some(q => {
-      const def = this.getQuestDef(q.defId);
-      return def && q.current >= def.target && !q.claimed;
+
+    const q = this._dailyTasks.find(t => t.templateId === templateId);
+    const def = getDailyQuestTemplate(templateId);
+    if (!q || !def || q.claimed || q.current < def.target) return false;
+
+    q.claimed = true;
+    this._applyInstantReward(def.reward);
+    this._weeklyPoints += def.weeklyPoints;
+
+    this._save();
+    SaveManager.save();
+    EventBus.emit('quest:claimed', templateId);
+    EventBus.emit('quest:updated');
+    return true;
+  }
+
+  claimWeeklyMilestone(milestoneId: string): boolean {
+    this._checkWeekRollover();
+
+    const m = WEEKLY_MILESTONES.find(x => x.id === milestoneId);
+    if (!m || this._weeklyMilestonesClaimed.has(milestoneId)) return false;
+    if (this._weeklyPoints < m.threshold) return false;
+
+    this._weeklyMilestonesClaimed.add(milestoneId);
+    this._applyInstantReward(m.reward);
+    this._save();
+    SaveManager.save();
+    EventBus.emit('quest:weeklyMilestoneClaimed', milestoneId);
+    EventBus.emit('quest:updated');
+    return true;
+  }
+
+  get hasClaimableDaily(): boolean {
+    this._checkWeekRollover();
+    this._checkDailyRefresh();
+    return this._dailyTasks.some(q => {
+      const def = getDailyQuestTemplate(q.templateId);
+      return def && !q.claimed && q.current >= def.target;
     });
   }
 
-  /** 是否有可领取的成就 */
-  get hasClaimableAchievement(): boolean {
-    return this._achievements.some(ach => {
-      const def = this.getAchievementDef(ach.defId);
-      if (!def) return false;
-      const nextTier = ach.claimedTier + 1;
-      return nextTier < def.tiers.length && ach.current >= def.tiers[nextTier].target;
-    });
+  get hasClaimableWeeklyMilestone(): boolean {
+    this._checkWeekRollover();
+    for (const m of WEEKLY_MILESTONES) {
+      if (this._weeklyMilestonesClaimed.has(m.id)) continue;
+      if (this._weeklyPoints >= m.threshold) return true;
+    }
+    return false;
+  }
+
+  /** 红点：每日可领或周里程碑可领 */
+  get hasClaimableQuest(): boolean {
+    return this.hasClaimableDaily || this.hasClaimableWeeklyMilestone;
   }
 
   // ====== 存档 ======
 
   private _save(): void {
-    const data: QuestSaveData = {
-      date: this._todayDate,
-      quests: [...this._dailyQuests],
-      achievements: [...this._achievements],
+    const data = {
+      version: SAVE_VERSION,
+      dailyLocalDate: this._dailyLocalDate,
+      dailyTasks: this._dailyTasks.map(t => ({ ...t })),
+      weekId: this._weekId,
+      weeklyPoints: this._weeklyPoints,
+      weeklyMilestonesClaimed: [...this._weeklyMilestonesClaimed],
     };
     try {
       _api?.setStorageSync(QUEST_STORAGE_KEY, JSON.stringify(data));
@@ -341,30 +238,32 @@ class QuestManagerClass {
     try {
       const raw = _api?.getStorageSync(QUEST_STORAGE_KEY);
       if (raw) {
-        const data: QuestSaveData = JSON.parse(raw);
-        this._todayDate = data.date || '';
-        this._dailyQuests = (data.quests || []).filter(q => !!this.getQuestDef(q.defId));
-        this._achievements = (data.achievements || []).filter(a =>
-          ACHIEVEMENT_DEFS.some(d => d.id === a.defId),
-        );
+        const data = JSON.parse(raw);
+        if (data.version === SAVE_VERSION && data.dailyTasks?.length) {
+          this._dailyLocalDate = data.dailyLocalDate || '';
+          this._dailyTasks = (data.dailyTasks || [])
+            .filter((q: DailyQuestRuntime) => getDailyQuestTemplate(q.templateId))
+            .map((q: DailyQuestRuntime) => ({
+              templateId: q.templateId,
+              current: Math.max(0, q.current | 0),
+              claimed: !!q.claimed,
+            }));
+          this._weekId = data.weekId || '';
+          this._weeklyPoints = Math.max(0, data.weeklyPoints | 0);
+          this._weeklyMilestonesClaimed = new Set(data.weeklyMilestonesClaimed || []);
+        }
       }
     } catch (_) {}
 
-    const today = new Date().toISOString().slice(0, 10);
-    if (this._dailyQuests.length === 0 && this._todayDate === today) {
-      this._todayDate = today;
+    this._checkWeekRollover();
+    const periodId = getDailyQuestPeriodIdLocal();
+
+    if (this._dailyTasks.length === 0) {
+      this._dailyLocalDate = periodId;
       this._generateDailyQuests();
+    } else {
+      this._checkDailyRefresh();
     }
-
-    // 确保所有成就都有进度记录
-    for (const def of ACHIEVEMENT_DEFS) {
-      if (!this._achievements.find(a => a.defId === def.id)) {
-        this._achievements.push({ defId: def.id, current: 0, claimedTier: -1 });
-      }
-    }
-
-    // 检查每日刷新
-    this._checkDailyRefresh();
   }
 }
 

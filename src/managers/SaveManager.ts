@@ -65,7 +65,7 @@ interface SaveData {
   customers?: CustomerPersistState;
   /** 主场景内购商店货架与刷新时间 */
   merchShop?: MerchShopPersistState;
-  /** 许愿喷泉专用券数量（存档键 flowerSignTickets 保持兼容） */
+  /** 许愿硬币数量（存档键 flowerSignTickets 与旧「许愿券」档兼容） */
   flowerSignTickets?: number;
 }
 
@@ -88,7 +88,7 @@ class SaveManagerClass {
     const data: SaveData = {
       fingerprint: CONFIG_FINGERPRINT,
       timestamp: Date.now(),
-      /** v8：许愿券（flowerSignTickets） */
+      /** v8：许愿硬币（flowerSignTickets，键名兼容旧档） */
       version: 8,
       currency: CurrencyManager.exportState(),
       board: BoardManager.exportState(),
@@ -218,7 +218,7 @@ class SaveManagerClass {
       const keys = [
         'huahua_checkin',
         'huahua_quests',
-        'huahua_achievements',
+        'huahua_achievements', // 历史成就独立 key，清除全数据时一并删掉
         'huahua_idle',
         'huahua_tutorial',
         'huahua_merge_stats',

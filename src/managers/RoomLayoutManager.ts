@@ -30,12 +30,12 @@ const SAVE_KEY = 'huahua_room_layout';
  */
 const LAYOUT_SAVE_VERSION = 3;
 
-/** placement.scale 合法区间（小贴图 defaultScale 可低于 0.5） */
-const PLACEMENT_SCALE_MIN = 0.1;
-const PLACEMENT_SCALE_MAX = 2;
+/** placement.scale 合法区间（小贴图 defaultScale 可低于 0.5；上限略抬高供庭院大树再放大） */
+export const FURNITURE_PLACEMENT_SCALE_MIN = 0.1;
+export const FURNITURE_PLACEMENT_SCALE_MAX = 2.8;
 
 function clampPlacementScale(s: number): number {
-  return Math.max(PLACEMENT_SCALE_MIN, Math.min(PLACEMENT_SCALE_MAX, s));
+  return Math.max(FURNITURE_PLACEMENT_SCALE_MIN, Math.min(FURNITURE_PLACEMENT_SCALE_MAX, s));
 }
 
 // ---- 数据结构 ----
@@ -47,7 +47,7 @@ export interface FurniturePlacement {
   x: number;
   /** 设计坐标 y */
   y: number;
-  /** 缩放系数（约 0.1~2.0，与贴图分辨率配套） */
+  /** 缩放系数（约 0.1~2.8，与贴图分辨率配套） */
   scale: number;
   /** 是否水平翻转 */
   flipped: boolean;

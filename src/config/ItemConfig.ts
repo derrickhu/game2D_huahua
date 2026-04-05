@@ -153,6 +153,9 @@ const TOOL_DATA: [ToolLine, string[]][] = [
 
 /** 棋盘幸运金币 itemId（单级，不可两枚合成） */
 export const LUCKY_COIN_ITEM_ID = 'lucky_coin_1';
+
+/** 旧版棋盘/收纳盒中的许愿硬币 id；已非 ITEM_DEFS 物品，仅用于读档与收纳盒迁移 */
+export const LEGACY_FLOWER_SIGN_COIN_ITEM_ID = 'currency_flower_sign_coin_1';
 /** 棋盘万能水晶：确认后目标升一级（同线） */
 export const CRYSTAL_BALL_ITEM_ID = 'crystal_ball_1';
 /** 棋盘金剪刀：确认后目标变为同线「低一级」×2（目标格一件 + 另一空位一件） */

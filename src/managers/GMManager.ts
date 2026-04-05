@@ -3,7 +3,7 @@
  *
  * 提供游戏内调试功能：
  * - 清除所有数据 / 重置游戏
- * - 增减货币（金币、钻石、体力、花愿）
+ * - 增减货币（金币、钻石、体力、花愿、许愿硬币）
  * - 设置等级/经验
  * - 跳过/重置新手引导
  * - 解锁/锁定所有格子
@@ -221,12 +221,12 @@ class GMManagerClass {
     this._commands.push({
       id: 'reset_quests',
       group: '🗑️ 数据重置',
-      name: '📋 重置任务/成就',
-      desc: '清除每日任务和成就进度',
+      name: '📋 重置每日挑战',
+      desc: '清除每日挑战与周积分进度（huahua_quests）',
       execute: () => {
         try { _api?.removeStorageSync('huahua_quests'); } catch (_) {}
         try { _api?.removeStorageSync('huahua_achievements'); } catch (_) {}
-        return '✅ 任务和成就数据已清除，刷新后重新开始';
+        return '✅ 每日挑战数据已清除，刷新后重新开始';
       },
     });
 
@@ -272,6 +272,42 @@ class GMManagerClass {
       execute: () => {
         CurrencyManager.addDiamond(100);
         return `✅ +100钻石，当前: ${CurrencyManager.state.diamond}`;
+      },
+    });
+
+    this._commands.push({
+      id: 'add_flower_sign_coin_1',
+      group: '💰 货币调整',
+      name: '🪙 +1 许愿硬币',
+      desc: '大地图许愿喷泉抽奖货币',
+      execute: () => {
+        FlowerSignTicketManager.add(1);
+        SaveManager.save();
+        return `✅ +1 许愿硬币，当前 ${FlowerSignTicketManager.count}`;
+      },
+    });
+
+    this._commands.push({
+      id: 'add_flower_sign_coin_100',
+      group: '💰 货币调整',
+      name: '🪙 +100 许愿硬币',
+      desc: '大地图许愿喷泉抽奖货币',
+      execute: () => {
+        FlowerSignTicketManager.add(100);
+        SaveManager.save();
+        return `✅ +100 许愿硬币，当前 ${FlowerSignTicketManager.count}`;
+      },
+    });
+
+    this._commands.push({
+      id: 'add_flower_sign_coin_500',
+      group: '💰 货币调整',
+      name: '🪙 +500 许愿硬币',
+      desc: '大地图许愿喷泉抽奖货币',
+      execute: () => {
+        FlowerSignTicketManager.add(500);
+        SaveManager.save();
+        return `✅ +500 许愿硬币，当前 ${FlowerSignTicketManager.count}`;
       },
     });
 
@@ -530,12 +566,12 @@ class GMManagerClass {
     this._commands.push({
       id: 'give_flower_sign_tickets',
       group: '➕ 增加物品',
-      name: '🎋 许愿券 +20',
-      desc: '大地图许愿喷泉抽奖用（活动/礼包未接前用于联调）',
+      name: '🪙 许愿硬币 +20',
+      desc: '大地图许愿喷泉抽奖用（数量仅在许愿池界面显示）',
       execute: () => {
         FlowerSignTicketManager.add(20);
         SaveManager.save();
-        return `✅ 许愿券 +20，当前 ${FlowerSignTicketManager.count}`;
+        return `✅ 许愿硬币 +20，当前 ${FlowerSignTicketManager.count}`;
       },
     });
 

@@ -1,0 +1,9 @@
+Single **normal silver coin** game HUD currency icon — **classic cool-gray / sterling silver metal only**. **NO purple, NO pink, NO violet, NO lavender, NO blue tint on the face** — just **neutral silver gradients** (light gray highlights → medium gray shadows). **Fully OPAQUE** metal; **NOT** glassy or see-through.
+
+**Slightly tilted 3/4 view**, merge-casual polish: **thick dark gray or charcoal outline** (same family as other UI icons), **small four-point white star sparkles** on the metal. **Optional tiny simple embossed ring or tiny star** in center — **same silver**, no second color fill.
+
+**NOT gold, NOT brass, NOT yellow** — this game already has a **gold lucky coin**; this must read clearly as **silver**.
+
+**NO** text, **NO** numbers. **Flat #FF00FF magenta** only **outside** the coin silhouette for matting. **No** white sticker halo between coin and magenta.
+
+FORBIDDEN: purple coin, pink metal, rose-gold, photoreal photo, square background, watermark.
