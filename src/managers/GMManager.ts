@@ -21,6 +21,7 @@ import { Platform } from '@/core/PlatformService';
 import { BoardManager } from './BoardManager';
 import { CurrencyManager } from './CurrencyManager';
 import { SaveManager } from './SaveManager';
+import { FlowerSignTicketManager } from './FlowerSignTicketManager';
 import { CheckInManager } from './CheckInManager';
 import { QuestManager } from './QuestManager';
 import { IdleManager } from './IdleManager';
@@ -523,6 +524,18 @@ class GMManagerClass {
       execute: () => {
         RewardBoxManager.addItem(GOLDEN_SCISSORS_ITEM_ID, 1);
         return '✅ 已发放 1 把金剪刀到收纳盒';
+      },
+    });
+
+    this._commands.push({
+      id: 'give_flower_sign_tickets',
+      group: '➕ 增加物品',
+      name: '🎋 许愿券 +20',
+      desc: '大地图许愿喷泉抽奖用（活动/礼包未接前用于联调）',
+      execute: () => {
+        FlowerSignTicketManager.add(20);
+        SaveManager.save();
+        return `✅ 许愿券 +20，当前 ${FlowerSignTicketManager.count}`;
       },
     });
 

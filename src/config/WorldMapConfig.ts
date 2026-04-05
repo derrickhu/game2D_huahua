@@ -10,7 +10,7 @@
 
 import { DESIGN_WIDTH, DESIGN_HEIGHT } from '@/config/Constants';
 
-export type MapNodeType = 'current_house' | 'house' | 'popup_shop' | 'locked';
+export type MapNodeType = 'current_house' | 'house' | 'popup_shop' | 'locked' | 'gacha';
 
 export interface MapNodeDef {
   id: string;
@@ -28,7 +28,7 @@ export interface MapNodeDef {
   unlockLevel: number;
   /** type=house 时：对应装修场景 sceneId */
   targetSceneId?: string;
-  /** type=popup_shop 时：弹出面板事件 */
+  /** type=popup_shop / gacha 时：EventBus 事件名 */
   popupEvent?: string;
   /** type=popup_shop 时：商店 ID */
   shopId?: string;
@@ -72,6 +72,17 @@ export const MAP_NODES: MapNodeDef[] = [
     useLiveMapThumb: false,
     unlockLevel: 1,
     targetSceneId: 'flower_shop',
+  },
+  {
+    id: 'wishing_fountain',
+    type: 'gacha',
+    label: '许愿喷泉',
+    x: 620,
+    y: 498,
+    thumbKey: 'worldmap_thumb_wishing_fountain',
+    thumbSize: 150,
+    unlockLevel: 1,
+    popupEvent: 'panel:openFlowerSignGacha',
   },
   {
     id: 'garden_villa',

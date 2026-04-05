@@ -1,0 +1,15 @@
+Cute small mobile game item icon, 3/4 top-down isometric view. Rounded chunky proportions, slightly chibi/compact. Soft smooth gradient shading with small bright highlight spots on surfaces. No hard black outlines — edges defined by color transitions and subtle darker-tone borders only. Warm cozy color palette with realistic material colors. No text, no labels, no UI elements. The item should look like a tiny desktop ornament.
+
+Single square 1:1 game tool icon — **insect / butterfly net line**, level **1/5** — **simple mesh fabric piece only**.
+
+**OBJECT:** **One loose piece of bug-net fabric** — soft **white or off-white nylon mesh** folded or gently crumpled like a **small cloth square** (readable grid pattern), **NO hoop, NO handle, NO pole, NO bag frame** — the humblest “material” tier before a real net.
+
+**STYLE:** Same huahua merge-game **tool** look as reference image.
+
+**COMPOSITION:** Fabric fills **~85–92%** of frame, one clear focal lump of mesh.
+
+**BACKGROUND:** ONLY flat **#FF00FF**; **hard edge**, no glow, no shadow on backdrop.
+
+**CHROMA-SAFE:** no magenta/pink-purple on mesh.
+
+**NO** text, digits.

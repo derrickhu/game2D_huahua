@@ -1,11 +1,15 @@
-Huahua merge-game **board item icon**, perfect square **1:1**, **ONE** butterfly only, centered, wings **mostly open**. **Same `flower_fresh` / `flower_green` merge illustration style**: cel shading, soft gradients, creamy speculars, top-left light — **NOT** photoreal, **NOT** embossed.
+Huahua merge-game **board item icon**, perfect square **1:1**, **ONE** butterfly only, centered, wings **mostly open**. **Same `flower_fresh` / `flower_green` merge illustration style**: cel shading, soft gradients **inside wing shapes only**, creamy speculars **inside** shapes, top-left light — **NOT** photoreal, **NOT** embossed.
 
-**SPECIES HINT (stylized):** **owl butterfly** (*Caligo*) — **one huge round “eye spot”** on each forewing: **bright orange / amber ring + pale blue inner ring + dark pupil dot** (cartoon readable). Wing ground = **warm cocoa, dusty rose, or soft lavender** (choose cheerful saturated pastel — **NOT** muddy gray-brown fog). Hindwings simpler, harmonious.
+**SPECIES HINT (stylized):** **owl butterfly** (*Caligo*) — **one huge round “eye spot”** on each forewing: **bright orange / amber ring + pale blue inner ring + dark pupil dot** (cartoon readable). Wing ground = **soft lavender, dusty rose, or warm cocoa pastel** — **NOT** muddy gray fog. Hindwings simpler, harmonious.
 
-**OUTLINE:** thin hue-darkened or wine/maroon.
+**OUTLINE:** thin hue-darkened or wine/maroon — **NOT** a thick white “sticker rim” around the whole butterfly.
 
 **FORBIDDEN PROPS:** flowers, leaves, branches, grass, pots, nets.
 
-**MATTING:** **#FF00FF** only outside; hard edge; no outer glow.
+**HARD EDGE FOR MATTING (highest priority):**
+- The **entire canvas outside the butterfly** must be **flat solid chroma magenta ONLY**, exact **#FF00FF**, on **every** pixel not part of the butterfly. **NO green, NO gray, NO gradient backdrop** — only #FF00FF.
+- Outside the butterfly’s **outermost painted edge**, the **very next pixels** must be **opaque #FF00FF** — **NO** semi-transparent pink/white ring, **NO** feathered glow, **NO** soft airbrush halo, **NO** outer bloom, **NO** drop shadow on the background, **NO** light bleeding into #FF00FF.
+- **FORBIDDEN:** thick white or pale **sticker border** around the silhouette; **FORBIDDEN:** pastel glow leaking into the background.
+- **Opaque cel-game paint**; **crisp silhouette** then **immediate** chroma — like a clean game sprite sheet.
 
 **NO** text, watermark, UI.

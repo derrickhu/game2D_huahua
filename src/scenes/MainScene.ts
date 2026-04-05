@@ -78,6 +78,7 @@ import { RewardBoxPanel } from '@/gameobjects/ui/RewardBoxPanel';
 import { PopupShopPanel } from '@/gameobjects/ui/PopupShopPanel';
 import { MerchShopPanel } from '@/gameobjects/ui/MerchShopPanel';
 import { WorldMapPanel } from '@/gameobjects/ui/WorldMapPanel';
+import { FlowerSignGachaPanel } from '@/gameobjects/ui/FlowerSignGachaPanel';
 import { ShopScene } from '@/scenes/ShopScene';
 import { LIVE_HOUSE_THUMB_CAPTURE_MAX } from '@/config/WorldMapConfig';
 import { RewardBoxManager } from '@/managers/RewardBoxManager';
@@ -395,6 +396,8 @@ export class MainScene implements Scene {
     // 大地图全屏页（盖住花店/顶栏；惯性滚动在面板内自注册 ticker）
     this._worldMapPanel = new WorldMapPanel();
     overlay.addChild(this._worldMapPanel);
+
+    overlay.addChild(new FlowerSignGachaPanel());
 
     EventBus.on('rewardBox:open', () => {
       const parent = this._rewardBoxPanel.parent;

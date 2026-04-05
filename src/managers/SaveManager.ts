@@ -14,6 +14,7 @@ import { WarehouseManager, WarehouseState } from './WarehouseManager';
 import { RewardBoxManager, RewardBoxState } from './RewardBoxManager';
 import { MergeCompanionManager, type MergeCompanionPersistState } from './MergeCompanionManager';
 import { MerchShopManager, type MerchShopPersistState } from './MerchShopManager';
+import { FlowerSignTicketManager } from './FlowerSignTicketManager';
 import { EventBus } from '@/core/EventBus';
 import { BOARD_TOTAL } from '@/config/Constants';
 import { BOARD_PRESETS } from '@/config/BoardLayout';
@@ -64,6 +65,8 @@ interface SaveData {
   customers?: CustomerPersistState;
   /** 主场景内购商店货架与刷新时间 */
   merchShop?: MerchShopPersistState;
+  /** 许愿喷泉专用券数量（存档键 flowerSignTickets 保持兼容） */
+  flowerSignTickets?: number;
 }
 
 class SaveManagerClass {
@@ -85,8 +88,8 @@ class SaveManagerClass {
     const data: SaveData = {
       fingerprint: CONFIG_FINGERPRINT,
       timestamp: Date.now(),
-      /** v7：新增 `merchShop`（内购商店货架）；规则与策划改表见 MerchShopConfig */
-      version: 7,
+      /** v8：许愿券（flowerSignTickets） */
+      version: 8,
       currency: CurrencyManager.exportState(),
       board: BoardManager.exportState(),
       buildings: BuildingManager.exportState(),
@@ -95,6 +98,7 @@ class SaveManagerClass {
       mergeCompanions: MergeCompanionManager.exportState(),
       customers: CustomerManager.exportState(),
       merchShop: MerchShopManager.exportState(),
+      flowerSignTickets: FlowerSignTicketManager.exportState(),
     };
     return JSON.stringify(data);
   }
@@ -172,6 +176,7 @@ class SaveManagerClass {
       CustomerManager.prepareFromSave(data.customers);
       MerchShopManager.init();
       MerchShopManager.loadState(data.merchShop);
+      FlowerSignTicketManager.loadState(data.flowerSignTickets);
 
       console.log('[Save] 读档成功, 距上次存档:', Math.round((Date.now() - data.timestamp) / 1000), '秒');
       return true;

@@ -10,6 +10,7 @@ import { TweenManager, Ease } from '@/core/TweenManager';
 import { TextureCache } from '@/utils/TextureCache';
 import { ToastMessage } from '@/gameobjects/ui/ToastMessage';
 import { CurrencyManager } from '@/managers/CurrencyManager';
+import { OverlayManager } from '@/core/OverlayManager';
 import { DESIGN_WIDTH, FONT_FAMILY } from '@/config/Constants';
 import {
   MAP_NODES,
@@ -183,6 +184,9 @@ export class WorldMapPanel extends PIXI.Container {
       case 'flower_shop':
         keys.push('house_shop', 'bg_room_default');
         break;
+      case 'wishing_fountain':
+        keys.push('worldmap_thumb_wishing_fountain', 'icon_worldmap');
+        break;
       case 'garden_villa':
         keys.push('icon_build');
         break;
@@ -319,6 +323,7 @@ export class WorldMapPanel extends PIXI.Container {
       case 'current_house': return 0xFFB347;
       case 'house': return 0x81C784;
       case 'popup_shop': return 0x64B5F6;
+      case 'gacha': return 0xF48FB1;
       case 'locked': return 0x9E9E9E;
       default: return 0xBDBDBD;
     }
@@ -383,6 +388,7 @@ export class WorldMapPanel extends PIXI.Container {
         && !!live
         && node.targetSceneId === currentSceneId
         && node.type !== 'popup_shop'
+        && node.type !== 'gacha'
         && node.type !== 'locked';
 
       if (useLive && live && live.width >= 2 && live.height >= 2) {
@@ -491,6 +497,12 @@ export class WorldMapPanel extends PIXI.Container {
       case 'popup_shop':
         if (node.popupEvent && node.shopId) {
           EventBus.emit(node.popupEvent, node.shopId);
+        }
+        break;
+      case 'gacha':
+        if (node.popupEvent) {
+          OverlayManager.bringToFront();
+          EventBus.emit(node.popupEvent);
         }
         break;
       case 'locked':

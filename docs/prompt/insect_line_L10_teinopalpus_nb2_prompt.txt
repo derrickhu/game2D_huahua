@@ -1,11 +1,14 @@
-Huahua merge-game **board item icon**, perfect square **1:1**, **ONE** butterfly only, centered, wings **mostly open** — **prestige “final tier”** look but still cute merge-game. **Same `flower_fresh` / `flower_green` polished 2D style**: rich gradients, cel light shapes, creamy highlights, top-left light — **NOT** photoreal specimen, **NOT** embossed gold statue.
+Huahua merge-game **board item icon**, perfect square **1:1**, **ONE** butterfly only, centered, wings **mostly open** — **prestige “final tier”** look but still cute merge-game. **Same `flower_fresh` / `flower_green` polished 2D style**: rich gradients and cel light **only inside wing panels**, creamy highlights **inside** shapes, top-left light — **NOT** photoreal, **NOT** embossed gold statue.
 
-**SPECIES HINT (stylized):** **Teinopalpus / golden green swallowtail** (*Teinopalpus aureus*) — wings **emerald / jade / spring green** with **bold golden-yellow patches and arcs** (simplified royal pattern). **Champagne-gold thin vein lines**. **Avoid** black or near-black wing fills — use **deep forest green** for darkest accents only. Tiny cute **snout-like head bump** hint OK (simplified).
+**SPECIES HINT (stylized):** **golden green swallowtail** (*Teinopalpus aureus*) — wings **emerald / jade / spring green** with **bold golden-yellow patches and arcs** (simplified royal pattern). **Champagne-gold thin vein lines**. **Avoid** black wing fills — **deep forest green** for darkest accents only. Tiny cute **snout-like head bump** hint OK (simplified).
 
-**OUTLINE:** thin gold-green or wine line — not heavy black contour.
+**OUTLINE:** thin gold-green or wine line — **NOT** a thick gold “sticker rim” around the entire insect.
 
 **FORBIDDEN PROPS:** flowers, leaves, branches, grass, pots, nets.
 
-**MATTING:** **#FF00FF** only outside; hard edge.
+**HARD EDGE FOR MATTING (highest priority):**
+- **Full canvas background = ONLY #FF00FF** everywhere outside the butterfly — **NO forest-green backdrop**, **NO vignette**, **NO colored studio fill** other than #FF00FF.
+- Outside the butterfly’s **outermost painted edge**, the **very next pixels** must be **opaque #FF00FF** — **NO** soft shadow painted on the background, **NO** drop shadow, **NO** outer glow, **NO** feathered halo, **NO** white/pale ring outside the bug.
+- **Opaque cel-game art**; **hard cut** from butterfly to magenta for easy chroma / rembg.
 
 **NO** text, watermark, UI.

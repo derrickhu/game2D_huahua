@@ -165,6 +165,10 @@ const PANELS_IMAGE_MAP: Record<string, string> = {
   worldmap_thumb_tool_shop: 'subpkg_panels/images/ui/worldmap_thumb_tool_shop.png',
   worldmap_thumb_garden_villa: 'subpkg_panels/images/ui/worldmap_thumb_garden_villa.png',
   icon_worldmap: 'subpkg_panels/images/ui/icon_worldmap.png',
+  /** 许愿池专用券图标（可换专用图；暂用花愿图标占位） */
+  icon_flower_sign_ticket: 'images/ui/icon_huayuan.png',
+  /** 大地图许愿喷泉（固定建筑） */
+  worldmap_thumb_wishing_fountain: 'subpkg_panels/images/ui/worldmap_thumb_wishing_fountain.png',
 };
 
 // ================================================================

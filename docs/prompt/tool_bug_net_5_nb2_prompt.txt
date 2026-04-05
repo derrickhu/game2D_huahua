@@ -1,0 +1,15 @@
+Cute small mobile game item icon, 3/4 top-down isometric view. Rounded chunky proportions, slightly chibi/compact. Soft smooth gradient shading with small bright highlight spots on surfaces. No hard black outlines — edges defined by color transitions and subtle darker-tone borders only. Warm cozy color palette with realistic material colors. No text, no labels, no UI elements. The item should look like a tiny desktop ornament.
+
+Single square 1:1 game tool icon — **insect / butterfly net line**, level **5/5** (top tier).
+
+**OBJECT:** One **fancy collector net**: **round hoop** with **thin gold or champagne-metal rim accent** (cel-shaded, not mirror chrome), **fine white mesh**; handle may have **dark leather-wrap hint** or richer wood — **most ornate** of the five, still readable at small size. **NO glitter particles, NO outer sparkle VFX.**
+
+**STYLE:** Same huahua tool icon polish as reference image.
+
+**COMPOSITION:** **~88–94%** of frame.
+
+**BACKGROUND:** ONLY **#FF00FF**; **hard edge** for matting — **no** sticker white ring, **no** glow.
+
+**CHROMA-SAFE:** no magenta/fuchsia on surfaces.
+
+**NO** text, digits.
