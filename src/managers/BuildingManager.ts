@@ -92,7 +92,7 @@ const CHEST_DEFS: ChestDef[] = [
       {
         type: 'product',
         category: Category.DRINK,
-        lines: [DrinkLine.TEA, DrinkLine.COLD, DrinkLine.DESSERT],
+        lines: [DrinkLine.BUTTERFLY, DrinkLine.COLD, DrinkLine.DESSERT],
         levelRange: [1, 1],
         weight: 45,
       },
@@ -112,7 +112,7 @@ const CHEST_DEFS: ChestDef[] = [
       {
         type: 'product',
         category: Category.DRINK,
-        lines: [DrinkLine.TEA, DrinkLine.COLD, DrinkLine.DESSERT],
+        lines: [DrinkLine.BUTTERFLY, DrinkLine.COLD, DrinkLine.DESSERT],
         levelRange: [1, 2],
         weight: 43,
       },
@@ -134,7 +134,7 @@ const CHEST_DEFS: ChestDef[] = [
       {
         type: 'product',
         category: Category.DRINK,
-        lines: [DrinkLine.TEA, DrinkLine.COLD, DrinkLine.DESSERT],
+        lines: [DrinkLine.BUTTERFLY, DrinkLine.COLD, DrinkLine.DESSERT],
         levelRange: [1, 3],
         weight: 32,
       },
@@ -155,7 +155,7 @@ const CHEST_DEFS: ChestDef[] = [
       {
         type: 'product',
         category: Category.DRINK,
-        lines: [DrinkLine.TEA, DrinkLine.COLD, DrinkLine.DESSERT],
+        lines: [DrinkLine.BUTTERFLY, DrinkLine.COLD, DrinkLine.DESSERT],
         levelRange: [1, 3],
         weight: 39,
       },
@@ -176,7 +176,7 @@ const CHEST_DEFS: ChestDef[] = [
       {
         type: 'product',
         category: Category.DRINK,
-        lines: [DrinkLine.TEA, DrinkLine.COLD, DrinkLine.DESSERT],
+        lines: [DrinkLine.BUTTERFLY, DrinkLine.COLD, DrinkLine.DESSERT],
         levelRange: [2, 4],
         weight: 34,
       },

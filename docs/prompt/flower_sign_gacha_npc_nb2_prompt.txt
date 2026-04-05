@@ -1,0 +1,11 @@
+Vertical 9:16 mobile game art sheet — **SINGLE FLOWER FAIRY / ELF CHARACTER ONLY** on flat **#FF00FF** magenta (full bleed outside the character). **No fountain, no landscape, no sky, no title** — only the character + any tiny immediate props **attached** to her (e.g. wand, petals) if needed.
+
+**BRIGHT** lighting to match the sunny scene layer; cheerful, welcoming pose: **facing camera**, hands slightly toward viewer as if blessing the wish pool she stands **behind** (she will be layered in front of the BG).
+
+ART STYLE — MATCH SHOPKEEPER CHIBI: **SD super-Q** (~2–2.5 heads), **warm brown soft outlines**, **flat merge-casual** fills, big friendly eyes with simple highlights; pastel mint, pink, cream; **NO** pseudo-realistic skin, **NO** anime-cinematic volume, **NO** 5-head fashion body.
+
+FORBIDDEN: full background, ground plane that reads as scene, fountain stones, pool water as environment, red ribbon, text, buttons, photoreal.
+
+MATTING: **#FF00FF** magenta everywhere except the painted character; clean silhouette for **rembg** after export.
+
+**CRITICAL for compositing**: **Same pixel width and height** as `flower_sign_gacha_bg_nb2`; **same scale and vertical placement** as in the original composed sketch (fairy roughly **behind** the fountain rim, upper body visible above water line when stacked).

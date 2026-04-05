@@ -1,7 +1,7 @@
 /**
  * 图鉴面板 - 6大收集分类展示 + 里程碑奖励
  *
- * 分类：花系 / 花饮(9) / 建筑(13) / 宝箱(5) / 客人(6) / 装饰(72) / 花语卡片（与 FlowerCardManager 同步）
+ * 分类：花系 / 饮品(蝴蝶+冷饮+甜品) / 建筑(13) / 宝箱(5) / 客人(6) / 装饰(72) / 花语卡片（与 FlowerCardManager 同步）
  * 里程碑：25% / 50% / 75% / 100% 解锁奖励
  */
 import * as PIXI from 'pixi.js';
@@ -17,7 +17,7 @@ type TabType = 'overview' | 'milestone';
 /** 分类显示配置 */
 const CATEGORY_DISPLAY: { cat: CollectionCategory; icon: string; name: string; color: number }[] = [
   { cat: CollectionCategory.FLOWER, icon: '🌸', name: '花束', color: 0xFFB7C5 },
-  { cat: CollectionCategory.DRINK, icon: '🍵', name: '花饮', color: 0x90EE90 },
+  { cat: CollectionCategory.DRINK, icon: '🦋', name: '饮品', color: 0x90EE90 },
   { cat: CollectionCategory.BUILDING, icon: '🏠', name: '建筑', color: 0xDEB887 },
   { cat: CollectionCategory.CHEST, icon: '📦', name: '宝箱', color: 0xDAA520 },
   { cat: CollectionCategory.CUSTOMER, icon: '👤', name: '客人', color: 0x87CEEB },

@@ -1,8 +1,8 @@
 /**
  * 物品配置
  *
- * 产品线：花系（鲜花/绿植各13级、花束10级 + 包装中间品4级）+ 饮品 3线x8级
- * 工具线：园艺6级、包装5级、茶饮/冷饮/烘焙各5级；工具1–2级仅合成，其后可产出
+ * 产品线：花系（鲜花/绿植各13级、花束10级 + 包装中间品4级）+ 饮品：蝴蝶10级、冷饮/甜品各8级
+ * 工具线：园艺6级、包装5级、捕虫网/冷饮/烘焙各5级；工具1–2级仅合成，其后可产出
  * 宝箱：5级；红包：4级（散落花愿利是，双击入账花愿）；钻石袋 / 体力箱工具：各 3 级（散落货币块）
  */
 
@@ -39,9 +39,9 @@ export enum FlowerLine {
 }
 
 export enum DrinkLine {
-  TEA = 'tea',         // 茶饮线
-  COLD = 'cold',       // 冷饮线
-  DESSERT = 'dessert', // 甜品线
+  BUTTERFLY = 'butterfly', // 蝴蝶标本线（捕虫网产出）
+  COLD = 'cold',           // 冷饮线
+  DESSERT = 'dessert',     // 甜品线
 }
 
 export enum CurrencyLine {
@@ -55,8 +55,8 @@ export enum ToolLine {
   /** 园艺种植工具 → 同等级随机产出 鲜花线 或 绿植线 */
   PLANT = 'plant',
   ARRANGE = 'arrange',   // 包装线工具 → 包装中间品
-  TEA_SET = 'tea_set',   // 茶具     → 茶饮线
-  MIXER = 'mixer',       // 饮品器具 → 冷饮线
+  BUTTERFLY_NET = 'butterfly_net', // 捕虫网 → 蝴蝶线
+  MIXER = 'mixer',           // 饮品器具 → 冷饮线
   BAKE = 'bake',         // 烘焙工具 → 甜品线
 }
 
@@ -66,7 +66,7 @@ export const TOOL_TO_PRODUCT_LINE: Record<ToolLine, { category: Category; line: 
   [ToolLine.PLANT]:   { category: Category.FLOWER, line: FlowerLine.FRESH },
   /** 包装线工具产出包装中间品；花束由「花束包装纸」产出 */
   [ToolLine.ARRANGE]: { category: Category.FLOWER, line: FlowerLine.WRAP },
-  [ToolLine.TEA_SET]: { category: Category.DRINK,  line: DrinkLine.TEA },
+  [ToolLine.BUTTERFLY_NET]: { category: Category.DRINK, line: DrinkLine.BUTTERFLY },
   [ToolLine.MIXER]:   { category: Category.DRINK,  line: DrinkLine.COLD },
   [ToolLine.BAKE]:    { category: Category.DRINK,  line: DrinkLine.DESSERT },
 };
@@ -116,9 +116,10 @@ const FLOWER_DATA: [FlowerLine, string[]][] = [
 ];
 
 const DRINK_DATA: [DrinkLine, string[]][] = [
-  [DrinkLine.TEA, [
-    '热水', '茉莉花茶', '玫瑰红茶', '调味花茶',
-    '手冲花茶', '四季花茶壶', '大师手作茶', '御品花茶典藏',
+  [DrinkLine.BUTTERFLY, [
+    '毛毛虫', '蛹',
+    '菜粉蝶', '柑橘凤蝶', '玉带凤蝶', '青凤蝶',
+    '金裳凤蝶', '猫头鹰环蝶', '大蓝闪蝶', '金斑喙凤蝶',
   ]],
   [DrinkLine.COLD, [
     '柠檬花水', '花果冰饮', '花漾气泡水', '玫瑰冰沙',
@@ -139,8 +140,8 @@ const TOOL_DATA: [ToolLine, string[]][] = [
   [ToolLine.ARRANGE, [
     '铁丝', '铁丝剪刀', '简易包装台', '包装台', '高级包装台',
   ]],
-  [ToolLine.TEA_SET, [
-    '茶包', '茶叶罐', '茶壶', '茶台', '高级茶台',
+  [ToolLine.BUTTERFLY_NET, [
+    '网布', '无柄网兜', '短柄捕虫网', '长柄抄网', '专业捕虫网',
   ]],
   [ToolLine.MIXER, [
     '量杯', '雪克杯', '制冰机', '冰箱', '冰柜',
@@ -189,6 +190,7 @@ function buildItemDefs(): Map<string, ItemDef> {
 
   // 饮品
   for (const [line, names] of DRINK_DATA) {
+    const lineMax = names.length;
     for (let i = 0; i < names.length; i++) {
       const id = `drink_${line}_${i + 1}`;
       const lv = i + 1;
@@ -199,7 +201,7 @@ function buildItemDefs(): Map<string, ItemDef> {
         category: Category.DRINK,
         line,
         level: lv,
-        maxLevel: 8,
+        maxLevel: lineMax,
         icon: `drink_${line}_${i + 1}`,
         interactType: InteractType.NONE,
         sellable: true,
@@ -515,13 +517,13 @@ export function getMergeChainName(itemId: string): string {
     [FlowerLine.BOUQUET]: '花束',
     [FlowerLine.GREEN]: '绿植',
     [FlowerLine.WRAP]: '包装',
-    [DrinkLine.TEA]: '茶饮',
+    [DrinkLine.BUTTERFLY]: '蝴蝶标本',
     [DrinkLine.COLD]: '冷饮',
     [DrinkLine.DESSERT]: '甜品',
     [ToolLine.PLANT]: '园艺工具',
     [ToolLine.ARRANGE]: '包装工具',
-    [ToolLine.TEA_SET]: '茶具',
-    [ToolLine.MIXER]: '饮品器具',
+    [ToolLine.BUTTERFLY_NET]: '捕虫网',
+    [ToolLine.MIXER]: '冷饮器具',
     [ToolLine.BAKE]: '烘焙工具',
     chest: '宝箱',
     hongbao: '红包',

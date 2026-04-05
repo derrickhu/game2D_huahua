@@ -299,7 +299,7 @@ function rollMysteryShopSlots(def: MerchShelfDef): MerchSlotState[] {
         priceAmount: Math.max(1, Math.round(5 * f)),
       },
       {
-        itemId: 'drink_tea_1',
+        itemId: 'drink_butterfly_1',
         remaining: 2,
         priceType: 'huayuan',
         priceAmount: Math.max(MERCH_MYSTERY_HUAYUAN_MIN, Math.round(14 * f)),
@@ -332,7 +332,7 @@ const FREE_SHOP_RARE_IDS = ['hongbao_1', 'stamina_chest_1', 'diamond_bag_1'] as 
 
 /**
  * 免费商店：已解锁（图鉴）、等级 1～5、排除 `tool_*`；另混入低权重 1 级红包/体力宝箱/宝石袋。
- * 图鉴尚无收录时用固定低级花饮占位，避免空池。
+ * 图鉴尚无收录时用固定低级饮品（如蝴蝶 L1）占位，避免空池。
  */
 function buildFreeShopDynamicPool(): MerchPoolEntry[] {
   const rareSet = new Set<string>(FREE_SHOP_RARE_IDS);
@@ -375,7 +375,7 @@ function buildFreeShopDynamicPool(): MerchPoolEntry[] {
         purchaseStock: 1,
       },
       {
-        itemId: 'drink_tea_1',
+        itemId: 'drink_butterfly_1',
         weight: MERCH_FREE_SHOP_BASE_WEIGHT,
         priceType: 'free',
         purchaseStock: 1,

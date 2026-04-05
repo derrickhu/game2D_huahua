@@ -763,13 +763,13 @@ export class ItemInfoBar extends PIXI.Container {
 
   private _getDescription(def: ItemDef): string {
     if (isLuckyCoinItem(def.id)) {
-      return '拖到鲜花或饮品上试试，会有惊喜。';
+      return '拖到鲜花或饮品（含蝴蝶标本）上试试，会有惊喜。';
     }
     if (isCrystalBallItem(def.id)) {
-      return '拖到鲜花或饮品上，确认后可稳定升一级（满级不可用）。';
+      return '拖到鲜花或饮品（含蝴蝶标本）上，确认后可稳定升一级（满级不可用）。';
     }
     if (isGoldenScissorsItem(def.id)) {
-      return '拖到 2 级及以上的鲜花或饮品上，确认后拆成两个低一级的同线物品。';
+      return '拖到 2 级及以上的鲜花或饮品（含蝴蝶标本）上，确认后拆成两个低一级的同线物品。';
     }
     if (def.interactType === InteractType.TOOL) {
       const pd = findBoardProducerDef(def.id);

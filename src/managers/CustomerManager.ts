@@ -1,7 +1,7 @@
 /**
  * 客人管理器 - 客人刷新、需求生成、自动锁定棋盘物品、交付结算
  *
- * 需求由 OrderGeneratorRegistry + OrderTierConfig 驱动；产线解锁见 orders/unlockedLines（与 BuildingConfig 一致）。
+ * 需求由 OrderGeneratorRegistry + OrderTierConfig 模板档驱动；角标 tier 由槽位物品内容统一计算（computeTierFromOrderSlots）。
  */
 import { EventBus } from '@/core/EventBus';
 import { BoardManager } from './BoardManager';
@@ -16,6 +16,7 @@ import { CUSTOMER_TYPES } from '@/config/CustomerConfig';
 import { Category, ITEM_DEFS, findItemId } from '@/config/ItemConfig';
 import {
   ORDER_TIERS,
+  computeTierFromOrderSlots,
   getOrderTierWeights,
   getDynamicMaxCustomers,
   pickTierByWeight,
@@ -24,8 +25,13 @@ import {
   type UnlockedLines,
 } from '@/config/OrderTierConfig';
 import { CUSTOMER_REFRESH_MIN, CUSTOMER_REFRESH_MAX } from '@/config/Constants';
+import { ORDER_SPAWN_VALIDATE_MAX_ATTEMPTS } from '@/config/OrderSpawnConfig';
 import { computeUnlockedLines } from '@/orders/unlockedLines';
-import { generateOrderDemands } from '@/orders/OrderGeneratorRegistry';
+import {
+  generateOrderDemands,
+  validateOrderSlotsToolCap,
+} from '@/orders/OrderGeneratorRegistry';
+import type { OrderGenResult, OrderGenerationKind } from '@/orders/types';
 
 export interface DemandSlot {
   itemId: string;
@@ -47,6 +53,8 @@ export interface CustomerInstance {
   chainIndex?: number;
   /** 预留：奖励倍率 */
   bonusMultiplier?: number;
+  /** 生成语义：基础 / 成长 / 组合（与角标 tier 独立） */
+  orderKind: OrderGenerationKind;
 }
 
 /** 存档用需求槽（无 lockedCellIndex，读档后由 _rescanAll 绑定棋盘） */
@@ -66,6 +74,8 @@ export interface CustomerSaveEntry {
   timeLimit: number | null;
   chainIndex?: number;
   bonusMultiplier?: number;
+  /** 缺省时读档按 orderType + bonusMultiplier 推断 */
+  orderKind?: OrderGenerationKind;
 }
 
 export interface CustomerPersistState {
@@ -74,8 +84,9 @@ export interface CustomerPersistState {
   refreshTimer: number;
 }
 
-const VALID_ORDER_TIERS = new Set<OrderTier>(['C', 'B', 'A', 'S']);
 const VALID_ORDER_TYPES = new Set<OrderType>(['normal', 'timed', 'chain', 'challenge']);
+
+const VALID_ORDER_KINDS = new Set<OrderGenerationKind>(['basic', 'growth', 'combo', 'eventStub']);
 
 const GREEN_PITY_THRESHOLD = 3;
 const GREEN_UNLOCK_BOOST_SPAWNS = 5;
@@ -107,7 +118,8 @@ function normalizeCustomerPersistState(raw: unknown): CustomerPersistState | nul
     }
     if (slots.length === 0) continue;
 
-    const tier = VALID_ORDER_TIERS.has(r.tier as OrderTier) ? (r.tier as OrderTier) : 'C';
+    const contentTier = computeTierFromOrderSlots(slots.map(s => s.itemId));
+    const tier = contentTier;
     const orderType = VALID_ORDER_TYPES.has(r.orderType as OrderType)
       ? (r.orderType as OrderType)
       : 'normal';
@@ -115,6 +127,11 @@ function normalizeCustomerPersistState(raw: unknown): CustomerPersistState | nul
       typeof r.bonusMultiplier === 'number' && Number.isFinite(r.bonusMultiplier)
         ? r.bonusMultiplier
         : undefined;
+    const rawKind = r.orderKind;
+    const orderKind: OrderGenerationKind =
+      typeof rawKind === 'string' && VALID_ORDER_KINDS.has(rawKind as OrderGenerationKind)
+        ? (rawKind as OrderGenerationKind)
+        : inferOrderKindFromLegacy({ orderType, bonusMultiplier });
     const huayuanReward =
       typeof r.huayuanReward === 'number' && Number.isFinite(r.huayuanReward) && r.huayuanReward >= 0
         ? Math.floor(r.huayuanReward)
@@ -138,6 +155,7 @@ function normalizeCustomerPersistState(raw: unknown): CustomerPersistState | nul
       timeLimit,
       chainIndex: typeof r.chainIndex === 'number' ? r.chainIndex : undefined,
       bonusMultiplier,
+      orderKind,
     });
   }
 
@@ -154,6 +172,15 @@ function normalizeCustomerPersistState(raw: unknown): CustomerPersistState | nul
       : CUSTOMER_REFRESH_MAX - 3;
 
   return { list, nextUid, refreshTimer };
+}
+
+function inferOrderKindFromLegacy(entry: {
+  orderType: OrderType;
+  bonusMultiplier?: number;
+}): OrderGenerationKind {
+  if (entry.orderType === 'challenge') return 'combo';
+  if (entry.bonusMultiplier && entry.bonusMultiplier > 1) return 'growth';
+  return 'basic';
 }
 
 class CustomerManagerClass {
@@ -203,6 +230,7 @@ class CustomerManagerClass {
         timeLimit: c.timeLimit,
         chainIndex: c.chainIndex,
         bonusMultiplier: c.bonusMultiplier,
+        orderKind: c.orderKind,
       })),
       nextUid: this._nextUid,
       refreshTimer: this._refreshTimer,
@@ -223,11 +251,12 @@ class CustomerManagerClass {
         slots: e.slots.map(s => ({ itemId: s.itemId, lockedCellIndex: -1 })),
         allSatisfied: false,
         huayuanReward: CustomerManagerClass.computeOrderHuayuan(e.slots, e.bonusMultiplier, e.orderType),
-        tier: e.tier,
+        tier: computeTierFromOrderSlots(e.slots.map(s => s.itemId)),
         orderType: e.orderType,
         timeLimit: e.timeLimit,
         chainIndex: e.chainIndex,
         bonusMultiplier: e.bonusMultiplier,
+        orderKind: e.orderKind ?? inferOrderKindFromLegacy(e),
       }));
       this._nextUid = p.nextUid;
       this._refreshTimer = p.refreshTimer;
@@ -332,6 +361,20 @@ class CustomerManagerClass {
     return true;
   }
 
+  /**
+   * 撕单：移除该客人且无交付奖励（供后续 UI/消耗接入；当前无扣费）。
+   */
+  ditchCustomerOrder(uid: number): boolean {
+    if (!this._started) return false;
+    const idx = this._customers.findIndex(c => c.uid === uid);
+    if (idx < 0) return false;
+    const [removed] = this._customers.splice(idx, 1);
+    if (!removed) return false;
+    EventBus.emit('customer:ditched', uid, removed);
+    this._rescanAll();
+    return true;
+  }
+
   private _bindBoardEvents(): void {
     const rescan = () => this._rescanAll();
     EventBus.on('board:merged', rescan);
@@ -363,13 +406,20 @@ class CustomerManagerClass {
       lines.hasGreen &&
       this._spawnsWithoutGreenDemand >= GREEN_PITY_THRESHOLD;
 
-    const gen = generateOrderDemands({
-      tier,
-      lines,
-      playerLevel: level,
-      forceGreenFlowerSlot: forceGreen,
-      rng: Math.random,
-    });
+    let gen: OrderGenResult | null = null;
+    for (let attempt = 0; attempt < ORDER_SPAWN_VALIDATE_MAX_ATTEMPTS; attempt++) {
+      const g = generateOrderDemands({
+        tier,
+        lines,
+        playerLevel: level,
+        forceGreenFlowerSlot: forceGreen,
+        rng: Math.random,
+      });
+      if (!g || g.slots.length === 0) continue;
+      if (!validateOrderSlotsToolCap(g.slots, lines)) continue;
+      gen = g;
+      break;
+    }
     if (!gen || gen.slots.length === 0) return;
 
     const slots: DemandSlot[] = gen.slots.map(s => ({
@@ -383,6 +433,8 @@ class CustomerManagerClass {
       gen.orderType,
     );
 
+    const contentTier = computeTierFromOrderSlots(slots.map(s => s.itemId));
+
     const customer: CustomerInstance = {
       uid: this._nextUid++,
       typeId: type.id,
@@ -391,10 +443,11 @@ class CustomerManagerClass {
       slots,
       allSatisfied: false,
       huayuanReward: huayuan,
-      tier,
+      tier: contentTier,
       orderType: gen.orderType,
       timeLimit: gen.timeLimit,
       bonusMultiplier: gen.bonusMultiplier,
+      orderKind: gen.generationKind,
     };
 
     if (lines.hasGreen) {
@@ -408,7 +461,7 @@ class CustomerManagerClass {
       this._greenLineUnlockBoostSpawns--;
     }
     console.log(
-      `[Customer] 新客人: ${customer.name}(${customer.emoji}) [${tier}] ${gen.generationKind}, 需求: ${customer.slots.map(s => s.itemId).join(', ')}`,
+      `[Customer] 新客人: ${customer.name}(${customer.emoji}) [${contentTier}] (tpl ${tier}) ${customer.orderKind}, 需求: ${customer.slots.map(s => s.itemId).join(', ')}`,
     );
     EventBus.emit('customer:arrived', customer);
 

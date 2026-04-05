@@ -104,7 +104,7 @@ export const MERGE_COMPANION_RULES: MergeCompanionRuleDef[] = [
     id: 'flower_float_bubble_clone',
     priority: 10,
     groupId: 'merge_bonus',
-    baseChance: 0.07,
+    baseChance: 0.015,
     match: {
       categories: [Category.FLOWER],
       resultLevelMin: 1,
@@ -124,7 +124,7 @@ export const MERGE_COMPANION_RULES: MergeCompanionRuleDef[] = [
     id: 'tool_float_bubble_clone',
     priority: 10,
     groupId: 'merge_bonus',
-    baseChance: 0.06,
+    baseChance: 0.008,
     match: {
       categories: [Category.BUILDING],
       interactTypes: [InteractType.TOOL],
@@ -149,7 +149,7 @@ export const MERGE_COMPANION_RULES: MergeCompanionRuleDef[] = [
     id: 'misc_float_bubble_clone',
     priority: 10,
     groupId: 'merge_bonus',
-    baseChance: 0.07,
+    baseChance: 0.015,
     match: {
       resultLevelMin: 1,
       allowPeekMerge: true,
@@ -197,6 +197,6 @@ export const MERGE_COMPANION_SAMPLE_ACTIVITY_RULES: MergeCompanionRuleDef[] = [
       allowPeekMerge: true,
     },
     carrier: 'direct_reward_box',
-    payload: { kind: 'fixed_item', itemId: 'drink_tea_1', count: 1 },
+    payload: { kind: 'fixed_item', itemId: 'drink_butterfly_1', count: 1 },
   },
 ];

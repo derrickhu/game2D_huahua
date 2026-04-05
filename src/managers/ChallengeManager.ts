@@ -132,9 +132,9 @@ const CHALLENGE_LEVELS: ChallengeLevel[] = [
 
   // 第2章：进阶
   {
-    id: 'c2_1', chapter: 2, level: 1, name: '花饮调配', desc: '合成2杯4级茶饮',
-    icon: '🍵', type: ChallengeType.TARGET,
-    targets: [{ desc: '合成4级茶饮×2', count: 2, current: 0 }],
+    id: 'c2_1', chapter: 2, level: 1, name: '标本进阶', desc: '合成2个4级蝴蝶标本',
+    icon: '🦋', type: ChallengeType.TARGET,
+    targets: [{ desc: '合成4级蝴蝶标本×2', count: 2, current: 0 }],
     star1: '完成目标', star2: '12步内', star3: '8步内',
     reward: { gold: 300, diamond: 5, huayuan: 1 },
     unlockStars: 8,
@@ -148,11 +148,11 @@ const CHALLENGE_LEVELS: ChallengeLevel[] = [
     unlockStars: 10,
   },
   {
-    id: 'c2_3', chapter: 2, level: 3, name: '混合达人', desc: '同时合成鲜花和茶饮',
+    id: 'c2_3', chapter: 2, level: 3, name: '混合达人', desc: '同时合成鲜花和蝴蝶标本',
     icon: '🎨', type: ChallengeType.TIMED, timeLimit: 60,
     targets: [
       { desc: '合成4级鲜花×2', count: 2, current: 0 },
-      { desc: '合成3级茶饮×2', count: 2, current: 0 },
+      { desc: '合成3级蝴蝶标本×2', count: 2, current: 0 },
     ],
     star1: '完成所有目标', star2: '40秒内', star3: '25秒内',
     reward: { gold: 600, diamond: 12, huayuan: 3 },

@@ -18,6 +18,7 @@ import {
   WORLD_MAP_CONTENT_H,
   type MapNodeDef,
 } from '@/config/WorldMapConfig';
+import { WishingFountainMapFxLayer } from '@/gameobjects/ui/WishingFountainMapFxLayer';
 
 const FRICTION = 0.92;
 const MIN_VELOCITY = 0.4;
@@ -53,6 +54,10 @@ export class WorldMapPanel extends PIXI.Container {
   private _lastDragTime = 0;
   private _hasMoved = false;
 
+  /** 许愿喷泉两帧精灵，大地图打开时交替显示模拟水波 */
+  private _wishingFountainAnimPair: [PIXI.Sprite, PIXI.Sprite] | null = null;
+  private _wishingFountainAnimAcc = 0;
+
   /** 花店场景截取的当前房间缩略图（关闭大地图后销毁） */
   private _liveHouseRt: PIXI.RenderTexture | null = null;
 
@@ -61,6 +66,7 @@ export class WorldMapPanel extends PIXI.Container {
 
   private readonly _onTicker = (): void => {
     if (!this._isOpen || !this.visible) return;
+    this._tickWishingFountainWaterAnim(Game.ticker.deltaMS);
     this.update(Game.ticker.deltaMS / 1000);
   };
 
@@ -91,7 +97,13 @@ export class WorldMapPanel extends PIXI.Container {
     if (this._isOpen) return;
     this._isOpen = true;
     this.visible = true;
+    this._wishingFountainAnimAcc = 0;
     this._refreshNodes();
+    const wf = this._wishingFountainAnimPair;
+    if (wf) {
+      wf[0].visible = true;
+      wf[1].visible = false;
+    }
     this._scrollToCurrentHouse();
     this.alpha = 0;
     Game.ticker.add(this._onTicker, this);
@@ -185,7 +197,7 @@ export class WorldMapPanel extends PIXI.Container {
         keys.push('house_shop', 'bg_room_default');
         break;
       case 'wishing_fountain':
-        keys.push('worldmap_thumb_wishing_fountain', 'icon_worldmap');
+        keys.push('worldmap_thumb_wishing_fountain_2', 'icon_worldmap');
         break;
       case 'garden_villa':
         keys.push('icon_build');
@@ -255,6 +267,7 @@ export class WorldMapPanel extends PIXI.Container {
   }
 
   private _buildNodes(): void {
+    this._wishingFountainAnimPair = null;
     for (const node of MAP_NODES) {
       const nc = this._createNodeContainer(node);
       nc.position.set(node.x, this._mapNodeY(node.y));
@@ -269,37 +282,60 @@ export class WorldMapPanel extends PIXI.Container {
     (c as any)._nodeId = node.id;
 
     const thumbSize = node.thumbSize ?? 150;
-    const tex = this._resolveNodeThumbTexture(node);
+    const tF1 = TextureCache.get('worldmap_thumb_wishing_fountain_1');
+    const tF2 = TextureCache.get('worldmap_thumb_wishing_fountain_2');
 
-    if (tex && tex.width > 1) {
-      const sp = new PIXI.Sprite(tex);
-      sp.anchor.set(0.5);
-      const sc = thumbSize / Math.max(tex.width, tex.height);
-      sp.scale.set(sc);
-      sp.eventMode = 'none';
-      (c as any)._mapThumbSprite = sp;
-      c.addChild(sp);
+    if (node.id === 'wishing_fountain' && tF1 && tF1.width > 1 && tF2 && tF2.width > 1) {
+      const sa = new PIXI.Sprite(tF1);
+      const sb = new PIXI.Sprite(tF2);
+      sa.anchor.set(0.5);
+      sb.anchor.set(0.5);
+      const maxDim = Math.max(tF1.width, tF1.height, tF2.width, tF2.height);
+      const sc = thumbSize / maxDim;
+      sa.scale.set(sc);
+      sb.scale.set(sc);
+      sa.eventMode = 'none';
+      sb.eventMode = 'none';
+      sb.visible = false;
+      c.addChild(sa);
+      c.addChild(sb);
+      /** 细闪叠在缩略图之上（在图后会被不透明像素挡住），文字 label 后加保持最上层 */
+      c.addChild(new WishingFountainMapFxLayer(thumbSize));
+      (c as any)._mapThumbSprite = sa;
+      this._wishingFountainAnimPair = [sa, sb];
     } else {
-      const g = new PIXI.Graphics();
-      const hw = thumbSize / 2;
-      const hh = thumbSize * 0.6;
-      g.beginFill(this._nodeColor(node), 0.85);
-      g.moveTo(0, -hh);
-      g.lineTo(hw, -hh * 0.3);
-      g.lineTo(hw, hh * 0.5);
-      g.lineTo(-hw, hh * 0.5);
-      g.lineTo(-hw, -hh * 0.3);
-      g.closePath();
-      g.endFill();
-      g.beginFill(this._nodeColor(node), 0.6);
-      g.moveTo(-hw - 10, -hh * 0.3);
-      g.lineTo(0, -hh);
-      g.lineTo(hw + 10, -hh * 0.3);
-      g.closePath();
-      g.endFill();
-      g.eventMode = 'none';
-      (c as any)._mapThumbSprite = undefined;
-      c.addChild(g);
+      const tex = this._resolveNodeThumbTexture(node);
+
+      if (tex && tex.width > 1) {
+        const sp = new PIXI.Sprite(tex);
+        sp.anchor.set(0.5);
+        const sc = thumbSize / Math.max(tex.width, tex.height);
+        sp.scale.set(sc);
+        sp.eventMode = 'none';
+        (c as any)._mapThumbSprite = sp;
+        c.addChild(sp);
+      } else {
+        const g = new PIXI.Graphics();
+        const hw = thumbSize / 2;
+        const hh = thumbSize * 0.6;
+        g.beginFill(this._nodeColor(node), 0.85);
+        g.moveTo(0, -hh);
+        g.lineTo(hw, -hh * 0.3);
+        g.lineTo(hw, hh * 0.5);
+        g.lineTo(-hw, hh * 0.5);
+        g.lineTo(-hw, -hh * 0.3);
+        g.closePath();
+        g.endFill();
+        g.beginFill(this._nodeColor(node), 0.6);
+        g.moveTo(-hw - 10, -hh * 0.3);
+        g.lineTo(0, -hh);
+        g.lineTo(hw + 10, -hh * 0.3);
+        g.closePath();
+        g.endFill();
+        g.eventMode = 'none';
+        (c as any)._mapThumbSprite = undefined;
+        c.addChild(g);
+      }
     }
 
     const label = new PIXI.Text(node.label, {
@@ -316,6 +352,18 @@ export class WorldMapPanel extends PIXI.Container {
     c.hitArea = new PIXI.Rectangle(-thumbSize / 2, -thumbSize * 0.6, thumbSize, thumbSize * 0.6 + 40);
 
     return c;
+  }
+
+  private _tickWishingFountainWaterAnim(deltaMS: number): void {
+    const pair = this._wishingFountainAnimPair;
+    if (!pair) return;
+    this._wishingFountainAnimAcc += deltaMS;
+    if (this._wishingFountainAnimAcc < 420) return;
+    this._wishingFountainAnimAcc = 0;
+    const [a, b] = pair;
+    const showA = !a.visible;
+    a.visible = showA;
+    b.visible = !showA;
   }
 
   private _nodeColor(node: MapNodeDef): number {
@@ -378,6 +426,7 @@ export class WorldMapPanel extends PIXI.Container {
 
     for (let i = 0; i < MAP_NODES.length; i++) {
       const node = MAP_NODES[i];
+      if (node.id === 'wishing_fountain') continue;
       const nc = this._nodeContainers[i];
       const sp = nc ? (nc as any)._mapThumbSprite as PIXI.Sprite | undefined : undefined;
       if (!sp || sp.destroyed) continue;

@@ -17,7 +17,7 @@ export interface FlowerSignPoolEntry {
 export const FLOWER_SIGN_GACHA_POOL: FlowerSignPoolEntry[] = [
   { itemId: 'flower_fresh_1', weight: 28 },
   { itemId: 'flower_green_1', weight: 24 },
-  { itemId: 'drink_tea_1', weight: 18 },
+  { itemId: 'drink_butterfly_1', weight: 18 },
   { itemId: 'currency_stamina_1', weight: 14 },
   { itemId: 'currency_huayuan_pickup_1', weight: 10 },
   { itemId: 'tool_plant_1', weight: 6 },

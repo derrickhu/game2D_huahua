@@ -347,7 +347,7 @@ class GMManagerClass {
       id: 'gm_star_up_one',
       group: '📊 等级调整',
       name: '⭐ 当前场景升 1 星级',
-      desc: '按装修进度条：补足星星升到下一星级（花店/茶屋等当前房）',
+      desc: '按装修进度条：补足星星升到下一星级（花店/蝴蝶小屋等当前房）',
       execute: () => {
         const sid = CurrencyManager.state.sceneId;
         const star = CurrencyManager.state.star;
@@ -498,7 +498,7 @@ class GMManagerClass {
       id: 'give_lucky_coin',
       group: '➕ 增加物品',
       name: '🪙 幸运金币 → 收纳盒×1',
-      desc: '发放到奖励收纳盒，取出后可拖至鲜花/饮品上随机升或降一级',
+      desc: '发放到奖励收纳盒，取出后可拖至鲜花或饮品（含蝴蝶标本）上随机升或降一级',
       execute: () => {
         RewardBoxManager.addItem(LUCKY_COIN_ITEM_ID, 1);
         return '✅ 已发放 1 枚幸运金币到收纳盒';
@@ -509,7 +509,7 @@ class GMManagerClass {
       id: 'give_crystal_ball',
       group: '➕ 增加物品',
       name: '🔮 万能水晶 → 收纳盒×1',
-      desc: '发放到收纳盒；拖到鲜花/饮品（非工具）上确认后稳定升一级',
+      desc: '发放到收纳盒；拖到鲜花或饮品（非工具，含蝴蝶标本）上确认后稳定升一级',
       execute: () => {
         RewardBoxManager.addItem(CRYSTAL_BALL_ITEM_ID, 1);
         return '✅ 已发放 1 个万能水晶到收纳盒';
@@ -520,7 +520,7 @@ class GMManagerClass {
       id: 'give_golden_scissors',
       group: '➕ 增加物品',
       name: '✂️ 金剪刀 → 收纳盒×1',
-      desc: '发放到收纳盒；拖到 2 级及以上鲜花/饮品上确认后拆成两个低一级同线物品',
+      desc: '发放到收纳盒；拖到 2 级及以上鲜花或饮品（含蝴蝶标本）上确认后拆成两个低一级同线物品',
       execute: () => {
         RewardBoxManager.addItem(GOLDEN_SCISSORS_ITEM_ID, 1);
         return '✅ 已发放 1 把金剪刀到收纳盒';

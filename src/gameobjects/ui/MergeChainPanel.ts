@@ -448,7 +448,7 @@ export class MergeChainPanel extends PIXI.Container {
     return this._isDiscoveredInAlbum(def);
   }
 
-  /** 图鉴已收录（花束/花饮/建筑）；宝箱线等未进图鉴的仍只看棋盘 */
+  /** 图鉴已收录（花束/饮品/建筑）；宝箱线等未进图鉴的仍只看棋盘 */
   private _isDiscoveredInAlbum(def: ItemDef): boolean {
     switch (def.category) {
       case Category.FLOWER:
@@ -1170,7 +1170,7 @@ export class MergeChainPanel extends PIXI.Container {
       fresh: COLORS.FLOWER_FRESH,
       bouquet: COLORS.FLOWER_BOUQUET,
       green: COLORS.FLOWER_GREEN,
-      tea: COLORS.DRINK_TEA,
+      butterfly: COLORS.DRINK_BUTTERFLY,
       cold: COLORS.DRINK_COLD,
       dessert: COLORS.DRINK_DESSERT,
     };
@@ -1180,7 +1180,7 @@ export class MergeChainPanel extends PIXI.Container {
   private _getCategoryEmoji(category: Category): string {
     switch (category) {
       case Category.FLOWER: return '🌸';
-      case Category.DRINK: return '🍵';
+      case Category.DRINK: return '🦋';
       case Category.BUILDING: return '🏠';
       case Category.CHEST: return '📦';
       case Category.CURRENCY: return '💰';

@@ -77,9 +77,10 @@ export const MAP_NODES: MapNodeDef[] = [
     id: 'wishing_fountain',
     type: 'gacha',
     label: '许愿喷泉',
-    x: 620,
-    y: 498,
-    thumbKey: 'worldmap_thumb_wishing_fountain',
+    /** 相对原 (570,648) 左移 300、下移 50 */
+    x: 270,
+    y: 698,
+    thumbKey: 'worldmap_thumb_wishing_fountain_1',
     thumbSize: 150,
     unlockLevel: 1,
     popupEvent: 'panel:openFlowerSignGacha',

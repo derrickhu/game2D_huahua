@@ -1,0 +1,25 @@
+One single WIDE horizontal game asset image, aspect about 16:9, flat solid #FF00FF magenta everywhere behind subjects (no gradient). NO black line, NO gray seam, NO visible divider between the two halves — only continuous magenta between them.
+
+Layout: TWO EQUAL WIDTH vertical panels, same width, invisible join at exact horizontal center (for later cropping only — do not draw the join).
+
+FORBIDDEN — BOOK-OPEN MIRROR LAYOUT: Many models wrongly mirror the whole scene so the left fairy faces right (toward the center) and the right fairy faces left (toward the center), making a symmetrical “open book”. That is WRONG. Do NOT do that.
+
+MANDATORY — SAME GLOBAL FACING IN BOTH PANELS: The fairy must use the EXACT SAME three-quarter pose and facing in panel 1 and panel 2. Example lock (follow closely): in BOTH panels, the fairy’s body and gaze tilt toward the LOWER-RIGHT corner of that panel (same compass within each cell). Her hair part, leaf hair clip, visible ear, and cheek bias must sit on the SAME sides in BOTH panels. The stone basin’s chipped stones, brightest rim highlights, and shadow bias must fall on the SAME clock positions in BOTH panels. The water stream must arc the SAME way in BOTH (same start, same curve, same splash zone) — only micro splash shape differs.
+
+ASYMMETRIC ANCHORS (IDENTICAL IN BOTH PANELS — BREAKS MIRRORING): Add at least two small fixed landmarks that are NOT symmetrical, and place them in the SAME spot in BOTH panels: (1) one tiny chipped lighter stone on the basin rim at the front-left quadrant of the fountain; (2) one small round gold coin glint under the water surface slightly left of the pedestal. These anchors must NOT swap sides between panels.
+
+ABSOLUTE — NO MOTION LINES: No speed lines, swooshes, comic streaks, or white curved action lines. Wing change = real wing silhouette/angle/height only.
+
+WORKFLOW: Fully paint the LEFT panel. Copy that entire illustration into the RIGHT panel. Then on the RIGHT panel ONLY, repaint wing pose (more raised vs more lowered — clearly different wing tip height) and repaint ONLY the pool impact ripples/splash. Do NOT flip horizontally. Do NOT re-light from the opposite side.
+
+FOUNTAIN LOGIC — MUST READ LIKE A REAL FOUNTAIN: One self-contained round stone basin with calm pool water. A short carved stone pillar stands at the CENTER of the basin; the chibi flower fairy sits on top as the landmark. The water feature is NOT fed from off-screen. The main jet MUST start ONLY from the fairy’s held blossom / cupped flower / her hands (or a tiny ornamental spout on the pillar immediately beneath her) — all attachment points INSIDE the fountain, fully visible. Water shoots or arcs UP and OUT from that blossom, then falls in a clear parabola BACK INTO the same basin. FORBIDDEN: any stream entering from the image edge or top of frame; “rain” or a pipe from the magenta void; water that looks like an external hose filling the pool; disconnected water with no visible source on the statue or pillar. The viewer must instantly read: “the fairy / flower is the spout.”
+
+FAIRY: Chibi flower fairy on the center stone pillar in the basin — pink hair, green leaf clip, mint and pink petal dress, glossy eyes, warm brown outlines, merge-game cute style. She holds the large blossom that acts as the spout.
+
+WINGS: Mostly opaque pastel — no heavy transparency, no magenta showing through wing fill.
+
+WATER: Turquoise/cyan/white only — no pink, magenta, purple in water. Stream and splash stay inside the basin volume; pool surface shows the landing splash.
+
+ALLOWED DIFFERENCES ONLY: wing pose (real geometry) + splash/ripples at impact. Everything else identical.
+
+Soft isometric ~45° from upper-left, chunky 2D, not photorealistic. No UI, no text, no watermark.

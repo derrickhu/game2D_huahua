@@ -534,7 +534,7 @@ export class ItemView extends PIXI.Container {
   private _getCategoryEmoji(category: Category): string {
     switch (category) {
       case Category.FLOWER: return '🌸';
-      case Category.DRINK: return '🍵';
+      case Category.DRINK: return '🦋';
       case Category.BUILDING: return '🏠';
       case Category.CHEST: return '📦';
       case Category.CURRENCY: return '💰';
@@ -559,7 +559,7 @@ export class ItemView extends PIXI.Container {
       case FlowerLine.BOUQUET: return COLORS.FLOWER_BOUQUET;
       case FlowerLine.WRAP: return COLORS.FLOWER_WRAP;
       case FlowerLine.GREEN: return COLORS.FLOWER_GREEN;
-      case DrinkLine.TEA: return COLORS.DRINK_TEA;
+      case DrinkLine.BUTTERFLY: return COLORS.DRINK_BUTTERFLY;
       case DrinkLine.COLD: return COLORS.DRINK_COLD;
       case DrinkLine.DESSERT: return COLORS.DRINK_DESSERT;
       default: return 0x999999;

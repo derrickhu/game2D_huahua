@@ -277,8 +277,8 @@ export class ShopScene implements Scene {
   private _zoomSliderDragActive = false;
   private _zoomSliderLastTap = 0;
   private _zoomSliderPointerId = 0;
-  private _onZoomSliderCanvasMove: ((e: PointerEvent) => void) | null = null;
-  private _onZoomSliderCanvasUp: ((e: PointerEvent) => void) | null = null;
+  private _onZoomSliderCanvasMove: ((e: Event) => void) | null = null;
+  private _onZoomSliderCanvasUp: ((e: Event) => void) | null = null;
   // pinch 手势追踪
   private _pinchPointers = new Map<number, { x: number; y: number }>();
   private _pinchStartDist = 0;
@@ -2015,6 +2015,23 @@ export class ShopScene implements Scene {
     return Math.max(0, Math.min(H, gh - topY));
   }
 
+  /** 画布级监听用：部分环境 federated nativeEvent 无 clientY，用 Touch 兜底 */
+  private _clientYFromBrowserEvent(ev: Event): number | null {
+    const pe = ev as PointerEvent & MouseEvent;
+    if (typeof pe.clientY === 'number') return pe.clientY;
+    const te = ev as TouchEvent;
+    const t = te.changedTouches?.[0] ?? te.touches?.[0];
+    return t ? t.clientY : null;
+  }
+
+  private _pointerIdFromBrowserEvent(ev: Event): number {
+    const pe = ev as PointerEvent;
+    if (typeof pe.pointerId === 'number') return pe.pointerId;
+    const te = ev as TouchEvent;
+    const t = te.changedTouches?.[0] ?? te.touches?.[0];
+    return t?.identifier ?? 0;
+  }
+
   /** 构建缩放滑杆：整体靠右减少挡家具；仅圆形滑块可交互，轨道不响应 */
   private _buildZoomControls(): void {
     if (this._zoomSlider) return;
@@ -2027,7 +2044,9 @@ export class ShopScene implements Scene {
 
     const root = new PIXI.Container();
     root.position.set(DESIGN_WIDTH - EDGE_INSET, cy);
-    root.eventMode = 'none';
+    /** `none` 会在 Pixi 命中阶段整枝子树，thumb 永远点不到；`passive` 自身不挡点、子节点仍可测 */
+    root.eventMode = 'passive';
+    root.interactiveChildren = true;
     /** 高于房间与飞星，低于升星弹窗(8500) */
     root.zIndex = 8300;
 
@@ -2052,8 +2071,10 @@ export class ShopScene implements Scene {
 
     thumb.on('pointerdown', (e: PIXI.FederatedPointerEvent) => {
       e.stopPropagation();
-      const native = e.nativeEvent as PointerEvent | undefined;
+      const native = e.nativeEvent as Event | undefined;
       if (!native) return;
+      const startY = this._clientYFromBrowserEvent(native);
+      if (startY == null) return;
 
       const now = Date.now();
       if (now - this._zoomSliderLastTap < 280) {
@@ -2066,33 +2087,39 @@ export class ShopScene implements Scene {
       if (this._zoomSliderDragging) return;
       this._zoomSliderDragging = true;
       this._zoomSliderDragActive = true;
-      this._zoomSliderPointerId = native.pointerId ?? 0;
+      const pid = this._pointerIdFromBrowserEvent(native);
+      this._zoomSliderPointerId = pid;
 
       const canvas = Game.app.view as HTMLCanvasElement;
-      if (canvas.setPointerCapture && native.pointerId != null) {
+      if (canvas.setPointerCapture && typeof (native as PointerEvent).pointerId === 'number') {
         try {
-          canvas.setPointerCapture(native.pointerId);
+          canvas.setPointerCapture((native as PointerEvent).pointerId);
         } catch (_) { /* */ }
       }
 
-      const ly0 = this._sliderLocalYFromClientY(native.clientY);
+      const ly0 = this._sliderLocalYFromClientY(startY);
       this._applyViewZoom(this._scaleFromTrackY(ly0));
 
-      this._onZoomSliderCanvasMove = (ev: PointerEvent) => {
+      this._onZoomSliderCanvasMove = (ev: Event) => {
         if (!this._zoomSliderDragging || !this._zoomSlider) return;
-        if (this._zoomSliderPointerId && ev.pointerId !== this._zoomSliderPointerId) return;
-        const ly2 = this._sliderLocalYFromClientY(ev.clientY);
+        const movePid = this._pointerIdFromBrowserEvent(ev);
+        if (this._zoomSliderPointerId && movePid !== this._zoomSliderPointerId) return;
+        const cy = this._clientYFromBrowserEvent(ev);
+        if (cy == null) return;
+        const ly2 = this._sliderLocalYFromClientY(cy);
         this._applyViewZoom(this._scaleFromTrackY(ly2));
       };
 
-      this._onZoomSliderCanvasUp = (ev: PointerEvent) => {
-        if (this._zoomSliderPointerId && ev.pointerId !== this._zoomSliderPointerId) return;
+      this._onZoomSliderCanvasUp = (ev: Event) => {
+        const upPid = this._pointerIdFromBrowserEvent(ev);
+        if (this._zoomSliderPointerId && upPid !== this._zoomSliderPointerId) return;
         this._zoomSliderDragging = false;
         this._zoomSliderDragActive = false;
         this._zoomSliderPointerId = 0;
-        if (canvas.releasePointerCapture && ev.pointerId != null) {
+        const pe = ev as PointerEvent;
+        if (canvas.releasePointerCapture && typeof pe.pointerId === 'number') {
           try {
-            canvas.releasePointerCapture(ev.pointerId);
+            canvas.releasePointerCapture(pe.pointerId);
           } catch (_) { /* */ }
         }
         if (this._onZoomSliderCanvasMove) {

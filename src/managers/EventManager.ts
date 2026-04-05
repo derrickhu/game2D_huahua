@@ -113,7 +113,7 @@ const EVENT_TEMPLATES: Omit<GameEvent, 'startTime' | 'endTime'>[] = [
     tasks: [
       { id: 'e_merge_20', name: '合成冲刺', desc: '完成20次合成', icon: '🧩', target: 20, current: 0, pointReward: 80, completed: false, claimed: false },
       { id: 'e_merge_40', name: '合成狂飙', desc: '完成40次合成', icon: '🧩', target: 40, current: 0, pointReward: 250, completed: false, claimed: false },
-      { id: 'e_drink_3', name: '饮品师', desc: '合成3杯3级花饮', icon: '🍵', target: 3, current: 0, pointReward: 150, completed: false, claimed: false },
+      { id: 'e_drink_3', name: '标本师', desc: '合成3次3级蝴蝶标本（菜粉蝶）', icon: '🦋', target: 3, current: 0, pointReward: 150, completed: false, claimed: false },
       { id: 'e_huayuan_1000', name: '小富翁', desc: '累计获得1000花愿', icon: '💰', target: 1000, current: 0, pointReward: 120, completed: false, claimed: false },
       { id: 'e_daily_login', name: '每日签到', desc: '活动期间登录5天', icon: '📅', target: 5, current: 0, pointReward: 200, completed: false, claimed: false },
     ],
@@ -170,12 +170,15 @@ class EventManagerClass {
     this._unbindEvents();
     if (!this._activeEvent) return;
 
-    this._on('board:merged', () => {
+    this._on('board:merged', (_src: number, _dst: number, resultId?: string) => {
       this._incrementTask('e_merge_10', 1);
       this._incrementTask('e_merge_20', 1);
       this._incrementTask('e_merge_25', 1);
       this._incrementTask('e_merge_40', 1);
       this._incrementTask('e_merge_50', 1);
+      if (resultId === 'drink_butterfly_3') {
+        this._incrementTask('e_drink_3', 1);
+      }
     });
 
     this._on('customer:delivered', () => {

@@ -55,7 +55,7 @@ export const MERCH_FREE_SHOP_RARE_WEIGHT = 3;
 export const MERCH_MYSTERY_UNLOCKED_LEVEL_NUM = 200;
 /** 未解锁整条合成线时，相对已解锁线的权重倍率（更低） */
 export const MERCH_MYSTERY_LOCKED_LINE_WEIGHT_FACTOR = 0.11;
-/** 工具线仅 1 级入池时的基础权重（相对花饮 L1 很低） */
+/** 工具线仅 1 级入池时的基础权重（相对饮品 L1 很低） */
 export const MERCH_MYSTERY_TOOL_L1_WEIGHT = 6;
 /** 单格库存上限 */
 export const MERCH_MYSTERY_STOCK_CAP = 6;

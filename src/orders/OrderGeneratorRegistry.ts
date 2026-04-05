@@ -1,5 +1,5 @@
 /**
- * 订单需求生成：基础档池、饮品槽回退、组合单、成长加成、活动钩子占位。
+ * 订单需求生成：基础档池、饮品槽回退（蝴蝶/冷饮/甜品）、组合单、成长加成、活动钩子占位。
  */
 import type { CustomerDemandDef } from '@/config/CustomerConfig';
 import {
@@ -12,9 +12,20 @@ import {
   Category,
   DrinkLine,
   FlowerLine,
+  ITEM_DEFS,
   findItemId,
   getMaxLevelForLine,
 } from '@/config/ItemConfig';
+import {
+  ORDER_ASPIRATIONAL_LEVEL_BONUS_CHANCE,
+  ORDER_COMBO_MIN_UNLOCKED_LINES_FOR_THIRD_SLOT,
+  ORDER_COMBO_THIRD_SLOT_CHANCE,
+  ORDER_GROWTH_BONUS_MULTIPLIER,
+  ORDER_GROWTH_MIN_MAX_NORM,
+  maxSlotNormForSlots,
+  orderComboEffectiveChance,
+  orderGrowthRollChance,
+} from '@/config/OrderSpawnConfig';
 import {
   type OrderGenContext,
   type OrderGenResult,
@@ -23,12 +34,7 @@ import {
   getActivityOrderHook,
 } from './types';
 
-const ASPIRATIONAL_LEVEL_BONUS_CHANCE = 0.09;
-const COMBO_ORDER_CHANCE = 0.12;
-const GROWTH_ORDER_CHANCE = 0.16;
-const GROWTH_BONUS_MULTIPLIER = 1.18;
-
-function toolCapForLine(category: Category, line: string, ulk: UnlockedLines): number {
+export function toolCapForLine(category: Category, line: string, ulk: UnlockedLines): number {
   let toolLevel = 0;
   if (category === Category.FLOWER) {
     if (line === FlowerLine.FRESH || line === FlowerLine.GREEN) {
@@ -119,7 +125,7 @@ function pickItemLevel(
   maxItemLevel: number,
   rng: () => number,
 ): number {
-  const aspirational = toolCap > 0 && rng() < ASPIRATIONAL_LEVEL_BONUS_CHANCE;
+  const aspirational = toolCap > 0 && rng() < ORDER_ASPIRATIONAL_LEVEL_BONUS_CHANCE;
   let hi = Math.min(tierMaxLv, toolCap + (aspirational ? 1 : 0), maxItemLevel);
   const lo = Math.min(minLv, hi);
   const span = hi - lo + 1;
@@ -224,7 +230,7 @@ function comboSpecsForTier(tier: OrderTier, ulk: UnlockedLines): ComboSpec[] {
     out.push({ category: Category.FLOWER, line: FlowerLine.GREEN, minLv: r.flower[0], maxLv: r.flower[1] });
   }
   if (ulk.hasDrink) {
-    const drinkLines = [DrinkLine.TEA, DrinkLine.COLD, DrinkLine.DESSERT];
+    const drinkLines = [DrinkLine.BUTTERFLY, DrinkLine.COLD, DrinkLine.DESSERT];
     for (const dl of drinkLines) {
       out.push({ category: Category.DRINK, line: dl, minLv: r.drink[0], maxLv: r.drink[1] });
     }
@@ -291,7 +297,11 @@ function tryGenerateCombo(
 
   const tierDef = ORDER_TIERS[tier];
   const [, maxS] = tierDef.slotRange;
-  if (tier === 'S' && maxS >= 3 && rng() < 0.35 && ulk.unlockedLineCount >= 3) {
+  if (
+    maxS >= 3 &&
+    rng() < ORDER_COMBO_THIRD_SLOT_CHANCE &&
+    ulk.unlockedLineCount >= ORDER_COMBO_MIN_UNLOCKED_LINES_FOR_THIRD_SLOT
+  ) {
     const third = shuffled.find(
       s => specKey(s) !== specKey(first) && specKey(s) !== specKey(second),
     );
@@ -302,6 +312,21 @@ function tryGenerateCombo(
   }
 
   return slots;
+}
+
+/** 当前解锁工具能力下，订单槽位是否不超过 cap+1（与 aspirational 上限一致） */
+export function validateOrderSlotsToolCap(
+  slots: readonly { itemId: string }[],
+  ulk: UnlockedLines,
+): boolean {
+  for (const s of slots) {
+    const def = ITEM_DEFS.get(s.itemId);
+    if (!def) return false;
+    if (def.category !== Category.FLOWER && def.category !== Category.DRINK) continue;
+    const cap = toolCapForLine(def.category, def.line, ulk);
+    if (def.level > cap + 1) return false;
+  }
+  return true;
 }
 
 /**
@@ -327,7 +352,8 @@ export function generateOrderDemands(ctx: OrderGenContext): OrderGenResult | nul
   const { tier, lines, rng } = ctx;
   const tierDef = ORDER_TIERS[tier];
 
-  if (lines.unlockedLineCount >= 2 && rng() < COMBO_ORDER_CHANCE) {
+  const comboChance = orderComboEffectiveChance(lines);
+  if (lines.unlockedLineCount >= 2 && rng() < comboChance) {
     const comboSlots = tryGenerateCombo(tier, lines, rng, ctx.forceGreenFlowerSlot);
     if (comboSlots && comboSlots.length >= 2) {
       return {
@@ -337,12 +363,14 @@ export function generateOrderDemands(ctx: OrderGenContext): OrderGenResult | nul
         generationKind: 'combo',
       };
     }
+    console.debug('[OrderGen] combo roll missed (pool empty or pick failed), fallback to pool');
   }
 
   let bonusMultiplier: number | undefined;
   let generationKind: OrderGenerationKind = 'basic';
-  if ((tier === 'A' || tier === 'S') && rng() < GROWTH_ORDER_CHANCE) {
-    bonusMultiplier = GROWTH_BONUS_MULTIPLIER;
+  const growthRoll = rng() < orderGrowthRollChance(tier);
+  if (growthRoll) {
+    bonusMultiplier = ORDER_GROWTH_BONUS_MULTIPLIER;
     generationKind = 'growth';
   }
 
@@ -356,6 +384,11 @@ export function generateOrderDemands(ctx: OrderGenContext): OrderGenResult | nul
     tier,
   });
   if (slots.length === 0) return null;
+
+  if (generationKind === 'growth' && maxSlotNormForSlots(slots) < ORDER_GROWTH_MIN_MAX_NORM) {
+    bonusMultiplier = undefined;
+    generationKind = 'basic';
+  }
 
   return {
     slots,

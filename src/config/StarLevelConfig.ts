@@ -65,7 +65,7 @@ const FLOWER_SHOP_MILESTONES: StarMilestoneDef[] = [
   { star: 160, rewards: [{ type: 'diamond', amount: 20 }, { type: 'stamina', amount: 50 }] },
 ];
 
-const TEA_HOUSE_THRESHOLDS: StarLevelThreshold[] = [
+const BUTTERFLY_HOUSE_THRESHOLDS: StarLevelThreshold[] = [
   { level: 1,  starRequired: 0,   label: '一星' },
   { level: 2,  starRequired: 8,   label: '二星' },
   { level: 3,  starRequired: 18,  label: '三星' },
@@ -76,7 +76,7 @@ const TEA_HOUSE_THRESHOLDS: StarLevelThreshold[] = [
   { level: 8,  starRequired: 120, label: '八星' },
 ];
 
-const TEA_HOUSE_MILESTONES: StarMilestoneDef[] = [
+const BUTTERFLY_HOUSE_MILESTONES: StarMilestoneDef[] = [
   { star: 8,   rewards: [{ type: 'stamina', amount: 25 }] },
   { star: 18,  rewards: [{ type: 'chest', amount: 1, itemId: 'chest_1' }] },
   { star: 30,  rewards: [{ type: 'diamond', amount: 8 }, { type: 'chest', amount: 1, itemId: 'chest_2' }] },
@@ -95,11 +95,11 @@ export const SCENE_DEFS: SceneDef[] = [
     milestones: FLOWER_SHOP_MILESTONES,
   },
   {
-    sceneId: 'tea_house',
-    name: '茶屋',
+    sceneId: 'butterfly_house',
+    name: '蝴蝶小屋',
     maxStarLevel: 8,
-    thresholds: TEA_HOUSE_THRESHOLDS,
-    milestones: TEA_HOUSE_MILESTONES,
+    thresholds: BUTTERFLY_HOUSE_THRESHOLDS,
+    milestones: BUTTERFLY_HOUSE_MILESTONES,
   },
 ];
 

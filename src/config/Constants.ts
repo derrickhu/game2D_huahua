@@ -121,7 +121,7 @@ export const COLORS = {
   FLOWER_GREEN: 0x66BB6A,    // 绿植线 - 绿色
 
   // 饮品线色标
-  DRINK_TEA: 0x90EE90,       // 茶饮线 - 浅绿
+  DRINK_BUTTERFLY: 0x90EE90,   // 蝴蝶线 - 浅绿
   DRINK_COLD: 0x87CEEB,      // 冷饮线 - 天蓝
   DRINK_DESSERT: 0xFFB6C1,   // 甜品线 - 浅粉
 

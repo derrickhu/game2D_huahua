@@ -1,7 +1,7 @@
 /**
  * 工具/建筑配置
  *
- * 工具链：园艺 6 级；包装线 5 级；茶饮/冷饮/烘焙 5 级；1–2级不可产出，3级起可产出（包装线产出包装中间品）。
+ * 工具链：园艺 6 级；包装线 5 级；捕虫网/冷饮/烘焙各 5 级；1–2级不可产出，3级起可产出（包装线产出包装中间品）。
  * 花束由「花束包装纸」消耗次数产出；种植线用 produceOutcomes。
  * 工具放在棋盘上可点击产出（仅 canProduce），合成两个同级工具升级为下一级
  */
@@ -21,7 +21,7 @@ export interface ToolDef {
   itemId: string;
   /** 工具线 */
   toolLine: ToolLine;
-  /** 工具等级（园艺/花艺 1–6；茶饮/冷饮/烘焙 1–5） */
+  /** 工具等级（园艺/花艺 1–6；捕虫网/冷饮/烘焙 1–5） */
   level: number;
   /** 是否可点击产出（1–2 级为 false，仅合成） */
   canProduce: boolean;
@@ -64,13 +64,25 @@ const SHARED_PRODUCE_TABLE_LV2: [number, number][] = [[2, 60], [3, 25], [4, 10],
 /** 产出档 C（原 Lv3 工具表） */
 const SHARED_PRODUCE_TABLE_LV3: [number, number][] = [[4, 70], [5, 20], [6, 9], [7, 1]];
 
-// ═══════════════ 冷饮线工具（tool_mixer）专属产出等级表；茶饮/烘焙仍用 SHARED_PRODUCE_TABLE_* ═══════════════
+// ═══════════════ 冷饮线工具（tool_mixer）专属产出等级表；蝴蝶网/烘焙用专用表或 SHARED ═══════════════
 /** tool_mixer_3：仅 1 级冷饮 */
 const MIXER_PRODUCE_TABLE_L3: [number, number][] = [[1, 100]];
 /** tool_mixer_4：1～2 级 */
 const MIXER_PRODUCE_TABLE_L4: [number, number][] = [[1, 58], [2, 42]];
 /** tool_mixer_5：1～3 级 */
 const MIXER_PRODUCE_TABLE_L5: [number, number][] = [[1, 45], [2, 35], [3, 20]];
+
+// ═══════════════ 蝴蝶线工具（tool_butterfly_net）专属产出等级表；产品共 10 级 ═══════════════
+/** tool_butterfly_net_3：入门 1～3 级 */
+const BUTTERFLY_NET_PRODUCE_TABLE_L3: [number, number][] = [[1, 62], [2, 28], [3, 10]];
+/** tool_butterfly_net_4：2～6 级 */
+const BUTTERFLY_NET_PRODUCE_TABLE_L4: [number, number][] = [
+  [2, 18], [3, 28], [4, 28], [5, 16], [6, 10],
+];
+/** tool_butterfly_net_5：中高等级，含 CD */
+const BUTTERFLY_NET_PRODUCE_TABLE_L5: [number, number][] = [
+  [4, 22], [5, 22], [6, 20], [7, 16], [8, 12], [9, 5], [10, 3],
+];
 
 // ═══════════════ 包装线工具 → 产出包装中间品（FlowerLine.WRAP） ═══════════════
 
@@ -269,10 +281,26 @@ const plantToolTemplate = (): Omit<ToolDef, 'itemId' | 'level'>[] => [
   },
 ];
 
-// ═══════════════ 饮品工具（产品8级）— 茶饮/冷饮/烘焙线为 5 级，无第 6 档 ═══════════════
+// ═══════════════ 饮品工具 — 蝴蝶 10 级 + 捕虫网 5 档；冷饮/甜品 8 级 + 各 5 档 ═══════════════
 
 const drinkToolTemplate = (toolLine: ToolLine, produceLine: DrinkLine): Omit<ToolDef, 'itemId' | 'level'>[] => {
   const isMixer = toolLine === ToolLine.MIXER;
+  const isButterflyNet = produceLine === DrinkLine.BUTTERFLY;
+  const tableL3 = isMixer
+    ? MIXER_PRODUCE_TABLE_L3
+    : isButterflyNet
+      ? BUTTERFLY_NET_PRODUCE_TABLE_L3
+      : SHARED_PRODUCE_TABLE_LV1;
+  const tableL4 = isMixer
+    ? MIXER_PRODUCE_TABLE_L4
+    : isButterflyNet
+      ? BUTTERFLY_NET_PRODUCE_TABLE_L4
+      : SHARED_PRODUCE_TABLE_LV2;
+  const tableL5 = isMixer
+    ? MIXER_PRODUCE_TABLE_L5
+    : isButterflyNet
+      ? BUTTERFLY_NET_PRODUCE_TABLE_L5
+      : SHARED_PRODUCE_TABLE_LV3;
   return [
     {
       toolLine, produceCategory: Category.DRINK, produceLine,
@@ -289,19 +317,19 @@ const drinkToolTemplate = (toolLine: ToolLine, produceLine: DrinkLine): Omit<Too
     {
       toolLine, produceCategory: Category.DRINK, produceLine,
       canProduce: true,
-      produceTable: isMixer ? MIXER_PRODUCE_TABLE_L3 : SHARED_PRODUCE_TABLE_LV1,
+      produceTable: tableL3,
       cooldown: 0, producesBeforeCooldown: 0, staminaCost: 1,
     },
     {
       toolLine, produceCategory: Category.DRINK, produceLine,
       canProduce: true,
-      produceTable: isMixer ? MIXER_PRODUCE_TABLE_L4 : SHARED_PRODUCE_TABLE_LV2,
+      produceTable: tableL4,
       cooldown: 0, producesBeforeCooldown: 0, staminaCost: 1,
     },
     {
       toolLine, produceCategory: Category.DRINK, produceLine,
       canProduce: true,
-      produceTable: isMixer ? MIXER_PRODUCE_TABLE_L5 : SHARED_PRODUCE_TABLE_LV3,
+      produceTable: tableL5,
       cooldown: 300, producesBeforeCooldown: 10, staminaCost: 1,
     },
   ];
@@ -315,7 +343,7 @@ function buildToolDefs(): Map<string, ToolDef> {
   const allTemplates: Omit<ToolDef, 'itemId' | 'level'>[][] = [
     plantToolTemplate(),
     arrangeToolTemplate(),
-    drinkToolTemplate(ToolLine.TEA_SET, DrinkLine.TEA),
+    drinkToolTemplate(ToolLine.BUTTERFLY_NET, DrinkLine.BUTTERFLY),
     drinkToolTemplate(ToolLine.MIXER, DrinkLine.COLD),
     drinkToolTemplate(ToolLine.BAKE, DrinkLine.DESSERT),
   ];

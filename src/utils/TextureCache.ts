@@ -161,14 +161,21 @@ const PANELS_IMAGE_MAP: Record<string, string> = {
   worldmap_house_flower_shop: 'subpkg_panels/images/ui/worldmap_house_flower_shop.png',
   worldmap_thumb_flower_shop: 'subpkg_panels/images/ui/worldmap_thumb_flower_shop.png',
   worldmap_thumb_flower_market: 'subpkg_panels/images/ui/worldmap_thumb_flower_market.png',
-  worldmap_thumb_tea_house: 'subpkg_panels/images/ui/worldmap_thumb_tea_house.png',
+  worldmap_thumb_butterfly_house: 'subpkg_panels/images/ui/worldmap_thumb_tea_house.png',
   worldmap_thumb_tool_shop: 'subpkg_panels/images/ui/worldmap_thumb_tool_shop.png',
   worldmap_thumb_garden_villa: 'subpkg_panels/images/ui/worldmap_thumb_garden_villa.png',
   icon_worldmap: 'subpkg_panels/images/ui/icon_worldmap.png',
   /** 许愿池专用券图标（可换专用图；暂用花愿图标占位） */
   icon_flower_sign_ticket: 'images/ui/icon_huayuan.png',
-  /** 大地图许愿喷泉（固定建筑） */
-  worldmap_thumb_wishing_fountain: 'subpkg_panels/images/ui/worldmap_thumb_wishing_fountain.png',
+  /** 大地图许愿喷泉双帧（水流动画） */
+  worldmap_thumb_wishing_fountain_1: 'subpkg_panels/images/ui/worldmap_thumb_wishing_fountain_1.png',
+  worldmap_thumb_wishing_fountain_2: 'subpkg_panels/images/ui/worldmap_thumb_wishing_fountain_2.png',
+  /** 许愿喷泉：整幅单图回退（有分层 bg+npc 时面板优先叠层） */
+  flower_sign_gacha_scene_nb2: 'subpkg_panels/images/ui/flower_sign_gacha_scene_nb2.png',
+  /** 许愿喷泉：场景层（无精灵；品红底 rembg+crop，与 npc 同尺寸叠放） */
+  flower_sign_gacha_bg_nb2: 'subpkg_panels/images/ui/flower_sign_gacha_bg_nb2.png',
+  /** 许愿喷泉：花精灵单层（品红底 rembg+crop；与 bg 同画布对齐） */
+  flower_sign_gacha_npc_nb2: 'subpkg_panels/images/ui/flower_sign_gacha_npc_nb2.png',
 };
 
 // ================================================================
@@ -223,15 +230,17 @@ const ITEMS_IMAGE_MAP: Record<string, string> = {
   flower_green_12: 'subpkg_items/images/flowers/green/flower_green_12.png',
   flower_green_13: 'subpkg_items/images/flowers/green/flower_green_13.png',
 
-  // ---- 茶饮线 (8张) ----
-  drink_tea_1: 'subpkg_items/images/drinks/tea/drink_tea_1.png',
-  drink_tea_2: 'subpkg_items/images/drinks/tea/drink_tea_2.png',
-  drink_tea_3: 'subpkg_items/images/drinks/tea/drink_tea_3.png',
-  drink_tea_4: 'subpkg_items/images/drinks/tea/drink_tea_4.png',
-  drink_tea_5: 'subpkg_items/images/drinks/tea/drink_tea_5.png',
-  drink_tea_6: 'subpkg_items/images/drinks/tea/drink_tea_6.png',
-  drink_tea_7: 'subpkg_items/images/drinks/tea/drink_tea_7.png',
-  drink_tea_8: 'subpkg_items/images/drinks/tea/drink_tea_8.png',
+  // ---- 蝴蝶线 (10张) ----
+  drink_butterfly_1: 'subpkg_items/images/drinks/butterfly/drink_butterfly_1.png',
+  drink_butterfly_2: 'subpkg_items/images/drinks/butterfly/drink_butterfly_2.png',
+  drink_butterfly_3: 'subpkg_items/images/drinks/butterfly/drink_butterfly_3.png',
+  drink_butterfly_4: 'subpkg_items/images/drinks/butterfly/drink_butterfly_4.png',
+  drink_butterfly_5: 'subpkg_items/images/drinks/butterfly/drink_butterfly_5.png',
+  drink_butterfly_6: 'subpkg_items/images/drinks/butterfly/drink_butterfly_6.png',
+  drink_butterfly_7: 'subpkg_items/images/drinks/butterfly/drink_butterfly_7.png',
+  drink_butterfly_8: 'subpkg_items/images/drinks/butterfly/drink_butterfly_8.png',
+  drink_butterfly_9: 'subpkg_items/images/drinks/butterfly/drink_butterfly_9.png',
+  drink_butterfly_10: 'subpkg_items/images/drinks/butterfly/drink_butterfly_10.png',
 
   // ---- 冷饮线 (8张) ----
   drink_cold_1: 'subpkg_items/images/drinks/cold/drink_cold_1.png',
@@ -276,12 +285,12 @@ const ITEMS_IMAGE_MAP: Record<string, string> = {
   tool_bake_4: 'subpkg_items/images/tools/bake/tool_bake_4.png',
   tool_bake_5: 'subpkg_items/images/tools/bake/tool_bake_5.png',
 
-  // ---- 工具：茶饮线（茶具）----
-  tool_tea_set_1: 'subpkg_items/images/tools/tea_set/tool_tea_set_1.png',
-  tool_tea_set_2: 'subpkg_items/images/tools/tea_set/tool_tea_set_2.png',
-  tool_tea_set_3: 'subpkg_items/images/tools/tea_set/tool_tea_set_3.png',
-  tool_tea_set_4: 'subpkg_items/images/tools/tea_set/tool_tea_set_4.png',
-  tool_tea_set_5: 'subpkg_items/images/tools/tea_set/tool_tea_set_5.png',
+  // ---- 工具：捕虫网（蝴蝶线）----
+  tool_butterfly_net_1: 'subpkg_items/images/tools/butterfly_net/tool_butterfly_net_1.png',
+  tool_butterfly_net_2: 'subpkg_items/images/tools/butterfly_net/tool_butterfly_net_2.png',
+  tool_butterfly_net_3: 'subpkg_items/images/tools/butterfly_net/tool_butterfly_net_3.png',
+  tool_butterfly_net_4: 'subpkg_items/images/tools/butterfly_net/tool_butterfly_net_4.png',
+  tool_butterfly_net_5: 'subpkg_items/images/tools/butterfly_net/tool_butterfly_net_5.png',
 
   // ---- 工具：冷饮线（饮品器具）----
   tool_mixer_1: 'subpkg_items/images/tools/mixer/tool_mixer_1.png',

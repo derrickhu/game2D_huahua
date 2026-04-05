@@ -25,7 +25,7 @@ export interface CellPreset {
  * 固定开局棋盘（7 列 × 9 行），**无随机**：BoardManager 不再改写预设。
  *
  * **圈层**：`layer = max(|row - 4|, |col - 3|)`（以几何中心为「内」），layer 越大越靠外。
- * **开局约束**：迷雾/钥匙格内花束线与冷饮成品各仅预置 2 个，余格为空；冷饮线仅 Lv1 量杯 `tool_mixer_1`，无冰箱/制冰机等高阶器具；**不含茶饮线**成品与茶具工具。
+ * **开局约束**：迷雾/钥匙格内花束线、蝴蝶标本线、冷饮/甜品成品为散落的低～中阶棋子（各线数量不匀）；冷饮线仅 Lv1 量杯 `tool_mixer_1`，无冰箱/制冰机等高阶器具；**不含**捕虫网 `tool_butterfly_net_*`（蝴蝶线须合成或产出获得）。
  * **例外**：中央 2×2 OPEN 仍为双铲 + 两空格；`(2,3)` 迷雾水壶为合成链，`BoardManager` 会在首次合铲后兜底半锁。
  * **约束**：`FOG` / `PEEK` 内不得放合成链**顶格**（`getMergeResultId` 为 null 的产品/工具），否则半解锁后无法在开放格再凑一对合成，格子永远打不开。
  */
@@ -34,8 +34,8 @@ export const BOARD_PRESETS: CellPreset[] = [
   { row: 0, col: 0, state: CellState.FOG,  itemId: 'tool_plant_5',     keyPrice: 0, unlockPriority: 80 },
   { row: 0, col: 1, state: CellState.KEY,  itemId: null,               keyPrice: 500, unlockPriority: 81 },
   { row: 0, col: 2, state: CellState.FOG,  itemId: 'flower_fresh_8',   keyPrice: 0, unlockPriority: 82 },
-  { row: 0, col: 3, state: CellState.FOG,  itemId: null,                 keyPrice: 0, unlockPriority: 83 },
-  { row: 0, col: 4, state: CellState.FOG,  itemId: null,                 keyPrice: 0, unlockPriority: 84 },
+  { row: 0, col: 3, state: CellState.FOG,  itemId: 'drink_butterfly_2', keyPrice: 0, unlockPriority: 83 },
+  { row: 0, col: 4, state: CellState.FOG,  itemId: 'drink_butterfly_3', keyPrice: 0, unlockPriority: 84 },
   { row: 0, col: 5, state: CellState.KEY,  itemId: null,               keyPrice: 500, unlockPriority: 85 },
   { row: 0, col: 6, state: CellState.FOG,  itemId: null,                 keyPrice: 0, unlockPriority: 86 },
 

@@ -2,9 +2,10 @@
  * 订单分级配置 — C(初) / B(中) / A(高) / S(特) 四档
  *
  * 每档定义需求槽数、物品等级范围、可用产线。花愿由物品单价 + 多槽加成计算。
- * CustomerManager 按玩家等级 + 已解锁产线动态选档后生成具体需求。
+ * CustomerManager 按玩家等级 + 已解锁产线随机选「模板档」生成需求；UI 角标与存档中的 tier
+ * 由 computeTierFromOrderSlots 按物品在全游产品线中的相对等级统一计算。
  */
-import { Category, FlowerLine, DrinkLine } from './ItemConfig';
+import { Category, DrinkLine, FlowerLine, ITEM_DEFS, getMaxLevelForLine } from './ItemConfig';
 import type { CustomerDemandDef } from './CustomerConfig';
 
 export type OrderTier = 'C' | 'B' | 'A' | 'S';
@@ -40,7 +41,7 @@ export const ORDER_TIERS: Record<OrderTier, OrderTierDef> = {
     slotRange: [2, 2],
     demandPool: [
       { category: Category.FLOWER, lines: [FlowerLine.FRESH, FlowerLine.BOUQUET], levelRange: [2, 5] },
-      { category: Category.DRINK, lines: [DrinkLine.TEA, DrinkLine.COLD], levelRange: [2, 4] },
+      { category: Category.DRINK, lines: [DrinkLine.BUTTERFLY, DrinkLine.COLD], levelRange: [2, 4] },
     ],
     timeLimit: null,
     orderType: 'normal',
@@ -51,7 +52,7 @@ export const ORDER_TIERS: Record<OrderTier, OrderTierDef> = {
     slotRange: [2, 2],
     demandPool: [
       { category: Category.FLOWER, lines: [FlowerLine.FRESH, FlowerLine.BOUQUET, FlowerLine.GREEN], levelRange: [4, 7] },
-      { category: Category.DRINK, lines: [DrinkLine.TEA, DrinkLine.COLD, DrinkLine.DESSERT], levelRange: [3, 6] },
+      { category: Category.DRINK, lines: [DrinkLine.BUTTERFLY, DrinkLine.COLD, DrinkLine.DESSERT], levelRange: [3, 6] },
     ],
     timeLimit: null,
     orderType: 'normal',
@@ -62,7 +63,7 @@ export const ORDER_TIERS: Record<OrderTier, OrderTierDef> = {
     slotRange: [2, 3],
     demandPool: [
       { category: Category.FLOWER, lines: [FlowerLine.BOUQUET, FlowerLine.GREEN], levelRange: [6, 13] },
-      { category: Category.DRINK, lines: [DrinkLine.COLD, DrinkLine.DESSERT], levelRange: [5, 8] },
+      { category: Category.DRINK, lines: [DrinkLine.BUTTERFLY, DrinkLine.COLD, DrinkLine.DESSERT], levelRange: [5, 10] },
     ],
     timeLimit: null,
     orderType: 'normal',
@@ -77,9 +78,9 @@ export interface UnlockedLines {
   maxPlantToolLevel: number;
   /** 棋盘上最高的包装工具等级（0=无） */
   maxArrangeToolLevel: number;
-  /** 棋盘上最高的饮品工具等级（取三线最大值，0=无） */
+  /** 棋盘上最高的饮品工具等级（捕虫网/冷饮器/烘焙，取三线最大值，0=无） */
   maxDrinkToolLevel: number;
-  /** 已解锁可产出的独立产线数（花束/绿植/各饮品线），用于动态客人上限 */
+  /** 已解锁可产出的独立产线数（花束/绿植/蝴蝶标本/冷饮/甜品等），用于动态客人上限 */
   unlockedLineCount: number;
 }
 
@@ -175,6 +176,35 @@ export const TIER_COLORS: Record<OrderTier, number> = {
   A: 0xd4a040,
   S: 0xc55a8a,
 };
+
+/**
+ * 内容档位：按各槽物品在其产品线中的相对等级（level / 该线 maxLevel）聚合，
+ * 再映射到 C/B/A/S。全玩家统一标尺，与生成时使用的「模板档位」独立。
+ *
+ * - 顺序无关：对 itemId 排序后再算，相同 multiset 必得同档。
+ * - 得分 = 0.45 * maxNorm + 0.55 * avgNorm + 多槽加成（2 槽 +0.03，3 槽 +0.06）。
+ */
+export function computeTierFromOrderSlots(itemIds: readonly string[]): OrderTier {
+  const sorted = [...itemIds].filter(Boolean).sort();
+  const norms: number[] = [];
+  for (const id of sorted) {
+    const def = ITEM_DEFS.get(id);
+    if (!def) continue;
+    const lineMax = Math.max(1, getMaxLevelForLine(def.category, def.line));
+    norms.push(Math.min(1, def.level / lineMax));
+  }
+  if (norms.length === 0) return 'C';
+
+  const maxNorm = Math.max(...norms);
+  const avgNorm = norms.reduce((a, b) => a + b, 0) / norms.length;
+  const slotBonus = norms.length >= 3 ? 0.06 : norms.length >= 2 ? 0.03 : 0;
+  const score = Math.min(1, 0.45 * maxNorm + 0.55 * avgNorm + slotBonus);
+
+  if (score < 0.3) return 'C';
+  if (score < 0.48) return 'B';
+  if (score < 0.68) return 'A';
+  return 'S';
+}
 
 /**
  * 根据工具等级推算订单可要求的物品等级上限。

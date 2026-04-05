@@ -32,7 +32,7 @@ export function computeSellHuayuan(orderHuayuan: number): number {
 const FLOWER_BASE = 12;
 const FLOWER_GROWTH = 1.5;
 
-/** 饮品订单单价曲线（略低于花系，与历史饮/花价比大致维持） */
+/** 饮品订单单价曲线（蝴蝶/冷饮/甜品共用曲线，略低于花系） */
 const DRINK_BASE = 13;
 const DRINK_GROWTH = 1.47;
 
@@ -41,7 +41,7 @@ export function flowerDeliverHuayuanForLevel(level: number): number {
   return Math.max(1, Math.round(FLOWER_BASE * FLOWER_GROWTH ** (level - 1)));
 }
 
-/** 饮品（按等级）单笔交付单价 */
+/** 饮品含蝴蝶标本线（按等级）单笔交付单价 */
 export function drinkDeliverHuayuanForLevel(level: number): number {
   return Math.max(1, Math.round(DRINK_BASE * DRINK_GROWTH ** (level - 1)));
 }

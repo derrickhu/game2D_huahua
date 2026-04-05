@@ -8,7 +8,7 @@ import { TweenManager, Ease } from '@/core/TweenManager';
 import { OverlayManager } from '@/core/OverlayManager';
 import { TextureCache } from '@/utils/TextureCache';
 import { ToastMessage } from '@/gameobjects/ui/ToastMessage';
-import { DESIGN_WIDTH, FONT_FAMILY, COLORS } from '@/config/Constants';
+import { DESIGN_WIDTH, FONT_FAMILY } from '@/config/Constants';
 import { ITEM_DEFS } from '@/config/ItemConfig';
 import {
   FLOWER_SIGN_DRAW_COST_MULTI,
@@ -20,6 +20,8 @@ import { FlowerSignTicketManager } from '@/managers/FlowerSignTicketManager';
 const Z = 11500;
 const CELL = 72;
 const GAP = 8;
+/** 无场景图时回退用圆角壳 */
+const FALLBACK_CORNER_R = 26;
 
 export class FlowerSignGachaPanel extends PIXI.Container {
   private _isOpen = false;
@@ -72,7 +74,7 @@ export class FlowerSignGachaPanel extends PIXI.Container {
     const H = Game.logicHeight;
 
     this._bg = new PIXI.Graphics();
-    this._bg.beginFill(0x000000, 0.52);
+    this._bg.beginFill(0x000000, 0.58);
     this._bg.drawRect(0, 0, W, H);
     this._bg.endFill();
     this._bg.eventMode = 'static';
@@ -89,35 +91,114 @@ export class FlowerSignGachaPanel extends PIXI.Container {
     const px = (W - pw) / 2;
     const py = Game.safeTop + 56 + (H - Game.safeTop - 56 - ph) / 2;
 
-    const shell = new PIXI.Graphics();
-    shell.beginFill(0xfff7f0, 0.98);
-    shell.drawRoundedRect(px, py, pw, ph, 22);
-    shell.endFill();
-    shell.lineStyle(2.5, 0xd4a574, 0.75);
-    shell.drawRoundedRect(px, py, pw, ph, 22);
-    this._panelRoot.addChild(shell);
+    const topBand = Game.safeTop + 64;
+    const bottomReserve = 96;
+    const maxArtW = W - 16;
+    const maxArtH = Math.max(220, H - topBand - bottomReserve);
+    const artCenterY = topBand + maxArtH * 0.5;
 
-    const title = new PIXI.Text('许愿喷泉', {
-      fontSize: 28,
-      fill: COLORS.TEXT_DARK,
-      fontFamily: FONT_FAMILY,
-      fontWeight: 'bold',
-    });
-    title.anchor.set(0.5, 0);
-    title.position.set(W / 2, py + 16);
-    this._panelRoot.addChild(title);
+    const bgTex = TextureCache.get('flower_sign_gacha_bg_nb2');
+    const npcTex = TextureCache.get('flower_sign_gacha_npc_nb2');
+    const fullTex = TextureCache.get('flower_sign_gacha_scene_nb2');
 
-    const sub = new PIXI.Text('消耗许愿券祈愿，奖励进入收纳盒', {
-      fontSize: 13,
-      fill: COLORS.TEXT_LIGHT,
-      fontFamily: FONT_FAMILY,
-    });
-    sub.anchor.set(0.5, 0);
-    sub.position.set(W / 2, py + 52);
-    this._panelRoot.addChild(sub);
+    type ArtMode = 'layered' | 'full' | 'none';
+    let artMode: ArtMode = 'none';
+    if (bgTex && bgTex.width > 2 && npcTex && npcTex.width > 2) {
+      artMode = 'layered';
+      const artRoot = new PIXI.Container();
+      artRoot.position.set(W / 2, artCenterY);
+      artRoot.eventMode = 'none';
+      const tw = bgTex.width;
+      const th = bgTex.height;
+      const scale = Math.min(maxArtW / tw, maxArtH / th);
+      const bgSp = new PIXI.Sprite(bgTex);
+      bgSp.anchor.set(0.5);
+      bgSp.scale.set(scale);
+      artRoot.addChild(bgSp);
+      const npcSp = new PIXI.Sprite(npcTex);
+      npcSp.anchor.set(0.5);
+      npcSp.scale.set(scale);
+      artRoot.addChild(npcSp);
+      this._panelRoot.addChild(artRoot);
+    } else if (fullTex && fullTex.width > 2) {
+      artMode = 'full';
+      const tw = fullTex.width;
+      const th = fullTex.height;
+      const scale = Math.min(maxArtW / tw, maxArtH / th);
+      const sp = new PIXI.Sprite(fullTex);
+      sp.anchor.set(0.5);
+      sp.scale.set(scale);
+      sp.position.set(W / 2, artCenterY);
+      sp.eventMode = 'none';
+      this._panelRoot.addChild(sp);
+    } else {
+      const shell = new PIXI.Graphics();
+      shell.beginFill(0xfff7f0, 0.98);
+      shell.drawRoundedRect(px, py, pw, ph, FALLBACK_CORNER_R);
+      shell.endFill();
+      shell.lineStyle(2.5, 0xd4a574, 0.75);
+      shell.drawRoundedRect(px, py, pw, ph, FALLBACK_CORNER_R);
+      this._panelRoot.addChild(shell);
+    }
+
+    const immersive = artMode === 'layered' || artMode === 'full';
+    const closeX = immersive ? W - 36 : px + pw - 20;
+    const closeY = immersive ? Game.safeTop + 22 : py + 20;
+
+    if (artMode === 'none') {
+      const titleY = py + 16;
+      const subY = py + 52;
+      const ticketY = py + 86;
+
+      const title = new PIXI.Text('许愿喷泉', {
+        fontSize: 28,
+        fill: 0x4e342e,
+        fontFamily: FONT_FAMILY,
+        fontWeight: 'bold',
+      });
+      title.anchor.set(0.5, 0);
+      title.position.set(W / 2, titleY);
+      this._panelRoot.addChild(title);
+
+      const sub = new PIXI.Text('消耗许愿券祈愿，奖励进入收纳盒', {
+        fontSize: 13,
+        fill: 0x6d4c41,
+        fontFamily: FONT_FAMILY,
+      });
+      sub.anchor.set(0.5, 0);
+      sub.position.set(W / 2, subY);
+      this._panelRoot.addChild(sub);
+
+      const ticketRow = new PIXI.Container();
+      ticketRow.position.set(W / 2, ticketY);
+      const tTex = TextureCache.get('icon_flower_sign_ticket');
+      if (tTex?.width) {
+        const tsp = new PIXI.Sprite(tTex);
+        tsp.anchor.set(1, 0.5);
+        tsp.height = 28;
+        tsp.width = (tTex.width / tTex.height) * 28;
+        tsp.position.set(-6, 0);
+        ticketRow.addChild(tsp);
+      }
+      this._ticketText = new PIXI.Text('', {
+        fontSize: 18,
+        fill: 0x5d4037,
+        fontFamily: FONT_FAMILY,
+        fontWeight: 'bold',
+      });
+      this._ticketText.anchor.set(0, 0.5);
+      this._ticketText.position.set(8, 0);
+      ticketRow.addChild(this._ticketText);
+      this._panelRoot.addChild(ticketRow);
+      this._syncTicketLabel();
+    } else if (artMode === 'layered') {
+      this._buildGachaRibbonHeader(W);
+    } else {
+      this._buildFullSceneTitleOverArt(W);
+    }
 
     const closeBtn = new PIXI.Container();
-    closeBtn.position.set(px + pw - 20, py + 20);
+    closeBtn.position.set(closeX, closeY);
     closeBtn.eventMode = 'static';
     closeBtn.cursor = 'pointer';
     const cx = new PIXI.Graphics();
@@ -135,8 +216,86 @@ export class FlowerSignGachaPanel extends PIXI.Container {
     });
     this._panelRoot.addChild(closeBtn);
 
+    this._idleLayer = new PIXI.Container();
+    this._panelRoot.addChild(this._idleLayer);
+
+    this._resultLayer = new PIXI.Container();
+    this._resultLayer.visible = false;
+    this._resultLayer.position.set(0, immersive ? Game.safeTop + 88 : py + 100);
+    this._panelRoot.addChild(this._resultLayer);
+
+    this._buildIdleContent(W, H, immersive, immersive ? 0 : py + 118, ph - 130);
+  }
+
+  /**
+   * 分层场景：装修同款红彩带标题 + 副标题 + 许愿券（人物/场景为透明底叠层 PNG）
+   */
+  private _buildGachaRibbonHeader(W: number): void {
+    const cx = W / 2;
+    let y = Game.safeTop + 28;
+    const decoRibbon = TextureCache.get('deco_panel_title_ribbon');
+    let titleCenterY = y + 22;
+    let onRedRibbon = false;
+
+    if (decoRibbon && decoRibbon.width > 2) {
+      const BW = 440;
+      let BH = Math.round((BW * decoRibbon.height) / decoRibbon.width);
+      BH = Math.max(52, Math.min(86, BH));
+      const sp = new PIXI.Sprite(decoRibbon);
+      sp.anchor.set(0.5, 0.5);
+      sp.position.set(cx, y + BH / 2);
+      sp.width = BW;
+      sp.height = BH;
+      this._panelRoot.addChild(sp);
+      titleCenterY = y + BH / 2;
+      y += BH + 10;
+      onRedRibbon = true;
+    } else {
+      const title = new PIXI.Text('许愿喷泉', {
+        fontSize: 28,
+        fill: 0x4e342e,
+        fontFamily: FONT_FAMILY,
+        fontWeight: 'bold',
+      });
+      title.anchor.set(0.5, 0);
+      title.position.set(cx, y);
+      this._panelRoot.addChild(title);
+      y += title.height + 10;
+    }
+
+    if (onRedRibbon) {
+      const titleOnRibbon = new PIXI.Text('许愿喷泉', {
+        fontSize: 24,
+        fill: 0xffffff,
+        fontFamily: FONT_FAMILY,
+        fontWeight: 'bold',
+        stroke: 0x4e2018,
+        strokeThickness: 3,
+      });
+      titleOnRibbon.anchor.set(0.5, 0.5);
+      titleOnRibbon.position.set(cx, titleCenterY);
+      this._panelRoot.addChild(titleOnRibbon);
+    }
+
+    const sub = new PIXI.Text('消耗许愿券祈愿，奖励进入收纳盒', {
+      fontSize: 13,
+      fill: 0xfff8f0,
+      fontFamily: FONT_FAMILY,
+      stroke: 0x3e2723,
+      strokeThickness: 2,
+      dropShadow: true,
+      dropShadowColor: 0x000000,
+      dropShadowAlpha: 0.35,
+      dropShadowBlur: 2,
+      dropShadowDistance: 1,
+    });
+    sub.anchor.set(0.5, 0);
+    sub.position.set(cx, y);
+    this._panelRoot.addChild(sub);
+    y += sub.height + 12;
+
     const ticketRow = new PIXI.Container();
-    ticketRow.position.set(W / 2, py + 86);
+    ticketRow.position.set(cx, y);
     const tTex = TextureCache.get('icon_flower_sign_ticket');
     if (tTex?.width) {
       const tsp = new PIXI.Sprite(tTex);
@@ -148,49 +307,272 @@ export class FlowerSignGachaPanel extends PIXI.Container {
     }
     this._ticketText = new PIXI.Text('', {
       fontSize: 18,
-      fill: 0x5d4037,
+      fill: 0xfff8f0,
       fontFamily: FONT_FAMILY,
       fontWeight: 'bold',
+      stroke: 0x3e2723,
+      strokeThickness: 2,
+      dropShadow: true,
+      dropShadowColor: 0x000000,
+      dropShadowAlpha: 0.35,
+      dropShadowBlur: 2,
+      dropShadowDistance: 1,
     });
     this._ticketText.anchor.set(0, 0.5);
     this._ticketText.position.set(8, 0);
     ticketRow.addChild(this._ticketText);
     this._panelRoot.addChild(ticketRow);
     this._syncTicketLabel();
+  }
 
-    this._idleLayer = new PIXI.Container();
-    this._idleLayer.position.set(0, py + 118);
-    this._panelRoot.addChild(this._idleLayer);
+  /** 单张全幅场景：底图自带花簇标题位时仅叠字（回退用） */
+  private _buildFullSceneTitleOverArt(W: number): void {
+    const header = new PIXI.Container();
+    header.eventMode = 'none';
+    header.position.set(W / 2, Game.safeTop + 78);
 
-    this._resultLayer = new PIXI.Container();
-    this._resultLayer.visible = false;
-    this._resultLayer.position.set(0, py + 100);
-    this._panelRoot.addChild(this._resultLayer);
+    const titleInArt = new PIXI.Text('许愿喷泉', {
+      fontSize: 28,
+      fill: 0xfffbef,
+      fontFamily: FONT_FAMILY,
+      fontWeight: 'bold',
+      stroke: 0x5d3a2a,
+      strokeThickness: 4,
+      dropShadow: true,
+      dropShadowColor: 0x2a1810,
+      dropShadowAlpha: 0.45,
+      dropShadowBlur: 3,
+      dropShadowDistance: 1,
+    });
+    titleInArt.anchor.set(0.5, 0);
+    titleInArt.position.set(0, 0);
+    header.addChild(titleInArt);
+    let belowRibbon = titleInArt.height + 10;
 
-    this._buildIdleContent(W, pw, ph - 130);
+    const sub = new PIXI.Text('消耗许愿券祈愿，奖励进入收纳盒', {
+      fontSize: 13,
+      fill: 0xfff8f0,
+      fontFamily: FONT_FAMILY,
+      stroke: 0x3e2723,
+      strokeThickness: 2,
+      dropShadow: true,
+      dropShadowColor: 0x000000,
+      dropShadowAlpha: 0.35,
+      dropShadowBlur: 2,
+      dropShadowDistance: 1,
+    });
+    sub.anchor.set(0.5, 0);
+    sub.position.set(0, belowRibbon);
+    header.addChild(sub);
+    belowRibbon += sub.height + 12;
+
+    const ticketRow = new PIXI.Container();
+    ticketRow.position.set(0, belowRibbon);
+    const tTex = TextureCache.get('icon_flower_sign_ticket');
+    if (tTex?.width) {
+      const tsp = new PIXI.Sprite(tTex);
+      tsp.anchor.set(1, 0.5);
+      tsp.height = 28;
+      tsp.width = (tTex.width / tTex.height) * 28;
+      tsp.position.set(-6, 0);
+      ticketRow.addChild(tsp);
+    }
+    this._ticketText = new PIXI.Text('', {
+      fontSize: 18,
+      fill: 0xfff8f0,
+      fontFamily: FONT_FAMILY,
+      fontWeight: 'bold',
+      stroke: 0x3e2723,
+      strokeThickness: 2,
+      dropShadow: true,
+      dropShadowColor: 0x000000,
+      dropShadowAlpha: 0.35,
+      dropShadowBlur: 2,
+      dropShadowDistance: 1,
+    });
+    this._ticketText.anchor.set(0, 0.5);
+    this._ticketText.position.set(8, 0);
+    ticketRow.addChild(this._ticketText);
+    header.addChild(ticketRow);
+
+    this._panelRoot.addChild(header);
+    this._syncTicketLabel();
   }
 
   private _syncTicketLabel(): void {
     this._ticketText.text = `许愿券：${FlowerSignTicketManager.count}`;
   }
 
-  private _buildIdleContent(W: number, pw: number, innerH: number): void {
+  private _buildIdleContent(
+    W: number,
+    H: number,
+    immersiveArt: boolean,
+    idleLayerY: number,
+    innerH: number,
+  ): void {
     this._idleLayer.removeChildren();
+    this._idleLayer.position.set(0, idleLayerY);
 
-    const cy = Math.min(innerH * 0.35, 200);
+    let hintY: number;
+    let btnRowY: number;
+    if (immersiveArt) {
+      /** 上移到画内喷泉石基一带（相对原 H-178 再上移约 70px） */
+      btnRowY = H - 248 - idleLayerY;
+      hintY = btnRowY - 46;
+    } else {
+      hintY = Math.min(innerH * 0.4, 228);
+      btnRowY = hintY + 120;
+    }
     const hint = new PIXI.Text('心诚则灵，愿望会开花 ✿', {
       fontSize: 15,
-      fill: 0x8d6e63,
+      fill: 0xfff5eb,
       fontFamily: FONT_FAMILY,
+      stroke: 0x4e342e,
+      strokeThickness: 2,
+      dropShadow: true,
+      dropShadowColor: 0x000000,
+      dropShadowAlpha: 0.4,
+      dropShadowBlur: 2,
+      dropShadowDistance: 1,
     });
     hint.anchor.set(0.5, 0.5);
-    hint.position.set(W / 2, cy);
+    hint.position.set(W / 2, hintY);
     this._idleLayer.addChild(hint);
 
-    const btnY = cy + 120;
-    const mkBtn = (label: string, cost: number, onTap: () => void): PIXI.Container => {
+    if (!immersiveArt) {
+      const btnY = hintY + 120;
+      this._idleLayer.addChild(
+        this._makeStackedGreenBtns(W, btnY, () => this._doDraw('single'), () => this._doDraw('multi')),
+      );
+    } else {
+      const row = new PIXI.Container();
+      row.position.set(W / 2, btnRowY);
+      const gap = 14;
+      const maxBtnW = 160;
+      const b1 = this._makeDecoWishBtn(
+        '许愿一次',
+        FLOWER_SIGN_DRAW_COST_SINGLE,
+        maxBtnW,
+        immersiveArt,
+        () => this._doDraw('single'),
+      );
+      const b2 = this._makeDecoWishBtn(
+        '许愿十次',
+        FLOWER_SIGN_DRAW_COST_MULTI,
+        maxBtnW,
+        immersiveArt,
+        () => this._doDraw('multi'),
+      );
+      const hw = maxBtnW + gap;
+      b1.position.set(-hw / 2, 0);
+      b2.position.set(hw / 2, 0);
+      row.addChild(b1, b2);
+      this._idleLayer.addChild(row);
+    }
+  }
+
+  /** 参考占卜页：横向双 pill + 文案在上、券标在按钮内 */
+  private _makeDecoWishBtn(
+    titleAbove: string,
+    cost: number,
+    maxBtnW: number,
+    fullScene: boolean,
+    onTap: () => void,
+  ): PIXI.Container {
+    const root = new PIXI.Container();
+    root.eventMode = 'static';
+    root.cursor = 'pointer';
+
+    const btnTex = TextureCache.get('deco_card_btn_1');
+    let hitW = maxBtnW;
+    let hitH = 48;
+    let sp: PIXI.Sprite | null = null;
+
+    if (btnTex && btnTex.width > 2) {
+      const s = new PIXI.Sprite(btnTex);
+      s.anchor.set(0.5);
+      const sc = maxBtnW / btnTex.width;
+      s.scale.set(sc);
+      hitW = btnTex.width * sc;
+      hitH = btnTex.height * sc;
+      sp = s;
+      root.addChild(s);
+    } else {
+      const g = new PIXI.Graphics();
+      g.beginFill(0x66bb6a, 0.95);
+      g.drawRoundedRect(-maxBtnW / 2, -24, maxBtnW, 48, 22);
+      g.endFill();
+      root.addChild(g);
+      hitH = 48;
+    }
+
+    const costRow = new PIXI.Container();
+    const icTex = TextureCache.get('icon_flower_sign_ticket');
+    if (icTex && icTex.width > 1) {
+      const ic = new PIXI.Sprite(icTex);
+      ic.anchor.set(1, 0.5);
+      ic.height = 22;
+      ic.width = (icTex.width / icTex.height) * 22;
+      ic.position.set(-2, 0);
+      costRow.addChild(ic);
+    }
+    const cx = new PIXI.Text(`×${cost}`, {
+      fontSize: 17,
+      fill: 0xffffff,
+      fontFamily: FONT_FAMILY,
+      fontWeight: 'bold',
+      stroke: 0x3e2723,
+      strokeThickness: 3,
+    });
+    cx.anchor.set(0, 0.5);
+    cx.position.set(6, 0);
+    costRow.addChild(cx);
+    costRow.position.set(0, sp ? -4 : 0);
+    root.addChild(costRow);
+
+    const titleFill = fullScene ? 0xfff5eb : 0x4e342e;
+    const title = new PIXI.Text(titleAbove, {
+      fontSize: 15,
+      fill: titleFill,
+      fontFamily: FONT_FAMILY,
+      fontWeight: 'bold',
+      stroke: 0x2c1e16,
+      strokeThickness: fullScene ? 3 : 2,
+      dropShadow: fullScene,
+      dropShadowColor: 0x000000,
+      dropShadowAlpha: fullScene ? 0.45 : 0,
+      dropShadowBlur: 2,
+      dropShadowDistance: 1,
+    });
+    title.anchor.set(0.5, 1);
+    title.position.set(0, -hitH / 2 - 8);
+    root.addChild(title);
+
+    const topPad = title.height + 10;
+    root.hitArea = new PIXI.Rectangle(
+      -hitW / 2 - 6,
+      -hitH / 2 - topPad,
+      hitW + 12,
+      hitH + topPad + 6,
+    );
+    root.on('pointertap', (e: PIXI.FederatedPointerEvent) => {
+      e.stopPropagation();
+      onTap();
+    });
+    return root;
+  }
+
+  /** 无全屏场景时维持纵向绿色双按钮 */
+  private _makeStackedGreenBtns(
+    W: number,
+    btnY: number,
+    onSingle: () => void,
+    onMulti: () => void,
+  ): PIXI.Container {
+    const wrap = new PIXI.Container();
+    const mk = (label: string, cost: number, y: number, onTap: () => void): void => {
       const c = new PIXI.Container();
-      c.position.set(W / 2, btnY);
+      c.position.set(W / 2, y);
       c.eventMode = 'static';
       c.cursor = 'pointer';
       const g = new PIXI.Graphics();
@@ -211,15 +593,11 @@ export class FlowerSignGachaPanel extends PIXI.Container {
         e.stopPropagation();
         onTap();
       });
-      return c;
+      wrap.addChild(c);
     };
-
-    this._idleLayer.addChild(
-      mkBtn('许愿一次', FLOWER_SIGN_DRAW_COST_SINGLE, () => this._doDraw('single')),
-    );
-    const row2 = mkBtn('许愿十次', FLOWER_SIGN_DRAW_COST_MULTI, () => this._doDraw('multi'));
-    row2.position.y = btnY + 58;
-    this._idleLayer.addChild(row2);
+    mk('许愿一次', FLOWER_SIGN_DRAW_COST_SINGLE, btnY, onSingle);
+    mk('许愿十次', FLOWER_SIGN_DRAW_COST_MULTI, btnY + 58, onMulti);
+    return wrap;
   }
 
   private _doDraw(kind: 'single' | 'multi'): void {
@@ -248,9 +626,16 @@ export class FlowerSignGachaPanel extends PIXI.Container {
     const W = DESIGN_WIDTH;
     const banner = new PIXI.Text('恭喜获得', {
       fontSize: 22,
-      fill: 0xe65100,
+      fill: 0xffe082,
       fontFamily: FONT_FAMILY,
       fontWeight: 'bold',
+      stroke: 0x4e342e,
+      strokeThickness: 3,
+      dropShadow: true,
+      dropShadowColor: 0x000000,
+      dropShadowAlpha: 0.45,
+      dropShadowBlur: 2,
+      dropShadowDistance: 1,
     });
     banner.anchor.set(0.5, 0);
     banner.position.set(W / 2, 0);

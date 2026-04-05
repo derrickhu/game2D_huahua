@@ -1,0 +1,13 @@
+Optional **single-file** composite (fallback when split layers are absent). Prefer **`flower_sign_gacha_bg_nb2` + `flower_sign_gacha_npc_nb2`** prompts for title ribbon + layered art in code.
+
+Vertical 9:16 mobile game wish-fountain POPUP SCENE — **bright, sunny, cheerful daytime**, high-key lighting, happy mood. **NOT** gloomy dusk, NOT night, NOT heavy shadows, NOT moody blue-gray grading, NOT cinematic darkness.
+
+ART STYLE — MATCH SHOPKEEPER / OWNER CHIBI (merge NPC): Same family as a **2D merge-casual shop owner sprite**: **SD super-Q** flower fairy (~2–2.5 heads), **warm brown soft outlines**, **flat to gently cel-shaded** color fills, **minimal 3D sculpt or PBR** — **NO** pseudo-realistic skin shading, **NO** strong rim light sculpture, **NO** anime-cinematic volume painting. Big friendly eyes with simple highlights; short limbs if full body visible; pastel mint, pink, cream, soft yellow. Cohesive **flat illustration** readable at phone size.
+
+BUILT-IN TITLE ZONE (no red ribbon, no separate banner asset): In the **upper 18–22%** of the frame, paint a **lush floral title frame** — roses, peonies, cherry blossoms, small leaves and vines, maybe tiny butterflies — forming a **gentle arch or garland** around a **clear, calm center pocket** (pale sky-blue, soft cream, or very light mint) where game text will sit. The center pocket must stay **uncluttered** and **legible** (no busy petals crossing the middle). **Do NOT** draw a red satin ribbon banner; the decoration is **only flowers and greenery**.
+
+SCENE LAYOUT: Slightly low player POV. **Foreground**: large round stone fountain rim + bright turquoise water, cheerful sparkles, **soft daylight specular** (subtle). **Center magic**: glowing lotus or blossom on the water — **light, airy glow**, not horror/contrast pool. **Mid**: flower fairy **behind** the fountain, **facing the camera**, welcoming hands toward the glow. **Background**: **sunny** garden — green hills, fluffy trees, maybe a tiny distant cottage — **airy atmospheric perspective**, light bokeh, **warm sun** from upper-left, sky **clear pastel blue** with a few soft clouds.
+
+FORBIDDEN: red title ribbon, rectangular UI frame, photoreal CGI, oil painting, 5-head fashion body, night scene, desaturated grim palette, thick black manga ink only.
+
+MATTING: Flat **#FF00FF** magenta only outside the painted world to all edges; no white; no magenta bleed stripe along bottom — blend bottom into stone/water. All halos and sky painted opaque on key. NO text, NO watermark, NO buttons in art. Bottom ~20% slightly calmer stone/water for real UI buttons.
