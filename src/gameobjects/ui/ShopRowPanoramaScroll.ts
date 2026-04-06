@@ -25,9 +25,15 @@ const BIG_R = 18;
 const RED_DOT_R = 5;
 const ACTIVITY_PAD_TOP = 28;
 
-/** 店主左侧展开 / 收起条尺寸 */
-const TOGGLE_BTN_W = 36;
-const TOGGLE_BTN_H = 80;
+/**
+ * 展开/收起：左侧竖向胶囊，锚点在店铺行高度约 38% 处（与原布局一致），样式加强对比与描边。
+ */
+const TOGGLE_BTN_W = 40;
+const TOGGLE_BTN_H = 92;
+const TOGGLE_SIDE_MARGIN = 5;
+/** 垂直位置：0=顶，1=底，与原先 `viewportH * 0.38` 一致 */
+const TOGGLE_VERT_ANCHOR = 0.38;
+const TOGGLE_CORNER_R = 14;
 const TOGGLE_TWEEN_DURATION = 0.34;
 
 interface TaskDef {
@@ -161,10 +167,10 @@ export class ShopRowPanoramaScroll extends PIXI.Container {
   }
 
   private _buildToggleButtons(): void {
-    const cy = this._viewportH * 0.38 - TOGGLE_BTN_H / 2;
+    const cy = this._viewportH * TOGGLE_VERT_ANCHOR - TOGGLE_BTN_H / 2;
 
     this._expandBtn = this._makeToggleButton('››', '展开', TOGGLE_BTN_W, TOGGLE_BTN_H);
-    this._expandBtn.position.set(4, cy);
+    this._expandBtn.position.set(TOGGLE_SIDE_MARGIN, cy);
     this._expandBtn.on('pointertap', (e: PIXI.FederatedPointerEvent) => {
       e.stopPropagation();
       this._animateScrollTo(this._maxScrollX);
@@ -172,7 +178,7 @@ export class ShopRowPanoramaScroll extends PIXI.Container {
     this._toggleLayer.addChild(this._expandBtn);
 
     this._collapseBtn = this._makeToggleButton('‹‹', '收起', TOGGLE_BTN_W, TOGGLE_BTN_H);
-    this._collapseBtn.position.set(6, cy);
+    this._collapseBtn.position.set(TOGGLE_SIDE_MARGIN + 2, cy);
     this._collapseBtn.on('pointertap', (e: PIXI.FederatedPointerEvent) => {
       e.stopPropagation();
       this._animateScrollTo(this._minScrollX);
@@ -184,33 +190,54 @@ export class ShopRowPanoramaScroll extends PIXI.Container {
 
   private _makeToggleButton(chevron: string, label: string, w: number, h: number): PIXI.Container {
     const root = new PIXI.Container();
+    const r = TOGGLE_CORNER_R;
+
+    const shadow = new PIXI.Graphics();
+    shadow.beginFill(0x3e2723, 0.22);
+    shadow.drawRoundedRect(2, 3, w, h, r);
+    shadow.endFill();
+    root.addChild(shadow);
+
     const bg = new PIXI.Graphics();
-    bg.beginFill(0xfffdf8, 0.78);
-    bg.lineStyle(1.5, 0xe8c8a0, 0.95);
-    bg.drawRoundedRect(0, 0, w, h, 10);
+    bg.beginFill(0xfffdf8, 0.98);
+    bg.lineStyle(2.25, 0xce93d8, 1);
+    bg.drawRoundedRect(0, 0, w, h, r);
     bg.endFill();
+    bg.lineStyle(1.25, 0xffffff, 0.9);
+    bg.drawRoundedRect(1, 1, w - 2, h - 2, r - 1);
     root.addChild(bg);
 
+    const accent = new PIXI.Graphics();
+    accent.beginFill(0xf8bbd9, 0.55);
+    accent.drawRoundedRect(5, 14, 4, h - 28, 2);
+    accent.endFill();
+    root.addChild(accent);
+
     const ch = new PIXI.Text(chevron, {
-      fontSize: 16,
-      fill: 0xa1887f,
+      fontSize: 17,
+      fill: 0x7e57c2,
       fontFamily: FONT_FAMILY,
       fontWeight: 'bold',
+      stroke: 0xffffff,
+      strokeThickness: 2,
     });
     ch.anchor.set(0.5, 0);
-    ch.position.set(w / 2, 8);
+    ch.position.set(w / 2, 11);
     root.addChild(ch);
 
     const lines = label.length === 2 ? `${label[0]}\n${label[1]}` : label;
     const tx = new PIXI.Text(lines, {
-      fontSize: 11,
-      fill: 0x6d4c41,
+      fontSize: 13,
+      fill: 0x4e342e,
       fontFamily: FONT_FAMILY,
-      lineHeight: 13,
+      fontWeight: 'bold',
+      lineHeight: 16,
       align: 'center',
+      stroke: 0xfff8f0,
+      strokeThickness: 2,
     });
     tx.anchor.set(0.5, 0);
-    tx.position.set(w / 2, 28);
+    tx.position.set(w / 2, 36);
     root.addChild(tx);
 
     root.eventMode = 'static';

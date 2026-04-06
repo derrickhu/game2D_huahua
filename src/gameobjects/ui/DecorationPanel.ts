@@ -15,9 +15,10 @@ import { SceneManager } from '@/core/SceneManager';
 import { TweenManager, Ease } from '@/core/TweenManager';
 import { EventBus } from '@/core/EventBus';
 import { ToastMessage } from '@/gameobjects/ui/ToastMessage';
+import { addMysteryCardPlaceholder, createSmallNameLockIcon } from '@/gameobjects/ui/mysteryCardPlaceholder';
 import { DecorationManager } from '@/managers/DecorationManager';
 import { TextureCache } from '@/utils/TextureCache';
-import { checkRequirement } from '@/utils/UnlockChecker';
+import { checkRequirement, requirementHintText } from '@/utils/UnlockChecker';
 import {
   DecoSlot, DECO_SLOT_INFO,
   DecoDef,
@@ -1302,25 +1303,6 @@ export class DecorationPanel extends PIXI.Container {
     }
   }
 
-  /** 未解锁家具/房壳：与仓库格锁同一资源 `warehouse_slot_lock`；缺纹理时退回棋盘锁再退回 emoji */
-  private _addCardLockOverlay(parent: PIXI.Container, cx: number, cy: number, cw: number): void {
-    const lockTex = TextureCache.get('warehouse_slot_lock') ?? TextureCache.get('cell_locked');
-    const lockSize = Math.max(24, Math.round((34 * cw) / CARD_BASE_W));
-    if (lockTex?.width) {
-      const sp = new PIXI.Sprite(lockTex);
-      const sc = Math.min(lockSize / lockTex.width, lockSize / lockTex.height);
-      sp.scale.set(sc);
-      sp.anchor.set(0.5, 0.5);
-      sp.position.set(cx, cy);
-      parent.addChild(sp);
-      return;
-    }
-    const lock = new PIXI.Text('🔒', { fontSize: 22, fontFamily: FONT_FAMILY });
-    lock.anchor.set(0.5, 0.5);
-    lock.position.set(cx, cy);
-    parent.addChild(lock);
-  }
-
   // ─── build furniture card ─────────────────────────────────
 
   private _buildCard(deco: DecoDef, x: number, y: number, cw: number, ch: number): PIXI.Container {
@@ -1347,37 +1329,58 @@ export class DecorationPanel extends PIXI.Container {
     iconArea.position.set(cw / 2, iconCy);
     card.addChild(iconArea);
 
-    const texture = TextureCache.get(deco.icon);
-    if (texture) {
-      const sprite = new PIXI.Sprite(texture);
-      const s = Math.min(maxIcon / texture.width, maxIcon / texture.height);
-      sprite.scale.set(s);
-      sprite.anchor.set(0.5, 0.5);
-      if (!reqMet || !sceneOk) sprite.alpha = 0.4;
-      iconArea.addChild(sprite);
-    } else {
-      const emoji = new PIXI.Text(DECO_SLOT_INFO[deco.slot].emoji, {
-        fontSize: Math.round((40 * cw) / CARD_BASE_W), fontFamily: FONT_FAMILY,
-      });
-      emoji.anchor.set(0.5, 0.5);
-      if (!reqMet || !sceneOk) emoji.alpha = 0.4;
-      iconArea.addChild(emoji);
-    }
+    // 未拥有且仍被条件/场景挡住：不展示真实图（与「未解锁」筛一致），满足条件但未购买仍显示预览
+    const mysteryPreview = !isUnlocked && (!reqMet || !sceneOk);
 
-    if (!reqMet || !sceneOk) {
-      this._addCardLockOverlay(card, cw / 2, iconCy, cw);
+    if (!mysteryPreview) {
+      const texture = TextureCache.get(deco.icon);
+      if (texture) {
+        const sprite = new PIXI.Sprite(texture);
+        const s = Math.min(maxIcon / texture.width, maxIcon / texture.height);
+        sprite.scale.set(s);
+        sprite.anchor.set(0.5, 0.5);
+        iconArea.addChild(sprite);
+      } else {
+        const emoji = new PIXI.Text(DECO_SLOT_INFO[deco.slot].emoji, {
+          fontSize: Math.round((40 * cw) / CARD_BASE_W), fontFamily: FONT_FAMILY,
+        });
+        emoji.anchor.set(0.5, 0.5);
+        iconArea.addChild(emoji);
+      }
+    } else {
+      addMysteryCardPlaceholder(iconArea, cw, CARD_BASE_W, maxIcon);
     }
 
     this._addStarValueBadge(card, cw, deco.starValue);
     if (isPlaced) this._addEquipBadge(card, cw);
 
+    const lockAfterName = !reqMet || !sceneOk;
+    const nameGap = 12;
+    const lockSlot = Math.max(26, Math.round((28 * cw) / CARD_BASE_W));
+    const nameWrap = lockAfterName ? Math.max(36, cw - 12 - nameGap - lockSlot) : cw - 12;
+
+    const nameRow = new PIXI.Container();
     const nameText = new PIXI.Text(deco.name, {
-      fontSize: 15, fill: COLORS.TEXT_DARK, fontFamily: FONT_FAMILY, fontWeight: 'bold',
-      wordWrap: true, wordWrapWidth: cw - 12, align: 'center',
+      fontSize: 15,
+      fill: COLORS.TEXT_DARK,
+      fontFamily: FONT_FAMILY,
+      fontWeight: 'bold',
+      wordWrap: true,
+      wordWrapWidth: nameWrap,
+      align: 'left',
     });
-    nameText.anchor.set(0.5, 0);
-    nameText.position.set(cw / 2, nameY);
-    card.addChild(nameText);
+    nameText.anchor.set(0, 0);
+    nameRow.addChild(nameText);
+
+    if (lockAfterName) {
+      const lockIcon = createSmallNameLockIcon(cw, CARD_BASE_W);
+      lockIcon.position.set(nameText.width + nameGap, nameText.height * 0.5);
+      nameRow.addChild(lockIcon);
+    }
+
+    const nb = nameRow.getLocalBounds();
+    nameRow.position.set(Math.round((cw - nb.width) / 2 - nb.x), nameY - nb.y - 2);
+    card.addChild(nameRow);
 
     if (!sceneOk) {
       this._addFooter(card, cw, ch, 'locked', undefined, formatAllowedScenesShort(deco));
@@ -1419,24 +1422,28 @@ export class DecorationPanel extends PIXI.Container {
     preview.position.set(cw / 2, previewCy);
     card.addChild(preview);
 
-    const tex = TextureCache.get(style.bgTexture);
     let previewHalfH = 0;
-    if (tex?.width) {
-      const sp = new PIXI.Sprite(tex);
-      const maxW = cw - 12;
-      const maxH = Math.round((76 * ch) / CARD_BASE_H);
-      const s = Math.min(maxW / tex.width, maxH / tex.height);
-      previewHalfH = Math.ceil((tex.height * s) / 2);
-      sp.scale.set(s);
-      sp.anchor.set(0.5, 0.5);
-      if (!styleReqMet) sp.alpha = 0.45;
-      preview.addChild(sp);
+    if (!styleReqMet) {
+      const maxBox = Math.min(cw - 12, Math.round((76 * ch) / CARD_BASE_H));
+      addMysteryCardPlaceholder(preview, cw, CARD_BASE_W, maxBox);
+      previewHalfH = Math.ceil(maxBox * 0.44) + 2;
     } else {
-      const ph = new PIXI.Text('🏠', { fontSize: Math.round((40 * cw) / CARD_BASE_W), fontFamily: FONT_FAMILY });
-      ph.anchor.set(0.5, 0.5);
-      if (!styleReqMet) ph.alpha = 0.45;
-      preview.addChild(ph);
-      previewHalfH = Math.ceil(ph.height / 2) || 20;
+      const tex = TextureCache.get(style.bgTexture);
+      if (tex?.width) {
+        const sp = new PIXI.Sprite(tex);
+        const maxW = cw - 12;
+        const maxH = Math.round((76 * ch) / CARD_BASE_H);
+        const s = Math.min(maxW / tex.width, maxH / tex.height);
+        previewHalfH = Math.ceil((tex.height * s) / 2);
+        sp.scale.set(s);
+        sp.anchor.set(0.5, 0.5);
+        preview.addChild(sp);
+      } else {
+        const ph = new PIXI.Text('🏠', { fontSize: Math.round((40 * cw) / CARD_BASE_W), fontFamily: FONT_FAMILY });
+        ph.anchor.set(0.5, 0.5);
+        preview.addChild(ph);
+        previewHalfH = Math.ceil(ph.height / 2) || 20;
+      }
     }
 
     const nameY = Math.max(
@@ -1444,20 +1451,45 @@ export class DecorationPanel extends PIXI.Container {
       previewCy + (previewHalfH || 28) + 8,
     );
 
-    if (!styleReqMet) {
-      this._addCardLockOverlay(card, cw / 2, previewCy, cw);
-    }
-
     this._addStarValueBadge(card, cw, style.starValue);
     if (equipped) this._addEquipBadge(card, cw);
 
-    const nameText = new PIXI.Text(style.name, {
-      fontSize: 15, fill: COLORS.TEXT_DARK, fontFamily: FONT_FAMILY, fontWeight: 'bold',
-      wordWrap: true, wordWrapWidth: cw - 12, align: 'center',
-    });
-    nameText.anchor.set(0.5, 0);
-    nameText.position.set(cw / 2, nameY);
-    card.addChild(nameText);
+    if (!styleReqMet) {
+      const nameGap = 12;
+      const lockSlot = Math.max(26, Math.round((28 * cw) / CARD_BASE_W));
+      const nameWrap = Math.max(36, cw - 12 - nameGap - lockSlot);
+      const nameRow = new PIXI.Container();
+      const nameText = new PIXI.Text(style.name, {
+        fontSize: 15,
+        fill: COLORS.TEXT_DARK,
+        fontFamily: FONT_FAMILY,
+        fontWeight: 'bold',
+        wordWrap: true,
+        wordWrapWidth: nameWrap,
+        align: 'left',
+      });
+      nameText.anchor.set(0, 0);
+      nameRow.addChild(nameText);
+      const lockIcon = createSmallNameLockIcon(cw, CARD_BASE_W);
+      lockIcon.position.set(nameText.width + nameGap, nameText.height * 0.5);
+      nameRow.addChild(lockIcon);
+      const nb = nameRow.getLocalBounds();
+      nameRow.position.set(Math.round((cw - nb.width) / 2 - nb.x), nameY - nb.y - 2);
+      card.addChild(nameRow);
+    } else {
+      const nameText = new PIXI.Text(style.name, {
+        fontSize: 15,
+        fill: COLORS.TEXT_DARK,
+        fontFamily: FONT_FAMILY,
+        fontWeight: 'bold',
+        wordWrap: true,
+        wordWrapWidth: cw - 12,
+        align: 'center',
+      });
+      nameText.anchor.set(0.5, 0);
+      nameText.position.set(cw / 2, nameY);
+      card.addChild(nameText);
+    }
 
     if (equipped) this._addFooter(card, cw, ch, 'equipped', undefined, '使用');
     else if (unlocked) this._addFooter(card, cw, ch, 'ready', undefined, '使用');
@@ -1552,7 +1584,7 @@ export class DecorationPanel extends PIXI.Container {
     }
     const req = checkRequirement(deco.unlockRequirement);
     if (!req.met) {
-      ToastMessage.show(`🔒 ${req.text}`);
+      ToastMessage.show(`🔒 ${requirementHintText(req)}`);
       return;
     }
     if (deco.cost > 0 && CurrencyManager.state.huayuan < deco.cost) {
@@ -1704,7 +1736,7 @@ export class DecorationPanel extends PIXI.Container {
     } else {
       const req = checkRequirement(style.unlockRequirement);
       if (!req.met) {
-        ToastMessage.show( `🔒 ${req.text}`);
+        ToastMessage.show(`🔒 ${requirementHintText(req)}`);
         return;
       }
       if (style.cost > 0 && CurrencyManager.state.huayuan < style.cost) {

@@ -14,11 +14,13 @@ import { OverlayManager } from '@/core/OverlayManager';
 import { DESIGN_WIDTH, FONT_FAMILY } from '@/config/Constants';
 import {
   MAP_NODES,
+  MAP_NODE_UNMET_UNLOCK_ALPHA,
   WORLD_MAP_CONTENT_W,
   WORLD_MAP_CONTENT_H,
   type MapNodeDef,
 } from '@/config/WorldMapConfig';
 import { WishingFountainMapFxLayer } from '@/gameobjects/ui/WishingFountainMapFxLayer';
+import { createSmallNameLockIcon } from '@/gameobjects/ui/mysteryCardPlaceholder';
 
 const FRICTION = 0.92;
 const MIN_VELOCITY = 0.4;
@@ -199,8 +201,14 @@ export class WorldMapPanel extends PIXI.Container {
       case 'wishing_fountain':
         keys.push('worldmap_thumb_wishing_fountain_2', 'icon_worldmap');
         break;
-      case 'garden_villa':
+      case 'butterfly_house':
         keys.push('icon_build');
+        break;
+      case 'cake_shop':
+        keys.push('icon_build');
+        break;
+      case 'timed_event':
+        keys.push('icon_worldmap');
         break;
       default:
         break;
@@ -338,14 +346,25 @@ export class WorldMapPanel extends PIXI.Container {
       }
     }
 
-    const label = new PIXI.Text(node.label, {
+    const namePlateY = (thumbSize * 0.6) / 2 + 8 + 15 + 10;
+    const namePlate = new PIXI.Container();
+    namePlate.eventMode = 'none';
+    namePlate.y = namePlateY;
+    const mapLabel = new PIXI.Text(node.label, {
       fontSize: 18, fill: 0xFFFFFF, fontFamily: FONT_FAMILY, fontWeight: 'bold',
       stroke: 0x2C2419, strokeThickness: 3,
     });
-    label.anchor.set(0.5, 0);
-    label.y = (thumbSize * 0.6) / 2 + 8;
-    label.eventMode = 'none';
-    c.addChild(label);
+    mapLabel.anchor.set(0, 0);
+    mapLabel.eventMode = 'none';
+    const mapLockAfterName = createSmallNameLockIcon(240, 140);
+    mapLockAfterName.visible = false;
+    mapLockAfterName.eventMode = 'none';
+    namePlate.addChild(mapLabel);
+    namePlate.addChild(mapLockAfterName);
+    (c as any)._namePlate = namePlate;
+    (c as any)._mapLabel = mapLabel;
+    (c as any)._mapLockAfterName = mapLockAfterName;
+    c.addChild(namePlate);
 
     c.eventMode = 'static';
     c.cursor = 'pointer';
@@ -389,7 +408,7 @@ export class WorldMapPanel extends PIXI.Container {
       const unlocked = globalLevel >= node.unlockLevel;
       const isCurrent = node.targetSceneId === currentSceneId;
 
-      nc.alpha = unlocked ? 1 : 0.45;
+      nc.alpha = unlocked ? 1 : (node.unmetUnlockAlpha ?? MAP_NODE_UNMET_UNLOCK_ALPHA);
 
       const oldBadges = nc.children.filter(ch => (ch as any)._isBadge);
       for (const b of oldBadges) nc.removeChild(b);
@@ -403,10 +422,11 @@ export class WorldMapPanel extends PIXI.Container {
         nc.addChild(badge);
       }
 
-      if (!unlocked) {
-        const lockBadge = this._createLockOverlay(node.thumbSize ?? 150, node.unlockLevel);
-        (lockBadge as any)._isBadge = true;
-        nc.addChild(lockBadge);
+      const namePlate = (nc as any)._namePlate as PIXI.Container | undefined;
+      const mapLabel = (nc as any)._mapLabel as PIXI.Text | undefined;
+      const mapLockAfterName = (nc as any)._mapLockAfterName as PIXI.Container | undefined;
+      if (namePlate && mapLabel && mapLockAfterName) {
+        this._layoutMapNodeNameRow(namePlate, mapLabel, mapLockAfterName, !unlocked);
       }
 
       nc.removeAllListeners('pointertap');
@@ -500,28 +520,24 @@ export class WorldMapPanel extends PIXI.Container {
     return c;
   }
 
-  private _createLockOverlay(thumbSize: number, level: number): PIXI.Container {
-    const c = new PIXI.Container();
-    c.eventMode = 'none';
-    const g = new PIXI.Graphics();
-    g.beginFill(0x000000, 0.45);
-    g.drawCircle(0, 0, thumbSize * 0.28);
-    g.endFill();
-    g.eventMode = 'none';
-    c.addChild(g);
-    const lockText = new PIXI.Text('🔒', { fontSize: 28, fontFamily: FONT_FAMILY });
-    lockText.anchor.set(0.5);
-    lockText.eventMode = 'none';
-    c.addChild(lockText);
-    const lvText = new PIXI.Text(`等级${level}`, {
-      fontSize: 12, fill: 0xFFFFFF, fontFamily: FONT_FAMILY,
-      stroke: 0x000000, strokeThickness: 2,
-    });
-    lvText.anchor.set(0.5, 0);
-    lvText.y = thumbSize * 0.22;
-    lvText.eventMode = 'none';
-    c.addChild(lvText);
-    return c;
+  /** 名称 + 未解锁时右侧小锁（与装修面板 createSmallNameLockIcon 同源） */
+  private _layoutMapNodeNameRow(
+    namePlate: PIXI.Container,
+    label: PIXI.Text,
+    lockAfter: PIXI.Container,
+    showLock: boolean,
+  ): void {
+    const gap = 6;
+    lockAfter.visible = showLock;
+    if (showLock) {
+      lockAfter.position.set(label.width + gap, label.height * 0.5);
+      const lb = lockAfter.getLocalBounds();
+      const lockW = Math.max(lb.width, 12);
+      const totalW = label.width + gap + lockW;
+      namePlate.pivot.set(totalW * 0.5, 0);
+    } else {
+      namePlate.pivot.set(label.width * 0.5, 0);
+    }
   }
 
   private _onNodeTap(node: MapNodeDef, unlocked: boolean, isCurrent: boolean): void {

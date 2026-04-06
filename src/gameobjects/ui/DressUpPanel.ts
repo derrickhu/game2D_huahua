@@ -11,8 +11,9 @@ import { DressUpManager, Outfit } from '@/managers/DressUpManager';
 import { getOwnerChibiTextureKey, getOwnerFullOpenTextureKey } from '@/config/DressUpConfig';
 import { CurrencyManager } from '@/managers/CurrencyManager';
 import { TextureCache } from '@/utils/TextureCache';
-import { checkRequirement } from '@/utils/UnlockChecker';
+import { checkRequirement, requirementHintText } from '@/utils/UnlockChecker';
 import { ToastMessage } from './ToastMessage';
+import { addMysteryCardPlaceholder, createSmallNameLockIcon } from '@/gameobjects/ui/mysteryCardPlaceholder';
 import { DESIGN_WIDTH, FONT_FAMILY, COLORS } from '@/config/Constants';
 
 const PANEL_W = DESIGN_WIDTH - 40;
@@ -335,61 +336,73 @@ export class DressUpPanel extends PIXI.Container {
     const maxPortraitW = cw - 16;
     const portraitCy = portraitTop + maxPortraitH / 2;
 
-    const chibiTex = TextureCache.get(getOwnerChibiTextureKey(outfit.id));
-    const fullTex = TextureCache.get(getOwnerFullOpenTextureKey(outfit.id));
-    const previewTex =
-      chibiTex && chibiTex.width > 0 ? chibiTex
-        : fullTex && fullTex.width > 0 ? fullTex
-          : null;
-
-    if (previewTex) {
-      const sp = new PIXI.Sprite(previewTex);
-      sp.anchor.set(0.5, 0.5);
-      const s = Math.min(maxPortraitW / previewTex.width, maxPortraitH / previewTex.height);
-      sp.scale.set(s);
-      sp.position.set(cw / 2, portraitCy);
-      if (!reqMet) sp.alpha = 0.35;
-      card.addChild(sp);
-    } else {
-      const iconCy = Math.round((ch * 54) / CARD_BASE_H);
-      const icon = new PIXI.Text(outfit.icon, { fontSize: Math.round((44 * cw) / CARD_BASE_W), fontFamily: FONT_FAMILY });
-      icon.anchor.set(0.5, 0.5);
-      icon.position.set(cw / 2, iconCy);
-      if (!reqMet) icon.alpha = 0.35;
-      card.addChild(icon);
-    }
-
     if (!reqMet) {
-      const lockSize = Math.max(24, Math.round((34 * cw) / CARD_BASE_W));
-      const lockTex = TextureCache.get('warehouse_slot_lock') ?? TextureCache.get('cell_locked');
-      if (lockTex?.width) {
-        const sp = new PIXI.Sprite(lockTex);
-        const sc = Math.min(lockSize / lockTex.width, lockSize / lockTex.height);
-        sp.scale.set(sc);
+      const mysteryWrap = new PIXI.Container();
+      mysteryWrap.position.set(cw / 2, portraitCy);
+      addMysteryCardPlaceholder(mysteryWrap, cw, CARD_BASE_W, Math.min(maxPortraitW, maxPortraitH));
+      card.addChild(mysteryWrap);
+    } else {
+      const chibiTex = TextureCache.get(getOwnerChibiTextureKey(outfit.id));
+      const fullTex = TextureCache.get(getOwnerFullOpenTextureKey(outfit.id));
+      const previewTex =
+        chibiTex && chibiTex.width > 0 ? chibiTex
+          : fullTex && fullTex.width > 0 ? fullTex
+            : null;
+
+      if (previewTex) {
+        const sp = new PIXI.Sprite(previewTex);
         sp.anchor.set(0.5, 0.5);
+        const s = Math.min(maxPortraitW / previewTex.width, maxPortraitH / previewTex.height);
+        sp.scale.set(s);
         sp.position.set(cw / 2, portraitCy);
         card.addChild(sp);
       } else {
-        const lock = new PIXI.Text('🔒', { fontSize: 22, fontFamily: FONT_FAMILY });
-        lock.anchor.set(0.5, 0.5);
-        lock.position.set(cw / 2, portraitCy);
-        card.addChild(lock);
+        const iconCy = Math.round((ch * 54) / CARD_BASE_H);
+        const icon = new PIXI.Text(outfit.icon, { fontSize: Math.round((44 * cw) / CARD_BASE_W), fontFamily: FONT_FAMILY });
+        icon.anchor.set(0.5, 0.5);
+        icon.position.set(cw / 2, iconCy);
+        card.addChild(icon);
       }
     }
 
     if (isEquipped) this._addEquipBadge(card, cw);
-    const name = new PIXI.Text(outfit.name, {
-      fontSize: 15,
-      fill: isUnlocked || reqMet ? COLORS.TEXT_DARK : COLORS.TEXT_LIGHT,
-      fontFamily: FONT_FAMILY,
-      fontWeight: 'bold',
-      align: 'center',
-      wordWrap: true,
-      wordWrapWidth: cw - 12,
-    });
-    name.anchor.set(0.5, 0);
-    name.position.set(cw / 2, nameY);
-    card.addChild(name);
+
+    if (!reqMet) {
+      const nameGap = 12;
+      const lockSlot = Math.max(26, Math.round((28 * cw) / CARD_BASE_W));
+      const nameWrap = Math.max(36, cw - 12 - nameGap - lockSlot);
+      const nameRow = new PIXI.Container();
+      const name = new PIXI.Text(outfit.name, {
+        fontSize: 15,
+        fill: COLORS.TEXT_DARK,
+        fontFamily: FONT_FAMILY,
+        fontWeight: 'bold',
+        align: 'left',
+        wordWrap: true,
+        wordWrapWidth: nameWrap,
+      });
+      name.anchor.set(0, 0);
+      nameRow.addChild(name);
+      const lockIcon = createSmallNameLockIcon(cw, CARD_BASE_W);
+      lockIcon.position.set(name.width + nameGap, name.height * 0.5);
+      nameRow.addChild(lockIcon);
+      const nb = nameRow.getLocalBounds();
+      nameRow.position.set(Math.round((cw - nb.width) / 2 - nb.x), nameY - nb.y - 2);
+      card.addChild(nameRow);
+    } else {
+      const name = new PIXI.Text(outfit.name, {
+        fontSize: 15,
+        fill: isUnlocked || reqMet ? COLORS.TEXT_DARK : COLORS.TEXT_LIGHT,
+        fontFamily: FONT_FAMILY,
+        fontWeight: 'bold',
+        align: 'center',
+        wordWrap: true,
+        wordWrapWidth: cw - 12,
+      });
+      name.anchor.set(0.5, 0);
+      name.position.set(cw / 2, nameY);
+      card.addChild(name);
+    }
 
     if (isEquipped) {
       this._addDressFooter(card, cw, ch, 'equipped', '穿戴中');
@@ -418,7 +431,7 @@ export class DressUpPanel extends PIXI.Container {
         } else {
           const req = checkRequirement(outfit.unlockRequirement);
           if (!req.met) {
-            ToastMessage.show(`🔒 ${req.text}`);
+            ToastMessage.show(`🔒 ${requirementHintText(req)}`);
             return;
           }
           if (CurrencyManager.state.huayuan < outfit.huayuanCost) {

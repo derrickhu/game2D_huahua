@@ -1,22 +1,28 @@
 /**
  * 每日挑战 + 周积分里程碑（无成就系统）
  *
- * 每日：本地每天 05:00 刷新，约 16 条梯度任务。
- * 周：每周一本地 05:00 重置周积分与里程碑领取状态。
+ * 每日：本地每天 05:00 刷新；条数与难度由 `globalLevel` 锁定档决定（当周与周里程碑同档）。
+ * 周：每周一本地 05:00 重置周积分与里程碑领取，并按当时 `globalLevel` 重算档。
  */
 import { EventBus } from '@/core/EventBus';
 import { CurrencyManager } from './CurrencyManager';
 import { RewardBoxManager } from './RewardBoxManager';
+import { FlowerSignTicketManager } from './FlowerSignTicketManager';
 import { SaveManager } from './SaveManager';
 import {
-  DAILY_QUEST_TEMPLATES,
-  WEEKLY_MILESTONES,
+  DAILY_CHALLENGE_TIERS,
+  DAILY_CHALLENGE_FULL_TIER_ID,
+  getDailyChallengeTierById,
+  pickDailyTemplatesForPeriod,
+  resolveDailyChallengeTier,
+} from '@/config/DailyChallengeTierConfig';
+import {
   describeDailyQuest,
   getDailyQuestTemplate,
-  seededShuffle,
   type DailyChallengeReward,
   type DailyQuestKind,
   type DailyQuestTemplate,
+  type WeeklyMilestoneDef,
 } from '@/config/DailyChallengeConfig';
 import { getDailyQuestPeriodIdLocal, getWeekIdLocal } from '@/utils/WeeklyCycle';
 import { ITEM_DEFS } from '@/config/ItemConfig';
@@ -26,7 +32,7 @@ declare const tt: any;
 const _api = typeof wx !== 'undefined' ? wx : typeof tt !== 'undefined' ? tt : null;
 
 const QUEST_STORAGE_KEY = 'huahua_quests';
-const SAVE_VERSION = 2;
+const SAVE_VERSION = 3;
 
 export interface DailyQuestRuntime {
   templateId: string;
@@ -38,6 +44,8 @@ class QuestManagerClass {
   private _dailyLocalDate = '';
   private _dailyTasks: DailyQuestRuntime[] = [];
   private _weekId = '';
+  /** 本周锁定档（与周里程碑、每日池一致）；每周一 05:00 随周重置刷新 */
+  private _challengeTierId = DAILY_CHALLENGE_FULL_TIER_ID;
   private _weeklyPoints = 0;
   private _weeklyMilestonesClaimed = new Set<string>();
   private _initialized = false;
@@ -58,6 +66,11 @@ class QuestManagerClass {
     return this._weeklyMilestonesClaimed;
   }
 
+  /** 当前周挑战档 id（`novice` / `mid` / `advanced` / `full`） */
+  get challengeTierId(): string {
+    return this._challengeTierId;
+  }
+
   getTemplate(id: string): DailyQuestTemplate | undefined {
     return getDailyQuestTemplate(id);
   }
@@ -66,8 +79,8 @@ class QuestManagerClass {
     return describeDailyQuest(t);
   }
 
-  get weeklyMilestoneDefs() {
-    return WEEKLY_MILESTONES;
+  get weeklyMilestoneDefs(): WeeklyMilestoneDef[] {
+    return [...getDailyChallengeTierById(this._challengeTierId).weeklyMilestones];
   }
 
   init(): void {
@@ -98,10 +111,12 @@ class QuestManagerClass {
       this._weekId = wid;
       this._weeklyPoints = 0;
       this._weeklyMilestonesClaimed.clear();
+      this._challengeTierId = resolveDailyChallengeTier(CurrencyManager.globalLevel).id;
       this._save();
       EventBus.emit('quest:weekReset');
     } else if (!this._weekId) {
       this._weekId = wid;
+      this._challengeTierId = resolveDailyChallengeTier(CurrencyManager.globalLevel).id;
       this._save();
     }
   }
@@ -115,8 +130,9 @@ class QuestManagerClass {
   }
 
   private _generateDailyQuests(): void {
-    const order = seededShuffle(DAILY_QUEST_TEMPLATES, this._dailyLocalDate);
-    this._dailyTasks = order.map(t => ({
+    const tier = getDailyChallengeTierById(this._challengeTierId);
+    const picked = pickDailyTemplatesForPeriod(this._dailyLocalDate, tier);
+    this._dailyTasks = picked.map(t => ({
       templateId: t.id,
       current: 0,
       claimed: false,
@@ -154,6 +170,9 @@ class QuestManagerClass {
     if (r.huayuan) CurrencyManager.addHuayuan(r.huayuan);
     if (r.stamina) CurrencyManager.addStamina(r.stamina);
     if (r.diamond) CurrencyManager.addDiamond(r.diamond);
+    if (r.flowerSignTickets && r.flowerSignTickets > 0) {
+      FlowerSignTicketManager.add(r.flowerSignTickets);
+    }
     if (r.itemId && r.itemCount && ITEM_DEFS.has(r.itemId)) {
       RewardBoxManager.addItem(r.itemId, r.itemCount);
     }
@@ -182,7 +201,8 @@ class QuestManagerClass {
   claimWeeklyMilestone(milestoneId: string): boolean {
     this._checkWeekRollover();
 
-    const m = WEEKLY_MILESTONES.find(x => x.id === milestoneId);
+    const milestones = getDailyChallengeTierById(this._challengeTierId).weeklyMilestones;
+    const m = milestones.find(x => x.id === milestoneId);
     if (!m || this._weeklyMilestonesClaimed.has(milestoneId)) return false;
     if (this._weeklyPoints < m.threshold) return false;
 
@@ -193,6 +213,44 @@ class QuestManagerClass {
     EventBus.emit('quest:weeklyMilestoneClaimed', milestoneId);
     EventBus.emit('quest:updated');
     return true;
+  }
+
+  /**
+   * 一次领取当前所有可领的每日任务 + 周里程碑（先每日以累计周积分，再按档领周奖）。
+   * 单次存档与 `quest:updated`；返回本次实际发放的奖励列表（用于合并飞入动效）。
+   */
+  claimAllPendingRewards(): DailyChallengeReward[] {
+    this._checkWeekRollover();
+    this._checkDailyRefresh();
+
+    const granted: DailyChallengeReward[] = [];
+
+    for (const q of this._dailyTasks) {
+      const def = getDailyQuestTemplate(q.templateId);
+      if (!def || q.claimed || q.current < def.target) continue;
+      q.claimed = true;
+      this._applyInstantReward(def.reward);
+      this._weeklyPoints += def.weeklyPoints;
+      granted.push({ ...def.reward });
+      EventBus.emit('quest:claimed', q.templateId);
+    }
+
+    const weekMs = getDailyChallengeTierById(this._challengeTierId).weeklyMilestones;
+    for (const m of weekMs) {
+      if (this._weeklyMilestonesClaimed.has(m.id)) continue;
+      if (this._weeklyPoints < m.threshold) continue;
+      this._weeklyMilestonesClaimed.add(m.id);
+      this._applyInstantReward(m.reward);
+      granted.push({ ...m.reward });
+      EventBus.emit('quest:weeklyMilestoneClaimed', m.id);
+    }
+
+    if (granted.length === 0) return [];
+
+    this._save();
+    SaveManager.save();
+    EventBus.emit('quest:updated');
+    return granted;
   }
 
   get hasClaimableDaily(): boolean {
@@ -206,7 +264,7 @@ class QuestManagerClass {
 
   get hasClaimableWeeklyMilestone(): boolean {
     this._checkWeekRollover();
-    for (const m of WEEKLY_MILESTONES) {
+    for (const m of getDailyChallengeTierById(this._challengeTierId).weeklyMilestones) {
       if (this._weeklyMilestonesClaimed.has(m.id)) continue;
       if (this._weeklyPoints >= m.threshold) return true;
     }
@@ -226,6 +284,7 @@ class QuestManagerClass {
       dailyLocalDate: this._dailyLocalDate,
       dailyTasks: this._dailyTasks.map(t => ({ ...t })),
       weekId: this._weekId,
+      challengeTierId: this._challengeTierId,
       weeklyPoints: this._weeklyPoints,
       weeklyMilestonesClaimed: [...this._weeklyMilestonesClaimed],
     };
@@ -235,11 +294,13 @@ class QuestManagerClass {
   }
 
   private _loadState(): void {
+    let migratedFromV2 = false;
     try {
       const raw = _api?.getStorageSync(QUEST_STORAGE_KEY);
       if (raw) {
         const data = JSON.parse(raw);
-        if (data.version === SAVE_VERSION && data.dailyTasks?.length) {
+        const fileVer = data.version | 0;
+        if ((fileVer === 2 || fileVer === SAVE_VERSION) && data.dailyTasks?.length) {
           this._dailyLocalDate = data.dailyLocalDate || '';
           this._dailyTasks = (data.dailyTasks || [])
             .filter((q: DailyQuestRuntime) => getDailyQuestTemplate(q.templateId))
@@ -251,18 +312,37 @@ class QuestManagerClass {
           this._weekId = data.weekId || '';
           this._weeklyPoints = Math.max(0, data.weeklyPoints | 0);
           this._weeklyMilestonesClaimed = new Set(data.weeklyMilestonesClaimed || []);
+
+          if (fileVer === 2) {
+            migratedFromV2 = true;
+            this._challengeTierId = resolveDailyChallengeTier(CurrencyManager.globalLevel).id;
+          } else {
+            const tid = data.challengeTierId as string | undefined;
+            this._challengeTierId =
+              tid && DAILY_CHALLENGE_TIERS.some(t => t.id === tid)
+                ? tid
+                : resolveDailyChallengeTier(CurrencyManager.globalLevel).id;
+          }
         }
       }
     } catch (_) {}
 
     this._checkWeekRollover();
     const periodId = getDailyQuestPeriodIdLocal();
+    const tier = getDailyChallengeTierById(this._challengeTierId);
 
-    if (this._dailyTasks.length === 0) {
+    if (migratedFromV2) {
+      this._dailyLocalDate = periodId;
+      this._generateDailyQuests();
+    } else if (this._dailyTasks.length === 0) {
       this._dailyLocalDate = periodId;
       this._generateDailyQuests();
     } else {
       this._checkDailyRefresh();
+      if (this._dailyTasks.length !== tier.dailyTemplateIds.length) {
+        this._dailyLocalDate = periodId;
+        this._generateDailyQuests();
+      }
     }
   }
 }

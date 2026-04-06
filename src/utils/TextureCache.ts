@@ -131,6 +131,8 @@ const PANELS_IMAGE_MAP: Record<string, string> = {
   warehouse_close_btn: 'subpkg_panels/images/ui/warehouse_close_btn.png',
   warehouse_slot_lock: 'subpkg_panels/images/ui/warehouse_slot_lock.png',
   merge_chain_ribbon: 'subpkg_panels/images/ui/merge_chain_ribbon.png',
+  /** 升级奖励等：粉色彩带标题条（叠字「恭喜升级」） */
+  pink_bar: 'subpkg_panels/images/ui/pink_bar.png',
   merge_chain_panel: 'subpkg_panels/images/ui/merge_chain_panel.png',
   /** 花语泡泡外框：NB2 淡粉花瓣形 + 白底 rembg；局内再叠 alpha 透出棋盘 */
   merge_companion_flower_bubble: 'subpkg_panels/images/ui/merge_companion_flower_bubble_nb2.png',
@@ -143,7 +145,6 @@ const PANELS_IMAGE_MAP: Record<string, string> = {
   special_consumable_panel_bg: 'subpkg_panels/images/ui/special_consumable_panel_bg.png',
   special_consumable_use_btn: 'subpkg_panels/images/ui/special_consumable_use_btn.png',
   deco_panel_popup_frame: 'subpkg_panels/images/ui/deco_panel_popup_frame.png',
-  deco_furniture_card: 'subpkg_panels/images/ui/deco_furniture_card.png',
   deco_panel_title_ribbon: 'subpkg_panels/images/ui/deco_panel_title_ribbon.png',
   item_info_title_ribbon: 'subpkg_panels/images/ui/item_info_title_ribbon.png',
   deco_card_btn_1: 'subpkg_panels/images/ui/deco_card_btn_1.png',
@@ -161,11 +162,12 @@ const PANELS_IMAGE_MAP: Record<string, string> = {
   worldmap_bg: 'subpkg_panels/images/ui/worldmap_bg.png',
   /** 大地图「花花妙屋」静态花坊外观（与装修房壳同系粉瓦白墙，完整店面） */
   worldmap_house_flower_shop: 'subpkg_panels/images/ui/worldmap_house_flower_shop.png',
-  worldmap_thumb_flower_shop: 'subpkg_panels/images/ui/worldmap_thumb_flower_shop.png',
-  worldmap_thumb_flower_market: 'subpkg_panels/images/ui/worldmap_thumb_flower_market.png',
-  worldmap_thumb_butterfly_house: 'subpkg_panels/images/ui/worldmap_thumb_tea_house.png',
-  worldmap_thumb_tool_shop: 'subpkg_panels/images/ui/worldmap_thumb_tool_shop.png',
-  worldmap_thumb_garden_villa: 'subpkg_panels/images/ui/worldmap_thumb_garden_villa.png',
+  /** 大地图蝴蝶小屋立绘（NB2+rembg；原茶室占位已替换） */
+  worldmap_thumb_butterfly_house: 'subpkg_panels/images/ui/worldmap_thumb_butterfly_house.png',
+  /** 大地图蛋糕房立绘（钩子，后续接 sceneId） */
+  worldmap_thumb_cake_shop: 'subpkg_panels/images/ui/worldmap_thumb_cake_shop.png',
+  /** 大地图限时活动入口（喜庆占位，点开 EventPanel） */
+  worldmap_thumb_timed_event: 'subpkg_panels/images/ui/worldmap_thumb_timed_event.png',
   icon_worldmap: 'subpkg_panels/images/ui/icon_worldmap.png',
   /** 大地图许愿喷泉双帧（水流动画） */
   worldmap_thumb_wishing_fountain_1: 'subpkg_panels/images/ui/worldmap_thumb_wishing_fountain_1.png',
@@ -177,14 +179,13 @@ const PANELS_IMAGE_MAP: Record<string, string> = {
   daily_challenge_panel_shell_nb2: 'subpkg_panels/images/ui/daily_challenge_panel_shell_nb2.png',
   /** 中间浅蓝任务区底板（空，叠在列表背后） */
   daily_challenge_task_area_nb2: 'subpkg_panels/images/ui/daily_challenge_ui_B_mid_plate_nb2.png',
-  /** 单条任务行纯色底板（无装饰，叠字与进度） */
-  daily_challenge_task_row_blank_nb2: 'subpkg_panels/images/ui/daily_challenge_ui_C_task_row_blank_nb2.png',
   /** 任务行：暖金渐变 + 双层描边 + 高光阴影（与每日挑战壳 pastel 一致） */
   daily_challenge_task_row_textured_nb2: 'subpkg_panels/images/ui/daily_challenge_ui_C_task_row_textured_nb2.png',
   /** 周进度轨空槽 + 双小鸡（进度填充与刻度仍由代码画在上层） */
   daily_challenge_weekly_rail_empty_nb2: 'subpkg_panels/images/ui/daily_challenge_ui_D_weekly_rail_empty_nb2.png',
-  /** 顶区粉丝带 + 空小进度条装饰 */
-  daily_challenge_subheader_empty_nb2: 'subpkg_panels/images/ui/daily_challenge_ui_E_subheader_capsule_empty_bar_nb2.png',
+  /** 顶栏米色胶囊内倒计时左侧：金秒表（透明底） */
+  daily_challenge_countdown_stopwatch_nb2:
+    'subpkg_panels/images/ui/daily_challenge_countdown_stopwatch_nb2.png',
   /** 周积分轨里程碑刻度黄点 */
   daily_challenge_ui_F_dot: 'subpkg_panels/images/ui/daily_challenge_ui_F_dot.png',
 };
@@ -345,12 +346,6 @@ const DECO_IMAGE_MAP: Record<string, string> = {
   house_shop: 'subpkg_deco/images/house/shop.png',
   house_bg:   'subpkg_deco/images/house/bg.jpg',
 
-  // ---- 装修家具素材 room_items (36张) ----
-  ...buildRoomMap('room', 36),
-
-  // ---- 装修家具素材 room2_items (36张) ----
-  ...buildRoomMap('room2', 36),
-
   // ---- 新家具素材 furniture/ (含 NB2 扩展，已扣底) ----
   // 花架
   shelf_wood:    'subpkg_deco/images/furniture/shelf_wood.png',
@@ -468,17 +463,6 @@ const IMAGE_MAP: Record<string, string> = {
   ...ITEMS_IMAGE_MAP,
   ...DECO_IMAGE_MAP,
 };
-
-/** 生成装修家具图片映射（旧 room 素材，已移到分包） */
-function buildRoomMap(prefix: string, count: number): Record<string, string> {
-  const map: Record<string, string> = {};
-  for (let i = 1; i <= count; i++) {
-    const key = `${prefix}_${String(i).padStart(2, '0')}`;
-    map[key] = `subpkg_deco/images/room/${key}.png`;
-  }
-  return map;
-}
-
 
 class TextureCacheClass {
   private _cache = new Map<string, PIXI.Texture>();

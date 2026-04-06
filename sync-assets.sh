@@ -58,6 +58,7 @@ if [ -d "$SOURCE_DIR/flowers" ]; then
 fi
 
 # ---- 4. 同步装修家具素材 ----
+# room/ 为历史格图目录；运行时家具贴图已统一走 furniture/，此处仍可同步旧 asset 源（无则 0 张）
 echo "🪑 同步装修家具..."
 mkdir -p "$TARGET_DIR/images/room"
 if [ -d "$SOURCE_DIR/room_items" ]; then

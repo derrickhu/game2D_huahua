@@ -769,6 +769,7 @@ export class MainScene implements Scene {
   private _createMainRewardFlyBindings(): RewardFlyBindings {
     const topBar = this._topBar;
     const boardView = this._boardView;
+    const rewardBoxBtn = this._rewardBoxButton;
     return {
       getCurrencyTarget(type: string) {
         const posMap: Record<string, { pos: { x: number; y: number }; flash: () => void }> = {
@@ -776,6 +777,7 @@ export class MainScene implements Scene {
           huayuan: { pos: topBar.getHuayuanIconPos(), flash: () => topBar.flashHuayuan() },
           diamond: { pos: topBar.getDiamondIconPos(), flash: () => topBar.flashDiamond() },
           stamina: { pos: topBar.getStaminaIconPos(), flash: () => topBar.flashStamina() },
+          flowerSignTicket: { pos: topBar.getDiamondIconPos(), flash: () => topBar.flashDiamond() },
         };
         const info = posMap[type];
         if (!info) return null;
@@ -798,6 +800,11 @@ export class MainScene implements Scene {
           });
         }
         return { plans, overflowCount: pieces.length - plans.length };
+      },
+      getRewardBoxFlyTarget() {
+        const half = REWARD_BOX_BTN_SIZE / 2;
+        const endGlobal = rewardBoxBtn.toGlobal(new PIXI.Point(half, half));
+        return { endGlobal };
       },
     };
   }

@@ -55,7 +55,7 @@ export const ALL_OUTFITS: Outfit[] = [
   { id: 'outfit_spring',   name: '春日樱花',    desc: '樱花盛开的季节，粉嫩少女感满分',           icon: '🌸', huayuanCost: 900, starValue: 8, unlockRequirement: { level: 4 } },
   { id: 'outfit_summer',   name: '夏日向日葵',  desc: '明媚阳光下，活力四射的夏日装扮',           icon: '🌻', huayuanCost: 900, starValue: 8, unlockRequirement: { level: 4 } },
   { id: 'outfit_vintage',  name: '复古花坊',    desc: '优雅复古的欧式风情，精致迷人',             icon: '🎀', huayuanCost: 1800, starValue: 12, unlockRequirement: { level: 8 } },
-  { id: 'outfit_queen',    name: '花之女王',    desc: '传说中的花神降临，集齐全部花语卡片解锁',    icon: '👑', huayuanCost: 0, starValue: 15, unlockRequirement: { questId: 'collect_all_flower_cards', conditionText: '集齐全部花语卡片' } },
+  { id: 'outfit_queen',    name: '花之女王',    desc: '传说中的花神降临，花店等级足够高后方可解锁',    icon: '👑', huayuanCost: 0, starValue: 15, unlockRequirement: { level: 12 } },
 ];
 
 /** 按 ID 查找形象 */

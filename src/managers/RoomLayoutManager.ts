@@ -89,6 +89,15 @@ const DEFAULT_POSITIONS: Record<string, { x: number; y: number; scale: number }>
   [DecoSlot.GARDEN]:   { x: 200, y: 780, scale: 0.425 },
 };
 
+/**
+ * 程序化拖入/「放入房间」时幽灵家具默认出现点（房间容器本地坐标）。
+ * 选在门廊木台前景（y 与庭院默认同量级、更靠中），避免落在室内后墙夹角；不复用 TABLE 默认位。
+ */
+export const FURNITURE_TRAY_SPAWN_ROOM_LOCAL = {
+  x: 400,
+  y: 950,
+} as const;
+
 // ---- 房间可摆放区域边界 (设计坐标) ----
 // 默认值（非编辑模式 / 初始值），编辑模式下由 ShopScene 动态更新
 const ROOM_BOUNDS = {

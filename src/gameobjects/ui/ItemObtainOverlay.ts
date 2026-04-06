@@ -70,6 +70,216 @@ const DIRECT_CURRENCY_ICON: Record<'stamina' | 'huayuan' | 'diamond', string> = 
   diamond: 'icon_gem',
 };
 
+/** 单格展示（许愿池 / 升级奖励等共用） */
+export function createItemObtainRewardCell(entry: ItemObtainEntry): PIXI.Container {
+  const root = new PIXI.Container();
+  root.eventMode = 'none';
+
+  let texKey = '';
+  let qtyStr = '';
+  if (entry.kind === 'board_item') {
+    const def = ITEM_DEFS.get(entry.itemId);
+    texKey = def?.icon ?? '';
+    qtyStr = `×${entry.count}`;
+  } else {
+    texKey = DIRECT_CURRENCY_ICON[entry.currency];
+    qtyStr = `${entry.amount}`;
+  }
+
+  const tex = TextureCache.get(texKey);
+  if (tex?.width) {
+    const sp = new PIXI.Sprite(tex);
+    sp.anchor.set(0.5);
+    const sc = Math.min((CELL - 10) / tex.width, (CELL - 10) / tex.height);
+    sp.scale.set(sc);
+    root.addChild(sp);
+  } else {
+    const ph = new PIXI.Text('?', { fontSize: 30, fontFamily: FONT_FAMILY, fill: 0xffffff });
+    ph.anchor.set(0.5);
+    root.addChild(ph);
+  }
+  const cnt = new PIXI.Text(qtyStr, {
+    fontSize: 18,
+    fill: 0xffeb3b,
+    fontFamily: FONT_FAMILY,
+    fontWeight: 'bold',
+    stroke: 0x4e342e,
+    strokeThickness: 2,
+    dropShadow: true,
+    dropShadowColor: 0x000000,
+    dropShadowAlpha: 0.45,
+    dropShadowBlur: 2,
+    dropShadowDistance: 1,
+  });
+  cnt.anchor.set(0.5, 0);
+  cnt.position.set(0, CELL * 0.36);
+  root.addChild(cnt);
+  return root;
+}
+
+export interface ObtainStyleLayoutParams {
+  ribbonTexKey: string;
+  titleText: string;
+}
+
+export interface ObtainStyleLayoutOutcome {
+  /** 收纳盒类奖励格中心（与 content 同坐标系，content 通常置于根 0,0） */
+  boardItemSlots: Array<{ cx: number; cy: number; itemId: string; count: number }>;
+}
+
+/**
+ * 许愿池同款：散射光 + 彩带标题 + 网格奖励 +「点击继续」。
+ * 由 LevelUpPopup 等外层自行加遮罩与点击关闭逻辑。
+ */
+export function layoutObtainStyleRewardBlock(
+  content: PIXI.Container,
+  W: number,
+  H: number,
+  rewards: ItemObtainEntry[],
+  params: ObtainStyleLayoutParams,
+): ObtainStyleLayoutOutcome {
+  const boardItemSlots: ObtainStyleLayoutOutcome['boardItemSlots'] = [];
+
+  const n = rewards.length;
+  const cols = n <= 1 ? 1 : Math.min(5, n);
+  const rows = Math.ceil(n / cols) || 1;
+  const gridW = cols * CELL + (cols - 1) * GAP;
+  const gridH = rows * CELL + (rows - 1) * GAP;
+
+  const ribTex = TextureCache.get(params.ribbonTexKey);
+  const layoutTargetW = Math.min(RIBBON_LAYOUT_MAX_W, W - 40);
+  let ribH_layout = 48;
+  if (ribTex && ribTex.width > 0) {
+    const rsL = layoutTargetW / ribTex.width;
+    ribH_layout = ribTex.height * rsL;
+  }
+
+  const GAP_RIBBON_GRID = 52;
+  const GAP_GRID_HINT = 52;
+  const hintLineH = 26;
+  const totalBlockH_layout = ribH_layout + GAP_RIBBON_GRID + gridH + GAP_GRID_HINT + hintLineH;
+  const ribbonTop_layout = Math.max(
+    Game.safeTop + 12,
+    Math.min((H - totalBlockH_layout) / 2, H - totalBlockH_layout - 28),
+  );
+  const gridTop = ribbonTop_layout + ribH_layout + GAP_RIBBON_GRID;
+  const gridCx = W / 2;
+  const gridCy = gridTop + gridH / 2;
+
+  const displayTargetW = Math.min(RIBBON_DISPLAY_MAX_W, W - 24);
+  let ribH_display = 48;
+  let titleCenterOffset = 24;
+  let rsDisplay = 1;
+  if (ribTex && ribTex.width > 0) {
+    rsDisplay = displayTargetW / ribTex.width;
+    ribH_display = ribTex.height * rsDisplay;
+    titleCenterOffset = ribH_display * TITLE_ON_RIBBON_Y_FRAC - TITLE_NUDGE_UP_PX;
+  } else {
+    ribH_display = Math.round(52 * (displayTargetW / RIBBON_LAYOUT_MAX_W));
+  }
+  let ribbonTop = gridTop - GAP_RIBBON_GRID - ribH_display - TITLE_LIFT_PX;
+  ribbonTop = Math.max(Game.safeTop + 4, ribbonTop);
+
+  if (ribTex && ribTex.width > 0) {
+    const r = new PIXI.Sprite(ribTex);
+    r.scale.set(rsDisplay);
+    r.anchor.set(0.5, 0);
+    r.position.set(W / 2, ribbonTop);
+    r.eventMode = 'none';
+    content.addChild(r);
+    const titleY = ribbonTop + Math.max(ribH_display * TITLE_ON_RIBBON_MIN_FRAC, titleCenterOffset);
+    const titleFont = Math.min(
+      TITLE_FONT_MAX,
+      Math.round(TITLE_FONT_BASE * (displayTargetW / RIBBON_LAYOUT_MAX_W)),
+    );
+    const titleTxt = new PIXI.Text(params.titleText, {
+      fontSize: titleFont,
+      fill: 0xffffff,
+      fontFamily: FONT_FAMILY,
+      fontWeight: 'bold',
+      stroke: 0x5d4037,
+      strokeThickness: 4,
+      dropShadow: true,
+      dropShadowColor: 0x000000,
+      dropShadowAlpha: 0.4,
+      dropShadowBlur: 2,
+      dropShadowDistance: 1,
+    });
+    titleTxt.anchor.set(0.5, 0.5);
+    titleTxt.position.set(W / 2, titleY);
+    titleTxt.eventMode = 'none';
+    content.addChild(titleTxt);
+  } else {
+    const rw = Math.min(displayTargetW, W - 48);
+    const rh = ribH_display;
+    const rx = (W - rw) / 2;
+    const g = new PIXI.Graphics();
+    g.beginFill(0xffb088, 0.98);
+    g.drawRoundedRect(rx, ribbonTop, rw, rh, 18);
+    g.endFill();
+    g.eventMode = 'none';
+    content.addChild(g);
+    const titleFontFb = Math.min(
+      TITLE_FONT_MAX,
+      Math.round(TITLE_FONT_BASE * (displayTargetW / RIBBON_LAYOUT_MAX_W)),
+    );
+    const titleTxt = new PIXI.Text(params.titleText, {
+      fontSize: titleFontFb,
+      fill: 0xffffff,
+      fontFamily: FONT_FAMILY,
+      fontWeight: 'bold',
+      stroke: 0x5d4037,
+      strokeThickness: 4,
+    });
+    titleTxt.anchor.set(0.5, 0.5);
+    const fbY = ribbonTop + Math.max(rh * TITLE_ON_RIBBON_MIN_FRAC, rh * TITLE_ON_RIBBON_Y_FRAC - TITLE_NUDGE_UP_PX);
+    titleTxt.position.set(W / 2, fbY);
+    content.addChild(titleTxt);
+  }
+
+  const burst = new PIXI.Graphics();
+  const burstR = (Math.max(gridW, gridH) * 0.72 + 56) * 0.5;
+  drawSunburstRays(burst, gridCx, gridCy, burstR);
+  burst.eventMode = 'none';
+  content.addChildAt(burst, 0);
+
+  const startX = gridCx - gridW / 2;
+  const startY = gridTop;
+  for (let i = 0; i < n; i++) {
+    const rw = Math.floor(i / cols);
+    const c = i % cols;
+    const entry = rewards[i]!;
+    const cell = createItemObtainRewardCell(entry);
+    const cx = startX + c * (CELL + GAP) + CELL / 2;
+    const cy = startY + rw * (CELL + GAP) + CELL / 2;
+    cell.position.set(cx, cy);
+    content.addChild(cell);
+    if (entry.kind === 'board_item') {
+      boardItemSlots.push({ cx, cy, itemId: entry.itemId, count: entry.count });
+    }
+  }
+
+  const hint = new PIXI.Text('点击继续', {
+    fontSize: 18,
+    fill: 0xfff8e7,
+    fontFamily: FONT_FAMILY,
+    fontWeight: 'bold',
+    stroke: 0x4e342e,
+    strokeThickness: 2,
+    dropShadow: true,
+    dropShadowColor: 0x1a0f0a,
+    dropShadowAlpha: 0.45,
+    dropShadowBlur: 3,
+    dropShadowDistance: 2,
+  });
+  hint.anchor.set(0.5, 0);
+  hint.position.set(W / 2, gridTop + gridH + GAP_GRID_HINT);
+  hint.eventMode = 'none';
+  content.addChild(hint);
+
+  return { boardItemSlots };
+}
+
 export class ItemObtainOverlay extends PIXI.Container {
   private static _current: ItemObtainOverlay | null = null;
 
@@ -132,186 +342,10 @@ export class ItemObtainOverlay extends PIXI.Container {
     content.eventMode = 'none';
     this.addChild(content);
 
-    const n = rewards.length;
-    const cols = n <= 1 ? 1 : Math.min(5, n);
-    const rows = Math.ceil(n / cols);
-    const gridW = cols * CELL + (cols - 1) * GAP;
-    const gridH = rows * CELL + (rows - 1) * GAP;
-
-    const ribTex = TextureCache.get('merge_chain_ribbon');
-    const layoutTargetW = Math.min(RIBBON_LAYOUT_MAX_W, W - 40);
-    let ribH_layout = 48;
-    if (ribTex && ribTex.width > 0) {
-      const rsL = layoutTargetW / ribTex.width;
-      ribH_layout = ribTex.height * rsL;
-    }
-
-    /** 标题彩带下沿到物品首行的间距（与背后「许愿喷泉」条视觉上拉开） */
-    const GAP_RIBBON_GRID = 52;
-    const GAP_GRID_HINT = 52;
-    const hintLineH = 26;
-    const totalBlockH_layout = ribH_layout + GAP_RIBBON_GRID + gridH + GAP_GRID_HINT + hintLineH;
-    const ribbonTop_layout = Math.max(
-      Game.safeTop + 12,
-      Math.min((H - totalBlockH_layout) / 2, H - totalBlockH_layout - 28),
-    );
-    /** 物品 +「点击继续」垂直位置保持不变（由布局参考彩带推算） */
-    const gridTop = ribbonTop_layout + ribH_layout + GAP_RIBBON_GRID;
-    const gridCx = W / 2;
-    const gridCy = gridTop + gridH / 2;
-
-    const displayTargetW = Math.min(RIBBON_DISPLAY_MAX_W, W - 24);
-    let ribH_display = 48;
-    let titleCenterOffset = 24;
-    let rsDisplay = 1;
-    if (ribTex && ribTex.width > 0) {
-      rsDisplay = displayTargetW / ribTex.width;
-      ribH_display = ribTex.height * rsDisplay;
-      titleCenterOffset = ribH_display * TITLE_ON_RIBBON_Y_FRAC - TITLE_NUDGE_UP_PX;
-    } else {
-      ribH_display = Math.round(52 * (displayTargetW / RIBBON_LAYOUT_MAX_W));
-    }
-    /** 更大彩带 + 单独上移；若顶边不够则夹紧，略压缩与物品间距 */
-    let ribbonTop = gridTop - GAP_RIBBON_GRID - ribH_display - TITLE_LIFT_PX;
-    ribbonTop = Math.max(Game.safeTop + 4, ribbonTop);
-
-    if (ribTex && ribTex.width > 0) {
-      const r = new PIXI.Sprite(ribTex);
-      r.scale.set(rsDisplay);
-      r.anchor.set(0.5, 0);
-      r.position.set(W / 2, ribbonTop);
-      r.eventMode = 'none';
-      content.addChild(r);
-      const titleY = ribbonTop + Math.max(ribH_display * TITLE_ON_RIBBON_MIN_FRAC, titleCenterOffset);
-      const titleFont = Math.min(
-        TITLE_FONT_MAX,
-        Math.round(TITLE_FONT_BASE * (displayTargetW / RIBBON_LAYOUT_MAX_W)),
-      );
-      const titleTxt = new PIXI.Text('恭喜获得', {
-        fontSize: titleFont,
-        fill: 0xffffff,
-        fontFamily: FONT_FAMILY,
-        fontWeight: 'bold',
-        stroke: 0x5d4037,
-        strokeThickness: 4,
-        dropShadow: true,
-        dropShadowColor: 0x000000,
-        dropShadowAlpha: 0.4,
-        dropShadowBlur: 2,
-        dropShadowDistance: 1,
-      });
-      titleTxt.anchor.set(0.5, 0.5);
-      titleTxt.position.set(W / 2, titleY);
-      titleTxt.eventMode = 'none';
-      content.addChild(titleTxt);
-    } else {
-      const rw = Math.min(displayTargetW, W - 48);
-      const rh = ribH_display;
-      const rx = (W - rw) / 2;
-      const g = new PIXI.Graphics();
-      g.beginFill(0xffb088, 0.98);
-      g.drawRoundedRect(rx, ribbonTop, rw, rh, 18);
-      g.endFill();
-      g.eventMode = 'none';
-      content.addChild(g);
-      const titleFontFb = Math.min(
-        TITLE_FONT_MAX,
-        Math.round(TITLE_FONT_BASE * (displayTargetW / RIBBON_LAYOUT_MAX_W)),
-      );
-      const titleTxt = new PIXI.Text('恭喜获得', {
-        fontSize: titleFontFb,
-        fill: 0xffffff,
-        fontFamily: FONT_FAMILY,
-        fontWeight: 'bold',
-        stroke: 0x5d4037,
-        strokeThickness: 4,
-      });
-      titleTxt.anchor.set(0.5, 0.5);
-      const fbY = ribbonTop + Math.max(rh * TITLE_ON_RIBBON_MIN_FRAC, rh * TITLE_ON_RIBBON_Y_FRAC - TITLE_NUDGE_UP_PX);
-      titleTxt.position.set(W / 2, fbY);
-      content.addChild(titleTxt);
-    }
-
-    const burst = new PIXI.Graphics();
-    /** 散射光半径约为原先一半 */
-    const burstR = (Math.max(gridW, gridH) * 0.72 + 56) * 0.5;
-    drawSunburstRays(burst, gridCx, gridCy, burstR);
-    burst.eventMode = 'none';
-    content.addChildAt(burst, 0);
-
-    const startX = gridCx - gridW / 2;
-    const startY = gridTop;
-    for (let i = 0; i < n; i++) {
-      const r = Math.floor(i / cols);
-      const c = i % cols;
-      const cell = this._makeEntry(rewards[i]!);
-      cell.position.set(startX + c * (CELL + GAP) + CELL / 2, startY + r * (CELL + GAP) + CELL / 2);
-      content.addChild(cell);
-    }
-
-    const hint = new PIXI.Text('点击继续', {
-      fontSize: 18,
-      fill: 0xfff8e7,
-      fontFamily: FONT_FAMILY,
-      fontWeight: 'bold',
-      stroke: 0x4e342e,
-      strokeThickness: 2,
-      dropShadow: true,
-      dropShadowColor: 0x1a0f0a,
-      dropShadowAlpha: 0.45,
-      dropShadowBlur: 3,
-      dropShadowDistance: 2,
+    layoutObtainStyleRewardBlock(content, W, H, rewards, {
+      ribbonTexKey: 'merge_chain_ribbon',
+      titleText: '恭喜获得',
     });
-    hint.anchor.set(0.5, 0);
-    hint.position.set(W / 2, gridTop + gridH + GAP_GRID_HINT);
-    hint.eventMode = 'none';
-    content.addChild(hint);
-  }
-
-  private _makeEntry(entry: ItemObtainEntry): PIXI.Container {
-    const root = new PIXI.Container();
-    root.eventMode = 'none';
-
-    let texKey = '';
-    let qtyStr = '';
-    if (entry.kind === 'board_item') {
-      const def = ITEM_DEFS.get(entry.itemId);
-      texKey = def?.icon ?? '';
-      qtyStr = `×${entry.count}`;
-    } else {
-      texKey = DIRECT_CURRENCY_ICON[entry.currency];
-      qtyStr = `${entry.amount}`;
-    }
-
-    const tex = TextureCache.get(texKey);
-    if (tex?.width) {
-      const sp = new PIXI.Sprite(tex);
-      sp.anchor.set(0.5);
-      const sc = Math.min((CELL - 10) / tex.width, (CELL - 10) / tex.height);
-      sp.scale.set(sc);
-      root.addChild(sp);
-    } else {
-      const ph = new PIXI.Text('?', { fontSize: 30, fontFamily: FONT_FAMILY, fill: 0xffffff });
-      ph.anchor.set(0.5);
-      root.addChild(ph);
-    }
-    const cnt = new PIXI.Text(qtyStr, {
-      fontSize: 18,
-      fill: 0xffeb3b,
-      fontFamily: FONT_FAMILY,
-      fontWeight: 'bold',
-      stroke: 0x4e342e,
-      strokeThickness: 2,
-      dropShadow: true,
-      dropShadowColor: 0x000000,
-      dropShadowAlpha: 0.45,
-      dropShadowBlur: 2,
-      dropShadowDistance: 1,
-    });
-    cnt.anchor.set(0.5, 0);
-    cnt.position.set(0, CELL * 0.36);
-    root.addChild(cnt);
-    return root;
   }
 
   private _finish(): void {

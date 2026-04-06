@@ -33,10 +33,9 @@ import { RoomLayoutManager } from './RoomLayoutManager';
 import { CellState } from '@/config/BoardLayout';
 import { DECO_DEFS } from '@/config/DecorationConfig';
 import {
-  getNextLevelStarRequired,
-  getStarLevelLabel,
-  getMaxStar,
-  isSceneCompleted,
+  getGlobalNextLevelStarRequired,
+  getGlobalStarLevelLabel,
+  getGlobalStarRequiredForLevel,
 } from '@/config/StarLevelConfig';
 import {
   ITEM_DEFS,
@@ -351,7 +350,7 @@ class GMManagerClass {
       id: 'set_level_5',
       group: '📊 等级调整',
       name: '⭐ 设为 Lv.5',
-      desc: '当前装修场景星级→5（并同步星星）；globalLevel 用于合成气泡等门控',
+      desc: '全局星级→5（并同步累计星星）；globalLevel 与顶栏一致',
       execute: () => {
         CurrencyManager.setLevel(5);
         return `✅ 当前房 Lv.5，globalLevel=${CurrencyManager.globalLevel}（合成气泡需≥3）`;
@@ -362,7 +361,7 @@ class GMManagerClass {
       id: 'set_level_10',
       group: '📊 等级调整',
       name: '⭐ 设为 Lv.10',
-      desc: '当前装修场景星级→10（花店满星会钳制在 10）',
+      desc: '全局星级→10（原花店十星档，160⭐ 门槛）',
       execute: () => {
         CurrencyManager.setLevel(10);
         return `✅ 当前房 Lv.${CurrencyManager.state.level}，globalLevel=${CurrencyManager.globalLevel}`;
@@ -373,7 +372,7 @@ class GMManagerClass {
       id: 'set_level_20',
       group: '📊 等级调整',
       name: '⭐ 设为 Lv.20',
-      desc: '按当前场景上限钳制（花店最高 10 星）',
+      desc: '全局星级→20（超过十星后继续可升）',
       execute: () => {
         CurrencyManager.setLevel(20);
         return `✅ 当前房 Lv.${CurrencyManager.state.level}，globalLevel=${CurrencyManager.globalLevel}`;
@@ -383,24 +382,17 @@ class GMManagerClass {
     this._commands.push({
       id: 'gm_star_up_one',
       group: '📊 等级调整',
-      name: '⭐ 当前场景升 1 星级',
-      desc: '按装修进度条：补足星星升到下一星级（花店/蝴蝶小屋等当前房）',
+      name: '⭐ 全局升 1 星级',
+      desc: '按顶栏进度条：补足星星升到下一全局星级',
       execute: () => {
-        const sid = CurrencyManager.state.sceneId;
         const star = CurrencyManager.state.star;
         const level = CurrencyManager.state.level;
-        if (isSceneCompleted(sid, level)) {
-          return '❌ 当前装修场景已满星';
-        }
-        const nextReq = getNextLevelStarRequired(sid, level);
-        if (nextReq < 0) {
-          return '❌ 无法解析下一星级阈值';
-        }
+        const nextReq = getGlobalNextLevelStarRequired(level);
         const delta = Math.max(1, nextReq - star);
-        const labelBefore = getStarLevelLabel(sid, level);
+        const labelBefore = getGlobalStarLevelLabel(level);
         CurrencyManager.addStar(delta);
         const afterLv = CurrencyManager.state.level;
-        const labelAfter = getStarLevelLabel(sid, afterLv);
+        const labelAfter = getGlobalStarLevelLabel(afterLv);
         return `✅ +${delta}⭐ → ${labelBefore}→${labelAfter}，累计 ${CurrencyManager.state.star}⭐`;
       },
     });
@@ -408,23 +400,19 @@ class GMManagerClass {
     this._commands.push({
       id: 'gm_star_max_scene',
       group: '📊 等级调整',
-      name: '⭐ 当前场景一键满星',
-      desc: '将当前装修场景星星拉到该场景满星阈值',
+      name: '⭐ 全局拉到十星门槛',
+      desc: '累计星星拉到全局 10 星门槛（160⭐，与原花店满星一致）',
       execute: () => {
-        const sid = CurrencyManager.state.sceneId;
-        const maxStar = getMaxStar(sid);
-        if (maxStar <= 0) {
-          return '❌ 未知场景';
-        }
+        const target = getGlobalStarRequiredForLevel(10);
         const cur = CurrencyManager.state.star;
-        if (cur >= maxStar) {
-          return '❌ 当前场景已满星';
+        if (cur >= target) {
+          return `❌ 全局已 ≥ 十星门槛（当前 ${cur}⭐）`;
         }
-        const delta = maxStar - cur;
-        const labelBefore = getStarLevelLabel(sid, CurrencyManager.state.level);
+        const delta = target - cur;
+        const labelBefore = getGlobalStarLevelLabel(CurrencyManager.state.level);
         CurrencyManager.addStar(delta);
-        const labelAfter = getStarLevelLabel(sid, CurrencyManager.state.level);
-        return `✅ +${delta}⭐ → ${labelBefore}→${labelAfter}（满星 ${maxStar}⭐）`;
+        const labelAfter = getGlobalStarLevelLabel(CurrencyManager.state.level);
+        return `✅ +${delta}⭐ → ${labelBefore}→${labelAfter}（${target}⭐）`;
       },
     });
 

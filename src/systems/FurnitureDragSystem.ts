@@ -8,7 +8,7 @@
  *
  * 支持：
  *   - 拖拽已放置的家具移动位置
- *   - 从 FurnitureTray 拖入新家具到房间
+ *   - 从 FurnitureTray 拖入新家具到房间（脚下柔光 + alpha 外缘细亮黄描边）
  *   - 拖拽时半透明投影 + 边界约束
  *   - 放置时弹跳动画
  *   - 按 y 坐标自动排序（2.5D 遮挡）
@@ -33,7 +33,8 @@ import {
 import { CurrencyManager } from '@/managers/CurrencyManager';
 import { ToastMessage } from '@/gameobjects/ui/ToastMessage';
 import { TextureCache } from '@/utils/TextureCache';
-import { roomDepthZForPlacement } from '@/config/RoomDepthSort';
+import { ROOM_DEPTH_AUX_MAX, roomDepthZForPlacement } from '@/config/RoomDepthSort';
+import { createFurnitureAlphaOutlineFilter } from './FurnitureAlphaOutlineFilter';
 
 // ---- 常量 ----
 
@@ -41,8 +42,6 @@ import { roomDepthZForPlacement } from '@/config/RoomDepthSort';
 const DRAG_ALPHA = 0.7;
 /** 拖拽时的缩放加成（让家具稍微放大，便于识别） */
 const DRAG_SCALE_BOOST = 1.1;
-/** 选中家具时的高亮色 */
-const SELECTED_TINT = 0xADD8E6;
 /** 放置弹跳动画时长 */
 const BOUNCE_DURATION = 0.25;
 /** 长按判定时间（ms） */
@@ -70,6 +69,8 @@ export interface DragContext {
   isNew: boolean;
   /** 原始缩放 */
   originalScale: number;
+  /** 仅 isNew：脚下柔光层（随 sprite 移动，落地后移除） */
+  newFurnitureGlow?: PIXI.Graphics;
 }
 
 class FurnitureDragSystemClass {
@@ -87,6 +88,11 @@ class FurnitureDragSystemClass {
 
   /** 当前选中的家具 ID */
   private _selectedDecoId: string | null = null;
+
+  /** 已放置家具选中描边（与拖入预览分开，避免同 Filter 实例挂到两个对象） */
+  private _outlineFilterSelection: PIXI.Filter | null = null;
+  /** 托盘拖入预览描边 */
+  private _outlineFilterDrag: PIXI.Filter | null = null;
 
   /** canvas 事件引用（用于 cleanup） */
   private _onRawMove: ((e: any) => void) | null = null;
@@ -162,6 +168,8 @@ class FurnitureDragSystemClass {
     this._spriteMap.clear();
     this._roomContainer = null;
 
+    this._destroyOutlineFilters();
+
     // 保存布局
     RoomLayoutManager.saveNow();
 
@@ -194,14 +202,14 @@ class FurnitureDragSystemClass {
    * 注销一个家具 Sprite（从房间移除时调用）
    */
   unregisterSprite(decoId: string): void {
+    if (this._selectedDecoId === decoId) {
+      this.deselect();
+    }
     const sprite = this._spriteMap.get(decoId);
     if (sprite) {
       sprite.eventMode = 'none';
       sprite.removeAllListeners();
       this._spriteMap.delete(decoId);
-    }
-    if (this._selectedDecoId === decoId) {
-      this._selectedDecoId = null;
     }
   }
 
@@ -224,7 +232,8 @@ class FurnitureDragSystemClass {
     this._selectedDecoId = decoId;
     const sprite = this._spriteMap.get(decoId);
     if (sprite) {
-      sprite.tint = SELECTED_TINT;
+      sprite.tint = 0xffffff;
+      sprite.filters = [this._getSelectionOutlineFilter()];
     }
     EventBus.emit('furniture:selected', decoId);
   }
@@ -236,7 +245,8 @@ class FurnitureDragSystemClass {
     if (!this._selectedDecoId) return;
     const sprite = this._spriteMap.get(this._selectedDecoId);
     if (sprite) {
-      sprite.tint = 0xFFFFFF;
+      sprite.tint = 0xffffff;
+      sprite.filters = null;
     }
     this._selectedDecoId = null;
     EventBus.emit('furniture:deselected');
@@ -251,6 +261,8 @@ class FurnitureDragSystemClass {
    */
   startDragFromTray(decoId: string, globalX: number, globalY: number): void {
     if (!this._enabled || !this._roomContainer) return;
+
+    this.deselect();
 
     const deco = DECO_MAP.get(decoId);
     if (!deco) return;
@@ -271,15 +283,22 @@ class FurnitureDragSystemClass {
       Math.min(SHOP_FURNITURE_TEX_BASE_PX / tex.width, SHOP_FURNITURE_TEX_BASE_PX / tex.height)
       * defaultPlacementScale;
 
+    const glow = this._createNewFurnitureFeetGlow();
+    glow.position.set(localPos.x, localPos.y);
+    this._roomContainer.addChild(glow);
+
     const sprite = new PIXI.Sprite(tex);
     sprite.anchor.set(0.5, 0.8); // 底部偏中心作为锚点
     sprite.x = localPos.x;
     sprite.y = localPos.y;
     sprite.alpha = DRAG_ALPHA;
     sprite.scale.set(baseScale * DRAG_SCALE_BOOST);
+    sprite.tint = 0xffffff;
+    sprite.filters = [this._getDragOutlineFilter()];
     (sprite as any)._decoId = decoId;
 
     this._roomContainer.addChild(sprite);
+    this._startNewFurnitureGlowPulse(glow);
 
     this._dragCtx = {
       sprite,
@@ -291,7 +310,9 @@ class FurnitureDragSystemClass {
       dragging: true, // 从托盘拖入直接视为拖拽状态
       isNew: true,
       originalScale: baseScale,
+      newFurnitureGlow: glow,
     };
+    this.sortByDepth();
   }
 
   /**
@@ -309,12 +330,28 @@ class FurnitureDragSystemClass {
         const decoId = (child as any)._decoId as string;
         const placement = RoomLayoutManager.getPlacement(decoId);
         const deco = DECO_MAP.get(decoId);
-        if (!placement || !deco) continue;
+        if (!deco) continue;
+        const feetY = child.y;
+        // 从托盘拖入、尚未写入布局：用当前 y + 高后缀保证浮在前景，避免 zIndex=0 贴后墙
+        if (!placement) {
+          const dc = this._dragCtx;
+          if (dc?.isNew && dc.decoId === decoId && child === dc.sprite) {
+            child.zIndex = roomDepthZForPlacement(
+              feetY,
+              8,
+              999,
+              deco,
+              ROOM_DEPTH_AUX_MAX,
+            );
+            if (dc.newFurnitureGlow) {
+              dc.newFurnitureGlow.zIndex = child.zIndex - 2;
+            }
+          }
+          continue;
+        }
         const zLayer = placement.zLayer ?? 0;
         const pi = stackOrder.get(decoId) ?? 0;
         const stackTie = Math.min(pi, 999);
-        // 拖拽中 placement 可能未落盘，须用 Sprite 当前 y 参与排序
-        const feetY = child.y;
         child.zIndex = roomDepthZForPlacement(
           feetY,
           zLayer,
@@ -390,6 +427,10 @@ class FurnitureDragSystemClass {
 
     ctx.sprite.x = newX;
     ctx.sprite.y = newY;
+    if (ctx.newFurnitureGlow) {
+      ctx.newFurnitureGlow.x = newX;
+      ctx.newFurnitureGlow.y = newY;
+    }
 
     // 实时排序
     this.sortByDepth();
@@ -414,6 +455,10 @@ class FurnitureDragSystemClass {
     // 检查是否在房间区域内
     const inBounds = finalX >= bounds.minX && finalX <= bounds.maxX
                   && finalY >= bounds.minY && finalY <= bounds.maxY;
+
+    const disposeNewDragExtras = () => {
+      this._disposeNewFurnitureDragExtras(ctx);
+    };
 
     if (ctx.isNew) {
       if (inBounds) {
@@ -441,15 +486,19 @@ class FurnitureDragSystemClass {
           ctx.decoId, finalX, finalY, placementScaleMult, false
         );
         if (placement) {
+          disposeNewDragExtras();
           this.registerSprite(ctx.sprite, ctx.decoId);
           this._playBounceAnimation(ctx.sprite, ctx.originalScale);
+          this.select(ctx.decoId);
         } else {
           // 已存在，移除临时 Sprite
+          disposeNewDragExtras();
           ctx.sprite.parent?.removeChild(ctx.sprite);
           ctx.sprite.destroy();
         }
       } else {
         // 拖出了房间 → 移除临时 Sprite
+        disposeNewDragExtras();
         ctx.sprite.parent?.removeChild(ctx.sprite);
         ctx.sprite.destroy();
         EventBus.emit('furniture:drag_cancelled', ctx.decoId);
@@ -503,6 +552,7 @@ class FurnitureDragSystemClass {
     this._dragCtx = null;
 
     if (ctx.isNew) {
+      this._disposeNewFurnitureDragExtras(ctx);
       ctx.sprite.parent?.removeChild(ctx.sprite);
       ctx.sprite.destroy();
     } else {
@@ -530,6 +580,82 @@ class FurnitureDragSystemClass {
     const designX = clientX * Game.designWidth / Game.screenWidth;
     const designY = clientY * Game.designHeight / Game.screenHeight;
     return this._designToLocal(designX, designY);
+  }
+
+  private _getSelectionOutlineFilter(): PIXI.Filter {
+    if (!this._outlineFilterSelection) {
+      this._outlineFilterSelection = createFurnitureAlphaOutlineFilter();
+    }
+    return this._outlineFilterSelection;
+  }
+
+  private _getDragOutlineFilter(): PIXI.Filter {
+    if (!this._outlineFilterDrag) {
+      this._outlineFilterDrag = createFurnitureAlphaOutlineFilter();
+    }
+    return this._outlineFilterDrag;
+  }
+
+  private _destroyOutlineFilters(): void {
+    if (this._outlineFilterSelection) {
+      this._outlineFilterSelection.destroy();
+      this._outlineFilterSelection = null;
+    }
+    if (this._outlineFilterDrag) {
+      this._outlineFilterDrag.destroy();
+      this._outlineFilterDrag = null;
+    }
+  }
+
+  private _disposeNewFurnitureDragExtras(ctx: DragContext): void {
+    if (ctx.newFurnitureGlow) {
+      TweenManager.cancelTarget(ctx.newFurnitureGlow);
+      ctx.newFurnitureGlow.parent?.removeChild(ctx.newFurnitureGlow);
+      ctx.newFurnitureGlow.destroy();
+      ctx.newFurnitureGlow = undefined;
+    }
+    if (ctx.isNew) {
+      ctx.sprite.filters = null;
+    }
+  }
+
+  /** 从托盘拖入时脚下柔光：仅脚点附近小圈（无外圈大椭圆），不挡触摸 */
+  private _createNewFurnitureFeetGlow(): PIXI.Graphics {
+    const g = new PIXI.Graphics();
+    g.beginFill(0xfff5e0, 0.48);
+    g.drawEllipse(0, -16, 32, 21);
+    g.endFill();
+    g.beginFill(0xffffff, 0.2);
+    g.drawEllipse(0, -17, 18, 12);
+    g.endFill();
+    g.eventMode = 'none';
+    (g as any)._isNewFurnitureGlow = true;
+    return g;
+  }
+
+  /** 柔光轻微呼吸，便于在复杂地面上发现新件 */
+  private _startNewFurnitureGlowPulse(g: PIXI.Graphics): void {
+    TweenManager.cancelTarget(g);
+    const runUp = () => {
+      TweenManager.to({
+        target: g,
+        props: { alpha: 1 },
+        duration: 0.48,
+        ease: Ease.easeInOutQuad,
+        onComplete: runDown,
+      });
+    };
+    const runDown = () => {
+      TweenManager.to({
+        target: g,
+        props: { alpha: 0.72 },
+        duration: 0.48,
+        ease: Ease.easeInOutQuad,
+        onComplete: runUp,
+      });
+    };
+    g.alpha = 0.88;
+    runDown();
   }
 
   /** 设计坐标 → roomContainer 本地坐标 */

@@ -5,8 +5,8 @@
  * - 花愿 (huayuan)：主货币；**收入仅** 客人订单交付 + 离线收益领取；其余玩法奖励多为钻石/体力
  * - 钻石 (diamond)：硬通货
  * - 体力 (stamina)：节奏调控
- * - 星星 (star)：购买家具/换装后累积的评分（只增不减）
- * - 星级 (starLevel)：由星星阈值决定，= 游戏等级
+ * - 星星 (star)：购买家具/换装后累积的**全局**评分（只增不减）
+ * - 星级 (level)：由全局星星阈值决定，= 游戏等级（与当前装修场景无关）
  *
  * 已移除：花露(hualu)、经验(exp)
  */
@@ -15,9 +15,8 @@ import { STAMINA_MAX, STAMINA_RECOVER_INTERVAL } from '@/config/Constants';
 import {
   DEFAULT_SCENE_ID,
   SCENE_MAP,
-  getStarLevel,
-  getGlobalLevel,
-  isSceneCompleted,
+  getGlobalStarLevel,
+  getGlobalStarRequiredForLevel,
   type SceneStarProgress,
 } from '@/config/StarLevelConfig';
 
@@ -26,7 +25,7 @@ export interface CurrencyState {
   huayuan: number;
   diamond: number;
   stamina: number;
-  /** 当前场景的星星累积值（只增不减） */
+  /** 全局星星累积值（只增不减） */
   star: number;
   /** 当前星级（由 star 阈值计算，= 游戏等级） */
   level: number;
@@ -139,53 +138,45 @@ class CurrencyManagerClass {
 
   /**
    * 增加星星（只增不减）。
-   * 购买家具/换装时调用，星星计入当前活跃场景。
+   * 购买家具/换装时调用，星星计入**全局**池。
    * 自动检查星级变化并触发 star:levelUp 事件。
    */
   addStar(amount: number): void {
     if (amount <= 0) return;
     this._state.star += amount;
-
-    const sp = this._getActiveSceneProgress();
-    if (sp) {
-      sp.star = this._state.star;
-    }
-
+    this._syncSceneProgressMirrors();
     EventBus.emit('currency:changed', 'star', this._state.star);
     this._checkStarLevel();
   }
 
   /** 内部：检查星级是否提升 */
   private _checkStarLevel(): void {
-    const newLevel = getStarLevel(this._state.sceneId, this._state.star);
+    const newLevel = getGlobalStarLevel(this._state.star);
     if (newLevel > this._state.level) {
       const oldLevel = this._state.level;
       this._state.level = newLevel;
-
-      const sp = this._getActiveSceneProgress();
-      if (sp) {
-        sp.starLevel = newLevel;
-      }
-
+      this._syncSceneProgressMirrors();
       EventBus.emit('currency:changed', 'level', this._state.level);
       EventBus.emit('star:levelUp', newLevel, oldLevel);
       console.log(`[Currency] 星级提升！${oldLevel} → ${newLevel}`);
     }
   }
 
-  /** 内部：获取当前活跃场景的进度对象 */
-  private _getActiveSceneProgress(): SceneStarProgress | undefined {
-    return this._state.sceneProgresses.find(
-      sp => sp.sceneId === this._state.sceneId
-    );
+  /** 各场景存档条目中 mirror 全局星/级（兼容旧结构；不按房分桶） */
+  private _syncSceneProgressMirrors(): void {
+    for (const sp of this._state.sceneProgresses) {
+      sp.star = this._state.star;
+      sp.starLevel = this._state.level;
+      sp.completed = false;
+    }
   }
 
   /**
-   * 全局游戏等级（综合所有场景进度）
-   * 用于订单档位等全局门控
+   * 全局游戏等级 = 全局星级（与顶栏一致）
+   * 用于订单档位、大地图解锁、合成气泡等门控
    */
   get globalLevel(): number {
-    return getGlobalLevel(this._state.sceneProgresses);
+    return Math.max(1, this._state.level);
   }
 
   buyStaminaWithDiamond(): boolean {
@@ -218,8 +209,7 @@ class CurrencyManagerClass {
 
   /**
    * 切换当前活跃装修场景。
-   * 同步 star / level 到目标场景的进度值。
-   * 首次进入新场景时自动补齐 sceneProgresses 条目。
+   * 不改变全局 star / level；仅切换 sceneId 并补齐 sceneProgresses 条目。
    */
   setActiveRenovationScene(sceneId: string): void {
     if (sceneId === this._state.sceneId) return;
@@ -228,29 +218,21 @@ class CurrencyManagerClass {
       return;
     }
 
-    const oldId = this._state.sceneId;
-    const oldSp = this._state.sceneProgresses.find(p => p.sceneId === oldId);
-    if (oldSp) {
-      oldSp.star = this._state.star;
-      oldSp.starLevel = getStarLevel(oldId, oldSp.star);
-      oldSp.completed = isSceneCompleted(oldId, oldSp.starLevel);
-    }
-
     let sp = this._state.sceneProgresses.find(p => p.sceneId === sceneId);
     if (!sp) {
-      sp = { sceneId, star: 0, starLevel: 1, completed: false };
+      sp = {
+        sceneId,
+        star: this._state.star,
+        starLevel: this._state.level,
+        completed: false,
+      };
       this._state.sceneProgresses.push(sp);
     }
 
     this._state.sceneId = sceneId;
-    this._state.star = sp.star;
-    this._state.level = getStarLevel(sceneId, sp.star);
-    sp.starLevel = this._state.level;
-    sp.completed = isSceneCompleted(sceneId, sp.starLevel);
+    this._syncSceneProgressMirrors();
 
-    console.log(`[Currency] 切换装修场景 → ${sceneId}, star=${sp.star}, level=${sp.starLevel}`);
-    EventBus.emit('currency:changed', 'level', this._state.level);
-    EventBus.emit('currency:changed', 'star', this._state.star);
+    console.log(`[Currency] 切换装修场景 → ${sceneId}, 全局 star=${this._state.star}, level=${this._state.level}`);
     EventBus.emit('renovation:sceneChanged', sceneId);
   }
 
@@ -263,39 +245,34 @@ class CurrencyManagerClass {
   setExp(_val: number): void {}
 
   /**
-   * GM/调试：将**当前装修场景**的星级设为指定值，并把累计星星调到该星级阈值。
-   * 气泡等门控使用 `globalLevel`（多场景星级之和）；单花店档下把当前房调到 ≥3 星即可出合成气泡。
+   * GM/调试：将**全局**星级设为指定值，并把累计星星调到该星级阈值。
+   * 门控使用 `globalLevel`（与顶栏星级一致）。
    * 正式玩法请用 `addStar`，勿对玩家开放此接口。
    */
   setLevel(val: number): void {
-    const sid = this._state.sceneId;
-    const scene = SCENE_MAP.get(sid);
-    if (!scene) return;
-    const clamped = Math.max(1, Math.min(Math.floor(val), scene.maxStarLevel));
-    const row = scene.thresholds.find(t => t.level === clamped);
-    const star = row?.starRequired ?? 0;
+    const clamped = Math.max(1, Math.min(Math.floor(val), 999));
+    const star = getGlobalStarRequiredForLevel(clamped);
 
     this._state.star = star;
     this._state.level = clamped;
-
-    let sp = this._getActiveSceneProgress();
-    if (!sp) {
-      sp = {
-        sceneId: sid,
-        star,
-        starLevel: clamped,
-        completed: isSceneCompleted(sid, clamped),
-      };
-      this._state.sceneProgresses.push(sp);
-    } else {
-      sp.star = star;
-      sp.starLevel = clamped;
-      sp.completed = isSceneCompleted(sid, clamped);
-    }
+    this._ensureActiveSceneProgress();
+    this._syncSceneProgressMirrors();
 
     EventBus.emit('currency:changed', 'star', this._state.star);
     EventBus.emit('currency:changed', 'level', this._state.level);
-    console.log(`[Currency] GM setLevel → ${sid} 星级=${clamped} 累计⭐=${star}，globalLevel=${getGlobalLevel(this._state.sceneProgresses)}`);
+    console.log(`[Currency] GM setLevel → 全局星级=${clamped} 累计⭐=${star}，globalLevel=${this.globalLevel}`);
+  }
+
+  private _ensureActiveSceneProgress(): void {
+    const sid = this._state.sceneId;
+    if (!this._state.sceneProgresses.some(p => p.sceneId === sid)) {
+      this._state.sceneProgresses.push({
+        sceneId: sid,
+        star: this._state.star,
+        starLevel: this._state.level,
+        completed: false,
+      });
+    }
   }
 
   /** @deprecated 花露已移除，统一使用花愿 */
@@ -375,15 +352,14 @@ class CurrencyManagerClass {
     delete (this._state as any).hualu;
     delete (this._state as any).exp;
 
-    // 星级必须与累计星数一致，否则会出现「星级虚高」导致再也无法触发升星与 level:up
-    const derived = getStarLevel(this._state.sceneId, this._state.star);
-    this._state.level = derived;
-    for (const sp of this._state.sceneProgresses) {
-      if (sp.sceneId === this._state.sceneId) {
-        sp.star = this._state.star;
-      }
-      sp.starLevel = getStarLevel(sp.sceneId, sp.star);
-    }
+    // 旧档按房分桶的星星：合并为全局池（取最大，避免丢进度）
+    const mergedStar = Math.max(
+      this._state.star,
+      ...this._state.sceneProgresses.map(sp => sp.star ?? 0),
+    );
+    this._state.star = mergedStar;
+    this._state.level = getGlobalStarLevel(mergedStar);
+    this._syncSceneProgressMirrors();
 
     EventBus.emit('currency:loaded');
   }

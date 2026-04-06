@@ -1,6 +1,7 @@
 /**
  * 从装修面板「去放置 / 放入房间」切到花店场景时，携带待摆放的 decoId。
- * ShopScene.onEnter 后消费并清空，避免与 SceneManager 切换时序打架。
+ * - 从合成页进店：ShopScene.onEnter 里 take 并消费。
+ * - 已在花店时打开面板：须由 ShopScene 对 scene:switchToShop 的监听 take（onEnter 不会跑）。
  */
 let _pendingDecoId: string | null = null;
 

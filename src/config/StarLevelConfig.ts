@@ -2,10 +2,9 @@
  * 星级配置
  *
  * 星星 ⭐ = 购买家具/换装后累积的评分（只增不减，不可消费）
- * 星级 = 游戏等级，由当前场景的累积星星决定
+ * 顶栏「等级 + 进度条」使用**全局**累计星与**全局**星级曲线（与当前装修哪间房无关）。
  *
- * 每个场景有独立的星星计数和星级阈值表。
- * 当前版本仅实现花店场景（满星十星）。
+ * 各场景的 thresholds / milestones 仍保留，供将来「单房间成就」等扩展；进度条与 LevelManager 只用全局表。
  */
 
 export interface SceneStarProgress {
@@ -109,6 +108,67 @@ export const SCENE_MAP = new Map<string, SceneDef>(
 
 export const DEFAULT_SCENE_ID = 'flower_shop';
 
+// ---------------------------------------------------------------------------
+// 全局星级（顶栏进度条、globalLevel、解锁门控）
+// ---------------------------------------------------------------------------
+
+/** 升到该星级所需的累计星星下限（L1=0，L2=5，…，L10=160；L11 起公式延伸，无硬顶） */
+export function getGlobalStarRequiredForLevel(level: number): number {
+  if (level <= 1) return 0;
+  if (level <= 10) {
+    return FLOWER_SHOP_THRESHOLDS[level - 1].starRequired;
+  }
+  let s = 160;
+  for (let L = 11; L <= level; L++) {
+    s += 40 + (L - 11) * 5;
+  }
+  return s;
+}
+
+const CN_DIGIT = ['零', '一', '二', '三', '四', '五', '六', '七', '八', '九'];
+
+/** 2～99 的中文数字 + 「星」，用于全局星级标签 */
+function globalStarLabelCn(level: number): string {
+  if (level <= 10) {
+    return FLOWER_SHOP_THRESHOLDS[level - 1]?.label ?? '一星';
+  }
+  if (level < 20) {
+    const u = level % 10;
+    return u === 0 ? '十星' : `十${CN_DIGIT[u]}星`;
+  }
+  if (level < 100) {
+    const t = Math.floor(level / 10);
+    const u = level % 10;
+    const head = `${CN_DIGIT[t]}十`;
+    const tail = u === 0 ? '' : CN_DIGIT[u];
+    return `${head}${tail}星`;
+  }
+  return `${level}星`;
+}
+
+/** 根据全局累计星星计算当前全局星级 */
+export function getGlobalStarLevel(star: number): number {
+  const n = Math.max(0, Math.floor(star));
+  let level = 1;
+  for (let L = 2; ; L++) {
+    const need = getGlobalStarRequiredForLevel(L);
+    if (n < need) break;
+    level = L;
+    if (L > 50000) break;
+  }
+  return level;
+}
+
+export function getGlobalStarLevelLabel(level: number): string {
+  const lv = Math.max(1, Math.floor(level));
+  return globalStarLabelCn(lv);
+}
+
+/** 下一星级所需累计星；全局无满级，始终有下一档 */
+export function getGlobalNextLevelStarRequired(currentLevel: number): number {
+  return getGlobalStarRequiredForLevel(currentLevel + 1);
+}
+
 /** 根据累积星星计算当前星级 */
 export function getStarLevel(sceneId: string, star: number): number {
   const scene = SCENE_MAP.get(sceneId);
@@ -153,21 +213,13 @@ export function getMaxStar(sceneId: string): number {
 }
 
 /**
- * 全局游戏等级 = 已完成场景数 × 满星级数 + 当前场景星级
- * 用于订单档位权重等全局门控
+ * 由存档里的场景进度推断全局门控等级（与 `CurrencyManager.state.level` 一致时应相同）。
+ * 兼容旧档：取各场景记录中星星的最大值，再套全局星级曲线。
  */
 export function getGlobalLevel(sceneProgresses: SceneStarProgress[]): number {
-  let total = 0;
-  for (const sp of sceneProgresses) {
-    const scene = SCENE_MAP.get(sp.sceneId);
-    if (!scene) continue;
-    if (sp.completed) {
-      total += scene.maxStarLevel;
-    } else {
-      total += sp.starLevel;
-    }
-  }
-  return Math.max(1, total);
+  if (!sceneProgresses.length) return 1;
+  const mergedStar = Math.max(0, ...sceneProgresses.map(sp => sp.star ?? 0));
+  return Math.max(1, getGlobalStarLevel(mergedStar));
 }
 
 /** 升星奖励（不含花愿，防止短路循环） */
@@ -179,7 +231,7 @@ export interface StarLevelUpReward {
 
 export function buildStarLevelUpReward(newLevel: number): StarLevelUpReward {
   let diamond = 10;
-  if (newLevel === 5 || newLevel === 10) diamond += 10;
+  if (newLevel > 0 && newLevel % 5 === 0) diamond += 10;
 
   const rewardBoxItems: Array<{ itemId: string; count: number }> = [
     { itemId: 'stamina_chest_1', count: 1 },

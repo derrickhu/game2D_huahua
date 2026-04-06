@@ -37,6 +37,10 @@ export interface MapNodeDef {
    * 默认 true：与当前 sceneId 匹配的 house / current_house 仍可显示实时缩略图。
    */
   useLiveMapThumb?: boolean;
+  /**
+   * 未满足 unlockLevel 时节点容器 alpha；未设则用 `MAP_NODE_UNMET_UNLOCK_ALPHA`（全图统一）。
+   */
+  unmetUnlockAlpha?: number;
 }
 
 /** 横向由几屏 9:16 宽度拼接（默认 3 屏 ≈ 2250 设计 px） */
@@ -58,6 +62,9 @@ export const WORLD_MAP_UNLOCK_LEVEL = 10;
 
 /** 大地图「当前店铺」实时缩略图：截取最长边像素（略小于节点 thumbSize，省显存） */
 export const LIVE_HOUSE_THUMB_CAPTURE_MAX = 160;
+
+/** 未解锁建筑节点整体透明度（统一；名称与小锁同乘该 alpha） */
+export const MAP_NODE_UNMET_UNLOCK_ALPHA = 0.68;
 
 export const MAP_NODES: MapNodeDef[] = [
   {
@@ -86,12 +93,49 @@ export const MAP_NODES: MapNodeDef[] = [
     popupEvent: 'panel:openFlowerSignGacha',
   },
   {
+    id: 'timed_event',
+    type: 'gacha',
+    label: '限时活动',
+    /** 左下沿路空地（喜庆入口占位，点击打开活动面板） */
+    x: 310,
+    y: 1120,
+    thumbKey: 'worldmap_thumb_timed_event',
+    thumbSize: 300,
+    unlockLevel: 1,
+    popupEvent: 'panel:openEvent',
+    useLiveMapThumb: false,
+  },
+  {
+    id: 'butterfly_house',
+    type: 'locked',
+    label: '蝴蝶小屋',
+    /** 下方左侧圆形空地（与花坊同缩略图边长，坐标可再微调） */
+    x: 600,
+    y: 840,
+    thumbKey: 'worldmap_thumb_butterfly_house',
+    thumbSize: 320,
+    unlockLevel: 18,
+    useLiveMapThumb: false,
+  },
+  {
+    id: 'cake_shop',
+    type: 'locked',
+    label: '蛋糕房',
+    /** 下方偏中右圆形空地（与花坊同缩略图边长，坐标可再微调） */
+    x: 1130,
+    y: 570,
+    thumbKey: 'worldmap_thumb_cake_shop',
+    thumbSize: 320,
+    unlockLevel: 20,
+    useLiveMapThumb: false,
+  },
+  {
     id: 'garden_villa',
     type: 'locked',
     label: '花园别墅',
     x: 2020,
     y: 560,
-    thumbKey: 'worldmap_thumb_garden_villa',
+    thumbKey: 'icon_build',
     thumbSize: 160,
     unlockLevel: 15,
   },

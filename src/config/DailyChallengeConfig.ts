@@ -1,10 +1,11 @@
 /**
- * 每日挑战：四类任务梯度 + 周积分里程碑。
+ * 每日挑战：全量任务模板表（`DAILY_QUEST_TEMPLATES`）+ 满档周里程碑（`WEEKLY_MILESTONES`）。
+ * 分档区间、抽样与低档里程碑见 `DailyChallengeTierConfig.ts`。
  *
- * 平衡：单日若全部完成并领取，周积分之和 = DAILY_MAX_WEEKLY_POINTS；
- * 7 * DAILY_MAX_WEEKLY_POINTS 应大于最后一条里程碑 threshold（留容错）。
+ * 满档平衡：单日全完成周积分之和 = DAILY_MAX_WEEKLY_POINTS；
+ * 7 * DAILY_MAX_WEEKLY_POINTS 应大于满档最后一条里程碑 threshold（留容错）。
  */
-import { LUCKY_COIN_ITEM_ID } from '@/config/ItemConfig';
+import { CRYSTAL_BALL_ITEM_ID, LUCKY_COIN_ITEM_ID } from '@/config/ItemConfig';
 
 export type DailyQuestKind = 'huayuan' | 'merge' | 'deliver' | 'diamond';
 
@@ -12,6 +13,8 @@ export interface DailyChallengeReward {
   huayuan?: number;
   stamina?: number;
   diamond?: number;
+  /** 许愿喷泉硬币（`FlowerSignTicketManager`，非收纳盒物品） */
+  flowerSignTickets?: number;
   itemId?: string;
   itemCount?: number;
 }
@@ -33,37 +36,40 @@ export interface WeeklyMilestoneDef {
 
 export const DAILY_QUEST_TEMPLATES: DailyQuestTemplate[] = [
   // 花愿 ×4
-  { id: 'hy_1', kind: 'huayuan', target: 400, weeklyPoints: 10, reward: { stamina: 12 } },
-  { id: 'hy_2', kind: 'huayuan', target: 1200, weeklyPoints: 15, reward: { diamond: 3 } },
-  { id: 'hy_3', kind: 'huayuan', target: 3000, weeklyPoints: 22, reward: { stamina: 20 } },
-  { id: 'hy_4', kind: 'huayuan', target: 5500, weeklyPoints: 28, reward: { diamond: 6 } },
+  { id: 'hy_1', kind: 'huayuan', target: 400, weeklyPoints: 10, reward: { stamina: 10 } },
+  { id: 'hy_2', kind: 'huayuan', target: 1200, weeklyPoints: 15, reward: { diamond: 2 } },
+  { id: 'hy_3', kind: 'huayuan', target: 3000, weeklyPoints: 22, reward: { stamina: 30 } },
+  { id: 'hy_4', kind: 'huayuan', target: 5500, weeklyPoints: 28, reward: { diamond: 5 } },
   // 合成 ×4
-  { id: 'mg_1', kind: 'merge', target: 8, weeklyPoints: 10, reward: { stamina: 10 } },
-  { id: 'mg_2', kind: 'merge', target: 22, weeklyPoints: 15, reward: { diamond: 3 } },
-  { id: 'mg_3', kind: 'merge', target: 45, weeklyPoints: 22, reward: { stamina: 18 } },
-  { id: 'mg_4', kind: 'merge', target: 80, weeklyPoints: 28, reward: { diamond: 6 } },
+  { id: 'mg_1', kind: 'merge', target: 50, weeklyPoints: 10, reward: { itemId: 'flower_fresh_4', itemCount: 1 } },
+  { id: 'mg_2', kind: 'merge', target: 100, weeklyPoints: 15, reward: { itemId: 'flower_green_4', itemCount: 1 } },
+  { id: 'mg_3', kind: 'merge', target: 200, weeklyPoints: 22, reward: { itemId: 'chest_1', itemCount: 1 } },
+  { id: 'mg_4', kind: 'merge', target: 500, weeklyPoints: 28, reward: { itemId: 'diamond_bag_1', itemCount: 1 } },
   // 订单 ×4
-  { id: 'dv_1', kind: 'deliver', target: 1, weeklyPoints: 10, reward: { huayuan: 30 } },
-  { id: 'dv_2', kind: 'deliver', target: 3, weeklyPoints: 15, reward: { diamond: 4 } },
-  { id: 'dv_3', kind: 'deliver', target: 6, weeklyPoints: 22, reward: { stamina: 25 } },
-  { id: 'dv_4', kind: 'deliver', target: 10, weeklyPoints: 28, reward: { diamond: 8 } },
+  { id: 'dv_1', kind: 'deliver', target: 10, weeklyPoints: 10, reward: { stamina: 10 } },
+  { id: 'dv_2', kind: 'deliver', target: 30, weeklyPoints: 15, reward: { diamond: 5 } },
+  { id: 'dv_3', kind: 'deliver', target: 50, weeklyPoints: 22, reward: { itemId: 'stamina_chest_1', itemCount: 1 } },
+  { id: 'dv_4', kind: 'deliver', target: 60, weeklyPoints: 28, reward: { itemId: 'diamond_bag_1', itemCount: 1 } },
   // 钻石 ×4
-  { id: 'dm_1', kind: 'diamond', target: 15, weeklyPoints: 10, reward: { stamina: 8 } },
-  { id: 'dm_2', kind: 'diamond', target: 40, weeklyPoints: 15, reward: { huayuan: 50 } },
-  { id: 'dm_3', kind: 'diamond', target: 80, weeklyPoints: 22, reward: { diamond: 5 } },
+  { id: 'dm_1', kind: 'diamond', target: 10, weeklyPoints: 10, reward: { itemId: 'flower_fresh_5', itemCount: 1 } },
+  { id: 'dm_2', kind: 'diamond', target: 40, weeklyPoints: 15, reward: { itemId: 'flower_fresh_6', itemCount: 1 } },
+  { id: 'dm_3', kind: 'diamond', target: 80, weeklyPoints: 22, reward: { itemId: 'stamina_chest_2', itemCount: 1 } },
   { id: 'dm_4', kind: 'diamond', target: 150, weeklyPoints: 28, reward: { itemId: LUCKY_COIN_ITEM_ID, itemCount: 1 } },
 ];
 
-/** 单日全领满可得周积分（16 条之和） */
+/** 单日全领满可得周积分（16 条之和，满档「完全版」） */
 export const DAILY_MAX_WEEKLY_POINTS = DAILY_QUEST_TEMPLATES.reduce((s, t) => s + t.weeklyPoints, 0);
 
+/** 所有每日模板 id（分档池引用） */
+export const ALL_DAILY_TEMPLATE_IDS: string[] = DAILY_QUEST_TEMPLATES.map(t => t.id);
+
 export const WEEKLY_MILESTONES: WeeklyMilestoneDef[] = [
-  { id: 'wm_100', threshold: 100, reward: { stamina: 20 } },
-  { id: 'wm_350', threshold: 350, reward: { diamond: 5 } },
-  { id: 'wm_650', threshold: 650, reward: { itemId: 'chest_1', itemCount: 1 } },
-  { id: 'wm_950', threshold: 950, reward: { stamina: 35 } },
-  { id: 'wm_1250', threshold: 1250, reward: { diamond: 12 } },
-  { id: 'wm_1550', threshold: 1550, reward: { itemId: 'chest_2', itemCount: 1 } },
+  { id: 'wm_100', threshold: 100, reward: { diamond: 10 } },
+  { id: 'wm_350', threshold: 350, reward: { itemId: 'stamina_chest_2', itemCount: 1 } },
+  { id: 'wm_650', threshold: 650, reward: { itemId: 'chest_3', itemCount: 1 } },
+  { id: 'wm_950', threshold: 950, reward: { itemId: LUCKY_COIN_ITEM_ID, itemCount: 1 } },
+  { id: 'wm_1250', threshold: 1250, reward: { itemId: CRYSTAL_BALL_ITEM_ID, itemCount: 1 } },
+  { id: 'wm_1550', threshold: 1550, reward: { flowerSignTickets: 10 } },
 ];
 
 const LAST_MILESTONE = WEEKLY_MILESTONES[WEEKLY_MILESTONES.length - 1];

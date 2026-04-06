@@ -45,11 +45,11 @@ export type FlowerSignPoolEntry =
     };
 
 /** 大类占比（相对 FLOWER_SIGN_WEIGHT_SCALE）；许愿硬币不进奖池 */
-const BUCKET_PREMIUM = 1_000; // 1% 金剪刀+万能水晶+幸运金币
-const BUCKET_TOOLS = 1_000; // 1% 工具类
-/** 1%：普通宝箱 + 体力宝箱 + 钻石袋 + 红包（同一大类内按等级衰减分权） */
-const BUCKET_CHEST_GROUP = 1_000;
-const BUCKET_DIRECT = 5_000; // 5% 直加体力+钻石
+const BUCKET_PREMIUM = 9_000; // 9% 金剪刀+万能水晶+幸运金币
+const BUCKET_TOOLS = 12_000; // 12% 工具类
+/** 20%：普通宝箱 + 体力宝箱 + 钻石袋 + 红包（同一大类内按等级衰减分权） */
+const BUCKET_CHEST_GROUP = 20_000;
+const BUCKET_DIRECT = 15_000; // 15% 直加体力+钻石
 
 const BUCKET_MAIN =
   FLOWER_SIGN_WEIGHT_SCALE -
@@ -150,7 +150,7 @@ function buildDirectEntries(totalWeight: number): FlowerSignPoolEntry[] {
 function classify(def: ItemDef): 'main' | 'chest_group' | 'tool' | 'premium' | 'none' {
   if (EXCLUDED_FROM_GACHA_IDS.has(def.id)) return 'none';
   if (PREMIUM_IDS.includes(def.id as (typeof PREMIUM_IDS)[number])) return 'premium';
-  /** 铜～传说宝箱、体力箱、钻石袋、红包 共用 1% 桶 */
+  /** 铜～传说宝箱、体力箱、钻石袋、红包 共用 20% 桶 */
   if (def.category === Category.CHEST) return 'chest_group';
   if (def.category === Category.BUILDING && def.interactType === InteractType.TOOL) return 'tool';
   if (def.category === Category.FLOWER && def.interactType === InteractType.TOOL) return 'tool';
@@ -200,9 +200,9 @@ function buildFlowerSignGachaPool(): FlowerSignPoolEntry[] {
 
 /**
  * 全物品加权随机（仅 `ITEM_DEFS` 内有效 id）。
- * - 约 93%：鲜花/饮品/棋盘货币块（不含许愿硬币）等，等级越高权重越低。
- * - 5%：直加体力 + 直加钻石（多档 amount）。
- * - 各 1%：宝箱+体力箱+钻石袋+红包；全部工具；金剪刀+万能水晶+幸运金币。
+ * - 约 44%：鲜花/饮品/棋盘货币块（不含许愿硬币）等，等级越高权重越低。
+ * - 15%：直加体力 + 直加钻石（多档 amount）。
+ * - 20%：宝箱+体力箱+钻石袋+红包；12%：全部工具（桶内等级越高权重越低）；9%：金剪刀+万能水晶+幸运金币。
  * - 许愿硬币不参与抽奖。
  */
 export const FLOWER_SIGN_GACHA_POOL: FlowerSignPoolEntry[] = buildFlowerSignGachaPool();

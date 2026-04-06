@@ -8,12 +8,23 @@ import { OverlayManager } from '@/core/OverlayManager';
 import { TextureCache } from '@/utils/TextureCache';
 import { TweenManager, Ease } from '@/core/TweenManager';
 import { ToastMessage } from '@/gameobjects/ui/ToastMessage';
+import { RewardBoxManager } from '@/managers/RewardBoxManager';
+
+/**
+ * Overlay 根节点 `sortableChildren=true`，各面板 zIndex 5k～11k+；飞入粒子默认 0 会被全屏面板完全挡住（如每日挑战）。
+ */
+const REWARD_FLY_SPRITE_Z_INDEX = 20000;
 
 export type RewardFlyItem = {
   type: string;
   textureKey: string;
   amount: number;
   itemId?: string;
+  /**
+   * type 为 `rewardBox` 时：默认在飞入结束时 `RewardBoxManager.addItem`。
+   * 设为 false 表示到账已由调用方预先处理，仅播放飞入（如每日挑战领取）。
+   */
+  grantOnArrive?: boolean;
 };
 
 export interface BoardPieceFlyPlan {
@@ -30,6 +41,8 @@ export interface RewardFlyBindings {
     plans: BoardPieceFlyPlan[];
     overflowCount: number;
   };
+  /** 收纳盒类奖励飞入落点（左下角礼盒等）；缺省则 `rewardBox` 类跳过飞入 */
+  getRewardBoxFlyTarget?: () => { endGlobal: PIXI.IPointData; onArrived?: () => void } | null;
 }
 
 export interface CheckInPanelLike {
@@ -123,6 +136,7 @@ class RewardFlyCoordinatorClass {
       icon.position.set(sx + randX, sy + randY);
       icon.alpha = 0;
       icon.scale.set(targetScale * 0.3);
+      icon.zIndex = REWARD_FLY_SPRITE_Z_INDEX;
 
       parent.addChild(icon);
 
@@ -171,6 +185,8 @@ class RewardFlyCoordinatorClass {
         },
       });
     }
+
+    if (parent.sortableChildren) parent.sortChildren();
   }
 
   /** 起点、终点均为舞台全局坐标 */
@@ -200,7 +216,7 @@ class RewardFlyCoordinatorClass {
 
     const sl = this._globalToLayerLocal(startGlobal);
 
-    const currencyItems = items.filter(i => i.type !== 'board');
+    const currencyItems = items.filter(i => i.type !== 'board' && i.type !== 'rewardBox');
     const boardPieces: { itemId: string; textureKey: string }[] = [];
     for (const i of items) {
       if (i.type !== 'board' || !i.itemId) continue;
@@ -209,6 +225,8 @@ class RewardFlyCoordinatorClass {
         boardPieces.push({ itemId: i.itemId, textureKey: i.textureKey });
       }
     }
+
+    const rewardBoxItems = items.filter(i => i.type === 'rewardBox' && i.itemId);
 
     const { plans, overflowCount } = bindings.planBoardPieces(boardPieces);
     if (overflowCount > 0) {
@@ -221,7 +239,7 @@ class RewardFlyCoordinatorClass {
       if (remaining <= 0) onAllComplete?.();
     };
 
-    if (currencyItems.length === 0 && plans.length === 0) {
+    if (currencyItems.length === 0 && plans.length === 0 && rewardBoxItems.length === 0) {
       onAllComplete?.();
       return;
     }
@@ -263,6 +281,34 @@ class RewardFlyCoordinatorClass {
         1,
         () => {
           p.onLand();
+          doneOne();
+        },
+        d,
+      );
+    });
+
+    const rbTarget = bindings.getRewardBoxFlyTarget?.() ?? null;
+    rewardBoxItems.forEach(item => {
+      if (!item.itemId) return;
+      if (!rbTarget) return;
+      remaining++;
+      const d = delayIdx * 0.08;
+      delayIdx++;
+      const el = this._globalToLayerLocal(rbTarget.endGlobal);
+      const grant = item.grantOnArrive !== false;
+      const amt = Math.max(1, Math.floor(item.amount));
+      this.playRewardFlyLayerLocal(
+        item.textureKey,
+        sl.x,
+        sl.y,
+        el.x,
+        el.y,
+        amt,
+        () => {
+          if (grant) {
+            RewardBoxManager.addItem(item.itemId!, amt);
+          }
+          rbTarget.onArrived?.();
           doneOne();
         },
         d,

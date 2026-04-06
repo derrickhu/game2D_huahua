@@ -10,6 +10,8 @@ import { FlowerSignTicketManager } from '@/managers/FlowerSignTicketManager';
 
 export interface RewardBoxState {
   items: [string, number][];
+  /** 最近一次写入收纳盒的物品 id（用于店主下方收起态图标；读档可恢复） */
+  lastAddedItemId?: string | null;
 }
 
 class RewardBoxManagerClass {
@@ -17,6 +19,8 @@ class RewardBoxManagerClass {
   private _items: Map<string, number> = new Map();
   /** 维护插入顺序 */
   private _order: string[] = [];
+  /** 最近一次入盒的物品（同 id 再入盒也会更新，用于「最新获得」展示） */
+  private _lastAddedItemId: string | null = null;
 
   get totalCount(): number {
     let sum = 0;
@@ -44,6 +48,41 @@ class RewardBoxManagerClass {
     return null;
   }
 
+  /**
+   * 收起态应显示的物品：优先「最近一次入盒」且仍有库存；否则取 order 中最后一类仍有货的。
+   */
+  latestDisplayItemId(): string | null {
+    if (this.isEmpty) return null;
+    if (this._lastAddedItemId) {
+      const c = this._items.get(this._lastAddedItemId);
+      if (c && c > 0) return this._lastAddedItemId;
+    }
+    for (let i = this._order.length - 1; i >= 0; i--) {
+      const id = this._order[i];
+      const c = this._items.get(id);
+      if (c && c > 0) return id;
+    }
+    return null;
+  }
+
+  private _syncDisplayPointer(): void {
+    if (this.isEmpty) {
+      this._lastAddedItemId = null;
+      return;
+    }
+    if (this._lastAddedItemId && (this._items.get(this._lastAddedItemId) ?? 0) > 0) {
+      return;
+    }
+    for (let i = this._order.length - 1; i >= 0; i--) {
+      const id = this._order[i];
+      if ((this._items.get(id) ?? 0) > 0) {
+        this._lastAddedItemId = id;
+        return;
+      }
+    }
+    this._lastAddedItemId = null;
+  }
+
   addItem(itemId: string, count = 1): void {
     if (itemId === LEGACY_FLOWER_SIGN_COIN_ITEM_ID) {
       if (count > 0) FlowerSignTicketManager.add(count);
@@ -55,6 +94,7 @@ class RewardBoxManagerClass {
     if (!this._order.includes(itemId)) {
       this._order.push(itemId);
     }
+    this._lastAddedItemId = itemId;
     EventBus.emit('rewardBox:changed');
   }
 
@@ -68,17 +108,19 @@ class RewardBoxManagerClass {
     } else {
       this._items.set(itemId, c - 1);
     }
+    this._syncDisplayPointer();
     EventBus.emit('rewardBox:changed');
     return true;
   }
 
   exportState(): RewardBoxState {
-    return { items: this.entries() };
+    return { items: this.entries(), lastAddedItemId: this._lastAddedItemId };
   }
 
   loadState(state: RewardBoxState): void {
     this._items.clear();
     this._order = [];
+    this._lastAddedItemId = null;
     if (state.items) {
       for (const [itemId, count] of state.items) {
         if (!itemId || count <= 0) continue;
@@ -90,6 +132,16 @@ class RewardBoxManagerClass {
           this._items.set(itemId, count);
           this._order.push(itemId);
         }
+      }
+    }
+    if (this.isEmpty) {
+      this._lastAddedItemId = null;
+    } else {
+      const saved = state.lastAddedItemId;
+      if (saved && (this._items.get(saved) ?? 0) > 0) {
+        this._lastAddedItemId = saved;
+      } else {
+        this._syncDisplayPointer();
       }
     }
     EventBus.emit('rewardBox:changed');

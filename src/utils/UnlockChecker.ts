@@ -13,18 +13,27 @@ export interface UnlockRequirement {
   level?: number;
   /** 自定义条件 id（由外部系统通过 grantQuest 标记为已达成） */
   questId?: string;
-  /** 条件文案（questId / 图鉴等的 UI 兜底显示） */
+  /** 条件文案（questId 未达成时的 UI 提示） */
   conditionText?: string;
   /**
    * 花系图鉴（棋盘鲜花首次出现即解锁）中已记录该 itemId 才可购买/显示为可解锁。
    * 用于花房「棋盘同花」小盆栽等；与 level / questId 同时存在时为 AND。
+   * 未解锁时卡片按钮短文案固定为「图鉴解锁」；点击说明用 detailText（具体花名等）。
    */
   flowerCollectionItemId?: string;
 }
 
 export interface RequirementResult {
   met: boolean;
+  /** 卡片按钮等短文案 */
   text: string;
+  /** 点击锁定项时的完整说明；缺省与 text 相同 */
+  detailText?: string;
+}
+
+/** Toast / 弹层说明：有 detailText 时用 detailText（如图鉴锁的具体花名） */
+export function requirementHintText(r: RequirementResult): string {
+  return r.detailText ?? r.text;
 }
 
 const _grantedQuests = new Set<string>();
@@ -52,11 +61,11 @@ export function checkRequirement(req?: UnlockRequirement): RequirementResult {
     const fid = req.flowerCollectionItemId;
     if (!CollectionManager.isDiscovered(CollectionCategory.FLOWER, fid)) {
       const flowerName = ITEM_DEFS.get(fid)?.name;
-      const fallback =
+      const detail =
         flowerName !== undefined
           ? `图鉴：先在棋盘获得「${flowerName}」`
           : '图鉴：先在棋盘获得对应鲜花';
-      return { met: false, text: req.conditionText || fallback };
+      return { met: false, text: '图鉴解锁', detailText: detail };
     }
   }
 

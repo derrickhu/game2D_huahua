@@ -22,7 +22,7 @@ import { RewardFlyCoordinator, type RewardFlyBindings } from '@/core/RewardFlyCo
 import { TweenManager, Ease } from '@/core/TweenManager';
 import { TopBar, TOP_BAR_HEIGHT } from '@/gameobjects/ui/TopBar';
 import { DecorationManager } from '@/managers/DecorationManager';
-import { RoomLayoutManager } from '@/managers/RoomLayoutManager';
+import { FURNITURE_TRAY_SPAWN_ROOM_LOCAL, RoomLayoutManager } from '@/managers/RoomLayoutManager';
 import { CurrencyManager } from '@/managers/CurrencyManager';
 import { CheckInManager } from '@/managers/CheckInManager';
 import { QuestManager } from '@/managers/QuestManager';
@@ -206,7 +206,6 @@ export class ShopScene implements Scene {
         rewardBoxItems: reward.rewardBoxItems,
       },
       {
-        bannerTitle: `恭喜升至 ${level}星`,
         rewardFlyTargetGlobal: flyTarget ?? undefined,
         onGrantRewardBoxItems: entries => {
           let any = false;
@@ -325,6 +324,7 @@ export class ShopScene implements Scene {
     EventBus.off('level:up', this._onShopLevelUp);
     EventBus.off('renovation:sceneChanged', this._onRenovationSceneChanged);
     EventBus.off('worldmap:switchScene', this._onWorldMapSwitchScene);
+    EventBus.off('scene:switchToShop', this._onSwitchToShopConsumePendingPlace);
     // 如果在编辑模式，退出时自动保存
     if (this._isEditMode) {
       this._exitEditMode();
@@ -1496,6 +1496,7 @@ export class ShopScene implements Scene {
 
     EventBus.on('renovation:sceneChanged', this._onRenovationSceneChanged);
     EventBus.on('worldmap:switchScene', this._onWorldMapSwitchScene);
+    EventBus.on('scene:switchToShop', this._onSwitchToShopConsumePendingPlace);
 
     // 监听布局变化 — 仅在非编辑模式下才完整重渲染
     // 编辑模式下由 FurnitureDragSystem 直接操控 Sprite
@@ -1533,24 +1534,47 @@ export class ShopScene implements Scene {
 
   /**
    * 装修面板「去放置 / 放入房间」进店后：进编辑模式、托盘切到对应槽位；
-   * 若该 deco 尚未摆放则自动从屏幕中心拉起拖入。
+   * 若该 deco 尚未摆放则自动从门廊木台前景（房间内本地坐标）拉起拖入。
+   *
+   * 注意：面板可在花店场景内打开（current 已是 shop），此时不会走 MainScene 切场景、
+   * onEnter 也不会再执行，须由 `scene:switchToShop` 的另一路监听消费 pending。
+   * 若用户已处于装修模式，不可因 `_isEditMode` 提前 return，否则无法拉起拖入。
    */
   private _consumePendingPlaceDeco(decoId: string): void {
     if (SceneManager.current?.name !== 'shop') return;
     const deco = DECO_MAP.get(decoId);
-    if (!deco || this._isEditMode) return;
+    if (!deco) return;
 
-    this._enterEditMode({ deco });
+    const wasEdit = this._isEditMode;
+    const placed = !!RoomLayoutManager.getPlacement(decoId);
 
-    if (RoomLayoutManager.getPlacement(decoId)) {
+    if (!wasEdit) {
+      this._enterEditMode({ deco });
+    } else if (!placed) {
+      this._furnitureTray.open({ deco });
+    }
+
+    if (placed) {
       ToastMessage.show('该家具已在房间中，可在装修模式下调整位置');
       return;
     }
 
-    const cx = DESIGN_WIDTH / 2;
-    const cy = Game.logicHeight * 0.42;
-    FurnitureDragSystem.startDragFromTray(decoId, cx, cy);
+    const { x: spawnDesignX, y: spawnDesignY } = this._roomLocalToDesign(
+      FURNITURE_TRAY_SPAWN_ROOM_LOCAL.x,
+      FURNITURE_TRAY_SPAWN_ROOM_LOCAL.y,
+    );
+    FurnitureDragSystem.startDragFromTray(decoId, spawnDesignX, spawnDesignY);
   }
+
+  /**
+   * 已在花店时从装修面板点「放入房间」：pending 只能在此消费（onEnter 不会触发）。
+   */
+  private readonly _onSwitchToShopConsumePendingPlace = (): void => {
+    if (SceneManager.current?.name !== 'shop') return;
+    const pendingPlace = takePendingPlaceDeco();
+    if (!pendingPlace) return;
+    requestAnimationFrame(() => this._consumePendingPlaceDeco(pendingPlace));
+  };
 
   /** 编辑模式下实时更新家具 Sprite 的缩放/翻转视觉（不重建） */
   private _updateSpriteVisual(placement: { decoId: string; scale: number; flipped: boolean }): void {
@@ -1857,6 +1881,19 @@ export class ShopScene implements Scene {
     this._roomContainer.pivot.set(cx, cy);
     this._roomContainer.position.set(cx + this._roomPanX, cy + this._roomPanY);
     this._roomContainer.scale.set(this._viewScale);
+  }
+
+  /**
+   * 房间内容本地坐标 → 设计坐标（与 FurnitureDragSystem 内 _designToLocal 互逆）。
+   * 用于把「房间内本地」默认落点换算到设计坐标；落点取自 FURNITURE_TRAY_SPAWN_ROOM_LOCAL（门廊前景）。
+   */
+  private _roomLocalToDesign(localX: number, localY: number): { x: number; y: number } {
+    const c = this._roomContainer;
+    const s = c.scale.x || 1;
+    return {
+      x: c.position.x + s * (localX - c.pivot.x),
+      y: c.position.y + s * (localY - c.pivot.y),
+    };
   }
 
   private _ensureRoomPanHitLayer(): void {
@@ -2365,6 +2402,7 @@ export class ShopScene implements Scene {
           huayuan: { pos: topBar.getHuayuanIconPos(), flash: () => topBar.flashHuayuan() },
           diamond: { pos: topBar.getDiamondIconPos(), flash: () => topBar.flashDiamond() },
           stamina: { pos: topBar.getStaminaIconPos(), flash: () => topBar.flashStamina() },
+          flowerSignTicket: { pos: topBar.getDiamondIconPos(), flash: () => topBar.flashDiamond() },
         };
         const info = posMap[type];
         if (!info) return null;
@@ -2379,6 +2417,10 @@ export class ShopScene implements Scene {
           onLand: () => { RewardBoxManager.addItem(p.itemId, 1); },
         }));
         return { plans, overflowCount: 0 };
+      },
+      getRewardBoxFlyTarget() {
+        const endGlobal = returnBtn.toGlobal(new PIXI.Point(0, 0));
+        return { endGlobal };
       },
     };
   }

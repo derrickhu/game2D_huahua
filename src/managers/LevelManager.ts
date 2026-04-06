@@ -8,10 +8,9 @@
 import { EventBus } from '@/core/EventBus';
 import { getLevelExtraRewards } from '@/config/LevelRewardsConfig';
 import {
-  getStarLevel,
-  getStarLevelLabel,
-  getNextLevelStarRequired,
-  isSceneCompleted,
+  getGlobalStarLevelLabel,
+  getGlobalNextLevelStarRequired,
+  getGlobalStarRequiredForLevel,
   buildStarLevelUpReward,
 } from '@/config/StarLevelConfig';
 import { CurrencyManager } from './CurrencyManager';
@@ -74,38 +73,35 @@ class LevelManagerClass {
     return CurrencyManager.state.star;
   }
 
-  /** 当前星级标签（一星、二星...） */
+  /** 当前全局星级标签（一星、二星...） */
   get starLevelLabel(): string {
-    return getStarLevelLabel(CurrencyManager.state.sceneId, this.level);
+    return getGlobalStarLevelLabel(this.level);
   }
 
-  /** 下一星级所需星星数，满星返回 -1 */
+  /** 下一星级所需累计星星数（全局无满级，始终有下一档） */
   get nextLevelStarRequired(): number {
-    return getNextLevelStarRequired(CurrencyManager.state.sceneId, this.level);
+    return getGlobalNextLevelStarRequired(this.level);
   }
 
-  /** 星星进度百分比 (0-1)，满星返回 1 */
+  /** 星星进度百分比 (0-1)，指向下一全局星级 */
   get starProgress(): number {
     const next = this.nextLevelStarRequired;
-    if (next < 0) return 1;
     const currentThreshold = this._getCurrentThreshold();
     const range = next - currentThreshold;
     if (range <= 0) return 1;
     return Math.min((this.star - currentThreshold) / range, 1);
   }
 
-  /** 是否已满星（当前场景） */
+  /** 全局星级无硬顶 */
   get isCompleted(): boolean {
-    return isSceneCompleted(CurrencyManager.state.sceneId, this.level);
+    return false;
   }
 
   /**
-   * 下一星级（当前星级+1）的礼包内容预览；已满星返回 null。
+   * 下一星级（当前星级+1）的礼包内容预览。
    * 与实际升星时 LevelManager 发放+弹窗展示一致。
    */
   getNextStarLevelRewardPreview(): LevelUpReward | null {
-    const nextReq = getNextLevelStarRequired(CurrencyManager.state.sceneId, this.level);
-    if (nextReq < 0) return null;
     return buildReward(this.level + 1);
   }
 
@@ -119,9 +115,7 @@ class LevelManagerClass {
   addExp(_amount: number): void {}
 
   private _getCurrentThreshold(): number {
-    const sceneId = CurrencyManager.state.sceneId;
-    const prevRequired = getNextLevelStarRequired(sceneId, this.level - 1);
-    return prevRequired >= 0 ? prevRequired : 0;
+    return getGlobalStarRequiredForLevel(this.level);
   }
 
   private _bindEvents(): void {
