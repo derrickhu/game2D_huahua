@@ -1,9 +1,7 @@
-Mobile game UI asset, 9:16 vertical canvas, pastel kawaii merge flower-shop style.
+Mobile game UI slice asset, 16:9 horizontal canvas, pastel kawaii merge flower-shop style.
 
-Exactly ONE single horizontal rounded-rectangle card centered in the frame. The card interior is one flat solid light-cream color only — no gradient, no inner shadow, no emboss, no texture, no pattern.
+Exactly ONE empty horizontal task row plate only. Shape: a single very wide flat rounded rectangle, like a long pill or stadium track. The row must span about 88% to 94% of the image width and sit centered vertically. The row height is only about 14% to 18% of the image height so the width-to-height ratio of the yellow plate is roughly 8:1 or wider (long bar, not a square card).
 
-A very thin soft tan or light-brown stroke outline around the rounded rectangle is allowed. Absolutely NO drop shadow outside the card shape.
+Fill: soft creamy light yellow, flat matte, no wood texture. Border: one thin dusty rose or muted mauve stroke around the rounded shape, even thickness on straight top and bottom and around corners. Corners stay true circular arcs, not stretched ovals. No inner drop shadow, no bevel, no emboss, no gloss highlight band, no text, no icons, no checkmark, no progress bar art inside the plate.
 
-CRITICAL EMPTY INTERIOR: inside the cream rectangle there must be NOTHING — no checkmark, no circles, no coins, no leaves, no sparkles, no stars, no gray lines, no placeholder bars, no pills, no text, no icons, no UI widgets at all. Only the uniform cream fill.
-
-Background: solid flat magenta FF00FF everywhere outside the one rounded rectangle. No second card, no panel chrome, no title, no watermark, no readable characters, no photoreal.
+Outside the single yellow row only: solid flat screen green RGB exactly 0,255,0 for clean cutout. No second row, no modal frame, no title, no watermark, no readable text, no photoreal.

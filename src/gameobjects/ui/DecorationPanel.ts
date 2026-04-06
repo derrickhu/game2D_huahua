@@ -288,6 +288,11 @@ export class DecorationPanel extends PIXI.Container {
     this._refreshAll();
   };
 
+  private readonly _onCollectionDiscoveredForGrid = (): void => {
+    if (!this._isOpen) return;
+    this._refreshAll();
+  };
+
   constructor() {
     super();
     this.visible = false;
@@ -385,6 +390,7 @@ export class DecorationPanel extends PIXI.Container {
     this._resizePanelIfNeeded();
     this._refreshAll();
     EventBus.on('currency:changed', this._onCurrencyChangedForGrid);
+    EventBus.on('collection:discovered', this._onCollectionDiscoveredForGrid);
 
     const h = Game.logicHeight;
     const panelH = Math.round(h * PANEL_H_RATIO);
@@ -401,6 +407,7 @@ export class DecorationPanel extends PIXI.Container {
   close(): void {
     if (!this._isOpen) return;
     EventBus.off('currency:changed', this._onCurrencyChangedForGrid);
+    EventBus.off('collection:discovered', this._onCollectionDiscoveredForGrid);
     EventBus.emit('decoration:decoPanelBackdrop', { open: false });
     this._sortParentOverlay();
     this._flushDeferredStarOnClose();

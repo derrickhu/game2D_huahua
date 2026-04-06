@@ -16,6 +16,7 @@
  *
  * 激活方式：连按招牌 5 次 → 弹出 GM 面板
  */
+import { ENABLE_CHALLENGE_LEVEL_FEATURE } from '@/config/FeatureFlags';
 import { EventBus } from '@/core/EventBus';
 import { Platform } from '@/core/PlatformService';
 import { BoardManager } from './BoardManager';
@@ -972,6 +973,9 @@ class GMManagerClass {
       name: '🏆 打开挑战关卡',
       desc: '打开挑战关卡面板',
       execute: () => {
+        if (!ENABLE_CHALLENGE_LEVEL_FEATURE) {
+          return '⏸️ 挑战关卡已关闭：将 FeatureFlags.ENABLE_CHALLENGE_LEVEL_FEATURE 设为 true 可恢复';
+        }
         EventBus.emit('panel:openChallenge');
         return '✅ 已打开挑战关卡';
       },

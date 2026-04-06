@@ -1,0 +1,9 @@
+Single mobile game HUD icon, square 1:1 canvas, one cute object centered with comfortable margin. Kawaii casual merge-game style: rounded chunky shapes, soft pastel colors, gentle smooth shading only — matte-friendly, easy cutout.
+
+Outline: one clean outer contour line with MODERATE width only — noticeably thinner and lighter than heavy cartoon icons; soft desaturated brown or blue-gray stroke, no double outlines, no extra inner rim stroke.
+
+Lighting: soft cel-style gradients and subtle form shading. Absolutely NO star shapes, NO sparkle, NO glitter, NO lens flare, NO four-point glints, NO sharp white specular blobs, NO glowing auras or outer glow that touches the magenta backdrop. Keep edges crisp against the background for matting.
+
+Subject: folded or slightly opened paper world map — warm cream parchment, simplified blob continents in soft mint or dusty blue, optional one small simple map pin shape in coral or gold (no text). Must read clearly at about 128 pixels.
+
+NO readable text, NO letters, NO numbers, NO watermark, NO phone frame, NO UI chrome — only the map. Background flat uniform magenta chroma key exactly hexadecimal FF00FF, solid, no gradient, no fringe pixels.

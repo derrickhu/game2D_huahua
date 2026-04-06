@@ -13,6 +13,7 @@
  */
 import { EventBus } from '@/core/EventBus';
 import { Platform } from '@/core/PlatformService';
+import { ENABLE_CHALLENGE_LEVEL_FEATURE } from '@/config/FeatureFlags';
 import { CurrencyManager } from './CurrencyManager';
 import { AdManager, AdScene } from './AdManager';
 
@@ -250,6 +251,7 @@ class ChallengeManagerClass {
   private _lastReviveDate = '';
 
   init(): void {
+    if (!ENABLE_CHALLENGE_LEVEL_FEATURE) return;
     this._loadState();
     console.log(`[Challenge] 初始化完成, 总星数: ${this.totalStars}`);
   }
@@ -298,6 +300,7 @@ class ChallengeManagerClass {
 
   /** 开始挑战 */
   startChallenge(levelId: string): boolean {
+    if (!ENABLE_CHALLENGE_LEVEL_FEATURE) return false;
     const level = CHALLENGE_LEVELS.find(l => l.id === levelId);
     if (!level) return false;
     if (this.totalStars < level.unlockStars) return false;
@@ -321,6 +324,7 @@ class ChallengeManagerClass {
 
   /** 每帧更新（限时模式） */
   update(dt: number): void {
+    if (!ENABLE_CHALLENGE_LEVEL_FEATURE) return;
     if (!this._state.isActive) return;
 
     const level = CHALLENGE_LEVELS.find(l => l.id === this._state.currentLevelId);

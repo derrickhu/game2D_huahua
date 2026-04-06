@@ -65,6 +65,7 @@ import { DressUpManager } from '@/managers/DressUpManager';
 import { getOwnerBoardDisplayScale } from '@/config/DressUpConfig';
 import { SocialManager } from '@/managers/SocialManager';
 import { EventManager } from '@/managers/EventManager';
+import { ENABLE_CHALLENGE_LEVEL_FEATURE } from '@/config/FeatureFlags';
 import { ChallengeManager } from '@/managers/ChallengeManager';
 import { HapticSystem } from '@/systems/HapticSystem';
 import { CollectionPanel } from '@/gameobjects/ui/CollectionPanel';
@@ -180,13 +181,13 @@ export class MainScene implements Scene {
       CheckInManager.init();
       IdleManager.init();
       LevelManager.init();
-      DecorationManager.init();
       RoomLayoutManager.init();
       SoundSystem.init();
 
       // Phase 7+ 新系统初始化
       AdManager.init();
       CollectionManager.init();
+      DecorationManager.init();
       FlowerCardManager.init();
       DressUpManager.init();
       // 店主半身像在 _buildShopArea 里已刷新过，但当时尚未 _loadState，须在换装存档加载后再刷一次
@@ -1072,8 +1073,9 @@ export class MainScene implements Scene {
       EventBus.emit('panel:openEvent');
     });
 
-    // ---- 挑战关卡入口 ----
+    // ---- 挑战关卡入口（关闭时事件无效果，面板与 Manager 内亦有开关） ----
     EventBus.on('nav:openChallenge', () => {
+      if (!ENABLE_CHALLENGE_LEVEL_FEATURE) return;
       EventBus.emit('panel:openChallenge');
     });
 

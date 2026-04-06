@@ -1,0 +1,13 @@
+Single horizontal UI slice asset, 16:9 aspect ratio, one flattened illustration layer for a flower-shop merge game Daily Challenge panel. High resolution, crisp anti-aliased vector edges, pastel kawaii polish — same decorative language as the lilac-lavender framed modal shell and ornate golden-yellow title plaque.
+
+TECHNICAL BACKGROUND FOR CLEAN CUTOUT: ONLY the margins OUTSIDE the one yellow row plate must be pure bright screen green RGB exactly 0,255,0 (neon green), flat, no gradient. The yellow pill plate and every pixel inside its rounded boundary must contain ZERO neon green pixels.
+
+ONE PLATE ONLY: exactly one very wide horizontal rounded stadium pill, centered vertically, spanning about 88% to 94% of image width; plate height only about 12% to 16% of image height so width-to-height ratio is roughly 8:1 or wider (long bar, not a square card).
+
+FILL: warm light golden yellow with soft vertical gradient — brighter creamy yellow toward the top, gentle butter-gold toward the bottom — subtle satin or glazed ceramic sheen, not flat matte. Soft inner bevel: thin bright cream-yellow highlight band along the top inner edge, soft deeper amber shadow band along the bottom inner edge. Optional extremely subtle linen micro-texture, still clean UI-readable.
+
+BORDER: double outline like premium mobile UI — outer stroke soft dusty lilac or mauve matching the purple modal frame family, inner stroke thin warm golden-ochre or caramel brown. Corner arcs are true circular caps, not squashed ovals. One subtle soft drop shadow downward only, tight under the bar, no heavy glow.
+
+No text, no numbers, no icons, no checkmark, no progress bar art inside the plate, no second row, no outer purple panel frame, no title banner, no close button, no chicks, no watermark.
+
+Art style: clean 2D vector mobile UI, pastel kawaii, gentle shading only on the gold plate and colored strokes — never use neon green inside the plate. No photoreal, no readable text or numbers.

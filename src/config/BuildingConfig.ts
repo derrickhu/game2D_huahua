@@ -166,11 +166,11 @@ const PLANT_OUTCOMES_TOOL_L3: ToolProduceOutcome[] = [
   { category: Category.FLOWER, line: FlowerLine.FRESH, level: 1, weight: 100 },
 ];
 
-/** 园艺 L4 工具：育苗仓 — 鲜花/绿植入门混产 */
+/** 园艺 L4 工具：育苗仓 — 绿植 L1 55%、鲜花 L1 40%、鲜花 L2 5%（权重合计 100） */
 const PLANT_OUTCOMES_TOOL_L4: ToolProduceOutcome[] = [
-  { category: Category.FLOWER, line: FlowerLine.FRESH, level: 1, weight: 50 },
-  { category: Category.FLOWER, line: FlowerLine.GREEN, level: 1, weight: 40 },
-  { category: Category.FLOWER, line: FlowerLine.FRESH, level: 2, weight: 10 },
+  { category: Category.FLOWER, line: FlowerLine.GREEN, level: 1, weight: 55 },
+  { category: Category.FLOWER, line: FlowerLine.FRESH, level: 1, weight: 40 },
+  { category: Category.FLOWER, line: FlowerLine.FRESH, level: 2, weight: 5 },
 ];
 
 /** 园艺 L5 工具：简易温室 — 鲜花/绿植 1～2 级为主，极低鲜花 3 级 */

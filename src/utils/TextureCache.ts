@@ -179,10 +179,14 @@ const PANELS_IMAGE_MAP: Record<string, string> = {
   daily_challenge_task_area_nb2: 'subpkg_panels/images/ui/daily_challenge_ui_B_mid_plate_nb2.png',
   /** 单条任务行纯色底板（无装饰，叠字与进度） */
   daily_challenge_task_row_blank_nb2: 'subpkg_panels/images/ui/daily_challenge_ui_C_task_row_blank_nb2.png',
+  /** 任务行：暖金渐变 + 双层描边 + 高光阴影（与每日挑战壳 pastel 一致） */
+  daily_challenge_task_row_textured_nb2: 'subpkg_panels/images/ui/daily_challenge_ui_C_task_row_textured_nb2.png',
   /** 周进度轨空槽 + 双小鸡（进度填充与刻度仍由代码画在上层） */
   daily_challenge_weekly_rail_empty_nb2: 'subpkg_panels/images/ui/daily_challenge_ui_D_weekly_rail_empty_nb2.png',
   /** 顶区粉丝带 + 空小进度条装饰 */
   daily_challenge_subheader_empty_nb2: 'subpkg_panels/images/ui/daily_challenge_ui_E_subheader_capsule_empty_bar_nb2.png',
+  /** 周积分轨里程碑刻度黄点 */
+  daily_challenge_ui_F_dot: 'subpkg_panels/images/ui/daily_challenge_ui_F_dot.png',
 };
 
 // ================================================================

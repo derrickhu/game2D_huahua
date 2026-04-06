@@ -7,6 +7,7 @@ import { EventBus } from '@/core/EventBus';
 import { TweenManager, Ease } from '@/core/TweenManager';
 import { ChallengeManager, ChallengeType, StarRating } from '@/managers/ChallengeManager';
 import { ToastMessage } from './ToastMessage';
+import { ENABLE_CHALLENGE_LEVEL_FEATURE } from '@/config/FeatureFlags';
 import { DESIGN_WIDTH, FONT_FAMILY, COLORS } from '@/config/Constants';
 
 const TYPE_DISPLAY: Record<string, { icon: string; name: string }> = {
@@ -33,6 +34,7 @@ export class ChallengePanel extends PIXI.Container {
   }
 
   open(): void {
+    if (!ENABLE_CHALLENGE_LEVEL_FEATURE) return;
     if (this._isOpen) return;
     this._isOpen = true;
     this.visible = true;

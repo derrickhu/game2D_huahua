@@ -619,6 +619,7 @@ export class ItemInfoBar extends PIXI.Container {
     EventBus.on('board:itemRemoved', () => this._clearSelection());
     EventBus.on('board:itemSold', () => this._clearSelection());
     EventBus.on('toolproduce:policyChanged', () => this._refreshToolStaminaLabel());
+    EventBus.on('collection:discovered', () => this.updateQuickBtnRedDots());
   }
 
   /** 全局工具体力倍率变化时刷新底栏文案（不重播入场动画） */

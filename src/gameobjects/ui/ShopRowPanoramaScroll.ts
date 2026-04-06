@@ -11,6 +11,7 @@ import { EventManager } from '@/managers/EventManager';
 import { FloatingMenu } from './FloatingMenu';
 import { TextureCache } from '@/utils/TextureCache';
 import { DESIGN_WIDTH, FONT_FAMILY } from '@/config/Constants';
+import { ENABLE_CHALLENGE_LEVEL_FEATURE } from '@/config/FeatureFlags';
 
 /** 左侧活动列宽度（大图标区） */
 export const SHOP_PANORAMA_ACTIVITY_W = 232;
@@ -39,7 +40,12 @@ interface TaskDef {
 
 const TASK_DEFS: TaskDef[] = [
   { id: 'quest', texKey: 'icon_quest', event: 'nav:openQuest', redDotKey: 'quest' },
-  { id: 'challenge', texKey: 'icon_challenge', event: 'nav:openChallenge' },
+  {
+    id: 'challenge',
+    texKey: 'icon_challenge',
+    event: 'nav:openChallenge',
+    isVisible: () => ENABLE_CHALLENGE_LEVEL_FEATURE,
+  },
   {
     id: 'event',
     texKey: 'icon_gift',

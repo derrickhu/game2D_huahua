@@ -15,6 +15,53 @@ import {
   msUntilNextDailyResetAt5am,
 } from '@/utils/WeeklyCycle';
 
+/** 任务行总高（与列表 viewport 计算、_drawTaskRow 一致） */
+const TASK_ROW_H = 88;
+
+/**
+ * 任务行底图：优先 `daily_challenge_ui_C_task_row_textured_nb2`（金渐变质感条），
+ * 否则签到条 / 纯色条。Sprite 直接设显示宽高；改比例可调宽窄与行内高度。
+ */
+const TASK_ROW_BG_WIDTH_FRAC = 0.92;
+const TASK_ROW_BG_HEIGHT_FRAC = 0.98;
+
+/**
+ * 新壳图 `daily_challenge_panel_shell_nb2.png`（抠空胶囊槽）内 **每日进度** 的纹理 UV。
+ * 基于 rembg+crop 后 681×1200 版本，对透明槽做行扫描标定；若换图或尺寸变，需重算。
+ *
+ * - `u`/`v`：槽左上角占纹理宽高的比例；`uw`/`uh`：槽宽高比例。
+ */
+const SHELL_DAILY_PROGRESS_TEX_W = 681;
+const SHELL_DAILY_PROGRESS_TEX_H = 1200;
+/** 相对行扫描略加宽，使黄条贴近胶囊槽左右圆角内侧 */
+const SHELL_DAILY_PROGRESS_UV = {
+  u: 138 / SHELL_DAILY_PROGRESS_TEX_W,
+  v: 205 / SHELL_DAILY_PROGRESS_TEX_H,
+  uw: 395 / SHELL_DAILY_PROGRESS_TEX_W,
+  uh: 65 / SHELL_DAILY_PROGRESS_TEX_H,
+} as const;
+
+/** 壳图进度槽整体平移（设计像素，叠加在 UV 换算结果上） */
+const SHELL_DAILY_PROGRESS_NUDGE_X = 0;
+const SHELL_DAILY_PROGRESS_NUDGE_Y = 0;
+
+/**
+ * 周轨道（D_weekly_rail）透明槽内程序进度条：UV 相对轨道 Sprite 显示矩形（0~1）。
+ */
+const WEEKLY_RAIL_PROGRESS_UV = {
+  u: 150 / 1248,
+  v: 84 / 214,
+  uw: 947 / 1248,
+  uh: 46 / 214,
+} as const;
+
+const WEEKLY_RAIL_PROGRESS_NUDGE_X = 0;
+const WEEKLY_RAIL_PROGRESS_NUDGE_Y = 0;
+
+/** 里程碑黄点映射在透明轨上的水平内缩（占轨宽比例），避免端点压住两侧小鸡 */
+const WEEKLY_MILESTONE_X_INSET_LEFT_FRAC = 0.02;
+const WEEKLY_MILESTONE_X_INSET_RIGHT_FRAC = 0.07;
+
 function formatHms(ms: number): string {
   if (ms <= 0) return '00:00:00';
   const s = Math.floor(ms / 1000);
@@ -42,32 +89,25 @@ function rewardPreview(r: DailyChallengeReward): string {
   return parts.join(' ');
 }
 
-function milestoneRewardEmoji(r: DailyChallengeReward): string {
-  if (r.itemId) return '📦';
-  if (r.stamina) return '💖';
-  if (r.diamond) return '💎';
-  if (r.huayuan) return '💰';
-  return '🎁';
+/** 周里程碑奖励 → 主包/物品分包纹理 key（与 TextureCache 一致） */
+function weeklyMilestoneRewardTextureKey(r: DailyChallengeReward): string | undefined {
+  if (r.itemId) return r.itemId;
+  if (r.diamond) return 'icon_gem';
+  if (r.stamina) return 'icon_energy';
+  if (r.huayuan) return 'icon_huayuan';
+  return undefined;
 }
 
-/** 瘦高壳图用 contain 会以高度为准、宽度变窄；按 panelW 缩放使粉框包住任务区 */
-function spriteShellFitPanelWidth(tex: PIXI.Texture, panelX: number, panelY: number, panelW: number, panelH: number): PIXI.Sprite {
+/** 任务行底图：等比装入 rowW×rowH 框并居中（禁止单独拉宽/压扁） */
+function spriteTaskRowPanel(tex: PIXI.Texture, x: number, y: number, rowW: number, rowH: number): PIXI.Sprite {
   const s = new PIXI.Sprite(tex);
-  const sc = panelW / tex.width;
-  s.scale.set(sc);
-  const dispH = tex.height * sc;
-  s.position.set(panelX, panelY + (panelH - dispH) / 2);
-  return s;
-}
-
-/** 任务行黄条等比装入 maxW×maxH 并居中（禁止单独拉宽/压扁） */
-function spriteTaskRowUniform(tex: PIXI.Texture, x: number, y: number, maxW: number, maxH: number): PIXI.Sprite {
-  const s = new PIXI.Sprite(tex);
-  const sc = Math.min(maxW / tex.width, maxH / tex.height);
+  const bw = rowW * TASK_ROW_BG_WIDTH_FRAC;
+  const bh = rowH * TASK_ROW_BG_HEIGHT_FRAC;
+  const sc = Math.min(bw / tex.width, bh / tex.height);
   s.scale.set(sc);
   const dw = tex.width * sc;
   const dh = tex.height * sc;
-  s.position.set(x + (maxW - dw) / 2, y + (maxH - dh) / 2);
+  s.position.set(x + (rowW - dw) / 2, y + (rowH - dh) / 2);
   return s;
 }
 
@@ -195,14 +235,30 @@ export class QuestPanel extends PIXI.Container {
     const panelX = cx - panelW / 2;
     const panelY = (Game.logicHeight - panelH) / 2;
 
-    const hasSubheaderDeco = !!TextureCache.get('daily_challenge_subheader_empty_nb2');
-    const headerEndY = panelY + (hasSubheaderDeco ? 112 : 92);
-    /** 蓝板（B_mid_plate）整体下移，避免贴图顶缘与胶囊条（E_subheader）视觉重叠 */
-    const midPlateTopGap = hasSubheaderDeco ? 32 : 12;
-
     const shellTex = TextureCache.get('daily_challenge_panel_shell_nb2');
+    let shellY = panelY;
+    let shellDispH = panelH;
     if (shellTex) {
-      this._content.addChild(spriteShellFitPanelWidth(shellTex, panelX, panelY, panelW, panelH));
+      const shellSc = panelW / shellTex.width;
+      shellDispH = shellTex.height * shellSc;
+      shellY = panelY + (panelH - shellDispH) / 2;
+      this._addProgressInTextureSlot(
+        panelX,
+        shellY,
+        panelW,
+        shellDispH,
+        SHELL_DAILY_PROGRESS_UV,
+        this._dailyHeaderProgressFraction(),
+        0xe8dcef,
+        0.9,
+        0xffca28,
+        SHELL_DAILY_PROGRESS_NUDGE_X,
+        SHELL_DAILY_PROGRESS_NUDGE_Y,
+      );
+      const sh = new PIXI.Sprite(shellTex);
+      sh.scale.set(shellSc);
+      sh.position.set(panelX, shellY);
+      this._content.addChild(sh);
     } else {
       const fb = new PIXI.Graphics();
       fb.beginFill(0xFFFBF0);
@@ -211,39 +267,24 @@ export class QuestPanel extends PIXI.Container {
       this._content.addChild(fb);
     }
 
+    const slotBottomNorm = SHELL_DAILY_PROGRESS_UV.v + SHELL_DAILY_PROGRESS_UV.uh;
+    const headerEndY = shellTex
+      ? shellY + shellDispH * slotBottomNorm + 16
+      : panelY + 100;
+    const listTopGap = 10;
+
     const hitPlate = new PIXI.Container();
     hitPlate.hitArea = new PIXI.Rectangle(panelX, panelY, panelW, panelH);
     hitPlate.eventMode = 'static';
     this._content.addChild(hitPlate);
 
-    /** 底部周进度 + 里程碑 + 说明文案（含等比周轨道贴图预留高度） */
-    const footerH = 262;
+    /** 底部周进度 + 轨下奖励图标 + 说明文案 */
+    const footerH = 298;
     const footerTopGap = 16;
-    const scrollAreaY = headerEndY + midPlateTopGap;
+    const scrollAreaY = headerEndY + listTopGap;
     const scrollAreaH = panelH - (scrollAreaY - panelY) - footerH - footerTopGap;
 
-    /** 中间蓝板（B）：等比放大，不 mask（避免圆角被切）；整体略下移与顶部分开 */
-    const platePadX = 4;
-    const plateW = panelW - platePadX * 2;
-    const midPlateDropY = 36;
-    const areaTex = TextureCache.get('daily_challenge_task_area_nb2');
-    if (areaTex) {
-      const baseSc = Math.min(plateW / areaTex.width, scrollAreaH / areaTex.height);
-      const dwBase = areaTex.width * baseSc;
-      const targetExtraDisplayW = 140;
-      const midPlateUniformBoost = Math.min(1.42, Math.max(1, 1 + targetExtraDisplayW / Math.max(1, dwBase)));
-      const sc = baseSc * midPlateUniformBoost;
-      const dw = areaTex.width * sc;
-      const dh = areaTex.height * sc;
-      const sx = panelX + platePadX + (plateW - dw) / 2;
-      const sy = scrollAreaY + (scrollAreaH - dh) / 2 + midPlateDropY;
-      const areaSp = new PIXI.Sprite(areaTex);
-      areaSp.scale.set(sc);
-      areaSp.position.set(sx, sy);
-      this._content.addChild(areaSp);
-    }
-
-    const taskRowH = 74;
+    const taskRowH = TASK_ROW_H;
     const taskRowGap = 8;
     const listInsetX = 52;
     const listX = panelX + listInsetX;
@@ -268,24 +309,16 @@ export class QuestPanel extends PIXI.Container {
     sub.position.set(cx, panelY + 44);
     this._content.addChild(sub);
 
-    const subheaderTex = TextureCache.get('daily_challenge_subheader_empty_nb2');
-    if (subheaderTex) {
-      const sh = new PIXI.Sprite(subheaderTex);
-      const shW = Math.min(panelW - 48, subheaderTex.width * 0.82);
-      const subheaderCapsuleShrink = 0.66;
-      sh.scale.set((shW / subheaderTex.width) * subheaderCapsuleShrink);
-      sh.anchor.set(0.5, 0);
-      sh.position.set(cx, panelY + 52);
-      this._content.addChild(sh);
-    }
-
     const now = Date.now();
     this._dailyCountdownText = new PIXI.Text(
       `距下次刷新（05:00） ${formatHms(msUntilNextDailyResetAt5am(new Date(now)))}`,
       { fontSize: 12, fill: 0x5C6BC0, fontFamily: FONT_FAMILY },
     );
     this._dailyCountdownText.anchor.set(0.5, 0);
-    this._dailyCountdownText.position.set(cx, panelY + (hasSubheaderDeco ? 86 : 66));
+    const countdownY = shellTex
+      ? shellY + shellDispH * slotBottomNorm + 6
+      : panelY + 72;
+    this._dailyCountdownText.position.set(cx, countdownY);
     this._content.addChild(this._dailyCountdownText);
 
     const closeBtn = new PIXI.Text('✕', {
@@ -359,6 +392,59 @@ export class QuestPanel extends PIXI.Container {
     if (this._isOpen) this._startCountdownTimer();
   }
 
+  /** 壳图每日进度槽：各任务 current/target 截断后取平均 */
+  private _dailyHeaderProgressFraction(): number {
+    const tasks = QuestManager.dailyTasks;
+    if (tasks.length === 0) return 0;
+    let sum = 0;
+    let n = 0;
+    for (const q of tasks) {
+      const def = QuestManager.getTemplate(q.templateId);
+      if (!def) continue;
+      sum += Math.min(1, q.current / def.target);
+      n += 1;
+    }
+    return n > 0 ? sum / n : 0;
+  }
+
+  /**
+   * 在已缩放贴图显示矩形内，按纹理 UV 画底轨 + 左对齐圆角填充（贴图叠在上层，透明槽透出进度）
+   */
+  private _addProgressInTextureSlot(
+    dispX: number,
+    dispY: number,
+    dispW: number,
+    dispH: number,
+    uv: { readonly u: number; readonly v: number; readonly uw: number; readonly uh: number },
+    progress: number,
+    trackColor: number,
+    trackAlpha: number,
+    fillColor: number,
+    nudgeX = 0,
+    nudgeY = 0,
+  ): void {
+    const px = dispX + uv.u * dispW + nudgeX;
+    const py = dispY + uv.v * dispH + nudgeY;
+    const tw = uv.uw * dispW;
+    const th = uv.uh * dispH;
+    const r = th / 2;
+    const gTrack = new PIXI.Graphics();
+    gTrack.beginFill(trackColor, trackAlpha);
+    gTrack.drawRoundedRect(px, py, tw, th, r);
+    gTrack.endFill();
+    this._content.addChild(gTrack);
+    const p = Math.max(0, Math.min(1, progress));
+    const fillW = tw * p;
+    if (fillW > 0.5) {
+      const rr = Math.min(r, fillW / 2);
+      const gFill = new PIXI.Graphics();
+      gFill.beginFill(fillColor, 1);
+      gFill.drawRoundedRect(px, py, fillW, th, rr);
+      gFill.endFill();
+      this._content.addChild(gFill);
+    }
+  }
+
   private _drawTaskRow(
     x: number,
     y: number,
@@ -367,39 +453,42 @@ export class QuestPanel extends PIXI.Container {
     def: DailyQuestTemplate,
     parent: PIXI.Container,
   ): number {
-    const rowH = 74;
+    const rowH = TASK_ROW_H;
     const isComplete = quest.current >= def.target;
     const isClaimed = quest.claimed;
 
-    const rowTex = TextureCache.get('daily_challenge_task_row_blank_nb2');
+    const rowTex = TextureCache.get('daily_challenge_task_row_textured_nb2')
+      ?? TextureCache.get('checkin_milestone_panel')
+      ?? TextureCache.get('daily_challenge_task_row_blank_nb2');
     if (rowTex) {
-      const rowBg = spriteTaskRowUniform(rowTex, x, y, w, rowH);
-      rowBg.tint = isClaimed ? 0xdddddd : isComplete ? 0xfff8e8 : 0xffffff;
-      parent.addChild(rowBg);
+      const rowSpr = spriteTaskRowPanel(rowTex, x, y, w, rowH);
+      rowSpr.tint = isClaimed ? 0xdddddd : isComplete ? 0xfff8e8 : 0xffffff;
+      parent.addChild(rowSpr);
     } else {
+      const inset = w * (1 - TASK_ROW_BG_WIDTH_FRAC) / 2;
       const bg = new PIXI.Graphics();
       bg.beginFill(isClaimed ? 0xECEFF1 : isComplete ? 0xFFF8E1 : 0xFFFFFF);
-      bg.drawRoundedRect(x, y, w, rowH, 12);
+      bg.drawRoundedRect(x + inset, y, w - inset * 2, rowH, 12);
       bg.endFill();
       bg.lineStyle(1, 0xE0E0E0);
-      bg.drawRoundedRect(x, y, w, rowH, 12);
+      bg.drawRoundedRect(x + inset, y, w - inset * 2, rowH, 12);
       parent.addChild(bg);
     }
 
     const check = new PIXI.Text(isComplete ? '✓' : ' ', {
       fontSize: 22, fill: isComplete ? 0x43A047 : 0xE0E0E0, fontFamily: FONT_FAMILY, fontWeight: 'bold',
     });
-    check.position.set(x + 10, y + 22);
+    check.position.set(x + 10, y + 28);
     parent.addChild(check);
 
     const desc = new PIXI.Text(QuestManager.describeTemplate(def), {
       fontSize: 15, fill: COLORS.TEXT_DARK, fontFamily: FONT_FAMILY, fontWeight: 'bold',
     });
-    desc.position.set(x + 40, y + 10);
+    desc.position.set(x + 40, y + 12);
     parent.addChild(desc);
 
     const barX = x + 40;
-    const barY = y + 36;
+    const barY = y + 42;
     const barW = w * 0.42;
     const barH = 10;
     const progress = Math.min(quest.current / def.target, 1);
@@ -428,18 +517,18 @@ export class QuestPanel extends PIXI.Container {
       fontSize: 13, fill: 0xC49000, fontFamily: FONT_FAMILY, fontWeight: 'bold',
     });
     pts.anchor.set(1, 0);
-    pts.position.set(x + w - 12, y + 8);
+    pts.position.set(x + w - 12, y + 10);
     parent.addChild(pts);
 
     const rw = new PIXI.Text(rewardPreview(def.reward), {
       fontSize: 11, fill: COLORS.TEXT_LIGHT, fontFamily: FONT_FAMILY,
     });
     rw.anchor.set(1, 0);
-    rw.position.set(x + w - 12, y + 28);
+    rw.position.set(x + w - 12, y + 32);
     parent.addChild(rw);
 
     const btnX = x + w - 96;
-    const btnY = y + 44;
+    const btnY = y + 52;
     if (isClaimed) {
       const t = new PIXI.Text('已领', { fontSize: 12, fill: 0x9E9E9E, fontFamily: FONT_FAMILY });
       t.position.set(btnX, btnY);
@@ -505,6 +594,20 @@ export class QuestPanel extends PIXI.Container {
       railDrawX = barX + (barW - railDrawW) / 2;
       const railTopMax = countdownY - 10 - railH;
       railTop = Math.min(railTopPreferred, railTopMax);
+      const weeklyRatio = maxT > 0 ? Math.min(1, wp / maxT) : 0;
+      this._addProgressInTextureSlot(
+        railDrawX,
+        railTop,
+        railDrawW,
+        railH,
+        WEEKLY_RAIL_PROGRESS_UV,
+        weeklyRatio,
+        0x5D4037,
+        0.88,
+        0xFFCA28,
+        WEEKLY_RAIL_PROGRESS_NUDGE_X,
+        WEEKLY_RAIL_PROGRESS_NUDGE_Y,
+      );
       const deco = new PIXI.Sprite(railDecoTex);
       deco.scale.set(sc);
       deco.position.set(railDrawX, railTop);
@@ -512,25 +615,86 @@ export class QuestPanel extends PIXI.Container {
       this._content.addChild(deco);
     }
 
-    const iconY = railTop + railH * 0.34;
+    const uv = WEEKLY_RAIL_PROGRESS_UV;
+    const trackPx = railDrawX + uv.u * railDrawW + WEEKLY_RAIL_PROGRESS_NUDGE_X;
+    const trackPy = railTop + uv.v * railH + WEEKLY_RAIL_PROGRESS_NUDGE_Y;
+    const trackW = uv.uw * railDrawW;
+    const trackTh = uv.uh * railH;
+    const dotY = trackPy + trackTh * 0.5;
 
+    const mileSpanStart = trackPx + trackW * WEEKLY_MILESTONE_X_INSET_LEFT_FRAC;
+    const mileSpanW = trackW * (1 - WEEKLY_MILESTONE_X_INSET_LEFT_FRAC - WEEKLY_MILESTONE_X_INSET_RIGHT_FRAC);
+
+    const DOT_DISP = 24;
+    const REWARD_ICON_DISP = 40;
+    const rewardY = railTop + railH + 6 + REWARD_ICON_DISP * 0.5;
+
+    const dotTex = TextureCache.get('daily_challenge_ui_F_dot');
     const claimed = QuestManager.weeklyMilestonesClaimed;
     for (const m of WEEKLY_MILESTONES) {
-      const ratio = m.threshold / maxT;
-      const cx = railDrawX + railDrawW * ratio;
+      const ratio = maxT > 0 ? m.threshold / maxT : 0;
+      const cx = mileSpanStart + mileSpanW * ratio;
       const canClaim = wp >= m.threshold && !claimed.has(m.id);
       const done = claimed.has(m.id);
 
-      const emoji = new PIXI.Text(done ? '✓' : milestoneRewardEmoji(m.reward), {
-        fontSize: done ? 16 : 14, fontFamily: FONT_FAMILY, fill: done ? 0x43A047 : COLORS.TEXT_DARK,
-      });
-      emoji.anchor.set(0.5, 0.5);
-      emoji.position.set(cx, iconY);
-      this._content.addChild(emoji);
+      if (dotTex) {
+        const dot = new PIXI.Sprite(dotTex);
+        dot.anchor.set(0.5);
+        const k = DOT_DISP / Math.max(1, dotTex.width);
+        dot.scale.set(k);
+        dot.position.set(cx, dotY);
+        this._content.addChild(dot);
+      } else {
+        const g = new PIXI.Graphics();
+        g.beginFill(0xffc107);
+        g.lineStyle(2, 0x8d6e63, 1);
+        g.drawCircle(cx, dotY, DOT_DISP * 0.45);
+        g.endFill();
+        this._content.addChild(g);
+      }
+
+      const iconKey = weeklyMilestoneRewardTextureKey(m.reward);
+      const rewardTex = iconKey ? TextureCache.get(iconKey) : undefined;
+      if (rewardTex) {
+        const sp = new PIXI.Sprite(rewardTex);
+        sp.anchor.set(0.5);
+        const rk = REWARD_ICON_DISP / Math.max(rewardTex.width, rewardTex.height);
+        sp.scale.set(rk);
+        sp.position.set(cx, rewardY);
+        if (done) {
+          sp.alpha = 0.45;
+          sp.tint = 0xcccccc;
+        }
+        this._content.addChild(sp);
+        if (done) {
+          const ck = new PIXI.Text('✓', {
+            fontSize: 22,
+            fill: 0xffffff,
+            fontFamily: FONT_FAMILY,
+            fontWeight: 'bold',
+            stroke: 0x2e7d32,
+            strokeThickness: 3,
+          });
+          ck.anchor.set(0.5);
+          ck.position.set(cx, rewardY);
+          this._content.addChild(ck);
+        }
+      } else {
+        const fallback = new PIXI.Text(rewardPreview(m.reward), {
+          fontSize: 11,
+          fill: COLORS.TEXT_DARK,
+          fontFamily: FONT_FAMILY,
+        });
+        fallback.anchor.set(0.5, 0);
+        fallback.position.set(cx, railTop + railH + 4);
+        this._content.addChild(fallback);
+      }
 
       if (canClaim) {
+        const hitTop = Math.min(dotY - DOT_DISP * 0.6, rewardY - REWARD_ICON_DISP * 0.55);
+        const hitH = rewardY + REWARD_ICON_DISP * 0.55 - hitTop + 8;
         const hit = new PIXI.Container();
-        hit.hitArea = new PIXI.Rectangle(cx - 22, iconY - 16, 44, 52);
+        hit.hitArea = new PIXI.Rectangle(cx - 36, hitTop, 72, hitH);
         hit.eventMode = 'static';
         hit.cursor = 'pointer';
         hit.on('pointerdown', (e: PIXI.FederatedPointerEvent) => {
