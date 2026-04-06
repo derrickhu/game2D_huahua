@@ -41,11 +41,11 @@ export interface SceneDef {
 
 const FLOWER_SHOP_THRESHOLDS: StarLevelThreshold[] = [
   { level: 1,  starRequired: 0,   label: '一星' },
-  { level: 2,  starRequired: 5,   label: '二星' },
-  { level: 3,  starRequired: 12,  label: '三星' },
-  { level: 4,  starRequired: 22,  label: '四星' },
-  { level: 5,  starRequired: 35,  label: '五星' },
-  { level: 6,  starRequired: 50,  label: '六星' },
+  { level: 2,  starRequired: 6,   label: '二星' },
+  { level: 3,  starRequired: 14,  label: '三星' },
+  { level: 4,  starRequired: 25,  label: '四星' },
+  { level: 5,  starRequired: 38,  label: '五星' },
+  { level: 6,  starRequired: 55,  label: '六星' },
   { level: 7,  starRequired: 70,  label: '七星' },
   { level: 8,  starRequired: 95,  label: '八星' },
   { level: 9,  starRequired: 125, label: '九星' },
@@ -53,11 +53,11 @@ const FLOWER_SHOP_THRESHOLDS: StarLevelThreshold[] = [
 ];
 
 const FLOWER_SHOP_MILESTONES: StarMilestoneDef[] = [
-  { star: 5,   rewards: [{ type: 'stamina', amount: 20 }] },
+  { star: 6,   rewards: [{ type: 'stamina', amount: 20 }] },
   { star: 10,  rewards: [{ type: 'chest', amount: 1, itemId: 'chest_1' }] },
   { star: 20,  rewards: [{ type: 'diamond', amount: 5 }, { type: 'chest', amount: 1, itemId: 'chest_2' }] },
-  { star: 35,  rewards: [{ type: 'stamina', amount: 30 }, { type: 'chest', amount: 1, itemId: 'chest_2' }] },
-  { star: 50,  rewards: [{ type: 'diamond', amount: 10 }] },
+  { star: 38,  rewards: [{ type: 'stamina', amount: 30 }, { type: 'chest', amount: 1, itemId: 'chest_2' }] },
+  { star: 55,  rewards: [{ type: 'diamond', amount: 10 }] },
   { star: 70,  rewards: [{ type: 'chest', amount: 1, itemId: 'chest_4' }] },
   { star: 95,  rewards: [{ type: 'diamond', amount: 10 }, { type: 'stamina', amount: 40 }] },
   { star: 125, rewards: [{ type: 'chest', amount: 1, itemId: 'chest_4' }, { type: 'diamond', amount: 15 }] },
@@ -66,8 +66,8 @@ const FLOWER_SHOP_MILESTONES: StarMilestoneDef[] = [
 
 const BUTTERFLY_HOUSE_THRESHOLDS: StarLevelThreshold[] = [
   { level: 1,  starRequired: 0,   label: '一星' },
-  { level: 2,  starRequired: 8,   label: '二星' },
-  { level: 3,  starRequired: 18,  label: '三星' },
+  { level: 2,  starRequired: 9,   label: '二星' },
+  { level: 3,  starRequired: 20,  label: '三星' },
   { level: 4,  starRequired: 30,  label: '四星' },
   { level: 5,  starRequired: 45,  label: '五星' },
   { level: 6,  starRequired: 65,  label: '六星' },
@@ -76,7 +76,7 @@ const BUTTERFLY_HOUSE_THRESHOLDS: StarLevelThreshold[] = [
 ];
 
 const BUTTERFLY_HOUSE_MILESTONES: StarMilestoneDef[] = [
-  { star: 8,   rewards: [{ type: 'stamina', amount: 25 }] },
+  { star: 9,   rewards: [{ type: 'stamina', amount: 25 }] },
   { star: 18,  rewards: [{ type: 'chest', amount: 1, itemId: 'chest_1' }] },
   { star: 30,  rewards: [{ type: 'diamond', amount: 8 }, { type: 'chest', amount: 1, itemId: 'chest_2' }] },
   { star: 45,  rewards: [{ type: 'stamina', amount: 35 }, { type: 'diamond', amount: 10 }] },
@@ -112,7 +112,7 @@ export const DEFAULT_SCENE_ID = 'flower_shop';
 // 全局星级（顶栏进度条、globalLevel、解锁门控）
 // ---------------------------------------------------------------------------
 
-/** 升到该星级所需的累计星星下限（L1=0，L2=5，…，L10=160；L11 起公式延伸，无硬顶） */
+/** 升到该星级所需的累计星星下限（L1=0，L4=25，L5=38，L6=55，L10=160；L11 起公式延伸） */
 export function getGlobalStarRequiredForLevel(level: number): number {
   if (level <= 1) return 0;
   if (level <= 10) {
