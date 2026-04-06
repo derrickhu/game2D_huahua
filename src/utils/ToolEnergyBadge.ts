@@ -17,6 +17,9 @@ export type ToolEnergyBadgeOptions = {
   maxSideFrac?: number;
 };
 
+/** 棋盘上可产出工具：体力标相对格（或拖拽幽灵内容盒）短边的比例 */
+export const BOARD_PRODUCER_ENERGY_MAX_SIDE_FRAC = 0.42;
+
 /**
  * 创建体力角标 Sprite（锚点已设为右下，position 应对齐容器右下角）
  */

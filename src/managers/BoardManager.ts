@@ -174,6 +174,7 @@ class BoardManagerClass {
       resultCellIndex = dstIndex;
       EventBus.emit('board:merged', srcIndex, dstIndex, resultId, resultCellIndex, isPeekMerge);
       EventBus.emit('board:cellUnlocked', dstIndex);
+      /** 仅「半解锁 → 全解锁」的合成才向周围 3×3 辐射 FOG→PEEK/OPEN；已开放格合成不波及 */
       this._checkRippleUnlock(dstIndex);
     } else {
       dst.itemId = resultId;
@@ -181,7 +182,6 @@ class BoardManagerClass {
       dst.luckyCoinConsumed = false;
       resultCellIndex = dstIndex;
       EventBus.emit('board:merged', srcIndex, dstIndex, resultId, resultCellIndex, isPeekMerge);
-      this._checkRippleUnlock(dstIndex);
     }
 
     this._ensureStarterKettlePeeked(resultId);
@@ -307,7 +307,10 @@ class BoardManagerClass {
     return cell?.keyUnlockMode ?? 'huayuan';
   }
 
-  /** 合成波及：周围 3×3 的 FOG 格，有物品→PEEK，无物品→直接 OPEN */
+  /**
+   * 周围 3×3 的 FOG 格：有物品→PEEK，无物品→OPEN。
+   * 调用时机：`doMerge` 仅当目标格由 PEEK 升为 OPEN；`unlockKeyCell` 钥匙格花钱解锁后。
+   */
   private _checkRippleUnlock(centerIndex: number): void {
     const center = this.cells[centerIndex];
     const neighbors3x3 = this._getNeighbors3x3(center.row, center.col);

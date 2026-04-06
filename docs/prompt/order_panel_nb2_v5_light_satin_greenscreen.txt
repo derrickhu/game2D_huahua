@@ -1,0 +1,13 @@
+Clean 2D mobile game UI asset, cozy pastel kawaii flower-shop merge game.
+
+TECHNICAL CUTOUT: ONLY the margins OUTSIDE the rounded panel must be pure flat chroma green RGB exactly 0,255,0. The lavender panel surface and all rounded corners must contain ZERO green pixels, no green glow bleeding inward.
+
+One wide horizontal rounded-rectangle strip, very rounded corners, shallow height, centered in frame. Single continuous surface fill in VERY LIGHT high-key lavender-lilac, almost off-white lavender — think #F7F3FC to #F3EEFB luminance, airy and bright, NOT deep purple, NOT saturated violet, NOT gray.
+
+Subtle satin or pearlescent material: delicate fine weave texture and whisper-soft highlight in upper area only, still pastel and clean, not metallic chrome.
+
+Strictly NO black outline, NO stroke border, NO inner slot boxes, NO icons, NO text, NO numbers.
+
+The green background fills the entire canvas outside the panel silhouette only, edge-clean against the panel.
+
+No watermark, no readable text.

@@ -1,0 +1,11 @@
+Use the provided reference image ONLY as the color and material guide for a different UI shape.
+
+REFERENCE STYLE TO MATCH EXACTLY: same warm honey golden yellow palette, same satin soft polished casual-game plastic, same lighting recipe — thin bright off-white or pale yellow highlight along the top edge, saturated cheerful yellow in the middle body, subtle darker orange-gold along the bottom edge for a gentle raised 3D bevel. Smooth clean surface with very faint horizontal shading variation like the reference, not flat matte, not wood grain photo, not metallic chrome.
+
+NEW SHAPE: one wide horizontal rounded-rectangle tray panel for a merge game customer order row — much taller than the thin reference strip (roughly five to eight times the reference height in proportion), very rounded corners, shallow landscape bar centered in frame. The panel is one continuous piece with the same yellow material treatment as the reference.
+
+TECHNICAL CUTOUT: ONLY the margins outside this rounded panel must be pure flat chroma green RGB exactly 0,255,0. The entire yellow panel including rounded corners must contain ZERO green pixels, no green fringe inside.
+
+NO black outline stroke, NO separate brown border line, NO inner item slot boxes, NO icons, NO text, NO numbers, NO watermark.
+
+The goal is visual unity: if placed above the reference bar in a UI, they should read as the same family of warm yellow satin UI chrome.

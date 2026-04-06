@@ -8,6 +8,7 @@ import { findBoardProducerDef } from '@/config/BuildingConfig';
 import { TextureCache } from '@/utils/TextureCache';
 import { TweenManager, Ease } from '@/core/TweenManager';
 import {
+  BOARD_PRODUCER_ENERGY_MAX_SIDE_FRAC,
   bringToolEnergyToFront,
   createToolEnergySprite,
 } from '@/utils/ToolEnergyBadge';
@@ -15,9 +16,11 @@ import { ToolSparkleLayer } from '@/utils/ToolSparkleLayer';
 import { createCurrencyIconCluster } from '@/utils/CurrencyCellIcons';
 
 /** 格子内物品最大边长占格子的比例（其余为边距） */
-const ITEM_CELL_FILL = 0.72;
+const ITEM_CELL_FILL = 0.76;
 /** 花束线资源留白多，在格子里单独放大，边距更小 */
 const BOUQUET_CELL_FILL = 0.9;
+/** 可点击产出的工具/建筑：格内图标统一略放大 */
+const BOARD_PRODUCER_CELL_FILL = 0.86;
 
 export class ItemView extends PIXI.Container {
   private _iconBg: PIXI.Graphics;
@@ -206,8 +209,13 @@ export class ItemView extends PIXI.Container {
       this._nameText.visible = false;
 
       this._iconSprite = new PIXI.Sprite(texture);
+      const producer = findBoardProducerDef(itemId);
       const fill =
-        (def.line === FlowerLine.BOUQUET || def.line === FlowerLine.WRAP) ? BOUQUET_CELL_FILL : ITEM_CELL_FILL;
+        def.line === FlowerLine.BOUQUET || def.line === FlowerLine.WRAP
+          ? BOUQUET_CELL_FILL
+          : producer?.canProduce
+            ? BOARD_PRODUCER_CELL_FILL
+            : ITEM_CELL_FILL;
       const maxSize = cs * fill;
       const scaleX = maxSize / texture.width;
       const scaleY = maxSize / texture.height;
@@ -430,7 +438,11 @@ export class ItemView extends PIXI.Container {
     this._hideToolEnergy();
     const td = findBoardProducerDef(this._itemId);
     if (!td?.canProduce) return;
-    const sp = createToolEnergySprite(BoardMetrics.cellSize, BoardMetrics.cellSize);
+    const cs = BoardMetrics.cellSize;
+    const sp = createToolEnergySprite(cs, cs, {
+      maxSideFrac: BOARD_PRODUCER_ENERGY_MAX_SIDE_FRAC,
+      pad: Math.max(5, Math.round(cs * 0.065)),
+    });
     if (!sp) return;
     this._toolEnergySprite = sp;
     this.addChild(sp);

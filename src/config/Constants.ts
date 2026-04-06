@@ -63,8 +63,8 @@ export function computeBoardMetrics(logicHeight: number, topReserved: number): v
 }
 
 // 客人
-export const MAX_CUSTOMERS = 5;          // 最大排队客人数（含服务中）
-export const MAX_VISIBLE_CUSTOMERS = 5;  // 滚动区可见客人数
+export const MAX_CUSTOMERS = 4;          // 与 OrderTierConfig 动态上限对齐（含服务中）
+export const MAX_VISIBLE_CUSTOMERS = 4;  // 滚动区可见客人数（与 max 一致）
 /** 与可见区一致：前 N 位（滚动区里显示的）客人，需求与棋盘物品一致则锁定/显示满足；可交付也限此范围 */
 export const ACTIVE_CUSTOMER_SLOTS = MAX_VISIBLE_CUSTOMERS;
 export const CUSTOMER_REFRESH_MIN = 10;  // 秒
@@ -97,22 +97,22 @@ export const COLORS = {
   CELL_KEY: 0xFFD700,
   CELL_BORDER: 0xD4C4B0,
   CELL_HIGHLIGHT: 0xFFE4B5,
-  /** 订单满足：叠在格底上的薄荷绿（比旧版略深一档，避免与奶油格底糊成一片） */
-  CELL_ORDER_MATCH_OVERLAY: 0x7EBE9E,
-  CELL_ORDER_MATCH_OVERLAY_ALPHA: 0.42,
-  /** 订单满足：内缘描边（与对钩绿、FLOWER_GREEN 呼应，便于一眼辨认） */
-  CELL_ORDER_MATCH_RING: 0x58B878,
-  CELL_ORDER_MATCH_RING_ALPHA: 0.9,
-  /** 拿起物品时：棋盘上同种物品所在格提示可合成（偏亮黄，与订单满足薄荷绿区分） */
-  CELL_MERGE_PARTNER_HINT: 0xFFF59D,
-  CELL_MERGE_PARTNER_HINT_ALPHA: 0.42,
+  /** 订单满足：叠在格底上（鲜薄荷绿，避免灰橄榄感） */
+  CELL_ORDER_MATCH_OVERLAY: 0x5CE1A6,
+  CELL_ORDER_MATCH_OVERLAY_ALPHA: 0.52,
+  /** 订单满足：内缘描边（翠绿、与对钩呼应） */
+  CELL_ORDER_MATCH_RING: 0x10B981,
+  CELL_ORDER_MATCH_RING_ALPHA: 0.92,
+  /** 拿起物品时：可合成格（亮柠檬黄，避免土黄/芥末） */
+  CELL_MERGE_PARTNER_HINT: 0xFFEA6B,
+  CELL_MERGE_PARTNER_HINT_ALPHA: 0.52,
   /** 顾客需求槽：未满足时的浅底（与已满足薄荷底区分） */
   CUSTOMER_DEMAND_PENDING_BG: 0xEBE0D4,
   CUSTOMER_DEMAND_PENDING_BG_ALPHA: 0.72,
   CUSTOMER_DEMAND_PENDING_BORDER: 0xC9B8A4,
   CUSTOMER_DEMAND_PENDING_BORDER_ALPHA: 0.65,
-  /** 顾客需求槽：已满足（与棋盘一致薄荷底 + 绿描边） */
-  CUSTOMER_DEMAND_SATISFIED_BORDER: 0x4A9E62,
+  /** 顾客需求槽：已满足（与棋盘绿描边一致） */
+  CUSTOMER_DEMAND_SATISFIED_BORDER: 0x10B981,
   CUSTOMER_DEMAND_SATISFIED_BORDER_ALPHA: 0.88,
 
   // 花系色标

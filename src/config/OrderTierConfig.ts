@@ -30,7 +30,8 @@ export const ORDER_TIERS: Record<OrderTier, OrderTierDef> = {
     label: '初级',
     slotRange: [1, 2],
     demandPool: [
-      { category: Category.FLOWER, lines: [FlowerLine.FRESH], levelRange: [1, 3] },
+      { category: Category.FLOWER, lines: [FlowerLine.FRESH], levelRange: [1, 2] },
+      { category: Category.FLOWER, lines: [FlowerLine.FRESH], levelRange: [2, 3] },
     ],
     timeLimit: null,
     orderType: 'normal',
@@ -222,9 +223,9 @@ export function getEffectiveMaxLevel(toolLevel: number, maxItemLevel: number): n
 }
 
 const DYNAMIC_MAX_CUSTOMERS_BASE = 3;
-const DYNAMIC_MAX_CUSTOMERS_CAP = 8;
+const DYNAMIC_MAX_CUSTOMERS_CAP = 4;
 
-/** 根据已解锁产线数计算客人上限：基础 3 + 每条产线 +1，上限 8 */
+/** 根据已解锁产线数计算客人上限：基础 3 + 每条产线 +1，上限 4 */
 export function getDynamicMaxCustomers(lines: UnlockedLines): number {
   return Math.min(DYNAMIC_MAX_CUSTOMERS_BASE + lines.unlockedLineCount, DYNAMIC_MAX_CUSTOMERS_CAP);
 }

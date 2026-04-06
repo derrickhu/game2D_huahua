@@ -43,6 +43,12 @@ export const ORDER_GROWTH_MIN_MAX_NORM = 0.42;
 export const ORDER_SPAWN_VALIDATE_MAX_ATTEMPTS = 4;
 
 /**
+ * 单次刷客总尝试次数（含工具 cap 校验 + 与上一单需求 fingerprint 去重）。
+ * 去重用尽后仍接受合法单，避免无法刷新。
+ */
+export const ORDER_SPAWN_MAX_ATTEMPTS = 10;
+
+/**
  * 组合单有效概率：min(max, base + (unlockedLineCount-2)*perLine)，至少 2 线才可能组合。
  */
 export function orderComboEffectiveChance(ulk: UnlockedLines): number {

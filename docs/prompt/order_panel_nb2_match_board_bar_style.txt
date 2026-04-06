@@ -1,0 +1,11 @@
+Mobile merge flower-shop game UI asset: a single wide ORDER TRAY PANEL that sits directly above the existing decorative board trim (board_bar) between the customer order row and the merge grid. It must read as the SAME material family and lighting recipe as board_bar from the same project.
+
+This prompt is derived from and must obey the same rules as docs/prompt/board_bar_nb2_prompt.txt: premium cute casual 2D, soft cel-shaded volumes, clean edges, not flat web banner, not photoreal, not heavy 3D render.
+
+COMPOSITION: Wide panoramic rounded rectangle is the hero. The yellow painted panel must extend FULL BLEED — touch the left and right edges of the image frame with NO side padding, NO short centered pill floating in empty space. Center the tray vertically. Above and below the colored tray use flat pure white (#FFFFFF) only — large white margins vertically for clean matting. No characters, no item icons, no text, no logos. NO extra white plinth slab glued under the tray beyond the white margins described.
+
+SHAPE: Shallow landscape tray with generous corner radius (mobile merge UI). Much taller than the thin board_bar strip, but the SAME surface language: painted wooden rail or enamel-coated shelf face — crisp top highlight line (soft pale yellow or near-white rim light), main visible face is ONE solid cheerful warm buttercream / honey yellow (same golden casual-game bar family as board_bar; NOT lavender, NOT pink as dominant, not two body colors fighting). Bottom edge slightly darker same-hue warm shadow for weight. Volume comes ONLY from vertical light on form (top brighter, bottom slightly deeper within the same yellow family). Avoid horizontal multi-hue blends across the width.
+
+DECORATION: Keep the main inner field calm for overlapping item sprites — no inner slot boxes, no carved wells, no second inner frame. Optional at most a hair-thin lower lip echoing board_bar emboss; if in doubt, leave the interior perfectly smooth.
+
+TECHNICAL: Single flat orthographic view, no perspective, no drop-shadow blob floating on white outside the yellow shape (any depth is painted ON the panel). High clarity on small highlights. Clean anti-aliased edges against white. After generation, background removal uses rembg birefnet-general, not color-threshold scripts — keep silhouette edges mat-friendly.

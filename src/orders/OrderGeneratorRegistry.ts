@@ -175,7 +175,7 @@ function generateDemandsFromPool(
   let greenPityUsed = false;
 
   for (let i = 0; i < slotCount; i++) {
-    let demandDef = pool[i % pool.length];
+    let demandDef = pool[Math.floor(opts.rng() * pool.length)]!;
     let eligibleLines = eligibleDemandLines(demandDef, ulk);
 
     if (eligibleLines.length === 0 && demandDef.category === Category.DRINK) {

@@ -22,18 +22,18 @@ export interface CustomerTypeDef {
 }
 
 export const CUSTOMER_TYPES: CustomerTypeDef[] = [
-  // ---- 初级为主 ----
+  // ---- 可出 C 档（初级单）：child / student / worker / mom / athlete / youth ----
   { id: 'child',     name: '小朋友',     emoji: '🧒',  tiers: ['C'] },
   { id: 'student',   name: '学生少女',   emoji: '👧',  tiers: ['C', 'B'] },
+  { id: 'worker',    name: '上班族',     emoji: '👔',  tiers: ['C', 'B'] },
+  { id: 'mom',       name: '温柔妈妈',   emoji: '👩',  tiers: ['C', 'B'] },
+  { id: 'athlete',   name: '运动少年',   emoji: '🏃',  tiers: ['C', 'B', 'A'] },
+  { id: 'youth',     name: '文艺青年',   emoji: '🎨',  tiers: ['C', 'B', 'A'] },
 
-  // ---- 中级为主 ----
-  { id: 'worker',    name: '上班族',     emoji: '👔',  tiers: ['B'] },
-  { id: 'mom',       name: '温柔妈妈',   emoji: '👩',  tiers: ['B'] },
-  { id: 'athlete',   name: '运动少年',   emoji: '🏃',  tiers: ['B', 'A'] },
-
-  // ---- 中高级 ----
-  { id: 'youth',     name: '文艺青年',   emoji: '🎨',  tiers: ['B', 'A'] },
+  // ---- B 档起（不进 C）：mystery ----
   { id: 'mystery',   name: '神秘男子',   emoji: '🕶️', tiers: ['B', 'A'] },
+
+  // ---- A 档：couple / birthday / blogger（不进 C/B）----
   { id: 'couple',    name: '情侣',       emoji: '💑',  tiers: ['A'] },
   { id: 'birthday',  name: '生日顾客',   emoji: '🎂',  tiers: ['A'] },
   { id: 'blogger',   name: '网红博主',   emoji: '📸',  tiers: ['A'] },

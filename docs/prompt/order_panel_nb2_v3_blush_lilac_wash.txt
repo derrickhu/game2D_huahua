@@ -1,0 +1,11 @@
+Clean 2D illustrated mobile UI, cozy kawaii flower-shop merge game.
+
+One horizontal wide rounded panel, generous corner radius, shallow height — like a ribbon tray. Entire interior is a single continuous soft blush-lilac field (mix warm pink with lavender, high luminance, pastel #F0E6F5 to #E5D6EF feel), cheerful and warm, not brown.
+
+NO black or brown outlines anywhere, NO stroke around the panel, NO inner slot graphics, NO embossed wells, NO decorative flowers or icons inside, NO typography.
+
+Texture: extremely subtle watercolor or gouache wash variation within the fill — cloud-soft, low-frequency, same hue family, no hard edges, no visible brush strokes as clutter. Optional microscopic paper tooth. Keep the center visually calm for overlaying item icons later.
+
+Very soft ambient occlusion only at the outer rounded perimeter (1–2 px equivalent softness), still no line-art border.
+
+Plain simple backdrop outside the shape. No watermark, no text, no numbers, not photoreal.

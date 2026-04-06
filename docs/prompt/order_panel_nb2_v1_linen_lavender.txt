@@ -1,0 +1,11 @@
+Clean 2D mobile game UI strip for a cozy pastel flower-shop merge game, kawaii vector base with gentle material depth.
+
+One single wide horizontal rounded rectangle panel, aspect like a shallow tray under character portraits. Very rounded corners. The entire visible shape is filled with soft cool lavender mist (#E6DCF5 family), high-key pastel, not gray, not neon purple.
+
+NO outer stroke line, NO inner border line, NO separate frame band, NO drop shadow as a second layer, NO embossed item slots, NO squares, NO dividers, NO icons, NO text, NO numbers.
+
+Material: subtle natural paper or fine linen texture across the whole fill only — extremely fine fiber grain, uniform, low contrast, still reads as one cohesive tinted surface. A whisper of soft top-left light sheen on the lavender (very subtle spherical gradient), not glossy plastic.
+
+Background outside the rounded panel: flat solid pale mint or very light cream so the panel silhouette reads clearly; or extend same lavender with safe margin. No busy scenery.
+
+Art: hand-painted mobile UI matte, soft brown-friendly pastels, no photoreal wood, no watermark, no readable text.

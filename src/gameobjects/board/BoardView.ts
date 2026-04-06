@@ -30,7 +30,7 @@ import { BuildingManager } from '@/managers/BuildingManager';
 import { CurrencyManager } from '@/managers/CurrencyManager';
 import { Platform } from '@/core/PlatformService';
 import { TextureCache } from '@/utils/TextureCache';
-import { createToolEnergySprite } from '@/utils/ToolEnergyBadge';
+import { BOARD_PRODUCER_ENERGY_MAX_SIDE_FRAC, createToolEnergySprite } from '@/utils/ToolEnergyBadge';
 import { ToolSparkleLayer } from '@/utils/ToolSparkleLayer';
 import { CellView } from './CellView';
 import { ItemView } from './ItemView';
@@ -1185,7 +1185,10 @@ export class BoardView extends PIXI.Container {
         const hh = (tex.height * s) / 2;
         const shell = new PIXI.Container();
         shell.position.set(-hw, -hh);
-        const energy = createToolEnergySprite(hw * 2, hh * 2, { maxSideFrac: 0.34, pad: 5 });
+        const energy = createToolEnergySprite(hw * 2, hh * 2, {
+          maxSideFrac: BOARD_PRODUCER_ENERGY_MAX_SIDE_FRAC,
+          pad: 5,
+        });
         if (energy) shell.addChild(energy);
         ghost.addChild(shell);
       }

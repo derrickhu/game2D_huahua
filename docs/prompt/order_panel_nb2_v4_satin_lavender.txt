@@ -1,0 +1,11 @@
+Clean 2D vector-hybrid mobile game UI, pastel flower-shop merge aesthetic, kawaii soft.
+
+Single landscape rounded rectangle panel, very rounded ends, one continuous surface. Fill is luminous soft lavender (#E2D8F8 family) with a hint of pearlescent satin sheen — gentle horizontal soft highlight band in the upper third only, still subtle, not metallic chrome, not mirror.
+
+Absolutely NO stroke outline, NO double border, NO inner rectangles, NO item placeholders, NO corner badges, NO text, NO numbers, NO icons.
+
+Body texture: fine satin weave or silk matte grain, extremely delicate, high-key, keeps readability for small sprites that will sit on top later. Bottom area slightly deeper lavender in the same hue (micro-gradient), no hard step.
+
+Outside panel: flat neutral pastel ground only. No busy background.
+
+No photoreal fabric macro photo, no watermark, no readable text.

@@ -74,7 +74,7 @@ import { DressUpPanel } from '@/gameobjects/ui/DressUpPanel';
 import { EventPanel } from '@/gameobjects/ui/EventPanel';
 import { ChallengePanel } from '@/gameobjects/ui/ChallengePanel';
 import { LeaderboardPanel } from '@/gameobjects/ui/LeaderboardPanel';
-import { RewardBoxButton, REWARD_BOX_BTN_SIZE } from '@/gameobjects/ui/RewardBoxButton';
+import { RewardBoxButton } from '@/gameobjects/ui/RewardBoxButton';
 import { RewardBoxPanel } from '@/gameobjects/ui/RewardBoxPanel';
 import { PopupShopPanel } from '@/gameobjects/ui/PopupShopPanel';
 import { MerchShopPanel } from '@/gameobjects/ui/MerchShopPanel';
@@ -96,6 +96,8 @@ const BOARD_OWNER_SIZE_MULT = 1.1;
  * 须与 `_update` 里呼吸动画的基准一致，勿只改 `_buildShopArea`。
  */
 const BOARD_OWNER_BASE_Y = 250;
+/** 店主与收纳格整体右移，与左侧「展开」按钮留缝（设计 px） */
+const SHOP_OWNER_BLOCK_NUDGE_X = 6;
 
 export class MainScene implements Scene {
   readonly name = 'main';
@@ -400,7 +402,8 @@ export class MainScene implements Scene {
     EventBus.on('rewardBox:open', () => {
       const parent = this._rewardBoxPanel.parent;
       if (!parent) return;
-      const p = new PIXI.Point(REWARD_BOX_BTN_SIZE / 2, REWARD_BOX_BTN_SIZE);
+      const { w, h } = RewardBoxButton.layoutSize();
+      const p = new PIXI.Point(w / 2, h);
       const global = this._rewardBoxButton.toGlobal(p);
       const local = parent.toLocal(global);
       this._rewardBoxPanel.openNear(local.x, local.y);
@@ -446,7 +449,7 @@ export class MainScene implements Scene {
     this._ownerSprite.cursor = 'pointer';
     this._ownerSprite.on('pointerdown', () => GMManager.onTitleTap());
 
-    this._ownerContainer.position.set(ownerCX, BOARD_OWNER_BASE_Y);
+    this._ownerContainer.position.set(ownerCX + SHOP_OWNER_BLOCK_NUDGE_X, BOARD_OWNER_BASE_Y);
     // 点击店主 → 打开换装面板
     this._ownerContainer.eventMode = 'static';
     this._ownerContainer.cursor = 'pointer';
@@ -468,7 +471,10 @@ export class MainScene implements Scene {
     this._ownerContainer.zIndex = 0;
 
     this._rewardBoxButton = new RewardBoxButton();
-    this._rewardBoxButton.position.set(ownerCX - REWARD_BOX_BTN_SIZE / 2, CHAR_BOTTOM_Y + 8);
+    this._rewardBoxButton.position.set(
+      ownerCX + SHOP_OWNER_BLOCK_NUDGE_X - RewardBoxButton.layoutSize().w / 2,
+      CHAR_BOTTOM_Y + 8,
+    );
     this._shopMainBlock.addChild(this._rewardBoxButton);
     // 礼包后绘，保证叠在店主之上（人物略放大时可压在礼盒底下由礼盒盖住边缘）
     this._rewardBoxButton.zIndex = 5;
@@ -703,9 +709,7 @@ export class MainScene implements Scene {
           }
         }
         if (predictedIdx < 0) {
-          const g = this._rewardBoxButton.toGlobal(
-            new PIXI.Point(REWARD_BOX_BTN_SIZE / 2, REWARD_BOX_BTN_SIZE / 2),
-          );
+          const g = this._rewardBoxButton.toGlobal(this._rewardBoxButton.getItemSlotCenterLocal());
           const el = this.container.toLocal(g);
           ex = el.x;
           ey = el.y;
@@ -802,8 +806,7 @@ export class MainScene implements Scene {
         return { plans, overflowCount: pieces.length - plans.length };
       },
       getRewardBoxFlyTarget() {
-        const half = REWARD_BOX_BTN_SIZE / 2;
-        const endGlobal = rewardBoxBtn.toGlobal(new PIXI.Point(half, half));
+        const endGlobal = rewardBoxBtn.toGlobal(rewardBoxBtn.getItemSlotCenterLocal());
         return { endGlobal };
       },
     };
@@ -1011,9 +1014,7 @@ export class MainScene implements Scene {
     // 升级弹窗（收纳盒物品在飞入礼包动画结束后再写入）；仅主场景处理，避免与花店场景重复弹窗/重复入库
     EventBus.on('level:up', (level: number, reward: any) => {
       if (SceneManager.current?.name !== 'main') return;
-      const g = this._rewardBoxButton.toGlobal(
-        new PIXI.Point(REWARD_BOX_BTN_SIZE / 2, REWARD_BOX_BTN_SIZE / 2),
-      );
+      const g = this._rewardBoxButton.toGlobal(this._rewardBoxButton.getItemSlotCenterLocal());
       this._levelUpPopup.show(level, reward, {
         rewardFlyTargetGlobal: g,
         onGrantRewardBoxItems: entries => {

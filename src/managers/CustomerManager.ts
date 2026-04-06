@@ -25,7 +25,7 @@ import {
   type UnlockedLines,
 } from '@/config/OrderTierConfig';
 import { CUSTOMER_REFRESH_MIN, CUSTOMER_REFRESH_MAX } from '@/config/Constants';
-import { ORDER_SPAWN_VALIDATE_MAX_ATTEMPTS } from '@/config/OrderSpawnConfig';
+import { ORDER_SPAWN_MAX_ATTEMPTS } from '@/config/OrderSpawnConfig';
 import { computeUnlockedLines } from '@/orders/unlockedLines';
 import {
   generateOrderDemands,
@@ -174,6 +174,11 @@ function normalizeCustomerPersistState(raw: unknown): CustomerPersistState | nul
   return { list, nextUid, refreshTimer };
 }
 
+/** 与上一单需求去重：槽位无序，同 multiset 视为相同 */
+function orderSlotsFingerprint(slots: readonly { itemId: string }[]): string {
+  return [...slots.map(s => s.itemId)].sort().join('|');
+}
+
 function inferOrderKindFromLegacy(entry: {
   orderType: OrderType;
   bonusMultiplier?: number;
@@ -196,6 +201,10 @@ class CustomerManagerClass {
   private _unlockSnapshot: UnlockedLines | null = null;
   /** 已解锁绿植但连续多单一株绿植都不要时的保底计数 */
   private _spawnsWithoutGreenDemand = 0;
+  /** 上一刷客人的 typeId，用于避免连续同人设（池子 >1 时） */
+  private _lastSpawnTypeId: string | null = null;
+  /** 上一刷订单需求 fingerprint，用于避免连续完全相同需求 */
+  private _lastOrderFingerprint: string | null = null;
 
   get customers(): readonly CustomerInstance[] {
     return this._customers;
@@ -271,8 +280,21 @@ class CustomerManagerClass {
       this._refreshTimer = CUSTOMER_REFRESH_MAX - 3;
     }
 
+    this._syncAntiRepeatFromQueueTail();
     this._bindBoardEvents();
     this._rescanAll();
+  }
+
+  /** 读档或初始化后：用当前队列末尾客人同步去重状态，避免首刷立刻撞脸上一会话最后一单 */
+  private _syncAntiRepeatFromQueueTail(): void {
+    const last = this._customers[this._customers.length - 1];
+    if (!last) {
+      this._lastSpawnTypeId = null;
+      this._lastOrderFingerprint = null;
+      return;
+    }
+    this._lastSpawnTypeId = last.typeId;
+    this._lastOrderFingerprint = orderSlotsFingerprint(last.slots);
   }
 
   get maxCustomers(): number {
@@ -401,13 +423,19 @@ class CustomerManagerClass {
     );
     if (pool.length === 0) return;
 
-    const type = pool[Math.floor(Math.random() * pool.length)]!;
+    let typePool = pool;
+    if (this._lastSpawnTypeId && pool.length > 1) {
+      const avoid = pool.filter(t => t.id !== this._lastSpawnTypeId);
+      if (avoid.length > 0) typePool = avoid;
+    }
+    const type = typePool[Math.floor(Math.random() * typePool.length)]!;
     const forceGreen =
       lines.hasGreen &&
       this._spawnsWithoutGreenDemand >= GREEN_PITY_THRESHOLD;
 
     let gen: OrderGenResult | null = null;
-    for (let attempt = 0; attempt < ORDER_SPAWN_VALIDATE_MAX_ATTEMPTS; attempt++) {
+    let fallbackGen: OrderGenResult | null = null;
+    for (let attempt = 0; attempt < ORDER_SPAWN_MAX_ATTEMPTS; attempt++) {
       const g = generateOrderDemands({
         tier,
         lines,
@@ -417,9 +445,14 @@ class CustomerManagerClass {
       });
       if (!g || g.slots.length === 0) continue;
       if (!validateOrderSlotsToolCap(g.slots, lines)) continue;
-      gen = g;
-      break;
+      fallbackGen = g;
+      const fp = orderSlotsFingerprint(g.slots);
+      if (!this._lastOrderFingerprint || fp !== this._lastOrderFingerprint) {
+        gen = g;
+        break;
+      }
     }
+    if (!gen) gen = fallbackGen;
     if (!gen || gen.slots.length === 0) return;
 
     const slots: DemandSlot[] = gen.slots.map(s => ({
@@ -455,6 +488,9 @@ class CustomerManagerClass {
       if (hasGreenItem) this._spawnsWithoutGreenDemand = 0;
       else this._spawnsWithoutGreenDemand++;
     }
+
+    this._lastSpawnTypeId = type.id;
+    this._lastOrderFingerprint = orderSlotsFingerprint(slots);
 
     this._customers.push(customer);
     if (this._greenLineUnlockBoostSpawns > 0) {

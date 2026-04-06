@@ -1,43 +1,33 @@
 /**
- * 奖励收纳框 — 收起态按钮
+ * 奖励收纳框 — 收起态（合成页店主下方）
  *
- * 礼包图常驻；有物品时礼盒呼吸 + 外发光 + 右上角红角标。
- * 空盒时仅静态礼包，无角标、无发光、无呼吸。
+ * **圆形托盘**（与方形棋盘格区分）+ 暖色/粉紫散射光斑 + 中心浅碟承托物品；右上红角标加大、数字描边便于辨认。
  */
 import * as PIXI from 'pixi.js';
 import { EventBus } from '@/core/EventBus';
 import { Game } from '@/core/Game';
-import { FONT_FAMILY } from '@/config/Constants';
+import { BoardMetrics, FONT_FAMILY } from '@/config/Constants';
+import { ITEM_DEFS } from '@/config/ItemConfig';
 import { RewardBoxManager } from '@/managers/RewardBoxManager';
 import { TextureCache } from '@/utils/TextureCache';
 
-export const REWARD_BOX_BTN_SIZE = 92;
-const CORNER_R = 20;
-const FILL_COLOR = 0xfff9e6;
-const FILL_ALPHA = 0.98;
-const BORDER_COLOR = 0xe8b86a;
-const BADGE_R = 13;
-/** 礼盒相对「铺满方格」再放大一档 */
-const BOX_TEX_ZOOM = 1.22;
-/** 呼吸缩放幅度（相对基础 scale） */
-const BREATH_AMP = 0.062;
+/** 主白碟半径占格边长的比例（略小于 0.5 留边，避免贴死方形容器） */
+const DISC_R_RATIO = 0.48;
+/** 图标最大边相对碟直径 */
+const ICON_IN_DISC = 0.76;
+const BADGE_R = 17;
+const BADGE_FONT = 15;
+const BREATH_AMP = 0.055;
 
 export class RewardBoxButton extends PIXI.Container {
-  private _outerGlow!: PIXI.Graphics;
-  private _midGlow!: PIXI.Graphics;
-  private _glowTint!: PIXI.Graphics;
-  private _boxMask!: PIXI.Graphics;
-  private _boxSprite!: PIXI.Sprite;
-  /** 无 cell_locked_v2 纹理时的矢量兜底 */
-  private _bg!: PIXI.Graphics;
-  private _innerLight!: PIXI.Graphics;
+  private _cellRoot!: PIXI.Container;
+  private _cellBg!: PIXI.Graphics;
+  private _itemSprite!: PIXI.Sprite;
   private _badge!: PIXI.Graphics;
   private _badgeText!: PIXI.Text;
-  private _boxBaseScale = 1;
-  private _hasBoxTexture = false;
-  /** 与 PIXI Container 的 _destroyed 区分，避免 TS 子类属性不兼容 */
+  private _itemBaseScale = 1;
+  private _hasItemTexture = false;
   private _breathStopped = false;
-  /** 收纳框内是否有可领物品（决定角标/发光/呼吸） */
   private _rewardActive = false;
 
   constructor() {
@@ -54,218 +44,165 @@ export class RewardBoxButton extends PIXI.Container {
     super.destroy(options);
   }
 
+  /** 占位区域仍与棋盘格同边长，便于布局对齐 */
+  static layoutSize(): { w: number; h: number } {
+    const cs = BoardMetrics.cellSize;
+    return { w: cs, h: cs };
+  }
+
+  getItemSlotCenterLocal(): PIXI.Point {
+    const cs = BoardMetrics.cellSize;
+    return new PIXI.Point(cs / 2, cs / 2);
+  }
+
   private _build(): void {
-    const S = REWARD_BOX_BTN_SIZE;
-    const cx = S / 2;
-    const cy = S / 2;
+    this._cellRoot = new PIXI.Container();
 
-    this._outerGlow = new PIXI.Graphics();
-    this._outerGlow.position.set(cx, cy);
-    this.addChild(this._outerGlow);
+    this._cellBg = new PIXI.Graphics();
+    this._cellRoot.addChild(this._cellBg);
 
-    this._glowTint = new PIXI.Graphics();
-    this._glowTint.position.set(cx, cy);
-    this.addChild(this._glowTint);
-
-    this._midGlow = new PIXI.Graphics();
-    this._midGlow.position.set(cx, cy);
-    this.addChild(this._midGlow);
-
-    this._boxMask = new PIXI.Graphics();
-    this.addChild(this._boxMask);
-
-    this._boxSprite = new PIXI.Sprite();
-    this._boxSprite.anchor.set(0.5);
-    this._boxSprite.position.set(cx, cy);
-    this.addChild(this._boxSprite);
-
-    this._bg = new PIXI.Graphics();
-    this.addChild(this._bg);
-
-    this._innerLight = new PIXI.Graphics();
-    this.addChild(this._innerLight);
+    this._itemSprite = new PIXI.Sprite();
+    this._itemSprite.anchor.set(0.5);
+    this._itemSprite.eventMode = 'none';
+    this._cellRoot.addChild(this._itemSprite);
 
     this._badge = new PIXI.Graphics();
-    this.addChild(this._badge);
+    this._cellRoot.addChild(this._badge);
 
     this._badgeText = new PIXI.Text('', {
-      fontSize: 12,
+      fontSize: BADGE_FONT,
       fill: 0xffffff,
       fontFamily: FONT_FAMILY,
       fontWeight: 'bold',
+      stroke: 0x3d0a0a,
+      strokeThickness: 3,
     });
     this._badgeText.anchor.set(0.5);
-    this.addChild(this._badgeText);
+    this._cellRoot.addChild(this._badgeText);
+
+    this.addChild(this._cellRoot);
 
     this.eventMode = 'static';
     this.cursor = 'pointer';
-    this.hitArea = new PIXI.Rectangle(0, 0, S, S);
     this.on('pointerdown', () => {
       EventBus.emit('rewardBox:open');
     });
   }
 
-  /** 外发光层：原点为按钮中心 */
-  private _drawOuterGlowRings(S: number): void {
-    this._outerGlow.clear();
-    const outer: [number, number, number][] = [
-      [0xffe8a8, 0.38, S * 0.62],
-      [0xfff5d6, 0.32, S * 0.54],
-      [0xffffff, 0.26, S * 0.46],
-      [0xffefd8, 0.2, S * 0.38],
+  /** 圆形碟 + 多色散射光（与棋盘方格明显不同） */
+  private _paintRewardPlate(g: PIXI.Graphics, cs: number, hasItems: boolean): void {
+    g.clear();
+    const cx = cs / 2;
+    const cy = cs / 2;
+    const strong = hasItems ? 1 : 0.55;
+
+    type Blob = { ox: number; oy: number; rRatio: number; color: number; a: number };
+    const blobs: Blob[] = [
+      { ox: -0.2, oy: -0.24, rRatio: 0.34, color: 0xffe8a8, a: 0.38 * strong },
+      { ox: 0.22, oy: -0.1, rRatio: 0.28, color: 0xe4d4ff, a: 0.32 * strong },
+      { ox: 0.06, oy: 0.22, rRatio: 0.26, color: 0xffc0d8, a: 0.28 * strong },
+      { ox: -0.18, oy: 0.2, rRatio: 0.24, color: 0xb8e8ff, a: 0.26 * strong },
+      { ox: 0.02, oy: -0.06, rRatio: 0.21, color: 0xfffacd, a: 0.22 * strong },
     ];
-    for (const [color, alpha, r] of outer) {
-      this._outerGlow.beginFill(color, alpha);
-      this._outerGlow.drawCircle(0, 0, r);
-      this._outerGlow.endFill();
+    for (const b of blobs) {
+      g.beginFill(b.color, Math.min(1, b.a));
+      g.drawCircle(cx + b.ox * cs, cy + b.oy * cs, b.rRatio * cs);
+      g.endFill();
     }
 
-    this._glowTint.clear();
-    const tint: [number, number, number][] = [
-      [0x7ee8b8, 0.22, S * 0.58],
-      [0xa8f0d0, 0.16, S * 0.48],
-      [0xc8f8e4, 0.1, S * 0.4],
-    ];
-    for (const [color, alpha, r] of tint) {
-      this._glowTint.beginFill(color, alpha);
-      this._glowTint.drawCircle(0, 0, r);
-      this._glowTint.endFill();
-    }
+    g.beginFill(0xffefd8, 0.45 * strong);
+    g.drawCircle(cx, cy, cs * 0.495);
+    g.endFill();
 
-    this._midGlow.clear();
-    const mid: [number, number, number][] = [
-      [0xffffff, 0.32, S * 0.42],
-      [0xfff8e8, 0.36, S * 0.32],
-      [0xffffff, 0.22, S * 0.24],
-    ];
-    for (const [color, alpha, r] of mid) {
-      this._midGlow.beginFill(color, alpha);
-      this._midGlow.drawCircle(0, 0, r);
-      this._midGlow.endFill();
-    }
+    g.beginFill(0xfffaee, 0.35 * strong);
+    g.drawCircle(cx, cy, cs * 0.44);
+    g.endFill();
+
+    const discR = cs * DISC_R_RATIO;
+    g.beginFill(0xfffffd, hasItems ? 0.96 : 0.62);
+    g.drawCircle(cx, cy, discR);
+    g.endFill();
+    g.lineStyle(2.5, 0xffb88a, hasItems ? 0.9 : 0.45);
+    g.drawCircle(cx, cy, Math.max(2, discR - 1.25));
+    g.lineStyle(1, 0xffffff, hasItems ? 0.55 : 0.3);
+    g.drawCircle(cx, cy, discR - 3);
   }
 
-  private _drawInnerLight(cx: number, cy: number, S: number): void {
-    this._innerLight.clear();
-    const inner: [number, number, number][] = [
-      [0xffffff, 0.45, S * 0.34],
-      [0xffefd0, 0.38, S * 0.26],
-      [0xffffff, 0.28, S * 0.16],
-    ];
-    for (const [color, alpha, r] of inner) {
-      this._innerLight.beginFill(color, alpha);
-      this._innerLight.drawCircle(cx, cy - S * 0.02, r);
-      this._innerLight.endFill();
-    }
+  private _discRadius(cs: number): number {
+    return cs * DISC_R_RATIO;
+  }
+
+  private _layoutHitArea(): void {
+    const cs = BoardMetrics.cellSize;
+    this.hitArea = new PIXI.Rectangle(0, 0, cs, cs);
+    const cx = cs / 2;
+    const cy = cs / 2;
+    this._itemSprite.position.set(cx, cy);
   }
 
   private _onBreathTick(): void {
     if (this._breathStopped || !this.visible) return;
-    if (!this._rewardActive) {
-      if (this._hasBoxTexture) {
-        this._boxSprite.scale.set(this._boxBaseScale);
-      } else if (this._bg.visible) {
-        this._bg.scale.set(1);
-      }
+    if (!this._rewardActive || !this._hasItemTexture) {
+      this._itemSprite.scale.set(this._itemBaseScale);
       return;
     }
-
     const t = performance.now() * 0.0028;
     const breathe = 1 + Math.sin(t) * BREATH_AMP;
-    if (this._hasBoxTexture) {
-      this._boxSprite.scale.set(this._boxBaseScale * breathe);
-    } else if (this._bg.visible) {
-      this._bg.scale.set(breathe);
-    }
-
-    const g = 1 + Math.sin(t * 0.95) * 0.085;
-    this._outerGlow.scale.set(g);
-    this._glowTint.scale.set(g * 1.02);
-    this._midGlow.scale.set(1 + Math.sin(t * 1.05) * 0.06);
-
-    const a = 0.88 + Math.sin(t * 0.9) * 0.12;
-    this._outerGlow.alpha = a;
-    this._glowTint.alpha = 0.75 + Math.sin(t * 1.0) * 0.2;
-    this._midGlow.alpha = 0.9 + Math.sin(t * 1.05) * 0.1;
-    if (this._innerLight.visible) {
-      this._innerLight.alpha = 0.88 + Math.sin(t * 1.12) * 0.12;
-    }
+    this._itemSprite.scale.set(this._itemBaseScale * breathe);
   }
 
   private _refresh(): void {
-    const S = REWARD_BOX_BTN_SIZE;
     const total = RewardBoxManager.totalCount;
     this.visible = true;
     this._rewardActive = total > 0;
 
-    const cx = S / 2;
-    const cy = S / 2;
+    const cs = BoardMetrics.cellSize;
+    this._layoutHitArea();
 
-    if (this._rewardActive) {
-      this._drawOuterGlowRings(S);
-      this._outerGlow.visible = true;
-      this._glowTint.visible = true;
-      this._midGlow.visible = true;
+    this._paintRewardPlate(this._cellBg, cs, this._rewardActive);
+
+    const latestId = RewardBoxManager.latestDisplayItemId();
+    const def = latestId ? ITEM_DEFS.get(latestId) : undefined;
+    const iconKey = def?.icon;
+    const tex = iconKey ? TextureCache.get(iconKey) : null;
+
+    const cx = cs / 2;
+    const cy = cs / 2;
+    const discR = this._discRadius(cs);
+    const maxSize = discR * 2 * ICON_IN_DISC;
+
+    if (this._rewardActive && tex && tex.width > 0) {
+      this._hasItemTexture = true;
+      this._itemSprite.texture = tex;
+      this._itemSprite.visible = true;
+      const s = Math.min(maxSize / tex.width, maxSize / tex.height);
+      this._itemBaseScale = s;
+      this._itemSprite.scale.set(this._itemBaseScale);
+      this._itemSprite.position.set(cx, cy);
     } else {
-      this._outerGlow.clear();
-      this._glowTint.clear();
-      this._midGlow.clear();
-      this._outerGlow.visible = false;
-      this._glowTint.visible = false;
-      this._midGlow.visible = false;
-      this._outerGlow.scale.set(1);
-      this._glowTint.scale.set(1);
-      this._midGlow.scale.set(1);
+      this._hasItemTexture = false;
+      this._itemSprite.visible = false;
+      this._itemSprite.texture = PIXI.Texture.EMPTY;
+      this._itemBaseScale = 1;
+      this._itemSprite.scale.set(1);
+      this._itemSprite.position.set(cx, cy);
     }
 
-    this._boxMask.clear();
-    this._boxMask.beginFill(0xffffff);
-    this._boxMask.drawRoundedRect(0, 0, S, S, CORNER_R);
-    this._boxMask.endFill();
-
-    const boxTex = TextureCache.get('cell_locked_v2');
-    this._bg.clear();
-    if (boxTex && boxTex.width > 0) {
-      this._hasBoxTexture = true;
-      this._boxSprite.texture = boxTex;
-      const cover = Math.max(S / boxTex.width, S / boxTex.height);
-      this._boxBaseScale = cover * BOX_TEX_ZOOM;
-      this._boxSprite.scale.set(this._boxBaseScale);
-      this._boxSprite.position.set(cx, cy);
-      this._boxSprite.visible = true;
-      this._boxSprite.mask = this._boxMask;
-      this._bg.visible = false;
-      this._bg.scale.set(1);
-      this._innerLight.visible = false;
-    } else {
-      this._hasBoxTexture = false;
-      this._boxSprite.visible = false;
-      this._boxSprite.mask = null;
-      this._bg.visible = true;
-      this._bg.pivot.set(cx, cy);
-      this._bg.position.set(cx, cy);
-      this._bg.lineStyle(2, BORDER_COLOR, 0.9);
-      this._bg.beginFill(FILL_COLOR, FILL_ALPHA);
-      this._bg.drawRoundedRect(-cx, -cy, S, S, CORNER_R);
-      this._bg.endFill();
-      this._innerLight.visible = this._rewardActive;
-      if (this._rewardActive) {
-        this._drawInnerLight(cx, cy, S);
-      } else {
-        this._innerLight.clear();
-      }
-    }
-
-    const badgeX = S - 3;
-    const badgeY = 3;
+    const badgeX = cs - 1;
+    const badgeY = 1;
     this._badge.clear();
     if (this._rewardActive) {
       this._badge.visible = true;
       this._badgeText.visible = true;
-      this._badge.beginFill(0xe53935);
+      this._badge.beginFill(0xd32f2f);
       this._badge.drawCircle(badgeX, badgeY, BADGE_R);
       this._badge.endFill();
-      this._badgeText.text = total > 99 ? '99+' : `${total}`;
+      this._badge.lineStyle(2.2, 0xffffff, 0.92);
+      this._badge.drawCircle(badgeX, badgeY, BADGE_R - 1);
+
+      const label = total > 99 ? '99+' : `${total}`;
+      this._badgeText.text = label;
+      this._badgeText.style.fontSize = label.length >= 3 ? 13 : BADGE_FONT;
       this._badgeText.position.set(badgeX, badgeY);
     } else {
       this._badge.visible = false;

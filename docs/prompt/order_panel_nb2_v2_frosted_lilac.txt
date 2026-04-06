@@ -1,0 +1,11 @@
+Clean 2D mobile game UI asset, cozy pastel flower-shop merge game, kawaii casual.
+
+Single wide horizontal rounded-rectangle order tray panel, very rounded corners, landscape strip. Full-bleed fill in frosted pastel lilac (#DDD0F0 to #E8DEF5 range), airy and bright, slightly cooler than beige, not muddy.
+
+Strictly NO outline stroke, NO rim highlight line, NO inner frames, NO placeholder boxes for items, NO shadows cast inside the panel, NO icons, NO text.
+
+Surface quality: matte frosted acrylic or velvety matte plastic feel — ultra-soft micro noise grain, even coverage, gentle soft light from above creating only a barely visible depth curve (no hard bands). Edges stay soft and clean, no bevel wire.
+
+Outside the rounded shape keep a simple flat field (pale gray-green or cream) only to separate silhouette; no patterns behind.
+
+No photoreal, no watermark, no text or numbers.
