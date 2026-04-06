@@ -146,7 +146,6 @@ export class ShopScene implements Scene {
   private _editBtn!: PIXI.Container;
   private _furnitureTray!: FurnitureTray;
   private _editToolbar!: RoomEditToolbar;
-  private _particleContainer!: PIXI.Container;
   private _shopBuildingSprite: PIXI.Sprite | null = null;
 
   // ── 大地图（面板在 OverlayManager，此处仅入口按钮） ──
@@ -399,13 +398,7 @@ export class ShopScene implements Scene {
     // ============== 10. 编辑模式按钮（放在最后，确保在最顶层） ==============
     this._buildEditButton(w, h);
 
-    // ============== 11. 氛围粒子 ==============
-    this._particleContainer = new PIXI.Container();
-    this._particleContainer.zIndex = 100;
-    this.container.addChild(this._particleContainer);
-    this._spawnAmbientParticles(w, h);
-
-    // ============== 11b. 飞星层（购买家具 → 飞入进度条） ==============
+    // ============== 11. 飞星层（购买家具 → 飞入进度条） ==============
     this.container.sortableChildren = true;
     this._starFlyLayer = new PIXI.Container();
     this._starFlyLayer.zIndex = 8000;
@@ -850,8 +843,11 @@ export class ShopScene implements Scene {
     this._progressBarRoot = barContainer;
     barContainer.position.set(cx - PROGRESS_BAR_W / 2, y);
     barContainer.zIndex = 7000;
-    /** 家具面板遮罩在面板之下、进度条抬升到 overlay 之上；条身穿透点击以落到遮罩关闭 */
-    barContainer.eventMode = 'none';
+    /**
+     * 须用 `passive` 而非 `none`：Pixi 7 对 `eventMode==='none'` 会整枝剪掉子树，子节点（礼包热区）永不参与命中。
+     * `passive` + interactiveChildren：条身各 Graphics/Text 仍为 none，点击会穿过落到下层；仅礼包等为 static 可点。
+     */
+    barContainer.eventMode = 'passive';
     barContainer.interactiveChildren = true;
 
     // 星星图标 + 星心等级数字（level，非累积 star）
@@ -939,7 +935,26 @@ export class ShopScene implements Scene {
       gift.eventMode = 'none';
       giftTap.addChild(gift);
     }
-    giftTap.on('pointertap', () => this._showNextStarGiftPreview());
+    // 微信等环境 pointertap 常不触发；按下在礼包热区内再松手（区内或区外）都应打开，与 HTML Pointer 行为一致
+    let giftPointerArmed = false;
+    giftTap.on('pointerdown', (e: PIXI.FederatedPointerEvent) => {
+      e.stopPropagation();
+      giftPointerArmed = true;
+    });
+    const tryOpenGiftPreview = (e: PIXI.FederatedPointerEvent): void => {
+      e.stopPropagation();
+      if (!giftPointerArmed) return;
+      giftPointerArmed = false;
+      setTimeout(() => {
+        if (SceneManager.current?.name !== 'shop') return;
+        this._showNextStarGiftPreview();
+      }, 40);
+    };
+    giftTap.on('pointerup', tryOpenGiftPreview);
+    giftTap.on('pointerupoutside', tryOpenGiftPreview);
+    giftTap.on('pointercancel', () => {
+      giftPointerArmed = false;
+    });
     barContainer.addChild(giftTap);
 
     this.container.addChild(barContainer);
@@ -1035,19 +1050,20 @@ export class ShopScene implements Scene {
       return;
     }
     const nextLv = CurrencyManager.state.level + 1;
-    this._levelUpPopup.show(
-      nextLv,
-      {
-        huayuan: 0,
-        stamina: preview.stamina,
-        diamond: preview.diamond,
-        rewardBoxItems: preview.rewardBoxItems,
-      },
-      {
-        previewOnly: true,
-        bannerTitle: `升至 ${nextLv}星 · 礼包预览`,
-      },
-    );
+    const payload = {
+      huayuan: 0,
+      stamina: preview.stamina,
+      diamond: preview.diamond,
+      rewardBoxItems: preview.rewardBoxItems,
+    };
+    const bannerTitle = `升至 ${nextLv}星 · 礼包预览`;
+    if (!this._levelUpPopup) return;
+    this._levelUpPopup.show(nextLv, payload, {
+      previewOnly: true,
+      bannerTitle,
+    });
+    OverlayManager.bringToFront();
+    this._levelUpPopup.parent?.sortChildren();
   }
 
   /** 家具购买后：星星从全局坐标飞入进度条左侧星标 */
@@ -2288,55 +2304,6 @@ export class ShopScene implements Scene {
     }
     this._pinchPointers.clear();
     this._pinchStartDist = 0;
-  }
-
-  // ─────────────────── 氛围粒子 ───────────────────
-
-  /** 生成飘落的花瓣/光斑粒子 */
-  private _spawnAmbientParticles(w: number, h: number): void {
-    const emojis = ['🌸', '✨', '🌿', '💫', '🍃'];
-    const count = 13;
-
-    for (let i = 0; i < count; i++) {
-      const emoji = emojis[Math.floor(Math.random() * emojis.length)];
-      const particle = new PIXI.Text(emoji, {
-        fontSize: 10 + Math.random() * 10,
-        fontFamily: FONT_FAMILY,
-      });
-      particle.anchor.set(0.5, 0.5);
-      particle.alpha = 0.35 + Math.random() * 0.35;
-      particle.position.set(
-        Math.random() * w,
-        Math.random() * h * 0.6
-      );
-      this._particleContainer.addChild(particle);
-
-      // 缓慢飘落动画（循环）
-      this._animateParticle(particle, w, h);
-    }
-  }
-
-  /** 单个粒子的飘落动画（循环） */
-  private _animateParticle(particle: PIXI.Text, w: number, h: number): void {
-    const duration = 4 + Math.random() * 6;
-    const startX = Math.random() * w;
-    const startY = -20;
-    const endX = startX + (Math.random() - 0.5) * 100;
-    const endY = h * 0.7 + Math.random() * h * 0.3;
-
-    particle.position.set(startX, startY);
-    particle.alpha = 0.3 + Math.random() * 0.3;
-
-    TweenManager.to({
-      target: particle,
-      props: { x: endX, y: endY, alpha: 0 },
-      duration,
-      ease: Ease.linear,
-      onComplete: () => {
-        // 循环
-        this._animateParticle(particle, w, h);
-      },
-    });
   }
 
   // ─────────────────── 动画 ───────────────────

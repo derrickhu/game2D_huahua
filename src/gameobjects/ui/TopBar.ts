@@ -1,7 +1,7 @@
 /**
  * 顶部信息栏
  *
- * 布局：[🌸花愿]  [⚡体力胶囊 … +]  [💠钻石条+加号]  [🏪内购商店图标*]  [🛠️GM*] …（*无白底，仅大图；GM 激活后可见）
+ * 布局：[🌸花愿]  [⚡体力胶囊 … +]  [💠钻石条+加号]  [🏪内购商店图标*]  [GM 槽：隐形热区连点5次激活 → 🛠️] …（商店无白底；🛠️ 仅 GM 激活后可见）
  *
  * 星星进度仅在花店装修场景进度条展示，顶栏不再显示星星槽位。
  *
@@ -12,7 +12,7 @@ import * as PIXI from 'pixi.js';
 import { EventBus } from '@/core/EventBus';
 import { CurrencyManager } from '@/managers/CurrencyManager';
 import { GMManager } from '@/managers/GMManager';
-import { DESIGN_WIDTH, FONT_FAMILY } from '@/config/Constants';
+import { COLORS, DESIGN_WIDTH, FONT_FAMILY } from '@/config/Constants';
 import { TextureCache } from '@/utils/TextureCache';
 import { TweenManager, Ease } from '@/core/TweenManager';
 
@@ -68,9 +68,6 @@ const C = {
   CAPSULE_RIM:    0xE5989E,
   /** 内圈深粉边 */
   CAPSULE_INSET:  0xCE93A8,
-  /** 未满槽浅绿底 */
-  STAMINA_TRACK:  0xDcedc8,
-  STAMINA_FILL:   0x8BC34A,
   PLUS_GREEN:     0x66BB6A,
   PLUS_GREEN_DK:  0x2E7D32,
   PLUS_RING:      0x1B5E20,
@@ -103,6 +100,7 @@ export class TopBar extends PIXI.Container {
     if (!this._opts.hideShopPill) {
       this._buildShopPill();
     }
+    this._buildGmActivateZone();
     this._buildGmButton();
     this._bindEvents();
     this._updateAll();
@@ -136,7 +134,7 @@ export class TopBar extends PIXI.Container {
 
     const innerRim = new PIXI.Graphics();
     innerRim.lineStyle(1.2, C.CAPSULE_INSET, 0.85);
-    innerRim.beginFill(C.STAMINA_TRACK);
+    innerRim.beginFill(COLORS.STAMINA_BAR_TRACK);
     innerRim.drawRoundedRect(ix0, iy0, iw, ih, ir);
     innerRim.endFill();
     this.addChild(innerRim);
@@ -329,7 +327,30 @@ export class TopBar extends PIXI.Container {
     this._gmSlotLeft = SHOP_PILL_LEFT + SHOP_HIT + 10;
   }
 
-  /** GM 调试入口：钻石条与右侧系统菜单之间的空位，避免压在店主区被父级 hitArea 挡点击 */
+  /**
+   * 真机友好：商店图标与右侧系统菜单之间的整条顶栏区域可点；
+   * 未激活 GM 时连点 5 次激活；已激活时点同一区域或 🛠️ 打开面板。
+   * 须先于 _buildGmButton 加入子节点，保证 🛠️ 叠在最上层。
+   */
+  private _buildGmActivateZone(): void {
+    const slotLeft = this._gmSlotLeft;
+    const slotRight = DESIGN_WIDTH - RIGHT_MENU_RESERVE;
+    const w = slotRight - slotLeft;
+    if (w < 20) return;
+
+    const zone = new PIXI.Container();
+    zone.position.set(slotLeft, 0);
+    zone.hitArea = new PIXI.Rectangle(0, 0, w, TOP_BAR_HEIGHT);
+    zone.eventMode = 'static';
+    zone.on('pointertap', (e: PIXI.FederatedPointerEvent) => {
+      e.stopPropagation();
+      if (GMManager.isEnabled) GMManager.openPanel();
+      else GMManager.onTitleTap();
+    });
+    this.addChild(zone);
+  }
+
+  /** GM 调试入口：槽位中央的 🛠️（激活后可见） */
   private _buildGmButton(): void {
     const slotLeft = this._gmSlotLeft;
     const slotRight = DESIGN_WIDTH - RIGHT_MENU_RESERVE;
@@ -429,7 +450,7 @@ export class TopBar extends PIXI.Container {
     g.clear();
     if (fillW < 0.5) return;
     const rr = Math.min(h / 2 - 0.5, fillW / 2);
-    g.beginFill(C.STAMINA_FILL);
+    g.beginFill(COLORS.STAMINA_BAR_FILL);
     g.drawRoundedRect(0, 0, fillW, h, rr);
     g.endFill();
   }

@@ -54,7 +54,7 @@ python3 ~/.cursor/skills/gemini-image-gen/scripts/generate_images.py \
 
 ## 抠图（透明底）
 
-若资源需去底 PNG：**强制**遵循仓库规则 **「抠图（remove-background）— 项目强制规范」**（`remove-background-game-art.mdc`）：使用 **`~/.cursor/skills/remove-background/scripts/`** 下脚本，默认 **`-m birefnet-general`**，**禁止**以色键替代主抠图流程。
+若资源需去底 PNG：**强制**遵循 **`remove-background-game-art.mdc`**：**默认 BiRefNet**（`rembg` **`-m birefnet-general`**，脚本在 **`~/.cursor/skills/remove-background/scripts/`**）。**禁止**以色键/魔棒/颜色阈值作为入库终稿；**除非特殊需要**且已在说明或 PR 中写明例外（规范全文见该规则）。
 
 ## 入库到游戏
 

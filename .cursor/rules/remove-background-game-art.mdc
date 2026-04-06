@@ -1,11 +1,17 @@
 ---
-description: 游戏立绘/UI 等 PNG 抠图强制使用 remove-background skill 与 birefnet-general，禁止以色键替代主抠图流程
+description: 入库透明底 PNG 默认 rembg BiRefNet（birefnet-general）；禁止以色键/魔棒作去底主流程，除非特殊需要并书面说明
 alwaysApply: true
 ---
 
 # 抠图（remove-background）— 项目强制规范
 
-凡需将 **AI 生图 / 格切 / 带底图 PNG** 转为 **透明底游戏资源**（客人胸像、店主、工具图标、UI 切图等），**必须**按 Cursor **`remove-background`** skill 执行，**不得**用奶油色/品红等 **色键当唯一或主要去底手段**（色键仅可作自动化初稿辅助，最终入库仍以 rembg 为准）。
+## 总则（默认写死）
+
+- **默认且唯一推荐的入库去底方式**：**BiRefNet**，通过 **`rembg` + 模型 `birefnet-general`**（即 remove-background skill 里的默认模型）。**自动识别前景/背景**，不依赖底色假设。
+- **禁止**将 **色键 / 魔棒 / 颜色阈值 / 固定 HEX 去底**（如绿幕、`#FF00FF`、`#FFF8F0` 等）作为 **写入 `minigame/` 的最终去底手段**。
+- **例外**：仅当存在**特殊需要**（例如批量自动化草稿、与主美书面约定的极少数资源）时，可暂用色键或脚本色键做**初稿**；**入库前仍须**经 **`birefnet-general` 再抠一遍**，或在任务说明 / PR 中**明确写明**为何本次可豁免（豁免项应极少）。
+
+凡需将 **AI 生图 / 格切 / 带底图 PNG** 转为 **透明底游戏资源**（客人胸像、店主、工具图标、**UI 壳体与切图**、面板插画层等），均适用本条。
 
 完整说明见技能：`~/.cursor/skills/remove-background/SKILL.md`（路径以本机 Cursor skills 为准）。
 
@@ -18,14 +24,15 @@ alwaysApply: true
 
 ## 模型选择（默认）
 
-- **默认且全项目抠图首选**：**`birefnet-general`**（BiRefNet 最高质量档，与店主 sprite、工具图标规范一致）。
+- **默认且全项目抠图首选**：**`birefnet-general`**（**BiRefNet** 最高质量档；与店主 sprite、工具图标、`owner-sprite-art-spec.mdc` 一致）。
 - **`birefnet-general-lite`**：仅当批量极大、可接受略降质时再用。
 - **`isnet-anime`**：仅当 skill 表格中明确适用、且 `birefnet-general` 效果明显不佳时再用，**不得**作为绕过本规范的常规替代。
 - **`u2net`**：非本仓库主流程，勿用于入库资源。
 
 ## 禁止与注意
 
-- **禁止**：仅靠 `#FFF8F0` / 品红等 **颜色阈值** 当最终去底（易产生锯齿、半透明边、与底图色差失效）。
+- **禁止**：仅靠任意 **单色/多色阈值、魔棒、色键类流程** 当**最终**去底（易产生锯齿、半透明边、色差/光照变化即失效）。
+- **允许**：生图阶段用绿幕/品红底**方便后期**——**仅作辅助**；**落盘入库仍以 rembg `birefnet-general` 为准**（见上「总则」）。
 - **允许**：rembg 之后用 **`game-art-pipeline` 的 `crop_trim.py`** 按 **alpha** 裁透明边（`--padding 4` 等）。
 - skill 要求：**勿用 CoreMLExecutionProvider**；脚本已固定 **CPUExecutionProvider** 与 `OMP_NUM_THREADS`，勿改 provider 以免卡死。
 

@@ -41,7 +41,6 @@ import { FlowerEasterEggSystem } from '@/systems/FlowerEasterEggSystem';
 import { MergeStatsSystem } from '@/systems/MergeStatsSystem';
 import { TutorialSystem, TutorialStep } from '@/systems/TutorialSystem';
 import { SoundSystem } from '@/systems/SoundSystem';
-import { GMManager } from '@/managers/GMManager';
 import { GMPanel } from '@/gameobjects/ui/GMPanel';
 import { DecorationManager } from '@/managers/DecorationManager';
 import { StaminaPanel } from '@/gameobjects/ui/StaminaPanel';
@@ -444,10 +443,7 @@ export class MainScene implements Scene {
     this._ownerSprite.position.set(0, 0);
     this._ownerContainer.addChild(this._ownerSprite);
 
-    // GM 激活：连按店主（与顶栏 🛠️ 入口配合，入口已移至 TopBar 避免店主容器小圆 hitArea 挡点击）
-    this._ownerSprite.eventMode = 'static';
-    this._ownerSprite.cursor = 'pointer';
-    this._ownerSprite.on('pointerdown', () => GMManager.onTitleTap());
+    this._ownerSprite.eventMode = 'none';
 
     this._ownerContainer.position.set(ownerCX + SHOP_OWNER_BLOCK_NUDGE_X, BOARD_OWNER_BASE_Y);
     // 点击店主 → 打开换装面板

@@ -11,6 +11,7 @@ import { ITEM_DEFS } from '@/config/ItemConfig';
 import { TextureCache } from '@/utils/TextureCache';
 import { DESIGN_WIDTH, FONT_FAMILY, COLORS } from '@/config/Constants';
 import type { DailyChallengeReward, DailyQuestTemplate } from '@/config/DailyChallengeConfig';
+import { getDailyChallengeTierById } from '@/config/DailyChallengeTierConfig';
 import {
   getNextWeekResetTimeMs,
   msUntilNextDailyResetAt5am,
@@ -50,8 +51,19 @@ const TASK_ROW_PTS_NUDGE_LEFT = 18;
 
 /** 每日总进度条（叠在壳图粉区）：相对壳图显示顶部的位置、宽度占比 */
 const DAILY_HEADER_PROGRESS_FROM_SHELL_TOP_FRAC = 0.188;
+/** 顶栏**单独**进度条宽度（短于下方任务列表，避免顶轨过满） */
+const DAILY_HEADER_TOP_BAR_W_FRAC = 0.56;
+/** 任务列表与迷你条等内容区列宽（与顶栏解耦） */
 const DAILY_HEADER_PROGRESS_W_FRAC = 0.7;
 const DAILY_HEADER_PROGRESS_H = 38;
+/** 顶栏「当日全部任务达成」额外奖图标边长（设计像素） */
+const DAILY_HEADER_ALL_DONE_BONUS_ICON = 56;
+/** 该图标锚在进度条右端内侧，避免与壳体裁切冲突 */
+const DAILY_HEADER_ALL_DONE_BONUS_PAD_RIGHT = 12;
+/** 相对原右缘锚点再向右移（设计像素），与进度条尾拉开 */
+const DAILY_HEADER_ALL_DONE_BONUS_NUDGE_X = 40;
+/** 图标下方数量字号（设计像素），大于周里程碑以突出全日奖 */
+const DAILY_HEADER_ALL_DONE_BONUS_QTY_FONT = 20;
 /** 顶栏进度条 + 倒计时 + 任务列表（含 mask 截断顶）整体下移，避开壳图标题区装饰、降低黄条裁切高度 */
 const DAILY_CHALLENGE_CONTENT_NUDGE_Y = 52;
 /**
@@ -94,6 +106,32 @@ const WEEKLY_REWARD_ICON_DISP = 40;
 const WEEKLY_MILESTONE_QTY_GAP = 4;
 /** 周里程碑图标下数量字号（设计像素） */
 const WEEKLY_MILESTONE_QTY_FONT = 15;
+
+/**
+ * 每日挑战进度条：**顶栏**与**黄任务卡内迷你条**与 **TopBar 体力条**同色（`COLORS.STAMINA_BAR_FILL`）；任务条扁平；**仅周轨**槽内填充 = 黄（`QUEST_PROG_WEEKLY_FILL`）。
+ */
+const QUEST_PROG_SHADOW = 0x9b8ab8;
+const QUEST_PROG_SHADOW_ALPHA = 0.14;
+const QUEST_PROG_TRACK_FILL = 0xfff7fb;
+const QUEST_PROG_TRACK_LINE = 0xe8d0e8;
+const QUEST_PROG_TRACK_LINE_ALPHA = 0.85;
+/** 黄任务卡内迷你条：浅轨 + 扁平填充（= 体力条绿） */
+const QUEST_PROG_TASK_ROW_TRACK_FILL = 0xfff8f6;
+const QUEST_PROG_TASK_ROW_TRACK_LINE = 0xc5e1b2;
+const QUEST_PROG_TASK_ROW_FILL = COLORS.STAMINA_BAR_FILL;
+/** 顶栏：略深草绿底 + 与体力条同色的上半带 */
+const QUEST_PROG_DAILY_FILL_BASE = 0x689f38;
+const QUEST_PROG_DAILY_FILL_HI = COLORS.STAMINA_BAR_FILL;
+const QUEST_PROG_DAILY_FILL_HI_ALPHA = 0.98;
+/** 顶栏 / 任务条草绿填充上白字描边（与 TopBar 加号深绿同系） */
+const QUEST_PROG_DAILY_LABEL_STROKE = 0x2e7d32;
+/** 周轨 UV 槽内底层 + **仅周进度**黄色填充 */
+const QUEST_PROG_WEEKLY_SLOT_BG = 0xede6f2;
+/** 周轨 UV 槽内浅底不透明度（仅槽位 Graphics，不再叠整轨宽垫底） */
+const QUEST_PROG_WEEKLY_SLOT_BG_ALPHA = 1;
+const QUEST_PROG_WEEKLY_FILL = 0xffc94a;
+/** 周轨槽内进度条左右各外扩（设计像素），减轻小鸡端盖处露底 */
+const WEEKLY_RAIL_PROGRESS_FILL_OUTSET_X = 5;
 
 /** 与 `MerchShopPanel` / `DecorationPanel` 顶栏标题一致：34 白字、赭描边、浅投影 */
 /** 任务行内除可点击领奖区外不抢指针，便于列表拖拽滚动 */
@@ -155,17 +193,17 @@ function questPanelMutedCaptionStyle(fontSize: number): Record<string, unknown> 
 }
 
 /**
- * 米色胶囊条内倒计时：无描边，深字 + 极轻投影便于辨认。
+ * 米色胶囊条内倒计时：暖棕字（与「本周积分」说明同系），比纯黑更柔和。
  */
 function questPanelCapsuleCountdownStyle(fontSize: number): Record<string, unknown> {
   return {
     fontFamily: FONT_FAMILY,
     fontWeight: 'bold',
     fontSize,
-    fill: 0x2e2724,
+    fill: 0x6d4c41,
     dropShadow: true,
-    dropShadowColor: 0x1a1412,
-    dropShadowAlpha: 0.14,
+    dropShadowColor: 0x5d4037,
+    dropShadowAlpha: 0.2,
     dropShadowBlur: 1,
     dropShadowDistance: 1,
   };
@@ -343,6 +381,9 @@ export class QuestPanel extends PIXI.Container {
   private _dailyCountdownRow: PIXI.Container | null = null;
   private _dailyCountdownStopwatch: PIXI.Sprite | null = null;
   private _weeklyCountdownText: PIXI.Text | null = null;
+  /** 全日完成额外奖：可领时上下跳 + scale 呼吸，刷新/关闭前 cancel */
+  private _dailyAllCompleteBonusBobRoot: PIXI.Container | null = null;
+  private _dailyAllCompleteBonusBreatheScale: { x: number; y: number } | null = null;
 
   /** 任务列表：canvas 跟手滚动（与 MerchShopPanel 一致） */
   private _questListCanvasListening = false;
@@ -417,6 +458,14 @@ export class QuestPanel extends PIXI.Container {
     this._isOpen = false;
     this._stopCountdownTimer();
     this._finishQuestListCanvasScroll();
+    if (this._dailyAllCompleteBonusBobRoot) {
+      TweenManager.cancelTarget(this._dailyAllCompleteBonusBobRoot);
+      this._dailyAllCompleteBonusBobRoot = null;
+    }
+    if (this._dailyAllCompleteBonusBreatheScale) {
+      TweenManager.cancelTarget(this._dailyAllCompleteBonusBreatheScale);
+      this._dailyAllCompleteBonusBreatheScale = null;
+    }
 
     TweenManager.cancelTarget(this._bg);
     TweenManager.cancelTarget(this._content);
@@ -523,6 +572,15 @@ export class QuestPanel extends PIXI.Container {
     const preservedQuestListScrollY = Math.max(0, this._questListCanvasScrollY);
     this._questListCanvasContent = null;
 
+    if (this._dailyAllCompleteBonusBobRoot) {
+      TweenManager.cancelTarget(this._dailyAllCompleteBonusBobRoot);
+      this._dailyAllCompleteBonusBobRoot = null;
+    }
+    if (this._dailyAllCompleteBonusBreatheScale) {
+      TweenManager.cancelTarget(this._dailyAllCompleteBonusBreatheScale);
+      this._dailyAllCompleteBonusBreatheScale = null;
+    }
+
     /** 须先摘掉 mask，否则会先 destroy 蒙版对象而带 mask 的 Container 仍引用之，下一帧 updateTransform 报 null */
     for (const child of this._content.children) {
       const c = child as PIXI.Container;
@@ -568,12 +626,12 @@ export class QuestPanel extends PIXI.Container {
       this._content.addChild(fb);
     }
 
-    const barW = panelW * DAILY_HEADER_PROGRESS_W_FRAC;
+    const headerBarW = panelW * DAILY_HEADER_TOP_BAR_W_FRAC;
     const barH = DAILY_HEADER_PROGRESS_H;
     const barY = (shellTex
       ? shellY + shellDispH * DAILY_HEADER_PROGRESS_FROM_SHELL_TOP_FRAC
       : panelY + 62) + DAILY_CHALLENGE_CONTENT_NUDGE_Y;
-    const barX = cx - barW / 2;
+    const barX = cx - headerBarW / 2;
     const barBottom = barY + barH;
     /** 倒计时已移到进度条上方胶囊内，顶栏底留白可收紧 */
     const headerEndY = barBottom + 10;
@@ -656,7 +714,7 @@ export class QuestPanel extends PIXI.Container {
     }
 
     const headerProgFrac = this._dailyHeaderProgressFraction();
-    this._drawDailyHeaderProgressBar(barX, barY, barW, barH, headerProgFrac);
+    this._drawDailyHeaderProgressBar(barX, barY, headerBarW, barH, headerProgFrac);
 
     const { done: dailyDone, total: dailyTotal } = this._dailyHeaderTaskCounts();
     const headerProgBright = headerProgFrac >= 0.5;
@@ -665,11 +723,11 @@ export class QuestPanel extends PIXI.Container {
       dailyTotal > 0 ? `${dailyDone}/${dailyTotal}` : '0/0',
       {
         fontSize: headerProgFs,
-        fill: headerProgBright ? 0xffffff : 0x5d4037,
+        fill: headerProgBright ? 0xffffff : 0x6b5a72,
         fontFamily: FONT_FAMILY,
         fontWeight: 'bold',
         ...(headerProgBright
-          ? { stroke: 0x3e2723, strokeThickness: Math.max(2, Math.round(2.5 * (headerProgFs / 20))) }
+          ? { stroke: QUEST_PROG_DAILY_LABEL_STROKE, strokeThickness: Math.max(2, Math.round(2.2 * (headerProgFs / 20))) }
           : {}),
       } as any,
     );
@@ -692,10 +750,12 @@ export class QuestPanel extends PIXI.Container {
     });
 
     const canClaimAny = QuestManager.hasClaimableQuest;
+    let questClaimAllWrap: PIXI.Container | null = null;
     if (canClaimAny) {
       const claimWrap = new PIXI.Container();
+      questClaimAllWrap = claimWrap;
       claimWrap.position.set(
-        barX + barW - QUEST_CLAIM_ALL_FROM_CONTENT_RIGHT + QUEST_CLAIM_ALL_OFFSET_X,
+        barX + headerBarW - QUEST_CLAIM_ALL_FROM_CONTENT_RIGHT + QUEST_CLAIM_ALL_OFFSET_X,
         countdownCy + QUEST_CLAIM_ALL_NUDGE_Y,
       );
       const labelFs = Math.max(15, Math.round(16 * (QUEST_CLAIM_ALL_BTN_MAX_W / 132)));
@@ -823,12 +883,24 @@ export class QuestPanel extends PIXI.Container {
     const footerTop = scrollAreaY + scrollAreaH + footerTopGap;
     this._drawWeeklyFooter(panelX, footerTop, panelW, footerH);
 
+    /** 全日完成奖图标压在进度条/列表/周区之上；再把领取全部与关闭热区提到最前，避免误挡交互 */
+    this._drawDailyAllCompleteBonusHeader(
+      barX,
+      barY,
+      headerBarW,
+      barH,
+      dailyDone,
+      dailyTotal,
+    );
+    if (questClaimAllWrap) this._content.addChild(questClaimAllWrap);
+    this._content.addChild(closeHit);
+
     if (this._isOpen) this._startCountdownTimer();
   }
 
   /**
-   * 每日总进度条（叠在壳图粉区米色槽位上）：阴影 + 浅底轨 + 绿色填充 + 顶高光。
-   * 位置由 `DAILY_HEADER_PROGRESS_*` 常量控制。
+   * 每日总进度条（叠在壳图粉区米色槽位上）：阴影 + 浅底轨 + 草绿填充（体力条同色）+ 顶高光。
+   * 位置由 `DAILY_HEADER_PROGRESS_*` / `DAILY_HEADER_TOP_BAR_W_FRAC` 控制。
    */
   private _drawDailyHeaderProgressBar(
     barX: number,
@@ -842,20 +914,20 @@ export class QuestPanel extends PIXI.Container {
     const inset = 3;
 
     const shadow = new PIXI.Graphics();
-    shadow.beginFill(0x3e2723, 0.2);
+    shadow.beginFill(QUEST_PROG_SHADOW, QUEST_PROG_SHADOW_ALPHA);
     shadow.drawRoundedRect(barX + 2, barY + 3, barW, barH, r);
     shadow.endFill();
     this._content.addChild(shadow);
 
     const track = new PIXI.Graphics();
-    track.lineStyle(2, 0xc4a574, 1);
-    track.beginFill(0xfff8e8, 0.98);
+    track.lineStyle(2, QUEST_PROG_TRACK_LINE, QUEST_PROG_TRACK_LINE_ALPHA);
+    track.beginFill(QUEST_PROG_TRACK_FILL, 0.98);
     track.drawRoundedRect(barX, barY, barW, barH, r);
     track.endFill();
     this._content.addChild(track);
 
     const rim = new PIXI.Graphics();
-    rim.lineStyle(1, 0xffffff, 0.4);
+    rim.lineStyle(1, 0xffffff, 0.55);
     rim.drawRoundedRect(barX + inset, barY + 2, barW - inset * 2, barH * 0.42, Math.max(4, r - inset));
     this._content.addChild(rim);
 
@@ -864,17 +936,27 @@ export class QuestPanel extends PIXI.Container {
     const ir = Math.max(6, r - inset);
     if (p > 0.004 && innerW * p > 8) {
       const fw = Math.max(0, innerW * p - 1);
-      /** 与任务行一致：任意进度均用绿色填充，仅用长度表示完成度 */
-      const fillColor = 0x66bb6a;
       const fill = new PIXI.Graphics();
-      fill.beginFill(fillColor);
+      fill.beginFill(QUEST_PROG_DAILY_FILL_BASE);
       fill.drawRoundedRect(barX + inset, barY + inset, fw, innerH, ir);
       fill.endFill();
       this._content.addChild(fill);
 
+      const hi = new PIXI.Graphics();
+      hi.beginFill(QUEST_PROG_DAILY_FILL_HI, QUEST_PROG_DAILY_FILL_HI_ALPHA);
+      hi.drawRoundedRect(
+        barX + inset,
+        barY + inset,
+        fw,
+        Math.max(2, innerH * 0.5),
+        Math.min(ir, Math.max(3, Math.floor(innerH * 0.25))),
+      );
+      hi.endFill();
+      this._content.addChild(hi);
+
       const gloss = new PIXI.Graphics();
-      gloss.beginFill(0xffffff, 0.28);
-      gloss.drawRoundedRect(barX + inset + 2, barY + inset + 2, Math.max(0, fw - 4), innerH * 0.38, 5);
+      gloss.beginFill(0xffffff, 0.22);
+      gloss.drawRoundedRect(barX + inset + 2, barY + inset + 2, Math.max(0, fw - 4), innerH * 0.34, 5);
       gloss.endFill();
       this._content.addChild(gloss);
     }
@@ -907,6 +989,115 @@ export class QuestPanel extends PIXI.Container {
       if (q.current >= def.target) done += 1;
     }
     return { done, total };
+  }
+
+  /**
+   * 顶栏每日进度条右端：当日全部任务达成后可领的额外奖（与 `DailyChallengeTierConfig.dailyAllCompleteBonus` 一致）。
+   */
+  private _drawDailyAllCompleteBonusHeader(
+    barX: number,
+    barY: number,
+    barW: number,
+    barH: number,
+    dailyDone: number,
+    dailyTotal: number,
+  ): void {
+    const tier = getDailyChallengeTierById(QuestManager.challengeTierId);
+    const bonus = tier.dailyAllCompleteBonus;
+    if (!bonus) return;
+
+    const iconKey = weeklyMilestoneRewardTextureKey(bonus);
+    const iconTex = iconKey ? TextureCache.get(iconKey) : undefined;
+    if (!iconTex) return;
+
+    const allObjectivesDone = dailyTotal > 0 && dailyDone >= dailyTotal;
+    const bonusClaimed = QuestManager.dailyAllCompleteBonusClaimed;
+    const canClaim = allObjectivesDone && !bonusClaimed;
+
+    const disp = DAILY_HEADER_ALL_DONE_BONUS_ICON;
+    const cx =
+      barX +
+      barW -
+      DAILY_HEADER_ALL_DONE_BONUS_PAD_RIGHT -
+      disp * 0.5 +
+      DAILY_HEADER_ALL_DONE_BONUS_NUDGE_X;
+    const cy = barY + barH * 0.5;
+
+    const bonusRoot = new PIXI.Container();
+    bonusRoot.position.set(cx, cy);
+
+    const pulse = new PIXI.Container();
+    bonusRoot.addChild(pulse);
+
+    const icon = new PIXI.Sprite(iconTex);
+    icon.anchor.set(0.5);
+    const ik = disp / Math.max(iconTex.width, iconTex.height);
+    icon.scale.set(ik);
+    icon.position.set(0, 0);
+    if (bonusClaimed) {
+      icon.alpha = 0.5;
+      icon.tint = 0xcccccc;
+    }
+    questRowNoPointerCapture(icon);
+    pulse.addChild(icon);
+
+    const qtyStr = dailyQuestRewardQtyText(bonus);
+    let qtyH = 0;
+    if (qtyStr != null && qtyStr !== '') {
+      const qtyFs = DAILY_HEADER_ALL_DONE_BONUS_QTY_FONT;
+      qtyH = Math.ceil(qtyFs * 1.28);
+      const ct = new PIXI.Text(qtyStr, {
+        fontSize: qtyFs,
+        fill: 0xfff8e1,
+        fontFamily: FONT_FAMILY,
+        fontWeight: 'bold',
+        stroke: 0x3e2723,
+        strokeThickness: 3,
+        dropShadow: true,
+        dropShadowColor: 0x000000,
+        dropShadowAlpha: 0.45,
+        dropShadowBlur: 2,
+        dropShadowDistance: 1,
+      } as any);
+      ct.anchor.set(0.5, 0);
+      ct.position.set(0, disp * 0.5 + WEEKLY_MILESTONE_QTY_GAP);
+      if (bonusClaimed) ct.alpha = 0.55;
+      questRowNoPointerCapture(ct);
+      pulse.addChild(ct);
+    }
+
+    if (bonusClaimed) {
+      const iconHalf = disp * 0.5;
+      addRewardClaimCheckOverlay(pulse, 30, iconHalf);
+    }
+
+    const hitHalfW = Math.max(28, Math.round(disp * 0.55));
+    const hitTop = -disp * 0.5 - 4;
+    const hitH =
+      disp + (qtyStr != null && qtyStr !== '' ? WEEKLY_MILESTONE_QTY_GAP + qtyH : 0) + 8;
+    bonusRoot.hitArea = new PIXI.Rectangle(-hitHalfW, hitTop, hitHalfW * 2, hitH);
+
+    if (canClaim) {
+      bonusRoot.eventMode = 'static';
+      bonusRoot.cursor = 'pointer';
+      bonusRoot.on('pointerdown', (e: PIXI.FederatedPointerEvent) => {
+        e.stopPropagation();
+        const ok = QuestManager.claimDailyAllCompleteBonus();
+        if (!ok) return;
+        const flyItems = questChallengeRewardToFlyItems(bonus);
+        if (flyItems.length > 0) {
+          const startGlobal = bonusRoot.toGlobal(new PIXI.Point(0, 0));
+          RewardFlyCoordinator.playBatch(flyItems, startGlobal);
+        }
+      });
+      this._dailyAllCompleteBonusBobRoot = bonusRoot;
+      this._dailyAllCompleteBonusBreatheScale = pulse.scale;
+      this._startDailyRewardClaimAnim(bonusRoot, cy, 6, pulse.scale);
+    } else {
+      questRowNoPointerCapture(bonusRoot);
+    }
+
+    this._content.addChild(bonusRoot);
   }
 
   /**
@@ -965,7 +1156,7 @@ export class QuestPanel extends PIXI.Container {
   }
 
   /**
-   * 任务行迷你进度条：凹轨质感 + 双色填充（深底浅顶）+ 高光；填充段**始终**绿色，进度仅由长度体现。
+   * 黄任务卡内迷你进度条：**扁平**单色填充 + 浅轨细线（无阴影层、无双色填充、无白高光）。
    */
   private _drawQuestTaskProgressBar(
     parent: PIXI.Container,
@@ -978,65 +1169,27 @@ export class QuestPanel extends PIXI.Container {
     const r = barH / 2;
     const p = Math.max(0, Math.min(1, progress));
     const inset = 2;
-    const shadow = new PIXI.Graphics();
-    shadow.beginFill(0x3e2723, 0.12);
-    shadow.drawRoundedRect(barX + 1, barY + 2, barW, barH, r);
-    shadow.endFill();
-    questRowNoPointerCapture(shadow);
-    parent.addChild(shadow);
 
     const track = new PIXI.Graphics();
-    track.beginFill(0xeae0d4, 1);
+    track.beginFill(QUEST_PROG_TASK_ROW_TRACK_FILL, 1);
     track.drawRoundedRect(barX, barY, barW, barH, r);
     track.endFill();
-    track.lineStyle(1.2, 0xc4a882, 1);
+    track.lineStyle(1, QUEST_PROG_TASK_ROW_TRACK_LINE, 0.88);
     track.drawRoundedRect(barX + 0.5, barY + 0.5, barW - 1, barH - 1, Math.max(1, r - 1));
     questRowNoPointerCapture(track);
     parent.addChild(track);
-
-    const trackShade = new PIXI.Graphics();
-    trackShade.beginFill(0x000000, 0.07);
-    trackShade.drawRoundedRect(barX + inset, barY + barH * 0.5, barW - inset * 2, barH * 0.5 - inset * 0.5, Math.max(3, r - inset));
-    trackShade.endFill();
-    questRowNoPointerCapture(trackShade);
-    parent.addChild(trackShade);
 
     const innerW = barW - inset * 2;
     const innerH = barH - inset * 2;
     const ir = Math.max(5, r - inset);
     if (p > 0.002 && innerW * p > 5) {
       const fw = Math.max(0, innerW * p - 0.5);
-      const deep = 0x2e7d32;
-      const light = 0x72d572;
-
-      const fillBase = new PIXI.Graphics();
-      fillBase.beginFill(deep);
-      fillBase.drawRoundedRect(barX + inset, barY + inset, fw, innerH, ir);
-      fillBase.endFill();
-      questRowNoPointerCapture(fillBase);
-      parent.addChild(fillBase);
-
-      const fillHi = new PIXI.Graphics();
-      const hiH = Math.max(2, innerH * 0.52);
-      const hiR = Math.min(ir, Math.max(3, Math.floor(hiH / 2)));
-      fillHi.beginFill(light, 0.88);
-      fillHi.drawRoundedRect(barX + inset, barY + inset, fw, hiH, hiR);
-      fillHi.endFill();
-      questRowNoPointerCapture(fillHi);
-      parent.addChild(fillHi);
-
-      const rim = new PIXI.Graphics();
-      rim.lineStyle(1, 0xffffff, 0.35);
-      rim.drawRoundedRect(barX + inset + 0.5, barY + inset + 0.5, Math.max(0, fw - 1), innerH - 1, Math.max(3, ir - 1));
-      questRowNoPointerCapture(rim);
-      parent.addChild(rim);
-
-      const gloss = new PIXI.Graphics();
-      gloss.beginFill(0xffffff, 0.28);
-      gloss.drawRoundedRect(barX + inset + 2, barY + inset + 1, Math.max(0, fw - 5), innerH * 0.32, 4);
-      gloss.endFill();
-      questRowNoPointerCapture(gloss);
-      parent.addChild(gloss);
+      const fill = new PIXI.Graphics();
+      fill.beginFill(QUEST_PROG_TASK_ROW_FILL, 1);
+      fill.drawRoundedRect(barX + inset, barY + inset, fw, innerH, ir);
+      fill.endFill();
+      questRowNoPointerCapture(fill);
+      parent.addChild(fill);
     }
   }
 
@@ -1052,10 +1205,11 @@ export class QuestPanel extends PIXI.Container {
     fillColor: number,
     nudgeX = 0,
     nudgeY = 0,
+    slotBleedX = 0,
   ): void {
-    const px = dispX + uv.u * dispW + nudgeX;
+    const px = dispX + uv.u * dispW + nudgeX - slotBleedX;
     const py = dispY + uv.v * dispH + nudgeY;
-    const tw = uv.uw * dispW;
+    const tw = uv.uw * dispW + slotBleedX * 2;
     const th = uv.uh * dispH;
     const r = th / 2;
     const gTrack = new PIXI.Graphics();
@@ -1075,10 +1229,19 @@ export class QuestPanel extends PIXI.Container {
     }
   }
 
-  /** 可领时奖励图标容器上下轻跳，点击领奖 */
-  private _startDailyRewardBob(root: PIXI.Container, baseY: number, amplitude: number): void {
+  /**
+   * 可领时：`root` 上下轻跳；`breatheScale` 上做 scale 呼吸（须与 root 分开 cancel）。
+   */
+  private _startDailyRewardClaimAnim(
+    root: PIXI.Container,
+    baseY: number,
+    amplitude: number,
+    breatheScale: { x: number; y: number },
+  ): void {
     TweenManager.cancelTarget(root);
+    TweenManager.cancelTarget(breatheScale);
     root.y = baseY;
+    breatheScale.x = breatheScale.y = 1;
     const down = (): void => {
       TweenManager.to({
         target: root,
@@ -1097,7 +1260,26 @@ export class QuestPanel extends PIXI.Container {
         onComplete: down,
       });
     };
+    const breatheOut = (): void => {
+      TweenManager.to({
+        target: breatheScale,
+        props: { x: 1, y: 1 },
+        duration: 0.52,
+        ease: Ease.easeInOutQuad,
+        onComplete: breatheIn,
+      });
+    };
+    const breatheIn = (): void => {
+      TweenManager.to({
+        target: breatheScale,
+        props: { x: 1.08, y: 1.08 },
+        duration: 0.52,
+        ease: Ease.easeInOutQuad,
+        onComplete: breatheOut,
+      });
+    };
     down();
+    breatheIn();
   }
 
   private _drawTaskRow(
@@ -1146,7 +1328,7 @@ export class QuestPanel extends PIXI.Container {
     const gapTitleBar = Math.round(6 * layoutS) + Math.round(5 * layoutS);
     const barH = Math.max(26, Math.round(30 * layoutS));
     const rewardIconDisp = Math.round(TASK_ROW_REWARD_ICON_DISP * layoutS);
-    /** 叠在图标右下角，不占图标下方纵向空间 */
+    /** 叠在图标右下角（与周里程碑「图标下居中」区分，避免行内错位） */
     const rewardQtyFs = Math.max(21, Math.round(26 * layoutS));
     const barRowH = Math.max(barH, rewardIconDisp + 2);
     const edgeSafe = Math.round(3 * layoutS);
@@ -1211,11 +1393,11 @@ export class QuestPanel extends PIXI.Container {
     const progOnFill = progress >= 0.5;
     const progT = new PIXI.Text(`${quest.current}/${def.target}`, {
       fontSize: progFs,
-      fill: progOnFill ? 0xffffff : 0x5d4037,
+      fill: progOnFill ? 0xffffff : 0x6b5a72,
       fontFamily: FONT_FAMILY,
       fontWeight: 'bold',
       ...(progOnFill
-        ? { stroke: 0x3e2723, strokeThickness: Math.max(2, Math.round(2.5 * layoutS)) }
+        ? { stroke: QUEST_PROG_DAILY_LABEL_STROKE, strokeThickness: Math.max(2, Math.round(2.2 * layoutS)) }
         : {}),
     } as any);
     progT.anchor.set(0.5, 0.5);
@@ -1233,13 +1415,20 @@ export class QuestPanel extends PIXI.Container {
       rewardRoot.position.set(iconCx, rewardRootY);
       parent.addChild(rewardRoot);
 
+      const pulse = new PIXI.Container();
+      rewardRoot.addChild(pulse);
+
       const icon = new PIXI.Sprite(iconTex);
       icon.anchor.set(0.5);
       const ik = rewardIconDisp / Math.max(iconTex.width, iconTex.height);
       icon.scale.set(ik);
       icon.position.set(0, 0);
+      if (isClaimed) {
+        icon.alpha = 0.5;
+        icon.tint = 0xcccccc;
+      }
       questRowNoPointerCapture(icon);
-      rewardRoot.addChild(icon);
+      pulse.addChild(icon);
 
       if (qtyStr != null && qtyStr !== '') {
         const inset = Math.max(2, Math.round(3 * layoutS));
@@ -1260,14 +1449,15 @@ export class QuestPanel extends PIXI.Container {
         } as any);
         ct.anchor.set(1, 1);
         ct.position.set(half - inset - claimQtyNudge, half - inset - claimQtyNudge);
+        if (isClaimed) ct.alpha = 0.55;
         questRowNoPointerCapture(ct);
-        rewardRoot.addChild(ct);
+        pulse.addChild(ct);
       }
 
       if (isClaimed) {
         const iconHalf = rewardIconDisp * 0.5;
         const checkSide = Math.min(42, Math.max(28, Math.round(32 * layoutS)));
-        addRewardClaimCheckOverlay(rewardRoot, checkSide, iconHalf);
+        addRewardClaimCheckOverlay(pulse, checkSide, iconHalf);
       }
 
       const canClaimReward = isComplete && !isClaimed;
@@ -1290,10 +1480,11 @@ export class QuestPanel extends PIXI.Container {
             RewardFlyCoordinator.playBatch(flyItems, startGlobal);
           }
         });
-        this._startDailyRewardBob(
+        this._startDailyRewardClaimAnim(
           rewardRoot,
           rewardRootY,
           Math.max(4, Math.round(6 * layoutS)),
+          pulse.scale,
         );
       } else {
         questRowNoPointerCapture(rewardRoot);
@@ -1339,7 +1530,8 @@ export class QuestPanel extends PIXI.Container {
     let railDrawW = barW;
     let railDecoScale = 1;
     if (railDecoTex) {
-      const railUniformShrink = 0.86;
+      /** 略缩小轨整体，减轻「粗重」感，与上方细胶囊条更协调 */
+      const railUniformShrink = 0.8;
       railDecoScale = (barW / railDecoTex.width) * railUniformShrink;
       railH = railDecoTex.height * railDecoScale;
       railDrawW = railDecoTex.width * railDecoScale;
@@ -1352,6 +1544,7 @@ export class QuestPanel extends PIXI.Container {
 
     if (railDecoTex) {
       const weeklyRatio = maxT > 0 ? Math.min(1, wp / maxT) : 0;
+
       this._addProgressInTextureSlot(
         railDrawX,
         railTop,
@@ -1359,16 +1552,17 @@ export class QuestPanel extends PIXI.Container {
         railH,
         WEEKLY_RAIL_PROGRESS_UV,
         weeklyRatio,
-        0x5D4037,
-        0.88,
-        0xFFCA28,
+        QUEST_PROG_WEEKLY_SLOT_BG,
+        QUEST_PROG_WEEKLY_SLOT_BG_ALPHA,
+        QUEST_PROG_WEEKLY_FILL,
         WEEKLY_RAIL_PROGRESS_NUDGE_X,
         WEEKLY_RAIL_PROGRESS_NUDGE_Y,
+        WEEKLY_RAIL_PROGRESS_FILL_OUTSET_X,
       );
       const deco = new PIXI.Sprite(railDecoTex);
       deco.scale.set(railDecoScale);
       deco.position.set(railDrawX, railTop);
-      deco.alpha = 0.92;
+      deco.alpha = 0.97;
       this._content.addChild(deco);
     }
 
@@ -1411,8 +1605,8 @@ export class QuestPanel extends PIXI.Container {
         this._content.addChild(dot);
       } else {
         const g = new PIXI.Graphics();
-        g.beginFill(0xffc107);
-        g.lineStyle(2, 0x8d6e63, 1);
+        g.beginFill(0xffe8b8);
+        g.lineStyle(2, QUEST_PROG_TRACK_LINE, 0.9);
         g.drawCircle(cx, dotY, DOT_DISP * 0.45);
         g.endFill();
         this._content.addChild(g);
@@ -1424,6 +1618,9 @@ export class QuestPanel extends PIXI.Container {
         const mileRoot = new PIXI.Container();
         mileRoot.position.set(cx, rewardY);
         this._content.addChild(mileRoot);
+
+        const pulse = new PIXI.Container();
+        mileRoot.addChild(pulse);
 
         const sp = new PIXI.Sprite(rewardTex);
         sp.anchor.set(0.5);
@@ -1437,7 +1634,7 @@ export class QuestPanel extends PIXI.Container {
           sp.alpha = 1;
           sp.tint = 0xffffff;
         }
-        mileRoot.addChild(sp);
+        pulse.addChild(sp);
 
         const wQtyStr = dailyQuestRewardQtyText(m.reward);
         if (wQtyStr != null && wQtyStr !== '') {
@@ -1457,13 +1654,14 @@ export class QuestPanel extends PIXI.Container {
           wq.anchor.set(0.5, 0);
           wq.position.set(0, REWARD_ICON_DISP * 0.5 + WEEKLY_MILESTONE_QTY_GAP);
           wq.eventMode = 'none';
-          mileRoot.addChild(wq);
+          if (done) wq.alpha = 0.55;
+          pulse.addChild(wq);
         }
 
         if (done) {
           const wh = REWARD_ICON_DISP * 0.5;
           const wCheck = Math.min(34, Math.max(24, Math.round(REWARD_ICON_DISP * 0.78)));
-          addRewardClaimCheckOverlay(mileRoot, wCheck, wh);
+          addRewardClaimCheckOverlay(pulse, wCheck, wh);
         }
 
         const hitHalfW = Math.max(28, Math.round(REWARD_ICON_DISP * 0.55));
@@ -1485,7 +1683,7 @@ export class QuestPanel extends PIXI.Container {
               RewardFlyCoordinator.playBatch(flyItems, startGlobal);
             }
           });
-          this._startDailyRewardBob(mileRoot, rewardY, 5);
+          this._startDailyRewardClaimAnim(mileRoot, rewardY, 5, pulse.scale);
         } else {
           mileRoot.eventMode = 'none';
         }

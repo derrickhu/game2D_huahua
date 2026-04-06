@@ -32,7 +32,7 @@ declare const tt: any;
 const _api = typeof wx !== 'undefined' ? wx : typeof tt !== 'undefined' ? tt : null;
 
 const QUEST_STORAGE_KEY = 'huahua_quests';
-const SAVE_VERSION = 3;
+const SAVE_VERSION = 4;
 
 export interface DailyQuestRuntime {
   templateId: string;
@@ -48,6 +48,8 @@ class QuestManagerClass {
   private _challengeTierId = DAILY_CHALLENGE_FULL_TIER_ID;
   private _weeklyPoints = 0;
   private _weeklyMilestonesClaimed = new Set<string>();
+  /** 当日「全部每日任务达成目标」额外奖是否已领（日切随 `_generateDailyQuests` 重置） */
+  private _dailyAllCompleteBonusClaimed = false;
   private _initialized = false;
 
   get dailyTasks(): readonly DailyQuestRuntime[] {
@@ -69,6 +71,10 @@ class QuestManagerClass {
   /** 当前周挑战档 id（`novice` / `mid` / `advanced` / `full`） */
   get challengeTierId(): string {
     return this._challengeTierId;
+  }
+
+  get dailyAllCompleteBonusClaimed(): boolean {
+    return this._dailyAllCompleteBonusClaimed;
   }
 
   getTemplate(id: string): DailyQuestTemplate | undefined {
@@ -137,8 +143,43 @@ class QuestManagerClass {
       current: 0,
       claimed: false,
     }));
+    this._dailyAllCompleteBonusClaimed = false;
     this._save();
     EventBus.emit('quest:refreshed');
+  }
+
+  /** 当日每条每日任务进度均已达标（不要求已领取单条奖励） */
+  private _allDailyObjectivesComplete(): boolean {
+    if (this._dailyTasks.length === 0) return false;
+    for (const q of this._dailyTasks) {
+      const def = getDailyQuestTemplate(q.templateId);
+      if (!def || q.current < def.target) return false;
+    }
+    return true;
+  }
+
+  private _tryGrantDailyAllCompleteBonus(granted: DailyChallengeReward[]): boolean {
+    const tier = getDailyChallengeTierById(this._challengeTierId);
+    const bonus = tier.dailyAllCompleteBonus;
+    if (!bonus || this._dailyAllCompleteBonusClaimed) return false;
+    if (!this._allDailyObjectivesComplete()) return false;
+    this._dailyAllCompleteBonusClaimed = true;
+    this._applyInstantReward(bonus);
+    granted.push({ ...bonus });
+    EventBus.emit('quest:dailyAllCompleteBonusClaimed');
+    return true;
+  }
+
+  /** 领取「当日全部每日任务达成」额外奖（不入周积分） */
+  claimDailyAllCompleteBonus(): boolean {
+    this._checkWeekRollover();
+    this._checkDailyRefresh();
+    const granted: DailyChallengeReward[] = [];
+    if (!this._tryGrantDailyAllCompleteBonus(granted)) return false;
+    this._save();
+    SaveManager.save();
+    EventBus.emit('quest:updated');
+    return true;
   }
 
   private _incrementKind(kind: DailyQuestKind, delta: number): void {
@@ -235,6 +276,8 @@ class QuestManagerClass {
       EventBus.emit('quest:claimed', q.templateId);
     }
 
+    this._tryGrantDailyAllCompleteBonus(granted);
+
     const weekMs = getDailyChallengeTierById(this._challengeTierId).weeklyMilestones;
     for (const m of weekMs) {
       if (this._weeklyMilestonesClaimed.has(m.id)) continue;
@@ -256,10 +299,17 @@ class QuestManagerClass {
   get hasClaimableDaily(): boolean {
     this._checkWeekRollover();
     this._checkDailyRefresh();
+    if (this._hasClaimableDailyAllCompleteBonus()) return true;
     return this._dailyTasks.some(q => {
       const def = getDailyQuestTemplate(q.templateId);
       return def && !q.claimed && q.current >= def.target;
     });
+  }
+
+  private _hasClaimableDailyAllCompleteBonus(): boolean {
+    const tier = getDailyChallengeTierById(this._challengeTierId);
+    if (!tier.dailyAllCompleteBonus || this._dailyAllCompleteBonusClaimed) return false;
+    return this._allDailyObjectivesComplete();
   }
 
   get hasClaimableWeeklyMilestone(): boolean {
@@ -287,6 +337,7 @@ class QuestManagerClass {
       challengeTierId: this._challengeTierId,
       weeklyPoints: this._weeklyPoints,
       weeklyMilestonesClaimed: [...this._weeklyMilestonesClaimed],
+      dailyAllCompleteBonusClaimed: this._dailyAllCompleteBonusClaimed,
     };
     try {
       _api?.setStorageSync(QUEST_STORAGE_KEY, JSON.stringify(data));
@@ -300,7 +351,7 @@ class QuestManagerClass {
       if (raw) {
         const data = JSON.parse(raw);
         const fileVer = data.version | 0;
-        if ((fileVer === 2 || fileVer === SAVE_VERSION) && data.dailyTasks?.length) {
+        if ((fileVer === 2 || fileVer === 3 || fileVer === SAVE_VERSION) && data.dailyTasks?.length) {
           this._dailyLocalDate = data.dailyLocalDate || '';
           this._dailyTasks = (data.dailyTasks || [])
             .filter((q: DailyQuestRuntime) => getDailyQuestTemplate(q.templateId))
@@ -312,6 +363,7 @@ class QuestManagerClass {
           this._weekId = data.weekId || '';
           this._weeklyPoints = Math.max(0, data.weeklyPoints | 0);
           this._weeklyMilestonesClaimed = new Set(data.weeklyMilestonesClaimed || []);
+          this._dailyAllCompleteBonusClaimed = !!data.dailyAllCompleteBonusClaimed;
 
           if (fileVer === 2) {
             migratedFromV2 = true;

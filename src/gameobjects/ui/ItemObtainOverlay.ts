@@ -70,10 +70,23 @@ const DIRECT_CURRENCY_ICON: Record<'stamina' | 'huayuan' | 'diamond', string> = 
   diamond: 'icon_gem',
 };
 
+export interface ItemObtainRewardCellOptions {
+  /** 数量/金额字号，默认 18 */
+  qtyFontSize?: number;
+  /** 与图标缩放、数字纵向位置一致，默认与布局 CELL 相同 */
+  cellSize?: number;
+}
+
 /** 单格展示（许愿池 / 升级奖励等共用） */
-export function createItemObtainRewardCell(entry: ItemObtainEntry): PIXI.Container {
+export function createItemObtainRewardCell(
+  entry: ItemObtainEntry,
+  options?: ItemObtainRewardCellOptions,
+): PIXI.Container {
   const root = new PIXI.Container();
   root.eventMode = 'none';
+  const cell = options?.cellSize ?? CELL;
+  const qtyFs = options?.qtyFontSize ?? 18;
+  const strokeT = qtyFs >= 22 ? 2.5 : 2;
 
   let texKey = '';
   let qtyStr = '';
@@ -90,7 +103,7 @@ export function createItemObtainRewardCell(entry: ItemObtainEntry): PIXI.Contain
   if (tex?.width) {
     const sp = new PIXI.Sprite(tex);
     sp.anchor.set(0.5);
-    const sc = Math.min((CELL - 10) / tex.width, (CELL - 10) / tex.height);
+    const sc = Math.min((cell - 10) / tex.width, (cell - 10) / tex.height);
     sp.scale.set(sc);
     root.addChild(sp);
   } else {
@@ -99,12 +112,12 @@ export function createItemObtainRewardCell(entry: ItemObtainEntry): PIXI.Contain
     root.addChild(ph);
   }
   const cnt = new PIXI.Text(qtyStr, {
-    fontSize: 18,
+    fontSize: qtyFs,
     fill: 0xffeb3b,
     fontFamily: FONT_FAMILY,
     fontWeight: 'bold',
     stroke: 0x4e342e,
-    strokeThickness: 2,
+    strokeThickness: strokeT,
     dropShadow: true,
     dropShadowColor: 0x000000,
     dropShadowAlpha: 0.45,
@@ -112,7 +125,7 @@ export function createItemObtainRewardCell(entry: ItemObtainEntry): PIXI.Contain
     dropShadowDistance: 1,
   });
   cnt.anchor.set(0.5, 0);
-  cnt.position.set(0, CELL * 0.36);
+  cnt.position.set(0, cell * 0.36);
   root.addChild(cnt);
   return root;
 }

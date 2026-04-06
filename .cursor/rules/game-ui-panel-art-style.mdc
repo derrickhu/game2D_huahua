@@ -34,8 +34,8 @@ alwaysApply: true
 - 正文用 **英文**；**不要**在发给模型的 prompt 文件里写 `#` 注释行（会进 API）。
 - 原型 / 底板类资源：优先要求 **无可读文字与数字**（避免乱码），文案由工程内 `PIXI.Text` 叠加。
 - **模型**：与项目统一，面板整页原型用 **`gemini-3.1-flash-image-preview`**，**`--aspect-ratio 9:16`**（竖屏全屏弹层）。
-- **范本提示词**（可节选合并进新面板 prompt）：`docs/prompt/daily_challenge_panel_shell_nb2_prompt.txt`（粉紫框 + **中间淡粉纯色实底**（非镂空）+ 金标题 + 红关闭 + 空胶囊条；**仅弹窗外围**用绿幕 0,255,0 便于抠图，窗内不得出现绿色）。
-- **分层拆图**：大面板可拆「壳 + 内容区底板 + 列表行 + 底栏进度轨」等多张 PNG 拼接，每张 prompt 须写明 **透明底** 或 **品红底 `#FF00FF`** 以便抠图（入库前仍走 rembg 流程，**勿**以色键为唯一去底手段）。
+- **范本提示词**（可节选合并进新面板 prompt）：`docs/prompt/daily_challenge_panel_shell_nb2_prompt.txt`（粉紫框 + **中间淡粉纯色实底**（非镂空）+ 金标题 + 红关闭 + 空胶囊条；**仅弹窗外围**可用绿幕 0,255,0 **辅助**生图——**入库去底仍以 BiRefNet / `birefnet-general` 为准**，见 `remove-background-game-art.mdc`，窗内不得出现绿色）。
+- **分层拆图**：大面板可拆「壳 + 内容区底板 + 列表行 + 底栏进度轨」等多张 PNG 拼接，每张 prompt 可写明 **透明底** 或 **品红底 `#FF00FF`** 方便人工区分图层；**禁止**仅靠色键当终稿，**必须**按 **`remove-background-game-art.mdc`** 用 **`birefnet-general`** 抠图入库。
 
 ## 资产落盘
 

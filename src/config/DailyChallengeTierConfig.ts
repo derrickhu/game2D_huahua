@@ -8,6 +8,7 @@ import {
   getDailyQuestTemplate,
   seededShuffle,
   WEEKLY_MILESTONES,
+  type DailyChallengeReward,
   type DailyQuestTemplate,
   type WeeklyMilestoneDef,
 } from '@/config/DailyChallengeConfig';
@@ -47,6 +48,11 @@ export interface DailyChallengeTierDef {
   /** 当日从此池 shuffle 下发（条数 = 池长度） */
   dailyTemplateIds: readonly string[];
   weeklyMilestones: WeeklyMilestoneDef[];
+  /**
+   * 当日所有每日任务均达成目标后可额外领取一次（日切重置；与单条是否已领无关）。
+   * 未配置则面板不显示该槽位。
+   */
+  dailyAllCompleteBonus?: DailyChallengeReward;
 }
 
 /** 新手：globalLevel 1–5 */
@@ -55,6 +61,7 @@ const TIER_NOVICE: DailyChallengeTierDef = {
   minGlobalLevel: 1,
   maxGlobalLevel: 5,
   dailyTemplateIds: NOVICE_DAILY_IDS,
+  dailyAllCompleteBonus: { stamina: 50 },
   weeklyMilestones: [
     { id: 'wm_n_100', threshold: 100, reward: { stamina: 20 } },
     { id: 'wm_n_280', threshold: 280, reward: { stamina: 40 } },
@@ -69,6 +76,7 @@ const TIER_MID: DailyChallengeTierDef = {
   minGlobalLevel: 6,
   maxGlobalLevel: 10,
   dailyTemplateIds: MID_DAILY_IDS,
+  dailyAllCompleteBonus: { stamina: 80 },
   weeklyMilestones: [
     { id: 'wm_m_150', threshold: 150, reward: { stamina: 30 } },
     { id: 'wm_m_450', threshold: 450, reward: { itemId: 'stamina_chest_2', itemCount: 1 } },
@@ -84,6 +92,7 @@ const TIER_ADVANCED: DailyChallengeTierDef = {
   minGlobalLevel: 11,
   maxGlobalLevel: 19,
   dailyTemplateIds: FULL_DAILY_IDS,
+  dailyAllCompleteBonus: { stamina: 90 },
   weeklyMilestones: [
     { id: 'wm_a_100', threshold: 100, reward: { stamina: 50 } },
     { id: 'wm_a_350', threshold: 350, reward: { itemId: 'chest_2', itemCount: 1 } },
@@ -100,6 +109,7 @@ const TIER_FULL: DailyChallengeTierDef = {
   minGlobalLevel: 20,
   maxGlobalLevel: 99999,
   dailyTemplateIds: FULL_DAILY_IDS,
+  dailyAllCompleteBonus: { stamina: 100 },
   weeklyMilestones: WEEKLY_MILESTONES.map(m => ({ ...m })),
 };
 
@@ -142,6 +152,8 @@ export function dailyMaxWeeklyPointsForTier(tier: DailyChallengeTierDef): number
 
 /**
  * 按档生成当日任务顺序（与 periodId、tier 绑定，可复现）。
+ * 先对池子做种子 shuffle，再按 `KIND_ORDER` 分组排序，避免同类任务（如两条花愿）被拆到列表两端。
+ * 同类内部的先后仍由当次 shuffle 决定。
  */
 export function pickDailyTemplatesForPeriod(periodId: string, tier: DailyChallengeTierDef): DailyQuestTemplate[] {
   const pool: DailyQuestTemplate[] = [];
@@ -149,7 +161,20 @@ export function pickDailyTemplatesForPeriod(periodId: string, tier: DailyChallen
     const def = getDailyQuestTemplate(id);
     if (def) pool.push(def);
   }
-  return seededShuffle(pool, `${periodId}|${tier.id}`);
+  const seed = `${periodId}|${tier.id}`;
+  const shuffled = seededShuffle(pool, seed);
+  const kindRank = (k: DailyQuestTemplate['kind']): number => {
+    const i = KIND_ORDER.indexOf(k);
+    return i >= 0 ? i : 99;
+  };
+  return shuffled
+    .map((t, idx) => ({ t, idx }))
+    .sort((a, b) => {
+      const dk = kindRank(a.t.kind) - kindRank(b.t.kind);
+      if (dk !== 0) return dk;
+      return a.idx - b.idx;
+    })
+    .map(x => x.t);
 }
 
 function assertTierWeeklyBalance(tier: DailyChallengeTierDef): void {

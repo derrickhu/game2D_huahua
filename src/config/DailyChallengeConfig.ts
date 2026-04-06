@@ -35,26 +35,26 @@ export interface WeeklyMilestoneDef {
 }
 
 export const DAILY_QUEST_TEMPLATES: DailyQuestTemplate[] = [
-  // 花愿 ×4
-  { id: 'hy_1', kind: 'huayuan', target: 400, weeklyPoints: 10, reward: { stamina: 10 } },
-  { id: 'hy_2', kind: 'huayuan', target: 1200, weeklyPoints: 15, reward: { diamond: 2 } },
+  // 花愿 ×4（目标 500 / 1500 / 3000 / 6000）
+  { id: 'hy_1', kind: 'huayuan', target: 500, weeklyPoints: 10, reward: { stamina: 10 } },
+  { id: 'hy_2', kind: 'huayuan', target: 1500, weeklyPoints: 15, reward: { diamond: 2 } },
   { id: 'hy_3', kind: 'huayuan', target: 3000, weeklyPoints: 22, reward: { stamina: 30 } },
-  { id: 'hy_4', kind: 'huayuan', target: 5500, weeklyPoints: 28, reward: { diamond: 5 } },
-  // 合成 ×4
+  { id: 'hy_4', kind: 'huayuan', target: 6000, weeklyPoints: 28, reward: { diamond: 5 } },
+  // 合成 ×4（目标 50 / 100 / 300 / 500）
   { id: 'mg_1', kind: 'merge', target: 50, weeklyPoints: 10, reward: { itemId: 'flower_fresh_4', itemCount: 1 } },
   { id: 'mg_2', kind: 'merge', target: 100, weeklyPoints: 15, reward: { itemId: 'flower_green_4', itemCount: 1 } },
-  { id: 'mg_3', kind: 'merge', target: 200, weeklyPoints: 22, reward: { itemId: 'chest_1', itemCount: 1 } },
+  { id: 'mg_3', kind: 'merge', target: 300, weeklyPoints: 22, reward: { itemId: 'chest_1', itemCount: 1 } },
   { id: 'mg_4', kind: 'merge', target: 500, weeklyPoints: 28, reward: { itemId: 'diamond_bag_1', itemCount: 1 } },
-  // 订单 ×4
+  // 订单 ×4（目标 10 / 35 / 50 / 60）：10体力、5级绿植、钻石
   { id: 'dv_1', kind: 'deliver', target: 10, weeklyPoints: 10, reward: { stamina: 10 } },
-  { id: 'dv_2', kind: 'deliver', target: 30, weeklyPoints: 15, reward: { diamond: 5 } },
-  { id: 'dv_3', kind: 'deliver', target: 50, weeklyPoints: 22, reward: { itemId: 'stamina_chest_1', itemCount: 1 } },
-  { id: 'dv_4', kind: 'deliver', target: 60, weeklyPoints: 28, reward: { itemId: 'diamond_bag_1', itemCount: 1 } },
-  // 钻石 ×4
-  { id: 'dm_1', kind: 'diamond', target: 10, weeklyPoints: 10, reward: { itemId: 'flower_fresh_5', itemCount: 1 } },
-  { id: 'dm_2', kind: 'diamond', target: 40, weeklyPoints: 15, reward: { itemId: 'flower_fresh_6', itemCount: 1 } },
-  { id: 'dm_3', kind: 'diamond', target: 80, weeklyPoints: 22, reward: { itemId: 'stamina_chest_2', itemCount: 1 } },
-  { id: 'dm_4', kind: 'diamond', target: 150, weeklyPoints: 28, reward: { itemId: LUCKY_COIN_ITEM_ID, itemCount: 1 } },
+  { id: 'dv_2', kind: 'deliver', target: 35, weeklyPoints: 15, reward: { itemId: 'flower_green_5', itemCount: 1 } },
+  { id: 'dv_3', kind: 'deliver', target: 50, weeklyPoints: 22, reward: { diamond: 5 } },
+  { id: 'dv_4', kind: 'deliver', target: 60, weeklyPoints: 28, reward: { diamond: 10 } },
+  // 钻石 ×4（目标 5 / 10 / 20 / 50）：体力、1级体力宝箱、幸运金币
+  { id: 'dm_1', kind: 'diamond', target: 5, weeklyPoints: 10, reward: { stamina: 10 } },
+  { id: 'dm_2', kind: 'diamond', target: 10, weeklyPoints: 15, reward: { stamina: 20 } },
+  { id: 'dm_3', kind: 'diamond', target: 20, weeklyPoints: 22, reward: { itemId: 'stamina_chest_1', itemCount: 1 } },
+  { id: 'dm_4', kind: 'diamond', target: 50, weeklyPoints: 28, reward: { itemId: LUCKY_COIN_ITEM_ID, itemCount: 1 } },
 ];
 
 /** 单日全领满可得周积分（16 条之和，满档「完全版」） */

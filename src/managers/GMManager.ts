@@ -4,7 +4,7 @@
  * 提供游戏内调试功能：
  * - 清除所有数据 / 重置游戏
  * - 增减货币（金币、钻石、体力、花愿、许愿硬币）
- * - 设置等级/经验
+ * - 设置等级/星星
  * - 跳过/重置新手引导
  * - 解锁/锁定所有格子
  * - 填充棋盘物品
@@ -14,7 +14,7 @@
  * - 完成所有每日任务
  * - 重置签到
  *
- * 激活方式：连按招牌 5 次 → 弹出 GM 面板
+ * 激活方式：顶栏「内购商店图标」与右侧系统菜单之间的空白区连点 5 次 → 出现 🛠️；再点打开面板（开发者工具可自动激活）
  */
 import { ENABLE_CHALLENGE_LEVEL_FEATURE } from '@/config/FeatureFlags';
 import { EventBus } from '@/core/EventBus';
@@ -24,8 +24,6 @@ import { CurrencyManager } from './CurrencyManager';
 import { SaveManager } from './SaveManager';
 import { FlowerSignTicketManager } from './FlowerSignTicketManager';
 import { CheckInManager } from './CheckInManager';
-import { QuestManager } from './QuestManager';
-import { IdleManager } from './IdleManager';
 import { LevelManager } from './LevelManager';
 import { DecorationManager } from './DecorationManager';
 import { EventManager } from './EventManager';
@@ -137,7 +135,7 @@ class GMManagerClass {
     this._loadState();
   }
 
-  /** 记录连按（招牌点击时调用） */
+  /** 记录连按（顶栏 GM 槽隐形热区点击时调用） */
   onTitleTap(): void {
     const now = Date.now();
     if (now - this._lastTapTime > 1500) {
@@ -161,7 +159,7 @@ class GMManagerClass {
   /** 打开 GM 面板 */
   openPanel(): void {
     if (!this._enabled) {
-      console.warn('[GM] GM模式未激活，请连按招牌5次');
+      console.warn('[GM] GM模式未激活：请在顶栏商店与系统菜单之间空白区连点 5 次');
       return;
     }
     EventBus.emit('gm:open');
@@ -335,13 +333,13 @@ class GMManagerClass {
     });
 
     this._commands.push({
-      id: 'add_exp_500',
+      id: 'add_star_10',
       group: '💰 货币调整',
-      name: '✨ +500 经验',
-      desc: '增加500经验值（可能触发升级）',
+      name: '⭐ +10 星星',
+      desc: '增加 10 点全局星星（可能升星）',
       execute: () => {
         CurrencyManager.addStar(10);
-        return `✅ +10星星，当前 ${LevelManager.level}星 ⭐${CurrencyManager.state.star}`;
+        return `✅ +10⭐，当前 ${LevelManager.level}星，累计 ⭐${CurrencyManager.state.star}`;
       },
     });
 
@@ -759,8 +757,8 @@ class GMManagerClass {
         const openCount = cells.filter(c => c.state === CellState.OPEN).length;
         const itemCount = cells.filter(c => c.itemId).length;
         const lines = [
-          `${cs.level}星 ⭐${cs.star}`,
-          `💰${cs.gold} 💎${cs.diamond} ⚡${cs.stamina} 🌸${cs.huayuan}`,
+          `${cs.level}星 累计⭐${cs.star}`,
+          `🌸花愿${cs.huayuan} 💎${cs.diamond} ⚡${cs.stamina} 🪙许愿${FlowerSignTicketManager.count}`,
           `棋盘: ${openCount}格开放, ${itemCount}物品`,
           `签到: 连续${CheckInManager.consecutiveDays}天`,
           `装修: ${DecorationManager.unlockedCount}/${DecorationManager.totalCount}解锁`,
@@ -922,18 +920,6 @@ class GMManagerClass {
     });
 
     this._commands.push({
-      id: 'add_event_points',
-      group: '🎪 新系统',
-      name: '🎟️ +500 活动积分',
-      desc: '增加活动积分',
-      execute: () => {
-        if (!EventManager.hasActiveEvent) return '❌ 没有进行中的活动';
-        // 通过完成任务间接增加（直接设置积分需要内部方法）
-        return '请通过完成活动任务获取积分';
-      },
-    });
-
-    this._commands.push({
       id: 'open_collection',
       group: '🎪 新系统',
       name: '📖 打开图鉴',
@@ -955,19 +941,18 @@ class GMManagerClass {
       },
     });
 
-    this._commands.push({
-      id: 'open_challenge',
-      group: '🎪 新系统',
-      name: '🏆 打开挑战关卡',
-      desc: '打开挑战关卡面板',
-      execute: () => {
-        if (!ENABLE_CHALLENGE_LEVEL_FEATURE) {
-          return '⏸️ 挑战关卡已关闭：将 FeatureFlags.ENABLE_CHALLENGE_LEVEL_FEATURE 设为 true 可恢复';
-        }
-        EventBus.emit('panel:openChallenge');
-        return '✅ 已打开挑战关卡';
-      },
-    });
+    if (ENABLE_CHALLENGE_LEVEL_FEATURE) {
+      this._commands.push({
+        id: 'open_challenge',
+        group: '🎪 新系统',
+        name: '🏆 打开挑战关卡',
+        desc: '打开挑战关卡面板',
+        execute: () => {
+          EventBus.emit('panel:openChallenge');
+          return '✅ 已打开挑战关卡';
+        },
+      });
+    }
 
     this._commands.push({
       id: 'disable_gm',
@@ -977,7 +962,7 @@ class GMManagerClass {
       execute: () => {
         this._enabled = false;
         this._saveState();
-        return '✅ GM模式已关闭，连按招牌5次可再次激活';
+        return '✅ GM模式已关闭，顶栏商店与菜单间空白区连点 5 次可再次激活';
       },
     });
   }

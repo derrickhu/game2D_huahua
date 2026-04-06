@@ -1,7 +1,7 @@
 /**
  * GM 调试面板 - 游戏内 GM 工具
  *
- * 激活方式：连按店铺招牌 5 次
+ * 激活方式：顶栏「内购商店」与右侧系统菜单之间的空白区连点 5 次（见 TopBar 隐形热区）
  *
  * 滚动：与 DecorationPanel 一致使用 stage 级 pointermove（微信子节点 pointermove 不可靠）；
  * 列表区按下后移动超过阈值视为滑动；否则松手视为点击。
@@ -14,12 +14,13 @@ import { EventBus } from '@/core/EventBus';
 import { GMManager, GMCommand } from '@/managers/GMManager';
 import { DESIGN_WIDTH, FONT_FAMILY } from '@/config/Constants';
 
-const BTN_H = 50;
-const BTN_GAP = 7;
-const PAD = 18;
-const RIGHT_CHROME = 44;
-const SCROLL_SLOP_PX = 14;
-const SCROLL_PAGE_STEP = 140;
+/** 指令按钮高度（标题一行 + 说明约两行） */
+const BTN_H = 78;
+const BTN_GAP = 10;
+const PAD = 22;
+const RIGHT_CHROME = 52;
+const SCROLL_SLOP_PX = 16;
+const SCROLL_PAGE_STEP = 180;
 
 const C = {
   panelBg: 0x1a1d33,
@@ -135,7 +136,7 @@ export class GMPanel extends PIXI.Container {
 
   private _thumbLength(): number {
     if (this._maxScrollY <= 0 || !this._sbTrackH) return this._sbTrackH;
-    const minThumb = 36;
+    const minThumb = 44;
     const ratio = this._sbTrackH / (this._sbTrackH + this._maxScrollY);
     return Math.max(minThumb, Math.floor(this._sbTrackH * ratio));
   }
@@ -164,10 +165,11 @@ export class GMPanel extends PIXI.Container {
     const y0 = t * range;
     this._sbThumb.clear();
     this._sbThumb.beginFill(C.thumb, 0.95);
-    this._sbThumb.drawRoundedRect(0, y0, 10, th, 5);
+    const barW = 12;
+    this._sbThumb.drawRoundedRect(0, y0, barW, th, 6);
     this._sbThumb.endFill();
     this._sbThumb.position.set(this._sbTrackX, this._sbTrackY);
-    this._sbThumb.hitArea = new PIXI.Rectangle(0, y0, 10, th);
+    this._sbThumb.hitArea = new PIXI.Rectangle(0, y0, barW, th);
   }
 
   open(): void {
@@ -226,53 +228,60 @@ export class GMPanel extends PIXI.Container {
     this._sbTrack = null;
 
     const cx = DESIGN_WIDTH / 2;
-    const panelW = Math.min(680, DESIGN_WIDTH - 28);
-    const panelH = Math.min(Game.logicHeight - 72, 880);
+    const panelW = Math.min(720, DESIGN_WIDTH - 24);
+    const panelH = Math.min(Game.logicHeight - 56, 900);
     const panelX = cx - panelW / 2;
     const panelY = (Game.logicHeight - panelH) / 2;
 
     const bg = new PIXI.Graphics();
     bg.beginFill(C.panelBg, 0.98);
-    bg.drawRoundedRect(panelX, panelY, panelW, panelH, 18);
+    bg.drawRoundedRect(panelX, panelY, panelW, panelH, 20);
     bg.endFill();
-    bg.lineStyle(1.5, C.panelStroke, 0.9);
-    bg.drawRoundedRect(panelX, panelY, panelW, panelH, 18);
+    bg.lineStyle(2, C.panelStroke, 0.92);
+    bg.drawRoundedRect(panelX, panelY, panelW, panelH, 20);
     bg.eventMode = 'static';
     bg.on('pointerdown', (e: PIXI.FederatedPointerEvent) => e.stopPropagation());
     this._content.addChild(bg);
 
-    const headerH = 52;
+    const headerH = 58;
     const titleBg = new PIXI.Graphics();
     titleBg.beginFill(C.headerBg, 1);
-    titleBg.drawRoundedRect(panelX, panelY, panelW, headerH, 18);
+    titleBg.drawRoundedRect(panelX, panelY, panelW, headerH, 20);
     titleBg.endFill();
     titleBg.beginFill(C.headerBg, 1);
-    titleBg.drawRect(panelX, panelY + headerH - 18, panelW, 18);
+    titleBg.drawRect(panelX, panelY + headerH - 20, panelW, 20);
     titleBg.endFill();
     this._content.addChild(titleBg);
 
     const title = new PIXI.Text('GM 调试', {
-      fontSize: 20,
+      fontSize: 26,
       fill: C.title,
       fontFamily: FONT_FAMILY,
       fontWeight: 'bold',
+      letterSpacing: 0.5,
     });
     title.anchor.set(0, 0.5);
     title.position.set(panelX + PAD, panelY + headerH / 2);
     this._content.addChild(title);
 
-    const sub = new PIXI.Text('在列表上上下拖动，或点右侧 ▲▼ / 轨道 / 滑块', {
-      fontSize: 11,
+    const sub = new PIXI.Text('列表上下拖动浏览；点按钮执行；右侧 ▲▼ / 轨道 / 滑块滚动', {
+      fontSize: 14,
       fill: C.muted,
       fontFamily: FONT_FAMILY,
+      lineHeight: 20,
       wordWrap: true,
       wordWrapWidth: panelW - PAD * 2 - RIGHT_CHROME - 8,
     });
-    sub.position.set(panelX + PAD, panelY + headerH + 4);
+    sub.position.set(panelX + PAD, panelY + headerH + 6);
     this._content.addChild(sub);
 
     const closeBtn = new PIXI.Text('关闭', {
-      fontSize: 16, fill: C.accent, fontFamily: FONT_FAMILY, fontWeight: 'bold',
+      fontSize: 20,
+      fill: C.accent,
+      fontFamily: FONT_FAMILY,
+      fontWeight: 'bold',
+      stroke: 0x1a1d33,
+      strokeThickness: 3,
     });
     closeBtn.anchor.set(1, 0.5);
     closeBtn.position.set(panelX + panelW - PAD, panelY + headerH / 2);
@@ -284,18 +293,22 @@ export class GMPanel extends PIXI.Container {
     });
     this._content.addChild(closeBtn);
 
-    const footerH = 42;
-    const scrollAreaY = panelY + headerH + 30;
-    const scrollAreaH = panelH - headerH - 30 - footerH;
+    const footerH = 56;
+    const scrollAreaY = panelY + headerH + 38;
+    const scrollAreaH = panelH - headerH - 38 - footerH;
 
     this._resultText = new PIXI.Text('', {
-      fontSize: 12,
+      fontSize: 16,
       fill: C.ok,
       fontFamily: FONT_FAMILY,
+      fontWeight: 'bold',
+      lineHeight: 22,
       wordWrap: true,
       wordWrapWidth: panelW - PAD * 2,
+      stroke: 0x0d1118,
+      strokeThickness: 2,
     });
-    this._resultText.position.set(panelX + PAD, panelY + panelH - footerH + 6);
+    this._resultText.position.set(panelX + PAD, panelY + panelH - footerH + 8);
     this._content.addChild(this._resultText);
 
     const mask = new PIXI.Graphics();
@@ -324,15 +337,16 @@ export class GMPanel extends PIXI.Container {
 
     for (const group of groups) {
       const groupTitle = new PIXI.Text(group, {
-        fontSize: 14,
+        fontSize: 17,
         fill: C.group,
         fontFamily: FONT_FAMILY,
         fontWeight: 'bold',
+        letterSpacing: 0.3,
       });
       groupTitle.position.set(panelX + PAD, curY);
       groupTitle.eventMode = 'none';
       this._scrollContainer.addChild(groupTitle);
-      curY += 22;
+      curY += 28;
 
       const commands = GMManager.getCommandsByGroup(group);
       for (const cmd of commands) {
@@ -349,18 +363,18 @@ export class GMPanel extends PIXI.Container {
     this._maxScrollY = Math.max(0, totalContentH - scrollAreaH);
     this._scrollContainer.y = -this._scrollY;
 
-    this._sbTrackX = panelX + panelW - PAD - 12;
-    this._sbTrackY = scrollAreaY + 36;
-    this._sbTrackH = Math.max(40, scrollAreaH - 72);
+    this._sbTrackX = panelX + panelW - PAD - 14;
+    this._sbTrackY = scrollAreaY + 42;
+    this._sbTrackH = Math.max(48, scrollAreaH - 84);
 
-    const btnUp = this._makeArrowBtn('▲', this._sbTrackX - 5, scrollAreaY + 4);
+    const btnUp = this._makeArrowBtn('▲', this._sbTrackX - 6, scrollAreaY + 4);
     btnUp.on('pointerdown', (e: PIXI.FederatedPointerEvent) => {
       e.stopPropagation();
       this._scrollBy(-SCROLL_PAGE_STEP);
     });
     this._content.addChild(btnUp);
 
-    const btnDown = this._makeArrowBtn('▼', this._sbTrackX - 5, scrollAreaY + scrollAreaH - 36);
+    const btnDown = this._makeArrowBtn('▼', this._sbTrackX - 6, scrollAreaY + scrollAreaH - 40);
     btnDown.on('pointerdown', (e: PIXI.FederatedPointerEvent) => {
       e.stopPropagation();
       this._scrollBy(SCROLL_PAGE_STEP);
@@ -369,11 +383,11 @@ export class GMPanel extends PIXI.Container {
 
     this._sbTrack = new PIXI.Graphics();
     this._sbTrack.beginFill(C.track, 0.85);
-    this._sbTrack.drawRoundedRect(this._sbTrackX, this._sbTrackY, 10, this._sbTrackH, 5);
+    this._sbTrack.drawRoundedRect(this._sbTrackX, this._sbTrackY, 12, this._sbTrackH, 6);
     this._sbTrack.endFill();
     this._sbTrack.eventMode = 'static';
     this._sbTrack.cursor = 'pointer';
-    this._sbTrack.hitArea = new PIXI.Rectangle(this._sbTrackX, this._sbTrackY, 10, this._sbTrackH);
+    this._sbTrack.hitArea = new PIXI.Rectangle(this._sbTrackX, this._sbTrackY, 12, this._sbTrackH);
     this._sbTrack.on('pointerdown', (e: PIXI.FederatedPointerEvent) => {
       e.stopPropagation();
       if (this._maxScrollY <= 0) return;
@@ -411,24 +425,27 @@ export class GMPanel extends PIXI.Container {
   }
 
   private _makeArrowBtn(label: string, x: number, y: number): PIXI.Container {
+    const bw = 40;
+    const bh = 34;
     const c = new PIXI.Container();
     c.position.set(x, y);
     const g = new PIXI.Graphics();
     g.beginFill(C.arrowBg, 1);
-    g.drawRoundedRect(0, 0, 32, 28, 6);
+    g.drawRoundedRect(0, 0, bw, bh, 8);
     g.endFill();
-    g.lineStyle(1, C.btnStroke, 0.8);
-    g.drawRoundedRect(0, 0, 32, 28, 6);
+    g.lineStyle(1.5, C.btnStroke, 0.85);
+    g.drawRoundedRect(0, 0, bw, bh, 8);
     c.addChild(g);
     const t = new PIXI.Text(label, {
-      fontSize: 14,
+      fontSize: 17,
       fill: C.title,
       fontFamily: FONT_FAMILY,
+      fontWeight: 'bold',
     });
     t.anchor.set(0.5, 0.5);
-    t.position.set(16, 14);
+    t.position.set(bw / 2, bh / 2);
     c.addChild(t);
-    c.hitArea = new PIXI.Rectangle(0, 0, 32, 28);
+    c.hitArea = new PIXI.Rectangle(0, 0, bw, bh);
     c.eventMode = 'static';
     c.cursor = 'pointer';
     return c;
@@ -437,31 +454,34 @@ export class GMPanel extends PIXI.Container {
   private _createButton(cmd: GMCommand, x: number, y: number, w: number, h: number): void {
     const btn = new PIXI.Graphics();
     btn.beginFill(C.btnFill, 1);
-    btn.drawRoundedRect(x, y, w, h, 10);
+    btn.drawRoundedRect(x, y, w, h, 12);
     btn.endFill();
-    btn.lineStyle(1, C.btnStroke, 0.75);
-    btn.drawRoundedRect(x, y, w, h, 10);
+    btn.lineStyle(1.5, C.btnStroke, 0.8);
+    btn.drawRoundedRect(x, y, w, h, 12);
     btn.eventMode = 'none';
     this._scrollContainer.addChild(btn);
 
+    const padIn = 14;
     const nameText = new PIXI.Text(cmd.name, {
-      fontSize: 14,
+      fontSize: 17,
       fill: C.btnText,
       fontFamily: FONT_FAMILY,
       fontWeight: 'bold',
+      lineHeight: 22,
     });
-    nameText.position.set(x + 12, y + 8);
+    nameText.position.set(x + padIn, y + 10);
     nameText.eventMode = 'none';
     this._scrollContainer.addChild(nameText);
 
     const descText = new PIXI.Text(cmd.desc, {
-      fontSize: 11,
+      fontSize: 14,
       fill: C.desc,
       fontFamily: FONT_FAMILY,
+      lineHeight: 20,
       wordWrap: true,
-      wordWrapWidth: w - 24,
+      wordWrapWidth: w - padIn * 2,
     });
-    descText.position.set(x + 12, y + 28);
+    descText.position.set(x + padIn, y + 36);
     descText.eventMode = 'none';
     this._scrollContainer.addChild(descText);
 

@@ -115,6 +115,11 @@ export const COLORS = {
   CUSTOMER_DEMAND_SATISFIED_BORDER: 0x10B981,
   CUSTOMER_DEMAND_SATISFIED_BORDER_ALPHA: 0.88,
 
+  /** TopBar 体力胶囊内绿色进度（Material Light Green 400）；其它进度条需与体力一致时引用 */
+  STAMINA_BAR_FILL: 0x8bc34a,
+  /** TopBar 体力条未满浅槽底 */
+  STAMINA_BAR_TRACK: 0xdcedc8,
+
   // 花系色标
   FLOWER_FRESH: 0xFFB347,    // 鲜花线 - 暖橙
   FLOWER_BOUQUET: 0xFF69B4,  // 花束线 - 粉红
