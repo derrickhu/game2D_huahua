@@ -20,7 +20,8 @@ class MergeManagerClass {
 
   startDrag(cellIndex: number): boolean {
     const cell = BoardManager.getCellByIndex(cellIndex);
-    if (!cell || !cell.itemId || cell.state !== 'open') return false;
+    if (!cell || !cell.itemId) return false;
+    if (cell.state !== 'open' && cell.state !== 'peek') return false;
     this.draggingIndex = cellIndex;
     EventBus.emit('merge:dragStart', cellIndex);
     return true;
@@ -72,11 +73,14 @@ class MergeManagerClass {
 
     // 尝试合成（BoardManager.canMerge 已支持 PEEK 跨格合成）
     if (BoardManager.canMerge(srcIndex, targetIndex)) {
+      const dstBefore = BoardManager.getCellByIndex(targetIndex);
+      const srcBefore = BoardManager.getCellByIndex(srcIndex);
+      const peekInvolved =
+        dstBefore?.state === 'peek' || srcBefore?.state === 'peek';
       const resultId = BoardManager.doMerge(srcIndex, targetIndex);
       if (resultId) {
         const def = ITEM_DEFS.get(resultId);
-        const targetCell = BoardManager.getCellByIndex(targetIndex);
-        const mergeType = targetCell?.state === 'peek' ? '跨格合成' : '合成';
+        const mergeType = peekInvolved ? '跨格合成' : '合成';
         console.log(`[Merge] ${mergeType}成功: ${def?.name} (Lv.${def?.level})`);
         return { kind: 'merged' };
       }

@@ -18,16 +18,17 @@ const LEVEL_EXTRA: Record<number, LevelExtraRewardsDef> = {
   2: {
     rewardBoxItems: [{ itemId: 'tool_plant_3', count: 1 }],
   },
-  /** 绿植线 6 级 */
+  /** 绿植线 6 级 + 冷饮线 Lv.1、Lv.2 搅拌器具（原 4 星档） */
   3: {
-    rewardBoxItems: [{ itemId: 'flower_green_6', count: 1 }],
-  },
-  /** 冷饮线 Lv.1、Lv.2 搅拌器具（量杯、雪克杯） */
-  4: {
     rewardBoxItems: [
+      { itemId: 'flower_green_6', count: 1 },
       { itemId: 'tool_mixer_1', count: 1 },
       { itemId: 'tool_mixer_2', count: 1 },
     ],
+  },
+  /** 园艺线 Lv.4；`stamina_chest_1`×1 由 `buildStarLevelUpReward` 基础档统一发放 */
+  4: {
+    rewardBoxItems: [{ itemId: 'tool_plant_4', count: 1 }],
   },
   /** 包装线 Lv.1「铁丝」×2（花束线前置） */
   5: {

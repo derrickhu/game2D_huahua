@@ -18,8 +18,8 @@ export const MERGE_COMPANION_MAX_ACTIVE_FLOAT = 4;
 /** 全局等级（globalLevel）≥ 此值才可能出现合成气泡；1～2 级不出现 */
 export const MERGE_COMPANION_MIN_GLOBAL_LEVEL = 3;
 
-/** 倒计时结束且未钻石解锁时补偿体力（飞入顶栏后入账） */
-export const MERGE_BUBBLE_EXPIRE_STAMINA = 2;
+/** 倒计时结束且未钻石解锁时：在棋盘放入 1 级体力瓶（`currency_stamina_1`），满格则进奖励箱 */
+export const MERGE_BUBBLE_EXPIRE_STAMINA_ITEM_ID = 'currency_stamina_1' as const;
 
 /** 玩家可见名称（底栏标题、Toast 等，与系统内「merge 伴生气泡」代码概念区分） */
 export const MERGE_BUBBLE_DISPLAY_NAME = '花语泡泡';

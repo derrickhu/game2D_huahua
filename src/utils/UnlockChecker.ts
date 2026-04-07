@@ -16,8 +16,10 @@ export interface UnlockRequirement {
   /** 条件文案（questId 未达成时的 UI 提示） */
   conditionText?: string;
   /**
-   * 花系图鉴（棋盘鲜花首次出现即解锁）中已记录该 itemId 才可购买/显示为可解锁。
-   * 用于花房「棋盘同花」小盆栽等；与 level / questId 同时存在时为 AND。
+   * 花系图鉴（棋盘鲜花/绿植首次出现即解锁）中已记录该 itemId 才可购买/显示为可解锁。
+   * 用于花房「棋盘同花」小盆栽、同名花瓶、绿植对应家具等。
+   * **与 level 互斥**：凡填写本字段，checkRequirement 将**忽略** level（仅以图鉴为准，不叠扣花店等级）。
+   * 与 questId 同时存在时仍为 AND（quest 先判，再判图鉴）。
    * 未解锁时卡片按钮短文案固定为「图鉴解锁」；点击说明用 detailText（具体花名等）。
    */
   flowerCollectionItemId?: string;
@@ -49,7 +51,13 @@ export function isQuestGranted(questId: string): boolean {
 export function checkRequirement(req?: UnlockRequirement): RequirementResult {
   if (!req) return { met: true, text: '' };
 
-  if (req.level !== undefined && req.level > 0 && LevelManager.level < req.level) {
+  const gatedByFlowerCollection = Boolean(req.flowerCollectionItemId);
+  if (
+    !gatedByFlowerCollection &&
+    req.level !== undefined &&
+    req.level > 0 &&
+    LevelManager.level < req.level
+  ) {
     return { met: false, text: `Lv.${req.level} 解锁` };
   }
 

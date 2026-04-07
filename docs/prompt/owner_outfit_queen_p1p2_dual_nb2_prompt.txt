@@ -1,0 +1,21 @@
+DUAL SHEET for game sprites — one wide image, two equal vertical panels side by side, no gap, no border line, no text.
+
+Overall canvas: landscape 16:9. Background: flat solid magenta FF00FF edge to edge (for photography reference only; final game uses AI matting).
+
+Left panel (exactly 50 percent width): one full-body chibi girl, same identity as right panel. Right panel (exactly 50 percent width): the same character redrawn at identical scale, identical pose, identical camera distance and vertical framing.
+
+BODY PROPORTION — critical, follow exactly: this outfit is intentionally taller than default shopkeeper sprites. Target strict san tou shen (three-head-tall chibi): measure from crown tip to soles — total standing height equals exactly three times one head height; one head height is one third of full body height including hair volume. She must read visibly taller and slimmer than typical 2-head or 2.5-head merge-game SD blobs. Allow a short visible neck, slightly longer torso and legs; limbs stay cute and rounded, not lanky realism. Forbid 2-head giant-head baby. Forbid 4+ head tall fashion model body. Crown stays compact and low-profile so crown plus hair still fits the top band. Scepter short and chunky-cute. Skirt wide simplified A-line or tea-length; both shoes fully visible above bottom edge.
+
+SCALE IN EACH HALF — critical: draw the figure LARGE in the column. The character must dominate the panel height. Do not shrink her into a small doll floating in empty magenta. Soles sit in bottom 6% to 10% of that panel height; top of crown or highest hair in top 10% to 16% of that panel. Use only a thin strip of magenta above crown and below soles. Horizontally: about 6% to 10% magenta margin left and right inside each half; character width uses most of the half width (crown and scepter may approach side margins).
+
+ART STYLE: 2D cute mobile fantasy merge-game NPC, soft pastel with subtle gold on costume, warm brown outlines, not cinematic, not oil painting.
+
+Identity — shopkeeper as flower queen: long wavy warm brown hair past shoulders, ornate compact golden floral crown with tiny roses and lily buds, gold earrings with small crystal flower drops, slight 3/4 toward viewer right, one hand holds short golden scepter with crystal flower bud top, other arm relaxed.
+
+Outfit: white bodice, soft lavender to rose pink gradient skirt in simplified chibi layers, golden vine embroidery on bodice only, small translucent petal shoulder cape, golden vine belt with rose center, golden strappy sandals, toy-like readable shapes.
+
+Left panel only: large brown eyes open, gentle smile, gold shimmer in iris.
+
+Right panel only: eyes gently closed in happy smile with simple curved eyelid lines, same mouth smile as left.
+
+Both figures must share the same pixel height, same foot baseline, same head size, same outfit details. No panel taller or shorter than the other.

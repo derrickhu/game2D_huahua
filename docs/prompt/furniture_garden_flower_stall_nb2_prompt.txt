@@ -1,10 +1,11 @@
 Square game asset 1:1. Single prop centered with generous margin.
 
-Cute kawaii 2.5D isometric view from upper-left about 45 degrees, hand-painted mobile merge-game flower shop style. Soft brown outlines, bright pastel colors, gentle highlights, chibi-friendly scale.
+Cute kawaii 2.5D isometric from upper-left about 45 degrees, merge flower shop garden tools. **Refined** soft brown outlines — lighter than old bold sticker lines, still clear and tactile; gentle gradients on metal and wood.
 
-Outdoor flower market stall kiosk: striped pastel awning, wooden counter, metal buckets with mixed pastel blooms, blank wooden tag shapes without writing, compact fair booth not a full building.
+Pair of tools lying as one cute cluster: pastel blue enamel watering can with simple round handle and spout, and matching hand trowel with light wood grip — both clean, pretty, slightly glossy. Optional one or two tiny fallen petals for charm.
 
+Organic irregular soft shadow patch or sparse grass bits at contact — no diamond grass tile.
 
-Readable silhouette. No text, no watermark, no characters, no real room.
+Readable silhouette. No text, no watermark.
 
 Background pure solid white #FFFFFF only for cutout.

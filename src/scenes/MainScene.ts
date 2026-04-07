@@ -21,7 +21,11 @@ import { WarehouseManager } from '@/managers/WarehouseManager';
 import { CustomerManager, DemandSlot } from '@/managers/CustomerManager';
 import { SaveManager } from '@/managers/SaveManager';
 import { QuestManager } from '@/managers/QuestManager';
-import { CheckInManager } from '@/managers/CheckInManager';
+import {
+  CheckInManager,
+  MILESTONES,
+  milestoneRewardToLevelUpPayload,
+} from '@/managers/CheckInManager';
 import { IdleManager } from '@/managers/IdleManager';
 import { LevelManager } from '@/managers/LevelManager';
 import { TweenManager, Ease } from '@/core/TweenManager';
@@ -637,23 +641,14 @@ export class MainScene implements Scene {
       });
     });
 
-    /** 合成气泡倒计时结束未购买：体力从气泡位置飞入顶栏后再入账 */
-    EventBus.on('mergeCompanion:expireStaminaFly', (payload: {
-      boardLocalX: number;
-      boardLocalY: number;
-      amount: number;
-    }) => {
-      const sg = this._boardView.toGlobal(new PIXI.Point(payload.boardLocalX, payload.boardLocalY));
-      const sx = this.container.toLocal(sg).x;
-      const sy = this.container.toLocal(sg).y;
-      const lp = this._topBar.getStaminaIconPos();
-      const endX = this._topBar.x + lp.x;
-      const endY = this._topBar.y + lp.y;
-      this._playRewardFly('icon_energy', sx, sy, endX, endY, payload.amount, () => {
-        CurrencyManager.addStamina(payload.amount);
-        ToastMessage.show(`${MERGE_BUBBLE_DISPLAY_NAME}散了，+${payload.amount} 体力`);
-        this._topBar.flashStamina();
-      });
+    /** 合成气泡倒计时结束未购买：1 级体力瓶落棋盘，满格则进奖励箱（逻辑在 MergeCompanionManager） */
+    EventBus.on('mergeCompanion:bubbleExpireBottle', (payload: { dest: 'board' | 'box' }) => {
+      const msg =
+        payload.dest === 'board'
+          ? `${MERGE_BUBBLE_DISPLAY_NAME}散了，已在棋盘放入体力瓶`
+          : `${MERGE_BUBBLE_DISPLAY_NAME}散了，棋盘已满，体力瓶已放入奖励箱`;
+      ToastMessage.show(msg);
+      SaveManager.save();
     });
 
     /** 钻石解锁花语泡泡：破裂特效 → 物品出现并弧线飞入空格或收纳礼包，落地后再入库 */
@@ -938,10 +933,61 @@ export class MainScene implements Scene {
     });
   }
 
+  /**
+   * 里程碑祝贺弹窗关闭时「飞入收纳盒」落点。合成页用左下礼包按钮；花店等场景 Main 未挂在 stage 时用屏幕右下近似点。
+   */
+  private _milestoneRewardFlyTargetGlobal(): PIXI.Point {
+    if (SceneManager.current?.name === 'main' && this._rewardBoxButton.parent) {
+      return this._rewardBoxButton.toGlobal(this._rewardBoxButton.getItemSlotCenterLocal());
+    }
+    return new PIXI.Point(DESIGN_WIDTH * 0.88, Game.safeTop + 96);
+  }
+
   /** 绑定留存系统事件 */
   private _bindSystemEvents(): void {
     // 签到面板
     EventBus.on('nav:openCheckIn', () => this._checkInPanel.open());
+    EventBus.on('checkin:gmVirtualDayAdvanced', () => this._checkInPanel.refreshIfOpen());
+
+    // 累计签到里程碑：领取 → 全屏「恭喜获得」（与升星同款）；关闭后若仍有可领则连弹
+    // 注意：签到面板在 Overlay 上，花店场景也会打开；不得限制为 main，否则礼包红点可点但无任何弹窗。
+    EventBus.on('checkin:requestMilestoneClaim', (threshold: number) => {
+      if (!CheckInManager.canClaimMilestone(threshold)) return;
+      const ms = CheckInManager.claimMilestone(threshold);
+      if (!ms) return;
+      SaveManager.save();
+      const payload = milestoneRewardToLevelUpPayload(ms);
+      const g = this._milestoneRewardFlyTargetGlobal();
+      const chainNext = (): void => {
+        this._checkInPanel.refreshIfOpen();
+        if (CheckInManager.hasClaimableMilestone) {
+          const next = MILESTONES.find(m => CheckInManager.canClaimMilestone(m.threshold));
+          if (next) {
+            requestAnimationFrame(() => EventBus.emit('checkin:requestMilestoneClaim', next.threshold));
+          }
+        }
+      };
+      OverlayManager.bringToFront();
+      this._levelUpPopup.show(0, payload, {
+        rewardFlyTargetGlobal: g,
+        celebrationTitle: '恭喜获得',
+        onFullyClosed: chainNext,
+      });
+      this._levelUpPopup.parent?.sortChildren();
+    });
+
+    // 累计签到里程碑：点击礼包预览（与升星礼包预览同款底板）
+    EventBus.on('checkin:requestMilestonePreview', (threshold: number) => {
+      const ms = MILESTONES.find(m => m.threshold === threshold);
+      if (!ms) return;
+      const payload = milestoneRewardToLevelUpPayload(ms);
+      OverlayManager.bringToFront();
+      this._levelUpPopup.show(0, payload, {
+        previewOnly: true,
+        bannerTitle: `累计签到 ${ms.threshold} 天 · 礼包预览`,
+      });
+      this._levelUpPopup.parent?.sortChildren();
+    });
 
     // 签到飞入由 RewardFlyCoordinator 统一处理（粒子挂在 Overlay）
 

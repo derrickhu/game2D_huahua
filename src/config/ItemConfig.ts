@@ -245,7 +245,7 @@ function buildItemDefs(): Map<string, ItemDef> {
   // 货币物品：体力 / 钻石 各 4 级；花愿利是为独立块（见下）
   // 棋盘货币双击入账：无单独「合成奖励」，故每级 amount 须严格 > 2×上一级，合成到顶才不亏于全点低级（体力曾违反此条已修正）
   const CURRENCY_DATA: [CurrencyLine, string[], 'stamina' | 'huayuan' | 'diamond', string, number[]][] = [
-    [CurrencyLine.STAMINA, ['体力瓶', '体力罐', '体力桶', '精粹体力壶'], 'stamina', 'icon_energy', [8, 18, 38, 80]],
+    [CurrencyLine.STAMINA, ['体力瓶', '体力罐', '体力桶', '精粹体力壶'], 'stamina', 'icon_energy', [3, 10, 30, 70]],
     [CurrencyLine.DIAMOND, ['碎钻', '钻石', '大钻石', '璨钻'], 'diamond', 'icon_gem', [1, 3, 8, 18]],
   ];
   for (const [line, names, rewardType, icon, amounts] of CURRENCY_DATA) {

@@ -246,14 +246,21 @@ const CHEST_DEFS: ChestDef[] = [
   // ═══ 体力宝箱线（3级）：仅散落棋盘体力货币块 ═══
   {
     itemId: 'stamina_chest_1',
-    boardDropCount: 4,
+    boardDropCount: 5,
     produceItems: [
       {
         type: 'product',
         category: Category.CURRENCY,
         lines: [CurrencyLine.STAMINA],
         levelRange: [1, 1],
-        weight: 100,
+        weight: 90,
+      },
+      {
+        type: 'product',
+        category: Category.CURRENCY,
+        lines: [CurrencyLine.STAMINA],
+        levelRange: [2, 2],
+        weight: 10,
       },
     ],
   },
@@ -279,28 +286,28 @@ const CHEST_DEFS: ChestDef[] = [
   },
   {
     itemId: 'stamina_chest_3',
-    boardDropCount: 6,
+    boardDropCount: 5,
     produceItems: [
       {
         type: 'product',
         category: Category.CURRENCY,
         lines: [CurrencyLine.STAMINA],
         levelRange: [1, 1],
-        weight: 12,
+        weight: 10,
       },
       {
         type: 'product',
         category: Category.CURRENCY,
         lines: [CurrencyLine.STAMINA],
         levelRange: [2, 2],
-        weight: 33,
+        weight: 50,
       },
       {
         type: 'product',
         category: Category.CURRENCY,
         lines: [CurrencyLine.STAMINA],
         levelRange: [3, 3],
-        weight: 55,
+        weight: 40,
       },
     ],
   },
@@ -996,7 +1003,7 @@ class BuildingManagerClass {
       if (nr < 0 || nr >= BOARD_ROWS || nc < 0 || nc >= BOARD_COLS) continue;
       const idx = nr * BOARD_COLS + nc;
       const c = BoardManager.getCellByIndex(idx);
-      if (c && c.state === 'open' && !c.itemId) return idx;
+      if (c && !c.itemId && (c.state === 'open' || c.state === 'peek')) return idx;
     }
 
     return BoardManager.findEmptyOpenCell();

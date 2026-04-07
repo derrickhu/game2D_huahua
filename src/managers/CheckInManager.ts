@@ -90,6 +90,22 @@ export const MILESTONES: MilestoneDef[] = [
   items: _buildItems({ day: 0, desc: '', icon: '', ...m.reward }),
 }));
 
+/** 与 `LevelUpPopup` 展示字段对齐（预览 / 祝贺同款布局） */
+export function milestoneRewardToLevelUpPayload(ms: MilestoneDef): {
+  huayuan: number;
+  stamina: number;
+  diamond: number;
+  rewardBoxItems: Array<{ itemId: string; count: number }>;
+} {
+  const r = ms.reward;
+  return {
+    huayuan: r.huayuan ?? 0,
+    stamina: 0,
+    diamond: r.diamond ?? 0,
+    rewardBoxItems: [],
+  };
+}
+
 export interface CheckInState {
   signedDays: number;
   consecutiveDays: number;
@@ -109,7 +125,18 @@ class CheckInManagerClass {
     claimedMilestones: [],
   };
 
+  /**
+   * GM 调试：相对真实 UTC 日历前进的天数，参与 `_getTodayStr()`。
+   * 写入 `huahua_checkin` 的 `_gmDateOffset` 字段，「重置签到」会一并清除。
+   */
+  private _gmDateOffsetDays = 0;
+
   get state(): Readonly<CheckInState> { return this._state; }
+
+  /** 当前虚拟日期偏移（天），仅 GM 调试用 */
+  get gmDateOffsetDays(): number {
+    return this._gmDateOffsetDays;
+  }
 
   get canCheckIn(): boolean {
     return !this._state.signedToday;
@@ -221,8 +248,8 @@ class CheckInManagerClass {
     this._state.signedToday = false;
 
     if (this._state.lastSignDate) {
-      const lastDate = new Date(this._state.lastSignDate);
-      const todayDate = new Date(today);
+      const lastDate = new Date(`${this._state.lastSignDate}T12:00:00.000Z`);
+      const todayDate = new Date(`${today}T12:00:00.000Z`);
       const diffDays = Math.floor((todayDate.getTime() - lastDate.getTime()) / 86400000);
       if (diffDays > 1) {
         this._state.consecutiveDays = 0;
@@ -232,12 +259,36 @@ class CheckInManagerClass {
   }
 
   private _getTodayStr(): string {
-    return new Date().toISOString().slice(0, 10);
+    const d = new Date();
+    d.setUTCDate(d.getUTCDate() + this._gmDateOffsetDays);
+    return d.toISOString().slice(0, 10);
+  }
+
+  /** GM：虚拟日历 +1 天，可再次签到；连续签到若仅隔 1 天会保留 */
+  gmAdvanceVirtualDay(): void {
+    this._gmDateOffsetDays += 1;
+    this._saveState();
+    this._checkNewDay();
+    EventBus.emit('checkin:gmVirtualDayAdvanced');
+  }
+
+  /** GM：清除虚拟日期偏移 */
+  gmResetVirtualDayOffset(): void {
+    this._gmDateOffsetDays = 0;
+    this._saveState();
+    this._checkNewDay();
+    EventBus.emit('checkin:gmVirtualDayAdvanced');
   }
 
   private _saveState(): void {
     try {
-      _api?.setStorageSync(CHECKIN_STORAGE_KEY, JSON.stringify(this._state));
+      _api?.setStorageSync(
+        CHECKIN_STORAGE_KEY,
+        JSON.stringify({
+          ...this._state,
+          _gmDateOffset: this._gmDateOffsetDays,
+        }),
+      );
     } catch (_) {}
   }
 
@@ -246,6 +297,10 @@ class CheckInManagerClass {
       const raw = _api?.getStorageSync(CHECKIN_STORAGE_KEY);
       if (raw) {
         const data = JSON.parse(raw);
+        this._gmDateOffsetDays =
+          typeof data._gmDateOffset === 'number' && Number.isFinite(data._gmDateOffset)
+            ? Math.trunc(data._gmDateOffset)
+            : 0;
         this._state.signedDays = data.signedDays ?? 0;
         this._state.consecutiveDays = data.consecutiveDays ?? 0;
         this._state.totalSignedDays = data.totalSignedDays ?? (data.consecutiveDays ?? 0);

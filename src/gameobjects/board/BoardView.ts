@@ -412,10 +412,14 @@ export class BoardView extends PIXI.Container {
       if (cell.state === CellState.KEY) return;
       // 工具/宝箱也可拖拽合成与移动；松手仍在原格时由 handleRawUp → _handleTap 触发点击产出
 
+      const dragItemId = cell.itemId;
+      const canDragItemFromCell =
+        !!dragItemId && (cell.state === CellState.OPEN || cell.state === CellState.PEEK);
+
       // 长按检测：0.8秒后弹出合成线面板（含工具链）
-      if (cell.itemId && cell.state === CellState.OPEN) {
-        const def = ITEM_DEFS.get(cell.itemId);
-        const chain = getMergeChain(cell.itemId);
+      if (canDragItemFromCell) {
+        const def = ITEM_DEFS.get(dragItemId);
+        const chain = getMergeChain(dragItemId);
         if (def && chain.length > 1) {
           this._clearLongPress();
           const pressItemId = cell.itemId;
@@ -433,7 +437,7 @@ export class BoardView extends PIXI.Container {
         }
       }
 
-      if (cell.itemId && cell.state === CellState.OPEN) {
+      if (canDragItemFromCell) {
         if (MergeManager.startDrag(cellIdx)) {
           this._startDragGhost(cellIdx, localPos);
           this._cacheAndHighlightTargets(cellIdx);
@@ -623,7 +627,7 @@ export class BoardView extends PIXI.Container {
     // 靠近可合成或可放置的目标时吸附到格子中心
     if (hoverIdx >= 0 && hoverIdx !== this._dragSrcIndex) {
       const isValidTarget = this._mergeTargets.has(hoverIdx)
-        || this._isEmptyOpenCell(hoverIdx)
+        || this._isEmptyPlayableCell(hoverIdx)
         || this._canSwapWithHover(hoverIdx);
       if (isValidTarget) {
         const center = this._getCellCenter(hoverIdx);
@@ -770,9 +774,9 @@ export class BoardView extends PIXI.Container {
     }
     this._selectedIndex = cellIndex;
     this._cellViews[cellIndex].setHighlight(true);
-    // 仅完全开放格可拖动，与拖拽规则一致；半锁定(PEEK)等只做选中高亮，无缩放反馈
+    // 全解锁 / 半解锁格均可拖动物品；缩放反馈与可拖状态一致
     const cell = BoardManager.getCellByIndex(cellIndex);
-    if (cell?.state === CellState.OPEN) {
+    if (cell?.state === CellState.OPEN || cell?.state === CellState.PEEK) {
       this._itemViews[cellIndex].playTapFeedback();
     }
     EventBus.emit('board:itemSelected', cellIndex, itemId);
@@ -1258,7 +1262,7 @@ export class BoardView extends PIXI.Container {
     }
     if (this._dragSrcIndex >= 0) {
       const cell = BoardManager.getCellByIndex(this._dragSrcIndex);
-      if (cell?.state === CellState.OPEN) {
+      if (cell?.state === CellState.OPEN || cell?.state === CellState.PEEK) {
         this._itemViews[this._dragSrcIndex].alpha = 1;
       }
     }
@@ -1356,9 +1360,14 @@ export class BoardView extends PIXI.Container {
     };
   }
 
-  private _isEmptyOpenCell(cellIdx: number): boolean {
+  /** 全解锁或半解锁且无物，可作为拖拽落点（与 `BoardManager.moveItem` / `placeItem` 一致） */
+  private _isEmptyPlayableCell(cellIdx: number): boolean {
     const cell = BoardManager.getCellByIndex(cellIdx);
-    return !!cell && cell.state === CellState.OPEN && !cell.itemId;
+    return (
+      !!cell
+      && !cell.itemId
+      && (cell.state === CellState.OPEN || cell.state === CellState.PEEK)
+    );
   }
 
   /** 拖拽目标格有物品且将触发互换（非可合成格已在 mergeTargets 中） */
@@ -1368,7 +1377,12 @@ export class BoardView extends PIXI.Container {
     const src = BoardManager.getCellByIndex(srcIdx);
     const dst = BoardManager.getCellByIndex(hoverIdx);
     if (!src || !dst) return false;
-    if (src.state !== CellState.OPEN || dst.state !== CellState.OPEN) return false;
+    if (
+      (src.state !== CellState.OPEN && src.state !== CellState.PEEK)
+      || (dst.state !== CellState.OPEN && dst.state !== CellState.PEEK)
+    ) {
+      return false;
+    }
     if (!src.itemId || !dst.itemId) return false;
     if (BoardManager.canMerge(srcIdx, hoverIdx)) return false;
     return true;

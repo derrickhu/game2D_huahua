@@ -9,7 +9,7 @@ import {
   MERGE_COMPANION_MIN_GLOBAL_LEVEL,
   MERGE_COMPANION_MAX_SPAWN_PER_MERGE,
   MERGE_COMPANION_DEFAULT_CHANCE_MULT,
-  MERGE_BUBBLE_EXPIRE_STAMINA,
+  MERGE_BUBBLE_EXPIRE_STAMINA_ITEM_ID,
   MERGE_BUBBLE_FREE_DIAMOND_MAX_ITEM_LEVEL,
   MERGE_BUBBLE_TOOL_DIAMOND_BASE,
   MERGE_BUBBLE_TOOL_DIAMOND_PER_LEVEL,
@@ -346,7 +346,11 @@ class MergeCompanionManagerClass {
   completeBubbleUnlockGrant(itemId: string, preferredCellIndex?: number): 'board' | 'box' {
     if (preferredCellIndex != null && preferredCellIndex >= 0) {
       const cell = BoardManager.getCellByIndex(preferredCellIndex);
-      if (cell && cell.state === CellState.OPEN && !cell.itemId) {
+      if (
+        cell
+        && !cell.itemId
+        && (cell.state === CellState.OPEN || cell.state === CellState.PEEK)
+      ) {
         if (BoardManager.placeItem(preferredCellIndex, itemId)) return 'board';
       }
     }
@@ -384,16 +388,12 @@ class MergeCompanionManagerClass {
   private _expireBubble(id: string): void {
     const b = this._bubbles.find(x => x.id === id);
     if (!b) return;
-    const bx = b.boardX;
-    const by = b.boardY;
-    EventBus.emit('mergeCompanion:expireStaminaFly', {
-      boardLocalX: bx,
-      boardLocalY: by,
-      amount: MERGE_BUBBLE_EXPIRE_STAMINA,
-    });
+    const ruleId = b.ruleId;
     this._removeBubble(id);
-    EventBus.emit('mergeCompanion:expire', id, b.ruleId, 'stamina');
-    console.log(`[MergeCompanion] 埋点 expire id=${id} rule=${b.ruleId} outcome=stamina`);
+    const dest = this._grantItemToBoardOrBox(MERGE_BUBBLE_EXPIRE_STAMINA_ITEM_ID);
+    EventBus.emit('mergeCompanion:expire', id, ruleId, 'stamina_bottle', dest);
+    EventBus.emit('mergeCompanion:bubbleExpireBottle', { dest });
+    console.log(`[MergeCompanion] 埋点 expire id=${id} rule=${ruleId} outcome=stamina_bottle dest=${dest}`);
   }
 
   private _collectAllRules(): MergeCompanionRuleDef[] {

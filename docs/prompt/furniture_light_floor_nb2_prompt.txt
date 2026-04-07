@@ -1,0 +1,9 @@
+Square game asset 1:1. Single prop centered with generous margin.
+
+Cute kawaii 2.5D isometric from upper-left about 45 degrees, hand-painted merge flower shop furniture. Line art: soft to medium warm brown outlines — refined and legible, neither ultra-thin nor heavy black sticker strokes; gentle edge weight with subtle inner shading for premium feel.
+
+Tall floor lamp: slender pole and round weighted base. Lampshade and accents in pale icy blue and aquamarine with milky opalite or frosted crystal look — material must read as **fully opaque solid** crystal-ceramic: strong milky highlights and facet shading, **no see-through glass, no transparency, no hollow clear panels**, so every pixel of the lamp body is painted opaque. Tiny pull chain in warm brass tone.
+
+Readable silhouette. No text, no watermark, no room.
+
+Background pure solid white #FFFFFF only for cutout.

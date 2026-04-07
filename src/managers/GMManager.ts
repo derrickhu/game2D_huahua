@@ -711,6 +711,28 @@ class GMManagerClass {
     });
 
     this._commands.push({
+      id: 'gm_checkin_advance_day',
+      group: '🔧 系统测试',
+      name: '📅 签到：虚拟下一天',
+      desc: 'UTC 日历 +1 天（测累计签到/再签）；数据写入 huahua_checkin',
+      execute: () => {
+        CheckInManager.gmAdvanceVirtualDay();
+        return `✅ 虚拟日期 +1，偏移=${CheckInManager.gmDateOffsetDays}天，可签到=${CheckInManager.canCheckIn ? '是' : '否'}`;
+      },
+    });
+
+    this._commands.push({
+      id: 'gm_checkin_reset_virtual_date',
+      group: '🔧 系统测试',
+      name: '📅 签到：重置虚拟日期',
+      desc: '清除 GM 虚拟日期偏移，恢复真实「今日」',
+      execute: () => {
+        CheckInManager.gmResetVirtualDayOffset();
+        return `✅ 虚拟日期已归零，可签到=${CheckInManager.canCheckIn ? '是' : '否'}`;
+      },
+    });
+
+    this._commands.push({
       id: 'trigger_quest',
       group: '🔧 系统测试',
       name: '📋 打开任务面板',
@@ -760,7 +782,7 @@ class GMManagerClass {
           `${cs.level}星 累计⭐${cs.star}`,
           `🌸花愿${cs.huayuan} 💎${cs.diamond} ⚡${cs.stamina} 🪙许愿${FlowerSignTicketManager.count}`,
           `棋盘: ${openCount}格开放, ${itemCount}物品`,
-          `签到: 连续${CheckInManager.consecutiveDays}天`,
+          `签到: 连续${CheckInManager.consecutiveDays}天 累计${CheckInManager.totalSignedDays} 虚拟+${CheckInManager.gmDateOffsetDays}天`,
           `装修: ${DecorationManager.unlockedCount}/${DecorationManager.totalCount}解锁`,
         ];
         const msg = lines.join(' | ');

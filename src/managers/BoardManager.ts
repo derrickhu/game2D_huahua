@@ -4,9 +4,6 @@
 import { EventBus } from '@/core/EventBus';
 import { BOARD_COLS, BOARD_ROWS, BOARD_TOTAL } from '@/config/Constants';
 
-/** 开局棋盘迷雾水壶格（与 BoardLayout BOARD_PRESETS 一致），保证任意位置合铲后必能半解锁 */
-const STARTER_KETTLE_ROW = 2;
-const STARTER_KETTLE_COL = 3;
 import { CellState, BOARD_PRESETS, KeyUnlockMode } from '@/config/BoardLayout';
 import {
   ITEM_DEFS,
@@ -131,7 +128,7 @@ class BoardManagerClass {
     if (!def) return false;
     if (def.level >= def.maxLevel) return false;
 
-    if (src.state !== CellState.OPEN) return false;
+    if (src.state !== CellState.OPEN && src.state !== CellState.PEEK) return false;
     if (dst.state !== CellState.OPEN && dst.state !== CellState.PEEK) return false;
 
     return true;
@@ -159,14 +156,17 @@ class BoardManagerClass {
       }
     }
 
-    const isPeekMerge = dst.state === CellState.PEEK;
+    const dstWasPeek = dst.state === CellState.PEEK;
+    const srcWasPeek = src.state === CellState.PEEK;
+    /** 任一侧为半解锁则视为「波及解锁」合成，须 3×3 辐射（含拖到全解锁格、源格为 PEEK 的情况） */
+    const isPeekMerge = dstWasPeek || srcWasPeek;
     let resultCellIndex: number;
 
     src.itemId = null;
     src.reserved = false;
     src.luckyCoinConsumed = false;
 
-    if (isPeekMerge) {
+    if (dstWasPeek) {
       dst.state = CellState.OPEN;
       dst.itemId = resultId;
       dst.reserved = false;
@@ -174,7 +174,6 @@ class BoardManagerClass {
       resultCellIndex = dstIndex;
       EventBus.emit('board:merged', srcIndex, dstIndex, resultId, resultCellIndex, isPeekMerge);
       EventBus.emit('board:cellUnlocked', dstIndex);
-      /** 仅「半解锁 → 全解锁」的合成才向周围 3×3 辐射 FOG→PEEK/OPEN；已开放格合成不波及 */
       this._checkRippleUnlock(dstIndex);
     } else {
       dst.itemId = resultId;
@@ -182,21 +181,12 @@ class BoardManagerClass {
       dst.luckyCoinConsumed = false;
       resultCellIndex = dstIndex;
       EventBus.emit('board:merged', srcIndex, dstIndex, resultId, resultCellIndex, isPeekMerge);
+      if (srcWasPeek) {
+        this._checkRippleUnlock(dstIndex);
+      }
     }
 
-    this._ensureStarterKettlePeeked(resultId);
     return resultId;
-  }
-
-  /** 首次合出水壶时，若固定格仍为藏雾水壶，强制半锁（避免合铲目标格不在其 3×3 波及内） */
-  private _ensureStarterKettlePeeked(resultId: string): void {
-    if (resultId !== 'tool_plant_2') return;
-    const idx = STARTER_KETTLE_ROW * BOARD_COLS + STARTER_KETTLE_COL;
-    const cell = this.cells[idx];
-    if (!cell || cell.state !== CellState.FOG) return;
-    if (cell.itemId !== 'tool_plant_2') return;
-    cell.state = CellState.PEEK;
-    EventBus.emit('board:cellsPeeked', [idx]);
   }
 
   /** 判断两个格子是否相邻（上下左右） */
@@ -211,8 +201,8 @@ class BoardManagerClass {
     if (!src || !dst) return false;
     if (!src.itemId) return false;
     if (dst.itemId) return false;
-    if (dst.state !== CellState.OPEN) return false;
-    if (src.state !== CellState.OPEN) return false;
+    if (dst.state !== CellState.OPEN && dst.state !== CellState.PEEK) return false;
+    if (src.state !== CellState.OPEN && src.state !== CellState.PEEK) return false;
 
     dst.itemId = src.itemId;
     dst.reserved = src.reserved;
@@ -233,7 +223,12 @@ class BoardManagerClass {
     const dst = this.cells[dstIndex];
     if (!src || !dst) return false;
     if (!src.itemId || !dst.itemId) return false;
-    if (src.state !== CellState.OPEN || dst.state !== CellState.OPEN) return false;
+    if (
+      (src.state !== CellState.OPEN && src.state !== CellState.PEEK)
+      || (dst.state !== CellState.OPEN && dst.state !== CellState.PEEK)
+    ) {
+      return false;
+    }
 
     const itemA = src.itemId;
     const resA = src.reserved;
@@ -252,7 +247,8 @@ class BoardManagerClass {
   /** 在指定格子放置物品（工具产出等） */
   placeItem(index: number, itemId: string): boolean {
     const cell = this.cells[index];
-    if (!cell || cell.state !== CellState.OPEN || cell.itemId) return false;
+    if (!cell || cell.itemId) return false;
+    if (cell.state !== CellState.OPEN && cell.state !== CellState.PEEK) return false;
     if (!ITEM_DEFS.has(itemId)) return false;
     cell.itemId = itemId;
     cell.luckyCoinConsumed = false;
@@ -275,14 +271,18 @@ class BoardManagerClass {
   /** 获取第一个空的已开放格 */
   findEmptyOpenCell(): number {
     for (const cell of this.cells) {
-      if (cell.state === CellState.OPEN && !cell.itemId) return cell.index;
+      if (!cell.itemId && (cell.state === CellState.OPEN || cell.state === CellState.PEEK)) {
+        return cell.index;
+      }
     }
     return -1;
   }
 
   /** 所有空格（已开放且无物），索引升序，用于宝箱批量散落 */
   getEmptyOpenCellIndices(): number[] {
-    return this.cells.filter(c => c.state === CellState.OPEN && !c.itemId).map(c => c.index);
+    return this.cells
+      .filter(c => !c.itemId && (c.state === CellState.OPEN || c.state === CellState.PEEK))
+      .map(c => c.index);
   }
 
   /** 用金币解锁钥匙格（需调用方先检查并扣除金币） */
@@ -309,7 +309,7 @@ class BoardManagerClass {
 
   /**
    * 周围 3×3 的 FOG 格：有物品→PEEK，无物品→OPEN。
-   * 调用时机：`doMerge` 仅当目标格由 PEEK 升为 OPEN；`unlockKeyCell` 钥匙格花钱解锁后。
+   * 调用时机：`doMerge` 当合成涉及半解锁格（目标 PEEK 升为 OPEN，或源为 PEEK）；`unlockKeyCell` 钥匙格花钱解锁后。
    */
   private _checkRippleUnlock(centerIndex: number): void {
     const center = this.cells[centerIndex];
@@ -410,7 +410,9 @@ class BoardManagerClass {
   findEmptyOpenCellExcluding(excludeIndex: number): number {
     for (const cell of this.cells) {
       if (cell.index === excludeIndex) continue;
-      if (cell.state === CellState.OPEN && !cell.itemId) return cell.index;
+      if (!cell.itemId && (cell.state === CellState.OPEN || cell.state === CellState.PEEK)) {
+        return cell.index;
+      }
     }
     return -1;
   }

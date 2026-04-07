@@ -17,16 +17,18 @@ from PIL import Image
 
 
 def chroma_ff00ff_fringe_clean(path: str) -> None:
+    """
+    只清 #FF00FF 渗到 alpha 边的品红，不误伤紫/粉裙装（其 G 常 100～180，旧版 soft/spill 会误判）。
+    仅在半透明带处理；强品红条带要求 R、B 高且 G 极低。
+    """
     img = Image.open(path).convert("RGBA")
     d = np.array(img, dtype=np.float32)
     r, g, b, a = d[:, :, 0], d[:, :, 1], d[:, :, 2], d[:, :, 3]
     vis = a > 6
-    strict = vis & (r > 185) & (g < 135) & (b > 180)
-    pink = vis & (r > 195) & (g < 105) & (b > 70) & (b < 245) & (r > g + 80)
-    soft = vis & (r >= 160) & (b >= 158) & (g <= 158) & ((r + b) >= (g * 1.95))
-    # 品红底 #FF00FF：G 极低、R/B 双高，rembg 半透明边常见
-    spill = vis & (r >= 150) & (b >= 150) & (g <= 100) & ((r + b) > (g * 2.4))
-    m = strict | pink | soft | spill
+    fringe = vis & (a < 252)
+    near_ff00ff = fringe & (r >= 228) & (g <= 50) & (b >= 228)
+    magenta_edge = fringe & (r >= 200) & (g <= 55) & (b >= 200) & ((r - g) > 120) & ((b - g) > 120)
+    m = near_ff00ff | magenta_edge
     d[m, 3] = 0
     Image.fromarray(np.clip(d, 0, 255).astype(np.uint8)).save(path, optimize=True)
 

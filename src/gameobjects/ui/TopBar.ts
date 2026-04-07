@@ -513,17 +513,19 @@ export class TopBar extends PIXI.Container {
   }
 
   private _flashText(txt: PIXI.Text): void {
-    const origSX = txt.scale.x;
-    const origSY = txt.scale.y;
+    // 连续触发 flash 时若沿用当前 scale 再 ×1.5，会叠乘爆炸（如连领签到/里程碑后钻石字巨大模糊）
+    TweenManager.cancelTarget(txt.scale);
+    const base = 1;
+    txt.scale.set(base, base);
     TweenManager.to({
       target: txt.scale,
-      props: { x: origSX * 1.5, y: origSY * 1.5 },
+      props: { x: base * 1.5, y: base * 1.5 },
       duration: 0.15,
       ease: Ease.easeOutQuad,
       onComplete: () => {
         TweenManager.to({
           target: txt.scale,
-          props: { x: origSX, y: origSY },
+          props: { x: base, y: base },
           duration: 0.25,
           ease: Ease.easeOutBounce,
         });

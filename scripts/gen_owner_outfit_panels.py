@@ -29,12 +29,17 @@ import sys
 import time
 from pathlib import Path
 
+import numpy as np
+
 from huahua_paths import game_assets_dir
 
 from PIL import Image
 
+ROOT = Path(__file__).resolve().parents[1]
 FULL_W, FULL_H = 197, 384
 CHIBI_W, CHIBI_H = 249, 384
+
+DEFAULT_OWNER_FULL_SCALE_REF = ROOT / "minigame/subpkg_chars/images/owner/full_outfit_vintage_eyesclosed.png"
 
 
 def fit_resize_to_canvas(im: Image.Image, tw: int, th: int) -> Image.Image:
@@ -49,6 +54,109 @@ def fit_resize_to_canvas(im: Image.Image, tw: int, th: int) -> Image.Image:
     resized = im.resize((nw, nh), Image.Resampling.LANCZOS)
     out = Image.new("RGBA", (tw, th), (0, 0, 0, 0))
     out.paste(resized, ((tw - nw) // 2, (th - nh) // 2), resized)
+    return out
+
+
+def alpha_trim_then_fit_canvas(
+    im: Image.Image,
+    tw: int,
+    th: int,
+    pad: int = 8,
+    alpha_th: int = 16,
+) -> Image.Image:
+    """按 alpha 裁掉透明边，再 letterbox 回 tw×th（双栏 rembg 后整幅先入画布时常留白过大，用此收紧体量）。"""
+    im = im.convert("RGBA")
+    a = np.array(im)[:, :, 3]
+    ys, xs = np.where(a > alpha_th)
+    if len(xs) == 0:
+        return im
+    h, w = a.shape
+    x0, x1 = int(xs.min()), int(xs.max()) + 1
+    y0, y1 = int(ys.min()), int(ys.max()) + 1
+    x0 = max(0, x0 - pad)
+    y0 = max(0, y0 - pad)
+    x1 = min(w, x1 + pad)
+    y1 = min(h, y1 + pad)
+    cropped = im.crop((x0, y0, x1, y1))
+    return fit_resize_to_canvas(cropped, tw, th)
+
+
+def measure_owner_full_bbox_frac(
+    im: Image.Image,
+    tw: int,
+    th: int,
+    alpha_th: int = 16,
+) -> tuple[float, float]:
+    """alpha 包围盒宽高占画布 tw×th 的比例（与 `full_outfit_vintage_eyesclosed` 等同度量）。"""
+    a = np.array(im.convert("RGBA"))[:, :, 3]
+    ys, xs = np.where(a > alpha_th)
+    if len(xs) == 0:
+        return 0.0, 0.0
+    x0, x1 = int(xs.min()), int(xs.max()) + 1
+    y0, y1 = int(ys.min()), int(ys.max()) + 1
+    return (x1 - x0) / tw, (y1 - y0) / th
+
+
+def match_owner_full_canvas_to_reference(
+    im: Image.Image,
+    ref_path: Path,
+    tw: int = FULL_W,
+    th: int = FULL_H,
+    pad: int = 4,
+    alpha_th: int = 16,
+    height_boost: float = 1.0,
+    max_target_fh: float = 0.96,
+) -> Image.Image:
+    """
+    将已落在 tw×th 上的全身图按参考套 **纵向内容占比** 重新缩放（alpha 裁切后等比放大），
+    使游戏中与 `full_outfit_vintage_eyesclosed` 等旧图体量接近；过宽则左右居中裁切。
+
+    height_boost：在参考纵向占比上再放大一点（如冠高、裙摆 rembg 后 alpha 框偏矮时）。
+    max_target_fh：目标内容高度占画布比例上限，避免顶死裁切。
+    """
+    if not ref_path.is_file():
+        return im.convert("RGBA")
+    ref = Image.open(ref_path).convert("RGBA")
+    _ref_fw, ref_fh = measure_owner_full_bbox_frac(ref, tw, th, alpha_th)
+    if ref_fh < 0.05:
+        return im.convert("RGBA")
+
+    eff_fh = min(max_target_fh, ref_fh * max(1.0, height_boost))
+
+    im = im.convert("RGBA")
+    a = np.array(im)[:, :, 3]
+    ys, xs = np.where(a > alpha_th)
+    if len(xs) == 0:
+        return im
+    H, W = a.shape
+    x0 = max(0, int(xs.min()) - pad)
+    y0 = max(0, int(ys.min()) - pad)
+    x1 = min(W, int(xs.max()) + 1 + pad)
+    y1 = min(H, int(ys.max()) + 1 + pad)
+    crop = im.crop((x0, y0, x1, y1))
+    cw, ch = crop.size
+    if ch < 1:
+        return im
+
+    target_ch = max(1, int(round(eff_fh * th)))
+    s = target_ch / ch
+    nw = max(1, int(round(cw * s)))
+    nh = max(1, int(round(ch * s)))
+    resized = crop.resize((nw, nh), Image.Resampling.LANCZOS)
+
+    if nh > th:
+        top = (nh - th) // 2
+        resized = resized.crop((0, top, nw, top + th))
+        nh = th
+    if nw > tw:
+        left = (nw - tw) // 2
+        resized = resized.crop((left, 0, left + tw, nh))
+        nw = tw
+
+    out = Image.new("RGBA", (tw, th), (0, 0, 0, 0))
+    ox = (tw - nw) // 2
+    oy = (th - nh) // 2
+    out.paste(resized, (ox, oy), resized)
     return out
 
 
@@ -82,6 +190,21 @@ def chroma_ff00ff_to_alpha(
     out_im = Image.new("RGBA", im.size)
     out_im.putdata(out)
     return out_im
+
+
+def write_owner_full_from_magenta_raw(
+    src: Path,
+    dest: Path,
+    tw: int = FULL_W,
+    th: int = FULL_H,
+) -> None:
+    """品红底全身 raw → 等比 letterbox + 品红软抠 → 写入 `dest`（入库前仍须 rembg，见 owner_sprite_art_spec）。"""
+    im = Image.open(src).convert("RGBA")
+    im = fit_resize_to_canvas(im, tw, th)
+    im = chroma_ff00ff_to_alpha(im)
+    dest.parent.mkdir(parents=True, exist_ok=True)
+    im.save(dest, "PNG")
+    print(f"Wrote {dest} ({tw}x{th})", flush=True)
 
 
 def shrink_for_api_ref(src: Path, max_side: int = 1024) -> Path:
@@ -267,11 +390,7 @@ def main() -> None:
         targets = all_targets
 
     for src, dest, tw, th in targets:
-        im = Image.open(src).convert("RGBA")
-        im = fit_resize_to_canvas(im, tw, th)
-        im = chroma_ff00ff_to_alpha(im)
-        im.save(dest, "PNG")
-        print(f"Wrote {dest} ({tw}x{th})", flush=True)
+        write_owner_full_from_magenta_raw(src, dest, tw, th)
 
     if args.preview_root is not None:
         note = args.preview_root.resolve() / "README.txt"

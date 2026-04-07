@@ -128,6 +128,17 @@ python3 scripts/gen_owner_outfit_panels.py outfit_queen \
 ./scripts/rembg_owner_full_sprites.sh
 ```
 
+**女王套全身 P1+P2 双栏一图（对齐身高再切分）**：若两张独立 9:16 导致睁眼/闭眼垂直构图不一致，可用 **单张 16:9 双栏** NB2，左睁眼、右闭眼，再左右切半；切半后对每半幅 **直接 `rembg`**（**禁止**仅用品红色键当终稿），再 `fit_resize_to_canvas` 写入 197×384，**默认再按 alpha 裁透明边并二次 letterbox**（`--tighten-pad`，默认 1），并跑 `owner_sprite_post_rembg.py` 清品红渗色。一键脚本见 `scripts/gen_owner_outfit_queen_dual_sheet.py`：默认 **`birefnet-general`**；`owner_sprite_post_rembg.py` 仅清理真品红渗边，避免误伤紫粉裙装。可用 `--rembg-model isnet-anime` 对比。英文提示词：`docs/prompt/owner_outfit_queen_p1p2_dual_nb2_prompt.txt`（约 **3 头身**、半栏纵向尽量撑满，故意比默认套 2～2.8 头略高；**默认不做** vintage 二次体量对齐，需要与旧套一致时加 `--match-vintage-scale`）。
+
+```bash
+cd /path/to/huahua
+python3 scripts/gen_owner_outfit_queen_dual_sheet.py
+```
+
+原图归档：`../game_assets/huahua/assets/raw/owner_outfit_queen_dual_nb2.png`，以及切半后的 `owner_outfit_queen_p1.png` / `owner_outfit_queen_p2.png`。若已有人工修好的 dual 大图，可 `python3 scripts/gen_owner_outfit_queen_dual_sheet.py --skip-gen` 仅切分并写 minigame。
+
+**全身体量与 vintage 对齐（可选）**：新图若 rembg 后人物在 197×384 里仍显小，可与已验收的 **`full_outfit_vintage_eyesclosed.png`** 比 alpha 纵向占比，用 `gen_owner_outfit_panels.match_owner_full_canvas_to_reference`。女王双栏脚本加 **`--match-vintage-scale`** 时会在 letterbox 后再做一次对齐。仅改已有 PNG：`python3 scripts/apply_owner_full_match_vintage_scale.py minigame/subpkg_chars/images/owner/full_outfit_<id>.png ...`。参考路径可设环境变量 `OWNER_FULL_SCALE_REF`。
+
 **批量重跑多套 P3**（`raw` 里需已有对应 `owner_<id>_p1.png`，否则先完整跑一遍该套）：
 
 ```bash

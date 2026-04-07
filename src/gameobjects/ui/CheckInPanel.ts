@@ -55,6 +55,13 @@ export class CheckInPanel extends PIXI.Container {
     TweenManager.to({ target: this._bg, props: { alpha: 1 }, duration: 0.2, ease: Ease.easeOutQuad });
     TweenManager.to({ target: this._content, props: { alpha: 1 }, duration: 0.2, ease: Ease.easeOutQuad });
     TweenManager.to({ target: this._content.scale, props: { x: 1, y: 1 }, duration: 0.3, ease: Ease.easeOutBack });
+
+    this._maybeAutoMilestoneClaimCelebration();
+  }
+
+  /** 主场景里程碑祝贺关闭后刷新日卡/礼包状态（公开供 MainScene 回调） */
+  refreshIfOpen(): void {
+    if (this._isOpen) this._refresh();
   }
 
   /** 将签到内容层本地坐标转为场景全局坐标（用于飞入动效与 MainScene.container 对齐） */
@@ -162,6 +169,16 @@ export class CheckInPanel extends PIXI.Container {
     if (CheckInManager.canCheckIn) {
       this._buildSignButton(cx, y);
     }
+  }
+
+  /** 打开面板后：有可领里程碑则下一帧弹出与升星同款的全屏祝贺 */
+  private _maybeAutoMilestoneClaimCelebration(): void {
+    if (!CheckInManager.hasClaimableMilestone) return;
+    const m = MILESTONES.find(ms => CheckInManager.canClaimMilestone(ms.threshold));
+    if (!m) return;
+    requestAnimationFrame(() => {
+      EventBus.emit('checkin:requestMilestoneClaim', m.threshold);
+    });
   }
 
   /* ====== 标题横幅 ====== */
@@ -272,9 +289,6 @@ export class CheckInPanel extends PIXI.Container {
       const nodeX = trackLeft + MILESTONE_X_INSET + (ms.threshold / MAX_DAYS) * mileSpan;
       const giftTex = TextureCache.get(`checkin_milestone_gift_${mi + 1}`);
       const claimed = CheckInManager.isMilestoneClaimed(ms.threshold);
-      const canClaim = CheckInManager.canClaimMilestone(ms.threshold);
-
-      let pulseTarget: PIXI.Sprite | PIXI.Graphics | null = null;
 
       if (giftTex) {
         const sp = new PIXI.Sprite(giftTex);
@@ -282,33 +296,27 @@ export class CheckInPanel extends PIXI.Container {
         sp.position.set(nodeX, GIFT_Y);
         sp.width = GIFT_SZ;
         sp.height = GIFT_SZ;
+        if (claimed) sp.alpha = 0.38;
         this._content.addChild(sp);
-        pulseTarget = sp;
       } else {
         const g = new PIXI.Graphics();
         g.beginFill(0xFFD54F);
         g.lineStyle(2, 0xF57C00, 1);
         g.drawRoundedRect(nodeX - 16, GIFT_Y - 16, 32, 32, 6);
         g.endFill();
+        if (claimed) g.alpha = 0.38;
         this._content.addChild(g);
-        pulseTarget = g;
       }
 
       if (claimed) {
         const ck = new PIXI.Text('✓', { fontSize: 20, fill: 0xFFFFFF, fontFamily: FONT_FAMILY, fontWeight: 'bold', stroke: 0x2E7D32, strokeThickness: 3 });
         ck.anchor.set(0.5);
         ck.position.set(nodeX, GIFT_Y);
+        ck.alpha = 0.85;
         this._content.addChild(ck);
       }
 
-      if (canClaim) {
-        const dot = new PIXI.Graphics();
-        dot.beginFill(0xE53935);
-        dot.lineStyle(1.5, 0xFFFFFF, 1);
-        dot.drawCircle(nodeX + GIFT_SZ * 0.3, GIFT_Y - GIFT_SZ * 0.32, 6);
-        dot.endFill();
-        this._content.addChild(dot);
-      }
+      // 可领时不再画红点、不做缩放脉冲：里程碑奖励打开面板会自动弹出祝贺，图标保持静态即可
 
       const lbl = new PIXI.Text(`${ms.threshold}天`, {
         fontSize: 16, fill: 0x5D4037, fontFamily: FONT_FAMILY, fontWeight: 'bold',
@@ -317,41 +325,22 @@ export class CheckInPanel extends PIXI.Container {
       });
       lbl.anchor.set(0.5, 0);
       lbl.position.set(nodeX, labelTop);
+      if (claimed) lbl.alpha = 0.55;
       this._content.addChild(lbl);
 
-      if (canClaim) {
-        if (pulseTarget instanceof PIXI.Sprite) {
-          const pt = pulseTarget;
-          const pObj = { s: 1 };
-          const bounce = (): void => {
-            TweenManager.to({
-              target: pObj, props: { s: 1.08 }, duration: 0.45, ease: Ease.easeInOutQuad,
-              onUpdate: () => pt.scale.set(pObj.s),
-              onComplete: () => {
-                TweenManager.to({
-                  target: pObj, props: { s: 1 }, duration: 0.45, ease: Ease.easeInOutQuad,
-                  onUpdate: () => pt.scale.set(pObj.s),
-                  onComplete: bounce,
-                });
-              },
-            });
-          };
-          bounce();
+      const hit = new PIXI.Container();
+      hit.hitArea = new PIXI.Circle(nodeX, GIFT_Y, GIFT_SZ * 0.65);
+      hit.eventMode = 'static';
+      hit.cursor = 'pointer';
+      hit.on('pointerdown', (e: PIXI.FederatedPointerEvent) => {
+        e.stopPropagation();
+        if (CheckInManager.canClaimMilestone(ms.threshold)) {
+          EventBus.emit('checkin:requestMilestoneClaim', ms.threshold);
+        } else {
+          EventBus.emit('checkin:requestMilestonePreview', ms.threshold);
         }
-
-        const hit = new PIXI.Container();
-        hit.hitArea = new PIXI.Circle(nodeX, GIFT_Y, GIFT_SZ * 0.65);
-        hit.eventMode = 'static';
-        hit.cursor = 'pointer';
-        hit.on('pointerdown', () => {
-          const result = CheckInManager.claimMilestone(ms.threshold);
-          if (result) {
-            EventBus.emit('checkin:flyMilestone', result, { x: nodeX, y: GIFT_Y });
-            this._refresh();
-          }
-        });
-        this._content.addChild(hit);
-      }
+      });
+      this._content.addChild(hit);
     });
 
     return blockH + 10;
@@ -560,5 +549,6 @@ export class CheckInPanel extends PIXI.Container {
     }
 
     this._refresh();
+    this._maybeAutoMilestoneClaimCelebration();
   }
 }

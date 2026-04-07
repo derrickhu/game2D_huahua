@@ -150,7 +150,13 @@ export class MergeHintSystem {
     const itemMap = new Map<string, number[]>();
 
     for (const cell of BoardManager.cells) {
-      if (cell.state !== CellState.OPEN || !cell.itemId || cell.reserved) continue;
+      if (
+        (cell.state !== CellState.OPEN && cell.state !== CellState.PEEK)
+        || !cell.itemId
+        || cell.reserved
+      ) {
+        continue;
+      }
       const def = ITEM_DEFS.get(cell.itemId);
       if (!def || def.level >= def.maxLevel) continue;
 
@@ -161,10 +167,29 @@ export class MergeHintSystem {
 
     const pairs: MergeablePair[] = [];
     for (const [, indices] of itemMap) {
-      if (indices.length >= 2) {
-        pairs.push({ a: indices[0], b: indices[1] });
-      }
+      const picked = this._pickMergeHintPair(indices);
+      if (picked) pairs.push(picked);
     }
     return pairs;
+  }
+
+  /**
+   * 同品多格时选一对用于空闲提示。两格均为 PEEK（半锁、不可点选）时不能在此合成，跳过以免误提示放大。
+   */
+  private _pickMergeHintPair(indices: number[]): MergeablePair | null {
+    if (indices.length < 2) return null;
+    const sorted = [...indices].sort((x, y) => x - y);
+    for (let i = 0; i < sorted.length; i++) {
+      for (let j = i + 1; j < sorted.length; j++) {
+        const a = sorted[i];
+        const b = sorted[j];
+        const ca = BoardManager.getCellByIndex(a);
+        const cb = BoardManager.getCellByIndex(b);
+        if (!ca?.itemId || !cb?.itemId) continue;
+        if (ca.state === CellState.PEEK && cb.state === CellState.PEEK) continue;
+        return { a, b };
+      }
+    }
+    return null;
   }
 }

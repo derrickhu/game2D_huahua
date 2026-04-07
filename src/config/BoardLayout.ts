@@ -22,11 +22,11 @@ export interface CellPreset {
 }
 
 /**
- * 固定开局棋盘（7 列 × 9 行），**无随机**：BoardManager 不再改写预设。
+ * 固定开局棋盘（7 列 × 9 行），**无随机**：`BoardManager.init` 仅按本表初始化各格（合成/钥匙/3×3 波及等运行时逻辑另计）。
  *
  * **圈层**：`layer = max(|row - 4|, |col - 3|)`（以几何中心为「内」），layer 越大越靠外。
  * **开局约束**：迷雾/钥匙格内花束线、蝴蝶标本线、冷饮/甜品成品为散落的低～中阶棋子（各线数量不匀）；冷饮线仅 Lv1 量杯 `tool_mixer_1`，无冰箱/制冰机等高阶器具；**不含**捕虫网 `tool_butterfly_net_*`（蝴蝶线须合成或产出获得）。
- * **例外**：中央 2×2 OPEN 仍为双铲 + 两空格；`(2,3)` 迷雾水壶为合成链，`BoardManager` 会在首次合铲后兜底半锁。
+ * **中央区摘要**：`row=3,col=2` **OPEN** `tool_plant_1`；`row=3,col=3` **PEEK** `tool_plant_1`；`row=4,col=2`～`col=3` **OPEN** 空格；`row=2,col=3` **PEEK** `tool_plant_2`；`row=5,col=2` **PEEK** `flower_fresh_1`。
  * **约束**：`FOG` / `PEEK` 内不得放合成链**顶格**（`getMergeResultId` 为 null 的产品/工具），否则半解锁后无法在开放格再凑一对合成，格子永远打不开。
  */
 export const BOARD_PRESETS: CellPreset[] = [
@@ -50,7 +50,7 @@ export const BOARD_PRESETS: CellPreset[] = [
   { row: 2, col: 0, state: CellState.FOG,  itemId: null,               keyPrice: 0, unlockPriority: 60 },
   { row: 2, col: 1, state: CellState.FOG,  itemId: 'flower_fresh_3',   keyPrice: 0, unlockPriority: 61 },
   { row: 2, col: 2, state: CellState.FOG,  itemId: 'flower_bouquet_1', keyPrice: 0, unlockPriority: 62 },
-  { row: 2, col: 3, state: CellState.FOG,  itemId: 'tool_plant_2',     keyPrice: 0, unlockPriority: 63 },
+  { row: 2, col: 3, state: CellState.PEEK, itemId: 'tool_plant_2',     keyPrice: 0, unlockPriority: 63 },
   { row: 2, col: 4, state: CellState.FOG,  itemId: 'flower_green_3',   keyPrice: 0, unlockPriority: 64 },
   { row: 2, col: 5, state: CellState.FOG,  itemId: 'tool_mixer_1',     keyPrice: 0, unlockPriority: 65 },
   { row: 2, col: 6, state: CellState.FOG,  itemId: 'drink_dessert_5',  keyPrice: 0, unlockPriority: 66 },
@@ -58,23 +58,23 @@ export const BOARD_PRESETS: CellPreset[] = [
   { row: 3, col: 0, state: CellState.FOG,  itemId: null,               keyPrice: 0, unlockPriority: 50 },
   { row: 3, col: 1, state: CellState.FOG,  itemId: 'flower_fresh_2',   keyPrice: 0, unlockPriority: 51 },
   { row: 3, col: 2, state: CellState.OPEN, itemId: 'tool_plant_1',     keyPrice: 0, unlockPriority: 0 },
-  { row: 3, col: 3, state: CellState.OPEN, itemId: 'tool_plant_1',     keyPrice: 0, unlockPriority: 0 },
+  { row: 3, col: 3, state: CellState.PEEK, itemId: 'tool_plant_1',     keyPrice: 0, unlockPriority: 0 },
   { row: 3, col: 4, state: CellState.FOG,  itemId: 'flower_fresh_2',   keyPrice: 0, unlockPriority: 52 },
   { row: 3, col: 5, state: CellState.FOG,  itemId: 'tool_arrange_2',   keyPrice: 0, unlockPriority: 53 },
   { row: 3, col: 6, state: CellState.FOG,  itemId: null,               keyPrice: 0, unlockPriority: 54 },
 
   { row: 4, col: 0, state: CellState.FOG,  itemId: 'flower_green_5',   keyPrice: 0, unlockPriority: 40 },
-  { row: 4, col: 1, state: CellState.FOG,  itemId: null,               keyPrice: 0, unlockPriority: 41 },
+  { row: 4, col: 1, state: CellState.FOG,  itemId: 'flower_green_1', keyPrice: 0, unlockPriority: 41 },
   { row: 4, col: 2, state: CellState.OPEN, itemId: null,               keyPrice: 0, unlockPriority: 0 },
   { row: 4, col: 3, state: CellState.OPEN, itemId: null,               keyPrice: 0, unlockPriority: 0 },
   { row: 4, col: 4, state: CellState.FOG,  itemId: 'flower_fresh_2',   keyPrice: 0, unlockPriority: 42 },
   { row: 4, col: 5, state: CellState.FOG,  itemId: 'drink_cold_4',     keyPrice: 0, unlockPriority: 43 },
   { row: 4, col: 6, state: CellState.KEY,  itemId: null,               keyPrice: 200, unlockPriority: 44 },
 
-  { row: 5, col: 0, state: CellState.KEY,  itemId: null,               keyPrice: 300, unlockPriority: 33 },
+  { row: 5, col: 0, state: CellState.FOG,  itemId: null,               keyPrice: 0, unlockPriority: 33 },
   { row: 5, col: 1, state: CellState.FOG,  itemId: 'flower_bouquet_2', keyPrice: 0, unlockPriority: 34 },
-  { row: 5, col: 2, state: CellState.FOG,  itemId: 'flower_fresh_1',   keyPrice: 0, unlockPriority: 35 },
-  { row: 5, col: 3, state: CellState.FOG,  itemId: null,               keyPrice: 0, unlockPriority: 36 },
+  { row: 5, col: 2, state: CellState.PEEK, itemId: 'flower_fresh_1',   keyPrice: 0, unlockPriority: 35 },
+  { row: 5, col: 3, state: CellState.FOG,  itemId: 'flower_fresh_1', keyPrice: 0, unlockPriority: 36 },
   { row: 5, col: 4, state: CellState.FOG,  itemId: 'flower_green_1',   keyPrice: 0, unlockPriority: 37 },
   { row: 5, col: 5, state: CellState.FOG,  itemId: null,               keyPrice: 0, unlockPriority: 38 },
   { row: 5, col: 6, state: CellState.FOG,  itemId: 'drink_dessert_3',  keyPrice: 0, unlockPriority: 39 },

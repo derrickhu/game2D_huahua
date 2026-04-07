@@ -173,23 +173,24 @@ const PLANT_OUTCOMES_TOOL_L4: ToolProduceOutcome[] = [
   { category: Category.FLOWER, line: FlowerLine.FRESH, level: 2, weight: 5 },
 ];
 
-/** 园艺 L5 工具：简易温室 — 鲜花/绿植 1～2 级为主，极低鲜花 3 级 */
+/** 园艺 L5 工具：简易温室 — 鲜/绿 1～3 级：1 级各 5%，2 级各 40%，3 级各 5% */
 const PLANT_OUTCOMES_TOOL_L5: ToolProduceOutcome[] = [
-  { category: Category.FLOWER, line: FlowerLine.FRESH, level: 1, weight: 27 },
-  { category: Category.FLOWER, line: FlowerLine.FRESH, level: 2, weight: 27 },
-  { category: Category.FLOWER, line: FlowerLine.GREEN, level: 1, weight: 23 },
-  { category: Category.FLOWER, line: FlowerLine.GREEN, level: 2, weight: 23 },
-  { category: Category.FLOWER, line: FlowerLine.FRESH, level: 3, weight: 2 },
+  { category: Category.FLOWER, line: FlowerLine.FRESH, level: 1, weight: 5 },
+  { category: Category.FLOWER, line: FlowerLine.GREEN, level: 1, weight: 5 },
+  { category: Category.FLOWER, line: FlowerLine.FRESH, level: 2, weight: 40 },
+  { category: Category.FLOWER, line: FlowerLine.GREEN, level: 2, weight: 40 },
+  { category: Category.FLOWER, line: FlowerLine.FRESH, level: 3, weight: 5 },
+  { category: Category.FLOWER, line: FlowerLine.GREEN, level: 3, weight: 5 },
 ];
 
-/** 园艺 L6 工具：温室 — 偏高等级鲜花/绿植 */
-const PLANT_OUTCOMES_LV4: ToolProduceOutcome[] = [
-  { category: Category.FLOWER, line: FlowerLine.FRESH, level: 5, weight: 28 },
-  { category: Category.FLOWER, line: FlowerLine.GREEN, level: 4, weight: 25 },
-  { category: Category.FLOWER, line: FlowerLine.FRESH, level: 6, weight: 22 },
-  { category: Category.FLOWER, line: FlowerLine.GREEN, level: 5, weight: 12 },
-  { category: Category.FLOWER, line: FlowerLine.FRESH, level: 7, weight: 8 },
-  { category: Category.FLOWER, line: FlowerLine.GREEN, level: 6, weight: 5 },
+/** 园艺 L6 工具：温室 — 鲜/绿 L4 各 30%，L5 各 10%，L6 各 10% */
+const PLANT_OUTCOMES_TOOL_L6: ToolProduceOutcome[] = [
+  { category: Category.FLOWER, line: FlowerLine.FRESH, level: 4, weight: 30 },
+  { category: Category.FLOWER, line: FlowerLine.GREEN, level: 4, weight: 30 },
+  { category: Category.FLOWER, line: FlowerLine.FRESH, level: 5, weight: 10 },
+  { category: Category.FLOWER, line: FlowerLine.GREEN, level: 5, weight: 10 },
+  { category: Category.FLOWER, line: FlowerLine.FRESH, level: 6, weight: 10 },
+  { category: Category.FLOWER, line: FlowerLine.GREEN, level: 6, weight: 10 },
 ];
 
 /** 园艺 L7 工具：高级温室 — 向高等级鲜花/绿植倾斜（对齐 13 级链末端） */
@@ -253,8 +254,8 @@ const plantToolTemplate = (): Omit<ToolDef, 'itemId' | 'level'>[] => [
     canProduce: true,
     produceTable: [],
     produceOutcomes: PLANT_OUTCOMES_TOOL_L5,
-    cooldown: 300,
-    producesBeforeCooldown: 10,
+    cooldown: 0,
+    producesBeforeCooldown: 0,
     staminaCost: 1,
   },
   {
@@ -263,9 +264,9 @@ const plantToolTemplate = (): Omit<ToolDef, 'itemId' | 'level'>[] => [
     produceLine: FlowerLine.FRESH,
     canProduce: true,
     produceTable: [],
-    produceOutcomes: PLANT_OUTCOMES_LV4,
+    produceOutcomes: PLANT_OUTCOMES_TOOL_L6,
     cooldown: 360,
-    producesBeforeCooldown: 8,
+    producesBeforeCooldown: 15,
     staminaCost: 1,
   },
   {

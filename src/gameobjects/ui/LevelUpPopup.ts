@@ -34,6 +34,8 @@ export interface LevelUpPopupShowOptions {
   previewOnly?: boolean;
   /** 仅 preview 时用作面板标题；正式升级固定「恭喜升级」 */
   bannerTitle?: string;
+  /** 非预览全屏祝贺时的标题，默认「恭喜升级」（如签到里程碑用「恭喜获得」） */
+  celebrationTitle?: string;
   /** 淡出并从舞台移除完毕后回调（用于衔接后续弹窗，如花店「获得新家具」） */
   onFullyClosed?: () => void;
 }
@@ -95,7 +97,7 @@ export class LevelUpPopup extends PIXI.Container {
 
     const titleText = this._previewOnly
       ? (options?.bannerTitle ?? `升至 ${level}星 · 礼包预览`)
-      : '恭喜升级';
+      : (options?.celebrationTitle ?? '恭喜升级');
 
     const mask = new PIXI.Graphics();
     mask.beginFill(0x000000, LEVEL_UP_MASK_ALPHA);

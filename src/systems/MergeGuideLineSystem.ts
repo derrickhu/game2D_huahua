@@ -78,7 +78,12 @@ export class MergeGuideLineSystem {
     for (let i = 0; i < BoardManager.cells.length; i++) {
       if (i === this._srcIndex) continue;
       const other = BoardManager.cells[i];
-      if (other.state !== CellState.OPEN || other.itemId !== cell.itemId) continue;
+      if (
+        (other.state !== CellState.OPEN && other.state !== CellState.PEEK)
+        || other.itemId !== cell.itemId
+      ) {
+        continue;
+      }
       if (other.reserved) continue;
 
       const col = i % BOARD_COLS;

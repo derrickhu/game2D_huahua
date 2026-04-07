@@ -1,0 +1,11 @@
+Single game sprite: one small humble wall painting for a cozy pastel merge flower shop. Tier 1 entry item — keep it modest and compact.
+
+PERSPECTIVE — mandatory: Designed to sit on the left-hand isometric interior wall in a 2.5D dollhouse room. The framed art lies flat on a vertical wall plane seen from a camera angled about 45 degrees into the room corner. Do NOT draw a front-facing billboard rectangle. Use clear isometric foreshortening: the frame reads as a skewed quadrilateral on that wall — the top edge of the frame slopes gently downward toward the right, the picture plane is foreshortened, verticals follow the wall oblique. One cohesive object only.
+
+FRAME — thin light maple or birch wood, simple flat profile, minimal moulding, small modest size overall (smallest painting in a four-item set).
+
+ART INSIDE — simple gouache or soft illustration of a tiny wildflower cluster: daisies, buttercups, soft greens; gentle and unfussy, limited detail, cozy not gallery-masterpiece.
+
+STYLE: kawaii casual mobile game prop, warm brown outlines, pastel high-key, soft cel shading, clean vector-like shapes, no photoreal metal, no readable text, no watermark.
+
+BACKGROUND: flat solid off-white or very pale warm cream around the skewed frame only; no room interior, no floor, no extra props.
