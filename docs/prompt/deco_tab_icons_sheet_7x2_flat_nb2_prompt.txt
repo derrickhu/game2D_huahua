@@ -1,0 +1,11 @@
+Single square spritesheet exactly 1:1 for 512 pixels per side. Strict invisible 7 columns by 2 rows, equal column widths within one pixel tolerance, two equal row heights, thin neutral gutters only.
+
+Each cell is one UI chip: a wide horizontal lozenge or squircle pill, much wider than tall, like a fat capsule, not a tall vertical card. Thick soft dark-brown outlines on the pill and on the icon art.
+
+Row 1 top, seven cells left to right: pink five-petal flower with yellow center and two small green leaves; simple peach-brown wooden chair; purple two-prong plug with short cord; white vase with blue band; brown picture frame with tiny green-hill landscape; rounded green bush with small white dots; seventh cell a cute simple house facade icon for picking room shell style, same line weight and pastel fills, gable roof small window and door readable silhouette, no text.
+
+Each top cell background fill inside the lozenge: off-white or very light cream, clearly idle unselected.
+
+Row 2 bottom: repeat the exact same seven icons with identical shapes and colors, only the lozenge interior fill becomes a saturated soft cherry-red or tomato-red selected state, still kawaii merge-game UI.
+
+No letters, no numbers, no watermark. Center icons inside each lozenge with padding. Sheet background between cells flat very pale lavender or light gray for easy separation. Photoreal forbidden.

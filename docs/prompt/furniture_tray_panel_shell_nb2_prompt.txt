@@ -1,0 +1,13 @@
+Single UI asset, vertical mobile proportions, centered on canvas. One empty decorative panel only, no buttons, no ribbons, no icons, no text, no numbers.
+
+Shape: a soft rounded rectangle whose top edge is a smooth upward arch or shallow dome like half of an oval, not a flat straight top; bottom corners stay large and rounded so the silhouette feels like a cute bottom-sheet or badge plate. Symmetric left-right.
+
+Frame: thick outer rim soft lilac lavender, thinner inner lip pastel pink, crisp hand-painted game UI strokes in warm dark brown. Main interior fill one flat solid very light cream or warm off-white, perfectly uniform matte, no wood grain, no pattern, no gradient except a whisper of pillow shading only on the purple and pink rims for volume.
+
+Absolutely omit: any golden yellow title ribbon or banner, any red circular close control, any green pill or bar, any checkmark, any coin or pouch icon, any furniture thumbnails, any tab row.
+
+Outside the panel silhouette only: flat pure white RGB 255,255,255 filling the rest of the image so the panel floats on white for easy cutout. No gray, no scene, no grass.
+
+Style: clean 2D vector kawaii casual merge-game UI, pastel high key, soft inner highlights on borders only, no photoreal, no watermark.
+
+Use the attached reference strictly for the arch-top proportion, purple-pink-cream layering, and outline thickness only — strip all inner chrome as listed above.

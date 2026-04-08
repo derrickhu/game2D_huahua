@@ -25,20 +25,60 @@ import {
   isDecoAllowedInScene,
   furnitureTrayTabFromSlot,
   furnitureTrayTabForDeco,
+  furnitureTrayTabTextureKey,
 } from '@/config/DecorationConfig';
 import { CurrencyManager } from '@/managers/CurrencyManager';
 import { DESIGN_WIDTH, FONT_FAMILY, COLORS } from '@/config/Constants';
 
 // ---- 布局常量 ----
 /** 导出供 ShopScene 对齐编辑按钮位置；略低于旧 300px，少挡花店场景 */
-export const FURNITURE_TRAY_H = 252;
+/** Tab 行下移后仍保留网格高度，与 TAB_ROW_TOP_PAD 同步增加 */
+export const FURNITURE_TRAY_H = 310;
+/**
+ * 打开态托盘整体上移（相对「贴底 TRAY_H」基准），与编辑态透明操作区上沿对齐
+ * @see ShopScene._enterEditMode trayTopY
+ */
+export const FURNITURE_TRAY_OPEN_OFFSET_UP = 50;
+/** 在「上移对齐」基础上再整体下移，减少遮挡房间内家具（Pixi y 增大 = 向下） */
+export const FURNITURE_TRAY_OPEN_NUDGE_DOWN = 30;
 
 const TRAY_H = FURNITURE_TRAY_H;
-const TAB_BAR_H = 52;             // 分类 Tab 栏高度（加大）
-const CARD_SIZE = 96;             // 家具卡片尺寸（加大）
-const CARD_GAP = 12;
-const PADDING = 14;
+/** 手柄与 Tab 行间距（整体下移） */
+const TAB_ROW_TOP_PAD = 30;
+/** 单个 Tab 槽宽（7 枚 + 间隙，整行水平居中，比均分屏宽更紧凑） */
+const TAB_SLOT_W = 88;
+const TAB_GAP = 4;
+/** 仅图标 Tab 行高度（无文字/计数） */
+const TAB_BAR_H = 50;
+const TAB_ICON_PAD = 6;
 const HANDLE_H = 28;              // 顶部拖拽手柄高度
+/** Tab 带下沿到托盘内容区顶（与 _build 一致） */
+const TAB_BAND_BOTTOM = HANDLE_H + TAB_ROW_TOP_PAD + TAB_BAR_H;
+/** 家具横滑区可视高度 */
+const GRID_VIEW_H = TRAY_H - TAB_BAND_BOTTOM;
+/**
+ * 列表裁切左右缩进（奶油区内再各收约 20，避免贴紫框；不足一屏可横滑）
+ */
+const GRID_CLIP_INSET_X = 59;
+/** 列表左留白与裁切左缘对齐 */
+const GRID_LIST_PAD_LEFT = GRID_CLIP_INSET_X;
+const GRID_LIST_PAD_RIGHT = 16;
+const GRID_LIST_PAD_Y = 10;
+const GRID_CARD_GAP = 8;
+const GRID_TARGETS_PER_ROW = 6;
+/** 奶油区内可绘宽度（与遮罩一致） */
+const GRID_CLIP_INNER_W = DESIGN_WIDTH - 2 * GRID_CLIP_INSET_X;
+/** 裁切右缘在父坐标中的 x（用于 maxScroll） */
+const GRID_CLIP_RIGHT_X = GRID_CLIP_INSET_X + GRID_CLIP_INNER_W;
+/** 首卡左缘与裁切左缘对齐，宽度按区内宽减右留白与间隙推导，避免滑到 0 仍裁到第六张 */
+const CARD_SIZE = Math.floor(
+  (GRID_CLIP_INNER_W -
+    GRID_LIST_PAD_RIGHT -
+    (GRID_TARGETS_PER_ROW - 1) * GRID_CARD_GAP) /
+    GRID_TARGETS_PER_ROW,
+);
+/** 底板矢量回退与贴图裁切高度（略大于 TRAY_H，与历史布局一致） */
+const TRAY_BG_H = TRAY_H + 40;
 const BG_COLOR = 0xFFF8F0;
 const BG_ALPHA = 0.97;
 const TRAY_RADIUS = 20;
@@ -69,7 +109,8 @@ const TRAY_TAP_SLOP_PX = 12;
 type TrayScrollMode = 'scroll' | 'drag' | 'neutral';
 
 export class FurnitureTray extends PIXI.Container {
-  private _bg!: PIXI.Graphics;
+  /** 底板：拱顶壳体贴图或矢量回退 */
+  private _bg!: PIXI.Container;
   private _handle!: PIXI.Container;
   private _tabContainer!: PIXI.Container;
   private _gridContainer!: PIXI.Container;
@@ -147,7 +188,8 @@ export class FurnitureTray extends PIXI.Container {
 
     const logicH = Game.logicHeight;
     this._closedY = logicH;
-    this._openY = logicH - TRAY_H;
+    this._openY =
+      logicH - TRAY_H - FURNITURE_TRAY_OPEN_OFFSET_UP + FURNITURE_TRAY_OPEN_NUDGE_DOWN;
 
     this.y = this._closedY;
     if (trayArg != null && typeof trayArg === 'object' && 'deco' in trayArg) {
@@ -198,14 +240,36 @@ export class FurnitureTray extends PIXI.Container {
   private _build(): void {
     const w = DESIGN_WIDTH;
 
-    // 背景
-    this._bg = new PIXI.Graphics();
-    this._bg.beginFill(BG_COLOR, BG_ALPHA);
-    this._bg.drawRoundedRect(0, 0, w, TRAY_H + 40, TRAY_RADIUS);
-    this._bg.endFill();
-    this._bg.lineStyle(1, 0xE0D0C0);
-    this._bg.drawRoundedRect(0, 0, w, TRAY_H + 40, TRAY_RADIUS);
-    this._bg.eventMode = 'static'; // 阻止穿透
+    // 背景：壳体贴图顶对齐；资源已倒置为平底在上，遮罩内主要见奶油区，拱顶在贴图下方可被裁掉
+    this._bg = new PIXI.Container();
+    this._bg.eventMode = 'static';
+    this._bg.hitArea = new PIXI.Rectangle(0, 0, w, TRAY_BG_H);
+
+    const shellTex = TextureCache.get('furniture_tray_panel_shell_nb2');
+    if (shellTex?.width) {
+      const sp = new PIXI.Sprite(shellTex);
+      sp.anchor.set(0.5, 0);
+      sp.position.set(w / 2, 0);
+      const sx = w / shellTex.width;
+      sp.scale.set(sx, sx);
+      this._bg.addChild(sp);
+    } else {
+      const g = new PIXI.Graphics();
+      g.beginFill(BG_COLOR, BG_ALPHA);
+      g.drawRoundedRect(0, 0, w, TRAY_BG_H, TRAY_RADIUS);
+      g.endFill();
+      g.lineStyle(1, 0xE0D0C0);
+      g.drawRoundedRect(0, 0, w, TRAY_BG_H, TRAY_RADIUS);
+      this._bg.addChild(g);
+    }
+
+    const bgMask = new PIXI.Graphics();
+    bgMask.beginFill(0xffffff);
+    bgMask.drawRoundedRect(0, 0, w, TRAY_BG_H, TRAY_RADIUS);
+    bgMask.endFill();
+    this._bg.addChild(bgMask);
+    this._bg.mask = bgMask;
+
     this.addChild(this._bg);
 
     // 顶部拖拽手柄
@@ -219,28 +283,28 @@ export class FurnitureTray extends PIXI.Container {
     this._handle.hitArea = new PIXI.Rectangle(0, 0, w, HANDLE_H);
     this.addChild(this._handle);
 
-    // 分类 Tab 栏
+    // 分类 Tab 栏（下移，与壳体上沿留白）
     this._tabContainer = new PIXI.Container();
-    this._tabContainer.y = HANDLE_H;
+    this._tabContainer.y = HANDLE_H + TAB_ROW_TOP_PAD;
     this.addChild(this._tabContainer);
 
     // 家具网格区域
     this._gridContainer = new PIXI.Container();
-    this._gridContainer.y = HANDLE_H + TAB_BAR_H;
+    this._gridContainer.y = TAB_BAND_BOTTOM;
     this.addChild(this._gridContainer);
 
-    // 网格遮罩
-    const gridH = TRAY_H - HANDLE_H - TAB_BAR_H;
+    // 网格遮罩（左右缩进，与奶油区内宽一致，列表不画到紫框上）
+    const clipW = w - 2 * GRID_CLIP_INSET_X;
     this._gridMask = new PIXI.Graphics();
     this._gridMask.beginFill(0xFFFFFF);
-    this._gridMask.drawRect(0, HANDLE_H + TAB_BAR_H, w, gridH);
+    this._gridMask.drawRect(GRID_CLIP_INSET_X, TAB_BAND_BOTTOM, clipW, GRID_VIEW_H);
     this._gridMask.endFill();
     this.addChild(this._gridMask);
     this._gridContainer.mask = this._gridMask;
 
-    // 网格滚动事件
+    // 网格滚动事件（命中区与可视裁切一致）
     this._gridContainer.eventMode = 'static';
-    this._gridContainer.hitArea = new PIXI.Rectangle(0, 0, w, gridH);
+    this._gridContainer.hitArea = new PIXI.Rectangle(GRID_CLIP_INSET_X, 0, clipW, GRID_VIEW_H);
   }
 
   private _unbindCanvasTrayScroll(): void {
@@ -319,52 +383,54 @@ export class FurnitureTray extends PIXI.Container {
     this._tabContainer.removeChildren();
 
     const tabs = FURNITURE_TRAY_TABS;
-    const tabW = Math.floor(DESIGN_WIDTH / tabs.length);
-    const sceneId = CurrencyManager.state.sceneId;
+    const n = tabs.length;
+    const rowW = n * TAB_SLOT_W + (n - 1) * TAB_GAP;
+    const rowStartX = Math.max(0, (DESIGN_WIDTH - rowW) / 2);
 
     tabs.forEach((tabId, i) => {
       const meta = getDecorationTabLabel(tabId as DecoPanelTabId);
       const isCurrent = tabId === this._currentTab;
 
       const tab = new PIXI.Container();
-      tab.position.set(i * tabW, 0);
+      tab.position.set(rowStartX + i * (TAB_SLOT_W + TAB_GAP), 0);
 
       // Tab 背景
       const bg = new PIXI.Graphics();
       if (isCurrent) {
         bg.beginFill(0xFFE8D0);
-        bg.drawRoundedRect(2, 2, tabW - 4, TAB_BAR_H - 4, 6);
+        bg.drawRoundedRect(2, 2, TAB_SLOT_W - 4, TAB_BAR_H - 4, 6);
         bg.endFill();
         bg.lineStyle(2, COLORS.BUTTON_PRIMARY);
-        bg.drawRoundedRect(2, 2, tabW - 4, TAB_BAR_H - 4, 6);
+        bg.drawRoundedRect(2, 2, TAB_SLOT_W - 4, TAB_BAR_H - 4, 6);
       }
       tab.addChild(bg);
 
-      const label = new PIXI.Text(`${meta.emoji}\n${meta.name}`, {
-        fontSize: 11,
-        fontFamily: FONT_FAMILY,
-        fill: COLORS.TEXT_DARK,
-        align: 'center',
-      } as any);
-      label.anchor.set(0.5, 0.5);
-      label.position.set(tabW / 2, TAB_BAR_H / 2 - 4);
-      tab.addChild(label);
+      const iconKey = furnitureTrayTabTextureKey(tabId);
+      const tabTex = TextureCache.get(iconKey);
+      const maxW = TAB_SLOT_W - TAB_ICON_PAD * 2;
+      const maxH = TAB_BAR_H - TAB_ICON_PAD * 2;
+      const cx = TAB_SLOT_W / 2;
+      const cy = TAB_BAR_H / 2;
 
-      const tabDecos = getDecosForDecorationPanelTab(tabId as DecoPanelTabId, sceneId);
-      const unlocked = tabDecos.filter(d => DecorationManager.isUnlocked(d.id) && isDecoAllowedInScene(d, sceneId));
-      const unlockedIds = new Set(unlocked.map(d => d.id));
-      const placedN = RoomLayoutManager.getLayout().filter(p => unlockedIds.has(p.decoId)).length;
-
-      if (unlocked.length > 0) {
-        const countText = new PIXI.Text(`${placedN}/${unlocked.length}`, {
-          fontSize: 9, fill: COLORS.TEXT_LIGHT, fontFamily: FONT_FAMILY,
+      if (tabTex?.width) {
+        const sp = new PIXI.Sprite(tabTex);
+        sp.anchor.set(0.5, 0.5);
+        const s = Math.min(maxW / tabTex.width, maxH / tabTex.height);
+        sp.scale.set(s, s);
+        sp.position.set(cx, cy);
+        tab.addChild(sp);
+      } else {
+        const emoji = new PIXI.Text(meta.emoji, {
+          fontSize: Math.min(34, maxH),
+          fontFamily: FONT_FAMILY,
         });
-        countText.anchor.set(0.5, 0);
-        countText.position.set(tabW / 2, TAB_BAR_H - 14);
-        tab.addChild(countText);
+        emoji.anchor.set(0.5, 0.5);
+        emoji.position.set(cx, cy);
+        tab.addChild(emoji);
       }
 
       tab.eventMode = 'static';
+      tab.hitArea = new PIXI.Rectangle(0, 0, TAB_SLOT_W, TAB_BAR_H);
       tab.cursor = 'pointer';
       tab.on('pointertap', () => {
         this._currentTab = tabId;
@@ -393,8 +459,7 @@ export class FurnitureTray extends PIXI.Container {
         align: 'center',
       });
       emptyText.anchor.set(0.5, 0.5);
-      const gridH = TRAY_H - HANDLE_H - TAB_BAR_H;
-      emptyText.position.set(DESIGN_WIDTH / 2, gridH / 2);
+      emptyText.position.set(DESIGN_WIDTH / 2, GRID_VIEW_H / 2);
       this._gridContainer.addChild(emptyText);
       return;
     }
@@ -403,15 +468,18 @@ export class FurnitureTray extends PIXI.Container {
     this._gridContainer.addChild(innerContainer);
     this._trayScrollInner = innerContainer;
 
-    const gridH = TRAY_H - HANDLE_H - TAB_BAR_H;
     const n = decos.length;
-    const contentW = PADDING + n * CARD_SIZE + (n > 0 ? (n - 1) * CARD_GAP : 0) + PADDING;
+    const contentW =
+      GRID_LIST_PAD_LEFT +
+      n * CARD_SIZE +
+      (n > 0 ? (n - 1) * GRID_CARD_GAP : 0) +
+      GRID_LIST_PAD_RIGHT;
     const plateW = Math.max(DESIGN_WIDTH, contentW);
 
     // 底层透明承接区：点在卡片间隙或右侧留白时也能横向滑动
     const scrollPlate = new PIXI.Container();
     scrollPlate.eventMode = 'static';
-    scrollPlate.hitArea = new PIXI.Rectangle(0, 0, plateW, gridH);
+    scrollPlate.hitArea = new PIXI.Rectangle(0, 0, plateW, GRID_VIEW_H);
     scrollPlate.on('pointerdown', (e: PIXI.FederatedPointerEvent) => {
       this._beginTrayScroll(e, null);
     });
@@ -420,13 +488,13 @@ export class FurnitureTray extends PIXI.Container {
     const currentLayout = RoomLayoutManager.getLayout();
 
     decos.forEach((deco, i) => {
-      const x = PADDING + i * (CARD_SIZE + CARD_GAP);
-      const y = PADDING;
+      const x = GRID_LIST_PAD_LEFT + i * (CARD_SIZE + GRID_CARD_GAP);
+      const y = GRID_LIST_PAD_Y;
       const card = this._buildCard(deco, x, y, currentLayout);
       innerContainer.addChild(card);
     });
 
-    this._maxScrollX = Math.max(0, contentW - DESIGN_WIDTH);
+    this._maxScrollX = Math.max(0, contentW - GRID_CLIP_RIGHT_X);
     this._scrollX = Math.max(-this._maxScrollX, Math.min(0, this._scrollX));
     innerContainer.x = this._scrollX;
   }
@@ -460,7 +528,7 @@ export class FurnitureTray extends PIXI.Container {
     const texture = TextureCache.get(deco.icon);
     if (texture) {
       const sprite = new PIXI.Sprite(texture);
-      const maxSize = CARD_SIZE - 20;
+      const maxSize = CARD_SIZE - 18;
       const s = Math.min(maxSize / texture.width, maxSize / texture.height);
       sprite.scale.set(s);
       sprite.anchor.set(0.5, 0.5);

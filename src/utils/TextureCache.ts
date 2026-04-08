@@ -141,6 +141,19 @@ const PANELS_IMAGE_MAP: Record<string, string> = {
   /** 装修面板左侧分类 Tab：NB2 品红底 + rembg；未选中 / 选中 */
   deco_panel_tab_idle_nb2: 'subpkg_panels/images/ui/deco_panel_tab_idle_nb2.png',
   deco_panel_tab_selected_nb2: 'subpkg_panels/images/ui/deco_panel_tab_selected_nb2.png',
+  /** 编辑托盘 Tab 图标（6×2 表切图 + rembg；顺序同 FURNITURE_TRAY_TABS） */
+  /** 家具托盘 Tab 图标（单态；选中由程序描边/底色区分） */
+  furniture_tray_tab_flower_room_idle: 'subpkg_panels/images/ui/furniture_tray_tab_flower_room_idle.png',
+  furniture_tray_tab_furniture_idle: 'subpkg_panels/images/ui/furniture_tray_tab_furniture_idle.png',
+  furniture_tray_tab_appliance_idle: 'subpkg_panels/images/ui/furniture_tray_tab_appliance_idle.png',
+  furniture_tray_tab_ornament_idle: 'subpkg_panels/images/ui/furniture_tray_tab_ornament_idle.png',
+  furniture_tray_tab_wallart_idle: 'subpkg_panels/images/ui/furniture_tray_tab_wallart_idle.png',
+  furniture_tray_tab_garden_idle: 'subpkg_panels/images/ui/furniture_tray_tab_garden_idle.png',
+  furniture_tray_tab_room_styles_idle: 'subpkg_panels/images/ui/furniture_tray_tab_room_styles_idle.png',
+  /** 编辑工具栏「确认」：绿色胶囊对勾，rembg 透明底 */
+  furniture_tray_confirm_btn: 'subpkg_panels/images/ui/furniture_tray_confirm_btn.png',
+  /** 家具托盘底板壳：NB2+rembg；贴图已 180° 调向，平底在上、拱顶在下，顶对齐裁切后少占竖向 */
+  furniture_tray_panel_shell_nb2: 'subpkg_panels/images/ui/furniture_tray_panel_shell_nb2.png',
   /** 万能水晶/金剪刀确认弹窗：NB2+rembg，与合成线彩带同风格 */
   special_consumable_panel_bg: 'subpkg_panels/images/ui/special_consumable_panel_bg.png',
   special_consumable_use_btn: 'subpkg_panels/images/ui/special_consumable_use_btn.png',

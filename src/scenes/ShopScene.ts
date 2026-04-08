@@ -30,7 +30,12 @@ import { SaveManager } from '@/managers/SaveManager';
 import { DressUpManager } from '@/managers/DressUpManager';
 import { getOwnerShopDisplayScale } from '@/config/DressUpConfig';
 import { FurnitureDragSystem } from '@/systems/FurnitureDragSystem';
-import { FurnitureTray, FURNITURE_TRAY_H } from '@/gameobjects/ui/FurnitureTray';
+import {
+  FurnitureTray,
+  FURNITURE_TRAY_H,
+  FURNITURE_TRAY_OPEN_OFFSET_UP,
+  FURNITURE_TRAY_OPEN_NUDGE_DOWN,
+} from '@/gameobjects/ui/FurnitureTray';
 import { RoomEditToolbar } from '@/gameobjects/ui/RoomEditToolbar';
 import { TextureCache } from '@/utils/TextureCache';
 import { DECO_MAP, DecoDef, DecoSlot, SHOP_FURNITURE_TEX_BASE_PX } from '@/config/DecorationConfig';
@@ -49,8 +54,25 @@ const PROGRESS_BAR_W = 400;
 const PROGRESS_BAR_H = 28;
 const RETURN_BTN_SIZE = 80;   // ← 放大返回按钮
 
+/** 底部浅绿条逻辑顶边 y = h - offset；大地图整体须在此线之下（不冒出条外）；随大地图放大+上移留高 */
+const SHOP_BOTTOM_STRIP_TOP_OFFSET = 280;
+/** 大地图（图标+「地图」字）底边与「营业」圆形上沿的间距 */
+const WORLD_MAP_ABOVE_OPERATE_GAP = 8;
+/** 相对自动排版结果整体上移（像素） */
+const WORLD_MAP_BTN_LIFT_PX = 50;
+/** 大地图入口：图标半径（逻辑 px） */
+const WORLD_MAP_ICON_R = 40;
+/** 「地图」字号；与 WORLD_MAP_LABEL_Y 一起参与 mapExtentBelowCenter 估算 */
+const WORLD_MAP_LABEL_FONT = 14;
+const WORLD_MAP_LABEL_H = 18;
+
 /** 与 FurnitureTray 一致，避免遮挡过多场景 */
-const TRAY_HEIGHT = FURNITURE_TRAY_H;
+/** 编辑态托盘顶边设计坐标：logicH - 高度 - 上移量 */
+const trayOpenTopY = (logicH: number) =>
+  logicH -
+  FURNITURE_TRAY_H -
+  FURNITURE_TRAY_OPEN_OFFSET_UP +
+  FURNITURE_TRAY_OPEN_NUDGE_DOWN;
 
 /** 「装修花店」主按钮宽度（与 _buildEditButton 一致） */
 const EDIT_MAIN_BTN_W = (): number => Math.round(DESIGN_WIDTH * 0.5);
@@ -385,7 +407,7 @@ export class ShopScene implements Scene {
     // ============== 8. 右下角返回按钮（参考四季物语的大箭头） ==============
     this._buildReturnButton(w, h);
 
-    // ============== 8b. 大地图按钮（返回按钮上方，10 星解锁） ==============
+    // ============== 8b. 大地图按钮（右下营业钮正上方、落在底部浅绿条内，10 星解锁） ==============
     this._buildWorldMapButton(w, h);
 
     // ============== 9. 编辑模式组件（初始隐藏） ==============
@@ -1441,10 +1463,21 @@ export class ShopScene implements Scene {
 
   private _buildWorldMapButton(w: number, h: number): void {
     const btn = new PIXI.Container();
-    // 与右下角「营业」按钮同一行，在其左侧（示意图红框区域）
-    const cx = w - 72 - 82;
-    const cy = h - 90;
-    const r = 32;
+    const r = WORLD_MAP_ICON_R;
+    // 与「营业」同列；整体上沿受底部浅绿条顶边限制（见 SHOP_BOTTOM_STRIP_TOP_OFFSET）
+    const cx = w - 72;
+    const operateCY = h - 90;
+    const operateR = RETURN_BTN_SIZE / 2;
+    const operateTopY = operateCY - operateR;
+    // 文案上提、略压图标下缘：锚点顶对齐，y < r 形成重叠
+    const labelY = r - 10;
+    const mapExtentBelowCenter = labelY + WORLD_MAP_LABEL_H;
+    const stripTopY = h - SHOP_BOTTOM_STRIP_TOP_OFFSET;
+    const cyFromOperate =
+      operateTopY - WORLD_MAP_ABOVE_OPERATE_GAP - mapExtentBelowCenter;
+    const cyMinForStrip = stripTopY + r + 2;
+    let cy = Math.max(cyFromOperate, cyMinForStrip) - WORLD_MAP_BTN_LIFT_PX;
+    if (cy - r < stripTopY) cy = stripTopY + r + 2;
 
     const tex = TextureCache.get('icon_worldmap');
     if (tex && tex.width > 1) {
@@ -1462,23 +1495,27 @@ export class ShopScene implements Scene {
       bg.drawCircle(0, 0, r);
       btn.addChild(bg);
 
-      const icon = new PIXI.Text('🗺️', { fontSize: 28, fontFamily: FONT_FAMILY });
+      const icon = new PIXI.Text('🗺️', { fontSize: Math.round(r * 0.88), fontFamily: FONT_FAMILY });
       icon.anchor.set(0.5);
       btn.addChild(icon);
     }
 
     const label = new PIXI.Text('地图', {
-      fontSize: 12, fill: 0xFFFFFF, fontFamily: FONT_FAMILY, fontWeight: 'bold',
-      stroke: 0x3E2723, strokeThickness: 2,
+      fontSize: WORLD_MAP_LABEL_FONT,
+      fill: 0xFFFFFF,
+      fontFamily: FONT_FAMILY,
+      fontWeight: 'bold',
+      stroke: 0x3E2723,
+      strokeThickness: 2.5,
     });
     label.anchor.set(0.5, 0);
-    label.y = r + 4;
+    label.y = labelY;
     btn.addChild(label);
 
     btn.position.set(cx, cy);
     btn.eventMode = 'static';
     btn.cursor = 'pointer';
-    btn.hitArea = new PIXI.Circle(0, 0, r + 12);
+    btn.hitArea = new PIXI.Circle(0, 0, r + 22);
     btn.on('pointerdown', () => {
       TweenManager.cancelTarget(btn.scale);
       btn.scale.set(0.85);
@@ -1761,7 +1798,7 @@ export class ShopScene implements Scene {
     }
 
     const h = Game.logicHeight;
-    const trayTopY = h - TRAY_HEIGHT;
+    const trayTopY = trayOpenTopY(h);
     this._editBtn.position.set(DESIGN_WIDTH / 2, trayTopY - 36);
 
     const editBtnY = trayTopY - 36;

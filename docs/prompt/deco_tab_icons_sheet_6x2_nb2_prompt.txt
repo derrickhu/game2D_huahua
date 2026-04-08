@@ -1,0 +1,11 @@
+Single square game UI spritesheet, exactly 1:1 aspect, optimized for 512 pixels per side output. Strict invisible 6-column by 2-row grid, equal cell size, thin neutral gaps between cells only, no outer decorative frame beyond the grid.
+
+Use the attached reference for icon shapes and art style only: thick soft dark-brown outlines, kawaii cozy merge-game 2D vector look, gentle top-left highlights, pastel fills.
+
+Row 1 top, six cells left to right, same order as reference: pink five-petal flower with yellow center and two small green leaves; simple brown wooden chair; purple two-prong plug with short cord; white vase with blue band; brown picture frame with tiny green-hill landscape inside; rounded green bush with small white dots.
+
+Each top cell background: off-white or very light cream rounded pill or squircle filling the cell, clearly unselected idle state, soft subtle inner shadow.
+
+Row 2 bottom: repeat the exact same six icons with identical proportions and line weight, only the cell background changes to a saturated soft cherry-red or tomato-red rounded pill fill for selected state, still readable cute UI, no neon, no gradient noise.
+
+No text, no numbers, no watermark, no extra icons. Center each icon in its cell with comfortable padding. Background outside cells flat very pale lavender or flat light gray so later cutout is easy. Photoreal forbidden.

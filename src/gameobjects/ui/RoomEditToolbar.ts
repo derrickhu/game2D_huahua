@@ -16,9 +16,12 @@ import {
 import { FurnitureDragSystem } from '@/systems/FurnitureDragSystem';
 import { DECO_MAP } from '@/config/DecorationConfig';
 import { FONT_FAMILY, COLORS } from '@/config/Constants';
+import { TextureCache } from '@/utils/TextureCache';
 
 // ---- 常量 ----
 const BTN_SIZE = 52;
+/** 最后一枚「确认」为横向胶囊贴图，槽位略宽 */
+const CONFIRM_SLOT_W = 92;
 const BTN_GAP = 10;
 const TOOLBAR_PADDING = 12;
 const BG_COLOR = 0xFFFFFF;
@@ -31,6 +34,21 @@ interface ToolButton {
   bgColor?: number;      // 自定义背景色
   borderColor?: number;   // 自定义边框色
   tooltipColor?: number;  // 自定义文字色
+  /** 使用贴图替代圆角底+emoji */
+  textureKey?: string;
+}
+
+function slotWidthForButton(def: ToolButton): number {
+  return def.textureKey ? CONFIRM_SLOT_W : BTN_SIZE;
+}
+
+function toolbarButtonsRowWidth(buttons: ToolButton[]): number {
+  let w = 0;
+  for (let i = 0; i < buttons.length; i++) {
+    w += slotWidthForButton(buttons[i]);
+    if (i < buttons.length - 1) w += BTN_GAP;
+  }
+  return w;
 }
 
 export class RoomEditToolbar extends PIXI.Container {
@@ -38,6 +56,8 @@ export class RoomEditToolbar extends PIXI.Container {
   private _buttons: PIXI.Container[] = [];
   private _nameLabel!: PIXI.Text;
   private _currentDecoId: string | null = null;
+  /** 与 _build 底板宽度一致，供 show 水平居中 */
+  private _toolbarTotalW = 750;
 
   constructor() {
     super();
@@ -61,8 +81,7 @@ export class RoomEditToolbar extends PIXI.Container {
     this.visible = true;
 
     // 固定在屏幕水平居中、roomBounds 上方（不遮挡家具）
-    const totalW = TOOLBAR_PADDING * 2 + 7 * BTN_SIZE + 6 * BTN_GAP;
-    this.x = (750 - totalW) / 2;  // 设计宽度750
+    this.x = (750 - this._toolbarTotalW) / 2;  // 设计宽度750
     this.y = 240;  // 在顶部UI下方、房间区域上方
 
     // 弹出动画（仅首次或切换家具时）
@@ -98,10 +117,17 @@ export class RoomEditToolbar extends PIXI.Container {
       { icon: '⬆️', tooltip: '置前', action: () => this._onBringForward() },
       { icon: '⬇️', tooltip: '置后', action: () => this._onSendBackward() },
       { icon: '🗑️', tooltip: '移除', action: () => this._onRemove() },
-      { icon: '✅', tooltip: '确认', action: () => this._onConfirm(), bgColor: 0xE8F5E8, borderColor: 0x4CAF50, tooltipColor: 0x2E7D32 },
+      {
+        icon: '',
+        tooltip: '确认',
+        action: () => this._onConfirm(),
+        tooltipColor: 0x2E7D32,
+        textureKey: 'furniture_tray_confirm_btn',
+      },
     ];
 
-    const totalW = TOOLBAR_PADDING * 2 + buttons.length * BTN_SIZE + (buttons.length - 1) * BTN_GAP;
+    const totalW = TOOLBAR_PADDING * 2 + toolbarButtonsRowWidth(buttons);
+    this._toolbarTotalW = totalW;
     const totalH = BTN_SIZE + TOOLBAR_PADDING * 2 + 24; // +24 for name label
 
     // 背景（大圆角白色卡片 + 阴影）
@@ -130,42 +156,56 @@ export class RoomEditToolbar extends PIXI.Container {
     this.addChild(this._nameLabel);
 
     // 按钮
-    buttons.forEach((btn, i) => {
-      const x = TOOLBAR_PADDING + i * (BTN_SIZE + BTN_GAP);
-      const y = 28;
-      const container = this._buildButton(btn, x, y);
+    let bx = TOOLBAR_PADDING;
+    const y = 28;
+    buttons.forEach((btn) => {
+      const sw = slotWidthForButton(btn);
+      const container = this._buildButton(btn, bx, y, sw);
+      bx += sw + BTN_GAP;
       this.addChild(container);
       this._buttons.push(container);
     });
   }
 
-  private _buildButton(def: ToolButton, x: number, y: number): PIXI.Container {
+  private _buildButton(def: ToolButton, x: number, y: number, slotW: number): PIXI.Container {
     const container = new PIXI.Container();
     container.position.set(x, y);
 
-    // 按钮背景（圆角）
-    const bg = new PIXI.Graphics();
-    bg.beginFill(def.bgColor ?? 0xF5F0EB);
-    bg.drawRoundedRect(0, 0, BTN_SIZE, BTN_SIZE, 10);
-    bg.endFill();
-    bg.lineStyle(1, def.borderColor ?? 0xE0D0C0, 0.5);
-    bg.drawRoundedRect(0, 0, BTN_SIZE, BTN_SIZE, 10);
-    container.addChild(bg);
+    const tex = def.textureKey ? TextureCache.get(def.textureKey) : null;
 
-    // 图标（大号）
-    const icon = new PIXI.Text(def.icon, {
-      fontSize: 22, fontFamily: FONT_FAMILY,
-    });
-    icon.anchor.set(0.5, 0.5);
-    icon.position.set(BTN_SIZE / 2, BTN_SIZE / 2 - 6);
-    container.addChild(icon);
+    if (tex && tex.width > 0) {
+      const sp = new PIXI.Sprite(tex);
+      sp.anchor.set(0.5, 0.5);
+      const maxW = slotW - 6;
+      const maxH = BTN_SIZE - 20;
+      const s = Math.min(maxW / tex.width, maxH / tex.height);
+      sp.scale.set(s);
+      sp.position.set(slotW / 2, BTN_SIZE / 2 - 4);
+      container.addChild(sp);
+    } else {
+      // 按钮背景（圆角）
+      const bg = new PIXI.Graphics();
+      bg.beginFill(def.bgColor ?? 0xF5F0EB);
+      bg.drawRoundedRect(0, 0, slotW, BTN_SIZE, 10);
+      bg.endFill();
+      bg.lineStyle(1, def.borderColor ?? 0xE0D0C0, 0.5);
+      bg.drawRoundedRect(0, 0, slotW, BTN_SIZE, 10);
+      container.addChild(bg);
+
+      const icon = new PIXI.Text(def.icon || '✓', {
+        fontSize: 22, fontFamily: FONT_FAMILY,
+      });
+      icon.anchor.set(0.5, 0.5);
+      icon.position.set(slotW / 2, BTN_SIZE / 2 - 6);
+      container.addChild(icon);
+    }
 
     // 功能文字说明（底部小字）
     const tooltip = new PIXI.Text(def.tooltip, {
       fontSize: 10, fill: def.tooltipColor ?? 0x8B7355, fontFamily: FONT_FAMILY,
     });
     tooltip.anchor.set(0.5, 0.5);
-    tooltip.position.set(BTN_SIZE / 2, BTN_SIZE - 8);
+    tooltip.position.set(slotW / 2, BTN_SIZE - 8);
     container.addChild(tooltip);
 
     // 交互

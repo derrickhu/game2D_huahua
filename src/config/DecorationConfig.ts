@@ -219,20 +219,20 @@ export const DECO_DEFS: DecoDef[] = [
   { id: 'orn_greenhouse_coat_rack', name: '木轨衣帽挂钩', slot: DecoSlot.ORNAMENT, rarity: DecoRarity.COMMON, cost: 200, starValue: 1, icon: 'orn_greenhouse_coat_rack', desc: '墙上木轨挂钩，挂着风衣、小包与草帽', unlockRequirement: { level: 3 }, defaultScale: 0.9, decorationPanelTab: 'furniture' },
   { id: 'orn_greenhouse_flower_cart', name: '木轮鲜花推车', slot: DecoSlot.ORNAMENT, rarity: DecoRarity.COMMON, cost: 880, starValue: 4, icon: 'orn_greenhouse_flower_cart', desc: '装满蔷薇与郁金香的双轮木推车', unlockRequirement: { level: 6 }, defaultScale: 1.05, decorationPanelTab: 'flower_room' },
   /** 花房小盆栽与同名花瓶：与棋盘鲜花线 item 一一对应；仅 flowerCollectionItemId（纯图鉴），勿再写 level（UnlockChecker 亦会忽略 level） */
-  /** 小盆栽花愿：原每阶约 +200，各减 120（fresh_1=80 … fresh_13=2480）；同名花瓶 / 荷花小池价见下行 */
+  /** 小盆栽花愿：fresh_2 花苞=180，对应鲜花每高一级 +100（公式 180+(N-2)*100；fresh_1=80）；无盆栽的阶（如 8）在价差中跳过 */
   { id: 'greenhouse_pot_sprout', name: '芽苗小盆栽', slot: DecoSlot.ORNAMENT, rarity: DecoRarity.COMMON, cost: 80, starValue: 1, icon: 'greenhouse_pot_sprout', desc: '陶盆里刚冒头的双叶小芽', unlockRequirement: { flowerCollectionItemId: 'flower_fresh_1' }, defaultScale: 0.28, decorationPanelTab: 'flower_room' },
-  { id: 'greenhouse_pot_bud', name: '花苞小盆栽', slot: DecoSlot.ORNAMENT, rarity: DecoRarity.COMMON, cost: 280, starValue: 1, icon: 'greenhouse_pot_bud', desc: '粉尖花苞快要开了', unlockRequirement: { flowerCollectionItemId: 'flower_fresh_2' }, defaultScale: 0.48, decorationPanelTab: 'flower_room' },
-  { id: 'greenhouse_pot_daisy', name: '雏菊小盆栽', slot: DecoSlot.ORNAMENT, rarity: DecoRarity.COMMON, cost: 480, starValue: 2, icon: 'greenhouse_pot_daisy', desc: '白瓣小黄心', unlockRequirement: { flowerCollectionItemId: 'flower_fresh_3' }, defaultScale: 0.5, decorationPanelTab: 'flower_room' },
-  { id: 'greenhouse_pot_sunflower', name: '向日葵小盆栽', slot: DecoSlot.ORNAMENT, rarity: DecoRarity.COMMON, cost: 680, starValue: 2, icon: 'greenhouse_pot_sunflower', desc: '一小束阳光', unlockRequirement: { flowerCollectionItemId: 'flower_fresh_4' }, defaultScale: 0.52, decorationPanelTab: 'flower_room' },
-  { id: 'greenhouse_pot_carnation', name: '康乃馨小盆栽', slot: DecoSlot.ORNAMENT, rarity: DecoRarity.COMMON, cost: 880, starValue: 2, icon: 'greenhouse_pot_carnation', desc: '温柔粉瓣', unlockRequirement: { flowerCollectionItemId: 'flower_fresh_5' }, defaultScale: 0.4, decorationPanelTab: 'flower_room' },
-  { id: 'greenhouse_pot_rose', name: '玫瑰小盆栽', slot: DecoSlot.ORNAMENT, rarity: DecoRarity.FINE, cost: 1080, starValue: 2, icon: 'greenhouse_pot_rose', desc: '一枝就够浪漫', unlockRequirement: { flowerCollectionItemId: 'flower_fresh_6' }, defaultScale: 0.4, decorationPanelTab: 'flower_room' },
-  { id: 'greenhouse_pot_lily', name: '百合小盆栽', slot: DecoSlot.ORNAMENT, rarity: DecoRarity.FINE, cost: 1280, starValue: 2, icon: 'greenhouse_pot_lily', desc: '清香白瓣', unlockRequirement: { flowerCollectionItemId: 'flower_fresh_7' }, defaultScale: 0.62, decorationPanelTab: 'flower_room' },
-  { id: 'greenhouse_pot_hydrangea', name: '绣球小盆栽', slot: DecoSlot.ORNAMENT, rarity: DecoRarity.FINE, cost: 1680, starValue: 3, icon: 'greenhouse_pot_hydrangea', desc: '团团蓝紫', unlockRequirement: { flowerCollectionItemId: 'flower_fresh_9' }, defaultScale: 0.52, decorationPanelTab: 'flower_room' },
-  { id: 'greenhouse_pot_orchid', name: '蝴蝶兰小盆栽', slot: DecoSlot.ORNAMENT, rarity: DecoRarity.RARE, cost: 1880, starValue: 4, icon: 'greenhouse_pot_orchid', desc: '兰科小公主', unlockRequirement: { flowerCollectionItemId: 'flower_fresh_10' }, defaultScale: 0.54, decorationPanelTab: 'flower_room' },
-  { id: 'greenhouse_pot_peony_gold', name: '金牡丹小盆栽', slot: DecoSlot.ORNAMENT, rarity: DecoRarity.RARE, cost: 2480, starValue: 5, icon: 'greenhouse_pot_peony_gold', desc: '富贵金灿灿', unlockRequirement: { flowerCollectionItemId: 'flower_fresh_13' }, defaultScale: 0.44, decorationPanelTab: 'flower_room' },
-  { id: 'greenhouse_vase_tulip', name: '郁金香花瓶', slot: DecoSlot.ORNAMENT, rarity: DecoRarity.COMMON, cost: 1600, starValue: 2, icon: 'greenhouse_vase_tulip', desc: '玻璃杯里一束热烈郁金香', unlockRequirement: { flowerCollectionItemId: 'flower_fresh_8' }, defaultScale: 0.56, decorationPanelTab: 'flower_room' },
-  { id: 'greenhouse_vase_peony', name: '芍药花瓶', slot: DecoSlot.ORNAMENT, rarity: DecoRarity.FINE, cost: 2400, starValue: 3, icon: 'greenhouse_vase_peony', desc: '奶釉罐盛满粉白芍药', unlockRequirement: { flowerCollectionItemId: 'flower_fresh_12' }, defaultScale: 0.54, decorationPanelTab: 'flower_room' },
-  { id: 'greenhouse_vase_lotus', name: '户外荷花小池', slot: DecoSlot.ORNAMENT, rarity: DecoRarity.FINE, cost: 3200, starValue: 5, icon: 'greenhouse_vase_lotus', desc: '石砌浅塘，浮叶开满粉荷', unlockRequirement: { flowerCollectionItemId: 'flower_fresh_11' }, defaultScale: 1.3, decorationPanelTab: 'flower_room' },
+  { id: 'greenhouse_pot_bud', name: '花苞小盆栽', slot: DecoSlot.ORNAMENT, rarity: DecoRarity.COMMON, cost: 180, starValue: 1, icon: 'greenhouse_pot_bud', desc: '粉尖花苞快要开了', unlockRequirement: { flowerCollectionItemId: 'flower_fresh_2' }, defaultScale: 0.48, decorationPanelTab: 'flower_room' },
+  { id: 'greenhouse_pot_daisy', name: '雏菊小盆栽', slot: DecoSlot.ORNAMENT, rarity: DecoRarity.COMMON, cost: 280, starValue: 2, icon: 'greenhouse_pot_daisy', desc: '白瓣小黄心', unlockRequirement: { flowerCollectionItemId: 'flower_fresh_3' }, defaultScale: 0.5, decorationPanelTab: 'flower_room' },
+  { id: 'greenhouse_pot_sunflower', name: '向日葵小盆栽', slot: DecoSlot.ORNAMENT, rarity: DecoRarity.COMMON, cost: 380, starValue: 2, icon: 'greenhouse_pot_sunflower', desc: '一小束阳光', unlockRequirement: { flowerCollectionItemId: 'flower_fresh_4' }, defaultScale: 0.52, decorationPanelTab: 'flower_room' },
+  { id: 'greenhouse_pot_carnation', name: '康乃馨小盆栽', slot: DecoSlot.ORNAMENT, rarity: DecoRarity.COMMON, cost: 480, starValue: 2, icon: 'greenhouse_pot_carnation', desc: '温柔粉瓣', unlockRequirement: { flowerCollectionItemId: 'flower_fresh_5' }, defaultScale: 0.4, decorationPanelTab: 'flower_room' },
+  { id: 'greenhouse_pot_rose', name: '玫瑰小盆栽', slot: DecoSlot.ORNAMENT, rarity: DecoRarity.FINE, cost: 580, starValue: 2, icon: 'greenhouse_pot_rose', desc: '一枝就够浪漫', unlockRequirement: { flowerCollectionItemId: 'flower_fresh_6' }, defaultScale: 0.4, decorationPanelTab: 'flower_room' },
+  { id: 'greenhouse_pot_lily', name: '百合小盆栽', slot: DecoSlot.ORNAMENT, rarity: DecoRarity.FINE, cost: 680, starValue: 2, icon: 'greenhouse_pot_lily', desc: '清香白瓣', unlockRequirement: { flowerCollectionItemId: 'flower_fresh_7' }, defaultScale: 0.62, decorationPanelTab: 'flower_room' },
+  { id: 'greenhouse_pot_hydrangea', name: '绣球小盆栽', slot: DecoSlot.ORNAMENT, rarity: DecoRarity.FINE, cost: 880, starValue: 3, icon: 'greenhouse_pot_hydrangea', desc: '团团蓝紫', unlockRequirement: { flowerCollectionItemId: 'flower_fresh_9' }, defaultScale: 0.52, decorationPanelTab: 'flower_room' },
+  { id: 'greenhouse_pot_orchid', name: '蝴蝶兰小盆栽', slot: DecoSlot.ORNAMENT, rarity: DecoRarity.RARE, cost: 980, starValue: 4, icon: 'greenhouse_pot_orchid', desc: '兰科小公主', unlockRequirement: { flowerCollectionItemId: 'flower_fresh_10' }, defaultScale: 0.54, decorationPanelTab: 'flower_room' },
+  { id: 'greenhouse_pot_peony_gold', name: '金牡丹小盆栽', slot: DecoSlot.ORNAMENT, rarity: DecoRarity.RARE, cost: 1280, starValue: 5, icon: 'greenhouse_pot_peony_gold', desc: '富贵金灿灿', unlockRequirement: { flowerCollectionItemId: 'flower_fresh_13' }, defaultScale: 0.44, decorationPanelTab: 'flower_room' },
+  { id: 'greenhouse_vase_tulip', name: '郁金香花瓶', slot: DecoSlot.ORNAMENT, rarity: DecoRarity.COMMON, cost: 600, starValue: 2, icon: 'greenhouse_vase_tulip', desc: '玻璃杯里一束热烈郁金香', unlockRequirement: { flowerCollectionItemId: 'flower_fresh_8' }, defaultScale: 0.56, decorationPanelTab: 'flower_room' },
+  { id: 'greenhouse_vase_peony', name: '芍药花瓶', slot: DecoSlot.ORNAMENT, rarity: DecoRarity.FINE, cost: 800, starValue: 3, icon: 'greenhouse_vase_peony', desc: '奶釉罐盛满粉白芍药', unlockRequirement: { flowerCollectionItemId: 'flower_fresh_12' }, defaultScale: 0.54, decorationPanelTab: 'flower_room' },
+  { id: 'greenhouse_vase_lotus', name: '户外荷花小池', slot: DecoSlot.ORNAMENT, rarity: DecoRarity.FINE, cost: 1500, starValue: 5, icon: 'greenhouse_vase_lotus', desc: '石砌浅塘，浮叶开满粉荷', unlockRequirement: { flowerCollectionItemId: 'flower_fresh_11' }, defaultScale: 1.3, decorationPanelTab: 'flower_room' },
 
   // ═══════ ⑩ 高星主题珍藏（常驻；id 沿用旧季节套以兼容存档）═══════
 
@@ -344,7 +344,8 @@ export const DECO_PANEL_TABS: DecoPanelTabId[] = [
   DecoSlot.GARDEN,
 ];
 
-export type FurnitureTrayTabId = Exclude<DecoPanelTabId, 'room_styles'>;
+/** 编辑托盘 Tab（含房壳 room_styles，与图标表 7 列一致） */
+export type FurnitureTrayTabId = DecoPanelTabId;
 
 export const FURNITURE_TRAY_TABS: FurnitureTrayTabId[] = [
   'flower_room',
@@ -353,6 +354,7 @@ export const FURNITURE_TRAY_TABS: FurnitureTrayTabId[] = [
   DecoSlot.ORNAMENT,
   DecoSlot.WALLART,
   DecoSlot.GARDEN,
+  'room_styles',
 ];
 
 export function isDecoSpecialUiCategory(deco: DecoDef): boolean {
@@ -385,6 +387,28 @@ export function getDecorationTabLabel(tab: DecoPanelTabId): { name: string; emoj
   if (tab === 'furniture') return { name: '家具', emoji: '🪑' };
   if (tab === 'appliance') return { name: '家电', emoji: '🔌' };
   return DECO_SLOT_INFO[tab];
+}
+
+/** 家具托盘 Tab → TextureCache 键（仅 idle 单图，与 `furniture_tray_tab_*_idle.png` 一致） */
+export function furnitureTrayTabTextureKey(tab: FurnitureTrayTabId): string {
+  switch (tab) {
+    case 'flower_room':
+      return 'furniture_tray_tab_flower_room_idle';
+    case 'furniture':
+      return 'furniture_tray_tab_furniture_idle';
+    case 'appliance':
+      return 'furniture_tray_tab_appliance_idle';
+    case 'room_styles':
+      return 'furniture_tray_tab_room_styles_idle';
+    case DecoSlot.ORNAMENT:
+      return 'furniture_tray_tab_ornament_idle';
+    case DecoSlot.WALLART:
+      return 'furniture_tray_tab_wallart_idle';
+    case DecoSlot.GARDEN:
+      return 'furniture_tray_tab_garden_idle';
+    default:
+      return 'furniture_tray_tab_flower_room_idle';
+  }
 }
 
 /** 编辑托盘：由槽位推断 Tab（不含 decorationPanelTab 分流） */

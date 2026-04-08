@@ -1,0 +1,11 @@
+One UI sprite sheet, flat layout, exactly four columns and two rows, eight equal rectangular cells with even spacing. No scene, no frame around the whole sheet beyond the cells themselves.
+
+Each cell contains exactly one horizontal pill-shaped button (stadium capsule: fully rounded ends). Buttons are shorter in length than a full-width mobile bar but keep the same height family as a chunky casual-game chip. Every button uses the same proportions, outline thickness, and lighting recipe so they look like one asset family.
+
+Visual recipe for every button (match the attached reference): warm dark brown outer stroke; pastel glossy fill; subtle darker inner band along bottom and right inside edge for soft 3D; small soft lighter oval highlight near the top-left; centered white checkmark with a thin darker outline that fits the fill hue. Clean 2D vector kawaii merge-game UI, pastel high key, no photoreal, no watermark, no readable text except the check shape.
+
+Assign one distinct pastel fill per cell, coordinated for a cozy flower-shop merge game (lilac, pink, cream, mint family). Suggested order left-to-right, top then bottom: (1) soft mint lime green like the reference, (2) pastel sky blue, (3) soft butter yellow, (4) soft lavender purple, (5) gentle peach coral, (6) pastel pink, (7) soft aqua teal, (8) warm cream with a hint of honey gold. Do not repeat the same hex twice.
+
+Background: pure flat white RGB 255,255,255 filling the entire canvas outside and between the eight buttons so the sheet is easy to separate. Keep the grid visually clean; if you draw separators, use hairline light gray only, or none.
+
+Output must read as eight separate buttons on one 4x2 grid, centered in their cells, identical art style across all eight.

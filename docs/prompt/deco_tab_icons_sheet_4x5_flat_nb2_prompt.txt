@@ -1,0 +1,13 @@
+Single square asset 512 by 512 pixels, strict 4 columns by 5 rows grid, faint guides OK. Every grid cell must be much wider than tall: landscape rectangle, about 4:3 or 3:2 width-to-height inside the cell, so the chip is a horizontal lozenge or wide squircle pill, never a tall vertical capsule.
+
+Inside each used cell, one UI chip only: thick dark-brown outline, kawaii pastel merge-game icon centered, chip fills most of the cell width with modest vertical padding.
+
+Fill order top to bottom, left to right:
+
+Rows 0 and 1, unselected state, off-white or cream chip fill: row0 left to right — pink flower with yellow center and two green leaves; brown wooden chair; purple plug with cord; white vase with blue band. Row1 left to right — brown picture frame with tiny green hill landscape; rounded green bush with white dots; small brown house with roof and door for room-shell picker; fourth cell in row1 leave a plain empty cream rounded rectangle matching chip shape, no icon.
+
+Rows 2 and 3, selected state, soft cherry-red or tomato-red chip fill, same seven icons in the same positions; fourth cell of row3 same empty red rounded rectangle placeholder.
+
+Row 4: four cells, each an empty flat pale lavender or very light gray rounded rectangle matching the same horizontal chip proportions, no icons — keeps the grid rhythm.
+
+Between cells keep thin neutral gutters. No text, no numbers, no watermark. Photoreal forbidden.
