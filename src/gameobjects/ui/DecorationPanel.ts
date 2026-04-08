@@ -11,6 +11,7 @@
  */
 import * as PIXI from 'pixi.js';
 import { Game } from '@/core/Game';
+import { AudioManager } from '@/core/AudioManager';
 import { SceneManager } from '@/core/SceneManager';
 import { TweenManager, Ease } from '@/core/TweenManager';
 import { EventBus } from '@/core/EventBus';
@@ -22,7 +23,7 @@ import { checkRequirement, requirementHintText } from '@/utils/UnlockChecker';
 import {
   DecoSlot, DECO_SLOT_INFO,
   DecoDef,
-  ROOM_STYLES, RoomStyleDef,
+  ROOM_STYLES, RoomStyleDef, sortRoomStylesByUnlockLevelThenCost,
   DECO_PANEL_TABS,
   type DecoPanelTabId,
   getDecorationTabLabel,
@@ -178,15 +179,6 @@ function sortDecosByCostAsc(decos: DecoDef[]): DecoDef[] {
 
 function sortDecosForInvFilter(decos: DecoDef[], filter: DecoInvFilter): DecoDef[] {
   return filter === 'locked' ? sortDecosByUnlockLevelThenCost(decos) : sortDecosByCostAsc(decos);
-}
-
-function sortRoomStylesByUnlockLevelThenCost(styles: RoomStyleDef[]): RoomStyleDef[] {
-  return [...styles].sort((a, b) => {
-    const la = a.unlockRequirement?.level ?? 0;
-    const lb = b.unlockRequirement?.level ?? 0;
-    if (la !== lb) return la - lb;
-    return a.cost - b.cost;
-  });
 }
 
 /** 家具列表库存筛选（默认打开面板为「未购买」） */
@@ -1601,6 +1593,7 @@ export class DecorationPanel extends PIXI.Container {
         ToastMessage.show(`🌸 花愿不足，需要 ${deco.cost} 花愿`);
         return;
       }
+      if (deco.cost > 0) AudioManager.play('purchase_tap');
       this._pendingDecoGrantStar = deco;
       this._emitShopStarFly(flyCard, deco.starValue);
       this._refreshAll();
@@ -1609,6 +1602,7 @@ export class DecorationPanel extends PIXI.Container {
         ToastMessage.show(`🌸 花愿不足，需要 ${deco.cost} 花愿`);
         return;
       }
+      if (deco.cost > 0) AudioManager.play('purchase_tap');
       this._emitShopStarFly(flyCard, deco.starValue);
       this._refreshAll();
       this._showNewDecoUnlockPopup(deco);
@@ -1744,6 +1738,7 @@ export class DecorationPanel extends PIXI.Container {
         return;
       }
       if (DecorationManager.unlockRoomStyle(style.id)) {
+        if (style.cost > 0) AudioManager.play('purchase_tap');
         DecorationManager.equipRoomStyle(style.id);
         this._emitShopStarFly(flyCard, style.starValue);
         ToastMessage.show( `✨ 解锁「${style.name}」！`);

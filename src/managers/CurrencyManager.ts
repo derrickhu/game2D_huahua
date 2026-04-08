@@ -10,6 +10,7 @@
  *
  * 已移除：花露(hualu)、经验(exp)
  */
+import { AudioManager } from '@/core/AudioManager';
 import { EventBus } from '@/core/EventBus';
 import { STAMINA_MAX, STAMINA_RECOVER_INTERVAL } from '@/config/Constants';
 import {
@@ -189,6 +190,8 @@ class CurrencyManagerClass {
     this.addDiamond(-price);
     this.addStamina(STAMINA_BUY_AMOUNT);
     this._dailyStaminaBuyCount++;
+
+    AudioManager.play('purchase_tap');
 
     console.log(`[Currency] 钻石购买体力: -${price}💎 +${STAMINA_BUY_AMOUNT}⚡ (今日第${this._dailyStaminaBuyCount}次)`);
     EventBus.emit('stamina:bought', STAMINA_BUY_AMOUNT, price, this._dailyStaminaBuyCount);

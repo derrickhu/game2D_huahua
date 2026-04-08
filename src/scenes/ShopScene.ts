@@ -48,6 +48,7 @@ import { RewardBoxManager } from '@/managers/RewardBoxManager';
 import { WarehouseManager } from '@/managers/WarehouseManager';
 import { ITEM_DEFS } from '@/config/ItemConfig';
 import { takePendingPlaceDeco } from '@/core/DecoPlaceIntent';
+import { SoundSystem } from '@/systems/SoundSystem';
 
 // ── 布局常量 ──
 const PROGRESS_BAR_W = 400;
@@ -74,10 +75,31 @@ const trayOpenTopY = (logicH: number) =>
   FURNITURE_TRAY_OPEN_OFFSET_UP +
   FURNITURE_TRAY_OPEN_NUDGE_DOWN;
 
+/** 托盘内「完成编辑」贴图锚点(1,1) 距设计坐标右/下边 */
+const TRAY_EDIT_COMPLETE_PAD_R = 52;
+const TRAY_EDIT_COMPLETE_PAD_B = 12;
+
 /** 「装修花店」主按钮宽度（与 _buildEditButton 一致） */
 const EDIT_MAIN_BTN_W = (): number => Math.round(DESIGN_WIDTH * 0.5);
 const EDIT_MAIN_BTN_H = 64;
 const EDIT_MAIN_BTN_R = 18;
+
+/**
+ * 底部「装修花店」标题：柔和圆角字感（重字重 + 描边），配色走暖花粉橘系，与仓库紫系区分；阴影刻意偏弱。
+ */
+const SHOP_EDIT_BTN_LABEL_STYLE: Partial<PIXI.ITextStyle> = {
+  fontSize: 22,
+  fill: 0xfffcf8,
+  fontFamily: FONT_FAMILY,
+  fontWeight: '900',
+  stroke: 0xe8a598,
+  strokeThickness: 3,
+  dropShadow: true,
+  dropShadowColor: 0x8d6e63,
+  dropShadowAlpha: 0.14,
+  dropShadowBlur: 1,
+  dropShadowDistance: 1,
+};
 
 /** 花店建筑竖直位置：中心 Y ≈ logicH * ratio + offset，ratio 增大则整体下移（原 0.405 偏上易顶到进度条） */
 const SHOP_BUILDING_CENTER_Y_RATIO = 0.442;
@@ -167,6 +189,8 @@ export class ShopScene implements Scene {
   private _isEditMode = false;
   private _editBtn!: PIXI.Container;
   private _furnitureTray!: FurnitureTray;
+  /** 编辑态托盘右下角「完成编辑」贴图（与 _editBtn 互斥显示） */
+  private _editCompletePill: PIXI.Container | null = null;
   private _editToolbar!: RoomEditToolbar;
   private _shopBuildingSprite: PIXI.Sprite | null = null;
 
@@ -331,6 +355,8 @@ export class ShopScene implements Scene {
     }
 
     RewardFlyCoordinator.setBindings(this._createShopRewardFlyBindings());
+
+    SoundSystem.playShopBGM();
   }
 
   onExit(): void {
@@ -1647,65 +1673,71 @@ export class ShopScene implements Scene {
 
   // ─────────────────── 编辑模式 ───────────────────
 
-  /** 创建编辑模式入口按钮（加宽双行文案，主 CTA 更醒目） */
+  /** 创建编辑模式入口按钮（胶囊贴图 + 左叠施工图标 + 居中标题字） */
   private _buildEditButton(w: number, h: number): void {
     this._editBtn = new PIXI.Container();
     const btnW = EDIT_MAIN_BTN_W();
     const btnH = EDIT_MAIN_BTN_H;
     const cornerR = EDIT_MAIN_BTN_R;
 
-    // 1. 阴影层
-    const shadow = new PIXI.Graphics();
-    shadow.beginFill(0x000000, 0.14);
-    shadow.drawRoundedRect(-btnW / 2 + 2, -btnH / 2 + 4, btnW, btnH, cornerR);
-    shadow.endFill();
-    this._editBtn.addChild(shadow);
+    let halfW: number;
+    let halfH: number;
 
-    // 2. 白色胶囊底板
-    const bg = new PIXI.Graphics();
-    bg.beginFill(0xFFFFFF, 0.97);
-    bg.drawRoundedRect(-btnW / 2, -btnH / 2, btnW, btnH, cornerR);
-    bg.endFill();
-    bg.lineStyle(2.5, COLORS.BUTTON_PRIMARY, 0.55);
-    bg.drawRoundedRect(-btnW / 2, -btnH / 2, btnW, btnH, cornerR);
-    this._editBtn.addChild(bg);
-
-    // 3. 施工图标
-    const pencilTex = TextureCache.get('icon_build');
-    const iconX = -btnW / 2 + 36;
-    if (pencilTex) {
-      const sp = new PIXI.Sprite(pencilTex);
-      sp.anchor.set(0.5);
-      sp.width = 34;
-      sp.height = 34;
-      sp.position.set(iconX, -6);
-      this._editBtn.addChild(sp);
+    const pillTex = TextureCache.get('shop_edit_deco_pill_4x2_nb2');
+    if (pillTex?.width) {
+      const ps = Math.min(btnW / pillTex.width, btnH / pillTex.height);
+      const sw = pillTex.width * ps;
+      const sh = pillTex.height * ps;
+      halfW = sw / 2;
+      halfH = sh / 2;
+      const pillSp = new PIXI.Sprite(pillTex);
+      pillSp.anchor.set(0.5, 0.5);
+      pillSp.scale.set(ps);
+      pillSp.position.set(0, 0);
+      this._editBtn.addChild(pillSp);
     } else {
-      const iconText = new PIXI.Text('✏️', { fontSize: 24, fontFamily: FONT_FAMILY });
-      iconText.anchor.set(0.5, 0.5);
-      iconText.position.set(iconX, -6);
-      this._editBtn.addChild(iconText);
+      halfW = btnW / 2;
+      halfH = btnH / 2;
+      const bg = new PIXI.Graphics();
+      bg.beginFill(0xffffff, 0.97);
+      bg.drawRoundedRect(-halfW, -halfH, btnW, btnH, cornerR);
+      bg.endFill();
+      bg.lineStyle(2.5, COLORS.BUTTON_PRIMARY, 0.55);
+      bg.drawRoundedRect(-halfW, -halfH, btnW, btnH, cornerR);
+      this._editBtn.addChild(bg);
     }
 
-    const label = new PIXI.Text('装修花店', {
-      fontSize: 20, fill: COLORS.BUTTON_PRIMARY, fontFamily: FONT_FAMILY, fontWeight: 'bold',
-    });
-    label.anchor.set(0, 0.5);
-    label.position.set(-btnW / 2 + 62, -14);
+    const label = new PIXI.Text('装修花店', SHOP_EDIT_BTN_LABEL_STYLE);
+    label.anchor.set(0.5, 0.5);
+    label.position.set(18, 0);
     this._editBtn.addChild(label);
 
-    const sub = new PIXI.Text('摆放家具 · 拖动调整', {
-      fontSize: 13, fill: COLORS.TEXT_LIGHT, fontFamily: FONT_FAMILY,
-    });
-    sub.anchor.set(0, 0.5);
-    sub.position.set(-btnW / 2 + 62, 12);
-    this._editBtn.addChild(sub);
+    const pencilTex = TextureCache.get('icon_build');
+    const pillH = halfH * 2;
+    const iconMaxH = Math.min(54, Math.floor(pillH * 0.88));
+    const iconMaxW = Math.min(62, Math.floor(halfW * 2 * 0.38));
+    const iconPadL = 12;
+    if (pencilTex?.width) {
+      const sp = new PIXI.Sprite(pencilTex);
+      sp.anchor.set(0.5);
+      const s = Math.min(iconMaxH / pencilTex.height, iconMaxW / pencilTex.width);
+      sp.scale.set(s);
+      const iw = pencilTex.width * s;
+      sp.position.set(-halfW + iconPadL + iw / 2, 0);
+      this._editBtn.addChild(sp);
+    } else {
+      const fs = Math.min(iconMaxH, iconMaxW);
+      const iconText = new PIXI.Text('✏️', { fontSize: Math.round(fs * 0.85), fontFamily: FONT_FAMILY });
+      iconText.anchor.set(0.5, 0.5);
+      iconText.position.set(-halfW + iconPadL + fs * 0.42, 0);
+      this._editBtn.addChild(iconText);
+    }
 
     // 底部居中，略上移避免与系统安全区/返回键重叠
     this._editBtn.position.set(w / 2, h - 118);
     this._editBtn.eventMode = 'static';
     this._editBtn.cursor = 'pointer';
-    this._editBtn.hitArea = new PIXI.Rectangle(-btnW / 2 - 12, -btnH / 2 - 12, btnW + 24, btnH + 24);
+    this._editBtn.hitArea = new PIXI.Rectangle(-halfW - 14, -halfH - 14, halfW * 2 + 28, halfH * 2 + 28);
     this._editBtn.on('pointerdown', () => {
       TweenManager.cancelTarget(this._editBtn.scale);
       this._editBtn.scale.set(0.92);
@@ -1764,49 +1796,17 @@ export class ShopScene implements Scene {
     TweenManager.cancelTarget(this._editBtn.scale);
     this._editBtn.scale.set(1);
 
-    const bw = EDIT_MAIN_BTN_W();
-    const bh = EDIT_MAIN_BTN_H;
-    const br = EDIT_MAIN_BTN_R;
-
-    const children = this._editBtn.children;
-    for (const child of children) {
-      if (child instanceof PIXI.Text) {
-        if (child.text === '装修花店') child.text = '✅ 完成编辑';
-        if (child.text.includes('摆放家具')) child.visible = false;
-      }
-      if (child instanceof PIXI.Graphics) {
-        child.visible = false;
-      }
-    }
-
-    const completeBg = new PIXI.Graphics();
-    completeBg.beginFill(0x4CAF50, 0.95);
-    completeBg.drawRoundedRect(-bw / 2, -bh / 2, bw, bh, br);
-    completeBg.endFill();
-    completeBg.lineStyle(2, 0x388E3C, 0.5);
-    completeBg.drawRoundedRect(-bw / 2, -bh / 2, bw, bh, br);
-    (completeBg as any)._editModeBg = true;
-    this._editBtn.addChildAt(completeBg, 0);
-
-    for (const child of this._editBtn.children) {
-      if (child instanceof PIXI.Text && child.text === '✅ 完成编辑') {
-        child.style.fill = 0xFFFFFF;
-        child.style.fontSize = 20;
-        child.anchor.set(0.5, 0.5);
-        child.position.set(0, 0);
-      }
-    }
+    // 编辑态：隐藏底部「装修花店」主按钮；完成编辑为托盘右下角贴图
+    this._editBtn.visible = false;
 
     const h = Game.logicHeight;
     const trayTopY = trayOpenTopY(h);
-    this._editBtn.position.set(DESIGN_WIDTH / 2, trayTopY - 36);
-
-    const editBtnY = trayTopY - 36;
     RoomLayoutManager.updateBounds({
       minX: 50,
       maxX: 700,
       minY: 280,
-      maxY: editBtnY - 60,
+      // 完成钮移入托盘后，房间可摆放区可更接近托盘顶边（不再预留悬浮大钮）
+      maxY: trayTopY - 24,
     });
 
     // 启用拖拽系统
@@ -1818,6 +1818,8 @@ export class ShopScene implements Scene {
     } else {
       this._furnitureTray.open(trayArg as DecoSlot | undefined);
     }
+
+    this._ensureEditCompletePill();
 
     // 隐藏返回按钮和侧边按钮（编辑模式下不能退出场景）
     this._returnBtn.visible = false;
@@ -1835,19 +1837,135 @@ export class ShopScene implements Scene {
     EventBus.emit('furniture:edit_enabled');
   }
 
+  /** 「完成装修」白字：深绿描边 + 轻阴影，浅绿底上可读 */
+  private static readonly _EDIT_COMPLETE_LABEL_STYLE: Partial<PIXI.ITextStyle> = {
+    fontSize: 17,
+    fill: 0xffffff,
+    fontFamily: FONT_FAMILY,
+    fontWeight: 'bold',
+    stroke: 0x14532a,
+    strokeThickness: 4,
+    dropShadow: true,
+    dropShadowColor: 0x000000,
+    dropShadowAlpha: 0.42,
+    dropShadowBlur: 2,
+    dropShadowDistance: 1,
+  };
+
+  private _makeEditCompletePillLabel(bw: number, bh: number): PIXI.Text {
+    const label = new PIXI.Text('完成装修', ShopScene._EDIT_COMPLETE_LABEL_STYLE);
+    label.anchor.set(0.5, 0.5);
+    label.position.set(-bw / 2, -bh / 2);
+    label.eventMode = 'none';
+    return label;
+  }
+
+  /** 完成装修钮柔和呼吸（吸引注意；退出编辑时取消） */
+  private _pulseEditCompletePill(): void {
+    const pill = this._editCompletePill;
+    if (!pill?.visible) return;
+    TweenManager.cancelTarget(pill.scale);
+    pill.scale.set(1);
+    const step = () => {
+      if (!this._isEditMode || !this._editCompletePill?.visible) return;
+      TweenManager.to({
+        target: pill.scale,
+        props: { x: 1.06, y: 1.06 },
+        duration: 1.15,
+        ease: Ease.easeInOutQuad,
+        onComplete: () => {
+          if (!this._isEditMode || !this._editCompletePill?.visible) return;
+          TweenManager.to({
+            target: pill.scale,
+            props: { x: 1, y: 1 },
+            duration: 1.15,
+            ease: Ease.easeInOutQuad,
+            onComplete: step,
+          });
+        },
+      });
+    };
+    step();
+  }
+
+  /** 托盘右下角「完成编辑」贴图（懒创建，随托盘位移） */
+  private _ensureEditCompletePill(): void {
+    if (this._editCompletePill) {
+      const p = this._editCompletePill;
+      p.visible = true;
+      p.eventMode = 'static';
+      const sp = p.children[0] as PIXI.Sprite;
+      const bw = sp.width;
+      const bh = sp.height;
+      if (p.children.length === 1) {
+        p.addChild(this._makeEditCompletePillLabel(bw, bh));
+      } else {
+        for (const c of p.children) {
+          if (c instanceof PIXI.Text && c.text === '完成装修') {
+            Object.assign(c.style, ShopScene._EDIT_COMPLETE_LABEL_STYLE);
+            break;
+          }
+        }
+      }
+      this._furnitureTray.addChild(p);
+      this._pulseEditCompletePill();
+      return;
+    }
+    const tex = TextureCache.get('edit_complete_pill_4x2_nb2');
+    if (!tex) {
+      console.warn('[ShopScene] 缺少 edit_complete_pill_4x2_nb2 纹理');
+      return;
+    }
+    const wrap = new PIXI.Container();
+    const sp = new PIXI.Sprite(tex);
+    sp.anchor.set(1, 1);
+    const maxW = 204;
+    const maxH = 52;
+    const s = Math.min(maxW / tex.width, maxH / tex.height);
+    sp.scale.set(s);
+    wrap.addChild(sp);
+    const bw = tex.width * s;
+    const bh = tex.height * s;
+    wrap.addChild(this._makeEditCompletePillLabel(bw, bh));
+    wrap.position.set(DESIGN_WIDTH - TRAY_EDIT_COMPLETE_PAD_R, FURNITURE_TRAY_H - TRAY_EDIT_COMPLETE_PAD_B);
+    wrap.eventMode = 'static';
+    wrap.cursor = 'pointer';
+    wrap.hitArea = new PIXI.Rectangle(-bw, -bh, bw, bh);
+    wrap.on('pointertap', () => {
+      this._exitEditMode();
+    });
+    this._editCompletePill = wrap;
+    this._furnitureTray.addChild(wrap);
+    this._pulseEditCompletePill();
+  }
+
+  private _hideEditCompletePill(): void {
+    if (!this._editCompletePill) return;
+    TweenManager.cancelTarget(this._editCompletePill.scale);
+    this._editCompletePill.scale.set(1);
+    this._editCompletePill.visible = false;
+    this._editCompletePill.eventMode = 'none';
+    if (this._editCompletePill.parent === this._furnitureTray) {
+      this._furnitureTray.removeChild(this._editCompletePill);
+    }
+  }
+
   /** 退出编辑模式 */
   private _exitEditMode(): void {
     if (!this._isEditMode) return;
     this._isEditMode = false;
 
-    // 移除绿色完成按钮背景
+    this._hideEditCompletePill();
+
+    // 移除绿色完成按钮背景（旧版编辑态兼容）
     const toRemoveBg: PIXI.DisplayObject[] = [];
     for (const child of this._editBtn.children) {
       if ((child as any)._editModeBg) toRemoveBg.push(child);
     }
     toRemoveBg.forEach(c => { this._editBtn.removeChild(c); c.destroy(); });
 
-    // 还原编辑按钮
+    // 还原编辑按钮（新版编辑态不再改文案，仅恢复显隐与布局）
+    this._editBtn.visible = true;
     const children = this._editBtn.children;
     const btnW = EDIT_MAIN_BTN_W();
     for (const child of children) {
@@ -1855,10 +1973,9 @@ export class ShopScene implements Scene {
       if (child instanceof PIXI.Text) {
         if (child.text === '✅ 完成编辑') {
           child.text = '装修花店';
-          child.style.fill = COLORS.BUTTON_PRIMARY;
-          child.style.fontSize = 20;
-          child.anchor.set(0, 0.5);
-          child.position.set(-btnW / 2 + 62, -14);
+          Object.assign(child.style, SHOP_EDIT_BTN_LABEL_STYLE);
+          child.anchor.set(0.5, 0.5);
+          child.position.set(18, 0);
         }
         if (child.text.includes('摆放家具')) {
           child.visible = true;

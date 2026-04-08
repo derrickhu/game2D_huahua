@@ -1,0 +1,17 @@
+CRITICAL LAYOUT — EXACTLY TEN BUTTONS, FIVE COLUMNS, TWO ROWS.
+
+Count before finishing: you must see exactly two horizontal rows. The top row contains exactly five pill buttons in a single left-to-right line. The bottom row contains exactly five pill buttons in a single left-to-right line. Total ten buttons. Forbidden: three columns, four rows, four columns, three rows, six columns, twelve items in any other arrangement. If the grid is not five wide and two tall, the image is wrong.
+
+Divide the canvas into a 5-by-2 table of ten equal cells (same cell width, same cell height). Draw one button per cell, centered. Optional hairline light gray grid lines between cells only; background pure white RGB 255 everywhere else.
+
+BUTTON SIZE — SHORT CAPSULES, NOT LONG BARS.
+
+Each button is a horizontal stadium capsule (rounded ends, flat top and bottom). The pill must be visually short: it must NOT span the cell. Hard rules relative to its cell: the pill’s total width must be at most 42 percent of the cell width, centered so at least 29 percent empty margin remains on the left and 29 percent on the right. The pill’s height must be between 38 percent and 50 percent of the cell height, vertically centered. These numbers force a compact chip, not a stretched horizontal banner.
+
+The width-to-height ratio of the pill’s bounding box must stay between 1.35 and 1.95. Ratios above 2.2 are forbidden.
+
+Style (match attached reference for stroke weight, brown outline color, and highlight style only; ignore how wide the reference pill is): warm dark brown outline; pastel fill; subtle darker inner band bottom-right inside the stroke; small soft highlight upper-left. Face completely empty: no checkmark, no icons, no text, no numbers.
+
+Ten different pastel colors for a cozy flower-shop merge UI, one per cell, order left-to-right on row one then left-to-right on row two: mint lime green, sky blue, butter yellow, lavender purple, peach coral, pastel pink, aqua teal, honey cream, periwinkle, light sage. No duplicate colors.
+
+Clean 2D vector kawaii casual game UI, pastel high key, no photoreal, no watermark.

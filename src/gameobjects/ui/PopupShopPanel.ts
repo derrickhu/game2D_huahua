@@ -6,6 +6,7 @@
  */
 import * as PIXI from 'pixi.js';
 import { Game } from '@/core/Game';
+import { AudioManager } from '@/core/AudioManager';
 import { EventBus } from '@/core/EventBus';
 import { TweenManager, Ease } from '@/core/TweenManager';
 import { OverlayManager } from '@/core/OverlayManager';
@@ -222,6 +223,7 @@ export class PopupShopPanel extends PIXI.Container {
 
     if (item.costHuayuan) CurrencyManager.addHuayuan(-item.costHuayuan);
     if (item.costDiamond) CurrencyManager.addDiamond(-item.costDiamond);
+    if (item.costHuayuan || item.costDiamond) AudioManager.play('purchase_tap');
 
     switch (item.type) {
       case 'stamina':

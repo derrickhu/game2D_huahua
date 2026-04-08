@@ -138,5 +138,9 @@ export const COLORS = {
   BUTTON_SECONDARY: 0xB0A090,
 };
 
-// 字体
-export const FONT_FAMILY = 'sans-serif';
+/**
+ * 全局 UI 字体：优先系统中文黑体族（iOS 苹方 / macOS 冬青黑 / Windows 雅黑 / Android Noto），最后无衬线回退。
+ * 微信小游戏 Canvas 会按设备解析；长期要全机一致可再叠加 wx.loadFont + 子集 TTF。
+ */
+export const FONT_FAMILY =
+  "'PingFang SC','Hiragino Sans GB','Microsoft YaHei','Noto Sans SC',sans-serif";

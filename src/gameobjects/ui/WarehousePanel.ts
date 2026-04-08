@@ -27,9 +27,6 @@ const TEX_H = 1376;
 const WH_ITEM_FILL = 0.72;
 const WH_BOUQUET_FILL = 0.9;
 
-/** 偏圆、偏可爱的中文回退栈（微信常见系统字体） */
-const FONT_CUTE = `'PingFang SC','Hiragino Sans GB','Microsoft YaHei','Noto Sans SC',${FONT_FAMILY}`;
-
 /**
  * ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
  * 对齐微调（坐标相对整图中心，单位 = 底图像素；右/下为正）
@@ -169,7 +166,7 @@ export class WarehousePanel extends PIXI.Container {
 
   private _cuteTextStyle(base: Partial<PIXI.ITextStyle>): PIXI.ITextStyle {
     return {
-      fontFamily: FONT_CUTE,
+      fontFamily: FONT_FAMILY,
       fontWeight: '900',
       fill: 0xfff5ff,
       stroke: 0xb794f6,

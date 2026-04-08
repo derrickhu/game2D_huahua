@@ -1,8 +1,8 @@
 /**
  * 家具托盘（编辑模式底部抽屉）
  *
- * 编辑模式下从底部弹出，展示所有已解锁家具的缩略图网格。
- * 分类与装修面板一致（花房/家电/…），支持向上拖出家具到房间。
+ * 编辑模式下从底部弹出，展示已解锁家具横滑列表；「房屋」Tab 为已购房间风格，点选即切换房壳。
+ * 分类与装修面板一致，家具支持向上拖入房间。
  */
 import * as PIXI from 'pixi.js';
 import { Game } from '@/core/Game';
@@ -18,8 +18,11 @@ import {
   DECO_RARITY_INFO,
   DecoDef,
   FURNITURE_TRAY_TABS,
+  ROOM_STYLES,
+  sortRoomStylesByUnlockLevelThenCost,
   type FurnitureTrayTabId,
   type DecoPanelTabId,
+  type RoomStyleDef,
   getDecorationTabLabel,
   getDecosForDecorationPanelTab,
   isDecoAllowedInScene,
@@ -54,8 +57,11 @@ const TAB_ICON_PAD = 6;
 const HANDLE_H = 28;              // 顶部拖拽手柄高度
 /** Tab 带下沿到托盘内容区顶（与 _build 一致） */
 const TAB_BAND_BOTTOM = HANDLE_H + TAB_ROW_TOP_PAD + TAB_BAR_H;
-/** 家具横滑区可视高度 */
+/** 家具横滑区总高度（含底部筛选条） */
 const GRID_VIEW_H = TRAY_H - TAB_BAND_BOTTOM;
+/** 底部「全部 / 未放置」筛选条高度；列表仅占用上方 GRID_SCROLL_H */
+const GRID_FILTER_BAR_H = 48;
+const GRID_SCROLL_H = GRID_VIEW_H - GRID_FILTER_BAR_H;
 /**
  * 列表裁切左右缩进（奶油区内再各收约 20，避免贴紫框；不足一屏可横滑）
  */
@@ -64,6 +70,8 @@ const GRID_CLIP_INSET_X = 59;
 const GRID_LIST_PAD_LEFT = GRID_CLIP_INSET_X;
 const GRID_LIST_PAD_RIGHT = 16;
 const GRID_LIST_PAD_Y = 10;
+/** 圆角卡片底边与下方名称文案的间距 */
+const CARD_NAME_BELOW_GAP = 4;
 const GRID_CARD_GAP = 8;
 const GRID_TARGETS_PER_ROW = 6;
 /** 奶油区内可绘宽度（与遮罩一致） */
@@ -108,6 +116,8 @@ const TRAY_TAP_SLOP_PX = 12;
 
 type TrayScrollMode = 'scroll' | 'drag' | 'neutral';
 
+type TrayListFilter = 'all' | 'unplaced';
+
 export class FurnitureTray extends PIXI.Container {
   /** 底板：拱顶壳体贴图或矢量回退 */
   private _bg!: PIXI.Container;
@@ -115,6 +125,8 @@ export class FurnitureTray extends PIXI.Container {
   private _tabContainer!: PIXI.Container;
   private _gridContainer!: PIXI.Container;
   private _gridMask!: PIXI.Graphics;
+  /** 底部左侧：全部 / 未放置 */
+  private _filterRow!: PIXI.Container;
   private _isOpen = false;
   private _currentTab: FurnitureTrayTabId = 'flower_room';
   private _closedY = 0;
@@ -131,6 +143,9 @@ export class FurnitureTray extends PIXI.Container {
   private _trayMode: TrayScrollMode | null = null;
   private _trayDragStarted = false;
   private _trayPending: { decoId: string; isPlaced: boolean } | null = null;
+
+  /** 列表筛选：默认仅显示尚未放入房间的家具 */
+  private _listFilter: TrayListFilter = 'unplaced';
 
   private readonly _onCanvasTrayMove = (ev: PointerEvent): void => {
     if (!this._isOpen || !this._trayScrollListening) return;
@@ -199,6 +214,7 @@ export class FurnitureTray extends PIXI.Container {
     } else {
       this._currentTab = 'flower_room';
     }
+    this._listFilter = 'unplaced';
     this._refreshAll();
 
     TweenManager.to({
@@ -297,14 +313,18 @@ export class FurnitureTray extends PIXI.Container {
     const clipW = w - 2 * GRID_CLIP_INSET_X;
     this._gridMask = new PIXI.Graphics();
     this._gridMask.beginFill(0xFFFFFF);
-    this._gridMask.drawRect(GRID_CLIP_INSET_X, TAB_BAND_BOTTOM, clipW, GRID_VIEW_H);
+    this._gridMask.drawRect(GRID_CLIP_INSET_X, TAB_BAND_BOTTOM, clipW, GRID_SCROLL_H);
     this._gridMask.endFill();
     this.addChild(this._gridMask);
     this._gridContainer.mask = this._gridMask;
 
     // 网格滚动事件（命中区与可视裁切一致）
     this._gridContainer.eventMode = 'static';
-    this._gridContainer.hitArea = new PIXI.Rectangle(GRID_CLIP_INSET_X, 0, clipW, GRID_VIEW_H);
+    this._gridContainer.hitArea = new PIXI.Rectangle(GRID_CLIP_INSET_X, 0, clipW, GRID_SCROLL_H);
+
+    this._filterRow = new PIXI.Container();
+    this._filterRow.y = TAB_BAND_BOTTOM + GRID_SCROLL_H;
+    this.addChild(this._filterRow);
   }
 
   private _unbindCanvasTrayScroll(): void {
@@ -442,24 +462,102 @@ export class FurnitureTray extends PIXI.Container {
     });
   }
 
+  private _buildFilterRow(): void {
+    this._filterRow.removeChildren();
+    if (this._currentTab === 'room_styles') {
+      this._filterRow.visible = false;
+      return;
+    }
+    this._filterRow.visible = true;
+    const CHIP_H = 36;
+    const PAD_Y = Math.max(0, (GRID_FILTER_BAR_H - CHIP_H) / 2);
+    const CHIP_GAP = 12;
+    const chips: { id: TrayListFilter; label: string; w: number }[] = [
+      { id: 'all', label: '全部', w: 68 },
+      { id: 'unplaced', label: '未放置', w: 92 },
+    ];
+    let x = GRID_CLIP_INSET_X;
+    for (const { id, label, w } of chips) {
+      const chip = new PIXI.Container();
+      chip.position.set(x, PAD_Y);
+      const selected = this._listFilter === id;
+      const bg = new PIXI.Graphics();
+      if (selected) {
+        bg.beginFill(0xFFE8D0);
+        bg.drawRoundedRect(0, 0, w, CHIP_H, 10);
+        bg.endFill();
+        bg.lineStyle(2, COLORS.BUTTON_PRIMARY);
+        bg.drawRoundedRect(0, 0, w, CHIP_H, 10);
+      } else {
+        bg.beginFill(0xFFFFFF, 0.96);
+        bg.drawRoundedRect(0, 0, w, CHIP_H, 10);
+        bg.endFill();
+        bg.lineStyle(1, 0xE0D0C0);
+        bg.drawRoundedRect(0, 0, w, CHIP_H, 10);
+      }
+      chip.addChild(bg);
+      const tx = new PIXI.Text(label, {
+        fontSize: 16,
+        fill: selected ? COLORS.TEXT_DARK : COLORS.TEXT_LIGHT,
+        fontFamily: FONT_FAMILY,
+      });
+      tx.anchor.set(0.5, 0.5);
+      tx.position.set(w / 2, CHIP_H / 2);
+      chip.addChild(tx);
+      chip.eventMode = 'static';
+      chip.cursor = 'pointer';
+      const hitPad = 4;
+      chip.hitArea = new PIXI.Rectangle(-hitPad, -hitPad, w + hitPad * 2, CHIP_H + hitPad * 2);
+      chip.on('pointertap', () => {
+        if (this._listFilter === id) return;
+        this._listFilter = id;
+        this._scrollX = 0;
+        this._refreshAll();
+      });
+      this._filterRow.addChild(chip);
+      x += w + CHIP_GAP;
+    }
+  }
+
   private _buildGrid(): void {
     this._teardownTrayScroll();
     this._trayScrollInner = null;
     this._gridContainer.removeChildren();
 
+    if (this._currentTab === 'room_styles') {
+      this._buildRoomStylesGrid();
+      return;
+    }
+
     const sceneId = CurrencyManager.state.sceneId;
     const candidates = getDecosForDecorationPanelTab(this._currentTab as DecoPanelTabId, sceneId);
-    const decos = candidates.filter(
+    const layout = RoomLayoutManager.getLayout();
+    const unlocked = candidates.filter(
       d => DecorationManager.isUnlocked(d.id) && isDecoAllowedInScene(d, sceneId),
     );
-    if (decos.length === 0) {
-      // 空状态
+    const decos =
+      this._listFilter === 'unplaced'
+        ? unlocked.filter(d => !layout.some(p => p.decoId === d.id))
+        : unlocked;
+
+    if (unlocked.length === 0) {
       const emptyText = new PIXI.Text('暂无已解锁的装饰\n去装修面板解锁吧~', {
         fontSize: 16, fill: COLORS.TEXT_LIGHT, fontFamily: FONT_FAMILY,
         align: 'center',
       });
       emptyText.anchor.set(0.5, 0.5);
-      emptyText.position.set(DESIGN_WIDTH / 2, GRID_VIEW_H / 2);
+      emptyText.position.set(DESIGN_WIDTH / 2, GRID_SCROLL_H / 2);
+      this._gridContainer.addChild(emptyText);
+      return;
+    }
+
+    if (decos.length === 0) {
+      const emptyText = new PIXI.Text('该分类下暂无未放置的家具\n点「全部」可查看已放置项', {
+        fontSize: 15, fill: COLORS.TEXT_LIGHT, fontFamily: FONT_FAMILY,
+        align: 'center',
+      });
+      emptyText.anchor.set(0.5, 0.5);
+      emptyText.position.set(DESIGN_WIDTH / 2, GRID_SCROLL_H / 2);
       this._gridContainer.addChild(emptyText);
       return;
     }
@@ -479,24 +577,156 @@ export class FurnitureTray extends PIXI.Container {
     // 底层透明承接区：点在卡片间隙或右侧留白时也能横向滑动
     const scrollPlate = new PIXI.Container();
     scrollPlate.eventMode = 'static';
-    scrollPlate.hitArea = new PIXI.Rectangle(0, 0, plateW, GRID_VIEW_H);
+    scrollPlate.hitArea = new PIXI.Rectangle(0, 0, plateW, GRID_SCROLL_H);
     scrollPlate.on('pointerdown', (e: PIXI.FederatedPointerEvent) => {
       this._beginTrayScroll(e, null);
     });
     innerContainer.addChild(scrollPlate);
 
-    const currentLayout = RoomLayoutManager.getLayout();
-
     decos.forEach((deco, i) => {
       const x = GRID_LIST_PAD_LEFT + i * (CARD_SIZE + GRID_CARD_GAP);
       const y = GRID_LIST_PAD_Y;
-      const card = this._buildCard(deco, x, y, currentLayout);
+      const card = this._buildCard(deco, x, y, layout);
       innerContainer.addChild(card);
     });
 
     this._maxScrollX = Math.max(0, contentW - GRID_CLIP_RIGHT_X);
     this._scrollX = Math.max(-this._maxScrollX, Math.min(0, this._scrollX));
     innerContainer.x = this._scrollX;
+  }
+
+  /** 房屋 Tab：仅展示已购买（已解锁）的房间风格，点选切换当前场景房壳 */
+  private _buildRoomStylesGrid(): void {
+    const owned = sortRoomStylesByUnlockLevelThenCost(ROOM_STYLES).filter(s =>
+      DecorationManager.isRoomStyleUnlocked(s.id),
+    );
+    if (owned.length === 0) {
+      const emptyText = new PIXI.Text('暂无已购买的房间风格\n去装修面板购买吧~', {
+        fontSize: 16, fill: COLORS.TEXT_LIGHT, fontFamily: FONT_FAMILY,
+        align: 'center',
+      });
+      emptyText.anchor.set(0.5, 0.5);
+      emptyText.position.set(DESIGN_WIDTH / 2, GRID_SCROLL_H / 2);
+      this._gridContainer.addChild(emptyText);
+      return;
+    }
+
+    const innerContainer = new PIXI.Container();
+    this._gridContainer.addChild(innerContainer);
+    this._trayScrollInner = innerContainer;
+
+    const n = owned.length;
+    const contentW =
+      GRID_LIST_PAD_LEFT +
+      n * CARD_SIZE +
+      (n > 0 ? (n - 1) * GRID_CARD_GAP : 0) +
+      GRID_LIST_PAD_RIGHT;
+    const plateW = Math.max(DESIGN_WIDTH, contentW);
+
+    const scrollPlate = new PIXI.Container();
+    scrollPlate.eventMode = 'static';
+    scrollPlate.hitArea = new PIXI.Rectangle(0, 0, plateW, GRID_SCROLL_H);
+    scrollPlate.on('pointerdown', (e: PIXI.FederatedPointerEvent) => {
+      this._beginTrayScroll(e, null);
+    });
+    innerContainer.addChild(scrollPlate);
+
+    owned.forEach((style, i) => {
+      const x = GRID_LIST_PAD_LEFT + i * (CARD_SIZE + GRID_CARD_GAP);
+      const y = GRID_LIST_PAD_Y;
+      innerContainer.addChild(this._buildRoomStyleCard(style, x, y));
+    });
+
+    this._maxScrollX = Math.max(0, contentW - GRID_CLIP_RIGHT_X);
+    this._scrollX = Math.max(-this._maxScrollX, Math.min(0, this._scrollX));
+    innerContainer.x = this._scrollX;
+  }
+
+  private _buildRoomStyleCard(style: RoomStyleDef, x: number, y: number): PIXI.Container {
+    const card = new PIXI.Container();
+    card.position.set(x, y);
+    const equipped = DecorationManager.roomStyleId === style.id;
+    const rarityInfo = DECO_RARITY_INFO[style.rarity];
+
+    const bg = new PIXI.Graphics();
+    bg.beginFill(0xffffff);
+    bg.drawRoundedRect(0, 0, CARD_SIZE, CARD_SIZE, 8);
+    bg.endFill();
+    if (equipped) {
+      bg.lineStyle(2, COLORS.BUTTON_PRIMARY);
+    } else {
+      bg.lineStyle(1, 0xE0D0C0);
+    }
+    bg.drawRoundedRect(0, 0, CARD_SIZE, CARD_SIZE, 8);
+    card.addChild(bg);
+
+    const roomTex = TextureCache.get(style.bgTexture);
+    if (roomTex?.width) {
+      const sprite = new PIXI.Sprite(roomTex);
+      const iconInset = 5;
+      const maxSize = CARD_SIZE - iconInset * 2;
+      const s = Math.min(maxSize / roomTex.width, maxSize / roomTex.height);
+      sprite.scale.set(s);
+      sprite.anchor.set(0.5, 0.5);
+      sprite.position.set(CARD_SIZE / 2, CARD_SIZE / 2);
+      card.addChild(sprite);
+    } else {
+      const ph = new PIXI.Text('🏠', { fontSize: 34, fontFamily: FONT_FAMILY });
+      ph.anchor.set(0.5, 0.5);
+      ph.position.set(CARD_SIZE / 2, CARD_SIZE / 2);
+      card.addChild(ph);
+    }
+
+    const rarityDot = new PIXI.Graphics();
+    rarityDot.beginFill(rarityInfo.color);
+    rarityDot.drawCircle(CARD_SIZE - 10, 10, 5);
+    rarityDot.endFill();
+    card.addChild(rarityDot);
+
+    if (equipped) {
+      const badgeTex = TextureCache.get('ui_order_check_badge');
+      if (badgeTex) {
+        const targetSide = Math.min(28, Math.floor(CARD_SIZE * 0.34));
+        const bs = targetSide / Math.max(badgeTex.width, badgeTex.height);
+        const badge = new PIXI.Sprite(badgeTex);
+        badge.scale.set(bs);
+        badge.anchor.set(1, 1);
+        badge.position.set(CARD_SIZE - 4, CARD_SIZE - 4);
+        badge.eventMode = 'none';
+        card.addChild(badge);
+      }
+    }
+
+    const nameText = new PIXI.Text(style.name, {
+      fontSize: 12,
+      fill: COLORS.TEXT_LIGHT,
+      fontFamily: FONT_FAMILY,
+      wordWrap: true,
+      wordWrapWidth: CARD_SIZE,
+      align: 'center',
+      lineHeight: 15,
+    });
+    nameText.anchor.set(0.5, 0);
+    nameText.position.set(CARD_SIZE / 2, CARD_SIZE + CARD_NAME_BELOW_GAP);
+    card.addChild(nameText);
+
+    card.eventMode = 'static';
+    card.cursor = 'pointer';
+    const hitH = CARD_SIZE + CARD_NAME_BELOW_GAP + Math.ceil(nameText.height);
+    card.hitArea = new PIXI.Rectangle(0, 0, CARD_SIZE, hitH);
+
+    card.on('pointerdown', (e: PIXI.FederatedPointerEvent) => {
+      this._beginTrayScroll(e, null);
+    });
+    card.on('pointertap', () => {
+      if (DecorationManager.roomStyleId === style.id) return;
+      if (DecorationManager.equipRoomStyle(style.id)) {
+        ToastMessage.show(`已切换为「${style.name}」`);
+        this._refreshAll();
+      }
+    });
+
+    return card;
   }
 
   private _buildCard(
@@ -511,29 +741,25 @@ export class FurnitureTray extends PIXI.Container {
     const isPlaced = layout.some(p => p.decoId === deco.id);
     const rarityInfo = DECO_RARITY_INFO[deco.rarity];
 
-    // 卡片背景
+    // 卡片背景（已放置与未放置同样式，仅用右下角对勾区分）
     const bg = new PIXI.Graphics();
-    bg.beginFill(isPlaced ? 0xE8F5E8 : 0xFFFFFF);
+    bg.beginFill(0xFFFFFF);
     bg.drawRoundedRect(0, 0, CARD_SIZE, CARD_SIZE, 8);
     bg.endFill();
-    if (isPlaced) {
-      bg.lineStyle(2, 0x4CAF50);
-    } else {
-      bg.lineStyle(1, 0xE0D0C0);
-    }
+    bg.lineStyle(1, 0xE0D0C0);
     bg.drawRoundedRect(0, 0, CARD_SIZE, CARD_SIZE, 8);
     card.addChild(bg);
 
-    // 家具图标
+    // 家具图标（卡片内铺满，名称已移到方块外下方）
     const texture = TextureCache.get(deco.icon);
     if (texture) {
       const sprite = new PIXI.Sprite(texture);
-      const maxSize = CARD_SIZE - 18;
+      const iconInset = 5;
+      const maxSize = CARD_SIZE - iconInset * 2;
       const s = Math.min(maxSize / texture.width, maxSize / texture.height);
       sprite.scale.set(s);
       sprite.anchor.set(0.5, 0.5);
-      sprite.position.set(CARD_SIZE / 2, CARD_SIZE / 2 - 4);
-      if (isPlaced) sprite.alpha = 0.5;
+      sprite.position.set(CARD_SIZE / 2, CARD_SIZE / 2);
       card.addChild(sprite);
     }
 
@@ -544,27 +770,41 @@ export class FurnitureTray extends PIXI.Container {
     rarityDot.endFill();
     card.addChild(rarityDot);
 
-    // 已放置标记
+    // 已放置：右下角叠主包对勾角标（与订单格 / 任务领奖一致）
     if (isPlaced) {
-      const placedBadge = new PIXI.Text('✓', {
-        fontSize: 18, fill: 0x4CAF50, fontFamily: FONT_FAMILY, fontWeight: 'bold',
-      });
-      placedBadge.anchor.set(0.5, 0.5);
-      placedBadge.position.set(CARD_SIZE / 2, CARD_SIZE / 2);
-      card.addChild(placedBadge);
+      const badgeTex = TextureCache.get('ui_order_check_badge');
+      if (badgeTex) {
+        const targetSide = Math.min(28, Math.floor(CARD_SIZE * 0.34));
+        const bs = targetSide / Math.max(badgeTex.width, badgeTex.height);
+        const badge = new PIXI.Sprite(badgeTex);
+        badge.scale.set(bs);
+        badge.anchor.set(1, 1);
+        const inset = 4;
+        badge.position.set(CARD_SIZE - inset, CARD_SIZE - inset);
+        badge.eventMode = 'none';
+        card.addChild(badge);
+      }
     }
 
-    // 名称（底部标签，加大可读）
+    // 名称：在圆角方块下方（不占卡片内白底）
     const nameText = new PIXI.Text(deco.name, {
-      fontSize: 11, fill: COLORS.TEXT_LIGHT, fontFamily: FONT_FAMILY,
+      fontSize: 12,
+      fill: COLORS.TEXT_LIGHT,
+      fontFamily: FONT_FAMILY,
+      wordWrap: true,
+      wordWrapWidth: CARD_SIZE,
+      align: 'center',
+      lineHeight: 15,
     });
-    nameText.anchor.set(0.5, 1);
-    nameText.position.set(CARD_SIZE / 2, CARD_SIZE - 4);
+    nameText.anchor.set(0.5, 0);
+    nameText.position.set(CARD_SIZE / 2, CARD_SIZE + CARD_NAME_BELOW_GAP);
     card.addChild(nameText);
 
     // 交互：pointerdown 起手势，横向滑 = 列表滚动，纵向滑 = 未放置则从托盘拖入房间
     card.eventMode = 'static';
     card.cursor = 'pointer';
+    const hitH = CARD_SIZE + CARD_NAME_BELOW_GAP + Math.ceil(nameText.height);
+    card.hitArea = new PIXI.Rectangle(0, 0, CARD_SIZE, hitH);
 
     card.on('pointerdown', (e: PIXI.FederatedPointerEvent) => {
       this._beginTrayScroll(e, { decoId: deco.id, isPlaced });
@@ -575,6 +815,7 @@ export class FurnitureTray extends PIXI.Container {
 
   private _refreshAll(): void {
     this._buildTabs();
+    this._buildFilterRow();
     this._buildGrid();
   }
 }

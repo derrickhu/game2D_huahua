@@ -46,7 +46,7 @@ export class BottomNav extends PIXI.Container {
       container.position.set(i * tabWidth, 0);
 
       // 图标
-      const icon = new PIXI.Text(tab.icon, { fontSize: 28 });
+      const icon = new PIXI.Text(tab.icon, { fontSize: 28, fontFamily: FONT_FAMILY });
       icon.anchor.set(0.5, 0);
       icon.position.set(tabWidth / 2, 12);
       container.addChild(icon);

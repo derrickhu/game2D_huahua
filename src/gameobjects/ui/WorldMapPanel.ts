@@ -5,6 +5,7 @@
  */
 import * as PIXI from 'pixi.js';
 import { Game } from '@/core/Game';
+import { AudioManager } from '@/core/AudioManager';
 import { EventBus } from '@/core/EventBus';
 import { TweenManager, Ease } from '@/core/TweenManager';
 import { TextureCache } from '@/utils/TextureCache';
@@ -99,6 +100,7 @@ export class WorldMapPanel extends PIXI.Container {
     if (this._isOpen) return;
     this._isOpen = true;
     this.visible = true;
+    AudioManager.play('world_map_open');
     this._wishingFountainAnimAcc = 0;
     this._refreshNodes();
     const wf = this._wishingFountainAnimPair;

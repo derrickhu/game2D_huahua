@@ -4,6 +4,7 @@
  * 倒计时基于 `Date.now()` 与持久化的 `nextRefreshAt`，**进程不在前台时真实时间仍流逝**，读档与 `ensureUpToDate` 会处理过期货架。
  */
 import { Game } from '@/core/Game';
+import { AudioManager } from '@/core/AudioManager';
 import { EventBus } from '@/core/EventBus';
 import {
   Category,
@@ -544,6 +545,7 @@ class MerchShopManagerClass {
       return false;
     }
     CurrencyManager.addDiamond(-diamondCost);
+    AudioManager.play('purchase_tap');
     this.rollShelfNow(shelfIndex, Date.now());
     EventBus.emit('merchShop:changed');
     ToastMessage.show('本栏已刷新');
@@ -611,6 +613,9 @@ class MerchShopManagerClass {
       return false;
     }
     this.pay(slot.priceType, slot.priceAmount);
+    if (slot.priceType === 'diamond' || slot.priceType === 'huayuan') {
+      AudioManager.play('purchase_tap');
+    }
     this.grantItem(slot.itemId);
     slot.remaining = Math.max(0, slot.remaining - 1);
     EventBus.emit('merchShop:changed');

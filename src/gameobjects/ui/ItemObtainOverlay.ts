@@ -4,6 +4,7 @@
  */
 import * as PIXI from 'pixi.js';
 import { Game } from '@/core/Game';
+import { AudioManager } from '@/core/AudioManager';
 import { OverlayManager } from '@/core/OverlayManager';
 import { TweenManager, Ease } from '@/core/TweenManager';
 import { DESIGN_WIDTH, FONT_FAMILY } from '@/config/Constants';
@@ -315,6 +316,7 @@ export class ItemObtainOverlay extends PIXI.Container {
     layer.zIndex = Z;
     ItemObtainOverlay._current = layer;
     parent.addChild(layer);
+    AudioManager.play('ui_reward_fanfare');
     layer.alpha = 0;
     TweenManager.to({ target: layer, props: { alpha: 1 }, duration: 0.22, ease: Ease.easeOutQuad });
   }

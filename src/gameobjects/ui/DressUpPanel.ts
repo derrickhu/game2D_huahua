@@ -5,6 +5,7 @@
  */
 import * as PIXI from 'pixi.js';
 import { Game } from '@/core/Game';
+import { AudioManager } from '@/core/AudioManager';
 import { EventBus } from '@/core/EventBus';
 import { TweenManager, Ease } from '@/core/TweenManager';
 import { DressUpManager, Outfit } from '@/managers/DressUpManager';
@@ -439,6 +440,7 @@ export class DressUpPanel extends PIXI.Container {
             return;
           }
           if (DressUpManager.unlock(outfit.id)) {
+            if (outfit.huayuanCost > 0) AudioManager.play('purchase_tap');
             ToastMessage.show(`🎉 解锁「${outfit.name}」！`);
             this._refreshHeaderNumbers();
             this._rebuildGrid();

@@ -45,6 +45,7 @@ import { FlowerEasterEggSystem } from '@/systems/FlowerEasterEggSystem';
 import { MergeStatsSystem } from '@/systems/MergeStatsSystem';
 import { TutorialSystem, TutorialStep } from '@/systems/TutorialSystem';
 import { SoundSystem } from '@/systems/SoundSystem';
+import { AudioManager } from '@/core/AudioManager';
 import { GMPanel } from '@/gameobjects/ui/GMPanel';
 import { DecorationManager } from '@/managers/DecorationManager';
 import { StaminaPanel } from '@/gameobjects/ui/StaminaPanel';
@@ -212,6 +213,7 @@ export class MainScene implements Scene {
     } else {
       // 从花店切回时同步 DressUpManager 当前装扮（避免仅依赖 dressup:equipped 漏刷新）
       this._refreshOwnerOutfit();
+      SoundSystem.playMainBGM();
     }
 
     Game.ticker.add(this._update, this);
@@ -516,6 +518,7 @@ export class MainScene implements Scene {
   private _bindCustomerEvents(): void {
     // 点击"完成"后：先播放飞行动画，动画结束后再真正执行交付
     EventBus.on('customer:requestDeliver', (uid: number, customer: any, globalPos: PIXI.Point) => {
+      AudioManager.play('customer_deliver', { bypassThrottle: true });
       const startLocal = this.container.toLocal(globalPos);
 
       let pendingAnims = 0;
@@ -567,7 +570,7 @@ export class MainScene implements Scene {
         this._playRewardFly('icon_huayuan', startLocal.x, startLocal.y, endX, endY, hyFly, () => {
           this._topBar.flashHuayuan();
           onAnimDone();
-        });
+        }, 0, false);
       }
 
       // 无奖励时直接交付
@@ -745,6 +748,7 @@ export class MainScene implements Scene {
     _amount: number,
     onAllArrived: () => void,
     initialDelay = 0,
+    playEntrySound = true,
   ): void {
     const layer = OverlayManager.container;
     const startL = layer.toLocal(this.container.toGlobal(new PIXI.Point(sx, sy)));
@@ -758,6 +762,7 @@ export class MainScene implements Scene {
       _amount,
       onAllArrived,
       initialDelay,
+      playEntrySound,
     );
   }
 

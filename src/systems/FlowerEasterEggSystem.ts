@@ -8,6 +8,7 @@ import * as PIXI from 'pixi.js';
 import { EventBus } from '@/core/EventBus';
 import { TweenManager, Ease } from '@/core/TweenManager';
 import { Game } from '@/core/Game';
+import { AudioManager } from '@/core/AudioManager';
 import { DESIGN_WIDTH, FONT_FAMILY } from '@/config/Constants';
 import { ITEM_DEFS, Category, type ItemDef } from '@/config/ItemConfig';
 import { TextureCache } from '@/utils/TextureCache';
@@ -58,6 +59,7 @@ export class FlowerEasterEggSystem {
 
   private _showUnlockPanel(itemId: string, displayName: string, rewards: UnlockRewards): void {
     this._isShowing = true;
+    AudioManager.play('collection_unlock');
 
     const W = DESIGN_WIDTH;
     const H = Game.logicHeight;

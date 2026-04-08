@@ -25,6 +25,8 @@ export interface PlaySoundOptions {
   playbackRate?: number;
   /** 为 true 时不做同名 50ms 节流（连续快速播放各一遍） */
   bypassThrottle?: boolean;
+  /** 乘在注册音量上，0～1；连击变调时略压高音档可减轻刺耳感 */
+  volumeScale?: number;
 }
 
 class AudioManagerClass {
@@ -60,6 +62,12 @@ class AudioManagerClass {
         ? Math.min(2, Math.max(0.5, rateRaw))
         : 1;
 
+    const scaleRaw = opts?.volumeScale;
+    const volumeScale =
+      scaleRaw !== undefined && Number.isFinite(scaleRaw)
+        ? Math.min(1, Math.max(0, scaleRaw))
+        : 1;
+
     try {
       const create = _api.createInnerAudioContext;
       if (typeof create !== 'function') return;
@@ -76,15 +84,19 @@ class AudioManagerClass {
         } catch (_) { /* */ }
       };
 
+      const applyPlaybackRate = (): void => {
+        if (opts?.playbackRate === undefined) return;
+        try {
+          (audio as { playbackRate?: number }).playbackRate = rate;
+        } catch (_) { /* 部分运行时不支持 */ }
+      };
+
       const tryPlay = () => {
         if (done || started) return;
         started = true;
         try {
-          if (opts?.playbackRate !== undefined) {
-            try {
-              (audio as { playbackRate?: number }).playbackRate = rate;
-            } catch (_) { /* 部分运行时不支持 */ }
-          }
+          // 微信 / 抖音 InnerAudioContext：倍速常在 src 赋值后、play 前写入才稳定生效（见官方社区反馈）
+          applyPlaybackRate();
           audio.play();
         } catch (e) {
           console.warn(TAG, `音效 "${name}" play():`, e);
@@ -92,18 +104,27 @@ class AudioManagerClass {
         }
       };
 
-      audio.volume = entry.volume;
+      audio.volume = entry.volume * volumeScale;
       audio.onError((err: any) => {
         console.warn(TAG, `音效 "${name}" 播放失败:`, err?.errMsg || err);
         cleanup();
       });
       audio.onEnded(() => cleanup());
       if (typeof audio.onCanplay === 'function') {
-        audio.onCanplay(() => tryPlay());
+        audio.onCanplay(() => {
+          applyPlaybackRate();
+          tryPlay();
+        });
       }
+      // 先写倍速再设 src、设完 src 再写一遍：兼容部分基础库只在「src 已设」后接受 playbackRate
+      applyPlaybackRate();
       audio.src = entry.src;
+      applyPlaybackRate();
       if (typeof audio.onCanplay !== 'function') {
-        setTimeout(tryPlay, 0);
+        setTimeout(() => {
+          applyPlaybackRate();
+          tryPlay();
+        }, 0);
       }
     } catch (e) {
       console.warn(TAG, `音效 "${name}" 创建异常:`, e);

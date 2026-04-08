@@ -4,6 +4,7 @@
  */
 import * as PIXI from 'pixi.js';
 import { EventBus } from '@/core/EventBus';
+import { AudioManager } from '@/core/AudioManager';
 import { OverlayManager } from '@/core/OverlayManager';
 import { TextureCache } from '@/utils/TextureCache';
 import { TweenManager, Ease } from '@/core/TweenManager';
@@ -110,7 +111,12 @@ class RewardFlyCoordinatorClass {
     amount: number,
     onAllArrived: () => void,
     initialDelay = 0,
+    playEntrySound = true,
   ): void {
+    if (playEntrySound) {
+      AudioManager.play('customer_deliver', { bypassThrottle: true });
+    }
+
     const tex = TextureCache.get(texKey);
     const COUNT = Math.min(Math.max(3, Math.ceil(amount / 5)), 8);
     const ICON_SIZE = 28;
@@ -197,10 +203,11 @@ class RewardFlyCoordinatorClass {
     amount: number,
     onAllArrived: () => void,
     initialDelay = 0,
+    playEntrySound = true,
   ): void {
     const sl = this._globalToLayerLocal(startGlobal);
     const el = this._globalToLayerLocal(endGlobal);
-    this.playRewardFlyLayerLocal(texKey, sl.x, sl.y, el.x, el.y, amount, onAllArrived, initialDelay);
+    this.playRewardFlyLayerLocal(texKey, sl.x, sl.y, el.x, el.y, amount, onAllArrived, initialDelay, playEntrySound);
   }
 
   playBatch(
@@ -244,6 +251,8 @@ class RewardFlyCoordinatorClass {
       return;
     }
 
+    AudioManager.play('customer_deliver', { bypassThrottle: true });
+
     let delayIdx = 0;
     currencyItems.forEach(item => {
       const t = bindings.getCurrencyTarget(item.type);
@@ -264,6 +273,7 @@ class RewardFlyCoordinatorClass {
           doneOne();
         },
         d,
+        false,
       );
     });
 
@@ -284,6 +294,7 @@ class RewardFlyCoordinatorClass {
           doneOne();
         },
         d,
+        false,
       );
     });
 
@@ -312,6 +323,7 @@ class RewardFlyCoordinatorClass {
           doneOne();
         },
         d,
+        false,
       );
     });
 

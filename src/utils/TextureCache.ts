@@ -152,6 +152,10 @@ const PANELS_IMAGE_MAP: Record<string, string> = {
   furniture_tray_tab_room_styles_idle: 'subpkg_panels/images/ui/furniture_tray_tab_room_styles_idle.png',
   /** 编辑工具栏「确认」：绿色胶囊对勾，rembg 透明底 */
   furniture_tray_confirm_btn: 'subpkg_panels/images/ui/furniture_tray_confirm_btn.png',
+  /** 编辑模式「完成编辑」：4×2 表 pill_btn_4x2_r1c1_idx01，托盘右下角 */
+  edit_complete_pill_4x2_nb2: 'subpkg_panels/images/ui/pill_btn_4x2_r1c1_idx01.png',
+  /** 花店主界面「装修花店」入口：4×2 表 pill_btn_4x2_r1c3_idx03 */
+  shop_edit_deco_pill_4x2_nb2: 'subpkg_panels/images/ui/pill_btn_4x2_r1c3_idx03.png',
   /** 家具托盘底板壳：NB2+rembg；贴图已 180° 调向，平底在上、拱顶在下，顶对齐裁切后少占竖向 */
   furniture_tray_panel_shell_nb2: 'subpkg_panels/images/ui/furniture_tray_panel_shell_nb2.png',
   /** 万能水晶/金剪刀确认弹窗：NB2+rembg，与合成线彩带同风格 */

@@ -11,10 +11,17 @@ import { AudioManager } from '@/core/AudioManager';
 import { EventBus } from '@/core/EventBus';
 import { Game } from '@/core/Game';
 import { SOUND_DEFS, BGM_DEFS } from '@/config/AudioConfig';
-import { getNextMergeChimePlaybackRate } from '@/systems/MergeChimeScale';
+
+/** 连续两次合成间隔超过此时长则变音档位从第 1 档重新计（略放宽，避免动画间隙导致永远停在第 1 档） */
+const MERGE_COMBO_GAP_MS = 2400;
+/** 连续合成：倍速升幅收窄 + 高档略压音量，减轻「又尖又吵」 */
+const MERGE_SUCCESS_PLAYBACK_RATES: readonly number[] = [1.0, 1.05, 1.1, 1.14, 1.18];
+const MERGE_SUCCESS_VOLUME_SCALE: readonly number[] = [1.0, 0.97, 0.93, 0.9, 0.86];
 
 class SoundSystemClass {
   private _inited = false;
+  private _mergeComboIndex = 0;
+  private _mergeLastTimeMs = 0;
 
   init(): void {
     if (this._inited) return;
@@ -30,10 +37,20 @@ class SoundSystemClass {
     // ---- 绑定事件 → 音效 ----
 
     EventBus.on('board:merged', () => {
+      const now = Date.now();
+      if (now - this._mergeLastTimeMs > MERGE_COMBO_GAP_MS) {
+        this._mergeComboIndex = 0;
+      }
+      this._mergeLastTimeMs = now;
+      const step = Math.min(this._mergeComboIndex, MERGE_SUCCESS_PLAYBACK_RATES.length - 1);
+      const rate = MERGE_SUCCESS_PLAYBACK_RATES[step];
+      const volSc = MERGE_SUCCESS_VOLUME_SCALE[step];
       AudioManager.play('merge_success', {
-        playbackRate: getNextMergeChimePlaybackRate(),
         bypassThrottle: true,
+        playbackRate: rate,
+        volumeScale: volSc,
       });
+      this._mergeComboIndex = Math.min(this._mergeComboIndex + 1, MERGE_SUCCESS_PLAYBACK_RATES.length);
     });
 
     // 建筑产出（点击建筑成功产出时）
@@ -51,6 +68,8 @@ class SoundSystemClass {
       AudioManager.play('cell_unlock');
     });
 
+    // 客人「完成」音效由 MainScene（订单起点一次）与 RewardFlyCoordinator（其它飞入）统一播 customer_deliver
+
     // ---- 首次交互恢复 BGM ----
     const canvas = Game.app?.view as HTMLCanvasElement | undefined;
     if (canvas) {
@@ -63,7 +82,8 @@ class SoundSystemClass {
       });
     }
 
-    // ---- 全局按钮点击音效 ----
+    // ---- 全局按钮点击音效（默认 `button_click` = `subpkg_audio/button_click.mp3`，源 `game_assets/huahua/bgm/按钮通用.mp3`）----
+    // 沿命中链向上找 `cursor === 'pointer'` 即播；未设 pointer 的交互区不会自动播（需在控件上设 cursor 或单独 play）。
     // 利用 PixiJS 事件冒泡机制：在 stage 上监听 pointerdown，
     // e.target 就是实际命中的元素（在按钮回调修改场景树之前就已确定）。
     // 这样完全不受"按钮回调打开面板遮罩 → hitTest 命中遮罩"的时序影响。
@@ -106,6 +126,16 @@ class SoundSystemClass {
     const bgm = BGM_DEFS.find(b => b.name === 'bgm_main');
     if (bgm) {
       AudioManager.playBGM(bgm.src, bgm.volume);
+    }
+  }
+
+  /** 花店 / 装修全屏场景 BGM */
+  playShopBGM(): void {
+    const bgm = BGM_DEFS.find(b => b.name === 'bgm_shop');
+    if (bgm) {
+      AudioManager.playBGM(bgm.src, bgm.volume);
+    } else {
+      this.playMainBGM();
     }
   }
 

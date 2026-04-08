@@ -65,9 +65,6 @@ const SOURCES_ROOT_OFFSET_Y = -20;
 /** 标题彩带最大宽度（随面板略放大） */
 const RIBBON_MAX_W = 500;
 
-/** 偏圆、偏可爱的中文回退栈（与 WarehousePanel 顶栏标题一致） */
-const FONT_CUTE = `'PingFang SC','Hiragino Sans GB','Microsoft YaHei','Noto Sans SC',${FONT_FAMILY}`;
-
 /** 复用仓库面板关闭钮资源与比例（设计坐标下最长边） */
 const MERGE_CLOSE_BTN_MAX_SIDE = 56;
 const MERGE_CLOSE_BTN_HIT_PAD = 12;
@@ -290,7 +287,7 @@ export class MergeChainPanel extends PIXI.Container {
   /** 合成线彩带标题：深描边 + 略深阴影，在橙/粉彩带上更易辨认 */
   private _mergeRibbonTitleStyle(): PIXI.ITextStyle {
     return {
-      fontFamily: FONT_CUTE,
+      fontFamily: FONT_FAMILY,
       fontWeight: '900',
       fontSize: 32,
       fill: 0xffffff,

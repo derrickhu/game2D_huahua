@@ -4,6 +4,7 @@
  */
 import * as PIXI from 'pixi.js';
 import { Game } from '@/core/Game';
+import { AudioManager } from '@/core/AudioManager';
 import { TweenManager, Ease } from '@/core/TweenManager';
 import { DESIGN_WIDTH, COLORS, FONT_FAMILY } from '@/config/Constants';
 import { ITEM_DEFS } from '@/config/ItemConfig';
@@ -156,6 +157,10 @@ export class LevelUpPopup extends PIXI.Container {
         this.removeAllListeners('pointertap');
         this.on('pointertap', () => this._dismiss());
       }, 80);
+    }
+
+    if (!this._previewOnly) {
+      AudioManager.play('ui_reward_fanfare');
     }
 
     this.alpha = 0;
@@ -462,6 +467,9 @@ export class LevelUpPopup extends PIXI.Container {
   }
 
   private _playRewardFlyToBox(onArrived: () => void): void {
+    if (this._flySources.length > 0) {
+      AudioManager.play('customer_deliver', { bypassThrottle: true });
+    }
     const parent = this.parent!;
     const endGlobal = this._rewardFlyTargetGlobal!;
     const endLocal = parent.toLocal(endGlobal);
