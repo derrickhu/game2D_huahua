@@ -201,8 +201,7 @@ class BoardManagerClass {
     if (!src || !dst) return false;
     if (!src.itemId) return false;
     if (dst.itemId) return false;
-    if (dst.state !== CellState.OPEN && dst.state !== CellState.PEEK) return false;
-    if (src.state !== CellState.OPEN && src.state !== CellState.PEEK) return false;
+    if (dst.state !== CellState.OPEN || src.state !== CellState.OPEN) return false;
 
     dst.itemId = src.itemId;
     dst.reserved = src.reserved;
@@ -223,12 +222,7 @@ class BoardManagerClass {
     const dst = this.cells[dstIndex];
     if (!src || !dst) return false;
     if (!src.itemId || !dst.itemId) return false;
-    if (
-      (src.state !== CellState.OPEN && src.state !== CellState.PEEK)
-      || (dst.state !== CellState.OPEN && dst.state !== CellState.PEEK)
-    ) {
-      return false;
-    }
+    if (src.state !== CellState.OPEN || dst.state !== CellState.OPEN) return false;
 
     const itemA = src.itemId;
     const resA = src.reserved;

@@ -20,8 +20,7 @@ class MergeManagerClass {
 
   startDrag(cellIndex: number): boolean {
     const cell = BoardManager.getCellByIndex(cellIndex);
-    if (!cell || !cell.itemId) return false;
-    if (cell.state !== 'open' && cell.state !== 'peek') return false;
+    if (!cell || !cell.itemId || cell.state !== 'open') return false;
     this.draggingIndex = cellIndex;
     EventBus.emit('merge:dragStart', cellIndex);
     return true;

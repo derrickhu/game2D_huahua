@@ -413,11 +413,12 @@ export class BoardView extends PIXI.Container {
       // 工具/宝箱也可拖拽合成与移动；松手仍在原格时由 handleRawUp → _handleTap 触发点击产出
 
       const dragItemId = cell.itemId;
-      const canDragItemFromCell =
-        !!dragItemId && (cell.state === CellState.OPEN || cell.state === CellState.PEEK);
+      // 半锁 PEEK 仅展示与选中说明，不可起拖；跨格合成须从 OPEN 拖向 PEEK
+      const canBoardDrag =
+        !!dragItemId && cell.state === CellState.OPEN;
 
-      // 长按检测：0.8秒后弹出合成线面板（含工具链）
-      if (canDragItemFromCell) {
+      // 长按检测：0.8秒后弹出合成线面板（含工具链）；仅全解锁格（与可拖规则一致）
+      if (canBoardDrag) {
         const def = ITEM_DEFS.get(dragItemId);
         const chain = getMergeChain(dragItemId);
         if (def && chain.length > 1) {
@@ -437,7 +438,7 @@ export class BoardView extends PIXI.Container {
         }
       }
 
-      if (canDragItemFromCell) {
+      if (canBoardDrag) {
         if (MergeManager.startDrag(cellIdx)) {
           this._startDragGhost(cellIdx, localPos);
           this._cacheAndHighlightTargets(cellIdx);
@@ -774,9 +775,9 @@ export class BoardView extends PIXI.Container {
     }
     this._selectedIndex = cellIndex;
     this._cellViews[cellIndex].setHighlight(true);
-    // 全解锁 / 半解锁格均可拖动物品；缩放反馈与可拖状态一致
+    // 仅完全开放格可拖动；半锁定(PEEK)等只做选中高亮，无缩放反馈
     const cell = BoardManager.getCellByIndex(cellIndex);
-    if (cell?.state === CellState.OPEN || cell?.state === CellState.PEEK) {
+    if (cell?.state === CellState.OPEN) {
       this._itemViews[cellIndex].playTapFeedback();
     }
     EventBus.emit('board:itemSelected', cellIndex, itemId);
@@ -1262,7 +1263,7 @@ export class BoardView extends PIXI.Container {
     }
     if (this._dragSrcIndex >= 0) {
       const cell = BoardManager.getCellByIndex(this._dragSrcIndex);
-      if (cell?.state === CellState.OPEN || cell?.state === CellState.PEEK) {
+      if (cell?.state === CellState.OPEN) {
         this._itemViews[this._dragSrcIndex].alpha = 1;
       }
     }
@@ -1360,14 +1361,10 @@ export class BoardView extends PIXI.Container {
     };
   }
 
-  /** 全解锁或半解锁且无物，可作为拖拽落点（与 `BoardManager.moveItem` / `placeItem` 一致） */
+  /** 全解锁且无物，可作为拖拽移动落点（与 `BoardManager.moveItem` 一致；合成落点仍见 mergeTargets） */
   private _isEmptyPlayableCell(cellIdx: number): boolean {
     const cell = BoardManager.getCellByIndex(cellIdx);
-    return (
-      !!cell
-      && !cell.itemId
-      && (cell.state === CellState.OPEN || cell.state === CellState.PEEK)
-    );
+    return !!cell && !cell.itemId && cell.state === CellState.OPEN;
   }
 
   /** 拖拽目标格有物品且将触发互换（非可合成格已在 mergeTargets 中） */
@@ -1377,12 +1374,7 @@ export class BoardView extends PIXI.Container {
     const src = BoardManager.getCellByIndex(srcIdx);
     const dst = BoardManager.getCellByIndex(hoverIdx);
     if (!src || !dst) return false;
-    if (
-      (src.state !== CellState.OPEN && src.state !== CellState.PEEK)
-      || (dst.state !== CellState.OPEN && dst.state !== CellState.PEEK)
-    ) {
-      return false;
-    }
+    if (src.state !== CellState.OPEN || dst.state !== CellState.OPEN) return false;
     if (!src.itemId || !dst.itemId) return false;
     if (BoardManager.canMerge(srcIdx, hoverIdx)) return false;
     return true;
