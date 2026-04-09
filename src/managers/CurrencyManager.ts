@@ -193,7 +193,7 @@ class CurrencyManagerClass {
 
     AudioManager.play('purchase_tap');
 
-    console.log(`[Currency] 钻石购买体力: -${price}💎 +${STAMINA_BUY_AMOUNT}⚡ (今日第${this._dailyStaminaBuyCount}次)`);
+    console.log(`[Currency] 钻石购买体力: -${price} +${STAMINA_BUY_AMOUNT} (今日第${this._dailyStaminaBuyCount}次)`);
     EventBus.emit('stamina:bought', STAMINA_BUY_AMOUNT, price, this._dailyStaminaBuyCount);
     return true;
   }
@@ -205,7 +205,7 @@ class CurrencyManagerClass {
     this.addStamina(STAMINA_AD_AMOUNT);
     this._dailyStaminaAdCount++;
 
-    console.log(`[Currency] 广告恢复体力: +${STAMINA_AD_AMOUNT}⚡ (今日第${this._dailyStaminaAdCount}次)`);
+    console.log(`[Currency] 广告恢复体力: +${STAMINA_AD_AMOUNT} (今日第${this._dailyStaminaAdCount}次)`);
     EventBus.emit('stamina:adRecovered', STAMINA_AD_AMOUNT, this._dailyStaminaAdCount);
     return true;
   }
@@ -263,7 +263,7 @@ class CurrencyManagerClass {
 
     EventBus.emit('currency:changed', 'star', this._state.star);
     EventBus.emit('currency:changed', 'level', this._state.level);
-    console.log(`[Currency] GM setLevel → 全局星级=${clamped} 累计⭐=${star}，globalLevel=${this.globalLevel}`);
+    console.log(`[Currency] GM setLevel → 全局星级=${clamped} 累计星=${star}，globalLevel=${this.globalLevel}`);
   }
 
   private _ensureActiveSceneProgress(): void {

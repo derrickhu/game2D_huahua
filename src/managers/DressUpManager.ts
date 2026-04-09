@@ -8,7 +8,8 @@ import { EventBus } from '@/core/EventBus';
 import { Platform } from '@/core/PlatformService';
 import { CurrencyManager } from './CurrencyManager';
 import { checkRequirement } from '@/utils/UnlockChecker';
-import { ALL_OUTFITS, OUTFIT_MAP } from '@/config/DressUpConfig';
+import { ALL_OUTFITS, OUTFIT_ACTIVITY_QUEST_BY_ID, OUTFIT_MAP } from '@/config/DressUpConfig';
+import { grantQuest } from '@/utils/UnlockChecker';
 import type { Outfit } from '@/config/DressUpConfig';
 export type { Outfit } from '@/config/DressUpConfig';
 
@@ -64,6 +65,16 @@ class DressUpManagerClass {
     EventBus.emit('dressup:unlocked', outfitId, outfit);
     EventBus.emit('dressup:equipped', outfitId);
     return true;
+  }
+
+  /**
+   * 活动完成后自动解锁套装（预留入口）。
+   * 会同步 `grantQuest`，使 `checkRequirement` 与已获得状态一致；并 `grantOutfit` 写入存档、发事件。
+   */
+  grantOutfitFromActivity(outfitId: string): boolean {
+    const q = OUTFIT_ACTIVITY_QUEST_BY_ID[outfitId];
+    if (q) grantQuest(q);
+    return this.grantOutfit(outfitId);
   }
 
   /** 免费赠送（成就/活动/合成奖励），成功后自动装备 */

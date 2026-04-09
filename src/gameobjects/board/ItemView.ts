@@ -545,12 +545,12 @@ export class ItemView extends PIXI.Container {
 
   private _getCategoryEmoji(category: Category): string {
     switch (category) {
-      case Category.FLOWER: return '🌸';
-      case Category.DRINK: return '🦋';
-      case Category.BUILDING: return '🏠';
-      case Category.CHEST: return '📦';
-      case Category.CURRENCY: return '💰';
-      default: return '❓';
+      case Category.FLOWER: return '花';
+      case Category.DRINK: return '饮';
+      case Category.BUILDING: return '建';
+      case Category.CHEST: return '箱';
+      case Category.CURRENCY: return '币';
+      default: return '物';
     }
   }
 

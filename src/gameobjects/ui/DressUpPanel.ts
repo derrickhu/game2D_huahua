@@ -197,7 +197,7 @@ export class DressUpPanel extends PIXI.Container {
     g.drawCircle(cw - 14, 14, 11);
     g.endFill();
     card.addChild(g);
-    const t = new PIXI.Text('✓', { fontSize: 13, fill: 0xffffff, fontFamily: FONT_FAMILY, fontWeight: 'bold' });
+    const t = new PIXI.Text('√', { fontSize: 13, fill: 0xffffff, fontFamily: FONT_FAMILY, fontWeight: 'bold' });
     t.anchor.set(0.5, 0.5);
     t.position.set(cw - 14, 14);
     card.addChild(t);
@@ -337,7 +337,8 @@ export class DressUpPanel extends PIXI.Container {
     const maxPortraitW = cw - 16;
     const portraitCy = portraitTop + maxPortraitH / 2;
 
-    if (!reqMet) {
+    const showPortrait = isUnlocked || reqMet;
+    if (!showPortrait) {
       const mysteryWrap = new PIXI.Container();
       mysteryWrap.position.set(cw / 2, portraitCy);
       addMysteryCardPlaceholder(mysteryWrap, cw, CARD_BASE_W, Math.min(maxPortraitW, maxPortraitH));
@@ -359,7 +360,8 @@ export class DressUpPanel extends PIXI.Container {
         card.addChild(sp);
       } else {
         const iconCy = Math.round((ch * 54) / CARD_BASE_H);
-        const icon = new PIXI.Text(outfit.icon, { fontSize: Math.round((44 * cw) / CARD_BASE_W), fontFamily: FONT_FAMILY });
+        const mark = outfit.icon?.trim() ? outfit.icon : outfit.name.charAt(0) || '?';
+        const icon = new PIXI.Text(mark, { fontSize: Math.round((44 * cw) / CARD_BASE_W), fontFamily: FONT_FAMILY });
         icon.anchor.set(0.5, 0.5);
         icon.position.set(cw / 2, iconCy);
         card.addChild(icon);
@@ -368,7 +370,7 @@ export class DressUpPanel extends PIXI.Container {
 
     if (isEquipped) this._addEquipBadge(card, cw);
 
-    if (!reqMet) {
+    if (!showPortrait) {
       const nameGap = 12;
       const lockSlot = Math.max(26, Math.round((28 * cw) / CARD_BASE_W));
       const nameWrap = Math.max(36, cw - 12 - nameGap - lockSlot);
@@ -425,23 +427,23 @@ export class DressUpPanel extends PIXI.Container {
         e.stopPropagation();
         if (isUnlocked) {
           if (DressUpManager.equip(outfit.id)) {
-            ToastMessage.show(`✨ 已切换为「${outfit.name}」`);
+            ToastMessage.show(`已切换为「${outfit.name}」`);
             this._refreshHeaderNumbers();
             this._rebuildGrid();
           }
         } else {
           const req = checkRequirement(outfit.unlockRequirement);
           if (!req.met) {
-            ToastMessage.show(`🔒 ${requirementHintText(req)}`);
+            ToastMessage.show(`${requirementHintText(req)}`);
             return;
           }
           if (CurrencyManager.state.huayuan < outfit.huayuanCost) {
-            ToastMessage.show('🌸 花愿不足');
+            ToastMessage.show('花愿不足');
             return;
           }
           if (DressUpManager.unlock(outfit.id)) {
             if (outfit.huayuanCost > 0) AudioManager.play('purchase_tap');
-            ToastMessage.show(`🎉 解锁「${outfit.name}」！`);
+            ToastMessage.show(`已解锁「${outfit.name}」！`);
             this._refreshHeaderNumbers();
             this._rebuildGrid();
           }
@@ -598,7 +600,7 @@ export class DressUpPanel extends PIXI.Container {
       this._content.addChild(closeBtn);
       this._closeBtn = closeBtn;
     } else {
-      const closeBtn = new PIXI.Text('✕', {
+      const closeBtn = new PIXI.Text('×', {
         fontSize: 34, fill: 0xffffff, fontFamily: FONT_FAMILY, fontWeight: 'bold',
         stroke: 0x7a4530, strokeThickness: 4,
       } as any);

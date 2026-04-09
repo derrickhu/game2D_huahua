@@ -10,9 +10,9 @@ import { ToastMessage } from './ToastMessage';
 import { DESIGN_WIDTH, FONT_FAMILY, COLORS } from '@/config/Constants';
 
 const LB_TABS: { type: LeaderboardType; icon: string }[] = [
-  { type: LeaderboardType.LEVEL, icon: '🏆' },
-  { type: LeaderboardType.COLLECTION, icon: '📖' },
-  { type: LeaderboardType.DECORATION, icon: '🏠' },
+  { type: LeaderboardType.LEVEL, icon: '等级' },
+  { type: LeaderboardType.COLLECTION, icon: '收集' },
+  { type: LeaderboardType.DECORATION, icon: '装修' },
 ];
 
 export class LeaderboardPanel extends PIXI.Container {
@@ -101,7 +101,7 @@ export class LeaderboardPanel extends PIXI.Container {
     this._content.addChild(title);
 
     // 关闭
-    const closeBtn = new PIXI.Text('✕', { fontSize: 22, fill: COLORS.TEXT_LIGHT, fontFamily: FONT_FAMILY });
+    const closeBtn = new PIXI.Text('×', { fontSize: 22, fill: COLORS.TEXT_LIGHT, fontFamily: FONT_FAMILY });
     closeBtn.anchor.set(0.5, 0.5);
     closeBtn.position.set(panelX + panelW - 24, panelY + 24);
     closeBtn.eventMode = 'static';
@@ -142,7 +142,7 @@ export class LeaderboardPanel extends PIXI.Container {
 
     // 我的排名信息
     const myScore = myScores[this._activeType] || 0;
-    const myInfo = new PIXI.Text(`📊 我的成绩: ${myScore}`, {
+    const myInfo = new PIXI.Text(` 我的成绩: ${myScore}`, {
       fontSize: 15, fill: COLORS.BUTTON_PRIMARY, fontFamily: FONT_FAMILY, fontWeight: 'bold',
     });
     myInfo.anchor.set(0.5, 0);
@@ -181,7 +181,7 @@ export class LeaderboardPanel extends PIXI.Container {
       avatar.endFill();
       this._content.addChild(avatar);
 
-      const avatarIcon = new PIXI.Text(entry.isSelf ? '👤' : '🌸', { fontSize: 18, fontFamily: FONT_FAMILY });
+      const avatarIcon = new PIXI.Text(entry.isSelf ? '' : '', { fontSize: 18, fontFamily: FONT_FAMILY });
       avatarIcon.anchor.set(0.5, 0.5);
       avatarIcon.position.set(rowX + 72, y + rowH / 2);
       this._content.addChild(avatarIcon);
@@ -205,7 +205,7 @@ export class LeaderboardPanel extends PIXI.Container {
     }
 
     // 提示：排行榜需要微信开放数据域
-    const hint = new PIXI.Text('💡 排行榜数据来自好友圈（微信开放数据域）', {
+    const hint = new PIXI.Text(' 排行榜数据来自好友圈（微信开放数据域）', {
       fontSize: 11, fill: 0xBBBBBB, fontFamily: FONT_FAMILY,
     });
     hint.anchor.set(0.5, 0);
@@ -220,7 +220,7 @@ export class LeaderboardPanel extends PIXI.Container {
     giftBtn.endFill();
     this._content.addChild(giftBtn);
 
-    const giftText = new PIXI.Text(`🎁 赠送体力 (${SocialManager.giftRemaining}/3)`, {
+    const giftText = new PIXI.Text(` 赠送体力 (${SocialManager.giftRemaining}/3)`, {
       fontSize: 14, fill: 0xFFFFFF, fontFamily: FONT_FAMILY, fontWeight: 'bold',
     });
     giftText.anchor.set(0.5, 0.5);
@@ -234,7 +234,7 @@ export class LeaderboardPanel extends PIXI.Container {
       giftHit.cursor = 'pointer';
       giftHit.on('pointerdown', () => {
         if (SocialManager.sendGift()) {
-          ToastMessage.show('🎁 已发送体力赠送邀请！');
+          ToastMessage.show('已发送体力赠送邀请！');
           this._refresh();
         }
       });

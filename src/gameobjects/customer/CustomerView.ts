@@ -7,7 +7,7 @@
  *
  *        ┌──完成──┐
  *   ┌──── 需求面板（放大，最多3格）──────── [花愿]
- *   │      [🌸] [🌸] [🌸]            │
+ *   │      [] [] []            │
  *   └────────────────────────────────┘
  */
 import * as PIXI from 'pixi.js';
@@ -128,7 +128,7 @@ export class CustomerView extends PIXI.Container {
     } else {
       this._avatarSprite.visible = false;
       this._avatar.visible = true;
-      this._avatar.text = customer.emoji;
+      this._avatar.text = customer.name?.charAt(0) || '?';
     }
 
     this._rebuildInfoPanel();
@@ -482,7 +482,7 @@ export class CustomerView extends PIXI.Container {
         check.endFill();
         this._infoPanel.addChild(check);
 
-        const checkMark = new PIXI.Text('✓', {
+        const checkMark = new PIXI.Text('√', {
           fontSize: Math.round(checkTarget * 0.48),
           fill: 0xFFFFFF,
           fontWeight: 'bold',
@@ -589,9 +589,9 @@ export class CustomerView extends PIXI.Container {
 
   private _getCategoryEmoji(category: Category): string {
     switch (category) {
-      case Category.FLOWER: return '🌸';
-      case Category.DRINK: return '🦋';
-      default: return '❓';
+      case Category.FLOWER: return '花';
+      case Category.DRINK: return '饮';
+      default: return '物';
     }
   }
 

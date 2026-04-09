@@ -16,7 +16,6 @@ import { RewardFlyCoordinator, type RewardFlyBindings } from '@/core/RewardFlyCo
 import { BoardManager } from '@/managers/BoardManager';
 import { MergeCompanionManager } from '@/managers/MergeCompanionManager';
 import { CurrencyManager } from '@/managers/CurrencyManager';
-import { BuildingManager } from '@/managers/BuildingManager';
 import { WarehouseManager } from '@/managers/WarehouseManager';
 import { CustomerManager, DemandSlot } from '@/managers/CustomerManager';
 import { SaveManager } from '@/managers/SaveManager';
@@ -257,7 +256,7 @@ export class MainScene implements Scene {
 
     // 4. 任务完成提示
     if (QuestManager.hasClaimableQuest) {
-      ToastMessage.show('📋 每日挑战有可领取奖励！');
+      ToastMessage.show('每日挑战有可领取奖励！');
     }
   }
 
@@ -581,7 +580,7 @@ export class MainScene implements Scene {
 
     // 交付完成后的 Toast 提示
     EventBus.on('customer:delivered', (_uid: number, customer: any) => {
-      ToastMessage.show(`${customer.name} 满意离开！🌸花愿+${customer.huayuanReward}`);
+      ToastMessage.show(`${customer.name} 满意离开！花愿+${customer.huayuanReward}`);
     });
   }
 
@@ -879,7 +878,7 @@ export class MainScene implements Scene {
 
     const icon = tex
       ? new PIXI.Sprite(tex)
-      : new PIXI.Text('🌸', { fontSize: 30 });
+      : new PIXI.Text('愿', { fontSize: 26, fontFamily: FONT_FAMILY, fill: COLORS.TEXT_DARK });
 
     icon.anchor.set(0.5);
 
@@ -1048,13 +1047,13 @@ export class MainScene implements Scene {
     // 任务完成提示
     EventBus.on('quest:taskCompleted', (templateId: string) => {
       const t = QuestManager.getTemplate(templateId);
-      if (t) ToastMessage.show(`✅ 任务完成：${QuestManager.describeTemplate(t)}`);
+      if (t) ToastMessage.show(`任务完成：${QuestManager.describeTemplate(t)}`);
     });
 
     // 活动/任务赠送整套形象
     EventBus.on('event:grantOutfit', (outfitId: string) => {
       if (DressUpManager.grantOutfit(outfitId)) {
-        ToastMessage.show('🎁 获得新形象，快去换装看看！');
+        ToastMessage.show('获得新形象，快去换装看看！');
       }
     });
 
@@ -1089,7 +1088,7 @@ export class MainScene implements Scene {
 
     // 引导完成
     EventBus.on('tutorial:completed', () => {
-      ToastMessage.show('🌸 欢迎来到花花妙屋！');
+      ToastMessage.show('欢迎来到花花妙屋！');
       if (CheckInManager.canCheckIn) {
         setTimeout(() => this._checkInPanel.open(), 1000);
       }
@@ -1114,12 +1113,12 @@ export class MainScene implements Scene {
 
     // ---- 场景入口事件（左侧浮动按钮） ----
     EventBus.on('nav:openDressup', () => {
-      ToastMessage.show('👗 主角装扮系统已上线！');
+      ToastMessage.show('主角装扮系统已上线！');
       EventBus.emit('panel:openDressUp');
     });
 
     EventBus.on('nav:openAlbum', () => {
-      ToastMessage.show('📖 花语图鉴已上线！');
+      ToastMessage.show('花语图鉴已上线！');
       EventBus.emit('panel:openCollection');
     });
 
@@ -1141,11 +1140,11 @@ export class MainScene implements Scene {
 
     // ---- 花语卡片收集事件 ----
     EventBus.on('flowerCard:collected', (card: any) => {
-      ToastMessage.show(`🌸 获得花语卡片：「${card.name}」！`);
+      ToastMessage.show(`获得花语卡片：「${card.name}」！`);
     });
 
     EventBus.on('flowerCard:complete', () => {
-      ToastMessage.show('🎉 集齐所有花语卡片！获得传说奖励！');
+      ToastMessage.show('集齐所有花语卡片！获得传说奖励！');
     });
 
     // ---- 图鉴发现事件 ----
@@ -1154,28 +1153,28 @@ export class MainScene implements Scene {
     });
 
     EventBus.on('collection:milestoneReady', (percent: number) => {
-      ToastMessage.show(`📖 图鉴收集达到 ${percent}%！有里程碑奖励可领取！`);
+      ToastMessage.show(`图鉴收集达到 ${percent}%！有里程碑奖励可领取！`);
     });
 
     // ---- 限时活动事件 ----
     EventBus.on('event:taskCompleted', (_taskId: string, task: any) => {
-      ToastMessage.show(`🎪 活动任务完成：${task.name}！`);
+      ToastMessage.show(`活动任务完成：${task.name}！`);
     });
 
     EventBus.on('event:started', (event: any) => {
-      ToastMessage.show(`🎉 限时活动开启：${event.name}！`);
+      ToastMessage.show(`限时活动开启：${event.name}！`);
     });
 
     // ---- 挑战事件 ----
     EventBus.on('challenge:ended', (_levelId: string, success: boolean, stars: number) => {
       if (success) {
-        ToastMessage.show(`⭐ 挑战成功！获得 ${'⭐'.repeat(stars)} 评价！`);
+        ToastMessage.show(`挑战成功！获得 ${stars} 星评价！`);
       } else {
-        ToastMessage.show('💔 挑战失败，再试一次？');
+        ToastMessage.show('挑战失败，再试一次？');
       }
     });
 
-    // ---- 进入花店/房屋装修场景（底栏 🏡，非「购买商店」；购买商店为顶栏 panel:openMerchShop） ----
+    // ---- 进入花店/房屋装修场景（底栏 ，非「购买商店」；购买商店为顶栏 panel:openMerchShop） ----
     EventBus.on('scene:switchToShop', () => {
       if (SceneManager.current?.name !== 'main') return;
       this._switchToShopScene();
@@ -1232,7 +1231,7 @@ export class MainScene implements Scene {
   private _update(): void {
     const dt = Game.ticker.deltaMS / 1000;
     CurrencyManager.update(dt);
-    BuildingManager.update(dt);
+    // BuildingManager.update：已在 Game.init 全局 ticker 注册，避免离店场景时 CD 暂停
     WarehouseManager.updateWarehouseCooldowns(dt);
     CustomerManager.update(dt);
     // 注意：TweenManager.update 已在 Game.init 的全局 ticker 中注册，
@@ -1244,6 +1243,7 @@ export class MainScene implements Scene {
     MergeCompanionManager.update(dt);
 
     this._infoBar.tickMergeBubbleCountdown();
+    this._infoBar.tickSelectedToolCooldownUi();
     this._boardView.refreshMergeCompanionHud();
     this._boardView.updateCdDisplay();
     this._topBar.updateTimer();

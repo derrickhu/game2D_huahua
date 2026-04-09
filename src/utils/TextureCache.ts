@@ -62,6 +62,10 @@ const MAIN_IMAGE_MAP: Record<string, string> = {
   shop_scene_bg:  'images/ui/shop_scene_bg.png',
   /** 主界面客区试看：花团锦簇强虚化 NB2 稿（缺省回退 shop_scene_bg） */
   shop_scene_bg_floral_nb2: 'images/ui/shop_scene_bg_floral_nb2.png',
+  /** 启动 Loading 全屏底图（NB2 9:16，主包随下） */
+  loading_splash_run_to_shop_nb2: 'images/ui/loading_splash_run_to_shop_nb2.png',
+  /** Loading 顶栏游戏名（NB2 上半可爱版 + rembg 透明底） */
+  loading_title_cute_nb2: 'images/ui/loading_title_cute_nb2.png',
   /** 仅底栏 ItemInfoBar 叶形标题条（与合成线弹窗彩带分离） */
   item_info_leaf_bar: 'images/ui/item_info_leaf_bar.png',
 };
@@ -152,6 +156,13 @@ const PANELS_IMAGE_MAP: Record<string, string> = {
   furniture_tray_tab_room_styles_idle: 'subpkg_panels/images/ui/furniture_tray_tab_room_styles_idle.png',
   /** 编辑工具栏「确认」：绿色胶囊对勾，rembg 透明底 */
   furniture_tray_confirm_btn: 'subpkg_panels/images/ui/furniture_tray_confirm_btn.png',
+  /** 房间编辑条：6 枚独立图标（横排；由合图 split 脚本产出） */
+  room_edit_toolbar_zoom_in: 'subpkg_panels/images/ui/room_edit_toolbar_zoom_in.png',
+  room_edit_toolbar_zoom_out: 'subpkg_panels/images/ui/room_edit_toolbar_zoom_out.png',
+  room_edit_toolbar_flip: 'subpkg_panels/images/ui/room_edit_toolbar_flip.png',
+  room_edit_toolbar_layer_up: 'subpkg_panels/images/ui/room_edit_toolbar_layer_up.png',
+  room_edit_toolbar_layer_down: 'subpkg_panels/images/ui/room_edit_toolbar_layer_down.png',
+  room_edit_toolbar_remove: 'subpkg_panels/images/ui/room_edit_toolbar_remove.png',
   /** 编辑模式「完成编辑」：4×2 表 pill_btn_4x2_r1c1_idx01，托盘右下角 */
   edit_complete_pill_4x2_nb2: 'subpkg_panels/images/ui/pill_btn_4x2_r1c1_idx01.png',
   /** 花店主界面「装修花店」入口：4×2 表 pill_btn_4x2_r1c3_idx03 */
@@ -254,8 +265,9 @@ const ITEMS_IMAGE_MAP: Record<string, string> = {
   flower_green_7:  'subpkg_items/images/flowers/green/flower_green_7.png',
   flower_green_8:  'subpkg_items/images/flowers/green/flower_green_8.png',
   flower_green_9:  'subpkg_items/images/flowers/green/flower_green_9.png',
-  flower_green_10: 'subpkg_items/images/flowers/green/flower_green_10.png',
-  flower_green_11: 'subpkg_items/images/flowers/green/flower_green_11.png',
+  /** L10/L11 与 ItemConfig 绿植线一致：10 红掌、11 发财树（文件名未改，此处交叉映射） */
+  flower_green_10: 'subpkg_items/images/flowers/green/flower_green_11.png',
+  flower_green_11: 'subpkg_items/images/flowers/green/flower_green_10.png',
   flower_green_12: 'subpkg_items/images/flowers/green/flower_green_12.png',
   flower_green_13: 'subpkg_items/images/flowers/green/flower_green_13.png',
 
@@ -598,6 +610,14 @@ class TextureCacheClass {
   /** 获取已缓存的纹理 */
   get(key: string): PIXI.Texture | null {
     return this._cache.get(key) || null;
+  }
+
+  /** 预加载启动 Loading 底图 + 顶栏标题（先于 preloadAll） */
+  preloadLoadingSplash(): Promise<void> {
+    return Promise.all([
+      this._loadTexture('loading_splash_run_to_shop_nb2', MAIN_IMAGE_MAP.loading_splash_run_to_shop_nb2),
+      this._loadTexture('loading_title_cute_nb2', MAIN_IMAGE_MAP.loading_title_cute_nb2),
+    ]).then(() => undefined);
   }
 
   /** 分包资源是否已加载 */

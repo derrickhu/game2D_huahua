@@ -268,7 +268,7 @@ class FurnitureDragSystemClass {
     if (!deco) return;
 
     if (!isDecoAllowedInScene(deco, CurrencyManager.state.sceneId)) {
-      ToastMessage.show(`🔒 当前场景不可用（${formatAllowedScenesShort(deco)}）`);
+      ToastMessage.show(`当前场景不可用（${formatAllowedScenesShort(deco)}）`);
       return;
     }
 

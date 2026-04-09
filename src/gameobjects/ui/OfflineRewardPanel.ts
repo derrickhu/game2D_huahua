@@ -90,7 +90,7 @@ export class OfflineRewardPanel extends PIXI.Container {
     this._content.addChild(bg);
 
     // 标题
-    const title = new PIXI.Text('🌙 离线收益报告', {
+    const title = new PIXI.Text(' 离线收益报告', {
       fontSize: 24, fill: COLORS.TEXT_DARK, fontFamily: FONT_FAMILY, fontWeight: 'bold',
     });
     title.anchor.set(0.5, 0);
@@ -114,7 +114,7 @@ export class OfflineRewardPanel extends PIXI.Container {
 
     // 产出物品
     if (this._reward.producedItems.length > 0) {
-      this._drawRewardLine(panelX + 60, y, '🌸', `花束产出 ×${this._reward.producedItems.length}`);
+      this._drawRewardLine(panelX + 60, y, '', `花束产出 ×${this._reward.producedItems.length}`);
       y += lineH;
 
       // 显示具体物品名（最多3个）
@@ -130,7 +130,7 @@ export class OfflineRewardPanel extends PIXI.Container {
     }
 
     if (this._reward.huayuanEarned > 0) {
-      this._drawRewardLine(panelX + 60, y, '💰', `花愿收入 +${this._reward.huayuanEarned}`);
+      this._drawRewardLine(panelX + 60, y, '', `花愿收入 +${this._reward.huayuanEarned}`);
       y += lineH;
     }
 
@@ -145,7 +145,7 @@ export class OfflineRewardPanel extends PIXI.Container {
     claimBtn.endFill();
     this._content.addChild(claimBtn);
 
-    const claimText = new PIXI.Text('🎁 领取收益', {
+    const claimText = new PIXI.Text(' 领取收益', {
       fontSize: 17, fill: 0xFFFFFF, fontFamily: FONT_FAMILY, fontWeight: 'bold',
     });
     claimText.anchor.set(0.5, 0.5);

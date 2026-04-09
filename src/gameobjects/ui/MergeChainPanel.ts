@@ -479,7 +479,7 @@ export class MergeChainPanel extends PIXI.Container {
     this._titleText.text = def?.name ?? '';
 
     if (def && def.level >= def.maxLevel) {
-      this._subtitleText.text = '✨ 已达到最高等级！';
+      this._subtitleText.text = '已达到最高等级！';
     } else if (def) {
       const nextDef = chain[def.level] ? ITEM_DEFS.get(chain[def.level]) : null;
       this._subtitleText.text = nextDef
@@ -1079,7 +1079,7 @@ export class MergeChainPanel extends PIXI.Container {
       sp.position.set(cs / 2, cs / 2);
       cell.addChild(sp);
     } else {
-      const q = new PIXI.Text('📦', {
+      const q = new PIXI.Text('?', {
         fontSize: Math.round(cs * 0.42),
         fontFamily: FONT_FAMILY,
       });
@@ -1176,12 +1176,12 @@ export class MergeChainPanel extends PIXI.Container {
 
   private _getCategoryEmoji(category: Category): string {
     switch (category) {
-      case Category.FLOWER: return '🌸';
-      case Category.DRINK: return '🦋';
-      case Category.BUILDING: return '🏠';
-      case Category.CHEST: return '📦';
-      case Category.CURRENCY: return '💰';
-      default: return '❓';
+      case Category.FLOWER: return '花';
+      case Category.DRINK: return '饮';
+      case Category.BUILDING: return '建';
+      case Category.CHEST: return '箱';
+      case Category.CURRENCY: return '币';
+      default: return '物';
     }
   }
 }

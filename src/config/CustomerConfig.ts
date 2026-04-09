@@ -23,25 +23,25 @@ export interface CustomerTypeDef {
 
 export const CUSTOMER_TYPES: CustomerTypeDef[] = [
   // ---- 可出 C 档（初级单）：child / student / worker / mom / athlete / youth ----
-  { id: 'child',     name: '小朋友',     emoji: '🧒',  tiers: ['C'] },
-  { id: 'student',   name: '学生少女',   emoji: '👧',  tiers: ['C', 'B'] },
-  { id: 'worker',    name: '上班族',     emoji: '👔',  tiers: ['C', 'B'] },
-  { id: 'mom',       name: '温柔妈妈',   emoji: '👩',  tiers: ['C', 'B'] },
-  { id: 'athlete',   name: '运动少年',   emoji: '🏃',  tiers: ['C', 'B', 'A'] },
-  { id: 'youth',     name: '文艺青年',   emoji: '🎨',  tiers: ['C', 'B', 'A'] },
+  { id: 'child',     name: '小朋友',     emoji: '',  tiers: ['C'] },
+  { id: 'student',   name: '学生少女',   emoji: '',  tiers: ['C', 'B'] },
+  { id: 'worker',    name: '上班族',     emoji: '',  tiers: ['C', 'B'] },
+  { id: 'mom',       name: '温柔妈妈',   emoji: '',  tiers: ['C', 'B'] },
+  { id: 'athlete',   name: '运动少年',   emoji: '',  tiers: ['C', 'B', 'A'] },
+  { id: 'youth',     name: '文艺青年',   emoji: '',  tiers: ['C', 'B', 'A'] },
 
   // ---- B 档起（不进 C）：mystery ----
-  { id: 'mystery',   name: '神秘男子',   emoji: '🕶️', tiers: ['B', 'A'] },
+  { id: 'mystery',   name: '神秘男子',   emoji: '', tiers: ['B', 'A'] },
 
   // ---- A 档：couple / birthday / blogger（不进 C/B）----
-  { id: 'couple',    name: '情侣',       emoji: '💑',  tiers: ['A'] },
-  { id: 'birthday',  name: '生日顾客',   emoji: '🎂',  tiers: ['A'] },
-  { id: 'blogger',   name: '网红博主',   emoji: '📸',  tiers: ['A'] },
+  { id: 'couple',    name: '情侣',       emoji: '',  tiers: ['A'] },
+  { id: 'birthday',  name: '生日顾客',   emoji: '',  tiers: ['A'] },
+  { id: 'blogger',   name: '网红博主',   emoji: '',  tiers: ['A'] },
 
   // ---- 高级 / 特级 ----
-  { id: 'celebrity', name: '大明星',     emoji: '⭐',  tiers: ['A', 'S'] },
-  { id: 'noble',     name: '贵妇',       emoji: '👸',  tiers: ['A', 'S'] },
-  { id: 'collector', name: '收藏家',     emoji: '🧐',  tiers: ['S'] },
+  { id: 'celebrity', name: '大明星',     emoji: '',  tiers: ['A', 'S'] },
+  { id: 'noble',     name: '贵妇',       emoji: '',  tiers: ['A', 'S'] },
+  { id: 'collector', name: '收藏家',     emoji: '',  tiers: ['S'] },
 ];
 
 /** 按 ID 快速查找 */

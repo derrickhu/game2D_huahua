@@ -260,7 +260,7 @@ function federatedPointerToDesignY(e: PIXI.FederatedPointerEvent): number {
 function rewardPreview(r: DailyChallengeReward): string {
   const parts: string[] = [];
   if (r.stamina) parts.push(`体力+${r.stamina}`);
-  if (r.diamond) parts.push(`💎${r.diamond}`);
+  if (r.diamond) parts.push(`${r.diamond}`);
   if (r.huayuan) parts.push(`花愿+${r.huayuan}`);
   if (r.flowerSignTickets) parts.push(`许愿硬币+${r.flowerSignTickets}`);
   if (r.itemId) parts.push(`道具×${r.itemCount ?? 1}`);

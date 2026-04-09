@@ -63,14 +63,14 @@ export const CHECK_IN_REWARDS: CheckInReward[] = [
     diamond: 8,
     boardGrants: [{ itemId: 'hongbao_1', count: 1 }],
     desc: '钻石×8 迎春红包×1',
-    icon: '🧧',
+    icon: '',
   },
-  { day: 2, stamina: 30, desc: '体力×30', icon: '💖' },
-  { day: 3, diamond: 12, desc: '钻石×12', icon: '🎁' },
-  { day: 4, diamond: 10, stamina: 15, desc: '钻石×10 体力×15', icon: '💎' },
-  { day: 5, diamond: 15, stamina: 25, desc: '钻石×15 体力×25', icon: '🌟' },
-  { day: 6, diamond: 12, desc: '钻石×12', icon: '💎' },
-  { day: 7, diamond: 35, stamina: 30, desc: '钻石×35 体力×30', icon: '🏆' },
+  { day: 2, stamina: 30, desc: '体力×30', icon: '' },
+  { day: 3, diamond: 12, desc: '钻石×12', icon: '' },
+  { day: 4, diamond: 10, stamina: 15, desc: '钻石×10 体力×15', icon: '' },
+  { day: 5, diamond: 15, stamina: 25, desc: '钻石×15 体力×25', icon: '' },
+  { day: 6, diamond: 12, desc: '钻石×12', icon: '' },
+  { day: 7, diamond: 35, stamina: 30, desc: '钻石×35 体力×30', icon: '' },
 ].map(r => ({ ...r, items: _buildItems(r as any) }));
 
 /** 里程碑配置 */

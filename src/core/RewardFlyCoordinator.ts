@@ -10,6 +10,7 @@ import { TextureCache } from '@/utils/TextureCache';
 import { TweenManager, Ease } from '@/core/TweenManager';
 import { ToastMessage } from '@/gameobjects/ui/ToastMessage';
 import { RewardBoxManager } from '@/managers/RewardBoxManager';
+import { FONT_FAMILY } from '@/config/Constants';
 
 /**
  * Overlay 根节点 `sortableChildren=true`，各面板 zIndex 5k～11k+；飞入粒子默认 0 会被全屏面板完全挡住（如每日挑战）。
@@ -128,7 +129,7 @@ class RewardFlyCoordinatorClass {
     for (let i = 0; i < COUNT; i++) {
       const icon = tex
         ? new PIXI.Sprite(tex)
-        : new PIXI.Text('🌸', { fontSize: 20 });
+        : new PIXI.Text('愿', { fontSize: 18, fontFamily: FONT_FAMILY, fill: 0x333333 });
 
       icon.anchor.set(0.5);
 

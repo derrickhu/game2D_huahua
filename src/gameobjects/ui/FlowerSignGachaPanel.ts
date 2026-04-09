@@ -208,7 +208,7 @@ export class FlowerSignGachaPanel extends PIXI.Container {
     cx.drawCircle(0, 0, 16);
     cx.endFill();
     closeBtn.addChild(cx);
-    const xtxt = new PIXI.Text('✕', { fontSize: 16, fill: 0xffffff, fontFamily: FONT_FAMILY, fontWeight: 'bold' });
+    const xtxt = new PIXI.Text('×', { fontSize: 16, fill: 0xffffff, fontFamily: FONT_FAMILY, fontWeight: 'bold' });
     xtxt.anchor.set(0.5);
     closeBtn.addChild(xtxt);
     closeBtn.hitArea = new PIXI.Circle(0, 0, 22);

@@ -13,8 +13,10 @@ export interface UnlockRequirement {
   level?: number;
   /** 自定义条件 id（由外部系统通过 grantQuest 标记为已达成） */
   questId?: string;
-  /** 条件文案（questId 未达成时的 UI 提示） */
+  /** 条件文案（questId 未达成时的 UI 短提示，如「活动解锁」） */
   conditionText?: string;
+  /** quest 未达成时点击/Toast 的完整说明；缺省与 conditionText 相同 */
+  questDetailText?: string;
   /**
    * 花系图鉴（棋盘鲜花/绿植首次出现即解锁）中已记录该 itemId 才可购买/显示为可解锁。
    * 用于花房「棋盘同花」小盆栽、同名花瓶、绿植对应家具等。
@@ -62,7 +64,9 @@ export function checkRequirement(req?: UnlockRequirement): RequirementResult {
   }
 
   if (req.questId && !_grantedQuests.has(req.questId)) {
-    return { met: false, text: req.conditionText || '未达成条件' };
+    const text = req.conditionText || '未达成条件';
+    const detail = req.questDetailText ?? text;
+    return { met: false, text, detailText: detail === text ? undefined : detail };
   }
 
   if (req.flowerCollectionItemId) {

@@ -49,13 +49,36 @@ export function getOwnerFullOpenTextureKey(outfitId: string): string {
   return outfitId === 'outfit_default' ? 'owner_full_default' : `owner_full_${outfitId}`;
 }
 
+/** 花之女王等活动赠送套装：活动结算处请调用 `DressUpManager.grantOutfitFromActivity('outfit_queen')`（会同步 grantQuest，条件与存档一致） */
+export const OUTFIT_QUEEN_ACTIVITY_QUEST_ID = 'dressup_activity_outfit_queen';
+
+/**
+ * 活动解锁的套装：完成对应活动时应调用 `grantOutfitFromActivity`，勿仅改存档。
+ * key = outfitId，value = UnlockChecker 的 questId（与配置里 unlockRequirement.questId 一致）
+ */
+export const OUTFIT_ACTIVITY_QUEST_BY_ID: Readonly<Record<string, string>> = {
+  outfit_queen: OUTFIT_QUEEN_ACTIVITY_QUEST_ID,
+};
+
 export const ALL_OUTFITS: Outfit[] = [
-  { id: 'outfit_default',  name: '自然少女',    desc: '清新自然，田园花店的日常装扮',              icon: '👗', huayuanCost: 0, starValue: 0 },
-  { id: 'outfit_florist',  name: '花店小姐姐',  desc: '专业花艺师的精致工装，满满花香',            icon: '💐', huayuanCost: 500, starValue: 5, unlockRequirement: { level: 2 } },
-  { id: 'outfit_spring',   name: '春日樱花',    desc: '樱花盛开的季节，粉嫩少女感满分',           icon: '🌸', huayuanCost: 900, starValue: 8, unlockRequirement: { level: 4 } },
-  { id: 'outfit_summer',   name: '夏日向日葵',  desc: '明媚阳光下，活力四射的夏日装扮',           icon: '🌻', huayuanCost: 900, starValue: 8, unlockRequirement: { level: 4 } },
-  { id: 'outfit_vintage',  name: '复古花坊',    desc: '优雅复古的欧式风情，精致迷人',             icon: '🎀', huayuanCost: 1800, starValue: 12, unlockRequirement: { level: 8 } },
-  { id: 'outfit_queen',    name: '花之女王',    desc: '传说中的花神降临，花店等级足够高后方可解锁',    icon: '👑', huayuanCost: 0, starValue: 15, unlockRequirement: { level: 12 } },
+  { id: 'outfit_default',  name: '自然少女',    desc: '清新自然，田园花店的日常装扮',              icon: '', huayuanCost: 0, starValue: 0 },
+  { id: 'outfit_florist',  name: '花店小姐姐',  desc: '专业花艺师的精致工装，满满花香',            icon: '', huayuanCost: 500, starValue: 5, unlockRequirement: { level: 2 } },
+  { id: 'outfit_spring',   name: '春日樱花',    desc: '樱花盛开的季节，粉嫩少女感满分',           icon: '', huayuanCost: 900, starValue: 8, unlockRequirement: { level: 8 } },
+  { id: 'outfit_summer',   name: '夏日向日葵',  desc: '明媚阳光下，活力四射的夏日装扮',           icon: '', huayuanCost: 900, starValue: 8, unlockRequirement: { level: 6 } },
+  { id: 'outfit_vintage',  name: '丝绒蔷薇',    desc: '酒红丝绒与蕾丝的复古礼装，优雅迷人',       icon: '', huayuanCost: 1800, starValue: 12, unlockRequirement: { level: 9 } },
+  {
+    id: 'outfit_queen',
+    name: '花之女王',
+    desc: '传说中的花神降临，参与指定活动即可获得',
+    icon: '',
+    huayuanCost: 0,
+    starValue: 15,
+    unlockRequirement: {
+      questId: OUTFIT_QUEEN_ACTIVITY_QUEST_ID,
+      conditionText: '活动解锁',
+      questDetailText: '完成指定活动后将自动获得该套装',
+    },
+  },
 ];
 
 /** 按 ID 查找形象 */

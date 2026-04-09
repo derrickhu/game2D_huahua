@@ -48,7 +48,7 @@ export function createSmallNameLockIcon(cw: number, cardBaseW: number): PIXI.Con
     wrap.addChild(sp);
     return wrap;
   }
-  const t = new PIXI.Text('🔒', { fontSize: Math.min(18, lockSize + 4), fontFamily: FONT_FAMILY });
+  const t = new PIXI.Text('?', { fontSize: Math.min(18, lockSize + 4), fontFamily: FONT_FAMILY });
   t.anchor.set(0, 0.5);
   wrap.addChild(t);
   return wrap;

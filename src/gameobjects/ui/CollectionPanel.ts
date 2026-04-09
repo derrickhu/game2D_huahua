@@ -16,13 +16,13 @@ type TabType = 'overview' | 'milestone';
 
 /** 分类显示配置 */
 const CATEGORY_DISPLAY: { cat: CollectionCategory; icon: string; name: string; color: number }[] = [
-  { cat: CollectionCategory.FLOWER, icon: '🌸', name: '花束', color: 0xFFB7C5 },
-  { cat: CollectionCategory.DRINK, icon: '🦋', name: '饮品', color: 0x90EE90 },
-  { cat: CollectionCategory.BUILDING, icon: '🏠', name: '建筑', color: 0xDEB887 },
-  { cat: CollectionCategory.CHEST, icon: '📦', name: '宝箱', color: 0xDAA520 },
-  { cat: CollectionCategory.CUSTOMER, icon: '👤', name: '客人', color: 0x87CEEB },
-  { cat: CollectionCategory.DECORATION, icon: '🪑', name: '装饰', color: 0xDDA0DD },
-  { cat: CollectionCategory.FLOWER_CARD, icon: '💐', name: '花语卡片', color: 0xFFD700 },
+  { cat: CollectionCategory.FLOWER, icon: '花', name: '花束', color: 0xFFB7C5 },
+  { cat: CollectionCategory.DRINK, icon: '饮', name: '饮品', color: 0x90EE90 },
+  { cat: CollectionCategory.BUILDING, icon: '建', name: '建筑', color: 0xDEB887 },
+  { cat: CollectionCategory.CHEST, icon: '箱', name: '宝箱', color: 0xDAA520 },
+  { cat: CollectionCategory.CUSTOMER, icon: '客', name: '客人', color: 0x87CEEB },
+  { cat: CollectionCategory.DECORATION, icon: '饰', name: '装饰', color: 0xDDA0DD },
+  { cat: CollectionCategory.FLOWER_CARD, icon: '语', name: '花语卡片', color: 0xFFD700 },
 ];
 
 export class CollectionPanel extends PIXI.Container {
@@ -115,7 +115,7 @@ export class CollectionPanel extends PIXI.Container {
 
     // 标题
     const totalPercent = CollectionManager.progressPercent.toFixed(1);
-    const title = new PIXI.Text(`📖 花语图鉴  ${CollectionManager.totalDiscovered}/${CollectionManager.totalCount} (${totalPercent}%)`, {
+    const title = new PIXI.Text(`花语图鉴  ${CollectionManager.totalDiscovered}/${CollectionManager.totalCount} (${totalPercent}%)`, {
       fontSize: 20, fill: COLORS.TEXT_DARK, fontFamily: FONT_FAMILY, fontWeight: 'bold',
     });
     title.anchor.set(0.5, 0);
@@ -124,11 +124,11 @@ export class CollectionPanel extends PIXI.Container {
 
     // Tab 按钮
     const tabY = panelY + 48;
-    this._drawTab('📋 总览', panelX + 20, tabY, 140, 'overview');
-    this._drawTab('🏆 里程碑', panelX + 170, tabY, 140, 'milestone');
+    this._drawTab('总览', panelX + 20, tabY, 140, 'overview');
+    this._drawTab('里程碑', panelX + 170, tabY, 140, 'milestone');
 
     // 关闭按钮
-    const closeBtn = new PIXI.Text('✕', {
+    const closeBtn = new PIXI.Text('×', {
       fontSize: 22, fill: COLORS.TEXT_LIGHT, fontFamily: FONT_FAMILY,
     });
     closeBtn.anchor.set(0.5, 0.5);
@@ -325,7 +325,7 @@ export class CollectionPanel extends PIXI.Container {
     this._scrollContainer.addChild(percentText);
 
     // 状态说明
-    const statusText = count >= total ? '✅ 已完成' : `还差 ${total - count} 项`;
+    const statusText = count >= total ? ' 已完成' : `还差 ${total - count} 项`;
     const status = new PIXI.Text(statusText, {
       fontSize: 11, fill: count >= total ? 0x4CAF50 : COLORS.TEXT_LIGHT, fontFamily: FONT_FAMILY,
     });
@@ -383,9 +383,9 @@ export class CollectionPanel extends PIXI.Container {
 
       // 奖励描述
       const rewardParts: string[] = [];
-      if (ms.gold) rewardParts.push(`💰${ms.gold}`);
-      if (ms.diamond) rewardParts.push(`💎${ms.diamond}`);
-      if (ms.huayuan) rewardParts.push(`🌸${ms.huayuan}`);
+      if (ms.gold) rewardParts.push(`${ms.gold}`);
+      if (ms.diamond) rewardParts.push(`${ms.diamond}`);
+      if (ms.huayuan) rewardParts.push(`${ms.huayuan}`);
       const rewardText = new PIXI.Text(rewardParts.join('  '), {
         fontSize: 13, fill: COLORS.TEXT_LIGHT, fontFamily: FONT_FAMILY,
       });
@@ -394,7 +394,7 @@ export class CollectionPanel extends PIXI.Container {
 
       // 状态按钮
       if (claimed) {
-        const doneText = new PIXI.Text('✅ 已领取', {
+        const doneText = new PIXI.Text(' 已领取', {
           fontSize: 14, fill: 0x9E9E9E, fontFamily: FONT_FAMILY,
         });
         doneText.position.set(cardX + 72, y + 66);
@@ -409,7 +409,7 @@ export class CollectionPanel extends PIXI.Container {
         btn.endFill();
         this._scrollContainer.addChild(btn);
 
-        const btnText = new PIXI.Text('🎁 领取', {
+        const btnText = new PIXI.Text(' 领取', {
           fontSize: 14, fill: 0xFFFFFF, fontFamily: FONT_FAMILY, fontWeight: 'bold',
         });
         btnText.anchor.set(0.5, 0.5);
@@ -423,7 +423,7 @@ export class CollectionPanel extends PIXI.Container {
         hit.on('pointerdown', (e: PIXI.FederatedPointerEvent) => {
           e.stopPropagation();
           if (CollectionManager.claimMilestone(ms.percent)) {
-            ToastMessage.show(`🎉 领取里程碑奖励：${ms.desc}！`);
+            ToastMessage.show(`领取里程碑奖励：${ms.desc}！`);
             this._refresh();
           }
         });

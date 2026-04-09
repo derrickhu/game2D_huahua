@@ -3,7 +3,7 @@
  *
  * 业界标准设计：
  * ┌────────────────────────────────────────────────────────┐
- * │  🧩 合成    🏠 花店    👗 装扮    📖 图鉴              │
+ * │   合成     花店     装扮     图鉴              │
  * └────────────────────────────────────────────────────────┘
  *
  * - 4个等宽Tab，居中排列
@@ -34,10 +34,10 @@ interface TabDef {
 }
 
 const TABS: TabDef[] = [
-  { id: 'merge',  icon: '🧩', activeIcon: '🧩', label: '合成',  event: 'tab:merge' },
-  { id: 'shop',   icon: '🏠', activeIcon: '🏡', label: '花店',  event: 'tab:shop' },
-  { id: 'dressup', icon: '👗', activeIcon: '👗', label: '装扮', event: 'tab:dressup' },
-  { id: 'album',  icon: '📖', activeIcon: '📖', label: '图鉴',  event: 'tab:album' },
+  { id: 'merge',  icon: '合', activeIcon: '合', label: '合成',  event: 'tab:merge' },
+  { id: 'shop',   icon: '花', activeIcon: '花', label: '花店',  event: 'tab:shop' },
+  { id: 'dressup', icon: '装', activeIcon: '装', label: '装扮', event: 'tab:dressup' },
+  { id: 'album',  icon: '鉴', activeIcon: '鉴', label: '图鉴',  event: 'tab:album' },
 ];
 
 // 颜色配置

@@ -114,7 +114,7 @@ class DecorationManagerClass {
     }
     this._unlockedRoomStyles.add(styleId);
     this._save();
-    console.log(`[Decoration] 解锁房间风格: ${st.name}${st.cost > 0 ? ` (-${st.cost}花愿)` : ''} +${st.starValue}⭐`);
+    console.log(`[Decoration] 解锁房间风格: ${st.name}${st.cost > 0 ? ` (-${st.cost}花愿)` : ''} +${st.starValue}星`);
     return true;
   }
 
@@ -186,7 +186,7 @@ class DecorationManagerClass {
     this._unlocked.add(decoId);
     this._save();
 
-    console.log(`[Decoration] 解锁装饰: ${deco.name} (-${deco.cost}花愿, +${deco.starValue}⭐)`);
+    console.log(`[Decoration] 解锁装饰: ${deco.name} (-${deco.cost}花愿, +${deco.starValue}星)`);
     EventBus.emit('decoration:unlocked', decoId, deco);
     return true;
   }

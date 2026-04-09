@@ -25,13 +25,13 @@ export interface CellPreset {
  * 固定开局棋盘（7 列 × 9 行），**无随机**：`BoardManager.init` 仅按本表初始化各格（合成/钥匙/3×3 波及等运行时逻辑另计）。
  *
  * **圈层**：`layer = max(|row - 4|, |col - 3|)`（以几何中心为「内」），layer 越大越靠外。
- * **开局约束**：迷雾/钥匙格内花束线、蝴蝶标本线、冷饮/甜品成品为散落的低～中阶棋子（各线数量不匀）；冷饮线仅 Lv1 量杯 `tool_mixer_1`，无冰箱/制冰机等高阶器具；**不含**捕虫网 `tool_butterfly_net_*`（蝴蝶线须合成或产出获得）。
+ * **开局约束**：迷雾/钥匙格内花束线、蝴蝶标本线、冷饮/甜品成品为散落的低～中阶棋子（各线数量不匀）；冷饮线仅 Lv1 量杯 `tool_mixer_1`，无冰箱/制冰机等高阶器具；**不含**捕虫网 `tool_butterfly_net_*`（蝴蝶线须合成或产出获得）。**不含**开局迷雾里的种植工具 L5（原两处 `tool_plant_5` 已改为一角 `tool_plant_1` + 一角 `flower_fresh_9`）。
  * **中央区摘要**：`row=3,col=2` **OPEN** `tool_plant_1`；`row=3,col=3` **PEEK** `tool_plant_1`；`row=4,col=2`～`col=3` **OPEN** 空格；`row=2,col=3` **PEEK** `tool_plant_2`；`row=5,col=2` **PEEK** `flower_fresh_1`。
  * **约束**：`FOG` / `PEEK` 内不得放合成链**顶格**（`getMergeResultId` 为 null 的产品/工具），否则半解锁后无法在开放格再凑一对合成，格子永远打不开。
  */
 export const BOARD_PRESETS: CellPreset[] = [
   // layer 4 外圈
-  { row: 0, col: 0, state: CellState.FOG,  itemId: 'tool_plant_5',     keyPrice: 0, unlockPriority: 80 },
+  { row: 0, col: 0, state: CellState.FOG,  itemId: 'tool_plant_1',     keyPrice: 0, unlockPriority: 80 },
   { row: 0, col: 1, state: CellState.KEY,  itemId: null,               keyPrice: 500, unlockPriority: 81 },
   { row: 0, col: 2, state: CellState.FOG,  itemId: 'flower_fresh_8',   keyPrice: 0, unlockPriority: 82 },
   { row: 0, col: 3, state: CellState.FOG,  itemId: 'drink_butterfly_2', keyPrice: 0, unlockPriority: 83 },
@@ -87,7 +87,7 @@ export const BOARD_PRESETS: CellPreset[] = [
   { row: 6, col: 5, state: CellState.FOG,  itemId: null,               keyPrice: 0, unlockPriority: 25 },
   { row: 6, col: 6, state: CellState.FOG,  itemId: 'drink_cold_5',     keyPrice: 0, unlockPriority: 26 },
 
-  { row: 7, col: 0, state: CellState.FOG,  itemId: 'tool_plant_5',     keyPrice: 0, unlockPriority: 10 },
+  { row: 7, col: 0, state: CellState.FOG,  itemId: 'flower_fresh_9',   keyPrice: 0, unlockPriority: 10 },
   { row: 7, col: 1, state: CellState.FOG,  itemId: 'flower_fresh_6',   keyPrice: 0, unlockPriority: 11 },
   { row: 7, col: 2, state: CellState.FOG,  itemId: 'flower_green_4',   keyPrice: 0, unlockPriority: 12 },
   { row: 7, col: 3, state: CellState.FOG,  itemId: null,               keyPrice: 0, unlockPriority: 13 },

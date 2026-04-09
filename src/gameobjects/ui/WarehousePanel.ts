@@ -457,7 +457,7 @@ export class WarehousePanel extends PIXI.Container {
         sp.position.set(s / 2, s / 2);
         slot.addChild(sp);
       } else {
-        const lock = new PIXI.Text('🔒', {
+        const lock = new PIXI.Text('锁', {
           fontSize: Math.min(22, s * 0.28),
           fontFamily: FONT_FAMILY,
         });
@@ -577,8 +577,8 @@ export class WarehousePanel extends PIXI.Container {
 
     const confirmed = await ConfirmDialog.show(
       '扩容仓库',
-      `消耗 ${cost} 💎钻石扩容仓库至 ${newCap} 格？\n当前钻石：${Math.floor(CurrencyManager.state.diamond)}`,
-      `扩容（${cost}💎）`,
+      `消耗 ${cost} 钻石扩容仓库至 ${newCap} 格？\n当前钻石：${Math.floor(CurrencyManager.state.diamond)}`,
+      `扩容（${cost}）`,
       '取消',
     );
     if (!confirmed) return;
@@ -599,11 +599,11 @@ export class WarehousePanel extends PIXI.Container {
 
   private _getCategoryEmoji(category: Category): string {
     switch (category) {
-      case Category.FLOWER: return '🌸';
-      case Category.DRINK: return '🦋';
-      case Category.BUILDING: return '🏠';
-      case Category.CHEST: return '📦';
-      default: return '❓';
+      case Category.FLOWER: return '花';
+      case Category.DRINK: return '饮';
+      case Category.BUILDING: return '建';
+      case Category.CHEST: return '箱';
+      default: return '物';
     }
   }
 }

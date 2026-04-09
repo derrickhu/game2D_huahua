@@ -4,6 +4,7 @@
 import * as PIXI from 'pixi.js';
 import { ShaderSystem } from '@pixi/core';
 import { TweenManager } from './TweenManager';
+import { BuildingManager } from '@/managers/BuildingManager';
 
 /* ---- @pixi/unsafe-eval 内联 patch ---- */
 
@@ -253,10 +254,11 @@ class GameClass {
     // 整体缩放到设计分辨率
     this.stage.scale.set(this.scale, this.scale);
 
-    // 注册 ticker 更新 TweenManager
+    // 全局 ticker：Tween + 棋盘工具/宝箱 CD（与当前场景无关；切花店装修时主场景 _update 已移除，仍须走表）
     this.ticker.add(() => {
       const dt = this.ticker.deltaMS / 1000;
       TweenManager.update(dt);
+      BuildingManager.update(dt);
     });
 
     // ---- 修复 EventSystem 坐标映射 ----

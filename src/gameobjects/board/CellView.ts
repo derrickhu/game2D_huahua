@@ -202,7 +202,7 @@ export class CellView extends PIXI.Container {
         sp.position.set(cs / 2, cs / 2);
         this._keyIcon = sp;
       } else {
-        const fallback = new PIXI.Text('📤', { fontSize: 20 });
+        const fallback = new PIXI.Text('钥', { fontSize: 18 });
         fallback.anchor.set(0.5, 0.5);
         fallback.position.set(cs / 2, cs / 2);
         this._keyIcon = fallback;

@@ -1,0 +1,9 @@
+Single vertical sheet, aspect 9:16, split into TWO equal horizontal halves by a straight midline. Each half is an isolated game title logotype on the SAME flat solid background #FF00FF magenta across the entire canvas, no gradient background, no vignette.
+
+Both halves must show exactly these four Chinese characters in ONE single horizontal row, left to right: 花花妙屋. Never stack into two rows; all four glyphs sit on one baseline like a wide banner. Cute kawaii casual merge-game typography: rounded bubbly strokes, thick soft outlines, pastel fills (pink, cream, peach, soft yellow allowed), small daisies, cherry blossoms, and tiny tulips tucked on or beside the letters as decorations. Hand-painted 2D vector sticker look, high-key pastel, cozy flower-shop mood.
+
+TOP HALF variant A: slightly warmer outline (coral-brown), flowers mostly white daisies and pink petals, gentle playful spacing between characters.
+
+BOTTOM HALF variant B: same layout and character order 花花妙屋 in one horizontal line, but tweak details for comparison — slightly cooler outline (dusty rose-brown), mix in one more mini yellow tulip cluster, letter fills can shift a shade (a bit more peach on the third character). Still clearly the same title style family as the top half.
+
+Hard bans for BOTH halves: NO outer glow, NO inner glow, NO neon bloom, NO semi-transparent or glassy letters, NO motion blur — opaque flat color fills only for easy cutout. NO English text, NO watermark, NO extra logos, NO UI frame. Strong silhouette contrast against #FF00FF.

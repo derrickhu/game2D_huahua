@@ -79,7 +79,7 @@ export class StaminaPanel extends PIXI.Container {
     }
 
     // 更新体力数值
-    this._staminaText.text = `⚡ ${CurrencyManager.state.stamina} / ${CurrencyManager.staminaCap}`;
+    this._staminaText.text = ` ${CurrencyManager.state.stamina} / ${CurrencyManager.staminaCap}`;
   }
 
   // ====== 构建 UI ======
@@ -112,7 +112,7 @@ export class StaminaPanel extends PIXI.Container {
     this._content.addChild(bg);
 
     // 标题
-    const title = new PIXI.Text('⚡ 体力不足', {
+    const title = new PIXI.Text(' 体力不足', {
       fontSize: 24,
       fill: COLORS.TEXT_DARK,
       fontFamily: FONT_FAMILY,
@@ -178,7 +178,7 @@ export class StaminaPanel extends PIXI.Container {
     const btnY = py + 196;
 
     this._buyBtn = this._makeButton(
-      '💎 钻石购买',
+      ' 钻石购买',
       '',
       0xAB47BC,
       px + (PANEL_W / 2 - btnW) / 2,
@@ -192,7 +192,7 @@ export class StaminaPanel extends PIXI.Container {
 
     // ---- 看广告按钮 ----
     this._adBtn = this._makeButton(
-      '📺 看广告',
+      ' 看广告',
       '',
       0x43A047,
       px + PANEL_W / 2 + (PANEL_W / 2 - btnW) / 2,
@@ -279,14 +279,14 @@ export class StaminaPanel extends PIXI.Container {
   private _refresh(neededStamina?: number): void {
     const s = CurrencyManager.state;
     const cap = CurrencyManager.staminaCap;
-    this._staminaText.text = `⚡ ${s.stamina} / ${cap}`;
+    this._staminaText.text = ` ${s.stamina} / ${cap}`;
 
     // 钻石购买
     const buyRemain = CurrencyManager.staminaBuyRemaining;
     const buyPrice = CurrencyManager.staminaBuyPrice;
     const buyAmount = CurrencyManager.staminaBuyAmount;
     if (buyRemain > 0) {
-      this._buyLabel.text = `+${buyAmount}⚡  花费${buyPrice}💎  (${buyRemain}次)`;
+      this._buyLabel.text = `+${buyAmount}  花费${buyPrice}  (${buyRemain}次)`;
       this._buyBtn.alpha = s.diamond >= buyPrice ? 1 : 0.5;
     } else {
       this._buyLabel.text = '今日已达上限';
@@ -297,7 +297,7 @@ export class StaminaPanel extends PIXI.Container {
     const adRemain = CurrencyManager.staminaAdRemaining;
     const adAmount = CurrencyManager.staminaAdAmount;
     if (adRemain > 0) {
-      this._adLabel.text = `+${adAmount}⚡  免费  (${adRemain}次)`;
+      this._adLabel.text = `+${adAmount}  免费  (${adRemain}次)`;
       this._adBtn.alpha = 1;
     } else {
       this._adLabel.text = '今日已达上限';
@@ -314,13 +314,13 @@ export class StaminaPanel extends PIXI.Container {
       return;
     }
     if (CurrencyManager.state.diamond < CurrencyManager.staminaBuyPrice) {
-      ToastMessage.show('💎 钻石不足');
+      ToastMessage.show('钻石不足');
       return;
     }
 
     const ok = CurrencyManager.buyStaminaWithDiamond();
     if (ok) {
-      ToastMessage.show(`⚡ +${CurrencyManager.staminaBuyAmount} 体力已恢复`);
+      ToastMessage.show(`+${CurrencyManager.staminaBuyAmount} 体力已恢复`);
       this._refresh();
     }
   }
@@ -337,7 +337,7 @@ export class StaminaPanel extends PIXI.Container {
       if (success) {
         const ok = CurrencyManager.recoverStaminaByAd();
         if (ok) {
-          ToastMessage.show(`📺 广告奖励：⚡ +${CurrencyManager.staminaAdAmount}`);
+          ToastMessage.show(`广告奖励：+${CurrencyManager.staminaAdAmount}`);
           this._refresh();
         }
       } else {

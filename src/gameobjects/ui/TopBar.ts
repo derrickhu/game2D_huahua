@@ -1,7 +1,7 @@
 /**
  * 顶部信息栏
  *
- * 布局：[🌸花愿]  [⚡体力胶囊 … +]  [💠钻石条+加号]  [🏪内购商店图标*]  [GM 槽：隐形热区连点5次激活 → 🛠️] …（商店无白底；🛠️ 仅 GM 激活后可见）
+ * 布局：[花愿]  [体力胶囊 … +]  [钻石条+加号]  [内购商店图标*]  [GM 槽：隐形热区连点5次激活 → ] …（商店无白底； 仅 GM 激活后可见）
  *
  * 星星进度仅在花店装修场景进度条展示，顶栏不再显示星星槽位。
  *
@@ -267,7 +267,7 @@ export class TopBar extends PIXI.Container {
       sp.position.set(0, 0);
       gemWrap.addChild(sp);
     } else {
-      const fb = new PIXI.Text('💎', { fontSize: 28 });
+      const fb = new PIXI.Text('钻', { fontSize: 22, fontFamily: FONT_FAMILY, fill: C.TEXT_DARK });
       fb.anchor.set(0.5);
       gemWrap.addChild(fb);
     }
@@ -309,7 +309,7 @@ export class TopBar extends PIXI.Container {
       sp.position.set(0, 0);
       root.addChild(sp);
     } else {
-      const fb = new PIXI.Text('🏪', { fontSize: 34 });
+      const fb = new PIXI.Text('店', { fontSize: 26, fontFamily: FONT_FAMILY, fill: C.TEXT_DARK });
       fb.anchor.set(0.5);
       fb.position.set(0, 0);
       root.addChild(fb);
@@ -329,8 +329,8 @@ export class TopBar extends PIXI.Container {
 
   /**
    * 真机友好：商店图标与右侧系统菜单之间的整条顶栏区域可点；
-   * 未激活 GM 时连点 5 次激活；已激活时点同一区域或 🛠️ 打开面板。
-   * 须先于 _buildGmButton 加入子节点，保证 🛠️ 叠在最上层。
+   * 未激活 GM 时连点 5 次激活；已激活时点同一区域或  打开面板。
+   * 须先于 _buildGmButton 加入子节点，保证  叠在最上层。
    */
   private _buildGmActivateZone(): void {
     const slotLeft = this._gmSlotLeft;
@@ -350,7 +350,7 @@ export class TopBar extends PIXI.Container {
     this.addChild(zone);
   }
 
-  /** GM 调试入口：槽位中央的 🛠️（激活后可见） */
+  /** GM 调试入口：槽位中央的 （激活后可见） */
   private _buildGmButton(): void {
     const slotLeft = this._gmSlotLeft;
     const slotRight = DESIGN_WIDTH - RIGHT_MENU_RESERVE;
@@ -366,7 +366,7 @@ export class TopBar extends PIXI.Container {
     wrap.visible = GMManager.isEnabled;
     wrap.name = 'gmBtn';
 
-    const icon = new PIXI.Text('🛠️', { fontSize: 22, fontFamily: FONT_FAMILY });
+    const icon = new PIXI.Text('GM', { fontSize: 14, fontFamily: FONT_FAMILY, fill: 0x666666 });
     icon.anchor.set(0.5);
     wrap.addChild(icon);
 

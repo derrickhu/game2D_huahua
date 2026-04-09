@@ -235,7 +235,7 @@ export class MergeStatsSystem {
     panel.addChild(card);
 
     // 标题
-    const title = new PIXI.Text('📊 合成统计', {
+    const title = new PIXI.Text(' 合成统计', {
       fontSize: 20,
       fill: 0x4A3728,
       fontFamily: FONT_FAMILY,
@@ -373,7 +373,7 @@ export class MergeStatsSystem {
   }
 
   private _addGoalLine(panel: PIXI.Container, goal: GoalDef, done: boolean, claimed: boolean, x: number, y: number): number {
-    const prefix = claimed ? '✅' : done ? '🎁' : '⬜';
+    const prefix = claimed ? '' : done ? '' : '⬜';
     const t = new PIXI.Text(`${prefix} ${goal.name}：${goal.desc}`, {
       fontSize: 11,
       fill: claimed ? 0x999999 : done ? 0x228B22 : 0x4A3728,

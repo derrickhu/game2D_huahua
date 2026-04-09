@@ -1078,7 +1078,7 @@ export class DecorationPanel extends PIXI.Container {
     card.addChild(bg);
   }
 
-  // ─── 星星值角标（购买后获得的 ⭐，与稀有度无关）────────────────
+  // ─── 星星值角标（购买后获得的星分，与稀有度无关）────────────────
 
   private _addStarValueBadge(card: PIXI.Container, cw: number, starValue: number): void {
     const tagPad = 4;
@@ -1100,7 +1100,7 @@ export class DecorationPanel extends PIXI.Container {
       content.addChild(sp);
       iconW = sp.width;
     } else {
-      const fb = new PIXI.Text('⭐', { fontSize: Math.round(iconH * 0.9), fontFamily: FONT_FAMILY });
+      const fb = new PIXI.Text('★', { fontSize: Math.round(iconH * 0.9), fontFamily: FONT_FAMILY });
       content.addChild(fb);
       iconW = fb.width;
     }
@@ -1142,7 +1142,7 @@ export class DecorationPanel extends PIXI.Container {
     bg.drawCircle(cw - 14, 14, 11);
     bg.endFill();
     card.addChild(bg);
-    const t = new PIXI.Text('✓', { fontSize: 13, fill: 0xffffff, fontFamily: FONT_FAMILY, fontWeight: 'bold' });
+    const t = new PIXI.Text('√', { fontSize: 13, fill: 0xffffff, fontFamily: FONT_FAMILY, fontWeight: 'bold' });
     t.anchor.set(0.5, 0.5);
     t.position.set(cw - 14, 14);
     card.addChild(t);
@@ -1333,8 +1333,9 @@ export class DecorationPanel extends PIXI.Container {
         sprite.anchor.set(0.5, 0.5);
         iconArea.addChild(sprite);
       } else {
-        const emoji = new PIXI.Text(DECO_SLOT_INFO[deco.slot].emoji, {
-          fontSize: Math.round((40 * cw) / CARD_BASE_W), fontFamily: FONT_FAMILY,
+        const fb = DECO_SLOT_INFO[deco.slot].name.charAt(0) || '?';
+        const emoji = new PIXI.Text(fb, {
+          fontSize: Math.round((40 * cw) / CARD_BASE_W), fontFamily: FONT_FAMILY, fill: COLORS.TEXT_DARK,
         });
         emoji.anchor.set(0.5, 0.5);
         iconArea.addChild(emoji);
@@ -1431,7 +1432,7 @@ export class DecorationPanel extends PIXI.Container {
         sp.anchor.set(0.5, 0.5);
         preview.addChild(sp);
       } else {
-        const ph = new PIXI.Text('🏠', { fontSize: Math.round((40 * cw) / CARD_BASE_W), fontFamily: FONT_FAMILY });
+        const ph = new PIXI.Text('风', { fontSize: Math.round((36 * cw) / CARD_BASE_W), fontFamily: FONT_FAMILY, fill: COLORS.TEXT_DARK });
         ph.anchor.set(0.5, 0.5);
         preview.addChild(ph);
         previewHalfH = Math.ceil(ph.height / 2) || 20;
@@ -1565,7 +1566,7 @@ export class DecorationPanel extends PIXI.Container {
 
   private _onCardTap(deco: DecoDef, flyCard: PIXI.Container): void {
     if (!isDecoAllowedInScene(deco, CurrencyManager.state.sceneId)) {
-      ToastMessage.show(`🔒 当前场景不可用（${formatAllowedScenesShort(deco)}）`);
+      ToastMessage.show(`当前场景不可用（${formatAllowedScenesShort(deco)}）`);
       return;
     }
     const isUnlocked = DecorationManager.isUnlocked(deco.id);
@@ -1576,11 +1577,11 @@ export class DecorationPanel extends PIXI.Container {
     }
     const req = checkRequirement(deco.unlockRequirement);
     if (!req.met) {
-      ToastMessage.show(`🔒 ${requirementHintText(req)}`);
+      ToastMessage.show(`${requirementHintText(req)}`);
       return;
     }
     if (deco.cost > 0 && CurrencyManager.state.huayuan < deco.cost) {
-      ToastMessage.show(`🌸 花愿不足，需要 ${deco.cost} 花愿`);
+      ToastMessage.show(`花愿不足，需要 ${deco.cost} 花愿`);
       return;
     }
     if (this._pendingDecoGrantStar) {
@@ -1590,7 +1591,7 @@ export class DecorationPanel extends PIXI.Container {
     const onShopScene = SceneManager.current?.name === 'shop';
     if (deco.starValue > 0 && onShopScene) {
       if (!DecorationManager.unlock(deco.id, { deferStarGrant: true })) {
-        ToastMessage.show(`🌸 花愿不足，需要 ${deco.cost} 花愿`);
+        ToastMessage.show(`花愿不足，需要 ${deco.cost} 花愿`);
         return;
       }
       if (deco.cost > 0) AudioManager.play('purchase_tap');
@@ -1599,7 +1600,7 @@ export class DecorationPanel extends PIXI.Container {
       this._refreshAll();
     } else {
       if (!DecorationManager.unlock(deco.id)) {
-        ToastMessage.show(`🌸 花愿不足，需要 ${deco.cost} 花愿`);
+        ToastMessage.show(`花愿不足，需要 ${deco.cost} 花愿`);
         return;
       }
       if (deco.cost > 0) AudioManager.play('purchase_tap');
@@ -1730,21 +1731,21 @@ export class DecorationPanel extends PIXI.Container {
     } else {
       const req = checkRequirement(style.unlockRequirement);
       if (!req.met) {
-        ToastMessage.show(`🔒 ${requirementHintText(req)}`);
+        ToastMessage.show(`${requirementHintText(req)}`);
         return;
       }
       if (style.cost > 0 && CurrencyManager.state.huayuan < style.cost) {
-        ToastMessage.show(`🌸 花愿不足，需要 ${style.cost} 花愿`);
+        ToastMessage.show(`花愿不足，需要 ${style.cost} 花愿`);
         return;
       }
       if (DecorationManager.unlockRoomStyle(style.id)) {
         if (style.cost > 0) AudioManager.play('purchase_tap');
         DecorationManager.equipRoomStyle(style.id);
         this._emitShopStarFly(flyCard, style.starValue);
-        ToastMessage.show( `✨ 解锁「${style.name}」！`);
+        ToastMessage.show(`已解锁「${style.name}」！`);
         this._refreshAll();
       } else {
-        ToastMessage.show( `🌸 花愿不足，需要 ${style.cost} 花愿`);
+        ToastMessage.show(`花愿不足，需要 ${style.cost} 花愿`);
       }
     }
   }

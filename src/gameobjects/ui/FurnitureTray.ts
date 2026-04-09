@@ -57,11 +57,13 @@ const TAB_ICON_PAD = 6;
 const HANDLE_H = 28;              // 顶部拖拽手柄高度
 /** Tab 带下沿到托盘内容区顶（与 _build 一致） */
 const TAB_BAND_BOTTOM = HANDLE_H + TAB_ROW_TOP_PAD + TAB_BAR_H;
+/** Tab 行与家具横滑区相对原布局整体下移（与顶区留白），高度从列表区扣除避免顶底溢出 */
+const TRAY_TAB_GRID_BLOCK_OFFSET_Y = 4;
 /** 家具横滑区总高度（含底部筛选条） */
 const GRID_VIEW_H = TRAY_H - TAB_BAND_BOTTOM;
 /** 底部「全部 / 未放置」筛选条高度；列表仅占用上方 GRID_SCROLL_H */
 const GRID_FILTER_BAR_H = 48;
-const GRID_SCROLL_H = GRID_VIEW_H - GRID_FILTER_BAR_H;
+const GRID_SCROLL_H = GRID_VIEW_H - GRID_FILTER_BAR_H - TRAY_TAB_GRID_BLOCK_OFFSET_Y;
 /**
  * 列表裁切左右缩进（奶油区内再各收约 20，避免贴紫框；不足一屏可横滑）
  */
@@ -299,21 +301,22 @@ export class FurnitureTray extends PIXI.Container {
     this._handle.hitArea = new PIXI.Rectangle(0, 0, w, HANDLE_H);
     this.addChild(this._handle);
 
-    // 分类 Tab 栏（下移，与壳体上沿留白）
+    // 分类 Tab 栏（下移，与壳体上沿留白；与列表块同偏移）
     this._tabContainer = new PIXI.Container();
-    this._tabContainer.y = HANDLE_H + TAB_ROW_TOP_PAD;
+    this._tabContainer.y = HANDLE_H + TAB_ROW_TOP_PAD + TRAY_TAB_GRID_BLOCK_OFFSET_Y;
     this.addChild(this._tabContainer);
 
     // 家具网格区域
     this._gridContainer = new PIXI.Container();
-    this._gridContainer.y = TAB_BAND_BOTTOM;
+    this._gridContainer.y = TAB_BAND_BOTTOM + TRAY_TAB_GRID_BLOCK_OFFSET_Y;
     this.addChild(this._gridContainer);
 
     // 网格遮罩（左右缩进，与奶油区内宽一致，列表不画到紫框上）
     const clipW = w - 2 * GRID_CLIP_INSET_X;
+    const gridMaskTop = TAB_BAND_BOTTOM + TRAY_TAB_GRID_BLOCK_OFFSET_Y;
     this._gridMask = new PIXI.Graphics();
     this._gridMask.beginFill(0xFFFFFF);
-    this._gridMask.drawRect(GRID_CLIP_INSET_X, TAB_BAND_BOTTOM, clipW, GRID_SCROLL_H);
+    this._gridMask.drawRect(GRID_CLIP_INSET_X, gridMaskTop, clipW, GRID_SCROLL_H);
     this._gridMask.endFill();
     this.addChild(this._gridMask);
     this._gridContainer.mask = this._gridMask;
@@ -323,7 +326,7 @@ export class FurnitureTray extends PIXI.Container {
     this._gridContainer.hitArea = new PIXI.Rectangle(GRID_CLIP_INSET_X, 0, clipW, GRID_SCROLL_H);
 
     this._filterRow = new PIXI.Container();
-    this._filterRow.y = TAB_BAND_BOTTOM + GRID_SCROLL_H;
+    this._filterRow.y = gridMaskTop + GRID_SCROLL_H;
     this.addChild(this._filterRow);
   }
 
@@ -440,9 +443,11 @@ export class FurnitureTray extends PIXI.Container {
         sp.position.set(cx, cy);
         tab.addChild(sp);
       } else {
-        const emoji = new PIXI.Text(meta.emoji, {
-          fontSize: Math.min(34, maxH),
+        const fb = meta.name.charAt(0) || '?';
+        const emoji = new PIXI.Text(fb, {
+          fontSize: Math.min(22, maxH),
           fontFamily: FONT_FAMILY,
+          fill: COLORS.TEXT_DARK,
         });
         emoji.anchor.set(0.5, 0.5);
         emoji.position.set(cx, cy);
@@ -671,7 +676,7 @@ export class FurnitureTray extends PIXI.Container {
       sprite.position.set(CARD_SIZE / 2, CARD_SIZE / 2);
       card.addChild(sprite);
     } else {
-      const ph = new PIXI.Text('🏠', { fontSize: 34, fontFamily: FONT_FAMILY });
+      const ph = new PIXI.Text('房', { fontSize: 28, fontFamily: FONT_FAMILY, fill: COLORS.TEXT_DARK });
       ph.anchor.set(0.5, 0.5);
       ph.position.set(CARD_SIZE / 2, CARD_SIZE / 2);
       card.addChild(ph);
@@ -698,13 +703,14 @@ export class FurnitureTray extends PIXI.Container {
     }
 
     const nameText = new PIXI.Text(style.name, {
-      fontSize: 12,
-      fill: COLORS.TEXT_LIGHT,
+      fontSize: 14,
+      fill: COLORS.TEXT_DARK,
       fontFamily: FONT_FAMILY,
+      fontWeight: 'bold',
       wordWrap: true,
       wordWrapWidth: CARD_SIZE,
       align: 'center',
-      lineHeight: 15,
+      lineHeight: 18,
     });
     nameText.anchor.set(0.5, 0);
     nameText.position.set(CARD_SIZE / 2, CARD_SIZE + CARD_NAME_BELOW_GAP);
@@ -788,13 +794,14 @@ export class FurnitureTray extends PIXI.Container {
 
     // 名称：在圆角方块下方（不占卡片内白底）
     const nameText = new PIXI.Text(deco.name, {
-      fontSize: 12,
-      fill: COLORS.TEXT_LIGHT,
+      fontSize: 14,
+      fill: COLORS.TEXT_DARK,
       fontFamily: FONT_FAMILY,
+      fontWeight: 'bold',
       wordWrap: true,
       wordWrapWidth: CARD_SIZE,
       align: 'center',
-      lineHeight: 15,
+      lineHeight: 18,
     });
     nameText.anchor.set(0.5, 0);
     nameText.position.set(CARD_SIZE / 2, CARD_SIZE + CARD_NAME_BELOW_GAP);

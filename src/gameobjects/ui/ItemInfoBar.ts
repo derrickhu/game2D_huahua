@@ -2,6 +2,9 @@
  * 底部信息栏 — 奶油卡片 + 标题红彩带（item_info_title_ribbon，与装修面板解耦）+ 合成线/出售
  *
  * 语义：左下按钮为「进屋 / 花店装修场景」，不是内购商店；购买物品商店仅顶栏胶囊（panel:openMerchShop）。
+ *
+ * 可产出工具处于 **CD** 时，原「出售 / 腾格」位改为 **加速**（占位：看广告清 CD）。可监听
+ * `board:requestToolCdAdAccelerate`（cellIndex, itemId）接入激励视频后再由 BuildingManager 等清 CD。
  */
 import * as PIXI from 'pixi.js';
 import { EventBus } from '@/core/EventBus';
@@ -22,6 +25,7 @@ import { findBoardProducerDef } from '@/config/BuildingConfig';
 import { MERGE_BUBBLE_DISPLAY_NAME } from '@/config/MergeCompanionConfig';
 import { CellState } from '@/config/BoardLayout';
 import { BoardManager } from '@/managers/BoardManager';
+import { BuildingManager } from '@/managers/BuildingManager';
 import {
   MergeCompanionManager,
   type MergeCompanionFloatBubble,
@@ -134,6 +138,11 @@ export class ItemInfoBar extends PIXI.Container {
   private _warehouseBtn!: PIXI.Container;
 
   private _sellBtn!: PIXI.Container;
+  /** 出售 / 加速 共用钮底色（CD 时换琥珀色） */
+  private _sellBtnBg!: PIXI.Graphics;
+  private _sellBtnTitle!: PIXI.Text;
+  /** true：当前显示「加速」占位（工具 CD 中），点击走广告预留而非出售 */
+  private _sellAccelerateMode = false;
   private _chainBtn!: PIXI.Container;
   private _chainBtnLabel!: PIXI.Text;
   private _sellPriceRow!: PIXI.Container;
@@ -246,7 +255,7 @@ export class ItemInfoBar extends PIXI.Container {
       circle.drawCircle(0, 0, SIDE_BTN_R);
       circle.endFill();
       this._houseBtn.addChild(circle);
-      const icon = new PIXI.Text('🏡', { fontSize: 34 });
+      const icon = new PIXI.Text('店', { fontSize: 22, fontFamily: FONT_FAMILY, fill: 0xffffff });
       icon.anchor.set(0.5, 0.5);
       icon.position.set(0, -1);
       this._houseBtn.addChild(icon);
@@ -291,7 +300,7 @@ export class ItemInfoBar extends PIXI.Container {
       circle.drawCircle(0, 0, SIDE_BTN_R);
       circle.endFill();
       this._warehouseBtn.addChild(circle);
-      const icon = new PIXI.Text('📦', { fontSize: 22 });
+      const icon = new PIXI.Text('仓', { fontSize: 18, fontFamily: FONT_FAMILY, fill: 0xffffff });
       icon.anchor.set(0.5, 0.5);
       this._warehouseBtn.addChild(icon);
     }
@@ -523,22 +532,39 @@ export class ItemInfoBar extends PIXI.Container {
     this._sellPriceText.position.set(x, 0);
   }
 
+  /** 出售=绿；工具 CD 加速占位=琥珀 */
+  private _paintSellBtnChrome(accelerate: boolean): void {
+    if (accelerate) {
+      drawStereoscopicRoundButton(
+        this._sellBtnBg,
+        SELL_BTN_W,
+        SELL_BTN_H,
+        16,
+        0xffb74d,
+        0xffe0b2,
+        0xe65100,
+      );
+    } else {
+      drawStereoscopicRoundButton(
+        this._sellBtnBg,
+        SELL_BTN_W,
+        SELL_BTN_H,
+        16,
+        0x7fe86f,
+        0xd8ffc8,
+        0x43a047,
+      );
+    }
+  }
+
   private _buildSellBtn(): void {
     this._sellBtn = new PIXI.Container();
 
-    const bg = new PIXI.Graphics();
-    drawStereoscopicRoundButton(
-      bg,
-      SELL_BTN_W,
-      SELL_BTN_H,
-      16,
-      0x7fe86f,
-      0xd8ffc8,
-      0x43a047,
-    );
-    this._sellBtn.addChild(bg);
+    this._sellBtnBg = new PIXI.Graphics();
+    this._paintSellBtnChrome(false);
+    this._sellBtn.addChild(this._sellBtnBg);
 
-    const text = new PIXI.Text('出售', {
+    this._sellBtnTitle = new PIXI.Text('出售', {
       fontSize: 17,
       fill: 0xffffff,
       fontFamily: FONT_FAMILY,
@@ -546,9 +572,9 @@ export class ItemInfoBar extends PIXI.Container {
       stroke: 0x1b5e20,
       strokeThickness: 3,
     });
-    text.anchor.set(0.5, 0.5);
-    text.position.set(0, -11);
-    this._sellBtn.addChild(text);
+    this._sellBtnTitle.anchor.set(0.5, 0.5);
+    this._sellBtnTitle.position.set(0, -11);
+    this._sellBtn.addChild(this._sellBtnTitle);
 
     this._sellPriceRow = new PIXI.Container();
     this._sellPriceRow.position.set(0, 14);
@@ -634,6 +660,66 @@ export class ItemInfoBar extends PIXI.Container {
     this._staminaDescLabel.text = `消耗体力 ${cost}`;
   }
 
+  /**
+   * 主循环调用：选中工具时 CD 结束需从「加速」切回「出售/腾格」，无需重点格子。
+   */
+  tickSelectedToolCooldownUi(): void {
+    if (!this._infoContainer.visible || this._selectedCellIndex < 0 || !this._selectedItemId) return;
+    const def = ITEM_DEFS.get(this._selectedItemId);
+    if (!def) return;
+    const cell = BoardManager.getCellByIndex(this._selectedCellIndex);
+    if (!cell) return;
+    if (cell.state === CellState.FOG || cell.state === CellState.PEEK) return;
+    this._applySellButtonState(def, cell);
+  }
+
+  /** 右下角出售钮：工具 CD 中改为加速占位，否则出售/腾格 */
+  private _applySellButtonState(def: ItemDef, cell: NonNullable<ReturnType<typeof BoardManager.getCellByIndex>>): void {
+    const canSellBase = cell.state === CellState.OPEN && def.sellable;
+    const producerDef = findBoardProducerDef(def.id);
+    const cdInfo =
+      this._selectedCellIndex >= 0 ? BuildingManager.getCdInfo(this._selectedCellIndex) : null;
+    const toolOnCooldown =
+      def.interactType === InteractType.TOOL &&
+      !!producerDef?.canProduce &&
+      producerDef.cooldown > 0 &&
+      (cdInfo?.remaining ?? 0) > 0;
+
+    if (toolOnCooldown && canSellBase) {
+      if (!this._sellAccelerateMode) {
+        this._sellAccelerateMode = true;
+        this._paintSellBtnChrome(true);
+      }
+      this._sellBtn.visible = true;
+      this._sellBtnTitle.text = '加速';
+      this._sellBtnTitle.style.stroke = 0xbf360c;
+      this._sellBtnTitle.style.strokeThickness = 3;
+      this._sellHuayuanSp.visible = false;
+      this._sellPriceText.text = '看广告';
+      this._layoutSellPriceRow();
+      return;
+    }
+
+    if (this._sellAccelerateMode) {
+      this._sellAccelerateMode = false;
+      this._paintSellBtnChrome(false);
+    }
+    this._sellBtnTitle.text = '出售';
+    this._sellBtnTitle.style.stroke = 0x1b5e20;
+    this._sellBtnTitle.style.strokeThickness = 3;
+
+    this._sellBtn.visible = canSellBase;
+    if (canSellBase) {
+      const price = getItemSellPrice(def);
+      const hyTex = TextureCache.get('icon_huayuan');
+      this._sellHuayuanSp.visible = price > 0 && !!(hyTex && hyTex.width > 0);
+      this._sellPriceText.text = price > 0 ? String(price) : '腾格';
+      this._layoutSellPriceRow();
+    } else {
+      this._sellPriceText.text = '';
+    }
+  }
+
   private _onItemSelected(cellIndex: number, itemId: string | null): void {
     if (!itemId) {
       this._clearSelection();
@@ -706,15 +792,17 @@ export class ItemInfoBar extends PIXI.Container {
       }
     }
 
-    const canSell = !!cell && cell.state === CellState.OPEN && def.sellable;
-    this._sellBtn.visible = canSell;
-    if (canSell) {
-      const price = getItemSellPrice(def);
-      const hyTex = TextureCache.get('icon_huayuan');
-      this._sellHuayuanSp.visible = price > 0 && !!(hyTex && hyTex.width > 0);
-      this._sellPriceText.text = price > 0 ? String(price) : '腾格';
-      this._layoutSellPriceRow();
+    if (!isLockedOrPeek && cell) {
+      this._applySellButtonState(def, cell);
     } else {
+      if (this._sellAccelerateMode) {
+        this._sellAccelerateMode = false;
+        this._paintSellBtnChrome(false);
+      }
+      this._sellBtnTitle.text = '出售';
+      this._sellBtnTitle.style.stroke = 0x1b5e20;
+      this._sellBtnTitle.style.strokeThickness = 3;
+      this._sellBtn.visible = false;
       this._sellPriceText.text = '';
     }
 
@@ -722,15 +810,16 @@ export class ItemInfoBar extends PIXI.Container {
       !isLockedOrPeek && getMergeChain(def.id).length > 1;
     this._chainBtn.visible = showChain;
 
+    const showRightAction = this._sellBtn.visible;
     const descReserveW =
-      showChain && canSell
+      showChain && showRightAction
         ? BTN_COL_W
-        : showChain || canSell
+        : showChain || showRightAction
           ? Math.max(CHAIN_W, SELL_BTN_W) + 24
           : 20;
     this._descText.style.wordWrapWidth = Math.max(72, this._cardW - 20 - descReserveW);
 
-    this._syncActionButtonPositions(showChain, canSell);
+    this._syncActionButtonPositions(showChain, showRightAction);
 
     this._syncLeafStrip();
 
@@ -752,6 +841,14 @@ export class ItemInfoBar extends PIXI.Container {
     this._selectedMergeBubbleId = null;
     this._chainBtnLabel.text = '查看';
     this._bubbleDismissLink.visible = false;
+
+    if (this._sellAccelerateMode) {
+      this._sellAccelerateMode = false;
+      this._paintSellBtnChrome(false);
+    }
+    this._sellBtnTitle.text = '出售';
+    this._sellBtnTitle.style.stroke = 0x1b5e20;
+    this._sellBtnTitle.style.strokeThickness = 3;
 
     this._infoContainer.visible = false;
     this._sellBtn.visible = false;
@@ -791,6 +888,15 @@ export class ItemInfoBar extends PIXI.Container {
   private _onSellTap(): void {
     if (this._selectedCellIndex < 0 || !this._selectedItemId) return;
     this._playBtnBounce(this._sellBtn);
+    if (this._sellAccelerateMode) {
+      EventBus.emit(
+        'board:requestToolCdAdAccelerate',
+        this._selectedCellIndex,
+        this._selectedItemId,
+      );
+      ToastMessage.show('即将开放：观看广告可立即完成冷却');
+      return;
+    }
     EventBus.emit('board:requestSell', this._selectedCellIndex, this._selectedItemId);
   }
 
@@ -811,7 +917,7 @@ export class ItemInfoBar extends PIXI.Container {
     this._descText.text = '到期未解锁获得少量体力';
     this._descText.visible = true;
     this._staminaDescRow.visible = false;
-    this._chainBtnLabel.text = b.diamondPrice <= 0 ? '免费解锁' : `💎${b.diamondPrice} 解锁`;
+    this._chainBtnLabel.text = b.diamondPrice <= 0 ? '免费解锁' : `${b.diamondPrice} 解锁`;
 
     const showDismiss = b.dismissEnabled && b.dismissHuayuanAmount > 0;
     this._bubbleDismissLink.visible = showDismiss;

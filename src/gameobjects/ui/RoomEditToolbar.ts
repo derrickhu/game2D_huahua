@@ -19,36 +19,31 @@ import { FONT_FAMILY, COLORS } from '@/config/Constants';
 import { TextureCache } from '@/utils/TextureCache';
 
 // ---- 常量 ----
-const BTN_SIZE = 52;
-/** 最后一枚「确认」为横向胶囊贴图，槽位略宽 */
-const CONFIRM_SLOT_W = 92;
-const BTN_GAP = 10;
+/** 六个操作钮横排槽宽（图标缩放后居中） */
+const TOOL_SLOT_W = 56;
+const ICON_MAX = 50;
+const BTN_GAP = 8;
+/** 确认：仅绿色对勾胶囊贴图，无文案 */
+const CONFIRM_SLOT_W = 72;
+const CONFIRM_GAP = 12;
 const TOOLBAR_PADDING = 12;
+const NAME_TOP = 8;
+const ROW_TOP = 28;
+const LABEL_BELOW = 14;
 const BG_COLOR = 0xFFFFFF;
 const BG_ALPHA = 0.96;
 
-interface ToolButton {
+interface ToolRowDef {
+  textureKey: string;
   icon: string;
   tooltip: string;
   action: () => void;
-  bgColor?: number;      // 自定义背景色
-  borderColor?: number;   // 自定义边框色
-  tooltipColor?: number;  // 自定义文字色
-  /** 使用贴图替代圆角底+emoji */
-  textureKey?: string;
+  tooltipColor?: number;
 }
 
-function slotWidthForButton(def: ToolButton): number {
-  return def.textureKey ? CONFIRM_SLOT_W : BTN_SIZE;
-}
-
-function toolbarButtonsRowWidth(buttons: ToolButton[]): number {
-  let w = 0;
-  for (let i = 0; i < buttons.length; i++) {
-    w += slotWidthForButton(buttons[i]);
-    if (i < buttons.length - 1) w += BTN_GAP;
-  }
-  return w;
+interface ConfirmToolDef {
+  action: () => void;
+  textureKey: string;
 }
 
 export class RoomEditToolbar extends PIXI.Container {
@@ -75,9 +70,7 @@ export class RoomEditToolbar extends PIXI.Container {
     const deco = DECO_MAP.get(decoId);
     if (!deco) return;
 
-    const placement = RoomLayoutManager.getPlacement(decoId);
-    const scaleStr = placement ? ` (${Math.round(placement.scale * 100) / 100})` : '';
-    this._nameLabel.text = `✏️ ${deco.name}${scaleStr}`;
+    this._nameLabel.text = deco.name;
     this.visible = true;
 
     // 固定在屏幕水平居中、roomBounds 上方（不遮挡家具）
@@ -110,29 +103,71 @@ export class RoomEditToolbar extends PIXI.Container {
   // ---- 构建 UI ----
 
   private _build(): void {
-    const buttons: ToolButton[] = [
-      { icon: '➕', tooltip: '放大', action: () => this._onScale(0.1) },
-      { icon: '➖', tooltip: '缩小', action: () => this._onScale(-0.1) },
-      { icon: '↔️', tooltip: '翻转', action: () => this._onFlip() },
-      { icon: '⬆️', tooltip: '置前', action: () => this._onBringForward() },
-      { icon: '⬇️', tooltip: '置后', action: () => this._onSendBackward() },
-      { icon: '🗑️', tooltip: '移除', action: () => this._onRemove() },
+    const tools: ToolRowDef[] = [
       {
-        icon: '',
-        tooltip: '确认',
-        action: () => this._onConfirm(),
-        tooltipColor: 0x2E7D32,
-        textureKey: 'furniture_tray_confirm_btn',
+        textureKey: 'room_edit_toolbar_zoom_in',
+        icon: '+',
+        tooltip: '放大',
+        action: () => this._onScale(0.1),
+      },
+      {
+        textureKey: 'room_edit_toolbar_zoom_out',
+        icon: '-',
+        tooltip: '缩小',
+        action: () => this._onScale(-0.1),
+      },
+      {
+        textureKey: 'room_edit_toolbar_flip',
+        icon: '<>',
+        tooltip: '翻转',
+        action: () => this._onFlip(),
+      },
+      {
+        textureKey: 'room_edit_toolbar_layer_up',
+        icon: '^',
+        tooltip: '置前',
+        action: () => this._onBringForward(),
+      },
+      {
+        textureKey: 'room_edit_toolbar_layer_down',
+        icon: 'v',
+        tooltip: '置后',
+        action: () => this._onSendBackward(),
+      },
+      {
+        textureKey: 'room_edit_toolbar_remove',
+        icon: 'x',
+        tooltip: '移除',
+        action: () => this._onRemove(),
       },
     ];
 
-    const totalW = TOOLBAR_PADDING * 2 + toolbarButtonsRowWidth(buttons);
+    const confirmDef: ConfirmToolDef = {
+      action: () => this._onConfirm(),
+      textureKey: 'furniture_tray_confirm_btn',
+    };
+
+    const toolsRowW = 6 * TOOL_SLOT_W + 5 * BTN_GAP;
+    const rowBlockH = ICON_MAX + LABEL_BELOW + 4;
+
+    const confirmTex = TextureCache.get(confirmDef.textureKey);
+    let confirmSpriteH = ICON_MAX;
+    if (confirmTex?.width > 0) {
+      const maxW = CONFIRM_SLOT_W - 4;
+      const maxH = ICON_MAX + 6;
+      const s = Math.min(maxW / confirmTex.width, maxH / confirmTex.height);
+      confirmSpriteH = confirmTex.height * s;
+    }
+    const confirmBlockH = confirmSpriteH;
+
+    const totalW = TOOLBAR_PADDING + toolsRowW + CONFIRM_GAP + CONFIRM_SLOT_W + TOOLBAR_PADDING;
+    const bodyH = Math.max(rowBlockH, confirmBlockH);
+    const totalH = ROW_TOP + bodyH + TOOLBAR_PADDING + 4;
     this._toolbarTotalW = totalW;
-    const totalH = BTN_SIZE + TOOLBAR_PADDING * 2 + 24; // +24 for name label
 
     // 背景（大圆角白色卡片 + 阴影）
     const shadowBg = new PIXI.Graphics();
-    shadowBg.beginFill(0x000000, 0.1);
+    shadowBg.beginFill(0x000000, 0.08);
     shadowBg.drawRoundedRect(2, 3, totalW, totalH, 14);
     shadowBg.endFill();
     this.addChild(shadowBg);
@@ -143,72 +178,104 @@ export class RoomEditToolbar extends PIXI.Container {
     this._bg.endFill();
     this._bg.lineStyle(1.5, 0xE0D0C0);
     this._bg.drawRoundedRect(0, 0, totalW, totalH, 14);
-    // 不拦截点击（允许穿透到下方家具）
     this._bg.eventMode = 'none';
     this.addChild(this._bg);
 
-    // 名称标签
     this._nameLabel = new PIXI.Text('', {
       fontSize: 14, fill: COLORS.TEXT_DARK, fontFamily: FONT_FAMILY, fontWeight: 'bold',
     });
     this._nameLabel.anchor.set(0.5, 0);
-    this._nameLabel.position.set(totalW / 2, 8);
+    this._nameLabel.position.set(totalW / 2, NAME_TOP);
     this.addChild(this._nameLabel);
 
-    // 按钮
     let bx = TOOLBAR_PADDING;
-    const y = 28;
-    buttons.forEach((btn) => {
-      const sw = slotWidthForButton(btn);
-      const container = this._buildButton(btn, bx, y, sw);
-      bx += sw + BTN_GAP;
-      this.addChild(container);
-      this._buttons.push(container);
-    });
+    const y0 = ROW_TOP;
+    for (let i = 0; i < tools.length; i++) {
+      const tex = TextureCache.get(tools[i].textureKey);
+      const c = this._buildToolButton(tools[i], bx, y0, TOOL_SLOT_W, ICON_MAX, tex);
+      this.addChild(c);
+      this._buttons.push(c);
+      bx += TOOL_SLOT_W + BTN_GAP;
+    }
+
+    const confirmX = TOOLBAR_PADDING + toolsRowW + CONFIRM_GAP;
+    const confirmY = ROW_TOP + (bodyH - confirmBlockH) / 2;
+    const confirmC = this._buildConfirmIconOnly(confirmDef, confirmX, confirmY, CONFIRM_SLOT_W, confirmSpriteH);
+    this.addChild(confirmC);
+    this._buttons.push(confirmC);
   }
 
-  private _buildButton(def: ToolButton, x: number, y: number, slotW: number): PIXI.Container {
+  private _buildToolButton(
+    def: ToolRowDef,
+    x: number,
+    y: number,
+    slotW: number,
+    iconMax: number,
+    tex: PIXI.Texture | null,
+  ): PIXI.Container {
     const container = new PIXI.Container();
     container.position.set(x, y);
-
-    const tex = def.textureKey ? TextureCache.get(def.textureKey) : null;
 
     if (tex && tex.width > 0) {
       const sp = new PIXI.Sprite(tex);
       sp.anchor.set(0.5, 0.5);
-      const maxW = slotW - 6;
-      const maxH = BTN_SIZE - 20;
-      const s = Math.min(maxW / tex.width, maxH / tex.height);
+      const s = Math.min(iconMax / tex.width, iconMax / tex.height);
       sp.scale.set(s);
-      sp.position.set(slotW / 2, BTN_SIZE / 2 - 4);
+      sp.position.set(slotW / 2, iconMax / 2);
       container.addChild(sp);
     } else {
-      // 按钮背景（圆角）
       const bg = new PIXI.Graphics();
-      bg.beginFill(def.bgColor ?? 0xF5F0EB);
-      bg.drawRoundedRect(0, 0, slotW, BTN_SIZE, 10);
+      bg.beginFill(0xF5F0EB);
+      bg.drawRoundedRect(0, 0, slotW, iconMax, 10);
       bg.endFill();
-      bg.lineStyle(1, def.borderColor ?? 0xE0D0C0, 0.5);
-      bg.drawRoundedRect(0, 0, slotW, BTN_SIZE, 10);
+      bg.lineStyle(1, 0xE0D0C0, 0.5);
+      bg.drawRoundedRect(0, 0, slotW, iconMax, 10);
       container.addChild(bg);
 
-      const icon = new PIXI.Text(def.icon || '✓', {
-        fontSize: 22, fontFamily: FONT_FAMILY,
-      });
+      const icon = new PIXI.Text(def.icon, { fontSize: 22, fontFamily: FONT_FAMILY });
       icon.anchor.set(0.5, 0.5);
-      icon.position.set(slotW / 2, BTN_SIZE / 2 - 6);
+      icon.position.set(slotW / 2, iconMax / 2 - 2);
       container.addChild(icon);
     }
 
-    // 功能文字说明（底部小字）
     const tooltip = new PIXI.Text(def.tooltip, {
       fontSize: 10, fill: def.tooltipColor ?? 0x8B7355, fontFamily: FONT_FAMILY,
     });
-    tooltip.anchor.set(0.5, 0.5);
-    tooltip.position.set(slotW / 2, BTN_SIZE - 8);
+    tooltip.anchor.set(0.5, 0);
+    tooltip.position.set(slotW / 2, iconMax + 4);
     container.addChild(tooltip);
 
-    // 交互
+    this._wireTap(container, def.action);
+    return container;
+  }
+
+  private _buildConfirmIconOnly(
+    def: ConfirmToolDef,
+    x: number,
+    y: number,
+    slotW: number,
+    iconBandH: number,
+  ): PIXI.Container {
+    const container = new PIXI.Container();
+    container.position.set(x, y);
+
+    const tex = TextureCache.get(def.textureKey);
+    if (tex?.width > 0) {
+      const sp = new PIXI.Sprite(tex);
+      sp.anchor.set(0.5, 0.5);
+      const maxW = slotW - 4;
+      const maxH = Math.max(iconBandH, 36);
+      const s = Math.min(maxW / tex.width, maxH / tex.height);
+      sp.scale.set(s);
+      sp.position.set(slotW / 2, iconBandH / 2);
+      container.addChild(sp);
+    }
+
+    this._wireTap(container, def.action);
+    return container;
+  }
+
+  private _wireTap(container: PIXI.Container, action: () => void): void {
     container.eventMode = 'static';
     container.cursor = 'pointer';
     container.on('pointerdown', () => {
@@ -226,10 +293,8 @@ export class RoomEditToolbar extends PIXI.Container {
         duration: 0.12,
         ease: Ease.easeOutBack,
       });
-      def.action();
+      action();
     });
-
-    return container;
   }
 
   // ---- 事件处理 ----
@@ -283,7 +348,7 @@ export class RoomEditToolbar extends PIXI.Container {
     RoomLayoutManager.bringForward(this._currentDecoId);
     // 图层变更后需要重新排序
     FurnitureDragSystem.sortByDepth();
-    ToastMessage.show( '📐 图层前移');
+    ToastMessage.show('图层前移');
   }
 
   /** 将家具图层往后移（被其它家具遮挡） */
@@ -291,7 +356,7 @@ export class RoomEditToolbar extends PIXI.Container {
     if (!this._currentDecoId) return;
     RoomLayoutManager.sendBackward(this._currentDecoId);
     FurnitureDragSystem.sortByDepth();
-    ToastMessage.show( '📐 图层后移');
+    ToastMessage.show('图层后移');
   }
 
   private _onRemove(): void {
@@ -333,7 +398,7 @@ export class RoomEditToolbar extends PIXI.Container {
     RoomLayoutManager.saveNow();
 
     if (deco) {
-      ToastMessage.show( `✓「${deco.name}」已确认`);
+      ToastMessage.show( `「${deco.name}」已确认`);
     }
   }
 }

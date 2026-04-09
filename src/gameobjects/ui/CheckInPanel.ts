@@ -309,7 +309,7 @@ export class CheckInPanel extends PIXI.Container {
       }
 
       if (claimed) {
-        const ck = new PIXI.Text('✓', { fontSize: 20, fill: 0xFFFFFF, fontFamily: FONT_FAMILY, fontWeight: 'bold', stroke: 0x2E7D32, strokeThickness: 3 });
+        const ck = new PIXI.Text('√', { fontSize: 20, fill: 0xFFFFFF, fontFamily: FONT_FAMILY, fontWeight: 'bold', stroke: 0x2E7D32, strokeThickness: 3 });
         ck.anchor.set(0.5);
         ck.position.set(nodeX, GIFT_Y);
         ck.alpha = 0.85;
@@ -427,7 +427,7 @@ export class CheckInPanel extends PIXI.Container {
       overlay.endFill();
       card.addChild(overlay);
 
-      const chk = new PIXI.Text('✓', {
+      const chk = new PIXI.Text('√', {
         fontSize: isWide ? 36 : 28, fill: 0x66BB6A, fontFamily: FONT_FAMILY, fontWeight: 'bold',
       });
       chk.anchor.set(0.5);

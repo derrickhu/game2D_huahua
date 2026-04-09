@@ -1,0 +1,7 @@
+Exactly 512 by 512 pixel square spritesheet for a cozy pastel merge-game room editor. Strict 3 columns by 2 rows, six equal cells, small neutral gaps, perfect grid alignment.
+
+Each cell must show one cute toy-like control: a soft circular or slightly squashed elliptical jelly button, glossy pastel, subtle drop shadow beneath the circle, small soft highlight blob on the upper-left of the sphere. Do not use square tiles, rounded squares, or rectangular chips as the button shape; the colored base must read as a round puffy icon bubble, not a box.
+
+White symbols on top must be very thick, chunky, and rounded like marshmallow strokes: puffy rounded-end plus; horizontal capsule minus; mirror flip as one thick horizontal bar with two chunky triangular arrowheads left and right; layer up and layer down as thick vertical stems with big soft triangular heads; remove as a bold rounded X made of two very thick diagonal bars with rounded ends.
+
+Reading order left to right, top then bottom: plus, minus, flip horizontal, up, down, remove X. Pastel colors: warm honey circle, soft teal circle, periwinkle blue circles for flip and both arrows, soft coral-pink circle for X. No text, no numbers, no emoji, no watermark, no brand marks. Cute casual mobile game UI, juicy and legible.

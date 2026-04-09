@@ -238,7 +238,7 @@ export class SpecialConsumableConfirmPanel extends PIXI.Container {
     titleTxt.on('pointertap', (e: PIXI.FederatedPointerEvent) => e.stopPropagation());
     this.addChild(titleTxt);
 
-    const closeBtn = new PIXI.Text('✕', {
+    const closeBtn = new PIXI.Text('×', {
       fontSize: 22,
       fill: 0xffffff,
       fontFamily: FONT_FAMILY,

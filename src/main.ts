@@ -14,6 +14,7 @@ import { IdleManager } from '@/managers/IdleManager';
 import { RoomLayoutManager } from '@/managers/RoomLayoutManager';
 import { LevelManager } from '@/managers/LevelManager';
 import { TextureCache } from '@/utils/TextureCache';
+import { LoadingScreenOverlay } from '@/gameobjects/ui/LoadingScreenOverlay';
 import { MainScene } from '@/scenes/MainScene';
 import { ShopScene } from '@/scenes/ShopScene';
 import { computeBoardMetrics } from '@/config/Constants';
@@ -73,10 +74,21 @@ async function main(): Promise<void> {
     computeBoardMetrics(Game.logicHeight, topReserved);
     console.log(`[main] BoardMetrics 计算完成, logicHeight:${Game.logicHeight}, safeTop:${Game.safeTop}, topReserved:${topReserved}`);
 
-    // 预加载图片纹理（主包 → items 分包 → deco 分包）
+    Game.stage.sortableChildren = true;
+    const loadingOverlay = new LoadingScreenOverlay();
+    Game.stage.addChild(loadingOverlay);
+
+    await TextureCache.preloadLoadingSplash();
+    loadingOverlay.applySplashTexture();
+    loadingOverlay.applyTitleTexture();
+
+    // 预加载图片纹理（主包 → chars → panels → items → deco）
     await TextureCache.preloadAll((loaded, total) => {
+      const ratio = total > 0 ? loaded / total : 1;
+      loadingOverlay.setProgress(ratio);
       console.log(`[main] 加载纹理: ${loaded}/${total}`);
     });
+    loadingOverlay.setProgress(1);
 
     // 先等 audio 分包就绪再进主场景，避免 InnerAudioContext 在文件未落地时解码报错
     const _apiAudio: any = typeof wx !== 'undefined' ? wx : typeof tt !== 'undefined' ? tt : null;
@@ -97,6 +109,9 @@ async function main(): Promise<void> {
         },
       });
     });
+
+    Game.stage.removeChild(loadingOverlay);
+    loadingOverlay.destroy({ children: true });
 
     // 初始化棋盘数据
     BoardManager.init();
@@ -150,7 +165,7 @@ async function main(): Promise<void> {
       });
     }
 
-    console.log('[main] 花花妙屋启动完成 ✿ BUILD:', BUILD_TIME);
+    console.log('[main] 花花妙屋启动完成 BUILD:', BUILD_TIME);
   } catch (e) {
     console.error('[main] 启动失败:', e);
   }

@@ -70,12 +70,12 @@ class SocialManagerClass {
   /** 注册分享菜单 */
   private _setupShareMenu(): void {
     Platform.onShareAppMessage(() => ({
-      title: '🌸 来看看我的花花妙屋！每朵花都有一段美丽的故事~',
+      title: ' 来看看我的花花妙屋！每朵花都有一段美丽的故事~',
       query: `invite=true&level=${CurrencyManager.state.level}`,
     }));
 
     Platform.onShareTimeline(() => ({
-      title: `花花妙屋 Lv.${CurrencyManager.state.level} | 已收集 ${CollectionManager.totalDiscovered} 种花草 🌸`,
+      title: `花花妙屋 Lv.${CurrencyManager.state.level} | 已收集 ${CollectionManager.totalDiscovered} 种花草 `,
     }));
   }
 
@@ -84,7 +84,7 @@ class SocialManagerClass {
   /** 分享花店 */
   shareShop(): void {
     Platform.shareAppMessage({
-      title: `🌸 花花妙屋 Lv.${CurrencyManager.state.level}，快来看看~`,
+      title: ` 花花妙屋 Lv.${CurrencyManager.state.level}，快来看看~`,
       query: `visit=true&level=${CurrencyManager.state.level}`,
     });
     this._totalShares++;
@@ -104,7 +104,7 @@ class SocialManagerClass {
   /** 分享花语卡片 */
   shareFlowerCard(cardId: string, cardName: string, quote: string): void {
     Platform.shareAppMessage({
-      title: `🌸 ${cardName} —— ${quote}`,
+      title: ` ${cardName} —— ${quote}`,
       query: `card=${cardId}`,
     });
     this._totalShares++;
@@ -130,7 +130,7 @@ class SocialManagerClass {
 
     // 发送给好友（通过分享/社交关系链）
     Platform.shareAppMessage({
-      title: `🎁 花花妙屋好友送你 ${GIFT_STAMINA_AMOUNT} 点体力！`,
+      title: ` 花花妙屋好友送你 ${GIFT_STAMINA_AMOUNT} 点体力！`,
       query: `gift=stamina&amount=${GIFT_STAMINA_AMOUNT}`,
     });
 
@@ -191,9 +191,9 @@ class SocialManagerClass {
   /** 获取排行榜名称 */
   getLeaderboardName(type: LeaderboardType): string {
     switch (type) {
-      case LeaderboardType.LEVEL: return '🏆 花店等级榜';
-      case LeaderboardType.COLLECTION: return '📖 收集进度榜';
-      case LeaderboardType.DECORATION: return '🏠 装修进度榜';
+      case LeaderboardType.LEVEL: return '花店等级榜';
+      case LeaderboardType.COLLECTION: return '收集进度榜';
+      case LeaderboardType.DECORATION: return '装修进度榜';
     }
   }
 

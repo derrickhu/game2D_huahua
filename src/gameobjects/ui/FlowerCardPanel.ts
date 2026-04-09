@@ -112,7 +112,7 @@ export class FlowerCardPanel extends PIXI.Container {
     this._content.addChild(bg);
 
     // 标题
-    const title = new PIXI.Text(`🌸 花语卡片  ${FlowerCardManager.collectedCount}/${FlowerCardManager.totalCount}`, {
+    const title = new PIXI.Text(` 花语卡片  ${FlowerCardManager.collectedCount}/${FlowerCardManager.totalCount}`, {
       fontSize: 22, fill: COLORS.TEXT_DARK, fontFamily: FONT_FAMILY, fontWeight: 'bold',
     });
     title.anchor.set(0.5, 0);
@@ -140,7 +140,7 @@ export class FlowerCardPanel extends PIXI.Container {
     }
 
     if (FlowerCardManager.isComplete) {
-      const completeText = new PIXI.Text('🎉 已集齐全部花语卡片！', {
+      const completeText = new PIXI.Text(' 已集齐全部花语卡片！', {
         fontSize: 13, fill: 0xFF69B4, fontFamily: FONT_FAMILY, fontWeight: 'bold',
       });
       completeText.anchor.set(0.5, 0);
@@ -149,7 +149,7 @@ export class FlowerCardPanel extends PIXI.Container {
     }
 
     // 关闭按钮
-    const closeBtn = new PIXI.Text('✕', {
+    const closeBtn = new PIXI.Text('×', {
       fontSize: 22, fill: COLORS.TEXT_LIGHT, fontFamily: FONT_FAMILY,
     });
     closeBtn.anchor.set(0.5, 0.5);
@@ -225,7 +225,7 @@ export class FlowerCardPanel extends PIXI.Container {
       const lineName = LINE_NAMES[line] || line;
 
       // 花系标题
-      const lineTitle = new PIXI.Text(`${line === 'daily' ? '🌼' : line === 'romantic' ? '💕' : '✨'} ${lineName}`, {
+      const lineTitle = new PIXI.Text(`${line === 'daily' ? '' : line === 'romantic' ? '' : ''} ${lineName}`, {
         fontSize: 15, fill: lineColor, fontFamily: FONT_FAMILY, fontWeight: 'bold',
       });
       lineTitle.position.set(panelX + pad, y);
@@ -270,7 +270,7 @@ export class FlowerCardPanel extends PIXI.Container {
 
     if (discovered) {
       // 图标
-      const icon = new PIXI.Text(card.icon || '🌸', {
+      const icon = new PIXI.Text(card.icon || '', {
         fontSize: 30, fontFamily: FONT_FAMILY,
       });
       icon.anchor.set(0.5, 0.5);
@@ -301,7 +301,7 @@ export class FlowerCardPanel extends PIXI.Container {
       }
 
       // 分享按钮
-      const shareBtn = new PIXI.Text('📤 分享', {
+      const shareBtn = new PIXI.Text(' 分享', {
         fontSize: 11, fill: lineColor, fontFamily: FONT_FAMILY,
       });
       shareBtn.anchor.set(0.5, 0);
@@ -319,14 +319,14 @@ export class FlowerCardPanel extends PIXI.Container {
           const fullCard = FlowerCardManager.getCard(card.id);
           if (fullCard) {
             FlowerCardManager.shareCard(fullCard);
-            ToastMessage.show(`📤 已分享「${fullCard.name}」的花语卡片`);
+            ToastMessage.show(`已分享「${fullCard.name}」的花语卡片`);
           }
         }
       });
       this._scrollContainer.addChild(hit);
     } else {
       // 未发现：问号图标
-      const lock = new PIXI.Text('❓', {
+      const lock = new PIXI.Text('?', {
         fontSize: 30, fontFamily: FONT_FAMILY,
       });
       lock.anchor.set(0.5, 0.5);

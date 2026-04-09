@@ -75,9 +75,11 @@ const trayOpenTopY = (logicH: number) =>
   FURNITURE_TRAY_OPEN_OFFSET_UP +
   FURNITURE_TRAY_OPEN_NUDGE_DOWN;
 
-/** 托盘内「完成编辑」贴图锚点(1,1) 距设计坐标右/下边 */
-const TRAY_EDIT_COMPLETE_PAD_R = 52;
-const TRAY_EDIT_COMPLETE_PAD_B = 12;
+/** 托盘内「完成装修」：顶栏水平居中，纵向约在拖动手柄带中心偏下（相对托盘顶边） */
+const TRAY_EDIT_COMPLETE_TOP_Y = 36;
+/** 较原右下角方案略放大 */
+const TRAY_EDIT_COMPLETE_MAX_W = 268;
+const TRAY_EDIT_COMPLETE_MAX_H = 72;
 
 /** 「装修花店」主按钮宽度（与 _buildEditButton 一致） */
 const EDIT_MAIN_BTN_W = (): number => Math.round(DESIGN_WIDTH * 0.5);
@@ -136,7 +138,7 @@ const C = {
 /** 侧边功能按钮定义 */
 interface SideBtnDef {
   id: string;
-  icon: string;       // 主图标 emoji（图标纹理不可用时降级）
+  icon: string;       // 主图标占位（纹理不可用时用 label 首字）
   texKey?: string;     // TextureCache 图标 key
   label: string;
   event: string;
@@ -146,19 +148,19 @@ interface SideBtnDef {
 
 /** 左下角横排 — 家具 / 装扮（无遮罩，大图标） */
 const DECO_PAIR_BUTTONS: SideBtnDef[] = [
-  { id: 'deco',    icon: '🛋️', texKey: 'icon_furniture', label: '家具', event: 'nav:openDeco',    iconBg: 0xFFB347, labelColor: 0xD48B2E },
-  { id: 'dressup', icon: '👗', texKey: 'icon_dress',      label: '装扮', event: 'nav:openDressup', iconBg: 0xFF7EB3, labelColor: 0xE0559C },
+  { id: 'deco',    icon: '', texKey: 'icon_furniture', label: '家具', event: 'nav:openDeco',    iconBg: 0xFFB347, labelColor: 0xD48B2E },
+  { id: 'dressup', icon: '', texKey: 'icon_dress',      label: '装扮', event: 'nav:openDressup', iconBg: 0xFF7EB3, labelColor: 0xE0559C },
 ];
 
 /** 左上角 — 图鉴（竖排） */
 const LEFT_TOP_BUTTONS: SideBtnDef[] = [
-  { id: 'album',   icon: '📖', texKey: 'icon_book',  label: '图鉴', event: 'nav:openAlbum',   iconBg: 0xA78BFA, labelColor: 0x7C5FC5 },
+  { id: 'album',   icon: '', texKey: 'icon_book',  label: '图鉴', event: 'nav:openAlbum',   iconBg: 0xA78BFA, labelColor: 0x7C5FC5 },
 ];
 
 /** 右侧 — 活动快捷按钮（签到/任务） */
 const RIGHT_BUTTONS: SideBtnDef[] = [
-  { id: 'checkin', icon: '📅', texKey: 'icon_checkin', label: '签到', event: 'nav:openCheckIn', iconBg: 0xFFA726, labelColor: 0xD48B2E },
-  { id: 'quest',   icon: '📋', texKey: 'icon_quest',   label: '任务', event: 'nav:openQuest',   iconBg: 0x42A5F5, labelColor: 0x1976D2 },
+  { id: 'checkin', icon: '', texKey: 'icon_checkin', label: '签到', event: 'nav:openCheckIn', iconBg: 0xFFA726, labelColor: 0xD48B2E },
+  { id: 'quest',   icon: '', texKey: 'icon_quest',   label: '任务', event: 'nav:openQuest',   iconBg: 0x42A5F5, labelColor: 0x1976D2 },
 ];
 
 export class ShopScene implements Scene {
@@ -855,14 +857,14 @@ export class ShopScene implements Scene {
         this._clearOwnerPressTracking();
         if (!this._isEditMode) {
           const greetings = [
-            '欢迎来到花花妙屋~ 🌸',
+            '欢迎来到花花妙屋~',
             '今天想做什么呢？可以装修花店哦！',
             '新的花材到了，快去合成吧~',
-            '花店越来越漂亮了呢！💕',
+            '花店越来越漂亮了呢！',
             '记得每天签到领奖励呀~',
           ];
           const msg = greetings[Math.floor(Math.random() * greetings.length)];
-          ToastMessage.show(`💬 店主：「${msg}」`);
+          ToastMessage.show(`店主：「${msg}」`);
           TweenManager.cancelTarget(tapped.scale);
           tapped.scale.set(0.9);
           TweenManager.to({
@@ -912,7 +914,7 @@ export class ShopScene implements Scene {
       starSp.eventMode = 'none';
       starGroup.addChild(starSp);
     } else {
-      const fb = new PIXI.Text('⭐', { fontSize: 28, fontFamily: FONT_FAMILY });
+      const fb = new PIXI.Text('★', { fontSize: 28, fontFamily: FONT_FAMILY });
       fb.anchor.set(0.5, 0.5);
       fb.eventMode = 'none';
       starGroup.addChild(fb);
@@ -978,7 +980,7 @@ export class ShopScene implements Scene {
       giftSp.eventMode = 'none';
       giftTap.addChild(giftSp);
     } else {
-      const gift = new PIXI.Text('🎁', { fontSize: 22, fontFamily: FONT_FAMILY });
+      const gift = new PIXI.Text('礼', { fontSize: 20, fontFamily: FONT_FAMILY, fill: COLORS.TEXT_DARK });
       gift.anchor.set(0.5, 0.5);
       gift.eventMode = 'none';
       giftTap.addChild(gift);
@@ -1134,7 +1136,7 @@ export class ShopScene implements Scene {
     for (let i = 0; i < COUNT; i++) {
       const icon = tex
         ? new PIXI.Sprite(tex)
-        : new PIXI.Text('⭐', { fontSize: 22, fontFamily: FONT_FAMILY });
+        : new PIXI.Text('★', { fontSize: 22, fontFamily: FONT_FAMILY });
       icon.anchor.set(0.5);
       icon.eventMode = 'none';
       let targetScale = 1;
@@ -1268,8 +1270,9 @@ export class ShopScene implements Scene {
       sp.height = iconSize;
       container.addChild(sp);
     } else {
-      const icon = new PIXI.Text(def.icon, {
-        fontSize: iconR * 1.1, fontFamily: FONT_FAMILY,
+      const fb = def.label.charAt(0) || '?';
+      const icon = new PIXI.Text(fb, {
+        fontSize: iconR * 1.1, fontFamily: FONT_FAMILY, fill: COLORS.TEXT_DARK,
       });
       icon.anchor.set(0.5, 0.5);
       container.addChild(icon);
@@ -1352,7 +1355,8 @@ export class ShopScene implements Scene {
       sp.position.set(0, iconCY);
       container.addChild(sp);
     } else {
-      const icon = new PIXI.Text(def.icon, { fontSize: iconSize * 0.7, fontFamily: FONT_FAMILY });
+      const fb = def.label.charAt(0) || '?';
+      const icon = new PIXI.Text(fb, { fontSize: iconSize * 0.7, fontFamily: FONT_FAMILY, fill: 0x333333 });
       icon.anchor.set(0.5, 0.5);
       icon.position.set(0, iconCY);
       container.addChild(icon);
@@ -1521,7 +1525,7 @@ export class ShopScene implements Scene {
       bg.drawCircle(0, 0, r);
       btn.addChild(bg);
 
-      const icon = new PIXI.Text('🗺️', { fontSize: Math.round(r * 0.88), fontFamily: FONT_FAMILY });
+      const icon = new PIXI.Text('图', { fontSize: Math.round(r * 0.72), fontFamily: FONT_FAMILY, fill: COLORS.TEXT_DARK });
       icon.anchor.set(0.5);
       btn.addChild(icon);
     }
@@ -1727,7 +1731,7 @@ export class ShopScene implements Scene {
       this._editBtn.addChild(sp);
     } else {
       const fs = Math.min(iconMaxH, iconMaxW);
-      const iconText = new PIXI.Text('✏️', { fontSize: Math.round(fs * 0.85), fontFamily: FONT_FAMILY });
+      const iconText = new PIXI.Text('修', { fontSize: Math.round(fs * 0.72), fontFamily: FONT_FAMILY, fill: COLORS.TEXT_DARK });
       iconText.anchor.set(0.5, 0.5);
       iconText.position.set(-halfW + iconPadL + fs * 0.42, 0);
       this._editBtn.addChild(iconText);
@@ -1833,13 +1837,13 @@ export class ShopScene implements Scene {
     this._enablePinchZoom();
     this._enableRoomPanSurface();
 
-    ToastMessage.show('🔨 装修模式：拖动家具；放大后可拖底板/空白平移；拖右侧圆点缩放，双击圆点恢复 1×');
+    ToastMessage.show('装修模式：拖动家具；放大后可拖底板/空白平移；拖右侧圆点缩放，双击圆点恢复 1×');
     EventBus.emit('furniture:edit_enabled');
   }
 
   /** 「完成装修」白字：深绿描边 + 轻阴影，浅绿底上可读 */
   private static readonly _EDIT_COMPLETE_LABEL_STYLE: Partial<PIXI.ITextStyle> = {
-    fontSize: 17,
+    fontSize: 20,
     fill: 0xffffff,
     fontFamily: FONT_FAMILY,
     fontWeight: 'bold',
@@ -1852,12 +1856,38 @@ export class ShopScene implements Scene {
     dropShadowDistance: 1,
   };
 
-  private _makeEditCompletePillLabel(bw: number, bh: number): PIXI.Text {
+  private _makeEditCompletePillLabel(): PIXI.Text {
     const label = new PIXI.Text('完成装修', ShopScene._EDIT_COMPLETE_LABEL_STYLE);
     label.anchor.set(0.5, 0.5);
-    label.position.set(-bw / 2, -bh / 2);
+    label.position.set(0, 0);
     label.eventMode = 'none';
     return label;
+  }
+
+  /** 顶中大钮：贴图与热区以容器中心为锚点 */
+  private _syncEditCompletePillLayout(wrap: PIXI.Container): void {
+    const sp = wrap.children[0] as PIXI.Sprite;
+    const tex = sp?.texture;
+    if (!tex || tex.width <= 0) return;
+    const s = Math.min(
+      TRAY_EDIT_COMPLETE_MAX_W / tex.width,
+      TRAY_EDIT_COMPLETE_MAX_H / tex.height,
+    );
+    sp.anchor.set(0.5, 0.5);
+    sp.position.set(0, 0);
+    sp.scale.set(s);
+    const bw = tex.width * s;
+    const bh = tex.height * s;
+    wrap.position.set(DESIGN_WIDTH / 2, TRAY_EDIT_COMPLETE_TOP_Y);
+    wrap.hitArea = new PIXI.Rectangle(-bw / 2, -bh / 2, bw, bh);
+    for (const c of wrap.children) {
+      if (c instanceof PIXI.Text && c.text === '完成装修') {
+        c.anchor.set(0.5, 0.5);
+        c.position.set(0, 0);
+        Object.assign(c.style, ShopScene._EDIT_COMPLETE_LABEL_STYLE);
+        break;
+      }
+    }
   }
 
   /** 完成装修钮柔和呼吸（吸引注意；退出编辑时取消） */
@@ -1894,11 +1924,8 @@ export class ShopScene implements Scene {
       const p = this._editCompletePill;
       p.visible = true;
       p.eventMode = 'static';
-      const sp = p.children[0] as PIXI.Sprite;
-      const bw = sp.width;
-      const bh = sp.height;
       if (p.children.length === 1) {
-        p.addChild(this._makeEditCompletePillLabel(bw, bh));
+        p.addChild(this._makeEditCompletePillLabel());
       } else {
         for (const c of p.children) {
           if (c instanceof PIXI.Text && c.text === '完成装修') {
@@ -1907,6 +1934,7 @@ export class ShopScene implements Scene {
           }
         }
       }
+      this._syncEditCompletePillLayout(p);
       this._furnitureTray.addChild(p);
       this._pulseEditCompletePill();
       return;
@@ -1918,19 +1946,11 @@ export class ShopScene implements Scene {
     }
     const wrap = new PIXI.Container();
     const sp = new PIXI.Sprite(tex);
-    sp.anchor.set(1, 1);
-    const maxW = 204;
-    const maxH = 52;
-    const s = Math.min(maxW / tex.width, maxH / tex.height);
-    sp.scale.set(s);
     wrap.addChild(sp);
-    const bw = tex.width * s;
-    const bh = tex.height * s;
-    wrap.addChild(this._makeEditCompletePillLabel(bw, bh));
-    wrap.position.set(DESIGN_WIDTH - TRAY_EDIT_COMPLETE_PAD_R, FURNITURE_TRAY_H - TRAY_EDIT_COMPLETE_PAD_B);
+    wrap.addChild(this._makeEditCompletePillLabel());
+    this._syncEditCompletePillLayout(wrap);
     wrap.eventMode = 'static';
     wrap.cursor = 'pointer';
-    wrap.hitArea = new PIXI.Rectangle(-bw, -bh, bw, bh);
     wrap.on('pointertap', () => {
       this._exitEditMode();
     });
@@ -1971,7 +1991,7 @@ export class ShopScene implements Scene {
     for (const child of children) {
       child.visible = true;
       if (child instanceof PIXI.Text) {
-        if (child.text === '✅ 完成编辑') {
+        if (child.text.includes('完成编辑')) {
           child.text = '装修花店';
           Object.assign(child.style, SHOP_EDIT_BTN_LABEL_STYLE);
           child.anchor.set(0.5, 0.5);
@@ -2023,7 +2043,7 @@ export class ShopScene implements Scene {
     // 刷新房间渲染
     this._renderFurnitureLayout();
 
-    ToastMessage.show('💾 布局已保存');
+    ToastMessage.show('布局已保存');
     EventBus.emit('furniture:edit_disabled');
   }
 

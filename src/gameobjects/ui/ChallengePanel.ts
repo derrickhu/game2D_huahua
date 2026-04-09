@@ -11,9 +11,9 @@ import { ENABLE_CHALLENGE_LEVEL_FEATURE } from '@/config/FeatureFlags';
 import { DESIGN_WIDTH, FONT_FAMILY, COLORS } from '@/config/Constants';
 
 const TYPE_DISPLAY: Record<string, { icon: string; name: string }> = {
-  [ChallengeType.TIMED]: { icon: '⏱️', name: '限时' },
-  [ChallengeType.LIMITED_MOVES]: { icon: '📏', name: '限步' },
-  [ChallengeType.TARGET]: { icon: '🎯', name: '目标' },
+  [ChallengeType.TIMED]: { icon: '时', name: '限时' },
+  [ChallengeType.LIMITED_MOVES]: { icon: '步', name: '限步' },
+  [ChallengeType.TARGET]: { icon: '标', name: '目标' },
 };
 
 export class ChallengePanel extends PIXI.Container {
@@ -98,7 +98,7 @@ export class ChallengePanel extends PIXI.Container {
     this._content.addChild(bg);
 
     // 标题
-    const title = new PIXI.Text(`🏆 挑战关卡  ⭐${ChallengeManager.totalStars}  (${ChallengeManager.clearedLevels}/${ChallengeManager.totalLevels})`, {
+    const title = new PIXI.Text(`挑战关卡 共${ChallengeManager.totalStars}星 (${ChallengeManager.clearedLevels}/${ChallengeManager.totalLevels})`, {
       fontSize: 20, fill: COLORS.TEXT_DARK, fontFamily: FONT_FAMILY, fontWeight: 'bold',
     });
     title.anchor.set(0.5, 0);
@@ -106,7 +106,7 @@ export class ChallengePanel extends PIXI.Container {
     this._content.addChild(title);
 
     // 关闭
-    const closeBtn = new PIXI.Text('✕', { fontSize: 22, fill: COLORS.TEXT_LIGHT, fontFamily: FONT_FAMILY });
+    const closeBtn = new PIXI.Text('×', { fontSize: 22, fill: COLORS.TEXT_LIGHT, fontFamily: FONT_FAMILY });
     closeBtn.anchor.set(0.5, 0.5);
     closeBtn.position.set(panelX + panelW - 24, panelY + 24);
     closeBtn.eventMode = 'static';
@@ -183,7 +183,7 @@ export class ChallengePanel extends PIXI.Container {
       const cardX = panelX + pad;
       const cardW = panelW - pad * 2;
       const cardH = 110;
-      const typeInfo = TYPE_DISPLAY[level.type] || { icon: '❓', name: '未知' };
+      const typeInfo = TYPE_DISPLAY[level.type] || { icon: '', name: '未知' };
 
       // 卡片
       const rowBg = new PIXI.Graphics();
@@ -224,18 +224,18 @@ export class ChallengePanel extends PIXI.Container {
       this._scrollContainer.addChild(desc);
 
       // 星级
-      const starsText = '⭐'.repeat(level.bestStars) + '☆'.repeat(3 - level.bestStars);
+      const starsText = '★'.repeat(level.bestStars) + '☆'.repeat(3 - level.bestStars);
       const stars = new PIXI.Text(starsText, { fontSize: 16, fontFamily: FONT_FAMILY });
       stars.position.set(cardX + 56, y + 68);
       this._scrollContainer.addChild(stars);
 
       // 奖励预览
       const rewardParts: string[] = [];
-      if (level.reward.gold) rewardParts.push(`💰${level.reward.gold}`);
-      if (level.reward.diamond) rewardParts.push(`💎${level.reward.diamond}`);
-      if (level.reward.huayuan) rewardParts.push(`🌸${level.reward.huayuan}`);
+      if (level.reward.gold) rewardParts.push(`${level.reward.gold}`);
+      if (level.reward.diamond) rewardParts.push(`${level.reward.diamond}`);
+      if (level.reward.huayuan) rewardParts.push(`${level.reward.huayuan}`);
       const rewardText = new PIXI.Text(
-        level.firstCleared ? '✅ 已领取' : rewardParts.join(' '),
+        level.firstCleared ? ' 已领取' : rewardParts.join(' '),
         { fontSize: 11, fill: level.firstCleared ? 0x9E9E9E : COLORS.TEXT_LIGHT, fontFamily: FONT_FAMILY },
       );
       rewardText.position.set(cardX + 56, y + 90);
@@ -246,7 +246,7 @@ export class ChallengePanel extends PIXI.Container {
       const btnY = y + cardH / 2 - 18;
 
       if (!level.unlocked) {
-        const lockText = new PIXI.Text(`🔒 需${level.unlockStars}⭐`, {
+        const lockText = new PIXI.Text(`需${level.unlockStars}星`, {
           fontSize: 12, fill: 0xBBBBBB, fontFamily: FONT_FAMILY,
         });
         lockText.position.set(btnX, btnY + 6);
@@ -273,10 +273,10 @@ export class ChallengePanel extends PIXI.Container {
         hit.on('pointerdown', (e: PIXI.FederatedPointerEvent) => {
           e.stopPropagation();
           if (ChallengeManager.startChallenge(level.id)) {
-            ToastMessage.show(`🏆 开始挑战：${level.name}！`);
+            ToastMessage.show(`开始挑战：${level.name}！`);
             this.close();
           } else {
-            ToastMessage.show('⚠️ 无法开始挑战');
+            ToastMessage.show('无法开始挑战');
           }
         });
         this._scrollContainer.addChild(hit);

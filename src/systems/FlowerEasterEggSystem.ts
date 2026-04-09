@@ -1,7 +1,7 @@
 /**
  * 首次合成解锁弹窗
  *
- * 任意棋盘物品（花、饮品、工具等）第一次合成出该 id 时弹出：遮罩 + 标题「新解锁」+ 物品图 + 名称 + 收下按钮。
+ * 任意棋盘物品（花、饮品、工具等）第一次合成出该 id 时弹出：遮罩 + 标题「新解锁」+ 物品图 + 名称 + 物品短描述（花语/物语）+ 收下按钮。
  * 花愿仅订单+离线，本弹窗不再发放花愿。
  */
 import * as PIXI from 'pixi.js';
@@ -11,6 +11,7 @@ import { Game } from '@/core/Game';
 import { AudioManager } from '@/core/AudioManager';
 import { DESIGN_WIDTH, FONT_FAMILY } from '@/config/Constants';
 import { ITEM_DEFS, Category, type ItemDef } from '@/config/ItemConfig';
+import { getItemCollectionBlurb } from '@/config/ItemCollectionBlurbs';
 import { TextureCache } from '@/utils/TextureCache';
 import { createCurrencyIconCluster } from '@/utils/CurrencyCellIcons';
 
@@ -178,7 +179,7 @@ export class FlowerEasterEggSystem {
         TweenManager.to({ target: sp.scale, props: { x: sc, y: sc }, duration: 0.5, ease: Ease.easeOutBack });
         TweenManager.to({ target: sp, props: { rotation: 0 }, duration: 0.5, ease: Ease.easeOutBack });
       } else {
-        const placeholder = new PIXI.Text('🌸', { fontSize: Math.min(88, Math.round(maxIconBox * 0.55)) });
+        const placeholder = new PIXI.Text(displayName.charAt(0) || '?', { fontSize: Math.min(88, Math.round(maxIconBox * 0.55)), fontFamily: FONT_FAMILY });
         placeholder.anchor.set(0.5, 0.5);
         placeholder.position.set(cx, previewCy);
         overlay.addChild(placeholder);
@@ -197,7 +198,7 @@ export class FlowerEasterEggSystem {
 
     curY = cardTop + cardH + 24;
 
-    const rewardLayout = this._drawRewardSection(overlay, cx, curY, rewards, CARD_W);
+    const rewardLayout = this._drawRewardSection(overlay, cx, curY, rewards, CARD_W, itemId);
     curY = rewardLayout.nextY;
 
     curY += 24;
@@ -410,11 +411,13 @@ export class FlowerEasterEggSystem {
     y: number,
     data: UnlockRewards,
     _cardW: number,
+    itemId: string,
   ): { nextY: number; flyCenterY: number } {
     const CELL = 78;
 
     if (data.huayuanReward <= 0) {
-      const hint = new PIXI.Text('花愿请通过完成订单、领取离线收益获得', {
+      const blurb = getItemCollectionBlurb(itemId);
+      const hint = new PIXI.Text(blurb, {
         fontSize: 17,
         fill: 0xfffef5,
         fontFamily: FONT_FAMILY,
@@ -506,7 +509,7 @@ export class FlowerEasterEggSystem {
 
   /* ---- 装饰粒子 ---- */
   private _addDecoParticles(container: PIXI.Container, W: number, H: number): void {
-    const petals = ['🌸', '✨', '🌿', '💮', '🍃'];
+    const petals = ['·', '·', '·', '·', '·'];
     for (let i = 0; i < 12; i++) {
       const t = new PIXI.Text(petals[i % petals.length], { fontSize: 16 + Math.random() * 14 });
       t.anchor.set(0.5);

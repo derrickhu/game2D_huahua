@@ -9,15 +9,14 @@ import { DESIGN_WIDTH, COLORS, FONT_FAMILY } from '@/config/Constants';
 interface NavTab {
   name: string;
   label: string;
-  icon: string;
 }
 
 const TABS: NavTab[] = [
-  { name: 'main', label: '合成', icon: '🏠' },
-  { name: 'decoration', label: '装修', icon: '🎨' },
-  { name: 'dressup', label: '换装', icon: '👗' },
-  { name: 'collection', label: '图鉴', icon: '📖' },
-  { name: 'social', label: '社交', icon: '👥' },
+  { name: 'main', label: '合成' },
+  { name: 'decoration', label: '装修' },
+  { name: 'dressup', label: '换装' },
+  { name: 'collection', label: '图鉴' },
+  { name: 'social', label: '社交' },
 ];
 
 export class BottomNav extends PIXI.Container {
@@ -45,20 +44,14 @@ export class BottomNav extends PIXI.Container {
       const container = new PIXI.Container();
       container.position.set(i * tabWidth, 0);
 
-      // 图标
-      const icon = new PIXI.Text(tab.icon, { fontSize: 28, fontFamily: FONT_FAMILY });
-      icon.anchor.set(0.5, 0);
-      icon.position.set(tabWidth / 2, 12);
-      container.addChild(icon);
-
-      // 标签
+      // 无 emoji：仅用文案，竖向居中
       const label = new PIXI.Text(tab.label, {
-        fontSize: 13,
+        fontSize: 15,
         fill: i === 0 ? COLORS.BUTTON_PRIMARY : COLORS.TEXT_LIGHT,
         fontFamily: FONT_FAMILY,
       });
-      label.anchor.set(0.5, 0);
-      label.position.set(tabWidth / 2, 50);
+      label.anchor.set(0.5, 0.5);
+      label.position.set(tabWidth / 2, 45);
       label.name = 'label';
       container.addChild(label);
 

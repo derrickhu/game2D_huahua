@@ -2,13 +2,13 @@
  * 图鉴收集管理器
  *
  * 7 大收集分类：
- * - 🌸 花系图鉴（鲜花/花束/绿植/包装，总数随 ItemConfig）
- * - 🦋 饮品图鉴（蝴蝶标本 / 冷饮 / 甜品，级数见 ItemConfig）
- * - 🏠 建筑图鉴（13种）
- * - 📦 宝箱图鉴（宝箱5级 + 红包4级，合成或散落至棋盘时解锁）
- * - 👤 客人图鉴（来访即解锁）
- * - 🪑 装饰图鉴（基于装修系统）
- * - 🌸 花语卡片（与 FlowerCardManager.FLOWER_QUOTES 条目一致，首次合成解锁）
+ * -  花系图鉴（鲜花/花束/绿植/包装，总数随 ItemConfig）
+ * -  饮品图鉴（蝴蝶标本 / 冷饮 / 甜品，级数见 ItemConfig）
+ * -  建筑图鉴（13种）
+ * -  宝箱图鉴（宝箱5级 + 红包4级，合成或散落至棋盘时解锁）
+ * -  客人图鉴（来访即解锁）
+ * -  装饰图鉴（基于装修系统）
+ * -  花语卡片（与 FlowerCardManager.FLOWER_QUOTES 条目一致，首次合成解锁）
  *
  * 收集里程碑奖励：25% / 50% / 75% / 100%
  */
@@ -42,10 +42,10 @@ interface MilestoneReward {
 }
 
 const MILESTONES: MilestoneReward[] = [
-  { percent: 25,  gold: 0,  diamond: 18,  huayuan: 0,  desc: '🌱 初识花语' },
-  { percent: 50,  gold: 0,  diamond: 35, huayuan: 0,  desc: '🌿 花艺学徒' },
-  { percent: 75,  gold: 0, diamond: 55, huayuan: 0,  desc: '🌺 花艺大师' },
-  { percent: 100, gold: 0, diamond: 85, huayuan: 0, desc: '🌸 花语传说' },
+  { percent: 25,  gold: 0,  diamond: 18,  huayuan: 0,  desc: ' 初识花语' },
+  { percent: 50,  gold: 0,  diamond: 35, huayuan: 0,  desc: ' 花艺学徒' },
+  { percent: 75,  gold: 0, diamond: 55, huayuan: 0,  desc: ' 花艺大师' },
+  { percent: 100, gold: 0, diamond: 85, huayuan: 0, desc: ' 花语传说' },
 ];
 
 interface CollectionSave {

@@ -824,7 +824,7 @@ export class TutorialSystem {
     const container = new PIXI.Container();
 
     // 手指图标（用 emoji text 或简单图形）
-    const fingerText = new PIXI.Text('👆', {
+    const fingerText = new PIXI.Text('', {
       fontSize: 40,
       fontFamily: FONT_FAMILY,
     });
@@ -832,7 +832,7 @@ export class TutorialSystem {
     container.addChild(fingerText);
 
     // 添加阴影效果
-    const shadow = new PIXI.Text('👆', {
+    const shadow = new PIXI.Text('', {
       fontSize: 40,
       fontFamily: FONT_FAMILY,
     });

@@ -26,9 +26,9 @@ const LEVEL_EXTRA: Record<number, LevelExtraRewardsDef> = {
       { itemId: 'tool_mixer_2', count: 1 },
     ],
   },
-  /** 园艺线 Lv.4；`stamina_chest_1`×1 由 `buildStarLevelUpReward` 基础档统一发放 */
+  /** 园艺线 Lv.5 工具；`stamina_chest_1`×1 由 `buildStarLevelUpReward` 基础档统一发放 */
   4: {
-    rewardBoxItems: [{ itemId: 'tool_plant_4', count: 1 }],
+    rewardBoxItems: [{ itemId: 'tool_plant_5', count: 1 }],
   },
   /** 包装线 Lv.1「铁丝」×2（花束线前置） */
   5: {

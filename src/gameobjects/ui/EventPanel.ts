@@ -37,7 +37,7 @@ export class EventPanel extends PIXI.Container {
     if (this._isOpen) return;
 
     if (!EventManager.activeEvent) {
-      ToastMessage.show('🎪 当前没有进行中的活动');
+      ToastMessage.show('当前没有进行中的活动');
       return;
     }
 
@@ -135,10 +135,10 @@ export class EventPanel extends PIXI.Container {
 
     // 倒计时 + 积分
     const status = EventManager.eventStatus;
-    const statusText = status === EventStatus.ENDING_SOON ? '⚠️ 即将结束' :
-                       status === EventStatus.ENDED ? '❌ 已结束' : '⏳ 进行中';
+    const statusText = status === EventStatus.ENDING_SOON ? ' 即将结束' :
+                       status === EventStatus.ENDED ? ' 已结束' : '⏳ 进行中';
 
-    const timerText = new PIXI.Text(`${statusText}  剩余: ${EventManager.timeRemainingText}  |  🎪 积分: ${EventManager.points}`, {
+    const timerText = new PIXI.Text(`${statusText}  剩余: ${EventManager.timeRemainingText}  |   积分: ${EventManager.points}`, {
       fontSize: 13, fill: COLORS.TEXT_LIGHT, fontFamily: FONT_FAMILY,
     });
     timerText.anchor.set(0.5, 0);
@@ -146,7 +146,7 @@ export class EventPanel extends PIXI.Container {
     this._content.addChild(timerText);
 
     // 关闭按钮
-    const closeBtn = new PIXI.Text('✕', {
+    const closeBtn = new PIXI.Text('×', {
       fontSize: 22, fill: COLORS.TEXT_LIGHT, fontFamily: FONT_FAMILY,
     });
     closeBtn.anchor.set(0.5, 0.5);
@@ -158,8 +158,8 @@ export class EventPanel extends PIXI.Container {
 
     // Tab 按钮
     const tabY = panelY + bannerH + 6;
-    this._drawTab('📋 活动任务', panelX + 20, tabY, 150, 'tasks');
-    this._drawTab('🛒 积分商店', panelX + 180, tabY, 150, 'shop');
+    this._drawTab(' 活动任务', panelX + 20, tabY, 150, 'tasks');
+    this._drawTab(' 积分商店', panelX + 180, tabY, 150, 'shop');
 
     // 滚动区域
     const scrollAreaY = tabY + 44;
@@ -306,7 +306,7 @@ export class EventPanel extends PIXI.Container {
       const btnY = y + 24;
 
       if (task.claimed) {
-        const doneText = new PIXI.Text('✅ 已领取', {
+        const doneText = new PIXI.Text(' 已领取', {
           fontSize: 13, fill: 0x9E9E9E, fontFamily: FONT_FAMILY,
         });
         doneText.position.set(btnX, btnY + 6);
@@ -332,13 +332,13 @@ export class EventPanel extends PIXI.Container {
         hit.on('pointerdown', (e: PIXI.FederatedPointerEvent) => {
           e.stopPropagation();
           if (EventManager.claimTaskReward(task.id)) {
-            ToastMessage.show(`🎪 获得 ${task.pointReward} 活动积分！`);
+            ToastMessage.show(`获得 ${task.pointReward} 活动积分！`);
             this._refresh();
           }
         });
         this._scrollContainer.addChild(hit);
       } else {
-        const rewardText = new PIXI.Text(`🎪 +${task.pointReward}分`, {
+        const rewardText = new PIXI.Text(` +${task.pointReward}分`, {
           fontSize: 12, fill: COLORS.TEXT_LIGHT, fontFamily: FONT_FAMILY,
         });
         rewardText.position.set(btnX, btnY + 6);
@@ -360,7 +360,7 @@ export class EventPanel extends PIXI.Container {
     let y = startY + 8;
 
     // 当前积分
-    const pointsText = new PIXI.Text(`🎪 当前积分: ${EventManager.points}`, {
+    const pointsText = new PIXI.Text(` 当前积分: ${EventManager.points}`, {
       fontSize: 16, fill: COLORS.BUTTON_PRIMARY, fontFamily: FONT_FAMILY, fontWeight: 'bold',
     });
     pointsText.position.set(panelX + pad, y);
@@ -420,7 +420,7 @@ export class EventPanel extends PIXI.Container {
         btn.endFill();
         this._scrollContainer.addChild(btn);
 
-        const btnText = new PIXI.Text(`🎪 ${item.pointCost}`, {
+        const btnText = new PIXI.Text(` ${item.pointCost}`, {
           fontSize: 13, fill: 0xFFFFFF, fontFamily: FONT_FAMILY, fontWeight: 'bold',
         });
         btnText.anchor.set(0.5, 0.5);
@@ -435,7 +435,7 @@ export class EventPanel extends PIXI.Container {
           hit.on('pointerdown', (e: PIXI.FederatedPointerEvent) => {
             e.stopPropagation();
             if (EventManager.buyShopItem(item.id)) {
-              ToastMessage.show(`🛒 兑换成功：${item.name}！`);
+              ToastMessage.show(`兑换成功：${item.name}！`);
               this._refresh();
             }
           });
