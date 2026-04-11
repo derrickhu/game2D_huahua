@@ -269,7 +269,7 @@ class CustomerManagerClass {
       }));
       this._nextUid = p.nextUid;
       this._refreshTimer = p.refreshTimer;
-      const maxCap = getDynamicMaxCustomers(computeUnlockedLines(BoardManager.cells));
+      const maxCap = getDynamicMaxCustomers(LevelManager.level);
       if (this._customers.length > maxCap) {
         this._customers = this._customers.slice(0, maxCap);
         console.warn(`[Customer] 读档客人超过当前上限 ${maxCap}，已截断`);
@@ -285,20 +285,23 @@ class CustomerManagerClass {
     this._rescanAll();
   }
 
-  /** 读档或初始化后：用当前队列末尾客人同步去重状态，避免首刷立刻撞脸上一会话最后一单 */
+  /**
+   * 读档或初始化后：用「uid 最大」的客人同步去重状态（最近一单），避免首刷立刻撞脸上一会话最后一单。
+   * 队列会因可完成订单前置而重排，不能再用数组末尾。
+   */
   private _syncAntiRepeatFromQueueTail(): void {
-    const last = this._customers[this._customers.length - 1];
-    if (!last) {
+    if (this._customers.length === 0) {
       this._lastSpawnTypeId = null;
       this._lastOrderFingerprint = null;
       return;
     }
-    this._lastSpawnTypeId = last.typeId;
-    this._lastOrderFingerprint = orderSlotsFingerprint(last.slots);
+    const latest = this._customers.reduce((a, b) => (a.uid >= b.uid ? a : b));
+    this._lastSpawnTypeId = latest.typeId;
+    this._lastOrderFingerprint = orderSlotsFingerprint(latest.slots);
   }
 
   get maxCustomers(): number {
-    return getDynamicMaxCustomers(computeUnlockedLines(BoardManager.cells));
+    return getDynamicMaxCustomers(LevelManager.level);
   }
 
   update(dt: number): void {
@@ -408,6 +411,7 @@ class CustomerManagerClass {
     EventBus.on('board:buildingConverted', rescan);
     EventBus.on('building:produced', rescan);
     EventBus.on('building:exhausted', rescan);
+    EventBus.on('star:levelUp', rescan);
   }
 
   private _spawnCustomer(): void {
@@ -523,18 +527,22 @@ class CustomerManagerClass {
     }
     this._unlockSnapshot = nextLines;
 
+    // 先抹掉全棋盘 reserved：`moveItem`/`swap` 会复制 reserved，若与槽位索引短暂脱节，
+    // 仅靠「按槽位清格」会留下幽灵 true → 格子上对钩但没有任何订单槽绑定该格。
+    for (const cell of BoardManager.cells) {
+      cell.reserved = false;
+    }
+
     for (const cust of this._customers) {
       for (const slot of cust.slots) {
-        if (slot.lockedCellIndex >= 0) {
-          const cell = BoardManager.getCellByIndex(slot.lockedCellIndex);
-          if (cell) cell.reserved = false;
-          slot.lockedCellIndex = -1;
-        }
+        slot.lockedCellIndex = -1;
       }
       cust.allSatisfied = false;
     }
 
     const activeCount = Math.min(this._customers.length, this.maxCustomers);
+    /** 同一物理格只能满足一位客人的一个槽，避免多订单重复锁同一格 */
+    const globallyUsedCells = new Set<number>();
     for (let ci = 0; ci < activeCount; ci++) {
       const cust = this._customers[ci];
       const usedCellsThisCustomer = new Set<number>();
@@ -543,6 +551,7 @@ class CustomerManagerClass {
 
         for (const cell of BoardManager.cells) {
           if (cell.state !== 'open' || !cell.itemId) continue;
+          if (globallyUsedCells.has(cell.index)) continue;
           if (usedCellsThisCustomer.has(cell.index)) continue;
           if (cell.itemId !== slot.itemId) continue;
           bestIndex = cell.index;
@@ -554,13 +563,34 @@ class CustomerManagerClass {
           cell.reserved = true;
           slot.lockedCellIndex = bestIndex;
           usedCellsThisCustomer.add(bestIndex);
+          globallyUsedCells.add(bestIndex);
         }
       }
 
       cust.allSatisfied = cust.slots.every(s => s.lockedCellIndex >= 0);
     }
 
+    const queueOrderChanged = this._prioritizeReadyCustomers();
     EventBus.emit('customer:lockChanged');
+    if (queueOrderChanged) {
+      EventBus.emit('customer:queueReordered');
+    }
+  }
+
+  /**
+   * 已可点「完成」的客人排到队首（稳定排序：同组内保持原相对顺序）。
+   * @returns 队列顺序是否相对调用前发生变化
+   */
+  private _prioritizeReadyCustomers(): boolean {
+    const list = this._customers;
+    if (list.length <= 1) return false;
+    const before = list.map(c => c.uid);
+    list.sort((a, b) => {
+      if (a.allSatisfied === b.allSatisfied) return 0;
+      return a.allSatisfied ? -1 : 1;
+    });
+    const after = list.map(c => c.uid);
+    return before.some((uid, i) => uid !== after[i]);
   }
 }
 

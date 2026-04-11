@@ -222,10 +222,13 @@ export function getEffectiveMaxLevel(toolLevel: number, maxItemLevel: number): n
   return Math.min(toolLevel * 2 - 1, maxItemLevel);
 }
 
-const DYNAMIC_MAX_CUSTOMERS_BASE = 3;
-const DYNAMIC_MAX_CUSTOMERS_CAP = 4;
-
-/** 根据已解锁产线数计算客人上限：基础 3 + 每条产线 +1，上限 4 */
-export function getDynamicMaxCustomers(lines: UnlockedLines): number {
-  return Math.min(DYNAMIC_MAX_CUSTOMERS_BASE + lines.unlockedLineCount, DYNAMIC_MAX_CUSTOMERS_CAP);
+/**
+ * 订单区同时接待 / 锁格 / 可交付人数上限：依玩家星级（全局等级 `CurrencyManager.state.level`）。
+ * 1–5 级：4 人；6–10 级：5 人；11 级及以上：6 人。
+ */
+export function getDynamicMaxCustomers(playerLevel: number): number {
+  const lv = Math.max(1, Math.floor(playerLevel));
+  if (lv <= 5) return 4;
+  if (lv <= 10) return 5;
+  return 6;
 }

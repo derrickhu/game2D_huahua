@@ -62,10 +62,10 @@ export function computeBoardMetrics(logicHeight: number, topReserved: number): v
   console.log(`[Board] 动态布局: cellSize=${BoardMetrics.cellSize}, topY=${BoardMetrics.topY}, topReserved=${topReserved}, paddingX=${BoardMetrics.paddingX}, area=${gridWidth}x${gridHeight}`);
 }
 
-// 客人
-export const MAX_CUSTOMERS = 4;          // 与 OrderTierConfig 动态上限对齐（含服务中）
-export const MAX_VISIBLE_CUSTOMERS = 4;  // 滚动区可见客人数（与 max 一致）
-/** 与可见区一致：前 N 位（滚动区里显示的）客人，需求与棋盘物品一致则锁定/显示满足；可交付也限此范围 */
+// 客人（实际上限随星级等级变化，见 OrderTierConfig.getDynamicMaxCustomers，封顶 6）
+export const MAX_CUSTOMERS = 6;
+export const MAX_VISIBLE_CUSTOMERS = 6;
+/** 历史命名：实际「可锁格 / 可交付」人数为 CustomerManager.maxCustomers（等级驱动） */
 export const ACTIVE_CUSTOMER_SLOTS = MAX_VISIBLE_CUSTOMERS;
 export const CUSTOMER_REFRESH_MIN = 10;  // 秒
 export const CUSTOMER_REFRESH_MAX = 30;

@@ -45,11 +45,11 @@ export const DAILY_QUEST_TEMPLATES: DailyQuestTemplate[] = [
   { id: 'mg_2', kind: 'merge', target: 100, weeklyPoints: 15, reward: { itemId: 'flower_green_4', itemCount: 1 } },
   { id: 'mg_3', kind: 'merge', target: 300, weeklyPoints: 22, reward: { itemId: 'chest_1', itemCount: 1 } },
   { id: 'mg_4', kind: 'merge', target: 500, weeklyPoints: 28, reward: { itemId: 'diamond_bag_1', itemCount: 1 } },
-  // 订单 ×4（目标 10 / 35 / 50 / 60）：10体力、5级绿植、钻石
+  // 订单 ×4（目标 10 / 35 / 50 / 60）：体力、1级体力宝箱、钻石
   { id: 'dv_1', kind: 'deliver', target: 10, weeklyPoints: 10, reward: { stamina: 10 } },
-  { id: 'dv_2', kind: 'deliver', target: 35, weeklyPoints: 15, reward: { itemId: 'flower_green_5', itemCount: 1 } },
-  { id: 'dv_3', kind: 'deliver', target: 50, weeklyPoints: 22, reward: { diamond: 5 } },
-  { id: 'dv_4', kind: 'deliver', target: 60, weeklyPoints: 28, reward: { diamond: 10 } },
+  { id: 'dv_2', kind: 'deliver', target: 35, weeklyPoints: 15, reward: { itemId: 'stamina_chest_1', itemCount: 1 } },
+  { id: 'dv_3', kind: 'deliver', target: 50, weeklyPoints: 22, reward: { diamond: 10 } },
+  { id: 'dv_4', kind: 'deliver', target: 60, weeklyPoints: 28, reward: { diamond: 20 } },
   // 钻石 ×4（目标 5 / 10 / 20 / 50）：体力、1级体力宝箱、幸运金币
   { id: 'dm_1', kind: 'diamond', target: 5, weeklyPoints: 10, reward: { stamina: 10 } },
   { id: 'dm_2', kind: 'diamond', target: 10, weeklyPoints: 15, reward: { stamina: 20 } },

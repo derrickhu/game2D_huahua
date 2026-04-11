@@ -14,9 +14,11 @@
  */
 import { EventBus } from '@/core/EventBus';
 import { Platform } from '@/core/PlatformService';
+import { CellState } from '@/config/BoardLayout';
 import { ITEM_DEFS, Category } from '@/config/ItemConfig';
 import { CUSTOMER_TYPES } from '@/config/CustomerConfig';
 import { CurrencyManager } from './CurrencyManager';
+import { BoardManager } from './BoardManager';
 import { FLOWER_CARD_TRACKED_TOTAL } from './FlowerCardManager';
 
 const STORAGE_KEY = 'huahua_collection';
@@ -66,7 +68,21 @@ class CollectionManagerClass {
     }
     this._loadState();
     this._bindEvents();
+    // 开局/读档格上的物品不经 placeItem，须补记图鉴（如初始铲子合成后链上仍问号）
+    this._syncOpenBoardDiscoveries();
     console.log(`[Collection] 初始化完成, 总收集: ${this.totalDiscovered}/${this.totalCount}`);
+  }
+
+  /**
+   * 将当前棋盘上「已开放格」内的物品记入图鉴（与 `board:itemPlaced` 规则一致）。
+   * 仅 OPEN：半解锁/迷雾内预置物不视为已获得。
+   */
+  private _syncOpenBoardDiscoveries(): void {
+    for (const cell of BoardManager.cells) {
+      if (cell.state === CellState.OPEN && cell.itemId) {
+        this._registerItemDiscoveryFromBoard(cell.itemId);
+      }
+    }
   }
 
   private _bindEvents(): void {

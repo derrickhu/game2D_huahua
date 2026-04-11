@@ -133,8 +133,8 @@ const arrangeToolTemplate = (): Omit<ToolDef, 'itemId' | 'level'>[] => [
     canProduce: true,
     produceTable: [],
     produceOutcomes: ARRANGE_WRAP_OUTCOME_T3,
-    cooldown: 0,
-    producesBeforeCooldown: 0,
+    cooldown: 120,
+    producesBeforeCooldown: 10,
     staminaCost: 1,
   },
   {
@@ -254,8 +254,8 @@ const plantToolTemplate = (): Omit<ToolDef, 'itemId' | 'level'>[] => [
     canProduce: true,
     produceTable: [],
     produceOutcomes: PLANT_OUTCOMES_TOOL_L5,
-    cooldown: 0,
-    producesBeforeCooldown: 0,
+    cooldown: 120,
+    producesBeforeCooldown: 10,
     staminaCost: 1,
   },
   {
@@ -378,7 +378,7 @@ function buildBoardProducerDefs(): Map<string, ToolDef> {
     cooldown: 0,
     producesBeforeCooldown: 0,
     staminaCost: 1,
-    exhaustAfterProduces: 5,
+    exhaustAfterProduces: 10,
   });
   return map;
 }

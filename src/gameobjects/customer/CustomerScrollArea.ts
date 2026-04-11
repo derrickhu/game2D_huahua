@@ -5,7 +5,7 @@
  * - 横向展示多位排队客人（卡片式半身像）
  * - 支持触控左右滑动 + 惯性滚动
  * - 带遮罩裁剪，超出区域不可见
- * - 前 ACTIVE_CUSTOMER_SLOTS 位可交付，其余为排队预览
+ * - 前 `CustomerManager.maxCustomers` 位参与锁格与可交付，其余为排队预览（随星级等级 4～6）
  */
 import * as PIXI from 'pixi.js';
 import { Game } from '@/core/Game';
@@ -247,5 +247,10 @@ export class CustomerScrollArea extends PIXI.Container {
     EventBus.on('customer:arrived', () => this.refresh());
     EventBus.on('customer:lockChanged', () => this.refresh());
     EventBus.on('customer:delivered', () => this.refresh());
+    EventBus.on('customer:queueReordered', () => {
+      this._scrollContent.x = 0;
+      this._velocity = 0;
+      this.refresh();
+    });
   }
 }
