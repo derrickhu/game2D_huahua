@@ -1,9 +1,9 @@
 /**
- * 体力不足面板 - 当体力不足时弹出
+ * 体力购买面板 - 顶栏「+」或体力不足时弹出
  *
  * 提供3种恢复方式：
  * 1. 等待自然恢复（显示倒计时）
- * 2. 钻石购买体力（递增定价，每日限5次）
+ * 2. 钻石购买体力（当日首次 10 钻→100 体力，每次 +10 钻封顶 50，每日限 5 次）
  * 3. 看广告恢复体力（每日限5次）
  */
 import * as PIXI from 'pixi.js';
@@ -112,7 +112,7 @@ export class StaminaPanel extends PIXI.Container {
     this._content.addChild(bg);
 
     // 标题
-    const title = new PIXI.Text(' 体力不足', {
+    const title = new PIXI.Text('体力购买', {
       fontSize: 24,
       fill: COLORS.TEXT_DARK,
       fontFamily: FONT_FAMILY,

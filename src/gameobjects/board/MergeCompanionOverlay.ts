@@ -176,6 +176,7 @@ class BubbleWidget {
   private _hudRoot: PIXI.Container;
   private _countBg: PIXI.Graphics;
   private _countLabel: PIXI.Text;
+  private _lastHudText = '';
 
   constructor(b: MergeCompanionFloatBubble) {
     this._bubble = b;
@@ -267,6 +268,8 @@ class BubbleWidget {
     if (!b) return;
     this._bubble = b;
     const t = _formatRemainSec(b.expireRemainingSec);
+    if (t === this._lastHudText) return;
+    this._lastHudText = t;
     this._countLabel.text = t;
     const cw = Math.max(this._countLabel.width + 18, 52);
     const ch = 24;

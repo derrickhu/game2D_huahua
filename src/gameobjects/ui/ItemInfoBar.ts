@@ -148,6 +148,10 @@ export class ItemInfoBar extends PIXI.Container {
   private _sellPriceRow!: PIXI.Container;
   private _sellHuayuanSp!: PIXI.Sprite;
   private _sellPriceText!: PIXI.Text;
+  private _lastSellTitleText = '出售';
+  private _lastSellTitleStroke = 0x1b5e20;
+  private _lastSellPriceText = '';
+  private _lastSellHuayuanVisible = false;
 
   private _hintContainer!: PIXI.Container;
   private _hintShadow!: PIXI.Graphics;
@@ -690,13 +694,9 @@ export class ItemInfoBar extends PIXI.Container {
         this._sellAccelerateMode = true;
         this._paintSellBtnChrome(true);
       }
-      this._sellBtn.visible = true;
-      this._sellBtnTitle.text = '加速';
-      this._sellBtnTitle.style.stroke = 0xbf360c;
-      this._sellBtnTitle.style.strokeThickness = 3;
-      this._sellHuayuanSp.visible = false;
-      this._sellPriceText.text = '看广告';
-      this._layoutSellPriceRow();
+      this._setSellTitleState('加速', 0xbf360c);
+      this._setSellPriceState('看广告', false);
+      if (!this._sellBtn.visible) this._sellBtn.visible = true;
       return;
     }
 
@@ -704,19 +704,45 @@ export class ItemInfoBar extends PIXI.Container {
       this._sellAccelerateMode = false;
       this._paintSellBtnChrome(false);
     }
-    this._sellBtnTitle.text = '出售';
-    this._sellBtnTitle.style.stroke = 0x1b5e20;
-    this._sellBtnTitle.style.strokeThickness = 3;
+    this._setSellTitleState('出售', 0x1b5e20);
 
-    this._sellBtn.visible = canSellBase;
+    if (this._sellBtn.visible !== canSellBase) this._sellBtn.visible = canSellBase;
     if (canSellBase) {
       const price = getItemSellPrice(def);
       const hyTex = TextureCache.get('icon_huayuan');
-      this._sellHuayuanSp.visible = price > 0 && !!(hyTex && hyTex.width > 0);
-      this._sellPriceText.text = price > 0 ? String(price) : '腾格';
-      this._layoutSellPriceRow();
+      const showHuayuan = price > 0 && !!(hyTex && hyTex.width > 0);
+      this._setSellPriceState(price > 0 ? String(price) : '腾格', showHuayuan);
     } else {
-      this._sellPriceText.text = '';
+      this._setSellPriceState('', false);
+    }
+  }
+
+  private _setSellTitleState(text: string, stroke: number): void {
+    if (text !== this._lastSellTitleText) {
+      this._lastSellTitleText = text;
+      this._sellBtnTitle.text = text;
+    }
+    if (stroke !== this._lastSellTitleStroke) {
+      this._lastSellTitleStroke = stroke;
+      this._sellBtnTitle.style.stroke = stroke;
+      this._sellBtnTitle.style.strokeThickness = 3;
+    }
+  }
+
+  private _setSellPriceState(text: string, showHuayuan: boolean): void {
+    let layoutDirty = false;
+    if (showHuayuan !== this._lastSellHuayuanVisible) {
+      this._lastSellHuayuanVisible = showHuayuan;
+      this._sellHuayuanSp.visible = showHuayuan;
+      layoutDirty = true;
+    }
+    if (text !== this._lastSellPriceText) {
+      this._lastSellPriceText = text;
+      this._sellPriceText.text = text;
+      layoutDirty = true;
+    }
+    if (layoutDirty) {
+      this._layoutSellPriceRow();
     }
   }
 
@@ -846,9 +872,8 @@ export class ItemInfoBar extends PIXI.Container {
       this._sellAccelerateMode = false;
       this._paintSellBtnChrome(false);
     }
-    this._sellBtnTitle.text = '出售';
-    this._sellBtnTitle.style.stroke = 0x1b5e20;
-    this._sellBtnTitle.style.strokeThickness = 3;
+    this._setSellTitleState('出售', 0x1b5e20);
+    this._setSellPriceState('', false);
 
     this._infoContainer.visible = false;
     this._sellBtn.visible = false;

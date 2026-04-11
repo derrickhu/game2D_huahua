@@ -23,13 +23,17 @@ import { TextureCache } from '@/utils/TextureCache';
 const TOOL_SLOT_W = 56;
 const ICON_MAX = 50;
 const BTN_GAP = 8;
-/** 确认：仅绿色对勾胶囊贴图，无文案 */
+/** 确认：复用棋盘/订单同款 `ui_order_check_badge`，与左侧图标同量级略大 */
 const CONFIRM_SLOT_W = 72;
+const CONFIRM_ICON_MAX = 48;
 const CONFIRM_GAP = 12;
+/** 工具钮下方中文标签字号 */
+const TOOL_LABEL_FONT_SIZE = 13;
 const TOOLBAR_PADDING = 12;
 const NAME_TOP = 8;
 const ROW_TOP = 28;
-const LABEL_BELOW = 14;
+/** 图标底到标签顶间距 + 标签行高预留（随 TOOL_LABEL_FONT_SIZE 调） */
+const LABEL_BELOW = 20;
 const BG_COLOR = 0xFFFFFF;
 const BG_ALPHA = 0.96;
 
@@ -144,17 +148,17 @@ export class RoomEditToolbar extends PIXI.Container {
 
     const confirmDef: ConfirmToolDef = {
       action: () => this._onConfirm(),
-      textureKey: 'furniture_tray_confirm_btn',
+      textureKey: 'ui_order_check_badge',
     };
 
     const toolsRowW = 6 * TOOL_SLOT_W + 5 * BTN_GAP;
     const rowBlockH = ICON_MAX + LABEL_BELOW + 4;
 
     const confirmTex = TextureCache.get(confirmDef.textureKey);
-    let confirmSpriteH = ICON_MAX;
+    let confirmSpriteH = CONFIRM_ICON_MAX;
     if (confirmTex?.width > 0) {
-      const maxW = CONFIRM_SLOT_W - 4;
-      const maxH = ICON_MAX + 6;
+      const maxW = CONFIRM_SLOT_W - 6;
+      const maxH = CONFIRM_ICON_MAX;
       const s = Math.min(maxW / confirmTex.width, maxH / confirmTex.height);
       confirmSpriteH = confirmTex.height * s;
     }
@@ -239,7 +243,10 @@ export class RoomEditToolbar extends PIXI.Container {
     }
 
     const tooltip = new PIXI.Text(def.tooltip, {
-      fontSize: 10, fill: def.tooltipColor ?? 0x8B7355, fontFamily: FONT_FAMILY,
+      fontSize: TOOL_LABEL_FONT_SIZE,
+      fill: def.tooltipColor ?? 0x8B7355,
+      fontFamily: FONT_FAMILY,
+      fontWeight: 'bold',
     });
     tooltip.anchor.set(0.5, 0);
     tooltip.position.set(slotW / 2, iconMax + 4);
@@ -263,8 +270,8 @@ export class RoomEditToolbar extends PIXI.Container {
     if (tex?.width > 0) {
       const sp = new PIXI.Sprite(tex);
       sp.anchor.set(0.5, 0.5);
-      const maxW = slotW - 4;
-      const maxH = Math.max(iconBandH, 36);
+      const maxW = slotW - 6;
+      const maxH = Math.max(iconBandH, CONFIRM_ICON_MAX);
       const s = Math.min(maxW / tex.width, maxH / tex.height);
       sp.scale.set(s);
       sp.position.set(slotW / 2, iconBandH / 2);

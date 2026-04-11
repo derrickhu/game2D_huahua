@@ -101,6 +101,7 @@ const BOARD_OWNER_SIZE_MULT = 1.1;
 const BOARD_OWNER_BASE_Y = 250;
 /** 店主与收纳格整体右移，与左侧「展开」按钮留缝（设计 px） */
 const SHOP_OWNER_BLOCK_NUDGE_X = 6;
+const MAIN_SCENE_RED_DOT_REFRESH_INTERVAL = 5;
 
 export class MainScene implements Scene {
   readonly name = 'main';
@@ -164,6 +165,8 @@ export class MainScene implements Scene {
   // ---- 离线计时 ----
   private _idleSaveTimer = 0;
   private _initialized = false;
+  private _redDotTimer = MAIN_SCENE_RED_DOT_REFRESH_INTERVAL;
+  private _redDotDirty = true;
 
   constructor() {
     this.container = new PIXI.Container();
@@ -216,6 +219,9 @@ export class MainScene implements Scene {
     }
 
     Game.ticker.add(this._update, this);
+    this._redDotDirty = true;
+    this._redDotTimer = MAIN_SCENE_RED_DOT_REFRESH_INTERVAL;
+    this._updateRedDots();
 
     if (this._initialized) {
       RewardFlyCoordinator.setBindings(this._createMainRewardFlyBindings());
@@ -355,7 +361,7 @@ export class MainScene implements Scene {
     this._levelUpPopup = new LevelUpPopup();
     overlay.addChild(this._levelUpPopup);
 
-    // 体力不足面板
+    // 体力购买面板（体力不足或顶栏 + 打开）
     this._staminaPanel = new StaminaPanel();
     overlay.addChild(this._staminaPanel);
 
@@ -1043,9 +1049,16 @@ export class MainScene implements Scene {
 
     // 任务面板
     EventBus.on('nav:openQuest', () => this._questPanel.open());
+    EventBus.on('currency:changed', () => this._markRedDotsDirty());
+    EventBus.on('currency:loaded', () => this._markRedDotsDirty());
+    EventBus.on('quest:updated', () => this._markRedDotsDirty());
+    EventBus.on('event:rewardClaimed', () => this._markRedDotsDirty());
+    EventBus.on('event:ended', () => this._markRedDotsDirty());
+    EventBus.on('event:shopBought', () => this._markRedDotsDirty());
 
     // 任务完成提示
     EventBus.on('quest:taskCompleted', (templateId: string) => {
+      this._markRedDotsDirty();
       const t = QuestManager.getTemplate(templateId);
       if (t) ToastMessage.show(`任务完成：${QuestManager.describeTemplate(t)}`);
     });
@@ -1100,6 +1113,14 @@ export class MainScene implements Scene {
     EventBus.on('building:noStamina', () => {
       this._staminaPanel.open();
     });
+    // 顶栏体力「+」：主动打开购买/广告体力面板（与 building:noStamina 共用 overlay）
+    EventBus.on('panel:openStamina', () => {
+      this._staminaPanel.open();
+    });
+    // 花店等场景无 MainScene._update 时，仍刷新体力购买面板上的恢复倒计时
+    EventBus.on('staminaPanel:updateTimer', () => {
+      this._staminaPanel.updateTimer();
+    });
 
     // 顶栏商店图标 → 全屏摊位购买面板（合成主界面与花店场景共用 overlay 上面板）
     EventBus.on('panel:openMerchShop', () => {
@@ -1150,6 +1171,7 @@ export class MainScene implements Scene {
     // ---- 图鉴发现事件 ----
     EventBus.on('collection:discovered', (_cat: string, _itemId: string) => {
       // 新发现不打扰游戏，只更新红点
+      this._markRedDotsDirty();
     });
 
     EventBus.on('collection:milestoneReady', (percent: number) => {
@@ -1158,10 +1180,12 @@ export class MainScene implements Scene {
 
     // ---- 限时活动事件 ----
     EventBus.on('event:taskCompleted', (_taskId: string, task: any) => {
+      this._markRedDotsDirty();
       ToastMessage.show(`活动任务完成：${task.name}！`);
     });
 
     EventBus.on('event:started', (event: any) => {
+      this._markRedDotsDirty();
       ToastMessage.show(`限时活动开启：${event.name}！`);
     });
 
@@ -1210,6 +1234,19 @@ export class MainScene implements Scene {
     this._infoBar.updateQuickBtnRedDots();
 
     this._shopRowPanorama.updateRedDots();
+  }
+
+  private _markRedDotsDirty(): void {
+    this._redDotDirty = true;
+  }
+
+  private _tickRedDots(dt: number): void {
+    this._redDotTimer += dt;
+    if (this._redDotTimer < MAIN_SCENE_RED_DOT_REFRESH_INTERVAL) return;
+    this._redDotTimer = 0;
+    if (!this._redDotDirty) return;
+    this._redDotDirty = false;
+    this._updateRedDots();
   }
 
   /** 切换到花店场景（带过渡动画） */
@@ -1270,7 +1307,6 @@ export class MainScene implements Scene {
       IdleManager.recordOnline();
     }
 
-    // 每5秒更新红点
-    this._updateRedDots();
+    this._tickRedDots(dt);
   }
 }

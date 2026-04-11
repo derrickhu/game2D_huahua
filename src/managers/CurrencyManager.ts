@@ -38,8 +38,12 @@ export interface CurrencyState {
   staminaRecoverElapsed?: number;
 }
 
-const STAMINA_BUY_PRICES = [5, 10, 15, 25, 40];
-const STAMINA_BUY_AMOUNT = 20;
+/** 单次购买获得的体力（恒为 100） */
+const STAMINA_BUY_AMOUNT = 100;
+/** 当日第 1 次：10 钻；之后每次 +10 钻，单价封顶 50（第 5 次及以后若仍允许购买则为 50） */
+const STAMINA_BUY_PRICE_BASE = 10;
+const STAMINA_BUY_PRICE_STEP = 10;
+const STAMINA_BUY_PRICE_CAP = 50;
 const STAMINA_BUY_MAX_DAILY = 5;
 const STAMINA_AD_AMOUNT = 10;
 const STAMINA_AD_MAX_DAILY = 5;
@@ -86,8 +90,10 @@ class CurrencyManagerClass {
 
   get staminaBuyPrice(): number {
     this._checkDailyReset();
-    const idx = Math.min(this._dailyStaminaBuyCount, STAMINA_BUY_PRICES.length - 1);
-    return STAMINA_BUY_PRICES[idx];
+    return Math.min(
+      STAMINA_BUY_PRICE_BASE + STAMINA_BUY_PRICE_STEP * this._dailyStaminaBuyCount,
+      STAMINA_BUY_PRICE_CAP,
+    );
   }
 
   get staminaBuyAmount(): number {

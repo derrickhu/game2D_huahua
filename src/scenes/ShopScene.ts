@@ -82,15 +82,17 @@ const TRAY_EDIT_COMPLETE_MAX_W = 268;
 const TRAY_EDIT_COMPLETE_MAX_H = 72;
 
 /** 「装修花店」主按钮宽度（与 _buildEditButton 一致） */
-const EDIT_MAIN_BTN_W = (): number => Math.round(DESIGN_WIDTH * 0.5);
-const EDIT_MAIN_BTN_H = 64;
-const EDIT_MAIN_BTN_R = 18;
+const EDIT_MAIN_BTN_W = (): number => Math.round(DESIGN_WIDTH * 0.58);
+const EDIT_MAIN_BTN_H = 76;
+const EDIT_MAIN_BTN_R = 22;
+/** 标题字相对按钮中心的水平偏移（略偏右，给左侧施工图标留空） */
+const EDIT_MAIN_BTN_LABEL_OFFSET_X = 24;
 
 /**
  * 底部「装修花店」标题：柔和圆角字感（重字重 + 描边），配色走暖花粉橘系，与仓库紫系区分；阴影刻意偏弱。
  */
 const SHOP_EDIT_BTN_LABEL_STYLE: Partial<PIXI.ITextStyle> = {
-  fontSize: 22,
+  fontSize: 25,
   fill: 0xfffcf8,
   fontFamily: FONT_FAMILY,
   fontWeight: '900',
@@ -1713,13 +1715,13 @@ export class ShopScene implements Scene {
 
     const label = new PIXI.Text('装修花店', SHOP_EDIT_BTN_LABEL_STYLE);
     label.anchor.set(0.5, 0.5);
-    label.position.set(18, 0);
+    label.position.set(EDIT_MAIN_BTN_LABEL_OFFSET_X, 0);
     this._editBtn.addChild(label);
 
     const pencilTex = TextureCache.get('icon_build');
     const pillH = halfH * 2;
-    const iconMaxH = Math.min(54, Math.floor(pillH * 0.88));
-    const iconMaxW = Math.min(62, Math.floor(halfW * 2 * 0.38));
+    const iconMaxH = Math.min(60, Math.floor(pillH * 0.88));
+    const iconMaxW = Math.min(70, Math.floor(halfW * 2 * 0.38));
     const iconPadL = 12;
     if (pencilTex?.width) {
       const sp = new PIXI.Sprite(pencilTex);
@@ -1995,7 +1997,7 @@ export class ShopScene implements Scene {
           child.text = '装修花店';
           Object.assign(child.style, SHOP_EDIT_BTN_LABEL_STYLE);
           child.anchor.set(0.5, 0.5);
-          child.position.set(18, 0);
+          child.position.set(EDIT_MAIN_BTN_LABEL_OFFSET_X, 0);
         }
         if (child.text.includes('摆放家具')) {
           child.visible = true;
@@ -2574,6 +2576,7 @@ export class ShopScene implements Scene {
     WarehouseManager.updateWarehouseCooldowns(dt);
     SaveManager.update(dt);
     this._topBar.updateTimer();
+    EventBus.emit('staminaPanel:updateTimer');
     this._updateRedDots();
     this._updateOwnerBlink(dt);
   };

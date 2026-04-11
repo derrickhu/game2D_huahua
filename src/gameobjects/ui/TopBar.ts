@@ -80,6 +80,7 @@ const C = {
 export class TopBar extends PIXI.Container {
   private _staminaText!: PIXI.Text;
   private _staminaTimer!: PIXI.Text;
+  private _lastStaminaTimerText = '';
   /** 体力条内绿进度（内缩区域左上角为原点） */
   private _staminaFill!: PIXI.Graphics;
   /** 体力内槽尺寸（用于绘制进度） */
@@ -168,7 +169,7 @@ export class TopBar extends PIXI.Container {
     staminaPlus.cursor = 'pointer';
     staminaPlus.on('pointertap', (e: PIXI.FederatedPointerEvent) => {
       e.stopPropagation();
-      // 预留：体力补充入口
+      EventBus.emit('panel:openStamina');
     });
     boltWrap.addChild(staminaPlus);
     this.addChild(boltWrap);
@@ -431,12 +432,17 @@ export class TopBar extends PIXI.Container {
   /** 由外部 ticker 调用，刷新体力倒计时 */
   updateTimer(): void {
     const remain = CurrencyManager.staminaRecoverRemain;
+    let nextText = '';
     if (remain <= 0) {
-      this._staminaTimer.text = '';
+      nextText = '';
     } else {
       const m = Math.floor(remain / 60);
       const sec = Math.floor(remain % 60);
-      this._staminaTimer.text = `${m}:${sec.toString().padStart(2, '0')}`;
+      nextText = `${m}:${sec.toString().padStart(2, '0')}`;
+    }
+    if (nextText !== this._lastStaminaTimerText) {
+      this._lastStaminaTimerText = nextText;
+      this._staminaTimer.text = nextText;
     }
   }
 

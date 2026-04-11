@@ -30,6 +30,8 @@ export class ItemView extends PIXI.Container {
   private _levelBg: PIXI.Graphics;
   private _cdOverlay: PIXI.Graphics;
   private _cdText: PIXI.Text;
+  private _lastCdSecond = -1;
+  private _lastCdProgressPx = -1;
   private _usesText: PIXI.Text;
   /** Lv2/Lv3 工具：本 CD 周期内剩余可产出次数（非 CD 时显示） */
   private _chargeText: PIXI.Text;
@@ -163,6 +165,7 @@ export class ItemView extends PIXI.Container {
       this.setPeekRibbon(false);
       this.visible = false;
       this._itemId = '';
+      this._resetCooldownUiCache();
       this._chargeText.visible = false;
       this._hideToolEnergy();
       this._hideToolSparkle();
@@ -177,6 +180,7 @@ export class ItemView extends PIXI.Container {
       this.setPeekRibbon(false);
       this.visible = false;
       this._itemId = '';
+      this._resetCooldownUiCache();
       this._chargeText.visible = false;
       this._hideToolEnergy();
       this._hideToolSparkle();
@@ -369,6 +373,7 @@ export class ItemView extends PIXI.Container {
     if (remaining <= 0) {
       this._cdOverlay.visible = false;
       this._cdText.visible = false;
+      this._resetCooldownUiCache();
       return;
     }
 
@@ -377,19 +382,25 @@ export class ItemView extends PIXI.Container {
     this._cdOverlay.visible = true;
     this._cdText.visible = true;
 
-    this._cdOverlay.clear();
-    this._cdOverlay.beginFill(0x000000, 0.4);
-    this._cdOverlay.drawRoundedRect(0, 0, cs, cs, 8);
-    this._cdOverlay.endFill();
-
-    // 进度条（底部）
-    const progress = 1 - remaining / total;
+    const progress = total > 0 ? 1 - remaining / total : 0;
     const barHeight = 4;
-    this._cdOverlay.beginFill(0x4CAF50, 0.8);
-    this._cdOverlay.drawRoundedRect(4, cs - barHeight - 2, (cs - 8) * progress, barHeight, 2);
-    this._cdOverlay.endFill();
+    const progressPx = Math.max(0, Math.min(cs - 8, Math.round((cs - 8) * progress)));
+    if (progressPx !== this._lastCdProgressPx) {
+      this._lastCdProgressPx = progressPx;
+      this._cdOverlay.clear();
+      this._cdOverlay.beginFill(0x000000, 0.4);
+      this._cdOverlay.drawRoundedRect(0, 0, cs, cs, 8);
+      this._cdOverlay.endFill();
+      this._cdOverlay.beginFill(0x4CAF50, 0.8);
+      this._cdOverlay.drawRoundedRect(4, cs - barHeight - 2, progressPx, barHeight, 2);
+      this._cdOverlay.endFill();
+    }
 
-    this._cdText.text = `${Math.ceil(remaining)}s`;
+    const remainSecond = Math.ceil(remaining);
+    if (remainSecond !== this._lastCdSecond) {
+      this._lastCdSecond = remainSecond;
+      this._cdText.text = `${remainSecond}s`;
+    }
     this._bringToolEnergyThenPeekOnTop();
   }
 
@@ -402,6 +413,11 @@ export class ItemView extends PIXI.Container {
     this._chargeText.text = `×${left}`;
     this._chargeText.visible = true;
     this._bringToolEnergyThenPeekOnTop();
+  }
+
+  private _resetCooldownUiCache(): void {
+    this._lastCdSecond = -1;
+    this._lastCdProgressPx = -1;
   }
 
   private _hideToolEnergy(): void {
