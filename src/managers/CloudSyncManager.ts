@@ -56,8 +56,12 @@ class CloudSyncManagerClass {
   }
 
   prewarm(): void {
-    if (!this.enabled) return;
+    if (!this.enabled) {
+      console.log('[CloudSync] prewarm 跳过: enabled=false, isWechat=', Platform.isWechat);
+      return;
+    }
     if (!this._startupPromise) {
+      console.log('[CloudSync] prewarm 开始初始化');
       this._startupPromise = this._initialize();
     }
   }
@@ -129,13 +133,16 @@ class CloudSyncManagerClass {
 
     this._initPromise = (async () => {
       try {
+        console.log('[CloudSync] 初始化中... env:', CLOUD_ENV_ID, 'supportsCloud:', Platform.supportsCloud);
         const inited = Platform.initCloud({ env: CLOUD_ENV_ID, traceUser: true });
         if (!inited) {
           console.warn('[CloudSync] 微信云开发初始化不可用，继续使用本地存档');
           return;
         }
+        console.log('[CloudSync] 云环境初始化成功，开始创建集合...');
 
         await this._ensureCollections();
+        console.log('[CloudSync] 集合检查完成，获取 openid...');
         this._openid = await this._getOpenid();
         this._cloudReady = !!this._openid;
 
@@ -144,6 +151,7 @@ class CloudSyncManagerClass {
           return;
         }
 
+        console.log('[CloudSync] 云同步就绪! openid:', this._openid.slice(0, 8) + '...');
         await this._pullFromCloudOnStartup();
       } catch (e) {
         console.warn('[CloudSync] 初始化失败，继续使用本地存档:', e);

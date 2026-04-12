@@ -37,6 +37,16 @@ class PlatformServiceClass {
     return this._api !== null;
   }
 
+  /** 是否微信平台 */
+  get isWechat(): boolean {
+    return this.name === 'wechat';
+  }
+
+  /** 是否支持微信云开发 */
+  get supportsCloud(): boolean {
+    return this.isWechat && !!this._api?.cloud;
+  }
+
   /** 底层 API（慎用，优先使用封装方法） */
   get api(): any {
     return this._api;
