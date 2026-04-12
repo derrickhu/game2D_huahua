@@ -10,6 +10,7 @@
  */
 import { EventBus } from '@/core/EventBus';
 import { Platform } from '@/core/PlatformService';
+import { PersistService } from '@/core/PersistService';
 import { Category, ITEM_DEFS } from '@/config/ItemConfig';
 import {
   FLOWER_CARD_QUOTES,
@@ -141,12 +142,12 @@ class FlowerCardManagerClass {
     for (const [id, card] of this._cards) {
       data[id] = card;
     }
-    Platform.setStorageSync(STORAGE_KEY, JSON.stringify(data));
+    PersistService.writeRaw(STORAGE_KEY, JSON.stringify(data));
   }
 
   private _loadState(): void {
     try {
-      const raw = Platform.getStorageSync(STORAGE_KEY);
+      const raw = PersistService.readRaw(STORAGE_KEY);
       if (!raw) return;
       const data = JSON.parse(raw);
       for (const [id, card] of Object.entries(data)) {

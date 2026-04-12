@@ -177,7 +177,10 @@ class GameClass {
         backgroundColor: 0xFFF5EE,
         resolution: 1,
         antialias: true,
-      });
+        // 业界已知：鸿蒙/Android 必须显式要求 stencil，否则 Filter/Mask/Graphics 不工作
+        // preferWebGLVersion 设为 1 避免鸿蒙返回假 WebGL2 上下文
+        preferWebGLVersion: 1,
+      } as any);
     } catch (e) {
       console.error('[Game] new PIXI.Application 失败:', e);
     }
@@ -206,7 +209,8 @@ class GameClass {
             backgroundColor: 0xFFF5EE,
             resolution: 1,
             antialias: true,
-          });
+            preferWebGLVersion: 1,
+          } as any);
           console.log('[Game] 方式2: new PIXI.Renderer 创建成功');
         } catch (e2) {
           console.error('[Game] new PIXI.Renderer 失败:', e2);
@@ -223,7 +227,8 @@ class GameClass {
             backgroundColor: 0xFFF5EE,
             resolution: 1,
             antialias: true,
-          });
+            preferWebGLVersion: 1,
+          } as any);
           console.log('[Game] 方式3: autoDetectRenderer 创建成功');
         } catch (e3) {
           console.error('[Game] autoDetectRenderer 失败:', e3);
@@ -250,6 +255,9 @@ class GameClass {
         view: canvas,
       } as any;
     }
+
+    // 标记游戏已渲染成功（供 game.js 诊断弹窗判断）
+    try { (GameGlobal as any).__gameRendered = true; } catch (_) {}
 
     // 整体缩放到设计分辨率
     this.stage.scale.set(this.scale, this.scale);

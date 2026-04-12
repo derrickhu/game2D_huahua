@@ -15,6 +15,7 @@
  */
 import { EventBus } from '@/core/EventBus';
 import { Platform } from '@/core/PlatformService';
+import { PersistService } from '@/core/PersistService';
 import { CurrencyManager } from './CurrencyManager';
 
 const STORAGE_KEY = 'huahua_events';
@@ -372,12 +373,12 @@ class EventManagerClass {
     for (const s of this._activeEvent.shop) {
       data.shopBought[s.id] = s.bought;
     }
-    Platform.setStorageSync(STORAGE_KEY, JSON.stringify(data));
+    PersistService.writeRaw(STORAGE_KEY, JSON.stringify(data));
   }
 
   private _loadState(): void {
     try {
-      const raw = Platform.getStorageSync(STORAGE_KEY);
+      const raw = PersistService.readRaw(STORAGE_KEY);
       if (!raw) return;
       const data: EventSave = JSON.parse(raw);
       if (!data.activeEventId) return;

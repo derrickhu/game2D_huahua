@@ -5,7 +5,7 @@
  * 形象配置在 config/DressUpConfig.ts
  */
 import { EventBus } from '@/core/EventBus';
-import { Platform } from '@/core/PlatformService';
+import { PersistService } from '@/core/PersistService';
 import { CurrencyManager } from './CurrencyManager';
 import { checkRequirement } from '@/utils/UnlockChecker';
 import { ALL_OUTFITS, OUTFIT_ACTIVITY_QUEST_BY_ID, OUTFIT_MAP } from '@/config/DressUpConfig';
@@ -119,12 +119,12 @@ class DressUpManagerClass {
       unlocked: Array.from(this._unlocked),
       equipped: this._equippedId,
     };
-    Platform.setStorageSync(STORAGE_KEY, JSON.stringify(data));
+    PersistService.writeRaw(STORAGE_KEY, JSON.stringify(data));
   }
 
   private _loadState(): void {
     try {
-      const raw = Platform.getStorageSync(STORAGE_KEY);
+      const raw = PersistService.readRaw(STORAGE_KEY);
       if (!raw) return;
       const data = JSON.parse(raw) as Partial<DressUpSave> & {
         // 兼容旧版 equipped: Record<slot, id> 结构

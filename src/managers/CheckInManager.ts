@@ -7,6 +7,7 @@
  * - 累计签到天数触发里程碑奖励
  */
 import { EventBus } from '@/core/EventBus';
+import { PersistService } from '@/core/PersistService';
 import { ITEM_DEFS } from '@/config/ItemConfig';
 import { CurrencyManager } from './CurrencyManager';
 
@@ -282,7 +283,7 @@ class CheckInManagerClass {
 
   private _saveState(): void {
     try {
-      _api?.setStorageSync(
+      PersistService.writeRaw(
         CHECKIN_STORAGE_KEY,
         JSON.stringify({
           ...this._state,
@@ -294,7 +295,7 @@ class CheckInManagerClass {
 
   private _loadState(): void {
     try {
-      const raw = _api?.getStorageSync(CHECKIN_STORAGE_KEY);
+      const raw = PersistService.readRaw(CHECKIN_STORAGE_KEY);
       if (raw) {
         const data = JSON.parse(raw);
         this._gmDateOffsetDays =

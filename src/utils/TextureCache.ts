@@ -59,15 +59,13 @@ const MAIN_IMAGE_MAP: Record<string, string> = {
   cell_locked_v2: 'images/ui/cell_locked_v2.png',
   cell_peek:      'images/ui/cell_peek.png',
   cell_key:       'images/ui/cell_key.png',
-  shop_scene_bg:  'images/ui/shop_scene_bg.png',
-  /** 主界面客区试看：花团锦簇强虚化 NB2 稿（缺省回退 shop_scene_bg） */
+  shop_scene_bg:  'images/ui/shop_scene_bg_floral_nb2.png',
+  /** 主界面客区试看：花团锦簇强虚化 NB2 稿 */
   shop_scene_bg_floral_nb2: 'images/ui/shop_scene_bg_floral_nb2.png',
   /** 启动 Loading 全屏底图（NB2 9:16，主包随下） */
   loading_splash_run_to_shop_nb2: 'images/ui/loading_splash_run_to_shop_nb2.png',
   /** Loading 顶栏游戏名（NB2 上半可爱版 + rembg 透明底） */
   loading_title_cute_nb2: 'images/ui/loading_title_cute_nb2.png',
-  /** 仅底栏 ItemInfoBar 叶形标题条（与合成线弹窗彩带分离） */
-  item_info_leaf_bar: 'images/ui/item_info_leaf_bar.png',
 };
 
 // ================================================================
@@ -372,7 +370,7 @@ const ITEMS_IMAGE_MAP: Record<string, string> = {
 // ================================================================
 const DECO_IMAGE_MAP: Record<string, string> = {
   // ---- 花店建筑场景 ----
-  house_shop: 'subpkg_deco/images/house/shop.png',
+  house_shop: 'subpkg_deco/images/house/bg_room_default.png',
   house_bg:   'subpkg_deco/images/house/bg.jpg',
 
   // ---- 新家具素材 furniture/ (含 NB2 扩展，已扣底) ----

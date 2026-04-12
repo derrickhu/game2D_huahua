@@ -8,6 +8,7 @@
  * 是否参与启动流程由 `Constants.OFFLINE_REWARD_UI_ENABLED` 控制；关闭时本类仍负责时间戳同步，便于日后活动/推送等复用。
  */
 import { EventBus } from '@/core/EventBus';
+import { PersistService } from '@/core/PersistService';
 import { BoardManager } from './BoardManager';
 import { CurrencyManager } from './CurrencyManager';
 import { RewardBoxManager } from './RewardBoxManager';
@@ -167,13 +168,13 @@ class IdleManagerClass {
       lastOnlineTimestamp: this._lastOnlineTimestamp,
     };
     try {
-      _api?.setStorageSync(IDLE_STORAGE_KEY, JSON.stringify(data));
+      PersistService.writeRaw(IDLE_STORAGE_KEY, JSON.stringify(data));
     } catch (_) {}
   }
 
   private _loadState(): void {
     try {
-      const raw = _api?.getStorageSync(IDLE_STORAGE_KEY);
+      const raw = PersistService.readRaw(IDLE_STORAGE_KEY);
       if (raw) {
         const data: IdleSaveData = JSON.parse(raw);
         this._lastOnlineTimestamp = data.lastOnlineTimestamp || 0;

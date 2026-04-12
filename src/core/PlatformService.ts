@@ -75,6 +75,43 @@ class PlatformServiceClass {
     } catch (_) {}
   }
 
+  // ═══════════════ 微信云开发 ═══════════════
+
+  initCloud(opts: { env: string; traceUser?: boolean }): boolean {
+    if (!this.supportsCloud) return false;
+    try {
+      this._api.cloud.init({
+        env: opts.env,
+        traceUser: opts.traceUser ?? true,
+      });
+      return true;
+    } catch (e) {
+      console.warn('[Platform] 云开发初始化失败:', e);
+      return false;
+    }
+  }
+
+  callCloudFunction(opts: { name: string; data?: Record<string, unknown> }): Promise<any> {
+    if (!this.supportsCloud) {
+      return Promise.reject(new Error('cloud unavailable'));
+    }
+    try {
+      return Promise.resolve(this._api.cloud.callFunction(opts));
+    } catch (e) {
+      return Promise.reject(e);
+    }
+  }
+
+  getCloudDatabase(): any {
+    if (!this.supportsCloud) return null;
+    try {
+      return this._api.cloud.database();
+    } catch (e) {
+      console.warn('[Platform] 获取云数据库实例失败:', e);
+      return null;
+    }
+  }
+
   // ═══════════════ 系统信息 ═══════════════
 
   getSystemInfoSync(): any {

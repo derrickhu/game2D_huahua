@@ -16,6 +16,7 @@ import { MergeCompanionManager, type MergeCompanionPersistState } from './MergeC
 import { MerchShopManager, type MerchShopPersistState } from './MerchShopManager';
 import { FlowerSignTicketManager } from './FlowerSignTicketManager';
 import { EventBus } from '@/core/EventBus';
+import { PersistService } from '@/core/PersistService';
 import { BOARD_TOTAL } from '@/config/Constants';
 import { BOARD_PRESETS } from '@/config/BoardLayout';
 import { ITEM_DEFS } from '@/config/ItemConfig';
@@ -109,7 +110,7 @@ class SaveManagerClass {
    */
   private _persistToStorage(log: boolean): void {
     try {
-      _api?.setStorageSync(SAVE_SLOT, this._buildSaveData());
+      PersistService.writeRaw(SAVE_SLOT, this._buildSaveData());
       if (log) {
         console.log('[Save] 存档成功(sync), fingerprint:', CONFIG_FINGERPRINT);
       }
@@ -125,7 +126,7 @@ class SaveManagerClass {
 
   load(): boolean {
     try {
-      const raw = _api?.getStorageSync(SAVE_SLOT);
+      const raw = PersistService.readRaw(SAVE_SLOT);
       if (!raw) return false;
 
       const data: SaveData = JSON.parse(raw);
@@ -198,32 +199,28 @@ class SaveManagerClass {
   /** 清除旧存档 */
   private _clearStorage(): void {
     try {
-      _api?.removeStorageSync(SAVE_SLOT);
-      // 同时清理历史遗留的带版本号的 key
-      for (let v = 1; v <= 10; v++) {
-        try { _api?.removeStorageSync(`huahua_save_v${v}`); } catch (_) {}
-      }
+      PersistService.remove(SAVE_SLOT);
+      const legacyKeys = Array.from({ length: 10 }, (_, i) => `huahua_save_v${i + 1}`);
+      PersistService.removeMany(legacyKeys, { markDirty: false });
     } catch (_) {}
   }
 
   /** 清除所有游戏数据（用于测试/重置） */
   clearAllData(): void {
     try {
-      // 主存档及历史版本
-      _api?.removeStorageSync(SAVE_SLOT);
-      for (let v = 1; v <= 10; v++) {
-        try { _api?.removeStorageSync(`huahua_save_v${v}`); } catch (_) {}
-      }
-      // 各系统独立存档
+      const legacyKeys = Array.from({ length: 10 }, (_, i) => `huahua_save_v${i + 1}`);
       const keys = [
+        SAVE_SLOT,
+        ...legacyKeys,
         'huahua_checkin',
         'huahua_quests',
-        'huahua_achievements', // 历史成就独立 key，清除全数据时一并删掉
+        'huahua_achievements',
         'huahua_idle',
         'huahua_tutorial',
         'huahua_merge_stats',
         'huahua_flower_quotes',
         'huahua_gm',
+        'huahua_gm_export_scales',
         'huahua_regulars',
         'huahua_decoration',
         'huahua_room_layout',
@@ -234,10 +231,10 @@ class SaveManagerClass {
         'huahua_collection',
         'huahua_flower_cards',
         'huahua_haptic',
+        CLOUD_SYNC_META_KEY,
       ];
-      for (const key of keys) {
-        try { _api?.removeStorageSync(key); } catch (_) {}
-      }
+      PersistService.removeMany(keys);
+      void CloudSyncManager.flushNow('clear-all-data');
       console.log('[Save] 所有游戏数据已清除');
     } catch (_) {}
   }

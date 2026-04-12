@@ -6,6 +6,7 @@
  */
 import * as PIXI from 'pixi.js';
 import { EventBus } from '@/core/EventBus';
+import { PersistService } from '@/core/PersistService';
 import { TweenManager, Ease } from '@/core/TweenManager';
 import { Game } from '@/core/Game';
 import { AudioManager } from '@/core/AudioManager';
@@ -550,25 +551,17 @@ export class FlowerEasterEggSystem {
 
   private _saveTriggered(): void {
     try {
-      const _api = typeof (globalThis as any).wx !== 'undefined' ? (globalThis as any).wx :
-                   typeof (globalThis as any).tt !== 'undefined' ? (globalThis as any).tt : null;
-      if (_api) {
-        _api.setStorageSync('huahua_flower_quotes', JSON.stringify(this.exportTriggered()));
-      }
+      PersistService.writeRaw('huahua_flower_quotes', JSON.stringify(this.exportTriggered()));
     } catch (_) { /* ignore */ }
   }
 
   private _loadTriggered(): void {
     try {
-      const _api = typeof (globalThis as any).wx !== 'undefined' ? (globalThis as any).wx :
-                   typeof (globalThis as any).tt !== 'undefined' ? (globalThis as any).tt : null;
-      if (_api) {
-        const raw = _api.getStorageSync('huahua_flower_quotes');
-        if (raw) {
-          const arr = JSON.parse(raw);
-          if (Array.isArray(arr)) {
-            this._triggered = new Set(arr);
-          }
+      const raw = PersistService.readRaw('huahua_flower_quotes');
+      if (raw) {
+        const arr = JSON.parse(raw);
+        if (Array.isArray(arr)) {
+          this._triggered = new Set(arr);
         }
       }
     } catch (_) { /* ignore */ }

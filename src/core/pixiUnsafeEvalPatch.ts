@@ -56,7 +56,8 @@ if (_api) {
       getWebGLRenderingContext: (): any => {
         try {
           const c = _api.createCanvas();
-          const gl = c.getContext('webgl');
+          // 业界已知：必须传 stencil:true，否则鸿蒙/部分安卓 stencil 不可用
+          const gl = c.getContext('webgl', { stencil: true, antialias: true, alpha: true, depth: true });
           return gl ? gl.constructor : Object;
         } catch { return Object; }
       },

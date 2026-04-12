@@ -25,6 +25,7 @@
   },
   "compileType": "game",
   "miniprogramRoot": "minigame/",
+  "cloudfunctionRoot": "cloudfunctions/",
   "simulatorPluginLibVersion": {},
   "packOptions": {
     "ignore": [],

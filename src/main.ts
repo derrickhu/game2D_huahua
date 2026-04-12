@@ -13,6 +13,7 @@ import { MerchShopManager } from '@/managers/MerchShopManager';
 import { IdleManager } from '@/managers/IdleManager';
 import { RoomLayoutManager } from '@/managers/RoomLayoutManager';
 import { LevelManager } from '@/managers/LevelManager';
+import { CloudSyncManager } from '@/managers/CloudSyncManager';
 import { TextureCache } from '@/utils/TextureCache';
 import { LoadingScreenOverlay } from '@/gameobjects/ui/LoadingScreenOverlay';
 import { MainScene } from '@/scenes/MainScene';
@@ -86,7 +87,6 @@ async function main(): Promise<void> {
     await TextureCache.preloadAll((loaded, total) => {
       const ratio = total > 0 ? loaded / total : 1;
       loadingOverlay.setProgress(ratio);
-      console.log(`[main] 加载纹理: ${loaded}/${total}`);
     });
     loadingOverlay.setProgress(1);
 
@@ -118,6 +118,8 @@ async function main(): Promise<void> {
     console.log('[main] BoardManager.init 完成');
 
     MergeCompanionManager.init();
+
+    await CloudSyncManager.awaitStartupSync();
 
     // 尝试加载存档（开发阶段已在启动时清除，此处应返回 false）
     const loaded = SaveManager.load();
@@ -156,6 +158,7 @@ async function main(): Promise<void> {
         SaveManager.save();
         // 立即刷写装饰布局（防止防抖 timer 未触发导致位置丢失）
         RoomLayoutManager.saveNow();
+        void CloudSyncManager.flushNow('app-hide');
       });
       _apiMain.onShow?.(() => {
         console.log('[main] 游戏回到前台');

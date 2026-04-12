@@ -11,6 +11,7 @@
  */
 
 import { EventBus } from '@/core/EventBus';
+import { PersistService } from '@/core/PersistService';
 import { DECO_MAP, DecoSlot, isDecoAllowedInScene } from '@/config/DecorationConfig';
 import { ROOM_DEPTH_AUX_MAX } from '@/config/RoomDepthSort';
 import { CurrencyManager } from './CurrencyManager';
@@ -494,11 +495,7 @@ class RoomLayoutManagerClass {
         scenes,
       };
       const json = JSON.stringify(data);
-      if (_api) {
-        _api.setStorageSync(SAVE_KEY, json);
-      } else if (typeof localStorage !== 'undefined') {
-        localStorage.setItem(SAVE_KEY, json);
-      }
+      PersistService.writeRaw(SAVE_KEY, json);
     } catch (e) {
       console.warn('[RoomLayout] 保存失败:', e);
     }
@@ -506,13 +503,7 @@ class RoomLayoutManagerClass {
 
   private _load(): boolean {
     try {
-      let raw: string | null = null;
-      if (_api) {
-        raw = _api.getStorageSync(SAVE_KEY) || null;
-      } else if (typeof localStorage !== 'undefined') {
-        raw = localStorage.getItem(SAVE_KEY);
-      }
-
+      const raw = PersistService.readRaw(SAVE_KEY);
       if (!raw) return false;
 
       const data = JSON.parse(raw) as Record<string, unknown> & {

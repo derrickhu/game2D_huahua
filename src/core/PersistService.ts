@@ -1,0 +1,268 @@
+import {
+  CLOUD_SYNC_ALLOWLIST,
+  CLOUD_SYNC_META_KEY,
+  CLOUD_SYNC_SCHEMA_VERSION,
+} from '@/config/CloudConfig';
+import { Platform } from './PlatformService';
+
+export interface CloudSyncMeta {
+  updatedAt: number;
+  dirty: boolean;
+  lastSyncAt: number;
+}
+
+export interface PersistSnapshot {
+  schemaVersion: number;
+  updatedAt: number;
+  payload: Record<string, string>;
+  payloadKeys: string[];
+  sizeBytes: number;
+}
+
+type DirtyListener = (changedKeys: string[]) => void;
+
+interface WriteOptions {
+  markDirty?: boolean;
+}
+
+class PersistServiceClass {
+  private readonly _allowlist = new Set<string>(CLOUD_SYNC_ALLOWLIST);
+  private readonly _listeners = new Set<DirtyListener>();
+  private _dirtyTrackingSuspended = 0;
+
+  getAllowlistKeys(): readonly string[] {
+    return CLOUD_SYNC_ALLOWLIST;
+  }
+
+  isCloudSyncKey(key: string): boolean {
+    return this._allowlist.has(key);
+  }
+
+  readRaw(key: string): string | null {
+    if (Platform.isMinigame) {
+      return Platform.getStorageSync(key);
+    }
+    if (typeof localStorage === 'undefined') return null;
+    try {
+      return localStorage.getItem(key);
+    } catch (_) {
+      return null;
+    }
+  }
+
+  readJSON<T>(key: string): T | null {
+    const raw = this.readRaw(key);
+    if (!raw) return null;
+    try {
+      return JSON.parse(raw) as T;
+    } catch (e) {
+      console.warn(`[Persist] JSON 读取失败 key=${key}:`, e);
+      return null;
+    }
+  }
+
+  writeRaw(key: string, value: string, options: WriteOptions = {}): void {
+    this._setLocalRaw(key, value);
+    if (options.markDirty !== false) {
+      this._onDataChanged([key]);
+    }
+  }
+
+  writeJSON(key: string, value: unknown, options: WriteOptions = {}): void {
+    this.writeRaw(key, JSON.stringify(value), options);
+  }
+
+  remove(key: string, options: WriteOptions = {}): void {
+    this._removeLocalRaw(key);
+    if (options.markDirty !== false) {
+      this._onDataChanged([key]);
+    }
+  }
+
+  removeMany(keys: readonly string[], options: WriteOptions = {}): void {
+    for (const key of keys) {
+      this._removeLocalRaw(key);
+    }
+    if (options.markDirty !== false) {
+      this._onDataChanged([...keys]);
+    }
+  }
+
+  subscribe(listener: DirtyListener): () => void {
+    this._listeners.add(listener);
+    return () => this._listeners.delete(listener);
+  }
+
+  withSuppressedDirtyTracking<T>(runner: () => T): T {
+    this._dirtyTrackingSuspended++;
+    try {
+      return runner();
+    } finally {
+      this._dirtyTrackingSuspended = Math.max(0, this._dirtyTrackingSuspended - 1);
+    }
+  }
+
+  getCloudSyncMeta(): CloudSyncMeta {
+    const parsed = this.readJSON<Partial<CloudSyncMeta>>(CLOUD_SYNC_META_KEY);
+    if (parsed && typeof parsed.updatedAt === 'number') {
+      return {
+        updatedAt: parsed.updatedAt,
+        dirty: !!parsed.dirty,
+        lastSyncAt: typeof parsed.lastSyncAt === 'number' ? parsed.lastSyncAt : 0,
+      };
+    }
+
+    return {
+      updatedAt: this._inferInitialUpdatedAt(),
+      dirty: false,
+      lastSyncAt: 0,
+    };
+  }
+
+  isCloudDirty(): boolean {
+    return this.getCloudSyncMeta().dirty;
+  }
+
+  touchCloudMeta(updatedAt = Date.now()): CloudSyncMeta {
+    const prev = this.getCloudSyncMeta();
+    const next: CloudSyncMeta = {
+      updatedAt,
+      dirty: true,
+      lastSyncAt: prev.lastSyncAt,
+    };
+    this._writeMeta(next);
+    return next;
+  }
+
+  markCloudSynced(updatedAt: number): void {
+    const prev = this.getCloudSyncMeta();
+    this._writeMeta({
+      updatedAt: updatedAt > 0 ? updatedAt : prev.updatedAt,
+      dirty: false,
+      lastSyncAt: Date.now(),
+    });
+  }
+
+  hasAnyLocalCloudData(): boolean {
+    return CLOUD_SYNC_ALLOWLIST.some((key) => this.readRaw(key) !== null);
+  }
+
+  exportCloudSnapshot(): PersistSnapshot {
+    const meta = this.getCloudSyncMeta();
+    const payload: Record<string, string> = {};
+    let sizeBytes = 0;
+
+    for (const key of CLOUD_SYNC_ALLOWLIST) {
+      const raw = this.readRaw(key);
+      if (raw === null) continue;
+      payload[key] = raw;
+      sizeBytes += raw.length;
+    }
+
+    const payloadKeys = Object.keys(payload);
+
+    return {
+      schemaVersion: CLOUD_SYNC_SCHEMA_VERSION,
+      updatedAt: meta.updatedAt,
+      payload,
+      payloadKeys,
+      sizeBytes,
+    };
+  }
+
+  importCloudSnapshot(snapshot: {
+    updatedAt?: number;
+    payload?: Record<string, unknown>;
+  }): void {
+    const payload = snapshot.payload || {};
+    const updatedAt = typeof snapshot.updatedAt === 'number' ? snapshot.updatedAt : Date.now();
+
+    this.withSuppressedDirtyTracking(() => {
+      for (const key of CLOUD_SYNC_ALLOWLIST) {
+        if (Object.prototype.hasOwnProperty.call(payload, key)) {
+          const value = payload[key];
+          if (value === undefined || value === null) {
+            this._removeLocalRaw(key);
+          } else {
+            const raw = typeof value === 'string' ? value : JSON.stringify(value);
+            this._setLocalRaw(key, raw);
+          }
+        } else {
+          this._removeLocalRaw(key);
+        }
+      }
+
+      this._writeMeta({
+        updatedAt,
+        dirty: false,
+        lastSyncAt: Date.now(),
+      });
+    });
+  }
+
+  private _onDataChanged(changedKeys: string[]): void {
+    if (this._dirtyTrackingSuspended > 0) return;
+
+    const syncKeys = changedKeys.filter((key) => this.isCloudSyncKey(key));
+    if (syncKeys.length === 0) return;
+
+    const updatedAt = Date.now();
+    const prev = this.getCloudSyncMeta();
+    this._writeMeta({
+      updatedAt,
+      dirty: true,
+      lastSyncAt: prev.lastSyncAt,
+    });
+
+    for (const listener of this._listeners) {
+      try {
+        listener(syncKeys);
+      } catch (e) {
+        console.warn('[Persist] dirty listener 执行失败:', e);
+      }
+    }
+  }
+
+  private _inferInitialUpdatedAt(): number {
+    const raw = this.readRaw('huahua_save');
+    if (!raw) return 0;
+    try {
+      const parsed = JSON.parse(raw) as { timestamp?: number };
+      return typeof parsed.timestamp === 'number' ? parsed.timestamp : 0;
+    } catch (_) {
+      return 0;
+    }
+  }
+
+  private _writeMeta(meta: CloudSyncMeta): void {
+    this.withSuppressedDirtyTracking(() => {
+      this._setLocalRaw(CLOUD_SYNC_META_KEY, JSON.stringify(meta));
+    });
+  }
+
+  private _setLocalRaw(key: string, value: string): void {
+    if (Platform.isMinigame) {
+      Platform.setStorageSync(key, value);
+      return;
+    }
+
+    if (typeof localStorage === 'undefined') return;
+    try {
+      localStorage.setItem(key, value);
+    } catch (_) {}
+  }
+
+  private _removeLocalRaw(key: string): void {
+    if (Platform.isMinigame) {
+      Platform.removeStorageSync(key);
+      return;
+    }
+
+    if (typeof localStorage === 'undefined') return;
+    try {
+      localStorage.removeItem(key);
+    } catch (_) {}
+  }
+}
+
+export const PersistService = new PersistServiceClass();

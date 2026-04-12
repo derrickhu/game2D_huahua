@@ -7,6 +7,7 @@
  */
 import * as PIXI from 'pixi.js';
 import { EventBus } from '@/core/EventBus';
+import { PersistService } from '@/core/PersistService';
 import { TweenManager, Ease } from '@/core/TweenManager';
 import { Game } from '@/core/Game';
 import { DESIGN_WIDTH, FONT_FAMILY } from '@/config/Constants';
@@ -439,25 +440,17 @@ export class MergeStatsSystem {
 
   private _saveStats(): void {
     try {
-      const _api = typeof (globalThis as any).wx !== 'undefined' ? (globalThis as any).wx :
-                   typeof (globalThis as any).tt !== 'undefined' ? (globalThis as any).tt : null;
-      if (_api) {
-        _api.setStorageSync(STORAGE_KEY, JSON.stringify(this._stats));
-      }
+      PersistService.writeRaw(STORAGE_KEY, JSON.stringify(this._stats));
     } catch (_) {}
   }
 
   private _loadStats(): void {
     try {
-      const _api = typeof (globalThis as any).wx !== 'undefined' ? (globalThis as any).wx :
-                   typeof (globalThis as any).tt !== 'undefined' ? (globalThis as any).tt : null;
-      if (_api) {
-        const raw = _api.getStorageSync(STORAGE_KEY);
-        if (raw) {
-          const parsed = JSON.parse(raw);
-          if (typeof parsed === 'object' && parsed !== null) {
-            Object.assign(this._stats, parsed);
-          }
+      const raw = PersistService.readRaw(STORAGE_KEY);
+      if (raw) {
+        const parsed = JSON.parse(raw);
+        if (typeof parsed === 'object' && parsed !== null) {
+          Object.assign(this._stats, parsed);
         }
       }
     } catch (_) {}

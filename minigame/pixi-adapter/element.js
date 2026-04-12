@@ -43,8 +43,22 @@ class Element {
 }
 
 // 通过 constructor 直接赋值（非 extends），确保 instanceof 正确
-const HTMLCanvasElement = platform.createCanvas().constructor;
-const HTMLImageElement = platform.createImage().constructor;
+// 鸿蒙等部分设备 createCanvas/createImage 返回对象可能无 constructor，需容错
+let HTMLCanvasElement, HTMLImageElement;
+try {
+  const _tmpCanvas = platform.createCanvas();
+  HTMLCanvasElement = (_tmpCanvas && _tmpCanvas.constructor) ? _tmpCanvas.constructor : Element;
+} catch (e) {
+  console.warn('[element] HTMLCanvasElement 获取失败，回退到 Element:', e);
+  HTMLCanvasElement = Element;
+}
+try {
+  const _tmpImage = platform.createImage();
+  HTMLImageElement = (_tmpImage && _tmpImage.constructor) ? _tmpImage.constructor : Element;
+} catch (e) {
+  console.warn('[element] HTMLImageElement 获取失败，回退到 Element:', e);
+  HTMLImageElement = Element;
+}
 
 class HTMLVideoElement extends Element {}
 

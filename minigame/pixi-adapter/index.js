@@ -8,22 +8,37 @@
  * 因此真机需要挂到 globalThis / global 上。
  */
 
-const platform = require('./platform');
-const { noop } = require('./util');
-const Image = require('./Image');
-const { canvas } = require('./canvas');
-const location = require('./location');
-const document = require('./document');
-const navigator = require('./navigator');
-const localStorage = require('./localStorage');
-const XMLHttpRequest = require('./XMLHttpRequest');
-const { registerTouchEvents } = require('./TouchEvent');
-const {
-  Element,
-  HTMLCanvasElement,
-  HTMLImageElement,
-  HTMLVideoElement,
-} = require('./element');
+console.log('[pixi-adapter] 开始加载子模块...');
+
+var platform, noop, Image, canvas, location, document, navigator, localStorage, XMLHttpRequest, registerTouchEvents;
+var Element, HTMLCanvasElement, HTMLImageElement, HTMLVideoElement;
+
+try { platform = require('./platform'); console.log('[pixi-adapter] ✓ platform'); } catch(e) { console.error('[pixi-adapter] ✗ platform:', e); }
+try { noop = require('./util').noop; console.log('[pixi-adapter] ✓ util'); } catch(e) { console.error('[pixi-adapter] ✗ util:', e); noop = function(){}; }
+try { Image = require('./Image'); console.log('[pixi-adapter] ✓ Image'); } catch(e) { console.error('[pixi-adapter] ✗ Image:', e); }
+try { canvas = require('./canvas').canvas; console.log('[pixi-adapter] ✓ canvas'); } catch(e) { console.error('[pixi-adapter] ✗ canvas:', e); }
+try { location = require('./location'); console.log('[pixi-adapter] ✓ location'); } catch(e) { console.error('[pixi-adapter] ✗ location:', e); location = {}; }
+try { document = require('./document'); console.log('[pixi-adapter] ✓ document'); } catch(e) { console.error('[pixi-adapter] ✗ document:', e); }
+try { navigator = require('./navigator'); console.log('[pixi-adapter] ✓ navigator'); } catch(e) { console.error('[pixi-adapter] ✗ navigator:', e); navigator = {}; }
+try { localStorage = require('./localStorage'); console.log('[pixi-adapter] ✓ localStorage'); } catch(e) { console.error('[pixi-adapter] ✗ localStorage:', e); localStorage = {}; }
+try { XMLHttpRequest = require('./XMLHttpRequest'); console.log('[pixi-adapter] ✓ XMLHttpRequest'); } catch(e) { console.error('[pixi-adapter] ✗ XMLHttpRequest:', e); }
+try { registerTouchEvents = require('./TouchEvent').registerTouchEvents; console.log('[pixi-adapter] ✓ TouchEvent'); } catch(e) { console.error('[pixi-adapter] ✗ TouchEvent:', e); registerTouchEvents = function(){}; }
+try {
+  var _elem = require('./element');
+  Element = _elem.Element;
+  HTMLCanvasElement = _elem.HTMLCanvasElement;
+  HTMLImageElement = _elem.HTMLImageElement;
+  HTMLVideoElement = _elem.HTMLVideoElement;
+  console.log('[pixi-adapter] ✓ element');
+} catch(e) {
+  console.error('[pixi-adapter] ✗ element:', e);
+  Element = function() {};
+  HTMLCanvasElement = Element;
+  HTMLImageElement = Element;
+  HTMLVideoElement = Element;
+}
+
+console.log('[pixi-adapter] 子模块加载完成');
 
 // ======== 获取真正的 JS 全局对象 ========
 // 优先 globalThis（ES2020+），其次 global（Node/V8），最后 GameGlobal
@@ -84,19 +99,87 @@ if (typeof GameGlobal !== 'undefined') {
 }
 
 // ======== WebGL / Canvas2D 上下文构造函数 ========
+// 业界已知坑：Android/鸿蒙 WebGL contextAttributes 中 stencil 返回数字 0 而不是 false，
+// 导致 PixiJS 判断为不支持 stencil，Filter/Mask/Graphics 全部失效
 let _WebGLRenderingContext = {};
 try {
   const _tmpCanvas = platform.createCanvas();
-  const _tmpGl = _tmpCanvas.getContext('webgl');
-  if (_tmpGl) _WebGLRenderingContext = _tmpGl.constructor || {};
-} catch (e) { /* 忽略 */ }
+  console.log('[pixi-adapter] WebGL: tmpCanvas created, type:', typeof _tmpCanvas);
+  if (_tmpCanvas && typeof _tmpCanvas.getContext === 'function') {
+    // 业界经验：优先 webgl，不要尝试 webgl2（鸿蒙/部分安卓返回假上下文）
+    var _tmpGl = _tmpCanvas.getContext('webgl', {
+      stencil: true,
+      antialias: true,
+      alpha: true,
+      depth: true,
+      preserveDrawingBuffer: true,
+    });
+    if (_tmpGl) {
+      _WebGLRenderingContext = _tmpGl.constructor || {};
+      console.log('[pixi-adapter] WebGL context 获取成功');
+
+      // 业界已知坑修复：contextAttributes 中 stencil/antialias 返回 0/1 而不是 bool
+      // PixiJS 用 === true 判断，导致功能被误关闭
+      try {
+        var _origGetCtxAttr = _tmpGl.getContextAttributes;
+        if (_origGetCtxAttr) {
+          var _patchProto = Object.getPrototypeOf(_tmpGl);
+          if (_patchProto) {
+            _patchProto.getContextAttributes = function() {
+              var attr = _origGetCtxAttr.call(this);
+              if (attr) {
+                // 强制布尔化（修复返回 0/1 的 bug）
+                attr.stencil = !!attr.stencil;
+                attr.antialias = !!attr.antialias;
+                attr.alpha = !!attr.alpha;
+                attr.depth = !!attr.depth;
+                attr.preserveDrawingBuffer = !!attr.preserveDrawingBuffer;
+              }
+              return attr;
+            };
+            console.log('[pixi-adapter] WebGL getContextAttributes 已 patch（布尔化）');
+          }
+        }
+      } catch (e3) {
+        console.warn('[pixi-adapter] patch getContextAttributes 失败:', e3);
+      }
+
+      // 业界已知坑：OES_vertex_array_object 在部分 Android/鸿蒙上返回假对象
+      try {
+        var _vaoExt = _tmpGl.getExtension('OES_vertex_array_object');
+        if (_vaoExt && typeof _vaoExt.createVertexArrayOES !== 'function') {
+          // 假扩展，禁用它
+          var _origGetExt = _tmpGl.__proto__.getExtension;
+          _tmpGl.__proto__.getExtension = function(name) {
+            if (name === 'OES_vertex_array_object') return null;
+            return _origGetExt.call(this, name);
+          };
+          console.warn('[pixi-adapter] OES_vertex_array_object 为假扩展，已禁用');
+        }
+      } catch (e4) { /* 忽略 */ }
+    } else {
+      console.warn('[pixi-adapter] WebGL context 获取失败（getContext 返回 null）');
+    }
+  }
+} catch (e) {
+  console.warn('[pixi-adapter] WebGL 初始化异常:', e);
+}
 
 let _CanvasRenderingContext2D = {};
 try {
   const _tmpCanvas2 = platform.createCanvas();
-  const _tmpCtx = _tmpCanvas2.getContext('2d');
-  if (_tmpCtx) _CanvasRenderingContext2D = _tmpCtx.constructor || {};
-} catch (e) { /* 忽略 */ }
+  if (_tmpCanvas2 && typeof _tmpCanvas2.getContext === 'function') {
+    const _tmpCtx = _tmpCanvas2.getContext('2d');
+    if (_tmpCtx) {
+      _CanvasRenderingContext2D = _tmpCtx.constructor || {};
+      console.log('[pixi-adapter] Canvas2D context 获取成功');
+    } else {
+      console.warn('[pixi-adapter] Canvas2D context 获取失败');
+    }
+  }
+} catch (e) {
+  console.warn('[pixi-adapter] Canvas2D 初始化异常:', e);
+}
 
 // ======== DOMParser ========
 class DOMParser {
@@ -200,15 +283,22 @@ if (isDevtools) {
   try {
     var _nativeWinAdd = _win.addEventListener.bind(_win);
     var _nativeWinRemove = _win.removeEventListener.bind(_win);
-    _win.addEventListener = function(type, handler, options) {
+    var _wrappedAdd = function(type, handler, options) {
       _windowAddEventListener(type, handler, options);
       return _nativeWinAdd(type, handler, options);
     };
-    _win.removeEventListener = function(type, handler, options) {
+    var _wrappedRemove = function(type, handler, options) {
       _windowRemoveEventListener(type, handler);
       return _nativeWinRemove(type, handler, options);
     };
-    console.log('[pixi-adapter] 模拟器 window.addEventListener 已包装');
+    // 微信新版基础库 addEventListener 可能为只读，用 defineProperty 强制覆盖
+    _origDefineProperty.call(Object, _win, 'addEventListener', {
+      value: _wrappedAdd, configurable: true, writable: true
+    });
+    _origDefineProperty.call(Object, _win, 'removeEventListener', {
+      value: _wrappedRemove, configurable: true, writable: true
+    });
+    console.log('[pixi-adapter] window.addEventListener 已包装');
   } catch (e) {
     console.warn('[pixi-adapter] 包装 window.addEventListener 失败:', e);
   }
@@ -229,29 +319,37 @@ if (isDevtools) {
   // 这样 IIFE bundle 中的自由变量 document、window 等才能正确解析
 
   // window = 全局对象自身（模拟浏览器行为）
-  _realGlobal.window = _realGlobal;
-  GameGlobal.window = _realGlobal;
+  try { _realGlobal.window = _realGlobal; } catch (e) { /* 只读忽略 */ }
+  try { GameGlobal.window = _realGlobal; } catch (e) { /* 只读忽略 */ }
 
   // self = 全局对象自身
-  _realGlobal.self = _realGlobal;
-  GameGlobal.self = _realGlobal;
+  try { _realGlobal.self = _realGlobal; } catch (e) { /* 只读忽略 */ }
+  try { GameGlobal.self = _realGlobal; } catch (e) { /* 只读忽略 */ }
 
   // addEventListener/removeEventListener 必须强制覆盖：
   // 微信框架可能内置了无效版本，PixiJS EventSystem 在 self 上注册
   // pointermove/pointerup 依赖这些函数正确工作
-  var _forceOverwrite = new Set(['addEventListener', 'removeEventListener']);
+  var _forceOverwrite = ['addEventListener', 'removeEventListener'];
 
   for (const key in _allGlobals) {
     if (key === 'window' || key === 'self') continue;
     var val = _allGlobals[key];
-    var force = _forceOverwrite.has(key);
+    var force = _forceOverwrite.indexOf(key) !== -1;
     // 挂到真正的全局作用域
     if (force || typeof _realGlobal[key] === 'undefined') {
-      try { _realGlobal[key] = val; } catch (e) { /* 忽略 */ }
+      try {
+        _origDefineProperty.call(Object, _realGlobal, key, { value: val, configurable: true, writable: true });
+      } catch (e) {
+        try { _realGlobal[key] = val; } catch (e2) { /* 忽略 */ }
+      }
     }
     // 同时挂到 GameGlobal
     if (force || typeof GameGlobal[key] === 'undefined') {
-      try { GameGlobal[key] = val; } catch (e) { /* 忽略 */ }
+      try {
+        _origDefineProperty.call(Object, GameGlobal, key, { value: val, configurable: true, writable: true });
+      } catch (e) {
+        try { GameGlobal[key] = val; } catch (e2) { /* 忽略 */ }
+      }
     }
   }
 

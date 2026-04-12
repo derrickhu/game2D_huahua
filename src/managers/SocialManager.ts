@@ -12,6 +12,7 @@
  */
 import { EventBus } from '@/core/EventBus';
 import { Platform } from '@/core/PlatformService';
+import { PersistService } from '@/core/PersistService';
 import { CurrencyManager } from './CurrencyManager';
 import { CollectionManager } from './CollectionManager';
 
@@ -220,12 +221,12 @@ class SocialManagerClass {
       lastShareTime: this._lastShareTime,
       totalShares: this._totalShares,
     };
-    Platform.setStorageSync(STORAGE_KEY, JSON.stringify(data));
+    PersistService.writeRaw(STORAGE_KEY, JSON.stringify(data));
   }
 
   private _loadState(): void {
     try {
-      const raw = Platform.getStorageSync(STORAGE_KEY);
+      const raw = PersistService.readRaw(STORAGE_KEY);
       if (!raw) return;
       const data: SocialSave = JSON.parse(raw);
       Object.assign(this, {

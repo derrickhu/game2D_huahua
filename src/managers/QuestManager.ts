@@ -26,10 +26,7 @@ import {
 } from '@/config/DailyChallengeConfig';
 import { getDailyQuestPeriodIdLocal, getWeekIdLocal } from '@/utils/WeeklyCycle';
 import { ITEM_DEFS } from '@/config/ItemConfig';
-
-declare const wx: any;
-declare const tt: any;
-const _api = typeof wx !== 'undefined' ? wx : typeof tt !== 'undefined' ? tt : null;
+import { PersistService } from '@/core/PersistService';
 
 const QUEST_STORAGE_KEY = 'huahua_quests';
 const SAVE_VERSION = 4;
@@ -340,14 +337,14 @@ class QuestManagerClass {
       dailyAllCompleteBonusClaimed: this._dailyAllCompleteBonusClaimed,
     };
     try {
-      _api?.setStorageSync(QUEST_STORAGE_KEY, JSON.stringify(data));
+      PersistService.writeRaw(QUEST_STORAGE_KEY, JSON.stringify(data));
     } catch (_) {}
   }
 
   private _loadState(): void {
     let migratedFromV2 = false;
     try {
-      const raw = _api?.getStorageSync(QUEST_STORAGE_KEY);
+      const raw = PersistService.readRaw(QUEST_STORAGE_KEY);
       if (raw) {
         const data = JSON.parse(raw);
         const fileVer = data.version | 0;

@@ -19,6 +19,7 @@
 import { ENABLE_CHALLENGE_LEVEL_FEATURE } from '@/config/FeatureFlags';
 import { EventBus } from '@/core/EventBus';
 import { Platform } from '@/core/PlatformService';
+import { PersistService } from '@/core/PersistService';
 import { BoardManager } from './BoardManager';
 import { CurrencyManager } from './CurrencyManager';
 import { SaveManager } from './SaveManager';
@@ -200,7 +201,7 @@ class GMManagerClass {
       name: ' 重置新手引导',
       desc: '清除教程进度，下次启动重新引导',
       execute: () => {
-        try { _api?.removeStorageSync('huahua_tutorial'); } catch (_) {}
+        PersistService.remove('huahua_tutorial');
         return ' 教程进度已清除，刷新后将重新开始新手引导';
       },
     });
@@ -211,7 +212,7 @@ class GMManagerClass {
       name: ' 重置签到',
       desc: '清除签到进度',
       execute: () => {
-        try { _api?.removeStorageSync('huahua_checkin'); } catch (_) {}
+        PersistService.remove('huahua_checkin');
         return ' 签到数据已清除，刷新后重新开始';
       },
     });
@@ -222,8 +223,7 @@ class GMManagerClass {
       name: ' 重置每日挑战',
       desc: '清除每日挑战与周积分进度（huahua_quests）',
       execute: () => {
-        try { _api?.removeStorageSync('huahua_quests'); } catch (_) {}
-        try { _api?.removeStorageSync('huahua_achievements'); } catch (_) {}
+        PersistService.removeMany(['huahua_quests', 'huahua_achievements']);
         return ' 每日挑战数据已清除，刷新后重新开始';
       },
     });
@@ -234,7 +234,7 @@ class GMManagerClass {
       name: ' 重置离线数据',
       desc: '清除离线挂机时间戳',
       execute: () => {
-        try { _api?.removeStorageSync('huahua_idle'); } catch (_) {}
+        PersistService.remove('huahua_idle');
         return ' 离线数据已清除';
       },
     });
@@ -694,7 +694,7 @@ class GMManagerClass {
       name: '⏩ 跳过教程',
       desc: '标记教程为已完成',
       execute: () => {
-        try { _api?.setStorageSync('huahua_tutorial', '99'); } catch (_) {}
+        PersistService.writeRaw('huahua_tutorial', '99');
         return ' 教程已标记完成（重刷生效）';
       },
     });
@@ -833,7 +833,7 @@ class GMManagerClass {
       name: ' 重置装修数据',
       desc: '清除所有装修存档',
       execute: () => {
-        try { _api?.removeStorageSync('huahua_decoration'); } catch (_) {}
+        PersistService.remove('huahua_decoration');
         DecorationManager.reset();
         return ' 装修数据已清除';
       },
@@ -857,7 +857,7 @@ class GMManagerClass {
       name: ' 重置房间布局',
       desc: '清除家具摆放数据，恢复默认布局',
       execute: () => {
-        try { _api?.removeStorageSync('huahua_room_layout'); } catch (_) {}
+        PersistService.remove('huahua_room_layout');
         RoomLayoutManager.reset();
         return ' 房间布局已重置为默认';
       },
@@ -919,7 +919,7 @@ class GMManagerClass {
         logLongStringToConsole('[GM] 家具缩放 defaultScale JSON', json);
         console.log('[GM] ===== END =====');
         try {
-          Platform.setStorageSync(GM_STORAGE_EXPORT_SCALES, json);
+          PersistService.writeRaw(GM_STORAGE_EXPORT_SCALES, json);
         } catch (_) {
           console.warn('[GM] 写入本地存储失败');
         }
@@ -993,13 +993,13 @@ class GMManagerClass {
 
   private _saveState(): void {
     try {
-      _api?.setStorageSync(GM_STORAGE_KEY, JSON.stringify({ enabled: this._enabled }));
+      PersistService.writeRaw(GM_STORAGE_KEY, JSON.stringify({ enabled: this._enabled }));
     } catch (_) {}
   }
 
   private _loadState(): void {
     try {
-      const raw = _api?.getStorageSync(GM_STORAGE_KEY);
+      const raw = PersistService.readRaw(GM_STORAGE_KEY);
       if (raw) {
         const data = JSON.parse(raw);
         this._enabled = !!data.enabled;

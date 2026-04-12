@@ -14,6 +14,7 @@
  */
 import * as PIXI from 'pixi.js';
 import { EventBus } from '@/core/EventBus';
+import { PersistService } from '@/core/PersistService';
 import { Game } from '@/core/Game';
 import { TweenManager, Ease } from '@/core/TweenManager';
 import { CurrencyManager } from '@/managers/CurrencyManager';
@@ -923,13 +924,13 @@ export class TutorialSystem {
 
   private _saveProgress(step: TutorialStep): void {
     try {
-      _api?.setStorageSync(TUTORIAL_STORAGE_KEY, String(step));
+      PersistService.writeRaw(TUTORIAL_STORAGE_KEY, String(step));
     } catch (_) {}
   }
 
   private _loadProgress(): TutorialStep {
     try {
-      const raw = _api?.getStorageSync(TUTORIAL_STORAGE_KEY);
+      const raw = PersistService.readRaw(TUTORIAL_STORAGE_KEY);
       if (raw) return Number(raw) as TutorialStep;
     } catch (_) {}
     return TutorialStep.NOT_STARTED;

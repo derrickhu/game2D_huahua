@@ -12,7 +12,7 @@
  * - 每周刷新新关卡
  */
 import { EventBus } from '@/core/EventBus';
-import { Platform } from '@/core/PlatformService';
+import { PersistService } from '@/core/PersistService';
 import { ENABLE_CHALLENGE_LEVEL_FEATURE } from '@/config/FeatureFlags';
 import { CurrencyManager } from './CurrencyManager';
 import { AdManager, AdScene } from './AdManager';
@@ -485,12 +485,12 @@ class ChallengeManagerClass {
       todayRevives: this._todayRevives,
       lastReviveDate: this._lastReviveDate,
     };
-    Platform.setStorageSync(STORAGE_KEY, JSON.stringify(data));
+    PersistService.writeRaw(STORAGE_KEY, JSON.stringify(data));
   }
 
   private _loadState(): void {
     try {
-      const raw = Platform.getStorageSync(STORAGE_KEY);
+      const raw = PersistService.readRaw(STORAGE_KEY);
       if (!raw) return;
       const data: ChallengeSave = JSON.parse(raw);
       if (data.stars) {

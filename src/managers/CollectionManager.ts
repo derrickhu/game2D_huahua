@@ -14,6 +14,7 @@
  */
 import { EventBus } from '@/core/EventBus';
 import { Platform } from '@/core/PlatformService';
+import { PersistService } from '@/core/PersistService';
 import { CellState } from '@/config/BoardLayout';
 import { ITEM_DEFS, Category } from '@/config/ItemConfig';
 import { CUSTOMER_TYPES } from '@/config/CustomerConfig';
@@ -261,12 +262,12 @@ class CollectionManagerClass {
       discovered,
       claimedMilestones: Array.from(this._claimedMilestones),
     };
-    Platform.setStorageSync(STORAGE_KEY, JSON.stringify(data));
+    PersistService.writeRaw(STORAGE_KEY, JSON.stringify(data));
   }
 
   private _loadState(): void {
     try {
-      const raw = Platform.getStorageSync(STORAGE_KEY);
+      const raw = PersistService.readRaw(STORAGE_KEY);
       if (!raw) return;
       const data: CollectionSave = JSON.parse(raw);
       if (data.discovered) {

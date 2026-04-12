@@ -5,6 +5,7 @@
  * 数据持久化到 localStorage 'huahua_decoration'
  */
 import { EventBus } from '@/core/EventBus';
+import { PersistService } from '@/core/PersistService';
 import { CurrencyManager } from './CurrencyManager';
 import { checkRequirement } from '@/utils/UnlockChecker';
 import {
@@ -287,12 +288,7 @@ class DecorationManagerClass {
         roomStyleByScene: Object.keys(roomStyleByScene).length ? roomStyleByScene : undefined,
         unlockedRoomStyles: [...this._unlockedRoomStyles],
       };
-      const platform = typeof wx !== 'undefined' ? wx : typeof tt !== 'undefined' ? tt : null;
-      if (platform) {
-        platform.setStorageSync('huahua_decoration', JSON.stringify(data));
-      } else {
-        localStorage.setItem('huahua_decoration', JSON.stringify(data));
-      }
+      PersistService.writeRaw('huahua_decoration', JSON.stringify(data));
     } catch (e) {
       console.warn('[Decoration] 保存失败:', e);
     }
@@ -300,15 +296,7 @@ class DecorationManagerClass {
 
   private _load(): void {
     try {
-      const platform = typeof wx !== 'undefined' ? wx : typeof tt !== 'undefined' ? tt : null;
-      let raw: string | null = null;
-
-      if (platform) {
-        raw = platform.getStorageSync('huahua_decoration') || null;
-      } else {
-        raw = localStorage.getItem('huahua_decoration');
-      }
-
+      const raw = PersistService.readRaw('huahua_decoration');
       if (!raw) return;
 
       const data: DecoSaveData = JSON.parse(raw);
