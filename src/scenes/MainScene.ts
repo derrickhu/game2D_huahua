@@ -1220,10 +1220,6 @@ export class MainScene implements Scene {
       this._markRedDotsDirty();
     });
 
-    EventBus.on('collection:milestoneReady', (percent: number) => {
-      ToastMessage.show(`图鉴收集达到 ${percent}%！有里程碑奖励可领取！`);
-    });
-
     // ---- 限时活动事件 ----
     EventBus.on('event:taskCompleted', (_taskId: string, task: any) => {
       this._markRedDotsDirty();

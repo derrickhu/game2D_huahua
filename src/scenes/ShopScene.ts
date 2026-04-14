@@ -179,6 +179,8 @@ export class ShopScene implements Scene {
   private _progressBarRoot!: PIXI.Container;
   /** 左侧星标 + 中央等级数字（脉冲整组） */
   private _progressStarGroup: PIXI.Container | null = null;
+  /** 用于检测花店顶条「累积星星」是否变化，避免首帧与重复刷新误触 */
+  private _lastShopProgressStar: number | null = null;
   private _progressLevelText: PIXI.Text | null = null;
   /** 飞星动画层（盖在房间之上） */
   private _starFlyLayer!: PIXI.Container;
@@ -1042,6 +1044,11 @@ export class ShopScene implements Scene {
     const sceneId = CurrencyManager.state.sceneId;
     const nextReq = getNextLevelStarRequired(sceneId, lv);
 
+    const prevStar = this._lastShopProgressStar;
+    this._lastShopProgressStar = star;
+    const starCountChanged =
+      this._progressStarGroup != null && prevStar !== null && prevStar !== star;
+
     this._progressFill.clear();
     if (ratio > 0) {
       const fillW = Math.max(PROGRESS_BAR_H, PROGRESS_BAR_W * ratio);
@@ -1055,6 +1062,10 @@ export class ShopScene implements Scene {
     }
     if (this._progressLevelText) {
       this._progressLevelText.text = String(lv);
+    }
+
+    if (starCountChanged) {
+      this._flashProgressStarIcon();
     }
   }
 
@@ -1211,7 +1222,6 @@ export class ShopScene implements Scene {
               icon.destroy();
               arrived++;
               if (arrived >= COUNT) {
-                this._pulseProgressStar();
                 EventBus.emit('decoration:shopStarFlyComplete');
               }
             },
@@ -1221,22 +1231,40 @@ export class ShopScene implements Scene {
     }
   }
 
-  private _pulseProgressStar(): void {
+  /** 累积星星数值变化时：左侧星标闪动 + 放大回弹（连续触发先取消，避免 scale 叠乘） */
+  private _flashProgressStarIcon(): void {
     const g = this._progressStarGroup;
     if (!g) return;
-    const ox = g.scale.x;
-    const oy = g.scale.y;
+    TweenManager.cancelTarget(g);
+    TweenManager.cancelTarget(g.scale);
+    const base = 1;
+    g.scale.set(base, base);
+    g.alpha = 1;
     TweenManager.to({
       target: g.scale,
-      props: { x: ox * 1.18, y: oy * 1.18 },
-      duration: 0.12,
+      props: { x: base * 1.26, y: base * 1.26 },
+      duration: 0.11,
       ease: Ease.easeOutQuad,
       onComplete: () => {
         TweenManager.to({
           target: g.scale,
-          props: { x: ox, y: oy },
-          duration: 0.28,
+          props: { x: base, y: base },
+          duration: 0.26,
           ease: Ease.easeOutBounce,
+        });
+      },
+    });
+    TweenManager.to({
+      target: g,
+      props: { alpha: 0.72 },
+      duration: 0.07,
+      ease: Ease.easeOutQuad,
+      onComplete: () => {
+        TweenManager.to({
+          target: g,
+          props: { alpha: 1 },
+          duration: 0.12,
+          ease: Ease.easeOutQuad,
         });
       },
     });

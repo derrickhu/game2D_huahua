@@ -215,6 +215,11 @@ const PANELS_IMAGE_MAP: Record<string, string> = {
   /** 周积分轨里程碑刻度黄点 */
   daily_challenge_ui_F_dot: 'subpkg_panels/images/ui/daily_challenge_ui_F_dot.png',
 
+  /** 图鉴面板壳体：笔记本风格粉紫框 + 金色标题栏 + 绿色翻页箭头 */
+  collection_panel_shell_nb2: 'subpkg_panels/images/ui/collection_panel_shell_nb2.png',
+  /** 图鉴未解锁物品占位卡：蓝色格纹方块 */
+  collection_item_placeholder_nb2: 'subpkg_panels/images/ui/collection_item_placeholder_nb2.png',
+
   /** 新手引导：开场故事插画 */
   tutorial_story_1: 'subpkg_panels/images/tutorial/story_1.png',
   tutorial_story_2: 'subpkg_panels/images/tutorial/story_2.png',

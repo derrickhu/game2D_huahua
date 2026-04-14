@@ -1,36 +1,75 @@
 /**
- * 图鉴面板 - 6大收集分类展示 + 里程碑奖励
+ * 图鉴面板 — 16 页扁平翻页式物品网格（参考四季物语）
  *
- * 分类：花系 / 饮品(蝴蝶+冷饮+甜品) / 建筑(13) / 宝箱(5) / 客人(6) / 装饰(72) / 花语卡片（与 FlowerCardManager 同步）
- * 里程碑：25% / 50% / 75% / 100% 解锁奖励
+ * 壳体由 NB2 生成的笔记本风格贴图覆盖，内含：
+ * - 金色标题栏（文字叠加）
+ * - 金色进度条轨道（代码绘制填充）
+ * - 红色关闭按钮（hitArea）
+ * - 绿色左右翻页箭头（hitArea）
+ *
+ * 每页展示一条产品线的全部物品（按 level 排序），4 列网格。
  */
 import * as PIXI from 'pixi.js';
 import { Game } from '@/core/Game';
 import { EventBus } from '@/core/EventBus';
 import { TweenManager, Ease } from '@/core/TweenManager';
 import { CollectionManager, CollectionCategory } from '@/managers/CollectionManager';
-import { ToastMessage } from './ToastMessage';
+import { Category, type ItemDef, ITEM_DEFS } from '@/config/ItemConfig';
+import { TextureCache } from '@/utils/TextureCache';
+import { RewardFlyCoordinator } from '@/core/RewardFlyCoordinator';
 import { DESIGN_WIDTH, FONT_FAMILY, COLORS } from '@/config/Constants';
 
-type TabType = 'overview' | 'milestone';
+interface CollectionPage {
+  collectionCat: CollectionCategory;
+  itemCategory: Category;
+  line: string;
+  title: string;
+}
 
-/** 分类显示配置 */
-const CATEGORY_DISPLAY: { cat: CollectionCategory; icon: string; name: string; color: number }[] = [
-  { cat: CollectionCategory.FLOWER, icon: '花', name: '花束', color: 0xFFB7C5 },
-  { cat: CollectionCategory.DRINK, icon: '饮', name: '饮品', color: 0x90EE90 },
-  { cat: CollectionCategory.BUILDING, icon: '建', name: '建筑', color: 0xDEB887 },
-  { cat: CollectionCategory.CHEST, icon: '箱', name: '宝箱', color: 0xDAA520 },
-  { cat: CollectionCategory.CUSTOMER, icon: '客', name: '客人', color: 0x87CEEB },
-  { cat: CollectionCategory.DECORATION, icon: '饰', name: '装饰', color: 0xDDA0DD },
-  { cat: CollectionCategory.FLOWER_CARD, icon: '语', name: '花语卡片', color: 0xFFD700 },
+const COLLECTION_PAGES: CollectionPage[] = [
+  { collectionCat: CollectionCategory.FLOWER, itemCategory: Category.FLOWER, line: 'fresh',         title: '鲜花' },
+  { collectionCat: CollectionCategory.FLOWER, itemCategory: Category.FLOWER, line: 'bouquet',       title: '花束' },
+  { collectionCat: CollectionCategory.FLOWER, itemCategory: Category.FLOWER, line: 'green',         title: '绿植' },
+  { collectionCat: CollectionCategory.FLOWER, itemCategory: Category.FLOWER, line: 'wrap',          title: '包装' },
+  { collectionCat: CollectionCategory.DRINK,  itemCategory: Category.DRINK,  line: 'butterfly',     title: '蝴蝶' },
+  { collectionCat: CollectionCategory.DRINK,  itemCategory: Category.DRINK,  line: 'cold',          title: '冷饮' },
+  { collectionCat: CollectionCategory.DRINK,  itemCategory: Category.DRINK,  line: 'dessert',       title: '甜品' },
+  { collectionCat: CollectionCategory.BUILDING, itemCategory: Category.BUILDING, line: 'plant',       title: '种植工具' },
+  { collectionCat: CollectionCategory.BUILDING, itemCategory: Category.BUILDING, line: 'arrange',     title: '包装工具' },
+  { collectionCat: CollectionCategory.BUILDING, itemCategory: Category.BUILDING, line: 'butterfly_net', title: '捕虫网' },
+  { collectionCat: CollectionCategory.BUILDING, itemCategory: Category.BUILDING, line: 'mixer',       title: '饮品工具' },
+  { collectionCat: CollectionCategory.BUILDING, itemCategory: Category.BUILDING, line: 'bake',        title: '烘焙工具' },
+  { collectionCat: CollectionCategory.CHEST,  itemCategory: Category.CHEST,  line: 'chest',         title: '宝箱' },
+  { collectionCat: CollectionCategory.CHEST,  itemCategory: Category.CHEST,  line: 'hongbao',       title: '红包' },
+  { collectionCat: CollectionCategory.CHEST,  itemCategory: Category.CHEST,  line: 'diamond_bag',   title: '钻石袋' },
+  { collectionCat: CollectionCategory.CHEST,  itemCategory: Category.CHEST,  line: 'stamina_chest', title: '体力箱' },
 ];
+
+const GRID_COLS = 4;
+const GRID_GAP_X = 4;
+const GRID_GAP_Y = 2;
+
+/**
+ * 壳体图原始像素坐标（384×688 PNG）。
+ * 运行时按 shellScale 缩放后映射到设计分辨率。
+ */
+const SHELL = {
+  W: 384, H: 688,
+  BANNER_CENTER_Y: 86,
+  BAR_Y: 132, BAR_H: 32, BAR_X_LEFT: 80, BAR_X_RIGHT: 319,
+  CLOSE_CX: 339, CLOSE_CY: 95, CLOSE_R: 22,
+  LEFT_CX: 29, LEFT_CY: 374, ARROW_R: 28,
+  RIGHT_CX: 354, RIGHT_CY: 345,
+  CONTENT_TOP: 175,
+  CONTENT_BOTTOM: 600,
+};
 
 export class CollectionPanel extends PIXI.Container {
   private _bg!: PIXI.Graphics;
   private _content!: PIXI.Container;
   private _scrollContainer!: PIXI.Container;
   private _isOpen = false;
-  private _activeTab: TabType = 'overview';
+  private _pageIndex = 0;
   private _scrollY = 0;
   private _maxScrollY = 0;
 
@@ -42,11 +81,13 @@ export class CollectionPanel extends PIXI.Container {
     this._bindEvents();
   }
 
+  get isOpen(): boolean { return this._isOpen; }
+
   open(): void {
     if (this._isOpen) return;
     this._isOpen = true;
     this.visible = true;
-    this._activeTab = 'overview';
+    this._pageIndex = 0;
     this._scrollY = 0;
     this._refresh();
 
@@ -89,6 +130,24 @@ export class CollectionPanel extends PIXI.Container {
     this.addChild(this._content);
   }
 
+  /** 壳体图缩放系数与偏移 — 尽量填满屏幕，整体下移避开顶栏 */
+  private _shellLayout() {
+    const maxW = DESIGN_WIDTH - 16;
+    const maxH = Game.logicHeight - 40;
+    const scale = Math.min(maxW / SHELL.W, maxH / SHELL.H);
+    const cx = DESIGN_WIDTH / 2;
+    const cy = Game.logicHeight / 2 + 30;
+    const ox = cx - (SHELL.W / 2) * scale;
+    const oy = cy - (SHELL.H / 2) * scale;
+    return { scale, cx, cy, ox, oy, panelW: SHELL.W * scale, panelH: SHELL.H * scale };
+  }
+
+  /** 壳体图像素坐标 → 设计分辨率坐标 */
+  private _s2d(px: number, py: number): { x: number; y: number } {
+    const { scale, ox, oy } = this._shellLayout();
+    return { x: ox + px * scale, y: oy + py * scale };
+  }
+
   private _refresh(): void {
     while (this._content.children.length > 0) {
       const child = this._content.children[0];
@@ -99,80 +158,354 @@ export class CollectionPanel extends PIXI.Container {
     this._content.pivot.set(DESIGN_WIDTH / 2, Game.logicHeight / 2);
     this._content.position.set(DESIGN_WIDTH / 2, Game.logicHeight / 2);
 
-    const cx = DESIGN_WIDTH / 2;
-    const panelW = Math.min(680, DESIGN_WIDTH - 32);
-    const panelH = Math.min(Game.logicHeight - 60, 820);
-    const panelX = cx - panelW / 2;
-    const panelY = (Game.logicHeight - panelH) / 2;
+    const layout = this._shellLayout();
 
-    // 面板背景
-    const bg = new PIXI.Graphics();
-    bg.beginFill(0xFFFBF0);
-    bg.drawRoundedRect(panelX, panelY, panelW, panelH, 20);
-    bg.endFill();
-    bg.eventMode = 'static';
-    this._content.addChild(bg);
-
-    // 标题
-    const totalPercent = CollectionManager.progressPercent.toFixed(1);
-    const title = new PIXI.Text(`花语图鉴  ${CollectionManager.totalDiscovered}/${CollectionManager.totalCount} (${totalPercent}%)`, {
-      fontSize: 20, fill: COLORS.TEXT_DARK, fontFamily: FONT_FAMILY, fontWeight: 'bold',
-    });
-    title.anchor.set(0.5, 0);
-    title.position.set(cx, panelY + 16);
-    this._content.addChild(title);
-
-    // Tab 按钮
-    const tabY = panelY + 48;
-    this._drawTab('总览', panelX + 20, tabY, 140, 'overview');
-    this._drawTab('里程碑', panelX + 170, tabY, 140, 'milestone');
-
-    // 关闭按钮
-    const closeBtn = new PIXI.Text('×', {
-      fontSize: 22, fill: COLORS.TEXT_LIGHT, fontFamily: FONT_FAMILY,
-    });
-    closeBtn.anchor.set(0.5, 0.5);
-    closeBtn.position.set(panelX + panelW - 24, panelY + 24);
-    closeBtn.eventMode = 'static';
-    closeBtn.cursor = 'pointer';
-    closeBtn.on('pointerdown', () => this.close());
-    this._content.addChild(closeBtn);
-
-    // 滚动区域
-    const scrollAreaY = tabY + 46;
-    const scrollAreaH = panelH - (scrollAreaY - panelY) - 12;
-
-    const mask = new PIXI.Graphics();
-    mask.beginFill(0xFFFFFF);
-    mask.drawRect(panelX, scrollAreaY, panelW, scrollAreaH);
-    mask.endFill();
-    this._content.addChild(mask);
-
-    this._scrollContainer = new PIXI.Container();
-    this._scrollContainer.mask = mask;
-    this._content.addChild(this._scrollContainer);
-
-    let contentH = 0;
-    if (this._activeTab === 'overview') {
-      contentH = this._drawOverviewTab(panelX, scrollAreaY, panelW);
+    // NB2 壳体背景
+    const shellTex = TextureCache.get('collection_panel_shell_nb2');
+    if (shellTex) {
+      const shell = new PIXI.Sprite(shellTex);
+      shell.scale.set(layout.scale);
+      shell.anchor.set(0.5, 0.5);
+      shell.position.set(layout.cx, layout.cy);
+      shell.eventMode = 'static';
+      this._content.addChild(shell);
     } else {
-      contentH = this._drawMilestoneTab(panelX, scrollAreaY, panelW);
+      const bg = new PIXI.Graphics();
+      bg.beginFill(0xFFFBF0);
+      bg.drawRoundedRect(layout.ox, layout.oy, layout.panelW, layout.panelH, 20);
+      bg.endFill();
+      bg.eventMode = 'static';
+      this._content.addChild(bg);
     }
 
-    this._maxScrollY = Math.max(0, contentH - scrollAreaH);
+    const page = COLLECTION_PAGES[this._pageIndex];
+    const items = CollectionManager.getItemsForLine(page.itemCategory, page.line);
+    const discoveredCount = CollectionManager.getLineDiscoveredCount(page.collectionCat, page.itemCategory, page.line);
+    const totalCount = items.length;
+    const progress = totalCount > 0 ? discoveredCount / totalCount : 0;
+
+    // 标题（放在金色标题栏上，与家具面板同族描边样式）
+    const bannerPos = this._s2d(SHELL.W / 2, SHELL.BANNER_CENTER_Y);
+    const titleText = new PIXI.Text(page.title, {
+      fontSize: 26,
+      fill: 0xffffff,
+      fontFamily: FONT_FAMILY,
+      fontWeight: 'bold',
+      stroke: 0x7a4530,
+      strokeThickness: 4,
+      dropShadow: true,
+      dropShadowColor: 0x5a2d10,
+      dropShadowBlur: 2,
+      dropShadowDistance: 1,
+    } as any);
+    titleText.anchor.set(0.5, 0.5);
+    titleText.position.set(bannerPos.x, bannerPos.y);
+    this._content.addChild(titleText);
+
+    // 进度条（覆盖在壳体的进度条轨道上）
+    const barLeft = this._s2d(SHELL.BAR_X_LEFT + 4, SHELL.BAR_Y + 4);
+    const barRight = this._s2d(SHELL.BAR_X_RIGHT - 4, SHELL.BAR_Y + SHELL.BAR_H - 4);
+    const barW = barRight.x - barLeft.x;
+    const barH = barRight.y - barLeft.y;
+
+    if (progress > 0) {
+      const fillW = Math.max(barH, barW * Math.min(progress, 1));
+      const barFill = new PIXI.Graphics();
+      barFill.beginFill(0xFFCC33);
+      barFill.drawRoundedRect(barLeft.x, barLeft.y, fillW, barH, barH / 2);
+      barFill.endFill();
+      this._content.addChild(barFill);
+
+      const barShine = new PIXI.Graphics();
+      barShine.beginFill(0xFFDD66, 0.5);
+      barShine.drawRoundedRect(barLeft.x + 2, barLeft.y + 1, fillW - 4, barH / 2 - 1, (barH / 2) / 2);
+      barShine.endFill();
+      this._content.addChild(barShine);
+    }
+
+    // 进度数字（居中在进度条上）
+    const barCenterX = (barLeft.x + barRight.x) / 2;
+    const barCenterY = (barLeft.y + barRight.y) / 2;
+    const countLabel = new PIXI.Text(`${discoveredCount}/${totalCount}`, {
+      fontSize: 16, fill: 0xFFFFFF, fontFamily: FONT_FAMILY, fontWeight: 'bold',
+      stroke: 0x996600, strokeThickness: 3,
+    });
+    countLabel.anchor.set(0.5, 0.5);
+    countLabel.position.set(barCenterX, barCenterY);
+    this._content.addChild(countLabel);
+
+    // 宝箱固定区域高度（壳体底部预留）
+    const chestZoneH = layout.scale * 90;
+
+    // 滚动区域（壳体内的粉色边框内侧，底部留出宝箱区）
+    const scrollTop = this._s2d(0, SHELL.CONTENT_TOP + 12);
+    const scrollBottom = this._s2d(0, SHELL.CONTENT_BOTTOM);
+    const scrollLeft = this._s2d(68, 0);
+    const scrollRight = this._s2d(SHELL.W - 44, 0);
+    const scrollAreaY = scrollTop.y;
+    const scrollAreaH = scrollBottom.y - scrollTop.y - chestZoneH;
+    const scrollAreaX = scrollLeft.x;
+    const scrollAreaW = scrollRight.x - scrollLeft.x;
+
+    const scrollMask = new PIXI.Graphics();
+    scrollMask.beginFill(0xFFFFFF);
+    scrollMask.drawRect(scrollAreaX, scrollAreaY, scrollAreaW, scrollAreaH);
+    scrollMask.endFill();
+    this._content.addChild(scrollMask);
+
+    this._scrollContainer = new PIXI.Container();
+    this._scrollContainer.mask = scrollMask;
+    this._content.addChild(this._scrollContainer);
+
+    // 物品网格 — 格子大小从可用宽度自动计算
+    const gridPadX = 8;
+    const availW = scrollAreaW - gridPadX * 2;
+    const cellSize = Math.floor((availW - (GRID_COLS - 1) * GRID_GAP_X) / GRID_COLS);
+    const cellStep = cellSize + GRID_GAP_X;
+    const rowStep = cellSize + 18 + GRID_GAP_Y;
+    const gridTotalW = GRID_COLS * cellSize + (GRID_COLS - 1) * GRID_GAP_X;
+    const gridStartX = scrollAreaX + (scrollAreaW - gridTotalW) / 2;
+    const gridY = scrollAreaY + 6;
+
+    for (let i = 0; i < items.length; i++) {
+      const col = i % GRID_COLS;
+      const row = Math.floor(i / GRID_COLS);
+      const cellX = gridStartX + col * cellStep;
+      const cellY = gridY + row * rowStep;
+
+      this._drawItemCell(cellX, cellY, cellSize, items[i], page.collectionCat);
+    }
+
+    const totalRows = Math.ceil(items.length / GRID_COLS);
+    const contentHeight = totalRows * rowStep + 10;
+    this._maxScrollY = Math.max(0, contentHeight - scrollAreaH);
     this._scrollY = 0;
+    this._scrollContainer.y = 0;
 
     // 滚动交互
+    this._setupScrollInteraction(scrollAreaX, scrollAreaW, scrollAreaY, scrollAreaH);
+
+    // 固定宝箱（位于滚动区域下方、壳体内底部）
+    const chestFixedY = scrollAreaY + scrollAreaH + 54;
+    this._drawRewardChest(layout.cx, chestFixedY, progress, cellSize);
+
+    // 页码
+    const pagePos = this._s2d(SHELL.W / 2, SHELL.CONTENT_BOTTOM - 2);
+    const pageText = new PIXI.Text(`${this._pageIndex + 1}/${COLLECTION_PAGES.length}`, {
+      fontSize: 16, fill: COLORS.TEXT_DARK, fontFamily: FONT_FAMILY, fontWeight: 'bold',
+    });
+    pageText.anchor.set(0.5, 0.5);
+    pageText.position.set(pagePos.x, pagePos.y);
+    this._content.addChild(pageText);
+
+    // hitArea：关闭按钮（壳体图上的红色 X）
+    this._addHitCircle(SHELL.CLOSE_CX, SHELL.CLOSE_CY, SHELL.CLOSE_R + 8, () => this.close());
+
+    // hitArea：左翻页（壳体图上的绿色左箭头）
+    if (this._pageIndex > 0) {
+      this._addHitCircle(SHELL.LEFT_CX, SHELL.LEFT_CY, SHELL.ARROW_R + 10, () => {
+        this._pageIndex--;
+        this._scrollY = 0;
+        this._refresh();
+      });
+    }
+
+    // hitArea：右翻页（壳体图上的绿色右箭头）
+    if (this._pageIndex < COLLECTION_PAGES.length - 1) {
+      this._addHitCircle(SHELL.RIGHT_CX, SHELL.RIGHT_CY, SHELL.ARROW_R + 10, () => {
+        this._pageIndex++;
+        this._scrollY = 0;
+        this._refresh();
+      });
+    }
+  }
+
+  /** 在壳体图坐标位置创建圆形 hitArea */
+  private _addHitCircle(shellPx: number, shellPy: number, shellRadius: number, onClick: () => void): void {
+    const pos = this._s2d(shellPx, shellPy);
+    const { scale } = this._shellLayout();
+    const r = shellRadius * scale;
+
+    const hit = new PIXI.Container();
+    hit.position.set(pos.x, pos.y);
+    hit.hitArea = new PIXI.Circle(0, 0, r);
+    hit.eventMode = 'static';
+    hit.cursor = 'pointer';
+    hit.on('pointerdown', (e: PIXI.FederatedPointerEvent) => {
+      e.stopPropagation();
+      onClick();
+    });
+    this._content.addChild(hit);
+  }
+
+  private _drawItemCell(x: number, y: number, size: number, def: ItemDef, collectionCat: CollectionCategory): void {
+    const discovered = CollectionManager.isDiscovered(collectionCat, def.id);
+    const cx = x + size / 2;
+    const cy = y + size / 2;
+    // 占位卡贴图有内边距，已解锁底板内缩保持视觉一致
+    const inset = Math.round(size * 0.08);
+    const cardSize = size - inset * 2;
+
+    if (discovered) {
+      const cardBg = new PIXI.Graphics();
+      cardBg.beginFill(0xE8F4FF, 0.7);
+      cardBg.drawRoundedRect(x + inset, y + inset, cardSize, cardSize, 10);
+      cardBg.endFill();
+      cardBg.lineStyle(1.5, 0xC0D8F0, 0.6);
+      cardBg.drawRoundedRect(x + inset, y + inset, cardSize, cardSize, 10);
+      this._scrollContainer.addChild(cardBg);
+
+      const tex = TextureCache.get(def.icon);
+      if (tex) {
+        const sprite = new PIXI.Sprite(tex);
+        const iconArea = cardSize - 12;
+        const sc = Math.min(iconArea / sprite.texture.width, iconArea / sprite.texture.height);
+        sprite.scale.set(sc);
+        sprite.anchor.set(0.5, 0.5);
+        sprite.position.set(cx, cy);
+        this._scrollContainer.addChild(sprite);
+      }
+
+      const nameText = new PIXI.Text(def.name, {
+        fontSize: 12, fill: COLORS.TEXT_DARK, fontFamily: FONT_FAMILY, fontWeight: 'bold',
+      });
+      nameText.anchor.set(0.5, 0);
+      nameText.position.set(cx, y + inset + cardSize + 3);
+      this._scrollContainer.addChild(nameText);
+    } else {
+      const placeholderTex = TextureCache.get('collection_item_placeholder_nb2');
+      if (placeholderTex) {
+        const sprite = new PIXI.Sprite(placeholderTex);
+        const sc = Math.min(size / sprite.texture.width, size / sprite.texture.height);
+        sprite.scale.set(sc);
+        sprite.anchor.set(0.5, 0.5);
+        sprite.position.set(cx, cy);
+        this._scrollContainer.addChild(sprite);
+      } else {
+        const cardBg = new PIXI.Graphics();
+        cardBg.beginFill(0xBBDDFF, 0.5);
+        cardBg.drawRoundedRect(x + inset, y + inset, cardSize, cardSize, 10);
+        cardBg.endFill();
+        this._scrollContainer.addChild(cardBg);
+      }
+
+      const qText = new PIXI.Text('???', {
+        fontSize: 12, fill: COLORS.TEXT_LIGHT, fontFamily: FONT_FAMILY,
+      });
+      qText.anchor.set(0.5, 0);
+      qText.position.set(cx, y + inset + cardSize + 3);
+      this._scrollContainer.addChild(qText);
+    }
+  }
+
+  private _drawRewardChest(cx: number, y: number, progress: number, cellSize: number): void {
+    const isFull = progress >= 1;
+    const claimed = CollectionManager.isPageRewardClaimed(this._pageIndex);
+    const chestSize = Math.round(cellSize * 0.9);
+
+    const container = new PIXI.Container();
+    container.position.set(cx, y);
+    this._content.addChild(container);
+
+    // 底座光圈
+    const glow = new PIXI.Graphics();
+    glow.beginFill(isFull && !claimed ? 0xFFD700 : 0xCCCCCC, isFull && !claimed ? 0.25 : 0.1);
+    glow.drawEllipse(0, chestSize * 0.4, chestSize * 0.6, chestSize * 0.15);
+    glow.endFill();
+    container.addChild(glow);
+
+    let spriteBottomY = chestSize * 0.55;
+    const chestTex = TextureCache.get('stamina_chest_3');
+    if (chestTex) {
+      const sprite = new PIXI.Sprite(chestTex);
+      const sc = Math.min(chestSize / sprite.texture.width, chestSize / sprite.texture.height);
+      sprite.scale.set(sc);
+      sprite.anchor.set(0.5, 0.5);
+      sprite.position.set(0, chestSize * 0.15);
+      container.addChild(sprite);
+      const halfH = (sprite.texture.height * sc) / 2;
+      spriteBottomY = sprite.position.y + halfH;
+
+      if (!isFull || claimed) {
+        sprite.alpha = 0.35;
+      }
+    }
+
+    let labelStr: string;
+    let labelFill: number;
+    if (claimed) {
+      labelStr = '已领取';
+      labelFill = 0x999999;
+    } else if (isFull) {
+      labelStr = '点击领取奖励';
+      labelFill = 0xCC6600;
+    } else {
+      labelStr = '收集满可领取';
+      labelFill = 0x999999;
+    }
+    const label = new PIXI.Text(labelStr, {
+      fontSize: 13,
+      fill: labelFill,
+      fontFamily: FONT_FAMILY,
+      fontWeight: isFull && !claimed ? 'bold' : 'normal',
+    });
+    label.anchor.set(0.5, 0);
+    const labelGap = 8;
+    label.position.set(0, spriteBottomY + labelGap);
+    container.addChild(label);
+
+    // 可领取时添加点击交互
+    if (isFull && !claimed) {
+      container.eventMode = 'static';
+      container.cursor = 'pointer';
+      const hitPad = 8;
+      const hitH = spriteBottomY + labelGap + label.height + hitPad;
+      container.hitArea = new PIXI.Rectangle(-chestSize / 2 - hitPad, -hitPad, chestSize + hitPad * 2, hitH + hitPad);
+      container.on('pointerdown', (e: PIXI.FederatedPointerEvent) => {
+        e.stopPropagation();
+        this._claimPageReward(container);
+      });
+    }
+  }
+
+  /** 每页奖励物品 id（体力箱最高级） */
+  private static readonly PAGE_REWARD_ITEM_ID = 'stamina_chest_3';
+
+  private _claimPageReward(chestContainer: PIXI.Container): void {
+    if (CollectionManager.isPageRewardClaimed(this._pageIndex)) return;
+    CollectionManager.claimPageReward(this._pageIndex);
+
+    const rewardId = CollectionPanel.PAGE_REWARD_ITEM_ID;
+    const def = ITEM_DEFS.get(rewardId);
+    if (!def) { this._refresh(); return; }
+
+    const startGlobal = chestContainer.toGlobal(new PIXI.Point(0, 0));
+    RewardFlyCoordinator.playBatch(
+      [{
+        type: 'rewardBox',
+        textureKey: def.icon,
+        amount: 1,
+        itemId: rewardId,
+      }],
+      startGlobal,
+      () => { this._refresh(); },
+    );
+  }
+
+  private _setupScrollInteraction(areaX: number, areaW: number, areaY: number, areaH: number): void {
     let lastTouchY = 0;
     let isDragging = false;
-    bg.on('pointerdown', (e: PIXI.FederatedPointerEvent) => {
-      const localY = e.globalY / Game.scale;
-      if (localY >= scrollAreaY && localY <= scrollAreaY + scrollAreaH) {
-        lastTouchY = localY;
-        isDragging = true;
-      }
+
+    const hitArea = new PIXI.Container();
+    hitArea.hitArea = new PIXI.Rectangle(areaX, areaY, areaW, areaH);
+    hitArea.eventMode = 'static';
+
+    hitArea.on('pointerdown', (e: PIXI.FederatedPointerEvent) => {
+      e.stopPropagation();
+      lastTouchY = e.globalY / Game.scale;
+      isDragging = true;
     });
-    bg.on('pointermove', (e: PIXI.FederatedPointerEvent) => {
+    hitArea.on('pointermove', (e: PIXI.FederatedPointerEvent) => {
       if (!isDragging) return;
       const curTouchY = e.globalY / Game.scale;
       const delta = lastTouchY - curTouchY;
@@ -180,266 +513,9 @@ export class CollectionPanel extends PIXI.Container {
       this._scrollY = Math.max(0, Math.min(this._maxScrollY, this._scrollY + delta));
       this._scrollContainer.y = -this._scrollY;
     });
-    bg.on('pointerup', () => { isDragging = false; });
-    bg.on('pointerupoutside', () => { isDragging = false; });
-  }
+    hitArea.on('pointerup', () => { isDragging = false; });
+    hitArea.on('pointerupoutside', () => { isDragging = false; });
 
-  private _drawTab(label: string, x: number, y: number, w: number, tab: TabType): void {
-    const isActive = this._activeTab === tab;
-    const g = new PIXI.Graphics();
-    g.beginFill(isActive ? COLORS.BUTTON_PRIMARY : 0xEEEEEE);
-    g.drawRoundedRect(x, y, w, 36, 18);
-    g.endFill();
-    this._content.addChild(g);
-
-    const text = new PIXI.Text(label, {
-      fontSize: 14, fill: isActive ? 0xFFFFFF : COLORS.TEXT_DARK, fontFamily: FONT_FAMILY,
-      fontWeight: isActive ? 'bold' : 'normal',
-    });
-    text.anchor.set(0.5, 0.5);
-    text.position.set(x + w / 2, y + 18);
-    this._content.addChild(text);
-
-    const hit = new PIXI.Container();
-    hit.hitArea = new PIXI.Rectangle(x, y, w, 36);
-    hit.eventMode = 'static';
-    hit.cursor = 'pointer';
-    hit.on('pointerdown', () => {
-      this._activeTab = tab;
-      this._refresh();
-    });
-    this._content.addChild(hit);
-  }
-
-  /** 总览 Tab - 显示各大分类的收集进度 */
-  private _drawOverviewTab(panelX: number, startY: number, panelW: number): number {
-    const pad = 16;
-    let y = startY + 10;
-
-    // 总进度条
-    const barX = panelX + pad;
-    const barW = panelW - pad * 2;
-    const progress = CollectionManager.progressPercent / 100;
-
-    const barBg = new PIXI.Graphics();
-    barBg.beginFill(0xE0E0E0);
-    barBg.drawRoundedRect(barX, y, barW, 14, 7);
-    barBg.endFill();
-    this._scrollContainer.addChild(barBg);
-
-    if (progress > 0) {
-      const barFill = new PIXI.Graphics();
-      barFill.beginFill(COLORS.BUTTON_PRIMARY);
-      barFill.drawRoundedRect(barX, y, barW * Math.min(progress, 1), 14, 7);
-      barFill.endFill();
-      this._scrollContainer.addChild(barFill);
-    }
-    y += 28;
-
-    // 各分类卡片（2列布局）
-    const cardW = (panelW - pad * 3) / 2;
-    const cardH = 110;
-    const gap = 10;
-
-    for (let i = 0; i < CATEGORY_DISPLAY.length; i += 2) {
-      for (let j = 0; j < 2 && i + j < CATEGORY_DISPLAY.length; j++) {
-        const cfg = CATEGORY_DISPLAY[i + j];
-        const cardX = panelX + pad + j * (cardW + pad);
-        this._drawCategoryCard(cardX, y, cardW, cardH, cfg);
-      }
-      y += cardH + gap;
-    }
-
-    return y - startY;
-  }
-
-  /** 绘制分类卡片 */
-  private _drawCategoryCard(
-    x: number, y: number, w: number, h: number,
-    cfg: { cat: CollectionCategory; icon: string; name: string; color: number },
-  ): void {
-    const count = CollectionManager.getCategoryCount(cfg.cat);
-    const total = CollectionManager.getCategoryTotal(cfg.cat);
-    const progress = total > 0 ? count / total : 0;
-
-    // 卡片背景
-    const card = new PIXI.Graphics();
-    card.beginFill(0xFFFFFF);
-    card.drawRoundedRect(x, y, w, h, 12);
-    card.endFill();
-    card.lineStyle(1.5, cfg.color, 0.5);
-    card.drawRoundedRect(x, y, w, h, 12);
-    this._scrollContainer.addChild(card);
-
-    // 顶部色条
-    const topBar = new PIXI.Graphics();
-    topBar.beginFill(cfg.color, 0.3);
-    topBar.drawRoundedRect(x, y, w, 32, 12);
-    topBar.endFill();
-    // 遮住下方圆角
-    topBar.beginFill(cfg.color, 0.3);
-    topBar.drawRect(x, y + 16, w, 16);
-    topBar.endFill();
-    this._scrollContainer.addChild(topBar);
-
-    // 图标 + 名称
-    const nameText = new PIXI.Text(`${cfg.icon} ${cfg.name}`, {
-      fontSize: 15, fill: COLORS.TEXT_DARK, fontFamily: FONT_FAMILY, fontWeight: 'bold',
-    });
-    nameText.position.set(x + 10, y + 7);
-    this._scrollContainer.addChild(nameText);
-
-    // 数量
-    const countText = new PIXI.Text(`${count}/${total}`, {
-      fontSize: 13, fill: COLORS.TEXT_LIGHT, fontFamily: FONT_FAMILY,
-    });
-    countText.anchor.set(1, 0);
-    countText.position.set(x + w - 10, y + 9);
-    this._scrollContainer.addChild(countText);
-
-    // 进度条
-    const barX = x + 10;
-    const barY = y + 42;
-    const barW = w - 20;
-    const barH = 10;
-
-    const barBg = new PIXI.Graphics();
-    barBg.beginFill(0xE8E8E8);
-    barBg.drawRoundedRect(barX, barY, barW, barH, 5);
-    barBg.endFill();
-    this._scrollContainer.addChild(barBg);
-
-    if (progress > 0) {
-      const barFill = new PIXI.Graphics();
-      barFill.beginFill(cfg.color);
-      barFill.drawRoundedRect(barX, barY, barW * Math.min(progress, 1), barH, 5);
-      barFill.endFill();
-      this._scrollContainer.addChild(barFill);
-    }
-
-    // 进度百分比
-    const percentText = new PIXI.Text(`${(progress * 100).toFixed(0)}%`, {
-      fontSize: 12, fill: COLORS.TEXT_LIGHT, fontFamily: FONT_FAMILY,
-    });
-    percentText.position.set(barX, barY + 16);
-    this._scrollContainer.addChild(percentText);
-
-    // 状态说明
-    const statusText = count >= total ? ' 已完成' : `还差 ${total - count} 项`;
-    const status = new PIXI.Text(statusText, {
-      fontSize: 11, fill: count >= total ? 0x4CAF50 : COLORS.TEXT_LIGHT, fontFamily: FONT_FAMILY,
-    });
-    status.anchor.set(1, 0);
-    status.position.set(x + w - 10, barY + 16);
-    this._scrollContainer.addChild(status);
-  }
-
-  /** 里程碑 Tab - 显示 4 个里程碑奖励 */
-  private _drawMilestoneTab(panelX: number, startY: number, panelW: number): number {
-    const pad = 16;
-    let y = startY + 10;
-
-    const milestones = CollectionManager.milestones;
-    const currentPercent = CollectionManager.progressPercent;
-
-    for (const ms of milestones) {
-      const cardX = panelX + pad;
-      const cardW = panelW - pad * 2;
-      const cardH = 100;
-
-      const reached = currentPercent >= ms.percent;
-      const claimed = ms.claimed;
-
-      // 卡片背景
-      const card = new PIXI.Graphics();
-      card.beginFill(claimed ? 0xF0F0F0 : reached ? 0xFFF8E1 : 0xFFFFFF);
-      card.drawRoundedRect(cardX, y, cardW, cardH, 12);
-      card.endFill();
-      card.lineStyle(1, claimed ? 0xDDDDDD : reached ? 0xFFD700 : 0xEEEEEE);
-      card.drawRoundedRect(cardX, y, cardW, cardH, 12);
-      this._scrollContainer.addChild(card);
-
-      // 百分比徽章
-      const badgeColor = claimed ? 0x9E9E9E : reached ? 0xFFD700 : 0xBDBDBD;
-      const badge = new PIXI.Graphics();
-      badge.beginFill(badgeColor);
-      badge.drawCircle(cardX + 36, y + cardH / 2, 24);
-      badge.endFill();
-      this._scrollContainer.addChild(badge);
-
-      const badgeText = new PIXI.Text(`${ms.percent}%`, {
-        fontSize: 14, fill: 0xFFFFFF, fontFamily: FONT_FAMILY, fontWeight: 'bold',
-      });
-      badgeText.anchor.set(0.5, 0.5);
-      badgeText.position.set(cardX + 36, y + cardH / 2);
-      this._scrollContainer.addChild(badgeText);
-
-      // 标题
-      const title = new PIXI.Text(ms.desc, {
-        fontSize: 16, fill: COLORS.TEXT_DARK, fontFamily: FONT_FAMILY, fontWeight: 'bold',
-      });
-      title.position.set(cardX + 72, y + 14);
-      this._scrollContainer.addChild(title);
-
-      // 奖励描述
-      const rewardParts: string[] = [];
-      if (ms.gold) rewardParts.push(`${ms.gold}`);
-      if (ms.diamond) rewardParts.push(`${ms.diamond}`);
-      if (ms.huayuan) rewardParts.push(`${ms.huayuan}`);
-      const rewardText = new PIXI.Text(rewardParts.join('  '), {
-        fontSize: 13, fill: COLORS.TEXT_LIGHT, fontFamily: FONT_FAMILY,
-      });
-      rewardText.position.set(cardX + 72, y + 40);
-      this._scrollContainer.addChild(rewardText);
-
-      // 状态按钮
-      if (claimed) {
-        const doneText = new PIXI.Text(' 已领取', {
-          fontSize: 14, fill: 0x9E9E9E, fontFamily: FONT_FAMILY,
-        });
-        doneText.position.set(cardX + 72, y + 66);
-        this._scrollContainer.addChild(doneText);
-      } else if (reached) {
-        // 可领取按钮
-        const btnX = cardX + 72;
-        const btnY = y + 62;
-        const btn = new PIXI.Graphics();
-        btn.beginFill(0x4CAF50);
-        btn.drawRoundedRect(btnX, btnY, 100, 30, 15);
-        btn.endFill();
-        this._scrollContainer.addChild(btn);
-
-        const btnText = new PIXI.Text(' 领取', {
-          fontSize: 14, fill: 0xFFFFFF, fontFamily: FONT_FAMILY, fontWeight: 'bold',
-        });
-        btnText.anchor.set(0.5, 0.5);
-        btnText.position.set(btnX + 50, btnY + 15);
-        this._scrollContainer.addChild(btnText);
-
-        const hit = new PIXI.Container();
-        hit.hitArea = new PIXI.Rectangle(btnX, btnY, 100, 30);
-        hit.eventMode = 'static';
-        hit.cursor = 'pointer';
-        hit.on('pointerdown', (e: PIXI.FederatedPointerEvent) => {
-          e.stopPropagation();
-          if (CollectionManager.claimMilestone(ms.percent)) {
-            ToastMessage.show(`领取里程碑奖励：${ms.desc}！`);
-            this._refresh();
-          }
-        });
-        this._scrollContainer.addChild(hit);
-      } else {
-        // 进度提示
-        const progressText = new PIXI.Text(`进度 ${currentPercent.toFixed(1)}% / ${ms.percent}%`, {
-          fontSize: 12, fill: COLORS.TEXT_LIGHT, fontFamily: FONT_FAMILY,
-        });
-        progressText.position.set(cardX + 72, y + 68);
-        this._scrollContainer.addChild(progressText);
-      }
-
-      y += cardH + 10;
-    }
-
-    return y - startY;
+    this._content.addChild(hitArea);
   }
 }

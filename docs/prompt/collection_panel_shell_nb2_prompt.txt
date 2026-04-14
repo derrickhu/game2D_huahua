@@ -1,0 +1,25 @@
+Single full-screen vertical mobile game UI asset, 9:16 aspect, one flattened illustration layer for a cozy pastel flower-shop merge game. High resolution, crisp anti-aliased vector edges.
+
+TECHNICAL BACKGROUND FOR CLEAN CUTOUT: ONLY the margins OUTSIDE the rounded modal must be pure bright screen green RGB exactly 0,255,0 (neon green), flat, no gradient. The modal itself including its inner content rectangle must contain ZERO neon green pixels.
+
+INNER CONTENT FIELD: the large central area inside the frame must be completely filled with one flat solid warm cream ivory color, perfectly uniform matte fill, no texture, no pattern, no gradient, no transparency, no hole, no cutout. This cream field is OPAQUE painted content, not background green showing through.
+
+MAIN FRAME: large rounded-rectangle modal centered on screen, very rounded corners. Thick outer border soft lilac lavender purple; thinner inner lip pastel pink. Gentle floating drop shadow on the left and right edges only (not bleeding into outside green). The frame should look like a cute notebook or album cover.
+
+LEFT AND RIGHT EDGES: decorative pastel spiral notebook binding rings along the left edge, like a cute journal or scrapbook, soft pink or lilac colored rings. Right edge clean.
+
+TOP: centered ornate golden-yellow scalloped title banner, empty center, no text, slightly wider than the frame.
+
+TOP-RIGHT: circular red close button with white X, slightly past the frame corner, chunky kawaii style.
+
+BELOW BANNER: one wide rounded golden-yellow progress bar track with soft shading, empty, no fill, no numbers.
+
+BELOW PROGRESS BAR: a thin horizontal divider line, very subtle warm gray or soft pink.
+
+BOTTOM AREA: the cream field continues cleanly to the bottom inner edge. No extra bars, no buttons at bottom.
+
+LEFT AND RIGHT SIDES outside the frame: one circular green arrow button on each side, vertically centered. Left arrow points left, right arrow points right. Bright pastel green with white arrow icon, chunky rounded style, slight drop shadow.
+
+GOAL: decorative shell only for a collection album panel. No item icons, no grid cells, no lists, no text content inside. Just the empty shell frame with notebook binding, title banner, progress bar track, and navigation arrows.
+
+Art style: clean 2D vector mobile UI, pastel kawaii casual game, gentle shading only on purple frame, pink lips, gold banner, red button, green arrows. Never use neon green inside the modal. No photoreal, no watermark, no readable text or numbers.

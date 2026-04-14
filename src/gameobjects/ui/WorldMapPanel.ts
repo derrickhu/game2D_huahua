@@ -373,7 +373,14 @@ export class WorldMapPanel extends PIXI.Container {
 
     c.eventMode = 'static';
     c.cursor = 'pointer';
-    c.hitArea = new PIXI.Rectangle(-thumbSize / 2, -thumbSize * 0.6, thumbSize, thumbSize * 0.6 + 40);
+    /**
+     * 热区须盖住：缩略图按「最长边 = thumbSize」缩放后的实际高度（约 ±thumbSize/2）
+     * 以及下方名称牌行。旧矩形底边约在 +thumbSize*0.6，喷泉等竖长缩略图下半截与整行文字都在区外，点击无反应。
+     */
+    const hitHalfW = thumbSize / 2;
+    const hitTop = -thumbSize * 0.52 - 6;
+    const hitBottom = namePlateY + 30;
+    c.hitArea = new PIXI.Rectangle(-hitHalfW, hitTop, thumbSize, hitBottom - hitTop);
 
     return c;
   }

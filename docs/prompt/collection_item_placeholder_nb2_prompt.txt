@@ -1,0 +1,9 @@
+A single square tile card for a mobile game collection album, 1:1 aspect ratio.
+
+The card is a rounded square with soft rounded corners. Fill color is a gentle pastel sky blue with a subtle lighter blue crosshatch or diamond lattice pattern overlay, giving it a cute plaid or gingham fabric texture feel. The pattern should be very soft and low contrast, lighter blue lines on a slightly deeper pastel blue base.
+
+Edges have a very thin soft blue-purple border outline, slightly darker than the fill.
+
+No text, no icons, no symbols, no question marks on the card itself. Just the patterned blue placeholder tile.
+
+Art style: clean 2D vector, flat kawaii casual mobile game UI element, pastel palette, no gradients except very subtle shading, no photoreal, no watermark. Transparent background or pure white background for easy cutout.
