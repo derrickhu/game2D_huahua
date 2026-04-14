@@ -214,6 +214,12 @@ const PANELS_IMAGE_MAP: Record<string, string> = {
     'subpkg_panels/images/ui/daily_challenge_countdown_stopwatch_nb2.png',
   /** 周积分轨里程碑刻度黄点 */
   daily_challenge_ui_F_dot: 'subpkg_panels/images/ui/daily_challenge_ui_F_dot.png',
+
+  /** 新手引导：开场故事插画 */
+  tutorial_story_1: 'subpkg_panels/images/tutorial/story_1.png',
+  tutorial_story_2: 'subpkg_panels/images/tutorial/story_2.png',
+  tutorial_story_3: 'subpkg_panels/images/tutorial/story_3.png',
+  tutorial_story_4: 'subpkg_panels/images/tutorial/story_4.png',
 };
 
 // ================================================================

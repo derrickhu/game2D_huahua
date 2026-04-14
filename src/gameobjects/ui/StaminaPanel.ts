@@ -1,31 +1,56 @@
 /**
  * 体力购买面板 - 顶栏「+」或体力不足时弹出
  *
- * 提供3种恢复方式：
- * 1. 等待自然恢复（显示倒计时）
- * 2. 钻石购买体力（当日首次 10 钻→100 体力，每次 +10 钻封顶 50，每日限 5 次）
- * 3. 看广告恢复体力（每日限5次）
+ * 壳体：`flower_egg_reward_bg` + `item_info_title_ribbon`（`FlowerEggModalFrame`）。
+ * **左右两列**：各列外包一层圆角框以免混淆；上为体力图标+角标，下左为钻石价、下右为「看广告」+ 次数。
  */
 import * as PIXI from 'pixi.js';
 import { Game } from '@/core/Game';
-import { EventBus } from '@/core/EventBus';
 import { CurrencyManager } from '@/managers/CurrencyManager';
 import { TweenManager, Ease } from '@/core/TweenManager';
 import { ToastMessage } from './ToastMessage';
-import { DESIGN_WIDTH, COLORS, FONT_FAMILY, STAMINA_RECOVER_INTERVAL } from '@/config/Constants';
+import { COLORS, DESIGN_WIDTH, FONT_FAMILY } from '@/config/Constants';
 import { AdManager, AdScene } from '@/managers/AdManager';
+import { createFlowerEggModalFrame } from '@/gameobjects/ui/FlowerEggModalFrame';
+import { TextureCache } from '@/utils/TextureCache';
 
-const PANEL_W = 520;
-const PANEL_H = 380;
+const COL_W = 200;
+const COL_GAP = 36;
+const TOP_ICON = 56;
+/** 上区（体力展示）高度 */
+const TOP_BLOCK_H = 88;
+const TOP_TO_BTN = 16;
+const BTN_H = 52;
+const AD_QUOTA_GAP = 6;
+const AD_QUOTA_H = 22;
+const TITLE_FONT = 24;
+
+/** 左右分栏独立圆角框（与面板 pastel 协调，不拦截点击） */
+function addColumnSurroundBox(
+  col: PIXI.Container,
+  w: number,
+  h: number,
+  rim: number,
+  face: number,
+): void {
+  const g = new PIXI.Graphics();
+  g.eventMode = 'none';
+  g.lineStyle(2, rim, 0.95);
+  g.beginFill(face, 0.42);
+  g.drawRoundedRect(0, 0, w, h, 14);
+  g.endFill();
+  g.lineStyle(1, rim, 0.35);
+  g.drawRoundedRect(2.5, 2.5, w - 5, h - 5, 11);
+  col.addChildAt(g, 0);
+}
 
 export class StaminaPanel extends PIXI.Container {
   private _content!: PIXI.Container;
   private _buyBtn!: PIXI.Container;
-  private _buyLabel!: PIXI.Text;
   private _adBtn!: PIXI.Container;
-  private _adLabel!: PIXI.Text;
-  private _timerText!: PIXI.Text;
-  private _staminaText!: PIXI.Text;
+  private _leftHead!: PIXI.Container;
+  private _rightHead!: PIXI.Container;
+  private _adQuotaText!: PIXI.Text;
   private _isOpen = false;
 
   constructor() {
@@ -36,12 +61,11 @@ export class StaminaPanel extends PIXI.Container {
 
   get isOpen(): boolean { return this._isOpen; }
 
-  /** 打开面板 */
-  open(neededStamina?: number): void {
+  open(_neededStamina?: number): void {
     if (this._isOpen) return;
     this._isOpen = true;
     this.visible = true;
-    this._refresh(neededStamina);
+    this._refresh();
 
     this.alpha = 0;
     TweenManager.to({
@@ -52,7 +76,6 @@ export class StaminaPanel extends PIXI.Container {
     });
   }
 
-  /** 关闭面板 */
   close(): void {
     if (!this._isOpen) return;
     this._isOpen = false;
@@ -66,29 +89,115 @@ export class StaminaPanel extends PIXI.Container {
     });
   }
 
-  /** 外部 ticker 调用，更新倒计时 */
   updateTimer(): void {
     if (!this._isOpen) return;
-    const remain = CurrencyManager.staminaRecoverRemain;
-    if (remain <= 0) {
-      this._timerText.text = '体力已满！';
-    } else {
-      const m = Math.floor(remain / 60);
-      const s = Math.floor(remain % 60);
-      this._timerText.text = `下一点体力恢复：${m}:${s.toString().padStart(2, '0')}`;
-    }
-
-    // 更新体力数值
-    this._staminaText.text = ` ${CurrencyManager.state.stamina} / ${CurrencyManager.staminaCap}`;
   }
 
-  // ====== 构建 UI ======
+  /** 体力闪电 + 右下角数字（体力条同源 `icon_energy`） */
+  private _buildStaminaHeaderBlock(): PIXI.Container {
+    const wrap = new PIXI.Container();
+    const energyTex = TextureCache.get('icon_energy');
+    if (energyTex) {
+      const sp = new PIXI.Sprite(energyTex);
+      sp.anchor.set(0.5);
+      sp.width = TOP_ICON;
+      sp.height = Math.round(TOP_ICON * (energyTex.height / Math.max(1, energyTex.width)));
+      sp.position.set(0, 0);
+      wrap.addChild(sp);
+    } else {
+      const fb = new PIXI.Text('体', { fontSize: 32, fontFamily: FONT_FAMILY, fill: COLORS.TEXT_DARK });
+      fb.anchor.set(0.5);
+      wrap.addChild(fb);
+    }
+
+    const amt = new PIXI.Text('0', {
+      fontSize: 24,
+      fill: 0x4e342e,
+      fontFamily: FONT_FAMILY,
+      fontWeight: 'bold',
+      stroke: 0xfffde7,
+      strokeThickness: 4,
+    });
+    amt.anchor.set(1, 1);
+    // 略压出图标右下，大字仍对齐闪电底部
+    amt.position.set(TOP_ICON * 0.52 + 6, TOP_ICON * 0.52 + 4);
+    amt.name = 'staminaAmt';
+    wrap.addChild(amt);
+
+    return wrap;
+  }
+
+  /** 左列下：紫钮，仅钻石图标 + 本次需付钻数 */
+  private _buildDiamondCostButton(w: number, h: number): PIXI.Container {
+    const c = new PIXI.Container();
+    c.eventMode = 'static';
+    c.cursor = 'pointer';
+
+    const bg = new PIXI.Graphics();
+    bg.beginFill(0xAB47BC);
+    bg.drawRoundedRect(0, 0, w, h, 14);
+    bg.endFill();
+    c.addChild(bg);
+
+    const gemSize = 30;
+    const gemTex = TextureCache.get('icon_gem');
+    if (gemTex) {
+      const sp = new PIXI.Sprite(gemTex);
+      sp.anchor.set(0.5);
+      sp.width = gemSize;
+      sp.height = gemSize;
+      sp.position.set(w / 2 - 22, h / 2);
+      c.addChild(sp);
+    } else {
+      const fb = new PIXI.Text('钻', { fontSize: 18, fontFamily: FONT_FAMILY, fill: 0xffffff });
+      fb.anchor.set(0.5);
+      fb.position.set(w / 2 - 22, h / 2);
+      c.addChild(fb);
+    }
+
+    const price = new PIXI.Text('0', {
+      fontSize: 22,
+      fill: 0xffffff,
+      fontFamily: FONT_FAMILY,
+      fontWeight: 'bold',
+    });
+    price.anchor.set(0.5);
+    price.position.set(w / 2 + 26, h / 2);
+    price.name = 'diamondPrice';
+    c.addChild(price);
+
+    return c;
+  }
+
+  /** 右列下：绿钮，仅「看广告」文案 */
+  private _buildAdTextOnlyButton(w: number, h: number): PIXI.Container {
+    const c = new PIXI.Container();
+    c.eventMode = 'static';
+    c.cursor = 'pointer';
+
+    const bg = new PIXI.Graphics();
+    bg.beginFill(0x43A047);
+    bg.drawRoundedRect(0, 0, w, h, 14);
+    bg.endFill();
+    c.addChild(bg);
+
+    const t = new PIXI.Text('看广告', {
+      fontSize: 18,
+      fill: 0xffffff,
+      fontFamily: FONT_FAMILY,
+      fontWeight: 'bold',
+    });
+    t.anchor.set(0.5);
+    t.position.set(w / 2, h / 2);
+    c.addChild(t);
+
+    return c;
+  }
 
   private _build(): void {
     const W = DESIGN_WIDTH;
     const H = Game.logicHeight;
 
-    // 全屏遮罩
     const overlay = new PIXI.Graphics();
     overlay.beginFill(0x000000, 0.45);
     overlay.drawRect(0, 0, W, H);
@@ -97,217 +206,95 @@ export class StaminaPanel extends PIXI.Container {
     overlay.on('pointerdown', () => this.close());
     this.addChild(overlay);
 
-    // 面板主体
-    this._content = new PIXI.Container();
-    const px = (W - PANEL_W) / 2;
-    const py = (H - PANEL_H) / 2;
+    const rowW = COL_W * 2 + COL_GAP;
+    const btnTop = TOP_BLOCK_H + TOP_TO_BTN;
+    const btnW = COL_W;
+    const contentH = btnTop + BTN_H + AD_QUOTA_GAP + AD_QUOTA_H;
+    const colBoxH = contentH;
 
-    const bg = new PIXI.Graphics();
-    bg.beginFill(0xFFFDF8, 0.97);
-    bg.drawRoundedRect(px, py, PANEL_W, PANEL_H, 20);
-    bg.endFill();
-    bg.lineStyle(2, COLORS.CELL_BORDER, 0.4);
-    bg.drawRoundedRect(px, py, PANEL_W, PANEL_H, 20);
-    bg.eventMode = 'static'; // 阻止穿透
-    this._content.addChild(bg);
-
-    // 标题
-    const title = new PIXI.Text('体力购买', {
-      fontSize: 24,
-      fill: COLORS.TEXT_DARK,
-      fontFamily: FONT_FAMILY,
-      fontWeight: 'bold',
+    const frame = createFlowerEggModalFrame({
+      viewW: W,
+      viewH: H,
+      title: '体力购买',
+      titleFontSize: TITLE_FONT,
+      contentWidth: rowW,
+      contentHeight: contentH,
+      onCloseTap: () => this.close(),
     });
-    title.anchor.set(0.5, 0);
-    title.position.set(W / 2, py + 24);
-    this._content.addChild(title);
-
-    // 当前体力
-    this._staminaText = new PIXI.Text('', {
-      fontSize: 32,
-      fill: 0x43A047,
-      fontFamily: FONT_FAMILY,
-      fontWeight: 'bold',
-    });
-    this._staminaText.anchor.set(0.5, 0);
-    this._staminaText.position.set(W / 2, py + 60);
-    this._content.addChild(this._staminaText);
-
-    // 自然恢复倒计时
-    this._timerText = new PIXI.Text('', {
-      fontSize: 14,
-      fill: COLORS.TEXT_LIGHT,
-      fontFamily: FONT_FAMILY,
-    });
-    this._timerText.anchor.set(0.5, 0);
-    this._timerText.position.set(W / 2, py + 104);
-    this._content.addChild(this._timerText);
-
-    // 恢复速度说明
-    const rateMin = Math.round(STAMINA_RECOVER_INTERVAL / 60);
-    const rateText = new PIXI.Text(`(每${rateMin}分钟自动恢复1点体力)`, {
-      fontSize: 12,
-      fill: 0xBBBBBB,
-      fontFamily: FONT_FAMILY,
-    });
-    rateText.anchor.set(0.5, 0);
-    rateText.position.set(W / 2, py + 124);
-    this._content.addChild(rateText);
-
-    // 分割线
-    const divider = new PIXI.Graphics();
-    divider.beginFill(COLORS.CELL_BORDER, 0.3);
-    divider.drawRect(px + 30, py + 150, PANEL_W - 60, 1);
-    divider.endFill();
-    this._content.addChild(divider);
-
-    // 恢复方式标题
-    const methodTitle = new PIXI.Text('快速恢复', {
-      fontSize: 16,
-      fill: COLORS.TEXT_DARK,
-      fontFamily: FONT_FAMILY,
-      fontWeight: 'bold',
-    });
-    methodTitle.anchor.set(0.5, 0);
-    methodTitle.position.set(W / 2, py + 162);
-    this._content.addChild(methodTitle);
-
-    // ---- 钻石购买按钮 ----
-    const btnW = 200;
-    const btnH = 56;
-    const btnY = py + 196;
-
-    this._buyBtn = this._makeButton(
-      ' 钻石购买',
-      '',
-      0xAB47BC,
-      px + (PANEL_W / 2 - btnW) / 2,
-      btnY,
-      btnW,
-      btnH,
-    );
-    this._buyLabel = this._buyBtn.getChildByName('subLabel') as PIXI.Text;
-    this._buyBtn.on('pointerdown', () => this._onBuyStamina());
-    this._content.addChild(this._buyBtn);
-
-    // ---- 看广告按钮 ----
-    this._adBtn = this._makeButton(
-      ' 看广告',
-      '',
-      0x43A047,
-      px + PANEL_W / 2 + (PANEL_W / 2 - btnW) / 2,
-      btnY,
-      btnW,
-      btnH,
-    );
-    this._adLabel = this._adBtn.getChildByName('subLabel') as PIXI.Text;
-    this._adBtn.on('pointerdown', () => this._onAdStamina());
-    this._content.addChild(this._adBtn);
-
-    // 关闭按钮
-    const closeBtn = new PIXI.Container();
-    closeBtn.eventMode = 'static';
-    closeBtn.cursor = 'pointer';
-
-    const closeBg = new PIXI.Graphics();
-    closeBg.beginFill(COLORS.BUTTON_SECONDARY);
-    closeBg.drawRoundedRect(0, 0, 160, 44, 12);
-    closeBg.endFill();
-    closeBtn.addChild(closeBg);
-
-    const closeTxt = new PIXI.Text('稍后再说', {
-      fontSize: 16,
-      fill: 0xFFFFFF,
-      fontFamily: FONT_FAMILY,
-      fontWeight: 'bold',
-    });
-    closeTxt.anchor.set(0.5, 0.5);
-    closeTxt.position.set(80, 22);
-    closeBtn.addChild(closeTxt);
-
-    closeBtn.position.set(W / 2 - 80, py + PANEL_H - 66);
-    closeBtn.on('pointerdown', () => this.close());
-    this._content.addChild(closeBtn);
-
+    this._content = frame.root;
     this.addChild(this._content);
-  }
+    const mount = frame.contentMount;
 
-  /** 创建按钮 */
-  private _makeButton(
-    mainLabel: string,
-    subLabel: string,
-    color: number,
-    x: number, y: number,
-    w: number, h: number,
-  ): PIXI.Container {
-    const c = new PIXI.Container();
-    c.eventMode = 'static';
-    c.cursor = 'pointer';
-    c.position.set(x, y);
+    // ── 左列：独立圆角框 + 上 100 体力图标区，下 钻石花费 ──
+    const leftCol = new PIXI.Container();
+    leftCol.position.set(0, 0);
+    mount.addChild(leftCol);
+    addColumnSurroundBox(leftCol, COL_W, colBoxH, 0xCE93A8, 0xfff5f8);
 
-    const bg = new PIXI.Graphics();
-    bg.beginFill(color);
-    bg.drawRoundedRect(0, 0, w, h, 14);
-    bg.endFill();
-    c.addChild(bg);
+    this._leftHead = this._buildStaminaHeaderBlock();
+    this._leftHead.position.set(COL_W / 2, TOP_BLOCK_H / 2);
+    leftCol.addChild(this._leftHead);
 
-    const main = new PIXI.Text(mainLabel, {
-      fontSize: 16,
-      fill: 0xFFFFFF,
+    this._buyBtn = this._buildDiamondCostButton(btnW, BTN_H);
+    this._buyBtn.position.set(0, btnTop);
+    this._buyBtn.on('pointerdown', () => this._onBuyStamina());
+    leftCol.addChild(this._buyBtn);
+
+    // ── 右列：独立圆角框 + 上 20 体力图标区，下纯文字看广告 + 次数 ──
+    const rightCol = new PIXI.Container();
+    rightCol.position.set(COL_W + COL_GAP, 0);
+    mount.addChild(rightCol);
+    addColumnSurroundBox(rightCol, COL_W, colBoxH, 0x66BB6A, 0xe8f5e9);
+
+    this._rightHead = this._buildStaminaHeaderBlock();
+    this._rightHead.position.set(COL_W / 2, TOP_BLOCK_H / 2);
+    rightCol.addChild(this._rightHead);
+
+    this._adBtn = this._buildAdTextOnlyButton(btnW, BTN_H);
+    this._adBtn.position.set(0, btnTop);
+    this._adBtn.on('pointerdown', () => this._onAdStamina());
+    rightCol.addChild(this._adBtn);
+
+    this._adQuotaText = new PIXI.Text('', {
+      fontSize: 14,
+      fill: COLORS.TEXT_DARK,
       fontFamily: FONT_FAMILY,
       fontWeight: 'bold',
     });
-    main.anchor.set(0.5, 0.5);
-    main.position.set(w / 2, h / 2 - 8);
-    c.addChild(main);
-
-    const sub = new PIXI.Text(subLabel, {
-      fontSize: 11,
-      fill: 0xFFFFFF,
-      fontFamily: FONT_FAMILY,
-    });
-    sub.alpha = 0.85;
-    sub.anchor.set(0.5, 0.5);
-    sub.position.set(w / 2, h / 2 + 14);
-    sub.name = 'subLabel';
-    c.addChild(sub);
-
-    return c;
+    this._adQuotaText.anchor.set(0.5, 0);
+    this._adQuotaText.position.set(COL_W / 2, btnTop + BTN_H + AD_QUOTA_GAP);
+    this._adQuotaText.eventMode = 'none';
+    rightCol.addChild(this._adQuotaText);
   }
 
-  /** 刷新按钮状态 */
-  private _refresh(neededStamina?: number): void {
+  private _refresh(): void {
     const s = CurrencyManager.state;
-    const cap = CurrencyManager.staminaCap;
-    this._staminaText.text = ` ${s.stamina} / ${cap}`;
 
-    // 钻石购买
+    (this._leftHead.getChildByName('staminaAmt') as PIXI.Text).text = String(
+      CurrencyManager.staminaBuyAmount,
+    );
+    (this._rightHead.getChildByName('staminaAmt') as PIXI.Text).text = String(
+      CurrencyManager.staminaAdAmount,
+    );
+
     const buyRemain = CurrencyManager.staminaBuyRemaining;
     const buyPrice = CurrencyManager.staminaBuyPrice;
-    const buyAmount = CurrencyManager.staminaBuyAmount;
+    const priceTxt = this._buyBtn.getChildByName('diamondPrice') as PIXI.Text;
     if (buyRemain > 0) {
-      this._buyLabel.text = `+${buyAmount}  花费${buyPrice}  (${buyRemain}次)`;
+      priceTxt.text = String(buyPrice);
       this._buyBtn.alpha = s.diamond >= buyPrice ? 1 : 0.5;
     } else {
-      this._buyLabel.text = '今日已达上限';
+      priceTxt.text = '—';
       this._buyBtn.alpha = 0.4;
     }
 
-    // 广告
     const adRemain = CurrencyManager.staminaAdRemaining;
-    const adAmount = CurrencyManager.staminaAdAmount;
-    if (adRemain > 0) {
-      this._adLabel.text = `+${adAmount}  免费  (${adRemain}次)`;
-      this._adBtn.alpha = 1;
-    } else {
-      this._adLabel.text = '今日已达上限';
-      this._adBtn.alpha = 0.4;
-    }
-
-    this.updateTimer();
+    const adMax = CurrencyManager.staminaAdMaxDaily;
+    this._adQuotaText.text = `${adRemain}/${adMax}`;
+    this._adBtn.alpha = adRemain > 0 ? 1 : 0.4;
+    this._adQuotaText.alpha = 1;
   }
 
-  /** 钻石购买体力 */
   private _onBuyStamina(): void {
     if (CurrencyManager.staminaBuyRemaining <= 0) {
       ToastMessage.show('今日购买次数已用完');
@@ -325,14 +312,12 @@ export class StaminaPanel extends PIXI.Container {
     }
   }
 
-  /** 看广告恢复体力 */
   private _onAdStamina(): void {
     if (CurrencyManager.staminaAdRemaining <= 0) {
       ToastMessage.show('今日广告次数已用完');
       return;
     }
 
-    // 通过 AdManager 展示激励视频广告
     AdManager.showRewardedAd(AdScene.STAMINA_RECOVER, (success) => {
       if (success) {
         const ok = CurrencyManager.recoverStaminaByAd();
@@ -344,5 +329,15 @@ export class StaminaPanel extends PIXI.Container {
         ToastMessage.show('广告未完成，无法获得奖励');
       }
     });
+  }
+
+  /** 体力飞入顶栏起点（全局）：左列体力图标中心（钻石购买） */
+  getStaminaFlyStartGlobalDiamond(): PIXI.Point {
+    return this._leftHead.toGlobal(new PIXI.Point(0, 0));
+  }
+
+  /** 体力飞入顶栏起点（全局）：右列体力图标中心（看广告） */
+  getStaminaFlyStartGlobalAd(): PIXI.Point {
+    return this._rightHead.toGlobal(new PIXI.Point(0, 0));
   }
 }

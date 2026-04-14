@@ -7,6 +7,7 @@ import { EventBus } from '@/core/EventBus';
 import { BoardManager } from './BoardManager';
 import { CurrencyManager } from './CurrencyManager';
 import { LevelManager } from './LevelManager';
+import { TutorialManager, TutorialStep } from './TutorialManager';
 import {
   CHALLENGE_ORDER_HUAYUAN_MULT,
   MULTI_SLOT_BONUS_RATE,
@@ -307,7 +308,9 @@ class CustomerManagerClass {
   update(dt: number): void {
     if (!this._started) return;
 
-    if (this._customers.length < this.maxCustomers) {
+    // 教程期间限制最多 1 位客人
+    const maxC = TutorialManager.isActive ? 1 : this.maxCustomers;
+    if (this._customers.length < maxC) {
       this._refreshTimer += dt;
       const threshold = CUSTOMER_REFRESH_MIN +
         Math.random() * (CUSTOMER_REFRESH_MAX - CUSTOMER_REFRESH_MIN);
@@ -505,6 +508,54 @@ class CustomerManagerClass {
     );
     EventBus.emit('customer:arrived', customer);
 
+    this._rescanAll();
+  }
+
+  /**
+   * 教程专用：清空当前所有客人队列，防止随机客人干扰脚本流程。
+   */
+  clearAllCustomers(): void {
+    for (const c of this._customers) {
+      for (const s of c.slots) {
+        if (s.lockedCellIndex >= 0) {
+          const cell = BoardManager.getCellByIndex(s.lockedCellIndex);
+          if (cell) cell.reserved = false;
+        }
+      }
+    }
+    this._customers = [];
+    EventBus.emit('customer:lockChanged');
+  }
+
+  /**
+   * 教程专用：清空已有客人后插入一个固定订单的客人。
+   * @param itemIds 订单槽物品 ID 列表，如 ['flower_fresh_1']
+   * @param typeId  客人类型 ID，默认 'child'
+   */
+  spawnScriptedCustomer(itemIds: string[], typeId = 'child'): void {
+    this.clearAllCustomers();
+    const type = CUSTOMER_TYPES.find(t => t.id === typeId) ?? CUSTOMER_TYPES[0];
+    const slots: DemandSlot[] = itemIds.map(id => ({ itemId: id, lockedCellIndex: -1 }));
+    const huayuan = CustomerManagerClass.computeOrderHuayuan(slots, 1, 'normal');
+
+    const customer: CustomerInstance = {
+      uid: this._nextUid++,
+      typeId: type.id,
+      name: type.name,
+      emoji: type.emoji,
+      slots,
+      allSatisfied: false,
+      huayuanReward: huayuan,
+      tier: computeTierFromOrderSlots(itemIds) as OrderTier,
+      orderType: 'normal' as OrderType,
+      timeLimit: null,
+      bonusMultiplier: 1,
+      orderKind: 'eventStub',
+    };
+
+    this._customers.push(customer);
+    console.log(`[Customer] 教程客人: ${customer.name} 需求: ${itemIds.join(', ')}`);
+    EventBus.emit('customer:arrived', customer);
     this._rescanAll();
   }
 

@@ -12,6 +12,7 @@
  */
 import * as PIXI from 'pixi.js';
 import { COLORS, FONT_FAMILY } from '@/config/Constants';
+import { BoardManager } from '@/managers/BoardManager';
 import { CustomerManager } from '@/managers/CustomerManager';
 import { ITEM_DEFS, Category, FlowerLine, DrinkLine } from '@/config/ItemConfig';
 import { TIER_COLORS, type OrderTier } from '@/config/OrderTierConfig';
@@ -204,6 +205,15 @@ export class CustomerView extends PIXI.Container {
     return new PIXI.Point(cx, cy);
   }
 
+  /**
+   * 「完成」按钮中心的全局坐标（订单已齐且按钮已显示时；供新手引导手指定位）
+   */
+  getCompleteButtonGlobalCenter(): PIXI.Point | null {
+    if (!this._completeBtn || !this.visible) return null;
+    const g = this._completeBtn.toGlobal(new PIXI.Point(0, 0));
+    return new PIXI.Point(g.x, g.y);
+  }
+
   // ========== 底部信息面板 ==========
 
   private _rebuildInfoPanel(): void {
@@ -257,7 +267,8 @@ export class CustomerView extends PIXI.Container {
     for (let i = 0; i < slots.length; i++) {
       const slot = slots[i];
       const sx = slotStartX + i * (SLOT_SIZE + SLOT_GAP);
-      const filled = slot.lockedCellIndex >= 0;
+      const filled =
+        slot.lockedCellIndex >= 0 || BoardManager.hasOpenCellWithItem(slot.itemId);
       this._drawSlotItem(sx, slotY, slot.itemId, filled);
     }
 

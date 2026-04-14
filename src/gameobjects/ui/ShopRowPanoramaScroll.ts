@@ -8,7 +8,9 @@ import * as PIXI from 'pixi.js';
 import { EventBus } from '@/core/EventBus';
 import { TweenManager, Ease } from '@/core/TweenManager';
 import { EventManager } from '@/managers/EventManager';
+import { QuestManager } from '@/managers/QuestManager';
 import { FloatingMenu } from './FloatingMenu';
+import { RewardBoxButton } from '@/gameobjects/ui/RewardBoxButton';
 import { TextureCache } from '@/utils/TextureCache';
 import { DESIGN_WIDTH, FONT_FAMILY } from '@/config/Constants';
 import { ENABLE_CHALLENGE_LEVEL_FEATURE } from '@/config/FeatureFlags';
@@ -22,19 +24,31 @@ const BIG_BTN = 92;
 const BIG_ICON = 72;
 const BIG_GAP = 20;
 const BIG_R = 18;
-const RED_DOT_R = 5;
+/** 任务/活动大图标右上角红点半径（略大便于辨认） */
+const RED_DOT_R = 8;
 const ACTIVITY_PAD_TOP = 28;
 
 /**
- * 展开/收起：左侧竖向胶囊，锚点在店铺行高度约 38% 处（与原布局一致），样式加强对比与描边。
+ * 展开/收起：左侧竖向胶囊；**垂直与主场景收纳篮中心对齐**（见 `MainScene._buildShopArea` 的 `CHAR_BOTTOM_Y + 8`），避免压住客人胸像。
  */
 const TOGGLE_BTN_W = 40;
 const TOGGLE_BTN_H = 92;
 const TOGGLE_SIDE_MARGIN = 5;
-/** 垂直位置：0=顶，1=底，与原先 `viewportH * 0.38` 一致 */
-const TOGGLE_VERT_ANCHOR = 0.38;
+/** 与 `MainScene._buildShopArea` 中人物底边参考、收纳钮顶距一致 */
+const SHOP_CHAR_BOTTOM_Y = 195;
+const SHOP_REWARD_BOX_TOP_PAD = 8;
 const TOGGLE_CORNER_R = 14;
 const TOGGLE_TWEEN_DURATION = 0.34;
+
+/** 展开按钮拆分绘制（可领取奖励时换肤 + 呼吸缩放） */
+interface ToggleButtonParts {
+  root: PIXI.Container;
+  shadow: PIXI.Graphics;
+  bg: PIXI.Graphics;
+  accent: PIXI.Graphics;
+  chevron: PIXI.Text;
+  label: PIXI.Text;
+}
 
 interface TaskDef {
   id: string;
@@ -75,6 +89,9 @@ export class ShopRowPanoramaScroll extends PIXI.Container {
   private _toggleLayer!: PIXI.Container;
   private _expandBtn!: PIXI.Container;
   private _collapseBtn!: PIXI.Container;
+  private _expandToggleParts: ToggleButtonParts | null = null;
+  /** 任务大图标根节点（居中 pivot，便于呼吸缩放） */
+  private _questTaskRoot: PIXI.Container | null = null;
 
   private _shopBlock: PIXI.Container | null = null;
   private _taskCards = new Map<string, { root: PIXI.Container; redDot: PIXI.Graphics; def: TaskDef }>();
@@ -84,6 +101,48 @@ export class ShopRowPanoramaScroll extends PIXI.Container {
 
   private _arrowPhase = 0;
   private _stopped = false;
+  /** 可领奖励呼吸相位（任务图标 + 展开钮共用） */
+  private _claimBreathPhase = 0;
+  private _expandClaimSkinActive = false;
+
+  /** 展开/收起按钮中心 Y：与 `RewardBoxButton` 在店铺块内中心同高 */
+  private _expandToggleCenterY(): number {
+    const h = RewardBoxButton.layoutSize().h;
+    const y = SHOP_CHAR_BOTTOM_Y + SHOP_REWARD_BOX_TOP_PAD + h / 2;
+    const pad = TOGGLE_BTN_H / 2 + 4;
+    return Math.max(pad, Math.min(this._viewportH - pad, y));
+  }
+
+  private static _paintToggleBg(g: PIXI.Graphics, w: number, h: number, r: number, mode: 'default' | 'alert'): void {
+    g.clear();
+    if (mode === 'alert') {
+      g.beginFill(0xfff3e0, 0.98);
+      g.lineStyle(2.5, 0xff9800, 1);
+      g.drawRoundedRect(0, 0, w, h, r);
+      g.endFill();
+      g.lineStyle(1.25, 0xffe0b2, 0.95);
+      g.drawRoundedRect(1, 1, w - 2, h - 2, r - 1);
+    } else {
+      g.beginFill(0xfffdf8, 0.98);
+      g.lineStyle(2.25, 0xce93d8, 1);
+      g.drawRoundedRect(0, 0, w, h, r);
+      g.endFill();
+      g.lineStyle(1.25, 0xffffff, 0.9);
+      g.drawRoundedRect(1, 1, w - 2, h - 2, r - 1);
+    }
+  }
+
+  private static _paintToggleAccent(g: PIXI.Graphics, w: number, h: number, mode: 'default' | 'alert'): void {
+    g.clear();
+    if (mode === 'alert') {
+      g.beginFill(0xffcc80, 0.72);
+      g.drawRoundedRect(5, 14, 4, h - 28, 2);
+    } else {
+      g.beginFill(0xf8bbd9, 0.55);
+      g.drawRoundedRect(5, 14, 4, h - 28, 2);
+    }
+    g.endFill();
+  }
 
   constructor(viewportW = DESIGN_WIDTH, viewportH = SHOP_PANORAMA_VIEW_H, activityW = SHOP_PANORAMA_ACTIVITY_W) {
     super();
@@ -158,6 +217,7 @@ export class ShopRowPanoramaScroll extends PIXI.Container {
     this._updateToggleVisibility();
     /** 整行位置仅由展开/收起 tween 驱动，无惯性滑动 */
     this._clampScroll(true);
+    this._updateClaimableHints(dt);
   }
 
   destroy(options?: PIXI.IDestroyOptions | boolean): void {
@@ -167,18 +227,23 @@ export class ShopRowPanoramaScroll extends PIXI.Container {
   }
 
   private _buildToggleButtons(): void {
-    const cy = this._viewportH * TOGGLE_VERT_ANCHOR - TOGGLE_BTN_H / 2;
+    const centerY = this._expandToggleCenterY();
 
-    this._expandBtn = this._makeToggleButton('››', '展开', TOGGLE_BTN_W, TOGGLE_BTN_H);
-    this._expandBtn.position.set(TOGGLE_SIDE_MARGIN, cy);
+    const expandParts = this._makeToggleButton('››', '展开', TOGGLE_BTN_W, TOGGLE_BTN_H);
+    this._expandToggleParts = expandParts;
+    this._expandBtn = expandParts.root;
+    this._expandBtn.pivot.set(TOGGLE_BTN_W / 2, TOGGLE_BTN_H / 2);
+    this._expandBtn.position.set(TOGGLE_SIDE_MARGIN + TOGGLE_BTN_W / 2, centerY);
     this._expandBtn.on('pointertap', (e: PIXI.FederatedPointerEvent) => {
       e.stopPropagation();
       this._animateScrollTo(this._maxScrollX);
     });
     this._toggleLayer.addChild(this._expandBtn);
 
-    this._collapseBtn = this._makeToggleButton('‹‹', '收起', TOGGLE_BTN_W, TOGGLE_BTN_H);
-    this._collapseBtn.position.set(TOGGLE_SIDE_MARGIN + 2, cy);
+    const collapseParts = this._makeToggleButton('‹‹', '收起', TOGGLE_BTN_W, TOGGLE_BTN_H);
+    this._collapseBtn = collapseParts.root;
+    this._collapseBtn.pivot.set(TOGGLE_BTN_W / 2, TOGGLE_BTN_H / 2);
+    this._collapseBtn.position.set(TOGGLE_SIDE_MARGIN + 2 + TOGGLE_BTN_W / 2, centerY);
     this._collapseBtn.on('pointertap', (e: PIXI.FederatedPointerEvent) => {
       e.stopPropagation();
       this._animateScrollTo(this._minScrollX);
@@ -188,7 +253,7 @@ export class ShopRowPanoramaScroll extends PIXI.Container {
     this._updateToggleVisibility();
   }
 
-  private _makeToggleButton(chevron: string, label: string, w: number, h: number): PIXI.Container {
+  private _makeToggleButton(chevron: string, label: string, w: number, h: number): ToggleButtonParts {
     const root = new PIXI.Container();
     const r = TOGGLE_CORNER_R;
 
@@ -199,18 +264,11 @@ export class ShopRowPanoramaScroll extends PIXI.Container {
     root.addChild(shadow);
 
     const bg = new PIXI.Graphics();
-    bg.beginFill(0xfffdf8, 0.98);
-    bg.lineStyle(2.25, 0xce93d8, 1);
-    bg.drawRoundedRect(0, 0, w, h, r);
-    bg.endFill();
-    bg.lineStyle(1.25, 0xffffff, 0.9);
-    bg.drawRoundedRect(1, 1, w - 2, h - 2, r - 1);
+    ShopRowPanoramaScroll._paintToggleBg(bg, w, h, r, 'default');
     root.addChild(bg);
 
     const accent = new PIXI.Graphics();
-    accent.beginFill(0xf8bbd9, 0.55);
-    accent.drawRoundedRect(5, 14, 4, h - 28, 2);
-    accent.endFill();
+    ShopRowPanoramaScroll._paintToggleAccent(accent, w, h, 'default');
     root.addChild(accent);
 
     const ch = new PIXI.Text(chevron, {
@@ -243,7 +301,51 @@ export class ShopRowPanoramaScroll extends PIXI.Container {
     root.eventMode = 'static';
     root.cursor = 'pointer';
     root.hitArea = new PIXI.Rectangle(0, 0, w, h);
-    return root;
+    return { root, shadow, bg, accent, chevron: ch, label: tx };
+  }
+
+  /** 展开钮：默认可领奖励时的金橙高亮 */
+  private _setExpandClaimHighlight(active: boolean): void {
+    if (!this._expandToggleParts || active === this._expandClaimSkinActive) return;
+    this._expandClaimSkinActive = active;
+    const { bg, accent, chevron, label } = this._expandToggleParts;
+    const w = TOGGLE_BTN_W;
+    const h = TOGGLE_BTN_H;
+    const r = TOGGLE_CORNER_R;
+    const mode = active ? 'alert' : 'default';
+    ShopRowPanoramaScroll._paintToggleBg(bg, w, h, r, mode);
+    ShopRowPanoramaScroll._paintToggleAccent(accent, w, h, mode);
+    chevron.style.fill = active ? 0xe65100 : 0x7e57c2;
+    label.style.fill = active ? 0xbf360c : 0x4e342e;
+  }
+
+  /** 每日任务有可领奖励时：任务图标 +「展开」缩放呼吸；展开钮换肤 */
+  private _updateClaimableHints(dt: number): void {
+    const claim = QuestManager.hasClaimableQuest;
+    if (claim) {
+      this._claimBreathPhase += (Math.PI * 2 * dt) / 2.35;
+    }
+
+    const breath = claim ? 1 + Math.sin(this._claimBreathPhase) * 0.065 : 1;
+
+    if (this._questTaskRoot && this._questTaskRoot.visible) {
+      this._questTaskRoot.scale.set(claim ? breath : 1);
+    }
+
+    this._setExpandClaimHighlight(claim);
+
+    if (this._expandBtn) {
+      if (this._expandBtn.visible && claim) {
+        this._expandBtn.scale.set(1 + Math.sin(this._claimBreathPhase) * 0.05);
+      } else {
+        this._expandBtn.scale.set(1);
+      }
+    }
+
+    if (!claim) {
+      this._claimBreathPhase = 0;
+      if (this._questTaskRoot) this._questTaskRoot.scale.set(1);
+    }
   }
 
   private _animateScrollTo(targetX: number): void {
@@ -341,12 +443,14 @@ export class ShopRowPanoramaScroll extends PIXI.Container {
     }
     root.addChild(icon);
 
+    const rdx = BIG_BTN - 4;
+    const rdy = 6;
     const redDot = new PIXI.Graphics();
     redDot.beginFill(0xff3333);
-    redDot.drawCircle(BIG_BTN - 5, 5, RED_DOT_R);
+    redDot.drawCircle(rdx, rdy, RED_DOT_R);
     redDot.endFill();
-    redDot.lineStyle(1, 0xffffff);
-    redDot.drawCircle(BIG_BTN - 5, 5, RED_DOT_R);
+    redDot.lineStyle(2, 0xffffff);
+    redDot.drawCircle(rdx, rdy, RED_DOT_R);
     redDot.visible = false;
     root.addChild(redDot);
 
@@ -369,6 +473,11 @@ export class ShopRowPanoramaScroll extends PIXI.Container {
       root.visible = def.isVisible();
     }
 
+    if (def.id === 'quest') {
+      root.pivot.set(BIG_BTN / 2, BIG_BTN / 2);
+      this._questTaskRoot = root;
+    }
+
     return { root, redDot, def };
   }
 
@@ -378,7 +487,11 @@ export class ShopRowPanoramaScroll extends PIXI.Container {
     for (const def of TASK_DEFS) {
       const card = this._taskCards.get(def.id)!;
       if (!card.root.visible) continue;
-      card.root.position.set(colX, y);
+      if (def.id === 'quest') {
+        card.root.position.set(colX + BIG_BTN / 2, y + BIG_BTN / 2);
+      } else {
+        card.root.position.set(colX, y);
+      }
       y += BIG_BTN + BIG_GAP;
     }
   }

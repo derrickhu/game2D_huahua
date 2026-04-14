@@ -42,7 +42,8 @@ import { LevelUpPopup } from '@/gameobjects/ui/LevelUpPopup';
 import { ShopRowPanoramaScroll, SHOP_PANORAMA_VIEW_H } from '@/gameobjects/ui/ShopRowPanoramaScroll';
 import { FlowerEasterEggSystem } from '@/systems/FlowerEasterEggSystem';
 import { MergeStatsSystem } from '@/systems/MergeStatsSystem';
-import { TutorialSystem, TutorialStep } from '@/systems/TutorialSystem';
+import { TutorialManager, TutorialStep } from '@/managers/TutorialManager';
+import { TutorialOverlay } from '@/systems/TutorialOverlay';
 import { SoundSystem } from '@/systems/SoundSystem';
 import { AudioManager } from '@/core/AudioManager';
 import { GMPanel } from '@/gameobjects/ui/GMPanel';
@@ -123,7 +124,7 @@ export class MainScene implements Scene {
   private _mergeStats!: MergeStatsSystem;
 
   // ---- 留存系统 ----
-  private _tutorialSystem!: TutorialSystem;
+  private _tutorialOverlay!: TutorialOverlay;
   private _checkInPanel!: CheckInPanel;
   private _questPanel!: QuestPanel;
   private _offlineRewardPanel!: OfflineRewardPanel;
@@ -216,6 +217,14 @@ export class MainScene implements Scene {
       // 从花店切回时同步 DressUpManager 当前装扮（避免仅依赖 dressup:equipped 漏刷新）
       this._refreshOwnerOutfit();
       SoundSystem.playMainBGM();
+
+      // 从花店返回后恢复教程引导
+      if (TutorialManager.isActive) {
+        if (TutorialManager.currentStep === TutorialStep.SWITCH_BACK_MERGE) {
+          TutorialManager.advanceTo(TutorialStep.TUTORIAL_GIFT);
+        }
+        this._tutorialOverlay.bind('main');
+      }
     }
 
     Game.ticker.add(this._update, this);
@@ -232,6 +241,11 @@ export class MainScene implements Scene {
     Game.ticker.remove(this._update, this);
     RewardFlyCoordinator.setBindings(null);
 
+    // 解除教程 UI 绑定
+    if (this._tutorialOverlay) {
+      this._tutorialOverlay.unbind();
+    }
+
     // 停止触觉反馈层上的粒子等效果
     if (this._hapticSystem) {
       this._hapticSystem.stopAll();
@@ -241,24 +255,26 @@ export class MainScene implements Scene {
   /** 游戏就绪后的启动流程 */
   private _onGameReady(): void {
     // 1. 离线收益（关闭时 IdleManager 仅同步时间戳，此处恒为 null）
+    // 教程期间跳过离线收益弹窗
     const offlineReward = IdleManager.calculateOfflineReward();
-    if (offlineReward) {
+    if (offlineReward && !TutorialManager.isActive) {
       this._offlineRewardPanel.show(offlineReward);
-      return; // 先展示离线收益，后续引导在关闭后触发
+      return;
     }
 
     // 2. 检查签到
     if (CheckInManager.canCheckIn) {
       // 延迟弹出签到面板
       setTimeout(() => {
-        if (!this._tutorialSystem.isActive) {
+        if (!TutorialManager.isActive) {
           this._checkInPanel.open();
         }
       }, 500);
     }
 
     // 3. 启动新手引导（如果需要）
-    this._tutorialSystem.start();
+    TutorialManager.start();
+    this._tutorialOverlay.bind('main');
 
     // 4. 任务完成提示
     if (QuestManager.hasClaimableQuest) {
@@ -340,8 +356,11 @@ export class MainScene implements Scene {
     // ---- 留存系统 UI（全局覆盖层，任何场景都能使用） ----
     const overlay = OverlayManager.container;
 
-    // 新手引导系统
-    this._tutorialSystem = new TutorialSystem(this.container);
+    // 新手引导 UI 覆盖层
+    this._tutorialOverlay = new TutorialOverlay(this.container, {
+      customerScrollArea: this._customerScrollArea,
+      itemInfoBar: this._infoBar,
+    });
 
     // 签到面板
     this._checkInPanel = new CheckInPanel();
@@ -583,11 +602,6 @@ export class MainScene implements Scene {
         CustomerManager.deliver(uid);
       }
     });
-
-    // 交付完成后的 Toast 提示
-    EventBus.on('customer:delivered', (_uid: number, customer: any) => {
-      ToastMessage.show(`${customer.name} 满意离开！花愿+${customer.huayuanReward}`);
-    });
   }
 
   /** 棋盘货币物品双击：弧线飞入 TopBar（与客人花愿飞入同一套），到账在动画结束后执行 */
@@ -768,6 +782,24 @@ export class MainScene implements Scene {
       onAllArrived,
       initialDelay,
       playEntrySound,
+    );
+  }
+
+  /** 体力面板到账后：从对应列体力图标飞向顶栏闪电位 */
+  private _playStaminaRecoverFly(amount: number, source: 'diamond' | 'ad'): void {
+    const startGlobal = source === 'diamond'
+      ? this._staminaPanel.getStaminaFlyStartGlobalDiamond()
+      : this._staminaPanel.getStaminaFlyStartGlobalAd();
+    const sp = this._topBar.getStaminaIconPos();
+    const endGlobal = this._topBar.toGlobal(new PIXI.Point(sp.x, sp.y));
+    RewardFlyCoordinator.playRewardFlyGlobal(
+      'icon_energy',
+      startGlobal,
+      endGlobal,
+      amount,
+      () => { this._topBar.flashStamina(); },
+      0,
+      true,
     );
   }
 
@@ -1092,10 +1124,11 @@ export class MainScene implements Scene {
     // 离线收益领取后检查签到
     EventBus.on('idle:claimed', () => {
       setTimeout(() => {
-        if (CheckInManager.canCheckIn && !this._tutorialSystem.isActive) {
+        if (CheckInManager.canCheckIn && !TutorialManager.isActive) {
           this._checkInPanel.open();
         }
-        this._tutorialSystem.start();
+        TutorialManager.start();
+        this._tutorialOverlay.bind('main');
       }, 500);
     });
 
@@ -1122,15 +1155,28 @@ export class MainScene implements Scene {
       this._staminaPanel.updateTimer();
     });
 
+    // 体力购买 / 广告恢复：闪电飞入顶栏体力位（与棋盘货币飞入同一套）
+    EventBus.on('stamina:bought', (amount: number) => {
+      this._playStaminaRecoverFly(amount, 'diamond');
+    });
+    EventBus.on('stamina:adRecovered', (amount: number) => {
+      this._playStaminaRecoverFly(amount, 'ad');
+    });
+
     // 顶栏商店图标 → 全屏摊位购买面板（合成主界面与花店场景共用 overlay 上面板）
     EventBus.on('panel:openMerchShop', () => {
+      if (TutorialManager.isActive) return;
       const cur = SceneManager.current?.name;
       if (cur !== 'main' && cur !== 'shop') return;
       this._merchShopPanel.open();
     });
 
     // ---- 装修系统事件 ----
-    EventBus.on('nav:openDeco', () => this._decoPanel.open());
+    EventBus.on('nav:openDeco', () => {
+      if (TutorialManager.isActive
+        && TutorialManager.currentStep !== TutorialStep.GUIDE_BUY_FURNITURE) return;
+      this._decoPanel.open();
+    });
 
     // ---- 场景入口事件（左侧浮动按钮） ----
     EventBus.on('nav:openDressup', () => {
@@ -1201,11 +1247,17 @@ export class MainScene implements Scene {
     // ---- 进入花店/房屋装修场景（底栏 ，非「购买商店」；购买商店为顶栏 panel:openMerchShop） ----
     EventBus.on('scene:switchToShop', () => {
       if (SceneManager.current?.name !== 'main') return;
+      // 教程期间仅在 SWITCH_TO_SHOP 步骤允许切换
+      if (TutorialManager.isActive
+        && TutorialManager.currentStep !== TutorialStep.SWITCH_TO_SHOP) {
+        return;
+      }
       this._switchToShopScene();
     });
 
     // ---- 大地图（花店按钮 → 全屏覆盖层） ----
     EventBus.on('worldmap:open', () => {
+      if (TutorialManager.isActive) return;
       const cur = SceneManager.current;
       const finish = (liveRt: PIXI.RenderTexture | null) => {
         OverlayManager.bringToFront();
@@ -1275,12 +1327,13 @@ export class MainScene implements Scene {
     // 此处不再重复调用，避免动画速度翻倍
     SaveManager.update(dt);
     MergeCompanionManager.setMergeCompanionBlocked(
-      this._tutorialSystem.isActive && this._tutorialSystem.currentStep < TutorialStep.FREE_EXPLORE,
+      TutorialManager.isActive && TutorialManager.currentStep < TutorialStep.COMPLETED,
     );
     MergeCompanionManager.update(dt);
 
     this._infoBar.tickMergeBubbleCountdown();
     this._infoBar.tickSelectedToolCooldownUi();
+    this._infoBar.tickHouseShopAffordHint(dt);
     this._boardView.refreshMergeCompanionHud();
     this._boardView.updateCdDisplay();
     this._topBar.updateTimer();

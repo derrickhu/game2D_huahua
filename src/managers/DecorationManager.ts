@@ -18,7 +18,7 @@ import {
 } from '@/config/DecorationConfig';
 
 export interface DecoSaveData {
-  /** 已解锁的装饰ID集合 */
+  /** 已拥有装饰 ID（花愿购入后写入；与游玩语义「购买前置已满足」不同，勿混用） */
   unlocked: string[];
   /** 当前装备：slot → decoId */
   equipped: Record<string, string>;
@@ -31,7 +31,7 @@ export interface DecoSaveData {
 }
 
 class DecorationManagerClass {
-  /** 已解锁的装饰 ID */
+  /** 已拥有（花愿购入）的装饰 ID；`unlockRequirement` 才是「允许购买」的前置 */
   private _unlocked = new Set<string>();
   /** 当前装备：slot → decoId */
   private _equipped = new Map<string, string>();
@@ -262,7 +262,8 @@ class DecorationManagerClass {
   }
 
   /**
-   * 检查是否有可以购买但未解锁的新装饰
+   * 是否有「购买前置已满足、尚未花愿购入、且当前花愿够付」的装饰。
+   * `_unlocked` 表示已拥有；`!_unlocked` = 尚未买；`unlockRequirement` = 何时才允许买。
    */
   hasAffordableNew(): boolean {
     const huayuan = CurrencyManager.state.huayuan;

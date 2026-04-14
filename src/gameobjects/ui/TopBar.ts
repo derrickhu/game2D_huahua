@@ -1,11 +1,12 @@
 /**
  * 顶部信息栏
  *
- * 布局：[花愿]  [体力胶囊 … +]  [钻石条+加号]  [内购商店图标*]  [GM 槽：隐形热区连点5次激活 → ] …（商店无白底； 仅 GM 激活后可见）
+ * 布局：[花愿]  [体力胶囊 … +]  [钻石条]  [内购商店图标*]  [GM 槽：隐形热区连点5次激活 → ] …（商店无白底； 仅 GM 激活后可见）
  *
  * 星星进度仅在花店装修场景进度条展示，顶栏不再显示星星槽位。
  *
- * - 体力：粉米色圆角外框 + 内绿进度 + 左侧闪电叠压 + 闪电右下绿圆加号 + 居中数值 + 条下倒计时
+ * - 体力：粉米色圆角外框 + 内绿进度 + 左侧闪电叠压 + 闪电右下绿圆加号（打开体力面板）+ 居中数值 + 条下倒计时
+ * - 钻石：粉框胶囊 + 左侧宝石叠压 + 数值（无加号；暂无内购加钻入口）
  * - 花愿：图标 + 数值叠在底边，图标中心与体力闪电/钻石宝石同一水平中线
  */
 import * as PIXI from 'pixi.js';
@@ -44,7 +45,7 @@ const GAP_STAMINA_TO_DIAMOND = 28;
 /** 钻石条（含左侧宝石叠压）左上角 x */
 const DIAMOND_LP = STA_X + STA_W + GAP_STAMINA_TO_DIAMOND;
 
-// 钻石条（参考：浅色圆角底 + 左侧宝石 + 绿加号 + 棕色数字）
+// 钻石条（浅色圆角底 + 左侧宝石 + 棕色数字）
 const GEM_BAR_H = 38;
 /** 钻石胶囊主体宽度（整体比体力条更短） */
 const GEM_BAR_W = 86;
@@ -227,7 +228,7 @@ export class TopBar extends PIXI.Container {
     this.addChild(this._huayuanText);
   }
 
-  /* ============== 钻石（与体力条同系粉框胶囊 + 叠压宝石 + 同款绿圆加号） ============== */
+  /* ============== 钻石（与体力条同系粉框胶囊 + 叠压宝石） ============== */
 
   private _buildDiamondPill(): void {
     /** 胶囊竖直居中于 BAR_MID_Y，宝石中心落在 BAR_MID_Y */
@@ -272,15 +273,6 @@ export class TopBar extends PIXI.Container {
       fb.anchor.set(0.5);
       gemWrap.addChild(fb);
     }
-    const dPlus = this._createGreenCirclePlusButton();
-    dPlus.position.set(GEM_ICON_SIZE * 0.22, GEM_ICON_SIZE * 0.28);
-    dPlus.eventMode = 'static';
-    dPlus.cursor = 'pointer';
-    dPlus.on('pointertap', (e: PIXI.FederatedPointerEvent) => {
-      e.stopPropagation();
-      // 暂不接入购买/获取，预留
-    });
-    gemWrap.addChild(dPlus);
     root.addChild(gemWrap);
 
     this._diamondText = new PIXI.Text('0', {
@@ -380,7 +372,7 @@ export class TopBar extends PIXI.Container {
   }
 
   /**
-   * 体力闪电角 / 钻石宝石角共用的绿圆白「+」（与参考图一致：亮绿圆 + 底侧略深 + 细描边）
+   * 体力闪电角绿圆白「+」（与参考图一致：亮绿圆 + 底侧略深 + 细描边）；点击打开体力面板
    */
   private _createGreenCirclePlusButton(): PIXI.Container {
     const r = 11;

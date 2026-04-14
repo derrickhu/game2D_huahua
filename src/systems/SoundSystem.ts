@@ -11,6 +11,7 @@ import { AudioManager } from '@/core/AudioManager';
 import { EventBus } from '@/core/EventBus';
 import { Game } from '@/core/Game';
 import { SOUND_DEFS, BGM_DEFS } from '@/config/AudioConfig';
+import { SceneManager } from '@/core/SceneManager';
 
 /** 连续两次合成间隔超过此时长则变音档位从第 1 档重新计（略放宽，避免动画间隙导致永远停在第 1 档） */
 const MERGE_COMBO_GAP_MS = 2400;
@@ -147,6 +148,26 @@ class SoundSystemClass {
     } else {
       this.playMainBGM();
     }
+  }
+
+  /** 新手引导开场四格插画：源 `新手.mp3` 首 10s，循环至故事结束 */
+  playTutorialStoryIntroBGM(): void {
+    const bgm = BGM_DEFS.find(b => b.name === 'bgm_tutorial_story_intro');
+    if (bgm) {
+      AudioManager.playBGM(bgm.src, bgm.volume, { loop: true });
+    }
+  }
+
+  /** 大地图全屏页：与 `playTutorialStoryIntroBGM` 同一段音乐 */
+  playWorldMapBGM(): void {
+    this.playTutorialStoryIntroBGM();
+  }
+
+  /** 关闭大地图后按当前场景恢复 BGM（主玩法 / 花店） */
+  resumeSceneBGMAfterWorldMap(): void {
+    const n = SceneManager.current?.name;
+    if (n === 'shop') this.playShopBGM();
+    else this.playMainBGM();
   }
 
   /** 停止 BGM */

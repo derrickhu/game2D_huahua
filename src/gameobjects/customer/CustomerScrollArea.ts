@@ -95,6 +95,21 @@ export class CustomerScrollArea extends PIXI.Container {
     return this._customerViews;
   }
 
+  /**
+   * 首个已凑单、可点「完成」的客人，其完成按钮中心的全局坐标（无则 null）
+   */
+  getFirstDeliverReadyCompleteBtnGlobal(): PIXI.Point | null {
+    const customers = CustomerManager.customers;
+    for (let i = 0; i < customers.length; i++) {
+      if (!customers[i].allSatisfied) continue;
+      const v = this._customerViews[i];
+      if (!v) continue;
+      const p = v.getCompleteButtonGlobalCenter();
+      if (p) return p;
+    }
+    return null;
+  }
+
   /** 刷新客人显示 */
   refresh(): void {
     const customers = CustomerManager.customers;

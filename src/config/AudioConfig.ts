@@ -48,6 +48,8 @@ export const BGM_DEFS: SoundDef[] = [
   /** 合成主界面：沿用正式 MP3；勿改为脚本生成的 wav，除非有意替换整条 BGM */
   { name: 'bgm_main', src: 'subpkg_audio/bgm_main.mp3', volume: 0.4, desc: '主玩法 BGM' },
   { name: 'bgm_story', src: 'subpkg_audio/bgm_main.mp3', volume: 0.35, desc: '剧情 BGM（暂同主 BGM）' },
+  /** 源：`../game_assets/huahua/bgm/新手.mp3` 截取首 10s；新手四格插画 + 大地图全屏页共用 */
+  { name: 'bgm_tutorial_story_intro', src: 'subpkg_audio/bgm_tutorial_story_xinshou_intro.mp3', volume: 0.36, desc: '新手故事 / 大地图 BGM' },
   /** 源文件：`../game_assets/huahua/bgm/Felt Petals.mp3` 拷贝为无空格文件名便于运行时路径 */
   { name: 'bgm_shop', src: 'subpkg_audio/bgm_shop_felt_petals.mp3', volume: 0.38, desc: '花店/装修场景 BGM（Felt Petals）' },
 ];

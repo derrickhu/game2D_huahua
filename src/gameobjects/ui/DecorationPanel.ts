@@ -35,6 +35,7 @@ import { CurrencyManager } from '@/managers/CurrencyManager';
 import { BOARD_BAR_HEIGHT, DESIGN_WIDTH, FONT_FAMILY, COLORS } from '@/config/Constants';
 import { RoomLayoutManager } from '@/managers/RoomLayoutManager';
 import { setPendingPlaceDeco } from '@/core/DecoPlaceIntent';
+import { TutorialManager, TutorialStep } from '@/managers/TutorialManager';
 
 /** 全宽底栏：与 NB2 全幅贴边原型一致（旧版左右各留边会造成左侧大缝） */
 const PANEL_W = DESIGN_WIDTH;
@@ -237,6 +238,12 @@ type DecoGridPendingTap =
   | { type: 'room'; style: RoomStyleDef; flyCard: PIXI.Container };
 
 export class DecorationPanel extends PIXI.Container {
+  /** MainScene 唯一实例；供新手引导在 overlay 上对齐购买钮 */
+  private static _sharedInstance: DecorationPanel | null = null;
+  static get shared(): DecorationPanel | null {
+    return DecorationPanel._sharedInstance;
+  }
+
   private _bg!: PIXI.Graphics;
   private _content!: PIXI.Container;
   private _tabContainer!: PIXI.Container;
@@ -271,10 +278,16 @@ export class DecorationPanel extends PIXI.Container {
   private _closeBtn!: PIXI.Container;
   /** 购买成功后「获得新家具」浮层 */
   private _unlockOverlay: PIXI.Container | null = null;
+  /** 「放入房间」按钮节点（新手引导对齐用） */
+  private _unlockPlaceRoomHit: PIXI.Container | null = null;
   /** 飞星结束前暂存，用于到账加星与弹窗顺序 */
   private _pendingDecoGrantStar: DecoDef | null = null;
   /** 升星弹窗关闭后再弹出「获得新家具」 */
   private _pendingNewDecoAfterLevelUp: DecoDef | null = null;
+
+  /** 当前网格中首张「可花愿购买」卡片的购买区锚点（卡片局部坐标系中的点） */
+  private _tutorialPurchaseAnchor: PIXI.Container | null = null;
+  private _assignTutorialPurchaseAnchorDone = false;
 
   private readonly _onCurrencyChangedForGrid = (type?: string): void => {
     if (!this._isOpen || type !== 'huayuan') return;
@@ -288,6 +301,7 @@ export class DecorationPanel extends PIXI.Container {
 
   constructor() {
     super();
+    DecorationPanel._sharedInstance = this;
     this.visible = false;
     this.zIndex = DECO_PANEL_Z_INDEX;
     this.sortableChildren = true;
@@ -369,6 +383,31 @@ export class DecorationPanel extends PIXI.Container {
   private _sortParentOverlay(): void {
     const p = this.parent;
     if (p?.sortableChildren) p.sortChildren();
+  }
+
+  /** 面板是否处于打开态（含滑入动画期间） */
+  get isOpen(): boolean {
+    return this._isOpen;
+  }
+
+  /**
+   * 首张可立即花愿购买的家具卡、绿色购买条中心的全局坐标（设计/舞台坐标系）。
+   * 仅在新手引导「选购家具」步骤且网格已刷新时可能非空。
+   */
+  getTutorialPurchasableBuyButtonGlobal(): PIXI.Point | null {
+    if (!this._isOpen || !this._tutorialPurchaseAnchor?.parent) return null;
+    const p = new PIXI.Point(0, 0);
+    this._tutorialPurchaseAnchor.toGlobal(p, p);
+    return new PIXI.Point(p.x, p.y);
+  }
+
+  /** 「获得新家具」弹层里「放入房间」钮中心的全局坐标 */
+  getTutorialUnlockPlaceRoomButtonGlobal(): PIXI.Point | null {
+    if (!this._unlockPlaceRoomHit?.parent) return null;
+    const btnH = 46;
+    const p = new PIXI.Point(0, btnH / 2);
+    this._unlockPlaceRoomHit.toGlobal(p, p);
+    return new PIXI.Point(p.x, p.y);
   }
 
   open(): void {
@@ -980,6 +1019,8 @@ export class DecorationPanel extends PIXI.Container {
   }
 
   private _buildGrid(availH: number): void {
+    this._tutorialPurchaseAnchor = null;
+    this._assignTutorialPurchaseAnchorDone = false;
     this._clearGridScrollContent();
     if (this._activeTab === 'room_styles') { this._buildRoomStyleGrid(availH); return; }
 
@@ -1393,6 +1434,24 @@ export class DecorationPanel extends PIXI.Container {
       this._beginScroll(e);
       this._pendingGridTap = { type: 'deco', deco, flyCard: card };
     });
+
+    if (
+      TutorialManager.isActive
+      && TutorialManager.currentStep === TutorialStep.GUIDE_BUY_FURNITURE
+      && showPurchase
+      && affordPurchase
+      && !this._assignTutorialPurchaseAnchorDone
+    ) {
+      this._assignTutorialPurchaseAnchorDone = true;
+      const anchor = new PIXI.Container();
+      const bottomPad = 10;
+      const targetH = Math.min(48, Math.round((38 * ch) / CARD_BASE_H));
+      const cy = ch - bottomPad - targetH / 2;
+      anchor.position.set(cw / 2, cy);
+      card.addChild(anchor);
+      this._tutorialPurchaseAnchor = anchor;
+    }
+
     return card;
   }
 
@@ -1615,6 +1674,8 @@ export class DecorationPanel extends PIXI.Container {
       this.removeChild(this._unlockOverlay);
       this._unlockOverlay.destroy({ children: true });
       this._unlockOverlay = null;
+      this._unlockPlaceRoomHit = null;
+      EventBus.emit('decoration:tutorialUnlockPopupClosed');
     }
   }
 
@@ -1684,7 +1745,7 @@ export class DecorationPanel extends PIXI.Container {
     const btnY = cardTop + cardH - btnH - 20;
     const gap = 14;
 
-    const mkBtn = (label: string, bx: number, onTap: () => void): void => {
+    const mkBtn = (label: string, bx: number, onTap: () => void): PIXI.Container => {
       const hit = new PIXI.Container();
       hit.position.set(bx, btnY);
       hit.eventMode = 'static';
@@ -1708,15 +1769,20 @@ export class DecorationPanel extends PIXI.Container {
         onTap();
       });
       root.addChild(hit);
+      return hit;
     };
 
     mkBtn('稍后', cx - btnW / 2 - gap / 2, () => {
       this._dismissUnlockPopup();
     });
-    mkBtn('放入房间', cx + btnW / 2 + gap / 2, () => {
+    this._unlockPlaceRoomHit = mkBtn('放入房间', cx + btnW / 2 + gap / 2, () => {
       this._dismissUnlockPopup();
       this._goToPlaceDeco(deco.id);
     });
+
+    if (TutorialManager.isActive && TutorialManager.currentStep === TutorialStep.GUIDE_BUY_FURNITURE) {
+      EventBus.emit('decoration:tutorialUnlockPlaceReady');
+    }
   }
 
   private _onRoomStyleTap(style: RoomStyleDef, flyCard: PIXI.Container): void {

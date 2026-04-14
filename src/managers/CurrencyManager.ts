@@ -45,7 +45,7 @@ const STAMINA_BUY_PRICE_BASE = 10;
 const STAMINA_BUY_PRICE_STEP = 10;
 const STAMINA_BUY_PRICE_CAP = 50;
 const STAMINA_BUY_MAX_DAILY = 5;
-const STAMINA_AD_AMOUNT = 10;
+const STAMINA_AD_AMOUNT = 20;
 const STAMINA_AD_MAX_DAILY = 5;
 
 class CurrencyManagerClass {
@@ -107,6 +107,11 @@ class CurrencyManagerClass {
 
   get staminaAdAmount(): number {
     return STAMINA_AD_AMOUNT;
+  }
+
+  /** 看广告恢复体力：每日次数上限（与 `staminaAdRemaining` 搭配可写「剩余/上限」） */
+  get staminaAdMaxDaily(): number {
+    return STAMINA_AD_MAX_DAILY;
   }
 
   /** @deprecated 统一使用 addHuayuan */

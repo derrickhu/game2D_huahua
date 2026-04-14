@@ -49,6 +49,8 @@ import { WarehouseManager } from '@/managers/WarehouseManager';
 import { ITEM_DEFS } from '@/config/ItemConfig';
 import { takePendingPlaceDeco } from '@/core/DecoPlaceIntent';
 import { SoundSystem } from '@/systems/SoundSystem';
+import { TutorialManager, TutorialStep } from '@/managers/TutorialManager';
+import { TutorialOverlay } from '@/systems/TutorialOverlay';
 
 // ── 布局常量 ──
 const PROGRESS_BAR_W = 400;
@@ -200,6 +202,9 @@ export class ShopScene implements Scene {
 
   // ── 大地图（面板在 OverlayManager，此处仅入口按钮） ──
   private _worldMapBtn: PIXI.Container | null = null;
+
+  // ── 教程引导 ──
+  private _tutorialOverlay: TutorialOverlay | null = null;
 
   // ── 店主 ──
   private _ownerContainer: PIXI.Container | null = null;
@@ -361,9 +366,27 @@ export class ShopScene implements Scene {
     RewardFlyCoordinator.setBindings(this._createShopRewardFlyBindings());
 
     SoundSystem.playShopBGM();
+
+    // 教程：从合成页切入花店时推进步骤，然后绑定花店引导 UI
+    if (TutorialManager.isActive) {
+      if (TutorialManager.currentStep === TutorialStep.SWITCH_TO_SHOP) {
+        TutorialManager.advanceTo(TutorialStep.SHOP_TOUR);
+      }
+      if (TutorialManager.isShopSceneStep()
+        || TutorialManager.currentStep === TutorialStep.SWITCH_BACK_MERGE) {
+        this._tutorialOverlay = new TutorialOverlay(this.container);
+        this._tutorialOverlay.bind('shop');
+      }
+    }
   }
 
   onExit(): void {
+    // 清理教程引导
+    if (this._tutorialOverlay) {
+      this._tutorialOverlay.destroy();
+      this._tutorialOverlay = null;
+    }
+
     this._restoreShopHudAfterDecoPanel();
     RewardFlyCoordinator.setBindings(null);
     this._clearPendingDoubleTapStates();

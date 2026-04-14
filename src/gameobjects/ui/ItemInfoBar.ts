@@ -53,6 +53,8 @@ const LEAF_MAX_W = 380;
 /** 叶形条向左超出卡片左金边的像素（文字仍排在卡片内） */
 const LEAF_LEFT_OVERHANG = 32;
 const SIDE_BTN_R = 46;
+/** 左下花店入口红点半径（与左侧任务列红点比例接近） */
+const HOUSE_RED_DOT_R = 8;
 const SIDE_PAD = 58;
 const SAFE_BOTTOM = 24;
 
@@ -134,7 +136,10 @@ export class ItemInfoBar extends PIXI.Container {
 
   /** 左下：进入花店/房屋（scene:switchToShop），勿与顶栏购买商店混淆 */
   private _houseBtn!: PIXI.Container;
+  /** 花店门面图标（与红点分离，可单独呼吸缩放） */
+  private _houseVisual!: PIXI.Container;
   private _houseRedDot!: PIXI.Graphics;
+  private _houseAffordBreathPhase = 0;
   private _warehouseBtn!: PIXI.Container;
 
   private _sellBtn!: PIXI.Container;
@@ -241,6 +246,7 @@ export class ItemInfoBar extends PIXI.Container {
    */
   private _buildHouseBtn(): void {
     this._houseBtn = new PIXI.Container();
+    this._houseVisual = new PIXI.Container();
     const cx = SIDE_PAD;
     const cy = this._contentCY;
 
@@ -251,26 +257,30 @@ export class ItemInfoBar extends PIXI.Container {
       sprite.width = SIDE_BTN_R * 2;
       sprite.height = SIDE_BTN_R * 2;
       sprite.position.set(0, -2);
-      this._houseBtn.addChild(sprite);
+      this._houseVisual.addChild(sprite);
     } else {
       const circle = new PIXI.Graphics();
       circle.beginFill(0xffb74d);
       circle.lineStyle(2.2, 0xf57c00, 0.85);
       circle.drawCircle(0, 0, SIDE_BTN_R);
       circle.endFill();
-      this._houseBtn.addChild(circle);
+      this._houseVisual.addChild(circle);
       const icon = new PIXI.Text('店', { fontSize: 22, fontFamily: FONT_FAMILY, fill: 0xffffff });
       icon.anchor.set(0.5, 0.5);
       icon.position.set(0, -1);
-      this._houseBtn.addChild(icon);
+      this._houseVisual.addChild(icon);
     }
 
+    this._houseBtn.addChild(this._houseVisual);
+
+    const hrdx = SIDE_BTN_R - 3;
+    const hrdy = -SIDE_BTN_R + 5;
     this._houseRedDot = new PIXI.Graphics();
     this._houseRedDot.beginFill(0xff3333);
-    this._houseRedDot.drawCircle(SIDE_BTN_R - 2, -SIDE_BTN_R + 4, 5);
+    this._houseRedDot.drawCircle(hrdx, hrdy, HOUSE_RED_DOT_R);
     this._houseRedDot.endFill();
-    this._houseRedDot.lineStyle(1.5, 0xffffff);
-    this._houseRedDot.drawCircle(SIDE_BTN_R - 2, -SIDE_BTN_R + 4, 5);
+    this._houseRedDot.lineStyle(2, 0xffffff);
+    this._houseRedDot.drawCircle(hrdx, hrdy, HOUSE_RED_DOT_R);
     this._houseRedDot.visible = false;
     this._houseBtn.addChild(this._houseRedDot);
 
@@ -279,10 +289,21 @@ export class ItemInfoBar extends PIXI.Container {
     this._houseBtn.cursor = 'pointer';
     this._houseBtn.hitArea = new PIXI.Circle(0, 0, SIDE_BTN_R + 8);
     this._houseBtn.on('pointerdown', () => {
-      this._playBtnBounce(this._houseBtn);
+      this._playBtnBounce(this._houseVisual);
       EventBus.emit('scene:switchToShop');
     });
     this.addChild(this._houseBtn);
+  }
+
+  /**
+   * 左下「进屋 / 花店」按钮外接正方形（相对本栏容器坐标），供主场景新手引导镂空与气泡对齐。
+   */
+  getHouseButtonSpotlightRectLocal(): { x: number; y: number; w: number; h: number } {
+    const cx = this._houseBtn.x;
+    const cy = this._houseBtn.y;
+    const pad = 10;
+    const ext = SIDE_BTN_R + pad;
+    return { x: cx - ext, y: cy - ext, w: ext * 2, h: ext * 2 };
   }
 
   private _buildWarehouseBtn(): void {
@@ -615,6 +636,22 @@ export class ItemInfoBar extends PIXI.Container {
 
   updateQuickBtnRedDots(): void {
     this._houseRedDot.visible = DecorationManager.hasAffordableNew();
+  }
+
+  /**
+   * 有可负担的新家具时：花店图标（不含红点）呼吸缩放，与左侧任务入口一致节奏。
+   */
+  tickHouseShopAffordHint(dt: number): void {
+    if (!this._houseVisual || this._houseVisual.destroyed) return;
+    const afford = DecorationManager.hasAffordableNew();
+    if (!afford) {
+      this._houseAffordBreathPhase = 0;
+      this._houseVisual.scale.set(1);
+      return;
+    }
+    this._houseAffordBreathPhase += (Math.PI * 2 * dt) / 2.35;
+    const s = 1 + Math.sin(this._houseAffordBreathPhase) * 0.06;
+    this._houseVisual.scale.set(s);
   }
 
   /** 主循环：气泡消失时清底栏选中态（倒计时在棋盘 HUD） */

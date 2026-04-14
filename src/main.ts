@@ -110,8 +110,8 @@ async function main(): Promise<void> {
       });
     });
 
-    Game.stage.removeChild(loadingOverlay);
-    loadingOverlay.destroy({ children: true });
+    // 勿在此处移除 Loading：其后仍有棋盘初始化、云同步、MainScene 首帧构建等，
+    // 过早销毁会只剩 renderer 底色 0xFFF5EE，表现为「白屏一闪」。见下方 switchTo 之后。
 
     // 初始化棋盘数据
     BoardManager.init();
@@ -146,8 +146,10 @@ async function main(): Promise<void> {
     SceneManager.register(shopScene);
     console.log('[main] MainScene + ShopScene 已注册');
 
-    // 进入主场景
+    // 进入主场景（首帧 UI 已挂到 stage 后再撤掉 Loading，避免中间空窗期浅底色「白屏」）
     SceneManager.switchTo('main');
+    Game.stage.removeChild(loadingOverlay);
+    loadingOverlay.destroy({ children: true });
 
     // 监听小游戏生命周期：退到后台时保存状态
     const _apiMain: any = typeof wx !== 'undefined' ? wx : typeof tt !== 'undefined' ? tt : null;

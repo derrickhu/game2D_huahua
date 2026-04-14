@@ -131,7 +131,7 @@ class AudioManagerClass {
     }
   }
 
-  playBGM(src: string, volume = 0.5): void {
+  playBGM(src: string, volume = 0.5, opts?: { loop?: boolean }): void {
     if (!_api) {
       console.warn(TAG, 'API 不可用，无法播放 BGM');
       return;
@@ -153,7 +153,7 @@ class AudioManagerClass {
         return;
       }
 
-      this._bgm.loop = true;
+      this._bgm.loop = opts?.loop ?? true;
       this._bgm.volume = volume;
       this._bgm.onError((err: any) => {
         console.warn(TAG, `BGM "${src}" 播放失败:`, err?.errMsg || err);

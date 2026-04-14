@@ -29,6 +29,7 @@ import { LevelManager } from './LevelManager';
 import { DecorationManager } from './DecorationManager';
 import { EventManager } from './EventManager';
 import { RoomLayoutManager } from './RoomLayoutManager';
+import { TutorialManager } from './TutorialManager';
 import { CellState } from '@/config/BoardLayout';
 import { DECO_DEFS } from '@/config/DecorationConfig';
 import {
@@ -201,7 +202,7 @@ class GMManagerClass {
       name: ' 重置新手引导',
       desc: '清除教程进度，下次启动重新引导',
       execute: () => {
-        PersistService.remove('huahua_tutorial');
+        TutorialManager.forceReset();
         return ' 教程进度已清除，刷新后将重新开始新手引导';
       },
     });
@@ -694,7 +695,7 @@ class GMManagerClass {
       name: '⏩ 跳过教程',
       desc: '标记教程为已完成',
       execute: () => {
-        PersistService.writeRaw('huahua_tutorial', '99');
+        TutorialManager.forceComplete();
         return ' 教程已标记完成（重刷生效）';
       },
     });
