@@ -1103,11 +1103,12 @@ export class MainScene implements Scene {
     });
 
     // 升级弹窗（收纳盒物品在飞入礼包动画结束后再写入）；仅主场景处理，避免与花店场景重复弹窗/重复入库
-    EventBus.on('level:up', (level: number, reward: any) => {
+    EventBus.on('level:up', (level: number, reward: any, oldLevel?: number) => {
       if (SceneManager.current?.name !== 'main') return;
       const g = this._rewardBoxButton.toGlobal(this._rewardBoxButton.getItemSlotCenterLocal());
       this._levelUpPopup.show(level, reward, {
         rewardFlyTargetGlobal: g,
+        previousLevel: oldLevel,
         onGrantRewardBoxItems: entries => {
           let any = false;
           for (const { itemId, count } of entries) {

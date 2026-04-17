@@ -276,6 +276,22 @@ export const DECO_DEFS: DecoDef[] = [
 /** 按 ID 查找装饰 */
 export const DECO_MAP = new Map<string, DecoDef>(DECO_DEFS.map(d => [d.id, d]));
 
+/** 获取某等级范围 (fromLevel, toLevel] 内按等级解锁的家具（用于升级弹窗展示） */
+export function getDecosUnlockedInLevelRange(fromLevel: number, toLevel: number): DecoDef[] {
+  return DECO_DEFS.filter(d => {
+    const lv = d.unlockRequirement?.level;
+    return lv !== undefined && lv > fromLevel && lv <= toLevel;
+  });
+}
+
+/** 获取某等级范围 (fromLevel, toLevel] 内按等级解锁的房间风格 */
+export function getRoomStylesUnlockedInLevelRange(fromLevel: number, toLevel: number): RoomStyleDef[] {
+  return ROOM_STYLES.filter(s => {
+    const lv = s.unlockRequirement?.level;
+    return lv !== undefined && lv > fromLevel && lv <= toLevel;
+  });
+}
+
 /**
  * 深度排序「台面小物」辅助量上限须与 RoomDepthSort 中 zLayer、stackTie 之和一起 &lt; ROOM_DEPTH_Y_MULT。
  * 具体 clamp 在 roomDepthZForPlacement 内完成。

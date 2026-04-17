@@ -371,10 +371,27 @@ class CustomerManagerClass {
     const customer = this._customers[idx];
     if (!customer.allSatisfied) return false;
 
+    // 即时为本客人查找可用格子（因 allSatisfied 不再独占锁格，
+    // 部分 slot 的 lockedCellIndex 可能为 -1）
+    const usedCells = new Set<number>();
     for (const slot of customer.slots) {
       if (slot.lockedCellIndex >= 0) {
-        BoardManager.removeItem(slot.lockedCellIndex);
+        usedCells.add(slot.lockedCellIndex);
+        continue;
       }
+      for (const cell of BoardManager.cells) {
+        if (cell.state !== 'open' || !cell.itemId) continue;
+        if (usedCells.has(cell.index)) continue;
+        if (cell.itemId !== slot.itemId) continue;
+        slot.lockedCellIndex = cell.index;
+        usedCells.add(cell.index);
+        break;
+      }
+    }
+    if (!customer.slots.every(s => s.lockedCellIndex >= 0)) return false;
+
+    for (const slot of customer.slots) {
+      BoardManager.removeItem(slot.lockedCellIndex);
     }
 
     const hy = customer.huayuanReward;
@@ -592,7 +609,8 @@ class CustomerManagerClass {
     }
 
     const activeCount = Math.min(this._customers.length, this.maxCustomers);
-    /** 同一物理格只能满足一位客人的一个槽，避免多订单重复锁同一格 */
+
+    // 第一遍：独占锁格，用于棋盘格 reserved 高亮（仅第一位匹配的客人占格）
     const globallyUsedCells = new Set<number>();
     for (let ci = 0; ci < activeCount; ci++) {
       const cust = this._customers[ci];
@@ -617,8 +635,27 @@ class CustomerManagerClass {
           globallyUsedCells.add(bestIndex);
         }
       }
+    }
 
-      cust.allSatisfied = cust.slots.every(s => s.lockedCellIndex >= 0);
+    // 第二遍：独立判定每位客人能否完成（不互斥），
+    // 允许多位客人同时显示「完成」按钮，由玩家决定提交哪个。
+    for (let ci = 0; ci < activeCount; ci++) {
+      const cust = this._customers[ci];
+      const usedCells = new Set<number>();
+      let satisfied = true;
+      for (const slot of cust.slots) {
+        let found = false;
+        for (const cell of BoardManager.cells) {
+          if (cell.state !== 'open' || !cell.itemId) continue;
+          if (usedCells.has(cell.index)) continue;
+          if (cell.itemId !== slot.itemId) continue;
+          usedCells.add(cell.index);
+          found = true;
+          break;
+        }
+        if (!found) { satisfied = false; break; }
+      }
+      cust.allSatisfied = satisfied;
     }
 
     const queueOrderChanged = this._prioritizeReadyCustomers();

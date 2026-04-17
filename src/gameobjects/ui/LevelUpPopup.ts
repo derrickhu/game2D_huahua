@@ -8,6 +8,12 @@ import { AudioManager } from '@/core/AudioManager';
 import { TweenManager, Ease } from '@/core/TweenManager';
 import { DESIGN_WIDTH, COLORS, FONT_FAMILY } from '@/config/Constants';
 import { ITEM_DEFS } from '@/config/ItemConfig';
+import {
+  getDecosUnlockedInLevelRange,
+  getRoomStylesUnlockedInLevelRange,
+  type DecoDef,
+  DecoRarity,
+} from '@/config/DecorationConfig';
 import { TextureCache } from '@/utils/TextureCache';
 import { RewardFlyCoordinator, type RewardFlyItem } from '@/core/RewardFlyCoordinator';
 import {
@@ -39,6 +45,8 @@ export interface LevelUpPopupShowOptions {
   celebrationTitle?: string;
   /** 淡出并从舞台移除完毕后回调（用于衔接后续弹窗，如花店「获得新家具」） */
   onFullyClosed?: () => void;
+  /** 升级前的旧等级，用于计算本次解锁的家具范围 */
+  previousLevel?: number;
 }
 
 export class LevelUpPopup extends PIXI.Container {
@@ -142,6 +150,15 @@ export class LevelUpPopup extends PIXI.Container {
         const def = ITEM_DEFS.get(s.itemId);
         return { x: s.cx, y: s.cy, texKey: def?.icon ?? s.itemId, count: s.count };
       });
+
+      if (!this._previewOnly) {
+        const prevLevel = options?.previousLevel ?? (level - 1);
+        const unlockedDecos = getDecosUnlockedInLevelRange(prevLevel, level);
+        const unlockedStyles = getRoomStylesUnlockedInLevelRange(prevLevel, level);
+        if (unlockedDecos.length > 0 || unlockedStyles.length > 0) {
+          this._appendUnlockSection(content, W, unlockedDecos, unlockedStyles);
+        }
+      }
 
       this.eventMode = 'static';
       this.hitArea = new PIXI.Rectangle(0, 0, W, H);
@@ -360,6 +377,159 @@ export class LevelUpPopup extends PIXI.Container {
     panelRoot.addChild(closeBtn);
 
     this.addChild(panelRoot);
+  }
+
+  // ── 解锁家具展示区 ──────────────────────────────────
+
+  private _appendUnlockSection(
+    content: PIXI.Container,
+    W: number,
+    decos: DecoDef[],
+    styles: { name: string }[],
+  ): void {
+    let hintNode: PIXI.Text | null = null;
+    for (const child of content.children) {
+      if (child instanceof PIXI.Text && (child as PIXI.Text).text === '点击继续') {
+        hintNode = child as PIXI.Text;
+        break;
+      }
+    }
+    if (!hintNode) return;
+
+    const COLS = 3;
+    const MAX_SHOW = 9;
+    const ICON_SIZE = 46;
+    const CELL_W = 78;
+    const CELL_H = 68;
+    const COL_GAP = 6;
+    const ROW_GAP = 4;
+    const NAME_FONT = 11;
+
+    const RARITY_ORDER: Record<string, number> = {
+      [DecoRarity.LIMITED]: 0,
+      [DecoRarity.RARE]: 1,
+      [DecoRarity.FINE]: 2,
+      [DecoRarity.COMMON]: 3,
+    };
+    const sorted = [...decos].sort(
+      (a, b) => (RARITY_ORDER[a.rarity] ?? 9) - (RARITY_ORDER[b.rarity] ?? 9) || b.cost - a.cost,
+    );
+
+    const totalCount = sorted.length;
+    const hasOverflow = totalCount > MAX_SHOW;
+    const displayItems = hasOverflow ? sorted.slice(0, MAX_SHOW - 1) : sorted;
+
+    const startY = hintNode.y - 10;
+
+    const divider = new PIXI.Graphics();
+    divider.lineStyle(1, 0xDEC090, 0.35);
+    divider.moveTo(W / 2 - 90, startY - 6);
+    divider.lineTo(W / 2 + 90, startY - 6);
+    divider.eventMode = 'none';
+    content.addChild(divider);
+
+    const header = new PIXI.Text('解锁新家具', {
+      fontSize: 15,
+      fill: 0xfff0c8,
+      fontFamily: FONT_FAMILY,
+      fontWeight: 'bold',
+      stroke: 0x7a5c2e,
+      strokeThickness: 2.5,
+    });
+    header.anchor.set(0.5, 0);
+    header.position.set(W / 2, startY);
+    header.eventMode = 'none';
+    content.addChild(header);
+
+    if (styles.length > 0) {
+      const styleNames = styles.map(s => s.name).join('、');
+      const styleHint = new PIXI.Text(`新风格：${styleNames}`, {
+        fontSize: 12,
+        fill: 0xfff0c8,
+        fontFamily: FONT_FAMILY,
+        stroke: 0x5d4037,
+        strokeThickness: 1.5,
+      });
+      styleHint.anchor.set(0.5, 0);
+      styleHint.position.set(W / 2, startY + 20);
+      styleHint.eventMode = 'none';
+      content.addChild(styleHint);
+    }
+
+    const gridTop = startY + (styles.length > 0 ? 38 : 24);
+    const gridW = COLS * CELL_W + (COLS - 1) * COL_GAP;
+    const gridLeft = (W - gridW) / 2;
+
+    const RARITY_BORDER_COLOR: Record<string, number> = {
+      [DecoRarity.LIMITED]: 0xFF9800,
+      [DecoRarity.RARE]: 0x64B5F6,
+      [DecoRarity.FINE]: 0x81C784,
+      [DecoRarity.COMMON]: 0xDEC090,
+    };
+
+    for (let i = 0; i < displayItems.length; i++) {
+      const item = displayItems[i]!;
+      const col = i % COLS;
+      const row = Math.floor(i / COLS);
+      const cx = gridLeft + col * (CELL_W + COL_GAP) + CELL_W / 2;
+      const cellTop = gridTop + row * (CELL_H + ROW_GAP);
+
+      const borderColor = RARITY_BORDER_COLOR[item.rarity] ?? 0xDEC090;
+      const cellBg = new PIXI.Graphics();
+      cellBg.beginFill(0x000000, 0.18);
+      cellBg.drawRoundedRect(cx - CELL_W / 2, cellTop, CELL_W, CELL_H, 8);
+      cellBg.endFill();
+      cellBg.lineStyle(1, borderColor, 0.6);
+      cellBg.drawRoundedRect(cx - CELL_W / 2, cellTop, CELL_W, CELL_H, 8);
+      cellBg.eventMode = 'none';
+      content.addChild(cellBg);
+
+      const tex = TextureCache.get(item.icon);
+      if (tex && tex.width > 0) {
+        const sp = new PIXI.Sprite(tex);
+        sp.anchor.set(0.5);
+        const scale = ICON_SIZE / Math.max(tex.width, tex.height);
+        sp.scale.set(scale);
+        sp.position.set(cx, cellTop + ICON_SIZE / 2 + 2);
+        sp.eventMode = 'none';
+        content.addChild(sp);
+      }
+
+      const name = new PIXI.Text(item.name, {
+        fontSize: NAME_FONT,
+        fill: 0xfff8e7,
+        fontFamily: FONT_FAMILY,
+        wordWrap: true,
+        wordWrapWidth: CELL_W - 4,
+        align: 'center',
+      });
+      name.anchor.set(0.5, 0);
+      name.position.set(cx, cellTop + ICON_SIZE + 5);
+      name.eventMode = 'none';
+      content.addChild(name);
+    }
+
+    const displayRows = Math.ceil(displayItems.length / COLS);
+    let bottomY = gridTop + displayRows * (CELL_H + ROW_GAP);
+
+    if (hasOverflow) {
+      const remaining = totalCount - displayItems.length;
+      const overflow = new PIXI.Text(`等${remaining}件家具`, {
+        fontSize: 13,
+        fill: 0xdec8a0,
+        fontFamily: FONT_FAMILY,
+        fontWeight: 'bold',
+        stroke: 0x5d4037,
+        strokeThickness: 1.5,
+      });
+      overflow.anchor.set(0.5, 0);
+      overflow.position.set(W / 2, bottomY + 2);
+      overflow.eventMode = 'none';
+      content.addChild(overflow);
+      bottomY += 22;
+    }
+
+    hintNode.position.y = bottomY + 14;
   }
 
   private _dismiss(): void {

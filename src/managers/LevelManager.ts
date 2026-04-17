@@ -131,7 +131,7 @@ class LevelManagerClass {
       console.log(
         `[Level] 星级提升！${oldLevel}→${newLevel}星, 奖励: ${stLog}钻石+${reward.diamond}${boxLog}`,
       );
-      EventBus.emit('level:up', newLevel, reward);
+      EventBus.emit('level:up', newLevel, reward, oldLevel);
     });
   }
 }

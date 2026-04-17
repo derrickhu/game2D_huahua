@@ -250,7 +250,7 @@ export class ShopScene implements Scene {
   };
 
   /** 花店内升星：弹窗展示奖励；确定后货币飞顶栏、宝箱飞回「营业返回」钮再入库 */
-  private readonly _onShopLevelUp = (level: number, reward: any): void => {
+  private readonly _onShopLevelUp = (level: number, reward: any, oldLevel?: number): void => {
     if (SceneManager.current?.name !== 'shop') return;
     const flyTarget = this._returnBtn?.toGlobal(new PIXI.Point(0, 0));
     this._levelUpPopup.show(
@@ -263,6 +263,7 @@ export class ShopScene implements Scene {
       },
       {
         rewardFlyTargetGlobal: flyTarget ?? undefined,
+        previousLevel: oldLevel,
         onGrantRewardBoxItems: entries => {
           let any = false;
           for (const { itemId, count } of entries) {
