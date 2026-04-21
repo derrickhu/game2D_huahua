@@ -1,34 +1,33 @@
+/**
+ * 云同步管理器 —— HTTP 版
+ *
+ * 对接 CloudBase HTTP 访问服务（见 src/core/BackendService.ts）。
+ * 逻辑保留：
+ *   - 启动时拉云端 + 本地合并（updatedAt 比较决定上/下行）
+ *   - 本地脏标记订阅 + 防抖
+ *   - 连续失败指数退避 / 低频重试
+ *
+ * 每平台独立身份（wx:/dy:/anon: 前缀），不互通；闸门改用 Platform.canUseBackend。
+ */
+
 import {
-  CLOUD_ENV_ID,
-  CLOUD_PLAYER_DATA_COLLECTION,
   CLOUD_SYNC_BASE_DELAY_MS,
   CLOUD_SYNC_DEBOUNCE_MS,
-  CLOUD_SYNC_FUNCTIONS,
   CLOUD_SYNC_LOG_THRESHOLD,
   CLOUD_SYNC_MAX_BACKOFF_MS,
   CLOUD_SYNC_MAX_FAIL_COUNT,
   CLOUD_SYNC_RETRY_INTERVAL_MS,
   CLOUD_SYNC_STARTUP_TIMEOUT_MS,
 } from '@/config/CloudConfig';
+import { BackendError, BackendService } from '@/core/BackendService';
 import { PersistService } from '@/core/PersistService';
 import { Platform } from '@/core/PlatformService';
-
-interface CloudPlayerDataDoc {
-  _id?: string;
-  _openid?: string;
-  schemaVersion?: number;
-  updatedAt?: number;
-  clientFingerprint?: string;
-  payload?: Record<string, string>;
-  payloadKeys?: string[];
-}
 
 class CloudSyncManagerClass {
   private _initPromise: Promise<void> | null = null;
   private _startupPromise: Promise<void> | null = null;
   private _cloudReady = false;
   private _initDone = false;
-  private _openid = '';
   private _syncTimer: ReturnType<typeof setTimeout> | null = null;
   private _retryTimer: ReturnType<typeof setInterval> | null = null;
   private _syncFailCount = 0;
@@ -44,20 +43,20 @@ class CloudSyncManagerClass {
   }
 
   get enabled(): boolean {
-    return Platform.isWechat;
+    return BackendService.available;
   }
 
   get ready(): boolean {
     return this._cloudReady;
   }
 
-  get openid(): string {
-    return this._openid;
+  get userId(): string {
+    return BackendService.userId;
   }
 
   prewarm(): void {
     if (!this.enabled) {
-      console.log('[CloudSync] prewarm 跳过: enabled=false, isWechat=', Platform.isWechat);
+      console.log('[CloudSync] prewarm 跳过: enabled=false, platform=', Platform.name);
       return;
     }
     if (!this._startupPromise) {
@@ -133,25 +132,16 @@ class CloudSyncManagerClass {
 
     this._initPromise = (async () => {
       try {
-        console.log('[CloudSync] 初始化中... env:', CLOUD_ENV_ID, 'supportsCloud:', Platform.supportsCloud);
-        const inited = Platform.initCloud({ env: CLOUD_ENV_ID, traceUser: true });
-        if (!inited) {
-          console.warn('[CloudSync] 微信云开发初始化不可用，继续使用本地存档');
-          return;
-        }
-        console.log('[CloudSync] 云环境初始化成功，开始创建集合...');
-
-        await this._ensureCollections();
-        console.log('[CloudSync] 集合检查完成，获取 openid...');
-        this._openid = await this._getOpenid();
-        this._cloudReady = !!this._openid;
+        console.log('[CloudSync] 初始化中... platform:', Platform.name);
+        await BackendService.ensureToken();
+        this._cloudReady = !!BackendService.userId;
 
         if (!this._cloudReady) {
-          console.warn('[CloudSync] openid 获取失败，继续使用本地存档');
+          console.warn('[CloudSync] 未能获取 token/userId，继续使用本地存档');
           return;
         }
 
-        console.log('[CloudSync] 云同步就绪! openid:', this._openid.slice(0, 8) + '...');
+        console.log('[CloudSync] 云同步就绪! userId:', BackendService.userId);
         await this._pullFromCloudOnStartup();
       } catch (e) {
         console.warn('[CloudSync] 初始化失败，继续使用本地存档:', e);
@@ -168,25 +158,31 @@ class CloudSyncManagerClass {
   }
 
   private async _pullFromCloudOnStartup(): Promise<void> {
-    const docs = await this._queryPlayerDocs();
+    let remote;
+    try {
+      remote = await BackendService.pullSave();
+    } catch (e) {
+      console.warn('[CloudSync] 启动拉取失败，保持本地存档:', e);
+      // 拉取失败但已登录：本地若有脏数据仍尝试上行（下一轮同步时会再走 push）
+      if (PersistService.isCloudDirty()) {
+        this.scheduleSync('startup-pull-failed');
+      }
+      return;
+    }
+
     const localSnapshot = PersistService.exportCloudSnapshot();
 
-    if (docs.length === 0) {
+    if (!remote.exists) {
       if (localSnapshot.payloadKeys.length > 0) {
         this.scheduleSync('startup-no-remote-doc');
       }
       return;
     }
 
-    const primary = [...docs].sort((a, b) => (b.updatedAt || 0) - (a.updatedAt || 0))[0];
-    const remotePayloadKeys = Array.isArray(primary.payloadKeys)
-      ? primary.payloadKeys
-      : Object.keys(primary.payload || {});
-    const remoteUpdatedAt = typeof primary.updatedAt === 'number' ? primary.updatedAt : 0;
-
-    if (docs.length > 1 && primary._id) {
-      await this._cleanupDuplicateDocs(docs, primary._id);
-    }
+    const remoteUpdatedAt = Number(remote.updatedAt) || 0;
+    const remotePayloadKeys = Array.isArray(remote.payloadKeys)
+      ? remote.payloadKeys
+      : Object.keys(remote.payload || {});
 
     const shouldApplyRemote = remotePayloadKeys.length > 0
       && (localSnapshot.payloadKeys.length === 0 || remoteUpdatedAt > localSnapshot.updatedAt);
@@ -194,7 +190,7 @@ class CloudSyncManagerClass {
     if (shouldApplyRemote) {
       PersistService.importCloudSnapshot({
         updatedAt: remoteUpdatedAt,
-        payload: primary.payload || {},
+        payload: remote.payload || {},
       });
       console.log(`[CloudSync] 启动期已从云端恢复 ${remotePayloadKeys.length} 个 key`);
       return;
@@ -234,46 +230,47 @@ class CloudSyncManagerClass {
       }
 
       const finalSnapshot = PersistService.exportCloudSnapshot();
-      const docData = {
-        schemaVersion: finalSnapshot.schemaVersion,
-        updatedAt: finalSnapshot.updatedAt,
-        clientFingerprint: this._buildClientFingerprint(),
-        payload: finalSnapshot.payload,
-        payloadKeys: finalSnapshot.payloadKeys,
-      };
 
-      const db = Platform.getCloudDatabase();
-      if (!db) {
-        throw new Error('cloud database unavailable');
-      }
+      try {
+        const res = await BackendService.pushSave({
+          schemaVersion: finalSnapshot.schemaVersion,
+          updatedAt: finalSnapshot.updatedAt,
+          clientFingerprint: this._buildClientFingerprint(),
+          payload: finalSnapshot.payload,
+        });
 
-      const collection = db.collection(CLOUD_PLAYER_DATA_COLLECTION);
-      const docs = await this._queryPlayerDocs();
+        PersistService.markCloudSynced(res.updatedAt || finalSnapshot.updatedAt);
 
-      if (docs.length > 1) {
-        const primary = [...docs].sort((a, b) => (b.updatedAt || 0) - (a.updatedAt || 0))[0];
-        await collection.doc(primary._id).update({ data: docData });
-        await this._cleanupDuplicateDocs(docs, primary._id!);
-      } else if (docs.length === 1 && docs[0]._id) {
-        await collection.doc(docs[0]._id).update({ data: docData });
-      } else {
-        await collection.add({ data: docData });
-      }
+        if (this._syncFailCount > 0) {
+          console.log('[CloudSync] 云同步恢复成功');
+        }
+        console.log(
+          `[CloudSync] 云端已同步 reason=${reason}, keys=${finalSnapshot.payloadKeys.length}, size=${res.sizeBytes ?? finalSnapshot.sizeBytes}B`,
+        );
 
-      PersistService.markCloudSynced(finalSnapshot.updatedAt);
-
-      if (this._syncFailCount > 0) {
-        console.log('[CloudSync] 云同步恢复成功');
-      }
-      console.log(
-        `[CloudSync] 云端已同步 reason=${reason}, keys=${finalSnapshot.payloadKeys.length}, size=${finalSnapshot.sizeBytes}B`,
-      );
-
-      this._syncFailCount = 0;
-      this._syncDisabled = false;
-      if (this._retryTimer) {
-        clearInterval(this._retryTimer);
-        this._retryTimer = null;
+        this._syncFailCount = 0;
+        this._syncDisabled = false;
+        if (this._retryTimer) {
+          clearInterval(this._retryTimer);
+          this._retryTimer = null;
+        }
+      } catch (e) {
+        if (e instanceof BackendError && e.code === 'STALE_UPDATE' && e.data?.remote) {
+          // 服务端版本更新 → 下行覆盖，重置失败计数
+          const remote = e.data.remote as {
+            updatedAt?: number;
+            payload?: Record<string, string>;
+          };
+          console.warn('[CloudSync] 服务端版本更新，改为下行覆盖本地');
+          PersistService.importCloudSnapshot({
+            updatedAt: Number(remote.updatedAt) || Date.now(),
+            payload: remote.payload || {},
+          });
+          this._syncFailCount = 0;
+          this._syncDisabled = false;
+          return;
+        }
+        throw e;
       }
     } catch (e: any) {
       this._syncFailCount += 1;
@@ -301,61 +298,6 @@ class CloudSyncManagerClass {
         this._syncPending = false;
         this.scheduleSync('pending-resume');
       }
-    }
-  }
-
-  private async _ensureCollections(): Promise<void> {
-    try {
-      const res = await Platform.callCloudFunction({
-        name: CLOUD_SYNC_FUNCTIONS.initCollections,
-      });
-      const errors = res?.result?.errors;
-      if (Array.isArray(errors) && errors.length > 0) {
-        console.warn('[CloudSync] 初始化集合存在异常:', errors);
-      }
-    } catch (e) {
-      console.warn('[CloudSync] 初始化集合失败:', e);
-    }
-  }
-
-  private async _getOpenid(): Promise<string> {
-    const res = await Platform.callCloudFunction({
-      name: CLOUD_SYNC_FUNCTIONS.getOpenid,
-    });
-    const openid = res?.result?.openid || '';
-    console.log('[CloudSync] 当前用户 openid:', openid);
-    return openid;
-  }
-
-  private async _queryPlayerDocs(): Promise<CloudPlayerDataDoc[]> {
-    if (!this._openid) return [];
-
-    const db = Platform.getCloudDatabase();
-    if (!db) return [];
-
-    const res = await db.collection(CLOUD_PLAYER_DATA_COLLECTION).where({ _openid: this._openid }).get();
-    return Array.isArray(res?.data) ? res.data as CloudPlayerDataDoc[] : [];
-  }
-
-  private async _cleanupDuplicateDocs(docs: CloudPlayerDataDoc[], keepId: string): Promise<void> {
-    if (!keepId) return;
-
-    const db = Platform.getCloudDatabase();
-    if (!db) return;
-
-    const collection = db.collection(CLOUD_PLAYER_DATA_COLLECTION);
-    const duplicates = docs.filter((doc) => doc._id && doc._id !== keepId);
-
-    for (const doc of duplicates) {
-      try {
-        await collection.doc(doc._id).remove();
-      } catch (e) {
-        console.warn('[CloudSync] 清理重复云存档失败:', e);
-      }
-    }
-
-    if (duplicates.length > 0) {
-      console.log(`[CloudSync] 已清理 ${duplicates.length} 条重复云存档`);
     }
   }
 

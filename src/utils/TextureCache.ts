@@ -668,8 +668,11 @@ class TextureCacheClass {
           resolve();
         },
         fail: (err: any) => {
-          console.error(`[TextureCache] ${name} 分包加载失败`, err);
-          reject(err);
+          const errMsg = (err && (err.errMsg || err.message)) || '';
+          let raw = '';
+          try { raw = JSON.stringify(err); } catch (_) { raw = String(err); }
+          console.error(`[TextureCache] ${name} 分包加载失败 errMsg=${errMsg} raw=${raw}`);
+          reject(Object.assign(new Error(`loadSubpackage(${name}) 失败: ${errMsg || raw || 'unknown'}`), { raw: err }));
         },
       });
 

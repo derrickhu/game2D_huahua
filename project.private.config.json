@@ -2,7 +2,7 @@
   "libVersion": "3.12.1",
   "projectname": "game2D_huahua",
   "setting": {
-    "urlCheck": true,
+    "urlCheck": false,
     "coverView": true,
     "lazyloadPlaceholderEnable": false,
     "skylineRenderEnable": false,

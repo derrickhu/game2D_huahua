@@ -171,8 +171,11 @@ async function main(): Promise<void> {
     }
 
     console.log('[main] 花花妙屋启动完成 BUILD:', BUILD_TIME);
-  } catch (e) {
-    console.error('[main] 启动失败:', e);
+  } catch (e: any) {
+    const errMsg = (e && (e.message || e.errMsg)) || '';
+    let raw = '';
+    try { raw = JSON.stringify(e, Object.getOwnPropertyNames(e || {})); } catch (_) { raw = String(e); }
+    console.error(`[main] 启动失败: errMsg=${errMsg} raw=${raw}`, e);
   }
 }
 

@@ -42,9 +42,19 @@ class PlatformServiceClass {
     return this.name === 'wechat';
   }
 
-  /** 是否支持微信云开发 */
-  get supportsCloud(): boolean {
-    return this.isWechat && !!this._api?.cloud;
+  /** 是否抖音平台 */
+  get isDouyin(): boolean {
+    return this.name === 'douyin';
+  }
+
+  /**
+   * 是否有可用的后端 HTTP 通道
+   * - 微信 / 抖音小游戏：有原生 request API
+   * - 浏览器：有全局 fetch
+   */
+  get canUseBackend(): boolean {
+    if (this._api && typeof this._api.request === 'function') return true;
+    return typeof (globalThis as any).fetch === 'function';
   }
 
   /** 底层 API（慎用，优先使用封装方法） */
@@ -85,41 +95,143 @@ class PlatformServiceClass {
     } catch (_) {}
   }
 
-  // ═══════════════ 微信云开发 ═══════════════
+  // ═══════════════ 通用 HTTP（对接 CloudBase HTTP 访问服务）═══════════════
 
-  initCloud(opts: { env: string; traceUser?: boolean }): boolean {
-    if (!this.supportsCloud) return false;
-    try {
-      this._api.cloud.init({
-        env: opts.env,
-        traceUser: opts.traceUser ?? true,
-      });
-      return true;
-    } catch (e) {
-      console.warn('[Platform] 云开发初始化失败:', e);
-      return false;
+  /**
+   * 跨平台 HTTP 请求，统一返回 { statusCode, data }。
+   * - 非 2xx 不会 reject（让上层自行判定业务错误码）
+   * - 网络失败 / 超时 / 解析异常才 reject
+   */
+  request(opts: {
+    url: string;
+    method?: 'GET' | 'POST' | 'PUT' | 'DELETE';
+    data?: unknown;
+    headers?: Record<string, string>;
+    timeoutMs?: number;
+  }): Promise<{ statusCode: number; data: any }> {
+    const method = (opts.method || 'POST').toUpperCase();
+    const headers: Record<string, string> = {
+      'content-type': 'application/json',
+      ...(opts.headers || {}),
+    };
+    const timeoutMs = opts.timeoutMs && opts.timeoutMs > 0 ? opts.timeoutMs : 10000;
+
+    if (this._api && typeof this._api.request === 'function') {
+      return this._requestViaMiniApi(opts.url, method, opts.data, headers, timeoutMs);
     }
+    if (typeof (globalThis as any).fetch === 'function') {
+      return this._requestViaFetch(opts.url, method, opts.data, headers, timeoutMs);
+    }
+    return Promise.reject(new Error('no http transport available'));
   }
 
-  callCloudFunction(opts: { name: string; data?: Record<string, unknown> }): Promise<any> {
-    if (!this.supportsCloud) {
-      return Promise.reject(new Error('cloud unavailable'));
-    }
-    try {
-      return Promise.resolve(this._api.cloud.callFunction(opts));
-    } catch (e) {
-      return Promise.reject(e);
-    }
+  private _requestViaMiniApi(
+    url: string,
+    method: string,
+    data: unknown,
+    headers: Record<string, string>,
+    timeoutMs: number,
+  ): Promise<{ statusCode: number; data: any }> {
+    return new Promise((resolve, reject) => {
+      let done = false;
+      const timer = setTimeout(() => {
+        if (done) return;
+        done = true;
+        reject(new Error(`request timeout after ${timeoutMs}ms: ${url}`));
+      }, timeoutMs);
+
+      try {
+        this._api.request({
+          url,
+          method,
+          data: data === undefined ? undefined : data,
+          header: headers,
+          timeout: timeoutMs,
+          success: (res: any) => {
+            if (done) return;
+            done = true;
+            clearTimeout(timer);
+            resolve({
+              statusCode: res?.statusCode ?? 0,
+              data: res?.data,
+            });
+          },
+          fail: (err: any) => {
+            if (done) return;
+            done = true;
+            clearTimeout(timer);
+            const msg = err?.errMsg || err?.message || String(err);
+            reject(new Error(`request failed: ${msg}`));
+          },
+        });
+      } catch (e) {
+        if (done) return;
+        done = true;
+        clearTimeout(timer);
+        reject(e instanceof Error ? e : new Error(String(e)));
+      }
+    });
   }
 
-  getCloudDatabase(): any {
-    if (!this.supportsCloud) return null;
-    try {
-      return this._api.cloud.database();
-    } catch (e) {
-      console.warn('[Platform] 获取云数据库实例失败:', e);
-      return null;
+  private _requestViaFetch(
+    url: string,
+    method: string,
+    data: unknown,
+    headers: Record<string, string>,
+    timeoutMs: number,
+  ): Promise<{ statusCode: number; data: any }> {
+    const fetchFn = (globalThis as any).fetch as typeof fetch;
+    const ctrl = typeof AbortController !== 'undefined' ? new AbortController() : null;
+    const timer = ctrl ? setTimeout(() => ctrl.abort(), timeoutMs) : null;
+
+    const init: any = {
+      method,
+      headers,
+      signal: ctrl ? ctrl.signal : undefined,
+    };
+    if (data !== undefined && method !== 'GET') {
+      init.body = typeof data === 'string' ? data : JSON.stringify(data);
     }
+
+    return fetchFn(url, init).then(async (res) => {
+      if (timer) clearTimeout(timer);
+      const text = await res.text();
+      let parsed: any = text;
+      if (text) {
+        try {
+          parsed = JSON.parse(text);
+        } catch (_) {
+          parsed = text;
+        }
+      }
+      return { statusCode: res.status, data: parsed };
+    }).catch((e) => {
+      if (timer) clearTimeout(timer);
+      throw e instanceof Error ? e : new Error(String(e));
+    });
+  }
+
+  /**
+   * 平台登录换 code：
+   *   微信 -> wx.login({ success: { code } })
+   *   抖音 -> tt.login({ success: { code } })
+   *   其他 -> 返回 ''（上层走匿名路径）
+   */
+  loginCode(): Promise<string> {
+    return new Promise((resolve) => {
+      if (!this._api || typeof this._api.login !== 'function') {
+        resolve('');
+        return;
+      }
+      try {
+        this._api.login({
+          success: (res: any) => resolve(res?.code || ''),
+          fail: () => resolve(''),
+        });
+      } catch (_) {
+        resolve('');
+      }
+    });
   }
 
   // ═══════════════ 系统信息 ═══════════════

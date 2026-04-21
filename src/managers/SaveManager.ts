@@ -20,6 +20,8 @@ import { PersistService } from '@/core/PersistService';
 import { BOARD_TOTAL } from '@/config/Constants';
 import { BOARD_PRESETS } from '@/config/BoardLayout';
 import { ITEM_DEFS } from '@/config/ItemConfig';
+import { CLOUD_SYNC_META_KEY } from '@/config/CloudConfig';
+import { CloudSyncManager } from '@/managers/CloudSyncManager';
 
 declare const wx: any;
 declare const tt: any;

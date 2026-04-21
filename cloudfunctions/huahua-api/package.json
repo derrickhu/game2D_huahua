@@ -1,0 +1,16 @@
+{
+  "name": "huahua-api",
+  "version": "1.0.0",
+  "description": "花花妙屋统一 HTTP 后端：login + save/pull + save/push",
+  "main": "index.js",
+  "engines": {
+    "node": ">=16"
+  },
+  "scripts": {
+    "mock": "node scripts/mock.js"
+  },
+  "dependencies": {
+    "@cloudbase/node-sdk": "^3.5.0",
+    "jsonwebtoken": "^9.0.2"
+  }
+}

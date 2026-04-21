@@ -1,0 +1,149 @@
+/**
+ * 存档 pull / push 处理
+ *
+ * 数据模型（MongoDB collection: playerData）：
+ *   {
+ *     _id,
+ *     userId: 'wx:...' | 'dy:...' | 'tap:...' | 'anon:...',
+ *     schemaVersion: number,
+ *     updatedAt: number (ms),
+ *     clientFingerprint: string,
+ *     payload: { [key: string]: string },  // 客户端上行的白名单 key -> 原始 JSON 字符串
+ *     payloadKeys: string[],
+ *     lastWriteAt: number (ms, 服务端写入时间，用于排障)
+ *   }
+ */
+
+const { httpError } = require('./http');
+const { requireUser } = require('./auth');
+const { getCollection } = require('./db');
+const { getMaxBytes } = require('./config');
+
+async function handlePull(req) {
+  const { userId, platform } = requireUser(req);
+  const col = getCollection();
+
+  const res = await col.where({ userId }).limit(1).get();
+  const doc = (res && Array.isArray(res.data) && res.data[0]) || null;
+
+  if (!doc) {
+    return {
+      userId,
+      platform,
+      exists: false,
+      schemaVersion: 0,
+      updatedAt: 0,
+      payload: {},
+      payloadKeys: [],
+    };
+  }
+
+  return {
+    userId,
+    platform,
+    exists: true,
+    schemaVersion: doc.schemaVersion || 0,
+    updatedAt: doc.updatedAt || 0,
+    payload: doc.payload || {},
+    payloadKeys: Array.isArray(doc.payloadKeys)
+      ? doc.payloadKeys
+      : Object.keys(doc.payload || {}),
+    clientFingerprint: doc.clientFingerprint || '',
+  };
+}
+
+async function handlePush(req) {
+  const { userId, platform } = requireUser(req);
+  const body = req.body || {};
+
+  const schemaVersion = Number(body.schemaVersion);
+  const updatedAt = Number(body.updatedAt);
+  const payload = body.payload;
+  const clientFingerprint = String(body.clientFingerprint || '').slice(0, 200);
+  const force = body.force === true;
+
+  if (!Number.isFinite(schemaVersion) || schemaVersion <= 0) {
+    throw httpError(400, 'BAD_SCHEMA', 'schemaVersion 非法');
+  }
+  if (!Number.isFinite(updatedAt) || updatedAt <= 0) {
+    throw httpError(400, 'BAD_UPDATED_AT', 'updatedAt 非法');
+  }
+  if (!payload || typeof payload !== 'object' || Array.isArray(payload)) {
+    throw httpError(400, 'BAD_PAYLOAD', 'payload 必须是 object');
+  }
+
+  // 体积上限（粗略按 JSON 序列化后字节数）
+  const size = Buffer.byteLength(JSON.stringify(payload), 'utf8');
+  const maxBytes = getMaxBytes();
+  if (size > maxBytes) {
+    throw httpError(413, 'PAYLOAD_TOO_LARGE', `payload 超限: ${size}B > ${maxBytes}B`);
+  }
+
+  // 每个 value 必须是字符串（与客户端 PersistService 约定一致）
+  const payloadKeys = [];
+  for (const k of Object.keys(payload)) {
+    const v = payload[k];
+    if (typeof v !== 'string') {
+      throw httpError(400, 'BAD_PAYLOAD_VALUE', `payload[${k}] 必须是字符串`);
+    }
+    payloadKeys.push(k);
+  }
+
+  const col = getCollection();
+  const existingRes = await col.where({ userId }).limit(1).get();
+  const existing = (existingRes && Array.isArray(existingRes.data) && existingRes.data[0]) || null;
+
+  if (existing && !force) {
+    const prevUpdatedAt = Number(existing.updatedAt) || 0;
+    if (updatedAt < prevUpdatedAt) {
+      // 服务端已有更新的版本 —— 拒绝，并把远端版本回传让客户端合并
+      throw Object.assign(
+        httpError(409, 'STALE_UPDATE', `服务端已有更新版本 remote=${prevUpdatedAt} > local=${updatedAt}`),
+        {
+          data: {
+            remote: {
+              schemaVersion: existing.schemaVersion || 0,
+              updatedAt: prevUpdatedAt,
+              payload: existing.payload || {},
+              payloadKeys: Array.isArray(existing.payloadKeys)
+                ? existing.payloadKeys
+                : Object.keys(existing.payload || {}),
+            },
+          },
+        },
+      );
+    }
+  }
+
+  const now = Date.now();
+  const docData = {
+    userId,
+    platform,
+    schemaVersion,
+    updatedAt,
+    clientFingerprint,
+    payload,
+    payloadKeys,
+    lastWriteAt: now,
+  };
+
+  if (existing && existing._id) {
+    await col.doc(existing._id).update(docData);
+    return { userId, updatedAt, savedAt: now, mode: 'update', sizeBytes: size };
+  }
+
+  const addRes = await col.add(docData);
+  return {
+    userId,
+    updatedAt,
+    savedAt: now,
+    mode: 'insert',
+    sizeBytes: size,
+    _id: addRes && (addRes.id || (addRes._id)),
+  };
+}
+
+module.exports = {
+  handlePull,
+  handlePush,
+};
