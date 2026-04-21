@@ -62,3 +62,27 @@ python3 scripts/compress_furniture_deco_pngs.py --dry-run
 - 棋盘 **工具图标** 那套 **3/4 俯视小物件**（见 `tool-icon-art-style.mdc`）— **家具用等距花店风，二者勿混用为同一参考图。**
 - 写实 IKEA 照片风、暗黑低饱和、细黑线稿扁平 UI 图标风。
 - 带第四面墙或透视地板的「小场景」而非单件家具。
+
+## 「免费赠予」家具（熟客/活动/任务奖励）特例
+
+凡通过**非花愿购买**路径获得的家具（当前为熟客 Bond Lv4 主题家具 `affinity_*`，未来活动 / 主线任务奖励家具同理）须遵循以下额外约束：
+
+| 维度 | 要求 |
+|---|---|
+| `cost` | **0**（不走花愿购买） |
+| `starValue` | **必须 0** — 否则可被「摆放→拆除→重摆」反复刷星，破坏星星只来自购买行为的经济循环 |
+| `rarity` | **`LIMITED`**，且**整体细节密度、材质感**应明显高于同 slot 的常规购买家具（黄铜/玫瑰金/胡桃木/雕花/玻璃柜/雕花铁艺等），让玩家一眼读出**稀缺感**而不是「免费 = 朴素」 |
+| `unlockRequirement` | 带 `questId` + `conditionText` + `questDetailText`，由对应 Manager（如 `AffinityManager._grantMilestoneReward`）通过 `grantQuest()` + `DecorationManager.gmUnlockDeco()` 一并发放；**不要**走 `unlock()` 购买路径 |
+| 资源路径 | 推荐独立子目录（如 `subpkg_deco/images/affinity/`），避免与购买线 `furniture/` 混为一谈，便于后续批量重绘/替换 |
+| 压缩 | 入库前显式给路径跑 `python3 scripts/compress_furniture_deco_pngs.py --force <path/*.png>`（脚本默认只扫 `furniture/` 根，子目录需显式传文件） |
+
+注释模板（写在 `DECO_DEFS` 该批次行上方）：
+
+```
+// 注：starValue 必须为 0 — 这些是免费赠予的稀有家具，若计星会被「摆放→拆除→重摆」刷分；星星统一来自购买行为。
+```
+
+## 多件批量生图的两种姿势
+
+1. **单件单提示词（首选 / 风险最低）**：每件 1:1 512px 单图，**避免** grid 切割误伤边缘（曾在熟客家具批次出现：trophy case 右框、balcony rack 铁艺纹被切到相邻 cell）。文件命名 `furniture_<id>_nb2_prompt.txt`，输出 `../game_assets/huahua/assets/raw/<id>_nb2.png`，直接 rembg → crop_trim → ship，无 split 步骤。
+2. **批量 grid（仅用于强风格统一 + 单件偏小的场景，如盆栽线）**：在 prompt 里**显式**要求每个 cell 的 prop 只占 cell 中央约 **55%–60%**，四周留宽白边；`split_grid.py --margin 0`（让边缘安全带留给 prop），同时核对生成图每个 cell 的 silhouette 都收敛在 cell 内，再走 rembg 流程。**禁止**对体量较大、轮廓饱满的家具（带玻璃柜、雕花花架、长条桌等）走 grid 出图——优先走方案 1。

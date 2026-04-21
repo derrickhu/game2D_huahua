@@ -15,6 +15,13 @@ export const ORDER_COMBO_BASE_CHANCE = 0.12;
 export const ORDER_COMBO_CHANCE_PER_EXTRA_LINE = 0.03;
 export const ORDER_COMBO_MAX_CHANCE = 0.35;
 
+/**
+ * 升星仪式 L4 解锁「组合订单提速」：玩家 globalLevel ≥ 该值时组合单概率乘以 LEVEL_MULT。
+ * 拍板 +20%（a_20）；与封顶 ORDER_COMBO_MAX_CHANCE 一同 clamp。
+ */
+export const ORDER_COMBO_LEVEL_BOOST_MIN_LEVEL = 4;
+export const ORDER_COMBO_LEVEL_BOOST_MULT = 1.2;
+
 /** 至少解锁几条独立产线才允许组合单第三槽 */
 export const ORDER_COMBO_MIN_UNLOCKED_LINES_FOR_THIRD_SLOT = 3;
 /** 满足条线数后，追加第三槽的概率（不再绑定 S 模板档） */
@@ -50,11 +57,18 @@ export const ORDER_SPAWN_MAX_ATTEMPTS = 10;
 
 /**
  * 组合单有效概率：min(max, base + (unlockedLineCount-2)*perLine)，至少 2 线才可能组合。
+ * playerLevel ≥ ORDER_COMBO_LEVEL_BOOST_MIN_LEVEL 时再乘 ORDER_COMBO_LEVEL_BOOST_MULT，整体仍 clamp 到 MAX。
  */
-export function orderComboEffectiveChance(ulk: UnlockedLines): number {
+export function orderComboEffectiveChance(
+  ulk: UnlockedLines,
+  playerLevel?: number,
+): number {
   if (ulk.unlockedLineCount < 2) return 0;
   const extra = Math.max(0, ulk.unlockedLineCount - 2);
-  const p = ORDER_COMBO_BASE_CHANCE + extra * ORDER_COMBO_CHANCE_PER_EXTRA_LINE;
+  let p = ORDER_COMBO_BASE_CHANCE + extra * ORDER_COMBO_CHANCE_PER_EXTRA_LINE;
+  if (typeof playerLevel === 'number' && playerLevel >= ORDER_COMBO_LEVEL_BOOST_MIN_LEVEL) {
+    p *= ORDER_COMBO_LEVEL_BOOST_MULT;
+  }
   return Math.min(ORDER_COMBO_MAX_CHANCE, p);
 }
 

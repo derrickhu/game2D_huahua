@@ -1,0 +1,13 @@
+Square game asset 1:1, single furniture prop centered with generous margin (the prop must occupy only the central ~60% of the canvas, with wide pure-white empty padding all around for safe cutout).
+
+Cute kawaii 2.5D isometric view from upper-left about 45 degrees, hand-painted mobile merge-game flower shop style, matching the existing `furniture_greenhouse_pot_*` and `furniture_orn_pastel_bench` batches. Soft brown outlines slightly thicker than hairline with rounded corners, gentle upper-left light, soft volumetric shading, readable silhouette at small grid size. Chibi-friendly proportions — NOT photoreal, NOT heavy 3D render, NOT flat UI icon, NOT sticker with white border.
+
+This piece is a LIMITED rarity reward — must feel premium and characterful, NOT plain. Style direction: AMERICAN COLLEGIATE / VARSITY HALL DISPLAY — light, bright, sporty, youthful — LIGHT MAPLE WOOD + NAVY-BLUE FELT INTERIOR + RED accent stripe + CHROME / BRUSHED-SILVER trophies + a hint of school-pennant flag. Distinctly different from the dark walnut Victorian / dark academia pieces — this is energetic preppy school-team pride, NOT antique mahogany cabinet.
+
+Subject: a stately compact chibi display cabinet in WARM HONEY-MAPLE WOOD with a slim red-painted accent stripe along the front rails, a curved clear-glass front (slight reflection highlight) framed with thin brushed-chrome edging, brushed-chrome hinges and a small brushed-chrome plaque crest on top with a tiny laurel wreath motif, plus a small navy-and-red mini PENNANT FLAG with a chibi star symbol mounted at one upper corner. Three internal shelves visible through the glass, lined with NAVY-BLUE FELT: TOP shelf — one tall gleaming silvery-CHROME champion trophy with double looping handles on a navy felt base, plus a small engraved chrome plaque (no readable text); MIDDLE shelf — three medallions on pastel-and-red ribbons (one gold, one silver, one bronze) hanging from small chrome hooks, plus a small silver laurel-wreath pin; BOTTOM shelf — a tiny bronze running-shoe figurine, a stopwatch on a thin silver chain, and a small folded varsity letterman patch (red letter on cream wool background, no readable letter shape — just a generic red square emblem). Tiny LED strip glow along top interior shelf edge.
+
+School-team pride / champion's hall mood. NOT dark mahogany Victorian, NOT industrial copper, NOT garden white iron, NOT cottage cream.
+
+ABSOLUTELY NO text, NO readable letters, NO numbers, NO Chinese characters, NO English words, NO logos, NO captions, NO watermark. NO sticker stroke around the prop, NO white outline border, NO floor tiles, NO walls, NO room scenery — the prop floats on pure white.
+
+Background pure solid white #FFFFFF ONLY, nothing else.

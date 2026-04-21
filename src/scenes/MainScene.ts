@@ -27,6 +27,8 @@ import {
 } from '@/managers/CheckInManager';
 import { IdleManager } from '@/managers/IdleManager';
 import { LevelManager } from '@/managers/LevelManager';
+import { DailyCandyManager } from '@/managers/DailyCandyManager';
+import { AffinityManager } from '@/managers/AffinityManager';
 import { TweenManager, Ease } from '@/core/TweenManager';
 import { BoardView } from '@/gameobjects/board/BoardView';
 import { CustomerScrollArea } from '@/gameobjects/customer/CustomerScrollArea';
@@ -86,6 +88,8 @@ import { RewardBoxButton } from '@/gameobjects/ui/RewardBoxButton';
 import { RewardBoxPanel } from '@/gameobjects/ui/RewardBoxPanel';
 import { PopupShopPanel } from '@/gameobjects/ui/PopupShopPanel';
 import { MerchShopPanel } from '@/gameobjects/ui/MerchShopPanel';
+import { CustomerProfilePanel } from '@/gameobjects/ui/CustomerProfilePanel';
+import { BondUpPopup } from '@/gameobjects/ui/BondUpPopup';
 import { WorldMapPanel } from '@/gameobjects/ui/WorldMapPanel';
 import { FlowerSignGachaPanel } from '@/gameobjects/ui/FlowerSignGachaPanel';
 import { ShopScene } from '@/scenes/ShopScene';
@@ -166,6 +170,12 @@ export class MainScene implements Scene {
   /** 合成顶栏 · 全屏摊位购买商店（NB2 框体） */
   private _merchShopPanel!: MerchShopPanel;
 
+  /** 熟客资料面板（CustomerView 头像心形角标 tap 入口） */
+  private _customerProfilePanel!: CustomerProfilePanel;
+
+  /** 熟客 Bond 升档弹窗（AffinityManager 触发） */
+  private _bondUpPopup!: BondUpPopup;
+
   /** 大地图全屏页（覆盖层，非花店子节点） */
   private _worldMapPanel!: WorldMapPanel;
 
@@ -194,6 +204,8 @@ export class MainScene implements Scene {
       CustomerManager.init();
       QuestManager.init();
       CheckInManager.init();
+      DailyCandyManager.init();
+      AffinityManager.init();
       IdleManager.init();
       LevelManager.init();
       RoomLayoutManager.init();
@@ -427,6 +439,12 @@ export class MainScene implements Scene {
 
     this._merchShopPanel = new MerchShopPanel();
     overlay.addChild(this._merchShopPanel);
+
+    this._customerProfilePanel = new CustomerProfilePanel();
+    overlay.addChild(this._customerProfilePanel);
+
+    this._bondUpPopup = new BondUpPopup();
+    overlay.addChild(this._bondUpPopup);
 
     // 大地图全屏页（盖住花店/顶栏；惯性滚动在面板内自注册 ticker）
     this._worldMapPanel = new WorldMapPanel();
@@ -1210,6 +1228,45 @@ export class MainScene implements Scene {
       const cur = SceneManager.current?.name;
       if (cur !== 'main' && cur !== 'shop') return;
       this._merchShopPanel.open();
+    });
+
+    // 熟客资料面板 - CustomerView 头像心形角标 tap 入口
+    EventBus.on('panel:openCustomerProfile', (typeId: string) => {
+      if (TutorialManager.isActive) return;
+      const cur = SceneManager.current?.name;
+      if (cur !== 'main' && cur !== 'shop') return;
+      if (!typeId) return;
+      this._customerProfilePanel.open(typeId);
+    });
+
+    // 熟客 Bond 升档：AffinityManager.onCustomerDelivered 跨 Bond 阈值时触发
+    EventBus.on('affinity:bondUp', (
+      typeId: string,
+      oldBond: number,
+      newBond: number,
+      reward: any,
+      def: any,
+    ) => {
+      if (!typeId || !reward || !def) return;
+      this._bondUpPopup.enqueue({
+        typeId,
+        oldBond: oldBond as any,
+        newBond: newBond as any,
+        reward,
+        def,
+      });
+    });
+
+    // 熟客解锁：刷新订单区让头像 heart 角标即时出现（即便玩家刚好同步看着升星弹窗）
+    EventBus.on('affinity:unlocked', () => {
+      this._customerScrollArea.refresh();
+    });
+
+    // GM「模拟离线回归」/「强制糖果」入口：直接弹离线回礼面板
+    EventBus.on('panel:showOfflineReward', (reward: any) => {
+      if (!reward) return;
+      if (this._offlineRewardPanel.visible) return;
+      this._offlineRewardPanel.show(reward);
     });
 
     // ---- 装修系统事件 ----

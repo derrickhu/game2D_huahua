@@ -1,0 +1,13 @@
+Square game asset 1:1, single furniture prop centered with generous margin (the prop must occupy only the central ~60% of the canvas, with wide pure-white empty padding all around for safe cutout).
+
+Cute kawaii 2.5D isometric view from upper-left about 45 degrees, hand-painted mobile merge-game flower shop style, matching the existing `furniture_greenhouse_pot_*` and `furniture_orn_pastel_bench` batches. Soft brown outlines slightly thicker than hairline with rounded corners, gentle upper-left light, soft volumetric shading, readable silhouette at small grid size. Chibi-friendly proportions — NOT photoreal, NOT heavy 3D render, NOT flat UI icon, NOT sticker with white border.
+
+This piece is a LIMITED rarity reward — must feel premium and characterful, NOT plain. Style direction: DARK ACADEMIA POET'S NOOK — moody warm interior, OXBLOOD-LEATHER + AMBER-LAMP + DUSTY-EMERALD accent — distinctly different from the cream cottage desk, white garden rack, and varsity sports cabinet. Antique scholar's collection vibe, slightly more introverted/melancholic than the bright pieces.
+
+Subject: a short ornate two-tier free-standing chibi bookshelf in deep aged-WALNUT WOOD with carved crown-molding lip, fluted side pilasters, small brass corner caps and a thin brass kick-rail on the bottom edge. TOP SHELF: a leaning row of five OXBLOOD-RED leather-bound poetry volumes with gilt spines and gilt page-edges (decorative gilt only, no readable text), a vintage brass rangefinder camera with a small leather strap, a slim gold-framed tinted-sepia photograph leaning at an angle, a pair of round vintage spectacles with brass frames. BOTTOM SHELF: a slim brass desk-lamp with a DUSTY-EMERALD pleated glass shade casting warm pool of light, a tall crystal cloche-dome covering an arrangement of pressed dried roses and eucalyptus, a fluted amber-glass vase with one tall dried pampas plume, a small vintage typewriter (chibi proportions, no readable letters) with a single curling sheet of paper. A thin trailing ivy stem drapes over the top edge.
+
+Antique scholar / "rainy-evening study" mood. NOT cottage cream, NOT bright sport, NOT garden white iron.
+
+ABSOLUTELY NO text, NO readable letters, NO numbers, NO Chinese characters, NO English words, NO logos, NO watermark. NO sticker stroke around the prop, NO white outline border, NO floor tiles, NO walls, NO room scenery — the prop floats on pure white.
+
+Background pure solid white #FFFFFF ONLY, nothing else.

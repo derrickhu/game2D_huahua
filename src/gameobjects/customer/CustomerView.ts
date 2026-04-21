@@ -22,6 +22,7 @@ import { ToolSparkleLayer } from '@/utils/ToolSparkleLayer';
 import { TweenManager, Ease } from '@/core/TweenManager';
 import { EventBus } from '@/core/EventBus';
 import { CustomerInstance } from '@/managers/CustomerManager';
+import { AffinityManager } from '@/managers/AffinityManager';
 /** 单格物品显示边长（3 个并排仍落在 PANEL_W 内） */
 const SLOT_SIZE = 66;
 const SLOT_GAP = 8;
@@ -58,6 +59,7 @@ export class CustomerView extends PIXI.Container {
   private _avatar: PIXI.Text;
   private _avatarSprite: PIXI.Sprite;
   private _infoPanel: PIXI.Container;
+  private _affinityHeartBadge: PIXI.Container | null = null;
   private _completeBtn: PIXI.Container | null = null;
   private _bounceTween: { config: any; startValues: any; elapsed: number; delayRemaining: number } | null = null;
   private _queueIndex = 0;
@@ -108,6 +110,7 @@ export class CustomerView extends PIXI.Container {
     if (!customer) {
       TweenManager.cancelTarget(this);
       TweenManager.cancelTarget(this.scale);
+      this._clearAffinityHeartBadge();
       this._boundCustomerUid = -1;
       this._customer = null;
       this.visible = false;
@@ -133,6 +136,7 @@ export class CustomerView extends PIXI.Container {
     }
 
     this._rebuildInfoPanel();
+    this._refreshAffinityHeartBadge();
 
     const isQueuing = this._queueIndex >= CustomerManager.maxCustomers;
     const targetAlpha = isQueuing ? 0.6 : 1;
@@ -594,6 +598,73 @@ export class CustomerView extends PIXI.Container {
       this._completeBtn.destroy({ children: true });
       this._completeBtn = null;
     }
+  }
+
+  /**
+   * 熟客解锁后，在头像右上角放一个心形小角标。点击该角标（仅角标命中区域可点）
+   * 弹出 CustomerProfilePanel；非角标区域照常透传给 CustomerScrollArea 的横向滑动 hitArea。
+   */
+  private _refreshAffinityHeartBadge(): void {
+    this._clearAffinityHeartBadge();
+    const c = this._customer;
+    if (!c) return;
+    if (!AffinityManager.isAffinityType(c.typeId)) return;
+    if (!AffinityManager.isUnlocked(c.typeId)) return;
+
+    const badge = new PIXI.Container();
+    badge.zIndex = 8;
+    const tex = TextureCache.get('icon_heart');
+    if (tex && tex.width > 0) {
+      const sp = new PIXI.Sprite(tex);
+      sp.anchor.set(0.5);
+      const targetSize = 26;
+      const k = targetSize / Math.max(tex.width, tex.height);
+      sp.scale.set(k);
+      badge.addChild(sp);
+    } else {
+      const fallback = new PIXI.Text('♥', {
+        fontSize: 22,
+        fill: 0xff5470,
+        fontFamily: FONT_FAMILY,
+        fontWeight: 'bold',
+      } as PIXI.TextStyle);
+      fallback.anchor.set(0.5);
+      badge.addChild(fallback);
+    }
+
+    let badgeX = 38;
+    let badgeY = AVATAR_FEET_Y - 150;
+    if (this._avatarSprite.visible && this._avatarSprite.texture && this._avatarSprite.texture.width > 0) {
+      const halfW = (this._avatarSprite.texture.width * this._avatarSprite.scale.x) / 2;
+      const fullH = this._avatarSprite.texture.height * this._avatarSprite.scale.y;
+      badgeX = halfW - 4;
+      badgeY = AVATAR_FEET_Y - fullH + 8;
+    }
+    badge.position.set(badgeX, badgeY);
+
+    badge.eventMode = 'static';
+    badge.cursor = 'pointer';
+    const hit = new PIXI.Circle(0, 0, 18);
+    badge.hitArea = hit;
+    badge.on('pointertap', (e: PIXI.FederatedPointerEvent) => {
+      e.stopPropagation();
+      const cur = this._customer;
+      if (!cur) return;
+      EventBus.emit('panel:openCustomerProfile', cur.typeId);
+    });
+
+    this._affinityHeartBadge = badge;
+    this.addChild(badge);
+    this.sortChildren();
+  }
+
+  private _clearAffinityHeartBadge(): void {
+    if (!this._affinityHeartBadge) return;
+    if (this._affinityHeartBadge.parent) {
+      this._affinityHeartBadge.parent.removeChild(this._affinityHeartBadge);
+    }
+    this._affinityHeartBadge.destroy({ children: true });
+    this._affinityHeartBadge = null;
   }
 
   // ========== 颜色工具 ==========

@@ -225,6 +225,14 @@ const PANELS_IMAGE_MAP: Record<string, string> = {
   tutorial_story_2: 'subpkg_panels/images/tutorial/story_2.png',
   tutorial_story_3: 'subpkg_panels/images/tutorial/story_3.png',
   tutorial_story_4: 'subpkg_panels/images/tutorial/story_4.png',
+
+  /** 升星仪式 · 6 张「新解锁」专属图标（NB2+rembg；用于 LevelUnlockCard 的 feature/map/affinity 类） */
+  ui_lvup_companion_bubble: 'subpkg_panels/images/ui/level_unlock/ui_lvup_companion_bubble.png',
+  ui_lvup_combo_boost: 'subpkg_panels/images/ui/level_unlock/ui_lvup_combo_boost.png',
+  ui_lvup_high_chest: 'subpkg_panels/images/ui/level_unlock/ui_lvup_high_chest.png',
+  ui_lvup_world_map: 'subpkg_panels/images/ui/level_unlock/ui_lvup_world_map.png',
+  ui_lvup_affinity_badge: 'subpkg_panels/images/ui/level_unlock/ui_lvup_affinity_badge.png',
+  ui_lvup_butterfly_quest: 'subpkg_panels/images/ui/level_unlock/ui_lvup_butterfly_quest.png',
 };
 
 // ================================================================
@@ -483,6 +491,13 @@ const DECO_IMAGE_MAP: Record<string, string> = {
 
   /** 后期家具占位：无独立贴图前可继续用作 fallback */
   furniture_deco_placeholder: 'subpkg_deco/images/furniture/furniture_deco_placeholder.png',
+
+  // ---- 熟客主题家具（Bond Lv4 解锁；NB2+rembg+crop_trim；DECO_DEFS 中以 affinity_* id 注册）----
+  affinity_student_desk:        'subpkg_deco/images/affinity/affinity_student_desk.png',
+  affinity_worker_coffee_corner:'subpkg_deco/images/affinity/affinity_worker_coffee_corner.png',
+  affinity_mom_balcony_rack:    'subpkg_deco/images/affinity/affinity_mom_balcony_rack.png',
+  affinity_youth_book_rack:     'subpkg_deco/images/affinity/affinity_youth_book_rack.png',
+  affinity_athlete_trophy_case: 'subpkg_deco/images/affinity/affinity_athlete_trophy_case.png',
 
   // ---- 房间背景 ----
   bg_room_default: 'subpkg_deco/images/house/bg_room_default.png',

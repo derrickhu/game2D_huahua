@@ -30,6 +30,11 @@ import { DecorationManager } from './DecorationManager';
 import { EventManager } from './EventManager';
 import { RoomLayoutManager } from './RoomLayoutManager';
 import { TutorialManager } from './TutorialManager';
+import { AffinityManager } from './AffinityManager';
+import { DailyCandyManager } from './DailyCandyManager';
+import { IdleManager } from './IdleManager';
+import { AFFINITY_DEFS, BOND_THRESHOLDS } from '@/config/AffinityConfig';
+import { getLevelUnlockDef } from '@/config/LevelUnlockConfig';
 import { CellState } from '@/config/BoardLayout';
 import { DECO_DEFS } from '@/config/DecorationConfig';
 import {
@@ -81,6 +86,9 @@ const GM_GROUP_ORDER: readonly string[] = [
   ' 数据重置',
   ' 货币调整',
   ' 等级调整',
+  ' 升星仪式',
+  ' 熟客系统',
+  ' 离线/糖果',
   ' 棋盘操作',
   ' 增加物品',
   ' 装修系统',
@@ -976,6 +984,186 @@ class GMManagerClass {
         },
       });
     }
+
+    // ========== 升星仪式 ==========
+    this._commands.push({
+      id: 'gm_simulate_levelup',
+      group: ' 升星仪式',
+      name: ' 模拟升星仪式（下一级）',
+      desc: '弹出当前等级 → 下一级的升星弹窗（含开放卡片）',
+      execute: () => {
+        const cur = LevelManager.level;
+        const next = Math.max(cur + 1, 1);
+        EventBus.emit('level:up', next, {
+          huayuan: 100,
+          stamina: 20,
+          diamond: 5,
+        }, cur);
+        return ` 已模拟升星 ${cur} → ${next}`;
+      },
+    });
+
+    this._commands.push({
+      id: 'gm_preview_unlock_def',
+      group: ' 升星仪式',
+      name: ' 预览：当前级开放清单',
+      desc: 'console 打印 LEVEL_UNLOCKS 当前等级条目',
+      execute: () => {
+        const lv = LevelManager.level;
+        const def = getLevelUnlockDef(lv);
+        if (!def) return ` Lv.${lv} 无升星仪式条目`;
+        console.log(`[GM][LevelUnlock] Lv.${lv} - ${def.ceremonyTitle}`);
+        for (const e of def.entries) {
+          console.log(`  · [${e.kind}] ${e.title} - ${e.desc}`);
+        }
+        return ` Lv.${lv} 共 ${def.entries.length} 张开放卡片：${def.ceremonyTitle}`;
+      },
+    });
+
+    // ========== 熟客系统 ==========
+    for (const def of AFFINITY_DEFS) {
+      this._commands.push({
+        id: `gm_affinity_unlock_${def.typeId}`,
+        group: ' 熟客系统',
+        name: ` 解锁熟客 · ${def.bondName}`,
+        desc: `${def.persona}`,
+        execute: () => {
+          AffinityManager.gmAddBondPoints(def.typeId, 0);
+          // gmAddBondPoints(0) 会触发 unlock=true 但不加点，确保解锁状态生效
+          AffinityManager.unlockForLevel(99);
+          return ` ${def.bondName} 已解锁`;
+        },
+      });
+    }
+
+    this._commands.push({
+      id: 'gm_affinity_add_5_first',
+      group: ' 熟客系统',
+      name: ' +5 Bond 点（首位熟客）',
+      desc: '快速测试 BondUpPopup',
+      execute: () => {
+        const first = AFFINITY_DEFS[0];
+        if (!first) return ' 无熟客配置';
+        AffinityManager.gmAddBondPoints(first.typeId, 5);
+        const st = AffinityManager.getState(first.typeId);
+        return ` ${first.bondName} +5 点 → 当前 ${st.points} 点 / Lv.${st.bond}`;
+      },
+    });
+
+    this._commands.push({
+      id: 'gm_affinity_max_first',
+      group: ' 熟客系统',
+      name: ' 拉满首位熟客至 Lv.5',
+      desc: '直接累加到 BOND_THRESHOLDS[5]',
+      execute: () => {
+        const first = AFFINITY_DEFS[0];
+        if (!first) return ' 无熟客配置';
+        const st = AffinityManager.getState(first.typeId);
+        const need = Math.max(0, BOND_THRESHOLDS[5] - st.points);
+        if (need > 0) AffinityManager.gmAddBondPoints(first.typeId, need);
+        return ` ${first.bondName} 已升到 Lv.5 知己`;
+      },
+    });
+
+    this._commands.push({
+      id: 'gm_affinity_reset',
+      group: ' 熟客系统',
+      name: ' 重置全部熟客进度',
+      desc: '清空 Bond 点 / 等级 / 已发放里程碑',
+      execute: () => {
+        AffinityManager.gmReset();
+        return ' 熟客进度已重置';
+      },
+    });
+
+    this._commands.push({
+      id: 'gm_affinity_open_profile_first',
+      group: ' 熟客系统',
+      name: ' 打开熟客资料卡（首位）',
+      desc: '直接弹 CustomerProfilePanel',
+      execute: () => {
+        const first = AFFINITY_DEFS[0];
+        if (!first) return ' 无熟客配置';
+        EventBus.emit('panel:openCustomerProfile', first.typeId);
+        return ` 已弹出 ${first.bondName} 资料卡`;
+      },
+    });
+
+    // ========== 离线 / 开店糖果 ==========
+    this._commands.push({
+      id: 'gm_simulate_offline_return',
+      group: ' 离线/糖果',
+      name: ' 模拟离线 1 小时回归',
+      desc: '把 lastOnlineTimestamp 回拨 1h，下次进游戏弹离线收益面板',
+      execute: () => {
+        const now = Date.now();
+        const oneHourAgo = now - 3600 * 1000;
+        try {
+          PersistService.writeRaw('huahua_idle', JSON.stringify({ lastOnlineTimestamp: oneHourAgo }));
+        } catch (_) {}
+        // 立即触发一次结算与弹窗
+        const reward = IdleManager.calculateOfflineReward();
+        if (reward) {
+          EventBus.emit('panel:showOfflineReward', reward);
+        }
+        return reward
+          ? ` 已模拟 1h 离线，物品 ${reward.producedItems.length} 件，花愿 +${reward.huayuanEarned}`
+          : ' 模拟成功但无可结算收益';
+      },
+    });
+
+    this._commands.push({
+      id: 'gm_force_daily_candy',
+      group: ' 离线/糖果',
+      name: ' 强制弹今日糖果',
+      desc: '清今日糖果记录后，立即弹离线/糖果面板',
+      execute: () => {
+        DailyCandyManager.gmReset();
+        const reward = IdleManager.calculateOfflineReward();
+        if (reward) {
+          EventBus.emit('panel:showOfflineReward', reward);
+        }
+        return reward
+          ? ` 已强制弹糖果（连签 ${reward.dailyCandy?.consecutiveDays ?? 0} 天）`
+          : ' 强制后仍无可弹内容';
+      },
+    });
+
+    this._commands.push({
+      id: 'gm_set_consecutive_3',
+      group: ' 离线/糖果',
+      name: ' 连签设为 3 天',
+      desc: '触发「连签 3 天 · 鲜花礼包」里程碑',
+      execute: () => {
+        CheckInManager.gmSetConsecutiveDays(3);
+        DailyCandyManager.gmReset();
+        return ' 连签=3，下次糖果触发 3 天里程碑';
+      },
+    });
+
+    this._commands.push({
+      id: 'gm_set_consecutive_7',
+      group: ' 离线/糖果',
+      name: ' 连签设为 7 天',
+      desc: '触发「连签 7 天 · 周礼包」里程碑',
+      execute: () => {
+        CheckInManager.gmSetConsecutiveDays(7);
+        DailyCandyManager.gmReset();
+        return ' 连签=7，下次糖果触发 7 天里程碑';
+      },
+    });
+
+    this._commands.push({
+      id: 'gm_set_consecutive_30',
+      group: ' 离线/糖果',
+      name: ' 连签设为 30 天',
+      desc: '触发「连签 30 天 · 熟客盲盒」里程碑',
+      execute: () => {
+        CheckInManager.gmSetConsecutiveDays(30);
+        DailyCandyManager.gmReset();
+        return ' 连签=30，下次糖果触发 30 天熟客盲盒';
+      },
+    });
 
     this._commands.push({
       id: 'disable_gm',

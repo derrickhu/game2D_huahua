@@ -32,7 +32,13 @@ import {
   generateOrderDemands,
   validateOrderSlotsToolCap,
 } from '@/orders/OrderGeneratorRegistry';
-import type { OrderGenResult, OrderGenerationKind } from '@/orders/types';
+import type { OrderGenResult, OrderGenerationKind, OrderPreferLine } from '@/orders/types';
+import { AffinityManager } from './AffinityManager';
+import {
+  EXCLUSIVE_ORDER_BONUS,
+  EXCLUSIVE_ORDER_HUAYUAN_MULTIPLIER,
+} from '@/config/AffinityConfig';
+import { FlowerSignTicketManager } from './FlowerSignTicketManager';
 
 export interface DemandSlot {
   itemId: string;
@@ -56,6 +62,8 @@ export interface CustomerInstance {
   bonusMultiplier?: number;
   /** 生成语义：基础 / 成长 / 组合（与角标 tier 独立） */
   orderKind: OrderGenerationKind;
+  /** 熟客专属订单标记：交付时按 EXCLUSIVE_ORDER_HUAYUAN_MULTIPLIER 加成 + 必给体力/许愿币 */
+  isExclusive?: boolean;
 }
 
 /** 存档用需求槽（无 lockedCellIndex，读档后由 _rescanAll 绑定棋盘） */
@@ -77,6 +85,8 @@ export interface CustomerSaveEntry {
   bonusMultiplier?: number;
   /** 缺省时读档按 orderType + bonusMultiplier 推断 */
   orderKind?: OrderGenerationKind;
+  /** 熟客专属订单（持久化，避免 reload 后丢失加成） */
+  isExclusive?: boolean;
 }
 
 export interface CustomerPersistState {
@@ -157,6 +167,7 @@ function normalizeCustomerPersistState(raw: unknown): CustomerPersistState | nul
       chainIndex: typeof r.chainIndex === 'number' ? r.chainIndex : undefined,
       bonusMultiplier,
       orderKind,
+      isExclusive: r.isExclusive === true ? true : undefined,
     });
   }
 
@@ -241,6 +252,7 @@ class CustomerManagerClass {
         chainIndex: c.chainIndex,
         bonusMultiplier: c.bonusMultiplier,
         orderKind: c.orderKind,
+        isExclusive: c.isExclusive,
       })),
       nextUid: this._nextUid,
       refreshTimer: this._refreshTimer,
@@ -267,6 +279,7 @@ class CustomerManagerClass {
         chainIndex: e.chainIndex,
         bonusMultiplier: e.bonusMultiplier,
         orderKind: e.orderKind ?? inferOrderKindFromLegacy(e),
+        isExclusive: e.isExclusive === true ? true : undefined,
       }));
       this._nextUid = p.nextUid;
       this._refreshTimer = p.refreshTimer;
@@ -397,7 +410,26 @@ class CustomerManagerClass {
     const hy = customer.huayuanReward;
     CurrencyManager.addHuayuan(hy);
 
-    console.log(`[Customer] 交付完成: ${customer.name}(${customer.tier}), 花愿+${hy}`);
+    // 熟客专属订单的额外随礼（必给 5 体力 + 1 许愿币）
+    if (customer.isExclusive) {
+      if (EXCLUSIVE_ORDER_BONUS.stamina > 0) {
+        CurrencyManager.addStamina(EXCLUSIVE_ORDER_BONUS.stamina);
+      }
+      if (EXCLUSIVE_ORDER_BONUS.flowerSignTickets > 0) {
+        FlowerSignTicketManager.add(EXCLUSIVE_ORDER_BONUS.flowerSignTickets);
+      }
+    }
+
+    // 熟客 Bond 累计：普通单 +1 / 专属单 +2，且发放里程碑奖励
+    if (AffinityManager.isAffinityType(customer.typeId)) {
+      AffinityManager.onCustomerDelivered(customer.typeId, {
+        isExclusive: !!customer.isExclusive,
+      });
+    }
+
+    console.log(
+      `[Customer] 交付完成: ${customer.name}(${customer.tier})${customer.isExclusive ? '[熟客专属]' : ''}, 花愿+${hy}`,
+    );
 
     this._customers.splice(idx, 1);
     EventBus.emit('customer:delivered', uid, customer);
@@ -442,17 +474,49 @@ class CustomerManagerClass {
     });
 
     const tier = pickTierByWeight(weights);
+
+    // 熟客专属订单优先掷骰：命中后强制使用该熟客 typeId + 软偏好 lines；
+    // 若该 typeId 不在当前 tier 的可用池里，仍允许出（熟客不受 tier 限制，已解锁即可上单）。
+    const exclusiveRoll = AffinityManager.rollExclusiveCustomer({
+      playerLevel: level,
+      lastSpawnTypeId: this._lastSpawnTypeId,
+    });
+    let preferLines: OrderPreferLine[] | undefined;
+    let isExclusive = false;
+    let forcedTypeId: string | null = null;
+    if (exclusiveRoll) {
+      forcedTypeId = exclusiveRoll.typeId;
+      preferLines = exclusiveRoll.preferLines.map(p => ({
+        category: p.category,
+        line: p.line,
+        weight: p.weight,
+      }));
+      isExclusive = true;
+    }
+
     const pool = CUSTOMER_TYPES.filter(t =>
       t.tiers.includes(tier) && this._isTypeAvailableForTier(t.id, tier, lines),
     );
-    if (pool.length === 0) return;
+    if (pool.length === 0 && !forcedTypeId) return;
 
-    let typePool = pool;
-    if (this._lastSpawnTypeId && pool.length > 1) {
-      const avoid = pool.filter(t => t.id !== this._lastSpawnTypeId);
-      if (avoid.length > 0) typePool = avoid;
+    let type;
+    if (forcedTypeId) {
+      type = CUSTOMER_TYPES.find(t => t.id === forcedTypeId);
+      if (!type) {
+        // 防御：熟客 typeId 在 CustomerConfig 不存在 → 回退普通刷
+        forcedTypeId = null;
+        isExclusive = false;
+        preferLines = undefined;
+      }
     }
-    const type = typePool[Math.floor(Math.random() * typePool.length)]!;
+    if (!type) {
+      let typePool = pool;
+      if (this._lastSpawnTypeId && pool.length > 1) {
+        const avoid = pool.filter(t => t.id !== this._lastSpawnTypeId);
+        if (avoid.length > 0) typePool = avoid;
+      }
+      type = typePool[Math.floor(Math.random() * typePool.length)]!;
+    }
     const forceGreen =
       lines.hasGreen &&
       this._spawnsWithoutGreenDemand >= GREEN_PITY_THRESHOLD;
@@ -466,6 +530,8 @@ class CustomerManagerClass {
         playerLevel: level,
         forceGreenFlowerSlot: forceGreen,
         rng: Math.random,
+        preferLines,
+        isExclusive: isExclusive ? true : undefined,
       });
       if (!g || g.slots.length === 0) continue;
       if (!validateOrderSlotsToolCap(g.slots, lines)) continue;
@@ -484,11 +550,19 @@ class CustomerManagerClass {
       lockedCellIndex: -1,
     }));
 
-    const huayuan = CustomerManagerClass.computeOrderHuayuan(
+    const exclusive = isExclusive || gen.isExclusive === true;
+    // 熟客专属订单：在 base 算完后再乘上 EXCLUSIVE 倍率（不进 computeOrderHuayuan，避免污染读档路径）
+    let huayuan = CustomerManagerClass.computeOrderHuayuan(
       slots,
       gen.bonusMultiplier,
       gen.orderType,
     );
+    if (exclusive) {
+      huayuan = Math.max(1, Math.round(huayuan * EXCLUSIVE_ORDER_HUAYUAN_MULTIPLIER));
+    } else if (AffinityManager.huayuanMultFor(type.id) !== 1) {
+      // Bond Lv5 软 buff（仅普通单）
+      huayuan = Math.max(1, Math.round(huayuan * AffinityManager.huayuanMultFor(type.id)));
+    }
 
     const contentTier = computeTierFromOrderSlots(slots.map(s => s.itemId));
 
@@ -505,6 +579,7 @@ class CustomerManagerClass {
       timeLimit: gen.timeLimit,
       bonusMultiplier: gen.bonusMultiplier,
       orderKind: gen.generationKind,
+      isExclusive: exclusive ? true : undefined,
     };
 
     if (lines.hasGreen) {
