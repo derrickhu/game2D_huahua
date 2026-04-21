@@ -75,6 +75,10 @@ import { HapticSystem } from '@/systems/HapticSystem';
 import { CollectionPanel } from '@/gameobjects/ui/CollectionPanel';
 import { FlowerCardPanel } from '@/gameobjects/ui/FlowerCardPanel';
 import { DressUpPanel } from '@/gameobjects/ui/DressUpPanel';
+import {
+  getShopProgressStarTargetLocalInSceneRoot,
+  playShopDecorationStarFly,
+} from '@/gameobjects/ui/ShopDecorationStarFly';
 import { EventPanel } from '@/gameobjects/ui/EventPanel';
 import { ChallengePanel } from '@/gameobjects/ui/ChallengePanel';
 import { LeaderboardPanel } from '@/gameobjects/ui/LeaderboardPanel';
@@ -146,6 +150,8 @@ export class MainScene implements Scene {
   private _collectionPanel!: CollectionPanel;
   private _flowerCardPanel!: FlowerCardPanel;
   private _dressUpPanel!: DressUpPanel;
+  /** 主场景：与花店 `decoration:shopStarFly` 同款飞星粒子层（装扮解锁用） */
+  private _dressShopStarFlyLayer: PIXI.Container | null = null;
   private _eventPanel!: EventPanel;
   private _challengePanel!: ChallengePanel;
   private _leaderboardPanel!: LeaderboardPanel;
@@ -803,6 +809,38 @@ export class MainScene implements Scene {
     );
   }
 
+  private _ensureDressShopStarFlyLayer(): PIXI.Container {
+    if (!this._dressShopStarFlyLayer) {
+      const ly = new PIXI.Container();
+      ly.eventMode = 'none';
+      ly.zIndex = 8010;
+      this.container.sortableChildren = true;
+      this.container.addChild(ly);
+      this.container.sortChildren();
+      this._dressShopStarFlyLayer = ly;
+    }
+    return this._dressShopStarFlyLayer;
+  }
+
+  /** 与花店购买家具相同：`decoration:shopStarFly` → 飞入「花店进度条星标」屏幕位置 */
+  private readonly _onMainSceneDecorationShopStarFly = (payload: {
+    globalX: number;
+    globalY: number;
+    amount: number;
+  }): void => {
+    if (SceneManager.current?.name !== 'main') return;
+    const t = getShopProgressStarTargetLocalInSceneRoot();
+    playShopDecorationStarFly({
+      flyLayer: this._ensureDressShopStarFlyLayer(),
+      startGlobalX: payload.globalX,
+      startGlobalY: payload.globalY,
+      targetLocalX: t.x,
+      targetLocalY: t.y,
+      amount: payload.amount,
+      onComplete: () => EventBus.emit('decoration:shopStarFlyComplete'),
+    });
+  };
+
   private _createMainRewardFlyBindings(): RewardFlyBindings {
     const topBar = this._topBar;
     const boardView = this._boardView;
@@ -1101,6 +1139,8 @@ export class MainScene implements Scene {
         ToastMessage.show('获得新形象，快去换装看看！');
       }
     });
+
+    EventBus.on('decoration:shopStarFly', this._onMainSceneDecorationShopStarFly);
 
     // 升级弹窗（收纳盒物品在飞入礼包动画结束后再写入）；仅主场景处理，避免与花店场景重复弹窗/重复入库
     EventBus.on('level:up', (level: number, reward: any, oldLevel?: number) => {

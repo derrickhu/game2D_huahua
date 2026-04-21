@@ -41,8 +41,11 @@ class DressUpManagerClass {
     }));
   }
 
-  /** 花愿购买解锁，成功后自动装备 */
-  unlock(outfitId: string): boolean {
+  /**
+   * 花愿购买解锁，成功后自动装备
+   * @param options.deferStarGrant 为 true 时不立即加星（先播飞星，再由换装面板在动画结束后加星）
+   */
+  unlock(outfitId: string, options?: { deferStarGrant?: boolean }): boolean {
     if (this._unlocked.has(outfitId)) return false;
 
     const outfit = OUTFIT_MAP.get(outfitId);
@@ -55,7 +58,7 @@ class DressUpManagerClass {
       if (CurrencyManager.state.huayuan < outfit.huayuanCost) return false;
       CurrencyManager.addHuayuan(-outfit.huayuanCost);
     }
-    if (outfit.starValue > 0) {
+    if (outfit.starValue > 0 && !options?.deferStarGrant) {
       CurrencyManager.addStar(outfit.starValue);
     }
 

@@ -28,6 +28,8 @@ export interface LevelUpRewardPayload {
   huayuan: number;
   stamina: number;
   diamond: number;
+  /** 许愿喷泉硬币（已入账，仅展示；无顶栏飞入） */
+  flowerSignTickets?: number;
   /** 收纳盒物品（展示 + 关闭时飞入礼包后再发放） */
   rewardBoxItems?: Array<{ itemId: string; count: number }>;
 }
@@ -90,6 +92,7 @@ export class LevelUpPopup extends PIXI.Container {
     const huayuan = reward.huayuan > 0 ? reward.huayuan : (reward.gold ?? 0);
     const stamina = reward.stamina ?? 0;
     const diamond = reward.diamond ?? 0;
+    const flowerSignTickets = Math.max(0, Math.floor(reward.flowerSignTickets ?? 0));
     const rewardBoxItems = reward.rewardBoxItems ?? [];
     this._pendingBoxItems = this._previewOnly ? [] : [...rewardBoxItems];
     this._showHuayuan = huayuan;
@@ -100,6 +103,9 @@ export class LevelUpPopup extends PIXI.Container {
     if (huayuan > 0) obtainEntries.push({ kind: 'direct_currency', currency: 'huayuan', amount: huayuan });
     if (stamina > 0) obtainEntries.push({ kind: 'direct_currency', currency: 'stamina', amount: stamina });
     if (diamond > 0) obtainEntries.push({ kind: 'direct_currency', currency: 'diamond', amount: diamond });
+    if (flowerSignTickets > 0) {
+      obtainEntries.push({ kind: 'direct_currency', currency: 'flowerSign', amount: flowerSignTickets });
+    }
     for (const { itemId, count } of rewardBoxItems) {
       obtainEntries.push({ kind: 'board_item', itemId, count });
     }

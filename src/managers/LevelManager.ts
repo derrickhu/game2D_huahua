@@ -14,11 +14,15 @@ import {
   buildStarLevelUpReward,
 } from '@/config/StarLevelConfig';
 import { CurrencyManager } from './CurrencyManager';
+import { FlowerSignTicketManager } from './FlowerSignTicketManager';
+import { SaveManager } from './SaveManager';
 
 export interface LevelUpReward {
   stamina: number;
   diamond: number;
   rewardBoxItems: Array<{ itemId: string; count: number }>;
+  /** 许愿喷泉硬币（直加，非收纳盒） */
+  flowerSignTickets: number;
 }
 
 function buildReward(newLevel: number): LevelUpReward {
@@ -32,6 +36,7 @@ function buildReward(newLevel: number): LevelUpReward {
     stamina: base.stamina,
     diamond: base.diamond,
     rewardBoxItems,
+    flowerSignTickets: extra.flowerSignTickets ?? 0,
   };
 }
 
@@ -39,11 +44,13 @@ function buildReward(newLevel: number): LevelUpReward {
 function aggregateStarLevelUpRewards(oldLevel: number, newLevel: number): LevelUpReward {
   let stamina = 0;
   let diamond = 0;
+  let flowerSignTickets = 0;
   const boxCounts = new Map<string, number>();
   for (let L = oldLevel + 1; L <= newLevel; L++) {
     const r = buildReward(L);
     stamina += r.stamina;
     diamond += r.diamond;
+    flowerSignTickets += r.flowerSignTickets;
     for (const b of r.rewardBoxItems) {
       boxCounts.set(b.itemId, (boxCounts.get(b.itemId) ?? 0) + b.count);
     }
@@ -52,7 +59,7 @@ function aggregateStarLevelUpRewards(oldLevel: number, newLevel: number): LevelU
     itemId,
     count,
   }));
-  return { stamina, diamond, rewardBoxItems };
+  return { stamina, diamond, rewardBoxItems, flowerSignTickets };
 }
 
 class LevelManagerClass {
@@ -123,13 +130,18 @@ class LevelManagerClass {
       const reward = aggregateStarLevelUpRewards(oldLevel, newLevel);
       if (reward.stamina > 0) CurrencyManager.addStamina(reward.stamina);
       if (reward.diamond > 0) CurrencyManager.addDiamond(reward.diamond);
+      if (reward.flowerSignTickets > 0) {
+        FlowerSignTicketManager.add(reward.flowerSignTickets);
+        SaveManager.save();
+      }
 
       const boxLog = reward.rewardBoxItems.length
         ? ` 收纳盒:${reward.rewardBoxItems.map(b => `${b.itemId}×${b.count}`).join(',')}`
         : '';
       const stLog = reward.stamina > 0 ? `体力+${reward.stamina} ` : '';
+      const wishLog = reward.flowerSignTickets > 0 ? ` 许愿硬币+${reward.flowerSignTickets}` : '';
       console.log(
-        `[Level] 星级提升！${oldLevel}→${newLevel}星, 奖励: ${stLog}钻石+${reward.diamond}${boxLog}`,
+        `[Level] 星级提升！${oldLevel}→${newLevel}星, 奖励: ${stLog}钻石+${reward.diamond}${wishLog}${boxLog}`,
       );
       EventBus.emit('level:up', newLevel, reward, oldLevel);
     });

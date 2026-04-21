@@ -2,6 +2,7 @@
  * 特定等级的额外奖励（与 LevelManager 基础体力/钻石/宝箱叠加；不发花愿）
  *
  * rewardBoxItems：发放进奖励收纳盒，由玩家手动取出到棋盘。
+ * flowerSignTickets：许愿喷泉消耗货币（直加 FlowerSignTicketManager，非收纳盒）。
  */
 export interface LevelRewardBoxEntry {
   itemId: string;
@@ -10,6 +11,7 @@ export interface LevelRewardBoxEntry {
 
 export interface LevelExtraRewardsDef {
   rewardBoxItems?: LevelRewardBoxEntry[];
+  flowerSignTickets?: number;
 }
 
 /** 按「升至该等级」触发（即 LevelManager 在 setLevel 之后取当前 level 查表） */
@@ -34,9 +36,9 @@ const LEVEL_EXTRA: Record<number, LevelExtraRewardsDef> = {
   5: {
     rewardBoxItems: [{ itemId: 'tool_arrange_1', count: 2 }],
   },
-  /** 花艺线 Lv.2 工具「铁丝剪刀」 */
+  /** 烘焙线 Lv.1 工具「擀面杖」 */
   6: {
-    rewardBoxItems: [{ itemId: 'tool_arrange_2', count: 1 }],
+    rewardBoxItems: [{ itemId: 'tool_bake_1', count: 1 }],
   },
   /** 花束 5 级 + 甜品线 3 级 */
   7: {
@@ -59,9 +61,13 @@ const LEVEL_EXTRA: Record<number, LevelExtraRewardsDef> = {
       { itemId: 'flower_bouquet_7', count: 1 },
     ],
   },
-  /** 幸运金币×1（收纳盒取出后可拖至合成链物品上随机升/降一级） */
+  /** 蝴蝶线捕虫网 Lv.1×2 + Lv.2×1；许愿池银币（许愿硬币）×10 */
   10: {
-    rewardBoxItems: [{ itemId: 'lucky_coin_1', count: 1 }],
+    rewardBoxItems: [
+      { itemId: 'tool_butterfly_net_1', count: 2 },
+      { itemId: 'tool_butterfly_net_2', count: 1 },
+    ],
+    flowerSignTickets: 10,
   },
 };
 
@@ -79,6 +85,11 @@ export function getLevelExtraRewards(level: number): LevelExtraRewardsDef {
     ...(explicit?.rewardBoxItems ?? []),
     ...fromChest,
   ];
-  if (merged.length === 0) return {};
-  return { rewardBoxItems: merged };
+  const tickets = explicit?.flowerSignTickets;
+  const hasTickets = tickets !== undefined && tickets > 0;
+  if (merged.length === 0 && !hasTickets) return {};
+  const out: LevelExtraRewardsDef = {};
+  if (merged.length > 0) out.rewardBoxItems = merged;
+  if (hasTickets) out.flowerSignTickets = tickets;
+  return out;
 }

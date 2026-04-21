@@ -11,6 +11,7 @@ import { TweenManager, Ease } from '@/core/TweenManager';
 import { DressUpManager, Outfit } from '@/managers/DressUpManager';
 import { getOwnerChibiTextureKey, getOwnerFullOpenTextureKey } from '@/config/DressUpConfig';
 import { CurrencyManager } from '@/managers/CurrencyManager';
+import { SaveManager } from '@/managers/SaveManager';
 import { TextureCache } from '@/utils/TextureCache';
 import { checkRequirement, requirementHintText } from '@/utils/UnlockChecker';
 import { ToastMessage } from './ToastMessage';
@@ -77,6 +78,8 @@ export class DressUpPanel extends PIXI.Container {
   private _isOpen = false;
   /** 记录面板高度，logicHeight 变化时拉伸底图与遮罩 */
   private _panelHBuilt = 0;
+  /** 飞星动画结束后再入账的星星数（与 DressUpManager.unlock defer 配对） */
+  private _pendingDressUpStarGrant = 0;
 
   constructor() {
     super();
@@ -84,6 +87,19 @@ export class DressUpPanel extends PIXI.Container {
     this.zIndex = 5000;
     this._build();
     EventBus.on('panel:openDressUp', () => this.open());
+    EventBus.on('decoration:shopStarFlyComplete', () => this._onDressUpStarFlyComplete());
+  }
+
+  private _grantPendingDressUpStarIfAny(): void {
+    if (this._pendingDressUpStarGrant <= 0) return;
+    const n = this._pendingDressUpStarGrant;
+    this._pendingDressUpStarGrant = 0;
+    CurrencyManager.addStar(n);
+    SaveManager.save();
+  }
+
+  private _onDressUpStarFlyComplete(): void {
+    this._grantPendingDressUpStarIfAny();
   }
 
   open(): void {
@@ -108,6 +124,7 @@ export class DressUpPanel extends PIXI.Container {
 
   close(): void {
     if (!this._isOpen) return;
+    this._grantPendingDressUpStarIfAny();
     this._isOpen = false;
     const h = Game.logicHeight;
     TweenManager.cancelTarget(this._content.position);
@@ -201,6 +218,62 @@ export class DressUpPanel extends PIXI.Container {
     t.anchor.set(0.5, 0.5);
     t.position.set(cw - 14, 14);
     card.addChild(t);
+  }
+
+  /** 购买后获得的星分角标（与 DecorationPanel 一致） */
+  private _addStarValueBadge(card: PIXI.Container, cw: number, starValue: number): void {
+    if (starValue <= 0) return;
+    const tagPad = 4;
+    const iconH = Math.min(19, Math.max(14, Math.round(cw * 0.11)));
+    const gap = 4;
+    const fontSize = Math.round(Math.min(13, Math.max(11, cw * 0.085)));
+
+    const wrap = new PIXI.Container();
+    wrap.position.set(tagPad, tagPad);
+
+    const content = new PIXI.Container();
+    let iconW = iconH;
+    const starTex = TextureCache.get('icon_star');
+    if (starTex?.width) {
+      const sp = new PIXI.Sprite(starTex);
+      sp.height = iconH;
+      sp.width = (starTex.width / starTex.height) * iconH;
+      sp.position.set(0, 0);
+      content.addChild(sp);
+      iconW = sp.width;
+    } else {
+      const fb = new PIXI.Text('★', { fontSize: Math.round(iconH * 0.9), fontFamily: FONT_FAMILY });
+      content.addChild(fb);
+      iconW = fb.width;
+    }
+
+    const num = new PIXI.Text(String(starValue), {
+      fontSize,
+      fill: 0x8d4a1a,
+      fontFamily: FONT_FAMILY,
+      fontWeight: 'bold',
+      stroke: 0xffffff,
+      strokeThickness: 2,
+    } as any);
+    num.anchor.set(0, 0.5);
+    num.position.set(iconW + gap, iconH / 2);
+    content.addChild(num);
+
+    const pillPadX = 6;
+    const pillPadY = 3;
+    const pillW = pillPadX * 2 + iconW + gap + num.width;
+    const pillH = pillPadY * 2 + iconH;
+
+    const pill = new PIXI.Graphics();
+    pill.beginFill(0xfff3e0, 0.95);
+    pill.lineStyle(1.2, 0xffb74d, 0.88);
+    pill.drawRoundedRect(0, 0, pillW, pillH, 9);
+    pill.endFill();
+    wrap.addChild(pill);
+    content.position.set(pillPadX, pillPadY);
+    wrap.addChild(content);
+
+    card.addChild(wrap);
   }
 
   private _addDressFooter(
@@ -358,6 +431,7 @@ export class DressUpPanel extends PIXI.Container {
         sp.scale.set(s);
         sp.position.set(cw / 2, portraitCy);
         card.addChild(sp);
+        this._addStarValueBadge(card, cw, outfit.starValue);
       } else {
         const iconCy = Math.round((ch * 54) / CARD_BASE_H);
         const mark = outfit.icon?.trim() ? outfit.icon : outfit.name.charAt(0) || '?';
@@ -365,7 +439,12 @@ export class DressUpPanel extends PIXI.Container {
         icon.anchor.set(0.5, 0.5);
         icon.position.set(cw / 2, iconCy);
         card.addChild(icon);
+        this._addStarValueBadge(card, cw, outfit.starValue);
       }
+    }
+
+    if (!showPortrait && outfit.starValue > 0) {
+      this._addStarValueBadge(card, cw, outfit.starValue);
     }
 
     if (isEquipped) this._addEquipBadge(card, cw);
@@ -441,9 +520,20 @@ export class DressUpPanel extends PIXI.Container {
             ToastMessage.show('花愿不足');
             return;
           }
-          if (DressUpManager.unlock(outfit.id)) {
+          const deferStar = outfit.starValue > 0;
+          const flyLp = new PIXI.Point(14, 14);
+          const flyGlobal = deferStar ? card.toGlobal(flyLp) : null;
+          if (DressUpManager.unlock(outfit.id, { deferStarGrant: deferStar })) {
             if (outfit.huayuanCost > 0) AudioManager.play('purchase_tap');
             ToastMessage.show(`已解锁「${outfit.name}」！`);
+            if (deferStar && flyGlobal) {
+              this._pendingDressUpStarGrant = outfit.starValue;
+              EventBus.emit('decoration:shopStarFly', {
+                globalX: flyGlobal.x,
+                globalY: flyGlobal.y,
+                amount: outfit.starValue,
+              });
+            }
             this._refreshHeaderNumbers();
             this._rebuildGrid();
           }

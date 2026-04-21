@@ -13,11 +13,15 @@ import { TextureCache } from '@/utils/TextureCache';
 
 /**
  * board_item：进收纳盒/棋盘的棋子，数量用 ×N；
- * direct_currency：直加顶栏体力/花愿/钻石，仅显示数字（无 ×，避免与「几个棋子」混淆）。
+ * direct_currency：直加顶栏体力/花愿/钻石/许愿硬币，仅显示数字（无 ×，避免与「几个棋子」混淆）。
  */
 export type ItemObtainEntry =
   | { kind: 'board_item'; itemId: string; count: number }
-  | { kind: 'direct_currency'; currency: 'stamina' | 'huayuan' | 'diamond'; amount: number };
+  | {
+      kind: 'direct_currency';
+      currency: 'stamina' | 'huayuan' | 'diamond' | 'flowerSign';
+      amount: number;
+    };
 
 const Z = 12500;
 /** 仅用于计算物品区垂直位置（与此前居中逻辑一致，避免改标题缩放时带动格子） */
@@ -65,10 +69,14 @@ function drawSunburstRays(g: PIXI.Graphics, cx: number, cy: number, outerR: numb
   g.endFill();
 }
 
-const DIRECT_CURRENCY_ICON: Record<'stamina' | 'huayuan' | 'diamond', string> = {
+const DIRECT_CURRENCY_ICON: Record<
+  'stamina' | 'huayuan' | 'diamond' | 'flowerSign',
+  string
+> = {
   stamina: 'icon_energy',
   huayuan: 'icon_huayuan',
   diamond: 'icon_gem',
+  flowerSign: 'icon_flower_sign_coin',
 };
 
 export interface ItemObtainRewardCellOptions {
