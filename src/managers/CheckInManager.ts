@@ -281,6 +281,17 @@ class CheckInManagerClass {
     EventBus.emit('checkin:gmVirtualDayAdvanced');
   }
 
+  /** GM：直接覆盖连续签到天数（用于测试 DailyCandy 连签里程碑） */
+  gmSetConsecutiveDays(n: number): void {
+    const clamped = Math.max(0, Math.floor(n));
+    this._state.consecutiveDays = clamped;
+    if (this._state.totalSignedDays < clamped) {
+      this._state.totalSignedDays = clamped;
+    }
+    this._saveState();
+    EventBus.emit('checkin:dataChanged');
+  }
+
   private _saveState(): void {
     try {
       PersistService.writeRaw(

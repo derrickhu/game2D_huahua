@@ -14,6 +14,12 @@ import {
   type DecoDef,
   DecoRarity,
 } from '@/config/DecorationConfig';
+import {
+  getLevelUnlockDef,
+  getLevelUnlocksInRange,
+  type LevelUnlockDef,
+} from '@/config/LevelUnlockConfig';
+import { createLevelUnlockCard } from '@/gameobjects/ui/LevelUnlockCard';
 import { TextureCache } from '@/utils/TextureCache';
 import { RewardFlyCoordinator, type RewardFlyItem } from '@/core/RewardFlyCoordinator';
 import {
@@ -110,9 +116,21 @@ export class LevelUpPopup extends PIXI.Container {
       obtainEntries.push({ kind: 'board_item', itemId, count });
     }
 
+    // 升星仪式：聚合本次跨越的 LevelUnlockDef（数据驱动；为空则不渲染卡片）
+    const ceremonyDefs: LevelUnlockDef[] = this._previewOnly
+      ? (level > 0 ? (getLevelUnlockDef(level) ? [getLevelUnlockDef(level)!] : []) : [])
+      : (level > 0 ? getLevelUnlocksInRange(options?.previousLevel ?? (level - 1), level) : []);
+    const ceremonySubtitle = ceremonyDefs.length > 0
+      ? ceremonyDefs.map(d => d.ceremonyTitle).join(' · ')
+      : null;
+
+    const previewBaseTitle = options?.bannerTitle ?? `升至 ${level}星 · 礼包预览`;
+    const previewTitle = this._previewOnly && ceremonySubtitle
+      ? `${previewBaseTitle}\n仪式：${ceremonySubtitle}`
+      : previewBaseTitle;
     const titleText = this._previewOnly
-      ? (options?.bannerTitle ?? `升至 ${level}星 · 礼包预览`)
-      : (options?.celebrationTitle ?? '恭喜升级');
+      ? previewTitle
+      : (options?.celebrationTitle ?? (ceremonySubtitle ? `升星仪式 · ${ceremonySubtitle}` : '恭喜升级'));
 
     const mask = new PIXI.Graphics();
     mask.beginFill(0x000000, LEVEL_UP_MASK_ALPHA);
@@ -158,6 +176,9 @@ export class LevelUpPopup extends PIXI.Container {
       });
 
       if (!this._previewOnly) {
+        if (ceremonyDefs.length > 0) {
+          this._appendOpenCardsSection(content, W, ceremonyDefs);
+        }
         const prevLevel = options?.previousLevel ?? (level - 1);
         const unlockedDecos = getDecosUnlockedInLevelRange(prevLevel, level);
         const unlockedStyles = getRoomStylesUnlockedInLevelRange(prevLevel, level);
@@ -383,6 +404,85 @@ export class LevelUpPopup extends PIXI.Container {
     panelRoot.addChild(closeBtn);
 
     this.addChild(panelRoot);
+  }
+
+  // ── 升星仪式 · 开放卡片区 ────────────────────────────
+
+  private _appendOpenCardsSection(
+    content: PIXI.Container,
+    W: number,
+    defs: LevelUnlockDef[],
+  ): void {
+    let hintNode: PIXI.Text | null = null;
+    for (const child of content.children) {
+      if (child instanceof PIXI.Text && (child as PIXI.Text).text === '点击继续') {
+        hintNode = child as PIXI.Text;
+        break;
+      }
+    }
+    if (!hintNode) return;
+
+    const allEntries = defs.flatMap(d => d.entries);
+    if (allEntries.length === 0) return;
+
+    const COLS = Math.min(3, allEntries.length);
+    const COL_GAP = 8;
+    const ROW_GAP = 8;
+    const cardW = Math.floor(((W - 64) - (COLS - 1) * COL_GAP) / COLS);
+    const startY = hintNode.y - 10;
+
+    const divider = new PIXI.Graphics();
+    divider.lineStyle(1, 0xDEC090, 0.35);
+    divider.moveTo(W / 2 - 90, startY - 6);
+    divider.lineTo(W / 2 + 90, startY - 6);
+    divider.eventMode = 'none';
+    content.addChild(divider);
+
+    const ceremonyTitle = defs.length === 1
+      ? `升星仪式 · ${defs[0]!.ceremonyTitle}`
+      : '升星仪式 · 新内容开放';
+    const header = new PIXI.Text(ceremonyTitle, {
+      fontSize: 15,
+      fill: 0xfff0c8,
+      fontFamily: FONT_FAMILY,
+      fontWeight: 'bold',
+      stroke: 0x7a5c2e,
+      strokeThickness: 2.5,
+    });
+    header.anchor.set(0.5, 0);
+    header.position.set(W / 2, startY);
+    header.eventMode = 'none';
+    content.addChild(header);
+
+    const gridTop = startY + 26;
+    const gridLeft = (W - (COLS * cardW + (COLS - 1) * COL_GAP)) / 2;
+
+    let curRow = 0;
+    let rowMaxH = 0;
+    let bottomY = gridTop;
+    for (let i = 0; i < allEntries.length; i++) {
+      const col = i % COLS;
+      const row = Math.floor(i / COLS);
+      if (row !== curRow) {
+        bottomY += rowMaxH + ROW_GAP;
+        rowMaxH = 0;
+        curRow = row;
+      }
+      const { view, height } = createLevelUnlockCard(allEntries[i]!, {
+        width: cardW,
+        iconSize: 36,
+        titleFontSize: 12,
+        descFontSize: 10,
+        padding: 6,
+        maxHeight: 96,
+      });
+      view.position.set(gridLeft + col * (cardW + COL_GAP), bottomY);
+      content.addChild(view);
+      rowMaxH = Math.max(rowMaxH, height);
+    }
+    bottomY += rowMaxH;
+
+    hintNode.position.y = bottomY + 14;
   }
 
   // ── 解锁家具展示区 ──────────────────────────────────

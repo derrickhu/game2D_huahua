@@ -1,0 +1,13 @@
+Square game asset 1:1, single furniture prop centered with generous margin (the prop must occupy only the central ~60% of the canvas, with wide pure-white empty padding all around for safe cutout).
+
+Cute kawaii 2.5D isometric view from upper-left about 45 degrees, hand-painted mobile merge-game flower shop style, matching the existing `furniture_greenhouse_pot_*` and `furniture_orn_pastel_bench` batches. Soft brown outlines slightly thicker than hairline with rounded corners, gentle upper-left light, soft volumetric shading, readable silhouette at small grid size. Chibi-friendly proportions — NOT photoreal, NOT heavy 3D render, NOT flat UI icon, NOT sticker with white border.
+
+This piece is a LIMITED rarity reward — must feel premium and characterful, NOT plain. Style direction: industrial speakeasy café / late-night programmer's corner — moody, warm-dim, masculine — DEEP-WALNUT base, MATTE-BLACK metal, COPPER accents, single tiny warm Edison-style bulb glow. Distinctly different from the bright cream cottage desk and the white airy garden rack.
+
+Subject: a small premium chibi coffee station built on a slim deep-walnut wood plinth with a thin matte-black wrought-iron edge band. Center: a compact chibi commercial-style espresso machine with a hammered POLISHED-COPPER body, matte-black control knobs, walnut portafilter handle, a tiny brass steam wand with a wisp of curling steam, and one tiny Edison-bulb pendant lamp hanging just above casting a warm amber glow. To the right: a matching small burr grinder with copper hopper and matte-black base. To the front: a dark ceramic espresso cup on a small saucer with a single perfect tulip latte-art crema, a tiny etched-glass sugar jar with cork stopper, a neatly-folded dark linen bar towel, and two roasted coffee beans. Tiny brass hook on the side holds a small pair of leather barista gloves or a small brass tamper.
+
+After-hours speakeasy roastery vibe. NOT pastel cream, NOT generic office appliance, NOT bright daytime kitchen, NOT white iron garden.
+
+ABSOLUTELY NO text, NO brand logos, NO numbers, NO Chinese characters, NO English letters, NO captions, NO watermark. NO sticker stroke around the prop, NO white outline border, NO floor tiles, NO walls, NO room scenery — the prop floats on pure white.
+
+Background pure solid white #FFFFFF ONLY, nothing else.

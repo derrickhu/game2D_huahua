@@ -232,6 +232,8 @@ class SaveManagerClass {
         'huahua_challenge',
         'huahua_collection',
         'huahua_flower_cards',
+        'huahua_affinity',
+        'huahua_daily_candy',
         'huahua_haptic',
         CLOUD_SYNC_META_KEY,
       ];

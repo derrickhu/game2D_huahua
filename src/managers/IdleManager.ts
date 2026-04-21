@@ -12,6 +12,9 @@ import { PersistService } from '@/core/PersistService';
 import { BoardManager } from './BoardManager';
 import { CurrencyManager } from './CurrencyManager';
 import { RewardBoxManager } from './RewardBoxManager';
+import { FlowerSignTicketManager } from './FlowerSignTicketManager';
+import { AffinityManager } from './AffinityManager';
+import { DailyCandyManager, type DailyCandyPayload } from './DailyCandyManager';
 import {
   IDLE_PRODUCE_INTERVAL,
   OFFLINE_MAX_HOURS,
@@ -26,6 +29,14 @@ const _api = typeof wx !== 'undefined' ? wx : typeof tt !== 'undefined' ? tt : n
 
 const IDLE_STORAGE_KEY = 'huahua_idle';
 
+export interface OfflineAffinityNote {
+  typeId: string;
+  bondName: string;
+  bondLabel: string;
+  bondLevel: number;
+  text: string;
+}
+
 export interface OfflineReward {
   /** 离线时长（秒） */
   offlineSeconds: number;
@@ -33,6 +44,13 @@ export interface OfflineReward {
   producedItems: { itemId: string; name: string }[];
   /** 花愿（体力不计入本面板，由 SaveManager 读档时单独结算） */
   huayuanEarned: number;
+  /** 熟客离线留言（已解锁的熟客中按混合规则抽签；未解锁则 null） */
+  affinityNote: OfflineAffinityNote | null;
+  /**
+   * 「开店糖果」（每日首次进店礼包）；当日已领过为 null。
+   * 入账与否在 OfflineRewardPanel.claim 时统一通过 IdleManager.claimReward 走流程。
+   */
+  dailyCandy: DailyCandyPayload | null;
 }
 
 interface IdleSaveData {
@@ -57,47 +75,52 @@ class IdleManagerClass {
       return null;
     }
 
-    if (this._lastOnlineTimestamp <= 0) {
-      // 首次进入，无离线收益
-      this._updateTimestamp();
-      return null;
-    }
+    const isFirstLaunch = this._lastOnlineTimestamp <= 0;
 
     const now = Date.now();
-    const offlineMs = now - this._lastOnlineTimestamp;
-    const offlineSeconds = Math.floor(offlineMs / 1000);
+    const offlineMs = isFirstLaunch ? 0 : now - this._lastOnlineTimestamp;
+    const offlineSeconds = Math.max(0, Math.floor(offlineMs / 1000));
 
-    // 最少离线60秒才计算收益
-    if (offlineSeconds < 60) {
+    // 离线上限（首次进入按 0 计）
+    const maxSeconds = OFFLINE_MAX_HOURS * 3600;
+    const effectiveSeconds = Math.min(offlineSeconds, maxSeconds);
+    const offlineQualifies = effectiveSeconds >= 60;
+
+    // 离线产出（仅离线 >= 60s 才计算）
+    const producedItems: { itemId: string; name: string }[] = [];
+    let huayuanEarned = 0;
+    if (offlineQualifies) {
+      const permBuildingCount = this._countPermanentBuildings();
+      const produceCount = Math.floor(effectiveSeconds / IDLE_PRODUCE_INTERVAL) * Math.max(1, permBuildingCount);
+      const cappedCount = Math.min(produceCount, 8);
+      for (let i = 0; i < cappedCount; i++) {
+        const itemId = this._randomIdleItem();
+        if (itemId) {
+          const def = ITEM_DEFS.get(itemId);
+          producedItems.push({ itemId, name: def?.name || itemId });
+        }
+      }
+      huayuanEarned = Math.floor(effectiveSeconds / OFFLINE_HUAYUAN_INTERVAL_SEC);
+    }
+
+    // 熟客留言（无解锁则 null）
+    const affinityNote = AffinityManager.pickRandomAffinityNote();
+
+    // 当日开店糖果（每自然日首次启动；当天已领则 null）
+    const dailyCandy = DailyCandyManager.consumeTodayCandy();
+
+    // 三块全空 → 不弹面板
+    if (!offlineQualifies && !affinityNote && !dailyCandy) {
       this._updateTimestamp();
       return null;
     }
-
-    // 离线上限
-    const maxSeconds = OFFLINE_MAX_HOURS * 3600;
-    const effectiveSeconds = Math.min(offlineSeconds, maxSeconds);
-
-    // 计算产出物品数量
-    const permBuildingCount = this._countPermanentBuildings();
-    const produceCount = Math.floor(effectiveSeconds / IDLE_PRODUCE_INTERVAL) * Math.max(1, permBuildingCount);
-    const cappedCount = Math.min(produceCount, 8); // 最多产出8个，避免棋盘爆满
-
-    // 产出物品
-    const producedItems: { itemId: string; name: string }[] = [];
-    for (let i = 0; i < cappedCount; i++) {
-      const itemId = this._randomIdleItem();
-      if (itemId) {
-        const def = ITEM_DEFS.get(itemId);
-        producedItems.push({ itemId, name: def?.name || itemId });
-      }
-    }
-
-    const huayuanEarned = Math.floor(effectiveSeconds / OFFLINE_HUAYUAN_INTERVAL_SEC);
 
     const reward: OfflineReward = {
       offlineSeconds: effectiveSeconds,
       producedItems,
       huayuanEarned,
+      affinityNote,
+      dailyCandy,
     };
 
     this._pendingReward = reward;
@@ -105,7 +128,7 @@ class IdleManagerClass {
     return reward;
   }
 
-  /** 领取离线收益 */
+  /** 领取离线收益（含当日开店糖果） */
   claimReward(): void {
     if (!this._pendingReward) return;
 
@@ -117,6 +140,37 @@ class IdleManagerClass {
 
     if (reward.huayuanEarned > 0) {
       CurrencyManager.addHuayuan(reward.huayuanEarned);
+    }
+
+    // 当日开店糖果：基础包 + 随机彩蛋 + 连签里程碑
+    if (reward.dailyCandy) {
+      const dc = reward.dailyCandy;
+      if (dc.base.huayuan > 0) CurrencyManager.addHuayuan(dc.base.huayuan);
+      if (dc.base.stamina > 0) CurrencyManager.addStamina(dc.base.stamina);
+      if (dc.base.diamond > 0) CurrencyManager.addDiamond(dc.base.diamond);
+
+      const b = dc.bonus;
+      if (b.huayuan) CurrencyManager.addHuayuan(b.huayuan);
+      if (b.stamina) CurrencyManager.addStamina(b.stamina);
+      if (b.flowerSignTickets) FlowerSignTicketManager.add(b.flowerSignTickets);
+      if (b.rewardBoxItem) {
+        RewardBoxManager.addItem(b.rewardBoxItem.itemId, b.rewardBoxItem.count);
+      }
+
+      const t = dc.streakTier;
+      if (t) {
+        if (t.huayuan) CurrencyManager.addHuayuan(t.huayuan);
+        if (t.stamina) CurrencyManager.addStamina(t.stamina);
+        if (t.diamond) CurrencyManager.addDiamond(t.diamond);
+        if (t.flowerSignTickets) FlowerSignTicketManager.add(t.flowerSignTickets);
+        if (t.rewardBoxItem) {
+          RewardBoxManager.addItem(t.rewardBoxItem.itemId, t.rewardBoxItem.count);
+        }
+        // 30 天「熟客盲盒」：暂时占位，真正接通需 affinity_furniture_random pool
+        if (t.blindBoxAffinityFurniture) {
+          EventBus.emit('dailyCandy:blindBoxAffinityFurniture', t);
+        }
+      }
     }
 
     this._pendingReward = null;

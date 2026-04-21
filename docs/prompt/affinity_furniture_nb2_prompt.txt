@@ -1,0 +1,28 @@
+Square game asset grid 1:1, EXACTLY 3 columns x 2 rows (six cells total, no extra rows). Each of the first FIVE cells contains ONE single premium chibi furniture prop, centered with generous margin. The sixth cell (bottom-right) is intentionally EMPTY. The six cells are visually separated only by pure white space — NO cell borders, NO sticker outlines, NO rounded rectangles around items, NO drop shadows that form a card, NO printed labels or captions anywhere.
+
+Cute kawaii 2.5D isometric view from upper-left about 45 degrees, hand-painted mobile merge-game flower shop style, consistent across all five pieces, matching the existing `furniture_greenhouse_pot_*` and `furniture_orn_pastel_bench` batches. Soft brown outlines slightly thicker than hairline with rounded corners, gentle upper-left light with soft volumetric shading, readable silhouettes at small grid size. Chibi-friendly proportions so each piece still reads as a merge-game sticker — NOT photoreal, NOT heavy 3D render, NOT flat UI icon style.
+
+These five pieces are LIMITED rarity rewards given by loyal customers at Bond Lv.4 — each must feel noticeably more PREMIUM and ORNATE than the regular shop furniture: richer materials (brass, polished walnut, rose gold, velvet, stained glass, carved wood), unique characterful silhouette, tasteful golden or metallic accent highlights, extra small storytelling details that hint at the specific customer, gentle magical sparkle dots on at most one accent spot per piece. Still one coherent prop, no surrounding scenery.
+
+Cell layout (left-to-right, top row then bottom row):
+
+CELL 1 (top-left) — STUDENT'S LITERARY DESK — "校园书桌" for 小诗:
+An elegant small chibi student writing desk in warm cherry-wood tone with rose-gold drawer pull and slim curved legs, gently scalloped edge. On the desktop: a small brass reading lamp with mint-green glass shade, a neat stack of three hand-bound leather-cover journals with gold-foil ribbons as page markers, a stained-glass pencil cup holding pastel pencils, a tiny pressed-flower specimen frame, a rose-gold pair of round spectacles. A small cushioned stool in cream bouclé fabric tucked to the side. Romantic bookish prodigy vibe.
+
+CELL 2 (top-middle) — ARTISAN COFFEE CORNER — "通勤咖啡角" for 阿凯:
+A premium compact chibi coffee station on a polished walnut wood base with subtle brass-trim edge. Center: a small boutique espresso machine with a hammered-copper body, brass steam valve and tiny pressure gauge (no readable numbers), walnut portafilter handle. Beside it: a matching mini burr grinder with copper hopper, a pastel ceramic cup with perfect tulip latte-art, a small etched-glass sugar jar, a couple of coffee beans, and one slim brass spoon. Cozy dim-lit after-hours artisan cafe vibe, NOT modern office, NOT generic appliance.
+
+CELL 3 (top-right) — ENCHANTED BALCONY CONSERVATORY — "阳台花架" for 林姐:
+A 3-tier curved wrought-iron mini conservatory rack in soft ivory-white with ornate scrollwork/curlicues on the sides, slightly pitched like a small greenhouse gable, each tier holding premium exotic houseplants in pastel terracotta pots: top tier a blooming pink phalaenopsis orchid, middle tier a lush lavender bush plus a tiny strawberry plant with red berries, bottom tier a miniature rose bush with rich velvet-red blooms. A brass vintage watering can and a short macrame hanger with one small air-plant tucked on one side. Romantic "winter-garden" vibe.
+
+CELL 4 (bottom-left) — POET'S LIBRARY NOOK — "诗意书架" for 小景:
+A short ornate two-tier chibi bookshelf in polished dark walnut wood with carved crown molding and small brass corner caps. Top shelf: a row of five leather-bound poetry volumes with gold-foil spine titles (no readable text, just decorative gilt stripes), a vintage brass rangefinder camera, and a small gold-framed photograph. Bottom shelf: a slim amber-glass desk lamp with pleated linen shade casting warm glow, a crystal dome cloche covering a pressed-flower specimen arrangement, and a slim fluted vase with a single dried eucalyptus stem. Literary, moody, collector vibe.
+
+CELL 5 (bottom-middle) — CHAMPION TROPHY CABINET — "冠军奖杯柜" for 小翼:
+A stately compact chibi display cabinet in rich mahogany wood with curved glass front, brass hinges and a small brass crown pediment on top, plus tiny LED strip light glow along the top interior shelf. Three internal shelves visible through the glass: top shelf hosts one gleaming tall golden champion cup with double handles on a navy felt base, plus a small engraved brass plaque; middle shelf has two stacked medallions with pastel velvet ribbons (pink, mint) and a small silver laurel-wreath pin; bottom shelf has a tiny bronze running-shoe figurine, a rolled certificate tied with red string, and a framed team photo. Sporty heirloom pride vibe, NOT bulky dark sports locker.
+
+CELL 6 (bottom-right) — INTENTIONALLY EMPTY, pure white.
+
+ABSOLUTELY NO text, NO labels, NO numbers, NO Chinese characters, NO English letters, NO logos, NO shop signs, NO captions, NO watermark. NO sticker strokes around any item, NO white outline borders, NO cell frames, NO floor tiles, NO walls, NO rooms — each piece floats on pure white, clean for rembg cutout.
+
+Background pure solid white #FFFFFF ONLY, nothing else.

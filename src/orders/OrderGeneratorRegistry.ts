@@ -31,6 +31,7 @@ import {
   type OrderGenResult,
   type OrderGenerationKind,
   type OrderGenSlot,
+  type OrderPreferLine,
   getActivityOrderHook,
 } from './types';
 
@@ -359,7 +360,7 @@ export function generateOrderDemands(ctx: OrderGenContext): OrderGenResult | nul
   const { tier, lines, rng } = ctx;
   const tierDef = ORDER_TIERS[tier];
 
-  const comboChance = orderComboEffectiveChance(lines);
+  const comboChance = orderComboEffectiveChance(lines, ctx.playerLevel);
   if (lines.unlockedLineCount >= 2 && rng() < comboChance) {
     const comboSlots = tryGenerateCombo(tier, lines, rng, ctx.forceGreenFlowerSlot);
     if (comboSlots && comboSlots.length >= 2) {
@@ -384,12 +385,24 @@ export function generateOrderDemands(ctx: OrderGenContext): OrderGenResult | nul
   const triple = tryGenerateChainOrderTriple(ctx);
   if (triple) return triple;
 
-  const pool = resolveDemandPool(tier, lines);
-  const slots = generateDemandsFromPool(pool, tierDef.slotRange, lines, {
-    rng,
-    forceGreenFlowerSlot: ctx.forceGreenFlowerSlot,
-    tier,
-  });
+  const basePool = resolveDemandPool(tier, lines);
+  // 熟客专属订单：优先在「软偏好」line 上生成；不足回退基础池
+  const preferPool = buildPreferredDemandPool(basePool, ctx.preferLines, lines);
+  let slots: OrderGenSlot[] = [];
+  if (preferPool && preferPool.length > 0) {
+    slots = generateDemandsFromPool(preferPool, tierDef.slotRange, lines, {
+      rng,
+      forceGreenFlowerSlot: ctx.forceGreenFlowerSlot,
+      tier,
+    });
+  }
+  if (slots.length === 0) {
+    slots = generateDemandsFromPool(basePool, tierDef.slotRange, lines, {
+      rng,
+      forceGreenFlowerSlot: ctx.forceGreenFlowerSlot,
+      tier,
+    });
+  }
   if (slots.length === 0) return null;
 
   if (generationKind === 'growth' && maxSlotNormForSlots(slots) < ORDER_GROWTH_MIN_MAX_NORM) {
@@ -403,5 +416,30 @@ export function generateOrderDemands(ctx: OrderGenContext): OrderGenResult | nul
     timeLimit: tierDef.timeLimit,
     bonusMultiplier,
     generationKind,
+    isExclusive: ctx.isExclusive === true ? true : undefined,
   };
+}
+
+/**
+ * 把基础 demand 池按 preferLines 软筛选：只保留 category+line 命中偏好的项；
+ * 若把 line 列表筛剩为空或与 demand 不交集，则跳过那条 demand。
+ * 完全不命中（返回空数组）时由调用方回退基础池。
+ */
+function buildPreferredDemandPool(
+  basePool: CustomerDemandDef[],
+  preferLines: OrderPreferLine[] | undefined,
+  ulk: UnlockedLines,
+): CustomerDemandDef[] | null {
+  if (!preferLines || preferLines.length === 0) return null;
+  const out: CustomerDemandDef[] = [];
+  for (const d of basePool) {
+    const matchedLines = d.lines.filter(ln =>
+      preferLines.some(p => p.category === d.category && p.line === ln),
+    );
+    if (matchedLines.length === 0) continue;
+    const eligible = eligibleDemandLines({ ...d, lines: matchedLines }, ulk);
+    if (eligible.length === 0) continue;
+    out.push({ ...d, lines: matchedLines });
+  }
+  return out;
 }

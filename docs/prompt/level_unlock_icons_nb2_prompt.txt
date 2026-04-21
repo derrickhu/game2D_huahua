@@ -1,0 +1,27 @@
+EXACTLY six small game UI feature icons arranged strictly in 3 columns and 2 rows (six icons total, NOT eight, NOT nine) on a flat solid magenta FF00FF background for chroma-key cutout. Square 1:1 canvas, divided invisibly into 3 columns x 2 rows of equal cells. Each icon is centered within its own cell with generous padding so cells do not overlap. No grid lines, no borders, no shared backgrounds — only the six icons floating on pure magenta. Do NOT add a third row, do NOT add extra icons, do NOT duplicate any icon.
+
+All six icons share the same art language: cute 2D hand-painted casual mobile game UI icon, kawaii cozy merge-game aesthetic, pastel high-key palette (soft pink, lavender, butter yellow, mint, sky blue, peach), thick smooth outlines, soft volumetric shading with gentle highlights and a subtle drop-shadow, slightly rounded chubby silhouettes, optional small sparkle dots for "newly unlocked" feel. Each icon should read instantly at small UI size. Not photorealistic, not 3D render.
+
+Cell layout (left-to-right, top row then bottom row):
+
+CELL 1 (top-left) — FLOWER LANGUAGE BUBBLE:
+A glossy translucent flower-shaped speech bubble (5 rounded petals like a sakura), pearly pastel pink and white, with a tiny soft-pink heart or 5-petal mini flower glowing inside the bubble. Light highlight on the upper-left petal, faint sparkle around the bubble. Conveys "free bonus / extra reward".
+
+CELL 2 (top-middle) — COMBO ORDER BOOST:
+Two stacked tiny order tickets / receipt cards, butter-cream and peach colored, slightly fanned out, tied together by a pink ribbon, with a small golden 4-point sparkle star burst behind them. ABSOLUTELY NO numbers anywhere, NO "x2", NO "2x", NO digits, NO text characters of any kind on or near the tickets. The tickets must be blank cream paper. Conveys "combo / multi-order".
+
+CELL 3 (top-right) — HIGH-TIER GIFT CHEST:
+A premium golden-trim treasure gift chest, pastel cream box body with rich gold corners and a big plump pink ribbon bow on top, lid slightly ajar with soft golden glow and a few sparkle stars escaping. Slight three-quarter angle. Conveys "rare reward upgrade".
+
+CELL 4 (bottom-left) — WORLD MAP UNLOCK:
+A folded paper world map / parchment scroll partially unrolled, soft cream paper with pastel mint-and-lavender continents, a tiny pink location pin standing on it, and a small golden compass star in the corner. Slight curl on the edges, drop shadow. Conveys "new map / new region opens".
+
+CELL 5 (bottom-middle) — LOYAL CUSTOMER BADGE:
+A round golden medal / badge with a soft pink heart in the center, a subtle ring of tiny sparkle dots around it, two short ribbon tails (pastel pink and lavender) hanging at the bottom. Conveys "regulars / friendship / bond unlocked".
+
+CELL 6 (bottom-right) — BUTTERFLY NET:
+A cute long-handled butterfly catching net (light wood handle, pastel mint-blue mesh hoop), with one small kawaii pastel pink-and-lavender butterfly fluttering near the net hoop and tiny sparkle dots. Conveys "butterfly drink line / new tool".
+
+Each icon roughly fills 55–65 percent of its cell, leaving clean magenta space on all sides for chroma-key cutout. No text, no numbers, no Chinese characters, no English letters, no logos, no watermarks. Pure flat magenta FF00FF background between and behind all icons.
+
+High quality 2D casual mobile game UI illustration set, consistent style across all six, soft pastel cozy floral merge-game vibe.

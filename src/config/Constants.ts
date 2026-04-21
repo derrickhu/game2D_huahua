@@ -86,7 +86,7 @@ export const OFFLINE_HUAYUAN_INTERVAL_SEC = 300; // 5 分钟 1 点
  * false：`IdleManager.calculateOfflineReward()` 仅同步离线时间戳、清空待领取，不弹窗、不发奖；`IdleManager` / `OfflineRewardPanel` 实现仍保留，改 true 即可恢复。
  * 体力随真实时间自然回复仍由读档 `SaveManager` + `CurrencyManager` 处理，不受此项影响。
  */
-export const OFFLINE_REWARD_UI_ENABLED = false;
+export const OFFLINE_REWARD_UI_ENABLED = true;
 
 // 颜色主题
 export const COLORS = {

@@ -1,0 +1,13 @@
+Square game asset 1:1, single furniture prop centered with generous margin (the prop must occupy only the central ~60% of the canvas, with wide pure-white empty padding all around for safe cutout).
+
+Cute kawaii 2.5D isometric view from upper-left about 45 degrees, hand-painted mobile merge-game flower shop style, matching the existing `furniture_greenhouse_pot_*` and `furniture_orn_pastel_bench` batches. Soft brown outlines slightly thicker than hairline with rounded corners, gentle upper-left light, soft volumetric shading, readable silhouette at small grid size. Chibi-friendly proportions — NOT photoreal, NOT heavy 3D render, NOT flat UI icon, NOT sticker with white border.
+
+This piece is a LIMITED rarity reward — must feel premium and characterful, NOT plain. Style direction: French country / cottage romance / cream + lavender pastel — light, airy, dreamy bookish girl vibe (this is the loyal "student poet" customer's gifted desk, NOT a dark wood adult desk).
+
+Subject: a small chibi writing desk in CREAM-WHITE PAINTED WOOD with delicate lavender-purple painted scalloped trim along the apron, gracefully curved cabriole legs, one slim drawer with a tiny gold ring pull and a hand-painted daisy motif on the drawer face. On top of the desk: a slim brass swan-neck reading lamp with mint-green pleated glass shade, a neat small stack of three pastel-cover hand-bound journals with ribbon page markers, an open journal with abstract doodled flowers on the visible page (no readable letters), a small ceramic teacup-shaped pencil cup holding pastel pencils, a tiny pressed-violet specimen in a thin gold oval frame. Beside the desk: a small round cushioned stool with cream bouclé fabric and a single lavender bow tied to one leg.
+
+Soft floral romance, "secret garden study" mood. NOT dark walnut, NOT brass-heavy industrial, NOT Victorian library.
+
+ABSOLUTELY NO text, NO labels, NO numbers, NO Chinese characters, NO English letters, NO logos, NO signatures, NO watermark. NO sticker stroke around the prop, NO white outline border, NO floor tiles, NO walls, NO room scenery — the prop floats on pure white.
+
+Background pure solid white #FFFFFF ONLY, nothing else.
