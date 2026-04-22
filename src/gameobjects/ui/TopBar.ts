@@ -102,6 +102,7 @@ export class TopBar extends PIXI.Container {
     if (!this._opts.hideShopPill) {
       this._buildShopPill();
     }
+    this._buildCodexPill();
     this._buildGmActivateZone();
     this._buildGmButton();
     this._bindEvents();
@@ -317,6 +318,52 @@ export class TopBar extends PIXI.Container {
     });
 
     this.addChild(root);
+  }
+
+  /** 友谊图鉴入口：仅 affinity_codex_btn，无白底；与商店图标同样行为（独立 hit area）
+   * - 当 hideShopPill = true（在花店内），仍显示，方便玩家随时翻图鉴
+   */
+  private _buildCodexPill(): void {
+    const root = new PIXI.Container();
+    // hideShopPill 时占用商店原位置；否则紧跟在商店图标右侧
+    const left = this._opts.hideShopPill
+      ? SHOP_PILL_LEFT
+      : SHOP_PILL_LEFT + SHOP_HIT + 4;
+    root.position.set(left + SHOP_HIT / 2, BAR_MID_Y);
+
+    const tex = TextureCache.get('affinity_codex_btn');
+    if (tex && tex.width > 0) {
+      const sp = new PIXI.Sprite(tex);
+      sp.anchor.set(0.5);
+      sp.width = SHOP_ICON;
+      sp.height = SHOP_ICON;
+      sp.position.set(0, 0);
+      root.addChild(sp);
+    } else {
+      // 兜底：纯文字「图鉴」按钮
+      const bg = new PIXI.Graphics();
+      bg.beginFill(0xb6a4d8, 1);
+      bg.lineStyle(2, 0xfff5da, 0.9);
+      bg.drawRoundedRect(-SHOP_ICON / 2, -SHOP_ICON / 2, SHOP_ICON, SHOP_ICON, 14);
+      bg.endFill();
+      root.addChild(bg);
+      const fb = new PIXI.Text('图鉴', { fontSize: 18, fontFamily: FONT_FAMILY, fill: 0xfff5da, fontWeight: 'bold' } as PIXI.TextStyle);
+      fb.anchor.set(0.5);
+      root.addChild(fb);
+    }
+
+    root.eventMode = 'static';
+    root.cursor = 'pointer';
+    root.hitArea = new PIXI.Rectangle(-SHOP_HIT / 2, -SHOP_HIT / 2, SHOP_HIT, SHOP_HIT);
+    root.on('pointertap', (e: PIXI.FederatedPointerEvent) => {
+      e.stopPropagation();
+      EventBus.emit('affinityCodex:open');
+    });
+
+    this.addChild(root);
+
+    // 让 GM 槽起点向后挪
+    this._gmSlotLeft = left + SHOP_HIT + 10;
     this._gmSlotLeft = SHOP_PILL_LEFT + SHOP_HIT + 10;
   }
 

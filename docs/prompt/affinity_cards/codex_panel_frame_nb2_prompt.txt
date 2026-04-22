@@ -1,0 +1,9 @@
+Clean 2D vector mobile game UI for a cozy pastel flower-shop merge game, kawaii casual style. Modal panel with very rounded corners: thick soft lilac-lavender outer rim, thinner pastel pink inner lip, gentle floating drop shadow. Large flat interior content field — light cream pastel matte fill, smooth, no wood grain, no noise.
+
+Top: ornate golden-yellow scalloped title banner across the upper portion (center empty / blank — engineering will overlay Chinese title text). The banner has cute curls at both ends and a tiny floral garnish on each side.
+
+Below the title, leave a wide tall empty cream content area for a scrollable card grid (engineering will populate cards). The bottom edge of the content area has a very soft horizontal divider line.
+
+Top-right: chunky circular red close button with simple white X slightly past the frame corner.
+
+Aspect 9:16 portrait, full screen modal. Pastel high-key palette, soft gradients only for depth, no photoreal, no readable text or numbers. NO text, NO letters, NO numbers, NO watermark, NO logo. The OUTSIDE area surrounding the modal panel is bright pure magenta #FF00FF for chroma key removal — but the inside of the modal must be cream and lavender, never magenta.

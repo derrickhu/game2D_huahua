@@ -250,16 +250,44 @@ export class AffinityCodexPanel extends PIXI.Container {
       const [obtained, total] = stats.byRarity[r];
       parts.push(`${r} ${obtained}/${total}`);
     }
-    parts.push(`友谊点 ${shards}`);
-    const txt = new PIXI.Text(parts.join('  ·  '), {
+    const rarityTxt = new PIXI.Text(parts.join('  ·  '), {
       fontSize: 12,
       fill: 0x6b4a1c,
       fontFamily: FONT_FAMILY,
       fontWeight: 'bold',
     } as PIXI.TextStyle);
-    txt.anchor.set(0.5);
-    txt.position.set(width / 2, 12);
-    c.addChild(txt);
+    rarityTxt.anchor.set(0, 0.5);
+    rarityTxt.position.set(10, 12);
+    c.addChild(rarityTxt);
+
+    // 右侧：友谊点图标 + 数字
+    const shardTex = TextureCache.get('affinity_shard_icon');
+    let cursorRight = width - 10;
+    const shardLabel = new PIXI.Text(`${shards}`, {
+      fontSize: 12,
+      fill: 0x9c4f2e,
+      fontFamily: FONT_FAMILY,
+      fontWeight: 'bold',
+    } as PIXI.TextStyle);
+    shardLabel.anchor.set(1, 0.5);
+    shardLabel.position.set(cursorRight, 12);
+    c.addChild(shardLabel);
+    cursorRight -= shardLabel.width + 4;
+    if (shardTex && shardTex.width > 0) {
+      const sp = new PIXI.Sprite(shardTex);
+      sp.anchor.set(1, 0.5);
+      const k = 18 / Math.max(shardTex.width, shardTex.height);
+      sp.scale.set(k);
+      sp.position.set(cursorRight, 12);
+      c.addChild(sp);
+    } else {
+      const fallback = new PIXI.Text('友谊点', {
+        fontSize: 11, fill: 0x9c4f2e, fontFamily: FONT_FAMILY,
+      } as PIXI.TextStyle);
+      fallback.anchor.set(1, 0.5);
+      fallback.position.set(cursorRight, 12);
+      c.addChild(fallback);
+    }
     return c;
   }
 

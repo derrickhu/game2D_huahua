@@ -109,6 +109,20 @@ const CHARS_IMAGE_MAP: Record<string, string> = {
   customer_athlete:   'subpkg_chars/images/customer/athlete.png',
   customer_mystery:   'subpkg_chars/images/customer/mystery.png',
   customer_celebrity: 'subpkg_chars/images/customer/celebrity.png',
+
+  // 友谊卡 / 图鉴系统：小诗 12 张卡面（S1 首发，路径 affinity_cards/）
+  affinity_card_student_01: 'subpkg_chars/images/affinity_cards/card_student_01.png',
+  affinity_card_student_02: 'subpkg_chars/images/affinity_cards/card_student_02.png',
+  affinity_card_student_03: 'subpkg_chars/images/affinity_cards/card_student_03.png',
+  affinity_card_student_04: 'subpkg_chars/images/affinity_cards/card_student_04.png',
+  affinity_card_student_05: 'subpkg_chars/images/affinity_cards/card_student_05.png',
+  affinity_card_student_06: 'subpkg_chars/images/affinity_cards/card_student_06.png',
+  affinity_card_student_07: 'subpkg_chars/images/affinity_cards/card_student_07.png',
+  affinity_card_student_08: 'subpkg_chars/images/affinity_cards/card_student_08.png',
+  affinity_card_student_09: 'subpkg_chars/images/affinity_cards/card_student_09.png',
+  affinity_card_student_10: 'subpkg_chars/images/affinity_cards/card_student_10.png',
+  affinity_card_student_11: 'subpkg_chars/images/affinity_cards/card_student_11.png',
+  affinity_card_student_12: 'subpkg_chars/images/affinity_cards/card_student_12.png',
 };
 
 // ================================================================
@@ -217,6 +231,12 @@ const PANELS_IMAGE_MAP: Record<string, string> = {
 
   /** 图鉴面板壳体：笔记本风格粉紫框 + 金色标题栏 + 绿色翻页箭头 */
   collection_panel_shell_nb2: 'subpkg_panels/images/ui/collection_panel_shell_nb2.png',
+
+  /** 友谊卡 / 图鉴系统：通用卡背、友谊点图标、顶栏图鉴入口、图鉴面板壳 */
+  affinity_card_back_default: 'subpkg_panels/images/ui/affinity_card_back_default.png',
+  affinity_shard_icon: 'subpkg_panels/images/ui/affinity_shard_icon.png',
+  affinity_codex_btn: 'subpkg_panels/images/ui/affinity_codex_btn.png',
+  affinity_codex_panel_frame: 'subpkg_panels/images/ui/affinity_codex_panel_frame.png',
   /** 图鉴未解锁物品占位卡：蓝色格纹方块 */
   collection_item_placeholder_nb2: 'subpkg_panels/images/ui/collection_item_placeholder_nb2.png',
 

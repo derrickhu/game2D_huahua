@@ -121,30 +121,44 @@ export class AffinityCardDropPopup extends PIXI.Container {
     const cur = this._curResults[this._curIndex]!;
     const tint = CARD_RARITY_COLOR[cur.card.rarity];
 
-    // 卡背：圆角矩形 + 中央暗色花纹（暂用色块占位）
-    const back = new PIXI.Graphics();
-    back.beginFill(0x4a2f10, 1);
-    back.lineStyle(4, tint, 1);
-    back.drawRoundedRect(-CARD_W / 2, -CARD_H / 2, CARD_W, CARD_H, 18);
-    back.endFill();
-    // 内层装饰边
-    back.lineStyle(2, tint, 0.45);
-    back.drawRoundedRect(-CARD_W / 2 + 10, -CARD_H / 2 + 10, CARD_W - 20, CARD_H - 20, 12);
-    // 中心装饰：花
-    const center = new PIXI.Graphics();
-    center.beginFill(tint, 0.9);
-    center.drawCircle(0, 0, 30);
-    center.endFill();
-    center.beginFill(0x4a2f10, 1);
-    center.drawCircle(0, 0, 16);
-    center.endFill();
-    const star = new PIXI.Text('花', {
-      fontSize: 20, fill: tint, fontFamily: FONT_FAMILY, fontWeight: 'bold',
-    } as PIXI.TextStyle);
-    star.anchor.set(0.5);
-    this._cardMount.addChild(back);
-    this._cardMount.addChild(center);
-    this._cardMount.addChild(star);
+    // 卡背：优先用美术资源 affinity_card_back_default；找不到时回落手画
+    const backTex = TextureCache.get('affinity_card_back_default');
+    if (backTex && backTex.width > 0) {
+      const sp = new PIXI.Sprite(backTex);
+      sp.anchor.set(0.5);
+      const k = Math.max(CARD_W / backTex.width, CARD_H / backTex.height);
+      sp.scale.set(k);
+      // 矩形 mask 把 1:1 卡背裁成 280×380 卡片
+      const mask = new PIXI.Graphics();
+      mask.beginFill(0xffffff);
+      mask.drawRoundedRect(-CARD_W / 2, -CARD_H / 2, CARD_W, CARD_H, 18);
+      mask.endFill();
+      sp.mask = mask;
+      this._cardMount.addChild(mask);
+      this._cardMount.addChild(sp);
+      // 稀有度色边
+      const border = new PIXI.Graphics();
+      border.lineStyle(4, tint, 1);
+      border.drawRoundedRect(-CARD_W / 2, -CARD_H / 2, CARD_W, CARD_H, 18);
+      this._cardMount.addChild(border);
+    } else {
+      const back = new PIXI.Graphics();
+      back.beginFill(0x4a2f10, 1);
+      back.lineStyle(4, tint, 1);
+      back.drawRoundedRect(-CARD_W / 2, -CARD_H / 2, CARD_W, CARD_H, 18);
+      back.endFill();
+      back.lineStyle(2, tint, 0.45);
+      back.drawRoundedRect(-CARD_W / 2 + 10, -CARD_H / 2 + 10, CARD_W - 20, CARD_H - 20, 12);
+      const center = new PIXI.Graphics();
+      center.beginFill(tint, 0.9);
+      center.drawCircle(0, 0, 30);
+      center.endFill();
+      center.beginFill(0x4a2f10, 1);
+      center.drawCircle(0, 0, 16);
+      center.endFill();
+      this._cardMount.addChild(back);
+      this._cardMount.addChild(center);
+    }
 
     this._hint.text = `点击翻牌（${this._curIndex + 1}/${this._curResults.length}）`;
 
