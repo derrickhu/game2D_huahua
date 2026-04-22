@@ -14,21 +14,21 @@ import type { LevelUnlockEntry, LevelUnlockEntryKind } from '@/config/LevelUnloc
 import { TextureCache } from '@/utils/TextureCache';
 
 const KIND_BORDER_COLOR: Record<LevelUnlockEntryKind, number> = {
-  feature:  0xFFD27A,
-  affinity: 0xFFB6C1,
-  shop:     0x9CCCFF,
-  map:      0x9FE2C2,
-  tool:     0xDEC090,
-  cosmetic: 0xC9A8FF,
+  feature:  0xF2A93C,
+  affinity: 0xE48BA3,
+  shop:     0x6FB3F2,
+  map:      0x5FBE92,
+  tool:     0xC79A55,
+  cosmetic: 0xA086D8,
 };
 
 const KIND_BG_TINT: Record<LevelUnlockEntryKind, number> = {
-  feature:  0x000000,
-  affinity: 0x000000,
-  shop:     0x000000,
-  map:      0x000000,
-  tool:     0x000000,
-  cosmetic: 0x000000,
+  feature:  0xFFE9C2,
+  affinity: 0xFFE0E6,
+  shop:     0xDEEEFE,
+  map:      0xD8F1E2,
+  tool:     0xFFEFD2,
+  cosmetic: 0xEAE0FF,
 };
 
 const KIND_DEFAULT_ICON: Record<LevelUnlockEntryKind, string> = {
@@ -74,14 +74,12 @@ export function createLevelUnlockCard(
   const root = new PIXI.Container();
   root.eventMode = 'none';
 
-  // 标题
+  // 标题（深棕字 + 弱 stroke，置于奶金暖底上）
   const title = new PIXI.Text(entry.title ?? '', {
     fontSize: TITLE,
-    fill: 0xfff8e7,
+    fill: 0x4a2f10,
     fontFamily: FONT_FAMILY,
     fontWeight: 'bold',
-    stroke: 0x5d4037,
-    strokeThickness: 2,
     wordWrap: true,
     wordWrapWidth: W - padding * 2,
     align: 'center',
@@ -91,7 +89,7 @@ export function createLevelUnlockCard(
   // 描述
   const desc = new PIXI.Text(entry.desc ?? '', {
     fontSize: DESC,
-    fill: 0xf2e6cf,
+    fill: 0x6b4a1c,
     fontFamily: FONT_FAMILY,
     wordWrap: true,
     wordWrapWidth: W - padding * 2,
@@ -130,13 +128,13 @@ export function createLevelUnlockCard(
   let H = Math.ceil(descY + desc.height + padding);
   if (typeof opts.maxHeight === 'number') H = Math.min(H, Math.max(40, opts.maxHeight));
 
-  // 背景
+  // 背景（暖色奶金分类底 + 同色系实线描边，与「解锁新家具」格视觉同源）
   const bg = new PIXI.Graphics();
-  bg.beginFill(KIND_BG_TINT[entry.kind] ?? 0x000000, 0.18);
-  bg.drawRoundedRect(0, 0, W, H, 10);
+  bg.beginFill(KIND_BG_TINT[entry.kind] ?? 0xFFF1D6, 0.95);
+  bg.drawRoundedRect(0, 0, W, H, 14);
   bg.endFill();
-  bg.lineStyle(1, KIND_BORDER_COLOR[entry.kind] ?? 0xDEC090, 0.7);
-  bg.drawRoundedRect(0, 0, W, H, 10);
+  bg.lineStyle(2, KIND_BORDER_COLOR[entry.kind] ?? 0xC79A55, 0.95);
+  bg.drawRoundedRect(0, 0, W, H, 14);
   bg.eventMode = 'none';
   root.addChild(bg);
 

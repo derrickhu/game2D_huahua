@@ -120,17 +120,13 @@ export class LevelUpPopup extends PIXI.Container {
     const ceremonyDefs: LevelUnlockDef[] = this._previewOnly
       ? (level > 0 ? (getLevelUnlockDef(level) ? [getLevelUnlockDef(level)!] : []) : [])
       : (level > 0 ? getLevelUnlocksInRange(options?.previousLevel ?? (level - 1), level) : []);
-    const ceremonySubtitle = ceremonyDefs.length > 0
-      ? ceremonyDefs.map(d => d.ceremonyTitle).join(' · ')
-      : null;
 
+    // 标题统一直白：「恭喜升级」（preview 保留传入 bannerTitle，便于「升至 N 星 · 礼包预览」）；
+    // 不再把「升星仪式 · xx」拼进标题，避免与物品奖励区视觉重复、文案花哨。
     const previewBaseTitle = options?.bannerTitle ?? `升至 ${level}星 · 礼包预览`;
-    const previewTitle = this._previewOnly && ceremonySubtitle
-      ? `${previewBaseTitle}\n仪式：${ceremonySubtitle}`
-      : previewBaseTitle;
     const titleText = this._previewOnly
-      ? previewTitle
-      : (options?.celebrationTitle ?? (ceremonySubtitle ? `升星仪式 · ${ceremonySubtitle}` : '恭喜升级'));
+      ? previewBaseTitle
+      : (options?.celebrationTitle ?? '恭喜升级');
 
     const mask = new PIXI.Graphics();
     mask.beginFill(0x000000, LEVEL_UP_MASK_ALPHA);
@@ -406,7 +402,7 @@ export class LevelUpPopup extends PIXI.Container {
     this.addChild(panelRoot);
   }
 
-  // ── 升星仪式 · 开放卡片区 ────────────────────────────
+  // ── 新功能解锁卡片区（仅 feature/affinity/shop/map；tool/cosmetic 已在物品奖励区出现，避免重复）────
 
   private _appendOpenCardsSection(
     content: PIXI.Container,
@@ -422,39 +418,22 @@ export class LevelUpPopup extends PIXI.Container {
     }
     if (!hintNode) return;
 
-    const allEntries = defs.flatMap(d => d.entries);
+    const allEntries = defs
+      .flatMap(d => d.entries)
+      .filter(e => e.kind === 'feature' || e.kind === 'affinity' || e.kind === 'shop' || e.kind === 'map');
     if (allEntries.length === 0) return;
 
-    const COLS = Math.min(3, allEntries.length);
-    const COL_GAP = 8;
-    const ROW_GAP = 8;
-    const cardW = Math.floor(((W - 64) - (COLS - 1) * COL_GAP) / COLS);
-    const startY = hintNode.y - 10;
+    const COLS = allEntries.length === 1 ? 1 : 2;
+    const COL_GAP = 12;
+    const ROW_GAP = 10;
+    const sideMargin = 32;
+    const usableW = W - sideMargin * 2;
+    const cardW = Math.floor((usableW - (COLS - 1) * COL_GAP) / COLS);
+    const startY = hintNode.y - 6;
 
-    const divider = new PIXI.Graphics();
-    divider.lineStyle(1, 0xDEC090, 0.35);
-    divider.moveTo(W / 2 - 90, startY - 6);
-    divider.lineTo(W / 2 + 90, startY - 6);
-    divider.eventMode = 'none';
-    content.addChild(divider);
+    this._drawSectionDivider(content, W, startY - 8, '新功能解锁');
 
-    const ceremonyTitle = defs.length === 1
-      ? `升星仪式 · ${defs[0]!.ceremonyTitle}`
-      : '升星仪式 · 新内容开放';
-    const header = new PIXI.Text(ceremonyTitle, {
-      fontSize: 15,
-      fill: 0xfff0c8,
-      fontFamily: FONT_FAMILY,
-      fontWeight: 'bold',
-      stroke: 0x7a5c2e,
-      strokeThickness: 2.5,
-    });
-    header.anchor.set(0.5, 0);
-    header.position.set(W / 2, startY);
-    header.eventMode = 'none';
-    content.addChild(header);
-
-    const gridTop = startY + 26;
+    const gridTop = startY + 30;
     const gridLeft = (W - (COLS * cardW + (COLS - 1) * COL_GAP)) / 2;
 
     let curRow = 0;
@@ -470,11 +449,10 @@ export class LevelUpPopup extends PIXI.Container {
       }
       const { view, height } = createLevelUnlockCard(allEntries[i]!, {
         width: cardW,
-        iconSize: 36,
-        titleFontSize: 12,
-        descFontSize: 10,
-        padding: 6,
-        maxHeight: 96,
+        iconSize: 52,
+        titleFontSize: 14,
+        descFontSize: 11,
+        padding: 10,
       });
       view.position.set(gridLeft + col * (cardW + COL_GAP), bottomY);
       content.addChild(view);
@@ -482,7 +460,35 @@ export class LevelUpPopup extends PIXI.Container {
     }
     bottomY += rowMaxH;
 
-    hintNode.position.y = bottomY + 14;
+    hintNode.position.y = bottomY + 16;
+  }
+
+  /** 统一的「奶金细线 + 标题」分隔条，集中样式以便整页改风 */
+  private _drawSectionDivider(content: PIXI.Container, W: number, y: number, title: string): void {
+    const cx = W / 2;
+    const txt = new PIXI.Text(title, {
+      fontSize: 16,
+      fill: 0xfff3d2,
+      fontFamily: FONT_FAMILY,
+      fontWeight: 'bold',
+      stroke: 0x6b4a1c,
+      strokeThickness: 3,
+    });
+    txt.anchor.set(0.5, 0);
+    txt.position.set(cx, y);
+    txt.eventMode = 'none';
+
+    const half = Math.max(60, Math.floor(txt.width / 2) + 22);
+    const line = new PIXI.Graphics();
+    const lineY = y + Math.floor(txt.height / 2);
+    line.lineStyle(1.4, 0xE6C97A, 0.55);
+    line.moveTo(cx - 130, lineY);
+    line.lineTo(cx - half, lineY);
+    line.moveTo(cx + half, lineY);
+    line.lineTo(cx + 130, lineY);
+    line.eventMode = 'none';
+    content.addChild(line);
+    content.addChild(txt);
   }
 
   // ── 解锁家具展示区 ──────────────────────────────────
@@ -502,14 +508,14 @@ export class LevelUpPopup extends PIXI.Container {
     }
     if (!hintNode) return;
 
-    const COLS = 3;
-    const MAX_SHOW = 9;
-    const ICON_SIZE = 46;
-    const CELL_W = 78;
-    const CELL_H = 68;
-    const COL_GAP = 6;
-    const ROW_GAP = 4;
-    const NAME_FONT = 11;
+    const COLS = 2;
+    const MAX_SHOW = 6;
+    const ICON_SIZE = 76;
+    const CELL_W = 156;
+    const CELL_H = 124;
+    const COL_GAP = 14;
+    const ROW_GAP = 12;
+    const NAME_FONT = 13;
 
     const RARITY_ORDER: Record<string, number> = {
       [DecoRarity.LIMITED]: 0,
@@ -525,28 +531,11 @@ export class LevelUpPopup extends PIXI.Container {
     const hasOverflow = totalCount > MAX_SHOW;
     const displayItems = hasOverflow ? sorted.slice(0, MAX_SHOW - 1) : sorted;
 
-    const startY = hintNode.y - 10;
+    const startY = hintNode.y - 6;
 
-    const divider = new PIXI.Graphics();
-    divider.lineStyle(1, 0xDEC090, 0.35);
-    divider.moveTo(W / 2 - 90, startY - 6);
-    divider.lineTo(W / 2 + 90, startY - 6);
-    divider.eventMode = 'none';
-    content.addChild(divider);
+    this._drawSectionDivider(content, W, startY - 8, '解锁新家具');
 
-    const header = new PIXI.Text('解锁新家具', {
-      fontSize: 15,
-      fill: 0xfff0c8,
-      fontFamily: FONT_FAMILY,
-      fontWeight: 'bold',
-      stroke: 0x7a5c2e,
-      strokeThickness: 2.5,
-    });
-    header.anchor.set(0.5, 0);
-    header.position.set(W / 2, startY);
-    header.eventMode = 'none';
-    content.addChild(header);
-
+    let captionBottom = startY + 26;
     if (styles.length > 0) {
       const styleNames = styles.map(s => s.name).join('、');
       const styleHint = new PIXI.Text(`新风格：${styleNames}`, {
@@ -557,12 +546,13 @@ export class LevelUpPopup extends PIXI.Container {
         strokeThickness: 1.5,
       });
       styleHint.anchor.set(0.5, 0);
-      styleHint.position.set(W / 2, startY + 20);
+      styleHint.position.set(W / 2, captionBottom);
       styleHint.eventMode = 'none';
       content.addChild(styleHint);
+      captionBottom += styleHint.height + 4;
     }
 
-    const gridTop = startY + (styles.length > 0 ? 38 : 24);
+    const gridTop = captionBottom;
     const gridW = COLS * CELL_W + (COLS - 1) * COL_GAP;
     const gridLeft = (W - gridW) / 2;
 
@@ -571,6 +561,12 @@ export class LevelUpPopup extends PIXI.Container {
       [DecoRarity.RARE]: 0x64B5F6,
       [DecoRarity.FINE]: 0x81C784,
       [DecoRarity.COMMON]: 0xDEC090,
+    };
+    const RARITY_TINT_FILL: Record<string, number> = {
+      [DecoRarity.LIMITED]: 0xFFE0B2,
+      [DecoRarity.RARE]: 0xCFE6FF,
+      [DecoRarity.FINE]: 0xCDEBD0,
+      [DecoRarity.COMMON]: 0xFFF1D6,
     };
 
     for (let i = 0; i < displayItems.length; i++) {
@@ -581,12 +577,13 @@ export class LevelUpPopup extends PIXI.Container {
       const cellTop = gridTop + row * (CELL_H + ROW_GAP);
 
       const borderColor = RARITY_BORDER_COLOR[item.rarity] ?? 0xDEC090;
+      const fillColor = RARITY_TINT_FILL[item.rarity] ?? 0xFFF1D6;
       const cellBg = new PIXI.Graphics();
-      cellBg.beginFill(0x000000, 0.18);
-      cellBg.drawRoundedRect(cx - CELL_W / 2, cellTop, CELL_W, CELL_H, 8);
+      cellBg.beginFill(fillColor, 0.92);
+      cellBg.drawRoundedRect(cx - CELL_W / 2, cellTop, CELL_W, CELL_H, 14);
       cellBg.endFill();
-      cellBg.lineStyle(1, borderColor, 0.6);
-      cellBg.drawRoundedRect(cx - CELL_W / 2, cellTop, CELL_W, CELL_H, 8);
+      cellBg.lineStyle(2, borderColor, 0.95);
+      cellBg.drawRoundedRect(cx - CELL_W / 2, cellTop, CELL_W, CELL_H, 14);
       cellBg.eventMode = 'none';
       content.addChild(cellBg);
 
@@ -596,21 +593,22 @@ export class LevelUpPopup extends PIXI.Container {
         sp.anchor.set(0.5);
         const scale = ICON_SIZE / Math.max(tex.width, tex.height);
         sp.scale.set(scale);
-        sp.position.set(cx, cellTop + ICON_SIZE / 2 + 2);
+        sp.position.set(cx, cellTop + 8 + ICON_SIZE / 2);
         sp.eventMode = 'none';
         content.addChild(sp);
       }
 
       const name = new PIXI.Text(item.name, {
         fontSize: NAME_FONT,
-        fill: 0xfff8e7,
+        fill: 0x4a2f10,
         fontFamily: FONT_FAMILY,
+        fontWeight: 'bold',
         wordWrap: true,
-        wordWrapWidth: CELL_W - 4,
+        wordWrapWidth: CELL_W - 12,
         align: 'center',
       });
       name.anchor.set(0.5, 0);
-      name.position.set(cx, cellTop + ICON_SIZE + 5);
+      name.position.set(cx, cellTop + 12 + ICON_SIZE + 4);
       name.eventMode = 'none';
       content.addChild(name);
     }
@@ -620,11 +618,10 @@ export class LevelUpPopup extends PIXI.Container {
 
     if (hasOverflow) {
       const remaining = totalCount - displayItems.length;
-      const overflow = new PIXI.Text(`等${remaining}件家具`, {
-        fontSize: 13,
-        fill: 0xdec8a0,
+      const overflow = new PIXI.Text(`…等 ${remaining} 件家具可在装修面板查看`, {
+        fontSize: 12,
+        fill: 0xfff0c8,
         fontFamily: FONT_FAMILY,
-        fontWeight: 'bold',
         stroke: 0x5d4037,
         strokeThickness: 1.5,
       });
@@ -632,10 +629,10 @@ export class LevelUpPopup extends PIXI.Container {
       overflow.position.set(W / 2, bottomY + 2);
       overflow.eventMode = 'none';
       content.addChild(overflow);
-      bottomY += 22;
+      bottomY += 20;
     }
 
-    hintNode.position.y = bottomY + 14;
+    hintNode.position.y = bottomY + 18;
   }
 
   private _dismiss(): void {
