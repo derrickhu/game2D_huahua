@@ -2,11 +2,16 @@
  * 「开店糖果」管理器
  *
  * 与离线回归弹窗（OfflineRewardPanel）联动：
- *  - 每日首次启动 → DailyCandyManager.consumeTodayCandy() 返回当日礼包；OfflineRewardPanel 在第三段呈现
+ *  - 每日首次启动且**有离线产出 / 熟客留言**时 → IdleManager 调 previewTodayCandy() 取当日礼包
  *  - 用 PersistService 落地 `huahua_daily_candy`（已加入 CloudSync allowlist）
- *  - 与 CheckInManager.consecutiveDays 同步：到 3/7/14/30 天送里程碑彩蛋
  *
- * 不直接发奖：交给 OfflineRewardPanel 在玩家点「领取」时统一入账（避免后台静默到账）。
+ * 设计要点：
+ *  - previewTodayCandy() **不写入**「今日已领」状态，仅生成并缓存当日 payload
+ *  - 玩家真正点「领取」后，由 IdleManager.claimReward 调 markConsumed(payload) 才落档
+ *    → 弹窗展示后崩溃 / 玩家关掉不领，下次启动仍能再次拿到（同一份 random bonus，避免反复重抽）
+ *
+ * 连签里程碑已下线（统一交给 CheckInManager），DailyCandyPayload.streakTier 永远为 null，
+ * 历史 lastStreakDays 字段保留以兼容旧存档但不再使用。
  */
 import { EventBus } from '@/core/EventBus';
 import { PersistService } from '@/core/PersistService';
@@ -14,8 +19,6 @@ import { CheckInManager } from './CheckInManager';
 import {
   DAILY_CANDY_BASE,
   DAILY_CANDY_RANDOM_BONUSES,
-  DAILY_CANDY_STREAK_TIERS,
-  getStreakTierExact,
   type DailyCandyRandomBonus,
   type DailyCandyStreakTier,
 } from '@/config/DailyCandyConfig';
@@ -43,6 +46,8 @@ interface DailyCandyState {
 class DailyCandyManagerClass {
   private _state: DailyCandyState = { lastDateKey: '', lastStreakDays: 0 };
   private _initialized = false;
+  /** 当日已生成但尚未领取的 payload（仅内存；进程重启会重抽 bonus） */
+  private _pending: DailyCandyPayload | null = null;
 
   init(): void {
     if (this._initialized) return;
@@ -50,56 +55,59 @@ class DailyCandyManagerClass {
     this._loadState();
   }
 
-  /** 当日是否已发糖（已弹过且玩家关闭）；OfflineRewardPanel 拼装时用于避免重复 */
+  /** 当日是否已领过糖 */
   hasConsumedToday(): boolean {
     return this._state.lastDateKey === this._todayKey();
   }
 
   /**
-   * 取今天该弹的糖果；若今天已经领过返回 null。
-   * 调用方（OfflineRewardPanel）负责显示并在领取时入账。
+   * 预览今天可领的糖果；若今天已领过返回 null。
+   * **不写入**「已领」状态：玩家真正点领取后，调用方需调 markConsumed(payload) 落档。
+   * 同一进程内重复调用返回相同 payload（避免反复重抽 random bonus）。
    */
-  consumeTodayCandy(rng: () => number = Math.random): DailyCandyPayload | null {
+  previewTodayCandy(rng: () => number = Math.random): DailyCandyPayload | null {
     const today = this._todayKey();
     if (this._state.lastDateKey === today) return null;
+    if (this._pending && this._pending.dateKey === today) return this._pending;
 
     const bonus = this._pickRandomBonus(rng);
     const streakDays = CheckInManager.consecutiveDays;
-    let streakTier: DailyCandyStreakTier | null = null;
-    if (streakDays > 0 && streakDays !== this._state.lastStreakDays) {
-      streakTier = getStreakTierExact(streakDays);
-    }
 
-    this._state.lastDateKey = today;
-    if (streakTier) this._state.lastStreakDays = streakDays;
-    this._saveState();
-
-    return {
+    this._pending = {
       dateKey: today,
       base: DAILY_CANDY_BASE,
       bonus,
-      streakTier,
+      streakTier: null,
       consecutiveDays: streakDays,
     };
+    return this._pending;
   }
 
-  /** 不消耗状态地探测下次会发什么；用于 GM「Force Daily Candy」预览 */
+  /** 玩家在领取面板真正按下「领取」后调用；落档「今日已领」并清掉内存 pending */
+  markConsumed(payload: DailyCandyPayload): void {
+    if (!payload) return;
+    this._state.lastDateKey = payload.dateKey;
+    this._pending = null;
+    this._saveState();
+  }
+
+  /** 不消耗状态地探测当日 payload；用于 GM「Force Daily Candy」预览 */
   peekTodayCandy(rng: () => number = Math.random): DailyCandyPayload {
     const bonus = this._pickRandomBonus(rng);
     const streakDays = CheckInManager.consecutiveDays;
-    const streakTier = streakDays > 0 ? getStreakTierExact(streakDays) : null;
     return {
       dateKey: this._todayKey(),
       base: DAILY_CANDY_BASE,
       bonus,
-      streakTier,
+      streakTier: null,
       consecutiveDays: streakDays,
     };
   }
 
-  /** GM：清除「今天已发糖」状态 */
+  /** GM：清除「今天已领糖」状态以及内存 pending */
   gmReset(): void {
     this._state = { lastDateKey: '', lastStreakDays: 0 };
+    this._pending = null;
     this._saveState();
     EventBus.emit('dailyCandy:reset');
   }

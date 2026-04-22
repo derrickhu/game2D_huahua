@@ -3,7 +3,12 @@
  *
  * 离线期间按规则产出收纳框物品 + 花愿；体力自然回复在读档时由 CurrencyManager
  * 按存档 timestamp 与 STAMINA_RECOVER_INTERVAL 结算，与在线 ticker 规则一致。
- * 回归时展示「离线收益报告」，领取无广告翻倍。
+ * 回归时展示「离线收益报告」。
+ *
+ * 「开店糖果」（DailyCandy）已收敛为本面板的**附赠尾巴**：
+ *  - 只在「离线产出 ≥60s」或「有熟客留言」时附赠，避免与签到面板争抢"日活登录奖励"心智位
+ *  - 取的是 previewTodayCandy（不写状态）；玩家点「领取」才调用 markConsumed 落档，
+ *    防止弹窗后崩溃 / 用户秒退导致当日次数被白白占用
  *
  * 是否参与启动流程由 `Constants.OFFLINE_REWARD_UI_ENABLED` 控制；关闭时本类仍负责时间戳同步，便于日后活动/推送等复用。
  */
@@ -106,8 +111,12 @@ class IdleManagerClass {
     // 熟客留言（无解锁则 null）
     const affinityNote = AffinityManager.pickRandomAffinityNote();
 
-    // 当日开店糖果（每自然日首次启动；当天已领则 null）
-    const dailyCandy = DailyCandyManager.consumeTodayCandy();
+    // 当日开店糖果：仅在已有「离线产出」或「熟客留言」需要弹面板时**附赠**；
+    // 不再独立撑起弹窗，避免与签到面板形成两连弹与日活奖励重叠。
+    // previewTodayCandy 不写状态，玩家点领取后由 claimReward 调 markConsumed 落档。
+    const dailyCandy = (offlineQualifies || affinityNote)
+      ? DailyCandyManager.previewTodayCandy()
+      : null;
 
     // 三块全空 → 不弹面板
     if (!offlineQualifies && !affinityNote && !dailyCandy) {
@@ -142,7 +151,7 @@ class IdleManagerClass {
       CurrencyManager.addHuayuan(reward.huayuanEarned);
     }
 
-    // 当日开店糖果：基础包 + 随机彩蛋 + 连签里程碑
+    // 当日开店糖果：基础包 + 随机彩蛋（连签里程碑已下线，统一交给签到）
     if (reward.dailyCandy) {
       const dc = reward.dailyCandy;
       if (dc.base.huayuan > 0) CurrencyManager.addHuayuan(dc.base.huayuan);
@@ -157,20 +166,8 @@ class IdleManagerClass {
         RewardBoxManager.addItem(b.rewardBoxItem.itemId, b.rewardBoxItem.count);
       }
 
-      const t = dc.streakTier;
-      if (t) {
-        if (t.huayuan) CurrencyManager.addHuayuan(t.huayuan);
-        if (t.stamina) CurrencyManager.addStamina(t.stamina);
-        if (t.diamond) CurrencyManager.addDiamond(t.diamond);
-        if (t.flowerSignTickets) FlowerSignTicketManager.add(t.flowerSignTickets);
-        if (t.rewardBoxItem) {
-          RewardBoxManager.addItem(t.rewardBoxItem.itemId, t.rewardBoxItem.count);
-        }
-        // 30 天「熟客盲盒」：暂时占位，真正接通需 affinity_furniture_random pool
-        if (t.blindBoxAffinityFurniture) {
-          EventBus.emit('dailyCandy:blindBoxAffinityFurniture', t);
-        }
-      }
+      // 真正发完才落档「今日已领」（防 previewTodayCandy 后未领取就被占次）
+      DailyCandyManager.markConsumed(dc);
     }
 
     this._pendingReward = null;
