@@ -40,6 +40,7 @@ import {
   type AffinityMilestoneReward,
   type BondLevel,
 } from '@/config/AffinityConfig';
+import { isAffinityCardSystemEnabled } from '@/config/AffinityFeatureFlags';
 
 const AFFINITY_STORAGE_KEY = 'huahua_affinity';
 
@@ -165,7 +166,17 @@ class AffinityManagerClass {
 
     const oldPoints = cur.points;
     const oldBond = cur.bond;
-    const gain = opts.isExclusive ? BOND_GAIN_EXCLUSIVE : BOND_GAIN_NORMAL;
+
+    // P0 阶段：卡片系统未启用 → 沿用 +1/+2 兼容路径；
+    // 后续 P1：FF=true 时本路径退场，改由 AffinityCardManager.rollCardDrop 决定 Bond 增量。
+    let gain: number;
+    if (isAffinityCardSystemEnabled()) {
+      // 桥接占位：FF 打开但 AffinityCardManager 还没接上时不加 Bond 点（避免双倍）
+      // P1 完成接入后此分支会调用 AffinityCardManager.rollCardDrop 拿到 addedBondPoints
+      gain = 0;
+    } else {
+      gain = opts.isExclusive ? BOND_GAIN_EXCLUSIVE : BOND_GAIN_NORMAL;
+    }
     cur.points = oldPoints + gain;
     cur.bond = this._bondLevelFromPoints(cur.points);
     this._entries.set(typeId, cur);

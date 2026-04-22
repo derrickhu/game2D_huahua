@@ -31,27 +31,35 @@ export const AFFINITY_UNLOCK_LEVELS: Record<string, number> = {
   athlete: 8,
 };
 
-/** Bond 累计点数阈值（达到即升级）；点数仅由「该熟客订单交付」累加 */
+/**
+ * Bond 累计点数阈值（达到即升级）；点数由「该熟客订单交付」累加。
+ * 节奏目标：单熟客 Lv5 ≈ 3 小时活跃；5 熟客并存约 5~7 小时/人。
+ *
+ * 旧值（5/15/30/55）单熟客 ~45 分钟即可到顶，挑战感不足；
+ * 新值翻倍并把 Lv5 拉远，与即将上线的「卡片系统」节奏匹配。
+ */
 export const BOND_THRESHOLDS: Record<BondLevel, number> = {
   1: 0,
   2: 5,
-  3: 15,
-  4: 30,
-  5: 55,
+  3: 20,
+  4: 50,
+  5: 120,
 };
 
 /**
- * 普通订单交付：+1 Bond 点
- * 专属订单交付：+2 Bond 点
+ * Bond 点收益（兼容期）：
+ *  - 当 AffinityCardManager 接管后（FF AFFINITY_CARD_SYSTEM_ENABLED=true），
+ *    Bond 点 = 卡片积分总和；本组常量将不再被读取。
+ *  - 当卡片系统未启用时，仍按本组常量 +1/+2 累加。
  */
 export const BOND_GAIN_NORMAL = 1;
 export const BOND_GAIN_EXCLUSIVE = 2;
 
-/** 专属订单触发概率（按当前玩家全局等级取段） */
+/** 专属订单触发概率（按当前玩家全局等级取段；早期段下调让节奏更稳） */
 export function exclusiveOrderChanceByLevel(playerLevel: number): number {
   if (playerLevel >= 10) return 0.12;
   if (playerLevel >= 7) return 0.15;
-  return 0.20;
+  return 0.15;
 }
 
 /** 专属单完成花愿倍率（叠加在常规计算之上；与 challenge 倍率独立） */
