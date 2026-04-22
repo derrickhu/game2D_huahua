@@ -57,6 +57,7 @@ export const CLOUD_SYNC_ALLOWLIST = [
   'huahua_collection',
   'huahua_flower_cards',
   'huahua_affinity',
+  'huahua_affinity_cards',
   'huahua_daily_candy',
 ] as const;
 

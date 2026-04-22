@@ -31,9 +31,16 @@ import { EventManager } from './EventManager';
 import { RoomLayoutManager } from './RoomLayoutManager';
 import { TutorialManager } from './TutorialManager';
 import { AffinityManager } from './AffinityManager';
+import { AffinityCardManager } from './AffinityCardManager';
 import { DailyCandyManager } from './DailyCandyManager';
 import { IdleManager } from './IdleManager';
 import { AFFINITY_DEFS, BOND_THRESHOLDS } from '@/config/AffinityConfig';
+import { AFFINITY_CARDS, CARD_RARITIES, type CardRarity } from '@/config/AffinityCardConfig';
+import {
+  dumpAffinityFlags,
+  gmSetAffinityFlag,
+  isAffinityCardSystemEnabled,
+} from '@/config/AffinityFeatureFlags';
 import { getLevelUnlockDef } from '@/config/LevelUnlockConfig';
 import { CellState } from '@/config/BoardLayout';
 import { DECO_DEFS } from '@/config/DecorationConfig';
@@ -88,6 +95,7 @@ const GM_GROUP_ORDER: readonly string[] = [
   ' 等级调整',
   ' 升星仪式',
   ' 熟客系统',
+  ' 卡牌系统',
   ' 离线/糖果',
   ' 棋盘操作',
   ' 增加物品',
@@ -1086,6 +1094,100 @@ class GMManagerClass {
         if (!first) return ' 无熟客配置';
         EventBus.emit('panel:openCustomerProfile', first.typeId);
         return ` 已弹出 ${first.bondName} 资料卡`;
+      },
+    });
+
+    // ========== 卡牌系统 ==========
+    this._commands.push({
+      id: 'gm_affinity_card_toggle',
+      group: ' 卡牌系统',
+      name: ' 切换 cardSystem 开关',
+      desc: '关 → 回到 +1/+2 兼容路径；开 → 卡片驱动 Bond',
+      execute: () => {
+        const next = !isAffinityCardSystemEnabled();
+        gmSetAffinityFlag('cardSystem', next);
+        return ` cardSystem = ${next}（仅当前会话；不持久化）`;
+      },
+    });
+    this._commands.push({
+      id: 'gm_affinity_card_dump_flags',
+      group: ' 卡牌系统',
+      name: ' 打印 Flag 当前值',
+      execute: () => {
+        const f = dumpAffinityFlags();
+        return ` cardSystem=${f.cardSystem} season=${f.season}`;
+      },
+    });
+
+    this._commands.push({
+      id: 'gm_affinity_card_open_codex',
+      group: ' 卡牌系统',
+      name: ' 打开图鉴（首位有卡熟客）',
+      execute: () => {
+        const first = AFFINITY_CARDS[0];
+        if (!first) return ' 无卡定义';
+        EventBus.emit('affinityCodex:open', first.ownerTypeId);
+        return ` 已打开图鉴：${first.ownerTypeId}`;
+      },
+    });
+
+    this._commands.push({
+      id: 'gm_affinity_card_simulate_normal',
+      group: ' 卡牌系统',
+      name: ' 模拟一次普通订单掉卡（小诗）',
+      execute: () => {
+        AffinityCardManager.gmSimulateDrop('student', false);
+        return ' 已模拟普通订单掉卡（事件已发，无卡掉时静默）';
+      },
+    });
+
+    this._commands.push({
+      id: 'gm_affinity_card_simulate_exclusive',
+      group: ' 卡牌系统',
+      name: ' 模拟一次专属订单掉卡（小诗）',
+      execute: () => {
+        AffinityCardManager.gmSimulateDrop('student', true);
+        return ' 已模拟专属订单掉卡';
+      },
+    });
+
+    // 一键发某稀有度卡（小诗未拥有里随机一张）
+    for (const rarity of CARD_RARITIES) {
+      this._commands.push({
+        id: `gm_affinity_card_grant_${rarity}_student`,
+        group: ' 卡牌系统',
+        name: ` 直发一张 ${rarity} 卡（小诗）`,
+        execute: () => {
+          const pool = AFFINITY_CARDS.filter(c =>
+            c.ownerTypeId === 'student' && c.rarity === (rarity as CardRarity)
+          );
+          if (pool.length === 0) return ` 小诗无 ${rarity} 卡定义`;
+          const pick = pool[Math.floor(Math.random() * pool.length)]!;
+          AffinityCardManager.gmGrantCard(pick.id);
+          return ` 已发：${pick.id} ${pick.title}`;
+        },
+      });
+    }
+
+    this._commands.push({
+      id: 'gm_affinity_card_grant_all_student',
+      group: ' 卡牌系统',
+      name: ' 一键全收：小诗',
+      desc: '直接 12 张全收，演示「全图鉴」效果',
+      execute: () => {
+        AffinityCardManager.gmGrantAllForType('student');
+        return ' 小诗 12 张已全收';
+      },
+    });
+
+    this._commands.push({
+      id: 'gm_affinity_card_reset',
+      group: ' 卡牌系统',
+      name: ' 重置卡牌进度',
+      desc: '清空所有客人的拥有卡 + 友谊点 + 保底计数',
+      execute: () => {
+        AffinityCardManager.gmReset();
+        return ' 卡牌进度已重置';
       },
     });
 

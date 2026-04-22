@@ -41,6 +41,7 @@ import {
   type BondLevel,
 } from '@/config/AffinityConfig';
 import { isAffinityCardSystemEnabled } from '@/config/AffinityFeatureFlags';
+import { AffinityCardManager } from './AffinityCardManager';
 
 const AFFINITY_STORAGE_KEY = 'huahua_affinity';
 
@@ -167,13 +168,15 @@ class AffinityManagerClass {
     const oldPoints = cur.points;
     const oldBond = cur.bond;
 
-    // P0 阶段：卡片系统未启用 → 沿用 +1/+2 兼容路径；
-    // 后续 P1：FF=true 时本路径退场，改由 AffinityCardManager.rollCardDrop 决定 Bond 增量。
+    // 卡片系统启用时：本次 Bond 点完全由 AffinityCardManager 决定
+    //   - 正常订单：base 35% 概率掉一张卡 → 该卡稀有度对应 1/3/8/25 点
+    //   - 专属订单：85% 必出，且稀有度 +1 档；30% 概率第二张
+    //   - 重复卡 → 友谊点（碎片），不直接给 Bond
+    // 卡片系统未启用：沿用 +1/+2 兼容路径
     let gain: number;
     if (isAffinityCardSystemEnabled()) {
-      // 桥接占位：FF 打开但 AffinityCardManager 还没接上时不加 Bond 点（避免双倍）
-      // P1 完成接入后此分支会调用 AffinityCardManager.rollCardDrop 拿到 addedBondPoints
-      gain = 0;
+      const drop = AffinityCardManager.rollCardDrop(typeId, opts.isExclusive);
+      gain = drop.addedBondPoints;
     } else {
       gain = opts.isExclusive ? BOND_GAIN_EXCLUSIVE : BOND_GAIN_NORMAL;
     }

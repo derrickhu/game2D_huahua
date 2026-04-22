@@ -29,6 +29,7 @@ import { IdleManager } from '@/managers/IdleManager';
 import { LevelManager } from '@/managers/LevelManager';
 import { DailyCandyManager } from '@/managers/DailyCandyManager';
 import { AffinityManager } from '@/managers/AffinityManager';
+import { AffinityCardManager } from '@/managers/AffinityCardManager';
 import { TweenManager, Ease } from '@/core/TweenManager';
 import { BoardView } from '@/gameobjects/board/BoardView';
 import { CustomerScrollArea } from '@/gameobjects/customer/CustomerScrollArea';
@@ -90,6 +91,8 @@ import { PopupShopPanel } from '@/gameobjects/ui/PopupShopPanel';
 import { MerchShopPanel } from '@/gameobjects/ui/MerchShopPanel';
 import { CustomerProfilePanel } from '@/gameobjects/ui/CustomerProfilePanel';
 import { BondUpPopup } from '@/gameobjects/ui/BondUpPopup';
+import { AffinityCardDropPopup } from '@/gameobjects/ui/AffinityCardDropPopup';
+import { AffinityCodexPanel } from '@/gameobjects/ui/AffinityCodexPanel';
 import { WorldMapPanel } from '@/gameobjects/ui/WorldMapPanel';
 import { FlowerSignGachaPanel } from '@/gameobjects/ui/FlowerSignGachaPanel';
 import { ShopScene } from '@/scenes/ShopScene';
@@ -175,6 +178,8 @@ export class MainScene implements Scene {
 
   /** 熟客 Bond 升档弹窗（AffinityManager 触发） */
   private _bondUpPopup!: BondUpPopup;
+  private _affinityCardDropPopup!: AffinityCardDropPopup;
+  private _affinityCodexPanel!: AffinityCodexPanel;
 
   /** 大地图全屏页（覆盖层，非花店子节点） */
   private _worldMapPanel!: WorldMapPanel;
@@ -206,6 +211,7 @@ export class MainScene implements Scene {
       CheckInManager.init();
       DailyCandyManager.init();
       AffinityManager.init();
+      AffinityCardManager.init();
       IdleManager.init();
       LevelManager.init();
       RoomLayoutManager.init();
@@ -445,6 +451,15 @@ export class MainScene implements Scene {
 
     this._bondUpPopup = new BondUpPopup();
     overlay.addChild(this._bondUpPopup);
+
+    this._affinityCardDropPopup = new AffinityCardDropPopup();
+    overlay.addChild(this._affinityCardDropPopup);
+
+    this._affinityCodexPanel = new AffinityCodexPanel();
+    overlay.addChild(this._affinityCodexPanel);
+    EventBus.on('affinityCodex:open', (typeId?: string) => {
+      this._affinityCodexPanel.open(typeId);
+    });
 
     // 大地图全屏页（盖住花店/顶栏；惯性滚动在面板内自注册 ticker）
     this._worldMapPanel = new WorldMapPanel();

@@ -18,7 +18,10 @@ interface AffinityFlags {
 }
 
 const _defaults: AffinityFlags = {
-  cardSystem: false,
+  // P1 demo：开启卡片系统作为默认行为；正式上线前若发现严重问题，
+  // 可通过 GM 面板「卡牌系统 → 关闭」即时回退到 +1/+2 兼容路径。
+  cardSystem: true,
+  // 赛季制还在 P2 实施中，先关，等 S1 完整方案与美术就绪后再开。
   season: false,
 };
 

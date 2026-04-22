@@ -6,11 +6,15 @@
  */
 import * as PIXI from 'pixi.js';
 import { Game } from '@/core/Game';
+import { EventBus } from '@/core/EventBus';
 import { TweenManager, Ease } from '@/core/TweenManager';
 import { COLORS, DESIGN_WIDTH, FONT_FAMILY } from '@/config/Constants';
 import { TextureCache } from '@/utils/TextureCache';
 import { createFlowerEggModalFrame } from '@/gameobjects/ui/FlowerEggModalFrame';
 import { AffinityManager } from '@/managers/AffinityManager';
+import { AffinityCardManager } from '@/managers/AffinityCardManager';
+import { isAffinityCardSystemEnabled } from '@/config/AffinityFeatureFlags';
+import { hasCardsForOwner } from '@/config/AffinityCardConfig';
 import { DECO_MAP } from '@/config/DecorationConfig';
 import {
   AFFINITY_MAP,
@@ -85,7 +89,7 @@ export class CustomerProfilePanel extends PIXI.Container {
     this.addChild(overlay);
 
     const contentW = Math.min(W - 80, 320);
-    const contentH = 380;
+    const contentH = isAffinityCardSystemEnabled() && hasCardsForOwner(def.typeId) ? 432 : 380;
 
     const frame = createFlowerEggModalFrame({
       viewW: W,
@@ -197,6 +201,14 @@ export class CustomerProfilePanel extends PIXI.Container {
       y += 4;
     }
 
+    // 卡册进度行（仅 cardSystem 启用 + 有卡定义时显示）
+    if (isAffinityCardSystemEnabled() && hasCardsForOwner(def.typeId)) {
+      const cardRow = this._buildCardCodexRow(def.typeId, width);
+      cardRow.position.set(0, y);
+      mount.addChild(cardRow);
+      y += 52;
+    }
+
     // 里程碑列表
     const sectionTitle = new PIXI.Text('Bond 里程碑', {
       fontSize: 14,
@@ -217,6 +229,71 @@ export class CustomerProfilePanel extends PIXI.Container {
       mount.addChild(row);
       y += (row as any).rowHeight ?? 26;
     }
+  }
+
+  private _buildCardCodexRow(typeId: string, width: number): PIXI.Container {
+    const c = new PIXI.Container();
+    const padX = 10;
+    const innerW = width - padX * 2;
+    const rowH = 44;
+
+    const bg = new PIXI.Graphics();
+    bg.beginFill(0xfff8e7, 0.95);
+    bg.lineStyle(2, 0xe6c79c, 1);
+    bg.drawRoundedRect(padX, 0, innerW, rowH, 12);
+    bg.endFill();
+    c.addChild(bg);
+
+    const stats = AffinityCardManager.progress(typeId);
+    const shards = AffinityCardManager.getShards(typeId);
+
+    const title = new PIXI.Text('友谊图鉴', {
+      fontSize: 14,
+      fill: 0x9c4f2e,
+      fontFamily: FONT_FAMILY,
+      fontWeight: 'bold',
+    } as PIXI.TextStyle);
+    title.anchor.set(0, 0);
+    title.position.set(padX + 12, 6);
+    c.addChild(title);
+
+    const sub = new PIXI.Text(`${stats.obtained}/${stats.total}  ·  友谊点 ${shards}`, {
+      fontSize: 12,
+      fill: 0x6f4a2e,
+      fontFamily: FONT_FAMILY,
+    } as PIXI.TextStyle);
+    sub.anchor.set(0, 0);
+    sub.position.set(padX + 12, 24);
+    c.addChild(sub);
+
+    // 跳转按钮
+    const btnW = 80, btnH = 28;
+    const btn = new PIXI.Container();
+    const btnBg = new PIXI.Graphics();
+    btnBg.beginFill(0xffb469, 1);
+    btnBg.lineStyle(2, 0x9c4f2e, 0.8);
+    btnBg.drawRoundedRect(0, 0, btnW, btnH, btnH / 2);
+    btnBg.endFill();
+    btn.addChild(btnBg);
+    const btnTxt = new PIXI.Text('查看图鉴', {
+      fontSize: 13,
+      fill: 0xffffff,
+      fontFamily: FONT_FAMILY,
+      fontWeight: 'bold',
+    } as PIXI.TextStyle);
+    btnTxt.anchor.set(0.5);
+    btnTxt.position.set(btnW / 2, btnH / 2);
+    btn.addChild(btnTxt);
+    btn.position.set(width - padX - 12 - btnW, (rowH - btnH) / 2);
+    btn.eventMode = 'static';
+    btn.cursor = 'pointer';
+    btn.on('pointertap', (e) => {
+      e.stopPropagation();
+      EventBus.emit('affinityCodex:open', typeId);
+    });
+    c.addChild(btn);
+
+    return c;
   }
 
   private _unlockHintFor(typeId: string): string {
