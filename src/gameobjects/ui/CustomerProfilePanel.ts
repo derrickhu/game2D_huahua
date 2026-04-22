@@ -13,7 +13,6 @@ import { TextureCache } from '@/utils/TextureCache';
 import { createFlowerEggModalFrame } from '@/gameobjects/ui/FlowerEggModalFrame';
 import { AffinityManager } from '@/managers/AffinityManager';
 import { AffinityCardManager } from '@/managers/AffinityCardManager';
-import { isAffinityCardSystemEnabled } from '@/config/AffinityFeatureFlags';
 import { hasCardsForOwner } from '@/config/AffinityCardConfig';
 import { DECO_MAP } from '@/config/DecorationConfig';
 import {
@@ -89,7 +88,9 @@ export class CustomerProfilePanel extends PIXI.Container {
     this.addChild(overlay);
 
     const contentW = Math.min(W - 80, 320);
-    const contentH = isAffinityCardSystemEnabled() && hasCardsForOwner(def.typeId) ? 432 : 380;
+    // 卡册行仅在「友谊卡系统已对玩家解锁（含 6 级门槛）」且当前客人有卡定义时占位
+    const cardRowVisible = AffinityManager.isCardSystemUnlocked() && hasCardsForOwner(def.typeId);
+    const contentH = cardRowVisible ? 432 : 380;
 
     const frame = createFlowerEggModalFrame({
       viewW: W,
@@ -201,8 +202,8 @@ export class CustomerProfilePanel extends PIXI.Container {
       y += 4;
     }
 
-    // 卡册进度行（仅 cardSystem 启用 + 有卡定义时显示）
-    if (isAffinityCardSystemEnabled() && hasCardsForOwner(def.typeId)) {
+    // 卡册进度行（仅 cardSystem 启用 + 玩家等级达 6 + 有卡定义时显示）
+    if (AffinityManager.isCardSystemUnlocked() && hasCardsForOwner(def.typeId)) {
       const cardRow = this._buildCardCodexRow(def.typeId, width);
       cardRow.position.set(0, y);
       mount.addChild(cardRow);

@@ -67,6 +67,19 @@ export const CARD_RARITY_LABEL: Record<CardRarity, string> = {
 // 抽卡参数
 // ============================================================================
 
+/**
+ * 友谊卡系统玩家解锁等级（含）。
+ *
+ * 设计目的：
+ *  - 新手前 5 级要专注「合成 + 出花 + 卖花」的核心循环，过早引入"开包"
+ *    会让新手注意力被卡片动画拉跑，且第一张 SSR 印象太早出会失去仪式感；
+ *  - Lv6 通常对应「3-5 ~ 4-1」附近，玩家已经稳定有专属订单，掉卡反馈与
+ *    专属订单产出节奏更契合；
+ *  - 6 级前：仍走原 +1/+2 兼容路径（AffinityManager.onCustomerDelivered
+ *    内的 else 分支），Bond 等级仍可正常推进。
+ */
+export const CARD_SYSTEM_UNLOCK_LEVEL = 6;
+
 /** 一次「是否掉卡」的基础概率 */
 export const CARD_DROP_BASE_CHANCE = 0.35;
 /** 专属订单交付的掉卡概率（覆盖 base） */

@@ -13,6 +13,7 @@ import * as PIXI from 'pixi.js';
 import { EventBus } from '@/core/EventBus';
 import { CurrencyManager } from '@/managers/CurrencyManager';
 import { GMManager } from '@/managers/GMManager';
+import { AffinityManager } from '@/managers/AffinityManager';
 import { COLORS, DESIGN_WIDTH, FONT_FAMILY } from '@/config/Constants';
 import { TextureCache } from '@/utils/TextureCache';
 import { TweenManager, Ease } from '@/core/TweenManager';
@@ -322,6 +323,8 @@ export class TopBar extends PIXI.Container {
 
   /** 友谊图鉴入口：仅 affinity_codex_btn，无白底；与商店图标同样行为（独立 hit area）
    * - 当 hideShopPill = true（在花店内），仍显示，方便玩家随时翻图鉴
+   * - 6 级前（CARD_SYSTEM_UNLOCK_LEVEL）整个按钮 visible = false，
+   *   监听 level:up 在解锁瞬间淡入显示
    */
   private _buildCodexPill(): void {
     const root = new PIXI.Container();
@@ -360,11 +363,25 @@ export class TopBar extends PIXI.Container {
       EventBus.emit('affinityCodex:open');
     });
 
+    // 等级门槛：6 级前隐藏；监听 level:up 解锁瞬间显示
+    const unlocked = AffinityManager.isCardSystemUnlocked();
+    root.visible = unlocked;
+    root.eventMode = unlocked ? 'static' : 'none';
+    if (!unlocked) {
+      const onLevelUp = () => {
+        if (AffinityManager.isCardSystemUnlocked()) {
+          root.visible = true;
+          root.eventMode = 'static';
+          EventBus.off('level:up', onLevelUp);
+        }
+      };
+      EventBus.on('level:up', onLevelUp);
+    }
+
     this.addChild(root);
 
-    // 让 GM 槽起点向后挪
+    // 让 GM 槽起点向后挪（即便按钮当前不可见，hit area 仍预留位置避免抖动）
     this._gmSlotLeft = left + SHOP_HIT + 10;
-    this._gmSlotLeft = SHOP_PILL_LEFT + SHOP_HIT + 10;
   }
 
   /**

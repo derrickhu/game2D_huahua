@@ -41,7 +41,9 @@ import {
   type BondLevel,
 } from '@/config/AffinityConfig';
 import { isAffinityCardSystemEnabled } from '@/config/AffinityFeatureFlags';
+import { CARD_SYSTEM_UNLOCK_LEVEL } from '@/config/AffinityCardConfig';
 import { AffinityCardManager } from './AffinityCardManager';
+import { LevelManager } from './LevelManager';
 
 const AFFINITY_STORAGE_KEY = 'huahua_affinity';
 
@@ -77,6 +79,16 @@ class AffinityManagerClass {
     this._loadState();
     this._ensureEntriesForCurrentLevel();
     this._bindEvents();
+  }
+
+  /**
+   * 友谊卡 + 图鉴系统对当前玩家是否「真正可用」。
+   * - flag 必须开启
+   * - 玩家等级达到 CARD_SYSTEM_UNLOCK_LEVEL（默认 6）
+   * UI 入口（TopBar 图鉴按钮、CustomerProfilePanel 卡册行）用本方法判定显隐。
+   */
+  isCardSystemUnlocked(): boolean {
+    return isAffinityCardSystemEnabled() && LevelManager.level >= CARD_SYSTEM_UNLOCK_LEVEL;
   }
 
   /** 当前累计点 → 落在哪个 bond 等级（按 BOND_THRESHOLDS） */
@@ -172,9 +184,13 @@ class AffinityManagerClass {
     //   - 正常订单：base 35% 概率掉一张卡 → 该卡稀有度对应 1/3/8/25 点
     //   - 专属订单：85% 必出，且稀有度 +1 档；30% 概率第二张
     //   - 重复卡 → 友谊点（碎片），不直接给 Bond
-    // 卡片系统未启用：沿用 +1/+2 兼容路径
+    // 卡片系统未启用 / 玩家等级未达 CARD_SYSTEM_UNLOCK_LEVEL：沿用 +1/+2 兼容路径
+    //  - 等级门槛见 AffinityCardConfig.CARD_SYSTEM_UNLOCK_LEVEL（默认 6）
+    //  - 6 级前 Bond 仍能正常推进，只是不掉卡 / 不积累友谊点，避免新手期分心
     let gain: number;
-    if (isAffinityCardSystemEnabled()) {
+    const cardSystemActive =
+      isAffinityCardSystemEnabled() && LevelManager.level >= CARD_SYSTEM_UNLOCK_LEVEL;
+    if (cardSystemActive) {
       const drop = AffinityCardManager.rollCardDrop(typeId, opts.isExclusive);
       gain = drop.addedBondPoints;
     } else {
