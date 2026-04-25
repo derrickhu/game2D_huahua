@@ -29,6 +29,7 @@ import { MergeManager, type MergeEndDragResult } from '@/managers/MergeManager';
 import { BuildingManager } from '@/managers/BuildingManager';
 import { CurrencyManager } from '@/managers/CurrencyManager';
 import { Platform } from '@/core/PlatformService';
+import { createUnlockCellShare } from '@/config/ShareConfig';
 import { TextureCache } from '@/utils/TextureCache';
 import { BOARD_PRODUCER_ENERGY_MAX_SIDE_FRAC, createToolEnergySprite } from '@/utils/ToolEnergyBadge';
 import { ToolSparkleLayer } from '@/utils/ToolSparkleLayer';
@@ -803,10 +804,7 @@ export class BoardView extends PIXI.Container {
     );
     if (!confirmed) return;
 
-    const shared = await Platform.shareAndWait({
-      title: '花花妙屋 — 来帮我解锁新格子吧！',
-      query: `unlock_cell=${cellIndex}`,
-    });
+    const shared = await Platform.shareAndWait(createUnlockCellShare(cellIndex));
 
     if (shared) {
       BoardManager.unlockKeyCell(cellIndex);

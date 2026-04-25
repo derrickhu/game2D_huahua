@@ -1,0 +1,13 @@
+Square game asset 1:1, single furniture prop centered with generous margin (the prop must occupy only the central ~60% of the canvas, with wide pure-white empty padding all around for safe cutout).
+
+Cute kawaii 2.5D isometric view from upper-left about 45 degrees, hand-painted mobile merge-game flower shop style, matching the existing `furniture_greenhouse_pot_*` and `furniture_orn_pastel_bench` batches. Soft brown outlines slightly thicker than hairline with rounded corners, gentle upper-left light, soft volumetric shading, readable silhouette at small grid size. Chibi-friendly proportions — NOT photoreal, NOT heavy 3D render, NOT flat UI icon, NOT sticker with white border.
+
+This piece is a LIMITED rarity reward — must feel premium and characterful, NOT plain. Style direction: idol backstage glamour / boutique dressing room / celebrity gift, but still warm and sweet enough to live inside a cozy flower-shop room. Elegant, sparkling, refined, romantic. Champagne gold metal + blush-rose accents + creamy pearl enamel + tiny floral details. Distinctly different from sporty varsity furniture and cottage study furniture.
+
+Subject: a tall freestanding full-length dressing mirror for a superstar customer, with a softly arched oval mirror face in a slim CHAMPAGNE-GOLD frame, supported by an elegant A-frame / cheval stand with curved feet and delicate star-and-vine filigree. Around the mirror frame: a ring of tiny round vanity bulbs, softly glowing warm white, premium but tasteful. Top crest: a small asymmetric starburst crown motif with one faceted crystal gem and a tiny cluster of pale pink flowers. Lower frame: a draped blush-pink silk ribbon with a miniature rose bouquet accent. At the base: a narrow little tray / ledge integrated into the stand holding one perfume bottle, one compact case, and one folded stage glove, all simplified and cute. Mirror surface should be softly reflective with creamy warm highlights, NO person reflection, NO realistic room reflection, just abstract glow and subtle sparkles.
+
+Mood: superstar backstage before encore, romantic starlight dressing mirror, elegant and collectible. Premium reward furniture that clearly belongs to the handsome celebrity guest.
+
+ABSOLUTELY NO text, NO labels, NO numbers, NO Chinese characters, NO English letters, NO logos, NO watermark. NO sticker stroke around the prop, NO white outline border, NO floor tiles, NO walls, NO room scenery, NO human figure, NO face reflection.
+
+Background pure solid white #FFFFFF ONLY, nothing else.

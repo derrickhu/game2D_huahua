@@ -34,13 +34,8 @@ import { AffinityManager } from './AffinityManager';
 import { AffinityCardManager } from './AffinityCardManager';
 import { DailyCandyManager } from './DailyCandyManager';
 import { IdleManager } from './IdleManager';
-import { AFFINITY_DEFS, BOND_THRESHOLDS } from '@/config/AffinityConfig';
+import { AFFINITY_DEFS } from '@/config/AffinityConfig';
 import { AFFINITY_CARDS, CARD_RARITIES, type CardRarity } from '@/config/AffinityCardConfig';
-import {
-  dumpAffinityFlags,
-  gmSetAffinityFlag,
-  isAffinityCardSystemEnabled,
-} from '@/config/AffinityFeatureFlags';
 import { getLevelUnlockDef } from '@/config/LevelUnlockConfig';
 import { CellState } from '@/config/BoardLayout';
 import { DECO_DEFS } from '@/config/DecorationConfig';
@@ -1036,8 +1031,6 @@ class GMManagerClass {
         name: ` 解锁熟客 · ${def.bondName}`,
         desc: `${def.persona}`,
         execute: () => {
-          AffinityManager.gmAddBondPoints(def.typeId, 0);
-          // gmAddBondPoints(0) 会触发 unlock=true 但不加点，确保解锁状态生效
           AffinityManager.unlockForLevel(99);
           return ` ${def.bondName} 已解锁`;
         },
@@ -1045,84 +1038,35 @@ class GMManagerClass {
     }
 
     this._commands.push({
-      id: 'gm_affinity_add_5_first',
-      group: ' 熟客系统',
-      name: ' +5 Bond 点（首位熟客）',
-      desc: '快速测试 BondUpPopup',
-      execute: () => {
-        const first = AFFINITY_DEFS[0];
-        if (!first) return ' 无熟客配置';
-        AffinityManager.gmAddBondPoints(first.typeId, 5);
-        const st = AffinityManager.getState(first.typeId);
-        return ` ${first.bondName} +5 点 → 当前 ${st.points} 点 / Lv.${st.bond}`;
-      },
-    });
-
-    this._commands.push({
-      id: 'gm_affinity_max_first',
-      group: ' 熟客系统',
-      name: ' 拉满首位熟客至 Lv.5',
-      desc: '直接累加到 BOND_THRESHOLDS[5]',
-      execute: () => {
-        const first = AFFINITY_DEFS[0];
-        if (!first) return ' 无熟客配置';
-        const st = AffinityManager.getState(first.typeId);
-        const need = Math.max(0, BOND_THRESHOLDS[5] - st.points);
-        if (need > 0) AffinityManager.gmAddBondPoints(first.typeId, need);
-        return ` ${first.bondName} 已升到 Lv.5 知己`;
-      },
-    });
-
-    this._commands.push({
       id: 'gm_affinity_reset',
       group: ' 熟客系统',
-      name: ' 重置全部熟客进度',
-      desc: '清空 Bond 点 / 等级 / 已发放里程碑',
+      name: ' 重置熟客留言/专属队列',
+      desc: '清空近期留言/专属订单冷却（不影响图鉴）',
       execute: () => {
         AffinityManager.gmReset();
-        return ' 熟客进度已重置';
+        return ' 熟客辅助状态已重置';
       },
     });
 
     this._commands.push({
       id: 'gm_affinity_open_profile_first',
       group: ' 熟客系统',
-      name: ' 打开熟客资料卡（首位）',
-      desc: '直接弹 CustomerProfilePanel',
+      name: ' 打开友谊图鉴（首位）',
+      desc: '直接打开首位熟客的友谊图鉴页',
       execute: () => {
         const first = AFFINITY_DEFS[0];
         if (!first) return ' 无熟客配置';
-        EventBus.emit('panel:openCustomerProfile', first.typeId);
-        return ` 已弹出 ${first.bondName} 资料卡`;
+        EventBus.emit('affinityCodex:open', first.typeId);
+        return ` 已打开 ${first.bondName} 图鉴`;
       },
     });
 
     // ========== 卡牌系统 ==========
     this._commands.push({
-      id: 'gm_affinity_card_toggle',
-      group: ' 卡牌系统',
-      name: ' 切换 cardSystem 开关',
-      desc: '关 → 回到 +1/+2 兼容路径；开 → 卡片驱动 Bond',
-      execute: () => {
-        const next = !isAffinityCardSystemEnabled();
-        gmSetAffinityFlag('cardSystem', next);
-        return ` cardSystem = ${next}（仅当前会话；不持久化）`;
-      },
-    });
-    this._commands.push({
-      id: 'gm_affinity_card_dump_flags',
-      group: ' 卡牌系统',
-      name: ' 打印 Flag 当前值',
-      execute: () => {
-        const f = dumpAffinityFlags();
-        return ` cardSystem=${f.cardSystem} season=${f.season}`;
-      },
-    });
-
-    this._commands.push({
       id: 'gm_affinity_card_open_codex',
       group: ' 卡牌系统',
       name: ' 打开图鉴（首位有卡熟客）',
+      desc: '直接弹 AffinityCodexPanel 到首位有卡定义的熟客 tab',
       execute: () => {
         const first = AFFINITY_CARDS[0];
         if (!first) return ' 无卡定义';
@@ -1134,29 +1078,20 @@ class GMManagerClass {
     this._commands.push({
       id: 'gm_affinity_card_simulate_normal',
       group: ' 卡牌系统',
-      name: ' 模拟一次普通订单掉卡（小诗）',
+      name: ' 模拟一次订单掉卡（小诗）',
+      desc: '按当前掉率/未拥有池模拟一次卡牌掉落（仅小诗）',
       execute: () => {
-        AffinityCardManager.gmSimulateDrop('student', false);
-        return ' 已模拟普通订单掉卡（事件已发，无卡掉时静默）';
+        AffinityCardManager.gmSimulateDrop('student');
+        return ' 已模拟订单掉卡（事件已发，无卡掉时静默）';
       },
     });
 
-    this._commands.push({
-      id: 'gm_affinity_card_simulate_exclusive',
-      group: ' 卡牌系统',
-      name: ' 模拟一次专属订单掉卡（小诗）',
-      execute: () => {
-        AffinityCardManager.gmSimulateDrop('student', true);
-        return ' 已模拟专属订单掉卡';
-      },
-    });
-
-    // 一键发某稀有度卡（小诗未拥有里随机一张）
     for (const rarity of CARD_RARITIES) {
       this._commands.push({
         id: `gm_affinity_card_grant_${rarity}_student`,
         group: ' 卡牌系统',
         name: ` 直发一张 ${rarity} 卡（小诗）`,
+        desc: `从小诗未拥有的 ${rarity} 卡池中随机直发一张（已拥有则计为重复并发对应奖励）`,
         execute: () => {
           const pool = AFFINITY_CARDS.filter(c =>
             c.ownerTypeId === 'student' && c.rarity === (rarity as CardRarity)
@@ -1181,13 +1116,47 @@ class GMManagerClass {
     });
 
     this._commands.push({
+      id: 'gm_affinity_card_grant_all_athlete',
+      group: ' 卡牌系统',
+      name: ' 一键全收：小翼',
+      desc: '直接 12 张全收，演示小翼的全图鉴效果',
+      execute: () => {
+        AffinityCardManager.gmGrantAllForType('athlete');
+        return ' 小翼 12 张已全收';
+      },
+    });
+
+    this._commands.push({
+      id: 'gm_affinity_card_grant_all_celebrity',
+      group: ' 卡牌系统',
+      name: ' 一键全收：曜辰',
+      desc: '直接 12 张全收，演示曜辰的全图鉴效果',
+      execute: () => {
+        AffinityCardManager.gmGrantAllForType('celebrity');
+        return ' 曜辰 12 张已全收';
+      },
+    });
+
+    this._commands.push({
       id: 'gm_affinity_card_reset',
       group: ' 卡牌系统',
       name: ' 重置卡牌进度',
-      desc: '清空所有客人的拥有卡 + 友谊点 + 保底计数',
+      desc: '清空所有客人的拥有卡 + 已领里程碑 + 已领赛季大奖 + 保底计数 + 今日掉卡额度',
       execute: () => {
         AffinityCardManager.gmReset();
         return ' 卡牌进度已重置';
+      },
+    });
+
+    this._commands.push({
+      id: 'gm_affinity_card_reset_daily_quota',
+      group: ' 卡牌系统',
+      name: ' 重置今日掉卡额度',
+      desc: `把"今日已掉 X/${AffinityCardManager.todayDropQuota().limit}"刷回 0，便于反复验证掉卡（不动卡册进度）`,
+      execute: () => {
+        AffinityCardManager.gmResetDailyQuota();
+        const q = AffinityCardManager.todayDropQuota();
+        return ` 今日额度已重置：${q.used}/${q.limit}`;
       },
     });
 

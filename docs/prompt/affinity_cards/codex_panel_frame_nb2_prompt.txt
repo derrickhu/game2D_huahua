@@ -1,9 +1,14 @@
-Clean 2D vector mobile game UI for a cozy pastel flower-shop merge game, kawaii casual style. Modal panel with very rounded corners: thick soft lilac-lavender outer rim, thinner pastel pink inner lip, gentle floating drop shadow. Large flat interior content field — light cream pastel matte fill, smooth, no wood grain, no noise.
+Clean 2D vector mobile game UI for a cozy pastel flower-shop merge game, kawaii casual style. Single modal panel shell, no characters, no text. Centered in the canvas with a comfortable margin so the entire panel is fully visible.
 
-Top: ornate golden-yellow scalloped title banner across the upper portion (center empty / blank — engineering will overlay Chinese title text). The banner has cute curls at both ends and a tiny floral garnish on each side.
+Panel structure:
+- Outer frame: thick soft lilac-lavender outer rim with very rounded corners, a thinner pastel pink inner lip on top of it, and a gentle floating drop shadow. Edges are crisp and clean, no fuzz, no glow halo.
+- Interior content field: one large flat rectangle of light cream / pale beige matte fill that completely fills the inside of the frame from just under the title banner all the way to the bottom rim — solid opaque cream, no white hole, no transparent gap, no wood grain, no noise, no pattern. Treat the cream interior as a solid plate.
+- Title banner: an ornate golden-yellow scalloped ribbon banner across the upper portion of the panel, with cute curls at both ends and a tiny floral garnish on each side. The banner has a smooth solid pastel-yellow / soft cream center plate (NO white hole, NO empty cutout, NO transparent area in the middle) — engineering will overlay Chinese title text on top of this plate.
+- Bottom edge of the cream interior has a very soft horizontal divider line, suggesting a footer slot.
+- Top-right corner: chunky circular red close button (deep coral red body, white outline, simple white X mark, soft drop shadow) sitting slightly past the upper-right corner of the frame.
 
-Below the title, leave a wide tall empty cream content area for a scrollable card grid (engineering will populate cards). The bottom edge of the content area has a very soft horizontal divider line.
+Background: solid pure chroma green #00FF00 fills the entire area outside the panel from edge to edge. NO magenta. NO checkerboard. NO gradient. The interior of the panel must remain cream / lavender / gold / red — chroma green appears ONLY outside the panel outline so background removal can isolate the panel cleanly.
 
-Top-right: chunky circular red close button with simple white X slightly past the frame corner.
+Aspect 1:1 square canvas, the panel itself fills roughly 80–88% of the canvas (slightly taller than wide is fine but keep the panel fully visible with a margin on all four sides).
 
-Aspect 9:16 portrait, full screen modal. Pastel high-key palette, soft gradients only for depth, no photoreal, no readable text or numbers. NO text, NO letters, NO numbers, NO watermark, NO logo. The OUTSIDE area surrounding the modal panel is bright pure magenta #FF00FF for chroma key removal — but the inside of the modal must be cream and lavender, never magenta.
+Style: kawaii pastel, soft 3D vector look, gentle shading for volume, no photoreal, no readable text or numbers, NO letters, NO watermark, NO logo, NO ui chrome other than the close button. One single coherent panel object only.

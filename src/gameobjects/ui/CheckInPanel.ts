@@ -9,8 +9,9 @@ import { Game } from '@/core/Game';
 import { EventBus } from '@/core/EventBus';
 import { TweenManager, Ease } from '@/core/TweenManager';
 import {
-  CheckInManager, CHECK_IN_REWARDS, MILESTONES,
-  type RewardItem, type CheckInReward,
+  CheckInManager, MILESTONES,
+  getCheckInRewardForCycleDay,
+  type RewardItem,
 } from '@/managers/CheckInManager';
 import { DESIGN_WIDTH, FONT_FAMILY } from '@/config/Constants';
 import { TextureCache } from '@/utils/TextureCache';
@@ -120,6 +121,9 @@ export class CheckInPanel extends PIXI.Container {
     const state = CheckInManager.state;
     const justCompletedCycle = state.signedToday && state.signedDays === 0;
     const effectiveSignedDays = justCompletedCycle ? 7 : state.signedDays;
+    const displayCycleIndex = justCompletedCycle
+      ? Math.max(0, Math.floor((state.totalSignedDays - 1) / 7))
+      : Math.max(0, Math.floor(state.totalSignedDays / 7));
 
     const cardAreaX = cx - CARD_AREA_W / 2;
 
@@ -150,19 +154,19 @@ export class CheckInPanel extends PIXI.Container {
     // ── 日卡 Row 1 (Day 1-3) ──
     for (let i = 0; i < 3; i++) {
       const x = cardAreaX + i * (CARD_W + CARD_GAP);
-      this._buildDayCard(x, y, CARD_W, CARD_H, i, effectiveSignedDays, state.signedToday);
+      this._buildDayCard(x, y, CARD_W, CARD_H, i, effectiveSignedDays, state.signedToday, false, displayCycleIndex);
     }
     y += CARD_H + CARD_GAP;
 
     // ── 日卡 Row 2 (Day 4-6) ──
     for (let i = 3; i < 6; i++) {
       const x = cardAreaX + (i - 3) * (CARD_W + CARD_GAP);
-      this._buildDayCard(x, y, CARD_W, CARD_H, i, effectiveSignedDays, state.signedToday);
+      this._buildDayCard(x, y, CARD_W, CARD_H, i, effectiveSignedDays, state.signedToday, false, displayCycleIndex);
     }
     y += CARD_H + CARD_GAP;
 
     // ── 日卡 Row 3 (Day 7) ──
-    this._buildDayCard(cardAreaX, y, CARD_AREA_W, DAY7_H, 6, effectiveSignedDays, state.signedToday, true);
+    this._buildDayCard(cardAreaX, y, CARD_AREA_W, DAY7_H, 6, effectiveSignedDays, state.signedToday, true, displayCycleIndex);
     y += DAY7_H + 20;
 
     // ── 签到按钮 ──
@@ -223,7 +227,6 @@ export class CheckInPanel extends PIXI.Container {
   /* ====== 里程碑：与下方日卡同宽；底板内礼包+程序绘制进度条+文字 ====== */
 
   private _buildMilestoneBar(x: number, y: number, totalDays: number, blockW: number): number {
-    const MAX_DAYS = 30;
     const SIDE_PAD = 20;
     const INNER_TOP = 12;
     const GAP_GIFT_TO_TRACK = 12;
@@ -233,6 +236,7 @@ export class CheckInPanel extends PIXI.Container {
     const TRACK_H = 22;
     /** 礼包与「N天」以中心对齐轨道；末位若贴满 track 右缘会裁切，故左右内缩 */
     const MILESTONE_X_INSET = Math.max(30, Math.ceil(GIFT_SZ * 0.62));
+    const maxDays = Math.max(...MILESTONES.map(ms => ms.threshold), 1);
 
     const trackW = blockW - SIDE_PAD * 2;
     const trackLeft = x + SIDE_PAD;
@@ -267,7 +271,7 @@ export class CheckInPanel extends PIXI.Container {
     trackBg.endFill();
     this._content.addChild(trackBg);
 
-    const fillRatio = Math.min(1, totalDays / MAX_DAYS);
+    const fillRatio = Math.min(1, totalDays / maxDays);
     const fillW = Math.max(0, fillRatio * trackW);
     if (fillW > 1.5) {
       const inset = 3;
@@ -286,7 +290,7 @@ export class CheckInPanel extends PIXI.Container {
 
     const mileSpan = Math.max(40, trackW - MILESTONE_X_INSET * 2);
     MILESTONES.forEach((ms, mi) => {
-      const nodeX = trackLeft + MILESTONE_X_INSET + (ms.threshold / MAX_DAYS) * mileSpan;
+      const nodeX = trackLeft + MILESTONE_X_INSET + (ms.threshold / maxDays) * mileSpan;
       const giftTex = TextureCache.get(`checkin_milestone_gift_${mi + 1}`);
       const claimed = CheckInManager.isMilestoneClaimed(ms.threshold);
 
@@ -352,8 +356,9 @@ export class CheckInPanel extends PIXI.Container {
     x: number, y: number, w: number, h: number,
     dayIndex: number, effectiveSigned: number, signedToday: boolean,
     isWide = false,
+    cycleIndex = 0,
   ): void {
-    const reward = CHECK_IN_REWARDS[dayIndex];
+    const reward = getCheckInRewardForCycleDay(dayIndex + 1, cycleIndex);
     const isSigned = dayIndex < effectiveSigned;
     const isToday = !signedToday && dayIndex === effectiveSigned;
 
@@ -406,11 +411,11 @@ export class CheckInPanel extends PIXI.Container {
     card.addChild(dayLbl);
 
     const items = reward.items;
-    const ICON_SZ = isWide ? 48 : (items.length > 1 ? 40 : 52);
+    const ICON_SZ = isWide ? (items.length > 2 ? 42 : 48) : (items.length > 1 ? 40 : 52);
     const contentCY = h / 2 + 10;
 
     if (isWide || items.length > 1) {
-      const spacing = isWide ? 100 : 78;
+      const spacing = isWide ? Math.max(82, Math.min(100, (w - 80) / Math.max(1, items.length - 1))) : 78;
       const startIX = w / 2 - ((items.length - 1) * spacing) / 2;
       for (let j = 0; j < items.length; j++) {
         this._drawRewardItem(card, startIX + j * spacing, contentCY, items[j], isSigned, ICON_SZ);
@@ -480,7 +485,8 @@ export class CheckInPanel extends PIXI.Container {
       parent.addChild(fb);
     }
 
-    const amt = new PIXI.Text(`×${item.amount}`, {
+    const qtyText = item.type === 'deco' ? '专属家具' : `×${item.amount}`;
+    const amt = new PIXI.Text(qtyText, {
       fontSize: 16, fill: dimmed ? 0xAAAAAA : 0x4E342E,
       fontFamily: FONT_FAMILY, fontWeight: 'bold',
       stroke: dimmed ? 0x000000 : 0xFFFFFF,

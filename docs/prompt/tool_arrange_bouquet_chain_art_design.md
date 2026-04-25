@@ -11,7 +11,7 @@
 ## 生成参数
 
 - 模型：`gemini-2.5-flash-image`
-- 风格参考图：`--image tool_bake_2.png`（烤箱，最具代表性）
+- 风格参考图：`--image tool_bake_2.png`（烤箱，当前烘焙线标准风格参考）
 - 背景：白色（提示词要求），生成后用 **rembg** 抠图（不再用品红键）
 - 输出：`game_assets/.../raw/` → rembg → `minigame/subpkg_items/images/tools/`
 

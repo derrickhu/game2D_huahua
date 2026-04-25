@@ -20,8 +20,6 @@ import {
   pickLuckyCoinNewItemId,
 } from '@/config/ItemConfig';
 import { FlowerSignTicketManager } from '@/managers/FlowerSignTicketManager';
-import { SeasonSystem } from '@/systems/SeasonSystem';
-
 export interface CellData {
   index: number;
   row: number;
@@ -134,27 +132,14 @@ class BoardManagerClass {
     return true;
   }
 
-  /** 执行合成（含跨格合成 + 季节跳级） */
+  /** 执行合成（含跨格合成） */
   doMerge(srcIndex: number, dstIndex: number): string | null {
     if (!this.canMerge(srcIndex, dstIndex)) return null;
 
     const src = this.cells[srcIndex];
     const dst = this.cells[dstIndex];
-    let resultId = getMergeResultId(src.itemId!);
+    const resultId = getMergeResultId(src.itemId!);
     if (!resultId) return null;
-
-    // 季节跳级
-    const srcDef = ITEM_DEFS.get(src.itemId!);
-    if (srcDef) {
-      const skipChance = SeasonSystem.getSkipLevelChance(srcDef.line);
-      if (skipChance > 0 && Math.random() < skipChance) {
-        const skipId = getMergeResultId(resultId);
-        if (skipId) {
-          resultId = skipId;
-          console.log(`[Board] 季节跳级! ${srcDef.name} → 跳升至 ${ITEM_DEFS.get(skipId)?.name}`);
-        }
-      }
-    }
 
     const dstWasPeek = dst.state === CellState.PEEK;
     const srcWasPeek = src.state === CellState.PEEK;

@@ -1,0 +1,14 @@
+Cute small mobile game item icon sheet for a cozy casual merge game, 3/4 top-down isometric view. Rounded chunky proportions, slightly chibi and compact. Soft smooth gradient shading, tiny bright highlight spots, no hard black outlines, edges defined by color transitions and subtle darker-tone borders. Warm pastel dessert-shop palette, clean white background, NO TEXT, no labels, no captions, no UI.
+
+Create a clean 4 columns x 2 rows sheet of 8 dessert items. All 8 items must clearly belong to the same progression line. The strongest shared visual rule: every dessert is served on a visible plate or shallow dessert dish. No glasses, no jars, no beverage cups, no parfait cups, no transparent containers. Every item is a fruit cake or fruit tart variant, not flower-themed cakes. Use fresh fruit toppings like strawberry, green grape, peach, orange, mixed berries, kiwi, mango, or assorted fruit. Progression should go from small and simple to larger and richer, while always staying readable as the same dessert line.
+
+Cell 1: a very small berry tart on a simple plain plate, compact, beginner-tier, a few berries only.
+Cell 2: a small green grape mini cake on a slightly nicer plate, soft cream, neat and simple.
+Cell 3: a small peach cream cake on a plate, fuller than level 2, more fruit slices, more frosting detail.
+Cell 4: a strawberry round cake on a plate, clearly a complete small round cake, strawberry slices around the side, no glass container.
+Cell 5: an orange fruit cake on a decorative plate, brighter color contrast, richer topping, medium size.
+Cell 6: a dual-fruit cake on an upgraded plate, two kinds of fruit visible, more cream layers and garnish.
+Cell 7: an assorted fruit cake on a more refined plate, generous fruit topping, looks like a shop signature cake but not extravagant.
+Cell 8: a colorful fruit cake on the most refined plate in the set, most detailed and rich, dense fruit topping and elegant cream decoration, but still not a giant celebration cake and not too final-boss.
+
+Keep all items centered, evenly sized for game icon use, each item isolated with enough whitespace. Make the plate shape evolve gradually across levels: from plain shallow dish to more refined dessert plate, but still subtle and game-readable. Avoid realistic photography composition; this should look like polished game asset art. No flowers as the main theme, fruit is the focus.

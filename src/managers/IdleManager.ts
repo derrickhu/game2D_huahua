@@ -37,8 +37,6 @@ const IDLE_STORAGE_KEY = 'huahua_idle';
 export interface OfflineAffinityNote {
   typeId: string;
   bondName: string;
-  bondLabel: string;
-  bondLevel: number;
   text: string;
 }
 

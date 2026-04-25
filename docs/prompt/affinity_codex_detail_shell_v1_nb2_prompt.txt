@@ -1,0 +1,13 @@
+Clean 2D vector mobile game UI for a cozy pastel flower-shop merge game, portrait 9:16, centered on a pure green chroma background RGB 0,255,0. Create a full-screen collection-detail album shell inspired by premium casual mobile-game collection pages. Warm peach notebook leather style, refined and polished, softly rounded rectangle, thick creamy inner page, subtle warm shadow, elegant and game-like.
+
+This shell is for a detail page with a top series header card and a lower card-grid area. NO TEXT, no letters, no numbers, no placeholder symbols except shell chrome. Leave the main interior mostly empty and clean for runtime layout.
+
+Top center: blank golden title plaque integrated into the shell, slightly smaller than the home shell. Top-left: a small circular pale-yellow back button base with a blank center, polished and cute. Top-right: a larger coral-red circular close button with a simple white X and glossy highlight.
+
+Body: wide open space with enough room for a compact series header card near upper-middle, and one large clean rounded rectangular content plate below for runtime card layout.
+
+ABSOLUTELY NO embedded grid cells, NO 3x4 slot recesses, NO card placeholders, NO square grooves, NO repeated slot shapes. The lower content area must be one expandable clean panel only, so runtime code can place different layouts freely.
+
+Add a soft warm base strip along the very bottom edge for weight, like a notebook footer.
+
+Very subtle floral accents only in the corners. No inner frame lines that reduce usable area. No watermark, no readable text, no characters.

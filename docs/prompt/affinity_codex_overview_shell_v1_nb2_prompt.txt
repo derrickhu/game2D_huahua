@@ -1,0 +1,14 @@
+Clean 2D vector mobile game UI for a cozy pastel flower-shop merge game, portrait 9:16, centered on a pure green chroma background RGB 0,255,0. Create a full-screen collection album shell inspired by premium casual mobile-game codex home pages. Warm peach-cream notebook style, soft rounded corners, thick outer frame, subtle layered bevel, gentle drop shadow, refined and premium.
+
+Main shell only, NO TEXT, no numbers, no letters, no icons except shell chrome. Large smooth matte warm-cream interior. No busy inner linework, no extra panels except the layout placeholders described below.
+
+Top area: integrated ornate title plaque centered near the top, rounded and softly embossed, warm honey-gold with peach shading, blank center for runtime title. Top-right: chunky coral-red circular close button with a simple white X, polished candy-like highlight. Top-left: no button.
+
+CRITICAL layout structure:
+- Immediately below the title plaque, place one wide rounded rectangular placeholder zone for a hero reward banner, close to the top, elegant and clearly visible.
+- Below the reward banner, leave one large open clean content field for runtime UI placement.
+- ABSOLUTELY NO circular recesses, NO circular slots, NO portrait cutouts, NO progress-bar grooves, NO pill slots, NO embedded placeholders, NO shaped indents in the lower body.
+- The lower two-thirds of the shell must be a smooth expandable canvas with only very subtle shading, so future layouts can change freely.
+- The page should still feel dense and game-like, but the lower section must stay flexible and not pre-structured.
+
+Add only very subtle notebook/page texture and edge shading. Tiny soft flower petal decorations only in the bottom corners. Palette: peach, blush pink, buttercream, warm caramel, soft gold. Extremely polished mobile-game UI art, crisp edges, clean silhouette, no watermark, no readable text, no placeholder icons, no characters.

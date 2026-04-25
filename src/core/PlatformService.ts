@@ -304,6 +304,27 @@ class PlatformServiceClass {
     return null;
   }
 
+  /**
+   * 创建微信「游戏圈」原生按钮。
+   * 仅微信小游戏支持；调用方通常会把它做成透明热区，视觉仍由 Canvas UI 自行绘制。
+   */
+  createGameClubButton(opts: {
+    type?: 'text' | 'image';
+    text?: string;
+    icon?: 'green' | 'white' | 'dark' | 'light';
+    image?: string;
+    style: Record<string, any>;
+  }): any {
+    try {
+      if (this.name === 'wechat') {
+        return this._api?.createGameClubButton?.(opts);
+      }
+    } catch (e) {
+      console.warn('[Platform] 创建游戏圈按钮失败:', e);
+    }
+    return null;
+  }
+
   // ═══════════════ 分享 ═══════════════
 
   /** 主动分享（fire-and-forget） */

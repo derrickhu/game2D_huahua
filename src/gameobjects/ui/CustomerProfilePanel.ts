@@ -1,8 +1,8 @@
 /**
- * 熟客资料卡面板
+ * 熟客资料卡面板（V2）
  *
- * 由 CustomerView 头像 tap 触发；展示该熟客的人设、当前 Bond 等级、累计点数 + 下一档进度，
- * 以及 5 档里程碑的「已发放」与「待解锁」概要（与 LevelUpPopup 仪式段同源 LevelUnlockCard 视觉）。
+ * 由 CustomerView 头像 tap 触发；展示该熟客的人设 + 友谊图鉴进度 + 里程碑奖励，
+ * 以及「查看图鉴」入口。Bond 等级与里程碑已退场，全部由 AffinityCardManager 接管。
  */
 import * as PIXI from 'pixi.js';
 import { Game } from '@/core/Game';
@@ -13,16 +13,16 @@ import { TextureCache } from '@/utils/TextureCache';
 import { createFlowerEggModalFrame } from '@/gameobjects/ui/FlowerEggModalFrame';
 import { AffinityManager } from '@/managers/AffinityManager';
 import { AffinityCardManager } from '@/managers/AffinityCardManager';
-import { hasCardsForOwner } from '@/config/AffinityCardConfig';
+import {
+  hasCardsForOwner,
+  type CustomerMilestone,
+  type CardReward,
+} from '@/config/AffinityCardConfig';
 import { DECO_MAP } from '@/config/DecorationConfig';
 import {
   AFFINITY_MAP,
   AFFINITY_UNLOCK_LEVELS,
-  BOND_THRESHOLDS,
-  getBondLevelLabel,
   type AffinityCustomerDef,
-  type AffinityMilestoneReward,
-  type BondLevel,
 } from '@/config/AffinityConfig';
 
 export class CustomerProfilePanel extends PIXI.Container {
@@ -45,7 +45,6 @@ export class CustomerProfilePanel extends PIXI.Container {
       return;
     }
     if (this._isOpen) {
-      // 已开 → 切换到点击的另一位熟客
       this._build(def);
       return;
     }
@@ -88,9 +87,9 @@ export class CustomerProfilePanel extends PIXI.Container {
     this.addChild(overlay);
 
     const contentW = Math.min(W - 80, 320);
-    // 卡册行仅在「友谊卡系统已对玩家解锁（含 6 级门槛）」且当前客人有卡定义时占位
-    const cardRowVisible = AffinityManager.isCardSystemUnlocked() && hasCardsForOwner(def.typeId);
-    const contentH = cardRowVisible ? 432 : 380;
+    const cardSystemReady = AffinityManager.isCardSystemUnlocked() && hasCardsForOwner(def.typeId);
+    const milestones = cardSystemReady ? AffinityCardManager.milestonesOf(def.typeId) : [];
+    const contentH = cardSystemReady ? Math.min(560, 260 + milestones.length * 64) : 320;
 
     const frame = createFlowerEggModalFrame({
       viewW: W,
@@ -116,7 +115,6 @@ export class CustomerProfilePanel extends PIXI.Container {
     const state = AffinityManager.getState(def.typeId);
 
     let y = 0;
-    // 头像
     const portraitTex = TextureCache.get(`customer_${def.typeId}`);
     if (portraitTex && portraitTex.width > 0) {
       const sp = new PIXI.Sprite(portraitTex);
@@ -131,7 +129,6 @@ export class CustomerProfilePanel extends PIXI.Container {
       y += 6;
     }
 
-    // 人设
     const persona = new PIXI.Text(def.persona, {
       fontSize: 13,
       fill: COLORS.TEXT_DARK,
@@ -146,10 +143,15 @@ export class CustomerProfilePanel extends PIXI.Container {
     mount.addChild(persona);
     y += persona.height + 10;
 
-    // Bond 等级 + 进度
-    const bondLine = new PIXI.Text(
+    const cardSystemReady = AffinityManager.isCardSystemUnlocked() && hasCardsForOwner(def.typeId);
+
+    const statusLine = new PIXI.Text(
       state.unlocked
-        ? `当前 Bond · Lv.${state.bond}「${getBondLevelLabel(state.bond)}」`
+        ? cardSystemReady
+          ? '常客 · 已加入友谊图鉴'
+          : hasCardsForOwner(def.typeId)
+            ? `常客 · 图鉴 Lv.6 解锁`
+            : '常客 · 本赛季暂无友谊图鉴'
         : `未解锁（${this._unlockHintFor(def.typeId)}）`,
       {
         fontSize: 14,
@@ -158,77 +160,36 @@ export class CustomerProfilePanel extends PIXI.Container {
         fontWeight: 'bold',
       } as PIXI.TextStyle,
     );
-    bondLine.anchor.set(0.5, 0);
-    bondLine.position.set(width / 2, y);
-    mount.addChild(bondLine);
+    statusLine.anchor.set(0.5, 0);
+    statusLine.position.set(width / 2, y);
+    mount.addChild(statusLine);
     y += 22;
 
-    if (state.unlocked) {
-      const nextBond = (state.bond < 5 ? (state.bond + 1) : 5) as BondLevel;
-      const cur = state.points;
-      const nextThreshold = BOND_THRESHOLDS[nextBond];
-      const prevThreshold = BOND_THRESHOLDS[state.bond];
-      const labelText = state.bond >= 5
-        ? `已达「知己」累计 ${cur} 点`
-        : `${cur} / ${nextThreshold} 点 → Lv.${nextBond}「${getBondLevelLabel(nextBond)}」`;
-      const ptsText = new PIXI.Text(labelText, {
-        fontSize: 12,
-        fill: 0x6f4a2e,
-        fontFamily: FONT_FAMILY,
-      } as PIXI.TextStyle);
-      ptsText.anchor.set(0.5, 0);
-      ptsText.position.set(width / 2, y);
-      mount.addChild(ptsText);
-      y += 16;
-
-      // 进度条
-      const barW = width - 32;
-      const barH = 8;
-      const barX = (width - barW) / 2;
-      const bg = new PIXI.Graphics();
-      bg.beginFill(0xfbe5d6, 0.95);
-      bg.drawRoundedRect(barX, y, barW, barH, 4);
-      bg.endFill();
-      mount.addChild(bg);
-      const range = Math.max(1, nextThreshold - prevThreshold);
-      const filled = state.bond >= 5 ? barW : Math.max(0, Math.min(1, (cur - prevThreshold) / range)) * barW;
-      const fg = new PIXI.Graphics();
-      fg.beginFill(0xffb469);
-      fg.drawRoundedRect(barX, y, filled, barH, 4);
-      fg.endFill();
-      mount.addChild(fg);
-      y += barH + 12;
-    } else {
-      y += 4;
-    }
-
-    // 卡册进度行（仅 cardSystem 启用 + 玩家等级达 6 + 有卡定义时显示）
-    if (AffinityManager.isCardSystemUnlocked() && hasCardsForOwner(def.typeId)) {
+    if (cardSystemReady) {
       const cardRow = this._buildCardCodexRow(def.typeId, width);
       cardRow.position.set(0, y);
       mount.addChild(cardRow);
-      y += 52;
-    }
+      y += 56;
 
-    // 里程碑列表
-    const sectionTitle = new PIXI.Text('Bond 里程碑', {
-      fontSize: 14,
-      fill: 0x9c4f2e,
-      fontFamily: FONT_FAMILY,
-      fontWeight: 'bold',
-    } as PIXI.TextStyle);
-    sectionTitle.anchor.set(0.5, 0);
-    sectionTitle.position.set(width / 2, y);
-    mount.addChild(sectionTitle);
-    y += 20;
+      const sectionTitle = new PIXI.Text('图鉴里程碑', {
+        fontSize: 14,
+        fill: 0x9c4f2e,
+        fontFamily: FONT_FAMILY,
+        fontWeight: 'bold',
+      } as PIXI.TextStyle);
+      sectionTitle.anchor.set(0.5, 0);
+      sectionTitle.position.set(width / 2, y);
+      mount.addChild(sectionTitle);
+      y += 20;
 
-    for (let lv = 1 as BondLevel; lv <= 5; lv = (lv + 1) as BondLevel) {
-      const reward = def.milestones[lv];
-      const claimed = state.unlocked && state.bond >= lv;
-      const row = this._buildMilestoneRow(width, lv, reward, claimed);
-      row.position.set(0, y);
-      mount.addChild(row);
-      y += (row as any).rowHeight ?? 26;
+      const milestones = AffinityCardManager.milestonesOf(def.typeId);
+      const stats = AffinityCardManager.progress(def.typeId);
+      for (const m of milestones) {
+        const row = this._buildMilestoneRow(width, m, stats.obtained);
+        row.position.set(0, y);
+        mount.addChild(row);
+        y += (row as any).rowHeight ?? 56;
+      }
     }
   }
 
@@ -236,7 +197,7 @@ export class CustomerProfilePanel extends PIXI.Container {
     const c = new PIXI.Container();
     const padX = 10;
     const innerW = width - padX * 2;
-    const rowH = 44;
+    const rowH = 48;
 
     const bg = new PIXI.Graphics();
     bg.beginFill(0xfff8e7, 0.95);
@@ -246,7 +207,6 @@ export class CustomerProfilePanel extends PIXI.Container {
     c.addChild(bg);
 
     const stats = AffinityCardManager.progress(typeId);
-    const shards = AffinityCardManager.getShards(typeId);
 
     const title = new PIXI.Text('友谊图鉴', {
       fontSize: 14,
@@ -258,17 +218,16 @@ export class CustomerProfilePanel extends PIXI.Container {
     title.position.set(padX + 12, 6);
     c.addChild(title);
 
-    const sub = new PIXI.Text(`${stats.obtained}/${stats.total}  ·  友谊点 ${shards}`, {
+    const sub = new PIXI.Text(`已收集 ${stats.obtained} / ${stats.total} 张`, {
       fontSize: 12,
       fill: 0x6f4a2e,
       fontFamily: FONT_FAMILY,
     } as PIXI.TextStyle);
     sub.anchor.set(0, 0);
-    sub.position.set(padX + 12, 24);
+    sub.position.set(padX + 12, 26);
     c.addChild(sub);
 
-    // 跳转按钮
-    const btnW = 80, btnH = 28;
+    const btnW = 90, btnH = 28;
     const btn = new PIXI.Container();
     const btnBg = new PIXI.Graphics();
     btnBg.beginFill(0xffb469, 1);
@@ -305,88 +264,91 @@ export class CustomerProfilePanel extends PIXI.Container {
 
   private _buildMilestoneRow(
     width: number,
-    bondLv: BondLevel,
-    reward: AffinityMilestoneReward,
-    claimed: boolean,
+    m: CustomerMilestone & { claimed: boolean },
+    currentObtained: number,
   ): PIXI.Container {
     const row = new PIXI.Container();
     const padX = 10;
     const innerW = width - padX * 2;
+    const rowH = 56;
 
-    const badge = new PIXI.Text(`Lv.${bondLv}`, {
+    const reached = currentObtained >= m.threshold;
+    const bg = new PIXI.Graphics();
+    bg.beginFill(m.claimed ? 0xefe9d4 : reached ? 0xffe9bb : 0xf6efe3, 0.92);
+    bg.lineStyle(1.5, m.claimed ? 0x4caf50 : reached ? 0xffb469 : 0xd9c8a8, 1);
+    bg.drawRoundedRect(padX, 0, innerW, rowH, 10);
+    bg.endFill();
+    row.addChild(bg);
+
+    const badge = new PIXI.Text(`${m.threshold}/12`, {
       fontSize: 12,
-      fill: claimed ? 0x4caf50 : 0xb0a08c,
+      fill: m.claimed ? 0x4caf50 : reached ? 0x9c4f2e : 0xb0a08c,
       fontFamily: FONT_FAMILY,
       fontWeight: 'bold',
     } as PIXI.TextStyle);
     badge.anchor.set(0, 0);
-    badge.position.set(padX, 2);
+    badge.position.set(padX + 10, 6);
     row.addChild(badge);
 
-    const title = new PIXI.Text(reward.title, {
+    const title = new PIXI.Text(m.title, {
       fontSize: 13,
-      fill: claimed ? 0x4e342e : 0x8a6f4f,
+      fill: m.claimed || reached ? 0x4e342e : 0x8a6f4f,
       fontFamily: FONT_FAMILY,
       fontWeight: 'bold',
     } as PIXI.TextStyle);
     title.anchor.set(0, 0);
-    title.position.set(padX + 38, 0);
+    title.position.set(padX + 56, 6);
     row.addChild(title);
 
-    const rewardSummary = this._summarizeReward(reward);
-    const rewardLine = new PIXI.Text(rewardSummary, {
+    const summary = this._summarizeMilestone(m);
+    const sub = new PIXI.Text(summary, {
       fontSize: 11,
-      fill: claimed ? 0x6f4a2e : 0xa6896a,
+      fill: m.claimed || reached ? 0x6f4a2e : 0xa6896a,
       fontFamily: FONT_FAMILY,
       wordWrap: true,
-      wordWrapWidth: innerW - 38,
+      wordWrapWidth: innerW - 64,
     } as PIXI.TextStyle);
-    rewardLine.anchor.set(0, 0);
-    rewardLine.position.set(padX + 38, 17);
-    row.addChild(rewardLine);
+    sub.anchor.set(0, 0);
+    sub.position.set(padX + 56, 24);
+    row.addChild(sub);
 
-    const desc = new PIXI.Text(reward.desc, {
-      fontSize: 11,
-      fill: claimed ? 0x6f4a2e : 0xa6896a,
-      fontFamily: FONT_FAMILY,
-      wordWrap: true,
-      wordWrapWidth: innerW - 38,
-    } as PIXI.TextStyle);
-    desc.anchor.set(0, 0);
-    desc.position.set(padX + 38, 17 + rewardLine.height + 2);
-    row.addChild(desc);
-
-    const rowH = 17 + rewardLine.height + 2 + desc.height + 8;
-    (row as any).rowHeight = rowH;
-
-    if (claimed) {
-      const tag = new PIXI.Text('已发放', {
+    if (m.claimed) {
+      const tag = new PIXI.Text('已领取', {
         fontSize: 11,
         fill: 0x4caf50,
         fontFamily: FONT_FAMILY,
         fontWeight: 'bold',
       } as PIXI.TextStyle);
       tag.anchor.set(1, 0);
-      tag.position.set(width - padX, 2);
+      tag.position.set(width - padX - 6, 6);
       row.addChild(tag);
     }
+    (row as any).rowHeight = rowH + 6;
     return row;
   }
 
-  private _summarizeReward(r: AffinityMilestoneReward): string {
+  private _summarizeMilestone(m: CustomerMilestone): string {
+    const parts = this._summarizeReward(m.reward);
+    if (m.decoUnlockId) {
+      const deco = DECO_MAP.get(m.decoUnlockId);
+      parts.push(deco ? `主题家具「${deco.name}」` : `主题家具：${m.decoUnlockId}`);
+    }
+    if (m.permanentHuayuanMult && m.permanentHuayuanMult > 1) {
+      const pct = Math.round((m.permanentHuayuanMult - 1) * 100);
+      parts.push(`订单永久 +${pct}% 花愿`);
+    }
+    return parts.length > 0 ? parts.join('  ') : '剧情解锁';
+  }
+
+  private _summarizeReward(r: CardReward): string[] {
     const parts: string[] = [];
     if (r.huayuan) parts.push(`花愿+${r.huayuan}`);
     if (r.diamond) parts.push(`钻石+${r.diamond}`);
     if (r.stamina) parts.push(`体力+${r.stamina}`);
     if (r.flowerSignTickets) parts.push(`许愿币+${r.flowerSignTickets}`);
-    if (r.decoUnlockId) {
-      const deco = DECO_MAP.get(r.decoUnlockId);
-      parts.push(deco ? `主题家具「${deco.name}」` : `主题家具：${r.decoUnlockId}`);
-    }
-    return parts.length > 0 ? parts.join('  ') : '剧情/角色解锁';
+    return parts;
   }
 
-  /** 当前面板正在展示的熟客 typeId（无则 null） */
   get currentTypeId(): string | null {
     return this._currentTypeId;
   }

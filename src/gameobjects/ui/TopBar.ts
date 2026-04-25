@@ -13,7 +13,6 @@ import * as PIXI from 'pixi.js';
 import { EventBus } from '@/core/EventBus';
 import { CurrencyManager } from '@/managers/CurrencyManager';
 import { GMManager } from '@/managers/GMManager';
-import { AffinityManager } from '@/managers/AffinityManager';
 import { COLORS, DESIGN_WIDTH, FONT_FAMILY } from '@/config/Constants';
 import { TextureCache } from '@/utils/TextureCache';
 import { TweenManager, Ease } from '@/core/TweenManager';
@@ -103,7 +102,7 @@ export class TopBar extends PIXI.Container {
     if (!this._opts.hideShopPill) {
       this._buildShopPill();
     }
-    this._buildCodexPill();
+    // 友谊图鉴入口已迁移到 ShopScene 左上侧栏「图鉴」按钮下方（V2，避免双入口），此处不再构建。
     this._buildGmActivateZone();
     this._buildGmButton();
     this._bindEvents();
@@ -319,69 +318,9 @@ export class TopBar extends PIXI.Container {
     });
 
     this.addChild(root);
-  }
 
-  /** 友谊图鉴入口：仅 affinity_codex_btn，无白底；与商店图标同样行为（独立 hit area）
-   * - 当 hideShopPill = true（在花店内），仍显示，方便玩家随时翻图鉴
-   * - 6 级前（CARD_SYSTEM_UNLOCK_LEVEL）整个按钮 visible = false，
-   *   监听 level:up 在解锁瞬间淡入显示
-   */
-  private _buildCodexPill(): void {
-    const root = new PIXI.Container();
-    // hideShopPill 时占用商店原位置；否则紧跟在商店图标右侧
-    const left = this._opts.hideShopPill
-      ? SHOP_PILL_LEFT
-      : SHOP_PILL_LEFT + SHOP_HIT + 4;
-    root.position.set(left + SHOP_HIT / 2, BAR_MID_Y);
-
-    const tex = TextureCache.get('affinity_codex_btn');
-    if (tex && tex.width > 0) {
-      const sp = new PIXI.Sprite(tex);
-      sp.anchor.set(0.5);
-      sp.width = SHOP_ICON;
-      sp.height = SHOP_ICON;
-      sp.position.set(0, 0);
-      root.addChild(sp);
-    } else {
-      // 兜底：纯文字「图鉴」按钮
-      const bg = new PIXI.Graphics();
-      bg.beginFill(0xb6a4d8, 1);
-      bg.lineStyle(2, 0xfff5da, 0.9);
-      bg.drawRoundedRect(-SHOP_ICON / 2, -SHOP_ICON / 2, SHOP_ICON, SHOP_ICON, 14);
-      bg.endFill();
-      root.addChild(bg);
-      const fb = new PIXI.Text('图鉴', { fontSize: 18, fontFamily: FONT_FAMILY, fill: 0xfff5da, fontWeight: 'bold' } as PIXI.TextStyle);
-      fb.anchor.set(0.5);
-      root.addChild(fb);
-    }
-
-    root.eventMode = 'static';
-    root.cursor = 'pointer';
-    root.hitArea = new PIXI.Rectangle(-SHOP_HIT / 2, -SHOP_HIT / 2, SHOP_HIT, SHOP_HIT);
-    root.on('pointertap', (e: PIXI.FederatedPointerEvent) => {
-      e.stopPropagation();
-      EventBus.emit('affinityCodex:open');
-    });
-
-    // 等级门槛：6 级前隐藏；监听 level:up 解锁瞬间显示
-    const unlocked = AffinityManager.isCardSystemUnlocked();
-    root.visible = unlocked;
-    root.eventMode = unlocked ? 'static' : 'none';
-    if (!unlocked) {
-      const onLevelUp = () => {
-        if (AffinityManager.isCardSystemUnlocked()) {
-          root.visible = true;
-          root.eventMode = 'static';
-          EventBus.off('level:up', onLevelUp);
-        }
-      };
-      EventBus.on('level:up', onLevelUp);
-    }
-
-    this.addChild(root);
-
-    // 让 GM 槽起点向后挪（即便按钮当前不可见，hit area 仍预留位置避免抖动）
-    this._gmSlotLeft = left + SHOP_HIT + 10;
+    // 商店之后没有 codexPill 了，GM 槽起点紧贴商店右缘
+    this._gmSlotLeft = SHOP_PILL_LEFT + SHOP_HIT + 10;
   }
 
   /**

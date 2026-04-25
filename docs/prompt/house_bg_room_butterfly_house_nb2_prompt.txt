@@ -1,0 +1,43 @@
+Square game asset, 1:1 aspect. A reference image is attached: follow ONLY the same upper-left isometric camera angle, canvas scale, open-front room-shell composition, and irregular floor footprint. Do NOT copy the reference wall decorations or wood strip details. The interior must stay visible from above. Do NOT cover the room with a full roof. Do NOT close the front side.
+
+Cute kawaii 2.5D isometric butterfly house room shell, hand-painted mobile game art, bright fresh and lively, soft brown outlines, polished merge-game quality. This room must be CLEARLY DIFFERENT from the first flower-shop shell in silhouette, material feeling, and theme identity.
+
+CORE DIFFERENCE:
+- The floor footprint should be an IRREGULAR non-square shape inspired by the reference screenshot: elegant, open, and slightly angled, not a simple square box.
+- Think of a softened polygon / tapered butterfly-house floor plan with one or two angled front edges, similar spatial feeling to the reference image, but simplified into a clean game shell.
+- The room should still work as an open shell for later furniture placement.
+
+STRUCTURE:
+- EMPTY architectural shell only. NO furniture, NO bed, NO desk, NO chair, NO sofa, NO aquarium, NO butterfly frames, NO plants, NO curtains, NO partitions, NO fences, NO balcony railings, NO rugs, NO hanging lamps, NO decorations, NO wall art, NO tools, NO characters, NO text, NO watermark.
+- Only allowed elements: floor, very partial roof strips, corner posts, back wall plane, right wall plane, foundation, and a very minimal exterior step if needed.
+- Windows should be NONE or almost NONE. Prefer solid wall planes. NO greenhouse glass wall, NO large transparent wall, NO display window, NO showcase structure.
+- No blocking objects anywhere inside the room.
+- Absolutely NO side railings, NO short fence segments, NO balcony guards, NO half walls, NO window hole cutouts, NO keyhole opening, NO arched opening. Keep wall planes clean and install-ready.
+- Absolutely NO exposed horizontal wood rails, NO mid-wall wood bands, NO chair-rail trim, NO rectangular panel framing, NO crossed mullion-like wall dividers. The wall surfaces should read as large clean install-ready planes, only bounded by the main corner posts and outer edges.
+- CRITICAL: only TWO interior walls are allowed: the BACK wall and the RIGHT wall. NO FRONT WALL. NO LEFT WALL. The front-left and front-center area must stay completely open so the room reads like an open shell.
+- CRITICAL: the roof must NOT cover the middle of the room. Use only narrow roof / eave strips sitting along the outer top edges of the back wall and right wall, leaving the main interior open and visible. Think partial canopy edges, not a full conservatory roof.
+- CRITICAL: from this camera angle, the player must be able to clearly see the entire interior floor area. The roof is decorative perimeter architecture only, not a lid over the room.
+
+STYLE AND IDENTITY:
+- Theme: butterfly house shell interpreted as a clean game room shell, not a furnished greenhouse bedroom.
+- Make it visibly different from the first flower shop: less pink-roof country shop feeling, more airy butterfly-house identity.
+- Suggested palette: creamy off-white walls, light warm wood or pale walnut posts, soft aqua / teal roof accents, tiny hints of lilac or butterfly-wing color only in roof details.
+- Roof can be a softer teal, desaturated aqua, butterfly-wing pastel gradient, or pale mint ceramic tile look. Not the same pink scalloped roof as the first flower shop. Keep roof details near the perimeter only.
+- The roof silhouette may subtly hint at butterfly wings through elegant spread, layered slopes, or a graceful observatory / greenhouse feeling, but it must remain readable and practical as a room shell.
+
+FLOOR AND WALLS:
+- Floor should feel premium and distinct from the first shop: light stone mosaic, butterfly-wing parquet, pale terrazzo, or elegant soft geometric floor pieces. No giant empty wooden planks copied from the first room.
+- Back wall and right wall remain as the ONLY two walls, and can be shorter, tapered, or more stylized to support the irregular room shape.
+- Interior wall surfaces should remain clean, broad, blank, and empty for future decoration placement, with minimal framing and no decorative wooden strip segmentation across the middle. Prefer smooth plaster-like panels.
+
+FOUNDATION AND ENTRY:
+- Foundation can keep a modest warm stone base similar gameplay weight as the existing shell.
+- If using steps, keep them small and simple, without side props or plant clusters.
+- Exterior ground patch should be minimal and clean.
+
+LIGHTING:
+- Single unified soft light from upper-left, bright daylight, soft highlights, subtle ambient occlusion, light elegant shadowing.
+
+BACKGROUND outside the structure: pure solid white #FFFFFF only, completely flat and uniform, no checkerboard, no beige grid, no tiled backdrop, no gradient, no studio floor, no shadow card, no vignette, no gray.
+
+Viewpoint: classic isometric from upper-left (~45°), consistent vanishing, exactly aligned with the existing room shell gameplay angle. The final silhouette should feel closer to the attached reference screenshot than to a normal closed greenhouse.

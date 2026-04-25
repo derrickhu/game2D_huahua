@@ -10,6 +10,8 @@ import { EventBus } from '@/core/EventBus';
 import { PersistService } from '@/core/PersistService';
 import { ITEM_DEFS } from '@/config/ItemConfig';
 import { CurrencyManager } from './CurrencyManager';
+import { DecorationManager } from './DecorationManager';
+import { grantQuest } from '@/utils/UnlockChecker';
 
 declare const wx: any;
 declare const tt: any;
@@ -18,11 +20,13 @@ const _api = typeof wx !== 'undefined' ? wx : typeof tt !== 'undefined' ? tt : n
 const CHECKIN_STORAGE_KEY = 'huahua_checkin';
 
 export interface RewardItem {
-  type: 'stamina' | 'diamond' | 'huayuan' | 'board';
+  type: 'stamina' | 'diamond' | 'huayuan' | 'board' | 'deco';
   amount: number;
   textureKey: string;
   /** type === board 时发放的物品 id */
   itemId?: string;
+  /** type === deco 时发放的家具 id */
+  decoId?: string;
 }
 
 export interface CheckInReward {
@@ -32,10 +36,31 @@ export interface CheckInReward {
   huayuan?: number;
   /** 棋盘物品（飞入空格子后落子；不可入仓类亦走此逻辑） */
   boardGrants?: Array<{ itemId: string; count: number }>;
+  /** 免费活动家具（直接解锁，不参与购买/星星经济） */
+  decoUnlockId?: string;
+  /** 解锁家具对应 questId，用于装修面板锁定说明 */
+  decoQuestId?: string;
   desc: string;
   icon: string;
   items: RewardItem[];
 }
+
+export const CHECKIN_MONTH1_WEEKLY_DECO_REWARDS: ReadonlyArray<{
+  cycleIndex: number;
+  decoUnlockId: string;
+  questId: string;
+}> = [
+  { cycleIndex: 0, decoUnlockId: 'checkin_m1_bunny_ac', questId: 'checkin_m1_week1_bunny_ac' },
+  { cycleIndex: 1, decoUnlockId: 'checkin_m1_crystal_partition', questId: 'checkin_m1_week2_crystal_partition' },
+  { cycleIndex: 2, decoUnlockId: 'checkin_m1_moon_display_arch', questId: 'checkin_m1_week3_moon_display_arch' },
+  { cycleIndex: 3, decoUnlockId: 'checkin_m1_butterfly_wall_lamp', questId: 'checkin_m1_week4_butterfly_wall_lamp' },
+] as const;
+
+export const CHECKIN_MONTH1_MILESTONE_DECO_REWARD = {
+  threshold: 28,
+  decoUnlockId: 'checkin_m1_rocking_horse',
+  questId: 'checkin_m1_28_rocking_horse',
+} as const;
 
 function _buildItems(r: Omit<CheckInReward, 'items'>): RewardItem[] {
   const items: RewardItem[] = [];
@@ -53,6 +78,9 @@ function _buildItems(r: Omit<CheckInReward, 'items'>): RewardItem[] {
         itemId: g.itemId,
       });
     }
+  }
+  if (r.decoUnlockId) {
+    items.push({ type: 'deco', amount: 1, textureKey: r.decoUnlockId, decoId: r.decoUnlockId });
   }
   return items;
 }
@@ -74,10 +102,24 @@ export const CHECK_IN_REWARDS: CheckInReward[] = [
   { day: 7, diamond: 35, stamina: 30, desc: '钻石×35 体力×30', icon: '' },
 ].map(r => ({ ...r, items: _buildItems(r as any) }));
 
+export function getCheckInRewardForCycleDay(day: number, cycleIndex: number): CheckInReward {
+  const base = CHECK_IN_REWARDS[Math.max(0, Math.min(6, day - 1))];
+  if (day !== 7) return base;
+  const deco = CHECKIN_MONTH1_WEEKLY_DECO_REWARDS.find(r => r.cycleIndex === cycleIndex);
+  if (!deco) return base;
+  const reward: Omit<CheckInReward, 'items'> = {
+    ...base,
+    decoUnlockId: deco.decoUnlockId,
+    decoQuestId: deco.questId,
+    desc: `${base.desc} 专属家具×1`,
+  };
+  return { ...reward, items: _buildItems(reward) };
+}
+
 /** 里程碑配置 */
 export interface MilestoneDef {
   threshold: number;
-  reward: { diamond?: number; huayuan?: number };
+  reward: { diamond?: number; huayuan?: number; decoUnlockId?: string; decoQuestId?: string };
   items: RewardItem[];
 }
 
@@ -85,7 +127,14 @@ export const MILESTONES: MilestoneDef[] = [
   { threshold: 8,  reward: { diamond: 25 } },
   { threshold: 15, reward: { diamond: 40 } },
   { threshold: 22, reward: { diamond: 60 } },
-  { threshold: 30, reward: { diamond: 100 } },
+  {
+    threshold: CHECKIN_MONTH1_MILESTONE_DECO_REWARD.threshold,
+    reward: {
+      diamond: 100,
+      decoUnlockId: CHECKIN_MONTH1_MILESTONE_DECO_REWARD.decoUnlockId,
+      decoQuestId: CHECKIN_MONTH1_MILESTONE_DECO_REWARD.questId,
+    },
+  },
 ].map(m => ({
   ...m,
   items: _buildItems({ day: 0, desc: '', icon: '', ...m.reward }),
@@ -96,6 +145,7 @@ export function milestoneRewardToLevelUpPayload(ms: MilestoneDef): {
   huayuan: number;
   stamina: number;
   diamond: number;
+  decoUnlockIds: string[];
   rewardBoxItems: Array<{ itemId: string; count: number }>;
 } {
   const r = ms.reward;
@@ -103,6 +153,7 @@ export function milestoneRewardToLevelUpPayload(ms: MilestoneDef): {
     huayuan: r.huayuan ?? 0,
     stamina: 0,
     diamond: r.diamond ?? 0,
+    decoUnlockIds: r.decoUnlockId ? [r.decoUnlockId] : [],
     rewardBoxItems: [],
   };
 }
@@ -148,8 +199,12 @@ class CheckInManagerClass {
     return (this._state.signedDays % 7) + 1;
   }
 
+  get currentCycleIndex(): number {
+    return Math.max(0, Math.floor(this._state.totalSignedDays / 7));
+  }
+
   get todayReward(): CheckInReward {
-    return CHECK_IN_REWARDS[this.currentDay - 1];
+    return getCheckInRewardForCycleDay(this.currentDay, this.currentCycleIndex);
   }
 
   get consecutiveDays(): number {
@@ -199,6 +254,7 @@ class CheckInManagerClass {
 
     if (reward.stamina) CurrencyManager.addStamina(reward.stamina);
     if (reward.diamond) CurrencyManager.addDiamond(reward.diamond);
+    this._grantDecoReward(reward.decoUnlockId, reward.decoQuestId, 'daily');
     const streakBonus = this._getStreakBonus();
     if (streakBonus > 0) {
       CurrencyManager.addDiamond(streakBonus);
@@ -219,6 +275,13 @@ class CheckInManagerClass {
     return { reward, streakBonus };
   }
 
+  private _grantDecoReward(decoUnlockId?: string, questId?: string, source: 'daily' | 'milestone' = 'daily'): void {
+    if (!decoUnlockId) return;
+    if (questId) grantQuest(questId);
+    DecorationManager.gmUnlockDeco(decoUnlockId);
+    EventBus.emit('checkin:decoUnlocked', decoUnlockId, source);
+  }
+
   /** 领取里程碑奖励 */
   claimMilestone(threshold: number): MilestoneDef | null {
     const ms = MILESTONES.find(m => m.threshold === threshold);
@@ -226,6 +289,7 @@ class CheckInManagerClass {
     if (!this.canClaimMilestone(threshold)) return null;
 
     if (ms.reward.diamond) CurrencyManager.addDiamond(ms.reward.diamond);
+    this._grantDecoReward(ms.reward.decoUnlockId, ms.reward.decoQuestId, 'milestone');
 
     this._state.claimedMilestones.push(threshold);
     this._saveState();

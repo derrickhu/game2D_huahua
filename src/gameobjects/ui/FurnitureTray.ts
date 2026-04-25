@@ -18,13 +18,13 @@ import {
   DECO_RARITY_INFO,
   DecoDef,
   FURNITURE_TRAY_TABS,
-  ROOM_STYLES,
   sortRoomStylesByUnlockLevelThenCost,
   type FurnitureTrayTabId,
   type DecoPanelTabId,
   type RoomStyleDef,
   getDecorationTabLabel,
   getDecosForDecorationPanelTab,
+  getRoomStylesForScene,
   isDecoAllowedInScene,
   furnitureTrayTabFromSlot,
   furnitureTrayTabForDeco,
@@ -411,7 +411,7 @@ export class FurnitureTray extends PIXI.Container {
     const rowStartX = Math.max(0, (DESIGN_WIDTH - rowW) / 2);
 
     tabs.forEach((tabId, i) => {
-      const meta = getDecorationTabLabel(tabId as DecoPanelTabId);
+      const meta = getDecorationTabLabel(tabId as DecoPanelTabId, CurrencyManager.state.sceneId);
       const isCurrent = tabId === this._currentTab;
 
       const tab = new PIXI.Container();
@@ -602,7 +602,7 @@ export class FurnitureTray extends PIXI.Container {
 
   /** 房屋 Tab：仅展示已购买（已解锁）的房间风格，点选切换当前场景房壳 */
   private _buildRoomStylesGrid(): void {
-    const owned = sortRoomStylesByUnlockLevelThenCost(ROOM_STYLES).filter(s =>
+    const owned = sortRoomStylesByUnlockLevelThenCost(getRoomStylesForScene(CurrencyManager.state.sceneId)).filter(s =>
       DecorationManager.isRoomStyleUnlocked(s.id),
     );
     if (owned.length === 0) {

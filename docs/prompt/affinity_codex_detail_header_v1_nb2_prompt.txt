@@ -1,0 +1,5 @@
+Clean 2D vector mobile game UI component for a cozy pastel flower-shop merge game, isolated on a pure green chroma background RGB 0,255,0. Create one premium series-header card for a collectible album detail page. Warm cream and peach-pink palette, refined, layered, soft shadow, elegant and polished like a top info card in a mobile collection screen.
+
+Layout: a wide rounded panel with a large circular portrait recess on the left, a rectangular reward box on the right upper area, and a shallow rounded progress groove centered along the bottom. Leave all content areas blank for runtime code. Add a tiny hanging ticket-tab accent overlapping the lower-left part of the progress groove, blank and cute. No text, no digits, no reward icons, no labels, no characters. The card should feel like it belongs to a collectible series detail screen, matching the shell style.
+
+Materials: creamy ivory surface, warm peach borders, soft caramel shadows, faint glossy highlights. High-end casual mobile-game UI art, crisp clean silhouette, no watermark, no readable writing.

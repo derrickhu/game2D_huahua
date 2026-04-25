@@ -1,0 +1,32 @@
+Generate ONE clean furniture spritesheet for a cozy butterfly-house renovation set.
+
+Canvas and layout:
+- Landscape 4:3 image.
+- EXACTLY 3 columns × 2 rows grid, six separate furniture props.
+- Each prop must stay centered inside its own cell and occupy only about 55% of the cell, with wide pure white empty margin around it for safe splitting and cutout.
+- Keep all six props in the SAME rendering style, same camera angle, same lighting, same line quality.
+
+Style:
+- Cute kawaii 2.5D isometric view from upper-left about 45 degrees.
+- Hand-painted mobile merge-game flower shop furniture style.
+- Soft brown outlines, rounded corners, gentle upper-left daylight, soft volumetric shading, readable silhouette at small grid size.
+- Elegant butterfly-house mood: pale warm wood, soft aqua / mint accents, cream fabrics, tiny lilac and butterfly-wing pastel notes.
+- Premium but not realistic, not heavy 3D, not flat UI icon, not sticker art.
+
+Reference and theme:
+- A reference image is attached. Use it only as style and furniture-theme inspiration.
+- Extract the mood of the mistaken butterfly-house interior furniture, but DO NOT generate a whole room, walls, floor, characters, or scenery.
+- Every cell must contain only ONE isolated furniture prop on white background.
+
+Cell contents, left to right, top to bottom:
+1. A glass butterfly display cabinet / terrarium: tall warm-wood frame, large clear glass panels, soft mint trim, inside a simple butterfly display branch and one tiny framed specimen feeling, elegant and airy silhouette.
+2. A butterfly-house writing desk: warm wood desk with a compact work surface, small drawers, delicate butterfly study mood, a tiny desk lamp, a couple of paper sheets, and subtle butterfly motif details, but no readable text.
+3. A butterfly sofa: a cute compact loveseat with soft pastel upholstery, butterfly-wing inspired back cushion or center bow-like butterfly accent, cozy premium lounge feeling.
+4. A wicker lounge chair: rounded woven rattan / wicker chair with soft seat cushion, relaxed reading-corner style, airy handcrafted silhouette.
+5. A small round tea table: low round table with delicate butterfly-house styling, a small tea set / dessert plate arrangement, elegant but simple, readable silhouette.
+6. A butterfly wall frame as a wall-hanging prop: decorative framed butterfly artwork or specimen display board, clearly a wall decor furniture piece, angled consistently for the isometric wall-art perspective used in this game.
+
+Important restrictions:
+- NO room shell, NO walls, NO floor tiles, NO windows, NO beds, NO stairs, NO people, NO cat, NO plants outside the furniture prop unless they are part of that prop.
+- NO text, NO labels, NO captions, NO numbers, NO logo, NO watermark.
+- Background must be pure solid white #FFFFFF only.

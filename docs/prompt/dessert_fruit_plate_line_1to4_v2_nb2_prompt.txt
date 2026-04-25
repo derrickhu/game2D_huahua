@@ -1,0 +1,20 @@
+Cute small mobile game item icon sheet for a cozy casual merge game, 3/4 top-down isometric view. Rounded chunky proportions, slightly chibi and compact. High readability for small in-game icons. Match the cleaner, softer, more dimensional style of premium fruit cake icons, with gentle colored outlines instead of harsh black outlines. Use stronger form shading, softer but clear edge definition, brighter highlights, and clearer color blocks. Clean white background. NO TEXT, no labels, no captions, no UI.
+
+Create a 2 columns x 2 rows sheet of 4 dessert items for levels 1 to 4 of the same fruit cake progression line. All 4 items must be served on visible dessert plates. No glasses, no jars, no cups, no transparent containers.
+
+Important style rules:
+- These four items must match the newer style used by higher-level fruit cake icons.
+- Do not make them look flat or sticker-like.
+- Do not use heavy black outlines.
+- Keep details simpler than levels 5 to 8, but use the same family style, plate presentation, and polished shading.
+- Each item should be easy to read at tiny icon size.
+
+Top-left (Level 1, 莓果小挞): a very small berry tart on a simple plate. Beginner-tier, compact, cute, a few large berries only, simple cream, clear silhouette, still visibly plated.
+
+Top-right (Level 2, 青提小糕): a small green grape mini cake on a neat plate. Soft green cream body, a few large grapes on top, slightly richer than level 1, but still simple and low-tier.
+
+Bottom-left (Level 3, 蜜桃蛋糕): a small peach cream cake on a plate. More height than level 2, soft peach color accents, a bit more cream piping, but still clean and readable.
+
+Bottom-right (Level 4, 草莓圆糕): a complete small strawberry round cake on a plate, clearly more finished than level 3. Use strawberry slices around the side and a neat top fruit arrangement. Keep it elegant, simple, and icon-friendly.
+
+All 4 items should feel like the early half of the same line as levels 5 to 8: same plate-based presentation, same polished dessert-shop feel, but lower complexity and smaller scale. The silhouettes should become gradually fuller from level 1 to 4.

@@ -1,0 +1,15 @@
+5:4 WeChat Mini Game share card for "Huahua Miaowu", a cozy flower-shop merge game.
+
+Use the provided reference image for the overall composition: a cute chibi florist girl on the left, a small expressive white cat helper near her feet, both pointing toward a locked merge-board cell on the right, with a glowing flower key and flower-shop background.
+
+Create a polished new version of this composition, not a screenshot copy. Keep the girl and cat expressive and funny, with big eyes and urgent gestures. The locked board cell should be large and easy to understand, wrapped by colorful ribbons and sparkles. Add a glowing flower-shaped key in the foreground. Show a small merge-board corner with roses and daisies at the bottom-right.
+
+Chinese text must be clear, correct, and beautiful. Add one large catchy Chinese headline at the top-left:
+帮我解锁这一格
+Add a smaller subtitle below it:
+合成路线就差你一下
+Typography style: bold rounded Chinese display font, cream-white fill, warm brown stroke, soft golden drop shadow, sticker-like, highly readable at chat thumbnail size.
+
+Art style: playful meme-like casual mobile game key art, polished 2D illustration, bright saturated colors, exaggerated expression, soft rounded shapes, warm pastel flower-shop palette, glossy highlights, soft 3D-like volume.
+
+Hard bans: NO English text, NO random letters, NO watermark, NO logo, NO QR code, NO app store badge, NO real photo, NO cluttered collage, NO black border, NO white border.

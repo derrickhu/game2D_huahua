@@ -107,15 +107,16 @@ export const MAP_NODES: MapNodeDef[] = [
   },
   {
     id: 'butterfly_house',
-    type: 'locked',
+    type: 'house',
     label: '蝴蝶小屋',
     /** 下方左侧圆形空地（与花坊同缩略图边长，坐标可再微调） */
     x: 600,
     y: 840,
     thumbKey: 'worldmap_thumb_butterfly_house',
     thumbSize: 320,
-    unlockLevel: 18,
+    unlockLevel: 10,
     useLiveMapThumb: false,
+    targetSceneId: 'butterfly_house',
   },
   {
     id: 'cake_shop',

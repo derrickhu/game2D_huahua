@@ -1,0 +1,17 @@
+5:4 WeChat Mini Game share card for "Huahua Miaowu", a cozy flower-shop merge game.
+
+Create a clean promotional image that already includes attractive Chinese headline typography as part of the final image.
+
+Canvas and layout: pure bright white background. A neat 6 columns by 4 rows rounded square merge-game grid fills most of the canvas, slightly tilted in a cute mobile game perspective. Each grid cell is light cream white with soft pastel shadow and thin warm beige outline.
+
+Main gameplay visual: the grid contains many vivid, glossy, three-dimensional 2D game icons: colorful flowers, green plants, small bouquets, wrapped flower bunches, potted plants, flower baskets, ribbons, and garden items. Show obvious merge progression: simple flower bud -> brighter flower -> full bouquet -> premium bouquet. Use sparkles and small plus-like glow effects between a few nearby cells to imply merging, but do not use any mathematical symbols or readable UI buttons.
+
+Chinese text must be clear, correct, and beautiful. Add one large catchy Chinese headline at the top-left:
+合成鲜花 开满全屏
+Add a smaller subtitle below it:
+一格一格变漂亮
+Typography style: bold rounded Chinese display font, cream-white fill, warm brown stroke, soft golden drop shadow, sticker-like, highly readable at chat thumbnail size.
+
+Art style: premium polished 2D casual mobile game advertising key art, bright high-key pastel palette, glossy highlights, soft 3D-like volume, clean silhouettes, cheerful and eye-catching.
+
+Hard bans: NO English text, NO random letters, NO watermark, NO logo, NO QR code, NO app store badge, NO real photo, NO cluttered collage, NO black border, NO white border.

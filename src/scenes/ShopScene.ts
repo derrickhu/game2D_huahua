@@ -50,8 +50,11 @@ import { ITEM_DEFS } from '@/config/ItemConfig';
 import { takePendingPlaceDeco } from '@/core/DecoPlaceIntent';
 import { SoundSystem } from '@/systems/SoundSystem';
 import { TutorialManager, TutorialStep } from '@/managers/TutorialManager';
+import { AffinityManager } from '@/managers/AffinityManager';
 import { TutorialOverlay } from '@/systems/TutorialOverlay';
 import { playShopDecorationStarFly } from '@/gameobjects/ui/ShopDecorationStarFly';
+import { Platform } from '@/core/PlatformService';
+import { SocialManager } from '@/managers/SocialManager';
 
 // ── 布局常量 ──
 const PROGRESS_BAR_W = 400;
@@ -69,6 +72,14 @@ const WORLD_MAP_ICON_R = 40;
 /** 「地图」字号；与 WORLD_MAP_LABEL_Y 一起参与 mapExtentBelowCenter 估算 */
 const WORLD_MAP_LABEL_FONT = 14;
 const WORLD_MAP_LABEL_H = 18;
+/** 左下隐藏功能条：收起态小竖签 + 展开态横条 */
+const MISC_DRAWER_Y_FROM_BOTTOM = 236;
+const MISC_DRAWER_TAB_W = 24;
+const MISC_DRAWER_TAB_H = 74;
+const MISC_DRAWER_PANEL_H = 76;
+const MISC_DRAWER_PANEL_SIDE_PAD = 14;
+const MISC_DRAWER_ITEM_W = 74;
+const MISC_DRAWER_ITEM_GAP = 10;
 
 /** 与 FurnitureTray 一致，避免遮挡过多场景 */
 /** 编辑态托盘顶边设计坐标：logicH - 高度 - 上移量 */
@@ -151,21 +162,36 @@ interface SideBtnDef {
   labelColor: number;
 }
 
+interface MiscDrawerBtnDef {
+  id: string;
+  label: string;
+  shortLabel: string;
+  fill: number;
+  stroke: number;
+}
+
 /** 左下角横排 — 家具 / 装扮（无遮罩，大图标） */
 const DECO_PAIR_BUTTONS: SideBtnDef[] = [
   { id: 'deco',    icon: '', texKey: 'icon_furniture', label: '家具', event: 'nav:openDeco',    iconBg: 0xFFB347, labelColor: 0xD48B2E },
   { id: 'dressup', icon: '', texKey: 'icon_dress',      label: '装扮', event: 'nav:openDressup', iconBg: 0xFF7EB3, labelColor: 0xE0559C },
 ];
 
-/** 左上角 — 图鉴（竖排） */
+/** 左上角 — 图鉴竖排：花语图鉴 / 友谊卡（friend codex 在玩家 6 级前隐藏，由 ShopScene 在 _buildLeftTopButtons 中按等级控制可见性） */
 const LEFT_TOP_BUTTONS: SideBtnDef[] = [
-  { id: 'album',   icon: '', texKey: 'icon_book',  label: '图鉴', event: 'nav:openAlbum',   iconBg: 0xA78BFA, labelColor: 0x7C5FC5 },
+  { id: 'album',  icon: '', texKey: 'icon_book',          label: '图鉴',   event: 'nav:openAlbum',       iconBg: 0xA78BFA, labelColor: 0x7C5FC5 },
+  { id: 'affinity_codex', icon: '', texKey: 'affinity_codex_btn', label: '友谊卡', event: 'affinityCodex:open', iconBg: 0xFFB1CC, labelColor: 0xC75D8B },
 ];
 
 /** 右侧 — 活动快捷按钮（签到/任务） */
 const RIGHT_BUTTONS: SideBtnDef[] = [
   { id: 'checkin', icon: '', texKey: 'icon_checkin', label: '签到', event: 'nav:openCheckIn', iconBg: 0xFFA726, labelColor: 0xD48B2E },
   { id: 'quest',   icon: '', texKey: 'icon_quest',   label: '任务', event: 'nav:openQuest',   iconBg: 0x42A5F5, labelColor: 0x1976D2 },
+];
+
+/** 左下折叠冷门功能区；当前先放「游戏圈」，后续可继续追加。 */
+const MISC_DRAWER_BUTTONS: MiscDrawerBtnDef[] = [
+  { id: 'invite_friend', label: '邀友', shortLabel: '邀', fill: 0xFFB347, stroke: 0xD48B2E },
+  { id: 'game_club', label: '游戏圈', shortLabel: '圈', fill: 0x8BCF63, stroke: 0x4D8F34 },
 ];
 
 export class ShopScene implements Scene {
@@ -205,6 +231,15 @@ export class ShopScene implements Scene {
 
   // ── 大地图（面板在 OverlayManager，此处仅入口按钮） ──
   private _worldMapBtn: PIXI.Container | null = null;
+  /** 左下隐藏功能条：收起竖签 + 展开横条 */
+  private _miscDrawerRoot: PIXI.Container | null = null;
+  private _miscDrawerTab: PIXI.Container | null = null;
+  private _miscDrawerArrow: PIXI.Graphics | null = null;
+  private _miscDrawerPanel: PIXI.Container | null = null;
+  private _miscDrawerExpanded = false;
+  private _miscDrawerButtons = new Map<string, PIXI.Container>();
+  /** 微信原生游戏圈按钮（透明热区，视觉仍由 Canvas 绘制） */
+  private _gameClubNativeBtn: any = null;
 
   // ── 教程引导 ──
   private _tutorialOverlay: TutorialOverlay | null = null;
@@ -248,6 +283,9 @@ export class ShopScene implements Scene {
 
   private readonly _onWorldMapSwitchScene = (sceneId: string): void => {
     CurrencyManager.setActiveRenovationScene(sceneId);
+    if (!this._isEditMode) {
+      this._enterEditMode();
+    }
   };
 
   /** 花店内升星：弹窗展示奖励；确定后货币飞顶栏、宝箱飞回「营业返回」钮再入库 */
@@ -403,6 +441,7 @@ export class ShopScene implements Scene {
     EventBus.off('renovation:sceneChanged', this._onRenovationSceneChanged);
     EventBus.off('worldmap:switchScene', this._onWorldMapSwitchScene);
     EventBus.off('scene:switchToShop', this._onSwitchToShopConsumePendingPlace);
+    this._destroyGameClubNativeButton();
     // 如果在编辑模式，退出时自动保存
     if (this._isEditMode) {
       this._exitEditMode();
@@ -460,6 +499,9 @@ export class ShopScene implements Scene {
 
     // ============== 7. 左下横排装修/装扮按钮（无遮罩，大图标） ==============
     this._buildDecoPairBtns();
+
+    // ============== 7b. 左下隐藏功能条（冷门功能折叠入口） ==============
+    this._buildMiscDrawer();
 
     // ============== 8. 右下角返回按钮（参考四季物语的大箭头） ==============
     this._buildReturnButton(w, h);
@@ -1223,6 +1265,25 @@ export class ShopScene implements Scene {
       const btn = this._createSideButton(def, cx, y, btnW, btnH);
       this.container.addChild(btn.container);
       this._activityBtns.set(def.id, btn);
+
+      // 友谊卡：6 级前隐藏，监听 level:up 解锁瞬间淡入显示
+      if (def.id === 'affinity_codex') {
+        const unlocked = AffinityManager.isCardSystemUnlocked();
+        btn.container.visible = unlocked;
+        btn.container.eventMode = unlocked ? 'static' : 'none';
+        if (!unlocked) {
+          const onLevelUp = (): void => {
+            if (AffinityManager.isCardSystemUnlocked()) {
+              btn.container.visible = true;
+              btn.container.eventMode = 'static';
+              btn.container.alpha = 0;
+              TweenManager.to({ target: btn.container, props: { alpha: 1 }, duration: 0.25, ease: Ease.easeOutQuad });
+              EventBus.off('level:up', onLevelUp);
+            }
+          };
+          EventBus.on('level:up', onLevelUp);
+        }
+      }
     }
   }
 
@@ -1242,6 +1303,338 @@ export class ShopScene implements Scene {
       this.container.addChild(btn.container);
       this._activityBtns.set(def.id, btn);
     }
+  }
+
+  private _buildMiscDrawer(): void {
+    const root = new PIXI.Container();
+    const drawerY = Game.logicHeight - MISC_DRAWER_Y_FROM_BOTTOM;
+
+    const tab = new PIXI.Container();
+    tab.position.set(18, drawerY);
+
+    const tabShadow = new PIXI.Graphics();
+    tabShadow.beginFill(0x7f6755, 0.18);
+    tabShadow.drawRoundedRect(2, 3, MISC_DRAWER_TAB_W, MISC_DRAWER_TAB_H, 12);
+    tabShadow.endFill();
+    tab.addChild(tabShadow);
+
+    const tabBg = new PIXI.Graphics();
+    tabBg.beginFill(0xfffbf3, 0.84);
+    tabBg.drawRoundedRect(0, 0, MISC_DRAWER_TAB_W, MISC_DRAWER_TAB_H, 12);
+    tabBg.endFill();
+    tabBg.lineStyle(2, 0xf0d4ab, 0.95);
+    tabBg.drawRoundedRect(0, 0, MISC_DRAWER_TAB_W, MISC_DRAWER_TAB_H, 12);
+    tab.addChild(tabBg);
+
+    this._miscDrawerArrow = new PIXI.Graphics();
+    this._miscDrawerArrow.lineStyle(3.2, 0x9b7653, 0.95, 0.5);
+    this._miscDrawerArrow.moveTo(-3, -7);
+    this._miscDrawerArrow.lineTo(5, 0);
+    this._miscDrawerArrow.lineTo(-3, 7);
+    this._miscDrawerArrow.position.set(MISC_DRAWER_TAB_W / 2 + 1, MISC_DRAWER_TAB_H / 2);
+    tab.addChild(this._miscDrawerArrow);
+
+    tab.eventMode = 'static';
+    tab.cursor = 'pointer';
+    tab.hitArea = new PIXI.Rectangle(-6, -6, MISC_DRAWER_TAB_W + 12, MISC_DRAWER_TAB_H + 12);
+    tab.on('pointerdown', () => {
+      TweenManager.cancelTarget(tab.scale);
+      tab.scale.set(0.92);
+      TweenManager.to({
+        target: tab.scale,
+        props: { x: 1, y: 1 },
+        duration: 0.2,
+        ease: Ease.easeOutBack,
+      });
+      this._toggleMiscDrawer();
+    });
+
+    const panel = new PIXI.Container();
+    panel.position.set(54, drawerY - 1);
+    panel.visible = false;
+    panel.alpha = 0;
+    panel.scale.set(0.94, 1);
+
+    const panelW = MISC_DRAWER_PANEL_SIDE_PAD * 2
+      + MISC_DRAWER_BUTTONS.length * MISC_DRAWER_ITEM_W
+      + Math.max(0, MISC_DRAWER_BUTTONS.length - 1) * MISC_DRAWER_ITEM_GAP;
+
+    const panelShadow = new PIXI.Graphics();
+    panelShadow.beginFill(0x7f6755, 0.16);
+    panelShadow.drawRoundedRect(2, 3, panelW, MISC_DRAWER_PANEL_H, 22);
+    panelShadow.endFill();
+    panel.addChild(panelShadow);
+
+    const panelBg = new PIXI.Graphics();
+    panelBg.beginFill(0xfffbf3, 0.78);
+    panelBg.drawRoundedRect(0, 0, panelW, MISC_DRAWER_PANEL_H, 22);
+    panelBg.endFill();
+    panelBg.lineStyle(2, 0xf2d6aa, 0.95);
+    panelBg.drawRoundedRect(0, 0, panelW, MISC_DRAWER_PANEL_H, 22);
+    panel.addChild(panelBg);
+
+    this._miscDrawerButtons.clear();
+    for (let i = 0; i < MISC_DRAWER_BUTTONS.length; i++) {
+      const def = MISC_DRAWER_BUTTONS[i];
+      const cx = MISC_DRAWER_PANEL_SIDE_PAD + i * (MISC_DRAWER_ITEM_W + MISC_DRAWER_ITEM_GAP) + MISC_DRAWER_ITEM_W / 2;
+      const btn = this._createMiscDrawerButton(def, cx, MISC_DRAWER_PANEL_H / 2);
+      panel.addChild(btn);
+      this._miscDrawerButtons.set(def.id, btn);
+    }
+
+    root.addChild(panel);
+    root.addChild(tab);
+    this.container.addChild(root);
+
+    this._miscDrawerRoot = root;
+    this._miscDrawerTab = tab;
+    this._miscDrawerPanel = panel;
+  }
+
+  private _createMiscDrawerButton(def: MiscDrawerBtnDef, cx: number, cy: number): PIXI.Container {
+    const btn = new PIXI.Container();
+    btn.position.set(cx, cy);
+
+    const cardW = 64;
+    const cardH = 58;
+    const iconR = 18;
+
+    const hoverBg = new PIXI.Graphics();
+    hoverBg.beginFill(0xffffff, 0.12);
+    hoverBg.drawRoundedRect(-cardW / 2, -cardH / 2, cardW, cardH, 18);
+    hoverBg.endFill();
+    btn.addChild(hoverBg);
+
+    const iconBg = new PIXI.Graphics();
+    iconBg.beginFill(def.fill, 1);
+    iconBg.drawCircle(0, -7, iconR + 3);
+    iconBg.endFill();
+    iconBg.lineStyle(2.5, def.stroke, 0.95);
+    iconBg.drawCircle(0, -7, iconR + 3);
+    iconBg.beginFill(0xffffff, 0.18);
+    iconBg.drawCircle(-6, -13, iconR - 6);
+    iconBg.endFill();
+    btn.addChild(iconBg);
+
+    const icon = new PIXI.Text(def.shortLabel, {
+      fontSize: 20,
+      fill: 0xffffff,
+      fontFamily: FONT_FAMILY,
+      fontWeight: 'bold',
+      stroke: def.stroke,
+      strokeThickness: 2.5,
+    });
+    icon.anchor.set(0.5);
+    icon.position.set(0, -7);
+    btn.addChild(icon);
+
+    const label = new PIXI.Text(def.label, {
+      fontSize: 13,
+      fill: 0x7b6250,
+      fontFamily: FONT_FAMILY,
+      fontWeight: 'bold',
+    });
+    label.anchor.set(0.5);
+    label.position.set(0, 18);
+    btn.addChild(label);
+
+    btn.eventMode = 'static';
+    btn.cursor = 'pointer';
+    btn.hitArea = new PIXI.RoundedRectangle(-cardW / 2, -cardH / 2, cardW, cardH, 18);
+    btn.on('pointerdown', () => {
+      TweenManager.cancelTarget(btn.scale);
+      btn.scale.set(0.9);
+      TweenManager.to({
+        target: btn.scale,
+        props: { x: 1, y: 1 },
+        duration: 0.22,
+        ease: Ease.easeOutBack,
+      });
+      this._handleMiscDrawerButtonTap(def.id);
+    });
+
+    return btn;
+  }
+
+  private _toggleMiscDrawer(nextExpanded = !this._miscDrawerExpanded): void {
+    if (!this._miscDrawerPanel || !this._miscDrawerArrow) return;
+    if (nextExpanded === this._miscDrawerExpanded && this._miscDrawerPanel.visible === nextExpanded) return;
+
+    this._miscDrawerExpanded = nextExpanded;
+    const panel = this._miscDrawerPanel;
+    const arrow = this._miscDrawerArrow;
+
+    TweenManager.cancelTarget(panel);
+    TweenManager.cancelTarget(panel.scale);
+    TweenManager.cancelTarget(arrow);
+
+    if (nextExpanded) {
+      panel.visible = true;
+      panel.eventMode = 'passive';
+      TweenManager.to({
+        target: panel,
+        props: { alpha: 1 },
+        duration: 0.18,
+        ease: Ease.easeOutQuad,
+      });
+      TweenManager.to({
+        target: panel.scale,
+        props: { x: 1, y: 1 },
+        duration: 0.22,
+        ease: Ease.easeOutBack,
+        onComplete: () => this._syncGameClubNativeButton(),
+      });
+    } else {
+      this._hideGameClubNativeButton();
+      panel.eventMode = 'none';
+      TweenManager.to({
+        target: panel,
+        props: { alpha: 0 },
+        duration: 0.16,
+        ease: Ease.easeOutQuad,
+        onComplete: () => {
+          if (!this._miscDrawerExpanded && this._miscDrawerPanel) {
+            this._miscDrawerPanel.visible = false;
+          }
+        },
+      });
+      TweenManager.to({
+        target: panel.scale,
+        props: { x: 0.94, y: 1 },
+        duration: 0.16,
+        ease: Ease.easeOutQuad,
+      });
+    }
+
+    TweenManager.to({
+      target: arrow,
+      props: { rotation: nextExpanded ? Math.PI : 0 },
+      duration: 0.2,
+      ease: Ease.easeOutQuad,
+    });
+  }
+
+  private _handleMiscDrawerButtonTap(id: string): void {
+    if (id === 'invite_friend') {
+      SocialManager.shareShop();
+      ToastMessage.show('已打开分享邀请');
+      return;
+    }
+
+    if (id !== 'game_club') return;
+
+    if (Platform.isWechat && this._gameClubNativeBtn) {
+      return;
+    }
+    ToastMessage.show(Platform.isWechat ? '当前环境暂不支持打开游戏圈' : '游戏圈仅支持微信小游戏');
+  }
+
+  private _syncGameClubCanvasButtonInteractivity(nativeVisible: boolean): void {
+    const target = this._miscDrawerButtons.get('game_club');
+    if (!target) return;
+    // 微信真机上由原生 GameClubButton 接管点击；Canvas 视觉层不能再吞事件。
+    target.eventMode = Platform.isWechat && nativeVisible ? 'none' : 'static';
+    target.cursor = Platform.isWechat && nativeVisible ? 'default' : 'pointer';
+  }
+
+  private _getGameClubNativeRectPx(): { left: number; top: number; width: number; height: number } | null {
+    const target = this._miscDrawerButtons.get('game_club');
+    if (!target) return null;
+    const lb = target.getLocalBounds();
+    const topLeft = target.toGlobal(new PIXI.Point(lb.x, lb.y));
+    const bottomRight = target.toGlobal(new PIXI.Point(lb.x + lb.width, lb.y + lb.height));
+    const left = topLeft.x / Game.dpr;
+    const top = topLeft.y / Game.dpr;
+    const width = (bottomRight.x - topLeft.x) / Game.dpr;
+    const height = (bottomRight.y - topLeft.y) / Game.dpr;
+    return {
+      left: Math.round(left),
+      top: Math.round(top),
+      width: Math.max(1, Math.round(width)),
+      height: Math.max(1, Math.round(height)),
+    };
+  }
+
+  private _ensureGameClubNativeButton(): void {
+    if (this._gameClubNativeBtn || !Platform.isWechat) return;
+    const rect = this._getGameClubNativeRectPx();
+    if (!rect) return;
+
+    const btn = Platform.createGameClubButton({
+      type: 'text',
+      text: '',
+      style: {
+        left: rect.left,
+        top: rect.top,
+        width: rect.width,
+        height: rect.height,
+        backgroundColor: 'rgba(0,0,0,0.01)',
+        color: 'rgba(0,0,0,0)',
+        borderColor: 'rgba(0,0,0,0)',
+        borderWidth: 0,
+        borderRadius: Math.round(rect.height / 2),
+        lineHeight: rect.height,
+        fontSize: 1,
+      },
+    });
+    if (!btn) return;
+    try { btn.hide?.(); } catch (_) {}
+    this._gameClubNativeBtn = btn;
+  }
+
+  private _hideGameClubNativeButton(): void {
+    if (!this._gameClubNativeBtn) return;
+    try { this._gameClubNativeBtn.hide?.(); } catch (_) {}
+    this._syncGameClubCanvasButtonInteractivity(false);
+  }
+
+  private _syncGameClubNativeButton(): void {
+    if (!Platform.isWechat) return;
+    this._ensureGameClubNativeButton();
+    if (!this._gameClubNativeBtn) {
+      this._syncGameClubCanvasButtonInteractivity(false);
+      return;
+    }
+
+    const shouldShow = !!this._miscDrawerRoot?.visible
+      && this._miscDrawerExpanded
+      && !this._isEditMode
+      && SceneManager.current?.name === 'shop';
+    if (!shouldShow) {
+      this._hideGameClubNativeButton();
+      return;
+    }
+
+    const rect = this._getGameClubNativeRectPx();
+    if (!rect) {
+      this._hideGameClubNativeButton();
+      return;
+    }
+    try {
+      if (this._gameClubNativeBtn.style) {
+        Object.assign(this._gameClubNativeBtn.style, {
+          left: rect.left,
+          top: rect.top,
+          width: rect.width,
+          height: rect.height,
+          borderRadius: Math.round(rect.height / 2),
+          lineHeight: rect.height,
+        });
+      }
+      this._gameClubNativeBtn.show?.();
+      this._syncGameClubCanvasButtonInteractivity(true);
+      console.log('[ShopScene] 游戏圈原生按钮 rect=', rect);
+    } catch (e) {
+      this._syncGameClubCanvasButtonInteractivity(false);
+      console.warn('[ShopScene] 游戏圈按钮位置同步失败:', e);
+    }
+  }
+
+  private _destroyGameClubNativeButton(): void {
+    if (!this._gameClubNativeBtn) return;
+    try { this._gameClubNativeBtn.destroy?.(); } catch (_) {}
+    this._gameClubNativeBtn = null;
+    this._syncGameClubCanvasButtonInteractivity(false);
   }
 
   /** 无遮罩底板的纯图标按钮（用于左下横排） */
@@ -1819,6 +2212,8 @@ export class ShopScene implements Scene {
     // 隐藏返回按钮和侧边按钮（编辑模式下不能退出场景）
     this._returnBtn.visible = false;
     if (this._worldMapBtn) this._worldMapBtn.visible = false;
+    this._toggleMiscDrawer(false);
+    if (this._miscDrawerRoot) this._miscDrawerRoot.visible = false;
     for (const { container } of this._activityBtns.values()) {
       container.visible = false;
     }
@@ -2027,6 +2422,8 @@ export class ShopScene implements Scene {
     // 恢复按钮显示
     this._returnBtn.visible = true;
     this._refreshWorldMapBtnVisibility();
+    if (this._miscDrawerRoot) this._miscDrawerRoot.visible = true;
+    this._syncGameClubNativeButton();
     for (const { container } of this._activityBtns.values()) {
       container.visible = true;
     }

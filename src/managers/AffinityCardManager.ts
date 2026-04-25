@@ -1,100 +1,100 @@
 /**
- * 熟客友谊卡 + 图鉴系统 — 管理器
+ * 友谊卡 + 图鉴 + 赛季 — 管理器（V2）
  *
  * 职责：
  *  - 维护每张卡的「拥有数」与「首次获得时间」
- *  - 维护每位熟客的「友谊点（碎片）」与抽卡保底计数
- *  - 提供 rollCardDrop(typeId, isExclusive) 给 AffinityManager 调用，决定本次交付掉几张卡 + 转换成多少 Bond 点
+ *  - 维护单客人保底计数
+ *  - 提供 rollCardDrop(typeId)：决定本次掉几张卡 + 重复卡直接派发奖励
+ *  - 维护「单客人里程碑」与「赛季全集」的领取状态，集齐瞬时结算
  *  - 提供 listCards / progress / isComplete 给 CodexPanel / CustomerProfilePanel
- *  - 提供 redeemPack / redeemBondPush 给 ShardShopPanel
- *  - 老存档迁移：检测到 huahua_affinity_cards 不存在但 huahua_affinity 存在时，按 LEGACY_BOND_TO_CARDS 回填
- *  - 存档 Key: huahua_affinity_cards；CloudSync allowlist 同步注册（CloudConfig.ts 同步追加）
+ *
+ * 存档 Key: huahua_affinity_cards；CloudSync allowlist 已注册。
  *
  * 事件：
  *  - 'affinityCard:dropped' (typeId, results: AffinityCardDropResult[])
  *  - 'affinityCard:obtained' (cardId, def, isFirstTime)
- *  - 'affinityCard:complete' (typeId)        — 该熟客全卡收齐
- *  - 'affinityCard:shardChanged' (typeId, oldVal, newVal)
- *
- * 与 AffinityManager 的桥接（P1 接入完成后）：
- *  - AffinityManager.onCustomerDelivered → 若 isAffinityCardSystemEnabled() → 调 rollCardDrop
- *    → 用返回的 addedBondPoints 累加到 AffinityEntryState.points
+ *  - 'affinityCard:milestone' (typeId, milestone, reward)  — 单客人里程碑达成
+ *  - 'affinityCard:complete' (typeId)                       — 该客人 12 张全收齐
+ *  - 'affinityCard:seasonComplete' (seasonId, reward)       — 整赛季全集
  */
 
 import { EventBus } from '@/core/EventBus';
 import { PersistService } from '@/core/PersistService';
-import { isAffinityCardSystemEnabled } from '@/config/AffinityFeatureFlags';
+import { CurrencyManager } from './CurrencyManager';
+import { DecorationManager } from './DecorationManager';
+import { FlowerSignTicketManager } from './FlowerSignTicketManager';
+import { CheckInManager } from './CheckInManager';
+import { grantQuest } from '@/utils/UnlockChecker';
 import {
   AFFINITY_CARDS,
   AFFINITY_CARD_MAP,
   CARD_DROP_BASE_CHANCE,
-  CARD_DROP_EXCLUSIVE_CHANCE,
-  CARD_DROP_EXCLUSIVE_RARITY_BUMP,
-  CARD_DROP_EXCLUSIVE_SECOND_CHANCE,
+  CARD_DROP_DAILY_LIMIT,
   CARD_RARITIES,
-  CARD_RARITY_POINTS,
-  LEGACY_BOND_TO_CARDS,
+  CURRENT_SEASON,
+  CUSTOMER_MILESTONE_REWARDS,
+  DUPLICATE_REWARDS,
   PITY_TO_SR_THRESHOLD,
   PITY_TO_SSR_THRESHOLD,
-  SHARD_BOND_PUSH_COST,
-  SHARD_PACK_COSTS,
-  SHARD_PER_DUP,
   bumpRarity,
   getCardsByOwner,
   getCardsByOwnerAndRarity,
+  getCustomerMilestones,
   hasCardsForOwner,
   rollRarityByWeights,
   type AffinityCardDef,
   type CardRarity,
+  type CardReward,
+  type CustomerMilestone,
 } from '@/config/AffinityCardConfig';
-import { BOND_THRESHOLDS, type BondLevel } from '@/config/AffinityConfig';
 
 const STORAGE_KEY = 'huahua_affinity_cards';
-const LEGACY_AFFINITY_KEY = 'huahua_affinity';
 
 /** 单卡持有状态 */
 export interface CardOwnedState {
-  /** 拥有数（≥1 表示已得；首张算非重复，>1 视后续为重复 → 转碎片） */
   count: number;
-  /** 首次获得时间戳（ms） */
   firstObtainedAt: number;
 }
 
-/** 单熟客的卡片状态 */
 export interface OwnerCardState {
   typeId: string;
   /** cardId → ownedState；只记录已得卡 */
   owned: Record<string, CardOwnedState>;
-  /** 友谊点（重复卡转化） */
-  shards: number;
-  /** 自上次出 SR/SSR 起累计抽卡次数（保底用） */
+  /** 已结算过的里程碑 threshold（避免重复发奖） */
+  claimedMilestones: number[];
+  /** 自上次出 SR/SSR 起累计抽卡次数（保底） */
   pityToSr: number;
-  /** 自上次出 SSR 起累计抽卡次数（保底用） */
+  /** 自上次出 SSR 起累计抽卡次数（保底） */
   pityToSsr: number;
 }
 
 interface PersistState {
-  v: 1;
+  v: 3;
   owners: OwnerCardState[];
-  /** 老存档迁移已完成的标记（避免反复回填） */
-  legacyMigrated: boolean;
+  /** 已领取的赛季全集大奖（seasonId 列表） */
+  claimedSeasonGrand: string[];
+  /** 当日掉卡计数所属日期（YYYY-MM-DD），与签到/每日糖一致 */
+  dailyDropDate: string;
+  /** 当日已掉落的卡张数（用于 CARD_DROP_DAILY_LIMIT 判断） */
+  dailyDropCount: number;
 }
 
 /** 单次掉卡结果 */
 export interface AffinityCardDropResult {
   card: AffinityCardDef;
-  /** 是否本次为重复（已拥有过） */
   isDuplicate: boolean;
-  /** 重复时给的碎片数 */
-  shardGain: number;
-  /** 非重复时计入 Bond 的积分；重复时为 0 */
-  bondPoints: number;
+  /** 重复卡时直接派发的奖励（已结算到玩家账户） */
+  duplicateReward?: CardReward;
 }
 
 class AffinityCardManagerClass {
   private _owners = new Map<string, OwnerCardState>();
+  private _claimedSeasonGrand = new Set<string>();
   private _initialized = false;
-  private _legacyMigrated = false;
+  /** 当日掉卡计数所属日期（YYYY-MM-DD） */
+  private _dailyDropDate = '';
+  /** 当日已掉落的卡张数 */
+  private _dailyDropCount = 0;
 
   // ============================================================
   // 生命周期
@@ -105,10 +105,8 @@ class AffinityCardManagerClass {
     this._initialized = true;
     this._loadState();
     this._ensureOwnersForAllAffinityTypes();
-    this._maybeMigrateFromLegacyAffinity();
   }
 
-  /** 给所有有卡定义的熟客建空 OwnerCardState（首次进入时） */
   private _ensureOwnersForAllAffinityTypes(): void {
     for (const card of AFFINITY_CARDS) {
       if (!this._owners.has(card.ownerTypeId)) {
@@ -121,7 +119,7 @@ class AffinityCardManagerClass {
     return {
       typeId,
       owned: {},
-      shards: 0,
+      claimedMilestones: [],
       pityToSr: 0,
       pityToSsr: 0,
     };
@@ -132,80 +130,76 @@ class AffinityCardManagerClass {
   // ============================================================
 
   /**
-   * 一次该熟客订单交付的"掉卡 + Bond 积分计算"
-   *  - FF 关闭时返回空结果（不影响兼容路径）
-   *  - 没有该客人卡定义时返回空结果
-   *  - 否则按规则掉 0~2 张卡，每张要么"非重复→bondPoints>0"，要么"重复→shardGain>0"
+   * 一次该熟客普通订单交付的"掉卡 + 即时奖励派发"
+   *  - 玩家等级未达 / 该客人无卡定义：返回空结果
+   *  - 否则按规则掉 0~1 张卡：新卡入图鉴；重复卡直接发花愿/钻石/体力
+   *  - 同时检查「单客人里程碑」与「赛季全集」
    */
-  rollCardDrop(typeId: string, isExclusive: boolean): {
+  rollCardDrop(typeId: string): {
     droppedCards: AffinityCardDropResult[];
-    addedBondPoints: number;
   } {
-    if (!isAffinityCardSystemEnabled()) {
-      return { droppedCards: [], addedBondPoints: 0 };
-    }
     if (!hasCardsForOwner(typeId)) {
-      return { droppedCards: [], addedBondPoints: 0 };
+      return { droppedCards: [] };
     }
+
+    this._rolloverDailyIfNeeded();
 
     const owner = this._owners.get(typeId) ?? this._defaultOwner(typeId);
     this._owners.set(typeId, owner);
 
-    const baseChance = isExclusive ? CARD_DROP_EXCLUSIVE_CHANCE : CARD_DROP_BASE_CHANCE;
-    if (Math.random() >= baseChance) {
-      // 不掉卡：仍推进保底（保持节奏感，否则极脸黑）
+    // 当日已达上限：不掉卡、不动保底，给玩家一个明确的"惊喜节奏"上限
+    if (this._dailyDropCount >= CARD_DROP_DAILY_LIMIT) {
+      return { droppedCards: [] };
+    }
+
+    if (Math.random() >= CARD_DROP_BASE_CHANCE) {
+      // 不掉卡：仍推进保底（保持节奏感，避免极脸黑）
       owner.pityToSr += 1;
       owner.pityToSsr += 1;
       this._saveState();
-      return { droppedCards: [], addedBondPoints: 0 };
+      return { droppedCards: [] };
     }
 
+    const remaining = CARD_DROP_DAILY_LIMIT - this._dailyDropCount;
     const results: AffinityCardDropResult[] = [];
-    const first = this._rollOneCard(owner, isExclusive);
+    const first = this._rollOneCard(owner);
     if (first) results.push(first);
 
-    // 专属订单二张卡触发
-    if (isExclusive && first && Math.random() < CARD_DROP_EXCLUSIVE_SECOND_CHANCE) {
-      const second = this._rollOneCard(owner, isExclusive);
-      if (second) results.push(second);
-    }
-
-    let addedBondPoints = 0;
-    for (const r of results) addedBondPoints += r.bondPoints;
+    // 截断到当日剩余额度（理论上 remaining ≥ 1，第二张会被 if 卡掉）
+    if (results.length > remaining) results.length = remaining;
+    this._dailyDropCount += results.length;
 
     if (results.length > 0) {
       EventBus.emit('affinityCard:dropped', typeId, results);
-      // 单卡事件：用于触发图鉴小红点 / 复用其他订阅
       for (const r of results) {
         if (!r.isDuplicate) {
           EventBus.emit('affinityCard:obtained', r.card.id, r.card, true);
         }
       }
-      // 如果该客人因这次抽卡而集齐
+      // 里程碑（按从低到高发奖，可一次跨多档）
+      this._maybeGrantMilestones(typeId);
+      // 单客人 12/12 完成
       if (this.isComplete(typeId)) {
         EventBus.emit('affinityCard:complete', typeId);
+        this._maybeGrantSeasonGrand();
       }
     }
 
     this._saveState();
-    return { droppedCards: results, addedBondPoints };
+    return { droppedCards: results };
   }
 
   /** 抽一张卡（更新 owner 的 pity 与 owned 状态；返回结果或 null） */
-  private _rollOneCard(owner: OwnerCardState, isExclusive: boolean): AffinityCardDropResult | null {
+  private _rollOneCard(owner: OwnerCardState): AffinityCardDropResult | null {
     let rarity = rollRarityByWeights();
-    if (isExclusive) rarity = bumpRarity(rarity, CARD_DROP_EXCLUSIVE_RARITY_BUMP);
 
-    // 保底覆盖
     if (rarity === 'N' || rarity === 'R') {
       if (owner.pityToSsr + 1 >= PITY_TO_SSR_THRESHOLD) rarity = 'SSR';
       else if (owner.pityToSr + 1 >= PITY_TO_SR_THRESHOLD) rarity = 'SR';
     }
 
-    // 在该客人 + 该稀有度的卡池里挑
     const pool = getCardsByOwnerAndRarity(owner.typeId, rarity);
     if (pool.length === 0) {
-      // 该稀有度暂无配置（如 SSR 全空）→ 降一档
       const fallback = bumpRarity(rarity, -1);
       const fbPool = getCardsByOwnerAndRarity(owner.typeId, fallback);
       if (fbPool.length === 0) return null;
@@ -214,7 +208,7 @@ class AffinityCardManagerClass {
     return this._pickAndCommitFromPool(owner, pool, rarity);
   }
 
-  /** 优先未得卡：随机；全得：随机重复 */
+  /** 优先未得卡：随机；全得：随机重复（重复立即派发奖励） */
   private _pickAndCommitFromPool(
     owner: OwnerCardState,
     pool: AffinityCardDef[],
@@ -228,26 +222,87 @@ class AffinityCardManagerClass {
 
     if (isDup) {
       owner.owned[target.id]!.count += 1;
-      const shardGain = SHARD_PER_DUP[rarity];
-      const oldShards = owner.shards;
-      owner.shards += shardGain;
-      EventBus.emit('affinityCard:shardChanged', owner.typeId, oldShards, owner.shards);
-      // 重复卡不冲保底（保底算的是"翻不到"的次数）
-      return { card: target, isDuplicate: true, shardGain, bondPoints: 0 };
+      const reward = DUPLICATE_REWARDS[rarity];
+      this._grantReward(reward);
+      // 重复卡不冲保底（保底算"翻不到"次数）
+      return { card: target, isDuplicate: true, duplicateReward: { ...reward } };
     }
 
     owner.owned[target.id] = { count: 1, firstObtainedAt: Date.now() };
-    // 重置保底
     if (rarity === 'SR' || rarity === 'SSR') owner.pityToSr = 0;
     if (rarity === 'SSR') owner.pityToSsr = 0;
     if (rarity !== 'SR' && rarity !== 'SSR') owner.pityToSr += 1;
     if (rarity !== 'SSR') owner.pityToSsr += 1;
-    return {
-      card: target,
-      isDuplicate: false,
-      shardGain: 0,
-      bondPoints: CARD_RARITY_POINTS[rarity],
-    };
+    return { card: target, isDuplicate: false };
+  }
+
+  // ============================================================
+  // 里程碑
+  // ============================================================
+
+  /** 检查并发放该客人当前可领的所有里程碑 */
+  private _maybeGrantMilestones(typeId: string): void {
+    const owner = this._owners.get(typeId);
+    if (!owner) return;
+    const milestones = getCustomerMilestones(typeId);
+    if (milestones.length === 0) return;
+    const obtained = Object.keys(owner.owned).length;
+    const sorted = [...milestones].sort((a, b) => a.threshold - b.threshold);
+    for (const m of sorted) {
+      if (owner.claimedMilestones.includes(m.threshold)) continue;
+      if (obtained < m.threshold) continue;
+      this._grantMilestone(typeId, m);
+      owner.claimedMilestones.push(m.threshold);
+    }
+  }
+
+  private _grantMilestone(typeId: string, m: CustomerMilestone): void {
+    this._grantReward(m.reward);
+    if (m.decoUnlockId) {
+      // 复用旧 questId 命名让 grantQuest 链路无缝；UnlockRequirement 文案已改图鉴口径。
+      grantQuest(`affinity_${typeId}_codex_full`);
+      DecorationManager.gmUnlockDeco(m.decoUnlockId);
+    }
+    EventBus.emit('affinityCard:milestone', typeId, m, m.reward);
+    console.log(`[AffinityCard] ${typeId} 里程碑 ${m.threshold}/12 达成: ${m.title}`);
+  }
+
+  private _grantReward(r: CardReward): void {
+    if (r.huayuan) CurrencyManager.addHuayuan(r.huayuan);
+    if (r.diamond) CurrencyManager.addDiamond(r.diamond);
+    if (r.stamina) CurrencyManager.addStamina(r.stamina);
+    if (r.flowerSignTickets) FlowerSignTicketManager.add(r.flowerSignTickets);
+  }
+
+  /** 检查赛季全集大奖（CURRENT_SEASON.ownerTypeIds 全员 100%） */
+  private _maybeGrantSeasonGrand(): void {
+    const season = CURRENT_SEASON;
+    if (this._claimedSeasonGrand.has(season.id)) return;
+    for (const tid of season.ownerTypeIds) {
+      if (!this.isComplete(tid)) return;
+    }
+    this._claimedSeasonGrand.add(season.id);
+    this._grantReward(season.grandReward);
+    if (season.grandReward.decoUnlockId) {
+      grantQuest(`affinity_season_${season.id}_complete`);
+      DecorationManager.gmUnlockDeco(season.grandReward.decoUnlockId);
+    }
+    EventBus.emit('affinityCard:seasonComplete', season.id, season.grandReward);
+    console.log(`[AffinityCard] 赛季 ${season.id} 100% 全集达成！`);
+  }
+
+  /** 单客人「该订单永久花愿倍率」（来自 100% 集齐里程碑） */
+  huayuanMultFor(typeId: string): number {
+    const owner = this._owners.get(typeId);
+    if (!owner) return 1;
+    const milestones = getCustomerMilestones(typeId);
+    let mult = 1;
+    for (const m of milestones) {
+      if (m.permanentHuayuanMult && owner.claimedMilestones.includes(m.threshold)) {
+        mult = Math.max(mult, m.permanentHuayuanMult);
+      }
+    }
+    return mult;
   }
 
   // ============================================================
@@ -261,7 +316,6 @@ class AffinityCardManagerClass {
     return !!owner && !!owner.owned[cardId];
   }
 
-  /** 单张卡的拥有数（含重复） */
   countOf(cardId: string): number {
     const def = AFFINITY_CARD_MAP.get(cardId);
     if (!def) return 0;
@@ -269,7 +323,6 @@ class AffinityCardManagerClass {
     return owner?.owned[cardId]?.count ?? 0;
   }
 
-  /** 该熟客的全部卡（按稀有度 N→SSR 再按 id 排） */
   listCards(typeId: string): Array<AffinityCardDef & {
     obtained: boolean;
     obtainedAt?: number;
@@ -292,7 +345,6 @@ class AffinityCardManagerClass {
     });
   }
 
-  /** 该熟客收集进度概览 */
   progress(typeId: string): {
     obtained: number;
     total: number;
@@ -325,140 +377,46 @@ class AffinityCardManagerClass {
     return true;
   }
 
-  /** 友谊点 */
-  getShards(typeId: string): number {
-    return this._owners.get(typeId)?.shards ?? 0;
+  /** 单客人里程碑列表 + 是否已领 */
+  milestonesOf(typeId: string): Array<CustomerMilestone & { claimed: boolean }> {
+    const owner = this._owners.get(typeId);
+    return getCustomerMilestones(typeId).map(m => ({
+      ...m,
+      claimed: !!owner && owner.claimedMilestones.includes(m.threshold),
+    }));
   }
 
-  spendShards(typeId: string, amount: number): boolean {
-    const o = this._owners.get(typeId);
-    if (!o || o.shards < amount) return false;
-    const oldShards = o.shards;
-    o.shards -= amount;
-    EventBus.emit('affinityCard:shardChanged', typeId, oldShards, o.shards);
-    this._saveState();
-    return true;
+  /** 当前赛季是否已 100% 全集 */
+  isSeasonComplete(seasonId: string = CURRENT_SEASON.id): boolean {
+    return this._claimedSeasonGrand.has(seasonId);
   }
 
-  // ============================================================
-  // 友谊点商店
-  // ============================================================
-
-  /**
-   * 用碎片买"必出指定稀有度"卡包：从该客人未得卡里抽；全得则降级为重复（按 SHARD_PER_DUP 双倍补偿）
-   * 返回掉卡结果或 null（碎片不够 / 该熟客无卡）
-   */
-  redeemPack(typeId: string, rarity: CardRarity): AffinityCardDropResult | null {
-    if (!hasCardsForOwner(typeId)) return null;
-    const cost = SHARD_PACK_COSTS[rarity];
-    const o = this._owners.get(typeId) ?? this._defaultOwner(typeId);
-    this._owners.set(typeId, o);
-    if (o.shards < cost) return null;
-
-    const pool = getCardsByOwnerAndRarity(typeId, rarity);
-    if (pool.length === 0) return null;
-
-    const oldShards = o.shards;
-    o.shards -= cost;
-    EventBus.emit('affinityCard:shardChanged', typeId, oldShards, o.shards);
-
-    const result = this._pickAndCommitFromPool(o, pool, rarity);
-    // 重复时双倍碎片补偿（让花高额碎片买重复卡的玩家不至于太亏）
-    if (result.isDuplicate) {
-      const oldS2 = o.shards;
-      const bonus = SHARD_PER_DUP[rarity];
-      o.shards += bonus;
-      result.shardGain += bonus;
-      EventBus.emit('affinityCard:shardChanged', typeId, oldS2, o.shards);
-    }
-
-    EventBus.emit('affinityCard:dropped', typeId, [result]);
-    if (!result.isDuplicate) {
-      EventBus.emit('affinityCard:obtained', result.card.id, result.card, true);
-      if (this.isComplete(typeId)) EventBus.emit('affinityCard:complete', typeId);
-    }
-    this._saveState();
-    return result;
+  /** 当日已掉张数 / 上限（UI / Codex 角标可显示"今日已 X/N"） */
+  todayDropQuota(): { used: number; limit: number; remaining: number } {
+    this._rolloverDailyIfNeeded();
+    const limit = CARD_DROP_DAILY_LIMIT;
+    const used = Math.min(this._dailyDropCount, limit);
+    return { used, limit, remaining: Math.max(0, limit - used) };
   }
 
-  /**
-   * 用碎片买 Bond 直升 1 等（仅 Lv1~4 可买）。
-   * 返回是否成功。Bond 推进通过 EventBus 通知 AffinityManager 处理（弱耦合）。
-   */
-  redeemBondPush(typeId: string): boolean {
-    const o = this._owners.get(typeId);
-    if (!o || o.shards < SHARD_BOND_PUSH_COST) return false;
-    const oldShards = o.shards;
-    o.shards -= SHARD_BOND_PUSH_COST;
-    EventBus.emit('affinityCard:shardChanged', typeId, oldShards, o.shards);
-    EventBus.emit('affinityCard:requestBondPush', typeId);
-    this._saveState();
-    return true;
-  }
-
-  // ============================================================
-  // 老存档迁移
-  // ============================================================
-
-  /**
-   * 检测到本系统首次启用且老 Affinity 存档已存在时，按当前 Bond 等级回填若干 N/R/SR 卡。
-   * 不补发任何奖励，仅让图鉴看起来不空。
-   */
-  private _maybeMigrateFromLegacyAffinity(): void {
-    if (this._legacyMigrated) return;
-    const legacyRaw = PersistService.readRaw(LEGACY_AFFINITY_KEY);
-    if (!legacyRaw) {
-      this._legacyMigrated = true;
-      this._saveState();
-      return;
+  /** 全部熟客的总进度（首页徽章 / 小红点） */
+  totalProgress(): { obtained: number; total: number } {
+    let obtained = 0, total = 0;
+    for (const o of this._owners.values()) {
+      const cards = getCardsByOwner(o.typeId);
+      total += cards.length;
+      for (const c of cards) {
+        if (o.owned[c.id]) obtained += 1;
+      }
     }
-    let legacy: { entries?: Array<{ typeId: string; unlocked: boolean; bond: number }> };
-    try {
-      legacy = JSON.parse(legacyRaw);
-    } catch {
-      this._legacyMigrated = true;
-      this._saveState();
-      return;
-    }
-    const entries = legacy.entries ?? [];
-    let touched = 0;
-    for (const e of entries) {
-      if (!e?.typeId || !e.unlocked) continue;
-      const bond = Math.max(1, Math.min(5, Math.floor(e.bond))) as BondLevel;
-      const quota = LEGACY_BOND_TO_CARDS[bond];
-      if (!quota) continue;
-      if (!hasCardsForOwner(e.typeId)) continue;
-      const owner = this._owners.get(e.typeId) ?? this._defaultOwner(e.typeId);
-      this._owners.set(e.typeId, owner);
-
-      const grantInRarity = (rarity: CardRarity, n: number): void => {
-        if (n <= 0) return;
-        const pool = getCardsByOwnerAndRarity(e.typeId, rarity).filter(c => !owner.owned[c.id]);
-        const shuffled = [...pool].sort(() => Math.random() - 0.5);
-        for (let i = 0; i < Math.min(n, shuffled.length); i++) {
-          const c = shuffled[i]!;
-          owner.owned[c.id] = { count: 1, firstObtainedAt: Date.now() };
-          touched += 1;
-        }
-      };
-      grantInRarity('N', quota.N);
-      grantInRarity('R', quota.R);
-      grantInRarity('SR', quota.SR);
-
-      console.log(`[AffinityCardMigration] ${e.typeId} Bond${bond} → 已回填 N/R/SR=${quota.N}/${quota.R}/${quota.SR}`);
-    }
-    this._legacyMigrated = true;
-    this._saveState();
-    if (touched > 0) {
-      console.log(`[AffinityCardMigration] 共回填 ${touched} 张卡（图鉴展示用，不补发奖励）`);
-    }
+    return { obtained, total };
   }
 
   // ============================================================
   // GM
   // ============================================================
 
-  /** GM：直发指定卡（无视稀有度池逻辑，主要用于演示 SSR 翻牌动画） */
+  /** GM：直发指定卡 */
   gmGrantCard(cardId: string): void {
     const def = AFFINITY_CARD_MAP.get(cardId);
     if (!def) return;
@@ -467,18 +425,20 @@ class AffinityCardManagerClass {
     const isDup = !!o.owned[cardId];
     if (isDup) {
       o.owned[cardId]!.count += 1;
-      const shardGain = SHARD_PER_DUP[def.rarity];
-      const oldShards = o.shards;
-      o.shards += shardGain;
-      EventBus.emit('affinityCard:shardChanged', def.ownerTypeId, oldShards, o.shards);
-      const result: AffinityCardDropResult = { card: def, isDuplicate: true, shardGain, bondPoints: 0 };
+      const reward = DUPLICATE_REWARDS[def.rarity];
+      this._grantReward(reward);
+      const result: AffinityCardDropResult = { card: def, isDuplicate: true, duplicateReward: { ...reward } };
       EventBus.emit('affinityCard:dropped', def.ownerTypeId, [result]);
     } else {
       o.owned[cardId] = { count: 1, firstObtainedAt: Date.now() };
-      const result: AffinityCardDropResult = { card: def, isDuplicate: false, shardGain: 0, bondPoints: CARD_RARITY_POINTS[def.rarity] };
+      const result: AffinityCardDropResult = { card: def, isDuplicate: false };
       EventBus.emit('affinityCard:dropped', def.ownerTypeId, [result]);
       EventBus.emit('affinityCard:obtained', cardId, def, true);
-      if (this.isComplete(def.ownerTypeId)) EventBus.emit('affinityCard:complete', def.ownerTypeId);
+      this._maybeGrantMilestones(def.ownerTypeId);
+      if (this.isComplete(def.ownerTypeId)) {
+        EventBus.emit('affinityCard:complete', def.ownerTypeId);
+        this._maybeGrantSeasonGrand();
+      }
     }
     this._saveState();
   }
@@ -495,17 +455,17 @@ class AffinityCardManagerClass {
         EventBus.emit('affinityCard:obtained', c.id, c, true);
       }
     }
-    if (this.isComplete(typeId)) EventBus.emit('affinityCard:complete', typeId);
+    this._maybeGrantMilestones(typeId);
+    if (this.isComplete(typeId)) {
+      EventBus.emit('affinityCard:complete', typeId);
+      this._maybeGrantSeasonGrand();
+    }
     this._saveState();
   }
 
   /** GM：模拟一次掉卡（不消耗订单） */
-  gmSimulateDrop(typeId: string, isExclusive = false): void {
-    if (!isAffinityCardSystemEnabled()) {
-      console.warn('[AffinityCardManager] cardSystem flag 关闭中，gm 模拟掉卡不会发事件');
-      return;
-    }
-    this.rollCardDrop(typeId, isExclusive);
+  gmSimulateDrop(typeId: string): void {
+    this.rollCardDrop(typeId);
   }
 
   /** GM：清空所有进度 */
@@ -513,33 +473,55 @@ class AffinityCardManagerClass {
     for (const id of this._owners.keys()) {
       this._owners.set(id, this._defaultOwner(id));
     }
-    this._legacyMigrated = false;
+    this._claimedSeasonGrand.clear();
+    this._dailyDropDate = '';
+    this._dailyDropCount = 0;
     this._saveState();
   }
 
-  // 便利：所有客人的总进度（首页徽章/小红点）
-  totalProgress(): { obtained: number; total: number } {
-    let obtained = 0, total = 0;
-    for (const o of this._owners.values()) {
-      const cards = getCardsByOwner(o.typeId);
-      total += cards.length;
-      for (const c of cards) {
-        if (o.owned[c.id]) obtained += 1;
-      }
-    }
-    return { obtained, total };
+  /** GM：把今日掉卡额度刷回 0（用于本地测试，不动卡册进度） */
+  gmResetDailyQuota(): void {
+    this._dailyDropDate = this._todayKey();
+    this._dailyDropCount = 0;
+    this._saveState();
   }
 
-  /** 调试快照 */
-  dump(): { owners: OwnerCardState[]; rarities: typeof CARD_RARITIES } {
+  dump(): {
+    owners: OwnerCardState[];
+    rarities: typeof CARD_RARITIES;
+    claimedSeasons: string[];
+    dailyQuota: { date: string; used: number; limit: number };
+  } {
     return {
       owners: Array.from(this._owners.values()).map(o => ({ ...o, owned: { ...o.owned } })),
       rarities: CARD_RARITIES,
+      claimedSeasons: Array.from(this._claimedSeasonGrand),
+      dailyQuota: {
+        date: this._dailyDropDate,
+        used: this._dailyDropCount,
+        limit: CARD_DROP_DAILY_LIMIT,
+      },
     };
   }
 
-  // 引用避免 unused
-  static _BOND_THRESHOLDS_REF = BOND_THRESHOLDS;
+  // ============================================================
+  // 每日额度
+  // ============================================================
+
+  private _todayKey(): string {
+    // 与 CheckInManager._getTodayStr / DailyCandyManager._todayKey 一致
+    const d = new Date();
+    d.setUTCDate(d.getUTCDate() + (CheckInManager.gmDateOffsetDays ?? 0));
+    return d.toISOString().slice(0, 10);
+  }
+
+  private _rolloverDailyIfNeeded(): void {
+    const today = this._todayKey();
+    if (this._dailyDropDate !== today) {
+      this._dailyDropDate = today;
+      this._dailyDropCount = 0;
+    }
+  }
 
   // ============================================================
   // 存档
@@ -548,15 +530,17 @@ class AffinityCardManagerClass {
   private _saveState(): void {
     try {
       const data: PersistState = {
-        v: 1,
+        v: 3,
         owners: Array.from(this._owners.values()).map(o => ({
           typeId: o.typeId,
           owned: { ...o.owned },
-          shards: o.shards,
+          claimedMilestones: [...o.claimedMilestones],
           pityToSr: o.pityToSr,
           pityToSsr: o.pityToSsr,
         })),
-        legacyMigrated: this._legacyMigrated,
+        claimedSeasonGrand: Array.from(this._claimedSeasonGrand),
+        dailyDropDate: this._dailyDropDate,
+        dailyDropCount: this._dailyDropCount,
       };
       PersistService.writeRaw(STORAGE_KEY, JSON.stringify(data));
     } catch (e) {
@@ -569,7 +553,6 @@ class AffinityCardManagerClass {
       const raw = PersistService.readRaw(STORAGE_KEY);
       if (!raw) return;
       const data = JSON.parse(raw) as Partial<PersistState>;
-      this._legacyMigrated = !!data?.legacyMigrated;
       if (Array.isArray(data?.owners)) {
         for (const o of data.owners) {
           if (!o || typeof o.typeId !== 'string') continue;
@@ -582,15 +565,32 @@ class AffinityCardManagerClass {
               owned[cid] = { count: cnt, firstObtainedAt: ts };
             }
           }
+          const claimedMs = Array.isArray(o.claimedMilestones)
+            ? o.claimedMilestones.filter((n): n is number => typeof n === 'number' && n > 0)
+            : [];
           this._owners.set(o.typeId, {
             typeId: o.typeId,
             owned,
-            shards: Math.max(0, Math.floor(o.shards ?? 0)),
+            claimedMilestones: claimedMs,
             pityToSr: Math.max(0, Math.floor(o.pityToSr ?? 0)),
             pityToSsr: Math.max(0, Math.floor(o.pityToSsr ?? 0)),
           });
         }
       }
+      if (Array.isArray(data?.claimedSeasonGrand)) {
+        for (const sid of data.claimedSeasonGrand) {
+          if (typeof sid === 'string') this._claimedSeasonGrand.add(sid);
+        }
+      }
+      // v3 起：每日掉卡额度。旧档无该字段→今天从 0 开始。
+      if (typeof data?.dailyDropDate === 'string') {
+        this._dailyDropDate = data.dailyDropDate;
+      }
+      if (typeof data?.dailyDropCount === 'number' && data.dailyDropCount >= 0) {
+        this._dailyDropCount = Math.floor(data.dailyDropCount);
+      }
+      // 跨日加载兜底（一启动就是新一天）
+      this._rolloverDailyIfNeeded();
     } catch (e) {
       console.warn('[AffinityCardManager] 读档失败:', e);
     }

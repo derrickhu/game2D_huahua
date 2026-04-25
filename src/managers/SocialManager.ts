@@ -13,8 +13,15 @@
 import { EventBus } from '@/core/EventBus';
 import { Platform } from '@/core/PlatformService';
 import { PersistService } from '@/core/PersistService';
+import {
+  createDefaultShare,
+  createFlowerCardShare,
+  createGiftStaminaShare,
+  createShopInviteShare,
+} from '@/config/ShareConfig';
 import { CurrencyManager } from './CurrencyManager';
 import { CollectionManager } from './CollectionManager';
+import type { FlowerCard } from './FlowerCardManager';
 
 const STORAGE_KEY = 'huahua_social';
 
@@ -70,24 +77,25 @@ class SocialManagerClass {
 
   /** 注册分享菜单 */
   private _setupShareMenu(): void {
-    Platform.onShareAppMessage(() => ({
-      title: ' 来看看我的花花妙屋！每朵花都有一段美丽的故事~',
-      query: `invite=true&level=${CurrencyManager.state.level}`,
-    }));
+    Platform.onShareAppMessage(() => createDefaultShare(
+      CurrencyManager.state.level,
+      CollectionManager.totalDiscovered,
+    ));
 
-    Platform.onShareTimeline(() => ({
-      title: `花花妙屋 Lv.${CurrencyManager.state.level} | 已收集 ${CollectionManager.totalDiscovered} 种花草 `,
-    }));
+    Platform.onShareTimeline(() => {
+      const share = createDefaultShare(CurrencyManager.state.level, CollectionManager.totalDiscovered);
+      return {
+        title: `花花妙屋 Lv.${CurrencyManager.state.level} | 已收集 ${CollectionManager.totalDiscovered} 种花草 `,
+        imageUrl: share.imageUrl,
+      };
+    });
   }
 
   // ═══════════════ 分享 ═══════════════
 
   /** 分享花店 */
   shareShop(): void {
-    Platform.shareAppMessage({
-      title: ` 花花妙屋 Lv.${CurrencyManager.state.level}，快来看看~`,
-      query: `visit=true&level=${CurrencyManager.state.level}`,
-    });
+    Platform.shareAppMessage(createShopInviteShare(CurrencyManager.state.level));
     this._totalShares++;
     this._lastShareTime = Date.now();
     this._saveState();
@@ -103,11 +111,8 @@ class SocialManagerClass {
   }
 
   /** 分享花语卡片 */
-  shareFlowerCard(cardId: string, cardName: string, quote: string): void {
-    Platform.shareAppMessage({
-      title: ` ${cardName} —— ${quote}`,
-      query: `card=${cardId}`,
-    });
+  shareFlowerCard(card: FlowerCard): void {
+    Platform.shareAppMessage(createFlowerCardShare(card));
     this._totalShares++;
     this._saveState();
     EventBus.emit('social:shared', 'flowerCard');
@@ -130,10 +135,7 @@ class SocialManagerClass {
     this._saveState();
 
     // 发送给好友（通过分享/社交关系链）
-    Platform.shareAppMessage({
-      title: ` 花花妙屋好友送你 ${GIFT_STAMINA_AMOUNT} 点体力！`,
-      query: `gift=stamina&amount=${GIFT_STAMINA_AMOUNT}`,
-    });
+    Platform.shareAppMessage(createGiftStaminaShare(GIFT_STAMINA_AMOUNT));
 
     EventBus.emit('social:giftSent', GIFT_STAMINA_AMOUNT);
     return true;

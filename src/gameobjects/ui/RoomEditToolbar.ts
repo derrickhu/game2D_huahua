@@ -252,6 +252,7 @@ export class RoomEditToolbar extends PIXI.Container {
     tooltip.position.set(slotW / 2, iconMax + 4);
     container.addChild(tooltip);
 
+    container.hitArea = new PIXI.Rectangle(0, 0, slotW, iconMax + LABEL_BELOW + 8);
     this._wireTap(container, def.action);
     return container;
   }
@@ -278,6 +279,7 @@ export class RoomEditToolbar extends PIXI.Container {
       container.addChild(sp);
     }
 
+    container.hitArea = new PIXI.Rectangle(0, 0, slotW, Math.max(iconBandH, CONFIRM_ICON_MAX));
     this._wireTap(container, def.action);
     return container;
   }
@@ -285,7 +287,16 @@ export class RoomEditToolbar extends PIXI.Container {
   private _wireTap(container: PIXI.Container, action: () => void): void {
     container.eventMode = 'static';
     container.cursor = 'pointer';
+    const resetScale = () => {
+      TweenManager.to({
+        target: container.scale,
+        props: { x: 1, y: 1 },
+        duration: 0.12,
+        ease: Ease.easeOutBack,
+      });
+    };
     container.on('pointerdown', () => {
+      action();
       TweenManager.to({
         target: container.scale,
         props: { x: 0.88, y: 0.88 },
@@ -293,15 +304,9 @@ export class RoomEditToolbar extends PIXI.Container {
         ease: Ease.easeOutQuad,
       });
     });
-    container.on('pointerup', () => {
-      TweenManager.to({
-        target: container.scale,
-        props: { x: 1, y: 1 },
-        duration: 0.12,
-        ease: Ease.easeOutBack,
-      });
-      action();
-    });
+    container.on('pointerup', resetScale);
+    container.on('pointerupoutside', resetScale);
+    container.on('pointercancel', resetScale);
   }
 
   // ---- 事件处理 ----

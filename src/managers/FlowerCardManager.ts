@@ -11,6 +11,7 @@
 import { EventBus } from '@/core/EventBus';
 import { Platform } from '@/core/PlatformService';
 import { PersistService } from '@/core/PersistService';
+import { createFlowerCardShare } from '@/config/ShareConfig';
 import { Category, ITEM_DEFS } from '@/config/ItemConfig';
 import {
   FLOWER_CARD_QUOTES,
@@ -128,10 +129,7 @@ class FlowerCardManagerClass {
 
   /** 分享花语卡片 */
   shareCard(card: FlowerCard): void {
-    Platform.shareAppMessage({
-      title: `${card.name} —— ${card.quote}`,
-      query: `card=${card.id}`,
-    });
+    Platform.shareAppMessage(createFlowerCardShare(card));
     EventBus.emit('flowerCard:shared', card);
   }
 

@@ -13,7 +13,7 @@ import { TextureCache } from '@/utils/TextureCache';
 import { ToastMessage } from '@/gameobjects/ui/ToastMessage';
 import { CurrencyManager } from '@/managers/CurrencyManager';
 import { OverlayManager } from '@/core/OverlayManager';
-import { DESIGN_WIDTH, FONT_FAMILY } from '@/config/Constants';
+import { COLORS, DESIGN_WIDTH, FONT_FAMILY } from '@/config/Constants';
 import {
   MAP_NODES,
   MAP_NODE_UNMET_UNLOCK_ALPHA,
@@ -26,7 +26,6 @@ import { createSmallNameLockIcon } from '@/gameobjects/ui/mysteryCardPlaceholder
 
 const FRICTION = 0.92;
 const MIN_VELOCITY = 0.4;
-const BOUNCE_FACTOR = 0.18;
 const DRAG_THRESHOLD = 6;
 
 /** 高于花店内 UI，低于地图弹窗商店 */
@@ -39,6 +38,13 @@ export class WorldMapPanel extends PIXI.Container {
   private _scrollMask!: PIXI.Graphics;
   private _topBar!: PIXI.Container;
   private _closeBtn!: PIXI.Container;
+  private _huayuanText!: PIXI.Text;
+  private _staminaText!: PIXI.Text;
+  private _staminaTimer!: PIXI.Text;
+  private _diamondText!: PIXI.Text;
+  private _staminaFill!: PIXI.Graphics;
+  private _staminaInner = { x: 0, y: 0, w: 0, h: 0 };
+  private _lastStaminaTimerText = '';
 
   private _scrollX = 0;
   private _scrollY = 0;
@@ -57,6 +63,8 @@ export class WorldMapPanel extends PIXI.Container {
   private _lastDragGY = 0;
   private _lastDragTime = 0;
   private _hasMoved = false;
+  /** 小游戏环境里 `pointertap` 易丢；改为 node `pointerdown` 标记，canvas `pointerup` 统一判定点击 */
+  private _pressedNodeIndex = -1;
 
   /** 许愿喷泉两帧精灵，大地图打开时交替显示模拟水波 */
   private _wishingFountainAnimPair: [PIXI.Sprite, PIXI.Sprite] | null = null;
@@ -70,6 +78,7 @@ export class WorldMapPanel extends PIXI.Container {
 
   private readonly _onTicker = (): void => {
     if (!this._isOpen || !this.visible) return;
+    this._updateHudTimer();
     this._tickWishingFountainWaterAnim(Game.ticker.deltaMS);
     this.update(Game.ticker.deltaMS / 1000);
   };
@@ -105,6 +114,8 @@ export class WorldMapPanel extends PIXI.Container {
     SoundSystem.playWorldMapBGM();
     this._wishingFountainAnimAcc = 0;
     this._refreshNodes();
+    this._refreshHud();
+    this._updateHudTimer();
     const wf = this._wishingFountainAnimPair;
     if (wf) {
       wf[0].visible = true;
@@ -119,6 +130,7 @@ export class WorldMapPanel extends PIXI.Container {
   close(): void {
     if (!this._isOpen) return;
     this._isOpen = false;
+    this._pressedNodeIndex = -1;
     Game.ticker.remove(this._onTicker, this);
     this._cleanupRawEvents();
     TweenManager.to({
@@ -141,12 +153,7 @@ export class WorldMapPanel extends PIXI.Container {
       this._velocityX = 0;
     }
 
-    if (Math.abs(this._velocityY) > MIN_VELOCITY) {
-      this._scrollY += this._velocityY;
-      this._velocityY *= FRICTION;
-    } else {
-      this._velocityY = 0;
-    }
+    this._velocityY = 0;
 
     this._applyBounce();
     this._syncScroll();
@@ -184,6 +191,8 @@ export class WorldMapPanel extends PIXI.Container {
     this._buildNodes();
     this._setupDrag();
     this._buildTopBar();
+    EventBus.on('currency:changed', () => this._refreshHud());
+    EventBus.on('currency:loaded', () => this._refreshHud());
   }
 
   /** 底图缺失时回退到已加载的花店草地 / 主界面顶图，避免整屏纯色 */
@@ -441,10 +450,9 @@ export class WorldMapPanel extends PIXI.Container {
         this._layoutMapNodeNameRow(namePlate, mapLabel, mapLockAfterName, !unlocked);
       }
 
-      nc.removeAllListeners('pointertap');
-      nc.on('pointertap', () => {
-        if (this._hasMoved) return;
-        this._onNodeTap(node, unlocked, isCurrent);
+      nc.removeAllListeners('pointerdown');
+      nc.on('pointerdown', (e: PIXI.FederatedPointerEvent) => {
+        this._beginPointerTracking(e, i);
       });
     }
 
@@ -601,56 +609,81 @@ export class WorldMapPanel extends PIXI.Container {
     const canvas = Game.app.view as any;
 
     hitLayer.on('pointerdown', (e: PIXI.FederatedPointerEvent) => {
-      this._isDragging = true;
-      this._hasMoved = false;
-      const { gx, gy } = this._rawFromFederated(e);
-      this._dragStartGX = gx;
-      this._dragStartGY = gy;
-      this._scrollStartX = this._scrollX;
-      this._scrollStartY = this._scrollY;
-      this._lastDragGX = gx;
-      this._lastDragGY = gy;
-      this._lastDragTime = Date.now();
-      this._velocityX = 0;
-      this._velocityY = 0;
-
-      this._cleanupRawEvents();
-
-      this._onRawMove = (rawE: any) => {
-        if (!this._isDragging) return;
-        const { gx: nx, gy: ny } = this._rawToDesign(rawE);
-        const dxTotal = nx - this._dragStartGX;
-        const dyTotal = ny - this._dragStartGY;
-        if (Math.abs(dxTotal) > DRAG_THRESHOLD || Math.abs(dyTotal) > DRAG_THRESHOLD) {
-          this._hasMoved = true;
-        }
-
-        const now = Date.now();
-        const dtMs = Math.max(1, now - this._lastDragTime);
-        this._velocityX = (nx - this._lastDragGX) / dtMs * 16;
-        this._velocityY = (ny - this._lastDragGY) / dtMs * 16;
-        this._lastDragGX = nx;
-        this._lastDragGY = ny;
-        this._lastDragTime = now;
-
-        this._scrollX = this._scrollStartX + dxTotal;
-        this._scrollY = this._scrollStartY + dyTotal;
-        this._syncScroll();
-      };
-
-      this._onRawUp = () => {
-        this._isDragging = false;
-        this._cleanupRawEvents();
-      };
-
-      canvas.addEventListener('pointermove', this._onRawMove);
-      canvas.addEventListener('pointerup', this._onRawUp);
-      canvas.addEventListener('pointercancel', this._onRawUp);
+      this._beginPointerTracking(e, -1);
     });
   }
 
-  private _rawFromFederated(e: PIXI.FederatedPointerEvent): { gx: number; gy: number } {
-    return { gx: e.globalX, gy: e.globalY };
+  private _beginPointerTracking(e: PIXI.FederatedPointerEvent, nodeIndex: number): void {
+    const canvas = Game.app.view as any;
+    this._isDragging = true;
+    this._hasMoved = false;
+    this._pressedNodeIndex = nodeIndex;
+    const { gx, gy } = this._designFromFederated(e);
+    this._dragStartGX = gx;
+    this._dragStartGY = gy;
+    this._scrollStartX = this._scrollX;
+    this._scrollStartY = this._scrollY;
+    this._lastDragGX = gx;
+    this._lastDragGY = gy;
+    this._lastDragTime = Date.now();
+    this._velocityX = 0;
+    this._velocityY = 0;
+
+    this._cleanupRawEvents();
+
+    this._onRawMove = (rawE: any) => {
+      if (!this._isDragging) return;
+      const { gx: nx } = this._rawToDesign(rawE);
+      const dxTotal = nx - this._dragStartGX;
+      if (Math.abs(dxTotal) > DRAG_THRESHOLD) {
+        this._hasMoved = true;
+      }
+
+      const now = Date.now();
+      const dtMs = Math.max(1, now - this._lastDragTime);
+      this._velocityX = (nx - this._lastDragGX) / dtMs * 16;
+      this._velocityY = 0;
+      this._lastDragGX = nx;
+      this._lastDragTime = now;
+
+      this._scrollX = this._clampScrollX(this._scrollStartX + dxTotal);
+      this._scrollY = this._contentH > Game.logicHeight
+        ? this._scrollStartY
+        : (Game.logicHeight - this._contentH) / 2;
+      this._syncScroll();
+    };
+
+    this._onRawUp = () => {
+      const pressedNodeIndex = this._pressedNodeIndex;
+      this._pressedNodeIndex = -1;
+      this._isDragging = false;
+      this._cleanupRawEvents();
+      if (pressedNodeIndex >= 0 && !this._hasMoved) {
+        const tappedNode = MAP_NODES[pressedNodeIndex];
+        if (!tappedNode) return;
+        const currentLevel = CurrencyManager.globalLevel;
+        const currentSceneId = CurrencyManager.state.sceneId;
+        const unlocked = currentLevel >= tappedNode.unlockLevel;
+        const isCurrent = tappedNode.targetSceneId === currentSceneId;
+        this._onNodeTap(tappedNode, unlocked, isCurrent);
+      }
+    };
+
+    canvas.addEventListener('pointermove', this._onRawMove);
+    canvas.addEventListener('pointerup', this._onRawUp);
+    canvas.addEventListener('pointercancel', this._onRawUp);
+  }
+
+  /**
+   * Pixi Federated 事件的 `global` 位于 renderer/canvas 像素空间；
+   * 拖拽 move 逻辑则使用浏览器 client 坐标换算出的设计坐标。
+   * 若两者混用，在高 DPR 设备上按下起点会比 move 坐标大一截，轻触也会被判定为拖拽。
+   */
+  private _designFromFederated(e: PIXI.FederatedPointerEvent): { gx: number; gy: number } {
+    return {
+      gx: (e.global.x / Game.dpr) * Game.designWidth / Game.screenWidth,
+      gy: (e.global.y / Game.dpr) * Game.designWidth / Game.screenWidth,
+    };
   }
 
   private _rawToDesign(e: any): { gx: number; gy: number } {
@@ -685,34 +718,22 @@ export class WorldMapPanel extends PIXI.Container {
     this._scrollContent.y = this._scrollY;
   }
 
+  private _clampScrollX(x: number): number {
+    const minX = Math.min(0, -(this._contentW - DESIGN_WIDTH));
+    return Math.max(minX, Math.min(0, x));
+  }
+
   private _applyBounce(): void {
-    const W = DESIGN_WIDTH;
     const H = Game.logicHeight;
-    const minX = -(this._contentW - W);
-    const maxX = 0;
-    const minY = -(this._contentH - H);
-    const maxY = 0;
-
-    if (this._scrollX > maxX) {
-      this._scrollX += (maxX - this._scrollX) * BOUNCE_FACTOR;
-      this._velocityX = 0;
-    } else if (this._scrollX < minX) {
-      this._scrollX += (minX - this._scrollX) * BOUNCE_FACTOR;
+    const clampedX = this._clampScrollX(this._scrollX);
+    if (clampedX !== this._scrollX) {
+      this._scrollX = clampedX;
       this._velocityX = 0;
     }
-
-    if (this._contentH > H) {
-      if (this._scrollY > maxY) {
-        this._scrollY += (maxY - this._scrollY) * BOUNCE_FACTOR;
-        this._velocityY = 0;
-      } else if (this._scrollY < minY) {
-        this._scrollY += (minY - this._scrollY) * BOUNCE_FACTOR;
-        this._velocityY = 0;
-      }
-    } else {
-      this._scrollY = (H - this._contentH) / 2;
-      this._velocityY = 0;
-    }
+    this._scrollY = this._contentH > H
+      ? Math.max(-(this._contentH - H), Math.min(0, this._scrollY))
+      : (H - this._contentH) / 2;
+    this._velocityY = 0;
   }
 
   private _scrollToCurrentHouse(): void {
@@ -738,68 +759,291 @@ export class WorldMapPanel extends PIXI.Container {
   // ═══════════════ 顶栏（独立页导航） ═══════════════
 
   private _buildTopBar(): void {
-    const W = DESIGN_WIDTH;
-    const H = Game.logicHeight;
-    const topH = Game.safeTop + 52;
+    const RIGHT_MENU_RESERVE = 172;
+    const BAR_MID_Y = 38;
+    const LEFT_MARGIN = 28;
+    const CURRENCY_ICON = 46;
+    const HYUAN_CX = LEFT_MARGIN + CURRENCY_ICON / 2;
+    const CURRENCY_ICON_CY = BAR_MID_Y;
+    const CURRENCY_TEXT_CY = CURRENCY_ICON_CY + CURRENCY_ICON / 2 - 5;
+    const GAP_HYUAN_TO_STAMINA = 36;
+    const STA_X = HYUAN_CX + CURRENCY_ICON / 2 + GAP_HYUAN_TO_STAMINA;
+    const STA_W = 102;
+    const PILL_H = 42;
+    const PILL_R = PILL_H / 2;
+    const PY = Math.round((76 - PILL_H) / 2);
+    const GAP_STAMINA_TO_DIAMOND = 28;
+    const DIAMOND_LP = STA_X + STA_W + GAP_STAMINA_TO_DIAMOND;
+    const GEM_BAR_H = 38;
+    const GEM_BAR_W = 86;
+    const GEM_BAR_R = 12;
+    const GEM_ICON_SIZE = 48;
+    const DIAMOND_BAR_RIGHT = DIAMOND_LP + 16 + (GEM_BAR_W + 4);
+    const GAP_DIAMOND_TO_SHOP = 10;
+    const SHOP_PILL_LEFT = DIAMOND_BAR_RIGHT + GAP_DIAMOND_TO_SHOP;
+    const SHOP_ICON = 56;
+    const SHOP_HIT = SHOP_ICON + 18;
 
     this._topBar = new PIXI.Container();
+    this._topBar.position.set(0, Game.safeTop);
     this._topBar.zIndex = 4000;
-    this._topBar.eventMode = 'static';
+    this._topBar.eventMode = 'passive';
+    this._topBar.interactiveChildren = true;
 
-    const barBg = new PIXI.Graphics();
-    barBg.beginFill(0x2A241C, 0.78);
-    barBg.drawRect(0, 0, W, topH);
-    barBg.endFill();
-    barBg.lineStyle(0);
-    this._topBar.addChild(barBg);
-
-    const title = new PIXI.Text('世界地图', {
-      fontSize: 20,
-      fill: 0xFFF8F0,
-      fontFamily: FONT_FAMILY,
+    const hyTex = TextureCache.get('icon_huayuan');
+    if (hyTex) {
+      const sp = new PIXI.Sprite(hyTex);
+      sp.anchor.set(0.5);
+      sp.width = CURRENCY_ICON;
+      sp.height = CURRENCY_ICON;
+      sp.position.set(HYUAN_CX, CURRENCY_ICON_CY);
+      this._topBar.addChild(sp);
+    }
+    this._huayuanText = new PIXI.Text('0', {
+      fontSize: 19,
       fontWeight: 'bold',
+      fill: 0xFFFFFF,
+      fontFamily: FONT_FAMILY,
+      stroke: 0xC2185B,
+      strokeThickness: 3,
     });
-    title.anchor.set(0.5, 0.5);
-    title.position.set(W / 2, Game.safeTop + 26);
-    this._topBar.addChild(title);
+    this._huayuanText.anchor.set(0.5);
+    this._huayuanText.position.set(HYUAN_CX, CURRENCY_TEXT_CY);
+    this._topBar.addChild(this._huayuanText);
 
-    const hint = new PIXI.Text('拖动地图探索', {
-      fontSize: 12,
-      fill: 0xD7CCC8,
+    const staminaFrame = new PIXI.Graphics();
+    staminaFrame.lineStyle(2.2, 0xE5989E, 1);
+    staminaFrame.beginFill(0xFFEFE8);
+    staminaFrame.drawRoundedRect(STA_X, PY, STA_W, PILL_H, PILL_R);
+    staminaFrame.endFill();
+    this._topBar.addChild(staminaFrame);
+
+    const inset = 3.5;
+    const ix0 = STA_X + inset;
+    const iy0 = PY + inset;
+    const iw = STA_W - inset * 2;
+    const ih = PILL_H - inset * 2;
+    const ir = Math.max(6, PILL_R - inset);
+    this._staminaInner = { x: ix0, y: iy0, w: iw, h: ih };
+    const staminaInner = new PIXI.Graphics();
+    staminaInner.lineStyle(1.2, 0xCE93A8, 0.85);
+    staminaInner.beginFill(COLORS.STAMINA_BAR_TRACK);
+    staminaInner.drawRoundedRect(ix0, iy0, iw, ih, ir);
+    staminaInner.endFill();
+    this._topBar.addChild(staminaInner);
+
+    this._staminaFill = new PIXI.Graphics();
+    this._staminaFill.position.set(ix0, iy0);
+    this._topBar.addChild(this._staminaFill);
+
+    const boltWrap = new PIXI.Container();
+    boltWrap.position.set(STA_X + 6, BAR_MID_Y);
+    const energyTex = TextureCache.get('icon_energy');
+    if (energyTex) {
+      const sp = new PIXI.Sprite(energyTex);
+      sp.anchor.set(0.5);
+      sp.width = 50;
+      sp.height = 54;
+      boltWrap.addChild(sp);
+    }
+    const plusBtn = this._createGreenCirclePlusButton();
+    plusBtn.position.set(11, 15);
+    plusBtn.eventMode = 'static';
+    plusBtn.cursor = 'pointer';
+    plusBtn.on('pointertap', (e: PIXI.FederatedPointerEvent) => {
+      e.stopPropagation();
+      EventBus.emit('panel:openStamina');
+    });
+    boltWrap.addChild(plusBtn);
+    this._topBar.addChild(boltWrap);
+
+    this._staminaText = new PIXI.Text('0/0', {
+      fontSize: 17,
+      fontWeight: 'bold',
+      fill: 0xFFFFFF,
+      fontFamily: FONT_FAMILY,
+      stroke: 0x3E2723,
+      strokeThickness: 2.5,
+    });
+    this._staminaText.anchor.set(0.5);
+    this._staminaText.position.set(STA_X + STA_W / 2 + 8, BAR_MID_Y);
+    this._topBar.addChild(this._staminaText);
+
+    this._staminaTimer = new PIXI.Text('', {
+      fontSize: 13,
+      fontWeight: 'bold',
+      fill: 0x5D4037,
+      fontFamily: FONT_FAMILY,
+      stroke: 0xFFFFFF,
+      strokeThickness: 2,
+    });
+    this._staminaTimer.anchor.set(0.5, 0);
+    this._staminaTimer.position.set(STA_X + STA_W / 2 + 8, PY + PILL_H + 1);
+    this._topBar.addChild(this._staminaTimer);
+
+    const diamondRoot = new PIXI.Container();
+    diamondRoot.position.set(DIAMOND_LP, Math.round(BAR_MID_Y - GEM_BAR_H / 2));
+    const barX = 16;
+    const barW = GEM_BAR_W + 4;
+    const barH = GEM_BAR_H;
+    const outer = new PIXI.Graphics();
+    outer.lineStyle(2, 0xE5989E, 1);
+    outer.beginFill(0xFFEFE8);
+    outer.drawRoundedRect(barX, 0, barW, barH, GEM_BAR_R);
+    outer.endFill();
+    diamondRoot.addChild(outer);
+    const inner = new PIXI.Graphics();
+    inner.lineStyle(1.1, 0xCE93A8, 0.8);
+    inner.beginFill(0xF7F5F0);
+    inner.drawRoundedRect(barX + 3, 3, barW - 6, barH - 6, Math.max(5, GEM_BAR_R - 3));
+    inner.endFill();
+    diamondRoot.addChild(inner);
+    const gemWrap = new PIXI.Container();
+    gemWrap.position.set(22, GEM_BAR_H / 2);
+    const gemTex = TextureCache.get('icon_gem');
+    if (gemTex) {
+      const sp = new PIXI.Sprite(gemTex);
+      sp.anchor.set(0.5);
+      sp.width = GEM_ICON_SIZE;
+      sp.height = GEM_ICON_SIZE;
+      gemWrap.addChild(sp);
+    }
+    diamondRoot.addChild(gemWrap);
+    this._diamondText = new PIXI.Text('0', {
+      fontSize: 19,
+      fontWeight: 'bold',
+      fill: 0x5D4037,
       fontFamily: FONT_FAMILY,
     });
-    hint.anchor.set(0.5, 0);
-    hint.position.set(W / 2, Game.safeTop + 44);
-    this._topBar.addChild(hint);
+    this._diamondText.anchor.set(1, 0.5);
+    this._diamondText.position.set(barX + barW - 7, GEM_BAR_H / 2);
+    diamondRoot.addChild(this._diamondText);
+    this._topBar.addChild(diamondRoot);
+
+    const shopRoot = new PIXI.Container();
+    shopRoot.position.set(SHOP_PILL_LEFT + SHOP_HIT / 2, BAR_MID_Y);
+    const shopTex = TextureCache.get('icon_shop_nb2');
+    if (shopTex) {
+      const sp = new PIXI.Sprite(shopTex);
+      sp.anchor.set(0.5);
+      sp.width = SHOP_ICON;
+      sp.height = SHOP_ICON;
+      shopRoot.addChild(sp);
+    }
+    shopRoot.eventMode = 'static';
+    shopRoot.cursor = 'pointer';
+    shopRoot.hitArea = new PIXI.Rectangle(-SHOP_HIT / 2, -SHOP_HIT / 2, SHOP_HIT, SHOP_HIT);
+    shopRoot.on('pointertap', (e: PIXI.FederatedPointerEvent) => {
+      e.stopPropagation();
+      EventBus.emit('panel:openMerchShop');
+    });
+    this._topBar.addChild(shopRoot);
 
     this._closeBtn = new PIXI.Container();
-    const r = 22;
+    const btnW = 90;
+    const btnH = 42;
+    const btnR = 21;
+    const shadow = new PIXI.Graphics();
+    shadow.beginFill(0x000000, 0.26);
+    shadow.drawRoundedRect(-btnW / 2 - 8, -btnH / 2 - 8, btnW + 16, btnH + 16, btnR + 8);
+    shadow.endFill();
+    this._closeBtn.addChild(shadow);
+
     const bg = new PIXI.Graphics();
-    bg.beginFill(0xFFFFFF, 0.18);
-    bg.drawCircle(0, 0, r);
+    bg.beginFill(0x3C4A38, 0.82);
+    bg.drawRoundedRect(-btnW / 2, -btnH / 2, btnW, btnH, btnR);
     bg.endFill();
-    bg.lineStyle(2.2, 0xFFF8F0, 0.95);
-    const aw = 8;
-    bg.moveTo(-aw * 0.3, 0);
-    bg.lineTo(aw * 0.9, -aw);
-    bg.lineTo(aw * 0.9, aw);
-    bg.closePath();
+    bg.lineStyle(2, 0xFFF8F0, 0.95);
+    bg.drawRoundedRect(-btnW / 2, -btnH / 2, btnW, btnH, btnR);
     this._closeBtn.addChild(bg);
-    this._closeBtn.position.set(28 + r, Game.safeTop + 26);
+
+    const label = new PIXI.Text('返回', {
+      fontSize: 20,
+      fontWeight: 'bold',
+      fill: 0xFFF8F0,
+      fontFamily: FONT_FAMILY,
+      stroke: 0x2C2419,
+      strokeThickness: 2,
+    });
+    label.anchor.set(0.5);
+    this._closeBtn.addChild(label);
+
+    this._closeBtn.position.set(24 + btnW / 2, Game.safeTop + 96);
+    this._closeBtn.zIndex = 4010;
     this._closeBtn.eventMode = 'static';
     this._closeBtn.cursor = 'pointer';
-    this._closeBtn.hitArea = new PIXI.Circle(0, 0, r + 14);
-    this._closeBtn.on('pointertap', () => this.close());
-    this._topBar.addChild(this._closeBtn);
+    this._closeBtn.hitArea = new PIXI.Rectangle(-btnW / 2 - 8, -btnH / 2 - 8, btnW + 16, btnH + 16);
+    this._closeBtn.on('pointerdown', () => this.close());
 
     this.addChild(this._topBar);
+    this.addChild(this._closeBtn);
+  }
 
-    // 底边轻分割线
-    const line = new PIXI.Graphics();
-    line.beginFill(0x5D4E37, 0.35);
-    line.drawRect(0, topH - 1, W, 1);
-    line.endFill();
-    line.zIndex = 4001;
-    this._topBar.addChild(line);
+  private _refreshHud(): void {
+    if (!this._huayuanText || !this._staminaText || !this._diamondText || !this._staminaFill) return;
+    const s = CurrencyManager.state;
+    const cap = CurrencyManager.staminaCap;
+    this._huayuanText.text = this._fmtNum(s.huayuan);
+    this._staminaText.text = `${s.stamina}/${cap}`;
+    this._diamondText.text = this._fmtNum(s.diamond);
+    this._drawStaminaFill(cap > 0 ? Math.min(1, s.stamina / cap) : 0);
+  }
+
+  private _updateHudTimer(): void {
+    if (!this._staminaTimer) return;
+    const remain = CurrencyManager.staminaRecoverRemain;
+    let nextText = '';
+    if (remain > 0) {
+      const m = Math.floor(remain / 60);
+      const sec = Math.floor(remain % 60);
+      nextText = `${m}:${sec.toString().padStart(2, '0')}`;
+    }
+    if (nextText !== this._lastStaminaTimerText) {
+      this._lastStaminaTimerText = nextText;
+      this._staminaTimer.text = nextText;
+    }
+  }
+
+  private _drawStaminaFill(ratio: number): void {
+    const g = this._staminaFill;
+    const { w, h } = this._staminaInner;
+    const fillW = Math.max(0, w * Math.min(1, Math.max(0, ratio)));
+    g.clear();
+    if (fillW < 0.5) return;
+    const rr = Math.min(h / 2 - 0.5, fillW / 2);
+    g.beginFill(COLORS.STAMINA_BAR_FILL);
+    g.drawRoundedRect(0, 0, fillW, h, rr);
+    g.endFill();
+  }
+
+  private _fmtNum(n: number): string {
+    if (n >= 10000) return `${(n / 10000).toFixed(1)}w`;
+    if (n >= 1000) return `${(n / 1000).toFixed(1)}k`;
+    return `${n}`;
+  }
+
+  private _createGreenCirclePlusButton(): PIXI.Container {
+    const r = 11;
+    const root = new PIXI.Container();
+    const body = new PIXI.Graphics();
+    body.beginFill(0x2E7D32, 0.95);
+    body.drawEllipse(0, 2.2, r * 0.92, r * 0.42);
+    body.endFill();
+    body.beginFill(0x66BB6A);
+    body.drawCircle(0, -0.5, r - 0.5);
+    body.endFill();
+    body.lineStyle(1.3, 0x1B5E20, 0.95);
+    body.drawCircle(0, -0.5, r - 0.5);
+    root.addChild(body);
+
+    const arm = 2.4;
+    const len = r * 0.42;
+    const cross = new PIXI.Graphics();
+    cross.beginFill(0xFFFFFF);
+    cross.drawRoundedRect(-len, -arm / 2, len * 2, arm, 1.1);
+    cross.drawRoundedRect(-arm / 2, -len, arm, len * 2, 1.1);
+    cross.endFill();
+    root.addChild(cross);
+    return root;
   }
 }

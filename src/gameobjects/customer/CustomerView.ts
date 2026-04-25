@@ -23,6 +23,8 @@ import { TweenManager, Ease } from '@/core/TweenManager';
 import { EventBus } from '@/core/EventBus';
 import { CustomerInstance } from '@/managers/CustomerManager';
 import { AffinityManager } from '@/managers/AffinityManager';
+import { ToastMessage } from '@/gameobjects/ui/ToastMessage';
+import { AFFINITY_MAP } from '@/config/AffinityConfig';
 /** 单格物品显示边长（3 个并排仍落在 PANEL_W 内） */
 const SLOT_SIZE = 66;
 const SLOT_GAP = 8;
@@ -601,15 +603,16 @@ export class CustomerView extends PIXI.Container {
   }
 
   /**
-   * 熟客解锁后，在头像右上角放一个心形小角标。点击该角标（仅角标命中区域可点）
-   * 弹出 CustomerProfilePanel；非角标区域照常透传给 CustomerScrollArea 的横向滑动 hitArea。
+   * 当该客人 12 张卡收满并拿到永久订单加成后，在头像右上角放一个心形小角标。
+   * 点击角标显示当前永久加成效果；非角标区域照常透传给 CustomerScrollArea 的横向滑动 hitArea。
    */
   private _refreshAffinityHeartBadge(): void {
     this._clearAffinityHeartBadge();
     const c = this._customer;
     if (!c) return;
     if (!AffinityManager.isAffinityType(c.typeId)) return;
-    if (!AffinityManager.isUnlocked(c.typeId)) return;
+    const mult = AffinityManager.huayuanMultFor(c.typeId);
+    if (mult <= 1) return;
 
     const badge = new PIXI.Container();
     badge.zIndex = 8;
@@ -650,7 +653,11 @@ export class CustomerView extends PIXI.Container {
       e.stopPropagation();
       const cur = this._customer;
       if (!cur) return;
-      EventBus.emit('panel:openCustomerProfile', cur.typeId);
+      const curMult = AffinityManager.huayuanMultFor(cur.typeId);
+      if (curMult <= 1) return;
+      const pct = Math.round((curMult - 1) * 100);
+      const bondName = AFFINITY_MAP.get(cur.typeId)?.bondName ?? cur.name ?? '该客人';
+      ToastMessage.show(`${bondName}订单永久 +${pct}% 花愿`);
     });
 
     this._affinityHeartBadge = badge;

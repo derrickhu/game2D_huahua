@@ -6,6 +6,8 @@ import { Game } from '@/core/Game';
 import { EventBus } from '@/core/EventBus';
 import { TweenManager, Ease } from '@/core/TweenManager';
 import { OverlayManager } from '@/core/OverlayManager';
+import { Platform } from '@/core/PlatformService';
+import { createWishLuckyShare } from '@/config/ShareConfig';
 import { TextureCache } from '@/utils/TextureCache';
 import { ToastMessage } from '@/gameobjects/ui/ToastMessage';
 import { DESIGN_WIDTH, FONT_FAMILY } from '@/config/Constants';
@@ -513,14 +515,24 @@ export class FlowerSignGachaPanel extends PIXI.Container {
   private _showResults(rewards: FlowerSignReward[]): void {
     this._syncTicketLabel();
     this._pendingRewards = rewards;
-    ItemObtainOverlay.show(flowerSignRewardsToObtainEntries(rewards), () => {
-      const pending = this._pendingRewards;
-      this._pendingRewards = null;
-      if (pending) {
-        grantFlowerSignRewards(pending);
-        SaveManager.save();
-      }
-      this._showIdle();
-    });
+    ItemObtainOverlay.show(
+      flowerSignRewardsToObtainEntries(rewards),
+      () => {
+        const pending = this._pendingRewards;
+        this._pendingRewards = null;
+        if (pending) {
+          grantFlowerSignRewards(pending);
+          SaveManager.save();
+        }
+        this._showIdle();
+      },
+      {
+        shareLabel: '晒欧气',
+        onShare: () => {
+          Platform.shareAppMessage(createWishLuckyShare());
+          ToastMessage.show('已分享许愿好运');
+        },
+      },
+    );
   }
 }

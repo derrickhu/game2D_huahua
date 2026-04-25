@@ -17,6 +17,7 @@ import { TextureCache } from '@/utils/TextureCache';
  */
 export type ItemObtainEntry =
   | { kind: 'board_item'; itemId: string; count: number }
+  | { kind: 'deco'; decoId: string; label?: string }
   | {
       kind: 'direct_currency';
       currency: 'stamina' | 'huayuan' | 'diamond' | 'flowerSign';
@@ -103,6 +104,9 @@ export function createItemObtainRewardCell(
     const def = ITEM_DEFS.get(entry.itemId);
     texKey = def?.icon ?? '';
     qtyStr = `×${entry.count}`;
+  } else if (entry.kind === 'deco') {
+    texKey = entry.decoId;
+    qtyStr = entry.label ?? '专属家具';
   } else {
     texKey = DIRECT_CURRENCY_ICON[entry.currency];
     qtyStr = `${entry.amount}`;
@@ -302,10 +306,16 @@ export function layoutObtainStyleRewardBlock(
   return { boardItemSlots };
 }
 
+export interface ItemObtainOverlayOptions {
+  shareLabel?: string;
+  onShare?: () => void;
+}
+
 export class ItemObtainOverlay extends PIXI.Container {
   private static _current: ItemObtainOverlay | null = null;
 
   private _onClaim!: () => void;
+  private _options?: ItemObtainOverlayOptions;
   private _settled = false;
 
   /**
@@ -315,12 +325,13 @@ export class ItemObtainOverlay extends PIXI.Container {
   static show(
     rewards: ItemObtainEntry[],
     onClaim: () => void,
+    options?: ItemObtainOverlayOptions,
     parent: PIXI.Container = OverlayManager.container,
   ): void {
     ItemObtainOverlay.forceClose();
     OverlayManager.bringToFront();
     parent.sortableChildren = true;
-    const layer = new ItemObtainOverlay(rewards, onClaim);
+    const layer = new ItemObtainOverlay(rewards, onClaim, options);
     layer.zIndex = Z;
     ItemObtainOverlay._current = layer;
     parent.addChild(layer);
@@ -339,9 +350,10 @@ export class ItemObtainOverlay extends PIXI.Container {
     c.destroy({ children: true });
   }
 
-  private constructor(rewards: ItemObtainEntry[], onClaim: () => void) {
+  private constructor(rewards: ItemObtainEntry[], onClaim: () => void, options?: ItemObtainOverlayOptions) {
     super();
     this._onClaim = onClaim;
+    this._options = options;
     this.sortableChildren = true;
     this._build(rewards);
   }
@@ -369,6 +381,41 @@ export class ItemObtainOverlay extends PIXI.Container {
       ribbonTexKey: 'merge_chain_ribbon',
       titleText: '恭喜获得',
     });
+    this._appendShareButton(W, H);
+  }
+
+  private _appendShareButton(W: number, H: number): void {
+    if (!this._options?.onShare) return;
+
+    const btn = new PIXI.Container();
+    btn.position.set(W / 2, Math.min(H - 92, H / 2 + 230));
+    btn.eventMode = 'static';
+    btn.cursor = 'pointer';
+    btn.hitArea = new PIXI.RoundedRectangle(-86, -20, 172, 40, 20);
+
+    const bg = new PIXI.Graphics();
+    bg.beginFill(0xfff1a8, 0.98);
+    bg.lineStyle(2, 0xffc75d, 1);
+    bg.drawRoundedRect(-82, -18, 164, 36, 18);
+    bg.endFill();
+    btn.addChild(bg);
+
+    const label = new PIXI.Text(this._options.shareLabel ?? '晒一下', {
+      fontSize: 16,
+      fill: 0x7a3f00,
+      fontFamily: FONT_FAMILY,
+      fontWeight: 'bold',
+      stroke: 0xffffff,
+      strokeThickness: 1,
+    } as PIXI.TextStyle);
+    label.anchor.set(0.5);
+    btn.addChild(label);
+
+    btn.on('pointertap', (e: PIXI.FederatedPointerEvent) => {
+      e.stopPropagation();
+      this._options?.onShare?.();
+    });
+    this.addChild(btn);
   }
 
   private _finish(): void {

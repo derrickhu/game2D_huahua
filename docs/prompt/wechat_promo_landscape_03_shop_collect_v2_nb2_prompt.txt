@@ -1,0 +1,15 @@
+16:9 horizontal promotional illustration for a cozy flower-shop merge game with decorating and character collection. V2 art direction: keep the same content, but make it more saturated, more dimensional, and more ad-like. Final crop will be 1280x720.
+
+Art style: premium 2.5D casual mobile game key art, cute anime-inspired characters, soft 3D-like volume, saturated flower colors, warm sunlight, glossy highlights, clear cast shadows, layered foreground and background, crisp thumbnail readability. Hand-painted kawaii finish, not photoreal, not hard 3D render.
+
+Main composition: a charming flower shop exterior in the center with cream walls, rosy warm roof, flower boxes, glowing doorway, garden path, and dense colorful flower beds. Give the house visible depth, soft shadows under eaves, glowing windows, and layered garden plants.
+
+Left side: a simplified merge flower table with thick rounded tiles, glossy flower icons, petals, coins, and a glowing merge trail. Right side: happy customers arriving with blank order-card shapes and collectible portrait-card silhouettes, plus floating decor rewards such as a lamp, mirror, wall art, and sofa.
+
+Hero: the young florist girl stands in front of the shop holding a huge bouquet. Make the bouquet very saturated and dimensional with large pink peonies, coral roses, yellow daisies, blue hydrangeas, cream flowers, and vivid green leaves. Her expression should be joyful and inviting.
+
+Make the long-term fantasy clear: merge flowers, serve customers, collect cards, and decorate the flower house. Use petal-and-sparkle motion paths, not UI arrows with text.
+
+Leave a clean bright sky or garden area along the top for optional external text overlay. Do not draw any text.
+
+Hard bans: NO text, NO letters, NO Chinese characters, NO logo, NO watermark, NO UI screenshot, NO buttons, NO captions, NO speech bubbles, NO numbers, NO black border, NO white border, NO flat low-saturation colors, NO literal app screenshot, NO cluttered collage.

@@ -1,0 +1,23 @@
+Create one clean 3 columns x 4 rows illustration sheet for a cozy flower-shop mobile game. Each cell must be a separate square friendship card illustration with clear spacing between cells. NO TEXT, no labels, no captions, no writing, no numbers, no logos, no watermark.
+
+Match the project card style exactly: elegant hand-painted 2D anime illustration, romantic shoujo mobile-game art, dreamy soft lighting, warm pastel glow, delicate clean line art, cinematic bloom, expressive eyes, polished collectible-card appeal. Every panel features the same very handsome young male superstar singer. He must look strikingly attractive and charming: glossy voluminous golden-blond curls, luminous amber eyes, smooth fair skin, elegant jawline, slim graceful build, dazzling idol smile, obvious star aura. He can wear stylish cream, white, champagne, black, or stage-ready fashion pieces. Make him feel much more handsome and atmospheric than an ordinary pretty boy. Flowers should connect naturally to music, stage, backstage, and performance life.
+
+Very important rarity progression by rows:
+Rows 1-2 are N rarity: intimate daily celebrity moments, simpler staging, softer compositions.
+Row 3 is R rarity: stronger glamour, more props, more emotional closeness, clearer celebrity world-building.
+Row 4 is high rarity: cinematic lighting, concert or backstage drama, very obvious upgrade in atmosphere. Row 4 col 1 and col 2 are SR. Row 4 col 3 is SSR and must be the most breathtaking stage scene.
+
+Panel descriptions, left to right, top to bottom:
+
+1. Outside the flower shop, the superstar wears sunglasses and a mask but turns back with smiling eyes, charming secret celebrity moment, warm storefront glow.
+2. By the open car door of a black nanny van, he checks bouquet colors before the night performance, stylish, elegant, intimate pre-show mood.
+3. During rehearsal break on a stage edge, he sits with a bouquet and a drink, golden stage light dusting his lashes, relaxed but magnetic.
+4. In a dressing room, he personally arranges flowers into a small vase beside makeup mirrors and warm bulbs, thoughtful calm expression, refined beauty.
+5. Late-night recording studio with one warm lamp, he lifts one side of his headphones and lowers his face toward the flowers as if listening to their scent, moody romantic music atmosphere.
+6. After the show, still wearing subtle stage makeup and sparkle, he holds a large bouquet and looks back from the side stage, dark background with tiny glittering lights.
+7. Support flower wall scene: luxurious fan support floral display backstage, but his favorite bouquet from the flower shop is centered and highlighted, glamorous and affectionate.
+8. Celebration party after a successful opening concert, champagne-rose bouquet raised toward the camera, soft luxurious lights, elegant confident smile, star afterglow.
+9. Backstage signed photo moment: he slips a signed stage photo into the bouquet wrapping for the flower shop owner, close emotional storytelling, romantic celebrity keepsake feeling.
+10. Empty theater rehearsal at night, only top lights on, he stands alone with a microphone and a white-gold bouquet at his feet, silent grand stage, hauntingly beautiful SR atmosphere.
+11. One minute before encore, side-stage tension, he brushes back loose curls and accepts a single rose, eyes bright and deeply focused, intimate pre-performance electricity.
+12. Ultimate SSR: full concert climax, sea of fan lights, petals drifting through the air, brilliant spotlight on the superstar singing at center stage with a microphone, one hand reaching outward while a bouquet is part of the scene, overwhelming atmosphere, breathtaking handsome face, unforgettable idol performance energy.

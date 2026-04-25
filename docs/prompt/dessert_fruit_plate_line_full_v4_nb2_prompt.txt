@@ -1,0 +1,22 @@
+Cute mobile game item icon sheet for a cozy merge game, 3/4 top-down isometric view. Highly readable at tiny size. Use the same kind of clarity and punch as casual game flower or potted plant icons: bright saturated colors, clear shape grouping, strong highlights, clear colored edge lines, and obvious silhouette hierarchy. Avoid muddy pastel haze. Avoid soft blurry rendering. Avoid too many tiny decorations. Every icon should read instantly when shrunk small.
+
+Create a clean 4 columns x 2 rows sheet of 8 dessert items forming one progression line. Icons only. No poster layout. No labels below icons. No captions. No words. No letters. No Chinese. No English. No logos. No bakery tags. No decorative writing anywhere in the image. All 8 items must be fruit desserts served on visible plates. No glasses, no jars, no cups, no transparent containers. The plate is a shared recognition point, but it should stay secondary to the dessert body. The main focus is the dessert silhouette and bold fruit / cream color blocks.
+
+Critical visual rules:
+- Stronger saturation and contrast than previous versions.
+- Cleaner and sharper icon look, not painterly, not hazy, not low-contrast.
+- Use darker colored outlines and edge separation, but not thick black cartoon outlines.
+- Use larger fruit pieces and larger cream shapes.
+- Minimize tiny fruit seeds, tiny plate ornaments, tiny lace details, tiny scattered garnish.
+- Each level should be differentiated by silhouette, size, cream color, top layout, and side band pattern.
+
+Cell 1: tiny berry tart on a plain plate. Bright red berries and dark blueberries, warm golden tart shell, simple cream center. Very clean and compact.
+Cell 2: small green grape mini cake on a plain plate. Bright green grapes, pale green cream, simple layered body, slightly larger than cell 1.
+Cell 3: small peach cake on a plate. Warm peach cream accents, simple rounded top, a few large peach slices, cleaner than a bakery illustration.
+Cell 4: small strawberry round cake on a plate. Bright strawberry red, white cream body, clear strawberry slices around side, stronger contrast.
+Cell 5: medium orange cake on a slightly nicer plate. Strong orange glaze, bold white cream dots, large orange slices, simple side pattern.
+Cell 6: larger dual-fruit cake on a nicer plate. Use two fruits only, clearly visible, such as strawberry and green grape. Cream body should be a distinct green tone, with large scalloped piping.
+Cell 7: larger assorted-fruit cake on a refined plate. Use a vivid lavender or berry cream body, larger mixed fruit pieces, bold piping rings, readable top layout.
+Cell 8: highest-level fruit cake on the most refined plate. Warm peach-pink and cream palette, bold top fruit arrangement, clear layered piping, richer than cell 7 but still icon-clean and not overdecorated.
+
+Keep all 8 icons centered with enough whitespace, consistent scale, and a unified game icon style. The overall result should feel more like polished merge-game icons and less like soft bakery poster art.

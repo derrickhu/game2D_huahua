@@ -1,0 +1,33 @@
+Square game asset, 1:1 aspect. Create an EMPTY open-front room shell for the butterfly house scene. Follow the same upper-left classic isometric camera angle, canvas scale, open-front composition, and furniture-placement usability as the existing butterfly house shell. The room must stay visible from above. Do NOT cover the room with a full roof. Do NOT close the front side.
+
+Cute kawaii 2.5D isometric butterfly house room shell, hand-painted mobile merge-game art, polished quality, soft brown outlines, bright and clean.
+
+STYLE DIRECTION: refined moonlit glass pavilion butterfly house. A more elegant night-garden inspired shell, clearly different from both the default pale wood shell and any bamboo/nature version. Use pearly cream walls, champagne-gold posts, desaturated midnight-blue / lilac roof edge strips, and subtle stained-glass butterfly-wing color only on the roof/eave trim. The floor is pale moonstone terrazzo with a faint crescent-and-wing geometric pattern, still light and readable.
+
+ABSOLUTELY FORBIDDEN FOR THIS VERSION:
+- NO bamboo, NO bamboo poles, NO reeds, NO plants, NO leaves, NO tree branches, NO green stalks, NO natural garden stems anywhere.
+- NO sage-green bamboo roof. The roof must be moonlit glass / enamel: lilac, midnight blue, pearl, champagne gold.
+
+ROOF DESIGN MUST BE PREMIUM:
+- Make the roof/eave perimeter much more delicate and beautiful than the default: layered scalloped glass tiles, slim champagne-gold ribs, tiny moonstone bead accents, tiny pearl caps at the roof ridge, and a butterfly-wing silhouette along the roof edge.
+- The roof is still only a narrow perimeter cap along the back and right wall top edges; it must NOT cover the interior floor.
+- Add subtle iridescent lilac-blue highlights on the roof tiles only, not broad lighting beams.
+
+STRUCTURE:
+- EMPTY architectural shell only. NO furniture, NO bed, NO desk, NO chair, NO sofa, NO aquarium, NO butterfly frames, NO plants, NO curtains, NO partitions, NO fences, NO balcony railings, NO rugs, NO hanging lamps, NO decorations, NO wall art, NO tools, NO characters, NO text, NO watermark.
+- Only allowed elements: floor, very partial roof/eave strips, corner posts, back wall plane, right wall plane, foundation, and a very minimal exterior step if needed.
+- Only TWO interior walls are allowed: the BACK wall and the RIGHT wall. NO FRONT WALL. NO LEFT WALL. Front-left and front-center area must stay completely open.
+- Roof must NOT cover the middle of the room. Use only narrow perimeter roof/eave strips along the back and right wall top edges, leaving the main interior open and visible.
+- Interior wall surfaces should be clean, broad, blank, and install-ready. No mid-wall wood bands, no rectangular panel framing, no crossed mullions, no large window holes.
+- CRITICAL: NO visible light beams, NO spotlight triangles, NO cast shadows across walls or floor, NO diagonal purple shadow wedge, NO large gradient patches. Use flat clean matte wall planes and an even soft ambient light only.
+
+SHAPE:
+- Irregular non-square softened polygon floor footprint, with one or two angled front edges, similar gameplay silhouette to the existing butterfly house but not identical.
+- Keep the shell practical for placing furniture.
+
+LIGHTING:
+- Even soft ambient daylight for game readability. No dramatic shadows, no sunlight streaks, no moonlight beams, no triangular shadow shapes. Keep wall and floor surfaces clean and usable.
+
+BACKGROUND outside the structure: pure solid white #FFFFFF only, completely flat and uniform, no checkerboard, no beige grid, no tiled backdrop, no gradient, no studio floor, no shadow card, no vignette, no gray.
+
+NO TEXT, no labels, no captions, no writing anywhere in the image.

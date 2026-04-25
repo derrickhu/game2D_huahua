@@ -1,0 +1,15 @@
+Square 1:1 mobile game icon illustration for a cozy flower-shop merge game. Final image must be a square canvas, and the actual picture content must sit INSIDE one large centered circle whose DIAMETER EQUALS THE FULL SIDE LENGTH OF THE SQUARE. The circle should visually touch the top, bottom, left, and right edges of the square canvas. No extra outer margin around the circle.
+
+Use the SAME attractive character direction as the best first version: a cute bright-eyed teenage girl florist, premium casual mobile game heroine, gentle small chin, warm large eyes, soft chestnut-brown hair with glossy volume, rosy cheeks, sweet and memorable smile. Keep her beautiful and polished, not realistic, not babyish, not western-cartoon exaggerated.
+
+This variation must be more distinctive and memorable with a stronger ICON silhouette. The giant bouquet should wrap around the girl more asymmetrically, with one oversized hero pink peony and one bright yellow daisy cluster creating an unmistakable color hook. The bouquet should still occupy about half the image, but with a clearer signature shape that feels like a blooming wave around the girl.
+
+Flower direction: abundant and colorful, with obvious large flower shapes and strong contrast — hot pink peonies, coral roses, sunny yellow daisies, cream blossoms, vivid green leaves. Dense but clean. Slightly fewer filler flowers than the previous version, so the hero flower shapes read more clearly and feel more iconic.
+
+Background direction: keep the beautiful cool turquoise/teal background, but make it a little more graphic and punchy with a soft inner glow halo behind the girl's head so the face pops faster at tiny size. Background must remain clearly separate from character and bouquet.
+
+Style: polished 2D casual game icon, soft clean outlines in warm dark brown, smooth cel shading with gentle gradients, glossy highlights on hair and petals, premium mobile-game icon finish. Rely on bold color masses and clean volume, not line clutter. Not photoreal, not rough painterly, not dark.
+
+Composition: face upper-center, bouquet rising from lower-left and curving toward the right, creating a stronger signature silhouette than a simple round bouquet blob. Make the icon instantly recognizable and attractive in a tiny app list. Use a THIN light circular rim only, no thick badge border.
+
+Hard bans: NO text, NO letters, NO numbers, NO logo, NO watermark, NO frame text, NO UI, NO captions, NO speech bubbles, NO extra characters, NO collage.

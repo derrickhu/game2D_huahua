@@ -28,6 +28,7 @@ import {
   type DecoPanelTabId,
   getDecorationTabLabel,
   getDecosForDecorationPanelTab,
+  getRoomStylesForScene,
   isDecoAllowedInScene,
   formatAllowedScenesShort,
 } from '@/config/DecorationConfig';
@@ -213,6 +214,17 @@ function decoMatchesInvFilter(deco: DecoDef, filter: DecoInvFilter, sceneId: str
     default:
       return true;
   }
+}
+
+function shouldShowDecoInDecorationPanel(deco: DecoDef): boolean {
+  return !deco.hideInDecorationPanel;
+}
+
+function lockedDecoHintText(deco: DecoDef, req: ReturnType<typeof checkRequirement>): string {
+  if (deco.unlockRequirement?.conditionText === '活动解锁') {
+    return deco.unlockRequirement.questDetailText ?? '签到奖励';
+  }
+  return requirementHintText(req);
 }
 
 /** global pixel -> design coordinate */
@@ -843,11 +855,12 @@ export class DecorationPanel extends PIXI.Container {
     const { cw, ch, cols } = measureCardGrid(gridW);
     let totalRows: number;
     if (this._activeTab === 'room_styles') {
-      totalRows = Math.max(1, Math.ceil(ROOM_STYLES.length / cols));
+      const sceneStyles = getRoomStylesForScene(CurrencyManager.state.sceneId);
+      totalRows = Math.max(1, Math.ceil(sceneStyles.length / cols));
     } else {
       const sceneId = CurrencyManager.state.sceneId;
       let decos = sortDecosForInvFilter(
-        getDecosForDecorationPanelTab(this._activeTab, sceneId),
+        getDecosForDecorationPanelTab(this._activeTab, sceneId).filter(shouldShowDecoInDecorationPanel),
         this._decoInvFilter,
       );
       decos = decos.filter((d) => decoMatchesInvFilter(d, this._decoInvFilter, sceneId));
@@ -990,7 +1003,7 @@ export class DecorationPanel extends PIXI.Container {
     };
 
     DECO_PANEL_TABS.forEach((tab, i) => {
-      const label = getDecorationTabLabel(tab);
+      const label = getDecorationTabLabel(tab, CurrencyManager.state.sceneId);
       const isCurrent = this._activeTab === tab;
       const title = label.name;
       makeTab(i, isCurrent, title, () => { this._activeTab = tab; });
@@ -1026,7 +1039,7 @@ export class DecorationPanel extends PIXI.Container {
 
     const sceneId = CurrencyManager.state.sceneId;
     let decos = sortDecosForInvFilter(
-      getDecosForDecorationPanelTab(this._activeTab, sceneId),
+      getDecosForDecorationPanelTab(this._activeTab, sceneId).filter(shouldShowDecoInDecorationPanel),
       this._decoInvFilter,
     );
     decos = decos.filter((d) => decoMatchesInvFilter(d, this._decoInvFilter, sceneId));
@@ -1076,7 +1089,22 @@ export class DecorationPanel extends PIXI.Container {
     const inner = new PIXI.Container();
     this._gridContainer.addChild(inner);
 
-    const stylesSorted = sortRoomStylesByUnlockLevelThenCost(ROOM_STYLES);
+    const stylesSorted = sortRoomStylesByUnlockLevelThenCost(getRoomStylesForScene(CurrencyManager.state.sceneId));
+    if (stylesSorted.length === 0) {
+      const empty = new PIXI.Text('当前房屋暂无可用房间风格', {
+        fontSize: 15,
+        fill: COLORS.TEXT_LIGHT,
+        fontFamily: FONT_FAMILY,
+        align: 'center',
+      });
+      empty.anchor.set(0.5, 0.5);
+      empty.position.set(gridW / 2, availH / 2);
+      inner.addChild(empty);
+      this._addScrollPlate(inner, gridW, availH);
+      this._maxScrollY = 0;
+      this._scrollY = 0;
+      return;
+    }
     const totalRows = Math.ceil(stylesSorted.length / cols);
     const listTopPad = decoGridListTopPad(availH, totalRows, ch);
 
@@ -1434,6 +1462,13 @@ export class DecorationPanel extends PIXI.Container {
       this._beginScroll(e);
       this._pendingGridTap = { type: 'deco', deco, flyCard: card };
     });
+    if (!reqResult.met) {
+      card.on('pointertap', (e: PIXI.FederatedPointerEvent) => {
+        e.stopPropagation();
+        this._teardownScroll();
+        ToastMessage.show(lockedDecoHintText(deco, reqResult));
+      });
+    }
 
     if (
       TutorialManager.isActive
@@ -1465,6 +1500,8 @@ export class DecorationPanel extends PIXI.Container {
     const equipped = DecorationManager.roomStyleId === style.id;
     const styleReq = checkRequirement(style.unlockRequirement);
     const styleReqMet = styleReq.met;
+    /** 已解锁或条件已满足时显示房壳预览；避免「GM 已解锁但等级条未满足」仍显示问号占位 */
+    const showStylePreview = unlocked || styleReqMet;
 
     this._drawCardBg(card, cw, ch, unlocked || styleReqMet, equipped);
 
@@ -1475,7 +1512,7 @@ export class DecorationPanel extends PIXI.Container {
     card.addChild(preview);
 
     let previewHalfH = 0;
-    if (!styleReqMet) {
+    if (!showStylePreview) {
       const maxBox = Math.min(cw - 12, Math.round((76 * ch) / CARD_BASE_H));
       addMysteryCardPlaceholder(preview, cw, CARD_BASE_W, maxBox);
       previewHalfH = Math.ceil(maxBox * 0.44) + 2;
@@ -1506,7 +1543,7 @@ export class DecorationPanel extends PIXI.Container {
     this._addStarValueBadge(card, cw, style.starValue);
     if (equipped) this._addEquipBadge(card, cw);
 
-    if (!styleReqMet) {
+    if (!showStylePreview) {
       const nameGap = 12;
       const lockSlot = Math.max(26, Math.round((28 * cw) / CARD_BASE_W));
       const nameWrap = Math.max(36, cw - 12 - nameGap - lockSlot);
@@ -1636,7 +1673,7 @@ export class DecorationPanel extends PIXI.Container {
     }
     const req = checkRequirement(deco.unlockRequirement);
     if (!req.met) {
-      ToastMessage.show(`${requirementHintText(req)}`);
+      ToastMessage.show(lockedDecoHintText(deco, req));
       return;
     }
     if (deco.cost > 0 && CurrencyManager.state.huayuan < deco.cost) {

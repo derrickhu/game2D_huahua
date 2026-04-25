@@ -13,6 +13,8 @@ import {
   getSlotDecos, DECO_SLOT_INFO,
   ROOM_STYLES, ROOM_STYLE_MAP,
   getDecosForDecorationPanelTab,
+  getDefaultRoomStyleIdForScene,
+  isRoomStyleAllowedInScene,
   isDecoAllowedInScene,
   type DecoPanelTabId,
 } from '@/config/DecorationConfig';
@@ -43,7 +45,7 @@ class DecorationManagerClass {
   private _unlockedRoomStyles = new Set<string>();
 
   private _initRoomStyleDefaults(): void {
-    this._roomStyleId = 'style_default';
+    this._roomStyleId = getDefaultRoomStyleIdForScene(CurrencyManager.state.sceneId ?? 'flower_shop');
     this._roomStyleByScene.clear();
     this._unlockedRoomStyles.clear();
     for (const s of ROOM_STYLES) {
@@ -64,16 +66,23 @@ class DecorationManagerClass {
   /** 当前装修场景下已装备的房间风格 id */
   private _effectiveRoomStyleId(): string {
     const sid = CurrencyManager.state.sceneId;
+    const defaultId = getDefaultRoomStyleIdForScene(sid);
     const fromMap = this._roomStyleByScene.get(sid);
-    if (fromMap && ROOM_STYLE_MAP.has(fromMap) && this._unlockedRoomStyles.has(fromMap)) {
+    if (
+      fromMap
+      && ROOM_STYLE_MAP.has(fromMap)
+      && this._unlockedRoomStyles.has(fromMap)
+      && isRoomStyleAllowedInScene(ROOM_STYLE_MAP.get(fromMap)!, sid)
+    ) {
       return fromMap;
     }
-    return 'style_default';
+    return defaultId;
   }
 
   /** TextureCache 键：当前房间背景 / 花店建筑底板图 */
   getRoomBgTextureKey(): string {
-    const st = ROOM_STYLE_MAP.get(this._effectiveRoomStyleId());
+    const effectiveStyleId = this._effectiveRoomStyleId();
+    const st = ROOM_STYLE_MAP.get(effectiveStyleId);
     return st?.bgTexture ?? 'bg_room_default';
   }
 
@@ -89,8 +98,9 @@ class DecorationManagerClass {
    * 切换房间整体风格（需已解锁）
    */
   equipRoomStyle(styleId: string): boolean {
-    if (!ROOM_STYLE_MAP.has(styleId) || !this._unlockedRoomStyles.has(styleId)) return false;
     const sid = CurrencyManager.state.sceneId;
+    const style = ROOM_STYLE_MAP.get(styleId);
+    if (!style || !this._unlockedRoomStyles.has(styleId) || !isRoomStyleAllowedInScene(style, sid)) return false;
     this._roomStyleByScene.set(sid, styleId);
     this._roomStyleId = styleId;
     this._save();
@@ -104,6 +114,7 @@ class DecorationManagerClass {
   unlockRoomStyle(styleId: string): boolean {
     const st = ROOM_STYLE_MAP.get(styleId);
     if (!st || this._unlockedRoomStyles.has(styleId)) return false;
+    if (!isRoomStyleAllowedInScene(st, CurrencyManager.state.sceneId)) return false;
     const req = checkRequirement(st.unlockRequirement);
     if (!req.met) return false;
     if (st.cost > 0 && CurrencyManager.state.huayuan < st.cost) return false;

@@ -264,7 +264,7 @@ export class OfflineRewardPanel extends PIXI.Container {
       avatarRight = 8 + tex.width * k + 10;
     }
 
-    const nameLine = new PIXI.Text(`${note.bondName} · Lv.${note.bondLevel}「${note.bondLabel}」`, {
+    const nameLine = new PIXI.Text(`${note.bondName} · 来信`, {
       fontSize: 14, fill: 0x9c4f2e, fontFamily: FONT_FAMILY, fontWeight: 'bold',
     } as PIXI.TextStyle);
     nameLine.position.set(avatarRight, y + 2);

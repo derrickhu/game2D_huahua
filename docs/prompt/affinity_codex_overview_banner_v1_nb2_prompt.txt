@@ -1,0 +1,7 @@
+Clean 2D vector mobile game UI component for a cozy pastel flower-shop merge game, portrait-friendly wide banner card on a pure green chroma background RGB 0,255,0. Create one premium reward banner panel only, isolated, centered, no other objects.
+
+Shape: wide rounded rectangle hero banner with thick creamy rim, soft peach-pink edge shading, inner scenic illustration strip occupying the upper half, and a clean reward/info area in the lower half. The scenic strip should show a dreamy pastel sunset sky and cozy whimsical outdoor atmosphere, softly painted but still stylized UI art, with no characters prominent enough to matter. Elegant, collectible-event feeling similar to a mobile-game album reward banner.
+
+Important: NO TEXT, no digits, no labels, no item icons, no badges, no progress numbers. Leave clear empty spaces where runtime code can place countdown, rewards, and progress. Include a shallow rounded groove centered near the bottom for a progress bar. Add one tiny decorative ticket-tab accent hanging near the lower-left edge, blank, no symbols.
+
+Colors: sunset peach, lavender-pink clouds, warm gold highlights, creamy ivory frame. Very polished, layered, premium casual-game UI, no watermark, no readable writing.

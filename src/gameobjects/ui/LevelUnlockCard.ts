@@ -40,6 +40,33 @@ const KIND_DEFAULT_ICON: Record<LevelUnlockEntryKind, string> = {
   cosmetic: 'icon_book',
 };
 
+const KIND_PILL_LABEL: Record<LevelUnlockEntryKind, string> = {
+  feature: '新功能',
+  affinity: '新熟客',
+  shop: '商店升级',
+  map: '地图开放',
+  tool: '新工具',
+  cosmetic: '新内容',
+};
+
+function drawSparkle(
+  g: PIXI.Graphics,
+  cx: number,
+  cy: number,
+  size: number,
+  color: number,
+  alpha: number,
+): void {
+  const h = size / 2;
+  g.beginFill(color, alpha);
+  g.moveTo(cx, cy - h);
+  g.lineTo(cx + h * 0.55, cy);
+  g.lineTo(cx, cy + h);
+  g.lineTo(cx - h * 0.55, cy);
+  g.closePath();
+  g.endFill();
+}
+
 export interface LevelUnlockCardOptions {
   /** 卡片宽度（高度按内容自适应） */
   width: number;
@@ -74,14 +101,24 @@ export function createLevelUnlockCard(
   const root = new PIXI.Container();
   root.eventMode = 'none';
 
-  // 标题（深棕字 + 弱 stroke，置于奶金暖底上）
+  const pillText = KIND_PILL_LABEL[entry.kind] ?? '已解锁';
+  const pill = new PIXI.Text(pillText, {
+    fontSize: Math.max(10, TITLE - 4),
+    fill: 0xffffff,
+    fontFamily: FONT_FAMILY,
+    fontWeight: 'bold',
+    letterSpacing: 1,
+  } as any);
+  pill.anchor.set(0.5, 0);
+
+  // 标题（深棕字 + 更明确层级）
   const title = new PIXI.Text(entry.title ?? '', {
     fontSize: TITLE,
     fill: 0x4a2f10,
     fontFamily: FONT_FAMILY,
     fontWeight: 'bold',
     wordWrap: true,
-    wordWrapWidth: W - padding * 2,
+    wordWrapWidth: W - padding * 2 - 12,
     align: 'center',
   } as any);
   title.anchor.set(0.5, 0);
@@ -89,12 +126,12 @@ export function createLevelUnlockCard(
   // 描述
   const desc = new PIXI.Text(entry.desc ?? '', {
     fontSize: DESC,
-    fill: 0x6b4a1c,
+    fill: 0x7a5a33,
     fontFamily: FONT_FAMILY,
     wordWrap: true,
-    wordWrapWidth: W - padding * 2,
+    wordWrapWidth: W - padding * 2 - 12,
     align: 'center',
-    lineHeight: DESC + 3,
+    lineHeight: DESC + 5,
   } as any);
   desc.anchor.set(0.5, 0);
 
@@ -119,24 +156,65 @@ export function createLevelUnlockCard(
   }
 
   // 计算高度
-  const iconYTop = padding;
-  const titleY = iconYTop + ICON + 4;
+  const pillH = Math.max(24, Math.round((TITLE - 4) * 1.9));
+  const pillY = padding;
+  const iconYTop = pillY + pillH + 10;
+  const titleY = iconYTop + ICON + 10;
   // 临时设位以拿到自然 height
   title.position.set(W / 2, titleY);
-  const descY = titleY + title.height + 2;
+  const descY = titleY + title.height + 6;
   desc.position.set(W / 2, descY);
-  let H = Math.ceil(descY + desc.height + padding);
+  let H = Math.ceil(descY + desc.height + padding + 4);
   if (typeof opts.maxHeight === 'number') H = Math.min(H, Math.max(40, opts.maxHeight));
 
-  // 背景（暖色奶金分类底 + 同色系实线描边，与「解锁新家具」格视觉同源）
+  // 背景（更像一张独立奖励卡，弱高光 + 内描边）
   const bg = new PIXI.Graphics();
-  bg.beginFill(KIND_BG_TINT[entry.kind] ?? 0xFFF1D6, 0.95);
+  bg.beginFill(0xfff8ea, 0.98);
   bg.drawRoundedRect(0, 0, W, H, 14);
   bg.endFill();
   bg.lineStyle(2, KIND_BORDER_COLOR[entry.kind] ?? 0xC79A55, 0.95);
   bg.drawRoundedRect(0, 0, W, H, 14);
+  bg.lineStyle(1.2, 0xffffff, 0.55);
+  bg.drawRoundedRect(4, 4, W - 8, H - 8, 11);
   bg.eventMode = 'none';
   root.addChild(bg);
+
+  const glow = new PIXI.Graphics();
+  glow.beginFill(KIND_BG_TINT[entry.kind] ?? 0xFFF1D6, 0.9);
+  glow.drawCircle(W / 2, iconYTop + ICON / 2, ICON * 0.48);
+  glow.endFill();
+  glow.lineStyle(2, KIND_BORDER_COLOR[entry.kind] ?? 0xC79A55, 0.35);
+  glow.drawCircle(W / 2, iconYTop + ICON / 2, ICON * 0.48);
+  glow.beginFill(0xffffff, 0.28);
+  glow.drawCircle(W / 2 - ICON * 0.18, iconYTop + ICON * 0.32, ICON * 0.18);
+  glow.endFill();
+  root.addChild(glow);
+
+  const sparkle = new PIXI.Graphics();
+  const scx = W / 2;
+  const scy = iconYTop + ICON / 2;
+  drawSparkle(sparkle, scx - ICON * 0.44, scy - ICON * 0.22, ICON * 0.26, 0xffffff, 0.9);
+  drawSparkle(sparkle, scx + ICON * 0.42, scy - ICON * 0.3, ICON * 0.2, 0xfff6cf, 0.78);
+  drawSparkle(sparkle, scx + ICON * 0.3, scy + ICON * 0.34, ICON * 0.16, 0xffffff, 0.68);
+  sparkle.lineStyle(1.2, 0xffffff, 0.55);
+  sparkle.moveTo(scx - ICON * 0.53, scy - ICON * 0.22 - ICON * 0.08);
+  sparkle.lineTo(scx - ICON * 0.53, scy - ICON * 0.22 + ICON * 0.08);
+  sparkle.moveTo(scx - ICON * 0.53 - ICON * 0.08, scy - ICON * 0.22);
+  sparkle.lineTo(scx - ICON * 0.53 + ICON * 0.08, scy - ICON * 0.22);
+  root.addChild(sparkle);
+
+  const pillBgW = Math.min(W - padding * 2, Math.max(84, pill.width + 24));
+  const pillBg = new PIXI.Graphics();
+  pillBg.beginFill(KIND_BORDER_COLOR[entry.kind] ?? 0xC79A55, 0.92);
+  pillBg.drawRoundedRect((W - pillBgW) / 2, pillY, pillBgW, pillH, Math.floor(pillH / 2));
+  pillBg.endFill();
+  pillBg.beginFill(0xffffff, 0.16);
+  pillBg.drawRoundedRect((W - pillBgW) / 2 + 3, pillY + 3, pillBgW - 6, Math.max(8, pillH * 0.42), Math.floor((pillH - 6) / 2));
+  pillBg.endFill();
+  root.addChild(pillBg);
+
+  pill.position.set(W / 2, pillY + Math.max(3, Math.floor((pillH - pill.height) / 2) - 1));
+  root.addChild(pill);
 
   iconHolder.position.set(W / 2, iconYTop + ICON / 2);
   root.addChild(iconHolder);

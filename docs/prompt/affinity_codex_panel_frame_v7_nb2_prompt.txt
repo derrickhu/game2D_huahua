@@ -1,0 +1,15 @@
+Clean 2D vector mobile game UI for a cozy pastel flower-shop merge game, kawaii casual style. A big portrait modal panel, 9:16, centered on a pure green chroma background pure RGB 0,255,0.
+
+Panel frame — very rounded corners (corner radius roughly 6 percent of panel width), one single thick soft buttercream ivory rim only. ABSOLUTELY NO inner frame, NO inner border, NO inner outline, NO double rim, NO secondary pink line, NO concentric ring. The interior must touch the outer rim directly with no nested border between them. Gentle floating drop shadow beneath the whole panel. No hard bevel, no metallic, no photoreal.
+
+Interior — one giant flat cream field, hex FFF3DC, matte plain fill. The cream interior fills ALL space inside the outer rim, edge to edge with no inner padding line. Absolutely no wood grain, no noise, no subtle patterns, no placeholder boxes, no dividing lines, no inner shadows, no extra outline rings. Leave the whole interior as one single clean empty canvas so UI elements can be placed on top at runtime.
+
+Top title banner — ornate golden yellow scalloped ribbon banner stretched across the top of the panel, puffy cute kawaii shape with two little ribbon tails on each side, empty center, no text, no numbers, no letters, no punctuation, no digits, no symbols inside the banner. Tiny pink cherry blossom florets tucked at both ribbon ends as decoration.
+
+Top-right close button — chunky circular red button with a simple white X glyph, slightly past the frame top-right corner, with a tiny white highlight dot on the upper-left of the red circle.
+
+Bottom-inside corners — very subtle scattered tiny pink and cream cherry blossom petals as decoration, very minimal, only in the bottom 5 percent of the interior, not crossing into the main usable interior area. Absolutely no leaves, no vines, no borders, no dividers across the interior.
+
+Palette — buttercream ivory, peach pink ONLY on the cherry blossom petals at the very bottom, warm honey gold for the title ribbon, soft blush. Pastel high key. Soft gradients only for subtle depth. No photoreal, no watermark, no readable text or numbers anywhere, no icons, no UI controls inside the interior.
+
+Aspect ratio exactly 9:16, panel fills roughly 92 percent of the frame, chroma pure green margin around the panel.

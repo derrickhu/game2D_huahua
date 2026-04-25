@@ -1,0 +1,15 @@
+Square 1:1 WeChat mini game icon illustration for a cozy flower-shop merge game. The image must be designed for a VERY SMALL icon: one strongest focal character only, very clear silhouette, very few fine lines, rely on bold color blocks and smooth color shading to show volume and material. The main picture must sit INSIDE one huge centered circle that nearly fills the whole square, like a full-bleed circular crop.
+
+Main subject: one cute young florist girl facing directly toward the viewer, hugging an ENORMOUS bouquet with both arms. Bust-up or half-body only. Her expression must be MUCH happier than before: eyes squeezed into joyful crescent shapes, mouth open in a big laughing smile, cheeks rosy, lively and bright. The bouquet should occupy about HALF of the whole image, especially the lower-left and lower-center area, and feel oversized, abundant, festive, and overflowing.
+
+IMPORTANT character direction: keep the same polished icon rendering style as the previous version, BUT the GIRL'S LOOK must be closer to the in-game shop owner, not American cartoon style, not Disney style, not western glamorous style. Use a cute East-Asian casual mobile-game heroine face. Round soft face, gentle small nose, warm brown color scheme, simpler sweeter facial structure. Hair should be a short light-brown bob with soft volume and straight bangs, with a small pink flower hair clip on one side. Outfit should hint at the game's owner look: soft pink puff sleeves and a simple white apron. Keep the girl charming and memorable, but clearly closer to the game's original heroine identity.
+
+Bouquet design: MANY flowers, very bright and saturated, strong large petal shapes, not intricate botanical detail. Use obvious color groups: hot pink peonies, coral roses, bright yellow daisies, creamy white blooms, vivid fresh green leaves. The flower mass should feel rich and dense with strong color contrast and clear layered depth.
+
+Color and readability: HIGH contrast between girl, bouquet, and background. Girl and flowers must pop immediately. Background must be clearly separated from both character and flowers, using a distinct cool teal-blue or turquoise gradient background with soft glow, so the warm skin tones and hot flower colors stand out.
+
+Rendering style: polished 2D game icon, soft warm brown outlines only where needed, limited line detail, strong clean shape design, smooth cel-plus-gradient shading, glossy highlights on petals and hair, soft material volume from color transitions rather than linework. Premium casual game icon finish. No photorealism, no rough painterly texture, no dark muddy palette, no cluttered background.
+
+Composition rules: face in the upper-center area, bouquet filling the lower half, some flowers reaching toward the right side for balance. Keep the important face and bouquet masses comfortably inside the safe area, but maximize the circular composition. A thin subtle light rim is allowed, but no thick badge border.
+
+Hard bans: NO text, NO letters, NO numbers, NO logo, NO watermark, NO UI, NO captions, NO speech bubbles, NO extra characters, NO collage, NO tiny decorative details that disappear at icon size.

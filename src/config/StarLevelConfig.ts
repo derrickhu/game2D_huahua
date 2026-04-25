@@ -47,9 +47,9 @@ const FLOWER_SHOP_THRESHOLDS: StarLevelThreshold[] = [
   { level: 5,  starRequired: 38,  label: '五星' },
   { level: 6,  starRequired: 55,  label: '六星' },
   { level: 7,  starRequired: 70,  label: '七星' },
-  { level: 8,  starRequired: 95,  label: '八星' },
-  { level: 9,  starRequired: 125, label: '九星' },
-  { level: 10, starRequired: 160, label: '十星' },
+  { level: 8,  starRequired: 90,  label: '八星' },
+  { level: 9,  starRequired: 118, label: '九星' },
+  { level: 10, starRequired: 145, label: '十星' },
 ];
 
 const FLOWER_SHOP_MILESTONES: StarMilestoneDef[] = [
@@ -59,9 +59,9 @@ const FLOWER_SHOP_MILESTONES: StarMilestoneDef[] = [
   { star: 38,  rewards: [{ type: 'stamina', amount: 30 }, { type: 'chest', amount: 1, itemId: 'chest_2' }] },
   { star: 55,  rewards: [{ type: 'diamond', amount: 10 }] },
   { star: 70,  rewards: [{ type: 'chest', amount: 1, itemId: 'chest_4' }] },
-  { star: 95,  rewards: [{ type: 'diamond', amount: 10 }, { type: 'stamina', amount: 40 }] },
-  { star: 125, rewards: [{ type: 'chest', amount: 1, itemId: 'chest_4' }, { type: 'diamond', amount: 15 }] },
-  { star: 160, rewards: [{ type: 'diamond', amount: 20 }, { type: 'stamina', amount: 50 }] },
+  { star: 90,  rewards: [{ type: 'diamond', amount: 10 }, { type: 'stamina', amount: 40 }] },
+  { star: 118, rewards: [{ type: 'chest', amount: 1, itemId: 'chest_4' }, { type: 'diamond', amount: 15 }] },
+  { star: 145, rewards: [{ type: 'diamond', amount: 20 }, { type: 'stamina', amount: 50 }] },
 ];
 
 const BUTTERFLY_HOUSE_THRESHOLDS: StarLevelThreshold[] = [
@@ -112,15 +112,40 @@ export const DEFAULT_SCENE_ID = 'flower_shop';
 // 全局星级（顶栏进度条、globalLevel、解锁门控）
 // ---------------------------------------------------------------------------
 
-/** 升到该星级所需的累计星星下限（L1=0，L4=25，L5=38，L6=55，L10=160；L11 起公式延伸） */
+/**
+ * 11-50 级显式表：
+ * - 11-20：承接蝴蝶小屋与地图预热
+ * - 21-30：中期扩展段
+ * - 31-40：中后期收藏段
+ * - 41-50：长线珍藏段
+ *
+ * 50 级后再用平滑兜底公式延伸，避免版本末端出现断崖。
+ */
+const GLOBAL_STAR_REQUIRED_11_TO_50: number[] = [
+  180, 218, 259, 303, 350, 400, 453, 509, 568, 630,
+  695, 763, 834, 908, 985, 1065, 1148, 1234, 1323, 1415,
+  1510, 1609, 1712, 1819, 1930, 2045, 2164, 2287, 2414, 2545,
+  2680, 2820, 2965, 3115, 3270, 3430, 3595, 3765, 3940, 4120,
+];
+
+const GLOBAL_STAR_LEVEL_CAP_EXPLICIT = 50;
+const GLOBAL_STAR_REQUIRED_AT_50 =
+  GLOBAL_STAR_REQUIRED_11_TO_50[GLOBAL_STAR_REQUIRED_11_TO_50.length - 1] ?? 4120;
+const GLOBAL_STAR_POST_50_BASE_DELTA = 185;
+const GLOBAL_STAR_POST_50_DELTA_STEP = 5;
+
+/** 升到该星级所需的累计星星下限（L1=0，L4=25，L5=38，L6=55，L10=145；L11-50 显式表，51+ 公式延伸） */
 export function getGlobalStarRequiredForLevel(level: number): number {
   if (level <= 1) return 0;
   if (level <= 10) {
     return FLOWER_SHOP_THRESHOLDS[level - 1].starRequired;
   }
-  let s = 160;
-  for (let L = 11; L <= level; L++) {
-    s += 40 + (L - 11) * 5;
+  if (level <= GLOBAL_STAR_LEVEL_CAP_EXPLICIT) {
+    return GLOBAL_STAR_REQUIRED_11_TO_50[level - 11] ?? GLOBAL_STAR_REQUIRED_AT_50;
+  }
+  let s = GLOBAL_STAR_REQUIRED_AT_50;
+  for (let L = GLOBAL_STAR_LEVEL_CAP_EXPLICIT + 1; L <= level; L++) {
+    s += GLOBAL_STAR_POST_50_BASE_DELTA + (L - (GLOBAL_STAR_LEVEL_CAP_EXPLICIT + 1)) * GLOBAL_STAR_POST_50_DELTA_STEP;
   }
   return s;
 }

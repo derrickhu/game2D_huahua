@@ -36,6 +36,8 @@ export interface LevelUpRewardPayload {
   diamond: number;
   /** 许愿喷泉硬币（已入账，仅展示；无顶栏飞入） */
   flowerSignTickets?: number;
+  /** 直接解锁的家具（展示用，发放已由调用方完成） */
+  decoUnlockIds?: string[];
   /** 收纳盒物品（展示 + 关闭时飞入礼包后再发放） */
   rewardBoxItems?: Array<{ itemId: string; count: number }>;
 }
@@ -99,6 +101,7 @@ export class LevelUpPopup extends PIXI.Container {
     const stamina = reward.stamina ?? 0;
     const diamond = reward.diamond ?? 0;
     const flowerSignTickets = Math.max(0, Math.floor(reward.flowerSignTickets ?? 0));
+    const decoUnlockIds = reward.decoUnlockIds ?? [];
     const rewardBoxItems = reward.rewardBoxItems ?? [];
     this._pendingBoxItems = this._previewOnly ? [] : [...rewardBoxItems];
     this._showHuayuan = huayuan;
@@ -111,6 +114,9 @@ export class LevelUpPopup extends PIXI.Container {
     if (diamond > 0) obtainEntries.push({ kind: 'direct_currency', currency: 'diamond', amount: diamond });
     if (flowerSignTickets > 0) {
       obtainEntries.push({ kind: 'direct_currency', currency: 'flowerSign', amount: flowerSignTickets });
+    }
+    for (const decoId of decoUnlockIds) {
+      obtainEntries.push({ kind: 'deco', decoId, label: '专属家具' });
     }
     for (const { itemId, count } of rewardBoxItems) {
       obtainEntries.push({ kind: 'board_item', itemId, count });
@@ -402,7 +408,7 @@ export class LevelUpPopup extends PIXI.Container {
     this.addChild(panelRoot);
   }
 
-  // ── 新功能解锁卡片区（仅 feature/affinity/shop/map；tool/cosmetic 已在物品奖励区出现，避免重复）────
+  // ── 新功能解锁卡片区（仅 feature/shop/map；tool/cosmetic 已在物品奖励区出现；affinity 已退场，客人会自然出现） ────
 
   private _appendOpenCardsSection(
     content: PIXI.Container,
@@ -420,15 +426,18 @@ export class LevelUpPopup extends PIXI.Container {
 
     const allEntries = defs
       .flatMap(d => d.entries)
-      .filter(e => e.kind === 'feature' || e.kind === 'affinity' || e.kind === 'shop' || e.kind === 'map');
+      .filter(e => e.kind === 'feature' || e.kind === 'shop' || e.kind === 'map');
     if (allEntries.length === 0) return;
 
-    const COLS = allEntries.length === 1 ? 1 : 2;
+    const singleCard = allEntries.length === 1;
+    const COLS = singleCard ? 1 : 2;
     const COL_GAP = 12;
     const ROW_GAP = 10;
     const sideMargin = 32;
     const usableW = W - sideMargin * 2;
-    const cardW = Math.floor((usableW - (COLS - 1) * COL_GAP) / COLS);
+    const cardW = singleCard
+      ? Math.min(340, usableW - 28)
+      : Math.floor((usableW - (COLS - 1) * COL_GAP) / COLS);
     const startY = hintNode.y - 6;
 
     this._drawSectionDivider(content, W, startY - 8, '新功能解锁');
@@ -449,10 +458,10 @@ export class LevelUpPopup extends PIXI.Container {
       }
       const { view, height } = createLevelUnlockCard(allEntries[i]!, {
         width: cardW,
-        iconSize: 52,
-        titleFontSize: 14,
-        descFontSize: 11,
-        padding: 10,
+        iconSize: singleCard ? 62 : 52,
+        titleFontSize: singleCard ? 16 : 14,
+        descFontSize: singleCard ? 12 : 11,
+        padding: singleCard ? 14 : 10,
       });
       view.position.set(gridLeft + col * (cardW + COL_GAP), bottomY);
       content.addChild(view);

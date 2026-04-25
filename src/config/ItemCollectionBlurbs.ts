@@ -73,14 +73,14 @@ const ITEM_UNLOCK_BLURB_EXTRA: Record<string, string> = {
   drink_cold_7: '星空配色，喝得到晚风。',
   drink_cold_8: '极光入杯，浪漫封顶。',
 
-  drink_dessert_1: '酥香花瓣，配茶刚好。',
-  drink_dessert_2: '马卡龙色，少女心不打烊。',
-  drink_dessert_3: '杯子蛋糕，一人份的幸福。',
-  drink_dessert_4: '慕斯如云，入口即化的温柔。',
-  drink_dessert_5: '切块分享，甜蜜要分你一半。',
-  drink_dessert_6: '拼盘上桌，选择困难全都要。',
-  drink_dessert_7: '圆蛋糕上，蜡烛与愿望齐亮。',
-  drink_dessert_8: '双层花艺，庆典的甜度加倍。',
+  drink_dessert_1: '小挞上点几颗莓果，甜味刚刚好。',
+  drink_dessert_2: '青提铺开，清爽奶香更显轻盈。',
+  drink_dessert_3: '蜜桃铺面，盘里的甜味更完整了。',
+  drink_dessert_4: '草莓围边，小圆蛋糕开始像样登场。',
+  drink_dessert_5: '香橙拼上奶油，颜色一下亮起来。',
+  drink_dessert_6: '两种水果同盘，层次和甜香都更丰富。',
+  drink_dessert_7: '什果铺满，已经有了店里招牌的样子。',
+  drink_dessert_8: '缤纷果香一层层堆起，越看越想分享。',
 
   tool_plant_1: '翻土第一铲，故事从泥土开始。',
   tool_plant_2: '滋润根须，也滋润期待。',
@@ -109,8 +109,8 @@ const ITEM_UNLOCK_BLURB_EXTRA: Record<string, string> = {
   tool_mixer_5: '冰柜满仓，招待永不断供。',
 
   tool_bake_1: '擀面杖滚过，面团变得听话。',
-  tool_bake_2: '打蛋器转圈，空气里都是甜。',
-  tool_bake_3: '烤箱灯亮，香气是最佳预告。',
+  tool_bake_2: '烤箱灯一亮，空气里就有甜香。',
+  tool_bake_3: '烘焙台备好模具，下一层甜味开始成形。',
   tool_bake_4: '装裱台上，蛋糕穿上外衣。',
   tool_bake_5: '高级装裱，把甜点做成作品。',
 

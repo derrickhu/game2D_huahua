@@ -1,0 +1,31 @@
+Square game asset sheet, 1:1 canvas.
+
+Generate EXACTLY 2 separate wall-art furniture props in ONE image, laid out as a clean 2 columns x 1 row sheet.
+Each prop must stay centered in its own half, with wide pure solid white #FFFFFF empty margin around it for safe splitting and cutout.
+
+Cute kawaii 2.5D isometric view from upper-left about 45 degrees, hand-painted mobile merge-game flower shop style.
+Soft brown rounded line art, gentle upper-left daylight, clean readable silhouette, cozy premium casual-game finish.
+Keep both props in the SAME rendering style and scale family.
+
+These are decorative indoor faux windows used as wall ornaments, not full room scenes.
+Each prop should read clearly as a framed window unit viewed in the same isometric wall-art perspective used by this game.
+Include a visible outside view inside the glass/opening, but keep that view simplified and painterly like part of the prop.
+
+Left prop:
+- A tall arched cottage window wall decor.
+- Material: creamy painted wood with soft honey wood trim.
+- Shape: elegant rounded arch top with two opening panels and a little sill ledge.
+- Outside scenery: bright spring flower meadow, a few soft pastel butterflies, pale blue sky, distant greenery.
+- Mood: airy, warm, welcoming, romantic butterfly-house feeling.
+
+Right prop:
+- A rounded vintage greenhouse window wall decor.
+- Material: brushed brass or antique bronze frame with soft cream inner trim.
+- Shape: circular or rounded-oval porthole-like greenhouse window with segmented mullions.
+- Outside scenery: calm lakeside or misty garden conservatory view, gentle water reflection, pale mint trees, soft morning haze.
+- Mood: quieter, slightly more premium and dreamy.
+
+Important:
+- NO full wall, NO whole room shell, NO floor, NO curtains outside the window unit, NO characters, NO readable text, NO watermark, NO logo.
+- Each prop must be a single isolated wall-decor object only.
+- Background pure solid white #FFFFFF only.

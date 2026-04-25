@@ -1,7 +1,9 @@
-Single isolated mobile game UI button on solid pure magenta background #FF00FF for chroma key removal. Soft pastel kawaii 2D casual game style.
+Single isolated mobile game UI button on solid pure chroma green background #00FF00 for clean background removal. Soft pastel kawaii 2D casual game style.
 
-Subject: ONE chunky CIRCULAR button (perfect circle, ~70% of canvas, centered with comfortable margin on all four sides). The button has a soft 3D rounded look — pastel lavender body, a slightly darker lavender lower curve for volume, a thin pearl-pink rim around the perimeter, a gentle glossy highlight on the upper-left edge, and a soft floating drop shadow underneath.
+Subject: ONE chunky CIRCULAR button — a perfect circle, roughly 70% of the canvas, centered with a comfortable margin on all four sides. The button has a soft 3D rounded look — pastel lavender body, a slightly darker lavender lower curve for volume, a thin pearl-pink rim around the perimeter, a gentle glossy highlight on the upper-left edge, and a soft floating drop shadow underneath the button. The circular button face is fully opaque solid lavender — NO transparent area inside, NO holes, NO green showing through the button.
 
 On the front face of the button: a stylized OPEN STORYBOOK / SCRAPBOOK ICON, painted simply in cream / pale gold / soft pink — left page shows a small heart doodle, right page shows a tiny portrait silhouette inside a frame, a golden ribbon bookmark draped down the spine, a tiny pink rose tucked at the upper corner. The book sits flat in the center of the button face, occupying about 60% of the button area. Symbolic, no readable text on the pages.
 
-The button must be FULLY visible as a single coherent circular object with strong clean edges against the bright magenta background. Solid bright magenta #FF00FF fills the entire area outside the button. NO text, NO numbers, NO watermark, NO ui chrome, NO partial cropping.
+The button must be FULLY visible as a single coherent circular object with strong clean edges against the bright chroma green background. Solid bright green #00FF00 fills the entire area outside the button, edge to edge. NO magenta. NO checkerboard. NO additional ui elements. NO text, NO numbers, NO watermark, NO ui chrome, NO partial cropping.
+
+Aspect 1:1 square canvas.

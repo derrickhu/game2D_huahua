@@ -1,0 +1,19 @@
+5:4 WeChat Mini Game share card for "Huahua Miaowu", a cozy flower-shop merge and room decoration game.
+
+Create a clean promotional image that already includes attractive Chinese headline typography as part of the final image.
+
+Canvas and layout: a bright empty cozy room interior, cream white walls, pale wood floor, soft sunlight, pastel flower-shop atmosphere. The room should feel like a blank room waiting to be decorated, with open floor space clearly visible.
+
+Main gameplay visual: many beautiful furniture pieces are falling from the sky into the empty room, as if the player is decorating it. Make the furniture the focus of the image: cute sofa, round tea table, wicker chair, flower display shelf, wall art frame, window decor, potted plants, vanity mirror, small lamp, rug, cushions, flower baskets. The furniture should be colorful, glossy, three-dimensional 2D game icons, with soft shadows under each piece and sparkles around falling items. Use motion arcs and floating petals to show "furniture drops in and fills the room", but do not draw UI buttons.
+
+Composition: keep the furniture large and readable at thumbnail size. Some pieces hover above, some have already landed in the room, forming a satisfying before-and-after decoration feeling. Avoid clutter; each furniture item should be attractive and distinct.
+
+Chinese text must be clear, correct, and beautiful. Add one large catchy Chinese headline at the top-left:
+努力攒钱装修中
+Add a smaller subtitle below it:
+空房间慢慢变漂亮
+Typography style: bold rounded Chinese display font, cream-white fill, warm brown stroke, soft golden drop shadow, sticker-like, highly readable at chat thumbnail size.
+
+Art style: premium polished 2D casual mobile game advertising key art, bright high-key pastel palette, glossy highlights, soft 3D-like volume, clean silhouettes, cheerful and eye-catching.
+
+Hard bans: NO English text, NO random letters, NO watermark, NO logo, NO QR code, NO app store badge, NO real photo, NO cluttered collage, NO black border, NO white border.

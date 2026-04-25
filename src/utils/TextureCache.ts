@@ -63,7 +63,7 @@ const MAIN_IMAGE_MAP: Record<string, string> = {
   /** 主界面客区试看：花团锦簇强虚化 NB2 稿 */
   shop_scene_bg_floral_nb2: 'images/ui/shop_scene_bg_floral_nb2.png',
   /** 启动 Loading 全屏底图（NB2 9:16，主包随下） */
-  loading_splash_run_to_shop_nb2: 'images/ui/loading_splash_run_to_shop_nb2.png',
+  loading_splash_run_to_shop_nb2: 'images/ui/loading_splash_run_to_shop_nb2.jpg',
   /** Loading 顶栏游戏名（NB2 上半可爱版 + rembg 透明底） */
   loading_title_cute_nb2: 'images/ui/loading_title_cute_nb2.png',
 };
@@ -110,7 +110,7 @@ const CHARS_IMAGE_MAP: Record<string, string> = {
   customer_mystery:   'subpkg_chars/images/customer/mystery.png',
   customer_celebrity: 'subpkg_chars/images/customer/celebrity.png',
 
-  // 友谊卡 / 图鉴系统：小诗 12 张卡面（S1 首发，路径 affinity_cards/）
+  // 友谊卡 / 图鉴系统：S1 首发卡面（路径 affinity_cards/）
   affinity_card_student_01: 'subpkg_chars/images/affinity_cards/card_student_01.png',
   affinity_card_student_02: 'subpkg_chars/images/affinity_cards/card_student_02.png',
   affinity_card_student_03: 'subpkg_chars/images/affinity_cards/card_student_03.png',
@@ -123,6 +123,30 @@ const CHARS_IMAGE_MAP: Record<string, string> = {
   affinity_card_student_10: 'subpkg_chars/images/affinity_cards/card_student_10.png',
   affinity_card_student_11: 'subpkg_chars/images/affinity_cards/card_student_11.png',
   affinity_card_student_12: 'subpkg_chars/images/affinity_cards/card_student_12.png',
+  affinity_card_athlete_01: 'subpkg_chars/images/affinity_cards/card_athlete_01.png',
+  affinity_card_athlete_02: 'subpkg_chars/images/affinity_cards/card_athlete_02.png',
+  affinity_card_athlete_03: 'subpkg_chars/images/affinity_cards/card_athlete_03.png',
+  affinity_card_athlete_04: 'subpkg_chars/images/affinity_cards/card_athlete_04.png',
+  affinity_card_athlete_05: 'subpkg_chars/images/affinity_cards/card_athlete_05.png',
+  affinity_card_athlete_06: 'subpkg_chars/images/affinity_cards/card_athlete_06.png',
+  affinity_card_athlete_07: 'subpkg_chars/images/affinity_cards/card_athlete_07.png',
+  affinity_card_athlete_08: 'subpkg_chars/images/affinity_cards/card_athlete_08.png',
+  affinity_card_athlete_09: 'subpkg_chars/images/affinity_cards/card_athlete_09.png',
+  affinity_card_athlete_10: 'subpkg_chars/images/affinity_cards/card_athlete_10.png',
+  affinity_card_athlete_11: 'subpkg_chars/images/affinity_cards/card_athlete_11.png',
+  affinity_card_athlete_12: 'subpkg_chars/images/affinity_cards/card_athlete_12.png',
+  affinity_card_celebrity_01: 'subpkg_chars/images/affinity_cards/card_celebrity_01.png',
+  affinity_card_celebrity_02: 'subpkg_chars/images/affinity_cards/card_celebrity_02.png',
+  affinity_card_celebrity_03: 'subpkg_chars/images/affinity_cards/card_celebrity_03.png',
+  affinity_card_celebrity_04: 'subpkg_chars/images/affinity_cards/card_celebrity_04.png',
+  affinity_card_celebrity_05: 'subpkg_chars/images/affinity_cards/card_celebrity_05.png',
+  affinity_card_celebrity_06: 'subpkg_chars/images/affinity_cards/card_celebrity_06.png',
+  affinity_card_celebrity_07: 'subpkg_chars/images/affinity_cards/card_celebrity_07.png',
+  affinity_card_celebrity_08: 'subpkg_chars/images/affinity_cards/card_celebrity_08.png',
+  affinity_card_celebrity_09: 'subpkg_chars/images/affinity_cards/card_celebrity_09.png',
+  affinity_card_celebrity_10: 'subpkg_chars/images/affinity_cards/card_celebrity_10.png',
+  affinity_card_celebrity_11: 'subpkg_chars/images/affinity_cards/card_celebrity_11.png',
+  affinity_card_celebrity_12: 'subpkg_chars/images/affinity_cards/card_celebrity_12.png',
 };
 
 // ================================================================
@@ -232,11 +256,16 @@ const PANELS_IMAGE_MAP: Record<string, string> = {
   /** 图鉴面板壳体：笔记本风格粉紫框 + 金色标题栏 + 绿色翻页箭头 */
   collection_panel_shell_nb2: 'subpkg_panels/images/ui/collection_panel_shell_nb2.png',
 
-  /** 友谊卡 / 图鉴系统：通用卡背、友谊点图标、顶栏图鉴入口、图鉴面板壳 */
+  /** 友谊卡 / 图鉴系统：通用卡背、（V1 遗留）友谊点图标、顶栏图鉴入口、图鉴面板壳 */
   affinity_card_back_default: 'subpkg_panels/images/ui/affinity_card_back_default.png',
+  /** （V1 遗留）友谊点碎片图标；V2 重复卡直接发花愿/钻石/体力，已不再使用，仅保留资源 */
   affinity_shard_icon: 'subpkg_panels/images/ui/affinity_shard_icon.png',
   affinity_codex_btn: 'subpkg_panels/images/ui/affinity_codex_btn.png',
   affinity_codex_panel_frame: 'subpkg_panels/images/ui/affinity_codex_panel_frame.png',
+  affinity_codex_overview_shell_nb2: 'subpkg_panels/images/ui/affinity_codex_overview_shell_nb2.png',
+  affinity_codex_overview_banner_nb2: 'subpkg_panels/images/ui/affinity_codex_overview_banner_nb2.png',
+  affinity_codex_detail_shell_nb2: 'subpkg_panels/images/ui/affinity_codex_detail_shell_nb2.png',
+  affinity_codex_detail_header_nb2: 'subpkg_panels/images/ui/affinity_codex_detail_header_nb2.png',
   /** 图鉴未解锁物品占位卡：蓝色格纹方块 */
   collection_item_placeholder_nb2: 'subpkg_panels/images/ui/collection_item_placeholder_nb2.png',
 
@@ -495,6 +524,15 @@ const DECO_IMAGE_MAP: Record<string, string> = {
   greenhouse_vase_tulip: 'subpkg_deco/images/furniture/greenhouse_vase_tulip.png',
   greenhouse_vase_peony: 'subpkg_deco/images/furniture/greenhouse_vase_peony.png',
   greenhouse_vase_lotus: 'subpkg_deco/images/furniture/greenhouse_vase_lotus.png',
+  // 蝴蝶小屋专属家具（由合图拆分）
+  butterfly_house_display_case: 'subpkg_deco/images/furniture/butterfly_house_display_case.png',
+  butterfly_house_writing_desk: 'subpkg_deco/images/furniture/butterfly_house_writing_desk.png',
+  butterfly_house_sofa: 'subpkg_deco/images/furniture/butterfly_house_sofa.png',
+  butterfly_house_wicker_chair: 'subpkg_deco/images/furniture/butterfly_house_wicker_chair.png',
+  butterfly_house_tea_table: 'subpkg_deco/images/furniture/butterfly_house_tea_table.png',
+  butterfly_house_wall_frame: 'subpkg_deco/images/furniture/butterfly_house_wall_frame.png',
+  wallart_window_meadow_arch: 'subpkg_deco/images/furniture/wallart_window_meadow_arch.png',
+  wallart_window_lake_round: 'subpkg_deco/images/furniture/wallart_window_lake_round.png',
 
   deco_late_lv7_table_01: 'subpkg_deco/images/furniture/deco_late_lv7_table_01.png',
   deco_late_lv7_wall_01: 'subpkg_deco/images/furniture/deco_late_lv7_wall_01.png',
@@ -509,18 +547,55 @@ const DECO_IMAGE_MAP: Record<string, string> = {
   deco_late_lv10_orn_01: 'subpkg_deco/images/furniture/deco_late_lv10_orn_01.png',
   deco_late_lv10_pachira_01: 'subpkg_deco/images/furniture/deco_late_lv10_pachira_01.png',
 
+  // ---- Lv14-20 高星常驻家具：海滨花园套 + 月光蝶园套 ----
+  deco_lv14_wall_butterfly_clock: 'subpkg_deco/images/furniture/deco_lv14_wall_butterfly_clock.png',
+  deco_lv14_light_blossom_sconce: 'subpkg_deco/images/furniture/deco_lv14_light_blossom_sconce.png',
+  deco_lv15_garden_pool: 'subpkg_deco/images/furniture/deco_lv15_garden_pool.png',
+  deco_lv15_garden_parasol: 'subpkg_deco/images/furniture/deco_lv15_garden_parasol.png',
+  deco_lv15_light_drink_cooler: 'subpkg_deco/images/furniture/deco_lv15_light_drink_cooler.png',
+  deco_lv16_orn_hanging_chair: 'subpkg_deco/images/furniture/deco_lv16_orn_hanging_chair.png',
+  deco_lv16_wall_shell_mirror: 'subpkg_deco/images/furniture/deco_lv16_wall_shell_mirror.png',
+  deco_lv16_garden_coral_planter: 'subpkg_deco/images/furniture/deco_lv16_garden_coral_planter.png',
+  deco_lv17_shelf_surfboard: 'subpkg_deco/images/furniture/deco_lv17_shelf_surfboard.png',
+  deco_lv17_table_terrace_bar: 'subpkg_deco/images/furniture/deco_lv17_table_terrace_bar.png',
+  deco_lv17_orn_seabreeze_rug: 'subpkg_deco/images/furniture/deco_lv17_orn_seabreeze_rug.png',
+  deco_lv18_shelf_moon_glasshouse: 'subpkg_deco/images/furniture/deco_lv18_shelf_moon_glasshouse.png',
+  deco_lv18_light_firefly_lamp: 'subpkg_deco/images/furniture/deco_lv18_light_firefly_lamp.png',
+  deco_lv18_garden_butterfly_arch: 'subpkg_deco/images/furniture/deco_lv18_garden_butterfly_arch.png',
+  deco_lv19_wall_crystal_specimen: 'subpkg_deco/images/furniture/deco_lv19_wall_crystal_specimen.png',
+  deco_lv19_orn_crescent_chaise: 'subpkg_deco/images/furniture/deco_lv19_orn_crescent_chaise.png',
+  deco_lv19_table_stardust_aroma: 'subpkg_deco/images/furniture/deco_lv19_table_stardust_aroma.png',
+  deco_lv20_garden_moon_fountain: 'subpkg_deco/images/furniture/deco_lv20_garden_moon_fountain.png',
+  deco_lv20_shelf_star_observatory: 'subpkg_deco/images/furniture/deco_lv20_shelf_star_observatory.png',
+  deco_lv20_wall_moon_sheer_curtain: 'subpkg_deco/images/furniture/deco_lv20_wall_moon_sheer_curtain.png',
+
+  // ---- 首月签到活动专属家具（7/14/21/28 日签到 + 28 日累计礼包）----
+  checkin_m1_bunny_ac: 'subpkg_deco/images/furniture/checkin_m1_bunny_ac.png',
+  checkin_m1_crystal_partition: 'subpkg_deco/images/furniture/checkin_m1_crystal_partition.png',
+  checkin_m1_moon_display_arch: 'subpkg_deco/images/furniture/checkin_m1_moon_display_arch.png',
+  checkin_m1_butterfly_wall_lamp: 'subpkg_deco/images/furniture/checkin_m1_butterfly_wall_lamp.png',
+  checkin_m1_dew_wish_fountain: 'subpkg_deco/images/furniture/checkin_m1_dew_wish_fountain.png',
+  checkin_m1_rocking_horse: 'subpkg_deco/images/furniture/checkin_m1_rocking_horse.png',
+
   /** 后期家具占位：无独立贴图前可继续用作 fallback */
   furniture_deco_placeholder: 'subpkg_deco/images/furniture/furniture_deco_placeholder.png',
 
-  // ---- 熟客主题家具（Bond Lv4 解锁；NB2+rembg+crop_trim；DECO_DEFS 中以 affinity_* id 注册）----
+  // ---- 熟客主题家具（V2：单客人图鉴 100% 解锁；NB2+rembg+crop_trim；DECO_DEFS 中以 affinity_* id 注册）----
   affinity_student_desk:        'subpkg_deco/images/affinity/affinity_student_desk.png',
   affinity_worker_coffee_corner:'subpkg_deco/images/affinity/affinity_worker_coffee_corner.png',
   affinity_mom_balcony_rack:    'subpkg_deco/images/affinity/affinity_mom_balcony_rack.png',
   affinity_youth_book_rack:     'subpkg_deco/images/affinity/affinity_youth_book_rack.png',
   affinity_athlete_trophy_case: 'subpkg_deco/images/affinity/affinity_athlete_trophy_case.png',
+  affinity_celebrity_dressing_mirror: 'subpkg_deco/images/affinity/affinity_celebrity_dressing_mirror.png',
+  // ---- 赛季限定大件家具（V2 全集大奖；S1：初春繁花季招牌灯箱）----
+  affinity_season_s1_signlight: 'subpkg_deco/images/affinity/affinity_season_s1_signlight.png',
 
   // ---- 房间背景 ----
   bg_room_default: 'subpkg_deco/images/house/bg_room_default.png',
+  /** 蝴蝶小屋默认房壳（当前先接 preview 资源，后续定稿可替换正式路径） */
+  bg_room_butterfly_house_nb2: 'subpkg_deco/images/house/preview/bg_room_butterfly_house_nb2.png',
+  bg_room_butterfly_house_moon_nb2: 'subpkg_deco/images/house/preview/bg_room_butterfly_house_moon_nb2.png',
+  bg_room_butterfly_house_bamboo_nb2: 'subpkg_deco/images/house/preview/bg_room_butterfly_house_bamboo_nb2.png',
   bg_room_candy_nb2: 'subpkg_deco/images/house/bg_room_candy_nb2.png',
   bg_room_bloom_nb2: 'subpkg_deco/images/house/bg_room_bloom_nb2.png',
   bg_room_lagoon_nb2: 'subpkg_deco/images/house/bg_room_lagoon_nb2.png',

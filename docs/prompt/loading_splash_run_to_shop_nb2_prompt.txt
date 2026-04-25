@@ -1,15 +1,15 @@
-Vertical 9:16 full-bleed mobile game loading splash illustration, edge-to-edge, no borders, no frames.
+Vertical 9:16 full-bleed mobile game loading splash illustration for a cozy flower-shop merge game, edge-to-edge, no borders, no frames.
 
-Overall mood: warm, cozy, gentle, and cute — a soft kawaii casual merge-game illustration with light comic / manga charm. Friendly rounded shapes, delicate soft shading and subtle airiness, warm sunlight, inviting pastel palette with a little extra flower saturation so colors feel lively but never cold or harsh. NOT stiff poster art, NOT sharp graphic-novel ink, NOT photoreal, NOT gritty 3D render, NOT dark or moody grading.
+Overall mood: bright, cheerful, vivid, and instantly eye-catching. Strong warm daylight, fresh spring air, clear foreground-background separation, bright saturated colors with obvious contrast: coral pink flowers, sunny yellow highlights, lush emerald and mint greens, warm cream shop walls, and clean sky blue. The image must feel luminous, colorful, and high-contrast, but still soft and cute in a polished 2D casual mobile game style.
 
-Art style: 2D hand-painted digital look with soft clean outlines, plump organic petals, slightly storybook sweetness, comfortable and homey like a small-town flower shop fantasy. Keep a playful cute energy without looking childish or super-deformed chibi.
+Main composition must match the original story direction: a cute teenage flower-shop girl and a tiny orange cat are both moving AWAY from the viewer, running toward the flower-shop house in the distance. The girl should be seen mostly from the back or back three-quarter view, with hair and skirt moving naturally as she runs. She holds or carries a beautiful flower bouquet while running toward the house. The cat runs happily beside her in the same direction. This running-toward-home feeling is important.
 
-Foreground: generous lower frame filled with big soft wildflowers and garden blooms — tulips, daisies, peonies, lavender, overlapping toward the viewer, many petals, warm pinks, butter yellows, lilac, coral, and fresh greens, clearly readable and abundant, still rounded and cuddly rather than angular or hyper-sharp.
+Foreground: abundant oversized flowers and petals framing the lower area and corners, especially peonies, daisies, tulips, roses, and fresh greenery. Use strong color blocking and clear petal shapes. Add a few floating petals and tiny sparkle accents, but keep it elegant and not noisy.
 
-Midground: a sweet young woman from behind, late teens (about 17–20), gentle slim silhouette with a bit of cute-game softness in proportions — still clearly not a toddler or little kid; normal teen height with a light graceful run. Simple summer dress, hair in motion, optional small backpack. A small fluffy orange tabby cat trots happily beside her.
+Midground: a bright garden path or grassy flower-yard path leading diagonally toward the shop. The girl and cat are on this path, clearly heading toward the house. Their silhouettes must read clearly even though they are not facing the viewer.
 
-Background: farther away, a cozy storybook flower-shop cottage — cream walls, terracotta roof, wooden door, window flower boxes, warm and welcoming, slightly smaller for depth. Upper sky: soft blue with fluffy white clouds, airy and bright.
+Background: a charming flower-shop cottage with cream walls, rosy terracotta roof, flower boxes, soft wooden door, and glowing welcoming windows. Bright blue sky with fluffy clouds and a slight golden morning light. Keep the upper center cleaner and less busy so the separate loading title can sit there clearly.
 
-Composition: depth with big friendly flowers in front, girl and cat mid, cottage back; gentle diagonal path feeling toward the shop; soft highlights, cozy daylight, harmonious warm colors.
+Composition: strong depth with big flowers in the foreground, girl and cat in the midground, cottage in the background. The image should clearly communicate "running toward the flower shop". Joyful, readable, premium first impression. Do NOT make the girl front-facing. Do NOT make her posing for the camera.
 
 Hard bans: NO text in any language, NO letters, NO numbers, NO logos, NO watermark, NO signatures, NO UI, NO buttons, NO progress bars, NO loading indicators, NO icons, NO speech bubbles, NO captions, NO labels, NO collage, NO split screen.

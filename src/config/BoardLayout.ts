@@ -81,7 +81,7 @@ export const BOARD_PRESETS: CellPreset[] = [
 
   { row: 6, col: 0, state: CellState.FOG,  itemId: 'flower_fresh_5',   keyPrice: 0, unlockPriority: 20 },
   { row: 6, col: 1, state: CellState.FOG,  itemId: 'flower_green_3',   keyPrice: 0, unlockPriority: 21 },
-  { row: 6, col: 2, state: CellState.FOG,  itemId: 'tool_arrange_1',     keyPrice: 0, unlockPriority: 22 },
+  { row: 6, col: 2, state: CellState.FOG,  itemId: 'flower_green_2',     keyPrice: 0, unlockPriority: 22 },
   { row: 6, col: 3, state: CellState.KEY,  itemId: null,               keyPrice: 300, unlockPriority: 23 },
   { row: 6, col: 4, state: CellState.FOG,  itemId: 'drink_dessert_3',  keyPrice: 0, unlockPriority: 24 },
   { row: 6, col: 5, state: CellState.FOG,  itemId: null,               keyPrice: 0, unlockPriority: 25 },

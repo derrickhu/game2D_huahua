@@ -89,10 +89,14 @@ import { RewardBoxButton } from '@/gameobjects/ui/RewardBoxButton';
 import { RewardBoxPanel } from '@/gameobjects/ui/RewardBoxPanel';
 import { PopupShopPanel } from '@/gameobjects/ui/PopupShopPanel';
 import { MerchShopPanel } from '@/gameobjects/ui/MerchShopPanel';
-import { CustomerProfilePanel } from '@/gameobjects/ui/CustomerProfilePanel';
-import { BondUpPopup } from '@/gameobjects/ui/BondUpPopup';
 import { AffinityCardDropPopup } from '@/gameobjects/ui/AffinityCardDropPopup';
 import { AffinityCodexPanel } from '@/gameobjects/ui/AffinityCodexPanel';
+import {
+  hasCardsForOwner,
+  type CardReward,
+  type CustomerMilestone,
+} from '@/config/AffinityCardConfig';
+import { ItemObtainOverlay, type ItemObtainEntry } from '@/gameobjects/ui/ItemObtainOverlay';
 import { WorldMapPanel } from '@/gameobjects/ui/WorldMapPanel';
 import { FlowerSignGachaPanel } from '@/gameobjects/ui/FlowerSignGachaPanel';
 import { ShopScene } from '@/scenes/ShopScene';
@@ -173,13 +177,10 @@ export class MainScene implements Scene {
   /** 合成顶栏 · 全屏摊位购买商店（NB2 框体） */
   private _merchShopPanel!: MerchShopPanel;
 
-  /** 熟客资料面板（CustomerView 头像心形角标 tap 入口） */
-  private _customerProfilePanel!: CustomerProfilePanel;
-
-  /** 熟客 Bond 升档弹窗（AffinityManager 触发） */
-  private _bondUpPopup!: BondUpPopup;
   private _affinityCardDropPopup!: AffinityCardDropPopup;
   private _affinityCodexPanel!: AffinityCodexPanel;
+  private _pendingAffinityRewardOverlays: ItemObtainEntry[][] = [];
+  private _showingAffinityRewardOverlay = false;
 
   /** 大地图全屏页（覆盖层，非花店子节点） */
   private _worldMapPanel!: WorldMapPanel;
@@ -446,12 +447,6 @@ export class MainScene implements Scene {
     this._merchShopPanel = new MerchShopPanel();
     overlay.addChild(this._merchShopPanel);
 
-    this._customerProfilePanel = new CustomerProfilePanel();
-    overlay.addChild(this._customerProfilePanel);
-
-    this._bondUpPopup = new BondUpPopup();
-    overlay.addChild(this._bondUpPopup);
-
     this._affinityCardDropPopup = new AffinityCardDropPopup();
     overlay.addChild(this._affinityCardDropPopup);
 
@@ -460,6 +455,16 @@ export class MainScene implements Scene {
     EventBus.on('affinityCodex:open', (typeId?: string) => {
       this._affinityCodexPanel.open(typeId);
     });
+    EventBus.on(
+      'affinityCard:milestone',
+      (_typeId: string, milestone: CustomerMilestone) => this._queueAffinityRewardOverlay(
+        this._affinityMilestoneToObtainEntries(milestone),
+      ),
+    );
+    EventBus.on('affinityCard:seasonComplete', (_seasonId: string, reward: CardReward & { decoUnlockId?: string }) => {
+      this._queueAffinityRewardOverlay(this._affinityRewardToObtainEntries(reward, reward.decoUnlockId));
+    });
+    EventBus.on('affinityCard:dropPopupClosed', () => this._drainAffinityRewardOverlays());
 
     // 大地图全屏页（盖住花店/顶栏；惯性滚动在面板内自注册 ticker）
     this._worldMapPanel = new WorldMapPanel();
@@ -479,6 +484,39 @@ export class MainScene implements Scene {
 
     // 棋盘拖拽幽灵挂到场景根容器，避免被 ItemInfoBar / 仓库条等后添加的兄弟节点遮挡
     this._boardView.setDragGhostParent(this.container);
+  }
+
+  private _affinityMilestoneToObtainEntries(milestone: CustomerMilestone): ItemObtainEntry[] {
+    return this._affinityRewardToObtainEntries(milestone.reward, milestone.decoUnlockId);
+  }
+
+  private _affinityRewardToObtainEntries(reward: CardReward, decoUnlockId?: string): ItemObtainEntry[] {
+    const entries: ItemObtainEntry[] = [];
+    if (reward.huayuan) entries.push({ kind: 'direct_currency', currency: 'huayuan', amount: reward.huayuan });
+    if (reward.stamina) entries.push({ kind: 'direct_currency', currency: 'stamina', amount: reward.stamina });
+    if (reward.diamond) entries.push({ kind: 'direct_currency', currency: 'diamond', amount: reward.diamond });
+    if (reward.flowerSignTickets) {
+      entries.push({ kind: 'direct_currency', currency: 'flowerSign', amount: reward.flowerSignTickets });
+    }
+    if (decoUnlockId) entries.push({ kind: 'deco', decoId: decoUnlockId, label: '专属家具' });
+    return entries;
+  }
+
+  private _queueAffinityRewardOverlay(entries: ItemObtainEntry[]): void {
+    if (entries.length === 0) return;
+    this._pendingAffinityRewardOverlays.push(entries);
+    this._drainAffinityRewardOverlays();
+  }
+
+  private _drainAffinityRewardOverlays(): void {
+    if (this._showingAffinityRewardOverlay || this._affinityCardDropPopup.isOpen) return;
+    const entries = this._pendingAffinityRewardOverlays.shift();
+    if (!entries) return;
+    this._showingAffinityRewardOverlay = true;
+    ItemObtainOverlay.show(entries, () => {
+      this._showingAffinityRewardOverlay = false;
+      this._drainAffinityRewardOverlays();
+    });
   }
 
   /**
@@ -1061,6 +1099,12 @@ export class MainScene implements Scene {
     // 签到面板
     EventBus.on('nav:openCheckIn', () => this._checkInPanel.open());
     EventBus.on('checkin:gmVirtualDayAdvanced', () => this._checkInPanel.refreshIfOpen());
+    EventBus.on('checkin:decoUnlocked', (decoId: string, source: 'daily' | 'milestone') => {
+      if (source !== 'daily') return;
+      setTimeout(() => {
+        ItemObtainOverlay.show([{ kind: 'deco', decoId, label: '专属家具' }], () => {});
+      }, 760);
+    });
 
     // 累计签到里程碑：领取 → 全屏「恭喜获得」（与升星同款）；关闭后若仍有可领则连弹
     // 注意：签到面板在 Overlay 上，花店场景也会打开；不得限制为 main，否则礼包红点可点但无任何弹窗。
@@ -1245,35 +1289,22 @@ export class MainScene implements Scene {
       this._merchShopPanel.open();
     });
 
-    // 熟客资料面板 - CustomerView 头像心形角标 tap 入口
+    // 兼容旧事件：熟客资料卡已废弃，统一跳友谊图鉴
     EventBus.on('panel:openCustomerProfile', (typeId: string) => {
       if (TutorialManager.isActive) return;
       const cur = SceneManager.current?.name;
       if (cur !== 'main' && cur !== 'shop') return;
       if (!typeId) return;
-      this._customerProfilePanel.open(typeId);
+      if (!AffinityManager.isCardSystemUnlocked()) return;
+      if (!hasCardsForOwner(typeId)) return;
+      this._affinityCodexPanel.open(typeId);
     });
 
-    // 熟客 Bond 升档：AffinityManager.onCustomerDelivered 跨 Bond 阈值时触发
-    EventBus.on('affinity:bondUp', (
-      typeId: string,
-      oldBond: number,
-      newBond: number,
-      reward: any,
-      def: any,
-    ) => {
-      if (!typeId || !reward || !def) return;
-      this._bondUpPopup.enqueue({
-        typeId,
-        oldBond: oldBond as any,
-        newBond: newBond as any,
-        reward,
-        def,
-      });
-    });
-
-    // 熟客解锁：刷新订单区让头像 heart 角标即时出现（即便玩家刚好同步看着升星弹窗）
+    // 客人解锁 / 图鉴集满后：刷新订单区让心形角标即时出现或消失
     EventBus.on('affinity:unlocked', () => {
+      this._customerScrollArea.refresh();
+    });
+    EventBus.on('affinityCard:complete', () => {
       this._customerScrollArea.refresh();
     });
 

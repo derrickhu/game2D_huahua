@@ -1,0 +1,23 @@
+Create one clean 3 columns x 4 rows illustration sheet for a cozy flower-shop mobile game. Each cell must be a separate square friendship card illustration with clear spacing between cells. NO TEXT, no labels, no captions, no speech bubbles, no numbers, no logos, no watermark.
+
+Match the existing card style exactly: soft hand-painted 2D anime illustration, gentle shoujo game look, warm pastel lighting, creamy highlights, soft brown line art, romantic bloom, expressive faces, polished mobile-game card art. The hero in every panel is the same handsome high-school basketball team captain: short tousled dark brown hair, warm light tan skin, bright lively brown eyes, athletic lean build, charming confident smile, very appealing and handsome but wholesome. Keep him looking cooler and more attractive than a generic sports boy. Blue-and-white varsity or basketball styling, sometimes jersey, sometimes warmup jacket, sometimes towel on shoulder. Flower shop and basketball imagery should both appear across the sheet.
+
+Very important rarity progression by rows:
+Rows 1-2 are N rarity: bright daily moments, simpler composition, one main action, lighter backgrounds.
+Row 3 is R rarity: richer storytelling, stronger props, more emotional connection.
+Row 4 is high rarity: cinematic lighting, dramatic atmosphere, visually memorable, obvious upgrade. Row 4 col 1 and col 2 are SR. Row 4 col 3 is SSR and must feel like the ultimate highlight scene.
+
+Panel descriptions, left to right, top to bottom:
+
+1. After practice, the handsome basketball captain stands outside the flower shop with a basketball tucked under one arm, smiling as if he just scored many three-pointers, warm sunset street, fresh youthful energy.
+2. Inside the flower shop, he has a white towel over his shoulder and carefully picks flowers for his coach beside a cold drink on the counter, gentle attentive expression, handsome side glance.
+3. Outdoor school gym bleachers at dusk, he stands higher on the steps and waves toward the glowing flower shop in the distance, light breeze, sporty silhouette, youthful charm.
+4. Pre-game encouragement: he holds a bright sunflower bouquet with determined eyes before a big match, clean sporty background, sunlight on his face, captain aura.
+5. Several teammates are around him in the flower shop laughing and teasing, but he remains the visual focus in front, slightly bashful yet composed, handsome leader vibe.
+6. After rain and extra practice, slightly wet hair and damp sports jacket, he enters the shop with a stubborn smile asking for a never-give-up bouquet, rainy reflections and cool air.
+7. Trophy display case scene: he proudly shows a beautiful championship trophy cabinet with medals, ribbons, team flag, and a blue-white bouquet placed in the center, more polished and sentimental.
+8. Locker room encouragement scene: he prepares a fresh green-white bouquet for an injured younger teammate, emotional but steady, sports bags and lockers in the background, caring captain presence.
+9. Retirement gift scene: a signed old team jersey and bouquet are prepared together for the old coach, he looks serious and warm, nostalgic sports memory atmosphere.
+10. Finals eve, cinematic gym interior at night: he sits on the wooden court floor wrapping wrist tape while watching a bouquet ribbon being tied, soft overhead lights, quiet tension before the decisive game.
+11. After the final whistle, roaring crowd and bright arena lights, sweaty and glowing, he rushes forward with a huge relieved smile and receives a bouquet in celebration, triumphant emotional payoff.
+12. Ultimate SSR: championship night MVP moment in a packed indoor arena, confetti raining down, giant scoreboard glow, dramatic spotlight, he stands at center court holding a trophy in one hand and a gorgeous bouquet in the other, stunning handsome face, powerful star athlete aura, unforgettable victory atmosphere.

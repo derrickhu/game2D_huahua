@@ -1,0 +1,8 @@
+Square 1:1 image, one single wall decoration prop centered with generous margin.
+Cute kawaii 2.5D wall-art asset for a cozy flower-shop merge game, classic upper-left about 45 degree view, matching the existing room-shell gameplay angle.
+The object MUST be a thin wall-mounted specimen panel that can hang flat on a room wall: very shallow thickness, flat rear side, rectangular frame seen in isometric wall perspective, visible top edge and right-side thickness only. It must NOT be a freestanding cabinet, NOT a tabletop display case, NOT a front-facing square UI icon, NOT a box sitting on the floor.
+Hand-painted mobile game style, soft brown outlines, rounded chibi-friendly corners, gentle upper-left lighting, clean readable silhouette.
+Subject: a crystal specimen wall display plaque, champagne-gold rounded rectangular frame, pale moon-blue glass cover, arranged butterfly-wing crystal pieces, pressed tiny flowers, pearl pins and lavender mineral shards inside. The frame is slightly tilted in isometric perspective so it reads as a wall-hanging board, with a slim rear plane and tiny hanging tabs on the back edge, but no wall background.
+Color palette: champagne gold, moon-blue glass, lavender crystals, pearl white, tiny mint and pink flower accents.
+NO TEXT, no labels, no captions, no writing anywhere in the image, no logo, no characters, no room walls, no floor plane, no stand, no base, no heavy shadow.
+Background pure solid white #FFFFFF only.

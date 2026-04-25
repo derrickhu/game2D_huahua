@@ -47,7 +47,7 @@ const LEVEL_EXTRA: Record<number, LevelExtraRewardsDef> = {
       { itemId: 'drink_dessert_3', count: 1 },
     ],
   },
-  /** 烘焙线 Lv.1、Lv.2（擀面杖、打蛋器） */
+  /** 烘焙线 Lv.1、Lv.2（擀面杖、烤箱） */
   8: {
     rewardBoxItems: [
       { itemId: 'tool_bake_1', count: 1 },

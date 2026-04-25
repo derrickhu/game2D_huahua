@@ -1,0 +1,21 @@
+Cute small mobile game item icon sheet for a cozy casual merge game, 3/4 top-down isometric view. Rounded chunky proportions, slightly chibi and compact. High readability for small in-game icons. Use stronger silhouette clarity, cleaner shape grouping, clearer darker outer edges, stronger value contrast, and fewer tiny details. Soft smooth gradient shading with bright highlight spots, but keep surfaces simple and bold. Clean white background. NO TEXT, no labels, no captions, no UI.
+
+Create a 2 columns x 2 rows sheet of 4 dessert items for levels 5 to 8 of the same fruit cake progression line. All 4 items must be served on visible dessert plates. No glasses, no jars, no cups, no transparent containers.
+
+Critical style rules:
+- Match the simpler, cleaner, more readable icon style of lower-level dessert icons.
+- Do not overload the cakes with too many tiny fruit pieces or tiny decorations.
+- Use larger fruit shapes, larger cream bands, larger piping forms, and clearer top silhouettes.
+- Each cake should be readable at small size in one glance.
+- The differences should come from cake size, cream color, side decoration, piping pattern, and plate refinement, not just more fruit on top.
+- Use stronger color contrast than the previous attempt.
+
+Top-left (Level 5, 香橙拼糕): medium orange cake on a plate. Bright orange glaze, simple citrus slices, bold creamy side layers, clear silhouette, clean plate. Not too many details.
+
+Top-right (Level 6, 双果蛋糕): slightly larger cake on a nicer plate. Two fruits only, clearly visible, such as strawberry plus green grape. Cream color should be visibly different from level 5, for example soft pistachio green. Use large scalloped cream edging and a simple side band pattern.
+
+Bottom-left (Level 7, 什果蛋糕): larger premium fruit cake on a more elegant plate. Use a clear lavender or berry-tinted cream body, bold rounded piping bands, and a limited number of larger mixed fruits on top. Keep the top arrangement clean and readable, not crowded.
+
+Bottom-right (Level 8, 缤纷果蛋糕): highest level among these four on the most refined plate, but still icon-clean and not overly ornate. Use a warm peach-pink plus cream palette or another clearly distinct palette from level 7. Strong top silhouette, larger fruit arrangement, elegant but simple layered piping, clear contrast.
+
+All 4 items should feel like one consistent line of fruit cakes, with the plate becoming more refined from level 5 to 8. Keep the illustrations polished but simplified for game icon readability.

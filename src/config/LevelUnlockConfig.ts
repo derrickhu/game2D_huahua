@@ -57,8 +57,8 @@ function affinityEntriesForLevel(level: number): LevelUnlockEntry[] {
         kind: 'affinity' as const,
         title: def ? `熟客 · ${def.bondName}` : `熟客 · ${typeId}`,
         desc: def
-          ? `${def.persona}（订单 +Bond）`
-          : '该等级解锁一位新熟客，订单互动可累积羁绊。',
+          ? `${def.persona}登场，订单互动可提升 Bond。`
+          : '新熟客登场，订单互动可提升 Bond。',
         iconKey: `customer_${typeId}`,
         payload: typeId,
       };
@@ -84,7 +84,7 @@ const LEVEL_UNLOCK_BASE: Record<number, Omit<LevelUnlockDef, 'level'>> = {
       {
         kind: 'feature',
         title: '花语泡泡',
-        desc: '合成时偶尔飘出花语泡泡，免费再得一份产物。',
+        desc: '合成偶遇花语泡泡，额外掉落一份奖励。',
         iconKey: 'ui_lvup_companion_bubble',
       },
       {
@@ -107,7 +107,7 @@ const LEVEL_UNLOCK_BASE: Record<number, Omit<LevelUnlockDef, 'level'>> = {
       {
         kind: 'feature',
         title: '组合订单提速',
-        desc: '订单池开放更高概率的组合单，奖励翻倍。',
+        desc: '组合订单出现更频繁，完成奖励更丰厚。',
         iconKey: 'ui_lvup_combo_boost',
       },
       {
@@ -130,7 +130,7 @@ const LEVEL_UNLOCK_BASE: Record<number, Omit<LevelUnlockDef, 'level'>> = {
       {
         kind: 'feature',
         title: '高阶礼包',
-        desc: '5 级开始每 5 级额外获得宝箱。',
+        desc: '每逢 5 级可额外领取一份高阶宝箱。',
         iconKey: 'ui_lvup_high_chest',
       },
     ],
@@ -185,14 +185,170 @@ const LEVEL_UNLOCK_BASE: Record<number, Omit<LevelUnlockDef, 'level'>> = {
       {
         kind: 'map',
         title: '大地图开放',
-        desc: '解锁世界地图入口，可拜访新场景与活动。',
+        desc: '世界地图入口开启，前往新场景与活动。',
         iconKey: 'ui_lvup_world_map',
+      },
+    ],
+  },
+  11: {
+    ceremonyTitle: '蝶屋小憩',
+    entries: [
+      {
+        kind: 'feature',
+        title: '进阶挑战',
+        desc: '每日挑战升为进阶档，任务池与周轨奖励更丰富。',
+        iconKey: 'icon_chart',
+      },
+      {
+        kind: 'cosmetic',
+        title: '藤编休闲椅',
+        desc: '蝴蝶小屋解锁首件休闲家具，阅读角开始成形。',
+        iconKey: 'butterfly_house_wicker_chair',
+      },
+    ],
+  },
+  12: {
+    ceremonyTitle: '湖窗手札',
+    entries: [
+      {
+        kind: 'cosmetic',
+        title: '观蝶书写桌',
+        desc: '蝴蝶小屋添置记录桌，观察笔记有了专属角落。',
+        iconKey: 'butterfly_house_writing_desk',
+      },
+      {
+        kind: 'cosmetic',
+        title: '圆窗湖雾景',
+        desc: '花店新增圆窗景框，把远湖晨雾收入室内。',
+        iconKey: 'wallart_window_lake_round',
+      },
+    ],
+  },
+  13: {
+    ceremonyTitle: '蝶影陈列',
+    entries: [
+      {
+        kind: 'cosmetic',
+        title: '观蝶玻璃柜',
+        desc: '蝴蝶小屋陈列位开放，收藏感与展示感进一步加强。',
+        iconKey: 'butterfly_house_display_case',
+      },
+    ],
+  },
+  14: {
+    ceremonyTitle: '温室会客',
+    entries: [
+      {
+        kind: 'cosmetic',
+        title: '蝶翼双人沙发',
+        desc: '蝴蝶小屋会客角成型，空间氛围更完整。',
+        iconKey: 'butterfly_house_sofa',
+      },
+    ],
+  },
+  15: {
+    ceremonyTitle: '远景初现',
+    entries: [
+      {
+        kind: 'feature',
+        title: '别墅预告',
+        desc: '大地图尽头出现花园别墅地标，等待后续版本开放。',
+        iconKey: 'icon_build',
       },
       {
         kind: 'feature',
-        title: '蝴蝶捕虫网',
-        desc: '蝴蝶饮品产线工具入库，许愿喷泉硬币 ×10。',
-        iconKey: 'ui_lvup_butterfly_quest',
+        title: '铜宝箱补给',
+        desc: '本次五级里程碑额外附赠铜宝箱 1 份。',
+        iconKey: 'chest_1',
+      },
+    ],
+  },
+  20: {
+    ceremonyTitle: '新店传闻',
+    entries: [
+      {
+        kind: 'feature',
+        title: '完全挑战',
+        desc: '每日挑战进入完全版，周轨与全勤奖励再升一档。',
+        iconKey: 'icon_chart',
+      },
+      {
+        kind: 'feature',
+        title: '蛋糕房预告',
+        desc: '大地图出现蛋糕房地标，等待后续版本开放经营。',
+        iconKey: 'worldmap_thumb_cake_shop',
+      },
+      {
+        kind: 'feature',
+        title: '铜宝箱补给',
+        desc: '本次五级里程碑额外附赠铜宝箱 1 份。',
+        iconKey: 'chest_1',
+      },
+    ],
+  },
+  25: {
+    ceremonyTitle: '银阶远航',
+    entries: [
+      {
+        kind: 'feature',
+        title: '银宝箱补给',
+        desc: '25级起每逢5级升级额外附赠银宝箱 1 份。',
+        iconKey: 'chest_2',
+      },
+    ],
+  },
+  30: {
+    ceremonyTitle: '主题藏馆',
+    entries: [
+      {
+        kind: 'feature',
+        title: '银宝箱补给',
+        desc: '本次五级里程碑额外附赠银宝箱 1 份。',
+        iconKey: 'chest_2',
+      },
+    ],
+  },
+  35: {
+    ceremonyTitle: '花境深藏',
+    entries: [
+      {
+        kind: 'feature',
+        title: '银宝箱补给',
+        desc: '本次五级里程碑额外附赠银宝箱 1 份。',
+        iconKey: 'chest_2',
+      },
+    ],
+  },
+  40: {
+    ceremonyTitle: '大师花坊',
+    entries: [
+      {
+        kind: 'feature',
+        title: '银宝箱补给',
+        desc: '本次五级里程碑额外附赠银宝箱 1 份。',
+        iconKey: 'chest_2',
+      },
+    ],
+  },
+  45: {
+    ceremonyTitle: '珍藏殿堂',
+    entries: [
+      {
+        kind: 'feature',
+        title: '银宝箱补给',
+        desc: '本次五级里程碑额外附赠银宝箱 1 份。',
+        iconKey: 'chest_2',
+      },
+    ],
+  },
+  50: {
+    ceremonyTitle: '传承花境',
+    entries: [
+      {
+        kind: 'feature',
+        title: '银宝箱补给',
+        desc: '本次五级里程碑额外附赠银宝箱 1 份。',
+        iconKey: 'chest_2',
       },
     ],
   },

@@ -1,0 +1,30 @@
+Square game asset, 1:1 aspect. A reference image is attached: use it as the HARD STRUCTURE TEMPLATE. Create an EMPTY open-front room shell for the butterfly house scene with the SAME overall house shape, SAME open L-shaped two-wall shell layout, SAME floor footprint proportion, SAME floor height, SAME corner post placement, SAME roof/eave position, SAME front opening, SAME canvas scale, and SAME upper-left classic isometric camera angle as the reference butterfly house shell. Change only the material palette and bamboo details. The room must stay visible from above. Do NOT cover the room with a full roof. Do NOT close the front side.
+
+Cute kawaii 2.5D isometric butterfly house room shell, hand-painted mobile merge-game art, polished quality, soft brown outlines, bright fresh and cozy.
+
+STYLE DIRECTION: sunlit bamboo conservatory butterfly house, but with the exact same architectural silhouette as the reference shell. A warm natural style clearly different from both the default pale wood shell and the moonlit version. Use honey bamboo corner posts, creamy plaster wall planes, muted sage-green roof edge strips, woven rattan-like foundation trim, and a light pebble-and-bamboo parquet floor with subtle butterfly-wing geometry. It should feel airy, organic, and handcrafted, but still clean enough for furniture placement.
+
+ROOF AND BAMBOO IDENTITY:
+- Preserve the reference roof/eave geometry and placement. Only recolor and restyle it into layered muted sage bamboo roof caps with small curved end caps and warm natural trim.
+- Add a few elegant bamboo stalks growing from BEHIND the house, visible above and behind the roofline. They should be sparse, slim, and secondary. They must not change the room outline, must not become tall background scenery, must not block the floor, and must not make the house look taller or narrower than the reference.
+- Keep the roof as the same narrow perimeter cap along the back and right wall top edges; it must NOT cover the interior floor.
+
+STRUCTURE:
+- EMPTY architectural shell only. NO furniture, NO bed, NO desk, NO chair, NO sofa, NO aquarium, NO butterfly frames, NO plants, NO curtains, NO partitions, NO fences, NO balcony railings, NO rugs, NO hanging lamps, NO decorations, NO wall art, NO tools, NO characters, NO text, NO watermark.
+- Only allowed elements: floor, very partial roof/eave strips, corner posts, back wall plane, right wall plane, foundation, and a very minimal exterior step if needed.
+- Only TWO interior walls are allowed: the BACK wall and the RIGHT wall. NO FRONT WALL. NO LEFT WALL. Front-left and front-center area must stay completely open.
+- Roof must NOT cover the middle of the room. Use only narrow perimeter roof/eave strips along the back and right wall top edges, leaving the main interior open and visible.
+- Interior wall surfaces should be clean, broad, blank, and install-ready. No exposed horizontal rail bands across the middle, no rectangular panel framing, no crossed mullions, no large window holes.
+- CRITICAL: NO visible light beams, NO spotlight triangles, NO cast shadows across walls or floor, NO diagonal shadow wedge, NO large gradient patches. Use flat clean matte wall planes and an even soft ambient light only.
+
+SHAPE:
+- Match the attached reference shell shape. Do NOT invent a new floor plan. Do NOT make the footprint a symmetrical corner booth, square platform, balcony, pavilion, gazebo, stage, or fenced deck.
+- The front edge angles, rear corner, right wall length, back wall length, foundation thickness, and small entry step should feel like the same room-shell family as the reference.
+- Keep the shell practical for placing furniture, with broad clean floor area.
+
+LIGHTING:
+- Even flat soft daylight, warm and cheerful. No dramatic shadows, no sunlight streaks, no triangular shadow shapes, no wall shadow gradients. Keep wall and floor surfaces clean and usable.
+
+BACKGROUND outside the structure: pure solid white #FFFFFF only, completely flat and uniform, no checkerboard, no beige grid, no tiled backdrop, no gradient, no studio floor, no shadow card, no vignette, no gray.
+
+NO TEXT, no labels, no captions, no writing anywhere in the image.

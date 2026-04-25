@@ -1,0 +1,18 @@
+Cute small mobile game item icon sheet for a cozy casual merge game, 3/4 top-down isometric view. Rounded chunky proportions, slightly chibi and compact. Soft smooth gradient shading, tiny bright highlight spots, no hard black outlines, edges defined by color transitions and subtle darker-tone borders. Warm pastel dessert-shop palette, clean white background, NO TEXT, no labels, no captions, no UI.
+
+Create a 2 columns x 2 rows sheet of 4 dessert items for levels 5 to 8 of the same progression line. All 4 items must clearly belong to the same fruit cake line and all must be served on visible dessert plates. No glasses, no jars, no cups, no transparent containers. These 4 items must have much stronger progression differences than before.
+
+Important variation rules:
+- Do not make them all white cakes with fruit on top.
+- The differences must come from multiple aspects together: cake size, plate refinement, cream color, side decoration, piping style, top arrangement, and overall silhouette.
+- Keep them elegant and game-readable, but not too similar to one another.
+
+Top-left (Level 5, 香橙拼糕): medium-size orange fruit cake on a decorative plate. Bright orange glaze or orange-toned cream, citrus slices visible on top and/or side, simple but clearly richer than lower levels. Plate slightly more refined than basic levels.
+
+Top-right (Level 6, 双果蛋糕): larger cake on a nicer plate, two fruits clearly visible such as strawberry plus green grape. Cream should not be plain white; use a soft tinted cream like pale pistachio, blush peach, or warm vanilla-pink. Add more layered piping and a more premium side pattern.
+
+Bottom-left (Level 7, 什果蛋糕): shop-signature assorted fruit cake on an elegant plate. Noticeably larger than level 6. Use a different cream palette such as lavender cream, peach cream, or soft yellow cream. More varied piping shapes: shells, swirls, scallops, or layered cream bands. Fruit should be generous but balanced.
+
+Bottom-right (Level 8, 缤纷果蛋糕): richest version in this set on the most refined plate, clearly the highest level among these four, but still not a giant celebration cake. Use the most detailed cream treatment with more color variation and decorative piping, maybe two cream tones together. Fruit arrangement should feel polished and abundant, not just random fruit piled on top.
+
+All 4 items should stay centered with enough whitespace, similar overall icon readability, and consistent line family style. Avoid making level 7 and level 8 too grand or wedding-cake-like. Keep them as premium fruit cakes for a merge game progression line.
