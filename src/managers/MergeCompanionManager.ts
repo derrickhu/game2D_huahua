@@ -305,6 +305,34 @@ class MergeCompanionManagerClass {
     EventBus.emit('mergeCompanion:changed');
   }
 
+  gmSpawnFloatBubble(payloadItemId = 'flower_fresh_6', anchorCellIndex?: number): boolean {
+    if (!ITEM_DEFS.has(payloadItemId)) return false;
+    if (this._bubbles.length >= MERGE_COMPANION_MAX_ACTIVE_FLOAT) return false;
+
+    const idx = anchorCellIndex ?? BoardManager.findEmptyOpenCell();
+    const safeIndex = idx >= 0 ? idx : 0;
+    const pos = _defaultBoardPos(safeIndex);
+    const bubble: MergeCompanionFloatBubble = {
+      id: _newId(),
+      ruleId: 'gm_spawn_bubble',
+      anchorCellIndex: safeIndex,
+      boardX: pos.boardX,
+      boardY: pos.boardY,
+      payloadItemId,
+      expireRemainingSec: 180,
+      diamondPrice: _effectiveBubbleDiamond(payloadItemId, 12),
+      dismissEnabled: false,
+      dismissHuayuanAmount: 0,
+    };
+
+    this._bubbles.push(bubble);
+    this._selectedBubbleId = bubble.id;
+    EventBus.emit('mergeCompanion:spawn', bubble.id, bubble.ruleId, payloadItemId, 'bubble');
+    EventBus.emit('mergeCompanion:changed');
+    EventBus.emit('mergeCompanion:bubbleSelected', bubble.id);
+    return true;
+  }
+
   update(dt: number): void {
     if (dt <= 0) return;
     for (const b of this._bubbles) {
@@ -326,15 +354,25 @@ class MergeCompanionManagerClass {
     if (CurrencyManager.state.diamond < b.diamondPrice) return false;
 
     CurrencyManager.addDiamond(-b.diamondPrice);
+    return this._unlockBubbleGrantLater(b);
+  }
+
+  unlockBubbleWithAd(id: string): boolean {
+    const b = this._bubbles.find(x => x.id === id);
+    if (!b) return false;
+    return this._unlockBubbleGrantLater(b);
+  }
+
+  private _unlockBubbleGrantLater(b: MergeCompanionFloatBubble): boolean {
     const payload = {
-      bubbleId: id,
+      bubbleId: b.id,
       ruleId: b.ruleId,
       diamondPrice: b.diamondPrice,
       itemId: b.payloadItemId,
       boardLocalX: b.boardX,
       boardLocalY: b.boardY,
     };
-    this._removeBubble(id);
+    this._removeBubble(b.id);
     EventBus.emit('mergeCompanion:bubbleUnlockVfx', payload);
     return true;
   }

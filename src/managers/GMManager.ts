@@ -54,6 +54,7 @@ import {
   LUCKY_COIN_ITEM_ID,
 } from '@/config/ItemConfig';
 import { RewardBoxManager } from './RewardBoxManager';
+import { MergeCompanionManager } from './MergeCompanionManager';
 import { STAMINA_MAX } from '@/config/Constants';
 
 declare const wx: any;
@@ -62,6 +63,14 @@ const _api = typeof wx !== 'undefined' ? wx : typeof tt !== 'undefined' ? tt : n
 
 const GM_DIAMOND_BAG_IDS = ['diamond_bag_1', 'diamond_bag_2', 'diamond_bag_3'] as const;
 const GM_STAMINA_CHEST_IDS = ['stamina_chest_1', 'stamina_chest_2', 'stamina_chest_3'] as const;
+const GM_HIGH_PRODUCER_IDS = [
+  'tool_plant_7',
+  'tool_arrange_5',
+  'tool_butterfly_net_5',
+  'tool_mixer_5',
+  'tool_bake_5',
+] as const;
+const GM_TEST_BUBBLE_ITEM_ID = 'flower_fresh_6';
 
 const GM_STORAGE_KEY = 'huahua_gm';
 
@@ -696,6 +705,47 @@ class GMManagerClass {
           placed.push(`#${idx} ${nm}`);
         }
         return ` 已放置 3 个体力箱：${placed.join('；')}`;
+      },
+    });
+
+    this._commands.push({
+      id: 'board_place_high_producers',
+      group: ' 增加物品',
+      name: ' 高级生产器 → 棋盘',
+      desc: '放置种植/包装/捕虫/饮品/烘焙各 1 个高级生产器，需空已开放格',
+      execute: () => {
+        const placed: string[] = [];
+        for (const id of GM_HIGH_PRODUCER_IDS) {
+          const def = ITEM_DEFS.get(id);
+          if (!def) return ` 未注册物品 ${id}`;
+          const idx = BoardManager.findEmptyOpenCell();
+          if (idx < 0) {
+            return placed.length === 0
+              ? ' 没有空的已开放格'
+              : ` 仅放置 ${placed.length}/${GM_HIGH_PRODUCER_IDS.length}（空格不足）：${placed.join('；')}`;
+          }
+          if (!BoardManager.placeItem(idx, id)) {
+            return placed.length === 0
+              ? ' 放置失败'
+              : ` 部分放置后失败：${placed.join('；')}`;
+          }
+          placed.push(`#${idx} ${def.name}`);
+        }
+        return ` 已放置高级生产器：${placed.join('；')}`;
+      },
+    });
+
+    this._commands.push({
+      id: 'gm_spawn_flower_bubble',
+      group: ' 增加物品',
+      name: ' 生成花语泡泡',
+      desc: '直接生成一个含高级鲜花的花语泡泡，用于测试广告解锁',
+      execute: () => {
+        const idx = BoardManager.findEmptyOpenCell();
+        const ok = MergeCompanionManager.gmSpawnFloatBubble(GM_TEST_BUBBLE_ITEM_ID, idx >= 0 ? idx : undefined);
+        if (!ok) return ' 生成失败：物品未注册或当前花语泡泡已达上限';
+        const nm = ITEM_DEFS.get(GM_TEST_BUBBLE_ITEM_ID)?.name ?? GM_TEST_BUBBLE_ITEM_ID;
+        return ` 已生成花语泡泡（内容：${nm}）`;
       },
     });
 

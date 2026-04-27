@@ -38,7 +38,7 @@ const AUTO_SAVE_INTERVAL = 30;
 function _computeConfigFingerprint(): string {
   const parts: string[] = [];
   for (const p of BOARD_PRESETS) {
-    parts.push(`${p.row},${p.col},${p.state},${p.keyPrice}`);
+    parts.push(`${p.row},${p.col},${p.state},${p.keyPrice},${p.keyUnlockMode ?? ''}`);
   }
   parts.push(`|total:${BOARD_TOTAL}`);
   const raw = parts.join(';');

@@ -35,8 +35,6 @@ export const BACKEND_REQUEST_TIMEOUT_MS = 10000;
 export const BACKEND_TOKEN_KEY = `${GAME_KEY}_token`;
 /** 匿名（H5 / 无平台 code）场景的稳定设备 ID key */
 export const BACKEND_ANON_ID_KEY = `${GAME_KEY}_anon_id`;
-/** 游戏内排障用稳定用户 ID（展示给玩家，纳入云同步入库） */
-export const USER_IDENTITY_KEY = `${GAME_KEY}_user_identity`;
 /** 玩家设置（音乐/音效等） */
 export const USER_SETTINGS_KEY = `${GAME_KEY}_settings`;
 
@@ -63,7 +61,7 @@ export const CLOUD_SYNC_ALLOWLIST = [
   'huahua_affinity',
   'huahua_affinity_cards',
   'huahua_daily_candy',
-  'huahua_user_identity',
+  'huahua_ad_entitlements',
   'huahua_settings',
 ] as const;
 

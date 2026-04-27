@@ -12,8 +12,10 @@ import { CELL_GAP, DESIGN_WIDTH, COLORS, FONT_FAMILY } from '@/config/Constants'
 import { ITEM_DEFS, FlowerLine } from '@/config/ItemConfig';
 import { RewardBoxManager } from '@/managers/RewardBoxManager';
 import { BoardManager } from '@/managers/BoardManager';
+import { AdManager, AdScene } from '@/managers/AdManager';
 import { TextureCache } from '@/utils/TextureCache';
 import { ToastMessage } from './ToastMessage';
+import { ConfirmDialog } from './ConfirmDialog';
 
 const GRID_COLS = 6;
 const PANEL_W = 540;
@@ -209,9 +211,43 @@ export class RewardBoxPanel extends PIXI.Container {
       fontFamily: FONT_FAMILY,
       fontWeight: 'bold',
     });
-    this._headerText.anchor.set(0.5, 0.5);
-    this._headerText.position.set(PANEL_W / 2, TAIL_H + HEADER_H / 2);
+    this._headerText.anchor.set(0, 0.5);
+
+    const organizeBtn = new PIXI.Container();
+    organizeBtn.eventMode = 'static';
+    organizeBtn.cursor = 'pointer';
+    const organizeBg = new PIXI.Graphics();
+    organizeBg.beginFill(0xff8c5a, 1);
+    organizeBg.lineStyle(2.5, 0xd84315, 0.95);
+    organizeBg.drawRoundedRect(-34, -17, 68, 34, 17);
+    organizeBg.endFill();
+    organizeBtn.addChild(organizeBg);
+    const organizeText = new PIXI.Text('整理', {
+      fontSize: 16,
+      fill: 0xffffff,
+      fontFamily: FONT_FAMILY,
+      fontWeight: '900',
+      stroke: 0xb8320a,
+      strokeThickness: 3,
+    } as any);
+    organizeText.anchor.set(0.5);
+    organizeBtn.addChild(organizeText);
+    organizeBtn.hitArea = new PIXI.Rectangle(-40, -22, 80, 44);
+    organizeBtn.on('pointerdown', (e: PIXI.FederatedPointerEvent) => {
+      e.stopPropagation();
+      void this._onOrganizeTap();
+    });
+
+    const headerCy = TAIL_H + HEADER_H / 2;
+    const titleW = this._headerText.width;
+    const btnHalfW = 34;
+    const gap = 12;
+    const rowW = titleW + gap + btnHalfW * 2;
+    const rowLeft = (PANEL_W - rowW) / 2;
+    this._headerText.position.set(rowLeft, headerCy);
+    organizeBtn.position.set(rowLeft + titleW + gap + btnHalfW, headerCy);
     this._card.addChild(this._headerText);
+    this._card.addChild(organizeBtn);
 
     const gridTop = TAIL_H + HEADER_H;
 
@@ -309,6 +345,32 @@ export class RewardBoxPanel extends PIXI.Container {
     });
 
     return slot;
+  }
+
+  private async _onOrganizeTap(): Promise<void> {
+    if (RewardBoxManager.isEmpty) {
+      ToastMessage.show('收纳框为空');
+      return;
+    }
+    const confirmed = await ConfirmDialog.show(
+      '整理收纳箱',
+      '观看一段广告，将收纳箱按品类和等级重新排列。',
+      '免费整理',
+      '取消',
+    );
+    if (!confirmed) return;
+
+    AdManager.showRewardedAd(AdScene.REWARD_BOX_ORGANIZE, (success) => {
+      console.log('[RewardBoxPanel] 整理广告回调:', success);
+      if (!success) {
+        ToastMessage.show('广告未看完，未整理');
+        return;
+      }
+      const changed = RewardBoxManager.organize();
+      this._refreshGrid();
+      ToastMessage.show(changed ? '收纳箱已整理' : '收纳箱已经很整齐');
+      this.close();
+    });
   }
 
   private _onSlotTap(itemId: string): void {

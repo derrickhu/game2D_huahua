@@ -50,6 +50,7 @@ import { CurrencyManager } from '@/managers/CurrencyManager';
 import { BoardManager } from '@/managers/BoardManager';
 import { RewardBoxManager } from '@/managers/RewardBoxManager';
 import { AdManager, AdScene } from '@/managers/AdManager';
+import { AdEntitlementManager, DailyAdEntitlement } from '@/managers/AdEntitlementManager';
 import { ToastMessage } from '@/gameobjects/ui/ToastMessage';
 
 export interface MerchSlotState {
@@ -522,6 +523,15 @@ class MerchShopManagerClass {
     };
   }
 
+  private rerollShelfDifferent(shelfIndex: number, now: number): void {
+    const before = JSON.stringify(this._shelves[shelfIndex]?.slots ?? []);
+    for (let i = 0; i < 6; i++) {
+      this.rollShelfNow(shelfIndex, now + i);
+      const after = JSON.stringify(this._shelves[shelfIndex]?.slots ?? []);
+      if (after !== before) return;
+    }
+  }
+
   checkRefreshes(): void {
     const now = Date.now();
     let changed = false;
@@ -550,6 +560,31 @@ class MerchShopManagerClass {
     EventBus.emit('merchShop:changed');
     ToastMessage.show('本栏已刷新');
     return true;
+  }
+
+  refreshShelfWithDailyAd(shelfIndex: number): void {
+    this.ensureUpToDate();
+    if (shelfIndex < 0 || shelfIndex >= MERCH_SHELVES.length) return;
+    if (!AdEntitlementManager.canUseDaily(DailyAdEntitlement.MERCH_DAILY_REFRESH)) {
+      ToastMessage.show('今日广告刷新已使用');
+      return;
+    }
+    AdManager.showRewardedAd(AdScene.MERCH_DAILY_REFRESH, (success) => {
+      if (!success) {
+        ToastMessage.show('广告未看完，未刷新');
+        return;
+      }
+      if (!AdEntitlementManager.markDailyUsed(DailyAdEntitlement.MERCH_DAILY_REFRESH)) {
+        ToastMessage.show('今日广告刷新已使用');
+        return;
+      }
+      AudioManager.play('purchase_tap');
+      this.rerollShelfDifferent(shelfIndex, Date.now());
+      console.log('[MerchShop] 每日广告刷新完成:', shelfIndex, this._shelves[shelfIndex]?.slots);
+      EventBus.emit('merchShop:changed');
+      EventBus.emit('merchShop:dailyAdRefreshCompleted', shelfIndex);
+      ToastMessage.show('本栏已刷新');
+    });
   }
 
   getSnapshot(): MerchShelfSnapshot[] {

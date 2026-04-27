@@ -461,6 +461,7 @@ const DECO_IMAGE_MAP: Record<string, string> = {
   table_round_cafe: 'subpkg_deco/images/furniture/table_round_cafe.png',
   table_square_bistro: 'subpkg_deco/images/furniture/table_square_bistro.png',
   table_side_round: 'subpkg_deco/images/furniture/table_side_round.png',
+  promo_wood_tea_table: 'subpkg_deco/images/furniture/promo_wood_tea_table.png',
   // 灯具
   light_desk:    'subpkg_deco/images/furniture/light_desk.png',
   light_floor:   'subpkg_deco/images/furniture/light_floor.png',
@@ -485,6 +486,7 @@ const DECO_IMAGE_MAP: Record<string, string> = {
   orn_awaken_bucket: 'subpkg_deco/images/furniture/orn_awaken_bucket.png',
   orn_floral_chest: 'subpkg_deco/images/furniture/orn_floral_chest.png',
   orn_pastel_bench: 'subpkg_deco/images/furniture/orn_pastel_bench.png',
+  promo_floral_sofa: 'subpkg_deco/images/furniture/promo_floral_sofa.png',
   orn_lounge_chaise: 'subpkg_deco/images/furniture/orn_lounge_chaise.png',
   orn_wood_stools_pair: 'subpkg_deco/images/furniture/orn_wood_stools_pair.png',
   orn_rocking_chair: 'subpkg_deco/images/furniture/orn_rocking_chair.png',

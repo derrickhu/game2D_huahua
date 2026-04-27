@@ -12,20 +12,7 @@
  */
 import { Platform } from '@/core/PlatformService';
 import { EventBus } from '@/core/EventBus';
-
-/** 广告位 ID 配置（上线前替换为真实 ID） */
-const AD_CONFIG = {
-  wechat: {
-    rewardedVideo: 'adunit-xxxxxxxxxxxxxxxxxx',  // 微信激励视频广告位
-    interstitial:  'adunit-yyyyyyyyyyyyyyyyyy',  // 微信插屏广告位
-    banner:        'adunit-zzzzzzzzzzzzzzzzzz',  // 微信 Banner 广告位
-  },
-  douyin: {
-    rewardedVideo: 'xxxxxxxxxxxxxxxxxxxxxxxxxx',  // 抖音激励视频广告位
-    interstitial:  'yyyyyyyyyyyyyyyyyyyyyyyyyy',  // 抖音插屏广告位
-    banner:        'zzzzzzzzzzzzzzzzzzzzzzzzzz',  // 抖音 Banner 广告位
-  },
-};
+import { AD_UNIT_CONFIG, type PlatformAdUnitConfig } from '@/config/AdConfig';
 
 /** 广告场景枚举 */
 export enum AdScene {
@@ -35,17 +22,36 @@ export enum AdScene {
   REVIVE           = 'revive',            // 挑战复活
   FREE_CHEST       = 'free_chest',        // 免费开箱
   MERCH_SHOP       = 'merch_shop',        // 主场景内购商店广告购
+  BOARD_CELL_UNLOCK = 'board_cell_unlock',
+  WAREHOUSE_SLOT_UNLOCK = 'warehouse_slot_unlock',
+  SPECIAL_DECO_UNLOCK = 'special_deco_unlock',
+  /** 宣传款家具等（独立广告位，见 AdConfig `promo_furniture_unlock`） */
+  PROMO_FURNITURE_UNLOCK = 'promo_furniture_unlock',
+  MERCH_DAILY_REFRESH = 'merch_daily_refresh',
+  FLOWER_SIGN_DAILY_DRAW = 'flower_sign_daily_draw',
+  WAREHOUSE_ORGANIZE = 'warehouse_organize',
+  REWARD_BOX_ORGANIZE = 'reward_box_organize',
+  MERGE_BUBBLE_UNLOCK = 'merge_bubble_unlock',
 }
 
 type AdCallback = (success: boolean) => void;
 
+export function showRewardedAdAsync(scene: AdScene): Promise<boolean> {
+  return new Promise((resolve) => {
+    AdManager.showRewardedAd(scene, resolve);
+  });
+}
+
 class AdManagerClass {
-  private _rewardedAd: any = null;
+  private _adConfig: PlatformAdUnitConfig | null = null;
+  private _rewardedAds = new Map<string, any>();
+  private _loadedRewardedAdUnits = new Set<string>();
   private _interstitialAd: any = null;
   private _bannerAd: any = null;
-  private _isAdLoaded = false;
   private _isAdShowing = false;
   private _pendingCallback: AdCallback | null = null;
+  private _pendingScene: AdScene | null = null;
+  private _pendingAdUnitId: string | null = null;
 
   /** 开发模式：没有真实广告时模拟成功 */
   private _devMode = true;
@@ -65,8 +71,8 @@ class AdManagerClass {
       return;
     }
 
-    const config = Platform.name === 'wechat' ? AD_CONFIG.wechat
-      : Platform.name === 'douyin' ? AD_CONFIG.douyin
+    const config = Platform.name === 'wechat' ? AD_UNIT_CONFIG.wechat
+      : Platform.name === 'douyin' ? AD_UNIT_CONFIG.douyin
       : null;
 
     if (!config) {
@@ -83,37 +89,7 @@ class AdManagerClass {
     }
 
     this._devMode = false;
-
-    // 创建激励视频广告
-    this._rewardedAd = Platform.createRewardedVideoAd(config.rewardedVideo);
-    if (this._rewardedAd) {
-      this._rewardedAd.onLoad(() => {
-        console.log('[AdManager] 激励视频广告加载成功');
-        this._isAdLoaded = true;
-      });
-      this._rewardedAd.onError((err: any) => {
-        console.warn('[AdManager] 激励视频广告错误:', err);
-        this._isAdLoaded = false;
-      });
-      this._rewardedAd.onClose((res: any) => {
-        this._isAdShowing = false;
-        const isCompleted = res && res.isEnded;
-        console.log(`[AdManager] 激励视频关闭, isCompleted=${isCompleted}`);
-
-        if (this._pendingCallback) {
-          this._pendingCallback(isCompleted);
-          this._pendingCallback = null;
-        }
-
-        if (isCompleted) {
-          this._stats.totalCompleted++;
-          EventBus.emit('ad:completed');
-        }
-      });
-
-      // 预加载
-      this._rewardedAd.load().catch(() => {});
-    }
+    this._adConfig = config;
 
     // 创建插屏广告
     this._interstitialAd = Platform.createInterstitialAd(config.interstitial);
@@ -133,7 +109,7 @@ class AdManagerClass {
   get canShowRewardedAd(): boolean {
     if (this._isAdShowing) return false;
     if (this._devMode) return true;
-    return this._isAdLoaded && !!this._rewardedAd;
+    return !!this._adConfig && this._rewardedAds.size > 0;
   }
 
   /** 是否处于开发模式 */
@@ -147,6 +123,12 @@ class AdManagerClass {
    * @param callback 回调 (success: boolean)
    */
   showRewardedAd(scene: AdScene, callback: AdCallback): void {
+    if (this._isAdShowing) {
+      console.warn('[AdManager] 已有广告正在展示，忽略新请求:', scene);
+      callback(false);
+      return;
+    }
+
     this._checkDailyReset();
     this._stats.totalShown++;
     this._stats.todayShown++;
@@ -166,25 +148,31 @@ class AdManagerClass {
       return;
     }
 
-    if (!this._rewardedAd) {
+    const adUnitId = this._rewardedAdUnitIdForScene(scene);
+    const rewardedAd = adUnitId ? this._getOrCreateRewardedAd(adUnitId) : null;
+    if (!rewardedAd) {
       console.warn('[AdManager] 广告实例不存在');
       callback(false);
       return;
     }
 
     this._pendingCallback = callback;
+    this._pendingScene = scene;
+    this._pendingAdUnitId = adUnitId;
     this._isAdShowing = true;
 
-    this._rewardedAd.show().catch(() => {
+    rewardedAd.show().catch(() => {
       // 显示失败，尝试重新加载后再显示
-      this._rewardedAd.load().then(() => {
-        this._rewardedAd.show().catch((err: any) => {
+      rewardedAd.load().then(() => {
+        rewardedAd.show().catch((err: any) => {
           console.error('[AdManager] 激励视频展示失败:', err);
           this._isAdShowing = false;
           if (this._pendingCallback) {
             this._pendingCallback(false);
             this._pendingCallback = null;
           }
+          this._pendingScene = null;
+          this._pendingAdUnitId = null;
         });
       }).catch((err: any) => {
         console.error('[AdManager] 激励视频加载失败:', err);
@@ -193,8 +181,57 @@ class AdManagerClass {
           this._pendingCallback(false);
           this._pendingCallback = null;
         }
+        this._pendingScene = null;
+        this._pendingAdUnitId = null;
       });
     });
+  }
+
+  private _rewardedAdUnitIdForScene(scene: AdScene): string | null {
+    if (!this._adConfig) return null;
+    return this._adConfig.rewardedVideoByScene?.[scene] ?? this._adConfig.rewardedVideo;
+  }
+
+  private _getOrCreateRewardedAd(adUnitId: string): any {
+    const existing = this._rewardedAds.get(adUnitId);
+    if (existing) return existing;
+
+    const ad = Platform.createRewardedVideoAd(adUnitId);
+    if (!ad) return null;
+
+    ad.onLoad(() => {
+      console.log('[AdManager] 激励视频广告加载成功:', adUnitId);
+      this._loadedRewardedAdUnits.add(adUnitId);
+    });
+    ad.onError((err: any) => {
+      console.warn('[AdManager] 激励视频广告错误:', adUnitId, err);
+      this._loadedRewardedAdUnits.delete(adUnitId);
+    });
+    ad.onClose((res: any) => {
+      if (this._pendingAdUnitId && this._pendingAdUnitId !== adUnitId) return;
+      this._isAdShowing = false;
+      this._loadedRewardedAdUnits.delete(adUnitId);
+      const isCompleted = res?.isEnded !== false;
+      const scene = this._pendingScene;
+      console.log('[AdManager] 激励视频关闭:', { scene, adUnitId, res, isCompleted });
+
+      if (this._pendingCallback) {
+        this._pendingCallback(isCompleted);
+        this._pendingCallback = null;
+      }
+      this._pendingScene = null;
+      this._pendingAdUnitId = null;
+
+      if (isCompleted) {
+        this._stats.totalCompleted++;
+        EventBus.emit('ad:completed', scene);
+      }
+      ad.load().catch(() => {});
+    });
+
+    this._rewardedAds.set(adUnitId, ad);
+    ad.load().catch(() => {});
+    return ad;
   }
 
   /** 展示插屏广告（场景切换时调用） */

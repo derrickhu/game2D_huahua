@@ -1252,6 +1252,7 @@ export class MainScene implements Scene {
 
     // 引导完成
     EventBus.on('tutorial:completed', () => {
+      this._tutorialOverlay?.unbind();
       ToastMessage.show('欢迎来到花花妙屋！');
       if (CheckInManager.canCheckIn) {
         setTimeout(() => this._checkInPanel.open(), 1000);
@@ -1390,6 +1391,7 @@ export class MainScene implements Scene {
       // 教程期间仅在 SWITCH_TO_SHOP 步骤允许切换
       if (TutorialManager.isActive
         && TutorialManager.currentStep !== TutorialStep.SWITCH_TO_SHOP) {
+        console.warn('[MainScene] switchToShop blocked by tutorial step', TutorialManager.currentStep);
         return;
       }
       this._switchToShopScene();

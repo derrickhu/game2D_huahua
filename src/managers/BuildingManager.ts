@@ -755,6 +755,19 @@ class BuildingManagerClass {
     };
   }
 
+  clearCooldownByAd(cellIndex: number): boolean {
+    const cell = BoardManager.getCellByIndex(cellIndex);
+    if (!cell?.itemId) return false;
+    const toolDef = findBoardProducerDef(cell.itemId);
+    if (!toolDef?.canProduce || toolDef.cooldown <= 0) return false;
+    const state = this._states.get(cellIndex);
+    if (!state || state.boundItemId !== cell.itemId || state.cdRemaining <= 0) return false;
+    state.cdRemaining = 0;
+    state.freeProducesLeft = Math.max(1, toolDef.producesBeforeCooldown);
+    EventBus.emit('building:cdReady', cellIndex);
+    return true;
+  }
+
   /** 获取消耗型次数（-1 表示不显示；宝箱/红包待散落件数见 getChestDispatchProgress，棋盘不展示） */
   getUsesLeft(cellIndex: number): number {
     const cell = BoardManager.getCellByIndex(cellIndex);

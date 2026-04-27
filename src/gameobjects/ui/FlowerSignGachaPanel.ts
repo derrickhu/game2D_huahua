@@ -10,6 +10,7 @@ import { Platform } from '@/core/PlatformService';
 import { createWishLuckyShare } from '@/config/ShareConfig';
 import { TextureCache } from '@/utils/TextureCache';
 import { ToastMessage } from '@/gameobjects/ui/ToastMessage';
+import { createAdIcon, createFreeAdBadge } from '@/gameobjects/ui/AdBadge';
 import { DESIGN_WIDTH, FONT_FAMILY } from '@/config/Constants';
 import {
   FLOWER_SIGN_DRAW_COST_MULTI,
@@ -21,6 +22,8 @@ import {
   type FlowerSignReward,
 } from '@/managers/FlowerSignGachaManager';
 import { FlowerSignTicketManager } from '@/managers/FlowerSignTicketManager';
+import { AdManager, AdScene } from '@/managers/AdManager';
+import { AdEntitlementManager, DailyAdEntitlement } from '@/managers/AdEntitlementManager';
 import { SaveManager } from '@/managers/SaveManager';
 import { ItemObtainOverlay, type ItemObtainEntry } from '@/gameobjects/ui/ItemObtainOverlay';
 
@@ -58,6 +61,14 @@ export class FlowerSignGachaPanel extends PIXI.Container {
   private _ticketText!: PIXI.Text;
   /** 已扣券、待点击获得遮罩发奖（强关面板时在此补发） */
   private _pendingRewards: FlowerSignReward[] | null = null;
+  private _drawInProgress = false;
+  private _idleLayout: {
+    W: number;
+    H: number;
+    immersiveArt: boolean;
+    idleLayerY: number;
+    innerH: number;
+  } | null = null;
 
   constructor() {
     super();
@@ -91,6 +102,7 @@ export class FlowerSignGachaPanel extends PIXI.Container {
       SaveManager.save();
       this._pendingRewards = null;
     }
+    this._drawInProgress = false;
     this._isOpen = false;
     TweenManager.to({
       target: this,
@@ -326,6 +338,7 @@ export class FlowerSignGachaPanel extends PIXI.Container {
     idleLayerY: number,
     innerH: number,
   ): void {
+    this._idleLayout = { W, H, immersiveArt, idleLayerY, innerH };
     this._idleLayer.removeChildren();
     this._idleLayer.position.set(0, idleLayerY);
 
@@ -346,6 +359,7 @@ export class FlowerSignGachaPanel extends PIXI.Container {
       row.position.set(W / 2, btnRowY);
       const gap = 14;
       const maxBtnW = 160;
+      const hasDailyAdDraw = AdEntitlementManager.canUseDaily(DailyAdEntitlement.FLOWER_SIGN_DAILY_DRAW);
       const b1 = this._makeDecoWishBtn(
         '许愿一次',
         FLOWER_SIGN_DRAW_COST_SINGLE,
@@ -355,7 +369,7 @@ export class FlowerSignGachaPanel extends PIXI.Container {
       );
       const b2 = this._makeDecoWishBtn(
         '许愿十次',
-        FLOWER_SIGN_DRAW_COST_MULTI,
+        hasDailyAdDraw ? 0 : FLOWER_SIGN_DRAW_COST_MULTI,
         maxBtnW,
         immersiveArt,
         () => this._doDraw('multi'),
@@ -405,7 +419,7 @@ export class FlowerSignGachaPanel extends PIXI.Container {
 
     const costRow = new PIXI.Container();
     const icTex = TextureCache.get('icon_flower_sign_coin');
-    if (icTex && icTex.width > 1) {
+    if (cost > 0 && icTex && icTex.width > 1) {
       const ic = new PIXI.Sprite(icTex);
       ic.anchor.set(1, 0.5);
       ic.height = 22;
@@ -413,7 +427,7 @@ export class FlowerSignGachaPanel extends PIXI.Container {
       ic.position.set(-2, 0);
       costRow.addChild(ic);
     }
-    const cx = new PIXI.Text(`×${cost}`, {
+    const cx = new PIXI.Text(cost > 0 ? `×${cost}` : '免费', {
       fontSize: 17,
       fill: 0xffffff,
       fontFamily: FONT_FAMILY,
@@ -424,6 +438,13 @@ export class FlowerSignGachaPanel extends PIXI.Container {
     cx.anchor.set(0, 0.5);
     cx.position.set(6, 0);
     costRow.addChild(cx);
+    if (cost <= 0) {
+      const adIcon = createAdIcon(20);
+      adIcon.position.set(cx.x + cx.width + 16, 0);
+      costRow.addChild(adIcon);
+    }
+    const cb = costRow.getLocalBounds();
+    costRow.pivot.set(cb.x + cb.width / 2, cb.y + cb.height / 2);
     costRow.position.set(0, sp ? -4 : 0);
     root.addChild(costRow);
 
@@ -477,7 +498,7 @@ export class FlowerSignGachaPanel extends PIXI.Container {
       g.drawRoundedRect(-130, -22, 260, 44, 22);
       g.endFill();
       c.addChild(g);
-      const t = new PIXI.Text(`${label}（${cost}券）`, {
+      const t = new PIXI.Text(cost > 0 ? `${label}（${cost}券）` : label, {
         fontSize: 17,
         fill: 0xffffff,
         fontFamily: FONT_FAMILY,
@@ -485,6 +506,11 @@ export class FlowerSignGachaPanel extends PIXI.Container {
       });
       t.anchor.set(0.5);
       c.addChild(t);
+      if (cost <= 0) {
+        const badge = createFreeAdBadge(14, 0xffffff, 0x2c6b35);
+        badge.position.set(t.x + t.width / 2 + 34, 0);
+        c.addChild(badge);
+      }
       c.hitArea = new PIXI.Rectangle(-130, -22, 260, 44);
       c.on('pointertap', (e: PIXI.FederatedPointerEvent) => {
         e.stopPropagation();
@@ -492,14 +518,45 @@ export class FlowerSignGachaPanel extends PIXI.Container {
       });
       wrap.addChild(c);
     };
+    const hasDailyAdDraw = AdEntitlementManager.canUseDaily(DailyAdEntitlement.FLOWER_SIGN_DAILY_DRAW);
     mk('许愿一次', FLOWER_SIGN_DRAW_COST_SINGLE, btnY, onSingle);
-    mk('许愿十次', FLOWER_SIGN_DRAW_COST_MULTI, btnY + 58, onMulti);
+    mk('许愿十次', hasDailyAdDraw ? 0 : FLOWER_SIGN_DRAW_COST_MULTI, btnY + 58, onMulti);
     return wrap;
   }
 
   private _doDraw(kind: 'single' | 'multi'): void {
+    if (this._drawInProgress) return;
+    this._drawInProgress = true;
+
+    if (
+      kind === 'multi'
+      && AdEntitlementManager.canUseDaily(DailyAdEntitlement.FLOWER_SIGN_DAILY_DRAW)
+    ) {
+      AdManager.showRewardedAd(AdScene.FLOWER_SIGN_DAILY_DRAW, (success) => {
+        console.log('[FlowerSignGacha] 广告十连回调:', success);
+        if (!success) {
+          this._drawInProgress = false;
+          ToastMessage.show('广告未看完，未许愿');
+          return;
+        }
+        if (!AdEntitlementManager.markDailyUsed(DailyAdEntitlement.FLOWER_SIGN_DAILY_DRAW)) {
+          this._drawInProgress = false;
+          ToastMessage.show('今日广告许愿已使用');
+          return;
+        }
+        const res = FlowerSignGachaManager.drawMultiFree();
+        if (!res.ok) {
+          this._drawInProgress = false;
+          ToastMessage.show('奖池配置异常');
+          return;
+        }
+        this._showResults(res.rewards);
+      });
+      return;
+    }
     const res = kind === 'single' ? FlowerSignGachaManager.drawSingle() : FlowerSignGachaManager.drawMulti();
     if (!res.ok) {
+      this._drawInProgress = false;
       if (res.reason === 'no_ticket') ToastMessage.show('许愿硬币不足');
       else ToastMessage.show('奖池配置异常');
       return;
@@ -508,6 +565,15 @@ export class FlowerSignGachaPanel extends PIXI.Container {
   }
 
   private _showIdle(): void {
+    if (this._idleLayout) {
+      this._buildIdleContent(
+        this._idleLayout.W,
+        this._idleLayout.H,
+        this._idleLayout.immersiveArt,
+        this._idleLayout.idleLayerY,
+        this._idleLayout.innerH,
+      );
+    }
     this._idleLayer.visible = true;
     this._syncTicketLabel();
   }
@@ -524,13 +590,15 @@ export class FlowerSignGachaPanel extends PIXI.Container {
           grantFlowerSignRewards(pending);
           SaveManager.save();
         }
+        this._drawInProgress = false;
         this._showIdle();
       },
       {
         shareLabel: '晒欧气',
-        onShare: () => {
-          Platform.shareAppMessage(createWishLuckyShare());
-          ToastMessage.show('已分享许愿好运');
+        onShare: async (overlay) => {
+          const imageUrl = await overlay.createShareSnapshotImageUrl();
+          Platform.shareAppMessage(createWishLuckyShare(imageUrl ?? undefined));
+          ToastMessage.show(imageUrl ? '已分享本次许愿结果' : '已分享许愿好运');
         },
       },
     );

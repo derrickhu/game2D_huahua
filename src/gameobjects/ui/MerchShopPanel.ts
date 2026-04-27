@@ -10,8 +10,10 @@ import { EventBus } from '@/core/EventBus';
 import { TweenManager, Ease } from '@/core/TweenManager';
 import { DESIGN_WIDTH, FONT_FAMILY, COLORS } from '@/config/Constants';
 import { TextureCache } from '@/utils/TextureCache';
+import { createAdIcon, createFreeAdBadge } from '@/gameobjects/ui/AdBadge';
 import { CurrencyManager } from '@/managers/CurrencyManager';
 import { MerchShopManager, type MerchSlotSnapshot } from '@/managers/MerchShopManager';
+import { AdEntitlementManager, DailyAdEntitlement } from '@/managers/AdEntitlementManager';
 import { MERCH_DIAMOND_REFRESH_SHELF_COST } from '@/config/MerchShopConfig';
 
 /** 相对原先边距略收紧 + 乘系数，整体面板（底板+内嵌货架）约大 6%～10%，仍钳在屏内 */
@@ -156,6 +158,13 @@ interface MerchSlotCell {
   badgeCount: PIXI.Text;
 }
 
+interface MerchRefreshButtonView {
+  row: PIXI.Container;
+  icon: PIXI.Sprite | null;
+  adIcon: PIXI.Container | null;
+  label: PIXI.Text;
+}
+
 export class MerchShopPanel extends PIXI.Container {
   private _bg!: PIXI.Graphics;
   private _frameRoot!: PIXI.Container;
@@ -173,6 +182,7 @@ export class MerchShopPanel extends PIXI.Container {
   /** 与 `MERCH_SHELVES` 路数一致，每层板一条倒计时 */
   private _shelfStripCountdowns: PIXI.Text[] = [];
   private _shelfStripBtns: PIXI.Container[] = [];
+  private _shelfRefreshButtonViews: MerchRefreshButtonView[] = [];
   private _merchTickAcc = 0;
 
   private readonly _onMerchShopChanged = (): void => {
@@ -182,6 +192,12 @@ export class MerchShopPanel extends PIXI.Container {
     }
   };
   private readonly _onCurrencyChanged = (): void => {
+    if (this._isOpen && this._merchDataBound) {
+      this._refreshMerchSlots();
+      this._refreshMerchShelfStrips();
+    }
+  };
+  private readonly _onAdEntitlementChanged = (): void => {
     if (this._isOpen && this._merchDataBound) {
       this._refreshMerchSlots();
       this._refreshMerchShelfStrips();
@@ -233,6 +249,8 @@ export class MerchShopPanel extends PIXI.Container {
       this._refreshMerchShelfStrips();
       EventBus.on('merchShop:changed', this._onMerchShopChanged);
       EventBus.on('currency:changed', this._onCurrencyChanged);
+      EventBus.on('adEntitlement:changed', this._onAdEntitlementChanged);
+      EventBus.on('merchShop:dailyAdRefreshCompleted', this._onAdEntitlementChanged);
       Game.ticker.add(this._merchUiTick, this);
     }
   }
@@ -244,6 +262,8 @@ export class MerchShopPanel extends PIXI.Container {
     if (this._merchDataBound) {
       EventBus.off('merchShop:changed', this._onMerchShopChanged);
       EventBus.off('currency:changed', this._onCurrencyChanged);
+      EventBus.off('adEntitlement:changed', this._onAdEntitlementChanged);
+      EventBus.off('merchShop:dailyAdRefreshCompleted', this._onAdEntitlementChanged);
       Game.ticker.remove(this._merchUiTick, this);
     }
     TweenManager.cancelTarget(this._bg);
@@ -513,6 +533,7 @@ export class MerchShopPanel extends PIXI.Container {
     this._slotCells = [];
     this._shelfStripCountdowns = [];
     this._shelfStripBtns = [];
+    this._shelfRefreshButtonViews = [];
 
     const onMerchScrollSurfaceDown = (e: PIXI.FederatedPointerEvent): void => {
       e.stopPropagation();
@@ -666,19 +687,22 @@ export class MerchShopPanel extends PIXI.Container {
       }
       const rRow = new PIXI.Container();
       rRow.position.set(-rHitW / 2, 0);
-      const rGap = 7;
+      const hasDailyAdRefresh = AdEntitlementManager.canUseDaily(DailyAdEntitlement.MERCH_DAILY_REFRESH);
       const rIconH = Math.min(46, rBtnH - 10);
-      let rIconW = 0;
       const rGem = TextureCache.get('icon_gem');
+      let rIcon: PIXI.Sprite | null = null;
       if (rGem?.width) {
-        const gsp = new PIXI.Sprite(rGem);
-        gsp.anchor.set(0.5, 0.5);
-        gsp.height = rIconH;
-        gsp.width = (rGem.width / rGem.height) * rIconH;
-        rIconW = gsp.width;
-        rRow.addChild(gsp);
+        rIcon = new PIXI.Sprite(rGem);
+        rIcon.anchor.set(0.5, 0.5);
+        rIcon.height = rIconH;
+        rIcon.width = (rGem.width / rGem.height) * rIconH;
+        rIcon.visible = !hasDailyAdRefresh;
+        rRow.addChild(rIcon);
       }
-      const rPrice = new PIXI.Text(String(MERCH_DIAMOND_REFRESH_SHELF_COST), {
+      const rAdIcon = createAdIcon(24);
+      rAdIcon.visible = hasDailyAdRefresh;
+      rRow.addChild(rAdIcon);
+      const rPrice = new PIXI.Text(hasDailyAdRefresh ? '免费' : String(MERCH_DIAMOND_REFRESH_SHELF_COST), {
         fontSize: 42,
         fill: MERCH_BTN_LABEL_FILL,
         fontFamily: FONT_FAMILY,
@@ -688,19 +712,18 @@ export class MerchShopPanel extends PIXI.Container {
       } as any);
       rPrice.anchor.set(0.5, 0.5);
       rRow.addChild(rPrice);
-      const rRowW = rIconW > 0 ? rIconW + rGap + rPrice.width : rPrice.width;
-      let rx = -rRowW / 2;
-      if (rIconW > 0 && rRow.children[0]) {
-        (rRow.children[0] as PIXI.Sprite).position.set(rx + rIconW / 2, 0);
-        rx += rIconW + rGap;
-      }
-      rPrice.position.set(rx + rPrice.width / 2, 0);
+      this._syncRefreshButtonView({ row: rRow, icon: rIcon, adIcon: rAdIcon, label: rPrice });
       refreshBtn.addChild(rRow);
       refreshBtn.hitArea = new PIXI.Rectangle(-rHitW - 6, -barH / 2, rHitW + 12, barH);
       refreshBtn.on('pointertap', (e: PIXI.FederatedPointerEvent) => {
         e.stopPropagation();
-        MerchShopManager.tryDiamondRefreshShelf(shelfIdx, MERCH_DIAMOND_REFRESH_SHELF_COST);
+        if (AdEntitlementManager.canUseDaily(DailyAdEntitlement.MERCH_DAILY_REFRESH)) {
+          MerchShopManager.refreshShelfWithDailyAd(shelfIdx);
+        } else {
+          MerchShopManager.tryDiamondRefreshShelf(shelfIdx, MERCH_DIAMOND_REFRESH_SHELF_COST);
+        }
       });
+      this._shelfRefreshButtonViews.push({ row: rRow, icon: rIcon, adIcon: rAdIcon, label: rPrice });
 
       const stripLbl = new PIXI.Text('刷新时间', {
         fontSize: 32,
@@ -815,6 +838,7 @@ export class MerchShopPanel extends PIXI.Container {
       } else {
         let iconKey: string | null = null;
         let priceStr = '';
+        const isAdPrice = sl.priceType === 'ad';
         if (sl.priceType === 'huayuan') {
           iconKey = 'icon_huayuan';
           priceStr = String(sl.priceAmount);
@@ -824,14 +848,19 @@ export class MerchShopPanel extends PIXI.Container {
         } else if (sl.priceType === 'free') {
           priceStr = '免费';
         } else {
-          priceStr = '广告';
+          priceStr = '免费';
         }
 
         const row = new PIXI.Container();
         const gap = 10;
         const iconH = Math.max(30, Math.min(50, Math.round(scaledH * 0.58)));
         let iconW = 0;
-        if (iconKey) {
+        if (isAdPrice) {
+          const badge = createFreeAdBadge(MERCH_BUY_BTN_LABEL_FONT_SIZE, MERCH_BTN_LABEL_FILL, MERCH_BTN_LABEL_STROKE);
+          row.addChild(badge);
+          overlay.addChild(row);
+        } else {
+          if (iconKey) {
           const iconTex = TextureCache.get(iconKey);
           if (iconTex?.width) {
             const iconSp = new PIXI.Sprite(iconTex);
@@ -842,17 +871,18 @@ export class MerchShopPanel extends PIXI.Container {
             row.addChild(iconSp);
           }
         }
-        const price = new PIXI.Text(priceStr, labelStyle as any);
-        price.anchor.set(0.5, 0.5);
-        row.addChild(price);
-        const rowW = iconW > 0 ? iconW + gap + price.width : price.width;
-        let xLeft = -rowW / 2;
-        if (iconW > 0 && row.children[0]) {
-          (row.children[0] as PIXI.Sprite).position.set(xLeft + iconW / 2, 0);
-          xLeft += iconW + gap;
+          const price = new PIXI.Text(priceStr, labelStyle as any);
+          price.anchor.set(0.5, 0.5);
+          row.addChild(price);
+          const rowW = iconW > 0 ? iconW + gap + price.width : price.width;
+          let xLeft = -rowW / 2;
+          if (iconW > 0 && row.children[0]) {
+            (row.children[0] as PIXI.Sprite).position.set(xLeft + iconW / 2, 0);
+            xLeft += iconW + gap;
+          }
+          price.position.set(xLeft + price.width / 2, 0);
+          overlay.addChild(row);
         }
-        price.position.set(xLeft + price.width / 2, 0);
-        overlay.addChild(row);
       }
 
       cell.buyRoot.hitArea = new PIXI.Rectangle(-scaledW / 2, -scaledH, scaledW, scaledH);
@@ -874,10 +904,15 @@ export class MerchShopPanel extends PIXI.Container {
     g.endFill();
     overlay.addChild(g);
     const line =
-      soldOut ? '售罄' : sl.priceType === 'free' ? '免费' : sl.priceType === 'ad' ? '广告' : `${sl.priceAmount}`;
+      soldOut ? '售罄' : sl.priceType === 'free' ? '免费' : sl.priceType === 'ad' ? '免费' : `${sl.priceAmount}`;
     const t = new PIXI.Text(line, labelStyle as any);
     t.anchor.set(0.5);
     overlay.addChild(t);
+    if (!soldOut && sl.priceType === 'ad') {
+      const icon = createAdIcon(22);
+      icon.position.set(t.width / 2 + 16, 0);
+      overlay.addChild(icon);
+    }
     cell.buyRoot.hitArea = new PIXI.Rectangle(-bw / 2, -bh / 2, bw, bh);
     cell.buyRoot.eventMode = soldOut ? 'none' : 'static';
     cell.buyRoot.cursor = soldOut ? 'default' : 'pointer';
@@ -940,6 +975,35 @@ export class MerchShopPanel extends PIXI.Container {
         btn.cursor = 'pointer';
         btn.eventMode = 'static';
       }
+      const refreshView = this._shelfRefreshButtonViews[r];
+      if (refreshView) this._syncRefreshButtonView(refreshView);
+    }
+  }
+
+  private _syncRefreshButtonView(view: MerchRefreshButtonView): void {
+    const hasDailyAdRefresh = AdEntitlementManager.canUseDaily(DailyAdEntitlement.MERCH_DAILY_REFRESH);
+    const gap = 7;
+    view.label.text = hasDailyAdRefresh ? '免费' : String(MERCH_DIAMOND_REFRESH_SHELF_COST);
+    if (view.icon) view.icon.visible = !hasDailyAdRefresh;
+    if (view.adIcon) view.adIcon.visible = hasDailyAdRefresh;
+
+    const iconW = view.icon?.visible ? view.icon.width : 0;
+    const adIconW = view.adIcon?.visible ? view.adIcon.width : 0;
+    const rowW =
+      iconW > 0
+        ? iconW + gap + view.label.width
+        : adIconW > 0
+          ? view.label.width + gap + adIconW
+          : view.label.width;
+    let x = -rowW / 2;
+    if (view.icon?.visible) {
+      view.icon.position.set(x + iconW / 2, 0);
+      x += iconW + gap;
+    }
+    view.label.position.set(x + view.label.width / 2, 0);
+    x += view.label.width + gap;
+    if (view.adIcon?.visible) {
+      view.adIcon.position.set(x + adIconW / 2, 0);
     }
   }
 

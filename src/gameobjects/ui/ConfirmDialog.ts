@@ -19,7 +19,9 @@ export class ConfirmDialog extends PIXI.Container {
     return new Promise((resolve) => {
       const dialog = new ConfirmDialog(title, message, confirmText, cancelText);
       dialog._resolve = resolve;
+      dialog.zIndex = 30000;
       Game.stage.addChild(dialog);
+      if (Game.stage.sortableChildren) Game.stage.sortChildren();
     });
   }
 

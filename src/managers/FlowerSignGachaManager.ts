@@ -94,6 +94,16 @@ export const FlowerSignGachaManager = {
     return { ok: true, rewards: [r] };
   },
 
+  drawMultiFree(rng: () => number = Math.random): FlowerSignDrawResult {
+    const pool = buildValidPool();
+    if (pool.length === 0) return { ok: false, reason: 'empty_pool' };
+    const rewards: FlowerSignReward[] = [];
+    for (let i = 0; i < FLOWER_SIGN_DRAW_COST_MULTI; i++) {
+      rewards.push(pickOne(rng));
+    }
+    return { ok: true, rewards };
+  },
+
   drawMulti(rng: () => number = Math.random): FlowerSignDrawResult {
     const pool = buildValidPool();
     if (pool.length === 0) return { ok: false, reason: 'empty_pool' };

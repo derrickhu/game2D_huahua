@@ -16,8 +16,12 @@ import { SceneManager } from '@/core/SceneManager';
 import { TweenManager, Ease } from '@/core/TweenManager';
 import { EventBus } from '@/core/EventBus';
 import { ToastMessage } from '@/gameobjects/ui/ToastMessage';
+import { ConfirmDialog } from '@/gameobjects/ui/ConfirmDialog';
+import { createFreeAdBadge } from '@/gameobjects/ui/AdBadge';
 import { addMysteryCardPlaceholder, createSmallNameLockIcon } from '@/gameobjects/ui/mysteryCardPlaceholder';
 import { DecorationManager } from '@/managers/DecorationManager';
+import { PROMO_FURNITURE_AD_DECO_IDS } from '@/config/AdConfig';
+import { AdManager, AdScene } from '@/managers/AdManager';
 import { TextureCache } from '@/utils/TextureCache';
 import { checkRequirement, requirementHintText } from '@/utils/UnlockChecker';
 import {
@@ -167,6 +171,13 @@ function decoGridListTopPad(availH: number, totalRows: number, ch: number): numb
 /** 装修面板：解锁等级升序，同级按花愿价升序（仅「未解锁」筛选用） */
 function sortDecosByUnlockLevelThenCost(decos: DecoDef[]): DecoDef[] {
   return [...decos].sort((a, b) => {
+    const aFreeAdUnlock = DecorationManager.isAdUnlockDeco(a.id)
+      && !DecorationManager.isAdUnlockSatisfied(a.id)
+      && !checkRequirement(a.unlockRequirement).met;
+    const bFreeAdUnlock = DecorationManager.isAdUnlockDeco(b.id)
+      && !DecorationManager.isAdUnlockSatisfied(b.id)
+      && !checkRequirement(b.unlockRequirement).met;
+    if (aFreeAdUnlock !== bFreeAdUnlock) return aFreeAdUnlock ? -1 : 1;
     const la = a.unlockRequirement?.level ?? 0;
     const lb = b.unlockRequirement?.level ?? 0;
     if (la !== lb) return la - lb;
@@ -198,7 +209,8 @@ function decoMatchesInvFilter(deco: DecoDef, filter: DecoInvFilter, sceneId: str
   const owned = DecorationManager.isUnlocked(deco.id);
   const reqMet = checkRequirement(deco.unlockRequirement).met;
   const sceneOk = isDecoAllowedInScene(deco, sceneId);
-  const blocked = !reqMet || !sceneOk;
+  const purchaseAllowed = sceneOk && (reqMet || DecorationManager.isAdUnlockSatisfied(deco.id));
+  const blocked = !sceneOk || !purchaseAllowed;
   const isPlaced = !!RoomLayoutManager.getPlacement(deco.id);
   switch (filter) {
     case 'all':
@@ -1303,10 +1315,16 @@ export class DecorationPanel extends PIXI.Container {
         card.addChild(row);
       } else {
         const lockStyle = mode === 'locked' ? { ...labelStyle, fontSize: 15 } : labelStyle;
-        const label = new PIXI.Text(lineText, lockStyle as any);
-        label.anchor.set(0.5, 0.5);
-        label.position.set(cw / 2, cy);
-        card.addChild(label);
+        if (lineText === '免费解锁') {
+          const badge = createFreeAdBadge(15, 0xffffff, 0x333333, '免费解锁');
+          badge.position.set(cw / 2, cy);
+          card.addChild(badge);
+        } else {
+          const label = new PIXI.Text(lineText, lockStyle as any);
+          label.anchor.set(0.5, 0.5);
+          label.position.set(cw / 2, cy);
+          card.addChild(label);
+        }
       }
     } else {
       const btnW = Math.min(maxBtnW, 100);
@@ -1355,11 +1373,17 @@ export class DecorationPanel extends PIXI.Container {
         row.alpha = purchaseFooterAlpha;
         card.addChild(row);
       } else {
-        const fs = mode === 'locked' ? 15 : 17;
-        const t = new PIXI.Text(lineText, { fontSize: fs, fill: 0xffffff, fontFamily: FONT_FAMILY, fontWeight: 'bold' });
-        t.anchor.set(0.5, 0.5);
-        t.position.set(cw / 2, cy);
-        card.addChild(t);
+        if (lineText === '免费解锁') {
+          const badge = createFreeAdBadge(15, 0xffffff, 0x333333, '免费解锁');
+          badge.position.set(cw / 2, cy);
+          card.addChild(badge);
+        } else {
+          const fs = mode === 'locked' ? 15 : 17;
+          const t = new PIXI.Text(lineText, { fontSize: fs, fill: 0xffffff, fontFamily: FONT_FAMILY, fontWeight: 'bold' });
+          t.anchor.set(0.5, 0.5);
+          t.position.set(cw / 2, cy);
+          card.addChild(t);
+        }
       }
     }
   }
@@ -1375,7 +1399,10 @@ export class DecorationPanel extends PIXI.Container {
     const reqResult = checkRequirement(deco.unlockRequirement);
     const reqMet = reqResult.met;
     const sceneOk = isDecoAllowedInScene(deco, CurrencyManager.state.sceneId);
-    const cardUnlockedLook = (isUnlocked || reqMet) && sceneOk;
+    const adGateSatisfied = DecorationManager.isAdUnlockSatisfied(deco.id);
+    const purchaseAllowed = sceneOk && (reqMet || adGateSatisfied);
+    const needsAdGate = sceneOk && DecorationManager.isAdUnlockDeco(deco.id) && !reqMet && !adGateSatisfied;
+    const cardUnlockedLook = (isUnlocked || purchaseAllowed) && sceneOk;
 
     this._drawCardBg(card, cw, ch, cardUnlockedLook, isPlaced);
 
@@ -1391,7 +1418,7 @@ export class DecorationPanel extends PIXI.Container {
     card.addChild(iconArea);
 
     // 未拥有且仍被条件/场景挡住：不展示真实图（与「未解锁」筛一致），满足条件但未购买仍显示预览
-    const mysteryPreview = !isUnlocked && (!reqMet || !sceneOk);
+    const mysteryPreview = !isUnlocked && !purchaseAllowed;
 
     if (!mysteryPreview) {
       const texture = TextureCache.get(deco.icon);
@@ -1416,7 +1443,7 @@ export class DecorationPanel extends PIXI.Container {
     this._addStarValueBadge(card, cw, deco.starValue);
     if (isPlaced) this._addEquipBadge(card, cw);
 
-    const lockAfterName = !reqMet || !sceneOk;
+    const lockAfterName = !purchaseAllowed;
     const nameGap = 12;
     const lockSlot = Math.max(26, Math.round((28 * cw) / CARD_BASE_W));
     const nameWrap = lockAfterName ? Math.max(36, cw - 12 - nameGap - lockSlot) : cw - 12;
@@ -1448,12 +1475,13 @@ export class DecorationPanel extends PIXI.Container {
       this._addFooter(card, cw, ch, 'locked', undefined, formatAllowedScenesShort(deco));
     } else if (isUnlocked && isPlaced) this._addFooter(card, cw, ch, 'furniture_placed', undefined, '');
     else if (isUnlocked) this._addFooter(card, cw, ch, 'furniture_go_place', undefined, '');
-    else if (!reqResult.met) this._addFooter(card, cw, ch, 'locked', undefined, reqResult.text);
+    else if (needsAdGate) this._addFooter(card, cw, ch, 'ready', undefined, '免费解锁');
+    else if (!purchaseAllowed) this._addFooter(card, cw, ch, 'locked', undefined, sceneOk ? reqResult.text : formatAllowedScenesShort(deco));
     else if (deco.cost > 0) this._addFooter(card, cw, ch, 'purchase', deco.cost, '装备');
     else this._addFooter(card, cw, ch, 'furniture_go_place', undefined, '');
 
     const showPurchase =
-      sceneOk && !isUnlocked && reqResult.met && deco.cost > 0;
+      sceneOk && !isUnlocked && purchaseAllowed && deco.cost > 0;
     const affordPurchase = CurrencyManager.state.huayuan >= deco.cost;
 
     card.eventMode = 'static';
@@ -1462,7 +1490,7 @@ export class DecorationPanel extends PIXI.Container {
       this._beginScroll(e);
       this._pendingGridTap = { type: 'deco', deco, flyCard: card };
     });
-    if (!reqResult.met) {
+    if (!purchaseAllowed && !needsAdGate) {
       card.on('pointertap', (e: PIXI.FederatedPointerEvent) => {
         e.stopPropagation();
         this._teardownScroll();
@@ -1672,8 +1700,14 @@ export class DecorationPanel extends PIXI.Container {
       return;
     }
     const req = checkRequirement(deco.unlockRequirement);
-    if (!req.met) {
+    const adGateSatisfied = DecorationManager.isAdUnlockSatisfied(deco.id);
+    const needsAdGate = DecorationManager.isAdUnlockDeco(deco.id) && !req.met && !adGateSatisfied;
+    if (!req.met && !adGateSatisfied && !needsAdGate) {
       ToastMessage.show(lockedDecoHintText(deco, req));
+      return;
+    }
+    if (needsAdGate) {
+      void this._unlockDecoWithAd(deco);
       return;
     }
     if (deco.cost > 0 && CurrencyManager.state.huayuan < deco.cost) {
@@ -1706,6 +1740,33 @@ export class DecorationPanel extends PIXI.Container {
     }
   }
 
+  private async _unlockDecoWithAd(deco: DecoDef): Promise<void> {
+    const ok = await ConfirmDialog.show(
+      '解锁购买资格',
+      `观看广告解锁购买资格，之后仍需花愿购买。`,
+      '免费解锁',
+      '取消',
+    );
+    if (!ok) return;
+
+    const adScene = PROMO_FURNITURE_AD_DECO_IDS.has(deco.id)
+      ? AdScene.PROMO_FURNITURE_UNLOCK
+      : AdScene.SPECIAL_DECO_UNLOCK;
+    AdManager.showRewardedAd(adScene, (success) => {
+      if (!success) {
+        ToastMessage.show('广告未看完，未解锁');
+        return;
+      }
+      if (!DecorationManager.unlockAdPurchaseGate(deco.id)) {
+        ToastMessage.show('家具已不可解锁');
+        return;
+      }
+      ToastMessage.show(`已解锁「${deco.name}」购买资格`);
+      this._refreshAll();
+      this._showAdGateUnlockedPopup(deco);
+    });
+  }
+
   private _dismissUnlockPopup(): void {
     if (this._unlockOverlay) {
       this.removeChild(this._unlockOverlay);
@@ -1714,6 +1775,120 @@ export class DecorationPanel extends PIXI.Container {
       this._unlockPlaceRoomHit = null;
       EventBus.emit('decoration:tutorialUnlockPopupClosed');
     }
+  }
+
+  /** 广告完成后：提示购买资格已解锁，但家具仍需花愿购入 */
+  private _showAdGateUnlockedPopup(deco: DecoDef): void {
+    this._dismissUnlockPopup();
+    const W = DESIGN_WIDTH;
+    const H = Game.logicHeight;
+    const cx = W / 2;
+
+    const root = new PIXI.Container();
+    root.zIndex = 12000;
+    this._unlockOverlay = root;
+    this.addChild(root);
+
+    const mask = new PIXI.Graphics();
+    mask.beginFill(0x000000, 0.55);
+    mask.drawRect(0, 0, W, H);
+    mask.endFill();
+    mask.eventMode = 'static';
+    root.addChild(mask);
+
+    const cardW = Math.min(400, W - 48);
+    const cardTop = H * 0.2;
+    const cardH = 300;
+
+    const card = new PIXI.Graphics();
+    card.beginFill(0xfffdf7, 0.98);
+    card.lineStyle(2.5, 0xd4a574, 0.9);
+    card.drawRoundedRect(cx - cardW / 2, cardTop, cardW, cardH, 20);
+    card.endFill();
+    root.addChild(card);
+
+    const title = new PIXI.Text('家具已解锁', {
+      fontSize: 26,
+      fill: 0x5a3e2b,
+      fontFamily: FONT_FAMILY,
+      fontWeight: 'bold',
+    });
+    title.anchor.set(0.5, 0);
+    title.position.set(cx, cardTop + 22);
+    root.addChild(title);
+
+    const sub = new PIXI.Text(`「${deco.name}」`, {
+      fontSize: 18,
+      fill: 0x6d4c41,
+      fontFamily: FONT_FAMILY,
+      fontWeight: 'bold',
+    });
+    sub.anchor.set(0.5, 0);
+    sub.position.set(cx, cardTop + 58);
+    root.addChild(sub);
+
+    const iconCy = cardTop + 128;
+    const tex = TextureCache.get(deco.icon);
+    if (tex?.width) {
+      const sp = new PIXI.Sprite(tex);
+      const ms = Math.min(108 / tex.width, 108 / tex.height);
+      sp.scale.set(ms);
+      sp.anchor.set(0.5);
+      sp.position.set(cx, iconCy);
+      root.addChild(sp);
+    }
+
+    const desc = new PIXI.Text('现在可以使用花愿购买', {
+      fontSize: 16,
+      fill: 0x8d6e63,
+      fontFamily: FONT_FAMILY,
+      fontWeight: 'bold',
+    });
+    desc.anchor.set(0.5, 0);
+    desc.position.set(cx, cardTop + 188);
+    root.addChild(desc);
+
+    const btnW = 148;
+    const btnH = 46;
+    const btnY = cardTop + cardH - btnH - 20;
+    const gap = 14;
+
+    const mkBtn = (label: string, bx: number, color: number, onTap: () => void): PIXI.Container => {
+      const hit = new PIXI.Container();
+      hit.position.set(bx, btnY);
+      hit.eventMode = 'static';
+      hit.cursor = 'pointer';
+      const g = new PIXI.Graphics();
+      g.beginFill(color);
+      g.drawRoundedRect(-btnW / 2, 0, btnW, btnH, btnH / 2);
+      g.endFill();
+      hit.addChild(g);
+      const t = new PIXI.Text(label, {
+        fontSize: 17,
+        fill: 0xffffff,
+        fontFamily: FONT_FAMILY,
+        fontWeight: 'bold',
+      });
+      t.anchor.set(0.5, 0.5);
+      t.position.set(0, btnH / 2);
+      hit.addChild(t);
+      hit.on('pointertap', e => {
+        e.stopPropagation();
+        onTap();
+      });
+      root.addChild(hit);
+      return hit;
+    };
+
+    mkBtn('稍后', cx - btnW / 2 - gap / 2, 0xb0a193, () => {
+      this._dismissUnlockPopup();
+    });
+    mkBtn('去购买', cx + btnW / 2 + gap / 2, 0xe57373, () => {
+      this._dismissUnlockPopup();
+      this._decoInvFilter = 'not_purchased';
+      this._scrollY = 0;
+      this._refreshAll();
+    });
   }
 
   /** 购买成功后：类似合成解锁的获得提示，可立即进店摆放 */

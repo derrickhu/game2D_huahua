@@ -21,6 +21,8 @@ import { ToastMessage } from './ToastMessage';
 import { ConfirmDialog } from './ConfirmDialog';
 import { Platform } from '@/core/PlatformService';
 import { createWarehouseSlotShare } from '@/config/ShareConfig';
+import { AdManager, AdScene } from '@/managers/AdManager';
+import { createFreeAdBadge } from '@/gameobjects/ui/AdBadge';
 
 const TEX_W = 768;
 const TEX_H = 1376;
@@ -38,6 +40,9 @@ const WH_BOUQUET_FILL = 0.9;
 const HEADER_TITLE_X = 0;
 /** 下移（增大 Y）更靠下，进入上方面紫条 */
 const HEADER_TITLE_Y = -450;
+/** 「整理」按钮中心：在「仓库」标题右侧（底图坐标系，与 HEADER_TITLE 同系） */
+const ORGANIZE_BTN_X = 118;
+const ORGANIZE_BTN_Y = HEADER_TITLE_Y;
 const FOOTER_ROW_X = 0;
 /** 减小 Y 更靠上，离开最底藤编，落回下方面紫条 */
 const FOOTER_ROW_Y = 295;
@@ -143,6 +148,7 @@ export class WarehousePanel extends PIXI.Container {
   private _gemSprite!: PIXI.Sprite;
   private _footerCost!: PIXI.Text;
   private _footerLocked!: PIXI.Text;
+  private _organizeBtn!: PIXI.Container;
   private _slotContainer!: PIXI.Container;
   /** NB2 关闭钮，叠在最上层 */
   private _closeBtn!: PIXI.Container;
@@ -241,6 +247,33 @@ export class WarehousePanel extends PIXI.Container {
       if (WarehouseManager.canExpand) void this._onExpandTap();
     });
     this._content.addChild(this._footerRoot);
+
+    this._organizeBtn = new PIXI.Container();
+    this._organizeBtn.position.set(ORGANIZE_BTN_X, ORGANIZE_BTN_Y);
+    this._organizeBtn.eventMode = 'static';
+    this._organizeBtn.cursor = 'pointer';
+    const organizeBg = new PIXI.Graphics();
+    organizeBg.beginFill(0xff8c5a, 1);
+    organizeBg.lineStyle(3, 0xd84315, 0.95);
+    organizeBg.drawRoundedRect(-58, -24, 116, 48, 24);
+    organizeBg.endFill();
+    this._organizeBtn.addChild(organizeBg);
+    const organizeText = new PIXI.Text('整理', {
+      fontFamily: FONT_FAMILY,
+      fontWeight: '900',
+      fontSize: 24,
+      fill: 0xffffff,
+      stroke: 0xb8320a,
+      strokeThickness: 4,
+    } as PIXI.ITextStyle);
+    organizeText.anchor.set(0.5);
+    this._organizeBtn.addChild(organizeText);
+    this._organizeBtn.hitArea = new PIXI.Rectangle(-64, -30, 128, 60);
+    this._organizeBtn.on('pointerdown', (e: PIXI.FederatedPointerEvent) => {
+      e.stopPropagation();
+      void this._onOrganizeTap();
+    });
+    this._content.addChild(this._organizeBtn);
 
     this._closeBtn = new PIXI.Container();
     this._closeBtn.position.set(CLOSE_BTN_X, CLOSE_BTN_Y);
@@ -398,12 +431,12 @@ export class WarehousePanel extends PIXI.Container {
     this._headerTitle.position.set(HEADER_TITLE_X, HEADER_TITLE_Y);
     this._footerRoot.position.set(FOOTER_ROW_X, FOOTER_ROW_Y);
 
-    if (WarehouseManager.hasShareUnlockSlot) {
+    if (WarehouseManager.hasExternalUnlockSlot) {
       this._expandWord.visible = false;
       this._gemSprite.visible = false;
       this._footerCost.visible = false;
       this._footerLocked.visible = true;
-      this._footerLocked.text = '点第二行锁格转发解锁';
+      this._footerLocked.text = '点锁格解锁';
       this._footerLocked.anchor.set(0.5, 0.5);
       this._footerLocked.position.set(0, 0);
       this._footerRoot.hitArea = new PIXI.Rectangle(-150, -22, 300, 44);
@@ -432,7 +465,8 @@ export class WarehousePanel extends PIXI.Container {
       for (let c = 0; c < GRID_COLS; c++) {
         const locked = idx >= cap;
         const itemId = !locked ? (items[idx] || null) : null;
-        const slot = this._createSlot(idx, itemId, cellSize, locked);
+        const count = !locked ? WarehouseManager.slotCount(idx) : 0;
+        const slot = this._createSlot(idx, itemId, count, cellSize, locked);
         slot.position.set(c * (cellSize + gap), r * (cellSize + gap));
         this._slotContainer.addChild(slot);
         idx += 1;
@@ -443,6 +477,7 @@ export class WarehousePanel extends PIXI.Container {
   private _createSlot(
     index: number,
     itemId: string | null,
+    count: number,
     s: number,
     locked: boolean,
   ): PIXI.Container {
@@ -481,24 +516,31 @@ export class WarehousePanel extends PIXI.Container {
         slot.addChild(lock);
       }
       if (shareLocked) {
-        const label = new PIXI.Text('转发', {
-          fontSize: Math.min(18, s * 0.22),
-          fill: 0xffffff,
-          fontFamily: FONT_FAMILY,
-          fontWeight: '900',
-          stroke: 0x8b5a2b,
-          strokeThickness: 3,
-        });
-        label.anchor.set(0.5, 1);
-        label.position.set(s / 2, s - Math.max(5, s * 0.06));
-        slot.addChild(label);
+        const mode = WarehouseManager.getSlotUnlockMode(index);
+        if (mode === 'ad') {
+          const badge = createFreeAdBadge(Math.min(15, s * 0.18), 0xffffff, 0x8b5a2b);
+          badge.position.set(s / 2, s - Math.max(13, s * 0.12));
+          slot.addChild(badge);
+        } else {
+          const label = new PIXI.Text('转发', {
+            fontSize: Math.min(18, s * 0.22),
+            fill: 0xffffff,
+            fontFamily: FONT_FAMILY,
+            fontWeight: '900',
+            stroke: 0x8b5a2b,
+            strokeThickness: 3,
+          });
+          label.anchor.set(0.5, 1);
+          label.position.set(s / 2, s - Math.max(5, s * 0.06));
+          slot.addChild(label);
+        }
 
         slot.eventMode = 'static';
         slot.cursor = 'pointer';
         slot.hitArea = new PIXI.Rectangle(0, 0, s, s);
         slot.on('pointerdown', (e: PIXI.FederatedPointerEvent) => {
           e.stopPropagation();
-          void this._onShareUnlockSlotTap(index);
+          void this._onExternalUnlockSlotTap(index);
         });
       }
       return slot;
@@ -577,6 +619,27 @@ export class WarehousePanel extends PIXI.Container {
         // 与棋盘一致：仅图标，不叠等级与名称
       }
 
+      if (count > 1) {
+        const badgeText = new PIXI.Text(`x${count}`, {
+          fontSize: Math.max(10, Math.min(14, s * 0.17)),
+          fill: 0xffffff,
+          fontFamily: FONT_FAMILY,
+          fontWeight: 'bold',
+        } as any);
+        badgeText.anchor.set(1, 1);
+
+        const bw = badgeText.width + 8;
+        const bh = badgeText.height + 3;
+        const badge = new PIXI.Graphics();
+        badge.beginFill(0x5a3e2b, 0.78);
+        badge.drawRoundedRect(s - bw - 3, s - bh - 3, bw, bh, 4);
+        badge.endFill();
+        slot.addChild(badge);
+
+        badgeText.position.set(s - 5, s - 4);
+        slot.addChild(badgeText);
+      }
+
       slot.eventMode = 'static';
       slot.cursor = 'pointer';
       slot.hitArea = new PIXI.Rectangle(0, 0, s, s);
@@ -607,8 +670,8 @@ export class WarehousePanel extends PIXI.Container {
 
   private async _onExpandTap(): Promise<void> {
     if (!WarehouseManager.canExpand) return;
-    if (WarehouseManager.hasShareUnlockSlot) {
-      ToastMessage.show('点击第二行锁格，转发解锁');
+    if (WarehouseManager.hasExternalUnlockSlot) {
+      ToastMessage.show('点击锁格解锁');
       return;
     }
     const cost = WarehouseManager.expandCost;
@@ -627,10 +690,32 @@ export class WarehousePanel extends PIXI.Container {
     }
   }
 
-  private async _onShareUnlockSlotTap(index: number): Promise<void> {
+  private async _onExternalUnlockSlotTap(index: number): Promise<void> {
     if (!WarehouseManager.isShareUnlockSlot(index)) return;
-    if (!WarehouseManager.canShareUnlockSlot(index)) {
+    if (!WarehouseManager.canExternalUnlockSlot(index)) {
       ToastMessage.show('请先解锁前一个仓库格');
+      return;
+    }
+
+    const mode = WarehouseManager.getSlotUnlockMode(index);
+    if (mode === 'ad') {
+      const confirmed = await ConfirmDialog.show(
+        '解锁仓库格',
+        '观看一段广告即可解锁这个仓库格',
+        '免费解锁',
+        '取消',
+      );
+      if (!confirmed) return;
+
+      AdManager.showRewardedAd(AdScene.WAREHOUSE_SLOT_UNLOCK, (success) => {
+        if (success && WarehouseManager.unlockSlotByExternalReward(index)) {
+          ToastMessage.show('仓库格解锁成功！');
+        } else if (!success) {
+          ToastMessage.show('广告未看完，未解锁');
+        } else {
+          ToastMessage.show('请先解锁前一个仓库格');
+        }
+      });
       return;
     }
 
@@ -643,11 +728,37 @@ export class WarehousePanel extends PIXI.Container {
     if (!confirmed) return;
 
     const shared = await Platform.shareAndWait(createWarehouseSlotShare(index));
-    if (shared && WarehouseManager.expandByShare(index)) {
+    if (shared && WarehouseManager.unlockSlotByExternalReward(index)) {
       ToastMessage.show('仓库格解锁成功！');
     } else {
       ToastMessage.show('分享取消，未解锁');
     }
+  }
+
+  private async _onOrganizeTap(): Promise<void> {
+    if (WarehouseManager.usedSlots <= 0) {
+      ToastMessage.show('仓库为空');
+      return;
+    }
+    const confirmed = await ConfirmDialog.show(
+      '整理仓库',
+      '观看一段广告，将物品向前整理并保留原有顺序。',
+      '免费整理',
+      '取消',
+    );
+    if (!confirmed) return;
+
+    AdManager.showRewardedAd(AdScene.WAREHOUSE_ORGANIZE, (success) => {
+      if (!success) {
+        ToastMessage.show('广告未看完，未整理');
+        return;
+      }
+      if (WarehouseManager.organize()) {
+        ToastMessage.show('仓库已整理');
+      } else {
+        ToastMessage.show('仓库已经很整齐');
+      }
+    });
   }
 
   private _getLineColor(line: string): number {

@@ -25,6 +25,7 @@ import {
   isLuckyCoinItem,
 } from '@/config/ItemConfig';
 import { BoardManager } from '@/managers/BoardManager';
+import { AdManager, AdScene } from '@/managers/AdManager';
 import { MergeManager, type MergeEndDragResult } from '@/managers/MergeManager';
 import { BuildingManager } from '@/managers/BuildingManager';
 import { CurrencyManager } from '@/managers/CurrencyManager';
@@ -794,8 +795,29 @@ export class BoardView extends PIXI.Container {
     EventBus.emit('board:selectionCleared');
   }
 
-  /** 转发解锁格点击 → 确认弹窗 → 分享好友 → 分享完成后解锁 */
+  /** 钥匙格点击 → 按配置走转发或广告 → 成功后解锁 */
   private async _handleKeyCellTap(cellIndex: number): Promise<void> {
+    const mode = BoardManager.getKeyCellUnlockMode(cellIndex);
+    if (mode === 'ad') {
+      const confirmed = await ConfirmDialog.show(
+        '解锁格子',
+        '观看一段广告即可解锁该格子',
+        '免费解锁',
+        '取消',
+      );
+      if (!confirmed) return;
+
+      AdManager.showRewardedAd(AdScene.BOARD_CELL_UNLOCK, (success) => {
+        if (success) {
+          BoardManager.unlockKeyCell(cellIndex);
+          ToastMessage.show('解锁成功！');
+        } else {
+          ToastMessage.show('广告未看完，未解锁');
+        }
+      });
+      return;
+    }
+
     const confirmed = await ConfirmDialog.show(
       '解锁格子',
       '转发给好友即可解锁该格子',

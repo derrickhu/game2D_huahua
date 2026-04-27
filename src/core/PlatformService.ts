@@ -344,6 +344,48 @@ class PlatformServiceClass {
     } catch (_) {}
   }
 
+  /** 将当前游戏 Canvas 的一段区域导出为临时图片路径，供动态分享图使用 */
+  canvasToTempFilePath(opts: {
+    canvas: any;
+    x?: number;
+    y?: number;
+    width?: number;
+    height?: number;
+    destWidth?: number;
+    destHeight?: number;
+    fileType?: 'jpg' | 'png';
+    quality?: number;
+  }): Promise<string | null> {
+    return new Promise(resolve => {
+      if (!this._api?.canvasToTempFilePath || !opts.canvas) {
+        console.warn('[Platform] canvasToTempFilePath unavailable');
+        resolve(null);
+        return;
+      }
+      try {
+        this._api.canvasToTempFilePath({
+          canvas: opts.canvas,
+          x: opts.x,
+          y: opts.y,
+          width: opts.width,
+          height: opts.height,
+          destWidth: opts.destWidth,
+          destHeight: opts.destHeight,
+          fileType: opts.fileType ?? 'jpg',
+          quality: opts.quality ?? 0.9,
+          success: (res: { tempFilePath?: string }) => resolve(res.tempFilePath ?? null),
+          fail: (err: unknown) => {
+            console.warn('[Platform] canvasToTempFilePath failed', err);
+            resolve(null);
+          },
+        });
+      } catch (err) {
+        console.warn('[Platform] canvasToTempFilePath exception', err);
+        resolve(null);
+      }
+    });
+  }
+
   /**
    * 主动分享并等待结果（通过 onHide/onShow 时间差判断）。
    * 微信已移除分享成功回调，此方法用时间差启发式判断：

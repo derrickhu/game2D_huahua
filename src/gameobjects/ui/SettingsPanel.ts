@@ -4,7 +4,6 @@ import { Game } from '@/core/Game';
 import { TweenManager, Ease } from '@/core/TweenManager';
 import { SettingsManager } from '@/managers/SettingsManager';
 import { UserIdentityManager } from '@/managers/UserIdentityManager';
-import { CloudSyncManager } from '@/managers/CloudSyncManager';
 import { ToastMessage } from '@/gameobjects/ui/ToastMessage';
 
 const PANEL_W = 340;
@@ -16,7 +15,6 @@ export class SettingsPanel extends PIXI.Container {
   private _musicToggle!: PIXI.Container;
   private _soundToggle!: PIXI.Container;
   private _uidText!: PIXI.Text;
-  private _syncText!: PIXI.Text;
 
   constructor() {
     super();
@@ -34,7 +32,7 @@ export class SettingsPanel extends PIXI.Container {
     this.alpha = 0;
     this._panel.scale.set(0.92);
     this._refresh();
-    void UserIdentityManager.registerToBackend().then(() => {
+    void UserIdentityManager.refreshFromBackend().then(() => {
       if (this._isOpen) this._refresh();
     });
 
@@ -156,35 +154,27 @@ export class SettingsPanel extends PIXI.Container {
     this._panel.addChild(uidTitle);
 
     this._uidText = new PIXI.Text('', {
-      fontSize: 17,
+      fontSize: 14,
       fill: 0x5e4637,
       fontFamily: FONT_FAMILY,
       fontWeight: 'bold',
       letterSpacing: 1,
+      align: 'center',
+      wordWrap: true,
+      wordWrapWidth: 248,
+      breakWords: true,
     });
     this._uidText.anchor.set(0.5);
     this._uidText.position.set(0, 121);
     this._panel.addChild(this._uidText);
 
-    this._syncText = new PIXI.Text('', {
-      fontSize: 12,
-      fill: 0xa58a78,
-      fontFamily: FONT_FAMILY,
-      align: 'center',
-      wordWrap: true,
-      wordWrapWidth: 250,
-    });
-    this._syncText.anchor.set(0.5);
-    this._syncText.position.set(0, 150);
-    this._panel.addChild(this._syncText);
-
-    const hint = new PIXI.Text('联系客服或反馈问题时，可附上此 ID', {
+    const hint = new PIXI.Text('联系客服或反馈问题时，可附上此 userId', {
       fontSize: 14,
       fill: 0x9b7b63,
       fontFamily: FONT_FAMILY,
     });
     hint.anchor.set(0.5);
-    hint.position.set(0, 170);
+    hint.position.set(0, 158);
     this._panel.addChild(hint);
   }
 
@@ -257,10 +247,7 @@ export class SettingsPanel extends PIXI.Container {
     this._drawToggle(this._musicToggle, SettingsManager.musicEnabled);
     this._drawToggle(this._soundToggle, SettingsManager.soundEnabled);
     const identity = UserIdentityManager.state;
-    this._uidText.text = identity.id;
-    this._syncText.text = CloudSyncManager.ready || identity.backendUserId
-      ? '已写入云端排障数据'
-      : '已本地保存，联网后自动同步';
+    this._uidText.text = identity.id || (identity.loading ? '获取中...' : '暂未获取');
   }
 
   private _drawToggle(row: PIXI.Container, enabled: boolean): void {

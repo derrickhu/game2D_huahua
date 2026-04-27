@@ -26,17 +26,18 @@ import { MERGE_BUBBLE_DISPLAY_NAME } from '@/config/MergeCompanionConfig';
 import { CellState } from '@/config/BoardLayout';
 import { BoardManager } from '@/managers/BoardManager';
 import { BuildingManager } from '@/managers/BuildingManager';
+import { AdManager, AdScene } from '@/managers/AdManager';
 import {
   MergeCompanionManager,
   type MergeCompanionFloatBubble,
 } from '@/managers/MergeCompanionManager';
-import { CurrencyManager } from '@/managers/CurrencyManager';
 import { ConfirmDialog } from './ConfirmDialog';
 import { ToastMessage } from './ToastMessage';
 import { ToolProducePolicy } from '@/managers/ToolProducePolicy';
 import { DecorationManager } from '@/managers/DecorationManager';
 import { TextureCache } from '@/utils/TextureCache';
 import { getItemSellPrice } from '@/utils/ItemSellPrice';
+import { createAdIcon } from '@/gameobjects/ui/AdBadge';
 
 export const INFO_BAR_HEIGHT = 112;
 
@@ -152,6 +153,7 @@ export class ItemInfoBar extends PIXI.Container {
   private _chainBtnLabel!: PIXI.Text;
   private _sellPriceRow!: PIXI.Container;
   private _sellHuayuanSp!: PIXI.Sprite;
+  private _sellAdIcon!: PIXI.Container;
   private _sellPriceText!: PIXI.Text;
   private _lastSellTitleText = '出售';
   private _lastSellTitleStroke = 0x1b5e20;
@@ -544,17 +546,24 @@ export class ItemInfoBar extends PIXI.Container {
   /** 花愿图标 + 数字在出售钮内水平居中 */
   private _layoutSellPriceRow(): void {
     const hy = this._sellHuayuanSp;
+    const ad = this._sellAdIcon;
     const hasIcon = hy.visible && hy.texture && hy.texture.width > 0;
+    const hasAdIcon = ad.visible;
     const iw = hasIcon ? hy.width : 0;
-    const gap = hasIcon ? 4 : 0;
+    const aw = hasAdIcon ? ad.width : 0;
+    const gap = hasIcon || hasAdIcon ? 4 : 0;
     const tw = this._sellPriceText.width;
-    const total = iw + gap + tw;
+    const total = iw + (hasIcon ? gap : 0) + tw + (hasAdIcon ? gap + aw : 0);
     let x = -total / 2;
     if (hasIcon) {
       hy.position.set(x + iw / 2, 0);
       x += iw + gap;
     }
     this._sellPriceText.position.set(x, 0);
+    x += tw + gap;
+    if (hasAdIcon) {
+      ad.position.set(x + aw / 2, 0);
+    }
   }
 
   /** 出售=绿；工具 CD 加速占位=琥珀 */
@@ -606,12 +615,18 @@ export class ItemInfoBar extends PIXI.Container {
     const hyTex = TextureCache.get('icon_huayuan');
     this._sellHuayuanSp = new PIXI.Sprite(hyTex ?? PIXI.Texture.EMPTY);
     this._sellHuayuanSp.anchor.set(0.5, 0.5);
+    /** 与 `_lastSellHuayuanVisible = false` 一致；若默认可见而缓存为 false，首次进「免费加速」时不会关图标 */
+    this._sellHuayuanSp.visible = false;
     if (hyTex && hyTex.width > 0) {
       const side = 26;
       const s = side / Math.max(hyTex.width, hyTex.height);
       this._sellHuayuanSp.scale.set(s);
     }
     this._sellPriceRow.addChild(this._sellHuayuanSp);
+
+    this._sellAdIcon = createAdIcon(17);
+    this._sellAdIcon.visible = false;
+    this._sellPriceRow.addChild(this._sellAdIcon);
 
     this._sellPriceText = new PIXI.Text('', {
       fontSize: 16,
@@ -732,7 +747,7 @@ export class ItemInfoBar extends PIXI.Container {
         this._paintSellBtnChrome(true);
       }
       this._setSellTitleState('加速', 0xbf360c);
-      this._setSellPriceState('看广告', false);
+      this._setSellPriceState('免费', false, true);
       if (!this._sellBtn.visible) this._sellBtn.visible = true;
       return;
     }
@@ -748,9 +763,9 @@ export class ItemInfoBar extends PIXI.Container {
       const price = getItemSellPrice(def);
       const hyTex = TextureCache.get('icon_huayuan');
       const showHuayuan = price > 0 && !!(hyTex && hyTex.width > 0);
-      this._setSellPriceState(price > 0 ? String(price) : '腾格', showHuayuan);
+      this._setSellPriceState(price > 0 ? String(price) : '腾格', showHuayuan, false);
     } else {
-      this._setSellPriceState('', false);
+      this._setSellPriceState('', false, false);
     }
   }
 
@@ -766,9 +781,9 @@ export class ItemInfoBar extends PIXI.Container {
     }
   }
 
-  private _setSellPriceState(text: string, showHuayuan: boolean): void {
+  private _setSellPriceState(text: string, showHuayuan: boolean, showAdIcon = false): void {
     let layoutDirty = false;
-    if (showHuayuan !== this._lastSellHuayuanVisible) {
+    if (showHuayuan !== this._lastSellHuayuanVisible || this._sellHuayuanSp.visible !== showHuayuan) {
       this._lastSellHuayuanVisible = showHuayuan;
       this._sellHuayuanSp.visible = showHuayuan;
       layoutDirty = true;
@@ -776,6 +791,10 @@ export class ItemInfoBar extends PIXI.Container {
     if (text !== this._lastSellPriceText) {
       this._lastSellPriceText = text;
       this._sellPriceText.text = text;
+      layoutDirty = true;
+    }
+    if (this._sellAdIcon.visible !== showAdIcon) {
+      this._sellAdIcon.visible = showAdIcon;
       layoutDirty = true;
     }
     if (layoutDirty) {
@@ -951,12 +970,28 @@ export class ItemInfoBar extends PIXI.Container {
     if (this._selectedCellIndex < 0 || !this._selectedItemId) return;
     this._playBtnBounce(this._sellBtn);
     if (this._sellAccelerateMode) {
-      EventBus.emit(
-        'board:requestToolCdAdAccelerate',
-        this._selectedCellIndex,
-        this._selectedItemId,
-      );
-      ToastMessage.show('即将开放：观看广告可立即完成冷却');
+      const cellIndex = this._selectedCellIndex;
+      const itemId = this._selectedItemId;
+      void ConfirmDialog.show(
+        '工具加速',
+        '观看一段广告，立即完成该工具冷却。',
+        '免费加速',
+        '取消',
+      ).then((ok) => {
+        if (!ok) return;
+        EventBus.emit('board:requestToolCdAdAccelerate', cellIndex, itemId);
+        AdManager.showRewardedAd(AdScene.CD_SPEEDUP, (success) => {
+          if (!success) {
+            ToastMessage.show('广告未看完，未加速');
+            return;
+          }
+          if (BuildingManager.clearCooldownByAd(cellIndex)) {
+            ToastMessage.show('冷却已完成');
+          } else {
+            ToastMessage.show('该工具无需加速');
+          }
+        });
+      });
       return;
     }
     EventBus.emit('board:requestSell', this._selectedCellIndex, this._selectedItemId);
@@ -1080,25 +1115,26 @@ export class ItemInfoBar extends PIXI.Container {
     }
     const def = ITEM_DEFS.get(b.payloadItemId);
     const name = def?.name ?? b.payloadItemId;
-    if (b.diamondPrice > 0) {
-      if (CurrencyManager.state.diamond < b.diamondPrice) {
-        ToastMessage.show('钻石不足');
+    const ok = await ConfirmDialog.show(
+      `解锁${MERGE_BUBBLE_DISPLAY_NAME}`,
+      `观看一段广告获得「${name}」。\n（棋盘满时物品进入收纳箱）`,
+      '免费解锁',
+      '取消',
+    );
+    if (!ok) return;
+
+    AdManager.showRewardedAd(AdScene.MERGE_BUBBLE_UNLOCK, (success) => {
+      if (!success) {
+        ToastMessage.show('广告未看完，未解锁');
         return;
       }
-      const ok = await ConfirmDialog.show(
-        `解锁${MERGE_BUBBLE_DISPLAY_NAME}`,
-        `花费 ${b.diamondPrice} 钻石获得「${name}」？\n（棋盘满时物品进入收纳箱）`,
-        '支付',
-        '取消',
-      );
-      if (!ok) return;
-    }
-    if (!MergeCompanionManager.unlockBubbleWithDiamond(id)) {
-      ToastMessage.show('钻石不足或泡泡已消失');
-    } else {
-      ToastMessage.show('已获得泡泡里的物品');
-      this._clearSelection();
-    }
+      if (!MergeCompanionManager.unlockBubbleWithAd(id)) {
+        ToastMessage.show('泡泡已消失');
+      } else {
+        ToastMessage.show('已获得泡泡里的物品');
+        this._clearSelection();
+      }
+    });
   }
 
   private _playBtnBounce(btn: PIXI.Container): void {

@@ -1,3 +1,6 @@
+import { BOARD_KEY_UNLOCK_MODES, type ExternalUnlockMode } from '@/config/AdConfig';
+import { BOARD_COLS } from '@/config/Constants';
+
 /**
  * 棋盘布局配置 - 仅定义核心区域预设，未覆盖格子使用默认规则补齐
  */
@@ -19,7 +22,11 @@ export interface CellPreset {
   keyPrice: number;
   /** 解锁优先级（越小越先解锁） */
   unlockPriority: number;
+  /** 钥匙格解锁方式；非钥匙格可省略 */
+  keyUnlockMode?: KeyUnlockMode;
 }
+
+export type KeyUnlockMode = ExternalUnlockMode | 'huayuan';
 
 /**
  * 固定开局棋盘（7 列 × 9 行），**无随机**：`BoardManager.init` 仅按本表初始化各格（合成/钥匙/3×3 波及等运行时逻辑另计）。
@@ -103,3 +110,9 @@ export const BOARD_PRESETS: CellPreset[] = [
   { row: 8, col: 5, state: CellState.FOG,  itemId: null,               keyPrice: 0, unlockPriority: 99 },
   { row: 8, col: 6, state: CellState.KEY,  itemId: null,               keyPrice: 500, unlockPriority: 96 },
 ];
+
+for (const preset of BOARD_PRESETS) {
+  if (preset.state !== CellState.KEY) continue;
+  const index = preset.row * BOARD_COLS + preset.col;
+  preset.keyUnlockMode = BOARD_KEY_UNLOCK_MODES[index] ?? 'share';
+}

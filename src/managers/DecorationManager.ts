@@ -9,7 +9,7 @@ import { PersistService } from '@/core/PersistService';
 import { CurrencyManager } from './CurrencyManager';
 import { checkRequirement } from '@/utils/UnlockChecker';
 import {
-  DECO_DEFS, DECO_MAP, DecoSlot, DecoDef, DecoRarity,
+  DECO_DEFS, DECO_MAP, DecoSlot, DecoDef,
   getSlotDecos, DECO_SLOT_INFO,
   ROOM_STYLES, ROOM_STYLE_MAP,
   getDecosForDecorationPanelTab,
@@ -18,6 +18,7 @@ import {
   isDecoAllowedInScene,
   type DecoPanelTabId,
 } from '@/config/DecorationConfig';
+import { AD_UNLOCK_DECO_IDS } from '@/config/AdConfig';
 
 export interface DecoSaveData {
   /** 已拥有装饰 ID（花愿购入后写入；与游玩语义「购买前置已满足」不同，勿混用） */
@@ -30,6 +31,8 @@ export interface DecoSaveData {
   roomStyleByScene?: Record<string, string>;
   /** 已解锁的房间风格 id */
   unlockedRoomStyles?: string[];
+  /** 已通过广告解锁购买资格的家具 id；不代表已拥有 */
+  adUnlockedDecos?: string[];
 }
 
 class DecorationManagerClass {
@@ -43,6 +46,8 @@ class DecorationManagerClass {
   private _roomStyleByScene = new Map<string, string>();
   /** 已解锁的房间风格 */
   private _unlockedRoomStyles = new Set<string>();
+  /** 广告只解锁购买资格，仍需花愿购买后才进入 `_unlocked` */
+  private _adUnlockedDecos = new Set<string>();
 
   private _initRoomStyleDefaults(): void {
     this._roomStyleId = getDefaultRoomStyleIdForScene(CurrencyManager.state.sceneId ?? 'flower_shop');
@@ -135,6 +140,22 @@ class DecorationManagerClass {
     return this._unlocked.has(decoId);
   }
 
+  isAdUnlockDeco(decoId: string): boolean {
+    return AD_UNLOCK_DECO_IDS.has(decoId);
+  }
+
+  isAdUnlockSatisfied(decoId: string): boolean {
+    return this._adUnlockedDecos.has(decoId);
+  }
+
+  canPurchaseDeco(decoId: string): boolean {
+    const deco = DECO_MAP.get(decoId);
+    if (!deco) return false;
+    if (!isDecoAllowedInScene(deco, CurrencyManager.state.sceneId)) return false;
+    const req = checkRequirement(deco.unlockRequirement);
+    return req.met || (this.isAdUnlockDeco(decoId) && this.isAdUnlockSatisfied(decoId));
+  }
+
   /** 获取当前装备的装饰ID */
   getEquipped(slot: DecoSlot): string | null {
     return this._equipped.get(slot) || null;
@@ -186,8 +207,7 @@ class DecorationManagerClass {
       return false;
     }
 
-    const req = checkRequirement(deco.unlockRequirement);
-    if (!req.met) return false;
+    if (!this.canPurchaseDeco(decoId)) return false;
 
     if (CurrencyManager.state.huayuan < deco.cost) return false;
 
@@ -200,6 +220,18 @@ class DecorationManagerClass {
 
     console.log(`[Decoration] 解锁装饰: ${deco.name} (-${deco.cost}花愿, +${deco.starValue}星)`);
     EventBus.emit('decoration:unlocked', decoId, deco);
+    return true;
+  }
+
+  unlockAdPurchaseGate(decoId: string): boolean {
+    const deco = DECO_MAP.get(decoId);
+    if (!deco || !this.isAdUnlockDeco(decoId)) return false;
+    if (!isDecoAllowedInScene(deco, CurrencyManager.state.sceneId)) return false;
+
+    this._adUnlockedDecos.add(decoId);
+    this._save();
+    console.log(`[Decoration] 广告解锁购买资格: ${deco.name}`);
+    EventBus.emit('decoration:adUnlockGate', decoId, deco);
     return true;
   }
 
@@ -280,7 +312,7 @@ class DecorationManagerClass {
     const huayuan = CurrencyManager.state.huayuan;
     return DECO_DEFS.some(d => {
       if (this._unlocked.has(d.id) || d.cost <= 0) return false;
-      if (!checkRequirement(d.unlockRequirement).met) return false;
+      if (!this.canPurchaseDeco(d.id)) return false;
       return d.cost <= huayuan;
     });
   }
@@ -299,6 +331,7 @@ class DecorationManagerClass {
         roomStyleId: this._roomStyleId,
         roomStyleByScene: Object.keys(roomStyleByScene).length ? roomStyleByScene : undefined,
         unlockedRoomStyles: [...this._unlockedRoomStyles],
+        adUnlockedDecos: [...this._adUnlockedDecos],
       };
       PersistService.writeRaw('huahua_decoration', JSON.stringify(data));
     } catch (e) {
@@ -315,6 +348,11 @@ class DecorationManagerClass {
       if (data.unlocked) {
         for (const id of data.unlocked) {
           this._unlocked.add(id);
+        }
+      }
+      if (data.adUnlockedDecos) {
+        for (const id of data.adUnlockedDecos) {
+          if (AD_UNLOCK_DECO_IDS.has(id)) this._adUnlockedDecos.add(id);
         }
       }
       // 旧版 equipped（槽位互斥）已废弃，不再读入，避免覆盖房间内多件同槽布局
@@ -357,12 +395,14 @@ class DecorationManagerClass {
       roomStyleId: this._roomStyleId,
       roomStyleByScene: Object.keys(roomStyleByScene).length ? roomStyleByScene : undefined,
       unlockedRoomStyles: [...this._unlockedRoomStyles],
+      adUnlockedDecos: [...this._adUnlockedDecos],
     };
   }
 
   /** 重置（GM 调试用） */
   reset(): void {
     this._unlocked.clear();
+    this._adUnlockedDecos.clear();
     this._equipped.clear();
     this.init();
     EventBus.emit('decoration:reset');

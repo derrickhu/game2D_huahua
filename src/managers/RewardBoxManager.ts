@@ -5,7 +5,7 @@
  * 进入收纳框堆叠存储，玩家手动取出放入棋盘。
  */
 import { EventBus } from '@/core/EventBus';
-import { ITEM_DEFS, LEGACY_FLOWER_SIGN_COIN_ITEM_ID } from '@/config/ItemConfig';
+import { Category, ITEM_DEFS, LEGACY_FLOWER_SIGN_COIN_ITEM_ID } from '@/config/ItemConfig';
 import { FlowerSignTicketManager } from '@/managers/FlowerSignTicketManager';
 
 export interface RewardBoxState {
@@ -38,6 +38,33 @@ class RewardBoxManagerClass {
       if (c && c > 0) result.push([id, c]);
     }
     return result;
+  }
+
+  organize(): boolean {
+    const categoryOrder: Record<string, number> = {
+      [Category.FLOWER]: 0,
+      [Category.DRINK]: 1,
+      [Category.BUILDING]: 2,
+      [Category.CHEST]: 3,
+      [Category.CURRENCY]: 4,
+    };
+    const before = this._order.join('|');
+    this._order = this._order
+      .filter(id => (this._items.get(id) ?? 0) > 0)
+      .sort((a, b) => {
+        const da = ITEM_DEFS.get(a);
+        const db = ITEM_DEFS.get(b);
+        if (!da || !db) return a.localeCompare(b);
+        if (da.category !== db.category) {
+          return (categoryOrder[da.category] ?? 99) - (categoryOrder[db.category] ?? 99);
+        }
+        if (da.line !== db.line) return da.line.localeCompare(db.line);
+        if (da.level !== db.level) return da.level - db.level;
+        return da.name.localeCompare(db.name);
+      });
+    const changed = before !== this._order.join('|');
+    EventBus.emit('rewardBox:changed');
+    return changed;
   }
 
   /** 返回第一个物品的 itemId（用于收起态图标显示） */

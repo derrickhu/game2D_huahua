@@ -61,10 +61,10 @@ export function createAffinityCardShare(card: AffinityCardDef): SharePayload {
   };
 }
 
-export function createWishLuckyShare(): SharePayload {
+export function createWishLuckyShare(imageUrl?: string): SharePayload {
   return {
-    title: '欧气来了，接住！',
-    imageUrl: SHARE_IMAGES.decor_gameplay,
+    title: imageUrl ? '我的十连许愿结果，欧气来了！' : '欧气来了，接住！',
+    imageUrl: imageUrl ?? SHARE_IMAGES.core_gameplay,
     query: 'wish_lucky=true',
   };
 }
