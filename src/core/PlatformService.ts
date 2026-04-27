@@ -327,6 +327,16 @@ class PlatformServiceClass {
 
   // ═══════════════ 分享 ═══════════════
 
+  /** 显式开启右上角菜单分享入口（微信真机需要，否则菜单里可能显示当前页面不可分享） */
+  showShareMenu(opts?: { withShareTicket?: boolean; menus?: string[] }): void {
+    try {
+      this._api?.showShareMenu?.({
+        withShareTicket: opts?.withShareTicket ?? true,
+        menus: opts?.menus ?? ['shareAppMessage', 'shareTimeline'],
+      });
+    } catch (_) {}
+  }
+
   /** 主动分享（fire-and-forget） */
   shareAppMessage(opts: { title: string; imageUrl?: string; query?: string }): void {
     try {

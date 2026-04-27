@@ -26,7 +26,12 @@ import {
   type UnlockedLines,
 } from '@/config/OrderTierConfig';
 import { CUSTOMER_REFRESH_MIN, CUSTOMER_REFRESH_MAX } from '@/config/Constants';
-import { ORDER_SPAWN_MAX_ATTEMPTS } from '@/config/OrderSpawnConfig';
+import {
+  ORDER_SPAWN_MAX_ATTEMPTS,
+  TIMED_DIAMOND_ORDER_DAILY_CAP,
+  TIMED_DIAMOND_ORDER_MIN_PLAYER_LEVEL,
+  computeTimedDiamondReward,
+} from '@/config/OrderSpawnConfig';
 import { computeUnlockedLines } from '@/orders/unlockedLines';
 import {
   generateOrderDemands,
@@ -51,6 +56,8 @@ export interface CustomerInstance {
   tier: OrderTier;
   orderType: OrderType;
   timeLimit: number | null;
+  /** 限时钻石单额外奖励；普通订单为 0/undefined */
+  diamondReward?: number;
   /** 预留：连续订单序号 */
   chainIndex?: number;
   /** 预留：奖励倍率 */
@@ -74,6 +81,7 @@ export interface CustomerSaveEntry {
   tier: OrderTier;
   orderType: OrderType;
   timeLimit: number | null;
+  diamondReward?: number;
   chainIndex?: number;
   bonusMultiplier?: number;
   /** 缺省时读档按 orderType + bonusMultiplier 推断 */
@@ -84,23 +92,39 @@ export interface CustomerPersistState {
   list: CustomerSaveEntry[];
   nextUid: number;
   refreshTimer: number;
+  timedDiamondOrderDate?: string;
+  timedDiamondOrdersToday?: number;
 }
 
 const VALID_ORDER_TYPES = new Set<OrderType>(['normal', 'timed', 'chain', 'challenge']);
 
-const VALID_ORDER_KINDS = new Set<OrderGenerationKind>(['basic', 'growth', 'combo', 'eventStub']);
+const VALID_ORDER_KINDS = new Set<OrderGenerationKind>([
+  'basic',
+  'growth',
+  'combo',
+  'timedDiamond',
+  'eventStub',
+]);
 
 const GREEN_PITY_THRESHOLD = 3;
 const GREEN_UNLOCK_BOOST_SPAWNS = 5;
+
+function localDateKey(ts = Date.now()): string {
+  const d = new Date(ts);
+  const y = d.getFullYear();
+  const m = `${d.getMonth() + 1}`.padStart(2, '0');
+  const day = `${d.getDate()}`.padStart(2, '0');
+  return `${y}-${m}-${day}`;
+}
 
 function normalizeCustomerPersistState(raw: unknown): CustomerPersistState | null {
   if (!raw || typeof raw !== 'object') return null;
   const o = raw as Record<string, unknown>;
   const listRaw = o.list;
-  if (!Array.isArray(listRaw) || listRaw.length === 0) return null;
+  const rows = Array.isArray(listRaw) ? listRaw : [];
 
   const list: CustomerSaveEntry[] = [];
-  for (const row of listRaw) {
+  for (const row of rows) {
     if (!row || typeof row !== 'object') continue;
     const r = row as Record<string, unknown>;
     const typeId = typeof r.typeId === 'string' ? r.typeId : '';
@@ -142,6 +166,12 @@ function normalizeCustomerPersistState(raw: unknown): CustomerPersistState | nul
       r.timeLimit === null || (typeof r.timeLimit === 'number' && Number.isFinite(r.timeLimit))
         ? (r.timeLimit as number | null)
         : null;
+    const diamondReward =
+      typeof r.diamondReward === 'number' && Number.isFinite(r.diamondReward) && r.diamondReward > 0
+        ? Math.floor(r.diamondReward)
+        : orderType === 'timed'
+          ? computeTimedDiamondReward(slots)
+          : undefined;
     const uid =
       typeof r.uid === 'number' && r.uid >= 1 ? Math.floor(r.uid) : list.length + 1;
 
@@ -155,13 +185,12 @@ function normalizeCustomerPersistState(raw: unknown): CustomerPersistState | nul
       tier,
       orderType,
       timeLimit,
+      diamondReward,
       chainIndex: typeof r.chainIndex === 'number' ? r.chainIndex : undefined,
       bonusMultiplier,
       orderKind,
     });
   }
-
-  if (list.length === 0) return null;
 
   const maxUid = list.reduce((m, e) => Math.max(m, e.uid), 0);
   let nextUid =
@@ -173,7 +202,16 @@ function normalizeCustomerPersistState(raw: unknown): CustomerPersistState | nul
       ? o.refreshTimer
       : CUSTOMER_REFRESH_MAX - 3;
 
-  return { list, nextUid, refreshTimer };
+  const timedDiamondOrderDate =
+    typeof o.timedDiamondOrderDate === 'string' && o.timedDiamondOrderDate
+      ? o.timedDiamondOrderDate
+      : localDateKey();
+  const timedDiamondOrdersToday =
+    typeof o.timedDiamondOrdersToday === 'number' && Number.isFinite(o.timedDiamondOrdersToday)
+      ? Math.max(0, Math.floor(o.timedDiamondOrdersToday))
+      : 0;
+
+  return { list, nextUid, refreshTimer, timedDiamondOrderDate, timedDiamondOrdersToday };
 }
 
 /** 与上一单需求去重：槽位无序，同 multiset 视为相同 */
@@ -186,6 +224,7 @@ function inferOrderKindFromLegacy(entry: {
   bonusMultiplier?: number;
 }): OrderGenerationKind {
   if (entry.orderType === 'challenge') return 'combo';
+  if (entry.orderType === 'timed') return 'timedDiamond';
   if (entry.bonusMultiplier && entry.bonusMultiplier > 1) return 'growth';
   return 'basic';
 }
@@ -203,6 +242,10 @@ class CustomerManagerClass {
   private _unlockSnapshot: UnlockedLines | null = null;
   /** 已解锁绿植但连续多单一株绿植都不要时的保底计数 */
   private _spawnsWithoutGreenDemand = 0;
+  private _timedDiamondOrderDate = localDateKey();
+  private _timedDiamondOrdersToday = 0;
+  private _preparedOfflineSeconds = 0;
+  private _timedOrderRefreshTicker = 0;
   /** 上一刷客人的 typeId，用于避免连续同人设（池子 >1 时） */
   private _lastSpawnTypeId: string | null = null;
   /** 上一刷订单需求 fingerprint，用于避免连续完全相同需求 */
@@ -212,8 +255,9 @@ class CustomerManagerClass {
     return this._customers;
   }
 
-  prepareFromSave(raw: unknown): void {
+  prepareFromSave(raw: unknown, offlineSeconds = 0): void {
     this._preparedFromSave = normalizeCustomerPersistState(raw);
+    this._preparedOfflineSeconds = Math.max(0, Math.floor(offlineSeconds));
   }
 
   exportState(): CustomerPersistState {
@@ -226,6 +270,8 @@ class CustomerManagerClass {
         })),
         nextUid: p.nextUid,
         refreshTimer: p.refreshTimer,
+        timedDiamondOrderDate: p.timedDiamondOrderDate,
+        timedDiamondOrdersToday: p.timedDiamondOrdersToday,
       };
     }
     return {
@@ -239,12 +285,15 @@ class CustomerManagerClass {
         tier: c.tier,
         orderType: c.orderType,
         timeLimit: c.timeLimit,
+        diamondReward: c.diamondReward,
         chainIndex: c.chainIndex,
         bonusMultiplier: c.bonusMultiplier,
         orderKind: c.orderKind,
       })),
       nextUid: this._nextUid,
       refreshTimer: this._refreshTimer,
+      timedDiamondOrderDate: this._timedDiamondOrderDate,
+      timedDiamondOrdersToday: this._timedDiamondOrdersToday,
     };
   }
 
@@ -254,6 +303,8 @@ class CustomerManagerClass {
     if (this._preparedFromSave) {
       const p = this._preparedFromSave;
       this._preparedFromSave = null;
+      const offlineSeconds = this._preparedOfflineSeconds;
+      this._preparedOfflineSeconds = 0;
       this._customers = p.list.map(e => ({
         uid: e.uid,
         typeId: e.typeId,
@@ -264,13 +315,18 @@ class CustomerManagerClass {
         huayuanReward: CustomerManagerClass.computeOrderHuayuan(e.slots, e.bonusMultiplier, e.orderType),
         tier: computeTierFromOrderSlots(e.slots.map(s => s.itemId)),
         orderType: e.orderType,
-        timeLimit: e.timeLimit,
+        timeLimit: e.orderType === 'timed' && e.timeLimit !== null
+          ? Math.max(0, e.timeLimit - offlineSeconds)
+          : e.timeLimit,
+        diamondReward: e.diamondReward,
         chainIndex: e.chainIndex,
         bonusMultiplier: e.bonusMultiplier,
         orderKind: e.orderKind ?? inferOrderKindFromLegacy(e),
-      }));
+      })).filter(c => !(c.orderType === 'timed' && (c.timeLimit ?? 0) <= 0));
       this._nextUid = p.nextUid;
       this._refreshTimer = p.refreshTimer;
+      this._timedDiamondOrderDate = p.timedDiamondOrderDate ?? localDateKey();
+      this._timedDiamondOrdersToday = p.timedDiamondOrdersToday ?? 0;
       const maxCap = getDynamicMaxCustomers(LevelManager.level);
       if (this._customers.length > maxCap) {
         this._customers = this._customers.slice(0, maxCap);
@@ -280,8 +336,12 @@ class CustomerManagerClass {
       this._customers = [];
       this._nextUid = 1;
       this._refreshTimer = CUSTOMER_REFRESH_MAX - 3;
+      this._timedDiamondOrderDate = localDateKey();
+      this._timedDiamondOrdersToday = 0;
+      this._preparedOfflineSeconds = 0;
     }
 
+    this._syncTimedDiamondDailyState();
     this._syncAntiRepeatFromQueueTail();
     this._bindBoardEvents();
     this._rescanAll();
@@ -308,6 +368,7 @@ class CustomerManagerClass {
 
   update(dt: number): void {
     if (!this._started) return;
+    this._updateTimedOrders(dt);
 
     // 教程期间限制最多 1 位客人
     const maxC = TutorialManager.isActive ? 1 : this.maxCustomers;
@@ -370,6 +431,10 @@ class CustomerManagerClass {
     const idx = this._customers.findIndex(c => c.uid === uid);
     if (idx < 0) return false;
     const customer = this._customers[idx];
+    if (customer.orderType === 'timed' && (customer.timeLimit ?? 0) <= 0) {
+      this._expireCustomerAt(idx);
+      return false;
+    }
     if (!customer.allSatisfied) return false;
 
     // 即时为本客人查找可用格子（因 allSatisfied 不再独占锁格，
@@ -397,6 +462,12 @@ class CustomerManagerClass {
 
     const hy = customer.huayuanReward;
     CurrencyManager.addHuayuan(hy);
+    const diamonds = customer.orderType === 'timed'
+      ? Math.max(0, Math.floor(customer.diamondReward ?? 0))
+      : 0;
+    if (diamonds > 0) {
+      CurrencyManager.addDiamond(diamonds);
+    }
 
     // 友谊卡进度：普通订单交付后统一走掉卡/里程碑结算
     if (AffinityManager.isAffinityType(customer.typeId)) {
@@ -404,7 +475,7 @@ class CustomerManagerClass {
     }
 
     console.log(
-      `[Customer] 交付完成: ${customer.name}(${customer.tier}), 花愿+${hy}`,
+      `[Customer] 交付完成: ${customer.name}(${customer.tier}), 花愿+${hy}${diamonds > 0 ? `, 钻石+${diamonds}` : ''}`,
     );
 
     this._customers.splice(idx, 1);
@@ -445,6 +516,7 @@ class CustomerManagerClass {
   private _spawnCustomer(): void {
     const level = LevelManager.level;
     const lines = computeUnlockedLines(BoardManager.cells);
+    this._syncTimedDiamondDailyState();
     const weights = getOrderTierWeights(level, lines, {
       greenLineUnlockBoostSpawns: this._greenLineUnlockBoostSpawns,
     });
@@ -465,6 +537,10 @@ class CustomerManagerClass {
     const forceGreen =
       lines.hasGreen &&
       this._spawnsWithoutGreenDemand >= GREEN_PITY_THRESHOLD;
+    const allowTimedDiamondOrder =
+      level >= TIMED_DIAMOND_ORDER_MIN_PLAYER_LEVEL &&
+      this._timedDiamondOrdersToday < TIMED_DIAMOND_ORDER_DAILY_CAP &&
+      !this._customers.some(c => c.orderType === 'timed');
 
     let gen: OrderGenResult | null = null;
     let fallbackGen: OrderGenResult | null = null;
@@ -474,6 +550,8 @@ class CustomerManagerClass {
         lines,
         playerLevel: level,
         forceGreenFlowerSlot: forceGreen,
+        allowTimedDiamondOrder,
+        timedDiamondOrdersToday: this._timedDiamondOrdersToday,
         rng: Math.random,
       });
       if (!g || g.slots.length === 0) continue;
@@ -515,9 +593,17 @@ class CustomerManagerClass {
       tier: contentTier,
       orderType: gen.orderType,
       timeLimit: gen.timeLimit,
+      diamondReward: gen.diamondReward,
       bonusMultiplier: gen.bonusMultiplier,
       orderKind: gen.generationKind,
     };
+
+    if (customer.orderType === 'timed') {
+      this._timedDiamondOrdersToday = Math.min(
+        TIMED_DIAMOND_ORDER_DAILY_CAP,
+        this._timedDiamondOrdersToday + 1,
+      );
+    }
 
     if (lines.hasGreen) {
       const hasGreenItem = slots.some(s => s.itemId.startsWith('flower_green_'));
@@ -533,11 +619,63 @@ class CustomerManagerClass {
       this._greenLineUnlockBoostSpawns--;
     }
     console.log(
-      `[Customer] 新客人: ${customer.name}(${customer.emoji}) [${contentTier}] (tpl ${tier}) ${customer.orderKind}, 需求: ${customer.slots.map(s => s.itemId).join(', ')}`,
+      `[Customer] 新客人: ${customer.name}(${customer.emoji}) [${contentTier}] (tpl ${tier}) ${customer.orderKind}${customer.orderType === 'timed' ? ` timed +${customer.diamondReward ?? 0}钻` : ''}, 需求: ${customer.slots.map(s => s.itemId).join(', ')}`,
     );
     EventBus.emit('customer:arrived', customer);
 
     this._rescanAll();
+  }
+
+  private _syncTimedDiamondDailyState(): void {
+    const today = localDateKey();
+    if (this._timedDiamondOrderDate !== today) {
+      this._timedDiamondOrderDate = today;
+      this._timedDiamondOrdersToday = 0;
+    }
+  }
+
+  private _updateTimedOrders(dt: number): void {
+    this._syncTimedDiamondDailyState();
+    if (dt <= 0 || this._customers.length === 0) return;
+    let hasTimed = false;
+    let expired = false;
+
+    for (const customer of this._customers) {
+      if (customer.orderType !== 'timed' || customer.timeLimit === null) continue;
+      hasTimed = true;
+      customer.timeLimit = Math.max(0, customer.timeLimit - dt);
+    }
+
+    for (let i = this._customers.length - 1; i >= 0; i--) {
+      const customer = this._customers[i];
+      if (customer.orderType === 'timed' && (customer.timeLimit ?? 0) <= 0) {
+        this._expireCustomerAt(i, false);
+        expired = true;
+      }
+    }
+
+    if (expired) {
+      this._rescanAll();
+      return;
+    }
+
+    if (hasTimed) {
+      this._timedOrderRefreshTicker += dt;
+      if (this._timedOrderRefreshTicker >= 1) {
+        this._timedOrderRefreshTicker = 0;
+        EventBus.emit('customer:timerTick');
+      }
+    } else {
+      this._timedOrderRefreshTicker = 0;
+    }
+  }
+
+  private _expireCustomerAt(index: number, rescan = true): void {
+    const [removed] = this._customers.splice(index, 1);
+    if (!removed) return;
+    console.log(`[Customer] 限时订单过期: ${removed.name}(${removed.uid})`);
+    EventBus.emit('customer:expired', removed.uid, removed);
+    if (rescan) this._rescanAll();
   }
 
   /**

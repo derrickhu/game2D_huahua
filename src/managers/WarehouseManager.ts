@@ -1,7 +1,7 @@
 /**
  * 仓库管理器 - 棋盘外暂存空间
  *
- * - 初始 4 格，最大扩容至 8 格
+ * - 初始 4 格，第二行可通过转发逐格解锁
  * - 仓库物品不参与客人订单锁定
  * - 仓库物品不可在仓库内合成
  * - 工具 CD：与棋盘一致，仅在 `updateWarehouseCooldowns(dt)` 局内递减，离线不流逝
@@ -21,7 +21,9 @@ const EXPAND_COSTS: Record<number, number> = {
 };
 
 const INITIAL_CAPACITY = 4;
-const MAX_CAPACITY = 8;
+const SHARE_UNLOCK_START_CAPACITY = 5;
+const SHARE_UNLOCK_END_CAPACITY = 10;
+const MAX_CAPACITY = SHARE_UNLOCK_END_CAPACITY;
 
 export interface WarehouseSlotEntry {
   itemId: string;
@@ -102,9 +104,20 @@ class WarehouseManagerClass {
   get usedSlots(): number { return this._items.filter(Boolean).length; }
   get isFull(): boolean { return this.usedSlots >= this._capacity; }
   get canExpand(): boolean { return this._capacity < MAX_CAPACITY; }
+  get hasShareUnlockSlot(): boolean {
+    return this._capacity >= SHARE_UNLOCK_START_CAPACITY && this._capacity < SHARE_UNLOCK_END_CAPACITY;
+  }
 
   get expandCost(): number {
     return EXPAND_COSTS[this._capacity + 1] || 0;
+  }
+
+  isShareUnlockSlot(index: number): boolean {
+    return index >= SHARE_UNLOCK_START_CAPACITY && index < SHARE_UNLOCK_END_CAPACITY;
+  }
+
+  canShareUnlockSlot(index: number): boolean {
+    return this.isShareUnlockSlot(index) && index === this._capacity && this._capacity < MAX_CAPACITY;
   }
 
   slotItemId(index: number): string | null {
@@ -170,6 +183,10 @@ class WarehouseManagerClass {
 
   expand(): boolean {
     if (!this.canExpand) return false;
+    if (this.hasShareUnlockSlot) {
+      EventBus.emit('warehouse:expandFailed', 'share');
+      return false;
+    }
     const cost = this.expandCost;
     if (cost <= 0) return false;
 
@@ -179,6 +196,15 @@ class WarehouseManagerClass {
     }
 
     CurrencyManager.addDiamond(-cost);
+    this._capacity++;
+    this._items.push(null);
+    EventBus.emit('warehouse:expanded', this._capacity);
+    EventBus.emit('warehouse:changed');
+    return true;
+  }
+
+  expandByShare(slotIndex: number): boolean {
+    if (!this.canShareUnlockSlot(slotIndex)) return false;
     this._capacity++;
     this._items.push(null);
     EventBus.emit('warehouse:expanded', this._capacity);

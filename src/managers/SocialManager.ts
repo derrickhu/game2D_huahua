@@ -77,6 +77,11 @@ class SocialManagerClass {
 
   /** 注册分享菜单 */
   private _setupShareMenu(): void {
+    Platform.showShareMenu({
+      withShareTicket: true,
+      menus: ['shareAppMessage', 'shareTimeline'],
+    });
+
     Platform.onShareAppMessage(() => createDefaultShare(
       CurrencyManager.state.level,
       CollectionManager.totalDiscovered,
@@ -85,7 +90,7 @@ class SocialManagerClass {
     Platform.onShareTimeline(() => {
       const share = createDefaultShare(CurrencyManager.state.level, CollectionManager.totalDiscovered);
       return {
-        title: `花花妙屋 Lv.${CurrencyManager.state.level} | 已收集 ${CollectionManager.totalDiscovered} 种花草 `,
+        title: share.title,
         imageUrl: share.imageUrl,
       };
     });

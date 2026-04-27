@@ -227,6 +227,7 @@ export class CustomerView extends PIXI.Container {
     this._clearCompleteBtn();
     this._clearRewardBadge();
     this._clearTierBadge();
+    this._clearTimedOrderBadge();
     if (!this._customer) return;
 
     const allDone = this._customer.allSatisfied && this._queueIndex < CustomerManager.maxCustomers;
@@ -278,6 +279,8 @@ export class CustomerView extends PIXI.Container {
       this._drawSlotItem(sx, slotY, slot.itemId, filled);
     }
 
+    this._buildTimedOrderBadge();
+
     // 全部满足 → 完成按钮在半身像右侧肩颈区域
     if (allDone) {
       this._showCompleteBtn();
@@ -298,6 +301,9 @@ export class CustomerView extends PIXI.Container {
     const items: { icon: string; value: number }[] = [];
 
     items.push({ icon: 'icon_huayuan', value: this._customer.huayuanReward });
+    if (this._customer.orderType === 'timed' && (this._customer.diamondReward ?? 0) > 0) {
+      items.push({ icon: 'icon_gem', value: this._customer.diamondReward ?? 0 });
+    }
 
     const content = new PIXI.Container();
     for (const item of items) {
@@ -393,6 +399,62 @@ export class CustomerView extends PIXI.Container {
       this._tierBadge.destroy({ children: true });
       this._tierBadge = null;
     }
+  }
+
+  private _timedOrderBadge: PIXI.Container | null = null;
+
+  private _buildTimedOrderBadge(): void {
+    this._clearTimedOrderBadge();
+    if (!this._customer || this._customer.orderType !== 'timed') return;
+    const remaining = Math.max(0, Math.ceil(this._customer.timeLimit ?? 0));
+    const urgent = remaining <= 30 * 60;
+    const labelText = `限时 ${this._formatTimedOrderRemaining(remaining)}`;
+
+    const badge = new PIXI.Container();
+    badge.eventMode = 'none';
+    badge.position.set(0, PANEL_H + 6);
+
+    const label = new PIXI.Text(labelText, {
+      fontSize: 15,
+      fill: urgent ? 0xFFFFFF : 0x7A3D18,
+      fontFamily: FONT_FAMILY,
+      fontWeight: 'bold',
+      stroke: urgent ? 0x8A1E1E : 0xFFFFFF,
+      strokeThickness: 3,
+    });
+    label.anchor.set(0.5, 0.5);
+
+    const padX = 10;
+    const bw = Math.max(92, label.width + padX * 2);
+    const bh = 24;
+    const bg = new PIXI.Graphics();
+    bg.beginFill(urgent ? 0xE15B5B : 0xFFE1A6, urgent ? 0.95 : 0.94);
+    bg.drawRoundedRect(-bw / 2, -bh / 2, bw, bh, bh / 2);
+    bg.endFill();
+    bg.lineStyle(1.2, urgent ? 0xFFFFFF : 0xD9963C, urgent ? 0.75 : 0.65);
+    bg.drawRoundedRect(-bw / 2, -bh / 2, bw, bh, bh / 2);
+
+    badge.addChild(bg);
+    badge.addChild(label);
+    badge.zIndex = 12;
+    this._infoPanel.addChild(badge);
+    this._timedOrderBadge = badge;
+  }
+
+  private _clearTimedOrderBadge(): void {
+    if (this._timedOrderBadge) {
+      if (this._timedOrderBadge.parent) this._timedOrderBadge.parent.removeChild(this._timedOrderBadge);
+      this._timedOrderBadge.destroy({ children: true });
+      this._timedOrderBadge = null;
+    }
+  }
+
+  private _formatTimedOrderRemaining(seconds: number): string {
+    const totalMinutes = Math.max(0, Math.ceil(seconds / 60));
+    const h = Math.floor(totalMinutes / 60);
+    const m = totalMinutes % 60;
+    if (h > 0) return `${h}小时${m.toString().padStart(2, '0')}分`;
+    return `${m}分钟`;
   }
 
   private _drawSlotItem(x: number, y: number, itemId: string, filled: boolean): void {

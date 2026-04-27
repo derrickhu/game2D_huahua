@@ -22,6 +22,13 @@ import {
   ORDER_COMBO_THIRD_SLOT_CHANCE,
   ORDER_GROWTH_BONUS_MULTIPLIER,
   ORDER_GROWTH_MIN_MAX_NORM,
+  TIMED_DIAMOND_ORDER_BASE_CHANCE,
+  TIMED_DIAMOND_ORDER_FIRST_DAILY_CHANCE_MULT,
+  TIMED_DIAMOND_ORDER_MIN_ITEM_LEVEL,
+  TIMED_DIAMOND_ORDER_MIN_PLAYER_LEVEL,
+  TIMED_DIAMOND_ORDER_SLOT_COUNT,
+  TIMED_DIAMOND_ORDER_TIME_LIMIT_SECONDS,
+  computeTimedDiamondReward,
   maxSlotNormForSlots,
   orderComboEffectiveChance,
   orderGrowthRollChance,
@@ -321,6 +328,107 @@ function tryGenerateCombo(
   return slots;
 }
 
+type TimedCandidate = {
+  itemId: string;
+  lineKey: string;
+  level: number;
+};
+
+function timedCandidateLines(ulk: UnlockedLines): { category: Category; line: string }[] {
+  const lines: { category: Category; line: string }[] = [
+    { category: Category.FLOWER, line: FlowerLine.FRESH },
+  ];
+  if (ulk.hasBouquet) lines.push({ category: Category.FLOWER, line: FlowerLine.BOUQUET });
+  if (ulk.hasGreen) lines.push({ category: Category.FLOWER, line: FlowerLine.GREEN });
+  if (ulk.hasDrink) {
+    for (const line of [DrinkLine.BUTTERFLY, DrinkLine.COLD, DrinkLine.DESSERT]) {
+      if ((ulk.drinkToolMaxByLine[line] ?? 0) > 0) {
+        lines.push({ category: Category.DRINK, line });
+      }
+    }
+  }
+  return lines;
+}
+
+function timedCandidatesForLine(category: Category, line: string, ulk: UnlockedLines): TimedCandidate[] {
+  const lineMax = Math.max(1, getMaxLevelForLine(category, line));
+  const cap = Math.min(lineMax, toolCapForLine(category, line, ulk) + 1);
+  const out: TimedCandidate[] = [];
+  for (let lv = TIMED_DIAMOND_ORDER_MIN_ITEM_LEVEL; lv <= cap; lv++) {
+    const itemId = findItemId(category, line, lv);
+    if (itemId) out.push({ itemId, lineKey: `${category}:${line}`, level: lv });
+  }
+  return out;
+}
+
+function pickRandom<T>(arr: readonly T[], rng: () => number): T | null {
+  if (arr.length === 0) return null;
+  return arr[Math.floor(rng() * arr.length)] ?? null;
+}
+
+function shuffled<T>(arr: readonly T[], rng: () => number): T[] {
+  return [...arr].sort(() => rng() - 0.5);
+}
+
+function tryGenerateTimedDiamondOrder(ctx: OrderGenContext): OrderGenResult | null {
+  if (!ctx.allowTimedDiamondOrder) return null;
+  if (ctx.playerLevel < TIMED_DIAMOND_ORDER_MIN_PLAYER_LEVEL) return null;
+
+  const todayCount = Math.max(0, ctx.timedDiamondOrdersToday ?? 0);
+  const chance = TIMED_DIAMOND_ORDER_BASE_CHANCE
+    * (todayCount === 0 ? TIMED_DIAMOND_ORDER_FIRST_DAILY_CHANCE_MULT : 1);
+  if (ctx.rng() >= chance) return null;
+
+  const grouped = timedCandidateLines(ctx.lines)
+    .map(line => ({
+      lineKey: `${line.category}:${line.line}`,
+      candidates: timedCandidatesForLine(line.category, line.line, ctx.lines),
+    }))
+    .filter(g => g.candidates.length > 0);
+  if (grouped.length === 0) return null;
+
+  const usedIds = new Set<string>();
+  const picked: TimedCandidate[] = [];
+
+  const greenGroup = ctx.forceGreenFlowerSlot
+    ? grouped.find(g => g.lineKey === `${Category.FLOWER}:${FlowerLine.GREEN}`)
+    : undefined;
+  if (greenGroup) {
+    const cand = pickRandom(greenGroup.candidates, ctx.rng);
+    if (cand) {
+      picked.push(cand);
+      usedIds.add(cand.itemId);
+    }
+  }
+
+  for (const g of shuffled(grouped, ctx.rng)) {
+    if (picked.length >= TIMED_DIAMOND_ORDER_SLOT_COUNT) break;
+    if (picked.some(p => p.lineKey === g.lineKey)) continue;
+    const cand = pickRandom(g.candidates.filter(c => !usedIds.has(c.itemId)), ctx.rng);
+    if (!cand) continue;
+    picked.push(cand);
+    usedIds.add(cand.itemId);
+  }
+
+  const allCandidates = shuffled(grouped.flatMap(g => g.candidates), ctx.rng);
+  for (const cand of allCandidates) {
+    if (picked.length >= TIMED_DIAMOND_ORDER_SLOT_COUNT) break;
+    if (usedIds.has(cand.itemId)) continue;
+    picked.push(cand);
+    usedIds.add(cand.itemId);
+  }
+
+  if (picked.length !== TIMED_DIAMOND_ORDER_SLOT_COUNT) return null;
+  const slots = picked.map(c => ({ itemId: c.itemId }));
+  return {
+    slots,
+    orderType: 'timed',
+    timeLimit: TIMED_DIAMOND_ORDER_TIME_LIMIT_SECONDS,
+    diamondReward: computeTimedDiamondReward(slots),
+    generationKind: 'timedDiamond',
+  };
+}
+
 /** 当前解锁工具能力下，订单槽位是否不超过 cap+1（与 aspirational 上限一致） */
 export function validateOrderSlotsToolCap(
   slots: readonly { itemId: string }[],
@@ -351,6 +459,7 @@ export function generateOrderDemands(ctx: OrderGenContext): OrderGenResult | nul
       slots: hook.slots,
       orderType: hook.orderType ?? tierDef.orderType,
       timeLimit: hook.timeLimit ?? tierDef.timeLimit,
+      diamondReward: hook.diamondReward,
       bonusMultiplier: hook.bonusMultiplier,
       generationKind: 'eventStub',
     };
@@ -358,6 +467,9 @@ export function generateOrderDemands(ctx: OrderGenContext): OrderGenResult | nul
 
   const { tier, lines, rng } = ctx;
   const tierDef = ORDER_TIERS[tier];
+
+  const timed = tryGenerateTimedDiamondOrder(ctx);
+  if (timed) return timed;
 
   const comboChance = orderComboEffectiveChance(lines, ctx.playerLevel);
   if (lines.unlockedLineCount >= 2 && rng() < comboChance) {

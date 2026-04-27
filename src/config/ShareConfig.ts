@@ -21,9 +21,9 @@ export const SHARE_IMAGES: Record<Exclude<ShareScene, 'gift_stamina'>, string> =
   unlock_cell: `${SHARE_IMAGE_ROOT}/share_unlock_cell.jpg`,
 };
 
-export function createDefaultShare(level: number, collectedCount: number): SharePayload {
+export function createDefaultShare(level: number, _collectedCount: number): SharePayload {
   return {
-    title: `花花妙屋 Lv.${level}，合成鲜花开满屏！`,
+    title: '花花一合，停不下来！',
     imageUrl: SHARE_IMAGES.core_gameplay,
     query: `invite=true&level=${level}`,
   };
@@ -31,7 +31,7 @@ export function createDefaultShare(level: number, collectedCount: number): Share
 
 export function createShopInviteShare(level: number): SharePayload {
   return {
-    title: '帮我照看花店，一起把订单做爆！',
+    title: '来我花店，越合越上头！',
     imageUrl: SHARE_IMAGES.core_gameplay,
     query: `visit=true&level=${level}`,
   };
@@ -39,15 +39,23 @@ export function createShopInviteShare(level: number): SharePayload {
 
 export function createUnlockCellShare(cellIndex: number): SharePayload {
   return {
-    title: '我卡在这格了，快来帮我开路！',
+    title: '差一格，救救花店！',
     imageUrl: SHARE_IMAGES.unlock_cell,
     query: `unlock_cell=${cellIndex}`,
   };
 }
 
+export function createWarehouseSlotShare(slotIndex: number): SharePayload {
+  return {
+    title: '仓库爆了，速来救场！',
+    imageUrl: SHARE_IMAGES.core_gameplay,
+    query: `warehouse_slot=${slotIndex}`,
+  };
+}
+
 export function createAffinityCardShare(card: AffinityCardDef): SharePayload {
   return {
-    title: `${card.rarity} 友谊卡「${card.title}」到手，这张你有吗？`,
+    title: `抽到「${card.title}」了！`,
     imageUrl: SHARE_IMAGES.core_gameplay,
     query: `affinity_card=${card.id}&owner=${card.ownerTypeId}`,
   };
@@ -55,7 +63,7 @@ export function createAffinityCardShare(card: AffinityCardDef): SharePayload {
 
 export function createWishLuckyShare(): SharePayload {
   return {
-    title: '今天欧气不错，来许愿喷泉试试！',
+    title: '欧气来了，接住！',
     imageUrl: SHARE_IMAGES.decor_gameplay,
     query: 'wish_lucky=true',
   };
@@ -63,7 +71,7 @@ export function createWishLuckyShare(): SharePayload {
 
 export function createFlowerCardShare(card: FlowerCard): SharePayload {
   return {
-    title: `这张「${card.name}」花语送给你：${card.quote}`,
+    title: `送你一朵「${card.name}」`,
     imageUrl: SHARE_IMAGES.core_gameplay,
     query: `card=${card.id}`,
   };
@@ -71,7 +79,7 @@ export function createFlowerCardShare(card: FlowerCard): SharePayload {
 
 export function createGiftStaminaShare(amount: number): SharePayload {
   return {
-    title: `花花妙屋好友送你 ${amount} 点体力，快来领！`,
+    title: `${amount} 点体力，拿去合！`,
     imageUrl: SHARE_IMAGES.core_gameplay,
     query: `gift=stamina&amount=${amount}`,
   };

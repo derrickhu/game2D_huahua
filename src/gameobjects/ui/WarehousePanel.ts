@@ -19,6 +19,8 @@ import { bringToolEnergyToFront, createToolEnergySprite } from '@/utils/ToolEner
 import { ToolSparkleLayer } from '@/utils/ToolSparkleLayer';
 import { ToastMessage } from './ToastMessage';
 import { ConfirmDialog } from './ConfirmDialog';
+import { Platform } from '@/core/PlatformService';
+import { createWarehouseSlotShare } from '@/config/ShareConfig';
 
 const TEX_W = 768;
 const TEX_H = 1376;
@@ -396,7 +398,17 @@ export class WarehousePanel extends PIXI.Container {
     this._headerTitle.position.set(HEADER_TITLE_X, HEADER_TITLE_Y);
     this._footerRoot.position.set(FOOTER_ROW_X, FOOTER_ROW_Y);
 
-    if (WarehouseManager.canExpand) {
+    if (WarehouseManager.hasShareUnlockSlot) {
+      this._expandWord.visible = false;
+      this._gemSprite.visible = false;
+      this._footerCost.visible = false;
+      this._footerLocked.visible = true;
+      this._footerLocked.text = '点第二行锁格转发解锁';
+      this._footerLocked.anchor.set(0.5, 0.5);
+      this._footerLocked.position.set(0, 0);
+      this._footerRoot.hitArea = new PIXI.Rectangle(-150, -22, 300, 44);
+      this._footerRoot.cursor = 'default';
+    } else if (WarehouseManager.canExpand) {
       this._expandWord.visible = true;
       this._gemSprite.visible = true;
       this._footerCost.visible = true;
@@ -408,6 +420,7 @@ export class WarehousePanel extends PIXI.Container {
       this._gemSprite.visible = false;
       this._footerCost.visible = false;
       this._footerLocked.visible = true;
+      this._footerLocked.text = '已达上限';
       this._footerLocked.anchor.set(0.5, 0.5);
       this._footerLocked.position.set(0, 0);
       this._footerRoot.hitArea = new PIXI.Rectangle(-120, -22, 240, 44);
@@ -441,6 +454,7 @@ export class WarehousePanel extends PIXI.Container {
 
     const bg = new PIXI.Graphics();
     if (locked) {
+      const shareLocked = WarehouseManager.isShareUnlockSlot(index);
       bg.lineStyle(1.5, COLORS.CELL_BORDER, 0.45);
       bg.beginFill(0xd8ccbe, 0.35);
       bg.drawRoundedRect(0, 0, s, s, rad);
@@ -465,6 +479,27 @@ export class WarehousePanel extends PIXI.Container {
         lock.position.set(s / 2, s / 2);
         lock.alpha = 0.55;
         slot.addChild(lock);
+      }
+      if (shareLocked) {
+        const label = new PIXI.Text('转发', {
+          fontSize: Math.min(18, s * 0.22),
+          fill: 0xffffff,
+          fontFamily: FONT_FAMILY,
+          fontWeight: '900',
+          stroke: 0x8b5a2b,
+          strokeThickness: 3,
+        });
+        label.anchor.set(0.5, 1);
+        label.position.set(s / 2, s - Math.max(5, s * 0.06));
+        slot.addChild(label);
+
+        slot.eventMode = 'static';
+        slot.cursor = 'pointer';
+        slot.hitArea = new PIXI.Rectangle(0, 0, s, s);
+        slot.on('pointerdown', (e: PIXI.FederatedPointerEvent) => {
+          e.stopPropagation();
+          void this._onShareUnlockSlotTap(index);
+        });
       }
       return slot;
     } else if (itemId) {
@@ -572,6 +607,10 @@ export class WarehousePanel extends PIXI.Container {
 
   private async _onExpandTap(): Promise<void> {
     if (!WarehouseManager.canExpand) return;
+    if (WarehouseManager.hasShareUnlockSlot) {
+      ToastMessage.show('点击第二行锁格，转发解锁');
+      return;
+    }
     const cost = WarehouseManager.expandCost;
     const newCap = WarehouseManager.capacity + 1;
 
@@ -585,6 +624,29 @@ export class WarehousePanel extends PIXI.Container {
 
     if (!WarehouseManager.expand()) {
       ToastMessage.show('钻石不足');
+    }
+  }
+
+  private async _onShareUnlockSlotTap(index: number): Promise<void> {
+    if (!WarehouseManager.isShareUnlockSlot(index)) return;
+    if (!WarehouseManager.canShareUnlockSlot(index)) {
+      ToastMessage.show('请先解锁前一个仓库格');
+      return;
+    }
+
+    const confirmed = await ConfirmDialog.show(
+      '解锁仓库格',
+      '转发给好友即可解锁这个仓库格',
+      '转发解锁',
+      '取消',
+    );
+    if (!confirmed) return;
+
+    const shared = await Platform.shareAndWait(createWarehouseSlotShare(index));
+    if (shared && WarehouseManager.expandByShare(index)) {
+      ToastMessage.show('仓库格解锁成功！');
+    } else {
+      ToastMessage.show('分享取消，未解锁');
     }
   }
 

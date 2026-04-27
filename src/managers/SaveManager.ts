@@ -176,7 +176,7 @@ class SaveManagerClass {
         RewardBoxManager.loadState(data.rewardBox);
       }
       MergeCompanionManager.loadState(data.mergeCompanions);
-      CustomerManager.prepareFromSave(data.customers);
+      CustomerManager.prepareFromSave(data.customers, offlineSec);
       MerchShopManager.init();
       MerchShopManager.loadState(data.merchShop);
       FlowerSignTicketManager.loadState(data.flowerSignTickets);

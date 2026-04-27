@@ -2,7 +2,7 @@
  * 体力购买面板 - 顶栏「+」或体力不足时弹出
  *
  * 壳体：`flower_egg_reward_bg` + `item_info_title_ribbon`（`FlowerEggModalFrame`）。
- * **左右两列**：各列外包一层圆角框以免混淆；上为体力图标+角标，下左为钻石价、下右为「看广告」+ 次数。
+ * **左右两列**：各列外包一层圆角框以免混淆；上为体力图标+角标，下左为钻石价、下右为临时「转发」+ 次数。
  */
 import * as PIXI from 'pixi.js';
 import { Game } from '@/core/Game';
@@ -10,9 +10,10 @@ import { CurrencyManager } from '@/managers/CurrencyManager';
 import { TweenManager, Ease } from '@/core/TweenManager';
 import { ToastMessage } from './ToastMessage';
 import { COLORS, DESIGN_WIDTH, FONT_FAMILY } from '@/config/Constants';
-import { AdManager, AdScene } from '@/managers/AdManager';
 import { createFlowerEggModalFrame } from '@/gameobjects/ui/FlowerEggModalFrame';
 import { TextureCache } from '@/utils/TextureCache';
+import { Platform } from '@/core/PlatformService';
+import { createGiftStaminaShare } from '@/config/ShareConfig';
 
 const COL_W = 200;
 const COL_GAP = 36;
@@ -169,7 +170,7 @@ export class StaminaPanel extends PIXI.Container {
     return c;
   }
 
-  /** 右列下：绿钮，仅「看广告」文案 */
+  /** 右列下：绿钮，广告未接入前临时用「转发」文案 */
   private _buildAdTextOnlyButton(w: number, h: number): PIXI.Container {
     const c = new PIXI.Container();
     c.eventMode = 'static';
@@ -181,7 +182,7 @@ export class StaminaPanel extends PIXI.Container {
     bg.endFill();
     c.addChild(bg);
 
-    const t = new PIXI.Text('看广告', {
+    const t = new PIXI.Text('转发', {
       fontSize: 18,
       fill: 0xffffff,
       fontFamily: FONT_FAMILY,
@@ -240,7 +241,7 @@ export class StaminaPanel extends PIXI.Container {
     this._buyBtn.on('pointerdown', () => this._onBuyStamina());
     leftCol.addChild(this._buyBtn);
 
-    // ── 右列：独立圆角框 + 上 20 体力图标区，下纯文字看广告 + 次数 ──
+    // ── 右列：独立圆角框 + 上 20 体力图标区，下纯文字转发 + 次数 ──
     const rightCol = new PIXI.Container();
     rightCol.position.set(COL_W + COL_GAP, 0);
     mount.addChild(rightCol);
@@ -314,19 +315,20 @@ export class StaminaPanel extends PIXI.Container {
 
   private _onAdStamina(): void {
     if (CurrencyManager.staminaAdRemaining <= 0) {
-      ToastMessage.show('今日广告次数已用完');
+      ToastMessage.show('今日转发次数已用完');
       return;
     }
 
-    AdManager.showRewardedAd(AdScene.STAMINA_RECOVER, (success) => {
-      if (success) {
-        const ok = CurrencyManager.recoverStaminaByAd();
-        if (ok) {
-          ToastMessage.show(`广告奖励：+${CurrencyManager.staminaAdAmount}`);
-          this._refresh();
-        }
-      } else {
-        ToastMessage.show('广告未完成，无法获得奖励');
+    // 临时方案：广告接入前，复用广告体力次数/奖励计数，但触发方式改为转发。
+    Platform.shareAndWait(createGiftStaminaShare(CurrencyManager.staminaAdAmount)).then((shared) => {
+      if (!shared) {
+        ToastMessage.show('转发取消，无法获得奖励');
+        return;
+      }
+      const ok = CurrencyManager.recoverStaminaByAd();
+      if (ok) {
+        ToastMessage.show(`转发奖励：+${CurrencyManager.staminaAdAmount}`);
+        this._refresh();
       }
     });
   }
@@ -336,7 +338,7 @@ export class StaminaPanel extends PIXI.Container {
     return this._leftHead.toGlobal(new PIXI.Point(0, 0));
   }
 
-  /** 体力飞入顶栏起点（全局）：右列体力图标中心（看广告） */
+  /** 体力飞入顶栏起点（全局）：右列体力图标中心（临时转发/未来广告） */
   getStaminaFlyStartGlobalAd(): PIXI.Point {
     return this._rightHead.toGlobal(new PIXI.Point(0, 0));
   }

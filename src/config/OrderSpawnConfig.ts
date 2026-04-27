@@ -55,6 +55,18 @@ export const ORDER_SPAWN_VALIDATE_MAX_ATTEMPTS = 4;
  */
 export const ORDER_SPAWN_MAX_ATTEMPTS = 10;
 
+/** 限时钻石订单：6 级后开放，碎片化游玩按小时级倒计时 */
+export const TIMED_DIAMOND_ORDER_MIN_PLAYER_LEVEL = 6;
+/** 每次正常刷客时的基础概率；再由每日上限与“当前已有一单”约束压住频率 */
+export const TIMED_DIAMOND_ORDER_BASE_CHANCE = 0.035;
+/** 当天还没出过限时单时，略微提高概率，长时间在线更接近 1-2 单 */
+export const TIMED_DIAMOND_ORDER_FIRST_DAILY_CHANCE_MULT = 1.35;
+export const TIMED_DIAMOND_ORDER_DAILY_CAP = 2;
+export const TIMED_DIAMOND_ORDER_SLOT_COUNT = 3;
+export const TIMED_DIAMOND_ORDER_MIN_ITEM_LEVEL = 6;
+export const TIMED_DIAMOND_ORDER_TIME_LIMIT_SECONDS = 6 * 60 * 60;
+export const TIMED_DIAMOND_ORDER_DIAMOND_CAP = 10;
+
 /**
  * 组合单有效概率：min(max, base + (unlockedLineCount-2)*perLine)，至少 2 线才可能组合。
  * playerLevel ≥ ORDER_COMBO_LEVEL_BOOST_MIN_LEVEL 时再乘 ORDER_COMBO_LEVEL_BOOST_MULT，整体仍 clamp 到 MAX。
@@ -93,4 +105,19 @@ export function maxSlotNormForSlots(slots: readonly OrderGenSlot[]): number {
     m = Math.max(m, slotNormForItemId(s.itemId));
   }
   return m;
+}
+
+/** 限时单钻石奖励：随需求等级上浮，单单封顶 10 钻 */
+export function computeTimedDiamondReward(slots: readonly OrderGenSlot[]): number {
+  if (slots.length === 0) return 0;
+  let levelSum = 0;
+  let maxLevel = 0;
+  for (const s of slots) {
+    const lv = ITEM_DEFS.get(s.itemId)?.level ?? 0;
+    levelSum += lv;
+    maxLevel = Math.max(maxLevel, lv);
+  }
+  const avg = levelSum / slots.length;
+  const raw = Math.floor(avg / 2) + (maxLevel >= 9 ? 3 : maxLevel >= 7 ? 2 : 1);
+  return Math.min(TIMED_DIAMOND_ORDER_DIAMOND_CAP, Math.max(2, raw));
 }
