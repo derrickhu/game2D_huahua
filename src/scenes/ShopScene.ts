@@ -55,6 +55,7 @@ import { TutorialOverlay } from '@/systems/TutorialOverlay';
 import { playShopDecorationStarFly } from '@/gameobjects/ui/ShopDecorationStarFly';
 import { Platform } from '@/core/PlatformService';
 import { SocialManager } from '@/managers/SocialManager';
+import { SettingsPanel } from '@/gameobjects/ui/SettingsPanel';
 
 // ── 布局常量 ──
 const PROGRESS_BAR_W = 400;
@@ -191,6 +192,7 @@ const RIGHT_BUTTONS: SideBtnDef[] = [
 /** 左下折叠冷门功能区；当前先放「游戏圈」，后续可继续追加。 */
 const MISC_DRAWER_BUTTONS: MiscDrawerBtnDef[] = [
   { id: 'invite_friend', label: '邀友', shortLabel: '邀', fill: 0xFFB347, stroke: 0xD48B2E },
+  { id: 'settings', label: '设置', shortLabel: '设', fill: 0xA78BFA, stroke: 0x7C5FC5 },
   { id: 'game_club', label: '游戏圈', shortLabel: '圈', fill: 0x8BCF63, stroke: 0x4D8F34 },
 ];
 
@@ -321,6 +323,7 @@ export class ShopScene implements Scene {
     OverlayManager.bringToFront();
     this._levelUpPopup.parent?.sortChildren();
   };
+  private _settingsPanel: SettingsPanel | null = null;
 
   /** 装修面板全屏遮罩：把星级进度条+飞星层提到 overlay，盖在遮罩之上 */
   private readonly _onDecoPanelBackdrop = (payload: { open: boolean }): void => {
@@ -455,6 +458,11 @@ export class ShopScene implements Scene {
       this._levelUpPopup.parent?.removeChild(this._levelUpPopup);
       this._levelUpPopup.destroy({ children: true });
     }
+    if (this._settingsPanel) {
+      this._settingsPanel.parent?.removeChild(this._settingsPanel);
+      this._settingsPanel.destroy({ children: true });
+      this._settingsPanel = null;
+    }
     this.container.removeChildren();
   }
 
@@ -531,6 +539,8 @@ export class ShopScene implements Scene {
     this._levelUpPopup.zIndex = ShopScene._LEVEL_UP_OVERLAY_Z;
     const ov = OverlayManager.container;
     ov.addChild(this._levelUpPopup);
+    this._settingsPanel = new SettingsPanel();
+    ov.addChild(this._settingsPanel);
     ov.sortChildren();
 
     // ============== 12. 绑定事件 ==============
@@ -1518,6 +1528,12 @@ export class ShopScene implements Scene {
     if (id === 'invite_friend') {
       SocialManager.shareShop();
       ToastMessage.show('已打开分享邀请');
+      return;
+    }
+
+    if (id === 'settings') {
+      this._toggleMiscDrawer(false);
+      this._settingsPanel?.show();
       return;
     }
 

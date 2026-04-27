@@ -14,6 +14,7 @@ import { IdleManager } from '@/managers/IdleManager';
 import { RoomLayoutManager } from '@/managers/RoomLayoutManager';
 import { LevelManager } from '@/managers/LevelManager';
 import { CloudSyncManager } from '@/managers/CloudSyncManager';
+import { UserIdentityManager } from '@/managers/UserIdentityManager';
 import { TextureCache } from '@/utils/TextureCache';
 import { LoadingScreenOverlay } from '@/gameobjects/ui/LoadingScreenOverlay';
 import { MainScene } from '@/scenes/MainScene';
@@ -129,6 +130,7 @@ async function main(): Promise<void> {
       MerchShopManager.bootstrapFresh();
     }
     console.log('[main]', loaded ? '存档加载成功' : '无存档，使用默认数据');
+    UserIdentityManager.init();
 
     // 星级升档奖励须在首帧 addStar 前就绪（不依赖 MainScene 是否已构建）
     LevelManager.init();

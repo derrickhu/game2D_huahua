@@ -32,7 +32,8 @@ export interface PlaySoundOptions {
 class AudioManagerClass {
   private _sounds: Map<string, SoundEntry> = new Map();
   private _bgm: any = null;
-  private _muted = false;
+  private _soundMuted = false;
+  private _musicMuted = false;
   private _bgmPending: { src: string; volume: number } | null = null;
   /** 记录每个音效最后一次播放时间戳，用于节流 */
   private _lastPlayTime: Map<string, number> = new Map();
@@ -42,7 +43,7 @@ class AudioManagerClass {
   }
 
   play(name: string, opts?: PlaySoundOptions): void {
-    if (this._muted || !_api) return;
+    if (this._soundMuted || !_api) return;
     const entry = this._sounds.get(name);
     if (!entry) {
       console.warn(TAG, `音效 "${name}" 未注册`);
@@ -168,7 +169,7 @@ class AudioManagerClass {
       });
 
       const tryPlayBgm = () => {
-        if (this._muted || !this._bgm) return;
+        if (this._musicMuted || !this._bgm) return;
         try {
           this._bgm.play();
           console.log(TAG, `BGM "${src}" 尝试播放...`);
@@ -181,7 +182,7 @@ class AudioManagerClass {
         this._bgm.onCanplay(() => tryPlayBgm());
       }
       this._bgm.src = src;
-      if (typeof this._bgm.onCanplay !== 'function' && !this._muted) {
+      if (typeof this._bgm.onCanplay !== 'function' && !this._musicMuted) {
         setTimeout(tryPlayBgm, 0);
       }
     } catch (e) {
@@ -201,7 +202,9 @@ class AudioManagerClass {
     }
     if (this._bgm && this._bgmPending) {
       console.log(TAG, '用户交互后恢复 BGM...');
-      try { this._bgm.play(); } catch (_) {}
+      if (!this._musicMuted) {
+        try { this._bgm.play(); } catch (_) {}
+      }
       this._bgmPending = null;
     }
   }
@@ -217,16 +220,45 @@ class AudioManagerClass {
   }
 
   get muted(): boolean {
-    return this._muted;
+    return this._musicMuted && this._soundMuted;
   }
 
   set muted(val: boolean) {
-    this._muted = val;
+    this.setMuted(val);
+  }
+
+  get musicMuted(): boolean {
+    return this._musicMuted;
+  }
+
+  set musicMuted(val: boolean) {
+    this.setMusicMuted(val);
+  }
+
+  get soundMuted(): boolean {
+    return this._soundMuted;
+  }
+
+  set soundMuted(val: boolean) {
+    this.setSoundMuted(val);
+  }
+
+  setMuted(val: boolean): void {
+    this.setMusicMuted(val);
+    this.setSoundMuted(val);
+  }
+
+  setMusicMuted(val: boolean): void {
+    this._musicMuted = val;
     if (this._bgm) {
       try {
         val ? this._bgm.pause() : this._bgm.play();
       } catch (_) {}
     }
+  }
+
+  setSoundMuted(val: boolean): void {
+    this._soundMuted = val;
   }
 }
 

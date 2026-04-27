@@ -12,6 +12,7 @@ import { EventBus } from '@/core/EventBus';
 import { Game } from '@/core/Game';
 import { SOUND_DEFS, BGM_DEFS } from '@/config/AudioConfig';
 import { SceneManager } from '@/core/SceneManager';
+import { SettingsManager } from '@/managers/SettingsManager';
 
 /** 连续两次合成间隔超过此时长则变音档位从第 1 档重新计（略放宽，避免动画间隙导致永远停在第 1 档） */
 const MERGE_COMBO_GAP_MS = 2400;
@@ -34,6 +35,7 @@ class SoundSystemClass {
     }
 
     console.log(`[SoundSystem] 注册 ${SOUND_DEFS.length} 个音效, ${BGM_DEFS.length} 个 BGM`);
+    SettingsManager.init();
 
     // ---- 绑定事件 → 音效 ----
 
@@ -177,12 +179,14 @@ class SoundSystemClass {
 
   /** 静音切换 */
   toggleMute(): boolean {
-    AudioManager.muted = !AudioManager.muted;
-    return AudioManager.muted;
+    const nextMuted = SettingsManager.musicEnabled || SettingsManager.soundEnabled;
+    SettingsManager.setMusicEnabled(!nextMuted);
+    SettingsManager.setSoundEnabled(!nextMuted);
+    return nextMuted;
   }
 
   get isMuted(): boolean {
-    return AudioManager.muted;
+    return !SettingsManager.musicEnabled && !SettingsManager.soundEnabled;
   }
 }
 
