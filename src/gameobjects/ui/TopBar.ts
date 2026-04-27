@@ -329,6 +329,8 @@ export class TopBar extends PIXI.Container {
    * 须先于 _buildGmButton 加入子节点，保证  叠在最上层。
    */
   private _buildGmActivateZone(): void {
+    if (!GMManager.isRuntimeAllowed) return;
+
     const slotLeft = this._gmSlotLeft;
     const slotRight = DESIGN_WIDTH - RIGHT_MENU_RESERVE;
     const w = slotRight - slotLeft;
@@ -348,6 +350,8 @@ export class TopBar extends PIXI.Container {
 
   /** GM 调试入口：槽位中央的 （激活后可见） */
   private _buildGmButton(): void {
+    if (!GMManager.isRuntimeAllowed) return;
+
     const slotLeft = this._gmSlotLeft;
     const slotRight = DESIGN_WIDTH - RIGHT_MENU_RESERVE;
     if (slotRight - slotLeft < 36) return;

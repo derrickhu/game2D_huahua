@@ -122,12 +122,16 @@ export interface GMCommand {
 
 class GMManagerClass {
   private _enabled = false;
+  private readonly _runtimeAllowed: boolean;
   private _tapCount = 0;
   private _lastTapTime = 0;
   private _commands: GMCommand[] = [];
 
+  /** GM 仅允许在微信/抖音开发者工具模拟器环境触发；真机一律禁用 */
+  get isRuntimeAllowed(): boolean { return this._runtimeAllowed; }
+
   /** GM 模式是否已开启 */
-  get isEnabled(): boolean { return this._enabled; }
+  get isEnabled(): boolean { return this._runtimeAllowed && this._enabled; }
 
   /** 获取所有指令 */
   get commands(): readonly GMCommand[] { return this._commands; }
@@ -153,12 +157,14 @@ class GMManagerClass {
   }
 
   constructor() {
+    this._runtimeAllowed = this._detectSimulatorRuntime();
     this._registerCommands();
     this._loadState();
   }
 
   /** 记录连按（顶栏 GM 槽隐形热区点击时调用） */
   onTitleTap(): void {
+    if (!this._runtimeAllowed) return;
     const now = Date.now();
     if (now - this._lastTapTime > 1500) {
       // 间隔超过1.5秒，重新计数
@@ -180,6 +186,10 @@ class GMManagerClass {
 
   /** 打开 GM 面板 */
   openPanel(): void {
+    if (!this._runtimeAllowed) {
+      console.warn('[GM] 真机环境禁用 GM');
+      return;
+    }
     if (!this._enabled) {
       console.warn('[GM] GM模式未激活：请在顶栏商店与系统菜单之间空白区连点 5 次');
       return;
@@ -189,6 +199,7 @@ class GMManagerClass {
 
   /** 执行指令 */
   executeCommand(id: string): string {
+    if (!this._runtimeAllowed) return ' 真机环境禁用 GM';
     const cmd = this._commands.find(c => c.id === id);
     if (!cmd) return ` 未知指令: ${id}`;
     try {
@@ -1308,6 +1319,11 @@ class GMManagerClass {
   }
 
   private _loadState(): void {
+    if (!this._runtimeAllowed) {
+      this._enabled = false;
+      return;
+    }
+
     try {
       const raw = PersistService.readRaw(GM_STORAGE_KEY);
       if (raw) {
@@ -1327,6 +1343,15 @@ class GMManagerClass {
           console.log('[GM]  开发者工具环境，自动激活GM模式');
         }
       } catch (_) {}
+    }
+  }
+
+  private _detectSimulatorRuntime(): boolean {
+    try {
+      const sysInfo = _api?.getSystemInfoSync?.();
+      return sysInfo?.platform === 'devtools';
+    } catch (_) {
+      return false;
     }
   }
 }

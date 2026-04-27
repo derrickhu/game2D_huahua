@@ -173,6 +173,7 @@ export class GMPanel extends PIXI.Container {
   }
 
   open(): void {
+    if (!GMManager.isRuntimeAllowed) return;
     if (this._isOpen) return;
     this._isOpen = true;
     this.visible = true;
