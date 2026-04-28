@@ -68,7 +68,11 @@ class CdnAssetServiceClass {
     if (resolved) return resolved;
 
     const ok = await this.download(logicalPath);
-    return ok && this._isCacheValid(logicalPath) ? this._getCachePath(logicalPath) : logicalPath;
+    if (ok && this._isCacheValid(logicalPath)) return this._getCachePath(logicalPath);
+    if (this.isCdnPath(logicalPath)) {
+      throw new Error(`CDN asset unavailable: ${logicalPath}`);
+    }
+    return logicalPath;
   }
 
   async fetchManifest(): Promise<boolean> {
@@ -196,12 +200,20 @@ class CdnAssetServiceClass {
         reject(new Error('wx.downloadFile unavailable'));
         return;
       }
-      console.log(`[CDN] downloadFile start: ${url}`);
       wx.downloadFile({
         url,
         success: (res: any) => {
-          console.log(`[CDN] downloadFile success: ${url}, status=${res?.statusCode ?? 'unknown'}, temp=${!!res?.tempFilePath}`);
-          resolve({ tempFilePath: res?.tempFilePath });
+          const statusCode = Number(res?.statusCode || 0);
+          const hasTemp = !!res?.tempFilePath;
+          if (statusCode < 200 || statusCode >= 300) {
+            reject(new Error(`downloadFile status=${statusCode || 'unknown'} url=${url}`));
+            return;
+          }
+          if (!hasTemp) {
+            reject(new Error(`downloadFile missing tempFilePath url=${url}`));
+            return;
+          }
+          resolve({ tempFilePath: res.tempFilePath });
         },
         fail: (err: any) => {
           const msg = err?.errMsg || err?.message || String(err);

@@ -227,10 +227,19 @@ export class MerchShopPanel extends PIXI.Container {
   open(): void {
     if (this._isOpen || this._opening) return;
     this._opening = true;
-    void TextureCache.preloadPanelAssets('merchShop').finally(() => {
-      this._opening = false;
-      this._openReady();
-    });
+    void TextureCache.preloadMerchShopPanel()
+      .then(() => {
+        // 构造时可能还没拿到 CDN 图而画了「筹备中」fallback；
+        // 打开前资源已就绪时必须主动重建，否则不会再收到 texture:loaded 事件。
+        if (!this._merchDataBound) this._rebuildFrameContents();
+        this._openReady();
+      })
+      .catch(err => {
+        console.warn('[MerchShopPanel] 商店资源未就绪，暂不打开空壳:', err);
+      })
+      .finally(() => {
+        this._opening = false;
+      });
   }
 
   private _openReady(): void {
@@ -239,9 +248,14 @@ export class MerchShopPanel extends PIXI.Container {
     this.visible = true;
     this.alpha = 1;
     this._assetUnsub = TextureCache.onAssetGroupLoaded('merchShop', () => {
-      if (!this._isOpen || !this._merchDataBound) return;
-      this._refreshMerchSlots();
-      this._refreshMerchShelfStrips();
+      if (!this._isOpen) return;
+      if (!this._merchDataBound) {
+        this._rebuildFrameContents();
+      }
+      if (this._merchDataBound) {
+        this._refreshMerchSlots();
+        this._refreshMerchShelfStrips();
+      }
     });
     this.position.set(0, 0);
     this.scale.set(1, 1);
@@ -356,6 +370,48 @@ export class MerchShopPanel extends PIXI.Container {
     this._frameRoot.position.set(DESIGN_WIDTH / 2, h / 2);
     this.addChild(this._frameRoot);
 
+    this._buildFrameContents();
+  }
+
+  private _resetMerchFrameState(): void {
+    this._finishMerchCanvasScroll();
+    if (this._merchDataBound) {
+      EventBus.off('merchShop:changed', this._onMerchShopChanged);
+      EventBus.off('currency:changed', this._onCurrencyChanged);
+      EventBus.off('adEntitlement:changed', this._onAdEntitlementChanged);
+      EventBus.off('merchShop:dailyAdRefreshCompleted', this._onAdEntitlementChanged);
+      Game.ticker.remove(this._merchUiTick, this);
+    }
+    this._merchDataBound = false;
+    this._merchScrollContent = null;
+    this._merchScrollMinY = 0;
+    this._slotCells = [];
+    this._shelfStripCountdowns = [];
+    this._shelfStripBtns = [];
+    this._shelfRefreshButtonViews = [];
+  }
+
+  private _rebuildFrameContents(): void {
+    this._resetMerchFrameState();
+    for (const child of [...this._frameRoot.children]) {
+      this._frameRoot.removeChild(child);
+      child.destroy({ children: true });
+    }
+    this._buildFrameContents();
+    if (this._isOpen && this._merchDataBound) {
+      MerchShopManager.ensureUpToDate();
+      this._refreshMerchSlots();
+      this._refreshMerchShelfStrips();
+      EventBus.on('merchShop:changed', this._onMerchShopChanged);
+      EventBus.on('currency:changed', this._onCurrencyChanged);
+      EventBus.on('adEntitlement:changed', this._onAdEntitlementChanged);
+      EventBus.on('merchShop:dailyAdRefreshCompleted', this._onAdEntitlementChanged);
+      Game.ticker.add(this._merchUiTick, this);
+    }
+  }
+
+  private _buildFrameContents(): void {
+    const h = Game.logicHeight;
     const frameTex = TextureCache.get('shop_merch_panel_frame');
     const secTex = TextureCache.get('shop_section_panel_bg');
     const slotTex = TextureCache.get('shop_item_slot');

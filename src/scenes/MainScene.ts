@@ -191,6 +191,7 @@ export class MainScene implements Scene {
   private _redDotTimer = MAIN_SCENE_RED_DOT_REFRESH_INTERVAL;
   private _redDotDirty = true;
   private _textureRefreshUnsub: (() => void) | null = null;
+  private _switchingToShop = false;
 
   constructor() {
     this.container = new PIXI.Container();
@@ -292,6 +293,11 @@ export class MainScene implements Scene {
 
   /** 游戏就绪后的启动流程 */
   private _onGameReady(): void {
+    // 先恢复/启动新手状态，再判断离线收益、签到等弹窗。
+    // 云端无存档时启动期会按云端权威清空本地缓存，此处应立即进入新手流程。
+    TutorialManager.start();
+    this._tutorialOverlay.bind('main');
+
     // 1. 离线收益（关闭时 IdleManager 仅同步时间戳，此处恒为 null）
     // 教程期间跳过离线收益弹窗
     const offlineReward = IdleManager.calculateOfflineReward();
@@ -310,12 +316,8 @@ export class MainScene implements Scene {
       }, 500);
     }
 
-    // 3. 启动新手引导（如果需要）
-    TutorialManager.start();
-    this._tutorialOverlay.bind('main');
-
     // 4. 任务完成提示
-    if (QuestManager.hasClaimableQuest) {
+    if (QuestManager.hasClaimableQuest && !TutorialManager.isActive) {
       ToastMessage.show('每日挑战有可领取奖励！');
     }
   }
@@ -1313,8 +1315,7 @@ export class MainScene implements Scene {
       if (TutorialManager.isActive) return;
       const cur = SceneManager.current?.name;
       if (cur !== 'main' && cur !== 'shop') return;
-      void TextureCache.preloadPanelAssets('merchShop')
-        .finally(() => this._merchShopPanel.open());
+      this._merchShopPanel.open();
     });
 
     // 兼容旧事件：熟客资料卡已废弃，统一跳友谊图鉴
@@ -1481,17 +1482,32 @@ export class MainScene implements Scene {
 
   /** 切换到花店场景（带过渡动画） */
   private _switchToShopScene(): void {
-    if (SceneManager.current?.name === 'shop') return;
-    // 淡出当前场景 → 切换到花店场景
-    TweenManager.to({
-      target: this.container,
-      props: { alpha: 0 },
-      duration: 0.3,
-      ease: Ease.easeInQuad,
-      onComplete: () => {
-        this.container.alpha = 1; // 恢复（下次进入时用）
-        SceneManager.switchTo('shop');
-      },
+    if (SceneManager.current?.name === 'shop' || this._switchingToShop) return;
+    this._switchingToShop = true;
+
+    const preload = TutorialManager.isActive
+      ? TextureCache.preloadTutorialDeco()
+      : TextureCache.preloadShopScene();
+
+    void preload.catch(err => {
+      console.warn('[MainScene] 花店首屏资源预加载未完全成功:', err);
+    }).then(() => {
+      if (SceneManager.current?.name !== 'main') {
+        this._switchingToShop = false;
+        return;
+      }
+      // 淡出当前场景 → 切换到花店场景。预加载先完成，真机首帧不再依赖本地兜底。
+      TweenManager.to({
+        target: this.container,
+        props: { alpha: 0 },
+        duration: 0.3,
+        ease: Ease.easeInQuad,
+        onComplete: () => {
+          this.container.alpha = 1; // 恢复（下次进入时用）
+          this._switchingToShop = false;
+          SceneManager.switchTo('shop');
+        },
+      });
     });
   }
 

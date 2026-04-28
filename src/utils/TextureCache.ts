@@ -1058,6 +1058,16 @@ class TextureCacheClass {
     return Promise.all(jobs).then(() => undefined);
   }
 
+  /** 严格预加载：Promise 完成时必须已经进入 TextureCache，否则向调用方暴露失败。 */
+  preloadKeysStrict(keys: readonly string[], label = 'assets'): Promise<void> {
+    return this.preloadKeys(keys).then(() => {
+      const missing = keys.filter(key => IMAGE_MAP[key] && !this._cache.has(key));
+      if (missing.length > 0) {
+        throw new Error(`${label} missing textures: ${missing.join(', ')}`);
+      }
+    });
+  }
+
   /** 场景级后台预热，不应阻塞启动；失败只记录警告 */
   preloadSceneWarmup(scene: TextureAssetGroup): Promise<void> {
     const keys = ASSET_GROUP_KEYS[scene] || [];
@@ -1066,9 +1076,19 @@ class TextureCacheClass {
     });
   }
 
+  /** 花店首屏必须资源：切场景前等待，避免真机首次进入时背景/房壳空白。 */
+  preloadShopScene(): Promise<void> {
+    return this.preloadKeysStrict(SHOP_WARMUP_KEYS, 'shop');
+  }
+
   /** 面板打开前的统一资源确保入口。 */
   preloadPanelAssets(panel: TextureAssetGroup): Promise<void> {
     return this.preloadSceneWarmup(panel);
+  }
+
+  /** 顶栏内购商店必须资源：打开前严格等待，避免 CDN 首次下载时显示空壳。 */
+  preloadMerchShopPanel(): Promise<void> {
+    return this.preloadKeysStrict(MERCH_SHOP_PANEL_KEYS, 'merchShop');
   }
 
   preloadCheckIn(): Promise<void> {
@@ -1077,7 +1097,7 @@ class TextureCacheClass {
 
   /** 新手装修链路必须资源：购买卡片、目标家具、放置托盘。 */
   preloadTutorialDeco(): Promise<void> {
-    return this.preloadSceneWarmup('tutorialDeco');
+    return this.preloadKeysStrict(TUTORIAL_DECO_KEYS, 'tutorialDeco');
   }
 
   /** 获取已缓存的纹理 */
@@ -1277,7 +1297,10 @@ class TextureCacheClass {
         };
         void CdnAssetService.resolveOrDownload(path)
           .then((resolvedPath) => { img.src = resolvedPath; })
-          .catch(() => { img.src = path; });
+          .catch((err) => {
+            this._loading.delete(key);
+            resolve();
+          });
       } catch (e) {
         console.warn(`[TextureCache] 加载异常: ${key}`, e);
         this._failed.add(key);

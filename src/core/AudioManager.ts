@@ -45,6 +45,12 @@ class AudioManagerClass {
     this._sounds.set(name, { src, volume });
   }
 
+  preload(srcs: readonly string[]): Promise<void> {
+    return CdnAssetService.preloadPaths(srcs).catch(err => {
+      console.warn(TAG, '音频预加载失败:', err);
+    });
+  }
+
   play(name: string, opts?: PlaySoundOptions): void {
     if (this._soundMuted || !_api) return;
     const entry = this._sounds.get(name);
@@ -74,7 +80,9 @@ class AudioManagerClass {
 
     void CdnAssetService.resolveOrDownload(entry.src)
       .then(src => this._playResolvedSound(name, src, entry.volume * volumeScale, opts, rate))
-      .catch(() => this._playResolvedSound(name, entry.src, entry.volume * volumeScale, opts, rate));
+      .catch(err => {
+        console.warn(TAG, `音效 "${name}" 资源未就绪:`, err?.message || err);
+      });
   }
 
   private _playResolvedSound(
@@ -136,12 +144,10 @@ class AudioManagerClass {
       applyPlaybackRate();
       audio.src = src;
       applyPlaybackRate();
-      if (typeof audio.onCanplay !== 'function') {
-        setTimeout(() => {
-          applyPlaybackRate();
-          tryPlay();
-        }, 0);
-      }
+      setTimeout(() => {
+        applyPlaybackRate();
+        tryPlay();
+      }, typeof audio.onCanplay === 'function' ? 300 : 0);
     } catch (e) {
       console.warn(TAG, `音效 "${name}" 创建异常:`, e);
     }
@@ -151,7 +157,11 @@ class AudioManagerClass {
     const seq = ++this._bgmRequestSeq;
     void CdnAssetService.resolveOrDownload(src)
       .then(resolvedSrc => this._playResolvedBGM(seq, src, resolvedSrc, volume, opts))
-      .catch(() => this._playResolvedBGM(seq, src, src, volume, opts));
+      .catch(err => {
+        if (seq !== this._bgmRequestSeq) return;
+        console.warn(TAG, `BGM "${src}" 资源未就绪:`, err?.message || err);
+        this._bgmPending = { src, volume };
+      });
   }
 
   private _playResolvedBGM(
@@ -212,8 +222,8 @@ class AudioManagerClass {
       }
       console.log(TAG, `BGM "${originalSrc}" resolved src: ${resolvedSrc}`);
       this._bgm.src = resolvedSrc;
-      if (typeof this._bgm.onCanplay !== 'function' && !this._musicMuted) {
-        setTimeout(tryPlayBgm, 0);
+      if (!this._musicMuted) {
+        setTimeout(tryPlayBgm, typeof this._bgm.onCanplay === 'function' ? 300 : 0);
       }
     } catch (e) {
       console.warn(TAG, `BGM "${originalSrc}" 创建异常:`, e);

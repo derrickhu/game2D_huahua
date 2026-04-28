@@ -400,16 +400,6 @@ export class ShopScene implements Scene {
     // 初始化房间布局管理器
     RoomLayoutManager.init();
 
-    this._build();
-    this._playEnterAnim();
-    Game.ticker.add(this._update, this);
-
-    const pendingPlace = takePendingPlaceDeco();
-    if (pendingPlace) {
-      requestAnimationFrame(() => this._consumePendingPlaceDeco(pendingPlace));
-    }
-
-    RewardFlyCoordinator.setBindings(this._createShopRewardFlyBindings());
     this._textureRefreshUnsub?.();
     this._textureRefreshUnsub = TextureCache.observeTextureDependencies(
       { groups: ['main', 'shop', 'deco', 'items', 'panels', 'affinity', 'customers', 'ownerOutfits'] },
@@ -427,6 +417,20 @@ export class ShopScene implements Scene {
         if (this._isEditMode) this._ensureEditCompletePill();
       },
     );
+    void TextureCache.preloadShopScene().catch(err => {
+      console.warn('[ShopScene] 花店首屏资源预加载未完全成功:', err);
+    });
+
+    this._build();
+    this._playEnterAnim();
+    Game.ticker.add(this._update, this);
+
+    const pendingPlace = takePendingPlaceDeco();
+    if (pendingPlace) {
+      requestAnimationFrame(() => this._consumePendingPlaceDeco(pendingPlace));
+    }
+
+    RewardFlyCoordinator.setBindings(this._createShopRewardFlyBindings());
 
     SoundSystem.playShopBGM();
 

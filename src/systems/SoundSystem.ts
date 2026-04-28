@@ -36,6 +36,10 @@ class SoundSystemClass {
 
     console.log(`[SoundSystem] 注册 ${SOUND_DEFS.length} 个音效, ${BGM_DEFS.length} 个 BGM`);
     SettingsManager.init();
+    void AudioManager.preload([
+      ...BGM_DEFS.map(def => def.src),
+      ...SOUND_DEFS.map(def => def.src),
+    ]);
 
     // ---- 绑定事件 → 音效 ----
 
