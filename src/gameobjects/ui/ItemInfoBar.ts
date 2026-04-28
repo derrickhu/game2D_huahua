@@ -716,9 +716,7 @@ export class ItemInfoBar extends PIXI.Container {
     this._staminaDescLabel.text = `消耗体力 ${cost}`;
   }
 
-  /**
-   * 主循环调用：选中工具时 CD 结束需从「加速」切回「出售/腾格」，无需重点格子。
-   */
+  /** 主循环调用：选中工具时 CD 结束需从「加速」切回普通状态，无需重点格子。 */
   tickSelectedToolCooldownUi(): void {
     if (!this._infoContainer.visible || this._selectedCellIndex < 0 || !this._selectedItemId) return;
     const def = ITEM_DEFS.get(this._selectedItemId);
@@ -729,19 +727,20 @@ export class ItemInfoBar extends PIXI.Container {
     this._applySellButtonState(def, cell);
   }
 
-  /** 右下角出售钮：工具 CD 中改为加速占位，否则出售/腾格 */
+  /** 右下角出售钮：工具 CD 中改为加速占位，否则按 sellable 显示出售 */
   private _applySellButtonState(def: ItemDef, cell: NonNullable<ReturnType<typeof BoardManager.getCellByIndex>>): void {
-    const canSellBase = cell.state === CellState.OPEN && def.sellable;
     const producerDef = findBoardProducerDef(def.id);
+    const isProducingTool = def.interactType === InteractType.TOOL && !!producerDef?.canProduce;
+    const canSellBase = cell.state === CellState.OPEN && def.sellable && !isProducingTool;
     const cdInfo =
       this._selectedCellIndex >= 0 ? BuildingManager.getCdInfo(this._selectedCellIndex) : null;
     const toolOnCooldown =
-      def.interactType === InteractType.TOOL &&
-      !!producerDef?.canProduce &&
+      isProducingTool &&
+      cell.state === CellState.OPEN &&
       producerDef.cooldown > 0 &&
       (cdInfo?.remaining ?? 0) > 0;
 
-    if (toolOnCooldown && canSellBase) {
+    if (toolOnCooldown) {
       if (!this._sellAccelerateMode) {
         this._sellAccelerateMode = true;
         this._paintSellBtnChrome(true);

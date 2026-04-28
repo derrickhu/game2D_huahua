@@ -229,7 +229,7 @@ function buildItemDefs(): Map<string, ItemDef> {
         maxLevel: maxLv,
         icon: `tool_${line}_${i + 1}`,
         interactType: InteractType.TOOL,
-        sellable: true,
+        sellable: false,
         storable: true,
       });
     }
@@ -239,6 +239,7 @@ function buildItemDefs(): Map<string, ItemDef> {
   const wrapTool = map.get('flower_wrap_4');
   if (wrapTool) {
     wrapTool.interactType = InteractType.TOOL;
+    wrapTool.sellable = false;
     wrapTool.storable = true;
   }
 

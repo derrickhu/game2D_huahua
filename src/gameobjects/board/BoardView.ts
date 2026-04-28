@@ -371,6 +371,7 @@ export class BoardView extends PIXI.Container {
 
     const def = ITEM_DEFS.get(cell.itemId);
     if (!def) return;
+    if (!def.sellable) return;
 
     const price = getItemSellPrice(def);
     BoardManager.removeItem(cellIndex);

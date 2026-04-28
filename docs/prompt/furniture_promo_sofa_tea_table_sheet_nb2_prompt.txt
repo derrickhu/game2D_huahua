@@ -1,0 +1,15 @@
+Wide 2-column furniture asset sheet, pure solid white #FFFFFF background.
+
+Use the reference image only for furniture design inspiration: a cozy flower-shop sofa and a wooden tea table from a warm decorated room. Redraw them as two separate standalone game furniture props, not a room screenshot.
+
+Canvas layout: 2 columns x 1 row. Left cell: one cozy two-seat sofa. Right cell: one low wooden tea table. Each prop must stay centered inside its own cell with generous white margin, no overlap between cells, no divider lines.
+
+Viewpoint: cute kawaii 2.5D classic isometric from upper-left about 45 degrees, consistent with a flower-shop L-shaped room. Each prop must show top surfaces and front/right faces clearly, suitable for placing on an isometric room floor.
+
+Art style: hand-painted mobile merge-game flower shop furniture, soft brown outlines slightly thicker than hairline, warm upper-left light, gentle highlights, soft rounded shapes, readable silhouette at small size. Match the cozy pastel room-shell style and existing greenhouse furniture line.
+
+Left cell sofa details: light cream fabric two-seat sofa, warm honey wood arms and legs, rounded wooden armrests, soft floral pillows, subtle rose pattern on cushions, low cozy proportions, no characters, no floor, no wall.
+
+Right cell tea table details: low rectangular warm wood coffee table, thick rounded plank top, simple sturdy legs, one small white teacup and saucer on top, cozy flower-shop style, no rug, no floor, no wall.
+
+Hard bans: NO text, NO letters, NO Chinese characters, NO logo, NO watermark, NO room background, NO wall, NO floor tile, NO shadows that look like a floor strip, NO characters, NO labels, NO captions, NO numbers.

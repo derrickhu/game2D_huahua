@@ -1477,7 +1477,7 @@ export class DecorationPanel extends PIXI.Container {
     else if (isUnlocked) this._addFooter(card, cw, ch, 'furniture_go_place', undefined, '');
     else if (needsAdGate) this._addFooter(card, cw, ch, 'ready', undefined, '免费解锁');
     else if (!purchaseAllowed) this._addFooter(card, cw, ch, 'locked', undefined, sceneOk ? reqResult.text : formatAllowedScenesShort(deco));
-    else if (deco.cost > 0) this._addFooter(card, cw, ch, 'purchase', deco.cost, '装备');
+    else if (deco.cost > 0) this._addFooter(card, cw, ch, 'purchase', deco.cost, '购买');
     else this._addFooter(card, cw, ch, 'furniture_go_place', undefined, '');
 
     const showPurchase =
@@ -1710,6 +1710,10 @@ export class DecorationPanel extends PIXI.Container {
       void this._unlockDecoWithAd(deco);
       return;
     }
+    this._purchaseDeco(deco, flyCard);
+  }
+
+  private _purchaseDeco(deco: DecoDef, flyCard: PIXI.Container): void {
     if (deco.cost > 0 && CurrencyManager.state.huayuan < deco.cost) {
       ToastMessage.show(`花愿不足，需要 ${deco.cost} 花愿`);
       return;
@@ -1730,7 +1734,9 @@ export class DecorationPanel extends PIXI.Container {
       this._refreshAll();
     } else {
       if (!DecorationManager.unlock(deco.id)) {
-        ToastMessage.show(`花愿不足，需要 ${deco.cost} 花愿`);
+        ToastMessage.show(DecorationManager.canPurchaseDeco(deco.id)
+          ? `花愿不足，需要 ${deco.cost} 花愿`
+          : '购买条件未满足');
         return;
       }
       if (deco.cost > 0) AudioManager.play('purchase_tap');
@@ -1883,8 +1889,13 @@ export class DecorationPanel extends PIXI.Container {
     mkBtn('稍后', cx - btnW / 2 - gap / 2, 0xb0a193, () => {
       this._dismissUnlockPopup();
     });
-    mkBtn('去购买', cx + btnW / 2 + gap / 2, 0xe57373, () => {
+    const canBuyNow = CurrencyManager.state.huayuan >= deco.cost;
+    mkBtn(canBuyNow ? '直接购买' : '去购买', cx + btnW / 2 + gap / 2, 0xe57373, () => {
       this._dismissUnlockPopup();
+      if (canBuyNow) {
+        this._purchaseDeco(deco, this);
+        return;
+      }
       this._decoInvFilter = 'not_purchased';
       this._scrollY = 0;
       this._refreshAll();
