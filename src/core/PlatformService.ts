@@ -491,6 +491,17 @@ class PlatformServiceClass {
     } catch (_) {}
   }
 
+  restartMiniProgram(): boolean {
+    try {
+      if (typeof this._api?.restartMiniProgram !== 'function') return false;
+      this._api.restartMiniProgram();
+      return true;
+    } catch (e) {
+      console.warn('[Platform] restartMiniProgram 失败:', e);
+      return false;
+    }
+  }
+
   /**
    * 写入剪贴板（异步 API，失败走 fail 回调，不会 throw）
    * 微信需：公众平台 → 设置 → 基本设置 → 用户隐私保护指引 中声明剪贴板用途，

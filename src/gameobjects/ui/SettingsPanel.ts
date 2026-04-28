@@ -5,6 +5,7 @@ import { TweenManager, Ease } from '@/core/TweenManager';
 import { SettingsManager } from '@/managers/SettingsManager';
 import { UserIdentityManager } from '@/managers/UserIdentityManager';
 import { ToastMessage } from '@/gameobjects/ui/ToastMessage';
+import { Platform } from '@/core/PlatformService';
 
 const PANEL_W = 340;
 const PANEL_H = 410;
@@ -149,9 +150,13 @@ export class SettingsPanel extends PIXI.Container {
       fontFamily: FONT_FAMILY,
       fontWeight: 'bold',
     });
-    uidTitle.anchor.set(0.5);
-    uidTitle.position.set(0, 91);
+    uidTitle.anchor.set(0, 0.5);
+    uidTitle.position.set(-118, 91);
     this._panel.addChild(uidTitle);
+
+    const copyUidBtn = this._createCopyUidButton();
+    copyUidBtn.position.set(108, 91);
+    this._panel.addChild(copyUidBtn);
 
     this._uidText = new PIXI.Text('', {
       fontSize: 14,
@@ -217,6 +222,43 @@ export class SettingsPanel extends PIXI.Container {
       onTap();
     });
     return row;
+  }
+
+  private _createCopyUidButton(): PIXI.Container {
+    const btn = new PIXI.Container();
+    const padX = 10;
+    const padY = 6;
+    const label = new PIXI.Text('复制', {
+      fontSize: 14,
+      fill: 0xffffff,
+      fontFamily: FONT_FAMILY,
+      fontWeight: 'bold',
+    });
+    label.anchor.set(0.5);
+    const w = label.width + padX * 2;
+    const h = label.height + padY * 2;
+    const bg = new PIXI.Graphics();
+    bg.beginFill(0xd4a574, 1);
+    bg.drawRoundedRect(-w / 2, -h / 2, w, h, 10);
+    bg.endFill();
+    bg.lineStyle(2, 0xb8885a, 1);
+    bg.drawRoundedRect(-w / 2, -h / 2, w, h, 10);
+    btn.addChild(bg);
+    btn.addChild(label);
+    btn.eventMode = 'static';
+    btn.cursor = 'pointer';
+    btn.hitArea = new PIXI.Rectangle(-w / 2, -h / 2, w, h);
+    btn.on('pointerdown', (e: PIXI.FederatedPointerEvent) => {
+      e.stopPropagation();
+      const id = UserIdentityManager.state.id;
+      if (!id || UserIdentityManager.state.loading) {
+        ToastMessage.show('用户ID 获取中或暂不可用');
+        return;
+      }
+      Platform.setClipboardData(id);
+      ToastMessage.show('已复制到剪贴板');
+    });
+    return btn;
   }
 
   private _createCloseButton(): PIXI.Container {

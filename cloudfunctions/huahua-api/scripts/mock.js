@@ -49,6 +49,7 @@ async function call(path, body, headers = {}) {
   await call('/save/push', {
     schemaVersion: 1,
     updatedAt: now,
+    baseRemoteUpdatedAt: 0,
     clientFingerprint: 'mock|dev',
     payload: { huahua_save: JSON.stringify({ ver: 1, coin: 100 }) },
   }, auth);
@@ -60,14 +61,25 @@ async function call(path, body, headers = {}) {
   await call('/save/push', {
     schemaVersion: 1,
     updatedAt: now - 1000,
+    baseRemoteUpdatedAt: now,
     clientFingerprint: 'mock|dev',
     payload: { huahua_save: JSON.stringify({ ver: 1, coin: 50 }) },
   }, auth);
 
-  // 6) push 新 updatedAt（期望 ok）
+  // 6) push 新 updatedAt 但旧云端基线（期望 409 STALE_UPDATE，防本地旧缓存回写）
   await call('/save/push', {
     schemaVersion: 1,
     updatedAt: now + 1000,
+    baseRemoteUpdatedAt: 0,
+    clientFingerprint: 'mock|dev',
+    payload: { huahua_save: JSON.stringify({ ver: 1, coin: 20 }) },
+  }, auth);
+
+  // 7) push 新 updatedAt 且基于当前云端版本（期望 ok）
+  await call('/save/push', {
+    schemaVersion: 1,
+    updatedAt: now + 1000,
+    baseRemoteUpdatedAt: now,
     clientFingerprint: 'mock|dev',
     payload: {
       huahua_save: JSON.stringify({ ver: 1, coin: 200 }),
@@ -75,22 +87,23 @@ async function call(path, body, headers = {}) {
     },
   }, auth);
 
-  // 7) pull final
+  // 8) pull final
   await call('/save/pull', {}, auth);
 
-  // 8) 无 token → 401
+  // 9) 无 token → 401
   await call('/save/pull', {});
 
-  // 9) 超大 payload → 413
+  // 10) 超大 payload → 413
   const big = 'x'.repeat(300 * 1024);
   await call('/save/push', {
     schemaVersion: 1,
     updatedAt: now + 2000,
+    baseRemoteUpdatedAt: now + 1000,
     clientFingerprint: 'mock|dev',
     payload: { huahua_save: big },
   }, auth);
 
-  // 10) 健康检查
+  // 11) 健康检查
   await call('/health', {});
 
   console.log('\n[mock] 全部用例运行完毕');

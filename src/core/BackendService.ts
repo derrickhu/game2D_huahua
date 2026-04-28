@@ -31,6 +31,8 @@ export interface BackendPullResult {
 export interface BackendPushPayload {
   schemaVersion: number;
   updatedAt: number;
+  /** 本地变更所基于的云端版本，用于服务端拒绝旧缓存覆盖。 */
+  baseRemoteUpdatedAt: number;
   clientFingerprint: string;
   payload: Record<string, string>;
 }

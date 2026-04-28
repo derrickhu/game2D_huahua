@@ -1096,6 +1096,13 @@ export class MainScene implements Scene {
 
   /** 绑定留存系统事件 */
   private _bindSystemEvents(): void {
+    EventBus.on('cloud:saveReloaded', () => {
+      this._boardView.refresh();
+      this._customerScrollArea.refresh();
+      this._checkInPanel.refreshIfOpen();
+      this._markRedDotsDirty();
+    });
+
     // 签到面板
     EventBus.on('nav:openCheckIn', () => this._checkInPanel.open());
     EventBus.on('checkin:gmVirtualDayAdvanced', () => this._checkInPanel.refreshIfOpen());

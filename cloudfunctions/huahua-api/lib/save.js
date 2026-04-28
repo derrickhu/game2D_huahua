@@ -7,6 +7,7 @@
  *     userId: 'wx:...' | 'dy:...' | 'tap:...' | 'anon:...',
  *     schemaVersion: number,
  *     updatedAt: number (ms),
+ *     baseRemoteUpdatedAt: number (ms), // 客户端本地修改基于的云端版本
  *     clientFingerprint: string,
  *     payload: { [key: string]: string },  // 客户端上行的白名单 key -> 原始 JSON 字符串
  *     payloadKeys: string[],
@@ -58,6 +59,7 @@ async function handlePush(req) {
 
   const schemaVersion = Number(body.schemaVersion);
   const updatedAt = Number(body.updatedAt);
+  const baseRemoteUpdatedAt = Number(body.baseRemoteUpdatedAt || 0);
   const payload = body.payload;
   const clientFingerprint = String(body.clientFingerprint || '').slice(0, 200);
   const force = body.force === true;
@@ -67,6 +69,9 @@ async function handlePush(req) {
   }
   if (!Number.isFinite(updatedAt) || updatedAt <= 0) {
     throw httpError(400, 'BAD_UPDATED_AT', 'updatedAt 非法');
+  }
+  if (!Number.isFinite(baseRemoteUpdatedAt) || baseRemoteUpdatedAt < 0) {
+    throw httpError(400, 'BAD_BASE_REMOTE_UPDATED_AT', 'baseRemoteUpdatedAt 非法');
   }
   if (!payload || typeof payload !== 'object' || Array.isArray(payload)) {
     throw httpError(400, 'BAD_PAYLOAD', 'payload 必须是 object');
@@ -95,10 +100,14 @@ async function handlePush(req) {
 
   if (existing && !force) {
     const prevUpdatedAt = Number(existing.updatedAt) || 0;
-    if (updatedAt < prevUpdatedAt) {
+    if (updatedAt < prevUpdatedAt || baseRemoteUpdatedAt < prevUpdatedAt) {
       // 服务端已有更新的版本 —— 拒绝，并把远端版本回传让客户端合并
       throw Object.assign(
-        httpError(409, 'STALE_UPDATE', `服务端已有更新版本 remote=${prevUpdatedAt} > local=${updatedAt}`),
+        httpError(
+          409,
+          'STALE_UPDATE',
+          `服务端已有更新版本 remote=${prevUpdatedAt} > local=${updatedAt}, base=${baseRemoteUpdatedAt}`,
+        ),
         {
           data: {
             remote: {
@@ -121,6 +130,7 @@ async function handlePush(req) {
     platform,
     schemaVersion,
     updatedAt,
+    baseRemoteUpdatedAt,
     clientFingerprint,
     payload,
     payloadKeys,

@@ -23,6 +23,13 @@ import { BackendError, BackendService } from '@/core/BackendService';
 import { PersistService } from '@/core/PersistService';
 import { Platform } from '@/core/PlatformService';
 
+export type CloudAuthorityState = 'disabled' | 'unknown' | 'confirmedRemote' | 'cacheOnly';
+
+export interface CloudStartupSyncResult {
+  status: 'disabled' | 'confirmed' | 'remote-applied' | 'cache-only';
+  reason: string;
+}
+
 class CloudSyncManagerClass {
   private _initPromise: Promise<void> | null = null;
   private _startupPromise: Promise<void> | null = null;
@@ -34,6 +41,8 @@ class CloudSyncManagerClass {
   private _syncDisabled = false;
   private _syncing = false;
   private _syncPending = false;
+  private _authorityState: CloudAuthorityState = this.enabled ? 'unknown' : 'disabled';
+  private _lastStartupRemoteApplied = false;
 
   constructor() {
     PersistService.subscribe((changedKeys) => {
@@ -48,6 +57,14 @@ class CloudSyncManagerClass {
 
   get ready(): boolean {
     return this._cloudReady;
+  }
+
+  get authorityState(): CloudAuthorityState {
+    return this._authorityState;
+  }
+
+  get cacheOnly(): boolean {
+    return this._authorityState === 'cacheOnly';
   }
 
   get userId(): string {
@@ -65,25 +82,49 @@ class CloudSyncManagerClass {
     }
   }
 
-  async awaitStartupSync(timeoutMs = CLOUD_SYNC_STARTUP_TIMEOUT_MS): Promise<void> {
-    if (!this.enabled) return;
+  async awaitStartupSync(timeoutMs = CLOUD_SYNC_STARTUP_TIMEOUT_MS): Promise<CloudStartupSyncResult> {
+    if (!this.enabled) {
+      this._authorityState = 'disabled';
+      return { status: 'disabled', reason: 'backend-disabled' };
+    }
     this.prewarm();
-    if (!this._startupPromise) return;
+    if (!this._startupPromise) return { status: 'disabled', reason: 'startup-missing' };
 
     let timer: ReturnType<typeof setTimeout> | null = null;
-    await Promise.race([
-      this._startupPromise.catch(() => undefined),
+    const result = await Promise.race([
+      this._startupPromise
+        .then(() => 'done' as const)
+        .catch(() => 'done' as const),
       new Promise<void>((resolve) => {
         timer = setTimeout(resolve, timeoutMs);
-      }),
+      }).then(() => 'timeout' as const),
     ]);
     if (timer) clearTimeout(timer);
+
+    if (result === 'timeout') {
+      this._enterCacheOnly('startup-timeout');
+      return { status: 'cache-only', reason: 'startup-timeout' };
+    }
+
+    if (this._authorityState === 'cacheOnly') {
+      return { status: 'cache-only', reason: 'startup-pull-failed' };
+    }
+    return {
+      status: this._lastStartupRemoteApplied ? 'remote-applied' : 'confirmed',
+      reason: this._lastStartupRemoteApplied ? 'remote-imported' : 'cloud-confirmed',
+    };
   }
 
   scheduleSync(reason = 'debounce'): void {
     if (!this.enabled) return;
 
     this.prewarm();
+
+    if (this._authorityState === 'cacheOnly') {
+      this._syncPending = true;
+      console.warn(`[CloudSync] cacheOnly 禁止上行，已暂存同步请求 reason=${reason}`);
+      return;
+    }
 
     if (!this._initDone) {
       this._syncPending = true;
@@ -117,6 +158,11 @@ class CloudSyncManagerClass {
       } catch (_) {}
     }
 
+    if (this._authorityState === 'cacheOnly') {
+      console.warn(`[CloudSync] cacheOnly 跳过立即上行 reason=${reason}`);
+      return;
+    }
+
     if (!this._cloudReady) return;
 
     if (this._syncTimer) {
@@ -138,6 +184,7 @@ class CloudSyncManagerClass {
 
         if (!this._cloudReady) {
           console.warn('[CloudSync] 未能获取 token/userId，继续使用本地存档');
+          this._enterCacheOnly('no-user-id');
           return;
         }
 
@@ -145,6 +192,7 @@ class CloudSyncManagerClass {
         await this._pullFromCloudOnStartup();
       } catch (e) {
         console.warn('[CloudSync] 初始化失败，继续使用本地存档:', e);
+        this._enterCacheOnly('init-failed');
       } finally {
         this._initDone = true;
         if (this._syncPending && this._cloudReady) {
@@ -163,19 +211,26 @@ class CloudSyncManagerClass {
       remote = await BackendService.pullSave();
     } catch (e) {
       console.warn('[CloudSync] 启动拉取失败，保持本地存档:', e);
-      // 拉取失败但已登录：本地若有脏数据仍尝试上行（下一轮同步时会再走 push）
-      if (PersistService.isCloudDirty()) {
-        this.scheduleSync('startup-pull-failed');
-      }
+      this._enterCacheOnly('startup-pull-failed');
       return;
     }
 
     const localSnapshot = PersistService.exportCloudSnapshot();
+    const localMeta = PersistService.getCloudSyncMeta();
 
     if (!remote.exists) {
       if (localSnapshot.payloadKeys.length > 0) {
-        this.scheduleSync('startup-no-remote-doc');
+        console.warn(
+          `[CloudSync] 云端无存档，按云端权威清空本地缓存 keys=${localSnapshot.payloadKeys.length}`,
+        );
       }
+      PersistService.importCloudSnapshot({
+        updatedAt: 0,
+        payload: {},
+        reason: this._authorityState === 'cacheOnly' ? 'startup-late' : 'startup',
+      });
+      this._confirmRemoteBaseline(0, 'startup-no-remote-doc');
+      this._lastStartupRemoteApplied = localSnapshot.payloadKeys.length > 0;
       return;
     }
 
@@ -184,22 +239,43 @@ class CloudSyncManagerClass {
       ? remote.payloadKeys
       : Object.keys(remote.payload || {});
 
+    if (remotePayloadKeys.length === 0) {
+      if (localSnapshot.payloadKeys.length > 0) {
+        console.warn(
+          `[CloudSync] 云端为空存档，按云端权威清空本地缓存 keys=${localSnapshot.payloadKeys.length}`,
+        );
+      }
+      PersistService.importCloudSnapshot({
+        updatedAt: remoteUpdatedAt,
+        payload: {},
+        reason: this._authorityState === 'cacheOnly' ? 'startup-late' : 'startup',
+      });
+      this._confirmRemoteBaseline(remoteUpdatedAt, 'startup-empty-remote-doc');
+      this._lastStartupRemoteApplied = localSnapshot.payloadKeys.length > 0;
+      return;
+    }
+
+    const hasKnownRemoteBaseline = localMeta.remoteUpdatedAt > 0;
     const shouldApplyRemote = remotePayloadKeys.length > 0
-      && (localSnapshot.payloadKeys.length === 0 || remoteUpdatedAt > localSnapshot.updatedAt);
+      && (
+        localSnapshot.payloadKeys.length === 0
+        || !hasKnownRemoteBaseline
+        || remoteUpdatedAt > localMeta.remoteUpdatedAt
+      );
 
     if (shouldApplyRemote) {
       PersistService.importCloudSnapshot({
         updatedAt: remoteUpdatedAt,
         payload: remote.payload || {},
+        reason: this._authorityState === 'cacheOnly' ? 'startup-late' : 'startup',
       });
+      this._confirmRemoteBaseline(remoteUpdatedAt, 'startup-remote-imported');
+      this._lastStartupRemoteApplied = true;
       console.log(`[CloudSync] 启动期已从云端恢复 ${remotePayloadKeys.length} 个 key`);
       return;
     }
 
-    if (localSnapshot.payloadKeys.length > 0 && localSnapshot.updatedAt > remoteUpdatedAt) {
-      this.scheduleSync('startup-local-newer');
-      return;
-    }
+    this._confirmRemoteBaseline(remoteUpdatedAt, 'startup-remote-confirmed');
 
     if (PersistService.isCloudDirty()) {
       this.scheduleSync('startup-local-dirty');
@@ -209,6 +285,11 @@ class CloudSyncManagerClass {
   private async _syncToCloud(reason: string, force = false): Promise<void> {
     if (!this._cloudReady) return;
     if (!force && this._syncDisabled) return;
+    if (this._authorityState === 'cacheOnly') {
+      this._syncPending = true;
+      console.warn(`[CloudSync] cacheOnly 拦截上行 reason=${reason}`);
+      return;
+    }
 
     if (this._syncing) {
       this._syncPending = true;
@@ -221,9 +302,10 @@ class CloudSyncManagerClass {
       const snapshot = PersistService.exportCloudSnapshot();
       const hasDirty = PersistService.isCloudDirty();
 
-      if (!hasDirty && snapshot.payloadKeys.length === 0) {
+      if (!hasDirty) {
         return;
       }
+      if (snapshot.payloadKeys.length === 0) return;
 
       if (snapshot.updatedAt <= 0) {
         PersistService.touchCloudMeta();
@@ -235,11 +317,13 @@ class CloudSyncManagerClass {
         const res = await BackendService.pushSave({
           schemaVersion: finalSnapshot.schemaVersion,
           updatedAt: finalSnapshot.updatedAt,
+          baseRemoteUpdatedAt: finalSnapshot.baseRemoteUpdatedAt,
           clientFingerprint: this._buildClientFingerprint(),
           payload: finalSnapshot.payload,
         });
 
         PersistService.markCloudSynced(res.updatedAt || finalSnapshot.updatedAt);
+        this._confirmRemoteBaseline(res.updatedAt || finalSnapshot.updatedAt, 'push-ok');
 
         if (this._syncFailCount > 0) {
           console.log('[CloudSync] 云同步恢复成功');
@@ -265,7 +349,9 @@ class CloudSyncManagerClass {
           PersistService.importCloudSnapshot({
             updatedAt: Number(remote.updatedAt) || Date.now(),
             payload: remote.payload || {},
+            reason: 'stale-update',
           });
+          this._confirmRemoteBaseline(Number(remote.updatedAt) || Date.now(), 'stale-update');
           this._syncFailCount = 0;
           this._syncDisabled = false;
           return;
@@ -313,6 +399,17 @@ class CloudSyncManagerClass {
       .filter(Boolean)
       .join('|')
       .slice(0, 160);
+  }
+
+  private _enterCacheOnly(reason: string): void {
+    if (this._authorityState === 'cacheOnly') return;
+    this._authorityState = 'cacheOnly';
+    console.warn(`[CloudSync] 进入 cacheOnly，本地仅作缓存，禁止上行 reason=${reason}`);
+  }
+
+  private _confirmRemoteBaseline(remoteUpdatedAt: number, reason: string): void {
+    this._authorityState = 'confirmedRemote';
+    console.log(`[CloudSync] 云端基准已确认 reason=${reason}, remoteUpdatedAt=${remoteUpdatedAt}`);
   }
 }
 

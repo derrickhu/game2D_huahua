@@ -9,17 +9,28 @@ export interface CloudSyncMeta {
   updatedAt: number;
   dirty: boolean;
   lastSyncAt: number;
+  /** 最近一次确认过的云端版本；本地缓存上行必须基于这个版本。 */
+  remoteUpdatedAt: number;
 }
 
 export interface PersistSnapshot {
   schemaVersion: number;
   updatedAt: number;
+  baseRemoteUpdatedAt: number;
   payload: Record<string, string>;
   payloadKeys: string[];
   sizeBytes: number;
 }
 
 type DirtyListener = (changedKeys: string[]) => void;
+export type CloudImportReason = 'startup' | 'startup-late' | 'stale-update' | 'manual';
+export interface CloudImportInfo {
+  reason: CloudImportReason;
+  updatedAt: number;
+  changedKeys: string[];
+  payloadKeys: string[];
+}
+export type CloudImportListener = (info: CloudImportInfo) => void;
 
 interface WriteOptions {
   markDirty?: boolean;
@@ -28,6 +39,7 @@ interface WriteOptions {
 class PersistServiceClass {
   private readonly _allowlist = new Set<string>(CLOUD_SYNC_ALLOWLIST);
   private readonly _listeners = new Set<DirtyListener>();
+  private readonly _importListeners = new Set<CloudImportListener>();
   private _dirtyTrackingSuspended = 0;
 
   getAllowlistKeys(): readonly string[] {
@@ -93,6 +105,11 @@ class PersistServiceClass {
     return () => this._listeners.delete(listener);
   }
 
+  subscribeCloudImport(listener: CloudImportListener): () => void {
+    this._importListeners.add(listener);
+    return () => this._importListeners.delete(listener);
+  }
+
   withSuppressedDirtyTracking<T>(runner: () => T): T {
     this._dirtyTrackingSuspended++;
     try {
@@ -109,6 +126,7 @@ class PersistServiceClass {
         updatedAt: parsed.updatedAt,
         dirty: !!parsed.dirty,
         lastSyncAt: typeof parsed.lastSyncAt === 'number' ? parsed.lastSyncAt : 0,
+        remoteUpdatedAt: typeof parsed.remoteUpdatedAt === 'number' ? parsed.remoteUpdatedAt : 0,
       };
     }
 
@@ -116,6 +134,7 @@ class PersistServiceClass {
       updatedAt: this._inferInitialUpdatedAt(),
       dirty: false,
       lastSyncAt: 0,
+      remoteUpdatedAt: 0,
     };
   }
 
@@ -129,6 +148,7 @@ class PersistServiceClass {
       updatedAt,
       dirty: true,
       lastSyncAt: prev.lastSyncAt,
+      remoteUpdatedAt: prev.remoteUpdatedAt,
     };
     this._writeMeta(next);
     return next;
@@ -140,6 +160,7 @@ class PersistServiceClass {
       updatedAt: updatedAt > 0 ? updatedAt : prev.updatedAt,
       dirty: false,
       lastSyncAt: Date.now(),
+      remoteUpdatedAt: updatedAt > 0 ? updatedAt : prev.remoteUpdatedAt,
     });
   }
 
@@ -164,6 +185,7 @@ class PersistServiceClass {
     return {
       schemaVersion: CLOUD_SYNC_SCHEMA_VERSION,
       updatedAt: meta.updatedAt,
+      baseRemoteUpdatedAt: meta.remoteUpdatedAt,
       payload,
       payloadKeys,
       sizeBytes,
@@ -173,21 +195,26 @@ class PersistServiceClass {
   importCloudSnapshot(snapshot: {
     updatedAt?: number;
     payload?: Record<string, unknown>;
+    reason?: CloudImportReason;
   }): void {
     const payload = snapshot.payload || {};
     const updatedAt = typeof snapshot.updatedAt === 'number' ? snapshot.updatedAt : Date.now();
+    const changedKeys: string[] = [];
 
     this.withSuppressedDirtyTracking(() => {
       for (const key of CLOUD_SYNC_ALLOWLIST) {
         if (Object.prototype.hasOwnProperty.call(payload, key)) {
           const value = payload[key];
           if (value === undefined || value === null) {
+            if (this.readRaw(key) !== null) changedKeys.push(key);
             this._removeLocalRaw(key);
           } else {
             const raw = typeof value === 'string' ? value : JSON.stringify(value);
+            if (this.readRaw(key) !== raw) changedKeys.push(key);
             this._setLocalRaw(key, raw);
           }
         } else {
+          if (this.readRaw(key) !== null) changedKeys.push(key);
           this._removeLocalRaw(key);
         }
       }
@@ -196,8 +223,23 @@ class PersistServiceClass {
         updatedAt,
         dirty: false,
         lastSyncAt: Date.now(),
+        remoteUpdatedAt: updatedAt,
       });
     });
+
+    const payloadKeys = Object.keys(payload);
+    for (const listener of this._importListeners) {
+      try {
+        listener({
+          reason: snapshot.reason || 'manual',
+          updatedAt,
+          changedKeys,
+          payloadKeys,
+        });
+      } catch (e) {
+        console.warn('[Persist] cloud import listener 执行失败:', e);
+      }
+    }
   }
 
   private _onDataChanged(changedKeys: string[]): void {
@@ -212,6 +254,7 @@ class PersistServiceClass {
       updatedAt,
       dirty: true,
       lastSyncAt: prev.lastSyncAt,
+      remoteUpdatedAt: prev.remoteUpdatedAt,
     });
 
     for (const listener of this._listeners) {

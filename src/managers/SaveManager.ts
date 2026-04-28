@@ -189,6 +189,12 @@ class SaveManagerClass {
     }
   }
 
+  /** 云端下行覆盖本地缓存后，重新把核心存档灌入运行态。 */
+  reloadFromStorage(reason = 'manual'): boolean {
+    console.warn(`[Save] 重新载入存档 reason=${reason}`);
+    return this.load();
+  }
+
   /** 每帧调用，定时自动存档（同步写入，避免异步竞态丢花语泡泡等状态） */
   update(dt: number): void {
     this._lastSave += dt;

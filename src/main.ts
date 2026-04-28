@@ -15,6 +15,9 @@ import { RoomLayoutManager } from '@/managers/RoomLayoutManager';
 import { LevelManager } from '@/managers/LevelManager';
 import { CloudSyncManager } from '@/managers/CloudSyncManager';
 import { UserIdentityManager } from '@/managers/UserIdentityManager';
+import { PersistService, type CloudImportInfo } from '@/core/PersistService';
+import { Platform } from '@/core/PlatformService';
+import { EventBus } from '@/core/EventBus';
 import { TextureCache } from '@/utils/TextureCache';
 import { LoadingScreenOverlay } from '@/gameobjects/ui/LoadingScreenOverlay';
 import { MainScene } from '@/scenes/MainScene';
@@ -79,6 +82,34 @@ async function main(): Promise<void> {
     Game.stage.sortableChildren = true;
     const loadingOverlay = new LoadingScreenOverlay();
     Game.stage.addChild(loadingOverlay);
+    let initialSaveLoaded = false;
+    let runtimeReadyForCloudReload = false;
+    let pendingCloudReloadInfo: CloudImportInfo | null = null;
+    const handleCloudSaveReload = (info: CloudImportInfo): void => {
+      console.warn(
+        `[main] 云端核心存档已覆盖本地，准备重载/重启 reason=${info.reason}, updatedAt=${info.updatedAt}`,
+      );
+      Platform.showToast('已恢复云端存档，正在刷新', 'none');
+
+      // 小游戏里重启最稳：能避免各业务 Manager 已绑定的旧内存状态继续写回。
+      if (Platform.restartMiniProgram()) return;
+
+      if (SaveManager.reloadFromStorage(`cloud-import:${info.reason}`)) {
+        EventBus.emit('cloud:saveReloaded', info);
+      }
+    };
+    PersistService.subscribeCloudImport((info) => {
+      if (!info.changedKeys.includes('huahua_save')) return;
+      if (!initialSaveLoaded) {
+        // 启动读档前发生的云端导入会被 SaveManager.load() 直接读到，不需要重启。
+        return;
+      }
+      if (!runtimeReadyForCloudReload) {
+        pendingCloudReloadInfo = info;
+        return;
+      }
+      handleCloudSaveReload(info);
+    });
 
     await TextureCache.preloadLoadingSplash();
     loadingOverlay.applySplashTexture();
@@ -120,10 +151,12 @@ async function main(): Promise<void> {
 
     MergeCompanionManager.init();
 
-    await CloudSyncManager.awaitStartupSync();
+    const startupSync = await CloudSyncManager.awaitStartupSync();
+    console.log(`[main] 云同步启动结果: ${startupSync.status}, reason=${startupSync.reason}`);
 
     // 尝试加载存档（开发阶段已在启动时清除，此处应返回 false）
     const loaded = SaveManager.load();
+    initialSaveLoaded = true;
     if (!loaded) {
       BuildingManager.reset();
       MerchShopManager.init();
@@ -152,6 +185,12 @@ async function main(): Promise<void> {
     SceneManager.switchTo('main');
     Game.stage.removeChild(loadingOverlay);
     loadingOverlay.destroy({ children: true });
+    runtimeReadyForCloudReload = true;
+    if (pendingCloudReloadInfo) {
+      const info = pendingCloudReloadInfo;
+      pendingCloudReloadInfo = null;
+      handleCloudSaveReload(info);
+    }
 
     // 监听小游戏生命周期：退到后台时保存状态
     const _apiMain: any = typeof wx !== 'undefined' ? wx : typeof tt !== 'undefined' ? tt : null;
