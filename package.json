@@ -4,7 +4,8 @@
   "type": "module",
   "scripts": {
     "build": "vite build && rimraf minigame/index.html",
-    "dev": "vite build --watch"
+    "dev": "vite build --watch",
+    "check:assets": "node scripts/check_assets.js"
   },
   "keywords": [],
   "author": "",

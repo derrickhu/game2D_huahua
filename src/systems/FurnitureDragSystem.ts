@@ -34,7 +34,6 @@ import { CurrencyManager } from '@/managers/CurrencyManager';
 import { ToastMessage } from '@/gameobjects/ui/ToastMessage';
 import { TextureCache } from '@/utils/TextureCache';
 import { ROOM_DEPTH_AUX_MAX, roomDepthZForPlacement } from '@/config/RoomDepthSort';
-import { createFurnitureAlphaOutlineFilter } from './FurnitureAlphaOutlineFilter';
 
 // ---- 常量 ----
 
@@ -88,11 +87,6 @@ class FurnitureDragSystemClass {
 
   /** 当前选中的家具 ID */
   private _selectedDecoId: string | null = null;
-
-  /** 已放置家具选中描边（与拖入预览分开，避免同 Filter 实例挂到两个对象） */
-  private _outlineFilterSelection: PIXI.Filter | null = null;
-  /** 托盘拖入预览描边 */
-  private _outlineFilterDrag: PIXI.Filter | null = null;
 
   /** canvas 事件引用（用于 cleanup） */
   private _onRawMove: ((e: any) => void) | null = null;
@@ -168,8 +162,6 @@ class FurnitureDragSystemClass {
     this._spriteMap.clear();
     this._roomContainer = null;
 
-    this._destroyOutlineFilters();
-
     // 保存布局
     RoomLayoutManager.saveNow();
 
@@ -232,8 +224,8 @@ class FurnitureDragSystemClass {
     this._selectedDecoId = decoId;
     const sprite = this._spriteMap.get(decoId);
     if (sprite) {
-      sprite.tint = 0xffffff;
-      sprite.filters = [this._getSelectionOutlineFilter()];
+      sprite.tint = 0xfff6cf;
+      sprite.filters = null;
     }
     EventBus.emit('furniture:selected', decoId);
   }
@@ -294,7 +286,8 @@ class FurnitureDragSystemClass {
     sprite.alpha = DRAG_ALPHA;
     sprite.scale.set(baseScale * DRAG_SCALE_BOOST);
     sprite.tint = 0xffffff;
-    sprite.filters = [this._getDragOutlineFilter()];
+    // 微信小游戏 WebGL 对自定义 Filter 兼容不稳；拖入预览只保留本体 + 脚底光圈，避免 sprite 被滤镜吞掉。
+    sprite.filters = null;
     (sprite as any)._decoId = decoId;
 
     this._roomContainer.addChild(sprite);
@@ -580,31 +573,6 @@ class FurnitureDragSystemClass {
     const designX = clientX * Game.designWidth / Game.screenWidth;
     const designY = clientY * Game.designHeight / Game.screenHeight;
     return this._designToLocal(designX, designY);
-  }
-
-  private _getSelectionOutlineFilter(): PIXI.Filter {
-    if (!this._outlineFilterSelection) {
-      this._outlineFilterSelection = createFurnitureAlphaOutlineFilter();
-    }
-    return this._outlineFilterSelection;
-  }
-
-  private _getDragOutlineFilter(): PIXI.Filter {
-    if (!this._outlineFilterDrag) {
-      this._outlineFilterDrag = createFurnitureAlphaOutlineFilter();
-    }
-    return this._outlineFilterDrag;
-  }
-
-  private _destroyOutlineFilters(): void {
-    if (this._outlineFilterSelection) {
-      this._outlineFilterSelection.destroy();
-      this._outlineFilterSelection = null;
-    }
-    if (this._outlineFilterDrag) {
-      this._outlineFilterDrag.destroy();
-      this._outlineFilterDrag = null;
-    }
   }
 
   private _disposeNewFurnitureDragExtras(ctx: DragContext): void {

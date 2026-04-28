@@ -28,7 +28,24 @@
   "cloudfunctionRoot": "cloudfunctions/",
   "simulatorPluginLibVersion": {},
   "packOptions": {
-    "ignore": [],
+    "ignore": [
+      {
+        "type": "folder",
+        "value": "subpkg_chars/images"
+      },
+      {
+        "type": "folder",
+        "value": "subpkg_panels/images"
+      },
+      {
+        "type": "folder",
+        "value": "subpkg_deco/images"
+      },
+      {
+        "type": "folder",
+        "value": "subpkg_audio"
+      }
+    ],
     "include": []
   },
   "isGameTourist": false,

@@ -39,12 +39,37 @@ try {
 }
 
 console.log('[pixi-adapter] 子模块加载完成');
+console.log('[pixi-adapter] XHR patch version: 2026-04-28-force-global-v2');
 
 // ======== 获取真正的 JS 全局对象 ========
 // 优先 globalThis（ES2020+），其次 global（Node/V8），最后 GameGlobal
 const _realGlobal = (typeof globalThis !== 'undefined' && globalThis)
   || (typeof global !== 'undefined' && global)
   || GameGlobal;
+
+function _forceInstallGlobal(name, value, targets) {
+  for (var i = 0; i < targets.length; i++) {
+    var target = targets[i];
+    if (!target) continue;
+    try {
+      _origDefineProperty.call(Object, target, name, { value: value, configurable: true, writable: true });
+    } catch (e) {
+      try { target[name] = value; } catch (_) {}
+    }
+  }
+}
+
+function _logXhrInstall(label, targets) {
+  try {
+    console.log('[pixi-adapter] XHR install check ' + label,
+      'real=', !!(_realGlobal && _realGlobal.XMLHttpRequest === XMLHttpRequest),
+      'window=', typeof window !== 'undefined' && window.XMLHttpRequest === XMLHttpRequest,
+      'GameGlobal=', typeof GameGlobal !== 'undefined' && GameGlobal.XMLHttpRequest === XMLHttpRequest,
+      'ctor=', XMLHttpRequest && XMLHttpRequest.name);
+  } catch (e) {
+    console.warn('[pixi-adapter] XHR install check failed:', e);
+  }
+}
 
 // ======== Patch Object.defineProperty ========
 const _origDefineProperty = Object.defineProperty;
@@ -265,16 +290,29 @@ if (isDevtools) {
   // ======== 模拟器环境 ========
   // window 已存在（浏览器环境），用 defineProperty 补充/覆盖
   const _win = typeof window !== 'undefined' ? window : GameGlobal;
+  const _forceDevtoolsOverwrite = ['XMLHttpRequest'];
+  _forceInstallGlobal('XMLHttpRequest', XMLHttpRequest, [_win, _realGlobal, typeof GameGlobal !== 'undefined' ? GameGlobal : null]);
+  _logXhrInstall('devtools-before-loop');
 
   for (const key in _allGlobals) {
     if (key === 'window' || key === 'self') continue;
     try {
       const desc = Object.getOwnPropertyDescriptor(_win, key);
-      if (!desc || desc.configurable) {
-        _origDefineProperty.call(Object, _win, key, { value: _allGlobals[key], configurable: true });
+      const force = _forceDevtoolsOverwrite.indexOf(key) !== -1;
+      if (force || !desc || desc.configurable) {
+        _origDefineProperty.call(Object, _win, key, { value: _allGlobals[key], configurable: true, writable: true });
       }
-    } catch (e) { /* 只读属性忽略 */ }
+    } catch (e) {
+      try {
+        if (_forceDevtoolsOverwrite.indexOf(key) !== -1) _win[key] = _allGlobals[key];
+      } catch (_) { /* 只读属性忽略 */ }
+    }
+    try {
+      if (_forceDevtoolsOverwrite.indexOf(key) !== -1) GameGlobal[key] = _allGlobals[key];
+    } catch (_) {}
   }
+  _forceInstallGlobal('XMLHttpRequest', XMLHttpRequest, [_win, _realGlobal, typeof GameGlobal !== 'undefined' ? GameGlobal : null]);
+  _logXhrInstall('devtools-after-loop');
 
   // 关键修复：包装 window.addEventListener / removeEventListener
   // PixiJS EventSystem 在 globalThis(window) 上注册 pointermove / pointerup，
@@ -283,12 +321,32 @@ if (isDevtools) {
   try {
     var _nativeWinAdd = _win.addEventListener.bind(_win);
     var _nativeWinRemove = _win.removeEventListener.bind(_win);
+    var _adapterOnlyEvents = {
+      pointerdown: true,
+      pointermove: true,
+      pointerup: true,
+      pointercancel: true,
+      pointerover: true,
+      pointerout: true,
+      pointerleave: true,
+      touchstart: true,
+      touchmove: true,
+      touchend: true,
+      touchcancel: true,
+      wheel: true,
+    };
     var _wrappedAdd = function(type, handler, options) {
       _windowAddEventListener(type, handler, options);
+      if (_adapterOnlyEvents[type]) {
+        return undefined;
+      }
       return _nativeWinAdd(type, handler, options);
     };
     var _wrappedRemove = function(type, handler, options) {
       _windowRemoveEventListener(type, handler);
+      if (_adapterOnlyEvents[type]) {
+        return undefined;
+      }
       return _nativeWinRemove(type, handler, options);
     };
     // 微信新版基础库 addEventListener 可能为只读，用 defineProperty 强制覆盖
@@ -352,6 +410,8 @@ if (isDevtools) {
       }
     }
   }
+  _forceInstallGlobal('XMLHttpRequest', XMLHttpRequest, [_realGlobal, typeof GameGlobal !== 'undefined' ? GameGlobal : null]);
+  _logXhrInstall('device-after-loop');
 
   // 确认事件系统已正确挂载
   console.log('[pixi-adapter] 真机事件系统检查:',

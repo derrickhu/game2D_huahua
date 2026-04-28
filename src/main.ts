@@ -18,6 +18,7 @@ import { UserIdentityManager } from '@/managers/UserIdentityManager';
 import { PersistService, type CloudImportInfo } from '@/core/PersistService';
 import { Platform } from '@/core/PlatformService';
 import { EventBus } from '@/core/EventBus';
+import { CdnAssetService } from '@/core/CdnAssetService';
 import { TextureCache } from '@/utils/TextureCache';
 import { LoadingScreenOverlay } from '@/gameobjects/ui/LoadingScreenOverlay';
 import { MainScene } from '@/scenes/MainScene';
@@ -114,17 +115,28 @@ async function main(): Promise<void> {
     await TextureCache.preloadLoadingSplash();
     loadingOverlay.applySplashTexture();
     loadingOverlay.applyTitleTexture();
+    await CdnAssetService.fetchManifest();
 
-    // 预加载图片纹理（主包 → chars → panels → items → deco）
-    await TextureCache.preloadAll((loaded, total) => {
+    // 启动只阻塞关键资源：主包 UI / 新手故事 / 默认头像 + items 分包。
+    // 其它 CDN 大资源进入游戏后后台预热或按需懒加载，避免新号首进因全量 CDN 下载卡住或空白。
+    await TextureCache.preloadCritical((loaded, total) => {
       const ratio = total > 0 ? loaded / total : 1;
-      loadingOverlay.setProgress(ratio);
+      loadingOverlay.setProgress(0.05 + ratio * 0.45);
+    });
+    await TextureCache.loadItemsSubpackage((loaded, total) => {
+      const ratio = total > 0 ? loaded / total : 1;
+      loadingOverlay.setProgress(0.5 + ratio * 0.45);
     });
     loadingOverlay.setProgress(1);
 
     // 先等 audio 分包就绪再进主场景，避免 InnerAudioContext 在文件未落地时解码报错
     const _apiAudio: any = typeof wx !== 'undefined' ? wx : typeof tt !== 'undefined' ? tt : null;
     await new Promise<void>((resolve) => {
+      if (CdnAssetService.isCdnPath('subpkg_audio/bgm_main.mp3')) {
+        console.log('[main] audio 已 CDN 化，跳过 audio 分包加载');
+        resolve();
+        return;
+      }
       if (!_apiAudio?.loadSubpackage) {
         resolve();
         return;
@@ -185,6 +197,22 @@ async function main(): Promise<void> {
     SceneManager.switchTo('main');
     Game.stage.removeChild(loadingOverlay);
     loadingOverlay.destroy({ children: true });
+    void TextureCache.preloadSceneWarmup('shop');
+    setTimeout(() => {
+      void TextureCache.preloadPanelAssets('checkin');
+      void TextureCache.preloadPanelAssets('quest');
+      void TextureCache.preloadSceneWarmup('deco');
+      void TextureCache.preloadSceneWarmup('worldmap');
+    }, 1500);
+    setTimeout(() => {
+      void TextureCache.preloadPanelAssets('warehouse');
+      void TextureCache.preloadPanelAssets('mergeChain');
+      void TextureCache.preloadPanelAssets('collection');
+      void TextureCache.preloadPanelAssets('affinity');
+      void TextureCache.preloadPanelAssets('dressup');
+      void TextureCache.preloadPanelAssets('merchShop');
+      void TextureCache.preloadPanelAssets('flowerSignGacha');
+    }, 3500);
     runtimeReadyForCloudReload = true;
     if (pendingCloudReloadInfo) {
       const info = pendingCloudReloadInfo;

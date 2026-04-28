@@ -116,6 +116,13 @@ class PlatformServiceClass {
     };
     const timeoutMs = opts.timeoutMs && opts.timeoutMs > 0 ? opts.timeoutMs : 10000;
 
+    // 微信开发者工具的 wx.request 底层会走一层内部 XMLHttpRequest 桥接。
+    // 在部分基础库版本里，即使请求成功，也会额外打印 "An object could not be cloned"。
+    // 工具环境优先使用 fetch，可绕过这层 DevTools 内部 XHR；真机仍使用 wx.request。
+    if (this._isDevtools() && typeof (globalThis as any).fetch === 'function') {
+      console.log(`[Platform.request] devtools fetch transport ${method} ${opts.url}`);
+      return this._requestViaFetch(opts.url, method, opts.data, headers, timeoutMs);
+    }
     if (this._api && typeof this._api.request === 'function') {
       return this._requestViaMiniApi(opts.url, method, opts.data, headers, timeoutMs);
     }
@@ -134,6 +141,11 @@ class PlatformServiceClass {
   ): Promise<{ statusCode: number; data: any }> {
     return new Promise((resolve, reject) => {
       let done = false;
+      const startedAt = Date.now();
+      const requestId = Math.random().toString(36).slice(2, 8);
+      const requestData = data === undefined || typeof data === 'string'
+        ? data
+        : JSON.stringify(data);
       const timer = setTimeout(() => {
         if (done) return;
         done = true;
@@ -141,16 +153,20 @@ class PlatformServiceClass {
       }, timeoutMs);
 
       try {
+        console.log(`[Platform.request#${requestId}] ${method} ${url}, data=${requestData ? String(requestData).length : 0}B`);
         this._api.request({
           url,
           method,
-          data: data === undefined ? undefined : data,
+          data: requestData,
           header: headers,
           timeout: timeoutMs,
           success: (res: any) => {
             if (done) return;
             done = true;
             clearTimeout(timer);
+            console.log(
+              `[Platform.request#${requestId}] success ${method} ${url}, status=${res?.statusCode ?? 0}, cost=${Date.now() - startedAt}ms`,
+            );
             resolve({
               statusCode: res?.statusCode ?? 0,
               data: res?.data,
@@ -158,10 +174,38 @@ class PlatformServiceClass {
           },
           fail: (err: any) => {
             if (done) return;
-            done = true;
             clearTimeout(timer);
-            const msg = err?.errMsg || err?.message || String(err);
-            reject(new Error(`request failed: ${msg}`));
+            let raw = '';
+            try { raw = JSON.stringify(err); } catch (_) { raw = String(err); }
+            const msg = err?.errMsg || err?.message || raw || String(err);
+            console.warn(
+              `[Platform.request#${requestId}] fail ${method} ${url}: ${msg}, cost=${Date.now() - startedAt}ms, env=${this._getRequestEnvSummary()}`,
+            );
+
+            const fetchFn = (globalThis as any).fetch as typeof fetch | undefined;
+            const canFallback =
+              typeof fetchFn === 'function'
+              && /request:fail/i.test(msg);
+
+            if (canFallback) {
+              console.warn('[Platform.request] wx.request 失败，尝试 fetch 兜底:', url);
+              void this._requestViaFetch(url, method, data, headers, timeoutMs)
+                .then((result) => {
+                  if (done) return;
+                  done = true;
+                  resolve(result);
+                })
+                .catch((e2) => {
+                  if (done) return;
+                  done = true;
+                  const fb = e2 instanceof Error ? e2.message : String(e2);
+                  reject(new Error(`request failed: ${msg}; url=${url}; raw=${raw}; fetchFallback=${fb}`));
+                });
+              return;
+            }
+
+            done = true;
+            reject(new Error(`request failed: ${msg}; url=${url}; raw=${raw}`));
           },
         });
       } catch (e) {
@@ -193,6 +237,7 @@ class PlatformServiceClass {
       init.body = typeof data === 'string' ? data : JSON.stringify(data);
     }
 
+    console.log(`[Platform.fetch] ${method} ${url}, data=${init.body ? String(init.body).length : 0}B`);
     return fetchFn(url, init).then(async (res) => {
       if (timer) clearTimeout(timer);
       const text = await res.text();
@@ -204,11 +249,37 @@ class PlatformServiceClass {
           parsed = text;
         }
       }
+      console.log(`[Platform.fetch] success ${method} ${url}, status=${res.status}`);
       return { statusCode: res.status, data: parsed };
     }).catch((e) => {
       if (timer) clearTimeout(timer);
+      console.warn(`[Platform.fetch] fail ${method} ${url}:`, e instanceof Error ? e.message : String(e));
       throw e instanceof Error ? e : new Error(String(e));
     });
+  }
+
+  private _isDevtools(): boolean {
+    try {
+      return this._api?.getSystemInfoSync?.()?.platform === 'devtools';
+    } catch (_) {
+      return false;
+    }
+  }
+
+  private _getRequestEnvSummary(): string {
+    try {
+      const info = this._api?.getSystemInfoSync?.();
+      if (!info) return `platform=${this.name}`;
+      return [
+        `platform=${this.name}`,
+        `sys=${info.system || info.platform || 'unknown'}`,
+        `sdk=${info.SDKVersion || 'unknown'}`,
+        `brand=${info.brand || 'unknown'}`,
+        `model=${info.model || 'unknown'}`,
+      ].join(',');
+    } catch (_) {
+      return `platform=${this.name}`;
+    }
   }
 
   /**
@@ -292,6 +363,10 @@ class PlatformServiceClass {
 
   /** 创建插屏广告实例 */
   createInterstitialAd(adUnitId: string): any {
+    if (!this._isValidAdUnitId(adUnitId)) {
+      console.warn('[Platform] 插屏广告位未配置，跳过创建');
+      return null;
+    }
     try {
       if (this.name === 'wechat') {
         return this._api?.createInterstitialAd?.({ adUnitId });
@@ -302,6 +377,14 @@ class PlatformServiceClass {
       console.warn('[Platform] 创建插屏广告失败:', e);
     }
     return null;
+  }
+
+  private _isValidAdUnitId(adUnitId: string): boolean {
+    if (!adUnitId) return false;
+    if (/[xyz]{6,}/i.test(adUnitId)) return false;
+    if (this.name === 'wechat') return /^adunit-[0-9a-f]{16}$/i.test(adUnitId);
+    if (this.name === 'douyin') return !/[xyz]{6,}/i.test(adUnitId) && adUnitId.length >= 8;
+    return false;
   }
 
   /**

@@ -9,24 +9,8 @@
   },
   "subpackages": [
     {
-      "name": "chars",
-      "root": "subpkg_chars/"
-    },
-    {
-      "name": "panels",
-      "root": "subpkg_panels/"
-    },
-    {
-      "name": "deco",
-      "root": "subpkg_deco/"
-    },
-    {
       "name": "items",
       "root": "subpkg_items/"
-    },
-    {
-      "name": "audio",
-      "root": "subpkg_audio/"
     }
   ]
 }

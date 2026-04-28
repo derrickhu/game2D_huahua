@@ -54,6 +54,7 @@ export class ItemView extends PIXI.Container {
   private _currencyContainer: PIXI.Container | null = null;
 
   private _itemId: string = '';
+  private _textureUnsub: (() => void) | null = null;
 
   constructor() {
     super();
@@ -161,6 +162,8 @@ export class ItemView extends PIXI.Container {
   }
 
   setItem(itemId: string | null): void {
+    this._textureUnsub?.();
+    this._textureUnsub = null;
     if (!itemId) {
       this.setPeekRibbon(false);
       this.visible = false;
@@ -229,6 +232,9 @@ export class ItemView extends PIXI.Container {
       this._iconSprite.position.set(cs / 2, cs / 2);
       this.addChildAt(this._iconSprite, 1);
     } else {
+      this._textureUnsub = TextureCache.onKeysLoaded([def.icon], () => {
+        if (this._itemId === itemId) this.setItem(itemId);
+      });
       // 无纹理 fallback：柔和的图标占位
       this._iconBg.clear();
 

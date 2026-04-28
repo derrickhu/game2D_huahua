@@ -134,6 +134,7 @@ function federatedPointerToDesignY(e: PIXI.FederatedPointerEvent): number {
 
 export class AffinityCodexPanel extends PIXI.Container {
   private _isOpen = false;
+  private _assetUnsub: (() => void) | null = null;
   private _view: ViewMode = 'overview';
   private _detailTypeId: string | null = null;
   private _bg!: PIXI.Graphics;
@@ -205,6 +206,9 @@ export class AffinityCodexPanel extends PIXI.Container {
     }
     this._isOpen = true;
     this.visible = true;
+    this._assetUnsub = TextureCache.onAssetGroupLoaded('affinity', () => {
+      if (this._isOpen) this._refresh();
+    });
     this._refresh();
     this.alpha = 0;
     this._root.scale.set(0.92);
@@ -215,6 +219,8 @@ export class AffinityCodexPanel extends PIXI.Container {
   close(): void {
     if (!this._isOpen) return;
     this._isOpen = false;
+    this._assetUnsub?.();
+    this._assetUnsub = null;
     this._finishGridCanvasScroll();
     if (this._detailLayer) this._closeCardDetail();
     TweenManager.to({

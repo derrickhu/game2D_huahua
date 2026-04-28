@@ -98,7 +98,7 @@ class AdManagerClass {
         console.log('[AdManager] 插屏广告加载成功');
       });
       this._interstitialAd.onError((err: any) => {
-        console.warn('[AdManager] 插屏广告错误:', err);
+        console.warn('[AdManager] 插屏广告错误:', err?.errMsg || err?.message || String(err));
       });
     }
 

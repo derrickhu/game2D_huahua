@@ -70,16 +70,22 @@ export class DressUpPanel extends PIXI.Container {
   private _gridMask!: PIXI.Graphics;
   private _titleText!: PIXI.Text;
   private _progressText!: PIXI.Text;
+  private _headerDivider!: PIXI.Graphics;
   private _closeBtn: PIXI.Sprite | PIXI.Text | null = null;
+  private _panelBgSprite: PIXI.Sprite | null = null;
+  private _panelFallbackBg: PIXI.DisplayObject | null = null;
+  private _ribbonSprite: PIXI.Sprite | null = null;
   private _titleCenterY = 58;
   private _contentTopY = 168;
   private _scrollY = 0;
   private _maxScrollY = 0;
   private _isOpen = false;
+  private _opening = false;
   /** 记录面板高度，logicHeight 变化时拉伸底图与遮罩 */
   private _panelHBuilt = 0;
   /** 飞星动画结束后再入账的星星数（与 DressUpManager.unlock defer 配对） */
   private _pendingDressUpStarGrant = 0;
+  private _assetUnsub: (() => void) | null = null;
 
   constructor() {
     super();
@@ -103,9 +109,24 @@ export class DressUpPanel extends PIXI.Container {
   }
 
   open(): void {
+    if (this._isOpen || this._opening) return;
+    this._opening = true;
+    void TextureCache.preloadPanelAssets('dressup').finally(() => {
+      this._opening = false;
+      this._openReady();
+    });
+  }
+
+  private _openReady(): void {
     if (this._isOpen) return;
     this._isOpen = true;
     this.visible = true;
+    this._assetUnsub = TextureCache.onAssetGroupLoaded('dressup', () => {
+      if (!this._isOpen) return;
+      this._applyLoadedPanelTextures();
+      this._rebuildGrid();
+    });
+    this._applyLoadedPanelTextures();
     this._resizePanelIfNeeded();
     this._refreshHeaderNumbers();
     this._rebuildGrid();
@@ -123,9 +144,12 @@ export class DressUpPanel extends PIXI.Container {
   }
 
   close(): void {
+    this._opening = false;
     if (!this._isOpen) return;
     this._grantPendingDressUpStarIfAny();
     this._isOpen = false;
+    this._assetUnsub?.();
+    this._assetUnsub = null;
     const h = Game.logicHeight;
     TweenManager.cancelTarget(this._content.position);
     TweenManager.to({ target: this._content.position, props: { y: h }, duration: 0.22, ease: Ease.easeInQuad });
@@ -138,6 +162,90 @@ export class DressUpPanel extends PIXI.Container {
   private _layoutCloseButton(): void {
     if (!this._closeBtn) return;
     this._closeBtn.position.set(PANEL_W - CLOSE_BTN_INSET_RIGHT, this._titleCenterY);
+  }
+
+  private _refreshCloseButtonTexture(): void {
+    const closeTex = TextureCache.get('warehouse_close_btn');
+    if (!closeTex?.width || this._closeBtn instanceof PIXI.Sprite) return;
+    const old = this._closeBtn as PIXI.DisplayObject | null;
+    if (!old) return;
+    old.parent?.removeChild(old);
+    old.destroy();
+
+    const closeBtn = new PIXI.Sprite(closeTex);
+    const cs = Math.min(54 / closeTex.width, 54 / closeTex.height);
+    closeBtn.scale.set(cs);
+    closeBtn.anchor.set(0.5, 0.5);
+    closeBtn.eventMode = 'static';
+    closeBtn.cursor = 'pointer';
+    closeBtn.zIndex = 2000;
+    closeBtn.on('pointertap', (e: PIXI.FederatedPointerEvent) => { e.stopPropagation(); this.close(); });
+    this._content.addChild(closeBtn);
+    this._closeBtn = closeBtn;
+    this._layoutCloseButton();
+  }
+
+  private _applyLoadedPanelTextures(): void {
+    const panelH = Math.round(Game.logicHeight * PANEL_H_RATIO);
+    const panelTex = TextureCache.get('merge_chain_panel');
+    if (panelTex?.width && !this._panelBgSprite) {
+      if (this._panelFallbackBg?.parent) {
+        this._panelFallbackBg.parent.removeChild(this._panelFallbackBg);
+        this._panelFallbackBg.destroy({ children: true });
+      }
+      this._panelFallbackBg = null;
+
+      const panelBg = new PIXI.Sprite(panelTex);
+      panelBg.width = PANEL_W;
+      panelBg.height = panelH;
+      panelBg.eventMode = 'static';
+      panelBg.zIndex = 0;
+      this._content.addChildAt(panelBg, 0);
+      this._panelBgSprite = panelBg;
+    }
+
+    const ribbonTex = TextureCache.get('merge_chain_ribbon');
+    if (ribbonTex?.width && !this._ribbonSprite) {
+      const rib = new PIXI.Sprite(ribbonTex);
+      const s = Math.min(RIBBON_MAX_W / ribbonTex.width, RIBBON_MAX_H / ribbonTex.height);
+      rib.scale.set(s);
+      rib.anchor.set(0.5, 0);
+      rib.position.set(PANEL_W / 2, RIBBON_Y);
+      rib.eventMode = 'static';
+      rib.zIndex = 5;
+      this._content.addChild(rib);
+      this._ribbonSprite = rib;
+      this._content.sortChildren();
+    }
+
+    this._refreshCloseButtonTexture();
+    this._syncHeaderLayout();
+  }
+
+  private _syncHeaderLayout(): void {
+    let titleCenterY = 58;
+    let ribbonBottom = titleCenterY + 36;
+    const ribbonTex = this._ribbonSprite?.texture;
+    if (this._ribbonSprite && ribbonTex?.width) {
+      titleCenterY = RIBBON_Y + (ribbonTex.height * this._ribbonSprite.scale.y) * 0.45;
+      ribbonBottom = RIBBON_Y + ribbonTex.height * this._ribbonSprite.scale.y;
+    }
+    this._titleCenterY = titleCenterY;
+    this._titleText.position.set(PANEL_W / 2, titleCenterY);
+
+    const progressY = Math.round(ribbonBottom + PROGRESS_BELOW_RIBBON);
+    this._progressText.position.set(PANEL_W / 2, progressY);
+
+    const dividerY = Math.round(progressY + PROGRESS_TO_DIVIDER);
+    const divHalfW = Math.round((PANEL_W * HEADER_DIVIDER_WIDTH_RATIO) / 2);
+    this._headerDivider.clear();
+    this._headerDivider.lineStyle(2, GOLD_LINE, 0.75);
+    this._headerDivider.moveTo(Math.round(PANEL_W / 2) - divHalfW, dividerY);
+    this._headerDivider.lineTo(Math.round(PANEL_W / 2) + divHalfW, dividerY);
+
+    this._contentTopY = Math.round(dividerY + DIVIDER_TO_CONTENT);
+    this._layoutCloseButton();
+    this._syncDressGridClip();
   }
 
   private _refreshHeaderNumbers(): void {
@@ -575,6 +683,7 @@ export class DressUpPanel extends PIXI.Container {
       panelBg.height = panelH;
       panelBg.eventMode = 'static';
       this._content.addChild(panelBg);
+      this._panelBgSprite = panelBg;
     } else {
       const g = new PIXI.Graphics();
       g.lineStyle(3, 0xd97b00);
@@ -585,6 +694,7 @@ export class DressUpPanel extends PIXI.Container {
       g.drawRoundedRect(3, 3, PANEL_W - 6, panelH - 6, PANEL_TOP_R - 2);
       g.eventMode = 'static';
       this._content.addChild(g);
+      this._panelFallbackBg = g;
     }
 
     const ribbonTex = TextureCache.get('merge_chain_ribbon');
@@ -599,6 +709,7 @@ export class DressUpPanel extends PIXI.Container {
       rib.eventMode = 'static';
       rib.zIndex = 5;
       this._content.addChild(rib);
+      this._ribbonSprite = rib;
       titleCenterY = RIBBON_Y + (ribbonTex.height * s) * 0.45;
       ribbonBottom = RIBBON_Y + ribbonTex.height * s;
     }
@@ -642,12 +753,12 @@ export class DressUpPanel extends PIXI.Container {
 
     const dividerY = Math.round(progressY + PROGRESS_TO_DIVIDER);
     const divHalfW = Math.round((PANEL_W * HEADER_DIVIDER_WIDTH_RATIO) / 2);
-    const headerDivider = new PIXI.Graphics();
-    headerDivider.zIndex = 5;
-    headerDivider.lineStyle(2, GOLD_LINE, 0.75);
-    headerDivider.moveTo(Math.round(PANEL_W / 2) - divHalfW, dividerY);
-    headerDivider.lineTo(Math.round(PANEL_W / 2) + divHalfW, dividerY);
-    this._content.addChild(headerDivider);
+    this._headerDivider = new PIXI.Graphics();
+    this._headerDivider.zIndex = 5;
+    this._headerDivider.lineStyle(2, GOLD_LINE, 0.75);
+    this._headerDivider.moveTo(Math.round(PANEL_W / 2) - divHalfW, dividerY);
+    this._headerDivider.lineTo(Math.round(PANEL_W / 2) + divHalfW, dividerY);
+    this._content.addChild(this._headerDivider);
 
     this._contentTopY = Math.round(dividerY + DIVIDER_TO_CONTENT);
 
@@ -724,7 +835,9 @@ export class DressUpPanel extends PIXI.Container {
     const panelH = Math.round(h * PANEL_H_RATIO);
     if (panelH === this._panelHBuilt) return;
     const bg = this._content.children[0];
-    if (bg instanceof PIXI.Sprite) {
+    if (this._panelBgSprite) {
+      this._panelBgSprite.height = panelH;
+    } else if (bg instanceof PIXI.Sprite) {
       bg.height = panelH;
     }
     this._syncDressGridClip();

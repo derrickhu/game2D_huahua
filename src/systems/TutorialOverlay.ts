@@ -797,6 +797,8 @@ export class TutorialOverlay {
   }
 
   private _showGuideBuyFurniture(): void {
+    void TextureCache.preloadTutorialDeco();
+
     const showBtnGuide = (): void => {
       this._clearOverlay();
       this._overlay.visible = true;

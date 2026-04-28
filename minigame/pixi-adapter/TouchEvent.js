@@ -42,6 +42,38 @@ function convertTouches(rawTouches) {
   }));
 }
 
+function createPointerEvent(type, touch, buttons) {
+  return {
+    type: type,
+    pointerId: touch.identifier || 0,
+    pointerType: 'touch',
+    clientX: touch.clientX,
+    clientY: touch.clientY,
+    pageX: touch.clientX,
+    pageY: touch.clientY,
+    screenX: touch.clientX,
+    screenY: touch.clientY,
+    x: touch.clientX,
+    y: touch.clientY,
+    offsetX: touch.clientX,
+    offsetY: touch.clientY,
+    width: 1,
+    height: 1,
+    pressure: buttons ? 0.5 : 0,
+    button: 0,
+    buttons: buttons,
+    isPrimary: true,
+    target: canvas,
+    currentTarget: canvas,
+    timeStamp: Date.now(),
+    bubbles: true,
+    cancelable: true,
+    preventDefault: function() {},
+    stopPropagation: function() {},
+    stopImmediatePropagation: function() {},
+  };
+}
+
 // 注册触摸事件监听桥接
 function registerTouchEvents() {
   const _listeners = {};
@@ -78,35 +110,7 @@ function registerTouchEvents() {
     if (!touches.length) return;
     const touch = touches[0];
 
-    const pointerEvent = {
-      type: pointerType,
-      pointerId: touch.identifier || 0,
-      pointerType: 'touch',
-      clientX: touch.clientX,
-      clientY: touch.clientY,
-      pageX: touch.clientX,
-      pageY: touch.clientY,
-      screenX: touch.clientX,
-      screenY: touch.clientY,
-      x: touch.clientX,
-      y: touch.clientY,
-      offsetX: touch.clientX,
-      offsetY: touch.clientY,
-      width: 1,
-      height: 1,
-      pressure: pointerType === 'pointerup' ? 0 : 0.5,
-      button: 0,
-      buttons: pointerType === 'pointerup' ? 0 : 1,
-      isPrimary: true,
-      target: canvas,
-      currentTarget: canvas,
-      timeStamp: Date.now(),
-      bubbles: true,
-      cancelable: true,
-      preventDefault() {},
-      stopPropagation() {},
-      stopImmediatePropagation() {},
-    };
+    const pointerEvent = createPointerEvent(pointerType, touch, pointerType === 'pointerup' ? 0 : 1);
 
     const queue = _listeners[pointerType];
     if (queue) {
@@ -119,7 +123,11 @@ function registerTouchEvents() {
   // 分发 window 上的全局事件（PixiJS EventSystem 在 window 上也注册了 pointermove/pointerup）
   function dispatchToWindow(type, event) {
     if (typeof GameGlobal !== 'undefined' && GameGlobal.__windowDispatchEvent) {
-      GameGlobal.__windowDispatchEvent(type, event);
+      try {
+        GameGlobal.__windowDispatchEvent(type, event);
+      } catch (e) {
+        console.error('[TouchEvent] dispatchToWindow failed:', type, e);
+      }
     }
   }
 
@@ -144,12 +152,7 @@ function registerTouchEvents() {
     var touches = e.changedTouches || e.touches || [];
     if (touches.length) {
       var t = touches[0];
-      dispatchToWindow('pointerdown', {
-        type: 'pointerdown', pointerId: t.identifier || 0, pointerType: 'touch',
-        clientX: t.clientX, clientY: t.clientY, pageX: t.clientX, pageY: t.clientY,
-        button: 0, buttons: 1, isPrimary: true, target: canvas,
-        preventDefault: function(){}, stopPropagation: function(){}, stopImmediatePropagation: function(){},
-      });
+      dispatchToWindow('pointerdown', createPointerEvent('pointerdown', t, 1));
     }
   });
 
@@ -166,12 +169,7 @@ function registerTouchEvents() {
           'x:', t.clientX, 'y:', t.clientY,
           'windowListeners(pointermove):', typeof GameGlobal.__windowDispatchEvent);
       }
-      dispatchToWindow('pointermove', {
-        type: 'pointermove', pointerId: t.identifier || 0, pointerType: 'touch',
-        clientX: t.clientX, clientY: t.clientY, pageX: t.clientX, pageY: t.clientY,
-        button: 0, buttons: 1, isPrimary: true, target: canvas,
-        preventDefault: function(){}, stopPropagation: function(){}, stopImmediatePropagation: function(){},
-      });
+      dispatchToWindow('pointermove', createPointerEvent('pointermove', t, 1));
     }
   });
 
@@ -181,12 +179,7 @@ function registerTouchEvents() {
     var touches = e.changedTouches || [];
     if (touches.length) {
       var t = touches[0];
-      dispatchToWindow('pointerup', {
-        type: 'pointerup', pointerId: t.identifier || 0, pointerType: 'touch',
-        clientX: t.clientX, clientY: t.clientY, pageX: t.clientX, pageY: t.clientY,
-        button: 0, buttons: 0, isPrimary: true, target: canvas,
-        preventDefault: function(){}, stopPropagation: function(){}, stopImmediatePropagation: function(){},
-      });
+      dispatchToWindow('pointerup', createPointerEvent('pointerup', t, 0));
     }
   });
 
@@ -196,12 +189,7 @@ function registerTouchEvents() {
     var touches = e.changedTouches || [];
     if (touches.length) {
       var t = touches[0];
-      dispatchToWindow('pointercancel', {
-        type: 'pointercancel', pointerId: t.identifier || 0, pointerType: 'touch',
-        clientX: t.clientX, clientY: t.clientY, pageX: t.clientX, pageY: t.clientY,
-        button: 0, buttons: 0, isPrimary: true, target: canvas,
-        preventDefault: function(){}, stopPropagation: function(){}, stopImmediatePropagation: function(){},
-      });
+      dispatchToWindow('pointercancel', createPointerEvent('pointercancel', t, 0));
     }
   });
 

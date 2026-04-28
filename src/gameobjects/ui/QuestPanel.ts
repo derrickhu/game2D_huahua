@@ -375,6 +375,7 @@ export class QuestPanel extends PIXI.Container {
   private _bg!: PIXI.Graphics;
   private _content!: PIXI.Container;
   private _isOpen = false;
+  private _opening = false;
   private _countdownTimer: ReturnType<typeof setInterval> | null = null;
   private _dailyCountdownText: PIXI.Text | null = null;
   /** 与秒表图标同一容器，秒数变化时需重算水平居中 */
@@ -397,6 +398,7 @@ export class QuestPanel extends PIXI.Container {
    * Pixi 仍在处理本次指针事件，`updateTransform` 会读到 null；且领取回调里 `toGlobal` 需在树仍存在时执行。
    */
   private _questUpdatedRefreshRaf: number | null = null;
+  private _assetUnsub: (() => void) | null = null;
 
   private readonly _onQuestListCanvasMove = (ev: PointerEvent): void => {
     if (!this._isOpen || !this._questListCanvasListening || !this._questListCanvasContent) return;
@@ -430,10 +432,22 @@ export class QuestPanel extends PIXI.Container {
   }
 
   open(): void {
+    if (this._isOpen || this._opening) return;
+    this._opening = true;
+    void TextureCache.preloadPanelAssets('quest').finally(() => {
+      this._opening = false;
+      this._openReady();
+    });
+  }
+
+  private _openReady(): void {
     if (this._isOpen) return;
     this._isOpen = true;
     this.visible = true;
     this.alpha = 1;
+    this._assetUnsub = TextureCache.onAssetGroupLoaded('quest', () => {
+      if (this._isOpen) this._refresh();
+    });
     this._refresh();
 
     TweenManager.cancelTarget(this._bg);
@@ -454,8 +468,11 @@ export class QuestPanel extends PIXI.Container {
   }
 
   close(): void {
+    this._opening = false;
     if (!this._isOpen) return;
     this._isOpen = false;
+    this._assetUnsub?.();
+    this._assetUnsub = null;
     this._stopCountdownTimer();
     this._finishQuestListCanvasScroll();
     if (this._dailyAllCompleteBonusBobRoot) {

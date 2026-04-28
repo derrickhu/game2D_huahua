@@ -5,6 +5,10 @@ dist/
 .vite/
 minigame/game-bundle.js
 
+# 本地 CDN 上传凭据与同步状态；勿提交
+scripts/.cdn_secret
+scripts/.cdn_manifest.json
+
 # 图像处理临时文件（全 minigame 子路径）；勿提交
 minigame/**/tmp*.png
 # Cursor / 本地生图流水日志

@@ -8,6 +8,8 @@
  *   - 分包 deco：家具 + 房间背景 + 旧 room 素材（subpkg_deco/images/）
  */
 import * as PIXI from 'pixi.js';
+import { CdnAssetService } from '@/core/CdnAssetService';
+import { EventBus } from '@/core/EventBus';
 
 // ================================================================
 // 主包资源（随主包一起下载，无需等待分包）
@@ -22,12 +24,6 @@ const MAIN_IMAGE_MAP: Record<string, string> = {
   icon_enter_house: 'images/ui/icon_enter_house.png',
   /** NB2+rembg：顶栏内购商店胶囊图标 */
   icon_shop_nb2: 'images/ui/icon_shop_nb2.png',
-  /** NB2 单层货架条（奶油区空，由代码叠槽位；rembg+裁边） */
-  shop_section_panel_bg: 'images/ui/shop_section_panel_bg.png',
-  /** NB2 单格灰槽位（rembg+裁边） */
-  shop_item_slot: 'images/ui/shop_item_slot.png',
-  /** 商店弹窗外框底板（紫木+楣棚绳）；货架组件叠在其内 `FRAME_INNER` 区，见 MerchShopPanel */
-  shop_merch_panel_frame: 'images/ui/shop_merch_panel_frame.png',
   icon_heart:  'images/ui/icon_heart.png',
   icon_book:   'images/ui/icon_book.png',
   icon_basket: 'images/ui/icon_basket.png',
@@ -153,6 +149,10 @@ const CHARS_IMAGE_MAP: Record<string, string> = {
 // panels 分包：大卡面 UI（需先 loadSubpackage('panels')）
 // ================================================================
 const PANELS_IMAGE_MAP: Record<string, string> = {
+  /** 内购商店大图移出主包，打开商店时通过 panels/CDN 懒加载。 */
+  shop_section_panel_bg: 'subpkg_panels/images/ui/shop_section_panel_bg.png',
+  shop_item_slot: 'subpkg_panels/images/ui/shop_item_slot.png',
+  shop_merch_panel_frame: 'subpkg_panels/images/ui/shop_merch_panel_frame.png',
   checkin_title_banner: 'subpkg_panels/images/ui/checkin_title_banner.png',
   checkin_milestone_panel: 'subpkg_panels/images/ui/checkin_milestone_panel.png',
   checkin_card_future: 'subpkg_panels/images/ui/checkin_card_future.png',
@@ -605,6 +605,23 @@ const DECO_IMAGE_MAP: Record<string, string> = {
   bg_room_pinkblue_nb2: 'subpkg_deco/images/house/bg_room_pinkblue_nb2.png',
 };
 
+// ================================================================
+// 启动关键资源：随主包保底，不走 CDN；避免新号首进弱网时新手图/基础头像空白
+// ================================================================
+const CRITICAL_IMAGE_MAP: Record<string, string> = {
+  tutorial_story_1: 'images/tutorial/story_1.png',
+  tutorial_story_2: 'images/tutorial/story_2.png',
+  tutorial_story_3: 'images/tutorial/story_3.png',
+  tutorial_story_4: 'images/tutorial/story_4.png',
+
+  owner_chibi_default: 'images/critical/owner/chibi_default.png',
+  owner_full_default: 'images/critical/owner/full_default.png',
+  owner_full_default_blink: 'images/critical/owner/full_default_eyesclosed.png',
+
+  customer_child: 'images/critical/customer/child.png',
+  customer_student: 'images/critical/customer/student.png',
+};
+
 /** 合并后的完整映射（用于统一查询） */
 const IMAGE_MAP: Record<string, string> = {
   ...MAIN_IMAGE_MAP,
@@ -612,11 +629,268 @@ const IMAGE_MAP: Record<string, string> = {
   ...PANELS_IMAGE_MAP,
   ...ITEMS_IMAGE_MAP,
   ...DECO_IMAGE_MAP,
+  ...CRITICAL_IMAGE_MAP,
 };
+
+const SHOP_WARMUP_KEYS = [
+  'house_bg',
+  'house_shop',
+  'owner_full_default',
+  'owner_full_default_blink',
+  'shop_edit_deco_pill_4x2_nb2',
+  'icon_worldmap',
+] as const;
+
+const DECO_PANEL_WARMUP_KEYS = [
+  'decoration_panel_bg_nb2',
+  'deco_panel_tab_idle_nb2',
+  'deco_panel_tab_selected_nb2',
+  'deco_nb2_close_btn_1x1',
+  'deco_card_btn_1',
+  'deco_card_btn_2',
+  'deco_card_btn_3',
+  'deco_card_btn_4',
+  'deco_rarity_tag_common',
+  'deco_rarity_tag_fine',
+] as const;
+
+const CHECKIN_PANEL_KEYS = [
+  'checkin_title_banner',
+  'checkin_milestone_panel',
+  'checkin_card_future',
+  'checkin_card_today',
+  'checkin_card_signed',
+  'checkin_card_day7',
+  'checkin_milestone_gift_1',
+  'checkin_milestone_gift_2',
+  'checkin_milestone_gift_3',
+  'checkin_milestone_gift_4',
+  'deco_card_btn_2',
+  'icon_energy',
+  'icon_gem',
+  'checkin_m1_bunny_ac',
+  'checkin_m1_crystal_partition',
+  'checkin_m1_moon_display_arch',
+  'checkin_m1_butterfly_wall_lamp',
+  'checkin_m1_rocking_horse',
+] as const;
+
+const TUTORIAL_DECO_KEYS = [
+  'house_bg',
+  'house_shop',
+  'shelf_wood',
+  'decoration_panel_bg_nb2',
+  'deco_panel_tab_idle_nb2',
+  'deco_panel_tab_selected_nb2',
+  'deco_nb2_close_btn_1x1',
+  'deco_card_btn_1',
+  'deco_card_btn_2',
+  'deco_card_btn_3',
+  'deco_card_btn_4',
+  'deco_rarity_tag_common',
+  'deco_rarity_tag_fine',
+  'furniture_tray_panel_shell_nb2',
+  'furniture_tray_tab_flower_room_idle',
+  'furniture_tray_tab_furniture_idle',
+  'furniture_tray_tab_ornament_idle',
+  'furniture_tray_tab_garden_idle',
+  'furniture_tray_confirm_btn',
+  'edit_complete_pill_4x2_nb2',
+  'ui_order_check_badge',
+  'room_edit_toolbar_zoom_in',
+  'room_edit_toolbar_zoom_out',
+  'room_edit_toolbar_flip',
+  'room_edit_toolbar_layer_up',
+  'room_edit_toolbar_layer_down',
+  'room_edit_toolbar_remove',
+] as const;
+
+const WORLDMAP_WARMUP_KEYS = [
+  'worldmap_bg',
+  'worldmap_house_flower_shop',
+  'worldmap_thumb_butterfly_house',
+  'worldmap_thumb_wishing_fountain_1',
+  'worldmap_thumb_wishing_fountain_2',
+  'icon_worldmap',
+] as const;
+
+const QUEST_PANEL_KEYS = [
+  'daily_challenge_panel_shell_nb2',
+  'daily_challenge_task_area_nb2',
+  'daily_challenge_task_row_textured_nb2',
+  'daily_challenge_weekly_rail_empty_nb2',
+  'daily_challenge_countdown_stopwatch_nb2',
+  'daily_challenge_ui_F_dot',
+  'deco_card_btn_3',
+  'icon_energy',
+  'icon_gem',
+  'icon_huayuan',
+] as const;
+
+const COLLECTION_PANEL_KEYS = [
+  'collection_panel_shell_nb2',
+  'collection_item_placeholder_nb2',
+  'warehouse_close_btn',
+  'ui_order_check_badge',
+] as const;
+
+const AFFINITY_PANEL_KEYS = [
+  'affinity_card_back_default',
+  'affinity_codex_btn',
+  'affinity_codex_panel_frame',
+  'affinity_codex_overview_shell_nb2',
+  'affinity_codex_overview_banner_nb2',
+  'affinity_codex_detail_shell_nb2',
+  'affinity_codex_detail_header_nb2',
+  'warehouse_slot_lock',
+  'ui_order_check_badge',
+] as const;
+
+const WAREHOUSE_PANEL_KEYS = [
+  'warehouse_panel_bg',
+  'warehouse_close_btn',
+  'warehouse_slot_lock',
+  'icon_gem',
+] as const;
+
+const MERGE_CHAIN_PANEL_KEYS = [
+  'merge_chain_panel',
+  'merge_chain_ribbon',
+  'warehouse_close_btn',
+  'ui_cell_selection_corners',
+  'item_info_title_ribbon',
+] as const;
+
+const DRESSUP_PANEL_KEYS = [
+  'merge_chain_panel',
+  'merge_chain_ribbon',
+  'warehouse_close_btn',
+  'owner_chibi_default',
+  'owner_full_default',
+  'owner_full_default_blink',
+  'icon_star',
+  'icon_huayuan',
+] as const;
+
+const MERCH_SHOP_PANEL_KEYS = [
+  'shop_merch_panel_frame',
+  'shop_section_panel_bg',
+  'shop_item_slot',
+  'deco_card_btn_3',
+  'icon_gem',
+] as const;
+
+const FLOWER_SIGN_GACHA_PANEL_KEYS = [
+  'flower_sign_gacha_scene_nb2',
+  'icon_flower_sign_coin',
+  'deco_panel_title_ribbon',
+  'deco_card_btn_1',
+] as const;
+
+function uniqueKeys(...groups: readonly (readonly string[])[]): string[] {
+  const set = new Set<string>();
+  groups.forEach(group => group.forEach(key => set.add(key)));
+  return Array.from(set);
+}
+
+function keysWhere(map: Record<string, string>, predicate: (key: string, path: string) => boolean): string[] {
+  return Object.keys(map).filter(key => predicate(key, map[key]));
+}
+
+const ALL_MAIN_KEYS = Object.keys(MAIN_IMAGE_MAP);
+const ALL_CHARS_KEYS = Object.keys(CHARS_IMAGE_MAP);
+const ALL_PANELS_KEYS = Object.keys(PANELS_IMAGE_MAP);
+const ALL_ITEMS_KEYS = Object.keys(ITEMS_IMAGE_MAP);
+const ALL_DECO_KEYS = Object.keys(DECO_IMAGE_MAP);
+const ALL_CRITICAL_KEYS = Object.keys(CRITICAL_IMAGE_MAP);
+const OWNER_OUTFIT_KEYS = keysWhere(CHARS_IMAGE_MAP, key => key.startsWith('owner_'));
+const CUSTOMER_KEYS = keysWhere(CHARS_IMAGE_MAP, key => key.startsWith('customer_'));
+const AFFINITY_CARD_KEYS = keysWhere(CHARS_IMAGE_MAP, key => key.startsWith('affinity_card_'));
+const WORLDMAP_KEYS = keysWhere(PANELS_IMAGE_MAP, key => key.startsWith('worldmap_') || key === 'icon_worldmap');
+
+export type TextureAssetGroup =
+  | 'shop'
+  | 'deco'
+  | 'checkin'
+  | 'tutorialDeco'
+  | 'worldmap'
+  | 'quest'
+  | 'collection'
+  | 'affinity'
+  | 'warehouse'
+  | 'mergeChain'
+  | 'dressup'
+  | 'merchShop'
+  | 'flowerSignGacha'
+  | 'main'
+  | 'items'
+  | 'chars'
+  | 'panels'
+  | 'critical'
+  | 'ownerOutfits'
+  | 'affinityCards'
+  | 'customers';
+
+const ASSET_GROUP_KEYS: Record<TextureAssetGroup, readonly string[]> = {
+  shop: SHOP_WARMUP_KEYS,
+  deco: DECO_PANEL_WARMUP_KEYS,
+  checkin: CHECKIN_PANEL_KEYS,
+  tutorialDeco: TUTORIAL_DECO_KEYS,
+  worldmap: WORLDMAP_WARMUP_KEYS,
+  quest: QUEST_PANEL_KEYS,
+  collection: COLLECTION_PANEL_KEYS,
+  affinity: AFFINITY_PANEL_KEYS,
+  warehouse: WAREHOUSE_PANEL_KEYS,
+  mergeChain: MERGE_CHAIN_PANEL_KEYS,
+  dressup: DRESSUP_PANEL_KEYS,
+  merchShop: MERCH_SHOP_PANEL_KEYS,
+  flowerSignGacha: FLOWER_SIGN_GACHA_PANEL_KEYS,
+  main: [],
+  items: [],
+  chars: [],
+  panels: [],
+  critical: [],
+  ownerOutfits: [],
+  affinityCards: [],
+  customers: [],
+};
+
+const ASSET_GROUP_NOTIFY_KEYS: Record<TextureAssetGroup, readonly string[]> = {
+  ...ASSET_GROUP_KEYS,
+  main: ALL_MAIN_KEYS,
+  items: ALL_ITEMS_KEYS,
+  chars: ALL_CHARS_KEYS,
+  panels: ALL_PANELS_KEYS,
+  critical: ALL_CRITICAL_KEYS,
+  ownerOutfits: OWNER_OUTFIT_KEYS,
+  affinityCards: AFFINITY_CARD_KEYS,
+  customers: CUSTOMER_KEYS,
+  shop: uniqueKeys(SHOP_WARMUP_KEYS, ALL_DECO_KEYS, OWNER_OUTFIT_KEYS, WORLDMAP_KEYS),
+  // 装修面板里的卡片、房间风格、房间预览都来自 DECO_IMAGE_MAP。
+  // 预加载仍保持轻量；但刷新通知必须覆盖全量 deco 图，避免 CDN 图下载完后 UI 不重绘。
+  deco: uniqueKeys(DECO_PANEL_WARMUP_KEYS, ALL_DECO_KEYS, ALL_ITEMS_KEYS),
+  tutorialDeco: uniqueKeys(TUTORIAL_DECO_KEYS, ALL_DECO_KEYS, ALL_ITEMS_KEYS),
+  worldmap: uniqueKeys(WORLDMAP_WARMUP_KEYS, WORLDMAP_KEYS),
+  quest: uniqueKeys(QUEST_PANEL_KEYS, ALL_ITEMS_KEYS, ALL_DECO_KEYS),
+  collection: uniqueKeys(COLLECTION_PANEL_KEYS, ALL_ITEMS_KEYS),
+  affinity: uniqueKeys(AFFINITY_PANEL_KEYS, AFFINITY_CARD_KEYS, CUSTOMER_KEYS, ALL_DECO_KEYS, ALL_ITEMS_KEYS),
+  warehouse: uniqueKeys(WAREHOUSE_PANEL_KEYS, ALL_ITEMS_KEYS),
+  mergeChain: uniqueKeys(MERGE_CHAIN_PANEL_KEYS, ALL_ITEMS_KEYS),
+  dressup: uniqueKeys(DRESSUP_PANEL_KEYS, OWNER_OUTFIT_KEYS),
+  merchShop: uniqueKeys(MERCH_SHOP_PANEL_KEYS, ALL_ITEMS_KEYS),
+  flowerSignGacha: uniqueKeys(FLOWER_SIGN_GACHA_PANEL_KEYS, ALL_ITEMS_KEYS, ALL_DECO_KEYS),
+};
+
+const TEXTURE_LOADED_EVENT = 'texture:loaded';
+
+export interface TextureDependencySpec {
+  groups?: readonly TextureAssetGroup[];
+  keys?: readonly string[];
+}
 
 class TextureCacheClass {
   private _cache = new Map<string, PIXI.Texture>();
-  private _loading = new Set<string>();
+  private _loading = new Map<string, Promise<void>>();
   private _failed = new Set<string>();
   private _decoLoaded = false;
   private _itemsLoaded = false;
@@ -649,11 +923,35 @@ class TextureCacheClass {
   }
 
   /**
+   * 启动关键资源：主包 UI + 新手故事 + 默认店主/基础客人。
+   * 这些资源不依赖 CDN，必须在进入教程/主场景前可用。
+   */
+  preloadCritical(onProgress?: (loaded: number, total: number) => void): Promise<void> {
+    const criticalTotal = Object.keys(MAIN_IMAGE_MAP).length + Object.keys(CRITICAL_IMAGE_MAP).length;
+    let loaded = 0;
+    const report = () => {
+      loaded++;
+      onProgress?.(loaded, criticalTotal);
+    };
+
+    return this.preloadMain(() => report())
+      .then(() => this._preloadImageMap(CRITICAL_IMAGE_MAP, 'critical', () => report()))
+      .then(() => {
+        console.log(`[TextureCache] 启动关键资源预加载完成: ${loaded}/${criticalTotal}`);
+      });
+  }
+
+  /**
    * 加载 chars 分包（店主 + 客人），然后预加载图片
    */
   loadCharsSubpackage(onProgress?: (loaded: number, total: number) => void): Promise<void> {
     if (this._charsLoaded) {
       return this._preloadImageMap(CHARS_IMAGE_MAP, 'chars', onProgress);
+    }
+
+    if (CdnAssetService.areAllCdnPaths(Object.values(CHARS_IMAGE_MAP))) {
+      this._charsLoaded = true;
+      return this._preloadImageMap(CHARS_IMAGE_MAP, 'chars-cdn', onProgress);
     }
 
     return this._loadSubpackage('chars').then(() => {
@@ -668,6 +966,11 @@ class TextureCacheClass {
   loadPanelsSubpackage(onProgress?: (loaded: number, total: number) => void): Promise<void> {
     if (this._panelsLoaded) {
       return this._preloadImageMap(PANELS_IMAGE_MAP, 'panels', onProgress);
+    }
+
+    if (CdnAssetService.areAllCdnPaths(Object.values(PANELS_IMAGE_MAP))) {
+      this._panelsLoaded = true;
+      return this._preloadImageMap(PANELS_IMAGE_MAP, 'panels-cdn', onProgress);
     }
 
     return this._loadSubpackage('panels').then(() => {
@@ -700,6 +1003,11 @@ class TextureCacheClass {
       return this._preloadImageMap(DECO_IMAGE_MAP, 'deco', onProgress);
     }
 
+    if (CdnAssetService.areAllCdnPaths(Object.values(DECO_IMAGE_MAP))) {
+      this._decoLoaded = true;
+      return this._preloadImageMap(DECO_IMAGE_MAP, 'deco-cdn', onProgress);
+    }
+
     return this._loadSubpackage('deco').then(() => {
       this._decoLoaded = true;
       return this._preloadImageMap(DECO_IMAGE_MAP, 'deco', onProgress);
@@ -710,7 +1018,9 @@ class TextureCacheClass {
    * 兼容旧接口：预加载所有资源（主包 → chars → panels → items → deco）
    */
   preloadAll(onProgress?: (loaded: number, total: number) => void): Promise<void> {
-    const totalKeys = Object.keys(IMAGE_MAP).length;
+    const totalKeys = Object.keys(MAIN_IMAGE_MAP).length
+      + Object.keys(CRITICAL_IMAGE_MAP).length
+      + Object.keys(ITEMS_IMAGE_MAP).length;
     let globalLoaded = 0;
 
     const wrapProgress = () => {
@@ -718,19 +1028,122 @@ class TextureCacheClass {
       onProgress?.(globalLoaded, totalKeys);
     };
 
-    return this.preloadMain(() => wrapProgress())
-      .then(() => this.loadCharsSubpackage(() => wrapProgress()))
-      .then(() => this.loadPanelsSubpackage(() => wrapProgress()))
+    return this.preloadCritical(() => wrapProgress())
       .then(() => this.loadItemsSubpackage(() => wrapProgress()))
-      .then(() => this.loadDecoSubpackage(() => wrapProgress()))
       .then(() => {
-        console.log(`[TextureCache] 全部预加载完成: ${this._cache.size}/${totalKeys} 张纹理`);
+        console.log(`[TextureCache] 启动预加载完成: ${this._cache.size}/${totalKeys} 张关键纹理`);
       });
+  }
+
+  /** 按 key 预热资源；用于场景/面板打开前的 CDN 懒加载补齐 */
+  preloadKeys(
+    keys: readonly string[],
+    onProgress?: (loaded: number, total: number) => void,
+  ): Promise<void> {
+    const total = keys.length;
+    let loaded = 0;
+    const jobs = keys.map(key => {
+      const path = IMAGE_MAP[key];
+      if (!path) {
+        loaded++;
+        onProgress?.(loaded, total);
+        return Promise.resolve();
+      }
+      return this._loadTexture(key, path).then(() => {
+        loaded++;
+        onProgress?.(loaded, total);
+      });
+    });
+
+    return Promise.all(jobs).then(() => undefined);
+  }
+
+  /** 场景级后台预热，不应阻塞启动；失败只记录警告 */
+  preloadSceneWarmup(scene: TextureAssetGroup): Promise<void> {
+    const keys = ASSET_GROUP_KEYS[scene] || [];
+    return this.preloadKeys(keys).catch(err => {
+      console.warn(`[TextureCache] ${scene} 场景预热失败:`, err);
+    });
+  }
+
+  /** 面板打开前的统一资源确保入口。 */
+  preloadPanelAssets(panel: TextureAssetGroup): Promise<void> {
+    return this.preloadSceneWarmup(panel);
+  }
+
+  preloadCheckIn(): Promise<void> {
+    return this.preloadPanelAssets('checkin');
+  }
+
+  /** 新手装修链路必须资源：购买卡片、目标家具、放置托盘。 */
+  preloadTutorialDeco(): Promise<void> {
+    return this.preloadSceneWarmup('tutorialDeco');
   }
 
   /** 获取已缓存的纹理 */
   get(key: string): PIXI.Texture | null {
-    return this._cache.get(key) || null;
+    const cached = this._cache.get(key);
+    if (cached) return cached;
+
+    const path = IMAGE_MAP[key];
+    if (path && !this._loading.has(key) && !this._failed.has(key)) {
+      void this._loadTexture(key, path);
+    }
+    return null;
+  }
+
+  /** 订阅纹理加载完成；用于打开后的 UI 自动刷新。返回取消订阅函数。 */
+  onTextureLoaded(handler: (key: string) => void): () => void {
+    EventBus.on(TEXTURE_LOADED_EVENT, handler);
+    return () => EventBus.off(TEXTURE_LOADED_EVENT, handler);
+  }
+
+  /** 订阅一组具体 key 的任意加载完成事件。 */
+  onKeysLoaded(keys: readonly string[], handler: (key: string) => void): () => void {
+    const keySet = new Set(keys);
+    if (keySet.size === 0) return () => undefined;
+    const onLoaded = (key: string): void => {
+      if (keySet.has(key)) handler(key);
+    };
+    EventBus.on(TEXTURE_LOADED_EVENT, onLoaded);
+    return () => EventBus.off(TEXTURE_LOADED_EVENT, onLoaded);
+  }
+
+  /** 订阅指定资源组中任意纹理完成，用于面板已打开时触发重绘。 */
+  onAssetGroupLoaded(group: TextureAssetGroup, handler: () => void): () => void {
+    const keys = new Set(ASSET_GROUP_NOTIFY_KEYS[group] || []);
+    const onLoaded = (key: string): void => {
+      if (keys.has(key)) handler();
+    };
+    EventBus.on(TEXTURE_LOADED_EVENT, onLoaded);
+    return () => EventBus.off(TEXTURE_LOADED_EVENT, onLoaded);
+  }
+
+  /**
+   * 统一观察资源依赖：资源组或动态 key 中任意纹理完成后，下一帧只刷新一次。
+   * 用于已打开面板/常驻场景的「CDN 下载完自动重绘」。
+   */
+  observeTextureDependencies(spec: TextureDependencySpec, refresh: () => void): () => void {
+    const keys = new Set<string>();
+    spec.groups?.forEach(group => {
+      (ASSET_GROUP_NOTIFY_KEYS[group] || []).forEach(key => keys.add(key));
+    });
+    spec.keys?.forEach(key => keys.add(key));
+    if (keys.size === 0) return () => undefined;
+
+    let raf: number | null = null;
+    const onLoaded = (key: string): void => {
+      if (!keys.has(key) || raf !== null) return;
+      raf = requestAnimationFrame(() => {
+        raf = null;
+        refresh();
+      });
+    };
+    EventBus.on(TEXTURE_LOADED_EVENT, onLoaded);
+    return () => {
+      EventBus.off(TEXTURE_LOADED_EVENT, onLoaded);
+      raf = null;
+    };
   }
 
   /** 预加载启动 Loading 底图 + 顶栏标题（先于 preloadAll） */
@@ -826,12 +1239,12 @@ class TextureCacheClass {
   /** 加载单张纹理 */
   private _loadTexture(key: string, path: string): Promise<void> {
     if (this._cache.has(key)) return Promise.resolve();
-    if (this._loading.has(key)) return Promise.resolve();
-    if (this._failed.has(key)) return Promise.resolve();
+    const inflight = this._loading.get(key);
+    if (inflight) return inflight;
 
-    this._loading.add(key);
+    this._failed.delete(key);
 
-    return new Promise<void>((resolve) => {
+    const promise = new Promise<void>((resolve) => {
       try {
         // 在微信小游戏中使用平台 API 创建图片
         const platform = typeof wx !== 'undefined' ? wx : typeof tt !== 'undefined' ? tt : null;
@@ -848,6 +1261,7 @@ class TextureCacheClass {
             const baseTexture = PIXI.BaseTexture.from(img as any);
             const texture = new PIXI.Texture(baseTexture);
             this._cache.set(key, texture);
+            EventBus.emit(TEXTURE_LOADED_EVENT, key);
           } catch (e) {
             console.warn(`[TextureCache] 创建纹理失败: ${key}`, e);
             this._failed.add(key);
@@ -861,13 +1275,19 @@ class TextureCacheClass {
           this._loading.delete(key);
           resolve();
         };
-        img.src = path;
+        void CdnAssetService.resolveOrDownload(path)
+          .then((resolvedPath) => { img.src = resolvedPath; })
+          .catch(() => { img.src = path; });
       } catch (e) {
         console.warn(`[TextureCache] 加载异常: ${key}`, e);
         this._failed.add(key);
         this._loading.delete(key);
         resolve();
       }
+    });
+    this._loading.set(key, promise);
+    return promise.finally(() => {
+      this._loading.delete(key);
     });
   }
 }

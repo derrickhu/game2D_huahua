@@ -87,6 +87,7 @@ export class StorySequenceOverlay extends PIXI.Container {
     this._tapLayer.endFill();
     this._tapLayer.eventMode = 'static';
     this._tapLayer.on('pointertap', () => this._advance());
+    this._tapLayer.on('pointerdown', () => this._advance());
     this.addChild(this._tapLayer);
 
     // Page indicator dots (pure visual)
@@ -153,6 +154,10 @@ export class StorySequenceOverlay extends PIXI.Container {
     container.eventMode = 'static';
     container.cursor = 'pointer';
     container.on('pointertap', (e: PIXI.FederatedPointerEvent) => {
+      e.stopPropagation();
+      this._finish();
+    });
+    container.on('pointerdown', (e: PIXI.FederatedPointerEvent) => {
       e.stopPropagation();
       this._finish();
     });
@@ -255,6 +260,10 @@ export class StorySequenceOverlay extends PIXI.Container {
       lastBtnHit.eventMode = 'static';
       lastBtnHit.cursor = 'pointer';
       lastBtnHit.on('pointertap', (e: PIXI.FederatedPointerEvent) => {
+        e.stopPropagation();
+        this._finish();
+      });
+      lastBtnHit.on('pointerdown', (e: PIXI.FederatedPointerEvent) => {
         e.stopPropagation();
         this._finish();
       });

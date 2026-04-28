@@ -98,6 +98,7 @@ export class MergeChainPanel extends PIXI.Container {
   private _scrollMask!: PIXI.Graphics;
   private _sourcesLayer!: PIXI.Container;
   private _isOpen = false;
+  private _assetUnsub: (() => void) | null = null;
   private _ownedItems = new Set<string>();
   /** 当前面板展示的合成链（打开时缓存） */
   private _chainIds: string[] = [];
@@ -365,6 +366,15 @@ export class MergeChainPanel extends PIXI.Container {
 
     this._isOpen = true;
     this.visible = true;
+    this._assetUnsub?.();
+    this._assetUnsub = TextureCache.onAssetGroupLoaded('mergeChain', () => {
+      if (!this._isOpen || this._chainIds.length === 0) return;
+      this._applyLoadedPanelTextures();
+      this._syncPanelFrame();
+      this._renderChain(this._chainIds, this._selectedItemId);
+      this._applySelectedItemUi();
+    });
+    this._applyLoadedPanelTextures();
     this._chainIds = chain;
     this._selectedItemId = itemId;
     this._hideProducePopover();
@@ -395,6 +405,8 @@ export class MergeChainPanel extends PIXI.Container {
   close(): void {
     if (!this._isOpen) return;
     this._isOpen = false;
+    this._assetUnsub?.();
+    this._assetUnsub = null;
 
     TweenManager.to({
       target: this._overlay,
@@ -419,6 +431,47 @@ export class MergeChainPanel extends PIXI.Container {
   }
 
   get isOpen(): boolean { return this._isOpen; }
+
+  private _applyLoadedPanelTextures(): void {
+    const cardTex = TextureCache.get('merge_chain_panel');
+    if (cardTex?.width && !this._panelCardSp) {
+      if (this._panelCardGfx?.parent) {
+        this._panelCardGfx.parent.removeChild(this._panelCardGfx);
+        this._panelCardGfx.destroy();
+      }
+      this._panelCardGfx = null;
+      const sp = new PIXI.Sprite(cardTex);
+      this._panelCardSp = sp;
+      sp.anchor.set(0.5, 0);
+      sp.position.set(DESIGN_WIDTH / 2, 26);
+      sp.eventMode = 'static';
+      sp.on('pointerdown', (e: PIXI.FederatedPointerEvent) => e.stopPropagation());
+      this._bgLayer.addChildAt(sp, 0);
+    }
+
+    const ribTex = TextureCache.get('merge_chain_ribbon');
+    if (ribTex?.width && !this._panelRibbonSp) {
+      const r = new PIXI.Sprite(ribTex);
+      this._panelRibbonSp = r;
+      r.anchor.set(0.5, 0);
+      const targetW = Math.min(RIBBON_MAX_W, DESIGN_WIDTH - 48);
+      r.scale.set(targetW / ribTex.width);
+      r.position.set(DESIGN_WIDTH / 2, 8);
+      r.eventMode = 'static';
+      r.on('pointerdown', (e: PIXI.FederatedPointerEvent) => e.stopPropagation());
+      this._bgLayer.addChild(r);
+    }
+
+    const closeTex = TextureCache.get('warehouse_close_btn');
+    if (closeTex?.width) {
+      this._closeBtn.removeChildren();
+      const closeSp = new PIXI.Sprite(closeTex);
+      closeSp.anchor.set(0.5);
+      const s = MERGE_CLOSE_BTN_MAX_SIDE / Math.max(closeTex.width, closeTex.height);
+      closeSp.scale.set(s);
+      this._closeBtn.addChild(closeSp);
+    }
+  }
 
   /**
    * 仅统计「已开放格」上的物品：迷雾 / 半解锁格内物尚未可操作、也未视为已产出，

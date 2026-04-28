@@ -36,6 +36,15 @@ const ROW_TOP = 28;
 const LABEL_BELOW = 20;
 const BG_COLOR = 0xFFFFFF;
 const BG_ALPHA = 0.96;
+const ROOM_EDIT_TOOLBAR_TEXTURE_KEYS = [
+  'room_edit_toolbar_zoom_in',
+  'room_edit_toolbar_zoom_out',
+  'room_edit_toolbar_flip',
+  'room_edit_toolbar_layer_up',
+  'room_edit_toolbar_layer_down',
+  'room_edit_toolbar_remove',
+  'ui_order_check_badge',
+] as const;
 
 interface ToolRowDef {
   textureKey: string;
@@ -55,6 +64,7 @@ export class RoomEditToolbar extends PIXI.Container {
   private _buttons: PIXI.Container[] = [];
   private _nameLabel!: PIXI.Text;
   private _currentDecoId: string | null = null;
+  private _assetUnsub: (() => void) | null = null;
   /** 与 _build 底板宽度一致，供 show 水平居中 */
   private _toolbarTotalW = 750;
 
@@ -63,7 +73,14 @@ export class RoomEditToolbar extends PIXI.Container {
     this.visible = false;
     this.zIndex = 5500;
     this._build();
+    this._assetUnsub = TextureCache.onKeysLoaded(ROOM_EDIT_TOOLBAR_TEXTURE_KEYS, () => this._rebuildForLoadedIcons());
     this._setupEvents();
+  }
+
+  override destroy(options?: PIXI.IDestroyOptions | boolean): void {
+    this._assetUnsub?.();
+    this._assetUnsub = null;
+    super.destroy(options);
   }
 
   // ---- 公共方法 ----
@@ -207,6 +224,20 @@ export class RoomEditToolbar extends PIXI.Container {
     const confirmC = this._buildConfirmIconOnly(confirmDef, confirmX, confirmY, CONFIRM_SLOT_W, confirmSpriteH);
     this.addChild(confirmC);
     this._buttons.push(confirmC);
+  }
+
+  private _rebuildForLoadedIcons(): void {
+    const wasVisible = this.visible;
+    const currentDecoId = this._currentDecoId;
+    this.removeChildren();
+    this._buttons = [];
+    this._build();
+    if (currentDecoId) {
+      this._currentDecoId = null;
+      this.show(currentDecoId);
+    } else {
+      this.visible = wasVisible;
+    }
   }
 
   private _buildToolButton(

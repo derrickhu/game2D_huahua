@@ -282,6 +282,8 @@ export class DecorationPanel extends PIXI.Container {
   /** Tab / 网格顶边（分割线以下，_build 内按顶栏比例计算） */
   private _contentTopY = 168;
   private _isOpen = false;
+  private _assetUnsub: (() => void) | null = null;
+  private _assetRefreshRaf: number | null = null;
   private _activeTab: DecoPanelTabId = 'flower_room';
   private _decoInvFilter: DecoInvFilter = 'not_purchased';
   private _scrollY = 0;
@@ -298,6 +300,8 @@ export class DecorationPanel extends PIXI.Container {
   private _panelBgMask: PIXI.Graphics | null = null;
   /** NB2 底板层（整块面板点击区） */
   private _panelBgLayer: PIXI.Container | null = null;
+  /** 构造时贴图未就绪的临时底板；真底图加载后必须移除，避免盖住花店上半区 */
+  private _panelFallbackBg: PIXI.DisplayObject | null = null;
   /** 顶栏右上角关闭 */
   private _closeBtn!: PIXI.Container;
   /** 购买成功后「获得新家具」浮层 */
@@ -438,6 +442,12 @@ export class DecorationPanel extends PIXI.Container {
     if (this._isOpen) return;
     this._isOpen = true;
     this.visible = true;
+    const offDeco = TextureCache.onAssetGroupLoaded('deco', () => this._scheduleAssetRefresh());
+    const offTutorialDeco = TextureCache.onAssetGroupLoaded('tutorialDeco', () => this._scheduleAssetRefresh());
+    this._assetUnsub = () => {
+      offDeco();
+      offTutorialDeco();
+    };
     EventBus.emit('decoration:decoPanelBackdrop', { open: true });
     this._sortParentOverlay();
     this._activeTab = 'flower_room';
@@ -464,6 +474,9 @@ export class DecorationPanel extends PIXI.Container {
     if (!this._isOpen) return;
     EventBus.off('currency:changed', this._onCurrencyChangedForGrid);
     EventBus.off('collection:discovered', this._onCollectionDiscoveredForGrid);
+    this._assetUnsub?.();
+    this._assetUnsub = null;
+    this._assetRefreshRaf = null;
     EventBus.emit('decoration:decoPanelBackdrop', { open: false });
     this._sortParentOverlay();
     this._flushDeferredStarOnClose();
@@ -579,6 +592,74 @@ export class DecorationPanel extends PIXI.Container {
     this._content.addChild(this._closeBtn);
   }
 
+  private _refreshCloseBtnTexture(): void {
+    if (!this._closeBtn) return;
+    this._closeBtn.removeChildren();
+    const closeTex = TextureCache.get('deco_nb2_close_btn_1x1') ?? TextureCache.get('warehouse_close_btn');
+    const closeSp = new PIXI.Sprite(closeTex ?? PIXI.Texture.EMPTY);
+    closeSp.anchor.set(0.5);
+    if (closeTex && closeTex.width > 0) {
+      const s = DECO_CLOSE_BTN_MAX_SIDE / Math.max(closeTex.width, closeTex.height);
+      closeSp.scale.set(s);
+    }
+    this._closeBtn.addChild(closeSp);
+  }
+
+  private _applyLoadedPanelTextures(): void {
+    const panelH = Math.round(Game.logicHeight * PANEL_H_RATIO);
+    const nb2Tex = TextureCache.get('decoration_panel_bg_nb2');
+
+    if (nb2Tex?.width && !this._panelBgMask) {
+      if (this._panelFallbackBg?.parent) {
+        this._panelFallbackBg.parent.removeChild(this._panelFallbackBg);
+        this._panelFallbackBg.destroy({ children: true });
+      }
+      this._panelFallbackBg = null;
+
+      const fr = nb2Tex.frame;
+      const cropH = Math.max(1, Math.floor(fr.height * DECO_PANEL_BG_TOP_RATIO));
+      const subFrame = new PIXI.Rectangle(fr.x, fr.y, fr.width, cropH);
+      const croppedTex = new PIXI.Texture(nb2Tex.baseTexture, subFrame);
+      const panelBg = new PIXI.Sprite(croppedTex);
+      panelBg.anchor.set(0.5, 1);
+      panelBg.eventMode = 'static';
+      panelBg.zIndex = 0;
+
+      const bgLayer = new PIXI.Container();
+      bgLayer.sortableChildren = true;
+      bgLayer.zIndex = 0;
+      bgLayer.eventMode = 'static';
+      bgLayer.hitArea = new PIXI.Rectangle(0, 0, PANEL_W, panelH);
+
+      const bgMask = new PIXI.Graphics();
+      bgMask.beginFill(0xffffff);
+      bgMask.drawRect(0, 0, PANEL_W, panelH);
+      bgMask.endFill();
+      bgLayer.addChild(panelBg);
+      bgLayer.addChild(bgMask);
+      bgLayer.mask = bgMask;
+      this._content.addChild(bgLayer);
+      this._panelBaseSprite = panelBg;
+      this._panelBgMask = bgMask;
+      this._panelBgLayer = bgLayer;
+      this._layoutNb2PanelBackground(panelH);
+      this._content.sortChildren();
+    }
+
+    this._refreshCloseBtnTexture();
+    this._applyHeaderChrome(panelH);
+  }
+
+  private _scheduleAssetRefresh(): void {
+    if (!this._isOpen || this._assetRefreshRaf !== null) return;
+    this._assetRefreshRaf = requestAnimationFrame(() => {
+      this._assetRefreshRaf = null;
+      if (!this._isOpen) return;
+      this._applyLoadedPanelTextures();
+      this._refreshAll();
+    });
+  }
+
   // ─── build ────────────────────────────────────────────────
 
   private _build(): void {
@@ -611,6 +692,7 @@ export class DecorationPanel extends PIXI.Container {
     this._panelBaseSprite = null;
     this._panelBgMask = null;
     this._panelBgLayer = null;
+    this._panelFallbackBg = null;
     if (nb2Tex?.width) {
       const fr = nb2Tex.frame;
       const cropH = Math.max(1, Math.floor(fr.height * DECO_PANEL_BG_TOP_RATIO));
@@ -645,6 +727,7 @@ export class DecorationPanel extends PIXI.Container {
       panelBg.zIndex = 0;
       this._content.addChild(panelBg);
       this._panelBaseSprite = panelBg;
+      this._panelFallbackBg = panelBg;
     } else {
       const g = new PIXI.Graphics();
       g.lineStyle(3, 0xd97b00);
@@ -656,6 +739,7 @@ export class DecorationPanel extends PIXI.Container {
       g.eventMode = 'static';
       g.zIndex = 0;
       this._content.addChild(g);
+      this._panelFallbackBg = g;
     }
 
     // --- 顶栏：无彩带；标题「家具」叠在底板粉区 ---

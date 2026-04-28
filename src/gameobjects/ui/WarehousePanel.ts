@@ -153,6 +153,7 @@ export class WarehousePanel extends PIXI.Container {
   /** NB2 关闭钮，叠在最上层 */
   private _closeBtn!: PIXI.Container;
   private _isOpen = false;
+  private _assetUnsub: (() => void) | null = null;
 
   constructor() {
     super();
@@ -348,6 +349,13 @@ export class WarehousePanel extends PIXI.Container {
   open(): void {
     this._isOpen = true;
     this.visible = true;
+    this._assetUnsub?.();
+    this._assetUnsub = TextureCache.onAssetGroupLoaded('warehouse', () => {
+      if (!this._isOpen) return;
+      this._applyLoadedPanelTextures();
+      this._refreshSlots();
+    });
+    this._applyLoadedPanelTextures();
     this._refreshSlots();
 
     const tw = this._basketSprite.texture?.width || TEX_W;
@@ -387,6 +395,8 @@ export class WarehousePanel extends PIXI.Container {
   close(): void {
     if (!this._isOpen) return;
     this._isOpen = false;
+    this._assetUnsub?.();
+    this._assetUnsub = null;
 
     const s1 = this._content.scale.x;
     const yTo = this._warehouseContentHideY(s1);
@@ -411,6 +421,29 @@ export class WarehousePanel extends PIXI.Container {
   }
 
   get isOpen(): boolean { return this._isOpen; }
+
+  private _applyLoadedPanelTextures(): void {
+    const panelTex = TextureCache.get('warehouse_panel_bg');
+    if (panelTex?.width) {
+      this._basketSprite.texture = panelTex;
+    }
+
+    const gemTex = TextureCache.get('icon_gem');
+    if (gemTex?.width) {
+      this._gemSprite.texture = gemTex;
+      this._layoutFooterExpand();
+    }
+
+    const closeTex = TextureCache.get('warehouse_close_btn');
+    if (closeTex?.width) {
+      this._closeBtn.removeChildren();
+      const closeSp = new PIXI.Sprite(closeTex);
+      closeSp.anchor.set(0.5);
+      const s = CLOSE_BTN_MAX_SIDE / Math.max(closeTex.width, closeTex.height);
+      closeSp.scale.set(s);
+      this._closeBtn.addChild(closeSp);
+    }
+  }
 
   private _refreshSlots(): void {
     while (this._slotContainer.children.length > 0) {

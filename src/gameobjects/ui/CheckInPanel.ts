@@ -26,6 +26,8 @@ export class CheckInPanel extends PIXI.Container {
   private _bg!: PIXI.Graphics;
   private _content!: PIXI.Container;
   private _isOpen = false;
+  private _opening = false;
+  private _assetUnsub: (() => void) | null = null;
 
   /** 每张日卡的屏幕中心坐标，供飞入动效使用 */
   _dayCardCenters: { x: number; y: number }[] = [];
@@ -38,10 +40,20 @@ export class CheckInPanel extends PIXI.Container {
   }
 
   open(): void {
+    if (this._isOpen || this._opening) return;
+    this._opening = true;
+    void TextureCache.preloadCheckIn().finally(() => {
+      this._opening = false;
+      this._openReady();
+    });
+  }
+
+  private _openReady(): void {
     if (this._isOpen) return;
     this._isOpen = true;
     this.visible = true;
     this.alpha = 1;
+    this._assetUnsub = TextureCache.onAssetGroupLoaded('checkin', () => this.refreshIfOpen());
     this._refresh();
 
     TweenManager.cancelTarget(this._bg);
@@ -71,8 +83,11 @@ export class CheckInPanel extends PIXI.Container {
   }
 
   close(): void {
+    this._opening = false;
     if (!this._isOpen) return;
     this._isOpen = false;
+    this._assetUnsub?.();
+    this._assetUnsub = null;
     TweenManager.cancelTarget(this._bg);
     TweenManager.cancelTarget(this._content);
     TweenManager.cancelTarget(this._content.scale);

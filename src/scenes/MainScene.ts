@@ -190,6 +190,7 @@ export class MainScene implements Scene {
   private _initialized = false;
   private _redDotTimer = MAIN_SCENE_RED_DOT_REFRESH_INTERVAL;
   private _redDotDirty = true;
+  private _textureRefreshUnsub: (() => void) | null = null;
 
   constructor() {
     this.container = new PIXI.Container();
@@ -260,11 +261,23 @@ export class MainScene implements Scene {
     if (this._initialized) {
       RewardFlyCoordinator.setBindings(this._createMainRewardFlyBindings());
     }
+    this._textureRefreshUnsub?.();
+    this._textureRefreshUnsub = TextureCache.observeTextureDependencies(
+      { groups: ['items', 'chars', 'panels', 'ownerOutfits', 'customers', 'affinityCards'] },
+      () => {
+        if (SceneManager.current?.name !== 'main') return;
+        this._boardView?.refresh();
+        this._customerScrollArea?.refresh();
+        this._refreshOwnerOutfit();
+      },
+    );
   }
 
   onExit(): void {
     Game.ticker.remove(this._update, this);
     RewardFlyCoordinator.setBindings(null);
+    this._textureRefreshUnsub?.();
+    this._textureRefreshUnsub = null;
 
     // 解除教程 UI 绑定
     if (this._tutorialOverlay) {
@@ -349,7 +362,8 @@ export class MainScene implements Scene {
     this.container.addChild(this._mergeChainPanel);
 
     EventBus.on('mergeChain:open', (itemId: string) => {
-      this._mergeChainPanel.open(itemId);
+      void TextureCache.preloadPanelAssets('mergeChain')
+        .finally(() => this._mergeChainPanel.open(itemId));
     });
 
     // 仓库面板
@@ -357,7 +371,8 @@ export class MainScene implements Scene {
     this.container.addChild(this._warehousePanel);
 
     EventBus.on('nav:openWarehouse', () => {
-      this._warehousePanel.open();
+      void TextureCache.preloadPanelAssets('warehouse')
+        .finally(() => this._warehousePanel.open());
     });
 
     // 花语合成彩蛋系统
@@ -454,6 +469,7 @@ export class MainScene implements Scene {
     overlay.addChild(this._affinityCodexPanel);
     EventBus.on('affinityCodex:open', (typeId?: string) => {
       this._affinityCodexPanel.open(typeId);
+      void TextureCache.preloadPanelAssets('affinity');
     });
     EventBus.on(
       'affinityCard:milestone',
@@ -1202,7 +1218,10 @@ export class MainScene implements Scene {
     });
 
     // 任务面板
-    EventBus.on('nav:openQuest', () => this._questPanel.open());
+    EventBus.on('nav:openQuest', () => {
+      void TextureCache.preloadPanelAssets('quest')
+        .finally(() => this._questPanel.open());
+    });
     EventBus.on('currency:changed', () => this._markRedDotsDirty());
     EventBus.on('currency:loaded', () => this._markRedDotsDirty());
     EventBus.on('quest:updated', () => this._markRedDotsDirty());
@@ -1294,7 +1313,8 @@ export class MainScene implements Scene {
       if (TutorialManager.isActive) return;
       const cur = SceneManager.current?.name;
       if (cur !== 'main' && cur !== 'shop') return;
-      this._merchShopPanel.open();
+      void TextureCache.preloadPanelAssets('merchShop')
+        .finally(() => this._merchShopPanel.open());
     });
 
     // 兼容旧事件：熟客资料卡已废弃，统一跳友谊图鉴
@@ -1305,7 +1325,8 @@ export class MainScene implements Scene {
       if (!typeId) return;
       if (!AffinityManager.isCardSystemUnlocked()) return;
       if (!hasCardsForOwner(typeId)) return;
-      this._affinityCodexPanel.open(typeId);
+      void TextureCache.preloadPanelAssets('affinity')
+        .finally(() => this._affinityCodexPanel.open(typeId));
     });
 
     // 客人解锁 / 图鉴集满后：刷新订单区让心形角标即时出现或消失
@@ -1327,18 +1348,23 @@ export class MainScene implements Scene {
     EventBus.on('nav:openDeco', () => {
       if (TutorialManager.isActive
         && TutorialManager.currentStep !== TutorialStep.GUIDE_BUY_FURNITURE) return;
-      this._decoPanel.open();
+      const preload = TutorialManager.isActive
+        ? TextureCache.preloadTutorialDeco()
+        : TextureCache.preloadSceneWarmup('deco');
+      void preload.finally(() => this._decoPanel.open());
     });
 
     // ---- 场景入口事件（左侧浮动按钮） ----
     EventBus.on('nav:openDressup', () => {
       ToastMessage.show('主角装扮系统已上线！');
-      EventBus.emit('panel:openDressUp');
+      void TextureCache.preloadPanelAssets('dressup')
+        .finally(() => EventBus.emit('panel:openDressUp'));
     });
 
     EventBus.on('nav:openAlbum', () => {
       ToastMessage.show('花语图鉴已上线！');
-      EventBus.emit('panel:openCollection');
+      void TextureCache.preloadPanelAssets('collection')
+        .finally(() => EventBus.emit('panel:openCollection'));
     });
 
     // ---- 限时活动入口 ----
@@ -1395,9 +1421,11 @@ export class MainScene implements Scene {
     // ---- 进入花店/房屋装修场景（底栏 ，非「购买商店」；购买商店为顶栏 panel:openMerchShop） ----
     EventBus.on('scene:switchToShop', () => {
       if (SceneManager.current?.name !== 'main') return;
-      // 教程期间仅在 SWITCH_TO_SHOP 步骤允许切换
+      // 教程期间：第 13 步是主动引导进花店；若存档已在花店步骤但当前仍在主场景，
+      // 也允许进入花店恢复教程，避免卡在 GUIDE_BUY_FURNITURE 等步骤。
       if (TutorialManager.isActive
-        && TutorialManager.currentStep !== TutorialStep.SWITCH_TO_SHOP) {
+        && TutorialManager.currentStep !== TutorialStep.SWITCH_TO_SHOP
+        && !TutorialManager.isShopSceneStep()) {
         console.warn('[MainScene] switchToShop blocked by tutorial step', TutorialManager.currentStep);
         return;
       }
@@ -1411,7 +1439,8 @@ export class MainScene implements Scene {
       const finish = (liveRt: PIXI.RenderTexture | null) => {
         OverlayManager.bringToFront();
         this._worldMapPanel.setLiveHouseThumbnail(liveRt);
-        this._worldMapPanel.open();
+        void TextureCache.preloadPanelAssets('worldmap')
+          .finally(() => this._worldMapPanel.open());
       };
       // 延后一帧再截屏，避免与当帧主渲染竞争导致部分机型截到透明空图
       if (cur?.name === 'shop') {

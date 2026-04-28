@@ -22,7 +22,7 @@ import { RewardFlyCoordinator, type RewardFlyBindings } from '@/core/RewardFlyCo
 import { TweenManager, Ease } from '@/core/TweenManager';
 import { TopBar, TOP_BAR_HEIGHT } from '@/gameobjects/ui/TopBar';
 import { DecorationManager } from '@/managers/DecorationManager';
-import { FURNITURE_TRAY_SPAWN_ROOM_LOCAL, RoomLayoutManager } from '@/managers/RoomLayoutManager';
+import { FURNITURE_TRAY_SPAWN_ROOM_LOCAL, RoomLayoutManager, type FurniturePlacement } from '@/managers/RoomLayoutManager';
 import { CurrencyManager } from '@/managers/CurrencyManager';
 import { CheckInManager } from '@/managers/CheckInManager';
 import { QuestManager } from '@/managers/QuestManager';
@@ -90,9 +90,8 @@ const trayOpenTopY = (logicH: number) =>
   FURNITURE_TRAY_OPEN_OFFSET_UP +
   FURNITURE_TRAY_OPEN_NUDGE_DOWN;
 
-/** 托盘内「完成装修」：顶栏水平居中，纵向约在拖动手柄带中心偏下（相对托盘顶边） */
+/** 托盘内「完成装修」：顶部水平居中，贴在手柄带下方。 */
 const TRAY_EDIT_COMPLETE_TOP_Y = 36;
-/** 较原右下角方案略放大 */
 const TRAY_EDIT_COMPLETE_MAX_W = 268;
 const TRAY_EDIT_COMPLETE_MAX_H = 72;
 
@@ -230,6 +229,8 @@ export class ShopScene implements Scene {
   private _editCompletePill: PIXI.Container | null = null;
   private _editToolbar!: RoomEditToolbar;
   private _shopBuildingSprite: PIXI.Sprite | null = null;
+  private _textureRefreshUnsub: (() => void) | null = null;
+  private _pendingPlaceTextureUnsub: (() => void) | null = null;
 
   // ── 大地图（面板在 OverlayManager，此处仅入口按钮） ──
   private _worldMapBtn: PIXI.Container | null = null;
@@ -409,11 +410,29 @@ export class ShopScene implements Scene {
     }
 
     RewardFlyCoordinator.setBindings(this._createShopRewardFlyBindings());
+    this._textureRefreshUnsub?.();
+    this._textureRefreshUnsub = TextureCache.observeTextureDependencies(
+      { groups: ['main', 'shop', 'deco', 'items', 'panels', 'affinity', 'customers', 'ownerOutfits'] },
+      () => {
+        if (SceneManager.current?.name !== 'shop') return;
+        this._refreshActivityButtonTextures();
+        this._refreshShopBuildingTexture();
+        if (this._isEditMode) {
+          this._ensureEditModeFurnitureSprites();
+        } else {
+          this._renderFurnitureLayout();
+        }
+        this._refreshShopOwnerOutfitTextures();
+        this._customerScrollArea?.refresh();
+        if (this._isEditMode) this._ensureEditCompletePill();
+      },
+    );
 
     SoundSystem.playShopBGM();
 
     // 教程：从合成页切入花店时推进步骤，然后绑定花店引导 UI
     if (TutorialManager.isActive) {
+      void TextureCache.preloadTutorialDeco();
       if (TutorialManager.currentStep === TutorialStep.SWITCH_TO_SHOP) {
         TutorialManager.advanceTo(TutorialStep.SHOP_TOUR);
       }
@@ -434,6 +453,10 @@ export class ShopScene implements Scene {
 
     this._restoreShopHudAfterDecoPanel();
     RewardFlyCoordinator.setBindings(null);
+    this._textureRefreshUnsub?.();
+    this._textureRefreshUnsub = null;
+    this._pendingPlaceTextureUnsub?.();
+    this._pendingPlaceTextureUnsub = null;
     this._clearPendingDoubleTapStates();
     EventBus.off('decoration:room_style', this._refreshShopBuildingTexture);
     EventBus.off('decoration:decoPanelBackdrop', this._onDecoPanelBackdrop);
@@ -676,34 +699,8 @@ export class ShopScene implements Scene {
     const layout = RoomLayoutManager.getLayout();
     for (let pi = 0; pi < layout.length; pi++) {
       const placement = layout[pi];
-      const deco = DECO_MAP.get(placement.decoId);
-      if (!deco) continue;
-
-      const texture = TextureCache.get(deco.icon);
-      if (!texture) continue;
-
-      const sprite = new PIXI.Sprite(texture);
-      const baseSize = SHOP_FURNITURE_TEX_BASE_PX;
-      const s = Math.min(baseSize / texture.width, baseSize / texture.height) * placement.scale;
-      sprite.scale.set(
-        placement.flipped ? -s : s,
-        s
-      );
-      sprite.anchor.set(0.5, 0.8); // 底部偏中心
-      sprite.position.set(placement.x, placement.y);
-      // 2.5D：Y 为主；台面小物 typeLift + depthManualBias + zLayer/stackTie（见 RoomDepthSort）
-      const stackTie = Math.min(pi, 999);
-      sprite.zIndex = roomDepthZForPlacement(
-        placement.y,
-        placement.zLayer ?? 0,
-        stackTie,
-        deco,
-        placement.depthManualBias,
-      );
-
-      // 标记 decoId（用于拖拽系统识别）
-      (sprite as any)._decoId = placement.decoId;
-
+      const sprite = this._createFurnitureSpriteFromPlacement(placement, pi);
+      if (!sprite) continue;
       this._roomContainer.addChild(sprite);
 
       if (!this._isEditMode) {
@@ -712,6 +709,45 @@ export class ShopScene implements Scene {
     }
 
     this._roomContainer.sortChildren();
+  }
+
+  private _createFurnitureSpriteFromPlacement(placement: FurniturePlacement, stackIndex: number): PIXI.Sprite | null {
+    const deco = DECO_MAP.get(placement.decoId);
+    if (!deco) return null;
+    const texture = TextureCache.get(deco.icon);
+    if (!texture) return null;
+
+    const sprite = new PIXI.Sprite(texture);
+    const baseSize = SHOP_FURNITURE_TEX_BASE_PX;
+    const s = Math.min(baseSize / texture.width, baseSize / texture.height) * placement.scale;
+    sprite.scale.set(placement.flipped ? -s : s, s);
+    sprite.anchor.set(0.5, 0.8);
+    sprite.position.set(placement.x, placement.y);
+    const stackTie = Math.min(stackIndex, 999);
+    sprite.zIndex = roomDepthZForPlacement(
+      placement.y,
+      placement.zLayer ?? 0,
+      stackTie,
+      deco,
+      placement.depthManualBias,
+    );
+    (sprite as any)._decoId = placement.decoId;
+    return sprite;
+  }
+
+  /** 编辑模式下不能全量重建；只补回被资源刷新误删或晚加载缺失的家具 Sprite。 */
+  private _ensureEditModeFurnitureSprites(): void {
+    const layout = RoomLayoutManager.getLayout();
+    for (let pi = 0; pi < layout.length; pi++) {
+      const placement = layout[pi];
+      const existing = FurnitureDragSystem.getSpriteByDecoId(placement.decoId);
+      if (existing && existing.parent === this._roomContainer && !existing.destroyed) continue;
+      const sprite = this._createFurnitureSpriteFromPlacement(placement, pi);
+      if (!sprite) continue;
+      this._roomContainer.addChild(sprite);
+      FurnitureDragSystem.registerSprite(sprite, placement.decoId);
+    }
+    FurnitureDragSystem.sortByDepth();
   }
 
   /** 取消家具/店主的「待判定单击」定时器（进编辑或离场景时调用） */
@@ -1294,6 +1330,67 @@ export class ShopScene implements Scene {
           EventBus.on('level:up', onLevelUp);
         }
       }
+    }
+  }
+
+  private _refreshActivityButtonTextures(): void {
+    for (const def of LEFT_TOP_BUTTONS) {
+      const btn = this._activityBtns.get(def.id);
+      if (btn) this._refreshSideButtonIcon(btn.container, def, 84, 84);
+    }
+    for (const def of RIGHT_BUTTONS) {
+      const btn = this._activityBtns.get(def.id);
+      if (btn) this._refreshSideButtonIcon(btn.container, def, 84, 84);
+    }
+    for (const def of DECO_PAIR_BUTTONS) {
+      const btn = this._activityBtns.get(def.id);
+      if (btn) this._refreshBareIconButtonIcon(btn.container, def, 40);
+    }
+  }
+
+  private _refreshSideButtonIcon(
+    container: PIXI.Container,
+    def: SideBtnDef,
+    btnW: number,
+    btnH: number,
+  ): void {
+    if (!def.texKey) return;
+    const tex = TextureCache.get(def.texKey);
+    if (!tex?.width) return;
+    const old = container.children[1];
+    if (old instanceof PIXI.Sprite && old.texture === tex) return;
+
+    const halfH = btnH / 2;
+    const iconSize = btnW * 0.72;
+    const iconCY = -halfH * 0.15;
+    const sp = new PIXI.Sprite(tex);
+    sp.anchor.set(0.5);
+    sp.width = iconSize;
+    sp.height = iconSize;
+    sp.position.set(0, iconCY);
+    container.addChildAt(sp, 1);
+    if (old) {
+      container.removeChild(old);
+      old.destroy({ children: true });
+    }
+  }
+
+  private _refreshBareIconButtonIcon(container: PIXI.Container, def: SideBtnDef, iconR: number): void {
+    if (!def.texKey) return;
+    const tex = TextureCache.get(def.texKey);
+    if (!tex?.width) return;
+    const old = container.children[0];
+    if (old instanceof PIXI.Sprite && old.texture === tex) return;
+
+    const iconSize = iconR * 2;
+    const sp = new PIXI.Sprite(tex);
+    sp.anchor.set(0.5);
+    sp.width = iconSize;
+    sp.height = iconSize;
+    container.addChildAt(sp, 0);
+    if (old) {
+      container.removeChild(old);
+      old.destroy({ children: true });
     }
   }
 
@@ -2027,6 +2124,7 @@ export class ShopScene implements Scene {
     if (SceneManager.current?.name !== 'shop') return;
     const deco = DECO_MAP.get(decoId);
     if (!deco) return;
+    void TextureCache.preloadKeys([deco.icon]);
 
     const wasEdit = this._isEditMode;
     const placed = !!RoomLayoutManager.getPlacement(decoId);
@@ -2038,15 +2136,41 @@ export class ShopScene implements Scene {
     }
 
     if (placed) {
+      this._ensureEditModeFurnitureSprites();
+      FurnitureDragSystem.select(decoId);
       ToastMessage.show('该家具已在房间中，可在装修模式下调整位置');
       return;
     }
 
-    const { x: spawnDesignX, y: spawnDesignY } = this._roomLocalToDesign(
-      FURNITURE_TRAY_SPAWN_ROOM_LOCAL.x,
-      FURNITURE_TRAY_SPAWN_ROOM_LOCAL.y,
-    );
-    FurnitureDragSystem.startDragFromTray(decoId, spawnDesignX, spawnDesignY);
+    this._startPendingPlaceDragWhenTextureReady(decoId);
+  }
+
+  private _startPendingPlaceDragWhenTextureReady(decoId: string): void {
+    const deco = DECO_MAP.get(decoId);
+    if (!deco) return;
+
+    const startDrag = (): boolean => {
+      if (SceneManager.current?.name !== 'shop' || !this._isEditMode) return true;
+      if (RoomLayoutManager.getPlacement(decoId)) return true;
+      if (!TextureCache.get(deco.icon)) return false;
+      const { x: spawnDesignX, y: spawnDesignY } = this._roomLocalToDesign(
+        FURNITURE_TRAY_SPAWN_ROOM_LOCAL.x,
+        FURNITURE_TRAY_SPAWN_ROOM_LOCAL.y,
+      );
+      FurnitureDragSystem.startDragFromTray(decoId, spawnDesignX, spawnDesignY);
+      return true;
+    };
+
+    this._pendingPlaceTextureUnsub?.();
+    this._pendingPlaceTextureUnsub = null;
+    if (startDrag()) return;
+
+    this._pendingPlaceTextureUnsub = TextureCache.onKeysLoaded([deco.icon], () => {
+      if (startDrag()) {
+        this._pendingPlaceTextureUnsub?.();
+        this._pendingPlaceTextureUnsub = null;
+      }
+    });
   }
 
   /**
@@ -2266,20 +2390,36 @@ export class ShopScene implements Scene {
     return label;
   }
 
+  private _makeEditCompletePillFallbackBg(): PIXI.Graphics {
+    const g = new PIXI.Graphics();
+    const w = TRAY_EDIT_COMPLETE_MAX_W;
+    const h = TRAY_EDIT_COMPLETE_MAX_H;
+    g.beginFill(0xbbe68d, 1);
+    g.lineStyle(4, 0x5a7a38, 0.85);
+    g.drawRoundedRect(-w / 2, -h / 2, w, h, h / 2);
+    g.endFill();
+    g.lineStyle(2, 0xe8ffd0, 0.7);
+    g.drawRoundedRect(-w / 2 + 5, -h / 2 + 5, w - 10, h - 10, Math.max(8, h / 2 - 5));
+    return g;
+  }
+
   /** 顶中大钮：贴图与热区以容器中心为锚点 */
   private _syncEditCompletePillLayout(wrap: PIXI.Container): void {
-    const sp = wrap.children[0] as PIXI.Sprite;
-    const tex = sp?.texture;
-    if (!tex || tex.width <= 0) return;
-    const s = Math.min(
-      TRAY_EDIT_COMPLETE_MAX_W / tex.width,
-      TRAY_EDIT_COMPLETE_MAX_H / tex.height,
-    );
-    sp.anchor.set(0.5, 0.5);
-    sp.position.set(0, 0);
-    sp.scale.set(s);
-    const bw = tex.width * s;
-    const bh = tex.height * s;
+    let bw = TRAY_EDIT_COMPLETE_MAX_W;
+    let bh = TRAY_EDIT_COMPLETE_MAX_H;
+    const bg = wrap.children[0];
+    if (bg instanceof PIXI.Sprite && bg.texture?.width > 0) {
+      const tex = bg.texture;
+      const s = Math.min(
+        TRAY_EDIT_COMPLETE_MAX_W / tex.width,
+        TRAY_EDIT_COMPLETE_MAX_H / tex.height,
+      );
+      bg.anchor.set(0.5, 0.5);
+      bg.position.set(0, 0);
+      bg.scale.set(s);
+      bw = tex.width * s;
+      bh = tex.height * s;
+    }
     wrap.position.set(DESIGN_WIDTH / 2, TRAY_EDIT_COMPLETE_TOP_Y);
     wrap.hitArea = new PIXI.Rectangle(-bw / 2, -bh / 2, bw, bh);
     for (const c of wrap.children) {
@@ -2338,17 +2478,13 @@ export class ShopScene implements Scene {
       }
       this._syncEditCompletePillLayout(p);
       this._furnitureTray.addChild(p);
+      this._refreshEditCompletePillTexture();
       this._pulseEditCompletePill();
       return;
     }
     const tex = TextureCache.get('edit_complete_pill_4x2_nb2');
-    if (!tex) {
-      console.warn('[ShopScene] 缺少 edit_complete_pill_4x2_nb2 纹理');
-      return;
-    }
     const wrap = new PIXI.Container();
-    const sp = new PIXI.Sprite(tex);
-    wrap.addChild(sp);
+    wrap.addChild(tex ? new PIXI.Sprite(tex) : this._makeEditCompletePillFallbackBg());
     wrap.addChild(this._makeEditCompletePillLabel());
     this._syncEditCompletePillLayout(wrap);
     wrap.eventMode = 'static';
@@ -2359,6 +2495,21 @@ export class ShopScene implements Scene {
     this._editCompletePill = wrap;
     this._furnitureTray.addChild(wrap);
     this._pulseEditCompletePill();
+  }
+
+  private _refreshEditCompletePillTexture(): void {
+    const pill = this._editCompletePill;
+    const tex = TextureCache.get('edit_complete_pill_4x2_nb2');
+    if (!pill || !tex?.width) return;
+    if (pill.children[0] instanceof PIXI.Sprite && (pill.children[0] as PIXI.Sprite).texture === tex) return;
+    const oldBg = pill.children[0];
+    const sp = new PIXI.Sprite(tex);
+    pill.addChildAt(sp, 0);
+    if (oldBg) {
+      pill.removeChild(oldBg);
+      oldBg.destroy({ children: true });
+    }
+    this._syncEditCompletePillLayout(pill);
   }
 
   private _hideEditCompletePill(): void {

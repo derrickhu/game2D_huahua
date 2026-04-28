@@ -23,6 +23,44 @@ function _safeCall(fn, fallback) {
 
 const noop = function() {};
 
+function _safeLogValue(v) {
+  if (v == null) return '';
+  try { return String(v); } catch (_) { return '[unstringifiable]'; }
+}
+
+function _shortUrl(url) {
+  const s = _safeLogValue(url);
+  return s.length > 220 ? s.slice(0, 220) + '...' : s;
+}
+
+function _sanitizeRequestOptions(opts) {
+  const out = {
+    url: String(opts && opts.url || ''),
+    method: String(opts && opts.method || 'GET'),
+  };
+  if (opts && opts.header) {
+    out.header = {};
+    for (const k in opts.header) out.header[k] = String(opts.header[k]);
+  }
+  if (opts && opts.data !== undefined) {
+    out.data = typeof opts.data === 'string' || opts.data instanceof ArrayBuffer
+      ? opts.data
+      : JSON.stringify(opts.data);
+  }
+  if (opts && opts.responseType) out.responseType = String(opts.responseType);
+  if (opts && opts.dataType) out.dataType = String(opts.dataType);
+  if (opts && opts.timeout) out.timeout = Number(opts.timeout);
+  if (opts && typeof opts.success === 'function') out.success = opts.success;
+  if (opts && typeof opts.fail === 'function') {
+    out.fail = function(err) {
+      const msg = err && (err.errMsg || err.message) ? (err.errMsg || err.message) : String(err);
+      opts.fail({ errMsg: msg });
+    };
+  }
+  if (opts && typeof opts.complete === 'function') out.complete = opts.complete;
+  return out;
+}
+
 const platform = {
   createCanvas: () => _api ? _api.createCanvas() : { width: 0, height: 0, getContext: function() { return null; } },
   createImage: () => _api ? _api.createImage() : { src: '', onload: null, onerror: null },
@@ -33,7 +71,32 @@ const platform = {
   setStorageSync: (key, data) => _api ? _safeCall(() => _api.setStorageSync(key, data)) : undefined,
   removeStorageSync: (key) => _api ? _safeCall(() => _api.removeStorageSync(key)) : undefined,
 
-  request: (opts) => _api ? _api.request(opts) : null,
+  request: (opts) => {
+    if (!_api) return null;
+    const clean = _sanitizeRequestOptions(opts || {});
+    try {
+      console.log('[platform.request]', clean.method, _shortUrl(clean.url), 'responseType=' + (clean.responseType || ''), 'dataType=' + (clean.dataType || ''));
+    } catch (_) {}
+    return _api.request(clean);
+  },
+  downloadFile: (opts) => {
+    if (!_api || !_api.downloadFile) return null;
+    const clean = {
+      url: String(opts && opts.url || ''),
+    };
+    if (opts && typeof opts.success === 'function') clean.success = opts.success;
+    if (opts && typeof opts.fail === 'function') {
+      clean.fail = function(err) {
+        const msg = err && (err.errMsg || err.message) ? (err.errMsg || err.message) : String(err);
+        opts.fail({ errMsg: msg });
+      };
+    }
+    if (opts && typeof opts.complete === 'function') clean.complete = opts.complete;
+    if (opts && opts.timeout) clean.timeout = Number(opts.timeout);
+    try { console.log('[platform.downloadFile]', _shortUrl(clean.url)); } catch (_) {}
+    return _api.downloadFile(clean);
+  },
+  getFileSystemManager: () => _api && _api.getFileSystemManager ? _api.getFileSystemManager() : null,
   connectSocket: (opts) => _api ? _api.connectSocket(opts) : null,
 
   onTouchStart: (cb) => _api && _api.onTouchStart ? _api.onTouchStart(cb) : noop,

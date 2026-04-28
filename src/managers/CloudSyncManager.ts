@@ -377,6 +377,8 @@ class CloudSyncManagerClass {
             }
           }, CLOUD_SYNC_RETRY_INTERVAL_MS);
         }
+      } else if (PersistService.isCloudDirty()) {
+        this.scheduleSync(`retry-after-fail:${reason}`);
       }
     } finally {
       this._syncing = false;

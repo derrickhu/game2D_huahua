@@ -42,6 +42,7 @@ export class RewardBoxPanel extends PIXI.Container {
   private _gridMask!: PIXI.Graphics;
   private _selectedItemId: string | null = null;
   private _isOpen = false;
+  private _textureUnsub: (() => void) | null = null;
 
   /** 触发按钮底中心在覆盖层本地坐标 */
   private _anchorLocal: { x: number; y: number } | null = null;
@@ -98,6 +99,10 @@ export class RewardBoxPanel extends PIXI.Container {
     }
     this._anchorLocal = { x: anchorX, y: anchorY };
     this._isOpen = true;
+    this._textureUnsub?.();
+    this._textureUnsub = TextureCache.observeTextureDependencies({ groups: ['items'] }, () => {
+      if (this._isOpen) this._refreshGrid();
+    });
     this._selectedItemId = null;
     this._scrollY = 0;
     this.visible = true;
@@ -115,6 +120,8 @@ export class RewardBoxPanel extends PIXI.Container {
   close(): void {
     if (!this._isOpen) return;
     this._isOpen = false;
+    this._textureUnsub?.();
+    this._textureUnsub = null;
     this._selectedItemId = null;
     this._cleanupDrag();
 

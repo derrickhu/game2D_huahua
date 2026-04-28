@@ -33,6 +33,8 @@ export const WORLD_MAP_PANEL_Z = 10500;
 
 export class WorldMapPanel extends PIXI.Container {
   private _isOpen = false;
+  private _opening = false;
+  private _assetUnsub: (() => void) | null = null;
   private _pageBg!: PIXI.Graphics;
   private _scrollContent!: PIXI.Container;
   private _scrollMask!: PIXI.Graphics;
@@ -107,9 +109,25 @@ export class WorldMapPanel extends PIXI.Container {
   }
 
   open(): void {
+    if (this._isOpen || this._opening) return;
+    this._opening = true;
+    void TextureCache.preloadPanelAssets('worldmap').finally(() => {
+      this._opening = false;
+      this._openReady();
+    });
+  }
+
+  private _openReady(): void {
     if (this._isOpen) return;
     this._isOpen = true;
     this.visible = true;
+    this._assetUnsub = TextureCache.onAssetGroupLoaded('worldmap', () => {
+      if (this._isOpen) {
+        this._rebuildMapContent();
+        this._refreshNodes();
+        this._refreshHud();
+      }
+    });
     AudioManager.play('world_map_open');
     SoundSystem.playWorldMapBGM();
     this._wishingFountainAnimAcc = 0;
@@ -128,8 +146,11 @@ export class WorldMapPanel extends PIXI.Container {
   }
 
   close(): void {
+    this._opening = false;
     if (!this._isOpen) return;
     this._isOpen = false;
+    this._assetUnsub?.();
+    this._assetUnsub = null;
     this._pressedNodeIndex = -1;
     Game.ticker.remove(this._onTicker, this);
     this._cleanupRawEvents();
@@ -297,6 +318,13 @@ export class WorldMapPanel extends PIXI.Container {
       this._nodeContainers.push(nc);
     }
     this._syncLiveBuildingThumbTexture();
+  }
+
+  private _rebuildMapContent(): void {
+    this._scrollContent.removeChildren();
+    this._nodeContainers = [];
+    this._drawMapBackground();
+    this._buildNodes();
   }
 
   private _createNodeContainer(node: MapNodeDef): PIXI.Container {

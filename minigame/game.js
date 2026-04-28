@@ -9,6 +9,24 @@ function _diag(msg) {
   try { console.log(line); } catch(_) {}
 }
 
+function _dumpRecentXhr(reason) {
+  try {
+    var g = typeof GameGlobal !== 'undefined' ? GameGlobal : (typeof globalThis !== 'undefined' ? globalThis : null);
+    var logs = g && g.__xhrDebugLogs;
+    if (!logs || !logs.length) {
+      console.warn('[XHR-DUMP]', reason, 'no xhr logs');
+      return;
+    }
+    var start = Math.max(0, logs.length - 30);
+    console.warn('[XHR-DUMP]', reason, 'recent=' + (logs.length - start) + '/' + logs.length);
+    for (var i = start; i < logs.length; i++) {
+      console.warn(logs[i]);
+    }
+  } catch (e) {
+    try { console.warn('[XHR-DUMP] failed:', e); } catch (_) {}
+  }
+}
+
 // 弹窗显示诊断信息（控制台出不来时的最后手段）
 function _showDiag() {
   try {
@@ -41,10 +59,12 @@ try {
   if (typeof GameGlobal !== 'undefined') {
     GameGlobal.onError = function(msg) {
       _diag('onError:' + msg);
+      _dumpRecentXhr('onError');
       _showDiag();
     };
     GameGlobal.onUnhandledRejection = function(ev) {
       _diag('unhandledRej:' + (ev && ev.reason || ev));
+      _dumpRecentXhr('onUnhandledRejection');
       _showDiag();
     };
   }

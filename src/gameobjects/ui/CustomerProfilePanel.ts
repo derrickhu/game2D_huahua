@@ -29,6 +29,7 @@ export class CustomerProfilePanel extends PIXI.Container {
   private _isOpen = false;
   private _frameRoot: PIXI.Container | null = null;
   private _currentTypeId: string | null = null;
+  private _textureUnsub: (() => void) | null = null;
 
   constructor() {
     super();
@@ -51,6 +52,15 @@ export class CustomerProfilePanel extends PIXI.Container {
     this._isOpen = true;
     this._currentTypeId = typeId;
     this.visible = true;
+    this._textureUnsub?.();
+    this._textureUnsub = TextureCache.observeTextureDependencies(
+      { groups: ['customers', 'affinity', 'deco'] },
+      () => {
+        if (!this._isOpen || !this._currentTypeId) return;
+        const nextDef = AFFINITY_MAP.get(this._currentTypeId);
+        if (nextDef) this._build(nextDef);
+      },
+    );
     this._build(def);
     this.alpha = 0;
     TweenManager.to({ target: this, props: { alpha: 1 }, duration: 0.18, ease: Ease.easeOutQuad });
@@ -59,6 +69,8 @@ export class CustomerProfilePanel extends PIXI.Container {
   close(): void {
     if (!this._isOpen) return;
     this._isOpen = false;
+    this._textureUnsub?.();
+    this._textureUnsub = null;
     this._currentTypeId = null;
     TweenManager.to({
       target: this,

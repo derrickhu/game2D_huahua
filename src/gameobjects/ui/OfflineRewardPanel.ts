@@ -30,6 +30,7 @@ export class OfflineRewardPanel extends PIXI.Container {
   private _content!: PIXI.Container;
   private _isOpen = false;
   private _reward: OfflineReward | null = null;
+  private _textureUnsub: (() => void) | null = null;
 
   constructor() {
     super();
@@ -43,6 +44,11 @@ export class OfflineRewardPanel extends PIXI.Container {
     this._reward = reward;
     this._isOpen = true;
     this.visible = true;
+    this._textureUnsub?.();
+    this._textureUnsub = TextureCache.observeTextureDependencies(
+      { groups: ['items', 'customers', 'deco'] },
+      () => { if (this._isOpen) this._refresh(); },
+    );
     this._refresh();
 
     this.alpha = 0;
@@ -54,6 +60,8 @@ export class OfflineRewardPanel extends PIXI.Container {
   close(): void {
     if (!this._isOpen) return;
     this._isOpen = false;
+    this._textureUnsub?.();
+    this._textureUnsub = null;
     TweenManager.to({
       target: this,
       props: { alpha: 0 },

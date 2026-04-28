@@ -29,6 +29,8 @@ export class FlowerEasterEggSystem {
   private _parent: PIXI.Container;
   private _triggered: Set<string> = new Set();
   private _isShowing = false;
+  private _activeUnlockAssetUnsub: (() => void) | null = null;
+  private _activeUnlockClosing = false;
 
   constructor(parent: PIXI.Container) {
     this._parent = parent;
@@ -52,16 +54,35 @@ export class FlowerEasterEggSystem {
     this._triggered.add(itemId);
     this._saveTriggered();
     const rewards = getUnlockRewards(itemId, def);
+    void TextureCache.preloadKeys(this._unlockPanelTextureKeys(itemId, def));
     setTimeout(() => {
       this._showUnlockPanel(itemId, def.name, rewards);
     }, 600);
   }
 
+  private _unlockPanelTextureKeys(itemId: string, def?: ItemDef): string[] {
+    return Array.from(new Set([
+      'deco_panel_title_ribbon',
+      'flower_egg_title_banner',
+      'flower_egg_card_bg',
+      'flower_egg_btn_claim',
+      def?.icon || itemId,
+    ].filter(Boolean)));
+  }
+
   /* ====== 弹窗 UI ====== */
 
-  private _showUnlockPanel(itemId: string, displayName: string, rewards: UnlockRewards): void {
+  private _showUnlockPanel(
+    itemId: string,
+    displayName: string,
+    rewards: UnlockRewards,
+    opts: { playAudio?: boolean; animate?: boolean } = {},
+  ): void {
     this._isShowing = true;
-    AudioManager.play('collection_unlock');
+    this._activeUnlockClosing = false;
+    this._activeUnlockAssetUnsub?.();
+    this._activeUnlockAssetUnsub = null;
+    if (opts.playAudio !== false) AudioManager.play('collection_unlock');
 
     const W = DESIGN_WIDTH;
     const H = Game.logicHeight;
@@ -293,13 +314,32 @@ export class FlowerEasterEggSystem {
     overlay.addChild(hint);
 
     // ---- 入场 ----
-    overlay.alpha = 0;
+    overlay.alpha = opts.animate === false ? 1 : 0;
     this._parent.addChild(overlay);
-    TweenManager.to({ target: overlay, props: { alpha: 1 }, duration: 0.35, ease: Ease.easeOutQuad });
+    if (opts.animate !== false) {
+      TweenManager.to({ target: overlay, props: { alpha: 1 }, duration: 0.35, ease: Ease.easeOutQuad });
+    }
+
+    this._activeUnlockAssetUnsub = TextureCache.onKeysLoaded(
+      this._unlockPanelTextureKeys(itemId, def),
+      () => {
+        if (!this._isShowing || this._activeUnlockClosing || overlay.destroyed) return;
+        TweenManager.cancelTarget(breathObj);
+        TweenManager.cancelTarget(overlay);
+        this._activeUnlockAssetUnsub?.();
+        this._activeUnlockAssetUnsub = null;
+        if (overlay.parent) overlay.parent.removeChild(overlay);
+        overlay.destroy({ children: true });
+        this._showUnlockPanel(itemId, displayName, rewards, { playAudio: false, animate: false });
+      },
+    );
 
     // ---- 关闭 & 回调（花愿为 0 时仅关窗；若有花愿则经 EventBus 飞入顶栏）----
     let claimStarted = false;
     const finishClose = (): void => {
+      this._activeUnlockClosing = true;
+      this._activeUnlockAssetUnsub?.();
+      this._activeUnlockAssetUnsub = null;
       TweenManager.cancelTarget(breathObj);
       TweenManager.cancelTarget(overlay);
       TweenManager.to({
@@ -312,6 +352,7 @@ export class FlowerEasterEggSystem {
           this._parent.removeChild(overlay);
           overlay.destroy({ children: true });
           this._isShowing = false;
+          this._activeUnlockClosing = false;
         },
       });
     };
@@ -319,6 +360,9 @@ export class FlowerEasterEggSystem {
     const closePanel = (): void => {
       if (claimStarted) return;
       claimStarted = true;
+      this._activeUnlockClosing = true;
+      this._activeUnlockAssetUnsub?.();
+      this._activeUnlockAssetUnsub = null;
       TweenManager.cancelTarget(breathObj);
       btnWrap.eventMode = 'none';
       mask.eventMode = 'none';

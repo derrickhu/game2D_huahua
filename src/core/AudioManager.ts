@@ -6,6 +6,8 @@
  * 首次播放需在用户交互（tap）回调中触发，否则可能被系统拦截。
  */
 
+import { CdnAssetService } from '@/core/CdnAssetService';
+
 declare const wx: any;
 declare const tt: any;
 
@@ -35,6 +37,7 @@ class AudioManagerClass {
   private _soundMuted = false;
   private _musicMuted = false;
   private _bgmPending: { src: string; volume: number } | null = null;
+  private _bgmRequestSeq = 0;
   /** 记录每个音效最后一次播放时间戳，用于节流 */
   private _lastPlayTime: Map<string, number> = new Map();
 
@@ -69,6 +72,18 @@ class AudioManagerClass {
         ? Math.min(1, Math.max(0, scaleRaw))
         : 1;
 
+    void CdnAssetService.resolveOrDownload(entry.src)
+      .then(src => this._playResolvedSound(name, src, entry.volume * volumeScale, opts, rate))
+      .catch(() => this._playResolvedSound(name, entry.src, entry.volume * volumeScale, opts, rate));
+  }
+
+  private _playResolvedSound(
+    name: string,
+    src: string,
+    volume: number,
+    opts: PlaySoundOptions | undefined,
+    rate: number,
+  ): void {
     try {
       const create = _api.createInnerAudioContext;
       if (typeof create !== 'function') return;
@@ -105,7 +120,7 @@ class AudioManagerClass {
         }
       };
 
-      audio.volume = entry.volume * volumeScale;
+      audio.volume = volume;
       audio.onError((err: any) => {
         console.warn(TAG, `音效 "${name}" 播放失败:`, err?.errMsg || err);
         cleanup();
@@ -119,7 +134,7 @@ class AudioManagerClass {
       }
       // 先写倍速再设 src、设完 src 再写一遍：兼容部分基础库只在「src 已设」后接受 playbackRate
       applyPlaybackRate();
-      audio.src = entry.src;
+      audio.src = src;
       applyPlaybackRate();
       if (typeof audio.onCanplay !== 'function') {
         setTimeout(() => {
@@ -133,6 +148,20 @@ class AudioManagerClass {
   }
 
   playBGM(src: string, volume = 0.5, opts?: { loop?: boolean }): void {
+    const seq = ++this._bgmRequestSeq;
+    void CdnAssetService.resolveOrDownload(src)
+      .then(resolvedSrc => this._playResolvedBGM(seq, src, resolvedSrc, volume, opts))
+      .catch(() => this._playResolvedBGM(seq, src, src, volume, opts));
+  }
+
+  private _playResolvedBGM(
+    seq: number,
+    originalSrc: string,
+    resolvedSrc: string,
+    volume = 0.5,
+    opts?: { loop?: boolean },
+  ): void {
+    if (seq !== this._bgmRequestSeq) return;
     if (!_api) {
       console.warn(TAG, 'API 不可用，无法播放 BGM');
       return;
@@ -140,7 +169,7 @@ class AudioManagerClass {
     this.stopBGM();
 
     // 记录待播放信息，首次可能需要用户交互后才能真正播放
-    this._bgmPending = { src, volume };
+    this._bgmPending = { src: originalSrc, volume };
 
     try {
       const create = _api.createInnerAudioContext;
@@ -157,14 +186,14 @@ class AudioManagerClass {
       this._bgm.loop = opts?.loop ?? true;
       this._bgm.volume = volume;
       this._bgm.onError((err: any) => {
-        console.warn(TAG, `BGM "${src}" 播放失败:`, err?.errMsg || err);
+        console.warn(TAG, `BGM "${originalSrc}" 播放失败:`, err?.errMsg || err);
         try {
           this._bgm?.destroy?.();
         } catch (_) { /* */ }
         this._bgm = null;
       });
       this._bgm.onPlay(() => {
-        console.log(TAG, `BGM "${src}" 开始播放`);
+        console.log(TAG, `BGM "${originalSrc}" 开始播放`);
         this._bgmPending = null;
       });
 
@@ -172,7 +201,7 @@ class AudioManagerClass {
         if (this._musicMuted || !this._bgm) return;
         try {
           this._bgm.play();
-          console.log(TAG, `BGM "${src}" 尝试播放...`);
+          console.log(TAG, `BGM "${originalSrc}" 尝试播放...`);
         } catch (e) {
           console.warn(TAG, `BGM play():`, e);
         }
@@ -181,12 +210,13 @@ class AudioManagerClass {
       if (typeof this._bgm.onCanplay === 'function') {
         this._bgm.onCanplay(() => tryPlayBgm());
       }
-      this._bgm.src = src;
+      console.log(TAG, `BGM "${originalSrc}" resolved src: ${resolvedSrc}`);
+      this._bgm.src = resolvedSrc;
       if (typeof this._bgm.onCanplay !== 'function' && !this._musicMuted) {
         setTimeout(tryPlayBgm, 0);
       }
     } catch (e) {
-      console.warn(TAG, `BGM "${src}" 创建异常:`, e);
+      console.warn(TAG, `BGM "${originalSrc}" 创建异常:`, e);
       this._bgm = null;
     }
   }

@@ -123,6 +123,8 @@ type TrayListFilter = 'all' | 'unplaced';
 export class FurnitureTray extends PIXI.Container {
   /** 底板：拱顶壳体贴图或矢量回退 */
   private _bg!: PIXI.Container;
+  private _bgShellSprite: PIXI.Sprite | null = null;
+  private _bgFallback: PIXI.DisplayObject | null = null;
   private _handle!: PIXI.Container;
   private _tabContainer!: PIXI.Container;
   private _gridContainer!: PIXI.Container;
@@ -130,6 +132,7 @@ export class FurnitureTray extends PIXI.Container {
   /** 底部左侧：全部 / 未放置 */
   private _filterRow!: PIXI.Container;
   private _isOpen = false;
+  private _textureRefreshUnsub: (() => void) | null = null;
   private _currentTab: FurnitureTrayTabId = 'flower_room';
   private _closedY = 0;
   private _openY = 0;
@@ -217,6 +220,16 @@ export class FurnitureTray extends PIXI.Container {
       this._currentTab = 'flower_room';
     }
     this._listFilter = 'unplaced';
+    this._textureRefreshUnsub?.();
+    this._textureRefreshUnsub = TextureCache.observeTextureDependencies(
+      { groups: ['deco', 'panels'] },
+      () => {
+        if (!this._isOpen) return;
+        this._applyLoadedShellTextures();
+        this._refreshAll();
+      },
+    );
+    this._applyLoadedShellTextures();
     this._refreshAll();
 
     TweenManager.to({
@@ -231,6 +244,8 @@ export class FurnitureTray extends PIXI.Container {
   close(): void {
     if (!this._isOpen) return;
     this._isOpen = false;
+    this._textureRefreshUnsub?.();
+    this._textureRefreshUnsub = null;
     this._teardownTrayScroll();
 
     TweenManager.to({
@@ -271,6 +286,7 @@ export class FurnitureTray extends PIXI.Container {
       const sx = w / shellTex.width;
       sp.scale.set(sx, sx);
       this._bg.addChild(sp);
+      this._bgShellSprite = sp;
     } else {
       const g = new PIXI.Graphics();
       g.beginFill(BG_COLOR, BG_ALPHA);
@@ -279,6 +295,7 @@ export class FurnitureTray extends PIXI.Container {
       g.lineStyle(1, 0xE0D0C0);
       g.drawRoundedRect(0, 0, w, TRAY_BG_H, TRAY_RADIUS);
       this._bg.addChild(g);
+      this._bgFallback = g;
     }
 
     const bgMask = new PIXI.Graphics();
@@ -328,6 +345,26 @@ export class FurnitureTray extends PIXI.Container {
     this._filterRow = new PIXI.Container();
     this._filterRow.y = gridMaskTop + GRID_SCROLL_H;
     this.addChild(this._filterRow);
+  }
+
+  private _applyLoadedShellTextures(): void {
+    if (this._bgShellSprite) return;
+    const shellTex = TextureCache.get('furniture_tray_panel_shell_nb2');
+    if (!shellTex?.width) return;
+
+    if (this._bgFallback?.parent) {
+      this._bgFallback.parent.removeChild(this._bgFallback);
+      this._bgFallback.destroy({ children: true });
+    }
+    this._bgFallback = null;
+
+    const sp = new PIXI.Sprite(shellTex);
+    sp.anchor.set(0.5, 0);
+    sp.position.set(DESIGN_WIDTH / 2, 0);
+    const sx = DESIGN_WIDTH / shellTex.width;
+    sp.scale.set(sx, sx);
+    this._bg.addChildAt(sp, 0);
+    this._bgShellSprite = sp;
   }
 
   private _unbindCanvasTrayScroll(): void {

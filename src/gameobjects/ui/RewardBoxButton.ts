@@ -29,17 +29,21 @@ export class RewardBoxButton extends PIXI.Container {
   private _hasItemTexture = false;
   private _breathStopped = false;
   private _rewardActive = false;
+  private _textureUnsub: (() => void) | null = null;
 
   constructor() {
     super();
     this._build();
     this._refresh();
     EventBus.on('rewardBox:changed', () => this._refresh());
+    this._textureUnsub = TextureCache.observeTextureDependencies({ groups: ['items'] }, () => this._refresh());
     Game.ticker.add(this._onBreathTick, this);
   }
 
   destroy(options?: PIXI.IDestroyOptions | boolean): void {
     this._breathStopped = true;
+    this._textureUnsub?.();
+    this._textureUnsub = null;
     Game.ticker.remove(this._onBreathTick, this);
     super.destroy(options);
   }

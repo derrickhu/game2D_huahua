@@ -169,6 +169,8 @@ export class MerchShopPanel extends PIXI.Container {
   private _bg!: PIXI.Graphics;
   private _frameRoot!: PIXI.Container;
   private _isOpen = false;
+  private _opening = false;
+  private _assetUnsub: (() => void) | null = null;
   /** 货架滚动层（有组件底板时存在） */
   private _merchScrollContent: PIXI.Container | null = null;
   private _merchScrollMinY = 0;
@@ -223,10 +225,24 @@ export class MerchShopPanel extends PIXI.Container {
   }
 
   open(): void {
+    if (this._isOpen || this._opening) return;
+    this._opening = true;
+    void TextureCache.preloadPanelAssets('merchShop').finally(() => {
+      this._opening = false;
+      this._openReady();
+    });
+  }
+
+  private _openReady(): void {
     if (this._isOpen) return;
     this._isOpen = true;
     this.visible = true;
     this.alpha = 1;
+    this._assetUnsub = TextureCache.onAssetGroupLoaded('merchShop', () => {
+      if (!this._isOpen || !this._merchDataBound) return;
+      this._refreshMerchSlots();
+      this._refreshMerchShelfStrips();
+    });
     this.position.set(0, 0);
     this.scale.set(1, 1);
 
@@ -256,8 +272,11 @@ export class MerchShopPanel extends PIXI.Container {
   }
 
   close(): void {
+    this._opening = false;
     if (!this._isOpen) return;
     this._isOpen = false;
+    this._assetUnsub?.();
+    this._assetUnsub = null;
     this._finishMerchCanvasScroll();
     if (this._merchDataBound) {
       EventBus.off('merchShop:changed', this._onMerchShopChanged);
