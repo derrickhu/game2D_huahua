@@ -10,6 +10,10 @@
  */
 
 import { AFFINITY_MAP, AFFINITY_UNLOCK_LEVELS } from './AffinityConfig';
+import {
+  BUTTERFLY_HOUSE_UNLOCK_LEVEL,
+  WORLD_MAP_UNLOCK_LEVEL,
+} from './WorldMapConfig';
 
 export type LevelUnlockEntryKind =
   | 'feature'        // 玩法功能解锁（花语泡泡 / 组合单 / 高阶宝箱等）
@@ -157,7 +161,7 @@ const LEVEL_UNLOCK_BASE: Record<number, Omit<LevelUnlockDef, 'level'>> = {
       },
     ],
   },
-  8: {
+  [WORLD_MAP_UNLOCK_LEVEL]: {
     ceremonyTitle: '夜赛初临',
     entries: [
       {
@@ -165,6 +169,12 @@ const LEVEL_UNLOCK_BASE: Record<number, Omit<LevelUnlockDef, 'level'>> = {
         title: '烘焙工具 Lv.1/2',
         desc: '甜品线产能再升一档。',
         iconKey: 'tool_bake_2',
+      },
+      {
+        kind: 'map',
+        title: '大地图开放',
+        desc: '世界地图入口开启，可前往许愿喷泉。',
+        iconKey: 'ui_lvup_world_map',
       },
     ],
   },
@@ -179,14 +189,14 @@ const LEVEL_UNLOCK_BASE: Record<number, Omit<LevelUnlockDef, 'level'>> = {
       },
     ],
   },
-  10: {
-    ceremonyTitle: '世界开门',
+  [BUTTERFLY_HOUSE_UNLOCK_LEVEL]: {
+    ceremonyTitle: '蝶屋启程',
     entries: [
       {
         kind: 'map',
-        title: '大地图开放',
-        desc: '世界地图入口开启，前往新场景与活动。',
-        iconKey: 'ui_lvup_world_map',
+        title: '蝴蝶小屋开放',
+        desc: '大地图中的蝴蝶小屋可进入，开启新的装修空间。',
+        iconKey: 'worldmap_thumb_butterfly_house',
       },
     ],
   },

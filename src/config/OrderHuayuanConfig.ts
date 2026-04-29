@@ -28,20 +28,56 @@ export function computeSellHuayuan(orderHuayuan: number): number {
   return Math.min(orderHuayuan, Math.max(1, raw));
 }
 
-/** 花系订单单价曲线（与档位中位数对齐后按合成收益上调增长） */
-const FLOWER_BASE = 12;
-const FLOWER_GROWTH = 1.5;
+export type OrderDeliveryCategory = 'flower' | 'drink';
+export type OrderDeliveryLine =
+  | 'fresh'
+  | 'bouquet'
+  | 'green'
+  | 'butterfly'
+  | 'cold'
+  | 'dessert';
 
-/** 饮品订单单价曲线（蝴蝶/冷饮/甜品共用曲线，略低于花系） */
-const DRINK_BASE = 13;
-const DRINK_GROWTH = 1.47;
-
-/** 鲜花/花束/绿植（按等级）单笔交付单价 */
-export function flowerDeliverHuayuanForLevel(level: number): number {
-  return Math.max(1, Math.round(FLOWER_BASE * FLOWER_GROWTH ** (level - 1)));
+export interface OrderDeliveryCurve {
+  /** L1 单价基准 */
+  base: number;
+  /** 线内逐级增长率 */
+  growth: number;
 }
 
-/** 饮品含蝴蝶标本线（按等级）单笔交付单价 */
-export function drinkDeliverHuayuanForLevel(level: number): number {
-  return Math.max(1, Math.round(DRINK_BASE * DRINK_GROWTH ** (level - 1)));
+/**
+ * 订单单品定价曲线。
+ * 同等级不再全线同价：每条产品线按自身产出成本、直出稀有度和中间品链路独立调参。
+ */
+export const ORDER_DELIVERY_CURVES: Record<OrderDeliveryCategory, Record<string, OrderDeliveryCurve>> = {
+  flower: {
+    /** 鲜花：园艺主线，作为花系经济基准 */
+    fresh: { base: 12, growth: 1.5 },
+    /** 花束：需要包装中间品与花艺材料篮二段产出，补偿额外体力与链路成本 */
+    bouquet: { base: 14, growth: 1.51 },
+    /** 绿植：与鲜花共用园艺工具，但高阶直出权重更低，中后期略高于鲜花 */
+    green: { base: 12, growth: 1.52 },
+  },
+  drink: {
+    /** 蝴蝶：捕虫网高阶可直出到 L10，单价略收敛 */
+    butterfly: { base: 12, growth: 1.45 },
+    /** 冷饮：最高工具只直出到 L3，后段合成压力最大 */
+    cold: { base: 14, growth: 1.5 },
+    /** 甜品：最高工具可直出到 L7，介于蝴蝶与冷饮之间 */
+    dessert: { base: 13, growth: 1.49 },
+  },
+};
+
+function deliverHuayuanForCurve(level: number, curve: OrderDeliveryCurve): number {
+  if (!Number.isFinite(level) || level < 1) return 0;
+  return Math.max(1, Math.round(curve.base * curve.growth ** (Math.floor(level) - 1)));
+}
+
+/** 指定产品线的单笔交付单价；未知线返回 0，避免误把包装/工具线纳入订单价值。 */
+export function deliverHuayuanForItem(
+  category: OrderDeliveryCategory,
+  line: string,
+  level: number,
+): number {
+  const curve = ORDER_DELIVERY_CURVES[category]?.[line];
+  return curve ? deliverHuayuanForCurve(level, curve) : 0;
 }

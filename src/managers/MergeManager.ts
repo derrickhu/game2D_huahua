@@ -4,6 +4,7 @@
 import { EventBus } from '@/core/EventBus';
 import { BoardManager } from './BoardManager';
 import { ITEM_DEFS } from '@/config/ItemConfig';
+import { TutorialInteractionGuard } from '@/systems/TutorialInteractionGuard';
 
 /** 拖拽松手后的结算结果（供 BoardView 反馈动画与 Toast） */
 export type MergeEndDragResult =
@@ -21,6 +22,10 @@ class MergeManagerClass {
   startDrag(cellIndex: number): boolean {
     const cell = BoardManager.getCellByIndex(cellIndex);
     if (!cell || !cell.itemId || cell.state !== 'open') return false;
+    if (!TutorialInteractionGuard.canStartDrag(cellIndex)) {
+      TutorialInteractionGuard.notifyInvalidAction();
+      return false;
+    }
     this.draggingIndex = cellIndex;
     EventBus.emit('merge:dragStart', cellIndex);
     return true;
@@ -33,6 +38,11 @@ class MergeManagerClass {
     this.draggingIndex = -1;
 
     if (srcIndex === targetIndex) {
+      EventBus.emit('merge:dragCancel', srcIndex);
+      return { kind: 'cancelled' };
+    }
+
+    if (!TutorialInteractionGuard.validateDrag(srcIndex, targetIndex)) {
       EventBus.emit('merge:dragCancel', srcIndex);
       return { kind: 'cancelled' };
     }

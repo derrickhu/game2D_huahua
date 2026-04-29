@@ -137,22 +137,36 @@ export function createLevelUnlockCard(
 
   // 图标
   const iconKey = entry.iconKey || KIND_DEFAULT_ICON[entry.kind];
+  const fallbackIconKey = KIND_DEFAULT_ICON[entry.kind];
   const iconHolder = new PIXI.Container();
-  let tex = TextureCache.get(iconKey);
-  if (!tex || !tex.width) tex = TextureCache.get(KIND_DEFAULT_ICON[entry.kind]);
-  if (tex && tex.width > 0) {
+  let textureUnsub: (() => void) | null = null;
+  const drawIcon = (): boolean => {
+    iconHolder.removeChildren();
+    const tex = TextureCache.get(iconKey) ?? TextureCache.get(fallbackIconKey);
+    if (!tex || tex.width <= 0) return false;
     const sp = new PIXI.Sprite(tex);
     sp.anchor.set(0.5);
     const k = ICON / Math.max(tex.width, tex.height);
     sp.scale.set(k);
     iconHolder.addChild(sp);
-  } else {
+    return true;
+  };
+  if (!drawIcon()) {
     // 兜底色块
     const g = new PIXI.Graphics();
     g.beginFill(0xb89a6c, 0.55);
     g.drawCircle(0, 0, ICON * 0.42);
     g.endFill();
     iconHolder.addChild(g);
+    textureUnsub = TextureCache.onKeysLoaded(
+      iconKey === fallbackIconKey ? [iconKey] : [iconKey, fallbackIconKey],
+      () => {
+        if (drawIcon()) {
+          textureUnsub?.();
+          textureUnsub = null;
+        }
+      },
+    );
   }
 
   // 计算高度
@@ -223,6 +237,13 @@ export function createLevelUnlockCard(
 
   // dim TEXT_DARK 占位避免 unused 引用
   void COLORS;
+
+  const destroyRoot = root.destroy.bind(root);
+  root.destroy = ((options?: boolean | PIXI.IDestroyOptions) => {
+    textureUnsub?.();
+    textureUnsub = null;
+    destroyRoot(options as any);
+  }) as typeof root.destroy;
 
   return { view: root, width: W, height: H };
 }

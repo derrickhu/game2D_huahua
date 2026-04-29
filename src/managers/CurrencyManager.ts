@@ -45,7 +45,7 @@ const STAMINA_BUY_PRICE_BASE = 10;
 const STAMINA_BUY_PRICE_STEP = 10;
 const STAMINA_BUY_PRICE_CAP = 50;
 const STAMINA_BUY_MAX_DAILY = 5;
-const STAMINA_AD_AMOUNT = 20;
+const STAMINA_AD_AMOUNT = 50;
 const STAMINA_AD_MAX_DAILY = 5;
 
 class CurrencyManagerClass {

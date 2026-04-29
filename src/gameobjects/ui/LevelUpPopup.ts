@@ -73,6 +73,8 @@ export class LevelUpPopup extends PIXI.Container {
   private _showDiamond = 0;
   /** 延后注册 pointertap 关闭，避免连续 show 时旧定时器重复绑监听 */
   private _dismissPointerArmTimer: ReturnType<typeof setTimeout> | null = null;
+  /** CDN 纹理异步到达后替换升级弹窗内的占位图；弹窗重建/关闭时统一取消。 */
+  private _textureUnsubs: Array<() => void> = [];
 
   constructor() {
     super();
@@ -88,6 +90,7 @@ export class LevelUpPopup extends PIXI.Container {
     this.visible = true;
     this._dismissing = false;
     this._previewOnly = options?.previewOnly ?? false;
+    this._clearTextureListeners();
     this.removeChildren();
     this._flySources = [];
     this._rewardFlyTargetGlobal = options?.rewardFlyTargetGlobal ?? null;
@@ -596,16 +599,7 @@ export class LevelUpPopup extends PIXI.Container {
       cellBg.eventMode = 'none';
       content.addChild(cellBg);
 
-      const tex = TextureCache.get(item.icon);
-      if (tex && tex.width > 0) {
-        const sp = new PIXI.Sprite(tex);
-        sp.anchor.set(0.5);
-        const scale = ICON_SIZE / Math.max(tex.width, tex.height);
-        sp.scale.set(scale);
-        sp.position.set(cx, cellTop + 8 + ICON_SIZE / 2);
-        sp.eventMode = 'none';
-        content.addChild(sp);
-      }
+      this._addDeferredIconSprite(content, item.icon, cx, cellTop + 8 + ICON_SIZE / 2, ICON_SIZE);
 
       const name = new PIXI.Text(item.name, {
         fontSize: NAME_FONT,
@@ -717,6 +711,59 @@ export class LevelUpPopup extends PIXI.Container {
     this.eventMode = mode;
   }
 
+  private _clearTextureListeners(): void {
+    for (const unsub of this._textureUnsubs) {
+      unsub();
+    }
+    this._textureUnsubs = [];
+  }
+
+  private _addDeferredIconSprite(
+    parent: PIXI.Container,
+    texKey: string,
+    x: number,
+    y: number,
+    maxSize: number,
+  ): void {
+    const holder = new PIXI.Container();
+    holder.position.set(x, y);
+    holder.eventMode = 'none';
+    parent.addChild(holder);
+
+    const drawIcon = (): boolean => {
+      holder.removeChildren();
+      const tex = TextureCache.get(texKey);
+      if (!tex || tex.width <= 0 || tex.height <= 0) {
+        const ph = new PIXI.Graphics();
+        ph.beginFill(0xb89a6c, 0.28);
+        ph.drawCircle(0, 0, maxSize * 0.32);
+        ph.endFill();
+        holder.addChild(ph);
+        return false;
+      }
+      const sp = new PIXI.Sprite(tex);
+      sp.anchor.set(0.5);
+      const scale = maxSize / Math.max(tex.width, tex.height);
+      sp.scale.set(scale);
+      sp.eventMode = 'none';
+      holder.addChild(sp);
+      return true;
+    };
+
+    if (drawIcon()) return;
+
+    let unsub: (() => void) | null = TextureCache.onKeysLoaded([texKey], () => {
+      if (drawIcon()) {
+        unsub?.();
+        unsub = null;
+      }
+    });
+    this._textureUnsubs.push(() => {
+      unsub?.();
+      unsub = null;
+    });
+  }
+
   private _fadeOutAndClose(): void {
     TweenManager.cancelTarget(this);
     TweenManager.to({
@@ -730,6 +777,7 @@ export class LevelUpPopup extends PIXI.Container {
           clearTimeout(this._dismissPointerArmTimer);
           this._dismissPointerArmTimer = null;
         }
+        this._clearTextureListeners();
         this.removeAllListeners('pointertap');
         this.visible = false;
         this.removeChildren();

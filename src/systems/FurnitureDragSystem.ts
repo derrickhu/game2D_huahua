@@ -483,6 +483,7 @@ class FurnitureDragSystemClass {
           this.registerSprite(ctx.sprite, ctx.decoId);
           this._playBounceAnimation(ctx.sprite, ctx.originalScale);
           this.select(ctx.decoId);
+          EventBus.emit('furniture:placed', placement);
         } else {
           // 已存在，移除临时 Sprite
           disposeNewDragExtras();
@@ -499,8 +500,9 @@ class FurnitureDragSystemClass {
     } else {
       // 移动已有家具
       if (inBounds) {
-        RoomLayoutManager.moveFurniture(ctx.decoId, finalX, finalY);
+        const moved = RoomLayoutManager.moveFurniture(ctx.decoId, finalX, finalY);
         this._playBounceAnimation(ctx.sprite, ctx.originalScale);
+        if (moved) EventBus.emit('furniture:moved', RoomLayoutManager.getPlacement(ctx.decoId));
       } else {
         // 拖出房间 → 回到原位
         TweenManager.to({

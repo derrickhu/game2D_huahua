@@ -113,18 +113,40 @@ export function createItemObtainRewardCell(
     qtyStr = `${entry.amount}`;
   }
 
-  const tex = TextureCache.get(texKey);
-  if (tex?.width) {
+  const iconLayer = new PIXI.Container();
+  root.addChild(iconLayer);
+  let textureUnsub: (() => void) | null = null;
+  const drawIcon = (): boolean => {
+    iconLayer.removeChildren();
+    const tex = TextureCache.get(texKey);
+    if (!tex?.width) return false;
     const sp = new PIXI.Sprite(tex);
     sp.anchor.set(0.5);
     const sc = Math.min((cell - 10) / tex.width, (cell - 10) / tex.height);
     sp.scale.set(sc);
-    root.addChild(sp);
-  } else {
+    iconLayer.addChild(sp);
+    return true;
+  };
+  if (!drawIcon()) {
     const ph = new PIXI.Text('?', { fontSize: 30, fontFamily: FONT_FAMILY, fill: 0xffffff });
     ph.anchor.set(0.5);
-    root.addChild(ph);
+    iconLayer.addChild(ph);
+    if (texKey) {
+      textureUnsub = TextureCache.onKeysLoaded([texKey], () => {
+        if (drawIcon()) {
+          textureUnsub?.();
+          textureUnsub = null;
+        }
+      });
+    }
   }
+  const destroyRoot = root.destroy.bind(root);
+  root.destroy = ((options?: boolean | PIXI.IDestroyOptions) => {
+    textureUnsub?.();
+    textureUnsub = null;
+    destroyRoot(options as any);
+  }) as typeof root.destroy;
+
   const cnt = new PIXI.Text(qtyStr, {
     fontSize: qtyFs,
     fill: 0xffeb3b,

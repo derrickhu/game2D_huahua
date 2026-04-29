@@ -56,6 +56,17 @@ export interface ToolDef {
   exhaustAfterProduces?: number;
 }
 
+/** 带 CD 的工具：每周期内产出次数（全游戏统一） */
+const TOOL_CD_CHARGES_PER_CYCLE = 20;
+
+/**
+ * 线内 CD 档位（从 0 起）：最低 3 分钟，每升一档 +1 分钟。
+ * 园艺 L5/L6/L7 → 0,1,2；包装 L3/L5（有 CD 的两档）→ 0,1；饮品三线 L5 → 仅 0。
+ */
+function cdTierSeconds(tierIndex: number): number {
+  return 3 * 60 + tierIndex * 60;
+}
+
 // ═══════════════ 单线工具共用：按「产出档」掷产品等级（种植线除外，见 produceOutcomes） ═══════════════
 /** 产出档 A（原 Lv1 工具表） */
 const SHARED_PRODUCE_TABLE_LV1: [number, number][] = [[1, 70], [2, 25], [3, 5]];
@@ -133,8 +144,8 @@ const arrangeToolTemplate = (): Omit<ToolDef, 'itemId' | 'level'>[] => [
     canProduce: true,
     produceTable: [],
     produceOutcomes: ARRANGE_WRAP_OUTCOME_T3,
-    cooldown: 120,
-    producesBeforeCooldown: 10,
+    cooldown: cdTierSeconds(0),
+    producesBeforeCooldown: TOOL_CD_CHARGES_PER_CYCLE,
     staminaCost: 1,
   },
   {
@@ -155,8 +166,8 @@ const arrangeToolTemplate = (): Omit<ToolDef, 'itemId' | 'level'>[] => [
     canProduce: true,
     produceTable: [],
     produceOutcomes: ARRANGE_WRAP_OUTCOME_T5,
-    cooldown: 300,
-    producesBeforeCooldown: 10,
+    cooldown: cdTierSeconds(1),
+    producesBeforeCooldown: TOOL_CD_CHARGES_PER_CYCLE,
     staminaCost: 1,
   },
 ];
@@ -254,8 +265,8 @@ const plantToolTemplate = (): Omit<ToolDef, 'itemId' | 'level'>[] => [
     canProduce: true,
     produceTable: [],
     produceOutcomes: PLANT_OUTCOMES_TOOL_L5,
-    cooldown: 120,
-    producesBeforeCooldown: 10,
+    cooldown: cdTierSeconds(0),
+    producesBeforeCooldown: TOOL_CD_CHARGES_PER_CYCLE,
     staminaCost: 1,
   },
   {
@@ -265,8 +276,8 @@ const plantToolTemplate = (): Omit<ToolDef, 'itemId' | 'level'>[] => [
     canProduce: true,
     produceTable: [],
     produceOutcomes: PLANT_OUTCOMES_TOOL_L6,
-    cooldown: 360,
-    producesBeforeCooldown: 15,
+    cooldown: cdTierSeconds(1),
+    producesBeforeCooldown: TOOL_CD_CHARGES_PER_CYCLE,
     staminaCost: 1,
   },
   {
@@ -276,8 +287,8 @@ const plantToolTemplate = (): Omit<ToolDef, 'itemId' | 'level'>[] => [
     canProduce: true,
     produceTable: [],
     produceOutcomes: PLANT_OUTCOMES_TOOL_L7,
-    cooldown: 420,
-    producesBeforeCooldown: 6,
+    cooldown: cdTierSeconds(2),
+    producesBeforeCooldown: TOOL_CD_CHARGES_PER_CYCLE,
     staminaCost: 1,
   },
 ];
@@ -331,7 +342,9 @@ const drinkToolTemplate = (toolLine: ToolLine, produceLine: DrinkLine): Omit<Too
       toolLine, produceCategory: Category.DRINK, produceLine,
       canProduce: true,
       produceTable: tableL5,
-      cooldown: 300, producesBeforeCooldown: 10, staminaCost: 1,
+      cooldown: cdTierSeconds(0),
+      producesBeforeCooldown: TOOL_CD_CHARGES_PER_CYCLE,
+      staminaCost: 1,
     },
   ];
 };

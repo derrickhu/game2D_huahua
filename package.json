@@ -5,7 +5,8 @@
   "scripts": {
     "build": "vite build && rimraf minigame/index.html",
     "dev": "vite build --watch",
-    "check:assets": "node scripts/check_assets.js"
+    "check:assets": "node scripts/check_assets.js",
+    "audit:order-pricing": "node scripts/audit_order_pricing.js"
   },
   "keywords": [],
   "author": "",

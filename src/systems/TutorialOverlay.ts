@@ -21,6 +21,9 @@ import { TutorialDialogBubble, type DialogBubbleOptions } from '@/gameobjects/ui
 import { StorySequenceOverlay } from '@/gameobjects/ui/StorySequenceOverlay';
 import { TextureCache } from '@/utils/TextureCache';
 import { RewardFlyCoordinator } from '@/core/RewardFlyCoordinator';
+import { TUTORIAL_COPY } from '@/config/TutorialCopy';
+import { TutorialInteractionGuard } from '@/systems/TutorialInteractionGuard';
+import { RoomLayoutManager } from '@/managers/RoomLayoutManager';
 import type { CustomerScrollArea } from '@/gameobjects/customer/CustomerScrollArea';
 import type { ItemInfoBar } from '@/gameobjects/ui/ItemInfoBar';
 import { OverlayManager } from '@/core/OverlayManager';
@@ -46,6 +49,7 @@ export class TutorialOverlay {
   private _customerScrollArea: CustomerScrollArea | null;
   private _itemInfoBar: ItemInfoBar | null;
   private _currentBubble: TutorialDialogBubble | null = null;
+  private _transientHint: PIXI.Text | null = null;
   private _fingerAnim: { finger: PIXI.Container; cancel: () => void } | null = null;
   private _storyOverlay: StorySequenceOverlay | null = null;
   /** 盖在装修面板之上（overlay 根），用于家具购买指引 */
@@ -100,6 +104,9 @@ export class TutorialOverlay {
     if (scene === 'main') {
       switch (step) {
         case TutorialStep.STORY_INTRO:       this._showStoryIntro(); break;
+        case TutorialStep.BOARD_INTRO_OPEN:  this._showBoardIntroOpen(); break;
+        case TutorialStep.BOARD_INTRO_PEEK:  this._showBoardIntroPeek(); break;
+        case TutorialStep.BOARD_INTRO_FOG_KEY: this._showBoardIntroFogKey(); break;
         case TutorialStep.GUIDE_MERGE_TOOL:  this._showGuideMergeTool(); break;
         case TutorialStep.GUIDE_TAP_TOOL:    this._showGuideTapTool(); break;
         case TutorialStep.CUSTOMER1_ARRIVE:  this._showCustomerArrive(1); break;
@@ -110,6 +117,12 @@ export class TutorialOverlay {
         case TutorialStep.CUSTOMER2_ARRIVE:  this._showCustomerArrive(2); break;
         case TutorialStep.GUIDE_DELIVER2:    this._showGuideDeliver(2); break;
         case TutorialStep.DELIVER2_SUCCESS:  this._showDeliverSuccess(2); break;
+        case TutorialStep.GUIDE_TAP_MORE_PEEK_FLOWER: this._showGuideTapMoreForPeek(); break;
+        case TutorialStep.GUIDE_MERGE_FLOWER_PEEK_PREP: this._showGuideMergeFlowerForPeek(); break;
+        case TutorialStep.GUIDE_MERGE_PEEK_FLOWER: this._showGuideMergePeekFlower(); break;
+        case TutorialStep.CUSTOMER3_ARRIVE:  this._showCustomerArrive(3); break;
+        case TutorialStep.GUIDE_DELIVER3:    this._showGuideDeliver(3); break;
+        case TutorialStep.DELIVER3_SUCCESS:  this._showDeliverSuccess(3); break;
         case TutorialStep.SHOP_INTRO_DIALOG: this._showShopIntroDialog(); break;
         case TutorialStep.SWITCH_TO_SHOP:    this._showSwitchToShop(); break;
         case TutorialStep.TUTORIAL_GIFT:     this._showTutorialGift(); break;
@@ -137,13 +150,78 @@ export class TutorialOverlay {
     this._storyOverlay = new StorySequenceOverlay(() => {
       this._storyOverlay = null;
       SoundSystem.playMainBGM();
-      TutorialManager.advanceTo(TutorialStep.GUIDE_MERGE_TOOL);
+      TutorialManager.advanceTo(TutorialStep.BOARD_INTRO_OPEN);
     });
     this._container.addChild(this._storyOverlay);
   }
 
+  private _showBoardIntroOpen(): void {
+    this._overlay.visible = true;
+    const pair = this._findToolPair();
+    const spotlight = pair
+      ? this._mergePairSpotlight(this._getCellRect(pair[0]), this._getCellRect(pair[1]), 8)
+      : this._getCellRect(3 * BOARD_COLS + 2);
+    this._drawBlockingDimWithGlow([{ ...spotlight, r: 14 }], 0.45);
+
+    this._showBubble({
+      ...TUTORIAL_COPY.boardIntroOpen,
+      buttonText: '开始准备',
+      variant: 'dialog',
+      spotlightTop: spotlight.y,
+      spotlightBottom: spotlight.y + spotlight.h,
+      onButton: () => TutorialManager.advanceTo(TutorialStep.GUIDE_MERGE_TOOL),
+    });
+  }
+
+  private _showBoardIntroPeek(): void {
+    this._overlay.visible = true;
+    const pair = this._findToolPair();
+    const srcIdx = pair?.[0] ?? (3 * BOARD_COLS + 2);
+    const dstIdx = pair?.[1] ?? (3 * BOARD_COLS + 3);
+    const srcRect = this._getCellRect(srcIdx);
+    const rect = this._getCellRect(dstIdx);
+    const spotlight = this._mergePairSpotlight(srcRect, rect, 8);
+    this._drawBlockingDimWithGlow([spotlight], 0.64);
+    this._startFingerDragAnim(
+      srcRect.x + srcRect.w / 2,
+      srcRect.y + srcRect.h / 2,
+      rect.x + rect.w / 2,
+      rect.y + rect.h / 2,
+    );
+
+    this._showBubble({
+      ...TUTORIAL_COPY.boardIntroPeek,
+      buttonText: '继续',
+      variant: 'dialog',
+      showAvatar: false,
+      spotlightTop: spotlight.y,
+      spotlightBottom: spotlight.y + spotlight.h,
+      onButton: () => TutorialManager.advanceTo(TutorialStep.BOARD_INTRO_FOG_KEY),
+    });
+  }
+
+  private _showBoardIntroFogKey(): void {
+    this._overlay.visible = true;
+    const fogRect = this._getCellRect(3 * BOARD_COLS + 1);
+    const keyRect = this._getCellRect(4 * BOARD_COLS + 6);
+    const spotlight = this._getBoundingSpotlight([fogRect, keyRect]);
+    this._drawBlockingDimWithGlow([{ ...spotlight, r: 14 }], 0.64);
+
+    this._showBubble({
+      ...TUTORIAL_COPY.boardIntroFogKey,
+      buttonText: '开始整理',
+      variant: 'dialog',
+      showAvatar: false,
+      spotlightTop: spotlight.y,
+      spotlightBottom: spotlight.y + spotlight.h,
+      onButton: () => TutorialManager.advanceTo(TutorialStep.GUIDE_MERGE_TOOL),
+    });
+  }
+
   /** 引导合成工具（循环：1级→2级→3级，直到 tool_plant_3 出现） */
   private _showGuideMergeTool(): void {
+    this._clearOverlay();
+
     if (this._findToolOnBoard('tool_plant_3') >= 0) {
       TutorialManager.advanceTo(TutorialStep.GUIDE_TAP_TOOL);
       return;
@@ -157,14 +235,25 @@ export class TutorialOverlay {
 
     this._overlay.visible = true;
     const [srcIdx, dstIdx] = pair;
+    if (!BoardManager.canMerge(srcIdx, dstIdx)) {
+      this._clearOverlay();
+      requestAnimationFrame(() => {
+        if (TutorialManager.currentStep === TutorialStep.GUIDE_MERGE_TOOL) {
+          this._showGuideMergeTool();
+        }
+      });
+      return;
+    }
+
     const srcRect = this._getCellRect(srcIdx);
     const dstRect = this._getCellRect(dstIdx);
     const srcItem = BoardManager.getCellByIndex(srcIdx)?.itemId ?? '';
     const isLevel1 = srcItem.endsWith('_1');
+    const isLevel2 = srcItem.endsWith('_2');
 
     const pad = 8;
     const spotlight = this._mergePairSpotlight(srcRect, dstRect, pad);
-    this._drawSpotlightMask([spotlight], 0.65);
+    this._drawMergeGuideGlow(srcRect, dstRect, pad);
     this._startFingerDragAnim(
       srcRect.x + srcRect.w / 2, srcRect.y + srcRect.h / 2,
       dstRect.x + dstRect.w / 2, dstRect.y + dstRect.h / 2,
@@ -176,54 +265,129 @@ export class TutorialOverlay {
     let guideTitle: string;
     let guideBody: string;
     if (isLevel1 && dstIsPeek) {
-      guideTitle = '解锁铲子';
-      guideBody = '铲子被丝带绑住了无法移动，\n试试把同样的铲子拖上去，\n就可以解锁空间并合成新工具了！';
+      guideTitle = TUTORIAL_COPY.mergeTool.unlockTitle;
+      guideBody = TUTORIAL_COPY.mergeTool.unlockBody;
     } else if (isLevel1) {
-      guideBody = '把两把相同的铲子拖到一起，\n合成更高级的工具吧！';
-      guideTitle = '合成工具';
+      guideTitle = TUTORIAL_COPY.mergeTool.mergeTitle;
+      guideBody = TUTORIAL_COPY.mergeTool.mergeBody;
     } else if (dstIsPeek) {
-      guideTitle = '继续合成';
-      guideBody = '上面还有一个相同的水壶！\n拖过去合成新工具吧~';
+      guideTitle = isLevel2 ? '解锁水壶' : TUTORIAL_COPY.mergeTool.continueTitle;
+      guideBody = TUTORIAL_COPY.mergeTool.continueBody;
     } else {
-      guideTitle = '继续合成';
-      guideBody = '把两个水壶合在一起，\n合成更高级的育苗盘吧！';
+      guideTitle = isLevel2 ? '合成水壶' : TUTORIAL_COPY.mergeTool.continueTitle;
+      guideBody = TUTORIAL_COPY.mergeTool.continueBody;
     }
 
     this._showBubble({
       title: guideTitle,
       body: guideBody,
+      actionText: TUTORIAL_COPY.mergeTool.actionText,
       spotlightTop: spotlight.y,
       spotlightBottom: spotlight.y + spotlight.h,
     });
 
-    const onMerged = (): void => {
+    TutorialInteractionGuard.allowMerge({
+      srcIndex: srcIdx,
+      dstIndex: dstIdx,
+      allowReverse: dstCell?.state === 'open',
+    });
+
+    const onInvalidAction = (): void => {
+      this._nudgeBubble();
+      this._showInlineHint(TUTORIAL_COPY.mergeTool.invalidActionText);
+      this._stopFingerAnim();
+      this._startFingerDragAnim(
+        srcRect.x + srcRect.w / 2, srcRect.y + srcRect.h / 2,
+        dstRect.x + dstRect.w / 2, dstRect.y + dstRect.h / 2,
+      );
+    };
+
+    const onCellsPeeked = (): void => {
+      this._showInlineHint(TUTORIAL_COPY.boardIntroFogKey.actionText);
+    };
+
+    let finished = false;
+    let refreshTimer: ReturnType<typeof setTimeout> | null = null;
+    const pollTimer = setInterval(() => {
+      if (finished || TutorialManager.currentStep !== TutorialStep.GUIDE_MERGE_TOOL) return;
+      const srcNow = BoardManager.getCellByIndex(srcIdx);
+      if (
+        this._findToolOnBoard('tool_plant_3') >= 0
+        || srcNow?.itemId !== srcItem
+        || !BoardManager.canMerge(srcIdx, dstIdx)
+      ) {
+        refreshGuideFromBoard();
+      }
+    }, 180);
+
+    const cleanupGuide = (): void => {
       EventBus.off('board:merged', onMerged);
+      EventBus.off('tutorial:invalidAction', onInvalidAction);
+      EventBus.off('board:cellsPeeked', onCellsPeeked);
+      EventBus.off('tutorial:boardActionSettled', onBoardActionSettled);
+      if (refreshTimer !== null) {
+        clearTimeout(refreshTimer);
+        refreshTimer = null;
+      }
+      clearInterval(pollTimer);
+      TutorialInteractionGuard.clear();
+    };
+
+    const refreshGuideFromBoard = (): void => {
+      if (finished || TutorialManager.currentStep !== TutorialStep.GUIDE_MERGE_TOOL) return;
+      finished = true;
+      cleanupGuide();
+      this._clearOverlay();
+      if (this._findToolOnBoard('tool_plant_3') >= 0) {
+        TutorialManager.advanceTo(TutorialStep.GUIDE_TAP_TOOL);
+        return;
+      }
+      this._showGuideMergeTool();
+    };
+
+    const onBoardActionSettled = (kind: string): void => {
+      if (kind !== 'merged' && kind !== 'moved' && kind !== 'swapped') return;
+      refreshTimer = setTimeout(() => {
+        if (finished || TutorialManager.currentStep !== TutorialStep.GUIDE_MERGE_TOOL) return;
+        const srcNow = BoardManager.getCellByIndex(srcIdx);
+        const dstNow = BoardManager.getCellByIndex(dstIdx);
+        const pairChanged = srcNow?.itemId !== srcItem || !BoardManager.canMerge(srcIdx, dstIdx);
+        if (pairChanged || dstNow?.itemId?.startsWith('tool_plant_')) {
+          refreshGuideFromBoard();
+        }
+      }, 60);
+    };
+
+    const onMerged = (_mergedSrc: number, _mergedDst: number, resultId: string, _resultCell: number, isPeekMerge?: boolean): void => {
+      if (!resultId.startsWith('tool_plant_')) return;
+      finished = true;
+      cleanupGuide();
       this._clearOverlay();
       this._overlay.visible = true;
-      this._drawSpotlightMask([], 0.5);
+      if (isPeekMerge) {
+        this._showInlineHint('丝带盒打开了，周围的神秘盒子也露出惊喜了');
+      }
 
       const hasLv3 = this._findToolOnBoard('tool_plant_3') >= 0;
       if (hasLv3) {
-        this._showBubble({
-          title: '育苗盘出现了！',
-          body: '太棒了！点击育苗盘就可以培育花朵了~',
-          buttonText: '继续',
-          onButton: () => TutorialManager.advanceTo(TutorialStep.GUIDE_TAP_TOOL),
-        });
+        TutorialManager.advanceTo(TutorialStep.GUIDE_TAP_TOOL);
       } else {
-        this._showBubble({
-          title: '合成成功',
-          body: '铲子合成了水壶！\n继续合成，升级成育苗盘就能培育花朵了~',
-          buttonText: '继续',
-          onButton: () => {
-            this._clearOverlay();
+        refreshTimer = setTimeout(() => {
+          if (TutorialManager.currentStep === TutorialStep.GUIDE_MERGE_TOOL) {
             this._showGuideMergeTool();
-          },
-        });
+          }
+        }, 280);
+        this._cleanup = () => {
+          if (refreshTimer !== null) clearTimeout(refreshTimer);
+          TutorialInteractionGuard.clear();
+        };
       }
     };
     EventBus.on('board:merged', onMerged);
-    this._cleanup = () => EventBus.off('board:merged', onMerged);
+    EventBus.on('tutorial:invalidAction', onInvalidAction);
+    EventBus.on('board:cellsPeeked', onCellsPeeked);
+    EventBus.on('tutorial:boardActionSettled', onBoardActionSettled);
+    this._cleanup = cleanupGuide;
   }
 
   /** 引导点击 3 级工具产出花朵 */
@@ -240,8 +404,9 @@ export class TutorialOverlay {
     this._startFingerTapAnim(rect.x + rect.w / 2, rect.y + rect.h / 2);
 
     this._showBubble({
-      title: '培育花朵',
-      body: '点击育苗盘就可以培育花朵了！\n快试试~',
+      title: TUTORIAL_COPY.tapTool.title,
+      body: TUTORIAL_COPY.tapTool.body,
+      actionText: TUTORIAL_COPY.tapTool.actionText,
       spotlightTop: rect.y,
       spotlightBottom: rect.y + rect.h,
     });
@@ -280,13 +445,21 @@ export class TutorialOverlay {
         buttonText: '知道了',
         onButton: () => TutorialManager.advanceTo(TutorialStep.GUIDE_DELIVER1),
       });
-    } else {
+    } else if (round === 2) {
       CustomerManager.spawnScriptedCustomer(['flower_fresh_2']);
       this._showBubble({
         title: '又有客人来了',
         body: '这位客人想要一朵「花苞」！\n刚好是合成的那朵~',
         buttonText: '知道了',
         onButton: () => TutorialManager.advanceTo(TutorialStep.GUIDE_DELIVER2),
+      });
+    } else {
+      CustomerManager.spawnScriptedCustomer(['flower_fresh_3']);
+      this._showBubble({
+        title: '再接一单',
+        body: '刚合成出的高级花，\n正好可以给这位客人~',
+        buttonText: '交给客人',
+        onButton: () => TutorialManager.advanceTo(TutorialStep.GUIDE_DELIVER3),
       });
     }
   }
@@ -296,7 +469,9 @@ export class TutorialOverlay {
 
     const nextStep = round === 1
       ? TutorialStep.DELIVER1_SUCCESS
-      : TutorialStep.DELIVER2_SUCCESS;
+      : round === 2
+        ? TutorialStep.DELIVER2_SUCCESS
+        : TutorialStep.DELIVER3_SUCCESS;
 
     const onDelivered = (): void => {
       EventBus.off('customer:delivered', onDelivered);
@@ -323,13 +498,16 @@ export class TutorialOverlay {
         fingerX = local.x;
         fingerY = local.y;
       }
+      this._drawDeliverButtonFocus(fingerX, fingerY);
       this._startFingerTapAnim(fingerX, fingerY);
 
       this._showBubble({
         title: round === 1 ? '交付订单' : '再次交付',
         body: '客人的订单已经凑齐了！\n点击客人完成交付吧~',
-        spotlightTop: areaY,
-        spotlightBottom: areaY + areaH,
+        spotlightTop: this._getDeliverBubbleAnchor().y,
+        spotlightBottom: this._getDeliverBubbleAnchor().y + this._getDeliverBubbleAnchor().h,
+        spotlightCenterX: this._getDeliverBubbleAnchor().x + this._getDeliverBubbleAnchor().w / 2,
+        dialogVerticalMode: 'below',
       });
     };
 
@@ -350,7 +528,11 @@ export class TutorialOverlay {
 
     const timeout = setTimeout(() => {
       const curStep = TutorialManager.currentStep;
-      if (curStep === TutorialStep.GUIDE_DELIVER1 || curStep === TutorialStep.GUIDE_DELIVER2) {
+      if (
+        curStep === TutorialStep.GUIDE_DELIVER1
+        || curStep === TutorialStep.GUIDE_DELIVER2
+        || curStep === TutorialStep.GUIDE_DELIVER3
+      ) {
         EventBus.off('customer:delivered', onDelivered);
         EventBus.off('customer:lockChanged', checkReady);
         TutorialManager.advanceTo(nextStep);
@@ -376,14 +558,42 @@ export class TutorialOverlay {
         buttonText: '花愿是什么？',
         onButton: () => this._showHuayuanExplain(),
       });
-    } else {
+    } else if (round === 2) {
       this._showBubble({
         title: '做得好',
-        body: '连续完成两笔订单！\n奶奶看到一定很开心~\n去装修一下花店吧！',
+        body: '连续完成两笔订单！\n接下来先准备一个花苞，\n再用它打开丝带盒。',
         buttonText: '继续',
+        onButton: () => TutorialManager.advanceTo(TutorialStep.GUIDE_TAP_MORE_PEEK_FLOWER),
+      });
+    } else {
+      this._showBubble({
+        title: '盒子也会帮忙',
+        body: '做得好！\n把同样物品拖到丝带盒上，\n就能打开更多格子。',
+        buttonText: '去装修花店',
         onButton: () => TutorialManager.advanceTo(TutorialStep.SHOP_INTRO_DIALOG),
       });
     }
+  }
+
+  private _getDeliverBubbleAnchor(): SpotlightRect {
+    const toolIdx = this._findProducibleTool();
+    if (toolIdx >= 0) {
+      const rect = this._getCellRect(toolIdx);
+      return {
+        x: rect.x,
+        y: rect.y + rect.h + Math.round(rect.h * 0.9),
+        w: rect.w,
+        h: rect.h,
+        r: 12,
+      };
+    }
+    return {
+      x: DESIGN_WIDTH * 0.5 - 60,
+      y: BoardMetrics.topY + BoardMetrics.cellSize * 3,
+      w: 120,
+      h: BoardMetrics.cellSize,
+      r: 12,
+    };
   }
 
   private _showHuayuanExplain(): void {
@@ -472,6 +682,170 @@ export class TutorialOverlay {
     };
   }
 
+  /** 引导把开放花种子拖到丝带花格，触发盒子解锁 */
+  private _showGuideTapMoreForPeek(): void {
+    const toolIdx = this._findProducibleTool();
+    if (toolIdx < 0) {
+      TutorialManager.advanceTo(TutorialStep.GUIDE_MERGE_FLOWER_PEEK_PREP);
+      return;
+    }
+
+    this._overlay.visible = true;
+    const rect = this._getCellRect(toolIdx);
+    this._drawSpotlightMask([{ ...rect, r: 10 }], 0.65);
+    this._startFingerTapAnim(rect.x + rect.w / 2, rect.y + rect.h / 2);
+
+    this._showBubble({
+      title: '准备花种子',
+      body: '再点击育苗盘，\n先准备两朵花种子。',
+      actionText: '点击育苗盘产出花种子',
+      spotlightTop: rect.y,
+      spotlightBottom: rect.y + rect.h,
+    });
+
+    let flowerCount = this._countFlowersOnBoard('flower_fresh_1');
+    const onProduced = (_srcIdx: number, _tgtIdx: number, producedId: string): void => {
+      if (producedId === 'flower_fresh_1') flowerCount++;
+      if (flowerCount >= 2) {
+        cleanup();
+        TutorialManager.advanceTo(TutorialStep.GUIDE_MERGE_FLOWER_PEEK_PREP);
+      }
+    };
+    EventBus.on('building:produced', onProduced);
+
+    const cleanup = (): void => {
+      EventBus.off('building:produced', onProduced);
+    };
+    this._cleanup = cleanup;
+  }
+
+  private _showGuideMergeFlowerForPeek(): void {
+    const pair = this._findFlowerPair('flower_fresh_1');
+    if (!pair) {
+      TutorialManager.advanceTo(TutorialStep.GUIDE_MERGE_PEEK_FLOWER);
+      return;
+    }
+
+    this._overlay.visible = true;
+    const [srcIdx, dstIdx] = pair;
+    const srcRect = this._getCellRect(srcIdx);
+    const dstRect = this._getCellRect(dstIdx);
+    const pad = 8;
+    const spotlight = this._mergePairSpotlight(srcRect, dstRect, pad);
+    this._drawMergeGuideGlow(srcRect, dstRect, pad);
+    this._startFingerDragAnim(
+      srcRect.x + srcRect.w / 2, srcRect.y + srcRect.h / 2,
+      dstRect.x + dstRect.w / 2, dstRect.y + dstRect.h / 2,
+    );
+
+    this._showBubble({
+      title: '先合成花苞',
+      body: '把两朵花种子合在一起，\n得到一朵花苞。',
+      actionText: '拖动花种子到另一朵花种子',
+      spotlightTop: spotlight.y,
+      spotlightBottom: spotlight.y + spotlight.h,
+    });
+
+    TutorialInteractionGuard.allowMerge({
+      srcIndex: srcIdx,
+      dstIndex: dstIdx,
+      allowReverse: true,
+    });
+
+    const onInvalidAction = (): void => {
+      this._nudgeBubble();
+      this._showInlineHint('先把两朵花种子合成花苞');
+    };
+
+    const onMerged = (_src: number, _dst: number, resultId: string): void => {
+      if (resultId !== 'flower_fresh_2') return;
+      cleanup();
+      TutorialManager.advanceTo(TutorialStep.GUIDE_MERGE_PEEK_FLOWER);
+    };
+
+    EventBus.on('board:merged', onMerged);
+    EventBus.on('tutorial:invalidAction', onInvalidAction);
+
+    const cleanup = (): void => {
+      EventBus.off('board:merged', onMerged);
+      EventBus.off('tutorial:invalidAction', onInvalidAction);
+      TutorialInteractionGuard.clear();
+    };
+    this._cleanup = cleanup;
+  }
+
+  private _showGuideMergePeekFlower(): void {
+    this._clearOverlay();
+    const pair = this._findFlowerPeekPair('flower_fresh_2');
+    if (!pair) {
+      TutorialManager.advanceTo(TutorialStep.CUSTOMER3_ARRIVE);
+      return;
+    }
+
+    this._overlay.visible = true;
+    const [srcIdx, dstIdx] = pair;
+    const srcRect = this._getCellRect(srcIdx);
+    const dstRect = this._getCellRect(dstIdx);
+    const pad = 8;
+    const spotlight = this._mergePairSpotlight(srcRect, dstRect, pad);
+
+    this._drawMergeGuideGlow(srcRect, dstRect, pad);
+    this._startFingerDragAnim(
+      srcRect.x + srcRect.w / 2, srcRect.y + srcRect.h / 2,
+      dstRect.x + dstRect.w / 2, dstRect.y + dstRect.h / 2,
+    );
+
+    this._showBubble({
+      title: '打开丝带盒',
+      body: '丝带盒里藏着花苞。\n把同样的花苞拖上去，\n就能合成出更高级的花。',
+      actionText: '拖动花苞到丝带花苞格',
+      spotlightTop: spotlight.y,
+      spotlightBottom: spotlight.y + spotlight.h,
+    });
+
+    TutorialInteractionGuard.allowMerge({
+      srcIndex: srcIdx,
+      dstIndex: dstIdx,
+      allowReverse: false,
+    });
+
+    const onInvalidAction = (): void => {
+      this._nudgeBubble();
+      this._showInlineHint('把开放格里的花苞拖到丝带花苞格上');
+      this._stopFingerAnim();
+      this._startFingerDragAnim(
+        srcRect.x + srcRect.w / 2, srcRect.y + srcRect.h / 2,
+        dstRect.x + dstRect.w / 2, dstRect.y + dstRect.h / 2,
+      );
+    };
+
+    const onMerged = (_src: number, _dst: number, resultId: string, _resultCell: number, isPeekMerge?: boolean): void => {
+      if (!resultId.startsWith('flower_')) return;
+      cleanup();
+      this._clearOverlay();
+      this._overlay.visible = true;
+      if (isPeekMerge) {
+        this._showInlineHint('丝带盒打开了，周围的神秘盒子也露出惊喜了');
+      }
+      this._showBubble({
+        title: '盒子打开了',
+        body: '太好了！花苞合成了更高级的花，\n周围盒子也露出了惊喜。',
+        buttonText: '接下一单',
+        onButton: () => TutorialManager.advanceTo(TutorialStep.CUSTOMER3_ARRIVE),
+      });
+    };
+
+    EventBus.on('board:merged', onMerged);
+    EventBus.on('tutorial:invalidAction', onInvalidAction);
+
+    const cleanup = (): void => {
+      EventBus.off('board:merged', onMerged);
+      EventBus.off('tutorial:invalidAction', onInvalidAction);
+      TutorialInteractionGuard.clear();
+    };
+    this._cleanup = cleanup;
+  }
+
   /** 引导合成两朵 1 级花 → 2 级花 */
   private _showGuideMergeFlower(): void {
     const pair = this._findFlowerPair('flower_fresh_1');
@@ -487,7 +861,7 @@ export class TutorialOverlay {
 
     const pad = 8;
     const spotlight = this._mergePairSpotlight(srcRect, dstRect, pad);
-    this._drawSpotlightMask([spotlight], 0.65);
+    this._drawMergeGuideGlow(srcRect, dstRect, pad);
     this._startFingerDragAnim(
       srcRect.x + srcRect.w / 2, srcRect.y + srcRect.h / 2,
       dstRect.x + dstRect.w / 2, dstRect.y + dstRect.h / 2,
@@ -496,13 +870,32 @@ export class TutorialOverlay {
     this._showBubble({
       title: '合成花朵',
       body: '把两朵相同的花拖到一起，\n就能合成更高级的花朵！',
+      actionText: '拖动高亮鲜花到目标格',
       spotlightTop: spotlight.y,
       spotlightBottom: spotlight.y + spotlight.h,
     });
 
+    TutorialInteractionGuard.allowMerge({
+      srcIndex: srcIdx,
+      dstIndex: dstIdx,
+      allowReverse: true,
+    });
+
+    const onInvalidAction = (): void => {
+      this._nudgeBubble();
+      this._showInlineHint('找一样的花拖到一起试试');
+      this._stopFingerAnim();
+      this._startFingerDragAnim(
+        srcRect.x + srcRect.w / 2, srcRect.y + srcRect.h / 2,
+        dstRect.x + dstRect.w / 2, dstRect.y + dstRect.h / 2,
+      );
+    };
+
     const onMerged = (_src: number, _dst: number, resultId: string): void => {
       if (!resultId.startsWith('flower_')) return;
       EventBus.off('board:merged', onMerged);
+      EventBus.off('tutorial:invalidAction', onInvalidAction);
+      TutorialInteractionGuard.clear();
       this._clearOverlay();
       this._overlay.visible = true;
       this._drawSpotlightMask([], 0.5);
@@ -515,7 +908,12 @@ export class TutorialOverlay {
       });
     };
     EventBus.on('board:merged', onMerged);
-    this._cleanup = () => EventBus.off('board:merged', onMerged);
+    EventBus.on('tutorial:invalidAction', onInvalidAction);
+    this._cleanup = () => {
+      EventBus.off('board:merged', onMerged);
+      EventBus.off('tutorial:invalidAction', onInvalidAction);
+      TutorialInteractionGuard.clear();
+    };
   }
 
   // ══════════════════════════════════════════════
@@ -596,38 +994,49 @@ export class TutorialOverlay {
     this._clearOverlay();
     this._drawSpotlightMask([], 0.55);
 
-    const PANEL_W = Math.min(440, DESIGN_WIDTH - 40);
-    const INNER_PAD = 20;
-    const ICON_S = 42;
+    const PANEL_W = Math.min(560, DESIGN_WIDTH - 48);
+    const INNER_PAD = 30;
+    const TITLE_H = 48;
+    const ICON_S = 58;
     const rewards = [
-      { texKey: 'icon_energy', amount: 50, label: '体力' },
-      { texKey: 'icon_gem',    amount: 32, label: '钻石' },
+      { texKey: 'icon_energy', amount: 100, label: '体力' },
+      { texKey: 'icon_gem',    amount: 30, label: '钻石' },
     ];
 
     const panel = new PIXI.Container();
     panel.eventMode = 'passive';
 
     const titleText = new PIXI.Text('花店重新开业了', {
-      fontSize: 22, fill: 0x4a3728, fontFamily: FONT_FAMILY,
+      fontSize: 27, fill: 0x4a3728, fontFamily: FONT_FAMILY,
       fontWeight: 'bold', stroke: 0xfffcf8, strokeThickness: 2,
     });
 
     const subtitleText = new PIXI.Text('恭喜完成引导！获得：', {
-      fontSize: 17, fill: 0x5c4a3d, fontFamily: FONT_FAMILY,
+      fontSize: 22, fill: 0x5c4a3d, fontFamily: FONT_FAMILY,
+      fontWeight: 'bold',
     });
 
     const storyText = new PIXI.Text('奶奶一定很欣慰。\n加油，让花花妙屋成为小镇最棒的花店！', {
-      fontSize: 17, fill: 0x5c4a3d, fontFamily: FONT_FAMILY,
-      wordWrap: true, wordWrapWidth: PANEL_W - INNER_PAD * 2, lineHeight: 26,
+      fontSize: 21, fill: 0x5c4a3d, fontFamily: FONT_FAMILY,
+      wordWrap: true, wordWrapWidth: PANEL_W - INNER_PAD * 2, lineHeight: 32,
     });
 
-    let y = INNER_PAD;
-    titleText.position.set(INNER_PAD, y); y += titleText.height + 8;
+    let y = INNER_PAD + 6;
+    const titleW = Math.max(260, titleText.width + 52);
+    const titleBg = new PIXI.Graphics();
+    titleBg.beginFill(0xffd76e, 1);
+    titleBg.drawRoundedRect((PANEL_W - titleW) / 2, y, titleW, TITLE_H, 24);
+    titleBg.endFill();
+    titleBg.lineStyle(2, 0xfff5bf, 0.95);
+    titleBg.drawRoundedRect((PANEL_W - titleW) / 2 + 3, y + 3, titleW - 6, TITLE_H - 6, 20);
+    titleText.anchor.set(0.5, 0.5);
+    titleText.position.set(PANEL_W / 2, y + TITLE_H / 2 - 1);
+    y += TITLE_H + 18;
     subtitleText.position.set(INNER_PAD, y); y += subtitleText.height + 14;
 
     const rewardRowY = y;
     const GAP = 24;
-    const itemW = ICON_S + 50;
+    const itemW = 132;
     const totalItemsW = rewards.length * itemW + (rewards.length - 1) * GAP;
     const rowStartX = (PANEL_W - totalItemsW) / 2;
 
@@ -636,6 +1045,14 @@ export class TutorialOverlay {
       const r = rewards[i];
       const cx = rowStartX + i * (itemW + GAP) + itemW / 2;
       const item = new PIXI.Container();
+
+      const card = new PIXI.Graphics();
+      card.beginFill(0xffefd1, 0.96);
+      card.drawRoundedRect(-itemW / 2, -ICON_S / 2 - 16, itemW, 116, 24);
+      card.endFill();
+      card.lineStyle(2, 0xffc76c, 0.55);
+      card.drawRoundedRect(-itemW / 2 + 3, -ICON_S / 2 - 13, itemW - 6, 110, 20);
+      item.addChild(card);
 
       const tex = TextureCache.get(r.texKey);
       if (tex) {
@@ -647,14 +1064,14 @@ export class TutorialOverlay {
       }
 
       const numText = new PIXI.Text(`+${r.amount}`, {
-        fontSize: 20, fontWeight: 'bold', fill: 0xE8751A, fontFamily: FONT_FAMILY,
+        fontSize: 25, fontWeight: 'bold', fill: 0xE8751A, fontFamily: FONT_FAMILY,
       });
       numText.anchor.set(0.5, 0);
       numText.position.set(0, ICON_S / 2 + 4);
       item.addChild(numText);
 
       const labelText = new PIXI.Text(r.label, {
-        fontSize: 13, fill: 0x8a7a6d, fontFamily: FONT_FAMILY,
+        fontSize: 16, fill: 0x8a7a6d, fontFamily: FONT_FAMILY,
       });
       labelText.anchor.set(0.5, 0);
       labelText.position.set(0, ICON_S / 2 + 28);
@@ -666,13 +1083,13 @@ export class TutorialOverlay {
       rewardSprites.push(item);
       panel.addChild(item);
     }
-    y = rewardRowY + ICON_S + 48;
+    y = rewardRowY + ICON_S + 70;
 
     storyText.position.set(INNER_PAD, y); y += storyText.height + 16;
 
-    const BTN_W = 170;
-    const BTN_H = 44;
-    const BTN_R = 22;
+    const BTN_W = 220;
+    const BTN_H = 56;
+    const BTN_R = 28;
     const btnX = (PANEL_W - BTN_W) / 2;
     const btnY = y;
     y += BTN_H + INNER_PAD;
@@ -680,13 +1097,22 @@ export class TutorialOverlay {
     const panelH = y;
 
     const bg = new PIXI.Graphics();
-    bg.beginFill(0xFFFBF0, 0.96);
-    bg.drawRoundedRect(0, 0, PANEL_W, panelH, 20);
+    bg.beginFill(0x4c2f4f, 0.16);
+    bg.drawRoundedRect(8, 12, PANEL_W, panelH, 32);
     bg.endFill();
-    bg.lineStyle(2.5, 0xFFD700, 0.5);
-    bg.drawRoundedRect(0, 0, PANEL_W, panelH, 20);
+    bg.beginFill(0xd8c4ff, 0.98);
+    bg.drawRoundedRect(0, 0, PANEL_W, panelH, 32);
+    bg.endFill();
+    bg.lineStyle(3, 0xffffff, 0.55);
+    bg.drawRoundedRect(3, 3, PANEL_W - 6, panelH - 6, 29);
+    bg.beginFill(0xfff7ea, 0.98);
+    bg.drawRoundedRect(10, 10, PANEL_W - 20, panelH - 20, 23);
+    bg.endFill();
+    bg.lineStyle(3, 0xffc9dc, 0.75);
+    bg.drawRoundedRect(12, 12, PANEL_W - 24, panelH - 24, 21);
     panel.addChildAt(bg, 0);
 
+    panel.addChild(titleBg);
     panel.addChild(titleText);
     panel.addChild(subtitleText);
     panel.addChild(storyText);
@@ -695,10 +1121,12 @@ export class TutorialOverlay {
     btnBg.beginFill(0xF4845F);
     btnBg.drawRoundedRect(btnX, btnY, BTN_W, BTN_H, BTN_R);
     btnBg.endFill();
+    btnBg.lineStyle(2, 0xffffff, 0.58);
+    btnBg.drawRoundedRect(btnX + 4, btnY + 4, BTN_W - 8, BTN_H - 8, BTN_R - 4);
     panel.addChild(btnBg);
 
     const btnLabel = new PIXI.Text('开始游戏', {
-      fontSize: 17, fill: 0xFFFFFF, fontFamily: FONT_FAMILY, fontWeight: 'bold',
+      fontSize: 21, fill: 0xFFFFFF, fontFamily: FONT_FAMILY, fontWeight: 'bold',
     });
     btnLabel.anchor.set(0.5, 0.5);
     btnLabel.position.set(btnX + BTN_W / 2, btnY + BTN_H / 2);
@@ -721,12 +1149,19 @@ export class TutorialOverlay {
 
     const avatarTex = TextureCache.get('owner_chibi_default');
     if (avatarTex) {
-      const AVATAR_SIZE = 90;
+      const AVATAR_SIZE = 104;
+      const halo = new PIXI.Graphics();
+      halo.beginFill(0xffe3ef, 0.95);
+      halo.drawCircle(PANEL_W / 2, -AVATAR_SIZE * 0.24, AVATAR_SIZE / 2);
+      halo.endFill();
+      halo.lineStyle(3, 0xffffff, 0.8);
+      halo.drawCircle(PANEL_W / 2, -AVATAR_SIZE * 0.24, AVATAR_SIZE / 2 - 3);
+      panel.addChild(halo);
       const avatarSp = new PIXI.Sprite(avatarTex);
       const sc = AVATAR_SIZE / Math.max(avatarTex.width, avatarTex.height);
       avatarSp.scale.set(sc);
       avatarSp.anchor.set(0.5, 0.5);
-      avatarSp.position.set(PANEL_W / 2, -AVATAR_SIZE * 0.3);
+      avatarSp.position.set(PANEL_W / 2, -AVATAR_SIZE * 0.24);
       panel.addChild(avatarSp);
     }
 
@@ -806,8 +1241,8 @@ export class TutorialOverlay {
       const ICON_R = 40;
       const btnCX = ICON_R + 14;
       const btnCY = Game.logicHeight - 92;
-      const hitR = 54;
-      const pad = 8;
+      const hitR = ICON_R + 18;
+      const pad = 12;
       const rect: SpotlightRect = {
         x: Math.max(0, btnCX - hitR - pad),
         y: btnCY - hitR - pad,
@@ -816,15 +1251,18 @@ export class TutorialOverlay {
         r: hitR,
       };
 
-      this._drawNonBlockingDim(0.55);
+      this._drawSpotlightMask([rect], 0.68);
       this._drawGlowBorder(rect);
+      this._drawTapTargetBurst(btnCX, btnCY, hitR + 10);
       this._startFingerTapAnim(btnCX, btnCY);
 
       this._showBubble({
         title: '选购家具',
-        body: '点击「家具」按钮，\n挑选一件喜欢的家具吧！',
+        body: '点击左下角「家具」按钮，\n挑选一件喜欢的家具吧！',
+        actionText: '只能点击高亮的家具按钮',
         spotlightTop: rect.y,
         spotlightBottom: rect.y + rect.h,
+        spotlightCenterX: btnCX,
       });
     };
 
@@ -925,13 +1363,6 @@ export class TutorialOverlay {
 
     const local = ov.toLocal(globalCenter);
 
-    const dim = new PIXI.Graphics();
-    dim.beginFill(0x000000, spec.dimAlpha ?? 0.52);
-    dim.drawRect(0, 0, DESIGN_WIDTH, Game.logicHeight);
-    dim.endFill();
-    dim.eventMode = 'none';
-    top.addChild(dim);
-
     const rect: SpotlightRect = {
       x: local.x - spec.hitW / 2,
       y: local.y - spec.hitH / 2,
@@ -939,6 +1370,7 @@ export class TutorialOverlay {
       h: spec.hitH,
       r: 14,
     };
+    this._drawSpotlightMaskOn(top, [rect], spec.dimAlpha ?? 0.52);
     this._drawGlowBorderOn(top, rect);
     this._startFingerTapAnim(local.x, local.y, top);
 
@@ -993,22 +1425,107 @@ export class TutorialOverlay {
   private _showGuidePlaceFurniture(): void {
     this._overlay.visible = true;
     this._clearOverlay();
-    this._drawNonBlockingDim(0.25);
 
-    this._showBubble({
-      title: '摆放家具',
-      body: '把家具拖到喜欢的位置，\n然后点击「完成装修」吧~',
-      showAvatar: true,
-    });
+    const bounds = RoomLayoutManager.bounds;
+    const placeRect: SpotlightRect = {
+      x: bounds.minX,
+      y: bounds.minY,
+      w: bounds.maxX - bounds.minX,
+      h: bounds.maxY - bounds.minY,
+      r: 22,
+    };
+
+    let placed = false;
+    let moved = false;
+
+    const showMoveGuide = (placement?: { x: number; y: number } | null): void => {
+      this._clearOverlay();
+      this._overlay.visible = true;
+      this._drawNonBlockingDim(0.25);
+      this._drawGlowBorder(placeRect);
+
+      const fromX = placement?.x ?? (placeRect.x + placeRect.w * 0.56);
+      const fromY = placement?.y ?? (placeRect.y + placeRect.h * 0.54);
+      const toX = Math.max(bounds.minX + 40, Math.min(bounds.maxX - 40, fromX - 130));
+      const toY = Math.max(bounds.minY + 40, Math.min(bounds.maxY - 40, fromY - 70));
+      this._startFingerDragAnim(fromX, fromY, toX, toY);
+
+      this._showBubble({
+        title: '调整家具',
+        body: '家具已经放进房间了。\n按住家具拖到喜欢的位置吧。',
+        actionText: '拖动房间里的家具到空地',
+        spotlightTop: placeRect.y,
+        spotlightBottom: placeRect.y + placeRect.h,
+        showAvatar: true,
+      });
+    };
+
+    const showFinishGuide = (): void => {
+      this._clearOverlay();
+      this._overlay.visible = true;
+
+      const trayOpenY = Game.logicHeight - 310 - 50 + 30;
+      const rect: SpotlightRect = {
+        x: DESIGN_WIDTH / 2 - 142,
+        y: trayOpenY + 36 - 40,
+        w: 284,
+        h: 80,
+        r: 28,
+      };
+      this._drawSpotlightMask([rect], 0.62);
+      this._drawGlowBorder(rect);
+      this._startFingerTapAnim(rect.x + rect.w / 2, rect.y + rect.h / 2);
+      this._showBubble({
+        title: TUTORIAL_COPY.furniturePlace.finishTitle,
+        body: TUTORIAL_COPY.furniturePlace.finishBody,
+        actionText: TUTORIAL_COPY.furniturePlace.finishAction,
+        spotlightTop: rect.y,
+        spotlightBottom: rect.y + rect.h,
+        showAvatar: true,
+      });
+    };
+
+    const onPlaced = (): void => {
+      if (placed) return;
+      placed = true;
+      const first = RoomLayoutManager.getLayout()[0] ?? null;
+      showMoveGuide(first);
+    };
+
+    const onMoved = (): void => {
+      if (moved) return;
+      moved = true;
+      showFinishGuide();
+    };
+
+    const onDragCancelled = (): void => {
+      if (placed) return;
+      this._nudgeBubble();
+      this._showInlineHint(TUTORIAL_COPY.furniturePlace.invalidAction);
+    };
 
     const onEditDisabled = (): void => {
       cleanup();
       TutorialManager.advanceTo(TutorialStep.SHOP_COMPLETE_DIALOG);
     };
 
+    EventBus.on('furniture:placed', onPlaced);
+    EventBus.on('furniture:moved', onMoved);
+    EventBus.on('furniture:drag_cancelled', onDragCancelled);
     EventBus.on('furniture:edit_disabled', onEditDisabled);
 
+    const existing = RoomLayoutManager.getLayout()[0] ?? null;
+    if (existing) {
+      placed = true;
+      showMoveGuide(existing);
+    } else {
+      showMoveGuide(null);
+    }
+
     const cleanup = (): void => {
+      EventBus.off('furniture:placed', onPlaced);
+      EventBus.off('furniture:moved', onMoved);
+      EventBus.off('furniture:drag_cancelled', onDragCancelled);
       EventBus.off('furniture:edit_disabled', onEditDisabled);
     };
     this._cleanup = cleanup;
@@ -1043,13 +1560,14 @@ export class TutorialOverlay {
       r: hitR,
     };
 
-    this._drawNonBlockingDim(0.55);
+    this._drawSpotlightMask([rect], 0.62);
     this._drawGlowBorder(rect);
     this._startFingerTapAnim(btnCX, btnCY);
 
     this._showBubble({
       title: '回到合成',
       body: '点击返回按钮，\n继续完成客人的订单吧~',
+      actionText: '只能点击高亮返回按钮',
       spotlightTop: rect.y,
       spotlightBottom: rect.y + rect.h,
     });
@@ -1062,6 +1580,10 @@ export class TutorialOverlay {
   // ══════════════════════════════════════════════
 
   private _drawSpotlightMask(spotlights: SpotlightRect[], alpha: number): void {
+    this._drawSpotlightMaskOn(this._overlay, spotlights, alpha);
+  }
+
+  private _drawSpotlightMaskOn(parent: PIXI.Container, spotlights: SpotlightRect[], alpha: number): void {
     const W = DESIGN_WIDTH;
     const H = Game.logicHeight;
 
@@ -1071,15 +1593,15 @@ export class TutorialOverlay {
       mask.drawRect(0, 0, W, H);
       mask.endFill();
       mask.eventMode = 'static';
-      this._overlay.addChild(mask);
+      parent.addChild(mask);
       return;
     }
 
     const sp = this._getBoundingSpotlight(spotlights);
-    if (sp.y > 0) this._addMaskRect(0, 0, W, sp.y, alpha);
-    if (sp.y + sp.h < H) this._addMaskRect(0, sp.y + sp.h, W, H - sp.y - sp.h, alpha);
-    if (sp.x > 0) this._addMaskRect(0, sp.y, sp.x, sp.h, alpha);
-    if (sp.x + sp.w < W) this._addMaskRect(sp.x + sp.w, sp.y, W - sp.x - sp.w, sp.h, alpha);
+    if (sp.y > 0) this._addMaskRectOn(parent, 0, 0, W, sp.y, alpha);
+    if (sp.y + sp.h < H) this._addMaskRectOn(parent, 0, sp.y + sp.h, W, H - sp.y - sp.h, alpha);
+    if (sp.x > 0) this._addMaskRectOn(parent, 0, sp.y, sp.x, sp.h, alpha);
+    if (sp.x + sp.w < W) this._addMaskRectOn(parent, sp.x + sp.w, sp.y, W - sp.x - sp.w, sp.h, alpha);
 
     for (const s of spotlights) {
       const r = s.r || 0;
@@ -1089,7 +1611,7 @@ export class TutorialOverlay {
       glow.lineStyle(2, 0xFFD700, 0.9);
       glow.drawRoundedRect(s.x, s.y, s.w, s.h, r);
       glow.eventMode = 'none';
-      this._overlay.addChild(glow);
+      parent.addChild(glow);
       this._breatheAnim(glow);
     }
   }
@@ -1101,6 +1623,37 @@ export class TutorialOverlay {
     g.endFill();
     g.eventMode = 'none';
     this._overlay.addChild(g);
+  }
+
+  private _drawBlockingDimWithGlow(spotlights: SpotlightRect[], alpha: number): void {
+    const g = new PIXI.Graphics();
+    g.beginFill(0x000000, alpha);
+    g.drawRect(0, 0, DESIGN_WIDTH, Game.logicHeight);
+    g.endFill();
+    g.eventMode = 'static';
+    this._overlay.addChild(g);
+
+    for (const rect of spotlights) {
+      this._drawGlowBorder(rect);
+    }
+  }
+
+  private _drawMergeGuideGlow(srcRect: SpotlightRect, dstRect: SpotlightRect, pad: number): void {
+    this._drawNonBlockingDim(0.62);
+    this._drawGlowBorder({
+      x: srcRect.x - pad,
+      y: srcRect.y - pad,
+      w: srcRect.w + pad * 2,
+      h: srcRect.h + pad * 2,
+      r: 12,
+    });
+    this._drawGlowBorder({
+      x: dstRect.x - pad,
+      y: dstRect.y - pad,
+      w: dstRect.w + pad * 2,
+      h: dstRect.h + pad * 2,
+      r: 12,
+    });
   }
 
   private _drawGlowBorder(rect: SpotlightRect): void {
@@ -1119,14 +1672,54 @@ export class TutorialOverlay {
     this._breatheAnim(glow);
   }
 
+  private _drawTapTargetBurst(x: number, y: number, radius: number): void {
+    this._drawTapTargetBurstOn(this._overlay, x, y, radius);
+  }
+
+  private _drawTapTargetBurstOn(parent: PIXI.Container, x: number, y: number, radius: number): void {
+    const ring = new PIXI.Graphics();
+    ring.lineStyle(6, 0xff7a4d, 0.9);
+    ring.drawCircle(x, y, radius);
+    ring.lineStyle(3, 0xffffff, 0.9);
+    ring.drawCircle(x, y, radius - 6);
+    ring.eventMode = 'none';
+    parent.addChild(ring);
+    this._breatheAnim(ring);
+
+    const label = new PIXI.Text('点这里', {
+      fontSize: 22,
+      fill: 0xffffff,
+      fontFamily: FONT_FAMILY,
+      fontWeight: 'bold',
+      stroke: 0xb84b2b,
+      strokeThickness: 5,
+    });
+    label.anchor.set(0.5, 1);
+    label.position.set(x, y - radius - 8);
+    label.eventMode = 'none';
+    parent.addChild(label);
+  }
+
+  private _drawDeliverButtonFocus(x: number, y: number): void {
+    const w = 146;
+    const h = 58;
+    const rect: SpotlightRect = { x: x - w / 2, y: y - h / 2, w, h, r: 24 };
+    this._drawGlowBorder(rect);
+
+  }
+
   private _addMaskRect(x: number, y: number, w: number, h: number, alpha: number): void {
+    this._addMaskRectOn(this._overlay, x, y, w, h, alpha);
+  }
+
+  private _addMaskRectOn(parent: PIXI.Container, x: number, y: number, w: number, h: number, alpha: number): void {
     if (w <= 0 || h <= 0) return;
     const g = new PIXI.Graphics();
     g.beginFill(0x000000, alpha);
     g.drawRect(x, y, w, h);
     g.endFill();
     g.eventMode = 'static';
-    this._overlay.addChild(g);
+    parent.addChild(g);
   }
 
   private _getBoundingSpotlight(spotlights: SpotlightRect[]): SpotlightRect {
@@ -1155,6 +1748,77 @@ export class TutorialOverlay {
       this._currentBubble.dispose();
       this._currentBubble = null;
     }
+  }
+
+  private _nudgeBubble(): void {
+    if (!this._currentBubble) return;
+    TweenManager.cancelTarget(this._currentBubble);
+    const startX = this._currentBubble.x;
+    TweenManager.to({
+      target: this._currentBubble,
+      props: { x: startX - 8 },
+      duration: 0.06,
+      ease: Ease.easeOutQuad,
+      onComplete: () => {
+        if (!this._currentBubble) return;
+        TweenManager.to({
+          target: this._currentBubble,
+          props: { x: startX + 8 },
+          duration: 0.08,
+          ease: Ease.easeInOutQuad,
+          onComplete: () => {
+            if (!this._currentBubble) return;
+            TweenManager.to({
+              target: this._currentBubble,
+              props: { x: startX },
+              duration: 0.08,
+              ease: Ease.easeOutQuad,
+            });
+          },
+        });
+      },
+    });
+  }
+
+  private _showInlineHint(text: string): void {
+    if (this._transientHint) {
+      TweenManager.cancelTarget(this._transientHint);
+      this._transientHint.parent?.removeChild(this._transientHint);
+      this._transientHint.destroy();
+      this._transientHint = null;
+    }
+    const hint = new PIXI.Text(text, {
+      fontSize: 22,
+      fill: 0xffffff,
+      fontFamily: FONT_FAMILY,
+      fontWeight: 'bold',
+      stroke: 0x7a4a1e,
+      strokeThickness: 5,
+    });
+    hint.anchor.set(0.5, 0.5);
+    hint.position.set(DESIGN_WIDTH / 2, Math.max(Game.safeTop + 92, BoardMetrics.topY - 38));
+    hint.alpha = 0;
+    this._overlay.addChild(hint);
+    this._transientHint = hint;
+    TweenManager.to({
+      target: hint,
+      props: { alpha: 1 },
+      duration: 0.12,
+      ease: Ease.easeOutQuad,
+      onComplete: () => {
+        TweenManager.to({
+          target: hint,
+          props: { alpha: 0 },
+          duration: 0.28,
+          delay: 0.85,
+          onComplete: () => {
+            if (this._transientHint === hint) this._transientHint = null;
+            hint.parent?.removeChild(hint);
+            hint.destroy();
+          },
+        });
+      },
+    });
   }
 
   // ══════════════════════════════════════════════
@@ -1384,17 +2048,37 @@ export class TutorialOverlay {
     return null;
   }
 
+  /** 找开放花朵 + 丝带花格，用于教学半锁格解锁 */
+  private _findFlowerPeekPair(itemId: string): [number, number] | null {
+    let openIdx = -1;
+    let peekIdx = -1;
+    for (const cell of BoardManager.cells) {
+      if (cell.itemId !== itemId) continue;
+      if (cell.state === 'open' && openIdx < 0) openIdx = cell.index;
+      if (cell.state === 'peek' && peekIdx < 0) peekIdx = cell.index;
+      if (openIdx >= 0 && peekIdx >= 0) return [openIdx, peekIdx];
+    }
+    return null;
+  }
+
   private _runCleanup(): void {
     if (this._cleanup) {
       this._cleanup();
       this._cleanup = null;
     }
+    TutorialInteractionGuard.clear();
   }
 
   private _clearOverlay(): void {
     this._clearDecoPurchaseOverlay();
     this._stopFingerAnim();
     this._disposeBubble();
+    if (this._transientHint) {
+      TweenManager.cancelTarget(this._transientHint);
+      this._transientHint.parent?.removeChild(this._transientHint);
+      this._transientHint.destroy();
+      this._transientHint = null;
+    }
     while (this._overlay.children.length > 0) {
       const child = this._overlay.children[0];
       this._overlay.removeChild(child);

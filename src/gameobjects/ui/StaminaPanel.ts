@@ -235,7 +235,7 @@ export class StaminaPanel extends PIXI.Container {
     this._buyBtn.on('pointerdown', () => this._onBuyStamina());
     leftCol.addChild(this._buyBtn);
 
-    // ── 右列：独立圆角框 + 上 20 体力图标区，下广告免费恢复 + 次数 ──
+    // ── 右列：独立圆角框 + 上区广告单次体力，下广告免费恢复 + 次数 ──
     const rightCol = new PIXI.Container();
     rightCol.position.set(COL_W + COL_GAP, 0);
     mount.addChild(rightCol);

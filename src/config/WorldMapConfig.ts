@@ -58,7 +58,10 @@ export const WORLD_MAP_CONTENT_H = DESIGN_HEIGHT;
 /**
  * 大地图解锁所需星级（花店星级 = CurrencyManager.state.level）
  */
-export const WORLD_MAP_UNLOCK_LEVEL = 10;
+export const WORLD_MAP_UNLOCK_LEVEL = 8;
+
+/** 蝴蝶小屋进入所需星级；大地图可先开放，但该房屋仍保持 10 级门槛 */
+export const BUTTERFLY_HOUSE_UNLOCK_LEVEL = 10;
 
 /** 大地图「当前店铺」实时缩略图：截取最长边像素（略小于节点 thumbSize，省显存） */
 export const LIVE_HOUSE_THUMB_CAPTURE_MAX = 160;
@@ -89,7 +92,7 @@ export const MAP_NODES: MapNodeDef[] = [
     y: 698,
     thumbKey: 'worldmap_thumb_wishing_fountain_1',
     thumbSize: 150,
-    unlockLevel: 1,
+    unlockLevel: WORLD_MAP_UNLOCK_LEVEL,
     popupEvent: 'panel:openFlowerSignGacha',
   },
   {
@@ -114,7 +117,7 @@ export const MAP_NODES: MapNodeDef[] = [
     y: 840,
     thumbKey: 'worldmap_thumb_butterfly_house',
     thumbSize: 320,
-    unlockLevel: 10,
+    unlockLevel: BUTTERFLY_HOUSE_UNLOCK_LEVEL,
     useLiveMapThumb: false,
     targetSceneId: 'butterfly_house',
   },

@@ -22,6 +22,11 @@ export enum TutorialStep {
   NOT_STARTED       = 0,
   STORY_INTRO       = 1,
 
+  // ── 棋盘空间认知教学（编号追加，实际顺序由 TUTORIAL_SEQUENCE 控制） ──
+  BOARD_INTRO_OPEN  = 20,
+  BOARD_INTRO_PEEK  = 21,
+  BOARD_INTRO_FOG_KEY = 22,
+
   // ── 工具合成教学 ──
   GUIDE_MERGE_TOOL  = 2,
   GUIDE_TAP_TOOL    = 3,
@@ -40,6 +45,14 @@ export enum TutorialStep {
   GUIDE_DELIVER2    = 10,
   DELIVER2_SUCCESS  = 11,
 
+  // ── 盒子解锁教学（花朵拖到丝带格） ──
+  GUIDE_MERGE_PEEK_FLOWER = 23,
+  GUIDE_TAP_MORE_PEEK_FLOWER = 27,
+  GUIDE_MERGE_FLOWER_PEEK_PREP = 28,
+  CUSTOMER3_ARRIVE = 24,
+  GUIDE_DELIVER3 = 25,
+  DELIVER3_SUCCESS = 26,
+
   // ── 花店引导 ──
   SHOP_INTRO_DIALOG = 12,
   SWITCH_TO_SHOP    = 13,
@@ -55,6 +68,40 @@ export enum TutorialStep {
 /** 旧版 TutorialStep 最大有效值（v1/v2 完成后存 99；v2 最大步骤 19） */
 const LEGACY_COMPLETED_THRESHOLD = 19;
 
+const TUTORIAL_SEQUENCE: TutorialStep[] = [
+  TutorialStep.STORY_INTRO,
+  TutorialStep.BOARD_INTRO_OPEN,
+  TutorialStep.GUIDE_MERGE_TOOL,
+  TutorialStep.GUIDE_TAP_TOOL,
+  TutorialStep.CUSTOMER1_ARRIVE,
+  TutorialStep.GUIDE_DELIVER1,
+  TutorialStep.DELIVER1_SUCCESS,
+  TutorialStep.GUIDE_TAP_MORE,
+  TutorialStep.GUIDE_MERGE_FLOWER,
+  TutorialStep.CUSTOMER2_ARRIVE,
+  TutorialStep.GUIDE_DELIVER2,
+  TutorialStep.DELIVER2_SUCCESS,
+  TutorialStep.GUIDE_TAP_MORE_PEEK_FLOWER,
+  TutorialStep.GUIDE_MERGE_FLOWER_PEEK_PREP,
+  TutorialStep.GUIDE_MERGE_PEEK_FLOWER,
+  TutorialStep.CUSTOMER3_ARRIVE,
+  TutorialStep.GUIDE_DELIVER3,
+  TutorialStep.DELIVER3_SUCCESS,
+  TutorialStep.SHOP_INTRO_DIALOG,
+  TutorialStep.SWITCH_TO_SHOP,
+  TutorialStep.SHOP_TOUR,
+  TutorialStep.GUIDE_BUY_FURNITURE,
+  TutorialStep.GUIDE_PLACE_FURNITURE,
+  TutorialStep.SHOP_COMPLETE_DIALOG,
+  TutorialStep.SWITCH_BACK_MERGE,
+  TutorialStep.TUTORIAL_GIFT,
+  TutorialStep.COMPLETED,
+];
+
+const TUTORIAL_ORDER = new Map<TutorialStep, number>(
+  TUTORIAL_SEQUENCE.map((step, index) => [step, index]),
+);
+
 class TutorialManagerClass {
   private _step: TutorialStep = TutorialStep.NOT_STARTED;
   private _started = false;
@@ -66,6 +113,9 @@ class TutorialManagerClass {
   /** 属于 MainScene 的步骤范围 */
   isMainSceneStep(): boolean {
     return this._step <= TutorialStep.SWITCH_TO_SHOP
+      || this._step === TutorialStep.BOARD_INTRO_OPEN
+      || this._step === TutorialStep.BOARD_INTRO_PEEK
+      || this._step === TutorialStep.BOARD_INTRO_FOG_KEY
       || this._step >= TutorialStep.SWITCH_BACK_MERGE;
   }
 
@@ -82,7 +132,7 @@ class TutorialManagerClass {
   start(): void {
     const saved = this._loadProgress();
 
-    if (saved >= TutorialStep.COMPLETED || (saved >= LEGACY_COMPLETED_THRESHOLD && saved < TutorialStep.COMPLETED)) {
+    if (saved >= TutorialStep.COMPLETED || saved === LEGACY_COMPLETED_THRESHOLD) {
       this._step = TutorialStep.COMPLETED;
       this._started = false;
       this._saveProgress(TutorialStep.COMPLETED);
@@ -90,6 +140,10 @@ class TutorialManagerClass {
     }
 
     this._step = saved || TutorialStep.NOT_STARTED;
+
+    if (this._step === TutorialStep.BOARD_INTRO_PEEK || this._step === TutorialStep.BOARD_INTRO_FOG_KEY) {
+      this._step = TutorialStep.GUIDE_MERGE_TOOL;
+    }
 
     if (this._step === TutorialStep.NOT_STARTED) {
       this._step = TutorialStep.STORY_INTRO;
@@ -102,7 +156,15 @@ class TutorialManagerClass {
 
   /** 推进到指定步骤 */
   advanceTo(step: TutorialStep): void {
-    if (step <= this._step && step !== TutorialStep.COMPLETED) return;
+    if (step !== TutorialStep.COMPLETED) {
+      const currentOrder = TUTORIAL_ORDER.get(this._step);
+      const nextOrder = TUTORIAL_ORDER.get(step);
+      if (currentOrder !== undefined && nextOrder !== undefined) {
+        if (nextOrder <= currentOrder) return;
+      } else if (step <= this._step) {
+        return;
+      }
+    }
     this._step = step;
     this._saveProgress(step);
 
@@ -124,8 +186,8 @@ class TutorialManagerClass {
 
   /** 发放新手礼包奖励 */
   grantTutorialGift(): void {
-    CurrencyManager.addStamina(50);
-    CurrencyManager.addDiamond(32);
+    CurrencyManager.addStamina(100);
+    CurrencyManager.addDiamond(30);
   }
 
   /** 强制完成（GM 用） */

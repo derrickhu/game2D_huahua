@@ -541,7 +541,7 @@ export class ShopScene implements Scene {
     // ============== 8. 右下角返回按钮（参考四季物语的大箭头） ==============
     this._buildReturnButton(w, h);
 
-    // ============== 8b. 大地图按钮（右下营业钮正上方、落在底部浅绿条内，10 星解锁） ==============
+    // ============== 8b. 大地图按钮（右下营业钮正上方、落在底部浅绿条内，配置等级解锁） ==============
     this._buildWorldMapButton(w, h);
 
     // ============== 9. 编辑模式组件（初始隐藏） ==============
@@ -1335,6 +1335,15 @@ export class ShopScene implements Scene {
         }
       }
     }
+  }
+
+  /** 左侧「友谊卡」入口须与 `AffinityManager.isCardSystemUnlocked()` 一致（编辑态结束勿强行设为可见）。 */
+  private _syncAffinityCodexButtonVisibility(): void {
+    const entry = this._activityBtns.get('affinity_codex');
+    if (!entry) return;
+    const unlocked = AffinityManager.isCardSystemUnlocked();
+    entry.container.visible = unlocked;
+    entry.container.eventMode = unlocked ? 'static' : 'none';
   }
 
   private _refreshActivityButtonTextures(): void {
@@ -2598,6 +2607,8 @@ export class ShopScene implements Scene {
     for (const { container } of this._activityBtns.values()) {
       container.visible = true;
     }
+    // 友谊卡未达开放等级时须保持隐藏；上面对全部入口统一 visible=true 会误显示，且 eventMode 仍为 none 导致点不动
+    this._syncAffinityCodexButtonVisibility();
 
     // 刷新房间渲染
     this._renderFurnitureLayout();

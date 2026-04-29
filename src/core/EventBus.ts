@@ -39,7 +39,10 @@ class EventBusClass {
       try {
         handler(...args);
       } catch (e) {
-        console.error(`[EventBus] 事件 "${event}" 处理出错:`, e);
+        const err = e instanceof Error
+          ? `${e.name}: ${e.message}\n${e.stack ?? ''}`
+          : String(e);
+        console.error(`[EventBus] 事件 "${event}" 处理出错: ${err}`);
       }
     });
   }

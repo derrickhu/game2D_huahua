@@ -8,8 +8,7 @@
 
 import {
   computeSellHuayuan,
-  drinkDeliverHuayuanForLevel,
-  flowerDeliverHuayuanForLevel,
+  deliverHuayuanForItem,
 } from './OrderHuayuanConfig';
 
 export enum Category {
@@ -172,7 +171,9 @@ function buildItemDefs(): Map<string, ItemDef> {
     for (let i = 0; i < names.length; i++) {
       const id = `flower_${line}_${i + 1}`;
       const lv = i + 1;
-      const orderHy = line !== FlowerLine.WRAP ? flowerDeliverHuayuanForLevel(lv) : 0;
+      const orderHy = line !== FlowerLine.WRAP
+        ? deliverHuayuanForItem(Category.FLOWER, line, lv)
+        : 0;
       map.set(id, {
         id,
         name: names[i],
@@ -197,7 +198,7 @@ function buildItemDefs(): Map<string, ItemDef> {
     for (let i = 0; i < names.length; i++) {
       const id = `drink_${line}_${i + 1}`;
       const lv = i + 1;
-      const orderHy = drinkDeliverHuayuanForLevel(lv);
+      const orderHy = deliverHuayuanForItem(Category.DRINK, line, lv);
       map.set(id, {
         id,
         name: names[i],

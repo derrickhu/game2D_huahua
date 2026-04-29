@@ -43,6 +43,7 @@ import { WarehouseManager } from '@/managers/WarehouseManager';
 import { getItemSellPrice } from '@/utils/ItemSellPrice';
 import { MergeGuideLineSystem } from '@/systems/MergeGuideLineSystem';
 import { MergeHintSystem } from '@/systems/MergeHintSystem';
+import { TutorialInteractionGuard } from '@/systems/TutorialInteractionGuard';
 import { MergeCompanionOverlay, createMergeBubbleDragReplica } from './MergeCompanionOverlay';
 import { MergeCompanionManager } from '@/managers/MergeCompanionManager';
 
@@ -279,7 +280,11 @@ export class BoardView extends PIXI.Container {
     }
     const dt = Game.ticker.deltaMS / 1000;
     this._guideLineSystem.update(dt);
-    this._mergeHintSystem.update(dt);
+    if (TutorialInteractionGuard.hasMergeRule) {
+      this._mergeHintSystem.resetIdle();
+    } else {
+      this._mergeHintSystem.update(dt);
+    }
   }
 
   /** 花语泡泡 HUD：倒计时与解锁文案（主循环调用） */
@@ -421,7 +426,7 @@ export class BoardView extends PIXI.Container {
         !!dragItemId && cell.state === CellState.OPEN;
 
       // 长按检测：0.8秒后弹出合成线面板（含工具链）；仅全解锁格（与可拖规则一致）
-      if (canBoardDrag) {
+      if (canBoardDrag && !TutorialInteractionGuard.hasMergeRule) {
         const def = ITEM_DEFS.get(dragItemId);
         const chain = getMergeChain(dragItemId);
         if (def && chain.length > 1) {
@@ -445,7 +450,11 @@ export class BoardView extends PIXI.Container {
         if (MergeManager.startDrag(cellIdx)) {
           this._startDragGhost(cellIdx, localPos);
           this._cacheAndHighlightTargets(cellIdx);
-          this._guideLineSystem.startGuide(cellIdx);
+          if (!TutorialInteractionGuard.hasMergeRule) {
+            this._guideLineSystem.startGuide(cellIdx);
+          }
+        } else {
+          this._dragSrcIndex = -1;
         }
       }
     });
@@ -508,6 +517,13 @@ export class BoardView extends PIXI.Container {
 
         // 拖到棋盘外下方区域 → 尝试存入仓库
         if (targetIdx < 0 && localPos.y > BoardMetrics.areaHeight) {
+          if (TutorialInteractionGuard.hasMergeRule) {
+            MergeManager.cancelDrag();
+            this._endDrag();
+            TutorialInteractionGuard.notifyInvalidAction();
+            this._dragSrcIndex = -1;
+            return;
+          }
           const cell = BoardManager.getCellByIndex(srcIdx);
           if (cell?.itemId) {
             const def = ITEM_DEFS.get(cell.itemId);
@@ -555,6 +571,7 @@ export class BoardView extends PIXI.Container {
           if (result.kind === 'lucky_coin_fail') {
             ToastMessage.show(result.toast);
           }
+          EventBus.emit('tutorial:boardActionSettled', result.kind);
           // 移入空格 / 互换：选中框跟到目标格上的物品
           if (result.kind === 'moved' || result.kind === 'swapped') {
             const cellAfter = BoardManager.getCellByIndex(targetIdx);
@@ -566,12 +583,22 @@ export class BoardView extends PIXI.Container {
           // 原地释放（没有实际拖拽到其他格子）→ 当作点击，触发选中
           MergeManager.cancelDrag();
           this._endDrag();
+          if (TutorialInteractionGuard.hasMergeRule) {
+            TutorialInteractionGuard.notifyInvalidAction();
+            this._dragSrcIndex = -1;
+            return;
+          }
           this._handleTap(srcIdx);
           this._dragSrcIndex = -1;
           return;
         }
         this._endDrag();
       } else {
+        if (TutorialInteractionGuard.hasMergeRule) {
+          TutorialInteractionGuard.notifyInvalidAction();
+          this._dragSrcIndex = -1;
+          return;
+        }
         this._handleTap(srcIdx);
       }
 
@@ -587,6 +614,9 @@ export class BoardView extends PIXI.Container {
       if (this._dragGhost) {
         MergeManager.cancelDrag();
         this._endDrag();
+        if (TutorialInteractionGuard.hasMergeRule) {
+          TutorialInteractionGuard.notifyInvalidAction();
+        }
       }
       this._dragSrcIndex = -1;
     });
