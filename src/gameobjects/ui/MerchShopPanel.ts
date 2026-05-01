@@ -774,10 +774,12 @@ export class MerchShopPanel extends PIXI.Container {
         rIcon.visible = !hasDailyAdRefresh;
         rRow.addChild(rIcon);
       }
-      const rAdIcon = createAdIcon(24);
+      /** 每日首次广告刷新：仅大图广告标，不占「免费」文案宽度 */
+      const rAdIconSize = Math.max(38, Math.min(58, Math.round(rBtnH * 0.92)));
+      const rAdIcon = createAdIcon(rAdIconSize);
       rAdIcon.visible = hasDailyAdRefresh;
       rRow.addChild(rAdIcon);
-      const rPrice = new PIXI.Text(hasDailyAdRefresh ? '免费' : String(MERCH_DIAMOND_REFRESH_SHELF_COST), {
+      const rPrice = new PIXI.Text(String(MERCH_DIAMOND_REFRESH_SHELF_COST), {
         fontSize: 42,
         fill: MERCH_BTN_LABEL_FILL,
         fontFamily: FONT_FAMILY,
@@ -1058,28 +1060,36 @@ export class MerchShopPanel extends PIXI.Container {
   private _syncRefreshButtonView(view: MerchRefreshButtonView): void {
     const hasDailyAdRefresh = AdEntitlementManager.canUseDaily(DailyAdEntitlement.MERCH_DAILY_REFRESH);
     const gap = 7;
-    view.label.text = hasDailyAdRefresh ? '免费' : String(MERCH_DIAMOND_REFRESH_SHELF_COST);
-    if (view.icon) view.icon.visible = !hasDailyAdRefresh;
-    if (view.adIcon) view.adIcon.visible = hasDailyAdRefresh;
+
+    if (hasDailyAdRefresh) {
+      view.label.visible = false;
+      if (view.icon) view.icon.visible = false;
+      if (view.adIcon) {
+        view.adIcon.visible = true;
+        if (view.adIcon instanceof PIXI.Sprite) {
+          view.adIcon.anchor.set(0.5, 0.5);
+        } else {
+          const b = view.adIcon.getLocalBounds();
+          view.adIcon.pivot.set(b.x + b.width / 2, b.y + b.height / 2);
+        }
+        view.adIcon.position.set(0, 0);
+      }
+      return;
+    }
+
+    view.label.visible = true;
+    view.label.text = String(MERCH_DIAMOND_REFRESH_SHELF_COST);
+    if (view.icon) view.icon.visible = true;
+    if (view.adIcon) view.adIcon.visible = false;
 
     const iconW = view.icon?.visible ? view.icon.width : 0;
-    const adIconW = view.adIcon?.visible ? view.adIcon.width : 0;
-    const rowW =
-      iconW > 0
-        ? iconW + gap + view.label.width
-        : adIconW > 0
-          ? view.label.width + gap + adIconW
-          : view.label.width;
+    const rowW = iconW + gap + view.label.width;
     let x = -rowW / 2;
     if (view.icon?.visible) {
       view.icon.position.set(x + iconW / 2, 0);
       x += iconW + gap;
     }
     view.label.position.set(x + view.label.width / 2, 0);
-    x += view.label.width + gap;
-    if (view.adIcon?.visible) {
-      view.adIcon.position.set(x + adIconW / 2, 0);
-    }
   }
 
   private _onBuyTap(row: number, col: number): void {

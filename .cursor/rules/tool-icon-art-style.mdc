@@ -38,7 +38,7 @@ Cute small mobile game item icon, 3/4 top-down isometric view. Rounded chunky pr
 | 模型 | `gemini-2.5-flash-image` |
 | 风格参考图 | `--image minigame/subpkg_items/images/tools/bake/tool_bake_2.png` |
 | 比例 | `1:1`（默认） |
-| 环境变量 | `GEMINI_IMAGE_REST_ONLY=1 HTTPS_PROXY=http://127.0.0.1:7890` |
+| 环境变量 | `GEMINI_IMAGE_REST_ONLY=1 HTTPS_PROXY=http://127.0.0.1:7897` |
 | 背景 | 提示词要求白色背景，生成后用 rembg 抠图 |
 
 ## 后处理流程
@@ -53,7 +53,7 @@ Cute small mobile game item icon, 3/4 top-down isometric view. Rounded chunky pr
 （在仓库根执行；原图落在与本仓库同级的 `game_assets/huahua/assets/raw/`。）
 
 ```bash
-GEMINI_IMAGE_REST_ONLY=1 HTTPS_PROXY=http://127.0.0.1:7890 python3 ~/.cursor/skills/gemini-image-gen/scripts/generate_images.py \
+GEMINI_IMAGE_REST_ONLY=1 HTTPS_PROXY=http://127.0.0.1:7897 python3 ~/.cursor/skills/gemini-image-gen/scripts/generate_images.py \
   --prompt-file docs/prompt/{item_name}_nb2_prompt.txt \
   --output ../game_assets/huahua/assets/raw/{item_name}_nb2.png \
   --model gemini-2.5-flash-image \

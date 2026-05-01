@@ -1,0 +1,29 @@
+A square 1:1 image containing a 2 columns x 2 rows grid sheet of 3 baking tool game item icons for a cozy flower-shop merge game. The first 3 cells contain the requested icons. The last cell is intentionally empty plain white background.
+
+Use the attached reference image for style consistency: cute compact mobile game item icon, 3/4 front view, slightly top-down, rounded chunky proportions, warm cream and brown colors, soft smooth gradient shading, small bright highlight spots, clean same-color outlines, no black outline, simple readable shapes.
+
+CRITICAL OUTPUT RULE:
+The final image must contain ONLY the 3 baking tool icons and plain white background. Do not draw any written words anywhere. Do not draw item names, level numbers, labels, captions, watermarks, UI text, or text-like marks.
+
+GLOBAL STYLE REQUIREMENTS:
+- Cute polished 2D mobile game item icons, readable at 128 px.
+- Compact centered objects, filling about 78-84% of each cell.
+- Warm cozy bakery palette: cream, caramel brown, peach, soft terracotta, warm gold, mint accents.
+- Soft 3D volume with rounded corners, subtle shadows, glossy highlights.
+- Avoid busy worktables, shelves, many tiny bottles, cake decorating tools, or packaging-table shapes.
+- Levels 4 and 5 must clearly be ovens, not counters and not wrapping/decoration stations.
+- Plain white background. No text, no labels, no numbers.
+
+GRID LAYOUT:
+
+Row 1, Column 1, Level 2 baking tray visual:
+A small baking tray item for early baking level. A warm bronze rectangular baking tray with rounded corners, shallow rim, a sheet of pale parchment paper, and 3 simple cookie dough rounds on it. Maybe a tiny oven mitt beside the tray. Simple small tool, not an oven.
+
+Row 1, Column 2, Level 4 double oven visual:
+A medium upgraded double-deck oven. Rounded cream and caramel body, two stacked warm orange glass oven windows, two or three round knobs, tiny golden handle details, cute compact shape. It should look clearly more advanced than the small single oven reference, but still simple and not too complex.
+
+Row 2, Column 1, Level 5 premium baking furnace visual:
+A high-level premium baking oven/furnace. Larger rounded pastel cream body with soft terracotta roof-like top or arched top, two glowing oven windows, gold trim, small temperature gauge, neat control knobs, and tiny side vent. Elegant and advanced, but still compact and readable. No extra table, no shelves full of jars.
+
+Row 2, Column 2:
+Leave this cell completely empty plain white background. Do not draw an icon, mark, label, frame, or text in this cell.

@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # 钻石袋 / 体力宝箱：NB2 原图（白底）→ rembg birefnet-general → crop_trim → 写入 subpkg_items，再于仓库根跑 compress_subpkg_items_pngs.py
 # 生图（仓库根）：钻石袋用 minigame/images/ui/icon_gem.png 作参考；体力箱用 icon_energy.png
-#   GEMINI_IMAGE_REST_ONLY=1 HTTPS_PROXY=http://127.0.0.1:7890 python3 ~/.cursor/skills/gemini-image-gen/scripts/generate_images.py \
+#   GEMINI_IMAGE_REST_ONLY=1 HTTPS_PROXY=http://127.0.0.1:7897 python3 ~/.cursor/skills/gemini-image-gen/scripts/generate_images.py \
 #     --prompt-file docs/prompt/diamond_bag_1_nb2_prompt.txt \
 #     --output ../game_assets/huahua/assets/raw/diamond_bag_1_nb2.png \
 #     --model gemini-2.5-flash-image \

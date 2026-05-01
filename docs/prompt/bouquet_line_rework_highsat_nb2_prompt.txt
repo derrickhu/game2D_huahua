@@ -1,0 +1,52 @@
+A 5 columns x 2 rows grid sheet of 10 flower bouquet game item icons for a cozy flower-shop merge game. The icons are a level progression from Level 1 to Level 10, left to right, top row first, then bottom row. Generate all 10 icons in one image so they share the same art style, lighting, color palette, line quality, and camera angle.
+
+CRITICAL OUTPUT RULE:
+The final image must contain ONLY the 10 bouquet icons and plain background. Do not draw any written words anywhere. Do not draw item names, level numbers, captions, labels, signatures, watermarks, UI text, or text-like marks. The level descriptions below are instructions for you only and must never appear in the image.
+
+Use the attached reference image only for flower rendering style and color feeling: saturated bright petals, layered rounded petals, glossy soft 3D volume, white highlight spots and arcs, cheerful warm colors, cute clean mobile game illustration. Do not copy the girl, face, circular badge, or background from the reference image. Only create standalone bouquet item icons.
+
+GLOBAL STYLE REQUIREMENTS:
+- Cute polished 2D mobile game item icons, high saturation, bright and joyful flower-shop mood.
+- Flowers are the visual focus: vivid pink, coral, yellow, red, cream white, lavender, sky blue accents, fresh glossy green leaves.
+- Petals are rounded and layered with smooth gradient shading, small white highlights, and a clear soft 3D look.
+- Thin clean outlines in the same color family as the fill, never thick black outlines.
+- Wrapping paper, boxes, ribbons, and basket materials are simple, rounded, and glossy with soft highlights.
+- 3/4 front view, slightly top-down, centered in each cell, readable at small 128 px game icon size.
+- Each icon should fill about 78-84% of its grid cell with consistent padding.
+- Progression should be clear through flower count, bouquet volume, wrapping quality, decoration, and arrangement complexity.
+- Levels 9 and 10 are high-level premium bouquets, but NOT final legendary forms. Leave room for future higher levels.
+- Clean plain white background behind the entire grid. No shadows cast on the background beyond a very soft contact shadow inside each icon if needed.
+- NO TEXT, no labels, no item names, no level numbers, no captions, no watermark, no logo, no UI frame, no character, no face.
+- NO sparkles, no magic glow, no floating particles, no heavy realism, no photographic texture.
+
+GRID LAYOUT, EXACT CONTENT:
+
+Row 1, Column 1, Level 1 visual:
+A very small casual hand-tied bunch of 3 to 4 flowers: one glossy white daisy with golden center, one small hot-pink flower, one tiny yellow flower, and a few bright green leaves. Thin green string around visible stems. No wrapping paper. Simple, cute, clearly the starting level.
+
+Row 1, Column 2, Level 2 visual:
+A small mini bouquet of 4 to 5 pink and cream-white flowers wrapped in translucent candy-paper style pastel pink film, tied with a small pink ribbon bow. Slightly more gift-like than Level 1, but still compact and modest. Flowers remain bright, glossy, and rounded.
+
+Row 1, Column 3, Level 3 visual:
+A medium bouquet of vivid red and golden-yellow tulips with glossy curved petals and strong white highlight arcs. Wrapped in crisp white inner paper with a fresh green satin bow. More organized and taller than Level 2.
+
+Row 1, Column 4, Level 4 visual:
+A sweet bouquet of plump coral-pink roses surrounded by tiny cream-white baby's breath dot clusters. Wrapped in soft blush-pink paper with a matching satin ribbon. Rose petals show visible spiral layers, bright highlights, and rich volume.
+
+Row 1, Column 5, Level 5 visual:
+A generous countryside mixed bouquet with one bright golden sunflower, white daisies, small purple flowers, coral-pink blossoms, and many glossy green leaves. Wrapped with cream inner paper and sage-green outer paper. Color variety and flower count clearly increase.
+
+Row 2, Column 1, Level 6 visual:
+An elegant ivory square flower gift box with rounded corners and a wide glossy golden ribbon. The lid is slightly open, showing red and pink roses arranged inside with a few leaves. More premium and structured than Level 5, but still a compact game icon.
+
+Row 2, Column 2, Level 7 visual:
+A large romantic bouquet of many glossy crimson red roses, at least 10 visible rose heads, wrapped in warm champagne-gold paper with a wide gold satin ribbon. Bigger silhouette than previous bouquets, clear red rose theme, rich but not over-decorated.
+
+Row 2, Column 3, Level 8 visual:
+A rounded woven wicker hand basket with a curved handle, filled with abundant pink roses, blue-purple hydrangea clusters, cream flowers, and lush glossy leaves spilling slightly over the rim. Warm golden-brown basket, cute simplified weave, high color richness.
+
+Row 2, Column 4, Level 9 visual:
+A premium bouquet of peach-pink peonies and cream roses wrapped in deep wine-red paper with thin gold edge trim and a neat gold satin bow. Elegant, refined, high-level, but not excessive and not final. The silhouette should be only slightly larger than Level 8.
+
+Row 2, Column 5, Level 10 visual:
+A festive premium bouquet with a balanced mix of soft rainbow-colored flowers: bright pink, lavender, pale blue, peach, cream white, and warm yellow. Wrapped in pearl-white paper with a soft gold ribbon. It should feel like a celebration bouquet for the current top level, but not legendary, not magical, not the ultimate largest form. Keep it expandable for future levels.

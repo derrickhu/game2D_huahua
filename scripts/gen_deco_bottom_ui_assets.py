@@ -90,7 +90,7 @@ def main() -> int:
     ):
         env.pop(k, None)
     env["GEMINI_IMAGE_REST_ONLY"] = "1"
-    # 未开 Clash 等本地代理时，避免脚本默认走 127.0.0.1:7890 导致失败；需代理时可 export GEMINI_IMAGE_NO_PROXY=0
+    # 未开 Clash 等本地代理时，避免脚本默认走 127.0.0.1:7897 导致失败；需代理时可 export GEMINI_IMAGE_NO_PROXY=0
     if os.environ.get("GEMINI_IMAGE_NO_PROXY", "").strip().lower() not in ("0", "false", "no"):
         env["GEMINI_IMAGE_NO_PROXY"] = "1"
 

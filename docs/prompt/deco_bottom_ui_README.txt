@@ -37,6 +37,6 @@
   对号图标用 #FF00FF 品红底生成，避免与白底混消。
 
 五、网络
-  generate_images.py 默认会走本机 7890 代理；代理未开时会报错。
+  generate_images.py 默认会走本机 7897 代理；代理未开时会报错。
   直连 Google 可用时，批量脚本已默认设置 GEMINI_IMAGE_NO_PROXY=1（直连）。
   必须走代理时：export GEMINI_IMAGE_NO_PROXY=0 且先启动 Clash 等。

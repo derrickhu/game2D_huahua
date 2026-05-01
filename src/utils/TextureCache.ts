@@ -24,6 +24,8 @@ const MAIN_IMAGE_MAP: Record<string, string> = {
   icon_enter_house: 'images/ui/icon_enter_house.png',
   /** NB2+rembg：顶栏内购商店胶囊图标 */
   icon_shop_nb2: 'images/ui/icon_shop_nb2.png',
+  /** NB2+rembg：激励视频 / 看广告统一小图标（粉紫边框 + 播放三角） */
+  icon_ad_reward_nb2: 'images/ui/icon_ad_reward_nb2.png',
   icon_heart:  'images/ui/icon_heart.png',
   icon_book:   'images/ui/icon_book.png',
   icon_basket: 'images/ui/icon_basket.png',
@@ -666,6 +668,7 @@ const CHECKIN_PANEL_KEYS = [
   'checkin_milestone_gift_3',
   'checkin_milestone_gift_4',
   'deco_card_btn_2',
+  'deco_card_btn_3',
   'icon_energy',
   'icon_gem',
   'checkin_m1_bunny_ac',
@@ -705,10 +708,13 @@ const TUTORIAL_DECO_KEYS = [
   'room_edit_toolbar_remove',
 ] as const;
 
+/** 大地图节点用到的缩略图须在此列表：否则 open 前 preload 不等人齐，首帧易落成五边形占位 */
 const WORLDMAP_WARMUP_KEYS = [
   'worldmap_bg',
   'worldmap_house_flower_shop',
   'worldmap_thumb_butterfly_house',
+  'worldmap_thumb_cake_shop',
+  'worldmap_thumb_timed_event',
   'worldmap_thumb_wishing_fountain_1',
   'worldmap_thumb_wishing_fountain_2',
   'icon_worldmap',

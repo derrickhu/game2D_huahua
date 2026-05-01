@@ -1,0 +1,40 @@
+A square 1:1 image containing a 2 columns x 3 rows grid sheet for premium flower bouquet game item icons in a cozy flower-shop merge game. The first 5 cells are Levels 6 to 10 of the bouquet merge chain, left to right, top row first, then middle row, then bottom row. The last cell is intentionally empty plain white background. Generate all 5 bouquet icons in one image so they share the same art style, lighting, color palette, line quality, and camera angle.
+
+Use the attached reference image only for style consistency with the existing bouquet icons: saturated bright petals, glossy soft 3D volume, rounded layered flowers, white highlight spots and arcs, thin same-color outlines, cute clean mobile game illustration. Do not copy the exact compositions. Create new bouquet-only designs.
+
+CRITICAL OUTPUT RULE:
+The final image must contain ONLY the 5 bouquet icons and plain white background. Do not draw any written words anywhere. Do not draw item names, level numbers, captions, labels, signatures, watermarks, UI text, or text-like marks. The descriptions below are instructions only and must never appear in the image.
+
+GLOBAL STYLE REQUIREMENTS:
+- Every item must be a wrapped flower bouquet, not a flower box, not a basket, not a vase, not a potted plant.
+- IMPORTANT SHAPE RULE: Each bouquet icon must be compact, wide, and balanced inside its cell. The final silhouette should be close to square or slightly wider than tall, never tall and skinny. Use short stems, short wrapping cones, wide flower heads, and broad rounded paper folds. Avoid long vertical bouquet shapes. These are board-game icons, not tall poster illustrations.
+- Cute polished 2D mobile game item icons, high saturation, bright and joyful flower-shop mood.
+- 3/4 front view, slightly top-down, centered in each cell, readable at small 128 px game icon size.
+- Flowers are the visual focus: vivid red, hot pink, coral, golden yellow, cream white, lavender, sky blue, violet, emerald green leaves.
+- Petals are rounded and layered with smooth gradient shading, small white highlights, and a clear soft 3D look.
+- Thin clean outlines in the same color family as the fill, never thick black outlines.
+- Wrapping paper and ribbons are simple, rounded, glossy, and elegant with soft highlights.
+- Level progression should be clear through bouquet size, rare flower choices, color richness, wrapping quality, decorative structure, and design sophistication.
+- Levels 9 and 10 are premium and special, but NOT final legendary forms. Leave room for future higher levels.
+- Clean plain white background. NO TEXT, no labels, no item names, no numbers, no watermark, no UI frame, no character, no face.
+- NO sparkles, no magic glow, no floating particles, no heavy realism, no photographic texture.
+
+GRID LAYOUT, EXACT CONTENT:
+
+Row 1, Column 1, Level 6 visual:
+A refined wrapped bouquet of red and pink roses mixed with cream ranunculus and glossy green leaves. Ivory inner paper, pale champagne outer wrap, wide golden ribbon bow. Clearly more premium than Level 5, but still a normal elegant bouquet silhouette. No box.
+
+Row 1, Column 2, Level 7 visual:
+A large romantic cascading bouquet of many glossy crimson red roses with a few deep pink roses, wrapped in warm champagne-gold paper. Wide gold satin ribbon at the bottom. Fuller and taller than Level 6, rich red theme, dramatic but clean.
+
+Row 2, Column 1, Level 8 visual:
+A rare orchid and hydrangea bouquet: lavender orchids, blue-purple hydrangea clusters, hot-pink roses, small cream blossoms, and lush emerald leaves. Wrapped in layered cream and soft lilac paper with a lavender ribbon. Must be a wrapped bouquet, not a basket. More unusual flower materials than Level 7.
+
+Row 2, Column 2, Level 9 visual:
+A high-design jeweled bouquet using rare and elegant flowers: peach-pink peonies, cream roses, coral ranunculus, violet anemones with dark centers, and a few golden yellow accents. Wrapped in deep wine-red paper with thin gold edge trim and a neat gold ribbon. More refined, more vivid, and more luxurious than Level 8, but not oversized.
+
+Row 3, Column 1, Level 10 visual:
+A vivid celebration designer bouquet using special rare flowers: magenta peonies, lavender orchids, sky-blue poppies, coral roses, pale yellow ranunculus, cream blossoms, and bright emerald leaves. The arrangement has an intentional color-gradient design from hot pink to violet to sky blue to warm yellow. Wrapped in pearl-white paper with soft gold ribbon and a small lilac accent ribbon. It should feel premium, rare, colorful, and highly designed, but not magical, not legendary, and not final.
+
+Row 3, Column 2:
+Leave this cell completely empty plain white background. Do not draw an icon, mark, label, frame, or text in this cell.

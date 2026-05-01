@@ -40,6 +40,27 @@ export function requirementHintText(r: RequirementResult): string {
   return r.detailText ?? r.text;
 }
 
+/**
+ * 装修面板：锁定家具的 Toast（短按钮文案常为「活动解锁」时需说明具体哪类活动）
+ */
+export function decorationLockedToastText(
+  unlockReq: UnlockRequirement | undefined,
+  result: RequirementResult,
+): string {
+  const ur = unlockReq;
+  if (ur?.conditionText === '活动解锁') {
+    const detail = ur.questDetailText?.trim();
+    if (!detail || detail === '签到奖励') {
+      return '完成当月签到任务后即可解锁（详见活动中心 · 签到）';
+    }
+    return detail;
+  }
+  if (ur?.questId) {
+    return requirementHintText(result);
+  }
+  return requirementHintText(result);
+}
+
 const _grantedQuests = new Set<string>();
 
 export function grantQuest(questId: string): void {

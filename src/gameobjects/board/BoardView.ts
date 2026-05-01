@@ -204,6 +204,9 @@ export class BoardView extends PIXI.Container {
       const cellView = this._cellViews[i];
       const itemView = this._itemViews[i];
 
+      cellView.setKeyUnlockMode(
+        cell.state === CellState.KEY ? BoardManager.getKeyCellUnlockMode(i) : null,
+      );
       cellView.setState(cell.state);
       cellView.setOrderReserved(
         !!cell.reserved &&
@@ -833,7 +836,7 @@ export class BoardView extends PIXI.Container {
       const confirmed = await ConfirmDialog.show(
         '解锁格子',
         '观看一段广告即可解锁该格子',
-        '免费解锁',
+        '看广告解锁',
         '取消',
       );
       if (!confirmed) return;

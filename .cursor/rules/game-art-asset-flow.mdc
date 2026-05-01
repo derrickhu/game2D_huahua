@@ -40,6 +40,7 @@ alwaysApply: true
 ## 模型与命令
 
 - **NB2** = `gemini-3.1-flash-image-preview`（gemini-image-gen skill）。
+- **HTTP(S) 代理**：`generate_images.py` 默认 `http://127.0.0.1:7897`（与 macOS 系统代理及 Clash Verge / Mihomo 常见监听一致）；其它端口 `export HTTPS_PROXY=...`；直连与 `GEMINI_IMAGE_NO_PROXY` 见 gemini-image-gen skill。
 - 竖版全屏背景常用 `--aspect-ratio 9:16`；**512 合图**用 `--aspect-ratio 1:1`（见上条）。
 - 使用 **prompt 文件** 避免超长命令行：
 

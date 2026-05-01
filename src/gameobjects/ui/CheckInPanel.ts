@@ -11,8 +11,12 @@ import { TweenManager, Ease } from '@/core/TweenManager';
 import {
   CheckInManager, MILESTONES,
   getCheckInRewardForCycleDay,
+  CHECKIN_AD_BONUS_STAMINA,
+  CHECKIN_AD_BONUS_DIAMOND,
   type RewardItem,
 } from '@/managers/CheckInManager';
+import { AdManager, AdScene } from '@/managers/AdManager';
+import { ToastMessage } from '@/gameobjects/ui/ToastMessage';
 import { DESIGN_WIDTH, FONT_FAMILY } from '@/config/Constants';
 import { TextureCache } from '@/utils/TextureCache';
 
@@ -111,7 +115,12 @@ export class CheckInPanel extends PIXI.Container {
     this._bg.drawRect(0, 0, w, h);
     this._bg.endFill();
     this._bg.eventMode = 'static';
-    this._bg.on('pointerdown', () => this.close());
+    this._bg.cursor = 'pointer';
+    this._bg.hitArea = new PIXI.Rectangle(0, 0, w, h);
+    const onDimClose = (): void => this.close();
+    this._bg.on('pointerdown', onDimClose);
+    /** 微信小游戏上 pointertap 更可靠落到遮罩 */
+    this._bg.on('pointertap', onDimClose);
     this.addChild(this._bg);
 
     this._content = new PIXI.Container();
@@ -142,15 +151,16 @@ export class CheckInPanel extends PIXI.Container {
 
     const cardAreaX = cx - CARD_AREA_W / 2;
 
-    const ESTIMATED_H = 200 + 220 + CARD_H + CARD_GAP + CARD_H + CARD_GAP + DAY7_H + 20 + 56;
+    const ESTIMATED_H = 200 + 220 + CARD_H + CARD_GAP + CARD_H + CARD_GAP + DAY7_H + 20 + 56 + 140;
     const startY = Math.max(36, (logicH - ESTIMATED_H) / 2);
     let y = startY;
 
+    /** 仅用 Alpha 垫层次，勿 static —— 否则会吞掉整块矩形内的点击，遮罩关不掉 */
     const blocker = new PIXI.Graphics();
     blocker.beginFill(0x000000, 0.001);
     blocker.drawRoundedRect(cardAreaX - 28, startY - 36, CARD_AREA_W + 56, ESTIMATED_H + 120, 20);
     blocker.endFill();
-    blocker.eventMode = 'static';
+    blocker.eventMode = 'none';
     this._content.addChild(blocker);
 
     y = this._buildTitleBanner(cx, y);
@@ -184,9 +194,24 @@ export class CheckInPanel extends PIXI.Container {
     this._buildDayCard(cardAreaX, y, CARD_AREA_W, DAY7_H, 6, effectiveSignedDays, state.signedToday, true, displayCycleIndex);
     y += DAY7_H + 20;
 
-    // ── 签到按钮 ──
+    // ── 签到 / 签到后广告加餐 ──
     if (CheckInManager.canCheckIn) {
       this._buildSignButton(cx, y);
+      y += 68;
+    }
+    if (CheckInManager.canClaimCheckInAdBonus) {
+      this._buildCheckInAdBonusButton(cx, y);
+      y += 68;
+    } else if (state.signedToday && CheckInManager.hasClaimedCheckInAdBonusToday) {
+      const tip = new PIXI.Text('今日额外奖励已领取', {
+        fontSize: 15,
+        fill: 0xAAAAAA,
+        fontFamily: FONT_FAMILY,
+        fontWeight: 'bold',
+      });
+      tip.anchor.set(0.5, 0);
+      tip.position.set(cx, y + 8);
+      this._content.addChild(tip);
     }
   }
 
@@ -550,6 +575,126 @@ export class CheckInPanel extends PIXI.Container {
     this._content.addChild(hit);
   }
 
+  private _buildCheckInAdBonusButton(cx: number, y: number): void {
+    const BW = Math.min(360, DESIGN_WIDTH - 40);
+    const BH = 58;
+
+    const btnTex = TextureCache.get('deco_card_btn_3');
+    if (btnTex) {
+      const sp = new PIXI.Sprite(btnTex);
+      sp.anchor.set(0.5, 0);
+      sp.width = BW;
+      sp.height = BH;
+      sp.position.set(cx, y);
+      this._content.addChild(sp);
+    } else {
+      const btnBg = new PIXI.Graphics();
+      btnBg.lineStyle(2, 0x2e7d32, 0.95);
+      btnBg.beginFill(0x2e7d32);
+      btnBg.drawRoundedRect(cx - BW / 2, y, BW, BH, BH / 2);
+      btnBg.endFill();
+      this._content.addChild(btnBg);
+    }
+
+    const root = new PIXI.Container();
+    root.eventMode = 'none';
+    root.position.set(cx, y + BH / 2);
+
+    const titleStyle = {
+      fontSize: 16,
+      fill: 0xfffef9,
+      fontFamily: FONT_FAMILY,
+      fontWeight: 'bold' as const,
+      stroke: 0x1b3320,
+      strokeThickness: 4,
+      dropShadow: true,
+      dropShadowColor: 0x000000,
+      dropShadowBlur: 2,
+      dropShadowDistance: 1,
+      dropShadowAlpha: 0.55,
+    };
+    const t1 = new PIXI.Text('看广告 · 额外领取', titleStyle as any);
+    t1.anchor.set(0.5, 1);
+    t1.position.set(0, -4);
+    root.addChild(t1);
+
+    const rewardRow = new PIXI.Container();
+    const iconH = 22;
+    const strokeAmt = {
+      fontSize: 16,
+      fill: 0xfffef9,
+      fontFamily: FONT_FAMILY,
+      fontWeight: 'bold' as const,
+      stroke: 0x263826,
+      strokeThickness: 3,
+    };
+
+    let rx = 0;
+    const stTex = TextureCache.get('icon_energy');
+    if (stTex?.width) {
+      const sp = new PIXI.Sprite(stTex);
+      sp.anchor.set(0, 0.5);
+      sp.height = iconH;
+      sp.width = (stTex.width / stTex.height) * iconH;
+      sp.position.set(rx, 0);
+      rewardRow.addChild(sp);
+      rx += sp.width + 5;
+    }
+    const stAmt = new PIXI.Text(`+${CHECKIN_AD_BONUS_STAMINA}`, strokeAmt as any);
+    stAmt.anchor.set(0, 0.5);
+    stAmt.position.set(rx, 0);
+    rewardRow.addChild(stAmt);
+    rx += stAmt.width + 18;
+
+    const dmTex = TextureCache.get('icon_gem');
+    if (dmTex?.width) {
+      const sp = new PIXI.Sprite(dmTex);
+      sp.anchor.set(0, 0.5);
+      sp.height = iconH;
+      sp.width = (dmTex.width / dmTex.height) * iconH;
+      sp.position.set(rx, 0);
+      rewardRow.addChild(sp);
+      rx += sp.width + 5;
+    }
+    const dmAmt = new PIXI.Text(`+${CHECKIN_AD_BONUS_DIAMOND}`, strokeAmt as any);
+    dmAmt.anchor.set(0, 0.5);
+    dmAmt.position.set(rx, 0);
+    rewardRow.addChild(dmAmt);
+
+    const rb = rewardRow.getLocalBounds();
+    rewardRow.pivot.set(rb.x + rb.width / 2, rb.y + rb.height / 2);
+    rewardRow.position.set(0, 10);
+    root.addChild(rewardRow);
+
+    this._content.addChild(root);
+
+    const hit = new PIXI.Container();
+    hit.hitArea = new PIXI.Rectangle(cx - BW / 2, y, BW, BH);
+    hit.eventMode = 'static';
+    hit.cursor = 'pointer';
+    hit.on('pointertap', (e: PIXI.FederatedPointerEvent) => {
+      e.stopPropagation();
+      AdManager.showRewardedAd(AdScene.CHECKIN_AD_BONUS, (success) => {
+        if (!success) {
+          ToastMessage.show('广告未看完，未领取额外奖励');
+          return;
+        }
+        if (!CheckInManager.grantCheckInAdBonusFromAd()) {
+          ToastMessage.show('今日额外奖励已领取');
+          return;
+        }
+        const items: RewardItem[] = [
+          { type: 'stamina', amount: CHECKIN_AD_BONUS_STAMINA, textureKey: 'icon_energy' },
+          { type: 'diamond', amount: CHECKIN_AD_BONUS_DIAMOND, textureKey: 'icon_gem' },
+        ];
+        const center = { x: cx, y: y + BH / 2 };
+        /** 加餐领完飞入结束后关面板；此处不再 _refresh，避免动画进行中拆掉节点 */
+        EventBus.emit('checkin:flyReward', { items, autoClosePanel: true }, center);
+      });
+    });
+    this._content.addChild(hit);
+  }
+
   /* ====== 签到逻辑 ====== */
 
   _onCheckIn(): void {
@@ -563,10 +708,9 @@ export class CheckInPanel extends PIXI.Container {
     if (result.streakBonus > 0) {
       flyItems.push({ type: 'diamond', amount: result.streakBonus, textureKey: 'icon_gem' });
     }
+    /** 飞完不关面板：便于继续点「看广告加餐」；仅点遮罩关闭（见 _bg） */
     if (center && flyItems.length > 0) {
-      EventBus.emit('checkin:flyReward', { items: flyItems, autoClosePanel: true }, center);
-    } else {
-      this.close();
+      EventBus.emit('checkin:flyReward', { items: flyItems, autoClosePanel: false }, center);
     }
 
     this._refresh();

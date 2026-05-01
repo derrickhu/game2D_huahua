@@ -23,7 +23,7 @@ import { DecorationManager } from '@/managers/DecorationManager';
 import { PROMO_FURNITURE_AD_DECO_IDS } from '@/config/AdConfig';
 import { AdManager, AdScene } from '@/managers/AdManager';
 import { TextureCache } from '@/utils/TextureCache';
-import { checkRequirement, requirementHintText } from '@/utils/UnlockChecker';
+import { checkRequirement, decorationLockedToastText, requirementHintText } from '@/utils/UnlockChecker';
 import {
   DecoSlot, DECO_SLOT_INFO,
   DecoDef,
@@ -37,6 +37,7 @@ import {
   formatAllowedScenesShort,
 } from '@/config/DecorationConfig';
 import { CurrencyManager } from '@/managers/CurrencyManager';
+import { LevelManager } from '@/managers/LevelManager';
 import { BOARD_BAR_HEIGHT, DESIGN_WIDTH, FONT_FAMILY, COLORS } from '@/config/Constants';
 import { RoomLayoutManager } from '@/managers/RoomLayoutManager';
 import { setPendingPlaceDeco } from '@/core/DecoPlaceIntent';
@@ -232,11 +233,24 @@ function shouldShowDecoInDecorationPanel(deco: DecoDef): boolean {
   return !deco.hideInDecorationPanel;
 }
 
-function lockedDecoHintText(deco: DecoDef, req: ReturnType<typeof checkRequirement>): string {
-  if (deco.unlockRequirement?.conditionText === '活动解锁') {
-    return deco.unlockRequirement.questDetailText ?? '签到奖励';
-  }
-  return requirementHintText(req);
+/**
+ * 未解锁但仍展示真实家具缩略图（替代问号占位）：广告 gate、活动/任务/图鉴条件锁、
+ * 以及「差一级星级门槛即可购买」的等级锁，用于提升面板吸引力。
+ */
+function shouldShowLockedDecoPreview(deco: DecoDef, sceneOk: boolean): boolean {
+  if (!sceneOk) return false;
+
+  if (DecorationManager.isAdUnlockDeco(deco.id)) return true;
+
+  const req = deco.unlockRequirement;
+  if (req?.questId) return true;
+  if (req?.conditionText === '活动解锁') return true;
+  if (req?.flowerCollectionItemId) return true;
+
+  const lv = req?.level;
+  if (lv !== undefined && lv > 0 && LevelManager.level === lv - 1) return true;
+
+  return false;
 }
 
 /** global pixel -> design coordinate */
@@ -400,7 +414,7 @@ export class DecorationPanel extends PIXI.Container {
     plate.hitArea = new PIXI.Rectangle(0, 0, w, h);
     plate.on('pointerdown', (e: PIXI.FederatedPointerEvent) => {
       this._beginScroll(e);
-      this._pendingGridTap = null;
+      // 勿清空 pending：家具卡在 plate 之上命中卡本身；点在空白才落到 plate，不应抹掉已在卡上记录的 pending
     });
     inner.addChildAt(plate, 0);
   }
@@ -622,16 +636,17 @@ export class DecorationPanel extends PIXI.Container {
       const croppedTex = new PIXI.Texture(nb2Tex.baseTexture, subFrame);
       const panelBg = new PIXI.Sprite(croppedTex);
       panelBg.anchor.set(0.5, 1);
-      panelBg.eventMode = 'static';
+      /** 纯装饰：勿参与命中，否则会先于网格成为 e.target，SoundSystem 沿链找不到 cursor:pointer → 无按钮音 */
+      panelBg.eventMode = 'none';
       panelBg.zIndex = 0;
 
       const bgLayer = new PIXI.Container();
       bgLayer.sortableChildren = true;
       bgLayer.zIndex = 0;
-      bgLayer.eventMode = 'static';
-      bgLayer.hitArea = new PIXI.Rectangle(0, 0, PANEL_W, panelH);
+      bgLayer.eventMode = 'none';
 
       const bgMask = new PIXI.Graphics();
+      bgMask.eventMode = 'none';
       bgMask.beginFill(0xffffff);
       bgMask.drawRect(0, 0, PANEL_W, panelH);
       bgMask.endFill();
@@ -700,14 +715,14 @@ export class DecorationPanel extends PIXI.Container {
       const croppedTex = new PIXI.Texture(nb2Tex.baseTexture, subFrame);
       const panelBg = new PIXI.Sprite(croppedTex);
       panelBg.anchor.set(0.5, 1);
-      panelBg.eventMode = 'static';
+      panelBg.eventMode = 'none';
       panelBg.zIndex = 0;
       const bgLayer = new PIXI.Container();
       bgLayer.sortableChildren = true;
       bgLayer.zIndex = 0;
-      bgLayer.eventMode = 'static';
-      bgLayer.hitArea = new PIXI.Rectangle(0, 0, PANEL_W, panelH);
+      bgLayer.eventMode = 'none';
       const bgMask = new PIXI.Graphics();
+      bgMask.eventMode = 'none';
       bgMask.beginFill(0xffffff);
       bgMask.drawRect(0, 0, PANEL_W, panelH);
       bgMask.endFill();
@@ -723,7 +738,7 @@ export class DecorationPanel extends PIXI.Container {
       const panelBg = new PIXI.Sprite(mergeTex);
       panelBg.width = PANEL_W;
       panelBg.height = panelH;
-      panelBg.eventMode = 'static';
+      panelBg.eventMode = 'none';
       panelBg.zIndex = 0;
       this._content.addChild(panelBg);
       this._panelBaseSprite = panelBg;
@@ -736,7 +751,7 @@ export class DecorationPanel extends PIXI.Container {
       g.endFill();
       g.lineStyle(2, 0xffd700);
       g.drawRoundedRect(3, 3, PANEL_W - 6, panelH - 6, PANEL_TOP_R - 2);
-      g.eventMode = 'static';
+      g.eventMode = 'none';
       g.zIndex = 0;
       this._content.addChild(g);
       this._panelFallbackBg = g;
@@ -1501,8 +1516,9 @@ export class DecorationPanel extends PIXI.Container {
     iconArea.position.set(cw / 2, iconCy);
     card.addChild(iconArea);
 
-    // 未拥有且仍被条件/场景挡住：不展示真实图（与「未解锁」筛一致），满足条件但未购买仍显示预览
-    const mysteryPreview = !isUnlocked && !purchaseAllowed;
+    // 未拥有且仍被条件/场景挡住：默认问号占位；广告/活动/下一星级档等仍展示真实图以利转化
+    const showLockedTeaser = shouldShowLockedDecoPreview(deco, sceneOk);
+    const mysteryPreview = !isUnlocked && !purchaseAllowed && !showLockedTeaser;
 
     if (!mysteryPreview) {
       const texture = TextureCache.get(deco.icon);
@@ -1569,18 +1585,14 @@ export class DecorationPanel extends PIXI.Container {
     const affordPurchase = CurrencyManager.state.huayuan >= deco.cost;
 
     card.eventMode = 'static';
+    /** Pixi v7：子节点（底栏贴图/文字）否则会抢走命中；整张卡单一矩形命中，与 DressUpPanel 一致 */
+    card.interactiveChildren = false;
+    card.hitArea = new PIXI.Rectangle(0, 0, cw, ch);
     card.cursor = showPurchase && !affordPurchase ? 'default' : 'pointer';
     card.on('pointerdown', (e: PIXI.FederatedPointerEvent) => {
       this._beginScroll(e);
       this._pendingGridTap = { type: 'deco', deco, flyCard: card };
     });
-    if (!purchaseAllowed && !needsAdGate) {
-      card.on('pointertap', (e: PIXI.FederatedPointerEvent) => {
-        e.stopPropagation();
-        this._teardownScroll();
-        ToastMessage.show(lockedDecoHintText(deco, reqResult));
-      });
-    }
 
     if (
       TutorialManager.isActive
@@ -1702,6 +1714,8 @@ export class DecorationPanel extends PIXI.Container {
     const affordStylePurchase = CurrencyManager.state.huayuan >= style.cost;
 
     card.eventMode = 'static';
+    card.interactiveChildren = false;
+    card.hitArea = new PIXI.Rectangle(0, 0, cw, ch);
     card.cursor = showStylePurchase && !affordStylePurchase ? 'default' : 'pointer';
     card.on('pointerdown', (e: PIXI.FederatedPointerEvent) => {
       this._beginScroll(e);
@@ -1787,7 +1801,8 @@ export class DecorationPanel extends PIXI.Container {
     const adGateSatisfied = DecorationManager.isAdUnlockSatisfied(deco.id);
     const needsAdGate = DecorationManager.isAdUnlockDeco(deco.id) && !req.met && !adGateSatisfied;
     if (!req.met && !adGateSatisfied && !needsAdGate) {
-      ToastMessage.show(lockedDecoHintText(deco, req));
+      /** 实际点击收尾走 canvas pointerup → _finishGridScroll → 此处；微信小游戏上家具卡 pointertap 常不触发，勿依赖 */
+      ToastMessage.show(decorationLockedToastText(deco.unlockRequirement, req));
       return;
     }
     if (needsAdGate) {

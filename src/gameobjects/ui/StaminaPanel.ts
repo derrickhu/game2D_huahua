@@ -2,7 +2,7 @@
  * 体力购买面板 - 顶栏「+」或体力不足时弹出
  *
  * 壳体：`flower_egg_reward_bg` + `item_info_title_ribbon`（`FlowerEggModalFrame`）。
- * **左右两列**：各列外包一层圆角框以免混淆；上为体力图标+角标，下左为钻石价、下右为广告免费恢复+次数。
+ * **左右两列**：各列外包一层圆角框以免混淆；上为体力图标+角标，下左为钻石价、下右为广告获取恢复+次数。
  */
 import * as PIXI from 'pixi.js';
 import { Game } from '@/core/Game';
@@ -170,7 +170,7 @@ export class StaminaPanel extends PIXI.Container {
     return c;
   }
 
-  /** 右列下：绿钮，免费 + 广告图标 */
+  /** 右列下：绿钮，「广告获取」+ 大号统一广告图标 */
   private _buildAdTextOnlyButton(w: number, h: number): PIXI.Container {
     const c = new PIXI.Container();
     c.eventMode = 'static';
@@ -182,7 +182,7 @@ export class StaminaPanel extends PIXI.Container {
     bg.endFill();
     c.addChild(bg);
 
-    const badge = createFreeAdBadge(18, 0xffffff, 0x2e7d32);
+    const badge = createFreeAdBadge(15, 0xffffff, 0x2e7d32, '广告获取', Math.round(h * 0.72));
     badge.position.set(w / 2, h / 2);
     c.addChild(badge);
 
@@ -235,7 +235,7 @@ export class StaminaPanel extends PIXI.Container {
     this._buyBtn.on('pointerdown', () => this._onBuyStamina());
     leftCol.addChild(this._buyBtn);
 
-    // ── 右列：独立圆角框 + 上区广告单次体力，下广告免费恢复 + 次数 ──
+    // ── 右列：独立圆角框 + 上区广告单次体力，下「广告获取」恢复 + 次数 ──
     const rightCol = new PIXI.Container();
     rightCol.position.set(COL_W + COL_GAP, 0);
     mount.addChild(rightCol);

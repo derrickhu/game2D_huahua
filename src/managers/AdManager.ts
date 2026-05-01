@@ -32,6 +32,8 @@ export enum AdScene {
   WAREHOUSE_ORGANIZE = 'warehouse_organize',
   REWARD_BOX_ORGANIZE = 'reward_box_organize',
   MERGE_BUBBLE_UNLOCK = 'merge_bubble_unlock',
+  /** 每日签到完成后加餐（体力+钻石） */
+  CHECKIN_AD_BONUS = 'checkin_ad_bonus',
 }
 
 type AdCallback = (success: boolean) => void;

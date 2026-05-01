@@ -159,7 +159,13 @@ export interface CheckInState {
   lastSignDate: string;
   signedToday: boolean;
   claimedMilestones: number[];
+  /** 上一次领取「签到后看广告加餐」的日历日（与 `_getTodayStr()` 一致）；未领过为空串 */
+  checkInAdBonusClaimDate: string;
 }
+
+/** 签到完成后激励视频加餐（与策划文案一致） */
+export const CHECKIN_AD_BONUS_STAMINA = 60;
+export const CHECKIN_AD_BONUS_DIAMOND = 5;
 
 class CheckInManagerClass {
   private _state: CheckInState = {
@@ -169,6 +175,7 @@ class CheckInManagerClass {
     lastSignDate: '',
     signedToday: false,
     claimedMilestones: [],
+    checkInAdBonusClaimDate: '',
   };
 
   /**
@@ -207,6 +214,17 @@ class CheckInManagerClass {
 
   get totalSignedDays(): number {
     return this._state.totalSignedDays;
+  }
+
+  /** 今日是否已领过「签到后广告加餐」 */
+  get hasClaimedCheckInAdBonusToday(): boolean {
+    const d = this._state.checkInAdBonusClaimDate;
+    return d !== '' && d === this._getTodayStr();
+  }
+
+  /** 今日已签到且尚未领取广告加餐 */
+  get canClaimCheckInAdBonus(): boolean {
+    return this._state.signedToday && !this.hasClaimedCheckInAdBonusToday;
   }
 
   get streakBonusDesc(): string {
@@ -267,6 +285,19 @@ class CheckInManagerClass {
     this._saveState();
     EventBus.emit('checkin:signed', reward, streakBonus);
     return { reward, streakBonus };
+  }
+
+  /**
+   * 签到面板：看完激励视频后的加餐（体力+钻石）。须在广告回调成功后再调用。
+   */
+  grantCheckInAdBonusFromAd(): boolean {
+    if (!this.canClaimCheckInAdBonus) return false;
+    CurrencyManager.addStamina(CHECKIN_AD_BONUS_STAMINA);
+    CurrencyManager.addDiamond(CHECKIN_AD_BONUS_DIAMOND);
+    this._state.checkInAdBonusClaimDate = this._getTodayStr();
+    this._saveState();
+    EventBus.emit('checkin:adBonusGranted');
+    return true;
   }
 
   private _grantDecoReward(decoUnlockId?: string, questId?: string, source: 'daily' | 'milestone' = 'daily'): void {
@@ -377,6 +408,8 @@ class CheckInManagerClass {
         this._state.lastSignDate = data.lastSignDate ?? '';
         this._state.signedToday = data.signedToday ?? false;
         this._state.claimedMilestones = data.claimedMilestones ?? [];
+        this._state.checkInAdBonusClaimDate =
+          typeof data.checkInAdBonusClaimDate === 'string' ? data.checkInAdBonusClaimDate : '';
       }
     } catch (_) {}
   }

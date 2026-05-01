@@ -3,7 +3,8 @@
  */
 import * as PIXI from 'pixi.js';
 import { BoardMetrics, COLORS } from '@/config/Constants';
-import { CellState } from '@/config/BoardLayout';
+import { CellState, type KeyUnlockMode } from '@/config/BoardLayout';
+import { createAdIcon } from '@/gameobjects/ui/AdBadge';
 import { TextureCache } from '@/utils/TextureCache';
 
 export class CellView extends PIXI.Container {
@@ -14,6 +15,8 @@ export class CellView extends PIXI.Container {
   private _fogOverlay: PIXI.Container | null = null;
   private _keyIcon: PIXI.Container | null = null;
   private _state: CellState = CellState.OPEN;
+  /** 钥匙格解锁方式（仅 state=KEY 时参与绘制） */
+  private _keyUnlockMode: KeyUnlockMode | null = null;
   /** 该格物品已被客人订单锁定（已满足需求）→ 薄荷浅底 + 绿描边 */
   private _orderReserved = false;
   /** 拖拽中：与拿起物品同 id 的其他已解锁格，提示可合成 */
@@ -56,6 +59,15 @@ export class CellView extends PIXI.Container {
     this._mergePartnerHint = on;
     if (this._state === CellState.OPEN || this._state === CellState.PEEK) {
       this._paintCellBase();
+    }
+  }
+
+  /** 与 `setState` 配合：请先设本字段再 `setState(KEY)`，或在刷新时先于 `setState` 调用。 */
+  setKeyUnlockMode(mode: KeyUnlockMode | null): void {
+    if (this._keyUnlockMode === mode) return;
+    this._keyUnlockMode = mode;
+    if (this._state === CellState.KEY) {
+      this._redraw();
     }
   }
 
@@ -192,6 +204,7 @@ export class CellView extends PIXI.Container {
     }
 
     if (this._state === CellState.KEY) {
+      const root = new PIXI.Container();
       const keyTex = TextureCache.get('cell_key');
       if (keyTex) {
         const sp = new PIXI.Sprite(keyTex);
@@ -200,13 +213,30 @@ export class CellView extends PIXI.Container {
         sp.scale.set(scale);
         sp.anchor.set(0.5, 0.5);
         sp.position.set(cs / 2, cs / 2);
-        this._keyIcon = sp;
+        root.addChild(sp);
       } else {
         const fallback = new PIXI.Text('钥', { fontSize: 18 });
         fallback.anchor.set(0.5, 0.5);
         fallback.position.set(cs / 2, cs / 2);
-        this._keyIcon = fallback;
+        root.addChild(fallback);
       }
+
+      if (this._keyUnlockMode === 'ad') {
+        /** 贴格角遮住 `cell_key` 底图右下角转发标；略小于先前版本以免喧宾夺主 */
+        const inset = Math.max(2, Math.round(cs * 0.015));
+        const iconSize = Math.max(22, Math.round(cs * 0.28));
+        const adBadge = createAdIcon(iconSize);
+        if (adBadge instanceof PIXI.Sprite) {
+          adBadge.anchor.set(1, 1);
+        } else {
+          const b = adBadge.getLocalBounds();
+          adBadge.pivot.set(b.x + b.width, b.y + b.height);
+        }
+        adBadge.position.set(cs - inset, cs - inset);
+        root.addChild(adBadge);
+      }
+
+      this._keyIcon = root;
       this.addChild(this._keyIcon);
     }
   }

@@ -6,6 +6,9 @@ import { Game } from '@/core/Game';
 import { DESIGN_WIDTH, FONT_FAMILY } from '@/config/Constants';
 import { TweenManager, Ease } from '@/core/TweenManager';
 
+/** 高于 OverlayManager.container（10000），且低于 ConfirmDialog（30000）等系统模态 */
+const TOAST_STAGE_Z_INDEX = 15000;
+
 export class ToastMessage {
   /**
    * 显示一条浮动提示
@@ -40,8 +43,10 @@ export class ToastMessage {
     container.addChild(txt);
     container.position.set(W / 2, H * 0.35);
     container.alpha = 0;
+    container.zIndex = TOAST_STAGE_Z_INDEX;
 
     Game.stage.addChild(container);
+    if (Game.stage.sortableChildren) Game.stage.sortChildren();
 
     // 淡入
     TweenManager.to({

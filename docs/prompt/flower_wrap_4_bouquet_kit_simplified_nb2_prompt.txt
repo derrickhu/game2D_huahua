@@ -1,0 +1,16 @@
+A single square 1:1 game item icon for Level 4 bouquet wrapping material in a cozy flower-shop merge game. This item is a consumable producer that can create bouquets, so it should look like a ready-to-use bouquet making kit, not a basket.
+
+Use the attached reference image for the wrap-line style: cute compact mobile game item icon, warm pastel colors, soft 3D volume, clean colored outlines, rounded shapes, glossy highlights, readable at 128 px. Keep the new icon much simpler and more square than the reference.
+
+Item concept: "bouquet material kit" / "flower bouquet wrapping kit".
+
+Visual design:
+- Main silhouette should be close to square, compact and centered.
+- A neat stack of 3 large wrapping paper sheets, fanned slightly: cream, pastel pink, and mint green.
+- One oversized glossy pink ribbon bow in front as the main decoration.
+- Only 2 or 3 simple flower/leaf accents tucked behind the papers to communicate that this kit produces bouquets: one small pink blossom, one yellow blossom, a few green leaves.
+- Optional short ribbon tail, but no loose tiny strips.
+- No basket, no handle, no many paper rolls, no many tiny flowers, no scissors, no table, no tools.
+- Big readable shapes only. Avoid clutter and tiny details.
+- Cute polished 2D casual game icon, 3/4 front view, slightly top-down, warm soft shadows, same-color outlines, no black outline.
+- Plain white background. NO text, no labels, no numbers, no watermark, no UI.

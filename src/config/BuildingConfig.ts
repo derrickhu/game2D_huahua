@@ -379,7 +379,7 @@ export const TOOL_DEFS = buildToolDefs();
 /** 棋盘上的非 tool_* 产出定义（如花束包装纸） */
 function buildBoardProducerDefs(): Map<string, ToolDef> {
   const map = new Map<string, ToolDef>();
-  /** 花艺材料篮：与宝箱不同，仍为每点一次产 1 个花束，共 `exhaustAfterProduces` 次后格子清空（BuildingManager 工具分支） */
+  /** 花束材料包：与宝箱不同，仍为每点一次产 1 个花束，共 `exhaustAfterProduces` 次后格子清空（BuildingManager 工具分支） */
   map.set('flower_wrap_4', {
     itemId: 'flower_wrap_4',
     toolLine: ToolLine.ARRANGE,

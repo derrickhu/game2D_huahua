@@ -15,7 +15,7 @@
 
 依赖：
   - gemini-image-gen skill（~/.cursor/skills/gemini-image-gen/scripts/generate_images.py）
-  - 本机 7890 端口的 HTTPS 代理（已在 env 里写死）
+  - 本机 7897 端口的 HTTPS 代理（已在 env 里写死）
 """
 from __future__ import annotations
 
@@ -232,9 +232,9 @@ def run_one(type_id: str, card: dict, char_block: str, ref: Path) -> bool:
         cmd += ["--image", str(ref)]
 
     env = os.environ.copy()
-    env.setdefault("HTTPS_PROXY", "http://127.0.0.1:7890")
-    env.setdefault("HTTP_PROXY", "http://127.0.0.1:7890")
-    env.setdefault("ALL_PROXY", "http://127.0.0.1:7890")
+    env.setdefault("HTTPS_PROXY", "http://127.0.0.1:7897")
+    env.setdefault("HTTP_PROXY", "http://127.0.0.1:7897")
+    env.setdefault("ALL_PROXY", "http://127.0.0.1:7897")
     env["GEMINI_IMAGE_FORCE_PROXY"] = "1"
     env["GEMINI_IMAGE_USE_REQUESTS"] = "1"
 

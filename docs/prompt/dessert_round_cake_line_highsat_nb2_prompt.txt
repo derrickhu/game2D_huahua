@@ -1,0 +1,47 @@
+A square 1:1 image containing a 3 columns x 3 rows grid sheet for 8 round cake dessert game item icons in a cozy flower-shop merge game. The first 8 cells are Levels 1 to 8 of one dessert merge chain, left to right, top row first, then middle row, then bottom row. The last cell is intentionally empty plain white background. Generate all 8 cake icons in one image so they share the same art style, lighting, color palette, line quality, camera angle, and plate style.
+
+Use the attached reference image only for the desired high-saturation mobile game rendering style: vivid colors, glossy soft 3D volume, rounded shapes, clear highlights, clean same-color outlines, cute polished icon quality. Do not draw flowers as the main subject unless they are tiny edible cream decorations. The subject must be round cakes on plates.
+
+CRITICAL OUTPUT RULE:
+The final image must contain ONLY the 8 cake icons and plain white background. Do not draw any written words anywhere. Do not draw item names, level numbers, captions, labels, signatures, watermarks, UI text, or text-like marks. The descriptions below are instructions only and must never appear in the image.
+
+GLOBAL STYLE REQUIREMENTS:
+- Every item must be a round cake on a visible plate. No tart, no cupcake, no cookie, no glass cup, no cake slice, no cake stand, no dessert table.
+- Cake silhouettes should stay in the same family: round cake body, round plate underneath, 3/4 front view, slightly top-down.
+- Show level progression through cake size, layer count, cream color saturation, fruit amount, piping size, glaze band, and plate refinement.
+- High saturation and stronger contrast than the current dessert icons. Avoid pale pastel haze.
+- Soft 3D volume: rounded cake sides, glossy fruit pieces, strong but clean highlights, clear shadows under cream and fruit.
+- Keep details large and readable at 128 px. Avoid tiny seeds, lace patterns, crumbs, scattered garnish, and dense small decorations.
+- Use clean colored outlines and edge separation, not thick black outlines.
+- Each icon should be compact and centered inside its square cell, filling about 78-84% of the cell.
+- Plates are visible but secondary: simple white or cream plates with slightly nicer rims at higher levels.
+- NO TEXT, no labels, no item names, no numbers, no watermark, no UI frame, no character.
+
+GRID LAYOUT, EXACT CONTENT:
+
+Row 1, Column 1, Level 1 visual:
+A tiny single-layer round berry cake on a simple white plate. Warm golden sponge side, white cream top, 3 to 4 large glossy red berries and one blueberry. Very simple, clean, compact.
+
+Row 1, Column 2, Level 2 visual:
+A small single-layer green grape round cake on a simple plate. Pale green cream side band, white cream top, several large bright green grape halves arranged clearly. Slightly bigger than Level 1.
+
+Row 1, Column 3, Level 3 visual:
+A small peach round cake on a plate. Peach-orange cream glaze, white cream rim, 4 large peach slices on top. More saturated warm peach color and a clearer side band than Level 2.
+
+Row 2, Column 1, Level 4 visual:
+A medium strawberry round cake on a plate. Bright red strawberry halves around the top edge, white cream body, red strawberry glaze band around the side. Strong contrast and clear strawberry theme.
+
+Row 2, Column 2, Level 5 visual:
+A medium orange cream round cake on a slightly nicer plate. Vivid orange glaze on top, large orange slices, bold white cream dollops, orange side band. Larger and brighter than Level 4.
+
+Row 2, Column 3, Level 6 visual:
+A larger two-fruit round cake on a refined plate. Two clear fruit colors only: bright strawberry red and fresh green grape. Two visible cake layers with a cream stripe between layers, large scalloped cream piping around the top.
+
+Row 3, Column 1, Level 7 visual:
+A high-level assorted fruit round cake on a refined plate. Berry-purple cream side, two cake layers, large top fruit pieces in red strawberry, yellow mango, green grape, and blueberry. Bold piping ring and clear layered side, rich but not crowded.
+
+Row 3, Column 2, Level 8 visual:
+The most premium current round cake, still expandable for future levels. A larger two-tier round cake on the nicest plate, peach-pink and cream body with a vivid berry-red glaze ribbon. Top has large readable fruit pieces: strawberries, orange slices, blueberries, green grapes, and mango cubes. Strong glossy highlights, rich color, elegant piping, but no tiny clutter.
+
+Row 3, Column 3:
+Leave this cell completely empty plain white background. Do not draw an icon, mark, label, frame, or text in this cell.

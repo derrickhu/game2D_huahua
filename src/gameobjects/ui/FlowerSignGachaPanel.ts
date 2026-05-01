@@ -70,6 +70,20 @@ export class FlowerSignGachaPanel extends PIXI.Container {
     idleLayerY: number;
     innerH: number;
   } | null = null;
+  /** 立绘/白壳 + 标题硬币行；open 预加载完成后重建，避免构造阶段无纹理永久停在空白壳 */
+  private _chromeLayer!: PIXI.Container;
+  private _closeBtn!: PIXI.Container;
+  private _layout!: {
+    W: number;
+    H: number;
+    pw: number;
+    ph: number;
+    px: number;
+    py: number;
+    maxArtW: number;
+    maxArtH: number;
+    artCenterY: number;
+  };
   private _assetUnsub: (() => void) | null = null;
 
   constructor() {
@@ -101,9 +115,9 @@ export class FlowerSignGachaPanel extends PIXI.Container {
     OverlayManager.bringToFront();
     this.visible = true;
     this._assetUnsub = TextureCache.onAssetGroupLoaded('flowerSignGacha', () => {
-      if (this._isOpen && !this._drawInProgress) this._showIdle();
+      if (this._isOpen && !this._drawInProgress) this._rebuildChrome();
     });
-    this._showIdle();
+    this._rebuildChrome();
     this.alpha = 0;
     TweenManager.to({ target: this, props: { alpha: 1 }, duration: 0.25, ease: Ease.easeOutQuad });
   }
@@ -161,20 +175,75 @@ export class FlowerSignGachaPanel extends PIXI.Container {
     const maxArtH = Math.max(260, H - topBand - bottomReserve);
     const artCenterY = topBand + maxArtH * 0.5;
 
+    this._layout = {
+      W,
+      H,
+      pw,
+      ph,
+      px,
+      py,
+      maxArtW,
+      maxArtH,
+      artCenterY,
+    };
+
+    this._chromeLayer = new PIXI.Container();
+    this._panelRoot.addChild(this._chromeLayer);
+
+    this._closeBtn = new PIXI.Container();
+    this._closeBtn.eventMode = 'static';
+    this._closeBtn.cursor = 'pointer';
+    const cx = new PIXI.Graphics();
+    cx.beginFill(0xc45c4a, 0.95);
+    cx.drawCircle(0, 0, 16);
+    cx.endFill();
+    this._closeBtn.addChild(cx);
+    const xtxt = new PIXI.Text('×', { fontSize: 16, fill: 0xffffff, fontFamily: FONT_FAMILY, fontWeight: 'bold' });
+    xtxt.anchor.set(0.5);
+    this._closeBtn.addChild(xtxt);
+    this._closeBtn.hitArea = new PIXI.Circle(0, 0, 22);
+    this._closeBtn.on('pointertap', (e: PIXI.FederatedPointerEvent) => {
+      e.stopPropagation();
+      this.close();
+    });
+    this._panelRoot.addChild(this._closeBtn);
+
+    this._idleLayer = new PIXI.Container();
+    this._panelRoot.addChild(this._idleLayer);
+
+    this._rebuildChrome();
+  }
+
+  /** 纹理异步落盘后刷新上半屏布局（immersive ↔ fallback） */
+  private _rebuildChrome(): void {
+    if (!this._layout || !this._chromeLayer || !this._closeBtn) return;
+
+    const {
+      W,
+      H,
+      pw,
+      ph,
+      px,
+      py,
+      maxArtW,
+      maxArtH,
+      artCenterY,
+    } = this._layout;
+
+    this._chromeLayer.removeChildren();
+
     const sceneTex = TextureCache.get('flower_sign_gacha_scene_nb2');
-    let useSceneArt = false;
-    if (sceneTex && sceneTex.width > 2) {
-      useSceneArt = true;
+    let immersive = !!(sceneTex && sceneTex.width > 2);
+    if (immersive && sceneTex) {
       const tw = sceneTex.width;
       const th = sceneTex.height;
       const scale = Math.min(maxArtW / tw, maxArtH / th);
       const sp = new PIXI.Sprite(sceneTex);
-      /** 锚点偏上：喷泉底座下凸时视觉重心与占卜弹窗「台前突出」一致 */
       sp.anchor.set(0.5, 0.4);
       sp.scale.set(scale);
       sp.position.set(W / 2, artCenterY + 12);
       sp.eventMode = 'none';
-      this._panelRoot.addChild(sp);
+      this._chromeLayer.addChild(sp);
     } else {
       const shell = new PIXI.Graphics();
       shell.beginFill(0xfff7f0, 0.98);
@@ -182,14 +251,15 @@ export class FlowerSignGachaPanel extends PIXI.Container {
       shell.endFill();
       shell.lineStyle(2.5, 0xd4a574, 0.75);
       shell.drawRoundedRect(px, py, pw, ph, FALLBACK_CORNER_R);
-      this._panelRoot.addChild(shell);
+      this._chromeLayer.addChild(shell);
+      immersive = false;
     }
 
-    const immersive = useSceneArt;
     const closeX = immersive ? W - 36 : px + pw - 20;
     const closeY = immersive ? Game.safeTop + 22 : py + 20;
+    this._closeBtn.position.set(closeX, closeY);
 
-    if (!useSceneArt) {
+    if (!immersive) {
       const titleY = py + 16 + FALLBACK_HEADER_DY;
       const ticketY = py + 52 + FALLBACK_HEADER_DY;
 
@@ -201,7 +271,7 @@ export class FlowerSignGachaPanel extends PIXI.Container {
       });
       title.anchor.set(0.5, 0);
       title.position.set(W / 2, titleY);
-      this._panelRoot.addChild(title);
+      this._chromeLayer.addChild(title);
 
       const ticketRow = new PIXI.Container();
       ticketRow.position.set(W / 2, ticketY);
@@ -223,34 +293,12 @@ export class FlowerSignGachaPanel extends PIXI.Container {
       this._ticketText.anchor.set(0, 0.5);
       this._ticketText.position.set(8, 0);
       ticketRow.addChild(this._ticketText);
-      this._panelRoot.addChild(ticketRow);
+      this._chromeLayer.addChild(ticketRow);
       this._syncTicketLabel();
     } else {
-      /** 单张抠图立绘 + 代码叠红彩带标题（画中不预留标题区、不画远景） */
       this._buildGachaRibbonHeader(W);
+      this._syncTicketLabel();
     }
-
-    const closeBtn = new PIXI.Container();
-    closeBtn.position.set(closeX, closeY);
-    closeBtn.eventMode = 'static';
-    closeBtn.cursor = 'pointer';
-    const cx = new PIXI.Graphics();
-    cx.beginFill(0xc45c4a, 0.95);
-    cx.drawCircle(0, 0, 16);
-    cx.endFill();
-    closeBtn.addChild(cx);
-    const xtxt = new PIXI.Text('×', { fontSize: 16, fill: 0xffffff, fontFamily: FONT_FAMILY, fontWeight: 'bold' });
-    xtxt.anchor.set(0.5);
-    closeBtn.addChild(xtxt);
-    closeBtn.hitArea = new PIXI.Circle(0, 0, 22);
-    closeBtn.on('pointertap', (e: PIXI.FederatedPointerEvent) => {
-      e.stopPropagation();
-      this.close();
-    });
-    this._panelRoot.addChild(closeBtn);
-
-    this._idleLayer = new PIXI.Container();
-    this._panelRoot.addChild(this._idleLayer);
 
     this._buildIdleContent(
       W,
@@ -259,6 +307,7 @@ export class FlowerSignGachaPanel extends PIXI.Container {
       immersive ? 0 : py + 118 + FALLBACK_IDLE_DY,
       ph - 130,
     );
+    this._idleLayer.visible = true;
   }
 
   /**
@@ -280,7 +329,7 @@ export class FlowerSignGachaPanel extends PIXI.Container {
       sp.position.set(cx, y + BH / 2);
       sp.width = BW;
       sp.height = BH;
-      this._panelRoot.addChild(sp);
+      this._chromeLayer.addChild(sp);
       titleCenterY = y + BH / 2;
       y += BH + 10;
       onRedRibbon = true;
@@ -293,7 +342,7 @@ export class FlowerSignGachaPanel extends PIXI.Container {
       });
       title.anchor.set(0.5, 0);
       title.position.set(cx, y);
-      this._panelRoot.addChild(title);
+      this._chromeLayer.addChild(title);
       y += title.height + 10;
     }
 
@@ -308,7 +357,7 @@ export class FlowerSignGachaPanel extends PIXI.Container {
       });
       titleOnRibbon.anchor.set(0.5, 0.5);
       titleOnRibbon.position.set(cx, titleCenterY);
-      this._panelRoot.addChild(titleOnRibbon);
+      this._chromeLayer.addChild(titleOnRibbon);
     }
 
     y += 8;
@@ -340,7 +389,7 @@ export class FlowerSignGachaPanel extends PIXI.Container {
     this._ticketText.anchor.set(0, 0.5);
     this._ticketText.position.set(8, 0);
     ticketRow.addChild(this._ticketText);
-    this._panelRoot.addChild(ticketRow);
+    this._chromeLayer.addChild(ticketRow);
     this._syncTicketLabel();
   }
 

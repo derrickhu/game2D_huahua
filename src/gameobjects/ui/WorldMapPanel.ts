@@ -121,6 +121,8 @@ export class WorldMapPanel extends PIXI.Container {
     if (this._isOpen) return;
     this._isOpen = true;
     this.visible = true;
+    /** 构造阶段 _build 可能早于纹理入缓存；preloadPanelAssets 完成后重绘，避免长期停在程序占位五边形 */
+    this._rebuildMapContent();
     this._assetUnsub = TextureCache.onAssetGroupLoaded('worldmap', () => {
       if (this._isOpen) {
         this._rebuildMapContent();

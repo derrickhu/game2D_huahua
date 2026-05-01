@@ -1,0 +1,29 @@
+A square 1:1 image containing a 2 columns x 2 rows grid sheet of 3 simplified flower bouquet wrapping tool game item icons. These are Levels 3 to 5 of the bouquet wrapping tool chain for a cozy flower-shop merge game. The first 3 cells contain the requested icons. The last cell is intentionally empty plain white background.
+
+Use the attached reference image only for general icon style: cute compact mobile game item icon, 3/4 front view, slightly top-down, rounded chunky proportions, warm wood and pastel colors, soft smooth gradient shading, small highlights, clean colored outlines, no black outline, readable at tiny size.
+
+CRITICAL OUTPUT RULE:
+The final image must contain ONLY the 3 wrapping station icons and plain white background. Do not draw any written words anywhere. Do not draw item names, level numbers, labels, captions, watermarks, UI text, or text-like marks.
+
+GLOBAL STYLE REQUIREMENTS:
+- Make the icons much simpler than a detailed workstation. Big shapes first, very few small objects.
+- Avoid clutter: no scattered tiny scissors, no many bottles, no many ribbons, no crowded shelves, no detailed paperwork.
+- Each icon should have 1 main silhouette plus 1 or 2 large readable props only.
+- Cute polished 2D game item icons, compact and centered, filling about 78-84% of each cell.
+- Warm cozy flower-shop palette: honey wood, cream paper, pastel pink ribbon, soft mint paper, lavender accent.
+- Soft 3D volume, rounded corners, simple highlights, clear colored edge lines.
+- These should look like bouquet wrapping stations, not baking tables and not cake decorating tables.
+
+GRID LAYOUT:
+
+Row 1, Column 1, Level 3 simple wrapping table:
+A very simple low honey-wood table with rounded legs. On top: one large cream wrapping paper sheet and one big pink ribbon roll. No scissors, no extra tiny tools. Clean open tabletop, large readable shapes.
+
+Row 1, Column 2, Level 4 wrapping station:
+A medium wooden wrapping table with one simple vertical back rail holding two large paper rolls, one mint green and one cream. On the tabletop: one big ribbon bow only. No small tools, no clutter. Clearly upgraded from Level 3 by the back rail and paper rolls.
+
+Row 2, Column 1, Level 5 premium wrapping station:
+A larger premium wrapping station with a rounded wooden counter and a simple arched back shelf. Only three big elements: two large pastel paper rolls on the back shelf and one oversized pink bow on the front. A single drawer shape is okay. Elegant, higher-level, but still clean and simple.
+
+Row 2, Column 2:
+Leave this cell completely empty plain white background. Do not draw an icon, mark, label, frame, or text in this cell.
