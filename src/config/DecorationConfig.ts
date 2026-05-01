@@ -220,7 +220,7 @@ export const DECO_DEFS: DecoDef[] = [
   { id: 'orn_pastel_bench',   name: '马卡龙长凳',   slot: DecoSlot.ORNAMENT, rarity: DecoRarity.FINE,   cost: 555, starValue: 4, icon: 'orn_pastel_bench',   desc: '薄荷木色配珊瑚软垫', unlockRequirement: { level: 2 }, defaultScale: 1.1, decorationPanelTab: 'furniture' },
   { id: 'promo_floral_sofa',  name: '花漾木扶手沙发', slot: DecoSlot.ORNAMENT, rarity: DecoRarity.RARE, cost: 1480, starValue: 6, icon: 'promo_floral_sofa', desc: '宣传图同款浅木扶手双人沙发，碎花抱枕很适合休息角', unlockRequirement: { level: 7 }, defaultScale: 1.18, decorationPanelTab: 'furniture' },
   { id: 'promo_wood_tea_table', name: '原木花茶几', slot: DecoSlot.TABLE, rarity: DecoRarity.FINE, cost: 680, starValue: 3, icon: 'promo_wood_tea_table', desc: '厚木板小茶几，摆一杯花茶就有午后感', unlockRequirement: { level: 6 }, defaultScale: 0.98, decorationPanelTab: 'furniture' },
-  { id: 'wallart_lace_curtain', name: '柔纱短帘', slot: DecoSlot.WALLART,  rarity: DecoRarity.FINE,   cost: 630, starValue: 3, icon: 'wallart_lace_curtain', desc: '蕾丝咖啡馆风情', unlockRequirement: { level: 6 }, defaultScale: 1.8 },
+  { id: 'wallart_lace_curtain', name: '柔纱短帘', slot: DecoSlot.WALLART,  rarity: DecoRarity.FINE,   cost: 300, starValue: 3, icon: 'wallart_lace_curtain', desc: '蕾丝咖啡馆风情', unlockRequirement: { level: 2 }, defaultScale: 1.8 },
   { id: 'garden_wood_trough', name: '木质长花箱',   slot: DecoSlot.GARDEN,   rarity: DecoRarity.COMMON, cost: 210, starValue: 1, icon: 'garden_wood_trough', desc: '一长条春天开在门口', unlockRequirement: { level: 4 }, defaultScale: 0.97 },
 
   // ═══════ ⑧ 家具 / 家电扩展（NB2 批次：躺椅、桌凳、收音机风扇等）═══════
