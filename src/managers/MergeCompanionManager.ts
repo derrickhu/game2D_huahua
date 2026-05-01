@@ -10,10 +10,7 @@ import {
   MERGE_COMPANION_MAX_SPAWN_PER_MERGE,
   MERGE_COMPANION_DEFAULT_CHANCE_MULT,
   MERGE_BUBBLE_EXPIRE_STAMINA_ITEM_ID,
-  MERGE_BUBBLE_FREE_DIAMOND_MAX_ITEM_LEVEL,
-  MERGE_BUBBLE_TOOL_DIAMOND_BASE,
-  MERGE_BUBBLE_TOOL_DIAMOND_PER_LEVEL,
-  MERGE_BUBBLE_TOOL_DIAMOND_MIN,
+  MERGE_BUBBLE_FREE_INSTANT_MAX_ITEM_LEVEL,
   MERGE_COMPANION_RULES,
   MERGE_COMPANION_SAMPLE_ACTIVITY_RULES,
   type MergeCompanionRuleDef,
@@ -91,6 +88,13 @@ function _matchRule(rule: MergeCompanionRuleDef, ctx: MergeCompanionContext): bo
   if (m.interactTypes && m.interactTypes.length > 0 && !m.interactTypes.includes(def.interactType)) {
     return false;
   }
+  if (
+    m.excludeInteractTypes &&
+    m.excludeInteractTypes.length > 0 &&
+    m.excludeInteractTypes.includes(def.interactType)
+  ) {
+    return false;
+  }
   if (m.resultLevelMin !== undefined && def.level < m.resultLevelMin) return false;
   if (m.resultLevelMax !== undefined && def.level > m.resultLevelMax) return false;
 
@@ -127,19 +131,20 @@ function _resolvePayloadItemId(rule: MergeCompanionRuleDef, ctx: MergeCompanionC
   return null;
 }
 
+/** 花语泡泡载荷不允许为工具（合成规则与活动规则双保险） */
+function _bubblePayloadItemAllowed(payloadItemId: string): boolean {
+  const def = ITEM_DEFS.get(payloadItemId);
+  return !!def && def.interactType !== InteractType.TOOL;
+}
+
 /**
- * 钻石解锁价：工具单独高价（不吃 ≤7 免费）；鲜花/饮品等低等级免费，否则用规则表 base。
+ * 钻石标价（底栏展示/埋点）：花语泡泡不含工具；非工具 ≤5 免费档；≥6 走广告解锁不在此扣钻，标价 0。
  */
 function _effectiveBubbleDiamond(payloadItemId: string, ruleDiamond: number): number {
   const def = ITEM_DEFS.get(payloadItemId);
   if (!def) return Math.max(0, ruleDiamond);
-  if (def.interactType === InteractType.TOOL) {
-    const tier = Math.max(1, def.level);
-    const raw = MERGE_BUBBLE_TOOL_DIAMOND_BASE + tier * MERGE_BUBBLE_TOOL_DIAMOND_PER_LEVEL;
-    return Math.max(MERGE_BUBBLE_TOOL_DIAMOND_MIN, raw);
-  }
-  if (def.level <= MERGE_BUBBLE_FREE_DIAMOND_MAX_ITEM_LEVEL) return 0;
-  return Math.max(0, ruleDiamond);
+  if (def.level <= MERGE_BUBBLE_FREE_INSTANT_MAX_ITEM_LEVEL) return 0;
+  return 0;
 }
 
 class MergeCompanionManagerClass {
@@ -216,6 +221,17 @@ class MergeCompanionManagerClass {
     return this._bubbles.find(b => b.id === id);
   }
 
+  /**
+   * 花语泡泡：载荷为非工具且合成链等级 ≤ {@link MERGE_BUBBLE_FREE_INSTANT_MAX_ITEM_LEVEL} 时，
+   * 可直接领取（走 0 钻解锁），无需看广告。
+   */
+  shouldBubbleUnlockWithoutAd(payloadItemId: string): boolean {
+    const def = ITEM_DEFS.get(payloadItemId);
+    if (!def) return false;
+    if (def.interactType === InteractType.TOOL) return false;
+    return def.level <= MERGE_BUBBLE_FREE_INSTANT_MAX_ITEM_LEVEL;
+  }
+
   getSelectedBubbleId(): string | null {
     return this._selectedBubbleId;
   }
@@ -270,6 +286,7 @@ class MergeCompanionManagerClass {
     const now = Date.now();
     for (const raw of state.bubbles) {
       if (!raw.payloadItemId || !ITEM_DEFS.has(raw.payloadItemId)) continue;
+      if (!_bubblePayloadItemAllowed(raw.payloadItemId)) continue;
       let remain = Number(raw.expireRemainingSec);
       if (!Number.isFinite(remain) || remain < 0) {
         const exp = Number(raw.expireAt);
@@ -307,6 +324,7 @@ class MergeCompanionManagerClass {
 
   gmSpawnFloatBubble(payloadItemId = 'flower_fresh_6', anchorCellIndex?: number): boolean {
     if (!ITEM_DEFS.has(payloadItemId)) return false;
+    if (!_bubblePayloadItemAllowed(payloadItemId)) return false;
     if (this._bubbles.length >= MERGE_COMPANION_MAX_ACTIVE_FLOAT) return false;
 
     const idx = anchorCellIndex ?? BoardManager.findEmptyOpenCell();
@@ -488,6 +506,7 @@ class MergeCompanionManagerClass {
         if (!bubbleOpt) continue;
         const payloadItemId = _resolvePayloadItemId(rule, ctx);
         if (!payloadItemId || !ITEM_DEFS.has(payloadItemId)) continue;
+        if (!_bubblePayloadItemAllowed(payloadItemId)) continue;
 
         const id = _newId();
         const durationSec = Math.max(5, bubbleOpt.durationSec);

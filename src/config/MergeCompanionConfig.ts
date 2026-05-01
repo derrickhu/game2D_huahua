@@ -25,15 +25,15 @@ export const MERGE_BUBBLE_EXPIRE_STAMINA_ITEM_ID = 'currency_stamina_1' as const
 export const MERGE_BUBBLE_DISPLAY_NAME = '花语泡泡';
 
 /**
- * 气泡内物品 `ItemDef.level` ≤ 此值时，钻石解锁免费（**仅非工具**；工具见下述工具价）
- * 规则表 `bubble.diamondPrice` 为鲜花/饮品等的基础价（等级超过此阈值时收取）
+ * 气泡内物品（**仅非工具**）`ItemDef.level` ≤ 此值：可免费瞬间领取，**无需广告**。
+ * 等级更高则只能「看广告解锁」（不占钻石价，见 `_effectiveBubbleDiamond`）。
  */
-export const MERGE_BUBBLE_FREE_DIAMOND_MAX_ITEM_LEVEL = 7;
+export const MERGE_BUBBLE_FREE_INSTANT_MAX_ITEM_LEVEL = 5;
 
-/** 气泡载荷为「工具」时的钻石价：底分 + level×系数，且不低于下限（大幅高于鲜花） */
-export const MERGE_BUBBLE_TOOL_DIAMOND_BASE = 52;
-export const MERGE_BUBBLE_TOOL_DIAMOND_PER_LEVEL = 18;
-export const MERGE_BUBBLE_TOOL_DIAMOND_MIN = 64;
+/**
+ * @deprecated 请使用 `MERGE_BUBBLE_FREE_INSTANT_MAX_ITEM_LEVEL`（语义：≤5 免费领；≥6 看广告）
+ */
+export const MERGE_BUBBLE_FREE_DIAMOND_MAX_ITEM_LEVEL = MERGE_BUBBLE_FREE_INSTANT_MAX_ITEM_LEVEL;
 
 /** 概率乘数（调试或活动 Buff） */
 export const MERGE_COMPANION_DEFAULT_CHANCE_MULT = 1;
@@ -71,6 +71,8 @@ export interface MergeCompanionMatch {
   lines?: string[];
   /** 若填写，合成结果的 `ItemDef.interactType` 须命中其一（如仅工具） */
   interactTypes?: InteractType[];
+  /** 若填写，合成结果的 `interactType` 命中任一则**不匹配**本条（如花语泡泡不出现工具载荷） */
+  excludeInteractTypes?: InteractType[];
   resultLevelMin?: number;
   resultLevelMax?: number;
   /** 是否允许半锁格跨格合成触发；默认 true */
@@ -120,30 +122,9 @@ export const MERGE_COMPANION_RULES: MergeCompanionRuleDef[] = [
       offlineTimerBehavior: 'run',
     },
   },
-  {
-    id: 'tool_float_bubble_clone',
-    priority: 10,
-    groupId: 'merge_bonus',
-    baseChance: 0.008,
-    match: {
-      categories: [Category.BUILDING],
-      interactTypes: [InteractType.TOOL],
-      resultLevelMin: 1,
-      resultLevelMax: 24,
-      allowPeekMerge: true,
-    },
-    carrier: 'bubble',
-    spatialMode: 'float',
-    payload: { kind: 'clone_result' },
-    bubble: {
-      durationSec: 180,
-      diamondPrice: 12,
-      offlineTimerBehavior: 'run',
-    },
-  },
   /**
-   * 兜底：饮品、宝箱、货币块、非工具建筑等。同组 `merge_bonus` 内仅保留一条规则参与当次合成，
-   * 故须排在鲜花/工具之后，避免覆盖专类概率。
+   * 兜底：饮品、宝箱、货币块、非工具建筑等。**不含工具**（工具不参与花语泡泡）。
+   * 同组 `merge_bonus` 内仅保留一条规则参与当次合成，故须排在鲜花之后，避免覆盖专类概率。
    */
   {
     id: 'misc_float_bubble_clone',
@@ -153,6 +134,7 @@ export const MERGE_COMPANION_RULES: MergeCompanionRuleDef[] = [
     match: {
       resultLevelMin: 1,
       allowPeekMerge: true,
+      excludeInteractTypes: [InteractType.TOOL],
     },
     carrier: 'bubble',
     spatialMode: 'float',

@@ -28,6 +28,7 @@ import { createAffinityCardShare } from '@/config/ShareConfig';
 import type { AffinityCardDropResult } from '@/managers/AffinityCardManager';
 import { RewardFlyCoordinator } from '@/core/RewardFlyCoordinator';
 import { ToastMessage } from './ToastMessage';
+import { TextureCache } from '@/utils/TextureCache';
 import {
   LARGE_CARD_W,
   LARGE_CARD_H,
@@ -69,10 +70,19 @@ export class AffinityCardDropPopup extends PIXI.Container {
   enqueue(item: DropQueueItem): void {
     if (!item.results || item.results.length === 0) return;
     this._queue.push(item);
-    if (!this._isOpen) this._showNext();
+    if (!this._isOpen) void this._showNextAsync();
   }
 
-  private _showNext(): void {
+  private _artKeysForResults(results: AffinityCardDropResult[]): string[] {
+    const set = new Set<string>();
+    for (const r of results) {
+      if (!r?.card) continue;
+      set.add(r.card.artKey ?? `customer_${r.card.ownerTypeId}`);
+    }
+    return [...set];
+  }
+
+  private async _showNextAsync(): Promise<void> {
     const next = this._queue.shift();
     if (!next) {
       this._dismiss();
@@ -83,6 +93,16 @@ export class AffinityCardDropPopup extends PIXI.Container {
     this._curTypeId = next.typeId;
     this._curResults = next.results;
     this._curIndex = 0;
+
+    const keys = this._artKeysForResults(next.results);
+    if (keys.length > 0) {
+      try {
+        await TextureCache.preloadKeys(keys);
+      } catch (e) {
+        console.warn('[AffinityCardDropPopup] 卡面纹理预热未完成:', e);
+      }
+    }
+
     this._build();
     this._renderCardBack();
   }
@@ -160,7 +180,7 @@ export class AffinityCardDropPopup extends PIXI.Container {
     }
     this._curIndex += 1;
     if (this._curIndex >= this._curResults.length) {
-      if (this._queue.length > 0) this._showNext();
+      if (this._queue.length > 0) void this._showNextAsync();
       else this._dismiss();
       return;
     }
@@ -327,7 +347,7 @@ export class AffinityCardDropPopup extends PIXI.Container {
       onComplete: () => {
         this.removeChildren();
         if (this._queue.length > 0) {
-          this._showNext();
+          void this._showNextAsync();
         } else {
           this.visible = false;
           EventBus.emit('affinityCard:dropPopupClosed');

@@ -67,11 +67,15 @@ class CdnAssetServiceClass {
     const resolved = this.resolveAsset(logicalPath);
     if (resolved) return resolved;
 
+    if (!this.isCdnPath(logicalPath)) {
+      return logicalPath;
+    }
+
     const ok = await this.download(logicalPath);
     if (ok && this._isCacheValid(logicalPath)) return this._getCachePath(logicalPath);
-    if (this.isCdnPath(logicalPath)) {
-      throw new Error(`CDN asset unavailable: ${logicalPath}`);
-    }
+
+    /** CDN 未命中或下载失败：仍返回分包逻辑路径，由微信用本地包资源加载（卡面等需在包内保留一份） */
+    console.warn(`[CDN] 资源未从云端就绪，使用本地分包路径: ${logicalPath}`);
     return logicalPath;
   }
 

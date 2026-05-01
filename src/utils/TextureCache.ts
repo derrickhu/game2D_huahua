@@ -1302,8 +1302,12 @@ class TextureCacheClass {
           resolve();
         };
         void CdnAssetService.resolveOrDownload(path)
-          .then((resolvedPath) => { img.src = resolvedPath; })
+          .then((resolvedPath) => {
+            img.src = resolvedPath;
+          })
           .catch((err) => {
+            console.warn(`[TextureCache] CDN 解析失败，尝试终止加载: ${key} (${path})`, err);
+            this._failed.add(key);
             this._loading.delete(key);
             resolve();
           });

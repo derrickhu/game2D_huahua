@@ -824,7 +824,7 @@ export class ItemInfoBar extends PIXI.Container {
       !!cell && (cell.state === CellState.FOG || cell.state === CellState.PEEK);
 
     if (isLockedOrPeek) {
-      this._nameText.text = cell!.state === CellState.FOG ? '迷雾格子' : '半解锁';
+      this._nameText.text = cell!.state === CellState.FOG ? '迷雾格子' : '未解锁';
       this._levelText.visible = false;
       this._levelText.text = '';
       this._descText.visible = true;
@@ -941,7 +941,7 @@ export class ItemInfoBar extends PIXI.Container {
 
   private _getDescription(def: ItemDef): string {
     if (isLuckyCoinItem(def.id)) {
-      return '拖到鲜花或饮品（含蝴蝶标本）上试试，会有惊喜。';
+      return '拖到物品上试试就可以';
     }
     if (isCrystalBallItem(def.id)) {
       return '拖到鲜花或饮品（含蝴蝶标本）上，确认后可稳定升一级（满级不可用）。';
@@ -1013,7 +1013,8 @@ export class ItemInfoBar extends PIXI.Container {
     this._descText.text = '到期未解锁获得少量体力';
     this._descText.visible = true;
     this._staminaDescRow.visible = false;
-    this._chainBtnLabel.text = b.diamondPrice <= 0 ? '免费解锁' : `${b.diamondPrice} 解锁`;
+    const freeInstant = MergeCompanionManager.shouldBubbleUnlockWithoutAd(b.payloadItemId);
+    this._chainBtnLabel.text = freeInstant ? '免费解锁' : '看广告解锁';
 
     const showDismiss = b.dismissEnabled && b.dismissHuayuanAmount > 0;
     this._bubbleDismissLink.visible = showDismiss;
@@ -1114,6 +1115,17 @@ export class ItemInfoBar extends PIXI.Container {
     }
     const def = ITEM_DEFS.get(b.payloadItemId);
     const name = def?.name ?? b.payloadItemId;
+
+    if (MergeCompanionManager.shouldBubbleUnlockWithoutAd(b.payloadItemId)) {
+      if (!MergeCompanionManager.unlockBubbleWithDiamond(id)) {
+        ToastMessage.show('泡泡已消失');
+      } else {
+        ToastMessage.show('已获得泡泡里的物品');
+        this._clearSelection();
+      }
+      return;
+    }
+
     const ok = await ConfirmDialog.show(
       `解锁${MERGE_BUBBLE_DISPLAY_NAME}`,
       `观看一段广告获得「${name}」。\n（棋盘满时物品进入收纳箱）`,
