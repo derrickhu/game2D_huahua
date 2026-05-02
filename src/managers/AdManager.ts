@@ -36,7 +36,14 @@ export enum AdScene {
   CHECKIN_AD_BONUS = 'checkin_ad_bonus',
 }
 
-type AdCallback = (success: boolean) => void;
+export type AdFailReason =
+  | 'busy'
+  | 'no_ad'
+  | 'load_failed'
+  | 'show_failed'
+  | 'skipped';
+
+type AdCallback = (success: boolean, reason?: AdFailReason) => void;
 
 export function showRewardedAdAsync(scene: AdScene): Promise<boolean> {
   return new Promise((resolve) => {
@@ -127,7 +134,7 @@ class AdManagerClass {
   showRewardedAd(scene: AdScene, callback: AdCallback): void {
     if (this._isAdShowing) {
       console.warn('[AdManager] 已有广告正在展示，忽略新请求:', scene);
-      callback(false);
+      callback(false, 'busy');
       return;
     }
 
@@ -154,7 +161,7 @@ class AdManagerClass {
     const rewardedAd = adUnitId ? this._getOrCreateRewardedAd(adUnitId) : null;
     if (!rewardedAd) {
       console.warn('[AdManager] 广告实例不存在');
-      callback(false);
+      callback(false, 'no_ad');
       return;
     }
 
@@ -166,25 +173,14 @@ class AdManagerClass {
     rewardedAd.show().catch(() => {
       // 显示失败，尝试重新加载后再显示
       rewardedAd.load().then(() => {
+        if (this._pendingAdUnitId !== adUnitId || !this._pendingCallback) return;
         rewardedAd.show().catch((err: any) => {
           console.error('[AdManager] 激励视频展示失败:', err);
-          this._isAdShowing = false;
-          if (this._pendingCallback) {
-            this._pendingCallback(false);
-            this._pendingCallback = null;
-          }
-          this._pendingScene = null;
-          this._pendingAdUnitId = null;
+          this._finishRewardedAd(false, 'show_failed');
         });
       }).catch((err: any) => {
         console.error('[AdManager] 激励视频加载失败:', err);
-        this._isAdShowing = false;
-        if (this._pendingCallback) {
-          this._pendingCallback(false);
-          this._pendingCallback = null;
-        }
-        this._pendingScene = null;
-        this._pendingAdUnitId = null;
+        this._finishRewardedAd(false, 'load_failed');
       });
     });
   }
@@ -208,32 +204,43 @@ class AdManagerClass {
     ad.onError((err: any) => {
       console.warn('[AdManager] 激励视频广告错误:', adUnitId, err);
       this._loadedRewardedAdUnits.delete(adUnitId);
+      if (this._pendingAdUnitId === adUnitId && this._pendingCallback) {
+        this._finishRewardedAd(false, 'load_failed');
+      }
     });
     ad.onClose((res: any) => {
       if (this._pendingAdUnitId && this._pendingAdUnitId !== adUnitId) return;
-      this._isAdShowing = false;
       this._loadedRewardedAdUnits.delete(adUnitId);
       const isCompleted = res?.isEnded !== false;
       const scene = this._pendingScene;
       console.log('[AdManager] 激励视频关闭:', { scene, adUnitId, res, isCompleted });
 
-      if (this._pendingCallback) {
-        this._pendingCallback(isCompleted);
-        this._pendingCallback = null;
-      }
-      this._pendingScene = null;
-      this._pendingAdUnitId = null;
-
-      if (isCompleted) {
-        this._stats.totalCompleted++;
-        EventBus.emit('ad:completed', scene);
-      }
+      this._finishRewardedAd(isCompleted, isCompleted ? undefined : 'skipped');
       ad.load().catch(() => {});
     });
 
     this._rewardedAds.set(adUnitId, ad);
     ad.load().catch(() => {});
     return ad;
+  }
+
+  private _finishRewardedAd(success: boolean, reason?: AdFailReason): void {
+    const callback = this._pendingCallback;
+    const scene = this._pendingScene;
+    const adUnitId = this._pendingAdUnitId;
+
+    this._isAdShowing = false;
+    this._pendingCallback = null;
+    this._pendingScene = null;
+    this._pendingAdUnitId = null;
+    if (adUnitId) this._loadedRewardedAdUnits.delete(adUnitId);
+
+    if (callback) callback(success, reason);
+
+    if (success) {
+      this._stats.totalCompleted++;
+      EventBus.emit('ad:completed', scene);
+    }
   }
 
   /** 展示插屏广告（场景切换时调用） */

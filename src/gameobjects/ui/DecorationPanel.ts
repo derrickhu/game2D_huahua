@@ -253,6 +253,12 @@ function shouldShowLockedDecoPreview(deco: DecoDef, sceneOk: boolean): boolean {
   return false;
 }
 
+function shouldUseNextLevelUnlockLabel(deco: DecoDef, sceneOk: boolean): boolean {
+  if (!sceneOk) return false;
+  const lv = deco.unlockRequirement?.level;
+  return lv !== undefined && lv > 0 && LevelManager.level === lv - 1;
+}
+
 /** global pixel -> design coordinate */
 function globalToDesignY(globalY: number): number {
   return globalY / Game.scale;
@@ -468,7 +474,12 @@ export class DecorationPanel extends PIXI.Container {
     this._decoInvFilter = 'not_purchased';
     this._redrawDimMask();
     this._resizePanelIfNeeded();
+    // 面板实例在主场景初始化时已构建；发版后冷启动时贴图常在 open 前的预加载阶段才进入缓存。
+    // 这里主动应用一次已加载贴图，避免错过 texture:loaded 事件后首帧仍停留在矢量/空贴图兜底态。
+    this._applyLoadedPanelTextures();
     this._refreshAll();
+    this._scheduleAssetRefresh();
+    setTimeout(() => this._scheduleAssetRefresh(), 120);
     EventBus.on('currency:changed', this._onCurrencyChangedForGrid);
     EventBus.on('collection:discovered', this._onCollectionDiscoveredForGrid);
 
@@ -1576,7 +1587,10 @@ export class DecorationPanel extends PIXI.Container {
     } else if (isUnlocked && isPlaced) this._addFooter(card, cw, ch, 'furniture_placed', undefined, '');
     else if (isUnlocked) this._addFooter(card, cw, ch, 'furniture_go_place', undefined, '');
     else if (needsAdGate) this._addFooter(card, cw, ch, 'ready', undefined, '免费解锁');
-    else if (!purchaseAllowed) this._addFooter(card, cw, ch, 'locked', undefined, sceneOk ? reqResult.text : formatAllowedScenesShort(deco));
+    else if (!purchaseAllowed) {
+      const lockedText = shouldUseNextLevelUnlockLabel(deco, sceneOk) ? '下级即将解锁' : reqResult.text;
+      this._addFooter(card, cw, ch, 'locked', undefined, lockedText);
+    }
     else if (deco.cost > 0) this._addFooter(card, cw, ch, 'purchase', deco.cost, '购买');
     else this._addFooter(card, cw, ch, 'furniture_go_place', undefined, '');
 

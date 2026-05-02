@@ -15,7 +15,7 @@ import {
   CHECKIN_AD_BONUS_DIAMOND,
   type RewardItem,
 } from '@/managers/CheckInManager';
-import { AdManager, AdScene } from '@/managers/AdManager';
+import { AdManager, AdScene, type AdFailReason } from '@/managers/AdManager';
 import { ToastMessage } from '@/gameobjects/ui/ToastMessage';
 import { DESIGN_WIDTH, FONT_FAMILY } from '@/config/Constants';
 import { TextureCache } from '@/utils/TextureCache';
@@ -31,6 +31,7 @@ export class CheckInPanel extends PIXI.Container {
   private _content!: PIXI.Container;
   private _isOpen = false;
   private _opening = false;
+  private _adBonusRequesting = false;
   private _assetUnsub: (() => void) | null = null;
 
   /** 每张日卡的屏幕中心坐标，供飞入动效使用 */
@@ -88,6 +89,7 @@ export class CheckInPanel extends PIXI.Container {
 
   close(): void {
     this._opening = false;
+    this._adBonusRequesting = false;
     if (!this._isOpen) return;
     this._isOpen = false;
     this._assetUnsub?.();
@@ -674,9 +676,12 @@ export class CheckInPanel extends PIXI.Container {
     hit.cursor = 'pointer';
     hit.on('pointertap', (e: PIXI.FederatedPointerEvent) => {
       e.stopPropagation();
-      AdManager.showRewardedAd(AdScene.CHECKIN_AD_BONUS, (success) => {
+      if (this._adBonusRequesting) return;
+      this._adBonusRequesting = true;
+      AdManager.showRewardedAd(AdScene.CHECKIN_AD_BONUS, (success, reason) => {
+        this._adBonusRequesting = false;
         if (!success) {
-          ToastMessage.show('广告未看完，未领取额外奖励');
+          ToastMessage.show(this._adBonusFailMessage(reason));
           return;
         }
         if (!CheckInManager.grantCheckInAdBonusFromAd()) {
@@ -693,6 +698,12 @@ export class CheckInPanel extends PIXI.Container {
       });
     });
     this._content.addChild(hit);
+  }
+
+  private _adBonusFailMessage(reason?: AdFailReason): string {
+    if (reason === 'skipped') return '广告未看完，未领取额外奖励';
+    if (reason === 'busy') return '广告正在加载，请稍候';
+    return '广告暂不可用，请稍后再试';
   }
 
   /* ====== 签到逻辑 ====== */
