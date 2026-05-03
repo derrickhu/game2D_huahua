@@ -1,0 +1,29 @@
+Square image 2048 by 2048 pixels, strict 5 columns by 2 rows of equal cells, thin neutral gutters between cells, faint guide lines allowed. Background inside every cell and gutter is pure solid white only, no gradient, no floor plane, no room walls.
+
+Overall style for all props: hand-painted mobile merge-game flower shop furniture, cute kawaii 2.5D isometric from upper-left about 45 degrees, visible top face plus front-right face, soft brown outlines slightly thicker than hairline, rounded chibi-friendly shapes, gentle upper-left lighting, readable silhouette at small size. Color story shared across the set: sage green, honey oak wood, brushed brass, amber glass, cream ceramic, soft lavender accents — Herbal Atelier apothecary botany lab, not coastal, not moon-butterfly theme. No text, no labels, no numbers, no watermark, no characters, no photoreal.
+
+Each cell contains exactly one separate furniture prop centered in that cell. Each prop must occupy only about 55 to 60 percent of its cell width and height, with generous white margin on all sides inside the cell so a future grid split will not crop silhouettes. No prop may touch the cell borders. No prop may overlap into neighboring cells.
+
+Fill order row by row, left to right.
+
+Row 0, column 0: Tall apothecary display cabinet, two glass doors with brass knobs, small amber bottles and dried herb bundles visible inside, warm wood frame, compact footprint.
+
+Row 0, column 1: Sorting and wrapping work table, light wood top, one small drawer front, kraft paper roll, twine spool, tiny scissors, a few loose leaves, flower-shop cute not industrial.
+
+Row 0, column 2: Ceiling pendant lamp, brass ring frame, cluster of small amber glass vial shapes as decorative shades, short chain, cute toy-like proportions.
+
+Row 0, column 3: Ornament cluster on a low round wooden tray: white ceramic mortar and pestle, scattered dried leaves, tiny glass bottle, all on one base group.
+
+Row 0, column 4: Wall art piece: three matching narrow rectangular frames side by side as one wall hanging, pressed flowers and herbs in soft purple and green, abstract botanical, no readable text.
+
+Row 1, column 0: Garden tiered planter: wooden ladder-style stepped shelves with terracotta pots of herbs, outdoor-cute, rounded pots.
+
+Row 1, column 1: Small seat: rustic wooden crate shape with a mint-green cushion on top, short ottoman height.
+
+Row 1, column 2: Wall sconce lamp: brass backplate, one glass jar shade with warm glow suggestion, small decorative leaf motif.
+
+Row 1, column 3: Small round cafe table, honey wood, teapot and two cups, tiny vase with flowers, compact bistro cute.
+
+Row 1, column 4: Narrow wall-mounted spice rack shelf unit, two or three short shelves, small jars with corks and brass hooks, wood backboard.
+
+Background for the entire canvas outside cell interiors: still pure white. Photoreal forbidden.

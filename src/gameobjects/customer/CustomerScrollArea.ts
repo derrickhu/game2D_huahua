@@ -195,11 +195,12 @@ export class CustomerScrollArea extends PIXI.Container {
     const canvas = Game.app.view as any;
 
     hitArea.on('pointerdown', (e: PIXI.FederatedPointerEvent) => {
+      const startX = this._rawToDesignX(e);
       this._isDragging = true;
       this._hasMoved = false;
-      this._dragStartX = e.globalX;
+      this._dragStartX = startX;
       this._scrollStartX = this._scrollContent.x;
-      this._lastDragX = e.globalX;
+      this._lastDragX = startX;
       this._lastDragTime = Date.now();
       this._velocity = 0;
 
@@ -240,7 +241,11 @@ export class CustomerScrollArea extends PIXI.Container {
     const rect = (Game.app.view as any).getBoundingClientRect
       ? (Game.app.view as any).getBoundingClientRect()
       : { left: 0, width: Game.screenWidth };
-    const clientX = e.clientX ?? e.pageX ?? (e.changedTouches?.[0]?.clientX ?? 0);
+    const clientX = e.clientX ?? e.pageX ?? (e.changedTouches?.[0]?.clientX);
+    if (clientX === undefined) {
+      // Pixi 的 globalX 是 renderer 像素坐标；stage 按 Game.scale 缩放后需转回设计坐标。
+      return (e.globalX ?? e.global?.x ?? 0) / Game.scale;
+    }
     const ratio = Game.designWidth / (rect.width || Game.screenWidth);
     return (clientX - rect.left) * ratio;
   }

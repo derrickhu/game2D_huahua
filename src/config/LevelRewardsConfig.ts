@@ -69,6 +69,66 @@ const LEVEL_EXTRA: Record<number, LevelExtraRewardsDef> = {
     ],
     flowerSignTickets: 10,
   },
+  /** 包装线补底 + 冷饮线低阶补量 */
+  11: {
+    rewardBoxItems: [
+      { itemId: 'tool_arrange_1', count: 2 },
+      { itemId: 'tool_mixer_1', count: 1 },
+    ],
+  },
+  /** 烘焙线低阶补量：优先形成一条中期主进阶方向 */
+  12: {
+    rewardBoxItems: [{ itemId: 'tool_bake_1', count: 2 }],
+  },
+  /** 蝴蝶线补网 + 园艺双长线基础补给 */
+  13: {
+    rewardBoxItems: [
+      { itemId: 'tool_butterfly_net_1', count: 2 },
+      { itemId: 'tool_plant_1', count: 2 },
+    ],
+  },
+  /** 冷饮线低阶补量：不强推到高阶 CD 段 */
+  14: {
+    rewardBoxItems: [{ itemId: 'tool_mixer_1', count: 1 }],
+  },
+  /** 包装里程碑包；铜宝箱由 chestRewardForLevel 自动追加 */
+  15: {
+    rewardBoxItems: [
+      { itemId: 'tool_arrange_1', count: 2 },
+      { itemId: 'tool_arrange_2', count: 1 },
+    ],
+  },
+  /** 烘焙进阶材料：仍需玩家自行合成生产工具 */
+  16: {
+    rewardBoxItems: [
+      { itemId: 'tool_bake_1', count: 1 },
+      { itemId: 'tool_bake_2', count: 1 },
+    ],
+  },
+  /** 蝴蝶线低阶补量：保留玩家是否合到高阶的选择 */
+  17: {
+    rewardBoxItems: [{ itemId: 'tool_butterfly_net_1', count: 2 }],
+  },
+  /** 冷饮 + 园艺小补给：避免多线同步进入 CD 压力段 */
+  18: {
+    rewardBoxItems: [
+      { itemId: 'tool_mixer_1', count: 1 },
+      { itemId: 'tool_plant_1', count: 1 },
+    ],
+  },
+  /** 烘焙收束补量 */
+  19: {
+    rewardBoxItems: [{ itemId: 'tool_bake_1', count: 1 }],
+  },
+  /** 20 级综合材料包；铜宝箱由 chestRewardForLevel 自动追加 */
+  20: {
+    rewardBoxItems: [
+      { itemId: 'tool_bake_1', count: 1 },
+      { itemId: 'tool_butterfly_net_1', count: 1 },
+      { itemId: 'tool_arrange_1', count: 2 },
+      { itemId: 'tool_plant_1', count: 2 },
+    ],
+  },
 };
 
 /** 5、10、15、20 级：铜宝箱；25 级起每 5 级：银宝箱 */

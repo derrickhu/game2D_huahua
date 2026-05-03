@@ -1,0 +1,22 @@
+Batch: 10 件「铃兰药草工作室」Herbal Atelier 套系。鼠尾草绿 + 蜂蜜木 + 黄铜 + 琥珀玻璃，与海盐度假线、月蝶线区分。
+
+单张 5×2 网格 NB2 提示词: furniture_set_herbal_atelier_grid10_nb2_prompt.txt
+原图: ../game_assets/huahua/assets/raw/furniture_set_herbal_atelier_grid10_nb2.png
+入库路径: minigame/subpkg_deco/images/furniture/<key>.png
+
+后处理: split_grid 5×2 → 每格 rembg -m birefnet-general → crop_trim.py --padding 4 → compress_furniture_deco_pngs.py（见 furniture-deco-art-spec.mdc，勿用棋盘 256 色脚本）。
+
+网格填序行优先（上排 0–4，下排 5–9）:
+
+0 deco_lv11_herbal_shelf_apothecary   药草玻璃高柜     SHELF   lv11  双门玻璃柜瓶罐干草黄铜把手
+1 deco_lv11_herbal_table_sorting      分拣包装台       TABLE   lv11  浅木台抽屉标签麻绳
+2 deco_lv11_herbal_light_pendant      琥珀瓶吊灯       LIGHT   lv11  黄铜架琥珀小瓶围饰
+3 deco_lv11_herbal_orn_mortar          研钵与托盘组     ORNAMENT lv12 白瓷研钵木托盘散叶
+4 deco_lv11_herbal_wall_herbarium     押花三联框       WALLART lv12 三格细框押花无文字
+5 deco_lv12_herbal_garden_ladder_planter 阶梯草药花架  GARDEN  lv12 斜梯木架陶盆香草
+6 deco_lv12_herbal_orn_crate_stool     木箱坐垫凳       ORNAMENT lv13 旧木箱薄荷绿垫
+7 deco_lv12_herbal_light_sconce       玻璃罐壁灯       LIGHT   lv13 单头壁灯小玻璃瓶
+8 deco_lv13_herbal_table_tea_round    草药下午茶圆桌   TABLE   lv13 小圆木桌茶壶杯花
+9 deco_lv13_herbal_shelf_wall_rack    壁挂香料架       SHELF   lv14 窄壁挂层板瓶罐钩
+
+DecorationConfig / TextureCache 登记与花愿价待策划在入库时填写。
