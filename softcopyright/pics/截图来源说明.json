@@ -1,0 +1,35 @@
+{
+  "huahua_01_main.jpg": [
+    "minigame/images/ui/loading_splash_run_to_shop_nb2.jpg",
+    "minigame/images/ui/icon_*"
+  ],
+  "huahua_02_board.jpg": [
+    "minigame/images/share/share_core_gameplay.jpg"
+  ],
+  "huahua_03_order.jpg": [
+    "minigame/images/ui/shop_scene_bg_floral_nb2.png",
+    "game_assets/huahua/assets/final/order_panel.png",
+    "customer/item assets"
+  ],
+  "huahua_04_decoration.jpg": [
+    "minigame/images/share/share_decor_gameplay.jpg"
+  ],
+  "huahua_05_dressup.jpg": [
+    "minigame/subpkg_chars/images/owner/full_outfit_*.png"
+  ],
+  "huahua_06_collection.jpg": [
+    "minigame/subpkg_panels/images/ui/collection_panel_shell_nb2.png",
+    "affinity_cards/card_*.png"
+  ],
+  "huahua_07_checkin.jpg": [
+    "daily_challenge_panel_shell_nb2.png",
+    "checkin_milestone_gift_*.png"
+  ],
+  "huahua_08_levelup.jpg": [
+    "level_unlock/*.png",
+    "deco furniture assets"
+  ],
+  "huahua_09_cloudsync.jpg": [
+    "cloudfunctions/huahua-api data model rendered as screenshot"
+  ]
+}

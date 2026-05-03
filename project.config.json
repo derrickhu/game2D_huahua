@@ -48,6 +48,11 @@
     ],
     "include": []
   },
+  "watchOptions": {
+    "ignore": [
+      "softcopyright/**"
+    ]
+  },
   "isGameTourist": false,
   "appid": "wx67b4d58810df8bba",
   "editorSetting": {},
