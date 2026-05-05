@@ -1,6 +1,6 @@
 ---
-description: 花店室内家具（subpkg_deco/furniture）NB2 生图 — 与房间壳一致的等距视角；配色按单品需求；入库须压缩对齐体量
-globs: docs/prompt/furniture_*.txt,minigame/subpkg_deco/images/furniture/**,src/config/DecorationConfig.ts
+description: 花店室内家具（subpkg_deco/furniture）NB2 生图 — 与房间壳一致的等距视角；配色按单品需求；入库须压缩并注册 TextureCache
+globs: docs/prompt/furniture_*.txt,minigame/subpkg_deco/images/furniture/**,minigame/subpkg_deco/images/cake/**,src/config/DecorationConfig.ts,src/utils/TextureCache.ts
 alwaysApply: false
 ---
 
@@ -43,6 +43,14 @@ alwaysApply: false
 
 - 原图、脚本与 `TextureCache` / `DecorationConfig` 登记见 **`docs/furniture_greenhouse_nb2.md`**、`game-art-asset-flow.mdc`（**deco 分包**，非 `subpkg_items`）。
 - 抠图默认 **`birefnet-general`**，裁切 **`crop_trim.py --padding 4`**（与花房批次 README 一致）；`defaultScale` 在 `DecorationConfig` 中按格子单独调校。
+- **强制注册 TextureCache**：凡新增/替换可购买或可摆放家具，`DecorationConfig.ts` 中 `icon` 必须与 `src/utils/TextureCache.ts` 中同名 key 一一对应，并指向真实 PNG 文件；房间风格 `bgTexture` 同理。只把 PNG 放进 `minigame/subpkg_deco/images/...` 或只写 `DECO_DEFS` 都不算完成，会导致发版后购买卡片/装修托盘取不到贴图。
+- **入库前必须跑严格校验**（仓库根）：
+
+```bash
+npm run check:deco-textures
+```
+
+该脚本会扫描 `DecorationConfig` 的全部 `icon` / `bgTexture`，检查 `TextureCache` key 是否存在、映射文件是否真实存在；有任何缺失都必须先修复再发版。
 
 ## 压缩与像素规格（须对齐现有家具）
 
