@@ -121,9 +121,27 @@ export class CellView extends PIXI.Container {
 
   private _paintCellBase(): void {
     const cs = BoardMetrics.cellSize;
+    const r = Math.max(4, Math.round(cs * 0.055));
     this._bg.clear();
-    this._bg.beginFill(0xFFFFFF, 0.78);
-    this._bg.drawRoundedRect(0, 0, cs, cs, 8);
+
+    // 程序绘制一个更亮的奶油色格底，避免纯色白底在绿色棋盘上显灰。
+    this._bg.beginFill(0xFFFBEA, 0.98);
+    this._bg.lineStyle(1.5, 0xDCD7B8, 0.9);
+    this._bg.drawRoundedRect(0.75, 0.75, cs - 1.5, cs - 1.5, r);
+    this._bg.endFill();
+
+    // 顶部内高光 + 底部暖色层，模拟轻微材质感，不引入外部阴影。
+    this._bg.lineStyle(0, 0, 0);
+    this._bg.beginFill(0xFFFFFF, 0.34);
+    this._bg.drawRoundedRect(4, 4, cs - 8, Math.max(12, cs * 0.34), Math.max(4, r - 3));
+    this._bg.endFill();
+
+    this._bg.beginFill(0xF4E9C8, 0.18);
+    this._bg.drawRoundedRect(4, cs * 0.56, cs - 8, cs * 0.38, Math.max(4, r - 3));
+    this._bg.endFill();
+
+    this._bg.lineStyle(1, 0xFFF7D2, 0.7);
+    this._bg.drawRoundedRect(3, 3, cs - 6, cs - 6, Math.max(4, r - 3));
     this._bg.endFill();
 
     const greenMatch =
@@ -134,7 +152,7 @@ export class CellView extends PIXI.Container {
         COLORS.CELL_ORDER_MATCH_OVERLAY,
         COLORS.CELL_ORDER_MATCH_OVERLAY_ALPHA,
       );
-      this._bg.drawRoundedRect(0, 0, cs, cs, 8);
+      this._bg.drawRoundedRect(0, 0, cs, cs, r);
       this._bg.endFill();
       const ringW = 2.25;
       const inset = ringW / 2;
@@ -148,7 +166,7 @@ export class CellView extends PIXI.Container {
         inset,
         cs - ringW,
         cs - ringW,
-        Math.max(4, 8 - Math.round(inset)),
+        Math.max(3, r - Math.round(inset)),
       );
     }
 
@@ -160,7 +178,7 @@ export class CellView extends PIXI.Container {
         COLORS.CELL_MERGE_PARTNER_HINT,
         COLORS.CELL_MERGE_PARTNER_HINT_ALPHA,
       );
-      this._bg.drawRoundedRect(0, 0, cs, cs, 8);
+      this._bg.drawRoundedRect(0, 0, cs, cs, r);
       this._bg.endFill();
     }
   }

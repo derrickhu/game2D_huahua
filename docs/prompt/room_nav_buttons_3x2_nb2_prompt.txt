@@ -1,0 +1,28 @@
+Create one 3 columns x 2 rows button icon sheet for a cozy pastel flower-shop mobile game.
+
+Use the provided reference image for style: the existing sofa and dress buttons are soft standalone UI icons with rounded chunky shapes, bright candy colors, gentle highlights, simple readable silhouettes, and no heavy frame. Match that style closely.
+
+Canvas and layout:
+- One image containing exactly 6 separate button icons in a clean 3x2 grid.
+- Equal-sized cells, generous spacing between icons.
+- Each icon centered in its own cell.
+- Pure solid magenta background (#FF00FF) across the whole image for later cutout.
+- No grid lines, no labels, no captions, no readable text, no numbers.
+
+Buttons, left to right, top row then bottom row:
+1. Catalog / collection button: a cute closed flower album or illustrated book, warm red-brown cover, tiny flower emblem, cozy collectible feeling.
+2. Friendship card button: two overlapping pastel cards or envelopes with a heart/flower motif, warm friendship feeling, not a generic book.
+3. Check-in button: cute calendar page with a green check mark and small flower pin, but no readable date text.
+4. Task button: rounded clipboard checklist with tiny abstract check marks and flower accent, no readable writing.
+5. Map button: folded pastel map with location pin and small flower path marks, no readable writing.
+6. Decoration button: golden tools or decorating kit, such as a small hammer and paintbrush crossed with a flower-shop ribbon, clearly about decorating.
+
+Shared art style:
+- Clean 2D vector mobile game UI, kawaii casual, cozy flower-shop game.
+- Same scale, same outline thickness, same lighting direction, same soft 3D volume as the sofa and dress reference.
+- Pastel high-key palette: coral red, peach, lavender, mint, honey gold, cream, soft green.
+- Thin warm brown outlines, soft internal highlights, rounded puffy shapes.
+- No realistic texture, no photorealism, no metallic hard shine, no black heavy outline.
+- Do not add white sticker borders around every icon.
+- Icons should feel like clickable game buttons, not flat emojis.
+- No external ground shadow; tiny self-shadow inside the icon is okay.

@@ -1,0 +1,31 @@
+Create one standalone UI asset for a reward storage button in a cozy pastel flower-shop merge game.
+
+Use the provided wooden order tray reference for art style: warm light wood, soft 2D vector UI, thin brown lines, subtle wood grain, gentle mobile-game depth. Match that style closely.
+
+Purpose:
+- This asset represents a temporary reward storage slot / reward box entrance.
+- The game will draw the latest obtained item icon on top of this asset later.
+- The asset itself must be an empty holder only, with a clear center area for one item icon.
+
+Design:
+- Square 1:1 icon asset, centered.
+- A small wooden reward tray / shallow storage holder, rounded-square silhouette.
+- Same warm honey-maple wood palette as the reference tray.
+- Large empty center area, also light wood, clean enough for an item icon.
+- Slight raised wooden rim and shallow tray depth, but much simpler and lighter than a sticker badge.
+- Optional tiny pastel flower or small ribbon tab may sit on the rim, but keep it subtle and small.
+
+Strict style requirements:
+- NO white outer sticker border.
+- NO thick white outline anywhere.
+- NO heavy black outline, no strong comic stroke.
+- NO glossy sticker look, no overly thick pasted-on texture.
+- Use thin soft brown edge lines like the wooden order tray reference.
+- Keep texture subtle: light wood grain strokes, soft highlights, pastel warmth.
+- No object inside the center.
+
+Background and cutout:
+- Put the asset on a pure solid magenta background (#FF00FF) for easy background removal.
+- The holder itself must not contain magenta.
+- No external drop shadow, no ground shadow, no glow outside the holder.
+- NO TEXT, no labels, no captions, no readable writing, no numbers, no watermark.

@@ -1,0 +1,28 @@
+Create one standalone empty wooden order tray UI asset for a cozy pastel flower-shop merge game.
+
+Use the provided reference image for the same overall silhouette, cute rounded rim style, and three-slot-friendly proportions. Redesign the tray bottom color.
+
+Final asset design:
+- One horizontal rounded rectangle wooden tray only.
+- No paper cards, no item icons, no flowers, no readable UI content inside.
+- Target proportion should match the existing order panel image: about 256 x 134 pixels.
+- Keep the thinner three-slot-friendly wooden rim and wide usable center area.
+- The center tray bottom must also be light wood, NOT cream white and NOT close to the board cell color.
+- Use a pale honey maple wood floor for the center: warm light tan, soft peach beige, subtle golden wooden planks or grain strokes.
+- The center must still be clean enough for item icons, but visibly wooden and clearly different from cream board cells.
+- The outer rim can be slightly darker honey wood to frame the lighter wooden bottom.
+- Avoid a white paper/card feeling. The entire tray should read as one shallow wooden dish.
+
+Style:
+- Clean 2D vector mobile game UI, kawaii casual, cozy pastel flower-shop mood.
+- Warm honey wood, pale maple, peach tan, soft golden highlights.
+- Stylized wood grain only: simple soft decorative strokes, not realistic photographic texture.
+- Gentle inner highlight, sticker-like depth, soft pastel colors.
+- No realistic wood, no dark heavy shadows, no dirty gray tones.
+
+Background and cutout:
+- Put the tray on a pure solid magenta background (#FF00FF) for easy background removal.
+- The tray itself must not contain magenta.
+- No external drop shadow, no ground shadow, no glow outside the tray.
+- Transparent-looking corners should be clean after cutout.
+- NO TEXT, no labels, no captions, no writing, no numbers, no watermark.

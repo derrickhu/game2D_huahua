@@ -1,0 +1,30 @@
+Create a 9:16 mobile game UI prototype for a cozy pastel flower-shop room decoration page.
+
+Use the provided screenshot as layout reference only. Keep the isometric flower-shop room as the main content in the center, but redesign the entire surrounding UI so it feels cohesive and polished.
+
+Direction A: warm wood garden UI.
+
+Main goals:
+- Unify all buttons, top counters, side shortcuts, bottom navigation, map button, and main decoration button into one consistent cozy flower-shop UI style.
+- Replace mismatched floating icons and random button shapes with a coherent set of warm wooden plaques, wicker tags, tiny flower badges, and soft cream-gold panels.
+- Keep the page readable and game-like, not realistic.
+
+Layout:
+- Top resource area: three or four compact rounded wooden/cream capsules with matching icon sockets, evenly aligned, soft brown outlines, warm highlights.
+- Level progress bar: centered below top resources, honey-wood or cream-gold rail with a soft peach fill and a small star badge on the left.
+- Left and right side shortcut buttons: vertical small hanging tags or wooden sign tabs with matching size and style, consistent icon framing.
+- Bottom area: a soft rounded bottom dock, warm cream-gold base with wood trim, containing two or three matching feature buttons.
+- Main call-to-action button near bottom center: larger golden wooden pill button for decorating the flower shop, with a small tool or ribbon icon. Keep the center blank enough for game text later.
+- Bottom right map button: match the same frame language, not a different style.
+
+Art style:
+- Clean 2D vector mobile game UI, kawaii casual, cozy pastel flower shop.
+- Warm honey wood, cream beige, pale gold, peach tan, pastel pink flower accents, soft mint-green environment.
+- Soft depth, rounded shapes, gentle highlights, thin soft brown outlines.
+- Do not use realistic wood, metallic gradients, harsh shadows, or dark UI.
+- Avoid clutter; leave enough space around the room.
+
+Important:
+- No readable text, no labels, no numbers, no watermark.
+- If small text-like areas are needed, use blank plaques or simple decorative marks only.
+- The UI should look like one designed system, not a collection of unrelated buttons.

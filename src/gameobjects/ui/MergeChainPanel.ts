@@ -89,6 +89,7 @@ export class MergeChainPanel extends PIXI.Container {
   private _panelCardSp: PIXI.Sprite | null = null;
   private _panelRibbonSp: PIXI.Sprite | null = null;
   private _panelCardGfx: PIXI.Graphics | null = null;
+  private _panelRibbonGfx: PIXI.Graphics | null = null;
   /** 当前面板总高度（随棋盘区变化） */
   private _panelHeight = 724;
   private _titleText!: PIXI.Text;
@@ -194,6 +195,7 @@ export class MergeChainPanel extends PIXI.Container {
   /** NB2 主面板底 + 标题彩带；无纹理时回退矢量 */
   private _buildDecorBackground(): void {
     this._bgLayer = new PIXI.Container();
+
     const cardTex = TextureCache.get('merge_chain_panel');
     const ribTex = TextureCache.get('merge_chain_ribbon');
 
@@ -243,6 +245,7 @@ export class MergeChainPanel extends PIXI.Container {
       this._bgLayer.addChild(r);
     } else {
       const g = new PIXI.Graphics();
+      this._panelRibbonGfx = g;
       const rw = Math.min(RIBBON_MAX_W, DESIGN_WIDTH - 88);
       const rh = 46;
       const rx = (DESIGN_WIDTH - rw) / 2;
@@ -451,6 +454,11 @@ export class MergeChainPanel extends PIXI.Container {
 
     const ribTex = TextureCache.get('merge_chain_ribbon');
     if (ribTex?.width && !this._panelRibbonSp) {
+      if (this._panelRibbonGfx?.parent) {
+        this._panelRibbonGfx.parent.removeChild(this._panelRibbonGfx);
+        this._panelRibbonGfx.destroy();
+      }
+      this._panelRibbonGfx = null;
       const r = new PIXI.Sprite(ribTex);
       this._panelRibbonSp = r;
       r.anchor.set(0.5, 0);
@@ -1059,7 +1067,6 @@ export class MergeChainPanel extends PIXI.Container {
 
     const nSlots = ids.length + (showChest ? 1 : 0);
     if (nSlots === 0) {
-      this._appendSourcesFooterHint(root, rowY + 8, mid);
       return;
     }
 
@@ -1096,18 +1103,6 @@ export class MergeChainPanel extends PIXI.Container {
     }
 
     root.addChild(row);
-    this._appendSourcesFooterHint(root, rowY + cs + 18, mid);
-  }
-
-  /** 获取来源下方：活动/任务等补充说明（非工具链查看时） */
-  private _appendSourcesFooterHint(root: PIXI.Container, y0: number, mid: number): void {
-    const selDef = ITEM_DEFS.get(this._selectedItemId ?? '');
-    if (selDef && selDef.interactType !== InteractType.NONE) return;
-    const style = { fontSize: 14, fill: 0x9a8b7a, fontFamily: FONT_FAMILY };
-    const ev = new PIXI.Text('· 限时活动、任务等可能产出额外奖励', style);
-    ev.anchor.set(0.5, 0);
-    ev.position.set(mid, y0);
-    root.addChild(ev);
   }
 
   /** 获取来源：可点击切换到对应档位宝箱合成线并查看开箱掉落概率 */
@@ -1121,6 +1116,8 @@ export class MergeChainPanel extends PIXI.Container {
     cell.addChild(bg);
 
     const chestDef = ITEM_DEFS.get(chestItemId);
+    const unlocked = chestDef ? this._isSourceToolUnlocked(chestItemId, chestDef) : false;
+    const iconLayer = new PIXI.Container();
     const iconKey = chestDef?.icon ?? 'icon_gift';
     const tex = TextureCache.get(iconKey);
     if (tex) {
@@ -1130,7 +1127,7 @@ export class MergeChainPanel extends PIXI.Container {
       sp.scale.set(s);
       sp.anchor.set(0.5, 0.5);
       sp.position.set(cs / 2, cs / 2);
-      cell.addChild(sp);
+      iconLayer.addChild(sp);
     } else {
       const q = new PIXI.Text('?', {
         fontSize: Math.round(cs * 0.42),
@@ -1138,16 +1135,20 @@ export class MergeChainPanel extends PIXI.Container {
       });
       q.anchor.set(0.5, 0.5);
       q.position.set(cs / 2, cs / 2);
-      cell.addChild(q);
+      iconLayer.addChild(q);
     }
+    iconLayer.alpha = unlocked ? 1 : SOURCE_TOOL_NOT_OBTAINED_ALPHA;
+    cell.addChild(iconLayer);
 
-    cell.eventMode = 'static';
-    cell.cursor = 'pointer';
-    cell.hitArea = new PIXI.Rectangle(0, 0, cs, cs);
-    cell.on('pointertap', (e: PIXI.FederatedPointerEvent) => {
-      e.stopPropagation();
-      this._switchToSourceChest(chestItemId);
-    });
+    if (unlocked) {
+      cell.eventMode = 'static';
+      cell.cursor = 'pointer';
+      cell.hitArea = new PIXI.Rectangle(0, 0, cs, cs);
+      cell.on('pointertap', (e: PIXI.FederatedPointerEvent) => {
+        e.stopPropagation();
+        this._switchToSourceChest(chestItemId);
+      });
+    }
 
     return cell;
   }
@@ -1171,7 +1172,7 @@ export class MergeChainPanel extends PIXI.Container {
     cell.addChild(iconLayer);
 
     const canOpenChain = getMergeChain(toolItemId).length > 1;
-    if (canOpenChain) {
+    if (unlocked && canOpenChain) {
       cell.eventMode = 'static';
       cell.cursor = 'pointer';
       cell.hitArea = new PIXI.Rectangle(0, 0, cs, cs);

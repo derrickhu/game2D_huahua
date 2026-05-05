@@ -1,0 +1,29 @@
+Create one standalone UI asset for a reward storage button in a cozy pastel flower-shop merge game.
+
+Purpose:
+- This asset represents a temporary reward storage slot / reward box entrance.
+- The game will draw the latest obtained item icon on top of this asset later.
+- The asset itself must be an empty holder only, with a clear center area for one item icon.
+
+Design:
+- Square 1:1 icon asset, centered.
+- Cute small reward storage holder, not a plain circle.
+- Shape can be a soft rounded pouch / shallow basket / gift tray hybrid.
+- It should clearly suggest "stored reward item": a small open basket rim, soft pocket, tiny ribbon tabs, subtle flower-shop decoration.
+- Keep a circular-ish or rounded-square readable silhouette so it fits the current left-side slot.
+- Large empty center area for the item icon, with a warm pale wood or cream-gold inner base.
+- Add a slightly raised rim around the holder, pastel pink and honey-gold accents.
+- Optional tiny decorative flower or bow on the rim, but do not put anything in the center.
+
+Style:
+- Clean 2D vector mobile game UI, kawaii casual, cozy pastel flower shop.
+- Warm honey wood, peach pink, cream gold, soft lavender highlights.
+- Rounded chunky mobile-game shapes, sticker-like depth, gentle highlights.
+- Not realistic, not metallic, not dark.
+- No heavy shadows outside the asset.
+
+Background and cutout:
+- Put the asset on a pure solid magenta background (#FF00FF) for easy background removal.
+- The holder itself must not contain magenta.
+- No external drop shadow, no ground shadow, no glow outside the holder.
+- NO TEXT, no labels, no captions, no readable writing, no numbers, no watermark.

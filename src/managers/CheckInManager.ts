@@ -85,15 +85,15 @@ function _buildItems(r: Omit<CheckInReward, 'items'>): RewardItem[] {
   return items;
 }
 
-/** 7 日签到：1–6 天固定 10 钻 + 100 体力；第 7 天 30 钻 + 100 体力 + 按周期专属家具（见 `getCheckInRewardForCycleDay`） */
+/** 7 日签到：1–6 天固定 10 钻 + 60 体力；第 7 天 30 钻 + 60 体力 + 按周期专属家具（见 `getCheckInRewardForCycleDay`） */
 export const CHECK_IN_REWARDS: CheckInReward[] = [
-  { day: 1, diamond: 10, stamina: 100, desc: '钻石×10 体力×100', icon: '' },
-  { day: 2, diamond: 10, stamina: 100, desc: '钻石×10 体力×100', icon: '' },
-  { day: 3, diamond: 10, stamina: 100, desc: '钻石×10 体力×100', icon: '' },
-  { day: 4, diamond: 10, stamina: 100, desc: '钻石×10 体力×100', icon: '' },
-  { day: 5, diamond: 10, stamina: 100, desc: '钻石×10 体力×100', icon: '' },
-  { day: 6, diamond: 10, stamina: 100, desc: '钻石×10 体力×100', icon: '' },
-  { day: 7, diamond: 30, stamina: 100, desc: '钻石×30 体力×100', icon: '' },
+  { day: 1, diamond: 10, stamina: 60, desc: '钻石×10 体力×60', icon: '' },
+  { day: 2, diamond: 10, stamina: 60, desc: '钻石×10 体力×60', icon: '' },
+  { day: 3, diamond: 10, stamina: 60, desc: '钻石×10 体力×60', icon: '' },
+  { day: 4, diamond: 10, stamina: 60, desc: '钻石×10 体力×60', icon: '' },
+  { day: 5, diamond: 10, stamina: 60, desc: '钻石×10 体力×60', icon: '' },
+  { day: 6, diamond: 10, stamina: 60, desc: '钻石×10 体力×60', icon: '' },
+  { day: 7, diamond: 30, stamina: 60, desc: '钻石×30 体力×60', icon: '' },
 ].map(r => ({ ...r, items: _buildItems(r as any) }));
 
 export function getCheckInRewardForCycleDay(day: number, cycleIndex: number): CheckInReward {

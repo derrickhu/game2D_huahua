@@ -314,6 +314,55 @@ export const DECO_DEFS: DecoDef[] = [
   { id: 'deco_lv20_shelf_star_observatory', name: '星月观景陈列柜', slot: DecoSlot.SHELF, rarity: DecoRarity.LIMITED, cost: 6200, starValue: 17, icon: 'deco_lv20_shelf_star_observatory', desc: '小型观景台式陈列柜，玻璃穹顶里摆着星月花器', unlockRequirement: { level: 20 }, defaultScale: 1.32, decorationPanelTab: 'furniture' },
   { id: 'deco_lv20_wall_moon_sheer_curtain', name: '月纱蝶影帘', slot: DecoSlot.WALLART, rarity: DecoRarity.RARE, cost: 4300, starValue: 13, icon: 'deco_lv20_wall_moon_sheer_curtain', desc: '挂墙半透明月光纱帘，香槟金帘杆与蝶影坠饰让墙面更轻盈', unlockRequirement: { level: 20 }, defaultScale: 1.8 },
 
+  // ═══════ ⑪.3 Lv10-20 30件扩展家具：6 大主题套 + 9 件单品（NB2 批次，单件单提示词出图）
+  // 主题：① 茶室禅意（Lv10-11，3 件） ② 蘑菇精灵（Lv12-15，4 件） ③ 法式咖啡烘焙（Lv13-16，4 件）
+  //       ④ 古董图书（Lv15-18，4 件） ⑤ 极光晶莹（Lv17-19，3 件） ⑥ 云端漫游（Lv18-20，3 件）
+  //       ⑦ 单件（Lv10-20，9 件，宠物/音乐/邮政/童趣/玻璃灯/墙窗/艺术大件）
+
+  // —— 茶室禅意套（茶台 + 蒲团 + 水墨挂轴；适配复古/竹影屋）——
+  { id: 'deco_lv10_table_zen_tea_low', name: '禅意茶台', slot: DecoSlot.TABLE, rarity: DecoRarity.FINE, cost: 950, starValue: 4, icon: 'deco_lv10_table_zen_tea_low', desc: '矮樱桃木茶台，青瓷茶具与一枝粉梅，安静茶席角落', unlockRequirement: { level: 10 }, defaultScale: 1.18, decorationPanelTab: 'furniture' },
+  { id: 'deco_lv10_orn_zen_cushion_pair', name: '蒲团坐垫组', slot: DecoSlot.ORNAMENT, rarity: DecoRarity.COMMON, cost: 480, starValue: 2, icon: 'deco_lv10_orn_zen_cushion_pair', desc: '玫粉与抹茶绿圆蒲团，配茶台正合适', unlockRequirement: { level: 10 }, defaultScale: 0.95, decorationPanelTab: 'furniture' },
+  { id: 'deco_lv11_wallart_zen_ink_scroll', name: '水墨竹影挂轴', slot: DecoSlot.WALLART, rarity: DecoRarity.FINE, cost: 1280, starValue: 4, icon: 'deco_lv11_wallart_zen_ink_scroll', desc: '宣纸卷轴绘水墨竹与一点粉梅，配暖木轴头', unlockRequirement: { level: 11 }, defaultScale: 1.40 },
+
+  // —— 蘑菇精灵套（坐墩+圆桌+陈列屋+精灵丛；童话森林感，适配蝶屋竹影房）——
+  { id: 'deco_lv12_orn_mushroom_stool_pair', name: '蘑菇坐墩组', slot: DecoSlot.ORNAMENT, rarity: DecoRarity.FINE, cost: 1100, starValue: 4, icon: 'deco_lv12_orn_mushroom_stool_pair', desc: '一红一米双蘑菇坐墩，森系小客座', unlockRequirement: { level: 12 }, defaultScale: 0.85, decorationPanelTab: 'furniture' },
+  { id: 'deco_lv13_table_mushroom_round', name: '蘑菇圆茶桌', slot: DecoSlot.TABLE, rarity: DecoRarity.FINE, cost: 1380, starValue: 5, icon: 'deco_lv13_table_mushroom_round', desc: '粉色蘑菇伞盖做桌面，奶白菌柄做底座', unlockRequirement: { level: 13 }, defaultScale: 0.9, decorationPanelTab: 'furniture' },
+  { id: 'deco_lv14_shelf_mushroom_cottage', name: '蘑菇小屋陈列架', slot: DecoSlot.SHELF, rarity: DecoRarity.RARE, cost: 2400, starValue: 8, icon: 'deco_lv14_shelf_mushroom_cottage', desc: '蘑菇屋造型陈列架，三层拱形格放小花盆', unlockRequirement: { level: 14 }, defaultScale: 1.35 },
+  { id: 'deco_lv15_garden_mushroom_grove', name: '蘑菇精灵丛', slot: DecoSlot.GARDEN, rarity: DecoRarity.RARE, cost: 2800, starValue: 9, icon: 'deco_lv15_garden_mushroom_grove', desc: '三色蘑菇与苔藓丛，配萤火虫提灯', unlockRequirement: { level: 15 }, defaultScale: 1.60, decorationPanelTab: 'garden' },
+
+  // —— 法式咖啡烘焙套（甜品柜+手冲架+复古烤箱+马卡龙塔；适配复古花坊 confetti）——
+  { id: 'deco_lv13_table_french_pastry_counter', name: '法式甜品玻璃柜', slot: DecoSlot.TABLE, rarity: DecoRarity.RARE, cost: 1850, starValue: 6, icon: 'deco_lv13_table_french_pastry_counter', desc: '奶薄荷柜身配玻璃罩，里面摆着马卡龙与小塔', unlockRequirement: { level: 13 }, defaultScale: 1.30, decorationPanelTab: 'furniture' },
+  { id: 'deco_lv14_shelf_handbrew_coffee_bar', name: '手冲咖啡架', slot: DecoSlot.SHELF, rarity: DecoRarity.RARE, cost: 2200, starValue: 7, icon: 'deco_lv14_shelf_handbrew_coffee_bar', desc: '蜜木双层架配手冲套与豆罐，店里多一个咖啡角', unlockRequirement: { level: 14 }, defaultScale: 1.30 },
+  { id: 'deco_lv15_light_vintage_oven', name: '奶黄复古烤箱', slot: DecoSlot.LIGHT, rarity: DecoRarity.RARE, cost: 2400, starValue: 8, icon: 'deco_lv15_light_vintage_oven', desc: '圆胖奶黄烤箱，玻璃门里看见可颂在烤', unlockRequirement: { level: 15 }, defaultScale: 0.65 },
+  { id: 'deco_lv16_orn_macaron_tower', name: '马卡龙塔', slot: DecoSlot.ORNAMENT, rarity: DecoRarity.FINE, cost: 1700, starValue: 5, icon: 'deco_lv16_orn_macaron_tower', desc: '三层瓷盘配粉黄紫蓝马卡龙，下午茶担当', unlockRequirement: { level: 16 }, defaultScale: 0.78 },
+
+  // —— 古董图书套（书架+地球仪桌+切斯特皮椅+植物标本；dark academia，适配复古/月辉）——
+  { id: 'deco_lv15_shelf_antique_library', name: '复古胡桃书架', slot: DecoSlot.SHELF, rarity: DecoRarity.RARE, cost: 2900, starValue: 9, icon: 'deco_lv15_shelf_antique_library', desc: '维多利亚胡桃木书架，皮革精装书与黄铜地球仪', unlockRequirement: { level: 15 }, defaultScale: 1.45 },
+  { id: 'deco_lv16_table_globe_writing_desk', name: '地球仪写字桌', slot: DecoSlot.TABLE, rarity: DecoRarity.RARE, cost: 3000, starValue: 9, icon: 'deco_lv16_table_globe_writing_desk', desc: '小巧胡桃木书桌，黄铜浑天仪、羽毛笔与压花玻璃罩', unlockRequirement: { level: 16 }, defaultScale: 1.08, decorationPanelTab: 'furniture' },
+  { id: 'deco_lv17_orn_chesterfield_armchair', name: '切斯特皮扶手椅', slot: DecoSlot.ORNAMENT, rarity: DecoRarity.RARE, cost: 3500, starValue: 11, icon: 'deco_lv17_orn_chesterfield_armchair', desc: '酒红绗缝皮扶手椅，配胡桃短腿与亚麻盖毯', unlockRequirement: { level: 17 }, defaultScale: 0.98, decorationPanelTab: 'furniture' },
+  { id: 'deco_lv18_wallart_botanical_taxonomy', name: '植物标本框', slot: DecoSlot.WALLART, rarity: DecoRarity.FINE, cost: 1900, starValue: 6, icon: 'deco_lv18_wallart_botanical_taxonomy', desc: '胡桃画框配米色羊皮纸，六格压花标本无文字', unlockRequirement: { level: 18 }, defaultScale: 1.10 },
+
+  // —— 极光晶莹套（镜面池+水晶球+落地灯；月光蝶园色系延伸）——
+  { id: 'deco_lv17_garden_aurora_mirror_pond', name: '极光镜面池', slot: DecoSlot.GARDEN, rarity: DecoRarity.LIMITED, cost: 5200, starValue: 15, icon: 'deco_lv17_garden_aurora_mirror_pond', desc: '奶白卵石围出极光水镜，浮叶莲与水晶星簇', unlockRequirement: { level: 17 }, defaultScale: 1.95, decorationPanelTab: 'garden' },
+  { id: 'deco_lv18_orn_aurora_crystal_orb', name: '极光水晶球', slot: DecoSlot.ORNAMENT, rarity: DecoRarity.FINE, cost: 2400, starValue: 7, icon: 'deco_lv18_orn_aurora_crystal_orb', desc: '玻璃球里漾着极光雾与小弦月，香槟金三脚架托起', unlockRequirement: { level: 18 }, defaultScale: 0.45 },
+  { id: 'deco_lv19_light_aurora_floor_lantern', name: '极光落地灯', slot: DecoSlot.LIGHT, rarity: DecoRarity.RARE, cost: 3200, starValue: 10, icon: 'deco_lv19_light_aurora_floor_lantern', desc: '香槟金细杆托起雾面玻璃灯罩，灯罩里流动极光蓝紫', unlockRequirement: { level: 19 }, defaultScale: 1.30 },
+
+  // —— 云端漫游套（云朵软墩+棉花云中岛+云秋千；棉花糖粉蓝，适配粉蓝/月辉）——
+  { id: 'deco_lv18_orn_cloud_pouf_set', name: '云朵软墩组', slot: DecoSlot.ORNAMENT, rarity: DecoRarity.FINE, cost: 2200, starValue: 6, icon: 'deco_lv18_orn_cloud_pouf_set', desc: '一大一小云朵造型软墩，奶白与浅粉刺绣小星', unlockRequirement: { level: 18 }, defaultScale: 1.05, decorationPanelTab: 'furniture' },
+  { id: 'deco_lv19_table_cloud_dessert_island', name: '棉花云中岛', slot: DecoSlot.TABLE, rarity: DecoRarity.RARE, cost: 3800, starValue: 12, icon: 'deco_lv19_table_cloud_dessert_island', desc: '云朵造型桌面带粉色糖霜流挂，香槟金弯腿与小甜点', unlockRequirement: { level: 19 }, defaultScale: 1, decorationPanelTab: 'furniture' },
+  { id: 'deco_lv20_garden_cloud_swing', name: '云端长秋千', slot: DecoSlot.GARDEN, rarity: DecoRarity.LIMITED, cost: 6500, starValue: 18, icon: 'deco_lv20_garden_cloud_swing', desc: '云朵长椅吊在香槟金 A 形架上，弦月坠与星形抱枕', unlockRequirement: { level: 20 }, defaultScale: 1.9, decorationPanelTab: 'garden' },
+
+  // —— 单件家具：宠物/音乐/邮政/童趣/玻璃灯/墙窗/艺术大件 ——
+  { id: 'deco_lv10_orn_kitten_bed', name: '奶油猫窝', slot: DecoSlot.ORNAMENT, rarity: DecoRarity.COMMON, cost: 420, starValue: 2, icon: 'deco_lv10_orn_kitten_bed', desc: '奶白绒毛甜甜圈猫窝，里面有针织球与粉毯', unlockRequirement: { level: 10 }, defaultScale: 0.72, decorationPanelTab: 'furniture' },
+  { id: 'deco_lv11_orn_cat_tower', name: '樱桃猫爬架', slot: DecoSlot.ORNAMENT, rarity: DecoRarity.FINE, cost: 1300, starValue: 4, icon: 'deco_lv11_orn_cat_tower', desc: '蜜木立柱+缠绳+樱桃形顶台与粉色软垫', unlockRequirement: { level: 11 }, defaultScale: 0.9, decorationPanelTab: 'furniture' },
+  { id: 'deco_lv11_light_phonograph_vintage', name: '古董留声机', slot: DecoSlot.LIGHT, rarity: DecoRarity.FINE, cost: 1100, starValue: 4, icon: 'deco_lv11_light_phonograph_vintage', desc: '胡桃木底座配黄铜花喇叭，唱针架在黑胶上', unlockRequirement: { level: 11 }, defaultScale: 0.65 },
+  { id: 'deco_lv12_orn_pastel_postbox', name: '草莓邮筒', slot: DecoSlot.GARDEN, rarity: DecoRarity.FINE, cost: 950, starValue: 3, icon: 'deco_lv12_orn_pastel_postbox', desc: '草莓粉立式邮筒，圆胖身段与小信件露出', unlockRequirement: { level: 12 }, defaultScale: 1 },
+  { id: 'deco_lv13_orn_teddy_armchair', name: '泰迪熊扶手椅', slot: DecoSlot.ORNAMENT, rarity: DecoRarity.FINE, cost: 1450, starValue: 5, icon: 'deco_lv13_orn_teddy_armchair', desc: '小熊造型椅背，焦糖蜜色绒面，配奶色小毯', unlockRequirement: { level: 13 }, defaultScale: 0.85, decorationPanelTab: 'furniture' },
+  { id: 'deco_lv14_orn_carousel_music_box', name: '旋转木马音乐盒', slot: DecoSlot.ORNAMENT, rarity: DecoRarity.RARE, cost: 2100, starValue: 7, icon: 'deco_lv14_orn_carousel_music_box', desc: '奶粉色基座配香槟金螺旋柱与三匹粉绿玫瑰木马', unlockRequirement: { level: 14 }, defaultScale: 0.65 },
+  { id: 'deco_lv15_light_terrarium_lamp', name: '玻璃花房灯', slot: DecoSlot.LIGHT, rarity: DecoRarity.RARE, cost: 2300, starValue: 7, icon: 'deco_lv15_light_terrarium_lamp', desc: '尖顶玻璃罩做小温室，里面有暖黄灯泡与小花苔藓', unlockRequirement: { level: 15 }, defaultScale: 0.65 },
+  { id: 'deco_lv16_wallart_harbor_arch_window', name: '海港拱窗景', slot: DecoSlot.WALLART, rarity: DecoRarity.RARE, cost: 2500, starValue: 8, icon: 'deco_lv16_wallart_harbor_arch_window', desc: '奶白拱窗框里收着金色海港落日，有小帆船与玫瑰窗台', unlockRequirement: { level: 16 }, defaultScale: 1.30 },
+  { id: 'deco_lv20_orn_white_grand_piano', name: '白色三角钢琴', slot: DecoSlot.ORNAMENT, rarity: DecoRarity.LIMITED, cost: 7500, starValue: 20, icon: 'deco_lv20_orn_white_grand_piano', desc: '奶白漆三角钢琴，香槟金腿与玫瑰花束、水晶烛台', unlockRequirement: { level: 20 }, defaultScale: 1.5, decorationPanelTab: 'furniture' },
+
   // ═══════ ⑪.5 首月签到活动专属家具（7/14/21/28 日签到 + 28 日累计礼包；免费赠予，starValue 必须为 0）
   { id: 'checkin_m1_bunny_ac', name: '兔兔云风空调', slot: DecoSlot.LIGHT, rarity: DecoRarity.LIMITED, cost: 0, starValue: 0, icon: 'checkin_m1_bunny_ac', desc: '兔耳立式空调，奶白机身配薄荷风口与小云朵冷气灯', unlockRequirement: { questId: 'checkin_m1_week1_bunny_ac', conditionText: '活动解锁', questDetailText: '签到奖励' }, defaultScale: 1.32 },
   { id: 'checkin_m1_crystal_partition', name: '水晶花影隔断', slot: DecoSlot.ORNAMENT, rarity: DecoRarity.LIMITED, cost: 0, starValue: 0, icon: 'checkin_m1_crystal_partition', desc: '半透明水晶隔断屏，金色枝蔓与粉紫棱镜把花影分成彩光', unlockRequirement: { questId: 'checkin_m1_week2_crystal_partition', conditionText: '活动解锁', questDetailText: '签到奖励' }, defaultScale: 1.38 },

@@ -1,0 +1,31 @@
+Create a 9:16 mobile game UI prototype for a cozy pastel flower-shop room decoration page.
+
+Use the provided screenshot as layout reference only. Keep the isometric flower-shop room as the main content in the center, but redesign the entire surrounding UI so it feels cohesive and polished.
+
+Direction B: soft ribbon boutique UI.
+
+Main goals:
+- Make the whole UI feel like a soft pastel boutique interface: fabric ribbons, rounded enamel buttons, stitched tags, and flower-shaped badges.
+- Keep the room decoration page cute, warm, and coordinated, while clearly different from the wooden tray style.
+- Replace mismatched floating icons and inconsistent buttons with a unified pastel ribbon system.
+
+Layout:
+- Top resource area: compact soft rounded capsules with pastel pink/lavender rims, cream centers, tiny flower or gem icon sockets, evenly aligned.
+- Level progress bar: slim stitched ribbon rail, peach-pink fill, small star badge, centered under resources.
+- Left and right side shortcut buttons: small vertical fabric tags with rounded ends, matching pastel outlines and tiny hanging pins.
+- Bottom area: large soft cream panel with pastel pink/lavender trim and subtle stitched details.
+- Main call-to-action button near bottom center: large golden-yellow scalloped ribbon button with soft highlights and no readable text.
+- Bottom left and bottom right feature buttons: matching rounded enamel/fabric buttons, each framed consistently.
+- Map button: a small folded-map icon inside the same pastel frame system.
+
+Art style:
+- Clean 2D vector mobile game UI, kawaii casual, cozy pastel flower shop.
+- Palette: cream white, pastel pink, lavender, peach, pale gold, mint accents.
+- Soft gradients only for depth, gentle shadows, rounded shapes, delicate stitched or ribbon details.
+- No realistic fabric, no heavy black outlines, no metallic UI, no dark hard shadows.
+- Avoid clutter; leave enough space around the room.
+
+Important:
+- No readable text, no labels, no numbers, no watermark.
+- If small text-like areas are needed, use blank plaques or simple decorative marks only.
+- The UI should look like one designed system, not a collection of unrelated buttons.

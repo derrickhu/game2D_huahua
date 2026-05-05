@@ -10,7 +10,7 @@ export const DESIGN_HEIGHT = 1334;
 export const BOARD_COLS = 7;
 export const BOARD_ROWS = 9;
 export const BOARD_TOTAL = BOARD_COLS * BOARD_ROWS;
-export const CELL_GAP = 4;
+export const CELL_GAP = 2;
 /** 棋盘区上下装饰横条高度（与 `images/ui/board_bar.png`、MainScene 底栏间距一致） */
 export const BOARD_BAR_HEIGHT = 22;
 
@@ -22,7 +22,7 @@ export const BoardMetrics = {
   cellSize: 90,
   paddingX: 0,
   topY: 380,
-  areaHeight: 90 * 9 + 4 * 8,  // 初始值，computeBoardMetrics 会覆盖
+  areaHeight: 90 * 9 + 2 * 8,  // 初始值，computeBoardMetrics 会覆盖
 };
 
 // 兼容旧引用的 getter

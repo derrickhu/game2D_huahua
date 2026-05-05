@@ -1,0 +1,30 @@
+Create one standalone UI asset for a reward storage button in a cozy pastel flower-shop merge game.
+
+Purpose:
+- This asset represents a temporary reward storage slot / reward box entrance.
+- The game will draw the latest obtained item icon on top of this asset later.
+- The asset itself must be an empty holder only, with a clear center area for one item icon.
+
+Design:
+- Square 1:1 icon asset, centered.
+- Make it visually distinct from a flat wooden order tray.
+- Design a cute shallow wicker flower basket / woven storage basket, viewed from the front-top angle.
+- Rounded-square basket opening with a soft oval/rounded inner cavity.
+- Use visible but subtle woven rattan texture: crisscross strands, braided rim, warm straw tan and light caramel colors.
+- Add small pastel flower-shop accents on the rim, such as a tiny pink flower, green leaves, or a soft ribbon tab.
+- Keep the center empty and readable for one item icon.
+- The silhouette should feel like a reward basket or temporary storage basket, not a tray panel.
+
+Style:
+- Clean 2D vector mobile game UI, kawaii casual, cozy pastel flower shop.
+- Soft rattan/wicker texture, warm straw tan, peach beige, pale caramel, small pastel flower accents.
+- Thin soft brown edge lines, gentle highlights, rounded chunky mobile-game shapes.
+- No realistic photo texture, no heavy black outline, no thick sticker border.
+- NO white outer sticker border.
+- NO object inside the center.
+
+Background and cutout:
+- Put the asset on a pure solid magenta background (#FF00FF) for easy background removal.
+- The basket itself must not contain magenta.
+- No external drop shadow, no ground shadow, no glow outside the basket.
+- NO TEXT, no labels, no captions, no readable writing, no numbers, no watermark.

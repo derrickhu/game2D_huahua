@@ -1,20 +1,21 @@
-Create one single empty board cell tile for a cozy pastel flower-shop merge game.
+Create one single empty inner board cell tile for a cozy pastel flower-shop merge game.
 
-Use the attached reference image for style only: the individual cream rounded cards in the flower grid, soft kawaii mobile game UI, warm ivory fill, pastel pink-lavender outline, gentle raised sticker depth, clean polished vector finish.
+Use the attached reference image for style only: the warm cream interior of each board cell, soft kawaii mobile game UI, gentle raised sticker depth, clean polished vector finish. The pink grid lines and pink board base belong to the board background, NOT to this single cell asset.
 
 Subject:
-- Exactly one empty rounded square cell tile, centered.
+- Exactly one empty rounded square INNER cell tile, centered.
 - Warm ivory / light cream interior, very soft matte gradient.
-- Large rounded corners.
-- Thin soft pastel pink-lavender outer rim, with a subtle darker mauve edge like the reference.
-- Very gentle lower-right shadow and tiny inner highlight so the cell feels slightly raised.
+- Moderately small rounded corners, around 8–10% of the tile width, not pill-shaped and not overly round.
+- No pink border, no lavender border, no colored outline. If an edge is needed, use only a very subtle cream/beige bevel line.
+- Tiny inner highlight and very subtle internal cream gradient only. The cell must not cast any shadow outside its shape.
 - No icon, no flower, no item, no box, no ribbon, no badge, no text, no number, no symbol.
 
 Background:
 - Pure flat chroma green RGB(0,255,0), only for background removal.
-- Leave a small margin around the cell so the shadow is not clipped.
+- Leave a small margin around the cell so the shape is not clipped.
 
 Important constraints:
 - One cell only, not a grid, no repeated cells.
 - Straight front-facing UI tile, no perspective tilt.
-- No photorealism, no heavy texture, no noise, no watermark.
+- No shadow of any kind, no drop shadow, no contact shadow, no ground shadow, no ambient shadow under the tile, no glow halo, no reflection.
+- No pink frame, no purple frame, no grid line, no photorealism, no heavy texture, no noise, no watermark.

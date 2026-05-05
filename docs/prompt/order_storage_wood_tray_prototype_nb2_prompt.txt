@@ -1,0 +1,26 @@
+Create a 9:16 mobile game UI prototype for a cozy pastel flower-shop merge game. Use the provided screenshot only as layout reference: keep the same overall screen composition, with character portraits at the top, a narrow order area below them, the merge board in the center, and a bottom storage/info bar.
+
+Redesign the top order panel and the bottom storage bar.
+
+Top order panel:
+- Replace the current flat red outlined order slots with a warm stylized wooden order tray.
+- The tray should feel tactile and polished, but NOT realistic: soft 2D vector mobile game style, kawaii casual art, rounded chunky shapes, hand-painted pastel highlights.
+- Use honey wood, cream beige, peach brown, and pale golden tones. Add subtle wood grain lines as simple decorative strokes, not photographic texture.
+- Make the tray look like a shallow horizontal wooden serving board with rounded corners and a slightly raised rim.
+- Include two or three cream paper order cards sitting inside the tray, each card with rounded corners and small blank item placeholders.
+- Keep the item placeholders simple and decorative. NO readable text, no numbers, no labels.
+- The order area must be clean, readable, and not too tall. It should fit naturally between the top character portraits and the board.
+
+Bottom storage bar:
+- Redesign the bottom bar as a matching warm wooden storage shelf / tray.
+- It should have a soft wooden base, rounded ends, pale cream inset panel, and two cute storage icons or basket slots at left and right.
+- Keep it consistent with the top tray: same honey wood palette, soft highlights, tiny pastel flower accents, cozy flower-shop mood.
+- The center area should be a blank cream panel where UI text can be placed later by the game. Do not draw readable text.
+
+Overall style:
+- Clean 2D vector mobile game UI, cozy pastel flower shop, kawaii casual, high-key warm palette.
+- The wooden parts should have stylized texture and depth, not photorealistic wood.
+- Rounded corners, soft shadows only inside UI layering, gentle highlights, sticker-like depth.
+- Keep the board cells and item grid visible but secondary; focus quality on the order tray and storage bar.
+- Avoid hard red borders, dirty gray colors, dark heavy shadows, realistic materials, clutter, watermarks, logos.
+- NO TEXT, no labels, no captions, no readable writing anywhere in the image.

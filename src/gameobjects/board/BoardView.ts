@@ -117,7 +117,7 @@ export class BoardView extends PIXI.Container {
       const sp = new PIXI.Sprite(tex);
       sp.width = w;
       sp.height = h;
-      sp.tint = 0xD8EDCE;
+      sp.tint = 0xF6CFA7;
       const mask = new PIXI.Graphics();
       mask.beginFill(0xFFFFFF);
       mask.drawRoundedRect(0, 0, w, h, 8);
@@ -127,7 +127,7 @@ export class BoardView extends PIXI.Container {
       this.addChild(sp);
     } else {
       const bg = new PIXI.Graphics();
-      bg.beginFill(COLORS.CELL_OPEN, 0.85);
+      bg.beginFill(0xF6CFA7, 0.96);
       bg.drawRoundedRect(0, 0, w, h, 8);
       bg.endFill();
       this.addChild(bg);

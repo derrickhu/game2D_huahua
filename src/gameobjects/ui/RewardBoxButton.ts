@@ -1,7 +1,7 @@
 /**
  * 奖励收纳框 — 收起态（合成页店主下方）
  *
- * **圆形托盘**（与方形棋盘格区分）+ 暖色/粉紫散射光斑 + 中心浅碟承托物品；右上红角标加大、数字描边便于辨认。
+ * 资源底座（与方形棋盘格区分）+ 中心叠最新入盒物品；右上红角标加大、数字描边便于辨认。
  */
 import * as PIXI from 'pixi.js';
 import { EventBus } from '@/core/EventBus';
@@ -15,13 +15,15 @@ import { TextureCache } from '@/utils/TextureCache';
 const DISC_R_RATIO = 0.48;
 /** 图标最大边相对碟直径 */
 const ICON_IN_DISC = 0.76;
-const BADGE_R = 17;
-const BADGE_FONT = 15;
+const BADGE_W = 54;
+const BADGE_H = 24;
+const BADGE_FONT = 13;
 const BREATH_AMP = 0.055;
 
 export class RewardBoxButton extends PIXI.Container {
   private _cellRoot!: PIXI.Container;
   private _cellBg!: PIXI.Graphics;
+  private _slotBg!: PIXI.Sprite;
   private _itemSprite!: PIXI.Sprite;
   private _badge!: PIXI.Graphics;
   private _badgeText!: PIXI.Text;
@@ -65,6 +67,11 @@ export class RewardBoxButton extends PIXI.Container {
     this._cellBg = new PIXI.Graphics();
     this._cellRoot.addChild(this._cellBg);
 
+    this._slotBg = new PIXI.Sprite();
+    this._slotBg.anchor.set(0.5);
+    this._slotBg.eventMode = 'none';
+    this._cellRoot.addChild(this._slotBg);
+
     this._itemSprite = new PIXI.Sprite();
     this._itemSprite.anchor.set(0.5);
     this._itemSprite.eventMode = 'none';
@@ -93,7 +100,7 @@ export class RewardBoxButton extends PIXI.Container {
     });
   }
 
-  /** 圆形碟 + 多色散射光（与棋盘方格明显不同） */
+  /** 兜底：资源未加载时仍显示旧圆形碟，避免入口消失 */
   private _paintRewardPlate(g: PIXI.Graphics, cs: number, hasItems: boolean): void {
     g.clear();
     const cx = cs / 2;
@@ -142,6 +149,7 @@ export class RewardBoxButton extends PIXI.Container {
     const cx = cs / 2;
     const cy = cs / 2;
     this._itemSprite.position.set(cx, cy);
+    this._slotBg.position.set(cx, cy);
   }
 
   private _onBreathTick(): void {
@@ -163,7 +171,18 @@ export class RewardBoxButton extends PIXI.Container {
     const cs = BoardMetrics.cellSize;
     this._layoutHitArea();
 
-    this._paintRewardPlate(this._cellBg, cs, this._rewardActive);
+    const slotTex = TextureCache.get('reward_box_button_slot');
+    if (slotTex) {
+      this._cellBg.clear();
+      this._slotBg.visible = true;
+      this._slotBg.texture = slotTex;
+      const bgScale = cs / Math.max(slotTex.width, slotTex.height);
+      this._slotBg.scale.set(bgScale);
+    } else {
+      this._slotBg.visible = false;
+      this._slotBg.texture = PIXI.Texture.EMPTY;
+      this._paintRewardPlate(this._cellBg, cs, this._rewardActive);
+    }
 
     const latestId = RewardBoxManager.latestDisplayItemId();
     const def = latestId ? ITEM_DEFS.get(latestId) : undefined;
@@ -192,22 +211,21 @@ export class RewardBoxButton extends PIXI.Container {
       this._itemSprite.position.set(cx, cy);
     }
 
-    const badgeX = cs - 1;
-    const badgeY = 1;
+    const badgeX = cs - BADGE_W + 2;
+    const badgeY = 0;
     this._badge.clear();
     if (this._rewardActive) {
       this._badge.visible = true;
       this._badgeText.visible = true;
       this._badge.beginFill(0xd32f2f);
-      this._badge.drawCircle(badgeX, badgeY, BADGE_R);
+      this._badge.drawRoundedRect(badgeX, badgeY, BADGE_W, BADGE_H, 8);
       this._badge.endFill();
       this._badge.lineStyle(2.2, 0xffffff, 0.92);
-      this._badge.drawCircle(badgeX, badgeY, BADGE_R - 1);
+      this._badge.drawRoundedRect(badgeX + 1, badgeY + 1, BADGE_W - 2, BADGE_H - 2, 7);
 
-      const label = total > 99 ? '99+' : `${total}`;
-      this._badgeText.text = label;
-      this._badgeText.style.fontSize = label.length >= 3 ? 13 : BADGE_FONT;
-      this._badgeText.position.set(badgeX, badgeY);
+      this._badgeText.text = '有奖励';
+      this._badgeText.style.fontSize = BADGE_FONT;
+      this._badgeText.position.set(badgeX + BADGE_W / 2, badgeY + BADGE_H / 2);
     } else {
       this._badge.visible = false;
       this._badgeText.visible = false;

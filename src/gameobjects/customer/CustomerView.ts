@@ -26,12 +26,14 @@ import { AffinityManager } from '@/managers/AffinityManager';
 import { ToastMessage } from '@/gameobjects/ui/ToastMessage';
 import { AFFINITY_MAP } from '@/config/AffinityConfig';
 /** 单格物品显示边长（3 个并排仍落在 PANEL_W 内） */
-const SLOT_SIZE = 66;
+const SLOT_SIZE = 72;
 const SLOT_GAP = 8;
+/** 槽位布局保持 72，但实际浅色方框略小，避免顶到木质托盘边框 */
+const SLOT_FRAME_SIZE = 62;
 /** 需求面板至少容纳 3 个槽位（左右内边距略收，让给图标） */
-const PANEL_W = SLOT_SIZE * 3 + SLOT_GAP * 2 + 24;
+const PANEL_W = SLOT_SIZE * 3 + SLOT_GAP * 2 + 30;
 /** 比槽位略高，避免角标贴边 */
-const PANEL_H = SLOT_SIZE + 30;
+const PANEL_H = SLOT_SIZE + 34;
 /**
  * 胸像脚底锚点在容器中的 y（>0 则整体下移，让面板能叠住胸像下沿直边）
  */
@@ -458,43 +460,16 @@ export class CustomerView extends PIXI.Container {
   }
 
   private _drawSlotItem(x: number, y: number, itemId: string, filled: boolean): void {
-    const cs = SLOT_SIZE;
+    const cs = SLOT_FRAME_SIZE;
+    const slotOffset = (SLOT_SIZE - SLOT_FRAME_SIZE) / 2;
+    const slotX = x + slotOffset;
+    const slotY = y + slotOffset;
     const def = ITEM_DEFS.get(itemId);
     if (!def) return;
 
-    const slotCornerR = Math.max(8, Math.round(cs * 0.12));
     const checkPad = Math.max(4, Math.round(cs * 0.07));
     /** 满足：与棋盘订单格一致的薄荷浅底 + 绿描边 + 更大对钩 */
     const checkTarget = Math.min(40, Math.max(28, Math.round(cs * 0.46)));
-
-    // 每个需求槽都有圆角底框 + 描边：未满足浅米底，已满足暖黄底
-    const slotBg = new PIXI.Graphics();
-    if (filled) {
-      slotBg.lineStyle(
-        1.5,
-        COLORS.CUSTOMER_DEMAND_SATISFIED_BORDER,
-        COLORS.CUSTOMER_DEMAND_SATISFIED_BORDER_ALPHA,
-      );
-      slotBg.beginFill(
-        COLORS.CELL_ORDER_MATCH_OVERLAY,
-        COLORS.CELL_ORDER_MATCH_OVERLAY_ALPHA,
-      );
-      slotBg.drawRoundedRect(x, y, cs, cs, slotCornerR);
-      slotBg.endFill();
-    } else {
-      slotBg.lineStyle(
-        1.5,
-        COLORS.CUSTOMER_DEMAND_PENDING_BORDER,
-        COLORS.CUSTOMER_DEMAND_PENDING_BORDER_ALPHA,
-      );
-      slotBg.beginFill(
-        COLORS.CUSTOMER_DEMAND_PENDING_BG,
-        COLORS.CUSTOMER_DEMAND_PENDING_BG_ALPHA,
-      );
-      slotBg.drawRoundedRect(x, y, cs, cs, slotCornerR);
-      slotBg.endFill();
-    }
-    this._infoPanel.addChild(slotBg);
 
     const texture = TextureCache.get(def.icon);
     if (texture) {
@@ -502,16 +477,16 @@ export class CustomerView extends PIXI.Container {
       const s = Math.min(cs / texture.width, cs / texture.height);
       sprite.scale.set(s);
       sprite.anchor.set(0.5, 0.5);
-      sprite.position.set(x + cs / 2, y + cs / 2);
+      sprite.position.set(slotX + cs / 2, slotY + cs / 2);
 
       this._infoPanel.addChild(sprite);
 
       if (isBoardToolInteract(def.interactType)) {
         const spark = new ToolSparkleLayer(cs, cs);
-        spark.position.set(x, y);
+        spark.position.set(slotX, slotY);
         this._infoPanel.addChild(spark);
         const shell = new PIXI.Container();
-        shell.position.set(x, y);
+        shell.position.set(slotX, slotY);
         const energy = createToolEnergySprite(cs, cs, { maxSideFrac: 0.28, pad: 5 });
         if (energy) {
           if (filled) energy.position.y -= 14;
@@ -523,10 +498,10 @@ export class CustomerView extends PIXI.Container {
       const iconColor = this._getLineColor(def.line);
       const fg = new PIXI.Graphics();
       fg.beginFill(iconColor, 0.15);
-      fg.drawRoundedRect(x + 2, y + 2, cs - 4, cs - 4, 4);
+      fg.drawRoundedRect(slotX + 2, slotY + 2, cs - 4, cs - 4, 4);
       fg.endFill();
       fg.beginFill(iconColor, 0.3);
-      fg.drawCircle(x + cs / 2, y + cs / 2 - 2, cs * 0.22);
+      fg.drawCircle(slotX + cs / 2, slotY + cs / 2 - 2, cs * 0.22);
       fg.endFill();
       
       this._infoPanel.addChild(fg);
@@ -537,7 +512,7 @@ export class CustomerView extends PIXI.Container {
         { fontSize: 7, fill: COLORS.TEXT_DARK, fontFamily: FONT_FAMILY, align: 'center' },
       );
       nameTxt.anchor.set(0.5, 1);
-      nameTxt.position.set(x + cs / 2, y + cs - 1);
+      nameTxt.position.set(slotX + cs / 2, slotY + cs - 1);
       
       this._infoPanel.addChild(nameTxt);
     }
@@ -549,12 +524,12 @@ export class CustomerView extends PIXI.Container {
         const s = checkTarget / Math.max(badgeTex.width, badgeTex.height);
         sp.scale.set(s);
         sp.anchor.set(1, 1);
-        sp.position.set(x + cs - checkPad, y + cs - checkPad);
+        sp.position.set(slotX + cs - checkPad, slotY + cs - checkPad);
         this._infoPanel.addChild(sp);
       } else {
         const cr = Math.max(11, Math.round(checkTarget * 0.38));
-        const cx = x + cs - checkPad;
-        const cy = y + cs - checkPad;
+        const cx = slotX + cs - checkPad;
+        const cy = slotY + cs - checkPad;
         const check = new PIXI.Graphics();
         check.beginFill(0x4CAF50);
         check.drawCircle(cx, cy, cr);
