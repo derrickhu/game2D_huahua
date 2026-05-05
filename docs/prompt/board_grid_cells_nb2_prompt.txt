@@ -1,0 +1,24 @@
+Create a clean 2D vector mobile game board grid overlay for a cozy pastel flower-shop merge game.
+
+Use the attached reference image only for visual style: soft kawaii casual mobile game UI, rounded cream cards, pink-lavender outline, gentle shadows, clean pastel finish.
+
+Generate only the grid cell layer.
+
+Composition:
+- Exactly 7 columns and exactly 9 rows of empty rounded square cells.
+- Every cell must be empty: no items, no boxes, no ribbons, no ad icons, no badges, no text, no numbers, no labels.
+- Cells should be warm ivory / cream white, with large rounded corners.
+- Each cell should have a thin soft pastel pink-lavender outline like the reference card grid.
+- Add a subtle inner glow and tiny soft shadow on each cell so each cell feels slightly raised and polished.
+- Keep all cells aligned in a strict rectangular 7 by 9 grid with even spacing.
+
+Background:
+- Use a flat pure chroma green background RGB(0,255,0) outside and between the cream cell shapes so the cells can be separated cleanly later.
+- Do not draw any sage, beige, pink, or patterned separator layer between the cells; the only area between cells must be pure chroma green.
+- Do not paint flowers, products, boxes, ribbons, icons, interface buttons, screenshots, or decorative text.
+
+Important constraints:
+- Exactly 7 by 9 cells, no extra cells, no missing cells.
+- No perspective tilt; straight front-facing UI sheet.
+- No readable text or symbols anywhere.
+- Polished 2D vector mobile game UI asset, soft pastel, not photorealistic.

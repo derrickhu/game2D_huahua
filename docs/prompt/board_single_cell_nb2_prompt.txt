@@ -1,0 +1,20 @@
+Create one single empty board cell tile for a cozy pastel flower-shop merge game.
+
+Use the attached reference image for style only: the individual cream rounded cards in the flower grid, soft kawaii mobile game UI, warm ivory fill, pastel pink-lavender outline, gentle raised sticker depth, clean polished vector finish.
+
+Subject:
+- Exactly one empty rounded square cell tile, centered.
+- Warm ivory / light cream interior, very soft matte gradient.
+- Large rounded corners.
+- Thin soft pastel pink-lavender outer rim, with a subtle darker mauve edge like the reference.
+- Very gentle lower-right shadow and tiny inner highlight so the cell feels slightly raised.
+- No icon, no flower, no item, no box, no ribbon, no badge, no text, no number, no symbol.
+
+Background:
+- Pure flat chroma green RGB(0,255,0), only for background removal.
+- Leave a small margin around the cell so the shadow is not clipped.
+
+Important constraints:
+- One cell only, not a grid, no repeated cells.
+- Straight front-facing UI tile, no perspective tilt.
+- No photorealism, no heavy texture, no noise, no watermark.

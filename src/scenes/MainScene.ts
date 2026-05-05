@@ -30,6 +30,7 @@ import { LevelManager } from '@/managers/LevelManager';
 import { DailyCandyManager } from '@/managers/DailyCandyManager';
 import { AffinityManager } from '@/managers/AffinityManager';
 import { AffinityCardManager } from '@/managers/AffinityCardManager';
+import { CARD_SYSTEM_UNLOCK_LEVEL } from '@/config/AffinityCardConfig';
 import { TweenManager, Ease } from '@/core/TweenManager';
 import { BoardView } from '@/gameobjects/board/BoardView';
 import { CustomerScrollArea } from '@/gameobjects/customer/CustomerScrollArea';
@@ -470,6 +471,10 @@ export class MainScene implements Scene {
     this._affinityCodexPanel = new AffinityCodexPanel();
     overlay.addChild(this._affinityCodexPanel);
     EventBus.on('affinityCodex:open', (typeId?: string) => {
+      if (!AffinityManager.isCardSystemUnlocked()) {
+        ToastMessage.show(`友谊卡将在 ${CARD_SYSTEM_UNLOCK_LEVEL}级 开放`);
+        return;
+      }
       this._affinityCodexPanel.open(typeId);
       void TextureCache.preloadPanelAssets('affinity');
     });

@@ -1,0 +1,43 @@
+Reusable prompt template for generating individual 512x512 raw preview icons.
+
+Reference style source:
+../game_assets/huahua/assets/raw/flower_grid_6x6_nb2.png
+
+Base prompt:
+Square 1:1 single mobile game item icon for a cozy pastel flower-shop merge game.
+
+Use the attached reference image as the visual style target for item rendering only: cute polished 2D item icon, soft 3D-like volume, warm pastel flower-shop mood, clean soft brown outline, glossy highlights, rounded chibi-friendly shape, readable silhouette, bright cheerful color, consistent upper-left lighting. Match the pleasant finish, saturation, and icon readability of the reference image, but do not copy its tile grid or shadows.
+
+Create exactly one centered item icon: {ITEM_DESCRIPTION}
+
+Composition: the item fills about 72% to 82% of the canvas, centered with comfortable padding, front-facing or very slight 3/4 view. The item should float cleanly on a pure solid magenta background (#FF00FF) for easy background removal. No tile grid, no floor, no surface, no multiple items, no duplicate versions, no labels.
+
+Important constraints: NO SHADOW of any kind, no drop shadow, no contact shadow, no ground shadow, no ambient shadow under the item, no glow halo, no reflection. NO TEXT, no labels, no captions, no writing anywhere in the image, no numbers, no logos, no watermark, no characters, no hands, no UI buttons, no background scene.
+
+Current batch item list:
+flower_fresh_1: cute flower seed packet
+flower_fresh_2: closed pink flower bud
+flower_fresh_3: small white daisy with yellow center
+flower_fresh_4: bright sunflower
+flower_fresh_5: pink carnation
+flower_fresh_6: red rose
+flower_fresh_7: white lily
+flower_fresh_8: colorful tulip
+flower_fresh_9: blue-purple hydrangea
+flower_fresh_10: butterfly orchid
+flower_fresh_11: pink lotus flower
+flower_fresh_12: pink peony
+flower_fresh_13: golden peony
+flower_green_1: tiny green sprout pot
+flower_green_2: coin-leaf pilea plant in a small pot
+flower_green_3: cute round succulent pot
+flower_green_4: pothos plant with trailing green leaves
+flower_green_5: fluffy Boston fern
+flower_green_6: upright snake plant
+flower_green_7: monstera plant with split leaves
+flower_green_8: fiddle-leaf fig plant
+flower_green_9: cute cactus in a small pot
+flower_green_10: red anthurium plant
+flower_green_11: money tree plant
+flower_green_12: bougainvillea plant with bright flowers
+flower_green_13: pine bonsai

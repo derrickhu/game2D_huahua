@@ -1,0 +1,20 @@
+Create a clean 2D vector mobile game board background layer for a cozy pastel flower-shop merge game.
+
+Use the attached reference image only for visual style: soft kawaii casual mobile game UI, warm pastel pink-purple background, cream cards, gentle rounded shapes, subtle depth, smooth clean rendering.
+
+Generate only the board base layer, no items, no boxes, no ribbons, no icons, no text, no numbers, no labels.
+
+Composition:
+- Vertical board area, approximately 7:9 grid proportions, centered and front-facing.
+- A full soft pastel mauve-pink / lavender-pink base panel.
+- The whole usable board field should be pink, not cream, because cream grid cells will be placed above it.
+- The base should feel like a smooth matte sticker panel with very subtle soft shading.
+- Add only a very faint lavender-pink outer rim and soft inner highlight, matching the sweet UI style of the reference.
+- Keep the central area clean and open so it can show through the gaps between grid cells.
+- Do not add gold bars, title plaques, tabs, buttons, or any UI controls.
+
+Important constraints:
+- No readable text, no symbols, no UI buttons, no flowers, no products, no locked boxes, no characters.
+- No heavy texture, no photorealism, no 3D realistic materials.
+- Keep the background simple enough that cream grid cells and game items will remain readable on top.
+- Full image should be a polished game UI asset, not a screenshot.

@@ -1,0 +1,17 @@
+Square 1:1 mobile game asset sheet for a cozy pastel flower-shop merge game.
+
+Use the attached reference image as the visual style target: cute polished 2D item icons, soft 3D-like volume, warm pastel flower-shop mood, clean soft brown outlines, glossy highlights, rounded chibi-friendly shapes, readable silhouettes, bright cheerful colors, consistent upper-left lighting, soft tiny shadow under each item. Keep the same pleasant tile-grid feeling and icon finish as the reference.
+
+Create one clean 4 columns x 4 rows grid, exactly 16 rounded square board cells. The first 13 cells contain the current fresh flower progression, one centered item icon per cell. The final 3 cells should be empty cream display tiles with no item, no symbol, and no text.
+
+Grid style: rounded cream tiles with subtle lavender-pink borders, thin even gaps between tiles, tidy and symmetrical, front-facing or very slight 3/4 view. The sheet should be readable at thumbnail size.
+
+Use this exact item plan, left to right, top row first:
+Row 1: flower seed packet, closed pink flower bud, small white daisy with yellow center, bright sunflower.
+Row 2: pink carnation, red rose, white lily, colorful tulip.
+Row 3: blue-purple hydrangea, butterfly orchid, pink lotus flower, pink peony.
+Row 4: golden peony, empty tile, empty tile, empty tile.
+
+Progression requirements: every filled cell must look like a different collectible merge-game flower item. Increase rarity and polish subtly from early items to later items. The golden peony should feel premium but still match the same soft cute game style.
+
+Important constraints: NO TEXT, no labels, no captions, no writing anywhere in the image, no numbers, no logos, no watermark, no characters, no hands, no UI buttons, no background scene. Only the 4x4 grid sheet of flower item icons.

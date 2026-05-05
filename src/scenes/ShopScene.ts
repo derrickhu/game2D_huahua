@@ -51,6 +51,7 @@ import { takePendingPlaceDeco } from '@/core/DecoPlaceIntent';
 import { SoundSystem } from '@/systems/SoundSystem';
 import { TutorialManager, TutorialStep } from '@/managers/TutorialManager';
 import { AffinityManager } from '@/managers/AffinityManager';
+import { CARD_SYSTEM_UNLOCK_LEVEL } from '@/config/AffinityCardConfig';
 import { TutorialOverlay } from '@/systems/TutorialOverlay';
 import { playShopDecorationStarFly } from '@/gameobjects/ui/ShopDecorationStarFly';
 import { Platform } from '@/core/PlatformService';
@@ -176,7 +177,7 @@ const DECO_PAIR_BUTTONS: SideBtnDef[] = [
   { id: 'dressup', icon: '', texKey: 'icon_dress',      label: '装扮', event: 'nav:openDressup', iconBg: 0xFF7EB3, labelColor: 0xE0559C },
 ];
 
-/** 左上角 — 图鉴竖排：花语图鉴 / 友谊卡（friend codex 在玩家 6 级前隐藏，由 ShopScene 在 _buildLeftTopButtons 中按等级控制可见性） */
+/** 左上角 — 图鉴竖排：花语图鉴 / 友谊卡（未开放时显示锁态） */
 const LEFT_TOP_BUTTONS: SideBtnDef[] = [
   { id: 'album',  icon: '', texKey: 'icon_book',          label: '图鉴',   event: 'nav:openAlbum',       iconBg: 0xA78BFA, labelColor: 0x7C5FC5 },
   { id: 'affinity_codex', icon: '', texKey: 'affinity_codex_btn', label: '友谊卡', event: 'affinityCodex:open', iconBg: 0xFFB1CC, labelColor: 0xC75D8B },
@@ -294,6 +295,8 @@ export class ShopScene implements Scene {
   /** 花店内升星：弹窗展示奖励；确定后货币飞顶栏、宝箱飞回「营业返回」钮再入库 */
   private readonly _onShopLevelUp = (level: number, reward: any, oldLevel?: number): void => {
     if (SceneManager.current?.name !== 'shop') return;
+    this._syncAffinityCodexButtonVisibility();
+    this._refreshWorldMapBtnVisibility();
     const flyTarget = this._returnBtn?.toGlobal(new PIXI.Point(0, 0));
     this._levelUpPopup.show(
       level,
@@ -1021,10 +1024,10 @@ export class ShopScene implements Scene {
     barContainer.eventMode = 'passive';
     barContainer.interactiveChildren = true;
 
-    // 星星图标 + 星心等级数字（level，非累积 star）
+    // 星星图标 + 下方等级文字（level，非累积 star）
     const starGroup = new PIXI.Container();
     starGroup.eventMode = 'none';
-    starGroup.position.set(-22, PROGRESS_BAR_H / 2);
+    starGroup.position.set(-22, PROGRESS_BAR_H / 2 - 2);
     this._progressStarGroup = starGroup;
     const starTex = TextureCache.get('icon_star');
     if (starTex) {
@@ -1041,15 +1044,16 @@ export class ShopScene implements Scene {
       starGroup.addChild(fb);
     }
     const lv0 = CurrencyManager.state.level;
-    this._progressLevelText = new PIXI.Text(String(lv0), {
-      fontSize: 15,
-      fill: 0xffffff,
+    this._progressLevelText = new PIXI.Text(`Lv.${lv0}`, {
+      fontSize: 16,
+      fill: 0x7A4A1E,
       fontFamily: FONT_FAMILY,
       fontWeight: 'bold',
-      stroke: 0x8B4513,
-      strokeThickness: 3,
+      stroke: 0xFFFFFF,
+      strokeThickness: 3.5,
     } as any);
-    this._progressLevelText.anchor.set(0.5, 0.52);
+    this._progressLevelText.anchor.set(0.5, 0);
+    this._progressLevelText.position.set(0, 15);
     this._progressLevelText.eventMode = 'none';
     starGroup.addChild(this._progressLevelText);
     barContainer.addChild(starGroup);
@@ -1155,7 +1159,7 @@ export class ShopScene implements Scene {
       this._progressText.text = nextReq >= 0 ? `${star}/${nextReq}` : `${star}`;
     }
     if (this._progressLevelText) {
-      this._progressLevelText.text = String(lv);
+      this._progressLevelText.text = `Lv.${lv}`;
     }
 
     if (starCountChanged) {
@@ -1316,34 +1320,50 @@ export class ShopScene implements Scene {
       this.container.addChild(btn.container);
       this._activityBtns.set(def.id, btn);
 
-      // 友谊卡：6 级前隐藏，监听 level:up 解锁瞬间淡入显示
+      // 友谊卡：未达开放星级也展示入口，点击提示开放等级。
       if (def.id === 'affinity_codex') {
-        const unlocked = AffinityManager.isCardSystemUnlocked();
-        btn.container.visible = unlocked;
-        btn.container.eventMode = unlocked ? 'static' : 'none';
-        if (!unlocked) {
-          const onLevelUp = (): void => {
-            if (AffinityManager.isCardSystemUnlocked()) {
-              btn.container.visible = true;
-              btn.container.eventMode = 'static';
-              btn.container.alpha = 0;
-              TweenManager.to({ target: btn.container, props: { alpha: 1 }, duration: 0.25, ease: Ease.easeOutQuad });
-              EventBus.off('level:up', onLevelUp);
-            }
-          };
-          EventBus.on('level:up', onLevelUp);
-        }
+        this._syncAffinityCodexButtonVisibility();
       }
     }
   }
 
-  /** 左侧「友谊卡」入口须与 `AffinityManager.isCardSystemUnlocked()` 一致（编辑态结束勿强行设为可见）。 */
+  /** 左侧「友谊卡」入口始终显示；未开放时显示锁态并点击提示开放等级。 */
   private _syncAffinityCodexButtonVisibility(): void {
     const entry = this._activityBtns.get('affinity_codex');
     if (!entry) return;
     const unlocked = AffinityManager.isCardSystemUnlocked();
-    entry.container.visible = unlocked;
-    entry.container.eventMode = unlocked ? 'static' : 'none';
+    entry.container.visible = true;
+    entry.container.eventMode = 'static';
+    entry.container.alpha = 1;
+    this._setFeatureLockBadge(entry.container, !unlocked, 'affinity_codex_lock');
+  }
+
+  private _setFeatureLockBadge(container: PIXI.Container, locked: boolean, badgeName: string): void {
+    const existing = container.children.find(child => child.name === badgeName);
+    if (!locked) {
+      if (existing) {
+        container.removeChild(existing);
+        existing.destroy({ children: true });
+      }
+      return;
+    }
+    if (existing) return;
+
+    const badge = new PIXI.Container();
+    badge.name = badgeName;
+    badge.eventMode = 'none';
+    badge.position.set(28, -26);
+
+    const lock = new PIXI.Text('🔒', {
+      fontSize: 22,
+      fontFamily: FONT_FAMILY,
+      stroke: 0xFFFFFF,
+      strokeThickness: 2,
+    });
+    lock.anchor.set(0.5);
+    badge.addChild(lock);
+
+    container.addChild(badge);
   }
 
   private _refreshActivityButtonTextures(): void {
@@ -1810,6 +1830,10 @@ export class ShopScene implements Scene {
         duration: 0.25,
         ease: Ease.easeOutBack,
       });
+      if (def.id === 'affinity_codex' && !AffinityManager.isCardSystemUnlocked()) {
+        ToastMessage.show(`友谊卡将在 ${CARD_SYSTEM_UNLOCK_LEVEL}级 开放`);
+        return;
+      }
       EventBus.emit(def.event);
     });
 
@@ -1909,6 +1933,10 @@ export class ShopScene implements Scene {
         duration: 0.25,
         ease: Ease.easeOutBack,
       });
+      if (def.id === 'affinity_codex' && !AffinityManager.isCardSystemUnlocked()) {
+        ToastMessage.show(`友谊卡将在 ${CARD_SYSTEM_UNLOCK_LEVEL}级 开放`);
+        return;
+      }
       EventBus.emit(def.event);
     });
 
@@ -2063,17 +2091,25 @@ export class ShopScene implements Scene {
         target: btn.scale, props: { x: 1, y: 1 },
         duration: 0.25, ease: Ease.easeOutBack,
       });
+      if (CurrencyManager.state.level < WORLD_MAP_UNLOCK_LEVEL) {
+        ToastMessage.show(`大地图将在 ${WORLD_MAP_UNLOCK_LEVEL}级 开放`);
+        return;
+      }
       EventBus.emit('worldmap:open');
     });
 
-    btn.visible = CurrencyManager.state.level >= WORLD_MAP_UNLOCK_LEVEL;
     this._worldMapBtn = btn;
+    this._refreshWorldMapBtnVisibility();
     this.container.addChild(btn);
   }
 
   private _refreshWorldMapBtnVisibility(): void {
     if (this._worldMapBtn) {
-      this._worldMapBtn.visible = CurrencyManager.state.level >= WORLD_MAP_UNLOCK_LEVEL;
+      const unlocked = CurrencyManager.state.level >= WORLD_MAP_UNLOCK_LEVEL;
+      this._worldMapBtn.visible = true;
+      this._worldMapBtn.eventMode = 'static';
+      this._worldMapBtn.alpha = 1;
+      this._setFeatureLockBadge(this._worldMapBtn, !unlocked, 'world_map_lock');
     }
   }
 
@@ -2607,7 +2643,7 @@ export class ShopScene implements Scene {
     for (const { container } of this._activityBtns.values()) {
       container.visible = true;
     }
-    // 友谊卡未达开放等级时须保持隐藏；上面对全部入口统一 visible=true 会误显示，且 eventMode 仍为 none 导致点不动
+    // 友谊卡未达开放等级时保持锁态；上面对全部入口统一 visible=true 后需刷新 alpha/锁标。
     this._syncAffinityCodexButtonVisibility();
 
     // 刷新房间渲染

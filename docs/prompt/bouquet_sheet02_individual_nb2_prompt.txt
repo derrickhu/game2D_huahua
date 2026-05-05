@@ -1,0 +1,11 @@
+Square 1:1 single bouquet item icon for a cozy pastel flower-shop merge game.
+
+Use the attached reference crop as the exact bouquet prototype. Preserve the prototype's overall bouquet silhouette, wrapping style, ribbon shape, flower-shop icon composition, cute polished 2D mobile game rendering, soft brown outline, glossy rounded petals, warm pastel lighting, and collectible merge-game readability.
+
+Create exactly one centered bouquet icon based on the attached crop. Remove the board tile, frame, cream cell background, and surrounding grid. Keep only the bouquet as a standalone item.
+
+Color and flower rule: if the reference bouquet contains mostly white, cream, or pale flowers, replace those pale flowers with brighter, richer, more colorful flowers while keeping the same premium bouquet structure. Use vivid but tasteful flower mixes such as coral pink roses, peach peonies, golden yellow ranunculus, lavender blossoms, tiny blue accent flowers, soft green leaves, and small white filler only as accents. If the reference bouquet is already colorful, preserve its main color identity and improve clarity.
+
+Composition: the bouquet fills about 75% to 84% of the canvas, centered with comfortable padding, front-facing or very slight 3/4 view. Use a pure solid magenta background (#FF00FF) for easy background removal.
+
+Important constraints: NO SHADOW of any kind, no drop shadow, no contact shadow, no ground shadow, no glow halo, no reflection. NO TEXT, no labels, no captions, no numbers, no logos, no watermark, no characters, no hands, no tile grid, no UI frame, no background scene.

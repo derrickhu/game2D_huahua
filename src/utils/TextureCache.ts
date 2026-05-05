@@ -615,6 +615,7 @@ const CRITICAL_IMAGE_MAP: Record<string, string> = {
   tutorial_story_2: 'images/tutorial/story_2.png',
   tutorial_story_3: 'images/tutorial/story_3.png',
   tutorial_story_4: 'images/tutorial/story_4.png',
+  tutorial_hand_pointer: 'images/tutorial/tutorial_hand_pointer.png',
 
   owner_chibi_default: 'images/critical/owner/chibi_default.png',
   owner_full_default: 'images/critical/owner/full_default.png',

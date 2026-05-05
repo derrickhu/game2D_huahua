@@ -186,16 +186,58 @@ function sortDecosByUnlockLevelThenCost(decos: DecoDef[]): DecoDef[] {
   });
 }
 
-/** 已满足条件可展示购买的家具 / 已拥有家具：只按花愿价升序，不看等级 */
-function sortDecosByCostAsc(decos: DecoDef[]): DecoDef[] {
-  return [...decos].sort((a, b) => a.cost - b.cost);
+function compareDecoByCostAsc(a: DecoDef, b: DecoDef): number {
+  return (a.cost - b.cost) || a.name.localeCompare(b.name) || a.id.localeCompare(b.id);
 }
 
-function sortDecosForInvFilter(decos: DecoDef[], filter: DecoInvFilter): DecoDef[] {
+function compareDecoByUnlockLevelThenCost(a: DecoDef, b: DecoDef): number {
+  const aFreeAdUnlock = DecorationManager.isAdUnlockDeco(a.id)
+    && !DecorationManager.isAdUnlockSatisfied(a.id)
+    && !checkRequirement(a.unlockRequirement).met;
+  const bFreeAdUnlock = DecorationManager.isAdUnlockDeco(b.id)
+    && !DecorationManager.isAdUnlockSatisfied(b.id)
+    && !checkRequirement(b.unlockRequirement).met;
+  if (aFreeAdUnlock !== bFreeAdUnlock) return aFreeAdUnlock ? -1 : 1;
+  const la = a.unlockRequirement?.level ?? 0;
+  const lb = b.unlockRequirement?.level ?? 0;
+  return (la - lb) || compareDecoByCostAsc(a, b);
+}
+
+/** 已满足条件可展示购买的家具 / 已拥有家具：只按花愿价升序，不看等级 */
+function sortDecosByCostAsc(decos: DecoDef[]): DecoDef[] {
+  return [...decos].sort(compareDecoByCostAsc);
+}
+
+function decoAllFilterRank(deco: DecoDef, sceneId: string): number {
+  const owned = DecorationManager.isUnlocked(deco.id);
+  const reqMet = checkRequirement(deco.unlockRequirement).met;
+  const sceneOk = isDecoAllowedInScene(deco, sceneId);
+  const purchaseAllowed = sceneOk && (reqMet || DecorationManager.isAdUnlockSatisfied(deco.id));
+  const blocked = !sceneOk || !purchaseAllowed;
+  const isPlaced = !!RoomLayoutManager.getPlacement(deco.id);
+
+  if (!owned && !blocked) return 0;      // 已解锁未购买
+  if (!owned && blocked) return 1;       // 未解锁
+  if (owned && !isPlaced) return 2;      // 未放置
+  return 3;                              // 已放置
+}
+
+function sortDecosForAllFilter(decos: DecoDef[], sceneId: string): DecoDef[] {
+  return [...decos].sort((a, b) => {
+    const ra = decoAllFilterRank(a, sceneId);
+    const rb = decoAllFilterRank(b, sceneId);
+    if (ra !== rb) return ra - rb;
+    if (ra === 1) return compareDecoByUnlockLevelThenCost(a, b);
+    return compareDecoByCostAsc(a, b);
+  });
+}
+
+function sortDecosForInvFilter(decos: DecoDef[], filter: DecoInvFilter, sceneId: string): DecoDef[] {
+  if (filter === 'all') return sortDecosForAllFilter(decos, sceneId);
   return filter === 'locked' ? sortDecosByUnlockLevelThenCost(decos) : sortDecosByCostAsc(decos);
 }
 
-/** 家具列表库存筛选（默认打开面板为「未购买」） */
+/** 家具列表库存筛选（默认打开面板为「全部」） */
 type DecoInvFilter = 'all' | 'placed' | 'not_placed' | 'not_purchased' | 'locked';
 
 const DECO_INV_FILTER_SPECS: ReadonlyArray<{ id: DecoInvFilter; label: string }> = [
@@ -281,6 +323,8 @@ type DecoGridPendingTap =
   | { type: 'deco'; deco: DecoDef; flyCard: PIXI.Container }
   | { type: 'room'; style: RoomStyleDef; flyCard: PIXI.Container };
 
+const TUTORIAL_BUY_DECO_ID = 'shelf_wood';
+
 export class DecorationPanel extends PIXI.Container {
   /** MainScene 唯一实例；供新手引导在 overlay 上对齐购买钮 */
   private static _sharedInstance: DecorationPanel | null = null;
@@ -305,7 +349,7 @@ export class DecorationPanel extends PIXI.Container {
   private _assetUnsub: (() => void) | null = null;
   private _assetRefreshRaf: number | null = null;
   private _activeTab: DecoPanelTabId = 'flower_room';
-  private _decoInvFilter: DecoInvFilter = 'not_purchased';
+  private _decoInvFilter: DecoInvFilter = 'all';
   private _scrollY = 0;
   private _maxScrollY = 0;
   private _gridScrollListening = false;
@@ -471,7 +515,7 @@ export class DecorationPanel extends PIXI.Container {
     EventBus.emit('decoration:decoPanelBackdrop', { open: true });
     this._sortParentOverlay();
     this._activeTab = 'flower_room';
-    this._decoInvFilter = 'not_purchased';
+    this._decoInvFilter = 'all';
     this._redrawDimMask();
     this._resizePanelIfNeeded();
     // 面板实例在主场景初始化时已构建；发版后冷启动时贴图常在 open 前的预加载阶段才进入缓存。
@@ -492,7 +536,17 @@ export class DecorationPanel extends PIXI.Container {
     this._content.position.set(panelX, h);
     this.alpha = 0;
     TweenManager.to({ target: this, props: { alpha: 1 }, duration: 0.18, ease: Ease.easeOutQuad });
-    TweenManager.to({ target: this._content.position, props: { y: panelY }, duration: 0.28, ease: Ease.easeOutQuad });
+    TweenManager.to({
+      target: this._content.position,
+      props: { y: panelY },
+      duration: 0.28,
+      ease: Ease.easeOutQuad,
+      onComplete: () => {
+        if (TutorialManager.isActive && TutorialManager.currentStep === TutorialStep.GUIDE_BUY_FURNITURE) {
+          EventBus.emit('decoration:tutorialPurchaseAnchorReady');
+        }
+      },
+    });
   }
 
   close(): void {
@@ -984,6 +1038,7 @@ export class DecorationPanel extends PIXI.Container {
       let decos = sortDecosForInvFilter(
         getDecosForDecorationPanelTab(this._activeTab, sceneId).filter(shouldShowDecoInDecorationPanel),
         this._decoInvFilter,
+        sceneId,
       );
       decos = decos.filter((d) => decoMatchesInvFilter(d, this._decoInvFilter, sceneId));
       totalRows = decos.length === 0 ? 1 : Math.ceil(decos.length / cols);
@@ -1163,6 +1218,7 @@ export class DecorationPanel extends PIXI.Container {
     let decos = sortDecosForInvFilter(
       getDecosForDecorationPanelTab(this._activeTab, sceneId).filter(shouldShowDecoInDecorationPanel),
       this._decoInvFilter,
+      sceneId,
     );
     decos = decos.filter((d) => decoMatchesInvFilter(d, this._decoInvFilter, sceneId));
     const gridW = decoPanelGridWidth();
@@ -1202,6 +1258,13 @@ export class DecorationPanel extends PIXI.Container {
     this._addScrollPlate(inner, gridW, contentH);
     this._maxScrollY = Math.max(0, contentH - availH);
     this._scrollY = 0;
+    if (
+      TutorialManager.isActive
+      && TutorialManager.currentStep === TutorialStep.GUIDE_BUY_FURNITURE
+      && this._tutorialPurchaseAnchor?.parent
+    ) {
+      EventBus.emit('decoration:tutorialPurchaseAnchorReady');
+    }
   }
 
   private _buildRoomStyleGrid(availH: number): void {
@@ -1611,6 +1674,7 @@ export class DecorationPanel extends PIXI.Container {
     if (
       TutorialManager.isActive
       && TutorialManager.currentStep === TutorialStep.GUIDE_BUY_FURNITURE
+      && deco.id === TUTORIAL_BUY_DECO_ID
       && showPurchase
       && affordPurchase
       && !this._assignTutorialPurchaseAnchorDone

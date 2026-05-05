@@ -1287,11 +1287,20 @@ export class TutorialOverlay {
           retryTimer = setTimeout(() => tryShow(attempt + 1), 55);
         }
       };
-      retryTimer = setTimeout(() => tryShow(0), 280);
+      retryTimer = setTimeout(() => tryShow(0), 430);
     };
 
     const onBackdrop = (ev: { open: boolean }): void => {
       if (!ev.open) this._clearDecoPurchaseOverlay();
+    };
+
+    const onPurchaseAnchorReady = (): void => {
+      if (TutorialManager.currentStep !== TutorialStep.GUIDE_BUY_FURNITURE) return;
+      requestAnimationFrame(() => {
+        const panel = DecorationPanel.shared;
+        const g = panel?.getTutorialPurchasableBuyButtonGlobal() ?? null;
+        if (panel?.isOpen && g) this._showDecoPurchaseGuideAt(g);
+      });
     };
 
     const onEditEnabled = (): void => {
@@ -1318,6 +1327,7 @@ export class TutorialOverlay {
 
     EventBus.on('nav:openDeco', onDecoOpen);
     EventBus.on('decoration:decoPanelBackdrop', onBackdrop);
+    EventBus.on('decoration:tutorialPurchaseAnchorReady', onPurchaseAnchorReady);
     EventBus.on('furniture:edit_enabled', onEditEnabled);
     EventBus.on('decoration:tutorialUnlockPlaceReady', onUnlockPlaceReady);
     EventBus.on('decoration:tutorialUnlockPopupClosed', onUnlockPopupClosed);
@@ -1329,6 +1339,7 @@ export class TutorialOverlay {
       }
       EventBus.off('nav:openDeco', onDecoOpen);
       EventBus.off('decoration:decoPanelBackdrop', onBackdrop);
+      EventBus.off('decoration:tutorialPurchaseAnchorReady', onPurchaseAnchorReady);
       EventBus.off('furniture:edit_enabled', onEditEnabled);
       EventBus.off('decoration:tutorialUnlockPlaceReady', onUnlockPlaceReady);
       EventBus.off('decoration:tutorialUnlockPopupClosed', onUnlockPopupClosed);
@@ -1928,6 +1939,26 @@ export class TutorialOverlay {
 
   private _createFinger(): PIXI.Container {
     const container = new PIXI.Container();
+    const tex = TextureCache.get('tutorial_hand_pointer');
+    if (tex && tex.width > 1) {
+      const shadow = new PIXI.Sprite(tex);
+      shadow.anchor.set(0.17, 0.82);
+      shadow.width = 58;
+      shadow.height = (tex.height / tex.width) * shadow.width;
+      shadow.tint = 0x5A3A2A;
+      shadow.alpha = 0.22;
+      shadow.position.set(3, 4);
+      container.addChild(shadow);
+
+      const sp = new PIXI.Sprite(tex);
+      sp.anchor.set(0.17, 0.82);
+      sp.width = 58;
+      sp.height = (tex.height / tex.width) * sp.width;
+      container.addChild(sp);
+      container.eventMode = 'none';
+      return container;
+    }
+
     const fingerText = new PIXI.Text('\u{1F449}', { fontSize: 40, fontFamily: FONT_FAMILY });
     fingerText.anchor.set(0.4, 0);
     container.addChild(fingerText);

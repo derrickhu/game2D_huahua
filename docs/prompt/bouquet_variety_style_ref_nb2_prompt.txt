@@ -1,0 +1,27 @@
+Square 1:1 concept sheet for a cozy pastel flower-shop merge game.
+
+Use the attached reference image as the main style target, especially the bouquet icons inside the red rectangles: cute polished 2D mobile game bouquet icons, warm pastel colors, saturated petals, soft brown outlines, rounded chibi-friendly shapes, glossy highlights, compact readable silhouettes, cheerful flower-shop mood. The bouquets should feel collectible and more charming than plain realistic flower arrangements.
+
+Create one clean 4 columns x 4 rows grid, exactly 16 rounded cream board cells with subtle pink-lavender borders. Each cell contains exactly one different centered bouquet icon. No empty cells, no duplicate bouquets, no labels.
+
+Creative direction: generate a wide variety of beautiful bouquet concepts that could become future merge-game items. Let the model invent attractive combinations, but keep every bouquet practical as a flower-shop product icon. Include variety across flower types, colors, wrapping paper, ribbons, bouquet shapes, and rarity feeling.
+
+Suggested variety across the 16 cells:
+1. tiny casual wildflower bouquet
+2. pink rose gift bouquet
+3. yellow tulip bouquet
+4. sunflower hand bouquet
+5. pastel candy-color bouquet
+6. red rose round bouquet
+7. orchid and hydrangea bouquet
+8. cream peony luxury bouquet
+9. lavender purple bouquet
+10. rainbow celebration bouquet
+11. white lily elegant bouquet
+12. coral pink bouquet
+13. blue hydrangea bouquet
+14. golden premium bouquet
+15. soft bridal bouquet
+16. playful kawaii mixed bouquet
+
+Important constraints: no readable text, no labels, no numbers, no logos, no watermark, no characters, no hands, no background scene. Only the 4x4 grid sheet of bouquet item icons.

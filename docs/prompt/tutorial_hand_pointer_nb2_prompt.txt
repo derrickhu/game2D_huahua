@@ -1,0 +1,7 @@
+Clean 2D mobile game tutorial pointer hand icon for a cozy pastel flower-shop merge game.
+
+Create one single right hand pointer gesture, index finger pointing down-left toward a UI button, suitable for tap and drag tutorial animations. The hand should be cute, clear, and highly readable at small size: rounded chubby fingers, soft warm peach skin, simple kawaii proportions, gentle brown outline, subtle pink blush on knuckles, soft highlight, light shadow only inside the hand. Style should match cozy pastel casual mobile game UI, not realistic, not 3D plastic, not emoji, not flat web icon.
+
+Composition: centered on a solid chroma green background (#00FF00) for later cutout. Leave safe margin around the hand. The fingertip should be the clearest visual focus. Slight diagonal pose, wrist at upper-right, index fingertip aiming lower-left. No sleeve unless a tiny pastel pink cuff helps the flower-shop style; keep the cuff minimal and do not distract.
+
+Asset requirements: one hand only, no extra icons, no arrows, no sparkles, no UI panels, no text. NO TEXT, no labels, no captions, no writing anywhere in the image, no watermark, no logo.

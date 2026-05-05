@@ -1,0 +1,17 @@
+Square 1:1 mobile game asset sheet for a cozy pastel flower-shop merge game.
+
+Create one clean 6 columns x 6 rows grid, exactly 36 rounded square board cells. Each cell contains exactly one centered item icon. All 36 item icons must be different from each other. No empty cells, no duplicate items, no merged cells.
+
+Overall style: cute polished 2D mobile game item icons, soft 3D-like volume, warm pastel flower-shop mood, clean soft brown outlines, glossy highlights, readable silhouettes, bright cheerful colors, consistent lighting from upper-left, soft tiny shadow under each item. The icons should look like collectible merge-game board pieces.
+
+Grid style: rounded cream tiles with subtle lavender-pink borders, thin gaps between tiles, front-facing or very slight 3/4 view, tidy and symmetrical. Keep the whole sheet readable at thumbnail size.
+
+Use this exact item plan, one different item per cell:
+Row 1: flower seed packet, closed flower bud, small white daisy, sunflower, pink carnation, red rose.
+Row 2: white lily, tulip, blue-purple hydrangea, butterfly orchid, lotus flower, pink peony.
+Row 3: golden peony, tiny hand-tied mini bouquet, candy-paper mini bouquet, sunny tulip bouquet, pink rose and baby's breath bouquet, sunflower countryside bouquet.
+Row 4: ribbon rose gift bouquet, large red rose bouquet, orchid and hydrangea bouquet, ornate peony bouquet with gold accents, premium purple coral flower bouquet, tiny green sprout pot.
+Row 5: coin-leaf pilea plant, succulent pot, pothos plant, Boston fern, snake plant, monstera plant.
+Row 6: fiddle-leaf fig, cactus, red anthurium, money tree, bougainvillea plant, pine bonsai.
+
+Important constraints: no readable text, no numbers, no logos, no watermark, no characters, no hands, no UI buttons, no background scene. Only the 6x6 grid sheet of item icons.

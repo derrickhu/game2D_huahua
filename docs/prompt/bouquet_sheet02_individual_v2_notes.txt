@@ -1,0 +1,28 @@
+V2 generation notes for bouquet_variety_style_ref_sheet_02 individual bouquet icons.
+
+Goal: regenerate the 16 individual bouquet icons with stronger identity and less same-looking flower choices. Each icon should follow its own prototype theme instead of turning every bouquet into a colorful mixed bouquet.
+
+Shared rules:
+- 512x512 square single bouquet icon.
+- Pure solid magenta background (#FF00FF), no shadow, no glow, no tile frame.
+- Keep cute polished 2D mobile game item icon style from the reference sheet.
+- Preserve the prototype's silhouette, wrapping, ribbon, and main bouquet idea.
+- Give each bouquet a distinct flower identity and color family.
+
+Per-cell themes:
+01 natural kraft wildflower bouquet: small blue, white, yellow field flowers, airy and rustic.
+02 pink rose gift bouquet: pink/red roses, pink wrapping and bow, romantic.
+03 yellow-orange tulip bouquet: yellow and orange tulips with green leaves, simple and bright.
+04 sunflower bouquet: bold sunflowers, warm brown wrap, green leaves.
+05 pastel candy bouquet: playful pastel round flowers, candy-like but still floral.
+06 deep red rose bouquet: round red rose cluster, formal and rich.
+07 orchid hydrangea bouquet: purple orchids plus blue-purple hydrangea, elegant cool palette.
+08 ornate premium peony bouquet: peach, coral, warm cream and gold peonies, teal leaves, ornate gold accents.
+09 lavender herb bouquet: lavender spikes and tiny purple flowers, slim vertical shape.
+10 rainbow rose bouquet: the one true rainbow multicolor bouquet, glassy wrapping and rainbow bow.
+11 lily calla bouquet: white calla lilies with yellow centers, silver wrap, keep mostly white but add green and pearl accents.
+12 coral ranunculus bouquet: coral, salmon, peach flowers, green berries, brown paper.
+13 blue hydrangea bouquet: full blue hydrangea cluster, pale blue bow.
+14 golden luxury bouquet: gold flowers, dark teal wrap, premium ornate style.
+15 blush bridal bouquet: blush pink roses, small white filler, lace, pearl bow, soft romantic.
+16 kawaii character bouquet: playful cute flower faces and pastel puffs, toy-like, intentionally whimsical.
