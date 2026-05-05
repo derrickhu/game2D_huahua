@@ -1,0 +1,31 @@
+Create a 9:16 mobile game scene prototype for a cozy pastel flower-shop room page.
+
+Use the provided screenshot as layout reference. Keep the isometric room/house in the center with the same general position and scale, but redesign the outdoor background and the contact area so the house feels grounded and integrated, not floating.
+
+Main problem to solve:
+- The current background is too pale and low-contrast compared with the house.
+- The house looks like it is pasted on top of the grass.
+- The background style should match the house: cute 2D mobile game, soft brown line art, warm pastel but with enough saturation and volume.
+
+Design direction:
+- Richer outdoor garden background behind the house, not empty pale green.
+- Use saturated but soft mint grass, warm yellow-green patches, small flower clusters, garden stones, and subtle painted texture.
+- Add a clear grounding area under and around the isometric room: soft contact shadow, darker grass directly under the floor base, small stones or dirt path at the bottom edge of the platform.
+- Add foreground grass patches and tiny flowers near the bottom to create depth.
+- Keep background calm enough for UI, but no longer flat or washed out.
+- Preserve the isometric room as the focal point.
+
+Art style:
+- Clean 2D hand-painted mobile merge game background, kawaii cozy flower-shop style.
+- Match the room art: soft brown outlines, rounded forms, warm highlights, gentle volume.
+- No photorealism, no heavy dark shadows, no cinematic lighting, no noisy texture.
+- Use soft gradients and painted patches for depth.
+
+UI:
+- You may keep simplified top bars and bottom buttons as faint placeholders, but focus on the room/background integration.
+- No readable text, no labels, no captions, no watermark.
+
+Important:
+- The house should visually sit on the ground with contact shadow and environmental details.
+- Do not make the background too busy behind UI icons.
+- The result is a prototype direction image, not a final game asset.

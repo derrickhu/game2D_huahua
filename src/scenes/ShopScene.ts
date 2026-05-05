@@ -38,7 +38,7 @@ import {
 } from '@/gameobjects/ui/FurnitureTray';
 import { RoomEditToolbar } from '@/gameobjects/ui/RoomEditToolbar';
 import { TextureCache } from '@/utils/TextureCache';
-import { DECO_MAP, DecoDef, DecoSlot, SHOP_FURNITURE_TEX_BASE_PX } from '@/config/DecorationConfig';
+import { DECO_MAP, DecoDef, DecoSlot, SHOP_FURNITURE_DISPLAY_SCALE_MULTIPLIER, SHOP_FURNITURE_TEX_BASE_PX } from '@/config/DecorationConfig';
 import { DESIGN_WIDTH, COLORS, FONT_FAMILY } from '@/config/Constants';
 import { roomDepthZForPlacement, roomDepthZForOwner } from '@/config/RoomDepthSort';
 import { ToastMessage } from '@/gameobjects/ui/ToastMessage';
@@ -123,7 +123,13 @@ const SHOP_EDIT_BTN_LABEL_STYLE: Partial<PIXI.ITextStyle> = {
 /** 花店建筑竖直位置：中心 Y ≈ logicH * ratio + offset，ratio 增大则整体下移（原 0.405 偏上易顶到进度条） */
 const SHOP_BUILDING_CENTER_Y_RATIO = 0.442;
 const SHOP_BUILDING_ANCHOR_OFFSET_Y = 18;
+/** 花坊房壳默认略放大，让房间更贴近屏幕边缘。 */
+const FLOWER_SHOP_BUILDING_SCALE_MULTIPLIER = 1.1;
+/** 蝴蝶小屋房壳包含前院地块，通用缩放会显小；单独放大到参考图的贴边比例。 */
+const BUTTERFLY_HOUSE_BUILDING_SCALE_MULTIPLIER = 1.3;
 
+/** 试调：房间可摆空间显大一些，店主显示缩到 90%。 */
+const SHOP_OWNER_DISPLAY_SCALE_MULTIPLIER = 0.9;
 /** 装修/花店场景中店主全身像目标高度（设计分辨率）。基准原为 150，现为 ×1.1。 */
 const SHOP_OWNER_TARGET_H = 165;
 /** 店主点击热区（锚点在脚底）：相对原 Circle(0,-40,60) 同比例 ×1.1 */
@@ -180,7 +186,7 @@ const DECO_PAIR_BUTTONS: SideBtnDef[] = [
 /** 左上角 — 图鉴竖排：花语图鉴 / 友谊卡（未开放时显示锁态） */
 const LEFT_TOP_BUTTONS: SideBtnDef[] = [
   { id: 'album',  icon: '', texKey: 'icon_book',          label: '图鉴',   event: 'nav:openAlbum',       iconBg: 0xA78BFA, labelColor: 0x7C5FC5 },
-  { id: 'affinity_codex', icon: '', texKey: 'affinity_codex_btn', label: '友谊卡', event: 'affinityCodex:open', iconBg: 0xFFB1CC, labelColor: 0xC75D8B },
+  { id: 'affinity_codex', icon: '', texKey: 'icon_affinity_card', label: '友谊卡', event: 'affinityCodex:open', iconBg: 0xFFB1CC, labelColor: 0xC75D8B },
 ];
 
 /** 右侧 — 活动快捷按钮（签到/任务） */
@@ -646,14 +652,15 @@ export class ShopScene implements Scene {
     const centerX = w / 2;
     const centerY = h * SHOP_BUILDING_CENTER_Y_RATIO;
 
-    // ---- 花店建筑底板：房间风格图 bg_room_*（TextureCache 键），缺省回退 shop.png ----
+    // ---- 花店建筑底板：房间风格图 bg_room_*（TextureCache 键）----
     const bgKey = DecorationManager.getRoomBgTextureKey();
-    const shopTex = TextureCache.get(bgKey) ?? TextureCache.get('house_shop');
+    const shopTex = this._getShopBuildingTexture(bgKey);
+    this._shopBuildingSprite = new PIXI.Sprite(shopTex ?? PIXI.Texture.EMPTY);
+    this._shopBuildingSprite.visible = !!shopTex;
     if (shopTex) {
-      this._shopBuildingSprite = new PIXI.Sprite(shopTex);
       this._layoutShopBuildingSprite(w, h, centerX, centerY);
-      this._roomContainer.addChild(this._shopBuildingSprite);
     }
+    this._roomContainer.addChild(this._shopBuildingSprite);
 
     // ---- 从 RoomLayoutManager 渲染所有已放置的家具 ----
     this._renderFurnitureLayout();
@@ -667,10 +674,23 @@ export class ShopScene implements Scene {
   }
 
   /** 按当前纹理尺寸缩放、定位建筑底板 */
+  private _getShopBuildingTexture(bgKey: string): PIXI.Texture | null {
+    const tex = TextureCache.get(bgKey);
+    if (tex) return tex;
+    // 只有花坊默认房型可以回退到 house_shop；其他房屋等待目标贴图，避免切换时闪成花坊。
+    return CurrencyManager.state.sceneId === 'flower_shop' ? TextureCache.get('house_shop') : null;
+  }
+
   private _layoutShopBuildingSprite(w: number, h: number, centerX: number, centerY: number): void {
     if (!this._shopBuildingSprite) return;
     const tex = this._shopBuildingSprite.texture;
-    const shopScale = Math.min((w * 1.18) / tex.width, (h * 0.72) / tex.height);
+    const sceneId = CurrencyManager.state.sceneId;
+    const roomScaleMultiplier = sceneId === 'butterfly_house'
+      ? BUTTERFLY_HOUSE_BUILDING_SCALE_MULTIPLIER
+      : sceneId === 'flower_shop'
+        ? FLOWER_SHOP_BUILDING_SCALE_MULTIPLIER
+        : 1;
+    const shopScale = Math.min((w * 1.18) / tex.width, (h * 0.72) / tex.height) * roomScaleMultiplier;
     this._shopBuildingSprite.scale.set(shopScale);
     this._shopBuildingSprite.anchor.set(0.5, 0.5);
     this._shopBuildingSprite.position.set(centerX, centerY + SHOP_BUILDING_ANCHOR_OFFSET_Y);
@@ -684,8 +704,12 @@ export class ShopScene implements Scene {
     const centerX = w / 2;
     const centerY = h * SHOP_BUILDING_CENTER_Y_RATIO;
     const bgKey = DecorationManager.getRoomBgTextureKey();
-    const tex = TextureCache.get(bgKey) ?? TextureCache.get('house_shop');
-    if (!tex) return;
+    const tex = this._getShopBuildingTexture(bgKey);
+    if (!tex) {
+      this._shopBuildingSprite.visible = false;
+      return;
+    }
+    this._shopBuildingSprite.visible = true;
     this._shopBuildingSprite.texture = tex;
     this._layoutShopBuildingSprite(w, h, centerX, centerY);
     this._refreshShopBuildingPanHitAreaIfNeeded();
@@ -726,7 +750,9 @@ export class ShopScene implements Scene {
 
     const sprite = new PIXI.Sprite(texture);
     const baseSize = SHOP_FURNITURE_TEX_BASE_PX;
-    const s = Math.min(baseSize / texture.width, baseSize / texture.height) * placement.scale;
+    const s = Math.min(baseSize / texture.width, baseSize / texture.height)
+      * placement.scale
+      * SHOP_FURNITURE_DISPLAY_SCALE_MULTIPLIER;
     sprite.scale.set(placement.flipped ? -s : s, s);
     sprite.anchor.set(0.5, 0.8);
     sprite.position.set(placement.x, placement.y);
@@ -879,7 +905,7 @@ export class ShopScene implements Scene {
     const useClosed = this._isBlinking && blinkTex?.width;
     this._ownerSprite.texture = useClosed ? blinkTex! : openTex;
     const outfitId = DressUpManager.getEquipped()?.id ?? 'outfit_default';
-    const targetH = SHOP_OWNER_TARGET_H * getOwnerShopDisplayScale(outfitId);
+    const targetH = SHOP_OWNER_TARGET_H * getOwnerShopDisplayScale(outfitId) * SHOP_OWNER_DISPLAY_SCALE_MULTIPLIER;
     const scale = targetH / this._ownerSprite.texture.height;
     this._ownerSprite.scale.set(scale);
   }
@@ -896,7 +922,7 @@ export class ShopScene implements Scene {
       this._ownerSprite = new PIXI.Sprite(tex);
       this._ownerSprite.anchor.set(0.5, 1);
       const outfitId = DressUpManager.getEquipped()?.id ?? 'outfit_default';
-      const targetH = SHOP_OWNER_TARGET_H * getOwnerShopDisplayScale(outfitId);
+      const targetH = SHOP_OWNER_TARGET_H * getOwnerShopDisplayScale(outfitId) * SHOP_OWNER_DISPLAY_SCALE_MULTIPLIER;
       const scale = targetH / tex.height;
       this._ownerSprite.scale.set(scale);
       owner.addChild(this._ownerSprite);
@@ -1224,6 +1250,12 @@ export class ShopScene implements Scene {
       this.container.addChild(this._starFlyLayer);
     }
     this.container.sortChildren();
+  }
+
+  private _setShopHudVisible(visible: boolean): void {
+    if (this._topBar) this._topBar.visible = visible;
+    if (this._progressBarRoot) this._progressBarRoot.visible = visible;
+    if (this._starFlyLayer) this._starFlyLayer.visible = visible;
   }
 
   /** 点击进度条旁礼包：预览升至下一星级时的礼包（与实际升星发放一致） */
@@ -2047,7 +2079,7 @@ export class ShopScene implements Scene {
     let cy = Math.max(cyFromOperate, cyMinForStrip) - WORLD_MAP_BTN_LIFT_PX;
     if (cy - r < stripTopY) cy = stripTopY + r + 2;
 
-    const tex = TextureCache.get('icon_worldmap');
+    const tex = TextureCache.get('icon_worldmap_nav');
     if (tex && tex.width > 1) {
       const sp = new PIXI.Sprite(tex);
       sp.anchor.set(0.5);
@@ -2238,7 +2270,9 @@ export class ShopScene implements Scene {
       if ((child as any)._decoId === placement.decoId && child instanceof PIXI.Sprite) {
         const texture = child.texture;
         const baseSize = SHOP_FURNITURE_TEX_BASE_PX;
-        const s = Math.min(baseSize / texture.width, baseSize / texture.height) * placement.scale;
+        const s = Math.min(baseSize / texture.width, baseSize / texture.height)
+          * placement.scale
+          * SHOP_FURNITURE_DISPLAY_SCALE_MULTIPLIER;
         child.scale.set(
           placement.flipped ? -s : s,
           s
@@ -2375,6 +2409,7 @@ export class ShopScene implements Scene {
 
     // 编辑态：隐藏底部「装修花店」主按钮；完成编辑为托盘右下角贴图
     this._editBtn.visible = false;
+    this._setShopHudVisible(false);
 
     const h = Game.logicHeight;
     const trayTopY = trayOpenTopY(h);
@@ -2636,6 +2671,7 @@ export class ShopScene implements Scene {
     this._disablePinchZoom();
 
     // 恢复按钮显示
+    this._setShopHudVisible(true);
     this._returnBtn.visible = true;
     this._refreshWorldMapBtnVisibility();
     if (this._miscDrawerRoot) this._miscDrawerRoot.visible = true;

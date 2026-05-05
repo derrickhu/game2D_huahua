@@ -1,0 +1,39 @@
+Create a 9:16 outdoor background image for a cozy pastel flower-shop room page mobile game.
+
+Generate BACKGROUND ONLY.
+
+Important output requirement:
+- Do NOT draw the house / room shell.
+- Do NOT draw characters, UI buttons, top bars, labels, text, numbers, or icons.
+- The image will be used behind a separate isometric house sprite.
+
+Composition:
+- 9:16 vertical mobile game background.
+- Top half: richer garden backdrop with soft mint sky-green gradient, leafy bushes, a few rounded trees or shrub silhouettes near the upper corners, and small clusters of colorful flowers.
+- Middle area where the house will sit: continuous natural grass only. Leave a calm open green lawn area with very subtle soft oval shading, but absolutely no platform shape.
+- Bottom half: foreground lawn with a few soft grass blades, tiny white/yellow/pink flowers, light leaf shapes, and gentle painted texture.
+- Decorations should be sparse and tasteful, not busy. Use green leaves and a few bright small flowers.
+
+Style:
+- Clean 2D hand-painted mobile merge game background.
+- Kawaii cozy flower-shop style, matching a cute isometric room with soft brown line art.
+- More saturated and richer than a pale flat green background, but still soft enough for UI readability.
+- Warm sunny garden mood: mint green, fresh grass green, yellow-green, peach flower accents, soft lavender flowers.
+- Use soft gradients and painted patches for depth.
+- No photorealism, no heavy dark shadows, no noisy texture.
+
+Grounding requirement:
+- The future house should feel grounded when placed on top.
+- Include only a broad, very soft darker oval grass patch under the expected house position, like a natural contact shadow over lawn.
+- Add only a few tiny grass tufts and small flowers around that area to integrate the house with the environment.
+
+Strict negatives:
+- No square or rectangular platform.
+- No raised stone base.
+- No stone border around the center.
+- No paved foundation.
+- No hard-edged footprint.
+- No empty content panel or content frame.
+- No isometric floor tile area.
+
+No readable text, no watermark.

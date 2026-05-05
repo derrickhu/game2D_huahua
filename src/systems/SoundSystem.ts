@@ -77,15 +77,11 @@ class SoundSystemClass {
 
     // 客人「完成」音效由 MainScene（订单起点一次）与 RewardFlyCoordinator（其它飞入）统一播 customer_deliver
 
-    // ---- 首次交互恢复 BGM ----
+    // ---- 用户交互恢复 BGM ----
     const canvas = Game.app?.view as HTMLCanvasElement | undefined;
     if (canvas) {
-      let _firstTouch = true;
       canvas.addEventListener('pointerdown', () => {
-        if (_firstTouch) {
-          _firstTouch = false;
-          AudioManager.resumeOnInteraction();
-        }
+        AudioManager.resumeOnInteraction();
       });
     }
 

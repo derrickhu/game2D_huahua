@@ -1,0 +1,22 @@
+Create one single square game asset image, not a comparison sheet.
+
+Use the provided two-panel reference image only as guidance:
+The left panel is the scale and screen-space reference. Match its house-shell size, outer silhouette coverage, and usable indoor room proportion: the roof and two walls should fill almost the full width of the square canvas, the interior floor should feel large and open like the left panel, and the house should not be surrounded by a large yard area inside the asset.
+The right panel is the style, room layout, and color reference. Keep the same butterfly greenhouse concept: L-shaped room, tall mint-aqua glass roof, soft cream walls, pale green checker floor, small blue-green brick paving at the front notch, tiny pastel roof flowers, and a few delicate butterflies near the roof.
+
+Important composition rules:
+The output must be a single isolated isometric room shell for a cozy pastel flower-shop merge game.
+Keep the room interior large: the playable floor and wall area should occupy a similar visual proportion to the left reference, not the smaller interior proportion of the right reference.
+The outer house silhouette should occupy about 92 to 96 percent of the canvas width and about 86 to 90 percent of the canvas height.
+Minimize exterior grass and foreground decoration. Only keep a small soft natural grass edge and the small front brick paving detail; do not let the yard, roof, or foreground consume the scale.
+Keep the current butterfly house palette: mint aqua roof, warm cream walls, pale sage green floor tiles, soft beige platform edge, gentle pastel flowers.
+Keep the current butterfly house layout: L-shaped two-wall room, high glass roof behind the walls, small front notch with blue-green brick paving.
+Do not use the pink roof or wooden floor from the left reference. The left reference is for size and indoor space proportion only.
+
+Art style:
+Clean 2D mobile game illustration, cozy kawaii pastel, soft brown outlines, warm high-key colors, gentle cel-shaded depth, crisp edges, no photorealism, no heavy texture, no dirty gray shadows.
+
+Asset requirements:
+Plain transparent-looking or clean chroma background outside the house shell, easy for background removal.
+No character, no furniture, no shelf, no UI, no buttons, no text, no labels, no captions, no writing anywhere in the image.
+No fence, no dangling vines, no large flower bushes, no tropical leaves, no hard dark outline around the grass edge, no blue or purple fringe.

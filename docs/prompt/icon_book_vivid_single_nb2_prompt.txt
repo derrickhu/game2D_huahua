@@ -1,0 +1,23 @@
+Create one standalone catalog / collection book icon for a cozy pastel flower-shop mobile game.
+
+Use the provided reference image style closely: bright saturated toy-like 3D object icon, rounded puffy volume, glossy soft highlights, simple readable silhouette, thin warm edge definition. Match the red sofa / purple dress style, not flat UI.
+
+Icon concept:
+- A cute closed album book for collection/catalog.
+- Dominant color: vivid coral red / strawberry red.
+- Thick rounded book cover, visible cream pages at the bottom edge, simple 3D volume.
+- Add one tiny cream flower emblem on the cover.
+- Keep the silhouette clean and complete; no thin bookmark tab sticking out, no broken side pieces.
+- Make the book fully contained with generous margin.
+
+Canvas:
+- Square 1:1 image.
+- Center the icon, generous margin on all sides.
+- Pure solid magenta background (#FF00FF) for cutout.
+
+Style rules:
+- High saturation, strong volume, top-left glossy highlight, darker lower-right shading.
+- Simple big shapes, minimal details.
+- No UI frame, no badge background, no plaque, no white sticker border.
+- No readable text, no letters, no numbers, no watermark.
+- No realistic texture, no heavy black outline.

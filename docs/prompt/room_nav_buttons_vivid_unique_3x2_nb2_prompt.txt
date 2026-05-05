@@ -1,0 +1,39 @@
+Create one 3 columns x 2 rows icon sheet for a cozy pastel flower-shop mobile game.
+
+Use the provided reference image as the exact style target. The sofa and dress icons are bright, saturated, rounded, toy-like 3D object icons. They have strong volume, simple silhouettes, glossy soft highlights, minimal details, and only thin warm edge definition. Match that style closely.
+
+Canvas and layout:
+- One image containing exactly 6 separate standalone object icons in a clean 3x2 grid.
+- Equal-sized cells, generous spacing between icons.
+- Each icon centered in its own cell, large and readable.
+- Pure solid magenta background (#FF00FF) across the whole image for later cutout.
+- No grid lines, no labels, no captions, no readable text, no numbers.
+
+Critical style rules:
+- Each icon must be a single bold object or simple object group, like the sofa and dress reference.
+- High saturation and strong volume. Use bright candy colors and clear highlights.
+- Each icon must have its own unique dominant color. Do not reuse the same dominant color across icons.
+- Simple big shapes, very few small details.
+- Thin warm brown edge definition only; no thick outlines.
+- No white sticker border.
+- No button frame, no plaque, no hanging tag, no panel, no parchment background.
+- No low-saturation pastel look, no grayish colors, no flat emoji style.
+- No realistic texture.
+
+Six icons, left to right, top row then bottom row:
+1. Catalog / collection: vivid coral-red chunky closed album book. Dominant color: saturated coral red. Tiny cream flower emblem only.
+2. Friendship card: vivid royal-purple card wallet or two overlapping heart cards. Dominant color: saturated purple/magenta. Use small pink heart/flower accent.
+3. Check-in: vivid orange calendar object with a green check emblem. Dominant color: saturated orange. No date text.
+4. Task: bright golden-yellow clipboard object with orange check marks. Dominant color: saturated golden yellow. No writing.
+5. Map: bright cyan-blue folded map object with a red location pin. Dominant color: saturated cyan/sky blue. No writing.
+6. Decoration: shiny golden decorating tool object, crossed hammer and paintbrush with red ribbon accent. Dominant color: saturated gold with red accent.
+
+Visual weight:
+- All six icons should feel equally heavy and saturated.
+- Make them as vivid as the red sofa and purple dress reference.
+- Use strong top-left highlights, darker lower-right shading, and rounded puffy forms.
+- Keep the center of each icon visually full, not thin or pale.
+
+Important negatives:
+- Do not include the sofa or dress from the reference.
+- Do not draw labels, Chinese characters, English letters, numbers, UI panels, badges, or frames.

@@ -1602,13 +1602,6 @@ export class DecorationPanel extends PIXI.Container {
         sprite.scale.set(s);
         sprite.anchor.set(0.5, 0.5);
         iconArea.addChild(sprite);
-      } else {
-        const fb = DECO_SLOT_INFO[deco.slot].name.charAt(0) || '?';
-        const emoji = new PIXI.Text(fb, {
-          fontSize: Math.round((40 * cw) / CARD_BASE_W), fontFamily: FONT_FAMILY, fill: COLORS.TEXT_DARK,
-        });
-        emoji.anchor.set(0.5, 0.5);
-        iconArea.addChild(emoji);
       }
     } else {
       addMysteryCardPlaceholder(iconArea, cw, CARD_BASE_W, maxIcon);

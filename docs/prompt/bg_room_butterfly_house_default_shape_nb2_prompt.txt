@@ -1,0 +1,25 @@
+Create one single square game asset image.
+
+Use the provided reference image as the primary composition reference. Keep the same overall house-shell size, camera angle, roof coverage, wall coverage, floor coverage, and usable indoor room proportion as the reference image. The room should feel just as large and spacious as the reference image.
+
+Transform the reference image into the current butterfly greenhouse style:
+Replace the pink tile roof with a mint-aqua glass greenhouse roof like the recent butterfly house design, with rounded soft roof ribs and translucent pale cyan glass panes.
+Replace the wooden floor with pale sage green checker floor tiles, soft and clean, like the recent butterfly house design.
+Keep warm cream walls, soft beige platform edges, light brown structural beams, and gentle pastel outlines.
+Add a few tiny pastel flowers and delicate butterflies near the roof ridge, but keep them small and sparse.
+If an exact L-shaped butterfly-house layout is difficult, do not force it. The top priority is matching the reference image's large default-house scale and spacious indoor area while using the butterfly greenhouse palette and roof style.
+
+Composition rules:
+The outer house silhouette should fill almost the full square canvas like the reference image.
+The two walls should reach close to the left and right canvas edges like the reference image.
+The interior floor should be large and open, not compressed by a large yard or oversized roof.
+Do not add a wide foreground yard. At most include a tiny soft front edge or small blue-green brick detail, but it must not reduce the indoor room size.
+Do not copy the pink roof or wooden floor from the reference image.
+
+Art style:
+Clean 2D mobile game illustration, cozy kawaii pastel, warm high-key colors, soft brown outlines, gentle cel-shaded depth, crisp edges, cute casual merge-game style.
+
+Asset requirements:
+Isolated house shell, easy background removal.
+No character, no furniture, no shelf, no UI, no buttons, no text, no labels, no captions, no writing anywhere.
+No fence, no dangling vines, no large bushes, no tropical plants, no dark grass outline, no blue or purple fringe, no photorealism.

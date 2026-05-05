@@ -85,6 +85,17 @@ const BUTTERFLY_HOUSE_MILESTONES: StarMilestoneDef[] = [
   { star: 120, rewards: [{ type: 'diamond', amount: 25 }, { type: 'chest', amount: 1, itemId: 'chest_4' }] },
 ];
 
+/**
+ * 蛋糕房（cake_shop）场景占位 thresholds / milestones：
+ * 当前版本仅供「装修面板 Tab 名 = 蛋糕房」与家具 allowedSceneIds 路由使用，
+ * 玩法（订单、星级循环）尚未开放；正式版本上线时按蝴蝶小屋档位重写。
+ */
+const CAKE_SHOP_THRESHOLDS: StarLevelThreshold[] = [
+  { level: 1, starRequired: 0, label: '一星' },
+];
+
+const CAKE_SHOP_MILESTONES: StarMilestoneDef[] = [];
+
 export const SCENE_DEFS: SceneDef[] = [
   {
     sceneId: 'flower_shop',
@@ -99,6 +110,13 @@ export const SCENE_DEFS: SceneDef[] = [
     maxStarLevel: 8,
     thresholds: BUTTERFLY_HOUSE_THRESHOLDS,
     milestones: BUTTERFLY_HOUSE_MILESTONES,
+  },
+  {
+    sceneId: 'cake_shop',
+    name: '蛋糕房',
+    maxStarLevel: 1,
+    thresholds: CAKE_SHOP_THRESHOLDS,
+    milestones: CAKE_SHOP_MILESTONES,
   },
 ];
 

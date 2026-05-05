@@ -112,7 +112,7 @@ const LEVEL_UNLOCK_BASE: Record<number, Omit<LevelUnlockDef, 'level'>> = {
         kind: 'feature',
         title: '组合订单提速',
         desc: '组合订单出现更频繁，完成奖励更丰厚。',
-        iconKey: 'ui_lvup_combo_boost',
+        iconKey: 'icon_quest',
       },
       {
         kind: 'tool',
@@ -245,25 +245,20 @@ const LEVEL_UNLOCK_BASE: Record<number, Omit<LevelUnlockDef, 'level'>> = {
       },
     ],
   },
-  14: {
-    ceremonyTitle: '温室会客',
+  15: {
+    ceremonyTitle: '蛋糕新店',
     entries: [
+      {
+        kind: 'map',
+        title: '蛋糕房开放',
+        desc: '大地图中的蛋糕房可进入，开启全新装修空间。',
+        iconKey: 'worldmap_thumb_cake_shop',
+      },
       {
         kind: 'cosmetic',
         title: '蝶翼双人沙发',
-        desc: '蝴蝶小屋会客角成型，空间氛围更完整。',
+        desc: '蝴蝶小屋会客角同步成型，空间氛围更完整。',
         iconKey: 'butterfly_house_sofa',
-      },
-    ],
-  },
-  15: {
-    ceremonyTitle: '远景初现',
-    entries: [
-      {
-        kind: 'feature',
-        title: '别墅预告',
-        desc: '大地图尽头出现花园别墅地标，等待后续版本开放。',
-        iconKey: 'icon_build',
       },
       {
         kind: 'feature',
@@ -274,7 +269,7 @@ const LEVEL_UNLOCK_BASE: Record<number, Omit<LevelUnlockDef, 'level'>> = {
     ],
   },
   20: {
-    ceremonyTitle: '新店传闻',
+    ceremonyTitle: '甜点典藏',
     entries: [
       {
         kind: 'feature',
@@ -283,10 +278,10 @@ const LEVEL_UNLOCK_BASE: Record<number, Omit<LevelUnlockDef, 'level'>> = {
         iconKey: 'icon_chart',
       },
       {
-        kind: 'feature',
-        title: '蛋糕房预告',
-        desc: '大地图出现蛋糕房地标，等待后续版本开放经营。',
-        iconKey: 'worldmap_thumb_cake_shop',
+        kind: 'cosmetic',
+        title: '婚礼蛋糕台',
+        desc: '蛋糕房限定中央摆件解锁，喜庆典藏感拉满。',
+        iconKey: 'cake_orn_wedding_cake_centerpiece',
       },
       {
         kind: 'feature',
@@ -297,8 +292,14 @@ const LEVEL_UNLOCK_BASE: Record<number, Omit<LevelUnlockDef, 'level'>> = {
     ],
   },
   25: {
-    ceremonyTitle: '银阶远航',
+    ceremonyTitle: '茶香小院',
     entries: [
+      {
+        kind: 'map',
+        title: '茶香小院开放',
+        desc: '大地图中的和风茶院可进入，深木灰瓦樱花角落同步上线。',
+        iconKey: 'worldmap_thumb_tea_house',
+      },
       {
         kind: 'feature',
         title: '银宝箱补给',
@@ -308,8 +309,14 @@ const LEVEL_UNLOCK_BASE: Record<number, Omit<LevelUnlockDef, 'level'>> = {
     ],
   },
   30: {
-    ceremonyTitle: '主题藏馆',
+    ceremonyTitle: '花园别墅',
     entries: [
+      {
+        kind: 'map',
+        title: '花园别墅开放',
+        desc: '大地图中的双层法式别墅启用，玫瑰阳台与塔楼任你布置。',
+        iconKey: 'worldmap_thumb_garden_villa',
+      },
       {
         kind: 'feature',
         title: '银宝箱补给',
@@ -319,8 +326,14 @@ const LEVEL_UNLOCK_BASE: Record<number, Omit<LevelUnlockDef, 'level'>> = {
     ],
   },
   35: {
-    ceremonyTitle: '花境深藏',
+    ceremonyTitle: '橡树小屋',
     entries: [
+      {
+        kind: 'map',
+        title: '橡树小屋开放',
+        desc: '大地图林边的橡树小屋可进入，蘑菇圈与苔藓圆顶等你寻访。',
+        iconKey: 'worldmap_thumb_forest_treehouse',
+      },
       {
         kind: 'feature',
         title: '银宝箱补给',

@@ -26,6 +26,7 @@ import {
 } from '@/managers/RoomLayoutManager';
 import {
   DECO_MAP,
+  SHOP_FURNITURE_DISPLAY_SCALE_MULTIPLIER,
   SHOP_FURNITURE_TEX_BASE_PX,
   isDecoAllowedInScene,
   formatAllowedScenesShort,
@@ -273,7 +274,8 @@ class FurnitureDragSystemClass {
     const defaultPlacementScale = deco.defaultScale ?? 0.4;
     const baseScale =
       Math.min(SHOP_FURNITURE_TEX_BASE_PX / tex.width, SHOP_FURNITURE_TEX_BASE_PX / tex.height)
-      * defaultPlacementScale;
+      * defaultPlacementScale
+      * SHOP_FURNITURE_DISPLAY_SCALE_MULTIPLIER;
 
     const glow = this._createNewFurnitureFeetGlow();
     glow.position.set(localPos.x, localPos.y);
@@ -456,8 +458,7 @@ class FurnitureDragSystemClass {
     if (ctx.isNew) {
       if (inBounds) {
         // 从托盘拖入成功 → 添加到布局
-        // placement.scale 存的是「相对纹理基准」倍率（与 ShopScene 渲染一致），
-        // 不是 PIXI 上的绝对 scale（后者 = baseRatio * 倍率）。
+        // placement.scale 存的是「相对纹理基准」倍率，不包含当前房间的全局家具显示倍率。
         const deco = DECO_MAP.get(ctx.decoId);
         const tex = deco ? TextureCache.get(deco.icon) : null;
         let placementScaleMult = deco?.defaultScale ?? 0.4;
@@ -467,7 +468,7 @@ class FurnitureDragSystemClass {
             SHOP_FURNITURE_TEX_BASE_PX / tex.height,
           );
           if (baseRatio > 1e-6) {
-            placementScaleMult = ctx.originalScale / baseRatio;
+            placementScaleMult = ctx.originalScale / (baseRatio * SHOP_FURNITURE_DISPLAY_SCALE_MULTIPLIER);
           }
         }
         placementScaleMult = Math.max(

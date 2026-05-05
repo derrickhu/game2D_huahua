@@ -7,25 +7,28 @@ import type { OrderTier, UnlockedLines } from '@/config/OrderTierConfig';
 import type { OrderGenSlot } from '@/orders/types';
 
 /** 略高于 toolCap 的概率（与 pickItemLevel 一致） */
-export const ORDER_ASPIRATIONAL_LEVEL_BONUS_CHANCE = 0.09;
+export const ORDER_ASPIRATIONAL_LEVEL_BONUS_CHANCE = 0.14;
+
+/** 物品等级抽样曲线；越接近 1 越平均，>1 会偏低级。早期需要更多中高阶体感，避免长期重复低级花。 */
+export const ORDER_ITEM_LEVEL_PICK_EXPONENT = 1.12;
 
 /** 组合单基础概率；随解锁产线数上浮，封顶 ORDER_COMBO_MAX_CHANCE */
-export const ORDER_COMBO_BASE_CHANCE = 0.12;
+export const ORDER_COMBO_BASE_CHANCE = 0.16;
 /** 解锁线数 > 2 时，每条额外线增加的概率 */
-export const ORDER_COMBO_CHANCE_PER_EXTRA_LINE = 0.03;
-export const ORDER_COMBO_MAX_CHANCE = 0.35;
+export const ORDER_COMBO_CHANCE_PER_EXTRA_LINE = 0.04;
+export const ORDER_COMBO_MAX_CHANCE = 0.42;
 
 /**
  * 升星仪式 L4 解锁「组合订单提速」：玩家 globalLevel ≥ 该值时组合单概率乘以 LEVEL_MULT。
  * 拍板 +20%（a_20）；与封顶 ORDER_COMBO_MAX_CHANCE 一同 clamp。
  */
 export const ORDER_COMBO_LEVEL_BOOST_MIN_LEVEL = 4;
-export const ORDER_COMBO_LEVEL_BOOST_MULT = 1.2;
+export const ORDER_COMBO_LEVEL_BOOST_MULT = 1.35;
 
 /** 至少解锁几条独立产线才允许组合单第三槽 */
-export const ORDER_COMBO_MIN_UNLOCKED_LINES_FOR_THIRD_SLOT = 3;
+export const ORDER_COMBO_MIN_UNLOCKED_LINES_FOR_THIRD_SLOT = 2;
 /** 满足条线数后，追加第三槽的概率（不再绑定 S 模板档） */
-export const ORDER_COMBO_THIRD_SLOT_CHANCE = 0.35;
+export const ORDER_COMBO_THIRD_SLOT_CHANCE = 0.45;
 
 /** 成长单：在基础池生成路径上尝试加成的基准概率 */
 export const ORDER_GROWTH_BASE_CHANCE = 0.1;

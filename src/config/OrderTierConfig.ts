@@ -50,7 +50,7 @@ export const ORDER_TIERS: Record<OrderTier, OrderTierDef> = {
   A: {
     tier: 'A',
     label: '高级',
-    slotRange: [2, 2],
+    slotRange: [2, 3],
     demandPool: [
       { category: Category.FLOWER, lines: [FlowerLine.FRESH, FlowerLine.BOUQUET, FlowerLine.GREEN], levelRange: [4, 7] },
       { category: Category.DRINK, lines: [DrinkLine.BUTTERFLY, DrinkLine.COLD, DrinkLine.DESSERT], levelRange: [3, 6] },
@@ -120,8 +120,8 @@ function _applyGreenBoost(
 
 /**
  * 按玩家等级 + 已解锁产线 + 工具等级综合计算各档出现权重。
- * - 玩家等级 1–3：不出现 S；4 级起微量 S 并逐步抬高；5 级起为「常态」分布。
- * - S 档整体保持低权重，偶发惊喜，避免高等级刷屏。
+ * - 玩家等级 1–3：不出现 S；4 级起少量 S 并逐步抬高；5 级起为「常态」分布。
+ * - S 档保持稀有但不再过度压低，避免早期订单长期停留在低阶鲜花。
  */
 export function getOrderTierWeights(
   playerLevel: number,
@@ -142,21 +142,21 @@ export function getOrderTierWeights(
       }
     } else {
       // 等级 3：仍无 S
-      if (lines.hasBouquet || lines.hasDrink) base = { C: 20, B: 50, A: 30, S: 0 };
-      else if (maxTool >= 4) base = { C: 30, B: 50, A: 20, S: 0 };
-      else base = { C: 40, B: 50, A: 10, S: 0 };
+      if (lines.hasBouquet || lines.hasDrink) base = { C: 15, B: 48, A: 37, S: 0 };
+      else if (maxTool >= 4) base = { C: 25, B: 48, A: 27, S: 0 };
+      else base = { C: 35, B: 50, A: 15, S: 0 };
     }
   } else if (playerLevel === 4) {
-    // 首次引入 S（约 2%），主力仍为 B/A
-    if (lines.hasBouquet || lines.hasDrink) base = { C: 20, B: 48, A: 30, S: 2 };
-    else if (maxTool >= 4) base = { C: 30, B: 48, A: 20, S: 2 };
-    else base = { C: 40, B: 48, A: 10, S: 2 };
+    // 首次引入 S，主力仍为 B/A，但让高级订单开始有体感
+    if (lines.hasBouquet || lines.hasDrink) base = { C: 15, B: 42, A: 37, S: 6 };
+    else if (maxTool >= 4) base = { C: 22, B: 45, A: 27, S: 6 };
+    else base = { C: 35, B: 45, A: 14, S: 6 };
   } else if (playerLevel <= 7) {
-    base = { C: 12, B: 32, A: 52, S: lines.hasGreen ? 4 : 3 };
+    base = { C: 8, B: 27, A: 58, S: lines.hasGreen ? 7 : 6 };
   } else if (playerLevel <= 9) {
-    base = { C: 8, B: 28, A: 58, S: 6 };
+    base = { C: 6, B: 24, A: 62, S: 8 };
   } else {
-    base = { C: 8, B: 26, A: 60, S: 6 };
+    base = { C: 6, B: 22, A: 64, S: 8 };
   }
 
   return _applyGreenBoost(base, lines, modifiers?.greenLineUnlockBoostSpawns);

@@ -1,0 +1,28 @@
+Create one single square game asset image.
+
+Use the provided reference image as two-part guidance:
+The large left room is the strict house shape and proportion reference. Match its exact isometric room silhouette, roof height, two-wall layout, L-shaped floor notch, small front brick paving, grass footprint, canvas coverage, and spacious indoor scale.
+The right style reference is for decoration and color direction only. Do not copy its smaller room shape or simpler roof. Apply its bamboo warm-natural identity onto the large left butterfly house shell.
+
+Must keep from the large left reference:
+Same overall house size and canvas coverage.
+Same greenhouse roof structure and glass side panels.
+Same L-shaped room, large pale checker floor, small front blue-green brick paving, and soft grass edge footprint.
+Same readable indoor space proportion.
+Same soft kawaii casual mobile-game rendering quality.
+
+Bamboo style transformation:
+Use warm honey bamboo columns and beams instead of plain beige beams.
+Use a muted sage-green / pale bamboo-green roof, still with the same rounded greenhouse roof geometry and translucent glass feeling.
+Add small bamboo leaves and a few slim bamboo stems near the roof ridge and back corner, sparse and elegant, not tall or cluttered.
+Use a warmer cream wall with very subtle bamboo-leaf patterns.
+Use a pale warm green checker floor with tiny bamboo-leaf or butterfly motifs, still clean and spacious.
+Use soft beige stone/wood platform edges with delicate bamboo woven trim hints.
+Keep a few tiny pastel flowers and butterflies, but make the bamboo mood clear.
+
+Important constraints:
+The room shape, size, scale, camera angle, and indoor floor area must remain almost identical to the large left default butterfly house.
+Do not make the house smaller. Do not simplify it into the old bamboo shell.
+No furniture, no character, no UI, no text, no labels, no captions, no writing.
+No fence, no dangling vines, no huge bamboo forest, no tropical leaves, no large bushes, no dirty gray shadows, no blue/purple fringe.
+Isolated house shell, easy background removal.

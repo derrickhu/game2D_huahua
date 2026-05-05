@@ -1,0 +1,30 @@
+Create one single square game asset image.
+
+The provided reference image has two kinds of guidance:
+The large left house is the strict composition and proportion reference. Match this house shell's overall size, camera angle, wall positions, floor coverage, roof coverage, and spacious indoor-room proportion.
+The narrow right column contains style-detail references only. Use those details for color, roof material, wall/floor treatment, butterfly-flower decoration style, and line softness. Do not copy the right column's room scale or silhouette.
+
+Top priority:
+Make the new room as large and spacious as the large left reference. The two walls should reach close to the left and right edges, and the floor should occupy a large playable area like the left reference.
+
+Style target from the butterfly detail reference:
+Mint-aqua glass greenhouse roof with soft rounded ribs and translucent cyan panes.
+Soft cream walls with gentle plant-pattern texture, but keep the walls clean and not dirty.
+Pale sage green checker floor tiles, airy and delicate.
+Soft beige platform edge and light warm-brown beams.
+Small pastel flowers and a few delicate butterflies near the roof ridge, sparse and cute.
+Use the accepted butterfly-house palette: mint aqua, pale sage green, warm cream, soft beige, tiny pink-blue flowers.
+
+Layout:
+Keep the same default-house large room scale. An exact L-shaped layout is optional; if it conflicts with the large default-house proportion, use the default-house room geometry instead.
+Do not include a large foreground yard. Do not let exterior grass or brick paving reduce the indoor room size.
+At most include a very small blue-green brick detail at the front edge.
+
+Art style:
+Clean 2D mobile game illustration, cozy kawaii pastel, warm high-key colors, soft brown outlines, gentle cel-shaded depth, crisp edges, cute casual merge-game style.
+The final image should feel like the accepted butterfly house style applied onto the default house shell size.
+
+Asset requirements:
+One isolated house shell, easy background removal.
+No character, no furniture, no shelf, no UI, no buttons, no text, no labels, no captions, no writing anywhere.
+No fence, no dangling vines, no large bushes, no tropical plants, no dark grass outline, no blue or purple fringe, no photorealism.

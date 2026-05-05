@@ -1,0 +1,37 @@
+Create one standalone default room shell asset for a cozy flower-shop room decoration game.
+
+Use the provided reference image as the exact structure, camera, and layout reference.
+Keep the same open-front 2.5D isometric L-shaped room, same overall size in canvas, same roof shape, same windows, same wooden floor platform, same small front steps, and same stone foundation.
+
+Goal:
+Redraw this default room shell with a softer, gentler style. The current room feels too hard in outline and color contrast; make it warmer and more harmonious.
+
+Canvas and cutout:
+- Square 1:1 image.
+- Keep the room centered with similar margins to the reference.
+- Use a pure solid magenta background (#FF00FF) for cutout.
+- No UI, no labels, no text, no numbers, no characters, no furniture.
+
+Color direction:
+- Soft warm pastel palette, not high-contrast and not flashy.
+- Roof tiles: muted powder rose / soft peach pink, gentle highlights, no bright candy red.
+- Wood beams and floor: light honey beige, warm maple, soft caramel, less orange and less dark.
+- Walls: warm cream white, slightly ivory, not stark white.
+- Window glass: very pale mint-cyan, low saturation.
+- Stone foundation: warm light gray-beige, softly shaded.
+- Avoid too many accent colors. No colorful decorations, no flowers on the shell, no tropical or beach objects.
+
+Line and rendering style:
+- Softer thinner outlines in warm taupe-brown, not hard dark brown or black.
+- Rounded hand-painted edges, gentle anti-aliased strokes.
+- Low-contrast shading with soft gradients.
+- Keep the room readable and clean for furniture placement.
+- 2D hand-painted mobile merge game art, cozy kawaii flower-shop mood.
+- Avoid photorealism, harsh black outlines, heavy shadows, noisy texture, or strong saturated colors.
+
+Important:
+- Do not invent a new theme.
+- Do not add sails, birds, ropes, straw, sea objects, extra fences, or outdoor background.
+- Do not crop the house tightly; preserve the same usable sprite footprint as the reference.
+
+NO TEXT, no labels, no captions, no writing anywhere in the image.

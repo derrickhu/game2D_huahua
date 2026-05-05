@@ -29,6 +29,8 @@ import {
 } from '@/gameobjects/ui/ItemObtainOverlay';
 
 const LEVEL_UP_MASK_ALPHA = 0.62;
+/** 正式升级内容整体上移，给下方解锁卡片留出空间 */
+const LEVEL_UP_CONTENT_OFFSET_Y = -70;
 
 export interface LevelUpRewardPayload {
   huayuan: number;
@@ -168,6 +170,7 @@ export class LevelUpPopup extends PIXI.Container {
 
       const content = new PIXI.Container();
       content.eventMode = 'none';
+      content.position.y = LEVEL_UP_CONTENT_OFFSET_Y;
       this.addChild(content);
 
       const { boardItemSlots } = layoutObtainStyleRewardBlock(content, W, H, obtainEntries, {
@@ -479,27 +482,38 @@ export class LevelUpPopup extends PIXI.Container {
   private _drawSectionDivider(content: PIXI.Container, W: number, y: number, title: string): void {
     const cx = W / 2;
     const txt = new PIXI.Text(title, {
-      fontSize: 16,
-      fill: 0xfff3d2,
+      fontSize: 15,
+      fill: 0x6b4421,
       fontFamily: FONT_FAMILY,
       fontWeight: 'bold',
-      stroke: 0x6b4a1c,
-      strokeThickness: 3,
+      stroke: 0xfff6df,
+      strokeThickness: 2,
     });
     txt.anchor.set(0.5, 0);
     txt.position.set(cx, y);
     txt.eventMode = 'none';
 
-    const half = Math.max(60, Math.floor(txt.width / 2) + 22);
+    const pillW = Math.max(112, Math.ceil(txt.width + 34));
+    const pillH = 26;
+    const pill = new PIXI.Graphics();
+    pill.beginFill(0xfff0c4, 0.96);
+    pill.drawRoundedRect(cx - pillW / 2, y - 2, pillW, pillH, 13);
+    pill.endFill();
+    pill.lineStyle(1.5, 0xe2b65e, 0.86);
+    pill.drawRoundedRect(cx - pillW / 2, y - 2, pillW, pillH, 13);
+    pill.eventMode = 'none';
+
+    const half = Math.max(72, Math.floor(pillW / 2) + 18);
     const line = new PIXI.Graphics();
-    const lineY = y + Math.floor(txt.height / 2);
-    line.lineStyle(1.4, 0xE6C97A, 0.55);
+    const lineY = y + Math.floor(pillH / 2) - 2;
+    line.lineStyle(1.4, 0xE6C97A, 0.68);
     line.moveTo(cx - 130, lineY);
     line.lineTo(cx - half, lineY);
     line.moveTo(cx + half, lineY);
     line.lineTo(cx + 130, lineY);
     line.eventMode = 'none';
     content.addChild(line);
+    content.addChild(pill);
     content.addChild(txt);
   }
 
@@ -522,12 +536,12 @@ export class LevelUpPopup extends PIXI.Container {
 
     const COLS = 2;
     const MAX_SHOW = 6;
-    const ICON_SIZE = 76;
-    const CELL_W = 156;
-    const CELL_H = 124;
-    const COL_GAP = 14;
-    const ROW_GAP = 12;
-    const NAME_FONT = 13;
+    const ICON_SIZE = 58;
+    const CELL_W = 150;
+    const CELL_H = 94;
+    const COL_GAP = 12;
+    const ROW_GAP = 8;
+    const NAME_FONT = 12;
 
     const RARITY_ORDER: Record<string, number> = {
       [DecoRarity.LIMITED]: 0,
@@ -568,13 +582,13 @@ export class LevelUpPopup extends PIXI.Container {
     const gridW = COLS * CELL_W + (COLS - 1) * COL_GAP;
     const gridLeft = (W - gridW) / 2;
 
-    const RARITY_BORDER_COLOR: Record<string, number> = {
+    const RARITY_ACCENT_COLOR: Record<string, number> = {
       [DecoRarity.LIMITED]: 0xFF9800,
       [DecoRarity.RARE]: 0x64B5F6,
       [DecoRarity.FINE]: 0x81C784,
       [DecoRarity.COMMON]: 0xDEC090,
     };
-    const RARITY_TINT_FILL: Record<string, number> = {
+    const RARITY_BADGE_FILL: Record<string, number> = {
       [DecoRarity.LIMITED]: 0xFFE0B2,
       [DecoRarity.RARE]: 0xCFE6FF,
       [DecoRarity.FINE]: 0xCDEBD0,
@@ -588,30 +602,47 @@ export class LevelUpPopup extends PIXI.Container {
       const cx = gridLeft + col * (CELL_W + COL_GAP) + CELL_W / 2;
       const cellTop = gridTop + row * (CELL_H + ROW_GAP);
 
-      const borderColor = RARITY_BORDER_COLOR[item.rarity] ?? 0xDEC090;
-      const fillColor = RARITY_TINT_FILL[item.rarity] ?? 0xFFF1D6;
+      const accentColor = RARITY_ACCENT_COLOR[item.rarity] ?? 0xDEC090;
+      const badgeFill = RARITY_BADGE_FILL[item.rarity] ?? 0xFFF1D6;
       const cellBg = new PIXI.Graphics();
-      cellBg.beginFill(fillColor, 0.92);
+      cellBg.beginFill(0x3b2314, 0.14);
+      cellBg.drawRoundedRect(cx - CELL_W / 2 + 3, cellTop + 4, CELL_W, CELL_H, 14);
+      cellBg.endFill();
+      cellBg.beginFill(0xfffbf0, 0.98);
       cellBg.drawRoundedRect(cx - CELL_W / 2, cellTop, CELL_W, CELL_H, 14);
       cellBg.endFill();
-      cellBg.lineStyle(2, borderColor, 0.95);
+      cellBg.lineStyle(2, 0xe6bf71, 0.92);
       cellBg.drawRoundedRect(cx - CELL_W / 2, cellTop, CELL_W, CELL_H, 14);
+      cellBg.lineStyle(1.1, 0xffffff, 0.55);
+      cellBg.drawRoundedRect(cx - CELL_W / 2 + 4, cellTop + 4, CELL_W - 8, CELL_H - 8, 11);
       cellBg.eventMode = 'none';
       content.addChild(cellBg);
 
-      this._addDeferredIconSprite(content, item.icon, cx, cellTop + 8 + ICON_SIZE / 2, ICON_SIZE);
+      const iconBadge = new PIXI.Graphics();
+      iconBadge.beginFill(badgeFill, 0.95);
+      iconBadge.drawRoundedRect(cx - ICON_SIZE / 2 - 5, cellTop + 8, ICON_SIZE + 10, ICON_SIZE + 10, 14);
+      iconBadge.endFill();
+      iconBadge.lineStyle(1.6, accentColor, 0.5);
+      iconBadge.drawRoundedRect(cx - ICON_SIZE / 2 - 5, cellTop + 8, ICON_SIZE + 10, ICON_SIZE + 10, 14);
+      iconBadge.beginFill(0xffffff, 0.22);
+      iconBadge.drawRoundedRect(cx - ICON_SIZE / 2, cellTop + 12, ICON_SIZE, 13, 8);
+      iconBadge.endFill();
+      iconBadge.eventMode = 'none';
+      content.addChild(iconBadge);
+
+      this._addDeferredIconSprite(content, item.icon, cx, cellTop + 13 + ICON_SIZE / 2, ICON_SIZE);
 
       const name = new PIXI.Text(item.name, {
         fontSize: NAME_FONT,
-        fill: 0x4a2f10,
+        fill: 0x5b3a1d,
         fontFamily: FONT_FAMILY,
         fontWeight: 'bold',
         wordWrap: true,
-        wordWrapWidth: CELL_W - 12,
+        wordWrapWidth: CELL_W - 14,
         align: 'center',
       });
       name.anchor.set(0.5, 0);
-      name.position.set(cx, cellTop + 12 + ICON_SIZE + 4);
+      name.position.set(cx, cellTop + 14 + ICON_SIZE + 4);
       name.eventMode = 'none';
       content.addChild(name);
     }

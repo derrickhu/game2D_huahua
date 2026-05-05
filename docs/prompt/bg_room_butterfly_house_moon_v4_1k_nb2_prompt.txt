@@ -1,0 +1,25 @@
+Create one single high-resolution square game asset image.
+
+Reference interpretation:
+The large house on the left is the exact required final layout, scale, silhouette, grass island, and room proportion. Copy this layout almost exactly.
+The small crops on the right are only material and color references for the Moonlight Butterfly Pavilion style: lavender-blue roof, moonlit glass, lavender floor, crescent moon and star butterfly decoration.
+
+Strict layout requirements:
+Keep the same large full grass island footprint as the left house, including the rounded uneven grass edge, front paving position, little steps, and bottom grass area.
+Keep the same house size, same roof height, same wall height, same wide indoor floor area, same L-shaped notch, same two-wall isometric camera angle, and same canvas coverage.
+Keep the room spacious and large. Do not shrink the house. Do not remove the grass base.
+
+Moonlight Butterfly Pavilion style:
+Replace bamboo materials with a soft moonlit lavender-blue pavilion style.
+Use lavender-blue roof tiles with pale moonlit translucent glass roof panels.
+Use cream walls with subtle crescent moon, star sparkle, and moonbeam patterns.
+Use lavender and cream checker floor tiles with small butterfly and star motifs, plus a gentle crescent moon floor emblem if it fits naturally.
+Use pale mint-lavender front paving.
+Add small white and blue flowers around the roof ridge and eaves, tiny moon butterflies, and one small crescent moon ornament above the roof ridge.
+The design should feel dreamy, moonlit, soft, and clearly different from the default mint and bamboo versions.
+
+Cutout-friendly background:
+Use a flat solid very light pastel mint-cream background outside the grass island and house. No magenta, no purple background, no blue background, no dark background, no gradient, no scenery, no cast shadow outside the asset.
+Edges must be crisp 1K game art, clean 2D illustration, soft brown outlines, pastel colors, no blur, no fuzzy glow, no color fringe.
+
+No furniture, no character, no UI, no text, no labels, no captions, no writing anywhere in the image.

@@ -1,0 +1,25 @@
+Create one single square game asset image.
+
+Use the provided reference image as two-part guidance:
+The large left room is the strict house shape and proportion reference. Match its exact isometric silhouette, roof height, two-wall layout, L-shaped floor notch, small front paving, grass footprint, canvas coverage, and spacious indoor scale.
+The right bamboo reference is only for the bamboo theme identity. Do not copy its smaller room shape.
+
+Must keep from the large left reference:
+Same overall room size and canvas coverage.
+Same L-shaped room, large indoor floor area, two walls, small front notch, soft grass footprint, and kawaii mobile-game rendering quality.
+Same general roof volume and roof position, but the roof material and color should change clearly.
+
+Make the bamboo version visibly different from the default mint greenhouse:
+Change the roof away from mint glass. Use a warm bamboo-woven roof or soft bamboo-tile roof: honey bamboo, pale straw yellow, muted sage shadows, rounded bamboo ribs, cozy natural texture. It can still have small side window glass panels, but the main roof should read as bamboo/cane/leaf-woven rather than transparent mint glass.
+Use warm honey bamboo columns and beams.
+Change the floor clearly: use light cream and warm bamboo-tan checker tiles, or woven tatami-like bamboo mat tiles, with subtle leaf/butterfly motifs. Do not use the default pale green checker floor.
+Change the small front paving color: use warm beige, muted tea-green, and pale tan bricks, not the default blue-green paving.
+Use soft cream walls with very subtle bamboo leaf patterns.
+Add sparse bamboo leaves, a few slender bamboo stems near the roof/back corner, and tiny pastel flowers/butterflies. Keep them decorative, not cluttered.
+
+Important constraints:
+The room shape, size, camera angle, and indoor floor area must remain almost identical to the large left default butterfly house.
+Do not make the house smaller.
+No furniture, no character, no UI, no text, no labels, no captions, no writing.
+No fence, no dangling vines, no huge bamboo forest, no tropical leaves, no large bushes, no dirty gray shadows, no blue/purple fringe.
+Isolated house shell, easy background removal.

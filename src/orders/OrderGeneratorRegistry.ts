@@ -22,6 +22,7 @@ import {
   ORDER_COMBO_THIRD_SLOT_CHANCE,
   ORDER_GROWTH_BONUS_MULTIPLIER,
   ORDER_GROWTH_MIN_MAX_NORM,
+  ORDER_ITEM_LEVEL_PICK_EXPONENT,
   TIMED_DIAMOND_ORDER_BASE_CHANCE,
   TIMED_DIAMOND_ORDER_FIRST_DAILY_CHANCE_MULT,
   TIMED_DIAMOND_ORDER_MIN_ITEM_LEVEL,
@@ -138,7 +139,7 @@ function pickItemLevel(
   let hi = Math.min(tierMaxLv, toolCap + (aspirational ? 1 : 0), maxItemLevel);
   const lo = Math.min(minLv, hi);
   const span = hi - lo + 1;
-  return lo + Math.floor(Math.pow(rng(), 1.4) * span);
+  return lo + Math.floor(Math.pow(rng(), ORDER_ITEM_LEVEL_PICK_EXPONENT) * span);
 }
 
 function tryPickItem(
@@ -290,7 +291,7 @@ function tryGenerateCombo(
     const hi = Math.min(spec.maxLv, toolCap + (aspirational ? 1 : 0), lineMax);
     const lo = Math.min(spec.minLv, hi);
     if (hi < lo) return null;
-    const level = lo + Math.floor(Math.pow(rng(), 1.4) * (hi - lo + 1));
+    const level = lo + Math.floor(Math.pow(rng(), ORDER_ITEM_LEVEL_PICK_EXPONENT) * (hi - lo + 1));
     const id = findItemId(spec.category, spec.line, level);
     if (id && !used.has(id)) return id;
     for (let lv = hi; lv >= lo; lv--) {
@@ -309,10 +310,7 @@ function tryGenerateCombo(
   if (!b) return null;
   slots.push({ itemId: b });
 
-  const tierDef = ORDER_TIERS[tier];
-  const [, maxS] = tierDef.slotRange;
   if (
-    maxS >= 3 &&
     rng() < ORDER_COMBO_THIRD_SLOT_CHANCE &&
     ulk.unlockedLineCount >= ORDER_COMBO_MIN_UNLOCKED_LINES_FOR_THIRD_SLOT
   ) {

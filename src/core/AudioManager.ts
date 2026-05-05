@@ -34,6 +34,7 @@ export interface PlaySoundOptions {
 class AudioManagerClass {
   private _sounds: Map<string, SoundEntry> = new Map();
   private _bgm: any = null;
+  private _bgmOriginalSrc: string | null = null;
   private _soundMuted = false;
   private _musicMuted = false;
   private _bgmPending: { src: string; volume: number } | null = null;
@@ -154,6 +155,15 @@ class AudioManagerClass {
   }
 
   playBGM(src: string, volume = 0.5, opts?: { loop?: boolean }): void {
+    if (this._bgm && this._bgmOriginalSrc === src) {
+      this._bgm.volume = volume;
+      this._bgm.loop = opts?.loop ?? true;
+      if (!this._musicMuted) {
+        try { this._bgm.play(); } catch (_) {}
+      }
+      return;
+    }
+
     const seq = ++this._bgmRequestSeq;
     void CdnAssetService.resolveOrDownload(src)
       .then(resolvedSrc => this._playResolvedBGM(seq, src, resolvedSrc, volume, opts))
@@ -176,6 +186,15 @@ class AudioManagerClass {
       console.warn(TAG, 'API 不可用，无法播放 BGM');
       return;
     }
+    if (this._bgm && this._bgmOriginalSrc === originalSrc) {
+      this._bgm.volume = volume;
+      this._bgm.loop = opts?.loop ?? true;
+      if (!this._musicMuted) {
+        try { this._bgm.play(); } catch (_) {}
+      }
+      return;
+    }
+
     this.stopBGM();
 
     // 记录待播放信息，首次可能需要用户交互后才能真正播放
@@ -190,9 +209,11 @@ class AudioManagerClass {
       this._bgm = create.call(_api);
       if (!this._bgm || typeof this._bgm.play !== 'function') {
         this._bgm = null;
+        this._bgmOriginalSrc = null;
         return;
       }
 
+      this._bgmOriginalSrc = originalSrc;
       this._bgm.loop = opts?.loop ?? true;
       this._bgm.volume = volume;
       this._bgm.onError((err: any) => {
@@ -201,6 +222,7 @@ class AudioManagerClass {
           this._bgm?.destroy?.();
         } catch (_) { /* */ }
         this._bgm = null;
+        this._bgmOriginalSrc = null;
       });
       this._bgm.onPlay(() => {
         console.log(TAG, `BGM "${originalSrc}" 开始播放`);
@@ -228,11 +250,12 @@ class AudioManagerClass {
     } catch (e) {
       console.warn(TAG, `BGM "${originalSrc}" 创建异常:`, e);
       this._bgm = null;
+      this._bgmOriginalSrc = null;
     }
   }
 
   /**
-   * 在用户首次交互时调用，确保被自动播放策略拦截的 BGM 能恢复播放
+   * 在用户交互时调用，确保被自动播放策略拦截的 BGM 能恢复播放
    */
   resumeOnInteraction(): void {
     if (this._bgmPending && !this._bgm) {
@@ -256,6 +279,7 @@ class AudioManagerClass {
         this._bgm.destroy();
       } catch (_) {}
       this._bgm = null;
+      this._bgmOriginalSrc = null;
     }
   }
 

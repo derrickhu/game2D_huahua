@@ -28,6 +28,7 @@ const MAIN_IMAGE_MAP: Record<string, string> = {
   icon_ad_reward_nb2: 'images/ui/icon_ad_reward_nb2.png',
   icon_heart:  'images/ui/icon_heart.png',
   icon_book:   'images/ui/icon_book.png',
+  icon_affinity_card: 'images/ui/icon_affinity_card.png',
   icon_basket: 'images/ui/icon_basket.png',
   icon_chart:  'images/ui/icon_chart.png',
   icon_level_badge: 'images/ui/icon_level_badge.png',
@@ -48,6 +49,7 @@ const MAIN_IMAGE_MAP: Record<string, string> = {
   /** 挑战关卡入口占位（正式图标就绪后替换路径或 key） */
   icon_challenge: 'images/ui/icon_level_badge.png',
   icon_build:     'images/ui/icon_build.png',
+  icon_worldmap_nav: 'images/ui/icon_worldmap_nav.png',
   icon_operate:   'images/ui/icon_operate.png',
 
   // ---- 棋盘 & 场景背景 ----
@@ -231,6 +233,9 @@ const PANELS_IMAGE_MAP: Record<string, string> = {
   worldmap_house_flower_shop: 'subpkg_panels/images/ui/worldmap_house_flower_shop.png',
   /** 大地图蝴蝶小屋立绘（NB2+rembg；原茶室占位已替换） */
   worldmap_thumb_butterfly_house: 'subpkg_panels/images/ui/worldmap_thumb_butterfly_house.png',
+  worldmap_thumb_garden_villa: 'subpkg_panels/images/ui/worldmap_thumb_garden_villa.png',
+  worldmap_thumb_tea_house: 'subpkg_panels/images/ui/worldmap_thumb_tea_house.png',
+  worldmap_thumb_forest_treehouse: 'subpkg_panels/images/ui/worldmap_thumb_forest_treehouse.png',
   /** 大地图蛋糕房立绘（钩子，后续接 sceneId） */
   worldmap_thumb_cake_shop: 'subpkg_panels/images/ui/worldmap_thumb_cake_shop.png',
   /** 大地图限时活动入口（喜庆占位，点开 EventPanel） */
@@ -441,8 +446,8 @@ const ITEMS_IMAGE_MAP: Record<string, string> = {
 // ================================================================
 const DECO_IMAGE_MAP: Record<string, string> = {
   // ---- 花店建筑场景 ----
-  house_shop: 'subpkg_deco/images/house/bg_room_default.png',
-  house_bg:   'subpkg_deco/images/house/bg.jpg',
+  house_shop: 'subpkg_deco/images/house/bg_room_default_soft_nb2.png',
+  house_bg:   'subpkg_deco/images/house/bg_integrated_grass_nb2.jpg',
 
   // ---- 新家具素材 furniture/ (含 NB2 扩展，已扣底) ----
   // 花架
@@ -585,6 +590,28 @@ const DECO_IMAGE_MAP: Record<string, string> = {
   /** 后期家具占位：无独立贴图前可继续用作 fallback */
   furniture_deco_placeholder: 'subpkg_deco/images/furniture/furniture_deco_placeholder.png',
 
+  // ---- 蛋糕房 cake_shop 专属家具 20 件（NB2+rembg+crop_trim；allowedSceneIds=['cake_shop']）----
+  cake_shelf_layered_display:        'subpkg_deco/images/cake/cake_shelf_layered_display.png',
+  cake_shelf_baking_pantry:          'subpkg_deco/images/cake/cake_shelf_baking_pantry.png',
+  cake_shelf_chilled_cabinet:        'subpkg_deco/images/cake/cake_shelf_chilled_cabinet.png',
+  cake_shelf_fondant_flowers:        'subpkg_deco/images/cake/cake_shelf_fondant_flowers.png',
+  cake_table_workstation:            'subpkg_deco/images/cake/cake_table_workstation.png',
+  cake_table_register_counter:       'subpkg_deco/images/cake/cake_table_register_counter.png',
+  cake_table_round_dessert:          'subpkg_deco/images/cake/cake_table_round_dessert.png',
+  cake_table_gift_wrap:              'subpkg_deco/images/cake/cake_table_gift_wrap.png',
+  cake_table_dessert_island:         'subpkg_deco/images/cake/cake_table_dessert_island.png',
+  cake_light_pink_double_oven:       'subpkg_deco/images/cake/cake_light_pink_double_oven.png',
+  cake_light_stand_mixer:            'subpkg_deco/images/cake/cake_light_stand_mixer.png',
+  cake_light_pendant_macaron:        'subpkg_deco/images/cake/cake_light_pendant_macaron.png',
+  cake_light_chocolate_fountain:     'subpkg_deco/images/cake/cake_light_chocolate_fountain.png',
+  cake_orn_strawberry_stool_pair:    'subpkg_deco/images/cake/cake_orn_strawberry_stool_pair.png',
+  cake_orn_wedding_cake_centerpiece: 'subpkg_deco/images/cake/cake_orn_wedding_cake_centerpiece.png',
+  cake_orn_donut_cushion_pair:       'subpkg_deco/images/cake/cake_orn_donut_cushion_pair.png',
+  cake_orn_teddy_baker:              'subpkg_deco/images/cake/cake_orn_teddy_baker.png',
+  cake_wallart_menu_chalkboard:      'subpkg_deco/images/cake/cake_wallart_menu_chalkboard.png',
+  cake_wallart_lollipop_clock:       'subpkg_deco/images/cake/cake_wallart_lollipop_clock.png',
+  cake_garden_strawberry_arch:       'subpkg_deco/images/cake/cake_garden_strawberry_arch.png',
+
   // ---- 熟客主题家具（V2：单客人图鉴 100% 解锁；NB2+rembg+crop_trim；DECO_DEFS 中以 affinity_* id 注册）----
   affinity_student_desk:        'subpkg_deco/images/affinity/affinity_student_desk.png',
   affinity_worker_coffee_corner:'subpkg_deco/images/affinity/affinity_worker_coffee_corner.png',
@@ -596,11 +623,11 @@ const DECO_IMAGE_MAP: Record<string, string> = {
   affinity_season_s1_signlight: 'subpkg_deco/images/affinity/affinity_season_s1_signlight.png',
 
   // ---- 房间背景 ----
-  bg_room_default: 'subpkg_deco/images/house/bg_room_default.png',
+  bg_room_default: 'subpkg_deco/images/house/bg_room_default_soft_nb2.png',
   /** 蝴蝶小屋默认房壳（当前先接 preview 资源，后续定稿可替换正式路径） */
-  bg_room_butterfly_house_nb2: 'subpkg_deco/images/house/preview/bg_room_butterfly_house_nb2.png',
-  bg_room_butterfly_house_moon_nb2: 'subpkg_deco/images/house/preview/bg_room_butterfly_house_moon_nb2.png',
-  bg_room_butterfly_house_bamboo_nb2: 'subpkg_deco/images/house/preview/bg_room_butterfly_house_bamboo_nb2.png',
+  bg_room_butterfly_house_nb2: 'subpkg_deco/images/house/preview/bg_room_butterfly_house_default_v11_1k_nb2.png',
+  bg_room_butterfly_house_moon_nb2: 'subpkg_deco/images/house/preview/bg_room_butterfly_house_moon_v4_1k_nb2.png',
+  bg_room_butterfly_house_bamboo_nb2: 'subpkg_deco/images/house/preview/bg_room_butterfly_house_bamboo_v4_1k_nb2.png',
   bg_room_candy_nb2: 'subpkg_deco/images/house/bg_room_candy_nb2.png',
   bg_room_bloom_nb2: 'subpkg_deco/images/house/bg_room_bloom_nb2.png',
   bg_room_lagoon_nb2: 'subpkg_deco/images/house/bg_room_lagoon_nb2.png',
@@ -642,7 +669,7 @@ const SHOP_WARMUP_KEYS = [
   'owner_full_default',
   'owner_full_default_blink',
   'shop_edit_deco_pill_4x2_nb2',
-  'icon_worldmap',
+  'icon_worldmap_nav',
 ] as const;
 
 const DECO_PANEL_WARMUP_KEYS = [
@@ -716,6 +743,9 @@ const WORLDMAP_WARMUP_KEYS = [
   'worldmap_house_flower_shop',
   'worldmap_thumb_butterfly_house',
   'worldmap_thumb_cake_shop',
+  'worldmap_thumb_garden_villa',
+  'worldmap_thumb_tea_house',
+  'worldmap_thumb_forest_treehouse',
   'worldmap_thumb_timed_event',
   'worldmap_thumb_wishing_fountain_1',
   'worldmap_thumb_wishing_fountain_2',
@@ -1284,6 +1314,13 @@ class TextureCacheClass {
         }
 
         const img = platform.createImage();
+        let retriedLocalSubpackage = false;
+        const markFailed = (err?: any): void => {
+          console.warn(`[TextureCache] 图片加载失败: ${key} (${path})`, err);
+          this._failed.add(key);
+          this._loading.delete(key);
+          resolve();
+        };
         img.onload = () => {
           try {
             const baseTexture = PIXI.BaseTexture.from(img as any);
@@ -1298,10 +1335,18 @@ class TextureCacheClass {
           resolve();
         };
         img.onerror = (err: any) => {
-          console.warn(`[TextureCache] 图片加载失败: ${key} (${path})`, err);
-          this._failed.add(key);
-          this._loading.delete(key);
-          resolve();
+          if (!retriedLocalSubpackage) {
+            retriedLocalSubpackage = true;
+            void this._ensureSubpackageForLocalFallback(path).then(ok => {
+              if (ok) {
+                img.src = path;
+                return;
+              }
+              markFailed(err);
+            }).catch(() => markFailed(err));
+            return;
+          }
+          markFailed(err);
         };
         void CdnAssetService.resolveOrDownload(path)
           .then((resolvedPath) => {
@@ -1324,6 +1369,30 @@ class TextureCacheClass {
     return promise.finally(() => {
       this._loading.delete(key);
     });
+  }
+
+  /**
+   * CDN 未命中时会回退到本地分包路径；若对应分包还没加载，图片会先 onerror。
+   * 这里按原始逻辑路径补加载分包后重试一次，避免房壳/家具在 CDN 同步期间直接空白。
+   */
+  private async _ensureSubpackageForLocalFallback(path: string): Promise<boolean> {
+    const normalized = path.replace(/^\/+/, '').replace(/^minigame\//, '');
+    if (normalized.startsWith('subpkg_deco/') && !this._decoLoaded) {
+      await this._loadSubpackage('deco');
+      this._decoLoaded = true;
+      return true;
+    }
+    if (normalized.startsWith('subpkg_chars/') && !this._charsLoaded) {
+      await this._loadSubpackage('chars');
+      this._charsLoaded = true;
+      return true;
+    }
+    if (normalized.startsWith('subpkg_panels/') && !this._panelsLoaded) {
+      await this._loadSubpackage('panels');
+      this._panelsLoaded = true;
+      return true;
+    }
+    return false;
   }
 }
 

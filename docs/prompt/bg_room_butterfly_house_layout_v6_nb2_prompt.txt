@@ -1,0 +1,35 @@
+Create one high-resolution standalone isometric room shell asset for the "Butterfly House" decoration scene in a cozy mobile merge game.
+
+Use the provided reference image for style, colors, house proportions, roof decoration style, and front-yard layout.
+
+Must preserve from the reference:
+- Same overall room type and proportions: open-front isometric room, two tall cream walls, high roof above the walls, large L-shaped front edge.
+- Same soft pastel color palette: pale mint/aqua roof, warm cream walls, muted sage-green checker floor, soft taupe-brown outlines.
+- Same cute butterfly-house feeling.
+- Keep decorative butterflies on top of the roof.
+- Keep small roof flowers / flower clusters on the roof edges.
+- Keep the small blue-green brick / herringbone paving area in the front yard.
+- The brick paving area must sit in the L-shaped notch/front-center area directly in front of the room opening, like the reference. It must NOT move to the right side.
+
+Required changes from the reference:
+- Remove all dangling vines, hanging leaves, hanging flower strings, and drooping plants from the inner roof center and wall corner.
+- The interior wall corner must stay clean and open for furniture placement.
+- Reduce dense flowers around the outer grass. Keep only sparse, tasteful low shrubs and tiny flowers.
+- The grass outer edge should be soft and painterly with minimal dark outline.
+- No fence.
+- No character, no furniture, no UI, no text, no labels, no numbers.
+
+Composition:
+- Square 1:1 asset.
+- Large centered house and yard, similar footprint to the reference.
+- Clean silhouette for background removal.
+- Use flat pale sky-blue background (#BEEFFF) for rembg cutout.
+
+Style:
+- Clean 2D hand-painted mobile game art.
+- Kawaii cozy butterfly garden room.
+- Gentle pastel palette, low-to-medium saturation.
+- Soft warm taupe-brown outlines, not black.
+- Crisp and high-detail for large in-game display; avoid blur.
+
+NO TEXT, no labels, no captions, no writing anywhere in the image.

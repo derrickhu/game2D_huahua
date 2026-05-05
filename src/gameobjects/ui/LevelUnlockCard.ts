@@ -93,8 +93,8 @@ export function createLevelUnlockCard(
   opts: LevelUnlockCardOptions,
 ): LevelUnlockCardResult {
   const W = Math.max(80, Math.floor(opts.width));
-  const padding = Math.max(4, opts.padding ?? 8);
-  const ICON = Math.max(24, Math.min(opts.iconSize ?? 44, 64));
+  const padding = Math.max(6, opts.padding ?? 10);
+  const ICON = Math.max(34, Math.min(opts.iconSize ?? 48, 64));
   const TITLE = Math.max(11, Math.min(opts.titleFontSize ?? 13, 16));
   const DESC = Math.max(9, Math.min(opts.descFontSize ?? 11, 14));
 
@@ -109,7 +109,7 @@ export function createLevelUnlockCard(
     fontWeight: 'bold',
     letterSpacing: 1,
   } as any);
-  pill.anchor.set(0.5, 0);
+  pill.anchor.set(0.5, 0.5);
 
   // 标题（深棕字 + 更明确层级）
   const title = new PIXI.Text(entry.title ?? '', {
@@ -118,10 +118,10 @@ export function createLevelUnlockCard(
     fontFamily: FONT_FAMILY,
     fontWeight: 'bold',
     wordWrap: true,
-    wordWrapWidth: W - padding * 2 - 12,
-    align: 'center',
+    wordWrapWidth: W - padding * 2 - ICON - 34,
+    align: 'left',
   } as any);
-  title.anchor.set(0.5, 0);
+  title.anchor.set(0, 0);
 
   // 描述
   const desc = new PIXI.Text(entry.desc ?? '', {
@@ -129,11 +129,11 @@ export function createLevelUnlockCard(
     fill: 0x7a5a33,
     fontFamily: FONT_FAMILY,
     wordWrap: true,
-    wordWrapWidth: W - padding * 2 - 12,
-    align: 'center',
-    lineHeight: DESC + 5,
+    wordWrapWidth: W - padding * 2 - ICON - 34,
+    align: 'left',
+    lineHeight: DESC + 4,
   } as any);
-  desc.anchor.set(0.5, 0);
+  desc.anchor.set(0, 0);
 
   // 图标
   const iconKey = entry.iconKey || KIND_DEFAULT_ICON[entry.kind];
@@ -169,68 +169,72 @@ export function createLevelUnlockCard(
     );
   }
 
-  // 计算高度
-  const pillH = Math.max(24, Math.round((TITLE - 4) * 1.9));
-  const pillY = padding;
-  const iconYTop = pillY + pillH + 10;
-  const titleY = iconYTop + ICON + 10;
+  // 计算高度：改为横向卡片，压缩纵向空间
+  const pillH = Math.max(18, Math.round((TITLE - 4) * 1.55));
+  const iconCx = padding + ICON / 2 + 3;
+  const iconCy = padding + ICON / 2 + 7;
+  const textX = padding + ICON + 18;
+  const titleY = padding + 12;
   // 临时设位以拿到自然 height
-  title.position.set(W / 2, titleY);
+  title.position.set(textX, titleY);
   const descY = titleY + title.height + 6;
-  desc.position.set(W / 2, descY);
-  let H = Math.ceil(descY + desc.height + padding + 4);
+  desc.position.set(textX, descY);
+  const textBottom = descY + desc.height;
+  let H = Math.max(86, Math.ceil(Math.max(iconCy + ICON / 2, textBottom + pillH + 8) + padding + 8));
   if (typeof opts.maxHeight === 'number') H = Math.min(H, Math.max(40, opts.maxHeight));
 
-  // 背景（更像一张独立奖励卡，弱高光 + 内描边）
+  // 背景（奶油奖励卡 + 左侧彩色图标章）
   const bg = new PIXI.Graphics();
-  bg.beginFill(0xfff8ea, 0.98);
-  bg.drawRoundedRect(0, 0, W, H, 14);
+  bg.beginFill(0x3b2314, 0.16);
+  bg.drawRoundedRect(3, 4, W, H, 15);
   bg.endFill();
-  bg.lineStyle(2, KIND_BORDER_COLOR[entry.kind] ?? 0xC79A55, 0.95);
-  bg.drawRoundedRect(0, 0, W, H, 14);
+  bg.beginFill(0xfffbf0, 0.98);
+  bg.drawRoundedRect(0, 0, W, H, 15);
+  bg.endFill();
+  bg.lineStyle(2, 0xe6bf71, 0.92);
+  bg.drawRoundedRect(0, 0, W, H, 15);
   bg.lineStyle(1.2, 0xffffff, 0.55);
-  bg.drawRoundedRect(4, 4, W - 8, H - 8, 11);
+  bg.drawRoundedRect(4, 4, W - 8, H - 8, 12);
   bg.eventMode = 'none';
   root.addChild(bg);
 
   const glow = new PIXI.Graphics();
-  glow.beginFill(KIND_BG_TINT[entry.kind] ?? 0xFFF1D6, 0.9);
-  glow.drawCircle(W / 2, iconYTop + ICON / 2, ICON * 0.48);
+  glow.beginFill(KIND_BG_TINT[entry.kind] ?? 0xFFF1D6, 0.96);
+  glow.drawRoundedRect(padding, padding + 5, ICON + 6, ICON + 6, 15);
   glow.endFill();
-  glow.lineStyle(2, KIND_BORDER_COLOR[entry.kind] ?? 0xC79A55, 0.35);
-  glow.drawCircle(W / 2, iconYTop + ICON / 2, ICON * 0.48);
+  glow.lineStyle(1.8, KIND_BORDER_COLOR[entry.kind] ?? 0xC79A55, 0.45);
+  glow.drawRoundedRect(padding, padding + 5, ICON + 6, ICON + 6, 15);
   glow.beginFill(0xffffff, 0.28);
-  glow.drawCircle(W / 2 - ICON * 0.18, iconYTop + ICON * 0.32, ICON * 0.18);
+  glow.drawRoundedRect(padding + 4, padding + 8, ICON - 2, Math.max(10, ICON * 0.28), 10);
   glow.endFill();
   root.addChild(glow);
 
   const sparkle = new PIXI.Graphics();
-  const scx = W / 2;
-  const scy = iconYTop + ICON / 2;
-  drawSparkle(sparkle, scx - ICON * 0.44, scy - ICON * 0.22, ICON * 0.26, 0xffffff, 0.9);
-  drawSparkle(sparkle, scx + ICON * 0.42, scy - ICON * 0.3, ICON * 0.2, 0xfff6cf, 0.78);
-  drawSparkle(sparkle, scx + ICON * 0.3, scy + ICON * 0.34, ICON * 0.16, 0xffffff, 0.68);
+  drawSparkle(sparkle, iconCx - ICON * 0.4, iconCy - ICON * 0.34, ICON * 0.22, 0xffffff, 0.85);
+  drawSparkle(sparkle, iconCx + ICON * 0.46, iconCy - ICON * 0.42, ICON * 0.18, 0xfff6cf, 0.78);
   sparkle.lineStyle(1.2, 0xffffff, 0.55);
-  sparkle.moveTo(scx - ICON * 0.53, scy - ICON * 0.22 - ICON * 0.08);
-  sparkle.lineTo(scx - ICON * 0.53, scy - ICON * 0.22 + ICON * 0.08);
-  sparkle.moveTo(scx - ICON * 0.53 - ICON * 0.08, scy - ICON * 0.22);
-  sparkle.lineTo(scx - ICON * 0.53 + ICON * 0.08, scy - ICON * 0.22);
+  sparkle.moveTo(iconCx - ICON * 0.48, iconCy - ICON * 0.35 - ICON * 0.06);
+  sparkle.lineTo(iconCx - ICON * 0.48, iconCy - ICON * 0.35 + ICON * 0.06);
+  sparkle.moveTo(iconCx - ICON * 0.48 - ICON * 0.06, iconCy - ICON * 0.35);
+  sparkle.lineTo(iconCx - ICON * 0.48 + ICON * 0.06, iconCy - ICON * 0.35);
   root.addChild(sparkle);
 
-  const pillBgW = Math.min(W - padding * 2, Math.max(84, pill.width + 24));
+  const pillBgW = Math.min(W - textX - padding, Math.max(72, pill.width + 18));
+  const pillX = Math.min(W - padding - pillBgW, textX + 2);
+  const pillY = H - padding - pillH + 1;
   const pillBg = new PIXI.Graphics();
   pillBg.beginFill(KIND_BORDER_COLOR[entry.kind] ?? 0xC79A55, 0.92);
-  pillBg.drawRoundedRect((W - pillBgW) / 2, pillY, pillBgW, pillH, Math.floor(pillH / 2));
+  pillBg.drawRoundedRect(pillX, pillY, pillBgW, pillH, Math.floor(pillH / 2));
   pillBg.endFill();
   pillBg.beginFill(0xffffff, 0.16);
-  pillBg.drawRoundedRect((W - pillBgW) / 2 + 3, pillY + 3, pillBgW - 6, Math.max(8, pillH * 0.42), Math.floor((pillH - 6) / 2));
+  pillBg.drawRoundedRect(pillX + 3, pillY + 3, pillBgW - 6, Math.max(7, pillH * 0.42), Math.floor((pillH - 6) / 2));
   pillBg.endFill();
   root.addChild(pillBg);
 
-  pill.position.set(W / 2, pillY + Math.max(3, Math.floor((pillH - pill.height) / 2) - 1));
+  pill.position.set(pillX + pillBgW / 2, pillY + pillH / 2 - 1);
   root.addChild(pill);
 
-  iconHolder.position.set(W / 2, iconYTop + ICON / 2);
+  iconHolder.position.set(iconCx + 3, iconCy + 3);
   root.addChild(iconHolder);
   root.addChild(title);
   root.addChild(desc);

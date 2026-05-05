@@ -1489,10 +1489,15 @@ export class MainScene implements Scene {
   private _switchToShopScene(): void {
     if (SceneManager.current?.name === 'shop' || this._switchingToShop) return;
     this._switchingToShop = true;
+    SoundSystem.playShopBGM();
 
+    const roomBgKey = DecorationManager.getRoomBgTextureKey();
     const preload = TutorialManager.isActive
       ? TextureCache.preloadTutorialDeco()
-      : TextureCache.preloadShopScene();
+      : Promise.all([
+        TextureCache.preloadShopScene(),
+        TextureCache.preloadKeys([roomBgKey]),
+      ]).then(() => undefined);
 
     void preload.catch(err => {
       console.warn('[MainScene] 花店首屏资源预加载未完全成功:', err);

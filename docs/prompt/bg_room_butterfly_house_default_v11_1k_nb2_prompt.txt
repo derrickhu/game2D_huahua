@@ -1,0 +1,25 @@
+Create one single high-resolution square game asset image.
+
+Reference interpretation:
+The large house on the left is the exact required final layout, scale, silhouette, grass island, and room proportion. Copy this layout almost exactly.
+The small crops on the right are only material and color references for the default Butterfly House style: mint roof, pale aqua glass, pale green floor, pastel flower and butterfly decoration.
+
+Strict layout requirements:
+Keep the same large full grass island footprint as the left house, including the rounded uneven grass edge, front paving position, little steps, and bottom grass area.
+Keep the same house size, same roof height, same wall height, same wide indoor floor area, same L-shaped notch, same two-wall isometric camera angle, and same canvas coverage.
+Keep the room spacious and large. Do not shrink the house. Do not remove the grass base.
+
+Default Butterfly House style:
+Replace bamboo materials with a fresh mint-aqua greenhouse cottage style.
+Use mint-aqua roof tiles with pale translucent glass roof panels.
+Use cream walls with subtle plant patterns.
+Use pale green checker floor tiles with tiny butterfly and leaf motifs.
+Use mint-green and pale aqua front paving.
+Add small pastel flowers around the roof ridge and eaves, and two or three soft butterflies near the roof.
+The design should feel fresh, airy, springlike, and clearly different from the bamboo version.
+
+Cutout-friendly background:
+Use a flat solid very light pastel mint-cream background outside the grass island and house. No magenta, no purple background, no blue background, no dark background, no gradient, no scenery, no cast shadow outside the asset.
+Edges must be crisp 1K game art, clean 2D illustration, soft brown outlines, pastel colors, no blur, no fuzzy glow, no color fringe.
+
+No furniture, no character, no UI, no text, no labels, no captions, no writing anywhere in the image.

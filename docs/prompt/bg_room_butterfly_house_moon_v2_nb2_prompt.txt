@@ -1,0 +1,27 @@
+Create one single square game asset image.
+
+Use the provided reference image as two-part guidance:
+The large left room is the strict house shape and proportion reference. Match its exact isometric room silhouette, roof height, two-wall layout, L-shaped floor notch, small front brick paving, grass footprint, canvas coverage, and spacious indoor scale.
+The right style reference is for decoration and color direction only. Do not copy its smaller room shape or simplified layout. Apply its moonlit rare-room identity onto the large left butterfly house shell.
+
+Must keep from the large left reference:
+Same overall house size and canvas coverage.
+Same greenhouse roof structure and glass side panels.
+Same L-shaped room, large checker floor, small front brick paving, and soft grass edge footprint.
+Same readable indoor space proportion.
+Same soft kawaii casual mobile-game rendering quality.
+
+Moonlit style transformation:
+Use a cool lavender-blue moon-glass roof, still following the same rounded greenhouse roof geometry and translucent glass panes.
+Use pearl cream walls with very subtle moonbeam / star-dust patterns, clean and bright, not dark.
+Use pale moonstone floor tiles, mostly ivory and light blue-lavender, with a soft crescent moon motif and delicate butterfly tile accents.
+Use pale champagne-gold beams and platform edges, with tiny pearl highlights.
+Add small crescent moon ornaments and a few delicate pale butterflies near the roof ridge, sparse and elegant.
+Keep the butterfly-house greenhouse feeling, but make the palette feel rare, moonlit, airy, and more premium than the default room.
+
+Important constraints:
+The room shape, size, scale, camera angle, and indoor floor area must remain almost identical to the large left default butterfly house.
+Do not make the house smaller. Do not simplify it into the old moon shell.
+No furniture, no character, no UI, no text, no labels, no captions, no writing.
+No fence, no dangling vines, no huge plants, no dark night background, no dirty gray shadows, no blue/purple fringe.
+Isolated house shell, easy background removal.

@@ -1,0 +1,34 @@
+Create one 3 columns x 2 rows icon sheet for a cozy pastel flower-shop mobile game.
+
+Use the provided reference image very closely for style. The sofa and dress icons are the target style: bright saturated candy colors, soft puffy 3D volume, simple readable object silhouettes, almost no decorative clutter, no button frame, no plaque, no badge background, no thick outline. Each button is represented by a single cute object icon.
+
+Canvas and layout:
+- One image containing exactly 6 separate standalone object icons in a clean 3x2 grid.
+- Equal-sized cells, generous spacing between icons.
+- Each icon centered in its own cell.
+- Pure solid magenta background (#FF00FF) across the whole image for later cutout.
+- No grid lines, no labels, no captions, no readable text, no numbers.
+
+Style must match the reference:
+- Standalone object icons, NOT framed UI buttons.
+- Bright saturated simple colors, one dominant color per icon plus small accent colors.
+- Soft volumetric highlights and rounded chubby forms.
+- Thin soft warm edge definition only; avoid obvious thick outline strokes.
+- No white sticker border.
+- No wooden plaques, no parchment panels, no complex frames, no many tiny details.
+- Like toy-like glossy soft mobile-game props, but not realistic.
+- Use upper-left soft light, smooth internal shading, readable at small size.
+
+Six icons, left to right, top row then bottom row:
+1. Catalog / collection: one chunky closed album book, red-orange cover, tiny simple flower emblem, rounded pages visible.
+2. Friendship card: two overlapping cute cards or envelopes, coral and lavender, one heart/flower emblem, simple and puffy.
+3. Check-in: one cute calendar object, peach or coral body, green check mark emblem, no date text.
+4. Task: one chunky clipboard object, warm tan/orange body, simple check mark shapes only, no writing.
+5. Map: one folded map object, mint and sky-blue panels, coral location pin, very simple.
+6. Decoration: one decorating tool object group, golden hammer plus coral paintbrush or ribbon, simple crossed shape, not many parts.
+
+Important negatives:
+- Do not draw square or rounded-square button backgrounds.
+- Do not draw hanging tags, wooden signs, capsules, panels, labels, text, or numbers.
+- Do not add realistic texture, heavy black line art, low saturation, gray colors, or flat emoji style.
+- Do not include furniture/dress icons from the reference; only use their style.

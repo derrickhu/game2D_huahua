@@ -1,0 +1,24 @@
+Create one standalone friendship card icon for a cozy pastel flower-shop mobile game.
+
+Use the provided reference style from the game's sofa and dress icons: bright saturated toy-like 3D object, rounded puffy volume, glossy soft highlights, thin warm edge definition, simple readable silhouette.
+
+Icon concept:
+- A stack of two or three friendship cards, clearly card-shaped.
+- Dominant color must be bright teal / turquoise / mint-blue, not purple.
+- Add coral-pink and cream accents, small flower or heart stamp on the top card.
+- Make it obviously a card or card wallet, not a heart shape and not an envelope.
+- Use rounded rectangle card corners, slight offset layers, visible card thickness.
+- Keep it simple and chunky, like a toy prop icon.
+
+Canvas:
+- Square 1:1 image.
+- Center the icon, generous margin.
+- Pure solid magenta background (#FF00FF) for cutout.
+
+Style rules:
+- High saturation, strong volume, top-left glossy highlight, darker lower-right shading.
+- Match the vivid sofa/dress button style.
+- No UI frame, no badge background, no plaque, no white sticker border.
+- No readable text, no letters, no numbers, no watermark.
+- No purple dominant color.
+- No realistic texture, no heavy black outline.
