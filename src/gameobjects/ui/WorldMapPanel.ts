@@ -327,6 +327,7 @@ export class WorldMapPanel extends PIXI.Container {
     this._nodeContainers = [];
     this._drawMapBackground();
     this._buildNodes();
+    this._setupDrag();
   }
 
   private _createNodeContainer(node: MapNodeDef): PIXI.Container {
