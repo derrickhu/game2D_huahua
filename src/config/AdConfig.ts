@@ -46,6 +46,8 @@ export const BOARD_KEY_UNLOCK_MODES: Record<number, ExternalUnlockMode> = {
   [4 * BOARD_COLS + 6]: 'share',
   [6 * BOARD_COLS + 3]: 'ad',
   [8 * BOARD_COLS + 0]: 'share',
+  /** (8,4) 原是空 FOG，但其 3×3 邻居全为空 FOG，波及只能让它们升 OPEN 而非 PEEK，本格永久打不开；改成转发解锁钥匙格。 */
+  [8 * BOARD_COLS + 4]: 'share',
   [8 * BOARD_COLS + 6]: 'ad',
 };
 

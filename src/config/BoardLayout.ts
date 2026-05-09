@@ -106,7 +106,9 @@ export const BOARD_PRESETS: CellPreset[] = [
   { row: 8, col: 1, state: CellState.FOG,  itemId: 'flower_green_8',   keyPrice: 0, unlockPriority: 91 },
   { row: 8, col: 2, state: CellState.FOG,  itemId: 'flower_fresh_7',   keyPrice: 0, unlockPriority: 92 },
   { row: 8, col: 3, state: CellState.FOG,  itemId: null,               keyPrice: 0, unlockPriority: 93 },
-  { row: 8, col: 4, state: CellState.FOG,  itemId: null,               keyPrice: 0, unlockPriority: 94 },
+  // (8,4) 周围 3×3 邻居全是「空 FOG」，波及只能让它们升 OPEN 而非 PEEK，本格永远不会被合成波及解锁。
+  // 改为 share 钥匙格，让老玩家也能转发解锁（老存档的 FOG 由 SaveManager 迁移逻辑就地改为 KEY）。
+  { row: 8, col: 4, state: CellState.KEY,  itemId: null,               keyPrice: 0,   unlockPriority: 94 },
   { row: 8, col: 5, state: CellState.FOG,  itemId: null,               keyPrice: 0, unlockPriority: 99 },
   { row: 8, col: 6, state: CellState.KEY,  itemId: null,               keyPrice: 500, unlockPriority: 96 },
 ];

@@ -17,8 +17,8 @@ import { MerchShopManager, type MerchShopPersistState } from './MerchShopManager
 import { FlowerSignTicketManager } from './FlowerSignTicketManager';
 import { EventBus } from '@/core/EventBus';
 import { PersistService } from '@/core/PersistService';
-import { BOARD_TOTAL } from '@/config/Constants';
-import { BOARD_PRESETS } from '@/config/BoardLayout';
+import { BOARD_COLS, BOARD_TOTAL } from '@/config/Constants';
+import { BOARD_PRESETS, CellState } from '@/config/BoardLayout';
 import { ITEM_DEFS } from '@/config/ItemConfig';
 import { BACKEND_ANON_ID_KEY, BACKEND_TOKEN_KEY, CLOUD_SYNC_META_KEY } from '@/config/CloudConfig';
 import { CloudSyncManager } from '@/managers/CloudSyncManager';
@@ -51,6 +51,43 @@ function _computeConfigFingerprint(): string {
 }
 
 const CONFIG_FINGERPRINT = _computeConfigFingerprint();
+
+/**
+ * 老指纹 → 老存档软迁移表：当存档的 fingerprint 命中本表，先就地修补 `data.board`
+ * 让其与新布局兼容，再继续读档；不命中才走 `_clearStorage` 清档。
+ *
+ * 加条目流程：
+ *  1. 用 `tmp_compute_fp.cjs` 复刻 `_computeConfigFingerprint` 算法，
+ *     传入「修改前」的 BOARD_PRESETS 与 BOARD_KEY_UNLOCK_MODES，跑出旧指纹常量；
+ *  2. 在 `migrate(board)` 里仅对差异格做最小修补（不要批量改无关格、保住玩家进度）；
+ *  3. 留好注释，便于后续追溯本次布局调整。
+ */
+interface LegacyBoardMigration {
+  fingerprint: string;
+  /** 描述本次迁移的目的，便于阅读历史 */
+  description: string;
+  migrate(
+    board: { index: number; state: CellState; itemId: string | null; reserved: boolean; luckyCoinConsumed?: boolean }[],
+  ): void;
+}
+
+const LEGACY_BOARD_MIGRATIONS: LegacyBoardMigration[] = [
+  {
+    /** (8,4) FOG → KEY share：原 FOG 周围全是空 FOG，永远打不开；老玩家此格仍卡死，需就地改为转发解锁。 */
+    fingerprint: 'fp2_oyuro6',
+    description: '(8,4) FOG → KEY share',
+    migrate: (board) => {
+      const targetIndex = 8 * BOARD_COLS + 4;
+      // 与 BoardManager.loadState 一致，用 saved.index 定位，不依赖数组位置
+      const cell = board.find(c => c.index === targetIndex);
+      // 仅在仍为 FOG 时迁移；若玩家通过 GM/异常路径已开放，则保留其进度
+      if (cell && cell.state === CellState.FOG) {
+        cell.state = CellState.KEY;
+        cell.itemId = null;
+      }
+    },
+  },
+];
 
 interface SaveData {
   fingerprint: string;
@@ -142,12 +179,25 @@ class SaveManagerClass {
 
       // 指纹校验
       if (data.fingerprint !== CONFIG_FINGERPRINT) {
-        // 旧版指纹(fp_xxx)的存档 → 结构不兼容，必须清除
-        // 同版指纹(fp2_xxx)但值不同 → 棋盘布局已变，也必须清除
-        console.warn('[Save] 指纹不匹配，清除旧存档',
-          '(存档:', data.fingerprint, '当前:', CONFIG_FINGERPRINT, ')');
-        this._clearStorage();
-        return false;
+        // 命中老指纹迁移表：就地修补棋盘格使其兼容新布局，然后视作新指纹继续读档；
+        // 否则按结构不兼容清档。
+        const migration = LEGACY_BOARD_MIGRATIONS.find(m => m.fingerprint === data.fingerprint);
+        if (migration) {
+          console.log(
+            '[Save] 命中老存档迁移:',
+            migration.fingerprint, '→', CONFIG_FINGERPRINT,
+            `(${migration.description})`,
+          );
+          migration.migrate(data.board);
+          data.fingerprint = CONFIG_FINGERPRINT;
+        } else {
+          // 旧版指纹(fp_xxx)的存档 → 结构不兼容，必须清除
+          // 同版指纹(fp2_xxx)但值不同 → 棋盘布局已变且无迁移规则，也必须清除
+          console.warn('[Save] 指纹不匹配，清除旧存档',
+            '(存档:', data.fingerprint, '当前:', CONFIG_FINGERPRINT, ')');
+          this._clearStorage();
+          return false;
+        }
       }
 
       // 清理存档中引用了已不存在物品ID的格子（物品配置变化时的软迁移）
