@@ -29,7 +29,7 @@ import { AdManager, AdScene } from '@/managers/AdManager';
 import { MergeManager, type MergeEndDragResult } from '@/managers/MergeManager';
 import { BuildingManager } from '@/managers/BuildingManager';
 import { CurrencyManager } from '@/managers/CurrencyManager';
-import { Platform } from '@/core/PlatformService';
+import { shareAndWaitWithAnalytics } from '@/utils/wechatShare';
 import { createUnlockCellShare } from '@/config/ShareConfig';
 import { TextureCache } from '@/utils/TextureCache';
 import { BOARD_PRODUCER_ENERGY_MAX_SIDE_FRAC, createToolEnergySprite } from '@/utils/ToolEnergyBadge';
@@ -860,7 +860,11 @@ export class BoardView extends PIXI.Container {
     );
     if (!confirmed) return;
 
-    const shared = await Platform.shareAndWait(createUnlockCellShare(cellIndex));
+    const shared = await shareAndWaitWithAnalytics(
+      createUnlockCellShare(cellIndex),
+      'unlock_cell',
+      { cell_index: cellIndex },
+    );
 
     if (shared) {
       BoardManager.unlockKeyCell(cellIndex);

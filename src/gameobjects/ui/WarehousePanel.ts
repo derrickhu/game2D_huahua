@@ -19,7 +19,7 @@ import { bringToolEnergyToFront, createToolEnergySprite } from '@/utils/ToolEner
 import { ToolSparkleLayer } from '@/utils/ToolSparkleLayer';
 import { ToastMessage } from './ToastMessage';
 import { ConfirmDialog } from './ConfirmDialog';
-import { Platform } from '@/core/PlatformService';
+import { shareAndWaitWithAnalytics } from '@/utils/wechatShare';
 import { createWarehouseSlotShare } from '@/config/ShareConfig';
 import { AdManager, AdScene } from '@/managers/AdManager';
 import { createFreeAdBadge } from '@/gameobjects/ui/AdBadge';
@@ -760,7 +760,11 @@ export class WarehousePanel extends PIXI.Container {
     );
     if (!confirmed) return;
 
-    const shared = await Platform.shareAndWait(createWarehouseSlotShare(index));
+    const shared = await shareAndWaitWithAnalytics(
+      createWarehouseSlotShare(index),
+      'warehouse_slot',
+      { slot_index: index },
+    );
     if (shared && WarehouseManager.unlockSlotByExternalReward(index)) {
       ToastMessage.show('仓库格解锁成功！');
     } else {

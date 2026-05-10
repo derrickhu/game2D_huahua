@@ -19,6 +19,7 @@ import {
   createGiftStaminaShare,
   createShopInviteShare,
 } from '@/config/ShareConfig';
+import { setupWechatShare, shareAppMessageWithAnalytics } from '@/utils/wechatShare';
 import { CurrencyManager } from './CurrencyManager';
 import { CollectionManager } from './CollectionManager';
 import type { FlowerCard } from './FlowerCardManager';
@@ -75,32 +76,26 @@ class SocialManagerClass {
     console.log(`[Social] 初始化完成`);
   }
 
-  /** 注册分享菜单 */
+  /**
+   * 注册分享菜单（兼带经分埋点）。
+   * 走 wechatShare 工具统一上报，被动分享回调里区分 wx_button/wx_menu/wx_other/wx_timeline，
+   * 朋友圈分享走独立事件 share_timeline。
+   */
   private _setupShareMenu(): void {
-    Platform.showShareMenu({
-      withShareTicket: true,
-      menus: ['shareAppMessage', 'shareTimeline'],
-    });
-
-    Platform.onShareAppMessage(() => createDefaultShare(
+    setupWechatShare(() => createDefaultShare(
       CurrencyManager.state.level,
       CollectionManager.totalDiscovered,
     ));
-
-    Platform.onShareTimeline(() => {
-      const share = createDefaultShare(CurrencyManager.state.level, CollectionManager.totalDiscovered);
-      return {
-        title: share.title,
-        imageUrl: share.imageUrl,
-      };
-    });
   }
 
   // ═══════════════ 分享 ═══════════════
 
   /** 分享花店 */
   shareShop(): void {
-    Platform.shareAppMessage(createShopInviteShare(CurrencyManager.state.level));
+    shareAppMessageWithAnalytics(
+      createShopInviteShare(CurrencyManager.state.level),
+      'shop_invite',
+    );
     this._totalShares++;
     this._lastShareTime = Date.now();
     this._saveState();
@@ -117,7 +112,11 @@ class SocialManagerClass {
 
   /** 分享花语卡片 */
   shareFlowerCard(card: FlowerCard): void {
-    Platform.shareAppMessage(createFlowerCardShare(card));
+    shareAppMessageWithAnalytics(
+      createFlowerCardShare(card),
+      'flower_card',
+      { card_id: String(card.id ?? '') },
+    );
     this._totalShares++;
     this._saveState();
     EventBus.emit('social:shared', 'flowerCard');
@@ -140,7 +139,11 @@ class SocialManagerClass {
     this._saveState();
 
     // 发送给好友（通过分享/社交关系链）
-    Platform.shareAppMessage(createGiftStaminaShare(GIFT_STAMINA_AMOUNT));
+    shareAppMessageWithAnalytics(
+      createGiftStaminaShare(GIFT_STAMINA_AMOUNT),
+      'gift_stamina',
+      { stamina_amount: GIFT_STAMINA_AMOUNT },
+    );
 
     EventBus.emit('social:giftSent', GIFT_STAMINA_AMOUNT);
     return true;

@@ -3,6 +3,14 @@
  */
 // unsafe-eval patch 必须最先导入，在 new PIXI.Application() 之前执行
 import '@/core/pixiUnsafeEvalPatch';
+import {
+  analytics,
+  EVENT_NAMES,
+  initAnalytics,
+  setAnalyticsUserId,
+  setupTutorialAnalytics,
+  setupGameplayAnalytics,
+} from '@/analytics';
 import { Game } from '@/core/Game';
 import { SceneManager } from '@/core/SceneManager';
 import { BoardManager } from '@/managers/BoardManager';
@@ -26,13 +34,43 @@ import { ShopScene } from '@/scenes/ShopScene';
 import { computeBoardMetrics } from '@/config/Constants';
 declare const GameGlobal: any;
 
-// 全局错误捕获——确保真机上所有异常可见
+// 全局错误捕获——确保真机上所有异常可见，并按经分 SOP 上报 app_error。
+//
+// 时序提醒：本块在 main() 之前同步执行，那时 SDK 还没 init，analytics.track 会被 SDK 内部
+// 的"未初始化即丢弃"分支吞掉（不会抛错），属于预期行为。也即：仅 init 之后捕获到的错误才会上报。
+// 想覆盖更早的启动期异常，得把 initAnalytics() 也搬到模块顶部，但那样 PlatformService 还没 ready，
+// 风险更大；当前选择"漏掉极少数 init 前异常"换稳定性。
 if (typeof GameGlobal !== 'undefined') {
   GameGlobal.onError = (msg: string) => {
     console.error('[GlobalError]', msg);
+    try {
+      analytics.track(EVENT_NAMES.APP_ERROR, {
+        err_code: 0,
+        err_msg: String(msg || '').slice(0, 500),
+        source: 'global_on_error',
+      });
+    } catch (_) {
+      // 埋点失败不能影响业务
+    }
   };
   GameGlobal.onUnhandledRejection = (ev: any) => {
     console.error('[UnhandledRejection]', ev?.reason || ev);
+    try {
+      const reason = ev?.reason;
+      const errMsg = reason instanceof Error
+        ? `${reason.name}: ${reason.message}`
+        : String(reason ?? ev ?? 'unknown');
+      const stack = reason instanceof Error ? String(reason.stack || '') : '';
+      analytics.track(EVENT_NAMES.APP_ERROR, {
+        err_code: 0,
+        err_msg: errMsg.slice(0, 500),
+        // stack 可能很大，裁剪到 1KB 避免单事件膨胀拖慢上报
+        stack: stack ? stack.slice(0, 1000) : '',
+        source: 'unhandled_rejection',
+      });
+    } catch (_) {
+      // 同上：埋点失败不能影响业务
+    }
   };
 }
 
@@ -64,6 +102,17 @@ async function main(): Promise<void> {
     // 初始化游戏
     Game.init(canvas);
     console.log('[main] Game.init 完成');
+
+    // 经分埋点 SDK：在最早的时机初始化即可，此时 SDK 还没拿到 user_id，
+    // 入队事件先用 anonymous_id 兜底；登录拿到 openid 后再调 setAnalyticsUserId 触发 LOGIN + flush。
+    // 注意：不要在这里立刻 track session_start！必须等 setAnalyticsUserId 之后再打，
+    // 否则 user_id='' 与登录后 user_id=xxx 会被算成两个不同 uk，DAU 翻倍。
+    initAnalytics();
+    // 在 TutorialManager.start() 之前就 attach EventBus 监听，避免错过首步的 stepChanged。
+    setupTutorialAnalytics();
+    // 玩法事件订阅同样要早 attach，避免错过 board:initialized 之类的早期事件。
+    // BoardManager.init / CustomerManager.start 都在 main() 后段才执行，所以现在 attach 不会漏单。
+    setupGameplayAnalytics();
 
     // EventSystem 诊断
     try {
@@ -166,6 +215,17 @@ async function main(): Promise<void> {
     const startupSync = await CloudSyncManager.awaitStartupSync();
     console.log(`[main] 云同步启动结果: ${startupSync.status}, reason=${startupSync.reason}`);
 
+    // 拿到 openid 后第一时间通知 SDK：内部会自动 track LOGIN 并立即 flush，
+    // 给后端做 anonymous_id ↔ user_id 归一锚点；本地登录失败（cacheOnly）时 userId 为空，仍要兜底打 session_start。
+    if (CloudSyncManager.userId) {
+      setAnalyticsUserId(CloudSyncManager.userId);
+    }
+    analytics.track(EVENT_NAMES.SESSION_START, {
+      entry: 'main',
+      with_user_id: !!CloudSyncManager.userId,
+      cloud_sync_status: startupSync.status,
+    });
+
     // 尝试加载存档（开发阶段已在启动时清除，此处应返回 false）
     const loaded = SaveManager.load();
     initialSaveLoaded = true;
@@ -223,6 +283,7 @@ async function main(): Promise<void> {
     // 监听小游戏生命周期：退到后台时保存状态
     const _apiMain: any = typeof wx !== 'undefined' ? wx : typeof tt !== 'undefined' ? tt : null;
     if (_apiMain) {
+      let lastHideAt = 0;
       _apiMain.onHide?.(() => {
         console.log('[main] 游戏退到后台，保存状态');
         IdleManager.onHide();
@@ -230,11 +291,22 @@ async function main(): Promise<void> {
         // 立即刷写装饰布局（防止防抖 timer 未触发导致位置丢失）
         RoomLayoutManager.saveNow();
         void CloudSyncManager.flushNow('app-hide');
+        // 经分 onHide 标准事件：reason 用 app-hide 与 hot-pot 对齐，便于跨游戏比较异常退出比例。
+        analytics.track(EVENT_NAMES.SESSION_END, { reason: 'app-hide' });
+        lastHideAt = Date.now();
       });
       _apiMain.onShow?.(() => {
         console.log('[main] 游戏回到前台');
         if (MerchShopManager.ensureUpToDate()) {
           SaveManager.save();
+        }
+        // 经分 app_show：业务侧自定义打，**不**重置 session_id（session = 一次冷启动）。
+        // 携带 background_ms 便于 dashboard 看「后台多久回来」分布；首次启动 lastHideAt=0 就跳过。
+        if (lastHideAt > 0) {
+          analytics.track(EVENT_NAMES.APP_SHOW, {
+            from_background: true,
+            background_ms: Date.now() - lastHideAt,
+          });
         }
       });
     }
@@ -245,6 +317,17 @@ async function main(): Promise<void> {
     let raw = '';
     try { raw = JSON.stringify(e, Object.getOwnPropertyNames(e || {})); } catch (_) { raw = String(e); }
     console.error(`[main] 启动失败: errMsg=${errMsg} raw=${raw}`, e);
+    // 启动失败是定位"白屏 / 进不来"问题的关键归因。SDK 已 init 才会真上报，否则会被吞，符合预期。
+    try {
+      analytics.track(EVENT_NAMES.APP_ERROR, {
+        err_code: 0,
+        err_msg: String(errMsg || raw || 'main_boot_failed').slice(0, 500),
+        stack: e instanceof Error ? String(e.stack || '').slice(0, 1000) : '',
+        source: 'main_boot_failed',
+      });
+    } catch (_) {
+      // 同上：埋点失败不能影响业务
+    }
   }
 }
 

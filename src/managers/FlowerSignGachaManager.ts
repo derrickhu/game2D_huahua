@@ -1,6 +1,7 @@
 /**
  * 许愿喷泉抽奖逻辑：扣券、加权随机；结果进奖励收纳盒或直加顶栏货币。
  */
+import { analytics, EVENT_NAMES } from '@/analytics';
 import { ITEM_DEFS } from '@/config/ItemConfig';
 import {
   FLOWER_SIGN_DRAW_COST_MULTI,
@@ -83,6 +84,49 @@ export type FlowerSignDrawResult =
   | { ok: true; rewards: FlowerSignReward[] }
   | { ok: false; reason: 'no_ticket' | 'empty_pool' };
 
+/**
+ * 抽奖经分埋点：在 Manager 内部统一打 fountain_draw 事件。
+ * 设计原因：抽奖逻辑没有 EventBus emit（reward 直接 return 给调用方），
+ * 在调用方（FlowerSignGachaPanel）多处 track 容易漏；内部统一 track 是单源真相。
+ *
+ * draw_kind 区分 single / multi / multi_free，rarity_summary 统计本次产出的 4 类奖励数量。
+ */
+function trackDraw(
+  drawKind: 'single' | 'multi' | 'multi_free',
+  rewards: FlowerSignReward[],
+  ticketCost: number,
+): void {
+  let rewardBoxItems = 0;
+  let directHuayuan = 0;
+  let directDiamond = 0;
+  let directStamina = 0;
+  for (const r of rewards) {
+    switch (r.kind) {
+      case 'reward_box_item':
+        rewardBoxItems += r.count;
+        break;
+      case 'direct_huayuan':
+        directHuayuan += r.amount;
+        break;
+      case 'direct_diamond':
+        directDiamond += r.amount;
+        break;
+      case 'direct_stamina':
+        directStamina += r.amount;
+        break;
+    }
+  }
+  analytics.track(EVENT_NAMES.FOUNTAIN_DRAW, {
+    draw_kind: drawKind,
+    ticket_cost: ticketCost,
+    reward_count: rewards.length,
+    reward_box_items: rewardBoxItems,
+    direct_huayuan: directHuayuan,
+    direct_diamond: directDiamond,
+    direct_stamina: directStamina,
+  });
+}
+
 export const FlowerSignGachaManager = {
   drawSingle(rng: () => number = Math.random): FlowerSignDrawResult {
     const pool = buildValidPool();
@@ -91,7 +135,9 @@ export const FlowerSignGachaManager = {
       return { ok: false, reason: 'no_ticket' };
     }
     const r = pickOne(rng);
-    return { ok: true, rewards: [r] };
+    const rewards = [r];
+    trackDraw('single', rewards, FLOWER_SIGN_DRAW_COST_SINGLE);
+    return { ok: true, rewards };
   },
 
   drawMultiFree(rng: () => number = Math.random): FlowerSignDrawResult {
@@ -101,6 +147,7 @@ export const FlowerSignGachaManager = {
     for (let i = 0; i < FLOWER_SIGN_DRAW_COST_MULTI; i++) {
       rewards.push(pickOne(rng));
     }
+    trackDraw('multi_free', rewards, 0);
     return { ok: true, rewards };
   },
 
@@ -114,6 +161,7 @@ export const FlowerSignGachaManager = {
     for (let i = 0; i < FLOWER_SIGN_DRAW_COST_MULTI; i++) {
       rewards.push(pickOne(rng));
     }
+    trackDraw('multi', rewards, FLOWER_SIGN_DRAW_COST_MULTI);
     return { ok: true, rewards };
   },
 };

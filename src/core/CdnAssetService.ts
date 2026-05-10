@@ -92,14 +92,19 @@ class CdnAssetServiceClass {
       return false;
     }
 
+    /** 注意：不要走 wx.downloadFile 拉 manifest.json。
+     *  开发者工具/基础库对 CloudBase 默认域名 (*.tcb.qcloud.la) 上的 application/json
+     *  会触发云开发协议层 JSON.parse，普通静态 JSON 文件会被报成
+     *  "downloadFile:fail Unexpected end of JSON input"。
+     *  改走 wx.request 直接拿 data 文本，规避协议解析层。 */
+    const url = `${this._getCdnUrl('manifest.json')}?_t=${Date.now()}`;
     try {
-      const res = await this._downloadUrl(this._getCdnUrl('manifest.json'));
-      if (!res.tempFilePath) {
+      const text = await this._requestText(url);
+      if (!text) {
         this._loadCachedManifest();
         return false;
       }
 
-      const text = fs.readFileSync(res.tempFilePath, 'utf-8');
       this._manifest = JSON.parse(text) as CdnManifest;
       this._manifestReady = true;
       this._ensureCacheDir(this._getCachePath('manifest.json'));
@@ -196,6 +201,37 @@ class CdnAssetServiceClass {
       }
     }
     return false;
+  }
+
+  private _requestText(url: string): Promise<string> {
+    return new Promise((resolve, reject) => {
+      if (typeof wx === 'undefined' || typeof wx.request !== 'function') {
+        reject(new Error('wx.request unavailable'));
+        return;
+      }
+      wx.request({
+        url,
+        method: 'GET',
+        responseType: 'text',
+        dataType: 'text',
+        timeout: this._config.downloadTimeoutMs,
+        success: (res: any) => {
+          const statusCode = Number(res?.statusCode || 0);
+          if (statusCode < 200 || statusCode >= 300) {
+            reject(new Error(`request status=${statusCode || 'unknown'} url=${url}`));
+            return;
+          }
+          const data = res?.data;
+          const text = typeof data === 'string' ? data : (data ? JSON.stringify(data) : '');
+          resolve(text);
+        },
+        fail: (err: any) => {
+          const msg = err?.errMsg || err?.message || String(err);
+          console.warn(`[CDN] request fail: ${url}, ${msg}`);
+          reject(new Error(msg));
+        },
+      });
+    });
   }
 
   private _downloadUrl(url: string): Promise<{ tempFilePath?: string }> {

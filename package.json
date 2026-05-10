@@ -14,6 +14,7 @@
   "license": "ISC",
   "description": "花花妙屋 - 合成经营微信小游戏",
   "dependencies": {
+    "@gp/analytics-sdk": "file:../game-analysis/packages/analytics-sdk",
     "@pixi/unsafe-eval": "^7.3.2",
     "pixi.js": "^7.3.2"
   },

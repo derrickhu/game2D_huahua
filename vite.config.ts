@@ -1,6 +1,11 @@
 import { defineConfig, type Plugin } from 'vite';
 import path from 'path';
 import fs from 'fs';
+import { createRequire } from 'module';
+
+// 读取 package.json 拿到版本号，注入到客户端供经分 SDK 使用，避免 app_version 硬编码导致 dashboard 区分不出版本。
+const requirePkg = createRequire(import.meta.url);
+const pkg = requirePkg('./package.json') as { version: string };
 
 /**
  * Vite 插件：构建后替换 bundle 中所有 ShaderSystem 的 systemCheck 方法体，
@@ -36,6 +41,9 @@ export default defineConfig({
     dedupe: ['@pixi/core', '@pixi/display', '@pixi/settings', '@pixi/constants', '@pixi/utils'],
   },
   publicDir: false,
+  define: {
+    __APP_VERSION__: JSON.stringify(pkg.version),
+  },
   plugins: [pixiUnsafeEvalPlugin()],
   build: {
     outDir: 'minigame',

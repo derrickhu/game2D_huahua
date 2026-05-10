@@ -9,9 +9,9 @@
  * 花语数据来自 `ItemCollectionBlurbs.FLOWER_CARD_QUOTES`
  */
 import { EventBus } from '@/core/EventBus';
-import { Platform } from '@/core/PlatformService';
 import { PersistService } from '@/core/PersistService';
 import { createFlowerCardShare } from '@/config/ShareConfig';
+import { shareAppMessageWithAnalytics } from '@/utils/wechatShare';
 import { Category, ITEM_DEFS } from '@/config/ItemConfig';
 import {
   FLOWER_CARD_QUOTES,
@@ -129,7 +129,11 @@ class FlowerCardManagerClass {
 
   /** 分享花语卡片 */
   shareCard(card: FlowerCard): void {
-    Platform.shareAppMessage(createFlowerCardShare(card));
+    shareAppMessageWithAnalytics(
+      createFlowerCardShare(card),
+      'flower_card',
+      { card_id: String(card.id ?? '') },
+    );
     EventBus.emit('flowerCard:shared', card);
   }
 

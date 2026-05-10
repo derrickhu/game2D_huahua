@@ -21,7 +21,7 @@ import { Game } from '@/core/Game';
 import { EventBus } from '@/core/EventBus';
 import { TweenManager, Ease } from '@/core/TweenManager';
 import { AudioManager } from '@/core/AudioManager';
-import { Platform } from '@/core/PlatformService';
+import { shareAppMessageWithAnalytics } from '@/utils/wechatShare';
 import { DESIGN_WIDTH, FONT_FAMILY } from '@/config/Constants';
 import { CARD_RARITY_COLOR, type CardRarity } from '@/config/AffinityCardConfig';
 import { createAffinityCardShare } from '@/config/ShareConfig';
@@ -300,7 +300,11 @@ export class AffinityCardDropPopup extends PIXI.Container {
 
     btn.on('pointertap', (e: PIXI.FederatedPointerEvent) => {
       e.stopPropagation();
-      Platform.shareAppMessage(createAffinityCardShare(cur.card));
+      shareAppMessageWithAnalytics(
+        createAffinityCardShare(cur.card),
+        'affinity_card',
+        { card_id: String(cur.card.id ?? '') },
+      );
       ToastMessage.show(`已分享「${cur.card.title}」`);
     });
 

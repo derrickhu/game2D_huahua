@@ -6,7 +6,7 @@ import { Game } from '@/core/Game';
 import { EventBus } from '@/core/EventBus';
 import { TweenManager, Ease } from '@/core/TweenManager';
 import { OverlayManager } from '@/core/OverlayManager';
-import { Platform } from '@/core/PlatformService';
+import { shareAppMessageWithAnalytics } from '@/utils/wechatShare';
 import { createWishLuckyShare } from '@/config/ShareConfig';
 import { TextureCache } from '@/utils/TextureCache';
 import { ToastMessage } from '@/gameobjects/ui/ToastMessage';
@@ -663,7 +663,11 @@ export class FlowerSignGachaPanel extends PIXI.Container {
         shareLabel: '晒欧气',
         onShare: async (overlay) => {
           const imageUrl = await overlay.createShareSnapshotImageUrl();
-          Platform.shareAppMessage(createWishLuckyShare(imageUrl ?? undefined));
+          shareAppMessageWithAnalytics(
+            createWishLuckyShare(imageUrl ?? undefined),
+            'wish_lucky',
+            { has_snapshot: !!imageUrl },
+          );
           ToastMessage.show(imageUrl ? '已分享本次许愿结果' : '已分享许愿好运');
         },
       },
