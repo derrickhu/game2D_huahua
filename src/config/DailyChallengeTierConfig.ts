@@ -7,7 +7,6 @@ import {
   DAILY_QUEST_TEMPLATES,
   getDailyQuestTemplate,
   seededShuffle,
-  WEEKLY_MILESTONES,
   type DailyChallengeReward,
   type DailyQuestTemplate,
   type WeeklyMilestoneDef,
@@ -17,6 +16,24 @@ import {
   GOLDEN_SCISSORS_ITEM_ID,
   LUCKY_COIN_ITEM_ID,
 } from '@/config/ItemConfig';
+
+/**
+ * 4 节点周积分轨道：体力宝箱 / 幸运金币 / 万能水晶 / 金剪刀。
+ * 各档调用本工厂时只需声明体力宝箱等级、4 个 threshold、以及统一的 coin/ball/scissors 数量。
+ */
+function buildWeeklyMilestones(
+  tierKey: string,
+  thresholds: [number, number, number, number],
+  staminaChestId: 'stamina_chest_1' | 'stamina_chest_2' | 'stamina_chest_3',
+  itemCount: number,
+): WeeklyMilestoneDef[] {
+  return [
+    { id: `wm_${tierKey}_chest`,    threshold: thresholds[0], reward: { itemId: staminaChestId,        itemCount: 1 } },
+    { id: `wm_${tierKey}_coin`,     threshold: thresholds[1], reward: { itemId: LUCKY_COIN_ITEM_ID,    itemCount } },
+    { id: `wm_${tierKey}_ball`,     threshold: thresholds[2], reward: { itemId: CRYSTAL_BALL_ITEM_ID,  itemCount } },
+    { id: `wm_${tierKey}_scissors`, threshold: thresholds[3], reward: { itemId: GOLDEN_SCISSORS_ITEM_ID, itemCount } },
+  ];
+}
 
 const KIND_ORDER = ['huayuan', 'merge', 'deliver', 'diamond'] as const;
 
@@ -55,6 +72,15 @@ export interface DailyChallengeTierDef {
   dailyAllCompleteBonus?: DailyChallengeReward;
 }
 
+/**
+ * 周积分轨道改版：四档统一 4 节点结构（体力宝箱 / 幸运金币 / 万能水晶 / 金剪刀），
+ * 体力宝箱等级与三道具数量随档位升档。
+ *
+ * 数量曲线（道具）：5 → 7 → 8 → 10
+ * 体力宝箱：       1 → 1 → 2 → 3
+ * 阈值取各档原有「前 4 节点」附近，保证 7 日满档可达且最后一节仍有冲刺感。
+ */
+
 /** 新手：globalLevel 1–5 */
 const TIER_NOVICE: DailyChallengeTierDef = {
   id: 'novice',
@@ -62,12 +88,7 @@ const TIER_NOVICE: DailyChallengeTierDef = {
   maxGlobalLevel: 5,
   dailyTemplateIds: NOVICE_DAILY_IDS,
   dailyAllCompleteBonus: { stamina: 50 },
-  weeklyMilestones: [
-    { id: 'wm_n_100', threshold: 100, reward: { stamina: 20 } },
-    { id: 'wm_n_280', threshold: 280, reward: { stamina: 40 } },
-    { id: 'wm_n_450', threshold: 450, reward: { diamond: 10 } },
-    { id: 'wm_n_600', threshold: 600, reward: { itemId: 'diamond_bag_1', itemCount: 1 } },
-  ],
+  weeklyMilestones: buildWeeklyMilestones('n', [100, 280, 450, 600], 'stamina_chest_1', 5),
 };
 
 /** 成长：6–10 */
@@ -77,30 +98,17 @@ const TIER_MID: DailyChallengeTierDef = {
   maxGlobalLevel: 10,
   dailyTemplateIds: MID_DAILY_IDS,
   dailyAllCompleteBonus: { stamina: 80 },
-  weeklyMilestones: [
-    { id: 'wm_m_150', threshold: 150, reward: { stamina: 30 } },
-    { id: 'wm_m_450', threshold: 450, reward: { itemId: 'stamina_chest_2', itemCount: 1 } },
-    { id: 'wm_m_750', threshold: 750, reward: { itemId: 'diamond_bag_1', itemCount: 1 } },
-    { id: 'wm_m_1050', threshold: 1050, reward: { itemId: LUCKY_COIN_ITEM_ID, itemCount: 1 } },
-    { id: 'wm_m_1250', threshold: 1250, reward: { itemId: CRYSTAL_BALL_ITEM_ID, itemCount: 1 } },
-  ],
+  weeklyMilestones: buildWeeklyMilestones('m', [150, 450, 750, 1050], 'stamina_chest_1', 7),
 };
 
-/** 进阶：11–19，满额日任务 + 周轨（体力 / 银宝箱 / 钻 / 幸运金币 / 万能水晶 / 金剪刀） */
+/** 进阶：11–19，满额日任务 + 周轨 */
 const TIER_ADVANCED: DailyChallengeTierDef = {
   id: 'advanced',
   minGlobalLevel: 11,
   maxGlobalLevel: 19,
   dailyTemplateIds: FULL_DAILY_IDS,
   dailyAllCompleteBonus: { stamina: 90 },
-  weeklyMilestones: [
-    { id: 'wm_a_100', threshold: 100, reward: { stamina: 50 } },
-    { id: 'wm_a_350', threshold: 350, reward: { itemId: 'chest_2', itemCount: 1 } },
-    { id: 'wm_a_650', threshold: 650, reward: { diamond: 15 } },
-    { id: 'wm_a_950', threshold: 950, reward: { itemId: LUCKY_COIN_ITEM_ID, itemCount: 1 } },
-    { id: 'wm_a_1250', threshold: 1250, reward: { itemId: CRYSTAL_BALL_ITEM_ID, itemCount: 1 } },
-    { id: 'wm_a_1450', threshold: 1450, reward: { itemId: GOLDEN_SCISSORS_ITEM_ID, itemCount: 1 } },
-  ],
+  weeklyMilestones: buildWeeklyMilestones('a', [100, 350, 650, 950], 'stamina_chest_2', 8),
 };
 
 /** 完全版：globalLevel ≥ 20 */
@@ -110,7 +118,7 @@ const TIER_FULL: DailyChallengeTierDef = {
   maxGlobalLevel: 99999,
   dailyTemplateIds: FULL_DAILY_IDS,
   dailyAllCompleteBonus: { stamina: 100 },
-  weeklyMilestones: WEEKLY_MILESTONES.map(m => ({ ...m })),
+  weeklyMilestones: buildWeeklyMilestones('f', [100, 350, 700, 1100], 'stamina_chest_3', 10),
 };
 
 /** 按 minGlobalLevel 升序；匹配时取首个落入区间的档 */

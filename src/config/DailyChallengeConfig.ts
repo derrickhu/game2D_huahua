@@ -1,11 +1,11 @@
 /**
- * 每日挑战：全量任务模板表（`DAILY_QUEST_TEMPLATES`）+ 满档周里程碑（`WEEKLY_MILESTONES`）。
- * 分档区间、抽样与低档里程碑见 `DailyChallengeTierConfig.ts`。
+ * 每日挑战：全量任务模板表（`DAILY_QUEST_TEMPLATES`）。
+ * 各档周积分轨道（4 节点：体力宝箱 / 幸运金币 / 万能水晶 / 金剪刀，等级与数量随档位升档）见 `DailyChallengeTierConfig.ts`。
  *
  * 满档平衡：单日全完成周积分之和 = DAILY_MAX_WEEKLY_POINTS；
- * 7 * DAILY_MAX_WEEKLY_POINTS 应大于满档最后一条里程碑 threshold（留容错）。
+ * 7 * DAILY_MAX_WEEKLY_POINTS 应大于该档最后一条里程碑 threshold（留容错）。
  */
-import { CRYSTAL_BALL_ITEM_ID, LUCKY_COIN_ITEM_ID } from '@/config/ItemConfig';
+import { LUCKY_COIN_ITEM_ID } from '@/config/ItemConfig';
 
 export type DailyQuestKind = 'huayuan' | 'merge' | 'deliver' | 'diamond';
 
@@ -45,11 +45,11 @@ export const DAILY_QUEST_TEMPLATES: DailyQuestTemplate[] = [
   { id: 'mg_2', kind: 'merge', target: 100, weeklyPoints: 15, reward: { itemId: 'flower_green_4', itemCount: 1 } },
   { id: 'mg_3', kind: 'merge', target: 300, weeklyPoints: 22, reward: { itemId: 'chest_1', itemCount: 1 } },
   { id: 'mg_4', kind: 'merge', target: 500, weeklyPoints: 28, reward: { itemId: 'diamond_bag_1', itemCount: 1 } },
-  // 订单 ×4（目标 10 / 35 / 50 / 60）：体力、1级体力宝箱、钻石
-  { id: 'dv_1', kind: 'deliver', target: 10, weeklyPoints: 10, reward: { stamina: 10 } },
-  { id: 'dv_2', kind: 'deliver', target: 35, weeklyPoints: 15, reward: { itemId: 'stamina_chest_1', itemCount: 1 } },
-  { id: 'dv_3', kind: 'deliver', target: 50, weeklyPoints: 22, reward: { diamond: 10 } },
-  { id: 'dv_4', kind: 'deliver', target: 60, weeklyPoints: 28, reward: { diamond: 20 } },
+  // 订单 ×4（目标 8 / 15 / 22 / 30）：玩家反馈高档过难，整体下调；最高档 30 单可在工作日内打满
+  { id: 'dv_1', kind: 'deliver', target: 8, weeklyPoints: 10, reward: { stamina: 10 } },
+  { id: 'dv_2', kind: 'deliver', target: 15, weeklyPoints: 15, reward: { itemId: 'stamina_chest_1', itemCount: 1 } },
+  { id: 'dv_3', kind: 'deliver', target: 22, weeklyPoints: 22, reward: { diamond: 10 } },
+  { id: 'dv_4', kind: 'deliver', target: 30, weeklyPoints: 28, reward: { diamond: 20 } },
   // 钻石 ×4（目标 5 / 10 / 20 / 50）：体力、1级体力宝箱、幸运金币
   { id: 'dm_1', kind: 'diamond', target: 5, weeklyPoints: 10, reward: { stamina: 10 } },
   { id: 'dm_2', kind: 'diamond', target: 10, weeklyPoints: 15, reward: { stamina: 20 } },
@@ -63,20 +63,13 @@ export const DAILY_MAX_WEEKLY_POINTS = DAILY_QUEST_TEMPLATES.reduce((s, t) => s 
 /** 所有每日模板 id（分档池引用） */
 export const ALL_DAILY_TEMPLATE_IDS: string[] = DAILY_QUEST_TEMPLATES.map(t => t.id);
 
-export const WEEKLY_MILESTONES: WeeklyMilestoneDef[] = [
-  { id: 'wm_100', threshold: 100, reward: { diamond: 10 } },
-  { id: 'wm_350', threshold: 350, reward: { itemId: 'stamina_chest_2', itemCount: 1 } },
-  { id: 'wm_650', threshold: 650, reward: { itemId: 'chest_3', itemCount: 1 } },
-  { id: 'wm_950', threshold: 950, reward: { itemId: LUCKY_COIN_ITEM_ID, itemCount: 1 } },
-  { id: 'wm_1250', threshold: 1250, reward: { itemId: CRYSTAL_BALL_ITEM_ID, itemCount: 1 } },
-  { id: 'wm_1550', threshold: 1550, reward: { flowerSignTickets: 10 } },
-];
-
-const LAST_MILESTONE = WEEKLY_MILESTONES[WEEKLY_MILESTONES.length - 1];
-/** 7 日满额 vs 最后一档里程碑：须留有余量 */
-export const _WEEKLY_BALANCE_CHECK = 7 * DAILY_MAX_WEEKLY_POINTS > LAST_MILESTONE.threshold;
-
-void _WEEKLY_BALANCE_CHECK;
+/**
+ * 周积分里程碑奖励统一沿用「体力宝箱 / 幸运金币 / 万能水晶 / 金剪刀」4 件套，
+ * 各档体力宝箱等级与道具数量在 `DailyChallengeTierConfig.ts` 内逐档定义；本文件不再维护单一全局表。
+ *
+ * 历史：曾导出 `WEEKLY_MILESTONES`（钻石/银宝箱/铜宝箱/幸运金币/万能水晶/许愿硬币 6 节点），
+ * 在改为「按档分别配置」后删除以避免双源同步。需要历史平衡参考时见 git 历史。
+ */
 
 export function getDailyQuestTemplate(id: string): DailyQuestTemplate | undefined {
   return DAILY_QUEST_TEMPLATES.find(t => t.id === id);

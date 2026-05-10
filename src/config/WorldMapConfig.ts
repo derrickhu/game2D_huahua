@@ -60,6 +60,12 @@ export const WORLD_MAP_CONTENT_H = DESIGN_HEIGHT;
  */
 export const WORLD_MAP_UNLOCK_LEVEL = 8;
 
+/**
+ * 许愿喷泉解锁星级 — 比大地图入口更早开放（玩家在花店主页已能直接进入许愿）。
+ * 大地图开放（Lv.8）后该节点仍可见且共享同一开放门槛。
+ */
+export const WISHING_FOUNTAIN_UNLOCK_LEVEL = 4;
+
 /** 蝴蝶小屋进入所需星级；大地图可先开放，但该房屋仍保持 10 级门槛 */
 export const BUTTERFLY_HOUSE_UNLOCK_LEVEL = 10;
 
@@ -92,7 +98,8 @@ export const MAP_NODES: MapNodeDef[] = [
     y: 698,
     thumbKey: 'worldmap_thumb_wishing_fountain_1',
     thumbSize: 150,
-    unlockLevel: WORLD_MAP_UNLOCK_LEVEL,
+    /** 与花店主页「许愿」入口共享同一门槛，玩家在大地图开放前就能从花店主页直达许愿。 */
+    unlockLevel: WISHING_FOUNTAIN_UNLOCK_LEVEL,
     popupEvent: 'panel:openFlowerSignGacha',
   },
   {

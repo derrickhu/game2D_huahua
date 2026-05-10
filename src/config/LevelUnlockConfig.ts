@@ -12,6 +12,7 @@
 import { AFFINITY_MAP, AFFINITY_UNLOCK_LEVELS } from './AffinityConfig';
 import {
   BUTTERFLY_HOUSE_UNLOCK_LEVEL,
+  WISHING_FOUNTAIN_UNLOCK_LEVEL,
   WORLD_MAP_UNLOCK_LEVEL,
 } from './WorldMapConfig';
 
@@ -105,7 +106,7 @@ const LEVEL_UNLOCK_BASE: Record<number, Omit<LevelUnlockDef, 'level'>> = {
       },
     ],
   },
-  4: {
+  [WISHING_FOUNTAIN_UNLOCK_LEVEL]: {
     ceremonyTitle: '熟客初识',
     entries: [
       {
@@ -119,6 +120,12 @@ const LEVEL_UNLOCK_BASE: Record<number, Omit<LevelUnlockDef, 'level'>> = {
         title: '园艺线 Lv.5 工具',
         desc: '园艺产线再次升档。',
         iconKey: 'tool_plant_5',
+      },
+      {
+        kind: 'feature',
+        title: '许愿喷泉',
+        desc: '花店主页新增许愿入口，攒许愿硬币即可抽奖。',
+        iconKey: 'icon_wishing_nav',
       },
     ],
   },

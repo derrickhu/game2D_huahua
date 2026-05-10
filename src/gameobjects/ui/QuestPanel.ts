@@ -344,7 +344,7 @@ function mergeChallengeRewardsToFlyItems(rewards: DailyChallengeReward[]): Rewar
 
 /** 周里程碑奖励 → 主包/物品分包纹理 key（与 TextureCache 一致） */
 function weeklyMilestoneRewardTextureKey(r: DailyChallengeReward): string | undefined {
-  if (r.itemId) return r.itemId;
+  if (r.itemId) return ITEM_DEFS.get(r.itemId)?.icon ?? r.itemId;
   if (r.diamond) return 'icon_gem';
   if (r.stamina) return 'icon_energy';
   if (r.huayuan) return 'icon_huayuan';

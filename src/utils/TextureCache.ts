@@ -50,6 +50,8 @@ const MAIN_IMAGE_MAP: Record<string, string> = {
   icon_challenge: 'images/ui/icon_level_badge.png',
   icon_build:     'images/ui/icon_build.png',
   icon_worldmap_nav: 'images/ui/icon_worldmap_nav.png',
+  /** 花店主页「许愿」入口（4 级解锁；与 icon_worldmap_nav 同款 HUD 银色硬币 + 薄荷水纹） */
+  icon_wishing_nav: 'images/ui/icon_wishing_nav.png',
   icon_operate:   'images/ui/icon_operate.png',
 
   // ---- 棋盘 & 场景背景 ----
@@ -702,6 +704,7 @@ const SHOP_WARMUP_KEYS = [
   'owner_full_default_blink',
   'shop_edit_deco_pill_4x2_nb2',
   'icon_worldmap_nav',
+  'icon_wishing_nav',
 ] as const;
 
 const DECO_PANEL_WARMUP_KEYS = [

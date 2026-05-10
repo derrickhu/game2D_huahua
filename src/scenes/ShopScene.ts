@@ -43,7 +43,11 @@ import { DESIGN_WIDTH, COLORS, FONT_FAMILY } from '@/config/Constants';
 import { roomDepthZForPlacement, roomDepthZForOwner } from '@/config/RoomDepthSort';
 import { ToastMessage } from '@/gameobjects/ui/ToastMessage';
 import { LevelUpPopup } from '@/gameobjects/ui/LevelUpPopup';
-import { LIVE_HOUSE_THUMB_CAPTURE_MAX, WORLD_MAP_UNLOCK_LEVEL } from '@/config/WorldMapConfig';
+import {
+  LIVE_HOUSE_THUMB_CAPTURE_MAX,
+  WISHING_FOUNTAIN_UNLOCK_LEVEL,
+  WORLD_MAP_UNLOCK_LEVEL,
+} from '@/config/WorldMapConfig';
 import { RewardBoxManager } from '@/managers/RewardBoxManager';
 import { WarehouseManager } from '@/managers/WarehouseManager';
 import { ITEM_DEFS } from '@/config/ItemConfig';
@@ -57,6 +61,7 @@ import { playShopDecorationStarFly } from '@/gameobjects/ui/ShopDecorationStarFl
 import { Platform } from '@/core/PlatformService';
 import { SocialManager } from '@/managers/SocialManager';
 import { SettingsPanel } from '@/gameobjects/ui/SettingsPanel';
+import { AdEntitlementManager, DailyAdEntitlement } from '@/managers/AdEntitlementManager';
 
 // ── 布局常量 ──
 const PROGRESS_BAR_W = 400;
@@ -74,6 +79,14 @@ const WORLD_MAP_ICON_R = 40;
 /** 「地图」字号；与 WORLD_MAP_LABEL_Y 一起参与 mapExtentBelowCenter 估算 */
 const WORLD_MAP_LABEL_FONT = 14;
 const WORLD_MAP_LABEL_H = 18;
+/** 许愿入口图标半径（与大地图同尺寸，保持视觉一致） */
+const WISHING_ICON_R = WORLD_MAP_ICON_R;
+/**
+ * 许愿入口与大地图入口的中心点水平间距（许愿在左、地图在右）。
+ * 取 2*r + 24 ≈ 一个图标 + 适度空隙；过小会贴在一起，过大易压到「装修花店」按钮。
+ */
+const WISHING_TO_WORLDMAP_GAP_X = WORLD_MAP_ICON_R * 2 + 24;
+const WISHING_FREE_PROMO_BADGE_NAME = 'wishing_free_multi_promo';
 /** 左下隐藏功能条：收起态小竖签 + 展开态横条 */
 const MISC_DRAWER_Y_FROM_BOTTOM = 236;
 const MISC_DRAWER_TAB_W = 24;
@@ -241,6 +254,8 @@ export class ShopScene implements Scene {
 
   // ── 大地图（面板在 OverlayManager，此处仅入口按钮） ──
   private _worldMapBtn: PIXI.Container | null = null;
+  /** 许愿入口（4 级解锁，未解锁仍显示锁徽，点击 → panel:openFlowerSignGacha 与大地图入口共享面板） */
+  private _wishingBtn: PIXI.Container | null = null;
   /** 左下隐藏功能条：收起竖签 + 展开横条 */
   private _miscDrawerRoot: PIXI.Container | null = null;
   private _miscDrawerTab: PIXI.Container | null = null;
@@ -303,6 +318,7 @@ export class ShopScene implements Scene {
     if (SceneManager.current?.name !== 'shop') return;
     this._syncAffinityCodexButtonVisibility();
     this._refreshWorldMapBtnVisibility();
+    this._refreshWishingBtnVisibility();
     const flyTarget = this._returnBtn?.toGlobal(new PIXI.Point(0, 0));
     this._levelUpPopup.show(
       level,
@@ -332,6 +348,10 @@ export class ShopScene implements Scene {
     );
     OverlayManager.bringToFront();
     this._levelUpPopup.parent?.sortChildren();
+  };
+
+  private readonly _onAdEntitlementChanged = (): void => {
+    this._refreshWishingBtnVisibility();
   };
   private _settingsPanel: SettingsPanel | null = null;
 
@@ -477,6 +497,7 @@ export class ShopScene implements Scene {
     EventBus.off('decoration:shopStarFly', this._onDecorationShopStarFly);
     EventBus.off('currency:changed', this._onShopCurrencyForProgress);
     EventBus.off('level:up', this._onShopLevelUp);
+    EventBus.off('adEntitlement:changed', this._onAdEntitlementChanged);
     EventBus.off('renovation:sceneChanged', this._onRenovationSceneChanged);
     EventBus.off('worldmap:switchScene', this._onWorldMapSwitchScene);
     EventBus.off('scene:switchToShop', this._onSwitchToShopConsumePendingPlace);
@@ -552,6 +573,9 @@ export class ShopScene implements Scene {
 
     // ============== 8b. 大地图按钮（右下营业钮正上方、落在底部浅绿条内，配置等级解锁） ==============
     this._buildWorldMapButton(w, h);
+
+    // ============== 8c. 许愿入口按钮（大地图按钮左侧；4 级解锁，未解锁仍显示锁徽） ==============
+    this._buildWishingButton();
 
     // ============== 9. 编辑模式组件（初始隐藏） ==============
     this._furnitureTray = new FurnitureTray();
@@ -2145,6 +2169,123 @@ export class ShopScene implements Scene {
     }
   }
 
+  // ─────────────────── 许愿入口（与大地图节点共享 panel:openFlowerSignGacha） ───────────────────
+
+  /**
+   * 许愿入口：放在大地图按钮左侧、同一 y，外观风格保持一致；
+   * 解锁等级 = `WISHING_FOUNTAIN_UNLOCK_LEVEL`（早于大地图开放）。
+   * 未解锁时仍显示按钮 + 锁徽，点击仅 Toast 提示；解锁后直接 emit `panel:openFlowerSignGacha`，
+   * 与大地图节点 `wishing_fountain` 走同一面板，体验保持一致。
+   */
+  private _buildWishingButton(): void {
+    if (!this._worldMapBtn) return;
+    const btn = new PIXI.Container();
+    const r = WISHING_ICON_R;
+
+    const tex = TextureCache.get('icon_wishing_nav');
+    if (tex && tex.width > 1) {
+      const sp = new PIXI.Sprite(tex);
+      sp.anchor.set(0.5);
+      sp.width = r * 2;
+      sp.height = r * 2;
+      btn.addChild(sp);
+    } else {
+      // 资源未加载完时的回退占位（与大地图按钮风格一致：彩底圆 + 文字）
+      const bg = new PIXI.Graphics();
+      bg.beginFill(0xB0BEC5, 0.85);
+      bg.drawCircle(0, 0, r);
+      bg.endFill();
+      bg.lineStyle(2.5, 0xFFFFFF, 0.6);
+      bg.drawCircle(0, 0, r);
+      btn.addChild(bg);
+
+      const icon = new PIXI.Text('愿', {
+        fontSize: Math.round(r * 0.72),
+        fontFamily: FONT_FAMILY,
+        fill: COLORS.TEXT_DARK,
+      });
+      icon.anchor.set(0.5);
+      btn.addChild(icon);
+    }
+
+    const promo = new PIXI.Container();
+    promo.name = WISHING_FREE_PROMO_BADGE_NAME;
+    promo.position.set(0, -r - 12);
+    promo.eventMode = 'none';
+    const promoBg = new PIXI.Graphics();
+    promoBg.lineStyle(2.5, 0xFFFFFF, 0.96);
+    promoBg.beginFill(0xFF6B6B, 0.98);
+    promoBg.drawRoundedRect(-46, -14, 92, 28, 14);
+    promoBg.endFill();
+    promoBg.lineStyle(1.5, 0xB84A2F, 0.45);
+    promoBg.drawRoundedRect(-46, -14, 92, 28, 14);
+    promo.addChild(promoBg);
+    const promoText = new PIXI.Text('免费10连', {
+      fontSize: 18,
+      fill: 0xFFF7CF,
+      fontFamily: FONT_FAMILY,
+      fontWeight: 'bold',
+      stroke: 0x8A2E23,
+      strokeThickness: 3,
+    });
+    promoText.anchor.set(0.5);
+    promo.addChild(promoText);
+    btn.addChild(promo);
+
+    const labelY = r - 10;
+    const label = new PIXI.Text('许愿', {
+      fontSize: WORLD_MAP_LABEL_FONT,
+      fill: 0xFFFFFF,
+      fontFamily: FONT_FAMILY,
+      fontWeight: 'bold',
+      stroke: 0x3E2723,
+      strokeThickness: 2.5,
+    });
+    label.anchor.set(0.5, 0);
+    label.y = labelY;
+    btn.addChild(label);
+
+    // 与大地图按钮等高同列（左移一个图标 + 间距）
+    const mapBtn = this._worldMapBtn;
+    btn.position.set(mapBtn.position.x - WISHING_TO_WORLDMAP_GAP_X, mapBtn.position.y);
+    btn.eventMode = 'static';
+    btn.cursor = 'pointer';
+    // 宣传语在图标上方，点击热区也向上扩展，避免玩家点文案无响应。
+    btn.hitArea = new PIXI.Rectangle(-r - 26, -r - 36, r * 2 + 52, r * 2 + 78);
+    btn.on('pointerdown', () => {
+      TweenManager.cancelTarget(btn.scale);
+      btn.scale.set(0.85);
+      TweenManager.to({
+        target: btn.scale, props: { x: 1, y: 1 },
+        duration: 0.25, ease: Ease.easeOutBack,
+      });
+      if (CurrencyManager.state.level < WISHING_FOUNTAIN_UNLOCK_LEVEL) {
+        ToastMessage.show(`许愿喷泉将在 ${WISHING_FOUNTAIN_UNLOCK_LEVEL}级 开放`);
+        return;
+      }
+      EventBus.emit('panel:openFlowerSignGacha');
+    });
+
+    this._wishingBtn = btn;
+    this._refreshWishingBtnVisibility();
+    this.container.addChild(btn);
+  }
+
+  private _refreshWishingBtnVisibility(): void {
+    if (!this._wishingBtn) return;
+    const unlocked = CurrencyManager.state.level >= WISHING_FOUNTAIN_UNLOCK_LEVEL;
+    this._wishingBtn.visible = true;
+    this._wishingBtn.eventMode = 'static';
+    this._wishingBtn.alpha = 1;
+    this._setFeatureLockBadge(this._wishingBtn, !unlocked, 'wishing_lock');
+
+    const promo = this._wishingBtn.children.find(c => c.name === WISHING_FREE_PROMO_BADGE_NAME);
+    if (promo) {
+      // 只有当天广告十连次数仍可用、且许愿功能已开放时才显示宣传语；用完或未解锁都隐藏。
+      promo.visible = unlocked && AdEntitlementManager.canUseDaily(DailyAdEntitlement.FLOWER_SIGN_DAILY_DRAW);
+    }
+  }
+
   // ─────────────────── 事件 ───────────────────
 
   private _bindEvents(): void {
@@ -2154,6 +2295,7 @@ export class ShopScene implements Scene {
     EventBus.on('decoration:shopStarFly', this._onDecorationShopStarFly);
     EventBus.on('currency:changed', this._onShopCurrencyForProgress);
     EventBus.on('level:up', this._onShopLevelUp);
+    EventBus.on('adEntitlement:changed', this._onAdEntitlementChanged);
 
     EventBus.on('renovation:sceneChanged', this._onRenovationSceneChanged);
     EventBus.on('worldmap:switchScene', this._onWorldMapSwitchScene);
@@ -2436,6 +2578,7 @@ export class ShopScene implements Scene {
     // 隐藏返回按钮和侧边按钮（编辑模式下不能退出场景）
     this._returnBtn.visible = false;
     if (this._worldMapBtn) this._worldMapBtn.visible = false;
+    if (this._wishingBtn) this._wishingBtn.visible = false;
     this._toggleMiscDrawer(false);
     if (this._miscDrawerRoot) this._miscDrawerRoot.visible = false;
     for (const { container } of this._activityBtns.values()) {
@@ -2674,6 +2817,7 @@ export class ShopScene implements Scene {
     this._setShopHudVisible(true);
     this._returnBtn.visible = true;
     this._refreshWorldMapBtnVisibility();
+    this._refreshWishingBtnVisibility();
     if (this._miscDrawerRoot) this._miscDrawerRoot.visible = true;
     this._syncGameClubNativeButton();
     for (const { container } of this._activityBtns.values()) {
@@ -3261,6 +3405,7 @@ export class ShopScene implements Scene {
     if (decoBtn) decoBtn.redDot.visible = DecorationManager.hasAffordableNew();
 
     this._refreshWorldMapBtnVisibility();
+    this._refreshWishingBtnVisibility();
   }
 
   /**
