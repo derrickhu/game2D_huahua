@@ -1,0 +1,34 @@
+Create one single high-resolution square game asset image.
+
+Reference interpretation:
+The attached reference is the exact required final layout, scale, grass island footprint, room proportion, L-shaped open notch, two-wall isometric camera, and canvas coverage. Copy this spatial layout almost exactly.
+Replace ALL materials and colors with a new identity: ethereal fairy-like Chinese tea pavilion room shell (仙气茶寮), NOT Japanese dark teahouse, NOT heavy dark wood.
+
+Strict layout requirements:
+Keep the same large full grass island footprint as the reference, including rounded uneven grass edge, front paving position, little steps, and bottom grass area.
+Keep the same house size, roof height, wall height, wide indoor floor area, L-shaped notch, two-wall isometric camera angle, and canvas coverage.
+Keep the room spacious and large. Do not shrink the house. Do not remove the grass base.
+
+Structure (gameplay shell rules):
+EMPTY architectural shell only. NO furniture, NO tea table, NO cushions, NO vases, NO scrolls, NO plants in pots, NO curtains, NO partitions, NO hanging lanterns, NO decorations, NO wall art, NO characters, NO text.
+Only allowed: floor, partial roof eave strips, corner posts, back wall plane, right wall plane, foundation, minimal exterior steps.
+CRITICAL: only TWO interior walls — BACK wall and RIGHT wall. NO front wall. NO left wall. Front-left and front-center stay open.
+CRITICAL: roof must NOT cover the middle of the room. Only narrow roof / eave strips along outer top edges of back and right walls, leaving main interior open and visible.
+Windows: at most one small circular moon-gate window shape on back wall as empty architectural cutout only, no glass scene inside. No large glass walls.
+Wall surfaces must stay clean, broad, blank install-ready planes for future decoration.
+
+Tea pavilion style identity (ethereal guofeng, dreamy pastel):
+Theme: airy Chinese tea salon / 茶寮 shell for a cozy merge game, light and fairy-like like pastel silk and morning mist.
+Palette: pale sandalwood and honey bamboo posts, cream and soft sage plaster walls, celadon-mint curved tile roof with soft gold eave accents, NOT cinnabar red, NOT dark walnut, NOT heavy lacquer.
+Roof: gentle upturned Chinese eaves with celadon-green and pale jade tiles, soft gold ridge details, maybe tiny plum blossom or cloud motif on eave ends only.
+Floor: pale bamboo-mat weave or light mint stone tiles with subtle auspicious cloud pattern, airy and bright.
+Foundation and paving: pale warm stone steps, soft moss-green grass island, light pebble paving strip at entry.
+Lighting: single soft upper-left daylight, gentle glow, dreamy but readable.
+
+Cutout-friendly background:
+Flat solid very light pastel cream-mint background outside the grass island and house. No magenta, no dark background, no gradient scenery, no cast shadow outside the asset.
+Crisp 2D illustration, soft brown outlines, pastel colors, no blur, no fuzzy glow fringe.
+
+No furniture, no character, no UI, no text, no labels anywhere in the image.
+
+Viewpoint: classic isometric from upper-left about 45 degrees, consistent with the reference gameplay angle.

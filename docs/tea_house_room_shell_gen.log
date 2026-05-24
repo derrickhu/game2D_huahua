@@ -1,0 +1,58 @@
+== NB2 bg_room_tea_house_nb2 (layout ref: butterfly v11) ==
+/Users/rosa/Library/Python/3.9/lib/python/site-packages/urllib3/__init__.py:35: NotOpenSSLWarning: urllib3 v2 only supports OpenSSL 1.1.1+, currently the 'ssl' module is compiled with 'LibreSSL 2.8.3'. See: https://github.com/urllib3/urllib3/issues/3020
+  warnings.warn(
+  reference image: minigame/subpkg_deco/images/house/preview/bg_room_butterfly_house_default_v11_1k_nb2.png
+Generating: ../game_assets/huahua/assets/preview_house_room/bg_room_tea_house_nb2_raw.png
+  model: gemini-3.1-flash-image-preview
+  ratio: 1:1
+  image_size: 1K (API: 1K)
+  prompt: Create one single high-resolution square game asset image.
+
+Reference interpretation:
+The attached reference is the exac...
+  proxy: HTTPS_PROXY='http://127.0.0.1:7897' bypass(generativelanguage.googleapis.com)=False getproxies_https='http://127.0.0.1:7897' REST_ONLY='1' requests=True
+  retrying (HTTPSConnectionPool(host='generativelanguage.googleapis.com', port=443): Max retries exceeded with url: /v1beta/models/gemini-3.1-flash-image-preview:generateContent?key=AIzaSyD5tHzOYXkc_DYN5FD-uKWxPsZYgf3M6pE (Caused by ProxyError('Unable to connect to proxy', RemoteDisconnected('Remote end closed connection without response'))))...
+  retrying (HTTPSConnectionPool(host='generativelanguage.googleapis.com', port=443): Max retries exceeded with url: /v1beta/models/gemini-3.1-flash-image-preview:generateContent?key=AIzaSyD5tHzOYXkc_DYN5FD-uKWxPsZYgf3M6pE (Caused by ProxyError('Unable to connect to proxy', RemoteDisconnected('Remote end closed connection without response'))))...
+  error: HTTPSConnectionPool(host='generativelanguage.googleapis.com', port=443): Max retries exceeded with url: /v1beta/models/gemini-3.1-flash-image-preview:generateContent?key=AIzaSyD5tHzOYXkc_DYN5FD-uKWxPsZYgf3M6pE (Caused by ProxyError('Unable to connect to proxy', RemoteDisconnected('Remote end closed connection without response')))
+  FAILED
+  retry 1...
+/Users/rosa/Library/Python/3.9/lib/python/site-packages/urllib3/__init__.py:35: NotOpenSSLWarning: urllib3 v2 only supports OpenSSL 1.1.1+, currently the 'ssl' module is compiled with 'LibreSSL 2.8.3'. See: https://github.com/urllib3/urllib3/issues/3020
+  warnings.warn(
+  reference image: minigame/subpkg_deco/images/house/preview/bg_room_butterfly_house_default_v11_1k_nb2.png
+Generating: ../game_assets/huahua/assets/preview_house_room/bg_room_tea_house_nb2_raw.png
+  model: gemini-3.1-flash-image-preview
+  ratio: 1:1
+  image_size: 1K (API: 1K)
+  prompt: Create one single high-resolution square game asset image.
+
+Reference interpretation:
+The attached reference is the exac...
+  proxy: HTTPS_PROXY='http://127.0.0.1:7897' bypass(generativelanguage.googleapis.com)=False getproxies_https='http://127.0.0.1:7897' REST_ONLY='1' requests=True
+  retrying (HTTPSConnectionPool(host='generativelanguage.googleapis.com', port=443): Max retries exceeded with url: /v1beta/models/gemini-3.1-flash-image-preview:generateContent?key=AIzaSyD5tHzOYXkc_DYN5FD-uKWxPsZYgf3M6pE (Caused by ProxyError('Unable to connect to proxy', RemoteDisconnected('Remote end closed connection without response'))))...
+  retrying (HTTPSConnectionPool(host='generativelanguage.googleapis.com', port=443): Max retries exceeded with url: /v1beta/models/gemini-3.1-flash-image-preview:generateContent?key=AIzaSyD5tHzOYXkc_DYN5FD-uKWxPsZYgf3M6pE (Caused by ProxyError('Unable to connect to proxy', RemoteDisconnected('Remote end closed connection without response'))))...
+  error: HTTPSConnectionPool(host='generativelanguage.googleapis.com', port=443): Max retries exceeded with url: /v1beta/models/gemini-3.1-flash-image-preview:generateContent?key=AIzaSyD5tHzOYXkc_DYN5FD-uKWxPsZYgf3M6pE (Caused by ProxyError('Unable to connect to proxy', RemoteDisconnected('Remote end closed connection without response')))
+  FAILED
+  retry 2...
+/Users/rosa/Library/Python/3.9/lib/python/site-packages/urllib3/__init__.py:35: NotOpenSSLWarning: urllib3 v2 only supports OpenSSL 1.1.1+, currently the 'ssl' module is compiled with 'LibreSSL 2.8.3'. See: https://github.com/urllib3/urllib3/issues/3020
+  warnings.warn(
+  reference image: minigame/subpkg_deco/images/house/preview/bg_room_butterfly_house_default_v11_1k_nb2.png
+Generating: ../game_assets/huahua/assets/preview_house_room/bg_room_tea_house_nb2_raw.png
+  model: gemini-3.1-flash-image-preview
+  ratio: 1:1
+  image_size: 1K (API: 1K)
+  prompt: Create one single high-resolution square game asset image.
+
+Reference interpretation:
+The attached reference is the exac...
+  proxy: HTTPS_PROXY='http://127.0.0.1:7897' bypass(generativelanguage.googleapis.com)=False getproxies_https='http://127.0.0.1:7897' REST_ONLY='1' requests=True
+  retrying (HTTPSConnectionPool(host='generativelanguage.googleapis.com', port=443): Max retries exceeded with url: /v1beta/models/gemini-3.1-flash-image-preview:generateContent?key=AIzaSyD5tHzOYXkc_DYN5FD-uKWxPsZYgf3M6pE (Caused by ProxyError('Unable to connect to proxy', RemoteDisconnected('Remote end closed connection without response'))))...
+  done (497059 bytes) -> ../game_assets/huahua/assets/preview_house_room/bg_room_tea_house_nb2_raw.png
+== rembg bg_room_tea_house_nb2 ==
+Model: birefnet-general
+Loaded in 2.8s
+Input: (1024, 1024) — removing background...
+Inference: 8.7s | Total: 11.5s
+Saved: ../game_assets/huahua/assets/preview_house_room/bg_room_tea_house_nb2_nobg.png (929 KB)
+-> minigame/subpkg_deco/images/house/bg_room_tea_house_nb2.png
+-> minigame/subpkg_deco/images/house/preview/bg_room_tea_house_nb2.png
+Done. Raw kept at ../game_assets/huahua/assets/preview_house_room/bg_room_tea_house_nb2_raw.png

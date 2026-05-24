@@ -1,0 +1,34 @@
+Create one single high-resolution square game asset image.
+
+Reference interpretation:
+The attached reference shows a traditional Chinese TWO-STORY tea inn / teahouse in isometric cutaway dollhouse view. Copy its overall spatial layout almost exactly: two full visible floors, central wooden staircase connecting levels, second-floor L-shaped balcony railing overlooking the ground floor, traditional gray-tile roof with upturned eaves, white plaster walls with dark warm wood posts and lattice window frames, stone ground floor and wood upper floor.
+
+CRITICAL gameplay shell rules — EMPTY install-ready architecture ONLY:
+NO furniture of any kind. NO tables, benches, chairs, counters with goods, beds, tubs, screens with paintings, Buddha statues, vases, scrolls, banners, books, teapots, cups, rugs, plants, characters, NPCs, pets, food, wine jars, abacus, makeup, incense, or clutter.
+NO readable text, numbers, logos, or Chinese calligraphy anywhere. Replace any banner or sign areas with blank colored fabric panels only.
+The rooms must feel vacant and ready for the player to place deco later.
+
+Allowed architectural elements only:
+Two-story building mass, roof, wall planes, floor surfaces, staircase structure, balcony railings, window lattice openings (empty), door openings (empty), column posts, ceiling beams, interior floor edges, small exterior foundation and minimal grass patch under the building if needed for cutout stability.
+
+Floor materials:
+Ground floor — pale gray stone tile like the reference.
+Second floor — warm honey wood planks.
+Staircase — wooden steps with simple rail, no red carpet runner.
+
+Style:
+Cute kawaii 2.5D hand-painted mobile merge-game art, soft brown outlines, polished casual game quality.
+Traditional Chinese teahouse inn mood similar to the reference: warm walnut wood, white walls, charcoal-gray roof tiles, subtle cinnabar accent only on blank fabric valance shapes without text.
+NOT ethereal pastel butterfly-house style. NOT modern cafe. NOT Japanese ryokan dark interior.
+Readable silhouette at mobile game scale. Single soft upper-left daylight.
+
+Cutaway and camera:
+Isometric cutaway from upper-left about 45 degrees, same dollhouse angle family as the reference.
+Front and side walls removed so both floors are fully visible for decoration placement.
+Keep both floors spacious with clear open floor areas.
+
+Cutout-friendly background:
+Flat solid very light warm cream background outside the building only. No scenery, no sky gradient, no cast shadow card, no magenta, no checkerboard.
+Crisp edges for rembg cutout. No blur fringe.
+
+No furniture, no characters, no UI, no text.

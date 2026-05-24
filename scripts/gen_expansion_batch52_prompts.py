@@ -1,0 +1,366 @@
+#!/usr/bin/env python3
+"""Batch 52: 20 ethereal dreamy guofeng furniture (light pastel, NOT dark heavy wood)."""
+from __future__ import annotations
+
+import json
+from pathlib import Path
+
+WS = Path(__file__).resolve().parents[1]
+PROMPT_DIR = WS / "docs" / "prompt"
+CATALOG_MD = WS / "docs" / "furniture_expansion_batch52_catalog.md"
+MANIFEST_JSON = WS / "docs" / "furniture_expansion_batch52_manifest.json"
+
+STYLE_PREFIX = (
+    "Square game asset 1:1. Single furniture prop centered with generous margin.\n\n"
+    "Ethereal fairy-like Chinese guofeng furniture, airy dreamy xianxia mood, NOT heavy dark wood furniture. "
+    "Cute kawaii 2.5D isometric view from upper-left about 45 degrees, hand-painted mobile merge-game style. "
+    "Light sandalwood or pale honey wood frames, soft pastel palette: mint green, peach pink, lavender, cream silk, "
+    "celadon ceramic, soft gold filigree accents. Translucent fabric panels, gentle glow feeling, soft brown outlines, "
+    "rounded chibi-friendly shapes, readable silhouette at small grid size."
+)
+
+STYLE_SUFFIX = (
+    "\n\nAvoid dark mahogany, cinnabar lacquer, heavy imperial throne mood, photoreal, sticker flatness. "
+    "No text, no labels, no numbers, no watermark, no characters, no room shell, no walls, no floor plane. "
+    "No ceiling-hanging lamp, no pendant light, no chandelier, no chain-suspended fixture.\n\n"
+    "Background pure solid white #FFFFFF only for cutout."
+)
+
+ITEMS: list[dict] = [
+    {
+        "id": "xianqi_wisteria_vanity",
+        "name": "紫藤绢屏梳妆台",
+        "set": "紫藤春梦套",
+        "slot": "table",
+        "scene": "tea_house",
+        "level": 18,
+        "cost": 920,
+        "star": 4,
+        "rarity": "fine",
+        "palette": "pale honey wood vanity, three silk panels with cascading lavender wisteria, soft gold apron carving, cream drawers",
+        "subject": "A delicate dressing vanity table with triptych silk back panels painted with hanging wisteria flowers in pastel purple, light wood frame, small mirror hint, elegant feminine guofeng mood like a fairy boudoir.",
+    },
+    {
+        "id": "xianqi_lotus_canopy_bed",
+        "name": "莲纱架子床",
+        "set": "紫藤春梦套",
+        "slot": "ornament",
+        "scene": "garden_villa",
+        "level": 22,
+        "cost": 1380,
+        "star": 6,
+        "rarity": "rare",
+        "palette": "light wood bed posts, layered peach and mint translucent silk canopy, large lotus embroidery runner",
+        "subject": "A fairy-like canopy bed with four slender pale-wood posts draped in layered translucent peach and mint silk veils, lotus motif fabric runner, soft glowing dreamy bedroom centerpiece.",
+    },
+    {
+        "id": "xianqi_silk_daybed",
+        "name": "流纱罗汉榻",
+        "set": "紫藤春梦套",
+        "slot": "ornament",
+        "scene": "garden_villa",
+        "level": 20,
+        "cost": 1120,
+        "star": 5,
+        "rarity": "rare",
+        "palette": "pale sandalwood daybed, mint and coral silk cushions, flowing ribbon ties",
+        "subject": "A low luohan daybed couch with airy light-wood rails, plush pastel silk cushions, trailing mint ribbon ends, relaxed fairy pavilion lounge seating.",
+    },
+    {
+        "id": "xianqi_cherry_wardrobe",
+        "name": "樱霞轻衣柜",
+        "set": "紫藤春梦套",
+        "slot": "shelf",
+        "scene": "garden_villa",
+        "level": 21,
+        "cost": 1180,
+        "star": 5,
+        "rarity": "rare",
+        "palette": "cream painted wood wardrobe, sakura pink door inlay, pale gold cloud handles",
+        "subject": "A tall wardrobe in pale cream wood with sakura blossom painted panels and soft gold cloud-shaped handles, light romantic guofeng storage, not dark lacquer.",
+    },
+    {
+        "id": "xianqi_wisteria_arch",
+        "name": "紫藤花拱",
+        "set": "紫藤春梦套",
+        "slot": "garden",
+        "scene": "garden_villa",
+        "level": 23,
+        "cost": 1050,
+        "star": 4,
+        "rarity": "fine",
+        "palette": "white painted garden arch, dripping pastel wisteria clusters, mint leaf accents",
+        "subject": "A short garden arch trellis dripping with soft purple wisteria blossoms, white wood frame, dreamy courtyard entry accent.",
+    },
+    {
+        "id": "xianqi_cloud_book_desk",
+        "name": "祥云书案",
+        "set": "云水书斋套",
+        "slot": "table",
+        "scene": "tea_house",
+        "level": 16,
+        "cost": 780,
+        "star": 3,
+        "rarity": "fine",
+        "palette": "pale wood scholar desk, celadon brush rest, cream scrolls, soft gold cloud leg carving",
+        "subject": "A light scholar writing desk with pale wood legs carved as soft auspicious clouds, celadon brush rest and rolled blank scrolls on top, airy study corner.",
+    },
+    {
+        "id": "xianqi_peony_screen",
+        "name": "牡丹圆光屏风",
+        "set": "云水书斋套",
+        "slot": "wallart",
+        "scene": "tea_house",
+        "level": 17,
+        "cost": 860,
+        "star": 4,
+        "rarity": "fine",
+        "palette": "light wood three-panel screen, pink peony and white lily silk paintings, mint frame trim",
+        "subject": "A three-panel folding screen as wall-art prop in isometric wall angle, each panel shows pastel peony and lily silk painting on translucent backing, no calligraphy.",
+    },
+    {
+        "id": "xianqi_moon_shelf",
+        "name": "月洞博古架",
+        "set": "云水书斋套",
+        "slot": "shelf",
+        "scene": "tea_house",
+        "level": 18,
+        "cost": 980,
+        "star": 4,
+        "rarity": "fine",
+        "palette": "pale wood bogu shelf with circular moon gate opening, celadon vases, pink flower in cubby",
+        "subject": "A display shelf unit with a circular moon-gate cutout frame on top tier, cubbies holding celadon teapots and one pink peony bud, light scholarly collector mood.",
+    },
+    {
+        "id": "xianqi_bamboo_window",
+        "name": "冰纹花窗",
+        "set": "云水书斋套",
+        "slot": "wallart",
+        "scene": "tea_house",
+        "level": 16,
+        "cost": 720,
+        "star": 3,
+        "rarity": "fine",
+        "palette": "cream octagonal window frame, ice-ray lattice, soft green bamboo and swallow silhouette beyond",
+        "subject": "An octagonal Chinese window wall prop in isometric wall angle, pale frame with ice-crack lattice, faint bamboo and one swallow silhouette in glass area, no readable text.",
+    },
+    {
+        "id": "xianqi_guqin_stand",
+        "name": "桐木古琴台",
+        "set": "云水书斋套",
+        "slot": "table",
+        "scene": "tea_house",
+        "level": 19,
+        "cost": 840,
+        "star": 3,
+        "rarity": "fine",
+        "palette": "paulownia pale wood low stand, guqin zither, silk tassel in lavender",
+        "subject": "A low music table holding a guqin zither on pale paulownia wood stand, lavender silk tassel, serene fairy music corner.",
+    },
+    {
+        "id": "xianqi_lotus_pond_table",
+        "name": "睡莲浅池几",
+        "set": "荷塘仙趣套",
+        "slot": "table",
+        "scene": "tea_house",
+        "level": 20,
+        "cost": 1020,
+        "star": 4,
+        "rarity": "fine",
+        "palette": "stone-rim low table with shallow water inset, pink lotus blooms, mint lily pads",
+        "subject": "A low tea table with embedded shallow lotus pond basin in the center, pink lotus flowers and green pads, stone rim, magical indoor water feature table.",
+    },
+    {
+        "id": "xianqi_lotus_screen",
+        "name": "荷塘纱屏",
+        "set": "荷塘仙趣套",
+        "slot": "wallart",
+        "scene": "tea_house",
+        "level": 19,
+        "cost": 800,
+        "star": 3,
+        "rarity": "fine",
+        "palette": "mint translucent screen panels, lotus and teal ribbon painting, pale wood frame",
+        "subject": "A folding screen wall-art prop with mint translucent fabric panels painted with lotus pond and flowing teal ribbons, dreamy water garden mood.",
+    },
+    {
+        "id": "xianqi_lotus_candelabra",
+        "name": "莲蕊烛台",
+        "set": "荷塘仙趣套",
+        "slot": "ornament",
+        "scene": "tea_house",
+        "level": 17,
+        "cost": 640,
+        "star": 3,
+        "rarity": "fine",
+        "palette": "pink lotus bloom as shade on green leaf base, golden stem stand, warm soft glow",
+        "subject": "A floor-standing lotus flower lamp shaped like a blooming pink lotus on a lily-pad base with slender gold stem, warm glow from flower center, tableside or floor accent NOT hanging from ceiling.",
+    },
+    {
+        "id": "xianqi_pink_scholar_rock",
+        "name": "粉晶赏石",
+        "set": "荷塘仙趣套",
+        "slot": "ornament",
+        "scene": "tea_house",
+        "level": 18,
+        "cost": 680,
+        "star": 3,
+        "rarity": "fine",
+        "palette": "rose-quartz pink taihu rock, wavy mint cloud pedestal, tiny sprouting leaf",
+        "subject": "A stylized pink scholar rock taihu stone on a mint cloud-shaped pedestal with one tiny green sprout on top, ethereal mineral garden ornament.",
+    },
+    {
+        "id": "xianqi_koi_bench",
+        "name": "锦鲤连廊凳",
+        "set": "荷塘仙趣套",
+        "slot": "ornament",
+        "scene": "tea_house",
+        "level": 21,
+        "cost": 760,
+        "star": 3,
+        "rarity": "fine",
+        "palette": "pale wood bench, carved water-wave seat edge, orange koi inlay motif",
+        "subject": "A light wood corridor bench with carved wave edge and cute koi fish inlay along the seat rail, pastel pond garden seating.",
+    },
+    {
+        "id": "xianqi_lantern_frame",
+        "name": "落地灯架组",
+        "set": "仙灯花影套",
+        "slot": "garden",
+        "scene": "flower_shop",
+        "level": 15,
+        "cost": 880,
+        "star": 4,
+        "rarity": "fine",
+        "palette": "pale wood vertical frame, strings of pastel paper lanterns in peach mint lavender, ground stone base",
+        "subject": "A ground-standing wooden lantern display frame with multiple strings of colorful paper lanterns in teardrop and round shapes, festival fairy mood, firmly on stone base NOT ceiling hung.",
+    },
+    {
+        "id": "xianqi_ribbon_canopy",
+        "name": "飞仙纱架",
+        "set": "仙灯花影套",
+        "slot": "ornament",
+        "scene": "butterfly_house",
+        "level": 17,
+        "cost": 940,
+        "star": 4,
+        "rarity": "fine",
+        "palette": "slender pale wood frame, flowing peach and mint silk ribbons, gold tassel ties",
+        "subject": "A standing decorative fabric canopy frame with translucent silk ribbons and veils draped from a horizontal bar on two posts, fairy pavilion accent without enclosing a whole room.",
+    },
+    {
+        "id": "xianqi_cloud_rug",
+        "name": "祥云地毯",
+        "set": "仙灯花影套",
+        "slot": "ornament",
+        "scene": "tea_house",
+        "level": 16,
+        "cost": 580,
+        "star": 2,
+        "rarity": "common",
+        "palette": "cream woven rug, pastel pink and mint auspicious cloud embroidery",
+        "subject": "A flat oval rug prop in isometric view with soft pastel auspicious cloud patterns in pink and mint on cream weave, low profile dreamy floor accent.",
+    },
+    {
+        "id": "xianqi_tea_shelf",
+        "name": "清茶舟架",
+        "set": "仙灯花影套",
+        "slot": "shelf",
+        "scene": "tea_house",
+        "level": 18,
+        "cost": 820,
+        "star": 3,
+        "rarity": "fine",
+        "palette": "light bamboo-wood tea shelf, celadon gaiwan, pale yellow tea canisters",
+        "subject": "A small open tea ware shelf with celadon gaiwan cups, bamboo tea boat tray, and pale ceramic jars, Song-style fairy tea corner.",
+    },
+    {
+        "id": "xianqi_blossom_cart",
+        "name": "花车小品",
+        "set": "仙灯花影套",
+        "slot": "garden",
+        "scene": "flower_shop",
+        "level": 19,
+        "cost": 900,
+        "star": 4,
+        "rarity": "fine",
+        "palette": "white wicker flower cart, pink peonies and lavender buckets, pale wood wheels",
+        "subject": "A small dreamy flower vendor cart in white wicker with wooden wheels, buckets of pastel peonies and wisteria, fairy market garden prop.",
+    },
+]
+
+RARITY_CN = {"common": "普通", "fine": "精良", "rare": "稀有", "limited": "限定"}
+SLOT_CN = {
+    "shelf": "花架", "table": "桌台", "light": "家电",
+    "ornament": "摆件", "wallart": "墙饰", "garden": "庭院",
+}
+SCENE_CN = {
+    "butterfly_house": "蝴蝶小屋", "tea_house": "茶香小院",
+    "garden_villa": "花园别墅", "forest_treehouse": "橡树小屋", "flower_shop": "花店",
+}
+
+
+def build_prompt(item: dict) -> str:
+    return (
+        f"{STYLE_PREFIX}\n\n"
+        f"Color and materials: {item['palette']}.\n\n"
+        f"Subject: {item['subject']}\n"
+        f"{STYLE_SUFFIX}"
+    )
+
+
+def write_catalog() -> None:
+    lines = [
+        "# 扩展家具批次 52 — 仙气梦幻古风（20 件）",
+        "",
+        "风格锚点：参考「我的休闲时光」类 **仙气飘飘、颜色梦幻** 的国风——",
+        "浅木/砂金框、薄荷/ peach / 薰衣草 pastel、绢屏紫藤、荷灯、流纱、祥云，",
+        "**禁止** 厚重深红木、朱漆、暗黑宫廷感。",
+        "",
+        "**不含悬吊式吊灯**；莲蕊烛台、落地灯架组均为落地/台面光源。",
+        "",
+        "经济：花愿 580–1380，星星 2–6；未写入 DecorationConfig。",
+        "",
+        "原图目录：`../game_assets/huahua/assets/raw/furniture_expansion_batch52/`",
+        "",
+        "## 套装一览（4 套 × 5 件）",
+        "",
+    ]
+    sets: dict[str, list[dict]] = {}
+    for it in ITEMS:
+        sets.setdefault(it["set"], []).append(it)
+    for set_name, members in sets.items():
+        lines += [f"### {set_name}", "",
+                  "| id | 名称 | 槽位 | 场景 | 等级 | 花愿 | 星星 | 稀有度 |",
+                  "|---|---|---|---|---:|---:|---:|---|"]
+        for it in members:
+            lines.append(
+                f"| `{it['id']}` | {it['name']} | {SLOT_CN[it['slot']]} | {SCENE_CN[it['scene']]} | "
+                f"{it['level']} | {it['cost']} | {it['star']} | {RARITY_CN[it['rarity']]} |"
+            )
+        lines.append("")
+    lines += [
+        "## 汇总", "",
+        f"- 合计：**{len(ITEMS)}** 件",
+        f"- 花愿：**{min(i['cost'] for i in ITEMS)} – {max(i['cost'] for i in ITEMS)}**",
+        f"- 等级：**{min(i['level'] for i in ITEMS)} – {max(i['level'] for i in ITEMS)}**",
+        "",
+    ]
+    CATALOG_MD.write_text("\n".join(lines), encoding="utf-8")
+
+
+def main() -> None:
+    assert len(ITEMS) == 20
+    assert not [i for i in ITEMS if i["slot"] == "light"]
+    PROMPT_DIR.mkdir(parents=True, exist_ok=True)
+    for it in ITEMS:
+        (PROMPT_DIR / f"furniture_{it['id']}_nb2_prompt.txt").write_text(
+            build_prompt(it), encoding="utf-8"
+        )
+    MANIFEST_JSON.write_text(json.dumps(ITEMS, ensure_ascii=False, indent=2), encoding="utf-8")
+    write_catalog()
+    print(f"Wrote {len(ITEMS)} prompts; catalog={CATALOG_MD}")
+
+
+if __name__ == "__main__":
+    main()

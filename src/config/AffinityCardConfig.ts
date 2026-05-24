@@ -56,12 +56,12 @@ export const CARD_RARITY_LABEL: Record<CardRarity, string> = {
 /**
  * 友谊卡系统玩家解锁等级（含）。
  *  - 新手前 5 级专注「合成 + 出花 + 卖花」核心循环
- *  - Lv6 起开放「图鉴掉卡」，作为普通订单上的低频惊喜
+ *  - Lv6 起开放「图鉴掉卡」，作为普通订单上的稳定收集目标
  */
 export const CARD_SYSTEM_UNLOCK_LEVEL = 6;
 
-/** 一次「是否掉卡」的基础概率（普通订单）— 调低后约 1/10，留出惊喜感 */
-export const CARD_DROP_BASE_CHANCE = 0.10;
+/** 一次「是否掉卡」的基础概率（普通订单）— 提高到约 1/4，让友谊卡成为可感知的收集目标 */
+export const CARD_DROP_BASE_CHANCE = 0.25;
 
 /**
  * 每日全局掉卡上限。
@@ -69,12 +69,12 @@ export const CARD_DROP_BASE_CHANCE = 0.10;
  * 保证"每天最多 N 张惊喜，不打扰核心节奏"。
  * 按本地日历日切日（与签到 / 每日糖一致：UTC 偏移 + GM dateOffset）。
  */
-export const CARD_DROP_DAILY_LIMIT = 3;
+export const CARD_DROP_DAILY_LIMIT = 5;
 
 /** 保底：累计 N 次抽卡未出 SR/SSR → 强制 SR */
-export const PITY_TO_SR_THRESHOLD = 30;
+export const PITY_TO_SR_THRESHOLD = 18;
 /** 保底：累计 N 次抽卡未出 SSR → 强制 SSR */
-export const PITY_TO_SSR_THRESHOLD = 100;
+export const PITY_TO_SSR_THRESHOLD = 70;
 
 // ============================================================================
 // 重复卡奖励

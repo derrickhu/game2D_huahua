@@ -1,0 +1,726 @@
+./scripts/gen_furniture_expansion_batch50_nb2.sh: line 24: mapfile: command not found
+Exception ignored in: <_io.TextIOWrapper name='<stdout>' mode='w' encoding='utf-8'>
+BrokenPipeError: [Errno 32] Broken pipe
+=== [bf_moon_lantern_stand] ===
+  attempt 1/8
+/Users/rosa/Library/Python/3.9/lib/python/site-packages/urllib3/__init__.py:35: NotOpenSSLWarning: urllib3 v2 only supports OpenSSL 1.1.1+, currently the 'ssl' module is compiled with 'LibreSSL 2.8.3'. See: https://github.com/urllib3/urllib3/issues/3020
+  warnings.warn(
+Generating: /Users/rosa/rosa_games/game2D_huahua/../game_assets/huahua/assets/raw/furniture_expansion_batch50/bf_moon_lantern_stand_nb2.png
+  model: gemini-3.1-flash-image-preview
+  ratio: 1:1
+  image_size: 512 (API: 512)
+  prompt: Square game asset 1:1. Single furniture prop centered with generous margin.
+
+Cute kawaii 2.5D isometric view from upper-...
+  proxy: HTTPS_PROXY='http://127.0.0.1:7897' bypass(generativelanguage.googleapis.com)=False getproxies_https='http://127.0.0.1:7897' REST_ONLY='1' requests=True
+  done (39581 bytes) -> /Users/rosa/rosa_games/game2D_huahua/../game_assets/huahua/assets/raw/furniture_expansion_batch50/bf_moon_lantern_stand_nb2.png
+  OK -> /Users/rosa/rosa_games/game2D_huahua/../game_assets/huahua/assets/raw/furniture_expansion_batch50/bf_moon_lantern_stand_nb2.png
+=== [bf_moon_specimen_shelf] ===
+  attempt 1/8
+/Users/rosa/Library/Python/3.9/lib/python/site-packages/urllib3/__init__.py:35: NotOpenSSLWarning: urllib3 v2 only supports OpenSSL 1.1.1+, currently the 'ssl' module is compiled with 'LibreSSL 2.8.3'. See: https://github.com/urllib3/urllib3/issues/3020
+  warnings.warn(
+Generating: /Users/rosa/rosa_games/game2D_huahua/../game_assets/huahua/assets/raw/furniture_expansion_batch50/bf_moon_specimen_shelf_nb2.png
+  model: gemini-3.1-flash-image-preview
+  ratio: 1:1
+  image_size: 512 (API: 512)
+  prompt: Square game asset 1:1. Single furniture prop centered with generous margin.
+
+Cute kawaii 2.5D isometric view from upper-...
+  proxy: HTTPS_PROXY='http://127.0.0.1:7897' bypass(generativelanguage.googleapis.com)=False getproxies_https='http://127.0.0.1:7897' REST_ONLY='1' requests=True
+  done (109964 bytes) -> /Users/rosa/rosa_games/game2D_huahua/../game_assets/huahua/assets/raw/furniture_expansion_batch50/bf_moon_specimen_shelf_nb2.png
+  OK -> /Users/rosa/rosa_games/game2D_huahua/../game_assets/huahua/assets/raw/furniture_expansion_batch50/bf_moon_specimen_shelf_nb2.png
+=== [bf_moon_crescent_rug] ===
+  attempt 1/8
+/Users/rosa/Library/Python/3.9/lib/python/site-packages/urllib3/__init__.py:35: NotOpenSSLWarning: urllib3 v2 only supports OpenSSL 1.1.1+, currently the 'ssl' module is compiled with 'LibreSSL 2.8.3'. See: https://github.com/urllib3/urllib3/issues/3020
+  warnings.warn(
+Generating: /Users/rosa/rosa_games/game2D_huahua/../game_assets/huahua/assets/raw/furniture_expansion_batch50/bf_moon_crescent_rug_nb2.png
+  model: gemini-3.1-flash-image-preview
+  ratio: 1:1
+  image_size: 512 (API: 512)
+  prompt: Square game asset 1:1. Single furniture prop centered with generous margin.
+
+Cute kawaii 2.5D isometric view from upper-...
+  proxy: HTTPS_PROXY='http://127.0.0.1:7897' bypass(generativelanguage.googleapis.com)=False getproxies_https='http://127.0.0.1:7897' REST_ONLY='1' requests=True
+  done (105908 bytes) -> /Users/rosa/rosa_games/game2D_huahua/../game_assets/huahua/assets/raw/furniture_expansion_batch50/bf_moon_crescent_rug_nb2.png
+  OK -> /Users/rosa/rosa_games/game2D_huahua/../game_assets/huahua/assets/raw/furniture_expansion_batch50/bf_moon_crescent_rug_nb2.png
+=== [bf_moon_star_chair] ===
+  attempt 1/8
+/Users/rosa/Library/Python/3.9/lib/python/site-packages/urllib3/__init__.py:35: NotOpenSSLWarning: urllib3 v2 only supports OpenSSL 1.1.1+, currently the 'ssl' module is compiled with 'LibreSSL 2.8.3'. See: https://github.com/urllib3/urllib3/issues/3020
+  warnings.warn(
+Generating: /Users/rosa/rosa_games/game2D_huahua/../game_assets/huahua/assets/raw/furniture_expansion_batch50/bf_moon_star_chair_nb2.png
+  model: gemini-3.1-flash-image-preview
+  ratio: 1:1
+  image_size: 512 (API: 512)
+  prompt: Square game asset 1:1. Single furniture prop centered with generous margin.
+
+Cute kawaii 2.5D isometric view from upper-...
+  proxy: HTTPS_PROXY='http://127.0.0.1:7897' bypass(generativelanguage.googleapis.com)=False getproxies_https='http://127.0.0.1:7897' REST_ONLY='1' requests=True
+  done (92169 bytes) -> /Users/rosa/rosa_games/game2D_huahua/../game_assets/huahua/assets/raw/furniture_expansion_batch50/bf_moon_star_chair_nb2.png
+  OK -> /Users/rosa/rosa_games/game2D_huahua/../game_assets/huahua/assets/raw/furniture_expansion_batch50/bf_moon_star_chair_nb2.png
+=== [bf_moon_glass_dome] ===
+  attempt 1/8
+/Users/rosa/Library/Python/3.9/lib/python/site-packages/urllib3/__init__.py:35: NotOpenSSLWarning: urllib3 v2 only supports OpenSSL 1.1.1+, currently the 'ssl' module is compiled with 'LibreSSL 2.8.3'. See: https://github.com/urllib3/urllib3/issues/3020
+  warnings.warn(
+Generating: /Users/rosa/rosa_games/game2D_huahua/../game_assets/huahua/assets/raw/furniture_expansion_batch50/bf_moon_glass_dome_nb2.png
+  model: gemini-3.1-flash-image-preview
+  ratio: 1:1
+  image_size: 512 (API: 512)
+  prompt: Square game asset 1:1. Single furniture prop centered with generous margin.
+
+Cute kawaii 2.5D isometric view from upper-...
+  proxy: HTTPS_PROXY='http://127.0.0.1:7897' bypass(generativelanguage.googleapis.com)=False getproxies_https='http://127.0.0.1:7897' REST_ONLY='1' requests=True
+  done (92539 bytes) -> /Users/rosa/rosa_games/game2D_huahua/../game_assets/huahua/assets/raw/furniture_expansion_batch50/bf_moon_glass_dome_nb2.png
+  OK -> /Users/rosa/rosa_games/game2D_huahua/../game_assets/huahua/assets/raw/furniture_expansion_batch50/bf_moon_glass_dome_nb2.png
+=== [bf_bamboo_low_table] ===
+  attempt 1/8
+/Users/rosa/Library/Python/3.9/lib/python/site-packages/urllib3/__init__.py:35: NotOpenSSLWarning: urllib3 v2 only supports OpenSSL 1.1.1+, currently the 'ssl' module is compiled with 'LibreSSL 2.8.3'. See: https://github.com/urllib3/urllib3/issues/3020
+  warnings.warn(
+Generating: /Users/rosa/rosa_games/game2D_huahua/../game_assets/huahua/assets/raw/furniture_expansion_batch50/bf_bamboo_low_table_nb2.png
+  model: gemini-3.1-flash-image-preview
+  ratio: 1:1
+  image_size: 512 (API: 512)
+  prompt: Square game asset 1:1. Single furniture prop centered with generous margin.
+
+Cute kawaii 2.5D isometric view from upper-...
+  proxy: HTTPS_PROXY='http://127.0.0.1:7897' bypass(generativelanguage.googleapis.com)=False getproxies_https='http://127.0.0.1:7897' REST_ONLY='1' requests=True
+  done (111295 bytes) -> /Users/rosa/rosa_games/game2D_huahua/../game_assets/huahua/assets/raw/furniture_expansion_batch50/bf_bamboo_low_table_nb2.png
+  OK -> /Users/rosa/rosa_games/game2D_huahua/../game_assets/huahua/assets/raw/furniture_expansion_batch50/bf_bamboo_low_table_nb2.png
+=== [bf_bamboo_screen] ===
+  attempt 1/8
+/Users/rosa/Library/Python/3.9/lib/python/site-packages/urllib3/__init__.py:35: NotOpenSSLWarning: urllib3 v2 only supports OpenSSL 1.1.1+, currently the 'ssl' module is compiled with 'LibreSSL 2.8.3'. See: https://github.com/urllib3/urllib3/issues/3020
+  warnings.warn(
+Generating: /Users/rosa/rosa_games/game2D_huahua/../game_assets/huahua/assets/raw/furniture_expansion_batch50/bf_bamboo_screen_nb2.png
+  model: gemini-3.1-flash-image-preview
+  ratio: 1:1
+  image_size: 512 (API: 512)
+  prompt: Square game asset 1:1. Single furniture prop centered with generous margin.
+
+Cute kawaii 2.5D isometric view from upper-...
+  proxy: HTTPS_PROXY='http://127.0.0.1:7897' bypass(generativelanguage.googleapis.com)=False getproxies_https='http://127.0.0.1:7897' REST_ONLY='1' requests=True
+  done (129752 bytes) -> /Users/rosa/rosa_games/game2D_huahua/../game_assets/huahua/assets/raw/furniture_expansion_batch50/bf_bamboo_screen_nb2.png
+  OK -> /Users/rosa/rosa_games/game2D_huahua/../game_assets/huahua/assets/raw/furniture_expansion_batch50/bf_bamboo_screen_nb2.png
+=== [bf_bamboo_hanging_lamp] ===
+  attempt 1/8
+/Users/rosa/Library/Python/3.9/lib/python/site-packages/urllib3/__init__.py:35: NotOpenSSLWarning: urllib3 v2 only supports OpenSSL 1.1.1+, currently the 'ssl' module is compiled with 'LibreSSL 2.8.3'. See: https://github.com/urllib3/urllib3/issues/3020
+  warnings.warn(
+Generating: /Users/rosa/rosa_games/game2D_huahua/../game_assets/huahua/assets/raw/furniture_expansion_batch50/bf_bamboo_hanging_lamp_nb2.png
+  model: gemini-3.1-flash-image-preview
+  ratio: 1:1
+  image_size: 512 (API: 512)
+  prompt: Square game asset 1:1. Single furniture prop centered with generous margin.
+
+Cute kawaii 2.5D isometric view from upper-...
+  proxy: HTTPS_PROXY='http://127.0.0.1:7897' bypass(generativelanguage.googleapis.com)=False getproxies_https='http://127.0.0.1:7897' REST_ONLY='1' requests=True
+  done (79173 bytes) -> /Users/rosa/rosa_games/game2D_huahua/../game_assets/huahua/assets/raw/furniture_expansion_batch50/bf_bamboo_hanging_lamp_nb2.png
+  OK -> /Users/rosa/rosa_games/game2D_huahua/../game_assets/huahua/assets/raw/furniture_expansion_batch50/bf_bamboo_hanging_lamp_nb2.png
+=== [bf_bamboo_planter_bench] ===
+  attempt 1/8
+/Users/rosa/Library/Python/3.9/lib/python/site-packages/urllib3/__init__.py:35: NotOpenSSLWarning: urllib3 v2 only supports OpenSSL 1.1.1+, currently the 'ssl' module is compiled with 'LibreSSL 2.8.3'. See: https://github.com/urllib3/urllib3/issues/3020
+  warnings.warn(
+Generating: /Users/rosa/rosa_games/game2D_huahua/../game_assets/huahua/assets/raw/furniture_expansion_batch50/bf_bamboo_planter_bench_nb2.png
+  model: gemini-3.1-flash-image-preview
+  ratio: 1:1
+  image_size: 512 (API: 512)
+  prompt: Square game asset 1:1. Single furniture prop centered with generous margin.
+
+Cute kawaii 2.5D isometric view from upper-...
+  proxy: HTTPS_PROXY='http://127.0.0.1:7897' bypass(generativelanguage.googleapis.com)=False getproxies_https='http://127.0.0.1:7897' REST_ONLY='1' requests=True
+  done (115774 bytes) -> /Users/rosa/rosa_games/game2D_huahua/../game_assets/huahua/assets/raw/furniture_expansion_batch50/bf_bamboo_planter_bench_nb2.png
+  OK -> /Users/rosa/rosa_games/game2D_huahua/../game_assets/huahua/assets/raw/furniture_expansion_batch50/bf_bamboo_planter_bench_nb2.png
+=== [bf_bamboo_garden_gate] ===
+  attempt 1/8
+/Users/rosa/Library/Python/3.9/lib/python/site-packages/urllib3/__init__.py:35: NotOpenSSLWarning: urllib3 v2 only supports OpenSSL 1.1.1+, currently the 'ssl' module is compiled with 'LibreSSL 2.8.3'. See: https://github.com/urllib3/urllib3/issues/3020
+  warnings.warn(
+Generating: /Users/rosa/rosa_games/game2D_huahua/../game_assets/huahua/assets/raw/furniture_expansion_batch50/bf_bamboo_garden_gate_nb2.png
+  model: gemini-3.1-flash-image-preview
+  ratio: 1:1
+  image_size: 512 (API: 512)
+  prompt: Square game asset 1:1. Single furniture prop centered with generous margin.
+
+Cute kawaii 2.5D isometric view from upper-...
+  proxy: HTTPS_PROXY='http://127.0.0.1:7897' bypass(generativelanguage.googleapis.com)=False getproxies_https='http://127.0.0.1:7897' REST_ONLY='1' requests=True
+  done (111303 bytes) -> /Users/rosa/rosa_games/game2D_huahua/../game_assets/huahua/assets/raw/furniture_expansion_batch50/bf_bamboo_garden_gate_nb2.png
+  OK -> /Users/rosa/rosa_games/game2D_huahua/../game_assets/huahua/assets/raw/furniture_expansion_batch50/bf_bamboo_garden_gate_nb2.png
+=== [bf_study_bookcase] ===
+  attempt 1/8
+/Users/rosa/Library/Python/3.9/lib/python/site-packages/urllib3/__init__.py:35: NotOpenSSLWarning: urllib3 v2 only supports OpenSSL 1.1.1+, currently the 'ssl' module is compiled with 'LibreSSL 2.8.3'. See: https://github.com/urllib3/urllib3/issues/3020
+  warnings.warn(
+Generating: /Users/rosa/rosa_games/game2D_huahua/../game_assets/huahua/assets/raw/furniture_expansion_batch50/bf_study_bookcase_nb2.png
+  model: gemini-3.1-flash-image-preview
+  ratio: 1:1
+  image_size: 512 (API: 512)
+  prompt: Square game asset 1:1. Single furniture prop centered with generous margin.
+
+Cute kawaii 2.5D isometric view from upper-...
+  proxy: HTTPS_PROXY='http://127.0.0.1:7897' bypass(generativelanguage.googleapis.com)=False getproxies_https='http://127.0.0.1:7897' REST_ONLY='1' requests=True
+  done (102733 bytes) -> /Users/rosa/rosa_games/game2D_huahua/../game_assets/huahua/assets/raw/furniture_expansion_batch50/bf_study_bookcase_nb2.png
+  OK -> /Users/rosa/rosa_games/game2D_huahua/../game_assets/huahua/assets/raw/furniture_expansion_batch50/bf_study_bookcase_nb2.png
+=== [bf_study_microscope_desk] ===
+  attempt 1/8
+/Users/rosa/Library/Python/3.9/lib/python/site-packages/urllib3/__init__.py:35: NotOpenSSLWarning: urllib3 v2 only supports OpenSSL 1.1.1+, currently the 'ssl' module is compiled with 'LibreSSL 2.8.3'. See: https://github.com/urllib3/urllib3/issues/3020
+  warnings.warn(
+Generating: /Users/rosa/rosa_games/game2D_huahua/../game_assets/huahua/assets/raw/furniture_expansion_batch50/bf_study_microscope_desk_nb2.png
+  model: gemini-3.1-flash-image-preview
+  ratio: 1:1
+  image_size: 512 (API: 512)
+  prompt: Square game asset 1:1. Single furniture prop centered with generous margin.
+
+Cute kawaii 2.5D isometric view from upper-...
+  proxy: HTTPS_PROXY='http://127.0.0.1:7897' bypass(generativelanguage.googleapis.com)=False getproxies_https='http://127.0.0.1:7897' REST_ONLY='1' requests=True
+  done (103500 bytes) -> /Users/rosa/rosa_games/game2D_huahua/../game_assets/huahua/assets/raw/furniture_expansion_batch50/bf_study_microscope_desk_nb2.png
+  OK -> /Users/rosa/rosa_games/game2D_huahua/../game_assets/huahua/assets/raw/furniture_expansion_batch50/bf_study_microscope_desk_nb2.png
+=== [bf_study_pin_board] ===
+  attempt 1/8
+/Users/rosa/Library/Python/3.9/lib/python/site-packages/urllib3/__init__.py:35: NotOpenSSLWarning: urllib3 v2 only supports OpenSSL 1.1.1+, currently the 'ssl' module is compiled with 'LibreSSL 2.8.3'. See: https://github.com/urllib3/urllib3/issues/3020
+  warnings.warn(
+Generating: /Users/rosa/rosa_games/game2D_huahua/../game_assets/huahua/assets/raw/furniture_expansion_batch50/bf_study_pin_board_nb2.png
+  model: gemini-3.1-flash-image-preview
+  ratio: 1:1
+  image_size: 512 (API: 512)
+  prompt: Square game asset 1:1. Single furniture prop centered with generous margin.
+
+Cute kawaii 2.5D isometric view from upper-...
+  proxy: HTTPS_PROXY='http://127.0.0.1:7897' bypass(generativelanguage.googleapis.com)=False getproxies_https='http://127.0.0.1:7897' REST_ONLY='1' requests=True
+  done (138113 bytes) -> /Users/rosa/rosa_games/game2D_huahua/../game_assets/huahua/assets/raw/furniture_expansion_batch50/bf_study_pin_board_nb2.png
+  OK -> /Users/rosa/rosa_games/game2D_huahua/../game_assets/huahua/assets/raw/furniture_expansion_batch50/bf_study_pin_board_nb2.png
+=== [bf_study_magnifier_lamp] ===
+  attempt 1/8
+/Users/rosa/Library/Python/3.9/lib/python/site-packages/urllib3/__init__.py:35: NotOpenSSLWarning: urllib3 v2 only supports OpenSSL 1.1.1+, currently the 'ssl' module is compiled with 'LibreSSL 2.8.3'. See: https://github.com/urllib3/urllib3/issues/3020
+  warnings.warn(
+Generating: /Users/rosa/rosa_games/game2D_huahua/../game_assets/huahua/assets/raw/furniture_expansion_batch50/bf_study_magnifier_lamp_nb2.png
+  model: gemini-3.1-flash-image-preview
+  ratio: 1:1
+  image_size: 512 (API: 512)
+  prompt: Square game asset 1:1. Single furniture prop centered with generous margin.
+
+Cute kawaii 2.5D isometric view from upper-...
+  proxy: HTTPS_PROXY='http://127.0.0.1:7897' bypass(generativelanguage.googleapis.com)=False getproxies_https='http://127.0.0.1:7897' REST_ONLY='1' requests=True
+  done (86510 bytes) -> /Users/rosa/rosa_games/game2D_huahua/../game_assets/huahua/assets/raw/furniture_expansion_batch50/bf_study_magnifier_lamp_nb2.png
+  OK -> /Users/rosa/rosa_games/game2D_huahua/../game_assets/huahua/assets/raw/furniture_expansion_batch50/bf_study_magnifier_lamp_nb2.png
+=== [bf_study_field_stool] ===
+  attempt 1/8
+/Users/rosa/Library/Python/3.9/lib/python/site-packages/urllib3/__init__.py:35: NotOpenSSLWarning: urllib3 v2 only supports OpenSSL 1.1.1+, currently the 'ssl' module is compiled with 'LibreSSL 2.8.3'. See: https://github.com/urllib3/urllib3/issues/3020
+  warnings.warn(
+Generating: /Users/rosa/rosa_games/game2D_huahua/../game_assets/huahua/assets/raw/furniture_expansion_batch50/bf_study_field_stool_nb2.png
+  model: gemini-3.1-flash-image-preview
+  ratio: 1:1
+  image_size: 512 (API: 512)
+  prompt: Square game asset 1:1. Single furniture prop centered with generous margin.
+
+Cute kawaii 2.5D isometric view from upper-...
+  proxy: HTTPS_PROXY='http://127.0.0.1:7897' bypass(generativelanguage.googleapis.com)=False getproxies_https='http://127.0.0.1:7897' REST_ONLY='1' requests=True
+  done (101015 bytes) -> /Users/rosa/rosa_games/game2D_huahua/../game_assets/huahua/assets/raw/furniture_expansion_batch50/bf_study_field_stool_nb2.png
+  OK -> /Users/rosa/rosa_games/game2D_huahua/../game_assets/huahua/assets/raw/furniture_expansion_batch50/bf_study_field_stool_nb2.png
+=== [tea_low_chabudai] ===
+  attempt 1/8
+/Users/rosa/Library/Python/3.9/lib/python/site-packages/urllib3/__init__.py:35: NotOpenSSLWarning: urllib3 v2 only supports OpenSSL 1.1.1+, currently the 'ssl' module is compiled with 'LibreSSL 2.8.3'. See: https://github.com/urllib3/urllib3/issues/3020
+  warnings.warn(
+Generating: /Users/rosa/rosa_games/game2D_huahua/../game_assets/huahua/assets/raw/furniture_expansion_batch50/tea_low_chabudai_nb2.png
+  model: gemini-3.1-flash-image-preview
+  ratio: 1:1
+  image_size: 512 (API: 512)
+  prompt: Square game asset 1:1. Single furniture prop centered with generous margin.
+
+Cute kawaii 2.5D isometric view from upper-...
+  proxy: HTTPS_PROXY='http://127.0.0.1:7897' bypass(generativelanguage.googleapis.com)=False getproxies_https='http://127.0.0.1:7897' REST_ONLY='1' requests=True
+  HTTP error: 500 {
+  "error": {
+    "code": 500,
+    "message": "Internal error encountered.",
+    "status": "INTERNAL"
+  }
+}
+
+  FAILED
+  attempt 2/8
+/Users/rosa/Library/Python/3.9/lib/python/site-packages/urllib3/__init__.py:35: NotOpenSSLWarning: urllib3 v2 only supports OpenSSL 1.1.1+, currently the 'ssl' module is compiled with 'LibreSSL 2.8.3'. See: https://github.com/urllib3/urllib3/issues/3020
+  warnings.warn(
+Generating: /Users/rosa/rosa_games/game2D_huahua/../game_assets/huahua/assets/raw/furniture_expansion_batch50/tea_low_chabudai_nb2.png
+  model: gemini-3.1-flash-image-preview
+  ratio: 1:1
+  image_size: 512 (API: 512)
+  prompt: Square game asset 1:1. Single furniture prop centered with generous margin.
+
+Cute kawaii 2.5D isometric view from upper-...
+  proxy: HTTPS_PROXY='http://127.0.0.1:7897' bypass(generativelanguage.googleapis.com)=False getproxies_https='http://127.0.0.1:7897' REST_ONLY='1' requests=True
+  done (92234 bytes) -> /Users/rosa/rosa_games/game2D_huahua/../game_assets/huahua/assets/raw/furniture_expansion_batch50/tea_low_chabudai_nb2.png
+  OK -> /Users/rosa/rosa_games/game2D_huahua/../game_assets/huahua/assets/raw/furniture_expansion_batch50/tea_low_chabudai_nb2.png
+=== [tea_zabuton_pair] ===
+  attempt 1/8
+/Users/rosa/Library/Python/3.9/lib/python/site-packages/urllib3/__init__.py:35: NotOpenSSLWarning: urllib3 v2 only supports OpenSSL 1.1.1+, currently the 'ssl' module is compiled with 'LibreSSL 2.8.3'. See: https://github.com/urllib3/urllib3/issues/3020
+  warnings.warn(
+Generating: /Users/rosa/rosa_games/game2D_huahua/../game_assets/huahua/assets/raw/furniture_expansion_batch50/tea_zabuton_pair_nb2.png
+  model: gemini-3.1-flash-image-preview
+  ratio: 1:1
+  image_size: 512 (API: 512)
+  prompt: Square game asset 1:1. Single furniture prop centered with generous margin.
+
+Cute kawaii 2.5D isometric view from upper-...
+  proxy: HTTPS_PROXY='http://127.0.0.1:7897' bypass(generativelanguage.googleapis.com)=False getproxies_https='http://127.0.0.1:7897' REST_ONLY='1' requests=True
+  done (139162 bytes) -> /Users/rosa/rosa_games/game2D_huahua/../game_assets/huahua/assets/raw/furniture_expansion_batch50/tea_zabuton_pair_nb2.png
+  OK -> /Users/rosa/rosa_games/game2D_huahua/../game_assets/huahua/assets/raw/furniture_expansion_batch50/tea_zabuton_pair_nb2.png
+=== [tea_tatami_cabinet] ===
+  attempt 1/8
+/Users/rosa/Library/Python/3.9/lib/python/site-packages/urllib3/__init__.py:35: NotOpenSSLWarning: urllib3 v2 only supports OpenSSL 1.1.1+, currently the 'ssl' module is compiled with 'LibreSSL 2.8.3'. See: https://github.com/urllib3/urllib3/issues/3020
+  warnings.warn(
+Generating: /Users/rosa/rosa_games/game2D_huahua/../game_assets/huahua/assets/raw/furniture_expansion_batch50/tea_tatami_cabinet_nb2.png
+  model: gemini-3.1-flash-image-preview
+  ratio: 1:1
+  image_size: 512 (API: 512)
+  prompt: Square game asset 1:1. Single furniture prop centered with generous margin.
+
+Cute kawaii 2.5D isometric view from upper-...
+  proxy: HTTPS_PROXY='http://127.0.0.1:7897' bypass(generativelanguage.googleapis.com)=False getproxies_https='http://127.0.0.1:7897' REST_ONLY='1' requests=True
+  done (96687 bytes) -> /Users/rosa/rosa_games/game2D_huahua/../game_assets/huahua/assets/raw/furniture_expansion_batch50/tea_tatami_cabinet_nb2.png
+  OK -> /Users/rosa/rosa_games/game2D_huahua/../game_assets/huahua/assets/raw/furniture_expansion_batch50/tea_tatami_cabinet_nb2.png
+=== [tea_paper_lantern] ===
+  attempt 1/8
+/Users/rosa/Library/Python/3.9/lib/python/site-packages/urllib3/__init__.py:35: NotOpenSSLWarning: urllib3 v2 only supports OpenSSL 1.1.1+, currently the 'ssl' module is compiled with 'LibreSSL 2.8.3'. See: https://github.com/urllib3/urllib3/issues/3020
+  warnings.warn(
+Generating: /Users/rosa/rosa_games/game2D_huahua/../game_assets/huahua/assets/raw/furniture_expansion_batch50/tea_paper_lantern_nb2.png
+  model: gemini-3.1-flash-image-preview
+  ratio: 1:1
+  image_size: 512 (API: 512)
+  prompt: Square game asset 1:1. Single furniture prop centered with generous margin.
+
+Cute kawaii 2.5D isometric view from upper-...
+  proxy: HTTPS_PROXY='http://127.0.0.1:7897' bypass(generativelanguage.googleapis.com)=False getproxies_https='http://127.0.0.1:7897' REST_ONLY='1' requests=True
+  done (94371 bytes) -> /Users/rosa/rosa_games/game2D_huahua/../game_assets/huahua/assets/raw/furniture_expansion_batch50/tea_paper_lantern_nb2.png
+  OK -> /Users/rosa/rosa_games/game2D_huahua/../game_assets/huahua/assets/raw/furniture_expansion_batch50/tea_paper_lantern_nb2.png
+=== [tea_scroll_wall] ===
+  attempt 1/8
+/Users/rosa/Library/Python/3.9/lib/python/site-packages/urllib3/__init__.py:35: NotOpenSSLWarning: urllib3 v2 only supports OpenSSL 1.1.1+, currently the 'ssl' module is compiled with 'LibreSSL 2.8.3'. See: https://github.com/urllib3/urllib3/issues/3020
+  warnings.warn(
+Generating: /Users/rosa/rosa_games/game2D_huahua/../game_assets/huahua/assets/raw/furniture_expansion_batch50/tea_scroll_wall_nb2.png
+  model: gemini-3.1-flash-image-preview
+  ratio: 1:1
+  image_size: 512 (API: 512)
+  prompt: Square game asset 1:1. Single furniture prop centered with generous margin.
+
+Cute kawaii 2.5D isometric view from upper-...
+  proxy: HTTPS_PROXY='http://127.0.0.1:7897' bypass(generativelanguage.googleapis.com)=False getproxies_https='http://127.0.0.1:7897' REST_ONLY='1' requests=True
+  done (88225 bytes) -> /Users/rosa/rosa_games/game2D_huahua/../game_assets/huahua/assets/raw/furniture_expansion_batch50/tea_scroll_wall_nb2.png
+  OK -> /Users/rosa/rosa_games/game2D_huahua/../game_assets/huahua/assets/raw/furniture_expansion_batch50/tea_scroll_wall_nb2.png
+=== [tea_stone_basin] ===
+  attempt 1/8
+/Users/rosa/Library/Python/3.9/lib/python/site-packages/urllib3/__init__.py:35: NotOpenSSLWarning: urllib3 v2 only supports OpenSSL 1.1.1+, currently the 'ssl' module is compiled with 'LibreSSL 2.8.3'. See: https://github.com/urllib3/urllib3/issues/3020
+  warnings.warn(
+Generating: /Users/rosa/rosa_games/game2D_huahua/../game_assets/huahua/assets/raw/furniture_expansion_batch50/tea_stone_basin_nb2.png
+  model: gemini-3.1-flash-image-preview
+  ratio: 1:1
+  image_size: 512 (API: 512)
+  prompt: Square game asset 1:1. Single furniture prop centered with generous margin.
+
+Cute kawaii 2.5D isometric view from upper-...
+  proxy: HTTPS_PROXY='http://127.0.0.1:7897' bypass(generativelanguage.googleapis.com)=False getproxies_https='http://127.0.0.1:7897' REST_ONLY='1' requests=True
+  done (88092 bytes) -> /Users/rosa/rosa_games/game2D_huahua/../game_assets/huahua/assets/raw/furniture_expansion_batch50/tea_stone_basin_nb2.png
+  OK -> /Users/rosa/rosa_games/game2D_huahua/../game_assets/huahua/assets/raw/furniture_expansion_batch50/tea_stone_basin_nb2.png
+=== [tea_bamboo_fence] ===
+  attempt 1/8
+/Users/rosa/Library/Python/3.9/lib/python/site-packages/urllib3/__init__.py:35: NotOpenSSLWarning: urllib3 v2 only supports OpenSSL 1.1.1+, currently the 'ssl' module is compiled with 'LibreSSL 2.8.3'. See: https://github.com/urllib3/urllib3/issues/3020
+  warnings.warn(
+Generating: /Users/rosa/rosa_games/game2D_huahua/../game_assets/huahua/assets/raw/furniture_expansion_batch50/tea_bamboo_fence_nb2.png
+  model: gemini-3.1-flash-image-preview
+  ratio: 1:1
+  image_size: 512 (API: 512)
+  prompt: Square game asset 1:1. Single furniture prop centered with generous margin.
+
+Cute kawaii 2.5D isometric view from upper-...
+  proxy: HTTPS_PROXY='http://127.0.0.1:7897' bypass(generativelanguage.googleapis.com)=False getproxies_https='http://127.0.0.1:7897' REST_ONLY='1' requests=True
+  done (105548 bytes) -> /Users/rosa/rosa_games/game2D_huahua/../game_assets/huahua/assets/raw/furniture_expansion_batch50/tea_bamboo_fence_nb2.png
+  OK -> /Users/rosa/rosa_games/game2D_huahua/../game_assets/huahua/assets/raw/furniture_expansion_batch50/tea_bamboo_fence_nb2.png
+=== [tea_maple_bonsai] ===
+  attempt 1/8
+/Users/rosa/Library/Python/3.9/lib/python/site-packages/urllib3/__init__.py:35: NotOpenSSLWarning: urllib3 v2 only supports OpenSSL 1.1.1+, currently the 'ssl' module is compiled with 'LibreSSL 2.8.3'. See: https://github.com/urllib3/urllib3/issues/3020
+  warnings.warn(
+Generating: /Users/rosa/rosa_games/game2D_huahua/../game_assets/huahua/assets/raw/furniture_expansion_batch50/tea_maple_bonsai_nb2.png
+  model: gemini-3.1-flash-image-preview
+  ratio: 1:1
+  image_size: 512 (API: 512)
+  prompt: Square game asset 1:1. Single furniture prop centered with generous margin.
+
+Cute kawaii 2.5D isometric view from upper-...
+  proxy: HTTPS_PROXY='http://127.0.0.1:7897' bypass(generativelanguage.googleapis.com)=False getproxies_https='http://127.0.0.1:7897' REST_ONLY='1' requests=True
+  done (96062 bytes) -> /Users/rosa/rosa_games/game2D_huahua/../game_assets/huahua/assets/raw/furniture_expansion_batch50/tea_maple_bonsai_nb2.png
+  OK -> /Users/rosa/rosa_games/game2D_huahua/../game_assets/huahua/assets/raw/furniture_expansion_batch50/tea_maple_bonsai_nb2.png
+=== [tea_stepping_stones] ===
+  attempt 1/8
+/Users/rosa/Library/Python/3.9/lib/python/site-packages/urllib3/__init__.py:35: NotOpenSSLWarning: urllib3 v2 only supports OpenSSL 1.1.1+, currently the 'ssl' module is compiled with 'LibreSSL 2.8.3'. See: https://github.com/urllib3/urllib3/issues/3020
+  warnings.warn(
+Generating: /Users/rosa/rosa_games/game2D_huahua/../game_assets/huahua/assets/raw/furniture_expansion_batch50/tea_stepping_stones_nb2.png
+  model: gemini-3.1-flash-image-preview
+  ratio: 1:1
+  image_size: 512 (API: 512)
+  prompt: Square game asset 1:1. Single furniture prop centered with generous margin.
+
+Cute kawaii 2.5D isometric view from upper-...
+  proxy: HTTPS_PROXY='http://127.0.0.1:7897' bypass(generativelanguage.googleapis.com)=False getproxies_https='http://127.0.0.1:7897' REST_ONLY='1' requests=True
+  done (73407 bytes) -> /Users/rosa/rosa_games/game2D_huahua/../game_assets/huahua/assets/raw/furniture_expansion_batch50/tea_stepping_stones_nb2.png
+  OK -> /Users/rosa/rosa_games/game2D_huahua/../game_assets/huahua/assets/raw/furniture_expansion_batch50/tea_stepping_stones_nb2.png
+=== [tea_torii_mini] ===
+  attempt 1/8
+/Users/rosa/Library/Python/3.9/lib/python/site-packages/urllib3/__init__.py:35: NotOpenSSLWarning: urllib3 v2 only supports OpenSSL 1.1.1+, currently the 'ssl' module is compiled with 'LibreSSL 2.8.3'. See: https://github.com/urllib3/urllib3/issues/3020
+  warnings.warn(
+Generating: /Users/rosa/rosa_games/game2D_huahua/../game_assets/huahua/assets/raw/furniture_expansion_batch50/tea_torii_mini_nb2.png
+  model: gemini-3.1-flash-image-preview
+  ratio: 1:1
+  image_size: 512 (API: 512)
+  prompt: Square game asset 1:1. Single furniture prop centered with generous margin.
+
+Cute kawaii 2.5D isometric view from upper-...
+  proxy: HTTPS_PROXY='http://127.0.0.1:7897' bypass(generativelanguage.googleapis.com)=False getproxies_https='http://127.0.0.1:7897' REST_ONLY='1' requests=True
+  done (86888 bytes) -> /Users/rosa/rosa_games/game2D_huahua/../game_assets/huahua/assets/raw/furniture_expansion_batch50/tea_torii_mini_nb2.png
+  OK -> /Users/rosa/rosa_games/game2D_huahua/../game_assets/huahua/assets/raw/furniture_expansion_batch50/tea_torii_mini_nb2.png
+=== [villa_chester_sofa] ===
+  attempt 1/8
+/Users/rosa/Library/Python/3.9/lib/python/site-packages/urllib3/__init__.py:35: NotOpenSSLWarning: urllib3 v2 only supports OpenSSL 1.1.1+, currently the 'ssl' module is compiled with 'LibreSSL 2.8.3'. See: https://github.com/urllib3/urllib3/issues/3020
+  warnings.warn(
+Generating: /Users/rosa/rosa_games/game2D_huahua/../game_assets/huahua/assets/raw/furniture_expansion_batch50/villa_chester_sofa_nb2.png
+  model: gemini-3.1-flash-image-preview
+  ratio: 1:1
+  image_size: 512 (API: 512)
+  prompt: Square game asset 1:1. Single furniture prop centered with generous margin.
+
+Cute kawaii 2.5D isometric view from upper-...
+  proxy: HTTPS_PROXY='http://127.0.0.1:7897' bypass(generativelanguage.googleapis.com)=False getproxies_https='http://127.0.0.1:7897' REST_ONLY='1' requests=True
+  done (93565 bytes) -> /Users/rosa/rosa_games/game2D_huahua/../game_assets/huahua/assets/raw/furniture_expansion_batch50/villa_chester_sofa_nb2.png
+  OK -> /Users/rosa/rosa_games/game2D_huahua/../game_assets/huahua/assets/raw/furniture_expansion_batch50/villa_chester_sofa_nb2.png
+=== [villa_marble_coffee_table] ===
+  attempt 1/8
+/Users/rosa/Library/Python/3.9/lib/python/site-packages/urllib3/__init__.py:35: NotOpenSSLWarning: urllib3 v2 only supports OpenSSL 1.1.1+, currently the 'ssl' module is compiled with 'LibreSSL 2.8.3'. See: https://github.com/urllib3/urllib3/issues/3020
+  warnings.warn(
+Generating: /Users/rosa/rosa_games/game2D_huahua/../game_assets/huahua/assets/raw/furniture_expansion_batch50/villa_marble_coffee_table_nb2.png
+  model: gemini-3.1-flash-image-preview
+  ratio: 1:1
+  image_size: 512 (API: 512)
+  prompt: Square game asset 1:1. Single furniture prop centered with generous margin.
+
+Cute kawaii 2.5D isometric view from upper-...
+  proxy: HTTPS_PROXY='http://127.0.0.1:7897' bypass(generativelanguage.googleapis.com)=False getproxies_https='http://127.0.0.1:7897' REST_ONLY='1' requests=True
+  done (82038 bytes) -> /Users/rosa/rosa_games/game2D_huahua/../game_assets/huahua/assets/raw/furniture_expansion_batch50/villa_marble_coffee_table_nb2.png
+  OK -> /Users/rosa/rosa_games/game2D_huahua/../game_assets/huahua/assets/raw/furniture_expansion_batch50/villa_marble_coffee_table_nb2.png
+=== [villa_gilded_mirror] ===
+  attempt 1/8
+/Users/rosa/Library/Python/3.9/lib/python/site-packages/urllib3/__init__.py:35: NotOpenSSLWarning: urllib3 v2 only supports OpenSSL 1.1.1+, currently the 'ssl' module is compiled with 'LibreSSL 2.8.3'. See: https://github.com/urllib3/urllib3/issues/3020
+  warnings.warn(
+Generating: /Users/rosa/rosa_games/game2D_huahua/../game_assets/huahua/assets/raw/furniture_expansion_batch50/villa_gilded_mirror_nb2.png
+  model: gemini-3.1-flash-image-preview
+  ratio: 1:1
+  image_size: 512 (API: 512)
+  prompt: Square game asset 1:1. Single furniture prop centered with generous margin.
+
+Cute kawaii 2.5D isometric view from upper-...
+  proxy: HTTPS_PROXY='http://127.0.0.1:7897' bypass(generativelanguage.googleapis.com)=False getproxies_https='http://127.0.0.1:7897' REST_ONLY='1' requests=True
+  done (106924 bytes) -> /Users/rosa/rosa_games/game2D_huahua/../game_assets/huahua/assets/raw/furniture_expansion_batch50/villa_gilded_mirror_nb2.png
+  OK -> /Users/rosa/rosa_games/game2D_huahua/../game_assets/huahua/assets/raw/furniture_expansion_batch50/villa_gilded_mirror_nb2.png
+=== [villa_crystal_chandelier] ===
+  attempt 1/8
+/Users/rosa/Library/Python/3.9/lib/python/site-packages/urllib3/__init__.py:35: NotOpenSSLWarning: urllib3 v2 only supports OpenSSL 1.1.1+, currently the 'ssl' module is compiled with 'LibreSSL 2.8.3'. See: https://github.com/urllib3/urllib3/issues/3020
+  warnings.warn(
+Generating: /Users/rosa/rosa_games/game2D_huahua/../game_assets/huahua/assets/raw/furniture_expansion_batch50/villa_crystal_chandelier_nb2.png
+  model: gemini-3.1-flash-image-preview
+  ratio: 1:1
+  image_size: 512 (API: 512)
+  prompt: Square game asset 1:1. Single furniture prop centered with generous margin.
+
+Cute kawaii 2.5D isometric view from upper-...
+  proxy: HTTPS_PROXY='http://127.0.0.1:7897' bypass(generativelanguage.googleapis.com)=False getproxies_https='http://127.0.0.1:7897' REST_ONLY='1' requests=True
+  done (123529 bytes) -> /Users/rosa/rosa_games/game2D_huahua/../game_assets/huahua/assets/raw/furniture_expansion_batch50/villa_crystal_chandelier_nb2.png
+  OK -> /Users/rosa/rosa_games/game2D_huahua/../game_assets/huahua/assets/raw/furniture_expansion_batch50/villa_crystal_chandelier_nb2.png
+=== [villa_rose_armoire] ===
+  attempt 1/8
+/Users/rosa/Library/Python/3.9/lib/python/site-packages/urllib3/__init__.py:35: NotOpenSSLWarning: urllib3 v2 only supports OpenSSL 1.1.1+, currently the 'ssl' module is compiled with 'LibreSSL 2.8.3'. See: https://github.com/urllib3/urllib3/issues/3020
+  warnings.warn(
+Generating: /Users/rosa/rosa_games/game2D_huahua/../game_assets/huahua/assets/raw/furniture_expansion_batch50/villa_rose_armoire_nb2.png
+  model: gemini-3.1-flash-image-preview
+  ratio: 1:1
+  image_size: 512 (API: 512)
+  prompt: Square game asset 1:1. Single furniture prop centered with generous margin.
+
+Cute kawaii 2.5D isometric view from upper-...
+  proxy: HTTPS_PROXY='http://127.0.0.1:7897' bypass(generativelanguage.googleapis.com)=False getproxies_https='http://127.0.0.1:7897' REST_ONLY='1' requests=True
+  done (112081 bytes) -> /Users/rosa/rosa_games/game2D_huahua/../game_assets/huahua/assets/raw/furniture_expansion_batch50/villa_rose_armoire_nb2.png
+  OK -> /Users/rosa/rosa_games/game2D_huahua/../game_assets/huahua/assets/raw/furniture_expansion_batch50/villa_rose_armoire_nb2.png
+=== [villa_wrought_bench] ===
+  attempt 1/8
+/Users/rosa/Library/Python/3.9/lib/python/site-packages/urllib3/__init__.py:35: NotOpenSSLWarning: urllib3 v2 only supports OpenSSL 1.1.1+, currently the 'ssl' module is compiled with 'LibreSSL 2.8.3'. See: https://github.com/urllib3/urllib3/issues/3020
+  warnings.warn(
+Generating: /Users/rosa/rosa_games/game2D_huahua/../game_assets/huahua/assets/raw/furniture_expansion_batch50/villa_wrought_bench_nb2.png
+  model: gemini-3.1-flash-image-preview
+  ratio: 1:1
+  image_size: 512 (API: 512)
+  prompt: Square game asset 1:1. Single furniture prop centered with generous margin.
+
+Cute kawaii 2.5D isometric view from upper-...
+  proxy: HTTPS_PROXY='http://127.0.0.1:7897' bypass(generativelanguage.googleapis.com)=False getproxies_https='http://127.0.0.1:7897' REST_ONLY='1' requests=True
+  done (117327 bytes) -> /Users/rosa/rosa_games/game2D_huahua/../game_assets/huahua/assets/raw/furniture_expansion_batch50/villa_wrought_bench_nb2.png
+  OK -> /Users/rosa/rosa_games/game2D_huahua/../game_assets/huahua/assets/raw/furniture_expansion_batch50/villa_wrought_bench_nb2.png
+=== [villa_planter_urn] ===
+  attempt 1/8
+/Users/rosa/Library/Python/3.9/lib/python/site-packages/urllib3/__init__.py:35: NotOpenSSLWarning: urllib3 v2 only supports OpenSSL 1.1.1+, currently the 'ssl' module is compiled with 'LibreSSL 2.8.3'. See: https://github.com/urllib3/urllib3/issues/3020
+  warnings.warn(
+Generating: /Users/rosa/rosa_games/game2D_huahua/../game_assets/huahua/assets/raw/furniture_expansion_batch50/villa_planter_urn_nb2.png
+  model: gemini-3.1-flash-image-preview
+  ratio: 1:1
+  image_size: 512 (API: 512)
+  prompt: Square game asset 1:1. Single furniture prop centered with generous margin.
+
+Cute kawaii 2.5D isometric view from upper-...
+  proxy: HTTPS_PROXY='http://127.0.0.1:7897' bypass(generativelanguage.googleapis.com)=False getproxies_https='http://127.0.0.1:7897' REST_ONLY='1' requests=True
+  done (114887 bytes) -> /Users/rosa/rosa_games/game2D_huahua/../game_assets/huahua/assets/raw/furniture_expansion_batch50/villa_planter_urn_nb2.png
+  OK -> /Users/rosa/rosa_games/game2D_huahua/../game_assets/huahua/assets/raw/furniture_expansion_batch50/villa_planter_urn_nb2.png
+=== [villa_balcony_table] ===
+  attempt 1/8
+/Users/rosa/Library/Python/3.9/lib/python/site-packages/urllib3/__init__.py:35: NotOpenSSLWarning: urllib3 v2 only supports OpenSSL 1.1.1+, currently the 'ssl' module is compiled with 'LibreSSL 2.8.3'. See: https://github.com/urllib3/urllib3/issues/3020
+  warnings.warn(
+Generating: /Users/rosa/rosa_games/game2D_huahua/../game_assets/huahua/assets/raw/furniture_expansion_batch50/villa_balcony_table_nb2.png
+  model: gemini-3.1-flash-image-preview
+  ratio: 1:1
+  image_size: 512 (API: 512)
+  prompt: Square game asset 1:1. Single furniture prop centered with generous margin.
+
+Cute kawaii 2.5D isometric view from upper-...
+  proxy: HTTPS_PROXY='http://127.0.0.1:7897' bypass(generativelanguage.googleapis.com)=False getproxies_https='http://127.0.0.1:7897' REST_ONLY='1' requests=True
+  done (47441 bytes) -> /Users/rosa/rosa_games/game2D_huahua/../game_assets/huahua/assets/raw/furniture_expansion_batch50/villa_balcony_table_nb2.png
+  OK -> /Users/rosa/rosa_games/game2D_huahua/../game_assets/huahua/assets/raw/furniture_expansion_batch50/villa_balcony_table_nb2.png
+=== [villa_parasol_stand] ===
+  attempt 1/8
+/Users/rosa/Library/Python/3.9/lib/python/site-packages/urllib3/__init__.py:35: NotOpenSSLWarning: urllib3 v2 only supports OpenSSL 1.1.1+, currently the 'ssl' module is compiled with 'LibreSSL 2.8.3'. See: https://github.com/urllib3/urllib3/issues/3020
+  warnings.warn(
+Generating: /Users/rosa/rosa_games/game2D_huahua/../game_assets/huahua/assets/raw/furniture_expansion_batch50/villa_parasol_stand_nb2.png
+  model: gemini-3.1-flash-image-preview
+  ratio: 1:1
+  image_size: 512 (API: 512)
+  prompt: Square game asset 1:1. Single furniture prop centered with generous margin.
+
+Cute kawaii 2.5D isometric view from upper-...
+  proxy: HTTPS_PROXY='http://127.0.0.1:7897' bypass(generativelanguage.googleapis.com)=False getproxies_https='http://127.0.0.1:7897' REST_ONLY='1' requests=True
+  done (72144 bytes) -> /Users/rosa/rosa_games/game2D_huahua/../game_assets/huahua/assets/raw/furniture_expansion_batch50/villa_parasol_stand_nb2.png
+  OK -> /Users/rosa/rosa_games/game2D_huahua/../game_assets/huahua/assets/raw/furniture_expansion_batch50/villa_parasol_stand_nb2.png
+=== [villa_rose_trellis] ===
+  attempt 1/8
+/Users/rosa/Library/Python/3.9/lib/python/site-packages/urllib3/__init__.py:35: NotOpenSSLWarning: urllib3 v2 only supports OpenSSL 1.1.1+, currently the 'ssl' module is compiled with 'LibreSSL 2.8.3'. See: https://github.com/urllib3/urllib3/issues/3020
+  warnings.warn(
+Generating: /Users/rosa/rosa_games/game2D_huahua/../game_assets/huahua/assets/raw/furniture_expansion_batch50/villa_rose_trellis_nb2.png
+  model: gemini-3.1-flash-image-preview
+  ratio: 1:1
+  image_size: 512 (API: 512)
+  prompt: Square game asset 1:1. Single furniture prop centered with generous margin.
+
+Cute kawaii 2.5D isometric view from upper-...
+  proxy: HTTPS_PROXY='http://127.0.0.1:7897' bypass(generativelanguage.googleapis.com)=False getproxies_https='http://127.0.0.1:7897' REST_ONLY='1' requests=True
+  done (121500 bytes) -> /Users/rosa/rosa_games/game2D_huahua/../game_assets/huahua/assets/raw/furniture_expansion_batch50/villa_rose_trellis_nb2.png
+  OK -> /Users/rosa/rosa_games/game2D_huahua/../game_assets/huahua/assets/raw/furniture_expansion_batch50/villa_rose_trellis_nb2.png
+=== [tree_canopy_bed] ===
+  attempt 1/8
+/Users/rosa/Library/Python/3.9/lib/python/site-packages/urllib3/__init__.py:35: NotOpenSSLWarning: urllib3 v2 only supports OpenSSL 1.1.1+, currently the 'ssl' module is compiled with 'LibreSSL 2.8.3'. See: https://github.com/urllib3/urllib3/issues/3020
+  warnings.warn(
+Generating: /Users/rosa/rosa_games/game2D_huahua/../game_assets/huahua/assets/raw/furniture_expansion_batch50/tree_canopy_bed_nb2.png
+  model: gemini-3.1-flash-image-preview
+  ratio: 1:1
+  image_size: 512 (API: 512)
+  prompt: Square game asset 1:1. Single furniture prop centered with generous margin.
+
+Cute kawaii 2.5D isometric view from upper-...
+  proxy: HTTPS_PROXY='http://127.0.0.1:7897' bypass(generativelanguage.googleapis.com)=False getproxies_https='http://127.0.0.1:7897' REST_ONLY='1' requests=True
+  done (114800 bytes) -> /Users/rosa/rosa_games/game2D_huahua/../game_assets/huahua/assets/raw/furniture_expansion_batch50/tree_canopy_bed_nb2.png
+  OK -> /Users/rosa/rosa_games/game2D_huahua/../game_assets/huahua/assets/raw/furniture_expansion_batch50/tree_canopy_bed_nb2.png
+=== [tree_nightstand] ===
+  attempt 1/8
+/Users/rosa/Library/Python/3.9/lib/python/site-packages/urllib3/__init__.py:35: NotOpenSSLWarning: urllib3 v2 only supports OpenSSL 1.1.1+, currently the 'ssl' module is compiled with 'LibreSSL 2.8.3'. See: https://github.com/urllib3/urllib3/issues/3020
+  warnings.warn(
+Generating: /Users/rosa/rosa_games/game2D_huahua/../game_assets/huahua/assets/raw/furniture_expansion_batch50/tree_nightstand_nb2.png
+  model: gemini-3.1-flash-image-preview
+  ratio: 1:1
+  image_size: 512 (API: 512)
+  prompt: Square game asset 1:1. Single furniture prop centered with generous margin.
+
+Cute kawaii 2.5D isometric view from upper-...
+  proxy: HTTPS_PROXY='http://127.0.0.1:7897' bypass(generativelanguage.googleapis.com)=False getproxies_https='http://127.0.0.1:7897' REST_ONLY='1' requests=True
+  done (90918 bytes) -> /Users/rosa/rosa_games/game2D_huahua/../game_assets/huahua/assets/raw/furniture_expansion_batch50/tree_nightstand_nb2.png
+  OK -> /Users/rosa/rosa_games/game2D_huahua/../game_assets/huahua/assets/raw/furniture_expansion_batch50/tree_nightstand_nb2.png
+=== [tree_wardrobe_round] ===
+  attempt 1/8
+/Users/rosa/Library/Python/3.9/lib/python/site-packages/urllib3/__init__.py:35: NotOpenSSLWarning: urllib3 v2 only supports OpenSSL 1.1.1+, currently the 'ssl' module is compiled with 'LibreSSL 2.8.3'. See: https://github.com/urllib3/urllib3/issues/3020
+  warnings.warn(
+Generating: /Users/rosa/rosa_games/game2D_huahua/../game_assets/huahua/assets/raw/furniture_expansion_batch50/tree_wardrobe_round_nb2.png
+  model: gemini-3.1-flash-image-preview
+  ratio: 1:1
+  image_size: 512 (API: 512)
+  prompt: Square game asset 1:1. Single furniture prop centered with generous margin.
+
+Cute kawaii 2.5D isometric view from upper-...
+  proxy: HTTPS_PROXY='http://127.0.0.1:7897' bypass(generativelanguage.googleapis.com)=False getproxies_https='http://127.0.0.1:7897' REST_ONLY='1' requests=True
+  done (103048 bytes) -> /Users/rosa/rosa_games/game2D_huahua/../game_assets/huahua/assets/raw/furniture_expansion_batch50/tree_wardrobe_round_nb2.png
+  OK -> /Users/rosa/rosa_games/game2D_huahua/../game_assets/huahua/assets/raw/furniture_expansion_batch50/tree_wardrobe_round_nb2.png
+=== [tree_moon_window] ===
+  attempt 1/8
+/Users/rosa/Library/Python/3.9/lib/python/site-packages/urllib3/__init__.py:35: NotOpenSSLWarning: urllib3 v2 only supports OpenSSL 1.1.1+, currently the 'ssl' module is compiled with 'LibreSSL 2.8.3'. See: https://github.com/urllib3/urllib3/issues/3020
+  warnings.warn(
+Generating: /Users/rosa/rosa_games/game2D_huahua/../game_assets/huahua/assets/raw/furniture_expansion_batch50/tree_moon_window_nb2.png
+  model: gemini-3.1-flash-image-preview
+  ratio: 1:1
+  image_size: 512 (API: 512)
+  prompt: Square game asset 1:1. Single furniture prop centered with generous margin.
+
+Cute kawaii 2.5D isometric view from upper-...
+  proxy: HTTPS_PROXY='http://127.0.0.1:7897' bypass(generativelanguage.googleapis.com)=False getproxies_https='http://127.0.0.1:7897' REST_ONLY='1' requests=True
+  done (108996 bytes) -> /Users/rosa/rosa_games/game2D_huahua/../game_assets/huahua/assets/raw/furniture_expansion_batch50/tree_moon_window_nb2.png
+  OK -> /Users/rosa/rosa_games/game2D_huahua/../game_assets/huahua/assets/raw/furniture_expansion_batch50/tree_moon_window_nb2.png
+=== [tree_star_lamp] ===
+  attempt 1/8
+/Users/rosa/Library/Python/3.9/lib/python/site-packages/urllib3/__init__.py:35: NotOpenSSLWarning: urllib3 v2 only supports OpenSSL 1.1.1+, currently the 'ssl' module is compiled with 'LibreSSL 2.8.3'. See: https://github.com/urllib3/urllib3/issues/3020
+  warnings.warn(
+Generating: /Users/rosa/rosa_games/game2D_huahua/../game_assets/huahua/assets/raw/furniture_expansion_batch50/tree_star_lamp_nb2.png
+  model: gemini-3.1-flash-image-preview
+  ratio: 1:1
+  image_size: 512 (API: 512)
+  prompt: Square game asset 1:1. Single furniture prop centered with generous margin.
+
+Cute kawaii 2.5D isometric view from upper-...
+  proxy: HTTPS_PROXY='http://127.0.0.1:7897' bypass(generativelanguage.googleapis.com)=False getproxies_https='http://127.0.0.1:7897' REST_ONLY='1' requests=True
+  done (83846 bytes) -> /Users/rosa/rosa_games/game2D_huahua/../game_assets/huahua/assets/raw/furniture_expansion_batch50/tree_star_lamp_nb2.png
+  OK -> /Users/rosa/rosa_games/game2D_huahua/../game_assets/huahua/assets/raw/furniture_expansion_batch50/tree_star_lamp_nb2.png
+=== [tree_hammock_chair] ===
+  attempt 1/8
+/Users/rosa/Library/Python/3.9/lib/python/site-packages/urllib3/__init__.py:35: NotOpenSSLWarning: urllib3 v2 only supports OpenSSL 1.1.1+, currently the 'ssl' module is compiled with 'LibreSSL 2.8.3'. See: https://github.com/urllib3/urllib3/issues/3020
+  warnings.warn(
+Generating: /Users/rosa/rosa_games/game2D_huahua/../game_assets/huahua/assets/raw/furniture_expansion_batch50/tree_hammock_chair_nb2.png
+  model: gemini-3.1-flash-image-preview
+  ratio: 1:1
+  image_size: 512 (API: 512)
+  prompt: Square game asset 1:1. Single furniture prop centered with generous margin.
+
+Cute kawaii 2.5D isometric view from upper-...
+  proxy: HTTPS_PROXY='http://127.0.0.1:7897' bypass(generativelanguage.googleapis.com)=False getproxies_https='http://127.0.0.1:7897' REST_ONLY='1' requests=True
+  done (110930 bytes) -> /Users/rosa/rosa_games/game2D_huahua/../game_assets/huahua/assets/raw/furniture_expansion_batch50/tree_hammock_chair_nb2.png
+  OK -> /Users/rosa/rosa_games/game2D_huahua/../game_assets/huahua/assets/raw/furniture_expansion_batch50/tree_hammock_chair_nb2.png
+=== [tree_stump_table] ===
+  attempt 1/8
+/Users/rosa/Library/Python/3.9/lib/python/site-packages/urllib3/__init__.py:35: NotOpenSSLWarning: urllib3 v2 only supports OpenSSL 1.1.1+, currently the 'ssl' module is compiled with 'LibreSSL 2.8.3'. See: https://github.com/urllib3/urllib3/issues/3020
+  warnings.warn(
+Generating: /Users/rosa/rosa_games/game2D_huahua/../game_assets/huahua/assets/raw/furniture_expansion_batch50/tree_stump_table_nb2.png
+  model: gemini-3.1-flash-image-preview
+  ratio: 1:1
+  image_size: 512 (API: 512)
+  prompt: Square game asset 1:1. Single furniture prop centered with generous margin.
+
+Cute kawaii 2.5D isometric view from upper-...
+  proxy: HTTPS_PROXY='http://127.0.0.1:7897' bypass(generativelanguage.googleapis.com)=False getproxies_https='http://127.0.0.1:7897' REST_ONLY='1' requests=True
+  done (112158 bytes) -> /Users/rosa/rosa_games/game2D_huahua/../game_assets/huahua/assets/raw/furniture_expansion_batch50/tree_stump_table_nb2.png
+  OK -> /Users/rosa/rosa_games/game2D_huahua/../game_assets/huahua/assets/raw/furniture_expansion_batch50/tree_stump_table_nb2.png
+=== [tree_bookshelf_hollow] ===
+  attempt 1/8
+/Users/rosa/Library/Python/3.9/lib/python/site-packages/urllib3/__init__.py:35: NotOpenSSLWarning: urllib3 v2 only supports OpenSSL 1.1.1+, currently the 'ssl' module is compiled with 'LibreSSL 2.8.3'. See: https://github.com/urllib3/urllib3/issues/3020
+  warnings.warn(
+Generating: /Users/rosa/rosa_games/game2D_huahua/../game_assets/huahua/assets/raw/furniture_expansion_batch50/tree_bookshelf_hollow_nb2.png
+  model: gemini-3.1-flash-image-preview
+  ratio: 1:1
+  image_size: 512 (API: 512)
+  prompt: Square game asset 1:1. Single furniture prop centered with generous margin.
+
+Cute kawaii 2.5D isometric view from upper-...
+  proxy: HTTPS_PROXY='http://127.0.0.1:7897' bypass(generativelanguage.googleapis.com)=False getproxies_https='http://127.0.0.1:7897' REST_ONLY='1' requests=True
+  done (122055 bytes) -> /Users/rosa/rosa_games/game2D_huahua/../game_assets/huahua/assets/raw/furniture_expansion_batch50/tree_bookshelf_hollow_nb2.png
+  OK -> /Users/rosa/rosa_games/game2D_huahua/../game_assets/huahua/assets/raw/furniture_expansion_batch50/tree_bookshelf_hollow_nb2.png
+=== [tree_mushroom_lamp] ===
+  attempt 1/8
+/Users/rosa/Library/Python/3.9/lib/python/site-packages/urllib3/__init__.py:35: NotOpenSSLWarning: urllib3 v2 only supports OpenSSL 1.1.1+, currently the 'ssl' module is compiled with 'LibreSSL 2.8.3'. See: https://github.com/urllib3/urllib3/issues/3020
+  warnings.warn(
+Generating: /Users/rosa/rosa_games/game2D_huahua/../game_assets/huahua/assets/raw/furniture_expansion_batch50/tree_mushroom_lamp_nb2.png
+  model: gemini-3.1-flash-image-preview
+  ratio: 1:1
+  image_size: 512 (API: 512)
+  prompt: Square game asset 1:1. Single furniture prop centered with generous margin.
+
+Cute kawaii 2.5D isometric view from upper-...
+  proxy: HTTPS_PROXY='http://127.0.0.1:7897' bypass(generativelanguage.googleapis.com)=False getproxies_https='http://127.0.0.1:7897' REST_ONLY='1' requests=True
+  done (83486 bytes) -> /Users/rosa/rosa_games/game2D_huahua/../game_assets/huahua/assets/raw/furniture_expansion_batch50/tree_mushroom_lamp_nb2.png
+  OK -> /Users/rosa/rosa_games/game2D_huahua/../game_assets/huahua/assets/raw/furniture_expansion_batch50/tree_mushroom_lamp_nb2.png
+=== [tree_rope_ladder_shelf] ===
+  attempt 1/8
+/Users/rosa/Library/Python/3.9/lib/python/site-packages/urllib3/__init__.py:35: NotOpenSSLWarning: urllib3 v2 only supports OpenSSL 1.1.1+, currently the 'ssl' module is compiled with 'LibreSSL 2.8.3'. See: https://github.com/urllib3/urllib3/issues/3020
+  warnings.warn(
+Generating: /Users/rosa/rosa_games/game2D_huahua/../game_assets/huahua/assets/raw/furniture_expansion_batch50/tree_rope_ladder_shelf_nb2.png
+  model: gemini-3.1-flash-image-preview
+  ratio: 1:1
+  image_size: 512 (API: 512)
+  prompt: Square game asset 1:1. Single furniture prop centered with generous margin.
+
+Cute kawaii 2.5D isometric view from upper-...
+  proxy: HTTPS_PROXY='http://127.0.0.1:7897' bypass(generativelanguage.googleapis.com)=False getproxies_https='http://127.0.0.1:7897' REST_ONLY='1' requests=True
+  done (92136 bytes) -> /Users/rosa/rosa_games/game2D_huahua/../game_assets/huahua/assets/raw/furniture_expansion_batch50/tree_rope_ladder_shelf_nb2.png
+  OK -> /Users/rosa/rosa_games/game2D_huahua/../game_assets/huahua/assets/raw/furniture_expansion_batch50/tree_rope_ladder_shelf_nb2.png
+=== [bf_aurora_terrarium] ===
+  attempt 1/8
+/Users/rosa/Library/Python/3.9/lib/python/site-packages/urllib3/__init__.py:35: NotOpenSSLWarning: urllib3 v2 only supports OpenSSL 1.1.1+, currently the 'ssl' module is compiled with 'LibreSSL 2.8.3'. See: https://github.com/urllib3/urllib3/issues/3020
+  warnings.warn(
+Generating: /Users/rosa/rosa_games/game2D_huahua/../game_assets/huahua/assets/raw/furniture_expansion_batch50/bf_aurora_terrarium_nb2.png
+  model: gemini-3.1-flash-image-preview
+  ratio: 1:1
+  image_size: 512 (API: 512)
+  prompt: Square game asset 1:1. Single furniture prop centered with generous margin.
+
+Cute kawaii 2.5D isometric view from upper-...
+  proxy: HTTPS_PROXY='http://127.0.0.1:7897' bypass(generativelanguage.googleapis.com)=False getproxies_https='http://127.0.0.1:7897' REST_ONLY='1' requests=True
+  done (128644 bytes) -> /Users/rosa/rosa_games/game2D_huahua/../game_assets/huahua/assets/raw/furniture_expansion_batch50/bf_aurora_terrarium_nb2.png
+  OK -> /Users/rosa/rosa_games/game2D_huahua/../game_assets/huahua/assets/raw/furniture_expansion_batch50/bf_aurora_terrarium_nb2.png
+=== [tea_gold_koi_pond] ===
+  attempt 1/8
+/Users/rosa/Library/Python/3.9/lib/python/site-packages/urllib3/__init__.py:35: NotOpenSSLWarning: urllib3 v2 only supports OpenSSL 1.1.1+, currently the 'ssl' module is compiled with 'LibreSSL 2.8.3'. See: https://github.com/urllib3/urllib3/issues/3020
+  warnings.warn(
+Generating: /Users/rosa/rosa_games/game2D_huahua/../game_assets/huahua/assets/raw/furniture_expansion_batch50/tea_gold_koi_pond_nb2.png
+  model: gemini-3.1-flash-image-preview
+  ratio: 1:1
+  image_size: 512 (API: 512)
+  prompt: Square game asset 1:1. Single furniture prop centered with generous margin.
+
+Cute kawaii 2.5D isometric view from upper-...
+  proxy: HTTPS_PROXY='http://127.0.0.1:7897' bypass(generativelanguage.googleapis.com)=False getproxies_https='http://127.0.0.1:7897' REST_ONLY='1' requests=True
+  done (102797 bytes) -> /Users/rosa/rosa_games/game2D_huahua/../game_assets/huahua/assets/raw/furniture_expansion_batch50/tea_gold_koi_pond_nb2.png
+  OK -> /Users/rosa/rosa_games/game2D_huahua/../game_assets/huahua/assets/raw/furniture_expansion_batch50/tea_gold_koi_pond_nb2.png
+=== [villa_grand_piano] ===
+  attempt 1/8
+/Users/rosa/Library/Python/3.9/lib/python/site-packages/urllib3/__init__.py:35: NotOpenSSLWarning: urllib3 v2 only supports OpenSSL 1.1.1+, currently the 'ssl' module is compiled with 'LibreSSL 2.8.3'. See: https://github.com/urllib3/urllib3/issues/3020
+  warnings.warn(
+Generating: /Users/rosa/rosa_games/game2D_huahua/../game_assets/huahua/assets/raw/furniture_expansion_batch50/villa_grand_piano_nb2.png
+  model: gemini-3.1-flash-image-preview
+  ratio: 1:1
+  image_size: 512 (API: 512)
+  prompt: Square game asset 1:1. Single furniture prop centered with generous margin.
+
+Cute kawaii 2.5D isometric view from upper-...
+  proxy: HTTPS_PROXY='http://127.0.0.1:7897' bypass(generativelanguage.googleapis.com)=False getproxies_https='http://127.0.0.1:7897' REST_ONLY='1' requests=True
+  done (116795 bytes) -> /Users/rosa/rosa_games/game2D_huahua/../game_assets/huahua/assets/raw/furniture_expansion_batch50/villa_grand_piano_nb2.png
+  OK -> /Users/rosa/rosa_games/game2D_huahua/../game_assets/huahua/assets/raw/furniture_expansion_batch50/villa_grand_piano_nb2.png
+=== [tree_fairy_door] ===
+  attempt 1/8
+/Users/rosa/Library/Python/3.9/lib/python/site-packages/urllib3/__init__.py:35: NotOpenSSLWarning: urllib3 v2 only supports OpenSSL 1.1.1+, currently the 'ssl' module is compiled with 'LibreSSL 2.8.3'. See: https://github.com/urllib3/urllib3/issues/3020
+  warnings.warn(
+Generating: /Users/rosa/rosa_games/game2D_huahua/../game_assets/huahua/assets/raw/furniture_expansion_batch50/tree_fairy_door_nb2.png
+  model: gemini-3.1-flash-image-preview
+  ratio: 1:1
+  image_size: 512 (API: 512)
+  prompt: Square game asset 1:1. Single furniture prop centered with generous margin.
+
+Cute kawaii 2.5D isometric view from upper-...
+  proxy: HTTPS_PROXY='http://127.0.0.1:7897' bypass(generativelanguage.googleapis.com)=False getproxies_https='http://127.0.0.1:7897' REST_ONLY='1' requests=True
+  done (91532 bytes) -> /Users/rosa/rosa_games/game2D_huahua/../game_assets/huahua/assets/raw/furniture_expansion_batch50/tree_fairy_door_nb2.png
+  OK -> /Users/rosa/rosa_games/game2D_huahua/../game_assets/huahua/assets/raw/furniture_expansion_batch50/tree_fairy_door_nb2.png
+=== [exp50_world_globe_bar] ===
+  attempt 1/8
+/Users/rosa/Library/Python/3.9/lib/python/site-packages/urllib3/__init__.py:35: NotOpenSSLWarning: urllib3 v2 only supports OpenSSL 1.1.1+, currently the 'ssl' module is compiled with 'LibreSSL 2.8.3'. See: https://github.com/urllib3/urllib3/issues/3020
+  warnings.warn(
+Generating: /Users/rosa/rosa_games/game2D_huahua/../game_assets/huahua/assets/raw/furniture_expansion_batch50/exp50_world_globe_bar_nb2.png
+  model: gemini-3.1-flash-image-preview
+  ratio: 1:1
+  image_size: 512 (API: 512)
+  prompt: Square game asset 1:1. Single furniture prop centered with generous margin.
+
+Cute kawaii 2.5D isometric view from upper-...
+  proxy: HTTPS_PROXY='http://127.0.0.1:7897' bypass(generativelanguage.googleapis.com)=False getproxies_https='http://127.0.0.1:7897' REST_ONLY='1' requests=True
+  done (89914 bytes) -> /Users/rosa/rosa_games/game2D_huahua/../game_assets/huahua/assets/raw/furniture_expansion_batch50/exp50_world_globe_bar_nb2.png
+  OK -> /Users/rosa/rosa_games/game2D_huahua/../game_assets/huahua/assets/raw/furniture_expansion_batch50/exp50_world_globe_bar_nb2.png
+
+Done. Raw output dir: /Users/rosa/rosa_games/game2D_huahua/../game_assets/huahua/assets/raw/furniture_expansion_batch50
+All 50 keys succeeded.

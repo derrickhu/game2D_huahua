@@ -153,7 +153,11 @@ class DecorationManagerClass {
     if (!deco) return false;
     if (!isDecoAllowedInScene(deco, CurrencyManager.state.sceneId)) return false;
     const req = checkRequirement(deco.unlockRequirement);
-    return req.met || (this.isAdUnlockDeco(decoId) && this.isAdUnlockSatisfied(decoId));
+    if (!req.met) return false;
+    if (this.isAdUnlockDeco(decoId)) {
+      return this.isAdUnlockSatisfied(decoId);
+    }
+    return true;
   }
 
   /** 获取当前装备的装饰ID */
@@ -227,6 +231,7 @@ class DecorationManagerClass {
     const deco = DECO_MAP.get(decoId);
     if (!deco || !this.isAdUnlockDeco(decoId)) return false;
     if (!isDecoAllowedInScene(deco, CurrencyManager.state.sceneId)) return false;
+    if (!checkRequirement(deco.unlockRequirement).met) return false;
 
     this._adUnlockedDecos.add(decoId);
     this._save();

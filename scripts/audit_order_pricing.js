@@ -30,7 +30,7 @@ const ORDER_TIERS = {
     ],
   },
   A: {
-    slotRange: [2, 2],
+    slotRange: [2, 3],
     pools: [
       { category: 'flower', lines: ['fresh', 'bouquet', 'green'], levelRange: [4, 7] },
       { category: 'drink', lines: ['butterfly', 'cold', 'dessert'], levelRange: [3, 6] },
@@ -48,6 +48,12 @@ const ORDER_TIERS = {
 const MULTI_SLOT_BONUS_RATE = 0.16;
 const SINGLE_SLOT_MERGE_PARITY_FACTOR = 0.9;
 const ITEM_SELL_RATIO = 0.15;
+const ORDER_TIER_HUAYUAN_MULT = {
+  C: 1,
+  B: 1.1,
+  A: 1.35,
+  S: 3,
+};
 
 function extractCurves() {
   const curves = {};
@@ -88,13 +94,29 @@ function singleSlotReward(line, level) {
   return Math.max(base, floor);
 }
 
+function computeContentTier(slots) {
+  const norms = slots
+    .filter(slot => LINE_META[slot.line])
+    .sort((a, b) => `${a.line}:${a.level}`.localeCompare(`${b.line}:${b.level}`))
+    .map(slot => Math.min(1, slot.level / LINE_META[slot.line].maxLevel));
+  if (norms.length === 0) return 'C';
+  const maxNorm = Math.max(...norms);
+  const avgNorm = norms.reduce((a, b) => a + b, 0) / norms.length;
+  const slotBonus = norms.length >= 3 ? 0.06 : norms.length >= 2 ? 0.03 : 0;
+  const score = Math.min(1, 0.45 * maxNorm + 0.55 * avgNorm + slotBonus);
+  if (score < 0.3) return 'C';
+  if (score < 0.48) return 'B';
+  if (score < 0.68) return 'A';
+  return 'S';
+}
+
 function orderReward(slots) {
   const sum = slots.reduce((acc, slot) => acc + price(slot.line, slot.level), 0);
   let base = Math.max(1, Math.round(sum * (1 + MULTI_SLOT_BONUS_RATE * (slots.length - 1))));
   if (slots.length === 1) {
     base = Math.max(base, singleSlotReward(slots[0].line, slots[0].level));
   }
-  return base;
+  return Math.max(1, Math.round(base * ORDER_TIER_HUAYUAN_MULT[computeContentTier(slots)]));
 }
 
 function pick(arr) {
@@ -104,6 +126,7 @@ function pick(arr) {
 function sampleTier(tier, count = 5000) {
   const def = ORDER_TIERS[tier];
   const values = [];
+  const contentTierCounts = { C: 0, B: 0, A: 0, S: 0 };
   for (let i = 0; i < count; i++) {
     const [minSlots, maxSlots] = def.slotRange;
     const slotCount = minSlots + Math.floor(Math.random() * (maxSlots - minSlots + 1));
@@ -122,7 +145,10 @@ function sampleTier(tier, count = 5000) {
       used.add(key);
       slots.push({ line, level });
     }
-    if (slots.length > 0) values.push(orderReward(slots));
+    if (slots.length > 0) {
+      contentTierCounts[computeContentTier(slots)]++;
+      values.push(orderReward(slots));
+    }
   }
   values.sort((a, b) => a - b);
   const sum = values.reduce((a, b) => a + b, 0);
@@ -133,6 +159,7 @@ function sampleTier(tier, count = 5000) {
     p90: at(0.9),
     max: values[values.length - 1],
     avg: Math.round(sum / values.length),
+    contentTierCounts,
   };
 }
 
@@ -178,7 +205,11 @@ printPriceTable();
 console.log('\n模板档订单奖励抽样');
 for (const tier of Object.keys(ORDER_TIERS)) {
   const s = sampleTier(tier);
-  console.log(`${tier}: min=${s.min}, p50=${s.p50}, p90=${s.p90}, max=${s.max}, avg=${s.avg}`);
+  const counts = Object.entries(s.contentTierCounts)
+    .filter(([, n]) => n > 0)
+    .map(([k, n]) => `${k}:${n}`)
+    .join(' ');
+  console.log(`${tier}: min=${s.min}, p50=${s.p50}, p90=${s.p90}, max=${s.max}, avg=${s.avg} | content ${counts}`);
 }
 
 validate();

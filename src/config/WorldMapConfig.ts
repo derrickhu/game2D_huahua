@@ -66,8 +66,11 @@ export const WORLD_MAP_UNLOCK_LEVEL = 8;
  */
 export const WISHING_FOUNTAIN_UNLOCK_LEVEL = 4;
 
-/** 蝴蝶小屋进入所需星级；大地图可先开放，但该房屋仍保持 10 级门槛 */
-export const BUTTERFLY_HOUSE_UNLOCK_LEVEL = 10;
+/** 蝴蝶小屋进入所需星级；与大地图同在 8 级开放 */
+export const BUTTERFLY_HOUSE_UNLOCK_LEVEL = 8;
+
+/** 茶香小院进入所需综合等级（与 LevelUnlockConfig 25 级仪式一致） */
+export const TEA_HOUSE_UNLOCK_LEVEL = 25;
 
 /** 大地图「当前店铺」实时缩略图：截取最长边像素（略小于节点 thumbSize，省显存） */
 export const LIVE_HOUSE_THUMB_CAPTURE_MAX = 160;
@@ -142,15 +145,16 @@ export const MAP_NODES: MapNodeDef[] = [
   },
   {
     id: 'tea_house',
-    type: 'locked',
+    type: 'house',
     label: '茶香小院',
     /** 中右草地圆地 */
     x: 1540,
     y: 780,
     thumbKey: 'worldmap_thumb_tea_house',
     thumbSize: 320,
-    unlockLevel: 25,
+    unlockLevel: TEA_HOUSE_UNLOCK_LEVEL,
     useLiveMapThumb: false,
+    targetSceneId: 'tea_house',
   },
   {
     id: 'garden_villa',

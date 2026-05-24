@@ -11,7 +11,6 @@
 
 import { AFFINITY_MAP, AFFINITY_UNLOCK_LEVELS } from './AffinityConfig';
 import {
-  BUTTERFLY_HOUSE_UNLOCK_LEVEL,
   WISHING_FOUNTAIN_UNLOCK_LEVEL,
   WORLD_MAP_UNLOCK_LEVEL,
 } from './WorldMapConfig';
@@ -180,8 +179,14 @@ const LEVEL_UNLOCK_BASE: Record<number, Omit<LevelUnlockDef, 'level'>> = {
       {
         kind: 'map',
         title: '大地图开放',
-        desc: '世界地图入口开启，可前往许愿喷泉。',
+        desc: '世界地图入口开启，可前往许愿喷泉与蝴蝶小屋。',
         iconKey: 'ui_lvup_world_map',
+      },
+      {
+        kind: 'map',
+        title: '蝴蝶小屋开放',
+        desc: '大地图中的蝴蝶小屋可进入，开启新的装修空间。',
+        iconKey: 'worldmap_thumb_butterfly_house',
       },
     ],
   },
@@ -193,17 +198,6 @@ const LEVEL_UNLOCK_BASE: Record<number, Omit<LevelUnlockDef, 'level'>> = {
         title: '甜品 Lv.6 / 花束 Lv.7',
         desc: '高阶产物礼包送入收纳盒。',
         iconKey: 'drink_dessert_6',
-      },
-    ],
-  },
-  [BUTTERFLY_HOUSE_UNLOCK_LEVEL]: {
-    ceremonyTitle: '蝶屋启程',
-    entries: [
-      {
-        kind: 'map',
-        title: '蝴蝶小屋开放',
-        desc: '大地图中的蝴蝶小屋可进入，开启新的装修空间。',
-        iconKey: 'worldmap_thumb_butterfly_house',
       },
     ],
   },

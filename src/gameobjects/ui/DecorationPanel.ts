@@ -174,10 +174,10 @@ function sortDecosByUnlockLevelThenCost(decos: DecoDef[]): DecoDef[] {
   return [...decos].sort((a, b) => {
     const aFreeAdUnlock = DecorationManager.isAdUnlockDeco(a.id)
       && !DecorationManager.isAdUnlockSatisfied(a.id)
-      && !checkRequirement(a.unlockRequirement).met;
+      && checkRequirement(a.unlockRequirement).met;
     const bFreeAdUnlock = DecorationManager.isAdUnlockDeco(b.id)
       && !DecorationManager.isAdUnlockSatisfied(b.id)
-      && !checkRequirement(b.unlockRequirement).met;
+      && checkRequirement(b.unlockRequirement).met;
     if (aFreeAdUnlock !== bFreeAdUnlock) return aFreeAdUnlock ? -1 : 1;
     const la = a.unlockRequirement?.level ?? 0;
     const lb = b.unlockRequirement?.level ?? 0;
@@ -193,10 +193,10 @@ function compareDecoByCostAsc(a: DecoDef, b: DecoDef): number {
 function compareDecoByUnlockLevelThenCost(a: DecoDef, b: DecoDef): number {
   const aFreeAdUnlock = DecorationManager.isAdUnlockDeco(a.id)
     && !DecorationManager.isAdUnlockSatisfied(a.id)
-    && !checkRequirement(a.unlockRequirement).met;
+    && checkRequirement(a.unlockRequirement).met;
   const bFreeAdUnlock = DecorationManager.isAdUnlockDeco(b.id)
     && !DecorationManager.isAdUnlockSatisfied(b.id)
-    && !checkRequirement(b.unlockRequirement).met;
+    && checkRequirement(b.unlockRequirement).met;
   if (aFreeAdUnlock !== bFreeAdUnlock) return aFreeAdUnlock ? -1 : 1;
   const la = a.unlockRequirement?.level ?? 0;
   const lb = b.unlockRequirement?.level ?? 0;
@@ -212,7 +212,8 @@ function decoAllFilterRank(deco: DecoDef, sceneId: string): number {
   const owned = DecorationManager.isUnlocked(deco.id);
   const reqMet = checkRequirement(deco.unlockRequirement).met;
   const sceneOk = isDecoAllowedInScene(deco, sceneId);
-  const purchaseAllowed = sceneOk && (reqMet || DecorationManager.isAdUnlockSatisfied(deco.id));
+  const isAdGate = DecorationManager.isAdUnlockDeco(deco.id);
+  const purchaseAllowed = sceneOk && reqMet && (!isAdGate || DecorationManager.isAdUnlockSatisfied(deco.id));
   const blocked = !sceneOk || !purchaseAllowed;
   const isPlaced = !!RoomLayoutManager.getPlacement(deco.id);
 
@@ -252,7 +253,8 @@ function decoMatchesInvFilter(deco: DecoDef, filter: DecoInvFilter, sceneId: str
   const owned = DecorationManager.isUnlocked(deco.id);
   const reqMet = checkRequirement(deco.unlockRequirement).met;
   const sceneOk = isDecoAllowedInScene(deco, sceneId);
-  const purchaseAllowed = sceneOk && (reqMet || DecorationManager.isAdUnlockSatisfied(deco.id));
+  const isAdGate = DecorationManager.isAdUnlockDeco(deco.id);
+  const purchaseAllowed = sceneOk && reqMet && (!isAdGate || DecorationManager.isAdUnlockSatisfied(deco.id));
   const blocked = !sceneOk || !purchaseAllowed;
   const isPlaced = !!RoomLayoutManager.getPlacement(deco.id);
   switch (filter) {
@@ -1573,8 +1575,9 @@ export class DecorationPanel extends PIXI.Container {
     const reqMet = reqResult.met;
     const sceneOk = isDecoAllowedInScene(deco, CurrencyManager.state.sceneId);
     const adGateSatisfied = DecorationManager.isAdUnlockSatisfied(deco.id);
-    const purchaseAllowed = sceneOk && (reqMet || adGateSatisfied);
-    const needsAdGate = sceneOk && DecorationManager.isAdUnlockDeco(deco.id) && !reqMet && !adGateSatisfied;
+    const isAdGate = DecorationManager.isAdUnlockDeco(deco.id);
+    const purchaseAllowed = sceneOk && reqMet && (!isAdGate || adGateSatisfied);
+    const needsAdGate = sceneOk && isAdGate && reqMet && !adGateSatisfied;
     const cardUnlockedLook = (isUnlocked || purchaseAllowed) && sceneOk;
 
     this._drawCardBg(card, cw, ch, cardUnlockedLook, isPlaced);
@@ -1870,8 +1873,9 @@ export class DecorationPanel extends PIXI.Container {
     }
     const req = checkRequirement(deco.unlockRequirement);
     const adGateSatisfied = DecorationManager.isAdUnlockSatisfied(deco.id);
-    const needsAdGate = DecorationManager.isAdUnlockDeco(deco.id) && !req.met && !adGateSatisfied;
-    if (!req.met && !adGateSatisfied && !needsAdGate) {
+    const isAdGate = DecorationManager.isAdUnlockDeco(deco.id);
+    const needsAdGate = isAdGate && req.met && !adGateSatisfied;
+    if (!req.met) {
       /** 实际点击收尾走 canvas pointerup → _finishGridScroll → 此处；微信小游戏上家具卡 pointertap 常不触发，勿依赖 */
       ToastMessage.show(decorationLockedToastText(deco.unlockRequirement, req));
       return;

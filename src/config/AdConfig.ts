@@ -62,7 +62,21 @@ export const WAREHOUSE_SLOT_UNLOCK_MODES: Record<number, ExternalUnlockMode> = {
 };
 
 /** 广告可解锁购买资格的家具白名单；只有这里列出的家具走广告条件。 */
-export const AD_UNLOCK_DECO_IDS = new Set<string>(['promo_floral_sofa', 'promo_wood_tea_table']);
+export const AD_UNLOCK_DECO_IDS = new Set<string>([
+  'promo_floral_sofa',
+  'promo_wood_tea_table',
+  'promo_petal_chaise',
+  'promo_mint_fridge',
+  'promo_doll_hug_pillow',
+  'promo_pearl_bead_curtain',
+]);
 
 /** 使用 `promo_furniture_unlock` 广告位的家具 id（其余走 `special_deco_unlock`） */
-export const PROMO_FURNITURE_AD_DECO_IDS = new Set<string>(['promo_floral_sofa', 'promo_wood_tea_table']);
+export const PROMO_FURNITURE_AD_DECO_IDS = new Set<string>([
+  'promo_floral_sofa',
+  'promo_wood_tea_table',
+  'promo_petal_chaise',
+  'promo_mint_fridge',
+  'promo_doll_hug_pillow',
+  'promo_pearl_bead_curtain',
+]);

@@ -14,6 +14,17 @@ export const MULTI_SLOT_BONUS_RATE = 0.16;
 export const CHALLENGE_ORDER_HUAYUAN_MULT = 1.06;
 
 /**
+ * 内容档位奖金：订单角标越高，额外补偿越明显。
+ * S 单通常要求高阶/多线调度，单靠物品单价求和体感偏低，因此给大倍率拉开收益。
+ */
+export const ORDER_TIER_HUAYUAN_MULT = {
+  C: 1,
+  B: 1.1,
+  A: 1.35,
+  S: 3,
+} as const;
+
+/**
  * 单槽订单软保底：花愿不低于 factor×2×H(L−1)，缓和「H(L)/H(L−1) 仍低于 2」时的反合成体感。
  * 仅 FLOWER/DRINK 且 L>1；多槽不走此条，由 MULTI_SLOT_BONUS_RATE 体现。
  */

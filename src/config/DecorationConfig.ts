@@ -147,6 +147,8 @@ export const ROOM_STYLES: RoomStyleDef[] = [
   { id: 'style_butterfly_house_nb2', name: '蝴蝶小屋原木壳', cost: 0, starValue: 0, rarity: DecoRarity.COMMON, bgTexture: 'bg_room_butterfly_house_nb2', desc: '蝴蝶小屋默认房壳：浅木结构、干净墙面与观蝶空间', allowedSceneIds: ['butterfly_house'] },
   { id: 'style_butterfly_house_bamboo_nb2', name: '竹影蝶屋', cost: 4200, starValue: 8, rarity: DecoRarity.FINE, bgTexture: 'bg_room_butterfly_house_bamboo_nb2', desc: '竹艺暖色房壳：蜂蜜竹柱、鼠尾草屋檐与蝶翼木拼地面', unlockRequirement: { level: 11 }, allowedSceneIds: ['butterfly_house'] },
   { id: 'style_butterfly_house_moon_nb2', name: '月辉蝶馆', cost: 6800, starValue: 12, rarity: DecoRarity.RARE, bgTexture: 'bg_room_butterfly_house_moon_nb2', desc: '月光玻璃感房壳：冷紫屋檐、月石地面与更清透的观蝶氛围', unlockRequirement: { level: 13 }, allowedSceneIds: ['butterfly_house'] },
+  { id: 'style_butterfly_house_xianqi_nb2', name: '云檐蝶舍', cost: 5400, starValue: 9, rarity: DecoRarity.FINE, bgTexture: 'bg_room_butterfly_house_xianqi_nb2', desc: '仙气 pastel 茶寮风替换壳：浅木竹柱、青瓷挑檐与竹席云纹地坪', unlockRequirement: { level: 12 }, allowedSceneIds: ['butterfly_house'] },
+  { id: 'style_tea_house_two_story_nb2', name: '双层茶楼', cost: 0, starValue: 0, rarity: DecoRarity.COMMON, bgTexture: 'bg_room_tea_house_two_story_nb2', desc: '茶香小院默认壳：传统二层 cutaway 茶楼，石砖一层、木台二层与回廊栏板', allowedSceneIds: ['tea_house'] },
 ];
 
 export const ROOM_STYLE_MAP = new Map<string, RoomStyleDef>(
@@ -222,6 +224,10 @@ export const DECO_DEFS: DecoDef[] = [
   { id: 'orn_pastel_bench',   name: '马卡龙长凳',   slot: DecoSlot.ORNAMENT, rarity: DecoRarity.FINE,   cost: 555, starValue: 4, icon: 'orn_pastel_bench',   desc: '薄荷木色配珊瑚软垫', unlockRequirement: { level: 2 }, defaultScale: 1.1, decorationPanelTab: 'furniture' },
   { id: 'promo_floral_sofa',  name: '花漾木扶手沙发', slot: DecoSlot.ORNAMENT, rarity: DecoRarity.RARE, cost: 299, starValue: 6, icon: 'promo_floral_sofa', desc: '宣传图同款浅木扶手双人沙发，碎花抱枕很适合休息角', unlockRequirement: { level: 7 }, defaultScale: 1.18, decorationPanelTab: 'furniture' },
   { id: 'promo_wood_tea_table', name: '原木花茶几', slot: DecoSlot.TABLE, rarity: DecoRarity.FINE, cost: 299, starValue: 3, icon: 'promo_wood_tea_table', desc: '厚木板小茶几，摆一杯花茶就有午后感', unlockRequirement: { level: 6 }, defaultScale: 0.98, decorationPanelTab: 'furniture' },
+  { id: 'promo_petal_chaise', name: '花瓣奶油躺椅', slot: DecoSlot.ORNAMENT, rarity: DecoRarity.RARE, cost: 920, starValue: 5, icon: 'promo_petal_chaise', desc: '奶油躺椅配花瓣靠背，午后小憩像躺进花心里', unlockRequirement: { level: 1 }, defaultScale: 1.15, decorationPanelTab: 'furniture' },
+  { id: 'promo_mint_fridge', name: '薄荷小冰箱', slot: DecoSlot.LIGHT, rarity: DecoRarity.FINE, cost: 780, starValue: 4, icon: 'promo_mint_fridge', desc: '圆角复古冰箱，冰饮和鲜花都能清清爽爽', unlockRequirement: { level: 1 }, defaultScale: 1.08 },
+  { id: 'promo_doll_hug_pillow', name: '兔兔抱枕玩偶', slot: DecoSlot.ORNAMENT, rarity: DecoRarity.FINE, cost: 560, starValue: 3, icon: 'promo_doll_hug_pillow', desc: '抱着粉心枕的软萌兔兔，角落立刻变可爱', unlockRequirement: { level: 1 }, defaultScale: 0.62 },
+  { id: 'promo_pearl_bead_curtain', name: '珍珠花珠帘', slot: DecoSlot.WALLART, rarity: DecoRarity.FINE, cost: 680, starValue: 3, icon: 'promo_pearl_bead_curtain', desc: '珍珠、花珠和薄荷小叶串成的温柔墙饰', unlockRequirement: { level: 1 }, defaultScale: 1.75 },
   { id: 'wallart_lace_curtain', name: '柔纱短帘', slot: DecoSlot.WALLART,  rarity: DecoRarity.FINE,   cost: 300, starValue: 3, icon: 'wallart_lace_curtain', desc: '蕾丝咖啡馆风情', unlockRequirement: { level: 2 }, defaultScale: 1.8 },
   { id: 'garden_wood_trough', name: '木质长花箱',   slot: DecoSlot.GARDEN,   rarity: DecoRarity.COMMON, cost: 210, starValue: 2, icon: 'garden_wood_trough', desc: '一长条春天开在门口', unlockRequirement: { level: 4 }, defaultScale: 0.97 },
 
@@ -265,8 +271,8 @@ export const DECO_DEFS: DecoDef[] = [
   { id: 'butterfly_house_writing_desk',  name: '观蝶书写桌', slot: DecoSlot.TABLE,    rarity: DecoRarity.FINE,   cost: 980,  starValue: 4, icon: 'butterfly_house_writing_desk',  desc: '记录观察笔记的小书桌，静静贴着墙角', unlockRequirement: { level: 12 }, defaultScale: 1.12, decorationPanelTab: 'flower_room', allowedSceneIds: ['butterfly_house'] },
   { id: 'butterfly_house_sofa',          name: '蝶翼双人沙发', slot: DecoSlot.ORNAMENT, rarity: DecoRarity.RARE, cost: 1320, starValue: 6, icon: 'butterfly_house_sofa',          desc: '柔软靠背像展开的蝶翼，适合小憩', unlockRequirement: { level: 15 }, defaultScale: 1.38, decorationPanelTab: 'flower_room', allowedSceneIds: ['butterfly_house'] },
   { id: 'butterfly_house_wicker_chair',  name: '藤编休闲椅', slot: DecoSlot.ORNAMENT, rarity: DecoRarity.FINE,   cost: 860,  starValue: 3, icon: 'butterfly_house_wicker_chair',  desc: '轻盈藤编椅，把温室角落变成阅读位', unlockRequirement: { level: 11 }, defaultScale: 0.98, decorationPanelTab: 'flower_room', allowedSceneIds: ['butterfly_house'] },
-  { id: 'butterfly_house_tea_table',     name: '圆茶几', slot: DecoSlot.TABLE,        rarity: DecoRarity.COMMON, cost: 520,  starValue: 2, icon: 'butterfly_house_tea_table',     desc: '圆润小茶几，摆上点心就很有氛围', unlockRequirement: { level: 10 }, defaultScale: 0.96, decorationPanelTab: 'flower_room', allowedSceneIds: ['butterfly_house'] },
-  { id: 'butterfly_house_wall_frame',    name: '蝶影挂画', slot: DecoSlot.WALLART,    rarity: DecoRarity.FINE,   cost: 760,  starValue: 2, icon: 'butterfly_house_wall_frame',    desc: '把蝴蝶标本感做成柔和挂画，适合干净墙面', unlockRequirement: { level: 10 }, defaultScale: 0.88, decorationPanelTab: 'flower_room', allowedSceneIds: ['butterfly_house'] },
+  { id: 'butterfly_house_tea_table',     name: '圆茶几', slot: DecoSlot.TABLE,        rarity: DecoRarity.COMMON, cost: 520,  starValue: 2, icon: 'butterfly_house_tea_table',     desc: '圆润小茶几，摆上点心就很有氛围', unlockRequirement: { level: 8 }, defaultScale: 0.96, decorationPanelTab: 'flower_room', allowedSceneIds: ['butterfly_house'] },
+  { id: 'butterfly_house_wall_frame',    name: '蝶影挂画', slot: DecoSlot.WALLART,    rarity: DecoRarity.FINE,   cost: 760,  starValue: 2, icon: 'butterfly_house_wall_frame',    desc: '把蝴蝶标本感做成柔和挂画，适合干净墙面', unlockRequirement: { level: 8 }, defaultScale: 0.88, decorationPanelTab: 'flower_room', allowedSceneIds: ['butterfly_house'] },
 
   // ═══════ ⑩ 高星主题珍藏（常驻；id 沿用旧季节套以兼容存档）═══════
 

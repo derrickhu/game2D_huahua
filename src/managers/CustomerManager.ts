@@ -11,6 +11,7 @@ import { TutorialManager, TutorialStep } from './TutorialManager';
 import {
   CHALLENGE_ORDER_HUAYUAN_MULT,
   MULTI_SLOT_BONUS_RATE,
+  ORDER_TIER_HUAYUAN_MULT,
   SINGLE_SLOT_MERGE_PARITY_FACTOR,
 } from '@/config/OrderHuayuanConfig';
 import { CUSTOMER_TYPES } from '@/config/CustomerConfig';
@@ -158,10 +159,15 @@ function normalizeCustomerPersistState(raw: unknown): CustomerPersistState | nul
       typeof rawKind === 'string' && VALID_ORDER_KINDS.has(rawKind as OrderGenerationKind)
         ? (rawKind as OrderGenerationKind)
         : inferOrderKindFromLegacy({ orderType, bonusMultiplier });
-    const huayuanReward =
+    const computedHuayuanReward = CustomerManagerClass.computeOrderHuayuan(slots, bonusMultiplier, orderType);
+    const savedHuayuanReward =
       typeof r.huayuanReward === 'number' && Number.isFinite(r.huayuanReward) && r.huayuanReward >= 0
         ? Math.floor(r.huayuanReward)
-        : CustomerManagerClass.computeOrderHuayuan(slots, bonusMultiplier, orderType);
+        : undefined;
+    const huayuanReward =
+      savedHuayuanReward === undefined
+        ? computedHuayuanReward
+        : Math.max(savedHuayuanReward, computedHuayuanReward);
     const timeLimit =
       r.timeLimit === null || (typeof r.timeLimit === 'number' && Number.isFinite(r.timeLimit))
         ? (r.timeLimit as number | null)
@@ -384,7 +390,7 @@ class CustomerManagerClass {
   }
 
   /**
-   * 订单花愿 = ΣorderHuayuan×(1+多槽加成) → 单槽合成软保底 → 成长倍率 → 组合单倍率。
+   * 订单花愿 = ΣorderHuayuan×(1+多槽加成) → 单槽合成软保底 → 内容档位倍率 → 成长倍率 → 组合单倍率。
    * 读档缺 huayuanReward 时与新生成共用本函数。
    */
   static computeOrderHuayuan(
@@ -400,6 +406,8 @@ class CustomerManagerClass {
     if (n <= 0) return 0;
     let base = Math.max(1, Math.round(sum * (1 + MULTI_SLOT_BONUS_RATE * (n - 1))));
     base = CustomerManagerClass._applySingleSlotMergeParityFloor(slots, base);
+    const tier = computeTierFromOrderSlots(slots.map(s => s.itemId));
+    base = Math.max(1, Math.round(base * ORDER_TIER_HUAYUAN_MULT[tier]));
     if (bonusMultiplier && bonusMultiplier > 0 && bonusMultiplier !== 1) {
       base = Math.max(1, Math.round(base * bonusMultiplier));
     }

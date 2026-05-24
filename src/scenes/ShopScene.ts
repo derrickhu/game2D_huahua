@@ -138,8 +138,10 @@ const SHOP_BUILDING_CENTER_Y_RATIO = 0.442;
 const SHOP_BUILDING_ANCHOR_OFFSET_Y = 18;
 /** 花坊房壳默认略放大，让房间更贴近屏幕边缘。 */
 const FLOWER_SHOP_BUILDING_SCALE_MULTIPLIER = 1.1;
-/** 蝴蝶小屋房壳包含前院地块，通用缩放会显小；单独放大到参考图的贴边比例。 */
+/** 蝴蝶小屋房壳含前院地块，通用缩放会显小；单独放大到参考图的贴边比例。 */
 const BUTTERFLY_HOUSE_BUILDING_SCALE_MULTIPLIER = 1.3;
+/** 双层茶楼房壳更高，略缩小倍率避免顶到 UI。 */
+const TEA_HOUSE_BUILDING_SCALE_MULTIPLIER = 1.12;
 
 /** 试调：房间可摆空间显大一些，店主显示缩到 90%。 */
 const SHOP_OWNER_DISPLAY_SCALE_MULTIPLIER = 0.9;
@@ -711,9 +713,11 @@ export class ShopScene implements Scene {
     const sceneId = CurrencyManager.state.sceneId;
     const roomScaleMultiplier = sceneId === 'butterfly_house'
       ? BUTTERFLY_HOUSE_BUILDING_SCALE_MULTIPLIER
-      : sceneId === 'flower_shop'
-        ? FLOWER_SHOP_BUILDING_SCALE_MULTIPLIER
-        : 1;
+      : sceneId === 'tea_house'
+        ? TEA_HOUSE_BUILDING_SCALE_MULTIPLIER
+        : sceneId === 'flower_shop'
+          ? FLOWER_SHOP_BUILDING_SCALE_MULTIPLIER
+          : 1;
     const shopScale = Math.min((w * 1.18) / tex.width, (h * 0.72) / tex.height) * roomScaleMultiplier;
     this._shopBuildingSprite.scale.set(shopScale);
     this._shopBuildingSprite.anchor.set(0.5, 0.5);

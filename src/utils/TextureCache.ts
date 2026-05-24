@@ -483,6 +483,7 @@ const DECO_IMAGE_MAP: Record<string, string> = {
   light_fan_desk: 'subpkg_deco/images/furniture/light_fan_desk.png',
   light_kettle_pastel: 'subpkg_deco/images/furniture/light_kettle_pastel.png',
   light_humidifier_cute: 'subpkg_deco/images/furniture/light_humidifier_cute.png',
+  promo_mint_fridge: 'subpkg_deco/images/furniture/promo_mint_fridge.png',
   // 摆件
   orn_pot:       'subpkg_deco/images/furniture/orn_pot.png',
   orn_vase:      'subpkg_deco/images/furniture/orn_vase.png',
@@ -497,6 +498,8 @@ const DECO_IMAGE_MAP: Record<string, string> = {
   orn_floral_chest: 'subpkg_deco/images/furniture/orn_floral_chest.png',
   orn_pastel_bench: 'subpkg_deco/images/furniture/orn_pastel_bench.png',
   promo_floral_sofa: 'subpkg_deco/images/furniture/promo_floral_sofa.png',
+  promo_petal_chaise: 'subpkg_deco/images/furniture/promo_petal_chaise.png',
+  promo_doll_hug_pillow: 'subpkg_deco/images/furniture/promo_doll_hug_pillow.png',
   orn_lounge_chaise: 'subpkg_deco/images/furniture/orn_lounge_chaise.png',
   orn_wood_stools_pair: 'subpkg_deco/images/furniture/orn_wood_stools_pair.png',
   orn_rocking_chair: 'subpkg_deco/images/furniture/orn_rocking_chair.png',
@@ -508,6 +511,7 @@ const DECO_IMAGE_MAP: Record<string, string> = {
   wallart_spring: 'subpkg_deco/images/furniture/wallart_spring.png',
   wallart_winter: 'subpkg_deco/images/furniture/wallart_winter.png',
   wallart_lace_curtain: 'subpkg_deco/images/furniture/wallart_lace_curtain.png',
+  promo_pearl_bead_curtain: 'subpkg_deco/images/furniture/promo_pearl_bead_curtain.png',
   // 庭院
   garden_flowerbed: 'subpkg_deco/images/furniture/garden_flowerbed.png',
   garden_arbor:     'subpkg_deco/images/furniture/garden_arbor.png',
@@ -662,6 +666,10 @@ const DECO_IMAGE_MAP: Record<string, string> = {
   bg_room_butterfly_house_nb2: 'subpkg_deco/images/house/preview/bg_room_butterfly_house_default_v11_1k_nb2.png',
   bg_room_butterfly_house_moon_nb2: 'subpkg_deco/images/house/preview/bg_room_butterfly_house_moon_v4_1k_nb2.png',
   bg_room_butterfly_house_bamboo_nb2: 'subpkg_deco/images/house/preview/bg_room_butterfly_house_bamboo_v4_1k_nb2.png',
+  /** 蝴蝶小屋 — 仙气 pastel 茶寮风替换房壳（布局同默认壳） */
+  bg_room_butterfly_house_xianqi_nb2: 'subpkg_deco/images/house/preview/bg_room_butterfly_house_xianqi_nb2.png',
+  /** 茶香小院 — 双层传统茶楼 cutaway 空壳 */
+  bg_room_tea_house_two_story_nb2: 'subpkg_deco/images/house/preview/bg_room_tea_house_two_story_nb2.png',
   bg_room_candy_nb2: 'subpkg_deco/images/house/bg_room_candy_nb2.png',
   bg_room_bloom_nb2: 'subpkg_deco/images/house/bg_room_bloom_nb2.png',
   bg_room_lagoon_nb2: 'subpkg_deco/images/house/bg_room_lagoon_nb2.png',
