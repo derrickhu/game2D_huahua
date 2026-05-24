@@ -225,6 +225,7 @@ async function main(): Promise<void> {
       with_user_id: !!CloudSyncManager.userId,
       cloud_sync_status: startupSync.status,
     });
+    void analytics.flush('startup-session-start');
 
     // 尝试加载存档（开发阶段已在启动时清除，此处应返回 false）
     const loaded = SaveManager.load();

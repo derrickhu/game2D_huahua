@@ -260,7 +260,16 @@ class PlatformServiceClass {
 
   private _isDevtools(): boolean {
     try {
-      return this._api?.getSystemInfoSync?.()?.platform === 'devtools';
+      const info = this._api?.getSystemInfoSync?.();
+      if (!info) return false;
+      const platform = String(info.platform || '').toLowerCase();
+      const brand = String(info.brand || '').toLowerCase();
+      const model = String(info.model || '').toLowerCase();
+      const environment = String(info.environment || '').toLowerCase();
+      return platform === 'devtools'
+        || brand === 'devtools'
+        || environment === 'devtools'
+        || model.includes('devtools');
     } catch (_) {
       return false;
     }

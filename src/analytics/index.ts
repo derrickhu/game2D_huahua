@@ -38,9 +38,15 @@ export function initAnalytics(opts?: { endpoint?: string; userId?: string; debug
 
   const platformName = mapPlatform();
   const deviceInfo = buildDeviceInfo();
+  const endpoint = opts?.endpoint || ENDPOINT;
+  const debug = opts?.debug ?? true;
+
+  console.log(
+    `[analytics] init endpoint=${endpoint}, gameKey=${GAME_KEY}, platform=${platformName}, debug=${debug}`,
+  );
 
   Analytics.init({
-    endpoint: opts?.endpoint || ENDPOINT,
+    endpoint,
     gameKey: GAME_KEY,
     appVersion: typeof __APP_VERSION__ === 'string' ? __APP_VERSION__ : '0.0.0',
     platform: platformName,
@@ -60,7 +66,7 @@ export function initAnalytics(opts?: { endpoint?: string; userId?: string; debug
       ticket_change: 0.1,
       wish_change: 0.1,
     },
-    debug: opts?.debug,
+    debug,
   });
 
   inited = true;
@@ -73,6 +79,7 @@ export function initAnalytics(opts?: { endpoint?: string; userId?: string; debug
  */
 export function setAnalyticsUserId(userId: string): void {
   if (!inited) return;
+  console.log(`[analytics] setUserId ${userId ? 'ok' : 'empty'}`);
   Analytics.setUserId(userId || '');
 }
 
