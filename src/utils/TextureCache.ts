@@ -668,8 +668,12 @@ const DECO_IMAGE_MAP: Record<string, string> = {
   bg_room_butterfly_house_bamboo_nb2: 'subpkg_deco/images/house/preview/bg_room_butterfly_house_bamboo_v4_1k_nb2.png',
   /** 蝴蝶小屋 — 仙气 pastel 茶寮风替换房壳（布局同默认壳） */
   bg_room_butterfly_house_xianqi_nb2: 'subpkg_deco/images/house/preview/bg_room_butterfly_house_xianqi_nb2.png',
-  /** 茶香小院 — 双层传统茶楼 cutaway 空壳 */
-  bg_room_tea_house_two_story_nb2: 'subpkg_deco/images/house/preview/bg_room_tea_house_two_story_nb2.png',
+  /** 茶香小院 — 紧凑竖向仙气 pastel 二层小楼 cutaway 空壳（新文件名绕过旧缓存） */
+  bg_room_tea_house_xianqi_compact_vertical_two_story_nb2: 'subpkg_deco/images/house/preview/bg_room_tea_house_xianqi_compact_vertical_two_story_nb2.png',
+  /** 蛋糕房 — 现代 pastel 甜品店 cutaway 空壳 */
+  bg_room_cake_shop_modern_nb2: 'subpkg_deco/images/house/preview/bg_room_cake_shop_modern_nb2.png',
+  /** 蛋糕房 — 蓝莓薄荷 pastel 甜品店 cutaway 空壳 */
+  bg_room_cake_shop_blueberry_mint_nb2: 'subpkg_deco/images/house/preview/bg_room_cake_shop_blueberry_mint_nb2.png',
   bg_room_candy_nb2: 'subpkg_deco/images/house/bg_room_candy_nb2.png',
   bg_room_bloom_nb2: 'subpkg_deco/images/house/bg_room_bloom_nb2.png',
   bg_room_lagoon_nb2: 'subpkg_deco/images/house/bg_room_lagoon_nb2.png',

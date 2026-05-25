@@ -1,0 +1,11 @@
+Create one game-ready isometric cutaway room shell for a cozy pastel merge game. Use the attached modern cake-shop room shell as the layout and style reference: same three-quarter isometric corner-room perspective, same open-front empty playable floor, same modern boutique patisserie architecture, same soft brown linework, same transparent isolated room-shell silhouette, same approximate object scale and camera angle.
+
+Subject: an alternate-color modern cake shop room shell, empty interior, no furniture. Theme palette: blueberry lavender + mint cream + soft butter yellow. Replace the strawberry-pink accents with gentle lavender-blue rounded trims, mint glass frames, pale cream walls, and a polished light floor with subtle blueberry, macaron, or sugar-dot geometric motifs. Keep the building modern and cute: large glass roof panels, rounded front platform, clean patisserie awnings, small integrated blueberry or whipped-cream ornaments on roof edges. It should feel like a refined modern dessert boutique, not a rustic cabin and not a traditional pagoda.
+
+Structure requirements: two interior walls meet in the back corner; open front side for placing furniture; broad flat readable floor for decoration placement. Keep the interior mostly empty and uncluttered. Exterior decorative details must be small and integrated, leaving the room shell readable at game size.
+
+NO TEXT, no labels, no readable signs, no numbers, no logo, no watermark, no characters, no furniture, no shelves, no counters, no captions anywhere in the image.
+
+Art style: 2D casual mobile game illustration, kawaii pastel, clean hand-painted vector-like asset, gentle highlights, soft ambient occlusion, crisp readable edges, transparent background or simple isolated object on plain background suitable for background removal. Avoid photorealism, heavy texture, dark colors, busy details, and perspective distortion.
+
+Output should be a single centered room-shell PNG composition, square 1:1, with generous transparent or removable empty margin around the shell.

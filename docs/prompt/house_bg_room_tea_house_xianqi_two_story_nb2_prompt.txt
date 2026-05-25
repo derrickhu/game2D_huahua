@@ -1,0 +1,11 @@
+Create one game-ready isometric cutaway room shell for a cozy pastel merge game. Use the attached two-story tea house only for layout intent: a two-level small building shell with an open front, usable lower floor and upper loft/deck, same approximate camera angle and transparent isolated composition. Use the attached airy pastel xianqi/butterfly-house shell as the style direction: brighter, lighter, more elegant, more fairy-like, with clean soft brown linework and high-key pastel colors.
+
+Subject: an elegant xianqi pastel two-story tea courtyard room shell, empty interior, no furniture. It should feel like a light immortal-garden tea pavilion rather than a dark old teahouse. Architecture: pale cream plaster walls, warm light bamboo columns, mint-jade curved roof tiles, translucent glass or silk-paper upper windows, airy second-floor balcony railings, thin cloud-scroll trim, soft peach blossom and wisteria accents, a few small hanging lanterns without text. Use a bright cream stone or pale jade tile lower floor, and a warm pale wood upper floor. Overall mood: floating, fresh, dreamy, gentle spring morning, not heavy, not brown, not gloomy.
+
+Structure requirements: clear two-story cutaway building; open front side for placing game furniture; broad readable lower floor; visible upper loft/deck suitable for decoration placement; two interior walls or back wall planes that make the space readable. Keep the shell centered and game-ready. Do not fill the room with furniture.
+
+NO TEXT, no labels, no readable signs, no numbers, no logo, no watermark, no characters, no counters, no shelves, no table, no chairs, no captions anywhere in the image.
+
+Art style: 2D casual mobile game illustration, kawaii pastel, clean hand-painted vector-like asset, upper-left isometric view, soft ambient occlusion, gentle highlights, crisp readable edges, transparent background or simple isolated object on plain background suitable for background removal. Avoid photorealism, heavy dark wood, muddy colors, dense clutter, strong shadows, and perspective distortion.
+
+Output should be a single centered room-shell PNG composition, square 1:1, with generous transparent or removable empty margin around the shell.

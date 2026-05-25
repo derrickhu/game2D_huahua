@@ -376,38 +376,27 @@ class GMManagerClass {
     });
 
     // ========== 等级调整 ==========
-    this._commands.push({
-      id: 'set_level_5',
-      group: ' 等级调整',
-      name: '设为 Lv.5',
-      desc: '全局星级→5（并同步累计星星）；globalLevel 与顶栏一致',
-      execute: () => {
-        CurrencyManager.setLevel(5);
-        return ` 当前房 Lv.5，globalLevel=${CurrencyManager.globalLevel}（合成气泡需≥3）`;
-      },
-    });
+    const addSetLevelCommand = (level: number, extraDesc = ''): void => {
+      this._commands.push({
+        id: `set_level_${level}`,
+        group: ' 等级调整',
+        name: `设为 Lv.${level}`,
+        desc: `全局星级→${level}（累计星门槛 ${getGlobalStarRequiredForLevel(level)}）${extraDesc}`,
+        execute: () => {
+          CurrencyManager.setLevel(level);
+          return ` 当前房 Lv.${CurrencyManager.state.level}，globalLevel=${CurrencyManager.globalLevel}`;
+        },
+      });
+    };
 
-    this._commands.push({
-      id: 'set_level_10',
-      group: ' 等级调整',
-      name: '设为 Lv.10',
-      desc: '全局星级→10（原花店十星档，160星 门槛）',
-      execute: () => {
-        CurrencyManager.setLevel(10);
-        return ` 当前房 Lv.${CurrencyManager.state.level}，globalLevel=${CurrencyManager.globalLevel}`;
-      },
-    });
-
-    this._commands.push({
-      id: 'set_level_20',
-      group: ' 等级调整',
-      name: '设为 Lv.20',
-      desc: '全局星级→20（超过十星后继续可升）',
-      execute: () => {
-        CurrencyManager.setLevel(20);
-        return ` 当前房 Lv.${CurrencyManager.state.level}，globalLevel=${CurrencyManager.globalLevel}`;
-      },
-    });
+    addSetLevelCommand(5, '；合成气泡需≥3');
+    addSetLevelCommand(10, '；原花店十星档');
+    addSetLevelCommand(20, '；蛋糕房中后段');
+    addSetLevelCommand(25, '；茶香小院开放');
+    addSetLevelCommand(30, '；花园别墅开放');
+    addSetLevelCommand(40, '；中后期测试');
+    addSetLevelCommand(50, '；显式等级表末段');
+    addSetLevelCommand(60, '；验证 50 级后公式延伸');
 
     this._commands.push({
       id: 'gm_star_up_one',
@@ -428,10 +417,28 @@ class GMManagerClass {
     });
 
     this._commands.push({
+      id: 'gm_star_up_five',
+      group: ' 等级调整',
+      name: '全局升 5 星级',
+      desc: '连续补足星星，升到当前等级 +5',
+      execute: () => {
+        const beforeLevel = CurrencyManager.state.level;
+        const targetLevel = beforeLevel + 5;
+        const targetStar = getGlobalStarRequiredForLevel(targetLevel);
+        const delta = Math.max(1, targetStar - CurrencyManager.state.star);
+        const labelBefore = getGlobalStarLevelLabel(beforeLevel);
+        CurrencyManager.addStar(delta);
+        const afterLevel = CurrencyManager.state.level;
+        const labelAfter = getGlobalStarLevelLabel(afterLevel);
+        return `+${delta}星 → ${labelBefore}→${labelAfter}（目标 Lv.${targetLevel}，当前 Lv.${afterLevel}）`;
+      },
+    });
+
+    this._commands.push({
       id: 'gm_star_max_scene',
       group: ' 等级调整',
       name: '全局拉到十星门槛',
-      desc: '累计星星拉到全局 10 星门槛（160星，与原花店满星一致）',
+      desc: `累计星星拉到全局 10 星门槛（${getGlobalStarRequiredForLevel(10)}星，与原花店满星一致）`,
       execute: () => {
         const target = getGlobalStarRequiredForLevel(10);
         const cur = CurrencyManager.state.star;

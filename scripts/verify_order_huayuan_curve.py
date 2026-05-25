@@ -15,10 +15,10 @@ CURVES = {
     "冷饮 cold": (14, 1.5, 8),
     "甜品 dessert": (13, 1.49, 8),
 }
-MULTI_K = 0.16
+MULTI_K = 0.20
 PARITY = 0.9
 CHALLENGE = 1.06
-TIER_MULT = {"C": 1, "B": 1.1, "A": 1.35, "S": 3}
+TIER_MULT = {"C": 1, "B": 1.1, "A": 1.75, "S": 3.8}
 
 
 def js_round(value: float) -> int:

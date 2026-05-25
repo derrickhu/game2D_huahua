@@ -261,7 +261,10 @@ export function getStarLevelLabel(sceneId: string, starLevel: number): string {
   return t?.label ?? '一星';
 }
 
-/** 获取下一星级所需星星数，满星返回 -1 */
+/**
+ * 获取单场景下一星级所需星星数，满星返回 -1。
+ * @deprecated 顶栏/主进度条使用全局星级曲线，请用 getGlobalNextLevelStarRequired。
+ */
 export function getNextLevelStarRequired(sceneId: string, currentLevel: number): number {
   const scene = SCENE_MAP.get(sceneId);
   if (!scene) return -1;
@@ -269,14 +272,14 @@ export function getNextLevelStarRequired(sceneId: string, currentLevel: number):
   return next?.starRequired ?? -1;
 }
 
-/** 判断是否已满星 */
+/** 判断单场景是否已满星；全局星级无满级。 */
 export function isSceneCompleted(sceneId: string, starLevel: number): boolean {
   const scene = SCENE_MAP.get(sceneId);
   if (!scene) return false;
   return starLevel >= scene.maxStarLevel;
 }
 
-/** 获取场景满星时的星星数 */
+/** 获取单场景满星时的星星数；全局星级请用 getGlobalStarRequiredForLevel。 */
 export function getMaxStar(sceneId: string): number {
   const scene = SCENE_MAP.get(sceneId);
   if (!scene) return 0;

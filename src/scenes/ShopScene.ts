@@ -14,7 +14,7 @@
 import * as PIXI from 'pixi.js';
 import { Scene, SceneManager } from '@/core/SceneManager';
 import { Game } from '@/core/Game';
-import { getNextLevelStarRequired } from '@/config/StarLevelConfig';
+import { getGlobalNextLevelStarRequired } from '@/config/StarLevelConfig';
 import { LevelManager } from '@/managers/LevelManager';
 import { EventBus } from '@/core/EventBus';
 import { OverlayManager } from '@/core/OverlayManager';
@@ -140,8 +140,8 @@ const SHOP_BUILDING_ANCHOR_OFFSET_Y = 18;
 const FLOWER_SHOP_BUILDING_SCALE_MULTIPLIER = 1.1;
 /** 蝴蝶小屋房壳含前院地块，通用缩放会显小；单独放大到参考图的贴边比例。 */
 const BUTTERFLY_HOUSE_BUILDING_SCALE_MULTIPLIER = 1.3;
-/** 双层茶楼房壳更高，略缩小倍率避免顶到 UI。 */
-const TEA_HOUSE_BUILDING_SCALE_MULTIPLIER = 1.12;
+/** 茶楼新壳前景偏窄，单独放大到横向撑满（1.5×）。 */
+const TEA_HOUSE_BUILDING_SCALE_MULTIPLIER = 1.5;
 
 /** 试调：房间可摆空间显大一些，店主显示缩到 90%。 */
 const SHOP_OWNER_DISPLAY_SCALE_MULTIPLIER = 0.9;
@@ -1131,9 +1131,8 @@ export class ShopScene implements Scene {
     // 星级进度文字（累积星星 / 下一星级门槛）
     const star = CurrencyManager.state.star;
     const lv = CurrencyManager.state.level;
-    const sceneId = CurrencyManager.state.sceneId;
-    const nextReq = getNextLevelStarRequired(sceneId, lv);
-    const label = nextReq >= 0 ? `${star}/${nextReq}` : `${star}`;
+    const nextReq = getGlobalNextLevelStarRequired(lv);
+    const label = `${star}/${nextReq}`;
     this._progressText = new PIXI.Text(label, {
       fontSize: 17, fill: COLORS.TEXT_DARK, fontFamily: FONT_FAMILY, fontWeight: 'bold',
       stroke: 0xFFFFFF, strokeThickness: 2,
@@ -1193,8 +1192,7 @@ export class ShopScene implements Scene {
     const ratio = LevelManager.starProgress;
     const star = CurrencyManager.state.star;
     const lv = CurrencyManager.state.level;
-    const sceneId = CurrencyManager.state.sceneId;
-    const nextReq = getNextLevelStarRequired(sceneId, lv);
+    const nextReq = getGlobalNextLevelStarRequired(lv);
 
     const prevStar = this._lastShopProgressStar;
     this._lastShopProgressStar = star;
@@ -1210,7 +1208,7 @@ export class ShopScene implements Scene {
     }
 
     if (this._progressText) {
-      this._progressText.text = nextReq >= 0 ? `${star}/${nextReq}` : `${star}`;
+      this._progressText.text = `${star}/${nextReq}`;
     }
     if (this._progressLevelText) {
       this._progressLevelText.text = `Lv.${lv}`;
@@ -1290,7 +1288,7 @@ export class ShopScene implements Scene {
   private _showNextStarGiftPreview(): void {
     const preview = LevelManager.getNextStarLevelRewardPreview();
     if (!preview) {
-      ToastMessage.show('当前场景已满星，暂无下一档礼包~');
+      ToastMessage.show('暂无下一档礼包预览~');
       return;
     }
     const nextLv = CurrencyManager.state.level + 1;

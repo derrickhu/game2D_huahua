@@ -1,0 +1,18 @@
+Create one game-ready isometric cutaway room shell for a cozy pastel merge game. Use the attached current xianqi tea-house shell as the style reference only: airy pastel xianqi mood, mint-jade roof tiles, pale bamboo columns, soft brown linework, cream walls, peach blossom and wisteria details. Redesign the layout to be furniture-friendly but NOT too wide.
+
+Subject: a balanced xianqi pastel two-story tea courtyard room shell, empty interior, no furniture. Elegant immortal-garden tea pavilion, fresh and dreamy, light spring morning palette.
+
+Critical layout requirements:
+- Overall silhouette must fit a near-square game room shell, not a panoramic wide hall. Width should be moderate, about 1.15 times the height, never more than 1.25 times the height.
+- First floor should be more spacious than the previous narrow version, but still compact: a clear broad square or slightly L-shaped floor area in the lower half, with enough room for several furniture items.
+- Second floor should be a usable L-shaped loft, not a thin balcony strip, but also not a huge horizontal terrace. It should have visible floor depth for furniture placement while keeping the building compact.
+- Staircase should be compact and tucked on the right side or back-right corner, not centered, and should not split the main first-floor area.
+- Keep railings low and thin so the upper floor surface remains visible. Open front side, clear two-level cutaway structure, minimal clutter.
+
+Architecture details: mint-jade curved roof tiles, light bamboo posts, pale cream plaster walls, translucent silk-paper windows, thin cloud-scroll trim, subtle peach blossom and wisteria near roof edges. Decorative details must stay near walls and roof, leaving floor areas open.
+
+NO TEXT, no labels, no readable signs, no numbers, no logo, no watermark, no characters, no counters, no shelves, no table, no chairs, no furniture, no captions anywhere in the image.
+
+Art style: 2D casual mobile game illustration, kawaii pastel, clean hand-painted vector-like asset, upper-left isometric view, soft ambient occlusion, gentle highlights, crisp readable edges, transparent background or simple isolated object on plain background suitable for background removal. Avoid photorealism, dark heavy wood, dense decoration, too-wide panoramic layout, narrow unusable floor, central staircase, strong shadows, and perspective distortion.
+
+Output should be a single centered room-shell PNG composition, square 1:1, with generous transparent or removable empty margin around the shell.

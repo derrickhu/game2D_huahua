@@ -8,7 +8,7 @@
  */
 
 /** 每多 1 个需求槽，对「单价之和」的加成比例（2 槽 = 1+k，3 槽 = 1+2k） */
-export const MULTI_SLOT_BONUS_RATE = 0.16;
+export const MULTI_SLOT_BONUS_RATE = 0.20;
 
 /** 组合单 / challenge：在最终花愿上再乘一小步，补偿跨链调度成本（与成长单 bonusMultiplier 独立） */
 export const CHALLENGE_ORDER_HUAYUAN_MULT = 1.06;
@@ -20,8 +20,8 @@ export const CHALLENGE_ORDER_HUAYUAN_MULT = 1.06;
 export const ORDER_TIER_HUAYUAN_MULT = {
   C: 1,
   B: 1.1,
-  A: 1.35,
-  S: 3,
+  A: 1.75,
+  S: 3.8,
 } as const;
 
 /**

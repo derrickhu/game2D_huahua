@@ -1,0 +1,18 @@
+Create one game-ready isometric cutaway room shell for a cozy pastel merge game. Use the attached current tea-house shell only as a style reference for airy xianqi pastel colors, mint-jade roof tiles, pale bamboo columns, soft brown linework, and gentle fairy-garden mood. Redesign the room layout to be much more spacious and furniture-friendly.
+
+Subject: a bright xianqi pastel two-story tea courtyard room shell, empty interior, no furniture. The building should be an elegant immortal-garden tea pavilion, fresh and dreamy, not dark or heavy. Palette: pale cream walls, light bamboo, mint-jade roof, soft peach blossom and wisteria accents, warm pale wood, faint jade floor tiles.
+
+Critical layout requirements:
+- First floor must be very wide and open: a large rectangular or broad L-shaped clear floor area occupying most of the lower half of the shell, suitable for placing many game furniture items.
+- Second floor must also be wide and usable: a broad upper loft/deck platform spanning most of the back and side walls, with enough visible floor depth to place multiple furniture items. Do not make it a thin balcony strip.
+- Staircase must be compact and tucked to one side or back corner, not in the center, and must not consume the main first-floor placement area.
+- Keep railings low and thin so the upper floor surface remains visible. Keep walls and roof high enough to read as a two-story building but do not cover the usable floor.
+- Open front side for placing furniture, clear two-level cutaway structure, no clutter.
+
+Architecture details: mint-jade curved roof tiles, light bamboo posts, pale cream plaster walls, translucent silk-paper windows, thin cloud-scroll trim, a few small blossoms or wisteria vines on the roof edge. Decorative details must stay near the edges and should not invade the empty floor areas.
+
+NO TEXT, no labels, no readable signs, no numbers, no logo, no watermark, no characters, no counters, no shelves, no table, no chairs, no furniture, no captions anywhere in the image.
+
+Art style: 2D casual mobile game illustration, kawaii pastel, clean hand-painted vector-like asset, upper-left isometric view, soft ambient occlusion, gentle highlights, crisp readable edges, transparent background or simple isolated object on plain background suitable for background removal. Avoid photorealism, muddy dark wood, dense wall decoration, narrow floors, central staircase, strong shadows, and perspective distortion.
+
+Output should be a single centered room-shell PNG composition, square 1:1, with generous transparent or removable empty margin around the shell.

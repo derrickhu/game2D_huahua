@@ -133,7 +133,7 @@ export const MAP_NODES: MapNodeDef[] = [
   },
   {
     id: 'cake_shop',
-    type: 'locked',
+    type: 'house',
     label: '蛋糕房',
     /** 下方偏中右圆形空地（与花坊同缩略图边长，坐标可再微调） */
     x: 1130,
@@ -142,6 +142,7 @@ export const MAP_NODES: MapNodeDef[] = [
     thumbSize: 320,
     unlockLevel: 15,
     useLiveMapThumb: false,
+    targetSceneId: 'cake_shop',
   },
   {
     id: 'tea_house',

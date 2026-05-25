@@ -95,6 +95,44 @@ function _maxToolLevel(lines: UnlockedLines): number {
   return Math.max(lines.maxPlantToolLevel, lines.maxArrangeToolLevel, lines.maxDrinkToolLevel);
 }
 
+function _clamp(v: number, lo: number, hi: number): number {
+  return Math.max(lo, Math.min(hi, v));
+}
+
+function _linePower(toolLevel: number, category: Category, line: string): number {
+  const maxItemLevel = Math.max(1, getMaxLevelForLine(category, line));
+  return _clamp(getEffectiveMaxLevel(toolLevel, maxItemLevel) / maxItemLevel, 0, 1);
+}
+
+/**
+ * 当前棋盘工具能力评分（0-1）。
+ * 订单只看棋盘 open 格里的可生产工具；仓库工具不计入，避免刷出玩家当前棋盘无法完成的单。
+ */
+function _toolPower(lines: UnlockedLines): number {
+  const powers: number[] = [];
+  if (lines.maxPlantToolLevel > 0) {
+    powers.push(_linePower(lines.maxPlantToolLevel, Category.FLOWER, FlowerLine.FRESH));
+    if (lines.hasGreen) {
+      powers.push(_linePower(lines.maxPlantToolLevel, Category.FLOWER, FlowerLine.GREEN));
+    }
+  }
+  if (lines.hasBouquet) {
+    powers.push(_linePower(
+      Math.max(lines.maxArrangeToolLevel, lines.maxPlantToolLevel),
+      Category.FLOWER,
+      FlowerLine.BOUQUET,
+    ));
+  }
+  for (const line of [DrinkLine.BUTTERFLY, DrinkLine.COLD, DrinkLine.DESSERT]) {
+    const toolLevel = lines.drinkToolMaxByLine[line] ?? 0;
+    if (toolLevel > 0) {
+      powers.push(_linePower(toolLevel, Category.DRINK, line));
+    }
+  }
+  if (powers.length === 0) return 0;
+  return powers.reduce((a, b) => a + b, 0) / powers.length;
+}
+
 /** 订单档位权重的会话修正（如解锁新产线后短期偏置） */
 export interface OrderTierWeightModifiers {
   /** 解锁绿植后剩余「加成刷次」：提高 A/S 权重，便于尽快见到绿植单 */
@@ -120,8 +158,9 @@ function _applyGreenBoost(
 
 /**
  * 按玩家等级 + 已解锁产线 + 工具等级综合计算各档出现权重。
- * - 玩家等级 1–3：不出现 S；4 级起少量 S 并逐步抬高；5 级起为「常态」分布。
- * - S 档保持稀有但不再过度压低，避免早期订单长期停留在低阶鲜花。
+ * - 玩家等级 1–3：不出现 S，保护新手主循环。
+ * - 4 级起少量 S；6 级后按玩家等级、工具能力、解锁产线连续成长。
+ * - 不再使用「10 级以后固定权重」，后续升星仍会自然提高高档订单体感。
  */
 export function getOrderTierWeights(
   playerLevel: number,
@@ -151,12 +190,28 @@ export function getOrderTierWeights(
     if (lines.hasBouquet || lines.hasDrink) base = { C: 15, B: 42, A: 37, S: 6 };
     else if (maxTool >= 4) base = { C: 22, B: 45, A: 27, S: 6 };
     else base = { C: 35, B: 45, A: 14, S: 6 };
-  } else if (playerLevel <= 7) {
-    base = { C: 8, B: 27, A: 58, S: lines.hasGreen ? 7 : 6 };
-  } else if (playerLevel <= 9) {
-    base = { C: 6, B: 24, A: 62, S: 8 };
   } else {
-    base = { C: 6, B: 22, A: 64, S: 8 };
+    const levelScore = _clamp((playerLevel - 4) / 12, 0, 1);
+    const toolScore = _toolPower(lines);
+    const lineScore = _clamp(lines.unlockedLineCount / 5, 0, 1);
+    const highOrderScore = _clamp(0.55 * toolScore + 0.25 * levelScore + 0.2 * lineScore, 0, 1);
+    const levelTail = Math.max(0, playerLevel - 6);
+
+    const sWeight = _clamp(
+      3 + 20 * highOrderScore + 0.9 * levelTail + (lines.hasGreen ? 1.5 : 0),
+      5,
+      30,
+    );
+    const aWeight = _clamp(30 + 30 * highOrderScore + 0.8 * levelTail, 34, 64);
+    const bWeight = _clamp(44 - 28 * highOrderScore - 0.6 * levelTail, 10, 36);
+    const cWeight = _clamp(18 - 16 * highOrderScore - 0.6 * levelTail, 1, 14);
+
+    base = {
+      C: Math.round(cWeight),
+      B: Math.round(bWeight),
+      A: Math.round(aWeight),
+      S: Math.round(sWeight),
+    };
   }
 
   return _applyGreenBoost(base, lines, modifiers?.greenLineUnlockBoostSpawns);

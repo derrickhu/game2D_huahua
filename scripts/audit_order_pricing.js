@@ -45,15 +45,18 @@ const ORDER_TIERS = {
   },
 };
 
-const MULTI_SLOT_BONUS_RATE = 0.16;
+const MULTI_SLOT_BONUS_RATE = 0.20;
 const SINGLE_SLOT_MERGE_PARITY_FACTOR = 0.9;
 const ITEM_SELL_RATIO = 0.15;
 const ORDER_TIER_HUAYUAN_MULT = {
   C: 1,
   B: 1.1,
-  A: 1.35,
-  S: 3,
+  A: 1.75,
+  S: 3.8,
 };
+const ORDER_ITEM_LEVEL_PICK_EXPONENT = 1.12;
+const ORDER_ASPIRATIONAL_LEVEL_BONUS_CHANCE = 0.14;
+const CHALLENGE_ORDER_HUAYUAN_MULT = 1.06;
 
 function extractCurves() {
   const curves = {};
@@ -119,6 +122,86 @@ function orderReward(slots) {
   return Math.max(1, Math.round(base * ORDER_TIER_HUAYUAN_MULT[computeContentTier(slots)]));
 }
 
+function clamp(v, lo, hi) {
+  return Math.max(lo, Math.min(hi, v));
+}
+
+function effectiveMaxLevel(toolLevel, maxItemLevel) {
+  if (toolLevel <= 0) return 0;
+  return Math.min(toolLevel * 2 - 1, maxItemLevel);
+}
+
+function linePower(toolLevel, line) {
+  return clamp(effectiveMaxLevel(toolLevel, LINE_META[line].maxLevel) / LINE_META[line].maxLevel, 0, 1);
+}
+
+function toolPower(lines) {
+  const powers = [];
+  if (lines.maxPlantToolLevel > 0) {
+    powers.push(linePower(lines.maxPlantToolLevel, 'fresh'));
+    if (lines.hasGreen) powers.push(linePower(lines.maxPlantToolLevel, 'green'));
+  }
+  if (lines.hasBouquet) {
+    powers.push(linePower(Math.max(lines.maxArrangeToolLevel, lines.maxPlantToolLevel), 'bouquet'));
+  }
+  for (const line of ['butterfly', 'cold', 'dessert']) {
+    const toolLevel = lines.drinkToolMaxByLine[line] ?? 0;
+    if (toolLevel > 0) powers.push(linePower(toolLevel, line));
+  }
+  if (powers.length === 0) return 0;
+  return powers.reduce((a, b) => a + b, 0) / powers.length;
+}
+
+function getOrderTierWeights(playerLevel, lines) {
+  const maxTool = Math.max(lines.maxPlantToolLevel, lines.maxArrangeToolLevel, lines.maxDrinkToolLevel);
+  const hasAnyProducer = maxTool >= 3;
+  if (playerLevel <= 2) {
+    if (!hasAnyProducer) return { C: 100, B: 0, A: 0, S: 0 };
+    if (maxTool >= 4 || lines.hasBouquet || lines.hasDrink) return { C: 30, B: 60, A: 10, S: 0 };
+    return { C: 60, B: 40, A: 0, S: 0 };
+  }
+  if (playerLevel === 3) {
+    if (lines.hasBouquet || lines.hasDrink) return { C: 15, B: 48, A: 37, S: 0 };
+    if (maxTool >= 4) return { C: 25, B: 48, A: 27, S: 0 };
+    return { C: 35, B: 50, A: 15, S: 0 };
+  }
+  if (playerLevel === 4) {
+    if (lines.hasBouquet || lines.hasDrink) return { C: 15, B: 42, A: 37, S: 6 };
+    if (maxTool >= 4) return { C: 22, B: 45, A: 27, S: 6 };
+    return { C: 35, B: 45, A: 14, S: 6 };
+  }
+
+  const levelScore = clamp((playerLevel - 4) / 12, 0, 1);
+  const toolScore = toolPower(lines);
+  const lineScore = clamp(lines.unlockedLineCount / 5, 0, 1);
+  const highOrderScore = clamp(0.55 * toolScore + 0.25 * levelScore + 0.2 * lineScore, 0, 1);
+  const levelTail = Math.max(0, playerLevel - 6);
+  return {
+    C: Math.round(clamp(18 - 16 * highOrderScore - 0.6 * levelTail, 1, 14)),
+    B: Math.round(clamp(44 - 28 * highOrderScore - 0.6 * levelTail, 10, 36)),
+    A: Math.round(clamp(30 + 30 * highOrderScore + 0.8 * levelTail, 34, 64)),
+    S: Math.round(clamp(3 + 20 * highOrderScore + 0.9 * levelTail + (lines.hasGreen ? 1.5 : 0), 5, 30)),
+  };
+}
+
+function pickTierByWeight(weights) {
+  const entries = Object.entries(weights).filter(([, w]) => w > 0);
+  const total = entries.reduce((s, [, w]) => s + w, 0);
+  let r = Math.random() * total;
+  for (const [tier, w] of entries) {
+    r -= w;
+    if (r <= 0) return tier;
+  }
+  return entries[entries.length - 1][0];
+}
+
+function tierPickExponent(tier) {
+  if (tier === 'S') return 0.58;
+  if (tier === 'A') return 0.82;
+  if (tier === 'B') return 1.02;
+  return ORDER_ITEM_LEVEL_PICK_EXPONENT;
+}
+
 function pick(arr) {
   return arr[Math.floor(Math.random() * arr.length)];
 }
@@ -139,7 +222,7 @@ function sampleTier(tier, count = 5000) {
       const [loRaw, hiRaw] = pool.levelRange;
       const lo = Math.min(loRaw, maxLevel);
       const hi = Math.min(hiRaw, maxLevel);
-      const level = lo + Math.floor(Math.random() ** 1.4 * (hi - lo + 1));
+      const level = lo + Math.floor(Math.random() ** tierPickExponent(tier) * (hi - lo + 1));
       const key = `${line}:${level}`;
       if (used.has(key)) continue;
       used.add(key);
@@ -161,6 +244,94 @@ function sampleTier(tier, count = 5000) {
     avg: Math.round(sum / values.length),
     contentTierCounts,
   };
+}
+
+function scenarioToolCap(lines, line) {
+  if (line === 'fresh' || line === 'green') return effectiveMaxLevel(lines.maxPlantToolLevel, LINE_META[line].maxLevel);
+  if (line === 'bouquet') {
+    return effectiveMaxLevel(Math.max(lines.maxArrangeToolLevel, lines.maxPlantToolLevel), LINE_META[line].maxLevel);
+  }
+  return effectiveMaxLevel(lines.drinkToolMaxByLine[line] ?? 0, LINE_META[line].maxLevel);
+}
+
+function eligibleLines(poolLines, lines) {
+  return poolLines.filter(line => {
+    if (line === 'fresh') return lines.maxPlantToolLevel > 0;
+    if (line === 'green') return lines.hasGreen;
+    if (line === 'bouquet') return lines.hasBouquet;
+    return (lines.drinkToolMaxByLine[line] ?? 0) > 0;
+  });
+}
+
+function pickScenarioLevel(tier, loRaw, hiRaw, line, lines) {
+  const cap = scenarioToolCap(lines, line);
+  const aspirationalBonus = tier === 'S' ? 0.18 : tier === 'A' ? 0.08 : tier === 'B' ? 0.02 : 0;
+  const aspirational = cap > 0 && Math.random() < ORDER_ASPIRATIONAL_LEVEL_BONUS_CHANCE + aspirationalBonus;
+  const hi = Math.min(hiRaw, cap + (aspirational ? 1 : 0), LINE_META[line].maxLevel);
+  const lo = Math.min(loRaw, hi);
+  return lo + Math.floor(Math.random() ** tierPickExponent(tier) * (hi - lo + 1));
+}
+
+function generateScenarioSlots(tier, lines) {
+  const def = ORDER_TIERS[tier];
+  const [minSlots, maxSlots] = def.slotRange;
+  const slotCount = minSlots + Math.floor(Math.random() * (maxSlots - minSlots + 1));
+  const used = new Set();
+  const slots = [];
+  for (let s = 0; s < slotCount; s++) {
+    let pool = pick(def.pools);
+    let linePool = eligibleLines(pool.lines, lines);
+    if (linePool.length === 0 && pool.category === 'drink') {
+      const fallbackLines = tier === 'S'
+        ? ['bouquet', ...(lines.hasGreen ? ['green'] : [])]
+        : ['fresh', ...(lines.hasBouquet ? ['bouquet'] : []), ...(lines.hasGreen ? ['green'] : [])];
+      pool = { category: 'flower', lines: fallbackLines, levelRange: tier === 'S' ? [7, 13] : tier === 'A' ? [4, 7] : [2, 5] };
+      linePool = eligibleLines(pool.lines, lines);
+    }
+    if (linePool.length === 0) continue;
+    const line = pick(linePool);
+    const level = pickScenarioLevel(tier, pool.levelRange[0], pool.levelRange[1], line, lines);
+    const key = `${line}:${level}`;
+    if (used.has(key)) continue;
+    used.add(key);
+    slots.push({ line, level });
+  }
+  return slots;
+}
+
+function simulateScenario(label, playerLevel, lines, count = 20000) {
+  const weights = getOrderTierWeights(playerLevel, lines);
+  const templateCounts = { C: 0, B: 0, A: 0, S: 0 };
+  const contentTierCounts = { C: 0, B: 0, A: 0, S: 0 };
+  const rewardsByContent = { C: [], B: [], A: [], S: [] };
+  for (let i = 0; i < count; i++) {
+    const tier = pickTierByWeight(weights);
+    templateCounts[tier]++;
+    const slots = generateScenarioSlots(tier, lines);
+    if (slots.length === 0) continue;
+    const contentTier = computeContentTier(slots);
+    contentTierCounts[contentTier]++;
+    rewardsByContent[contentTier].push(orderReward(slots));
+  }
+
+  console.log(`\n场景模拟：${label}`);
+  console.log(`weights=${JSON.stringify(weights)} template=${JSON.stringify(templateCounts)} content=${JSON.stringify(contentTierCounts)}`);
+  for (const tier of ['C', 'B', 'A', 'S']) {
+    const values = rewardsByContent[tier].sort((a, b) => a - b);
+    if (values.length === 0) continue;
+    const at = p => values[Math.min(values.length - 1, Math.floor(values.length * p))];
+    const avg = Math.round(values.reduce((a, b) => a + b, 0) / values.length);
+    console.log(`${tier}: n=${values.length}, p50=${at(0.5)}, p90=${at(0.9)}, avg=${avg}, min=${values[0]}, max=${values[values.length - 1]}`);
+  }
+
+  const visibleSRate = contentTierCounts.S / Math.max(1, Object.values(contentTierCounts).reduce((a, b) => a + b, 0));
+  const aValues = rewardsByContent.A.sort((a, b) => a - b);
+  if (label.includes('Lv10 高工具') && visibleSRate < 0.18) {
+    fail(`Lv10 高工具 S 可见比例过低：${(visibleSRate * 100).toFixed(1)}%`);
+  }
+  if (label.includes('Lv10 高工具') && aValues.length > 0 && aValues[Math.floor(aValues.length * 0.5)] < 350) {
+    fail('Lv10 高工具 A 档 p50 仍偏低');
+  }
 }
 
 function printPriceTable() {
@@ -211,6 +382,39 @@ for (const tier of Object.keys(ORDER_TIERS)) {
     .join(' ');
   console.log(`${tier}: min=${s.min}, p50=${s.p50}, p90=${s.p90}, max=${s.max}, avg=${s.avg} | content ${counts}`);
 }
+
+simulateScenario('Lv6 中级工具：plant5 arrange4 蝴蝶4', 6, {
+  hasBouquet: true,
+  hasGreen: true,
+  hasDrink: true,
+  maxPlantToolLevel: 5,
+  maxArrangeToolLevel: 4,
+  maxDrinkToolLevel: 4,
+  drinkToolMaxByLine: { butterfly: 4 },
+  unlockedLineCount: 3,
+});
+
+simulateScenario('Lv10 高工具：plant7 arrange5 三饮品5', 10, {
+  hasBouquet: true,
+  hasGreen: true,
+  hasDrink: true,
+  maxPlantToolLevel: 7,
+  maxArrangeToolLevel: 5,
+  maxDrinkToolLevel: 5,
+  drinkToolMaxByLine: { butterfly: 5, cold: 5, dessert: 5 },
+  unlockedLineCount: 5,
+});
+
+simulateScenario('Lv10 低工具：plant4 arrange3', 10, {
+  hasBouquet: true,
+  hasGreen: true,
+  hasDrink: false,
+  maxPlantToolLevel: 4,
+  maxArrangeToolLevel: 3,
+  maxDrinkToolLevel: 0,
+  drinkToolMaxByLine: {},
+  unlockedLineCount: 2,
+});
 
 validate();
 if (process.exitCode) {

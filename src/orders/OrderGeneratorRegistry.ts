@@ -133,13 +133,27 @@ function pickItemLevel(
   tierMaxLv: number,
   toolCap: number,
   maxItemLevel: number,
+  tier: OrderTier,
   rng: () => number,
 ): number {
-  const aspirational = toolCap > 0 && rng() < ORDER_ASPIRATIONAL_LEVEL_BONUS_CHANCE;
+  const tierAspirationalBonus: Record<OrderTier, number> = {
+    C: 0,
+    B: 0.02,
+    A: 0.08,
+    S: 0.18,
+  };
+  const tierExponent: Record<OrderTier, number> = {
+    C: ORDER_ITEM_LEVEL_PICK_EXPONENT,
+    B: 1.02,
+    A: 0.82,
+    S: 0.58,
+  };
+  const aspirational = toolCap > 0
+    && rng() < ORDER_ASPIRATIONAL_LEVEL_BONUS_CHANCE + tierAspirationalBonus[tier];
   let hi = Math.min(tierMaxLv, toolCap + (aspirational ? 1 : 0), maxItemLevel);
   const lo = Math.min(minLv, hi);
   const span = hi - lo + 1;
-  return lo + Math.floor(Math.pow(rng(), ORDER_ITEM_LEVEL_PICK_EXPONENT) * span);
+  return lo + Math.floor(Math.pow(rng(), tierExponent[tier]) * span);
 }
 
 function tryPickItem(
@@ -147,6 +161,7 @@ function tryPickItem(
   eligibleLines: string[],
   ulk: UnlockedLines,
   usedIds: Set<string>,
+  tier: OrderTier,
   rng: () => number,
 ): string | null {
   const [minLv, tierMaxLv] = demandDef.levelRange;
@@ -155,7 +170,7 @@ function tryPickItem(
     const line = eligibleLines[Math.floor(rng() * eligibleLines.length)];
     const lineMax = Math.max(1, getMaxLevelForLine(demandDef.category, line));
     const toolCap = toolCapForLine(demandDef.category, line, ulk);
-    const level = pickItemLevel(minLv, tierMaxLv, toolCap, lineMax, rng);
+    const level = pickItemLevel(minLv, tierMaxLv, toolCap, lineMax, tier, rng);
     const cand = findItemId(demandDef.category, line, level);
     if (cand && !usedIds.has(cand)) {
       return cand;
@@ -206,7 +221,7 @@ function generateDemandsFromPool(
       greenPityUsed = true;
     }
 
-    const itemId = tryPickItem(demandDef, eligibleLines, ulk, usedIds, opts.rng);
+    const itemId = tryPickItem(demandDef, eligibleLines, ulk, usedIds, opts.tier, opts.rng);
     if (itemId) {
       usedIds.add(itemId);
       slots.push({ itemId });
@@ -227,8 +242,8 @@ function comboSpecsForTier(tier: OrderTier, ulk: UnlockedLines): ComboSpec[] {
   const ranges: Record<OrderTier, { flower: [number, number]; drink: [number, number] }> = {
     C: { flower: [1, 3], drink: [1, 3] },
     B: { flower: [2, 4], drink: [2, 3] },
-    A: { flower: [4, 6], drink: [3, 5] },
-    S: { flower: [6, 13], drink: [5, 7] },
+    A: { flower: [4, 7], drink: [4, 6] },
+    S: { flower: [7, 13], drink: [6, 10] },
   };
   const r = ranges[tier];
   const out: ComboSpec[] = [];
@@ -287,11 +302,13 @@ function tryGenerateCombo(
   const pickFromSpec = (spec: ComboSpec): string | null => {
     const toolCap = toolCapForLine(spec.category, spec.line, ulk);
     const lineMax = Math.max(1, getMaxLevelForLine(spec.category, spec.line));
-    const aspirational = toolCap > 0 && rng() < ORDER_ASPIRATIONAL_LEVEL_BONUS_CHANCE;
+    const aspirational = toolCap > 0
+      && rng() < ORDER_ASPIRATIONAL_LEVEL_BONUS_CHANCE + (tier === 'S' ? 0.18 : tier === 'A' ? 0.08 : 0.02);
     const hi = Math.min(spec.maxLv, toolCap + (aspirational ? 1 : 0), lineMax);
     const lo = Math.min(spec.minLv, hi);
     if (hi < lo) return null;
-    const level = lo + Math.floor(Math.pow(rng(), ORDER_ITEM_LEVEL_PICK_EXPONENT) * (hi - lo + 1));
+    const exponent = tier === 'S' ? 0.58 : tier === 'A' ? 0.82 : tier === 'B' ? 1.02 : ORDER_ITEM_LEVEL_PICK_EXPONENT;
+    const level = lo + Math.floor(Math.pow(rng(), exponent) * (hi - lo + 1));
     const id = findItemId(spec.category, spec.line, level);
     if (id && !used.has(id)) return id;
     for (let lv = hi; lv >= lo; lv--) {
