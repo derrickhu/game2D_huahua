@@ -33,7 +33,7 @@ export const CDN_CONFIG: CdnConfig = {
   cloudBucket: '726f-rosa-env-d7grf78r5dbd37323-1414200063',
   baseUrl: 'https://726f-rosa-env-d7grf78r5dbd37323-1414200063.tcb.qcloud.la',
   filePrefix: 'assets_cdn',
-  cacheRootName: 'cdn_cache',
+  cacheRootName: 'cdn_cache_v2',
   downloadRetry: 2,
   downloadTimeoutMs: 30000,
   cdnDirs: [

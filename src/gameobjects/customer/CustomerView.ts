@@ -321,11 +321,9 @@ export class CustomerView extends PIXI.Container {
       }
       const val = new PIXI.Text(`${item.value}`, {
         fontSize: 16,
-        fill: 0xFFFFFF,
+        fill: 0x7A4A2A,
         fontFamily: FONT_FAMILY,
         fontWeight: 'bold',
-        stroke: 0x000000,
-        strokeThickness: 3,
       });
       val.anchor.set(0, 0.5);
       val.position.set(offsetX, 0);
@@ -339,7 +337,8 @@ export class CustomerView extends PIXI.Container {
     const bh = iconSize + padY * 2;
 
     const bg = new PIXI.Graphics();
-    bg.beginFill(0x000000, 0.45);
+    bg.beginFill(0xFFF2C2, 0.92);
+    bg.lineStyle(2, 0xE3B15C, 0.85);
     bg.drawRoundedRect(0, 0, bw, bh, bh / 2);
     bg.endFill();
 

@@ -17,11 +17,11 @@ import { MerchShopManager, type MerchShopPersistState } from './MerchShopManager
 import { FlowerSignTicketManager } from './FlowerSignTicketManager';
 import { EventBus } from '@/core/EventBus';
 import { PersistService } from '@/core/PersistService';
+import { CdnAssetService } from '@/core/CdnAssetService';
 import { BOARD_COLS, BOARD_TOTAL } from '@/config/Constants';
 import { BOARD_PRESETS, CellState } from '@/config/BoardLayout';
 import { ITEM_DEFS } from '@/config/ItemConfig';
 import { BACKEND_ANON_ID_KEY, BACKEND_TOKEN_KEY, CLOUD_SYNC_META_KEY } from '@/config/CloudConfig';
-import { CloudSyncManager } from '@/managers/CloudSyncManager';
 
 declare const wx: any;
 declare const tt: any;
@@ -296,7 +296,7 @@ class SaveManagerClass {
         BACKEND_ANON_ID_KEY,
       ];
       PersistService.removeMany(keys);
-      void CloudSyncManager.flushNow('clear-all-data');
+      CdnAssetService.clearAllCache();
       console.log('[Save] 所有游戏数据已清除');
     } catch (_) {}
   }

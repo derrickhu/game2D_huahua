@@ -158,7 +158,7 @@ function _applyGreenBoost(
 
 /**
  * 按玩家等级 + 已解锁产线 + 工具等级综合计算各档出现权重。
- * - 玩家等级 1–3：不出现 S，保护新手主循环。
+ * - 玩家等级 1–3：不出现 S，保护新手主循环；但有任意生产工具后就混入 B 单，避免开局长期单槽低级花。
  * - 4 级起少量 S；6 级后按玩家等级、工具能力、解锁产线连续成长。
  * - 不再使用「10 级以后固定权重」，后续升星仍会自然提高高档订单体感。
  */
@@ -168,16 +168,18 @@ export function getOrderTierWeights(
   modifiers?: OrderTierWeightModifiers,
 ): Record<OrderTier, number> {
   const maxTool = _maxToolLevel(lines);
-  const hasAnyProducer = maxTool >= 3;
+  const hasAnyProducer = maxTool >= 1;
 
   let base: Record<OrderTier, number>;
   if (playerLevel <= 3) {
     if (playerLevel <= 2) {
       if (!hasAnyProducer) base = { C: 100, B: 0, A: 0, S: 0 };
-      else if (maxTool >= 4 || lines.hasBouquet || lines.hasDrink) {
-        base = { C: 30, B: 60, A: 10, S: 0 };
+      else if (maxTool >= 3 || lines.hasBouquet || lines.hasDrink) {
+        base = { C: 35, B: 55, A: 10, S: 0 };
+      } else if (maxTool >= 2) {
+        base = { C: 45, B: 55, A: 0, S: 0 };
       } else {
-        base = { C: 60, B: 40, A: 0, S: 0 };
+        base = { C: 55, B: 45, A: 0, S: 0 };
       }
     } else {
       // 等级 3：仍无 S

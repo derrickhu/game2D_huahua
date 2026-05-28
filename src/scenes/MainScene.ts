@@ -298,6 +298,11 @@ export class MainScene implements Scene {
     // 云端无存档时启动期会按云端权威清空本地缓存，此处应立即进入新手流程。
     TutorialManager.start();
     this._tutorialOverlay.bind('main');
+    setTimeout(() => {
+      if (SceneManager.current?.name === 'main' && !TutorialManager.isActive) {
+        SoundSystem.playMainBGM();
+      }
+    }, 600);
 
     // 1. 离线收益（关闭时 IdleManager 仅同步时间戳，此处恒为 null）
     // 教程期间跳过离线收益弹窗

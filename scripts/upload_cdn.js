@@ -16,6 +16,7 @@ import { PROJECT_ROOT, loadUploadEnv } from './loadWxSecret.js';
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const FORCE = process.argv.includes('--force');
 const DRY_RUN = process.argv.includes('--dry-run');
+const PRUNE = process.argv.includes('--prune');
 const CONCURRENCY = Number(process.env.CDN_UPLOAD_CONCURRENCY || 5);
 const MANIFEST_LOCAL = path.join(PROJECT_ROOT, 'scripts', '.cdn_manifest.json');
 
@@ -229,6 +230,7 @@ async function main() {
   console.log('CDN:', CDN_BASE_URL || '(未配置)');
   console.log('云目录:', CDN_FILE_PREFIX);
   console.log('模式:', FORCE ? '强制全量' : DRY_RUN ? 'dry-run' : '增量');
+  console.log('删除远端旧文件:', PRUNE ? '开启 (--prune)' : '关闭（默认保留，兼容旧客户端）');
   console.log('');
 
   if (!cfg.enabled) throw new Error('CDN_CONFIG.enabled=false，已停止上传');
@@ -269,8 +271,10 @@ async function main() {
     if (!FORCE && oldFiles[rp]?.hash === info.hash) skipped++;
     else toUpload.push(rp);
   }
-  for (const rp of Object.keys(oldFiles)) {
-    if (!localManifest[rp]) toDelete.push(rp);
+  if (PRUNE) {
+    for (const rp of Object.keys(oldFiles)) {
+      if (!localManifest[rp]) toDelete.push(rp);
+    }
   }
 
   console.log(`新增/更新: ${toUpload.length}`);
