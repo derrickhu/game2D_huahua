@@ -148,8 +148,8 @@ const SHOP_BUILDING_ANCHOR_OFFSET_Y = 18;
 const FLOWER_SHOP_BUILDING_SCALE_MULTIPLIER = 1.1;
 /** 蝴蝶小屋房壳含前院地块，通用缩放会显小；单独放大到参考图的贴边比例。 */
 const BUTTERFLY_HOUSE_BUILDING_SCALE_MULTIPLIER = 1.3;
-/** 茶香小院双层壳：与入库前一致，先用默认填充满度 + 小幅倍率（视角 OK 后勿过度放大）。 */
-const TEA_HOUSE_BUILDING_SCALE_MULTIPLIER = 1.12;
+/** 茶香小院房壳：默认填充满度 + 1.4× 显示倍率。 */
+const TEA_HOUSE_BUILDING_SCALE_MULTIPLIER = 1.4;
 
 /** 试调：房间可摆空间显大一些，店主显示缩到 90%。 */
 const SHOP_OWNER_DISPLAY_SCALE_MULTIPLIER = 0.9;

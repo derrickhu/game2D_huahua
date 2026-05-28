@@ -245,7 +245,7 @@ export class WorldMapPanel extends PIXI.Container {
         keys.push('icon_build');
         break;
       case 'tea_house':
-        keys.push('bg_room_tea_house_xianqi_compact_vertical_two_story_nb2', 'icon_build');
+        keys.push('bg_room_tea_house_xianqi_two_story_nb2', 'icon_build');
         break;
       case 'timed_event':
         keys.push('icon_worldmap');

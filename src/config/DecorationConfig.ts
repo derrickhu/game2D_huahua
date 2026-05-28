@@ -150,7 +150,7 @@ export const ROOM_STYLES: RoomStyleDef[] = [
   { id: 'style_butterfly_house_xianqi_nb2', name: '云檐蝶舍', cost: 5400, starValue: 9, rarity: DecoRarity.FINE, bgTexture: 'bg_room_butterfly_house_xianqi_nb2', desc: '仙气 pastel 茶寮风替换壳：浅木竹柱、青瓷挑檐与竹席云纹地坪', unlockRequirement: { level: 12 }, allowedSceneIds: ['butterfly_house'] },
   { id: 'style_cake_shop_modern_nb2', name: '奶油甜品屋', cost: 0, starValue: 0, rarity: DecoRarity.COMMON, bgTexture: 'bg_room_cake_shop_modern_nb2', desc: '蛋糕房默认壳：现代 pastel 甜品店，奶油白墙、草莓粉圆角边与玻璃天窗', allowedSceneIds: ['cake_shop'] },
   { id: 'style_cake_shop_blueberry_mint_nb2', name: '蓝莓薄荷屋', cost: 5200, starValue: 10, rarity: DecoRarity.FINE, bgTexture: 'bg_room_cake_shop_blueberry_mint_nb2', desc: '蛋糕房换色壳：蓝莓薰衣草边框、薄荷玻璃天窗与奶油马卡龙地砖', unlockRequirement: { level: 18 }, allowedSceneIds: ['cake_shop'] },
-  { id: 'style_tea_house_two_story_nb2', name: '仙茶小楼', cost: 0, starValue: 0, rarity: DecoRarity.COMMON, bgTexture: 'bg_room_tea_house_xianqi_compact_vertical_two_story_nb2', desc: '茶香小院默认壳：轻盈 pastel 双层茶寮，视角与家具等距一致，青玉屋瓦、二层回廊与明亮茶院空间', allowedSceneIds: ['tea_house'] },
+  { id: 'style_tea_house_two_story_nb2', name: '仙茶小楼', cost: 0, starValue: 0, rarity: DecoRarity.COMMON, bgTexture: 'bg_room_tea_house_xianqi_two_story_nb2', desc: '茶香小院默认壳：轻盈 pastel 仙气双层茶寮，青玉屋瓦、回廊与明亮茶院空间', allowedSceneIds: ['tea_house'] },
 ];
 
 export const ROOM_STYLE_MAP = new Map<string, RoomStyleDef>(

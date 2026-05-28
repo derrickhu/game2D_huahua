@@ -668,10 +668,8 @@ const DECO_IMAGE_MAP: Record<string, string> = {
   bg_room_butterfly_house_bamboo_nb2: 'subpkg_deco/images/house/preview/bg_room_butterfly_house_bamboo_v4_1k_nb2.png',
   /** 蝴蝶小屋 — 仙气 pastel 茶寮风替换房壳（布局同默认壳） */
   bg_room_butterfly_house_xianqi_nb2: 'subpkg_deco/images/house/preview/bg_room_butterfly_house_xianqi_nb2.png',
-  /** 茶香小院默认壳 — 双层 cutaway，视角锁蝴蝶 v11 等距网格，轻盈 pastel 茶寮风 */
-  bg_room_tea_house_xianqi_compact_vertical_two_story_nb2: 'subpkg_deco/images/house/preview/bg_room_tea_house_xianqi_compact_vertical_two_story_nb2.png',
-  /** 单层 L 壳试做（非茶香默认） */
-  bg_room_tea_house_nb2: 'subpkg_deco/images/house/preview/bg_room_tea_house_nb2.png',
+  /** 茶香小院默认房壳 — 仙气 pastel 双层茶寮 */
+  bg_room_tea_house_xianqi_two_story_nb2: 'subpkg_deco/images/house/bg_room_tea_house_xianqi_two_story_nb2.png',
   /** 蛋糕房 — 现代 pastel 甜品店 cutaway 空壳 */
   bg_room_cake_shop_modern_nb2: 'subpkg_deco/images/house/preview/bg_room_cake_shop_modern_nb2.png',
   /** 蛋糕房 — 蓝莓薄荷 pastel 甜品店 cutaway 空壳 */
