@@ -1,0 +1,29 @@
+Square 1:1 game asset. Single centered room shell, generous margin.
+
+ATTACHED IMAGE 1 = PROPORTION LOCK (copy almost pixel-for-pixel):
+Copy EXACTLY from image 1 — do NOT redesign layout:
+- Same overall building silhouette, canvas occupancy, width-to-height ratio
+- Same two-story cutaway mass: ground floor footprint, upper loft footprint and position (loft covers back-left over ground floor)
+- Same compact wooden staircase on the RIGHT wall, same stair width and height
+- Same window count, size, and positions (ground circular moon window left, upper circular windows, upper quatrefoil window)
+- Same roof shape and eave outline, same grass island size and shape, same stone steps and entry paving position
+- Same spacious floor areas on BOTH levels — do NOT shrink, widen, or rearrange rooms
+- EMPTY shell only: remove all furniture, characters, counters from image 1 — architecture and empty floors only
+
+ATTACHED IMAGE 2 = PERSPECTIVE LOCK (ONLY change wall/floor angles to match this):
+Re-draw image 1's exact layout but rotate wall planes and floor grid to the SAME isometric camera as image 2 (merge-game upper-left ~45° L-family).
+Back wall plane and right-side wall plane must be parallel to the isometric floor grid so rectangular furniture sits flush against walls without looking crooked.
+Floor tile edges must follow the same isometric vanishing as image 2.
+Do NOT change building proportions while fixing perspective. Do NOT use dollhouse front-facing elevation walls.
+
+ATTACHED IMAGE 3 = STYLE LOCK (replace materials/colors only):
+Apply image 3's lighter airy xianqi pastel art direction onto the proportion-locked structure:
+Pale sandalwood bamboo posts, cream plaster walls, celadon-mint roof tiles, soft gold eave accents only
+Light mint stone ground floor, warm pale wood upper floor, faint cloud motifs
+Soft wisteria and cherry blossom on eave corners only, small pale green round lanterns under eaves only
+NOT heavy teal panels, NOT dark gold trim bands, NOT thick decorative wall divisions, NOT muddy or saturated colors
+Soft brown outlines, pastel high-key, crisp 2D hand-painted merge-game art
+
+EMPTY shell: NO furniture, NO tables, NO sofas, NO characters, NO text, NO readable signs, NO interior clutter.
+
+Background pure solid white #FFFFFF outside grass island for cutout.

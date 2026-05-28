@@ -61,7 +61,7 @@ const TOOL_CD_CHARGES_PER_CYCLE = 20;
 
 /**
  * 线内 CD 档位（从 0 起）：最低 3 分钟，每升一档 +1 分钟。
- * 园艺 L5/L6/L7 → 0,1,2；包装 L3/L5（有 CD 的两档）→ 0,1；饮品三线 L5 → 仅 0。
+ * 园艺 L5/L6/L7 → 0,1,2；包装 L3 → cdTier 0；L5 → 6 分钟 / 10 次；饮品三线 L5 → 仅 0。
  */
 function cdTierSeconds(tierIndex: number): number {
   return 3 * 60 + tierIndex * 60;
@@ -101,13 +101,16 @@ const BUTTERFLY_NET_PRODUCE_TABLE_L5: [number, number][] = [
 const ARRANGE_WRAP_OUTCOME_T3: ToolProduceOutcome[] = [
   { category: Category.FLOWER, line: FlowerLine.WRAP, level: 1, weight: 100 },
 ];
-/** 包装台 */
+/** 包装台：不产出花束材料包，初级丝带卷承接原 Lv4 权重 */
 const ARRANGE_WRAP_OUTCOME_T4: ToolProduceOutcome[] = [
-  { category: Category.FLOWER, line: FlowerLine.WRAP, level: 1, weight: 18 },
+  { category: Category.FLOWER, line: FlowerLine.WRAP, level: 1, weight: 33 },
   { category: Category.FLOWER, line: FlowerLine.WRAP, level: 2, weight: 32 },
   { category: Category.FLOWER, line: FlowerLine.WRAP, level: 3, weight: 35 },
-  { category: Category.FLOWER, line: FlowerLine.WRAP, level: 4, weight: 15 },
 ];
+/** 高级包装台：6 分钟 CD，每周期 10 次产出 */
+const ARRANGE_T5_COOLDOWN_SEC = 6 * 60;
+const ARRANGE_T5_CHARGES_PER_CYCLE = 10;
+
 /** 高级包装台 */
 const ARRANGE_WRAP_OUTCOME_T5: ToolProduceOutcome[] = [
   { category: Category.FLOWER, line: FlowerLine.WRAP, level: 1, weight: 5 },
@@ -166,8 +169,8 @@ const arrangeToolTemplate = (): Omit<ToolDef, 'itemId' | 'level'>[] => [
     canProduce: true,
     produceTable: [],
     produceOutcomes: ARRANGE_WRAP_OUTCOME_T5,
-    cooldown: cdTierSeconds(1),
-    producesBeforeCooldown: TOOL_CD_CHARGES_PER_CYCLE,
+    cooldown: ARRANGE_T5_COOLDOWN_SEC,
+    producesBeforeCooldown: ARRANGE_T5_CHARGES_PER_CYCLE,
     staminaCost: 1,
   },
 ];

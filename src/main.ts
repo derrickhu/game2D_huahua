@@ -22,6 +22,9 @@ import { IdleManager } from '@/managers/IdleManager';
 import { RoomLayoutManager } from '@/managers/RoomLayoutManager';
 import { LevelManager } from '@/managers/LevelManager';
 import { CloudSyncManager } from '@/managers/CloudSyncManager';
+import { TutorialManager } from '@/managers/TutorialManager';
+import { DecorationManager } from '@/managers/DecorationManager';
+import { RoomLayoutManager } from '@/managers/RoomLayoutManager';
 import { UserIdentityManager } from '@/managers/UserIdentityManager';
 import { PersistService, type CloudImportInfo } from '@/core/PersistService';
 import { Platform } from '@/core/PlatformService';
@@ -149,6 +152,20 @@ async function main(): Promise<void> {
       }
     };
     PersistService.subscribeCloudImport((info) => {
+      if (info.changedKeys.includes('huahua_tutorial')) {
+        TutorialManager.reloadFromStorage();
+      }
+      if (info.changedKeys.includes('huahua_decoration')) {
+        DecorationManager.reloadFromStorage();
+      }
+      if (info.changedKeys.includes('huahua_room_layout')) {
+        RoomLayoutManager.reloadFromStorage();
+      }
+      if (info.changedKeys.includes('huahua_save')) {
+        if (initialSaveLoaded) {
+          TutorialManager.ensureCompletedIfVeteranSave(true);
+        }
+      }
       if (!info.changedKeys.includes('huahua_save')) return;
       if (!initialSaveLoaded) {
         // 启动读档前发生的云端导入会被 SaveManager.load() 直接读到，不需要重启。
@@ -230,6 +247,7 @@ async function main(): Promise<void> {
     // 尝试加载存档（开发阶段已在启动时清除，此处应返回 false）
     const loaded = SaveManager.load();
     initialSaveLoaded = true;
+    TutorialManager.ensureCompletedIfVeteranSave(loaded);
     if (!loaded) {
       BuildingManager.reset();
       MerchShopManager.init();

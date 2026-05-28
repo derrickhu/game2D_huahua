@@ -1,0 +1,16 @@
+Square game asset 1:1. Single empty room shell centered with generous margin.
+
+CRITICAL perspective lock — must match merge-game furniture icons exactly:
+Classic isometric from upper-left about 45 degrees, identical camera to the attached LAYOUT reference (butterfly house open shell). Copy the layout reference spatial layout almost exactly: grass island footprint, room proportion, L-shaped open notch, TWO-WALL shell only (back wall + right wall), open front-left, partial roof eave strips along back and right top edges only, wide flat interior floor fully visible.
+Do NOT use dollhouse cutaway, do NOT use front-facing trimetric walls, do NOT use a different wall angle than the layout reference. Wall planes must be parallel to the isometric floor grid so placed furniture aligns flush with walls.
+
+Style reference — match the attached STYLE reference (light airy tea pavilion):
+Ethereal fairy-like Chinese tea house, NOT heavy dark wood inn. Palette: pale sandalwood and honey bamboo posts, cream and soft sage plaster walls, celadon-mint curved roof tiles with soft gold eave accents, subtle wisteria and cherry blossom clusters on eave corners only, pale green round lanterns tucked under eaves (NOT hanging into room), light mint stone floor tiles with faint cloud motifs, soft moss-green grass island, pale pebble entry strip.
+Optional small circular moon-gate window cutout on back wall as empty architecture only. Optional narrow second-floor balcony railing segment along back wall top ONLY if it follows the same isometric angle as the layout reference — keep main floor very spacious.
+
+EMPTY shell rules:
+NO furniture, NO tables, NO sofas, NO cushions, NO vases, NO scrolls, NO characters, NO text, NO readable signs, NO interior clutter, NO room shell floor rug that blocks placement.
+
+Hand-painted mobile merge-game art, soft brown outlines, pastel high-key colors, crisp edges.
+
+Background pure solid white #FFFFFF only outside the grass island for cutout.

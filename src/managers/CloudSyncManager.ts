@@ -272,6 +272,9 @@ class CloudSyncManagerClass {
       this._confirmRemoteBaseline(remoteUpdatedAt, 'startup-remote-imported');
       this._lastStartupRemoteApplied = true;
       console.log(`[CloudSync] 启动期已从云端恢复 ${remotePayloadKeys.length} 个 key`);
+      if (PersistService.isCloudDirty()) {
+        this.scheduleSync('startup-preserved-local-assets');
+      }
       return;
     }
 

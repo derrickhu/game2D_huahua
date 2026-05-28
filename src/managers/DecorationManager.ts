@@ -68,6 +68,16 @@ class DecorationManagerClass {
     console.log(`[Decoration] 初始化: ${this._unlocked.size} 个装饰已解锁, 房间风格: ${this._roomStyleId}`);
   }
 
+  /** 云同步写入 huahua_decoration 后重载（勿调用 _initRoomStyleDefaults，避免清空已解锁房壳） */
+  reloadFromStorage(): void {
+    this._unlocked.clear();
+    this._adUnlockedDecos.clear();
+    this._equipped.clear();
+    this._load();
+    console.log(`[Decoration] 已从存储重载: ${this._unlocked.size} 个装饰已解锁`);
+    EventBus.emit('decoration:reloaded');
+  }
+
   /** 当前装修场景下已装备的房间风格 id */
   private _effectiveRoomStyleId(): string {
     const sid = CurrencyManager.state.sceneId;

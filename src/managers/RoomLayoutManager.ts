@@ -154,6 +154,25 @@ class RoomLayoutManagerClass {
     );
   }
 
+  /** 云同步写入 huahua_room_layout 后重载 */
+  reloadFromStorage(): void {
+    if (!this._initialized) {
+      this.init();
+      return;
+    }
+    const loaded = this._load();
+    this._syncActiveSceneWithCurrency();
+    if (!loaded && Object.keys(this._scenes).length === 0) {
+      this._scenes = { [DEFAULT_SCENE_ID]: { placements: [] } };
+    }
+    this._ensureSceneBucket(this._layoutActiveSceneId);
+    this._hydrateFromScenes(this._layoutActiveSceneId);
+    EventBus.emit('roomlayout:changed');
+    console.log(
+      `[RoomLayout] 已从存储重载 scene=${this._layoutActiveSceneId}, ${this._placements.length} 件`,
+    );
+  }
+
   private readonly _onRenovationSceneChanged = (newSceneId: string): void => {
     if (newSceneId === this._layoutActiveSceneId) return;
     this._flushActiveSceneToMap();
@@ -444,31 +463,116 @@ class RoomLayoutManagerClass {
 
   /** 导出布局数据（v3 多房） */
   exportState(): RoomLayoutSaveV3 {
+    this._syncActiveSceneWithCurrency();
     this._flushActiveSceneToMap();
-    const scenes: Record<string, SceneLayoutData> = {};
+    const memoryScenes: Record<string, SceneLayoutData> = {};
     for (const [k, v] of Object.entries(this._scenes)) {
-      scenes[k] = {
+      memoryScenes[k] = {
         placements: this._clonePlacements(v.placements),
         ownerPos: v.ownerPos ? { ...v.ownerPos } : undefined,
       };
     }
+    const scenes = this._mergeScenesForSave(memoryScenes);
     return { version: 3, scenes };
   }
 
-  /** 重置布局（GM 调试用）：清空当前装修场景房间内已摆放家具 */
-  reset(): void {
+  /**
+   * 一键清空：仅清除**当前房屋**（CurrencyManager.state.sceneId）的摆放，其它屋子不动。
+   */
+  clearCurrentScenePlacements(): void {
+    this._syncActiveSceneWithCurrency();
+    const sceneId = CurrencyManager.state.sceneId;
+    const prevOwner = this._scenes[sceneId]?.ownerPos;
+
     this._placements = [];
-    this._scenes[this._layoutActiveSceneId] = { placements: [] };
-    this._save();
+    this._scenes[sceneId] = {
+      placements: [],
+      ...(prevOwner ? { ownerPos: { ...prevOwner } } : {}),
+    };
+
+    this.saveNow();
     EventBus.emit('roomlayout:changed');
-    console.log(`[RoomLayout] 已清空场景 ${this._layoutActiveSceneId} 的房间布局`);
+    console.log(`[RoomLayout] 已清空当前房屋 scene=${sceneId}，其它场景未改动`);
+  }
+
+  /** 清空当前装修场景（GM 填充前 / 兼容旧调用） */
+  reset(): void {
+    this.clearCurrentScenePlacements();
+  }
+
+  /** 清空全部房屋的家具摆放（DecorationManager 全量重置时） */
+  resetAllScenes(): void {
+    this._syncActiveSceneWithCurrency();
+    this._placements = [];
+    for (const sceneId of Object.keys(this._scenes)) {
+      const prevOwner = this._scenes[sceneId]?.ownerPos;
+      this._scenes[sceneId] = {
+        placements: [],
+        ...(prevOwner ? { ownerPos: { ...prevOwner } } : {}),
+      };
+    }
+    this.saveNow();
+    EventBus.emit('roomlayout:changed');
+    console.log('[RoomLayout] 已清空全部装修场景的家具摆放');
   }
 
   // ---- 私有方法 ----
 
+  /**
+   * 与 CurrencyManager 当前装修场景对齐，避免清错房或把摆放写到别的 scene 桶里。
+   */
+  private _syncActiveSceneWithCurrency(): void {
+    const sceneId = CurrencyManager.state.sceneId;
+    if (sceneId === this._layoutActiveSceneId) return;
+    const prevSceneId = this._layoutActiveSceneId;
+    this._flushActiveSceneToMap();
+    this._layoutActiveSceneId = sceneId;
+    this._ensureSceneBucket(sceneId);
+    this._hydrateFromScenes(sceneId);
+    console.warn(
+      `[RoomLayout] 布局活跃场景已同步: ${prevSceneId} → ${sceneId}`,
+    );
+  }
+
+  /** 从磁盘合并 v3 多房数据，避免内存中缺 key 时保存覆盖掉其它房屋 */
+  private _mergeScenesForSave(memoryScenes: Record<string, SceneLayoutData>): Record<string, SceneLayoutData> {
+    const merged: Record<string, SceneLayoutData> = {};
+    try {
+      const raw = PersistService.readRaw(SAVE_KEY);
+      if (raw) {
+        const data = JSON.parse(raw) as {
+          version?: number;
+          scenes?: Record<string, { placements?: FurniturePlacement[]; ownerPos?: { x: number; y: number } }>;
+        };
+        if (data.version === 3 && data.scenes && typeof data.scenes === 'object') {
+          for (const [sceneId, bucket] of Object.entries(data.scenes)) {
+            if (!bucket || !Array.isArray(bucket.placements)) continue;
+            const rows = bucket.placements
+              .filter(p => DECO_MAP.has(p.decoId))
+              .map(p => this._normalizePlacementRow(p));
+            let ownerPos: { x: number; y: number } | undefined;
+            if (bucket.ownerPos && typeof bucket.ownerPos.x === 'number') {
+              ownerPos = { x: bucket.ownerPos.x, y: bucket.ownerPos.y };
+            }
+            merged[sceneId] = { placements: rows, ownerPos };
+          }
+        }
+      }
+    } catch (e) {
+      console.warn('[RoomLayout] 合并磁盘多房布局失败，仅写内存:', e);
+    }
+    for (const [sceneId, bucket] of Object.entries(memoryScenes)) {
+      merged[sceneId] = {
+        placements: this._clonePlacements(bucket.placements),
+        ownerPos: bucket.ownerPos ? { ...bucket.ownerPos } : undefined,
+      };
+    }
+    return merged;
+  }
+
   /** 装饰数据重置时重建布局 */
   private _onDecoReset(): void {
-    this.reset();
+    this.resetAllScenes();
   }
 
   /** 防抖保存（500ms） */
@@ -482,20 +586,23 @@ class RoomLayoutManagerClass {
 
   private _save(): void {
     try {
+      this._syncActiveSceneWithCurrency();
       this._flushActiveSceneToMap();
-      const scenes: Record<string, SceneLayoutData> = {};
+      const memoryScenes: Record<string, SceneLayoutData> = {};
       for (const [k, v] of Object.entries(this._scenes)) {
-        scenes[k] = {
+        memoryScenes[k] = {
           placements: this._clonePlacements(v.placements),
           ownerPos: v.ownerPos ? { ...v.ownerPos } : undefined,
         };
       }
+      const scenes = this._mergeScenesForSave(memoryScenes);
       const data: RoomLayoutSaveV3 = {
         version: 3,
         scenes,
       };
       const json = JSON.stringify(data);
       PersistService.writeRaw(SAVE_KEY, json);
+      this._scenes = scenes;
     } catch (e) {
       console.warn('[RoomLayout] 保存失败:', e);
     }

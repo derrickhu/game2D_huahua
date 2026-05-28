@@ -1,0 +1,27 @@
+Square 1:1 game asset. Upgrade the attached current tea house shell — keep its L-shell isometric camera EXACTLY.
+
+PERSPECTIVE LOCK (do NOT change):
+- Same L-shell: back wall oblique plane + right wall oblique plane only, open front-left
+- Same floor grid angle, same grass island, same entry steps position
+- NOT interior corner camera, NOT front-facing walls
+
+SECOND FLOOR UPGRADE (main task):
+- Make upper floor MUCH LARGER — a full spacious L-shaped second-story room, NOT a thin balcony strip
+- Upper floor must have real WALLS: back wall and right wall continue upward as full plaster/bamboo wall planes on the same oblique angles as ground floor walls
+- Second-floor wall height clearly readable (similar wall height to ground floor walls)
+- Add empty window cutouts on second-floor walls (circular moon window on back wall, small lattice window on right wall) — architectural only, no scenery inside
+- Upper floor has visible wooden plank floor surface with large open placement area
+- Low wooden railing ONLY on the open front edge of the loft overlooking ground floor — walls remain on back and right
+
+ROOF:
+- Raise roof significantly higher above second-floor walls
+- Celadon-mint curved tile roof with upturned eaves sits ON TOP of second-floor walls, not low above a thin railing
+
+GROUND FLOOR:
+- Keep spacious ground floor unchanged in footprint
+- Compact wooden staircase on RIGHT connecting both levels
+
+STYLE: Light airy xianqi pastel tea pavilion — cream walls, pale bamboo posts, wisteria on eave corners, light mint stone ground floor, faint cloud motifs.
+
+EMPTY shell: NO furniture, NO characters, NO text.
+Background pure white #FFFFFF outside grass.

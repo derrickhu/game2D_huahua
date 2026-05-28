@@ -10,9 +10,16 @@ alwaysApply: true
 
 ## 强制流程
 
-1. 生图 → **rembg**（`birefnet-general`）→ **`crop_trim.py --padding 4`**（见 `remove-background-game-art.mdc`、工具线见 `tool-icon-art-style.mdc`）。
-2. 拷贝到 `minigame/subpkg_items/images/` 下对应子目录，`TextureCache` 的 `ITEMS_IMAGE_MAP` 已注册 key。
-3. **整目录跑压缩脚本**（仓库根）：
+1. **白底合图切格**（5×2、4×2 等 progression 表）：**禁止**仅用 `宽÷列数` 等分（易切掉左右）。用仓库脚本按行内白缝定位，再对内容 bbox **左右多留边**（默认 `--hpad 32 --vpad 16`）：
+   ```bash
+   python3 scripts/split_sheet_row_by_gutter.py \
+     ../game_assets/huahua/assets/raw/{sheet}.png \
+     --row 0 --index 4 \
+     -o ../game_assets/huahua/assets/split/{name}.png
+   ```
+2. **抠图**：**rembg `isnet-anime`**（棋盘物品线默认；2D 插画 / 白底合图图标；见 `remove-background-game-art.mdc` 分工）→ **`crop_trim.py --padding 8`**（棋盘花束类建议 8，其它小图标可用 4）。
+3. 拷贝到 `minigame/subpkg_items/images/` 下对应子目录，`TextureCache` 的 `ITEMS_IMAGE_MAP` 已注册 key。
+4. **整目录跑压缩脚本**（仓库根）：
 
 ```bash
 python3 scripts/compress_subpkg_items_pngs.py
@@ -38,5 +45,8 @@ python3 scripts/compress_subpkg_items_pngs.py
 
 ## 相关文件
 
-- 脚本：`scripts/compress_subpkg_items_pngs.py`
+- 白底合图切格：`scripts/split_sheet_row_by_gutter.py`
+- 压缩：`scripts/compress_subpkg_items_pngs.py`
 - 纹理映射：`src/utils/TextureCache.ts` → `ITEMS_IMAGE_MAP`
+- 示例（3 级花束）：`bouquet_line_rework_highsat_nb2_v2.png` → row0 index2 → rembg **`isnet-anime`** → `flower_bouquet_3.png`
+- 示例（5 级花束）：同表 row0 index4 → rembg **`isnet-anime`**（若验收更优可保留；历史曾用 `birefnet-general` 可单张重抠对比）

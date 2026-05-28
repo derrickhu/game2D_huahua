@@ -206,6 +206,37 @@ class FurnitureDragSystemClass {
     }
   }
 
+  /** 编辑模式下一键清空：移除房间内全部家具 Sprite（布局数据由 RoomLayoutManager 另行清空） */
+  clearAllRoomFurnitureSprites(): void {
+    if (this._dragCtx) {
+      this._cancelDrag();
+    }
+    this.deselect();
+
+    const decoIds = [...this._spriteMap.keys()];
+    for (const decoId of decoIds) {
+      const sprite = this._spriteMap.get(decoId);
+      this.unregisterSprite(decoId);
+      if (sprite && !sprite.destroyed) {
+        if (sprite.parent) sprite.parent.removeChild(sprite);
+        sprite.destroy();
+      }
+    }
+
+    const room = this._roomContainer;
+    if (!room) return;
+    const orphans: PIXI.DisplayObject[] = [];
+    for (const child of room.children) {
+      if (child instanceof PIXI.Sprite && (child as any)._decoId) {
+        orphans.push(child);
+      }
+    }
+    for (const child of orphans) {
+      room.removeChild(child);
+      child.destroy();
+    }
+  }
+
   /**
    * 根据 decoId 获取对应的 Sprite 引用
    */

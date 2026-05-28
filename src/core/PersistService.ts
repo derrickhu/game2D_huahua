@@ -196,10 +196,19 @@ class PersistServiceClass {
     updatedAt?: number;
     payload?: Record<string, unknown>;
     reason?: CloudImportReason;
+    /**
+     * 为 true：payload 未出现的白名单 key 一律从本地删除（云端权威全量覆盖 / 空存档清空）。
+     * 为 false（默认，且 payload 非空时）：仅更新 payload 里出现的 key，**保留**本地其它 key
+     *（避免云端旧档缺少 huahua_decoration 时误删已购家具）。
+     */
+    replaceMissingKeys?: boolean;
   }): void {
     const payload = snapshot.payload || {};
+    const payloadKeyCount = Object.keys(payload).length;
+    const replaceMissingKeys = snapshot.replaceMissingKeys ?? (payloadKeyCount === 0);
     const updatedAt = typeof snapshot.updatedAt === 'number' ? snapshot.updatedAt : Date.now();
     const changedKeys: string[] = [];
+    const preservedLocalKeys: string[] = [];
 
     this.withSuppressedDirtyTracking(() => {
       for (const key of CLOUD_SYNC_ALLOWLIST) {
@@ -213,19 +222,27 @@ class PersistServiceClass {
             if (this.readRaw(key) !== raw) changedKeys.push(key);
             this._setLocalRaw(key, raw);
           }
-        } else {
+        } else if (replaceMissingKeys) {
           if (this.readRaw(key) !== null) changedKeys.push(key);
           this._removeLocalRaw(key);
+        } else if (this.readRaw(key) !== null) {
+          preservedLocalKeys.push(key);
         }
       }
 
       this._writeMeta({
         updatedAt,
-        dirty: false,
+        dirty: preservedLocalKeys.length > 0,
         lastSyncAt: Date.now(),
         remoteUpdatedAt: updatedAt,
       });
     });
+
+    if (preservedLocalKeys.length > 0) {
+      console.warn(
+        `[Persist] 云端档缺少本地资产 key，已保留并标记待上行: ${preservedLocalKeys.join(', ')}`,
+      );
+    }
 
     const payloadKeys = Object.keys(payload);
     for (const listener of this._importListeners) {

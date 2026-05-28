@@ -14,6 +14,8 @@
 
 import { EventBus } from '@/core/EventBus';
 import { PersistService } from '@/core/PersistService';
+import { BoardManager } from '@/managers/BoardManager';
+import { CloudSyncManager } from '@/managers/CloudSyncManager';
 import { CurrencyManager } from '@/managers/CurrencyManager';
 
 const TUTORIAL_STORAGE_KEY = 'huahua_tutorial';
@@ -195,6 +197,51 @@ class TutorialManagerClass {
     this._complete();
   }
 
+  /**
+   * 从本地/云端存储重新加载教程步骤（云同步导入 huahua_tutorial 后调用）。
+   * 若已变为完成态，会发出 tutorial:completed 以便 UI 收起。
+   */
+  reloadFromStorage(): void {
+    const wasActive = this._started && !this.isCompleted;
+    const saved = this._loadProgress();
+
+    if (saved >= TutorialStep.COMPLETED || saved === LEGACY_COMPLETED_THRESHOLD) {
+      const becameCompleted = !this.isCompleted;
+      this._step = TutorialStep.COMPLETED;
+      this._started = false;
+      if (becameCompleted || wasActive) {
+        EventBus.emit('tutorial:completed');
+      }
+      return;
+    }
+
+    this._step = saved || TutorialStep.NOT_STARTED;
+    this._started = false;
+  }
+
+  /**
+   * 主存档已从云端/本地恢复，但教程 key 缺失或未同步时的兜底：
+   * 根据实际游戏进度判定为老玩家并自动标记引导完成（不写新手礼包，避免重复发放）。
+   */
+  ensureCompletedIfVeteranSave(hasMainSave: boolean): void {
+    if (!hasMainSave || this.isCompleted) return;
+
+    const saved = this._loadProgress();
+    if (saved >= TutorialStep.COMPLETED || saved === LEGACY_COMPLETED_THRESHOLD) {
+      this._step = TutorialStep.COMPLETED;
+      this._started = false;
+      return;
+    }
+
+    if (!this._hasVeteranProgress()) return;
+
+    console.warn(
+      '[Tutorial] 主存档已恢复且进度超出新手期，自动标记引导完成（可能因清缓存后云端缺少 huahua_tutorial）',
+    );
+    this._complete();
+    CloudSyncManager.scheduleSync('tutorial-veteran-skip');
+  }
+
   /** 强制重置（GM 用） */
   forceReset(): void {
     this._step = TutorialStep.NOT_STARTED;
@@ -216,6 +263,16 @@ class TutorialManagerClass {
       if (raw) return Number(raw) as TutorialStep;
     } catch (_) { /* ignore */ }
     return TutorialStep.NOT_STARTED;
+  }
+
+  /** 是否已明显超出纯新号状态（与 SaveManager.load 成功配合使用） */
+  private _hasVeteranProgress(): boolean {
+    if (CurrencyManager.globalLevel >= 2) return true;
+    if (CurrencyManager.state.star > 0) return true;
+    const openWithItem = BoardManager.cells.filter(
+      c => c.state === 'open' && c.itemId !== null,
+    ).length;
+    return openWithItem >= 4;
   }
 }
 

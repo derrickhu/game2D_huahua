@@ -62,6 +62,8 @@ import { Platform } from '@/core/PlatformService';
 import { SocialManager } from '@/managers/SocialManager';
 import { SettingsPanel } from '@/gameobjects/ui/SettingsPanel';
 import { AdEntitlementManager, DailyAdEntitlement } from '@/managers/AdEntitlementManager';
+import { AdManager, AdScene } from '@/managers/AdManager';
+import { ConfirmDialog } from '@/gameobjects/ui/ConfirmDialog';
 
 // ── 布局常量 ──
 const PROGRESS_BAR_W = 400;
@@ -108,6 +110,12 @@ const trayOpenTopY = (logicH: number) =>
 const TRAY_EDIT_COMPLETE_TOP_Y = 36;
 const TRAY_EDIT_COMPLETE_MAX_W = 268;
 const TRAY_EDIT_COMPLETE_MAX_H = 72;
+/** 「一键清空」：贴在「完成装修」右侧 */
+const TRAY_EDIT_CLEAR_BTN_W = 116;
+const TRAY_EDIT_CLEAR_BTN_H = 48;
+const TRAY_EDIT_CLEAR_GAP = 12;
+const TRAY_EDIT_CLEAR_CENTER_X =
+  DESIGN_WIDTH / 2 + TRAY_EDIT_COMPLETE_MAX_W / 2 + TRAY_EDIT_CLEAR_GAP + TRAY_EDIT_CLEAR_BTN_W / 2;
 
 /** 「装修花店」主按钮宽度（与 _buildEditButton 一致） */
 const EDIT_MAIN_BTN_W = (): number => Math.round(DESIGN_WIDTH * 0.58);
@@ -140,8 +148,8 @@ const SHOP_BUILDING_ANCHOR_OFFSET_Y = 18;
 const FLOWER_SHOP_BUILDING_SCALE_MULTIPLIER = 1.1;
 /** 蝴蝶小屋房壳含前院地块，通用缩放会显小；单独放大到参考图的贴边比例。 */
 const BUTTERFLY_HOUSE_BUILDING_SCALE_MULTIPLIER = 1.3;
-/** 茶楼新壳前景偏窄，单独放大到横向撑满（1.5×）。 */
-const TEA_HOUSE_BUILDING_SCALE_MULTIPLIER = 1.5;
+/** 茶香小院双层壳：与入库前一致，先用默认填充满度 + 小幅倍率（视角 OK 后勿过度放大）。 */
+const TEA_HOUSE_BUILDING_SCALE_MULTIPLIER = 1.12;
 
 /** 试调：房间可摆空间显大一些，店主显示缩到 90%。 */
 const SHOP_OWNER_DISPLAY_SCALE_MULTIPLIER = 0.9;
@@ -249,6 +257,8 @@ export class ShopScene implements Scene {
   private _furnitureTray!: FurnitureTray;
   /** 编辑态托盘右下角「完成编辑」贴图（与 _editBtn 互斥显示） */
   private _editCompletePill: PIXI.Container | null = null;
+  /** 编辑态「一键清空」按钮（完成装修右侧） */
+  private _editClearAllPill: PIXI.Container | null = null;
   private _editToolbar!: RoomEditToolbar;
   private _shopBuildingSprite: PIXI.Sprite | null = null;
   private _textureRefreshUnsub: (() => void) | null = null;
@@ -2709,6 +2719,7 @@ export class ShopScene implements Scene {
       this._furnitureTray.addChild(p);
       this._refreshEditCompletePillTexture();
       this._pulseEditCompletePill();
+      this._ensureEditClearAllPill();
       return;
     }
     const tex = TextureCache.get('edit_complete_pill_4x2_nb2');
@@ -2724,6 +2735,96 @@ export class ShopScene implements Scene {
     this._editCompletePill = wrap;
     this._furnitureTray.addChild(wrap);
     this._pulseEditCompletePill();
+    this._ensureEditClearAllPill();
+  }
+
+  private _makeEditClearAllPill(): PIXI.Container {
+    const wrap = new PIXI.Container();
+    const w = TRAY_EDIT_CLEAR_BTN_W;
+    const h = TRAY_EDIT_CLEAR_BTN_H;
+    const bg = new PIXI.Graphics();
+    bg.beginFill(0xff8c5a, 1);
+    bg.lineStyle(3, 0xd84315, 0.95);
+    bg.drawRoundedRect(-w / 2, -h / 2, w, h, h / 2);
+    bg.endFill();
+    wrap.addChild(bg);
+    const label = new PIXI.Text('一键清空', {
+      fontFamily: FONT_FAMILY,
+      fontWeight: '900',
+      fontSize: 18,
+      fill: 0xffffff,
+      stroke: 0xb8320a,
+      strokeThickness: 3,
+    } as PIXI.ITextStyle);
+    label.anchor.set(0.5);
+    wrap.addChild(label);
+    wrap.position.set(TRAY_EDIT_CLEAR_CENTER_X, TRAY_EDIT_COMPLETE_TOP_Y);
+    wrap.hitArea = new PIXI.Rectangle(-w / 2 - 4, -h / 2 - 4, w + 8, h + 8);
+    wrap.eventMode = 'static';
+    wrap.cursor = 'pointer';
+    wrap.on('pointertap', (e: PIXI.FederatedPointerEvent) => {
+      e.stopPropagation();
+      void this._onEditClearAllTap();
+    });
+    return wrap;
+  }
+
+  private _ensureEditClearAllPill(): void {
+    if (!this._editClearAllPill) {
+      this._editClearAllPill = this._makeEditClearAllPill();
+    }
+    const btn = this._editClearAllPill;
+    btn.visible = true;
+    btn.eventMode = 'static';
+    if (btn.parent !== this._furnitureTray) {
+      this._furnitureTray.addChild(btn);
+    }
+  }
+
+  private _hideEditClearAllPill(): void {
+    if (!this._editClearAllPill) return;
+    this._editClearAllPill.visible = false;
+    this._editClearAllPill.eventMode = 'none';
+    if (this._editClearAllPill.parent === this._furnitureTray) {
+      this._furnitureTray.removeChild(this._editClearAllPill);
+    }
+  }
+
+  private async _onEditClearAllTap(): Promise<void> {
+    if (RoomLayoutManager.count <= 0) {
+      ToastMessage.show('房间内没有家具');
+      return;
+    }
+    const confirmed = await ConfirmDialog.show(
+      '一键清空',
+      '看完广告，清空本房所有摆放。\n家具仍保留，可从托盘再拖入。',
+      '观看广告',
+      '取消',
+    );
+    if (!confirmed) return;
+
+    AdManager.showRewardedAd(AdScene.WAREHOUSE_ORGANIZE, (success) => {
+      if (!success) {
+        ToastMessage.show('广告未看完，未清空');
+        return;
+      }
+      this._applyClearAllFurnitureInRoom();
+      ToastMessage.show('已清空房间家具');
+    });
+  }
+
+  /** 清空当前房屋布局并刷新编辑态视图 */
+  private _applyClearAllFurnitureInRoom(): void {
+    RoomLayoutManager.clearCurrentScenePlacements();
+    if (this._isEditMode) {
+      FurnitureDragSystem.clearAllRoomFurnitureSprites();
+      this._editToolbar.hide();
+    } else {
+      this._renderFurnitureLayout();
+    }
+    if (this._furnitureTray.isOpen) {
+      this._furnitureTray.refresh();
+    }
   }
 
   private _refreshEditCompletePillTexture(): void {
@@ -2750,6 +2851,7 @@ export class ShopScene implements Scene {
     if (this._editCompletePill.parent === this._furnitureTray) {
       this._furnitureTray.removeChild(this._editCompletePill);
     }
+    this._hideEditClearAllPill();
   }
 
   /** 退出编辑模式 */

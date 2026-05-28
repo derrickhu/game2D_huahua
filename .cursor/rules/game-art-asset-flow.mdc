@@ -55,9 +55,23 @@ python3 ~/.cursor/skills/gemini-image-gen/scripts/generate_images.py \
   --aspect-ratio 9:16
 ```
 
+## 白底 progression 合图切格（棋盘物品线）
+
+NB2 输出的 **5×2 / 4×2 白底图标表**（花束、鲜花、饮品等）**不要**用 `split_grid.py` 等分切格（列宽不均时会裁掉左右）。在仓库根：
+
+```bash
+python3 scripts/split_sheet_row_by_gutter.py \
+  "../game_assets/huahua/assets/raw/{sheet}.png" \
+  --row 0 --index {N} \
+  -o "../game_assets/huahua/assets/split/{item}.png" \
+  --hpad 32 --vpad 16
+```
+
+`--index` 为该行从左到右 0 起。切好后走 **`board-item-png-spec.mdc`**：`rembg -m isnet-anime` → `crop_trim --padding 8` → `compress_subpkg_items_pngs.py`。
+
 ## 抠图（透明底）
 
-若资源需去底 PNG：**强制**遵循 **`remove-background-game-art.mdc`**：**默认 BiRefNet**（`rembg` **`-m birefnet-general`**，脚本在 **`~/.cursor/skills/remove-background/scripts/`**）。**禁止**以色键/魔棒/颜色阈值作为入库终稿；**除非特殊需要**且已在说明或 PR 中写明例外（规范全文见该规则）。
+若资源需去底 PNG：**强制**遵循 **`remove-background-game-art.mdc`**。**`subpkg_items` 棋盘物品**（鲜花、饮品、工具小图标等）默认 **`rembg -m isnet-anime`**；店主 / 客人 / 装修大图等仍用 **`birefnet-general`**（见该规则分工表）。**禁止**以色键/魔棒/颜色阈值作为入库终稿。
 
 ## 入库到游戏
 

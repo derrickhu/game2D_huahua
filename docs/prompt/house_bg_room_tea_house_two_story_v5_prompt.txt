@@ -1,0 +1,18 @@
+Square 1:1 game asset. Minimal edit of the attached butterfly xianqi L-shell reference.
+
+KEEP IDENTICAL (do not change):
+- L-shell isometric camera from upper-left ~45°
+- Back wall oblique plane + right wall oblique plane only
+- Open front-left corner, same floor parallelogram grid, same grass island and entry steps
+
+ONLY ADD (two-story, empty shell):
+- Wooden loft deck along inside top of back wall and right wall, same wall angles
+- Low wooden railing on loft edge
+- Compact wooden stairs on the right connecting ground to loft
+- Keep celadon roof eave / tea pavilion materials
+
+FORBIDDEN:
+- NO interior corner camera with both walls front-facing
+- NO furniture, NO characters, NO text
+
+Background pure white #FFFFFF outside grass.

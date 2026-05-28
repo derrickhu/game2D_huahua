@@ -1,0 +1,32 @@
+Square 1:1 game asset. Single centered room shell.
+
+IMAGE 1 = PERSPECTIVE LOCK — COPY THIS CAMERA EXACTLY (highest priority):
+This is the ONLY valid camera. Classic merge-game L-shell isometric from upper-left ~45°.
+Copy EXACTLY from image 1:
+- L-shaped open shell: ONLY two wall planes — BACK wall (left-back to right-back oblique parallelogram) + RIGHT wall (back-right to front-right oblique parallelogram)
+- Front-left and front-center completely OPEN — no third wall, no left wall, no front wall
+- Floor is the same oblique parallelogram grid as image 1 — floor tile diagonals MUST match image 1
+- Wall planes are shallow oblique planes like image 1 — NOT front-facing rectangles
+- Same grass island footprint, entry steps position, canvas coverage as image 1
+
+FORBIDDEN perspective (do NOT copy from image 2):
+- NO interior corner view with both walls facing the camera
+- NO dollhouse cutaway with front-facing wall faces
+- NO symmetric room corner with windows looking at viewer
+- NO different floor grid angle than image 1
+
+IMAGE 2 = PROPORTION LOCK ONLY (volumes, NOT camera):
+From image 2 copy ONLY these spatial volumes — ignore image 2's wall angles and camera completely:
+- TWO full stories: spacious ground floor + upper L-shaped loft deck along back and right walls
+- Compact wooden staircase on the RIGHT connecting both levels
+- Large usable floor on both levels, stair tucked in back-right corner
+- Similar overall building height and loft depth as image 2
+- EMPTY shell — no furniture, no characters
+
+Rebuild image 2's two-story volumes INSIDE image 1's L-shell camera. The loft must follow the same back/right wall planes as the ground floor walls — same oblique angle, not a new corner camera.
+
+IMAGE 3 = STYLE ONLY:
+Light airy xianqi pastel tea pavilion from image 3: celadon-mint roof tiles, cream walls, pale bamboo posts, soft wisteria and cherry blossom on eave corners, light mint stone ground floor, warm pale wood upper floor, faint cloud motifs. NOT heavy teal wall panels, NOT dark gold trim bands.
+
+EMPTY shell: NO furniture, NO text, NO characters, NO clutter.
+Background pure solid white #FFFFFF outside grass island.

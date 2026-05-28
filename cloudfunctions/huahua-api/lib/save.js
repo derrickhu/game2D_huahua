@@ -124,6 +124,22 @@ async function handlePush(req) {
     }
   }
 
+  // 与客户端「部分合并下行」一致：上行只覆盖本次出现的 key，勿因缺 key 抹掉云端已有资产（如 huahua_decoration）。
+  let mergedPayload = { ...(existing && existing.payload ? existing.payload : {}) };
+  for (const k of Object.keys(payload)) {
+    const v = payload[k];
+    if (v === undefined || v === null) {
+      delete mergedPayload[k];
+    } else {
+      mergedPayload[k] = v;
+    }
+  }
+  const mergedPayloadKeys = Object.keys(mergedPayload);
+  const mergedSize = Buffer.byteLength(JSON.stringify(mergedPayload), 'utf8');
+  if (mergedSize > maxBytes) {
+    throw httpError(413, 'PAYLOAD_TOO_LARGE', `payload 超限: ${mergedSize}B > ${maxBytes}B`);
+  }
+
   const now = Date.now();
   const docData = {
     userId,
@@ -132,14 +148,14 @@ async function handlePush(req) {
     updatedAt,
     baseRemoteUpdatedAt,
     clientFingerprint,
-    payload,
-    payloadKeys,
+    payload: mergedPayload,
+    payloadKeys: mergedPayloadKeys,
     lastWriteAt: now,
   };
 
   if (existing && existing._id) {
     await col.doc(existing._id).update(docData);
-    return { userId, updatedAt, savedAt: now, mode: 'update', sizeBytes: size };
+    return { userId, updatedAt, savedAt: now, mode: 'update', sizeBytes: mergedSize };
   }
 
   const addRes = await col.add(docData);

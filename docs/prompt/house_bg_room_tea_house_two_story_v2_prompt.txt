@@ -1,0 +1,26 @@
+Square 1:1 game asset. Single centered two-story room shell with generous margin.
+
+CRITICAL — TWO STORY layout (copy the attached LAYOUT reference almost exactly):
+Traditional Chinese tea pavilion with TWO full visible floors in cutaway view.
+Ground floor: large open pale stone tile floor, spacious, clear placement area.
+Second floor: L-shaped loft / balcony deck along back and right walls, with visible wooden plank floor surface for furniture placement — NOT a thin decorative strip only.
+Compact wooden staircase on the RIGHT side connecting both levels, tucked in back-right corner, does NOT split the main ground floor.
+Mint-jade curved roof with upturned eaves, pale bamboo posts, cream plaster walls, circular and quatrefoil lattice windows as empty cutouts.
+Soft wisteria and cherry blossom accents on eave corners only. Small pale green round lanterns under eaves only.
+Keep both floors spacious. Do NOT shrink to single-story L-shell. Do NOT remove the upper loft.
+
+CRITICAL — perspective lock (copy the attached PERSPECTIVE reference wall and floor angles exactly):
+Classic merge-game isometric from upper-left about 45 degrees — SAME camera family as the perspective reference (butterfly house open shell).
+Back wall plane and right wall plane must be parallel to the isometric floor grid so placed furniture aligns flush with walls.
+Floor tile edges and wall bases must share the same isometric vanishing as the perspective reference.
+Do NOT use dollhouse front-facing trimetric walls. Do NOT use a different wall angle than the perspective reference.
+Open front cutaway remains so both floors are visible, but wall planes follow merge-game isometric, not architectural elevation view.
+
+Style (match attached STYLE reference — light airy xianqi pastel, NOT heavy dark wood):
+Pale sandalwood and honey bamboo, cream and soft sage walls, celadon-mint roof tiles, soft gold eave accents, light mint stone ground floor, warm pale wood upper floor, faint cloud motifs on walls.
+Ethereal fairy-like Chinese tea courtyard mood. Pastel high-key, soft brown outlines, crisp 2D illustration.
+
+EMPTY shell rules:
+NO furniture, NO tables, NO sofas, NO cushions, NO vases, NO scrolls, NO characters, NO text, NO readable signs, NO interior clutter, NO hanging lanterns dropping into room center.
+
+Background pure solid white #FFFFFF outside the building for cutout.

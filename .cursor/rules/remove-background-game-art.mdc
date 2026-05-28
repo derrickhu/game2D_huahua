@@ -24,9 +24,14 @@ alwaysApply: true
 
 ## 模型选择（默认）
 
-- **默认且全项目抠图首选**：**`birefnet-general`**（**BiRefNet** 最高质量档；与店主 sprite、工具图标、`owner-sprite-art-spec.mdc` 一致）。
-- **`birefnet-general-lite`**：仅当批量极大、可接受略降质时再用。
-- **`isnet-anime`**：仅当 skill 表格中明确适用、且 `birefnet-general` 效果明显不佳时再用，**不得**作为绕过本规范的常规替代。
+| 资产类型 | 默认模型 | 说明 |
+|---|---|---|
+| **`minigame/subpkg_items/images/` 棋盘物品**（鲜花/饮品/工具/宝箱等） | **`isnet-anime`** | 2D 插画、白底 progression 合图；见 **`board-item-png-spec.mdc`** |
+| 店主 / 客人胸像 / 装修 UI 大图 / 工具线（`tool-icon-art-style.mdc`） | **`birefnet-general`** | BiRefNet 最高质量档 |
+
+- **`birefnet-general-lite`**：仅当批量极大、可接受略降质时再用（非棋盘物品线首选）。
+- **`u2net`**：非本仓库常规入库流程。
+- 棋盘物品线**勿**用 `birefnet-general` 替代 `isnet-anime`，除非单张验收书面说明例外。
 - **`u2net`**：非本仓库主流程，勿用于入库资源。
 
 ## 禁止与注意
