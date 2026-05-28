@@ -45,6 +45,7 @@ export enum AdScene {
   MERGE_BUBBLE_UNLOCK = 'merge_bubble_unlock',
   /** 每日签到完成后加餐（体力+钻石） */
   CHECKIN_AD_BONUS = 'checkin_ad_bonus',
+  NEWBIE_GIFT_PACK = 'newbie_gift_pack',
 }
 
 export type AdFailReason =

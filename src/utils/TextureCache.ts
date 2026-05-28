@@ -33,6 +33,7 @@ const MAIN_IMAGE_MAP: Record<string, string> = {
   icon_chart:  'images/ui/icon_chart.png',
   icon_level_badge: 'images/ui/icon_level_badge.png',
   icon_gift:   'images/ui/icon_gift.png',
+  icon_newbie_gift_qinglian: 'images/ui/icon_newbie_gift_qinglian.png',
   order_panel: 'images/ui/order_panel.png',
   reward_box_button_slot: 'images/ui/reward_box_button_slot.png',
   /** NB2+抠图：选中格四角、订单完成角标、无字完成按钮底图 */
@@ -197,6 +198,7 @@ const PANELS_IMAGE_MAP: Record<string, string> = {
   furniture_tray_tab_wallart_idle: 'subpkg_panels/images/ui/furniture_tray_tab_wallart_idle.png',
   furniture_tray_tab_garden_idle: 'subpkg_panels/images/ui/furniture_tray_tab_garden_idle.png',
   furniture_tray_tab_room_styles_idle: 'subpkg_panels/images/ui/furniture_tray_tab_room_styles_idle.png',
+  furniture_tray_tab_qinglian_idle: 'subpkg_panels/images/ui/furniture_tray_tab_qinglian_idle.png',
   /** 编辑工具栏「确认」：绿色胶囊对勾，rembg 透明底 */
   furniture_tray_confirm_btn: 'subpkg_panels/images/ui/furniture_tray_confirm_btn.png',
   /** 房间编辑条：6 枚独立图标（横排；由合图 split 脚本产出） */
@@ -659,6 +661,13 @@ const DECO_IMAGE_MAP: Record<string, string> = {
   affinity_celebrity_dressing_mirror: 'subpkg_deco/images/affinity/affinity_celebrity_dressing_mirror.png',
   // ---- 赛季限定大件家具（V2 全集大奖；S1：初春繁花季招牌灯箱）----
   affinity_season_s1_signlight: 'subpkg_deco/images/affinity/affinity_season_s1_signlight.png',
+  // ---- 清涟荷影主题家具 ----
+  qinglian_flower_cart: 'subpkg_deco/images/furniture/qinglian_flower_cart.png',
+  qinglian_cloud_rug: 'subpkg_deco/images/furniture/qinglian_cloud_rug.png',
+  qinglian_koi_bench: 'subpkg_deco/images/furniture/qinglian_koi_bench.png',
+  qinglian_lotus_screen: 'subpkg_deco/images/furniture/qinglian_lotus_screen.png',
+  qinglian_lotus_lamp: 'subpkg_deco/images/furniture/qinglian_lotus_lamp.png',
+  qinglian_lotus_pond_table: 'subpkg_deco/images/furniture/qinglian_lotus_pond_table.png',
 
   // ---- 房间背景 ----
   bg_room_default: 'subpkg_deco/images/house/bg_room_default_soft_nb2.png',
@@ -678,6 +687,7 @@ const DECO_IMAGE_MAP: Record<string, string> = {
   bg_room_bloom_nb2: 'subpkg_deco/images/house/bg_room_bloom_nb2.png',
   bg_room_lagoon_nb2: 'subpkg_deco/images/house/bg_room_lagoon_nb2.png',
   bg_room_confetti_nb2: 'subpkg_deco/images/house/bg_room_confetti_nb2.png',
+  bg_room_qinglian_lotus_shop_nb2: 'subpkg_deco/images/house/bg_room_qinglian_lotus_shop_nb2.png',
   bg_room_pinkblue_nb2: 'subpkg_deco/images/house/bg_room_pinkblue_nb2.png',
 };
 

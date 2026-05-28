@@ -70,8 +70,9 @@ export interface DecoDef {
    * - 'furniture' = 通用「家具」Tab（含通用 shelf/table 与指定放入家具大类的条目）
    * - 'flower_room' = 当前房屋专属 Tab（名称随 sceneId 变化；花店显示「花坊」，蝴蝶小屋显示「蝴蝶小屋」）
    * - 'garden' = 通用「庭院」Tab
+   * - 'qinglian' = 跨场景主题「清涟荷影」Tab
    */
-  decorationPanelTab?: 'furniture' | 'flower_room' | 'garden';
+  decorationPanelTab?: 'furniture' | 'flower_room' | 'garden' | 'qinglian';
   /**
    * 深度排序 Y 辅助（仅影响遮挡，不改坐标）：用于覆盖槽位默认的「台面小物」抬升。
    * 0 = 按地板大件处理；未设置时由 getDepthSortTypeLift() 按 slot/tab 推断。
@@ -143,6 +144,7 @@ export const ROOM_STYLES: RoomStyleDef[] = [
   { id: 'style_bloom_nb2', name: '花境小筑', cost: 3999, starValue: 9, rarity: DecoRarity.FINE, bgTexture: 'bg_room_bloom_nb2', desc: '满开鲜花硬装与窗景，室内纯色大块地坪，温馨不撞糖果系', unlockRequirement: { level: 4 }, allowedSceneIds: ['flower_shop'] },
   { id: 'style_pinkblue_nb2', name: '粉蓝花坊', cost: 5200, starValue: 10, rarity: DecoRarity.FINE, bgTexture: 'bg_room_pinkblue_nb2', desc: '粉白蓝温馨风：短绒地毯、樱花形窗、新瓦型屋顶', unlockRequirement: { level: 5 }, allowedSceneIds: ['flower_shop'] },
   { id: 'style_lagoon_nb2', name: '海岛汽水', cost: 6900, starValue: 12, rarity: DecoRarity.RARE, bgTexture: 'bg_room_lagoon_nb2', desc: '青绿天蓝木瓜橙撞色，清新热带感', unlockRequirement: { level: 6 }, allowedSceneIds: ['flower_shop'] },
+  { id: 'style_qinglian_lotus_shop_nb2', name: '清涟荷影花坊', cost: 0, starValue: 0, rarity: DecoRarity.LIMITED, bgTexture: 'bg_room_qinglian_lotus_shop_nb2', desc: '薄荷青瓦与祥云纹地坪的 L 形花坊壳，新手礼包限定', unlockRequirement: { questId: 'qinglian_newbie_gift_claimed', conditionText: '新手礼包', questDetailText: '完成新手礼包（观看 5 次广告）后解锁' }, allowedSceneIds: ['flower_shop'] },
   { id: 'style_confetti_nb2', name: '复古花坊', cost: 7500, starValue: 14, rarity: DecoRarity.LIMITED, bgTexture: 'bg_room_confetti_nb2', desc: '明亮复古花店：奶黄墙、豆沙绿与浅橡木，大格地面不暗沉', unlockRequirement: { level: 7 }, allowedSceneIds: ['flower_shop'] },
   { id: 'style_butterfly_house_nb2', name: '蝴蝶小屋原木壳', cost: 0, starValue: 0, rarity: DecoRarity.COMMON, bgTexture: 'bg_room_butterfly_house_nb2', desc: '蝴蝶小屋默认房壳：浅木结构、干净墙面与观蝶空间', allowedSceneIds: ['butterfly_house'] },
   { id: 'style_butterfly_house_bamboo_nb2', name: '竹影蝶屋', cost: 4200, starValue: 8, rarity: DecoRarity.FINE, bgTexture: 'bg_room_butterfly_house_bamboo_nb2', desc: '竹艺暖色房壳：蜂蜜竹柱、鼠尾草屋檐与蝶翼木拼地面', unlockRequirement: { level: 11 }, allowedSceneIds: ['butterfly_house'] },
@@ -405,6 +407,15 @@ export const DECO_DEFS: DecoDef[] = [
   { id: 'checkin_m1_dew_wish_fountain', name: '晨露许愿花池', slot: DecoSlot.GARDEN, rarity: DecoRarity.RARE, cost: 1880, starValue: 7, icon: 'checkin_m1_dew_wish_fountain', desc: '贝壳形浅水花池，水晶露珠、睡莲与小星灯围出庭院清晨感', unlockRequirement: { level: 8 }, defaultScale: 1.48 },
   { id: 'checkin_m1_rocking_horse', name: '花园摇摇马', slot: DecoSlot.GARDEN, rarity: DecoRarity.LIMITED, cost: 0, starValue: 0, icon: 'checkin_m1_rocking_horse', desc: '户外花园里的木质摇摇马玩具，彩绘马鞍、藤花与小风车一起摇出童话感', unlockRequirement: { questId: 'checkin_m1_28_rocking_horse', conditionText: '活动解锁', questDetailText: '签到奖励' }, defaultScale: 1.15 },
 
+
+  // ═══════ 清涟荷影主题（新手礼包 + 后续同主题扩展；全场景可摆，starValue 礼包件为 0）
+  { id: 'qinglian_flower_cart', name: '帷帘花车', slot: DecoSlot.ORNAMENT, rarity: DecoRarity.LIMITED, cost: 0, starValue: 0, icon: 'qinglian_flower_cart', desc: '薄荷帷帘花车，棚顶祥云饰与满盆 pastel 花束', unlockRequirement: { questId: 'qinglian_newbie_gift_claimed', conditionText: '新手礼包', questDetailText: '完成新手礼包（观看 5 次广告）后解锁' }, defaultScale: 1.15, decorationPanelTab: 'qinglian' },
+  { id: 'qinglian_cloud_rug', name: '祥云地毯', slot: DecoSlot.ORNAMENT, rarity: DecoRarity.LIMITED, cost: 0, starValue: 0, icon: 'qinglian_cloud_rug', desc: '奶油底祥云纹椭圆地毯，粉绿 pastel 祥云绕边', unlockRequirement: { questId: 'qinglian_newbie_gift_claimed', conditionText: '新手礼包', questDetailText: '完成新手礼包（观看 5 次广告）后解锁' }, defaultScale: 0.95, depthSortYLift: 0, decorationPanelTab: 'qinglian' },
+  { id: 'qinglian_koi_bench', name: '锦鲤曲榻', slot: DecoSlot.TABLE, rarity: DecoRarity.LIMITED, cost: 0, starValue: 0, icon: 'qinglian_koi_bench', desc: '桃木曲榻配薄荷垫与锦鲤纹座面，流苏轻晃', unlockRequirement: { questId: 'qinglian_newbie_gift_claimed', conditionText: '新手礼包', questDetailText: '完成新手礼包（观看 5 次广告）后解锁' }, defaultScale: 1.08, decorationPanelTab: 'qinglian' },
+  { id: 'qinglian_lotus_screen', name: '荷梦屏风', slot: DecoSlot.WALLART, rarity: DecoRarity.LIMITED, cost: 0, starValue: 0, icon: 'qinglian_lotus_screen', desc: '四扇荷塘屏风，粉荷与青绸带连续成景', unlockRequirement: { questId: 'qinglian_newbie_gift_claimed', conditionText: '新手礼包', questDetailText: '完成新手礼包（观看 5 次广告）后解锁' }, defaultScale: 1.12, decorationPanelTab: 'qinglian' },
+  { id: 'qinglian_lotus_lamp', name: '莲光立灯', slot: DecoSlot.LIGHT, rarity: DecoRarity.LIMITED, cost: 0, starValue: 0, icon: 'qinglian_lotus_lamp', desc: '莲瓣灯盏暖光，荷叶底座金边', unlockRequirement: { questId: 'qinglian_newbie_gift_claimed', conditionText: '新手礼包', questDetailText: '完成新手礼包（观看 5 次广告）后解锁' }, defaultScale: 0.92, decorationPanelTab: 'qinglian' },
+  { id: 'qinglian_lotus_pond_table', name: '清池茶案', slot: DecoSlot.TABLE, rarity: DecoRarity.LIMITED, cost: 0, starValue: 0, icon: 'qinglian_lotus_pond_table', desc: '嵌莲池方案，薄荷紫纱垂帘与点点萤光', unlockRequirement: { questId: 'qinglian_newbie_gift_claimed', conditionText: '新手礼包', questDetailText: '完成新手礼包（观看 5 次广告）后解锁' }, defaultScale: 1.05, decorationPanelTab: 'qinglian' },
+
   // ═══════ ⑫ 熟客主题家具（V2：AffinityCardConfig.CUSTOMER_MILESTONE_REWARDS[12] decoUnlockId 解锁；100% 集齐图鉴时 grantQuest('affinity_<type>_codex_full') + gmUnlockDeco）
   // 注：starValue 必须为 0 — 这些是免费赠予的稀有家具，若计星会被「摆放→拆除→重摆」刷分；星星统一来自购买行为。
   { id: 'affinity_student_desk',         name: '校园书桌',     slot: DecoSlot.TABLE,    rarity: DecoRarity.LIMITED, cost: 0, starValue: 0, icon: 'affinity_student_desk',         desc: '小诗赠：法式田园奶白漆木 + 薰衣草荷叶边，黄铜鹅颈灯与薄荷玻璃罩，诗稿与压花静静摆开', defaultScale: 1.25, decorationPanelTab: 'furniture',   unlockRequirement: { questId: 'affinity_student_codex_full', conditionText: '集齐小诗图鉴', questDetailText: '集齐与小诗的 12 张友谊图鉴即可解锁' } },
@@ -461,12 +472,12 @@ export function getDepthSortTypeLift(deco: DecoDef): number {
    */
   if (
     deco.slot === DecoSlot.ORNAMENT &&
-    deco.decorationPanelTab === 'flower_room' &&
+    (deco.decorationPanelTab === 'flower_room' || deco.decorationPanelTab === 'qinglian') &&
     (deco.defaultScale ?? 1) > 0.92
   ) {
     return 0;
   }
-  if (deco.slot === DecoSlot.ORNAMENT && deco.decorationPanelTab !== 'furniture' && deco.decorationPanelTab !== 'garden') {
+  if (deco.slot === DecoSlot.ORNAMENT && deco.decorationPanelTab !== 'furniture' && deco.decorationPanelTab !== 'garden' && deco.decorationPanelTab !== 'qinglian') {
     return 140;
   }
   return 0;
@@ -496,7 +507,7 @@ export function getDepthSortFeetYFudge(deco: DecoDef): number {
     /** 长凳、双凳组等大件仍按脚点 y；略小的「家具 Tab」件仍可摆台面 */
     if (deco.decorationPanelTab === 'furniture' && (deco.defaultScale ?? 1) > 0.92) return 0;
     /** 房屋专属 Tab 的大件（如蝴蝶小屋沙发/藤椅）同样按地面大件处理 */
-    if (deco.decorationPanelTab === 'flower_room' && (deco.defaultScale ?? 1) > 0.92) return 0;
+    if ((deco.decorationPanelTab === 'flower_room' || deco.decorationPanelTab === 'qinglian') && (deco.defaultScale ?? 1) > 0.92) return 0;
     /** 地毯、矮地垫等小件贴地：勿抬高 sortFeetY，否则会整档压过同区域站立的店主 */
     if (deco.decorationPanelTab === 'furniture' && (deco.defaultScale ?? 1) < 0.58) return 0;
     return 95;
@@ -517,7 +528,8 @@ export type DecoPanelTabId =
   | 'appliance'
   | DecoSlot.ORNAMENT
   | DecoSlot.WALLART
-  | DecoSlot.GARDEN;
+  | DecoSlot.GARDEN
+  | 'qinglian';
 
 /** 左栏顺序 */
 export const DECO_PANEL_TABS: DecoPanelTabId[] = [
@@ -528,6 +540,7 @@ export const DECO_PANEL_TABS: DecoPanelTabId[] = [
   DecoSlot.ORNAMENT,
   DecoSlot.WALLART,
   DecoSlot.GARDEN,
+  'qinglian',
 ];
 
 /** 编辑托盘 Tab（含房壳 room_styles，与图标表 7 列一致） */
@@ -541,6 +554,7 @@ export const FURNITURE_TRAY_TABS: FurnitureTrayTabId[] = [
   DecoSlot.WALLART,
   DecoSlot.GARDEN,
   'room_styles',
+  'qinglian',
 ];
 
 export function isDecoSpecialUiCategory(deco: DecoDef): boolean {
@@ -590,6 +604,7 @@ export function getDecorationTabLabel(tab: DecoPanelTabId, sceneId: string = DEC
   if (tab === 'flower_room') return { name: SCENE_MAP.get(sceneId)?.name ?? '房屋专属', emoji: '' };
   if (tab === 'furniture') return { name: '家具', emoji: '' };
   if (tab === 'appliance') return { name: '家电', emoji: '' };
+  if (tab === 'qinglian') return { name: '清涟荷影', emoji: '' };
   return DECO_SLOT_INFO[tab];
 }
 
@@ -610,6 +625,8 @@ export function furnitureTrayTabTextureKey(tab: FurnitureTrayTabId): string {
       return 'furniture_tray_tab_wallart_idle';
     case DecoSlot.GARDEN:
       return 'furniture_tray_tab_garden_idle';
+    case 'qinglian':
+      return 'furniture_tray_tab_qinglian_idle';
     default:
       return 'furniture_tray_tab_flower_room_idle';
   }
@@ -629,6 +646,7 @@ export function furnitureTrayTabForDeco(deco: DecoDef): FurnitureTrayTabId {
   if (deco.decorationPanelTab === 'furniture') return 'furniture';
   if (deco.decorationPanelTab === 'flower_room') return 'flower_room';
   if (deco.decorationPanelTab === 'garden') return DecoSlot.GARDEN;
+  if (deco.decorationPanelTab === 'qinglian') return 'qinglian';
   return furnitureTrayTabFromSlot(deco.slot);
 }
 
@@ -641,7 +659,7 @@ export function getDecosForDecorationPanelTab(tab: DecoPanelTabId, sceneId: stri
     return DECO_DEFS.filter((d) => {
       if (!inScene(d)) return false;
       if (d.decorationPanelTab === 'furniture') return true;
-      if (d.decorationPanelTab === 'flower_room' || d.decorationPanelTab === 'garden') return false;
+      if (d.decorationPanelTab === 'flower_room' || d.decorationPanelTab === 'garden' || d.decorationPanelTab === 'qinglian') return false;
       return d.slot === DecoSlot.SHELF || d.slot === DecoSlot.TABLE;
     });
   }
@@ -649,6 +667,9 @@ export function getDecosForDecorationPanelTab(tab: DecoPanelTabId, sceneId: stri
   const slotMatch = (d: DecoDef): boolean => {
     if (tab === 'flower_room') {
       return d.decorationPanelTab === 'flower_room';
+    }
+    if (tab === 'qinglian') {
+      return d.decorationPanelTab === 'qinglian';
     }
     if (tab === 'appliance') {
       return d.slot === DecoSlot.LIGHT && d.decorationPanelTab !== 'furniture' && d.decorationPanelTab !== 'garden';
@@ -662,7 +683,8 @@ export function getDecosForDecorationPanelTab(tab: DecoPanelTabId, sceneId: stri
         d.slot === tab &&
         d.decorationPanelTab !== 'furniture' &&
         d.decorationPanelTab !== 'flower_room' &&
-        d.decorationPanelTab !== 'garden'
+        d.decorationPanelTab !== 'garden' &&
+        d.decorationPanelTab !== 'qinglian'
       );
     }
     return d.slot === tab;

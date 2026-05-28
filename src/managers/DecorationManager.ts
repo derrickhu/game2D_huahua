@@ -272,6 +272,17 @@ class DecorationManagerClass {
     return n;
   }
 
+  /** GM / 活动：单壳解锁（不扣花愿、不加星） */
+  gmUnlockRoomStyle(styleId: string): boolean {
+    const st = ROOM_STYLE_MAP.get(styleId);
+    if (!st || this._unlockedRoomStyles.has(styleId)) return false;
+    this._unlockedRoomStyles.add(styleId);
+    this._save();
+    EventBus.emit('decoration:roomStyleUnlocked', styleId, st);
+    console.log(`[Decoration] GM 解锁房间风格: ${st.name}`);
+    return true;
+  }
+
   /** GM：解锁全部房间风格（不扣花愿） */
   gmUnlockAllRoomStyles(): number {
     let n = 0;

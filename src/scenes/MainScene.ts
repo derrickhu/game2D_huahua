@@ -40,6 +40,9 @@ import { MergeChainPanel } from '@/gameobjects/ui/MergeChainPanel';
 import { WarehousePanel } from '@/gameobjects/ui/WarehousePanel';
 import { ToastMessage } from '@/gameobjects/ui/ToastMessage';
 import { CheckInPanel } from '@/gameobjects/ui/CheckInPanel';
+import { NewbieGiftPackPanel } from '@/gameobjects/ui/NewbieGiftPackPanel';
+import { NewbieGiftPackEntryButton } from '@/gameobjects/ui/NewbieGiftPackEntryButton';
+import { NewbieGiftPackManager } from '@/managers/NewbieGiftPackManager';
 import { QuestPanel } from '@/gameobjects/ui/QuestPanel';
 import { OfflineRewardPanel } from '@/gameobjects/ui/OfflineRewardPanel';
 import { LevelUpPopup } from '@/gameobjects/ui/LevelUpPopup';
@@ -171,6 +174,8 @@ export class MainScene implements Scene {
   // ---- 奖励收纳框 ----
   private _rewardBoxButton!: RewardBoxButton;
   private _rewardBoxPanel!: RewardBoxPanel;
+  private _newbieGiftPackPanel!: NewbieGiftPackPanel;
+  private _newbieGiftPackEntry!: NewbieGiftPackEntryButton;
 
   // ---- 大地图弹框商店 ----
   private _popupShopPanel!: PopupShopPanel;
@@ -408,6 +413,9 @@ export class MainScene implements Scene {
     // 签到面板
     this._checkInPanel = new CheckInPanel();
     overlay.addChild(this._checkInPanel);
+
+    this._newbieGiftPackPanel = new NewbieGiftPackPanel();
+    overlay.addChild(this._newbieGiftPackPanel);
     RewardFlyCoordinator.setCheckInPanel(this._checkInPanel);
     RewardFlyCoordinator.initCheckInFlyListeners();
 
@@ -602,6 +610,15 @@ export class MainScene implements Scene {
       CHAR_BOTTOM_Y + 8,
     );
     this._shopMainBlock.addChild(this._rewardBoxButton);
+
+    this._newbieGiftPackEntry = new NewbieGiftPackEntryButton(() => this._newbieGiftPackPanel.open());
+    this._newbieGiftPackEntry.position.set(
+      ownerCX + SHOP_OWNER_BLOCK_NUDGE_X + RewardBoxButton.layoutSize().w / 2 + 40,
+      CHAR_BOTTOM_Y + 8 + RewardBoxButton.layoutSize().h / 2,
+    );
+    this._newbieGiftPackEntry.zIndex = 6;
+    this._shopMainBlock.addChild(this._newbieGiftPackEntry);
+
     // 礼包后绘，保证叠在店主之上（人物略放大时可压在礼盒底下由礼盒盖住边缘）
     this._rewardBoxButton.zIndex = 5;
 
@@ -1290,6 +1307,9 @@ export class MainScene implements Scene {
       if (CheckInManager.canCheckIn) {
         setTimeout(() => this._checkInPanel.open(), 1000);
       }
+      if (NewbieGiftPackManager.shouldShowEntry) {
+        setTimeout(() => this._newbieGiftPackPanel.open(), 1400);
+      }
     });
 
     // ---- 体力系统事件 ----
@@ -1548,6 +1568,7 @@ export class MainScene implements Scene {
     // 客人滚动区惯性动画
     this._customerScrollArea.update(dt);
     this._shopRowPanorama.update(dt);
+    this._newbieGiftPackEntry?.tickBreath();
 
     // 奖励收纳框滚动惯性
     this._rewardBoxPanel.update(dt);
