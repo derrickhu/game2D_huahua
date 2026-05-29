@@ -64,7 +64,7 @@ export const WORLD_MAP_UNLOCK_LEVEL = 8;
  * 许愿喷泉解锁星级 — 比大地图入口更早开放（玩家在花店主页已能直接进入许愿）。
  * 大地图开放（Lv.8）后该节点仍可见且共享同一开放门槛。
  */
-export const WISHING_FOUNTAIN_UNLOCK_LEVEL = 4;
+export const WISHING_FOUNTAIN_UNLOCK_LEVEL = 3;
 
 /** 蝴蝶小屋进入所需星级；与大地图同在 8 级开放 */
 export const BUTTERFLY_HOUSE_UNLOCK_LEVEL = 8;

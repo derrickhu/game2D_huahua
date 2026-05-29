@@ -266,7 +266,7 @@ export class ShopScene implements Scene {
 
   // ── 大地图（面板在 OverlayManager，此处仅入口按钮） ──
   private _worldMapBtn: PIXI.Container | null = null;
-  /** 许愿入口（4 级解锁，未解锁仍显示锁徽，点击 → panel:openFlowerSignGacha 与大地图入口共享面板） */
+  /** 许愿入口（3 级解锁，未解锁仍显示锁徽，点击 → panel:openFlowerSignGacha 与大地图入口共享面板） */
   private _wishingBtn: PIXI.Container | null = null;
   /** 左下隐藏功能条：收起竖签 + 展开横条 */
   private _miscDrawerRoot: PIXI.Container | null = null;
@@ -586,7 +586,7 @@ export class ShopScene implements Scene {
     // ============== 8b. 大地图按钮（右下营业钮正上方、落在底部浅绿条内，配置等级解锁） ==============
     this._buildWorldMapButton(w, h);
 
-    // ============== 8c. 许愿入口按钮（大地图按钮左侧；4 级解锁，未解锁仍显示锁徽） ==============
+    // ============== 8c. 许愿入口按钮（大地图按钮左侧；3 级解锁，未解锁仍显示锁徽） ==============
     this._buildWishingButton();
 
     // ============== 9. 编辑模式组件（初始隐藏） ==============

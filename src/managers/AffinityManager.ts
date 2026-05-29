@@ -54,7 +54,7 @@ class AffinityManagerClass {
 
   /**
    * 友谊卡 + 图鉴系统对当前玩家是否「真正可用」。
-   * 玩家等级达到 CARD_SYSTEM_UNLOCK_LEVEL（默认 6）即可。
+   * 玩家等级达到 CARD_SYSTEM_UNLOCK_LEVEL（默认 2）即可。
    * UI 入口（TopBar 图鉴按钮、CustomerProfilePanel 卡册行）用本方法判定显隐。
    */
   isCardSystemUnlocked(): boolean {

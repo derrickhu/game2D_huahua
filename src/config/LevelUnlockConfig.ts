@@ -10,10 +10,7 @@
  */
 
 import { AFFINITY_MAP, AFFINITY_UNLOCK_LEVELS } from './AffinityConfig';
-import {
-  WISHING_FOUNTAIN_UNLOCK_LEVEL,
-  WORLD_MAP_UNLOCK_LEVEL,
-} from './WorldMapConfig';
+import { WORLD_MAP_UNLOCK_LEVEL } from './WorldMapConfig';
 
 export type LevelUnlockEntryKind =
   | 'feature'        // 玩法功能解锁（花语泡泡 / 组合单 / 高阶宝箱等）
@@ -75,6 +72,12 @@ const LEVEL_UNLOCK_BASE: Record<number, Omit<LevelUnlockDef, 'level'>> = {
     ceremonyTitle: '初春萌芽',
     entries: [
       {
+        kind: 'feature',
+        title: '友谊卡',
+        desc: '图鉴入口开放，完成订单有机会收集熟客友谊卡。',
+        iconKey: 'icon_affinity_card',
+      },
+      {
         kind: 'tool',
         title: '育苗盘 Lv.3',
         desc: '园艺线 Lv.3 工具到货，鲜花产线再升一档。',
@@ -92,6 +95,12 @@ const LEVEL_UNLOCK_BASE: Record<number, Omit<LevelUnlockDef, 'level'>> = {
         iconKey: 'ui_lvup_companion_bubble',
       },
       {
+        kind: 'feature',
+        title: '许愿喷泉',
+        desc: '花店主页新增许愿入口，攒许愿硬币即可抽奖。',
+        iconKey: 'icon_wishing_nav',
+      },
+      {
         kind: 'tool',
         title: '冷饮搅拌器 Lv.1/2',
         desc: '冷饮线工具开放，饮品订单接入。',
@@ -105,26 +114,14 @@ const LEVEL_UNLOCK_BASE: Record<number, Omit<LevelUnlockDef, 'level'>> = {
       },
     ],
   },
-  [WISHING_FOUNTAIN_UNLOCK_LEVEL]: {
+  4: {
     ceremonyTitle: '熟客初识',
     entries: [
-      {
-        kind: 'feature',
-        title: '组合订单提速',
-        desc: '组合订单出现更频繁，完成奖励更丰厚。',
-        iconKey: 'icon_quest',
-      },
       {
         kind: 'tool',
         title: '园艺线 Lv.5 工具',
         desc: '园艺产线再次升档。',
         iconKey: 'tool_plant_5',
-      },
-      {
-        kind: 'feature',
-        title: '许愿喷泉',
-        desc: '花店主页新增许愿入口，攒许愿硬币即可抽奖。',
-        iconKey: 'icon_wishing_nav',
       },
     ],
   },

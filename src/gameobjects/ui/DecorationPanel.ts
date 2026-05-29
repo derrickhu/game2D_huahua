@@ -2018,15 +2018,52 @@ export class DecorationPanel extends PIXI.Container {
       root.addChild(sp);
     }
 
-    const desc = new PIXI.Text('现在可以使用花愿购买', {
+    const descY = cardTop + 188;
+    const descStyle = {
       fontSize: 16,
       fill: 0x8d6e63,
       fontFamily: FONT_FAMILY,
-      fontWeight: 'bold',
-    });
-    desc.anchor.set(0.5, 0);
-    desc.position.set(cx, cardTop + 188);
-    root.addChild(desc);
+      fontWeight: 'bold' as const,
+    };
+    if (deco.cost <= 0) {
+      const desc = new PIXI.Text('现在可以免费领取', descStyle);
+      desc.anchor.set(0.5, 0);
+      desc.position.set(cx, descY);
+      root.addChild(desc);
+    } else {
+      const prefix = new PIXI.Text('需要 ', descStyle);
+      const price = new PIXI.Text(String(deco.cost), descStyle);
+      const suffix = new PIXI.Text(' 购买', descStyle);
+      const gap = 5;
+      const iconH = 22;
+      let iconW = 0;
+      let iconSp: PIXI.Sprite | undefined;
+      const iconTex = TextureCache.get('icon_huayuan');
+      if (iconTex?.width) {
+        iconSp = new PIXI.Sprite(iconTex);
+        iconSp.height = iconH;
+        iconSp.width = (iconTex.width / iconTex.height) * iconH;
+        iconW = iconSp.width;
+      }
+      const totalW =
+        prefix.width + price.width + (iconW > 0 ? gap + iconW : 0) + suffix.width;
+      const row = new PIXI.Container();
+      row.position.set(cx - totalW / 2, descY);
+      let x = 0;
+      prefix.position.set(x, 0);
+      x += prefix.width;
+      price.position.set(x, 0);
+      x += price.width;
+      if (iconSp) {
+        iconSp.position.set(x + gap, (descStyle.fontSize - iconH) / 2);
+        x += gap + iconW;
+      }
+      suffix.position.set(x, 0);
+      row.addChild(prefix, price);
+      if (iconSp) row.addChild(iconSp);
+      row.addChild(suffix);
+      root.addChild(row);
+    }
 
     const btnW = 148;
     const btnH = 46;
@@ -2063,8 +2100,11 @@ export class DecorationPanel extends PIXI.Container {
     mkBtn('稍后', cx - btnW / 2 - gap / 2, 0xb0a193, () => {
       this._dismissUnlockPopup();
     });
-    const canBuyNow = CurrencyManager.state.huayuan >= deco.cost;
+    const canBuyNow = deco.cost <= 0 || CurrencyManager.state.huayuan >= deco.cost;
     mkBtn(canBuyNow ? '直接购买' : '去购买', cx + btnW / 2 + gap / 2, 0xe57373, () => {
+      if (!canBuyNow && deco.cost > 0) {
+        ToastMessage.show(`花愿不足，需要 ${deco.cost} 花愿`);
+      }
       this._dismissUnlockPopup();
       if (canBuyNow) {
         this._purchaseDeco(deco, this);

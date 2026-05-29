@@ -50,7 +50,7 @@ const MAIN_IMAGE_MAP: Record<string, string> = {
   icon_challenge: 'images/ui/icon_level_badge.png',
   icon_build:     'images/ui/icon_build.png',
   icon_worldmap_nav: 'images/ui/icon_worldmap_nav.png',
-  /** 花店主页「许愿」入口（4 级解锁；与 icon_worldmap_nav 同款 HUD 银色硬币 + 薄荷水纹） */
+  /** 花店主页「许愿」入口（3 级解锁；与 icon_worldmap_nav 同款 HUD 银色硬币 + 薄荷水纹） */
   icon_wishing_nav: 'images/ui/icon_wishing_nav.png',
   icon_operate:   'images/ui/icon_operate.png',
 
@@ -547,6 +547,18 @@ const DECO_IMAGE_MAP: Record<string, string> = {
   butterfly_house_wicker_chair: 'subpkg_deco/images/furniture/butterfly_house_wicker_chair.png',
   butterfly_house_tea_table: 'subpkg_deco/images/furniture/butterfly_house_tea_table.png',
   butterfly_house_wall_frame: 'subpkg_deco/images/furniture/butterfly_house_wall_frame.png',
+  butterfly_house_study_field_stool: 'subpkg_deco/images/furniture/butterfly_house_study_field_stool.png',
+  butterfly_house_study_pin_board: 'subpkg_deco/images/furniture/butterfly_house_study_pin_board.png',
+  butterfly_house_bamboo_screen: 'subpkg_deco/images/furniture/butterfly_house_bamboo_screen.png',
+  butterfly_house_study_microscope_desk: 'subpkg_deco/images/furniture/butterfly_house_study_microscope_desk.png',
+  butterfly_house_moon_specimen_shelf: 'subpkg_deco/images/furniture/butterfly_house_moon_specimen_shelf.png',
+  butterfly_house_aurora_terrarium: 'subpkg_deco/images/furniture/butterfly_house_aurora_terrarium.png',
+  butterfly_house_moon_crescent_rug: 'subpkg_deco/images/furniture/butterfly_house_moon_crescent_rug.png',
+  butterfly_house_moon_star_chair: 'subpkg_deco/images/furniture/butterfly_house_moon_star_chair.png',
+  villa_planter_urn: 'subpkg_deco/images/furniture/villa_planter_urn.png',
+  villa_wrought_bench: 'subpkg_deco/images/furniture/villa_wrought_bench.png',
+  villa_gilded_mirror: 'subpkg_deco/images/furniture/villa_gilded_mirror.png',
+  villa_rose_armoire: 'subpkg_deco/images/furniture/villa_rose_armoire.png',
   wallart_window_meadow_arch: 'subpkg_deco/images/furniture/wallart_window_meadow_arch.png',
   wallart_window_lake_round: 'subpkg_deco/images/furniture/wallart_window_lake_round.png',
 
