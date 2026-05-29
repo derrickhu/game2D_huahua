@@ -21,7 +21,6 @@ import {
 import { DECO_MAP } from '@/config/DecorationConfig';
 import {
   AFFINITY_MAP,
-  AFFINITY_UNLOCK_LEVELS,
   type AffinityCustomerDef,
 } from '@/config/AffinityConfig';
 
@@ -124,7 +123,6 @@ export class CustomerProfilePanel extends PIXI.Container {
     width: number,
   ): void {
     mount.removeChildren();
-    const state = AffinityManager.getState(def.typeId);
 
     let y = 0;
     const portraitTex = TextureCache.get(`customer_${def.typeId}`);
@@ -158,16 +156,14 @@ export class CustomerProfilePanel extends PIXI.Container {
     const cardSystemReady = AffinityManager.isCardSystemUnlocked() && hasCardsForOwner(def.typeId);
 
     const statusLine = new PIXI.Text(
-      state.unlocked
-        ? cardSystemReady
-          ? '常客 · 已加入友谊图鉴'
-          : hasCardsForOwner(def.typeId)
-            ? `常客 · 图鉴 Lv.6 解锁`
-            : '常客 · 本赛季暂无友谊图鉴'
-        : `未解锁（${this._unlockHintFor(def.typeId)}）`,
+      cardSystemReady
+        ? '常客 · 已加入友谊图鉴'
+        : hasCardsForOwner(def.typeId)
+          ? '常客 · 图鉴 Lv.2 解锁'
+          : '常客 · 本赛季暂无友谊图鉴',
       {
         fontSize: 14,
-        fill: state.unlocked ? 0x9c4f2e : COLORS.TEXT_LIGHT,
+        fill: cardSystemReady ? 0x9c4f2e : COLORS.TEXT_LIGHT,
         fontFamily: FONT_FAMILY,
         fontWeight: 'bold',
       } as PIXI.TextStyle,
@@ -266,12 +262,6 @@ export class CustomerProfilePanel extends PIXI.Container {
     c.addChild(btn);
 
     return c;
-  }
-
-  private _unlockHintFor(typeId: string): string {
-    if (!AFFINITY_MAP.has(typeId)) return '解锁等级未配置';
-    const lv = AFFINITY_UNLOCK_LEVELS[typeId];
-    return typeof lv === 'number' ? `Lv.${lv} 解锁` : '解锁等级未配置';
   }
 
   private _buildMilestoneRow(

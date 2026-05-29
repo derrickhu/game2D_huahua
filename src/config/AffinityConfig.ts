@@ -3,23 +3,14 @@
  *
  * V2 设计（2026-04 改版）：
  *  - 去掉 Bond 等级 / 里程碑 / Lv5 buff，改由「友谊卡 + 图鉴 + 赛季」承接收集驱动；
- *  - 这里只剩：解锁等级 / 留言模板 / 名字/人设
+ *  - 熟客等级锁已软下线：2 级开放友谊卡后，遇到有卡册的客人即可按概率掉卡；
+ *  - 这里只剩：留言模板 / 名字 / 人设
  *  - 集齐里程碑奖励 / 重复卡奖励 / 赛季配置 → AffinityCardConfig.ts
  *
  * Manager 见 src/managers/AffinityManager.ts。
  */
 
 import { Category, FlowerLine, DrinkLine } from './ItemConfig';
-
-/** 熟客的解锁等级（玩家 globalLevel 达到时由 LevelManager 解锁） */
-export const AFFINITY_UNLOCK_LEVELS: Record<string, number> = {
-  student: 4,
-  athlete: 5,
-  celebrity: 6,
-  worker: 7,
-  mom: 8,
-  youth: 9,
-};
 
 /** 离线/糖果留言：避重窗口长度 */
 export const AFFINITY_NOTE_AVOID_RECENT_N = 3;
@@ -145,13 +136,6 @@ export const AFFINITY_DEFS: AffinityCustomerDef[] = [
 export const AFFINITY_MAP = new Map<string, AffinityCustomerDef>(
   AFFINITY_DEFS.map(d => [d.typeId, d]),
 );
-
-/** 取首发解锁的 typeId 列表 */
-export function getAffinityUnlocksAtLevel(level: number): string[] {
-  return Object.entries(AFFINITY_UNLOCK_LEVELS)
-    .filter(([, lv]) => lv === level)
-    .map(([id]) => id);
-}
 
 /** 全部熟客 typeId */
 export function listAllAffinityTypeIds(): string[] {

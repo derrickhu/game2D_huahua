@@ -47,7 +47,7 @@ export interface OfflineReward {
   producedItems: { itemId: string; name: string }[];
   /** 花愿（体力不计入本面板，由 SaveManager 读档时单独结算） */
   huayuanEarned: number;
-  /** 熟客离线留言（已解锁的熟客中按混合规则抽签；未解锁则 null） */
+  /** 熟客离线留言（熟客等级锁已下线；当前离线面板关闭时不会对玩家展示） */
   affinityNote: OfflineAffinityNote | null;
   /**
    * 「开店糖果」（每日首次进店礼包）；当日已领过为 null。
@@ -106,7 +106,7 @@ class IdleManagerClass {
       huayuanEarned = Math.floor(effectiveSeconds / OFFLINE_HUAYUAN_INTERVAL_SEC);
     }
 
-    // 熟客留言（无解锁则 null）
+    // 熟客留言（当前离线面板关闭时不会对玩家展示）
     const affinityNote = AffinityManager.pickRandomAffinityNote();
 
     // 当日开店糖果：仅在已有「离线产出」或「熟客留言」需要弹面板时**附赠**；

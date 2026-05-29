@@ -1340,10 +1340,7 @@ export class MainScene implements Scene {
         .finally(() => this._affinityCodexPanel.open(typeId));
     });
 
-    // 客人解锁 / 图鉴集满后：刷新订单区让心形角标即时出现或消失
-    EventBus.on('affinity:unlocked', () => {
-      this._customerScrollArea.refresh();
-    });
+    // 图鉴集满后：刷新订单区让心形角标即时出现或消失
     EventBus.on('affinityCard:complete', () => {
       this._customerScrollArea.refresh();
     });

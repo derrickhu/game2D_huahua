@@ -6,15 +6,14 @@
  *  - entries：本星级新开放的内容（卡片区，配 icon + 描述）
  *
  * 仅做 UI 展示数据；具体玩法门控仍在各自 Config（如 MERGE_COMPANION_MIN_GLOBAL_LEVEL=3）；
- * AffinityManager.unlockForLevel(level) 已挂在 LevelManager 的 star:levelUp 链上独立处理。
+ * 友谊卡系统仅由 2 级功能入口控制，不再按熟客等级生成解锁项。
  */
 
-import { AFFINITY_MAP, AFFINITY_UNLOCK_LEVELS } from './AffinityConfig';
 import { WORLD_MAP_UNLOCK_LEVEL } from './WorldMapConfig';
 
 export type LevelUnlockEntryKind =
   | 'feature'        // 玩法功能解锁（花语泡泡 / 组合单 / 高阶宝箱等）
-  | 'affinity'       // 熟客解锁
+  | 'affinity'       // 兼容旧熟客解锁卡片类型（当前不再自动生成）
   | 'shop'           // 商店货架升档
   | 'map'            // 大地图入口
   | 'tool'           // 高阶工具线
@@ -46,27 +45,7 @@ export interface LevelUnlockDef {
   entries: LevelUnlockEntry[];
 }
 
-/**
- * 把已配置的「熟客解锁等级」自动转成 LevelUnlockEntry，避免两边维护。
- */
-function affinityEntriesForLevel(level: number): LevelUnlockEntry[] {
-  return Object.entries(AFFINITY_UNLOCK_LEVELS)
-    .filter(([, lv]) => lv === level)
-    .map(([typeId]) => {
-      const def = AFFINITY_MAP.get(typeId);
-      return {
-        kind: 'affinity' as const,
-        title: def ? `熟客 · ${def.bondName}` : `熟客 · ${typeId}`,
-        desc: def
-          ? `${def.persona}登场，订单互动可提升 Bond。`
-          : '新熟客登场，订单互动可提升 Bond。',
-        iconKey: `customer_${typeId}`,
-        payload: typeId,
-      };
-    });
-}
-
-/** 主表：仅维护「玩法/商店/地图/工具/装修」类卡片，熟客自动并入。 */
+/** 主表：仅维护「玩法/商店/地图/工具/装修」类卡片。 */
 const LEVEL_UNLOCK_BASE: Record<number, Omit<LevelUnlockDef, 'level'>> = {
   2: {
     ceremonyTitle: '初春萌芽',
@@ -372,19 +351,12 @@ const LEVEL_UNLOCK_BASE: Record<number, Omit<LevelUnlockDef, 'level'>> = {
 
 const LEVEL_UNLOCKS: Map<number, LevelUnlockDef> = (() => {
   const map = new Map<number, LevelUnlockDef>();
-  const allLevels = new Set<number>([
-    ...Object.keys(LEVEL_UNLOCK_BASE).map(s => Number(s)),
-    ...Object.values(AFFINITY_UNLOCK_LEVELS),
-  ]);
+  const allLevels = new Set<number>(Object.keys(LEVEL_UNLOCK_BASE).map(s => Number(s)));
   for (const lvNum of allLevels) {
     const lv = Number(lvNum);
     if (!Number.isFinite(lv) || lv <= 0) continue;
     const base = LEVEL_UNLOCK_BASE[lv];
-    const affinities = affinityEntriesForLevel(lv);
-    const entries: LevelUnlockEntry[] = [
-      ...affinities,
-      ...(base?.entries ?? []),
-    ];
+    const entries: LevelUnlockEntry[] = base?.entries ?? [];
     if (entries.length === 0) continue;
     map.set(lv, {
       level: lv,

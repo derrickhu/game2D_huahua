@@ -1091,23 +1091,10 @@ class GMManagerClass {
       },
     });
 
-    // ========== 熟客系统 ==========
-    for (const def of AFFINITY_DEFS) {
-      this._commands.push({
-        id: `gm_affinity_unlock_${def.typeId}`,
-        group: ' 熟客系统',
-        name: ` 解锁熟客 · ${def.bondName}`,
-        desc: `${def.persona}`,
-        execute: () => {
-          AffinityManager.unlockForLevel(99);
-          return ` ${def.bondName} 已解锁`;
-        },
-      });
-    }
-
+    // ========== 熟客辅助 ==========
     this._commands.push({
       id: 'gm_affinity_reset',
-      group: ' 熟客系统',
+      group: ' 熟客辅助',
       name: ' 重置熟客留言/专属队列',
       desc: '清空近期留言/专属订单冷却（不影响图鉴）',
       execute: () => {
@@ -1118,7 +1105,7 @@ class GMManagerClass {
 
     this._commands.push({
       id: 'gm_affinity_open_profile_first',
-      group: ' 熟客系统',
+      group: ' 熟客辅助',
       name: ' 打开友谊图鉴（首位）',
       desc: '直接打开首位熟客的友谊图鉴页',
       execute: () => {

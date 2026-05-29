@@ -2,23 +2,16 @@
  * 熟客系统管理器（V2 · 已去 Bond）
  *
  * 职责：
- *  - 维护每位熟客的 unlocked 状态、近期留言/触发去重队列
- *  - 接收 LevelManager 的 level:up 事件 → 解锁该等级新熟客
+ *  - 维护熟客基础配置与近期留言去重队列
  *  - 提供 onCustomerDelivered(typeId)：调 AffinityCardManager 抽卡
  *  - 提供 pickRandomAffinityNote() 给 IdleManager / DailyCandyManager
  *  - 存档 Key: huahua_affinity；CloudSync allowlist 同步注册
- *
- * 事件：
- *  - 'affinity:unlocked' (typeId, def)
  */
-import { EventBus } from '@/core/EventBus';
 import { PersistService } from '@/core/PersistService';
-import { CurrencyManager } from './CurrencyManager';
 import {
   AFFINITY_DEFS,
   AFFINITY_MAP,
   AFFINITY_NOTE_AVOID_RECENT_N,
-  AFFINITY_UNLOCK_LEVELS,
   type AffinityCustomerDef,
 } from '@/config/AffinityConfig';
 import { CARD_SYSTEM_UNLOCK_LEVEL } from '@/config/AffinityCardConfig';
@@ -29,6 +22,7 @@ const AFFINITY_STORAGE_KEY = 'huahua_affinity';
 
 export interface AffinityEntryState {
   typeId: string;
+  /** @deprecated 熟客等级锁已软下线；保留字段仅兼容旧存档。 */
   unlocked: boolean;
 }
 
@@ -48,8 +42,7 @@ class AffinityManagerClass {
     if (this._initialized) return;
     this._initialized = true;
     this._loadState();
-    this._ensureEntriesForCurrentLevel();
-    this._bindEvents();
+    this._ensureEntries();
   }
 
   /**
@@ -61,18 +54,12 @@ class AffinityManagerClass {
     return LevelManager.level >= CARD_SYSTEM_UNLOCK_LEVEL;
   }
 
-  /** 列出全部熟客（含未解锁）按解锁等级排序 */
+  /** 列出全部熟客（当前不再按等级锁定；保持配置顺序） */
   listAll(): { def: AffinityCustomerDef; state: AffinityEntryState }[] {
-    const all = AFFINITY_DEFS.map(def => {
+    return AFFINITY_DEFS.map(def => {
       const state = this._entries.get(def.typeId) ?? this._defaultEntry(def.typeId);
       return { def, state };
     });
-    all.sort((a, b) => {
-      const la = AFFINITY_UNLOCK_LEVELS[a.def.typeId] ?? 99;
-      const lb = AFFINITY_UNLOCK_LEVELS[b.def.typeId] ?? 99;
-      return la - lb;
-    });
-    return all;
   }
 
   getState(typeId: string): AffinityEntryState {
@@ -80,7 +67,7 @@ class AffinityManagerClass {
   }
 
   isUnlocked(typeId: string): boolean {
-    return this.getState(typeId).unlocked;
+    return this.isAffinityType(typeId);
   }
 
   isAffinityType(typeId: string): boolean {
@@ -89,30 +76,8 @@ class AffinityManagerClass {
 
   /** 全局 buff：集齐该客人 100% 图鉴时订单花愿 +10%（来自 AffinityCardManager） */
   huayuanMultFor(typeId: string): number {
-    const s = this.getState(typeId);
-    if (!s.unlocked) return 1;
+    if (!this.isAffinityType(typeId)) return 1;
     return AffinityCardManager.huayuanMultFor(typeId);
-  }
-
-  // ============================================================
-  // 解锁
-  // ============================================================
-
-  unlockForLevel(level: number): AffinityCustomerDef[] {
-    const newly: AffinityCustomerDef[] = [];
-    for (const def of AFFINITY_DEFS) {
-      const target = AFFINITY_UNLOCK_LEVELS[def.typeId] ?? 999;
-      if (target > level) continue;
-      const cur = this._entries.get(def.typeId) ?? this._defaultEntry(def.typeId);
-      if (cur.unlocked) continue;
-      cur.unlocked = true;
-      this._entries.set(def.typeId, cur);
-      newly.push(def);
-      EventBus.emit('affinity:unlocked', def.typeId, def);
-      console.log(`[Affinity] 熟客解锁: ${def.typeId} (${def.bondName})`);
-    }
-    if (newly.length > 0) this._saveState();
-    return newly;
   }
 
   // ============================================================
@@ -121,8 +86,6 @@ class AffinityManagerClass {
 
   onCustomerDelivered(typeId: string): void {
     if (!this.isAffinityType(typeId)) return;
-    const cur = this._entries.get(typeId) ?? this._defaultEntry(typeId);
-    if (!cur.unlocked) return;
 
     // 卡片系统达等级即触发抽卡：新卡入图鉴；重复卡直接派发花愿/钻石/体力；
     // 里程碑（50%/100%）与赛季全集均在 AffinityCardManager 内部自动结算。
@@ -140,11 +103,11 @@ class AffinityManagerClass {
     bondName: string;
     text: string;
   } | null {
-    const unlocked = this.listAll().filter(x => x.state.unlocked);
-    if (unlocked.length === 0) return null;
+    const all = this.listAll();
+    if (all.length === 0) return null;
 
-    const fresh = unlocked.filter(x => !this._recentNoteTypeIds.includes(x.def.typeId));
-    const pool = fresh.length > 0 ? fresh : unlocked;
+    const fresh = all.filter(x => !this._recentNoteTypeIds.includes(x.def.typeId));
+    const pool = fresh.length > 0 ? fresh : all;
 
     const chosen = pool[Math.floor(rng() * pool.length)]!;
     const note = chosen.def.notes[Math.floor(rng() * chosen.def.notes.length)] ?? '';
@@ -163,43 +126,32 @@ class AffinityManagerClass {
     };
   }
 
-  /** GM：清空所有进度（保留解锁信息） */
+  /** GM：清空熟客辅助状态（不影响图鉴） */
   gmReset(): void {
     this._recentNoteTypeIds = [];
     this._saveState();
   }
 
   // ============================================================
-  // 私有：默认条目 / 当前等级补齐 / 事件 / 持久化
+  // 私有：默认条目 / 兼容补齐 / 持久化
   // ============================================================
 
   private _defaultEntry(typeId: string): AffinityEntryState {
     return {
       typeId,
-      unlocked: false,
+      unlocked: true,
     };
   }
 
-  private _ensureEntriesForCurrentLevel(): void {
-    const lv = CurrencyManager.globalLevel;
+  private _ensureEntries(): void {
     for (const def of AFFINITY_DEFS) {
-      if (!this._entries.has(def.typeId)) {
+      const cur = this._entries.get(def.typeId);
+      if (!cur) {
         this._entries.set(def.typeId, this._defaultEntry(def.typeId));
-      }
-      const target = AFFINITY_UNLOCK_LEVELS[def.typeId] ?? 999;
-      if (target <= lv) {
-        const e = this._entries.get(def.typeId)!;
-        if (!e.unlocked) {
-          e.unlocked = true;
-        }
+      } else if (!cur.unlocked) {
+        cur.unlocked = true;
       }
     }
-  }
-
-  private _bindEvents(): void {
-    EventBus.on('star:levelUp', (newLevel: number) => {
-      this.unlockForLevel(newLevel);
-    });
   }
 
   // ====== 存档 ======
@@ -232,7 +184,7 @@ class AffinityManagerClass {
           if (!def) continue;
           this._entries.set(e.typeId, {
             typeId: e.typeId,
-            unlocked: !!e.unlocked,
+            unlocked: true,
           });
         }
       }

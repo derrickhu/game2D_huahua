@@ -5,7 +5,6 @@ import { TweenManager, Ease } from '@/core/TweenManager';
 import { DESIGN_WIDTH, FONT_FAMILY } from '@/config/Constants';
 import { TextureCache } from '@/utils/TextureCache';
 import { AffinityCardManager } from '@/managers/AffinityCardManager';
-import { AffinityManager } from '@/managers/AffinityManager';
 import {
   AFFINITY_CARDS,
   CURRENT_SEASON,
@@ -13,7 +12,7 @@ import {
   type AffinityCardDef,
   type CardReward,
 } from '@/config/AffinityCardConfig';
-import { AFFINITY_MAP, AFFINITY_UNLOCK_LEVELS } from '@/config/AffinityConfig';
+import { AFFINITY_MAP } from '@/config/AffinityConfig';
 import {
   LARGE_CARD_H,
   LARGE_CARD_W,
@@ -460,8 +459,7 @@ export class AffinityCodexPanel extends PIXI.Container {
 
   private _buildOverviewNode(typeId: string, size: number): PIXI.Container {
     const c = new PIXI.Container();
-    const st = AffinityManager.getState(typeId);
-    const enabled = st.unlocked && this._typeIdHasCards(typeId);
+    const enabled = this._typeIdHasCards(typeId);
     const p = AffinityCardManager.progress(typeId);
     const cm = AFFINITY_MAP.get(typeId);
     const name = cm?.bondName ?? typeId;
@@ -480,9 +478,7 @@ export class AffinityCodexPanel extends PIXI.Container {
     nameText.position.set(0, size * 0.64);
     c.addChild(nameText);
 
-    const pill = enabled
-      ? this._buildPurpleProgressPill(size * 0.86, p.obtained, p.total)
-      : this._buildLockPill(size * 0.86, `Lv.${AFFINITY_UNLOCK_LEVELS[typeId] ?? '-'}`);
+    const pill = this._buildPurpleProgressPill(size * 0.86, p.obtained, p.total);
     pill.position.set(-pill.width / 2, size * 0.92);
     c.addChild(pill);
 
@@ -930,27 +926,6 @@ export class AffinityCodexPanel extends PIXI.Container {
       fontWeight: 'bold',
       stroke: 0x7a3f61,
       strokeThickness: 4,
-    } as PIXI.TextStyle);
-    text.anchor.set(0.5);
-    text.position.set(width / 2, H / 2);
-    c.addChild(text);
-    return c;
-  }
-
-  private _buildLockPill(width: number, label: string): PIXI.Container {
-    const c = new PIXI.Container();
-    const H = Math.max(20, Math.round(width * 0.075));
-    const bg = new PIXI.Graphics();
-    bg.beginFill(0xe6d4c2, 1);
-    bg.lineStyle(2, 0xffffff, 0.72);
-    bg.drawRoundedRect(0, 0, width, H, H / 2);
-    bg.endFill();
-    c.addChild(bg);
-    const text = new PIXI.Text(label, {
-      fontSize: Math.max(12, Math.round(H * 0.58)),
-      fill: 0x8d7d70,
-      fontFamily: FONT_FAMILY,
-      fontWeight: 'bold',
     } as PIXI.TextStyle);
     text.anchor.set(0.5);
     text.position.set(width / 2, H / 2);
