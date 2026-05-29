@@ -143,9 +143,25 @@ function _applyGreenBoost(
   w: Record<OrderTier, number>,
   lines: UnlockedLines,
   boostSpawns: number | undefined,
+  playerLevel?: number,
 ): Record<OrderTier, number> {
   if (!boostSpawns || boostSpawns <= 0 || !lines.hasGreen) return w;
   const out = { ...w };
+  // 1 级：绿植偏置只抬 B；2 级：少量挪到 A（仍不抬 S）
+  if (playerLevel === 1) {
+    const takeC = Math.min(out.C, 12);
+    out.C -= takeC;
+    out.B += takeC;
+    return out;
+  }
+  if (playerLevel === 2) {
+    const takeC = Math.min(out.C, 10);
+    const takeB = Math.min(out.B, 8);
+    out.C -= takeC;
+    out.B -= takeB;
+    out.A += takeC + takeB;
+    return out;
+  }
   // 从 B/C 挪到 A：抬高含绿植池档位，但不抬 S（S 保持稀有）
   const takeB = Math.min(out.B, 12);
   const takeC = Math.min(out.C, 8);
@@ -158,7 +174,7 @@ function _applyGreenBoost(
 
 /**
  * 按玩家等级 + 已解锁产线 + 工具等级综合计算各档出现权重。
- * - 玩家等级 1–3：不出现 S，保护新手主循环；但有任意生产工具后就混入 B 单，避免开局长期单槽低级花。
+ * - 1 级：偏 C/B，角标最高 B；2 级：约 15–20% A 模板，角标金色 A 更易出现；3 级仍无 S。
  * - 4 级起少量 S；6 级后按玩家等级、工具能力、解锁产线连续成长。
  * - 不再使用「10 级以后固定权重」，后续升星仍会自然提高高档订单体感。
  */
@@ -172,14 +188,23 @@ export function getOrderTierWeights(
 
   let base: Record<OrderTier, number>;
   if (playerLevel <= 3) {
-    if (playerLevel <= 2) {
+    if (playerLevel === 1) {
       if (!hasAnyProducer) base = { C: 100, B: 0, A: 0, S: 0 };
       else if (maxTool >= 3 || lines.hasBouquet || lines.hasDrink) {
-        base = { C: 35, B: 55, A: 10, S: 0 };
+        base = { C: 62, B: 38, A: 0, S: 0 };
       } else if (maxTool >= 2) {
-        base = { C: 45, B: 55, A: 0, S: 0 };
+        base = { C: 58, B: 42, A: 0, S: 0 };
       } else {
-        base = { C: 55, B: 45, A: 0, S: 0 };
+        base = { C: 65, B: 35, A: 0, S: 0 };
+      }
+    } else if (playerLevel === 2) {
+      if (!hasAnyProducer) base = { C: 100, B: 0, A: 0, S: 0 };
+      else if (maxTool >= 3 || lines.hasBouquet || lines.hasDrink) {
+        base = { C: 42, B: 38, A: 20, S: 0 };
+      } else if (maxTool >= 2) {
+        base = { C: 45, B: 40, A: 15, S: 0 };
+      } else {
+        base = { C: 50, B: 35, A: 15, S: 0 };
       }
     } else {
       // 等级 3：仍无 S
@@ -216,7 +241,7 @@ export function getOrderTierWeights(
     };
   }
 
-  return _applyGreenBoost(base, lines, modifiers?.greenLineUnlockBoostSpawns);
+  return _applyGreenBoost(base, lines, modifiers?.greenLineUnlockBoostSpawns, playerLevel);
 }
 
 /** 按权重随机选一个档位 */
@@ -247,7 +272,14 @@ export const TIER_COLORS: Record<OrderTier, number> = {
  * - 顺序无关：对 itemId 排序后再算，相同 multiset 必得同档。
  * - 得分 = 0.45 * maxNorm + 0.55 * avgNorm + 多槽加成（2 槽 +0.03，3 槽 +0.06）。
  */
-export function computeTierFromOrderSlots(itemIds: readonly string[]): OrderTier {
+/**
+ * 按槽位物品相对难度算内容档位（UI 角标 / 花愿倍率）。
+ * @param playerLevel 传入时：1 级角标最高 B；2 级更易出现金色 A、仍无 S。
+ */
+export function computeTierFromOrderSlots(
+  itemIds: readonly string[],
+  playerLevel?: number,
+): OrderTier {
   const sorted = [...itemIds].filter(Boolean).sort();
   const norms: number[] = [];
   for (const id of sorted) {
@@ -263,7 +295,19 @@ export function computeTierFromOrderSlots(itemIds: readonly string[]): OrderTier
   const slotBonus = norms.length >= 3 ? 0.06 : norms.length >= 2 ? 0.03 : 0;
   const score = Math.min(1, 0.45 * maxNorm + 0.55 * avgNorm + slotBonus);
 
+  const lv1 = playerLevel === 1;
+  const lv2 = playerLevel === 2;
+
   if (score < 0.3) return 'C';
+  if (lv1) {
+    if (score < 0.58) return 'B';
+    return 'B';
+  }
+  if (lv2) {
+    if (score < 0.50) return 'B';
+    if (score < 0.72) return 'A';
+    return 'A';
+  }
   if (score < 0.48) return 'B';
   if (score < 0.68) return 'A';
   return 'S';

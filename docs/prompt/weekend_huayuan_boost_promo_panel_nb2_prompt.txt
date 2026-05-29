@@ -1,0 +1,25 @@
+Vertical mobile game event promo UI master sheet, 3:4 aspect, SAME 2D comic style as flower-shop merge game HUD icons: thick warm chocolate-brown outlines, chunky rounded cel-shaded shapes, soft white highlights, kawaii chibi florist girl, NOT photoreal NOT 3D render.
+
+Full canvas background pure flat white RGB 255,255,255 everywhere outside the central card, wide white margins left and right for cutout.
+
+CENTER: one NARROW tall rounded-rectangle promo card, width about 60 percent of image, soft lilac-pink border lip like game modal panels.
+
+INSIDE CARD — top to bottom, ALL Chinese text must be clear and readable:
+
+Top ribbon banner text: 周末限时 in gold bold.
+
+Large headline two lines: 花愿获得提升 on first line, enormous 50% in yellow-orange with sparkle on second line.
+
+Sub copy lines in medium size: 超值福利 · 看广告激活, 今日全部订单花愿额外加成, 次日0点重置.
+
+Hero illustration middle: chibi girl florist, bouquets, raining pink flower coins, calendar and hourglass props, same linework as game shop icons.
+
+Bottom wide pill button inside card: coral-gold gradient capsule, small play triangle left, bold white Chinese text 看广告 0/1 with dark stroke.
+
+Top-right of card: red circle close button white X slightly past corner.
+
+Outside card only solid white, no green screen.
+
+Readable Chinese required on banner headline sublines and button. Comic merge-game pastel palette pink purple yellow mint.
+
+No watermark, no QR, no ultra-wide 16:9 cinematic crop.

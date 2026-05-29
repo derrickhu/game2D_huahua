@@ -1,0 +1,14 @@
+Single mobile game HUD icon, square 1:1, extremely SIMPLE readable silhouette at 64 pixels, same game as reference shop stall icon.
+
+Match reference shop icon: thick warm chocolate-brown outline, chunky rounded cel shading, soft white highlights, isometric three-quarter, merge flower-shop casual 2D.
+
+ONLY THREE big simple shapes, no clutter:
+1) One giant glossy pink five-petal sakura flower coin like the game huayuan currency icon, fills 55 percent of canvas, clean petals, yellow center dot only.
+2) One bold floating yellow round badge overlapping lower-right of flower with huge dark-brown stroke plus sign and 50 in simple chunky digits, only these characters allowed.
+3) Optional one tiny coral ribbon tab on upper-left, solid color block only, no calendar no basket no flags no hourglass no extra petals.
+
+NO woven basket, NO many small coins, NO calendar prop, NO hourglass, NO girl character, NO square UI button frame, NO white border.
+
+Background solid flat magenta FF00FF full bleed.
+
+No watermark, no photoreal, maximum 4 color areas total for clarity at small HUD size.

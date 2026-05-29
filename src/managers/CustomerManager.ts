@@ -40,6 +40,7 @@ import {
 } from '@/orders/OrderGeneratorRegistry';
 import type { OrderGenResult, OrderGenerationKind } from '@/orders/types';
 import { AffinityManager } from './AffinityManager';
+import { WeekendHuayuanBoostManager } from './WeekendHuayuanBoostManager';
 
 export interface DemandSlot {
   itemId: string;
@@ -53,7 +54,10 @@ export interface CustomerInstance {
   emoji: string;
   slots: DemandSlot[];
   allSatisfied: boolean;
+  /** 订单原始花愿收益（含订单类型 / 熟客图鉴倍率，不含限时活动额外加成） */
   huayuanReward: number;
+  /** 周末广告活动额外花愿；当天 12 点重置后自动归零 */
+  weekendHuayuanBonus?: number;
   tier: OrderTier;
   orderType: OrderType;
   timeLimit: number | null;
@@ -79,6 +83,7 @@ export interface CustomerSaveEntry {
   emoji: string;
   slots: CustomerSaveSlot[];
   huayuanReward: number;
+  weekendHuayuanBonus?: number;
   tier: OrderTier;
   orderType: OrderType;
   timeLimit: number | null;
@@ -145,7 +150,7 @@ function normalizeCustomerPersistState(raw: unknown): CustomerPersistState | nul
     }
     if (slots.length === 0) continue;
 
-    const contentTier = computeTierFromOrderSlots(slots.map(s => s.itemId));
+    const contentTier = computeTierFromOrderSlots(slots.map(s => s.itemId), LevelManager.level);
     const tier = contentTier;
     const orderType = VALID_ORDER_TYPES.has(r.orderType as OrderType)
       ? (r.orderType as OrderType)
@@ -288,6 +293,7 @@ class CustomerManagerClass {
         emoji: c.emoji,
         slots: c.slots.map(s => ({ itemId: s.itemId })),
         huayuanReward: c.huayuanReward,
+        weekendHuayuanBonus: c.weekendHuayuanBonus,
         tier: c.tier,
         orderType: c.orderType,
         timeLimit: c.timeLimit,
@@ -318,8 +324,8 @@ class CustomerManagerClass {
         emoji: e.emoji,
         slots: e.slots.map(s => ({ itemId: s.itemId, lockedCellIndex: -1 })),
         allSatisfied: false,
-        huayuanReward: CustomerManagerClass.computeOrderHuayuan(e.slots, e.bonusMultiplier, e.orderType),
-        tier: computeTierFromOrderSlots(e.slots.map(s => s.itemId)),
+        huayuanReward: this._computeCustomerHuayuan(e.typeId, e.slots, e.bonusMultiplier, e.orderType),
+        tier: computeTierFromOrderSlots(e.slots.map(s => s.itemId), LevelManager.level),
         orderType: e.orderType,
         timeLimit: e.orderType === 'timed' && e.timeLimit !== null
           ? Math.max(0, e.timeLimit - offlineSeconds)
@@ -329,6 +335,7 @@ class CustomerManagerClass {
         bonusMultiplier: e.bonusMultiplier,
         orderKind: e.orderKind ?? inferOrderKindFromLegacy(e),
       })).filter(c => !(c.orderType === 'timed' && (c.timeLimit ?? 0) <= 0));
+      this._refreshWeekendHuayuanBonuses(false);
       this._nextUid = p.nextUid;
       this._refreshTimer = p.refreshTimer;
       this._timedDiamondOrderDate = p.timedDiamondOrderDate ?? localDateKey();
@@ -350,6 +357,7 @@ class CustomerManagerClass {
     this._syncTimedDiamondDailyState();
     this._syncAntiRepeatFromQueueTail();
     this._bindBoardEvents();
+    this._refreshWeekendHuayuanBonuses(false);
     this._rescanAll();
   }
 
@@ -406,7 +414,7 @@ class CustomerManagerClass {
     if (n <= 0) return 0;
     let base = Math.max(1, Math.round(sum * (1 + MULTI_SLOT_BONUS_RATE * (n - 1))));
     base = CustomerManagerClass._applySingleSlotMergeParityFloor(slots, base);
-    const tier = computeTierFromOrderSlots(slots.map(s => s.itemId));
+    const tier = computeTierFromOrderSlots(slots.map(s => s.itemId), LevelManager.level);
     base = Math.max(1, Math.round(base * ORDER_TIER_HUAYUAN_MULT[tier]));
     if (bonusMultiplier && bonusMultiplier > 0 && bonusMultiplier !== 1) {
       base = Math.max(1, Math.round(base * bonusMultiplier));
@@ -468,7 +476,8 @@ class CustomerManagerClass {
       BoardManager.removeItem(slot.lockedCellIndex);
     }
 
-    const hy = customer.huayuanReward;
+    const weekendBonus = customer.weekendHuayuanBonus ?? 0;
+    const hy = customer.huayuanReward + weekendBonus;
     CurrencyManager.addHuayuan(hy);
     const diamonds = customer.orderType === 'timed'
       ? Math.max(0, Math.floor(customer.diamondReward ?? 0))
@@ -483,7 +492,7 @@ class CustomerManagerClass {
     }
 
     console.log(
-      `[Customer] 交付完成: ${customer.name}(${customer.tier}), 花愿+${hy}${diamonds > 0 ? `, 钻石+${diamonds}` : ''}`,
+      `[Customer] 交付完成: ${customer.name}(${customer.tier}), 花愿+${hy}${weekendBonus > 0 ? ` (周末+${weekendBonus})` : ''}${diamonds > 0 ? `, 钻石+${diamonds}` : ''}`,
     );
 
     this._customers.splice(idx, 1);
@@ -519,6 +528,36 @@ class CustomerManagerClass {
     EventBus.on('building:produced', rescan);
     EventBus.on('building:exhausted', rescan);
     EventBus.on('star:levelUp', rescan);
+    EventBus.on('weekendHuayuanBoost:changed', () => this._refreshWeekendHuayuanBonuses(true));
+  }
+
+  private _computeCustomerHuayuan(
+    typeId: string,
+    slots: readonly { itemId: string }[],
+    bonusMultiplier: number | undefined,
+    orderType: OrderType,
+  ): number {
+    let huayuan = CustomerManagerClass.computeOrderHuayuan(slots, bonusMultiplier, orderType);
+    const affinityMult = AffinityManager.huayuanMultFor(typeId);
+    if (affinityMult !== 1) {
+      huayuan = Math.max(1, Math.round(huayuan * affinityMult));
+    }
+    return huayuan;
+  }
+
+  private _refreshWeekendHuayuanBonuses(emitChanged: boolean): void {
+    let changed = false;
+    for (const customer of this._customers) {
+      const next = WeekendHuayuanBoostManager.bonusFor(customer.huayuanReward);
+      const prev = customer.weekendHuayuanBonus ?? 0;
+      if (prev === next) continue;
+      customer.weekendHuayuanBonus = next > 0 ? next : undefined;
+      changed = true;
+    }
+    if (changed && emitChanged) {
+      EventBus.emit('customer:rewardBonusChanged');
+      this._rescanAll();
+    }
   }
 
   private _spawnCustomer(): void {
@@ -579,16 +618,10 @@ class CustomerManagerClass {
       lockedCellIndex: -1,
     }));
 
-    let huayuan = CustomerManagerClass.computeOrderHuayuan(
-      slots,
-      gen.bonusMultiplier,
-      gen.orderType,
-    );
-    if (AffinityManager.huayuanMultFor(type.id) !== 1) {
-      huayuan = Math.max(1, Math.round(huayuan * AffinityManager.huayuanMultFor(type.id)));
-    }
+    const huayuan = this._computeCustomerHuayuan(type.id, slots, gen.bonusMultiplier, gen.orderType);
+    const weekendHuayuanBonus = WeekendHuayuanBoostManager.bonusFor(huayuan);
 
-    const contentTier = computeTierFromOrderSlots(slots.map(s => s.itemId));
+    const contentTier = computeTierFromOrderSlots(slots.map(s => s.itemId), level);
 
     const customer: CustomerInstance = {
       uid: this._nextUid++,
@@ -598,6 +631,7 @@ class CustomerManagerClass {
       slots,
       allSatisfied: false,
       huayuanReward: huayuan,
+      weekendHuayuanBonus: weekendHuayuanBonus > 0 ? weekendHuayuanBonus : undefined,
       tier: contentTier,
       orderType: gen.orderType,
       timeLimit: gen.timeLimit,
@@ -711,7 +745,8 @@ class CustomerManagerClass {
     this.clearAllCustomers();
     const type = CUSTOMER_TYPES.find(t => t.id === typeId) ?? CUSTOMER_TYPES[0];
     const slots: DemandSlot[] = itemIds.map(id => ({ itemId: id, lockedCellIndex: -1 }));
-    const huayuan = CustomerManagerClass.computeOrderHuayuan(slots, 1, 'normal');
+    const huayuan = this._computeCustomerHuayuan(type.id, slots, 1, 'normal');
+    const weekendHuayuanBonus = WeekendHuayuanBoostManager.bonusFor(huayuan);
 
     const customer: CustomerInstance = {
       uid: this._nextUid++,
@@ -721,7 +756,8 @@ class CustomerManagerClass {
       slots,
       allSatisfied: false,
       huayuanReward: huayuan,
-      tier: computeTierFromOrderSlots(itemIds) as OrderTier,
+      weekendHuayuanBonus: weekendHuayuanBonus > 0 ? weekendHuayuanBonus : undefined,
+      tier: computeTierFromOrderSlots(itemIds, LevelManager.level) as OrderTier,
       orderType: 'normal' as OrderType,
       timeLimit: null,
       bonusMultiplier: 1,

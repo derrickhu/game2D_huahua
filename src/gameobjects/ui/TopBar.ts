@@ -10,9 +10,11 @@
  * - 花愿：图标 + 数值叠在底边，图标中心与体力闪电/钻石宝石同一水平中线
  */
 import * as PIXI from 'pixi.js';
+import { AudioManager } from '@/core/AudioManager';
 import { EventBus } from '@/core/EventBus';
 import { CurrencyManager } from '@/managers/CurrencyManager';
 import { GMManager } from '@/managers/GMManager';
+import { WeekendHuayuanBoostManager } from '@/managers/WeekendHuayuanBoostManager';
 import { COLORS, DESIGN_WIDTH, FONT_FAMILY } from '@/config/Constants';
 import { TextureCache } from '@/utils/TextureCache';
 import { TweenManager, Ease } from '@/core/TweenManager';
@@ -60,6 +62,9 @@ const SHOP_PILL_LEFT = DIAMOND_BAR_RIGHT + GAP_DIAMOND_TO_SHOP;
 const SHOP_ICON = 56;
 /** 点击热区 = 图标 + 外扩，避免难点 */
 const SHOP_HIT = SHOP_ICON + 18;
+/** 周末活动入口：约为商店图标 2 倍显示尺寸 */
+const WEEKEND_ICON = SHOP_ICON * 2;
+const WEEKEND_HIT = WEEKEND_ICON + 24;
 /** 顶栏右侧为系统菜单胶囊预留，GM 入口在商店/钻石条右缘与此之间 */
 const RIGHT_MENU_RESERVE = 172;
 // ── 颜色（体力胶囊参考：浅粉框 + 鲜绿填充 + 绿圆加号）──
@@ -90,7 +95,7 @@ export class TopBar extends PIXI.Container {
   private _diamondBar!: PIXI.Container;
   private _diamondText!: PIXI.Text;
   private readonly _opts: TopBarOptions;
-  /** GM 左侧起点：钻石条右缘，或商店图标热区右缘 */
+  /** 周末图标接入前 GM 槽左缘（仅用于周末图标定位） */
   private _gmSlotLeft = DIAMOND_BAR_RIGHT + 10;
 
   constructor(opts?: TopBarOptions) {
@@ -101,6 +106,7 @@ export class TopBar extends PIXI.Container {
     this._buildDiamondPill();
     if (!this._opts.hideShopPill) {
       this._buildShopPill();
+      this._buildWeekendBoostButton();
     }
     // 友谊图鉴入口已迁移到 ShopScene 左上侧栏「图鉴」按钮下方（V2，避免双入口），此处不再构建。
     this._buildGmActivateZone();
@@ -169,6 +175,7 @@ export class TopBar extends PIXI.Container {
     staminaPlus.position.set(BOLT_W * 0.22, BOLT_H * 0.28);
     staminaPlus.eventMode = 'static';
     staminaPlus.cursor = 'pointer';
+    this._bindButtonClickSfx(staminaPlus);
     staminaPlus.on('pointertap', (e: PIXI.FederatedPointerEvent) => {
       e.stopPropagation();
       EventBus.emit('panel:openStamina');
@@ -312,6 +319,7 @@ export class TopBar extends PIXI.Container {
     root.eventMode = 'static';
     root.cursor = 'pointer';
     root.hitArea = new PIXI.Rectangle(-SHOP_HIT / 2, -SHOP_HIT / 2, SHOP_HIT, SHOP_HIT);
+    this._bindButtonClickSfx(root);
     root.on('pointertap', (e: PIXI.FederatedPointerEvent) => {
       e.stopPropagation();
       EventBus.emit('panel:openMerchShop');
@@ -319,27 +327,114 @@ export class TopBar extends PIXI.Container {
 
     this.addChild(root);
 
-    // 商店之后没有 codexPill 了，GM 槽起点紧贴商店右缘
+    // 商店之后可挂限时活动入口，GM 槽起点由后续入口继续右推
     this._gmSlotLeft = SHOP_PILL_LEFT + SHOP_HIT + 10;
   }
 
+  private _weekendBoostRoot: PIXI.Container | null = null;
+  private _weekendCountdownWrap: PIXI.Container | null = null;
+  private _weekendCountdownText: PIXI.Text | null = null;
+  private _lastWeekendCountdown = '';
+
+  /** 周末活动：商店旁 NB2 物件图标 → 宣传页；图标下显示距周一 0 点结束倒计时 */
+  private _buildWeekendBoostButton(): void {
+    const root = new PIXI.Container();
+    this._weekendBoostRoot = root;
+    root.position.set(this._gmSlotLeft + WEEKEND_HIT / 2, BAR_MID_Y);
+    root.eventMode = 'static';
+    root.cursor = 'pointer';
+    root.hitArea = new PIXI.Rectangle(
+      -WEEKEND_HIT / 2,
+      -WEEKEND_HIT / 2,
+      WEEKEND_HIT,
+      WEEKEND_HIT + 22,
+    );
+
+    const draw = (): void => {
+      root.removeChildren();
+      this._weekendCountdownText = null;
+      this._weekendCountdownWrap = null;
+      const tex = TextureCache.get('icon_weekend_huayuan_boost_nb2');
+      if (tex) {
+        const sp = new PIXI.Sprite(tex);
+        sp.anchor.set(0.5);
+        sp.width = WEEKEND_ICON;
+        sp.height = WEEKEND_ICON;
+        root.addChild(sp);
+      } else {
+        const fb = new PIXI.Text('周末', {
+          fontSize: 14,
+          fill: 0xff7f66,
+          fontFamily: FONT_FAMILY,
+          fontWeight: 'bold',
+        });
+        fb.anchor.set(0.5);
+        root.addChild(fb);
+      }
+
+      const countdownWrap = new PIXI.Container();
+      countdownWrap.position.set(0, WEEKEND_ICON / 2 - 6);
+      const countdownBg = new PIXI.Graphics();
+      countdownBg.beginFill(0x4e342e, 0.92);
+      countdownBg.drawRoundedRect(-58, 0, 116, 24, 12);
+      countdownBg.endFill();
+      countdownWrap.addChild(countdownBg);
+      const countdown = new PIXI.Text('', {
+        fontSize: 17,
+        fill: 0xfff9c4,
+        fontFamily: FONT_FAMILY,
+        fontWeight: 'bold',
+        stroke: 0x3e2723,
+        strokeThickness: 4,
+      } as PIXI.TextStyle);
+      countdown.anchor.set(0.5);
+      countdown.position.set(0, 12);
+      countdownWrap.addChild(countdown);
+      root.addChild(countdownWrap);
+      this._weekendCountdownWrap = countdownWrap;
+      this._weekendCountdownText = countdown;
+
+      root.visible = WeekendHuayuanBoostManager.isAvailableToday();
+      this._lastWeekendCountdown = '';
+      this.updateWeekendCountdown();
+    };
+
+    this._bindButtonClickSfx(root);
+    root.on('pointertap', (e: PIXI.FederatedPointerEvent) => {
+      e.stopPropagation();
+      EventBus.emit('panel:openWeekendHuayuanBoost');
+    });
+    EventBus.on('weekendHuayuanBoost:changed', draw);
+    draw();
+    this.addChild(root);
+    this._gmSlotLeft += WEEKEND_HIT + 8;
+  }
+
+  /** 顶栏周末活动倒计时（周六 0 点～周一 0 点，按结束时刻） */
+  updateWeekendCountdown(): void {
+    if (!this._weekendCountdownText || !this._weekendBoostRoot) return;
+    const label = WeekendHuayuanBoostManager.countdownLabel();
+    if (!label) {
+      this._weekendBoostRoot.visible = false;
+      return;
+    }
+    this._weekendBoostRoot.visible = true;
+    if (label === this._lastWeekendCountdown) return;
+    this._lastWeekendCountdown = label;
+    this._weekendCountdownText.text = label;
+  }
+
   /**
-   * 真机友好：商店图标与右侧系统菜单之间的整条顶栏区域可点；
-   * 未激活 GM 时连点 5 次激活；已激活时点同一区域或  打开面板。
-   * 须先于 _buildGmButton 加入子节点，保证  叠在最上层。
+   * GM 激活热区：顶栏左下（避开右侧微信菜单与周末大图标）
    */
   private _buildGmActivateZone(): void {
     if (!GMManager.isRuntimeAllowed) return;
 
-    const slotLeft = this._gmSlotLeft;
-    const slotRight = DESIGN_WIDTH - RIGHT_MENU_RESERVE;
-    const w = slotRight - slotLeft;
-    if (w < 20) return;
-
     const zone = new PIXI.Container();
-    zone.position.set(slotLeft, 0);
-    zone.hitArea = new PIXI.Rectangle(0, 0, w, TOP_BAR_HEIGHT);
+    zone.position.set(12, TOP_BAR_HEIGHT - 4);
+    zone.hitArea = new PIXI.Rectangle(0, 0, 108, 34);
     zone.eventMode = 'static';
+    zone.zIndex = 20;
     zone.on('pointertap', (e: PIXI.FederatedPointerEvent) => {
       e.stopPropagation();
       if (GMManager.isEnabled) GMManager.openPanel();
@@ -348,34 +443,48 @@ export class TopBar extends PIXI.Container {
     this.addChild(zone);
   }
 
-  /** GM 调试入口：槽位中央的 （激活后可见） */
+  /** GM 调试入口：顶栏左下（激活后可见，不被微信胶囊挡住） */
   private _buildGmButton(): void {
     if (!GMManager.isRuntimeAllowed) return;
 
-    const slotLeft = this._gmSlotLeft;
-    const slotRight = DESIGN_WIDTH - RIGHT_MENU_RESERVE;
-    if (slotRight - slotLeft < 36) return;
-
-    const cx = (slotLeft + slotRight) / 2;
     const wrap = new PIXI.Container();
-    wrap.position.set(cx, BAR_MID_Y);
+    wrap.position.set(66, TOP_BAR_HEIGHT + 10);
     const hit = 44;
     wrap.hitArea = new PIXI.Rectangle(-hit / 2, -hit / 2, hit, hit);
     wrap.eventMode = 'static';
     wrap.cursor = 'pointer';
     wrap.visible = GMManager.isEnabled;
     wrap.name = 'gmBtn';
+    wrap.zIndex = 21;
 
-    const icon = new PIXI.Text('GM', { fontSize: 14, fontFamily: FONT_FAMILY, fill: 0x666666 });
+    const bg = new PIXI.Graphics();
+    bg.beginFill(0x2a314f, 0.94);
+    bg.lineStyle(1.5, 0x6a7a9a, 0.9);
+    bg.drawRoundedRect(-22, -14, 44, 28, 10);
+    bg.endFill();
+    wrap.addChild(bg);
+
+    const icon = new PIXI.Text('GM', {
+      fontSize: 15,
+      fontFamily: FONT_FAMILY,
+      fill: 0xe8ecf4,
+      fontWeight: 'bold',
+    });
     icon.anchor.set(0.5);
     wrap.addChild(icon);
 
+    this._bindButtonClickSfx(wrap);
     wrap.on('pointertap', (e: PIXI.FederatedPointerEvent) => {
       e.stopPropagation();
       GMManager.openPanel();
     });
     this.addChild(wrap);
     EventBus.on('gm:activated', () => { wrap.visible = true; });
+  }
+
+  /** 顶栏图标走 pointertap 开面板，在此显式播通用按钮音（与 stage 全局链式解耦） */
+  private _bindButtonClickSfx(target: PIXI.Container): void {
+    target.on('pointerdown', () => AudioManager.play('button_click'));
   }
 
   /**
@@ -416,6 +525,10 @@ export class TopBar extends PIXI.Container {
   private _bindEvents(): void {
     EventBus.on('currency:changed', () => this._updateAll());
     EventBus.on('currency:loaded', () => this._updateAll());
+    EventBus.on('checkin:gmVirtualDayAdvanced', () => {
+      this._lastWeekendCountdown = '';
+      this.updateWeekendCountdown();
+    });
   }
 
   private _updateAll(): void {

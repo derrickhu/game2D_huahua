@@ -24,6 +24,8 @@ const MAIN_IMAGE_MAP: Record<string, string> = {
   icon_enter_house: 'images/ui/icon_enter_house.png',
   /** NB2+rembg：顶栏内购商店胶囊图标 */
   icon_shop_nb2: 'images/ui/icon_shop_nb2.png',
+  /** 周末订单花愿 +50% 顶栏入口（NB2 物件 + rembg） */
+  icon_weekend_huayuan_boost_nb2: 'images/ui/icon_weekend_huayuan_boost_nb2.png',
   /** NB2+rembg：激励视频 / 看广告统一小图标（粉紫边框 + 播放三角） */
   icon_ad_reward_nb2: 'images/ui/icon_ad_reward_nb2.png',
   icon_heart:  'images/ui/icon_heart.png',
@@ -251,6 +253,8 @@ const PANELS_IMAGE_MAP: Record<string, string> = {
 
   /** 每日挑战：NB2+rembg 粉紫壳（顶栏标题位、关闭钮、秒表条；中间留白叠列表） */
   daily_challenge_panel_shell_nb2: 'subpkg_panels/images/ui/daily_challenge_panel_shell_nb2.png',
+  /** 周末花愿加成宣传卡（rembg 透明底，按钮文案由代码叠） */
+  weekend_huayuan_boost_promo_panel_nb2: 'subpkg_panels/images/ui/weekend_huayuan_boost_promo_panel_nb2.png',
   /** 中间浅蓝任务区底板（空，叠在列表背后） */
   daily_challenge_task_area_nb2: 'subpkg_panels/images/ui/daily_challenge_ui_B_mid_plate_nb2.png',
   /** 任务行：暖金渐变 + 双层描边 + 高光阴影（与每日挑战壳 pastel 一致） */
@@ -729,6 +733,7 @@ const SHOP_WARMUP_KEYS = [
   'shop_edit_deco_pill_4x2_nb2',
   'icon_worldmap_nav',
   'icon_wishing_nav',
+  'icon_weekend_huayuan_boost_nb2',
 ] as const;
 
 const DECO_PANEL_WARMUP_KEYS = [
@@ -877,6 +882,10 @@ const MERCH_SHOP_PANEL_KEYS = [
   'icon_gem',
 ] as const;
 
+const WEEKEND_HUAYUAN_BOOST_PANEL_KEYS = [
+  'weekend_huayuan_boost_promo_panel_nb2',
+] as const;
+
 const FLOWER_SIGN_GACHA_PANEL_KEYS = [
   'flower_sign_gacha_scene_nb2',
   'icon_flower_sign_coin',
@@ -919,6 +928,7 @@ export type TextureAssetGroup =
   | 'dressup'
   | 'merchShop'
   | 'flowerSignGacha'
+  | 'weekendHuayuanBoost'
   | 'main'
   | 'items'
   | 'chars'
@@ -942,6 +952,7 @@ const ASSET_GROUP_KEYS: Record<TextureAssetGroup, readonly string[]> = {
   dressup: DRESSUP_PANEL_KEYS,
   merchShop: MERCH_SHOP_PANEL_KEYS,
   flowerSignGacha: FLOWER_SIGN_GACHA_PANEL_KEYS,
+  weekendHuayuanBoost: WEEKEND_HUAYUAN_BOOST_PANEL_KEYS,
   main: [],
   items: [],
   chars: [],
@@ -976,6 +987,7 @@ const ASSET_GROUP_NOTIFY_KEYS: Record<TextureAssetGroup, readonly string[]> = {
   dressup: uniqueKeys(DRESSUP_PANEL_KEYS, OWNER_OUTFIT_KEYS),
   merchShop: uniqueKeys(MERCH_SHOP_PANEL_KEYS, ALL_ITEMS_KEYS),
   flowerSignGacha: uniqueKeys(FLOWER_SIGN_GACHA_PANEL_KEYS, ALL_ITEMS_KEYS, ALL_DECO_KEYS),
+  weekendHuayuanBoost: [...WEEKEND_HUAYUAN_BOOST_PANEL_KEYS],
 };
 
 const TEXTURE_LOADED_EVENT = 'texture:loaded';

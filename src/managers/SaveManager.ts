@@ -290,6 +290,7 @@ class SaveManagerClass {
         'huahua_flower_cards',
         'huahua_affinity',
         'huahua_daily_candy',
+        'huahua_weekend_huayuan_boost',
         'huahua_haptic',
         CLOUD_SYNC_META_KEY,
         BACKEND_TOKEN_KEY,

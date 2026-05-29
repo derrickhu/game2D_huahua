@@ -99,7 +99,7 @@ class SoundSystemClass {
     //   - passive：自身不触发事件，不参与事件冒泡处理链，.on() 回调不会被调用
     //   - static：触发事件并参与 hitTest，能接收子对象冒泡上来的事件
     // 参考：https://github.com/pixijs/pixijs/discussions/10388
-    const stage = Game.app?.stage;
+    const stage = Game.stage;
     if (stage) {
       stage.eventMode = 'static';
       stage.hitArea = new PIXI.Rectangle(

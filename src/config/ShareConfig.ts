@@ -53,10 +53,10 @@ export function createWarehouseSlotShare(slotIndex: number): SharePayload {
   };
 }
 
-export function createAffinityCardShare(card: AffinityCardDef): SharePayload {
+export function createAffinityCardShare(card: AffinityCardDef, imageUrl?: string): SharePayload {
   return {
     title: `抽到「${card.title}」了！`,
-    imageUrl: SHARE_IMAGES.core_gameplay,
+    imageUrl: imageUrl ?? SHARE_IMAGES.core_gameplay,
     query: `affinity_card=${card.id}&owner=${card.ownerTypeId}`,
   };
 }

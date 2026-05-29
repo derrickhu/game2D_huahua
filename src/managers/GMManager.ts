@@ -25,6 +25,7 @@ import { CurrencyManager } from './CurrencyManager';
 import { SaveManager } from './SaveManager';
 import { FlowerSignTicketManager } from './FlowerSignTicketManager';
 import { CheckInManager } from './CheckInManager';
+import { WeekendHuayuanBoostManager } from './WeekendHuayuanBoostManager';
 import { LevelManager } from './LevelManager';
 import { DecorationManager } from './DecorationManager';
 import { EventManager } from './EventManager';
@@ -798,6 +799,24 @@ class GMManagerClass {
       execute: () => {
         CheckInManager.gmAdvanceVirtualDay();
         return ` 虚拟日期 +1，偏移=${CheckInManager.gmDateOffsetDays}天，可签到=${CheckInManager.canCheckIn ? '是' : '否'}`;
+      },
+    });
+
+    this._commands.push({
+      id: 'gm_weekend_advance_day',
+      group: ' 系统测试',
+      name: ' 周末花愿：虚拟下一天',
+      desc: '日历 +1 天并重置周末加成激活（与签到虚拟日共用偏移）',
+      execute: () => {
+        CheckInManager.gmAdvanceVirtualDay();
+        WeekendHuayuanBoostManager.resetAfterVirtualDayAdvance();
+        const h = WeekendHuayuanBoostManager.countdownLabel();
+        return [
+          ` 虚拟日 +1，偏移=${CheckInManager.gmDateOffsetDays} 天`,
+          ` 周末入口=${WeekendHuayuanBoostManager.isAvailableToday() ? '显示' : '隐藏'}`,
+          ` 已激活=${WeekendHuayuanBoostManager.isActive() ? '是' : '否'}`,
+          h ? ` 倒计时：${h}` : ' 倒计时：—',
+        ].join('；');
       },
     });
 

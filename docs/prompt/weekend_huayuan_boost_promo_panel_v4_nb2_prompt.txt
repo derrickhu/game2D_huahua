@@ -1,0 +1,25 @@
+Vertical mobile game event promo UI master sheet, 3:4 aspect, cozy pastel flower-shop merge game, match reference shopkeeper chibi and pink sakura huayuan coin style.
+
+Full image background pure flat white RGB 255,255,255 only in margins left and right and top bottom outside the card. NO gradient in white margins.
+
+CENTER: one clean vertical rounded-rectangle card, width 58 percent of canvas, crisp smooth purple-pink border with NO fuzzy glow bleeding into white margins, anti-aliased edges.
+
+Inside card top to bottom:
+
+Gold ribbon banner text 周末限时 readable Chinese.
+
+Headline readable Chinese 花愿获得提升 then enormous decorative 50 percent in yellow-orange.
+
+Sub lines readable Chinese 超值福利 看广告激活 and 今日全部订单花愿额外加成 and small tag 次日0点重置.
+
+Middle illustration: same brown-hair pink-bow shopkeeper girl as reference, white apron, holding bouquet, large simple pink sakura coins like reference currency icon floating, minimal background shapes, thick chocolate outlines, soft cel shading like game UI.
+
+BOTTOM 20 percent: one wide horizontal pill button EMPTY — smooth coral-to-gold gradient capsule with subtle highlight ONLY, absolutely NO text NO letters NO numbers NO play icon NO words baked into the button. Button must be blank for code overlay.
+
+Top-right red circle close button white X on the card corner.
+
+Card interior soft pink-lavender gradient background, sparkles minimal.
+
+Readable Chinese on banner and headlines required. Button area must stay completely blank.
+
+No watermark, no photoreal, no fuzzy halos outside card silhouette.

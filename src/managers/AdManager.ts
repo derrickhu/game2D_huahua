@@ -45,6 +45,8 @@ export enum AdScene {
   MERGE_BUBBLE_UNLOCK = 'merge_bubble_unlock',
   /** 每日签到完成后加餐（体力+钻石） */
   CHECKIN_AD_BONUS = 'checkin_ad_bonus',
+  /** 周末订单花愿 +50% 活动 */
+  WEEKEND_HUAYUAN_BOOST = 'weekend_huayuan_boost',
 }
 
 export type AdFailReason =
@@ -136,7 +138,7 @@ class AdManagerClass {
   get canShowRewardedAd(): boolean {
     if (this._isAdShowing) return false;
     if (this._devMode) return true;
-    return !!this._adConfig && this._rewardedAds.size > 0;
+    return !!this._adConfig;
   }
 
   /** 是否处于开发模式 */
@@ -211,6 +213,7 @@ class AdManagerClass {
     }
 
     const adUnitId = this._rewardedAdUnitIdForScene(scene);
+    console.log(`[AdManager] 激励视频请求 scene=${scene} adUnitId=${adUnitId ?? 'null'}`);
     // 经分 ad_request：在调 createRewardedVideoAd().load() 前打。dev_mode 不打，避免曝光数虚高。
     this._trackAd(EVENT_NAMES.AD_REQUEST, scene, adUnitId);
 
@@ -232,29 +235,29 @@ class AdManagerClass {
     // 重置一次性 cycle 标志：从这次 show() 开始，到 _finishRewardedAd 结束之间，ad_error 只打一次。
     this._errorReportedThisCycle = false;
 
-    rewardedAd.show()
-      .then(() => {
-        // 真正展示成功才打 ad_show（与 ad_request 拉开漏斗，方便算 load→show 转化率）
-        this._trackAd(EVENT_NAMES.AD_SHOW, scene, adUnitId);
-      })
-      .catch(() => {
-        // 显示失败，尝试重新加载后再显示
-        rewardedAd.load().then(() => {
-          if (this._pendingAdUnitId !== adUnitId || !this._pendingCallback) return;
-          rewardedAd.show()
-            .then(() => {
-              this._trackAd(EVENT_NAMES.AD_SHOW, scene, adUnitId);
-            })
-            .catch((err: any) => {
-              console.error('[AdManager] 激励视频展示失败:', err);
-              this._reportAdErrorOnce(scene, adUnitId, Number(err?.errCode ?? -1), String(err?.errMsg || 'show_failed'));
-              this._finishRewardedAd(false, 'show_failed');
-            });
-        }).catch((err: any) => {
-          console.error('[AdManager] 激励视频加载失败:', err);
-          this._reportAdErrorOnce(scene, adUnitId, Number(err?.errCode ?? -1), String(err?.errMsg || 'load_failed'));
-          this._finishRewardedAd(false, 'load_failed');
+    const doShow = () => {
+      if (this._pendingAdUnitId !== adUnitId || !this._pendingCallback) return;
+      rewardedAd.show()
+        .then(() => {
+          this._trackAd(EVENT_NAMES.AD_SHOW, scene, adUnitId);
+        })
+        .catch((err: any) => {
+          console.error('[AdManager] 激励视频展示失败:', err);
+          this._reportAdErrorOnce(scene, adUnitId, Number(err?.errCode ?? -1), String(err?.errMsg || 'show_failed'));
+          this._finishRewardedAd(false, 'show_failed');
         });
+    };
+
+    // 微信端须先 load 再 show；直接 show 常因未加载完成而无声失败
+    rewardedAd.load()
+      .then(() => {
+        if (adUnitId) this._loadedRewardedAdUnits.add(adUnitId);
+        doShow();
+      })
+      .catch((err: any) => {
+        console.error('[AdManager] 激励视频加载失败:', err);
+        this._reportAdErrorOnce(scene, adUnitId, Number(err?.errCode ?? -1), String(err?.errMsg || 'load_failed'));
+        this._finishRewardedAd(false, 'load_failed');
       });
   }
 

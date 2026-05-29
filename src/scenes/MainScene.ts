@@ -105,6 +105,8 @@ import { LIVE_HOUSE_THUMB_CAPTURE_MAX } from '@/config/WorldMapConfig';
 import { RewardBoxManager } from '@/managers/RewardBoxManager';
 import { MERGE_BUBBLE_DISPLAY_NAME } from '@/config/MergeCompanionConfig';
 import { RoomLayoutManager } from '@/managers/RoomLayoutManager';
+import { WeekendHuayuanBoostManager } from '@/managers/WeekendHuayuanBoostManager';
+import { WeekendHuayuanBoostPanel } from '@/gameobjects/ui/WeekendHuayuanBoostPanel';
 
 /** 合成页左侧店主半身：目标高度与最大宽度（设计 px），统一 scale=min(宽限,高限) 保持宽高比、避免栏内「压扁」感 */
 const BOARD_OWNER_TARGET_H = 208;
@@ -177,6 +179,7 @@ export class MainScene implements Scene {
 
   /** 合成顶栏 · 全屏摊位购买商店（NB2 框体） */
   private _merchShopPanel!: MerchShopPanel;
+  private _weekendHuayuanBoostPanel!: WeekendHuayuanBoostPanel;
 
   private _affinityCardDropPopup!: AffinityCardDropPopup;
   private _affinityCodexPanel!: AffinityCodexPanel;
@@ -210,6 +213,7 @@ export class MainScene implements Scene {
       this._boardView.refresh();
 
       // 启动核心管理器
+      WeekendHuayuanBoostManager.init();
       CustomerManager.init();
       QuestManager.init();
       CheckInManager.init();
@@ -469,6 +473,9 @@ export class MainScene implements Scene {
 
     this._merchShopPanel = new MerchShopPanel();
     overlay.addChild(this._merchShopPanel);
+
+    this._weekendHuayuanBoostPanel = new WeekendHuayuanBoostPanel();
+    overlay.addChild(this._weekendHuayuanBoostPanel);
 
     this._affinityCardDropPopup = new AffinityCardDropPopup();
     overlay.addChild(this._affinityCardDropPopup);
@@ -1328,6 +1335,13 @@ export class MainScene implements Scene {
       this._merchShopPanel.open();
     });
 
+    EventBus.on('panel:openWeekendHuayuanBoost', () => {
+      if (TutorialManager.isActive) return;
+      const cur = SceneManager.current?.name;
+      if (cur !== 'main') return;
+      this._weekendHuayuanBoostPanel.open();
+    });
+
     // 兼容旧事件：熟客资料卡已废弃，统一跳友谊图鉴
     EventBus.on('panel:openCustomerProfile', (typeId: string) => {
       if (TutorialManager.isActive) return;
@@ -1543,9 +1557,11 @@ export class MainScene implements Scene {
     this._boardView.refreshMergeCompanionHud();
     this._boardView.updateCdDisplay();
     this._topBar.updateTimer();
+    this._topBar.updateWeekendCountdown();
     this._staminaPanel.updateTimer();
     this._hapticSystem.update(dt);
     ChallengeManager.update(dt);
+    WeekendHuayuanBoostManager.update(dt);
 
     // 客人滚动区惯性动画
     this._customerScrollArea.update(dt);

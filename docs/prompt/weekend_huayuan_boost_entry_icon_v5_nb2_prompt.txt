@@ -1,0 +1,17 @@
+Single mobile game HUD icon 1:1, readable at 64 pixels, same chocolate-outline cel-shaded merge flower-shop style as reference shop stall icon.
+
+NOT just one flat flower coin. Build a small weekend gift scene from 3 simple bold shapes:
+
+1) Lower center: open wicker basket or wooden crate with 2-3 oversized pink sakura flower heads sticking out, simple chunky petals like game huayuan icon colors.
+
+2) Upper right overlapping basket: bold yellow round badge with huge dark-brown stroke text plus 50 percent, largest readable element, same visual impact as reference weekend icon with plus 50.
+
+3) Upper left: small coral weekend ribbon flag or tiny Saturday-Sunday calendar tab, solid color block only, minimal detail.
+
+Isometric three-quarter view, generous margin, NO square UI button frame, NO white border.
+
+Background solid magenta FF00FF.
+
+Maximum 5 simple color masses, no tiny coins, no hourglass, no full girl character, no market stall awning duplicate.
+
+No watermark.
