@@ -9,7 +9,7 @@
  * - `purchaseStock`：本波该槽位可购买次数（默认 1，范围 1～99）；每次购买 `remaining--`，到 0 售罄至下次刷新。
  * - 所有 `itemId` 须存在于 `ITEM_DEFS`，否则 roll 时跳过。
  * - `dynamicFreeShopPool`：为 true 时忽略 `pool`，由 `MerchShopManager` 按图鉴动态生成（已解锁、等级小于 6、非 `tool_*`、全部免费；另低权重含 1 级红包/体力宝箱/宝石袋）；**每格可购次数固定为 1**。
- * - `dynamicMysteryShopPool`：为 true 时忽略 `pool`，由 `MerchShopManager` 生成神秘商店（已解锁线全等级高权；未解锁线低权少货贵价；`tool_*` 仅 1 级极低权高价；钻石售价带波动；低等级可概率花愿；**不含钻石袋线 `diamond_bag_*`**）。**第三栏 `shelf_mixed` 当前与第二栏相同规则占位**，后续可单独改配置。
+ * - `dynamicMysteryShopPool`：为 true 时忽略 `pool`，由 `MerchShopManager` 生成神秘商店（已解锁线全等级高权；未解锁线低权少货贵价；`tool_*` 仅 1 级极低权高价；钻石售价带波动；低等级可概率花愿；**不含钻石袋线 `diamond_bag_*`**；幸运金币/万能水晶/金剪刀低权重入池、每格库存 1）。**第三栏 `shelf_mixed` 当前与第二栏相同规则占位**，后续可单独改配置。
  * - `MERCH_DIAMOND_REFRESH_SHELF_COST`：面板内每层板旁「钻石刷新」仅重 roll 该路货架并重置该路 CD。
  */
 export type MerchPriceType = 'free' | 'diamond' | 'huayuan' | 'ad';
@@ -63,18 +63,23 @@ export const MERCH_MYSTERY_STOCK_CAP = 6;
 export const MERCH_MYSTERY_STOCK_DIVISOR = 6;
 /** 未解锁线相对已解锁线的库存倍率（更少） */
 export const MERCH_MYSTERY_LOCKED_STOCK_FACTOR = 0.38;
-/** 钻石基础价：`base + level*perLv + floor(level²/curveDiv)` */
-export const MERCH_MYSTERY_DIAMOND_BASE = 2;
-export const MERCH_MYSTERY_DIAMOND_PER_LEVEL = 2;
-export const MERCH_MYSTERY_DIAMOND_CURVE_DIV = 2;
+/** 钻石基础价：`base + level*perLv + floor(level²/curveDiv)`（已下调，L5 已解锁约 10～14 钻） */
+export const MERCH_MYSTERY_DIAMOND_BASE = 1;
+export const MERCH_MYSTERY_DIAMOND_PER_LEVEL = 1;
+export const MERCH_MYSTERY_DIAMOND_CURVE_DIV = 4;
 /** 宝箱类额外钻石/级 */
-export const MERCH_MYSTERY_DIAMOND_EXTRA_PER_CHEST_LEVEL = 2;
-/** 未解锁线钻石价倍率与加值（更贵） */
-export const MERCH_MYSTERY_LOCKED_DIAMOND_MULT = 2.28;
-export const MERCH_MYSTERY_LOCKED_DIAMOND_ADD = 6;
-/** 工具 1 级：钻石底价 + 随机 [0, spread) */
-export const MERCH_MYSTERY_TOOL_L1_DIAMOND_BASE = 56;
-export const MERCH_MYSTERY_TOOL_L1_DIAMOND_SPREAD = 38;
+export const MERCH_MYSTERY_DIAMOND_EXTRA_PER_CHEST_LEVEL = 1;
+/** 未解锁线钻石价倍率与加值（更贵，相对已下调的底价） */
+export const MERCH_MYSTERY_LOCKED_DIAMOND_MULT = 1.75;
+export const MERCH_MYSTERY_LOCKED_DIAMOND_ADD = 3;
+/** 工具 1 级：钻石底价 + 随机 [0, spread)，约 26～40 钻 */
+export const MERCH_MYSTERY_TOOL_L1_DIAMOND_BASE = 26;
+export const MERCH_MYSTERY_TOOL_L1_DIAMOND_SPREAD = 14;
+/** 幸运金币 / 万能水晶 / 金剪刀：各一条低权重（相对饮品 L1≈200 极低） */
+export const MERCH_MYSTERY_SPECIAL_CONSUMABLE_WEIGHT = 3;
+/** 上述棋盘消耗品：仅钻石价、每格库存 1；base + [0, spread)，再乘售价波动后约 16～26 */
+export const MERCH_MYSTERY_SPECIAL_CONSUMABLE_DIAMOND_BASE = 16;
+export const MERCH_MYSTERY_SPECIAL_CONSUMABLE_DIAMOND_SPREAD = 8;
 /** 售价随机波动：最终价 × U(min, max) */
 export const MERCH_MYSTERY_PRICE_MULT_MIN = 0.82;
 export const MERCH_MYSTERY_PRICE_MULT_MAX = 1.18;

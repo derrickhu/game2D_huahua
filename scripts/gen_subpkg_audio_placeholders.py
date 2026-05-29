@@ -102,6 +102,7 @@ def main() -> None:
     # 奖励飞入与完成订单统一用 customer_deliver.mp3，不再单独生成 reward_fly_whoosh
 
     # ui_reward_fanfare：正式为 game_assets/huahua/bgm/奖励.mp3 → subpkg_audio/ui_reward_fanfare.mp3
+    # deco_obtain：caizhu-rosa/bgm/消除1.mp3 去视频轨 → subpkg_audio/deco_obtain.mp3
 
     map_open = freq_sweep(200, 600, 0.45, 0.16) + silence(0.05)
     write_wav(ROOT / "world_map_open.wav", [int(x) for x in map_open])
@@ -127,6 +128,7 @@ def main() -> None:
     print("tap_building: subpkg_audio/tap_building.mp3 — copy from game_assets/huahua/bgm/合成2.mp3")
     print("ui_reward_fanfare: subpkg_audio/ui_reward_fanfare.mp3 — copy from game_assets/huahua/bgm/奖励.mp3")
     print("collection_unlock: subpkg_audio/collection_unlock.mp3 — copy from game_assets/huahua/bgm/解锁图鉴.mp3")
+    print("deco_obtain: subpkg_audio/deco_obtain.mp3 — game_assets/caizhu-rosa/bgm/消除1.mp3 (ffmpeg -map 0:a:0)")
     print("purchase_tap: subpkg_audio/purchase_tap.mp3 — ~0.4s + tail afade from game_assets/huahua/bgm/购买.mp3")
     print("button_click: subpkg_audio/button_click.mp3 — from game_assets/huahua/bgm/按钮通用.mp3")
     print("Replace WAV with real assets when ready; update src in src/config/AudioConfig.ts")

@@ -134,12 +134,7 @@ const LEVEL_UNLOCK_BASE: Record<number, Omit<LevelUnlockDef, 'level'>> = {
         desc: '花束线开张，订单需求会出现「花束」槽。',
         iconKey: 'tool_arrange_1',
       },
-      {
-        kind: 'feature',
-        title: '高阶礼包',
-        desc: '每逢 5 级可额外领取一份高阶宝箱。',
-        iconKey: 'ui_lvup_high_chest',
-      },
+      // 高阶礼包：每逢 5 级内部发放，无独立实物；不在升星「新功能解锁」区展示
     ],
   },
   6: {

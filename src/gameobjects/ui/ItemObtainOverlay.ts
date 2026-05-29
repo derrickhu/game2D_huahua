@@ -23,7 +23,9 @@ export type ItemObtainEntry =
       kind: 'direct_currency';
       currency: 'stamina' | 'huayuan' | 'diamond' | 'flowerSign';
       amount: number;
-    };
+    }
+  /** 升星解锁区：仅图标 + 短标签（无底板卡片） */
+  | { kind: 'unlock_icon'; iconKey: string; label: string };
 
 const Z = 12500;
 /** 仅用于计算物品区垂直位置（与此前居中逻辑一致，避免改标题缩放时带动格子） */
@@ -101,6 +103,8 @@ export function createItemObtainRewardCell(
 
   let texKey = '';
   let qtyStr = '';
+  let labelFontSize = qtyFs;
+  let labelWrapWidth = cell - 4;
   if (entry.kind === 'board_item') {
     const def = ITEM_DEFS.get(entry.itemId);
     texKey = def?.icon ?? '';
@@ -108,12 +112,18 @@ export function createItemObtainRewardCell(
   } else if (entry.kind === 'deco') {
     texKey = entry.decoId;
     qtyStr = entry.label ?? '专属家具';
+  } else if (entry.kind === 'unlock_icon') {
+    texKey = entry.iconKey;
+    qtyStr = entry.label;
+    labelFontSize = qtyFs >= 14 ? qtyFs : Math.max(13, Math.round(cell * 0.155));
+    labelWrapWidth = cell + 14;
   } else {
     texKey = DIRECT_CURRENCY_ICON[entry.currency];
     qtyStr = `${entry.amount}`;
   }
 
   const iconLayer = new PIXI.Container();
+  const isUnlockIcon = entry.kind === 'unlock_icon';
   root.addChild(iconLayer);
   let textureUnsub: (() => void) | null = null;
   const drawIcon = (): boolean => {
@@ -122,8 +132,11 @@ export function createItemObtainRewardCell(
     if (!tex?.width) return false;
     const sp = new PIXI.Sprite(tex);
     sp.anchor.set(0.5);
-    const sc = Math.min((cell - 10) / tex.width, (cell - 10) / tex.height);
+    // 升星解锁区：与上方奖励格同款，图标铺满格子上半部，无圆形底
+    const iconMax = isUnlockIcon ? cell * 0.8 : cell - 10;
+    const sc = Math.min(iconMax / tex.width, iconMax / tex.height);
     sp.scale.set(sc);
+    if (isUnlockIcon) iconLayer.position.set(0, -cell * 0.06);
     iconLayer.addChild(sp);
     return true;
   };
@@ -148,17 +161,21 @@ export function createItemObtainRewardCell(
   }) as typeof root.destroy;
 
   const cnt = new PIXI.Text(qtyStr, {
-    fontSize: qtyFs,
-    fill: 0xffeb3b,
+    fontSize: labelFontSize,
+    fill: entry.kind === 'unlock_icon' ? 0xfff8e7 : 0xffeb3b,
     fontFamily: FONT_FAMILY,
     fontWeight: 'bold',
     stroke: 0x4e342e,
-    strokeThickness: strokeT,
+    strokeThickness: entry.kind === 'unlock_icon' ? 2 : strokeT,
     dropShadow: true,
     dropShadowColor: 0x000000,
     dropShadowAlpha: 0.45,
     dropShadowBlur: 2,
     dropShadowDistance: 1,
+    wordWrap: entry.kind === 'unlock_icon',
+    wordWrapWidth: labelWrapWidth,
+    align: 'center',
+    lineHeight: (entry.kind === 'unlock_icon' ? labelFontSize : qtyFs) + 3,
   });
   cnt.anchor.set(0.5, 0);
   cnt.position.set(0, cell * 0.36);
@@ -327,6 +344,142 @@ export function layoutObtainStyleRewardBlock(
   content.addChild(hint);
 
   return { boardItemSlots };
+}
+
+export interface IconOnlyGridLayoutOptions {
+  cellSize?: number;
+  gap?: number;
+  maxCols?: number;
+  maxShow?: number;
+  /** 区块标题字号（升星「新功能解锁」等） */
+  titleFontSize?: number;
+  /** 格内短标签字号 */
+  labelFontSize?: number;
+  /** 区块顶边额外留白（与上方奖励区拉开） */
+  topPadding?: number;
+  /** 标题与图标网格间距 */
+  titleToGridGap?: number;
+  /** 标题与图标网格之间的副标题（如「新风格：xxx」） */
+  caption?: string;
+  /** 超出 maxShow 时在网格下显示的提示（如「等共 N 件家具」） */
+  overflowText?: string;
+  /** 溢出提示字号，默认 16 */
+  overflowFontSize?: number;
+}
+
+/**
+ * 仅图标网格（与 layoutObtainStyleRewardBlock 奖励格同款，无白底卡片）。
+ * @returns 区块底边 Y（供下移「点击继续」）
+ */
+export function layoutIconOnlyGrid(
+  content: PIXI.Container,
+  W: number,
+  sectionTopY: number,
+  sectionTitle: string,
+  entries: ItemObtainEntry[],
+  options?: IconOnlyGridLayoutOptions,
+): number {
+  const cell = options?.cellSize ?? 80;
+  const gap = options?.gap ?? 18;
+  const maxCols = options?.maxCols ?? 5;
+  const maxShow = options?.maxShow ?? entries.length;
+  const hasOverflow = entries.length > maxShow;
+  const display = hasOverflow ? entries.slice(0, maxShow) : entries;
+  const n = display.length;
+  if (n <= 0) return sectionTopY;
+
+  const cols = Math.min(maxCols, n);
+  const rows = Math.ceil(n / cols);
+  const gridW = cols * cell + (cols - 1) * gap;
+  const gridH = rows * cell + (rows - 1) * gap;
+
+  const topPad = options?.topPadding ?? 0;
+  const titleFontSize = options?.titleFontSize ?? 22;
+  const titleToGridGap = options?.titleToGridGap ?? 18;
+  const labelFontSize = options?.labelFontSize ?? 15;
+  const titleY = sectionTopY + topPad;
+  const cx = W / 2;
+
+  const titleTxt = new PIXI.Text(sectionTitle, {
+    fontSize: titleFontSize,
+    fill: 0xfff4d4,
+    fontFamily: FONT_FAMILY,
+    fontWeight: 'bold',
+    stroke: 0x4e342e,
+    strokeThickness: 3,
+    dropShadow: true,
+    dropShadowColor: 0x1a0f0a,
+    dropShadowAlpha: 0.5,
+    dropShadowBlur: 3,
+    dropShadowDistance: 2,
+    letterSpacing: 1,
+  });
+  titleTxt.anchor.set(0.5, 0);
+  titleTxt.position.set(cx, titleY);
+  titleTxt.eventMode = 'none';
+
+  const pillPadX = 22;
+  const pillPadY = 8;
+  const pillW = titleTxt.width + pillPadX * 2;
+  const pillH = titleTxt.height + pillPadY * 2;
+  const pill = new PIXI.Graphics();
+  pill.beginFill(0x3e2723, 0.45);
+  pill.drawRoundedRect(-pillW / 2, -pillH / 2, pillW, pillH, pillH / 2);
+  pill.endFill();
+  pill.lineStyle(2, 0xffd54f, 0.5);
+  pill.drawRoundedRect(-pillW / 2, -pillH / 2, pillW, pillH, pillH / 2);
+  pill.position.set(cx, titleY + titleTxt.height / 2);
+  pill.eventMode = 'none';
+  content.addChild(pill);
+  content.addChild(titleTxt);
+
+  let gridTop = titleY + titleTxt.height + titleToGridGap;
+  if (options?.caption) {
+    const cap = new PIXI.Text(options.caption, {
+      fontSize: 14,
+      fill: 0xfff0c8,
+      fontFamily: FONT_FAMILY,
+      fontWeight: 'bold',
+      stroke: 0x5d4037,
+      strokeThickness: 1.5,
+    });
+    cap.anchor.set(0.5, 0);
+    cap.position.set(cx, gridTop);
+    cap.eventMode = 'none';
+    content.addChild(cap);
+    gridTop += cap.height + 8;
+  }
+  const startX = cx - gridW / 2;
+  for (let i = 0; i < n; i++) {
+    const row = Math.floor(i / cols);
+    const col = i % cols;
+    const cellView = createItemObtainRewardCell(display[i]!, {
+      cellSize: cell,
+      qtyFontSize: display[i]!.kind === 'unlock_icon' ? labelFontSize : 13,
+    });
+    const cellCx = startX + col * (cell + gap) + cell / 2;
+    const cellCy = gridTop + row * (cell + gap) + cell / 2;
+    cellView.position.set(cellCx, cellCy);
+    content.addChild(cellView);
+  }
+
+  let bottomY = gridTop + gridH;
+  if (options?.overflowText && (hasOverflow || entries.length > display.length)) {
+    const overflow = new PIXI.Text(options.overflowText, {
+      fontSize: options.overflowFontSize ?? 16,
+      fill: 0xfff0c8,
+      fontFamily: FONT_FAMILY,
+      fontWeight: 'bold',
+      stroke: 0x5d4037,
+      strokeThickness: 2,
+    });
+    overflow.anchor.set(0.5, 0);
+    overflow.position.set(cx, bottomY + 6);
+    overflow.eventMode = 'none';
+    content.addChild(overflow);
+    bottomY += overflow.height + 8;
+  }
+  return bottomY;
 }
 
 export interface ItemObtainOverlayOptions {

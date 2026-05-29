@@ -39,6 +39,9 @@ import {
   MERCH_MYSTERY_TOOL_L1_DIAMOND_BASE,
   MERCH_MYSTERY_TOOL_L1_DIAMOND_SPREAD,
   MERCH_MYSTERY_TOOL_L1_WEIGHT,
+  MERCH_MYSTERY_SPECIAL_CONSUMABLE_DIAMOND_BASE,
+  MERCH_MYSTERY_SPECIAL_CONSUMABLE_DIAMOND_SPREAD,
+  MERCH_MYSTERY_SPECIAL_CONSUMABLE_WEIGHT,
   MERCH_MYSTERY_UNLOCKED_LEVEL_NUM,
   MERCH_SHELVES,
   type MerchPoolEntry,
@@ -150,15 +153,17 @@ interface MysteryCandidate {
   itemId: string;
   weight: number;
   isToolL1: boolean;
+  isSpecialConsumable: boolean;
   lockedLine: boolean;
   def: ItemDef;
 }
 
-const MYSTERY_BLOCKED_IDS = new Set<string>([
+/** 神秘商店低概率棋盘消耗品（幸运金币 / 万能水晶 / 金剪刀） */
+const MYSTERY_SPECIAL_CONSUMABLE_IDS = [
   LUCKY_COIN_ITEM_ID,
   CRYSTAL_BALL_ITEM_ID,
   GOLDEN_SCISSORS_ITEM_ID,
-]);
+] as const;
 
 /** 神秘商店不出现：钻石袋线（棋盘散落钻石块） */
 const MYSTERY_EXCLUDED_CHEST_LINES = new Set<string>(['diamond_bag']);
@@ -166,7 +171,6 @@ const MYSTERY_EXCLUDED_CHEST_LINES = new Set<string>(['diamond_bag']);
 function buildMysteryCandidates(): MysteryCandidate[] {
   const out: MysteryCandidate[] = [];
   for (const [id, def] of ITEM_DEFS) {
-    if (MYSTERY_BLOCKED_IDS.has(id)) continue;
     if (def.category === Category.CURRENCY) continue;
 
     if (def.category === Category.BUILDING) {
@@ -178,6 +182,7 @@ function buildMysteryCandidates(): MysteryCandidate[] {
           itemId: id,
           weight: Math.max(1, Math.round(w)),
           isToolL1: true,
+          isSpecialConsumable: false,
           lockedLine,
           def,
         });
@@ -207,15 +212,48 @@ function buildMysteryCandidates(): MysteryCandidate[] {
           Math.round(w * MERCH_MYSTERY_LOCKED_LINE_WEIGHT_FACTOR),
         );
       }
-      out.push({ itemId: id, weight: w, isToolL1: false, lockedLine, def });
+      out.push({
+        itemId: id,
+        weight: w,
+        isToolL1: false,
+        isSpecialConsumable: false,
+        lockedLine,
+        def,
+      });
     }
   }
+
+  for (const itemId of MYSTERY_SPECIAL_CONSUMABLE_IDS) {
+    const def = ITEM_DEFS.get(itemId);
+    if (!def) continue;
+    out.push({
+      itemId,
+      weight: MERCH_MYSTERY_SPECIAL_CONSUMABLE_WEIGHT,
+      isToolL1: false,
+      isSpecialConsumable: true,
+      lockedLine: false,
+      def,
+    });
+  }
+
   return out;
 }
 
 function finalizeMysterySlot(c: MysteryCandidate): MerchSlotState {
-  const { def, lockedLine, isToolL1 } = c;
+  const { def, lockedLine, isToolL1, isSpecialConsumable } = c;
   const fluct = mysteryPriceFluctuationMult();
+
+  if (isSpecialConsumable) {
+    const baseDia =
+      MERCH_MYSTERY_SPECIAL_CONSUMABLE_DIAMOND_BASE +
+      Math.floor(Math.random() * MERCH_MYSTERY_SPECIAL_CONSUMABLE_DIAMOND_SPREAD);
+    return {
+      itemId: c.itemId,
+      remaining: 1,
+      priceType: 'diamond',
+      priceAmount: Math.max(1, Math.round(baseDia * fluct)),
+    };
+  }
 
   let stock: number;
   if (isToolL1) {
@@ -234,6 +272,7 @@ function finalizeMysterySlot(c: MysteryCandidate): MerchSlotState {
     : MERCH_MYSTERY_HUAYUAN_CHANCE_UNLOCKED;
   const tryHuayuan =
     !isToolL1 &&
+    !isSpecialConsumable &&
     def.level <= MERCH_MYSTERY_HUAYUAN_MAX_LEVEL &&
     Math.random() < hyChance;
 

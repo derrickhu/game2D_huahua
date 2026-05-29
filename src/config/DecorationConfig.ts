@@ -1,3 +1,5 @@
+import { AD_UNLOCK_DECO_IDS } from '@/config/AdConfig';
+
 /**
  * 花店装修配置 v2
  *
@@ -180,11 +182,11 @@ export const DECO_DEFS: DecoDef[] = [
 
   // ═══════ ① 花架 / 展示架 (shelf) ═══════
   // 入门花架：低价带仍便于首周入手，但整体高于旧版（约多攒数单）
-  { id: 'shelf_wood',    name: '简约木花架',  slot: DecoSlot.SHELF, rarity: DecoRarity.COMMON, cost: 5, starValue: 2, icon: 'shelf_wood',   desc: '三层原木架，朴素实用', defaultScale: 1.5, decorationPanelTab: 'flower_room' },
+  { id: 'shelf_wood',    name: '简约木花架',  slot: DecoSlot.SHELF, rarity: DecoRarity.COMMON, cost: 5, starValue: 2, icon: 'shelf_wood',   desc: '三层原木架，朴素实用', defaultScale: 1.5, decorationPanelTab: 'flower_room', allowedSceneIds: ['flower_shop'] },
   { id: 'shelf_step',    name: '阶梯花架',    slot: DecoSlot.SHELF, rarity: DecoRarity.COMMON, cost: 655, starValue: 2, icon: 'shelf_step',   desc: '层层叠叠，像小山丘', unlockRequirement: { level: 2 }, defaultScale: 1.35 },
   { id: 'shelf_long',    name: '长条花台',    slot: DecoSlot.SHELF, rarity: DecoRarity.FINE,   cost: 696, starValue: 2, icon: 'shelf_long',   desc: '靠墙摆放的温馨花台', unlockRequirement: { level: 5 }, defaultScale: 1.25, decorationPanelTab: 'garden' },
   { id: 'shelf_iron',    name: '铁艺旋转架',  slot: DecoSlot.SHELF, rarity: DecoRarity.COMMON, cost: 835, starValue: 4, icon: 'shelf_iron',   desc: '优雅的法式铁艺风格', unlockRequirement: { level: 7 }, defaultScale: 1.5 },
-  { id: 'shelf_glass',   name: '玻璃展示柜',  slot: DecoSlot.SHELF, rarity: DecoRarity.RARE,   cost: 1930, starValue: 8, icon: 'shelf_glass',  desc: '高端玻璃门展示柜', unlockRequirement: { level: 10 }, defaultScale: 1.45 },
+  { id: 'shelf_glass',   name: '玻璃展示柜',  slot: DecoSlot.SHELF, rarity: DecoRarity.RARE,   cost: 1930, starValue: 6, icon: 'shelf_glass',  desc: '高端玻璃门展示柜', unlockRequirement: { level: 10 }, defaultScale: 1.45 },
 
   // ═══════ ② 桌台 / 工作台 (table) ═══════
   { id: 'table_counter',  name: '木质收银台',  slot: DecoSlot.TABLE, rarity: DecoRarity.COMMON, cost: 540, starValue: 3, icon: 'table_counter', desc: '温暖的原木收银台', defaultScale: 1.13 },
@@ -196,7 +198,7 @@ export const DECO_DEFS: DecoDef[] = [
   { id: 'light_desk',     name: '台灯',        slot: DecoSlot.LIGHT, rarity: DecoRarity.COMMON, cost: 195, starValue: 2,  icon: 'light_desk',    desc: '简约台灯，温暖光芒', unlockRequirement: { level: 2 }, defaultScale: 0.43 },
   { id: 'light_floor',    name: '晶石立灯',    slot: DecoSlot.LIGHT, rarity: DecoRarity.COMMON, cost: 360, starValue: 1, icon: 'light_floor',   desc: '淡蓝晶石立灯，实心乳白质感易抠图', unlockRequirement: { level: 3 }, defaultScale: 1.25 },
   { id: 'light_pendant',  name: '花式吊灯',    slot: DecoSlot.LIGHT, rarity: DecoRarity.FINE,   cost: 792, starValue: 2, icon: 'light_pendant', desc: '花朵造型的精美吊灯', unlockRequirement: { level: 6 }, defaultScale: 1.05 },
-  { id: 'light_crystal',  name: '水晶吊灯',    slot: DecoSlot.LIGHT, rarity: DecoRarity.RARE,   cost: 1850, starValue: 7, icon: 'light_crystal', desc: '华丽的水晶折射光芒', unlockRequirement: { level: 10 }, defaultScale: 1.1 },
+  { id: 'light_crystal',  name: '水晶灯',      slot: DecoSlot.LIGHT, rarity: DecoRarity.RARE,   cost: 1850, starValue: 4, icon: 'light_crystal', desc: '华丽的水晶折射光芒', unlockRequirement: { level: 10 }, defaultScale: 1.1 },
 
   // ═══════ ④ 摆件 / 装饰品 (ornament) ═══════
   { id: 'orn_pot',        name: '藤编收纳篮',  slot: DecoSlot.ORNAMENT, rarity: DecoRarity.COMMON, cost: 165, starValue: 2,  icon: 'orn_pot',       desc: '手编篮配干花丝带，非盆栽', unlockRequirement: { level: 2 }, defaultScale: 0.63 },
@@ -210,7 +212,7 @@ export const DECO_DEFS: DecoDef[] = [
   { id: 'wallart_plant',  name: '植物壁挂',    slot: DecoSlot.WALLART, rarity: DecoRarity.COMMON, cost: 265, starValue: 2,  icon: 'wallart_plant',  desc: '墙上的一抹绿意', unlockRequirement: { level: 2 }, defaultScale: 0.93 },
   { id: 'wallart_frame',  name: '装饰画框',    slot: DecoSlot.WALLART, rarity: DecoRarity.COMMON, cost: 420, starValue: 1, icon: 'wallart_frame',  desc: '小花野趣装饰画，等距墙面透视', unlockRequirement: { level: 3 }, defaultScale: 0.73 },
   { id: 'wallart_wreath', name: '花环壁饰',    slot: DecoSlot.WALLART, rarity: DecoRarity.FINE,   cost: 870, starValue: 2, icon: 'wallart_wreath', desc: '干花与绿叶编织的花环', unlockRequirement: { level: 5 }, defaultScale: 0.71 },
-  { id: 'wallart_relief', name: '艺术浮雕',    slot: DecoSlot.WALLART, rarity: DecoRarity.RARE,   cost: 2170, starValue: 8, icon: 'wallart_relief', desc: '精致的花卉浮雕壁饰', unlockRequirement: { level: 10 }, defaultScale: 0.67 },
+  { id: 'wallart_relief', name: '艺术浮雕',    slot: DecoSlot.WALLART, rarity: DecoRarity.RARE,   cost: 2170, starValue: 3, icon: 'wallart_relief', desc: '精致的花卉浮雕壁饰', unlockRequirement: { level: 10 }, defaultScale: 0.67 },
   { id: 'wallart_window_meadow_arch', name: '拱窗花野景', slot: DecoSlot.WALLART, rarity: DecoRarity.FINE, cost: 1960, starValue: 4, icon: 'wallart_window_meadow_arch', desc: '奶油木拱窗里收进一片花野与蝶影', unlockRequirement: { level: 10 }, defaultScale: 1.32 },
   { id: 'wallart_window_lake_round',  name: '圆窗湖雾景', slot: DecoSlot.WALLART, rarity: DecoRarity.RARE, cost: 2000, starValue: 6, icon: 'wallart_window_lake_round',  desc: '复古圆窗映着薄雾湖景，像温室外的安静清晨', unlockRequirement: { level: 12 }, defaultScale: 1.28 },
 
@@ -229,12 +231,13 @@ export const DECO_DEFS: DecoDef[] = [
   { id: 'orn_awaken_bucket',  name: '金属醒花桶',   slot: DecoSlot.ORNAMENT, rarity: DecoRarity.FINE, cost: 726, starValue: 2, icon: 'orn_awaken_bucket',  desc: '深水养花，把花叫醒', unlockRequirement: { level: 3 }, defaultScale: 0.57, decorationPanelTab: 'flower_room', allowedSceneIds: ['flower_shop'] },
   { id: 'orn_floral_chest',   name: '花艺工具箱',   slot: DecoSlot.ORNAMENT, rarity: DecoRarity.COMMON, cost: 276, starValue: 1, icon: 'orn_floral_chest',   desc: '剪刀麻绳小喷壶', unlockRequirement: { level: 4 }, defaultScale: 0.87, decorationPanelTab: 'flower_room', allowedSceneIds: ['flower_shop'] },
   { id: 'orn_pastel_bench',   name: '马卡龙长凳',   slot: DecoSlot.ORNAMENT, rarity: DecoRarity.FINE,   cost: 555, starValue: 4, icon: 'orn_pastel_bench',   desc: '薄荷木色配珊瑚软垫', unlockRequirement: { level: 2 }, defaultScale: 1.1, decorationPanelTab: 'furniture' },
-  { id: 'promo_floral_sofa',  name: '花漾木扶手沙发', slot: DecoSlot.ORNAMENT, rarity: DecoRarity.RARE, cost: 299, starValue: 6, icon: 'promo_floral_sofa', desc: '宣传图同款浅木扶手双人沙发，碎花抱枕很适合休息角', unlockRequirement: { level: 7 }, defaultScale: 1.18, decorationPanelTab: 'furniture' },
-  { id: 'promo_wood_tea_table', name: '原木花茶几', slot: DecoSlot.TABLE, rarity: DecoRarity.FINE, cost: 359, starValue: 2, icon: 'promo_wood_tea_table', desc: '厚木板小茶几，摆一杯花茶就有午后感', unlockRequirement: { level: 6 }, defaultScale: 0.98, decorationPanelTab: 'furniture' },
-  { id: 'promo_petal_chaise', name: '花瓣奶油躺椅', slot: DecoSlot.ORNAMENT, rarity: DecoRarity.RARE, cost: 920, starValue: 5, icon: 'promo_petal_chaise', desc: '奶油躺椅配花瓣靠背，午后小憩像躺进花心里', unlockRequirement: { level: 1 }, defaultScale: 1.15, decorationPanelTab: 'furniture' },
-  { id: 'promo_mint_fridge', name: '薄荷小冰箱', slot: DecoSlot.LIGHT, rarity: DecoRarity.FINE, cost: 780, starValue: 4, icon: 'promo_mint_fridge', desc: '圆角复古冰箱，冰饮和鲜花都能清清爽爽', unlockRequirement: { level: 1 }, defaultScale: 1.08 },
-  { id: 'promo_doll_hug_pillow', name: '兔兔抱枕玩偶', slot: DecoSlot.ORNAMENT, rarity: DecoRarity.FINE, cost: 560, starValue: 3, icon: 'promo_doll_hug_pillow', desc: '抱着粉心枕的软萌兔兔，角落立刻变可爱', unlockRequirement: { level: 1 }, defaultScale: 0.62 },
-  { id: 'promo_pearl_bead_curtain', name: '珍珠花珠帘', slot: DecoSlot.WALLART, rarity: DecoRarity.FINE, cost: 680, starValue: 3, icon: 'promo_pearl_bead_curtain', desc: '珍珠、花珠和薄荷小叶串成的温柔墙饰', unlockRequirement: { level: 1 }, defaultScale: 1.75 },
+  // 宣传款：仅广告解锁购买资格 + 花愿购买，不设花店等级门槛（见 AdConfig.AD_UNLOCK_DECO_IDS）
+  { id: 'promo_floral_sofa',  name: '花漾木扶手沙发', slot: DecoSlot.ORNAMENT, rarity: DecoRarity.RARE, cost: 299, starValue: 6, icon: 'promo_floral_sofa', desc: '宣传图同款浅木扶手双人沙发，碎花抱枕很适合休息角', defaultScale: 1.18, decorationPanelTab: 'furniture' },
+  { id: 'promo_wood_tea_table', name: '原木花茶几', slot: DecoSlot.TABLE, rarity: DecoRarity.FINE, cost: 359, starValue: 2, icon: 'promo_wood_tea_table', desc: '厚木板小茶几，摆一杯花茶就有午后感', defaultScale: 0.98, decorationPanelTab: 'furniture' },
+  { id: 'promo_petal_chaise', name: '花瓣奶油躺椅', slot: DecoSlot.ORNAMENT, rarity: DecoRarity.RARE, cost: 920, starValue: 5, icon: 'promo_petal_chaise', desc: '奶油躺椅配花瓣靠背，午后小憩像躺进花心里', defaultScale: 1.15, decorationPanelTab: 'furniture' },
+  { id: 'promo_mint_fridge', name: '薄荷小冰箱', slot: DecoSlot.LIGHT, rarity: DecoRarity.FINE, cost: 780, starValue: 4, icon: 'promo_mint_fridge', desc: '圆角复古冰箱，冰饮和鲜花都能清清爽爽', defaultScale: 1.08 },
+  { id: 'promo_doll_hug_pillow', name: '兔兔抱枕玩偶', slot: DecoSlot.ORNAMENT, rarity: DecoRarity.FINE, cost: 560, starValue: 3, icon: 'promo_doll_hug_pillow', desc: '抱着粉心枕的软萌兔兔，角落立刻变可爱', defaultScale: 0.62 },
+  { id: 'promo_pearl_bead_curtain', name: '珍珠花珠帘', slot: DecoSlot.WALLART, rarity: DecoRarity.FINE, cost: 680, starValue: 3, icon: 'promo_pearl_bead_curtain', desc: '珍珠、花珠和薄荷小叶串成的温柔墙饰', defaultScale: 1.75 },
   { id: 'wallart_lace_curtain', name: '柔纱短帘', slot: DecoSlot.WALLART,  rarity: DecoRarity.FINE,   cost: 300, starValue: 3, icon: 'wallart_lace_curtain', desc: '蕾丝咖啡馆风情', unlockRequirement: { level: 2 }, defaultScale: 1.8 },
   { id: 'garden_wood_trough', name: '木质长花箱',   slot: DecoSlot.GARDEN,   rarity: DecoRarity.COMMON, cost: 252, starValue: 1, icon: 'garden_wood_trough', desc: '一长条春天开在门口', unlockRequirement: { level: 4 }, defaultScale: 0.97 },
 
@@ -283,18 +286,18 @@ export const DECO_DEFS: DecoDef[] = [
   // 蝴蝶小屋扩展（Lv10-14，观蝶/月辉/野趣套）
   { id: 'butterfly_house_study_field_stool', name: '野趣折叠凳', slot: DecoSlot.ORNAMENT, rarity: DecoRarity.FINE, cost: 1750, starValue: 2, icon: 'butterfly_house_study_field_stool', desc: '木架帆布折叠凳，侧挂小布包，适合温室野趣角', unlockRequirement: { level: 10 }, defaultScale: 0.88, decorationPanelTab: 'flower_room', allowedSceneIds: ['butterfly_house'] },
   { id: 'butterfly_house_study_pin_board', name: '蝶翅观察板', slot: DecoSlot.WALLART, rarity: DecoRarity.FINE, cost: 2200, starValue: 2, icon: 'butterfly_house_study_pin_board', desc: '软木板钉着蝶翅速写便签与彩钉，记录每日观察', unlockRequirement: { level: 11 }, defaultScale: 0.95, decorationPanelTab: 'flower_room', allowedSceneIds: ['butterfly_house'] },
-  { id: 'butterfly_house_bamboo_screen', name: '蝶影竹屏风', slot: DecoSlot.WALLART, rarity: DecoRarity.FINE, cost: 2350, starValue: 2, icon: 'butterfly_house_bamboo_screen', desc: '三扇竹编屏风上印着青绿大蝶影，轻隔断观蝶区', unlockRequirement: { level: 11 }, defaultScale: 1.22, decorationPanelTab: 'flower_room', allowedSceneIds: ['butterfly_house'] },
-  { id: 'butterfly_house_study_microscope_desk', name: '显微镜观察台', slot: DecoSlot.TABLE, rarity: DecoRarity.FINE, cost: 3100, starValue: 3, icon: 'butterfly_house_study_microscope_desk', desc: '浅木桌上摆着黄铜显微镜、蝶类图鉴与彩铅', unlockRequirement: { level: 12 }, defaultScale: 1.12, decorationPanelTab: 'flower_room', allowedSceneIds: ['butterfly_house'] },
-  { id: 'butterfly_house_moon_specimen_shelf', name: '蝶标标本柜', slot: DecoSlot.SHELF, rarity: DecoRarity.RARE, cost: 3500, starValue: 4, icon: 'butterfly_house_moon_specimen_shelf', desc: '浅木陈列柜分层展示框装蝶标，下层玻璃门收纳册', unlockRequirement: { level: 13 }, defaultScale: 1.55, decorationPanelTab: 'flower_room', allowedSceneIds: ['butterfly_house'] },
+  { id: 'butterfly_house_bamboo_screen', name: '蝶影竹屏风', slot: DecoSlot.WALLART, rarity: DecoRarity.FINE, cost: 2350, starValue: 2, icon: 'butterfly_house_bamboo_screen', desc: '三扇竹编屏风上印着青绿大蝶影，轻隔断观蝶区', unlockRequirement: { level: 11 }, defaultScale: 1.82, decorationPanelTab: 'flower_room', allowedSceneIds: ['butterfly_house'] },
+  { id: 'butterfly_house_study_microscope_desk', name: '显微镜观察台', slot: DecoSlot.TABLE, rarity: DecoRarity.FINE, cost: 3100, starValue: 3, icon: 'butterfly_house_study_microscope_desk', desc: '浅木桌上摆着黄铜显微镜、蝶类图鉴与彩铅', unlockRequirement: { level: 12 }, defaultScale: 1.62, decorationPanelTab: 'flower_room', allowedSceneIds: ['butterfly_house'] },
+  { id: 'butterfly_house_moon_specimen_shelf', name: '蝶标标本柜', slot: DecoSlot.SHELF, rarity: DecoRarity.RARE, cost: 3500, starValue: 4, icon: 'butterfly_house_moon_specimen_shelf', desc: '浅木陈列柜分层展示框装蝶标，下层玻璃门收纳册', unlockRequirement: { level: 13 }, defaultScale: 1.65, decorationPanelTab: 'flower_room', allowedSceneIds: ['butterfly_house'] },
   { id: 'butterfly_house_aurora_terrarium', name: '幻彩蝴蝶温室', slot: DecoSlot.SHELF, rarity: DecoRarity.RARE, cost: 4100, starValue: 4, icon: 'butterfly_house_aurora_terrarium', desc: '幻彩玻璃罩温室里长着发光小花，一只蝶影停驻', unlockRequirement: { level: 13 }, defaultScale: 1.68, decorationPanelTab: 'flower_room', allowedSceneIds: ['butterfly_house'] },
-  { id: 'butterfly_house_moon_crescent_rug', name: '新月针织毯', slot: DecoSlot.ORNAMENT, rarity: DecoRarity.FINE, cost: 3250, starValue: 3, icon: 'butterfly_house_moon_crescent_rug', desc: '奶油针织毯卷着淡紫新月边，铺出柔软阅读角', unlockRequirement: { level: 14 }, defaultScale: 1.05, depthSortYLift: 0, decorationPanelTab: 'flower_room', allowedSceneIds: ['butterfly_house'] },
-  { id: 'butterfly_house_moon_star_chair', name: '星纹观蝶椅', slot: DecoSlot.ORNAMENT, rarity: DecoRarity.RARE, cost: 3850, starValue: 4, icon: 'butterfly_house_moon_star_chair', desc: '浅木扶手椅配雾蓝软垫与星形抱枕，月辉小憩位', unlockRequirement: { level: 14 }, defaultScale: 1.08, decorationPanelTab: 'flower_room', allowedSceneIds: ['butterfly_house'] },
+  { id: 'butterfly_house_moon_crescent_rug', name: '新月针织毯', slot: DecoSlot.ORNAMENT, rarity: DecoRarity.FINE, cost: 3250, starValue: 3, icon: 'butterfly_house_moon_crescent_rug', desc: '奶油针织毯卷着淡紫新月边，铺出柔软阅读角', unlockRequirement: { level: 14 }, defaultScale: 1.25, depthSortYLift: 0, decorationPanelTab: 'flower_room', allowedSceneIds: ['butterfly_house'] },
+  { id: 'butterfly_house_moon_star_chair', name: '星纹观蝶椅', slot: DecoSlot.ORNAMENT, rarity: DecoRarity.RARE, cost: 3850, starValue: 4, icon: 'butterfly_house_moon_star_chair', desc: '浅木扶手椅配雾蓝软垫与星形抱枕，月辉小憩位', unlockRequirement: { level: 14 }, defaultScale: 1.38, decorationPanelTab: 'flower_room', allowedSceneIds: ['butterfly_house'] },
 
   // 花店/庭院通用 — 奶油别墅风（Lv10-14，花坊家具 Tab）
-  { id: 'villa_planter_urn', name: '玫瑰花卉瓮', slot: DecoSlot.GARDEN, rarity: DecoRarity.FINE, cost: 1800, starValue: 2, icon: 'villa_planter_urn', desc: '陶瓮盛满浅粉玫瑰，摆在庭院或门廊都很体面', unlockRequirement: { level: 10 }, defaultScale: 1.32, decorationPanelTab: 'garden' },
-  { id: 'villa_wrought_bench', name: '铁艺粉垫长椅', slot: DecoSlot.ORNAMENT, rarity: DecoRarity.FINE, cost: 2700, starValue: 3, icon: 'villa_wrought_bench', desc: '深灰铁艺雕花靠背配粉色软垫，庭园休憩经典款', unlockRequirement: { level: 11 }, defaultScale: 1.15, decorationPanelTab: 'furniture' },
-  { id: 'villa_gilded_mirror', name: '鎏金玫瑰镜', slot: DecoSlot.WALLART, rarity: DecoRarity.FINE, cost: 3000, starValue: 3, icon: 'villa_gilded_mirror', desc: '椭圆鎏金框镜顶缀三朵玫瑰，墙面立刻贵气起来', unlockRequirement: { level: 12 }, defaultScale: 0.82 },
-  { id: 'villa_rose_armoire', name: '玫瑰顶衣柜', slot: DecoSlot.SHELF, rarity: DecoRarity.RARE, cost: 3400, starValue: 4, icon: 'villa_rose_armoire', desc: '奶油白立柜顶饰粉玫瑰，单门单屉收纳花艺杂物', unlockRequirement: { level: 13 }, defaultScale: 1.38, decorationPanelTab: 'furniture' },
+  { id: 'villa_planter_urn', name: '玫瑰花卉瓮', slot: DecoSlot.GARDEN, rarity: DecoRarity.FINE, cost: 3600, starValue: 4, icon: 'villa_planter_urn', desc: '陶瓮盛满浅粉玫瑰，摆在庭院或门廊都很体面', unlockRequirement: { level: 10 }, defaultScale: 1.32, decorationPanelTab: 'garden' },
+  { id: 'villa_wrought_bench', name: '铁艺粉垫长椅', slot: DecoSlot.ORNAMENT, rarity: DecoRarity.FINE, cost: 2700, starValue: 3, icon: 'villa_wrought_bench', desc: '深灰铁艺雕花靠背配粉色软垫，庭园休憩经典款', unlockRequirement: { level: 11 }, defaultScale: 1.65, decorationPanelTab: 'furniture' },
+  { id: 'villa_gilded_mirror', name: '鎏金玫瑰镜', slot: DecoSlot.WALLART, rarity: DecoRarity.FINE, cost: 3000, starValue: 3, icon: 'villa_gilded_mirror', desc: '椭圆鎏金框镜顶缀三朵玫瑰，墙面立刻贵气起来', unlockRequirement: { level: 12 }, defaultScale: 1.22 },
+  { id: 'villa_rose_armoire', name: '玫瑰顶衣柜', slot: DecoSlot.SHELF, rarity: DecoRarity.RARE, cost: 3400, starValue: 4, icon: 'villa_rose_armoire', desc: '奶油白立柜顶饰粉玫瑰，单门单屉收纳花艺杂物', unlockRequirement: { level: 13 }, defaultScale: 1.78, decorationPanelTab: 'furniture' },
 
   // ═══════ ⑩ 高星主题珍藏（常驻；id 沿用旧季节套以兼容存档）═══════
 
@@ -302,10 +305,10 @@ export const DECO_DEFS: DecoDef[] = [
   { id: 'season_spring_wall', name: '樱花挂画', slot: DecoSlot.WALLART, rarity: DecoRarity.RARE, cost: 2415, starValue: 8, icon: 'wallart_spring', desc: '鎏金框油画风樱花径，等距墙面透视', unlockRequirement: { level: 8 }, defaultScale: 0.81 },
   { id: 'season_summer_light', name: '向日葵灯', slot: DecoSlot.LIGHT, rarity: DecoRarity.COMMON, cost: 390, starValue: 1, icon: 'light_summer', desc: '阳光感的向日葵造型灯具', unlockRequirement: { level: 4 }, defaultScale: 0.53 },
   { id: 'season_summer_garden', name: '花园喷泉', slot: DecoSlot.GARDEN, rarity: DecoRarity.LIMITED, cost: 3380, starValue: 11, icon: 'garden_summer', desc: '三层石喷泉，自然草边无菱形草皮', unlockRequirement: { level: 9 }, defaultScale: 1.68 },
-  { id: 'season_autumn_orn', name: '南瓜灯笼', slot: DecoSlot.ORNAMENT, rarity: DecoRarity.RARE, cost: 2415, starValue: 8, icon: 'orn_pumpkin', desc: '暖色调丰收风灯笼', unlockRequirement: { level: 9 }, defaultScale: 0.65 },
-  { id: 'season_autumn_table', name: '枫叶柜台', slot: DecoSlot.TABLE, rarity: DecoRarity.RARE, cost: 3140, starValue: 10, icon: 'table_autumn', desc: '铺满红叶的木质柜台', unlockRequirement: { level: 10 }, defaultScale: 1.48 },
+  { id: 'season_autumn_orn', name: '南瓜灯笼', slot: DecoSlot.ORNAMENT, rarity: DecoRarity.RARE, cost: 2415, starValue: 6, icon: 'orn_pumpkin', desc: '暖色调丰收风灯笼', unlockRequirement: { level: 9 }, defaultScale: 0.65 },
+  { id: 'season_autumn_table', name: '枫叶柜台', slot: DecoSlot.TABLE, rarity: DecoRarity.RARE, cost: 3140, starValue: 5, icon: 'table_autumn', desc: '铺满红叶的木质柜台', unlockRequirement: { level: 10 }, defaultScale: 1.48 },
   { id: 'season_winter_wallart', name: '复古落地钟', slot: DecoSlot.ORNAMENT, rarity: DecoRarity.RARE, cost: 1800, starValue: 7, icon: 'wallart_winter', desc: '胡桃木落地钟，柔线稿无数字', unlockRequirement: { level: 9 }, defaultScale: 1.34, decorationPanelTab: 'furniture' },
-  { id: 'season_winter_orn', name: '节庆壁炉', slot: DecoSlot.ORNAMENT, rarity: DecoRarity.LIMITED, cost: 3620, starValue: 12, icon: 'orn_christmas', desc: '圣诞袜花环灯串，精致柔线稿', unlockRequirement: { level: 10 }, defaultScale: 1.3, decorationPanelTab: 'furniture' },
+  { id: 'season_winter_orn', name: '节庆壁炉', slot: DecoSlot.ORNAMENT, rarity: DecoRarity.LIMITED, cost: 3620, starValue: 6, icon: 'orn_christmas', desc: '圣诞袜花环灯串，精致柔线稿', unlockRequirement: { level: 10 }, defaultScale: 1.3, decorationPanelTab: 'furniture' },
 
   // ═══════ ⑪ 后期家具（NB2 + rembg + 规范压缩；提示词 docs/prompt/furniture_deco_late_*_nb2_prompt.txt）═══════
   // L7 主搭 style_confetti_nb2；L9 主搭 style_lagoon_nb2；绿植 L11 发财树搭粉蓝/复古大空间
@@ -319,7 +322,7 @@ export const DECO_DEFS: DecoDef[] = [
   { id: 'deco_late_lv9_table_01', name: '礼品中岛台', slot: DecoSlot.TABLE, rarity: DecoRarity.FINE, cost: 1525, starValue: 3, icon: 'deco_late_lv9_table_01', desc: '浅木台面上缎带架、吊式牛皮纸卷、剪刀挂钩与小堆礼盒', unlockRequirement: { level: 5 }, defaultScale: 1.12, decorationPanelTab: 'furniture' },
   { id: 'deco_late_lv9_garden_01', name: '香水柠檬树', slot: DecoSlot.GARDEN, rarity: DecoRarity.RARE, cost: 2770, starValue: 9, icon: 'deco_late_lv9_garden_01', desc: '透明底仅树干与树根，无地砖；冠上青柠与花', unlockRequirement: { level: 8 }, defaultScale: 2.8, decorationPanelTab: 'garden' },
   { id: 'deco_late_lv10_shelf_01', name: '自行车花架', slot: DecoSlot.SHELF, rarity: DecoRarity.RARE, cost: 2380, starValue: 8, icon: 'deco_late_lv10_shelf_01', desc: '立式铁艺自行车轮廓作花架，圆环与横梁挂小花盆与藤', unlockRequirement: { level: 9 }, defaultScale: 1.48, decorationPanelTab: 'garden' },
-  { id: 'deco_late_lv10_orn_01', name: '迷你洗手台', slot: DecoSlot.ORNAMENT, rarity: DecoRarity.LIMITED, cost: 2975, starValue: 10, icon: 'deco_late_lv10_orn_01', desc: '半高柜+小椭圆镜+陶瓷盆与古铜龙头，角落实用', unlockRequirement: { level: 10 }, defaultScale: 1.2, decorationPanelTab: 'furniture' },
+  { id: 'deco_late_lv10_orn_01', name: '迷你洗手台', slot: DecoSlot.ORNAMENT, rarity: DecoRarity.LIMITED, cost: 2975, starValue: 5, icon: 'deco_late_lv10_orn_01', desc: '半高柜+小椭圆镜+陶瓷盆与古铜龙头，角落实用', unlockRequirement: { level: 10 }, defaultScale: 1.2, decorationPanelTab: 'furniture' },
   { id: 'deco_late_lv10_pachira_01', name: '落地发财树', slot: DecoSlot.ORNAMENT, rarity: DecoRarity.LIMITED, cost: 2220, starValue: 9, icon: 'deco_late_lv10_pachira_01', desc: '高腰深釉陶盆，掌状大叶层叠向上，落地体量撑场面', unlockRequirement: { flowerCollectionItemId: 'flower_green_11' }, defaultScale: 1.22, decorationPanelTab: 'furniture' },
 
   // ═══════ ⑪.2 Lv14-20 高星常驻家具：海滨花园套 + 月光蝶园套（补足 10-20 级购买目标）═══════
@@ -383,7 +386,7 @@ export const DECO_DEFS: DecoDef[] = [
   { id: 'deco_lv20_garden_cloud_swing', name: '云端长秋千', slot: DecoSlot.GARDEN, rarity: DecoRarity.LIMITED, cost: 6500, starValue: 18, icon: 'deco_lv20_garden_cloud_swing', desc: '云朵长椅吊在香槟金 A 形架上，弦月坠与星形抱枕', unlockRequirement: { level: 20 }, defaultScale: 1.9, decorationPanelTab: 'garden' },
 
   // —— 单件家具：宠物/音乐/邮政/童趣/玻璃灯/墙窗/艺术大件 ——
-  { id: 'deco_lv10_orn_kitten_bed', name: '奶油猫窝', slot: DecoSlot.ORNAMENT, rarity: DecoRarity.COMMON, cost: 1000, starValue: 2, icon: 'deco_lv10_orn_kitten_bed', desc: '奶白绒毛甜甜圈猫窝，里面有针织球与粉毯', unlockRequirement: { level: 10 }, defaultScale: 0.72, decorationPanelTab: 'furniture' },
+  { id: 'deco_lv10_orn_kitten_bed', name: '奶油猫窝', slot: DecoSlot.ORNAMENT, rarity: DecoRarity.COMMON, cost: 2000, starValue: 2, icon: 'deco_lv10_orn_kitten_bed', desc: '奶白绒毛甜甜圈猫窝，里面有针织球与粉毯', unlockRequirement: { level: 10 }, defaultScale: 0.72, decorationPanelTab: 'furniture' },
   { id: 'deco_lv11_orn_cat_tower', name: '樱桃猫爬架', slot: DecoSlot.ORNAMENT, rarity: DecoRarity.FINE, cost: 2600, starValue: 4, icon: 'deco_lv11_orn_cat_tower', desc: '蜜木立柱+缠绳+樱桃形顶台与粉色软垫', unlockRequirement: { level: 11 }, defaultScale: 0.9, decorationPanelTab: 'furniture' },
   { id: 'deco_lv11_light_phonograph_vintage', name: '古董留声机', slot: DecoSlot.LIGHT, rarity: DecoRarity.FINE, cost: 1200, starValue: 4, icon: 'deco_lv11_light_phonograph_vintage', desc: '胡桃木底座配黄铜花喇叭，唱针架在黑胶上', unlockRequirement: { level: 11 }, defaultScale: 0.65 },
   { id: 'deco_lv12_orn_pastel_postbox', name: '草莓邮筒', slot: DecoSlot.GARDEN, rarity: DecoRarity.FINE, cost: 2000, starValue: 3, icon: 'deco_lv12_orn_pastel_postbox', desc: '草莓粉立式邮筒，圆胖身段与小信件露出', unlockRequirement: { level: 12 }, defaultScale: 1 },
@@ -443,9 +446,10 @@ export const DECO_DEFS: DecoDef[] = [
 /** 按 ID 查找装饰 */
 export const DECO_MAP = new Map<string, DecoDef>(DECO_DEFS.map(d => [d.id, d]));
 
-/** 获取某等级范围 (fromLevel, toLevel] 内按等级解锁的家具（用于升级弹窗展示） */
+/** 获取某等级范围 (fromLevel, toLevel] 内按等级解锁的家具（用于升级弹窗展示；不含广告宣传款） */
 export function getDecosUnlockedInLevelRange(fromLevel: number, toLevel: number): DecoDef[] {
   return DECO_DEFS.filter(d => {
+    if (AD_UNLOCK_DECO_IDS.has(d.id)) return false;
     const lv = d.unlockRequirement?.level;
     return lv !== undefined && lv > fromLevel && lv <= toLevel;
   });
