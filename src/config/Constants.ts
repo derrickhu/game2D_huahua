@@ -67,6 +67,7 @@ export const MAX_CUSTOMERS = 6;
 export const MAX_VISIBLE_CUSTOMERS = 6;
 /** 历史命名：实际「可锁格 / 可交付」人数为 CustomerManager.maxCustomers（等级驱动） */
 export const ACTIVE_CUSTOMER_SLOTS = MAX_VISIBLE_CUSTOMERS;
+/** 高等级默认刷客间隔（实际以 OrderSpawnConfig.getCustomerRefreshTier 为准） */
 export const CUSTOMER_REFRESH_MIN = 10;  // 秒
 export const CUSTOMER_REFRESH_MAX = 30;
 

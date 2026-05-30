@@ -26,12 +26,14 @@ import {
   type OrderType,
   type UnlockedLines,
 } from '@/config/OrderTierConfig';
-import { CUSTOMER_REFRESH_MIN, CUSTOMER_REFRESH_MAX } from '@/config/Constants';
 import {
   ORDER_SPAWN_MAX_ATTEMPTS,
   TIMED_DIAMOND_ORDER_DAILY_CAP,
   TIMED_DIAMOND_ORDER_MIN_PLAYER_LEVEL,
   computeTimedDiamondReward,
+  getCustomerRefreshInitialDelay,
+  getCustomerRefreshTier,
+  rollCustomerRefreshInterval,
 } from '@/config/OrderSpawnConfig';
 import { computeUnlockedLines } from '@/orders/unlockedLines';
 import {
@@ -211,7 +213,7 @@ function normalizeCustomerPersistState(raw: unknown): CustomerPersistState | nul
   const refreshTimer =
     typeof o.refreshTimer === 'number' && o.refreshTimer >= 0 && Number.isFinite(o.refreshTimer)
       ? o.refreshTimer
-      : CUSTOMER_REFRESH_MAX - 3;
+      : getCustomerRefreshInitialDelay(LevelManager.level);
 
   const timedDiamondOrderDate =
     typeof o.timedDiamondOrderDate === 'string' && o.timedDiamondOrderDate
@@ -348,7 +350,7 @@ class CustomerManagerClass {
     } else {
       this._customers = [];
       this._nextUid = 1;
-      this._refreshTimer = CUSTOMER_REFRESH_MAX - 3;
+      this._refreshTimer = getCustomerRefreshInitialDelay(LevelManager.level);
       this._timedDiamondOrderDate = localDateKey();
       this._timedDiamondOrdersToday = 0;
       this._preparedOfflineSeconds = 0;
@@ -357,8 +359,31 @@ class CustomerManagerClass {
     this._syncTimedDiamondDailyState();
     this._syncAntiRepeatFromQueueTail();
     this._bindBoardEvents();
+    EventBus.on('tutorial:completed', this._onTutorialCompleted);
     this._refreshWeekendHuayuanBonuses(false);
     this._rescanAll();
+    this._bootstrapLowLevelQueue();
+  }
+
+  private _onTutorialCompleted = (): void => {
+    if (!this._started) return;
+    this._bootstrapLowLevelQueue();
+  };
+
+  /**
+   * 1～2 级非教程：开局预填少量客人，避免首屏长时间「等待客人中」。
+   */
+  private _bootstrapLowLevelQueue(): void {
+    if (TutorialManager.isActive) return;
+    const tier = getCustomerRefreshTier(LevelManager.level);
+    if (tier.bootstrapCount <= 0) return;
+    const target = Math.min(this.maxCustomers, tier.bootstrapCount);
+    const need = target - this._customers.length;
+    if (need <= 0) return;
+    for (let i = 0; i < need; i++) {
+      this._spawnCustomer();
+    }
+    this._refreshTimer = Math.min(this._refreshTimer, tier.minSec);
   }
 
   /**
@@ -388,8 +413,7 @@ class CustomerManagerClass {
     const maxC = TutorialManager.isActive ? 1 : this.maxCustomers;
     if (this._customers.length < maxC) {
       this._refreshTimer += dt;
-      const threshold = CUSTOMER_REFRESH_MIN +
-        Math.random() * (CUSTOMER_REFRESH_MAX - CUSTOMER_REFRESH_MIN);
+      const threshold = rollCustomerRefreshInterval(LevelManager.level);
       if (this._refreshTimer >= threshold) {
         this._refreshTimer = 0;
         this._spawnCustomer();
@@ -785,7 +809,10 @@ class CustomerManagerClass {
     const nextLines = computeUnlockedLines(BoardManager.cells);
     if (this._started && prevSnap && !prevSnap.hasGreen && nextLines.hasGreen) {
       this._greenLineUnlockBoostSpawns = GREEN_UNLOCK_BOOST_SPAWNS;
-      this._refreshTimer = Math.min(this._refreshTimer, 2);
+      this._refreshTimer = Math.min(
+        this._refreshTimer,
+        getCustomerRefreshTier(LevelManager.level).minSec,
+      );
     }
     this._unlockSnapshot = nextLines;
 

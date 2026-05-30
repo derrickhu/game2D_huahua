@@ -49,6 +49,43 @@ export const ORDER_GROWTH_BONUS_MULTIPLIER = 1.18;
  */
 export const ORDER_GROWTH_MIN_MAX_NORM = 0.42;
 
+/**
+ * 客人刷新间隔（秒）：低等级缩短等待，避免 1 级长时间「一个一个等」。
+ * `maxLevel` 为含上限的星级档位。
+ */
+export const CUSTOMER_REFRESH_TIER_BY_LEVEL: ReadonlyArray<{
+  maxLevel: number;
+  minSec: number;
+  maxSec: number;
+  /** 新档 / 读档缺省时的首刷倒计时 */
+  initialDelaySec: number;
+  /** 非教程、队列空时开局预刷人数（0 = 不预刷） */
+  bootstrapCount: number;
+}> = [
+  { maxLevel: 1, minSec: 4, maxSec: 9, initialDelaySec: 5, bootstrapCount: 2 },
+  { maxLevel: 2, minSec: 5, maxSec: 12, initialDelaySec: 6, bootstrapCount: 1 },
+  { maxLevel: 5, minSec: 7, maxSec: 18, initialDelaySec: 8, bootstrapCount: 0 },
+  { maxLevel: Number.POSITIVE_INFINITY, minSec: 10, maxSec: 30, initialDelaySec: 27, bootstrapCount: 0 },
+];
+
+export function getCustomerRefreshTier(playerLevel: number): (typeof CUSTOMER_REFRESH_TIER_BY_LEVEL)[number] {
+  const lv = Math.max(1, Math.floor(playerLevel));
+  for (const tier of CUSTOMER_REFRESH_TIER_BY_LEVEL) {
+    if (lv <= tier.maxLevel) return tier;
+  }
+  return CUSTOMER_REFRESH_TIER_BY_LEVEL[CUSTOMER_REFRESH_TIER_BY_LEVEL.length - 1]!;
+}
+
+/** 随机下一次刷客阈值（秒） */
+export function rollCustomerRefreshInterval(playerLevel: number): number {
+  const t = getCustomerRefreshTier(playerLevel);
+  return t.minSec + Math.random() * (t.maxSec - t.minSec);
+}
+
+export function getCustomerRefreshInitialDelay(playerLevel: number): number {
+  return getCustomerRefreshTier(playerLevel).initialDelaySec;
+}
+
 /** 生成订单时若超出工具能力校验失败，最大重试次数（CustomerManager._spawnCustomer） */
 export const ORDER_SPAWN_VALIDATE_MAX_ATTEMPTS = 4;
 

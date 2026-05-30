@@ -36,12 +36,6 @@ export const NEWBIE_GIFT_PANEL_LAYOUT = {
   /** 按钮上方规则说明（须在按钮顶缘之上，避免与橙钮重叠） */
   ctaRuleNy: 0.808,
 
-  /** 母图标题区（叠字盖住 AI 内嵌字，真机更清晰） */
-  mainTitleNy: 0.132,
-  ribbonTitleNy: 0.208,
-  mainTitleFontSize: 36,
-  ribbonTitleFontSize: 30,
-
   sectionTitleFontSize: 26,
   decoLabelFontSize: 20,
   boardLabelFontSize: 20,

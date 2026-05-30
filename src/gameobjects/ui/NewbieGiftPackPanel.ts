@@ -1,6 +1,6 @@
 /**
  * 清涟荷影新手礼包宣传页（花店底栏入口）
- * 壳体 + 空按钮在 AI 母图内；分区标题、奖励与按钮文案由 PIXI 叠字。
+ * 母图已含顶栏标题/丝带；PIXI 仅叠分区标题、奖励格名称、规则说明与 CTA 动态文案。
  */
 import * as PIXI from 'pixi.js';
 import { Game } from '@/core/Game';
@@ -40,22 +40,6 @@ function makeCrispText(content: string, style: Partial<PIXI.ITextStyle>): PIXI.T
   text.resolution = TEXT_RES;
   return text;
 }
-
-const MAIN_TITLE_STYLE: Partial<PIXI.ITextStyle> = {
-  fontSize: L.mainTitleFontSize,
-  fill: 0xfff8e8,
-  fontFamily: FONT_FAMILY,
-  fontWeight: 'bold',
-  letterSpacing: 1,
-};
-
-const RIBBON_TITLE_STYLE: Partial<PIXI.ITextStyle> = {
-  fontSize: L.ribbonTitleFontSize,
-  fill: 0xffffff,
-  fontFamily: FONT_FAMILY,
-  fontWeight: 'bold',
-  letterSpacing: 1,
-};
 
 const SECTION_TITLE_STYLE: Partial<PIXI.ITextStyle> = {
   fontSize: L.sectionTitleFontSize,
@@ -113,7 +97,6 @@ export class NewbieGiftPackPanel extends PIXI.Container {
   private _root!: PIXI.Container;
   private _art!: PIXI.Sprite;
   private _rewardMount!: PIXI.Container;
-  private _headerMount!: PIXI.Container;
   private _ctaHit!: PIXI.Container;
   private _ctaLabel!: PIXI.Text;
   private _ctaRuleMount!: PIXI.Container;
@@ -205,7 +188,6 @@ export class NewbieGiftPackPanel extends PIXI.Container {
   }
 
   private _setContentVisible(visible: boolean): void {
-    this._headerMount.visible = visible;
     this._rewardMount.visible = visible;
     this._ctaHit.visible = visible;
     this._ctaRuleMount.visible = visible;
@@ -237,10 +219,6 @@ export class NewbieGiftPackPanel extends PIXI.Container {
     this._rewardMount = new PIXI.Container();
     this._rewardMount.visible = false;
     this._root.addChild(this._rewardMount);
-
-    this._headerMount = new PIXI.Container();
-    this._headerMount.visible = false;
-    this._root.addChild(this._headerMount);
 
     this._closeHit = new PIXI.Container();
     this._closeHit.visible = false;
@@ -322,55 +300,6 @@ export class NewbieGiftPackPanel extends PIXI.Container {
     this._ctaLabel.position.set(0, ctaH * L.ctaLabelDyRatio);
 
     this._rebuildCtaRule();
-    this._rebuildHeaderTexts();
-  }
-
-  private _rebuildHeaderTexts(): void {
-    this._headerMount.removeChildren();
-    if (this._panelW <= 0) return;
-
-    this._drawHeaderBand(
-      0.5,
-      L.mainTitleNy,
-      0.84,
-      0.052,
-      0xffd76e,
-      '清涟荷影 · 新手礼',
-      MAIN_TITLE_STYLE,
-    );
-    this._drawHeaderBand(
-      0.5,
-      L.ribbonTitleNy,
-      0.78,
-      0.042,
-      0x58b5a6,
-      '10件豪礼 免费领',
-      RIBBON_TITLE_STYLE,
-    );
-  }
-
-  private _drawHeaderBand(
-    centerNx: number,
-    centerNy: number,
-    widthRatio: number,
-    heightRatio: number,
-    fillColor: number,
-    label: string,
-    style: Partial<PIXI.ITextStyle>,
-  ): void {
-    const pos = this._normToLocal(centerNx, centerNy);
-    const bandW = this._panelW * widthRatio;
-    const bandH = this._panelH * heightRatio;
-    const band = new PIXI.Graphics();
-    band.beginFill(fillColor, 1);
-    band.drawRoundedRect(pos.x - bandW / 2, pos.y - bandH / 2, bandW, bandH, bandH * 0.42);
-    band.endFill();
-    this._headerMount.addChild(band);
-
-    const text = makeCrispText(label, style);
-    text.anchor.set(0.5);
-    text.position.set(Math.round(pos.x), Math.round(pos.y));
-    this._headerMount.addChild(text);
   }
 
   private _rebuildCtaRule(): void {
