@@ -15,4 +15,4 @@ process "$ASSETS/c0e2d5ba-79d5-492f-8d81-6d8e29a3b2f6-ea2b187e-4f72-4e16-bb24-eb
 process "$ASSETS/f87e6c4d-daa4-451c-9121-a606901a7e01-a4480f41-f383-4f17-bf1f-252def490afa.png" qinglian_lotus_screen
 process "$ASSETS/00296f30-6803-4058-b6e8-d33f27cceef4-68a92000-3d8b-4da0-85a3-626c345b4f29.png" qinglian_lotus_lamp
 process "$ASSETS/1fc329c8-104f-4b1e-929c-596e1e1db689-519abaf0-4c17-4fcc-a834-70557eb7ee7c.png" qinglian_lotus_pond_table
-cd "$REPO" && python3 scripts/compress_furniture_deco_pngs.py --force minigame/subpkg_deco/images/furniture/qinglian_*.png
+cd "$REPO" && python3 scripts/compress_furniture_deco_pngs.py --max-side "${MAX_SIDE:-512}" --force minigame/subpkg_deco/images/furniture/qinglian_*.png
