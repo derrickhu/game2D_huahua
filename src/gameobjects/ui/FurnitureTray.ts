@@ -195,7 +195,12 @@ export class FurnitureTray extends PIXI.Container {
 
     if (this._trayMode === 'drag' && this._trayPending && !this._trayDragStarted) {
       this._trayDragStarted = true;
-      FurnitureDragSystem.startDragFromTray(this._trayPending.decoId, designX, designY);
+      FurnitureDragSystem.startDragFromTray(
+        this._trayPending.decoId,
+        designX,
+        designY,
+        ev.pointerId,
+      );
       this._trayPending = null;
       this._trayScrollListening = false;
       this._trayMode = null;

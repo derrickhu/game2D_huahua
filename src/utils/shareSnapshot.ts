@@ -1,6 +1,7 @@
 /**
- * 微信小游戏动态分享图：优先 RenderTexture → extract → canvasToTempFilePath；
- * 失败时回退主 WebGL canvas 区域裁剪（开发者工具 / 部分真机仍可用）。
+ * 微信小游戏动态分享图。
+ * 真机：优先裁主屏 WebGL canvas（wx.canvasToTempFilePath 不传 canvas 字段）；
+ * 开发者工具：可再走 RenderTexture → extract → 离屏 toDataURL 落盘。
  */
 import * as PIXI from 'pixi.js';
 import { settings } from '@pixi/settings';
@@ -16,8 +17,8 @@ export interface ShareSnapshotOptions {
   /** 截图前临时隐藏（如「晒一下」按钮） */
   hide?: PIXI.DisplayObject[];
   /**
-   * 主 canvas 回退：固定设计坐标裁切区（许愿「恭喜获得」等全屏弹层）。
-   * 在 RT 路径与内容包围盒裁剪均失败时使用。
+   * 主 canvas 裁切：固定设计坐标区（许愿「恭喜获得」弹层）。
+   * 设置后真机主屏裁剪优先用此区域，不依赖子节点包围盒。
    */
   fallbackCrop?: { x: number; y: number; width: number; height: number };
 }
@@ -43,7 +44,11 @@ function getExtract(renderer: ShareRenderer): ShareRenderer['extract'] {
   return renderer.extract ?? renderer.plugins?.extract;
 }
 
-/** 与 Pixi ADAPTER 对齐的 2D 离屏 canvas（微信真机 createOffscreenCanvas 探测逻辑已写在 patch 里） */
+/** 真机小游戏：主屏裁剪可靠；RT+离屏导出在真机常失败 */
+function preferMainScreenCapture(): boolean {
+  return Platform.isMinigame && !Platform.isDevtools;
+}
+
 function createExportCanvas2D(width: number, height: number): HTMLCanvasElement | null {
   try {
     const c = settings.ADAPTER.createCanvas(width, height) as HTMLCanvasElement;
@@ -53,7 +58,6 @@ function createExportCanvas2D(width: number, height: number): HTMLCanvasElement 
   }
 }
 
-/** 同父节点下合并局部包围盒 */
 function unionBoundsLocal(layers: PIXI.DisplayObject[], padding: number): PIXI.Rectangle | null {
   let minX = Infinity;
   let minY = Infinity;
@@ -72,7 +76,6 @@ function unionBoundsLocal(layers: PIXI.DisplayObject[], padding: number): PIXI.R
   return new PIXI.Rectangle(minX, minY, maxX - minX, maxY - minY);
 }
 
-/** 舞台全局坐标合并包围盒（多父节点 / 主 canvas 裁剪用） */
 function unionBoundsGlobal(layers: PIXI.DisplayObject[], padding: number): PIXI.Rectangle | null {
   let minX = Infinity;
   let minY = Infinity;
@@ -91,6 +94,19 @@ function unionBoundsGlobal(layers: PIXI.DisplayObject[], padding: number): PIXI.
   }
   if (!Number.isFinite(minX)) return null;
   return new PIXI.Rectangle(minX, minY, maxX - minX, maxY - minY);
+}
+
+async function waitPaintFrames(count = 2): Promise<void> {
+  const ticker = Game.app?.ticker;
+  if (!ticker) {
+    await new Promise<void>(r => setTimeout(r, 64));
+    return;
+  }
+  for (let i = 0; i < count; i++) {
+    await new Promise<void>(resolve => {
+      ticker.addOnce(() => resolve());
+    });
+  }
 }
 
 async function canvasToShareJpg(
@@ -115,14 +131,13 @@ async function canvasToShareJpg(
   ctx.fillStyle = letterboxColor;
   ctx.fillRect(0, 0, destW, destH);
   ctx.drawImage(sourceCanvas, 0, 0, destW, destH);
-  path = await Platform.canvasToTempFilePath({
+  return Platform.canvasToTempFilePath({
     canvas: outCanvas,
     destWidth: destW,
     destHeight: destH,
     fileType: 'jpg',
     quality: 0.88,
   });
-  return path;
 }
 
 function repaintStage(renderer: ShareRenderer): void {
@@ -187,20 +202,20 @@ async function captureViaRenderTexture(
   }
 }
 
-/** 主屏 WebGL canvas 按舞台坐标裁切（旧版友谊卡 / 许愿弹层逻辑） */
+/** 主屏 WebGL canvas 按设计坐标裁切（真机分享图主路径） */
 async function captureMainCanvasCrop(
   layers: PIXI.DisplayObject[],
   options: ShareSnapshotOptions | undefined,
   renderer: ShareRenderer,
 ): Promise<string | null> {
-  const canvas = Game.app?.view as HTMLCanvasElement | undefined;
-  if (!canvas) return null;
+  const view = Game.app?.view as HTMLCanvasElement | undefined;
+  if (!view?.width || !view?.height) return null;
 
   const destW = options?.destWidth ?? 500;
 
   try {
     repaintStage(renderer);
-    await new Promise<void>(resolve => setTimeout(resolve, 50));
+    await waitPaintFrames(2);
 
     const pad = options?.padding ?? 14;
     let cropX: number;
@@ -216,7 +231,10 @@ async function captureMainCanvasCrop(
       cropH = fixed.height;
     } else {
       const g = unionBoundsGlobal(layers, pad);
-      if (!g || g.width < 2 || g.height < 2) return null;
+      if (!g || g.width < 2 || g.height < 2) {
+        console.warn('[shareSnapshot] main crop: no global bounds');
+        return null;
+      }
       cropX = g.x;
       cropY = g.y;
       cropW = g.width;
@@ -224,17 +242,32 @@ async function captureMainCanvasCrop(
     }
 
     const destH = Math.max(2, Math.round(destW * (cropH / cropW)));
-    return await Platform.canvasToTempFilePath({
-      canvas,
-      x: Math.round(Game.toReal(cropX)),
-      y: Math.round(Game.toReal(cropY)),
-      width: Math.round(Game.toReal(cropW)),
-      height: Math.round(Game.toReal(cropH)),
+    const pxX = Math.round(Game.toReal(cropX));
+    const pxY = Math.round(Game.toReal(cropY));
+    const pxW = Math.round(Game.toReal(cropW));
+    const pxH = Math.round(Game.toReal(cropH));
+    const maxW = view.width;
+    const maxH = view.height;
+    const x = Math.max(0, Math.min(pxX, maxW - 1));
+    const y = Math.max(0, Math.min(pxY, maxH - 1));
+    const w = Math.max(1, Math.min(pxW, maxW - x));
+    const h = Math.max(1, Math.min(pxH, maxH - y));
+
+    const path = await Platform.canvasToTempFilePath({
+      fromMainScreen: true,
+      x,
+      y,
+      width: w,
+      height: h,
       destWidth: destW,
       destHeight: destH,
       fileType: 'jpg',
       quality: 0.92,
     });
+    if (!path) {
+      console.warn('[shareSnapshot] main canvas crop returned null', { x, y, w, h, destW, destH });
+    }
+    return path;
   } catch (err) {
     console.warn('[shareSnapshot] main canvas crop failed', err);
     return null;
@@ -263,15 +296,20 @@ export async function captureLayersShareImageUrl(
   try {
     const extract = getExtract(renderer);
     let imageUrl: string | null = null;
+    const mainFirst = preferMainScreenCapture();
 
-    if (extract) {
-      imageUrl = await captureViaRenderTexture(layers, options, renderer, extract);
-    } else {
-      console.warn('[shareSnapshot] renderer.extract 不可用，跳过 RT 路径');
-    }
-
-    if (!imageUrl) {
+    if (mainFirst) {
       imageUrl = await captureMainCanvasCrop(layers, options, renderer);
+      if (!imageUrl && extract) {
+        imageUrl = await captureViaRenderTexture(layers, options, renderer, extract);
+      }
+    } else {
+      if (extract) {
+        imageUrl = await captureViaRenderTexture(layers, options, renderer, extract);
+      }
+      if (!imageUrl) {
+        imageUrl = await captureMainCanvasCrop(layers, options, renderer);
+      }
     }
 
     return imageUrl;

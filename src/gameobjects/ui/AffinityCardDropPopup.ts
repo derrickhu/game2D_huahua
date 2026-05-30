@@ -417,21 +417,18 @@ export class AffinityCardDropPopup extends PIXI.Container {
     ToastMessage.show(imageUrl ? `已分享「${cur.card.title}」` : `已分享「${cur.card.title}」（使用默认图）`);
   }
 
-  /** 截取标题条 + 当前卡面，生成微信分享用临时图 */
+  /** 截取弹层内容（标题条 + 卡面），生成微信分享用临时图 */
   async createShareSnapshotImageUrl(): Promise<string | null> {
-    return captureLayersShareImageUrl(
-      [this._titleLayer, this._cardMount],
-      {
-        padding: 16,
-        destWidth: 500,
-        aspectRatio: 5 / 4,
-        hide: [
-          ...(this._shareBtn ? [this._shareBtn] : []),
-          this._hint,
-          this._overlay,
-        ],
-      },
-    );
+    return captureLayersShareImageUrl([this], {
+      padding: 16,
+      destWidth: 500,
+      aspectRatio: 5 / 4,
+      hide: [
+        ...(this._shareBtn ? [this._shareBtn] : []),
+        this._hint,
+        this._overlay,
+      ],
+    });
   }
 
   private _clearShareButton(): void {

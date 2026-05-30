@@ -8,7 +8,12 @@ import { EventBus } from '@/core/EventBus';
 import { PersistService } from '@/core/PersistService';
 import { CurrencyManager } from './CurrencyManager';
 import { checkRequirement } from '@/utils/UnlockChecker';
-import { ALL_OUTFITS, OUTFIT_ACTIVITY_QUEST_BY_ID, OUTFIT_MAP } from '@/config/DressUpConfig';
+import {
+  AD_UNLOCK_OUTFIT_IDS,
+  DRESSUP_PANEL_OUTFITS,
+  OUTFIT_ACTIVITY_QUEST_BY_ID,
+  OUTFIT_MAP,
+} from '@/config/DressUpConfig';
 import { grantQuest } from '@/utils/UnlockChecker';
 import type { Outfit } from '@/config/DressUpConfig';
 export type { Outfit } from '@/config/DressUpConfig';
@@ -20,21 +25,24 @@ interface DressUpSave {
   unlocked: string[];
   /** 当前穿戴的形象 id */
   equipped: string;
+  /** 已看广告、可花愿购买的形象 id（见 AD_UNLOCK_OUTFIT_IDS） */
+  adPurchaseGates?: string[];
 }
 
 class DressUpManagerClass {
   private _unlocked: Set<string> = new Set();
+  private _adPurchaseGates: Set<string> = new Set();
   private _equippedId = 'outfit_default';
 
   init(): void {
     this._unlocked.add('outfit_default');
     this._loadState();
-    console.log(`[DressUp] 初始化完成，解锁 ${this._unlocked.size}/${ALL_OUTFITS.length} 套形象，当前穿戴: ${this._equippedId}`);
+    console.log(`[DressUp] 初始化完成，解锁 ${this._unlocked.size}/${DRESSUP_PANEL_OUTFITS.length} 套形象，当前穿戴: ${this._equippedId}`);
   }
 
   /** 获取全部形象（附带解锁/穿戴状态） */
   getAllOutfits(): (Outfit & { unlocked: boolean; equipped: boolean })[] {
-    return ALL_OUTFITS.map(o => ({
+    return DRESSUP_PANEL_OUTFITS.map(o => ({
       ...o,
       unlocked: this._unlocked.has(o.id),
       equipped: this._equippedId === o.id,
@@ -53,6 +61,7 @@ class DressUpManagerClass {
 
     const req = checkRequirement(outfit.unlockRequirement);
     if (!req.met) return false;
+    if (!this.canPurchaseOutfit(outfitId)) return false;
 
     if (outfit.huayuanCost > 0) {
       if (CurrencyManager.state.huayuan < outfit.huayuanCost) return false;
@@ -112,8 +121,40 @@ class DressUpManagerClass {
   /** 是否已解锁 */
   isUnlocked(outfitId: string): boolean { return this._unlocked.has(outfitId); }
 
+  isAdUnlockOutfit(outfitId: string): boolean {
+    return AD_UNLOCK_OUTFIT_IDS.has(outfitId);
+  }
+
+  isAdPurchaseGateSatisfied(outfitId: string): boolean {
+    return this._adPurchaseGates.has(outfitId);
+  }
+
+  /** 是否满足花愿购买前置（等级/任务 + 广告 gate） */
+  canPurchaseOutfit(outfitId: string): boolean {
+    const outfit = OUTFIT_MAP.get(outfitId);
+    if (!outfit) return false;
+    const req = checkRequirement(outfit.unlockRequirement);
+    if (!req.met) return false;
+    if (this.isAdUnlockOutfit(outfitId)) {
+      return this.isAdPurchaseGateSatisfied(outfitId);
+    }
+    return true;
+  }
+
+  /** 激励视频看完后解锁购买资格（不扣花愿、不加星） */
+  unlockAdPurchaseGate(outfitId: string): boolean {
+    const outfit = OUTFIT_MAP.get(outfitId);
+    if (!outfit || !this.isAdUnlockOutfit(outfitId)) return false;
+    if (this._unlocked.has(outfitId)) return false;
+    this._adPurchaseGates.add(outfitId);
+    this._saveState();
+    console.log(`[DressUp] 广告解锁购买资格: ${outfit.name}`);
+    EventBus.emit('dressup:adUnlockGate', outfitId, outfit);
+    return true;
+  }
+
   get unlockedCount(): number { return this._unlocked.size; }
-  get totalCount(): number { return ALL_OUTFITS.length; }
+  get totalCount(): number { return DRESSUP_PANEL_OUTFITS.length; }
 
   // ═══════════════ 存档 ═══════════════
 
@@ -121,6 +162,7 @@ class DressUpManagerClass {
     const data: DressUpSave = {
       unlocked: Array.from(this._unlocked),
       equipped: this._equippedId,
+      adPurchaseGates: [...this._adPurchaseGates],
     };
     PersistService.writeRaw(STORAGE_KEY, JSON.stringify(data));
   }
@@ -143,6 +185,11 @@ class DressUpManagerClass {
 
       if (typeof data.equipped === 'string' && OUTFIT_MAP.has(data.equipped)) {
         this._equippedId = data.equipped as string;
+      }
+      if (Array.isArray(data.adPurchaseGates)) {
+        for (const id of data.adPurchaseGates) {
+          if (AD_UNLOCK_OUTFIT_IDS.has(id)) this._adPurchaseGates.add(id);
+        }
       }
     } catch (_) {}
   }

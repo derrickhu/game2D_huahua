@@ -1,0 +1,18 @@
+REFERENCE IMAGE — attached `chibi_default.png` is the approved huahua owner bust card art:
+Match its exact bust crop scale, head size in frame, soft brown line weight, and flat-to-soft shading level. Only change hair, accessories, and upper costume to Qinglian theme below. Forbidden: heavier 3D rendering than reference, glossy skin, detailed fabric texture, fashion illustration realism, full-body SD sprite, duplicate ghost figure.
+
+BUST PORTRAIT — dialogue / dress-up card bust only, same series as default owner bust and customer order portraits but FLATTER like in-game owner full-body line art, not glossy illustration.
+
+ART STYLE:
+Hand-drawn 2D cute mobile game. Flat-to-soft cel shading, low saturation warm pastel, mint jade and blush lotus accents, clean soft warm brown outlines. Large round brown eyes with small white sparkle, rosy cheeks, gentle smile. Simple flat color areas with minimal gradient — match reference bust simplicity, NOT extra volumetric lighting.
+
+FRAMING — bust only:
+Portrait 9:16, waist-up from mid-chest to top of hair. Bottom crop through mid-torso. Forbidden: hips, legs, feet, full-body chibi under huge head.
+
+POSE: slight 3/4 toward viewer's right, both eyes visible, warm expression.
+
+IDENTITY: warm brown half-up hair, compact jade lotus hairpin, short pink ribbon, small jade earrings, mint celadon cross-collar top with simple flat pink lotus on chest, cream inner collar — simplified shapes.
+
+LAYOUT: Hair top about 12% to 18% from canvas top; bottom crop about 18% to 24% from canvas bottom; centered with 8% to 12% white side margins. Background pure flat white RGB 255 255 255 only. No text, no watermark.
+
+Qinglian colors and accessories from text; framing and flat comic rendering from attached default bust reference.

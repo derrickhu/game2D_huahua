@@ -10,7 +10,10 @@ import { EventBus } from '@/core/EventBus';
 import { TweenManager, Ease } from '@/core/TweenManager';
 import { DressUpManager, Outfit } from '@/managers/DressUpManager';
 import { getOwnerChibiTextureKey, getOwnerFullOpenTextureKey } from '@/config/DressUpConfig';
+import { AdManager, AdScene } from '@/managers/AdManager';
 import { CurrencyManager } from '@/managers/CurrencyManager';
+import { ConfirmDialog } from './ConfirmDialog';
+import { createFreeAdBadge } from './AdBadge';
 import { SaveManager } from '@/managers/SaveManager';
 import { TextureCache } from '@/utils/TextureCache';
 import { checkRequirement, requirementHintText } from '@/utils/UnlockChecker';
@@ -386,7 +389,7 @@ export class DressUpPanel extends PIXI.Container {
 
   private _addDressFooter(
     card: PIXI.Container, cw: number, ch: number,
-    mode: 'equipped' | 'ready' | 'purchase' | 'locked',
+    mode: 'equipped' | 'ready' | 'purchase' | 'locked' | 'ad_unlock',
     line: string,
     purchaseHualuCost?: number,
   ): void {
@@ -417,7 +420,11 @@ export class DressUpPanel extends PIXI.Container {
       const scaledH = tex.height * s;
       const cy = pillCenterY(scaledH);
 
-      if (mode === 'purchase' && purchaseHualuCost !== undefined) {
+      if (mode === 'ad_unlock') {
+        const badge = createFreeAdBadge(14, 0xffffff, 0x333333, line || '看广告解锁', Math.round(scaledH * 0.58));
+        badge.position.set(cw / 2, cy);
+        card.addChild(badge);
+      } else if (mode === 'purchase' && purchaseHualuCost !== undefined) {
         const iconTex = TextureCache.get('icon_huayuan');
         const gap = 5;
         const iconH = Math.max(16, Math.min(28, Math.round(scaledH * 0.62)));
@@ -461,7 +468,11 @@ export class DressUpPanel extends PIXI.Container {
       g.endFill();
       card.addChild(g);
       const cy = btnY + btnH / 2;
-      if (mode === 'purchase' && purchaseHualuCost !== undefined) {
+      if (mode === 'ad_unlock') {
+        const badge = createFreeAdBadge(13, 0xffffff, 0x333333, line || '看广告解锁', Math.round(btnH * 0.55));
+        badge.position.set(cw / 2, cy);
+        card.addChild(badge);
+      } else if (mode === 'purchase' && purchaseHualuCost !== undefined) {
         const row = new PIXI.Container();
         row.position.set(cw / 2, cy);
         const gap = 5;
@@ -497,6 +508,31 @@ export class DressUpPanel extends PIXI.Container {
     }
   }
 
+  private async _unlockOutfitWithAd(outfit: Outfit): Promise<void> {
+    const ok = await ConfirmDialog.show(
+      '解锁购买资格',
+      `观看广告解锁「${outfit.name}」购买资格，之后仍需 ${outfit.huayuanCost} 花愿购买。`,
+      '看广告解锁',
+      '取消',
+    );
+    if (!ok) return;
+
+    const adScene = AdScene.SPECIAL_DECO_UNLOCK;
+    AdManager.showRewardedAd(adScene, (success) => {
+      if (!success) {
+        ToastMessage.show('广告未看完，未解锁');
+        return;
+      }
+      if (!DressUpManager.unlockAdPurchaseGate(outfit.id)) {
+        ToastMessage.show('该形象已不可解锁');
+        return;
+      }
+      ToastMessage.show(`已解锁「${outfit.name}」购买资格`);
+      this._refreshHeaderNumbers();
+      this._rebuildGrid();
+    });
+  }
+
   private _buildOutfitCard(
     outfit: Outfit & { unlocked: boolean; equipped: boolean },
     x: number, y: number, cw: number, ch: number,
@@ -508,8 +544,13 @@ export class DressUpPanel extends PIXI.Container {
     const isUnlocked = outfit.unlocked;
     const reqResult = checkRequirement(outfit.unlockRequirement);
     const reqMet = reqResult.met;
+    const isAdOutfit = DressUpManager.isAdUnlockOutfit(outfit.id);
+    const adGateSatisfied = DressUpManager.isAdPurchaseGateSatisfied(outfit.id);
+    const needsAdGate = isAdOutfit && reqMet && !isUnlocked && !adGateSatisfied;
+    const purchaseAllowed = reqMet && (!isAdOutfit || adGateSatisfied);
+    const cardUnlockedLook = isUnlocked || purchaseAllowed || needsAdGate;
 
-    this._drawCardBg(card, cw, ch, isUnlocked || reqMet, isEquipped);
+    this._drawCardBg(card, cw, ch, cardUnlockedLook, isEquipped);
 
     const nameY = Math.round((ch * 88) / CARD_BASE_H);
     const portraitTop = 10;
@@ -518,7 +559,7 @@ export class DressUpPanel extends PIXI.Container {
     const maxPortraitW = cw - 16;
     const portraitCy = portraitTop + maxPortraitH / 2;
 
-    const showPortrait = isUnlocked || reqMet;
+    const showPortrait = isUnlocked || reqMet || needsAdGate;
     if (!showPortrait) {
       const mysteryWrap = new PIXI.Container();
       mysteryWrap.position.set(cw / 2, portraitCy);
@@ -598,6 +639,8 @@ export class DressUpPanel extends PIXI.Container {
       this._addDressFooter(card, cw, ch, 'equipped', '穿戴中');
     } else if (isUnlocked) {
       this._addDressFooter(card, cw, ch, 'ready', '换装');
+    } else if (needsAdGate) {
+      this._addDressFooter(card, cw, ch, 'ad_unlock', '看广告解锁');
     } else if (!reqResult.met) {
       this._addDressFooter(card, cw, ch, 'locked', reqResult.text);
     } else if (outfit.huayuanCost > 0) {
@@ -606,10 +649,14 @@ export class DressUpPanel extends PIXI.Container {
       this._addDressFooter(card, cw, ch, 'ready', '领取');
     }
 
+    const canTapPurchase =
+      !isEquipped && purchaseAllowed && outfit.huayuanCost > 0
+      && CurrencyManager.state.huayuan >= outfit.huayuanCost;
+
     card.eventMode = 'static';
     card.hitArea = new PIXI.Rectangle(0, 0, cw, ch);
     if (!isEquipped) {
-      card.cursor = (isUnlocked || (reqResult.met && CurrencyManager.state.huayuan >= outfit.huayuanCost)) ? 'pointer' : 'default';
+      card.cursor = (isUnlocked || needsAdGate || canTapPurchase) ? 'pointer' : 'default';
       card.on('pointertap', (e: PIXI.FederatedPointerEvent) => {
         e.stopPropagation();
         if (isUnlocked) {
@@ -618,10 +665,16 @@ export class DressUpPanel extends PIXI.Container {
             this._refreshHeaderNumbers();
             this._rebuildGrid();
           }
+        } else if (needsAdGate) {
+          void this._unlockOutfitWithAd(outfit);
         } else {
           const req = checkRequirement(outfit.unlockRequirement);
           if (!req.met) {
             ToastMessage.show(`${requirementHintText(req)}`);
+            return;
+          }
+          if (!DressUpManager.canPurchaseOutfit(outfit.id)) {
+            ToastMessage.show('请先观看广告解锁购买资格');
             return;
           }
           if (CurrencyManager.state.huayuan < outfit.huayuanCost) {

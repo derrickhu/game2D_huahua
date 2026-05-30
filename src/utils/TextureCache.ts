@@ -98,6 +98,10 @@ const CHARS_IMAGE_MAP: Record<string, string> = {
   owner_full_outfit_vintage_blink: 'subpkg_chars/images/owner/full_outfit_vintage_eyesclosed.png',
   owner_chibi_outfit_vintage: 'subpkg_chars/images/owner/chibi_outfit_vintage.png',
 
+  owner_full_outfit_qinglian: 'subpkg_chars/images/owner/full_outfit_qinglian.png',
+  owner_full_outfit_qinglian_blink: 'subpkg_chars/images/owner/full_outfit_qinglian_eyesclosed.png',
+  owner_chibi_outfit_qinglian: 'subpkg_chars/images/owner/chibi_outfit_qinglian.png',
+
   owner_full_outfit_queen: 'subpkg_chars/images/owner/full_outfit_queen.png',
   owner_full_outfit_queen_blink: 'subpkg_chars/images/owner/full_outfit_queen_eyesclosed.png',
   owner_chibi_outfit_queen: 'subpkg_chars/images/owner/chibi_outfit_queen.png',

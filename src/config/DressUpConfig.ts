@@ -2,7 +2,8 @@
  * 换装配置
  *
  * 整套形象定义：id / 名称 / 图标 / 花愿价格 / 解锁条件
- * 新增形象只需在 ALL_OUTFITS 数组末尾加一行
+ * 换装面板展示套：在 DRESSUP_PANEL_OUTFITS 末尾追加。
+ * 活动隐藏套（如花之女王）放 DRESSUP_HIDDEN_OUTFITS，仍可通过 grantOutfit 解锁穿戴。
  */
 import type { UnlockRequirement } from '@/utils/UnlockChecker';
 
@@ -49,6 +50,9 @@ export function getOwnerFullOpenTextureKey(outfitId: string): string {
   return outfitId === 'outfit_default' ? 'owner_full_default' : `owner_full_${outfitId}`;
 }
 
+/** 看广告解锁购买资格的形象（与 `DecorationManager` 广告 gate 同流程：先看广告，再花愿购买） */
+export const AD_UNLOCK_OUTFIT_IDS = new Set<string>(['outfit_qinglian']);
+
 /** 花之女王等活动赠送套装：活动结算处请调用 `DressUpManager.grantOutfitFromActivity('outfit_queen')`（会同步 grantQuest，条件与存档一致） */
 export const OUTFIT_QUEEN_ACTIVITY_QUEST_ID = 'dressup_activity_outfit_queen';
 
@@ -60,12 +64,25 @@ export const OUTFIT_ACTIVITY_QUEST_BY_ID: Readonly<Record<string, string>> = {
   outfit_queen: OUTFIT_QUEEN_ACTIVITY_QUEST_ID,
 };
 
-export const ALL_OUTFITS: Outfit[] = [
+/** 形象换装面板展示的套装（2 列网格，暂不含活动隐藏套） */
+export const DRESSUP_PANEL_OUTFITS: Outfit[] = [
   { id: 'outfit_default',  name: '自然少女',    desc: '清新自然，田园花店的日常装扮',              icon: '', huayuanCost: 0, starValue: 0 },
   { id: 'outfit_florist',  name: '花店小姐姐',  desc: '专业花艺师的精致工装，满满花香',            icon: '', huayuanCost: 600, starValue: 3, unlockRequirement: { level: 2 } },
   { id: 'outfit_spring',   name: '春日樱花',    desc: '樱花盛开的季节，粉嫩少女感满分',           icon: '', huayuanCost: 1400, starValue: 6, unlockRequirement: { level: 8 } },
   { id: 'outfit_summer',   name: '夏日向日葵',  desc: '明媚阳光下，活力四射的夏日装扮',           icon: '', huayuanCost: 1080, starValue: 6, unlockRequirement: { level: 6 } },
   { id: 'outfit_vintage',  name: '丝绒蔷薇',    desc: '酒红丝绒与蕾丝的复古礼装，优雅迷人',       icon: '', huayuanCost: 2800, starValue: 9, unlockRequirement: { level: 9 } },
+  {
+    id: 'outfit_qinglian',
+    name: '清涟荷影',
+    desc: '薄荷青瓷与粉荷纹的古风襦裙，莲影摇曳',
+    icon: '',
+    huayuanCost: 999,
+    starValue: 5,
+  },
+];
+
+/** 活动赠送等隐藏套：可 grantOutfit / 穿戴，不进换装面板 */
+export const DRESSUP_HIDDEN_OUTFITS: Outfit[] = [
   {
     id: 'outfit_queen',
     name: '花之女王',
@@ -81,5 +98,10 @@ export const ALL_OUTFITS: Outfit[] = [
   },
 ];
 
-/** 按 ID 查找形象 */
-export const OUTFIT_MAP = new Map<string, Outfit>(ALL_OUTFITS.map(o => [o.id, o]));
+/** @deprecated 请用 DRESSUP_PANEL_OUTFITS；保留别名避免旧引用断裂 */
+export const ALL_OUTFITS = DRESSUP_PANEL_OUTFITS;
+
+const _ALL_OUTFIT_DEFS = [...DRESSUP_PANEL_OUTFITS, ...DRESSUP_HIDDEN_OUTFITS];
+
+/** 按 ID 查找形象（含隐藏套） */
+export const OUTFIT_MAP = new Map<string, Outfit>(_ALL_OUTFIT_DEFS.map(o => [o.id, o]));

@@ -92,6 +92,9 @@ class FurnitureDragSystemClass {
   /** canvas 事件引用（用于 cleanup） */
   private _onRawMove: ((e: any) => void) | null = null;
   private _onRawUp: ((e: any) => void) | null = null;
+  private _onRawTouchEnd: ((e: TouchEvent) => void) | null = null;
+  /** 当前拖拽对应的 pointerId；从托盘拖入时可能为 null（接受任意抬起） */
+  private _dragPointerId: number | null = null;
 
   // ---- 公共 API ----
 
@@ -101,6 +104,7 @@ class FurnitureDragSystemClass {
    */
   enable(roomContainer: PIXI.Container): void {
     if (this._enabled) return;
+    if (this._dragCtx) this._cancelDrag();
     this._enabled = true;
     this._roomContainer = roomContainer;
 
@@ -122,6 +126,12 @@ class FurnitureDragSystemClass {
     canvas.addEventListener('pointermove', this._onRawMove);
     canvas.addEventListener('pointerup', this._onRawUp);
     canvas.addEventListener('pointercancel', this._onRawUp);
+    this._onRawTouchEnd = (e: TouchEvent) => {
+      const t = e.changedTouches?.[0];
+      if (t) this._handleRawUp(t);
+    };
+    canvas.addEventListener('touchend', this._onRawTouchEnd);
+    canvas.addEventListener('touchcancel', this._onRawTouchEnd);
 
     console.log('[FurnitureDrag] 已启用');
     EventBus.emit('furniture:edit_enabled');
@@ -159,6 +169,12 @@ class FurnitureDragSystemClass {
       canvas.removeEventListener('pointercancel', this._onRawUp);
       this._onRawUp = null;
     }
+    if (this._onRawTouchEnd) {
+      canvas.removeEventListener('touchend', this._onRawTouchEnd);
+      canvas.removeEventListener('touchcancel', this._onRawTouchEnd);
+      this._onRawTouchEnd = null;
+    }
+    this._dragPointerId = null;
 
     this._spriteMap.clear();
     this._roomContainer = null;
@@ -283,9 +299,11 @@ class FurnitureDragSystemClass {
    * @param globalX pointer 的全局 x（设计坐标）
    * @param globalY pointer 的全局 y（设计坐标）
    */
-  startDragFromTray(decoId: string, globalX: number, globalY: number): void {
+  startDragFromTray(decoId: string, globalX: number, globalY: number, pointerId?: number): void {
     if (!this._enabled || !this._roomContainer) return;
 
+    EventBus.emit('furniture:drag_pointer_down');
+    this._dragPointerId = pointerId ?? null;
     this.deselect();
 
     const deco = DECO_MAP.get(decoId);
@@ -400,6 +418,9 @@ class FurnitureDragSystemClass {
     sprite.on('pointerdown', (e: PIXI.FederatedPointerEvent) => {
       if (!this._enabled || this._dragCtx) return;
 
+      EventBus.emit('furniture:drag_pointer_down');
+      this._dragPointerId = e.pointerId;
+
       const decoId = (sprite as any)._decoId as string;
       const localPos = this._rawEventToDesign(e);
 
@@ -462,12 +483,26 @@ class FurnitureDragSystemClass {
     this.sortByDepth();
   }
 
-  /** 处理 canvas 级别的 pointerup */
+  /** 处理 canvas 级别的 pointerup / touchend */
   private _handleRawUp(e: any): void {
     if (!this._dragCtx || !this._enabled) return;
 
+    const pid = typeof e?.pointerId === 'number'
+      ? e.pointerId
+      : typeof e?.identifier === 'number'
+        ? e.identifier
+        : undefined;
+    if (
+      this._dragPointerId != null
+      && pid !== undefined
+      && pid !== this._dragPointerId
+    ) {
+      return;
+    }
+
     const ctx = this._dragCtx;
     this._dragCtx = null;
+    this._dragPointerId = null;
 
     if (!ctx.dragging) {
       // 没有实际拖动，只是点击 → 保持选中状态即可
@@ -577,6 +612,7 @@ class FurnitureDragSystemClass {
     if (!this._dragCtx) return;
     const ctx = this._dragCtx;
     this._dragCtx = null;
+    this._dragPointerId = null;
 
     if (ctx.isNew) {
       this._disposeNewFurnitureDragExtras(ctx);

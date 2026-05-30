@@ -47,6 +47,16 @@ class PlatformServiceClass {
     return this.name === 'douyin';
   }
 
+  /** 微信开发者工具（非真机） */
+  get isDevtools(): boolean {
+    if (!this.isMinigame) return false;
+    try {
+      return this._api?.getSystemInfoSync?.()?.platform === 'devtools';
+    } catch {
+      return false;
+    }
+  }
+
   /**
    * 是否有可用的后端 HTTP 通道
    * - 微信 / 抖音小游戏：有原生 request API
@@ -436,9 +446,39 @@ class PlatformServiceClass {
     } catch (_) {}
   }
 
-  /** 将当前游戏 Canvas 的一段区域导出为临时图片路径，供动态分享图使用 */
+  /**
+   * 导出 canvas 为临时图片。
+   * - `fromMainScreen: true`：裁主屏 WebGL（微信真机分享图必走此路径，勿传 canvas 字段）。
+   * - 否则：离屏 canvas 用 toDataURL + 写 USER_DATA_PATH（真机对离屏 canvasToTempFilePath 常失败）。
+   */
   canvasToTempFilePath(opts: {
-    canvas: any;
+    canvas?: any;
+    fromMainScreen?: boolean;
+    x?: number;
+    y?: number;
+    width?: number;
+    height?: number;
+    destWidth?: number;
+    destHeight?: number;
+    fileType?: 'jpg' | 'png';
+    quality?: number;
+  }): Promise<string | null> {
+    if (!this._api?.canvasToTempFilePath) {
+      console.warn('[Platform] canvasToTempFilePath unavailable');
+      return Promise.resolve(null);
+    }
+    if (opts.fromMainScreen) {
+      return this._canvasToTempFromMainScreen(opts);
+    }
+    if (!opts.canvas) {
+      console.warn('[Platform] canvasToTempFilePath: 缺少 canvas');
+      return Promise.resolve(null);
+    }
+    return this._canvasToTempFromOffscreen(opts);
+  }
+
+  /** 微信/抖音：从默认上屏 WebGL canvas 裁剪（x/y/width/height 为物理像素） */
+  private _canvasToTempFromMainScreen(opts: {
     x?: number;
     y?: number;
     width?: number;
@@ -449,33 +489,85 @@ class PlatformServiceClass {
     quality?: number;
   }): Promise<string | null> {
     return new Promise(resolve => {
-      if (!this._api?.canvasToTempFilePath || !opts.canvas) {
-        console.warn('[Platform] canvasToTempFilePath unavailable');
-        resolve(null);
-        return;
-      }
       try {
-        this._api.canvasToTempFilePath({
-          canvas: opts.canvas,
-          x: opts.x,
-          y: opts.y,
-          width: opts.width,
-          height: opts.height,
+        const apiOpts: Record<string, unknown> = {
           destWidth: opts.destWidth,
           destHeight: opts.destHeight,
           fileType: opts.fileType ?? 'jpg',
           quality: opts.quality ?? 0.9,
           success: (res: { tempFilePath?: string }) => resolve(res.tempFilePath ?? null),
           fail: (err: unknown) => {
-            console.warn('[Platform] canvasToTempFilePath failed', err);
+            console.warn('[Platform] canvasToTempFilePath(main) failed', err);
             resolve(null);
           },
-        });
+        };
+        if (opts.x != null) apiOpts.x = Math.max(0, Math.round(opts.x));
+        if (opts.y != null) apiOpts.y = Math.max(0, Math.round(opts.y));
+        if (opts.width != null) apiOpts.width = Math.max(1, Math.round(opts.width));
+        if (opts.height != null) apiOpts.height = Math.max(1, Math.round(opts.height));
+        this._api.canvasToTempFilePath(apiOpts);
       } catch (err) {
-        console.warn('[Platform] canvasToTempFilePath exception', err);
+        console.warn('[Platform] canvasToTempFilePath(main) exception', err);
         resolve(null);
       }
     });
+  }
+
+  /** 离屏 2D / extract 画布：toDataURL 落盘（避免传 canvas 给 wx API） */
+  private _canvasToTempFromOffscreen(opts: {
+    canvas: any;
+    destWidth?: number;
+    destHeight?: number;
+    fileType?: 'jpg' | 'png';
+    quality?: number;
+  }): Promise<string | null> {
+    const canvas = opts.canvas;
+    const destW = Math.max(2, opts.destWidth ?? 500);
+    const destH = Math.max(2, opts.destHeight ?? 400);
+    const mime = (opts.fileType ?? 'jpg') === 'png' ? 'image/png' : 'image/jpeg';
+    const quality = opts.quality ?? 0.88;
+
+    try {
+      let dataUrl: string | null = null;
+      const sw = canvas.width ?? 0;
+      const sh = canvas.height ?? 0;
+      if (sw > 0 && sh > 0 && typeof canvas.getContext === 'function') {
+        const tmp = this._api.createCanvas?.() ?? canvas;
+        if (tmp && tmp !== canvas) {
+          tmp.width = destW;
+          tmp.height = destH;
+          const ctx = tmp.getContext?.('2d');
+          if (ctx) {
+            ctx.drawImage(canvas, 0, 0, destW, destH);
+            dataUrl = typeof tmp.toDataURL === 'function'
+              ? tmp.toDataURL(mime, quality)
+              : null;
+          }
+        }
+      }
+      if (!dataUrl && typeof canvas.toDataURL === 'function') {
+        dataUrl = canvas.toDataURL(mime, quality);
+      }
+      if (!dataUrl) {
+        console.warn('[Platform] offscreen toDataURL 不可用');
+        return Promise.resolve(null);
+      }
+
+      const base64 = dataUrl.replace(/^data:image\/\w+;base64,/, '');
+      const fs = this._api.getFileSystemManager?.();
+      const root = this._api.env?.USER_DATA_PATH ?? '';
+      if (!fs?.writeFileSync || !root) {
+        console.warn('[Platform] 无法写分享临时图（无 fs 或 USER_DATA_PATH）');
+        return Promise.resolve(null);
+      }
+      const ext = mime === 'image/png' ? 'png' : 'jpg';
+      const path = `${root}/share_snap_${Date.now()}.${ext}`;
+      fs.writeFileSync(path, base64, 'base64');
+      return Promise.resolve(path);
+    } catch (err) {
+      console.warn('[Platform] offscreen export failed', err);
+      return Promise.resolve(null);
+    }
   }
 
   /**

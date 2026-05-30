@@ -1,0 +1,26 @@
+DUAL SHEET for game sprites — one wide image, two equal vertical panels side by side, no gap, no border line, no text.
+
+Overall canvas: landscape 16:9. Background: pure flat white RGB 255 255 255 only edge to edge.
+
+Left panel (50% width): one full-body chibi girl. Right panel (50% width): same girl, identical scale, pose, camera.
+
+BODY PROPORTION — critical, MUST match huahua spring/default shop owner SD sprite, NOT tall anime girl:
+Strict super-deformed 2-head-tall chibi ONLY. Total standing height from crown to soles equals EXACTLY 2 times one head height (head includes hair volume). Head alone is about 48% to 52% of full body height. Very short neck. Tiny round torso. Very short chunky legs. Small hands and feet. Cute toy blob silhouette like merge-game NPC in isometric flower shop.
+Absolutely FORBIDDEN: 3-head, 3.5-head, 4-head, 5-head, slim long legs, tall elegant proportions, teen fashion body, illustration model.
+
+SCALE IN EACH HALF — critical, match spring owner sprite density:
+Draw the figure VERY LARGE filling the panel. Soles in bottom 10% to 14% of panel height. Top of hair in top 16% to 22%. Only 8% to 12% white margin on sides. Character must feel as BIG as reference spring chibi owner in game sprite sheet.
+
+ART STYLE:
+2D flat-to-soft mobile merge-game NPC. Simple flat pastel fills, warm brown soft outlines, mint jade and blush lotus. NO 3D render, NO fashion illustration.
+
+HAIRSTYLE — ancient Chinese guzhuang, match Qinglian bust card:
+Warm brown hair: soft high cloud bun (古装发髻), long side tress locks, mint lotus hairpin, long pink silk ribbon streamers, jade earrings. FORBIDDEN modern bob, thick bangs bowl cut, city ponytail only.
+
+OUTFIT — ethereal hanfu on SD body:
+Mint celadon cross-collar ru, wide short sleeves for chibi, full-length pale pink long fairy skirt to near ankles but drawn compact on tiny legs — flowing layers simplified, NOT tall adult dress on long legs. Mint sash, cream shoes visible. Hands at sides, five simple fingers, fully visible.
+
+Left panel: brown eyes open, gentle smile.
+Right panel: eyes closed happy smile, curved eyelid lines.
+
+Same pixel height, foot baseline, head size, outfit both panels.

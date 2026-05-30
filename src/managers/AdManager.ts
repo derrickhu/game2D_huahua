@@ -48,6 +48,8 @@ export enum AdScene {
   NEWBIE_GIFT_PACK = 'newbie_gift_pack',
   /** 周末订单花愿 +50% 活动 */
   WEEKEND_HUAYUAN_BOOST = 'weekend_huayuan_boost',
+  /** 形象换装 · 清涟荷影：广告解锁购买资格 */
+  DRESSUP_OUTFIT_QINGLIAN = 'dressup_outfit_qinglian',
 }
 
 export type AdFailReason =
