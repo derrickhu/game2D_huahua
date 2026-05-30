@@ -66,6 +66,7 @@ import { AdManager, AdScene } from '@/managers/AdManager';
 import { ConfirmDialog } from '@/gameobjects/ui/ConfirmDialog';
 import { NewbieGiftPackEntryButton } from '@/gameobjects/ui/NewbieGiftPackEntryButton';
 import { NewbieGiftPackManager } from '@/managers/NewbieGiftPackManager';
+import { ENABLE_SHOP_MISC_DRAWER } from '@/config/FeatureFlags';
 
 // ── 布局常量 ──
 const PROGRESS_BAR_W = 400;
@@ -1635,6 +1636,8 @@ export class ShopScene implements Scene {
   }
 
   private _buildMiscDrawer(): void {
+    if (!ENABLE_SHOP_MISC_DRAWER) return;
+
     const root = new PIXI.Container();
     const drawerY = Game.logicHeight - MISC_DRAWER_Y_FROM_BOTTOM;
 
@@ -1891,6 +1894,7 @@ export class ShopScene implements Scene {
   }
 
   private _ensureGameClubNativeButton(): void {
+    if (!ENABLE_SHOP_MISC_DRAWER) return;
     if (this._gameClubNativeBtn || !Platform.isWechat) return;
     const rect = this._getGameClubNativeRectPx();
     if (!rect) return;
@@ -1924,6 +1928,10 @@ export class ShopScene implements Scene {
   }
 
   private _syncGameClubNativeButton(): void {
+    if (!ENABLE_SHOP_MISC_DRAWER) {
+      this._hideGameClubNativeButton();
+      return;
+    }
     if (!Platform.isWechat) return;
     this._ensureGameClubNativeButton();
     if (!this._gameClubNativeBtn) {
