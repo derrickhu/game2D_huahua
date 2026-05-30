@@ -19,7 +19,7 @@ import { FONT_FAMILY, COLORS } from '@/config/Constants';
 import { TextureCache } from '@/utils/TextureCache';
 
 // ---- 常量 ----
-/** 六个操作钮横排槽宽（图标缩放后居中） */
+/** 四个操作钮横排槽宽（图标缩放后居中） */
 const TOOL_SLOT_W = 56;
 const ICON_MAX = 50;
 const BTN_GAP = 8;
@@ -40,8 +40,6 @@ const ROOM_EDIT_TOOLBAR_TEXTURE_KEYS = [
   'room_edit_toolbar_zoom_in',
   'room_edit_toolbar_zoom_out',
   'room_edit_toolbar_flip',
-  'room_edit_toolbar_layer_up',
-  'room_edit_toolbar_layer_down',
   'room_edit_toolbar_remove',
   'ui_order_check_badge',
 ] as const;
@@ -144,18 +142,6 @@ export class RoomEditToolbar extends PIXI.Container {
         action: () => this._onFlip(),
       },
       {
-        textureKey: 'room_edit_toolbar_layer_up',
-        icon: '^',
-        tooltip: '置前',
-        action: () => this._onBringForward(),
-      },
-      {
-        textureKey: 'room_edit_toolbar_layer_down',
-        icon: 'v',
-        tooltip: '置后',
-        action: () => this._onSendBackward(),
-      },
-      {
         textureKey: 'room_edit_toolbar_remove',
         icon: 'x',
         tooltip: '移除',
@@ -168,7 +154,7 @@ export class RoomEditToolbar extends PIXI.Container {
       textureKey: 'ui_order_check_badge',
     };
 
-    const toolsRowW = 6 * TOOL_SLOT_W + 5 * BTN_GAP;
+    const toolsRowW = 4 * TOOL_SLOT_W + 3 * BTN_GAP;
     const rowBlockH = ICON_MAX + LABEL_BELOW + 4;
 
     const confirmTex = TextureCache.get(confirmDef.textureKey);
@@ -383,23 +369,6 @@ export class RoomEditToolbar extends PIXI.Container {
     if (!this._currentDecoId) return;
     RoomLayoutManager.flipFurniture(this._currentDecoId);
     // roomlayout:updated 事件已由 RoomLayoutManager 内部发射
-  }
-
-  /** 将家具图层往前移（遮挡其它家具） */
-  private _onBringForward(): void {
-    if (!this._currentDecoId) return;
-    RoomLayoutManager.bringForward(this._currentDecoId);
-    // 图层变更后需要重新排序
-    FurnitureDragSystem.sortByDepth();
-    ToastMessage.show('图层前移');
-  }
-
-  /** 将家具图层往后移（被其它家具遮挡） */
-  private _onSendBackward(): void {
-    if (!this._currentDecoId) return;
-    RoomLayoutManager.sendBackward(this._currentDecoId);
-    FurnitureDragSystem.sortByDepth();
-    ToastMessage.show('图层后移');
   }
 
   private _onRemove(): void {

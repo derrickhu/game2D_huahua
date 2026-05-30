@@ -1,0 +1,20 @@
+Single full-screen vertical mobile game UI mockup, 9:16 aspect ratio, for a cozy pastel flower-shop merge game. High resolution, crisp 2D vector illustration, kawaii casual style.
+
+THEME: Chinese lotus pond "Qinglian Heying" newbie mega gift pack — mint jade green accents, soft pink lotus petals, golden highlights, auspicious cloud motifs. Must feel GENEROUS and exciting — player should instantly feel "wow, so many free rewards".
+
+OUTER FRAME: large centered modal with very rounded corners. Thick soft lilac-lavender outer rim, thinner pastel pink inner lip, gentle floating drop shadow. Top: ornate golden-yellow scalloped title banner with readable Chinese title text "清涟荷影 · 新手礼" in bold cute rounded font. Top-right: chunky circular red close button with white X slightly past frame corner.
+
+HERO RIBBON below title: wide mint-green and gold ribbon badge reading "10件豪礼 免费领" with small sparkle stars — emphasize abundance.
+
+MAIN CONTENT AREA: soft cream-to-blush-pink matte fill. Center: dense reward showcase grid (4 columns, 3 rows) with illustrated mini icons in rounded square slots with soft golden borders:
+Row1: L-shaped flower shop room thumbnail, lotus flower cart, cloud-pattern oval rug, koi bench
+Row2: four-panel lotus screen, lotus lamp, lotus pond tea table, lucky gold coin stack x3
+Row3: rainbow crystal ball x3, golden scissors x3, plus two decorative sparkle filler cells
+Each slot has tiny Chinese label under icon (帷帘花车, 祥云地毯, etc.) — labels may be stylized but legible.
+
+BOTTOM SECTION:
+- Wide progress track capsule in pastel blue-green with gold trim, label "观看广告 0/5" with small play icon
+- Large primary CTA button below: warm orange-gold gradient pill, glossy kawaii style, centered video-play triangle icon + text "观看广告领取进度"
+- Small subtitle under button: "累计5次即可全部领取"
+
+Decorative lotus petals and soft glow particles around the grid edges. Pastel high-key palette, soft gradients only for depth. No photoreal, no watermark, no brand logos. Full UI mockup on simple blurred game background (grass + shop), modal is the focus.

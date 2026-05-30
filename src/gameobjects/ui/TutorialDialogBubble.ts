@@ -42,6 +42,10 @@ export interface DialogBubbleOptions {
    * 垂直位置：auto 按 spotlight 上下避让；bottom 固定靠近屏底；below 强制放在目标下方。
    */
   dialogVerticalMode?: 'auto' | 'bottom' | 'below';
+  /** auto 模式下优先放在高亮上方（降低上方空间阈值，避免气泡被挤到棋盘下方） */
+  preferAboveSpotlight?: boolean;
+  /** 气泡垂直中心锚点（设计坐标 Y）；指定时忽略 bottom/auto/below 纵向计算 */
+  dialogAnchorY?: number;
   /** dialog 用于说明，action 用于强操作提示，影响卡片尺寸与强调层级 */
   variant?: 'dialog' | 'action';
 }
@@ -256,7 +260,10 @@ export class TutorialDialogBubble extends PIXI.Container {
     let dialogY: number;
     const margin = 20;
 
-    if (opts.dialogVerticalMode === 'bottom') {
+    if (opts.dialogAnchorY !== undefined) {
+      dialogY = opts.dialogAnchorY - totalH / 2;
+      dialogY = Math.max(30, Math.min(dialogY, Game.logicHeight - totalH - 30));
+    } else if (opts.dialogVerticalMode === 'bottom') {
       const marginBottom = 14;
       dialogY = Game.logicHeight - totalH - marginBottom;
       dialogY = Math.max(
@@ -269,9 +276,10 @@ export class TutorialDialogBubble extends PIXI.Container {
     } else if (opts.spotlightTop !== undefined && opts.spotlightBottom !== undefined) {
       const spaceAbove = opts.spotlightTop;
       const spaceBelow = Game.logicHeight - opts.spotlightBottom;
-      if (spaceAbove >= totalH + margin + 40) {
+      const aboveSlack = opts.preferAboveSpotlight ? 12 : 40;
+      if (spaceAbove >= totalH + margin + aboveSlack) {
         dialogY = opts.spotlightTop - totalH - margin;
-      } else if (spaceBelow >= totalH + margin + 40) {
+      } else if (!opts.preferAboveSpotlight && spaceBelow >= totalH + margin + 40) {
         dialogY = opts.spotlightBottom + margin;
       } else {
         dialogY = 40;

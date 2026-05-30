@@ -1,0 +1,17 @@
+Single mobile game HUD icon 1:1, readable at 64 pixels, same bold chocolate-outline cel-shaded merge flower-shop style as weekend huayuan boost entry icon.
+
+NOT a detailed treasure chest with many tiny coins koi crystals petals. Maximum 4-5 simple color masses only.
+
+Build a chunky newbie gift badge from 3 bold shapes:
+
+1) Lower center: oversized mint-jade green gift box, simple rounded cube, one pink lotus bow on top, thick dark brown outline, NO lid opening detail, NO tiny items spilling out.
+
+2) Upper right overlapping box: bold coral-orange round badge with readable Chinese text "10件" in huge white letters with dark brown stroke, largest element.
+
+3) Upper left: small teal ribbon tab with white text "礼" or simple lotus petal shape, solid flat color block only.
+
+Isometric three-quarter or front view, generous margin, NO square UI button frame, NO white border.
+
+Background solid magenta FF00FF for cutout.
+
+No watermark, no photoreal, no sparkle particles, no gold halo, no floating petals.

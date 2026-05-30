@@ -1,0 +1,16 @@
+Vertical mobile game newbie gift promo panel, TALL narrow card, aspect ratio about 9:16 (much taller than 3:4), centered pink-lavender lotus-themed rounded card on pure white outer margins, kawaii pastel flower-shop merge game style.
+
+TOP: ornate golden scalloped title banner with readable Chinese "清涟荷影 · 新手礼" in bold cute rounded font with chocolate brown outline. Wide mint-green and gold ribbon below reading "10件豪礼 免费领" with small sparkle stars.
+
+TOP-RIGHT on card: chunky circular red close button with white X slightly past frame corner.
+
+MIDDLE CONTENT (COMPLETELY EMPTY — critical):
+One large uninterrupted cream-to-blush-pink matte interior field occupying about 55% of card height between ribbon and bottom button. Perfectly smooth flat fill, NO grid, NO squares, NO frames, NO borders, NO placeholder boxes, NO rectangles, NO cells, NO mount points, NO faint outlines, NO dividers, NO icons, NO furniture, NO labels. Only subtle lotus petal decorations tucked in the four corners of this empty field — corners only, center must stay clean empty pastel fill for code to overlay 4x3 reward icons.
+
+NO progress bar. NO progress track. NO secondary strips.
+
+BOTTOM: one wide blank primary CTA pill button centered, warm coral-to-gold gradient glossy kawaii capsule, completely EMPTY — NO text, NO numbers, NO play icon.
+
+Decorative lotus on purple-lavender frame edges. Card must be visibly TALLER and narrower than a square panel so a 4-column by 3-row reward grid can fit in the empty middle when overlaid by game code.
+
+Readable Chinese only in title and ribbon. White background outside card for rembg. No watermark, no photoreal.

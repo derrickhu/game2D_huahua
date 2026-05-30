@@ -339,7 +339,7 @@ export class TutorialOverlay {
       cleanupGuide();
       this._clearOverlay();
       if (this._findToolOnBoard('tool_plant_3') >= 0) {
-        TutorialManager.advanceTo(TutorialStep.GUIDE_TAP_TOOL);
+        this._showPlantTrayReadyDialog();
         return;
       }
       this._showGuideMergeTool();
@@ -370,7 +370,7 @@ export class TutorialOverlay {
 
       const hasLv3 = this._findToolOnBoard('tool_plant_3') >= 0;
       if (hasLv3) {
-        TutorialManager.advanceTo(TutorialStep.GUIDE_TAP_TOOL);
+        this._showPlantTrayReadyDialog();
       } else {
         refreshTimer = setTimeout(() => {
           if (TutorialManager.currentStep === TutorialStep.GUIDE_MERGE_TOOL) {
@@ -390,6 +390,20 @@ export class TutorialOverlay {
     this._cleanup = cleanupGuide;
   }
 
+  /** 合成出育苗盘后：居中提示（不跟格子避让），点继续再进入点击引导 */
+  private _showPlantTrayReadyDialog(): void {
+    this._clearOverlay();
+    this._overlay.visible = true;
+    this._drawSpotlightMask([], 0.5);
+
+    this._showBubble({
+      title: '育苗盘出现了！',
+      body: '太棒了！点击育苗盘就可以培育花朵了~',
+      buttonText: '继续',
+      onButton: () => TutorialManager.advanceTo(TutorialStep.GUIDE_TAP_TOOL),
+    });
+  }
+
   /** 引导点击 3 级工具产出花朵 */
   private _showGuideTapTool(): void {
     const toolIdx = this._findToolOnBoard('tool_plant_3');
@@ -406,9 +420,9 @@ export class TutorialOverlay {
     this._showBubble({
       title: TUTORIAL_COPY.tapTool.title,
       body: TUTORIAL_COPY.tapTool.body,
-      actionText: TUTORIAL_COPY.tapTool.actionText,
       spotlightTop: rect.y,
       spotlightBottom: rect.y + rect.h,
+      preferAboveSpotlight: true,
     });
 
     const onProduced = (_srcIdx: number, _tgtIdx: number, producedId: string): void => {

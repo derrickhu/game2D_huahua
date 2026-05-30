@@ -28,7 +28,7 @@ export const AD_UNIT_CONFIG: Record<'wechat' | 'douyin', PlatformAdUnitConfig> =
       merge_bubble_unlock: 'adunit-4091dd36e39990e6',
       /** 签到完成后加餐激励视频：与默认 rewardedVideo / 每日福利类一致 */
       checkin_ad_bonus: 'adunit-6ca54692fdb75515',
-      newbie_gift_pack: 'adunit-6ca54692fdb75515',
+      newbie_gift_pack: 'adunit-afb2c19fab7b5c08',
       /** 周末订单花愿加成（独立活动广告位） */
       weekend_huayuan_boost: 'adunit-b6400a6a24ed1fb8',
     },

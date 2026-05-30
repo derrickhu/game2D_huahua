@@ -10,7 +10,7 @@ import { TweenManager, Ease } from '@/core/TweenManager';
 import { DESIGN_WIDTH, FONT_FAMILY } from '@/config/Constants';
 import { ITEM_DEFS } from '@/config/ItemConfig';
 import { TextureCache } from '@/utils/TextureCache';
-import { Platform } from '@/core/PlatformService';
+import { captureContainerShareImageUrl } from '@/utils/shareSnapshot';
 
 /**
  * board_item：进收纳盒/棋盘的棋子，数量用 ×N；
@@ -494,6 +494,7 @@ export class ItemObtainOverlay extends PIXI.Container {
   private _options?: ItemObtainOverlayOptions;
   private _settled = false;
   private _shareBtn: PIXI.Container | null = null;
+  private _content!: PIXI.Container;
 
   /**
    * 展示获得物品；点击任意处触发 onClaim 后移除自身。
@@ -553,6 +554,7 @@ export class ItemObtainOverlay extends PIXI.Container {
     const content = new PIXI.Container();
     content.eventMode = 'none';
     this.addChild(content);
+    this._content = content;
 
     layoutObtainStyleRewardBlock(content, W, H, rewards, {
       ribbonTexKey: 'merge_chain_ribbon',
@@ -597,51 +599,23 @@ export class ItemObtainOverlay extends PIXI.Container {
   }
 
   async createShareSnapshotImageUrl(): Promise<string | null> {
-    const renderer = Game.app?.renderer as any;
-    const canvas = Game.app?.view;
-    if (!renderer || !canvas) return null;
-
-    const prevVisible = this._shareBtn?.visible ?? true;
-    if (this._shareBtn) this._shareBtn.visible = false;
-
-    try {
-      renderer.render(Game.stage);
-      await new Promise<void>(resolve => setTimeout(resolve, 50));
-
-      const designW = DESIGN_WIDTH;
-      const designH = Game.logicHeight;
-      const cropW = Math.min(670, designW - 40);
-      const cropH = Math.round(cropW * 0.8);
-      const cropX = (designW - cropW) / 2;
-      const idealY = designH / 2 - 360;
-      const cropY = Math.max(
-        Game.safeTop,
-        Math.min(Math.max(Game.safeTop, designH - cropH), idealY),
-      );
-      const croppedImageUrl = await Platform.canvasToTempFilePath({
-        canvas,
-        x: Math.round(Game.toReal(cropX)),
-        y: Math.round(Game.toReal(cropY)),
-        width: Math.round(Game.toReal(cropW)),
-        height: Math.round(Game.toReal(cropH)),
-        destWidth: 500,
-        destHeight: 400,
-        fileType: 'jpg',
-        quality: 0.92,
-      });
-      if (croppedImageUrl) return croppedImageUrl;
-
-      return await Platform.canvasToTempFilePath({
-        canvas,
-        destWidth: 720,
-        destHeight: 1280,
-        fileType: 'jpg',
-        quality: 0.9,
-      });
-    } finally {
-      if (this._shareBtn) this._shareBtn.visible = prevVisible;
-      renderer.render(Game.stage);
-    }
+    const designW = DESIGN_WIDTH;
+    const designH = Game.logicHeight;
+    const cropW = Math.min(670, designW - 40);
+    const cropH = Math.round(cropW * 0.8);
+    const cropX = (designW - cropW) / 2;
+    const idealY = designH / 2 - 360;
+    const cropY = Math.max(
+      Game.safeTop,
+      Math.min(Math.max(Game.safeTop, designH - cropH), idealY),
+    );
+    return captureContainerShareImageUrl(this._content, {
+      padding: 20,
+      destWidth: 500,
+      aspectRatio: 5 / 4,
+      hide: this._shareBtn ? [this._shareBtn] : [],
+      fallbackCrop: { x: cropX, y: cropY, width: cropW, height: cropH },
+    });
   }
 
   private _finish(): void {

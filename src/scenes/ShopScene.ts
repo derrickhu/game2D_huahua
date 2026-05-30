@@ -64,6 +64,8 @@ import { SettingsPanel } from '@/gameobjects/ui/SettingsPanel';
 import { AdEntitlementManager, DailyAdEntitlement } from '@/managers/AdEntitlementManager';
 import { AdManager, AdScene } from '@/managers/AdManager';
 import { ConfirmDialog } from '@/gameobjects/ui/ConfirmDialog';
+import { NewbieGiftPackEntryButton } from '@/gameobjects/ui/NewbieGiftPackEntryButton';
+import { NewbieGiftPackManager } from '@/managers/NewbieGiftPackManager';
 
 // ── 布局常量 ──
 const PROGRESS_BAR_W = 400;
@@ -84,10 +86,11 @@ const WORLD_MAP_LABEL_H = 18;
 /** 许愿入口图标半径（与大地图同尺寸，保持视觉一致） */
 const WISHING_ICON_R = WORLD_MAP_ICON_R;
 /**
- * 许愿入口与大地图入口的中心点水平间距（许愿在左、地图在右）。
- * 取 2*r + 24 ≈ 一个图标 + 适度空隙；过小会贴在一起，过大易压到「装修花店」按钮。
+ * 许愿入口与大地图 / 新手礼包入口的中心点水平间距（相邻底栏圆钮）。
  */
 const WISHING_TO_WORLDMAP_GAP_X = WORLD_MAP_ICON_R * 2 + 24;
+/** 新手礼包入口在「许愿」左侧，间距与许愿-地图一致 */
+const NEWBIE_GIFT_TO_WISHING_GAP_X = WISHING_TO_WORLDMAP_GAP_X;
 const WISHING_FREE_PROMO_BADGE_NAME = 'wishing_free_multi_promo';
 /** 左下隐藏功能条：收起态小竖签 + 展开态横条 */
 const MISC_DRAWER_Y_FROM_BOTTOM = 236;
@@ -268,6 +271,10 @@ export class ShopScene implements Scene {
   private _worldMapBtn: PIXI.Container | null = null;
   /** 许愿入口（3 级解锁，未解锁仍显示锁徽，点击 → panel:openFlowerSignGacha 与大地图入口共享面板） */
   private _wishingBtn: PIXI.Container | null = null;
+  /** 新手礼包入口（装修花店与许愿之间） */
+  private _newbieGiftPackEntry: NewbieGiftPackEntryButton | null = null;
+  /** 花店 UI 是否已构建（二次进店复用，避免整场景重建卡顿） */
+  private _uiBuilt = false;
   /** 左下隐藏功能条：收起竖签 + 展开横条 */
   private _miscDrawerRoot: PIXI.Container | null = null;
   private _miscDrawerTab: PIXI.Container | null = null;
@@ -322,6 +329,33 @@ export class ShopScene implements Scene {
     CurrencyManager.setActiveRenovationScene(sceneId);
     if (!this._isEditMode) {
       this._enterEditMode();
+    }
+  };
+
+  private readonly _onRoomLayoutChanged = (): void => {
+    if (!this._isEditMode) {
+      this._renderFurnitureLayout();
+    }
+  };
+
+  private readonly _onRoomLayoutAdded = (): void => {
+    if (!this._isEditMode) {
+      this._renderFurnitureLayout();
+    }
+    if (this._furnitureTray.isOpen) this._furnitureTray.refresh();
+  };
+
+  private readonly _onRoomLayoutRemoved = (): void => {
+    if (!this._isEditMode) {
+      this._renderFurnitureLayout();
+    }
+    if (this._furnitureTray.isOpen) this._furnitureTray.refresh();
+  };
+
+  private readonly _onRoomLayoutUpdated = (placement: { decoId?: string; scale?: number; flipped?: boolean } | undefined): void => {
+    if (this._isEditMode && placement && placement.decoId) {
+      this._updateSpriteVisual(placement as { decoId: string; scale: number; flipped: boolean });
+      FurnitureDragSystem.sortByDepth();
     }
   };
 
@@ -437,6 +471,7 @@ export class ShopScene implements Scene {
     this.container.scale.set(1, 1);
     this.container.pivot.set(0, 0);
     this.container.alpha = 1;
+    this.container.visible = true;
 
     // 初始化房间布局管理器
     RoomLayoutManager.init();
@@ -455,15 +490,55 @@ export class ShopScene implements Scene {
         }
         this._refreshShopOwnerOutfitTextures();
         this._customerScrollArea?.refresh();
+        this._refreshShopEditButtonChrome();
         if (this._isEditMode) this._ensureEditCompletePill();
       },
     );
-    void TextureCache.preloadShopScene().catch(err => {
+    void TextureCache.preloadShopScene()
+      .then(() => {
+        if (SceneManager.current?.name !== 'shop') return;
+        this._refreshShopEditButtonChrome();
+      })
+      .catch(err => {
       console.warn('[ShopScene] 花店首屏资源预加载未完全成功:', err);
     });
 
-    this._build();
-    this._playEnterAnim();
+    if (this._uiBuilt) {
+      this._resumeShop();
+    } else {
+      this._build();
+      this._uiBuilt = true;
+      this._finishShopEnter(false);
+    }
+  }
+
+  /** 二次进店：复用已构建 UI，只刷新动态内容与事件 */
+  private _resumeShop(): void {
+    this._restoreShopHudAfterDecoPanel();
+    this._bindEvents();
+    this._refreshAfterReenter();
+    this._finishShopEnter(true);
+  }
+
+  private _refreshAfterReenter(): void {
+    if (this._isEditMode) {
+      this._ensureEditModeFurnitureSprites();
+    } else {
+      this._renderFurnitureLayout();
+    }
+    this._refreshShopBuildingTexture();
+    this._refreshShopOwnerOutfitTextures();
+    this._refreshActivityButtonTextures();
+    this._refreshNewbieGiftEntryVisibility();
+    this._refreshShopEditButtonChrome();
+    this._updateProgressBar();
+    this._syncAffinityCodexButtonVisibility();
+    this._refreshWorldMapBtnVisibility();
+    this._refreshWishingBtnVisibility();
+  }
+
+  private _finishShopEnter(instant: boolean): void {
+    this._playEnterAnim(instant);
     Game.ticker.add(this._update, this);
 
     const pendingPlace = takePendingPlaceDeco();
@@ -475,7 +550,6 @@ export class ShopScene implements Scene {
 
     SoundSystem.playShopBGM();
 
-    // 教程：从合成页切入花店时推进步骤，然后绑定花店引导 UI
     if (TutorialManager.isActive) {
       void TextureCache.preloadTutorialDeco();
       if (TutorialManager.currentStep === TutorialStep.SWITCH_TO_SHOP) {
@@ -486,7 +560,19 @@ export class ShopScene implements Scene {
         this._tutorialOverlay = new TutorialOverlay(this.container);
         this._tutorialOverlay.bind('shop');
       }
+    } else {
+      this._scheduleNewbieGiftAutoPrompt();
     }
+  }
+
+  /** 教程完成后首次进花坊：延迟自动弹出新手礼包（不与合成页签到叠在一起） */
+  private _scheduleNewbieGiftAutoPrompt(): void {
+    if (!NewbieGiftPackManager.shouldAutoOpenOnShopEnter) return;
+    window.setTimeout(() => {
+      if (SceneManager.current?.name !== 'shop') return;
+      if (!NewbieGiftPackManager.shouldAutoOpenOnShopEnter) return;
+      EventBus.emit('panel:openNewbieGiftPack');
+    }, 900);
   }
 
   onExit(): void {
@@ -503,16 +589,7 @@ export class ShopScene implements Scene {
     this._pendingPlaceTextureUnsub?.();
     this._pendingPlaceTextureUnsub = null;
     this._clearPendingDoubleTapStates();
-    EventBus.off('decoration:room_style', this._refreshShopBuildingTexture);
-    EventBus.off('decoration:decoPanelBackdrop', this._onDecoPanelBackdrop);
-    EventBus.off('dressup:equipped', this._onDressUpEquipped);
-    EventBus.off('decoration:shopStarFly', this._onDecorationShopStarFly);
-    EventBus.off('currency:changed', this._onShopCurrencyForProgress);
-    EventBus.off('level:up', this._onShopLevelUp);
-    EventBus.off('adEntitlement:changed', this._onAdEntitlementChanged);
-    EventBus.off('renovation:sceneChanged', this._onRenovationSceneChanged);
-    EventBus.off('worldmap:switchScene', this._onWorldMapSwitchScene);
-    EventBus.off('scene:switchToShop', this._onSwitchToShopConsumePendingPlace);
+    this._unbindEvents();
     this._destroyGameClubNativeButton();
     // 如果在编辑模式，退出时自动保存
     if (this._isEditMode) {
@@ -523,16 +600,7 @@ export class ShopScene implements Scene {
     // 无论是否编辑模式，都强制刷写布局存档（防止防抖 timer 未触发）
     RoomLayoutManager.saveNow();
     Game.ticker.remove(this._update, this);
-    if (this._levelUpPopup) {
-      this._levelUpPopup.parent?.removeChild(this._levelUpPopup);
-      this._levelUpPopup.destroy({ children: true });
-    }
-    if (this._settingsPanel) {
-      this._settingsPanel.parent?.removeChild(this._settingsPanel);
-      this._settingsPanel.destroy({ children: true });
-      this._settingsPanel = null;
-    }
-    this.container.removeChildren();
+    this.container.visible = false;
   }
 
   private _cleanupOwnerDragEvents(): void {
@@ -2313,38 +2381,27 @@ export class ShopScene implements Scene {
     EventBus.on('worldmap:switchScene', this._onWorldMapSwitchScene);
     EventBus.on('scene:switchToShop', this._onSwitchToShopConsumePendingPlace);
 
-    // 监听布局变化 — 仅在非编辑模式下才完整重渲染
-    // 编辑模式下由 FurnitureDragSystem 直接操控 Sprite
-    EventBus.on('roomlayout:changed', () => {
-      if (!this._isEditMode) {
-        this._renderFurnitureLayout();
-      }
-    });
+    EventBus.on('roomlayout:changed', this._onRoomLayoutChanged);
+    EventBus.on('roomlayout:added', this._onRoomLayoutAdded);
+    EventBus.on('roomlayout:removed', this._onRoomLayoutRemoved);
+    EventBus.on('roomlayout:updated', this._onRoomLayoutUpdated);
+  }
 
-    // 添加家具：编辑模式下只刷新托盘（Sprite已由DragSystem创建）
-    EventBus.on('roomlayout:added', () => {
-      if (!this._isEditMode) {
-        this._renderFurnitureLayout();
-      }
-      if (this._furnitureTray.isOpen) this._furnitureTray.refresh();
-    });
-
-    // 移除家具：编辑模式下Sprite已由Toolbar移除
-    EventBus.on('roomlayout:removed', () => {
-      if (!this._isEditMode) {
-        this._renderFurnitureLayout();
-      }
-      if (this._furnitureTray.isOpen) this._furnitureTray.refresh();
-    });
-
-    // 缩放/翻转：编辑模式下实时更新 Sprite 视觉
-    EventBus.on('roomlayout:updated', (placement: any) => {
-      if (this._isEditMode && placement && placement.decoId) {
-        this._updateSpriteVisual(placement);
-        // 置前/置后改的是 zLayer、depthManualBias，须重算 zIndex（不仅依赖工具栏里的 sortByDepth）
-        FurnitureDragSystem.sortByDepth();
-      }
-    });
+  private _unbindEvents(): void {
+    EventBus.off('decoration:decoPanelBackdrop', this._onDecoPanelBackdrop);
+    EventBus.off('decoration:room_style', this._refreshShopBuildingTexture);
+    EventBus.off('dressup:equipped', this._onDressUpEquipped);
+    EventBus.off('decoration:shopStarFly', this._onDecorationShopStarFly);
+    EventBus.off('currency:changed', this._onShopCurrencyForProgress);
+    EventBus.off('level:up', this._onShopLevelUp);
+    EventBus.off('adEntitlement:changed', this._onAdEntitlementChanged);
+    EventBus.off('renovation:sceneChanged', this._onRenovationSceneChanged);
+    EventBus.off('worldmap:switchScene', this._onWorldMapSwitchScene);
+    EventBus.off('scene:switchToShop', this._onSwitchToShopConsumePendingPlace);
+    EventBus.off('roomlayout:changed', this._onRoomLayoutChanged);
+    EventBus.off('roomlayout:added', this._onRoomLayoutAdded);
+    EventBus.off('roomlayout:removed', this._onRoomLayoutRemoved);
+    EventBus.off('roomlayout:updated', this._onRoomLayoutUpdated);
   }
 
   /**
@@ -2441,68 +2498,34 @@ export class ShopScene implements Scene {
   /** 创建编辑模式入口按钮（胶囊贴图 + 左叠施工图标 + 居中标题字） */
   private _buildEditButton(w: number, h: number): void {
     this._editBtn = new PIXI.Container();
-    const btnW = EDIT_MAIN_BTN_W();
-    const btnH = EDIT_MAIN_BTN_H;
-    const cornerR = EDIT_MAIN_BTN_R;
-
-    let halfW: number;
-    let halfH: number;
-
-    const pillTex = TextureCache.get('shop_edit_deco_pill_4x2_nb2');
-    if (pillTex?.width) {
-      const ps = Math.min(btnW / pillTex.width, btnH / pillTex.height);
-      const sw = pillTex.width * ps;
-      const sh = pillTex.height * ps;
-      halfW = sw / 2;
-      halfH = sh / 2;
-      const pillSp = new PIXI.Sprite(pillTex);
-      pillSp.anchor.set(0.5, 0.5);
-      pillSp.scale.set(ps);
-      pillSp.position.set(0, 0);
-      this._editBtn.addChild(pillSp);
-    } else {
-      halfW = btnW / 2;
-      halfH = btnH / 2;
-      const bg = new PIXI.Graphics();
-      bg.beginFill(0xffffff, 0.97);
-      bg.drawRoundedRect(-halfW, -halfH, btnW, btnH, cornerR);
-      bg.endFill();
-      bg.lineStyle(2.5, COLORS.BUTTON_PRIMARY, 0.55);
-      bg.drawRoundedRect(-halfW, -halfH, btnW, btnH, cornerR);
-      this._editBtn.addChild(bg);
-    }
 
     const label = new PIXI.Text('装修花店', SHOP_EDIT_BTN_LABEL_STYLE);
     label.anchor.set(0.5, 0.5);
-    label.position.set(EDIT_MAIN_BTN_LABEL_OFFSET_X, 0);
     this._editBtn.addChild(label);
 
     const pencilTex = TextureCache.get('icon_build');
-    const pillH = halfH * 2;
-    const iconMaxH = Math.min(60, Math.floor(pillH * 0.88));
-    const iconMaxW = Math.min(70, Math.floor(halfW * 2 * 0.38));
-    const iconPadL = 12;
     if (pencilTex?.width) {
       const sp = new PIXI.Sprite(pencilTex);
       sp.anchor.set(0.5);
-      const s = Math.min(iconMaxH / pencilTex.height, iconMaxW / pencilTex.width);
-      sp.scale.set(s);
-      const iw = pencilTex.width * s;
-      sp.position.set(-halfW + iconPadL + iw / 2, 0);
+      (sp as PIXI.Sprite & { _shopEditBtnIcon?: boolean })._shopEditBtnIcon = true;
       this._editBtn.addChild(sp);
     } else {
-      const fs = Math.min(iconMaxH, iconMaxW);
-      const iconText = new PIXI.Text('修', { fontSize: Math.round(fs * 0.72), fontFamily: FONT_FAMILY, fill: COLORS.TEXT_DARK });
+      const iconText = new PIXI.Text('修', {
+        fontSize: 22,
+        fontFamily: FONT_FAMILY,
+        fill: COLORS.TEXT_DARK,
+      });
       iconText.anchor.set(0.5, 0.5);
-      iconText.position.set(-halfW + iconPadL + fs * 0.42, 0);
+      (iconText as PIXI.Text & { _shopEditBtnIcon?: boolean })._shopEditBtnIcon = true;
       this._editBtn.addChild(iconText);
     }
+
+    this._applyShopEditButtonChrome();
 
     // 底部居中，略上移避免与系统安全区/返回键重叠
     this._editBtn.position.set(w / 2, h - 118);
     this._editBtn.eventMode = 'static';
     this._editBtn.cursor = 'pointer';
-    this._editBtn.hitArea = new PIXI.Rectangle(-halfW - 14, -halfH - 14, halfW * 2 + 28, halfH * 2 + 28);
     this._editBtn.on('pointerdown', () => {
       TweenManager.cancelTarget(this._editBtn.scale);
       this._editBtn.scale.set(0.92);
@@ -2522,8 +2545,121 @@ export class ShopScene implements Scene {
 
     this.container.addChild(this._editBtn);
 
+    this._buildNewbieGiftEntryButton(w);
+
     // 编辑按钮微弱脉冲引导注意力
     this._pulseEditBtn();
+  }
+
+  /**
+   * 刷新「装修花店」胶囊底图与图标布局。
+   * 首帧 build 时 panels 分包可能尚未就绪，会先走白底 fallback；贴图加载后须再调一次。
+   */
+  private _refreshShopEditButtonChrome(): void {
+    if (!this._editBtn) return;
+    this._applyShopEditButtonChrome();
+  }
+
+  private _applyShopEditButtonChrome(): void {
+    const btn = this._editBtn;
+    const btnW = EDIT_MAIN_BTN_W();
+    const btnH = EDIT_MAIN_BTN_H;
+    const cornerR = EDIT_MAIN_BTN_R;
+
+    const oldBg = btn.children.find(
+      c => (c as PIXI.DisplayObject & { _shopEditBtnBg?: boolean })._shopEditBtnBg,
+    );
+    if (oldBg) {
+      btn.removeChild(oldBg);
+      oldBg.destroy();
+    }
+
+    let halfW: number;
+    let halfH: number;
+    const pillTex = TextureCache.get('shop_edit_deco_pill_4x2_nb2');
+    if (pillTex?.width) {
+      const ps = Math.min(btnW / pillTex.width, btnH / pillTex.height);
+      const sw = pillTex.width * ps;
+      const sh = pillTex.height * ps;
+      halfW = sw / 2;
+      halfH = sh / 2;
+      const pillSp = new PIXI.Sprite(pillTex);
+      pillSp.anchor.set(0.5, 0.5);
+      pillSp.scale.set(ps);
+      pillSp.position.set(0, 0);
+      (pillSp as PIXI.Sprite & { _shopEditBtnBg?: boolean })._shopEditBtnBg = true;
+      btn.addChildAt(pillSp, 0);
+    } else {
+      halfW = btnW / 2;
+      halfH = btnH / 2;
+      const bg = new PIXI.Graphics();
+      bg.beginFill(0xffffff, 0.97);
+      bg.drawRoundedRect(-halfW, -halfH, btnW, btnH, cornerR);
+      bg.endFill();
+      bg.lineStyle(2.5, COLORS.BUTTON_PRIMARY, 0.55);
+      bg.drawRoundedRect(-halfW, -halfH, btnW, btnH, cornerR);
+      (bg as PIXI.Graphics & { _shopEditBtnBg?: boolean })._shopEditBtnBg = true;
+      btn.addChildAt(bg, 0);
+    }
+
+    for (const child of btn.children) {
+      if (child instanceof PIXI.Text && child.text === '装修花店') {
+        child.anchor.set(0.5, 0.5);
+        child.position.set(EDIT_MAIN_BTN_LABEL_OFFSET_X, 0);
+        Object.assign(child.style, SHOP_EDIT_BTN_LABEL_STYLE);
+        continue;
+      }
+      if (!(child as PIXI.DisplayObject & { _shopEditBtnIcon?: boolean })._shopEditBtnIcon) continue;
+
+      const pillH = halfH * 2;
+      const iconMaxH = Math.min(60, Math.floor(pillH * 0.88));
+      const iconMaxW = Math.min(70, Math.floor(halfW * 2 * 0.38));
+      const iconPadL = 12;
+
+      if (child instanceof PIXI.Sprite) {
+        const pencilTex = TextureCache.get('icon_build');
+        if (!pencilTex?.width) continue;
+        child.texture = pencilTex;
+        const s = Math.min(iconMaxH / pencilTex.height, iconMaxW / pencilTex.width);
+        child.scale.set(s);
+        const iw = pencilTex.width * s;
+        child.position.set(-halfW + iconPadL + iw / 2, 0);
+      } else if (child instanceof PIXI.Text) {
+        const fs = Math.min(iconMaxH, iconMaxW);
+        child.style.fontSize = Math.round(fs * 0.72);
+        child.position.set(-halfW + iconPadL + fs * 0.42, 0);
+      }
+    }
+
+    btn.hitArea = new PIXI.Rectangle(-halfW - 14, -halfH - 14, halfW * 2 + 28, halfH * 2 + 28);
+  }
+
+  /** 底栏：「许愿」左侧一格（与许愿-地图同间距） */
+  private _buildNewbieGiftEntryButton(w: number): void {
+    if (!this._wishingBtn || !this._editBtn) return;
+
+    const entry = new NewbieGiftPackEntryButton(
+      () => EventBus.emit('panel:openNewbieGiftPack'),
+      { variant: 'shopRow' },
+    );
+
+    const cx = this._wishingBtn.position.x - NEWBIE_GIFT_TO_WISHING_GAP_X;
+    const cy = this._wishingBtn.position.y;
+
+    entry.position.set(cx, cy);
+    this._newbieGiftPackEntry = entry;
+    this.container.addChild(entry);
+
+    if (NewbieGiftPackManager.shouldShowEntry) {
+      window.setTimeout(() => {
+        void TextureCache.preloadNewbieGiftPackPanel().catch(() => undefined);
+      }, 1200);
+    }
+  }
+
+  private _refreshNewbieGiftEntryVisibility(): void {
+    if (!this._newbieGiftPackEntry) return;
+    this._newbieGiftPackEntry.visible = NewbieGiftPackManager.shouldShowEntry && !this._isEditMode;
   }
 
   /** 编辑按钮柔和脉冲（吸引玩家注意） */
@@ -2591,6 +2727,7 @@ export class ShopScene implements Scene {
     this._returnBtn.visible = false;
     if (this._worldMapBtn) this._worldMapBtn.visible = false;
     if (this._wishingBtn) this._wishingBtn.visible = false;
+    if (this._newbieGiftPackEntry) this._newbieGiftPackEntry.visible = false;
     this._toggleMiscDrawer(false);
     if (this._miscDrawerRoot) this._miscDrawerRoot.visible = false;
     for (const { container } of this._activityBtns.values()) {
@@ -2892,6 +3029,7 @@ export class ShopScene implements Scene {
 
     const h = Game.logicHeight;
     this._editBtn.position.set(DESIGN_WIDTH / 2, h - 118);
+    this._applyShopEditButtonChrome();
 
     // 恢复脉冲动画
     this._pulseEditBtn();
@@ -2922,6 +3060,7 @@ export class ShopScene implements Scene {
     this._returnBtn.visible = true;
     this._refreshWorldMapBtnVisibility();
     this._refreshWishingBtnVisibility();
+    this._refreshNewbieGiftEntryVisibility();
     if (this._miscDrawerRoot) this._miscDrawerRoot.visible = true;
     this._syncGameClubNativeButton();
     for (const { container } of this._activityBtns.values()) {
@@ -3373,25 +3512,31 @@ export class ShopScene implements Scene {
   // ─────────────────── 动画 ───────────────────
 
   /** 进入花店场景的过渡动画 */
-  private _playEnterAnim(): void {
-    // 整体淡入
+  private _playEnterAnim(instant = false): void {
+    if (instant) {
+      this.container.alpha = 1;
+      if (this._roomContainer) {
+        TweenManager.cancelTarget(this._roomContainer);
+      }
+      return;
+    }
+
     this.container.alpha = 0;
     TweenManager.to({
       target: this.container,
       props: { alpha: 1 },
-      duration: 0.4,
+      duration: 0.28,
       ease: Ease.easeOutQuad,
     });
 
-    // 房间从下方滑入
     if (this._roomContainer) {
       const origY = this._roomContainer.y;
-      this._roomContainer.y = origY + 60;
+      this._roomContainer.y = origY + 40;
       TweenManager.to({
         target: this._roomContainer,
         props: { y: origY },
-        duration: 0.5,
-        delay: 0.1,
+        duration: 0.35,
+        delay: 0.05,
         ease: Ease.easeOutBack,
       });
     }
@@ -3467,6 +3612,7 @@ export class ShopScene implements Scene {
     EventBus.emit('staminaPanel:updateTimer');
     this._updateRedDots();
     this._updateOwnerBlink(dt);
+    this._newbieGiftPackEntry?.tickBreath();
   };
 
   /** 店主眨眼动画：每隔一段时间闭眼 0.15 秒 */

@@ -17,6 +17,9 @@ export const ROOM_DEPTH_Y_MULT = 2000;
 const Z_LAYER_WEIGHT = 40;
 
 const Z_LAYER_CLAMP = 8;
+/** 贴地地毯层：高于房壳 (zIndex 0)，低于任意 Y 排序家具 (minY≈280 → 560000+) */
+export const ROOM_DEPTH_FLOOR_MAT_BASE = 1;
+
 const STACK_TIE_CLAMP = 999;
 
 /** typeLift+manual 与 zLayer、tie 叠加后的上限（保证不跨过一个整数 y 台阶） */
@@ -46,6 +49,12 @@ export function roomDepthZForFurniture(
   return Math.floor(feetY) * ROOM_DEPTH_Y_MULT + clamped;
 }
 
+/** 贴地地毯 / 地垫：固定底层，重叠时不压过其它家具 */
+export function roomDepthZForFloorMat(stackTie: number): number {
+  const tie = Math.min(Math.max(stackTie, 0), STACK_TIE_CLAMP);
+  return ROOM_DEPTH_FLOOR_MAT_BASE + tie;
+}
+
 /** 按装饰类型与手动前移累加计算完整深度键（ShopScene / FurnitureDragSystem 使用） */
 export function roomDepthZForPlacement(
   feetY: number,
@@ -54,6 +63,9 @@ export function roomDepthZForPlacement(
   deco: DecoDef,
   depthManualBias?: number,
 ): number {
+  if (deco.depthSortFloorMat) {
+    return roomDepthZForFloorMat(stackTie);
+  }
   const typeLift = getDepthSortTypeLift(deco);
   const manual = Math.min(
     Math.max(depthManualBias ?? 0, 0),

@@ -1,0 +1,11 @@
+Single square mobile game UI icon asset, 1:1 aspect ratio, 512px feel, transparent-friendly composition on pure white background for easy cutout.
+
+THEME: "Qinglian Heying" newbie gift pack entry icon for a cozy pastel flower-shop merge game. Must look clickable, premium, and GENEROUS — overflowing rewards.
+
+CENTER: large ornate gift box in mint jade green with gold trim and pink lotus ribbon bow on top. Box lid slightly open with magical soft glow, small reward items spilling out: tiny lotus lamp, gold coin, crystal gem, miniature koi, cloud curl — all cute chibi 2D style.
+
+RING: circular soft golden halo behind the box suggesting high value. Scattered sparkle stars and tiny lotus petals around edges.
+
+BOTTOM CURVE: optional small ribbon tail in pastel pink — leave center-bottom clear for overlay text "新手礼" in engine (no text required in image, or very small if included).
+
+Style: clean 2D vector mobile game icon, kawaii, high saturation pastel, soft cel shading, crisp edges, no photoreal, no watermark, no readable numbers. Icon reads clearly at 80px circle size like neighboring "wish" and "map" nav buttons.

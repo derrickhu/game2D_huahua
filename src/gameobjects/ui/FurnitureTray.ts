@@ -17,6 +17,8 @@ import {
   DECO_MAP,
   DECO_RARITY_INFO,
   DecoDef,
+  FURNITURE_TRAY_REGULAR_TABS,
+  FURNITURE_TRAY_THEME_TABS,
   FURNITURE_TRAY_TABS,
   sortRoomStylesByUnlockLevelThenCost,
   type FurnitureTrayTabId,
@@ -46,19 +48,19 @@ export const FURNITURE_TRAY_OPEN_OFFSET_UP = 50;
 export const FURNITURE_TRAY_OPEN_NUDGE_DOWN = 30;
 
 const TRAY_H = FURNITURE_TRAY_H;
-/** 手柄与 Tab 行间距（整体下移） */
+const HANDLE_H = 28;
+/** 手柄与 Tab 行间距 */
 const TAB_ROW_TOP_PAD = 30;
+/** Tab 行与家具横滑区相对原布局整体下移（与顶区留白），高度从列表区扣除避免顶底溢出 */
+const TRAY_TAB_GRID_BLOCK_OFFSET_Y = 4;
 /** 单个 Tab 槽宽（7 枚 + 间隙，整行水平居中，比均分屏宽更紧凑） */
 const TAB_SLOT_W = 88;
 const TAB_GAP = 4;
 /** 仅图标 Tab 行高度（无文字/计数） */
 const TAB_BAR_H = 50;
 const TAB_ICON_PAD = 6;
-const HANDLE_H = 28;              // 顶部拖拽手柄高度
 /** Tab 带下沿到托盘内容区顶（与 _build 一致） */
 const TAB_BAND_BOTTOM = HANDLE_H + TAB_ROW_TOP_PAD + TAB_BAR_H;
-/** Tab 行与家具横滑区相对原布局整体下移（与顶区留白），高度从列表区扣除避免顶底溢出 */
-const TRAY_TAB_GRID_BLOCK_OFFSET_Y = 4;
 /** 家具横滑区总高度（含底部筛选条） */
 const GRID_VIEW_H = TRAY_H - TAB_BAND_BOTTOM;
 /** 底部「全部 / 未放置」筛选条高度；列表仅占用上方 GRID_SCROLL_H */
@@ -120,6 +122,18 @@ type TrayScrollMode = 'scroll' | 'drag' | 'neutral';
 
 type TrayListFilter = 'all' | 'unplaced';
 
+/** 托盘顶栏：常规分类 vs 主题线 */
+type TraySection = 'regular' | 'theme';
+
+const MODE_TOGGLE_X = 24;
+const MODE_TOGGLE_Y = 10;
+const MODE_CHIP_H = 32;
+const MODE_CHIP_GAP = 8;
+const MODE_CHIPS: { id: TraySection; label: string; w: number }[] = [
+  { id: 'regular', label: '常规', w: 68 },
+  { id: 'theme', label: '主题', w: 68 },
+];
+
 export class FurnitureTray extends PIXI.Container {
   /** 底板：拱顶壳体贴图或矢量回退 */
   private _bg!: PIXI.Container;
@@ -127,6 +141,8 @@ export class FurnitureTray extends PIXI.Container {
   private _bgFallback: PIXI.DisplayObject | null = null;
   private _handle!: PIXI.Container;
   private _tabContainer!: PIXI.Container;
+  /** 顶栏左侧：常规 / 主题 */
+  private _modeToggleRow!: PIXI.Container;
   private _gridContainer!: PIXI.Container;
   private _gridMask!: PIXI.Graphics;
   /** 底部左侧：全部 / 未放置 */
@@ -134,6 +150,7 @@ export class FurnitureTray extends PIXI.Container {
   private _isOpen = false;
   private _textureRefreshUnsub: (() => void) | null = null;
   private _currentTab: FurnitureTrayTabId = 'flower_room';
+  private _traySection: TraySection = 'regular';
   private _closedY = 0;
   private _openY = 0;
   private _scrollX = 0;
@@ -213,10 +230,19 @@ export class FurnitureTray extends PIXI.Container {
 
     this.y = this._closedY;
     if (trayArg != null && typeof trayArg === 'object' && 'deco' in trayArg) {
-      this._currentTab = furnitureTrayTabForDeco(trayArg.deco);
+      const tab = furnitureTrayTabForDeco(trayArg.deco);
+      if (tab === 'qinglian') {
+        this._traySection = 'theme';
+        this._currentTab = 'qinglian';
+      } else {
+        this._traySection = 'regular';
+        this._currentTab = tab;
+      }
     } else if (trayArg != null) {
+      this._traySection = 'regular';
       this._currentTab = furnitureTrayTabFromSlot(trayArg as DecoSlot);
     } else {
+      this._traySection = 'regular';
       this._currentTab = 'flower_room';
     }
     this._listFilter = 'unplaced';
@@ -317,6 +343,9 @@ export class FurnitureTray extends PIXI.Container {
     this._handle.eventMode = 'static';
     this._handle.hitArea = new PIXI.Rectangle(0, 0, w, HANDLE_H);
     this.addChild(this._handle);
+
+    this._modeToggleRow = new PIXI.Container();
+    this.addChild(this._modeToggleRow);
 
     // 分类 Tab 栏（下移，与壳体上沿留白；与列表块同偏移）
     this._tabContainer = new PIXI.Container();
@@ -439,10 +468,69 @@ export class FurnitureTray extends PIXI.Container {
     }
   }
 
+  private _getActiveTrayTabs(): FurnitureTrayTabId[] {
+    return this._traySection === 'theme' ? FURNITURE_TRAY_THEME_TABS : FURNITURE_TRAY_REGULAR_TABS;
+  }
+
+  private _setTraySection(section: TraySection): void {
+    if (this._traySection === section) return;
+    this._traySection = section;
+    const tabs = this._getActiveTrayTabs();
+    if (!tabs.includes(this._currentTab)) {
+      this._currentTab = tabs[0] ?? 'flower_room';
+    }
+    this._scrollX = 0;
+    this._refreshAll();
+  }
+
+  private _buildModeToggle(): void {
+    this._modeToggleRow.removeChildren();
+    this._modeToggleRow.position.set(MODE_TOGGLE_X, MODE_TOGGLE_Y);
+
+    let x = 0;
+    for (const { id, label, w } of MODE_CHIPS) {
+      const chip = new PIXI.Container();
+      chip.position.set(x, 0);
+      const selected = this._traySection === id;
+      const bg = new PIXI.Graphics();
+      if (selected) {
+        bg.beginFill(0xffe8d0);
+        bg.drawRoundedRect(0, 0, w, MODE_CHIP_H, 10);
+        bg.endFill();
+        bg.lineStyle(2, COLORS.BUTTON_PRIMARY);
+        bg.drawRoundedRect(0, 0, w, MODE_CHIP_H, 10);
+      } else {
+        bg.beginFill(0xffffff, 0.96);
+        bg.drawRoundedRect(0, 0, w, MODE_CHIP_H, 10);
+        bg.endFill();
+        bg.lineStyle(1, 0xe0d0c0);
+        bg.drawRoundedRect(0, 0, w, MODE_CHIP_H, 10);
+      }
+      chip.addChild(bg);
+
+      const tx = new PIXI.Text(label, {
+        fontSize: 15,
+        fill: selected ? COLORS.TEXT_DARK : COLORS.TEXT_LIGHT,
+        fontFamily: FONT_FAMILY,
+        fontWeight: selected ? 'bold' : 'normal',
+      });
+      tx.anchor.set(0.5, 0.5);
+      tx.position.set(w / 2, MODE_CHIP_H / 2);
+      chip.addChild(tx);
+
+      chip.eventMode = 'static';
+      chip.cursor = 'pointer';
+      chip.hitArea = new PIXI.Rectangle(-4, -4, w + 8, MODE_CHIP_H + 8);
+      chip.on('pointertap', () => this._setTraySection(id));
+      this._modeToggleRow.addChild(chip);
+      x += w + MODE_CHIP_GAP;
+    }
+  }
+
   private _buildTabs(): void {
     this._tabContainer.removeChildren();
 
-    const tabs = FURNITURE_TRAY_TABS;
+    const tabs = this._getActiveTrayTabs();
     const n = tabs.length;
     const rowW = n * TAB_SLOT_W + (n - 1) * TAB_GAP;
     const rowStartX = Math.max(0, (DESIGN_WIDTH - rowW) / 2);
@@ -479,16 +567,6 @@ export class FurnitureTray extends PIXI.Container {
         sp.scale.set(s, s);
         sp.position.set(cx, cy);
         tab.addChild(sp);
-      } else {
-        const fb = meta.name.charAt(0) || '?';
-        const emoji = new PIXI.Text(fb, {
-          fontSize: Math.min(22, maxH),
-          fontFamily: FONT_FAMILY,
-          fill: COLORS.TEXT_DARK,
-        });
-        emoji.anchor.set(0.5, 0.5);
-        emoji.position.set(cx, cy);
-        tab.addChild(emoji);
       }
 
       tab.eventMode = 'static';
@@ -858,6 +936,7 @@ export class FurnitureTray extends PIXI.Container {
   }
 
   private _refreshAll(): void {
+    this._buildModeToggle();
     this._buildTabs();
     this._buildFilterRow();
     this._buildGrid();

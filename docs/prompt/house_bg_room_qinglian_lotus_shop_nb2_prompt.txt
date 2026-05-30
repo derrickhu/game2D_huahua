@@ -1,0 +1,26 @@
+Square game asset, EXACTLY 1024 by 1024 pixels, 1:1 aspect ratio — same canvas size and margins as the attached reference PNG. Attached reference image: the APPROVED Qinglian Lotus Shadow room shell — replicate EXACTLY the same isometric L-shaped open flower shop room shell, same footprint, centering, vertical band, margins, roof, floor, foundation, steps, outdoor patch, corner posts, and right-wall windows. ONE CHANGE ONLY (critical): the viewer-left / back interior wall must have NO window — a completely solid uninterrupted plaster wall. Do NOT crop tighter, do NOT zoom in, do NOT change building scale relative to canvas.
+
+清涟荷影 Qinglian Lotus Shadow theme flower shop shell — must visually match the attached reference and the game's Qinglian furniture line: mint jade celadon, warm cream ivory, soft pink lotus accents, peach-caramel wood, auspicious cloud motifs, airy zen garden boutique mood. Cute kawaii 2.5D hand-painted mobile merge game art, soft warm-brown outlines slightly thicker than hairline, single soft light from upper-left, gentle volume, no circular spotlight, no heavy vignette.
+
+ROOF: match reference exactly — pale celadon-mint scalloped glazed ceramic tiles (#9FD4C4 to #B8E6D8), outward eaves, rounded ridge cap at L-corner, tiny pink lotus bud finial on ridge.
+
+WALLS: match reference — warm ivory-cream plaster (#FFFBF5) with soft watercolor pink lotus blooms and pale mint auspicious-cloud scrolls as a gentle upper frieze.
+
+WINDOWS (critical layout change vs old three-window version):
+- Viewer-left / BACK wall (the long wall on the left side of the room interior): ZERO windows. Solid blank plaster wall only — no frame, no glass, no opening, no painted fake window. Lotus frieze may continue across this wall.
+- RIGHT wall ONLY: keep exactly TWO windows from the reference — warm peach-caramel wood frames (#C4956A), glass with pale aqua-mint inner glow (#D8F2EC), same sizes and spacing as reference right wall. Optional thin mint silk ribbon tiebacks beside those two frames only.
+- Total windows in entire shell: exactly TWO (both on right wall).
+
+POSTS / BEAMS: match reference — slender warm peach wood corner posts; mint-green collar rings at post bases.
+
+BASEBOARD: match reference — thin warm peach-wood band between wall and floor.
+
+FLOOR: match reference — calm matte pale cream-jade stone (#E8F0EA to #F0EDE4), at most TWO to FOUR very large soft panel divisions, very subtle large faint auspicious-cloud silhouettes only. No herringbone, no busy pattern.
+
+FOUNDATION: match reference — light warm-gray cobblestone (#C5C0BA).
+
+OUTDOOR PATCH front-left: match reference — pale cream sand, stepping stones, mint grass, micro lotus petals.
+
+Interior polygon completely EMPTY — no furniture, no indoor plants, no pond, no characters, no shop sign, no text, no watermark.
+
+BACKGROUND outside the structure: pure solid white #FFFFFF for rembg cutout pipeline.

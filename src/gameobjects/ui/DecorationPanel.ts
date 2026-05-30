@@ -42,6 +42,8 @@ import { BOARD_BAR_HEIGHT, DESIGN_WIDTH, FONT_FAMILY, COLORS } from '@/config/Co
 import { RoomLayoutManager } from '@/managers/RoomLayoutManager';
 import { setPendingPlaceDeco } from '@/core/DecoPlaceIntent';
 import { TutorialManager, TutorialStep } from '@/managers/TutorialManager';
+import { NewbieGiftPackManager } from '@/managers/NewbieGiftPackManager';
+import { NEWBIE_GIFT_PACK_QUEST_ID } from '@/config/NewbieGiftPackConfig';
 import { createTutorialStyleModalFrame } from '@/gameobjects/ui/TutorialStyleModalFrame';
 
 /** 全宽底栏：与 NB2 全幅贴边原型一致（旧版左右各留边会造成左侧大缝） */
@@ -1103,7 +1105,13 @@ export class DecorationPanel extends PIXI.Container {
     const selTabTex = TextureCache.get('deco_panel_tab_selected_nb2');
     const useNb2TabSprites = idleTabTex != null && selTabTex != null;
 
-    const makeTab = (row: number, isCurrent: boolean, title: string, onTap: () => void): void => {
+    const makeTab = (
+      row: number,
+      isCurrent: boolean,
+      title: string,
+      onTap: () => void,
+      withLotusIcon = false,
+    ): void => {
       const tab = new PIXI.Container();
       tab.position.set(0, row * tabH);
       const bh = tabH - pad * 2;
@@ -1170,11 +1178,30 @@ export class DecorationPanel extends PIXI.Container {
         strokeThickness: 4,
         lineHeight: 26,
         wordWrap: true,
-        wordWrapWidth: Math.max(58, bw - 6),
+        wordWrapWidth: Math.max(58, bw - (withLotusIcon ? 30 : 6)),
         align: 'center',
       } as any);
-      label.anchor.set(0.5, 0.5);
-      label.position.set(TAB_W / 2, tabH / 2);
+
+      const lotusTex = withLotusIcon ? TextureCache.get('furniture_tray_tab_qinglian_idle') : null;
+      const iconMax = 24;
+      if (lotusTex?.width) {
+        const sp = new PIXI.Sprite(lotusTex);
+        sp.anchor.set(0.5, 0.5);
+        const s = Math.min(iconMax / lotusTex.width, iconMax / lotusTex.height);
+        sp.scale.set(s);
+        const iconW = lotusTex.width * s;
+        const gap = 5;
+        label.anchor.set(0, 0.5);
+        const textW = label.width;
+        const totalW = iconW + gap + textW;
+        const x0 = (TAB_W - totalW) / 2;
+        sp.position.set(x0 + iconW / 2, tabH / 2);
+        label.position.set(x0 + iconW + gap, tabH / 2);
+        tab.addChild(sp);
+      } else {
+        label.anchor.set(0.5, 0.5);
+        label.position.set(TAB_W / 2, tabH / 2);
+      }
       tab.addChild(label);
 
       tab.eventMode = 'static';
@@ -1187,7 +1214,7 @@ export class DecorationPanel extends PIXI.Container {
       const label = getDecorationTabLabel(tab, CurrencyManager.state.sceneId);
       const isCurrent = this._activeTab === tab;
       const title = label.name;
-      makeTab(i, isCurrent, title, () => { this._activeTab = tab; });
+      makeTab(i, isCurrent, title, () => { this._activeTab = tab; }, tab === 'qinglian');
     });
   }
 
@@ -1728,10 +1755,7 @@ export class DecorationPanel extends PIXI.Container {
         sp.anchor.set(0.5, 0.5);
         preview.addChild(sp);
       } else {
-        const ph = new PIXI.Text('风', { fontSize: Math.round((36 * cw) / CARD_BASE_W), fontFamily: FONT_FAMILY, fill: COLORS.TEXT_DARK });
-        ph.anchor.set(0.5, 0.5);
-        preview.addChild(ph);
-        previewHalfH = Math.ceil(ph.height / 2) || 20;
+        previewHalfH = Math.round((38 * ch) / CARD_BASE_H);
       }
     }
 
@@ -1878,6 +1902,13 @@ export class DecorationPanel extends PIXI.Container {
     const isAdGate = DecorationManager.isAdUnlockDeco(deco.id);
     const needsAdGate = isAdGate && req.met && !adGateSatisfied;
     if (!req.met) {
+      if (
+        deco.unlockRequirement?.questId === NEWBIE_GIFT_PACK_QUEST_ID
+        && NewbieGiftPackManager.shouldShowEntry
+      ) {
+        EventBus.emit('panel:openNewbieGiftPack');
+        return;
+      }
       /** 实际点击收尾走 canvas pointerup → _finishGridScroll → 此处；微信小游戏上家具卡 pointertap 常不触发，勿依赖 */
       ToastMessage.show(decorationLockedToastText(deco.unlockRequirement, req));
       return;
@@ -2273,6 +2304,13 @@ export class DecorationPanel extends PIXI.Container {
     } else {
       const req = checkRequirement(style.unlockRequirement);
       if (!req.met) {
+        if (
+          style.id === 'style_qinglian_lotus_shop_nb2'
+          && NewbieGiftPackManager.shouldShowEntry
+        ) {
+          EventBus.emit('panel:openNewbieGiftPack');
+          return;
+        }
         ToastMessage.show(`${requirementHintText(req)}`);
         return;
       }

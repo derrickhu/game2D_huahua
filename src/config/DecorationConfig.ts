@@ -88,6 +88,10 @@ export interface DecoDef {
    */
   depthSortFeetYFudge?: number;
   /**
+   * 贴地地毯 / 地垫：恒排在房壳之上、其它家具之下（重叠时不遮挡桌椅屏几等）。
+   */
+  depthSortFloorMat?: boolean;
+  /**
    * 装修面板分组：special 曾用于「特殊」Tab（已移除）；保留字段供数据兼容，新配置勿用。
    */
   uiCategory?: 'default' | 'special';
@@ -151,7 +155,7 @@ export const ROOM_STYLES: RoomStyleDef[] = [
   { id: 'style_bloom_nb2', name: '花境小筑', cost: 4799, starValue: 6, rarity: DecoRarity.FINE, bgTexture: 'bg_room_bloom_nb2', desc: '满开鲜花硬装与窗景，室内纯色大块地坪，温馨不撞糖果系', unlockRequirement: { level: 4 }, allowedSceneIds: ['flower_shop'] },
   { id: 'style_pinkblue_nb2', name: '粉蓝花坊', cost: 6240, starValue: 7, rarity: DecoRarity.FINE, bgTexture: 'bg_room_pinkblue_nb2', desc: '粉白蓝温馨风：短绒地毯、樱花形窗、新瓦型屋顶', unlockRequirement: { level: 5 }, allowedSceneIds: ['flower_shop'] },
   { id: 'style_lagoon_nb2', name: '海岛汽水', cost: 8280, starValue: 8, rarity: DecoRarity.RARE, bgTexture: 'bg_room_lagoon_nb2', desc: '青绿天蓝木瓜橙撞色，清新热带感', unlockRequirement: { level: 6 }, allowedSceneIds: ['flower_shop'] },
-  { id: 'style_qinglian_lotus_shop_nb2', name: '清涟荷影花坊', cost: 0, starValue: 0, rarity: DecoRarity.LIMITED, bgTexture: 'bg_room_qinglian_lotus_shop_nb2', desc: '薄荷青瓦与祥云纹地坪的 L 形花坊壳，新手礼包限定', unlockRequirement: { questId: 'qinglian_newbie_gift_claimed', conditionText: '新手礼包', questDetailText: '完成新手礼包（观看 5 次广告）后解锁' }, allowedSceneIds: ['flower_shop'] },
+  { id: 'style_qinglian_lotus_shop_nb2', name: '清涟荷影花坊', cost: 0, starValue: 0, rarity: DecoRarity.LIMITED, bgTexture: 'bg_room_qinglian_lotus_shop_nb2', desc: '薄荷青瓦与祥云纹地坪的 L 形花坊壳，新手礼包限定', unlockRequirement: { questId: 'qinglian_newbie_gift_claimed', conditionText: '新手礼包', questDetailText: '完成新手礼包（观看 2 次广告）后解锁' }, allowedSceneIds: ['flower_shop'] },
   { id: 'style_confetti_nb2', name: '复古花坊', cost: 7500, starValue: 14, rarity: DecoRarity.LIMITED, bgTexture: 'bg_room_confetti_nb2', desc: '明亮复古花店：奶黄墙、豆沙绿与浅橡木，大格地面不暗沉', unlockRequirement: { level: 7 }, allowedSceneIds: ['flower_shop'] },
   { id: 'style_butterfly_house_nb2', name: '蝴蝶小屋原木壳', cost: 0, starValue: 0, rarity: DecoRarity.COMMON, bgTexture: 'bg_room_butterfly_house_nb2', desc: '蝴蝶小屋默认房壳：浅木结构、干净墙面与观蝶空间', allowedSceneIds: ['butterfly_house'] },
   { id: 'style_butterfly_house_bamboo_nb2', name: '竹影蝶屋', cost: 4200, starValue: 8, rarity: DecoRarity.FINE, bgTexture: 'bg_room_butterfly_house_bamboo_nb2', desc: '竹艺暖色房壳：蜂蜜竹柱、鼠尾草屋檐与蝶翼木拼地面', unlockRequirement: { level: 11 }, allowedSceneIds: ['butterfly_house'] },
@@ -259,7 +263,7 @@ export const DECO_DEFS: DecoDef[] = [
   { id: 'wallart_greenhouse_chalkboard', name: '花房小黑板', slot: DecoSlot.ORNAMENT, rarity: DecoRarity.FINE, cost: 775, starValue: 2, icon: 'wallart_greenhouse_chalkboard', desc: '户外落地 A 字招牌架，黑白板粉笔「花花」，小花饰点缀', unlockRequirement: { level: 5 }, defaultScale: 1.02, decorationPanelTab: 'flower_room', allowedSceneIds: ['flower_shop'] },
   { id: 'orn_greenhouse_cart', name: '软木留言板', slot: DecoSlot.ORNAMENT, rarity: DecoRarity.COMMON, cost: 295, starValue: 1, icon: 'orn_greenhouse_cart', desc: '浅木框软木板，钉着备忘与便签', unlockRequirement: { level: 4 }, defaultScale: 0.78, decorationPanelTab: 'flower_room', allowedSceneIds: ['flower_shop'] },
   { id: 'garden_flower_stall', name: '浇水壶与花铲', slot: DecoSlot.GARDEN, rarity: DecoRarity.FINE, cost: 345, starValue: 1, icon: 'garden_flower_stall', desc: '浅蓝壶与木柄铲，精致柔线稿', unlockRequirement: { level: 3 }, defaultScale: 0.65, decorationPanelTab: 'flower_room', allowedSceneIds: ['flower_shop'] },
-  { id: 'orn_greenhouse_rug', name: '粉色碎花地毯', slot: DecoSlot.ORNAMENT, rarity: DecoRarity.COMMON, cost: 200, starValue: 2, icon: 'orn_greenhouse_rug', desc: '粉地白花图案的小地垫', unlockRequirement: { level: 2 }, defaultScale: 0.92, decorationPanelTab: 'furniture' },
+  { id: 'orn_greenhouse_rug', name: '粉色碎花地毯', slot: DecoSlot.ORNAMENT, rarity: DecoRarity.COMMON, cost: 200, starValue: 2, icon: 'orn_greenhouse_rug', desc: '粉地白花图案的小地垫', unlockRequirement: { level: 2 }, defaultScale: 0.92, depthSortFloorMat: true, decorationPanelTab: 'furniture' },
   { id: 'orn_greenhouse_coat_rack', name: '木轨衣帽挂钩', slot: DecoSlot.ORNAMENT, rarity: DecoRarity.COMMON, cost: 300, starValue: 1, icon: 'orn_greenhouse_coat_rack', desc: '墙上木轨挂钩，挂着风衣、小包与草帽', unlockRequirement: { level: 3 }, defaultScale: 0.9, decorationPanelTab: 'furniture' },
   { id: 'orn_greenhouse_flower_cart', name: '木轮鲜花推车', slot: DecoSlot.ORNAMENT, rarity: DecoRarity.COMMON, cost: 1320, starValue: 3, icon: 'orn_greenhouse_flower_cart', desc: '装满蔷薇与郁金香的双轮木推车', unlockRequirement: { level: 6 }, defaultScale: 1.05, decorationPanelTab: 'flower_room', allowedSceneIds: ['flower_shop'] },
   /** 花房小盆栽与同名花瓶：与棋盘鲜花线 item 一一对应；仅 flowerCollectionItemId（纯图鉴），勿再写 level（UnlockChecker 亦会忽略 level） */
@@ -292,7 +296,7 @@ export const DECO_DEFS: DecoDef[] = [
   { id: 'butterfly_house_study_microscope_desk', name: '显微镜观察台', slot: DecoSlot.TABLE, rarity: DecoRarity.FINE, cost: 3100, starValue: 3, icon: 'butterfly_house_study_microscope_desk', desc: '浅木桌上摆着黄铜显微镜、蝶类图鉴与彩铅', unlockRequirement: { level: 12 }, defaultScale: 1.62, decorationPanelTab: 'flower_room', allowedSceneIds: ['butterfly_house'] },
   { id: 'butterfly_house_moon_specimen_shelf', name: '蝶标标本柜', slot: DecoSlot.SHELF, rarity: DecoRarity.RARE, cost: 3500, starValue: 4, icon: 'butterfly_house_moon_specimen_shelf', desc: '浅木陈列柜分层展示框装蝶标，下层玻璃门收纳册', unlockRequirement: { level: 13 }, defaultScale: 1.65, decorationPanelTab: 'flower_room', allowedSceneIds: ['butterfly_house'] },
   { id: 'butterfly_house_aurora_terrarium', name: '幻彩蝴蝶温室', slot: DecoSlot.SHELF, rarity: DecoRarity.RARE, cost: 4100, starValue: 4, icon: 'butterfly_house_aurora_terrarium', desc: '幻彩玻璃罩温室里长着发光小花，一只蝶影停驻', unlockRequirement: { level: 13 }, defaultScale: 1.68, decorationPanelTab: 'flower_room', allowedSceneIds: ['butterfly_house'] },
-  { id: 'butterfly_house_moon_crescent_rug', name: '新月针织毯', slot: DecoSlot.ORNAMENT, rarity: DecoRarity.FINE, cost: 3250, starValue: 3, icon: 'butterfly_house_moon_crescent_rug', desc: '奶油针织毯卷着淡紫新月边，铺出柔软阅读角', unlockRequirement: { level: 14 }, defaultScale: 1.25, depthSortYLift: 0, decorationPanelTab: 'flower_room', allowedSceneIds: ['butterfly_house'] },
+  { id: 'butterfly_house_moon_crescent_rug', name: '新月针织毯', slot: DecoSlot.ORNAMENT, rarity: DecoRarity.FINE, cost: 3250, starValue: 3, icon: 'butterfly_house_moon_crescent_rug', desc: '奶油针织毯卷着淡紫新月边，铺出柔软阅读角', unlockRequirement: { level: 14 }, defaultScale: 1.25, depthSortYLift: 0, depthSortFloorMat: true, decorationPanelTab: 'flower_room', allowedSceneIds: ['butterfly_house'] },
   { id: 'butterfly_house_moon_star_chair', name: '星纹观蝶椅', slot: DecoSlot.ORNAMENT, rarity: DecoRarity.RARE, cost: 3850, starValue: 4, icon: 'butterfly_house_moon_star_chair', desc: '浅木扶手椅配雾蓝软垫与星形抱枕，月辉小憩位', unlockRequirement: { level: 14 }, defaultScale: 1.38, decorationPanelTab: 'flower_room', allowedSceneIds: ['butterfly_house'] },
 
   // 花店/庭院通用 — 奶油别墅风（Lv10-14，花坊家具 Tab）
@@ -338,7 +342,7 @@ export const DECO_DEFS: DecoDef[] = [
   { id: 'deco_lv16_garden_coral_planter', name: '珊瑚花箱', slot: DecoSlot.GARDEN, rarity: DecoRarity.RARE, cost: 2400, starValue: 8, icon: 'deco_lv16_garden_coral_planter', desc: '珊瑚色长花箱盛着海风小花，和泳池伞组自然成套', unlockRequirement: { level: 16 }, defaultScale: 1.22, decorationPanelTab: 'garden' },
   { id: 'deco_lv17_shelf_surfboard', name: '冲浪板花架', slot: DecoSlot.SHELF, rarity: DecoRarity.RARE, cost: 3200, starValue: 10, icon: 'deco_lv17_shelf_surfboard', desc: '旧冲浪板改成竖向花架，薄荷蓝与珊瑚花盆呼应海滨套', unlockRequirement: { level: 17 }, defaultScale: 1.55, decorationPanelTab: 'garden' },
   { id: 'deco_lv17_table_terrace_bar', name: '露台折叠吧台', slot: DecoSlot.TABLE, rarity: DecoRarity.RARE, cost: 4200, starValue: 13, icon: 'deco_lv17_table_terrace_bar', desc: '浅柚木折叠吧台配冰饮托盘，适合海边露台角落', unlockRequirement: { level: 17 }, defaultScale: 1.22, decorationPanelTab: 'furniture' },
-  { id: 'deco_lv17_orn_seabreeze_rug', name: '海风圆地毯', slot: DecoSlot.ORNAMENT, rarity: DecoRarity.FINE, cost: 2000, starValue: 5, icon: 'deco_lv17_orn_seabreeze_rug', desc: '厚织物圆地毯，抬高软包边与流苏让休闲区更像坐垫', unlockRequirement: { level: 17 }, defaultScale: 1.22, decorationPanelTab: 'furniture' },
+  { id: 'deco_lv17_orn_seabreeze_rug', name: '海风圆地毯', slot: DecoSlot.ORNAMENT, rarity: DecoRarity.FINE, cost: 2000, starValue: 5, icon: 'deco_lv17_orn_seabreeze_rug', desc: '厚织物圆地毯，抬高软包边与流苏让休闲区更像坐垫', unlockRequirement: { level: 17 }, defaultScale: 1.22, depthSortFloorMat: true, decorationPanelTab: 'furniture' },
   { id: 'deco_lv18_shelf_moon_glasshouse', name: '月光玻璃温室柜', slot: DecoSlot.SHELF, rarity: DecoRarity.RARE, cost: 4200, starValue: 13, icon: 'deco_lv18_shelf_moon_glasshouse', desc: '香槟金玻璃小温室，月光蓝蝶影与水晶花盆陈列其中', unlockRequirement: { level: 18 }, defaultScale: 1.3, decorationPanelTab: 'furniture' },
   { id: 'deco_lv18_light_firefly_lamp', name: '星萤庭院灯', slot: DecoSlot.LIGHT, rarity: DecoRarity.RARE, cost: 2800, starValue: 9, icon: 'deco_lv18_light_firefly_lamp', desc: '月蓝玻璃灯罩里闪着星萤光点，适合蝶屋夜色', unlockRequirement: { level: 18 }, defaultScale: 1.35 },
   { id: 'deco_lv18_garden_butterfly_arch', name: '蝶翼月光拱门', slot: DecoSlot.GARDEN, rarity: DecoRarity.LIMITED, cost: 5600, starValue: 16, icon: 'deco_lv18_garden_butterfly_arch', desc: '香槟金拱门展开半透明蝶翼，月光蓝水晶点亮庭院入口', unlockRequirement: { level: 18 }, defaultScale: 2.02, decorationPanelTab: 'garden' },
@@ -432,12 +436,16 @@ export const DECO_DEFS: DecoDef[] = [
 
 
   // ═══════ 清涟荷影主题（新手礼包 + 后续同主题扩展；全场景可摆，starValue 礼包件为 0）
-  { id: 'qinglian_flower_cart', name: '帷帘花车', slot: DecoSlot.ORNAMENT, rarity: DecoRarity.LIMITED, cost: 0, starValue: 0, icon: 'qinglian_flower_cart', desc: '薄荷帷帘花车，棚顶祥云饰与满盆 pastel 花束', unlockRequirement: { questId: 'qinglian_newbie_gift_claimed', conditionText: '新手礼包', questDetailText: '完成新手礼包（观看 5 次广告）后解锁' }, defaultScale: 1.15, decorationPanelTab: 'qinglian' },
-  { id: 'qinglian_cloud_rug', name: '祥云地毯', slot: DecoSlot.ORNAMENT, rarity: DecoRarity.LIMITED, cost: 0, starValue: 0, icon: 'qinglian_cloud_rug', desc: '奶油底祥云纹椭圆地毯，粉绿 pastel 祥云绕边', unlockRequirement: { questId: 'qinglian_newbie_gift_claimed', conditionText: '新手礼包', questDetailText: '完成新手礼包（观看 5 次广告）后解锁' }, defaultScale: 0.95, depthSortYLift: 0, decorationPanelTab: 'qinglian' },
-  { id: 'qinglian_koi_bench', name: '锦鲤曲榻', slot: DecoSlot.TABLE, rarity: DecoRarity.LIMITED, cost: 0, starValue: 0, icon: 'qinglian_koi_bench', desc: '桃木曲榻配薄荷垫与锦鲤纹座面，流苏轻晃', unlockRequirement: { questId: 'qinglian_newbie_gift_claimed', conditionText: '新手礼包', questDetailText: '完成新手礼包（观看 5 次广告）后解锁' }, defaultScale: 1.08, decorationPanelTab: 'qinglian' },
-  { id: 'qinglian_lotus_screen', name: '荷梦屏风', slot: DecoSlot.WALLART, rarity: DecoRarity.LIMITED, cost: 0, starValue: 0, icon: 'qinglian_lotus_screen', desc: '四扇荷塘屏风，粉荷与青绸带连续成景', unlockRequirement: { questId: 'qinglian_newbie_gift_claimed', conditionText: '新手礼包', questDetailText: '完成新手礼包（观看 5 次广告）后解锁' }, defaultScale: 1.12, decorationPanelTab: 'qinglian' },
-  { id: 'qinglian_lotus_lamp', name: '莲光立灯', slot: DecoSlot.LIGHT, rarity: DecoRarity.LIMITED, cost: 0, starValue: 0, icon: 'qinglian_lotus_lamp', desc: '莲瓣灯盏暖光，荷叶底座金边', unlockRequirement: { questId: 'qinglian_newbie_gift_claimed', conditionText: '新手礼包', questDetailText: '完成新手礼包（观看 5 次广告）后解锁' }, defaultScale: 0.92, decorationPanelTab: 'qinglian' },
-  { id: 'qinglian_lotus_pond_table', name: '清池茶案', slot: DecoSlot.TABLE, rarity: DecoRarity.LIMITED, cost: 0, starValue: 0, icon: 'qinglian_lotus_pond_table', desc: '嵌莲池方案，薄荷紫纱垂帘与点点萤光', unlockRequirement: { questId: 'qinglian_newbie_gift_claimed', conditionText: '新手礼包', questDetailText: '完成新手礼包（观看 5 次广告）后解锁' }, defaultScale: 1.05, decorationPanelTab: 'qinglian' },
+  { id: 'qinglian_flower_cart', name: '帷帘花车', slot: DecoSlot.ORNAMENT, rarity: DecoRarity.LIMITED, cost: 0, starValue: 0, icon: 'qinglian_flower_cart', desc: '薄荷帷帘花车，棚顶祥云饰与满盆 pastel 花束', unlockRequirement: { questId: 'qinglian_newbie_gift_claimed', conditionText: '新手礼包', questDetailText: '完成新手礼包（观看 2 次广告）后解锁' }, defaultScale: 1.65, decorationPanelTab: 'qinglian' },
+  { id: 'qinglian_cloud_rug', name: '祥云地毯', slot: DecoSlot.ORNAMENT, rarity: DecoRarity.LIMITED, cost: 0, starValue: 0, icon: 'qinglian_cloud_rug', desc: '奶油底祥云纹椭圆地毯，粉绿 pastel 祥云绕边', unlockRequirement: { questId: 'qinglian_newbie_gift_claimed', conditionText: '新手礼包', questDetailText: '完成新手礼包（观看 2 次广告）后解锁' }, defaultScale: 1.65, depthSortYLift: 0, depthSortFloorMat: true, decorationPanelTab: 'qinglian' },
+  { id: 'qinglian_koi_bench', name: '锦鲤曲榻', slot: DecoSlot.TABLE, rarity: DecoRarity.LIMITED, cost: 0, starValue: 0, icon: 'qinglian_koi_bench', desc: '桃木曲榻配薄荷垫与锦鲤纹座面，流苏轻晃', unlockRequirement: { questId: 'qinglian_newbie_gift_claimed', conditionText: '新手礼包', questDetailText: '完成新手礼包（观看 2 次广告）后解锁' }, defaultScale: 1.28, decorationPanelTab: 'qinglian' },
+  { id: 'qinglian_lotus_screen', name: '荷梦屏风', slot: DecoSlot.WALLART, rarity: DecoRarity.LIMITED, cost: 0, starValue: 0, icon: 'qinglian_lotus_screen', desc: '四扇荷塘屏风，粉荷与青绸带连续成景', unlockRequirement: { questId: 'qinglian_newbie_gift_claimed', conditionText: '新手礼包', questDetailText: '完成新手礼包（观看 2 次广告）后解锁' }, defaultScale: 1.42, decorationPanelTab: 'qinglian' },
+  { id: 'qinglian_lotus_lamp', name: '莲光立灯', slot: DecoSlot.LIGHT, rarity: DecoRarity.LIMITED, cost: 0, starValue: 0, icon: 'qinglian_lotus_lamp', desc: '莲瓣灯盏暖光，荷叶底座金边', unlockRequirement: { questId: 'qinglian_newbie_gift_claimed', conditionText: '新手礼包', questDetailText: '完成新手礼包（观看 2 次广告）后解锁' }, defaultScale: 1.12, decorationPanelTab: 'qinglian' },
+  { id: 'qinglian_lotus_pond_table', name: '清池茶案', slot: DecoSlot.TABLE, rarity: DecoRarity.LIMITED, cost: 0, starValue: 0, icon: 'qinglian_lotus_pond_table', desc: '嵌莲池方案，薄荷紫纱垂帘与点点萤光', unlockRequirement: { questId: 'qinglian_newbie_gift_claimed', conditionText: '新手礼包', questDetailText: '完成新手礼包（观看 2 次广告）后解锁' }, defaultScale: 1.25, decorationPanelTab: 'qinglian' },
+  { id: 'qinglian_tea_shelf', name: '清涟茶架', slot: DecoSlot.SHELF, rarity: DecoRarity.FINE, cost: 1580, starValue: 3, icon: 'qinglian_tea_shelf', desc: '三层 mint 茶具架，紫纱垂帘与盖碗套组', unlockRequirement: { level: 4 }, defaultScale: 1.55, decorationPanelTab: 'qinglian' },
+  { id: 'qinglian_lantern_frame', name: '宫灯花架', slot: DecoSlot.ORNAMENT, rarity: DecoRarity.FINE, cost: 3000, starValue: 3, icon: 'qinglian_lantern_frame', desc: '木架悬挂 pastel 宫灯，夜宴花坊氛围', unlockRequirement: { level: 5 }, defaultScale: 2.58, decorationPanelTab: 'qinglian' },
+  { id: 'qinglian_scholar_rock', name: '粉晶山石', slot: DecoSlot.ORNAMENT, rarity: DecoRarity.FINE, cost: 2180, starValue: 4, icon: 'qinglian_scholar_rock', desc: '粉晶玲珑石与祥云木座，案头清供', unlockRequirement: { level: 6 }, defaultScale: 1.25, decorationPanelTab: 'qinglian' },
+  { id: 'qinglian_guqin_stand', name: '古琴雅案', slot: DecoSlot.TABLE, rarity: DecoRarity.FINE, cost: 2780, starValue: 4, icon: 'qinglian_guqin_stand', desc: '古琴案几配云纹屏风，紫绿渐变琴身', unlockRequirement: { level: 7 }, defaultScale: 1.4, decorationPanelTab: 'qinglian' },
 
   // ═══════ ⑫ 熟客主题家具（V2：AffinityCardConfig.CUSTOMER_MILESTONE_REWARDS[12] decoUnlockId 解锁；100% 集齐图鉴时 grantQuest('affinity_<type>_codex_full') + gmUnlockDeco）
   // 注：starValue 必须为 0 — 这些是免费赠予的稀有家具，若计星会被「摆放→拆除→重摆」刷分；星星统一来自购买行为。
@@ -570,7 +578,7 @@ export const DECO_PANEL_TABS: DecoPanelTabId[] = [
 /** 编辑托盘 Tab（含房壳 room_styles，与图标表 7 列一致） */
 export type FurnitureTrayTabId = DecoPanelTabId;
 
-export const FURNITURE_TRAY_TABS: FurnitureTrayTabId[] = [
+export const FURNITURE_TRAY_REGULAR_TABS: FurnitureTrayTabId[] = [
   'flower_room',
   'furniture',
   'appliance',
@@ -578,7 +586,16 @@ export const FURNITURE_TRAY_TABS: FurnitureTrayTabId[] = [
   DecoSlot.WALLART,
   DecoSlot.GARDEN,
   'room_styles',
+];
+
+/** 主题线 Tab（与常规分类分列，由托盘顶栏「主题」切换） */
+export const FURNITURE_TRAY_THEME_TABS: FurnitureTrayTabId[] = [
   'qinglian',
+];
+
+export const FURNITURE_TRAY_TABS: FurnitureTrayTabId[] = [
+  ...FURNITURE_TRAY_REGULAR_TABS,
+  ...FURNITURE_TRAY_THEME_TABS,
 ];
 
 export function isDecoSpecialUiCategory(deco: DecoDef): boolean {

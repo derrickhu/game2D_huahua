@@ -177,6 +177,7 @@ class GameClass {
         backgroundColor: 0xFFF5EE,
         resolution: 1,
         antialias: true,
+        preserveDrawingBuffer: true,
         // 业界已知：鸿蒙/Android 必须显式要求 stencil，否则 Filter/Mask/Graphics 不工作
         // preferWebGLVersion 设为 1 避免鸿蒙返回假 WebGL2 上下文
         preferWebGLVersion: 1,
@@ -209,6 +210,7 @@ class GameClass {
             backgroundColor: 0xFFF5EE,
             resolution: 1,
             antialias: true,
+            preserveDrawingBuffer: true,
             preferWebGLVersion: 1,
           } as any);
           console.log('[Game] 方式2: new PIXI.Renderer 创建成功');
@@ -227,6 +229,7 @@ class GameClass {
             backgroundColor: 0xFFF5EE,
             resolution: 1,
             antialias: true,
+            preserveDrawingBuffer: true,
             preferWebGLVersion: 1,
           } as any);
           console.log('[Game] 方式3: autoDetectRenderer 创建成功');

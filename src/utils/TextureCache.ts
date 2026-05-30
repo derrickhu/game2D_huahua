@@ -257,6 +257,8 @@ const PANELS_IMAGE_MAP: Record<string, string> = {
   daily_challenge_panel_shell_nb2: 'subpkg_panels/images/ui/daily_challenge_panel_shell_nb2.png',
   /** 周末花愿加成宣传卡（rembg 透明底，按钮文案由代码叠） */
   weekend_huayuan_boost_promo_panel_nb2: 'subpkg_panels/images/ui/weekend_huayuan_boost_promo_panel_nb2.png',
+  /** 清涟荷影新手礼包宣传卡（空奖励格 + 空按钮，文案与图标由代码叠） */
+  newbie_gift_qinglian_promo_panel_nb2: 'subpkg_panels/images/ui/newbie_gift_qinglian_promo_panel_nb2.png',
   /** 中间浅蓝任务区底板（空，叠在列表背后） */
   daily_challenge_task_area_nb2: 'subpkg_panels/images/ui/daily_challenge_ui_B_mid_plate_nb2.png',
   /** 任务行：暖金渐变 + 双层描边 + 高光阴影（与每日挑战壳 pastel 一致） */
@@ -684,6 +686,10 @@ const DECO_IMAGE_MAP: Record<string, string> = {
   qinglian_lotus_screen: 'subpkg_deco/images/furniture/qinglian_lotus_screen.png',
   qinglian_lotus_lamp: 'subpkg_deco/images/furniture/qinglian_lotus_lamp.png',
   qinglian_lotus_pond_table: 'subpkg_deco/images/furniture/qinglian_lotus_pond_table.png',
+  qinglian_tea_shelf: 'subpkg_deco/images/furniture/qinglian_tea_shelf.png',
+  qinglian_lantern_frame: 'subpkg_deco/images/furniture/qinglian_lantern_frame.png',
+  qinglian_scholar_rock: 'subpkg_deco/images/furniture/qinglian_scholar_rock.png',
+  qinglian_guqin_stand: 'subpkg_deco/images/furniture/qinglian_guqin_stand.png',
 
   // ---- 房间背景 ----
   bg_room_default: 'subpkg_deco/images/house/bg_room_default_soft_nb2.png',
@@ -757,6 +763,7 @@ const DECO_PANEL_WARMUP_KEYS = [
   'deco_card_btn_4',
   'deco_rarity_tag_common',
   'deco_rarity_tag_fine',
+  'furniture_tray_tab_qinglian_idle',
 ] as const;
 
 const CHECKIN_PANEL_KEYS = [
@@ -800,14 +807,13 @@ const TUTORIAL_DECO_KEYS = [
   'furniture_tray_tab_furniture_idle',
   'furniture_tray_tab_ornament_idle',
   'furniture_tray_tab_garden_idle',
+  'furniture_tray_tab_qinglian_idle',
   'furniture_tray_confirm_btn',
   'edit_complete_pill_4x2_nb2',
   'ui_order_check_badge',
   'room_edit_toolbar_zoom_in',
   'room_edit_toolbar_zoom_out',
   'room_edit_toolbar_flip',
-  'room_edit_toolbar_layer_up',
-  'room_edit_toolbar_layer_down',
   'room_edit_toolbar_remove',
 ] as const;
 
@@ -896,6 +902,24 @@ const WEEKEND_HUAYUAN_BOOST_PANEL_KEYS = [
   'weekend_huayuan_boost_promo_panel_nb2',
 ] as const;
 
+const NEWBIE_GIFT_PANEL_KEYS = [
+  'newbie_gift_qinglian_promo_panel_nb2',
+  'icon_coin',
+  'icon_crystal_ball',
+  'icon_golden_scissors',
+  'bg_room_qinglian_lotus_shop_nb2',
+  'qinglian_flower_cart',
+  'qinglian_cloud_rug',
+  'qinglian_koi_bench',
+  'qinglian_lotus_screen',
+  'qinglian_lotus_lamp',
+  'qinglian_lotus_pond_table',
+  'qinglian_tea_shelf',
+  'qinglian_lantern_frame',
+  'qinglian_scholar_rock',
+  'qinglian_guqin_stand',
+] as const;
+
 const FLOWER_SIGN_GACHA_PANEL_KEYS = [
   'flower_sign_gacha_scene_nb2',
   'icon_flower_sign_coin',
@@ -939,6 +963,7 @@ export type TextureAssetGroup =
   | 'merchShop'
   | 'flowerSignGacha'
   | 'weekendHuayuanBoost'
+  | 'newbieGiftPack'
   | 'main'
   | 'items'
   | 'chars'
@@ -963,6 +988,7 @@ const ASSET_GROUP_KEYS: Record<TextureAssetGroup, readonly string[]> = {
   merchShop: MERCH_SHOP_PANEL_KEYS,
   flowerSignGacha: FLOWER_SIGN_GACHA_PANEL_KEYS,
   weekendHuayuanBoost: WEEKEND_HUAYUAN_BOOST_PANEL_KEYS,
+  newbieGiftPack: NEWBIE_GIFT_PANEL_KEYS,
   main: [],
   items: [],
   chars: [],
@@ -998,6 +1024,7 @@ const ASSET_GROUP_NOTIFY_KEYS: Record<TextureAssetGroup, readonly string[]> = {
   merchShop: uniqueKeys(MERCH_SHOP_PANEL_KEYS, ALL_ITEMS_KEYS),
   flowerSignGacha: uniqueKeys(FLOWER_SIGN_GACHA_PANEL_KEYS, ALL_ITEMS_KEYS, ALL_DECO_KEYS),
   weekendHuayuanBoost: [...WEEKEND_HUAYUAN_BOOST_PANEL_KEYS],
+  newbieGiftPack: uniqueKeys(NEWBIE_GIFT_PANEL_KEYS, ALL_DECO_KEYS, ALL_ITEMS_KEYS),
 };
 
 const TEXTURE_LOADED_EVENT = 'texture:loaded';
@@ -1201,6 +1228,11 @@ class TextureCacheClass {
   /** 顶栏内购商店必须资源：打开前严格等待，避免 CDN 首次下载时显示空壳。 */
   preloadMerchShopPanel(): Promise<void> {
     return this.preloadKeysStrict(MERCH_SHOP_PANEL_KEYS, 'merchShop');
+  }
+
+  /** 清涟荷影新手礼包：仅预加载面板壳 + 预览图，勿拉全量 deco/items/panels 分包。 */
+  preloadNewbieGiftPackPanel(): Promise<void> {
+    return this.preloadKeysStrict(NEWBIE_GIFT_PANEL_KEYS, 'newbieGiftPack');
   }
 
   preloadCheckIn(): Promise<void> {

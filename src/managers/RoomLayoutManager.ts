@@ -13,7 +13,6 @@
 import { EventBus } from '@/core/EventBus';
 import { PersistService } from '@/core/PersistService';
 import { DECO_MAP, DecoSlot, isDecoAllowedInScene } from '@/config/DecorationConfig';
-import { ROOM_DEPTH_AUX_MAX } from '@/config/RoomDepthSort';
 import { CurrencyManager } from './CurrencyManager';
 import { DEFAULT_SCENE_ID } from '@/config/StarLevelConfig';
 
@@ -52,11 +51,10 @@ export interface FurniturePlacement {
   scale: number;
   /** 是否水平翻转 */
   flipped: boolean;
-  /** 图层偏移（默认 0，正数=置前/更靠前，负数=置后） */
+  /** 图层偏移（默认 0；新放入时自动递增，仅同 Y 带内微调） */
   zLayer?: number;
   /**
-   * 手动深度前移累加（与 getDepthSortTypeLift 相加后参与排序，有上限，见 RoomDepthSort）。
-   * 「图层前移」会增大此值，解决同格 y 下 zLayer 权重不足以压过桌子的问题。
+   * 手动深度前移（存档兼容；已无 UI 入口，遮挡请拖动调整 Y）。
    */
   depthManualBias?: number;
 }
@@ -388,47 +386,6 @@ class RoomLayoutManagerClass {
     this._debounceSave();
 
     EventBus.emit('roomlayout:updated', p);
-    return true;
-  }
-
-  /**
-   * 将家具图层往前移一级（更靠近屏幕前方）
-   */
-  bringForward(decoId: string): boolean {
-    const p = this._placements.find(p => p.decoId === decoId);
-    if (!p) return false;
-
-    const step = 100;
-    p.depthManualBias = Math.min(
-      ROOM_DEPTH_AUX_MAX,
-      (p.depthManualBias ?? 0) + step,
-    );
-    p.zLayer = Math.min(8, (p.zLayer ?? 0) + 1);
-    this._debounceSave();
-
-    EventBus.emit('roomlayout:updated', p);
-    console.log(
-      `[RoomLayout] ${decoId} 图层前移 → zLayer=${p.zLayer} depthManualBias=${p.depthManualBias}`,
-    );
-    return true;
-  }
-
-  /**
-   * 将家具图层往后移一级（更远离屏幕）
-   */
-  sendBackward(decoId: string): boolean {
-    const p = this._placements.find(p => p.decoId === decoId);
-    if (!p) return false;
-
-    const step = 100;
-    p.depthManualBias = Math.max(0, (p.depthManualBias ?? 0) - step);
-    p.zLayer = Math.max(-5, (p.zLayer ?? 0) - 1);
-    this._debounceSave();
-
-    EventBus.emit('roomlayout:updated', p);
-    console.log(
-      `[RoomLayout] ${decoId} 图层后移 → zLayer=${p.zLayer} depthManualBias=${p.depthManualBias}`,
-    );
     return true;
   }
 

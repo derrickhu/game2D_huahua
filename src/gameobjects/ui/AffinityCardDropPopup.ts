@@ -18,8 +18,8 @@
  */
 import * as PIXI from 'pixi.js';
 import { Game } from '@/core/Game';
-import { Platform } from '@/core/PlatformService';
 import { EventBus } from '@/core/EventBus';
+import { captureLayersShareImageUrl } from '@/utils/shareSnapshot';
 import { TweenManager, Ease } from '@/core/TweenManager';
 import { AudioManager } from '@/core/AudioManager';
 import { shareAppMessageWithAnalytics } from '@/utils/wechatShare';
@@ -419,57 +419,19 @@ export class AffinityCardDropPopup extends PIXI.Container {
 
   /** 截取标题条 + 当前卡面，生成微信分享用临时图 */
   async createShareSnapshotImageUrl(): Promise<string | null> {
-    const renderer = Game.app?.renderer as { render: (stage: PIXI.Container) => void } | undefined;
-    const canvas = Game.app?.view;
-    if (!renderer || !canvas || !this._cardMount) return null;
-
-    const prevShare = this._shareBtn?.visible ?? true;
-    const prevHint = this._hint.visible;
-    if (this._shareBtn) this._shareBtn.visible = false;
-    this._hint.visible = false;
-
-    try {
-      renderer.render(Game.stage);
-      await new Promise<void>(resolve => setTimeout(resolve, 50));
-
-      const pad = 14;
-      let minX = Infinity;
-      let minY = Infinity;
-      let maxX = -Infinity;
-      let maxY = -Infinity;
-      for (const layer of [this._titleLayer, this._cardMount]) {
-        if (!layer?.visible) continue;
-        const b = layer.getBounds();
-        const tl = layer.toGlobal(new PIXI.Point(b.x - pad, b.y - pad));
-        const br = layer.toGlobal(new PIXI.Point(b.x + b.width + pad, b.y + b.height + pad));
-        minX = Math.min(minX, tl.x, br.x);
-        minY = Math.min(minY, tl.y, br.y);
-        maxX = Math.max(maxX, tl.x, br.x);
-        maxY = Math.max(maxY, tl.y, br.y);
-      }
-      if (!Number.isFinite(minX)) return null;
-
-      const cropW = Math.max(1, maxX - minX);
-      const cropH = Math.max(1, maxY - minY);
-      const destW = 500;
-      const destH = Math.round(destW * (cropH / cropW));
-
-      return await Platform.canvasToTempFilePath({
-        canvas,
-        x: Math.round(Game.toReal(minX)),
-        y: Math.round(Game.toReal(minY)),
-        width: Math.round(Game.toReal(cropW)),
-        height: Math.round(Game.toReal(cropH)),
-        destWidth: destW,
-        destHeight: destH,
-        fileType: 'jpg',
-        quality: 0.92,
-      });
-    } finally {
-      if (this._shareBtn) this._shareBtn.visible = prevShare;
-      this._hint.visible = prevHint;
-      renderer.render(Game.stage);
-    }
+    return captureLayersShareImageUrl(
+      [this._titleLayer, this._cardMount],
+      {
+        padding: 16,
+        destWidth: 500,
+        aspectRatio: 5 / 4,
+        hide: [
+          ...(this._shareBtn ? [this._shareBtn] : []),
+          this._hint,
+          this._overlay,
+        ],
+      },
+    );
   }
 
   private _clearShareButton(): void {

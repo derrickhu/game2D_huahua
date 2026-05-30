@@ -1,0 +1,19 @@
+Vertical mobile game newbie gift promo panel, 3:4 aspect ratio, SAME layout pattern as successful weekend huayuan boost promo panel: centered pink-lavender sparkle rounded card on pure white outer margins, kawaii pastel flower-shop merge game style.
+
+TOP: ornate golden scalloped title banner with readable Chinese "清涟荷影 · 新手礼" in bold cute rounded font with chocolate brown outline. Wide mint-green and gold ribbon below reading "10件豪礼 免费领" with small sparkle stars.
+
+TOP-RIGHT on card: chunky circular red close button with white X slightly past frame corner.
+
+MIDDLE CONTENT (EMPTY REWARD ZONE — critical):
+Large cream-blush interior field with subtle decorative lotus petals in corners ONLY.
+Show a 4-column by 3-row grid of EMPTY placeholder slots ONLY: soft rounded square frames with thin golden borders and very faint cream fill, NO icons inside, NO furniture, NO coins, NO crystals, NO scissors, NO room thumbnails, NO item illustrations, NO labels under slots. Slots must look like blank mount points for code to overlay rewards later.
+
+NO progress bar. NO progress track. NO "0/5" bar. NO secondary capsule strip between grid and button.
+
+BOTTOM: one wide blank primary CTA pill button centered, warm coral-to-gold gradient glossy kawaii capsule shape, completely EMPTY center — absolutely NO text, NO numbers, NO play icon, NO ad icon. Button is integrated into the panel art like weekend promo panel blank button.
+
+Decorative lotus motif on purple-lavender frame corners. Soft sparkle particles around title only, not cluttering empty grid.
+
+Readable large Chinese promo text in title and ribbon only. All dynamic UI (reward icons, button label like 看广告 0/2) will be PIXI overlay — do NOT draw them.
+
+White background outside card for clean rembg cutout. No watermark, no photoreal.

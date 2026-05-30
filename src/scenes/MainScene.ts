@@ -41,8 +41,6 @@ import { WarehousePanel } from '@/gameobjects/ui/WarehousePanel';
 import { ToastMessage } from '@/gameobjects/ui/ToastMessage';
 import { CheckInPanel } from '@/gameobjects/ui/CheckInPanel';
 import { NewbieGiftPackPanel } from '@/gameobjects/ui/NewbieGiftPackPanel';
-import { NewbieGiftPackEntryButton } from '@/gameobjects/ui/NewbieGiftPackEntryButton';
-import { NewbieGiftPackManager } from '@/managers/NewbieGiftPackManager';
 import { QuestPanel } from '@/gameobjects/ui/QuestPanel';
 import { OfflineRewardPanel } from '@/gameobjects/ui/OfflineRewardPanel';
 import { LevelUpPopup } from '@/gameobjects/ui/LevelUpPopup';
@@ -110,6 +108,9 @@ import { MERGE_BUBBLE_DISPLAY_NAME } from '@/config/MergeCompanionConfig';
 import { RoomLayoutManager } from '@/managers/RoomLayoutManager';
 import { WeekendHuayuanBoostManager } from '@/managers/WeekendHuayuanBoostManager';
 import { WeekendHuayuanBoostPanel } from '@/gameobjects/ui/WeekendHuayuanBoostPanel';
+import { BuyFurnitureHintManager } from '@/managers/BuyFurnitureHintManager';
+import { BuyFurnitureHintOverlay } from '@/gameobjects/ui/BuyFurnitureHintOverlay';
+import { BUY_FURNITURE_HINT_HUAYUAN_MIN } from '@/config/BuyFurnitureHintConfig';
 
 /** 合成页左侧店主半身：目标高度与最大宽度（设计 px），统一 scale=min(宽限,高限) 保持宽高比、避免栏内「压扁」感 */
 const BOARD_OWNER_TARGET_H = 208;
@@ -146,6 +147,8 @@ export class MainScene implements Scene {
 
   // ---- 留存系统 ----
   private _tutorialOverlay!: TutorialOverlay;
+  private _buyFurnitureHintOverlay!: BuyFurnitureHintOverlay;
+  private _buyFurnitureHintTimer: ReturnType<typeof setTimeout> | null = null;
   private _checkInPanel!: CheckInPanel;
   private _questPanel!: QuestPanel;
   private _offlineRewardPanel!: OfflineRewardPanel;
@@ -177,7 +180,6 @@ export class MainScene implements Scene {
   private _rewardBoxButton!: RewardBoxButton;
   private _rewardBoxPanel!: RewardBoxPanel;
   private _newbieGiftPackPanel!: NewbieGiftPackPanel;
-  private _newbieGiftPackEntry!: NewbieGiftPackEntryButton;
 
   // ---- 大地图弹框商店 ----
   private _popupShopPanel!: PopupShopPanel;
@@ -262,6 +264,7 @@ export class MainScene implements Scene {
         }
         this._tutorialOverlay.bind('main');
       }
+      this._scheduleBuyFurnitureHint(1200);
     }
 
     Game.ticker.add(this._update, this);
@@ -294,6 +297,11 @@ export class MainScene implements Scene {
     if (this._tutorialOverlay) {
       this._tutorialOverlay.unbind();
     }
+    if (this._buyFurnitureHintTimer) {
+      clearTimeout(this._buyFurnitureHintTimer);
+      this._buyFurnitureHintTimer = null;
+    }
+    this._buyFurnitureHintOverlay?.hide();
 
     // 停止触觉反馈层上的粒子等效果
     if (this._hapticSystem) {
@@ -335,6 +343,8 @@ export class MainScene implements Scene {
     if (QuestManager.hasClaimableQuest && !TutorialManager.isActive) {
       ToastMessage.show('每日挑战有可领取奖励！');
     }
+
+    this._scheduleBuyFurnitureHint(2800);
   }
 
   private _buildUI(): void {
@@ -392,8 +402,8 @@ export class MainScene implements Scene {
         .finally(() => this._warehousePanel.open());
     });
 
-    // 花语合成彩蛋系统
-    this._flowerEasterEgg = new FlowerEasterEggSystem(this.container);
+    // 花语合成彩蛋系统（挂全局 Overlay，保证「新解锁」在教程层之上）
+    this._flowerEasterEgg = new FlowerEasterEggSystem(OverlayManager.container);
 
     // 合成统计系统
     this._mergeStats = new MergeStatsSystem(this.container);
@@ -418,6 +428,7 @@ export class MainScene implements Scene {
       customerScrollArea: this._customerScrollArea,
       itemInfoBar: this._infoBar,
     });
+    this._buyFurnitureHintOverlay = new BuyFurnitureHintOverlay(this.container);
 
     // 签到面板
     this._checkInPanel = new CheckInPanel();
@@ -622,14 +633,6 @@ export class MainScene implements Scene {
       CHAR_BOTTOM_Y + 8,
     );
     this._shopMainBlock.addChild(this._rewardBoxButton);
-
-    this._newbieGiftPackEntry = new NewbieGiftPackEntryButton(() => this._newbieGiftPackPanel.open());
-    this._newbieGiftPackEntry.position.set(
-      ownerCX + SHOP_OWNER_BLOCK_NUDGE_X + RewardBoxButton.layoutSize().w / 2 + 40,
-      CHAR_BOTTOM_Y + 8 + RewardBoxButton.layoutSize().h / 2,
-    );
-    this._newbieGiftPackEntry.zIndex = 6;
-    this._shopMainBlock.addChild(this._newbieGiftPackEntry);
 
     // 礼包后绘，保证叠在店主之上（人物略放大时可压在礼盒底下由礼盒盖住边缘）
     this._rewardBoxButton.zIndex = 5;
@@ -1258,7 +1261,12 @@ export class MainScene implements Scene {
       void TextureCache.preloadPanelAssets('quest')
         .finally(() => this._questPanel.open());
     });
-    EventBus.on('currency:changed', () => this._markRedDotsDirty());
+    EventBus.on('currency:changed', (kind?: string, value?: number) => {
+      this._markRedDotsDirty();
+      if (kind === 'huayuan' && typeof value === 'number' && value > BUY_FURNITURE_HINT_HUAYUAN_MIN) {
+        this._scheduleBuyFurnitureHint(1800);
+      }
+    });
     EventBus.on('currency:loaded', () => this._markRedDotsDirty());
     EventBus.on('quest:updated', () => this._markRedDotsDirty());
     EventBus.on('event:rewardClaimed', () => this._markRedDotsDirty());
@@ -1277,6 +1285,10 @@ export class MainScene implements Scene {
       if (DressUpManager.grantOutfit(outfitId)) {
         ToastMessage.show('获得新形象，快去换装看看！');
       }
+    });
+
+    EventBus.on('decoration:unlocked', () => {
+      this._scheduleBuyFurnitureHint(1200);
     });
 
     EventBus.on('decoration:shopStarFly', this._onMainSceneDecorationShopStarFly);
@@ -1312,16 +1324,14 @@ export class MainScene implements Scene {
       }, 500);
     });
 
-    // 引导完成
+    // 引导完成：仅弹签到，新手礼包改到首次进入花坊时再弹
     EventBus.on('tutorial:completed', () => {
       this._tutorialOverlay?.unbind();
       ToastMessage.show('欢迎来到花花妙屋！');
       if (CheckInManager.canCheckIn) {
         setTimeout(() => this._checkInPanel.open(), 1000);
       }
-      if (NewbieGiftPackManager.shouldShowEntry) {
-        setTimeout(() => this._newbieGiftPackPanel.open(), 1400);
-      }
+      this._scheduleBuyFurnitureHint(3500);
     });
 
     // ---- 体力系统事件 ----
@@ -1537,23 +1547,50 @@ export class MainScene implements Scene {
 
     void preload.catch(err => {
       console.warn('[MainScene] 花店首屏资源预加载未完全成功:', err);
-    }).then(() => {
-      if (SceneManager.current?.name !== 'main') {
-        this._switchingToShop = false;
-        return;
-      }
-      // 淡出当前场景 → 切换到花店场景。预加载先完成，真机首帧不再依赖本地兜底。
-      TweenManager.to({
-        target: this.container,
-        props: { alpha: 0 },
-        duration: 0.3,
-        ease: Ease.easeInQuad,
-        onComplete: () => {
-          this.container.alpha = 1; // 恢复（下次进入时用）
+    });
+
+    // 立即淡出，不阻塞在 CDN/分包预加载上；资源在后台继续拉，ShopScene 会用占位并自动刷新。
+    TweenManager.to({
+      target: this.container,
+      props: { alpha: 0 },
+      duration: 0.22,
+      ease: Ease.easeInQuad,
+      onComplete: () => {
+        if (SceneManager.current?.name !== 'main') {
           this._switchingToShop = false;
-          SceneManager.switchTo('shop');
-        },
-      });
+          this.container.alpha = 1;
+          return;
+        }
+        this.container.alpha = 1;
+        this._switchingToShop = false;
+        SceneManager.switchTo('shop');
+      },
+    });
+  }
+
+  /** 延迟检测「该去买家具」软提醒，避免与签到/离线弹窗叠在一起 */
+  private _scheduleBuyFurnitureHint(delayMs = 1500): void {
+    if (this._buyFurnitureHintTimer) {
+      clearTimeout(this._buyFurnitureHintTimer);
+    }
+    this._buyFurnitureHintTimer = window.setTimeout(() => {
+      this._buyFurnitureHintTimer = null;
+      this._tryShowBuyFurnitureHint();
+    }, delayMs);
+  }
+
+  private _tryShowBuyFurnitureHint(): void {
+    if (SceneManager.current?.name !== 'main') return;
+    if (!BuyFurnitureHintManager.shouldPrompt()) return;
+    if (this._buyFurnitureHintOverlay.isShowing) return;
+    if (TutorialManager.isActive) return;
+    if (this._checkInPanel.visible) return;
+    if (this._offlineRewardPanel.visible) return;
+    if (this._levelUpPopup.visible) return;
+
+    this._buyFurnitureHintOverlay.show({
+      itemInfoBar: this._infoBar,
+      onDismiss: () => BuyFurnitureHintManager.markDismissed(),
     });
   }
 
@@ -1586,7 +1623,6 @@ export class MainScene implements Scene {
     // 客人滚动区惯性动画
     this._customerScrollArea.update(dt);
     this._shopRowPanorama.update(dt);
-    this._newbieGiftPackEntry?.tickBreath();
 
     // 奖励收纳框滚动惯性
     this._rewardBoxPanel.update(dt);

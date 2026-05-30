@@ -1,0 +1,16 @@
+Match the attached reference game HUD icon EXACTLY in art quality and rendering pipeline:
+thick warm chocolate-brown outline on every shape, soft glossy cel-shaded 2D, gentle white specular highlights, isometric three-quarter view, cozy merge flower-shop mobile game sticker icon, premium polished NOT flat clipart.
+
+Design a Qinglian lotus newbie gift pack icon for bottom navigation bar, readable at 80 pixels circle.
+
+Main subject (55% of canvas): elegant mint-jade green square gift box with gold trim lines, lid slightly open showing soft warm glow inside, one large pink lotus flower on the lid center with yellow stamen — same pastel saturation as game deco furniture, cute but premium.
+
+Secondary badge (lower-right overlapping box, like reference +50% coin): shiny gold round seal with bold dark-brown stroke, simple white Chinese character "礼" only, large and readable.
+
+Tertiary accent (upper-left): small teal ribbon tab with white Chinese "新" in chunky rounded font, solid color block, minimal detail.
+
+Maximum 4 color masses. NO tiny coins, NO koi, NO crystals, NO many petals flying, NO text "10件", NO flat vector clipart, NO photoreal, NO square UI button frame.
+
+Background solid flat magenta FF00FF full bleed for cutout.
+
+No watermark.

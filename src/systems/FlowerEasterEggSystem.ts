@@ -15,9 +15,16 @@ import { ITEM_DEFS, Category, type ItemDef } from '@/config/ItemConfig';
 import { getItemCollectionBlurb } from '@/config/ItemCollectionBlurbs';
 import { TextureCache } from '@/utils/TextureCache';
 import { createCurrencyIconCluster } from '@/utils/CurrencyCellIcons';
+import { TutorialManager, TutorialStep } from '@/managers/TutorialManager';
 
 interface UnlockRewards {
   huayuanReward: number;
+}
+
+interface PendingUnlock {
+  itemId: string;
+  displayName: string;
+  rewards: UnlockRewards;
 }
 
 function getUnlockRewards(_itemId: string, _def: ItemDef): UnlockRewards {
@@ -31,6 +38,7 @@ export class FlowerEasterEggSystem {
   private _isShowing = false;
   private _activeUnlockAssetUnsub: (() => void) | null = null;
   private _activeUnlockClosing = false;
+  private _pendingUnlocks: PendingUnlock[] = [];
 
   constructor(parent: PIXI.Container) {
     this._parent = parent;
@@ -42,6 +50,34 @@ export class FlowerEasterEggSystem {
     EventBus.on('board:merged', (_src: number, _dst: number, resultId: string, _resultCell: number) => {
       this._checkFirstMergeUnlock(resultId);
     });
+    EventBus.on('tutorial:stepChanged', () => {
+      this._flushPendingUnlocks();
+    });
+    EventBus.on('tutorial:completed', () => {
+      this._flushPendingUnlocks();
+    });
+  }
+
+  /** 「培育花朵」点击引导进行时不与「新解锁」叠层 */
+  private _shouldDeferUnlockForTutorial(): boolean {
+    return TutorialManager.isActive && TutorialManager.currentStep === TutorialStep.GUIDE_TAP_TOOL;
+  }
+
+  private _flushPendingUnlocks(): void {
+    if (this._isShowing || this._pendingUnlocks.length === 0) return;
+    if (this._shouldDeferUnlockForTutorial()) return;
+    const next = this._pendingUnlocks.shift()!;
+    setTimeout(() => {
+      if (this._isShowing) {
+        this._pendingUnlocks.unshift(next);
+        return;
+      }
+      if (this._shouldDeferUnlockForTutorial()) {
+        this._pendingUnlocks.unshift(next);
+        return;
+      }
+      this._showUnlockPanel(next.itemId, next.displayName, next.rewards);
+    }, 320);
   }
 
   private _checkFirstMergeUnlock(itemId: string): void {
@@ -54,9 +90,14 @@ export class FlowerEasterEggSystem {
     this._triggered.add(itemId);
     this._saveTriggered();
     const rewards = getUnlockRewards(itemId, def);
+    const pending: PendingUnlock = { itemId, displayName: def.name, rewards };
     void TextureCache.preloadKeys(this._unlockPanelTextureKeys(itemId, def));
     setTimeout(() => {
-      this._showUnlockPanel(itemId, def.name, rewards);
+      if (this._shouldDeferUnlockForTutorial()) {
+        this._pendingUnlocks.push(pending);
+        return;
+      }
+      this._showUnlockPanel(pending.itemId, pending.displayName, pending.rewards);
     }, 600);
   }
 
@@ -89,6 +130,7 @@ export class FlowerEasterEggSystem {
     const cx = W / 2;
 
     const overlay = new PIXI.Container();
+    overlay.zIndex = 9000;
 
     // ---- 全屏遮罩 ----
     const mask = new PIXI.Graphics();
@@ -353,6 +395,7 @@ export class FlowerEasterEggSystem {
           overlay.destroy({ children: true });
           this._isShowing = false;
           this._activeUnlockClosing = false;
+          this._flushPendingUnlocks();
         },
       });
     };

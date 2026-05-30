@@ -66,7 +66,6 @@ const REWARD_BADGE_RADIUS = Math.round((REWARD_BADGE_ICON + REWARD_BADGE_PAD_Y *
 export class CustomerView extends PIXI.Container {
   private _customer: CustomerInstance | null = null;
 
-  private _avatar: PIXI.Text;
   private _avatarSprite: PIXI.Sprite;
   private _infoPanel: PIXI.Container;
   private _affinityHeartBadge: PIXI.Container | null = null;
@@ -89,12 +88,6 @@ export class CustomerView extends PIXI.Container {
     this._avatarSprite.visible = false;
     this._avatarSprite.eventMode = 'none';
     this.addChild(this._avatarSprite);
-
-    this._avatar = new PIXI.Text('', { fontSize: 52 });
-    this._avatar.anchor.set(0.5, 1.0);
-    this._avatar.position.set(0, AVATAR_FEET_Y);
-    this._avatar.eventMode = 'none';
-    this.addChild(this._avatar);
 
     this._infoPanel = new PIXI.Container();
     this._infoPanel.position.set(0, PANEL_Y);
@@ -138,11 +131,8 @@ export class CustomerView extends PIXI.Container {
       const s = targetH / tex.height;
       this._avatarSprite.scale.set(s);
       this._avatarSprite.visible = true;
-      this._avatar.visible = false;
     } else {
       this._avatarSprite.visible = false;
-      this._avatar.visible = true;
-      this._avatar.text = customer.name?.charAt(0) || '?';
     }
 
     this._rebuildInfoPanel();

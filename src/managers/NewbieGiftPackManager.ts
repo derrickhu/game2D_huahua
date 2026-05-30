@@ -20,11 +20,14 @@ const STORAGE_KEY = 'huahua_newbie_gift_pack';
 interface NewbieGiftPackSave {
   adsWatched: number;
   claimed: boolean;
+  /** 是否已在花坊自动弹过一次宣传页（避免与签到等同屏挤在一起） */
+  introPromptShown?: boolean;
 }
 
 class NewbieGiftPackManagerClass {
   private _adsWatched = 0;
   private _claimed = false;
+  private _introPromptShown = false;
   private _loaded = false;
 
   private _ensureLoaded(): void {
@@ -56,21 +59,36 @@ class NewbieGiftPackManagerClass {
     return this.isAvailable && this._adsWatched < NEWBIE_GIFT_PACK_ADS_REQUIRED;
   }
 
+  /** 广告次数已满、尚未点「领取」 */
+  get canClaim(): boolean {
+    this._ensureLoaded();
+    return this.isAvailable && this._adsWatched >= NEWBIE_GIFT_PACK_ADS_REQUIRED;
+  }
+
   get shouldShowEntry(): boolean {
     return this.isAvailable;
   }
 
-  onAdSuccess(): boolean {
+  /** 教程完成后首次进入花坊时自动弹出宣传页 */
+  get shouldAutoOpenOnShopEnter(): boolean {
     this._ensureLoaded();
-    if (!this.canWatchAd) return false;
+    return this.isAvailable && !this._introPromptShown;
+  }
+
+  markIntroPromptShown(): void {
+    this._ensureLoaded();
+    if (this._introPromptShown) return;
+    this._introPromptShown = true;
+    this._save();
+  }
+
+  /** 激励视频观看成功：仅累计次数，不自动发奖 */
+  onAdSuccess(): void {
+    this._ensureLoaded();
+    if (!this.canWatchAd) return;
     this._adsWatched += 1;
     this._save();
     EventBus.emit('newbieGiftPack:progress', this._adsWatched);
-    if (this._adsWatched >= NEWBIE_GIFT_PACK_ADS_REQUIRED) {
-      this.claim();
-      return true;
-    }
-    return false;
   }
 
   claim(): boolean {
@@ -99,6 +117,7 @@ class NewbieGiftPackManagerClass {
   gmReset(): void {
     this._adsWatched = 0;
     this._claimed = false;
+    this._introPromptShown = false;
     this._loaded = true;
     PersistService.remove(STORAGE_KEY);
     EventBus.emit('newbieGiftPack:progress', 0);
@@ -108,6 +127,7 @@ class NewbieGiftPackManagerClass {
     const data: NewbieGiftPackSave = {
       adsWatched: this._adsWatched,
       claimed: this._claimed,
+      introPromptShown: this._introPromptShown,
     };
     PersistService.writeRaw(STORAGE_KEY, JSON.stringify(data));
   }
@@ -119,6 +139,7 @@ class NewbieGiftPackManagerClass {
       const data = JSON.parse(raw) as NewbieGiftPackSave;
       this._adsWatched = Math.max(0, Number(data.adsWatched) || 0);
       this._claimed = Boolean(data.claimed);
+      this._introPromptShown = Boolean(data.introPromptShown);
     } catch (_) {
       /* ignore */
     }
