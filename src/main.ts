@@ -24,7 +24,6 @@ import { LevelManager } from '@/managers/LevelManager';
 import { CloudSyncManager } from '@/managers/CloudSyncManager';
 import { TutorialManager } from '@/managers/TutorialManager';
 import { DecorationManager } from '@/managers/DecorationManager';
-import { RoomLayoutManager } from '@/managers/RoomLayoutManager';
 import { UserIdentityManager } from '@/managers/UserIdentityManager';
 import { PersistService, type CloudImportInfo } from '@/core/PersistService';
 import { Platform } from '@/core/PlatformService';
@@ -276,22 +275,6 @@ async function main(): Promise<void> {
     SceneManager.switchTo('main');
     Game.stage.removeChild(loadingOverlay);
     loadingOverlay.destroy({ children: true });
-    void TextureCache.preloadSceneWarmup('shop');
-    setTimeout(() => {
-      void TextureCache.preloadPanelAssets('checkin');
-      void TextureCache.preloadPanelAssets('quest');
-      void TextureCache.preloadSceneWarmup('deco');
-      void TextureCache.preloadSceneWarmup('worldmap');
-    }, 1500);
-    setTimeout(() => {
-      void TextureCache.preloadPanelAssets('warehouse');
-      void TextureCache.preloadPanelAssets('mergeChain');
-      void TextureCache.preloadPanelAssets('collection');
-      void TextureCache.preloadPanelAssets('affinity');
-      void TextureCache.preloadPanelAssets('dressup');
-      void TextureCache.preloadPanelAssets('merchShop');
-      void TextureCache.preloadPanelAssets('flowerSignGacha');
-    }, 3500);
     runtimeReadyForCloudReload = true;
     if (pendingCloudReloadInfo) {
       const info = pendingCloudReloadInfo;

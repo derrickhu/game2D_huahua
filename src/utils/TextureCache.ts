@@ -1,11 +1,11 @@
 /**
  * 纹理缓存 - 管理图片加载和 PIXI.Texture 缓存
- * 支持微信小游戏分包加载：
+ * 支持微信小游戏分包 / CDN 加载：
  *   - 主包：棋盘/顶栏等小图标与启动必需 UI（images/）
- *   - 分包 chars：店主全身/半身 + 客人胸像（subpkg_chars/images/）
- *   - 分包 panels：签到/花语彩蛋/仓库/合成线/装修大卡等面板底图（subpkg_panels/images/ui/）
+ *   - CDN chars：店主全身/半身 + 客人胸像（subpkg_chars/images/）
+ *   - CDN panels：签到/花语彩蛋/仓库/合成线/装修大卡等面板底图（subpkg_panels/images/ui/）
  *   - 分包 items：花朵 + 饮品 + 工具 + 棋盘消耗品等（subpkg_items/images/）；PNG 入库规范见 .cursor/rules/board-item-png-spec.mdc → compress_subpkg_items_pngs.py
- *   - 分包 deco：家具 + 房间背景 + 旧 room 素材（subpkg_deco/images/）
+ *   - CDN deco：家具 + 房间背景 + 旧 room 素材（subpkg_deco/images/）
  */
 import * as PIXI from 'pixi.js';
 import { CdnAssetService } from '@/core/CdnAssetService';
@@ -24,6 +24,8 @@ const MAIN_IMAGE_MAP: Record<string, string> = {
   icon_enter_house: 'images/ui/icon_enter_house.png',
   /** NB2+rembg：顶栏内购商店胶囊图标 */
   icon_shop_nb2: 'images/ui/icon_shop_nb2.png',
+  /** 周末订单花愿 +50% 顶栏入口（NB2 物件 + rembg） */
+  icon_weekend_huayuan_boost_nb2: 'images/ui/icon_weekend_huayuan_boost_nb2.png',
   /** NB2+rembg：激励视频 / 看广告统一小图标（粉紫边框 + 播放三角） */
   icon_ad_reward_nb2: 'images/ui/icon_ad_reward_nb2.png',
   icon_heart:  'images/ui/icon_heart.png',
@@ -51,7 +53,7 @@ const MAIN_IMAGE_MAP: Record<string, string> = {
   icon_challenge: 'images/ui/icon_level_badge.png',
   icon_build:     'images/ui/icon_build.png',
   icon_worldmap_nav: 'images/ui/icon_worldmap_nav.png',
-  /** 花店主页「许愿」入口（4 级解锁；与 icon_worldmap_nav 同款 HUD 银色硬币 + 薄荷水纹） */
+  /** 花店主页「许愿」入口（3 级解锁；与 icon_worldmap_nav 同款 HUD 银色硬币 + 薄荷水纹） */
   icon_wishing_nav: 'images/ui/icon_wishing_nav.png',
   icon_operate:   'images/ui/icon_operate.png',
 
@@ -73,7 +75,7 @@ const MAIN_IMAGE_MAP: Record<string, string> = {
 };
 
 // ================================================================
-// chars 分包：店主 + 客人（需先 loadSubpackage('chars')）
+// chars CDN：店主 + 客人
 // ================================================================
 const CHARS_IMAGE_MAP: Record<string, string> = {
   owner_chibi_default:  'subpkg_chars/images/owner/chibi_default.png',
@@ -154,7 +156,7 @@ const CHARS_IMAGE_MAP: Record<string, string> = {
 };
 
 // ================================================================
-// panels 分包：大卡面 UI（需先 loadSubpackage('panels')）
+// panels CDN：大卡面 UI
 // ================================================================
 const PANELS_IMAGE_MAP: Record<string, string> = {
   /** 内购商店大图移出主包，打开商店时通过 panels/CDN 懒加载。 */
@@ -253,6 +255,8 @@ const PANELS_IMAGE_MAP: Record<string, string> = {
 
   /** 每日挑战：NB2+rembg 粉紫壳（顶栏标题位、关闭钮、秒表条；中间留白叠列表） */
   daily_challenge_panel_shell_nb2: 'subpkg_panels/images/ui/daily_challenge_panel_shell_nb2.png',
+  /** 周末花愿加成宣传卡（rembg 透明底，按钮文案由代码叠） */
+  weekend_huayuan_boost_promo_panel_nb2: 'subpkg_panels/images/ui/weekend_huayuan_boost_promo_panel_nb2.png',
   /** 中间浅蓝任务区底板（空，叠在列表背后） */
   daily_challenge_task_area_nb2: 'subpkg_panels/images/ui/daily_challenge_ui_B_mid_plate_nb2.png',
   /** 任务行：暖金渐变 + 双层描边 + 高光阴影（与每日挑战壳 pastel 一致） */
@@ -446,7 +450,7 @@ const ITEMS_IMAGE_MAP: Record<string, string> = {
 };
 
 // ================================================================
-// deco 分包资源（需先 loadSubpackage('deco') 后才可访问）
+// deco CDN 资源
 // ================================================================
 const DECO_IMAGE_MAP: Record<string, string> = {
   // ---- 花店建筑场景 ----
@@ -549,6 +553,18 @@ const DECO_IMAGE_MAP: Record<string, string> = {
   butterfly_house_wicker_chair: 'subpkg_deco/images/furniture/butterfly_house_wicker_chair.png',
   butterfly_house_tea_table: 'subpkg_deco/images/furniture/butterfly_house_tea_table.png',
   butterfly_house_wall_frame: 'subpkg_deco/images/furniture/butterfly_house_wall_frame.png',
+  butterfly_house_study_field_stool: 'subpkg_deco/images/furniture/butterfly_house_study_field_stool.png',
+  butterfly_house_study_pin_board: 'subpkg_deco/images/furniture/butterfly_house_study_pin_board.png',
+  butterfly_house_bamboo_screen: 'subpkg_deco/images/furniture/butterfly_house_bamboo_screen.png',
+  butterfly_house_study_microscope_desk: 'subpkg_deco/images/furniture/butterfly_house_study_microscope_desk.png',
+  butterfly_house_moon_specimen_shelf: 'subpkg_deco/images/furniture/butterfly_house_moon_specimen_shelf.png',
+  butterfly_house_aurora_terrarium: 'subpkg_deco/images/furniture/butterfly_house_aurora_terrarium.png',
+  butterfly_house_moon_crescent_rug: 'subpkg_deco/images/furniture/butterfly_house_moon_crescent_rug.png',
+  butterfly_house_moon_star_chair: 'subpkg_deco/images/furniture/butterfly_house_moon_star_chair.png',
+  villa_planter_urn: 'subpkg_deco/images/furniture/villa_planter_urn.png',
+  villa_wrought_bench: 'subpkg_deco/images/furniture/villa_wrought_bench.png',
+  villa_gilded_mirror: 'subpkg_deco/images/furniture/villa_gilded_mirror.png',
+  villa_rose_armoire: 'subpkg_deco/images/furniture/villa_rose_armoire.png',
   wallart_window_meadow_arch: 'subpkg_deco/images/furniture/wallart_window_meadow_arch.png',
   wallart_window_lake_round: 'subpkg_deco/images/furniture/wallart_window_lake_round.png',
 
@@ -727,6 +743,7 @@ const SHOP_WARMUP_KEYS = [
   'shop_edit_deco_pill_4x2_nb2',
   'icon_worldmap_nav',
   'icon_wishing_nav',
+  'icon_weekend_huayuan_boost_nb2',
 ] as const;
 
 const DECO_PANEL_WARMUP_KEYS = [
@@ -875,6 +892,10 @@ const MERCH_SHOP_PANEL_KEYS = [
   'icon_gem',
 ] as const;
 
+const WEEKEND_HUAYUAN_BOOST_PANEL_KEYS = [
+  'weekend_huayuan_boost_promo_panel_nb2',
+] as const;
+
 const FLOWER_SIGN_GACHA_PANEL_KEYS = [
   'flower_sign_gacha_scene_nb2',
   'icon_flower_sign_coin',
@@ -917,6 +938,7 @@ export type TextureAssetGroup =
   | 'dressup'
   | 'merchShop'
   | 'flowerSignGacha'
+  | 'weekendHuayuanBoost'
   | 'main'
   | 'items'
   | 'chars'
@@ -940,6 +962,7 @@ const ASSET_GROUP_KEYS: Record<TextureAssetGroup, readonly string[]> = {
   dressup: DRESSUP_PANEL_KEYS,
   merchShop: MERCH_SHOP_PANEL_KEYS,
   flowerSignGacha: FLOWER_SIGN_GACHA_PANEL_KEYS,
+  weekendHuayuanBoost: WEEKEND_HUAYUAN_BOOST_PANEL_KEYS,
   main: [],
   items: [],
   chars: [],
@@ -974,6 +997,7 @@ const ASSET_GROUP_NOTIFY_KEYS: Record<TextureAssetGroup, readonly string[]> = {
   dressup: uniqueKeys(DRESSUP_PANEL_KEYS, OWNER_OUTFIT_KEYS),
   merchShop: uniqueKeys(MERCH_SHOP_PANEL_KEYS, ALL_ITEMS_KEYS),
   flowerSignGacha: uniqueKeys(FLOWER_SIGN_GACHA_PANEL_KEYS, ALL_ITEMS_KEYS, ALL_DECO_KEYS),
+  weekendHuayuanBoost: [...WEEKEND_HUAYUAN_BOOST_PANEL_KEYS],
 };
 
 const TEXTURE_LOADED_EVENT = 'texture:loaded';
@@ -1036,9 +1060,7 @@ class TextureCacheClass {
       });
   }
 
-  /**
-   * 加载 chars 分包（店主 + 客人），然后预加载图片
-   */
+  /** 预加载 chars 图片；当前配置下走 CDN，非 CDN 配置才会加载微信分包。 */
   loadCharsSubpackage(onProgress?: (loaded: number, total: number) => void): Promise<void> {
     if (this._charsLoaded) {
       return this._preloadImageMap(CHARS_IMAGE_MAP, 'chars', onProgress);
@@ -1055,9 +1077,7 @@ class TextureCacheClass {
     });
   }
 
-  /**
-   * 加载 panels 分包（签到/仓库/合成线/装修大卡等），然后预加载图片
-   */
+  /** 预加载 panels 图片；当前配置下走 CDN，非 CDN 配置才会加载微信分包。 */
   loadPanelsSubpackage(onProgress?: (loaded: number, total: number) => void): Promise<void> {
     if (this._panelsLoaded) {
       return this._preloadImageMap(PANELS_IMAGE_MAP, 'panels', onProgress);
@@ -1089,10 +1109,7 @@ class TextureCacheClass {
     });
   }
 
-  /**
-   * 加载 deco 分包，然后预加载分包中的图片
-   * 在进入花店场景前调用
-   */
+  /** 预加载 deco 图片；当前配置下走 CDN，非 CDN 配置才会加载微信分包。 */
   loadDecoSubpackage(onProgress?: (loaded: number, total: number) => void): Promise<void> {
     if (this._decoLoaded) {
       return this._preloadImageMap(DECO_IMAGE_MAP, 'deco', onProgress);
@@ -1429,25 +1446,24 @@ class TextureCacheClass {
   }
 
   /**
-   * CDN 未命中时会回退到本地分包路径；若对应分包还没加载，图片会先 onerror。
-   * 这里按原始逻辑路径补加载分包后重试一次，避免房壳/家具在 CDN 同步期间直接空白。
+   * 图片 onerror 时尝试加载微信分包后重试。
+   * chars/panels/deco/audio 在 CdnConfig.cdnDirs 中，安装包不携带、game.json 也无对应分包，
+   * 不得 loadSubpackage（必报 does not exist）；仅 items 等非 CDN 路径可走分包兜底。
    */
   private async _ensureSubpackageForLocalFallback(path: string): Promise<boolean> {
     const normalized = path.replace(/^\/+/, '').replace(/^minigame\//, '');
-    if (normalized.startsWith('subpkg_deco/') && !this._decoLoaded) {
-      await this._loadSubpackage('deco');
-      this._decoLoaded = true;
-      return true;
+    if (CdnAssetService.isCdnPath(normalized)) {
+      return false;
     }
-    if (normalized.startsWith('subpkg_chars/') && !this._charsLoaded) {
-      await this._loadSubpackage('chars');
-      this._charsLoaded = true;
-      return true;
-    }
-    if (normalized.startsWith('subpkg_panels/') && !this._panelsLoaded) {
-      await this._loadSubpackage('panels');
-      this._panelsLoaded = true;
-      return true;
+    if (normalized.startsWith('subpkg_items/') && !this._itemsLoaded) {
+      try {
+        await this._loadSubpackage('items');
+        this._itemsLoaded = true;
+        return true;
+      } catch (err) {
+        console.warn('[TextureCache] items 分包加载失败，本地兜底不可用', err);
+        return false;
+      }
     }
     return false;
   }

@@ -1,0 +1,26 @@
+Vertical mobile game weekend event promo panel, 3:4 aspect, same pink-lavender diamond sparkle card style as reference v5, chocolate outlines, kawaii cel-shaded flower-shop merge game.
+
+White margins outside card RGB 255,255,255 only, crisp edges no halos.
+
+LAYOUT PRIORITY: typography and promotion text dominate, illustration is secondary support.
+
+TOP 52 percent of card = HUGE readable Chinese promo text, fills width, poster advertising layout:
+Line1 gold ribbon banner: 周末限时 very large bold.
+Line2 headline: 花愿获得提升 enormous pink-white stroke thick.
+Line3 giant yellow-orange 50% digits taking 18 percent of card height, sparkle, upward arrow.
+Line4 purple pill: 超值福利 看广告激活 large.
+Line5: 今日全部订单花愿额外加成 medium-large clear.
+Line6 small tag: 次日0点重置 with clock icon.
+
+BOTTOM 33 percent ONLY small illustration scene:
+Shopkeeper waist-up behind counter medium-small NOT poster-sized, about same head size as customers.
+Four customer chibi busts in front, SAME scale as shopkeeper, clearly buying flower bouquets, busy weekend shop queue.
+Wooden counter, bouquets, soft shelves, petals. NO coins NO shop stall HUD icon.
+
+BOTTOM 15 percent: blank coral-gold pill button absolutely NO text.
+
+Top-right red close white X.
+
+All Chinese promo text must be very large clear legible, main visual focus is words not character art.
+
+No watermark.

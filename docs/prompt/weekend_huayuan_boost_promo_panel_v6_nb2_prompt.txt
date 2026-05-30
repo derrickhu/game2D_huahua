@@ -1,0 +1,21 @@
+Vertical mobile game weekend event promo panel illustration layer, 3:4 aspect, same pink-lavender diamond sparkle card style as reference v5, chocolate outlines, kawaii merge flower-shop cel shading.
+
+White margins outside card only RGB 255,255,255, crisp edges.
+
+Card layout TOP to BOTTOM:
+
+TOP 42 percent of card interior: EMPTY decorative header field only — soft pink-lavender gradient, subtle sparkles, thin gold ribbon shape blank with NO text NO letters NO numbers NO Chinese characters. This zone is reserved for game UI text overlay.
+
+MIDDLE 40 percent: flower shop scene illustration ONLY:
+Shopkeeper girl waist-up behind counter, brown hair pink clip white apron, medium size about 28 percent of card height, NOT giant, NOT dominating frame.
+Three to four customers in front of counter, each customer bust waist-up nearly SAME scale as shopkeeper, clearly buying flowers, holding bouquets, happy faces visible, queue composition.
+Wooden counter, bouquets on counter, soft shop shelves background, petals, warm Saturday busy mood.
+NO coins, NO shop stall HUD icon, NO currency tokens.
+
+BOTTOM 18 percent: blank coral-gold gradient pill button NO text.
+
+Top-right red circle close white X.
+
+CRITICAL: absolutely NO readable text anywhere in entire image, no headline, no 50 percent, no Chinese, no watermark.
+
+Proportions must look logical: customers are NOT tiny ants, shopkeeper is NOT oversized poster.

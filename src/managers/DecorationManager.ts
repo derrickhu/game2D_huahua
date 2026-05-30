@@ -241,7 +241,6 @@ class DecorationManagerClass {
     const deco = DECO_MAP.get(decoId);
     if (!deco || !this.isAdUnlockDeco(decoId)) return false;
     if (!isDecoAllowedInScene(deco, CurrencyManager.state.sceneId)) return false;
-    if (!checkRequirement(deco.unlockRequirement).met) return false;
 
     this._adUnlockedDecos.add(decoId);
     this._save();

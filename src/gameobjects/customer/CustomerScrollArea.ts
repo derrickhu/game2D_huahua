@@ -269,6 +269,7 @@ export class CustomerScrollArea extends PIXI.Container {
     EventBus.on('customer:delivered', () => this.refresh());
     EventBus.on('customer:expired', () => this.refresh());
     EventBus.on('customer:timerTick', () => this.refresh());
+    EventBus.on('customer:rewardBonusChanged', () => this.refresh());
     EventBus.on('customer:queueReordered', () => {
       this._scrollContent.x = 0;
       this._velocity = 0;

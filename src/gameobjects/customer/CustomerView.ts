@@ -56,6 +56,12 @@ export const CARD_W = Math.max(
 export const CARD_H = 278;
 
 const REWARD_BADGE_Y = -12;
+/** 单行花愿胶囊尺寸（周末加成另起一颗，上下叠放） */
+const REWARD_BADGE_ICON = 22;
+const REWARD_BADGE_PAD_X = 8;
+const REWARD_BADGE_PAD_Y = 5;
+const REWARD_BADGE_CAPSULE_GAP = 4;
+const REWARD_BADGE_RADIUS = Math.round((REWARD_BADGE_ICON + REWARD_BADGE_PAD_Y * 2) / 2);
 
 export class CustomerView extends PIXI.Container {
   private _customer: CustomerInstance | null = null;
@@ -291,62 +297,92 @@ export class CustomerView extends PIXI.Container {
 
   private _rewardBadge: PIXI.Container | null = null;
 
-  private _buildRewardBadge(): void {
-    if (!this._customer) return;
-    const badge = new PIXI.Container();
-    badge.position.set(PANEL_W / 2, REWARD_BADGE_Y);
-    badge.eventMode = 'none';
-
-    const iconSize = 22;
+  /** 单行花愿/钻石胶囊（与改版前单颗徽章一致） */
+  private _makeRewardCapsule(
+    lineItems: { icon: string; value: number; prefix?: string; fill?: number }[],
+    fontSize = 16,
+  ): { node: PIXI.Container; w: number; h: number } {
+    const iconSize = REWARD_BADGE_ICON;
     const gap = 4;
-    let offsetX = 0;
-    const items: { icon: string; value: number }[] = [];
-
-    items.push({ icon: 'icon_huayuan', value: this._customer.huayuanReward });
-    if (this._customer.orderType === 'timed' && (this._customer.diamondReward ?? 0) > 0) {
-      items.push({ icon: 'icon_gem', value: this._customer.diamondReward ?? 0 });
-    }
+    const rowH = iconSize;
 
     const content = new PIXI.Container();
-    for (const item of items) {
+    let offsetX = 0;
+    for (const item of lineItems) {
       const tex = TextureCache.get(item.icon);
       if (tex) {
         const sp = new PIXI.Sprite(tex);
         sp.anchor.set(0, 0.5);
         sp.width = iconSize;
         sp.height = iconSize;
-        sp.position.set(offsetX, 0);
+        sp.position.set(offsetX, rowH / 2);
         content.addChild(sp);
         offsetX += iconSize + gap;
       }
-      const val = new PIXI.Text(`${item.value}`, {
-        fontSize: 16,
-        fill: 0xFFFFFF,
+      const val = new PIXI.Text(`${item.prefix ?? ''}${item.value}`, {
+        fontSize,
+        fill: item.fill ?? 0x7A4A2A,
         fontFamily: FONT_FAMILY,
         fontWeight: 'bold',
-        stroke: 0x000000,
-        strokeThickness: 3,
       });
       val.anchor.set(0, 0.5);
-      val.position.set(offsetX, 0);
+      val.position.set(offsetX, rowH / 2);
       content.addChild(val);
       offsetX += val.width + 8;
     }
 
-    const padX = 8;
-    const padY = 5;
-    const bw = offsetX - 8 + padX * 2;
-    const bh = iconSize + padY * 2;
+    const bw = content.width + REWARD_BADGE_PAD_X * 2;
+    const bh = rowH + REWARD_BADGE_PAD_Y * 2;
+    const cornerR = Math.min(REWARD_BADGE_RADIUS, bw / 2, bh / 2);
 
     const bg = new PIXI.Graphics();
-    bg.beginFill(0x000000, 0.45);
-    bg.drawRoundedRect(0, 0, bw, bh, bh / 2);
+    bg.beginFill(0xFFF2C2, 0.92);
+    bg.lineStyle(2, 0xE3B15C, 0.85);
+    bg.drawRoundedRect(0, 0, bw, bh, cornerR);
     bg.endFill();
 
-    content.position.set(padX, bh / 2);
-    badge.addChild(bg);
-    badge.addChild(content);
-    badge.pivot.set(bw, bh / 2);
+    content.position.set(REWARD_BADGE_PAD_X, REWARD_BADGE_PAD_Y);
+
+    const node = new PIXI.Container();
+    node.addChild(bg);
+    node.addChild(content);
+    return { node, w: bw, h: bh };
+  }
+
+  private _buildRewardBadge(): void {
+    if (!this._customer) return;
+    const badge = new PIXI.Container();
+    badge.position.set(PANEL_W / 2, REWARD_BADGE_Y);
+    badge.eventMode = 'none';
+
+    const baseItems: { icon: string; value: number }[] = [
+      { icon: 'icon_huayuan', value: this._customer.huayuanReward },
+    ];
+    if (this._customer.orderType === 'timed' && (this._customer.diamondReward ?? 0) > 0) {
+      baseItems.push({ icon: 'icon_gem', value: this._customer.diamondReward ?? 0 });
+    }
+
+    const capsules: { node: PIXI.Container; w: number; h: number }[] = [
+      this._makeRewardCapsule(baseItems, 16),
+    ];
+
+    const weekendBonus = this._customer.weekendHuayuanBonus ?? 0;
+    if (weekendBonus > 0) {
+      capsules.push(this._makeRewardCapsule([
+        { icon: 'icon_huayuan', value: weekendBonus, prefix: '+', fill: 0x2E7D32 },
+      ], 16));
+    }
+
+    const maxW = Math.max(...capsules.map((c) => c.w));
+    let y = 0;
+    for (const cap of capsules) {
+      cap.node.position.set(maxW - cap.w, y);
+      badge.addChild(cap.node);
+      y += cap.h + REWARD_BADGE_CAPSULE_GAP;
+    }
+    const totalH = y - (capsules.length > 1 ? REWARD_BADGE_CAPSULE_GAP : 0);
+
+    badge.pivot.set(maxW, totalH / 2);
     badge.zIndex = 8;
     this.addChild(badge);
     this._rewardBadge = badge;

@@ -19,11 +19,14 @@ const MERGE_COMBO_GAP_MS = 2400;
 /** 连续合成：倍速升幅收窄 + 高档略压音量，减轻「又尖又吵」 */
 const MERGE_SUCCESS_PLAYBACK_RATES: readonly number[] = [1.0, 1.05, 1.1, 1.14, 1.18];
 const MERGE_SUCCESS_VOLUME_SCALE: readonly number[] = [1.0, 0.97, 0.93, 0.9, 0.86];
+/** BGM 延后到用户交互后启动，避免首屏阶段触发原生音频解码。 */
+const BGM_ENABLED = true;
 
 class SoundSystemClass {
   private _inited = false;
   private _mergeComboIndex = 0;
   private _mergeLastTimeMs = 0;
+  private _mainBgmStarted = false;
 
   init(): void {
     if (this._inited) return;
@@ -36,10 +39,6 @@ class SoundSystemClass {
 
     console.log(`[SoundSystem] 注册 ${SOUND_DEFS.length} 个音效, ${BGM_DEFS.length} 个 BGM`);
     SettingsManager.init();
-    void AudioManager.preload([
-      ...BGM_DEFS.map(def => def.src),
-      ...SOUND_DEFS.map(def => def.src),
-    ]);
 
     // ---- 绑定事件 → 音效 ----
 
@@ -81,7 +80,11 @@ class SoundSystemClass {
     const canvas = Game.app?.view as HTMLCanvasElement | undefined;
     if (canvas) {
       canvas.addEventListener('pointerdown', () => {
-        AudioManager.resumeOnInteraction();
+        if (BGM_ENABLED && !this._mainBgmStarted && SceneManager.current?.name === 'main') {
+          this._mainBgmStarted = true;
+          this.playMainBGM();
+        }
+        if (BGM_ENABLED) AudioManager.resumeOnInteraction();
       });
     }
 
@@ -96,7 +99,7 @@ class SoundSystemClass {
     //   - passive：自身不触发事件，不参与事件冒泡处理链，.on() 回调不会被调用
     //   - static：触发事件并参与 hitTest，能接收子对象冒泡上来的事件
     // 参考：https://github.com/pixijs/pixijs/discussions/10388
-    const stage = Game.app?.stage;
+    const stage = Game.stage;
     if (stage) {
       stage.eventMode = 'static';
       stage.hitArea = new PIXI.Rectangle(
@@ -120,20 +123,22 @@ class SoundSystemClass {
       });
     }
 
-    // 尝试自动播放主 BGM（可能因自动播放策略被拦截，首次交互时会重试）
-    this.playMainBGM();
+    // BGM 延后到首次用户交互后启动，降低首屏原生音频解码/自动播放策略带来的风险。
   }
 
   /** 播放主玩法 BGM */
   playMainBGM(): void {
+    if (!BGM_ENABLED) return;
     const bgm = BGM_DEFS.find(b => b.name === 'bgm_main');
     if (bgm) {
+      this._mainBgmStarted = true;
       AudioManager.playBGM(bgm.src, bgm.volume);
     }
   }
 
   /** 花店 / 装修全屏场景 BGM */
   playShopBGM(): void {
+    if (!BGM_ENABLED) return;
     const bgm = BGM_DEFS.find(b => b.name === 'bgm_shop');
     if (bgm) {
       AudioManager.playBGM(bgm.src, bgm.volume);
@@ -144,6 +149,7 @@ class SoundSystemClass {
 
   /** 播放花语剧情 BGM */
   playStoryBGM(): void {
+    if (!BGM_ENABLED) return;
     const bgm = BGM_DEFS.find(b => b.name === 'bgm_story');
     if (bgm) {
       AudioManager.playBGM(bgm.src, bgm.volume);
@@ -154,6 +160,7 @@ class SoundSystemClass {
 
   /** 新手引导开场四格插画：源 `新手.mp3` 首 10s，循环至故事结束 */
   playTutorialStoryIntroBGM(): void {
+    if (!BGM_ENABLED) return;
     const bgm = BGM_DEFS.find(b => b.name === 'bgm_tutorial_story_intro');
     if (bgm) {
       AudioManager.playBGM(bgm.src, bgm.volume, { loop: true });

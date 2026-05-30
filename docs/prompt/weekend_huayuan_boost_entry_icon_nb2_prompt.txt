@@ -1,0 +1,19 @@
+Single mobile game HUD icon asset, square 1:1 canvas, SAME ART DNA as the game's existing market-stall shop HUD icon: thick warm chocolate-brown soft outlines never pure black, chunky rounded toy-like forms, gentle cel shading with soft gradients, bright white specular edge highlights, polished casual 2D merge flower-shop game, isometric three-quarter view from front-above.
+
+CRITICAL SHAPE RULES:
+- ONE freestanding cute OBJECT only, centered with generous empty margin.
+- NOT a square button, NOT a rounded-rectangle badge, NOT a UI panel frame, NOT a flat icon plate, NOT a circular medal with square background.
+- Silhouette must be irregular organic prop shape like a stall or basket, readable at 128px.
+
+SUBJECT — weekend limited flower-wish bonus prop:
+- A small woven gift basket or wooden crate overflowing with shiny pink cherry-blossom flower-wish coins and two gold coins, petals floating up.
+- Leaning on the basket: a tiny desk calendar prop with two highlighted weekend day blocks in pink and gold abstract squares no legible digits required.
+- A curved satin ribbon banner wrapped around the basket front with bold stylized plus 50 percent in sunny yellow with chocolate stroke, largest accent on the object.
+- A small blank pink weekend ribbon flag on a stick optional.
+- Tiny white four-point star sparkles like the shop stall icon.
+
+NO house facade, NO shop awning duplicate, NO square UI chrome.
+
+Background flat uniform magenta chroma exactly FF00FF edge to edge, no gradient backdrop, no white border, no drop shadow on background.
+
+No watermark, no QR. Minimal readable text only as the plus 50 percent graphic on the ribbon.

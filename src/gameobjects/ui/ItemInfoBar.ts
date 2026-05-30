@@ -953,13 +953,13 @@ export class ItemInfoBar extends PIXI.Container {
 
   private _getDescription(def: ItemDef): string {
     if (isLuckyCoinItem(def.id)) {
-      return '拖到物品上试试就可以';
+      return '古老的金币，拖到物品上可随机让物品升级或降级。';
     }
     if (isCrystalBallItem(def.id)) {
-      return '拖到鲜花或饮品（含蝴蝶标本）上，确认后可稳定升一级（满级不可用）。';
+      return '神奇的五彩宝石，拖到物品上，可使物品升一级。';
     }
     if (isGoldenScissorsItem(def.id)) {
-      return '拖到 2 级及以上的鲜花或饮品（含蝴蝶标本）上，确认后拆成两个低一级的同线物品。';
+      return '金剪刀可以把物品拆成两个低一级的同款。';
     }
     if (def.interactType === InteractType.TOOL) {
       const pd = findBoardProducerDef(def.id);

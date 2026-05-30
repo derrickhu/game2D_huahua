@@ -1,0 +1,16 @@
+Vertical mobile game weekend promo panel, 3:4, SAME successful layout as reference v7: pink-lavender sparkle card, huge Chinese promo text top, blank button bottom, white outer margins, chocolate outlines kawaii style.
+
+KEEP from v7 exactly: enormous top typography 周末限时, 花愿获得提升, giant 50 percent, 超值福利 看广告激活, 今日全部订单花愿额外加成, 次日0点重置, blank coral-gold button, red close X.
+
+FIX illustration proportions in lower 33 percent only:
+Wide counter scene, eye-level view.
+Shopkeeper girl waist-up behind counter, head height equals customer heads, she is NOT taller than customers, NOT close-up portrait, NOT filling half the illustration.
+Four customers waist-up in front of counter, each customer head and shoulders SAME size as shopkeeper, clearly interacting buying flower bouquets.
+Balanced group composition like a busy shop queue photo, logical human scale.
+Wooden counter, colorful bouquets, soft shop background, petals.
+
+NO coins, NO shop HUD icons, NO giant single character dominating frame.
+
+Readable large Chinese text required. Blank button no text.
+
+No watermark.

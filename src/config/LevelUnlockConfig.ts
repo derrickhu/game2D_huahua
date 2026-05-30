@@ -6,18 +6,14 @@
  *  - entries：本星级新开放的内容（卡片区，配 icon + 描述）
  *
  * 仅做 UI 展示数据；具体玩法门控仍在各自 Config（如 MERGE_COMPANION_MIN_GLOBAL_LEVEL=3）；
- * AffinityManager.unlockForLevel(level) 已挂在 LevelManager 的 star:levelUp 链上独立处理。
+ * 友谊卡系统仅由 2 级功能入口控制，不再按熟客等级生成解锁项。
  */
 
-import { AFFINITY_MAP, AFFINITY_UNLOCK_LEVELS } from './AffinityConfig';
-import {
-  WISHING_FOUNTAIN_UNLOCK_LEVEL,
-  WORLD_MAP_UNLOCK_LEVEL,
-} from './WorldMapConfig';
+import { WORLD_MAP_UNLOCK_LEVEL } from './WorldMapConfig';
 
 export type LevelUnlockEntryKind =
   | 'feature'        // 玩法功能解锁（花语泡泡 / 组合单 / 高阶宝箱等）
-  | 'affinity'       // 熟客解锁
+  | 'affinity'       // 兼容旧熟客解锁卡片类型（当前不再自动生成）
   | 'shop'           // 商店货架升档
   | 'map'            // 大地图入口
   | 'tool'           // 高阶工具线
@@ -49,31 +45,17 @@ export interface LevelUnlockDef {
   entries: LevelUnlockEntry[];
 }
 
-/**
- * 把已配置的「熟客解锁等级」自动转成 LevelUnlockEntry，避免两边维护。
- */
-function affinityEntriesForLevel(level: number): LevelUnlockEntry[] {
-  return Object.entries(AFFINITY_UNLOCK_LEVELS)
-    .filter(([, lv]) => lv === level)
-    .map(([typeId]) => {
-      const def = AFFINITY_MAP.get(typeId);
-      return {
-        kind: 'affinity' as const,
-        title: def ? `熟客 · ${def.bondName}` : `熟客 · ${typeId}`,
-        desc: def
-          ? `${def.persona}登场，订单互动可提升 Bond。`
-          : '新熟客登场，订单互动可提升 Bond。',
-        iconKey: `customer_${typeId}`,
-        payload: typeId,
-      };
-    });
-}
-
-/** 主表：仅维护「玩法/商店/地图/工具/装修」类卡片，熟客自动并入。 */
+/** 主表：仅维护「玩法/商店/地图/工具/装修」类卡片。 */
 const LEVEL_UNLOCK_BASE: Record<number, Omit<LevelUnlockDef, 'level'>> = {
   2: {
     ceremonyTitle: '初春萌芽',
     entries: [
+      {
+        kind: 'feature',
+        title: '友谊卡',
+        desc: '图鉴入口开放，完成订单有机会收集熟客友谊卡。',
+        iconKey: 'icon_affinity_card',
+      },
       {
         kind: 'tool',
         title: '育苗盘 Lv.3',
@@ -92,6 +74,12 @@ const LEVEL_UNLOCK_BASE: Record<number, Omit<LevelUnlockDef, 'level'>> = {
         iconKey: 'ui_lvup_companion_bubble',
       },
       {
+        kind: 'feature',
+        title: '许愿喷泉',
+        desc: '花店主页新增许愿入口，攒许愿硬币即可抽奖。',
+        iconKey: 'icon_wishing_nav',
+      },
+      {
         kind: 'tool',
         title: '冷饮搅拌器 Lv.1/2',
         desc: '冷饮线工具开放，饮品订单接入。',
@@ -105,26 +93,14 @@ const LEVEL_UNLOCK_BASE: Record<number, Omit<LevelUnlockDef, 'level'>> = {
       },
     ],
   },
-  [WISHING_FOUNTAIN_UNLOCK_LEVEL]: {
+  4: {
     ceremonyTitle: '熟客初识',
     entries: [
-      {
-        kind: 'feature',
-        title: '组合订单提速',
-        desc: '组合订单出现更频繁，完成奖励更丰厚。',
-        iconKey: 'icon_quest',
-      },
       {
         kind: 'tool',
         title: '园艺线 Lv.5 工具',
         desc: '园艺产线再次升档。',
         iconKey: 'tool_plant_5',
-      },
-      {
-        kind: 'feature',
-        title: '许愿喷泉',
-        desc: '花店主页新增许愿入口，攒许愿硬币即可抽奖。',
-        iconKey: 'icon_wishing_nav',
       },
     ],
   },
@@ -137,12 +113,7 @@ const LEVEL_UNLOCK_BASE: Record<number, Omit<LevelUnlockDef, 'level'>> = {
         desc: '花束线开张，订单需求会出现「花束」槽。',
         iconKey: 'tool_arrange_1',
       },
-      {
-        kind: 'feature',
-        title: '高阶礼包',
-        desc: '每逢 5 级可额外领取一份高阶宝箱。',
-        iconKey: 'ui_lvup_high_chest',
-      },
+      // 高阶礼包：每逢 5 级内部发放，无独立实物；不在升星「新功能解锁」区展示
     ],
   },
   6: {
@@ -380,19 +351,12 @@ const LEVEL_UNLOCK_BASE: Record<number, Omit<LevelUnlockDef, 'level'>> = {
 
 const LEVEL_UNLOCKS: Map<number, LevelUnlockDef> = (() => {
   const map = new Map<number, LevelUnlockDef>();
-  const allLevels = new Set<number>([
-    ...Object.keys(LEVEL_UNLOCK_BASE).map(s => Number(s)),
-    ...Object.values(AFFINITY_UNLOCK_LEVELS),
-  ]);
+  const allLevels = new Set<number>(Object.keys(LEVEL_UNLOCK_BASE).map(s => Number(s)));
   for (const lvNum of allLevels) {
     const lv = Number(lvNum);
     if (!Number.isFinite(lv) || lv <= 0) continue;
     const base = LEVEL_UNLOCK_BASE[lv];
-    const affinities = affinityEntriesForLevel(lv);
-    const entries: LevelUnlockEntry[] = [
-      ...affinities,
-      ...(base?.entries ?? []),
-    ];
+    const entries: LevelUnlockEntry[] = base?.entries ?? [];
     if (entries.length === 0) continue;
     map.set(lv, {
       level: lv,

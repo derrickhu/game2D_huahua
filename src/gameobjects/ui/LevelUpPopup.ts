@@ -18,19 +18,39 @@ import {
   getLevelUnlockDef,
   getLevelUnlocksInRange,
   type LevelUnlockDef,
+  type LevelUnlockEntryKind,
 } from '@/config/LevelUnlockConfig';
-import { createLevelUnlockCard } from '@/gameobjects/ui/LevelUnlockCard';
 import { TextureCache } from '@/utils/TextureCache';
 import { RewardFlyCoordinator, type RewardFlyItem } from '@/core/RewardFlyCoordinator';
 import {
-  layoutObtainStyleRewardBlock,
   createItemObtainRewardCell,
+  layoutObtainStyleRewardBlock,
+  layoutIconOnlyGrid,
   type ItemObtainEntry,
 } from '@/gameobjects/ui/ItemObtainOverlay';
 
 const LEVEL_UP_MASK_ALPHA = 0.62;
-/** 正式升级内容整体上移，给下方解锁卡片留出空间 */
-const LEVEL_UP_CONTENT_OFFSET_Y = -70;
+/** 正式升级内容整体上移，给下方解锁区留出空间 */
+const LEVEL_UP_CONTENT_OFFSET_Y = -100;
+
+/** 升星「解锁新家具」单行最多预览件数，超出显示「等共 N 件家具」 */
+const LEVEL_UP_DECO_PREVIEW_MAX = 5;
+
+/** 升星弹窗「新功能解锁 / 解锁新家具」图标网格（格大于顶部奖励 CELL=96，更易辨认） */
+const LEVEL_UP_UNLOCK_GRID_OPTS = {
+  cellSize: 118,
+  gap: 18,
+  maxCols: 5,
+  titleFontSize: 24,
+  labelFontSize: 17,
+  titleToGridGap: 20,
+} as const;
+
+const LEVEL_UNLOCK_DEFAULT_ICON: Partial<Record<LevelUnlockEntryKind, string>> = {
+  feature: 'ui_lvup_companion_bubble',
+  shop: 'icon_shop_nb2',
+  map: 'ui_lvup_world_map',
+};
 
 export interface LevelUpRewardPayload {
   huayuan: number;
@@ -421,13 +441,7 @@ export class LevelUpPopup extends PIXI.Container {
     W: number,
     defs: LevelUnlockDef[],
   ): void {
-    let hintNode: PIXI.Text | null = null;
-    for (const child of content.children) {
-      if (child instanceof PIXI.Text && (child as PIXI.Text).text === '点击继续') {
-        hintNode = child as PIXI.Text;
-        break;
-      }
-    }
+    const hintNode = this._findClickContinueHint(content);
     if (!hintNode) return;
 
     const allEntries = defs
@@ -435,86 +449,30 @@ export class LevelUpPopup extends PIXI.Container {
       .filter(e => e.kind === 'feature' || e.kind === 'shop' || e.kind === 'map');
     if (allEntries.length === 0) return;
 
-    const singleCard = allEntries.length === 1;
-    const COLS = singleCard ? 1 : 2;
-    const COL_GAP = 12;
-    const ROW_GAP = 10;
-    const sideMargin = 32;
-    const usableW = W - sideMargin * 2;
-    const cardW = singleCard
-      ? Math.min(340, usableW - 28)
-      : Math.floor((usableW - (COLS - 1) * COL_GAP) / COLS);
-    const startY = hintNode.y - 6;
+    const gridEntries: ItemObtainEntry[] = allEntries.map(e => ({
+      kind: 'unlock_icon',
+      iconKey: e.iconKey ?? LEVEL_UNLOCK_DEFAULT_ICON[e.kind] ?? 'icon_book',
+      label: e.title,
+    }));
 
-    this._drawSectionDivider(content, W, startY - 8, '新功能解锁');
-
-    const gridTop = startY + 30;
-    const gridLeft = (W - (COLS * cardW + (COLS - 1) * COL_GAP)) / 2;
-
-    let curRow = 0;
-    let rowMaxH = 0;
-    let bottomY = gridTop;
-    for (let i = 0; i < allEntries.length; i++) {
-      const col = i % COLS;
-      const row = Math.floor(i / COLS);
-      if (row !== curRow) {
-        bottomY += rowMaxH + ROW_GAP;
-        rowMaxH = 0;
-        curRow = row;
-      }
-      const { view, height } = createLevelUnlockCard(allEntries[i]!, {
-        width: cardW,
-        iconSize: singleCard ? 62 : 52,
-        titleFontSize: singleCard ? 16 : 14,
-        descFontSize: singleCard ? 12 : 11,
-        padding: singleCard ? 14 : 10,
-      });
-      view.position.set(gridLeft + col * (cardW + COL_GAP), bottomY);
-      content.addChild(view);
-      rowMaxH = Math.max(rowMaxH, height);
-    }
-    bottomY += rowMaxH;
-
-    hintNode.position.y = bottomY + 16;
+    const bottomY = layoutIconOnlyGrid(
+      content,
+      W,
+      hintNode.y - 6,
+      '新功能解锁',
+      gridEntries,
+      { ...LEVEL_UP_UNLOCK_GRID_OPTS, topPadding: 28 },
+    );
+    hintNode.position.y = bottomY + 20;
   }
 
-  /** 统一的「奶金细线 + 标题」分隔条，集中样式以便整页改风 */
-  private _drawSectionDivider(content: PIXI.Container, W: number, y: number, title: string): void {
-    const cx = W / 2;
-    const txt = new PIXI.Text(title, {
-      fontSize: 15,
-      fill: 0x6b4421,
-      fontFamily: FONT_FAMILY,
-      fontWeight: 'bold',
-      stroke: 0xfff6df,
-      strokeThickness: 2,
-    });
-    txt.anchor.set(0.5, 0);
-    txt.position.set(cx, y);
-    txt.eventMode = 'none';
-
-    const pillW = Math.max(112, Math.ceil(txt.width + 34));
-    const pillH = 26;
-    const pill = new PIXI.Graphics();
-    pill.beginFill(0xfff0c4, 0.96);
-    pill.drawRoundedRect(cx - pillW / 2, y - 2, pillW, pillH, 13);
-    pill.endFill();
-    pill.lineStyle(1.5, 0xe2b65e, 0.86);
-    pill.drawRoundedRect(cx - pillW / 2, y - 2, pillW, pillH, 13);
-    pill.eventMode = 'none';
-
-    const half = Math.max(72, Math.floor(pillW / 2) + 18);
-    const line = new PIXI.Graphics();
-    const lineY = y + Math.floor(pillH / 2) - 2;
-    line.lineStyle(1.4, 0xE6C97A, 0.68);
-    line.moveTo(cx - 130, lineY);
-    line.lineTo(cx - half, lineY);
-    line.moveTo(cx + half, lineY);
-    line.lineTo(cx + 130, lineY);
-    line.eventMode = 'none';
-    content.addChild(line);
-    content.addChild(pill);
-    content.addChild(txt);
+  private _findClickContinueHint(content: PIXI.Container): PIXI.Text | null {
+    for (const child of content.children) {
+      if (child instanceof PIXI.Text && child.text === '点击继续') {
+        return child;
+      }
+    }
+    return null;
   }
 
   // ── 解锁家具展示区 ──────────────────────────────────
@@ -525,23 +483,8 @@ export class LevelUpPopup extends PIXI.Container {
     decos: DecoDef[],
     styles: { name: string }[],
   ): void {
-    let hintNode: PIXI.Text | null = null;
-    for (const child of content.children) {
-      if (child instanceof PIXI.Text && (child as PIXI.Text).text === '点击继续') {
-        hintNode = child as PIXI.Text;
-        break;
-      }
-    }
+    const hintNode = this._findClickContinueHint(content);
     if (!hintNode) return;
-
-    const COLS = 2;
-    const MAX_SHOW = 6;
-    const ICON_SIZE = 58;
-    const CELL_W = 150;
-    const CELL_H = 94;
-    const COL_GAP = 12;
-    const ROW_GAP = 8;
-    const NAME_FONT = 12;
 
     const RARITY_ORDER: Record<string, number> = {
       [DecoRarity.LIMITED]: 0,
@@ -554,119 +497,34 @@ export class LevelUpPopup extends PIXI.Container {
     );
 
     const totalCount = sorted.length;
-    const hasOverflow = totalCount > MAX_SHOW;
-    const displayItems = hasOverflow ? sorted.slice(0, MAX_SHOW - 1) : sorted;
+    const gridEntries: ItemObtainEntry[] = sorted.map(item => ({
+      kind: 'unlock_icon',
+      iconKey: item.icon,
+      label: item.name,
+    }));
 
-    const startY = hintNode.y - 6;
+    const styleCaption =
+      styles.length > 0 ? `新风格：${styles.map(s => s.name).join('、')}` : undefined;
 
-    this._drawSectionDivider(content, W, startY - 8, '解锁新家具');
-
-    let captionBottom = startY + 26;
-    if (styles.length > 0) {
-      const styleNames = styles.map(s => s.name).join('、');
-      const styleHint = new PIXI.Text(`新风格：${styleNames}`, {
-        fontSize: 12,
-        fill: 0xfff0c8,
-        fontFamily: FONT_FAMILY,
-        stroke: 0x5d4037,
-        strokeThickness: 1.5,
-      });
-      styleHint.anchor.set(0.5, 0);
-      styleHint.position.set(W / 2, captionBottom);
-      styleHint.eventMode = 'none';
-      content.addChild(styleHint);
-      captionBottom += styleHint.height + 4;
-    }
-
-    const gridTop = captionBottom;
-    const gridW = COLS * CELL_W + (COLS - 1) * COL_GAP;
-    const gridLeft = (W - gridW) / 2;
-
-    const RARITY_ACCENT_COLOR: Record<string, number> = {
-      [DecoRarity.LIMITED]: 0xFF9800,
-      [DecoRarity.RARE]: 0x64B5F6,
-      [DecoRarity.FINE]: 0x81C784,
-      [DecoRarity.COMMON]: 0xDEC090,
-    };
-    const RARITY_BADGE_FILL: Record<string, number> = {
-      [DecoRarity.LIMITED]: 0xFFE0B2,
-      [DecoRarity.RARE]: 0xCFE6FF,
-      [DecoRarity.FINE]: 0xCDEBD0,
-      [DecoRarity.COMMON]: 0xFFF1D6,
-    };
-
-    for (let i = 0; i < displayItems.length; i++) {
-      const item = displayItems[i]!;
-      const col = i % COLS;
-      const row = Math.floor(i / COLS);
-      const cx = gridLeft + col * (CELL_W + COL_GAP) + CELL_W / 2;
-      const cellTop = gridTop + row * (CELL_H + ROW_GAP);
-
-      const accentColor = RARITY_ACCENT_COLOR[item.rarity] ?? 0xDEC090;
-      const badgeFill = RARITY_BADGE_FILL[item.rarity] ?? 0xFFF1D6;
-      const cellBg = new PIXI.Graphics();
-      cellBg.beginFill(0x3b2314, 0.14);
-      cellBg.drawRoundedRect(cx - CELL_W / 2 + 3, cellTop + 4, CELL_W, CELL_H, 14);
-      cellBg.endFill();
-      cellBg.beginFill(0xfffbf0, 0.98);
-      cellBg.drawRoundedRect(cx - CELL_W / 2, cellTop, CELL_W, CELL_H, 14);
-      cellBg.endFill();
-      cellBg.lineStyle(2, 0xe6bf71, 0.92);
-      cellBg.drawRoundedRect(cx - CELL_W / 2, cellTop, CELL_W, CELL_H, 14);
-      cellBg.lineStyle(1.1, 0xffffff, 0.55);
-      cellBg.drawRoundedRect(cx - CELL_W / 2 + 4, cellTop + 4, CELL_W - 8, CELL_H - 8, 11);
-      cellBg.eventMode = 'none';
-      content.addChild(cellBg);
-
-      const iconBadge = new PIXI.Graphics();
-      iconBadge.beginFill(badgeFill, 0.95);
-      iconBadge.drawRoundedRect(cx - ICON_SIZE / 2 - 5, cellTop + 8, ICON_SIZE + 10, ICON_SIZE + 10, 14);
-      iconBadge.endFill();
-      iconBadge.lineStyle(1.6, accentColor, 0.5);
-      iconBadge.drawRoundedRect(cx - ICON_SIZE / 2 - 5, cellTop + 8, ICON_SIZE + 10, ICON_SIZE + 10, 14);
-      iconBadge.beginFill(0xffffff, 0.22);
-      iconBadge.drawRoundedRect(cx - ICON_SIZE / 2, cellTop + 12, ICON_SIZE, 13, 8);
-      iconBadge.endFill();
-      iconBadge.eventMode = 'none';
-      content.addChild(iconBadge);
-
-      this._addDeferredIconSprite(content, item.icon, cx, cellTop + 13 + ICON_SIZE / 2, ICON_SIZE);
-
-      const name = new PIXI.Text(item.name, {
-        fontSize: NAME_FONT,
-        fill: 0x5b3a1d,
-        fontFamily: FONT_FAMILY,
-        fontWeight: 'bold',
-        wordWrap: true,
-        wordWrapWidth: CELL_W - 14,
-        align: 'center',
-      });
-      name.anchor.set(0.5, 0);
-      name.position.set(cx, cellTop + 14 + ICON_SIZE + 4);
-      name.eventMode = 'none';
-      content.addChild(name);
-    }
-
-    const displayRows = Math.ceil(displayItems.length / COLS);
-    let bottomY = gridTop + displayRows * (CELL_H + ROW_GAP);
-
-    if (hasOverflow) {
-      const remaining = totalCount - displayItems.length;
-      const overflow = new PIXI.Text(`…等 ${remaining} 件家具可在装修面板查看`, {
-        fontSize: 12,
-        fill: 0xfff0c8,
-        fontFamily: FONT_FAMILY,
-        stroke: 0x5d4037,
-        strokeThickness: 1.5,
-      });
-      overflow.anchor.set(0.5, 0);
-      overflow.position.set(W / 2, bottomY + 2);
-      overflow.eventMode = 'none';
-      content.addChild(overflow);
-      bottomY += 20;
-    }
-
-    hintNode.position.y = bottomY + 18;
+    const bottomY = layoutIconOnlyGrid(
+      content,
+      W,
+      hintNode.y - 6,
+      '解锁新家具',
+      gridEntries,
+      {
+        ...LEVEL_UP_UNLOCK_GRID_OPTS,
+        topPadding: 16,
+        maxShow: LEVEL_UP_DECO_PREVIEW_MAX,
+        caption: styleCaption,
+        overflowText:
+          totalCount > LEVEL_UP_DECO_PREVIEW_MAX
+            ? `等共 ${totalCount} 件家具`
+            : undefined,
+        overflowFontSize: 16,
+      },
+    );
+    hintNode.position.y = bottomY + 22;
   }
 
   private _dismiss(): void {

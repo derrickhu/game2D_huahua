@@ -176,6 +176,20 @@ class CdnAssetServiceClass {
     }
   }
 
+  clearAllCache(): void {
+    const fs = this._getFs();
+    const root = this._getCacheRootPath();
+    if (!fs || !root) return;
+    this._localExistsCache.clear();
+    this._accessLog.clear();
+    try {
+      fs.rmdirSync(root, true);
+      console.log('[CDN] 已清空本地 CDN 缓存');
+    } catch (e) {
+      console.warn('[CDN] 清空本地 CDN 缓存失败:', e);
+    }
+  }
+
   private async _downloadWithRetry(logicalPath: string): Promise<boolean> {
     const fs = this._getFs();
     if (!fs || !this._config.baseUrl) return false;
@@ -278,6 +292,9 @@ class CdnAssetServiceClass {
   private _isCacheValid(logicalPath: string): boolean {
     if (!this._cacheFileExists(logicalPath)) return false;
     const entry = this._manifest?.files?.[logicalPath];
+    if (entry?.size && this._getLocalFileSize(this._getCachePath(logicalPath)) !== entry.size) {
+      return false;
+    }
     if (!entry?.hash) return true;
     return this._readCachedHash(logicalPath) === entry.hash;
   }
@@ -306,6 +323,16 @@ class CdnAssetServiceClass {
     }
   }
 
+  private _getLocalFileSize(path: string): number {
+    const fs = this._getFs();
+    try {
+      const stat = fs?.statSync(path);
+      return Number(stat?.size || 0);
+    } catch (_) {
+      return 0;
+    }
+  }
+
   private _readCachedHash(logicalPath: string): string | null {
     const fs = this._getFs();
     try {
@@ -321,8 +348,12 @@ class CdnAssetServiceClass {
   }
 
   private _getCachePath(logicalPath: string): string {
+    return `${this._getCacheRootPath()}/${logicalPath}`;
+  }
+
+  private _getCacheRootPath(): string {
     const userDataPath = this._getUserDataPath();
-    return `${userDataPath}/${this._config.cacheRootName}/${logicalPath}`;
+    return userDataPath ? `${userDataPath}/${this._config.cacheRootName}` : '';
   }
 
   private _ensureCacheDir(filePath: string): void {

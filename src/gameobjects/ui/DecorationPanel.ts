@@ -42,6 +42,7 @@ import { BOARD_BAR_HEIGHT, DESIGN_WIDTH, FONT_FAMILY, COLORS } from '@/config/Co
 import { RoomLayoutManager } from '@/managers/RoomLayoutManager';
 import { setPendingPlaceDeco } from '@/core/DecoPlaceIntent';
 import { TutorialManager, TutorialStep } from '@/managers/TutorialManager';
+import { createTutorialStyleModalFrame } from '@/gameobjects/ui/TutorialStyleModalFrame';
 
 /** 全宽底栏：与 NB2 全幅贴边原型一致（旧版左右各留边会造成左侧大缝） */
 const PANEL_W = DESIGN_WIDTH;
@@ -299,6 +300,7 @@ function shouldShowLockedDecoPreview(deco: DecoDef, sceneOk: boolean): boolean {
 
 function shouldUseNextLevelUnlockLabel(deco: DecoDef, sceneOk: boolean): boolean {
   if (!sceneOk) return false;
+  if (DecorationManager.isAdUnlockDeco(deco.id)) return false;
   const lv = deco.unlockRequirement?.level;
   return lv !== undefined && lv > 0 && LevelManager.level === lv - 1;
 }
@@ -1957,12 +1959,68 @@ export class DecorationPanel extends PIXI.Container {
     }
   }
 
-  /** 广告完成后：提示购买资格已解锁，但家具仍需花愿购入 */
+  /** 广告资格弹层：花愿说明行（居中） */
+  private _layoutAdGatePurchaseHint(
+    mount: PIXI.Container,
+    deco: DecoDef,
+    cx: number,
+    y: number,
+  ): number {
+    const descStyle = {
+      fontSize: 17,
+      fill: 0x6a4a2f,
+      fontFamily: FONT_FAMILY,
+      fontWeight: 'bold' as const,
+      stroke: 0xfffcf5,
+      strokeThickness: 1.5,
+    };
+    if (deco.cost <= 0) {
+      const desc = new PIXI.Text('现在可以免费领取', descStyle);
+      desc.anchor.set(0.5, 0);
+      desc.position.set(cx, y);
+      mount.addChild(desc);
+      return y + desc.height + 16;
+    }
+    const prefix = new PIXI.Text('需要 ', descStyle);
+    const price = new PIXI.Text(String(deco.cost), descStyle);
+    const suffix = new PIXI.Text(' 购买', descStyle);
+    const gap = 5;
+    const iconH = 22;
+    let iconW = 0;
+    let iconSp: PIXI.Sprite | undefined;
+    const iconTex = TextureCache.get('icon_huayuan');
+    if (iconTex?.width) {
+      iconSp = new PIXI.Sprite(iconTex);
+      iconSp.height = iconH;
+      iconSp.width = (iconTex.width / iconTex.height) * iconH;
+      iconW = iconSp.width;
+    }
+    const totalW =
+      prefix.width + price.width + (iconW > 0 ? gap + iconW : 0) + suffix.width;
+    const row = new PIXI.Container();
+    row.position.set(cx - totalW / 2, y);
+    let x = 0;
+    prefix.position.set(x, 0);
+    x += prefix.width;
+    price.position.set(x, 0);
+    x += price.width;
+    if (iconSp) {
+      iconSp.position.set(x + gap, (descStyle.fontSize - iconH) / 2);
+      x += gap + iconW;
+    }
+    suffix.position.set(x, 0);
+    row.addChild(prefix, price);
+    if (iconSp) row.addChild(iconSp);
+    row.addChild(suffix);
+    mount.addChild(row);
+    return y + Math.max(descStyle.fontSize, iconH) + 16;
+  }
+
+  /** 广告完成后：教程绘制壳体；购买资格已开，仍须花愿购入 */
   private _showAdGateUnlockedPopup(deco: DecoDef): void {
     this._dismissUnlockPopup();
     const W = DESIGN_WIDTH;
     const H = Game.logicHeight;
-    const cx = W / 2;
 
     const root = new PIXI.Container();
     root.zIndex = 12000;
@@ -1976,112 +2034,146 @@ export class DecorationPanel extends PIXI.Container {
     mask.eventMode = 'static';
     root.addChild(mask);
 
-    const cardW = Math.min(400, W - 48);
-    const cardTop = H * 0.2;
-    const cardH = 300;
+    const BTN_W = 148;
+    const BTN_H = 54;
+    const BTN_GAP = 14;
+    const ICON_MAX = 108;
+    const contentW = BTN_W * 2 + BTN_GAP;
+    const contentH = 30 + ICON_MAX + 36 + BTN_H;
 
-    const card = new PIXI.Graphics();
-    card.beginFill(0xfffdf7, 0.98);
-    card.lineStyle(2.5, 0xd4a574, 0.9);
-    card.drawRoundedRect(cx - cardW / 2, cardTop, cardW, cardH, 20);
-    card.endFill();
-    root.addChild(card);
-
-    const title = new PIXI.Text('家具已解锁', {
-      fontSize: 26,
-      fill: 0x5a3e2b,
-      fontFamily: FONT_FAMILY,
-      fontWeight: 'bold',
+    const frame = createTutorialStyleModalFrame({
+      viewW: W,
+      viewH: H,
+      title: '家具已解锁',
+      contentWidth: contentW,
+      contentHeight: contentH,
+      onCloseTap: () => this._dismissUnlockPopup(),
     });
-    title.anchor.set(0.5, 0);
-    title.position.set(cx, cardTop + 22);
-    root.addChild(title);
+    root.addChild(frame.root);
+
+    const mount = frame.contentMount;
+    const cx = contentW / 2;
+    let y = 0;
 
     const sub = new PIXI.Text(`「${deco.name}」`, {
-      fontSize: 18,
-      fill: 0x6d4c41,
+      fontSize: 19,
+      fill: 0x5c4a3d,
       fontFamily: FONT_FAMILY,
       fontWeight: 'bold',
+      stroke: 0xfffcf5,
+      strokeThickness: 2,
     });
     sub.anchor.set(0.5, 0);
-    sub.position.set(cx, cardTop + 58);
-    root.addChild(sub);
+    sub.position.set(cx, y);
+    mount.addChild(sub);
+    y += sub.height + 12;
 
-    const iconCy = cardTop + 128;
     const tex = TextureCache.get(deco.icon);
     if (tex?.width) {
       const sp = new PIXI.Sprite(tex);
-      const ms = Math.min(108 / tex.width, 108 / tex.height);
+      const ms = Math.min(ICON_MAX / tex.width, ICON_MAX / tex.height);
       sp.scale.set(ms);
-      sp.anchor.set(0.5);
-      sp.position.set(cx, iconCy);
-      root.addChild(sp);
+      sp.anchor.set(0.5, 0);
+      sp.position.set(cx, y);
+      mount.addChild(sp);
     }
+    y += ICON_MAX + 10;
 
-    const desc = new PIXI.Text('现在可以使用花愿购买', {
-      fontSize: 16,
-      fill: 0x8d6e63,
-      fontFamily: FONT_FAMILY,
-      fontWeight: 'bold',
-    });
-    desc.anchor.set(0.5, 0);
-    desc.position.set(cx, cardTop + 188);
-    root.addChild(desc);
+    y = this._layoutAdGatePurchaseHint(mount, deco, cx, y);
 
-    const btnW = 148;
-    const btnH = 46;
-    const btnY = cardTop + cardH - btnH - 20;
-    const gap = 14;
-
-    const mkBtn = (label: string, bx: number, color: number, onTap: () => void): PIXI.Container => {
-      const hit = new PIXI.Container();
-      hit.position.set(bx, btnY);
-      hit.eventMode = 'static';
-      hit.cursor = 'pointer';
-      const g = new PIXI.Graphics();
-      g.beginFill(color);
-      g.drawRoundedRect(-btnW / 2, 0, btnW, btnH, btnH / 2);
-      g.endFill();
-      hit.addChild(g);
-      const t = new PIXI.Text(label, {
-        fontSize: 17,
-        fill: 0xffffff,
-        fontFamily: FONT_FAMILY,
-        fontWeight: 'bold',
-      });
-      t.anchor.set(0.5, 0.5);
-      t.position.set(0, btnH / 2);
-      hit.addChild(t);
-      hit.on('pointertap', e => {
-        e.stopPropagation();
-        onTap();
-      });
-      root.addChild(hit);
-      return hit;
-    };
-
-    mkBtn('稍后', cx - btnW / 2 - gap / 2, 0xb0a193, () => {
-      this._dismissUnlockPopup();
-    });
-    const canBuyNow = CurrencyManager.state.huayuan >= deco.cost;
-    mkBtn(canBuyNow ? '直接购买' : '去购买', cx + btnW / 2 + gap / 2, 0xe57373, () => {
-      this._dismissUnlockPopup();
-      if (canBuyNow) {
-        this._purchaseDeco(deco, this);
-        return;
-      }
-      this._decoInvFilter = 'not_purchased';
-      this._scrollY = 0;
-      this._refreshAll();
-    });
+    this._addPastelModalButton(
+      mount,
+      '稍后',
+      BTN_W / 2,
+      y,
+      BTN_W,
+      BTN_H,
+      'secondary',
+      () => this._dismissUnlockPopup(),
+    );
+    const canBuyNow = deco.cost <= 0 || CurrencyManager.state.huayuan >= deco.cost;
+    this._addPastelModalButton(
+      mount,
+      canBuyNow ? '直接购买' : '去购买',
+      BTN_W + BTN_GAP + BTN_W / 2,
+      y,
+      BTN_W,
+      BTN_H,
+      'primary',
+      () => {
+        if (!canBuyNow && deco.cost > 0) {
+          ToastMessage.show(`花愿不足，需要 ${deco.cost} 花愿`);
+        }
+        this._dismissUnlockPopup();
+        if (canBuyNow) {
+          this._purchaseDeco(deco, this);
+          return;
+        }
+        this._decoInvFilter = 'not_purchased';
+        this._scrollY = 0;
+        this._refreshAll();
+      },
+    );
   }
 
-  /** 购买成功后：类似合成解锁的获得提示，可立即进店摆放 */
+  /** 与 ConfirmDialog 同款圆钮 */
+  private _addPastelModalButton(
+    parent: PIXI.Container,
+    label: string,
+    cx: number,
+    topY: number,
+    btnW: number,
+    btnH: number,
+    variant: 'primary' | 'secondary',
+    onTap: () => void,
+  ): PIXI.Container {
+    const hit = new PIXI.Container();
+    hit.position.set(cx, topY);
+    hit.eventMode = 'static';
+    hit.cursor = 'pointer';
+    hit.hitArea = new PIXI.Rectangle(-btnW / 2, 0, btnW, btnH);
+
+    const g = new PIXI.Graphics();
+    const r = btnH / 2;
+    if (variant === 'primary') {
+      g.beginFill(COLORS.BUTTON_PRIMARY);
+      g.drawRoundedRect(-btnW / 2, 0, btnW, btnH, r);
+      g.endFill();
+      g.lineStyle(2, 0xffffff, 0.58);
+      g.drawRoundedRect(-btnW / 2 + 3, 3, btnW - 6, btnH - 6, r - 3);
+    } else {
+      g.beginFill(0xe8dff7, 0.98);
+      g.drawRoundedRect(-btnW / 2, 0, btnW, btnH, r);
+      g.endFill();
+      g.lineStyle(2.5, 0xffffff, 0.85);
+      g.drawRoundedRect(-btnW / 2 + 2.5, 2.5, btnW - 5, btnH - 5, Math.max(8, r - 4));
+    }
+    hit.addChild(g);
+
+    const t = new PIXI.Text(label, {
+      fontSize: 19,
+      fill: variant === 'primary' ? 0xffffff : 0x6a4a2f,
+      fontFamily: FONT_FAMILY,
+      fontWeight: 'bold',
+      stroke: variant === 'primary' ? 0x8b4513 : 0xfffcf5,
+      strokeThickness: variant === 'primary' ? 2 : 1.5,
+    });
+    t.anchor.set(0.5, 0.5);
+    t.position.set(0, btnH / 2);
+    hit.addChild(t);
+    hit.on('pointertap', e => {
+      e.stopPropagation();
+      onTap();
+    });
+    parent.addChild(hit);
+    return hit;
+  }
+
+  /** 购买成功后：教程绘制壳体，可立即进店摆放 */
   private _showNewDecoUnlockPopup(deco: DecoDef): void {
     this._dismissUnlockPopup();
     const W = DESIGN_WIDTH;
     const H = Game.logicHeight;
-    const cx = W / 2;
 
     const root = new PIXI.Container();
     root.zIndex = 12000;
@@ -2095,87 +2187,74 @@ export class DecorationPanel extends PIXI.Container {
     mask.eventMode = 'static';
     root.addChild(mask);
 
-    const cardW = Math.min(400, W - 48);
-    const cardTop = H * 0.2;
-    const cardH = 280;
+    const BTN_W = 148;
+    const BTN_H = 54;
+    const BTN_GAP = 14;
+    const ICON_MAX = 116;
+    const contentW = BTN_W * 2 + BTN_GAP;
+    const contentH = 30 + ICON_MAX + 20 + BTN_H;
 
-    const card = new PIXI.Graphics();
-    card.beginFill(0xfffdf7, 0.98);
-    card.lineStyle(2.5, 0xd4a574, 0.9);
-    card.drawRoundedRect(cx - cardW / 2, cardTop, cardW, cardH, 20);
-    card.endFill();
-    root.addChild(card);
-
-    const title = new PIXI.Text('获得新家具', {
-      fontSize: 26,
-      fill: 0x5a3e2b,
-      fontFamily: FONT_FAMILY,
-      fontWeight: 'bold',
+    const frame = createTutorialStyleModalFrame({
+      viewW: W,
+      viewH: H,
+      title: '获得新家具',
+      contentWidth: contentW,
+      contentHeight: contentH,
+      onCloseTap: () => this._dismissUnlockPopup(),
     });
-    title.anchor.set(0.5, 0);
-    title.position.set(cx, cardTop + 22);
-    root.addChild(title);
+    root.addChild(frame.root);
+
+    const mount = frame.contentMount;
+    const cx = contentW / 2;
+    let y = 0;
 
     const sub = new PIXI.Text(`「${deco.name}」`, {
-      fontSize: 18,
-      fill: 0x6d4c41,
+      fontSize: 19,
+      fill: 0x5c4a3d,
       fontFamily: FONT_FAMILY,
       fontWeight: 'bold',
+      stroke: 0xfffcf5,
+      strokeThickness: 2,
     });
     sub.anchor.set(0.5, 0);
-    sub.position.set(cx, cardTop + 58);
-    root.addChild(sub);
+    sub.position.set(cx, y);
+    mount.addChild(sub);
+    y += sub.height + 14;
 
-    const iconCy = cardTop + 118;
     const tex = TextureCache.get(deco.icon);
     if (tex?.width) {
       const sp = new PIXI.Sprite(tex);
-      const ms = Math.min(100 / tex.width, 100 / tex.height);
+      const ms = Math.min(ICON_MAX / tex.width, ICON_MAX / tex.height);
       sp.scale.set(ms);
-      sp.anchor.set(0.5);
-      sp.position.set(cx, iconCy);
-      root.addChild(sp);
+      sp.anchor.set(0.5, 0);
+      sp.position.set(cx, y);
+      mount.addChild(sp);
     }
+    y += ICON_MAX + 18;
 
-    const btnW = 148;
-    const btnH = 46;
-    const btnY = cardTop + cardH - btnH - 20;
-    const gap = 14;
-
-    const mkBtn = (label: string, bx: number, onTap: () => void): PIXI.Container => {
-      const hit = new PIXI.Container();
-      hit.position.set(bx, btnY);
-      hit.eventMode = 'static';
-      hit.cursor = 'pointer';
-      const g = new PIXI.Graphics();
-      g.beginFill(0xe57373);
-      g.drawRoundedRect(-btnW / 2, 0, btnW, btnH, btnH / 2);
-      g.endFill();
-      hit.addChild(g);
-      const t = new PIXI.Text(label, {
-        fontSize: 17,
-        fill: 0xffffff,
-        fontFamily: FONT_FAMILY,
-        fontWeight: 'bold',
-      });
-      t.anchor.set(0.5, 0.5);
-      t.position.set(0, btnH / 2);
-      hit.addChild(t);
-      hit.on('pointertap', e => {
-        e.stopPropagation();
-        onTap();
-      });
-      root.addChild(hit);
-      return hit;
-    };
-
-    mkBtn('稍后', cx - btnW / 2 - gap / 2, () => {
-      this._dismissUnlockPopup();
-    });
-    this._unlockPlaceRoomHit = mkBtn('放入房间', cx + btnW / 2 + gap / 2, () => {
-      this._dismissUnlockPopup();
-      this._goToPlaceDeco(deco.id);
-    });
+    this._addPastelModalButton(
+      mount,
+      '稍后',
+      BTN_W / 2,
+      y,
+      BTN_W,
+      BTN_H,
+      'secondary',
+      () => this._dismissUnlockPopup(),
+    );
+    this._unlockPlaceRoomHit = this._addPastelModalButton(
+      mount,
+      '放入房间',
+      BTN_W + BTN_GAP + BTN_W / 2,
+      y,
+      BTN_W,
+      BTN_H,
+      'primary',
+      () => {
+        this._dismissUnlockPopup();
+        this._goToPlaceDeco(deco.id);
+      },
+    );
 
     if (TutorialManager.isActive && TutorialManager.currentStep === TutorialStep.GUIDE_BUY_FURNITURE) {
       EventBus.emit('decoration:tutorialUnlockPlaceReady');

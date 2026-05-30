@@ -135,6 +135,7 @@ function pickItemLevel(
   maxItemLevel: number,
   tier: OrderTier,
   rng: () => number,
+  playerLevel?: number,
 ): number {
   const tierAspirationalBonus: Record<OrderTier, number> = {
     C: 0,
@@ -148,9 +149,24 @@ function pickItemLevel(
     A: 0.82,
     S: 0.58,
   };
-  const aspirational = toolCap > 0
-    && rng() < ORDER_ASPIRATIONAL_LEVEL_BONUS_CHANCE + tierAspirationalBonus[tier];
+  const aspirationalChance =
+    ORDER_ASPIRATIONAL_LEVEL_BONUS_CHANCE + tierAspirationalBonus[tier];
+  const aspirational = toolCap > 0 && rng() < (
+    playerLevel === 1 ? 0
+      : playerLevel === 2 ? aspirationalChance * 0.65
+        : aspirationalChance
+  );
   let hi = Math.min(tierMaxLv, toolCap + (aspirational ? 1 : 0), maxItemLevel);
+  if (playerLevel === 1) {
+    const cap = toolCap > 0 ? toolCap : 3;
+    hi = Math.min(hi, cap);
+    if (tier === 'B') hi = Math.min(hi, minLv + 2);
+  } else if (playerLevel === 2) {
+    const cap = toolCap > 0 ? toolCap + 1 : 4;
+    hi = Math.min(hi, cap);
+    if (tier === 'B') hi = Math.min(hi, minLv + 4);
+    if (tier === 'A') hi = Math.min(hi, minLv + 2, cap + 1);
+  }
   const lo = Math.min(minLv, hi);
   const span = hi - lo + 1;
   return lo + Math.floor(Math.pow(rng(), tierExponent[tier]) * span);
@@ -163,6 +179,7 @@ function tryPickItem(
   usedIds: Set<string>,
   tier: OrderTier,
   rng: () => number,
+  playerLevel?: number,
 ): string | null {
   const [minLv, tierMaxLv] = demandDef.levelRange;
 
@@ -170,7 +187,7 @@ function tryPickItem(
     const line = eligibleLines[Math.floor(rng() * eligibleLines.length)];
     const lineMax = Math.max(1, getMaxLevelForLine(demandDef.category, line));
     const toolCap = toolCapForLine(demandDef.category, line, ulk);
-    const level = pickItemLevel(minLv, tierMaxLv, toolCap, lineMax, tier, rng);
+    const level = pickItemLevel(minLv, tierMaxLv, toolCap, lineMax, tier, rng, playerLevel);
     const cand = findItemId(demandDef.category, line, level);
     if (cand && !usedIds.has(cand)) {
       return cand;
@@ -183,6 +200,7 @@ interface GeneratePoolOptions {
   rng: () => number;
   forceGreenFlowerSlot: boolean;
   tier: OrderTier;
+  playerLevel: number;
 }
 
 function generateDemandsFromPool(
@@ -221,7 +239,7 @@ function generateDemandsFromPool(
       greenPityUsed = true;
     }
 
-    const itemId = tryPickItem(demandDef, eligibleLines, ulk, usedIds, opts.tier, opts.rng);
+    const itemId = tryPickItem(demandDef, eligibleLines, ulk, usedIds, opts.tier, opts.rng, opts.playerLevel);
     if (itemId) {
       usedIds.add(itemId);
       slots.push({ itemId });
@@ -282,6 +300,7 @@ function tryGenerateCombo(
   ulk: UnlockedLines,
   rng: () => number,
   forceGreen: boolean,
+  playerLevel: number,
 ): OrderGenSlot[] | null {
   const specs = comboSpecsForTier(tier, ulk);
   if (specs.length < 2) return null;
@@ -302,9 +321,21 @@ function tryGenerateCombo(
   const pickFromSpec = (spec: ComboSpec): string | null => {
     const toolCap = toolCapForLine(spec.category, spec.line, ulk);
     const lineMax = Math.max(1, getMaxLevelForLine(spec.category, spec.line));
-    const aspirational = toolCap > 0
-      && rng() < ORDER_ASPIRATIONAL_LEVEL_BONUS_CHANCE + (tier === 'S' ? 0.18 : tier === 'A' ? 0.08 : 0.02);
-    const hi = Math.min(spec.maxLv, toolCap + (aspirational ? 1 : 0), lineMax);
+    const comboAspChance =
+      ORDER_ASPIRATIONAL_LEVEL_BONUS_CHANCE + (tier === 'S' ? 0.18 : tier === 'A' ? 0.08 : 0.02);
+    const aspirational = toolCap > 0 && rng() < (
+      playerLevel === 1 ? 0
+        : playerLevel === 2 ? comboAspChance * 0.65
+          : comboAspChance
+    );
+    let hi = Math.min(spec.maxLv, toolCap + (aspirational ? 1 : 0), lineMax);
+    if (playerLevel === 1) {
+      const cap = toolCap > 0 ? toolCap : 3;
+      hi = Math.min(hi, cap, spec.minLv + 2);
+    } else if (playerLevel === 2) {
+      const cap = toolCap > 0 ? toolCap + 1 : 4;
+      hi = Math.min(hi, cap + 1, spec.minLv + 4);
+    }
     const lo = Math.min(spec.minLv, hi);
     if (hi < lo) return null;
     const exponent = tier === 'S' ? 0.58 : tier === 'A' ? 0.82 : tier === 'B' ? 1.02 : ORDER_ITEM_LEVEL_PICK_EXPONENT;
@@ -488,7 +519,7 @@ export function generateOrderDemands(ctx: OrderGenContext): OrderGenResult | nul
 
   const comboChance = orderComboEffectiveChance(lines, ctx.playerLevel);
   if (lines.unlockedLineCount >= 2 && rng() < comboChance) {
-    const comboSlots = tryGenerateCombo(tier, lines, rng, ctx.forceGreenFlowerSlot);
+    const comboSlots = tryGenerateCombo(tier, lines, rng, ctx.forceGreenFlowerSlot, ctx.playerLevel);
     if (comboSlots && comboSlots.length >= 2) {
       return {
         slots: comboSlots,
@@ -502,7 +533,7 @@ export function generateOrderDemands(ctx: OrderGenContext): OrderGenResult | nul
 
   let bonusMultiplier: number | undefined;
   let generationKind: OrderGenerationKind = 'basic';
-  const growthRoll = rng() < orderGrowthRollChance(tier);
+  const growthRoll = rng() < orderGrowthRollChance(tier, ctx.playerLevel);
   if (growthRoll) {
     bonusMultiplier = ORDER_GROWTH_BONUS_MULTIPLIER;
     generationKind = 'growth';
@@ -517,6 +548,7 @@ export function generateOrderDemands(ctx: OrderGenContext): OrderGenResult | nul
     rng,
     forceGreenFlowerSlot: ctx.forceGreenFlowerSlot,
     tier,
+    playerLevel: ctx.playerLevel,
   });
   if (slots.length === 0) return null;
 

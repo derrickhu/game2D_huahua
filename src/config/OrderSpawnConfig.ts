@@ -78,6 +78,11 @@ export function orderComboEffectiveChance(
   ulk: UnlockedLines,
   playerLevel?: number,
 ): number {
+  if (playerLevel === 1) return 0;
+  if (playerLevel === 2) {
+    if (ulk.unlockedLineCount < 2) return 0;
+    return Math.min(0.14, ORDER_COMBO_BASE_CHANCE * 0.85);
+  }
   if (ulk.unlockedLineCount < 2) return 0;
   const extra = Math.max(0, ulk.unlockedLineCount - 2);
   let p = ORDER_COMBO_BASE_CHANCE + extra * ORDER_COMBO_CHANCE_PER_EXTRA_LINE;
@@ -88,9 +93,12 @@ export function orderComboEffectiveChance(
 }
 
 /** 成长加成尝试概率（仅用于基础池路径，与模板档挂钩） */
-export function orderGrowthRollChance(tier: OrderTier): number {
+export function orderGrowthRollChance(tier: OrderTier, playerLevel?: number): number {
   const m = ORDER_GROWTH_TIER_MULT[tier] ?? 0;
-  return Math.min(1, ORDER_GROWTH_BASE_CHANCE * m);
+  const base = ORDER_GROWTH_BASE_CHANCE * m;
+  if (playerLevel === 1) return 0;
+  if (playerLevel === 2) return Math.min(0.09, base * 0.7);
+  return Math.min(1, base);
 }
 
 /** 单槽 norm；未知物品返回 0 */

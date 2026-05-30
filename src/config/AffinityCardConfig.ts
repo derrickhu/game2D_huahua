@@ -55,10 +55,9 @@ export const CARD_RARITY_LABEL: Record<CardRarity, string> = {
 
 /**
  * 友谊卡系统玩家解锁等级（含）。
- *  - 新手前 5 级专注「合成 + 出花 + 卖花」核心循环
- *  - Lv6 起开放「图鉴掉卡」，作为普通订单上的稳定收集目标
+ *  - Lv2 起开放图鉴入口与订单掉卡
  */
-export const CARD_SYSTEM_UNLOCK_LEVEL = 6;
+export const CARD_SYSTEM_UNLOCK_LEVEL = 2;
 
 /** 一次「是否掉卡」的基础概率（普通订单）— 提高到约 1/4，让友谊卡成为可感知的收集目标 */
 export const CARD_DROP_BASE_CHANCE = 0.25;

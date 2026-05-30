@@ -18,6 +18,7 @@
  */
 import * as PIXI from 'pixi.js';
 import { Game } from '@/core/Game';
+import { Platform } from '@/core/PlatformService';
 import { EventBus } from '@/core/EventBus';
 import { TweenManager, Ease } from '@/core/TweenManager';
 import { AudioManager } from '@/core/AudioManager';
@@ -52,8 +53,10 @@ export class AffinityCardDropPopup extends PIXI.Container {
   private _flipDone = false;
   private _overlay!: PIXI.Graphics;
   private _cardMount!: PIXI.Container;
+  private _titleLayer!: PIXI.Container;
   private _hint!: PIXI.Text;
   private _shareBtn: PIXI.Container | null = null;
+  private _unsubTextures: (() => void) | null = null;
 
   constructor() {
     super();
@@ -73,13 +76,42 @@ export class AffinityCardDropPopup extends PIXI.Container {
     if (!this._isOpen) void this._showNextAsync();
   }
 
-  private _artKeysForResults(results: AffinityCardDropResult[]): string[] {
-    const set = new Set<string>();
-    for (const r of results) {
+  private _textureKeysForDrop(item: DropQueueItem): string[] {
+    const set = new Set<string>(['affinity_card_back_default']);
+    for (const r of item.results) {
       if (!r?.card) continue;
       set.add(r.card.artKey ?? `customer_${r.card.ownerTypeId}`);
     }
     return [...set];
+  }
+
+  private async _ensureDropTextures(keys: readonly string[]): Promise<void> {
+    try {
+      await Promise.all([
+        TextureCache.loadPanelsSubpackage(),
+        TextureCache.loadCharsSubpackage(),
+      ]);
+      await TextureCache.preloadKeys(keys);
+    } catch (e) {
+      console.warn('[AffinityCardDropPopup] 友谊卡资源预热失败:', e);
+    }
+  }
+
+  private _bindTextureRefresh(keys: readonly string[]): void {
+    this._unsubTextures?.();
+    this._unsubTextures = TextureCache.observeTextureDependencies(
+      { keys: [...keys] },
+      () => {
+        if (!this._isOpen || this._flipping) return;
+        if (!this._flipDone) this._renderCardBack();
+        else this._renderCardFront();
+      },
+    );
+  }
+
+  private _clearTextureRefresh(): void {
+    this._unsubTextures?.();
+    this._unsubTextures = null;
   }
 
   private async _showNextAsync(): Promise<void> {
@@ -94,14 +126,9 @@ export class AffinityCardDropPopup extends PIXI.Container {
     this._curResults = next.results;
     this._curIndex = 0;
 
-    const keys = this._artKeysForResults(next.results);
-    if (keys.length > 0) {
-      try {
-        await TextureCache.preloadKeys(keys);
-      } catch (e) {
-        console.warn('[AffinityCardDropPopup] 卡面纹理预热未完成:', e);
-      }
-    }
+    const keys = this._textureKeysForDrop(next);
+    await this._ensureDropTextures(keys);
+    this._bindTextureRefresh(keys);
 
     this._build();
     this._renderCardBack();
@@ -122,9 +149,14 @@ export class AffinityCardDropPopup extends PIXI.Container {
     this.addChild(this._overlay);
 
     // 卡挂载点：中心点对齐屏幕中心，由子节点偏移到 (-W/2, -H/2)
+    const cardCenterY = H / 2 - 10;
     this._cardMount = new PIXI.Container();
-    this._cardMount.position.set(W / 2, H / 2 - 10);
+    this._cardMount.position.set(W / 2, cardCenterY);
     this.addChild(this._cardMount);
+
+    this._titleLayer = new PIXI.Container();
+    this._buildTitleBanner(W, cardCenterY);
+    this.addChild(this._titleLayer);
 
     this._hint = new PIXI.Text('点击翻牌', {
       fontSize: 18,
@@ -138,6 +170,55 @@ export class AffinityCardDropPopup extends PIXI.Container {
 
     this.alpha = 0;
     TweenManager.to({ target: this, props: { alpha: 1 }, duration: 0.22, ease: Ease.easeOutQuad });
+  }
+
+  /** 卡面上方蜜黄标题条 +「获得友谊卡」 */
+  private _buildTitleBanner(screenW: number, cardCenterY: number): void {
+    this._titleLayer.removeChildren();
+    const cardTopY = cardCenterY - LARGE_CARD_H / 2;
+    const ribbonTargetW = Math.min(420, screenW - 48);
+    const ribTex = TextureCache.get('merge_chain_ribbon');
+    let ribbonTop = cardTopY - 56;
+    let ribbonH = 48;
+
+    if (ribTex && ribTex.width > 0) {
+      const rs = ribbonTargetW / ribTex.width;
+      ribbonH = ribTex.height * rs;
+      ribbonTop = cardTopY - ribbonH - 14;
+      const rib = new PIXI.Sprite(ribTex);
+      rib.scale.set(rs);
+      rib.anchor.set(0.5, 0);
+      rib.position.set(screenW / 2, ribbonTop);
+      rib.eventMode = 'none';
+      this._titleLayer.addChild(rib);
+    } else {
+      ribbonTop = cardTopY - ribbonH - 14;
+      const g = new PIXI.Graphics();
+      g.beginFill(0xffc75d, 0.98);
+      g.lineStyle(2, 0xffffff, 0.7);
+      g.drawRoundedRect((screenW - ribbonTargetW) / 2, ribbonTop, ribbonTargetW, ribbonH, 20);
+      g.endFill();
+      g.eventMode = 'none';
+      this._titleLayer.addChild(g);
+    }
+
+    const title = new PIXI.Text('获得友谊卡', {
+      fontSize: 26,
+      fill: 0xffffff,
+      fontFamily: FONT_FAMILY,
+      fontWeight: 'bold',
+      stroke: 0x5d4037,
+      strokeThickness: 4,
+      dropShadow: true,
+      dropShadowColor: 0x000000,
+      dropShadowAlpha: 0.35,
+      dropShadowBlur: 2,
+      dropShadowDistance: 1,
+    } as PIXI.TextStyle);
+    title.anchor.set(0.5, 0.5);
+    title.position.set(screenW / 2, ribbonTop + ribbonH * 0.4);
+    title.eventMode = 'none';
+    this._titleLayer.addChild(title);
   }
 
   private _mountCardCentered(view: PIXI.Container): void {
@@ -269,47 +350,126 @@ export class AffinityCardDropPopup extends PIXI.Container {
     const shouldShow = !cur.isDuplicate || cur.card.rarity === 'SR' || cur.card.rarity === 'SSR';
     if (!shouldShow) return;
 
+    const btnW = 208;
+    const btnH = 52;
     const btn = new PIXI.Container();
-    btn.position.set(DESIGN_WIDTH / 2, this._hint.y + 38);
+    btn.position.set(DESIGN_WIDTH / 2, this._hint.y + 46);
     btn.eventMode = 'static';
     btn.cursor = 'pointer';
-    btn.hitArea = new PIXI.RoundedRectangle(-72, -18, 144, 36, 18);
+    btn.hitArea = new PIXI.RoundedRectangle(-btnW / 2, -btnH / 2, btnW, btnH, btnH / 2);
+
+    const glow = new PIXI.Graphics();
+    glow.beginFill(0xff8ac9, 0.42);
+    glow.drawRoundedRect(-btnW / 2 - 6, -btnH / 2 - 6, btnW + 12, btnH + 12, (btnH + 12) / 2);
+    glow.endFill();
+    btn.addChild(glow);
 
     const shadow = new PIXI.Graphics();
-    shadow.beginFill(0x3d244f, 0.28);
-    shadow.drawRoundedRect(-70, -15, 140, 34, 17);
+    shadow.beginFill(0x5c2a4a, 0.32);
+    shadow.drawRoundedRect(-btnW / 2, -btnH / 2 + 4, btnW, btnH, btnH / 2);
     shadow.endFill();
-    shadow.position.set(0, 3);
     btn.addChild(shadow);
 
     const bg = new PIXI.Graphics();
-    bg.beginFill(0xfff1a8, 0.98);
-    bg.lineStyle(2, 0xffc75d, 1);
-    bg.drawRoundedRect(-70, -17, 140, 34, 17);
+    bg.beginFill(0xff9ec8, 1);
+    bg.lineStyle(3, 0xffffff, 0.92);
+    bg.drawRoundedRect(-btnW / 2, -btnH / 2, btnW, btnH, btnH / 2);
     bg.endFill();
+    const sheen = new PIXI.Graphics();
+    sheen.beginFill(0xffffff, 0.38);
+    sheen.drawRoundedRect(-btnW / 2 + 6, -btnH / 2 + 5, btnW - 12, btnH * 0.42, 12);
+    sheen.endFill();
+    bg.addChild(sheen);
     btn.addChild(bg);
 
     const label = new PIXI.Text('晒一下', {
-      fontSize: 16,
-      fill: 0x7a3f00,
+      fontSize: 22,
+      fill: 0xffffff,
       fontFamily: FONT_FAMILY,
       fontWeight: 'bold',
+      stroke: 0x9c3d6b,
+      strokeThickness: 3,
+      dropShadow: true,
+      dropShadowColor: 0xc75d8b,
+      dropShadowAlpha: 0.55,
+      dropShadowBlur: 2,
+      dropShadowDistance: 1,
     } as PIXI.TextStyle);
     label.anchor.set(0.5);
     btn.addChild(label);
 
     btn.on('pointertap', (e: PIXI.FederatedPointerEvent) => {
       e.stopPropagation();
-      shareAppMessageWithAnalytics(
-        createAffinityCardShare(cur.card),
-        'affinity_card',
-        { card_id: String(cur.card.id ?? '') },
-      );
-      ToastMessage.show(`已分享「${cur.card.title}」`);
+      void this._onShareTap(cur);
     });
 
     this._shareBtn = btn;
     this.addChild(btn);
+  }
+
+  private async _onShareTap(cur: AffinityCardDropResult): Promise<void> {
+    const imageUrl = await this.createShareSnapshotImageUrl();
+    shareAppMessageWithAnalytics(
+      createAffinityCardShare(cur.card, imageUrl ?? undefined),
+      'affinity_card',
+      { card_id: String(cur.card.id ?? ''), has_snapshot: !!imageUrl },
+    );
+    ToastMessage.show(imageUrl ? `已分享「${cur.card.title}」` : `已分享「${cur.card.title}」（使用默认图）`);
+  }
+
+  /** 截取标题条 + 当前卡面，生成微信分享用临时图 */
+  async createShareSnapshotImageUrl(): Promise<string | null> {
+    const renderer = Game.app?.renderer as { render: (stage: PIXI.Container) => void } | undefined;
+    const canvas = Game.app?.view;
+    if (!renderer || !canvas || !this._cardMount) return null;
+
+    const prevShare = this._shareBtn?.visible ?? true;
+    const prevHint = this._hint.visible;
+    if (this._shareBtn) this._shareBtn.visible = false;
+    this._hint.visible = false;
+
+    try {
+      renderer.render(Game.stage);
+      await new Promise<void>(resolve => setTimeout(resolve, 50));
+
+      const pad = 14;
+      let minX = Infinity;
+      let minY = Infinity;
+      let maxX = -Infinity;
+      let maxY = -Infinity;
+      for (const layer of [this._titleLayer, this._cardMount]) {
+        if (!layer?.visible) continue;
+        const b = layer.getBounds();
+        const tl = layer.toGlobal(new PIXI.Point(b.x - pad, b.y - pad));
+        const br = layer.toGlobal(new PIXI.Point(b.x + b.width + pad, b.y + b.height + pad));
+        minX = Math.min(minX, tl.x, br.x);
+        minY = Math.min(minY, tl.y, br.y);
+        maxX = Math.max(maxX, tl.x, br.x);
+        maxY = Math.max(maxY, tl.y, br.y);
+      }
+      if (!Number.isFinite(minX)) return null;
+
+      const cropW = Math.max(1, maxX - minX);
+      const cropH = Math.max(1, maxY - minY);
+      const destW = 500;
+      const destH = Math.round(destW * (cropH / cropW));
+
+      return await Platform.canvasToTempFilePath({
+        canvas,
+        x: Math.round(Game.toReal(minX)),
+        y: Math.round(Game.toReal(minY)),
+        width: Math.round(Game.toReal(cropW)),
+        height: Math.round(Game.toReal(cropH)),
+        destWidth: destW,
+        destHeight: destH,
+        fileType: 'jpg',
+        quality: 0.92,
+      });
+    } finally {
+      if (this._shareBtn) this._shareBtn.visible = prevShare;
+      this._hint.visible = prevHint;
+      renderer.render(Game.stage);
+    }
   }
 
   private _clearShareButton(): void {
@@ -342,6 +502,7 @@ export class AffinityCardDropPopup extends PIXI.Container {
 
   private _dismiss(): void {
     this._isOpen = false;
+    this._clearTextureRefresh();
     this._clearShareButton();
     TweenManager.to({
       target: this,

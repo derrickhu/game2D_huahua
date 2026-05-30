@@ -49,6 +49,7 @@ reencode_mp3_sfx "$AUDIO/button_click.mp3" "$SFX_KBPS"
 reencode_mp3_sfx "$AUDIO/purchase_tap.mp3" "$SFX_KBPS"
 reencode_mp3_sfx "$AUDIO/ui_reward_fanfare.mp3" "$SFX_KBPS"
 reencode_mp3_sfx "$AUDIO/collection_unlock.mp3" "$SFX_KBPS"
+reencode_mp3_sfx "$AUDIO/deco_obtain.mp3" "$SFX_KBPS"
 
 ls -la "$AUDIO"/*.mp3
 echo "完成。BGM 发糊可提高 BGM_KBPS（如 80）；短音偏薄可提高 SFX_KBPS（如 96）或去掉脚本里 -ac 1 改立体声。"

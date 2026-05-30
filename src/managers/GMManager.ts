@@ -25,6 +25,7 @@ import { CurrencyManager } from './CurrencyManager';
 import { SaveManager } from './SaveManager';
 import { FlowerSignTicketManager } from './FlowerSignTicketManager';
 import { CheckInManager } from './CheckInManager';
+import { WeekendHuayuanBoostManager } from './WeekendHuayuanBoostManager';
 import { LevelManager } from './LevelManager';
 import { DecorationManager } from './DecorationManager';
 import { EventManager } from './EventManager';
@@ -802,6 +803,24 @@ class GMManagerClass {
     });
 
     this._commands.push({
+      id: 'gm_weekend_advance_day',
+      group: ' 系统测试',
+      name: ' 周末花愿：虚拟下一天',
+      desc: '日历 +1 天并重置周末加成激活（与签到虚拟日共用偏移）',
+      execute: () => {
+        CheckInManager.gmAdvanceVirtualDay();
+        WeekendHuayuanBoostManager.resetAfterVirtualDayAdvance();
+        const h = WeekendHuayuanBoostManager.countdownLabel();
+        return [
+          ` 虚拟日 +1，偏移=${CheckInManager.gmDateOffsetDays} 天`,
+          ` 周末入口=${WeekendHuayuanBoostManager.isAvailableToday() ? '显示' : '隐藏'}`,
+          ` 已激活=${WeekendHuayuanBoostManager.isActive() ? '是' : '否'}`,
+          h ? ` 倒计时：${h}` : ' 倒计时：—',
+        ].join('；');
+      },
+    });
+
+    this._commands.push({
       id: 'gm_checkin_reset_virtual_date',
       group: ' 系统测试',
       name: ' 签到：重置虚拟日期',
@@ -1091,23 +1110,10 @@ class GMManagerClass {
       },
     });
 
-    // ========== 熟客系统 ==========
-    for (const def of AFFINITY_DEFS) {
-      this._commands.push({
-        id: `gm_affinity_unlock_${def.typeId}`,
-        group: ' 熟客系统',
-        name: ` 解锁熟客 · ${def.bondName}`,
-        desc: `${def.persona}`,
-        execute: () => {
-          AffinityManager.unlockForLevel(99);
-          return ` ${def.bondName} 已解锁`;
-        },
-      });
-    }
-
+    // ========== 熟客辅助 ==========
     this._commands.push({
       id: 'gm_affinity_reset',
-      group: ' 熟客系统',
+      group: ' 熟客辅助',
       name: ' 重置熟客留言/专属队列',
       desc: '清空近期留言/专属订单冷却（不影响图鉴）',
       execute: () => {
@@ -1118,7 +1124,7 @@ class GMManagerClass {
 
     this._commands.push({
       id: 'gm_affinity_open_profile_first',
-      group: ' 熟客系统',
+      group: ' 熟客辅助',
       name: ' 打开友谊图鉴（首位）',
       desc: '直接打开首位熟客的友谊图鉴页',
       execute: () => {
