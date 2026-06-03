@@ -11,6 +11,7 @@ import {
   setupTutorialAnalytics,
   setupGameplayAnalytics,
 } from '@/analytics';
+import { AttributionManager } from '@/analytics/AttributionManager';
 import { Game } from '@/core/Game';
 import { SceneManager } from '@/core/SceneManager';
 import { BoardManager } from '@/managers/BoardManager';
@@ -110,6 +111,7 @@ async function main(): Promise<void> {
     // 注意：不要在这里立刻 track session_start！必须等 setAnalyticsUserId 之后再打，
     // 否则 user_id='' 与登录后 user_id=xxx 会被算成两个不同 uk，DAU 翻倍。
     initAnalytics();
+    AttributionManager.init();
     // 在 TutorialManager.start() 之前就 attach EventBus 监听，避免错过首步的 stepChanged。
     setupTutorialAnalytics();
     // 玩法事件订阅同样要早 attach，避免错过 board:initialized 之类的早期事件。
@@ -235,11 +237,13 @@ async function main(): Promise<void> {
     // 给后端做 anonymous_id ↔ user_id 归一锚点；本地登录失败（cacheOnly）时 userId 为空，仍要兜底打 session_start。
     if (CloudSyncManager.userId) {
       setAnalyticsUserId(CloudSyncManager.userId);
+      AttributionManager.bindUser(CloudSyncManager.userId);
     }
     analytics.track(EVENT_NAMES.SESSION_START, {
       entry: 'main',
       with_user_id: !!CloudSyncManager.userId,
       cloud_sync_status: startupSync.status,
+      ...AttributionManager.sessionParams(),
     });
     void analytics.flush('startup-session-start');
 

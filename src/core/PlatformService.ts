@@ -661,6 +661,22 @@ class PlatformServiceClass {
     } catch (_) {}
   }
 
+  getLaunchOptionsSync(): any {
+    try {
+      return this._api?.getLaunchOptionsSync?.() || null;
+    } catch (_) {
+      return null;
+    }
+  }
+
+  getEnterOptionsSync(): any {
+    try {
+      return this._api?.getEnterOptionsSync?.() || null;
+    } catch (_) {
+      return null;
+    }
+  }
+
   // ═══════════════ 其他 ═══════════════
 
   /** 获取当前时间戳（服务器校时备用，默认本地） */
