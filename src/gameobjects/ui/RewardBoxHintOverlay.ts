@@ -7,7 +7,7 @@ import { OverlayManager } from '@/core/OverlayManager';
 import { TweenManager, Ease } from '@/core/TweenManager';
 import { DESIGN_WIDTH, BoardMetrics } from '@/config/Constants';
 import { TutorialDialogBubble } from '@/gameobjects/ui/TutorialDialogBubble';
-import type { RewardBoxButton } from '@/gameobjects/ui/RewardBoxButton';
+import { RewardBoxButton } from '@/gameobjects/ui/RewardBoxButton';
 
 interface SpotlightRect {
   x: number;

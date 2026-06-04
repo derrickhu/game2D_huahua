@@ -39,8 +39,8 @@ export const TUTORIAL_COPY = {
     invalidAction: '拖到房间空地上就可以摆放',
   },
   shopCompleteDialog: {
-    title: '装修能升星',
-    body: '装修花店会攒星升星，\n看上方星星和进度条。\n星级越高，合成工具越强~',
+    title: '装修能升级',
+    body: '装修花店会攒星升级，\n看上方星星和进度条。\n升级后会获得更加高级的合成工具哦',
     buttonText: '回去继续做花束',
   },
 } as const;
