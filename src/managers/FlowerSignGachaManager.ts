@@ -9,9 +9,30 @@ import {
   FLOWER_SIGN_GACHA_POOL,
   type FlowerSignPoolEntry,
 } from '@/config/FlowerSignGachaConfig';
+import { WISHING_FOUNTAIN_UNLOCK_LEVEL } from '@/config/WorldMapConfig';
+import { PersistService } from '@/core/PersistService';
+import { AdEntitlementManager, DailyAdEntitlement } from '@/managers/AdEntitlementManager';
 import { CurrencyManager } from '@/managers/CurrencyManager';
 import { RewardBoxManager } from '@/managers/RewardBoxManager';
 import { FlowerSignTicketManager } from '@/managers/FlowerSignTicketManager';
+
+const SHOP_AUTO_OPEN_DATE_KEY = 'huahua_flower_sign_shop_auto_open';
+
+function todayKey(): string {
+  return new Date().toISOString().slice(0, 10);
+}
+
+/** 花坊当日首次进入且仍有广告免费十连时，自动弹出许愿喷泉 */
+export function shouldAutoOpenFlowerSignOnShopEnter(): boolean {
+  if (CurrencyManager.state.level < WISHING_FOUNTAIN_UNLOCK_LEVEL) return false;
+  if (!AdEntitlementManager.canUseDaily(DailyAdEntitlement.FLOWER_SIGN_DAILY_DRAW)) return false;
+  const last = PersistService.readJSON<string>(SHOP_AUTO_OPEN_DATE_KEY);
+  return last !== todayKey();
+}
+
+export function markFlowerSignAutoOpenedOnShopEnter(): void {
+  PersistService.writeJSON(SHOP_AUTO_OPEN_DATE_KEY, todayKey());
+}
 
 export type FlowerSignReward =
   | { kind: 'reward_box_item'; itemId: string; count: number }

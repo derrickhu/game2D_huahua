@@ -32,6 +32,7 @@ import { EventManager } from './EventManager';
 import { RoomLayoutManager } from './RoomLayoutManager';
 import { TutorialManager } from './TutorialManager';
 import { AffinityManager } from './AffinityManager';
+import { CustomerManager } from './CustomerManager';
 import { AffinityCardManager } from './AffinityCardManager';
 import { DailyCandyManager } from './DailyCandyManager';
 import { IdleManager } from './IdleManager';
@@ -103,6 +104,7 @@ const GM_GROUP_ORDER: readonly string[] = [
   ' 卡牌系统',
   ' 离线/糖果',
   ' 棋盘操作',
+  ' 订单/客人',
   ' 增加物品',
   ' 装修系统',
   ' 系统测试',
@@ -554,6 +556,15 @@ class GMManagerClass {
         }
         return ` 填充了 ${count} 个高级花朵`;
       },
+    });
+
+    // ========== 订单/客人 ==========
+    this._commands.push({
+      id: 'gm_spawn_timed_diamond_order',
+      group: ' 订单/客人',
+      name: ' 立即刷限时钻石单',
+      desc: '强制生成大富翁限时钻石订单（绕过概率/每日上限；若已有则替换）',
+      execute: () => CustomerManager.gmSpawnTimedDiamondOrder(),
     });
 
     // ========== 增加物品（收纳盒 / 棋盘）==========

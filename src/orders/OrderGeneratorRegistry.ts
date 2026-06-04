@@ -2,6 +2,7 @@
  * 订单需求生成：基础档池、饮品槽回退（蝴蝶/冷饮/甜品）、组合单、成长加成、活动钩子占位。
  */
 import type { CustomerDemandDef } from '@/config/CustomerConfig';
+import { DEFAULT_SPECIAL_CUSTOMER_BY_ORDER_KIND } from '@/config/CustomerConfig';
 import {
   ORDER_TIERS,
   getEffectiveMaxLevel,
@@ -392,15 +393,7 @@ function shuffled<T>(arr: readonly T[], rng: () => number): T[] {
   return [...arr].sort(() => rng() - 0.5);
 }
 
-function tryGenerateTimedDiamondOrder(ctx: OrderGenContext): OrderGenResult | null {
-  if (!ctx.allowTimedDiamondOrder) return null;
-  if (ctx.playerLevel < TIMED_DIAMOND_ORDER_MIN_PLAYER_LEVEL) return null;
-
-  const todayCount = Math.max(0, ctx.timedDiamondOrdersToday ?? 0);
-  const chance = TIMED_DIAMOND_ORDER_BASE_CHANCE
-    * (todayCount === 0 ? TIMED_DIAMOND_ORDER_FIRST_DAILY_CHANCE_MULT : 1);
-  if (ctx.rng() >= chance) return null;
-
+function buildTimedDiamondOrderSlots(ctx: OrderGenContext): OrderGenSlot[] | null {
   const grouped = timedCandidateLines(ctx.lines)
     .map(line => ({
       lineKey: `${line.category}:${line.line}`,
@@ -430,14 +423,39 @@ function tryGenerateTimedDiamondOrder(ctx: OrderGenContext): OrderGenResult | nu
   }
 
   if (picked.length !== TIMED_DIAMOND_ORDER_SLOT_COUNT) return null;
-  const slots = picked.map(c => ({ itemId: c.itemId }));
+  return picked.map(c => ({ itemId: c.itemId }));
+}
+
+function timedDiamondOrderFromSlots(slots: OrderGenSlot[]): OrderGenResult {
   return {
     slots,
     orderType: 'timed',
     timeLimit: TIMED_DIAMOND_ORDER_TIME_LIMIT_SECONDS,
     diamondReward: computeTimedDiamondReward(slots),
+    customerTypeId: DEFAULT_SPECIAL_CUSTOMER_BY_ORDER_KIND.timedDiamond,
     generationKind: 'timedDiamond',
   };
+}
+
+function tryGenerateTimedDiamondOrder(ctx: OrderGenContext): OrderGenResult | null {
+  if (!ctx.allowTimedDiamondOrder) return null;
+  if (ctx.playerLevel < TIMED_DIAMOND_ORDER_MIN_PLAYER_LEVEL) return null;
+
+  const todayCount = Math.max(0, ctx.timedDiamondOrdersToday ?? 0);
+  const chance = TIMED_DIAMOND_ORDER_BASE_CHANCE
+    * (todayCount === 0 ? TIMED_DIAMOND_ORDER_FIRST_DAILY_CHANCE_MULT : 1);
+  if (ctx.rng() >= chance) return null;
+
+  const slots = buildTimedDiamondOrderSlots(ctx);
+  if (!slots) return null;
+  return timedDiamondOrderFromSlots(slots);
+}
+
+/** GM / 调试：跳过概率与每日上限，强制生成限时钻石单 */
+export function forceGenerateTimedDiamondOrder(ctx: OrderGenContext): OrderGenResult | null {
+  const slots = buildTimedDiamondOrderSlots(ctx);
+  if (!slots) return null;
+  return timedDiamondOrderFromSlots(slots);
 }
 
 /** 当前解锁工具能力下，订单槽位是否不超过 cap+1（与 aspirational 上限一致） */
@@ -472,6 +490,7 @@ export function generateOrderDemands(ctx: OrderGenContext): OrderGenResult | nul
       timeLimit: hook.timeLimit ?? tierDef.timeLimit,
       diamondReward: hook.diamondReward,
       bonusMultiplier: hook.bonusMultiplier,
+      customerTypeId: hook.customerTypeId,
       generationKind: 'eventStub',
     };
   }

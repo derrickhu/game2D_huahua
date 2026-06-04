@@ -3,7 +3,7 @@
  * 策划调参入口；生成逻辑见 OrderGeneratorRegistry + CustomerManager。
  */
 import { ITEM_DEFS } from '@/config/ItemConfig';
-import { computeOrderLevelDifficulty, type OrderTier, type UnlockedLines } from '@/config/OrderTierConfig';
+import { computeOrderItemDifficulty, type OrderTier, type UnlockedLines } from '@/config/OrderTierConfig';
 import type { OrderGenSlot } from '@/orders/types';
 
 /** 略高于 toolCap 的概率（与 pickItemLevel 一致） */
@@ -45,7 +45,7 @@ export const ORDER_GROWTH_BONUS_MULTIPLIER = 1.18;
 
 /**
  * 成长单语义：槽位 max(norm) 须达到此值才保留成长标记与倍率，否则降级为基础单。
- * norm = item.level / 统一订单难度参考等级
+ * norm = 13 级绝对标尺 + 产线后段补偿后的订单物品难度
  */
 export const ORDER_GROWTH_MIN_MAX_NORM = 0.42;
 
@@ -98,9 +98,9 @@ export const ORDER_SPAWN_MAX_ATTEMPTS = 10;
 /** 限时钻石订单：6 级后开放，碎片化游玩按小时级倒计时 */
 export const TIMED_DIAMOND_ORDER_MIN_PLAYER_LEVEL = 6;
 /** 每次正常刷客时的基础概率；再由每日上限与“当前已有一单”约束压住频率 */
-export const TIMED_DIAMOND_ORDER_BASE_CHANCE = 0.035;
-/** 当天还没出过限时单时，略微提高概率，长时间在线更接近 1-2 单 */
-export const TIMED_DIAMOND_ORDER_FIRST_DAILY_CHANCE_MULT = 1.35;
+export const TIMED_DIAMOND_ORDER_BASE_CHANCE = 0.06;
+/** 当天还没出过限时单时，明显提高概率，让每日首单更有体感 */
+export const TIMED_DIAMOND_ORDER_FIRST_DAILY_CHANCE_MULT = 1.6;
 export const TIMED_DIAMOND_ORDER_DAILY_CAP = 2;
 export const TIMED_DIAMOND_ORDER_SLOT_COUNT = 3;
 export const TIMED_DIAMOND_ORDER_MIN_ITEM_LEVEL = 6;
@@ -142,7 +142,7 @@ export function orderGrowthRollChance(tier: OrderTier, playerLevel?: number): nu
 export function slotNormForItemId(itemId: string): number {
   const def = ITEM_DEFS.get(itemId);
   if (!def) return 0;
-  return computeOrderLevelDifficulty(def.level);
+  return computeOrderItemDifficulty(def);
 }
 
 /** 多槽 max(norm)，用于成长单校验 */

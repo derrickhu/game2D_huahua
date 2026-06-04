@@ -66,6 +66,10 @@ import { AdManager, AdScene } from '@/managers/AdManager';
 import { ConfirmDialog } from '@/gameobjects/ui/ConfirmDialog';
 import { NewbieGiftPackEntryButton } from '@/gameobjects/ui/NewbieGiftPackEntryButton';
 import { NewbieGiftPackManager } from '@/managers/NewbieGiftPackManager';
+import {
+  markFlowerSignAutoOpenedOnShopEnter,
+  shouldAutoOpenFlowerSignOnShopEnter,
+} from '@/managers/FlowerSignGachaManager';
 import { ENABLE_SHOP_MISC_DRAWER } from '@/config/FeatureFlags';
 
 // ── 布局常量 ──
@@ -81,9 +85,11 @@ const WORLD_MAP_ABOVE_OPERATE_GAP = 8;
 const WORLD_MAP_BTN_LIFT_PX = 50;
 /** 大地图入口：图标半径（逻辑 px） */
 const WORLD_MAP_ICON_R = 40;
-/** 「地图」字号；与 WORLD_MAP_LABEL_Y 一起参与 mapExtentBelowCenter 估算 */
-const WORLD_MAP_LABEL_FONT = 14;
-const WORLD_MAP_LABEL_H = 18;
+/** 「地图 / 许愿 / 家具 / 装扮」等底栏圆钮文案字号 */
+const WORLD_MAP_LABEL_FONT = 18;
+const WORLD_MAP_LABEL_H = 22;
+/** 左上 / 右上侧边活动钮（图鉴、签到等）文案字号 */
+const SIDE_BTN_LABEL_FONT = 19;
 /** 许愿入口图标半径（与大地图同尺寸，保持视觉一致） */
 const WISHING_ICON_R = WORLD_MAP_ICON_R;
 /**
@@ -563,7 +569,21 @@ export class ShopScene implements Scene {
       }
     } else {
       this._scheduleNewbieGiftAutoPrompt();
+      this._scheduleFlowerSignAutoPrompt();
     }
+  }
+
+  /** 花坊当日首次进入：已解锁许愿池且仍有免费十连时自动打开面板 */
+  private _scheduleFlowerSignAutoPrompt(): void {
+    if (!shouldAutoOpenFlowerSignOnShopEnter()) return;
+    const delayMs = NewbieGiftPackManager.shouldAutoOpenOnShopEnter ? 2600 : 1000;
+    window.setTimeout(() => {
+      if (SceneManager.current?.name !== 'shop') return;
+      if (TutorialManager.isActive) return;
+      if (!shouldAutoOpenFlowerSignOnShopEnter()) return;
+      markFlowerSignAutoOpenedOnShopEnter();
+      EventBus.emit('panel:openFlowerSignGacha');
+    }, delayMs);
   }
 
   /** 教程完成后首次进花坊：延迟自动弹出新手礼包（不与合成页签到叠在一起） */
@@ -1276,8 +1296,8 @@ export class ShopScene implements Scene {
 
     // 右端礼盒：点击预览「下一星级」礼包内容
     const giftTap = new PIXI.Container();
-    giftTap.position.set(PROGRESS_BAR_W + 24, PROGRESS_BAR_H / 2);
-    const giftHit = 44;
+    giftTap.position.set(PROGRESS_BAR_W + 30, PROGRESS_BAR_H / 2);
+    const giftHit = 54;
     giftTap.hitArea = new PIXI.Rectangle(-giftHit / 2, -giftHit / 2, giftHit, giftHit);
     giftTap.eventMode = 'static';
     giftTap.cursor = 'pointer';
@@ -1285,12 +1305,12 @@ export class ShopScene implements Scene {
     if (giftTex) {
       const giftSp = new PIXI.Sprite(giftTex);
       giftSp.anchor.set(0.5, 0.5);
-      giftSp.width = 30;
-      giftSp.height = 30;
+      giftSp.width = 42;
+      giftSp.height = 42;
       giftSp.eventMode = 'none';
       giftTap.addChild(giftSp);
     } else {
-      const gift = new PIXI.Text('礼', { fontSize: 20, fontFamily: FONT_FAMILY, fill: COLORS.TEXT_DARK });
+      const gift = new PIXI.Text('礼', { fontSize: 26, fontFamily: FONT_FAMILY, fill: COLORS.TEXT_DARK });
       gift.anchor.set(0.5, 0.5);
       gift.eventMode = 'none';
       giftTap.addChild(gift);
@@ -2005,6 +2025,20 @@ export class ShopScene implements Scene {
       container.addChild(icon);
     }
 
+    // 文案：与右下「许愿 / 地图」一致，压在图标下缘
+    const labelY = iconR - 10;
+    const label = new PIXI.Text(def.label, {
+      fontSize: WORLD_MAP_LABEL_FONT,
+      fill: 0xFFFFFF,
+      fontFamily: FONT_FAMILY,
+      fontWeight: 'bold',
+      stroke: 0x3E2723,
+      strokeThickness: 3,
+    });
+    label.anchor.set(0.5, 0);
+    label.y = labelY;
+    container.addChild(label);
+
     // 红点
     const redDot = new PIXI.Graphics();
     redDot.beginFill(0xFF3333);
@@ -2017,7 +2051,12 @@ export class ShopScene implements Scene {
 
     container.eventMode = 'static';
     container.cursor = 'pointer';
-    container.hitArea = new PIXI.Circle(0, 0, iconR + 10);
+    container.hitArea = new PIXI.Rectangle(
+      -iconR - 12,
+      -iconR - 12,
+      (iconR + 12) * 2,
+      iconR + 12 + labelY + WORLD_MAP_LABEL_H,
+    );
     container.on('pointerdown', () => {
       TweenManager.cancelTarget(container.scale);
       container.scale.set(0.85);
@@ -2096,12 +2135,12 @@ export class ShopScene implements Scene {
     // 3. 文字标签：白色+描边，压在图标底边（参考 TopBar 星星样式）
     const labelY = iconCY + iconSize / 2 - 2; // 与图标底边重合
     const label = new PIXI.Text(def.label, {
-      fontSize: 16,
+      fontSize: SIDE_BTN_LABEL_FONT,
       fill: 0xFFFFFF,
       fontFamily: FONT_FAMILY,
       fontWeight: 'bold',
       stroke: 0x00000040,   // 半透明黑色描边增加对比
-      strokeThickness: 3,
+      strokeThickness: 3.5,
     });
     label.anchor.set(0.5, 0.5);
     label.position.set(0, labelY);
@@ -2271,7 +2310,7 @@ export class ShopScene implements Scene {
       fontFamily: FONT_FAMILY,
       fontWeight: 'bold',
       stroke: 0x3E2723,
-      strokeThickness: 2.5,
+      strokeThickness: 3,
     });
     label.anchor.set(0.5, 0);
     label.y = labelY;
@@ -2380,7 +2419,7 @@ export class ShopScene implements Scene {
       fontFamily: FONT_FAMILY,
       fontWeight: 'bold',
       stroke: 0x3E2723,
-      strokeThickness: 2.5,
+      strokeThickness: 3,
     });
     label.anchor.set(0.5, 0);
     label.y = labelY;

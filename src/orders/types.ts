@@ -24,6 +24,8 @@ export interface OrderGenResult {
   timeLimit: number | null;
   diamondReward?: number;
   bonusMultiplier?: number;
+  /** 特殊订单可指定专属客人；普通订单留空走多样性随机 */
+  customerTypeId?: string;
   generationKind: OrderGenerationKind;
 }
 
@@ -34,6 +36,7 @@ export type ActivityOrderPartial = Partial<{
   timeLimit: number | null;
   diamondReward: number;
   bonusMultiplier: number;
+  customerTypeId: string;
 }>;
 
 export type ActivityOrderHook = (ctx: OrderGenContext) => ActivityOrderPartial | null;

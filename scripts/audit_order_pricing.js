@@ -102,7 +102,7 @@ function computeContentTier(slots) {
   const norms = slots
     .filter(slot => LINE_META[slot.line])
     .sort((a, b) => `${a.line}:${a.level}`.localeCompare(`${b.line}:${b.level}`))
-    .map(slot => orderLevelDifficulty(slot.level));
+    .map(slot => orderItemDifficulty(slot));
   if (norms.length === 0) return 'C';
   const maxNorm = Math.max(...norms);
   const avgNorm = norms.reduce((a, b) => a + b, 0) / norms.length;
@@ -135,6 +135,20 @@ function effectiveMaxLevel(toolLevel, maxItemLevel) {
 function orderLevelDifficulty(level) {
   if (!Number.isFinite(level) || level <= 0) return 0;
   return clamp(Math.floor(level) / ORDER_DIFFICULTY_REFERENCE_LEVEL, 0, 1);
+}
+
+function smoothstep(edge0, edge1, x) {
+  const t = clamp((x - edge0) / (edge1 - edge0), 0, 1);
+  return t * t * (3 - 2 * t);
+}
+
+function orderItemDifficulty(slot) {
+  const absolute = orderLevelDifficulty(slot.level);
+  const maxLevel = LINE_META[slot.line]?.maxLevel ?? 0;
+  if (!Number.isFinite(maxLevel) || maxLevel <= 1) return absolute;
+  const relative = clamp(Math.floor(slot.level) / maxLevel, 0, 1);
+  const lateLineBonus = 0.14 * smoothstep(0.65, 1, relative);
+  return clamp(absolute + lateLineBonus, 0, 1);
 }
 
 function linePower(toolLevel, line) {

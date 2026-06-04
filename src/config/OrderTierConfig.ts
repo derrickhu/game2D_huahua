@@ -3,7 +3,7 @@
  *
  * 每档定义需求槽数、物品等级范围、可用产线。花愿由物品单价 + 多槽加成计算。
  * CustomerManager 按玩家等级 + 已解锁产线随机选「模板档」生成需求；UI 角标与存档中的 tier
- * 由 computeTierFromOrderSlots 按物品绝对等级统一计算。
+ * 由 computeTierFromOrderSlots 按物品难度统一计算。
  */
 import { Category, DrinkLine, FlowerLine, ITEM_DEFS } from './ItemConfig';
 import type { CustomerDemandDef } from './CustomerConfig';
@@ -232,15 +232,25 @@ export const TIER_COLORS: Record<OrderTier, number> = {
   S: 0xc55a8a,
 };
 
+function _smoothstep(edge0: number, edge1: number, x: number): number {
+  const t = _clamp((x - edge0) / (edge1 - edge0), 0, 1);
+  return t * t * (3 - 2 * t);
+}
+
 /**
- * 内容档位：按各槽物品绝对等级在统一 13 级标尺上的难度聚合，
- * 再映射到 C/B/A/S。全玩家统一标尺，与生成时使用的「模板档位」独立。
- *
- * - 顺序无关：对 itemId 排序后再算，相同 multiset 必得同档。
- * - 得分 = 0.45 * maxNorm + 0.55 * avgNorm + 多槽加成（2 槽 +0.03，3 槽 +0.06）。
+ * 订单内容物品难度：以 13 级主链作绝对标尺，并对各产线后段做小幅补偿。
+ * 这样花束 / 短饮品线的末段不会被低估，但中前段也不会像旧版按 maxLevel 归一那样过早变 S。
  */
+export function computeOrderItemDifficulty(def: { level: number; maxLevel: number }): number {
+  const absolute = computeOrderLevelDifficulty(def.level);
+  if (!Number.isFinite(def.maxLevel) || def.maxLevel <= 1) return absolute;
+  const relative = _clamp(Math.floor(def.level) / def.maxLevel, 0, 1);
+  const lateLineBonus = 0.14 * _smoothstep(0.65, 1, relative);
+  return _clamp(absolute + lateLineBonus, 0, 1);
+}
+
 /**
- * 按槽位物品绝对等级难度算内容档位（UI 角标 / 花愿倍率）。
+ * 按槽位物品难度算内容档位（UI 角标 / 花愿倍率）。
  * @param playerLevel 传入时：1 级角标最高 B；2 级更易出现金色 A、仍无 S。
  */
 export function computeTierFromOrderSlots(
@@ -252,7 +262,7 @@ export function computeTierFromOrderSlots(
   for (const id of sorted) {
     const def = ITEM_DEFS.get(id);
     if (!def) continue;
-    norms.push(computeOrderLevelDifficulty(def.level));
+    norms.push(computeOrderItemDifficulty(def));
   }
   if (norms.length === 0) return 'C';
 

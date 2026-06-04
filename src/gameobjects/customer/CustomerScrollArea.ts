@@ -12,6 +12,7 @@ import { Game } from '@/core/Game';
 import { CustomerView, CARD_W } from './CustomerView';
 import { CustomerInstance, CustomerManager } from '@/managers/CustomerManager';
 import { EventBus } from '@/core/EventBus';
+import { TextureCache } from '@/utils/TextureCache';
 import { COLORS, FONT_FAMILY } from '@/config/Constants';
 
 /** 卡片间距（客人之间额外留白；中心距主要由 CustomerView.CARD_W 决定） */
@@ -85,6 +86,9 @@ export class CustomerScrollArea extends PIXI.Container {
 
     // 监听客人事件
     this._bindEvents();
+
+    // 限时单倒计时复用每日挑战秒表图，提前拉取避免首帧空白
+    void TextureCache.preloadKeys(['daily_challenge_countdown_stopwatch_nb2']);
   }
 
   /** 区域高度 */

@@ -52,6 +52,10 @@ const IMMERSIVE_IDLE_DY = 50;
 /** 回退壳：标题区 / 底部交互区与立绘模式对齐的纵向偏移 */
 const FALLBACK_HEADER_DY = 100;
 const FALLBACK_IDLE_DY = 50;
+const CLOSE_BTN_MAX_SIDE = 56;
+const CLOSE_BTN_HIT_PAD = 12;
+/** 全屏立绘模式：关闭钮距右缘（与装修面板一致） */
+const IMMERSIVE_CLOSE_INSET_RIGHT = 44;
 
 export class FlowerSignGachaPanel extends PIXI.Container {
   private _isOpen = false;
@@ -159,6 +163,7 @@ export class FlowerSignGachaPanel extends PIXI.Container {
     this.addChild(this._bg);
 
     this._panelRoot = new PIXI.Container();
+    this._panelRoot.sortableChildren = true;
     this._panelRoot.eventMode = 'static';
     this._panelRoot.on('pointertap', (e: PIXI.FederatedPointerEvent) => e.stopPropagation());
     this.addChild(this._panelRoot);
@@ -190,22 +195,7 @@ export class FlowerSignGachaPanel extends PIXI.Container {
     this._chromeLayer = new PIXI.Container();
     this._panelRoot.addChild(this._chromeLayer);
 
-    this._closeBtn = new PIXI.Container();
-    this._closeBtn.eventMode = 'static';
-    this._closeBtn.cursor = 'pointer';
-    const cx = new PIXI.Graphics();
-    cx.beginFill(0xc45c4a, 0.95);
-    cx.drawCircle(0, 0, 16);
-    cx.endFill();
-    this._closeBtn.addChild(cx);
-    const xtxt = new PIXI.Text('×', { fontSize: 16, fill: 0xffffff, fontFamily: FONT_FAMILY, fontWeight: 'bold' });
-    xtxt.anchor.set(0.5);
-    this._closeBtn.addChild(xtxt);
-    this._closeBtn.hitArea = new PIXI.Circle(0, 0, 22);
-    this._closeBtn.on('pointertap', (e: PIXI.FederatedPointerEvent) => {
-      e.stopPropagation();
-      this.close();
-    });
+    this._closeBtn = this._createCloseButton();
     this._panelRoot.addChild(this._closeBtn);
 
     this._idleLayer = new PIXI.Container();
@@ -255,9 +245,8 @@ export class FlowerSignGachaPanel extends PIXI.Container {
       immersive = false;
     }
 
-    const closeX = immersive ? W - 36 : px + pw - 20;
-    const closeY = immersive ? Game.safeTop + 22 : py + 20;
-    this._closeBtn.position.set(closeX, closeY);
+    this._layoutCloseButton(immersive, px, pw, py);
+    this._refreshCloseButtonTexture();
 
     if (!immersive) {
       const titleY = py + 16 + FALLBACK_HEADER_DY;
@@ -315,9 +304,10 @@ export class FlowerSignGachaPanel extends PIXI.Container {
    */
   private _buildGachaRibbonHeader(W: number): void {
     const cx = W / 2;
-    let y = Game.safeTop + 28 + IMMERSIVE_HEADER_DY;
+    const ribbon = this._gachaRibbonLayout();
+    let y = ribbon.topY;
     const decoRibbon = TextureCache.get('deco_panel_title_ribbon');
-    let titleCenterY = y + 22;
+    let titleCenterY = ribbon.centerY;
     let onRedRibbon = false;
 
     if (decoRibbon && decoRibbon.width > 2) {
@@ -326,12 +316,11 @@ export class FlowerSignGachaPanel extends PIXI.Container {
       BH = Math.max(52, Math.min(86, BH));
       const sp = new PIXI.Sprite(decoRibbon);
       sp.anchor.set(0.5, 0.5);
-      sp.position.set(cx, y + BH / 2);
+      sp.position.set(cx, ribbon.centerY);
       sp.width = BW;
       sp.height = BH;
       this._chromeLayer.addChild(sp);
-      titleCenterY = y + BH / 2;
-      y += BH + 10;
+      y = ribbon.bottomY + 10;
       onRedRibbon = true;
     } else {
       const title = new PIXI.Text('许愿喷泉', {
@@ -395,6 +384,100 @@ export class FlowerSignGachaPanel extends PIXI.Container {
 
   private _syncTicketLabel(): void {
     this._ticketText.text = `：${FlowerSignTicketManager.count}`;
+  }
+
+  private _createCloseButton(): PIXI.Container {
+    const btn = new PIXI.Container();
+    btn.zIndex = 30;
+    btn.eventMode = 'static';
+    btn.cursor = 'pointer';
+    const closeTex = TextureCache.get('deco_nb2_close_btn_1x1') ?? TextureCache.get('warehouse_close_btn');
+    const closeSp = new PIXI.Sprite(closeTex ?? PIXI.Texture.EMPTY);
+    closeSp.anchor.set(0.5);
+    if (closeTex && closeTex.width > 0) {
+      const s = CLOSE_BTN_MAX_SIDE / Math.max(closeTex.width, closeTex.height);
+      closeSp.scale.set(s);
+    } else {
+      const fallback = new PIXI.Graphics();
+      fallback.beginFill(0xef6b6b, 1);
+      fallback.drawCircle(0, 0, 22);
+      fallback.endFill();
+      fallback.lineStyle(2.5, 0xffffff, 0.95);
+      fallback.drawCircle(0, 0, 22);
+      fallback.lineStyle(3, 0xffffff, 1);
+      fallback.moveTo(-8, -8);
+      fallback.lineTo(8, 8);
+      fallback.moveTo(8, -8);
+      fallback.lineTo(-8, 8);
+      btn.addChild(fallback);
+    }
+    if (closeSp.texture !== PIXI.Texture.EMPTY) btn.addChild(closeSp);
+    const hit = Math.max(CLOSE_BTN_MAX_SIDE + CLOSE_BTN_HIT_PAD * 2, 72);
+    btn.hitArea = new PIXI.Circle(0, 0, hit / 2);
+    const onClose = (e: PIXI.FederatedPointerEvent): void => {
+      e.stopPropagation();
+      this.close();
+    };
+    btn.on('pointerdown', onClose);
+    btn.on('pointertap', onClose);
+    return btn;
+  }
+
+  private _layoutCloseButton(immersive: boolean, px: number, pw: number, py: number): void {
+    const { W } = this._layout;
+    if (immersive) {
+      const { x, y } = this._immersiveCloseButtonPos(W);
+      this._closeBtn.position.set(x, y);
+      return;
+    }
+    this._closeBtn.position.set(px + pw - 28, py + 24);
+  }
+
+  /** 与 `_buildGachaRibbonHeader` 红彩带标题同行，避免贴顶栏/胶囊区 */
+  private _immersiveCloseButtonPos(W: number): { x: number; y: number } {
+    const ribbon = this._gachaRibbonLayout();
+    return {
+      x: W - IMMERSIVE_CLOSE_INSET_RIGHT,
+      y: ribbon.centerY + 10,
+    };
+  }
+
+  private _gachaRibbonLayout(): { topY: number; centerY: number; bottomY: number } {
+    const topY = Game.safeTop + 28 + IMMERSIVE_HEADER_DY;
+    const decoRibbon = TextureCache.get('deco_panel_title_ribbon');
+    if (decoRibbon && decoRibbon.width > 2) {
+      const BW = 440;
+      let BH = Math.round((BW * decoRibbon.height) / decoRibbon.width);
+      BH = Math.max(52, Math.min(86, BH));
+      return { topY, centerY: topY + BH / 2, bottomY: topY + BH };
+    }
+    return { topY, centerY: topY + 22, bottomY: topY + 44 };
+  }
+
+  private _refreshCloseButtonTexture(): void {
+    if (!this._closeBtn) return;
+    this._closeBtn.removeChildren();
+    const closeTex = TextureCache.get('deco_nb2_close_btn_1x1') ?? TextureCache.get('warehouse_close_btn');
+    if (closeTex && closeTex.width > 0) {
+      const closeSp = new PIXI.Sprite(closeTex);
+      closeSp.anchor.set(0.5);
+      const s = CLOSE_BTN_MAX_SIDE / Math.max(closeTex.width, closeTex.height);
+      closeSp.scale.set(s);
+      this._closeBtn.addChild(closeSp);
+    } else {
+      const fallback = new PIXI.Graphics();
+      fallback.beginFill(0xef6b6b, 1);
+      fallback.drawCircle(0, 0, 22);
+      fallback.endFill();
+      fallback.lineStyle(2.5, 0xffffff, 0.95);
+      fallback.drawCircle(0, 0, 22);
+      fallback.lineStyle(3, 0xffffff, 1);
+      fallback.moveTo(-8, -8);
+      fallback.lineTo(8, 8);
+      fallback.moveTo(8, -8);
+      fallback.lineTo(-8, 8);
+      this._closeBtn.addChild(fallback);
+    }
   }
 
   private _buildIdleContent(

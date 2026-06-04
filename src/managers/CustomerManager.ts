@@ -14,17 +14,15 @@ import {
   ORDER_TIER_HUAYUAN_MULT,
   SINGLE_SLOT_MERGE_PARITY_FACTOR,
 } from '@/config/OrderHuayuanConfig';
-import { CUSTOMER_TYPES } from '@/config/CustomerConfig';
+import { CUSTOMER_TYPES, CUSTOMER_TYPE_MAP, type CustomerTypeDef } from '@/config/CustomerConfig';
 import { Category, ITEM_DEFS, findItemId } from '@/config/ItemConfig';
 import {
-  ORDER_TIERS,
   computeTierFromOrderSlots,
   getOrderTierWeights,
   getDynamicMaxCustomers,
   pickTierByWeight,
   type OrderTier,
   type OrderType,
-  type UnlockedLines,
 } from '@/config/OrderTierConfig';
 import {
   ORDER_SPAWN_MAX_ATTEMPTS,
@@ -37,6 +35,7 @@ import {
 } from '@/config/OrderSpawnConfig';
 import { computeUnlockedLines } from '@/orders/unlockedLines';
 import {
+  forceGenerateTimedDiamondOrder,
   generateOrderDemands,
   validateOrderSlotsToolCap,
 } from '@/orders/OrderGeneratorRegistry';
@@ -113,6 +112,8 @@ const VALID_ORDER_KINDS = new Set<OrderGenerationKind>([
   'timedDiamond',
   'eventStub',
 ]);
+
+const RECENT_CUSTOMER_AVOID_N = 4;
 
 function localDateKey(ts = Date.now()): string {
   const d = new Date(ts);
@@ -252,6 +253,8 @@ class CustomerManagerClass {
   private _timedOrderRefreshTicker = 0;
   /** 上一刷客人的 typeId，用于避免连续同人设（池子 >1 时） */
   private _lastSpawnTypeId: string | null = null;
+  /** 最近刷出的客人 typeId，用于普通订单多样性降权 */
+  private _recentSpawnTypeIds: string[] = [];
   /** 上一刷订单需求 fingerprint，用于避免连续完全相同需求 */
   private _lastOrderFingerprint: string | null = null;
 
@@ -384,11 +387,16 @@ class CustomerManagerClass {
   private _syncAntiRepeatFromQueueTail(): void {
     if (this._customers.length === 0) {
       this._lastSpawnTypeId = null;
+      this._recentSpawnTypeIds = [];
       this._lastOrderFingerprint = null;
       return;
     }
     const latest = this._customers.reduce((a, b) => (a.uid >= b.uid ? a : b));
     this._lastSpawnTypeId = latest.typeId;
+    this._recentSpawnTypeIds = [...this._customers]
+      .sort((a, b) => b.uid - a.uid)
+      .map(c => c.typeId)
+      .slice(0, RECENT_CUSTOMER_AVOID_N);
     this._lastOrderFingerprint = orderSlotsFingerprint(latest.slots);
   }
 
@@ -575,6 +583,46 @@ class CustomerManagerClass {
     }
   }
 
+  private _rememberRecentCustomerType(typeId: string): void {
+    this._recentSpawnTypeIds = [
+      typeId,
+      ...this._recentSpawnTypeIds.filter(id => id !== typeId),
+    ].slice(0, RECENT_CUSTOMER_AVOID_N);
+  }
+
+  private _pickCustomerTypeForOrder(gen: OrderGenResult): CustomerTypeDef {
+    const requested = gen.customerTypeId ? CUSTOMER_TYPE_MAP.get(gen.customerTypeId) : undefined;
+    if (requested) return requested;
+
+    const pool = CUSTOMER_TYPES.filter(t => !t.specialOnly);
+    if (pool.length === 0) return CUSTOMER_TYPES[0]!;
+
+    const queueCounts = new Map<string, number>();
+    for (const c of this._customers) {
+      queueCounts.set(c.typeId, (queueCounts.get(c.typeId) ?? 0) + 1);
+    }
+
+    const weighted = pool.map(type => {
+      let weight = 1;
+      if (type.id === this._lastSpawnTypeId && pool.length > 1) weight *= 0.08;
+      const recentIndex = this._recentSpawnTypeIds.indexOf(type.id);
+      if (recentIndex >= 0) weight *= 0.25 + recentIndex * 0.15;
+      const inQueue = queueCounts.get(type.id) ?? 0;
+      if (inQueue > 0) weight *= 1 / (1 + inQueue * 1.6);
+      return { type, weight };
+    });
+
+    const total = weighted.reduce((sum, row) => sum + row.weight, 0);
+    if (total <= 0) return pool[Math.floor(Math.random() * pool.length)]!;
+
+    let r = Math.random() * total;
+    for (const row of weighted) {
+      r -= row.weight;
+      if (r <= 0) return row.type;
+    }
+    return weighted[weighted.length - 1]!.type;
+  }
+
   private _spawnCustomer(): void {
     const level = LevelManager.level;
     const lines = computeUnlockedLines(BoardManager.cells);
@@ -583,17 +631,6 @@ class CustomerManagerClass {
 
     const tier = pickTierByWeight(weights);
 
-    const pool = CUSTOMER_TYPES.filter(t =>
-      t.tiers.includes(tier) && this._isTypeAvailableForTier(t.id, tier, lines),
-    );
-    if (pool.length === 0) return;
-
-    let typePool = pool;
-    if (this._lastSpawnTypeId && pool.length > 1) {
-      const avoid = pool.filter(t => t.id !== this._lastSpawnTypeId);
-      if (avoid.length > 0) typePool = avoid;
-    }
-    const type = typePool[Math.floor(Math.random() * typePool.length)]!;
     const allowTimedDiamondOrder =
       level >= TIMED_DIAMOND_ORDER_MIN_PLAYER_LEVEL &&
       this._timedDiamondOrdersToday < TIMED_DIAMOND_ORDER_DAILY_CAP &&
@@ -621,6 +658,7 @@ class CustomerManagerClass {
     }
     if (!gen) gen = fallbackGen;
     if (!gen || gen.slots.length === 0) return;
+    const type = this._pickCustomerTypeForOrder(gen);
 
     const slots: DemandSlot[] = gen.slots.map(s => ({
       itemId: s.itemId,
@@ -657,6 +695,7 @@ class CustomerManagerClass {
     }
 
     this._lastSpawnTypeId = type.id;
+    this._rememberRecentCustomerType(type.id);
     this._lastOrderFingerprint = orderSlotsFingerprint(slots);
 
     this._customers.push(customer);
@@ -741,6 +780,80 @@ class CustomerManagerClass {
    * @param itemIds 订单槽物品 ID 列表，如 ['flower_fresh_1']
    * @param typeId  客人类型 ID，默认 'child'
    */
+  /**
+   * GM 专用：立即刷出限时钻石特殊订单（大富翁），绕过概率、等级与每日上限。
+   */
+  gmSpawnTimedDiamondOrder(): string {
+    if (!this._started) return '客人系统尚未启动';
+    if (TutorialManager.isActive) return '教程进行中不可用';
+
+    const maxC = this.maxCustomers;
+    if (this._customers.length >= maxC) {
+      return `客人队列已满（${maxC}/${maxC}），请先交付或等待空位`;
+    }
+
+    for (let i = this._customers.length - 1; i >= 0; i--) {
+      if (this._customers[i]!.orderType === 'timed') {
+        this._expireCustomerAt(i, false);
+      }
+    }
+
+    const level = LevelManager.level;
+    const lines = computeUnlockedLines(BoardManager.cells);
+    const gen = forceGenerateTimedDiamondOrder({
+      tier: 'B',
+      lines,
+      playerLevel: level,
+      rng: Math.random,
+    });
+    if (!gen || gen.slots.length === 0) {
+      return '无法生成限时钻石单：需有足够解锁产线且物品等级≥6';
+    }
+    if (!validateOrderSlotsToolCap(gen.slots, lines)) {
+      return '生成的限时单超出当前工具能力，请先升级工具或解锁产线';
+    }
+
+    const type = this._pickCustomerTypeForOrder(gen);
+    const slots: DemandSlot[] = gen.slots.map(s => ({
+      itemId: s.itemId,
+      lockedCellIndex: -1,
+    }));
+    const huayuan = this._computeCustomerHuayuan(type.id, slots, gen.bonusMultiplier, gen.orderType);
+    const weekendHuayuanBonus = WeekendHuayuanBoostManager.bonusFor(huayuan);
+    const contentTier = computeTierFromOrderSlots(slots.map(s => s.itemId), level);
+
+    const customer: CustomerInstance = {
+      uid: this._nextUid++,
+      typeId: type.id,
+      name: type.name,
+      emoji: type.emoji,
+      slots,
+      allSatisfied: false,
+      huayuanReward: huayuan,
+      weekendHuayuanBonus: weekendHuayuanBonus > 0 ? weekendHuayuanBonus : undefined,
+      tier: contentTier,
+      orderType: gen.orderType,
+      timeLimit: gen.timeLimit,
+      diamondReward: gen.diamondReward,
+      bonusMultiplier: gen.bonusMultiplier,
+      orderKind: gen.generationKind,
+    };
+
+    this._lastSpawnTypeId = type.id;
+    this._rememberRecentCustomerType(type.id);
+    this._lastOrderFingerprint = orderSlotsFingerprint(slots);
+    this._customers.push(customer);
+
+    console.log(
+      `[Customer][GM] 限时钻石单: ${customer.name} +${customer.diamondReward ?? 0}钻, 需求: ${customer.slots.map(s => s.itemId).join(', ')}`,
+    );
+    EventBus.emit('customer:arrived', customer);
+    this._rescanAll();
+
+    const hours = Math.round((gen.timeLimit ?? 0) / 3600);
+    return `已刷限时钻石单：${customer.name} +${customer.diamondReward ?? 0}钻，${hours}h 倒计时`;
+  }
+
   spawnScriptedCustomer(itemIds: string[], typeId = 'child'): void {
     this.clearAllCustomers();
     const type = CUSTOMER_TYPES.find(t => t.id === typeId) ?? CUSTOMER_TYPES[0];
@@ -765,19 +878,12 @@ class CustomerManagerClass {
     };
 
     this._customers.push(customer);
+    this._lastSpawnTypeId = type.id;
+    this._rememberRecentCustomerType(type.id);
+    this._lastOrderFingerprint = orderSlotsFingerprint(slots);
     console.log(`[Customer] 教程客人: ${customer.name} 需求: ${itemIds.join(', ')}`);
     EventBus.emit('customer:arrived', customer);
     this._rescanAll();
-  }
-
-  private _isTypeAvailableForTier(_typeId: string, tier: OrderTier, ulk: UnlockedLines): boolean {
-    const tierDef = ORDER_TIERS[tier];
-    const hasDrinkInPool = tierDef.demandPool.some(d => d.category === Category.DRINK);
-    if (hasDrinkInPool && !ulk.hasDrink) {
-      const hasFlowerOnly = tierDef.demandPool.some(d => d.category === Category.FLOWER);
-      if (!hasFlowerOnly) return false;
-    }
-    return true;
   }
 
   private _rescanAll(): void {

@@ -63,6 +63,14 @@ const REWARD_BADGE_PAD_Y = 5;
 const REWARD_BADGE_CAPSULE_GAP = 4;
 const REWARD_BADGE_RADIUS = Math.round((REWARD_BADGE_ICON + REWARD_BADGE_PAD_Y * 2) / 2);
 
+/** 限时订单倒计时：秒表图标高度、间距与胶囊内边距 */
+const TIMED_BADGE_ICON_H = 18;
+const TIMED_BADGE_ICON_TEXT_GAP = 4;
+const TIMED_BADGE_PAD_X = 8;
+const TIMED_BADGE_PAD_Y = 5;
+const TIMED_BADGE_CORNER_R = 8;
+const TIMED_BADGE_STOPWATCH_KEY = 'daily_challenge_countdown_stopwatch_nb2';
+
 export class CustomerView extends PIXI.Container {
   private _customer: CustomerInstance | null = null;
 
@@ -436,37 +444,69 @@ export class CustomerView extends PIXI.Container {
     if (!this._customer || this._customer.orderType !== 'timed') return;
     const remaining = Math.max(0, Math.ceil(this._customer.timeLimit ?? 0));
     const urgent = remaining <= 30 * 60;
-    const labelText = `限时 ${this._formatTimedOrderRemaining(remaining)}`;
+    const labelText = this._formatTimedOrderRemaining(remaining);
 
     const badge = new PIXI.Container();
     badge.eventMode = 'none';
-    badge.position.set(0, PANEL_H + 6);
+
+    const row = new PIXI.Container();
+    const rowH = TIMED_BADGE_ICON_H;
+    let contentW = 0;
+
+    const swTex = TextureCache.get(TIMED_BADGE_STOPWATCH_KEY);
+    if (swTex) {
+      const sw = new PIXI.Sprite(swTex);
+      const sc = TIMED_BADGE_ICON_H / Math.max(swTex.height, 1);
+      sw.scale.set(sc);
+      sw.anchor.set(0, 0.5);
+      sw.position.set(0, rowH / 2);
+      row.addChild(sw);
+      contentW += sw.width + TIMED_BADGE_ICON_TEXT_GAP;
+    }
 
     const label = new PIXI.Text(labelText, {
       fontSize: 15,
-      fill: urgent ? 0xFFFFFF : 0x7A3D18,
+      fill: urgent ? 0xFFFFFF : 0x3D5088,
       fontFamily: FONT_FAMILY,
       fontWeight: 'bold',
-      stroke: urgent ? 0x8A1E1E : 0xFFFFFF,
-      strokeThickness: 3,
+      ...(urgent
+        ? { stroke: 0x8A1E1E, strokeThickness: 2 }
+        : {}),
     });
-    label.anchor.set(0.5, 0.5);
+    label.anchor.set(0, 0.5);
+    label.position.set(contentW, rowH / 2);
+    row.addChild(label);
+    contentW += label.width;
 
-    const padX = 10;
-    const bw = Math.max(92, label.width + padX * 2);
-    const bh = 24;
+    const bw = contentW + TIMED_BADGE_PAD_X * 2;
+    const bh = rowH + TIMED_BADGE_PAD_Y * 2;
     const bg = new PIXI.Graphics();
-    bg.beginFill(urgent ? 0xE15B5B : 0xFFE1A6, urgent ? 0.95 : 0.94);
-    bg.drawRoundedRect(-bw / 2, -bh / 2, bw, bh, bh / 2);
+    bg.beginFill(urgent ? 0xE85A5A : 0xDCE6FF, urgent ? 0.96 : 0.94);
+    bg.drawRoundedRect(-bw / 2, -bh / 2, bw, bh, TIMED_BADGE_CORNER_R);
     bg.endFill();
-    bg.lineStyle(1.2, urgent ? 0xFFFFFF : 0xD9963C, urgent ? 0.75 : 0.65);
-    bg.drawRoundedRect(-bw / 2, -bh / 2, bw, bh, bh / 2);
+    bg.lineStyle(1.5, urgent ? 0xFFFFFF : 0x6E88D8, urgent ? 0.85 : 0.72);
+    bg.drawRoundedRect(-bw / 2, -bh / 2, bw, bh, TIMED_BADGE_CORNER_R);
+
+    row.position.set(-bw / 2 + TIMED_BADGE_PAD_X, -bh / 2 + TIMED_BADGE_PAD_Y);
 
     badge.addChild(bg);
-    badge.addChild(label);
-    badge.zIndex = 12;
-    this._infoPanel.addChild(badge);
+    badge.addChild(row);
+    badge.zIndex = 20;
+
+    // 放在头像右上侧，避免需求面板下缘被 CustomerScrollArea 的遮罩裁掉。
+    let badgeX = 58;
+    let badgeY = AVATAR_FEET_Y - 142;
+    if (this._avatarSprite.visible && this._avatarSprite.texture && this._avatarSprite.texture.width > 0) {
+      const halfW = (this._avatarSprite.texture.width * this._avatarSprite.scale.x) / 2;
+      const fullH = this._avatarSprite.texture.height * this._avatarSprite.scale.y;
+      badgeX = Math.min(PANEL_W / 2 - bw / 2 - 2, halfW + bw / 2 - 24);
+      badgeY = AVATAR_FEET_Y - fullH + 28;
+    }
+    badge.position.set(badgeX, badgeY);
+
+    this.addChild(badge);
     this._timedOrderBadge = badge;
+    this.sortChildren();
   }
 
   private _clearTimedOrderBadge(): void {
@@ -481,8 +521,7 @@ export class CustomerView extends PIXI.Container {
     const totalMinutes = Math.max(0, Math.ceil(seconds / 60));
     const h = Math.floor(totalMinutes / 60);
     const m = totalMinutes % 60;
-    if (h > 0) return `${h}小时${m.toString().padStart(2, '0')}分`;
-    return `${m}分钟`;
+    return `${h}h${m.toString().padStart(2, '0')}m`;
   }
 
   private _drawSlotItem(x: number, y: number, itemId: string, filled: boolean): void {

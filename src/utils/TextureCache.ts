@@ -119,6 +119,7 @@ const CHARS_IMAGE_MAP: Record<string, string> = {
   customer_athlete:   'subpkg_chars/images/customer/athlete.png',
   customer_mystery:   'subpkg_chars/images/customer/mystery.png',
   customer_celebrity: 'subpkg_chars/images/customer/celebrity.png',
+  customer_tycoon:    'subpkg_chars/images/customer/tycoon.png',
 
   // 友谊卡 / 图鉴系统：S1 首发卡面（路径 affinity_cards/）
   affinity_card_student_01: 'subpkg_chars/images/affinity_cards/card_student_01.png',
@@ -694,6 +695,14 @@ const DECO_IMAGE_MAP: Record<string, string> = {
   qinglian_lantern_frame: 'subpkg_deco/images/furniture/qinglian_lantern_frame.png',
   qinglian_scholar_rock: 'subpkg_deco/images/furniture/qinglian_scholar_rock.png',
   qinglian_guqin_stand: 'subpkg_deco/images/furniture/qinglian_guqin_stand.png',
+  qinglian_bamboo_window: 'subpkg_deco/images/furniture/qinglian_bamboo_window.png',
+  qinglian_wisteria_vanity: 'subpkg_deco/images/furniture/qinglian_wisteria_vanity.png',
+  qinglian_cloud_book_desk: 'subpkg_deco/images/furniture/qinglian_cloud_book_desk.png',
+  qinglian_moon_shelf: 'subpkg_deco/images/furniture/qinglian_moon_shelf.png',
+  qinglian_peony_screen: 'subpkg_deco/images/furniture/qinglian_peony_screen.png',
+  qinglian_cherry_wardrobe: 'subpkg_deco/images/furniture/qinglian_cherry_wardrobe.png',
+  qinglian_silk_daybed: 'subpkg_deco/images/furniture/qinglian_silk_daybed.png',
+  qinglian_lotus_canopy_bed: 'subpkg_deco/images/furniture/qinglian_lotus_canopy_bed.png',
 
   // ---- 房间背景 ----
   bg_room_default: 'subpkg_deco/images/house/bg_room_default_soft_nb2.png',
@@ -1258,6 +1267,21 @@ class TextureCacheClass {
       void this._loadTexture(key, path);
     }
     return null;
+  }
+
+  /**
+   * 获取可直接传给微信分享 imageUrl 的图片路径。
+   * CDN 资源优先返回已下载缓存；未命中时返回本地分包逻辑路径。
+   */
+  async resolveImageUrl(key: string): Promise<string | null> {
+    const path = IMAGE_MAP[key];
+    if (!path) return null;
+    try {
+      return await CdnAssetService.resolveOrDownload(path);
+    } catch (err) {
+      console.warn(`[TextureCache] 分享图路径解析失败: ${key} (${path})`, err);
+      return path;
+    }
   }
 
   /** 订阅纹理加载完成；用于打开后的 UI 自动刷新。返回取消订阅函数。 */

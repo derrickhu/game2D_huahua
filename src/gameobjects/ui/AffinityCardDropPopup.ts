@@ -408,7 +408,7 @@ export class AffinityCardDropPopup extends PIXI.Container {
   }
 
   private async _onShareTap(cur: AffinityCardDropResult): Promise<void> {
-    const imageUrl = await this.createShareSnapshotImageUrl();
+    const imageUrl = await this._createShareImageUrl(cur);
     shareAppMessageWithAnalytics(
       createAffinityCardShare(cur.card, imageUrl ?? undefined),
       'affinity_card',
@@ -429,6 +429,20 @@ export class AffinityCardDropPopup extends PIXI.Container {
         this._overlay,
       ],
     });
+  }
+
+  private async _createShareImageUrl(cur: AffinityCardDropResult): Promise<string | null> {
+    const snapshotUrl = await this.createShareSnapshotImageUrl();
+    if (snapshotUrl) return snapshotUrl;
+
+    const artKey = cur.card.artKey ?? `customer_${cur.card.ownerTypeId}`;
+    const directUrl = await TextureCache.resolveImageUrl(artKey);
+    if (!directUrl) {
+      console.warn('[AffinityCardDropPopup] 分享图生成失败，且无法解析卡牌原图:', artKey);
+    } else {
+      console.warn('[AffinityCardDropPopup] 分享截图失败，已回退为卡牌原图:', artKey, directUrl);
+    }
+    return directUrl;
   }
 
   private _clearShareButton(): void {
