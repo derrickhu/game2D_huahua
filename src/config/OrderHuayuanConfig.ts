@@ -19,9 +19,9 @@ export const CHALLENGE_ORDER_HUAYUAN_MULT = 1.06;
  */
 export const ORDER_TIER_HUAYUAN_MULT = {
   C: 1,
-  B: 1.1,
+  B: 1.2,
   A: 1.75,
-  S: 2.5,
+  S: 2.7,
 } as const;
 
 /**

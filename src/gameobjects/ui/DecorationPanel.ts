@@ -301,11 +301,24 @@ function shouldShowLockedDecoPreview(deco: DecoDef, sceneOk: boolean): boolean {
   const req = deco.unlockRequirement;
   if (req?.questId) return true;
   if (req?.conditionText === '活动解锁') return true;
+  if (req?.conditionText === '新手礼包') return true;
   if (req?.flowerCollectionItemId) return true;
 
   const lv = req?.level;
   if (lv !== undefined && lv > 0 && LevelManager.level === lv - 1) return true;
 
+  return false;
+}
+
+/** 未解锁房壳仍展示真实预览图（与家具卡 teaser 规则对齐，含新手礼包房壳） */
+function shouldShowLockedRoomStylePreview(style: RoomStyleDef): boolean {
+  const req = style.unlockRequirement;
+  if (req?.questId) return true;
+  if (req?.conditionText === '活动解锁') return true;
+  if (req?.conditionText === '新手礼包') return true;
+  if (req?.flowerCollectionItemId) return true;
+  const lv = req?.level;
+  if (lv !== undefined && lv > 0 && LevelManager.level === lv - 1) return true;
   return false;
 }
 
@@ -1770,8 +1783,8 @@ export class DecorationPanel extends PIXI.Container {
     const equipped = DecorationManager.roomStyleId === style.id;
     const styleReq = checkRequirement(style.unlockRequirement);
     const styleReqMet = styleReq.met;
-    /** 已解锁或条件已满足时显示房壳预览；避免「GM 已解锁但等级条未满足」仍显示问号占位 */
-    const showStylePreview = unlocked || styleReqMet;
+    /** 已解锁、条件已满足、或任务/礼包/下一级档 teaser 时显示房壳预览 */
+    const showStylePreview = unlocked || styleReqMet || shouldShowLockedRoomStylePreview(style);
 
     this._drawCardBg(card, cw, ch, unlocked || styleReqMet, equipped);
 

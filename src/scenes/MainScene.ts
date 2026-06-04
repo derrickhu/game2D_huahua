@@ -154,6 +154,8 @@ export class MainScene implements Scene {
   private _rewardBoxHintOverlay!: RewardBoxHintOverlay;
   private _buyFurnitureHintTimer: ReturnType<typeof setTimeout> | null = null;
   private _rewardBoxHintTimer: ReturnType<typeof setTimeout> | null = null;
+  private _rewardBoxHintRetryCount = 0;
+  private static readonly _REWARD_BOX_HINT_MAX_RETRY = 15;
   private _checkInPanel!: CheckInPanel;
   private _questPanel!: QuestPanel;
   private _offlineRewardPanel!: OfflineRewardPanel;
@@ -259,6 +261,8 @@ export class MainScene implements Scene {
 
       // 启动后处理（延迟一帧确保UI就绪）
       setTimeout(() => this._onGameReady(), 100);
+      RewardBoxHintManager.onMainSceneEnter();
+      this._scheduleRewardBoxHint(5500, true);
     } else {
       // 从花店切回时同步 DressUpManager 当前装扮（避免仅依赖 dressup:equipped 漏刷新）
       this._refreshOwnerOutfit();
@@ -272,7 +276,8 @@ export class MainScene implements Scene {
         this._tutorialOverlay.bind('main');
       }
       this._scheduleBuyFurnitureHint(1200);
-      this._scheduleRewardBoxHint(1400);
+      RewardBoxHintManager.onMainSceneEnter();
+      this._scheduleRewardBoxHint(1800, true);
     }
 
     Game.ticker.add(this._update, this);
@@ -358,6 +363,8 @@ export class MainScene implements Scene {
     }
 
     this._scheduleBuyFurnitureHint(2800);
+    RewardBoxHintManager.onMainSceneEnter();
+    this._scheduleRewardBoxHint(6000, true);
   }
 
   private _buildUI(): void {
@@ -442,7 +449,7 @@ export class MainScene implements Scene {
       itemInfoBar: this._infoBar,
     });
     this._buyFurnitureHintOverlay = new BuyFurnitureHintOverlay(this.container);
-    this._rewardBoxHintOverlay = new RewardBoxHintOverlay(this.container);
+    this._rewardBoxHintOverlay = new RewardBoxHintOverlay(OverlayManager.container);
 
     // 签到面板
     this._checkInPanel = new CheckInPanel();
@@ -1311,6 +1318,8 @@ export class MainScene implements Scene {
     EventBus.on('level:up', (level: number, reward: any, oldLevel?: number) => {
       if (SceneManager.current?.name !== 'main') return;
       const g = this._rewardBoxButton.toGlobal(this._rewardBoxButton.getItemSlotCenterLocal());
+      const prev = typeof oldLevel === 'number' ? oldLevel : level - 1;
+      const shouldRewardBoxHint = level >= 2 && prev < 2;
       this._levelUpPopup.show(level, reward, {
         rewardFlyTargetGlobal: g,
         previousLevel: oldLevel,
@@ -1324,11 +1333,18 @@ export class MainScene implements Scene {
           }
           if (any) SaveManager.save();
         },
+        onFullyClosed: shouldRewardBoxHint
+          ? () => this._scheduleRewardBoxHint(500, true)
+          : undefined,
       });
-      const prev = typeof oldLevel === 'number' ? oldLevel : level - 1;
-      if (level >= 2 && prev < 2) {
-        this._scheduleRewardBoxHint(2800);
+      if (shouldRewardBoxHint) {
+        this._scheduleRewardBoxHint(12000, true);
       }
+    });
+
+    EventBus.on('shop:levelUpPopupClosed', () => {
+      if (SceneManager.current?.name !== 'main') return;
+      this._scheduleRewardBoxHint(600, true);
     });
 
     // 离线收益领取后检查签到
@@ -1350,7 +1366,12 @@ export class MainScene implements Scene {
         setTimeout(() => this._checkInPanel.open(), 1000);
       }
       this._scheduleBuyFurnitureHint(3500);
-      this._scheduleRewardBoxHint(2000);
+      this._scheduleRewardBoxHint(2800, true);
+    });
+
+    EventBus.on('rewardBoxHint:pending', () => {
+      if (SceneManager.current?.name !== 'main') return;
+      this._scheduleRewardBoxHint(900, true);
     });
 
     // ---- 体力系统事件 ----
@@ -1610,12 +1631,16 @@ export class MainScene implements Scene {
 
     this._buyFurnitureHintOverlay.show({
       itemInfoBar: this._infoBar,
-      onDismiss: () => BuyFurnitureHintManager.markDismissed(),
+      onDismiss: () => {
+        BuyFurnitureHintManager.markDismissed();
+        this._scheduleRewardBoxHint(800, true);
+      },
     });
   }
 
-  /** 延迟展示「升星奖励在奖励篮」软提醒（与买家具提醒互斥排队） */
-  private _scheduleRewardBoxHint(delayMs = 1500): void {
+  /** 延迟展示「升级奖励在奖励篮」软提醒（与买家具/教程弹窗互斥时自动重试） */
+  private _scheduleRewardBoxHint(delayMs = 1500, resetRetry = false): void {
+    if (resetRetry) this._rewardBoxHintRetryCount = 0;
     if (this._rewardBoxHintTimer) {
       clearTimeout(this._rewardBoxHintTimer);
     }
@@ -1627,14 +1652,29 @@ export class MainScene implements Scene {
 
   private _tryShowRewardBoxHint(): void {
     if (SceneManager.current?.name !== 'main') return;
-    if (!RewardBoxHintManager.shouldPrompt()) return;
+    if (!RewardBoxHintManager.shouldPrompt()) {
+      this._rewardBoxHintRetryCount = 0;
+      return;
+    }
     if (this._rewardBoxHintOverlay.isShowing) return;
-    if (this._buyFurnitureHintOverlay.isShowing) return;
-    if (TutorialManager.isActive) return;
-    if (this._checkInPanel.visible) return;
-    if (this._offlineRewardPanel.visible) return;
-    if (this._levelUpPopup.visible) return;
 
+    const blocked =
+      this._buyFurnitureHintOverlay.isShowing
+      || TutorialManager.isActive
+      || this._checkInPanel.visible
+      || this._offlineRewardPanel.visible
+      || this._levelUpPopup.visible;
+
+    if (blocked) {
+      if (this._rewardBoxHintRetryCount < MainScene._REWARD_BOX_HINT_MAX_RETRY) {
+        this._rewardBoxHintRetryCount += 1;
+        this._scheduleRewardBoxHint(2200);
+      }
+      return;
+    }
+
+    this._rewardBoxHintRetryCount = 0;
+    OverlayManager.bringToFront();
     this._rewardBoxHintOverlay.show({
       rewardBoxButton: this._rewardBoxButton,
       onDismiss: () => RewardBoxHintManager.markDismissed(),

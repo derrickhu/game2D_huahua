@@ -1,8 +1,9 @@
 /**
- * 合成页软提醒：升星奖励在奖励篮，样式对齐教程对话气泡。
+ * 合成页软提醒：升级/活动奖励在奖励篮，样式对齐教程对话气泡。
  */
 import * as PIXI from 'pixi.js';
 import { Game } from '@/core/Game';
+import { OverlayManager } from '@/core/OverlayManager';
 import { TweenManager, Ease } from '@/core/TweenManager';
 import { DESIGN_WIDTH, BoardMetrics } from '@/config/Constants';
 import { TutorialDialogBubble } from '@/gameobjects/ui/TutorialDialogBubble';
@@ -25,7 +26,7 @@ export class RewardBoxHintOverlay {
   constructor(parent: PIXI.Container) {
     this._root = new PIXI.Container();
     this._root.visible = false;
-    this._root.zIndex = 7600;
+    this._root.zIndex = 11500;
     this._root.eventMode = 'passive';
     parent.addChild(this._root);
     if (!parent.sortableChildren) parent.sortableChildren = true;
@@ -44,17 +45,19 @@ export class RewardBoxHintOverlay {
     this._layer.removeChildren();
     this._root.visible = true;
     this._root.alpha = 0;
+    OverlayManager.bringToFront();
+    this._root.parent?.sortChildren?.();
 
     const spotlight = this._getRewardBoxSpotlight(options.rewardBoxButton);
     this._drawNonBlockingDim(0.38);
     this._drawGlowBorder(spotlight);
 
     this._bubble = new TutorialDialogBubble({
-      title: '升星奖励在这里',
-      body: '升到二星后的礼包会先放进下方的奖励篮，\n点一下就能取出，随时都能用~',
+      title: '奖励在这里',
+      body: '每次升级或其他活动的奖励物品\n会先放进店主旁的奖励篮，\n点一下就能取出，随时都能用~',
       buttonText: '知道了',
       variant: 'dialog',
-      dialogAnchorY: BoardMetrics.topY + BoardMetrics.areaHeight * 0.48,
+      preferAboveSpotlight: true,
       spotlightTop: spotlight.y,
       spotlightBottom: spotlight.y + spotlight.h,
       spotlightCenterX: spotlight.x + spotlight.w / 2,
@@ -89,7 +92,8 @@ export class RewardBoxHintOverlay {
 
   private _getRewardBoxSpotlight(btn: RewardBoxButton): SpotlightRect {
     const { w, h } = RewardBoxButton.layoutSize();
-    const center = btn.toGlobal(btn.getItemSlotCenterLocal());
+    const global = btn.toGlobal(btn.getItemSlotCenterLocal());
+    const center = this._root.parent?.toLocal(global) ?? global;
     const pad = 8;
     return {
       x: center.x - w / 2 - pad,

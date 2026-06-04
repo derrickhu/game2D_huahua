@@ -22,6 +22,7 @@ import { MerchShopManager } from '@/managers/MerchShopManager';
 import { IdleManager } from '@/managers/IdleManager';
 import { RoomLayoutManager } from '@/managers/RoomLayoutManager';
 import { LevelManager } from '@/managers/LevelManager';
+import { RewardBoxHintManager } from '@/managers/RewardBoxHintManager';
 import { CloudSyncManager } from '@/managers/CloudSyncManager';
 import { TutorialManager } from '@/managers/TutorialManager';
 import { DecorationManager } from '@/managers/DecorationManager';
@@ -271,6 +272,7 @@ async function main(): Promise<void> {
 
     // 星级升档奖励须在首帧 addStar 前就绪（不依赖 MainScene 是否已构建）
     LevelManager.init();
+    RewardBoxHintManager.init();
 
     // 再次确认棋盘状态
     const cells = BoardManager.cells;

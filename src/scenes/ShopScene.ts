@@ -564,7 +564,9 @@ export class ShopScene implements Scene {
       }
       if (TutorialManager.isShopSceneStep()
         || TutorialManager.currentStep === TutorialStep.SWITCH_BACK_MERGE) {
-        this._tutorialOverlay = new TutorialOverlay(this.container);
+        this._tutorialOverlay = new TutorialOverlay(this.container, {
+          getShopStarProgressSpotlight: () => this._getTutorialStarProgressSpotlightRect(),
+        });
         this._tutorialOverlay.bind('shop');
       }
     } else {
@@ -1214,6 +1216,23 @@ export class ShopScene implements Scene {
   }
 
   // ─────────────────── 装修进度条 ───────────────────
+
+  /** 新手引导「装修能升星」：镂空星星 + 进度条 + 右侧礼包预览钮 */
+  _getTutorialStarProgressSpotlightRect(): { x: number; y: number; w: number; h: number; r: number } | null {
+    if (!this._progressBarRoot?.parent) return null;
+    const pad = 10;
+    const leftExt = 50;
+    const rightExt = 58;
+    const topExt = 24;
+    const bottomExt = 28;
+    return {
+      x: Math.round(this._progressBarRoot.x - leftExt - pad),
+      y: Math.round(this._progressBarRoot.y - topExt - pad),
+      w: Math.round(PROGRESS_BAR_W + leftExt + rightExt + pad * 2),
+      h: Math.round(PROGRESS_BAR_H + topExt + bottomExt + pad * 2),
+      r: 16,
+    };
+  }
 
   private _buildProgressBar(w: number): void {
     const y = Game.safeTop + TOP_BAR_HEIGHT + 16;

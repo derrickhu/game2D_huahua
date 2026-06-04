@@ -41,6 +41,8 @@ export interface TutorialOverlayOptions {
   customerScrollArea?: CustomerScrollArea | null;
   /** 主场景底栏；传入后「进入花店」引导可对齐真实左下进店钮与气泡位置 */
   itemInfoBar?: ItemInfoBar | null;
+  /** 花店场景：升星进度条（星星 + 条 + 礼包）镂空区域，与 ShopScene.container 同坐标系 */
+  getShopStarProgressSpotlight?: () => SpotlightRect | null;
 }
 
 export class TutorialOverlay {
@@ -48,6 +50,7 @@ export class TutorialOverlay {
   private _overlay: PIXI.Container;
   private _customerScrollArea: CustomerScrollArea | null;
   private _itemInfoBar: ItemInfoBar | null;
+  private _getShopStarProgressSpotlight: (() => SpotlightRect | null) | null;
   private _currentBubble: TutorialDialogBubble | null = null;
   private _transientHint: PIXI.Text | null = null;
   private _fingerAnim: { finger: PIXI.Container; cancel: () => void } | null = null;
@@ -61,6 +64,7 @@ export class TutorialOverlay {
     this._container = parentContainer;
     this._customerScrollArea = options?.customerScrollArea ?? null;
     this._itemInfoBar = options?.itemInfoBar ?? null;
+    this._getShopStarProgressSpotlight = options?.getShopStarProgressSpotlight ?? null;
     this._overlay = new PIXI.Container();
     this._overlay.visible = false;
     this._overlay.zIndex = 8000;
@@ -1559,12 +1563,19 @@ export class TutorialOverlay {
   private _showShopCompleteDialog(): void {
     this._overlay.visible = true;
     this._clearOverlay();
-    this._drawSpotlightMask([], 0.5);
 
+    const hudRect = this._getShopStarProgressSpotlight?.() ?? null;
+    const spotlights = hudRect ? [hudRect] : [];
+    this._drawSpotlightMask(spotlights, hudRect ? 0.62 : 0.5);
+
+    const copy = TUTORIAL_COPY.shopCompleteDialog;
     this._showBubble({
-      title: '花店焕然一新',
-      body: '哇！花店看起来好多了！\n客人们一定会喜欢的~',
-      buttonText: '回去继续做花束',
+      title: copy.title,
+      body: copy.body,
+      buttonText: copy.buttonText,
+      spotlightTop: hudRect?.y,
+      spotlightBottom: hudRect ? hudRect.y + hudRect.h : undefined,
+      spotlightCenterX: hudRect ? hudRect.x + hudRect.w / 2 : undefined,
       onButton: () => TutorialManager.advanceTo(TutorialStep.SWITCH_BACK_MERGE),
     });
   }
