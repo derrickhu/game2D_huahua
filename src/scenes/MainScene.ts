@@ -107,6 +107,7 @@ import { RewardBoxManager } from '@/managers/RewardBoxManager';
 import { MERGE_BUBBLE_DISPLAY_NAME } from '@/config/MergeCompanionConfig';
 import { RoomLayoutManager } from '@/managers/RoomLayoutManager';
 import { WeekendHuayuanBoostManager } from '@/managers/WeekendHuayuanBoostManager';
+import { NewbieGiftPackManager } from '@/managers/NewbieGiftPackManager';
 import { WeekendHuayuanBoostPanel } from '@/gameobjects/ui/WeekendHuayuanBoostPanel';
 import { BuyFurnitureHintManager } from '@/managers/BuyFurnitureHintManager';
 import { BuyFurnitureHintOverlay } from '@/gameobjects/ui/BuyFurnitureHintOverlay';
@@ -236,6 +237,7 @@ export class MainScene implements Scene {
       AdManager.init();
       CollectionManager.init();
       DecorationManager.init();
+      NewbieGiftPackManager.reconcileClaimedRewards('main-init');
       FlowerCardManager.init();
       DressUpManager.init();
       // 店主半身像在 _buildShopArea 里已刷新过，但当时尚未 _loadState，须在换装存档加载后再刷一次

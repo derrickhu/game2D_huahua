@@ -3,9 +3,9 @@
  *
  * 每档定义需求槽数、物品等级范围、可用产线。花愿由物品单价 + 多槽加成计算。
  * CustomerManager 按玩家等级 + 已解锁产线随机选「模板档」生成需求；UI 角标与存档中的 tier
- * 由 computeTierFromOrderSlots 按物品在全游产品线中的相对等级统一计算。
+ * 由 computeTierFromOrderSlots 按物品绝对等级统一计算。
  */
-import { Category, DrinkLine, FlowerLine, ITEM_DEFS, getMaxLevelForLine } from './ItemConfig';
+import { Category, DrinkLine, FlowerLine, ITEM_DEFS } from './ItemConfig';
 import type { CustomerDemandDef } from './CustomerConfig';
 
 export type OrderTier = 'C' | 'B' | 'A' | 'S';
@@ -30,8 +30,8 @@ export const ORDER_TIERS: Record<OrderTier, OrderTierDef> = {
     label: '初级',
     slotRange: [1, 2],
     demandPool: [
-      { category: Category.FLOWER, lines: [FlowerLine.FRESH], levelRange: [1, 2] },
-      { category: Category.FLOWER, lines: [FlowerLine.FRESH], levelRange: [2, 3] },
+      { category: Category.FLOWER, lines: [FlowerLine.FRESH, FlowerLine.GREEN], levelRange: [1, 2] },
+      { category: Category.FLOWER, lines: [FlowerLine.FRESH, FlowerLine.GREEN], levelRange: [2, 3] },
     ],
     timeLimit: null,
     orderType: 'normal',
@@ -41,7 +41,7 @@ export const ORDER_TIERS: Record<OrderTier, OrderTierDef> = {
     label: '中级',
     slotRange: [2, 2],
     demandPool: [
-      { category: Category.FLOWER, lines: [FlowerLine.FRESH, FlowerLine.BOUQUET], levelRange: [2, 5] },
+      { category: Category.FLOWER, lines: [FlowerLine.FRESH, FlowerLine.BOUQUET, FlowerLine.GREEN], levelRange: [2, 5] },
       { category: Category.DRINK, lines: [DrinkLine.BUTTERFLY, DrinkLine.COLD], levelRange: [2, 4] },
     ],
     timeLimit: null,
@@ -63,7 +63,7 @@ export const ORDER_TIERS: Record<OrderTier, OrderTierDef> = {
     label: '特级',
     slotRange: [2, 3],
     demandPool: [
-      { category: Category.FLOWER, lines: [FlowerLine.BOUQUET, FlowerLine.GREEN], levelRange: [6, 13] },
+      { category: Category.FLOWER, lines: [FlowerLine.FRESH, FlowerLine.BOUQUET, FlowerLine.GREEN], levelRange: [6, 13] },
       { category: Category.DRINK, lines: [DrinkLine.BUTTERFLY, DrinkLine.COLD, DrinkLine.DESSERT], levelRange: [5, 10] },
     ],
     timeLimit: null,
@@ -99,9 +99,16 @@ function _clamp(v: number, lo: number, hi: number): number {
   return Math.max(lo, Math.min(hi, v));
 }
 
-function _linePower(toolLevel: number, category: Category, line: string): number {
-  const maxItemLevel = Math.max(1, getMaxLevelForLine(category, line));
-  return _clamp(getEffectiveMaxLevel(toolLevel, maxItemLevel) / maxItemLevel, 0, 1);
+/** 订单难度统一按最长主链 13 级归一，避免短链产品线天然更容易成为 S。 */
+export const ORDER_DIFFICULTY_REFERENCE_LEVEL = 13;
+
+export function computeOrderLevelDifficulty(level: number): number {
+  if (!Number.isFinite(level) || level <= 0) return 0;
+  return _clamp(Math.floor(level) / ORDER_DIFFICULTY_REFERENCE_LEVEL, 0, 1);
+}
+
+function _linePower(toolLevel: number, _category: Category, _line: string): number {
+  return computeOrderLevelDifficulty(getEffectiveMaxLevel(toolLevel, ORDER_DIFFICULTY_REFERENCE_LEVEL));
 }
 
 /**
@@ -133,45 +140,6 @@ function _toolPower(lines: UnlockedLines): number {
   return powers.reduce((a, b) => a + b, 0) / powers.length;
 }
 
-/** 订单档位权重的会话修正（如解锁新产线后短期偏置） */
-export interface OrderTierWeightModifiers {
-  /** 解锁绿植后剩余「加成刷次」：提高 A/S 权重，便于尽快见到绿植单 */
-  greenLineUnlockBoostSpawns?: number;
-}
-
-function _applyGreenBoost(
-  w: Record<OrderTier, number>,
-  lines: UnlockedLines,
-  boostSpawns: number | undefined,
-  playerLevel?: number,
-): Record<OrderTier, number> {
-  if (!boostSpawns || boostSpawns <= 0 || !lines.hasGreen) return w;
-  const out = { ...w };
-  // 1 级：绿植偏置只抬 B；2 级：少量挪到 A（仍不抬 S）
-  if (playerLevel === 1) {
-    const takeC = Math.min(out.C, 12);
-    out.C -= takeC;
-    out.B += takeC;
-    return out;
-  }
-  if (playerLevel === 2) {
-    const takeC = Math.min(out.C, 10);
-    const takeB = Math.min(out.B, 8);
-    out.C -= takeC;
-    out.B -= takeB;
-    out.A += takeC + takeB;
-    return out;
-  }
-  // 从 B/C 挪到 A：抬高含绿植池档位，但不抬 S（S 保持稀有）
-  const takeB = Math.min(out.B, 12);
-  const takeC = Math.min(out.C, 8);
-  out.B = out.B - takeB;
-  out.C = out.C - takeC;
-  const add = takeB + takeC;
-  out.A = out.A + add;
-  return out;
-}
-
 /**
  * 按玩家等级 + 已解锁产线 + 工具等级综合计算各档出现权重。
  * - 1 级：偏 C/B，角标最高 B；2 级：约 15–20% A 模板，角标金色 A 更易出现；3 级仍无 S。
@@ -181,7 +149,6 @@ function _applyGreenBoost(
 export function getOrderTierWeights(
   playerLevel: number,
   lines: UnlockedLines,
-  modifiers?: OrderTierWeightModifiers,
 ): Record<OrderTier, number> {
   const maxTool = _maxToolLevel(lines);
   const hasAnyProducer = maxTool >= 1;
@@ -225,7 +192,7 @@ export function getOrderTierWeights(
     const levelTail = Math.max(0, playerLevel - 6);
 
     const sWeight = _clamp(
-      3 + 20 * highOrderScore + 0.9 * levelTail + (lines.hasGreen ? 1.5 : 0),
+      3 + 20 * highOrderScore + 0.9 * levelTail,
       5,
       30,
     );
@@ -241,7 +208,7 @@ export function getOrderTierWeights(
     };
   }
 
-  return _applyGreenBoost(base, lines, modifiers?.greenLineUnlockBoostSpawns, playerLevel);
+  return base;
 }
 
 /** 按权重随机选一个档位 */
@@ -266,14 +233,14 @@ export const TIER_COLORS: Record<OrderTier, number> = {
 };
 
 /**
- * 内容档位：按各槽物品在其产品线中的相对等级（level / 该线 maxLevel）聚合，
+ * 内容档位：按各槽物品绝对等级在统一 13 级标尺上的难度聚合，
  * 再映射到 C/B/A/S。全玩家统一标尺，与生成时使用的「模板档位」独立。
  *
  * - 顺序无关：对 itemId 排序后再算，相同 multiset 必得同档。
  * - 得分 = 0.45 * maxNorm + 0.55 * avgNorm + 多槽加成（2 槽 +0.03，3 槽 +0.06）。
  */
 /**
- * 按槽位物品相对难度算内容档位（UI 角标 / 花愿倍率）。
+ * 按槽位物品绝对等级难度算内容档位（UI 角标 / 花愿倍率）。
  * @param playerLevel 传入时：1 级角标最高 B；2 级更易出现金色 A、仍无 S。
  */
 export function computeTierFromOrderSlots(
@@ -285,8 +252,7 @@ export function computeTierFromOrderSlots(
   for (const id of sorted) {
     const def = ITEM_DEFS.get(id);
     if (!def) continue;
-    const lineMax = Math.max(1, getMaxLevelForLine(def.category, def.line));
-    norms.push(Math.min(1, def.level / lineMax));
+    norms.push(computeOrderLevelDifficulty(def.level));
   }
   if (norms.length === 0) return 'C';
 

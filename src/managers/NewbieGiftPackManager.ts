@@ -75,11 +75,42 @@ class NewbieGiftPackManagerClass {
     return this.isAvailable && !this._introPromptShown;
   }
 
+  reloadFromStorage(): void {
+    this._adsWatched = 0;
+    this._claimed = false;
+    this._introPromptShown = false;
+    this._loaded = false;
+    this._ensureLoaded();
+  }
+
   markIntroPromptShown(): void {
     this._ensureLoaded();
     if (this._introPromptShown) return;
     this._introPromptShown = true;
     this._save();
+  }
+
+  /**
+   * 老号/云档补偿：礼包领取状态可能早于清涟房壳入库，或云端缺少装修 key。
+   * 只要确认礼包已领，就重新确认「条件标记 + 家具 + 房壳」存在。
+   */
+  reconcileClaimedRewards(reason = 'manual'): boolean {
+    this._ensureLoaded();
+    this._inferClaimedFromDecoration();
+    if (!this._claimed) return false;
+
+    grantQuest(NEWBIE_GIFT_PACK_QUEST_ID);
+
+    let changed = false;
+    for (const id of QINGLIAN_NEWBIE_DECO_IDS) {
+      changed = DecorationManager.gmUnlockDeco(id) || changed;
+    }
+    changed = DecorationManager.gmUnlockRoomStyle(NEWBIE_GIFT_PACK_ROOM_STYLE_ID) || changed;
+
+    if (changed) {
+      console.log(`[NewbieGiftPack] 已补齐清涟荷影礼包装修奖励 reason=${reason}`);
+    }
+    return changed;
   }
 
   /** 激励视频观看成功：仅累计次数，不自动发奖 */
@@ -140,9 +171,24 @@ class NewbieGiftPackManagerClass {
       this._adsWatched = Math.max(0, Number(data.adsWatched) || 0);
       this._claimed = Boolean(data.claimed);
       this._introPromptShown = Boolean(data.introPromptShown);
+      if (this._claimed) {
+        this._adsWatched = Math.max(this._adsWatched, NEWBIE_GIFT_PACK_ADS_REQUIRED);
+      }
     } catch (_) {
       /* ignore */
     }
+  }
+
+  private _inferClaimedFromDecoration(): void {
+    if (this._claimed) return;
+    const hasAllGiftDecos = QINGLIAN_NEWBIE_DECO_IDS.every(id => DecorationManager.isUnlocked(id));
+    const hasGiftRoomStyle = DecorationManager.isRoomStyleUnlocked(NEWBIE_GIFT_PACK_ROOM_STYLE_ID);
+    if (!hasAllGiftDecos && !hasGiftRoomStyle) return;
+
+    this._claimed = true;
+    this._adsWatched = Math.max(this._adsWatched, NEWBIE_GIFT_PACK_ADS_REQUIRED);
+    this._save();
+    console.log('[NewbieGiftPack] 已从装修存档反推礼包领取状态');
   }
 }
 

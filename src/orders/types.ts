@@ -11,8 +11,6 @@ export interface OrderGenContext {
   tier: OrderTier;
   lines: UnlockedLines;
   playerLevel: number;
-  /** 连续多单无绿植需求时的保底：下一单花类槽尽量出绿植 */
-  forceGreenFlowerSlot: boolean;
   /** 本次刷单是否允许抽限时钻石单（每日上限、当前队列等由 CustomerManager 控制） */
   allowTimedDiamondOrder?: boolean;
   /** 今日已刷出的限时钻石单数量，用于首单概率微保底 */

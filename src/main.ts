@@ -25,6 +25,7 @@ import { LevelManager } from '@/managers/LevelManager';
 import { CloudSyncManager } from '@/managers/CloudSyncManager';
 import { TutorialManager } from '@/managers/TutorialManager';
 import { DecorationManager } from '@/managers/DecorationManager';
+import { NewbieGiftPackManager } from '@/managers/NewbieGiftPackManager';
 import { UserIdentityManager } from '@/managers/UserIdentityManager';
 import { PersistService, type CloudImportInfo } from '@/core/PersistService';
 import { Platform } from '@/core/PlatformService';
@@ -158,6 +159,15 @@ async function main(): Promise<void> {
       }
       if (info.changedKeys.includes('huahua_decoration')) {
         DecorationManager.reloadFromStorage();
+      }
+      if (info.changedKeys.includes('huahua_newbie_gift_pack')) {
+        NewbieGiftPackManager.reloadFromStorage();
+      }
+      if (
+        info.changedKeys.includes('huahua_newbie_gift_pack')
+        || info.changedKeys.includes('huahua_decoration')
+      ) {
+        NewbieGiftPackManager.reconcileClaimedRewards(`cloud-import:${info.reason}`);
       }
       if (info.changedKeys.includes('huahua_room_layout')) {
         RoomLayoutManager.reloadFromStorage();

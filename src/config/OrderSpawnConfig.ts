@@ -2,8 +2,8 @@
  * 订单刷新与类型权重（组合单 / 成长单 / aspirational）。
  * 策划调参入口；生成逻辑见 OrderGeneratorRegistry + CustomerManager。
  */
-import { ITEM_DEFS, getMaxLevelForLine } from '@/config/ItemConfig';
-import type { OrderTier, UnlockedLines } from '@/config/OrderTierConfig';
+import { ITEM_DEFS } from '@/config/ItemConfig';
+import { computeOrderLevelDifficulty, type OrderTier, type UnlockedLines } from '@/config/OrderTierConfig';
 import type { OrderGenSlot } from '@/orders/types';
 
 /** 略高于 toolCap 的概率（与 pickItemLevel 一致） */
@@ -45,7 +45,7 @@ export const ORDER_GROWTH_BONUS_MULTIPLIER = 1.18;
 
 /**
  * 成长单语义：槽位 max(norm) 须达到此值才保留成长标记与倍率，否则降级为基础单。
- * norm = item.level / 该线 maxLevel
+ * norm = item.level / 统一订单难度参考等级
  */
 export const ORDER_GROWTH_MIN_MAX_NORM = 0.42;
 
@@ -142,8 +142,7 @@ export function orderGrowthRollChance(tier: OrderTier, playerLevel?: number): nu
 export function slotNormForItemId(itemId: string): number {
   const def = ITEM_DEFS.get(itemId);
   if (!def) return 0;
-  const lineMax = Math.max(1, getMaxLevelForLine(def.category, def.line));
-  return Math.min(1, def.level / lineMax);
+  return computeOrderLevelDifficulty(def.level);
 }
 
 /** 多槽 max(norm)，用于成长单校验 */

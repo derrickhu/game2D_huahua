@@ -21,7 +21,7 @@ export const ORDER_TIER_HUAYUAN_MULT = {
   C: 1,
   B: 1.1,
   A: 1.75,
-  S: 3.8,
+  S: 2.5,
 } as const;
 
 /**

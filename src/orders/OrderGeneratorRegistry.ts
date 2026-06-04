@@ -78,25 +78,14 @@ function eligibleDemandLines(demandDef: CustomerDemandDef, ulk: UnlockedLines): 
   return [...demandDef.lines];
 }
 
-/** B 档在可产绿植后把 GREEN 纳入花需求池（与 ORDER_TIERS 解耦） */
-function resolveDemandPool(tier: OrderTier, ulk: UnlockedLines): CustomerDemandDef[] {
-  const base = ORDER_TIERS[tier].demandPool;
-  if (tier === 'B' && ulk.hasGreen) {
-    return base.map(d => {
-      if (d.category !== Category.FLOWER) return d;
-      const lines = d.lines.includes(FlowerLine.GREEN)
-        ? d.lines
-        : [...d.lines, FlowerLine.GREEN];
-      return { ...d, lines };
-    });
-  }
-  return base;
-}
-
 function fallbackFlowerDemand(tier: OrderTier, ulk: UnlockedLines): CustomerDemandDef {
   switch (tier) {
     case 'C':
-      return { category: Category.FLOWER, lines: [FlowerLine.FRESH], levelRange: [1, 3] };
+      return {
+        category: Category.FLOWER,
+        lines: [FlowerLine.FRESH, ...(ulk.hasGreen ? [FlowerLine.GREEN] : [])],
+        levelRange: [1, 3],
+      };
     case 'B':
       return {
         category: Category.FLOWER,
@@ -120,7 +109,11 @@ function fallbackFlowerDemand(tier: OrderTier, ulk: UnlockedLines): CustomerDema
     case 'S':
       return {
         category: Category.FLOWER,
-        lines: [FlowerLine.BOUQUET, ...(ulk.hasGreen ? [FlowerLine.GREEN] : [])],
+        lines: [
+          FlowerLine.FRESH,
+          FlowerLine.BOUQUET,
+          ...(ulk.hasGreen ? [FlowerLine.GREEN] : []),
+        ],
         levelRange: [6, 13],
       };
     default:
@@ -198,7 +191,6 @@ function tryPickItem(
 
 interface GeneratePoolOptions {
   rng: () => number;
-  forceGreenFlowerSlot: boolean;
   tier: OrderTier;
   playerLevel: number;
 }
@@ -213,7 +205,6 @@ function generateDemandsFromPool(
   const slotCount = minSlots + Math.floor(opts.rng() * (maxSlots - minSlots + 1));
   const slots: OrderGenSlot[] = [];
   const usedIds = new Set<string>();
-  let greenPityUsed = false;
 
   for (let i = 0; i < slotCount; i++) {
     let demandDef = pool[Math.floor(opts.rng() * pool.length)]!;
@@ -227,16 +218,6 @@ function generateDemandsFromPool(
     if (eligibleLines.length === 0) {
       if (pool.length > 1) continue;
       return [];
-    }
-
-    if (
-      !greenPityUsed &&
-      opts.forceGreenFlowerSlot &&
-      demandDef.category === Category.FLOWER &&
-      eligibleLines.includes(FlowerLine.GREEN)
-    ) {
-      eligibleLines = [FlowerLine.GREEN];
-      greenPityUsed = true;
     }
 
     const itemId = tryPickItem(demandDef, eligibleLines, ulk, usedIds, opts.tier, opts.rng, opts.playerLevel);
@@ -299,18 +280,13 @@ function tryGenerateCombo(
   tier: OrderTier,
   ulk: UnlockedLines,
   rng: () => number,
-  forceGreen: boolean,
   playerLevel: number,
 ): OrderGenSlot[] | null {
   const specs = comboSpecsForTier(tier, ulk);
   if (specs.length < 2) return null;
 
   const shuffled = [...specs].sort(() => rng() - 0.5);
-  let first = shuffled[0]!;
-  if (forceGreen) {
-    const g = specs.find(s => s.line === FlowerLine.GREEN);
-    if (g) first = g;
-  }
+  const first = shuffled[0]!;
 
   const second = shuffled.find(s => specKey(s) !== specKey(first));
   if (!second) return null;
@@ -433,19 +409,8 @@ function tryGenerateTimedDiamondOrder(ctx: OrderGenContext): OrderGenResult | nu
     .filter(g => g.candidates.length > 0);
   if (grouped.length === 0) return null;
 
-  const usedIds = new Set<string>();
   const picked: TimedCandidate[] = [];
-
-  const greenGroup = ctx.forceGreenFlowerSlot
-    ? grouped.find(g => g.lineKey === `${Category.FLOWER}:${FlowerLine.GREEN}`)
-    : undefined;
-  if (greenGroup) {
-    const cand = pickRandom(greenGroup.candidates, ctx.rng);
-    if (cand) {
-      picked.push(cand);
-      usedIds.add(cand.itemId);
-    }
-  }
+  const usedIds = new Set<string>();
 
   for (const g of shuffled(grouped, ctx.rng)) {
     if (picked.length >= TIMED_DIAMOND_ORDER_SLOT_COUNT) break;
@@ -519,7 +484,7 @@ export function generateOrderDemands(ctx: OrderGenContext): OrderGenResult | nul
 
   const comboChance = orderComboEffectiveChance(lines, ctx.playerLevel);
   if (lines.unlockedLineCount >= 2 && rng() < comboChance) {
-    const comboSlots = tryGenerateCombo(tier, lines, rng, ctx.forceGreenFlowerSlot, ctx.playerLevel);
+    const comboSlots = tryGenerateCombo(tier, lines, rng, ctx.playerLevel);
     if (comboSlots && comboSlots.length >= 2) {
       return {
         slots: comboSlots,
@@ -542,11 +507,10 @@ export function generateOrderDemands(ctx: OrderGenContext): OrderGenResult | nul
   const triple = tryGenerateChainOrderTriple(ctx);
   if (triple) return triple;
 
-  const basePool = resolveDemandPool(tier, lines);
+  const basePool = ORDER_TIERS[tier].demandPool;
   let slots: OrderGenSlot[] = [];
   slots = generateDemandsFromPool(basePool, tierDef.slotRange, lines, {
     rng,
-    forceGreenFlowerSlot: ctx.forceGreenFlowerSlot,
     tier,
     playerLevel: ctx.playerLevel,
   });

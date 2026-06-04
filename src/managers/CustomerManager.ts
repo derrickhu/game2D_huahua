@@ -114,9 +114,6 @@ const VALID_ORDER_KINDS = new Set<OrderGenerationKind>([
   'eventStub',
 ]);
 
-const GREEN_PITY_THRESHOLD = 3;
-const GREEN_UNLOCK_BOOST_SPAWNS = 5;
-
 function localDateKey(ts = Date.now()): string {
   const d = new Date(ts);
   const y = d.getFullYear();
@@ -249,12 +246,6 @@ class CustomerManagerClass {
   private _started = false;
   /** SaveManager.load 在 MainScene 初始化前写入；init() 消费后清空 */
   private _preparedFromSave: CustomerPersistState | null = null;
-  /** 解锁绿植后若干次刷单的档位偏置 */
-  private _greenLineUnlockBoostSpawns = 0;
-  /** 上一帧棋盘产线快照（用于检测解锁） */
-  private _unlockSnapshot: UnlockedLines | null = null;
-  /** 已解锁绿植但连续多单一株绿植都不要时的保底计数 */
-  private _spawnsWithoutGreenDemand = 0;
   private _timedDiamondOrderDate = localDateKey();
   private _timedDiamondOrdersToday = 0;
   private _preparedOfflineSeconds = 0;
@@ -588,9 +579,7 @@ class CustomerManagerClass {
     const level = LevelManager.level;
     const lines = computeUnlockedLines(BoardManager.cells);
     this._syncTimedDiamondDailyState();
-    const weights = getOrderTierWeights(level, lines, {
-      greenLineUnlockBoostSpawns: this._greenLineUnlockBoostSpawns,
-    });
+    const weights = getOrderTierWeights(level, lines);
 
     const tier = pickTierByWeight(weights);
 
@@ -605,9 +594,6 @@ class CustomerManagerClass {
       if (avoid.length > 0) typePool = avoid;
     }
     const type = typePool[Math.floor(Math.random() * typePool.length)]!;
-    const forceGreen =
-      lines.hasGreen &&
-      this._spawnsWithoutGreenDemand >= GREEN_PITY_THRESHOLD;
     const allowTimedDiamondOrder =
       level >= TIMED_DIAMOND_ORDER_MIN_PLAYER_LEVEL &&
       this._timedDiamondOrdersToday < TIMED_DIAMOND_ORDER_DAILY_CAP &&
@@ -620,7 +606,6 @@ class CustomerManagerClass {
         tier,
         lines,
         playerLevel: level,
-        forceGreenFlowerSlot: forceGreen,
         allowTimedDiamondOrder,
         timedDiamondOrdersToday: this._timedDiamondOrdersToday,
         rng: Math.random,
@@ -671,19 +656,10 @@ class CustomerManagerClass {
       );
     }
 
-    if (lines.hasGreen) {
-      const hasGreenItem = slots.some(s => s.itemId.startsWith('flower_green_'));
-      if (hasGreenItem) this._spawnsWithoutGreenDemand = 0;
-      else this._spawnsWithoutGreenDemand++;
-    }
-
     this._lastSpawnTypeId = type.id;
     this._lastOrderFingerprint = orderSlotsFingerprint(slots);
 
     this._customers.push(customer);
-    if (this._greenLineUnlockBoostSpawns > 0) {
-      this._greenLineUnlockBoostSpawns--;
-    }
     console.log(
       `[Customer] 新客人: ${customer.name}(${customer.emoji}) [${contentTier}] (tpl ${tier}) ${customer.orderKind}${customer.orderType === 'timed' ? ` timed +${customer.diamondReward ?? 0}钻` : ''}, 需求: ${customer.slots.map(s => s.itemId).join(', ')}`,
     );
@@ -805,17 +781,6 @@ class CustomerManagerClass {
   }
 
   private _rescanAll(): void {
-    const prevSnap = this._unlockSnapshot;
-    const nextLines = computeUnlockedLines(BoardManager.cells);
-    if (this._started && prevSnap && !prevSnap.hasGreen && nextLines.hasGreen) {
-      this._greenLineUnlockBoostSpawns = GREEN_UNLOCK_BOOST_SPAWNS;
-      this._refreshTimer = Math.min(
-        this._refreshTimer,
-        getCustomerRefreshTier(LevelManager.level).minSec,
-      );
-    }
-    this._unlockSnapshot = nextLines;
-
     // 先抹掉全棋盘 reserved：`moveItem`/`swap` 会复制 reserved，若与槽位索引短暂脱节，
     // 仅靠「按槽位清格」会留下幽灵 true → 格子上对钩但没有任何订单槽绑定该格。
     for (const cell of BoardManager.cells) {
