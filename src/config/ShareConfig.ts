@@ -13,7 +13,7 @@ export interface SharePayload {
   query?: string;
 }
 
-const SHARE_IMAGE_ROOT = 'images/share';
+const SHARE_IMAGE_ROOT = 'subpkg_items/images/share';
 
 export const SHARE_IMAGES: Record<Exclude<ShareScene, 'gift_stamina'>, string> = {
   core_gameplay: `${SHARE_IMAGE_ROOT}/share_core_gameplay.jpg`,

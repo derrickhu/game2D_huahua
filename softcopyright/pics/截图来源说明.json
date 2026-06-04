@@ -4,7 +4,7 @@
     "minigame/images/ui/icon_*"
   ],
   "huahua_02_board.jpg": [
-    "minigame/images/share/share_core_gameplay.jpg"
+    "minigame/subpkg_items/images/share/share_core_gameplay.jpg"
   ],
   "huahua_03_order.jpg": [
     "minigame/images/ui/shop_scene_bg_floral_nb2.png",
@@ -12,7 +12,7 @@
     "customer/item assets"
   ],
   "huahua_04_decoration.jpg": [
-    "minigame/images/share/share_decor_gameplay.jpg"
+    "minigame/subpkg_items/images/share/share_decor_gameplay.jpg"
   ],
   "huahua_05_dressup.jpg": [
     "minigame/subpkg_chars/images/owner/full_outfit_*.png"

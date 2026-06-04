@@ -110,7 +110,9 @@ import { WeekendHuayuanBoostManager } from '@/managers/WeekendHuayuanBoostManage
 import { NewbieGiftPackManager } from '@/managers/NewbieGiftPackManager';
 import { WeekendHuayuanBoostPanel } from '@/gameobjects/ui/WeekendHuayuanBoostPanel';
 import { BuyFurnitureHintManager } from '@/managers/BuyFurnitureHintManager';
+import { RewardBoxHintManager } from '@/managers/RewardBoxHintManager';
 import { BuyFurnitureHintOverlay } from '@/gameobjects/ui/BuyFurnitureHintOverlay';
+import { RewardBoxHintOverlay } from '@/gameobjects/ui/RewardBoxHintOverlay';
 import { BUY_FURNITURE_HINT_HUAYUAN_MIN } from '@/config/BuyFurnitureHintConfig';
 
 /** 合成页左侧店主半身：目标高度与最大宽度（设计 px），统一 scale=min(宽限,高限) 保持宽高比、避免栏内「压扁」感 */
@@ -149,7 +151,9 @@ export class MainScene implements Scene {
   // ---- 留存系统 ----
   private _tutorialOverlay!: TutorialOverlay;
   private _buyFurnitureHintOverlay!: BuyFurnitureHintOverlay;
+  private _rewardBoxHintOverlay!: RewardBoxHintOverlay;
   private _buyFurnitureHintTimer: ReturnType<typeof setTimeout> | null = null;
+  private _rewardBoxHintTimer: ReturnType<typeof setTimeout> | null = null;
   private _checkInPanel!: CheckInPanel;
   private _questPanel!: QuestPanel;
   private _offlineRewardPanel!: OfflineRewardPanel;
@@ -224,6 +228,7 @@ export class MainScene implements Scene {
       WeekendHuayuanBoostManager.init();
       CustomerManager.init();
       QuestManager.init();
+      RewardBoxHintManager.init();
       CheckInManager.init();
       DailyCandyManager.init();
       AffinityManager.init();
@@ -267,6 +272,7 @@ export class MainScene implements Scene {
         this._tutorialOverlay.bind('main');
       }
       this._scheduleBuyFurnitureHint(1200);
+      this._scheduleRewardBoxHint(1400);
     }
 
     Game.ticker.add(this._update, this);
@@ -304,6 +310,11 @@ export class MainScene implements Scene {
       this._buyFurnitureHintTimer = null;
     }
     this._buyFurnitureHintOverlay?.hide();
+    if (this._rewardBoxHintTimer) {
+      clearTimeout(this._rewardBoxHintTimer);
+      this._rewardBoxHintTimer = null;
+    }
+    this._rewardBoxHintOverlay?.hide();
 
     // 停止触觉反馈层上的粒子等效果
     if (this._hapticSystem) {
@@ -431,6 +442,7 @@ export class MainScene implements Scene {
       itemInfoBar: this._infoBar,
     });
     this._buyFurnitureHintOverlay = new BuyFurnitureHintOverlay(this.container);
+    this._rewardBoxHintOverlay = new RewardBoxHintOverlay(this.container);
 
     // 签到面板
     this._checkInPanel = new CheckInPanel();
@@ -1313,6 +1325,10 @@ export class MainScene implements Scene {
           if (any) SaveManager.save();
         },
       });
+      const prev = typeof oldLevel === 'number' ? oldLevel : level - 1;
+      if (level >= 2 && prev < 2) {
+        this._scheduleRewardBoxHint(2800);
+      }
     });
 
     // 离线收益领取后检查签到
@@ -1334,6 +1350,7 @@ export class MainScene implements Scene {
         setTimeout(() => this._checkInPanel.open(), 1000);
       }
       this._scheduleBuyFurnitureHint(3500);
+      this._scheduleRewardBoxHint(2000);
     });
 
     // ---- 体力系统事件 ----
@@ -1585,6 +1602,7 @@ export class MainScene implements Scene {
     if (SceneManager.current?.name !== 'main') return;
     if (!BuyFurnitureHintManager.shouldPrompt()) return;
     if (this._buyFurnitureHintOverlay.isShowing) return;
+    if (this._rewardBoxHintOverlay.isShowing) return;
     if (TutorialManager.isActive) return;
     if (this._checkInPanel.visible) return;
     if (this._offlineRewardPanel.visible) return;
@@ -1593,6 +1611,33 @@ export class MainScene implements Scene {
     this._buyFurnitureHintOverlay.show({
       itemInfoBar: this._infoBar,
       onDismiss: () => BuyFurnitureHintManager.markDismissed(),
+    });
+  }
+
+  /** 延迟展示「升星奖励在奖励篮」软提醒（与买家具提醒互斥排队） */
+  private _scheduleRewardBoxHint(delayMs = 1500): void {
+    if (this._rewardBoxHintTimer) {
+      clearTimeout(this._rewardBoxHintTimer);
+    }
+    this._rewardBoxHintTimer = window.setTimeout(() => {
+      this._rewardBoxHintTimer = null;
+      this._tryShowRewardBoxHint();
+    }, delayMs);
+  }
+
+  private _tryShowRewardBoxHint(): void {
+    if (SceneManager.current?.name !== 'main') return;
+    if (!RewardBoxHintManager.shouldPrompt()) return;
+    if (this._rewardBoxHintOverlay.isShowing) return;
+    if (this._buyFurnitureHintOverlay.isShowing) return;
+    if (TutorialManager.isActive) return;
+    if (this._checkInPanel.visible) return;
+    if (this._offlineRewardPanel.visible) return;
+    if (this._levelUpPopup.visible) return;
+
+    this._rewardBoxHintOverlay.show({
+      rewardBoxButton: this._rewardBoxButton,
+      onDismiss: () => RewardBoxHintManager.markDismissed(),
     });
   }
 

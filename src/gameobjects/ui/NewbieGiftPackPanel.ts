@@ -408,12 +408,14 @@ export class NewbieGiftPackPanel extends PIXI.Container {
     parent.addChild(root);
 
     const iconY = -iconMax * 0.12;
+    const iconHalfW = this._iconHalfWidth(item.textureKey, iconMax);
     this._drawIcon(root, item.textureKey, iconMax, iconY);
 
     if (item.amount != null && item.amount > 1) {
       const amt = makeCrispText(`×${item.amount}`, BOARD_AMOUNT_STYLE);
-      amt.anchor.set(1, 1);
-      amt.position.set(iconMax * L.boardAmountOffsetXRatio, iconY + iconMax * 0.48);
+      const gap = Math.max(4, Math.round(iconMax * L.boardAmountRightGapRatio));
+      amt.anchor.set(0, 1);
+      amt.position.set(iconHalfW + gap, iconY + iconMax * 0.48);
       root.addChild(amt);
     }
 
@@ -425,6 +427,14 @@ export class NewbieGiftPackPanel extends PIXI.Container {
     lbl.anchor.set(0.5, 0);
     lbl.position.set(0, iconY + iconMax * 0.50);
     root.addChild(lbl);
+  }
+
+  /** 与 `_drawIcon` 相同缩放规则下的半宽（用于数量角标贴在图标右侧） */
+  private _iconHalfWidth(textureKey: string, iconMax: number): number {
+    const tex = TextureCache.get(textureKey);
+    if (!tex?.width || !tex.height) return iconMax * 0.5;
+    const sc = iconMax / Math.max(tex.width, tex.height);
+    return (tex.width * sc) / 2;
   }
 
   private _drawIcon(parent: PIXI.Container, textureKey: string, iconMax: number, iconY: number): void {

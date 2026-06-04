@@ -40,8 +40,8 @@ export const NEWBIE_GIFT_PANEL_LAYOUT = {
   decoLabelFontSize: 20,
   boardLabelFontSize: 20,
   boardAmountFontSize: 32,
-  /** 数量角标相对图标右缘的水平偏移（越小越靠左） */
-  boardAmountOffsetXRatio: 0.28,
+  /** 数量角标在图标右缘外的间距（相对 iconMax） */
+  boardAmountRightGapRatio: 0.06,
   ctaRuleFontSize: 28,
   ctaRuleHighlightFontSize: 30,
 } as const;

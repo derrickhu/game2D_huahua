@@ -20,6 +20,7 @@ import { ConfirmDialog } from '@/gameobjects/ui/ConfirmDialog';
 import { createFreeAdBadge } from '@/gameobjects/ui/AdBadge';
 import { addMysteryCardPlaceholder, createSmallNameLockIcon } from '@/gameobjects/ui/mysteryCardPlaceholder';
 import { DecorationManager } from '@/managers/DecorationManager';
+import { DecoNewUnlockManager } from '@/managers/DecoNewUnlockManager';
 import { PROMO_FURNITURE_AD_DECO_IDS } from '@/config/AdConfig';
 import { AdManager, AdScene } from '@/managers/AdManager';
 import { TextureCache } from '@/utils/TextureCache';
@@ -228,6 +229,14 @@ function decoAllFilterRank(deco: DecoDef, sceneId: string): number {
 
 function sortDecosForAllFilter(decos: DecoDef[], sceneId: string): DecoDef[] {
   return [...decos].sort((a, b) => {
+    const newPri = DecoNewUnlockManager.compareAllFilterNewPriority(
+      a.id,
+      b.id,
+      a.unlockRequirement?.level,
+      b.unlockRequirement?.level,
+    );
+    if (newPri !== 0) return newPri;
+
     const ra = decoAllFilterRank(a, sceneId);
     const rb = decoAllFilterRank(b, sceneId);
     if (ra !== rb) return ra - rb;
@@ -397,6 +406,11 @@ export class DecorationPanel extends PIXI.Container {
     this._refreshAll();
   };
 
+  private readonly _onDecoNewUnlockChanged = (): void => {
+    if (!this._isOpen) return;
+    this._refreshAll();
+  };
+
   constructor() {
     super();
     DecorationPanel._sharedInstance = this;
@@ -406,6 +420,7 @@ export class DecorationPanel extends PIXI.Container {
     this._build();
     EventBus.on('decoration:shopStarFlyComplete', this._onShopStarFlyComplete);
     EventBus.on('shop:levelUpPopupClosed', this._onShopLevelUpPopupClosed);
+    EventBus.on('decoNewUnlock:changed', this._onDecoNewUnlockChanged);
   }
 
   // ─── touch scroll：pointermove/up 绑 canvas（微信小游戏上 stage 级 move 常丢失）────
@@ -1421,6 +1436,31 @@ export class DecorationPanel extends PIXI.Container {
 
   // ─── equipped badge ───────────────────────────────────────
 
+  private _addNewUnlockBadge(card: PIXI.Container, cw: number): void {
+    const pad = 6;
+    const tagW = Math.round(Math.min(34, Math.max(28, cw * 0.22)));
+    const tagH = Math.round(tagW * 0.68);
+    const x = cw - pad - tagW;
+    const y = pad;
+
+    const bg = new PIXI.Graphics();
+    bg.beginFill(0xe53935);
+    bg.lineStyle(1.5, 0xffffff, 0.92);
+    bg.drawRoundedRect(x, y, tagW, tagH, 8);
+    bg.endFill();
+    card.addChild(bg);
+
+    const t = new PIXI.Text('新', {
+      fontSize: Math.round(tagH * 0.62),
+      fill: 0xffffff,
+      fontFamily: FONT_FAMILY,
+      fontWeight: 'bold',
+    });
+    t.anchor.set(0.5, 0.5);
+    t.position.set(x + tagW / 2, y + tagH / 2);
+    card.addChild(t);
+  }
+
   private _addEquipBadge(card: PIXI.Container, cw: number): void {
     const bg = new PIXI.Graphics();
     bg.beginFill(COLORS.BUTTON_PRIMARY);
@@ -1640,6 +1680,9 @@ export class DecorationPanel extends PIXI.Container {
     }
 
     this._addStarValueBadge(card, cw, deco.starValue);
+    if (DecoNewUnlockManager.isNewUnlockHighlight(deco.id)) {
+      this._addNewUnlockBadge(card, cw);
+    }
     if (isPlaced) this._addEquipBadge(card, cw);
 
     const lockAfterName = !purchaseAllowed;

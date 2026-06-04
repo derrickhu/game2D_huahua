@@ -19,6 +19,7 @@ import {
   type DecoPanelTabId,
 } from '@/config/DecorationConfig';
 import { AD_UNLOCK_DECO_IDS } from '@/config/AdConfig';
+import { DecoNewUnlockManager } from '@/managers/DecoNewUnlockManager';
 
 export interface DecoSaveData {
   /** 已拥有装饰 ID（花愿购入后写入；与游玩语义「购买前置已满足」不同，勿混用） */
@@ -63,6 +64,7 @@ class DecorationManagerClass {
    * 配置里「无 unlockRequirement」仅表示等级到了即可花愿购买，不等于已拥有。
    */
   init(): void {
+    DecoNewUnlockManager.init();
     this._initRoomStyleDefaults();
     this._load();
     console.log(`[Decoration] 初始化: ${this._unlocked.size} 个装饰已解锁, 房间风格: ${this._roomStyleId}`);
