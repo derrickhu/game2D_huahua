@@ -8,3 +8,6 @@ export const ENABLE_CHALLENGE_LEVEL_FEATURE = false;
 
 /** 花店左下折叠条（邀友 / 设置 / 游戏圈）；关闭后不创建 UI 与微信游戏圈原生按钮。 */
 export const ENABLE_SHOP_MISC_DRAWER = false;
+
+/** 合成页店铺行左侧「展开」活动列（挑战关卡 / 限时活动等）；关闭后隐藏展开钮与屏外活动区。 */
+export const ENABLE_SHOP_ACTIVITY_EXPAND = false;

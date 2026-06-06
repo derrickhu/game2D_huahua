@@ -13,6 +13,7 @@ import { COLORS, DESIGN_WIDTH, FONT_FAMILY } from '@/config/Constants';
 import { createFlowerEggModalFrame } from '@/gameobjects/ui/FlowerEggModalFrame';
 import { TextureCache } from '@/utils/TextureCache';
 import { AdManager, AdScene } from '@/managers/AdManager';
+import { SaveManager } from '@/managers/SaveManager';
 import { createFreeAdBadge } from '@/gameobjects/ui/AdBadge';
 
 const COL_W = 200;
@@ -283,11 +284,9 @@ export class StaminaPanel extends PIXI.Container {
       this._buyBtn.alpha = 0.4;
     }
 
-    const adRemain = CurrencyManager.staminaAdRemaining;
-    const adMax = CurrencyManager.staminaAdMaxDaily;
-    this._adQuotaText.text = `${adRemain}/${adMax}`;
-    this._adBtn.alpha = adRemain > 0 ? 1 : 0.4;
-    this._adQuotaText.alpha = 1;
+    this._adQuotaText.text = '不限次数';
+    this._adBtn.alpha = 1;
+    this._adQuotaText.alpha = 0.75;
   }
 
   private _onBuyStamina(): void {
@@ -303,16 +302,12 @@ export class StaminaPanel extends PIXI.Container {
     const ok = CurrencyManager.buyStaminaWithDiamond();
     if (ok) {
       ToastMessage.show(`+${CurrencyManager.staminaBuyAmount} 体力已恢复`);
+      SaveManager.save();
       this._refresh();
     }
   }
 
   private _onAdStamina(): void {
-    if (CurrencyManager.staminaAdRemaining <= 0) {
-      ToastMessage.show('今日广告恢复次数已用完');
-      return;
-    }
-
     AdManager.showRewardedAd(AdScene.STAMINA_RECOVER, (success) => {
       if (!success) {
         ToastMessage.show('广告未看完，无法获得奖励');
@@ -321,6 +316,7 @@ export class StaminaPanel extends PIXI.Container {
       const ok = CurrencyManager.recoverStaminaByAd();
       if (ok) {
         ToastMessage.show(`+${CurrencyManager.staminaAdAmount} 体力已恢复`);
+        SaveManager.save();
         this._refresh();
       }
     });

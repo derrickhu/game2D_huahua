@@ -382,7 +382,7 @@ export class MainScene implements Scene {
     }
 
     // 顶部信息栏（紧贴安全区下方）
-    this._topBar = new TopBar();
+    this._topBar = new TopBar({ showDailyChallenge: true });
     this._topBar.position.set(0, y);
     this.container.addChild(this._topBar);
     y += TOP_BAR_HEIGHT + 4;
@@ -1556,6 +1556,7 @@ export class MainScene implements Scene {
     this._infoBar.updateQuickBtnRedDots();
 
     this._shopRowPanorama.updateRedDots();
+    this._topBar.updateQuestRedDot();
   }
 
   private _markRedDotsDirty(): void {

@@ -500,6 +500,14 @@ class BuildingManagerClass {
       this._states.delete(srcIndex);
       this._states.delete(dstIndex);
     });
+    /** 拖拽移动：CD / 次数 / 宝箱队列须随物品迁到目标格 */
+    EventBus.on('board:moved', (srcIndex: number, dstIndex: number) => {
+      this._relocateState(srcIndex, dstIndex);
+    });
+    /** 拖拽互换：两侧建筑状态对调 */
+    EventBus.on('board:swapped', (srcIndex: number, dstIndex: number) => {
+      this._swapBuildingStates(srcIndex, dstIndex);
+    });
   }
 
   /** 判断某个物品是否是工具类交互（tool_* 或花束包装纸等） */
@@ -883,6 +891,35 @@ class BuildingManagerClass {
   }
 
   // ═══════════════ 私有方法 ═══════════════
+
+  /** 物品移到空格：runtime 状态从 src 格搬到 dst 格（无状态则仅清两侧残留） */
+  private _relocateState(srcIndex: number, dstIndex: number): void {
+    const state = this._states.get(srcIndex);
+    this._states.delete(srcIndex);
+    this._states.delete(dstIndex);
+    if (!state) return;
+    const cell = BoardManager.getCellByIndex(dstIndex);
+    if (cell?.itemId === state.boundItemId) {
+      this._states.set(dstIndex, state);
+    }
+  }
+
+  /** 两格互换物品：对调建筑 runtime（单侧无状态则该侧清空） */
+  private _swapBuildingStates(srcIndex: number, dstIndex: number): void {
+    const stateA = this._states.get(srcIndex);
+    const stateB = this._states.get(dstIndex);
+    this._states.delete(srcIndex);
+    this._states.delete(dstIndex);
+
+    const cellA = BoardManager.getCellByIndex(srcIndex);
+    const cellB = BoardManager.getCellByIndex(dstIndex);
+    if (stateA && cellB?.itemId === stateA.boundItemId) {
+      this._states.set(dstIndex, stateA);
+    }
+    if (stateB && cellA?.itemId === stateB.boundItemId) {
+      this._states.set(srcIndex, stateB);
+    }
+  }
 
   private _findChestDef(itemId: string): ChestDef | undefined {
     return CHEST_DEFS.find(b => b.itemId === itemId);

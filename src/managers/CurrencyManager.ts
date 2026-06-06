@@ -36,17 +36,21 @@ export interface CurrencyState {
   sceneProgresses: SceneStarProgress[];
   /** 距上次体力恢复已过的秒数（用于恢复倒计时的持久化） */
   staminaRecoverElapsed?: number;
+  /** 当日已钻石购买体力次数（与 dailyStaminaQuotaDate 配套） */
+  dailyStaminaBuyCount?: number;
+  /** 当日已广告恢复体力次数（与 dailyStaminaQuotaDate 配套） */
+  dailyStaminaAdCount?: number;
+  /** 体力购买/广告日计数所属日期 YYYY-MM-DD */
+  dailyStaminaQuotaDate?: string;
 }
 
 /** 单次购买获得的体力（恒为 100） */
 const STAMINA_BUY_AMOUNT = 100;
-/** 当日第 1 次：10 钻；之后每次 +10 钻，单价封顶 50（第 5 次及以后若仍允许购买则为 50） */
-const STAMINA_BUY_PRICE_BASE = 10;
-const STAMINA_BUY_PRICE_STEP = 10;
-const STAMINA_BUY_PRICE_CAP = 50;
+/** 当日第 1 次 10 钻，第 2 次起固定 20 钻 */
+const STAMINA_BUY_PRICE_FIRST = 10;
+const STAMINA_BUY_PRICE_REPEAT = 20;
 const STAMINA_BUY_MAX_DAILY = 5;
 const STAMINA_AD_AMOUNT = 50;
-const STAMINA_AD_MAX_DAILY = 5;
 
 class CurrencyManagerClass {
   private _state: CurrencyState = {
@@ -90,28 +94,17 @@ class CurrencyManagerClass {
 
   get staminaBuyPrice(): number {
     this._checkDailyReset();
-    return Math.min(
-      STAMINA_BUY_PRICE_BASE + STAMINA_BUY_PRICE_STEP * this._dailyStaminaBuyCount,
-      STAMINA_BUY_PRICE_CAP,
-    );
+    return this._dailyStaminaBuyCount === 0
+      ? STAMINA_BUY_PRICE_FIRST
+      : STAMINA_BUY_PRICE_REPEAT;
   }
 
   get staminaBuyAmount(): number {
     return STAMINA_BUY_AMOUNT;
   }
 
-  get staminaAdRemaining(): number {
-    this._checkDailyReset();
-    return STAMINA_AD_MAX_DAILY - this._dailyStaminaAdCount;
-  }
-
   get staminaAdAmount(): number {
     return STAMINA_AD_AMOUNT;
-  }
-
-  /** 看广告恢复体力：每日次数上限（与 `staminaAdRemaining` 搭配可写「剩余/上限」） */
-  get staminaAdMaxDaily(): number {
-    return STAMINA_AD_MAX_DAILY;
   }
 
   /** @deprecated 统一使用 addHuayuan */
@@ -211,7 +204,6 @@ class CurrencyManagerClass {
 
   recoverStaminaByAd(): boolean {
     this._checkDailyReset();
-    if (this._dailyStaminaAdCount >= STAMINA_AD_MAX_DAILY) return false;
 
     this.addStamina(STAMINA_AD_AMOUNT);
     this._dailyStaminaAdCount++;
@@ -346,7 +338,22 @@ class CurrencyManagerClass {
     if (state.staminaRecoverElapsed !== undefined) {
       this._lastStaminaRecover = state.staminaRecoverElapsed;
     }
-    const { staminaRecoverElapsed: _, ...rest } = state;
+    if (typeof state.dailyStaminaQuotaDate === 'string') {
+      this._lastDailyResetDate = state.dailyStaminaQuotaDate;
+    }
+    if (typeof state.dailyStaminaBuyCount === 'number' && state.dailyStaminaBuyCount >= 0) {
+      this._dailyStaminaBuyCount = Math.floor(state.dailyStaminaBuyCount);
+    }
+    if (typeof state.dailyStaminaAdCount === 'number' && state.dailyStaminaAdCount >= 0) {
+      this._dailyStaminaAdCount = Math.floor(state.dailyStaminaAdCount);
+    }
+    const {
+      staminaRecoverElapsed: _elapsed,
+      dailyStaminaBuyCount: _buy,
+      dailyStaminaAdCount: _ad,
+      dailyStaminaQuotaDate: _quotaDate,
+      ...rest
+    } = state;
 
     // 兼容旧存档：如果没有 star/sceneId 字段，使用默认值
     if (rest.star === undefined) rest.star = 0;
@@ -375,11 +382,20 @@ class CurrencyManagerClass {
     this._state.level = getGlobalStarLevel(mergedStar);
     this._syncSceneProgressMirrors();
 
+    this._checkDailyReset();
+
     EventBus.emit('currency:loaded');
   }
 
   exportState(): CurrencyState {
-    return { ...this._state, staminaRecoverElapsed: this._lastStaminaRecover };
+    this._checkDailyReset();
+    return {
+      ...this._state,
+      staminaRecoverElapsed: this._lastStaminaRecover,
+      dailyStaminaBuyCount: this._dailyStaminaBuyCount,
+      dailyStaminaAdCount: this._dailyStaminaAdCount,
+      dailyStaminaQuotaDate: this._lastDailyResetDate,
+    };
   }
 
   private _checkDailyReset(): void {

@@ -13,7 +13,7 @@ import { FloatingMenu } from './FloatingMenu';
 import { RewardBoxButton } from '@/gameobjects/ui/RewardBoxButton';
 import { TextureCache } from '@/utils/TextureCache';
 import { DESIGN_WIDTH, FONT_FAMILY } from '@/config/Constants';
-import { ENABLE_CHALLENGE_LEVEL_FEATURE } from '@/config/FeatureFlags';
+import { ENABLE_CHALLENGE_LEVEL_FEATURE, ENABLE_SHOP_ACTIVITY_EXPAND } from '@/config/FeatureFlags';
 
 /** 左侧活动列宽度（大图标区） */
 export const SHOP_PANORAMA_ACTIVITY_W = 232;
@@ -59,7 +59,6 @@ interface TaskDef {
 }
 
 const TASK_DEFS: TaskDef[] = [
-  { id: 'quest', texKey: 'icon_quest', event: 'nav:openQuest', redDotKey: 'quest' },
   {
     id: 'challenge',
     texKey: 'icon_challenge',
@@ -90,9 +89,6 @@ export class ShopRowPanoramaScroll extends PIXI.Container {
   private _expandBtn!: PIXI.Container;
   private _collapseBtn!: PIXI.Container;
   private _expandToggleParts: ToggleButtonParts | null = null;
-  /** 任务大图标根节点（居中 pivot，便于呼吸缩放） */
-  private _questTaskRoot: PIXI.Container | null = null;
-
   private _shopBlock: PIXI.Container | null = null;
   private _taskCards = new Map<string, { root: PIXI.Container; redDot: PIXI.Graphics; def: TaskDef }>();
 
@@ -148,7 +144,7 @@ export class ShopRowPanoramaScroll extends PIXI.Container {
     super();
     this._viewportW = viewportW;
     this._viewportH = viewportH;
-    this._activityW = activityW;
+    this._activityW = ENABLE_SHOP_ACTIVITY_EXPAND ? activityW : 0;
 
     this._maskG = new PIXI.Graphics();
     this._scrollContent = new PIXI.Container();
@@ -167,7 +163,11 @@ export class ShopRowPanoramaScroll extends PIXI.Container {
     this._arrowLayer.addChild(this._arrowHintR);
 
     this._toggleLayer = new PIXI.Container();
-    this._buildToggleButtons();
+    if (ENABLE_SHOP_ACTIVITY_EXPAND) {
+      this._buildToggleButtons();
+    } else {
+      this._toggleLayer.visible = false;
+    }
 
     this.addChild(this._maskG);
     this.addChild(this._scrollContent);
@@ -176,10 +176,12 @@ export class ShopRowPanoramaScroll extends PIXI.Container {
 
     this._scrollContent.addChild(this._underlay);
     this._scrollContent.addChild(this._activityRoot);
-    this._buildActivityColumn();
+    if (ENABLE_SHOP_ACTIVITY_EXPAND) {
+      this._buildActivityColumn();
+    }
     this._redrawUnderlay();
     this._drawViewportMask();
-    this._scrollContent.x = -this._activityW;
+    this._scrollContent.x = ENABLE_SHOP_ACTIVITY_EXPAND ? -this._activityW : 0;
     this._refreshScrollBounds();
     this._updateToggleVisibility();
   }
@@ -198,6 +200,7 @@ export class ShopRowPanoramaScroll extends PIXI.Container {
   }
 
   updateRedDots(): void {
+    if (!ENABLE_SHOP_ACTIVITY_EXPAND) return;
     for (const [, card] of this._taskCards) {
       if (card.def.isVisible) {
         card.root.visible = card.def.isVisible();
@@ -321,15 +324,10 @@ export class ShopRowPanoramaScroll extends PIXI.Container {
 
   /** 每日任务有可领奖励时：任务图标 +「展开」缩放呼吸；展开钮换肤 */
   private _updateClaimableHints(dt: number): void {
+    if (!ENABLE_SHOP_ACTIVITY_EXPAND) return;
     const claim = QuestManager.hasClaimableQuest;
     if (claim) {
       this._claimBreathPhase += (Math.PI * 2 * dt) / 2.35;
-    }
-
-    const breath = claim ? 1 + Math.sin(this._claimBreathPhase) * 0.065 : 1;
-
-    if (this._questTaskRoot && this._questTaskRoot.visible) {
-      this._questTaskRoot.scale.set(claim ? breath : 1);
     }
 
     this._setExpandClaimHighlight(claim);
@@ -344,7 +342,6 @@ export class ShopRowPanoramaScroll extends PIXI.Container {
 
     if (!claim) {
       this._claimBreathPhase = 0;
-      if (this._questTaskRoot) this._questTaskRoot.scale.set(1);
     }
   }
 
@@ -473,11 +470,6 @@ export class ShopRowPanoramaScroll extends PIXI.Container {
       root.visible = def.isVisible();
     }
 
-    if (def.id === 'quest') {
-      root.pivot.set(BIG_BTN / 2, BIG_BTN / 2);
-      this._questTaskRoot = root;
-    }
-
     return { root, redDot, def };
   }
 
@@ -487,11 +479,7 @@ export class ShopRowPanoramaScroll extends PIXI.Container {
     for (const def of TASK_DEFS) {
       const card = this._taskCards.get(def.id)!;
       if (!card.root.visible) continue;
-      if (def.id === 'quest') {
-        card.root.position.set(colX + BIG_BTN / 2, y + BIG_BTN / 2);
-      } else {
-        card.root.position.set(colX, y);
-      }
+      card.root.position.set(colX, y);
       y += BIG_BTN + BIG_GAP;
     }
   }

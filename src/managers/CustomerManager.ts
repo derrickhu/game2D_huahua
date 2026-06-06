@@ -481,8 +481,17 @@ class CustomerManagerClass {
     const usedCells = new Set<number>();
     for (const slot of customer.slots) {
       if (slot.lockedCellIndex >= 0) {
-        usedCells.add(slot.lockedCellIndex);
-        continue;
+        const locked = BoardManager.getCellByIndex(slot.lockedCellIndex);
+        if (
+          locked?.state === 'open' &&
+          locked.itemId === slot.itemId &&
+          !usedCells.has(slot.lockedCellIndex)
+        ) {
+          usedCells.add(slot.lockedCellIndex);
+          continue;
+        }
+        // 缓存格已失效（他客先交、合成消耗等）：丢弃旧索引，走下方即时扫描
+        slot.lockedCellIndex = -1;
       }
       for (const cell of BoardManager.cells) {
         if (cell.state !== 'open' || !cell.itemId) continue;
@@ -495,6 +504,10 @@ class CustomerManagerClass {
     }
     if (!customer.slots.every(s => s.lockedCellIndex >= 0)) return false;
 
+    for (const slot of customer.slots) {
+      const cell = BoardManager.getCellByIndex(slot.lockedCellIndex);
+      if (!cell || cell.state !== 'open' || cell.itemId !== slot.itemId) return false;
+    }
     for (const slot of customer.slots) {
       BoardManager.removeItem(slot.lockedCellIndex);
     }
