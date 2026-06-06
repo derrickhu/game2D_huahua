@@ -247,6 +247,8 @@ export class PopupShopPanel extends PIXI.Container {
         }
         break;
     }
+
+    EventBus.emit('popupShop:purchased', this._currentShopId, item);
   }
 
   private _bindEvents(): void {

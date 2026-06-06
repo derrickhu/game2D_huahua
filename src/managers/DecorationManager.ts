@@ -144,6 +144,7 @@ class DecorationManagerClass {
     this._unlockedRoomStyles.add(styleId);
     this._save();
     console.log(`[Decoration] 解锁房间风格: ${st.name}${st.cost > 0 ? ` (-${st.cost}花愿)` : ''} +${st.starValue}星`);
+    EventBus.emit('decoration:roomStyleUnlocked', styleId, st);
     return true;
   }
 

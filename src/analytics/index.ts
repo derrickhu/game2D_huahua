@@ -41,8 +41,18 @@ export function initAnalytics(opts?: { endpoint?: string; userId?: string; debug
   const endpoint = opts?.endpoint || ENDPOINT;
   const debug = opts?.debug ?? true;
 
+  // 开发者工具联调：合成事件全量上报，便于原始事件流验证（线上仍走 SDK 默认 10% 采样）
+  const samplingRules: Record<string, number> = {
+    stamina_change: 0.1,
+    ticket_change: 0.1,
+    wish_change: 0.1,
+  };
+  if (Platform.isDevtools) {
+    samplingRules.merge_success = 1.0;
+  }
+
   console.log(
-    `[analytics] init endpoint=${endpoint}, gameKey=${GAME_KEY}, platform=${platformName}, debug=${debug}`,
+    `[analytics] init endpoint=${endpoint}, gameKey=${GAME_KEY}, platform=${platformName}, debug=${debug}, devtools=${Platform.isDevtools}`,
   );
 
   Analytics.init({
@@ -59,13 +69,7 @@ export function initAnalytics(opts?: { endpoint?: string; userId?: string; debug
       remove: Platform.removeStorageSync.bind(Platform),
     },
     lifecycle: { onHide: Platform.onHide.bind(Platform) },
-    // 业务高频自定义货币变化事件（体力 / 票券 / 心愿）按经分 SDK 文档建议降到 10% 采样，
-    // 跟内置 coin_change / diamond_change 对齐，避免上报配额浪费。
-    samplingRules: {
-      stamina_change: 0.1,
-      ticket_change: 0.1,
-      wish_change: 0.1,
-    },
+    samplingRules,
     debug,
   });
 
@@ -247,17 +251,26 @@ export function attachGameplayAnalytics(): void {
   // 后端聚合时按 event_name 分组就能拆出花愿入账/出账渠道。
   EventBus.on('decoration:unlocked', (decoId: string, deco: any) => {
     analytics.track(EVENT_NAMES.DECORATION_PURCHASE, {
+      purchase_kind: 'deco',
       deco_id: String(decoId ?? ''),
       huayuan_cost: Number(deco?.cost ?? 0),
       star_value: Number(deco?.starValue ?? 0),
     });
   });
 
+  EventBus.on('decoration:roomStyleUnlocked', (styleId: string, style?: any) => {
+    analytics.track(EVENT_NAMES.DECORATION_PURCHASE, {
+      purchase_kind: 'room_style',
+      style_id: String(styleId ?? ''),
+      huayuan_cost: Number(style?.cost ?? 0),
+      star_value: Number(style?.starValue ?? 0),
+    });
+  });
+
   EventBus.on('dressup:unlocked', (outfitId: string, def?: any) => {
     analytics.track(EVENT_NAMES.DRESSUP_UNLOCK, {
       outfit_id: String(outfitId ?? ''),
-      // DressUpManager.unlock 的 def 来自 DressUpConfig，含 cost 字段（花愿）；不存在时回退 0
-      huayuan_cost: Number(def?.cost ?? 0),
+      huayuan_cost: Number(def?.huayuanCost ?? 0),
     });
   });
 
@@ -330,6 +343,34 @@ export function attachGameplayAnalytics(): void {
     analytics.track(EVENT_NAMES.COLLECTION_DISCOVER, {
       category: String(category ?? ''),
       item_id: String(itemId ?? ''),
+    });
+  });
+
+  EventBus.on('merchShop:purchased', (shelfIndex: number, slot: any, viaAd: boolean) => {
+    analytics.track(EVENT_NAMES.MERCH_SHOP_PURCHASE, {
+      shelf_index: Number(shelfIndex) || 0,
+      item_id: String(slot?.itemId ?? ''),
+      price_type: String(slot?.priceType ?? ''),
+      price_amount: Number(slot?.priceAmount ?? 0),
+      via_ad: !!viaAd,
+    });
+  });
+
+  EventBus.on('popupShop:purchased', (shopId: string, item: any) => {
+    analytics.track(EVENT_NAMES.POPUP_SHOP_PURCHASE, {
+      shop_id: String(shopId ?? ''),
+      item_id: String(item?.id ?? ''),
+      item_type: String(item?.type ?? ''),
+      cost_huayuan: Number(item?.costHuayuan ?? 0),
+      cost_diamond: Number(item?.costDiamond ?? 0),
+      grant_amount: Number(item?.amount ?? 0),
+      grant_item_id: String(item?.itemId ?? ''),
+    });
+  });
+
+  EventBus.on('newbieGiftPack:claimed', () => {
+    analytics.track(EVENT_NAMES.NEWBIE_GIFT_CLAIM, {
+      pack_id: 'qinglian_newbie_gift',
     });
   });
 }

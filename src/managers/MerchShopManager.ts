@@ -692,6 +692,7 @@ class MerchShopManagerClass {
     }
     this.grantItem(slot.itemId);
     slot.remaining = Math.max(0, slot.remaining - 1);
+    EventBus.emit('merchShop:purchased', shelfIndex, slot, false);
     EventBus.emit('merchShop:changed');
     ToastMessage.show(`获得 ${ITEM_DEFS.get(slot.itemId)?.name ?? slot.itemId}`);
     return true;
@@ -724,6 +725,7 @@ class MerchShopManagerClass {
       }
       this.grantItem(sl.itemId);
       sl.remaining = Math.max(0, sl.remaining - 1);
+      EventBus.emit('merchShop:purchased', shelfIndex, sl, true);
       EventBus.emit('merchShop:changed');
       ToastMessage.show(`获得 ${ITEM_DEFS.get(sl.itemId)?.name ?? sl.itemId}`);
     });
