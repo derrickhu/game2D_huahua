@@ -121,6 +121,8 @@ function collectionCategoryForItemDef(def: ItemDef): CollectionCategory | null {
       return CollectionCategory.FLOWER;
     case Category.DRINK:
       return CollectionCategory.DRINK;
+    case Category.FOOD:
+      return CollectionCategory.FOOD;
     case Category.BUILDING:
       return CollectionCategory.BUILDING;
     case Category.CHEST:
@@ -193,6 +195,7 @@ function buildMysteryCandidates(): MysteryCandidate[] {
     if (
       def.category === Category.FLOWER ||
       def.category === Category.DRINK ||
+      def.category === Category.FOOD ||
       def.category === Category.CHEST
     ) {
       if (

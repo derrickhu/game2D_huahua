@@ -14,6 +14,7 @@ import {
 export enum Category {
   FLOWER = 'flower',
   DRINK = 'drink',
+  FOOD = 'food',
   BUILDING = 'building',
   CHEST = 'chest',
   CURRENCY = 'currency',
@@ -43,6 +44,17 @@ export enum DrinkLine {
   DESSERT = 'dessert',     // 甜品线
 }
 
+export enum FoodLine {
+  FRUIT_STRAWBERRY = 'fruit_strawberry',
+  FRUIT_WATERMELON = 'fruit_watermelon',
+  FRUIT_PINEAPPLE = 'fruit_pineapple',
+  FRUIT_GRAPE = 'fruit_grape',
+  CUT_STRAWBERRY = 'cut_strawberry',
+  CUT_WATERMELON = 'cut_watermelon',
+  CUT_PINEAPPLE = 'cut_pineapple',
+  CUT_GRAPE = 'cut_grape',
+}
+
 export enum CurrencyLine {
   STAMINA = 'stamina',
   /** 棋盘花愿利是（红包等产出；双击入账花愿） */
@@ -57,6 +69,8 @@ export enum ToolLine {
   BUTTERFLY_NET = 'butterfly_net', // 捕虫网 → 蝴蝶线
   MIXER = 'mixer',           // 饮品器具 → 冷饮线
   BAKE = 'bake',         // 烘焙工具 → 甜品线
+  FARM = 'farm',         // 农田工具 → 整果
+  FRUIT_CUT = 'fruit_cut', // 果切工具：整果拖入后加工为对应果切
 }
 
 /** 工具线 → 对应产品线的映射 */
@@ -68,6 +82,8 @@ export const TOOL_TO_PRODUCT_LINE: Record<ToolLine, { category: Category; line: 
   [ToolLine.BUTTERFLY_NET]: { category: Category.DRINK, line: DrinkLine.BUTTERFLY },
   [ToolLine.MIXER]:   { category: Category.DRINK,  line: DrinkLine.COLD },
   [ToolLine.BAKE]:    { category: Category.DRINK,  line: DrinkLine.DESSERT },
+  [ToolLine.FARM]:    { category: Category.FOOD, line: FoodLine.FRUIT_STRAWBERRY },
+  [ToolLine.FRUIT_CUT]: { category: Category.FOOD, line: FoodLine.CUT_STRAWBERRY },
 };
 
 export interface ItemDef {
@@ -130,6 +146,17 @@ const DRINK_DATA: [DrinkLine, string[]][] = [
   ]],
 ];
 
+const FOOD_DATA: [FoodLine, string[]][] = [
+  [FoodLine.FRUIT_STRAWBERRY, ['草莓']],
+  [FoodLine.FRUIT_WATERMELON, ['西瓜']],
+  [FoodLine.FRUIT_PINEAPPLE, ['菠萝']],
+  [FoodLine.FRUIT_GRAPE, ['葡萄']],
+  [FoodLine.CUT_STRAWBERRY, ['草莓粒杯', '草莓花杯', '莓红果切盘']],
+  [FoodLine.CUT_WATERMELON, ['西瓜块', '西瓜杯', '西瓜披萨盘']],
+  [FoodLine.CUT_PINEAPPLE, ['菠萝块', '菠萝船', '热带菠萝盘']],
+  [FoodLine.CUT_GRAPE, ['葡萄串杯', '葡萄晶冻杯', '紫晶葡萄盘']],
+];
+
 // ═══════════════ 工具数据 ═══════════════
 
 const TOOL_DATA: [ToolLine, string[]][] = [
@@ -148,7 +175,35 @@ const TOOL_DATA: [ToolLine, string[]][] = [
   [ToolLine.BAKE, [
     '擀面杖', '烤盘', '小烤箱', '双层烤箱', '高级烘焙炉',
   ]],
+  [ToolLine.FARM, [
+    '小锄头', '荒地', '果田', '丰收大果田',
+  ]],
+  [ToolLine.FRUIT_CUT, [
+    '水果刀', '小砧板', '果切盘', '高级果切台',
+  ]],
 ];
+
+export const FRUIT_WHOLE_TO_CUT_LINE: Record<string, FoodLine> = {
+  [FoodLine.FRUIT_STRAWBERRY]: FoodLine.CUT_STRAWBERRY,
+  [FoodLine.FRUIT_WATERMELON]: FoodLine.CUT_WATERMELON,
+  [FoodLine.FRUIT_PINEAPPLE]: FoodLine.CUT_PINEAPPLE,
+  [FoodLine.FRUIT_GRAPE]: FoodLine.CUT_GRAPE,
+};
+
+export function isWholeFruitLine(line: string): boolean {
+  return Object.prototype.hasOwnProperty.call(FRUIT_WHOLE_TO_CUT_LINE, line);
+}
+
+export function isFruitCutLine(line: string): boolean {
+  return Object.values(FRUIT_WHOLE_TO_CUT_LINE).includes(line as FoodLine);
+}
+
+export function fruitCutLevelForToolLevel(toolLevel: number): number {
+  if (toolLevel >= 4) return 3;
+  if (toolLevel >= 3) return 2;
+  if (toolLevel >= 1) return 1;
+  return 0;
+}
 
 /** 棋盘幸运金币 itemId（单级，不可两枚合成） */
 export const LUCKY_COIN_ITEM_ID = 'lucky_coin_1';
@@ -212,6 +267,32 @@ function buildItemDefs(): Map<string, ItemDef> {
         storable: true,
         orderHuayuan: orderHy,
         sellHuayuan: computeSellHuayuan(orderHy),
+      });
+    }
+  }
+
+  // 食物：整果不进订单；果切短线进订单
+  for (const [line, names] of FOOD_DATA) {
+    const lineMax = names.length;
+    for (let i = 0; i < names.length; i++) {
+      const id = `food_${line}_${i + 1}`;
+      const lv = i + 1;
+      const isCut = isFruitCutLine(line);
+      const orderHy = isCut ? deliverHuayuanForItem(Category.FOOD, line, lv) : 0;
+      map.set(id, {
+        id,
+        name: names[i],
+        category: Category.FOOD,
+        line,
+        level: lv,
+        maxLevel: lineMax,
+        icon: `food_${line}_${i + 1}`,
+        interactType: InteractType.NONE,
+        sellable: true,
+        storable: true,
+        ...(isCut
+          ? { orderHuayuan: orderHy, sellHuayuan: computeSellHuayuan(orderHy) }
+          : { sellHuayuan: 1 }),
       });
     }
   }
@@ -462,21 +543,21 @@ export function isSpecialConsumableItem(itemId: string): boolean {
 }
 
 /**
- * 万能水晶与金剪刀允许作用的物品：仅 FLOWER / DRINK 且非 TOOL；排除宝箱、货币、消耗品自身。
+ * 万能水晶与金剪刀允许作用的物品：仅 FLOWER / DRINK / FOOD 且非 TOOL；排除宝箱、货币、消耗品自身。
  */
 export function isCrystalScissorsValidTargetDef(def: ItemDef): boolean {
   if (isSpecialConsumableItem(def.id)) return false;
   if (def.category === Category.CHEST || def.category === Category.CURRENCY) return false;
-  if (def.category !== Category.FLOWER && def.category !== Category.DRINK) return false;
+  if (def.category !== Category.FLOWER && def.category !== Category.DRINK && def.category !== Category.FOOD) return false;
   if (def.interactType === InteractType.TOOL) return false;
   return true;
 }
 
-/** 幸运金币可作用的棋盘物品：鲜花/饮品可合成链 + 工具；排除宝箱、货币、金币自身 */
+/** 幸运金币可作用的棋盘物品：鲜花/饮品/食物可合成链 + 工具；排除宝箱、货币、金币自身 */
 export function isLuckyCoinValidTarget(def: ItemDef): boolean {
   if (isLuckyCoinItem(def.id)) return false;
   if (def.category === Category.CHEST || def.category === Category.CURRENCY) return false;
-  if (def.category === Category.FLOWER || def.category === Category.DRINK) return true;
+  if (def.category === Category.FLOWER || def.category === Category.DRINK || def.category === Category.FOOD) return true;
   if (def.category === Category.BUILDING && def.interactType === InteractType.TOOL) return true;
   return false;
 }
@@ -525,11 +606,21 @@ export function getMergeChainName(itemId: string): string {
     [DrinkLine.BUTTERFLY]: '蝴蝶标本',
     [DrinkLine.COLD]: '冷饮',
     [DrinkLine.DESSERT]: '甜品',
+    [FoodLine.FRUIT_STRAWBERRY]: '草莓',
+    [FoodLine.FRUIT_WATERMELON]: '西瓜',
+    [FoodLine.FRUIT_PINEAPPLE]: '菠萝',
+    [FoodLine.FRUIT_GRAPE]: '葡萄',
+    [FoodLine.CUT_STRAWBERRY]: '草莓果切',
+    [FoodLine.CUT_WATERMELON]: '西瓜果切',
+    [FoodLine.CUT_PINEAPPLE]: '菠萝果切',
+    [FoodLine.CUT_GRAPE]: '葡萄果切',
     [ToolLine.PLANT]: '园艺工具',
     [ToolLine.ARRANGE]: '包装工具',
     [ToolLine.BUTTERFLY_NET]: '捕虫网',
     [ToolLine.MIXER]: '冷饮器具',
     [ToolLine.BAKE]: '烘焙工具',
+    [ToolLine.FARM]: '农田工具',
+    [ToolLine.FRUIT_CUT]: '果切工具',
     chest: '宝箱',
     hongbao: '红包',
     diamond_bag: '钻石袋',

@@ -1,0 +1,13 @@
+A square 1:1 image, 1 row x 3 columns grid on plain white background. Three STRAWBERRY fruit-cut product icons, Level 1 to 3 left to right. Shared style across all 3.
+
+Match attached bouquet reference: thick dark brown outlines, flat 2D cel-shaded sticker style, candy-bright colors, kawaii merge game, NOT realistic, NOT 3D render. NO TEXT.
+
+STYLE: Flat vector-like 2D icon, thick brown outlines, simple cel shading, rounded shapes, high saturation berry pink-red palette.
+
+Column 1 — strawberry dice cup: small cute clear cup with chunky red strawberry cube shapes inside, mint leaf accent, simple flat glass outline.
+
+Column 2 — strawberry flower cup: taller dessert cup, strawberry slices arranged in a flat spiral flower pattern, pink-red layers as color blocks.
+
+Column 3 — berry platter: round white plate with cute arranged strawberry cuts and whole berries, flat decorative dots, largest icon but still flat 2D style.
+
+ONE icon per cell, equal width columns, no overlap.

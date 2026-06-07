@@ -1,0 +1,21 @@
+A square 1:1 image with a PERFECT 2 columns x 2 rows grid on plain white background. Four equal square cells with equal white gutters. Farm tool icons for merge game.
+
+STYLE — match tool_bake_2: cute compact 3/4 isometric, soft gradient shading (2-3 shades per surface), small white highlight spots, same-color subtle outlines. NO photorealism.
+
+CRITICAL SIZE RULE — ALL FOUR ICONS MUST BE THE SAME VISUAL SIZE:
+- Each icon centered in its cell, occupying exactly 68-72% of cell width AND height.
+- All four icons have nearly identical bounding box size on the sheet. L4 may be only 5% larger than L1, not 30% larger.
+- Do NOT let any icon touch cell edges. Equal padding on all sides in every cell.
+
+CRITICAL SIMPLICITY — NO FRAGMENTED COLORS:
+- Use large flat color blocks. Maximum 4 main colors per icon.
+- NO tiny leaves, NO many fruit dots, NO wood grain, NO fence posts detail, NO separate large watering can.
+- Farmland fields = simple rounded rectangle soil patch, 1-2 green blob plant shapes, 1-2 large red/yellow color dots only.
+
+GRID LAYOUT (2x2):
+Row1 Col1 (top-left) L1 — small hoe: ONE hoe only, simple wood + terracotta blade.
+Row1 Col2 (top-right) L2 — cleared soil: ONE square brown soil tile, ONE green sprout dot.
+Row2 Col1 (bottom-left) L3 — young fruit field: ONE simple square farm plot, flat brown soil, two large green rounded plant blobs, one red dot, one yellow dot. Optional single thin fence line on back edge only.
+Row2 Col2 (bottom-right) L4 — harvest field: SAME plot style as L3 but slightly larger (within 5%), two green blobs, two red dots, one purple dot. Still a flat field plot, NOT crate, NOT basket, NO watering can beside it.
+
+NO text. NO labels. White gutters between all cells.

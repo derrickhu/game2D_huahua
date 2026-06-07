@@ -15,7 +15,7 @@ import {
   DESIGN_WIDTH,
 } from '@/config/Constants';
 import { CellState } from '@/config/BoardLayout';
-import { findBoardProducerDef } from '@/config/BuildingConfig';
+import { findBoardProducerDef, toolUsesStamina } from '@/config/BuildingConfig';
 import {
   ITEM_DEFS,
   Category,
@@ -560,19 +560,30 @@ export class BoardView extends PIXI.Container {
             this._dragSrcIndex = -1;
             return;
           }
+          if (result.kind === 'fruit_cut_fail') {
+            ToastMessage.show(result.toast);
+            this._endDrag();
+            this._dragSrcIndex = -1;
+            return;
+          }
           if (
             result.kind === 'merged'
             || result.kind === 'moved'
             || result.kind === 'swapped'
             || result.kind === 'lucky_coin'
+            || result.kind === 'fruit_cut_processed'
           ) {
-            this._playDropBounce(targetIdx);
+            this._playDropBounce(result.kind === 'fruit_cut_processed' ? result.resultIndex : targetIdx);
           }
           if (result.kind === 'lucky_coin') {
             ToastMessage.show(result.direction === 'up' ? '幸运升级！' : '降级了…');
           }
           if (result.kind === 'lucky_coin_fail') {
             ToastMessage.show(result.toast);
+          }
+          if (result.kind === 'fruit_cut_processed') {
+            const def = ITEM_DEFS.get(result.resultId);
+            ToastMessage.show(def ? `切好了：${def.name}` : '切好了！');
           }
           EventBus.emit('tutorial:boardActionSettled', result.kind);
           // 移入空格 / 互换：选中框跟到目标格上的物品
@@ -1244,6 +1255,8 @@ export class BoardView extends PIXI.Container {
         const spark = new ToolSparkleLayer(cs, cs);
         spark.position.set(-cs / 2, -cs / 2);
         ghost.addChild(spark);
+      }
+      if (toolUsesStamina(producerDef)) {
         const hw = (tex.width * s) / 2;
         const hh = (tex.height * s) / 2;
         const shell = new PIXI.Container();
@@ -1337,6 +1350,9 @@ export class BoardView extends PIXI.Container {
     for (let i = 0; i < BoardManager.cells.length; i++) {
       if (i === srcIndex) continue;
       if (BoardManager.canMerge(srcIndex, i)) {
+        this._mergeTargets.add(i);
+      }
+      if (BoardManager.isFruitCutProcessTarget(srcIndex, i)) {
         this._mergeTargets.add(i);
       }
       if (dragLuckyCoin && BoardManager.isLuckyCoinHighlightTarget(srcIndex, i)) {
@@ -1435,6 +1451,7 @@ export class BoardView extends PIXI.Container {
     if (src.state !== CellState.OPEN || dst.state !== CellState.OPEN) return false;
     if (!src.itemId || !dst.itemId) return false;
     if (BoardManager.canMerge(srcIdx, hoverIdx)) return false;
+    if (BoardManager.isFruitCutProcessTarget(srcIdx, hoverIdx)) return false;
     return true;
   }
 }

@@ -1,0 +1,18 @@
+A square 1:1 image, 1 row x 4 columns, plain white background. Four FARM tool icons for merge game.
+
+STYLE — match tool_bake_2.png reference EXACTLY:
+Cute small mobile game item icon, 3/4 top-down isometric. Rounded chunky proportions. Volume ONLY from soft smooth color gradients (2-3 tones per surface) and small bright highlight spots. Same-color subtle darker borders, NO thick black outline, NO wood grain texture, NO tiny screws/nails/pebbles, NO cluttered scene.
+
+MINIMALISM RULE: each cell has ONE main object only. Maximum 2 simple accessory shapes. Readable at 128px on a crowded merge board. NO TEXT.
+
+Warm earthy palette: terracotta, soil brown, grass green, wood tan.
+
+Column 1 — small hoe: ONLY a simple garden hoe, wooden handle + terracotta blade. Nothing else.
+
+Column 2 — soil plot: ONLY a small rounded square of tilled brown soil, one tiny green sprout in center. No fence, no stake, no rocks.
+
+Column 3 — fruit bed: ONE simple wooden planter box with 2-3 LARGE simplified fruit shapes peeking out (one red round, one green stripe ball, one yellow oval). No individual plants, no vines, no labels.
+
+Column 4 — harvest box: ONE wooden crate, slightly larger, with 3-4 LARGE round fruit blobs above rim (red, green-striped, yellow, purple). Big simple shapes like dessert toppings, not a busy orchard. No watering can, no basket, no leaves everywhere.
+
+ONE icon per cell, equal columns, no overlap.

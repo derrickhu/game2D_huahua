@@ -6,7 +6,7 @@ import {
   findBoardProducerDef,
   boardProducerOutputsProductLine,
 } from '@/config/BuildingConfig';
-import { Category, DrinkLine, FlowerLine, ToolLine } from '@/config/ItemConfig';
+import { Category, DrinkLine, FlowerLine, FoodLine, ToolLine } from '@/config/ItemConfig';
 import type { UnlockedLines } from '@/config/OrderTierConfig';
 
 export interface OrderBoardCell {
@@ -18,11 +18,15 @@ export function computeUnlockedLines(cells: readonly OrderBoardCell[]): Unlocked
   let maxPlantToolLevel = 0;
   let maxArrangeToolLevel = 0;
   let maxDrinkToolLevel = 0;
+  let maxFarmToolLevel = 0;
+  let maxFruitCutToolLevel = 0;
   let hasBouquet = false;
   let hasGreen = false;
   let hasDrink = false;
+  let hasFood = false;
   const drinkLinesOnBoard = new Set<string>();
   const drinkToolMaxByLine: Partial<Record<DrinkLine, number>> = {};
+  const foodToolMaxByLine: Partial<Record<FoodLine, number>> = {};
 
   for (const c of cells) {
     if (c.state !== CellState.OPEN || !c.itemId) continue;
@@ -48,6 +52,21 @@ export function computeUnlockedLines(cells: readonly OrderBoardCell[]): Unlocked
       drinkLinesOnBoard.add(def.produceLine);
       const dl = def.produceLine as DrinkLine;
       drinkToolMaxByLine[dl] = Math.max(drinkToolMaxByLine[dl] ?? 0, def.level);
+    } else if (def.toolLine === ToolLine.FARM) {
+      maxFarmToolLevel = Math.max(maxFarmToolLevel, def.level);
+    } else if (def.toolLine === ToolLine.FRUIT_CUT) {
+      maxFruitCutToolLevel = Math.max(maxFruitCutToolLevel, def.level);
+    }
+  }
+
+  if (maxFarmToolLevel >= 3 && maxFruitCutToolLevel >= 1) {
+    hasFood = true;
+    const fruitCutLines = [FoodLine.CUT_STRAWBERRY, FoodLine.CUT_WATERMELON];
+    if (maxFarmToolLevel >= 4) {
+      fruitCutLines.push(FoodLine.CUT_PINEAPPLE, FoodLine.CUT_GRAPE);
+    }
+    for (const line of fruitCutLines) {
+      foodToolMaxByLine[line] = maxFruitCutToolLevel;
     }
   }
 
@@ -55,15 +74,20 @@ export function computeUnlockedLines(cells: readonly OrderBoardCell[]): Unlocked
   if (hasBouquet) unlockedLineCount++;
   if (hasGreen) unlockedLineCount++;
   unlockedLineCount += drinkLinesOnBoard.size;
+  unlockedLineCount += Object.keys(foodToolMaxByLine).length;
 
   return {
     hasBouquet,
     hasGreen,
     hasDrink,
+    hasFood,
     maxPlantToolLevel,
     maxArrangeToolLevel,
     maxDrinkToolLevel,
+    maxFarmToolLevel,
+    maxFruitCutToolLevel,
     drinkToolMaxByLine,
+    foodToolMaxByLine,
     unlockedLineCount,
   };
 }

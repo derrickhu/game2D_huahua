@@ -14,7 +14,7 @@ import { Game } from '@/core/Game';
 import { EventBus } from '@/core/EventBus';
 import { TweenManager, Ease } from '@/core/TweenManager';
 import { CollectionManager, CollectionCategory } from '@/managers/CollectionManager';
-import { Category, type ItemDef, ITEM_DEFS } from '@/config/ItemConfig';
+import { Category, FoodLine, type ItemDef, ITEM_DEFS } from '@/config/ItemConfig';
 import { TextureCache } from '@/utils/TextureCache';
 import { RewardFlyCoordinator } from '@/core/RewardFlyCoordinator';
 import { DESIGN_WIDTH, FONT_FAMILY, COLORS } from '@/config/Constants';
@@ -34,6 +34,14 @@ const COLLECTION_PAGES: CollectionPage[] = [
   { collectionCat: CollectionCategory.DRINK,  itemCategory: Category.DRINK,  line: 'butterfly',     title: '蝴蝶' },
   { collectionCat: CollectionCategory.DRINK,  itemCategory: Category.DRINK,  line: 'cold',          title: '冷饮' },
   { collectionCat: CollectionCategory.DRINK,  itemCategory: Category.DRINK,  line: 'dessert',       title: '甜品' },
+  { collectionCat: CollectionCategory.FOOD, itemCategory: Category.FOOD, line: FoodLine.FRUIT_STRAWBERRY, title: '草莓' },
+  { collectionCat: CollectionCategory.FOOD, itemCategory: Category.FOOD, line: FoodLine.FRUIT_WATERMELON, title: '西瓜' },
+  { collectionCat: CollectionCategory.FOOD, itemCategory: Category.FOOD, line: FoodLine.FRUIT_PINEAPPLE, title: '菠萝' },
+  { collectionCat: CollectionCategory.FOOD, itemCategory: Category.FOOD, line: FoodLine.FRUIT_GRAPE, title: '葡萄' },
+  { collectionCat: CollectionCategory.FOOD, itemCategory: Category.FOOD, line: FoodLine.CUT_STRAWBERRY, title: '草莓果切' },
+  { collectionCat: CollectionCategory.FOOD, itemCategory: Category.FOOD, line: FoodLine.CUT_WATERMELON, title: '西瓜果切' },
+  { collectionCat: CollectionCategory.FOOD, itemCategory: Category.FOOD, line: FoodLine.CUT_PINEAPPLE, title: '菠萝果切' },
+  { collectionCat: CollectionCategory.FOOD, itemCategory: Category.FOOD, line: FoodLine.CUT_GRAPE, title: '葡萄果切' },
   { collectionCat: CollectionCategory.BUILDING, itemCategory: Category.BUILDING, line: 'plant',       title: '种植工具' },
   { collectionCat: CollectionCategory.BUILDING, itemCategory: Category.BUILDING, line: 'arrange',     title: '包装工具' },
   { collectionCat: CollectionCategory.BUILDING, itemCategory: Category.BUILDING, line: 'butterfly_net', title: '捕虫网' },

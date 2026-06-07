@@ -1,0 +1,15 @@
+A square 1:1 image with a PERFECT 2 columns x 2 rows grid on plain white background. Four equal square cells with equal white gutters.
+
+STYLE — tool_bake_2: cute 3/4 isometric, soft shading, large flat color blocks, minimal detail. Each icon ~70% of cell, centered.
+
+Row1 Col1 — L1 hoe: ONE simple garden hoe.
+Row1 Col2 — L2 soil: ONE brown soil square, ONE green sprout.
+Row2 Col1 — L3 young field: ONE single small farm plot, 2 green plant blobs, 2 fruit dots. Sparse.
+
+Row2 Col2 — L4 harvest farm (CRITICAL):
+FOUR square farm plots connected in a COMPLETE 2x2 square block (four tiles forming one larger square farmland, NO missing corner, NOT L-shape, NOT three plots).
+All four plots share edges and fill most of the icon area like a full mini farm grid.
+Each mini-plot has simple green plants; overall has a few curling vine accents and red/yellow/purple fruit dots.
+Must look like a complete filled 2x2 farmland cluster, occupying the cell boldly. Clearly bigger and fuller than L3 single plot.
+
+NO crate, NO basket, NO watering can. NO text.

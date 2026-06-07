@@ -1,0 +1,18 @@
+A square 1:1 image, 1 row x 4 columns grid, plain white background. Four WHOLE FRUIT icons.
+
+STYLE — blend bouquet + dessert product quality:
+Match attached flower_bouquet_4 and drink_dessert_1 references. Cute polished 2D merge-game icons, high saturation, joyful colors. Rounded layered shapes with smooth gradient shading (base + shadow + highlight arc). Small white gloss spots on curves. Thin clean outlines in same color family as fill (soft dark red/green/brown, NOT thick black sticker). Soft 3D plump volume like bouquet petals — NOT flat cel sticker, NOT photorealistic.
+
+BALANCE: More refined than flat icon — visible seed dots on strawberry, stripe bands on watermelon, diamond segments on pineapple, round grape spheres with highlights. But each fruit is still ONE simple object, no plate, no background props.
+
+NO TEXT anywhere.
+
+Column 1 — Strawberry: one plump heart-shaped strawberry, vivid candy red with gradient shading, yellow seed dots, green calyx with 2-3 leaf shapes and soft highlights.
+
+Column 2 — Watermelon: one round mini watermelon, bold green stripe bands with highlight, brown stem nub, plump glossy volume.
+
+Column 3 — Pineapple: one upright pineapple, golden body with simplified diamond pattern blocks and shading, green crown of 4-5 leaf spikes.
+
+Column 4 — Grape: one grape cluster, 8-12 round purple berries with individual highlight dots, one green leaf accent, rich violet gradient.
+
+ONE fruit per cell, no overlap.

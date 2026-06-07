@@ -16,12 +16,13 @@ import {
   Category,
   InteractType,
   FlowerLine,
+  ToolLine,
   getMergeChain,
   isCrystalBallItem,
   isGoldenScissorsItem,
   isLuckyCoinItem,
 } from '@/config/ItemConfig';
-import { findBoardProducerDef } from '@/config/BuildingConfig';
+import { findBoardProducerDef, toolUsesStamina } from '@/config/BuildingConfig';
 import { MERGE_BUBBLE_DISPLAY_NAME } from '@/config/MergeCompanionConfig';
 import { CellState } from '@/config/BoardLayout';
 import { BoardManager } from '@/managers/BoardManager';
@@ -722,9 +723,9 @@ export class ItemInfoBar extends PIXI.Container {
     const def = ITEM_DEFS.get(this._selectedItemId);
     if (!def) return;
     const producerDef = findBoardProducerDef(def.id);
-    if (def.interactType !== InteractType.TOOL || !producerDef?.canProduce) return;
+    if (def.interactType !== InteractType.TOOL || !toolUsesStamina(producerDef)) return;
     if (!this._staminaDescRow.visible) return;
-    const cost = ToolProducePolicy.getEffectiveStaminaCost(producerDef.staminaCost);
+    const cost = ToolProducePolicy.getEffectiveStaminaCost(producerDef!.staminaCost);
     this._staminaDescLabel.text = `消耗体力 ${cost}`;
   }
 
@@ -871,7 +872,7 @@ export class ItemInfoBar extends PIXI.Container {
       );
 
       const producerDef = findBoardProducerDef(def.id);
-      const showStaminaRow = def.interactType === InteractType.TOOL && !!producerDef?.canProduce;
+      const showStaminaRow = def.interactType === InteractType.TOOL && toolUsesStamina(producerDef);
 
       if (showStaminaRow) {
         const cost = ToolProducePolicy.getEffectiveStaminaCost(producerDef!.staminaCost);
@@ -963,6 +964,7 @@ export class ItemInfoBar extends PIXI.Container {
     }
     if (def.interactType === InteractType.TOOL) {
       const pd = findBoardProducerDef(def.id);
+      if (pd?.toolLine === ToolLine.FRUIT_CUT) return '拖入整果可加工为果切。';
       if (pd && !pd.canProduce) return '合成后可获得更高级物品。';
       if (pd?.canProduce) return '';
       return '工具';

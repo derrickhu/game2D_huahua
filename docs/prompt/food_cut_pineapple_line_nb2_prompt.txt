@@ -1,0 +1,13 @@
+A square 1:1 image, 1 row x 3 columns grid on plain white background. Three PINEAPPLE fruit-cut product icons, Level 1 to 3 left to right.
+
+Match attached bouquet reference: thick dark brown outlines, flat 2D cel-shaded sticker style, candy-bright sunny yellow, kawaii merge game, NOT realistic, NOT 3D render. NO TEXT.
+
+STYLE: Flat vector-like 2D icon, thick brown outlines, simple cel shading, tropical yellow-green palette.
+
+Column 1 — pineapple chunks: small pile of chunky golden pineapple pieces, flat shapes, tiny green leaf.
+
+Column 2 — pineapple boat: half-pineapple shell bowl filled with golden chunks, cute flat tropical boat shape.
+
+Column 3 — tropical platter: oval plate with pineapple rings and chunks, tiny flat umbrella garnish, largest.
+
+ONE icon per cell, equal width columns, no overlap.

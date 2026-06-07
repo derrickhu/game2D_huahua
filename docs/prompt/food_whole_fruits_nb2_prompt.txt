@@ -1,0 +1,18 @@
+A square 1:1 image, 1 row x 4 columns, plain white background. Four WHOLE FRUIT icons.
+
+STYLE — match flower_bouquet_4.png reference for polish level:
+Cute 2D merge-game product icon. Thin clean dark brown outlines. Volume from 3-tone soft gradients and small white highlight arcs on curves (like rose petals). Saturated candy-bright colors, rounded shapes. NOT flat sticker, NOT photorealistic, NOT hyper-detailed texture.
+
+More refined than a flat icon: visible highlight layer + shadow layer on each fruit. Seeds and patterns as simple repeated shapes, not tiny realistic dots.
+
+NO TEXT. ONE fruit per cell.
+
+Column 1 — Strawberry: one plump heart strawberry, glossy red with highlight arc, simplified yellow seed teardrops, layered green calyx.
+
+Column 2 — Watermelon: one round watermelon, bold green stripe bands with gradient, short stem, highlight on upper curve.
+
+Column 3 — Pineapple: one upright pineapple, golden body with simple diamond color blocks, green crown of 5-6 leaf shapes.
+
+Column 4 — Grape: one full grape cluster, many round purple berries as simple circles with tiny highlights, one green leaf.
+
+ONE icon per cell, equal columns, no overlap.

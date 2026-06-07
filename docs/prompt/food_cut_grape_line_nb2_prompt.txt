@@ -1,0 +1,13 @@
+A square 1:1 image, 1 row x 3 columns grid on plain white background. Three GRAPE fruit-cut product icons, Level 1 to 3 left to right.
+
+Match attached bouquet reference: thick dark brown outlines, flat 2D cel-shaded sticker style, candy-bright violet-purple, kawaii merge game, NOT realistic, NOT 3D render. NO TEXT.
+
+STYLE: Flat vector-like 2D icon, thick brown outlines, simple cel shading, rich purple palette.
+
+Column 1 — grape cluster cup: small cup with cute purple grape cluster, green stem accent.
+
+Column 2 — grape jelly cup: taller clear cup with flat purple jelly layer and grape circles inside, simple translucent look as flat color blocks.
+
+Column 3 — amethyst platter: round plate with grape clusters and jelly cubes, flat crystal-like purple gems, largest.
+
+ONE icon per cell, equal width columns, no overlap.

@@ -1,0 +1,24 @@
+A square 1:1 image with a PERFECT 2 columns x 2 rows grid on plain white background. Four equal square cells with equal white gutters. Farm tool icons.
+
+STYLE — match tool_bake_2: cute compact 3/4 isometric, soft gradient shading (2-3 shades), small highlights, same-color outlines. Large flat color blocks, NO tiny fragmented details.
+
+SIZE RULE — all four icons centered, each fills 68-72% of its cell, nearly identical bounding box (L4 may be up to 8% larger than L1).
+
+PROGRESSION MUST BE OBVIOUS between L3 and L4:
+- L3 = small starter field (ONE modest plot only)
+- L4 = mature harvest farm (clearly bigger and richer — see below)
+
+GRID (2x2):
+
+Row1 Col1 — L1 small hoe: ONE simple garden hoe, wood handle + terracotta blade.
+
+Row1 Col2 — L2 cleared soil: ONE square brown soil tile, ONE tiny green sprout.
+
+Row2 Col1 — L3 young fruit field (果田): ONE single small square farm plot only. Flat brown soil, TWO small round green plant blobs, TWO fruit dots (one red, one yellow). Simple and sparse. Looks like a beginner patch.
+
+Row2 Col2 — L4 abundant harvest farm (丰收大果田): MUST look clearly more advanced than L3. Choose ONE of these strong differences:
+  - THREE small farm plots arranged in a row or L-shape (multi-block farmland), each with green plants and colorful fruit dots; OR
+  - ONE larger plot with TALL winding green vines curling upward, big leafy clusters, and more fruit dots (red, yellow, purple).
+  L4 should feel lush, abundant, and noticeably busier/larger than the single small L3 patch. Still flat farmland theme, NO wooden crate, NO harvest basket, NO watering can prop.
+
+NO text. White gutters between cells.

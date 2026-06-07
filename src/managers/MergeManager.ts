@@ -9,6 +9,8 @@ import { TutorialInteractionGuard } from '@/systems/TutorialInteractionGuard';
 /** 拖拽松手后的结算结果（供 BoardView 反馈动画与 Toast） */
 export type MergeEndDragResult =
   | { kind: 'merged' | 'moved' | 'swapped' | 'cancelled' }
+  | { kind: 'fruit_cut_processed'; resultId: string; resultIndex: number }
+  | { kind: 'fruit_cut_fail'; toast: string }
   | { kind: 'lucky_coin'; direction: 'up' | 'down' }
   | { kind: 'lucky_coin_fail'; toast: string }
   | { kind: 'crystal_ball_confirm'; srcIndex: number; dstIndex: number; newId: string }
@@ -78,6 +80,21 @@ class MergeManagerClass {
     if (scissorsPrev.kind === 'fail') {
       EventBus.emit('merge:dragCancel', srcIndex);
       return { kind: 'special_consumable_fail', toast: scissorsPrev.toast };
+    }
+
+    const fruitCut = BoardManager.tryProcessFruitCut(srcIndex, targetIndex);
+    if (fruitCut.kind === 'ok') {
+      const def = ITEM_DEFS.get(fruitCut.resultId);
+      console.log(`[Merge] 果切加工成功: ${def?.name} (Lv.${def?.level})`);
+      return {
+        kind: 'fruit_cut_processed',
+        resultId: fruitCut.resultId,
+        resultIndex: fruitCut.resultIndex,
+      };
+    }
+    if (fruitCut.kind === 'fail') {
+      EventBus.emit('merge:dragCancel', srcIndex);
+      return { kind: 'fruit_cut_fail', toast: fruitCut.toast };
     }
 
     // 尝试合成（BoardManager.canMerge 已支持 PEEK 跨格合成）

@@ -6,7 +6,7 @@
  * 工具放在棋盘上可点击产出（仅 canProduce），合成两个同级工具升级为下一级
  */
 
-import { Category, FlowerLine, DrinkLine, ToolLine, findItemId } from './ItemConfig';
+import { Category, FlowerLine, DrinkLine, FoodLine, ToolLine, findItemId, isFruitCutLine } from './ItemConfig';
 
 /** 单次产出的明确目标：品类 + 产品线 + 产品等级 + 权重（相对权重即可） */
 export interface ToolProduceOutcome {
@@ -218,6 +218,20 @@ const PLANT_OUTCOMES_TOOL_L7: ToolProduceOutcome[] = [
   { category: Category.FLOWER, line: FlowerLine.FRESH, level: 10, weight: 3 },
 ];
 
+// ═══════════════ 农田工具（tool_farm）→ 单级整果 ═══════════════
+
+const FARM_OUTCOMES_TOOL_L3: ToolProduceOutcome[] = [
+  { category: Category.FOOD, line: FoodLine.FRUIT_STRAWBERRY, level: 1, weight: 55 },
+  { category: Category.FOOD, line: FoodLine.FRUIT_WATERMELON, level: 1, weight: 45 },
+];
+
+const FARM_OUTCOMES_TOOL_L4: ToolProduceOutcome[] = [
+  { category: Category.FOOD, line: FoodLine.FRUIT_STRAWBERRY, level: 1, weight: 30 },
+  { category: Category.FOOD, line: FoodLine.FRUIT_WATERMELON, level: 1, weight: 28 },
+  { category: Category.FOOD, line: FoodLine.FRUIT_PINEAPPLE, level: 1, weight: 24 },
+  { category: Category.FOOD, line: FoodLine.FRUIT_GRAPE, level: 1, weight: 18 },
+];
+
 const plantToolTemplate = (): Omit<ToolDef, 'itemId' | 'level'>[] => [
   {
     toolLine: ToolLine.PLANT,
@@ -296,6 +310,94 @@ const plantToolTemplate = (): Omit<ToolDef, 'itemId' | 'level'>[] => [
   },
 ];
 
+const farmToolTemplate = (): Omit<ToolDef, 'itemId' | 'level'>[] => [
+  {
+    toolLine: ToolLine.FARM,
+    produceCategory: Category.FOOD,
+    produceLine: FoodLine.FRUIT_STRAWBERRY,
+    canProduce: false,
+    produceTable: [],
+    cooldown: 0,
+    producesBeforeCooldown: 0,
+    staminaCost: 0,
+  },
+  {
+    toolLine: ToolLine.FARM,
+    produceCategory: Category.FOOD,
+    produceLine: FoodLine.FRUIT_STRAWBERRY,
+    canProduce: false,
+    produceTable: [],
+    cooldown: 0,
+    producesBeforeCooldown: 0,
+    staminaCost: 0,
+  },
+  {
+    toolLine: ToolLine.FARM,
+    produceCategory: Category.FOOD,
+    produceLine: FoodLine.FRUIT_STRAWBERRY,
+    canProduce: true,
+    produceTable: [],
+    produceOutcomes: FARM_OUTCOMES_TOOL_L3,
+    cooldown: 0,
+    producesBeforeCooldown: 0,
+    staminaCost: 1,
+  },
+  {
+    toolLine: ToolLine.FARM,
+    produceCategory: Category.FOOD,
+    produceLine: FoodLine.FRUIT_STRAWBERRY,
+    canProduce: true,
+    produceTable: [],
+    produceOutcomes: FARM_OUTCOMES_TOOL_L4,
+    cooldown: cdTierSeconds(0),
+    producesBeforeCooldown: TOOL_CD_CHARGES_PER_CYCLE,
+    staminaCost: 1,
+  },
+];
+
+const fruitCutToolTemplate = (): Omit<ToolDef, 'itemId' | 'level'>[] => [
+  {
+    toolLine: ToolLine.FRUIT_CUT,
+    produceCategory: Category.FOOD,
+    produceLine: FoodLine.CUT_STRAWBERRY,
+    canProduce: false,
+    produceTable: [],
+    cooldown: 0,
+    producesBeforeCooldown: 0,
+    staminaCost: 1,
+  },
+  {
+    toolLine: ToolLine.FRUIT_CUT,
+    produceCategory: Category.FOOD,
+    produceLine: FoodLine.CUT_STRAWBERRY,
+    canProduce: false,
+    produceTable: [],
+    cooldown: 0,
+    producesBeforeCooldown: 0,
+    staminaCost: 1,
+  },
+  {
+    toolLine: ToolLine.FRUIT_CUT,
+    produceCategory: Category.FOOD,
+    produceLine: FoodLine.CUT_STRAWBERRY,
+    canProduce: false,
+    produceTable: [],
+    cooldown: 0,
+    producesBeforeCooldown: 0,
+    staminaCost: 1,
+  },
+  {
+    toolLine: ToolLine.FRUIT_CUT,
+    produceCategory: Category.FOOD,
+    produceLine: FoodLine.CUT_STRAWBERRY,
+    canProduce: false,
+    produceTable: [],
+    cooldown: 0,
+    producesBeforeCooldown: 0,
+    staminaCost: 1,
+  },
+];
+
 // ═══════════════ 饮品工具 — 蝴蝶 10 级 + 捕虫网 5 档；冷饮/甜品 8 级 + 各 5 档 ═══════════════
 
 const drinkToolTemplate = (toolLine: ToolLine, produceLine: DrinkLine): Omit<ToolDef, 'itemId' | 'level'>[] => {
@@ -363,6 +465,8 @@ function buildToolDefs(): Map<string, ToolDef> {
     drinkToolTemplate(ToolLine.BUTTERFLY_NET, DrinkLine.BUTTERFLY),
     drinkToolTemplate(ToolLine.MIXER, DrinkLine.COLD),
     drinkToolTemplate(ToolLine.BAKE, DrinkLine.DESSERT),
+    farmToolTemplate(),
+    fruitCutToolTemplate(),
   ];
 
   for (const templates of allTemplates) {
@@ -404,6 +508,15 @@ export const BOARD_PRODUCER_DEFS = buildBoardProducerDefs();
 /** 根据物品ID查找工具定义（仅 tool_*） */
 export function findToolDef(itemId: string): ToolDef | undefined {
   return TOOL_DEFS.get(itemId);
+}
+
+/**
+ * 棋盘是否显示体力角标，并在交互时扣体力。
+ * 含可点击产出工具，以及果切工具（拖合整果加工，不可点击产出）。
+ */
+export function toolUsesStamina(def: ToolDef | undefined): boolean {
+  if (!def || def.staminaCost <= 0) return false;
+  return def.canProduce || def.toolLine === ToolLine.FRUIT_CUT;
 }
 
 /** 工具或棋盘特殊产出物（tool_* + 花束包装纸等） */
@@ -495,6 +608,9 @@ export function getSourceToolsForProductLine(
   category: Category,
   productLine: string,
 ): string[] {
+  if (category === Category.FOOD && isFruitCutLine(productLine)) {
+    return ['tool_fruit_cut_1'];
+  }
   const byToolLine = new Map<ToolLine, { level: number; itemId: string }>();
   const allDefs = [...TOOL_DEFS.values(), ...BOARD_PRODUCER_DEFS.values()];
   for (const def of allDefs) {

@@ -39,14 +39,18 @@ export function computeSellHuayuan(orderHuayuan: number): number {
   return Math.min(orderHuayuan, Math.max(1, raw));
 }
 
-export type OrderDeliveryCategory = 'flower' | 'drink';
+export type OrderDeliveryCategory = 'flower' | 'drink' | 'food';
 export type OrderDeliveryLine =
   | 'fresh'
   | 'bouquet'
   | 'green'
   | 'butterfly'
   | 'cold'
-  | 'dessert';
+  | 'dessert'
+  | 'cut_strawberry'
+  | 'cut_watermelon'
+  | 'cut_pineapple'
+  | 'cut_grape';
 
 export interface OrderDeliveryCurve {
   /** L1 单价基准 */
@@ -75,6 +79,13 @@ export const ORDER_DELIVERY_CURVES: Record<OrderDeliveryCategory, Record<string,
     cold: { base: 14, growth: 1.5 },
     /** 甜品：最高工具可直出到 L7，介于蝴蝶与冷饮之间 */
     dessert: { base: 13, growth: 1.49 },
+  },
+  food: {
+    /** 果切短线：需要农田整果 + 果切工具拖拽加工，按 3 级短链定价 */
+    cut_strawberry: { base: 16, growth: 1.75 },
+    cut_watermelon: { base: 16, growth: 1.75 },
+    cut_pineapple: { base: 18, growth: 1.75 },
+    cut_grape: { base: 18, growth: 1.75 },
   },
 };
 

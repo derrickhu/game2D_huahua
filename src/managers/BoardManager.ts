@@ -8,8 +8,12 @@ import { CellState, BOARD_PRESETS, KeyUnlockMode } from '@/config/BoardLayout';
 import {
   ITEM_DEFS,
   LEGACY_FLOWER_SIGN_COIN_ITEM_ID,
+  Category,
+  ToolLine,
   findItemId,
+  fruitCutLevelForToolLevel,
   getDowngradeResultId,
+  FRUIT_WHOLE_TO_CUT_LINE,
   getLuckyCoinDirection,
   getMergeResultId,
   isCrystalBallItem,
@@ -19,6 +23,9 @@ import {
   isLuckyCoinValidTarget,
   pickLuckyCoinNewItemId,
 } from '@/config/ItemConfig';
+import { findBoardProducerDef } from '@/config/BuildingConfig';
+import { CurrencyManager } from '@/managers/CurrencyManager';
+import { ToolProducePolicy } from '@/managers/ToolProducePolicy';
 import { FlowerSignTicketManager } from '@/managers/FlowerSignTicketManager';
 export interface CellData {
   index: number;
@@ -51,6 +58,11 @@ export type GoldenScissorsPreviewResult =
   | { kind: 'not_applicable' }
   | { kind: 'fail'; toast: string }
   | { kind: 'ok'; splitId: string };
+
+export type FruitCutProcessResult =
+  | { kind: 'not_applicable' }
+  | { kind: 'fail'; toast: string }
+  | { kind: 'ok'; resultId: string; resultIndex: number; toolIndex: number; fruitIndex: number };
 
 class BoardManagerClass {
   cells: CellData[] = [];
@@ -172,6 +184,82 @@ class BoardManagerClass {
     }
 
     return resultId;
+  }
+
+  /**
+   * 果切加工：整果与果切工具拖到一起时，消耗整果并在整果原格生成对应果切。
+   * 支持「水果拖工具」和「工具拖水果」两个方向；工具始终保留在原格。
+   */
+  tryProcessFruitCut(srcIndex: number, dstIndex: number): FruitCutProcessResult {
+    const src = this.cells[srcIndex];
+    const dst = this.cells[dstIndex];
+    if (!src || !dst) return { kind: 'not_applicable' };
+    if (src.state !== CellState.OPEN || dst.state !== CellState.OPEN) return { kind: 'not_applicable' };
+    if (!src.itemId || !dst.itemId) return { kind: 'not_applicable' };
+
+    const srcDef = ITEM_DEFS.get(src.itemId);
+    const dstDef = ITEM_DEFS.get(dst.itemId);
+    if (!srcDef || !dstDef) return { kind: 'not_applicable' };
+
+    const srcIsFruit = srcDef.category === Category.FOOD && FRUIT_WHOLE_TO_CUT_LINE[srcDef.line];
+    const dstIsFruit = dstDef.category === Category.FOOD && FRUIT_WHOLE_TO_CUT_LINE[dstDef.line];
+    const srcIsCutTool = srcDef.category === Category.BUILDING && srcDef.line === ToolLine.FRUIT_CUT;
+    const dstIsCutTool = dstDef.category === Category.BUILDING && dstDef.line === ToolLine.FRUIT_CUT;
+
+    if (!((srcIsFruit && dstIsCutTool) || (srcIsCutTool && dstIsFruit))) {
+      return { kind: 'not_applicable' };
+    }
+
+    const fruitCell = srcIsFruit ? src : dst;
+    const toolCell = srcIsCutTool ? src : dst;
+    const fruitIndex = srcIsFruit ? srcIndex : dstIndex;
+    const toolIndex = srcIsCutTool ? srcIndex : dstIndex;
+    const fruitDef = srcIsFruit ? srcDef : dstDef;
+    const toolDef = srcIsCutTool ? srcDef : dstDef;
+
+    if (fruitCell.reserved || toolCell.reserved) {
+      return { kind: 'fail', toast: '订单锁定中的物品不能加工' };
+    }
+
+    const targetLine = FRUIT_WHOLE_TO_CUT_LINE[fruitDef.line];
+    const targetLevel = fruitCutLevelForToolLevel(toolDef.level);
+    if (!targetLine || targetLevel <= 0) return { kind: 'not_applicable' };
+
+    const resultId = findItemId(Category.FOOD, targetLine, targetLevel);
+    if (!resultId) return { kind: 'fail', toast: '这台果切工具还不能加工该水果' };
+
+    const producerDef = findBoardProducerDef(toolCell.itemId!);
+    const staminaCost = ToolProducePolicy.getEffectiveStaminaCost(producerDef?.staminaCost ?? 0);
+    if (staminaCost > 0 && !CurrencyManager.consumeStamina(staminaCost)) {
+      return { kind: 'fail', toast: `体力不足！需要 ${staminaCost} 点` };
+    }
+
+    fruitCell.itemId = resultId;
+    fruitCell.reserved = false;
+    fruitCell.luckyCoinConsumed = false;
+    toolCell.luckyCoinConsumed = false;
+
+    EventBus.emit('board:itemPlaced', fruitIndex, resultId);
+    return { kind: 'ok', resultId, resultIndex: fruitIndex, toolIndex, fruitIndex };
+  }
+
+  isFruitCutProcessTarget(srcIndex: number, dstIndex: number): boolean {
+    const src = this.cells[srcIndex];
+    const dst = this.cells[dstIndex];
+    if (!src || !dst || srcIndex === dstIndex) return false;
+    if (src.state !== CellState.OPEN || dst.state !== CellState.OPEN) return false;
+    if (!src.itemId || !dst.itemId) return false;
+    if (src.reserved || dst.reserved) return false;
+
+    const srcDef = ITEM_DEFS.get(src.itemId);
+    const dstDef = ITEM_DEFS.get(dst.itemId);
+    if (!srcDef || !dstDef) return false;
+
+    const srcIsFruit = srcDef.category === Category.FOOD && !!FRUIT_WHOLE_TO_CUT_LINE[srcDef.line];
+    const dstIsFruit = dstDef.category === Category.FOOD && !!FRUIT_WHOLE_TO_CUT_LINE[dstDef.line];
+    const srcIsCutTool = srcDef.category === Category.BUILDING && srcDef.line === ToolLine.FRUIT_CUT;
+    const dstIsCutTool = dstDef.category === Category.BUILDING && dstDef.line === ToolLine.FRUIT_CUT;
+    return (srcIsFruit && dstIsCutTool) || (srcIsCutTool && dstIsFruit);
   }
 
   /** 判断两个格子是否相邻（上下左右） */

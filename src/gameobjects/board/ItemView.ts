@@ -3,8 +3,8 @@
  */
 import * as PIXI from 'pixi.js';
 import { BoardMetrics, COLORS, FONT_FAMILY } from '@/config/Constants';
-import { ITEM_DEFS, Category, FlowerLine, DrinkLine } from '@/config/ItemConfig';
-import { findBoardProducerDef } from '@/config/BuildingConfig';
+import { ITEM_DEFS, Category, FlowerLine, DrinkLine, FoodLine } from '@/config/ItemConfig';
+import { findBoardProducerDef, toolUsesStamina } from '@/config/BuildingConfig';
 import { TextureCache } from '@/utils/TextureCache';
 import { TweenManager, Ease } from '@/core/TweenManager';
 import {
@@ -459,7 +459,7 @@ export class ItemView extends PIXI.Container {
   private _syncToolEnergy(category: Category): void {
     this._hideToolEnergy();
     const td = findBoardProducerDef(this._itemId);
-    if (!td?.canProduce) return;
+    if (!toolUsesStamina(td)) return;
     const cs = BoardMetrics.cellSize;
     const sp = createToolEnergySprite(cs, cs, {
       maxSideFrac: BOARD_PRODUCER_ENERGY_MAX_SIDE_FRAC,
@@ -569,6 +569,7 @@ export class ItemView extends PIXI.Container {
     switch (category) {
       case Category.FLOWER: return '花';
       case Category.DRINK: return '饮';
+      case Category.FOOD: return '果';
       case Category.BUILDING: return '建';
       case Category.CHEST: return '箱';
       case Category.CURRENCY: return '币';
@@ -580,6 +581,7 @@ export class ItemView extends PIXI.Container {
     switch (category) {
       case Category.FLOWER: return this._getLineColor(line);
       case Category.DRINK: return this._getLineColor(line);
+      case Category.FOOD: return this._getLineColor(line);
       case Category.BUILDING: return 0x8B4513;
       case Category.CHEST: return 0xDAA520;
       case Category.CURRENCY: return 0x4CAF50;
@@ -596,6 +598,18 @@ export class ItemView extends PIXI.Container {
       case DrinkLine.BUTTERFLY: return COLORS.DRINK_BUTTERFLY;
       case DrinkLine.COLD: return COLORS.DRINK_COLD;
       case DrinkLine.DESSERT: return COLORS.DRINK_DESSERT;
+      case FoodLine.FRUIT_STRAWBERRY:
+      case FoodLine.CUT_STRAWBERRY:
+        return 0xe94b65;
+      case FoodLine.FRUIT_WATERMELON:
+      case FoodLine.CUT_WATERMELON:
+        return 0x4caf63;
+      case FoodLine.FRUIT_PINEAPPLE:
+      case FoodLine.CUT_PINEAPPLE:
+        return 0xf5c542;
+      case FoodLine.FRUIT_GRAPE:
+      case FoodLine.CUT_GRAPE:
+        return 0x8e63c7;
       default: return 0x999999;
     }
   }

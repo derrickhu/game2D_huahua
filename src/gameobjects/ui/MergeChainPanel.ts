@@ -513,6 +513,8 @@ export class MergeChainPanel extends PIXI.Container {
         return CollectionManager.isDiscovered(CollectionCategory.FLOWER, def.id);
       case Category.DRINK:
         return CollectionManager.isDiscovered(CollectionCategory.DRINK, def.id);
+      case Category.FOOD:
+        return CollectionManager.isDiscovered(CollectionCategory.FOOD, def.id);
       case Category.BUILDING:
         return CollectionManager.isDiscovered(CollectionCategory.BUILDING, def.id);
       case Category.CHEST:

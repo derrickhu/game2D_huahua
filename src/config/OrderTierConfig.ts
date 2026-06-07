@@ -5,7 +5,7 @@
  * CustomerManager 按玩家等级 + 已解锁产线随机选「模板档」生成需求；UI 角标与存档中的 tier
  * 由 computeTierFromOrderSlots 按物品难度统一计算。
  */
-import { Category, DrinkLine, FlowerLine, ITEM_DEFS } from './ItemConfig';
+import { Category, DrinkLine, FlowerLine, FoodLine, ITEM_DEFS } from './ItemConfig';
 import type { CustomerDemandDef } from './CustomerConfig';
 
 export type OrderTier = 'C' | 'B' | 'A' | 'S';
@@ -43,6 +43,7 @@ export const ORDER_TIERS: Record<OrderTier, OrderTierDef> = {
     demandPool: [
       { category: Category.FLOWER, lines: [FlowerLine.FRESH, FlowerLine.BOUQUET, FlowerLine.GREEN], levelRange: [2, 5] },
       { category: Category.DRINK, lines: [DrinkLine.BUTTERFLY, DrinkLine.COLD], levelRange: [2, 4] },
+      { category: Category.FOOD, lines: [FoodLine.CUT_STRAWBERRY, FoodLine.CUT_WATERMELON], levelRange: [1, 1] },
     ],
     timeLimit: null,
     orderType: 'normal',
@@ -54,6 +55,7 @@ export const ORDER_TIERS: Record<OrderTier, OrderTierDef> = {
     demandPool: [
       { category: Category.FLOWER, lines: [FlowerLine.FRESH, FlowerLine.BOUQUET, FlowerLine.GREEN], levelRange: [4, 7] },
       { category: Category.DRINK, lines: [DrinkLine.BUTTERFLY, DrinkLine.COLD, DrinkLine.DESSERT], levelRange: [3, 6] },
+      { category: Category.FOOD, lines: [FoodLine.CUT_STRAWBERRY, FoodLine.CUT_WATERMELON, FoodLine.CUT_PINEAPPLE, FoodLine.CUT_GRAPE], levelRange: [1, 2] },
     ],
     timeLimit: null,
     orderType: 'normal',
@@ -65,6 +67,7 @@ export const ORDER_TIERS: Record<OrderTier, OrderTierDef> = {
     demandPool: [
       { category: Category.FLOWER, lines: [FlowerLine.FRESH, FlowerLine.BOUQUET, FlowerLine.GREEN], levelRange: [6, 13] },
       { category: Category.DRINK, lines: [DrinkLine.BUTTERFLY, DrinkLine.COLD, DrinkLine.DESSERT], levelRange: [5, 10] },
+      { category: Category.FOOD, lines: [FoodLine.CUT_STRAWBERRY, FoodLine.CUT_WATERMELON, FoodLine.CUT_PINEAPPLE, FoodLine.CUT_GRAPE], levelRange: [2, 3] },
     ],
     timeLimit: null,
     orderType: 'normal',
@@ -75,24 +78,37 @@ export interface UnlockedLines {
   hasBouquet: boolean;
   hasGreen: boolean;
   hasDrink: boolean;
+  hasFood: boolean;
   /** 棋盘上最高的园艺工具等级（0=无） */
   maxPlantToolLevel: number;
   /** 棋盘上最高的包装工具等级（0=无） */
   maxArrangeToolLevel: number;
   /** 棋盘上最高的饮品工具等级（捕虫网/冷饮器/烘焙，取三线最大值，0=无） */
   maxDrinkToolLevel: number;
+  /** 棋盘上最高的农田工具等级（0=无） */
+  maxFarmToolLevel: number;
+  /** 棋盘上最高的果切工具等级（0=无） */
+  maxFruitCutToolLevel: number;
   /**
    * 各饮品线独立最高工具等级（仅该线棋盘上有生产工具时 >0）。
    * 避免仅有蝴蝶网时仍刷冷饮/甜品需求导致无法完成。
    */
   drinkToolMaxByLine: Partial<Record<DrinkLine, number>>;
+  /** 各果切线最高加工工具等级（仅农田+果切工具均在棋盘上时 >0）。 */
+  foodToolMaxByLine: Partial<Record<FoodLine, number>>;
   /** 已解锁可产出的独立产线数（花束/绿植/蝴蝶标本/冷饮/甜品等），用于动态客人上限 */
   unlockedLineCount: number;
 }
 
 /** 棋盘上最高工具等级（取所有线的最大值） */
 function _maxToolLevel(lines: UnlockedLines): number {
-  return Math.max(lines.maxPlantToolLevel, lines.maxArrangeToolLevel, lines.maxDrinkToolLevel);
+  return Math.max(
+    lines.maxPlantToolLevel,
+    lines.maxArrangeToolLevel,
+    lines.maxDrinkToolLevel,
+    lines.maxFarmToolLevel,
+    lines.maxFruitCutToolLevel,
+  );
 }
 
 function _clamp(v: number, lo: number, hi: number): number {
@@ -134,6 +150,12 @@ function _toolPower(lines: UnlockedLines): number {
     const toolLevel = lines.drinkToolMaxByLine[line] ?? 0;
     if (toolLevel > 0) {
       powers.push(_linePower(toolLevel, Category.DRINK, line));
+    }
+  }
+  for (const line of [FoodLine.CUT_STRAWBERRY, FoodLine.CUT_WATERMELON, FoodLine.CUT_PINEAPPLE, FoodLine.CUT_GRAPE]) {
+    const toolLevel = lines.foodToolMaxByLine[line] ?? 0;
+    if (toolLevel > 0) {
+      powers.push(_linePower(toolLevel, Category.FOOD, line));
     }
   }
   if (powers.length === 0) return 0;

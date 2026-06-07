@@ -1,0 +1,22 @@
+A square 1:1 image, 1 row x 4 columns grid, plain white background. Four FRUIT CUTTING tool icons, Level 1-4 left to right.
+
+STYLE — match attached tool_bake_2 reference EXACTLY:
+Cute small mobile game item icon, 3/4 top-down isometric view. Rounded chunky proportions. Soft smooth gradient shading with small bright highlight spots. NO hard black outlines — edges defined by color transitions and subtle darker-tone borders only. Volume from color shades, NOT tiny details.
+
+CRITICAL SIMPLICITY RULES:
+- Each icon = ONE main object (+ optional ONE tiny accent).
+- NO compartments, NO multiple knives, NO garnish cups, NO scattered fruit pieces everywhere.
+- Progression = slightly larger object, one more simple element.
+- Readable at 128px.
+
+NO TEXT anywhere.
+
+Column 1 — fruit knife: ONE small cute knife only. Cream handle with 2-tone shading, silver blade with soft highlight. Maybe ONE tiny red berry dot beside it, not a whole fruit.
+
+Column 2 — cutting board: ONE maple cutting board, rounded rectangle, 2 wood shades. ONE knife resting on it. TWO simple flat fruit slice shapes (one red half-circle, one green triangle). Nothing else.
+
+Column 3 — serving plate: ONE oval white plate with soft shadow. THREE large simple fruit cut shapes arranged neatly (red chunk, green triangle, yellow chunk). No board behind, no extra garnish.
+
+Column 4 — prep station: ONE compact cream counter block, slightly larger. ONE inset cutting board area, ONE plate area with 2-3 large fruit chunks. Simple rounded silhouette like a small oven shape — NOT a complex kitchen station with slots and trim.
+
+ONE icon per cell, equal columns, no overlap.

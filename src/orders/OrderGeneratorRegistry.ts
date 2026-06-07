@@ -13,8 +13,10 @@ import {
   Category,
   DrinkLine,
   FlowerLine,
+  FoodLine,
   ITEM_DEFS,
   findItemId,
+  fruitCutLevelForToolLevel,
   getMaxLevelForLine,
 } from '@/config/ItemConfig';
 import {
@@ -53,6 +55,10 @@ export function toolCapForLine(category: Category, line: string, ulk: UnlockedLi
     }
   } else if (category === Category.DRINK) {
     toolLevel = ulk.drinkToolMaxByLine[line as DrinkLine] ?? 0;
+  } else if (category === Category.FOOD) {
+    const foodToolLevel = ulk.foodToolMaxByLine[line as FoodLine] ?? 0;
+    const lineMax = Math.max(1, getMaxLevelForLine(category, line));
+    return Math.min(fruitCutLevelForToolLevel(foodToolLevel), lineMax);
   }
   const lineMax = Math.max(1, getMaxLevelForLine(category, line));
   return getEffectiveMaxLevel(toolLevel, lineMax);
@@ -75,6 +81,12 @@ function eligibleDemandLines(demandDef: CustomerDemandDef, ulk: UnlockedLines): 
   }
   if (demandDef.category === Category.FLOWER) {
     return eligibleFlowerLines(demandDef.lines, ulk);
+  }
+  if (demandDef.category === Category.FOOD) {
+    if (!ulk.hasFood) return [];
+    return demandDef.lines.filter(
+      ln => (ulk.foodToolMaxByLine[ln as FoodLine] ?? 0) > 0,
+    );
   }
   return [...demandDef.lines];
 }
@@ -259,6 +271,19 @@ function comboSpecsForTier(tier: OrderTier, ulk: UnlockedLines): ComboSpec[] {
     for (const dl of drinkLines) {
       if ((ulk.drinkToolMaxByLine[dl] ?? 0) <= 0) continue;
       out.push({ category: Category.DRINK, line: dl, minLv: r.drink[0], maxLv: r.drink[1] });
+    }
+  }
+  if (ulk.hasFood) {
+    const foodRange: Record<OrderTier, [number, number]> = {
+      C: [1, 1],
+      B: [1, 1],
+      A: [1, 2],
+      S: [2, 3],
+    };
+    const [minLv, maxLv] = foodRange[tier];
+    for (const fl of [FoodLine.CUT_STRAWBERRY, FoodLine.CUT_WATERMELON, FoodLine.CUT_PINEAPPLE, FoodLine.CUT_GRAPE]) {
+      if ((ulk.foodToolMaxByLine[fl] ?? 0) <= 0) continue;
+      out.push({ category: Category.FOOD, line: fl, minLv, maxLv });
     }
   }
   return out.map(clampComboSpecToLineMax);
@@ -466,7 +491,7 @@ export function validateOrderSlotsToolCap(
   for (const s of slots) {
     const def = ITEM_DEFS.get(s.itemId);
     if (!def) return false;
-    if (def.category !== Category.FLOWER && def.category !== Category.DRINK) continue;
+    if (def.category !== Category.FLOWER && def.category !== Category.DRINK && def.category !== Category.FOOD) continue;
     const cap = toolCapForLine(def.category, def.line, ulk);
     if (def.level > cap + 1) return false;
   }

@@ -1,0 +1,9 @@
+STYLE PREFIX — must match in-game flower bouquet icons (flower_bouquet_2.png):
+
+Clean 2D casual merge-game item icon, kawaii mobile game sticker style. FLAT vector-like illustration — NOT 3D render, NOT photorealistic, NOT semi-realistic painting, NOT heavy volumetric shading, NOT cinematic lighting.
+
+Line art: thick soft dark brown outlines on EVERY shape, sticker-like, consistent line weight, clearly readable at 128px.
+
+Color: high saturation candy-bright colors, bold and recognizable. Simple 2-step cel shading only (base color + one darker shadow block). Tiny white gloss spots allowed on edges, but NO complex multi-tone gradients, NO realistic textures, NO pores, NO photographic detail.
+
+Shapes: rounded bubbly simplified geometry, cute and chunky. 3/4 front view, slightly top-down. Icon centered, fills 78-84% of cell. Plain white background. NO TEXT, NO labels, NO numbers, NO watermark.

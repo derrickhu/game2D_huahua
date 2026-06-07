@@ -429,6 +429,38 @@ const ITEMS_IMAGE_MAP: Record<string, string> = {
   tool_mixer_4: 'subpkg_items/images/tools/mixer/tool_mixer_4.png',
   tool_mixer_5: 'subpkg_items/images/tools/mixer/tool_mixer_5.png',
 
+  // ---- 工具：农田线（果切 MVP）----
+  tool_farm_1: 'subpkg_items/images/tools/farm/tool_farm_1.png',
+  tool_farm_2: 'subpkg_items/images/tools/farm/tool_farm_2.png',
+  tool_farm_3: 'subpkg_items/images/tools/farm/tool_farm_3.png',
+  tool_farm_4: 'subpkg_items/images/tools/farm/tool_farm_4.png',
+
+  // ---- 工具：果切加工台 ----
+  tool_fruit_cut_1: 'subpkg_items/images/tools/fruit_cut/tool_fruit_cut_1.png',
+  tool_fruit_cut_2: 'subpkg_items/images/tools/fruit_cut/tool_fruit_cut_2.png',
+  tool_fruit_cut_3: 'subpkg_items/images/tools/fruit_cut/tool_fruit_cut_3.png',
+  tool_fruit_cut_4: 'subpkg_items/images/tools/fruit_cut/tool_fruit_cut_4.png',
+
+  // ---- 食物：整果（4 种单级）----
+  food_fruit_strawberry_1: 'subpkg_items/images/food/whole/food_fruit_strawberry_1.png',
+  food_fruit_watermelon_1: 'subpkg_items/images/food/whole/food_fruit_watermelon_1.png',
+  food_fruit_pineapple_1: 'subpkg_items/images/food/whole/food_fruit_pineapple_1.png',
+  food_fruit_grape_1: 'subpkg_items/images/food/whole/food_fruit_grape_1.png',
+
+  // ---- 食物：果切线（4 线 × 3 级）----
+  food_cut_strawberry_1: 'subpkg_items/images/food/cut/food_cut_strawberry_1.png',
+  food_cut_strawberry_2: 'subpkg_items/images/food/cut/food_cut_strawberry_2.png',
+  food_cut_strawberry_3: 'subpkg_items/images/food/cut/food_cut_strawberry_3.png',
+  food_cut_watermelon_1: 'subpkg_items/images/food/cut/food_cut_watermelon_1.png',
+  food_cut_watermelon_2: 'subpkg_items/images/food/cut/food_cut_watermelon_2.png',
+  food_cut_watermelon_3: 'subpkg_items/images/food/cut/food_cut_watermelon_3.png',
+  food_cut_pineapple_1: 'subpkg_items/images/food/cut/food_cut_pineapple_1.png',
+  food_cut_pineapple_2: 'subpkg_items/images/food/cut/food_cut_pineapple_2.png',
+  food_cut_pineapple_3: 'subpkg_items/images/food/cut/food_cut_pineapple_3.png',
+  food_cut_grape_1: 'subpkg_items/images/food/cut/food_cut_grape_1.png',
+  food_cut_grape_2: 'subpkg_items/images/food/cut/food_cut_grape_2.png',
+  food_cut_grape_3: 'subpkg_items/images/food/cut/food_cut_grape_3.png',
+
   // ---- 宝箱 5 档（棋盘物品图统一最长边 128px + 256 色调色板，见 scripts/compress_subpkg_items_pngs.py）----
   chest_1: 'subpkg_items/images/chest/chest_1.png',
   chest_2: 'subpkg_items/images/chest/chest_2.png',

@@ -71,6 +71,18 @@ const GM_HIGH_PRODUCER_IDS = [
   'tool_butterfly_net_5',
   'tool_mixer_5',
   'tool_bake_5',
+  'tool_farm_4',
+] as const;
+/** 果切线：农田 + 果切加工工具（各 4 级） */
+const GM_FRUIT_CUT_TOOL_IDS = [
+  'tool_farm_1',
+  'tool_farm_2',
+  'tool_farm_3',
+  'tool_farm_4',
+  'tool_fruit_cut_1',
+  'tool_fruit_cut_2',
+  'tool_fruit_cut_3',
+  'tool_fruit_cut_4',
 ] as const;
 const GM_TEST_BUBBLE_ITEM_ID = 'flower_fresh_6';
 
@@ -742,7 +754,7 @@ class GMManagerClass {
       id: 'board_place_high_producers',
       group: ' 增加物品',
       name: ' 高级生产器 → 棋盘',
-      desc: '放置种植/包装/捕虫/饮品/烘焙各 1 个高级生产器，需空已开放格',
+      desc: '放置种植/包装/捕虫/饮品/烘焙/农田各 1 个高级生产器，需空已开放格',
       execute: () => {
         const placed: string[] = [];
         for (const id of GM_HIGH_PRODUCER_IDS) {
@@ -762,6 +774,50 @@ class GMManagerClass {
           placed.push(`#${idx} ${def.name}`);
         }
         return ` 已放置高级生产器：${placed.join('；')}`;
+      },
+    });
+
+    this._commands.push({
+      id: 'board_place_fruit_cut_tools',
+      group: ' 增加物品',
+      name: ' 果切线工具 → 棋盘',
+      desc: '放置农田 1–4 级 + 果切工具 1–4 级，需 8 个空已开放格',
+      execute: () => {
+        const placed: string[] = [];
+        for (const id of GM_FRUIT_CUT_TOOL_IDS) {
+          const def = ITEM_DEFS.get(id);
+          if (!def) return ` 未注册物品 ${id}`;
+          const idx = BoardManager.findEmptyOpenCell();
+          if (idx < 0) {
+            return placed.length === 0
+              ? ' 没有空的已开放格'
+              : ` 仅放置 ${placed.length}/${GM_FRUIT_CUT_TOOL_IDS.length}（空格不足）：${placed.join('；')}`;
+          }
+          if (!BoardManager.placeItem(idx, id)) {
+            return placed.length === 0
+              ? ' 放置失败'
+              : ` 部分放置后失败：${placed.join('；')}`;
+          }
+          placed.push(`#${idx} ${def.name}`);
+        }
+        return ` 已放置果切线工具：${placed.join('；')}`;
+      },
+    });
+
+    this._commands.push({
+      id: 'rewardbox_fruit_cut_tools',
+      group: ' 增加物品',
+      name: ' 果切线工具 → 收纳盒',
+      desc: '农田 1–4 级 + 果切工具 1–4 级各 1 个，放入奖励收纳盒',
+      execute: () => {
+        const names: string[] = [];
+        for (const id of GM_FRUIT_CUT_TOOL_IDS) {
+          const def = ITEM_DEFS.get(id);
+          if (!def) return ` 未注册物品 ${id}`;
+          RewardBoxManager.addItem(id, 1);
+          names.push(def.name);
+        }
+        return ` 已发放到收纳盒：${names.join('、')}`;
       },
     });
 

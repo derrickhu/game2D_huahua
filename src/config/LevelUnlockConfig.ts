@@ -204,6 +204,12 @@ const LEVEL_UNLOCK_BASE: Record<number, Omit<LevelUnlockDef, 'level'>> = {
         desc: '花店新增圆窗景框，把远湖晨雾收入室内。',
         iconKey: 'wallart_window_lake_round',
       },
+      {
+        kind: 'tool',
+        title: '果切线开放',
+        desc: '农田会产出整果，把水果拖到果切工具上即可切成果切。',
+        iconKey: 'tool_fruit_cut_1',
+      },
     ],
   },
   13: {
@@ -344,6 +350,17 @@ const LEVEL_UNLOCK_BASE: Record<number, Omit<LevelUnlockDef, 'level'>> = {
         title: '银宝箱补给',
         desc: '本次五级里程碑额外附赠银宝箱 1 份。',
         iconKey: 'chest_2',
+      },
+    ],
+  },
+  12: {
+    ceremonyTitle: '鲜果上新',
+    entries: [
+      {
+        kind: 'tool',
+        title: '果切线开放',
+        desc: '农田会产出整果，把水果拖到果切工具上即可切成果切。',
+        iconKey: 'tool_fruit_cut_1',
       },
     ],
   },

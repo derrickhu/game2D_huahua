@@ -1,0 +1,14 @@
+A square 1:1 image, 1 row x 3 columns grid, plain white background. Three STRAWBERRY cut fruit products L1-L3.
+
+STYLE — match drink_dessert_1/3 simplicity + bouquet color richness:
+Cute 2D merge-game dessert icon. Soft gradient shading, small white highlights, same-family soft outlines. ONE container + ONE fruit type only per icon. Large readable shapes, max 5 fruit pieces visible. NO mixed berries, NO flowers, NO carved roses, NO sauce dots, NO scattered tiny garnishes.
+
+NO TEXT.
+
+Column 1 — strawberry cup: ONE small clear cup, 4-5 large red strawberry cube chunks inside, one mint leaf. Simple like dessert L1.
+
+Column 2 — strawberry cup L2: ONE taller cup, 5-6 strawberry half-slices in simple radial fan (NOT elaborate flower carving), pink cream layer visible as one flat color band.
+
+Column 3 — strawberry plate L3: ONE round white plate, 6-7 large strawberry pieces (halves and wholes) in neat circle arrangement. Largest icon but still clean — only strawberries, no other fruit types.
+
+ONE icon per cell.

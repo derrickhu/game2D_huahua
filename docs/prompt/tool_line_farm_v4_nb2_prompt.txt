@@ -1,0 +1,17 @@
+A square 1:1 image, 1 row x 4 columns grid, plain white background. Four FARM / FARMLAND progression icons L1-L4 for merge game.
+
+STYLE — match tool_bake_2 and tool_plant_1: cute compact 3/4 isometric, soft gradient shading, small white highlights, same-color subtle outlines, volume from 2-3 color shades only. Simple readable at 128px. NO text.
+
+CRITICAL THEME — ALWAYS FARMLAND, NEVER HARVEST CRATE OR WOODEN BOX:
+- This is a farmland tool line. L3 and L4 must be FARM PLOTS / FIELDS seen from above, NOT wooden crates, NOT baskets, NOT fruit boxes.
+- Progression: hoe → cleared soil → young fruit field → lush harvest field.
+
+Column 1 — small hoe: ONE simple garden hoe, wooden handle, terracotta blade. Hand tool only.
+
+Column 2 — cleared wasteland: ONE square patch of tilled brown soil with ONE tiny green sprout. Flat farmland soil, no crate.
+
+Column 3 — young fruit field (果田): ONE modest rectangular farm plot viewed from 3/4 above. Green soil rows, a few small fruit plants with simple red/yellow/purple dots as fruit. Optional low wooden fence around plot. This is a FIELD not a container.
+
+Column 4 — abundant fruit field (丰收大果田): ONE larger lush farm plot, same field style but bigger. More green rows, more colorful fruit dots on plants, maybe a tiny scarecrow or watering can beside the field. Still a FIELD / orchard plot, absolutely NO crate, NO box, NO piled harvest basket.
+
+ONE icon per cell, equal columns, no overlap.

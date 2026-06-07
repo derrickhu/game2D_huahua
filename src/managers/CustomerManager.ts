@@ -448,7 +448,7 @@ class CustomerManagerClass {
     return base;
   }
 
-  /** 单槽 FLOWER/DRINK：不低于 0.9×2×H(L−1)，避免相对「两单 L−1」过亏 */
+  /** 单槽 FLOWER/DRINK/FOOD：不低于 0.9×2×H(L−1)，避免相对「两单 L−1」过亏 */
   private static _applySingleSlotMergeParityFloor(
     slots: { itemId: string }[],
     preliminaryBase: number,
@@ -456,7 +456,7 @@ class CustomerManagerClass {
     if (slots.length !== 1) return preliminaryBase;
     const def = ITEM_DEFS.get(slots[0]!.itemId);
     if (!def?.orderHuayuan || def.level <= 1) return preliminaryBase;
-    if (def.category !== Category.FLOWER && def.category !== Category.DRINK) {
+    if (def.category !== Category.FLOWER && def.category !== Category.DRINK && def.category !== Category.FOOD) {
       return preliminaryBase;
     }
     const prevId = findItemId(def.category, def.line, def.level - 1);

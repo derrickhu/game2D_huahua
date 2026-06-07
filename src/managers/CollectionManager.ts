@@ -4,6 +4,7 @@
  * 4 大收集分类（棋盘物品）：
  * - FLOWER：鲜花 / 花束 / 绿植 / 包装（总数随 ItemConfig）
  * - DRINK：蝴蝶标本 / 冷饮 / 甜品
+ * - FOOD：整果 / 果切
  * - BUILDING：种植工具 / 包装工具 / 捕虫网 / 饮品器具 / 烘焙工具 + 特殊消耗品
  * - CHEST：宝箱 / 红包 / 钻石袋 / 体力箱
  *
@@ -21,6 +22,7 @@ const STORAGE_KEY = 'huahua_collection';
 export enum CollectionCategory {
   FLOWER = 'flower',
   DRINK = 'drink',
+  FOOD = 'food',
   BUILDING = 'building',
   CHEST = 'chest',
 }
@@ -75,6 +77,8 @@ class CollectionManagerClass {
       this._discover(CollectionCategory.FLOWER, itemId);
     } else if (def.category === Category.DRINK) {
       this._discover(CollectionCategory.DRINK, itemId);
+    } else if (def.category === Category.FOOD) {
+      this._discover(CollectionCategory.FOOD, itemId);
     } else if (def.category === Category.BUILDING) {
       this._discover(CollectionCategory.BUILDING, itemId);
     } else if (def.category === Category.CHEST) {
