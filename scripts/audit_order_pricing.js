@@ -11,7 +11,7 @@ const LINE_META = {
   green: { category: 'flower', label: '绿植', maxLevel: 13 },
   butterfly: { category: 'drink', label: '蝴蝶', maxLevel: 10 },
   cold: { category: 'drink', label: '冷饮', maxLevel: 8 },
-  dessert: { category: 'drink', label: '甜品', maxLevel: 8 },
+  dessert: { category: 'drink', label: '甜品', maxLevel: 10 },
 };
 const ORDER_DIFFICULTY_REFERENCE_LEVEL = 13;
 
@@ -46,7 +46,7 @@ const ORDER_TIERS = {
   },
 };
 
-const MULTI_SLOT_BONUS_RATE = 0.20;
+const MULTI_SLOT_BONUS_RATE = 0.10;
 const SINGLE_SLOT_MERGE_PARITY_FACTOR = 0.9;
 const ITEM_SELL_RATIO = 0.15;
 const ORDER_TIER_HUAYUAN_MULT = {

@@ -35,11 +35,11 @@ export interface WeeklyMilestoneDef {
 }
 
 export const DAILY_QUEST_TEMPLATES: DailyQuestTemplate[] = [
-  // 花愿 ×4（目标 500 / 1500 / 3000 / 6000）
-  { id: 'hy_1', kind: 'huayuan', target: 500, weeklyPoints: 10, reward: { stamina: 10 } },
-  { id: 'hy_2', kind: 'huayuan', target: 1500, weeklyPoints: 15, reward: { diamond: 2 } },
-  { id: 'hy_3', kind: 'huayuan', target: 3000, weeklyPoints: 22, reward: { stamina: 30 } },
-  { id: 'hy_4', kind: 'huayuan', target: 6000, weeklyPoints: 28, reward: { diamond: 5 } },
+  // 花愿 ×4（目标 2000 / 5000 / 10000 / 20000）
+  { id: 'hy_1', kind: 'huayuan', target: 2000, weeklyPoints: 10, reward: { stamina: 10 } },
+  { id: 'hy_2', kind: 'huayuan', target: 5000, weeklyPoints: 15, reward: { diamond: 2 } },
+  { id: 'hy_3', kind: 'huayuan', target: 10000, weeklyPoints: 22, reward: { stamina: 30 } },
+  { id: 'hy_4', kind: 'huayuan', target: 20000, weeklyPoints: 28, reward: { diamond: 5 } },
   // 合成 ×4（目标 50 / 100 / 300 / 500）
   { id: 'mg_1', kind: 'merge', target: 50, weeklyPoints: 10, reward: { itemId: 'flower_fresh_4', itemCount: 1 } },
   { id: 'mg_2', kind: 'merge', target: 100, weeklyPoints: 15, reward: { itemId: 'flower_green_4', itemCount: 1 } },

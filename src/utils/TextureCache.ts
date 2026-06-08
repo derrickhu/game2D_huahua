@@ -382,7 +382,7 @@ const ITEMS_IMAGE_MAP: Record<string, string> = {
   drink_cold_7: 'subpkg_items/images/drinks/cold/drink_cold_7.png',
   drink_cold_8: 'subpkg_items/images/drinks/cold/drink_cold_8.png',
 
-  // ---- 甜品线 (8张) ----
+  // ---- 甜品线 (10张) ----
   drink_dessert_1: 'subpkg_items/images/drinks/dessert/drink_dessert_1.png',
   drink_dessert_2: 'subpkg_items/images/drinks/dessert/drink_dessert_2.png',
   drink_dessert_3: 'subpkg_items/images/drinks/dessert/drink_dessert_3.png',
@@ -391,6 +391,8 @@ const ITEMS_IMAGE_MAP: Record<string, string> = {
   drink_dessert_6: 'subpkg_items/images/drinks/dessert/drink_dessert_6.png',
   drink_dessert_7: 'subpkg_items/images/drinks/dessert/drink_dessert_7.png',
   drink_dessert_8: 'subpkg_items/images/drinks/dessert/drink_dessert_8.png',
+  drink_dessert_9: 'subpkg_items/images/drinks/dessert/drink_dessert_9.png',
+  drink_dessert_10: 'subpkg_items/images/drinks/dessert/drink_dessert_10.png',
 
   // ---- 工具：种植线 (3级试跑) ----
   tool_plant_1: 'subpkg_items/images/tools/plant/tool_plant_1.png',
