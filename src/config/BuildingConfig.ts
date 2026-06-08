@@ -197,25 +197,26 @@ const PLANT_OUTCOMES_TOOL_L5: ToolProduceOutcome[] = [
   { category: Category.FLOWER, line: FlowerLine.GREEN, level: 3, weight: 5 },
 ];
 
-/** 园艺 L6 工具：温室 — 鲜/绿 L4 各 30%，L5 各 10%，L6 各 10% */
+/** 园艺 L6 工具：温室 — 鲜/绿 L3 各 10%，L4 各 30%，L5 各 10%（无 L6） */
 const PLANT_OUTCOMES_TOOL_L6: ToolProduceOutcome[] = [
+  { category: Category.FLOWER, line: FlowerLine.FRESH, level: 3, weight: 10 },
+  { category: Category.FLOWER, line: FlowerLine.GREEN, level: 3, weight: 10 },
   { category: Category.FLOWER, line: FlowerLine.FRESH, level: 4, weight: 30 },
   { category: Category.FLOWER, line: FlowerLine.GREEN, level: 4, weight: 30 },
   { category: Category.FLOWER, line: FlowerLine.FRESH, level: 5, weight: 10 },
   { category: Category.FLOWER, line: FlowerLine.GREEN, level: 5, weight: 10 },
-  { category: Category.FLOWER, line: FlowerLine.FRESH, level: 6, weight: 10 },
-  { category: Category.FLOWER, line: FlowerLine.GREEN, level: 6, weight: 10 },
 ];
 
-/** 园艺 L7 工具：高级温室 — 向高等级鲜花/绿植倾斜（对齐 13 级链末端） */
+/** 园艺 L7 工具：高级温室 — 鲜/绿 L4 各 5%，L5 各 30%，L6 各 10%，L7 各 5% */
 const PLANT_OUTCOMES_TOOL_L7: ToolProduceOutcome[] = [
-  { category: Category.FLOWER, line: FlowerLine.FRESH, level: 7, weight: 24 },
-  { category: Category.FLOWER, line: FlowerLine.GREEN, level: 6, weight: 22 },
-  { category: Category.FLOWER, line: FlowerLine.FRESH, level: 8, weight: 18 },
-  { category: Category.FLOWER, line: FlowerLine.GREEN, level: 7, weight: 14 },
-  { category: Category.FLOWER, line: FlowerLine.FRESH, level: 9, weight: 12 },
-  { category: Category.FLOWER, line: FlowerLine.GREEN, level: 8, weight: 7 },
-  { category: Category.FLOWER, line: FlowerLine.FRESH, level: 10, weight: 3 },
+  { category: Category.FLOWER, line: FlowerLine.FRESH, level: 4, weight: 5 },
+  { category: Category.FLOWER, line: FlowerLine.GREEN, level: 4, weight: 5 },
+  { category: Category.FLOWER, line: FlowerLine.FRESH, level: 5, weight: 30 },
+  { category: Category.FLOWER, line: FlowerLine.GREEN, level: 5, weight: 30 },
+  { category: Category.FLOWER, line: FlowerLine.FRESH, level: 6, weight: 10 },
+  { category: Category.FLOWER, line: FlowerLine.GREEN, level: 6, weight: 10 },
+  { category: Category.FLOWER, line: FlowerLine.FRESH, level: 7, weight: 5 },
+  { category: Category.FLOWER, line: FlowerLine.GREEN, level: 7, weight: 5 },
 ];
 
 const plantToolTemplate = (): Omit<ToolDef, 'itemId' | 'level'>[] => [

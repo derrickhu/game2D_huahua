@@ -7,8 +7,8 @@
  * 数值原则：合成消耗约 2 个 (L−1) 得到一个 L，单价倍率应明显高于旧版 1.33，避免「拆单交低阶」长期优于合成高阶。
  */
 
-/** 每多 1 个需求槽，对「单价之和」的加成比例（2 槽 = 1+k，3 槽 = 1+2k） */
-export const MULTI_SLOT_BONUS_RATE = 0.20;
+/** 每多 1 个需求槽，对「单价之和」的加成比例（1/2/3 槽 = 1.0 / 1.1 / 1.2） */
+export const MULTI_SLOT_BONUS_RATE = 0.10;
 
 /** 组合单 / challenge：在最终花愿上再乘一小步，补偿跨链调度成本（与成长单 bonusMultiplier 独立） */
 export const CHALLENGE_ORDER_HUAYUAN_MULT = 1.06;
