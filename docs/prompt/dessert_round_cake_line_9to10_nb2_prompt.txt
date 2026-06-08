@@ -1,0 +1,17 @@
+Two separate square 1:1 images, each ONE single game merge item icon, centered, plain solid white background.
+
+STYLE — MUST match drink_dessert_8 reference (two-tier fruit round cake, flower-shop merge game):
+- Cute kawaii hand-painted 2D mobile game icon, high saturation, glossy soft 3D volume
+- Round TWO-TIER cake on cream-white ceramic plate, 3/4 front view slightly top-down
+- Golden sponge between tiers; wavy drip frosting on both tiers
+- Large readable fruit on top; colored hairline outlines; NO text; NO cake stand
+
+IMAGE A — LEVEL 9 PINK CREAM TWO-TIER CAKE:
+- Bottom tier vivid rose-pink cream + pink drip; top tier lighter blush-pink cream + pink drip
+- Top fruit: 2 strawberries, 2 blueberries, 2 green grapes, 1 orange slice
+- Dominantly PINK palette
+
+IMAGE B — LEVEL 10 YELLOW CREAM TWO-TIER CAKE:
+- Bottom tier rich golden-yellow cream + yellow drip; top tier pale lemon-butter cream + creamy yellow drip
+- Top fruit: 2 strawberries, 2 mango cubes, 2 green grapes, 1 orange slice
+- Plate with faint warm gold rim; dominantly YELLOW palette, more luxurious than Lv9

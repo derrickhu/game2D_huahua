@@ -297,7 +297,7 @@ const plantToolTemplate = (): Omit<ToolDef, 'itemId' | 'level'>[] => [
   },
 ];
 
-// ═══════════════ 饮品工具 — 蝴蝶 10 级 + 捕虫网 5 档；冷饮/甜品 8 级 + 各 5 档 ═══════════════
+// ═══════════════ 饮品工具 — 蝴蝶/甜品 10 级 + 捕虫网/烘焙各 5 档；冷饮 8 级 + 制冰 5 档 ═══════════════
 
 const drinkToolTemplate = (toolLine: ToolLine, produceLine: DrinkLine): Omit<ToolDef, 'itemId' | 'level'>[] => {
   const isMixer = toolLine === ToolLine.MIXER;
