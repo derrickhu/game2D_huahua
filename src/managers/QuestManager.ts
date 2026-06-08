@@ -352,11 +352,16 @@ class QuestManagerClass {
           this._dailyLocalDate = data.dailyLocalDate || '';
           this._dailyTasks = (data.dailyTasks || [])
             .filter((q: DailyQuestRuntime) => getDailyQuestTemplate(q.templateId))
-            .map((q: DailyQuestRuntime) => ({
-              templateId: q.templateId,
-              current: Math.max(0, q.current | 0),
-              claimed: !!q.claimed,
-            }));
+            .map((q: DailyQuestRuntime) => {
+              const def = getDailyQuestTemplate(q.templateId);
+              const claimed = !!q.claimed;
+              let current = Math.max(0, q.current | 0);
+              // 配置上调 target 后：已领但 current 仍停在旧目标 → 对齐新 target 展示，避免「有勾却半条」
+              if (claimed && def && current < def.target) {
+                current = def.target;
+              }
+              return { templateId: q.templateId, current, claimed };
+            });
           this._weekId = data.weekId || '';
           this._weeklyPoints = Math.max(0, data.weeklyPoints | 0);
           this._weeklyMilestonesClaimed = new Set(data.weeklyMilestonesClaimed || []);
