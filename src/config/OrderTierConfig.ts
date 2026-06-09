@@ -5,9 +5,15 @@
  * CustomerManager 按玩家等级 + 已解锁产线随机选「模板档」生成需求；UI 角标与存档中的 tier
  * 由 computeTierFromOrderSlots 按物品难度统一计算。
  */
-import { FoodLine, ITEM_DEFS, type DrinkLine } from './ItemConfig';
+import { Category, FoodLine, ITEM_DEFS, isFruitCutLine, type DrinkLine } from './ItemConfig';
 
-export type OrderTier = 'C' | 'B' | 'A' | 'S';
+/** 果切订单角标难度：按「整果链顺位 + 果切等级」定档，短链偏低、西瓜偏高 */
+const FRUIT_CUT_ORDER_DIFFICULTY: Readonly<Record<string, Readonly<Record<number, number>>>> = {
+  [FoodLine.CUT_AVOCADO]: { 1: 0.22, 2: 0.42, 3: 0.45 },
+  [FoodLine.CUT_WATERMELON]: { 1: 0.40, 2: 0.72, 3: 0.78 },
+  [FoodLine.CUT_PINEAPPLE]: { 1: 0.38, 2: 0.44, 3: 0.46 },
+  [FoodLine.CUT_DRAGONFRUIT]: { 1: 0.35, 2: 0.55, 3: 0.62 },
+};
 
 export type OrderType = 'normal' | 'timed' | 'chain' | 'challenge';
 
@@ -239,7 +245,15 @@ function _smoothstep(edge0: number, edge1: number, x: number): number {
  * 订单内容物品难度：以 13 级主链作绝对标尺，并对各产线后段做小幅补偿。
  * 这样花束 / 短饮品线的末段不会被低估，但中前段也不会像旧版按 maxLevel 归一那样过早变 S。
  */
-export function computeOrderItemDifficulty(def: { level: number; maxLevel: number }): number {
+export function computeOrderItemDifficulty(def: {
+  level: number;
+  maxLevel: number;
+  category?: Category;
+  line?: string;
+}): number {
+  if (def.category === Category.FOOD && def.line && isFruitCutLine(def.line)) {
+    return FRUIT_CUT_ORDER_DIFFICULTY[def.line]?.[def.level] ?? 0.4;
+  }
   const absolute = computeOrderLevelDifficulty(def.level);
   if (!Number.isFinite(def.maxLevel) || def.maxLevel <= 1) return absolute;
   const relative = _clamp(Math.floor(def.level) / def.maxLevel, 0, 1);

@@ -441,7 +441,6 @@ const ITEMS_IMAGE_MAP: Record<string, string> = {
   tool_fruit_cut_1: 'subpkg_items/images/tools/fruit_cut/tool_fruit_cut_1.png',
   tool_fruit_cut_2: 'subpkg_items/images/tools/fruit_cut/tool_fruit_cut_2.png',
   tool_fruit_cut_3: 'subpkg_items/images/tools/fruit_cut/tool_fruit_cut_3.png',
-  tool_fruit_cut_4: 'subpkg_items/images/tools/fruit_cut/tool_fruit_cut_4.png',
 
   // ---- 食物：整果合成线 L1–L4 ----
   food_fruit_1: 'subpkg_items/images/food/whole/food_fruit_1.png',

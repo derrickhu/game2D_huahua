@@ -1,0 +1,31 @@
+Cute small mobile game item icon, 3/4 top-down isometric view. Rounded chunky proportions, slightly chibi/compact. Soft smooth gradient shading with small bright highlight spots on surfaces. No hard black outlines — edges defined by color transitions and subtle darker-tone borders only. Warm cozy color palette with realistic material colors. Clean simple white background. No text, no labels, no UI elements. The item should look like a tiny desktop ornament.
+
+Square 1:1 image with a PERFECT 2 columns x 2 rows grid on pure flat white #FFFFFF. Four equal square cells with equal white gutters. Farm tool icons L1–L4:
+
+Row1 Col1 — L1 small hoe (小锄头)
+Row1 Col2 — L2 cleared wasteland (荒地)
+Row2 Col1 — L3 young fruit field (果田)
+Row2 Col2 — L4 abundant harvest farm (丰收大果田)
+
+STYLE — match attached tool_bake_2 reference: large flat color blocks, 2–3 shade gradients only, minimal tiny details, readable at 128px. Soft upper-left lighting.
+
+CRITICAL — OPEN FARMLAND ONLY, NEVER CONTAINERS:
+- Every icon is FLAT OPEN SOIL / GROUND seen from 3/4 above — like a patch of earth in a garden.
+- ABSOLUTELY NO wooden planter box, NO raised rim, NO crate, NO basket, NO ceramic pot, NO fence walls, NO gift box.
+- Soil edges may have ONLY a thin soft grass fringe or gentle slope — NOT a thick wooden border.
+- NO standalone floating tools without soil (except L1 hoe must sit IN the soil patch).
+- NO watering cans, scarecrows, or extra props.
+
+Row1 Col1 — L1 small hoe (小锄头):
+One small flat diamond-shaped tilled soil patch (warm brown earth, soft grass at corners). ONE simple cute garden hoe stuck diagonally IN the soil — short wood handle, terracotta blade. Soil patch is the main shape; hoe is small accent. Clean and simple.
+
+Row1 Col2 — L2 cleared wasteland (荒地):
+One slightly larger flat open tilled soil tile, same open-ground style as L1 but NO hoe. Bare brown earth with subtle rake lines. ONE tiny green sprout with two round leaves in the center. Empty and calm — still just land, not a box.
+
+Row2 Col1 — L3 young fruit field (果田):
+One modest single square open farm plot (flat earth, no borders). TWO simple round green plant blobs on soil. TWO fruit dots only — one red, one yellow — large and readable. Sparse beginner patch. NO vines, NO fence, NO third plant type.
+
+Row2 Col2 — L4 abundant harvest farm (丰收大果田):
+FOUR flat soil tiles connected in a COMPLETE 2x2 square block forming one unified mini farmland (all four corners filled — NOT L-shape, NOT three tiles). Each tile: one simple green plant blob + one fruit dot (mix red/yellow/purple across tiles). Clearly bigger and fuller than L3 single plot. Still open flat ground tiles with thin grass edge only — NO wooden frame around the whole block. Lush but SIMPLE — large shapes, not cluttered.
+
+Each icon fills about 68–72% of its cell. Consistent scale across four cells.

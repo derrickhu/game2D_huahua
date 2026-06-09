@@ -1,0 +1,31 @@
+Cute small mobile game item icon, 3/4 top-down isometric view. Rounded chunky proportions, slightly chibi/compact. Soft smooth gradient shading with small bright highlight spots on surfaces. No hard black outlines — edges defined by color transitions and subtle darker-tone borders only. Warm cozy color palette. Clean simple white background. No text, no labels, no UI elements. The item should look like a tiny desktop ornament.
+
+Square 1:1 image with a PERFECT 2 columns x 2 rows grid on pure flat white #FFFFFF. Four equal square cells with equal white gutters. Fruit-cutting TOOL icons L1–L4:
+
+Row1 Col1 — L1 fruit knife (水果刀)
+Row1 Col2 — L2 small board (小砧板)
+Row2 Col1 — L3 fruit-cut board (果切盘)
+Row2 Col2 — L4 premium station (高级果切台)
+
+STYLE — match attached tool_bake_2 reference: large flat color blocks, 2–3 shade gradients, minimal tiny details, readable at 128px. Soft upper-left lighting.
+
+CRITICAL — TOOL PROGRESSION (knife + board), NOT FOOD OUTPUT:
+- These are PRODUCTION TOOLS, not plates of cut fruit.
+- L1 = knife ONLY. L2–L4 = cutting board + knife together as ONE tool set.
+- Knife quality and board size/refinement increase each level.
+- NO fruit platter as main subject. NO kitchen counter with multiple slots. NO bowls of berries. NO scattered fruit pieces everywhere.
+- At most ONE tiny fruit accent dot on L2–L4 (optional, small).
+
+Row1 Col1 — L1 fruit knife:
+ONE small cute paring fruit knife only, diagonal angle. Simple cream handle with 2-tone shading, short silver blade with soft highlight. Modest and basic — clearly the simplest level. NO cutting board, NO plate, NO fruit pile.
+
+Row1 Col2 — L2 small cutting board:
+ONE rounded rectangular maple wooden cutting board (warm tan, 2 wood shades, soft rounded corners). ONE simple fruit knife resting on the board at a slight angle — slightly nicer/longer blade than L1. Reads clearly as "knife on board" production tool. Optional at most ONE tiny red fruit half-dot on board corner. NO extra bowls.
+
+Row2 Col1 — L3 fruit-cut board:
+ONE larger premium wooden cutting board, thicker and more polished than L2, subtle wood grain (still simple blocks). ONE sharper chef-style fruit knife with nicer ergonomic cream handle and longer gleaming blade — clearly upgraded from L2. Board + knife as unified tool icon, centered. Optional ONE tiny green lime wedge accent. Still a board+knife tool, NOT a white serving plate of fruit slices.
+
+Row2 Col2 — L4 premium fruit-cut station:
+ONE wide professional bamboo or dark-maple cutting board — largest and most refined of the four, subtle juice-groove line OK but keep simple. ONE gleaming professional fruit knife with premium handle and long polished blade — clearly the best knife in the set. Board and knife together fill the cell boldly. Optional tiny accent only. NO multi-compartment counter, NO fruit tray, NO oven-like appliance shape.
+
+Each icon fills about 68–72% of its cell. L4 may be up to 8% larger than L1. Consistent isometric angle across all four.

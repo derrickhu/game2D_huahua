@@ -19,7 +19,7 @@ import {
   type ToolProduceDisplayEntry,
   type ToolDef,
 } from '@/config/BuildingConfig';
-import { ITEM_DEFS, getMergeChain, Category, InteractType, FlowerLine, type ItemDef } from '@/config/ItemConfig';
+import { ITEM_DEFS, getMergeChain, Category, InteractType, FlowerLine, usesLargeBoardIconFill, type ItemDef } from '@/config/ItemConfig';
 import {
   findRepresentativeChestForDrop,
   getChestProduceOutcomePercents,
@@ -659,10 +659,7 @@ export class MergeChainPanel extends PIXI.Container {
         const tex = TextureCache.get(odef.icon);
         if (tex && tex.width > 0) {
           const sp = new PIXI.Sprite(tex);
-          const fill =
-            odef.line === FlowerLine.BOUQUET || odef.line === FlowerLine.WRAP
-              ? BOUQUET_CELL_FILL
-              : ITEM_CELL_FILL;
+          const fill = usesLargeBoardIconFill(odef) ? BOUQUET_CELL_FILL : ITEM_CELL_FILL;
           const maxS = iconBox * fill;
           const sc = Math.min(maxS / tex.width, maxS / tex.height);
           sp.scale.set(sc);
@@ -900,7 +897,7 @@ export class MergeChainPanel extends PIXI.Container {
     const tex = TextureCache.get(def.icon);
     if (tex) {
       const sprite = new PIXI.Sprite(tex);
-      const fill = (def.line === FlowerLine.BOUQUET || def.line === FlowerLine.WRAP) ? BOUQUET_CELL_FILL : ITEM_CELL_FILL;
+      const fill = usesLargeBoardIconFill(def) ? BOUQUET_CELL_FILL : ITEM_CELL_FILL;
       const maxSize = cs * fill;
       const s = Math.min(maxSize / tex.width, maxSize / tex.height);
       sprite.scale.set(s);

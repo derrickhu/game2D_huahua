@@ -1,0 +1,35 @@
+Cute small mobile game item icon, 3/4 top-down isometric view. Rounded chunky proportions, slightly chibi/compact. Soft smooth gradient shading with small bright highlight spots. No hard black outlines — color transitions and subtle darker-tone borders only. Warm cozy palette. Pure flat white #FFFFFF background. No text.
+
+Square 1:1, PERFECT 2 columns x 2 rows grid, equal white gutters.
+
+Row1 Col1 — L1 | Row1 Col2 — L2 | Row2 Col1 — L3 | Row2 Col2 — L4
+
+STYLE — match attached tool_bake_2: large flat color blocks, 2–3 shades, readable at 128px.
+
+CRITICAL — FOUR COMPLETELY DIFFERENT SILHOUETTES. L2/L3/L4 must NOT look like copies with tiny changes.
+
+SIZE LADDER (strict — each level visibly bigger):
+- L1 smallest (~55% of cell): tiny knife alone.
+- L2 medium-small (~62% of cell): small board + small knife.
+- L3 medium-large (~72% of cell): bigger board + BIG cleaver.
+- L4 largest (~82% of cell): widest board + HUGE cleaver dominating the icon.
+
+KNIFE TYPE LADDER (strict — blade shape must change):
+- L1 & L2: slim pointed FRUIT KNIFE (narrow blade, small).
+- L3 & L4: Chinese kitchen CLEAVER 菜刀 (wide rectangular blade, tall straight edge, NO pointed chef-knife tip). L4 cleaver clearly bigger and heavier than L3.
+
+Row1 Col1 — L1 水果刀:
+ONLY one tiny slim paring fruit knife, diagonal. Short cream handle, narrow silver blade with point. NO board. Smallest icon of the four.
+
+Row1 Col2 — L2 小砧板:
+One SMALL rounded maple cutting board (compact, short handle hole OK). One SMALL slim fruit knife on board — blade narrow and short, clearly smaller/weaker than L3 cleaver. Board smaller than L3. Simple beginner setup.
+
+Row2 Col1 — L3 果切砧板:
+One MEDIUM-LARGE wooden cutting board, noticeably bigger than L2. One MEDIUM Chinese cleaver 菜刀 on board — WIDE rectangular metal blade (twice as wide as L2 fruit knife), short blocky silhouette, wooden handle. Must look like a real 菜刀, NOT another fruit knife. Cleaver is the visual focus.
+
+Row2 Col2 — L4 高级果切台:
+One LARGE wide professional cutting board — biggest board in the set. One LARGE heavy Chinese cleaver 菜刀 — blade even wider and longer than L3, thick spine, premium wooden handle, gleaming highlight. Cleaver dominates 50% of the icon. Clearly the top tier — much bigger and bolder than L3.
+
+NO fruit piles, NO platters, NO kitchen counters. Optional one tiny accent max on L2–L4.
+
+Each cell ONE centered tool set. L3 and L4 MUST use 菜刀 wide-blade shape — never slim pointed chef knives.

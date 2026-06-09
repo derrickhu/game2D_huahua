@@ -61,12 +61,13 @@ export function computeUnlockedLines(cells: readonly OrderBoardCell[]): Unlocked
 
   if (maxFarmToolLevel >= 3 && maxFruitCutToolLevel >= 1) {
     hasFood = true;
-    const fruitCutLines = [FoodLine.CUT_AVOCADO, FoodLine.CUT_WATERMELON];
+    /** L3 农田可产整果 + 任意果切工具：开放牛油果/西瓜果切订单 */
+    foodToolMaxByLine[FoodLine.CUT_AVOCADO] = maxFruitCutToolLevel;
+    foodToolMaxByLine[FoodLine.CUT_WATERMELON] = maxFruitCutToolLevel;
+    /** L4 农田可产 L2 整果：再开放菠萝/火龙果果切订单 */
     if (maxFarmToolLevel >= 4) {
-      fruitCutLines.push(FoodLine.CUT_PINEAPPLE, FoodLine.CUT_DRAGONFRUIT);
-    }
-    for (const line of fruitCutLines) {
-      foodToolMaxByLine[line] = maxFruitCutToolLevel;
+      foodToolMaxByLine[FoodLine.CUT_PINEAPPLE] = maxFruitCutToolLevel;
+      foodToolMaxByLine[FoodLine.CUT_DRAGONFRUIT] = maxFruitCutToolLevel;
     }
   }
 

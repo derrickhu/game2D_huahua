@@ -219,15 +219,30 @@ const PLANT_OUTCOMES_TOOL_L7: ToolProduceOutcome[] = [
   { category: Category.FLOWER, line: FlowerLine.GREEN, level: 7, weight: 5 },
 ];
 
-// ═══════════════ 农田工具（tool_farm）→ 整果 L1 ═══════════════
+// ═══════════════ 农田工具（tool_farm）→ 整果 ═══════════════
 
+/** L3 果田：100% 整果 L1（牛油果） */
 const FARM_OUTCOMES_TOOL_L3: ToolProduceOutcome[] = [
   { category: Category.FOOD, line: FoodLine.FRUIT, level: 1, weight: 100 },
 ];
 
+/** L4 丰收大果田：整果 L1 / L2 各 50%（牛油果 / 菠萝） */
 const FARM_OUTCOMES_TOOL_L4: ToolProduceOutcome[] = [
-  { category: Category.FOOD, line: FoodLine.FRUIT, level: 1, weight: 100 },
+  { category: Category.FOOD, line: FoodLine.FRUIT, level: 1, weight: 50 },
+  { category: Category.FOOD, line: FoodLine.FRUIT, level: 2, weight: 50 },
 ];
+
+/** 农田 L3：每周期 10 次产出 → 2 分钟 CD */
+const FARM_TOOL_L3_CD_SECONDS = 2 * 60;
+const FARM_TOOL_L3_CHARGES = 10;
+/** 农田 L4：每周期 20 次产出 → 3 分钟 CD */
+const FARM_TOOL_L4_CD_SECONDS = 3 * 60;
+const FARM_TOOL_L4_CHARGES = 20;
+
+/** 果切工具加工：按 produceTable 掷果切等级（产品线由整果决定） */
+const FRUIT_CUT_LEVEL_TABLE_L1: [number, number][] = [[1, 100]];
+const FRUIT_CUT_LEVEL_TABLE_L2: [number, number][] = [[1, 75], [2, 25]];
+const FRUIT_CUT_LEVEL_TABLE_L3: [number, number][] = [[1, 55], [2, 40], [3, 5]];
 
 const plantToolTemplate = (): Omit<ToolDef, 'itemId' | 'level'>[] => [
   {
@@ -335,8 +350,8 @@ const farmToolTemplate = (): Omit<ToolDef, 'itemId' | 'level'>[] => [
     canProduce: true,
     produceTable: [],
     produceOutcomes: FARM_OUTCOMES_TOOL_L3,
-    cooldown: 0,
-    producesBeforeCooldown: 0,
+    cooldown: FARM_TOOL_L3_CD_SECONDS,
+    producesBeforeCooldown: FARM_TOOL_L3_CHARGES,
     staminaCost: 1,
   },
   {
@@ -346,8 +361,8 @@ const farmToolTemplate = (): Omit<ToolDef, 'itemId' | 'level'>[] => [
     canProduce: true,
     produceTable: [],
     produceOutcomes: FARM_OUTCOMES_TOOL_L4,
-    cooldown: cdTierSeconds(0),
-    producesBeforeCooldown: TOOL_CD_CHARGES_PER_CYCLE,
+    cooldown: FARM_TOOL_L4_CD_SECONDS,
+    producesBeforeCooldown: FARM_TOOL_L4_CHARGES,
     staminaCost: 1,
   },
 ];
@@ -358,7 +373,7 @@ const fruitCutToolTemplate = (): Omit<ToolDef, 'itemId' | 'level'>[] => [
     produceCategory: Category.FOOD,
     produceLine: FoodLine.CUT_AVOCADO,
     canProduce: false,
-    produceTable: [],
+    produceTable: FRUIT_CUT_LEVEL_TABLE_L1,
     cooldown: 0,
     producesBeforeCooldown: 0,
     staminaCost: 1,
@@ -368,7 +383,7 @@ const fruitCutToolTemplate = (): Omit<ToolDef, 'itemId' | 'level'>[] => [
     produceCategory: Category.FOOD,
     produceLine: FoodLine.CUT_AVOCADO,
     canProduce: false,
-    produceTable: [],
+    produceTable: FRUIT_CUT_LEVEL_TABLE_L2,
     cooldown: 0,
     producesBeforeCooldown: 0,
     staminaCost: 1,
@@ -378,17 +393,7 @@ const fruitCutToolTemplate = (): Omit<ToolDef, 'itemId' | 'level'>[] => [
     produceCategory: Category.FOOD,
     produceLine: FoodLine.CUT_AVOCADO,
     canProduce: false,
-    produceTable: [],
-    cooldown: 0,
-    producesBeforeCooldown: 0,
-    staminaCost: 1,
-  },
-  {
-    toolLine: ToolLine.FRUIT_CUT,
-    produceCategory: Category.FOOD,
-    produceLine: FoodLine.CUT_AVOCADO,
-    canProduce: false,
-    produceTable: [],
+    produceTable: FRUIT_CUT_LEVEL_TABLE_L3,
     cooldown: 0,
     producesBeforeCooldown: 0,
     staminaCost: 1,
@@ -526,6 +531,30 @@ export type ToolProduceDisplayEntry = { itemId: string; percent: number };
 
 function roundOutcomePercent(p: number): number {
   return Math.round(p * 10) / 10;
+}
+
+/** 按 produceTable 权重掷产出等级（与 BuildingManager 掷等级一致） */
+export function rollProduceTableLevel(table: [number, number][]): number {
+  if (!table.length) return 1;
+  const total = table.reduce((s, [, w]) => s + w, 0);
+  if (total <= 0) return table[0][0];
+  let roll = Math.random() * total;
+  for (const [level, weight] of table) {
+    roll -= weight;
+    if (roll <= 0) return level;
+  }
+  return table[table.length - 1][0];
+}
+
+/** produceTable 各等级对应百分比（展示用） */
+export function getProduceTableLevelPercents(table: [number, number][]): { level: number; percent: number }[] {
+  if (!table.length) return [{ level: 1, percent: 100 }];
+  const sum = table.reduce((s, [, w]) => s + w, 0);
+  if (sum <= 0) return [{ level: table[0][0], percent: 100 }];
+  return table.map(([level, weight]) => ({
+    level,
+    percent: roundOutcomePercent((weight / sum) * 100),
+  }));
 }
 
 /** 合并相同 itemId 的概率（如多线均分同一等级时）；宝箱产出预览与工具共用 */

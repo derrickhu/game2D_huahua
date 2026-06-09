@@ -3,7 +3,7 @@
  */
 import * as PIXI from 'pixi.js';
 import { BoardMetrics, COLORS, FONT_FAMILY } from '@/config/Constants';
-import { ITEM_DEFS, Category, FlowerLine, DrinkLine, FoodLine } from '@/config/ItemConfig';
+import { ITEM_DEFS, Category, FlowerLine, DrinkLine, FoodLine, usesLargeBoardIconFill } from '@/config/ItemConfig';
 import { findBoardProducerDef, toolUsesStamina } from '@/config/BuildingConfig';
 import { TextureCache } from '@/utils/TextureCache';
 import { TweenManager, Ease } from '@/core/TweenManager';
@@ -218,7 +218,7 @@ export class ItemView extends PIXI.Container {
       this._iconSprite = new PIXI.Sprite(texture);
       const producer = findBoardProducerDef(itemId);
       const fill =
-        def.line === FlowerLine.BOUQUET || def.line === FlowerLine.WRAP
+        usesLargeBoardIconFill(def)
           ? BOUQUET_CELL_FILL
           : producer?.canProduce
             ? BOARD_PRODUCER_CELL_FILL

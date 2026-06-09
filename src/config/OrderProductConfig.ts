@@ -82,34 +82,41 @@ const TIER_LEVELS: Record<OrderProductId, Record<OrderTier, [number, number]>> =
   },
   cut_avocado: {
     C: [1, 1],
-    B: [1, 1],
-    A: [1, 2],
-    S: [2, 3],
+    B: [1, 3],
+    A: [1, 1],
+    S: [1, 1],
   },
   cut_watermelon: {
     C: [1, 1],
     B: [1, 1],
-    A: [1, 2],
+    A: [2, 2],
     S: [2, 3],
   },
   cut_pineapple: {
     C: [1, 1],
-    B: [1, 1],
-    A: [1, 2],
-    S: [2, 3],
+    B: [1, 2],
+    A: [1, 1],
+    S: [1, 1],
   },
   cut_dragonfruit: {
     C: [1, 1],
-    B: [1, 1],
-    A: [1, 2],
-    S: [2, 3],
+    B: [1, 2],
+    A: [2, 3],
+    S: [1, 1],
   },
 };
 
 const DRINK_TIER_B_PLUS: (tier: OrderTier) => boolean = tier => tier === 'B' || tier === 'A' || tier === 'S';
 const DRINK_TIER_A_S: (tier: OrderTier) => boolean = tier => tier === 'A' || tier === 'S';
-const FOOD_TIER_B_PLUS: (tier: OrderTier) => boolean = tier => tier === 'B' || tier === 'A' || tier === 'S';
-const FOOD_TIER_A_S: (tier: OrderTier) => boolean = tier => tier === 'A' || tier === 'S';
+const FOOD_TIER_C_B: (tier: OrderTier) => boolean = tier => tier === 'C' || tier === 'B';
+const FOOD_TIER_B_ONLY: (tier: OrderTier) => boolean = tier => tier === 'B';
+const FOOD_TIER_B_A: (tier: OrderTier) => boolean = tier => tier === 'B' || tier === 'A';
+const FOOD_TIER_B_A_S: (tier: OrderTier) => boolean = tier => tier === 'B' || tier === 'A' || tier === 'S';
+
+/** 棋盘同时有可产出农田（L3+）与果切工具时，才允许刷果切订单 */
+export function hasFruitCutOrderCapability(ulk: UnlockedLines): boolean {
+  return ulk.maxFarmToolLevel >= 3 && ulk.maxFruitCutToolLevel >= 1;
+}
 
 export const ORDER_PRODUCT_DEFS: Record<OrderProductId, OrderProductDef> = {
   fresh: {
@@ -178,8 +185,9 @@ export const ORDER_PRODUCT_DEFS: Record<OrderProductId, OrderProductDef> = {
     itemLine: FoodLine.CUT_AVOCADO,
     maxLevel: 3,
     tierLevelRanges: TIER_LEVELS.cut_avocado,
-    isAvailableInTier: FOOD_TIER_B_PLUS,
-    isUnlocked: ulk => ulk.hasFood && (ulk.foodToolMaxByLine[FoodLine.CUT_AVOCADO] ?? 0) > 0,
+    isAvailableInTier: FOOD_TIER_C_B,
+    isUnlocked: ulk =>
+      hasFruitCutOrderCapability(ulk) && (ulk.foodToolMaxByLine[FoodLine.CUT_AVOCADO] ?? 0) > 0,
     toolLevel: ulk => ulk.foodToolMaxByLine[FoodLine.CUT_AVOCADO] ?? 0,
   },
   cut_watermelon: {
@@ -188,8 +196,9 @@ export const ORDER_PRODUCT_DEFS: Record<OrderProductId, OrderProductDef> = {
     itemLine: FoodLine.CUT_WATERMELON,
     maxLevel: 3,
     tierLevelRanges: TIER_LEVELS.cut_watermelon,
-    isAvailableInTier: FOOD_TIER_B_PLUS,
-    isUnlocked: ulk => ulk.hasFood && (ulk.foodToolMaxByLine[FoodLine.CUT_WATERMELON] ?? 0) > 0,
+    isAvailableInTier: FOOD_TIER_B_A_S,
+    isUnlocked: ulk =>
+      hasFruitCutOrderCapability(ulk) && (ulk.foodToolMaxByLine[FoodLine.CUT_WATERMELON] ?? 0) > 0,
     toolLevel: ulk => ulk.foodToolMaxByLine[FoodLine.CUT_WATERMELON] ?? 0,
   },
   cut_pineapple: {
@@ -198,8 +207,9 @@ export const ORDER_PRODUCT_DEFS: Record<OrderProductId, OrderProductDef> = {
     itemLine: FoodLine.CUT_PINEAPPLE,
     maxLevel: 3,
     tierLevelRanges: TIER_LEVELS.cut_pineapple,
-    isAvailableInTier: FOOD_TIER_A_S,
-    isUnlocked: ulk => ulk.hasFood && (ulk.foodToolMaxByLine[FoodLine.CUT_PINEAPPLE] ?? 0) > 0,
+    isAvailableInTier: FOOD_TIER_B_ONLY,
+    isUnlocked: ulk =>
+      hasFruitCutOrderCapability(ulk) && (ulk.foodToolMaxByLine[FoodLine.CUT_PINEAPPLE] ?? 0) > 0,
     toolLevel: ulk => ulk.foodToolMaxByLine[FoodLine.CUT_PINEAPPLE] ?? 0,
   },
   cut_dragonfruit: {
@@ -208,8 +218,9 @@ export const ORDER_PRODUCT_DEFS: Record<OrderProductId, OrderProductDef> = {
     itemLine: FoodLine.CUT_DRAGONFRUIT,
     maxLevel: 3,
     tierLevelRanges: TIER_LEVELS.cut_dragonfruit,
-    isAvailableInTier: FOOD_TIER_A_S,
-    isUnlocked: ulk => ulk.hasFood && (ulk.foodToolMaxByLine[FoodLine.CUT_DRAGONFRUIT] ?? 0) > 0,
+    isAvailableInTier: FOOD_TIER_B_A,
+    isUnlocked: ulk =>
+      hasFruitCutOrderCapability(ulk) && (ulk.foodToolMaxByLine[FoodLine.CUT_DRAGONFRUIT] ?? 0) > 0,
     toolLevel: ulk => ulk.foodToolMaxByLine[FoodLine.CUT_DRAGONFRUIT] ?? 0,
   },
 };

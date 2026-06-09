@@ -73,7 +73,7 @@ const GM_HIGH_PRODUCER_IDS = [
   'tool_bake_5',
   'tool_farm_4',
 ] as const;
-/** 果切线：农田 + 果切加工工具（各 4 级） */
+/** 果切线：农田 + 果切加工工具（农田 4 级 + 果切 3 级） */
 const GM_FRUIT_CUT_TOOL_IDS = [
   'tool_farm_1',
   'tool_farm_2',
@@ -82,7 +82,6 @@ const GM_FRUIT_CUT_TOOL_IDS = [
   'tool_fruit_cut_1',
   'tool_fruit_cut_2',
   'tool_fruit_cut_3',
-  'tool_fruit_cut_4',
 ] as const;
 const GM_TEST_BUBBLE_ITEM_ID = 'flower_fresh_6';
 

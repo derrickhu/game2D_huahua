@@ -80,18 +80,50 @@ export const ORDER_DELIVERY_CURVES: Record<OrderDeliveryCategory, Record<string,
     /** 甜品：最高工具可直出到 L7，介于蝴蝶与冷饮之间 */
     dessert: { base: 13, growth: 1.49 },
   },
-  food: {
-    /** 果切短线：需要农田整果 + 果切工具拖拽加工，按 3 级短链定价 */
-    cut_avocado: { base: 16, growth: 1.75 },
-    cut_watermelon: { base: 16, growth: 1.75 },
-    cut_pineapple: { base: 18, growth: 1.75 },
-    cut_dragonfruit: { base: 18, growth: 1.75 },
-  },
+  /** 果切单价见 deliverHuayuanForFruitCut（顺链对标花束，不走独立曲线） */
+  food: {},
 };
+
+/**
+ * 果切全链顺位（与整果 L1→L4 一致）：牛油果 L1–3 → 菠萝 L1–3 → 火龙果 L1–3 → 西瓜 L1–3，
+ * 共 12 步；全链几何平滑：起点 = 花束 L1 × 90%，终点 = 300 花愿（西瓜 L3 顶格）。
+ */
+const FRUIT_CUT_LINE_CHAIN: readonly OrderDeliveryLine[] = [
+  'cut_avocado',
+  'cut_pineapple',
+  'cut_dragonfruit',
+  'cut_watermelon',
+];
+
+const FRUIT_CUT_CHAIN_STEPS = 12;
+
+/** 链首锚点：相对花束 L1 的折扣 */
+const FRUIT_CUT_VS_BOUQUET_RATIO = 0.9;
+
+/** 果切全链最高价（西瓜 L3 顶格） */
+const FRUIT_CUT_MAX_HY = 300;
 
 function deliverHuayuanForCurve(level: number, curve: OrderDeliveryCurve): number {
   if (!Number.isFinite(level) || level < 1) return 0;
   return Math.max(1, Math.round(curve.base * curve.growth ** (Math.floor(level) - 1)));
+}
+
+function fruitCutGlobalTier(line: string, level: number): number {
+  const idx = FRUIT_CUT_LINE_CHAIN.indexOf(line as OrderDeliveryLine);
+  if (idx < 0 || !Number.isFinite(level) || level < 1) return 0;
+  return idx * 3 + Math.floor(level);
+}
+
+function deliverHuayuanForFruitCut(line: string, level: number): number {
+  const globalTier = fruitCutGlobalTier(line, level);
+  if (globalTier < 1) return 0;
+  const bouquetCurve = ORDER_DELIVERY_CURVES.flower.bouquet;
+  const startHy = Math.max(
+    1,
+    Math.round(deliverHuayuanForCurve(1, bouquetCurve) * FRUIT_CUT_VS_BOUQUET_RATIO),
+  );
+  const t = (globalTier - 1) / (FRUIT_CUT_CHAIN_STEPS - 1);
+  return Math.max(1, Math.round(startHy * (FRUIT_CUT_MAX_HY / startHy) ** t));
 }
 
 /** 指定产品线的单笔交付单价；未知线返回 0，避免误把包装/工具线纳入订单价值。 */
@@ -100,6 +132,9 @@ export function deliverHuayuanForItem(
   line: string,
   level: number,
 ): number {
+  if (category === 'food' && line.startsWith('cut_')) {
+    return deliverHuayuanForFruitCut(line, level);
+  }
   const curve = ORDER_DELIVERY_CURVES[category]?.[line];
   return curve ? deliverHuayuanForCurve(level, curve) : 0;
 }

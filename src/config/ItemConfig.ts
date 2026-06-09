@@ -150,7 +150,7 @@ const FOOD_DATA: [FoodLine, string[]][] = [
   [FoodLine.CUT_AVOCADO, ['半切牛油果', '木盘牛油果', '牛油果陶碗']],
   [FoodLine.CUT_WATERMELON, ['西瓜角', '竹盘西瓜', '缤纷果篮']],
   [FoodLine.CUT_PINEAPPLE, ['菠萝环片', '竹盘菠萝', '菠萝船']],
-  [FoodLine.CUT_DRAGONFRUIT, ['半切火龙果', '粉盘火龙果', '火龙果礼盒']],
+  [FoodLine.CUT_DRAGONFRUIT, ['半切火龙果', '木盘火龙果', '火龙果果篮']],
 ];
 
 // ═══════════════ 工具数据 ═══════════════
@@ -175,7 +175,7 @@ const TOOL_DATA: [ToolLine, string[]][] = [
     '小锄头', '荒地', '果田', '丰收大果田',
   ]],
   [ToolLine.FRUIT_CUT, [
-    '水果刀', '小砧板', '果切盘', '高级果切台',
+    '小砧板', '果切砧板', '高级果切台',
   ]],
 ];
 
@@ -198,8 +198,17 @@ export const LEGACY_WHOLE_FRUIT_ITEM_ID_MAP: Readonly<Record<string, string>> = 
   food_fruit_watermelon_1: 'food_fruit_4',
 };
 
+/** 果切工具 4 级 → 3 级（去掉 L1 水果刀，原 L2–L4 顺位为 L1–L3） */
+export const LEGACY_FRUIT_CUT_TOOL_ID_MAP: Readonly<Record<string, string>> = {
+  tool_fruit_cut_4: 'tool_fruit_cut_3',
+  tool_fruit_cut_3: 'tool_fruit_cut_2',
+  tool_fruit_cut_2: 'tool_fruit_cut_1',
+};
+
 export function migrateLegacyItemId(itemId: string): string {
-  return LEGACY_WHOLE_FRUIT_ITEM_ID_MAP[itemId] ?? itemId;
+  return LEGACY_FRUIT_CUT_TOOL_ID_MAP[itemId]
+    ?? LEGACY_WHOLE_FRUIT_ITEM_ID_MAP[itemId]
+    ?? itemId;
 }
 
 export function isWholeFruitLine(line: string): boolean {
@@ -219,10 +228,18 @@ export function isFruitCutLine(line: string): boolean {
   return Object.values(FRUIT_LEVEL_TO_CUT_LINE).includes(line as FoodLine);
 }
 
+/** 棋盘/仓库等同系 UI：资源留白较多，需与花束共用更大 cell fill（0.9） */
+export function usesLargeBoardIconFill(def: Pick<ItemDef, 'line'>): boolean {
+  return (
+    def.line === FlowerLine.BOUQUET ||
+    def.line === FlowerLine.WRAP ||
+    isFruitCutLine(def.line)
+  );
+}
+
 export function fruitCutLevelForToolLevel(toolLevel: number): number {
-  if (toolLevel >= 4) return 3;
-  if (toolLevel >= 3) return 2;
-  if (toolLevel >= 1) return 1;
+  /** 订单需求 cap：果切链仅 3 级，解锁时玩家等级已偏高，任一果切工具即可刷 L1–L3 订单（加工仍按 produceTable 概率） */
+  if (toolLevel >= 1) return 3;
   return 0;
 }
 

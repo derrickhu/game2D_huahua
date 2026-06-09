@@ -1,0 +1,21 @@
+Square 1:1 image, exactly 1 row x 3 columns on pure flat white background #FFFFFF. Three DRAGON FRUIT (pitaya) fruit-cut icons only: Column 1 CUT L1, Column 2 CUT L2, Column 3 CUT L3.
+
+Match attached avocado cut reference style AND flower_bouquet_4: cute polished 2D mobile merge-game icons, high saturation, joyful pastel-friendly colors, rounded plump shapes, smooth gradient shading on surfaces, small white gloss highlights, thin same-family colored outlines in magenta/pink/green families (NEVER thick black). Soft 3D volume — NOT photorealistic, NOT dark muddy colors.
+
+GLOBAL RULES:
+- NO knives, forks, spoons, chopsticks, or any utensils.
+- NO cast shadows, drop shadows, or gray blobs on white background. Pure flat white only.
+- NO text, NO watermark, NO gift ribbon bows, NO lacquer gift boxes.
+- NO cartoon eyes, NO mouth, NO face — food objects only, never anthropomorphic.
+- Each icon fills about 55-70% of its cell — compact and readable at 128px. Generous white margin.
+
+Column 1 — CUT L1 (single piece only):
+Exactly ONE dragon fruit half, cut lengthwise, standing upright. Magenta-pink scaly skin on outer curve with bright lime-green scale tips. Cut face shows clean white flesh with simplified scattered black seed dots (not overcrowded). ONLY ONE half — do NOT draw two halves side by side. Cute simplified shapes, vivid hot-pink and white, instantly readable as dragon fruit.
+
+Column 2 — CUT L2 (cute serving tray):
+One small rounded pastel-cream wooden serving tray (same cute style as avocado L2 tray). On tray: 3-4 chunky round dragon fruit slice discs showing white flesh, simplified black seed dots, vivid magenta-pink skin rim — fan-arranged. ONE tiny tropical green leaf accent. Warm golden-cream tray, lively pink-white-green colors. No utensils.
+
+Column 3 — CUT L3 (simple premium basket):
+One shallow rounded woven basket in warm honey-cream / soft beige wicker with a decorative braided MAGENTA-PINK rim band (NOT dark brown, NOT gray). Short handles. Inside: only 4-5 LARGE simplified glossy white dragon fruit chunks with magenta edges and few black seed dots — big readable shapes. Minimal garnish: at most 2 tiny golden mango cubes and 1 small pink tropical flower petal. Festive tropical but SIMPLE — must stay clear at 128px. No ceramic bowl, no gift box, no tiny scattered cubes.
+
+Equal column widths, one product centered per cell, no overlap, consistent soft upper-left lighting on objects only.

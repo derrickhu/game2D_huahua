@@ -22,7 +22,7 @@ import {
   isGoldenScissorsItem,
   isLuckyCoinItem,
 } from '@/config/ItemConfig';
-import { findBoardProducerDef, toolUsesStamina } from '@/config/BuildingConfig';
+import { findBoardProducerDef, getProduceTableLevelPercents, toolUsesStamina } from '@/config/BuildingConfig';
 import { MERGE_BUBBLE_DISPLAY_NAME } from '@/config/MergeCompanionConfig';
 import { CellState } from '@/config/BoardLayout';
 import { BoardManager } from '@/managers/BoardManager';
@@ -964,7 +964,11 @@ export class ItemInfoBar extends PIXI.Container {
     }
     if (def.interactType === InteractType.TOOL) {
       const pd = findBoardProducerDef(def.id);
-      if (pd?.toolLine === ToolLine.FRUIT_CUT) return '拖入整果可加工为果切。';
+      if (pd?.toolLine === ToolLine.FRUIT_CUT) {
+        const pct = getProduceTableLevelPercents(pd.produceTable);
+        const detail = pct.map(p => `${p.level}级 ${p.percent}%`).join('，');
+        return `拖入整果可加工为果切（${detail}）。`;
+      }
       if (pd && !pd.canProduce) return '合成后可获得更高级物品。';
       if (pd?.canProduce) return '';
       return '工具';

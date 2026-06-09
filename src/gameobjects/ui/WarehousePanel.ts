@@ -8,7 +8,7 @@ import { EventBus } from '@/core/EventBus';
 import { TweenManager, Ease } from '@/core/TweenManager';
 import { Game } from '@/core/Game';
 import { CELL_GAP, DESIGN_WIDTH, COLORS, FONT_FAMILY } from '@/config/Constants';
-import { ITEM_DEFS, Category, FlowerLine } from '@/config/ItemConfig';
+import { ITEM_DEFS, Category, FlowerLine, usesLargeBoardIconFill } from '@/config/ItemConfig';
 import { WarehouseManager } from '@/managers/WarehouseManager';
 import { BuildingManager } from '@/managers/BuildingManager';
 import { BoardManager } from '@/managers/BoardManager';
@@ -609,7 +609,7 @@ export class WarehousePanel extends PIXI.Container {
     if (itemId) {
       const def = ITEM_DEFS.get(itemId);
       if (def) {
-        const fill = (def.line === FlowerLine.BOUQUET || def.line === FlowerLine.WRAP) ? WH_BOUQUET_FILL : WH_ITEM_FILL;
+        const fill = usesLargeBoardIconFill(def) ? WH_BOUQUET_FILL : WH_ITEM_FILL;
         const maxIcon = s * fill;
         const tex = TextureCache.get(def.icon);
         if (tex && tex.width > 0) {

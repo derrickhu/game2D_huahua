@@ -3,11 +3,11 @@
 果切线美术入库：白底合图 → gutter 切格 → rembg → trim → 写入 subpkg_items → compress
 
 用法（仓库根）：
-  python3 scripts/build_fruit_cut_assets.py --sheet farm ../game_assets/huahua/assets/raw/tool_line_farm_nb2.png
+  python3 scripts/build_fruit_cut_assets.py --sheet farm ../game_assets/huahua/assets/raw/tool_line_farm_v8_nb2.png
   python3 scripts/build_fruit_cut_assets.py --sheet fruit_cut ../game_assets/huahua/assets/raw/tool_line_fruit_cut_nb2.png
   python3 scripts/build_fruit_cut_assets.py --sheet whole_v4 ../game_assets/huahua/assets/raw/food_whole_fruits_v4_nb2.png
   python3 scripts/build_fruit_cut_assets.py --sheet avocado_line_v6 ../game_assets/huahua/assets/raw/food_avocado_line_v6_nb2.png
-  python3 scripts/build_fruit_cut_assets.py --sheet dragonfruit_line ../game_assets/huahua/assets/raw/food_dragonfruit_line_v4_nb2.png
+  python3 scripts/build_fruit_cut_assets.py --sheet dragonfruit_cut_v6 ../game_assets/huahua/assets/raw/food_dragonfruit_cut_v6_nb2.png
   python3 scripts/build_fruit_cut_assets.py --all   # 处理 raw/ 下全部约定文件名
 """
 from __future__ import annotations
@@ -36,7 +36,7 @@ COMPRESS = _REPO / "scripts" / "compress_subpkg_items_pngs.py"
 
 SHEETS: dict[str, dict] = {
     "farm": {
-        "raw": "tool_line_farm_nb2.png",
+        "raw": "tool_line_farm_v8_nb2.png",
         "n": 4,
         "grid": (2, 2),
         "rembg": "birefnet-general",
@@ -50,15 +50,17 @@ SHEETS: dict[str, dict] = {
         ],
     },
     "fruit_cut": {
-        "raw": "tool_line_fruit_cut_nb2.png",
-        "n": 4,
+        "raw": "tool_line_fruit_cut_v5_nb2.png",
+        "n": 3,
+        "grid": (2, 2),
+        "grid_indices": [1, 2, 3],
         "rembg": "birefnet-general",
         "padding": 4,
+        "square_icon": True,
         "outputs": [
             ("tool_fruit_cut_1", _ITEMS / "tools/fruit_cut/tool_fruit_cut_1.png"),
             ("tool_fruit_cut_2", _ITEMS / "tools/fruit_cut/tool_fruit_cut_2.png"),
             ("tool_fruit_cut_3", _ITEMS / "tools/fruit_cut/tool_fruit_cut_3.png"),
-            ("tool_fruit_cut_4", _ITEMS / "tools/fruit_cut/tool_fruit_cut_4.png"),
         ],
     },
     "whole": {
@@ -110,6 +112,18 @@ SHEETS: dict[str, dict] = {
             ("food_cut_avocado_1", _ITEMS / "food/cut/food_cut_avocado_1.png"),
             ("food_cut_avocado_2", _ITEMS / "food/cut/food_cut_avocado_2.png"),
             ("food_cut_avocado_3", _ITEMS / "food/cut/food_cut_avocado_3.png"),
+        ],
+    },
+    "dragonfruit_cut_v6": {
+        "raw": "food_dragonfruit_cut_v6_nb2.png",
+        "n": 3,
+        "top_row_only": True,
+        "rembg": "isnet-anime",
+        "padding": 8,
+        "outputs": [
+            ("food_cut_dragonfruit_1", _ITEMS / "food/cut/food_cut_dragonfruit_1.png"),
+            ("food_cut_dragonfruit_2", _ITEMS / "food/cut/food_cut_dragonfruit_2.png"),
+            ("food_cut_dragonfruit_3", _ITEMS / "food/cut/food_cut_dragonfruit_3.png"),
         ],
     },
     "dragonfruit_line": {
@@ -191,9 +205,20 @@ def _to_square_icon(im: Image.Image) -> Image.Image:
     return sq
 
 
-def _split_row_equal(sheet_path: Path, index: int, n: int, out_path: Path, *, margin: int = 4) -> None:
+def _split_row_equal(
+    sheet_path: Path,
+    index: int,
+    n: int,
+    out_path: Path,
+    *,
+    margin: int = 4,
+    top_row_only: bool = False,
+) -> None:
     im = Image.open(sheet_path).convert("RGBA")
     w, h = im.size
+    if top_row_only:
+        h = h // 2
+        im = im.crop((0, 0, w, h))
     cw = w // n
     left = index * cw + margin
     right = (index + 1) * cw - margin if index < n - 1 else w - margin
@@ -254,7 +279,14 @@ def process_sheet(key: str, sheet_path: Path | None = None) -> None:
             gi = grid_indices[i] if grid_indices else i
             _split_grid_equal(raw_path, gi, cols, rows, split_out)
         else:
-            _split_row_equal(raw_path, i, n, split_out)
+            _split_row_equal(
+                raw_path,
+                i,
+                n,
+                split_out,
+                margin=10 if cfg.get("top_row_only") else 4,
+                top_row_only=cfg.get("top_row_only", False),
+            )
         _run([
             sys.executable, str(REMBG), str(split_out),
             "-o", str(nobg_out),

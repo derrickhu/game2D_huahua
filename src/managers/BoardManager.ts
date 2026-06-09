@@ -11,7 +11,6 @@ import {
   Category,
   ToolLine,
   findItemId,
-  fruitCutLevelForToolLevel,
   getDowngradeResultId,
   getCutLineForWholeFruit,
   isWholeFruitItem,
@@ -24,7 +23,7 @@ import {
   isLuckyCoinValidTarget,
   pickLuckyCoinNewItemId,
 } from '@/config/ItemConfig';
-import { findBoardProducerDef } from '@/config/BuildingConfig';
+import { findBoardProducerDef, rollProduceTableLevel } from '@/config/BuildingConfig';
 import { CurrencyManager } from '@/managers/CurrencyManager';
 import { ToolProducePolicy } from '@/managers/ToolProducePolicy';
 import { FlowerSignTicketManager } from '@/managers/FlowerSignTicketManager';
@@ -216,20 +215,21 @@ class BoardManagerClass {
     const fruitIndex = srcIsFruit ? srcIndex : dstIndex;
     const toolIndex = srcIsCutTool ? srcIndex : dstIndex;
     const fruitDef = srcIsFruit ? srcDef : dstDef;
-    const toolDef = srcIsCutTool ? srcDef : dstDef;
 
     if (fruitCell.reserved || toolCell.reserved) {
       return { kind: 'fail', toast: '订单锁定中的物品不能加工' };
     }
 
     const targetLine = getCutLineForWholeFruit(fruitDef);
-    const targetLevel = fruitCutLevelForToolLevel(toolDef.level);
-    if (!targetLine || targetLevel <= 0) return { kind: 'not_applicable' };
+    if (!targetLine) return { kind: 'not_applicable' };
+
+    const producerDef = findBoardProducerDef(toolCell.itemId!);
+    const targetLevel = rollProduceTableLevel(producerDef?.produceTable ?? [[1, 100]]);
+    if (targetLevel <= 0) return { kind: 'not_applicable' };
 
     const resultId = findItemId(Category.FOOD, targetLine, targetLevel);
     if (!resultId) return { kind: 'fail', toast: '这台果切工具还不能加工该水果' };
 
-    const producerDef = findBoardProducerDef(toolCell.itemId!);
     const staminaCost = ToolProducePolicy.getEffectiveStaminaCost(producerDef?.staminaCost ?? 0);
     if (staminaCost > 0 && !CurrencyManager.consumeStamina(staminaCost)) {
       return { kind: 'fail', toast: `体力不足！需要 ${staminaCost} 点` };

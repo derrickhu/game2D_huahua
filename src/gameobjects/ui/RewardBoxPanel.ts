@@ -9,7 +9,7 @@ import { EventBus } from '@/core/EventBus';
 import { TweenManager, Ease } from '@/core/TweenManager';
 import { Game } from '@/core/Game';
 import { CELL_GAP, DESIGN_WIDTH, COLORS, FONT_FAMILY } from '@/config/Constants';
-import { ITEM_DEFS, FlowerLine } from '@/config/ItemConfig';
+import { ITEM_DEFS, FlowerLine, usesLargeBoardIconFill } from '@/config/ItemConfig';
 import { RewardBoxManager } from '@/managers/RewardBoxManager';
 import { BoardManager } from '@/managers/BoardManager';
 import { AdManager, AdScene } from '@/managers/AdManager';
@@ -308,7 +308,7 @@ export class RewardBoxPanel extends PIXI.Container {
 
     const def = ITEM_DEFS.get(itemId);
     if (def) {
-      const fill = (def.line === FlowerLine.BOUQUET || def.line === FlowerLine.WRAP) ? BOUQUET_FILL : ITEM_FILL;
+      const fill = usesLargeBoardIconFill(def) ? BOUQUET_FILL : ITEM_FILL;
       const maxIcon = s * fill;
       const tex = TextureCache.get(def.icon);
       if (tex && tex.width > 0) {
