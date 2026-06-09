@@ -107,7 +107,6 @@ const VALID_ORDER_TYPES = new Set<OrderType>(['normal', 'timed', 'chain', 'chall
 
 const VALID_ORDER_KINDS = new Set<OrderGenerationKind>([
   'basic',
-  'growth',
   'combo',
   'timedDiamond',
   'eventStub',
@@ -155,22 +154,30 @@ function normalizeCustomerPersistState(raw: unknown): CustomerPersistState | nul
     const orderType = VALID_ORDER_TYPES.has(r.orderType as OrderType)
       ? (r.orderType as OrderType)
       : 'normal';
-    const bonusMultiplier =
+    let bonusMultiplier =
       typeof r.bonusMultiplier === 'number' && Number.isFinite(r.bonusMultiplier)
         ? r.bonusMultiplier
         : undefined;
     const rawKind = r.orderKind;
-    const orderKind: OrderGenerationKind =
+    let orderKind: OrderGenerationKind =
       typeof rawKind === 'string' && VALID_ORDER_KINDS.has(rawKind as OrderGenerationKind)
         ? (rawKind as OrderGenerationKind)
         : inferOrderKindFromLegacy({ orderType, bonusMultiplier });
+    /** 成长单已下线：读档归并为基础单，重算花愿（勿沿用旧 bonusMultiplier / 缓存高额） */
+    const legacyGrowth =
+      rawKind === 'growth'
+      || (orderType === 'normal' && bonusMultiplier !== undefined && bonusMultiplier > 1);
+    if (legacyGrowth) {
+      orderKind = 'basic';
+      bonusMultiplier = undefined;
+    }
     const computedHuayuanReward = CustomerManagerClass.computeOrderHuayuan(slots, bonusMultiplier, orderType);
     const savedHuayuanReward =
       typeof r.huayuanReward === 'number' && Number.isFinite(r.huayuanReward) && r.huayuanReward >= 0
         ? Math.floor(r.huayuanReward)
         : undefined;
     const huayuanReward =
-      savedHuayuanReward === undefined
+      legacyGrowth || savedHuayuanReward === undefined
         ? computedHuayuanReward
         : Math.max(savedHuayuanReward, computedHuayuanReward);
     const timeLimit =
@@ -236,7 +243,6 @@ function inferOrderKindFromLegacy(entry: {
 }): OrderGenerationKind {
   if (entry.orderType === 'challenge') return 'combo';
   if (entry.orderType === 'timed') return 'timedDiamond';
-  if (entry.bonusMultiplier && entry.bonusMultiplier > 1) return 'growth';
   return 'basic';
 }
 
@@ -421,7 +427,7 @@ class CustomerManagerClass {
   }
 
   /**
-   * 订单花愿 = ΣorderHuayuan×(1+多槽加成) → 单槽合成软保底 → 内容档位倍率 → 成长倍率 → 组合单倍率。
+   * 订单花愿 = ΣorderHuayuan×(1+多槽加成) → 单槽合成软保底 → 内容档位倍率 → 组合单倍率。
    * 读档缺 huayuanReward 时与新生成共用本函数。
    */
   static computeOrderHuayuan(

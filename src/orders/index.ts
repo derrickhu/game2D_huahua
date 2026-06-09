@@ -4,7 +4,16 @@ export {
   tryGenerateChainOrderTriple,
   validateOrderSlotsToolCap,
   toolCapForLine,
+  lineOrderSpecsForTier,
 } from './OrderGeneratorRegistry';
+export {
+  ORDER_PRODUCT_IDS,
+  productOrderSpecsForTier,
+  productToolCap,
+  resolveOrderProduct,
+  type OrderProductId,
+  type ProductOrderSpec,
+} from '@/config/OrderProductConfig';
 export {
   registerDeferredOrderPlaceholder,
   type DeferredOrderFeatureId,

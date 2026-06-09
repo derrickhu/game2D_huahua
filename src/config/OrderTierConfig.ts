@@ -1,12 +1,11 @@
 /**
  * 订单分级配置 — C(初) / B(中) / A(高) / S(特) 四档
  *
- * 每档定义需求槽数、物品等级范围、可用产线。花愿由物品单价 + 多槽加成计算。
+ * 每档定义槽数范围；各产品等级区间见 OrderProductConfig。
  * CustomerManager 按玩家等级 + 已解锁产线随机选「模板档」生成需求；UI 角标与存档中的 tier
  * 由 computeTierFromOrderSlots 按物品难度统一计算。
  */
-import { Category, DrinkLine, FlowerLine, FoodLine, ITEM_DEFS } from './ItemConfig';
-import type { CustomerDemandDef } from './CustomerConfig';
+import { FoodLine, ITEM_DEFS, type DrinkLine } from './ItemConfig';
 
 export type OrderTier = 'C' | 'B' | 'A' | 'S';
 
@@ -16,8 +15,6 @@ export interface OrderTierDef {
   tier: OrderTier;
   label: string;
   slotRange: [number, number];
-  /** 该档可选的需求池（每个槽位从中随机取一条） */
-  demandPool: CustomerDemandDef[];
   /** 预留：限时秒数，null = 不限时 */
   timeLimit: number | null;
   /** 预留：订单子类型 */
@@ -29,10 +26,6 @@ export const ORDER_TIERS: Record<OrderTier, OrderTierDef> = {
     tier: 'C',
     label: '初级',
     slotRange: [1, 2],
-    demandPool: [
-      { category: Category.FLOWER, lines: [FlowerLine.FRESH, FlowerLine.GREEN], levelRange: [1, 2] },
-      { category: Category.FLOWER, lines: [FlowerLine.FRESH, FlowerLine.GREEN], levelRange: [2, 3] },
-    ],
     timeLimit: null,
     orderType: 'normal',
   },
@@ -40,11 +33,6 @@ export const ORDER_TIERS: Record<OrderTier, OrderTierDef> = {
     tier: 'B',
     label: '中级',
     slotRange: [2, 2],
-    demandPool: [
-      { category: Category.FLOWER, lines: [FlowerLine.FRESH, FlowerLine.BOUQUET, FlowerLine.GREEN], levelRange: [2, 5] },
-      { category: Category.DRINK, lines: [DrinkLine.BUTTERFLY, DrinkLine.COLD], levelRange: [2, 4] },
-      { category: Category.FOOD, lines: [FoodLine.CUT_AVOCADO, FoodLine.CUT_WATERMELON], levelRange: [1, 1] },
-    ],
     timeLimit: null,
     orderType: 'normal',
   },
@@ -52,11 +40,6 @@ export const ORDER_TIERS: Record<OrderTier, OrderTierDef> = {
     tier: 'A',
     label: '高级',
     slotRange: [2, 3],
-    demandPool: [
-      { category: Category.FLOWER, lines: [FlowerLine.FRESH, FlowerLine.BOUQUET, FlowerLine.GREEN], levelRange: [4, 7] },
-      { category: Category.DRINK, lines: [DrinkLine.BUTTERFLY, DrinkLine.COLD, DrinkLine.DESSERT], levelRange: [3, 6] },
-      { category: Category.FOOD, lines: [FoodLine.CUT_AVOCADO, FoodLine.CUT_WATERMELON, FoodLine.CUT_PINEAPPLE, FoodLine.CUT_DRAGONFRUIT], levelRange: [1, 2] },
-    ],
     timeLimit: null,
     orderType: 'normal',
   },
@@ -64,11 +47,6 @@ export const ORDER_TIERS: Record<OrderTier, OrderTierDef> = {
     tier: 'S',
     label: '特级',
     slotRange: [2, 3],
-    demandPool: [
-      { category: Category.FLOWER, lines: [FlowerLine.FRESH, FlowerLine.BOUQUET, FlowerLine.GREEN], levelRange: [6, 13] },
-      { category: Category.DRINK, lines: [DrinkLine.BUTTERFLY, DrinkLine.COLD, DrinkLine.DESSERT], levelRange: [5, 10] },
-      { category: Category.FOOD, lines: [FoodLine.CUT_AVOCADO, FoodLine.CUT_WATERMELON, FoodLine.CUT_PINEAPPLE, FoodLine.CUT_DRAGONFRUIT], levelRange: [2, 3] },
-    ],
     timeLimit: null,
     orderType: 'normal',
   },
@@ -123,9 +101,11 @@ export function computeOrderLevelDifficulty(level: number): number {
   return _clamp(Math.floor(level) / ORDER_DIFFICULTY_REFERENCE_LEVEL, 0, 1);
 }
 
-function _linePower(toolLevel: number, _category: Category, _line: string): number {
+function _linePower(toolLevel: number): number {
   return computeOrderLevelDifficulty(getEffectiveMaxLevel(toolLevel, ORDER_DIFFICULTY_REFERENCE_LEVEL));
 }
+
+const DRINK_PRODUCT_TOOL_KEYS: readonly DrinkLine[] = ['butterfly', 'cold', 'dessert'];
 
 /**
  * 当前棋盘工具能力评分（0-1）。
@@ -134,28 +114,24 @@ function _linePower(toolLevel: number, _category: Category, _line: string): numb
 function _toolPower(lines: UnlockedLines): number {
   const powers: number[] = [];
   if (lines.maxPlantToolLevel > 0) {
-    powers.push(_linePower(lines.maxPlantToolLevel, Category.FLOWER, FlowerLine.FRESH));
+    powers.push(_linePower(lines.maxPlantToolLevel));
     if (lines.hasGreen) {
-      powers.push(_linePower(lines.maxPlantToolLevel, Category.FLOWER, FlowerLine.GREEN));
+      powers.push(_linePower(lines.maxPlantToolLevel));
     }
   }
-  if (lines.hasBouquet) {
-    powers.push(_linePower(
-      Math.max(lines.maxArrangeToolLevel, lines.maxPlantToolLevel),
-      Category.FLOWER,
-      FlowerLine.BOUQUET,
-    ));
+  if (lines.hasBouquet && lines.maxArrangeToolLevel > 0) {
+    powers.push(_linePower(lines.maxArrangeToolLevel));
   }
-  for (const line of [DrinkLine.BUTTERFLY, DrinkLine.COLD, DrinkLine.DESSERT]) {
-    const toolLevel = lines.drinkToolMaxByLine[line] ?? 0;
+  for (const productKey of DRINK_PRODUCT_TOOL_KEYS) {
+    const toolLevel = lines.drinkToolMaxByLine[productKey] ?? 0;
     if (toolLevel > 0) {
-      powers.push(_linePower(toolLevel, Category.DRINK, line));
+      powers.push(_linePower(toolLevel));
     }
   }
   for (const line of [FoodLine.CUT_AVOCADO, FoodLine.CUT_WATERMELON, FoodLine.CUT_PINEAPPLE, FoodLine.CUT_DRAGONFRUIT]) {
     const toolLevel = lines.foodToolMaxByLine[line] ?? 0;
     if (toolLevel > 0) {
-      powers.push(_linePower(toolLevel, Category.FOOD, line));
+      powers.push(_linePower(toolLevel));
     }
   }
   if (powers.length === 0) return 0;

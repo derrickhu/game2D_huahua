@@ -1,5 +1,5 @@
 /**
- * 订单刷新与类型权重（组合单 / 成长单 / aspirational）。
+ * 订单刷新与类型权重（组合单 / aspirational）。
  * 策划调参入口；生成逻辑见 OrderGeneratorRegistry + CustomerManager。
  */
 import { ITEM_DEFS } from '@/config/ItemConfig';
@@ -29,25 +29,6 @@ export const ORDER_COMBO_LEVEL_BOOST_MULT = 1.35;
 export const ORDER_COMBO_MIN_UNLOCKED_LINES_FOR_THIRD_SLOT = 2;
 /** 满足条线数后，追加第三槽的概率（不再绑定 S 模板档） */
 export const ORDER_COMBO_THIRD_SLOT_CHANCE = 0.45;
-
-/** 成长单：在基础池生成路径上尝试加成的基准概率 */
-export const ORDER_GROWTH_BASE_CHANCE = 0.1;
-/** 模板档乘子：C 通常不出成长加成 */
-export const ORDER_GROWTH_TIER_MULT: Record<OrderTier, number> = {
-  C: 0,
-  B: 0.85,
-  A: 1.15,
-  S: 1.25,
-};
-
-/** 成长花愿倍率（与 challenge 倍率独立叠乘） */
-export const ORDER_GROWTH_BONUS_MULTIPLIER = 1.18;
-
-/**
- * 成长单语义：槽位 max(norm) 须达到此值才保留成长标记与倍率，否则降级为基础单。
- * norm = 13 级绝对标尺 + 产线后段补偿后的订单物品难度
- */
-export const ORDER_GROWTH_MIN_MAX_NORM = 0.42;
 
 /**
  * 客人刷新间隔（秒）：低等级缩短等待，避免 1 级长时间「一个一个等」。
@@ -127,15 +108,6 @@ export function orderComboEffectiveChance(
     p *= ORDER_COMBO_LEVEL_BOOST_MULT;
   }
   return Math.min(ORDER_COMBO_MAX_CHANCE, p);
-}
-
-/** 成长加成尝试概率（仅用于基础池路径，与模板档挂钩） */
-export function orderGrowthRollChance(tier: OrderTier, playerLevel?: number): number {
-  const m = ORDER_GROWTH_TIER_MULT[tier] ?? 0;
-  const base = ORDER_GROWTH_BASE_CHANCE * m;
-  if (playerLevel === 1) return 0;
-  if (playerLevel === 2) return Math.min(0.09, base * 0.7);
-  return Math.min(1, base);
 }
 
 /** 单槽 norm；未知物品返回 0 */

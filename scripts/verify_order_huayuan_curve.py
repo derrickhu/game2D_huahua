@@ -17,7 +17,7 @@ CURVES = {
 }
 MULTI_K = 0.20
 PARITY = 0.9
-CHALLENGE = 1.06
+CHALLENGE = 1
 TIER_MULT = {"C": 1, "B": 1.1, "A": 1.75, "S": 3.8}
 
 
