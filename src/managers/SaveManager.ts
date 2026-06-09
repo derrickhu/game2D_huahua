@@ -20,7 +20,7 @@ import { PersistService } from '@/core/PersistService';
 import { CdnAssetService } from '@/core/CdnAssetService';
 import { BOARD_COLS, BOARD_TOTAL } from '@/config/Constants';
 import { BOARD_PRESETS, CellState } from '@/config/BoardLayout';
-import { ITEM_DEFS } from '@/config/ItemConfig';
+import { ITEM_DEFS, migrateLegacyItemId } from '@/config/ItemConfig';
 import { BACKEND_ANON_ID_KEY, BACKEND_TOKEN_KEY, CLOUD_SYNC_META_KEY } from '@/config/CloudConfig';
 
 declare const wx: any;
@@ -197,6 +197,24 @@ class SaveManagerClass {
             '(存档:', data.fingerprint, '当前:', CONFIG_FINGERPRINT, ')');
           this._clearStorage();
           return false;
+        }
+      }
+
+      // 整果四线 → 单线 L1–L4 合成链
+      for (const cell of data.board) {
+        if (cell.itemId) {
+          const migrated = migrateLegacyItemId(cell.itemId);
+          if (migrated !== cell.itemId) {
+            console.warn('[Save] 整果 itemId 迁移:', cell.itemId, '→', migrated);
+            cell.itemId = migrated;
+          }
+        }
+      }
+      if (data.warehouse?.items) {
+        for (const entry of data.warehouse.items) {
+          if (entry?.itemId) {
+            entry.itemId = migrateLegacyItemId(entry.itemId);
+          }
         }
       }
 

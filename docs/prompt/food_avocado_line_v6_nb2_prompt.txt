@@ -1,0 +1,24 @@
+Square 1:1 image, exactly 1 row x 4 columns on pure flat white background #FFFFFF. Four AVOCADO merge-game icons: Column 1 whole fruit L1, Columns 2-4 fruit-cut L1-L3.
+
+Match attached flower_bouquet_4 reference style: cute polished 2D mobile merge-game icons, high saturation, joyful pastel-friendly colors, rounded plump shapes, smooth gradient shading on surfaces, small white gloss highlights, thin same-family colored outlines (NEVER thick black). Soft 3D volume like bouquet petals — NOT photorealistic, NOT dark muddy greens.
+
+GLOBAL RULES:
+- NO knives, forks, spoons, chopsticks, or any utensils.
+- NO cast shadows, drop shadows, or gray blobs on white background. Pure flat white only.
+- NO text, NO watermark.
+- NO cartoon eyes, NO mouth, NO face, NO kawaii facial features on ANY icon — food objects only, never anthropomorphic.
+- Each icon fills about 55-65% of its cell — compact and readable at 128px. Leave generous white margin around every object.
+
+Column 1 — WHOLE avocado (merge L1 starter, must look SMALL):
+One whole avocado standing perfectly upright (vertical pear shape, NOT tilted). Compact modest size — smaller silhouette than the cut icons, clearly the lowest tier starter fruit. Bright cheerful yellow-green bumpy skin with simplified pebble texture dots only (NOT eyes — bumps are random skin texture, never arranged like a face), tiny brown stem on top, creamy highlight arc. Plain uncut fruit, zero facial features.
+
+Column 2 — CUT L1 (single piece only):
+Exactly ONE avocado half, cut lengthwise, standing upright. Show bumpy green skin on outer curve, creamy yellow-green flesh, one large round brown pit. ONLY ONE half — do NOT draw two halves side by side. Cute simplified shapes, bright fresh greens, same cute merge-game style.
+
+Column 3 — CUT L2 (cute serving board):
+One small rounded pastel-cream wooden serving tray (NOT a cutting board). On tray: 3-4 chunky crescent avocado slices with vivid yellow-green flesh and bright green skin rims, fan-arranged. ONE tiny lime-green accent wedge. Colors richer and cuter than realistic — golden-cream wood, lively greens. No utensils.
+
+Column 4 — CUT L3 (simple premium basket):
+One shallow rounded woven basket in warm honey-cream / soft beige wicker (NOT dark olive, NOT gray). Short handles. Inside: only 4-5 LARGE simplified glossy avocado chunks as hero — big readable shapes, bright yellow-green, minimal extra garnish (at most 2 tiny cherry tomato dots and 1 small leaf). Festive but SIMPLE — must stay clear at 128px. No ceramic bowl, no gift box, no tiny scattered cubes.
+
+Equal column widths, one product centered per cell, no overlap, consistent soft upper-left lighting on objects only.

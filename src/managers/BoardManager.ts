@@ -13,7 +13,8 @@ import {
   findItemId,
   fruitCutLevelForToolLevel,
   getDowngradeResultId,
-  FRUIT_WHOLE_TO_CUT_LINE,
+  getCutLineForWholeFruit,
+  isWholeFruitItem,
   getLuckyCoinDirection,
   getMergeResultId,
   isCrystalBallItem,
@@ -201,8 +202,8 @@ class BoardManagerClass {
     const dstDef = ITEM_DEFS.get(dst.itemId);
     if (!srcDef || !dstDef) return { kind: 'not_applicable' };
 
-    const srcIsFruit = srcDef.category === Category.FOOD && FRUIT_WHOLE_TO_CUT_LINE[srcDef.line];
-    const dstIsFruit = dstDef.category === Category.FOOD && FRUIT_WHOLE_TO_CUT_LINE[dstDef.line];
+    const srcIsFruit = isWholeFruitItem(srcDef);
+    const dstIsFruit = isWholeFruitItem(dstDef);
     const srcIsCutTool = srcDef.category === Category.BUILDING && srcDef.line === ToolLine.FRUIT_CUT;
     const dstIsCutTool = dstDef.category === Category.BUILDING && dstDef.line === ToolLine.FRUIT_CUT;
 
@@ -221,7 +222,7 @@ class BoardManagerClass {
       return { kind: 'fail', toast: '订单锁定中的物品不能加工' };
     }
 
-    const targetLine = FRUIT_WHOLE_TO_CUT_LINE[fruitDef.line];
+    const targetLine = getCutLineForWholeFruit(fruitDef);
     const targetLevel = fruitCutLevelForToolLevel(toolDef.level);
     if (!targetLine || targetLevel <= 0) return { kind: 'not_applicable' };
 
@@ -255,8 +256,8 @@ class BoardManagerClass {
     const dstDef = ITEM_DEFS.get(dst.itemId);
     if (!srcDef || !dstDef) return false;
 
-    const srcIsFruit = srcDef.category === Category.FOOD && !!FRUIT_WHOLE_TO_CUT_LINE[srcDef.line];
-    const dstIsFruit = dstDef.category === Category.FOOD && !!FRUIT_WHOLE_TO_CUT_LINE[dstDef.line];
+    const srcIsFruit = isWholeFruitItem(srcDef);
+    const dstIsFruit = isWholeFruitItem(dstDef);
     const srcIsCutTool = srcDef.category === Category.BUILDING && srcDef.line === ToolLine.FRUIT_CUT;
     const dstIsCutTool = dstDef.category === Category.BUILDING && dstDef.line === ToolLine.FRUIT_CUT;
     return (srcIsFruit && dstIsCutTool) || (srcIsCutTool && dstIsFruit);

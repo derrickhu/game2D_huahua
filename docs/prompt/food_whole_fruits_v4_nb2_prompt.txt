@@ -1,0 +1,20 @@
+Square 1:1 image, 1 row x 3 columns grid on plain white background. Three WHOLE FRUIT merge-game icons only. NO watermelon.
+
+STYLE — match attached flower_bouquet_4 and food_fruit_watermelon_1 references exactly:
+Cute polished 2D mobile merge-game item icons, high saturation, bright joyful colors, soft manga kawaii charm. Rounded plump shapes with smooth gradient shading (base color + soft shadow + bright highlight arc). Small white gloss spots on curves. Thin clean outlines in the SAME color family as the fill — soft dark green on avocado, warm gold-brown on pineapple, deep magenta on dragonfruit. NEVER thick black outlines. Soft 3D volume like bouquet petals — NOT flat cel sticker, NOT photorealistic, NOT dark muddy colors.
+
+COMPOSITION — CRITICAL for every cell:
+Each fruit is laid diagonally at about 30–45 degrees, NOT standing upright. Slightly top-down 3/4 view. The fruit silhouette must fill about 78–84% of its grid cell width AND height — chunky, plump, board-friendly. Avoid tall thin vertical shapes that leave empty side margins.
+
+NO TEXT, no labels, no captions, no watermark, no plate, no shadow cast on white background.
+
+Column 1 — Avocado:
+One whole avocado lying diagonally, plump pear shape tilted so the wide belly fills the cell. Cheerful bright yellow-green skin (fresh avocado green, NOT dark forest green, NOT realistic brown-black). Simplified cute bumpy texture with small lighter green dots. Tiny brown stem nub. Warm glossy highlights, friendly cute game icon mood.
+
+Column 2 — Pineapple:
+One whole pineapple lying diagonally, chunky golden-yellow oval body filling the cell. Cute simplified diamond segment pattern with warm orange-gold shading in each block, not boring flat crosshatch. Short playful green crown leaves spread to one side (not a tall spiky tower). Distinct tropical character, glossy and appetizing, same cute merge-game style as bouquet icons.
+
+Column 3 — Dragonfruit:
+One whole dragonfruit lying diagonally, plump oval magenta-pink body filling the cell. Bright hot-pink skin with cute green scale tips at edges. Soft deep-magenta outline matching the pink (NOT black outline). White highlight arc on the curve. Cheerful tropical kawaii look, readable at small icon size.
+
+ONE fruit per cell, no overlap between cells.

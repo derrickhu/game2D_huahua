@@ -219,18 +219,14 @@ const PLANT_OUTCOMES_TOOL_L7: ToolProduceOutcome[] = [
   { category: Category.FLOWER, line: FlowerLine.GREEN, level: 7, weight: 5 },
 ];
 
-// ═══════════════ 农田工具（tool_farm）→ 单级整果 ═══════════════
+// ═══════════════ 农田工具（tool_farm）→ 整果 L1 ═══════════════
 
 const FARM_OUTCOMES_TOOL_L3: ToolProduceOutcome[] = [
-  { category: Category.FOOD, line: FoodLine.FRUIT_AVOCADO, level: 1, weight: 55 },
-  { category: Category.FOOD, line: FoodLine.FRUIT_WATERMELON, level: 1, weight: 45 },
+  { category: Category.FOOD, line: FoodLine.FRUIT, level: 1, weight: 100 },
 ];
 
 const FARM_OUTCOMES_TOOL_L4: ToolProduceOutcome[] = [
-  { category: Category.FOOD, line: FoodLine.FRUIT_AVOCADO, level: 1, weight: 30 },
-  { category: Category.FOOD, line: FoodLine.FRUIT_WATERMELON, level: 1, weight: 28 },
-  { category: Category.FOOD, line: FoodLine.FRUIT_PINEAPPLE, level: 1, weight: 24 },
-  { category: Category.FOOD, line: FoodLine.FRUIT_DRAGONFRUIT, level: 1, weight: 18 },
+  { category: Category.FOOD, line: FoodLine.FRUIT, level: 1, weight: 100 },
 ];
 
 const plantToolTemplate = (): Omit<ToolDef, 'itemId' | 'level'>[] => [
@@ -315,7 +311,7 @@ const farmToolTemplate = (): Omit<ToolDef, 'itemId' | 'level'>[] => [
   {
     toolLine: ToolLine.FARM,
     produceCategory: Category.FOOD,
-    produceLine: FoodLine.FRUIT_AVOCADO,
+    produceLine: FoodLine.FRUIT,
     canProduce: false,
     produceTable: [],
     cooldown: 0,
@@ -325,7 +321,7 @@ const farmToolTemplate = (): Omit<ToolDef, 'itemId' | 'level'>[] => [
   {
     toolLine: ToolLine.FARM,
     produceCategory: Category.FOOD,
-    produceLine: FoodLine.FRUIT_AVOCADO,
+    produceLine: FoodLine.FRUIT,
     canProduce: false,
     produceTable: [],
     cooldown: 0,
@@ -335,7 +331,7 @@ const farmToolTemplate = (): Omit<ToolDef, 'itemId' | 'level'>[] => [
   {
     toolLine: ToolLine.FARM,
     produceCategory: Category.FOOD,
-    produceLine: FoodLine.FRUIT_AVOCADO,
+    produceLine: FoodLine.FRUIT,
     canProduce: true,
     produceTable: [],
     produceOutcomes: FARM_OUTCOMES_TOOL_L3,
@@ -346,7 +342,7 @@ const farmToolTemplate = (): Omit<ToolDef, 'itemId' | 'level'>[] => [
   {
     toolLine: ToolLine.FARM,
     produceCategory: Category.FOOD,
-    produceLine: FoodLine.FRUIT_AVOCADO,
+    produceLine: FoodLine.FRUIT,
     canProduce: true,
     produceTable: [],
     produceOutcomes: FARM_OUTCOMES_TOOL_L4,

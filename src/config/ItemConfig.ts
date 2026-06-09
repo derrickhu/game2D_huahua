@@ -1,7 +1,7 @@
 /**
  * 物品配置
  *
- * 产品线：花系（鲜花/绿植各13级、花束10级 + 包装中间品4级）+ 饮品：蝴蝶/甜品各10级、冷饮8级
+ * 产品线：花系（鲜花/绿植各13级、花束10级 + 包装中间品4级）+ 饮品：蝴蝶/甜品各10级、冷饮8级 + 食物：整果4级（牛油果→菠萝→火龙果→西瓜）+ 果切各3级
  * 工具线：园艺6级、包装5级、捕虫网/冷饮/烘焙各5级；工具1–2级仅合成，其后可产出
  * 宝箱：5级；红包：4级（散落花愿利是，双击入账花愿）；钻石袋 / 体力箱工具：各 3 级（散落货币块）
  */
@@ -45,10 +45,8 @@ export enum DrinkLine {
 }
 
 export enum FoodLine {
-  FRUIT_AVOCADO = 'fruit_avocado',
-  FRUIT_WATERMELON = 'fruit_watermelon',
-  FRUIT_PINEAPPLE = 'fruit_pineapple',
-  FRUIT_DRAGONFRUIT = 'fruit_dragonfruit',
+  /** 整果合成线 L1 牛油果 → L2 菠萝 → L3 火龙果 → L4 西瓜 */
+  FRUIT = 'fruit',
   CUT_AVOCADO = 'cut_avocado',
   CUT_WATERMELON = 'cut_watermelon',
   CUT_PINEAPPLE = 'cut_pineapple',
@@ -82,7 +80,7 @@ export const TOOL_TO_PRODUCT_LINE: Record<ToolLine, { category: Category; line: 
   [ToolLine.BUTTERFLY_NET]: { category: Category.DRINK, line: DrinkLine.BUTTERFLY },
   [ToolLine.MIXER]:   { category: Category.DRINK,  line: DrinkLine.COLD },
   [ToolLine.BAKE]:    { category: Category.DRINK,  line: DrinkLine.DESSERT },
-  [ToolLine.FARM]:    { category: Category.FOOD, line: FoodLine.FRUIT_AVOCADO },
+  [ToolLine.FARM]:    { category: Category.FOOD, line: FoodLine.FRUIT },
   [ToolLine.FRUIT_CUT]: { category: Category.FOOD, line: FoodLine.CUT_AVOCADO },
 };
 
@@ -148,10 +146,7 @@ const DRINK_DATA: [DrinkLine, string[]][] = [
 ];
 
 const FOOD_DATA: [FoodLine, string[]][] = [
-  [FoodLine.FRUIT_AVOCADO, ['牛油果']],
-  [FoodLine.FRUIT_WATERMELON, ['西瓜']],
-  [FoodLine.FRUIT_PINEAPPLE, ['菠萝']],
-  [FoodLine.FRUIT_DRAGONFRUIT, ['火龙果']],
+  [FoodLine.FRUIT, ['牛油果', '菠萝', '火龙果', '西瓜']],
   [FoodLine.CUT_AVOCADO, ['半切牛油果', '木盘牛油果', '牛油果陶碗']],
   [FoodLine.CUT_WATERMELON, ['西瓜角', '竹盘西瓜', '缤纷果篮']],
   [FoodLine.CUT_PINEAPPLE, ['菠萝环片', '竹盘菠萝', '菠萝船']],
@@ -184,19 +179,44 @@ const TOOL_DATA: [ToolLine, string[]][] = [
   ]],
 ];
 
-export const FRUIT_WHOLE_TO_CUT_LINE: Record<string, FoodLine> = {
-  [FoodLine.FRUIT_AVOCADO]: FoodLine.CUT_AVOCADO,
-  [FoodLine.FRUIT_WATERMELON]: FoodLine.CUT_WATERMELON,
-  [FoodLine.FRUIT_PINEAPPLE]: FoodLine.CUT_PINEAPPLE,
-  [FoodLine.FRUIT_DRAGONFRUIT]: FoodLine.CUT_DRAGONFRUIT,
+/** 整果等级 → 对应果切线（L1 牛油果 … L4 西瓜） */
+export const FRUIT_LEVEL_TO_CUT_LINE: Readonly<Record<number, FoodLine>> = {
+  1: FoodLine.CUT_AVOCADO,
+  2: FoodLine.CUT_PINEAPPLE,
+  3: FoodLine.CUT_DRAGONFRUIT,
+  4: FoodLine.CUT_WATERMELON,
 };
 
+/** @deprecated 使用 getCutLineForWholeFruit */
+export const FRUIT_WHOLE_TO_CUT_LINE: Record<string, FoodLine> = {};
+
+/** 旧版四线整果 itemId → 新整果合成线 itemId */
+export const LEGACY_WHOLE_FRUIT_ITEM_ID_MAP: Readonly<Record<string, string>> = {
+  food_fruit_avocado_1: 'food_fruit_1',
+  food_fruit_pineapple_1: 'food_fruit_2',
+  food_fruit_dragonfruit_1: 'food_fruit_3',
+  food_fruit_watermelon_1: 'food_fruit_4',
+};
+
+export function migrateLegacyItemId(itemId: string): string {
+  return LEGACY_WHOLE_FRUIT_ITEM_ID_MAP[itemId] ?? itemId;
+}
+
 export function isWholeFruitLine(line: string): boolean {
-  return Object.prototype.hasOwnProperty.call(FRUIT_WHOLE_TO_CUT_LINE, line);
+  return line === FoodLine.FRUIT;
+}
+
+export function isWholeFruitItem(def: ItemDef): boolean {
+  return def.category === Category.FOOD && def.line === FoodLine.FRUIT;
+}
+
+export function getCutLineForWholeFruit(def: ItemDef): FoodLine | null {
+  if (!isWholeFruitItem(def)) return null;
+  return FRUIT_LEVEL_TO_CUT_LINE[def.level] ?? null;
 }
 
 export function isFruitCutLine(line: string): boolean {
-  return Object.values(FRUIT_WHOLE_TO_CUT_LINE).includes(line as FoodLine);
+  return Object.values(FRUIT_LEVEL_TO_CUT_LINE).includes(line as FoodLine);
 }
 
 export function fruitCutLevelForToolLevel(toolLevel: number): number {
@@ -607,10 +627,7 @@ export function getMergeChainName(itemId: string): string {
     [DrinkLine.BUTTERFLY]: '蝴蝶标本',
     [DrinkLine.COLD]: '冷饮',
     [DrinkLine.DESSERT]: '甜品',
-    [FoodLine.FRUIT_AVOCADO]: '牛油果',
-    [FoodLine.FRUIT_WATERMELON]: '西瓜',
-    [FoodLine.FRUIT_PINEAPPLE]: '菠萝',
-    [FoodLine.FRUIT_DRAGONFRUIT]: '火龙果',
+    [FoodLine.FRUIT]: '整果',
     [FoodLine.CUT_AVOCADO]: '牛油果果切',
     [FoodLine.CUT_WATERMELON]: '西瓜果切',
     [FoodLine.CUT_PINEAPPLE]: '菠萝果切',
