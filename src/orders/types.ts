@@ -1,6 +1,7 @@
 import type { OrderType, OrderTier, UnlockedLines } from '@/config/OrderTierConfig';
 
 /** 本帧生成语义：基础 / 成长加成 / 跨链组合 / 限时钻石 / 活动预留 */
+/** @deprecated 读档遇 `growth` 会迁移为 `basic` */
 export type OrderGenerationKind = 'basic' | 'growth' | 'combo' | 'timedDiamond' | 'eventStub';
 
 export interface OrderGenSlot {

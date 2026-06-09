@@ -5,45 +5,77 @@ const root = process.cwd();
 const configPath = path.join(root, 'src/config/OrderHuayuanConfig.ts');
 const configText = fs.readFileSync(configPath, 'utf8');
 
-const LINE_META = {
-  fresh: { category: 'flower', label: '鲜花', maxLevel: 13 },
-  bouquet: { category: 'flower', label: '花束', maxLevel: 10 },
-  green: { category: 'flower', label: '绿植', maxLevel: 13 },
-  butterfly: { category: 'drink', label: '蝴蝶', maxLevel: 10 },
-  cold: { category: 'drink', label: '冷饮', maxLevel: 8 },
-  dessert: { category: 'drink', label: '甜品', maxLevel: 10 },
+/** 与 src/config/OrderProductConfig.ts 保持同步 */
+const ORDER_PRODUCT_IDS = ['fresh', 'green', 'bouquet', 'butterfly', 'cold', 'dessert'];
+const ORDER_PRODUCT_DEFS = {
+  fresh: {
+    label: '鲜花',
+    maxLevel: 13,
+    tierLevelRanges: {
+      C: [1, 3], B: [2, 5], A: [4, 8], S: [8, 13],
+    },
+    isAvailableInTier: () => true,
+    isUnlocked: lines => lines.maxPlantToolLevel > 0,
+    toolLevel: lines => lines.maxPlantToolLevel,
+  },
+  green: {
+    label: '绿植',
+    maxLevel: 13,
+    tierLevelRanges: {
+      C: [1, 3], B: [2, 5], A: [4, 8], S: [8, 13],
+    },
+    isAvailableInTier: () => true,
+    isUnlocked: lines => lines.hasGreen && lines.maxPlantToolLevel > 0,
+    toolLevel: lines => lines.maxPlantToolLevel,
+  },
+  bouquet: {
+    label: '花束',
+    maxLevel: 10,
+    tierLevelRanges: {
+      C: [1, 2], B: [2, 4], A: [3, 6], S: [6, 10],
+    },
+    isAvailableInTier: tier => tier !== 'C',
+    isUnlocked: lines => lines.hasBouquet,
+    toolLevel: lines => lines.maxArrangeToolLevel,
+  },
+  butterfly: {
+    label: '蝴蝶',
+    maxLevel: 10,
+    tierLevelRanges: {
+      C: [1, 3], B: [2, 4], A: [3, 6], S: [6, 10],
+    },
+    isAvailableInTier: tier => tier === 'B' || tier === 'A' || tier === 'S',
+    isUnlocked: lines => (lines.drinkToolMaxByLine.butterfly ?? 0) > 0,
+    toolLevel: lines => lines.drinkToolMaxByLine.butterfly ?? 0,
+  },
+  cold: {
+    label: '冷饮',
+    maxLevel: 8,
+    tierLevelRanges: {
+      C: [1, 3], B: [2, 4], A: [3, 6], S: [5, 10],
+    },
+    isAvailableInTier: tier => tier === 'B' || tier === 'A' || tier === 'S',
+    isUnlocked: lines => (lines.drinkToolMaxByLine.cold ?? 0) > 0,
+    toolLevel: lines => lines.drinkToolMaxByLine.cold ?? 0,
+  },
+  dessert: {
+    label: '甜品',
+    maxLevel: 10,
+    tierLevelRanges: {
+      C: [1, 3], B: [2, 4], A: [3, 6], S: [6, 10],
+    },
+    isAvailableInTier: tier => tier === 'A' || tier === 'S',
+    isUnlocked: lines => (lines.drinkToolMaxByLine.dessert ?? 0) > 0,
+    toolLevel: lines => lines.drinkToolMaxByLine.dessert ?? 0,
+  },
 };
 const ORDER_DIFFICULTY_REFERENCE_LEVEL = 13;
 
 const ORDER_TIERS = {
-  C: {
-    slotRange: [1, 2],
-    pools: [
-      { category: 'flower', lines: ['fresh', 'green'], levelRange: [1, 2] },
-      { category: 'flower', lines: ['fresh', 'green'], levelRange: [2, 3] },
-    ],
-  },
-  B: {
-    slotRange: [2, 2],
-    pools: [
-      { category: 'flower', lines: ['fresh', 'bouquet', 'green'], levelRange: [2, 5] },
-      { category: 'drink', lines: ['butterfly', 'cold'], levelRange: [2, 4] },
-    ],
-  },
-  A: {
-    slotRange: [2, 3],
-    pools: [
-      { category: 'flower', lines: ['fresh', 'bouquet', 'green'], levelRange: [4, 7] },
-      { category: 'drink', lines: ['butterfly', 'cold', 'dessert'], levelRange: [3, 6] },
-    ],
-  },
-  S: {
-    slotRange: [2, 3],
-    pools: [
-      { category: 'flower', lines: ['fresh', 'bouquet', 'green'], levelRange: [6, 13] },
-      { category: 'drink', lines: ['butterfly', 'cold', 'dessert'], levelRange: [5, 10] },
-    ],
-  },
+  C: { slotRange: [1, 2] },
+  B: { slotRange: [2, 2] },
+  A: { slotRange: [2, 3] },
+  S: { slotRange: [2, 3] },
 };
 
 const MULTI_SLOT_BONUS_RATE = 0.10;
@@ -57,7 +89,7 @@ const ORDER_TIER_HUAYUAN_MULT = {
 };
 const ORDER_ITEM_LEVEL_PICK_EXPONENT = 1.12;
 const ORDER_ASPIRATIONAL_LEVEL_BONUS_CHANCE = 0.14;
-const CHALLENGE_ORDER_HUAYUAN_MULT = 1.06;
+const CHALLENGE_ORDER_HUAYUAN_MULT = 1;
 
 function extractCurves() {
   const curves = {};
@@ -100,7 +132,7 @@ function singleSlotReward(line, level) {
 
 function computeContentTier(slots) {
   const norms = slots
-    .filter(slot => LINE_META[slot.line])
+    .filter(slot => ORDER_PRODUCT_DEFS[slot.line])
     .sort((a, b) => `${a.line}:${a.level}`.localeCompare(`${b.line}:${b.level}`))
     .map(slot => orderItemDifficulty(slot));
   if (norms.length === 0) return 'C';
@@ -144,7 +176,7 @@ function smoothstep(edge0, edge1, x) {
 
 function orderItemDifficulty(slot) {
   const absolute = orderLevelDifficulty(slot.level);
-  const maxLevel = LINE_META[slot.line]?.maxLevel ?? 0;
+  const maxLevel = ORDER_PRODUCT_DEFS[slot.line]?.maxLevel ?? 0;
   if (!Number.isFinite(maxLevel) || maxLevel <= 1) return absolute;
   const relative = clamp(Math.floor(slot.level) / maxLevel, 0, 1);
   const lateLineBonus = 0.14 * smoothstep(0.65, 1, relative);
@@ -162,7 +194,9 @@ function toolPower(lines) {
     if (lines.hasGreen) powers.push(linePower(lines.maxPlantToolLevel, 'green'));
   }
   if (lines.hasBouquet) {
-    powers.push(linePower(Math.max(lines.maxArrangeToolLevel, lines.maxPlantToolLevel), 'bouquet'));
+    if (lines.maxArrangeToolLevel > 0) {
+      powers.push(linePower(lines.maxArrangeToolLevel, 'bouquet'));
+    }
   }
   for (const line of ['butterfly', 'cold', 'dessert']) {
     const toolLevel = lines.drinkToolMaxByLine[line] ?? 0;
@@ -233,28 +267,18 @@ function pick(arr) {
   return arr[Math.floor(Math.random() * arr.length)];
 }
 
+const AUDIT_LINES_FULL = {
+  maxPlantToolLevel: 7,
+  hasBouquet: true,
+  hasGreen: true,
+  drinkToolMaxByLine: { butterfly: 6, cold: 5, dessert: 4 },
+};
+
 function sampleTier(tier, count = 5000) {
-  const def = ORDER_TIERS[tier];
   const values = [];
   const contentTierCounts = { C: 0, B: 0, A: 0, S: 0 };
   for (let i = 0; i < count; i++) {
-    const [minSlots, maxSlots] = def.slotRange;
-    const slotCount = minSlots + Math.floor(Math.random() * (maxSlots - minSlots + 1));
-    const used = new Set();
-    const slots = [];
-    for (let s = 0; s < slotCount; s++) {
-      const pool = pick(def.pools);
-      const line = pick(pool.lines);
-      const maxLevel = LINE_META[line].maxLevel;
-      const [loRaw, hiRaw] = pool.levelRange;
-      const lo = Math.min(loRaw, maxLevel);
-      const hi = Math.min(hiRaw, maxLevel);
-      const level = lo + Math.floor(Math.random() ** tierPickExponent(tier) * (hi - lo + 1));
-      const key = `${line}:${level}`;
-      if (used.has(key)) continue;
-      used.add(key);
-      slots.push({ line, level });
-    }
+    const slots = generateScenarioSlots(tier, AUDIT_LINES_FULL);
     if (slots.length > 0) {
       contentTierCounts[computeContentTier(slots)]++;
       values.push(orderReward(slots));
@@ -273,55 +297,54 @@ function sampleTier(tier, count = 5000) {
   };
 }
 
-function scenarioToolCap(lines, line) {
-  if (line === 'fresh' || line === 'green') return effectiveMaxLevel(lines.maxPlantToolLevel, LINE_META[line].maxLevel);
-  if (line === 'bouquet') {
-    return effectiveMaxLevel(Math.max(lines.maxArrangeToolLevel, lines.maxPlantToolLevel), LINE_META[line].maxLevel);
-  }
-  return effectiveMaxLevel(lines.drinkToolMaxByLine[line] ?? 0, LINE_META[line].maxLevel);
+function scenarioToolCap(lines, productId) {
+  const product = ORDER_PRODUCT_DEFS[productId];
+  return effectiveMaxLevel(product.toolLevel(lines), product.maxLevel);
 }
 
-function eligibleLines(poolLines, lines) {
-  return poolLines.filter(line => {
-    if (line === 'fresh') return lines.maxPlantToolLevel > 0;
-    if (line === 'green') return lines.hasGreen;
-    if (line === 'bouquet') return lines.hasBouquet;
-    return (lines.drinkToolMaxByLine[line] ?? 0) > 0;
-  });
+function productOrderSpecsForTier(tier, lines) {
+  return ORDER_PRODUCT_IDS
+    .filter(id => {
+      const product = ORDER_PRODUCT_DEFS[id];
+      return product.isAvailableInTier(tier) && product.isUnlocked(lines);
+    })
+    .map(id => {
+      const product = ORDER_PRODUCT_DEFS[id];
+      const [lo, hi] = product.tierLevelRanges[tier];
+      const minLv = Math.min(lo, product.maxLevel);
+      const maxLv = Math.min(hi, product.maxLevel);
+      return { productId: id, levelRange: [minLv, maxLv >= minLv ? maxLv : minLv] };
+    });
 }
 
-function pickScenarioLevel(tier, loRaw, hiRaw, line, lines) {
-  const cap = scenarioToolCap(lines, line);
+function pickScenarioLevel(tier, loRaw, hiRaw, productId, lines) {
+  const product = ORDER_PRODUCT_DEFS[productId];
+  const cap = scenarioToolCap(lines, productId);
   const aspirationalBonus = tier === 'S' ? 0.18 : tier === 'A' ? 0.08 : tier === 'B' ? 0.02 : 0;
   const aspirational = cap > 0 && Math.random() < ORDER_ASPIRATIONAL_LEVEL_BONUS_CHANCE + aspirationalBonus;
-  const hi = Math.min(hiRaw, cap + (aspirational ? 1 : 0), LINE_META[line].maxLevel);
+  const hi = Math.min(hiRaw, cap + (aspirational ? 1 : 0), product.maxLevel);
   const lo = Math.min(loRaw, hi);
   return lo + Math.floor(Math.random() ** tierPickExponent(tier) * (hi - lo + 1));
 }
 
 function generateScenarioSlots(tier, lines) {
   const def = ORDER_TIERS[tier];
+  const specs = productOrderSpecsForTier(tier, lines);
+  if (specs.length === 0) return [];
   const [minSlots, maxSlots] = def.slotRange;
   const slotCount = minSlots + Math.floor(Math.random() * (maxSlots - minSlots + 1));
   const used = new Set();
   const slots = [];
   for (let s = 0; s < slotCount; s++) {
-    let pool = pick(def.pools);
-    let linePool = eligibleLines(pool.lines, lines);
-    if (linePool.length === 0 && pool.category === 'drink') {
-      const fallbackLines = tier === 'S'
-        ? ['fresh', ...(lines.hasBouquet ? ['bouquet'] : []), ...(lines.hasGreen ? ['green'] : [])]
-        : ['fresh', ...(lines.hasBouquet ? ['bouquet'] : []), ...(lines.hasGreen ? ['green'] : [])];
-      pool = { category: 'flower', lines: fallbackLines, levelRange: tier === 'S' ? [6, 13] : tier === 'A' ? [4, 7] : [2, 5] };
-      linePool = eligibleLines(pool.lines, lines);
+    for (let attempt = 0; attempt < 20; attempt++) {
+      const spec = pick(specs);
+      const level = pickScenarioLevel(tier, spec.levelRange[0], spec.levelRange[1], spec.productId, lines);
+      const key = `${spec.productId}:${level}`;
+      if (used.has(key)) continue;
+      used.add(key);
+      slots.push({ line: spec.productId, level });
+      break;
     }
-    if (linePool.length === 0) continue;
-    const line = pick(linePool);
-    const level = pickScenarioLevel(tier, pool.levelRange[0], pool.levelRange[1], line, lines);
-    const key = `${line}:${level}`;
-    if (used.has(key)) continue;
-    used.add(key);
-    slots.push({ line, level });
   }
   return slots;
 }
@@ -366,29 +389,29 @@ function simulateScenario(label, playerLevel, lines, count = 20000) {
 
 function printPriceTable() {
   console.log('订单单品价格表');
-  for (const [line, meta] of Object.entries(LINE_META)) {
+  for (const [productId, meta] of Object.entries(ORDER_PRODUCT_DEFS)) {
     const values = [];
     for (let lv = 1; lv <= meta.maxLevel; lv++) {
-      values.push(price(line, lv));
+      values.push(price(productId, lv));
     }
-    console.log(`${meta.label.padEnd(2)} ${line.padEnd(9)}: ${values.join(', ')}`);
+    console.log(`${meta.label.padEnd(2)} ${productId.padEnd(9)}: ${values.join(', ')}`);
   }
 }
 
 function validate() {
-  for (const line of Object.keys(LINE_META)) {
-    if (!curves[line]) fail(`缺少 ${line} 定价曲线`);
+  for (const productId of Object.keys(ORDER_PRODUCT_DEFS)) {
+    if (!curves[productId]) fail(`缺少 ${productId} 定价曲线`);
   }
 
-  for (const [line, meta] of Object.entries(LINE_META)) {
+  for (const [productId, meta] of Object.entries(ORDER_PRODUCT_DEFS)) {
     let prev = 0;
     for (let lv = 1; lv <= meta.maxLevel; lv++) {
-      const value = price(line, lv);
-      if (value <= prev) fail(`${line} L${lv} 未严格高于上一等级`);
+      const value = price(productId, lv);
+      if (value <= prev) fail(`${productId} L${lv} 未严格高于上一等级`);
       const sell = sellPrice(value);
-      if (sell >= value) fail(`${line} L${lv} 出售价不应达到订单价`);
-      if (lv > 1 && singleSlotReward(line, lv) < Math.round(1.8 * price(line, lv - 1))) {
-        fail(`${line} L${lv} 单槽保底低于合成软保底`);
+      if (sell >= value) fail(`${productId} L${lv} 出售价不应达到订单价`);
+      if (lv > 1 && singleSlotReward(productId, lv) < Math.round(1.8 * price(productId, lv - 1))) {
+        fail(`${productId} L${lv} 单槽保底低于合成软保底`);
       }
       prev = value;
     }
