@@ -1,0 +1,15 @@
+A square 1:1 image, 1 row x 4 columns grid on plain white background. Four WHOLE FRUIT game item icons for a cozy flower-shop merge game.
+
+Use the attached reference image ONLY for art style — match its polished 2D merge-game look: high saturation joyful colors, rounded plump shapes, smooth gradient shading (base + soft shadow + bright highlight arc), small white gloss spots on curves, thin clean outlines in the same color family as each fruit (NOT thick black sticker). Soft 3D volume like the reference bouquet petals — NOT flat cel sticker, NOT photorealistic.
+
+CRITICAL: The image must contain ONLY the 4 fruit icons and white background. No text, no numbers, no labels, no watermark.
+
+Column 1 — Strawberry: one plump heart-shaped strawberry, vivid candy red with gradient shading, simplified yellow seed dots, green calyx with 2-3 leaf shapes.
+
+Column 2 — Watermelon: one round mini whole watermelon, bold green stripe bands with highlight, short brown stem nub, glossy plump volume.
+
+Column 3 — Pineapple: one upright whole pineapple, golden body with simplified diamond pattern blocks and shading, green crown of 4-5 leaf spikes.
+
+Column 4 — Grape: one grape cluster, 8-12 round purple berries with individual highlight dots, one green leaf accent, rich violet gradient.
+
+Equal column widths, one fruit centered per cell, no overlap between cells, consistent scale across all four icons.

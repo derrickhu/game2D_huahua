@@ -61,9 +61,9 @@ export function computeUnlockedLines(cells: readonly OrderBoardCell[]): Unlocked
 
   if (maxFarmToolLevel >= 3 && maxFruitCutToolLevel >= 1) {
     hasFood = true;
-    const fruitCutLines = [FoodLine.CUT_STRAWBERRY, FoodLine.CUT_WATERMELON];
+    const fruitCutLines = [FoodLine.CUT_AVOCADO, FoodLine.CUT_WATERMELON];
     if (maxFarmToolLevel >= 4) {
-      fruitCutLines.push(FoodLine.CUT_PINEAPPLE, FoodLine.CUT_GRAPE);
+      fruitCutLines.push(FoodLine.CUT_PINEAPPLE, FoodLine.CUT_DRAGONFRUIT);
     }
     for (const line of fruitCutLines) {
       foodToolMaxByLine[line] = maxFruitCutToolLevel;

@@ -598,18 +598,18 @@ export class ItemView extends PIXI.Container {
       case DrinkLine.BUTTERFLY: return COLORS.DRINK_BUTTERFLY;
       case DrinkLine.COLD: return COLORS.DRINK_COLD;
       case DrinkLine.DESSERT: return COLORS.DRINK_DESSERT;
-      case FoodLine.FRUIT_STRAWBERRY:
-      case FoodLine.CUT_STRAWBERRY:
-        return 0xe94b65;
+      case FoodLine.FRUIT_AVOCADO:
+      case FoodLine.CUT_AVOCADO:
+        return 0x6a9e3a;
       case FoodLine.FRUIT_WATERMELON:
       case FoodLine.CUT_WATERMELON:
         return 0x4caf63;
       case FoodLine.FRUIT_PINEAPPLE:
       case FoodLine.CUT_PINEAPPLE:
         return 0xf5c542;
-      case FoodLine.FRUIT_GRAPE:
-      case FoodLine.CUT_GRAPE:
-        return 0x8e63c7;
+      case FoodLine.FRUIT_DRAGONFRUIT:
+      case FoodLine.CUT_DRAGONFRUIT:
+        return 0xe0568a;
       default: return 0x999999;
     }
   }

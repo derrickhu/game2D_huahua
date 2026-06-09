@@ -281,7 +281,7 @@ function comboSpecsForTier(tier: OrderTier, ulk: UnlockedLines): ComboSpec[] {
       S: [2, 3],
     };
     const [minLv, maxLv] = foodRange[tier];
-    for (const fl of [FoodLine.CUT_STRAWBERRY, FoodLine.CUT_WATERMELON, FoodLine.CUT_PINEAPPLE, FoodLine.CUT_GRAPE]) {
+    for (const fl of [FoodLine.CUT_AVOCADO, FoodLine.CUT_WATERMELON, FoodLine.CUT_PINEAPPLE, FoodLine.CUT_DRAGONFRUIT]) {
       if ((ulk.foodToolMaxByLine[fl] ?? 0) <= 0) continue;
       out.push({ category: Category.FOOD, line: fl, minLv, maxLv });
     }

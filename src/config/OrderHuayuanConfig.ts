@@ -47,10 +47,10 @@ export type OrderDeliveryLine =
   | 'butterfly'
   | 'cold'
   | 'dessert'
-  | 'cut_strawberry'
+  | 'cut_avocado'
   | 'cut_watermelon'
   | 'cut_pineapple'
-  | 'cut_grape';
+  | 'cut_dragonfruit';
 
 export interface OrderDeliveryCurve {
   /** L1 单价基准 */
@@ -82,10 +82,10 @@ export const ORDER_DELIVERY_CURVES: Record<OrderDeliveryCategory, Record<string,
   },
   food: {
     /** 果切短线：需要农田整果 + 果切工具拖拽加工，按 3 级短链定价 */
-    cut_strawberry: { base: 16, growth: 1.75 },
+    cut_avocado: { base: 16, growth: 1.75 },
     cut_watermelon: { base: 16, growth: 1.75 },
     cut_pineapple: { base: 18, growth: 1.75 },
-    cut_grape: { base: 18, growth: 1.75 },
+    cut_dragonfruit: { base: 18, growth: 1.75 },
   },
 };
 

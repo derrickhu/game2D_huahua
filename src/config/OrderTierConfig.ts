@@ -43,7 +43,7 @@ export const ORDER_TIERS: Record<OrderTier, OrderTierDef> = {
     demandPool: [
       { category: Category.FLOWER, lines: [FlowerLine.FRESH, FlowerLine.BOUQUET, FlowerLine.GREEN], levelRange: [2, 5] },
       { category: Category.DRINK, lines: [DrinkLine.BUTTERFLY, DrinkLine.COLD], levelRange: [2, 4] },
-      { category: Category.FOOD, lines: [FoodLine.CUT_STRAWBERRY, FoodLine.CUT_WATERMELON], levelRange: [1, 1] },
+      { category: Category.FOOD, lines: [FoodLine.CUT_AVOCADO, FoodLine.CUT_WATERMELON], levelRange: [1, 1] },
     ],
     timeLimit: null,
     orderType: 'normal',
@@ -55,7 +55,7 @@ export const ORDER_TIERS: Record<OrderTier, OrderTierDef> = {
     demandPool: [
       { category: Category.FLOWER, lines: [FlowerLine.FRESH, FlowerLine.BOUQUET, FlowerLine.GREEN], levelRange: [4, 7] },
       { category: Category.DRINK, lines: [DrinkLine.BUTTERFLY, DrinkLine.COLD, DrinkLine.DESSERT], levelRange: [3, 6] },
-      { category: Category.FOOD, lines: [FoodLine.CUT_STRAWBERRY, FoodLine.CUT_WATERMELON, FoodLine.CUT_PINEAPPLE, FoodLine.CUT_GRAPE], levelRange: [1, 2] },
+      { category: Category.FOOD, lines: [FoodLine.CUT_AVOCADO, FoodLine.CUT_WATERMELON, FoodLine.CUT_PINEAPPLE, FoodLine.CUT_DRAGONFRUIT], levelRange: [1, 2] },
     ],
     timeLimit: null,
     orderType: 'normal',
@@ -67,7 +67,7 @@ export const ORDER_TIERS: Record<OrderTier, OrderTierDef> = {
     demandPool: [
       { category: Category.FLOWER, lines: [FlowerLine.FRESH, FlowerLine.BOUQUET, FlowerLine.GREEN], levelRange: [6, 13] },
       { category: Category.DRINK, lines: [DrinkLine.BUTTERFLY, DrinkLine.COLD, DrinkLine.DESSERT], levelRange: [5, 10] },
-      { category: Category.FOOD, lines: [FoodLine.CUT_STRAWBERRY, FoodLine.CUT_WATERMELON, FoodLine.CUT_PINEAPPLE, FoodLine.CUT_GRAPE], levelRange: [2, 3] },
+      { category: Category.FOOD, lines: [FoodLine.CUT_AVOCADO, FoodLine.CUT_WATERMELON, FoodLine.CUT_PINEAPPLE, FoodLine.CUT_DRAGONFRUIT], levelRange: [2, 3] },
     ],
     timeLimit: null,
     orderType: 'normal',
@@ -152,7 +152,7 @@ function _toolPower(lines: UnlockedLines): number {
       powers.push(_linePower(toolLevel, Category.DRINK, line));
     }
   }
-  for (const line of [FoodLine.CUT_STRAWBERRY, FoodLine.CUT_WATERMELON, FoodLine.CUT_PINEAPPLE, FoodLine.CUT_GRAPE]) {
+  for (const line of [FoodLine.CUT_AVOCADO, FoodLine.CUT_WATERMELON, FoodLine.CUT_PINEAPPLE, FoodLine.CUT_DRAGONFRUIT]) {
     const toolLevel = lines.foodToolMaxByLine[line] ?? 0;
     if (toolLevel > 0) {
       powers.push(_linePower(toolLevel, Category.FOOD, line));

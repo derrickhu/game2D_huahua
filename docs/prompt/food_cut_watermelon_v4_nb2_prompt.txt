@@ -1,0 +1,18 @@
+A square 1:1 image, exactly 1 row x 3 columns grid on plain white background. Three WATERMELON FRUIT-CUT product icons L1 to L3 for a cozy flower-shop merge game.
+
+Use the attached reference image ONLY for art style — match its polished 2D merge-game look: high saturation joyful colors, rounded plump shapes, smooth gradient shading (base + soft shadow + bright highlight arc), small white gloss spots on curves, thin clean outlines in the same color family as each object (NOT thick black sticker). Soft 3D volume like the reference bouquet petals — NOT flat cel sticker, NOT photorealistic.
+
+This is the FRUIT-CUT product line — NOT dessert parfait, NOT drink cup, NOT flower bouquet. Show fresh cut watermelon with natural rind/flesh contrast. Each level must look clearly more premium than the last through container upgrade and garnish accents.
+
+CRITICAL: Only the 3 icons and white background. No text, no numbers, no labels, no watermark.
+
+Column 1 — L1 simplest (NO plate, NO cup):
+One large quarter-wedge of watermelon standing upright, showing green striped rind, white pith band, juicy red flesh with 4-6 simplified black seed dots. Clean single-piece presentation — like a fresh 1/4 cut slice ready to eat. Modest size, centered in cell.
+
+Column 2 — L2 mid tier (bamboo tray):
+One round woven bamboo serving tray or bamboo plate with visible warm tan bamboo slats and rim. On the tray: 4-5 neat triangular watermelon slice pieces with alternating red flesh and green rind edges, arranged in a fan. Add ONE small green mint leaf accent for color contrast. Tray must look sturdy and crafted, not cheap plastic.
+
+Column 3 — L3 premium (wicker picnic basket — NOT generic copy for other fruits):
+One small woven wicker fruit basket with curved handle, warm honey-brown weave texture and cream cloth liner peeking inside. Inside: neat pink-red watermelon cubes (6-8 cubes) as the hero fruit. Add colorful garnish accents: 2-3 small blueberries, 1-2 yellow kiwi slice rounds, 1 mint sprig, maybe 1 small strawberry half — enough color dots to break up monochrome red but watermelon remains dominant. Largest, most festive icon in the row.
+
+Equal column widths, one product centered per cell, no overlap, consistent lighting direction left-to-top across all three.

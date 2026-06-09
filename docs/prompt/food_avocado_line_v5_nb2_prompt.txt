@@ -1,0 +1,23 @@
+A square 1:1 image, exactly 1 row x 4 columns grid on pure flat white background #FFFFFF. Four AVOCADO icons for a cozy flower-shop merge game: Column 1 WHOLE FRUIT, Columns 2-4 FRUIT-CUT L1-L3.
+
+Use the attached reference image ONLY for art style — polished 2D merge-game look: high saturation, rounded plump shapes, smooth gradient shading ON object surfaces only, small white gloss highlights, thin same-family outlines. NOT flat sticker, NOT photorealistic.
+
+GLOBAL RULES — STRICT:
+- NO knives, forks, spoons, chopsticks, or ANY cutlery/utensils in any cell.
+- NO cast shadows, drop shadows, ground shadows, gray ovals, or contact shadows on the white background. Background stays pure flat white with zero gray blobs beneath objects.
+- Volume shading only on fruit and container surfaces — never a dark shadow pool on the floor.
+- NO text, NO watermark.
+
+Column 1 — WHOLE avocado:
+One whole pear-shaped avocado standing upright, dark bumpy green skin, small brown stem nub, plump glossy volume — uncut complete fruit.
+
+Column 2 — CUT L1 (NO container, NO utensils):
+Exactly ONE avocado half, cut lengthwise, showing bumpy dark-green skin on outer curve, creamy yellow-green flesh, one large round brown pit in center. Single piece only, clean cut face.
+
+Column 3 — CUT L2 (light wood board only — NO utensils):
+One small rectangular light-wood serving board (NOT a cutting board with knife). On the board: 4-5 crescent avocado slices fan-arranged, green skin rim + yellow-green flesh. ONE small lime wedge accent for color. No fork, no knife, no spoon.
+
+Column 4 — CUT L3 (premium oval GREEN woven harvest basket — different from brown picnic basket):
+One deep oval woven basket in olive-green / forest-green wicker weave, short woven side handles, visible cream linen liner folded over the rim. Inside: neat glossy avocado cubes (6-8) as hero fruit. Colorful garnish accents on top: 2 cherry tomato halves, a few golden corn kernels, 1 small basil or mint leaf — festive premium fruit-salad basket feel. Largest icon. NO ceramic bowl, NO gift box.
+
+Equal column widths, one product centered per cell, no overlap, consistent upper-left lighting on objects only.

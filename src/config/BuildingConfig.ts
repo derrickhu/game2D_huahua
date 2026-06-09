@@ -222,15 +222,15 @@ const PLANT_OUTCOMES_TOOL_L7: ToolProduceOutcome[] = [
 // ═══════════════ 农田工具（tool_farm）→ 单级整果 ═══════════════
 
 const FARM_OUTCOMES_TOOL_L3: ToolProduceOutcome[] = [
-  { category: Category.FOOD, line: FoodLine.FRUIT_STRAWBERRY, level: 1, weight: 55 },
+  { category: Category.FOOD, line: FoodLine.FRUIT_AVOCADO, level: 1, weight: 55 },
   { category: Category.FOOD, line: FoodLine.FRUIT_WATERMELON, level: 1, weight: 45 },
 ];
 
 const FARM_OUTCOMES_TOOL_L4: ToolProduceOutcome[] = [
-  { category: Category.FOOD, line: FoodLine.FRUIT_STRAWBERRY, level: 1, weight: 30 },
+  { category: Category.FOOD, line: FoodLine.FRUIT_AVOCADO, level: 1, weight: 30 },
   { category: Category.FOOD, line: FoodLine.FRUIT_WATERMELON, level: 1, weight: 28 },
   { category: Category.FOOD, line: FoodLine.FRUIT_PINEAPPLE, level: 1, weight: 24 },
-  { category: Category.FOOD, line: FoodLine.FRUIT_GRAPE, level: 1, weight: 18 },
+  { category: Category.FOOD, line: FoodLine.FRUIT_DRAGONFRUIT, level: 1, weight: 18 },
 ];
 
 const plantToolTemplate = (): Omit<ToolDef, 'itemId' | 'level'>[] => [
@@ -315,7 +315,7 @@ const farmToolTemplate = (): Omit<ToolDef, 'itemId' | 'level'>[] => [
   {
     toolLine: ToolLine.FARM,
     produceCategory: Category.FOOD,
-    produceLine: FoodLine.FRUIT_STRAWBERRY,
+    produceLine: FoodLine.FRUIT_AVOCADO,
     canProduce: false,
     produceTable: [],
     cooldown: 0,
@@ -325,7 +325,7 @@ const farmToolTemplate = (): Omit<ToolDef, 'itemId' | 'level'>[] => [
   {
     toolLine: ToolLine.FARM,
     produceCategory: Category.FOOD,
-    produceLine: FoodLine.FRUIT_STRAWBERRY,
+    produceLine: FoodLine.FRUIT_AVOCADO,
     canProduce: false,
     produceTable: [],
     cooldown: 0,
@@ -335,7 +335,7 @@ const farmToolTemplate = (): Omit<ToolDef, 'itemId' | 'level'>[] => [
   {
     toolLine: ToolLine.FARM,
     produceCategory: Category.FOOD,
-    produceLine: FoodLine.FRUIT_STRAWBERRY,
+    produceLine: FoodLine.FRUIT_AVOCADO,
     canProduce: true,
     produceTable: [],
     produceOutcomes: FARM_OUTCOMES_TOOL_L3,
@@ -346,7 +346,7 @@ const farmToolTemplate = (): Omit<ToolDef, 'itemId' | 'level'>[] => [
   {
     toolLine: ToolLine.FARM,
     produceCategory: Category.FOOD,
-    produceLine: FoodLine.FRUIT_STRAWBERRY,
+    produceLine: FoodLine.FRUIT_AVOCADO,
     canProduce: true,
     produceTable: [],
     produceOutcomes: FARM_OUTCOMES_TOOL_L4,
@@ -360,7 +360,7 @@ const fruitCutToolTemplate = (): Omit<ToolDef, 'itemId' | 'level'>[] => [
   {
     toolLine: ToolLine.FRUIT_CUT,
     produceCategory: Category.FOOD,
-    produceLine: FoodLine.CUT_STRAWBERRY,
+    produceLine: FoodLine.CUT_AVOCADO,
     canProduce: false,
     produceTable: [],
     cooldown: 0,
@@ -370,7 +370,7 @@ const fruitCutToolTemplate = (): Omit<ToolDef, 'itemId' | 'level'>[] => [
   {
     toolLine: ToolLine.FRUIT_CUT,
     produceCategory: Category.FOOD,
-    produceLine: FoodLine.CUT_STRAWBERRY,
+    produceLine: FoodLine.CUT_AVOCADO,
     canProduce: false,
     produceTable: [],
     cooldown: 0,
@@ -380,7 +380,7 @@ const fruitCutToolTemplate = (): Omit<ToolDef, 'itemId' | 'level'>[] => [
   {
     toolLine: ToolLine.FRUIT_CUT,
     produceCategory: Category.FOOD,
-    produceLine: FoodLine.CUT_STRAWBERRY,
+    produceLine: FoodLine.CUT_AVOCADO,
     canProduce: false,
     produceTable: [],
     cooldown: 0,
@@ -390,7 +390,7 @@ const fruitCutToolTemplate = (): Omit<ToolDef, 'itemId' | 'level'>[] => [
   {
     toolLine: ToolLine.FRUIT_CUT,
     produceCategory: Category.FOOD,
-    produceLine: FoodLine.CUT_STRAWBERRY,
+    produceLine: FoodLine.CUT_AVOCADO,
     canProduce: false,
     produceTable: [],
     cooldown: 0,

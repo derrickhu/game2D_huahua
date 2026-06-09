@@ -6,7 +6,8 @@
   python3 scripts/build_fruit_cut_assets.py --sheet farm ../game_assets/huahua/assets/raw/tool_line_farm_nb2.png
   python3 scripts/build_fruit_cut_assets.py --sheet fruit_cut ../game_assets/huahua/assets/raw/tool_line_fruit_cut_nb2.png
   python3 scripts/build_fruit_cut_assets.py --sheet whole ../game_assets/huahua/assets/raw/food_whole_fruits_nb2.png
-  python3 scripts/build_fruit_cut_assets.py --sheet cut_strawberry ../game_assets/huahua/assets/raw/food_cut_strawberry_line_nb2.png
+  python3 scripts/build_fruit_cut_assets.py --sheet avocado_line ../game_assets/huahua/assets/raw/food_avocado_line_v4_nb2.png
+  python3 scripts/build_fruit_cut_assets.py --sheet dragonfruit_line ../game_assets/huahua/assets/raw/food_dragonfruit_line_v4_nb2.png
   python3 scripts/build_fruit_cut_assets.py --all   # 处理 raw/ 下全部约定文件名
 """
 from __future__ import annotations
@@ -63,29 +64,59 @@ SHEETS: dict[str, dict] = {
     "whole": {
         "raw": "food_whole_fruits_nb2.png",
         "n": 4,
+        "grid": (2, 2),
         "rembg": "isnet-anime",
         "padding": 8,
         "outputs": [
-            ("food_fruit_strawberry_1", _ITEMS / "food/whole/food_fruit_strawberry_1.png"),
+            ("food_fruit_avocado_1", _ITEMS / "food/whole/food_fruit_avocado_1.png"),
             ("food_fruit_watermelon_1", _ITEMS / "food/whole/food_fruit_watermelon_1.png"),
             ("food_fruit_pineapple_1", _ITEMS / "food/whole/food_fruit_pineapple_1.png"),
-            ("food_fruit_grape_1", _ITEMS / "food/whole/food_fruit_grape_1.png"),
+            ("food_fruit_dragonfruit_1", _ITEMS / "food/whole/food_fruit_dragonfruit_1.png"),
         ],
     },
-    "cut_strawberry": {
-        "raw": "food_cut_strawberry_line_nb2.png",
+    "avocado_line": {
+        "raw": "food_avocado_line_v4_nb2.png",
+        "n": 4,
+        "grid": (2, 2),
+        "grid_indices": [0, 1, 2, 3],
+        "rembg": "isnet-anime",
+        "padding": 8,
+        "outputs": [
+            ("food_fruit_avocado_1", _ITEMS / "food/whole/food_fruit_avocado_1.png"),
+            ("food_cut_avocado_1", _ITEMS / "food/cut/food_cut_avocado_1.png"),
+            ("food_cut_avocado_2", _ITEMS / "food/cut/food_cut_avocado_2.png"),
+            ("food_cut_avocado_3", _ITEMS / "food/cut/food_cut_avocado_3.png"),
+        ],
+    },
+    "dragonfruit_line": {
+        "raw": "food_dragonfruit_line_v4_nb2.png",
+        "n": 4,
+        "grid": (2, 2),
+        "rembg": "isnet-anime",
+        "padding": 8,
+        "outputs": [
+            ("food_fruit_dragonfruit_1", _ITEMS / "food/whole/food_fruit_dragonfruit_1.png"),
+            ("food_cut_dragonfruit_1", _ITEMS / "food/cut/food_cut_dragonfruit_1.png"),
+            ("food_cut_dragonfruit_2", _ITEMS / "food/cut/food_cut_dragonfruit_2.png"),
+            ("food_cut_dragonfruit_3", _ITEMS / "food/cut/food_cut_dragonfruit_3.png"),
+        ],
+    },
+    "cut_avocado": {
+        "raw": "food_cut_avocado_line_nb2.png",
         "n": 3,
         "rembg": "isnet-anime",
         "padding": 8,
         "outputs": [
-            ("food_cut_strawberry_1", _ITEMS / "food/cut/food_cut_strawberry_1.png"),
-            ("food_cut_strawberry_2", _ITEMS / "food/cut/food_cut_strawberry_2.png"),
-            ("food_cut_strawberry_3", _ITEMS / "food/cut/food_cut_strawberry_3.png"),
+            ("food_cut_avocado_1", _ITEMS / "food/cut/food_cut_avocado_1.png"),
+            ("food_cut_avocado_2", _ITEMS / "food/cut/food_cut_avocado_2.png"),
+            ("food_cut_avocado_3", _ITEMS / "food/cut/food_cut_avocado_3.png"),
         ],
     },
     "cut_watermelon": {
         "raw": "food_cut_watermelon_line_nb2.png",
         "n": 3,
+        "grid": (2, 2),
+        "grid_indices": [0, 1, 3],
         "rembg": "isnet-anime",
         "padding": 8,
         "outputs": [
@@ -97,6 +128,8 @@ SHEETS: dict[str, dict] = {
     "cut_pineapple": {
         "raw": "food_cut_pineapple_line_nb2.png",
         "n": 3,
+        "grid": (2, 2),
+        "grid_indices": [0, 1, 3],
         "rembg": "isnet-anime",
         "padding": 8,
         "outputs": [
@@ -105,15 +138,15 @@ SHEETS: dict[str, dict] = {
             ("food_cut_pineapple_3", _ITEMS / "food/cut/food_cut_pineapple_3.png"),
         ],
     },
-    "cut_grape": {
-        "raw": "food_cut_grape_line_nb2.png",
+    "cut_dragonfruit": {
+        "raw": "food_cut_dragonfruit_line_nb2.png",
         "n": 3,
         "rembg": "isnet-anime",
         "padding": 8,
         "outputs": [
-            ("food_cut_grape_1", _ITEMS / "food/cut/food_cut_grape_1.png"),
-            ("food_cut_grape_2", _ITEMS / "food/cut/food_cut_grape_2.png"),
-            ("food_cut_grape_3", _ITEMS / "food/cut/food_cut_grape_3.png"),
+            ("food_cut_dragonfruit_1", _ITEMS / "food/cut/food_cut_dragonfruit_1.png"),
+            ("food_cut_dragonfruit_2", _ITEMS / "food/cut/food_cut_dragonfruit_2.png"),
+            ("food_cut_dragonfruit_3", _ITEMS / "food/cut/food_cut_dragonfruit_3.png"),
         ],
     },
 }
@@ -193,7 +226,9 @@ def process_sheet(key: str, sheet_path: Path | None = None) -> None:
 
         if grid:
             cols, rows = grid
-            _split_grid_equal(raw_path, i, cols, rows, split_out)
+            grid_indices = cfg.get("grid_indices")
+            gi = grid_indices[i] if grid_indices else i
+            _split_grid_equal(raw_path, gi, cols, rows, split_out)
         else:
             _split_row_equal(raw_path, i, n, split_out)
         _run([

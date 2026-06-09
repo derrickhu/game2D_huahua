@@ -45,14 +45,14 @@ export enum DrinkLine {
 }
 
 export enum FoodLine {
-  FRUIT_STRAWBERRY = 'fruit_strawberry',
+  FRUIT_AVOCADO = 'fruit_avocado',
   FRUIT_WATERMELON = 'fruit_watermelon',
   FRUIT_PINEAPPLE = 'fruit_pineapple',
-  FRUIT_GRAPE = 'fruit_grape',
-  CUT_STRAWBERRY = 'cut_strawberry',
+  FRUIT_DRAGONFRUIT = 'fruit_dragonfruit',
+  CUT_AVOCADO = 'cut_avocado',
   CUT_WATERMELON = 'cut_watermelon',
   CUT_PINEAPPLE = 'cut_pineapple',
-  CUT_GRAPE = 'cut_grape',
+  CUT_DRAGONFRUIT = 'cut_dragonfruit',
 }
 
 export enum CurrencyLine {
@@ -82,8 +82,8 @@ export const TOOL_TO_PRODUCT_LINE: Record<ToolLine, { category: Category; line: 
   [ToolLine.BUTTERFLY_NET]: { category: Category.DRINK, line: DrinkLine.BUTTERFLY },
   [ToolLine.MIXER]:   { category: Category.DRINK,  line: DrinkLine.COLD },
   [ToolLine.BAKE]:    { category: Category.DRINK,  line: DrinkLine.DESSERT },
-  [ToolLine.FARM]:    { category: Category.FOOD, line: FoodLine.FRUIT_STRAWBERRY },
-  [ToolLine.FRUIT_CUT]: { category: Category.FOOD, line: FoodLine.CUT_STRAWBERRY },
+  [ToolLine.FARM]:    { category: Category.FOOD, line: FoodLine.FRUIT_AVOCADO },
+  [ToolLine.FRUIT_CUT]: { category: Category.FOOD, line: FoodLine.CUT_AVOCADO },
 };
 
 export interface ItemDef {
@@ -148,14 +148,14 @@ const DRINK_DATA: [DrinkLine, string[]][] = [
 ];
 
 const FOOD_DATA: [FoodLine, string[]][] = [
-  [FoodLine.FRUIT_STRAWBERRY, ['草莓']],
+  [FoodLine.FRUIT_AVOCADO, ['牛油果']],
   [FoodLine.FRUIT_WATERMELON, ['西瓜']],
   [FoodLine.FRUIT_PINEAPPLE, ['菠萝']],
-  [FoodLine.FRUIT_GRAPE, ['葡萄']],
-  [FoodLine.CUT_STRAWBERRY, ['草莓粒杯', '草莓花杯', '莓红果切盘']],
-  [FoodLine.CUT_WATERMELON, ['西瓜块', '西瓜杯', '西瓜披萨盘']],
-  [FoodLine.CUT_PINEAPPLE, ['菠萝块', '菠萝船', '热带菠萝盘']],
-  [FoodLine.CUT_GRAPE, ['葡萄串杯', '葡萄晶冻杯', '紫晶葡萄盘']],
+  [FoodLine.FRUIT_DRAGONFRUIT, ['火龙果']],
+  [FoodLine.CUT_AVOCADO, ['半切牛油果', '木盘牛油果', '牛油果陶碗']],
+  [FoodLine.CUT_WATERMELON, ['西瓜角', '竹盘西瓜', '缤纷果篮']],
+  [FoodLine.CUT_PINEAPPLE, ['菠萝环片', '竹盘菠萝', '菠萝船']],
+  [FoodLine.CUT_DRAGONFRUIT, ['半切火龙果', '粉盘火龙果', '火龙果礼盒']],
 ];
 
 // ═══════════════ 工具数据 ═══════════════
@@ -185,10 +185,10 @@ const TOOL_DATA: [ToolLine, string[]][] = [
 ];
 
 export const FRUIT_WHOLE_TO_CUT_LINE: Record<string, FoodLine> = {
-  [FoodLine.FRUIT_STRAWBERRY]: FoodLine.CUT_STRAWBERRY,
+  [FoodLine.FRUIT_AVOCADO]: FoodLine.CUT_AVOCADO,
   [FoodLine.FRUIT_WATERMELON]: FoodLine.CUT_WATERMELON,
   [FoodLine.FRUIT_PINEAPPLE]: FoodLine.CUT_PINEAPPLE,
-  [FoodLine.FRUIT_GRAPE]: FoodLine.CUT_GRAPE,
+  [FoodLine.FRUIT_DRAGONFRUIT]: FoodLine.CUT_DRAGONFRUIT,
 };
 
 export function isWholeFruitLine(line: string): boolean {
@@ -607,14 +607,14 @@ export function getMergeChainName(itemId: string): string {
     [DrinkLine.BUTTERFLY]: '蝴蝶标本',
     [DrinkLine.COLD]: '冷饮',
     [DrinkLine.DESSERT]: '甜品',
-    [FoodLine.FRUIT_STRAWBERRY]: '草莓',
+    [FoodLine.FRUIT_AVOCADO]: '牛油果',
     [FoodLine.FRUIT_WATERMELON]: '西瓜',
     [FoodLine.FRUIT_PINEAPPLE]: '菠萝',
-    [FoodLine.FRUIT_GRAPE]: '葡萄',
-    [FoodLine.CUT_STRAWBERRY]: '草莓果切',
+    [FoodLine.FRUIT_DRAGONFRUIT]: '火龙果',
+    [FoodLine.CUT_AVOCADO]: '牛油果果切',
     [FoodLine.CUT_WATERMELON]: '西瓜果切',
     [FoodLine.CUT_PINEAPPLE]: '菠萝果切',
-    [FoodLine.CUT_GRAPE]: '葡萄果切',
+    [FoodLine.CUT_DRAGONFRUIT]: '火龙果果切',
     [ToolLine.PLANT]: '园艺工具',
     [ToolLine.ARRANGE]: '包装工具',
     [ToolLine.BUTTERFLY_NET]: '捕虫网',
