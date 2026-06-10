@@ -241,6 +241,7 @@ class BoardManagerClass {
     toolCell.luckyCoinConsumed = false;
 
     EventBus.emit('board:itemPlaced', fruitIndex, resultId);
+    EventBus.emit('board:fruitCutProcessed', fruitIndex, toolIndex, resultId, fruitIndex);
     return { kind: 'ok', resultId, resultIndex: fruitIndex, toolIndex, fruitIndex };
   }
 

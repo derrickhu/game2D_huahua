@@ -69,20 +69,17 @@ const LEVEL_EXTRA: Record<number, LevelExtraRewardsDef> = {
     ],
     flowerSignTickets: 10,
   },
-  /** 包装线补底 + 冷饮线低阶补量 */
+  /** 果切线开张：农田 Lv.1×2 + Lv.2×1、果切 Lv.1×1 */
   11: {
     rewardBoxItems: [
-      { itemId: 'tool_arrange_1', count: 2 },
-      { itemId: 'tool_mixer_1', count: 1 },
+      { itemId: 'tool_farm_1', count: 2 },
+      { itemId: 'tool_farm_2', count: 1 },
+      { itemId: 'tool_fruit_cut_1', count: 1 },
     ],
   },
-  /** 烘焙线低阶补量 + 果切线开张 */
+  /** 烘焙线低阶补量 */
   12: {
-    rewardBoxItems: [
-      { itemId: 'tool_bake_1', count: 2 },
-      { itemId: 'tool_farm_1', count: 2 },
-      { itemId: 'tool_fruit_cut_1', count: 2 },
-    ],
+    rewardBoxItems: [{ itemId: 'tool_bake_1', count: 2 }],
   },
   /** 蝴蝶线补网 + 园艺双长线基础补给 */
   13: {

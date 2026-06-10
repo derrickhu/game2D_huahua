@@ -43,20 +43,11 @@ class SoundSystemClass {
     // ---- 绑定事件 → 音效 ----
 
     EventBus.on('board:merged', () => {
-      const now = Date.now();
-      if (now - this._mergeLastTimeMs > MERGE_COMBO_GAP_MS) {
-        this._mergeComboIndex = 0;
-      }
-      this._mergeLastTimeMs = now;
-      const step = Math.min(this._mergeComboIndex, MERGE_SUCCESS_PLAYBACK_RATES.length - 1);
-      const rate = MERGE_SUCCESS_PLAYBACK_RATES[step];
-      const volSc = MERGE_SUCCESS_VOLUME_SCALE[step];
-      AudioManager.play('merge_success', {
-        bypassThrottle: true,
-        playbackRate: rate,
-        volumeScale: volSc,
-      });
-      this._mergeComboIndex = Math.min(this._mergeComboIndex + 1, MERGE_SUCCESS_PLAYBACK_RATES.length);
+      this._playMergeSuccessSound();
+    });
+
+    EventBus.on('board:fruitCutProcessed', () => {
+      this._playMergeSuccessSound();
     });
 
     // 建筑产出（点击建筑成功产出时）
@@ -194,6 +185,23 @@ class SoundSystemClass {
 
   get isMuted(): boolean {
     return !SettingsManager.musicEnabled && !SettingsManager.soundEnabled;
+  }
+
+  private _playMergeSuccessSound(): void {
+    const now = Date.now();
+    if (now - this._mergeLastTimeMs > MERGE_COMBO_GAP_MS) {
+      this._mergeComboIndex = 0;
+    }
+    this._mergeLastTimeMs = now;
+    const step = Math.min(this._mergeComboIndex, MERGE_SUCCESS_PLAYBACK_RATES.length - 1);
+    const rate = MERGE_SUCCESS_PLAYBACK_RATES[step];
+    const volSc = MERGE_SUCCESS_VOLUME_SCALE[step];
+    AudioManager.play('merge_success', {
+      bypassThrottle: true,
+      playbackRate: rate,
+      volumeScale: volSc,
+    });
+    this._mergeComboIndex = Math.min(this._mergeComboIndex + 1, MERGE_SUCCESS_PLAYBACK_RATES.length);
   }
 }
 

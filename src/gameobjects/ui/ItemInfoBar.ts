@@ -21,6 +21,7 @@ import {
   isCrystalBallItem,
   isGoldenScissorsItem,
   isLuckyCoinItem,
+  isWholeFruitItem,
 } from '@/config/ItemConfig';
 import { findBoardProducerDef, getProduceTableLevelPercents, toolUsesStamina } from '@/config/BuildingConfig';
 import { MERGE_BUBBLE_DISPLAY_NAME } from '@/config/MergeCompanionConfig';
@@ -723,7 +724,12 @@ export class ItemInfoBar extends PIXI.Container {
     const def = ITEM_DEFS.get(this._selectedItemId);
     if (!def) return;
     const producerDef = findBoardProducerDef(def.id);
-    if (def.interactType !== InteractType.TOOL || !toolUsesStamina(producerDef)) return;
+    if (def.interactType !== InteractType.TOOL || !toolUsesStamina(producerDef) || !producerDef) return;
+    if (producerDef.toolLine === ToolLine.FRUIT_CUT) {
+      if (!this._descText.visible) return;
+      this._descText.text = this._getFruitCutToolDescription(producerDef);
+      return;
+    }
     if (!this._staminaDescRow.visible) return;
     const cost = ToolProducePolicy.getEffectiveStaminaCost(producerDef!.staminaCost);
     this._staminaDescLabel.text = `消耗体力 ${cost}`;
@@ -872,9 +878,15 @@ export class ItemInfoBar extends PIXI.Container {
       );
 
       const producerDef = findBoardProducerDef(def.id);
-      const showStaminaRow = def.interactType === InteractType.TOOL && toolUsesStamina(producerDef);
+      const isFruitCutTool = producerDef?.toolLine === ToolLine.FRUIT_CUT;
+      const showStaminaRow =
+        def.interactType === InteractType.TOOL && toolUsesStamina(producerDef) && !isFruitCutTool;
 
-      if (showStaminaRow) {
+      if (isFruitCutTool && producerDef) {
+        this._descText.visible = true;
+        this._staminaDescRow.visible = false;
+        this._descText.text = this._getFruitCutToolDescription(producerDef);
+      } else if (showStaminaRow) {
         const cost = ToolProducePolicy.getEffectiveStaminaCost(producerDef!.staminaCost);
         this._descText.visible = false;
         this._staminaDescRow.visible = true;
@@ -952,6 +964,11 @@ export class ItemInfoBar extends PIXI.Container {
     this._hintContainer.visible = true;
   }
 
+  private _getFruitCutToolDescription(producerDef: NonNullable<ReturnType<typeof findBoardProducerDef>>): string {
+    const cost = ToolProducePolicy.getEffectiveStaminaCost(producerDef.staminaCost);
+    return `可拖到水果上进行果切加工，消耗体力${cost}`;
+  }
+
   private _getDescription(def: ItemDef): string {
     if (isLuckyCoinItem(def.id)) {
       return '古老的金币，拖到物品上可随机让物品升级或降级。';
@@ -965,9 +982,7 @@ export class ItemInfoBar extends PIXI.Container {
     if (def.interactType === InteractType.TOOL) {
       const pd = findBoardProducerDef(def.id);
       if (pd?.toolLine === ToolLine.FRUIT_CUT) {
-        const pct = getProduceTableLevelPercents(pd.produceTable);
-        const detail = pct.map(p => `${p.level}级 ${p.percent}%`).join('，');
-        return `拖入整果可加工为果切（${detail}）。`;
+        return this._getFruitCutToolDescription(pd);
       }
       if (pd && !pd.canProduce) return '合成后可获得更高级物品。';
       if (pd?.canProduce) return '';
@@ -978,6 +993,12 @@ export class ItemInfoBar extends PIXI.Container {
     }
     if (def.category === Category.FLOWER && def.line === FlowerLine.WRAP) {
       return '包装中间材，合成用，不进入订单。';
+    }
+    if (isWholeFruitItem(def)) {
+      const base = def.level < def.maxLevel
+        ? '合成后可获得更高级物品。'
+        : '已达最高等级！可用于完成订单。';
+      return `${base}\n可拖到果切工具进行加工。`;
     }
     if (def.level < def.maxLevel) return '合成后可获得更高级物品。';
     return '已达最高等级！可用于完成订单。';

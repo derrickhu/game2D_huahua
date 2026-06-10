@@ -644,7 +644,7 @@ export function getMergeChainName(itemId: string): string {
     [DrinkLine.BUTTERFLY]: '蝴蝶标本',
     [DrinkLine.COLD]: '冷饮',
     [DrinkLine.DESSERT]: '甜品',
-    [FoodLine.FRUIT]: '整果',
+    [FoodLine.FRUIT]: '水果',
     [FoodLine.CUT_AVOCADO]: '牛油果果切',
     [FoodLine.CUT_WATERMELON]: '西瓜果切',
     [FoodLine.CUT_PINEAPPLE]: '菠萝果切',

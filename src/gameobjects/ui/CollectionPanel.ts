@@ -1,5 +1,5 @@
 /**
- * 图鉴面板 — 16 页扁平翻页式物品网格（参考四季物语）
+ * 图鉴面板 — 扁平翻页式物品网格（参考四季物语）
  *
  * 壳体由 NB2 生成的笔记本风格贴图覆盖，内含：
  * - 金色标题栏（文字叠加）
@@ -34,11 +34,13 @@ const COLLECTION_PAGES: CollectionPage[] = [
   { collectionCat: CollectionCategory.DRINK,  itemCategory: Category.DRINK,  line: 'butterfly',     title: '蝴蝶' },
   { collectionCat: CollectionCategory.DRINK,  itemCategory: Category.DRINK,  line: 'cold',          title: '冷饮' },
   { collectionCat: CollectionCategory.DRINK,  itemCategory: Category.DRINK,  line: 'dessert',       title: '甜品' },
-  { collectionCat: CollectionCategory.FOOD, itemCategory: Category.FOOD, line: FoodLine.FRUIT, title: '整果' },
+  { collectionCat: CollectionCategory.FOOD, itemCategory: Category.FOOD, line: FoodLine.FRUIT, title: '水果' },
   { collectionCat: CollectionCategory.FOOD, itemCategory: Category.FOOD, line: FoodLine.CUT_AVOCADO, title: '牛油果果切' },
   { collectionCat: CollectionCategory.FOOD, itemCategory: Category.FOOD, line: FoodLine.CUT_WATERMELON, title: '西瓜果切' },
   { collectionCat: CollectionCategory.FOOD, itemCategory: Category.FOOD, line: FoodLine.CUT_PINEAPPLE, title: '菠萝果切' },
   { collectionCat: CollectionCategory.FOOD, itemCategory: Category.FOOD, line: FoodLine.CUT_DRAGONFRUIT, title: '火龙果果切' },
+  { collectionCat: CollectionCategory.BUILDING, itemCategory: Category.BUILDING, line: 'farm',        title: '农田工具' },
+  { collectionCat: CollectionCategory.BUILDING, itemCategory: Category.BUILDING, line: 'fruit_cut',   title: '果切工具' },
   { collectionCat: CollectionCategory.BUILDING, itemCategory: Category.BUILDING, line: 'plant',       title: '种植工具' },
   { collectionCat: CollectionCategory.BUILDING, itemCategory: Category.BUILDING, line: 'arrange',     title: '包装工具' },
   { collectionCat: CollectionCategory.BUILDING, itemCategory: Category.BUILDING, line: 'butterfly_net', title: '捕虫网' },

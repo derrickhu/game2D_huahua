@@ -114,6 +114,8 @@ import { RewardBoxHintManager } from '@/managers/RewardBoxHintManager';
 import { BuyFurnitureHintOverlay } from '@/gameobjects/ui/BuyFurnitureHintOverlay';
 import { RewardBoxHintOverlay } from '@/gameobjects/ui/RewardBoxHintOverlay';
 import { BUY_FURNITURE_HINT_HUAYUAN_MIN } from '@/config/BuyFurnitureHintConfig';
+import { createTutorialStyleModalFrame } from '@/gameobjects/ui/TutorialStyleModalFrame';
+import { FruitCutUpdateGrantManager } from '@/managers/FruitCutUpdateGrantManager';
 
 /** 合成页左侧店主半身：目标高度与最大宽度（设计 px），统一 scale=min(宽限,高限) 保持宽高比、避免栏内「压扁」感 */
 const BOARD_OWNER_TARGET_H = 208;
@@ -152,6 +154,7 @@ export class MainScene implements Scene {
   private _tutorialOverlay!: TutorialOverlay;
   private _buyFurnitureHintOverlay!: BuyFurnitureHintOverlay;
   private _rewardBoxHintOverlay!: RewardBoxHintOverlay;
+  private _fruitCutUpdateGrantOverlay: PIXI.Container | null = null;
   private _buyFurnitureHintTimer: ReturnType<typeof setTimeout> | null = null;
   private _rewardBoxHintTimer: ReturnType<typeof setTimeout> | null = null;
   private _rewardBoxHintRetryCount = 0;
@@ -320,6 +323,7 @@ export class MainScene implements Scene {
       this._rewardBoxHintTimer = null;
     }
     this._rewardBoxHintOverlay?.hide();
+    this._dismissFruitCutUpdateGrantPrompt();
 
     // 停止触觉反馈层上的粒子等效果
     if (this._hapticSystem) {
@@ -344,6 +348,10 @@ export class MainScene implements Scene {
     const offlineReward = IdleManager.calculateOfflineReward();
     if (offlineReward && !TutorialManager.isActive) {
       this._offlineRewardPanel.show(offlineReward);
+      return;
+    }
+
+    if (this._tryShowFruitCutUpdateGrantPrompt()) {
       return;
     }
 
@@ -1319,6 +1327,9 @@ export class MainScene implements Scene {
       if (SceneManager.current?.name !== 'main') return;
       const g = this._rewardBoxButton.toGlobal(this._rewardBoxButton.getItemSlotCenterLocal());
       const prev = typeof oldLevel === 'number' ? oldLevel : level - 1;
+      if (prev < 11 && level >= 11) {
+        FruitCutUpdateGrantManager.markClaimed();
+      }
       const shouldRewardBoxHint = level >= 2 && prev < 2;
       this._levelUpPopup.show(level, reward, {
         rewardFlyTargetGlobal: g,
@@ -1609,6 +1620,156 @@ export class MainScene implements Scene {
     });
   }
 
+  private _tryShowFruitCutUpdateGrantPrompt(): boolean {
+    if (SceneManager.current?.name !== 'main') return false;
+    if (TutorialManager.isActive) return false;
+    if (this._fruitCutUpdateGrantOverlay) return true;
+    if (!FruitCutUpdateGrantManager.shouldPrompt()) return false;
+
+    const items = FruitCutUpdateGrantManager.items;
+    void TextureCache.preloadKeys(items.map(item => ITEM_DEFS.get(item.itemId)?.icon ?? item.itemId));
+
+    OverlayManager.bringToFront();
+    const root = new PIXI.Container();
+    root.zIndex = 12000;
+    root.eventMode = 'static';
+    root.hitArea = new PIXI.Rectangle(0, 0, DESIGN_WIDTH, Game.logicHeight);
+    this._fruitCutUpdateGrantOverlay = root;
+    OverlayManager.container.addChild(root);
+    OverlayManager.container.sortableChildren = true;
+    OverlayManager.container.sortChildren();
+
+    const mask = new PIXI.Graphics();
+    mask.beginFill(0x000000, 0.56);
+    mask.drawRect(0, 0, DESIGN_WIDTH, Game.logicHeight);
+    mask.endFill();
+    mask.eventMode = 'static';
+    root.addChild(mask);
+
+    let claimed = false;
+    const claim = (): void => {
+      if (claimed) return;
+      claimed = true;
+      for (const { itemId, count } of items) {
+        if (ITEM_DEFS.has(itemId) && count > 0) {
+          RewardBoxManager.addItem(itemId, count);
+        }
+      }
+      FruitCutUpdateGrantManager.markClaimed();
+      SaveManager.save();
+      ToastMessage.show('新工具已放入奖励箱');
+      this._dismissFruitCutUpdateGrantPrompt();
+      this._scheduleRewardBoxHint(600, true);
+    };
+
+    const contentW = 420;
+    const iconCell = 86;
+    const iconGap = 22;
+    const contentH = 228;
+    const frame = createTutorialStyleModalFrame({
+      viewW: DESIGN_WIDTH,
+      viewH: Game.logicHeight,
+      title: '鲜果上新',
+      contentWidth: contentW,
+      contentHeight: contentH,
+      showCloseButton: false,
+    });
+    root.addChild(frame.root);
+
+    const mount = frame.contentMount;
+    const title = new PIXI.Text('水果果切玩法更新啦！', {
+      fontSize: 22,
+      fill: 0x5c3d2e,
+      fontFamily: FONT_FAMILY,
+      fontWeight: 'bold',
+      stroke: 0xfffcf5,
+      strokeThickness: 2,
+    });
+    title.anchor.set(0.5, 0);
+    title.position.set(contentW / 2, 0);
+    mount.addChild(title);
+
+    const desc = new PIXI.Text('农田会产出水果，把水果拖到果切工具上，\n就能切出新的果切订单啦。', {
+      fontSize: 17,
+      fill: 0x6f5848,
+      fontFamily: FONT_FAMILY,
+      align: 'center',
+      lineHeight: 24,
+      wordWrap: true,
+      wordWrapWidth: contentW - 28,
+    });
+    desc.anchor.set(0.5, 0);
+    desc.position.set(contentW / 2, 34);
+    mount.addChild(desc);
+
+    const startX = (contentW - (items.length * iconCell + (items.length - 1) * iconGap)) / 2;
+    const iconTop = 104;
+    items.forEach((entry, idx) => {
+      const cell = new PIXI.Container();
+      cell.position.set(startX + idx * (iconCell + iconGap) + iconCell / 2, iconTop + iconCell / 2);
+      mount.addChild(cell);
+
+      const bg = new PIXI.Graphics();
+      bg.beginFill(0xffffff, 0.82);
+      bg.drawRoundedRect(-iconCell / 2, -iconCell / 2, iconCell, iconCell, 18);
+      bg.endFill();
+      bg.lineStyle(2, 0xffcfdf, 0.9);
+      bg.drawRoundedRect(-iconCell / 2 + 1, -iconCell / 2 + 1, iconCell - 2, iconCell - 2, 17);
+      cell.addChild(bg);
+
+      const def = ITEM_DEFS.get(entry.itemId);
+      const tex = TextureCache.get(def?.icon ?? entry.itemId);
+      if (tex?.width) {
+        const sp = new PIXI.Sprite(tex);
+        sp.anchor.set(0.5);
+        const sc = Math.min(62 / tex.width, 62 / tex.height);
+        sp.scale.set(sc);
+        cell.addChild(sp);
+      } else {
+        const ph = new PIXI.Text('?', { fontSize: 28, fill: 0x8d6e63, fontFamily: FONT_FAMILY });
+        ph.anchor.set(0.5);
+        cell.addChild(ph);
+      }
+
+      const count = new PIXI.Text(`×${entry.count}`, {
+        fontSize: 18,
+        fill: 0xfff4aa,
+        fontFamily: FONT_FAMILY,
+        fontWeight: 'bold',
+        stroke: 0x6d4c41,
+        strokeThickness: 2,
+      });
+      count.anchor.set(0.5, 0);
+      count.position.set(0, 28);
+      cell.addChild(count);
+    });
+
+    const hint = new PIXI.Text('点击任意位置领取到奖励箱', {
+      fontSize: 18,
+      fill: 0xa35b44,
+      fontFamily: FONT_FAMILY,
+      fontWeight: 'bold',
+    });
+    hint.anchor.set(0.5, 0);
+    hint.position.set(contentW / 2, 202);
+    mount.addChild(hint);
+
+    root.on('pointertap', claim);
+    mask.on('pointertap', claim);
+    frame.root.on('pointertap', claim);
+    frame.contentMount.on('pointertap', claim);
+    return true;
+  }
+
+  private _dismissFruitCutUpdateGrantPrompt(): void {
+    const root = this._fruitCutUpdateGrantOverlay;
+    if (!root) return;
+    this._fruitCutUpdateGrantOverlay = null;
+    root.removeAllListeners();
+    root.parent?.removeChild(root);
+    root.destroy({ children: true });
+  }
+
   /** 延迟检测「该去买家具」软提醒，避免与签到/离线弹窗叠在一起 */
   private _scheduleBuyFurnitureHint(delayMs = 1500): void {
     if (this._buyFurnitureHintTimer) {
@@ -1625,6 +1786,7 @@ export class MainScene implements Scene {
     if (!BuyFurnitureHintManager.shouldPrompt()) return;
     if (this._buyFurnitureHintOverlay.isShowing) return;
     if (this._rewardBoxHintOverlay.isShowing) return;
+    if (this._fruitCutUpdateGrantOverlay) return;
     if (TutorialManager.isActive) return;
     if (this._checkInPanel.visible) return;
     if (this._offlineRewardPanel.visible) return;
@@ -1661,6 +1823,7 @@ export class MainScene implements Scene {
 
     const blocked =
       this._buyFurnitureHintOverlay.isShowing
+      || !!this._fruitCutUpdateGrantOverlay
       || TutorialManager.isActive
       || this._checkInPanel.visible
       || this._offlineRewardPanel.visible
