@@ -1,6 +1,5 @@
 /**
- * 订单可需求产品定义 — 各产品独立配置等级区间、解锁与工具 cap。
- * 「产线」(line) 仅为 ItemConfig 物品查找键，不作为订单玩法分层；新增产品在此注册即可。
+ * 订单可需求产品定义：把玩法产品与 ItemConfig 的 line 解耦，便于独立配置解锁、工具 cap 与档位区间。
  */
 import { Category, DrinkLine, FlowerLine, FoodLine, fruitCutLevelForToolLevel } from './ItemConfig';
 import { getEffectiveMaxLevel, type OrderTier, type UnlockedLines } from './OrderTierConfig';
@@ -17,7 +16,6 @@ export type OrderProductId =
   | 'cut_pineapple'
   | 'cut_dragonfruit';
 
-/** 注册顺序即扁平抽样池顺序（新增产品追加在末尾） */
 export const ORDER_PRODUCT_IDS: readonly OrderProductId[] = [
   'fresh',
   'green',
@@ -34,86 +32,28 @@ export const ORDER_PRODUCT_IDS: readonly OrderProductId[] = [
 export interface OrderProductDef {
   id: OrderProductId;
   category: Category;
-  /** ItemConfig.findItemId 查找键（历史字段名 line） */
+  /** ItemConfig.findItemId 的 line 键。 */
   itemLine: string;
   maxLevel: number;
-  tierLevelRanges: Record<OrderTier, [number, number]>;
-  isAvailableInTier: (tier: OrderTier) => boolean;
+  tierLevelRanges: Record<OrderTier, [number, number] | null>;
   isUnlocked: (ulk: UnlockedLines) => boolean;
   toolLevel: (ulk: UnlockedLines) => number;
+  /**
+   * 保留当前正式版的花/饮品池体感：
+   * B 档饮品单品权重大于花系单品；A/S 全产品等权。
+   */
+  weightByTier: Record<OrderTier, number>;
 }
 
-const TIER_LEVELS: Record<OrderProductId, Record<OrderTier, [number, number]>> = {
-  fresh: {
-    C: [1, 3],
-    B: [2, 5],
-    A: [4, 8],
-    S: [8, 13],
-  },
-  green: {
-    C: [1, 3],
-    B: [2, 5],
-    A: [4, 8],
-    S: [8, 13],
-  },
-  bouquet: {
-    C: [1, 2],
-    B: [2, 4],
-    A: [3, 6],
-    S: [6, 10],
-  },
-  butterfly: {
-    C: [1, 3],
-    B: [2, 4],
-    A: [3, 6],
-    S: [6, 10],
-  },
-  cold: {
-    C: [1, 3],
-    B: [2, 4],
-    A: [3, 6],
-    S: [5, 10],
-  },
-  dessert: {
-    C: [1, 3],
-    B: [2, 4],
-    A: [3, 6],
-    S: [6, 10],
-  },
-  cut_avocado: {
-    C: [1, 1],
-    B: [1, 3],
-    A: [1, 1],
-    S: [1, 1],
-  },
-  cut_watermelon: {
-    C: [1, 1],
-    B: [1, 1],
-    A: [2, 2],
-    S: [2, 3],
-  },
-  cut_pineapple: {
-    C: [1, 1],
-    B: [1, 2],
-    A: [1, 1],
-    S: [1, 1],
-  },
-  cut_dragonfruit: {
-    C: [1, 1],
-    B: [1, 2],
-    A: [2, 3],
-    S: [1, 1],
-  },
-};
+const FLOWER_WEIGHT: Record<OrderTier, number> = { C: 1, B: 1, A: 1, S: 1 };
+const DRINK_B_PLUS_WEIGHT: Record<OrderTier, number> = { C: 0, B: 1.5, A: 1, S: 1 };
+const DESSERT_WEIGHT: Record<OrderTier, number> = { C: 0, B: 0, A: 1, S: 1 };
+const FOOD_C_B_WEIGHT: Record<OrderTier, number> = { C: 1, B: 1, A: 0, S: 0 };
+const FOOD_B_ONLY_WEIGHT: Record<OrderTier, number> = { C: 0, B: 1, A: 0, S: 0 };
+const FOOD_B_A_WEIGHT: Record<OrderTier, number> = { C: 0, B: 1, A: 1, S: 0 };
+const FOOD_B_A_S_WEIGHT: Record<OrderTier, number> = { C: 0, B: 1, A: 1, S: 1 };
 
-const DRINK_TIER_B_PLUS: (tier: OrderTier) => boolean = tier => tier === 'B' || tier === 'A' || tier === 'S';
-const DRINK_TIER_A_S: (tier: OrderTier) => boolean = tier => tier === 'A' || tier === 'S';
-const FOOD_TIER_C_B: (tier: OrderTier) => boolean = tier => tier === 'C' || tier === 'B';
-const FOOD_TIER_B_ONLY: (tier: OrderTier) => boolean = tier => tier === 'B';
-const FOOD_TIER_B_A: (tier: OrderTier) => boolean = tier => tier === 'B' || tier === 'A';
-const FOOD_TIER_B_A_S: (tier: OrderTier) => boolean = tier => tier === 'B' || tier === 'A' || tier === 'S';
-
-/** 棋盘同时有可产出农田（L3+）与果切工具时，才允许刷果切订单 */
+/** 棋盘同时有可产出农田（L3+）与果切工具时，才允许刷果切订单。 */
 export function hasFruitCutOrderCapability(ulk: UnlockedLines): boolean {
   return ulk.maxFarmToolLevel >= 3 && ulk.maxFruitCutToolLevel >= 1;
 }
@@ -124,104 +64,154 @@ export const ORDER_PRODUCT_DEFS: Record<OrderProductId, OrderProductDef> = {
     category: Category.FLOWER,
     itemLine: FlowerLine.FRESH,
     maxLevel: 13,
-    tierLevelRanges: TIER_LEVELS.fresh,
-    isAvailableInTier: () => true,
+    tierLevelRanges: {
+      C: [1, 3],
+      B: [2, 5],
+      A: [4, 7],
+      S: [6, 13],
+    },
     isUnlocked: ulk => ulk.maxPlantToolLevel > 0,
     toolLevel: ulk => ulk.maxPlantToolLevel,
+    weightByTier: FLOWER_WEIGHT,
   },
   green: {
     id: 'green',
     category: Category.FLOWER,
     itemLine: FlowerLine.GREEN,
     maxLevel: 13,
-    tierLevelRanges: TIER_LEVELS.green,
-    isAvailableInTier: () => true,
+    tierLevelRanges: {
+      C: [1, 3],
+      B: [2, 5],
+      A: [4, 7],
+      S: [6, 13],
+    },
     isUnlocked: ulk => ulk.hasGreen && ulk.maxPlantToolLevel > 0,
     toolLevel: ulk => ulk.maxPlantToolLevel,
+    weightByTier: FLOWER_WEIGHT,
   },
   bouquet: {
     id: 'bouquet',
     category: Category.FLOWER,
     itemLine: FlowerLine.BOUQUET,
     maxLevel: 10,
-    tierLevelRanges: TIER_LEVELS.bouquet,
-    isAvailableInTier: tier => tier !== 'C',
-    isUnlocked: ulk => ulk.hasBouquet,
+    tierLevelRanges: {
+      C: null,
+      B: [2, 5],
+      A: [4, 7],
+      S: [6, 10],
+    },
+    isUnlocked: ulk => ulk.hasBouquet && ulk.maxArrangeToolLevel > 0,
     toolLevel: ulk => ulk.maxArrangeToolLevel,
+    weightByTier: FLOWER_WEIGHT,
   },
   butterfly: {
     id: 'butterfly',
     category: Category.DRINK,
     itemLine: DrinkLine.BUTTERFLY,
     maxLevel: 10,
-    tierLevelRanges: TIER_LEVELS.butterfly,
-    isAvailableInTier: DRINK_TIER_B_PLUS,
+    tierLevelRanges: {
+      C: null,
+      B: [2, 4],
+      A: [3, 6],
+      S: [5, 10],
+    },
     isUnlocked: ulk => (ulk.drinkToolMaxByLine[DrinkLine.BUTTERFLY] ?? 0) > 0,
     toolLevel: ulk => ulk.drinkToolMaxByLine[DrinkLine.BUTTERFLY] ?? 0,
+    weightByTier: DRINK_B_PLUS_WEIGHT,
   },
   cold: {
     id: 'cold',
     category: Category.DRINK,
     itemLine: DrinkLine.COLD,
     maxLevel: 8,
-    tierLevelRanges: TIER_LEVELS.cold,
-    isAvailableInTier: DRINK_TIER_B_PLUS,
+    tierLevelRanges: {
+      C: null,
+      B: [2, 4],
+      A: [3, 6],
+      S: [5, 8],
+    },
     isUnlocked: ulk => (ulk.drinkToolMaxByLine[DrinkLine.COLD] ?? 0) > 0,
     toolLevel: ulk => ulk.drinkToolMaxByLine[DrinkLine.COLD] ?? 0,
+    weightByTier: DRINK_B_PLUS_WEIGHT,
   },
   dessert: {
     id: 'dessert',
     category: Category.DRINK,
     itemLine: DrinkLine.DESSERT,
     maxLevel: 10,
-    tierLevelRanges: TIER_LEVELS.dessert,
-    isAvailableInTier: DRINK_TIER_A_S,
+    tierLevelRanges: {
+      C: null,
+      B: null,
+      A: [3, 6],
+      S: [5, 10],
+    },
     isUnlocked: ulk => (ulk.drinkToolMaxByLine[DrinkLine.DESSERT] ?? 0) > 0,
     toolLevel: ulk => ulk.drinkToolMaxByLine[DrinkLine.DESSERT] ?? 0,
+    weightByTier: DESSERT_WEIGHT,
   },
   cut_avocado: {
     id: 'cut_avocado',
     category: Category.FOOD,
     itemLine: FoodLine.CUT_AVOCADO,
     maxLevel: 3,
-    tierLevelRanges: TIER_LEVELS.cut_avocado,
-    isAvailableInTier: FOOD_TIER_C_B,
+    tierLevelRanges: {
+      C: [1, 1],
+      B: [1, 3],
+      A: null,
+      S: null,
+    },
     isUnlocked: ulk =>
       hasFruitCutOrderCapability(ulk) && (ulk.foodToolMaxByLine[FoodLine.CUT_AVOCADO] ?? 0) > 0,
     toolLevel: ulk => ulk.foodToolMaxByLine[FoodLine.CUT_AVOCADO] ?? 0,
+    weightByTier: FOOD_C_B_WEIGHT,
   },
   cut_watermelon: {
     id: 'cut_watermelon',
     category: Category.FOOD,
     itemLine: FoodLine.CUT_WATERMELON,
     maxLevel: 3,
-    tierLevelRanges: TIER_LEVELS.cut_watermelon,
-    isAvailableInTier: FOOD_TIER_B_A_S,
+    tierLevelRanges: {
+      C: null,
+      B: [1, 1],
+      A: [2, 2],
+      S: [2, 3],
+    },
     isUnlocked: ulk =>
       hasFruitCutOrderCapability(ulk) && (ulk.foodToolMaxByLine[FoodLine.CUT_WATERMELON] ?? 0) > 0,
     toolLevel: ulk => ulk.foodToolMaxByLine[FoodLine.CUT_WATERMELON] ?? 0,
+    weightByTier: FOOD_B_A_S_WEIGHT,
   },
   cut_pineapple: {
     id: 'cut_pineapple',
     category: Category.FOOD,
     itemLine: FoodLine.CUT_PINEAPPLE,
     maxLevel: 3,
-    tierLevelRanges: TIER_LEVELS.cut_pineapple,
-    isAvailableInTier: FOOD_TIER_B_ONLY,
+    tierLevelRanges: {
+      C: null,
+      B: [1, 2],
+      A: null,
+      S: null,
+    },
     isUnlocked: ulk =>
       hasFruitCutOrderCapability(ulk) && (ulk.foodToolMaxByLine[FoodLine.CUT_PINEAPPLE] ?? 0) > 0,
     toolLevel: ulk => ulk.foodToolMaxByLine[FoodLine.CUT_PINEAPPLE] ?? 0,
+    weightByTier: FOOD_B_ONLY_WEIGHT,
   },
   cut_dragonfruit: {
     id: 'cut_dragonfruit',
     category: Category.FOOD,
     itemLine: FoodLine.CUT_DRAGONFRUIT,
     maxLevel: 3,
-    tierLevelRanges: TIER_LEVELS.cut_dragonfruit,
-    isAvailableInTier: FOOD_TIER_B_A,
+    tierLevelRanges: {
+      C: null,
+      B: [1, 2],
+      A: [2, 3],
+      S: null,
+    },
     isUnlocked: ulk =>
       hasFruitCutOrderCapability(ulk) && (ulk.foodToolMaxByLine[FoodLine.CUT_DRAGONFRUIT] ?? 0) > 0,
     toolLevel: ulk => ulk.foodToolMaxByLine[FoodLine.CUT_DRAGONFRUIT] ?? 0,
+    weightByTier: FOOD_B_A_WEIGHT,
   },
 };
 
@@ -231,43 +221,80 @@ export type ProductOrderSpec = {
   itemLine: string;
   minLv: number;
   maxLv: number;
+  weight: number;
 };
 
 export function getOrderProduct(id: OrderProductId): OrderProductDef {
   return ORDER_PRODUCT_DEFS[id];
 }
 
-/** 由物品 category + itemLine 反查订单产品（包装中间品等返回 null） */
-export function resolveOrderProduct(
-  category: Category,
-  itemLine: string,
-): OrderProductDef | null {
+export function resolveOrderProduct(category: Category, itemLine: string): OrderProductDef | null {
   return ORDER_PRODUCT_IDS
     .map(id => ORDER_PRODUCT_DEFS[id])
-    .find(p => p.category === category && p.itemLine === itemLine) ?? null;
+    .find(product => product.category === category && product.itemLine === itemLine) ?? null;
 }
 
 export function productToolCap(productId: OrderProductId, ulk: UnlockedLines): number {
   const product = ORDER_PRODUCT_DEFS[productId];
-  const toolLevel = product.toolLevel(ulk);
   if (product.category === Category.FOOD) {
-    return Math.min(fruitCutLevelForToolLevel(toolLevel), product.maxLevel);
+    return Math.min(fruitCutLevelForToolLevel(product.toolLevel(ulk)), product.maxLevel);
   }
-  return getEffectiveMaxLevel(toolLevel, product.maxLevel);
+  return getEffectiveMaxLevel(product.toolLevel(ulk), product.maxLevel);
 }
 
-/** 棋盘已解锁、可进限时单等的产品（不按模板档过滤） */
 export function unlockedOrderProducts(ulk: UnlockedLines): OrderProductDef[] {
   return ORDER_PRODUCT_IDS
     .map(id => ORDER_PRODUCT_DEFS[id])
-    .filter(p => p.isUnlocked(ulk));
+    .filter(product => product.isUnlocked(ulk));
 }
 
-/** 指定模板档下可扁平抽样的产品列表 */
-export function orderProductsForTier(tier: OrderTier, ulk: UnlockedLines): OrderProductDef[] {
-  return ORDER_PRODUCT_IDS
+function productSpecsForRange(
+  ids: readonly OrderProductId[],
+  range: [number, number],
+  ulk: UnlockedLines,
+  poolWeight: number,
+): ProductOrderSpec[] {
+  const products = ids
     .map(id => ORDER_PRODUCT_DEFS[id])
-    .filter(p => p.isAvailableInTier(tier) && p.isUnlocked(ulk));
+    .filter(product => product.isUnlocked(ulk));
+  if (products.length === 0) return [];
+
+  return products.map(product => {
+    const { minLv, maxLv } = clampLevelRange(range[0], range[1], product.maxLevel);
+    return {
+      productId: product.id,
+      category: product.category,
+      itemLine: product.itemLine,
+      minLv,
+      maxLv,
+      weight: poolWeight / products.length,
+    };
+  });
+}
+
+function productSpecsForTierRanges(
+  ids: readonly OrderProductId[],
+  tier: OrderTier,
+  ulk: UnlockedLines,
+  poolWeight: number,
+): ProductOrderSpec[] {
+  const products = ids
+    .map(id => ORDER_PRODUCT_DEFS[id])
+    .filter(product => product.isUnlocked(ulk) && product.tierLevelRanges[tier] !== null);
+  if (products.length === 0) return [];
+
+  return products.map(product => {
+    const range = product.tierLevelRanges[tier]!;
+    const { minLv, maxLv } = clampLevelRange(range[0], range[1], product.maxLevel);
+    return {
+      productId: product.id,
+      category: product.category,
+      itemLine: product.itemLine,
+      minLv,
+      maxLv,
+      weight: poolWeight / products.length,
+    };
+  });
 }
 
 function clampLevelRange(
@@ -275,22 +302,76 @@ function clampLevelRange(
   maxLv: number,
   productMax: number,
 ): { minLv: number; maxLv: number } {
-  let lo = Math.min(minLv, productMax);
-  let hi = Math.min(maxLv, productMax);
-  if (hi < lo) hi = lo;
-  return { minLv: lo, maxLv: hi };
+  const minClamped = Math.min(minLv, productMax);
+  const maxClamped = Math.min(maxLv, productMax);
+  return {
+    minLv: minClamped,
+    maxLv: Math.max(minClamped, maxClamped),
+  };
 }
 
 export function productOrderSpecsForTier(tier: OrderTier, ulk: UnlockedLines): ProductOrderSpec[] {
-  return orderProductsForTier(tier, ulk).map(product => {
-    const [lo, hi] = product.tierLevelRanges[tier];
-    const { minLv, maxLv } = clampLevelRange(lo, hi, product.maxLevel);
-    return {
-      productId: product.id,
-      category: product.category,
-      itemLine: product.itemLine,
-      minLv,
-      maxLv,
-    };
-  });
+  const flowerIds: readonly OrderProductId[] = ['fresh', 'bouquet', 'green'];
+  const simpleFlowerIds: readonly OrderProductId[] = ['fresh', 'green'];
+  const drinkBIds: readonly OrderProductId[] = ['butterfly', 'cold'];
+  const drinkAllIds: readonly OrderProductId[] = ['butterfly', 'cold', 'dessert'];
+  const foodCIds: readonly OrderProductId[] = ['cut_avocado'];
+  const foodBIds: readonly OrderProductId[] = [
+    'cut_avocado',
+    'cut_watermelon',
+    'cut_pineapple',
+    'cut_dragonfruit',
+  ];
+  const foodAIds: readonly OrderProductId[] = ['cut_watermelon', 'cut_dragonfruit'];
+  const foodSIds: readonly OrderProductId[] = ['cut_watermelon'];
+
+  switch (tier) {
+    case 'C':
+      // 复刻旧正式版：两个花类池各 50%，再在鲜花/绿植内均分。
+      return [
+        ...productSpecsForRange(simpleFlowerIds, [1, 2], ulk, 1),
+        ...productSpecsForRange(simpleFlowerIds, [2, 3], ulk, 1),
+        ...productSpecsForTierRanges(foodCIds, tier, ulk, 1),
+      ];
+    case 'B':
+      return [
+        ...productSpecsForRange(flowerIds, [2, 5], ulk, 1),
+        ...productSpecsForRange(drinkBIds, [2, 4], ulk, 1),
+        ...productSpecsForTierRanges(foodBIds, tier, ulk, 1),
+      ];
+    case 'A':
+      return [
+        ...productSpecsForRange(flowerIds, [4, 7], ulk, 1),
+        ...productSpecsForRange(drinkAllIds, [3, 6], ulk, 1),
+        ...productSpecsForTierRanges(foodAIds, tier, ulk, 1),
+      ];
+    case 'S':
+      return [
+        ...productSpecsForRange(flowerIds, [6, 13], ulk, 1),
+        ...productSpecsForRange(drinkAllIds, [5, 10], ulk, 1),
+        ...productSpecsForTierRanges(foodSIds, tier, ulk, 1),
+      ];
+    default:
+      return [];
+  }
+}
+
+export function comboOrderSpecsForTier(tier: OrderTier, ulk: UnlockedLines): ProductOrderSpec[] {
+  const ranges: Record<OrderTier, { flower: [number, number]; drink: [number, number] }> = {
+    C: { flower: [1, 3], drink: [1, 3] },
+    B: { flower: [2, 4], drink: [2, 3] },
+    A: { flower: [4, 7], drink: [4, 6] },
+    S: { flower: [7, 13], drink: [6, 10] },
+  };
+  const r = ranges[tier];
+  return [
+    ...productSpecsForRange(['fresh', 'bouquet', 'green'], r.flower, ulk, 1),
+    ...productSpecsForRange(['butterfly', 'cold', 'dessert'], r.drink, ulk, 1),
+    ...productSpecsForTierRanges(
+      ['cut_avocado', 'cut_watermelon', 'cut_pineapple', 'cut_dragonfruit'],
+      tier,
+      ulk,
+      1,
+    ),
+  ].map(spec => ({ ...spec, weight: 1 }));
 }

@@ -1,5 +1,5 @@
 /**
- * 订单需求生成：按已解锁产品扁平抽样、组合单、活动钩子占位。
+ * 订单需求生成：产品级基础池、组合单、成长加成、活动钩子占位。
  */
 import { DEFAULT_SPECIAL_CUSTOMER_BY_ORDER_KIND } from '@/config/CustomerConfig';
 import {
@@ -8,23 +8,26 @@ import {
   type UnlockedLines,
 } from '@/config/OrderTierConfig';
 import {
-  type OrderProductId,
-  type ProductOrderSpec,
-  getOrderProduct,
-  productOrderSpecsForTier,
-  productToolCap,
-  resolveOrderProduct,
-  unlockedOrderProducts,
-} from '@/config/OrderProductConfig';
-import {
   Category,
   ITEM_DEFS,
   findItemId,
 } from '@/config/ItemConfig';
 import {
+  comboOrderSpecsForTier,
+  getOrderProduct,
+  productOrderSpecsForTier,
+  productToolCap,
+  resolveOrderProduct,
+  unlockedOrderProducts,
+  type OrderProductId,
+  type ProductOrderSpec,
+} from '@/config/OrderProductConfig';
+import {
   ORDER_ASPIRATIONAL_LEVEL_BONUS_CHANCE,
   ORDER_COMBO_MIN_UNLOCKED_LINES_FOR_THIRD_SLOT,
   ORDER_COMBO_THIRD_SLOT_CHANCE,
+  ORDER_GROWTH_BONUS_MULTIPLIER,
+  ORDER_GROWTH_MIN_MAX_NORM,
   ORDER_ITEM_LEVEL_PICK_EXPONENT,
   TIMED_DIAMOND_ORDER_BASE_CHANCE,
   TIMED_DIAMOND_ORDER_FIRST_DAILY_CHANCE_MULT,
@@ -33,44 +36,21 @@ import {
   TIMED_DIAMOND_ORDER_SLOT_COUNT,
   TIMED_DIAMOND_ORDER_TIME_LIMIT_SECONDS,
   computeTimedDiamondReward,
+  maxSlotNormForSlots,
   orderComboEffectiveChance,
+  orderGrowthRollChance,
 } from '@/config/OrderSpawnConfig';
 import {
   type OrderGenContext,
   type OrderGenResult,
+  type OrderGenerationKind,
   type OrderGenSlot,
   getActivityOrderHook,
 } from './types';
 
-export type { ProductOrderSpec } from '@/config/OrderProductConfig';
-
-/** @deprecated 使用 ProductOrderSpec */
-export type LineOrderSpec = {
-  category: Category;
-  line: string;
-  minLv: number;
-  maxLv: number;
-};
-
-/** 由物品 category + itemLine 推算订单工具 cap（包装中间品等返回 0） */
 export function toolCapForLine(category: Category, line: string, ulk: UnlockedLines): number {
   const product = resolveOrderProduct(category, line);
-  if (!product) return 0;
-  return productToolCap(product.id, ulk);
-}
-
-/** @deprecated 使用 productOrderSpecsForTier */
-export function lineOrderSpecsForTier(tier: OrderTier, ulk: UnlockedLines): LineOrderSpec[] {
-  return productOrderSpecsForTier(tier, ulk).map(spec => ({
-    category: spec.category,
-    line: spec.itemLine,
-    minLv: spec.minLv,
-    maxLv: spec.maxLv,
-  }));
-}
-
-function productSpecKey(spec: ProductOrderSpec): string {
-  return spec.productId;
+  return product ? productToolCap(product.id, ulk) : 0;
 }
 
 function resolveLevelBounds(
@@ -126,42 +106,63 @@ function pickItemLevel(
     S: 0.58,
   };
   const { lo, hi } = resolveLevelBounds(
-    minLv, tierMaxLv, toolCap, maxItemLevel, tier, rng, playerLevel,
+    minLv,
+    tierMaxLv,
+    toolCap,
+    maxItemLevel,
+    tier,
+    rng,
+    playerLevel,
   );
   const span = hi - lo + 1;
   return lo + Math.floor(Math.pow(rng(), tierExponent[tier]) * span);
 }
 
-function pickItemFromProductSpec(
+function pickWeightedSpec(specs: readonly ProductOrderSpec[], rng: () => number): ProductOrderSpec | null {
+  const total = specs.reduce((sum, spec) => sum + Math.max(0, spec.weight), 0);
+  if (total <= 0) return null;
+  let roll = rng() * total;
+  for (const spec of specs) {
+    roll -= Math.max(0, spec.weight);
+    if (roll <= 0) return spec;
+  }
+  return specs[specs.length - 1] ?? null;
+}
+
+function tryPickProductItem(
   spec: ProductOrderSpec,
   ulk: UnlockedLines,
   usedIds: Set<string>,
   tier: OrderTier,
   rng: () => number,
-  playerLevel: number,
+  playerLevel?: number,
 ): string | null {
   const toolCap = productToolCap(spec.productId, ulk);
 
-  for (let attempt = 0; attempt < 12; attempt++) {
-    const level = pickItemLevel(
-      spec.minLv, spec.maxLv, toolCap, spec.maxLv, tier, rng, playerLevel,
-    );
-    const id = findItemId(spec.category, spec.itemLine, level);
-    if (id && !usedIds.has(id)) return id;
+  for (let attempt = 0; attempt < 20; attempt++) {
+    const level = pickItemLevel(spec.minLv, spec.maxLv, toolCap, spec.maxLv, tier, rng, playerLevel);
+    const cand = findItemId(spec.category, spec.itemLine, level);
+    if (cand && !usedIds.has(cand)) {
+      return cand;
+    }
   }
-
   const { lo, hi } = resolveLevelBounds(
-    spec.minLv, spec.maxLv, toolCap, spec.maxLv, tier, rng, playerLevel,
+    spec.minLv,
+    spec.maxLv,
+    toolCap,
+    spec.maxLv,
+    tier,
+    rng,
+    playerLevel,
   );
-  if (hi < lo) return null;
   for (let lv = hi; lv >= lo; lv--) {
-    const id = findItemId(spec.category, spec.itemLine, lv);
-    if (id && !usedIds.has(id)) return id;
+    const cand = findItemId(spec.category, spec.itemLine, lv);
+    if (cand && !usedIds.has(cand)) return cand;
   }
   return null;
 }
 
-interface GenerateProductSpecsOptions {
+interface GeneratePoolOptions {
   rng: () => number;
   tier: OrderTier;
   playerLevel: number;
@@ -170,7 +171,7 @@ interface GenerateProductSpecsOptions {
 function generateDemandsFromProductSpecs(
   slotRange: [number, number],
   ulk: UnlockedLines,
-  opts: GenerateProductSpecsOptions,
+  opts: GeneratePoolOptions,
 ): OrderGenSlot[] {
   const specs = productOrderSpecsForTier(opts.tier, ulk);
   if (specs.length === 0) return [];
@@ -182,10 +183,9 @@ function generateDemandsFromProductSpecs(
 
   for (let i = 0; i < slotCount; i++) {
     for (let attempt = 0; attempt < 20; attempt++) {
-      const spec = specs[Math.floor(opts.rng() * specs.length)]!;
-      const itemId = pickItemFromProductSpec(
-        spec, ulk, usedIds, opts.tier, opts.rng, opts.playerLevel,
-      );
+      const spec = pickWeightedSpec(specs, opts.rng);
+      if (!spec) break;
+      const itemId = tryPickProductItem(spec, ulk, usedIds, opts.tier, opts.rng, opts.playerLevel);
       if (itemId) {
         usedIds.add(itemId);
         slots.push({ itemId });
@@ -197,6 +197,13 @@ function generateDemandsFromProductSpecs(
   return slots;
 }
 
+export function lineOrderSpecsForTier(tier: OrderTier, ulk: UnlockedLines): ProductOrderSpec[] {
+  return productOrderSpecsForTier(tier, ulk);
+}
+
+function specKey(s: ProductOrderSpec): string {
+  return s.productId;
+}
 
 function tryGenerateCombo(
   tier: OrderTier,
@@ -204,24 +211,24 @@ function tryGenerateCombo(
   rng: () => number,
   playerLevel: number,
 ): OrderGenSlot[] | null {
-  const specs = productOrderSpecsForTier(tier, ulk);
+  const specs = comboOrderSpecsForTier(tier, ulk);
   if (specs.length < 2) return null;
 
   const shuffled = [...specs].sort(() => rng() - 0.5);
   const first = shuffled[0]!;
 
-  const second = shuffled.find(s => productSpecKey(s) !== productSpecKey(first));
+  const second = shuffled.find(s => specKey(s) !== specKey(first));
   if (!second) return null;
 
   const used = new Set<string>();
   const slots: OrderGenSlot[] = [];
 
-  const a = pickItemFromProductSpec(first, ulk, used, tier, rng, playerLevel);
+  const a = tryPickProductItem(first, ulk, used, tier, rng, playerLevel);
   if (!a) return null;
   used.add(a);
   slots.push({ itemId: a });
 
-  const b = pickItemFromProductSpec(second, ulk, used, tier, rng, playerLevel);
+  const b = tryPickProductItem(second, ulk, used, tier, rng, playerLevel);
   if (!b) return null;
   slots.push({ itemId: b });
 
@@ -230,10 +237,10 @@ function tryGenerateCombo(
     ulk.unlockedLineCount >= ORDER_COMBO_MIN_UNLOCKED_LINES_FOR_THIRD_SLOT
   ) {
     const third = shuffled.find(
-      s => productSpecKey(s) !== productSpecKey(first) && productSpecKey(s) !== productSpecKey(second),
+      s => specKey(s) !== specKey(first) && specKey(s) !== specKey(second),
     );
     if (third) {
-      const c = pickItemFromProductSpec(third, ulk, used, tier, rng, playerLevel);
+      const c = tryPickProductItem(third, ulk, used, tier, rng, playerLevel);
       if (c) slots.push({ itemId: c });
     }
   }
@@ -243,14 +250,11 @@ function tryGenerateCombo(
 
 type TimedCandidate = {
   itemId: string;
-  productId: string;
+  productId: OrderProductId;
   level: number;
 };
 
-function timedCandidatesForProduct(
-  productId: OrderProductId,
-  ulk: UnlockedLines,
-): TimedCandidate[] {
+function timedCandidatesForProduct(productId: OrderProductId, ulk: UnlockedLines): TimedCandidate[] {
   const product = getOrderProduct(productId);
   const cap = Math.min(product.maxLevel, productToolCap(productId, ulk) + 1);
   const out: TimedCandidate[] = [];
@@ -343,7 +347,7 @@ export function validateOrderSlotsToolCap(
   for (const s of slots) {
     const def = ITEM_DEFS.get(s.itemId);
     if (!def) return false;
-    if (def.category !== Category.FLOWER && def.category !== Category.DRINK && def.category !== Category.FOOD) continue;
+    if (def.category !== Category.FLOWER && def.category !== Category.DRINK) continue;
     const cap = toolCapForLine(def.category, def.line, ulk);
     if (def.level > cap + 1) return false;
   }
@@ -392,6 +396,14 @@ export function generateOrderDemands(ctx: OrderGenContext): OrderGenResult | nul
     console.debug('[OrderGen] combo roll missed (pool empty or pick failed), fallback to pool');
   }
 
+  let bonusMultiplier: number | undefined;
+  let generationKind: OrderGenerationKind = 'basic';
+  const growthRoll = rng() < orderGrowthRollChance(tier, ctx.playerLevel);
+  if (growthRoll) {
+    bonusMultiplier = ORDER_GROWTH_BONUS_MULTIPLIER;
+    generationKind = 'growth';
+  }
+
   const triple = tryGenerateChainOrderTriple(ctx);
   if (triple) return triple;
 
@@ -402,10 +414,16 @@ export function generateOrderDemands(ctx: OrderGenContext): OrderGenResult | nul
   });
   if (slots.length === 0) return null;
 
+  if (generationKind === 'growth' && maxSlotNormForSlots(slots) < ORDER_GROWTH_MIN_MAX_NORM) {
+    bonusMultiplier = undefined;
+    generationKind = 'basic';
+  }
+
   return {
     slots,
     orderType: tierDef.orderType,
     timeLimit: tierDef.timeLimit,
-    generationKind: 'basic',
+    bonusMultiplier,
+    generationKind,
   };
 }

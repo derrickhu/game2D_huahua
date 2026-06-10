@@ -8,6 +8,7 @@ export {
 } from './OrderGeneratorRegistry';
 export {
   ORDER_PRODUCT_IDS,
+  comboOrderSpecsForTier,
   productOrderSpecsForTier,
   productToolCap,
   resolveOrderProduct,

@@ -1,13 +1,15 @@
 /**
  * 订单分级配置 — C(初) / B(中) / A(高) / S(特) 四档
  *
- * 每档定义槽数范围；各产品等级区间见 OrderProductConfig。
+ * 每档定义需求槽数；具体产品等级范围见 OrderProductConfig。
  * CustomerManager 按玩家等级 + 已解锁产线随机选「模板档」生成需求；UI 角标与存档中的 tier
  * 由 computeTierFromOrderSlots 按物品难度统一计算。
  */
-import { Category, FoodLine, ITEM_DEFS, isFruitCutLine, type DrinkLine } from './ItemConfig';
+import { Category, DrinkLine, FoodLine, ITEM_DEFS, isFruitCutLine } from './ItemConfig';
 
-/** 果切订单角标难度：按「整果链顺位 + 果切等级」定档，短链偏低、西瓜偏高 */
+export type OrderTier = 'C' | 'B' | 'A' | 'S';
+
+/** 果切订单角标难度：按整果链顺位 + 果切等级定档，短链偏低、西瓜偏高。 */
 const FRUIT_CUT_ORDER_DIFFICULTY: Readonly<Record<string, Readonly<Record<number, number>>>> = {
   [FoodLine.CUT_AVOCADO]: { 1: 0.22, 2: 0.42, 3: 0.45 },
   [FoodLine.CUT_WATERMELON]: { 1: 0.40, 2: 0.72, 3: 0.78 },
@@ -111,8 +113,6 @@ function _linePower(toolLevel: number): number {
   return computeOrderLevelDifficulty(getEffectiveMaxLevel(toolLevel, ORDER_DIFFICULTY_REFERENCE_LEVEL));
 }
 
-const DRINK_PRODUCT_TOOL_KEYS: readonly DrinkLine[] = ['butterfly', 'cold', 'dessert'];
-
 /**
  * 当前棋盘工具能力评分（0-1）。
  * 订单只看棋盘 open 格里的可生产工具；仓库工具不计入，避免刷出玩家当前棋盘无法完成的单。
@@ -128,13 +128,18 @@ function _toolPower(lines: UnlockedLines): number {
   if (lines.hasBouquet && lines.maxArrangeToolLevel > 0) {
     powers.push(_linePower(lines.maxArrangeToolLevel));
   }
-  for (const productKey of DRINK_PRODUCT_TOOL_KEYS) {
-    const toolLevel = lines.drinkToolMaxByLine[productKey] ?? 0;
+  for (const line of [DrinkLine.BUTTERFLY, DrinkLine.COLD, DrinkLine.DESSERT]) {
+    const toolLevel = lines.drinkToolMaxByLine[line] ?? 0;
     if (toolLevel > 0) {
       powers.push(_linePower(toolLevel));
     }
   }
-  for (const line of [FoodLine.CUT_AVOCADO, FoodLine.CUT_WATERMELON, FoodLine.CUT_PINEAPPLE, FoodLine.CUT_DRAGONFRUIT]) {
+  for (const line of [
+    FoodLine.CUT_AVOCADO,
+    FoodLine.CUT_WATERMELON,
+    FoodLine.CUT_PINEAPPLE,
+    FoodLine.CUT_DRAGONFRUIT,
+  ]) {
     const toolLevel = lines.foodToolMaxByLine[line] ?? 0;
     if (toolLevel > 0) {
       powers.push(_linePower(toolLevel));
