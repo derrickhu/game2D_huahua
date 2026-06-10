@@ -1032,7 +1032,20 @@ export class ItemInfoBar extends PIXI.Container {
       });
       return;
     }
-    EventBus.emit('board:requestSell', this._selectedCellIndex, this._selectedItemId);
+    const cellIndex = this._selectedCellIndex;
+    const itemId = this._selectedItemId;
+    const def = ITEM_DEFS.get(itemId);
+    if (!def) return;
+    const price = getItemSellPrice(def);
+    const itemLabel = `${def.name} Lv.${def.level}`;
+    const message =
+      price > 0
+        ? `确定出售「${itemLabel}」吗？\n将获得 ${price} 花愿，并腾出棋盘一格。`
+        : `确定出售「${itemLabel}」吗？\n将腾出棋盘一格。`;
+    void ConfirmDialog.show('确认出售', message, '出售', '取消').then((ok) => {
+      if (!ok) return;
+      EventBus.emit('board:requestSell', cellIndex, itemId);
+    });
   }
 
   private _onChainTap(): void {

@@ -51,6 +51,7 @@ import {
   Category,
   FlowerLine,
   findItemId,
+  getMaxLevelForLine,
   CRYSTAL_BALL_ITEM_ID,
   GOLDEN_SCISSORS_ITEM_ID,
   LUCKY_COIN_ITEM_ID,
@@ -550,14 +551,16 @@ class GMManagerClass {
       id: 'fill_high_flowers',
       group: ' 棋盘操作',
       name: ' 填充高级花朵',
-      desc: '在空格子中填满4-5级花朵',
+      desc: '在空格子中填满高等级花朵（鲜花/绿植10-13级，花束7-10级）',
       execute: () => {
         let count = 0;
         const lines = [FlowerLine.FRESH, FlowerLine.BOUQUET, FlowerLine.GREEN];
         for (const cell of BoardManager.cells) {
           if (cell.state === CellState.OPEN && !cell.itemId) {
             const line = lines[Math.floor(Math.random() * lines.length)];
-            const level = Math.random() < 0.5 ? 4 : 5;
+            const maxLv = getMaxLevelForLine(Category.FLOWER, line);
+            const minLv = Math.max(1, maxLv - 3);
+            const level = minLv + Math.floor(Math.random() * (maxLv - minLv + 1));
             const itemId = findItemId(Category.FLOWER, line, level);
             if (itemId) {
               BoardManager.placeItem(cell.index, itemId);
