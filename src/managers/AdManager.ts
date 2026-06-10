@@ -9,6 +9,9 @@
  * 广告位 ID 配置：
  * - 微信和抖音使用不同的 adUnitId
  * - 上线前在 AdConfig 中填入真实 ID
+ *
+ * 微信多广告位：createRewardedVideoAd 须 multiton（见 PlatformService），
+ * 本类按 adUnitId 缓存实例；同一时刻仍只允许展示一条激励视频。
  */
 import { Platform } from '@/core/PlatformService';
 import { EventBus } from '@/core/EventBus';

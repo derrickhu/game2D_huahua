@@ -352,11 +352,11 @@ class PlatformServiceClass {
 
   // ═══════════════ 广告 ═══════════════
 
-  /** 创建激励视频广告实例 */
+  /** 创建激励视频广告实例（微信须 multiton，否则小游戏端全局单例只绑定首次 adUnitId） */
   createRewardedVideoAd(adUnitId: string): any {
     try {
       if (this.name === 'wechat') {
-        return this._api?.createRewardedVideoAd?.({ adUnitId });
+        return this._api?.createRewardedVideoAd?.({ adUnitId, multiton: true });
       } else if (this.name === 'douyin') {
         return this._api?.createRewardedVideoAd?.({ adUnitId });
       }
