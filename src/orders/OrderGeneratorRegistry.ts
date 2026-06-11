@@ -78,8 +78,8 @@ function resolveLevelBounds(
   const aspirationalChance =
     ORDER_ASPIRATIONAL_LEVEL_BONUS_CHANCE + tierAspirationalBonus[tier];
   const aspirational = toolCap > 0 && rng() < (
-    playerLevel === 1 ? 0
-      : playerLevel === 2 ? aspirationalChance * 0.65
+    playerLevel === 1 || playerLevel === 2 ? 0
+      : playerLevel === 3 ? aspirationalChance * 0.5
         : aspirationalChance
   );
   let hi = Math.min(tierMaxLv, toolCap + (aspirational ? 1 : 0), maxItemLevel);
@@ -88,10 +88,15 @@ function resolveLevelBounds(
     hi = Math.min(hi, cap);
     if (tier === 'B') hi = Math.min(hi, minLv + 2);
   } else if (playerLevel === 2) {
-    const cap = toolCap > 0 ? toolCap + 1 : 4;
+    const cap = toolCap > 0 ? toolCap : 3;
     hi = Math.min(hi, cap);
     if (tier === 'B') hi = Math.min(hi, minLv + 4);
-    if (tier === 'A') hi = Math.min(hi, minLv + 2, cap + 1);
+    if (tier === 'A') hi = Math.min(hi, minLv + 2, cap);
+  } else if (playerLevel === 3) {
+    const cap = toolCap > 0 ? toolCap : 4;
+    hi = Math.min(hi, cap + (aspirational ? 1 : 0));
+    if (tier === 'B') hi = Math.min(hi, minLv + 3, cap + (aspirational ? 1 : 0));
+    if (tier === 'A') hi = Math.min(hi, minLv + 2, cap + (aspirational ? 1 : 0));
   }
   const lo = Math.min(minLv, hi);
   return { lo, hi };
@@ -239,8 +244,14 @@ function tryGenerateCombo(
   if (!b) return null;
   slots.push({ itemId: b });
 
+  const thirdSlotChance = playerLevel === 2
+    ? 0
+    : playerLevel === 3
+      ? ORDER_COMBO_THIRD_SLOT_CHANCE * 0.5
+      : ORDER_COMBO_THIRD_SLOT_CHANCE;
   if (
-    rng() < ORDER_COMBO_THIRD_SLOT_CHANCE &&
+    thirdSlotChance > 0 &&
+    rng() < thirdSlotChance &&
     ulk.unlockedLineCount >= ORDER_COMBO_MIN_UNLOCKED_LINES_FOR_THIRD_SLOT
   ) {
     const third = shuffled.find(

@@ -151,7 +151,7 @@ function _toolPower(lines: UnlockedLines): number {
 
 /**
  * 按玩家等级 + 已解锁产线 + 工具等级综合计算各档出现权重。
- * - 1 级：偏 C/B，角标最高 B；2 级：约 15–20% A 模板，角标金色 A 更易出现；3 级仍无 S。
+ * - 1 级：偏 C/B，角标最高 B；2 级：约 10% A 模板；3 级：A 略降、仍无 S。
  * - 4 级起少量 S；6 级后按玩家等级、工具能力、解锁产线连续成长。
  * - 不再使用「10 级以后固定权重」，后续升星仍会自然提高高档订单体感。
  */
@@ -176,17 +176,17 @@ export function getOrderTierWeights(
     } else if (playerLevel === 2) {
       if (!hasAnyProducer) base = { C: 100, B: 0, A: 0, S: 0 };
       else if (maxTool >= 3 || lines.hasBouquet || lines.hasDrink) {
-        base = { C: 42, B: 38, A: 20, S: 0 };
+        base = { C: 52, B: 38, A: 10, S: 0 };
       } else if (maxTool >= 2) {
-        base = { C: 45, B: 40, A: 15, S: 0 };
+        base = { C: 55, B: 35, A: 10, S: 0 };
       } else {
-        base = { C: 50, B: 35, A: 15, S: 0 };
+        base = { C: 60, B: 30, A: 10, S: 0 };
       }
     } else {
-      // 等级 3：仍无 S
-      if (lines.hasBouquet || lines.hasDrink) base = { C: 15, B: 48, A: 37, S: 0 };
-      else if (maxTool >= 4) base = { C: 25, B: 48, A: 27, S: 0 };
-      else base = { C: 35, B: 50, A: 15, S: 0 };
+      // 等级 3：仍无 S；A 模板略低于 4 级前过渡档
+      if (lines.hasBouquet || lines.hasDrink) base = { C: 22, B: 48, A: 30, S: 0 };
+      else if (maxTool >= 4) base = { C: 30, B: 48, A: 22, S: 0 };
+      else base = { C: 42, B: 48, A: 10, S: 0 };
     }
   } else if (playerLevel === 4) {
     // 首次引入 S，主力仍为 B/A，但让高级订单开始有体感

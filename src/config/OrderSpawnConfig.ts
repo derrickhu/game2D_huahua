@@ -137,12 +137,14 @@ export function orderComboEffectiveChance(
   if (playerLevel === 1) return 0;
   if (playerLevel === 2) {
     if (ulk.unlockedLineCount < 2) return 0;
-    return Math.min(0.14, ORDER_COMBO_BASE_CHANCE * 0.85);
+    return ORDER_COMBO_BASE_CHANCE * 0.85 * 0.5;
   }
   if (ulk.unlockedLineCount < 2) return 0;
   const extra = Math.max(0, ulk.unlockedLineCount - 2);
   let p = ORDER_COMBO_BASE_CHANCE + extra * ORDER_COMBO_CHANCE_PER_EXTRA_LINE;
-  if (typeof playerLevel === 'number' && playerLevel >= ORDER_COMBO_LEVEL_BOOST_MIN_LEVEL) {
+  if (playerLevel === 3) {
+    p *= 0.75;
+  } else if (typeof playerLevel === 'number' && playerLevel >= ORDER_COMBO_LEVEL_BOOST_MIN_LEVEL) {
     p *= ORDER_COMBO_LEVEL_BOOST_MULT;
   }
   return Math.min(ORDER_COMBO_MAX_CHANCE, p);
@@ -154,6 +156,7 @@ export function orderGrowthRollChance(tier: OrderTier, playerLevel?: number): nu
   const base = ORDER_GROWTH_BASE_CHANCE * m;
   if (playerLevel === 1) return 0;
   if (playerLevel === 2) return Math.min(0.09, base * 0.7);
+  if (playerLevel === 3) return Math.min(0.12, base * 0.85);
   return Math.min(1, base);
 }
 
