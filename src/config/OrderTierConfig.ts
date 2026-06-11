@@ -152,7 +152,7 @@ function _toolPower(lines: UnlockedLines): number {
 /**
  * 按玩家等级 + 已解锁产线 + 工具等级综合计算各档出现权重。
  * - 1 级：偏 C/B，角标最高 B；2 级：约 10% A 模板；3 级：A 略降、仍无 S。
- * - 4 级起少量 S；6 级后按玩家等级、工具能力、解锁产线连续成长。
+ * - 4 级：首次引入 S，A/S 略降（幅度小于 3 级）；5 级起正常成长曲线。
  * - 不再使用「10 级以后固定权重」，后续升星仍会自然提高高档订单体感。
  */
 export function getOrderTierWeights(
@@ -189,10 +189,10 @@ export function getOrderTierWeights(
       else base = { C: 42, B: 48, A: 10, S: 0 };
     }
   } else if (playerLevel === 4) {
-    // 首次引入 S，主力仍为 B/A，但让高级订单开始有体感
-    if (lines.hasBouquet || lines.hasDrink) base = { C: 15, B: 42, A: 37, S: 6 };
-    else if (maxTool >= 4) base = { C: 22, B: 45, A: 27, S: 6 };
-    else base = { C: 35, B: 45, A: 14, S: 6 };
+    // 首次引入 S；A/S 略降，幅度小于 3 级
+    if (lines.hasBouquet || lines.hasDrink) base = { C: 18, B: 42, A: 34, S: 4 };
+    else if (maxTool >= 4) base = { C: 25, B: 45, A: 24, S: 4 };
+    else base = { C: 37, B: 45, A: 12, S: 5 };
   } else {
     const levelScore = _clamp((playerLevel - 4) / 12, 0, 1);
     const toolScore = _toolPower(lines);

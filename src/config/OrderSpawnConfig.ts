@@ -19,10 +19,9 @@ export const ORDER_COMBO_CHANCE_PER_EXTRA_LINE = 0.04;
 export const ORDER_COMBO_MAX_CHANCE = 0.42;
 
 /**
- * 升星仪式 L4 解锁「组合订单提速」：玩家 globalLevel ≥ 该值时组合单概率乘以 LEVEL_MULT。
- * 拍板 +20%（a_20）；与封顶 ORDER_COMBO_MAX_CHANCE 一同 clamp。
+ * 升星仪式 L5 起组合单概率 × LEVEL_MULT（4 级仍走新手过渡，不加速）。
  */
-export const ORDER_COMBO_LEVEL_BOOST_MIN_LEVEL = 4;
+export const ORDER_COMBO_LEVEL_BOOST_MIN_LEVEL = 5;
 export const ORDER_COMBO_LEVEL_BOOST_MULT = 1.35;
 
 /** 至少解锁几条独立产线才允许组合单第三槽 */
@@ -144,6 +143,8 @@ export function orderComboEffectiveChance(
   let p = ORDER_COMBO_BASE_CHANCE + extra * ORDER_COMBO_CHANCE_PER_EXTRA_LINE;
   if (playerLevel === 3) {
     p *= 0.75;
+  } else if (playerLevel === 4) {
+    p *= 0.88;
   } else if (typeof playerLevel === 'number' && playerLevel >= ORDER_COMBO_LEVEL_BOOST_MIN_LEVEL) {
     p *= ORDER_COMBO_LEVEL_BOOST_MULT;
   }
@@ -157,6 +158,7 @@ export function orderGrowthRollChance(tier: OrderTier, playerLevel?: number): nu
   if (playerLevel === 1) return 0;
   if (playerLevel === 2) return Math.min(0.09, base * 0.7);
   if (playerLevel === 3) return Math.min(0.12, base * 0.85);
+  if (playerLevel === 4) return Math.min(0.14, base * 0.92);
   return Math.min(1, base);
 }
 

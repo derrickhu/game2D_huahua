@@ -80,7 +80,8 @@ function resolveLevelBounds(
   const aspirational = toolCap > 0 && rng() < (
     playerLevel === 1 || playerLevel === 2 ? 0
       : playerLevel === 3 ? aspirationalChance * 0.5
-        : aspirationalChance
+        : playerLevel === 4 ? aspirationalChance * 0.75
+          : aspirationalChance
   );
   let hi = Math.min(tierMaxLv, toolCap + (aspirational ? 1 : 0), maxItemLevel);
   if (playerLevel === 1) {
@@ -97,6 +98,11 @@ function resolveLevelBounds(
     hi = Math.min(hi, cap + (aspirational ? 1 : 0));
     if (tier === 'B') hi = Math.min(hi, minLv + 3, cap + (aspirational ? 1 : 0));
     if (tier === 'A') hi = Math.min(hi, minLv + 2, cap + (aspirational ? 1 : 0));
+  } else if (playerLevel === 4) {
+    const cap = toolCap > 0 ? toolCap : 4;
+    hi = Math.min(hi, cap + (aspirational ? 1 : 0));
+    if (tier === 'B') hi = Math.min(hi, minLv + 4, cap + (aspirational ? 1 : 0));
+    if (tier === 'A') hi = Math.min(hi, minLv + 3, cap + (aspirational ? 1 : 0));
   }
   const lo = Math.min(minLv, hi);
   return { lo, hi };
@@ -248,7 +254,9 @@ function tryGenerateCombo(
     ? 0
     : playerLevel === 3
       ? ORDER_COMBO_THIRD_SLOT_CHANCE * 0.5
-      : ORDER_COMBO_THIRD_SLOT_CHANCE;
+      : playerLevel === 4
+        ? ORDER_COMBO_THIRD_SLOT_CHANCE * 0.75
+        : ORDER_COMBO_THIRD_SLOT_CHANCE;
   if (
     thirdSlotChance > 0 &&
     rng() < thirdSlotChance &&
