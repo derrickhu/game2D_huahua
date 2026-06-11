@@ -37,7 +37,8 @@ export const CUSTOMER_TYPES: CustomerTypeDef[] = [
   { id: 'collector', name: '收藏家',     emoji: '' },
 
   // 特殊订单专属客人：不进入普通随机池。
-  { id: 'tycoon',    name: '大富翁',     emoji: '', specialOnly: true },
+  { id: 'tycoon',           name: '大富翁',   emoji: '', specialOnly: true },
+  { id: 'florist_merchant', name: '富贵花商', emoji: '', specialOnly: true },
 ];
 
 /** 按 ID 快速查找 */
@@ -45,4 +46,5 @@ export const CUSTOMER_TYPE_MAP = new Map(CUSTOMER_TYPES.map(t => [t.id, t]));
 
 export const DEFAULT_SPECIAL_CUSTOMER_BY_ORDER_KIND: Partial<Record<OrderGenerationKind, string>> = {
   timedDiamond: 'tycoon',
+  timedFlorist: 'florist_merchant',
 };

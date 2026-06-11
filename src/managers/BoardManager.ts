@@ -633,8 +633,8 @@ class BoardManagerClass {
   }
 
   /**
-   * 已开放格上是否存在该物品（与订单扫描一致：仅 OPEN）。
-   * 用于需求槽 UI：棋盘上有时所有需要该物的客人都显示对勾；物理格仍由 CustomerManager 独占锁定。
+   * 已开放格上是否存在该物品（仅 OPEN）。
+   * 用于跨客人需求槽对勾；同客人多槽同款须 CustomerManager lockedCellIndex 1:1。
    */
   hasOpenCellWithItem(itemId: string): boolean {
     return this.cells.some(

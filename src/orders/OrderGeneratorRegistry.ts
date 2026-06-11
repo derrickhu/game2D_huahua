@@ -35,6 +35,13 @@ import {
   TIMED_DIAMOND_ORDER_MIN_PLAYER_LEVEL,
   TIMED_DIAMOND_ORDER_SLOT_COUNT,
   TIMED_DIAMOND_ORDER_TIME_LIMIT_SECONDS,
+  TIMED_FLORIST_ORDER_BASE_CHANCE,
+  TIMED_FLORIST_ORDER_FIRST_DAILY_CHANCE_MULT,
+  TIMED_FLORIST_ORDER_MIN_ITEM_LEVEL,
+  TIMED_FLORIST_ORDER_MIN_PLAYER_LEVEL,
+  TIMED_FLORIST_ORDER_SLOT_COUNT,
+  TIMED_FLORIST_ORDER_TIME_LIMIT_SECONDS,
+  computeFloristStaminaChestReward,
   computeTimedDiamondReward,
   maxSlotNormForSlots,
   orderComboEffectiveChance,
@@ -318,6 +325,64 @@ function timedDiamondOrderFromSlots(slots: OrderGenSlot[]): OrderGenResult {
   };
 }
 
+function buildTimedFloristOrderSlots(ctx: OrderGenContext): OrderGenSlot[] | null {
+  const flowerProductIds: OrderProductId[] = ['fresh', 'green'];
+  const unlocked = flowerProductIds
+    .map(id => getOrderProduct(id))
+    .filter(product => product.isUnlocked(ctx.lines));
+  if (unlocked.length === 0) return null;
+
+  const product = pickRandom(unlocked, ctx.rng);
+  if (!product) return null;
+
+  const toolCap = productToolCap(product.id, ctx.lines);
+  if (toolCap <= 0) return null;
+
+  const level = pickItemLevel(
+    TIMED_FLORIST_ORDER_MIN_ITEM_LEVEL,
+    product.maxLevel,
+    toolCap,
+    product.maxLevel,
+    'A',
+    ctx.rng,
+    ctx.playerLevel,
+  );
+  if (level < TIMED_FLORIST_ORDER_MIN_ITEM_LEVEL) return null;
+
+  const itemId = findItemId(product.category, product.itemLine, level);
+  if (!itemId) return null;
+
+  const probe = [{ itemId }];
+  if (!validateOrderSlotsToolCap(probe, ctx.lines)) return null;
+
+  return Array.from({ length: TIMED_FLORIST_ORDER_SLOT_COUNT }, () => ({ itemId }));
+}
+
+function timedFloristOrderFromSlots(slots: OrderGenSlot[]): OrderGenResult {
+  return {
+    slots,
+    orderType: 'timed',
+    timeLimit: TIMED_FLORIST_ORDER_TIME_LIMIT_SECONDS,
+    staminaChestReward: computeFloristStaminaChestReward(slots),
+    customerTypeId: DEFAULT_SPECIAL_CUSTOMER_BY_ORDER_KIND.timedFlorist,
+    generationKind: 'timedFlorist',
+  };
+}
+
+function tryGenerateTimedFloristOrder(ctx: OrderGenContext): OrderGenResult | null {
+  if (!ctx.allowTimedFloristOrder) return null;
+  if (ctx.playerLevel < TIMED_FLORIST_ORDER_MIN_PLAYER_LEVEL) return null;
+
+  const todayCount = Math.max(0, ctx.timedFloristOrdersToday ?? 0);
+  const chance = TIMED_FLORIST_ORDER_BASE_CHANCE
+    * (todayCount === 0 ? TIMED_FLORIST_ORDER_FIRST_DAILY_CHANCE_MULT : 1);
+  if (ctx.rng() >= chance) return null;
+
+  const slots = buildTimedFloristOrderSlots(ctx);
+  if (!slots) return null;
+  return timedFloristOrderFromSlots(slots);
+}
+
 function tryGenerateTimedDiamondOrder(ctx: OrderGenContext): OrderGenResult | null {
   if (!ctx.allowTimedDiamondOrder) return null;
   if (ctx.playerLevel < TIMED_DIAMOND_ORDER_MIN_PLAYER_LEVEL) return null;
@@ -337,6 +402,13 @@ export function forceGenerateTimedDiamondOrder(ctx: OrderGenContext): OrderGenRe
   const slots = buildTimedDiamondOrderSlots(ctx);
   if (!slots) return null;
   return timedDiamondOrderFromSlots(slots);
+}
+
+/** GM / 调试：强制生成富贵花商限时单（三槽同款鲜花/绿植） */
+export function forceGenerateTimedFloristOrder(ctx: OrderGenContext): OrderGenResult | null {
+  const slots = buildTimedFloristOrderSlots(ctx);
+  if (!slots) return null;
+  return timedFloristOrderFromSlots(slots);
 }
 
 /** 当前解锁工具能力下，订单槽位是否不超过 cap+1（与 aspirational 上限一致） */
@@ -378,6 +450,9 @@ export function generateOrderDemands(ctx: OrderGenContext): OrderGenResult | nul
 
   const { tier, lines, rng } = ctx;
   const tierDef = ORDER_TIERS[tier];
+
+  const timedFlorist = tryGenerateTimedFloristOrder(ctx);
+  if (timedFlorist) return timedFlorist;
 
   const timed = tryGenerateTimedDiamondOrder(ctx);
   if (timed) return timed;

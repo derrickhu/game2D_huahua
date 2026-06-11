@@ -107,6 +107,25 @@ export const TIMED_DIAMOND_ORDER_MIN_ITEM_LEVEL = 6;
 export const TIMED_DIAMOND_ORDER_TIME_LIMIT_SECONDS = 6 * 60 * 60;
 export const TIMED_DIAMOND_ORDER_DIAMOND_CAP = 10;
 
+/** 富贵花商限时单：4 级开放，每日最多 1 单，限时 8 小时，三槽同款鲜花/绿植 L6+ */
+export const TIMED_FLORIST_ORDER_MIN_PLAYER_LEVEL = 4;
+export const TIMED_FLORIST_ORDER_DAILY_CAP = 1;
+export const TIMED_FLORIST_ORDER_BASE_CHANCE = 0.05;
+export const TIMED_FLORIST_ORDER_FIRST_DAILY_CHANCE_MULT = 1.6;
+export const TIMED_FLORIST_ORDER_SLOT_COUNT = 3;
+export const TIMED_FLORIST_ORDER_MIN_ITEM_LEVEL = 6;
+export const TIMED_FLORIST_ORDER_TIME_LIMIT_SECONDS = 8 * 60 * 60;
+
+/** 按需求物品等级映射体力箱档位 */
+export function computeFloristStaminaChestReward(
+  slots: readonly OrderGenSlot[],
+): 'stamina_chest_1' | 'stamina_chest_2' | 'stamina_chest_3' {
+  const lv = ITEM_DEFS.get(slots[0]?.itemId ?? '')?.level ?? TIMED_FLORIST_ORDER_MIN_ITEM_LEVEL;
+  if (lv >= 11) return 'stamina_chest_3';
+  if (lv >= 8) return 'stamina_chest_2';
+  return 'stamina_chest_1';
+}
+
 /**
  * 组合单有效概率：min(max, base + (unlockedLineCount-2)*perLine)，至少 2 线才可能组合。
  * playerLevel ≥ ORDER_COMBO_LEVEL_BOOST_MIN_LEVEL 时再乘 ORDER_COMBO_LEVEL_BOOST_MULT，整体仍 clamp 到 MAX。

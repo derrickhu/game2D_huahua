@@ -120,6 +120,7 @@ const CHARS_IMAGE_MAP: Record<string, string> = {
   customer_mystery:   'subpkg_chars/images/customer/mystery.png',
   customer_celebrity: 'subpkg_chars/images/customer/celebrity.png',
   customer_tycoon:    'subpkg_chars/images/customer/tycoon.png',
+  customer_florist_merchant: 'subpkg_chars/images/customer/florist_merchant.png',
 
   // 友谊卡 / 图鉴系统：S1 首发卡面（路径 affinity_cards/）
   affinity_card_student_01: 'subpkg_chars/images/affinity_cards/card_student_01.png',

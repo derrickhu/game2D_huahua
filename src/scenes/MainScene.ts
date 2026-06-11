@@ -34,6 +34,7 @@ import { CARD_SYSTEM_UNLOCK_LEVEL } from '@/config/AffinityCardConfig';
 import { TweenManager, Ease } from '@/core/TweenManager';
 import { BoardView } from '@/gameobjects/board/BoardView';
 import { CustomerScrollArea } from '@/gameobjects/customer/CustomerScrollArea';
+import { CustomerArrivalBanner } from '@/gameobjects/customer/CustomerArrivalBanner';
 import { TopBar, TOP_BAR_HEIGHT } from '@/gameobjects/ui/TopBar';
 import { ItemInfoBar } from '@/gameobjects/ui/ItemInfoBar';
 import { MergeChainPanel } from '@/gameobjects/ui/MergeChainPanel';
@@ -701,6 +702,10 @@ export class MainScene implements Scene {
 
   /** 绑定客人相关事件 */
   private _bindCustomerEvents(): void {
+    EventBus.on('customer:arrived', (customer) => {
+      CustomerArrivalBanner.tryShow(customer);
+    });
+
     // 点击"完成"后：先播放飞行动画，动画结束后再真正执行交付
     EventBus.on('customer:requestDeliver', (uid: number, customer: any, globalPos: PIXI.Point) => {
       AudioManager.play('customer_deliver', { bypassThrottle: true });

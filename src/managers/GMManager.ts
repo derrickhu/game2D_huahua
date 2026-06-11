@@ -33,6 +33,7 @@ import { RoomLayoutManager } from './RoomLayoutManager';
 import { TutorialManager } from './TutorialManager';
 import { AffinityManager } from './AffinityManager';
 import { CustomerManager } from './CustomerManager';
+import { CUSTOMER_TYPES } from '@/config/CustomerConfig';
 import { AffinityCardManager } from './AffinityCardManager';
 import { DailyCandyManager } from './DailyCandyManager';
 import { IdleManager } from './IdleManager';
@@ -577,9 +578,20 @@ class GMManagerClass {
       id: 'gm_spawn_timed_diamond_order',
       group: ' 订单/客人',
       name: ' 立即刷限时钻石单',
-      desc: '强制生成大富翁限时钻石订单（绕过概率/每日上限；若已有则替换）',
+      desc: '清空现有客人后刷出大富翁限时钻石单（绕过概率/每日上限）',
       execute: () => CustomerManager.gmSpawnTimedDiamondOrder(),
     });
+
+    for (const customerType of CUSTOMER_TYPES) {
+      const specialHint = customerType.specialOnly ? '（限时钻石单）' : '（随机配套订单）';
+      this._commands.push({
+        id: `gm_spawn_customer_${customerType.id}`,
+        group: ' 订单/客人',
+        name: ` 刷客人：${customerType.name}`,
+        desc: `清空现有客人队列，刷出 ${customerType.name}${specialHint}`,
+        execute: () => CustomerManager.gmClearAndSpawnCustomer(customerType.id),
+      });
+    }
 
     // ========== 增加物品（收纳盒 / 棋盘）==========
     this._commands.push({

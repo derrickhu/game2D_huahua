@@ -122,6 +122,7 @@ export class CustomerView extends PIXI.Container {
       TweenManager.cancelTarget(this);
       TweenManager.cancelTarget(this.scale);
       this._clearAffinityHeartBadge();
+      this._clearStaminaChestBadge();
       this._boundCustomerUid = -1;
       this._customer = null;
       this.visible = false;
@@ -144,6 +145,7 @@ export class CustomerView extends PIXI.Container {
     }
 
     this._rebuildInfoPanel();
+    this._buildStaminaChestBadge();
     this._refreshAffinityHeartBadge();
 
     const isQueuing = this._queueIndex >= CustomerManager.maxCustomers;
@@ -197,6 +199,7 @@ export class CustomerView extends PIXI.Container {
   refreshSlots(): void {
     if (!this._customer) return;
     this._rebuildInfoPanel();
+    this._buildStaminaChestBadge();
   }
 
   /**
@@ -232,6 +235,7 @@ export class CustomerView extends PIXI.Container {
     this._infoPanel.removeChildren();
     this._clearCompleteBtn();
     this._clearRewardBadge();
+    this._clearStaminaChestBadge();
     this._clearTierBadge();
     this._clearTimedOrderBadge();
     if (!this._customer) return;
@@ -280,8 +284,7 @@ export class CustomerView extends PIXI.Container {
     for (let i = 0; i < slots.length; i++) {
       const slot = slots[i];
       const sx = slotStartX + i * (SLOT_SIZE + SLOT_GAP);
-      const filled =
-        slot.lockedCellIndex >= 0 || BoardManager.hasOpenCellWithItem(slot.itemId);
+      const filled = this._isDemandSlotFilled(slot);
       this._drawSlotItem(sx, slotY, slot.itemId, filled);
     }
 
@@ -291,6 +294,18 @@ export class CustomerView extends PIXI.Container {
     if (allDone) {
       this._showCompleteBtn();
     }
+  }
+
+  /**
+   * 需求槽对勾：同客人多槽同款须 1:1（仅 lockedCellIndex）；
+   * 不同客人可共享棋盘物示意（棋盘有货即可打勾）。
+   */
+  private _isDemandSlotFilled(slot: CustomerInstance['slots'][number]): boolean {
+    if (slot.lockedCellIndex >= 0) return true;
+    if (!this._customer) return false;
+    const sameItemSlots = this._customer.slots.filter(s => s.itemId === slot.itemId).length;
+    if (sameItemSlots > 1) return false;
+    return BoardManager.hasOpenCellWithItem(slot.itemId);
   }
 
   private _rewardBadge: PIXI.Container | null = null;
@@ -397,6 +412,8 @@ export class CustomerView extends PIXI.Container {
     }
   }
 
+  private static readonly TIER_BADGE_R = 11;
+
   private _tierBadge: PIXI.Container | null = null;
 
   private _buildTierBadge(): void {
@@ -406,7 +423,7 @@ export class CustomerView extends PIXI.Container {
     const color = TIER_COLORS[tier] ?? 0x999999;
 
     const badge = new PIXI.Container();
-    const r = 11;
+    const r = CustomerView.TIER_BADGE_R;
     const bg = new PIXI.Graphics();
     bg.beginFill(color, 0.92);
     bg.drawCircle(0, 0, r);
@@ -434,6 +451,60 @@ export class CustomerView extends PIXI.Container {
       if (this._tierBadge.parent) this._tierBadge.parent.removeChild(this._tierBadge);
       this._tierBadge.destroy({ children: true });
       this._tierBadge = null;
+    }
+  }
+
+  private _staminaChestBadge: PIXI.Sprite | null = null;
+
+  /** 胸像宽高（锚点 0.5,1 @ AVATAR_FEET_Y），无贴图时返回 null */
+  private _getAvatarSpriteMetrics(): { halfW: number; fullH: number; topY: number } | null {
+    if (!this._avatarSprite.visible || !this._avatarSprite.texture || this._avatarSprite.texture.width <= 0) {
+      return null;
+    }
+    const halfW = (this._avatarSprite.texture.width * this._avatarSprite.scale.x) / 2;
+    const fullH = this._avatarSprite.texture.height * this._avatarSprite.scale.y;
+    return { halfW, fullH, topY: AVATAR_FEET_Y - fullH };
+  }
+
+  private _buildStaminaChestBadge(): void {
+    this._clearStaminaChestBadge();
+    if (!this._customer?.staminaChestReward) return;
+
+    const chestId = this._customer.staminaChestReward;
+    const tex = TextureCache.get(chestId);
+    if (!tex || tex.height <= 0) return;
+
+    const iconSize = 52;
+    const icon = new PIXI.Sprite(tex);
+    icon.anchor.set(0.5, 0.5);
+    icon.scale.set(iconSize / Math.max(tex.height, 1));
+    icon.eventMode = 'none';
+    icon.zIndex = 14;
+
+    // 浮在胸像左缘外（肩颈高度），不压头发；倒计时仍在右上
+    let x = -72;
+    let y = AVATAR_FEET_Y - 82;
+    const avatar = this._getAvatarSpriteMetrics();
+    if (avatar) {
+      const gapOutside = 6;
+      x = -avatar.halfW - iconSize / 2 - gapOutside;
+      y = avatar.topY + avatar.fullH * 0.55;
+      const minX = -CARD_LAYOUT_HALF + iconSize / 2 + 6;
+      x = Math.max(minX, x);
+    }
+    icon.position.set(x, y);
+    this.addChild(icon);
+    this._staminaChestBadge = icon;
+    this.sortChildren();
+  }
+
+  private _clearStaminaChestBadge(): void {
+    if (this._staminaChestBadge) {
+      if (this._staminaChestBadge.parent) {
+        this._staminaChestBadge.parent.removeChild(this._staminaChestBadge);
+      }
+      this._staminaChestBadge.destroy({ children: true });
+      this._staminaChestBadge = null;
     }
   }
 
