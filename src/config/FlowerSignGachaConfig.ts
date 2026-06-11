@@ -6,6 +6,7 @@
 import {
   Category,
   InteractType,
+  ToolLine,
   GOLDEN_SCISSORS_ITEM_ID,
   CRYSTAL_BALL_ITEM_ID,
   LUCKY_COIN_ITEM_ID,
@@ -46,7 +47,7 @@ export type FlowerSignPoolEntry =
 
 /** 大类占比（相对 FLOWER_SIGN_WEIGHT_SCALE）；许愿硬币不进奖池 */
 const BUCKET_PREMIUM = 9_000; // 9% 金剪刀+万能水晶+幸运金币
-const BUCKET_TOOLS = 12_000; // 12% 低阶生产工具类（Lv1-3）
+const BUCKET_TOOLS = 12_000; // 12% 1 级生产工具（种子工具）
 /** 20%：普通宝箱 + 体力宝箱 + 钻石袋 + 红包（同一大类内按等级衰减分权） */
 const BUCKET_CHEST_GROUP = 20_000;
 const BUCKET_DIRECT = 15_000; // 15% 直加体力+钻石
@@ -61,8 +62,8 @@ const BUCKET_MAIN =
 const PREMIUM_IDS = [GOLDEN_SCISSORS_ITEM_ID, CRYSTAL_BALL_ITEM_ID, LUCKY_COIN_ITEM_ID] as const;
 /** 旧 id 若仍出现在配置中则排除；许愿硬币不进奖池 */
 const EXCLUDED_FROM_GACHA_IDS = new Set<string>([LEGACY_FLOWER_SIGN_COIN_ITEM_ID]);
-/** 许愿池只补低阶生产工具；Lv4+ 会直接抬产能，不能从抽奖获得。 */
-const MAX_GACHA_PRODUCER_TOOL_LEVEL = 3;
+/** 许愿池只补 1 级种子工具；高阶会直接抬产能，不能从抽奖获得。果切线走升级/礼包发放。 */
+const GACHA_PRODUCER_TOOL_LEVEL = 1;
 
 /** 等级越高权重越低：(maxLevel - level + 1)^2，同级线内衰减 */
 function levelScore(def: ItemDef): number {
@@ -104,7 +105,11 @@ function distributeEqualIds(ids: string[], totalWeight: number): FlowerSignPoolE
 }
 
 function isGachaEligibleProducerTool(def: ItemDef): boolean {
-  return def.interactType === InteractType.TOOL && def.level <= MAX_GACHA_PRODUCER_TOOL_LEVEL;
+  return (
+    def.interactType === InteractType.TOOL
+    && def.level === GACHA_PRODUCER_TOOL_LEVEL
+    && def.line !== ToolLine.FRUIT_CUT
+  );
 }
 
 /** 直加体力/钻石：条内再分档，高档略稀；总和严格 = totalWeight */
@@ -208,7 +213,7 @@ function buildFlowerSignGachaPool(): FlowerSignPoolEntry[] {
  * 全物品加权随机（仅 `ITEM_DEFS` 内有效 id）。
  * - 约 44%：鲜花/饮品/棋盘货币块（不含许愿硬币）等，等级越高权重越低。
  * - 15%：直加体力 + 直加钻石（多档 amount）。
- * - 20%：宝箱+体力箱+钻石袋+红包；12%：低阶生产工具 Lv1-3（桶内等级越高权重越低）；9%：金剪刀+万能水晶+幸运金币。
+ * - 20%：宝箱+体力箱+钻石袋+红包；12%：1 级生产工具（不含果切，桶内按线 maxLevel 衰减）；9%：金剪刀+万能水晶+幸运金币。
  * - 许愿硬币不参与抽奖。
  */
 export const FLOWER_SIGN_GACHA_POOL: FlowerSignPoolEntry[] = buildFlowerSignGachaPool();
