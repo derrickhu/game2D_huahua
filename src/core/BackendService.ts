@@ -12,6 +12,8 @@ import {
   BACKEND_LOGIN_PATH,
   BACKEND_PULL_PATH,
   BACKEND_PUSH_PATH,
+  BACKEND_WECHAT_GIFT_MARK_PATH,
+  BACKEND_WECHAT_GIFT_QUERY_PATH,
   BACKEND_REQUEST_TIMEOUT_MS,
   BACKEND_TOKEN_KEY,
 } from '@/config/CloudConfig';
@@ -43,6 +45,23 @@ export interface BackendPushResult {
   savedAt: number;
   mode: 'insert' | 'update';
   sizeBytes: number;
+}
+
+export interface WechatGiftRow {
+  id: string;
+  orderId: string;
+  giftId?: string;
+  rewards: Record<string, number>;
+  rawGoodsList?: Array<{ Id?: string; Num?: number }>;
+  createdAt: number;
+}
+
+export interface WechatGiftQueryResult {
+  gifts: WechatGiftRow[];
+}
+
+export interface WechatGiftMarkResult {
+  updated: number;
 }
 
 interface StoredToken {
@@ -112,6 +131,14 @@ class BackendServiceClass {
 
   async pushSave(snapshot: BackendPushPayload): Promise<BackendPushResult> {
     return this._callWithAuth<BackendPushResult>(BACKEND_PUSH_PATH, snapshot);
+  }
+
+  async queryPendingWechatGifts(): Promise<WechatGiftQueryResult> {
+    return this._callWithAuth<WechatGiftQueryResult>(BACKEND_WECHAT_GIFT_QUERY_PATH, {});
+  }
+
+  async markWechatGiftsGranted(ids: string[]): Promise<WechatGiftMarkResult> {
+    return this._callWithAuth<WechatGiftMarkResult>(BACKEND_WECHAT_GIFT_MARK_PATH, { ids });
   }
 
   /** 清空本地 token（排障用），不影响本地存档 */

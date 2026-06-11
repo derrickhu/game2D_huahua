@@ -5,8 +5,12 @@
  * 依赖：node 18+（内置 fetch）；不需要真实的 WX/TT AppSecret（会走 anon 登录路径）。
  */
 
+const crypto = require('crypto');
+const jwt = require('jsonwebtoken');
+
 process.env.HUAHUA_JWT_SECRET = process.env.HUAHUA_JWT_SECRET || 'dev-secret-do-not-use-in-prod';
 process.env.HUAHUA_TOKEN_TTL_SEC = process.env.HUAHUA_TOKEN_TTL_SEC || '3600';
+process.env.HUAHUA_WECHAT_PUSH_TOKEN = process.env.HUAHUA_WECHAT_PUSH_TOKEN || 'huahua_gift_2026';
 
 // 劫持 @cloudbase/node-sdk，伪造内存集合
 const Module = require('module');
@@ -20,18 +24,30 @@ Module._resolveFilename = function (request, parent, ...rest) {
 
 const { main } = require('../index');
 
-async function call(path, body, headers = {}) {
+async function httpCall(method, path, body, headers = {}, query = {}) {
   const event = {
-    httpMethod: 'POST',
+    httpMethod: method,
     path,
     headers: { 'content-type': 'application/json', ...headers },
-    body: JSON.stringify(body || {}),
+    queryStringParameters: query,
+    body: body === undefined ? '' : (typeof body === 'string' ? body : JSON.stringify(body || {})),
     isBase64Encoded: false,
   };
   const res = await main(event, {});
   const parsed = res && res.body ? (() => { try { return JSON.parse(res.body); } catch { return res.body; } })() : res;
-  console.log(`[${path}]`, res && res.statusCode, JSON.stringify(parsed));
+  console.log(`[${method} ${path}]`, res && res.statusCode, JSON.stringify(parsed));
   return { statusCode: res && res.statusCode, body: parsed };
+}
+
+async function call(path, body, headers = {}) {
+  return httpCall('POST', path, body, headers);
+}
+
+function signWechatPush(timestamp, nonce) {
+  return crypto
+    .createHash('sha1')
+    .update(['huahua_gift_2026', timestamp, nonce].sort().join(''))
+    .digest('hex');
 }
 
 (async () => {
@@ -105,6 +121,50 @@ async function call(path, body, headers = {}) {
 
   // 11) 健康检查
   await call('/health', {});
+
+  // 12) 微信消息推送 URL 校验
+  const timestamp = String(Math.floor(Date.now() / 1000));
+  const nonce = 'mock-nonce';
+  const signature = signWechatPush(timestamp, nonce);
+  await httpCall('GET', '/giftDeliver', undefined, {}, {
+    signature,
+    timestamp,
+    nonce,
+    echostr: 'mock-ok',
+  });
+
+  // 13) 微信消息推送 POST(JSON 明文)
+  await httpCall('POST', '/giftDeliver', {
+    MsgType: 'event',
+    Event: 'minigame_notify_msg',
+    Title: 'mock-title',
+    Content: 'mock-content',
+  }, {}, { signature, timestamp, nonce });
+
+  // 14) 微信礼包发货回调 → queryPending → markGranted
+  const wxOpenId = 'mock-openid';
+  await httpCall('POST', '/giftDeliver', {
+    MsgType: 'event',
+    Event: 'minigame_deliver_goods',
+    MiniGame: {
+      OrderId: 'mock-order-0001',
+      IsPreview: 1,
+      ToUserOpenid: wxOpenId,
+      Zone: 1001,
+      GiftId: 'mock-gift',
+      SendTime: Math.floor(Date.now() / 1000),
+      GoodsList: [{ Id: 'crystal_ball_1', Num: 1 }],
+    },
+  }, {}, { signature, timestamp, nonce });
+  const wxToken = jwt.sign(
+    { sub: `wx:${wxOpenId}`, plt: 'wx', gk: 'huahua', iat: Math.floor(Date.now() / 1000) },
+    process.env.HUAHUA_JWT_SECRET,
+    { expiresIn: 3600 },
+  );
+  const wxAuth = { authorization: `Bearer ${wxToken}` };
+  const pending = await call('/wechat-gift/queryPending', {}, wxAuth);
+  const pendingIds = (((pending.body || {}).data || {}).gifts || []).map((g) => g.id);
+  await call('/wechat-gift/markGranted', { ids: pendingIds }, wxAuth);
 
   console.log('\n[mock] 全部用例运行完毕');
 })().catch((e) => {

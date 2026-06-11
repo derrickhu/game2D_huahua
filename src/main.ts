@@ -28,6 +28,8 @@ import { TutorialManager } from '@/managers/TutorialManager';
 import { DecorationManager } from '@/managers/DecorationManager';
 import { NewbieGiftPackManager } from '@/managers/NewbieGiftPackManager';
 import { UserIdentityManager } from '@/managers/UserIdentityManager';
+import { WechatGiftManager } from '@/managers/WechatGiftManager';
+import { WechatWelfareManager } from '@/managers/WechatWelfareManager';
 import { PersistService, type CloudImportInfo } from '@/core/PersistService';
 import { Platform } from '@/core/PlatformService';
 import { EventBus } from '@/core/EventBus';
@@ -273,6 +275,7 @@ async function main(): Promise<void> {
     // 星级升档奖励须在首帧 addStar 前就绪（不依赖 MainScene 是否已构建）
     LevelManager.init();
     RewardBoxHintManager.init();
+    void WechatGiftManager.syncAndGrant('startup');
 
     // 再次确认棋盘状态
     const cells = BoardManager.cells;
@@ -297,6 +300,9 @@ async function main(): Promise<void> {
       pendingCloudReloadInfo = null;
       handleCloudSaveReload(info);
     }
+    setTimeout(() => {
+      WechatWelfareManager.tryAutoShowOnLaunch();
+    }, 800);
 
     // 监听小游戏生命周期：退到后台时保存状态
     const _apiMain: any = typeof wx !== 'undefined' ? wx : typeof tt !== 'undefined' ? tt : null;
@@ -304,6 +310,7 @@ async function main(): Promise<void> {
       let lastHideAt = 0;
       _apiMain.onHide?.(() => {
         console.log('[main] 游戏退到后台，保存状态');
+        WechatWelfareManager.notifyAppHide();
         IdleManager.onHide();
         SaveManager.save();
         // 立即刷写装饰布局（防止防抖 timer 未触发导致位置丢失）
@@ -318,6 +325,7 @@ async function main(): Promise<void> {
         if (MerchShopManager.ensureUpToDate()) {
           SaveManager.save();
         }
+        WechatWelfareManager.syncAfterAppShow('app-show');
         // 经分 app_show：业务侧自定义打，**不**重置 session_id（session = 一次冷启动）。
         // 携带 background_ms 便于 dashboard 看「后台多久回来」分布；首次启动 lastHideAt=0 就跳过。
         if (lastHideAt > 0) {

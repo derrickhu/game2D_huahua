@@ -76,10 +76,22 @@ function getMaxBytes() {
   return Number.isFinite(v) && v > 0 ? Math.floor(v) : DEFAULT_MAX_BYTES;
 }
 
+function getWechatPushTokens() {
+  const gameKey = getGameKey();
+  const gk = gameKeyUpper();
+  return Array.from(new Set([
+    readEnvPrefer(`${gk}_WECHAT_PUSH_TOKEN`, `${gk}_GIFT_TOKEN`),
+    `${gameKey}_gift_2026`,
+    `${gameKey.replace(/_/g, '')}_gift_2026`,
+  ].filter(Boolean).map((v) => String(v).trim()).filter(Boolean)));
+}
+
 module.exports = {
   getGameKey,
+  gameKeyUpper,
   getCollectionName,
   getJwtSecret,
   getTtlSec,
   getMaxBytes,
+  getWechatPushTokens,
 };

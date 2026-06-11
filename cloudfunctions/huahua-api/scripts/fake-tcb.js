@@ -10,12 +10,14 @@ class FakeCollection {
     this.store = store;
     this._filter = null;
     this._limit = 0;
+    this._order = null;
   }
 
   _clone() {
     const c = new FakeCollection(this.name, this.store);
     c._filter = this._filter;
     c._limit = this._limit;
+    c._order = this._order;
     return c;
   }
 
@@ -31,8 +33,24 @@ class FakeCollection {
     return c;
   }
 
+  orderBy(key, direction) {
+    const c = this._clone();
+    c._order = { key, direction };
+    return c;
+  }
+
   async get() {
     const all = this.store.docs.filter((d) => matches(d, this._filter));
+    if (this._order) {
+      const { key, direction } = this._order;
+      const sign = String(direction).toLowerCase() === 'desc' ? -1 : 1;
+      all.sort((a, b) => {
+        const av = a[key];
+        const bv = b[key];
+        if (av === bv) return 0;
+        return av > bv ? sign : -sign;
+      });
+    }
     const out = this._limit > 0 ? all.slice(0, this._limit) : all;
     return { data: out.map((d) => ({ ...d })) };
   }

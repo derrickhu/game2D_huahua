@@ -57,6 +57,21 @@ class PlatformServiceClass {
     }
   }
 
+  /** 鸿蒙微信当前不稳定支持 PageManager openlink，福利半屏需降级。 */
+  get isOhos(): boolean {
+    if (!this.isMinigame) return false;
+    try {
+      const dev = typeof this._api?.getDeviceInfo === 'function' ? this._api.getDeviceInfo() : null;
+      if (dev && (dev.platform === 'ohos' || dev.system === 'HarmonyOS')) return true;
+    } catch (_) {}
+    try {
+      const sys = this._api?.getSystemInfoSync?.();
+      return !!(sys && (sys.platform === 'ohos' || sys.system === 'HarmonyOS'));
+    } catch (_) {
+      return false;
+    }
+  }
+
   /**
    * 是否有可用的后端 HTTP 通道
    * - 微信 / 抖音小游戏：有原生 request API
@@ -423,6 +438,25 @@ class PlatformServiceClass {
       }
     } catch (e) {
       console.warn('[Platform] 创建游戏圈按钮失败:', e);
+    }
+    return null;
+  }
+
+  /** 微信 PageManager openlink 能力：用于游戏圈 / 福利半屏。 */
+  canOpenPageByOpenlink(): boolean {
+    return this.name === 'wechat'
+      && !this.isDevtools
+      && !this.isOhos
+      && typeof this._api?.createPageManager === 'function';
+  }
+
+  createPageManager(): any {
+    try {
+      if (this.canOpenPageByOpenlink()) {
+        return this._api.createPageManager();
+      }
+    } catch (e) {
+      console.warn('[Platform] 创建 PageManager 失败:', e);
     }
     return null;
   }

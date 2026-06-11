@@ -5,6 +5,7 @@
  *   /login        登录：wx/dy code2session / anon，签发 JWT
  *   /save/pull    拉取当前用户存档
  *   /save/push    上传当前用户存档（Upsert，updatedAt 防回写）
+ *   /giftDeliver  微信后台消息推送：GET 验证 URL，POST 接收明文 JSON/XML 事件
  *   /health       健康检查（无鉴权）
  *
  * 客户端可用两种方式命中：
@@ -23,13 +24,24 @@
 
 const { handleLogin } = require('./lib/auth');
 const { handlePull, handlePush } = require('./lib/save');
+const {
+  handleWechatPushVerify,
+  handleWechatPushCallback,
+  handleQueryPendingWechatGifts,
+  handleMarkWechatGiftsGranted,
+} = require('./lib/wechatPush');
 const { respond, parseEvent, preflight } = require('./lib/http');
 
 const ROUTES = {
+  'GET /health': async () => ({ ok: true, ts: Date.now() }),
   'POST /health': async () => ({ ok: true, ts: Date.now() }),
   'POST /login': handleLogin,
   'POST /save/pull': handlePull,
   'POST /save/push': handlePush,
+  'GET /giftDeliver': handleWechatPushVerify,
+  'POST /giftDeliver': handleWechatPushCallback,
+  'POST /wechat-gift/queryPending': handleQueryPendingWechatGifts,
+  'POST /wechat-gift/markGranted': handleMarkWechatGiftsGranted,
 };
 
 exports.main = async (event, context) => {

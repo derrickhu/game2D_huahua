@@ -27,6 +27,8 @@ export const BACKEND_LOGIN_PATH = `${BACKEND_PATH_PREFIX}/login`;
 export const BACKEND_PULL_PATH = `${BACKEND_PATH_PREFIX}/save/pull`;
 export const BACKEND_PUSH_PATH = `${BACKEND_PATH_PREFIX}/save/push`;
 export const BACKEND_HEALTH_PATH = `${BACKEND_PATH_PREFIX}/health`;
+export const BACKEND_WECHAT_GIFT_QUERY_PATH = `${BACKEND_PATH_PREFIX}/wechat-gift/queryPending`;
+export const BACKEND_WECHAT_GIFT_MARK_PATH = `${BACKEND_PATH_PREFIX}/wechat-gift/markGranted`;
 
 /** 请求超时（毫秒） */
 export const BACKEND_REQUEST_TIMEOUT_MS = 10000;

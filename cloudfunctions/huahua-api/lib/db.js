@@ -24,8 +24,13 @@ function getCollection() {
   return getDb().collection(getCollectionName('playerData'));
 }
 
+function collection(suffix) {
+  return getDb().collection(getCollectionName(suffix));
+}
+
 module.exports = {
   getApp,
   getDb,
   getCollection,
+  collection,
 };
