@@ -56,6 +56,14 @@ const CLOSE_BTN_MAX_SIDE = 56;
 const CLOSE_BTN_HIT_PAD = 12;
 /** 全屏立绘模式：关闭钮距右缘（与装修面板一致） */
 const IMMERSIVE_CLOSE_INSET_RIGHT = 44;
+/** 立绘模式许愿按钮：标题 / 券标字号（免费十连再放大一档） */
+const WISH_DECO_BTN_MAX_W = 178;
+const WISH_DECO_TITLE_FS = 20;
+const WISH_DECO_TITLE_FS_FREE = 24;
+const WISH_DECO_COST_FS = 22;
+const WISH_DECO_COST_FS_FREE = 28;
+const WISH_DECO_COIN_ICON_H = 26;
+const WISH_DECO_COIN_ICON_H_FREE = 30;
 
 export class FlowerSignGachaPanel extends PIXI.Container {
   private _isOpen = false;
@@ -506,8 +514,8 @@ export class FlowerSignGachaPanel extends PIXI.Container {
     } else {
       const row = new PIXI.Container();
       row.position.set(W / 2, btnRowY);
-      const gap = 14;
-      const maxBtnW = 160;
+      const gap = 16;
+      const maxBtnW = WISH_DECO_BTN_MAX_W;
       const hasDailyAdDraw = AdEntitlementManager.canUseDaily(DailyAdEntitlement.FLOWER_SIGN_DAILY_DRAW);
       const b1 = this._makeDecoWishBtn(
         '许愿一次',
@@ -522,6 +530,7 @@ export class FlowerSignGachaPanel extends PIXI.Container {
         maxBtnW,
         immersiveArt,
         () => this._doDraw('multi'),
+        hasDailyAdDraw,
       );
       const hw = maxBtnW + gap;
       b1.position.set(-hw / 2, 0);
@@ -538,10 +547,12 @@ export class FlowerSignGachaPanel extends PIXI.Container {
     maxBtnW: number,
     fullScene: boolean,
     onTap: () => void,
+    isFreePromo = false,
   ): PIXI.Container {
     const root = new PIXI.Container();
     root.eventMode = 'static';
     root.cursor = 'pointer';
+    if (isFreePromo) root.scale.set(1.06);
 
     const btnTex = TextureCache.get('deco_card_btn_1');
     let hitW = maxBtnW;
@@ -559,63 +570,82 @@ export class FlowerSignGachaPanel extends PIXI.Container {
       root.addChild(s);
     } else {
       const g = new PIXI.Graphics();
-      g.beginFill(0x66bb6a, 0.95);
-      g.drawRoundedRect(-maxBtnW / 2, -24, maxBtnW, 48, 22);
+      g.beginFill(isFreePromo ? 0xffa726 : 0x66bb6a, 0.98);
+      g.drawRoundedRect(-maxBtnW / 2, -26, maxBtnW, 52, 22);
       g.endFill();
+      if (isFreePromo) {
+        g.lineStyle(2.5, 0xffeb3b, 0.95);
+        g.drawRoundedRect(-maxBtnW / 2, -26, maxBtnW, 52, 22);
+      }
       root.addChild(g);
-      hitH = 48;
+      hitH = 52;
+    }
+
+    if (isFreePromo && sp) {
+      const glow = new PIXI.Graphics();
+      glow.beginFill(0xffeb3b, 0.28);
+      glow.drawEllipse(0, 0, hitW * 0.58, hitH * 0.72);
+      glow.endFill();
+      root.addChildAt(glow, 0);
     }
 
     const costRow = new PIXI.Container();
     const icTex = TextureCache.get('icon_flower_sign_coin');
+    const coinIconH = isFreePromo ? WISH_DECO_COIN_ICON_H_FREE : WISH_DECO_COIN_ICON_H;
     if (cost > 0 && icTex && icTex.width > 1) {
       const ic = new PIXI.Sprite(icTex);
       ic.anchor.set(1, 0.5);
-      ic.height = 22;
-      ic.width = (icTex.width / icTex.height) * 22;
+      ic.height = coinIconH;
+      ic.width = (icTex.width / icTex.height) * coinIconH;
       ic.position.set(-2, 0);
       costRow.addChild(ic);
     }
-    const cx = new PIXI.Text(cost > 0 ? `×${cost}` : '免费', {
-      fontSize: 17,
-      fill: 0xffffff,
+    const costLabel = isFreePromo ? '免费十连' : `×${cost}`;
+    const cx = new PIXI.Text(costLabel, {
+      fontSize: isFreePromo ? WISH_DECO_COST_FS_FREE : WISH_DECO_COST_FS,
+      fill: isFreePromo ? 0xffeb3b : 0xffffff,
       fontFamily: FONT_FAMILY,
       fontWeight: 'bold',
-      stroke: 0x3e2723,
-      strokeThickness: 3,
+      stroke: isFreePromo ? 0xbf360c : 0x3e2723,
+      strokeThickness: isFreePromo ? 4 : 3,
+      dropShadow: isFreePromo,
+      dropShadowColor: 0x000000,
+      dropShadowAlpha: 0.45,
+      dropShadowBlur: 3,
+      dropShadowDistance: 1,
     });
     cx.anchor.set(0, 0.5);
     cx.position.set(6, 0);
     costRow.addChild(cx);
-    if (cost <= 0) {
-      const adIcon = createAdIcon(20);
-      adIcon.position.set(cx.x + cx.width + 16, 0);
+    if (isFreePromo) {
+      const adIcon = createAdIcon(26);
+      adIcon.position.set(cx.x + cx.width + 18, 0);
       costRow.addChild(adIcon);
     }
     const cb = costRow.getLocalBounds();
     costRow.pivot.set(cb.x + cb.width / 2, cb.y + cb.height / 2);
-    costRow.position.set(0, sp ? -4 : 0);
+    costRow.position.set(0, sp ? -2 : 0);
     root.addChild(costRow);
 
-    const titleFill = fullScene ? 0xfff5eb : 0x4e342e;
+    const titleFill = isFreePromo ? 0xfff176 : (fullScene ? 0xfff5eb : 0x4e342e);
     const title = new PIXI.Text(titleAbove, {
-      fontSize: 15,
+      fontSize: isFreePromo ? WISH_DECO_TITLE_FS_FREE : WISH_DECO_TITLE_FS,
       fill: titleFill,
       fontFamily: FONT_FAMILY,
       fontWeight: 'bold',
-      stroke: 0x2c1e16,
-      strokeThickness: fullScene ? 3 : 2,
-      dropShadow: fullScene,
+      stroke: isFreePromo ? 0xbf360c : 0x2c1e16,
+      strokeThickness: isFreePromo ? 4 : (fullScene ? 3 : 2),
+      dropShadow: fullScene || isFreePromo,
       dropShadowColor: 0x000000,
-      dropShadowAlpha: fullScene ? 0.45 : 0,
-      dropShadowBlur: 2,
+      dropShadowAlpha: isFreePromo ? 0.55 : (fullScene ? 0.45 : 0),
+      dropShadowBlur: isFreePromo ? 3 : 2,
       dropShadowDistance: 1,
     });
     title.anchor.set(0.5, 1);
-    title.position.set(0, -hitH / 2 - 8);
+    title.position.set(0, -hitH / 2 - 10);
     root.addChild(title);
 
-    const topPad = title.height + 10;
+    const topPad = title.height + 12;
     root.hitArea = new PIXI.Rectangle(
       -hitW / 2 - 6,
       -hitH / 2 - topPad,
@@ -637,30 +667,39 @@ export class FlowerSignGachaPanel extends PIXI.Container {
     onMulti: () => void,
   ): PIXI.Container {
     const wrap = new PIXI.Container();
-    const mk = (label: string, cost: number, y: number, onTap: () => void): void => {
+    const mk = (label: string, cost: number, y: number, onTap: () => void, isFreePromo = false): void => {
       const c = new PIXI.Container();
       c.position.set(W / 2, y);
       c.eventMode = 'static';
       c.cursor = 'pointer';
+      const btnW = isFreePromo ? 280 : 260;
+      const btnH = isFreePromo ? 50 : 44;
       const g = new PIXI.Graphics();
-      g.beginFill(0x66bb6a, 0.95);
-      g.drawRoundedRect(-130, -22, 260, 44, 22);
+      g.beginFill(isFreePromo ? 0xffa726 : 0x66bb6a, 0.98);
+      g.drawRoundedRect(-btnW / 2, -btnH / 2, btnW, btnH, 22);
       g.endFill();
+      if (isFreePromo) {
+        g.lineStyle(2.5, 0xffeb3b, 0.95);
+        g.drawRoundedRect(-btnW / 2, -btnH / 2, btnW, btnH, 22);
+      }
       c.addChild(g);
-      const t = new PIXI.Text(cost > 0 ? `${label}（${cost}券）` : label, {
-        fontSize: 17,
-        fill: 0xffffff,
+      const line = isFreePromo ? `${label} · 免费十连` : `${label}（${cost}券）`;
+      const t = new PIXI.Text(line, {
+        fontSize: isFreePromo ? 22 : 20,
+        fill: isFreePromo ? 0xffeb3b : 0xffffff,
         fontFamily: FONT_FAMILY,
         fontWeight: 'bold',
+        stroke: isFreePromo ? 0xbf360c : 0x2c6b35,
+        strokeThickness: isFreePromo ? 4 : 3,
       });
       t.anchor.set(0.5);
       c.addChild(t);
-      if (cost <= 0) {
-        const badge = createFreeAdBadge(14, 0xffffff, 0x2c6b35);
-        badge.position.set(t.x + t.width / 2 + 34, 0);
+      if (isFreePromo) {
+        const badge = createFreeAdBadge(18, 0xffeb3b, 0xbf360c, '看广告', 24);
+        badge.position.set(t.x + t.width / 2 + 38, 0);
         c.addChild(badge);
       }
-      c.hitArea = new PIXI.Rectangle(-130, -22, 260, 44);
+      c.hitArea = new PIXI.Rectangle(-btnW / 2, -btnH / 2, btnW, btnH);
       c.on('pointertap', (e: PIXI.FederatedPointerEvent) => {
         e.stopPropagation();
         onTap();
@@ -669,7 +708,7 @@ export class FlowerSignGachaPanel extends PIXI.Container {
     };
     const hasDailyAdDraw = AdEntitlementManager.canUseDaily(DailyAdEntitlement.FLOWER_SIGN_DAILY_DRAW);
     mk('许愿一次', FLOWER_SIGN_DRAW_COST_SINGLE, btnY, onSingle);
-    mk('许愿十次', hasDailyAdDraw ? 0 : FLOWER_SIGN_DRAW_COST_MULTI, btnY + 58, onMulti);
+    mk('许愿十次', hasDailyAdDraw ? 0 : FLOWER_SIGN_DRAW_COST_MULTI, btnY + 62, onMulti, hasDailyAdDraw);
     return wrap;
   }
 
