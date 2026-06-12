@@ -34,7 +34,7 @@ import { PersistService, type CloudImportInfo } from '@/core/PersistService';
 import { Platform } from '@/core/PlatformService';
 import { EventBus } from '@/core/EventBus';
 import { CdnAssetService } from '@/core/CdnAssetService';
-import { TextureCache, SPECIAL_CUSTOMER_PORTRAIT_KEYS } from '@/utils/TextureCache';
+import { TextureCache } from '@/utils/TextureCache';
 import { LoadingScreenOverlay } from '@/gameobjects/ui/LoadingScreenOverlay';
 import { MainScene } from '@/scenes/MainScene';
 import { ShopScene } from '@/scenes/ShopScene';
@@ -208,11 +208,6 @@ async function main(): Promise<void> {
       loadingOverlay.setProgress(0.5 + ratio * 0.45);
     });
     loadingOverlay.setProgress(1);
-
-    // 特殊限时单胸像走 CDN，后台预热（不占主包体积；见 SPECIAL_CUSTOMER_PORTRAIT_KEYS）
-    void TextureCache.ensureKeys(SPECIAL_CUSTOMER_PORTRAIT_KEYS).catch(err => {
-      console.warn('[main] 特殊客人胸像 CDN 预热失败:', err);
-    });
 
     // 先等 audio 分包就绪再进主场景，避免 InnerAudioContext 在文件未落地时解码报错
     const _apiAudio: any = typeof wx !== 'undefined' ? wx : typeof tt !== 'undefined' ? tt : null;

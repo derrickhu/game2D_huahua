@@ -40,11 +40,13 @@ export class CustomerArrivalBanner {
       this._queue.push(customer);
       this._pumpQueue();
     };
-    if (TextureCache.get(key)) {
+    const tex = TextureCache.get(key);
+    if (tex && tex.height > 0) {
       enqueue();
       return;
     }
-    void TextureCache.ensureKeys([key]).finally(enqueue);
+    // 特殊客人胸像走 CDN，横幅播放前须等人像就绪（仅影响入场横幅，不改订单卡片）
+    void TextureCache.preloadKeys([key]).finally(enqueue);
   }
 
   private static _pumpQueue(): void {

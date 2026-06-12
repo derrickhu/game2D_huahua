@@ -778,12 +778,6 @@ const CRITICAL_IMAGE_MAP: Record<string, string> = {
   customer_student: 'images/critical/customer/student.png',
 };
 
-/** 特殊限时单客人胸像（仅 CDN；主包 4MB 已满，勿写入 critical） */
-export const SPECIAL_CUSTOMER_PORTRAIT_KEYS = [
-  'customer_tycoon',
-  'customer_florist_merchant',
-] as const;
-
 /** 合并后的完整映射（用于统一查询） */
 const IMAGE_MAP: Record<string, string> = {
   ...MAIN_IMAGE_MAP,
@@ -1297,7 +1291,7 @@ class TextureCacheClass {
     return this.preloadKeysStrict(TUTORIAL_DECO_KEYS, 'tutorialDeco');
   }
 
-  /** 获取已缓存的纹理；未命中时触发异步加载（含此前失败过的 key，由 preloadKeys 负责强制重试） */
+  /** 获取已缓存的纹理 */
   get(key: string): PIXI.Texture | null {
     const cached = this._cache.get(key);
     if (cached) return cached;
@@ -1307,11 +1301,6 @@ class TextureCacheClass {
       void this._loadTexture(key, path);
     }
     return null;
-  }
-
-  /** 强制加载（忽略 _failed），用于客人胸像等 CDN 资源重试 */
-  ensureKeys(keys: readonly string[]): Promise<void> {
-    return this.preloadKeys(keys);
   }
 
   /**
