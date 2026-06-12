@@ -703,7 +703,10 @@ export class MainScene implements Scene {
   /** 绑定客人相关事件 */
   private _bindCustomerEvents(): void {
     EventBus.on('customer:arrived', (customer) => {
-      CustomerArrivalBanner.tryShow(customer);
+      const portraitKey = `customer_${customer.typeId}`;
+      void TextureCache.ensureKeys([portraitKey]).finally(() => {
+        CustomerArrivalBanner.tryShow(customer);
+      });
     });
 
     // 点击"完成"后：先播放飞行动画，动画结束后再真正执行交付

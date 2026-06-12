@@ -94,6 +94,7 @@ export class CustomerView extends PIXI.Container {
     this._avatarSprite.anchor.set(0.5, 1.0);
     this._avatarSprite.position.set(0, AVATAR_FEET_Y);
     this._avatarSprite.visible = false;
+    this._avatarSprite.zIndex = 6;
     this._avatarSprite.eventMode = 'none';
     this.addChild(this._avatarSprite);
 
@@ -115,6 +116,22 @@ export class CustomerView extends PIXI.Container {
     this._queueIndex = index;
   }
 
+  /** 绑定客人胸像；纹理未就绪时触发 preloadKeys（可绕过 get 的 _failed 不重试） */
+  private _applyAvatar(typeId: string): void {
+    const key = `customer_${typeId}`;
+    const tex = TextureCache.get(key);
+    if (tex && tex.width > 0 && tex.height > 0) {
+      this._avatarSprite.texture = tex;
+      const targetH = 160;
+      const s = targetH / tex.height;
+      this._avatarSprite.scale.set(s);
+      this._avatarSprite.visible = true;
+      return;
+    }
+    this._avatarSprite.visible = false;
+    void TextureCache.ensureKeys([key]);
+  }
+
   setCustomer(customer: CustomerInstance | null): void {
     this._clearCompleteBtn();
 
@@ -133,16 +150,7 @@ export class CustomerView extends PIXI.Container {
     this._customer = customer;
     this.visible = true;
 
-    const tex = TextureCache.get(`customer_${customer.typeId}`);
-    if (tex) {
-      this._avatarSprite.texture = tex;
-      const targetH = 160;
-      const s = targetH / tex.height;
-      this._avatarSprite.scale.set(s);
-      this._avatarSprite.visible = true;
-    } else {
-      this._avatarSprite.visible = false;
-    }
+    this._applyAvatar(customer.typeId);
 
     this._rebuildInfoPanel();
     this._buildStaminaChestBadge();

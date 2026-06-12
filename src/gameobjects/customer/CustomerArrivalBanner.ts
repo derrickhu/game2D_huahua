@@ -35,8 +35,16 @@ export class CustomerArrivalBanner {
     if (!shouldShowCustomerArrivalBanner(customer)) return;
     if (!pickCustomerArrivalLine(customer.typeId)) return;
 
-    this._queue.push(customer);
-    this._pumpQueue();
+    const key = `customer_${customer.typeId}`;
+    const enqueue = (): void => {
+      this._queue.push(customer);
+      this._pumpQueue();
+    };
+    if (TextureCache.get(key)) {
+      enqueue();
+      return;
+    }
+    void TextureCache.ensureKeys([key]).finally(enqueue);
   }
 
   private static _pumpQueue(): void {
