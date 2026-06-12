@@ -1,5 +1,6 @@
 import { PersistService } from '@/core/PersistService';
 import { EventBus } from '@/core/EventBus';
+import { formatLocalDateString } from '@/utils/WeeklyCycle';
 
 const STORAGE_KEY = 'huahua_ad_entitlements';
 
@@ -13,8 +14,9 @@ interface AdEntitlementState {
   used: Record<string, number>;
 }
 
+/** 本地自然日 0:00 日切（每日任务单独用 05:00，此处不用 UTC 避免国内 0～8 点双领） */
 function todayKey(): string {
-  return new Date().toISOString().slice(0, 10);
+  return formatLocalDateString();
 }
 
 function emptyState(): AdEntitlementState {

@@ -15,11 +15,12 @@ import { AdEntitlementManager, DailyAdEntitlement } from '@/managers/AdEntitleme
 import { CurrencyManager } from '@/managers/CurrencyManager';
 import { RewardBoxManager } from '@/managers/RewardBoxManager';
 import { FlowerSignTicketManager } from '@/managers/FlowerSignTicketManager';
+import { formatLocalDateString } from '@/utils/WeeklyCycle';
 
 const SHOP_AUTO_OPEN_DATE_KEY = 'huahua_flower_sign_shop_auto_open';
 
 function todayKey(): string {
-  return new Date().toISOString().slice(0, 10);
+  return formatLocalDateString();
 }
 
 /** 花坊当日首次进入且仍有广告免费十连时，自动弹出许愿喷泉 */

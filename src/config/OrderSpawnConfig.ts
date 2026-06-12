@@ -106,8 +106,8 @@ export const TIMED_DIAMOND_ORDER_MIN_ITEM_LEVEL = 6;
 export const TIMED_DIAMOND_ORDER_TIME_LIMIT_SECONDS = 6 * 60 * 60;
 export const TIMED_DIAMOND_ORDER_DIAMOND_CAP = 10;
 
-/** 富贵花商限时单：4 级开放，每日最多 1 单，限时 8 小时，三槽同款鲜花/绿植 L6+ */
-export const TIMED_FLORIST_ORDER_MIN_PLAYER_LEVEL = 4;
+/** 富贵花商限时单：8 级后才有概率出现，每日最多 1 单，限时 8 小时，三槽同款鲜花/绿植 L6+ */
+export const TIMED_FLORIST_ORDER_MIN_PLAYER_LEVEL = 8;
 export const TIMED_FLORIST_ORDER_DAILY_CAP = 1;
 export const TIMED_FLORIST_ORDER_BASE_CHANCE = 0.05;
 export const TIMED_FLORIST_ORDER_FIRST_DAILY_CHANCE_MULT = 1.6;
