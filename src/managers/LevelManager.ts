@@ -15,6 +15,7 @@ import {
 } from '@/config/StarLevelConfig';
 import { CurrencyManager } from './CurrencyManager';
 import { FlowerSignTicketManager } from './FlowerSignTicketManager';
+import { FruitCutUpdateGrantManager } from './FruitCutUpdateGrantManager';
 import { SaveManager } from './SaveManager';
 
 export interface LevelUpReward {
@@ -127,6 +128,7 @@ class LevelManagerClass {
 
   private _bindEvents(): void {
     EventBus.on('star:levelUp', (newLevel: number, oldLevel: number) => {
+      FruitCutUpdateGrantManager.onStarLevelUp(oldLevel, newLevel);
       const reward = aggregateStarLevelUpRewards(oldLevel, newLevel);
       if (reward.stamina > 0) CurrencyManager.addStamina(reward.stamina);
       if (reward.diamond > 0) CurrencyManager.addDiamond(reward.diamond);

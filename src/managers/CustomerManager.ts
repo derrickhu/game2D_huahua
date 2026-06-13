@@ -520,6 +520,15 @@ class CustomerManagerClass {
     return Math.max(preliminaryBase, floor);
   }
 
+  /**
+   * 解析交付时应扣除的棋盘格（与 deliver 一致）。
+   * 供 MainScene 飞行动画使用；不写入 slot.lockedCellIndex，避免与 _rescanAll 竞态。
+   */
+  resolveDeliverCellIndices(customer: CustomerInstance): number[] | null {
+    if (!customer.allSatisfied) return null;
+    return this._resolveDeliverCellIndices(customer);
+  }
+
   deliver(uid: number): boolean {
     const idx = this._customers.findIndex(c => c.uid === uid);
     if (idx < 0) return false;
@@ -532,38 +541,13 @@ class CustomerManagerClass {
 
     // 即时为本客人查找可用格子（因 allSatisfied 不再独占锁格，
     // 部分 slot 的 lockedCellIndex 可能为 -1）
-    const usedCells = new Set<number>();
-    for (const slot of customer.slots) {
-      if (slot.lockedCellIndex >= 0) {
-        const locked = BoardManager.getCellByIndex(slot.lockedCellIndex);
-        if (
-          locked?.state === 'open' &&
-          locked.itemId === slot.itemId &&
-          !usedCells.has(slot.lockedCellIndex)
-        ) {
-          usedCells.add(slot.lockedCellIndex);
-          continue;
-        }
-        // 缓存格已失效（他客先交、合成消耗等）：丢弃旧索引，走下方即时扫描
-        slot.lockedCellIndex = -1;
-      }
-      for (const cell of BoardManager.cells) {
-        if (cell.state !== 'open' || !cell.itemId) continue;
-        if (usedCells.has(cell.index)) continue;
-        if (cell.itemId !== slot.itemId) continue;
-        slot.lockedCellIndex = cell.index;
-        usedCells.add(cell.index);
-        break;
-      }
-    }
-    if (!customer.slots.every(s => s.lockedCellIndex >= 0)) return false;
+    const cellIndices = this._resolveDeliverCellIndices(customer);
+    if (!cellIndices) return false;
 
-    for (const slot of customer.slots) {
-      const cell = BoardManager.getCellByIndex(slot.lockedCellIndex);
-      if (!cell || cell.state !== 'open' || cell.itemId !== slot.itemId) return false;
-    }
-    for (const slot of customer.slots) {
-      BoardManager.removeItem(slot.lockedCellIndex);
+    // 须先快照索引再逐个 removeItem：每次 board:itemRemoved 会同步 _rescanAll，
+    // 把 slot.lockedCellIndex 清成 -1，若边删边读 slot 会导致后续格扣不掉。
+    for (const cellIndex of cellIndices) {
+      BoardManager.removeItem(cellIndex);
     }
 
     const weekendBonus = customer.weekendHuayuanBonus ?? 0;
@@ -1114,6 +1098,47 @@ class CustomerManagerClass {
     });
     const after = list.map(c => c.uid);
     return before.some((uid, i) => uid !== after[i]);
+  }
+
+  /** 为每位需求槽解析 1:1 棋盘格；失败返回 null */
+  private _resolveDeliverCellIndices(customer: CustomerInstance): number[] | null {
+    const usedCells = new Set<number>();
+    const indices: number[] = [];
+
+    for (const slot of customer.slots) {
+      let cellIndex = -1;
+
+      if (slot.lockedCellIndex >= 0) {
+        const locked = BoardManager.getCellByIndex(slot.lockedCellIndex);
+        if (
+          locked?.state === 'open' &&
+          locked.itemId === slot.itemId &&
+          !usedCells.has(slot.lockedCellIndex)
+        ) {
+          cellIndex = slot.lockedCellIndex;
+        }
+      }
+
+      if (cellIndex < 0) {
+        for (const cell of BoardManager.cells) {
+          if (cell.state !== 'open' || !cell.itemId) continue;
+          if (usedCells.has(cell.index)) continue;
+          if (cell.itemId !== slot.itemId) continue;
+          cellIndex = cell.index;
+          break;
+        }
+      }
+
+      if (cellIndex < 0) return null;
+
+      const cell = BoardManager.getCellByIndex(cellIndex);
+      if (!cell || cell.state !== 'open' || cell.itemId !== slot.itemId) return null;
+
+      usedCells.add(cellIndex);
+      indices.push(cellIndex);
+    }
+
+    return indices;
   }
 }
 

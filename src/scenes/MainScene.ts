@@ -17,7 +17,7 @@ import { BoardManager } from '@/managers/BoardManager';
 import { MergeCompanionManager } from '@/managers/MergeCompanionManager';
 import { CurrencyManager } from '@/managers/CurrencyManager';
 import { WarehouseManager } from '@/managers/WarehouseManager';
-import { CustomerManager, DemandSlot } from '@/managers/CustomerManager';
+import { CustomerManager } from '@/managers/CustomerManager';
 import { SaveManager } from '@/managers/SaveManager';
 import { QuestManager } from '@/managers/QuestManager';
 import {
@@ -719,12 +719,14 @@ export class MainScene implements Scene {
         }
       };
 
-      // 棋盘上已锁定的物品 → 飞到对应需求槽位
+      // 交付应扣除的全部棋盘格（含他客已 reserved 的共享物；lockedCellIndex 可能为 -1）
       const cv = this._customerScrollArea.customerViews.find(v => v.customerUid === uid) ?? null;
       const slotsToFly: { slotIndex: number; cellIndex: number; itemId: string }[] = [];
-      (customer.slots as DemandSlot[]).forEach((slot, idx) => {
-        if (slot.lockedCellIndex >= 0) {
-          slotsToFly.push({ slotIndex: idx, cellIndex: slot.lockedCellIndex, itemId: slot.itemId });
+      const deliverCells = CustomerManager.resolveDeliverCellIndices(customer);
+      deliverCells?.forEach((cellIndex, idx) => {
+        const itemId = customer.slots[idx]?.itemId;
+        if (itemId) {
+          slotsToFly.push({ slotIndex: idx, cellIndex, itemId });
         }
       });
       if (cv && slotsToFly.length > 0) {
@@ -1332,9 +1334,6 @@ export class MainScene implements Scene {
       if (SceneManager.current?.name !== 'main') return;
       const g = this._rewardBoxButton.toGlobal(this._rewardBoxButton.getItemSlotCenterLocal());
       const prev = typeof oldLevel === 'number' ? oldLevel : level - 1;
-      if (prev < 11 && level >= 11) {
-        FruitCutUpdateGrantManager.markClaimed();
-      }
       const shouldRewardBoxHint = level >= 2 && prev < 2;
       this._levelUpPopup.show(level, reward, {
         rewardFlyTargetGlobal: g,
@@ -1654,6 +1653,10 @@ export class MainScene implements Scene {
     let claimed = false;
     const claim = (): void => {
       if (claimed) return;
+      if (FruitCutUpdateGrantManager.isClaimed()) {
+        this._dismissFruitCutUpdateGrantPrompt();
+        return;
+      }
       claimed = true;
       for (const { itemId, count } of items) {
         if (ITEM_DEFS.has(itemId) && count > 0) {
