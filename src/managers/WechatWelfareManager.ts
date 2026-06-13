@@ -7,6 +7,7 @@ import {
 } from '@/config/WechatWelfareConfig';
 import { Platform } from '@/core/PlatformService';
 import { ToastMessage } from '@/gameobjects/ui/ToastMessage';
+import { TutorialManager } from '@/managers/TutorialManager';
 import { WechatGiftManager } from './WechatGiftManager';
 
 class WechatWelfareManagerClass {
@@ -28,6 +29,7 @@ class WechatWelfareManagerClass {
   }
 
   tryAutoShowOnLaunch(): boolean {
+    if (!TutorialManager.isCompleted) return false;
     if (this._sessionShown || this._pageManager) return false;
     if (this._isNoGiftCoolingDownToday()) return false;
     if (this._isDismissCoolingDown()) return false;
@@ -47,6 +49,9 @@ class WechatWelfareManagerClass {
   }
 
   async showNativeWelfarePage(reason = 'manual'): Promise<void> {
+    if (!TutorialManager.isCompleted) {
+      throw new Error('tutorial not completed');
+    }
     if (!this.canUseNativeWelfare()) {
       throw new Error('native welfare unavailable');
     }

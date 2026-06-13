@@ -8,6 +8,7 @@ import { CurrencyManager } from './CurrencyManager';
 import { FlowerSignTicketManager } from './FlowerSignTicketManager';
 import { RewardBoxManager } from './RewardBoxManager';
 import { SaveManager } from './SaveManager';
+import { TutorialManager } from './TutorialManager';
 
 const GRANTED_IDS_KEY = `${GAME_KEY}_wechat_gift_granted_ids`;
 const MAX_LOCAL_GRANTED_IDS = 300;
@@ -27,6 +28,7 @@ class WechatGiftManagerClass {
 
   async syncAndGrant(reason = 'manual'): Promise<WechatGiftSyncResult> {
     const empty = { granted: false, count: 0 };
+    if (!TutorialManager.isCompleted) return empty;
     if (this._syncing || !BackendService.available) return empty;
     this._syncing = true;
     try {
