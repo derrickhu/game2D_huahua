@@ -13,8 +13,8 @@ const GRANTED_IDS_KEY = `${GAME_KEY}_wechat_gift_granted_ids`;
 const MAX_LOCAL_GRANTED_IDS = 300;
 
 interface GrantSummary {
-  directCount: number;
-  boxCount: number;
+  /** 本次新发放成功的礼包单数（不是奖励道具数量之和） */
+  giftCount: number;
 }
 
 export interface WechatGiftSyncResult {
@@ -36,7 +36,7 @@ class WechatGiftManagerClass {
 
       const grantedIds = this._loadGrantedIds();
       const idsToMark: string[] = [];
-      const summary: GrantSummary = { directCount: 0, boxCount: 0 };
+      const summary: GrantSummary = { giftCount: 0 };
       let changed = false;
 
       for (const gift of gifts) {
@@ -45,8 +45,9 @@ class WechatGiftManagerClass {
           idsToMark.push(gift.id);
           continue;
         }
-        const didGrant = this._grantGift(gift, summary);
+        const didGrant = this._grantGift(gift);
         if (!didGrant) continue;
+        summary.giftCount += 1;
         grantedIds.add(gift.id);
         idsToMark.push(gift.id);
         changed = true;
@@ -56,14 +57,14 @@ class WechatGiftManagerClass {
         this._saveGrantedIds(grantedIds);
         SaveManager.save();
         CloudSyncManager.scheduleSync(`wechat-gift:${reason}`);
-        const count = summary.directCount + summary.boxCount;
-        ToastMessage.show(count > 0 ? `微信礼包已到账 ×${count}` : '微信礼包已到账', 1.6);
+        const n = summary.giftCount;
+        ToastMessage.show(n > 1 ? `微信礼包已到账（${n} 个）` : '微信礼包已到账', 1.6);
       }
 
       if (idsToMark.length > 0) {
         await BackendService.markWechatGiftsGranted(Array.from(new Set(idsToMark)));
       }
-      return { granted: changed, count: summary.directCount + summary.boxCount };
+      return { granted: changed, count: summary.giftCount };
     } catch (error) {
       console.warn('[WechatGift] sync failed:', error);
       return empty;
@@ -72,7 +73,7 @@ class WechatGiftManagerClass {
     }
   }
 
-  private _grantGift(gift: WechatGiftRow, summary: GrantSummary): boolean {
+  private _grantGift(gift: WechatGiftRow): boolean {
     const rewards = gift.rewards || {};
     let didGrant = false;
     for (const [key, rawAmount] of Object.entries(rewards)) {
@@ -82,28 +83,23 @@ class WechatGiftManagerClass {
       switch (key) {
         case 'stamina':
           CurrencyManager.addStamina(amount);
-          summary.directCount += amount;
           didGrant = true;
           break;
         case 'diamond':
           CurrencyManager.addDiamond(amount);
-          summary.directCount += amount;
           didGrant = true;
           break;
         case 'huayuan':
           CurrencyManager.addHuayuan(amount);
-          summary.directCount += amount;
           didGrant = true;
           break;
         case 'flowerSign':
           FlowerSignTicketManager.add(amount);
-          summary.directCount += amount;
           didGrant = true;
           break;
         default:
           if (ITEM_DEFS.has(key)) {
             RewardBoxManager.addItem(key, amount);
-            summary.boxCount += amount;
             didGrant = true;
           } else {
             console.warn('[WechatGift] unknown reward key:', key, amount, gift.orderId);
