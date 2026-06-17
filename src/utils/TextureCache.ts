@@ -693,12 +693,15 @@ const DECO_IMAGE_MAP: Record<string, string> = {
   xianqi_koi_twin_stone_seat: 'subpkg_deco/images/furniture/xianqi_koi_twin_stone_seat.png',
   xianqi_koi_wall_fountain: 'subpkg_deco/images/furniture/xianqi_koi_wall_fountain.png',
   xianqi_bamboo_mist_daybed: 'subpkg_deco/images/furniture/xianqi_bamboo_mist_daybed.png',
+
+  jiangnan_wash_bench: 'subpkg_deco/images/furniture/jiangnan_wash_bench.png',
   xianqi_bamboo_joint_desk: 'subpkg_deco/images/furniture/xianqi_bamboo_joint_desk.png',
   xianqi_bamboo_book_tower: 'subpkg_deco/images/furniture/xianqi_bamboo_book_tower.png',
   xianqi_bamboo_mist_fence: 'subpkg_deco/images/furniture/xianqi_bamboo_mist_fence.png',
   xianqi_orchid_pavilion_mirror: 'subpkg_deco/images/furniture/xianqi_orchid_pavilion_mirror.png',
 
-  // ---- 茶香小院专属家具（batch51 tea_house Lv25-30）----
+  // ---- 茶香小院专属家具（batch51 tea_house Lv20-30）----
+  gucha_tea_bench: 'subpkg_deco/images/furniture/gucha_tea_bench.png',
   jiangnan_lattice_window: 'subpkg_deco/images/furniture/jiangnan_lattice_window.png',
   gucha_water_jar: 'subpkg_deco/images/furniture/gucha_water_jar.png',
   gucha_charcoal_brazier: 'subpkg_deco/images/furniture/gucha_charcoal_brazier.png',

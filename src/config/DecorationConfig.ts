@@ -402,6 +402,7 @@ export const DECO_DEFS: DecoDef[] = [
   { id: 'deco_lv15_light_terrarium_lamp', name: '玻璃花房灯', slot: DecoSlot.LIGHT, rarity: DecoRarity.RARE, cost: 2300, starValue: 7, icon: 'deco_lv15_light_terrarium_lamp', desc: '尖顶玻璃罩做小温室，里面有暖黄灯泡与小花苔藓', unlockRequirement: { level: 11 }, defaultScale: 0.65 },
   { id: 'deco_lv16_wallart_harbor_arch_window', name: '海港拱窗景', slot: DecoSlot.WALLART, rarity: DecoRarity.RARE, cost: 5500, starValue: 8, icon: 'deco_lv16_wallart_harbor_arch_window', desc: '奶白拱窗框里收着金色海港落日，有小帆船与玫瑰窗台', unlockRequirement: { level: 16 }, defaultScale: 1.30 },
   { id: 'deco_lv20_orn_white_grand_piano', name: '白色三角钢琴', slot: DecoSlot.ORNAMENT, rarity: DecoRarity.LIMITED, cost: 20000, starValue: 12, icon: 'deco_lv20_orn_white_grand_piano', desc: '奶白漆三角钢琴，香槟金腿与玫瑰花束、水晶烛台', unlockRequirement: { level: 20 }, defaultScale: 1.5, decorationPanelTab: 'furniture' },
+  { id: 'jiangnan_wash_bench', name: '临河浣衣凳', slot: DecoSlot.ORNAMENT, rarity: DecoRarity.COMMON, cost: 3600, starValue: 1, icon: 'jiangnan_wash_bench', desc: '旧木矮凳叠着白布，底下藤篮装着浣衣日常', unlockRequirement: { level: 20 }, defaultScale: 0.95, decorationPanelTab: 'furniture' },
 
   // ═══════ ⑭ 仙气古风扩展 Lv21–30（batch53 · 全场景通用 · 家具/摆件/墙饰/庭院 Tab）
   { id: 'xianqi_maple_tier_shelf', name: '果篮层架', slot: DecoSlot.SHELF, rarity: DecoRarity.FINE, cost: 9200, starValue: 4, icon: 'xianqi_maple_tier_shelf', desc: '三层原木架配藤篮与柿子梨，顶栏枫叶花饰', unlockRequirement: { level: 21 }, defaultScale: 1.75 },
@@ -426,6 +427,7 @@ export const DECO_DEFS: DecoDef[] = [
   { id: 'xianqi_bamboo_mist_daybed', name: '竹影卧榻', slot: DecoSlot.ORNAMENT, rarity: DecoRarity.RARE, cost: 12800, starValue: 7, icon: 'xianqi_bamboo_mist_daybed', desc: '竹框卧榻配鼠尾草垫，一端垂雾灰纱', unlockRequirement: { level: 30 }, defaultScale: 1.55, decorationPanelTab: 'furniture' },
 
   // ═══════ ⑭.5 茶香小院专属家具（tea_house Lv25 解锁；decorationPanelTab=flower_room → 左侧「茶香小院」Tab）
+  { id: 'gucha_tea_bench', name: '茶寮长凳', slot: DecoSlot.ORNAMENT, rarity: DecoRarity.COMMON, cost: 3400, starValue: 1, icon: 'gucha_tea_bench', desc: '素木长凳磨得发亮，台面留着一圈茶渍印', unlockRequirement: { level: 25 }, defaultScale: 1.1, decorationPanelTab: 'flower_room', allowedSceneIds: ['tea_house'] },
   { id: 'jiangnan_lattice_window', name: '花窗栏', slot: DecoSlot.WALLART, rarity: DecoRarity.FINE, cost: 9800, starValue: 5, icon: 'jiangnan_lattice_window', desc: '冰裂纹花窗格，淡蓝天空映在磨砂玻璃上', unlockRequirement: { level: 25 }, defaultScale: 1.28, decorationPanelTab: 'flower_room', allowedSceneIds: ['tea_house'] },
   { id: 'gucha_water_jar', name: '陶瓮水缸', slot: DecoSlot.ORNAMENT, rarity: DecoRarity.COMMON, cost: 9200, starValue: 4, icon: 'gucha_water_jar', desc: '粗陶大水瓮配竹勺，茶寮取水必备', unlockRequirement: { level: 25 }, defaultScale: 0.82, decorationPanelTab: 'flower_room', allowedSceneIds: ['tea_house'] },
   { id: 'gucha_charcoal_brazier', name: '竹风炉', slot: DecoSlot.ORNAMENT, rarity: DecoRarity.FINE, cost: 10200, starValue: 5, icon: 'gucha_charcoal_brazier', desc: '竹编风炉炭火微红，陶壶上袅袅茶烟', unlockRequirement: { level: 26 }, defaultScale: 0.88, decorationPanelTab: 'flower_room', allowedSceneIds: ['tea_house'] },
