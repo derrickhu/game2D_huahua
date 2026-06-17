@@ -676,6 +676,57 @@ const DECO_IMAGE_MAP: Record<string, string> = {
   deco_lv16_wallart_harbor_arch_window: 'subpkg_deco/images/furniture/deco_lv16_wallart_harbor_arch_window.png',
   deco_lv20_orn_white_grand_piano: 'subpkg_deco/images/furniture/deco_lv20_orn_white_grand_piano.png',
 
+  // ---- Batch53 仙气古风 Lv21–30（rembg + crop_trim + max-side 171）----
+  xianqi_maple_round_table: 'subpkg_deco/images/furniture/xianqi_maple_round_table.png',
+  xianqi_maple_folding_chair: 'subpkg_deco/images/furniture/xianqi_maple_folding_chair.png',
+  xianqi_maple_incense_stand: 'subpkg_deco/images/furniture/xianqi_maple_incense_stand.png',
+  xianqi_maple_landscape_screen: 'subpkg_deco/images/furniture/xianqi_maple_landscape_screen.png',
+  xianqi_maple_tier_shelf: 'subpkg_deco/images/furniture/xianqi_maple_tier_shelf.png',
+  xianqi_plum_canopy_bed: 'subpkg_deco/images/furniture/xianqi_plum_canopy_bed.png',
+  xianqi_plum_wardrobe: 'subpkg_deco/images/furniture/xianqi_plum_wardrobe.png',
+  xianqi_plum_snow_basin: 'subpkg_deco/images/furniture/xianqi_plum_snow_basin.png',
+  xianqi_plum_snow_window: 'subpkg_deco/images/furniture/xianqi_plum_snow_window.png',
+  xianqi_plum_padded_stool: 'subpkg_deco/images/furniture/xianqi_plum_padded_stool.png',
+  xianqi_koi_stream_bridge: 'subpkg_deco/images/furniture/xianqi_koi_stream_bridge.png',
+  xianqi_koi_pond_tea_table: 'subpkg_deco/images/furniture/xianqi_koi_pond_tea_table.png',
+  xianqi_koi_scale_cabinet: 'subpkg_deco/images/furniture/xianqi_koi_scale_cabinet.png',
+  xianqi_koi_twin_stone_seat: 'subpkg_deco/images/furniture/xianqi_koi_twin_stone_seat.png',
+  xianqi_koi_wall_fountain: 'subpkg_deco/images/furniture/xianqi_koi_wall_fountain.png',
+  xianqi_bamboo_mist_daybed: 'subpkg_deco/images/furniture/xianqi_bamboo_mist_daybed.png',
+  xianqi_bamboo_joint_desk: 'subpkg_deco/images/furniture/xianqi_bamboo_joint_desk.png',
+  xianqi_bamboo_book_tower: 'subpkg_deco/images/furniture/xianqi_bamboo_book_tower.png',
+  xianqi_bamboo_mist_fence: 'subpkg_deco/images/furniture/xianqi_bamboo_mist_fence.png',
+  xianqi_orchid_pavilion_mirror: 'subpkg_deco/images/furniture/xianqi_orchid_pavilion_mirror.png',
+
+  // ---- 茶香小院专属家具（batch51 tea_house Lv25-30）----
+  jiangnan_lattice_window: 'subpkg_deco/images/furniture/jiangnan_lattice_window.png',
+  gucha_water_jar: 'subpkg_deco/images/furniture/gucha_water_jar.png',
+  gucha_charcoal_brazier: 'subpkg_deco/images/furniture/gucha_charcoal_brazier.png',
+  jiangnan_rattan_daybed: 'subpkg_deco/images/furniture/jiangnan_rattan_daybed.png',
+  gucha_tea_boat: 'subpkg_deco/images/furniture/gucha_tea_boat.png',
+  jiangnan_willow_cart: 'subpkg_deco/images/furniture/jiangnan_willow_cart.png',
+  gucha_tea_chest: 'subpkg_deco/images/furniture/gucha_tea_chest.png',
+  xianxia_herb_rack: 'subpkg_deco/images/furniture/xianxia_herb_rack.png',
+  jiangnan_blue_cabinet: 'subpkg_deco/images/furniture/jiangnan_blue_cabinet.png',
+  xianxia_meditation_platform: 'subpkg_deco/images/furniture/xianxia_meditation_platform.png',
+
+  // ---- 古风/民俗/奇匠 Lv30-35（batch51）----
+  ancient_brush_mountain: 'subpkg_deco/images/furniture/ancient_brush_mountain.png',
+  ancient_inkstone_desk: 'subpkg_deco/images/furniture/ancient_inkstone_desk.png',
+  ancient_scroll_rack: 'subpkg_deco/images/furniture/ancient_scroll_rack.png',
+  ancient_dressing_case: 'subpkg_deco/images/furniture/ancient_dressing_case.png',
+  folk_kite_wall: 'subpkg_deco/images/furniture/folk_kite_wall.png',
+  folk_lion_head_stand: 'subpkg_deco/images/furniture/folk_lion_head_stand.png',
+  ancient_landscape_screen: 'subpkg_deco/images/furniture/ancient_landscape_screen.png',
+  folk_dragon_bench: 'subpkg_deco/images/furniture/folk_dragon_bench.png',
+  ancient_master_chair: 'subpkg_deco/images/furniture/ancient_master_chair.png',
+  ancient_bronze_ding: 'subpkg_deco/images/furniture/ancient_bronze_ding.png',
+  ancient_phoenix_rug: 'subpkg_deco/images/furniture/ancient_phoenix_rug.png',
+  ancient_jade_bi_stand: 'subpkg_deco/images/furniture/ancient_jade_bi_stand.png',
+  whimsy_geode_table: 'subpkg_deco/images/furniture/whimsy_geode_table.png',
+  folk_pole_lantern: 'subpkg_deco/images/furniture/folk_pole_lantern.png',
+  ancient_stone_lantern: 'subpkg_deco/images/furniture/ancient_stone_lantern.png',
+
   // ---- 首月签到活动专属家具（7/14/21/28 日签到 + 28 日累计礼包）----
   checkin_m1_bunny_ac: 'subpkg_deco/images/furniture/checkin_m1_bunny_ac.png',
   checkin_m1_crystal_partition: 'subpkg_deco/images/furniture/checkin_m1_crystal_partition.png',
@@ -748,6 +799,8 @@ const DECO_IMAGE_MAP: Record<string, string> = {
   bg_room_butterfly_house_xianqi_nb2: 'subpkg_deco/images/house/preview/bg_room_butterfly_house_xianqi_nb2.png',
   /** 茶香小院默认房壳 — 仙气 pastel 双层茶寮 */
   bg_room_tea_house_xianqi_two_story_nb2: 'subpkg_deco/images/house/bg_room_tea_house_xianqi_two_story_nb2.png',
+  /** 茶香小院 — 深色红木双层茶寮 cutaway 空壳 */
+  bg_room_tea_house_darkwood_two_story_nb2: 'subpkg_deco/images/house/bg_room_tea_house_darkwood_two_story_nb2.png',
   /** 蛋糕房 — 现代 pastel 甜品店 cutaway 空壳 */
   bg_room_cake_shop_modern_nb2: 'subpkg_deco/images/house/preview/bg_room_cake_shop_modern_nb2.png',
   /** 蛋糕房 — 蓝莓薄荷 pastel 甜品店 cutaway 空壳 */

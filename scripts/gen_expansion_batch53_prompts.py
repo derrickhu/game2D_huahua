@@ -33,10 +33,9 @@ ITEMS: list[dict] = [
         "name": "枫影圆几",
         "set": "秋枫暖梦套",
         "slot": "table",
-        "scene": "tea_house",
-        "level": 20,
-        "cost": 760,
-        "star": 3,
+        "level": 21,
+        "cost": 9800,
+        "star": 5,
         "rarity": "fine",
         "palette": "pale birch wood round table, coral maple leaf inlay on top, amber tea cup pair",
         "subject": "A round low tea table in pale birch wood with coral-orange maple leaf inlay on the surface, two small amber tea cups, warm autumn fairy mood.",
@@ -46,10 +45,9 @@ ITEMS: list[dict] = [
         "name": "折扇游椅",
         "set": "秋枫暖梦套",
         "slot": "ornament",
-        "scene": "tea_house",
-        "level": 21,
-        "cost": 680,
-        "star": 3,
+        "level": 22,
+        "cost": 10200,
+        "star": 5,
         "rarity": "fine",
         "palette": "light wood folding chair shaped like an open folding fan back, peach cushion, gold fan ribs",
         "subject": "A single lounge chair whose backrest mimics an open folding fan silhouette in pale wood with gold ribs, peach silk seat cushion, elegant portable seating.",
@@ -59,10 +57,9 @@ ITEMS: list[dict] = [
         "name": "香云几",
         "set": "秋枫暖梦套",
         "slot": "ornament",
-        "scene": "tea_house",
-        "level": 19,
-        "cost": 620,
-        "star": 2,
+        "level": 22,
+        "cost": 8800,
+        "star": 4,
         "rarity": "common",
         "palette": "tiered pale wood incense stand, celadon burner, soft orange smoke curl",
         "subject": "A small tiered offering stand with celadon incense burner on top and gentle pastel smoke curl, maple-leaf motif carved on legs.",
@@ -71,11 +68,10 @@ ITEMS: list[dict] = [
         "id": "xianqi_maple_landscape_screen",
         "name": "秋山屏风",
         "set": "秋枫暖梦套",
-        "slot": "wallart",
-        "scene": "garden_villa",
-        "level": 22,
-        "cost": 920,
-        "star": 4,
+        "slot": "ornament",
+        "level": 23,
+        "cost": 11200,
+        "star": 6,
         "rarity": "fine",
         "palette": "four-panel screen, amber and coral maple mountain silk painting, cream wood frame",
         "subject": "A four-panel folding screen wall-art prop in isometric wall angle, silk panels painted with misty autumn maple mountains in coral and amber pastels, no calligraphy.",
@@ -85,10 +81,9 @@ ITEMS: list[dict] = [
         "name": "果篮层架",
         "set": "秋枫暖梦套",
         "slot": "shelf",
-        "scene": "flower_shop",
-        "level": 20,
-        "cost": 840,
-        "star": 3,
+        "level": 21,
+        "cost": 9200,
+        "star": 4,
         "rarity": "fine",
         "palette": "three-tier pale wood shelf, woven baskets with persimmon and pear, maple garland trim",
         "subject": "A three-tier display shelf with wicker baskets holding cute stylized persimmons and pears, maple leaf garland on top rail, harvest fairy pantry mood.",
@@ -99,12 +94,12 @@ ITEMS: list[dict] = [
         "name": "寒梅纱床",
         "set": "寒梅雪境套",
         "slot": "ornament",
-        "scene": "garden_villa",
-        "level": 24,
-        "cost": 1420,
-        "star": 6,
-        "rarity": "rare",
-        "palette": "white-washed wood bed frame, icy blue and plum pink silk canopy, snowflake embroidery",
+        "decorationPanelTab": "furniture",
+        "level": 25,
+    "cost": 18000,
+    "star": 8,
+    "rarity": "rare",
+    "palette": "white-washed wood bed frame, icy blue and plum pink silk canopy, snowflake embroidery",
         "subject": "A fairy canopy bed with white-painted slender wood posts, layered icy-blue and plum-pink translucent silk curtains, subtle snowflake and plum blossom embroidery, winter dream bedroom.",
     },
     {
@@ -112,10 +107,9 @@ ITEMS: list[dict] = [
         "name": "雪白轻柜",
         "set": "寒梅雪境套",
         "slot": "shelf",
-        "scene": "garden_villa",
-        "level": 23,
-        "cost": 1150,
-        "star": 5,
+        "level": 25,
+        "cost": 11800,
+        "star": 6,
         "rarity": "rare",
         "palette": "white lacquer-look wardrobe, silver plum branch inlay, pale blue handles",
         "subject": "A tall wardrobe in soft white painted wood with silver plum blossom branch inlay and pale blue cloud handles, airy winter boudoir storage not dark wood.",
@@ -125,10 +119,9 @@ ITEMS: list[dict] = [
         "name": "雪梅水钵",
         "set": "寒梅雪境套",
         "slot": "garden",
-        "scene": "tea_house",
-        "level": 22,
-        "cost": 880,
-        "star": 4,
+        "level": 24,
+        "cost": 10800,
+        "star": 6,
         "rarity": "fine",
         "palette": "white stone basin, floating plum petals, pale blue water, silver rim",
         "subject": "A small stone water basin with pale blue water and floating pink plum petals, silver rim accent, serene winter garden water feature on ground.",
@@ -138,10 +131,9 @@ ITEMS: list[dict] = [
         "name": "梅枝雪窗",
         "set": "寒梅雪境套",
         "slot": "wallart",
-        "scene": "tea_house",
-        "level": 21,
-        "cost": 780,
-        "star": 3,
+        "level": 24,
+        "cost": 9500,
+        "star": 5,
         "rarity": "fine",
         "palette": "round moon window frame in white wood, plum branch and soft snow dots on frosted glass",
         "subject": "A round moon-gate window wall prop in isometric wall angle, white wood frame, frosted glass with plum branch and gentle snow motif, no text.",
@@ -151,10 +143,9 @@ ITEMS: list[dict] = [
         "name": "暖绒绣墩",
         "set": "寒梅雪境套",
         "slot": "ornament",
-        "scene": "tea_house",
-        "level": 20,
-        "cost": 560,
-        "star": 2,
+        "level": 23,
+        "cost": 8600,
+        "star": 4,
         "rarity": "common",
         "palette": "round drum stool, plum pink velvet top, white wood base, silver tassel",
         "subject": "A round padded drum stool xiangdu in plum pink velvet on white wood base with small silver tassel, cozy winter seating.",
@@ -165,11 +156,10 @@ ITEMS: list[dict] = [
         "name": "游鳞小桥",
         "set": "鎏金游鳞套",
         "slot": "garden",
-        "scene": "garden_villa",
-        "level": 25,
-        "cost": 1280,
-        "star": 5,
-        "rarity": "rare",
+        "level": 28,
+        "cost": 14200,
+        "star": 8,
+        "rarity": "limited",
         "palette": "pale jade-green stone bridge, gold rail inlay, orange koi shape under arch",
         "subject": "A short garden bridge with jade-green stone and soft gold rail inlay, simplified orange koi visible in water under the arch, twilight pond crossing accent.",
     },
@@ -178,10 +168,9 @@ ITEMS: list[dict] = [
         "name": "临池茶台",
         "set": "鎏金游鳞套",
         "slot": "table",
-        "scene": "garden_villa",
-        "level": 24,
-        "cost": 1080,
-        "star": 4,
+        "level": 27,
+        "cost": 12200,
+        "star": 7,
         "rarity": "fine",
         "palette": "low tea table beside miniature pond inset, gold-trim celadon tea set, teal water",
         "subject": "A low tea table integrated with a small side pond pool showing two cute koi, celadon tea set with gold trim on tabletop, waterside leisure table.",
@@ -191,10 +180,9 @@ ITEMS: list[dict] = [
         "name": "鱼鳞圆柜",
         "set": "鎏金游鳞套",
         "slot": "shelf",
-        "scene": "garden_villa",
-        "level": 23,
-        "cost": 980,
-        "star": 4,
+        "level": 26,
+        "cost": 11200,
+        "star": 6,
         "rarity": "fine",
         "palette": "round drum cabinet, teal and gold fish-scale pattern doors, pale wood top",
         "subject": "A round drum-shaped storage cabinet with teal and soft gold fish-scale pattern on doors, compact decorative storage, fairy pavilion mood.",
@@ -204,10 +192,9 @@ ITEMS: list[dict] = [
         "name": "双鲤石凳",
         "set": "鎏金游鳞套",
         "slot": "ornament",
-        "scene": "garden_villa",
-        "level": 22,
-        "cost": 720,
-        "star": 3,
+        "level": 26,
+        "cost": 9200,
+        "star": 5,
         "rarity": "fine",
         "palette": "two pale stone stools with koi carving, teal cushion pads",
         "subject": "Two matching stone garden stools as one prop group, each carved with koi motif, soft teal cushion pads on top, pond-side seating pair.",
@@ -217,10 +204,9 @@ ITEMS: list[dict] = [
         "name": "壁泉游鳞",
         "set": "鎏金游鳞套",
         "slot": "wallart",
-        "scene": "garden_villa",
-        "level": 24,
-        "cost": 860,
-        "star": 4,
+        "level": 27,
+        "cost": 10500,
+        "star": 5,
         "rarity": "fine",
         "palette": "wall-mounted jade fountain panel, gold koi relief, trickling water stream",
         "subject": "A wall-mounted decorative water fountain panel in isometric wall angle, jade-green stone with gold koi relief and gentle water trickle, not a hanging lamp.",
@@ -231,11 +217,11 @@ ITEMS: list[dict] = [
         "name": "竹影卧榻",
         "set": "竹烟兰月套",
         "slot": "ornament",
-        "scene": "butterfly_house",
-        "level": 19,
-        "cost": 1040,
-        "star": 4,
-        "rarity": "fine",
+        "decorationPanelTab": "furniture",
+        "level": 30,
+        "cost": 12800,
+        "star": 7,
+        "rarity": "rare",
         "palette": "bamboo frame daybed, sage green silk mat, mist-gray sheer curtain at one end",
         "subject": "A bamboo-framed daybed couch with sage green silk mat and one end draped in mist-gray sheer curtain, morning bamboo pavilion lounge.",
     },
@@ -244,10 +230,9 @@ ITEMS: list[dict] = [
         "name": "竹节书案",
         "set": "竹烟兰月套",
         "slot": "table",
-        "scene": "butterfly_house",
-        "level": 18,
-        "cost": 800,
-        "star": 3,
+        "level": 29,
+        "cost": 10200,
+        "star": 5,
         "rarity": "fine",
         "palette": "bamboo segment legs desk, pale green paper scroll, jade paperweight",
         "subject": "A writing desk with bamboo-joint carved legs and pale top, rolled green-tinted paper and jade paperweight, misty bamboo study table.",
@@ -257,10 +242,9 @@ ITEMS: list[dict] = [
         "name": "竹筒书塔",
         "set": "竹烟兰月套",
         "slot": "shelf",
-        "scene": "butterfly_house",
-        "level": 19,
-        "cost": 900,
-        "star": 4,
+        "level": 30,
+        "cost": 11000,
+        "star": 6,
         "rarity": "fine",
         "palette": "stacked bamboo tube shelves spiraling up, blank cream books, orchid sprig on top",
         "subject": "A whimsical spiral bookshelf built from bamboo tubes stacked at angles, blank cream books inside tubes, tiny orchid sprig on top tier.",
@@ -270,10 +254,9 @@ ITEMS: list[dict] = [
         "name": "翠竹篱段",
         "set": "竹烟兰月套",
         "slot": "garden",
-        "scene": "butterfly_house",
-        "level": 18,
-        "cost": 640,
-        "star": 2,
+        "level": 29,
+        "cost": 8800,
+        "star": 4,
         "rarity": "common",
         "palette": "fresh green bamboo fence segment, morning mist ribbon tied, small stone base",
         "subject": "A short bamboo garden fence segment with pale mist-gray ribbon tied on posts, fresh green stalks, outdoor fairy garden border.",
@@ -283,10 +266,9 @@ ITEMS: list[dict] = [
         "name": "兰月妆镜台",
         "set": "竹烟兰月套",
         "slot": "table",
-        "scene": "garden_villa",
-        "level": 21,
-        "cost": 960,
-        "star": 4,
+        "level": 28,
+        "cost": 11500,
+        "star": 6,
         "rarity": "fine",
         "palette": "pale lavender wood vanity, orchid purple silk panel, round silver mirror, moon motif base",
         "subject": "A dressing vanity table in pale lavender-tinted wood with orchid purple silk back panel, round silver mirror, moon crescent carved on base, dreamy orchid pavilion boudoir.",
@@ -298,10 +280,27 @@ SLOT_CN = {
     "shelf": "花架", "table": "桌台", "light": "家电",
     "ornament": "摆件", "wallart": "墙饰", "garden": "庭院",
 }
-SCENE_CN = {
-    "butterfly_house": "蝴蝶小屋", "tea_house": "茶香小院",
-    "garden_villa": "花园别墅", "forest_treehouse": "橡树小屋", "flower_shop": "花店",
+SCENE_CN = {}  # batch53 已取消 scene 字段
+
+PANEL_TAB_CN = {
+    "furniture": "家具",
+    "appliance": "家电",
+    "ornament": "摆件",
+    "wallart": "墙饰",
+    "garden": "庭院",
 }
+
+
+def panel_tab_for(item: dict) -> str:
+    """装修面板左侧 Tab（与 DecorationConfig.getDecosForDecorationPanelTab 一致）。"""
+    if item.get("decorationPanelTab") == "furniture":
+        return "furniture"
+    slot = item["slot"]
+    if slot in ("shelf", "table"):
+        return "furniture"
+    if slot == "light":
+        return "appliance"
+    return slot
 
 
 def build_prompt(item: dict) -> str:
@@ -315,7 +314,7 @@ def build_prompt(item: dict) -> str:
 
 def write_catalog() -> None:
     lines = [
-        "# 扩展家具批次 53 — 仙气梦幻古风（20 件 · 新配色主题）",
+        "# 扩展家具批次 53 — 仙气梦幻古风（20 件 · Lv21–30）",
         "",
         "延续批次 52 画风：浅木 pastel、绢屏纱幔、仙气轻盈；本批换 **4 套全新配色与主题**，品类更杂。",
         "",
@@ -323,19 +322,64 @@ def write_catalog() -> None:
         "",
         "原图：`../game_assets/huahua/assets/raw/furniture_expansion_batch53/`",
         "",
-        "## 套装一览（4 套 × 5 件）",
+        "## 定价原则（相对 Lv20 家具）",
         "",
+        "| 维度 | Lv20 锚点 | 本批 Lv21–30 |",
+        "|---|---|---|",
+        "| 花愿 | 7300 – 10800 | **8600 – 14200**（同档略贵，大件封顶 14200） |",
+        "| 星星 | 13 – 20 | **4 – 8**（刻意压低，约 1500–2000 花愿/星） |",
+        "| 全买合计 | 6 件 ≈ 106 星 | 20 件 ≈ **112 星**（10 级长线，单级约 11 星） |",
+        "",
+        "**全场景通用**：不写 `allowedSceneIds`，不进「房屋专属 / 清涟荷影」Tab，按槽位归入装修面板 **家具 / 摆件 / 墙饰 / 庭院**（本批无家电）。",
+        "",
+        "## 分类分布",
+        "",
+        "| 面板 Tab | 件数 | 说明 |",
+        "|---|---:|---|",
     ]
+    tab_counts: dict[str, int] = {}
+    for it in ITEMS:
+        tab = panel_tab_for(it)
+        tab_counts[tab] = tab_counts.get(tab, 0) + 1
+    tab_notes = {
+        "furniture": "shelf + table；大件床榻 ornament 但 `decorationPanelTab: furniture`",
+        "appliance": "本批无",
+        "ornament": "椅墩、香几、石凳等",
+        "wallart": "屏风、雪窗、壁泉",
+        "garden": "水钵、小桥、竹篱",
+    }
+    for tab in ("furniture", "appliance", "ornament", "wallart", "garden"):
+        n = tab_counts.get(tab, 0)
+        lines.append(f"| {PANEL_TAB_CN[tab]} | {n} | {tab_notes[tab]} |")
+    lines += [
+        "",
+        "## 按等级解锁（2 件/级）",
+        "",
+        "| 等级 | 名称 | 花愿 | 星星 | 分类 | 套装 |",
+        "|---:|---|---:|---:|---|---|",
+    ]
+    by_level: dict[int, list[dict]] = {}
+    for it in ITEMS:
+        by_level.setdefault(it["level"], []).append(it)
+    for lv in sorted(by_level):
+        for it in sorted(by_level[lv], key=lambda x: x["cost"]):
+            tab = panel_tab_for(it)
+            lines.append(
+                f"| {lv} | {it['name']} `{it['id']}` | {it['cost']} | {it['star']} | "
+                f"{PANEL_TAB_CN[tab]} | {it['set']} |"
+            )
+    lines += ["", "## 套装一览（4 套 × 5 件）", ""]
     sets: dict[str, list[dict]] = {}
     for it in ITEMS:
         sets.setdefault(it["set"], []).append(it)
     for set_name, members in sets.items():
         lines += [f"### {set_name}", "",
-                  "| id | 名称 | 槽位 | 场景 | 等级 | 花愿 | 星星 | 稀有度 |",
+                  "| id | 名称 | 槽位 | 分类 | 等级 | 花愿 | 星星 | 稀有度 |",
                   "|---|---|---|---|---:|---:|---:|---|"]
         for it in members:
+            tab = panel_tab_for(it)
             lines.append(
-                f"| `{it['id']}` | {it['name']} | {SLOT_CN[it['slot']]} | {SCENE_CN[it['scene']]} | "
+                f"| `{it['id']}` | {it['name']} | {SLOT_CN[it['slot']]} | {PANEL_TAB_CN[tab]} | "
                 f"{it['level']} | {it['cost']} | {it['star']} | {RARITY_CN[it['rarity']]} |"
             )
         lines.append("")
@@ -344,9 +388,18 @@ def write_catalog() -> None:
         slot_counts[it["slot"]] = slot_counts.get(it["slot"], 0) + 1
     lines += [
         "## 汇总", "",
-        f"- 合计：**{len(ITEMS)}** 件",
-        f"- 花愿：**{min(i['cost'] for i in ITEMS)} – {max(i['cost'] for i in ITEMS)}**",
-        f"- 槽位分布：{', '.join(f'{SLOT_CN[k]}×{v}' for k, v in sorted(slot_counts.items()))}",
+        f"- 合计：**{len(ITEMS)}** 件（Lv21–30，每级 2 件）",
+        f"- 花愿：**{min(i['cost'] for i in ITEMS)} – {max(i['cost'] for i in ITEMS)}**（全买约 **{sum(i['cost'] for i in ITEMS):,}** 花愿）",
+        f"- 星星：**{min(i['star'] for i in ITEMS)} – {max(i['star'] for i in ITEMS)}**（全买合计 **{sum(i['star'] for i in ITEMS)}** 星）",
+        f"- 面板 Tab：家具×{tab_counts.get('furniture', 0)}，家电×0，摆件×{tab_counts.get('ornament', 0)}，"
+        f"墙饰×{tab_counts.get('wallart', 0)}，庭院×{tab_counts.get('garden', 0)}",
+        "",
+        "## 入库备忘（DecorationConfig）",
+        "",
+        "- **勿写** `allowedSceneIds`（全场景可摆）",
+        "- **勿写** `decorationPanelTab: 'flower_room'` / `'qinglian'` / `'garden'`（庭院槽位除外：`garden` 槽 + 默认路由即进「庭院」Tab）",
+        "- 大件床榻：`寒梅纱床` / `竹影卧榻` → `slot: ORNAMENT` + `decorationPanelTab: 'furniture'`（与白色三角钢琴同模式）",
+        "- 稀有度：`游鳞小桥` → `LIMITED`；`寒梅纱床` / `竹影卧榻` → `RARE`",
         "",
     ]
     CATALOG_MD.write_text("\n".join(lines), encoding="utf-8")

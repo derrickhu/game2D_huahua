@@ -1,0 +1,33 @@
+Create one game-ready isometric cutaway room shell for a cozy pastel merge game.
+
+Reference interpretation (CRITICAL — layout lock):
+The attached reference image is the current xianqi tea-house two-story shell. You MUST keep the EXACT same building structure, silhouette, camera angle, proportions, and spatial layout. Do NOT change the floor plan, staircase position, window placement, balcony shape, roof curve, or overall footprint. Only recolor and rematerialize the shell into a dark-wood variant.
+
+Subject: a dark-wood two-story tea courtyard room shell, empty interior, no furniture. Same elegant Chinese tea pavilion cutaway as the reference, but with rich dark walnut / mahogany / rosewood timber instead of pale bamboo. Mood: refined ancient literati teahouse, warm and dignified, still cute and game-friendly — NOT photoreal, NOT gloomy horror, NOT modern luxury hotel.
+
+Structure requirements (must match reference exactly):
+- Two-story isometric cutaway building with open front for placing game furniture
+- L-shaped lower floor with large cream/beige stone tiles and faint cloud or crane motifs
+- Central wooden staircase with handrail leading to upper mezzanine
+- Upper wooden balcony/mezzanine with decorative railing panels overlooking the lower floor
+- Two large circular moon windows on back walls at ground level
+- Four rectangular lattice windows on upper floor
+- Traditional curved East Asian roof with upturned eaves covering only the top; front remains open
+- Small entrance step and textured mat at lower-left corner
+- Shell centered in frame with generous margin for background removal
+
+Dark-wood style swap (materials and colors only):
+- All woodwork: deep dark walnut, polished mahogany, warm ebony-brown with soft hand-painted shading
+- Staircase, railings, upper floor boards, window frames, pillars: dark wood with subtle grain, NOT black flat silhouette
+- Roof tiles: deep emerald-green or charcoal-blue celadon tiles (darker than reference mint-jade)
+- Walls: warm antique cream plaster with faint muted cloud patterns in taupe/grey
+- Lower floor tiles: warm sand-cream stone tiles, slightly darker than reference but still bright enough for furniture readability
+- Accent flowers: keep subtle wisteria vines and pink blossom branches near roof edges for color contrast against dark wood
+- Hanging lanterns: small pale jade or warm amber paper lanterns, no text
+- Thin cloud-scroll trim in dark wood or muted gold
+
+NO TEXT, no labels, no readable signs, no numbers, no logo, no watermark, no characters, no counters, no shelves, no table, no chairs, no furniture, no captions anywhere in the image.
+
+Art style: 2D casual mobile game illustration, kawaii pastel merge-game asset, clean hand-painted vector-like look, soft brown outlines, upper-left isometric view, gentle ambient occlusion, mild highlights, crisp readable edges. Match the same stylization level as cozy Chinese antique furniture icons: illustrated, slightly cute, not realistic wood photography. Transparent background or plain isolated background suitable for background removal. Avoid photorealism, harsh shadows, muddy brown monochrome, perspective distortion, and layout changes.
+
+Output: single centered room-shell PNG composition, square 1:1, generous transparent or removable empty margin around the shell.
