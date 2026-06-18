@@ -1,0 +1,24 @@
+Reference sheet with TWO panels side by side.
+
+LEFT panel: current game intro scene — KEEP the entire background unchanged: flower shop cottage, cream walls, brown roof, striped awnings, stone path, garden flowers, orange tabby cat, floating pink petals, sparkle highlights, vivid saturated palette (turquoise-cyan sky, hot pink, coral orange, lemon yellow, lime green). Do NOT redesign the house or dull colors.
+
+RIGHT panel: use ONLY for illustration painting technique — polished cozy mobile game scene illustration, soft gradient shading, painterly finish, NOT flat sprite.
+
+OUTPUT: one vertical 9:16 full-screen scene illustration.
+
+REPLACE the foreground character completely:
+
+Show the shopkeeper from BEHIND only — NO face visible, NO front portrait, NO eye contact with viewer.
+
+Back view of a young florist girl standing on the stone path, facing toward the flower shop cottage ahead. She holds a LARGE overflowing bouquet of vivid flowers in both arms — hot pink peonies, coral roses, yellow daisies, white blossoms, lush green leaves — the bouquet is the visual focus beside her back silhouette.
+
+Character from behind:
+light brown chin-length bob hair visible from back, small pink flower hair clip on one side of head (viewer's left), pink puff-sleeve blouse, white apron strings tied at the back, blue skirt, simple white shoes on the path. Cute illustrated proportions, scene key art style with soft shading matching the cottage — painted into the scene, not a pasted sprite.
+
+Composition: character in lower-center foreground, back to camera, looking at her flower shop; soft ground shadow under feet; petals and sparkles may drift in front of her silhouette.
+
+Lighting: bright upper-left sun, same as background, subtle rim light on hair and bouquet edges.
+
+Forbidden: front-facing face, looking at camera, flat merge-game sprite cutout, thick black sticker outline, portrait close-up, elderly person, text.
+
+No readable text, no watermark, no logo.

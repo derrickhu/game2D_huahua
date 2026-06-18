@@ -293,11 +293,8 @@ const PANELS_IMAGE_MAP: Record<string, string> = {
   /** 图鉴未解锁物品占位卡：蓝色格纹方块 */
   collection_item_placeholder_nb2: 'subpkg_panels/images/ui/collection_item_placeholder_nb2.png',
 
-  /** 新手引导：开场故事插画 */
+  /** 新手引导：开场点题插画（单页） */
   tutorial_story_1: 'subpkg_panels/images/tutorial/story_1.png',
-  tutorial_story_2: 'subpkg_panels/images/tutorial/story_2.png',
-  tutorial_story_3: 'subpkg_panels/images/tutorial/story_3.png',
-  tutorial_story_4: 'subpkg_panels/images/tutorial/story_4.png',
 
   /** 升星仪式 · 6 张「新解锁」专属图标（NB2+rembg；用于 LevelUnlockCard 的 feature/map/affinity 类） */
   ui_lvup_companion_bubble: 'subpkg_panels/images/ui/level_unlock/ui_lvup_companion_bubble.png',
@@ -713,6 +710,12 @@ const DECO_IMAGE_MAP: Record<string, string> = {
   jiangnan_blue_cabinet: 'subpkg_deco/images/furniture/jiangnan_blue_cabinet.png',
   xianxia_meditation_platform: 'subpkg_deco/images/furniture/xianxia_meditation_platform.png',
 
+  // ---- 橡树小屋专属家具（forest_treehouse Lv35–38 航海奇遇套）----
+  sea_wheel_wall: 'subpkg_deco/images/furniture/sea_wheel_wall.png',
+  sea_anchor_bench: 'subpkg_deco/images/furniture/sea_anchor_bench.png',
+  sea_treasure_chest: 'subpkg_deco/images/furniture/sea_treasure_chest.png',
+  sea_coral_cabinet: 'subpkg_deco/images/furniture/sea_coral_cabinet.png',
+
   // ---- 古风/民俗/奇匠 Lv30-35（batch51）----
   ancient_brush_mountain: 'subpkg_deco/images/furniture/ancient_brush_mountain.png',
   ancient_inkstone_desk: 'subpkg_deco/images/furniture/ancient_inkstone_desk.png',
@@ -804,6 +807,12 @@ const DECO_IMAGE_MAP: Record<string, string> = {
   bg_room_tea_house_xianqi_two_story_nb2: 'subpkg_deco/images/house/bg_room_tea_house_xianqi_two_story_nb2.png',
   /** 茶香小院 — 深色红木双层茶寮 cutaway 空壳 */
   bg_room_tea_house_darkwood_two_story_nb2: 'subpkg_deco/images/house/bg_room_tea_house_darkwood_two_story_nb2.png',
+  /** 橡树小屋 — 童话森林双层树屋 cutaway 空壳 */
+  bg_room_forest_treehouse_oak_nb2: 'subpkg_deco/images/house/bg_room_forest_treehouse_oak_nb2.png',
+  /** 花园别墅 — 宽景分层西式洋房 cutaway 空壳 */
+  bg_room_garden_villa_loft_nb2: 'subpkg_deco/images/house/bg_room_garden_villa_loft_nb2.png',
+  /** 花园别墅 — 旧版木骨双层洋房（保留备用） */
+  bg_room_garden_villa_manor_nb2: 'subpkg_deco/images/house/bg_room_garden_villa_manor_nb2.png',
   /** 蛋糕房 — 现代 pastel 甜品店 cutaway 空壳 */
   bg_room_cake_shop_modern_nb2: 'subpkg_deco/images/house/preview/bg_room_cake_shop_modern_nb2.png',
   /** 蛋糕房 — 蓝莓薄荷 pastel 甜品店 cutaway 空壳 */
@@ -821,9 +830,6 @@ const DECO_IMAGE_MAP: Record<string, string> = {
 // ================================================================
 const CRITICAL_IMAGE_MAP: Record<string, string> = {
   tutorial_story_1: 'images/tutorial/story_1.png',
-  tutorial_story_2: 'images/tutorial/story_2.png',
-  tutorial_story_3: 'images/tutorial/story_3.png',
-  tutorial_story_4: 'images/tutorial/story_4.png',
   tutorial_hand_pointer: 'images/tutorial/tutorial_hand_pointer.png',
 
   owner_chibi_default: 'images/critical/owner/chibi_default.png',

@@ -1,0 +1,19 @@
+Create one game-ready isometric cutaway room shell for a cozy pastel merge game. Use the attached two-story tea house shell ONLY for layout intent: same approximate upper-left isometric camera, open-front cutaway, readable lower floor plus visible upper loft/balcony deck, two interior walls (back and right), partial perimeter roof strips that do NOT cover the interior, centered isolated composition. Do NOT copy tea house Asian pavilion details, jade tiles, bamboo columns, or xianqi cloud trim.
+
+Subject: a charming Western European garden manor villa interior room shell, empty, no furniture. Mood: bright French-country / English cottage manor salon, elegant but cozy pastel mobile-game villa, sunny afternoon garden-house feeling. This must read clearly as a WESTERN two-story manor, not Asian, not treehouse, not modern cake shop.
+
+Architecture and distinctive features:
+- TWO-STORY CUTAWAY: broad lower grand salon floor; upper mezzanine/balcony level with a slim white wrought-iron or painted wood railing wrapping along the back and right upper edge, suitable for future decoration placement; a short interior wooden stair or curved stair segment on the right side connects lower to upper level.
+- FLOOR: refined Western interior flooring — pale cream herringbone parquet or soft checker marble tiles on the lower floor; upper balcony deck in warm honey oak planks. Slightly softened polygon footprint, elegant but readable.
+- WALLS: only BACK wall and RIGHT wall planes, front completely open. Cream off-white plaster walls with warm dark-wood Tudor-style timber bracing beams on the upper wall zone. One or two tall arched windows with cream shutters on the back wall; right wall can have a rounded turret curve with a narrow arched window. Wall surfaces stay broad, blank, and install-ready for game decorations.
+- ROOF: partial dusty slate-blue hipped roof / eave strips along the top outer edges of back and right walls only — European villa roof feel, not Asian tiles, not moss treehouse shingles, not pink flower-shop scallops. Roof must NOT lid the room; interior floor and upper balcony must stay fully visible.
+- EXTERIOR EDGE ACCENTS ONLY: tiny pink and ivory climbing roses on timber braces near the upper balcony edge; a small stone foundation plinth and two terracotta planter shapes at outer corners outside the playable floor — minimal, no interior clutter. No interior plants, no furniture.
+- PALETTE: warm cream plaster, honey oak timber, dusty slate-blue roof accents, soft rose and lavender pastel highlights, pale stone base. High-key pastel, clean soft brown linework, airy and bright — not gloomy, not photoreal, not heavy dark wood cabin.
+
+Structure requirements: clear two-story Western manor cutaway shell; open front for placing game furniture; broad readable lower salon floor; visible upper balcony/mezzanine; two interior walls only; no front wall, no left wall; no blocking objects inside; no furniture, no bed, no shelf, no table, no chair, no sofa, no curtains, no chandeliers, no characters inside.
+
+NO TEXT, no labels, no readable signs, no numbers, no logo, no watermark, no captions anywhere in the image.
+
+Art style: 2D casual mobile game illustration, kawaii pastel, hand-painted vector-like asset, upper-left isometric view, soft ambient occlusion, gentle highlights, crisp readable edges, transparent background or simple isolated object on plain background suitable for background removal. Avoid photorealism, heavy shadows, dense clutter, greenhouse glass walls, and perspective distortion.
+
+Output: single centered room-shell PNG composition, square 1:1, generous transparent or removable empty margin around the shell.

@@ -32,6 +32,15 @@ import {
   formatAllowedScenesShort,
 } from '@/config/DecorationConfig';
 import { CurrencyManager } from '@/managers/CurrencyManager';
+
+function effectiveFurnitureDisplayScale(): number {
+  return SHOP_FURNITURE_DISPLAY_SCALE_MULTIPLIER
+    * getSceneFurnitureDisplayScaleMultiplier(CurrencyManager.state.sceneId);
+}
+import {
+  getSceneFurnitureDisplayScaleMultiplier,
+  getScenePlacementScaleMultiplier,
+} from '@/config/SceneRenovationConfig';
 import { ToastMessage } from '@/gameobjects/ui/ToastMessage';
 import { TextureCache } from '@/utils/TextureCache';
 import { ROOM_DEPTH_AUX_MAX, roomDepthZForPlacement } from '@/config/RoomDepthSort';
@@ -320,11 +329,11 @@ class FurnitureDragSystemClass {
     // 将设计坐标转为容器本地坐标（支持 roomContainer 缩放后拖入）
     const localPos = this._designToLocal(globalX, globalY);
 
-    const defaultPlacementScale = deco.defaultScale ?? 0.4;
+    const defaultPlacementScale = (deco.defaultScale ?? 0.4) * getScenePlacementScaleMultiplier(CurrencyManager.state.sceneId);
     const baseScale =
       Math.min(SHOP_FURNITURE_TEX_BASE_PX / tex.width, SHOP_FURNITURE_TEX_BASE_PX / tex.height)
       * defaultPlacementScale
-      * SHOP_FURNITURE_DISPLAY_SCALE_MULTIPLIER;
+      * effectiveFurnitureDisplayScale();
 
     const glow = this._createNewFurnitureFeetGlow();
     glow.position.set(localPos.x, localPos.y);
@@ -527,14 +536,14 @@ class FurnitureDragSystemClass {
         // placement.scale 存的是「相对纹理基准」倍率，不包含当前房间的全局家具显示倍率。
         const deco = DECO_MAP.get(ctx.decoId);
         const tex = deco ? TextureCache.get(deco.icon) : null;
-        let placementScaleMult = deco?.defaultScale ?? 0.4;
+        let placementScaleMult = (deco?.defaultScale ?? 0.4) * getScenePlacementScaleMultiplier(CurrencyManager.state.sceneId);
         if (deco && tex) {
           const baseRatio = Math.min(
             SHOP_FURNITURE_TEX_BASE_PX / tex.width,
             SHOP_FURNITURE_TEX_BASE_PX / tex.height,
           );
           if (baseRatio > 1e-6) {
-            placementScaleMult = ctx.originalScale / (baseRatio * SHOP_FURNITURE_DISPLAY_SCALE_MULTIPLIER);
+            placementScaleMult = ctx.originalScale / (baseRatio * effectiveFurnitureDisplayScale());
           }
         }
         placementScaleMult = Math.max(

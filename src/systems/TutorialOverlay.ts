@@ -1024,17 +1024,18 @@ export class TutorialOverlay {
     const panel = new PIXI.Container();
     panel.eventMode = 'passive';
 
-    const titleText = new PIXI.Text('花店重新开业了', {
+    const gift = TUTORIAL_COPY.tutorialGift;
+    const titleText = new PIXI.Text(gift.title, {
       fontSize: 27, fill: 0x4a3728, fontFamily: FONT_FAMILY,
       fontWeight: 'bold', stroke: 0xfffcf8, strokeThickness: 2,
     });
 
-    const subtitleText = new PIXI.Text('恭喜完成引导！获得：', {
+    const subtitleText = new PIXI.Text(gift.subtitle, {
       fontSize: 22, fill: 0x5c4a3d, fontFamily: FONT_FAMILY,
       fontWeight: 'bold',
     });
 
-    const storyText = new PIXI.Text('奶奶一定很欣慰。\n加油，让花花妙屋成为小镇最棒的花店！', {
+    const storyText = new PIXI.Text(gift.body, {
       fontSize: 21, fill: 0x5c4a3d, fontFamily: FONT_FAMILY,
       wordWrap: true, wordWrapWidth: PANEL_W - INNER_PAD * 2, lineHeight: 32,
     });
@@ -1143,7 +1144,7 @@ export class TutorialOverlay {
     btnBg.drawRoundedRect(btnX + 4, btnY + 4, BTN_W - 8, BTN_H - 8, BTN_R - 4);
     panel.addChild(btnBg);
 
-    const btnLabel = new PIXI.Text('开始游戏', {
+    const btnLabel = new PIXI.Text(gift.buttonText, {
       fontSize: 21, fill: 0xFFFFFF, fontFamily: FONT_FAMILY, fontWeight: 'bold',
     });
     btnLabel.anchor.set(0.5, 0.5);
@@ -1572,6 +1573,7 @@ export class TutorialOverlay {
     this._showBubble({
       title: copy.title,
       body: copy.body,
+      actionText: copy.emphasisText,
       buttonText: copy.buttonText,
       spotlightTop: hudRect?.y,
       spotlightBottom: hudRect ? hudRect.y + hudRect.h : undefined,

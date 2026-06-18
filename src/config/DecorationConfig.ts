@@ -165,6 +165,8 @@ export const ROOM_STYLES: RoomStyleDef[] = [
   { id: 'style_cake_shop_blueberry_mint_nb2', name: '蓝莓薄荷屋', cost: 8200, starValue: 10, rarity: DecoRarity.FINE, bgTexture: 'bg_room_cake_shop_blueberry_mint_nb2', desc: '蛋糕房换色壳：蓝莓薰衣草边框、薄荷玻璃天窗与奶油马卡龙地砖', unlockRequirement: { level: 18 }, allowedSceneIds: ['cake_shop'] },
   { id: 'style_tea_house_two_story_nb2', name: '仙茶小楼', cost: 0, starValue: 0, rarity: DecoRarity.COMMON, bgTexture: 'bg_room_tea_house_xianqi_two_story_nb2', desc: '茶香小院默认壳：轻盈 pastel 仙气双层茶寮，青玉屋瓦、回廊与明亮茶院空间', allowedSceneIds: ['tea_house'] },
   { id: 'style_tea_house_darkwood_two_story_nb2', name: '乌木茶寮', cost: 22000, starValue: 10, rarity: DecoRarity.FINE, bgTexture: 'bg_room_tea_house_darkwood_two_story_nb2', desc: '深色红木双层茶寮：乌木柱栏、黛青屋瓦与暖 cream 地砖，配古风家具更显沉稳', unlockRequirement: { level: 26 }, allowedSceneIds: ['tea_house'] },
+  { id: 'style_forest_treehouse_oak_nb2', name: '橡树心舍', cost: 0, starValue: 0, rarity: DecoRarity.COMMON, bgTexture: 'bg_room_forest_treehouse_oak_nb2', desc: '橡树小屋默认壳：巨橡树干贯穿双层、苔藓木瓦与年轮地坪，童话森林树屋 cutaway', allowedSceneIds: ['forest_treehouse'] },
+  { id: 'style_garden_villa_manor_nb2', name: '花园阁楼', cost: 0, starValue: 0, rarity: DecoRarity.COMMON, bgTexture: 'bg_room_garden_villa_loft_nb2', desc: '花园别墅默认壳：现代洋房错层空壳，正面敞开无窗，仅后墙右墙+前左一层后右二层错开', allowedSceneIds: ['garden_villa'] },
 ];
 
 export const ROOM_STYLE_MAP = new Map<string, RoomStyleDef>(
@@ -438,6 +440,12 @@ export const DECO_DEFS: DecoDef[] = [
   { id: 'xianxia_herb_rack', name: '悬索晒药架', slot: DecoSlot.SHELF, rarity: DecoRarity.FINE, cost: 11500, starValue: 6, icon: 'xianxia_herb_rack', desc: '竹架悬着干花束与草药纸包，茶香伴药香', unlockRequirement: { level: 28 }, defaultScale: 1.68, decorationPanelTab: 'flower_room', allowedSceneIds: ['tea_house'] },
   { id: 'jiangnan_blue_cabinet', name: '青花博古柜', slot: DecoSlot.SHELF, rarity: DecoRarity.RARE, cost: 13200, starValue: 7, icon: 'jiangnan_blue_cabinet', desc: '红木博古架陈列青花瓶盏与折扇', unlockRequirement: { level: 29 }, defaultScale: 1.65, decorationPanelTab: 'flower_room', allowedSceneIds: ['tea_house'] },
   { id: 'xianxia_meditation_platform', name: '蒲团云台', slot: DecoSlot.TABLE, rarity: DecoRarity.FINE, cost: 10800, starValue: 5, icon: 'xianxia_meditation_platform', desc: '云纹矮台配草编蒲团，抹茶粉与小花点缀', unlockRequirement: { level: 30 }, defaultScale: 1.12, decorationPanelTab: 'flower_room', allowedSceneIds: ['tea_house'] },
+
+  // ═══════ ⑭.6 橡树小屋专属家具（forest_treehouse Lv35–38 · 航海奇遇套）
+  { id: 'sea_wheel_wall', name: '舵轮墙挂', slot: DecoSlot.WALLART, rarity: DecoRarity.FINE, cost: 13800, starValue: 5, icon: 'sea_wheel_wall', desc: '旧木舵轮悬在麻绳上，黄铜毂心闪着冒险光泽', unlockRequirement: { level: 35 }, defaultScale: 0.92, decorationPanelTab: 'flower_room', allowedSceneIds: ['forest_treehouse'] },
+  { id: 'sea_anchor_bench', name: '船锚绳凳', slot: DecoSlot.ORNAMENT, rarity: DecoRarity.FINE, cost: 14200, starValue: 5, icon: 'sea_anchor_bench', desc: '锈色船锚作靠背，麻绳缠腿托着木纹坐板', unlockRequirement: { level: 36 }, defaultScale: 1.28, decorationPanelTab: 'flower_room', allowedSceneIds: ['forest_treehouse'] },
+  { id: 'sea_treasure_chest', name: '珍珠藏箱', slot: DecoSlot.ORNAMENT, rarity: DecoRarity.FINE, cost: 14800, starValue: 6, icon: 'sea_treasure_chest', desc: '橡木宝箱半开，珍珠珊瑚与黄铜罗盘满溢而出', unlockRequirement: { level: 37 }, defaultScale: 1.02, decorationPanelTab: 'flower_room', allowedSceneIds: ['forest_treehouse'] },
+  { id: 'sea_coral_cabinet', name: '珊瑚展柜', slot: DecoSlot.SHELF, rarity: DecoRarity.RARE, cost: 15500, starValue: 6, icon: 'sea_coral_cabinet', desc: '拱顶玻璃木柜，粉珊瑚与贝壳分层陈列', unlockRequirement: { level: 38 }, defaultScale: 1.58, decorationPanelTab: 'flower_room', allowedSceneIds: ['forest_treehouse'] },
 
   // ═══════ ⑮ 古风/民俗/奇匠扩展 Lv30–35（batch51 · 全场景通用 · 售价高于 Lv21–30 档）
   { id: 'ancient_brush_mountain', name: '笔架山', slot: DecoSlot.ORNAMENT, rarity: DecoRarity.COMMON, cost: 14800, starValue: 5, icon: 'ancient_brush_mountain', desc: '青玉笔山插着数支毛笔，案头文房小景', unlockRequirement: { level: 30 }, defaultScale: 0.55 },

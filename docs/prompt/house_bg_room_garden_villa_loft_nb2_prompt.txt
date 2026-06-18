@@ -1,0 +1,26 @@
+Create one game-ready isometric cutaway ROOM SHELL for a cozy pastel merge mobile game. The subject is a MODERN WESTERN GARDEN VILLA (现代西式洋房), empty, no furniture. It must read as a clean contemporary two-story villa, NOT a cottage, NOT Tudor timber-frame, NOT an Asian pavilion, NOT a treehouse.
+
+Use the attached reference ONLY for the SPATIAL STRUCTURE — how the two floors are staggered and joined. Copy its split-level geometry. Do NOT copy any furniture, beds, sofas, kitchen, tables, chairs, rugs, plants, screens, or movable objects, and do NOT copy its interior decoration style.
+
+REQUIRED STRUCTURE (must reproduce as an empty shell):
+- TWO STAGGERED FLOORS (两层错开): a large open LOWER floor sits at the FRONT-LEFT; a separate UPPER floor block sits HIGHER and shifted toward the BACK-RIGHT. The two floors do NOT stack on the same footprint — the upper block only overlaps a small portion, leaving a big open lower floor and a clearly visible upper deck.
+- ONE SHARED CONNECTING WALL (通过一面墙连接): the two floors join along ONE tall continuous vertical wall plane at the inner/back junction — a single flat, broad, smooth wall running from the lower floor up through the upper floor. This is the main wall for placing wall decorations: keep it large, blank, clean white, no clutter.
+- STAIRS ON THE SIDE, NOT BLOCKING VIEW (楼梯在侧面不挡视野): one slim modern straight staircase tucked tight against the FAR RIGHT side edge of the structure, running from the lower floor up to the upper deck. The stairs must be narrow and peripheral — never in the center of either floor — occupying only ~10% of the width, with light wood treads and a thin white/metal handrail so the rooms stay wide open.
+- UPPER DECK EDGE: along the open front edge of the upper floor, a slim modern railing (thin white metal bars or clean glass panel railing) so the raised floor reads as a real room while staying see-through.
+
+MODERN WESTERN VILLA LOOK:
+- WALLS: crisp matte off-white / warm cream plaster, smooth and modern, with very subtle clean trim lines. The single back/connecting wall may have one tall modern rectangular picture-window recess high up near the roof (kept blank, never on the open front).
+- FLOOR: lower floor in large pale cream marble or stone tiles; upper deck in light warm honey oak planks.
+- ROOF: thin modern dusty terracotta / warm clay hipped eave strips along the top OUTER edges only (like the reference roof). The roof must NOT lid the rooms — interior lower floor and upper deck must stay fully visible and open.
+- EXTERIOR ACCENTS ONLY (outside the playable floor): a low pale stone foundation plinth, a hint of green lawn, optional tiny distant trees low at the back — minimal, low profile. No interior plants.
+
+GAME SHELL RULES (mandatory):
+- Open-front cutaway dollhouse: camera is upper-left isometric facing the open front. NO front wall, NO left wall blocking the view, no glass facade wrapped around the open front.
+- Besides the one shared connecting wall, keep walls minimal: at most one short back/right perimeter lip for roof support. NO interior partition walls, NO room-divider glass.
+- Absolutely NO furniture, beds, sofas, shelves, tables, chairs, curtains, chandeliers, characters, or text anywhere.
+
+Art style: 2D casual mobile game illustration, kawaii high-key pastel, hand-painted vector-like asset, soft ambient occlusion, gentle highlights, crisp readable soft-brown outlines, clean and bright. Avoid photorealism, heavy shadows, dense clutter, and perspective distortion.
+
+NO TEXT, no labels, no numbers, no logo, no watermark, no captions anywhere.
+
+Output: single centered empty room-shell PNG, square 1:1, generous transparent / removable empty margin around the shell.

@@ -1,4 +1,8 @@
 export const TUTORIAL_COPY = {
+  storyIntro: {
+    text: '假如你拥有一家花店……\n合成鲜花、招待客人，\n把它经营成最温暖的小店吧！',
+    buttonText: '开始打理花店',
+  },
   boardIntroOpen: {
     title: '花店开业啦',
     body: '欢迎来到花花妙屋！\n客人已经来了，我们去整理台准备花材吧。',
@@ -40,7 +44,14 @@ export const TUTORIAL_COPY = {
   },
   shopCompleteDialog: {
     title: '装修能升级',
-    body: '装修花店会攒星升级，\n看上方星星和进度条。\n升级后会获得更加高级的合成工具哦',
+    body: '装修花店会攒星升级，\n看上方星星和进度条。',
+    emphasisText: '升级后会获得更加高级的合成工具哦',
     buttonText: '回去继续做花束',
+  },
+  tutorialGift: {
+    title: '引导完成啦',
+    subtitle: '恭喜完成引导！获得：',
+    body: '从这里开始，经营属于你自己的花店吧。\n加油，让花花妙屋成为小镇最棒的花店！',
+    buttonText: '开始游戏',
   },
 } as const;

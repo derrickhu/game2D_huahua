@@ -1,7 +1,7 @@
 /**
- * StorySequenceOverlay — 开场故事插画全屏序列
+ * StorySequenceOverlay — 开场点题插画（默认单页全屏）
  *
- * 展示 3-4 张故事插画 + 文案，玩家点击翻页。
+ * 展示 1 张插画 + 文案，玩家点击 CTA 进入引导。
  * zIndex 9000，在教程遮罩之上。
  * 结束后 emit 'tutorial:storyDone' 并自毁。
  */
@@ -9,6 +9,7 @@ import * as PIXI from 'pixi.js';
 import { Game } from '@/core/Game';
 import { TweenManager, Ease } from '@/core/TweenManager';
 import { DESIGN_WIDTH, FONT_FAMILY } from '@/config/Constants';
+import { TUTORIAL_COPY } from '@/config/TutorialCopy';
 import { TextureCache } from '@/utils/TextureCache';
 
 export interface StoryPage {
@@ -16,24 +17,15 @@ export interface StoryPage {
   textureKey: string;
   /** Story text shown at the bottom */
   text: string;
+  /** Optional CTA label on the last page */
+  buttonText?: string;
 }
 
 const DEFAULT_PAGES: StoryPage[] = [
   {
     textureKey: 'tutorial_story_1',
-    text: '小镇边上有一家小花店，是奶奶一手打理起来的。\n小时候，这里是我最喜欢的地方。',
-  },
-  {
-    textureKey: 'tutorial_story_2',
-    text: '"小花，奶奶老了，花店快开不下去了。\n你愿意回来看看吗？"',
-  },
-  {
-    textureKey: 'tutorial_story_3',
-    text: '我决定回来。推开门的那一刻，\n熟悉的花香扑面而来——\n花店还在，只是需要有人重新照料。',
-  },
-  {
-    textureKey: 'tutorial_story_4',
-    text: '从今天起，我要让这家花店重新热闹起来！',
+    text: TUTORIAL_COPY.storyIntro.text,
+    buttonText: TUTORIAL_COPY.storyIntro.buttonText,
   },
 ];
 
@@ -43,7 +35,7 @@ export class StorySequenceOverlay extends PIXI.Container {
   private _pageContainer!: PIXI.Container;
   private _textContainer!: PIXI.Container;
   private _tapLayer!: PIXI.Graphics;
-  private _skipBtn!: PIXI.Container;
+  private _skipBtn!: PIXI.Container | null;
   private _pageIndicator!: PIXI.Container;
   private _transitioning = false;
   private _onDone: () => void;
@@ -90,15 +82,19 @@ export class StorySequenceOverlay extends PIXI.Container {
     this._tapLayer.on('pointerdown', () => this._advance());
     this.addChild(this._tapLayer);
 
-    // Page indicator dots (pure visual)
+    // Page indicator dots (pure visual) — 单页无需翻页指示
     this._pageIndicator = new PIXI.Container();
     this._pageIndicator.eventMode = 'none';
-    this._buildPageIndicator();
-    this.addChild(this._pageIndicator);
+    if (this._pages.length > 1) {
+      this._buildPageIndicator();
+      this.addChild(this._pageIndicator);
+    }
 
-    // Skip button (top-right) — 在 tapLayer 之上，能正常拦截事件
-    this._skipBtn = this._buildSkipButton();
-    this.addChild(this._skipBtn);
+    // Skip button — 单页时与主按钮重复，隐藏
+    if (this._pages.length > 1) {
+      this._skipBtn = this._buildSkipButton();
+      this.addChild(this._skipBtn);
+    }
   }
 
   private _buildPageIndicator(): void {
@@ -244,7 +240,7 @@ export class StorySequenceOverlay extends PIXI.Container {
       btn.endFill();
       this._textContainer.addChild(btn);
 
-      const btnLabel = new PIXI.Text('开始打理花店', {
+      const btnLabel = new PIXI.Text(page.buttonText || '开始打理花店', {
         fontSize: 22,
         fill: 0xFFFFFF,
         fontFamily: FONT_FAMILY,

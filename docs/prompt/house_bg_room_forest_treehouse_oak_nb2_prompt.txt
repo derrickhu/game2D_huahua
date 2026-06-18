@@ -1,0 +1,20 @@
+Create one game-ready isometric cutaway room shell for a cozy pastel merge game. Use the attached two-story tea house shell ONLY for layout intent: same approximate upper-left isometric camera, open-front cutaway, readable lower floor plus visible upper loft/deck, two interior walls (back and right), partial perimeter roof strips that do NOT cover the interior, centered isolated composition. Do NOT copy tea house Asian pavilion details, jade tiles, bamboo columns, or xianqi cloud trim.
+
+Subject: a whimsical fairytale oak treehouse interior room shell, empty, no furniture. The signature identity is a massive warm caramel oak tree trunk rising through the center of the room from lower floor through the upper loft — the building is built around and inside the living tree. Mood: enchanted woodland cottage, cozy storybook forest, gentle morning light with soft firefly sparkles near the roof edge only.
+
+Architecture and distinctive features:
+- CENTRAL OAK TRUNK: thick rounded bark column through the middle of the cutaway, warm caramel-brown with soft moss patches, one or two small round porthole windows cut into the trunk showing a soft starry twilight sky glow (amber-lilac, not dark).
+- TWO-STORY CUTAWAY: broad lower wooden platform floor; upper loft/deck wraps partially around the trunk with a simple wooden railing suitable for future decoration placement; a short rope-and-wood ladder or spiral wooden rungs on the trunk connects lower to upper level.
+- FLOOR: irregular softened polygon footprint inspired by organic treehouse shapes — pale cream oak plank floor with subtle tree-ring parquet accents and a few soft moss-green patches at the edges, not a plain square tile grid.
+- WALLS: only BACK wall and RIGHT wall planes, front completely open. Back wall mixes bark-textured wood panels and cream plaster; right wall is smooth cream wood with one small round window. Wall surfaces stay broad, blank, and install-ready for game decorations.
+- ROOF: partial mossy green-brown wooden shingle eave strips along the top outer edges of back and right walls only — fairy-tale woodland shingles, not Asian curved tiles, not butterfly teal, not pink flower-shop roof. Roof must NOT lid the room; interior floor and loft must stay fully visible.
+- EXTERIOR EDGE ACCENTS ONLY: tiny chibi red-and-white mushroom caps and a few fern fronds tucked at the foundation corners outside the playable floor — minimal, no interior clutter. One tiny hanging wooden lantern shape without flame detail at an outer corner, no text.
+- PALETTE: warm caramel oak bark, moss emerald green, soft cream wood, pale pebble stone foundation, gentle amber highlights. High-key pastel, clean soft brown linework, airy and bright — not dark cabin, not gloomy, not photoreal.
+
+Structure requirements: clear two-story cutaway treehouse shell; open front for placing game furniture; broad readable lower floor; visible upper loft around trunk; two interior walls only; no front wall, no left wall; no blocking objects inside; no furniture, no bed, no shelf, no table, no chair, no plants inside the room, no characters, no railings blocking the lower floor center except the trunk itself and the loft railing on the upper level only.
+
+NO TEXT, no labels, no readable signs, no numbers, no logo, no watermark, no captions anywhere in the image.
+
+Art style: 2D casual mobile game illustration, kawaii pastel, hand-painted vector-like asset, upper-left isometric view, soft ambient occlusion, gentle highlights, crisp readable edges, transparent background or simple isolated object on plain background suitable for background removal. Avoid photorealism, heavy shadows, dense clutter, greenhouse glass walls, and perspective distortion.
+
+Output: single centered room-shell PNG composition, square 1:1, generous transparent or removable empty margin around the shell.

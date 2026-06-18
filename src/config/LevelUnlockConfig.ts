@@ -287,14 +287,8 @@ const LEVEL_UNLOCK_BASE: Record<number, Omit<LevelUnlockDef, 'level'>> = {
     ],
   },
   30: {
-    ceremonyTitle: '花园别墅',
+    ceremonyTitle: '进阶花境',
     entries: [
-      {
-        kind: 'map',
-        title: '花园别墅开放',
-        desc: '大地图中的双层法式别墅启用，玫瑰阳台与塔楼任你布置。',
-        iconKey: 'worldmap_thumb_garden_villa',
-      },
       {
         kind: 'feature',
         title: '银宝箱补给',
@@ -321,8 +315,14 @@ const LEVEL_UNLOCK_BASE: Record<number, Omit<LevelUnlockDef, 'level'>> = {
     ],
   },
   40: {
-    ceremonyTitle: '大师花坊',
+    ceremonyTitle: '花园别墅',
     entries: [
+      {
+        kind: 'map',
+        title: '花园别墅开放',
+        desc: '大地图中的双层西式花园洋房可进入，玫瑰露台与人字拼沙龙任你布置。',
+        iconKey: 'worldmap_thumb_garden_villa',
+      },
       {
         kind: 'feature',
         title: '银宝箱补给',

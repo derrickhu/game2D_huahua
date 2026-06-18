@@ -72,6 +72,12 @@ export const BUTTERFLY_HOUSE_UNLOCK_LEVEL = 8;
 /** 茶香小院进入所需综合等级（与 LevelUnlockConfig 25 级仪式一致） */
 export const TEA_HOUSE_UNLOCK_LEVEL = 25;
 
+/** 橡树小屋进入所需综合等级（与 LevelUnlockConfig 35 级仪式一致） */
+export const FOREST_TREEHOUSE_UNLOCK_LEVEL = 35;
+
+/** 花园别墅进入所需综合等级（与 LevelUnlockConfig 40 级仪式一致） */
+export const GARDEN_VILLA_UNLOCK_LEVEL = 40;
+
 /** 大地图「当前店铺」实时缩略图：截取最长边像素（略小于节点 thumbSize，省显存） */
 export const LIVE_HOUSE_THUMB_CAPTURE_MAX = 160;
 
@@ -159,26 +165,28 @@ export const MAP_NODES: MapNodeDef[] = [
   },
   {
     id: 'garden_villa',
-    type: 'locked',
+    type: 'house',
     label: '花园别墅',
     /** 远右上圆形草地 */
     x: 2020,
     y: 430,
     thumbKey: 'worldmap_thumb_garden_villa',
     thumbSize: 320,
-    unlockLevel: 30,
+    unlockLevel: GARDEN_VILLA_UNLOCK_LEVEL,
     useLiveMapThumb: false,
+    targetSceneId: 'garden_villa',
   },
   {
     id: 'forest_treehouse',
-    type: 'locked',
+    type: 'house',
     label: '橡树小屋',
     /** 右下圆形草地（放大缩略图，更突出） */
     x: 1980,
     y: 900,
     thumbKey: 'worldmap_thumb_forest_treehouse',
     thumbSize: 480,
-    unlockLevel: 35,
+    unlockLevel: FOREST_TREEHOUSE_UNLOCK_LEVEL,
     useLiveMapThumb: false,
+    targetSceneId: 'forest_treehouse',
   },
 ];
