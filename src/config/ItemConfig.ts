@@ -18,6 +18,7 @@ export enum Category {
   BUILDING = 'building',
   CHEST = 'chest',
   CURRENCY = 'currency',
+  EVENT = 'event',
 }
 
 /** 物品的交互机制——决定点击行为、是否走 CD / 宝箱散落等 */
@@ -69,6 +70,10 @@ export enum ToolLine {
   BAKE = 'bake',         // 烘焙工具 → 甜品线
   FARM = 'farm',         // 农田工具 → 整果
   FRUIT_CUT = 'fruit_cut', // 果切工具：整果拖入后加工为对应果切
+}
+
+export enum EventLine {
+  JEWELRY = 'jewelry',
 }
 
 /** 工具线 → 对应产品线的映射 */
@@ -151,6 +156,16 @@ const FOOD_DATA: [FoodLine, string[]][] = [
   [FoodLine.CUT_WATERMELON, ['西瓜角', '竹盘西瓜', '缤纷果篮']],
   [FoodLine.CUT_PINEAPPLE, ['菠萝环片', '竹盘菠萝', '菠萝船']],
   [FoodLine.CUT_DRAGONFRUIT, ['半切火龙果', '木盘火龙果', '火龙果果篮']],
+];
+
+export const EVENT_JEWELRY_STARTER_BOX_ID = 'event_jewelry_starter_box';
+
+const EVENT_JEWELRY_DATA: [EventLine, string[]][] = [
+  [EventLine.JEWELRY, [
+    '小原石', '亮宝石', '宝石戒指', '花耳钉', '小项坠', '珍珠手链',
+    '宝石耳坠', '红宝胸针', '绿宝项链', '蓝宝发冠', '彩宝项圈', '钻石皇冠',
+    '星辉王冠',
+  ]],
 ];
 
 // ═══════════════ 工具数据 ═══════════════
@@ -334,6 +349,39 @@ function buildItemDefs(): Map<string, ItemDef> {
       });
     }
   }
+
+  // 活动首饰线：活动棋盘专用，不进入主订单池；L3 起均为完整首饰。
+  for (const [line, names] of EVENT_JEWELRY_DATA) {
+    const maxLv = names.length;
+    for (let i = 0; i < names.length; i++) {
+      const id = `event_${line}_${i + 1}`;
+      map.set(id, {
+        id,
+        name: names[i],
+        category: Category.EVENT,
+        line,
+        level: i + 1,
+        maxLevel: maxLv,
+        icon: `event_${line}_${i + 1}`,
+        interactType: InteractType.NONE,
+        sellable: false,
+        storable: false,
+      });
+    }
+  }
+
+  map.set(EVENT_JEWELRY_STARTER_BOX_ID, {
+    id: EVENT_JEWELRY_STARTER_BOX_ID,
+    name: '原石包',
+    category: Category.EVENT,
+    line: 'jewelry_box',
+    level: 1,
+    maxLevel: 1,
+    icon: EVENT_JEWELRY_STARTER_BOX_ID,
+    interactType: InteractType.NONE,
+    sellable: false,
+    storable: false,
+  });
 
   // 工具（BUILDING 品类，可合成升级）
   for (const [line, names] of TOOL_DATA) {

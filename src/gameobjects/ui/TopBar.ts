@@ -14,6 +14,7 @@ import { AudioManager } from '@/core/AudioManager';
 import { EventBus } from '@/core/EventBus';
 import { CurrencyManager } from '@/managers/CurrencyManager';
 import { GMManager } from '@/managers/GMManager';
+import { EventBoardManager } from '@/managers/EventBoardManager';
 import { WeekendHuayuanBoostManager } from '@/managers/WeekendHuayuanBoostManager';
 import { FloatingMenu } from '@/gameobjects/ui/FloatingMenu';
 import { COLORS, DESIGN_WIDTH, FONT_FAMILY } from '@/config/Constants';
@@ -79,6 +80,8 @@ const GM_BTN_CY = TOP_BAR_HEIGHT + 10;
 /** 锚在体力条左段下方（红框区），再略向右下 */
 const QUEST_BTN_CX = STA_X + 42;
 const QUEST_BTN_CY = TOP_BAR_HEIGHT + 18;
+const EVENT_BTN_CX = QUEST_BTN_CX + QUEST_HIT + 14;
+const EVENT_BTN_CY = QUEST_BTN_CY;
 // ── 颜色（体力胶囊参考：浅粉框 + 鲜绿填充 + 绿圆加号）──
 const C = {
   /** 胶囊外沿浅粉米 */
@@ -110,6 +113,7 @@ export class TopBar extends PIXI.Container {
   /** 周末图标接入前 GM 槽左缘（仅用于周末图标定位） */
   private _gmSlotLeft = DIAMOND_BAR_RIGHT + 10;
   private _questRedDot: PIXI.Graphics | null = null;
+  private _eventRedDot: PIXI.Graphics | null = null;
 
   constructor(opts?: TopBarOptions) {
     super();
@@ -126,6 +130,7 @@ export class TopBar extends PIXI.Container {
     this._buildGmButton();
     if (this._opts.showDailyChallenge) {
       this._buildDailyChallengeButton();
+      this._buildEventBoardButton();
     }
     this._bindEvents();
     this._updateAll();
@@ -546,10 +551,64 @@ export class TopBar extends PIXI.Container {
     this.updateQuestRedDot();
   }
 
+  /** 首饰活动入口：放在每日挑战旁边，1 级即可看到 */
+  private _buildEventBoardButton(): void {
+    const wrap = new PIXI.Container();
+    wrap.position.set(EVENT_BTN_CX, EVENT_BTN_CY);
+    wrap.hitArea = new PIXI.Rectangle(-QUEST_HIT / 2, -QUEST_HIT / 2, QUEST_HIT, QUEST_HIT);
+    wrap.eventMode = 'static';
+    wrap.cursor = 'pointer';
+    wrap.zIndex = 21;
+    wrap.name = 'eventBoardBtn';
+
+    const tex = TextureCache.get('icon_gift');
+    if (tex && tex.width > 0) {
+      const sp = new PIXI.Sprite(tex);
+      sp.anchor.set(0.5);
+      const s = Math.min(QUEST_ICON_SIZE / tex.width, QUEST_ICON_SIZE / tex.height);
+      sp.scale.set(s);
+      wrap.addChild(sp);
+    } else {
+      const fb = new PIXI.Text('活动', {
+        fontSize: 12,
+        fontFamily: FONT_FAMILY,
+        fill: 0x5d4037,
+        fontWeight: 'bold',
+      });
+      fb.anchor.set(0.5);
+      wrap.addChild(fb);
+    }
+
+    const redDot = new PIXI.Graphics();
+    redDot.beginFill(0xff3333);
+    redDot.drawCircle(QUEST_HIT / 2 - 5, -QUEST_HIT / 2 + 7, 6);
+    redDot.endFill();
+    redDot.lineStyle(1.5, 0xffffff);
+    redDot.drawCircle(QUEST_HIT / 2 - 5, -QUEST_HIT / 2 + 7, 6);
+    redDot.visible = false;
+    wrap.addChild(redDot);
+    this._eventRedDot = redDot;
+
+    this._bindButtonClickSfx(wrap);
+    wrap.on('pointertap', (e: PIXI.FederatedPointerEvent) => {
+      e.stopPropagation();
+      EventBus.emit('nav:openEvent');
+    });
+
+    this.addChild(wrap);
+    this.updateEventRedDot();
+  }
+
   /** 每日挑战红点（由 MainScene 红点刷新或 quest 事件触发） */
   updateQuestRedDot(): void {
     if (this._questRedDot) {
       this._questRedDot.visible = FloatingMenu.getRedDot('quest');
+    }
+  }
+
+  updateEventRedDot(): void {
+    if (this._eventRedDot) {
+      this._eventRedDot.visible = EventBoardManager.hasClaimable || FloatingMenu.getRedDot('event');
     }
   }
 
@@ -602,6 +661,7 @@ export class TopBar extends PIXI.Container {
     });
     EventBus.on('quest:updated', () => this.updateQuestRedDot());
     EventBus.on('quest:taskCompleted', () => this.updateQuestRedDot());
+    EventBus.on('eventBoard:changed', () => this.updateEventRedDot());
   }
 
   private _updateAll(): void {

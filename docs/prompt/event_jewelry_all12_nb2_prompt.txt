@@ -1,0 +1,9 @@
+High-saturation 2D mobile merge-game item icons, exactly the same art style as a cozy flower-shop merge game bouquet line: bold clean dark outline, chunky simple readable shapes, glossy hand-painted cel shading with soft volume, rich vivid candy colors. Describe each object through color blocks and soft shadow rather than tiny fine details, so it stays clear and pretty as a small board icon. ONE single centered object per cell, no duplicates, every cell different. Pure flat white background, no scene, faint soft contact shadow only. NO TEXT, no labels, no numbers, no watermark anywhere.
+
+Layout: a neat grid of exactly 3 columns x 4 rows = 12 icons, evenly spaced, each icon large and centered in its own cell, wide even white gutters between cells so each piece can be cropped individually. Fill all 12 cells, do not add extra rows, do not repeat any item.
+
+A jewelry progression from raw stone to royal crown, each a SINGLE simple piece, read left-to-right top-to-bottom:
+Row 1: (1) one chunky rough raw amethyst crystal stone, pale lilac with simple bold facets. (2) one big polished faceted teardrop gemstone, vivid violet-purple, glossy. (3) one simple gold ring with a single round purple gem on top.
+Row 2: (4) one flower-shaped stud earring, bold gold petals with a purple gem center. (5) one small teardrop pendant on a short gold chain, purple gem. (6) one pearl bracelet loop, glossy white pearls with a small gold clasp.
+Row 3: (7) one single drop earring, a purple teardrop gem on a slim gold hook, only one earring. (8) one ruby brooch, a bold red gem in a simple gold scroll frame. (9) one emerald necklace, a green gem on a simple gold chain.
+Row 4: (10) one sapphire tiara, a delicate gold hair crown with blue gems. (11) one ornate gemstone collar choker necklace with a few bold multi-color gems. (12) one grand royal gold crown with bold sparkling gems, the most luxurious single piece.

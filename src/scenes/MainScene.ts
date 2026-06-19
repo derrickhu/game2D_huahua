@@ -75,6 +75,7 @@ import { DressUpManager } from '@/managers/DressUpManager';
 import { getOwnerBoardDisplayScale } from '@/config/DressUpConfig';
 import { SocialManager } from '@/managers/SocialManager';
 import { EventManager } from '@/managers/EventManager';
+import { EventBoardManager } from '@/managers/EventBoardManager';
 import { ENABLE_CHALLENGE_LEVEL_FEATURE } from '@/config/FeatureFlags';
 import { ChallengeManager } from '@/managers/ChallengeManager';
 import { HapticSystem } from '@/systems/HapticSystem';
@@ -86,6 +87,7 @@ import {
   playShopDecorationStarFly,
 } from '@/gameobjects/ui/ShopDecorationStarFly';
 import { EventPanel } from '@/gameobjects/ui/EventPanel';
+import { EventBoardPanel } from '@/gameobjects/ui/EventBoardPanel';
 import { ChallengePanel } from '@/gameobjects/ui/ChallengePanel';
 import { LeaderboardPanel } from '@/gameobjects/ui/LeaderboardPanel';
 import { RewardBoxButton } from '@/gameobjects/ui/RewardBoxButton';
@@ -184,6 +186,7 @@ export class MainScene implements Scene {
   /** 主场景：与花店 `decoration:shopStarFly` 同款飞星粒子层（装扮解锁用） */
   private _dressShopStarFlyLayer: PIXI.Container | null = null;
   private _eventPanel!: EventPanel;
+  private _eventBoardPanel!: EventBoardPanel;
   private _challengePanel!: ChallengePanel;
   private _leaderboardPanel!: LeaderboardPanel;
 
@@ -505,6 +508,9 @@ export class MainScene implements Scene {
 
     this._eventPanel = new EventPanel();
     overlay.addChild(this._eventPanel);
+
+    this._eventBoardPanel = new EventBoardPanel();
+    overlay.addChild(this._eventBoardPanel);
 
     this._challengePanel = new ChallengePanel();
     overlay.addChild(this._challengePanel);
@@ -1476,7 +1482,7 @@ export class MainScene implements Scene {
 
     // ---- 限时活动入口 ----
     EventBus.on('nav:openEvent', () => {
-      EventBus.emit('panel:openEvent');
+      EventBus.emit('panel:openEventBoard');
     });
 
     // ---- 挑战关卡入口（关闭时事件无效果，面板与 Manager 内亦有开关） ----
@@ -1514,6 +1520,10 @@ export class MainScene implements Scene {
     EventBus.on('event:started', (event: any) => {
       this._markRedDotsDirty();
       ToastMessage.show(`限时活动开启：${event.name}！`);
+    });
+
+    EventBus.on('eventBoard:changed', () => {
+      this._markRedDotsDirty();
     });
 
     // ---- 挑战事件 ----
@@ -1564,7 +1574,7 @@ export class MainScene implements Scene {
   /** 更新红点 */
   private _updateRedDots(): void {
     // 活动红点
-    this._floatingMenu.setRedDot('event', EventManager.hasClaimableTask);
+    this._floatingMenu.setRedDot('event', EventManager.hasClaimableTask || EventBoardManager.hasClaimable);
     this._floatingMenu.setRedDot('quest', QuestManager.hasClaimableQuest);
 
     // 底部栏红点（装修按钮）
@@ -1572,6 +1582,7 @@ export class MainScene implements Scene {
 
     this._shopRowPanorama.updateRedDots();
     this._topBar.updateQuestRedDot();
+    this._topBar.updateEventRedDot();
   }
 
   private _markRedDotsDirty(): void {

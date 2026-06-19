@@ -59,6 +59,7 @@ import {
 } from '@/config/ItemConfig';
 import { RewardBoxManager } from './RewardBoxManager';
 import { MergeCompanionManager } from './MergeCompanionManager';
+import { EventBoardManager } from './EventBoardManager';
 import { STAMINA_MAX } from '@/config/Constants';
 
 declare const wx: any;
@@ -377,6 +378,28 @@ class GMManagerClass {
       execute: () => {
         CurrencyManager.addHuayuan(100);
         return ` +100花愿，当前: ${CurrencyManager.state.huayuan}`;
+      },
+    });
+
+    this._commands.push({
+      id: 'add_event_stones_10',
+      group: ' 货币调整',
+      name: ' +10 原石',
+      desc: '首饰活动：向活动库存发放 10 个原石',
+      execute: () => {
+        const total = EventBoardManager.addStarterStones(10);
+        return ` +10 原石，当前活动库存: ${total}`;
+      },
+    });
+
+    this._commands.push({
+      id: 'add_event_stones_1',
+      group: ' 货币调整',
+      name: ' +1 原石',
+      desc: '首饰活动：向活动库存发放 1 个原石',
+      execute: () => {
+        const total = EventBoardManager.addStarterStones(1);
+        return ` +1 原石，当前活动库存: ${total}`;
       },
     });
 

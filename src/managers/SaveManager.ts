@@ -15,6 +15,7 @@ import { RewardBoxManager, RewardBoxState } from './RewardBoxManager';
 import { MergeCompanionManager, type MergeCompanionPersistState } from './MergeCompanionManager';
 import { MerchShopManager, type MerchShopPersistState } from './MerchShopManager';
 import { FlowerSignTicketManager } from './FlowerSignTicketManager';
+import { EventBoardManager, type EventBoardPersistState } from './EventBoardManager';
 import { EventBus } from '@/core/EventBus';
 import { PersistService } from '@/core/PersistService';
 import { CdnAssetService } from '@/core/CdnAssetService';
@@ -107,11 +108,14 @@ interface SaveData {
   merchShop?: MerchShopPersistState;
   /** 许愿硬币数量（存档键 flowerSignTickets 与旧「许愿券」档兼容） */
   flowerSignTickets?: number;
+  /** 限时活动独立棋盘（不参与主棋盘布局指纹） */
+  eventBoard?: EventBoardPersistState;
 }
 
 class SaveManagerClass {
   private _lastSave = 0;
   private _mergeCompanionSaveTimer: ReturnType<typeof setTimeout> | null = null;
+  private _eventBoardSaveTimer: ReturnType<typeof setTimeout> | null = null;
 
   constructor() {
     /** 花语泡泡等伴生物变化后尽快落盘，避免仅依赖 30s 异步档或未触发 onHide 时丢档 */
@@ -119,6 +123,13 @@ class SaveManagerClass {
       if (this._mergeCompanionSaveTimer) clearTimeout(this._mergeCompanionSaveTimer);
       this._mergeCompanionSaveTimer = setTimeout(() => {
         this._mergeCompanionSaveTimer = null;
+        this._persistToStorage(false);
+      }, 200);
+    });
+    EventBus.on('eventBoard:changed', () => {
+      if (this._eventBoardSaveTimer) clearTimeout(this._eventBoardSaveTimer);
+      this._eventBoardSaveTimer = setTimeout(() => {
+        this._eventBoardSaveTimer = null;
         this._persistToStorage(false);
       }, 200);
     });
@@ -139,6 +150,7 @@ class SaveManagerClass {
       customers: CustomerManager.exportState(),
       merchShop: MerchShopManager.exportState(),
       flowerSignTickets: FlowerSignTicketManager.exportState(),
+      eventBoard: EventBoardManager.exportState(),
     };
     return JSON.stringify(data);
   }
@@ -237,6 +249,7 @@ class SaveManagerClass {
       CurrencyManager.applyElapsedStaminaRecovery(offlineSec);
       BoardManager.loadState(data.board);
       BuildingManager.loadState(data.buildings);
+      EventBoardManager.loadState(data.eventBoard);
       if (data.warehouse) {
         WarehouseManager.loadState(data.warehouse);
       }

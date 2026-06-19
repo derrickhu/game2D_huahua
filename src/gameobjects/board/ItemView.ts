@@ -573,6 +573,7 @@ export class ItemView extends PIXI.Container {
       case Category.BUILDING: return '建';
       case Category.CHEST: return '箱';
       case Category.CURRENCY: return '币';
+      case Category.EVENT: return '饰';
       default: return '物';
     }
   }
@@ -585,6 +586,7 @@ export class ItemView extends PIXI.Container {
       case Category.BUILDING: return 0x8B4513;
       case Category.CHEST: return 0xDAA520;
       case Category.CURRENCY: return 0x4CAF50;
+      case Category.EVENT: return 0x8e6ad8;
       default: return 0xCCCCCC;
     }
   }
@@ -607,6 +609,10 @@ export class ItemView extends PIXI.Container {
         return 0xf5c542;
       case FoodLine.CUT_DRAGONFRUIT:
         return 0xe0568a;
+      case 'jewelry':
+        return 0x8e6ad8;
+      case 'jewelry_box':
+        return 0x50b7c8;
       default: return 0x999999;
     }
   }

@@ -47,6 +47,7 @@ class RewardBoxManagerClass {
       [Category.BUILDING]: 2,
       [Category.CHEST]: 3,
       [Category.CURRENCY]: 4,
+      [Category.EVENT]: 5,
     };
     const before = this._order.join('|');
     this._order = this._order

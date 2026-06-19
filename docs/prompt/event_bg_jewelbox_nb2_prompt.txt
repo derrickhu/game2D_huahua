@@ -1,0 +1,17 @@
+Full-screen 9:16 portrait BACKGROUND template for a limited-time jewelry event page in a cozy flower-shop merge mobile game. Opulent, luxurious "dripping with jewels" mood, lush semi-painterly 2D illustration with luminous gemstones, sharp sparkling highlights, pearl luster, polished gold filigree, soft glittering bokeh. Elegant high-key pastel palette (lilac, rose pink, cream, mint, champagne gold) enriched with jewel-tone accents (amethyst, emerald, sapphire, ruby). The WHOLE image must feel harmonious and color-coordinated, soft and dreamy, not flat cartoon, no watermark.
+
+Strict vertical layout with a SMALL header, a LONG empty center, and a decorated footer:
+
+TOP HEADER (only the top ~20% of the height) — keep it compact, do NOT let art spill below this band:
+- A single ornate decorative title banner, an elegant scalloped gem-studded gold frame with glowing edges, small flowers and gemstones around it.
+- Inside the banner, render the Chinese event title text "花间珠匣" in big bold elegant glossy GOLD characters with a soft dark outline, perfectly centered, clearly legible, correct strokes.
+- Just a few small jewelry-theme accents tucked tightly around the banner (a hint of an open jewelry box corner, a couple of gems, a tiny tiara, a few pastel roses and ribbon tails) — small and contained in this top band only, NOT a big illustration.
+
+CENTER PANEL (a TALL band, about 62% of the height, from ~20% down to ~82%) — MUST stay clean and empty:
+- One large smooth SOLID-COLOR panel (soft cream or pale mint, gentle subtle vertical gradient only) with a simple elegant rounded pastel-and-gold frame border. Make this panel clearly TALL / elongated with plenty of vertical room, since a game board with extra rows will be placed on top later.
+- Absolutely NOTHING inside this panel: no jewelry, no gems, no flowers, no board, no grid, no cells, no icons, no text, no pattern — just clean flat solid color so UI reads clearly on top.
+
+BOTTOM FOOTER (bottom ~18%) — decorated with floral ornament:
+- A pretty decorative band: a soft garland of pastel roses, leaves, small gemstones and elegant swirling ribbon/filigree ornament running along the bottom, gently framing the page. Make it visually rich enough to balance the header, but keep it BELOW the center panel. No buttons, no progress bar, no counters, no UI widgets, no text.
+
+Only the title "花间珠匣" may contain text; everywhere else there must be NO letters, NO numbers, NO garbled glyphs. Crisp, sharp, jewel-bright but not overexposed, balanced soft contrast, cohesive pastel-jewel color harmony across the whole picture.

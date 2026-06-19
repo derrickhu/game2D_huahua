@@ -187,6 +187,20 @@ const PANELS_IMAGE_MAP: Record<string, string> = {
   warehouse_close_btn: 'subpkg_panels/images/ui/warehouse_close_btn.png',
   warehouse_slot_lock: 'subpkg_panels/images/ui/warehouse_slot_lock.png',
   merge_chain_ribbon: 'subpkg_panels/images/ui/merge_chain_ribbon.png',
+  /** 花间珠匣活动整页背景：NB2 珠匣华丽底图（顶部金标题牌 + 中部纯色棋盘区 + 底部花纹） */
+  event_board_bg: 'subpkg_panels/images/ui/event_board_bg_nb2.png',
+  /** 花间珠匣：底部原石投放器「珠宝匣」图标（NB2 + birefnet 去底） */
+  event_jewelry_casket: 'subpkg_panels/images/ui/event_jewelry_casket_nb2.png',
+  /** 花间珠匣：棋盘上的「时空门」棋子（NB2 + birefnet 去底；集齐钥匙点击进下一层） */
+  event_portal_gate: 'subpkg_panels/images/ui/event_portal_gate_nb2.png',
+  /** 花间珠匣：阶段信息条纯色淡紫底（NB2 + birefnet 去底；其上叠绘标题/进度/图标） */
+  event_stage_card_bg: 'subpkg_panels/images/ui/event_stage_card_bg_nb2.png',
+  /** 花间珠匣：全锁格紫丝绒整块（NB2 + birefnet 去底） */
+  event_cell_fog: 'subpkg_panels/images/ui/event_cell_fog_nb2.png',
+  /** 花间珠匣：半锁格掀开一半的紫丝绒（上半透明露出压着的物品） */
+  event_cell_peek: 'subpkg_panels/images/ui/event_cell_peek_nb2.png',
+  /** 花间珠匣：进度条上可获得钥匙节点的金钥匙角标（NB2 + birefnet 去底） */
+  event_key_badge: 'subpkg_panels/images/ui/event_key_badge_nb2.png',
   /** 升级奖励等：粉色彩带标题条（叠字「恭喜升级」） */
   pink_bar: 'subpkg_panels/images/ui/pink_bar.png',
   merge_chain_panel: 'subpkg_panels/images/ui/merge_chain_panel.png',
@@ -485,6 +499,21 @@ const ITEMS_IMAGE_MAP: Record<string, string> = {
   icon_coin: 'subpkg_items/images/special/special_lucky_coin.png',
   icon_crystal_ball: 'subpkg_items/images/special/special_crystal_ball.png',
   icon_golden_scissors: 'subpkg_items/images/special/special_golden_scissors.png',
+
+  // ---- 活动首饰线（花间珠匣活动棋盘，L1 原石 → L12 珠宝套装，1:1 白底合图 + birefnet-general）----
+  event_jewelry_1: 'subpkg_items/images/jewelry/event_jewelry_1.png',
+  event_jewelry_2: 'subpkg_items/images/jewelry/event_jewelry_2.png',
+  event_jewelry_3: 'subpkg_items/images/jewelry/event_jewelry_3.png',
+  event_jewelry_4: 'subpkg_items/images/jewelry/event_jewelry_4.png',
+  event_jewelry_5: 'subpkg_items/images/jewelry/event_jewelry_5.png',
+  event_jewelry_6: 'subpkg_items/images/jewelry/event_jewelry_6.png',
+  event_jewelry_7: 'subpkg_items/images/jewelry/event_jewelry_7.png',
+  event_jewelry_8: 'subpkg_items/images/jewelry/event_jewelry_8.png',
+  event_jewelry_9: 'subpkg_items/images/jewelry/event_jewelry_9.png',
+  event_jewelry_10: 'subpkg_items/images/jewelry/event_jewelry_10.png',
+  event_jewelry_11: 'subpkg_items/images/jewelry/event_jewelry_11.png',
+  event_jewelry_12: 'subpkg_items/images/jewelry/event_jewelry_12.png',
+  event_jewelry_13: 'subpkg_items/images/jewelry/event_jewelry_13.png',
 };
 
 // ================================================================

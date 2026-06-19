@@ -8,6 +8,7 @@ import * as PIXI from 'pixi.js';
 import { EventBus } from '@/core/EventBus';
 import { TweenManager, Ease } from '@/core/TweenManager';
 import { EventManager } from '@/managers/EventManager';
+import { EventBoardManager } from '@/managers/EventBoardManager';
 import { QuestManager } from '@/managers/QuestManager';
 import { FloatingMenu } from './FloatingMenu';
 import { RewardBoxButton } from '@/gameobjects/ui/RewardBoxButton';
@@ -70,7 +71,7 @@ const TASK_DEFS: TaskDef[] = [
     texKey: 'icon_gift',
     event: 'nav:openEvent',
     redDotKey: 'event',
-    isVisible: () => EventManager.hasActiveEvent,
+    isVisible: () => EventManager.hasActiveEvent || EventBoardManager.stageCount > 0,
   },
 ];
 
