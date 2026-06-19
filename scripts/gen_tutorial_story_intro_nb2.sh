@@ -88,4 +88,7 @@ PY
 
 cp "$out" "$CRIT/story_1.png"
 cp "$out" "$SUB/story_1.png"
+
+echo "== compress tutorial story PNG (pngquant, keep mobile gradient quality) =="
+python3 scripts/compress_tutorial_story_png.py "$out" "$CRIT/story_1.png" "$SUB/story_1.png"
 echo "Done. Raw: $raw"
