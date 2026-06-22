@@ -12,16 +12,10 @@ import {
   getStageRows,
   getStageTotal,
   EVENT_DISCOVERY_REWARDS,
-  EVENT_MERGE_COMMON_BASE_CHANCE,
-  EVENT_MERGE_COMMON_MAX_CHANCE,
-  EVENT_MERGE_COMMON_PER_LEVEL,
-  EVENT_MERGE_COMMON_TABLE,
-  EVENT_MERGE_RARE_BASE_CHANCE,
-  EVENT_MERGE_RARE_DAILY_LIMIT,
-  EVENT_MERGE_RARE_MAX_CHANCE,
-  EVENT_MERGE_RARE_MIN_LEVEL,
-  EVENT_MERGE_RARE_PER_LEVEL,
-  EVENT_MERGE_RARE_TABLE,
+  EVENT_MERGE_DROP_BASE_CHANCE,
+  EVENT_MERGE_DROP_MAX_CHANCE,
+  EVENT_MERGE_DROP_PER_LEVEL,
+  EVENT_MERGE_DROP_TABLE,
   EVENT_ORDER_BOX_CHANCE,
   EVENT_ORDER_BOX_DAILY_GUARANTEE,
   EVENT_ORDER_BOX_DAILY_LIMIT,
@@ -61,6 +55,17 @@ export interface EventBoardPersistState {
   /** @deprecated 旧版字段：每日原石包数量。 */
   dailyStarterBoxes: number;
   dailyDropCounts: Record<string, number>;
+}
+
+export interface EventMergeDropPlacement {
+  itemId: string;
+  cellIndex: number;
+}
+
+export interface EventCurrencyCollectResult {
+  collected: boolean;
+  type?: 'stamina' | 'diamond' | 'huayuan';
+  amount?: number;
 }
 
 function localDateKey(ts = Date.now()): string {
@@ -292,7 +297,7 @@ class EventBoardManagerClass {
     if (!guaranteed && Math.random() >= EVENT_ORDER_BOX_CHANCE) return false;
     this._dailyStarterStones++;
     this._pendingStarterStones++;
-    EventBus.emit('eventBoard:starterStoneGranted', this._pendingStarterStones);
+    EventBus.emit('eventBoard:starterStoneGranted', this._pendingStarterStones, 1);
     EventBus.emit('eventBoard:changed');
     return true;
   }
@@ -302,7 +307,7 @@ class EventBoardManagerClass {
     const add = Math.max(0, Math.floor(n));
     if (add <= 0) return this._pendingStarterStones;
     this._pendingStarterStones += add;
-    EventBus.emit('eventBoard:starterStoneGranted', this._pendingStarterStones);
+    EventBus.emit('eventBoard:starterStoneGranted', this._pendingStarterStones, add);
     EventBus.emit('eventBoard:changed');
     return this._pendingStarterStones;
   }
@@ -333,6 +338,15 @@ class EventBoardManagerClass {
     if (idx < 0) return -1;
     this._cells[idx].itemId = itemId;
     return idx;
+  }
+
+  private _placeItemInPreferredEmpty(itemId: string, preferredIndex: number): number {
+    const preferred = this._cells[preferredIndex];
+    if (preferred?.state === CellState.OPEN && !preferred.itemId && !preferred.isPortal) {
+      preferred.itemId = itemId;
+      return preferredIndex;
+    }
+    return this._placeItemInFirstEmpty(itemId);
   }
 
   /**
@@ -368,7 +382,7 @@ class EventBoardManagerClass {
       }
       this._markDiscovered(resultId, true);
       this._tryCompleteStage(resultId);
-      this._tryGrantMergeDrop(resultId);
+      this._tryGrantMergeDrop(resultId, srcIndex);
       EventBus.emit('eventBoard:merged', resultId, dstIndex);
       EventBus.emit('eventBoard:changed');
       return dstWasPeek ? 'unlocked' : 'merged';
@@ -419,11 +433,11 @@ class EventBoardManagerClass {
     return false;
   }
 
-  collectCurrencyCell(index: number): boolean {
+  collectCurrencyCell(index: number): EventCurrencyCollectResult {
     const cell = this._cells[index];
-    if (!cell?.itemId) return false;
+    if (!cell?.itemId) return { collected: false };
     const def = ITEM_DEFS.get(cell.itemId);
-    if (!def || def.category !== Category.CURRENCY || !def.currencyReward) return false;
+    if (!def || def.category !== Category.CURRENCY || !def.currencyReward) return { collected: false };
     const { type, amount } = def.currencyReward;
     if (type === 'stamina') CurrencyManager.addStamina(amount);
     if (type === 'diamond') CurrencyManager.addDiamond(amount);
@@ -431,7 +445,7 @@ class EventBoardManagerClass {
     cell.itemId = null;
     EventBus.emit('eventBoard:rewardGranted', [{ kind: type, amount }]);
     EventBus.emit('eventBoard:changed');
-    return true;
+    return { collected: true, type, amount };
   }
 
   /** 该格是否是可开启的容器（宝箱/红包/钻石袋/体力箱） */
@@ -451,7 +465,7 @@ class EventBoardManagerClass {
   /**
    * 开启活动棋盘上的容器：首次点击即掷出整队掉落（活动棋盘开箱不耗体力），
    * 每次点击向空格散落，散不完则保留容器与剩余队列（与主棋盘一致）。
-   * 散落的货币块点击即可领取。
+   * 散落的货币块双击领取（与主棋盘一致）。
    */
   openContainerCell(index: number): {
     result: 'opened' | 'partial' | 'noSpace' | 'invalid';
@@ -509,6 +523,8 @@ class EventBoardManagerClass {
   }
 
   private _markDiscovered(itemId: string, grantReward: boolean): void {
+    const itemDef = ITEM_DEFS.get(itemId);
+    if (itemDef?.category !== Category.EVENT || itemDef.line !== EventLine.JEWELRY) return;
     if (this._discoveredItemIds.has(itemId)) return;
     this._discoveredItemIds.add(itemId);
     EventBus.emit('eventBoard:discovered', itemId);
@@ -545,52 +561,24 @@ class EventBoardManagerClass {
     return table[table.length - 1]?.reward ?? null;
   }
 
-  /**
-   * 每次合成的掉落：
-   *  - 常驻：概率随结果等级提升，爆出 钻石 / 体力 / 花愿（花愿数量按等级放大）；
-   *  - 稀有：高级合成才可能，小概率且每日有限，爆出 体力宝箱 / 钻石袋 / 红包（进收纳盒）。
-   */
-  private _tryGrantMergeDrop(resultId: string): void {
+  /** 首饰线合成按等级概率爆 1 个奖励物品；物品优先落活动棋盘，满格进奖励篮。 */
+  private _tryGrantMergeDrop(resultId: string, preferredCellIndex: number): void {
     const def = ITEM_DEFS.get(resultId);
     if (!def) return;
+    if (def.category !== Category.EVENT || def.line !== EventLine.JEWELRY) return;
     const level = def.level;
-
-    // 稀有掉落（优先判定，命中则不再叠加常驻）
-    if (level >= EVENT_MERGE_RARE_MIN_LEVEL) {
-      const rareUsed = this._dailyDropCounts.rare ?? 0;
-      if (rareUsed < EVENT_MERGE_RARE_DAILY_LIMIT) {
-        const rareChance = Math.min(
-          EVENT_MERGE_RARE_MAX_CHANCE,
-          EVENT_MERGE_RARE_BASE_CHANCE + level * EVENT_MERGE_RARE_PER_LEVEL,
-        );
-        if (Math.random() < rareChance) {
-          const reward = this._pickWeighted(EVENT_MERGE_RARE_TABLE);
-          if (reward) {
-            this._dailyDropCounts.rare = rareUsed + 1;
-            this._grantRewards([reward], true);
-            return;
-          }
-        }
-      }
-    }
-
-    // 常驻货币掉落
-    const commonChance = Math.min(
-      EVENT_MERGE_COMMON_MAX_CHANCE,
-      EVENT_MERGE_COMMON_BASE_CHANCE + level * EVENT_MERGE_COMMON_PER_LEVEL,
+    const dropChance = Math.min(
+      EVENT_MERGE_DROP_MAX_CHANCE,
+      EVENT_MERGE_DROP_BASE_CHANCE + level * EVENT_MERGE_DROP_PER_LEVEL,
     );
-    if (Math.random() >= commonChance) return;
-    const picked = this._pickWeighted(EVENT_MERGE_COMMON_TABLE);
+    if (Math.random() >= dropChance) return;
+    const picked = this._pickWeighted(EVENT_MERGE_DROP_TABLE);
     if (!picked) return;
-    // 花愿随结果等级放大，越高级越值钱
-    const reward: EventRewardDef =
-      picked.kind === 'huayuan'
-        ? { kind: 'huayuan', amount: picked.amount * Math.max(1, level) }
-        : picked;
-    this._grantRewards([reward], true);
+    this._grantRewards([picked], true, preferredCellIndex);
   }
 
-  private _grantRewards(rewards: EventRewardDef[], isDrop = false): void {
+  private _grantRewards(rewards: EventRewardDef[], isDrop = false, preferredCellIndex = -1): void {
+    const placements: EventMergeDropPlacement[] = [];
     for (const reward of rewards) {
       switch (reward.kind) {
         case 'stamina':
@@ -604,22 +592,24 @@ class EventBoardManagerClass {
           break;
         case 'boxItem':
           for (let i = 0; i < reward.count; i++) {
-            const idx = this._placeItemInFirstEmpty(reward.itemId);
-            if (idx < 0) RewardBoxManager.addItem(reward.itemId, 1);
+            const idx = this._placeItemInPreferredEmpty(reward.itemId, i === 0 ? preferredCellIndex : -1);
+            if (idx >= 0) placements.push({ itemId: reward.itemId, cellIndex: idx });
+            else RewardBoxManager.addItem(reward.itemId, 1);
           }
           break;
         case 'boxReward':
           // 宝箱/钻石袋/红包：直接落到活动棋盘空格（点击开箱散落货币块）；棋盘满了才退收纳盒
           for (let i = 0; i < reward.count; i++) {
-            const idx = this._placeItemInFirstEmpty(reward.itemId);
-            if (idx < 0) RewardBoxManager.addItem(reward.itemId, 1);
+            const idx = this._placeItemInPreferredEmpty(reward.itemId, i === 0 ? preferredCellIndex : -1);
+            if (idx >= 0) placements.push({ itemId: reward.itemId, cellIndex: idx });
+            else RewardBoxManager.addItem(reward.itemId, 1);
           }
           break;
       }
     }
     EventBus.emit('eventBoard:rewardGranted', rewards);
     // 合成爆奖：额外发一个用于"掉落飘字"的事件
-    if (isDrop) EventBus.emit('eventBoard:mergeDrop', rewards);
+    if (isDrop) EventBus.emit('eventBoard:mergeDrop', rewards, placements);
   }
 }
 

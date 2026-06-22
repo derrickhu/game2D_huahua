@@ -13,6 +13,9 @@ export const EVENT_BOARD_MAX_TOTAL = EVENT_BOARD_COLS * EVENT_BOARD_MAX_ROWS;
 export const JEWELRY_STARTER_BOX_ITEM_ID = EVENT_JEWELRY_STARTER_BOX_ID;
 export const JEWELRY_ITEM_PREFIX = 'event_jewelry_';
 
+/** 进度条上标注「合出可获得钥匙」的首饰等级（参考同类活动 9/10/12 级角标） */
+export const EVENT_KEY_BADGE_LEVELS: readonly number[] = [9, 10, 12];
+
 export interface EventBoardStageDef {
   id: string;
   name: string;
@@ -133,31 +136,20 @@ export const EVENT_DISCOVERY_REWARDS: EventDiscoveryRewardDef[] = [
 ];
 
 /**
- * 合成「常驻」掉落：每次合成都有机会爆出 钻石 / 体力 / 花愿。
- * 命中概率随结果等级提高（越高级越容易掉），花愿数量也按等级放大。
+ * 合成奖励物品掉落：首饰线合成有概率爆 1 个奖励棋子，落活动棋盘空格，满格进奖励篮。
+ * 基础 35%，随合成结果等级 +2.5%/级，12 级及以上封顶 65%。
+ * 权重从高到低：1 级花愿 > 1 级体力 > 1 级红包 > 1 级钻石 > 1 级体力箱；幸运金币极低；钻石/体力箱权重已压低。
  */
-export const EVENT_MERGE_COMMON_BASE_CHANCE = 0.16;
-export const EVENT_MERGE_COMMON_PER_LEVEL = 0.012;
-export const EVENT_MERGE_COMMON_MAX_CHANCE = 0.34;
-export const EVENT_MERGE_COMMON_TABLE: EventDropEntry[] = [
-  { reward: { kind: 'huayuan', amount: 20 }, weight: 5 },
-  { reward: { kind: 'stamina', amount: 2 }, weight: 4 },
-  { reward: { kind: 'diamond', amount: 1 }, weight: 2 },
-];
-
-/**
- * 合成「稀有」掉落：仅较高级合成才可能，小概率，每日有限。
- * 体力宝箱 / 钻石袋 / 红包，直接进收纳盒。
- */
-export const EVENT_MERGE_RARE_MIN_LEVEL = 4;
-export const EVENT_MERGE_RARE_BASE_CHANCE = 0.02;
-export const EVENT_MERGE_RARE_PER_LEVEL = 0.004;
-export const EVENT_MERGE_RARE_MAX_CHANCE = 0.06;
-export const EVENT_MERGE_RARE_DAILY_LIMIT = 6;
-export const EVENT_MERGE_RARE_TABLE: EventDropEntry[] = [
-  { reward: { kind: 'boxReward', itemId: 'stamina_chest_1', count: 1 }, weight: 4 },
-  { reward: { kind: 'boxReward', itemId: 'diamond_bag_1', count: 1 }, weight: 3 },
-  { reward: { kind: 'boxReward', itemId: 'hongbao_1', count: 1 }, weight: 3 },
+export const EVENT_MERGE_DROP_BASE_CHANCE = 0.35;
+export const EVENT_MERGE_DROP_PER_LEVEL = 0.025;
+export const EVENT_MERGE_DROP_MAX_CHANCE = 0.65;
+export const EVENT_MERGE_DROP_TABLE: EventDropEntry[] = [
+  { reward: { kind: 'boxItem', itemId: 'currency_huayuan_pickup_1', count: 1 }, weight: 420 },
+  { reward: { kind: 'boxItem', itemId: 'currency_stamina_1', count: 1 }, weight: 180 },
+  { reward: { kind: 'boxItem', itemId: 'hongbao_1', count: 1 }, weight: 120 },
+  { reward: { kind: 'boxItem', itemId: 'currency_diamond_1', count: 1 }, weight: 30 },
+  { reward: { kind: 'boxItem', itemId: 'stamina_chest_1', count: 1 }, weight: 15 },
+  { reward: { kind: 'boxItem', itemId: 'lucky_coin_1', count: 1 }, weight: 4 },
 ];
 
 export const EVENT_ORDER_BOX_DAILY_LIMIT = 18;
@@ -166,18 +158,32 @@ export const EVENT_ORDER_BOX_CHANCE = 0.35;
 
 /**
  * 主玩法普通订单携带原石奖励的概率（不宜过高），按订单档位区分：
- * 越高级的订单出原石概率越高。命中后该订单在花愿奖励基础上额外显示 1 原石，
+ * 越高级的订单出原石概率越高。命中后该订单在花愿奖励基础上额外显示原石，
  * 交单时发放到活动库存。
  */
 export const EVENT_ORDER_STONE_CHANCE_BY_TIER: Record<string, number> = {
-  C: 0.08,
-  B: 0.14,
-  A: 0.22,
-  S: 0.32,
+  C: 0.12,
+  B: 0.20,
+  A: 0.30,
+  S: 0.42,
 };
 /** 取某档位订单的原石概率（未知档位回退到 C） */
 export function getEventOrderStoneChance(tier: string): number {
   return EVENT_ORDER_STONE_CHANCE_BY_TIER[tier] ?? EVENT_ORDER_STONE_CHANCE_BY_TIER.C;
 }
-/** 单个订单携带的原石数量（固定 1） */
-export const EVENT_ORDER_STONE_AMOUNT = 1;
+
+/** 命中原石奖励后，各档订单给的原石数量区间（C/B/A/S = 1-8 递增） */
+export const EVENT_ORDER_STONE_AMOUNT_RANGE_BY_TIER: Record<string, { min: number; max: number }> = {
+  C: { min: 1, max: 2 },
+  B: { min: 2, max: 4 },
+  A: { min: 4, max: 6 },
+  S: { min: 6, max: 8 },
+};
+
+/** 取某档位订单的原石数量：生成订单时掷一次，所见即所得 */
+export function rollEventOrderStoneAmount(tier: string): number {
+  const range = EVENT_ORDER_STONE_AMOUNT_RANGE_BY_TIER[tier] ?? EVENT_ORDER_STONE_AMOUNT_RANGE_BY_TIER.C;
+  const min = Math.max(1, Math.floor(range.min));
+  const max = Math.max(min, Math.floor(range.max));
+  return min + Math.floor(Math.random() * (max - min + 1));
+}

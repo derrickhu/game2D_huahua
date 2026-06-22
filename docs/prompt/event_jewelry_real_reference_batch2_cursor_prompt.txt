@@ -1,0 +1,28 @@
+Create six standalone jewelry game item icons, one for each attached real jewelry reference photo.
+
+Overall art style for every output:
+- Match the previous generated refined jewelry icon batch: polished 2D mobile merge-game item icons for a cozy pastel flower-shop merge game.
+- Luxurious but readable at 128 px: simplified high-jewelry shapes, glossy cel-shaded gemstones, soft gradients, bright white highlight arcs, small diamond sparkle clusters.
+- Thin clean outlines in local colors only: deep emerald, teal blue, sapphire blue, ruby red, warm gold, platinum gray, or soft gray. No heavy black outlines.
+- Center exactly one jewelry object on a pure white background with generous margins.
+- Remove all photo backgrounds, hands, fabric, watermarks, text, labels, UI, logos, shadows, and display stands.
+- Preserve the reference's main jewelry type, silhouette, gemstone palette, and premium feeling. Do not turn the design into an unrelated generic item.
+- No readable text, numbers, captions, signatures, or watermarks anywhere.
+
+Reference 1:
+Turn the blue-green butterfly brooch into a single elegant butterfly-shaped jewelry icon. Preserve the wide butterfly silhouette, translucent blue enamel wing ribbons, emerald-green stones, teal accents, and diamond-pave edges. Keep it refined and high-end, not insect-realistic.
+
+Reference 2:
+Turn the blue gemstone earring pair into a paired earring icon. Preserve the mirrored pair composition, aqua-blue pear drops, turquoise round stones, delicate gold/platinum starburst settings, and airy dangling silhouette.
+
+Reference 3:
+Turn the sapphire-and-emerald stud earring pair into a paired stud earring icon. Preserve the large cushion-cut sapphire centers, emerald rectangular halo, white diamond pear corner accents, and clean platinum luxury setting.
+
+Reference 4:
+Turn the green-and-gold pendant brooch into a single ornate pendant/brooch icon. Preserve the horizontal gold bar top, central green gemstone, dangling oval emerald centerpiece, gold bead filigree, and small green gem accents. Replace pearl-like beads with diamond-white faceted cabochons if needed, keeping the reference structure.
+
+Reference 5:
+Turn the emerald diamond bracelet into a bracelet icon. Important: it must read as a bracelet, similar to the current level-6 item's circular/ring-like board icon composition, not as a long vertical strip. Preserve the repeated round diamond floral medallions, oval emerald centers, green side gems, gold edges, and bracelet loop feeling.
+
+Reference 6:
+Turn the red flower and turquoise drop earring pair into a paired earring icon. Preserve the red flower tops, gold filigree, pale center cabochons, and large turquoise teardrop dangles. Make it elegant, colorful, and consistent with the same polished 2D jewelry icon style.

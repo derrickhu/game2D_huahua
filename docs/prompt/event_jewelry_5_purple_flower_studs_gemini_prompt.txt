@@ -1,0 +1,16 @@
+Create a square 1:1 image containing a clean 2 columns x 2 rows grid sheet of 4 candidate icons for one merge-game jewelry item. Use the attached jewelry sheet reference only for style consistency: cute polished 2D mobile game item icons, soft glossy volume, saturated gemstone colors, thin clean same-color outlines, warm gold highlights, readable shapes at 128 px. Do not copy the existing objects exactly. Create 4 new variations of the same item concept.
+
+The item concept: a PAIR of delicate golden stud earrings with purple diamond gemstones, unique flower-inspired design. Each cell should show exactly one pair of matching stud earrings arranged as a small balanced pair, not a necklace, not a pendant, not a single earring. The pair should feel refined, designer-like, and more beautiful than a generic flower stud.
+
+Design requirements:
+- Main metal: elegant warm gold or champagne gold.
+- Main gems: faceted purple diamond or amethyst gemstones, rich violet and lavender gradient, bright white highlight arcs.
+- Shape language: flower-inspired but stylized, such as four-petal orchid, star-flower, spiral blossom, butterfly-flower hybrid, or asymmetric tiny blossom pair.
+- The two earrings may be slightly angled toward each other for a cute display, but must clearly read as a pair of small stud earrings.
+- Use small accent gems only if they improve the design: emerald green, pink tourmaline, or diamond-white tiny stones.
+- No pearls, no pearl beads, no white round pearl balls.
+- No deep black outlines. Use dark gold, warm brown, violet, or local-color outlines.
+- Keep it readable as a small board icon: compact silhouette, not too many tiny details, no long dangling chain.
+- Clean pure white background, generous white gutters, no UI frame, no text, no labels, no numbers, no watermark.
+
+Make all four candidates distinct in silhouette and gemstone arrangement, but keep them in the same polished gemstone jewelry style as the reference sheet.

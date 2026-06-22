@@ -195,9 +195,9 @@ const PANELS_IMAGE_MAP: Record<string, string> = {
   event_portal_gate: 'subpkg_panels/images/ui/event_portal_gate_nb2.png',
   /** 花间珠匣：阶段信息条纯色淡紫底（NB2 + birefnet 去底；其上叠绘标题/进度/图标） */
   event_stage_card_bg: 'subpkg_panels/images/ui/event_stage_card_bg_nb2.png',
-  /** 花间珠匣：全锁格紫丝绒整块（NB2 + birefnet 去底） */
+  /** 花间珠匣：全锁格关闭首饰箱（NB2 + birefnet 去底） */
   event_cell_fog: 'subpkg_panels/images/ui/event_cell_fog_nb2.png',
-  /** 花间珠匣：半锁格掀开一半的紫丝绒（上半透明露出压着的物品） */
+  /** 花间珠匣：半锁格半块丝绒布（上半透明露出压着的物品） */
   event_cell_peek: 'subpkg_panels/images/ui/event_cell_peek_nb2.png',
   /** 花间珠匣：进度条上可获得钥匙节点的金钥匙角标（NB2 + birefnet 去底） */
   event_key_badge: 'subpkg_panels/images/ui/event_key_badge_nb2.png',

@@ -1,0 +1,28 @@
+Create one standalone jewelry game item icon based directly on the attached current level-13 necklace icon.
+
+Preserve the necklace design identity exactly:
+- Keep it as an ornate high-jewelry necklace, not earrings, not a crown, not a brooch.
+- Keep the upper gold collar loop / chain shape.
+- Keep the small red and green gemstone nodes around the necklace.
+- Keep the central dangling pendant structure.
+- Keep the large green tassel / clustered emerald drop at the bottom.
+- Keep the warm gold metalwork and emerald-green main palette with small ruby-red accents.
+
+Improve only the composition and rendering:
+- Repaint it in the same refined 2D mobile merge-game jewelry icon style as the recent accepted Gemini batch.
+- Make the jewelry fill a square 1:1 item cell as much as possible while still leaving a small safe margin.
+- The icon should be larger and more readable than the source: wider necklace arc, fuller tassel, stronger gemstone highlights, clearer gold structure.
+- Keep the whole necklace centered in a pure white square background.
+- Do not crop any part of the necklace, but use most of the 1:1 canvas.
+
+Art style:
+- Cozy pastel flower-shop merge game item icon.
+- Luxurious, polished, readable at 128 px.
+- Glossy cel-shaded gemstones, smooth gradients, clear gemstone facets, bright white highlight arcs, small diamond sparkle clusters.
+- Thin clean outlines in local colors only: emerald green, warm gold, ruby red, or soft gray. No heavy black outlines.
+- Simplify tiny clutter while preserving the design features listed above.
+
+Cleanup and negatives:
+- Transparent-background-ready composition on pure white background.
+- No photo background, shadows, hands, fabric, display stand, text, labels, UI, logo, watermark, or signature.
+- NO TEXT, no labels, no captions, no writing anywhere in the image.

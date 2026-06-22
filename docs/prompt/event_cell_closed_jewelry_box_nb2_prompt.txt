@@ -1,0 +1,7 @@
+Clean 2D vector mobile game UI asset for a cozy pastel flower-shop merge game, ornate jewelry event style. A single CLOSED LUXURY JEWELRY CASKET used as a fully locked merge-board cell cover, matching a dreamy pastel jewelry event page with cream panels, lavender outlines, gold ornaments, emerald and amethyst accents.
+
+The casket is elegant and delicate, not plain: rounded square compact jewelry box in 3/4 top view, domed lid, pearly lavender enamel body, warm champagne-gold filigree trim, scalloped gold corner protectors, tiny central amethyst gem clasp, small emerald and pearl inlays on the lid, soft engraved floral scrollwork, glossy cel-shaded highlights, gentle warm outline, cute but refined. It should look like a precious event reward chest, readable at small board-cell size, with clear silhouette and luxurious details.
+
+Composition: centered in a 1:1 square canvas, filling about 82% of the canvas width and 72% of the canvas height, with a small clean margin. Lid must be fully closed. No opening gap, no loose jewels spilling out, no text.
+
+Background: flat pure magenta #FF00FF filling the whole canvas outside the casket. No text, no numbers, no watermark, no photoreal, no extra objects, no readable symbols.

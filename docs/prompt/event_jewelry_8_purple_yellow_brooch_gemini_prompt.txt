@@ -1,0 +1,15 @@
+Create a square 1:1 image containing a clean 2 columns x 2 rows grid sheet of 4 candidate icons for one merge-game jewelry item. Use the attached jewelry sheet reference only for style consistency: cute polished 2D mobile game icon, soft glossy volume, faceted gemstones, thin same-color outlines, refined gold highlights, readable at 128 px. Do not copy the reference objects exactly.
+
+The item concept: a single refined brooch made from purple gemstones and yellow gemstones. It must clearly be a brooch, not an earring, necklace, pendant, crown, hair comb, or bracelet.
+
+Design requirements:
+- Main gemstones: amethyst purple and yellow topaz. Both colors must appear as obvious faceted gems, not just gold metal.
+- Metal frame: warm gold or champagne gold, but the yellow gemstone must be visually distinct from the gold frame through faceted planes, bright lemon-yellow color, and white highlights.
+- Shape ideas: elegant art-deco fan brooch, stylized flower brooch, small sunburst brooch, or bow-shaped brooch.
+- Keep the palette refined and high-end: mostly purple + yellow gems, tiny diamond-white accents allowed, no rainbow mixed gems.
+- No pearls, no pearl beads, no white pearl balls.
+- No deep black outlines. Use dark gold, warm brown, violet, or amber outlines.
+- Clean compact silhouette, centered in each cell, pure white background, generous gutters.
+- NO TEXT, no labels, no numbers, no captions, no watermark.
+
+Make all four candidates distinct, with different arrangements of purple amethyst and yellow topaz gemstones, but all should feel like elegant designer gemstone brooches.

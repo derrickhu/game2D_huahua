@@ -15,8 +15,8 @@ import {
   SINGLE_SLOT_MERGE_PARITY_FACTOR,
 } from '@/config/OrderHuayuanConfig';
 import {
-  EVENT_ORDER_STONE_AMOUNT,
   getEventOrderStoneChance,
+  rollEventOrderStoneAmount,
 } from '@/config/EventBoardConfig';
 import { CUSTOMER_TYPES, CUSTOMER_TYPE_MAP, type CustomerTypeDef } from '@/config/CustomerConfig';
 import { Category, ITEM_DEFS, findItemId } from '@/config/ItemConfig';
@@ -763,9 +763,9 @@ class CustomerManagerClass {
       orderKind: gen.generationKind,
     };
 
-    // 主玩法普通订单按档位概率携带 1 原石（首饰活动）：越高级的单越容易出，生成即定、订单上展示
+    // 主玩法普通订单按档位概率携带原石（首饰活动）：越高级的单越容易出、数量越多，生成即定、订单上展示
     if (customer.orderType === 'normal' && Math.random() < getEventOrderStoneChance(customer.tier)) {
-      customer.eventStoneReward = EVENT_ORDER_STONE_AMOUNT;
+      customer.eventStoneReward = rollEventOrderStoneAmount(customer.tier);
     }
 
     if (customer.orderKind === 'timedFlorist') {

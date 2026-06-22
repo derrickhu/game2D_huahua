@@ -1395,6 +1395,18 @@ export class MainScene implements Scene {
       this._scheduleRewardBoxHint(900, true);
     });
 
+    // 花间珠匣整页打开时收起奖励篮软提醒，关闭后再尝试弹出
+    EventBus.on('panel:openEventBoard', () => {
+      this._rewardBoxHintOverlay.hide();
+      if (this._rewardBoxHintTimer) {
+        clearTimeout(this._rewardBoxHintTimer);
+        this._rewardBoxHintTimer = null;
+      }
+    });
+    EventBus.on('panel:closeEventBoard', () => {
+      this._scheduleRewardBoxHint(800, true);
+    });
+
     // ---- 体力系统事件 ----
 
     // 体力不足 → 弹出体力面板引导
@@ -1846,7 +1858,8 @@ export class MainScene implements Scene {
       || TutorialManager.isActive
       || this._checkInPanel.visible
       || this._offlineRewardPanel.visible
-      || this._levelUpPopup.visible;
+      || this._levelUpPopup.visible
+      || this._eventBoardPanel.visible;
 
     if (blocked) {
       if (this._rewardBoxHintRetryCount < MainScene._REWARD_BOX_HINT_MAX_RETRY) {

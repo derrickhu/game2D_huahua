@@ -7,10 +7,12 @@ import { BoardMetrics, DESIGN_WIDTH, FONT_FAMILY } from '@/config/Constants';
 import {
   EVENT_BOARD_COLS,
   EVENT_BOARD_MAX_TOTAL,
+  EVENT_KEY_BADGE_LEVELS,
   type EventRewardDef,
 } from '@/config/EventBoardConfig';
 import { Category, ITEM_DEFS, getMergeResultId } from '@/config/ItemConfig';
 import { EventBoardManager } from '@/managers/EventBoardManager';
+import type { EventMergeDropPlacement } from '@/managers/EventBoardManager';
 import { CurrencyManager } from '@/managers/CurrencyManager';
 import { CellView } from '@/gameobjects/board/CellView';
 import { ItemView } from '@/gameobjects/board/ItemView';
@@ -27,8 +29,10 @@ const STAGE_CARD_W = DESIGN_WIDTH - 16;
 /** 背景图中部纯色面板（棋盘区）的上 / 下边界占图高比例（由底图实测） */
 const PANEL_TOP_FRAC = 0.28;
 const PANEL_BOTTOM_FRAC = 0.855;
-/** 起拖判定：拖动超过该设计像素才算拖拽，否则按点击处理（货币领取） */
+/** 起拖判定：拖动超过该设计像素才算拖拽，否则按点击处理（货币双击领取） */
 const DRAG_THRESHOLD = 10;
+/** 货币块双击间隔（与主棋盘 BoardView 一致） */
+const CURRENCY_DOUBLE_TAP_MS = 300;
 /** 底部珠宝匣投放器尺寸 */
 const DISPENSER_W = 168;
 const DISPENSER_H = 142;
@@ -58,7 +62,7 @@ export class EventBoardPanel extends PIXI.Container {
   private _itemViews: ItemView[] = [];
   /** 半锁（PEEK）覆盖层：面板自管，不改 CellView/ItemView，避免影响主棋盘 */
   private _peekViews: PIXI.Container[] = [];
-  /** 全锁（FOG）紫丝绒覆盖层：盖住整格 */
+  /** 全锁（FOG）关闭首饰箱覆盖层：盖住整格 */
   private _fogViews: PIXI.Container[] = [];
   /** 时空门棋子覆盖层（仅门格显示） */
   private _portalViews: PIXI.Container[] = [];
@@ -82,6 +86,10 @@ export class EventBoardPanel extends PIXI.Container {
   private _dragStartDesign = { x: 0, y: 0 };
   private _dragGhost: ItemView | null = null;
   private _hoverIndex = -1;
+  /** 货币块双击检测（与主棋盘一致） */
+  private _lastCurrencyTapIndex = -1;
+  private _lastCurrencyTapTime = 0;
+  private _currencyTapTimer: ReturnType<typeof setTimeout> | null = null;
 
   /** 珠宝匣投放器根节点（用于飞行动画取起点） */
   private _dispenserRoot: PIXI.Container | null = null;
@@ -109,6 +117,7 @@ export class EventBoardPanel extends PIXI.Container {
     this._isOpen = true;
     this.visible = true;
     this._clearDragGhost();
+    this._syncLockOverlays();
     this._refresh();
     this._content.alpha = 0;
     this._content.position.x = 40;
@@ -119,6 +128,7 @@ export class EventBoardPanel extends PIXI.Container {
   close(): void {
     if (!this._isOpen) return;
     this._isOpen = false;
+    this._resetCurrencyTapDetect();
     this._clearDragGhost();
     this._clearStoneFly();
     this._flyStoneTargetIndex = -1;
@@ -127,7 +137,10 @@ export class EventBoardPanel extends PIXI.Container {
       props: { alpha: 0 },
       duration: 0.14,
       ease: Ease.easeInQuad,
-      onComplete: () => { this.visible = false; },
+      onComplete: () => {
+        this.visible = false;
+        EventBus.emit('panel:closeEventBoard');
+      },
     });
   }
 
@@ -143,8 +156,8 @@ export class EventBoardPanel extends PIXI.Container {
       }
       this._refresh();
     });
-    EventBus.on('eventBoard:starterStoneGranted', () => {
-      ToastMessage.show('订单送来 1 个原石');
+    EventBus.on('eventBoard:starterStoneGranted', (_total: number, granted?: number) => {
+      ToastMessage.show(`订单送来 ${Math.max(1, Math.floor(granted ?? 1))} 个原石`);
       if (this._isOpen && this._dragSrcIndex < 0) this._refresh();
     });
     EventBus.on('eventBoard:discovered', (itemId: string) => {
@@ -154,10 +167,13 @@ export class EventBoardPanel extends PIXI.Container {
     EventBus.on('eventBoard:stageCompleted', (stage: { name: string }) => {
       ToastMessage.show(`${stage.name}完成，获得钥匙`);
     });
-    EventBus.on('eventBoard:mergeDrop', (rewards: EventRewardDef[]) => {
+    EventBus.on('eventBoard:mergeDrop', (rewards: EventRewardDef[], placements?: EventMergeDropPlacement[]) => {
       if (!this._isOpen || !Array.isArray(rewards)) return;
       const label = rewards.map(r => this._rewardLabel(r)).filter(Boolean).join(' ');
       if (label) ToastMessage.show(`合成掉落：${label}`);
+      if (Array.isArray(placements) && placements.length > 0) {
+        window.setTimeout(() => this._playMergeRewardDrop(placements), 0);
+      }
     });
   }
 
@@ -172,6 +188,15 @@ export class EventBoardPanel extends PIXI.Container {
         return r.count > 1 ? `${name}×${r.count}` : name;
       }
       default: return '';
+    }
+  }
+
+  private _currencyCollectLabel(type?: 'stamina' | 'diamond' | 'huayuan'): string {
+    switch (type) {
+      case 'stamina': return '体力';
+      case 'diamond': return '钻石';
+      case 'huayuan': return '花愿';
+      default: return '奖励';
     }
   }
 
@@ -208,10 +233,17 @@ export class EventBoardPanel extends PIXI.Container {
       }
       // 珠宝匣 / 时空门 / 首饰贴图加载完成后重绘，让其立即显示
       else if (
-        (key === 'event_jewelry_casket' || key === 'event_portal_gate' || key.startsWith('event_jewelry_')) &&
-        this._isOpen && this._dragSrcIndex < 0
+        key === 'event_jewelry_casket' ||
+        key === 'event_portal_gate' ||
+        key === 'event_key_badge' ||
+        key === 'event_cell_fog' ||
+        key === 'event_cell_peek' ||
+        key === 'warehouse_slot_lock' ||
+        key === 'cell_locked' ||
+        key.startsWith('event_jewelry_')
       ) {
-        this._refresh();
+        this._syncLockOverlays();
+        if (this._isOpen && this._dragSrcIndex < 0) this._refreshGrid();
       }
     });
 
@@ -326,6 +358,10 @@ export class EventBoardPanel extends PIXI.Container {
       peekView.visible = false;
       wrapper.addChild(peekView);
 
+      const fogView = this._createFogOverlay();
+      fogView.visible = false;
+      wrapper.addChild(fogView);
+
       const portalView = this._createPortalView();
       portalView.visible = false;
       wrapper.addChild(portalView);
@@ -335,6 +371,7 @@ export class EventBoardPanel extends PIXI.Container {
       this._cellViews.push(cellView);
       this._itemViews.push(itemView);
       this._peekViews.push(peekView);
+      this._fogViews.push(fogView);
       this._portalViews.push(portalView);
     }
   }
@@ -350,22 +387,31 @@ export class EventBoardPanel extends PIXI.Container {
     sp.name = 'gate';
     c.addChild(sp);
 
-    // 角标（钥匙🔑 / 锁🔒），刷新时按 keys 切换文案与底色
+    // 门锁覆盖层：未获得钥匙时显示家具同款锁，获得钥匙后隐藏
     const badge = new PIXI.Graphics();
     badge.name = 'badgeBg';
     c.addChild(badge);
-    const badgeText = new PIXI.Text('', { fontSize: 22, fontFamily: FONT_FAMILY });
-    badgeText.anchor.set(0.5);
-    badgeText.name = 'badgeText';
-    c.addChild(badgeText);
+    const badgeIcon = new PIXI.Sprite(PIXI.Texture.EMPTY);
+    badgeIcon.anchor.set(0.5);
+    badgeIcon.name = 'badgeIcon';
+    c.addChild(badgeIcon);
     return c;
   }
 
-  /** 刷新门格角标（有钥匙=金底🔑，无钥匙=灰底🔒），并补齐门贴图 */
+  /** 门锁贴图：使用装修面板同款锁 */
+  private _portalBadgeIconTexture(hasKey: boolean): PIXI.Texture | null {
+    if (hasKey) return null;
+    const lockTex = TextureCache.get('warehouse_slot_lock') ?? TextureCache.get('cell_locked');
+    return lockTex && lockTex.width > 1 ? lockTex : null;
+  }
+
+  /** 刷新门锁（无钥匙=门中心锁图标；有钥匙=移除锁），并补齐门贴图 */
   private _updatePortalBadge(view: PIXI.Container, hasKey: boolean): void {
     const badge = view.getChildByName('badgeBg') as PIXI.Graphics | null;
-    const text = view.getChildByName('badgeText') as PIXI.Text | null;
+    const icon = view.getChildByName('badgeIcon') as PIXI.Sprite | null;
     const gate = view.getChildByName('gate') as PIXI.Sprite | null;
+    const lockCx = CELL / 2;
+    const lockCy = CELL / 2;
     if (gate) {
       const tex = TextureCache.get('event_portal_gate');
       if (tex && gate.texture !== tex) gate.texture = tex;
@@ -377,64 +423,99 @@ export class EventBoardPanel extends PIXI.Container {
     }
     if (badge) {
       badge.clear();
-      badge.lineStyle(2, 0xffffff, 1);
-      badge.beginFill(hasKey ? 0xffc94d : 0x9b9b9b, 1);
-      badge.drawCircle(CELL - 18, CELL - 18, 16);
-      badge.endFill();
     }
-    if (text) {
-      text.text = hasKey ? '🔑' : '🔒';
-      text.position.set(CELL - 18, CELL - 18);
+    if (icon) {
+      const tex = this._portalBadgeIconTexture(hasKey);
+      if (tex) {
+        icon.texture = tex;
+        icon.visible = true;
+        const fit = 34;
+        icon.scale.set(Math.min(fit / tex.width, fit / tex.height));
+        icon.position.set(lockCx, lockCy);
+      } else {
+        icon.visible = false;
+      }
     }
   }
 
-  /** 半锁格覆盖层：掀开一半的紫丝绒（上半透明露出压着的物品，提示"拖相同物品来合成解锁"） */
+  /** 半锁格覆盖层：紫色缎带（上半透明露出压着的物品） */
   private _createPeekOverlay(): PIXI.Container {
     const c = new PIXI.Container();
     c.eventMode = 'none';
-
-    const tex = TextureCache.get('event_cell_peek');
-    if (tex) {
-      const sp = new PIXI.Sprite(tex);
-      // 丝绒图为正方框，整体铺满格子：保持透明上半，丝绒压住下半
-      sp.width = CELL;
-      sp.height = CELL;
-      sp.position.set(0, 0);
-      sp.name = 'velvet';
-      c.addChild(sp);
-    } else {
-      const r = Math.max(4, Math.round(CELL * 0.08));
-      const dim = new PIXI.Graphics();
-      dim.beginFill(0x9b78d6, 0.5);
-      dim.drawRoundedRect(0, CELL * 0.45, CELL, CELL * 0.55, r);
-      dim.endFill();
-      c.addChild(dim);
-    }
+    this._applyPeekOverlaySprite(c);
     return c;
   }
 
-  /** 全锁格覆盖层：整块紫丝绒盖住格子 */
+  /** 全锁格覆盖层：关闭首饰箱盖住格子 */
   private _createFogOverlay(): PIXI.Container {
     const c = new PIXI.Container();
     c.eventMode = 'none';
+    this._applyFogOverlaySprite(c);
+    return c;
+  }
+
+  /** 刷新所有锁格贴图（分包异步加载后替换 fallback） */
+  private _syncLockOverlays(): void {
+    for (const view of this._peekViews) this._applyPeekOverlaySprite(view);
+    for (const view of this._fogViews) this._applyFogOverlaySprite(view);
+  }
+
+  private _applyPeekOverlaySprite(container: PIXI.Container): void {
+    const tex = TextureCache.get('event_cell_peek');
+    if (tex && tex.width > 1) {
+      let sp = container.getChildByName('lockOverlay') as PIXI.Sprite | null;
+      if (!sp) {
+        container.removeChildren();
+        sp = new PIXI.Sprite(tex);
+        sp.name = 'lockOverlay';
+        container.addChild(sp);
+      } else {
+        sp.texture = tex;
+      }
+      sp.anchor.set(0, 0);
+      sp.width = CELL;
+      sp.height = CELL;
+      sp.position.set(0, 0);
+      return;
+    }
+    if (container.getChildByName('lockOverlay')) return;
+    container.removeChildren();
+    const r = Math.max(4, Math.round(CELL * 0.08));
+    const dim = new PIXI.Graphics();
+    dim.name = 'lockFallback';
+    dim.beginFill(0x9b78d6, 0.5);
+    dim.drawRoundedRect(0, CELL * 0.45, CELL, CELL * 0.55, r);
+    dim.endFill();
+    container.addChild(dim);
+  }
+
+  private _applyFogOverlaySprite(container: PIXI.Container): void {
     const tex = TextureCache.get('event_cell_fog');
-    if (tex) {
-      const sp = new PIXI.Sprite(tex);
+    if (tex && tex.width > 1) {
+      let sp = container.getChildByName('lockOverlay') as PIXI.Sprite | null;
+      if (!sp) {
+        container.removeChildren();
+        sp = new PIXI.Sprite(tex);
+        sp.name = 'lockOverlay';
+        container.addChild(sp);
+      } else {
+        sp.texture = tex;
+      }
       const fit = CELL * 1.02;
       sp.anchor.set(0.5);
       sp.scale.set(Math.min(fit / tex.width, fit / tex.height));
       sp.position.set(CELL / 2, CELL / 2);
-      sp.name = 'velvet';
-      c.addChild(sp);
-    } else {
-      const r = Math.max(4, Math.round(CELL * 0.08));
-      const g = new PIXI.Graphics();
-      g.beginFill(0x8a6bd0, 0.92);
-      g.drawRoundedRect(2, 2, CELL - 4, CELL - 4, r);
-      g.endFill();
-      c.addChild(g);
+      return;
     }
-    return c;
+    if (container.getChildByName('lockOverlay')) return;
+    container.removeChildren();
+    const r = Math.max(4, Math.round(CELL * 0.08));
+    const g = new PIXI.Graphics();
+    g.name = 'lockFallback';
+    g.beginFill(0x8a6bd0, 0.92);
+    g.drawRoundedRect(2, 2, CELL - 4, CELL - 4, r);
+    g.endFill();
+    container.addChild(g);
   }
 
   // ========== 刷新 ==========
@@ -445,6 +526,7 @@ export class EventBoardPanel extends PIXI.Container {
   }
 
   private _refreshGrid(): void {
+    this._syncLockOverlays();
     const cells = EventBoardManager.cells;
     const hasKey = EventBoardManager.keys > 0;
     const total = EventBoardManager.currentTotal;
@@ -459,6 +541,7 @@ export class EventBoardPanel extends PIXI.Container {
       const cellView = this._cellViews[i];
       const itemView = this._itemViews[i];
       const peekView = this._peekViews[i];
+      const fogView = this._fogViews[i];
       const portalView = this._portalViews[i];
       this._wrappers[i].scale.set(1);
       cellView.setMergePartnerHint(false);
@@ -466,6 +549,7 @@ export class EventBoardPanel extends PIXI.Container {
         cellView.setState(CellState.FOG);
         itemView.setItem(null);
         if (peekView) peekView.visible = false;
+        if (fogView) fogView.visible = false;
         if (portalView) portalView.visible = false;
         continue;
       }
@@ -475,6 +559,7 @@ export class EventBoardPanel extends PIXI.Container {
         itemView.setItem(null);
         itemView.alpha = 1;
         if (peekView) peekView.visible = false;
+        if (fogView) fogView.visible = false;
         if (portalView) {
           portalView.visible = true;
           this._updatePortalBadge(portalView, hasKey);
@@ -482,15 +567,18 @@ export class EventBoardPanel extends PIXI.Container {
         continue;
       }
       if (portalView) portalView.visible = false;
-      cellView.setState(cell.state);
+      // 全锁格：底格保持 OPEN，不用主棋盘 cell_locked；首饰箱 overlay 盖住
+      const isFog = cell.state === CellState.FOG;
+      cellView.setState(isFog ? CellState.OPEN : cell.state);
       itemView.snapToCellLayout();
-      // 半锁格也显示压着的物品（半透明），提示"拖相同物品来合成解锁"
+      // 半锁格也显示压着的物品（正常不透明），紫色缎带 overlay 提示需合成解锁
       const showItem = cell.state === CellState.OPEN || cell.state === CellState.PEEK;
       itemView.setItem(showItem ? cell.itemId : null);
-      itemView.alpha = cell.state === CellState.PEEK ? 0.55 : 1;
+      itemView.alpha = 1;
       // 飞行动画进行中：落点格先不显示，避免与飞行幽灵重叠
       if (this._flyStoneTargetIndex === i) itemView.setItem(null);
       if (peekView) peekView.visible = cell.state === CellState.PEEK;
+      if (fogView) fogView.visible = isFog;
     }
   }
 
@@ -639,6 +727,7 @@ export class EventBoardPanel extends PIXI.Container {
     const cy = y + 12;
     for (let i = 0; i < n; i++) {
       const itemId = ids[i];
+      const level = startLevel + i;
       const nx = x + (n <= 1 ? 0 : (w * i) / (n - 1));
       const unlocked = EventBoardManager.isDiscovered(itemId);
 
@@ -668,6 +757,55 @@ export class EventBoardPanel extends PIXI.Container {
         shadow.endFill();
         this._shellLayer.addChild(shadow);
       }
+
+      if (EVENT_KEY_BADGE_LEVELS.includes(level)) {
+        this._drawProgressKeyBadge(nx, cy);
+      }
+    }
+  }
+
+  /** 进度条钥匙角标：白色气泡牌 + 金钥匙贴图，叠在物品圆框上方 */
+  private _drawProgressKeyBadge(cx: number, itemCy: number): void {
+    const bubbleW = 56;
+    const bubbleH = 48;
+    const bubbleTop = itemCy - 68;
+    const bubbleLeft = cx - bubbleW / 2;
+    const pointerW = 14;
+    const pointerH = 12;
+
+    const bubble = new PIXI.Graphics();
+    bubble.beginFill(0x000000, 0.12);
+    bubble.drawRoundedRect(bubbleLeft + 2, bubbleTop + 2, bubbleW, bubbleH, 6);
+    bubble.endFill();
+    bubble.lineStyle(1.5, 0xd8c8b5, 0.85);
+    bubble.beginFill(0xffffff, 0.98);
+    bubble.drawRoundedRect(bubbleLeft, bubbleTop, bubbleW, bubbleH, 6);
+    bubble.endFill();
+    bubble.beginFill(0xffffff, 0.98);
+    bubble.moveTo(cx - pointerW / 2, bubbleTop + bubbleH - 1);
+    bubble.lineTo(cx + pointerW / 2, bubbleTop + bubbleH - 1);
+    bubble.lineTo(cx, bubbleTop + bubbleH + pointerH);
+    bubble.closePath();
+    bubble.endFill();
+    bubble.lineStyle(1.5, 0xd8c8b5, 0.85);
+    bubble.moveTo(cx - pointerW / 2, bubbleTop + bubbleH - 1);
+    bubble.lineTo(cx, bubbleTop + bubbleH + pointerH);
+    bubble.lineTo(cx + pointerW / 2, bubbleTop + bubbleH - 1);
+    this._shellLayer.addChild(bubble);
+
+    const keyTex = TextureCache.get('event_key_badge');
+    if (keyTex && keyTex.width > 1) {
+      const sp = new PIXI.Sprite(keyTex);
+      const fit = 42;
+      sp.anchor.set(0.5);
+      sp.scale.set(Math.min(fit / keyTex.width, fit / keyTex.height));
+      sp.position.set(cx, bubbleTop + bubbleH / 2 + 1);
+      this._shellLayer.addChild(sp);
+    } else {
+      const fb = new PIXI.Text('🔑', { fontSize: 30 });
+      fb.anchor.set(0.5);
+      fb.position.set(cx, bubbleTop + bubbleH / 2);
+      this._shellLayer.addChild(fb);
     }
   }
 
@@ -962,6 +1100,53 @@ export class EventBoardPanel extends PIXI.Container {
     });
   }
 
+  /** 合成爆奖：奖励物品从上方落到实际空出的源格，并在落地时闪光弹跳 */
+  private _playMergeRewardDrop(placements: EventMergeDropPlacement[]): void {
+    if (!this._isOpen) return;
+    this._refreshGrid();
+
+    placements.forEach((p, i) => {
+      if (p.cellIndex < 0 || p.cellIndex >= this._itemViews.length) return;
+      const itemView = this._itemViews[p.cellIndex];
+      const col = p.cellIndex % EVENT_BOARD_COLS;
+      const row = Math.floor(p.cellIndex / EVENT_BOARD_COLS);
+      const tx = this._gridStartX + col * (CELL + GAP) + CELL / 2;
+      const ty = this._gridStartY + row * (CELL + GAP) + CELL / 2;
+      const delay = i * 0.08;
+
+      itemView.visible = false;
+
+      const ghost = new ItemView();
+      ghost.setItem(p.itemId);
+      ghost.scale.set(this._cellScale * 0.72);
+      ghost.alpha = 0;
+      ghost.position.set(tx, ty - 74);
+      this._ghostLayer.addChild(ghost);
+
+      const anim = { t: 0 };
+      TweenManager.to({
+        target: anim,
+        props: { t: 1 },
+        delay,
+        duration: 0.28,
+        ease: Ease.easeInQuad,
+        onUpdate: () => {
+          const t = anim.t;
+          ghost.alpha = Math.min(1, t * 1.5);
+          ghost.position.set(tx, ty - 74 + 74 * t);
+          const s = this._cellScale * (0.72 + 0.34 * t);
+          ghost.scale.set(s);
+        },
+        onComplete: () => {
+          if (ghost.parent) ghost.parent.removeChild(ghost);
+          ghost.destroy();
+          itemView.visible = true;
+          this._playStoneLandPop(tx, ty, p.cellIndex);
+        },
+      });
+    });
+  }
+
   // ========== 拖拽交互（照搬主棋盘：pointerdown 走 PixiJS，move/up 走 canvas）==========
 
   private _onCellDown(index: number): void {
@@ -1029,18 +1214,33 @@ export class EventBoardPanel extends PIXI.Container {
         // 纯点击（未起拖，幽灵从未创建、物品也未隐藏）
         const cell = EventBoardManager.cells[src];
         const def = cell?.itemId ? ITEM_DEFS.get(cell.itemId) : null;
-        // 货币块：直接领取
-        if (def?.category === Category.CURRENCY && EventBoardManager.collectCurrencyCell(src)) {
-          ToastMessage.show(`获得${def.name}`);
-          this._refresh();
+        // 货币块：双击领取（与主棋盘一致）
+        if (def?.category === Category.CURRENCY) {
+          const now = Date.now();
+          if (src === this._lastCurrencyTapIndex && now - this._lastCurrencyTapTime < CURRENCY_DOUBLE_TAP_MS) {
+            this._resetCurrencyTapDetect();
+            const r = EventBoardManager.collectCurrencyCell(src);
+            if (!r.collected) return;
+            ToastMessage.show(`获得${this._currencyCollectLabel(r.type)} +${r.amount ?? 0}`);
+            this._refresh();
+            return;
+          }
+          this._lastCurrencyTapIndex = src;
+          this._lastCurrencyTapTime = now;
+          if (this._currencyTapTimer) clearTimeout(this._currencyTapTimer);
+          this._currencyTapTimer = setTimeout(() => {
+            this._currencyTapTimer = null;
+            this._itemViews[src]?.playTapFeedback();
+          }, CURRENCY_DOUBLE_TAP_MS);
           return;
         }
+        this._resetCurrencyTapDetect();
         // 容器（宝箱/红包/钻石袋/体力箱）：开箱散落货币块
         if (EventBoardManager.isContainerCell(src)) {
           const r = EventBoardManager.openContainerCell(src);
           if (r.result === 'noSpace') ToastMessage.show('棋盘空位不足，先清理一下');
           else if (r.result === 'partial') ToastMessage.show(`散落 ${r.placed} 件，还剩 ${r.remaining} 件（清空位后继续点）`);
-          else if (r.result === 'opened') ToastMessage.show(r.placed > 0 ? `开箱散落 ${r.placed} 件，点击收取` : '开箱完成');
+          else if (r.result === 'opened') ToastMessage.show(r.placed > 0 ? `开箱散落 ${r.placed} 件，双击收取` : '开箱完成');
           this._refresh();
           return;
         }
@@ -1141,6 +1341,15 @@ export class EventBoardPanel extends PIXI.Container {
       this._dragGhost.destroy({ children: true });
       this._dragGhost = null;
     }
+  }
+
+  private _resetCurrencyTapDetect(): void {
+    if (this._currencyTapTimer) {
+      clearTimeout(this._currencyTapTimer);
+      this._currencyTapTimer = null;
+    }
+    this._lastCurrencyTapIndex = -1;
+    this._lastCurrencyTapTime = 0;
   }
 
   private _clearDragGhost(): void {
