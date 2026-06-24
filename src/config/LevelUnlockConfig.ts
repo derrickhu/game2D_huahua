@@ -69,6 +69,12 @@ const LEVEL_UNLOCK_BASE: Record<number, Omit<LevelUnlockDef, 'level'>> = {
     entries: [
       {
         kind: 'feature',
+        title: '花间珠匣',
+        desc: '合成页开放首饰活动，完成订单有机会获得原石。',
+        iconKey: 'icon_jewelry_event_nb2',
+      },
+      {
+        kind: 'feature',
         title: '花语泡泡',
         desc: '合成偶遇花语泡泡，额外掉落一份奖励。',
         iconKey: 'ui_lvup_companion_bubble',

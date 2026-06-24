@@ -74,6 +74,8 @@ export enum ToolLine {
 
 export enum EventLine {
   JEWELRY = 'jewelry',
+  /** 花间珠匣副产物线：点翠凤冠系列，仅活动棋盘掉落/合成 */
+  DIAN_CUI = 'jewelry_dian_cui',
 }
 
 /** 工具线 → 对应产品线的映射 */
@@ -159,12 +161,26 @@ const FOOD_DATA: [FoodLine, string[]][] = [
 ];
 
 export const EVENT_JEWELRY_STARTER_BOX_ID = 'event_jewelry_starter_box';
+export const EVENT_JEWELRY_PRODUCER_ITEM_ID = 'event_jewelry_13';
+export const EVENT_DIAN_CUI_PRODUCER_ITEM_ID = 'event_jewelry_dian_cui_8';
+export const EVENT_PRODUCER_ITEM_IDS: readonly string[] = [
+  EVENT_JEWELRY_PRODUCER_ITEM_ID,
+  EVENT_DIAN_CUI_PRODUCER_ITEM_ID,
+];
+
+export function isEventProducerItem(itemId: string): boolean {
+  return EVENT_PRODUCER_ITEM_IDS.includes(itemId);
+}
 
 const EVENT_JEWELRY_DATA: [EventLine, string[]][] = [
   [EventLine.JEWELRY, [
     '小原石', '亮宝石', '宝石戒指', '花耳钉', '小项坠', '珍珠手链',
     '宝石耳坠', '红宝胸针', '绿宝项链', '蓝宝发冠', '彩宝项圈', '钻石皇冠',
     '星辉王冠',
+  ]],
+  [EventLine.DIAN_CUI, [
+    '点翠发簪', '点翠发梳', '点翠小冠', '点翠半冠',
+    '点翠羽冠', '点翠高冠', '点翠凤冠', '点翠华凤冠',
   ]],
 ];
 
@@ -363,7 +379,7 @@ function buildItemDefs(): Map<string, ItemDef> {
         level: i + 1,
         maxLevel: maxLv,
         icon: `event_${line}_${i + 1}`,
-        interactType: InteractType.NONE,
+        interactType: isEventProducerItem(id) ? InteractType.TOOL : InteractType.NONE,
         sellable: false,
         storable: false,
       });

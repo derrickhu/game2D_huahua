@@ -1,0 +1,22 @@
+Single square HUD reward icon for the "Flower Jewelry Box" activity, 1:1, readable at 48-64 pixels.
+
+Use the current Huahua game style: soft pastel 2D mobile game UI, warm cute, clean, rounded, thick warm brown outline, simple glossy cel shading. Match the activity page palette: soft pink, cream, lilac, warm gold accents.
+
+Main composition:
+- ONLY one compact reward booklet / jewelry codex book, front-facing 3/4 angle, large and centered;
+- coral pink cover with cream page edges and a small warm-gold corner clasp;
+- one simple embossed flower or gem medallion on the cover, very large and low-detail;
+- the object fills 86%-90% of the frame.
+
+Important: do NOT include any red exclamation badge, do NOT include a progress bar, do NOT include a bottom plaque. These will be drawn by the game program later.
+
+Small-icon rules:
+- booklet silhouette must be clear at tiny size;
+- maximum 3 main color groups: coral pink book, cream pages, warm gold accent;
+- no tiny decorations, no complex filigree, no many gems.
+
+Strict rules:
+- NO readable text, NO fake text, NO pseudo letters, NO labels, NO captions, NO numbers;
+- NO exclamation mark, NO progress bar, NO plaque, NO UI button frame;
+- NO photoreal, NO watermark;
+- background is pure solid magenta #FF00FF full bleed for cutout.

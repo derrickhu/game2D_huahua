@@ -1,0 +1,28 @@
+Create a square 1:1 image containing a clean 4 columns x 2 rows grid sheet of exactly 8 jewelry merge-game item icons. Use the attached Chinese dian-cui phoenix crown reference only for motif inspiration: kingfisher-feather turquoise blue inlay, gold filigree, pearl accents, phoenix crown silhouette. Do not copy the photo exactly. Convert all eight into the existing huahua flower-shop jewelry merge-game icon style: cute polished 2D mobile game icons, soft glossy volume, smooth color gradients, bright white highlight arcs, thin clean same-color outlines, warm gold metal highlights, readable at 128 px on a small board.
+
+Series theme: Blue Dian-Cui Phoenix Crown progression. All eight icons must clearly belong to ONE unified set:
+- Main color: vivid turquoise / cyan kingfisher blue dian-cui panels (simplified bold shapes, not micro feather texture).
+- Metal: warm polished gold filigree frames.
+- Accents: creamy white pearls and a few small ruby-red gems only. Higher levels may add one pale green jade accent maximum.
+- Jewelry type: hair crown / phoenix crown / fengguan evolution, never necklace, never earrings, never ring.
+- Each cell subject must be LARGE, filling about 85% to 92% of its cell with only a small white margin. Bold chunky silhouettes. No tiny scattered gems, no photo-level filigree clutter, no readable text.
+
+Grid order left-to-right, top row then bottom row:
+
+Cell 1, Level 1: simplest blue dian-cui phoenix hair pin. One slender gold pin with a single small blue feather-or-flower dian-cui head and one pearl. Minimal, cute entry tier.
+
+Cell 2, Level 2: small blue dian-cui hair comb. Gold comb base with two blue dian-cui petals and two pearls. Still compact and simple.
+
+Cell 3, Level 3: tiny phoenix tiara band. Curved gold band with three blue dian-cui flowers across the front and three small pearls. Clear tiara silhouette.
+
+Cell 4, Level 4: half phoenix crown. Gold arc band plus short upward blue dian-cui wing panels on both sides, one central red gem, a few pearls. More crown-like but still compact.
+
+Cell 5, Level 5: medium phoenix crown. Circular gold crown base with five blue dian-cui flame-feather points rising up, central red gem, short side pearl drops. Balanced and readable.
+
+Cell 6, Level 6: taller phoenix crown. Gold crown with a central blue dian-cui phoenix-tail fan, side wing panels, several pearls, short gold-pearl tassels on both sides. Clearly richer than level 5.
+
+Cell 7, Level 7: grand phoenix crown. Larger gold phoenix crown with layered blue dian-cui wings, more pearl clusters, longer but still simplified side tassels, one pale green jade accent at center. Premium tier.
+
+Cell 8, Level 8: ultimate fengguan phoenix crown. Most elaborate but still game-icon simplified: full majestic blue dian-cui phoenix crown with gold branches, pearl tassels, central jade or red gem, symmetrical wide silhouette that fills the cell boldly. Highest luxury tier.
+
+Make the eight levels visibly progress from simple pin to ultimate crown. Keep the same art style, palette, and design language across all cells. Clean pure white background, generous white gutters between cells, no UI frame, no labels, no numbers, no watermark.

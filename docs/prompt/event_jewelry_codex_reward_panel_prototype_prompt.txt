@@ -1,0 +1,24 @@
+Use the attached reference image mainly for structure: a vertical collection/reward codex panel with category sections, item slots, progress bar, reward milestones, and a close button. But restyle it to match the current Huahua "Flower Jewelry Box" activity page: soft pastel pink/purple/gold jewelry UI, cute mobile game, clean and bright.
+
+Full-screen 9:16 mobile game UI prototype. This is a prototype image only, not split assets.
+
+Overall visual style:
+- soft pastel 2D mobile game UI, clean and rounded, similar to the existing Flower Jewelry Box activity screen;
+- cream content area, lilac/pink rounded frame, warm gold jewelry trim, small flower and gem decorations;
+- high-key cute style, not realistic, not dark, not western ornate fantasy.
+
+Layout:
+- centered vertical modal panel occupying most of the screen;
+- top title banner: rounded pink/lilac jewelry banner with empty center, no generated readable words;
+- top-right: round teal close button with a simple white X;
+- top progress area: small coral reward booklet icon on the left, long gold progress bar in the middle, reward chest/box icon on the right;
+- main content section 1: pastel pink header strip with only blank rounded decorative bars, 6 large slots in 3x2 grid, each slot has one simple jewelry icon;
+- main content section 2: pastel teal header strip with only blank rounded decorative bars, 6 large slots in 3x2 grid, each slot has one turquoise/gold crown or hairpin icon;
+- bottom reward milestone strip: 4 large reward nodes, simple icons such as gem bag, stamina chest, gold coin, locked mystery slot.
+
+Important composition rules:
+- item icons must be large and simple, not tiny detailed jewelry;
+- panel must feel like the current game's pastel UI, not a different game;
+- use abstract text blocks only where labels would go, no readable language or numbers;
+- absolutely no Latin letters, no Chinese characters, no pseudo text, no fake words, no digits; every title/header/progress label area must be blank or represented by simple rounded bars only;
+- no screenshot UI controls from another app, no watermark, no brand logo.

@@ -8,6 +8,7 @@
  * - 跳过/重置新手引导
  * - 解锁/锁定所有格子
  * - 填充棋盘物品
+ * - 活动棋盘：放置各等级首饰 / 清空活动棋盘物品
  * - 增加物品（收纳盒 / 棋盘首空格：幸运金币、万能水晶、金剪刀、钻石袋与体力箱全套）
  * - 清空棋盘
  * - 模拟离线收益
@@ -118,6 +119,7 @@ const GM_GROUP_ORDER: readonly string[] = [
   ' 卡牌系统',
   ' 离线/糖果',
   ' 棋盘操作',
+  ' 活动棋盘',
   ' 订单/客人',
   ' 增加物品',
   ' 装修系统',
@@ -593,6 +595,88 @@ class GMManagerClass {
           }
         }
         return ` 填充了 ${count} 个高级花朵`;
+      },
+    });
+
+    // ========== 活动棋盘 ==========
+    this._commands.push({
+      id: 'open_event_board',
+      group: ' 活动棋盘',
+      name: ' 打开活动棋盘',
+      desc: '打开花间珠匣活动棋盘面板',
+      execute: () => {
+        EventBus.emit('panel:openEventBoard');
+        return ' 已打开活动棋盘';
+      },
+    });
+
+    this._commands.push({
+      id: 'clear_event_board_items',
+      group: ' 活动棋盘',
+      name: ' 清空活动棋盘物品',
+      desc: '移除活动棋盘开放格上的所有物品（不影响格子锁态与时空门）',
+      execute: () => {
+        const count = EventBoardManager.gmClearOpenItems();
+        return count > 0 ? ` 清除了 ${count} 个活动棋盘物品` : ' 活动棋盘开放格上无物品';
+      },
+    });
+
+    for (let level = 1; level <= 13; level++) {
+      const itemId = `event_jewelry_${level}`;
+      const itemName = ITEM_DEFS.get(itemId)?.name ?? itemId;
+      this._commands.push({
+        id: `event_board_jewelry_${level}`,
+        group: ' 活动棋盘',
+        name: ` +${level}级 ${itemName}`,
+        desc: `向活动棋盘首个空开放格放置 1 个 ${level} 级首饰（${itemName}）`,
+        execute: () => {
+          const { placed, cellIndexes } = EventBoardManager.gmPlaceJewelry(level, 1);
+          if (placed <= 0) {
+            return ` 放置失败：活动棋盘无空开放格（${itemName}）`;
+          }
+          const idx = cellIndexes[0];
+          const emptyLeft = EventBoardManager.emptyOpenCellCount;
+          return ` 已放置 ${itemName} → 格 ${idx}，剩余空格 ${emptyLeft}`;
+        },
+      });
+    }
+
+    for (let level = 1; level <= 8; level++) {
+      const itemId = `event_jewelry_dian_cui_${level}`;
+      const itemName = ITEM_DEFS.get(itemId)?.name ?? itemId;
+      this._commands.push({
+        id: `event_board_dian_cui_${level}`,
+        group: ' 活动棋盘',
+        name: ` 点翠+${level}级 ${itemName}`,
+        desc: `向活动棋盘首个空开放格放置 1 个 ${level} 级点翠副产物（${itemName}）`,
+        execute: () => {
+          const { placed, cellIndexes } = EventBoardManager.gmPlaceDianCui(level, 1);
+          if (placed <= 0) {
+            return ` 放置失败：活动棋盘无空开放格（${itemName}）`;
+          }
+          const idx = cellIndexes[0];
+          const emptyLeft = EventBoardManager.emptyOpenCellCount;
+          return ` 已放置 ${itemName} → 格 ${idx}，剩余空格 ${emptyLeft}`;
+        },
+      });
+    }
+
+    this._commands.push({
+      id: 'event_board_jewelry_fill_1_6',
+      group: ' 活动棋盘',
+      name: ' 填充 1–6 级各 1 个',
+      desc: '按 1→6 级顺序各放 1 个首饰到活动棋盘空开放格',
+      execute: () => {
+        const parts: string[] = [];
+        for (let level = 1; level <= 6; level++) {
+          const { placed } = EventBoardManager.gmPlaceJewelry(level, 1);
+          if (placed <= 0) {
+            parts.push(`${level}级失败`);
+            break;
+          }
+          parts.push(`${level}级✓`);
+        }
+        return ` ${parts.join(' ')}，剩余空格 ${EventBoardManager.emptyOpenCellCount}`;
       },
     });
 

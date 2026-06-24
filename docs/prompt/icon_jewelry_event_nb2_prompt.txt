@@ -1,0 +1,25 @@
+Single mobile game HUD activity icon, square 1:1, designed first for tiny display at 48-64 pixels. The icon must still read clearly when very small.
+
+Style: cozy pastel flower-shop merge game UI icon, thick warm chocolate-brown outline, glossy cel-shaded 2D, rounded chunky forms, simple top-left highlights, premium sticker icon, not flat clipart.
+
+Subject: one open jewelry box containing one emerald ring. Use very few shapes and strong color separation.
+
+Composition:
+- The open jewelry box fills 90% of the frame.
+- Box exterior: warm coral pink, simple rounded rectangular silhouette.
+- Trim and ring band: warm golden yellow, thick and readable.
+- Interior velvet: dark wine red, flat solid fill.
+- Main jewelry: ONE oversized emerald ring placed in the middle. It must look like a ring: a thick gold circular band plus a large oval green emerald mounted on top. The ring should fill most of the box interior.
+
+Small-icon simplification:
+- Use only 3 big readable objects: pink open box, gold ring band, green emerald stone.
+- Only 2 white sparkle stars, large and simple.
+- No flower decoration, no small petals, no extra beads, no extra gems.
+
+Color rules:
+- Strong contrast between pink box, dark red interior, gold ring, green emerald.
+- NO purple diamond, NO loose diamond shape, NO blue, NO cyan, NO green velvet, NO many colors.
+
+Prohibitions: NO text, NO labels, NO captions, NO writing anywhere, NO UI button frame, NO white border, NO realistic metal texture, NO tiny details, NO watermark.
+
+Background solid flat magenta #FF00FF full bleed for cutout.

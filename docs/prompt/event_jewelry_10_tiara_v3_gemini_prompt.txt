@@ -1,0 +1,11 @@
+Create one standalone jewelry merge-game item icon on a square 1:1 canvas. Use the attached reference only to preserve the same jewelry identity: an emerald and diamond tiara / crown with hanging teardrop drops. Convert into the existing huahua jewelry merge-game icon style: cute polished 2D mobile game icon, soft glossy volume, clear gemstone facets, bright white highlight arcs, smooth color gradients, thin clean same-color outlines, warm gold and silver metal highlights.
+
+Critical composition rules for small board readability:
+- The jewelry must be LARGE and centered, filling about 88% to 94% of the canvas width and height.
+- Make the tiara taller and bolder so it fills the square, not a thin wide strip with empty top/bottom.
+- Simplify heavily: at most 3 to 5 large emerald green gems on the crown band, 3 to 5 simplified teardrop drops below, a few small white diamond accents only. No dense pave halos, no eleven tiny drops, no micro gems.
+- Readable at 128 px thumbnail on a 6x6 merge board.
+
+Subject: Level 10 emerald tiara / hair crown. Premium simplified tiara, mainly emerald green with silver-gold frame and minimal white sparkle accents. Distinct crown silhouette, elegant but chunky.
+
+Pure white background only. No grid, no UI, no text, no labels, no numbers, no watermark.

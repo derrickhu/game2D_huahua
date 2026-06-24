@@ -26,6 +26,10 @@ const MAIN_IMAGE_MAP: Record<string, string> = {
   icon_shop_nb2: 'images/ui/icon_shop_nb2.png',
   /** 周末订单花愿 +50% 顶栏入口（NB2 物件 + rembg） */
   icon_weekend_huayuan_boost_nb2: 'images/ui/icon_weekend_huayuan_boost_nb2.png',
+  /** 花间珠匣活动入口：打开首饰盒 + 大颗宝石（NB2 + rembg） */
+  icon_jewelry_event_nb2: 'images/ui/icon_jewelry_event_nb2.png',
+  /** 花间珠匣图鉴奖励入口：小册子本体（Gemini + rembg；感叹号/进度条由程序绘制） */
+  event_jewelry_reward_book_icon: 'images/ui/event_jewelry_reward_book_icon.png',
   /** NB2+rembg：激励视频 / 看广告统一小图标（粉紫边框 + 播放三角） */
   icon_ad_reward_nb2: 'images/ui/icon_ad_reward_nb2.png',
   icon_heart:  'images/ui/icon_heart.png',
@@ -201,6 +205,10 @@ const PANELS_IMAGE_MAP: Record<string, string> = {
   event_cell_peek: 'subpkg_panels/images/ui/event_cell_peek_nb2.png',
   /** 花间珠匣：进度条上可获得钥匙节点的金钥匙角标（NB2 + birefnet 去底） */
   event_key_badge: 'subpkg_panels/images/ui/event_key_badge_nb2.png',
+  /** 花间珠匣：图鉴奖励页空面板壳（透明底，内容由程序绘制） */
+  event_jewelry_codex_panel_shell: 'subpkg_panels/images/ui/event_jewelry_codex_panel_shell.png',
+  /** 花间珠匣：图鉴奖励分组空面板（标题头 + 右侧奖励预留 + 空内容区） */
+  event_jewelry_codex_reward_section_shell: 'subpkg_panels/images/ui/event_jewelry_codex_reward_section_shell.png',
   /** 升级奖励等：粉色彩带标题条（叠字「恭喜升级」） */
   pink_bar: 'subpkg_panels/images/ui/pink_bar.png',
   merge_chain_panel: 'subpkg_panels/images/ui/merge_chain_panel.png',
@@ -514,6 +522,14 @@ const ITEMS_IMAGE_MAP: Record<string, string> = {
   event_jewelry_11: 'subpkg_items/images/jewelry/event_jewelry_11.png',
   event_jewelry_12: 'subpkg_items/images/jewelry/event_jewelry_12.png',
   event_jewelry_13: 'subpkg_items/images/jewelry/event_jewelry_13.png',
+  event_jewelry_dian_cui_1: 'subpkg_items/images/jewelry/event_jewelry_dian_cui_1.png',
+  event_jewelry_dian_cui_2: 'subpkg_items/images/jewelry/event_jewelry_dian_cui_2.png',
+  event_jewelry_dian_cui_3: 'subpkg_items/images/jewelry/event_jewelry_dian_cui_3.png',
+  event_jewelry_dian_cui_4: 'subpkg_items/images/jewelry/event_jewelry_dian_cui_4.png',
+  event_jewelry_dian_cui_5: 'subpkg_items/images/jewelry/event_jewelry_dian_cui_5.png',
+  event_jewelry_dian_cui_6: 'subpkg_items/images/jewelry/event_jewelry_dian_cui_6.png',
+  event_jewelry_dian_cui_7: 'subpkg_items/images/jewelry/event_jewelry_dian_cui_7.png',
+  event_jewelry_dian_cui_8: 'subpkg_items/images/jewelry/event_jewelry_dian_cui_8.png',
 };
 
 // ================================================================
@@ -888,6 +904,7 @@ const SHOP_WARMUP_KEYS = [
   'icon_worldmap_nav',
   'icon_wishing_nav',
   'icon_weekend_huayuan_boost_nb2',
+  'icon_jewelry_event_nb2',
 ] as const;
 
 const DECO_PANEL_WARMUP_KEYS = [

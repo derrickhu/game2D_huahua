@@ -2,6 +2,13 @@ import { EVENT_JEWELRY_STARTER_BOX_ID } from './ItemConfig';
 
 export const JEWELRY_EVENT_ID = 'jewelry_box_event';
 export const JEWELRY_EVENT_NAME = '花间珠匣';
+/** 花间珠匣活动开放所需玩家综合等级 */
+export const JEWELRY_EVENT_UNLOCK_LEVEL = 3;
+
+export function isJewelryEventUnlocked(playerLevel: number): boolean {
+  return playerLevel >= JEWELRY_EVENT_UNLOCK_LEVEL;
+}
+
 export const EVENT_BOARD_COLS = 6;
 /** 基础行数（阶段未单独指定 rows 时使用） */
 export const EVENT_BOARD_ROWS = 5;
@@ -12,6 +19,21 @@ export const EVENT_BOARD_MAX_TOTAL = EVENT_BOARD_COLS * EVENT_BOARD_MAX_ROWS;
 
 export const JEWELRY_STARTER_BOX_ITEM_ID = EVENT_JEWELRY_STARTER_BOX_ID;
 export const JEWELRY_ITEM_PREFIX = 'event_jewelry_';
+export const DIAN_CUI_ITEM_PREFIX = 'event_jewelry_dian_cui_';
+export const EVENT_CODEX_ITEM_IDS: readonly string[] = [
+  ...Array.from({ length: 13 }, (_, i) => `${JEWELRY_ITEM_PREFIX}${i + 1}`),
+  ...Array.from({ length: 8 }, (_, i) => `${DIAN_CUI_ITEM_PREFIX}${i + 1}`),
+];
+
+/** 活动满级产出工具：每件最多点击产出 10 次，用完消失；不消耗体力。 */
+export const EVENT_PRODUCER_TOTAL_DROPS = 10;
+export const EVENT_PRODUCER_DROP_TABLE: readonly { itemId: string; weight: number }[] = [
+  { itemId: 'stamina_chest_1', weight: 1 },
+  { itemId: 'stamina_chest_2', weight: 1 },
+  { itemId: 'stamina_chest_3', weight: 1 },
+  { itemId: 'lucky_coin_1', weight: 1 },
+  { itemId: 'currency_diamond_1', weight: 1 },
+];
 
 /** 进度条上标注「合出可获得钥匙」的首饰等级（参考同类活动 9/10/12 级角标） */
 export const EVENT_KEY_BADGE_LEVELS: readonly number[] = [9, 10, 12];
@@ -84,8 +106,10 @@ export const EVENT_BOARD_STAGES: EventBoardStageDef[] = [
     name: '第二层',
     goalItemId: 'event_jewelry_11',
     goalText: '合出彩宝项圈',
-    peekCells: [2, 3, 7, 10, 12, 17, 19, 22, 26, 27],
-    fogCells: [0, 1, 4, 5, 6, 11, 18, 23, 24, 25, 28, 29],
+    // 棋盘 6×6：在 6×5 基础上底部加一行，顶/底行对称全锁角 + 半锁边
+    rows: 6,
+    peekCells: [2, 3, 7, 10, 12, 17, 19, 22, 26, 27, 32, 33],
+    fogCells: [0, 1, 4, 5, 6, 11, 18, 23, 24, 25, 28, 29, 30, 31, 34, 35],
     peekItemId: 'event_jewelry_1',
     starterItems: ['event_jewelry_2', 'event_jewelry_2', 'event_jewelry_3'],
     portalCell: 14,
@@ -137,12 +161,12 @@ export const EVENT_DISCOVERY_REWARDS: EventDiscoveryRewardDef[] = [
 
 /**
  * 合成奖励物品掉落：首饰线合成有概率爆 1 个奖励棋子，落活动棋盘空格，满格进奖励篮。
- * 基础 35%，随合成结果等级 +2.5%/级，12 级及以上封顶 65%。
+ * 基础 20%，随合成结果等级 +1.5%/级，12 级及以上封顶 45%。
  * 权重从高到低：1 级花愿 > 1 级体力 > 1 级红包 > 1 级钻石 > 1 级体力箱；幸运金币极低；钻石/体力箱权重已压低。
  */
-export const EVENT_MERGE_DROP_BASE_CHANCE = 0.35;
-export const EVENT_MERGE_DROP_PER_LEVEL = 0.025;
-export const EVENT_MERGE_DROP_MAX_CHANCE = 0.65;
+export const EVENT_MERGE_DROP_BASE_CHANCE = 0.2;
+export const EVENT_MERGE_DROP_PER_LEVEL = 0.015;
+export const EVENT_MERGE_DROP_MAX_CHANCE = 0.45;
 export const EVENT_MERGE_DROP_TABLE: EventDropEntry[] = [
   { reward: { kind: 'boxItem', itemId: 'currency_huayuan_pickup_1', count: 1 }, weight: 420 },
   { reward: { kind: 'boxItem', itemId: 'currency_stamina_1', count: 1 }, weight: 180 },
@@ -152,20 +176,32 @@ export const EVENT_MERGE_DROP_TABLE: EventDropEntry[] = [
   { reward: { kind: 'boxItem', itemId: 'lucky_coin_1', count: 1 }, weight: 4 },
 ];
 
+/**
+ * 主首饰线合成时的小概率副产物：点翠凤冠线 L1/L2。
+ * 与上方普通奖励互斥；概率低于普通奖励，避免副线挤占主玩法收益。
+ */
+export const EVENT_MERGE_BYPRODUCT_BASE_CHANCE = 0.08;
+export const EVENT_MERGE_BYPRODUCT_PER_LEVEL = 0.006;
+export const EVENT_MERGE_BYPRODUCT_MAX_CHANCE = 0.18;
+export const EVENT_MERGE_BYPRODUCT_TABLE: EventDropEntry[] = [
+  { reward: { kind: 'boxItem', itemId: `${DIAN_CUI_ITEM_PREFIX}1`, count: 1 }, weight: 75 },
+  { reward: { kind: 'boxItem', itemId: `${DIAN_CUI_ITEM_PREFIX}2`, count: 1 }, weight: 25 },
+];
+
 export const EVENT_ORDER_BOX_DAILY_LIMIT = 18;
 export const EVENT_ORDER_BOX_DAILY_GUARANTEE = 6;
 export const EVENT_ORDER_BOX_CHANCE = 0.35;
 
 /**
- * 主玩法普通订单携带原石奖励的概率（不宜过高），按订单档位区分：
+ * 主玩法普通订单携带原石奖励的概率，按订单档位区分：
  * 越高级的订单出原石概率越高。命中后该订单在花愿奖励基础上额外显示原石，
  * 交单时发放到活动库存。
  */
 export const EVENT_ORDER_STONE_CHANCE_BY_TIER: Record<string, number> = {
-  C: 0.12,
-  B: 0.20,
-  A: 0.30,
-  S: 0.42,
+  C: 0.4,
+  B: 0.5,
+  A: 0.55,
+  S: 0.6,
 };
 /** 取某档位订单的原石概率（未知档位回退到 C） */
 export function getEventOrderStoneChance(tier: string): number {

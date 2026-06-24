@@ -17,6 +17,7 @@ import {
 import {
   getEventOrderStoneChance,
   rollEventOrderStoneAmount,
+  isJewelryEventUnlocked,
 } from '@/config/EventBoardConfig';
 import { CUSTOMER_TYPES, CUSTOMER_TYPE_MAP, type CustomerTypeDef } from '@/config/CustomerConfig';
 import { Category, ITEM_DEFS, findItemId } from '@/config/ItemConfig';
@@ -764,7 +765,11 @@ class CustomerManagerClass {
     };
 
     // 主玩法普通订单按档位概率携带原石（首饰活动）：越高级的单越容易出、数量越多，生成即定、订单上展示
-    if (customer.orderType === 'normal' && Math.random() < getEventOrderStoneChance(customer.tier)) {
+    if (
+      customer.orderType === 'normal'
+      && isJewelryEventUnlocked(level)
+      && Math.random() < getEventOrderStoneChance(customer.tier)
+    ) {
       customer.eventStoneReward = rollEventOrderStoneAmount(customer.tier);
     }
 

@@ -10,6 +10,8 @@ import { TweenManager, Ease } from '@/core/TweenManager';
 import { EventManager } from '@/managers/EventManager';
 import { EventBoardManager } from '@/managers/EventBoardManager';
 import { QuestManager } from '@/managers/QuestManager';
+import { LevelManager } from '@/managers/LevelManager';
+import { isJewelryEventUnlocked } from '@/config/EventBoardConfig';
 import { FloatingMenu } from './FloatingMenu';
 import { RewardBoxButton } from '@/gameobjects/ui/RewardBoxButton';
 import { TextureCache } from '@/utils/TextureCache';
@@ -68,10 +70,11 @@ const TASK_DEFS: TaskDef[] = [
   },
   {
     id: 'event',
-    texKey: 'icon_gift',
+    texKey: 'icon_jewelry_event_nb2',
     event: 'nav:openEvent',
     redDotKey: 'event',
-    isVisible: () => EventManager.hasActiveEvent || EventBoardManager.stageCount > 0,
+    isVisible: () => isJewelryEventUnlocked(LevelManager.level)
+      && (EventManager.hasActiveEvent || EventBoardManager.stageCount > 0),
   },
 ];
 

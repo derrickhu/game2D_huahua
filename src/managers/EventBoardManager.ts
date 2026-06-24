@@ -5,25 +5,37 @@ import {
   EventLine,
   ITEM_DEFS,
   getMergeResultId,
+  isEventProducerItem,
 } from '@/config/ItemConfig';
 import {
   EVENT_BOARD_COLS,
   EVENT_BOARD_STAGES,
+  EVENT_CODEX_ITEM_IDS,
   getStageRows,
   getStageTotal,
   EVENT_DISCOVERY_REWARDS,
+  EVENT_MERGE_BYPRODUCT_BASE_CHANCE,
+  EVENT_MERGE_BYPRODUCT_MAX_CHANCE,
+  EVENT_MERGE_BYPRODUCT_PER_LEVEL,
+  EVENT_MERGE_BYPRODUCT_TABLE,
   EVENT_MERGE_DROP_BASE_CHANCE,
   EVENT_MERGE_DROP_MAX_CHANCE,
   EVENT_MERGE_DROP_PER_LEVEL,
   EVENT_MERGE_DROP_TABLE,
+  EVENT_PRODUCER_DROP_TABLE,
+  EVENT_PRODUCER_TOTAL_DROPS,
   EVENT_ORDER_BOX_CHANCE,
   EVENT_ORDER_BOX_DAILY_GUARANTEE,
   EVENT_ORDER_BOX_DAILY_LIMIT,
   JEWELRY_EVENT_NAME,
+  DIAN_CUI_ITEM_PREFIX,
+  JEWELRY_ITEM_PREFIX,
+  isJewelryEventUnlocked,
   type EventDropEntry,
   type EventRewardDef,
 } from '@/config/EventBoardConfig';
 import { CurrencyManager } from './CurrencyManager';
+import { LevelManager } from './LevelManager';
 import { RewardBoxManager } from './RewardBoxManager';
 import { isChestItem, rollChestBoardDrops } from './BuildingManager';
 
@@ -48,6 +60,7 @@ export interface EventBoardPersistState {
   /** @deprecated 旧版字段：原石包数量。 */
   pendingStarterBoxes: number;
   discoveredItemIds: string[];
+  claimedDiscoveryRewardItemIds?: string[];
   completedStageIds: string[];
   dailyKey: string;
   dailyOrderDeliveries: number;
@@ -68,6 +81,19 @@ export interface EventCurrencyCollectResult {
   amount?: number;
 }
 
+export interface EventProducerResult {
+  result: 'produced' | 'noSpace' | 'invalid';
+  itemId?: string;
+  cellIndex?: number;
+  remaining: number;
+}
+
+interface EventBoardCarryItem {
+  itemId: string;
+  chestQueue?: string[];
+  chestTotal?: number;
+}
+
 function localDateKey(ts = Date.now()): string {
   const d = new Date(ts);
   const y = d.getFullYear();
@@ -84,6 +110,7 @@ function emptyPersistState(): EventBoardPersistState {
     pendingStarterStones: 6,
     pendingStarterBoxes: 0,
     discoveredItemIds: [],
+    claimedDiscoveryRewardItemIds: [],
     completedStageIds: [],
     dailyKey: localDateKey(),
     dailyOrderDeliveries: 0,
@@ -99,6 +126,7 @@ class EventBoardManagerClass {
   private _keys = 0;
   private _pendingStarterStones = 6;
   private _discoveredItemIds: Set<string> = new Set();
+  private _claimedDiscoveryRewardItemIds: Set<string> = new Set();
   private _completedStageIds: Set<string> = new Set();
   private _dailyKey = localDateKey();
   private _dailyOrderDeliveries = 0;
@@ -119,9 +147,15 @@ class EventBoardManagerClass {
   private _bindEvents(): void {
     // 订单是否带原石在生成时已决定并展示在订单上，交单按该标记发放，所见即所得
     EventBus.on('customer:delivered', (_uid: number, customer?: { eventStoneReward?: number }) => {
+      if (!this.isUnlocked) return;
       const n = Math.max(0, Math.floor(customer?.eventStoneReward ?? 0));
       if (n > 0) this.addStarterStones(n);
     });
+  }
+
+  /** 玩家综合等级达到 {@link JEWELRY_EVENT_UNLOCK_LEVEL} 后开放花间珠匣 */
+  get isUnlocked(): boolean {
+    return isJewelryEventUnlocked(LevelManager.level);
   }
 
   get cells(): readonly EventBoardCellData[] { return this._cells; }
@@ -137,9 +171,23 @@ class EventBoardManagerClass {
   /** @deprecated UI 请使用 pendingStarterStones */
   get pendingStarterBoxes(): number { return this._pendingStarterStones; }
   get discoveredCount(): number { return this._discoveredItemIds.size; }
+  get codexTotalCount(): number { return EVENT_CODEX_ITEM_IDS.length; }
+  get codexDiscoveredCount(): number {
+    return EVENT_CODEX_ITEM_IDS.filter(id => this._discoveredItemIds.has(id)).length;
+  }
   isDiscovered(itemId: string): boolean { return this._discoveredItemIds.has(itemId); }
+  get hasClaimableDiscoveryReward(): boolean {
+    return EVENT_DISCOVERY_REWARDS.some(
+      r => this._discoveredItemIds.has(r.itemId) && !this._claimedDiscoveryRewardItemIds.has(r.itemId),
+    );
+  }
   get hasClaimable(): boolean {
-    return this._pendingStarterStones > 0 || (this._keys > 0 && this._stageIndex < EVENT_BOARD_STAGES.length - 1);
+    if (!this.isUnlocked) return false;
+    return (
+      this.hasClaimableDiscoveryReward ||
+      this._pendingStarterStones > 0 ||
+      (this._keys > 0 && this._stageIndex < EVENT_BOARD_STAGES.length - 1)
+    );
   }
 
   exportState(): EventBoardPersistState {
@@ -150,6 +198,7 @@ class EventBoardManagerClass {
       pendingStarterStones: this._pendingStarterStones,
       pendingStarterBoxes: 0,
       discoveredItemIds: Array.from(this._discoveredItemIds),
+      claimedDiscoveryRewardItemIds: Array.from(this._claimedDiscoveryRewardItemIds),
       completedStageIds: Array.from(this._completedStageIds),
       dailyKey: this._dailyKey,
       dailyOrderDeliveries: this._dailyOrderDeliveries,
@@ -168,6 +217,9 @@ class EventBoardManagerClass {
       Math.floor(state.pendingStarterStones ?? state.pendingStarterBoxes ?? 0),
     );
     this._discoveredItemIds = new Set((state.discoveredItemIds ?? []).filter(id => ITEM_DEFS.has(id)));
+    this._claimedDiscoveryRewardItemIds = new Set(
+      (state.claimedDiscoveryRewardItemIds ?? []).filter(id => ITEM_DEFS.has(id)),
+    );
     this._completedStageIds = new Set(state.completedStageIds ?? []);
     this._dailyKey = typeof state.dailyKey === 'string' ? state.dailyKey : localDateKey();
     this._dailyOrderDeliveries = Math.max(0, Math.floor(state.dailyOrderDeliveries ?? 0));
@@ -211,7 +263,7 @@ class EventBoardManagerClass {
     EventBus.emit('eventBoard:changed');
   }
 
-  private _resetStage(stageIndex: number, emit = true): void {
+  private _resetStage(stageIndex: number, emit = true, grantStarterDiscoveryRewards = emit): void {
     const stage = EVENT_BOARD_STAGES[stageIndex] ?? EVENT_BOARD_STAGES[0];
     const peek = new Set(stage.peekCells);
     const fog = new Set(stage.fogCells);
@@ -240,7 +292,7 @@ class EventBoardManagerClass {
 
     for (const itemId of stage.starterItems) {
       this._placeItemInFirstEmpty(itemId);
-      this._markDiscovered(itemId, emit);
+    this._markDiscovered(itemId, grantStarterDiscoveryRewards);
     }
 
     if (emit) {
@@ -333,6 +385,56 @@ class EventBoardManagerClass {
     return this._cells.filter(c => c.state === CellState.OPEN && !c.itemId && !c.isPortal).length;
   }
 
+  get carryableEventItemCount(): number {
+    return this._collectCarryItemsForNextStage().length;
+  }
+
+  /** GM：清空活动棋盘开放格上的物品（不含时空门格、半锁/全锁格） */
+  gmClearOpenItems(): number {
+    let count = 0;
+    for (const cell of this._cells) {
+      if (cell.state !== CellState.OPEN || cell.isPortal || !cell.itemId) continue;
+      cell.itemId = null;
+      cell.chestQueue = undefined;
+      cell.chestTotal = undefined;
+      count++;
+    }
+    if (count > 0) EventBus.emit('eventBoard:changed');
+    return count;
+  }
+
+  /**
+   * GM：向活动棋盘空开放格放置首饰（1–13 级）。
+   * 仅更新图鉴发现状态，不发放首次发现奖励。
+   */
+  gmPlaceJewelry(level: number, count = 1): { placed: number; cellIndexes: number[] } {
+    const lv = Math.max(1, Math.min(13, Math.floor(level)));
+    const itemId = `${JEWELRY_ITEM_PREFIX}${lv}`;
+    return this._gmPlaceEventItem(itemId, count);
+  }
+
+  /** GM：向活动棋盘空开放格放置点翠副产物（1–8 级）。 */
+  gmPlaceDianCui(level: number, count = 1): { placed: number; cellIndexes: number[] } {
+    const lv = Math.max(1, Math.min(8, Math.floor(level)));
+    const itemId = `${DIAN_CUI_ITEM_PREFIX}${lv}`;
+    return this._gmPlaceEventItem(itemId, count);
+  }
+
+  private _gmPlaceEventItem(itemId: string, count = 1): { placed: number; cellIndexes: number[] } {
+    if (!ITEM_DEFS.has(itemId)) return { placed: 0, cellIndexes: [] };
+
+    const n = Math.max(1, Math.floor(count));
+    const cellIndexes: number[] = [];
+    for (let i = 0; i < n; i++) {
+      const idx = this._placeItemInFirstEmpty(itemId);
+      if (idx < 0) break;
+      cellIndexes.push(idx);
+      this._markDiscovered(itemId, false);
+    }
+    if (cellIndexes.length > 0) EventBus.emit('eventBoard:changed');
+    return { placed: cellIndexes.length, cellIndexes };
+  }
+
   private _placeItemInFirstEmpty(itemId: string): number {
     const idx = this._cells.findIndex(c => c.state === CellState.OPEN && !c.itemId && !c.isPortal);
     if (idx < 0) return -1;
@@ -347,6 +449,44 @@ class EventBoardManagerClass {
       return preferredIndex;
     }
     return this._placeItemInFirstEmpty(itemId);
+  }
+
+  private _isCarryableBoardItem(itemId: string | null | undefined): itemId is string {
+    if (!itemId) return false;
+    return ITEM_DEFS.has(itemId);
+  }
+
+  private _collectCarryItemsForNextStage(): EventBoardCarryItem[] {
+    return this._cells
+      .filter(c => c.state === CellState.OPEN && !c.isPortal && this._isCarryableBoardItem(c.itemId))
+      .map(c => ({
+        itemId: c.itemId!,
+        chestQueue: c.chestQueue ? [...c.chestQueue] : undefined,
+        chestTotal: c.chestTotal,
+      }));
+  }
+
+  private _placeCarryItemsIntoNewStage(items: EventBoardCarryItem[]): number {
+    let placed = 0;
+    const placeInto = (indexes: number[]): void => {
+      for (const idx of indexes) {
+        if (placed >= items.length) return;
+        const cell = this._cells[idx];
+        if (!cell || cell.isPortal) continue;
+        const item = items[placed];
+        cell.itemId = item.itemId;
+        cell.chestQueue = item.chestQueue ? [...item.chestQueue] : undefined;
+        cell.chestTotal = item.chestTotal;
+        this._markDiscovered(item.itemId, false);
+        placed++;
+      }
+    };
+
+    // 继承物优先压入锁格，保留该格锁态，后续按原规则合成解锁。
+    placeInto(this._cells.filter(c => c.state === CellState.PEEK && !c.isPortal).map(c => c.index));
+    placeInto(this._cells.filter(c => c.state === CellState.FOG && !c.isPortal).map(c => c.index));
+    placeInto(this._cells.filter(c => c.state === CellState.OPEN && !c.itemId && !c.isPortal).map(c => c.index));
+    return placed;
   }
 
   /**
@@ -417,7 +557,7 @@ class EventBoardManagerClass {
       const cell = this._cells[n];
       if (cell && cell.state === CellState.FOG) {
         cell.state = CellState.PEEK;
-        cell.itemId = peekItemId;
+        cell.itemId = cell.itemId ?? peekItemId;
       }
     }
   }
@@ -454,12 +594,55 @@ class EventBoardManagerClass {
     return !!cell && cell.state === CellState.OPEN && !!cell.itemId && isChestItem(cell.itemId);
   }
 
+  /** 该格是否是活动满级产出工具（主线 L13 / 点翠 L8）。 */
+  isEventProducerCell(index: number): boolean {
+    const cell = this._cells[index];
+    return !!cell && cell.state === CellState.OPEN && !!cell.itemId && isEventProducerItem(cell.itemId);
+  }
+
   private _emptyOpenCellsExcept(index: number): number[] {
     const out: number[] = [];
     for (const c of this._cells) {
       if (c.index !== index && c.state === CellState.OPEN && !c.itemId && !c.isPortal) out.push(c.index);
     }
     return out;
+  }
+
+  private _findEventProduceTarget(index: number): number {
+    const col = index % EVENT_BOARD_COLS;
+    const row = Math.floor(index / EVENT_BOARD_COLS);
+    const rows = this.currentRows;
+    const candidates: number[] = [];
+    if (col > 0) candidates.push(index - 1);
+    if (col < EVENT_BOARD_COLS - 1) candidates.push(index + 1);
+    if (row > 0) candidates.push(index - EVENT_BOARD_COLS);
+    if (row < rows - 1) candidates.push(index + EVENT_BOARD_COLS);
+    for (const idx of candidates) {
+      const c = this._cells[idx];
+      if (c?.state === CellState.OPEN && !c.itemId && !c.isPortal) return idx;
+    }
+    return this._emptyOpenCellsExcept(index)[0] ?? -1;
+  }
+
+  private _pickEventProducerItem(): string | null {
+    const table = EVENT_PRODUCER_DROP_TABLE.filter(e => ITEM_DEFS.has(e.itemId) && e.weight > 0);
+    const total = table.reduce((sum, e) => sum + e.weight, 0);
+    if (total <= 0) return null;
+    let roll = Math.random() * total;
+    for (const entry of table) {
+      roll -= entry.weight;
+      if (roll <= 0) return entry.itemId;
+    }
+    return table[table.length - 1]?.itemId ?? null;
+  }
+
+  private _rollEventProducerQueue(): string[] {
+    const queue: string[] = [];
+    for (let i = 0; i < EVENT_PRODUCER_TOTAL_DROPS; i++) {
+      const itemId = this._pickEventProducerItem();
+      if (itemId) queue.push(itemId);
+    }
+    return queue;
   }
 
   /**
@@ -515,22 +698,73 @@ class EventBoardManagerClass {
     return { result: remaining === 0 ? 'opened' : 'partial', placed, remaining };
   }
 
+  /** 活动满级产出工具：每次点击产出 1 个随机奖励块，不耗体力，累计 10 次后消失。 */
+  produceEventToolCell(index: number): EventProducerResult {
+    const cell = this._cells[index];
+    if (!cell || cell.state !== CellState.OPEN || !cell.itemId || !isEventProducerItem(cell.itemId)) {
+      return { result: 'invalid', remaining: 0 };
+    }
+
+    if (this._emptyOpenCellsExcept(index).length < 1) {
+      return {
+        result: 'noSpace',
+        remaining: cell.chestQueue?.length ?? EVENT_PRODUCER_TOTAL_DROPS,
+      };
+    }
+
+    if (cell.chestQueue === undefined) {
+      cell.chestQueue = this._rollEventProducerQueue();
+      cell.chestTotal = cell.chestQueue.length;
+    }
+
+    const itemId = cell.chestQueue.shift();
+    if (!itemId) {
+      cell.itemId = null;
+      cell.chestQueue = undefined;
+      cell.chestTotal = undefined;
+      EventBus.emit('eventBoard:changed');
+      return { result: 'invalid', remaining: 0 };
+    }
+
+    const targetIndex = this._findEventProduceTarget(index);
+    if (targetIndex < 0) {
+      cell.chestQueue.unshift(itemId);
+      return { result: 'noSpace', remaining: cell.chestQueue.length };
+    }
+
+    this._cells[targetIndex].itemId = itemId;
+    const remaining = cell.chestQueue.length;
+    if (remaining <= 0) {
+      cell.itemId = null;
+      cell.chestQueue = undefined;
+      cell.chestTotal = undefined;
+    }
+    EventBus.emit('eventBoard:changed');
+    return { result: 'produced', itemId, cellIndex: targetIndex, remaining };
+  }
+
   nextStage(): boolean {
     if (this._keys <= 0 || this._stageIndex >= EVENT_BOARD_STAGES.length - 1) return false;
+    const carryItems = this._collectCarryItemsForNextStage();
     this._keys--;
-    this._resetStage(this._stageIndex + 1, true);
+    this._resetStage(this._stageIndex + 1, false, true);
+    this._placeCarryItemsIntoNewStage(carryItems);
+    EventBus.emit('eventBoard:stageChanged', this.currentStage);
+    EventBus.emit('eventBoard:changed');
     return true;
   }
 
   private _markDiscovered(itemId: string, grantReward: boolean): void {
     const itemDef = ITEM_DEFS.get(itemId);
-    if (itemDef?.category !== Category.EVENT || itemDef.line !== EventLine.JEWELRY) return;
+    if (itemDef?.category !== Category.EVENT) return;
+    if (itemDef.line !== EventLine.JEWELRY && itemDef.line !== EventLine.DIAN_CUI) return;
     if (this._discoveredItemIds.has(itemId)) return;
     this._discoveredItemIds.add(itemId);
     EventBus.emit('eventBoard:discovered', itemId);
-    if (!grantReward) return;
-    const def = EVENT_DISCOVERY_REWARDS.find(r => r.itemId === itemId);
-    if (def) this._grantRewards(def.rewards);
+    // 图鉴奖励进入待领取状态，由图鉴奖励页统一领取；GM 放置时仍只记录发现，不发奖。
+    if (!grantReward || !EVENT_DISCOVERY_REWARDS.some(r => r.itemId === itemId)) {
+      this._claimedDiscoveryRewardItemIds.add(itemId);
+    }
   }
 
   private _tryCompleteStage(resultId: string): void {
@@ -561,12 +795,26 @@ class EventBoardManagerClass {
     return table[table.length - 1]?.reward ?? null;
   }
 
-  /** 首饰线合成按等级概率爆 1 个奖励物品；物品优先落活动棋盘，满格进奖励篮。 */
+  /** 活动棋子合成奖励：主首饰线可爆普通奖励或点翠副产物（二选一）；点翠线只爆普通奖励。 */
   private _tryGrantMergeDrop(resultId: string, preferredCellIndex: number): void {
     const def = ITEM_DEFS.get(resultId);
     if (!def) return;
-    if (def.category !== Category.EVENT || def.line !== EventLine.JEWELRY) return;
+    if (def.category !== Category.EVENT) return;
+    if (def.line !== EventLine.JEWELRY && def.line !== EventLine.DIAN_CUI) return;
     const level = def.level;
+
+    if (def.line === EventLine.JEWELRY) {
+      const byproductChance = Math.min(
+        EVENT_MERGE_BYPRODUCT_MAX_CHANCE,
+        EVENT_MERGE_BYPRODUCT_BASE_CHANCE + level * EVENT_MERGE_BYPRODUCT_PER_LEVEL,
+      );
+      if (Math.random() < byproductChance) {
+        const picked = this._pickWeighted(EVENT_MERGE_BYPRODUCT_TABLE);
+        if (picked) this._grantRewards([picked], true, preferredCellIndex);
+        return;
+      }
+    }
+
     const dropChance = Math.min(
       EVENT_MERGE_DROP_MAX_CHANCE,
       EVENT_MERGE_DROP_BASE_CHANCE + level * EVENT_MERGE_DROP_PER_LEVEL,

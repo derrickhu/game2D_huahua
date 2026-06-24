@@ -1,0 +1,13 @@
+Clean 2D vector mobile game UI asset for a cozy pastel flower-shop merge game, kawaii casual style, horizontal reward-section panel shell, 16:9 composition.
+
+Use the attached reference image only for layout structure: a horizontal section panel with a top title header strip, an empty reward reserve area on the right side of the header, and one large content panel below. Redesign it for the jewelry encyclopedia reward page: soft lilac, pastel mint, warm cream, pale aqua, rose pink, warm gold, pearls, tiny gemstones, soft brown outlines.
+
+Top header: a cute rounded horizontal header bar across the panel top. Left side has an empty title plaque area with no text. Right side has a rounded golden-cream reward capsule area reserved for reward icons and quantities, but it must be completely empty. Add small decorative gems and pearls around the edges only, not inside the reserved content areas.
+
+Below the header: one large clean blank content panel, warm cream or very pale peach solid fill, thin pastel mint and gold border, softly rounded corners. The central area must be empty and usable for game UI overlays.
+
+The whole panel should be a single finished UI shell asset with transparent-ready silhouette, high-key pastel, soft brown outlines, gentle gradients only for depth, polished mobile game UI, no photorealism, no watermark, no logo.
+
+Background outside the panel must be flat pure chroma green #00FF00, perfectly solid and uniform, no texture, no shadow blending into it, for clean background removal. The panel itself must not contain green screen color.
+
+NO TEXT, no labels, no captions, no readable letters, no numbers, no progress bar, no reward items, no icons, no question marks, no grid contents, no characters.

@@ -1,0 +1,15 @@
+Create a square 1:1 image containing a clean 2 columns x 1 row grid sheet of exactly 2 jewelry merge-game item icons. Use the attached real jewelry reference only for the LEFT cell's general motif inspiration: celestial starburst cluster with hanging gem drops. Convert both icons into the existing huahua jewelry game icon style: cute polished 2D mobile merge-game icons, soft glossy volume, clear gemstone facets, bright white highlight arcs, smooth color gradients, thin clean same-color outlines, warm gold and silver metal highlights, readable silhouette at 128 px. Do not copy the photo exactly.
+
+Important art direction for small-icon readability:
+- Simplify shapes. Use bold, chunky star points, fewer separate tiny stones, fewer dangling pieces.
+- Avoid photo-level micro detail, thin wire filigree, or many small scattered gems that blur at 128 px.
+- Each icon should have one clear jewelry type and one main gemstone color theme.
+- No heavy black outlines. Use dark sapphire blue, warm gold, or soft gray outlines that match local color.
+- No pearls, no pearl beads.
+- Clean pure white background, generous white gutters between the two cells, no UI frame, no text, no labels, no numbers, no watermark.
+
+Cell 1, Level 6, LEFT: sapphire starburst earrings. A pair of elegant earrings inspired by the reference's star cluster and hanging drops, but simplified for game icon clarity. Main gemstones are deep rich sapphire blue only. Use gold and silver metal in a clean two-tone frame. Show about 2 to 3 medium starburst shapes and 2 to 3 simplified teardrop sapphire drops, not a dense tangle of tiny stars. One pair shown together, balanced, premium, readable.
+
+Cell 2, Level 7, RIGHT: sapphire gemstone hairpin. A traditional Chinese-style ornamental hairpin (发簪) with a long slender gold pin and a decorative head. The head uses the same game jewelry style: deep sapphire blue faceted gems set in warm gold, with a graceful floral or cloud-scroll silhouette. Clear readable hairpin shape, not a crown, not earrings, not a necklace. Elegant, refined, distinct from the earrings in cell 1.
+
+Make both icons harmonious with each other and with a cozy pastel flower-shop merge-game jewelry chain. Keep them distinct in jewelry type and silhouette.

@@ -1,0 +1,17 @@
+Clean 2D vector mobile game UI asset for a cozy pastel flower-shop merge game, jewelry event semi-locked cell overlay.
+
+Create ONE single flat light-lavender satin ribbon band covering only the lower portion of a square cell. This is a semi-lock cover, not a box, not a tray, not a pocket.
+
+Ribbon design requirements:
+- Color: soft pale lavender / light lilac purple (#D8C4F0 to #E8D8F8), gentle and airy, NOT deep violet, NOT dark purple, NOT heavy velvet.
+- Shape: one simple wide ribbon strip only, about 42% to 48% of canvas height at the bottom. Soft rounded lower corners, one graceful wavy top edge near the middle of the canvas.
+- Must be a SINGLE flat satin surface. Do NOT draw a second ribbon layer behind it. Do NOT draw a back wall, trough, pocket, U-shape container, or double-layer folded ribbon loop.
+- Keep it thin and elegant, readable at small board-cell size. Subtle silky highlight streaks and a tiny warm gold line along the top wavy edge are OK. Optional one tiny pale amethyst gem at center is OK but keep minimal.
+- The ribbon body must be fully OPAQUE with solid color fill. No holes, no gaps, no semi-transparent fabric, no see-through areas inside the ribbon.
+
+Upper half requirement:
+- The entire upper 52% to 58% of the canvas must be completely empty with flat pure magenta #FF00FF only, so it becomes transparent after background removal and reveals the item underneath.
+
+Background:
+- Flat pure magenta #FF00FF everywhere outside the ribbon, including the entire upper half.
+- NO text, NO numbers, NO watermark, NO photoreal, NO jewelry box, NO extra objects, NO readable symbols.

@@ -1,0 +1,11 @@
+Create one standalone jewelry merge-game item icon on a square 1:1 canvas. Use the attached real jewelry reference only as loose motif inspiration for starburst cluster earrings with hanging drops. Convert into the existing huahua jewelry game icon style: cute polished 2D mobile merge-game icon, soft glossy volume, clear gemstone facets, bright white highlight arcs, smooth color gradients, thin clean same-color outlines, warm gold and silver metal highlights.
+
+Critical composition rules:
+- The jewelry must be LARGE and centered, filling about 85% to 92% of the canvas width and height.
+- Leave only a small even white margin on all sides. Do not leave the subject tiny in the middle.
+- Use bold chunky shapes only. No tiny scattered gems, no thin wire filigree, no micro star fragments, no photo-level clutter.
+- Readable at 128 px thumbnail size.
+
+Subject: Level 6 sapphire starburst earrings. A pair of elegant earrings inspired by celestial star clusters, but heavily simplified. Main gemstones are deep rich sapphire blue only. Use gold and silver metal in a clean two-tone frame. Show at most 2 medium starburst shapes and 2 simplified teardrop sapphire drops per earring. One pair shown together, balanced, premium.
+
+Pure white background only. No grid, no sheet, no UI, no text, no labels, no numbers, no watermark.
