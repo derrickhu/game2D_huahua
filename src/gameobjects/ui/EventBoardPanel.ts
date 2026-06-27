@@ -12,22 +12,32 @@ import {
   EVENT_PRODUCER_TOTAL_DROPS,
   isJewelryEventUnlocked,
   JEWELRY_EVENT_UNLOCK_LEVEL,
+  type EventProgressEchoMilestoneDef,
   type EventRewardDef,
 } from '@/config/EventBoardConfig';
-import { Category, ITEM_DEFS, getMergeResultId, isEventProducerItem } from '@/config/ItemConfig';
+import {
+  Category,
+  CRYSTAL_BALL_ITEM_ID,
+  GOLDEN_SCISSORS_ITEM_ID,
+  ITEM_DEFS,
+  LUCKY_COIN_ITEM_ID,
+  getMergeResultId,
+  isEventProducerItem,
+} from '@/config/ItemConfig';
 import { EventBoardManager, type EventMergeDropPlacement } from '@/managers/EventBoardManager';
 import { LevelManager } from '@/managers/LevelManager';
 import { CellView } from '@/gameobjects/board/CellView';
 import { ItemView } from '@/gameobjects/board/ItemView';
 import { TextureCache } from '@/utils/TextureCache';
+import { AdManager, AdScene, type AdFailReason } from '@/managers/AdManager';
 import { ConfirmDialog } from './ConfirmDialog';
 import { ToastMessage } from './ToastMessage';
 
 const CELL = 104;
 const GAP = 8;
 const HEADER_H = 96;
-/** 阶段信息条（宝石横幅底图 + 仅叠绘进度条/图标）高度；上移到金标题牌与面板之间的色带 */
-const STAGE_CARD_H = 92;
+/** 阶段信息条（横幅底图 + 仅叠绘进度条/图标）高度；新版长条需要更厚避免变形 */
+const STAGE_CARD_H = 124;
 /** 阶段信息条宽度：占满整个横向（横幅按此宽度横向拉伸填满） */
 const STAGE_CARD_W = DESIGN_WIDTH - 16;
 /** 背景图中部纯色面板（棋盘区）的上 / 下边界占图高比例（由底图实测） */
@@ -42,7 +52,7 @@ const DISPENSER_W = 168;
 const DISPENSER_H = 142;
 const DISPENSER_STONE_FIT = 64;
 const DISPENSER_STONE_LOCAL_Y = 18;
-/** 图鉴奖励入口：位于活动页左上装饰区，避开返回按钮与阶段横幅 */
+/** 图鉴与进度回响入口：位于活动页左上装饰区，避开返回按钮与阶段横幅 */
 const REWARD_CATALOG_BTN_SIZE = 78;
 
 /**
@@ -107,7 +117,17 @@ export class EventBoardPanel extends PIXI.Container {
   /** placeStarterStone 同步 emit changed 期间，避免整页重绘打断飞行动画 */
   private _stonePlaceAnimating = false;
   private _codexPanelOpen = false;
+  private _codexRewardPanelOpen = false;
   private _codexScrollY = 0;
+  private _codexScrollListening = false;
+  private _codexScrollStartDesignY = 0;
+  private _codexScrollStartY = 0;
+  private _codexScrollMaxY = 0;
+  private _codexScroller: PIXI.Container | null = null;
+  private _codexScrollerViewportY = 0;
+  private _codexScrollViewport = { x: 0, y: 0, w: 0, h: 0 };
+  private _codexCloseHit = { x: 0, y: 0, r: 0 };
+  private _progressEchoAdRequesting = false;
 
   private _isOpen = false;
 
@@ -119,6 +139,7 @@ export class EventBoardPanel extends PIXI.Container {
     this._build();
     this._bindEvents();
     this._setupCanvasDrag();
+    this._setupCanvasRewardCodexScroll();
   }
 
   open(): void {
@@ -177,6 +198,7 @@ export class EventBoardPanel extends PIXI.Container {
     EventBus.on('eventBoard:discovered', (itemId: string) => {
       const name = ITEM_DEFS.get(itemId)?.name ?? '新首饰';
       ToastMessage.show(`解锁新首饰：${name}`);
+      if (this._isOpen) this._playCodexUnlockFly(itemId, name);
     });
     EventBus.on('eventBoard:stageCompleted', (stage: { name: string }) => {
       ToastMessage.show(`${stage.name}完成，获得钥匙`);
@@ -196,6 +218,7 @@ export class EventBoardPanel extends PIXI.Container {
       case 'stamina': return `体力+${r.amount}`;
       case 'diamond': return `钻石+${r.amount}`;
       case 'huayuan': return `花愿+${r.amount}`;
+      case 'flowerSignTickets': return `许愿硬币+${r.amount}`;
       case 'boxItem':
       case 'boxReward': {
         const name = ITEM_DEFS.get(r.itemId)?.name ?? '奖励';
@@ -250,6 +273,9 @@ export class EventBoardPanel extends PIXI.Container {
         key === 'event_jewelry_codex_reward_section_shell'
       ) {
         if (this._codexPanelOpen) this._drawRewardCodexPanel();
+      }
+      else if (key === 'event_jewelry_codex_reward_panel_shell') {
+        if (this._codexRewardPanelOpen) this._drawCodexRewardMilestonePanel();
       }
       // 珠宝匣 / 进度条首饰图标等 shell 贴图：异步加载后须重绘整页壳层
       else if (
@@ -642,15 +668,13 @@ export class EventBoardPanel extends PIXI.Container {
     // ---- 顶部返回栏（标题「花间珠匣」已在背景图金标题牌中，不再重复绘制） ----
     this._drawBackButton(56, top + HEADER_H / 2);
     this._drawRewardCatalogButton();
+    this._drawStageNumberLabel();
 
     // ---- 棋盘外框底板（格子由 _gridLayer 渲染）----
     this._drawBoardBackdrop();
 
     // ---- 阶段信息卡（木牌，上移到面板顶部色带；绘制在底板之上避免被压边）----
     this._drawStageCard(this._stageCardY);
-
-    // ---- 棋盘下方阶段序号 ----
-    this._drawStageNumberLabel();
 
     // ---- 底部操作区 ----
     this._drawActions();
@@ -683,7 +707,7 @@ export class EventBoardPanel extends PIXI.Container {
     root.addChild(arrow);
   }
 
-  /** 图鉴奖励入口：只放图标，具体红点 / 进度由后续奖励页逻辑叠绘 */
+  /** 珠宝图鉴入口：只放图标，具体红点 / 进度由后续奖励页逻辑叠绘 */
   private _drawRewardCatalogButton(): void {
     const size = REWARD_CATALOG_BTN_SIZE;
     const x = 108;
@@ -728,6 +752,51 @@ export class EventBoardPanel extends PIXI.Container {
     this._drawRewardCatalogProgress(root, size);
     if (EventBoardManager.hasClaimableDiscoveryReward) {
       this._drawRewardCatalogNotice(root, size - 2, 4);
+    }
+    this._drawCodexRewardMilestoneButton(x + size + 26, y);
+  }
+
+  private _drawCodexRewardMilestoneButton(x: number, y: number): void {
+    const size = REWARD_CATALOG_BTN_SIZE;
+    const root = new PIXI.Container();
+    root.position.set(x, y);
+    root.eventMode = 'static';
+    root.cursor = 'pointer';
+    root.hitArea = new PIXI.RoundedRectangle(-10, -8, size + 20, size + 20, 16);
+    root.on('pointerdown', e => {
+      e.stopPropagation();
+      this._showCodexRewardMilestonePanel();
+    });
+    this._shellLayer.addChild(root);
+
+    const shadow = new PIXI.Graphics();
+    shadow.beginFill(0x6b4c78, 0.22);
+    shadow.drawEllipse(size / 2, size - 3, size * 0.38, size * 0.11);
+    shadow.endFill();
+    root.addChild(shadow);
+
+    const tex = TextureCache.get('event_jewelry_codex_reward_icon');
+    if (tex && tex.width > 1) {
+      const icon = new PIXI.Sprite(tex);
+      icon.anchor.set(0.5);
+      const fit = size * 1.34;
+      icon.scale.set(Math.min(fit / tex.width, fit / tex.height));
+      icon.position.set(size / 2, size / 2);
+      root.addChild(icon);
+    } else {
+      const box = new PIXI.Graphics();
+      box.beginFill(0xd7a8f0, 1);
+      box.lineStyle(4, 0x8b5f42, 1);
+      box.drawRoundedRect(10, 18, size - 20, size - 24, 12);
+      box.endFill();
+      box.beginFill(0xffd36f, 1);
+      box.drawCircle(size / 2, size * 0.62, 12);
+      box.endFill();
+      root.addChild(box);
+    }
+
+    if (EventBoardManager.hasClaimableProgressEchoReward) {
+      this._drawRewardCatalogNotice(root, size - 4, 4);
     }
   }
 
@@ -783,12 +852,19 @@ export class EventBoardPanel extends PIXI.Container {
   }
 
   private _showRewardCodexPanel(): void {
+    this._hideCodexRewardMilestonePanel();
     this._codexPanelOpen = true;
     this._drawRewardCodexPanel();
   }
 
   private _hideRewardCodexPanel(): void {
+    this._finishRewardCodexScroll();
+    this._codexScroller = null;
+    this._codexScrollMaxY = 0;
+    this._codexScrollViewport = { x: 0, y: 0, w: 0, h: 0 };
+    this._codexCloseHit = { x: 0, y: 0, r: 0 };
     this._codexPanelOpen = false;
+    this._codexRewardPanelOpen = false;
     while (this._codexLayer.children.length > 0) {
       const child = this._codexLayer.children[0];
       this._codexLayer.removeChild(child);
@@ -796,7 +872,313 @@ export class EventBoardPanel extends PIXI.Container {
     }
   }
 
-  /** 图鉴奖励页空壳：背景壳只提供上下花纹和关闭按钮，中间内容后续由程序叠绘 */
+  private _showCodexRewardMilestonePanel(): void {
+    this._hideRewardCodexPanel();
+    this._codexRewardPanelOpen = true;
+    this._drawCodexRewardMilestonePanel();
+  }
+
+  private _hideCodexRewardMilestonePanel(): void {
+    if (!this._codexRewardPanelOpen && this._codexLayer.children.length === 0) return;
+    this._finishRewardCodexScroll();
+    this._codexScroller = null;
+    this._codexScrollMaxY = 0;
+    this._codexScrollViewport = { x: 0, y: 0, w: 0, h: 0 };
+    this._codexCloseHit = { x: 0, y: 0, r: 0 };
+    this._codexRewardPanelOpen = false;
+    while (this._codexLayer.children.length > 0) {
+      const child = this._codexLayer.children[0];
+      this._codexLayer.removeChild(child);
+      child.destroy({ children: true });
+    }
+  }
+
+  /** 进度回响页空壳：后续在中间空白区绘制一条条达标奖励。 */
+  private _drawCodexRewardMilestonePanel(): void {
+    this._codexRewardPanelOpen = true;
+    while (this._codexLayer.children.length > 0) {
+      const child = this._codexLayer.children[0];
+      this._codexLayer.removeChild(child);
+      child.destroy({ children: true });
+    }
+
+    const blocker = new PIXI.Graphics();
+    blocker.beginFill(0x000000, 0.34);
+    blocker.drawRect(0, 0, DESIGN_WIDTH, Game.logicHeight);
+    blocker.endFill();
+    blocker.eventMode = 'static';
+    blocker.on('pointerdown', e => {
+      e.stopPropagation();
+      this._hideCodexRewardMilestonePanel();
+    });
+    this._codexLayer.addChild(blocker);
+
+    const shellTex = TextureCache.get('event_jewelry_codex_reward_panel_shell');
+    if (shellTex && shellTex.width > 1) {
+      const shell = new PIXI.Sprite(shellTex);
+      const scale = Math.min((DESIGN_WIDTH * 0.94) / shellTex.width, (Game.logicHeight * 0.88) / shellTex.height);
+      shell.scale.set(scale);
+      shell.anchor.set(0.5);
+      shell.position.set(DESIGN_WIDTH / 2, Game.logicHeight / 2 + 18);
+      this._codexLayer.addChild(shell);
+
+      const shellW = shellTex.width * scale;
+      const shellH = shellTex.height * scale;
+      const shellHit = new PIXI.Container();
+      shellHit.eventMode = 'static';
+      shellHit.hitArea = new PIXI.Rectangle(shell.position.x - shellW / 2, shell.position.y - shellH / 2, shellW, shellH);
+      shellHit.on('pointerdown', e => e.stopPropagation());
+      this._codexLayer.addChild(shellHit);
+
+      const closeX = shell.position.x + shellW * 0.43;
+      const closeY = shell.position.y - shellH * 0.39;
+      this._codexCloseHit = { x: closeX, y: closeY, r: Math.max(56, shellW * 0.09) };
+      const closeHit = new PIXI.Container();
+      closeHit.position.set(closeX, closeY);
+      closeHit.eventMode = 'static';
+      closeHit.cursor = 'pointer';
+      closeHit.hitArea = new PIXI.Circle(0, 0, this._codexCloseHit.r);
+      closeHit.on('pointerdown', e => {
+        e.stopPropagation();
+        this._hideCodexRewardMilestonePanel();
+      });
+      this._codexLayer.addChild(closeHit);
+      this._drawProgressEchoMilestones(shell.position.x, shell.position.y, shellW, shellH);
+    } else {
+      const fallback = new PIXI.Graphics();
+      fallback.beginFill(0xfdf2de, 1);
+      fallback.lineStyle(4, 0x4db7bd, 1);
+      fallback.drawRoundedRect(58, Game.safeTop + 120, DESIGN_WIDTH - 116, Game.logicHeight - Game.safeTop - 220, 30);
+      fallback.endFill();
+      this._codexLayer.addChild(fallback);
+      this._codexCloseHit = { x: DESIGN_WIDTH - 58, y: Game.safeTop + 154, r: 58 };
+      this._drawProgressEchoMilestones(DESIGN_WIDTH / 2, Game.logicHeight / 2, DESIGN_WIDTH - 116, Game.logicHeight - Game.safeTop - 220);
+    }
+  }
+
+  private _drawProgressEchoMilestones(shellCx: number, shellCy: number, shellW: number, shellH: number): void {
+    const milestones = EventBoardManager.progressEchoMilestones;
+    const listW = shellW * 0.74;
+    const rowH = Math.min(92, shellH * 0.072);
+    const gap = Math.max(10, shellH * 0.012);
+    const x = shellCx - listW / 2;
+    const viewportW = shellW * 0.78;
+    const viewportH = shellH * 0.43;
+    const viewportX = shellCx - viewportW / 2;
+    const viewportY = shellCy - shellH * 0.2;
+    const contentH = milestones.length * rowH + Math.max(0, milestones.length - 1) * gap;
+    const maxScroll = Math.max(0, contentH - viewportH);
+    this._codexScrollY = Math.max(0, Math.min(maxScroll, this._codexScrollY));
+    this._codexScrollViewport = { x: viewportX, y: viewportY, w: viewportW, h: viewportH };
+    this._codexScrollMaxY = maxScroll;
+
+    const mask = new PIXI.Graphics();
+    mask.beginFill(0xffffff, 1);
+    mask.drawRoundedRect(viewportX, viewportY, viewportW, viewportH, 18);
+    mask.endFill();
+    this._codexLayer.addChild(mask);
+
+    const scroller = new PIXI.Container();
+    scroller.position.set(0, viewportY - this._codexScrollY);
+    scroller.mask = mask;
+    this._codexLayer.addChild(scroller);
+    this._codexScroller = scroller;
+    this._codexScrollerViewportY = viewportY;
+
+    for (let i = 0; i < milestones.length; i++) {
+      const milestone = milestones[i];
+      this._drawProgressEchoMilestoneRow(scroller, x, i * (rowH + gap), listW, rowH, milestone);
+    }
+  }
+
+  private _drawProgressEchoMilestoneRow(
+    target: PIXI.Container,
+    x: number,
+    y: number,
+    w: number,
+    h: number,
+    milestone: EventProgressEchoMilestoneDef,
+  ): void {
+    const completed = EventBoardManager.isProgressEchoCompleted(milestone);
+    const current = EventBoardManager.progressEchoCurrentValue(milestone);
+    const targetValue = EventBoardManager.progressEchoTargetValue(milestone);
+
+    const bg = new PIXI.Graphics();
+    bg.beginFill(completed ? 0xf7fff5 : 0xfffbf2, 0.96);
+    bg.lineStyle(2, completed ? 0x72c6a0 : 0xe5c6a4, 0.9);
+    bg.drawRoundedRect(x, y, w, h, 16);
+    bg.endFill();
+    target.addChild(bg);
+
+    const title = new PIXI.Text(milestone.title, {
+      fontSize: 21,
+      fill: completed ? 0x3a7b68 : 0x7b5b42,
+      fontFamily: FONT_FAMILY,
+      fontWeight: 'bold',
+      stroke: 0xffffff,
+      strokeThickness: 3,
+    });
+    title.anchor.set(0, 0.5);
+    title.position.set(x + 22, y + h * 0.34);
+    target.addChild(title);
+
+    const progress = new PIXI.Text(`${Math.min(current, targetValue)}/${targetValue}`, {
+      fontSize: 18,
+      fill: completed ? 0x3a9b72 : 0x9a7a60,
+      fontFamily: FONT_FAMILY,
+      fontWeight: 'bold',
+    });
+    progress.anchor.set(0, 0.5);
+    progress.position.set(x + 22, y + h * 0.68);
+    target.addChild(progress);
+
+    const rewardW = 118;
+    const gapX = 12;
+    const adX = x + w - rewardW - 14;
+    const primaryX = adX - rewardW - gapX;
+    this._drawProgressEchoRewardCell(target, primaryX, y + 10, rewardW, h - 20, milestone, 'primary');
+    this._drawProgressEchoRewardCell(target, adX, y + 10, rewardW, h - 20, milestone, 'ad');
+  }
+
+  private _drawProgressEchoRewardCell(
+    target: PIXI.Container,
+    x: number,
+    y: number,
+    w: number,
+    h: number,
+    milestone: EventProgressEchoMilestoneDef,
+    type: 'primary' | 'ad',
+  ): void {
+    const reward = type === 'primary' ? milestone.primaryReward : milestone.adReward;
+    const completed = EventBoardManager.isProgressEchoCompleted(milestone);
+    const claimed = type === 'primary'
+      ? EventBoardManager.isProgressEchoPrimaryClaimed(milestone.id)
+      : EventBoardManager.isProgressEchoAdClaimed(milestone.id);
+    const claimable = completed && !claimed;
+
+    const iconKey = this._rewardIconKey(reward);
+    const tex = TextureCache.get(iconKey);
+    if (tex && tex.width > 1) {
+      const icon = new PIXI.Sprite(tex);
+      icon.anchor.set(0.5);
+      icon.scale.set(Math.min(34 / tex.width, 34 / tex.height));
+      icon.position.set(x + w * 0.38, y + 19);
+      icon.alpha = completed || claimed ? 1 : 0.55;
+      target.addChild(icon);
+    }
+
+    const amount = new PIXI.Text(`x${this._rewardAmount(reward)}`, {
+      fontSize: 16,
+      fill: completed || claimed ? 0x6b4b35 : 0xa28b76,
+      fontFamily: FONT_FAMILY,
+      fontWeight: 'bold',
+      stroke: 0xffffff,
+      strokeThickness: 2,
+    });
+    amount.anchor.set(0, 0.5);
+    amount.position.set(x + w * 0.52, y + 20);
+    target.addChild(amount);
+
+    const btnH = 28;
+    const btnY = y + h - btnH;
+    const btn = new PIXI.Graphics();
+    const fill = claimed ? 0xa6d9a7 : claimable ? (type === 'ad' ? 0x6bbbd1 : 0xffcf75) : 0xd2c9bd;
+    btn.beginFill(fill, 1);
+    btn.lineStyle(2, 0xffffff, 0.95);
+    btn.drawRoundedRect(x + 4, btnY, w - 8, btnH, 10);
+    btn.endFill();
+    target.addChild(btn);
+
+    const btnText = claimed ? '已领取' : claimable ? (type === 'ad' ? '看广告领取' : '领取') : '未完成';
+    const label = new PIXI.Text(btnText, {
+      fontSize: type === 'ad' ? 13 : 15,
+      fill: claimed ? 0x2f7d42 : claimable ? 0x6b4b35 : 0x8d7f72,
+      fontFamily: FONT_FAMILY,
+      fontWeight: 'bold',
+    });
+    label.anchor.set(0.5);
+    label.position.set(x + w / 2, btnY + btnH / 2 + 1);
+    target.addChild(label);
+
+    if (claimed) {
+      this._drawRewardCodexClaimCheck(target, x + w - 6, y + 4, 24);
+      return;
+    }
+    if (!claimable) return;
+
+    const hit = new PIXI.Container();
+    hit.position.set(x, y);
+    hit.eventMode = 'static';
+    hit.cursor = 'pointer';
+    hit.hitArea = new PIXI.Rectangle(0, 0, w, h);
+    hit.on('pointerdown', e => {
+      e.stopPropagation();
+      if (type === 'primary') this._claimProgressEchoPrimary(milestone.id);
+      else this._claimProgressEchoAd(milestone.id);
+    });
+    target.addChild(hit);
+  }
+
+  private _claimProgressEchoPrimary(id: string): void {
+    if (!EventBoardManager.claimProgressEchoPrimaryReward(id)) return;
+    ToastMessage.show('奖励已领取');
+    this._drawCodexRewardMilestonePanel();
+  }
+
+  private _claimProgressEchoAd(id: string): void {
+    if (this._progressEchoAdRequesting) return;
+    this._progressEchoAdRequesting = true;
+    AdManager.showRewardedAd(AdScene.EVENT_PROGRESS_ECHO, (success, reason?: AdFailReason) => {
+      this._progressEchoAdRequesting = false;
+      if (!success) {
+        ToastMessage.show(this._progressEchoAdFailMessage(reason));
+        return;
+      }
+      if (!EventBoardManager.claimProgressEchoAdReward(id)) {
+        ToastMessage.show('该广告奖励暂不可领取');
+        this._drawCodexRewardMilestonePanel();
+        return;
+      }
+      ToastMessage.show('广告奖励已领取');
+      this._drawCodexRewardMilestonePanel();
+    });
+  }
+
+  private _progressEchoAdFailMessage(reason?: AdFailReason): string {
+    if (reason === 'skipped') return '广告未看完，未领取奖励';
+    if (reason === 'busy') return '广告正在播放中，请稍候';
+    return '广告暂不可用，请稍后再试';
+  }
+
+  private _rewardIconKey(reward: EventRewardDef): string {
+    switch (reward.kind) {
+      case 'stamina': return 'icon_energy';
+      case 'diamond': return 'icon_gem';
+      case 'huayuan': return 'icon_huayuan';
+      case 'flowerSignTickets': return 'icon_flower_sign_coin';
+      case 'boxItem':
+      case 'boxReward':
+        if (reward.itemId === LUCKY_COIN_ITEM_ID) return 'icon_coin';
+        if (reward.itemId === CRYSTAL_BALL_ITEM_ID) return 'icon_crystal_ball';
+        if (reward.itemId === GOLDEN_SCISSORS_ITEM_ID) return 'icon_golden_scissors';
+        return reward.itemId;
+    }
+  }
+
+  private _rewardAmount(reward: EventRewardDef): number {
+    switch (reward.kind) {
+      case 'stamina':
+      case 'diamond':
+      case 'huayuan':
+      case 'flowerSignTickets':
+        return reward.amount;
+      case 'boxItem':
+      case 'boxReward':
+        return reward.count;
+    }
+  }
+
+  /** 珠宝图鉴页空壳：背景壳只提供上下花纹和关闭按钮，中间内容后续由程序叠绘 */
   private _drawRewardCodexPanel(): void {
     this._hideRewardCodexPanel();
     this._codexPanelOpen = true;
@@ -806,7 +1188,10 @@ export class EventBoardPanel extends PIXI.Container {
     blocker.drawRect(0, 0, DESIGN_WIDTH, Game.logicHeight);
     blocker.endFill();
     blocker.eventMode = 'static';
-    blocker.on('pointerdown', e => e.stopPropagation());
+    blocker.on('pointerdown', e => {
+      e.stopPropagation();
+      this._hideRewardCodexPanel();
+    });
     this._codexLayer.addChild(blocker);
 
     const shellTex = TextureCache.get('event_jewelry_codex_panel_shell');
@@ -818,10 +1203,24 @@ export class EventBoardPanel extends PIXI.Container {
       shell.position.set(DESIGN_WIDTH / 2, Game.logicHeight / 2 + 20);
       this._codexLayer.addChild(shell);
 
+      const shellHit = new PIXI.Container();
+      shellHit.eventMode = 'static';
+      shellHit.hitArea = new PIXI.Rectangle(
+        shell.position.x - shellTex.width * scale / 2,
+        shell.position.y - shellTex.height * scale / 2,
+        shellTex.width * scale,
+        shellTex.height * scale,
+      );
+      shellHit.on('pointerdown', e => e.stopPropagation());
+      this._codexLayer.addChild(shellHit);
+
       this._drawRewardCodexSectionPreview(shell.position.x, shell.position.y, shellTex.width * scale, shellTex.height * scale);
 
-      const closeX = shell.position.x + shellTex.width * scale * 0.44;
-      const closeY = shell.position.y - shellTex.height * scale * 0.45;
+      const shellW = shellTex.width * scale;
+      const shellH = shellTex.height * scale;
+      const closeX = shell.position.x + shellW * 0.42;
+      const closeY = shell.position.y - shellH * 0.35;
+      this._codexCloseHit = { x: closeX, y: closeY, r: Math.max(54, shellW * 0.09) };
       this._drawRewardCodexCloseHit(closeX, closeY);
     } else {
       const fallback = new PIXI.Graphics();
@@ -846,22 +1245,29 @@ export class EventBoardPanel extends PIXI.Container {
       close.lineTo(-12, 12);
       close.position.set(DESIGN_WIDTH - 58, Game.safeTop + 154);
       this._codexLayer.addChild(close);
+      const fallbackHit = new PIXI.Container();
+      fallbackHit.eventMode = 'static';
+      fallbackHit.hitArea = new PIXI.Rectangle(44, Game.safeTop + 90, DESIGN_WIDTH - 88, Game.logicHeight - Game.safeTop - 150);
+      fallbackHit.on('pointerdown', e => e.stopPropagation());
+      this._codexLayer.addChild(fallbackHit);
+      this._codexCloseHit = { x: DESIGN_WIDTH - 58, y: Game.safeTop + 154, r: 58 };
       this._drawRewardCodexCloseHit(DESIGN_WIDTH - 58, Game.safeTop + 154);
     }
   }
 
   private _drawRewardCodexSectionPreview(shellCx: number, shellCy: number, shellW: number, shellH: number): void {
-    const targetW = shellW * 0.72;
-    const normalSectionH = targetW * 0.48;
+    const targetW = shellW * 0.66;
     const tallSectionH = targetW * 0.74;
     const gap = shellH * 0.025;
-    const viewportW = shellW * 0.78;
-    const viewportH = shellH * 0.58;
+    const viewportW = shellW * 0.72;
+    const viewportH = shellH * 0.43;
     const viewportX = shellCx - viewportW / 2;
-    const viewportY = shellCy - shellH * 0.27;
-    const contentH = tallSectionH + gap + normalSectionH;
+    const viewportY = shellCy - shellH * 0.21;
+    const contentH = tallSectionH * 2 + gap;
     const maxScroll = Math.max(0, contentH - viewportH);
     this._codexScrollY = Math.max(0, Math.min(maxScroll, this._codexScrollY));
+    this._codexScrollViewport = { x: viewportX, y: viewportY, w: viewportW, h: viewportH };
+    this._codexScrollMaxY = maxScroll;
 
     const mask = new PIXI.Graphics();
     mask.beginFill(0xffffff, 1);
@@ -873,13 +1279,8 @@ export class EventBoardPanel extends PIXI.Container {
     scroller.position.set(0, viewportY - this._codexScrollY);
     scroller.mask = mask;
     this._codexLayer.addChild(scroller);
-
-    const hit = new PIXI.Graphics();
-    hit.eventMode = 'static';
-    hit.cursor = maxScroll > 0 ? 'grab' : 'default';
-    hit.hitArea = new PIXI.Rectangle(viewportX, viewportY, viewportW, viewportH);
-    this._codexLayer.addChild(hit);
-    this._bindRewardCodexScroll(hit, scroller, viewportY, maxScroll);
+    this._codexScroller = scroller;
+    this._codexScrollerViewportY = viewportY;
 
     this._drawRewardCodexSection(scroller, {
       x: shellCx,
@@ -887,17 +1288,19 @@ export class EventBoardPanel extends PIXI.Container {
       w: targetW,
       h: tallSectionH,
       title: '首饰',
+      section: 'jewelry',
       rewardTextureKey: 'icon_energy',
       rewardCount: 500,
       itemIds: EVENT_CODEX_ITEM_IDS.slice(0, 13),
-      cols: 4,
+      cols: 5,
     });
     this._drawRewardCodexSection(scroller, {
       x: shellCx,
       y: tallSectionH + gap,
       w: targetW,
-      h: normalSectionH,
+      h: tallSectionH,
       title: '点翠',
+      section: 'dian_cui',
       rewardTextureKey: 'icon_crystal_ball',
       rewardCount: 2,
       itemIds: EVENT_CODEX_ITEM_IDS.slice(13),
@@ -905,38 +1308,54 @@ export class EventBoardPanel extends PIXI.Container {
     });
   }
 
-  private _bindRewardCodexScroll(
-    hit: PIXI.Graphics,
-    scroller: PIXI.Container,
-    viewportY: number,
-    maxScroll: number,
-  ): void {
-    if (maxScroll <= 0) return;
-    let dragging = false;
-    let lastY = 0;
-    hit.on('pointerdown', (e: PIXI.FederatedPointerEvent) => {
-      e.stopPropagation();
-      dragging = true;
-      lastY = e.global.y;
-      hit.cursor = 'grabbing';
-    });
-    hit.on('pointermove', (e: PIXI.FederatedPointerEvent) => {
-      if (!dragging) return;
-      e.stopPropagation();
-      const y = e.global.y;
-      const dy = y - lastY;
-      lastY = y;
-      this._codexScrollY = Math.max(0, Math.min(maxScroll, this._codexScrollY - dy));
-      scroller.position.y = viewportY - this._codexScrollY;
-    });
-    const endDrag = (e?: PIXI.FederatedPointerEvent): void => {
-      if (e) e.stopPropagation();
-      dragging = false;
-      hit.cursor = 'grab';
-    };
-    hit.on('pointerup', endDrag);
-    hit.on('pointerupoutside', endDrag);
-    hit.on('pointercancel', endDrag);
+  private _setupCanvasRewardCodexScroll(): void {
+    const canvas = Game.app.view as unknown as HTMLCanvasElement | undefined;
+    if (!canvas?.addEventListener) return;
+    canvas.addEventListener('pointerdown', this._onCanvasRewardCodexDown);
+    canvas.addEventListener('pointermove', this._onCanvasRewardCodexMove);
+    canvas.addEventListener('pointerup', this._onCanvasRewardCodexUp);
+    canvas.addEventListener('pointercancel', this._onCanvasRewardCodexUp);
+  }
+
+  private readonly _onCanvasRewardCodexDown = (ev: PointerEvent): void => {
+    if (!this._isOpen || (!this._codexPanelOpen && !this._codexRewardPanelOpen)) return;
+    const p = this._rawToDesign(ev);
+    const c = this._codexCloseHit;
+    if (c.r > 0 && Math.hypot(p.x - c.x, p.y - c.y) <= c.r) {
+      ev.preventDefault?.();
+      if (this._codexRewardPanelOpen) this._hideCodexRewardMilestonePanel();
+      else this._hideRewardCodexPanel();
+      return;
+    }
+    if (this._codexScrollMaxY <= 0 || !this._codexScroller) return;
+    const r = this._codexScrollViewport;
+    if (p.x < r.x || p.x > r.x + r.w || p.y < r.y || p.y > r.y + r.h) return;
+    this._codexScrollListening = true;
+    this._codexScrollStartDesignY = p.y;
+    this._codexScrollStartY = this._codexScrollY;
+    ev.preventDefault?.();
+  };
+
+  private readonly _onCanvasRewardCodexMove = (ev: PointerEvent): void => {
+    if (
+      !this._isOpen ||
+      (!this._codexPanelOpen && !this._codexRewardPanelOpen) ||
+      !this._codexScrollListening ||
+      !this._codexScroller
+    ) return;
+    const dy = this._rawToDesign(ev).y - this._codexScrollStartDesignY;
+    this._codexScrollY = Math.max(0, Math.min(this._codexScrollMaxY, this._codexScrollStartY - dy));
+    this._codexScroller.position.y = this._codexScrollerViewportY - this._codexScrollY;
+    ev.preventDefault?.();
+  };
+
+  private readonly _onCanvasRewardCodexUp = (_ev: PointerEvent): void => {
+    this._finishRewardCodexScroll();
+  };
+
+  private _finishRewardCodexScroll(): void {
+    if (!this._codexScrollListening) return;
+    this._codexScrollListening = false;
   }
 
   private _drawRewardCodexSection(target: PIXI.Container, args: {
@@ -945,6 +1364,7 @@ export class EventBoardPanel extends PIXI.Container {
     w: number;
     h: number;
     title: string;
+    section: 'jewelry' | 'dian_cui';
     rewardTextureKey: string;
     rewardCount: number;
     itemIds: readonly string[];
@@ -975,6 +1395,9 @@ export class EventBoardPanel extends PIXI.Container {
       headerH * 0.58,
       args.rewardTextureKey,
       args.rewardCount,
+      args.section,
+      w * 0.32,
+      headerH * 0.84,
     );
     this._drawRewardCodexItemGrid(
       target,
@@ -995,38 +1418,33 @@ export class EventBoardPanel extends PIXI.Container {
     h: number,
     headerH: number,
   ): void {
-    const r = 24;
+    const r = 22;
     const header = new PIXI.Graphics();
-    header.beginFill(0xf7b9cf, 1);
-    header.drawRoundedRect(x - 4, y - 4, w + 8, headerH + 8, r + 4);
-    header.endFill();
-    header.beginFill(0xd9b2f1, 1);
-    header.lineStyle(3, 0x8e6e54, 1);
+    header.beginFill(0xd9b2f1, 0.96);
+    header.lineStyle(2, 0xb87bc3, 0.9);
     header.drawRoundedRect(x, y, w, headerH, r);
     header.endFill();
     target.addChild(header);
 
     const titlePlate = new PIXI.Graphics();
-    titlePlate.beginFill(0xfff1d7, 1);
-    titlePlate.lineStyle(3, 0xbc8751, 1);
+    titlePlate.beginFill(0xfff1d7, 0.98);
     titlePlate.drawRoundedRect(x + w * 0.08, y + headerH * 0.18, w * 0.34, headerH * 0.64, 13);
     titlePlate.endFill();
     target.addChild(titlePlate);
 
     const rewardPlate = new PIXI.Graphics();
-    rewardPlate.beginFill(0xffe7ad, 1);
-    rewardPlate.lineStyle(3, 0xbc8751, 1);
-    rewardPlate.drawRoundedRect(x + w * 0.62, y - 2, w * 0.32, headerH + 4, 22);
+    rewardPlate.beginFill(0xffe7ad, 0.98);
+    rewardPlate.drawRoundedRect(x + w * 0.62, y + headerH * 0.08, w * 0.32, headerH * 0.84, 18);
     rewardPlate.endFill();
     target.addChild(rewardPlate);
 
     const body = new PIXI.Graphics();
-    body.beginFill(0xffefd9, 1);
-    body.lineStyle(4, 0xf09ca3, 1);
-    body.drawRoundedRect(x, y + headerH - 2, w, h - headerH + 2, 18);
+    body.beginFill(0xffefd9, 0.98);
+    body.lineStyle(2, 0xf0a9b3, 0.9);
+    body.drawRoundedRect(x, y + headerH + 6, w, h - headerH - 6, 18);
     body.endFill();
-    body.lineStyle(4, 0x8acfc1, 1);
-    body.drawRoundedRect(x + 10, y + headerH + 14, w - 20, h - headerH - 28, 12);
+    body.lineStyle(3, 0x8fd6ca, 0.9);
+    body.drawRoundedRect(x + 10, y + headerH + 18, w - 20, h - headerH - 36, 12);
     target.addChild(body);
 
     const pearl = new PIXI.Graphics();
@@ -1037,13 +1455,39 @@ export class EventBoardPanel extends PIXI.Container {
     target.addChild(pearl);
   }
 
-  private _drawRewardCodexSectionReward(target: PIXI.Container, cx: number, cy: number, iconFit: number, textureKey: string, count: number): void {
+  private _drawRewardCodexSectionReward(
+    target: PIXI.Container,
+    cx: number,
+    cy: number,
+    iconFit: number,
+    textureKey: string,
+    count: number,
+    section: 'jewelry' | 'dian_cui',
+    hitW: number,
+    hitH: number,
+  ): void {
+    const claimed = EventBoardManager.isCodexSectionRewardClaimed(section);
+    const claimable = EventBoardManager.isCodexSectionRewardClaimable(section);
+    const hit = new PIXI.Container();
+    hit.position.set(cx - hitW / 2, cy - hitH / 2);
+    hit.eventMode = claimable ? 'static' : 'none';
+    hit.cursor = claimable ? 'pointer' : 'default';
+    hit.hitArea = new PIXI.Rectangle(0, 0, hitW, hitH);
+    hit.on('pointerdown', e => {
+      e.stopPropagation();
+      if (!EventBoardManager.claimCodexSectionReward(section)) return;
+      ToastMessage.show(section === 'jewelry' ? '领取体力 +500' : '领取万能水晶 x2');
+      this._drawRewardCodexPanel();
+    });
+    target.addChild(hit);
+
     const tex = TextureCache.get(textureKey);
     if (tex && tex.width > 1) {
       const sp = new PIXI.Sprite(tex);
       sp.anchor.set(0.5);
       sp.scale.set(Math.min(iconFit / tex.width, iconFit / tex.height));
       sp.position.set(cx - iconFit * 0.34, cy);
+      sp.alpha = claimable || claimed ? 1 : 0.58;
       target.addChild(sp);
     }
 
@@ -1057,7 +1501,34 @@ export class EventBoardPanel extends PIXI.Container {
     });
     label.anchor.set(0, 0.5);
     label.position.set(cx + iconFit * 0.06, cy + 1);
+    label.alpha = claimable || claimed ? 1 : 0.58;
     target.addChild(label);
+
+    if (claimed) {
+      this._drawRewardCodexClaimCheck(target, cx + hitW * 0.3, cy + hitH * 0.18, Math.max(24, iconFit * 0.62));
+    }
+  }
+
+  private _drawRewardCodexClaimCheck(target: PIXI.Container, cx: number, cy: number, size: number): void {
+    const badgeTex = TextureCache.get('ui_order_check_badge');
+    if (badgeTex && badgeTex.width > 1) {
+      const badge = new PIXI.Sprite(badgeTex);
+      badge.anchor.set(0.5);
+      badge.scale.set(size / Math.max(badgeTex.width, badgeTex.height));
+      badge.position.set(cx, cy);
+      target.addChild(badge);
+      return;
+    }
+    const g = new PIXI.Graphics();
+    g.beginFill(0x4caf50, 1);
+    g.lineStyle(3, 0xffffff, 1);
+    g.drawCircle(cx, cy, size / 2);
+    g.endFill();
+    g.lineStyle(5, 0xffffff, 1);
+    g.moveTo(cx - size * 0.22, cy);
+    g.lineTo(cx - size * 0.06, cy + size * 0.16);
+    g.lineTo(cx + size * 0.24, cy - size * 0.18);
+    target.addChild(g);
   }
 
   private _drawRewardCodexItemGrid(
@@ -1071,7 +1542,7 @@ export class EventBoardPanel extends PIXI.Container {
   ): void {
     const rows = Math.ceil(itemIds.length / cols);
     const cell = Math.min(w / cols, h / rows);
-    const iconFit = cell * 0.58;
+    const iconFit = cell * 0.72;
     const gridW = cell * cols;
     const startX = x + (w - gridW) / 2;
 
@@ -1080,28 +1551,25 @@ export class EventBoardPanel extends PIXI.Container {
       const row = Math.floor(i / cols);
       const cx = startX + col * cell + cell / 2;
       const cy = y + row * cell + cell / 2;
+      const itemId = itemIds[i];
+      if (!EventBoardManager.isDiscovered(itemId)) continue;
 
       const tile = new PIXI.Graphics();
       tile.beginFill(0xffefd0, 0.72);
       tile.lineStyle(1.5, 0xe3bf80, 0.72);
-      tile.drawRoundedRect(cx - cell * 0.34, cy - cell * 0.34, cell * 0.68, cell * 0.68, 10);
+      tile.drawRoundedRect(cx - cell * 0.39, cy - cell * 0.39, cell * 0.78, cell * 0.78, 10);
       tile.endFill();
       tile.rotation = Math.PI / 4;
       tile.position.set(cx, cy);
       tile.pivot.set(cx, cy);
       target.addChild(tile);
 
-      const itemId = itemIds[i];
       const tex = TextureCache.get(itemId);
       if (tex && tex.width > 1) {
         const sp = new PIXI.Sprite(tex);
         sp.anchor.set(0.5);
         sp.scale.set(Math.min(iconFit / tex.width, iconFit / tex.height));
         sp.position.set(cx, cy);
-        if (!EventBoardManager.isDiscovered(itemId)) {
-          sp.tint = 0x2a211f;
-          sp.alpha = 0.34;
-        }
         target.addChild(sp);
       }
     }
@@ -1112,7 +1580,7 @@ export class EventBoardPanel extends PIXI.Container {
     closeHit.position.set(x, y);
     closeHit.eventMode = 'static';
     closeHit.cursor = 'pointer';
-    closeHit.hitArea = new PIXI.Circle(0, 0, 52);
+    closeHit.hitArea = new PIXI.Circle(0, 0, Math.max(52, this._codexCloseHit.r));
     closeHit.on('pointerdown', e => {
       e.stopPropagation();
       this._hideRewardCodexPanel();
@@ -1155,11 +1623,8 @@ export class EventBoardPanel extends PIXI.Container {
 
   private _drawProgressTrack(x: number, y: number, w: number): void {
     const track = new PIXI.Graphics();
-    track.beginFill(0x8a6fc0, 0.55);
-    track.drawRoundedRect(x, y + 7, w, 10, 5);
-    track.endFill();
-    track.beginFill(0xffffff, 0.35);
-    track.drawRoundedRect(x, y + 7, w, 4, 2);
+    track.beginFill(0xb7a1df, 0.72);
+    track.drawRoundedRect(x, y + 8, w, 8, 4);
     track.endFill();
     this._shellLayer.addChild(track);
 
@@ -1176,17 +1641,10 @@ export class EventBoardPanel extends PIXI.Container {
       const nx = x + (n <= 1 ? 0 : (w * i) / (n - 1));
       const unlocked = EventBoardManager.isDiscovered(itemId);
 
-      const halo = new PIXI.Graphics();
-      halo.lineStyle(2, unlocked ? 0xffc94d : 0x1c1712, unlocked ? 0.9 : 0.3);
-      halo.beginFill(unlocked ? 0xfff6da : 0x5a4a82, unlocked ? 0.5 : 0.28);
-      halo.drawCircle(nx, cy, 18);
-      halo.endFill();
-      this._shellLayer.addChild(halo);
-
       const tex = TextureCache.get(itemId);
       if (tex) {
         const sp = new PIXI.Sprite(tex);
-        const fit = unlocked ? 38 : 34;
+        const fit = unlocked ? 54 : 48;
         sp.anchor.set(0.5);
         sp.scale.set(Math.min(fit / tex.width, fit / tex.height));
         sp.position.set(nx, cy);
@@ -1209,7 +1667,24 @@ export class EventBoardPanel extends PIXI.Container {
     }
   }
 
-  /** 进度条钥匙角标：白色气泡牌 + 金钥匙贴图，叠在物品圆框上方 */
+  /** 顶部色带居中显示当前阶段，避免占用棋盘下方空间。 */
+  private _drawStageNumberLabel(): void {
+    const stageNo = EventBoardManager.stageIndex + 1;
+    const total = EventBoardManager.stageCount;
+    const label = new PIXI.Text(`阶段 ${stageNo}/${total}`, {
+      fontSize: 26,
+      fill: 0x7b5aa0,
+      fontFamily: FONT_FAMILY,
+      fontWeight: 'bold',
+      stroke: 0xffffff,
+      strokeThickness: 4,
+    });
+    label.anchor.set(0.5);
+    label.position.set(DESIGN_WIDTH / 2, this._stageCardY - 48);
+    this._shellLayer.addChild(label);
+  }
+
+  /** 进度条钥匙角标：白色气泡牌 + 金钥匙贴图，叠在物品节点上方 */
   private _drawProgressKeyBadge(cx: number, itemCy: number): void {
     const bubbleW = 56;
     const bubbleH = 48;
@@ -1278,30 +1753,6 @@ export class EventBoardPanel extends PIXI.Container {
     const rows = EventBoardManager.currentRows;
     const gridH = rows * CELL + (rows - 1) * GAP;
     return this._gridStartY + gridH + 16;
-  }
-
-  /** 棋盘与珠宝匣之间的阶段序号文案 Y */
-  private _computeStageLabelY(): number {
-    const boardBottom = this._computeBoardBottomY();
-    const dispenserTop = this._computeDispenserY() - DISPENSER_H / 2;
-    return Math.round((boardBottom + dispenserTop) / 2);
-  }
-
-  /** 棋盘下方居中显示「阶段 x/4」 */
-  private _drawStageNumberLabel(): void {
-    const stageNo = EventBoardManager.stageIndex + 1;
-    const total = EventBoardManager.stageCount;
-    const label = new PIXI.Text(`阶段 ${stageNo}/${total}`, {
-      fontSize: 28,
-      fill: 0x7b5aa0,
-      fontFamily: FONT_FAMILY,
-      fontWeight: 'bold',
-      stroke: 0xffffff,
-      strokeThickness: 4,
-    });
-    label.anchor.set(0.5);
-    label.position.set(DESIGN_WIDTH / 2, this._computeStageLabelY());
-    this._shellLayer.addChild(label);
   }
 
   private _drawActions(): void {
@@ -1620,6 +2071,160 @@ export class EventBoardPanel extends PIXI.Container {
           this._playStoneLandPop(tx, ty, p.cellIndex);
         },
       });
+    });
+  }
+
+  /** 首次解锁图鉴：弹出新物品卡片，然后图标飞入左上图鉴入口。 */
+  private _playCodexUnlockFly(itemId: string, itemName: string): void {
+    const tex = TextureCache.get(itemId);
+    if (!tex || tex.width <= 1) return;
+
+    const target = this._rewardCatalogButtonCenter();
+    const root = new PIXI.Container();
+    root.position.set(DESIGN_WIDTH / 2, Math.max(Game.safeTop + 260, this._gridStartY + 140));
+    root.scale.set(0.72);
+    root.alpha = 0;
+    this._ghostLayer.addChild(root);
+
+    const cardW = 360;
+    const cardH = 170;
+    const shadow = new PIXI.Graphics();
+    shadow.beginFill(0x4b2f55, 0.2);
+    shadow.drawRoundedRect(-cardW / 2 + 6, -cardH / 2 + 9, cardW, cardH, 28);
+    shadow.endFill();
+    root.addChild(shadow);
+
+    const card = new PIXI.Graphics();
+    card.beginFill(0xfff3df, 0.98);
+    card.lineStyle(4, 0xd7a7e8, 1);
+    card.drawRoundedRect(-cardW / 2, -cardH / 2, cardW, cardH, 28);
+    card.endFill();
+    card.beginFill(0xffdbe8, 0.9);
+    card.drawRoundedRect(-cardW / 2 + 12, -cardH / 2 + 12, cardW - 24, 46, 20);
+    card.endFill();
+    root.addChild(card);
+
+    const title = new PIXI.Text('解锁新图鉴', {
+      fontSize: 28,
+      fill: 0x7b4f5f,
+      fontFamily: FONT_FAMILY,
+      fontWeight: 'bold',
+      stroke: 0xffffff,
+      strokeThickness: 4,
+    });
+    title.anchor.set(0.5);
+    title.position.set(0, -cardH / 2 + 35);
+    root.addChild(title);
+
+    const icon = new PIXI.Sprite(tex);
+    icon.anchor.set(0.5);
+    icon.scale.set(Math.min(82 / tex.width, 82 / tex.height));
+    icon.position.set(-94, 28);
+    root.addChild(icon);
+
+    const name = new PIXI.Text(itemName, {
+      fontSize: 24,
+      fill: 0x5f4438,
+      fontFamily: FONT_FAMILY,
+      fontWeight: 'bold',
+      stroke: 0xffffff,
+      strokeThickness: 3,
+      wordWrap: true,
+      wordWrapWidth: 190,
+    });
+    name.anchor.set(0, 0.5);
+    name.position.set(-38, 28);
+    root.addChild(name);
+
+    TweenManager.to({
+      target: root,
+      props: { alpha: 1 },
+      duration: 0.16,
+      ease: Ease.easeOutQuad,
+    });
+    TweenManager.to({
+      target: root.scale,
+      props: { x: 1, y: 1 },
+      duration: 0.22,
+      ease: Ease.easeOutBack,
+      onComplete: () => {
+        const hold = { v: 0 };
+        TweenManager.to({
+          target: hold,
+          props: { v: 1 },
+          duration: 0.01,
+          delay: 0.55,
+          onComplete: () => {
+            const startGlobal = root.toGlobal(icon.position);
+            if (root.parent) root.parent.removeChild(root);
+            root.destroy({ children: true });
+            this._playCodexIconFly(tex, startGlobal.x / Game.scale, startGlobal.y / Game.scale, target.x, target.y);
+          },
+        });
+      },
+    });
+  }
+
+  private _rewardCatalogButtonCenter(): { x: number; y: number } {
+    const size = REWARD_CATALOG_BTN_SIZE;
+    const x = 108;
+    const y = Math.max(Game.safeTop + HEADER_H + 112, this._stageCardY - size - 18);
+    return { x: x + size / 2, y: y + size / 2 };
+  }
+
+  private _playCodexIconFly(tex: PIXI.Texture, sx: number, sy: number, tx: number, ty: number): void {
+    if (!this._isOpen) return;
+    const icon = new PIXI.Sprite(tex);
+    icon.anchor.set(0.5);
+    icon.position.set(sx, sy);
+    icon.scale.set(Math.min(80 / tex.width, 80 / tex.height));
+    this._ghostLayer.addChild(icon);
+
+    const midY = Math.min(sy, ty) - 90;
+    const anim = { t: 0 };
+    TweenManager.to({
+      target: anim,
+      props: { t: 1 },
+      duration: 0.52,
+      ease: Ease.easeInOutQuad,
+      onUpdate: () => {
+        const t = anim.t;
+        const omt = 1 - t;
+        icon.position.set(
+          omt * omt * sx + 2 * omt * t * ((sx + tx) / 2) + t * t * tx,
+          omt * omt * sy + 2 * omt * t * midY + t * t * ty,
+        );
+        const s = (1 - t) * Math.min(80 / tex.width, 80 / tex.height) + t * Math.min(34 / tex.width, 34 / tex.height);
+        icon.scale.set(s);
+        icon.alpha = 1 - Math.max(0, t - 0.82) / 0.18;
+      },
+      onComplete: () => {
+        if (icon.parent) icon.parent.removeChild(icon);
+        icon.destroy();
+        this._playRewardCatalogButtonPulse();
+      },
+    });
+  }
+
+  private _playRewardCatalogButtonPulse(): void {
+    // 图鉴入口在 shell 重绘时会重建，这里用轻量光圈提示飞入终点。
+    const p = this._rewardCatalogButtonCenter();
+    const ring = new PIXI.Graphics();
+    ring.lineStyle(5, 0xffe082, 0.95);
+    ring.drawCircle(p.x, p.y, 28);
+    ring.alpha = 1;
+    ring.scale.set(0.6);
+    this._ghostLayer.addChild(ring);
+    TweenManager.to({ target: ring, props: { alpha: 0 }, duration: 0.36, ease: Ease.easeOutQuad });
+    TweenManager.to({
+      target: ring.scale,
+      props: { x: 1.8, y: 1.8 },
+      duration: 0.36,
+      ease: Ease.easeOutQuad,
+      onComplete: () => {
+        if (ring.parent) ring.parent.removeChild(ring);
+        ring.destroy();
+      },
     });
   }
 

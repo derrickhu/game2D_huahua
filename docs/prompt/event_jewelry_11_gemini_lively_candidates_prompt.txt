@@ -1,0 +1,22 @@
+Create a square 1:1 image containing exactly four separate jewelry item icon candidates in one horizontal row on a pure white background.
+
+This is for redesigning level 11 of a 2D mobile merge-game jewelry progression. Make the icons more lively, graceful, and imaginative than a rigid symmetrical necklace template, while still readable as premium jewelry at 128 px.
+
+Use a polished 2D mobile game item icon style: glossy gemstones, layered color gradients, soft volume, warm clean outlines, bright highlight arcs, refined metal shine, and a cute but high-end game asset feeling. Avoid photorealism, flat simple drawing, thick black outlines, sticker-like contour lines, excessive tiny beads, messy dangling fragments, text, labels, numbers, captions, or watermark.
+
+Important design goal:
+Level 11 should feel clearly richer than a simple necklace, but not as dense as the level 12 full ruby collar and not as complex as the final level 13 royal necklace. Let the silhouettes feel more organic and playful: flowing arcs, slight asymmetry, bird-wing curves, fan shapes, peacock-tail rhythm, flower-petal gemstone layouts, or crescent motion. Do not make all four candidates identical collar templates.
+
+Candidate 1:
+Emerald and champagne-gold flowing crescent necklace. A graceful S-curve or wing-like collar with several large emerald cabochons, small diamond sparks, and polished gold curls. Bold central gem, lively silhouette, not a rigid circle.
+
+Candidate 2:
+Sapphire and white platinum high-jewelry collar. Deep blue sapphire gems with white gold / platinum metal, diamond-white highlights, cool moonlit luxury. Shape can be a fan-wing or flowing crescent, elegant and more dynamic than a standard necklace.
+
+Candidate 3:
+Amethyst and rose-gold floral arc necklace. Violet amethyst stones arranged like a soft flower-petal fan or butterfly-wing collar, warm rose-gold frame, one larger center stone, refined but readable.
+
+Candidate 4:
+Ruby and pale-gold dancing floral choker. Red ruby cabochons in a graceful asymmetrical floral collar or small bib necklace, gold flower curls, compact silhouette, less dense than level 12, more playful than a rigid ring.
+
+Make each candidate a single complete object, centered in its own white space, with no overlap between candidates. The four icons should feel like siblings in the same jewelry series, but each should have a distinct silhouette and gemstone mood.

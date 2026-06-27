@@ -6,6 +6,7 @@ import {
   ITEM_DEFS,
   getMergeResultId,
   isEventProducerItem,
+  CRYSTAL_BALL_ITEM_ID,
 } from '@/config/ItemConfig';
 import {
   EVENT_BOARD_COLS,
@@ -14,6 +15,7 @@ import {
   getStageRows,
   getStageTotal,
   EVENT_DISCOVERY_REWARDS,
+  EVENT_PROGRESS_ECHO_MILESTONES,
   EVENT_MERGE_BYPRODUCT_BASE_CHANCE,
   EVENT_MERGE_BYPRODUCT_MAX_CHANCE,
   EVENT_MERGE_BYPRODUCT_PER_LEVEL,
@@ -32,9 +34,11 @@ import {
   JEWELRY_ITEM_PREFIX,
   isJewelryEventUnlocked,
   type EventDropEntry,
+  type EventProgressEchoMilestoneDef,
   type EventRewardDef,
 } from '@/config/EventBoardConfig';
 import { CurrencyManager } from './CurrencyManager';
+import { FlowerSignTicketManager } from './FlowerSignTicketManager';
 import { LevelManager } from './LevelManager';
 import { RewardBoxManager } from './RewardBoxManager';
 import { isChestItem, rollChestBoardDrops } from './BuildingManager';
@@ -68,6 +72,10 @@ export interface EventBoardPersistState {
   /** @deprecated 旧版字段：每日原石包数量。 */
   dailyStarterBoxes: number;
   dailyDropCounts: Record<string, number>;
+  claimedCodexRewardIds?: string[];
+  progressEchoMergeCount?: number;
+  claimedProgressEchoPrimaryIds?: string[];
+  claimedProgressEchoAdIds?: string[];
 }
 
 export interface EventMergeDropPlacement {
@@ -117,6 +125,10 @@ function emptyPersistState(): EventBoardPersistState {
     dailyStarterStones: 0,
     dailyStarterBoxes: 0,
     dailyDropCounts: {},
+    claimedCodexRewardIds: [],
+    progressEchoMergeCount: 0,
+    claimedProgressEchoPrimaryIds: [],
+    claimedProgressEchoAdIds: [],
   };
 }
 
@@ -128,6 +140,10 @@ class EventBoardManagerClass {
   private _discoveredItemIds: Set<string> = new Set();
   private _claimedDiscoveryRewardItemIds: Set<string> = new Set();
   private _completedStageIds: Set<string> = new Set();
+  private _claimedCodexRewardIds: Set<string> = new Set();
+  private _progressEchoMergeCount = 0;
+  private _claimedProgressEchoPrimaryIds: Set<string> = new Set();
+  private _claimedProgressEchoAdIds: Set<string> = new Set();
   private _dailyKey = localDateKey();
   private _dailyOrderDeliveries = 0;
   private _dailyStarterStones = 0;
@@ -177,14 +193,61 @@ class EventBoardManagerClass {
   }
   isDiscovered(itemId: string): boolean { return this._discoveredItemIds.has(itemId); }
   get hasClaimableDiscoveryReward(): boolean {
-    return EVENT_DISCOVERY_REWARDS.some(
-      r => this._discoveredItemIds.has(r.itemId) && !this._claimedDiscoveryRewardItemIds.has(r.itemId),
+    return (
+      this.isCodexSectionRewardClaimable('jewelry') ||
+      this.isCodexSectionRewardClaimable('dian_cui')
     );
+  }
+  isCodexSectionRewardClaimed(section: 'jewelry' | 'dian_cui'): boolean {
+    return this._claimedCodexRewardIds.has(section);
+  }
+  isCodexSectionRewardClaimable(section: 'jewelry' | 'dian_cui'): boolean {
+    if (this.isCodexSectionRewardClaimed(section)) return false;
+    const ids = section === 'jewelry' ? EVENT_CODEX_ITEM_IDS.slice(0, 13) : EVENT_CODEX_ITEM_IDS.slice(13);
+    return ids.length > 0 && ids.every(id => this._discoveredItemIds.has(id));
+  }
+  get progressEchoMergeCount(): number { return this._progressEchoMergeCount; }
+  get progressEchoMilestones(): readonly EventProgressEchoMilestoneDef[] {
+    return EVENT_PROGRESS_ECHO_MILESTONES;
+  }
+  progressEchoCurrentValue(milestone: EventProgressEchoMilestoneDef): number {
+    switch (milestone.objective.kind) {
+      case 'codex_discovered':
+        return this.codexDiscoveredCount;
+      case 'merge_count':
+        return this._progressEchoMergeCount;
+      case 'item_discovered':
+        return this.isDiscovered(milestone.objective.itemId) ? 1 : 0;
+    }
+  }
+  progressEchoTargetValue(milestone: EventProgressEchoMilestoneDef): number {
+    return milestone.objective.kind === 'item_discovered' ? 1 : milestone.objective.target;
+  }
+  isProgressEchoCompleted(milestone: EventProgressEchoMilestoneDef): boolean {
+    return this.progressEchoCurrentValue(milestone) >= this.progressEchoTargetValue(milestone);
+  }
+  isProgressEchoPrimaryClaimed(id: string): boolean {
+    return this._claimedProgressEchoPrimaryIds.has(id);
+  }
+  isProgressEchoAdClaimed(id: string): boolean {
+    return this._claimedProgressEchoAdIds.has(id);
+  }
+  isProgressEchoPrimaryClaimable(milestone: EventProgressEchoMilestoneDef): boolean {
+    return this.isProgressEchoCompleted(milestone) && !this.isProgressEchoPrimaryClaimed(milestone.id);
+  }
+  isProgressEchoAdClaimable(milestone: EventProgressEchoMilestoneDef): boolean {
+    return this.isProgressEchoCompleted(milestone) && !this.isProgressEchoAdClaimed(milestone.id);
+  }
+  get hasClaimableProgressEchoReward(): boolean {
+    return this.progressEchoMilestones.some(m => (
+      this.isProgressEchoPrimaryClaimable(m) || this.isProgressEchoAdClaimable(m)
+    ));
   }
   get hasClaimable(): boolean {
     if (!this.isUnlocked) return false;
     return (
       this.hasClaimableDiscoveryReward ||
+      this.hasClaimableProgressEchoReward ||
       this._pendingStarterStones > 0 ||
       (this._keys > 0 && this._stageIndex < EVENT_BOARD_STAGES.length - 1)
     );
@@ -205,6 +268,10 @@ class EventBoardManagerClass {
       dailyStarterStones: this._dailyStarterStones,
       dailyStarterBoxes: 0,
       dailyDropCounts: { ...this._dailyDropCounts },
+      claimedCodexRewardIds: Array.from(this._claimedCodexRewardIds),
+      progressEchoMergeCount: this._progressEchoMergeCount,
+      claimedProgressEchoPrimaryIds: Array.from(this._claimedProgressEchoPrimaryIds),
+      claimedProgressEchoAdIds: Array.from(this._claimedProgressEchoAdIds),
     };
   }
 
@@ -228,6 +295,17 @@ class EventBoardManagerClass {
       Math.floor(state.dailyStarterStones ?? state.dailyStarterBoxes ?? 0),
     );
     this._dailyDropCounts = { ...(state.dailyDropCounts ?? {}) };
+    this._progressEchoMergeCount = Math.max(0, Math.floor(state.progressEchoMergeCount ?? 0));
+    this._claimedCodexRewardIds = new Set(
+      (state.claimedCodexRewardIds ?? []).filter(id => id === 'jewelry' || id === 'dian_cui'),
+    );
+    const milestoneIds = new Set(EVENT_PROGRESS_ECHO_MILESTONES.map(m => m.id));
+    this._claimedProgressEchoPrimaryIds = new Set(
+      (state.claimedProgressEchoPrimaryIds ?? []).filter(id => milestoneIds.has(id)),
+    );
+    this._claimedProgressEchoAdIds = new Set(
+      (state.claimedProgressEchoAdIds ?? []).filter(id => milestoneIds.has(id)),
+    );
 
     const cells = Array.isArray(state.cells) ? state.cells : [];
     const stageDef = EVENT_BOARD_STAGES[this._stageIndex] ?? EVENT_BOARD_STAGES[0];
@@ -521,6 +599,7 @@ class EventBoardManagerClass {
         EventBus.emit('eventBoard:unlocked', dstIndex);
       }
       this._markDiscovered(resultId, true);
+      this._progressEchoMergeCount++;
       this._tryCompleteStage(resultId);
       this._tryGrantMergeDrop(resultId, srcIndex);
       EventBus.emit('eventBoard:merged', resultId, dstIndex);
@@ -586,6 +665,38 @@ class EventBoardManagerClass {
     EventBus.emit('eventBoard:rewardGranted', [{ kind: type, amount }]);
     EventBus.emit('eventBoard:changed');
     return { collected: true, type, amount };
+  }
+
+  claimCodexSectionReward(section: 'jewelry' | 'dian_cui'): boolean {
+    if (!this.isCodexSectionRewardClaimable(section)) return false;
+    this._claimedCodexRewardIds.add(section);
+    if (section === 'jewelry') {
+      CurrencyManager.addStamina(500);
+      EventBus.emit('eventBoard:rewardGranted', [{ kind: 'stamina', amount: 500 }]);
+    } else {
+      RewardBoxManager.addItem(CRYSTAL_BALL_ITEM_ID, 2);
+      EventBus.emit('eventBoard:rewardGranted', [{ kind: 'boxReward', itemId: CRYSTAL_BALL_ITEM_ID, count: 2 }]);
+    }
+    EventBus.emit('eventBoard:changed');
+    return true;
+  }
+
+  claimProgressEchoPrimaryReward(id: string): boolean {
+    const milestone = EVENT_PROGRESS_ECHO_MILESTONES.find(m => m.id === id);
+    if (!milestone || !this.isProgressEchoPrimaryClaimable(milestone)) return false;
+    this._claimedProgressEchoPrimaryIds.add(id);
+    this._grantRewards([milestone.primaryReward]);
+    EventBus.emit('eventBoard:changed');
+    return true;
+  }
+
+  claimProgressEchoAdReward(id: string): boolean {
+    const milestone = EVENT_PROGRESS_ECHO_MILESTONES.find(m => m.id === id);
+    if (!milestone || !this.isProgressEchoAdClaimable(milestone)) return false;
+    this._claimedProgressEchoAdIds.add(id);
+    this._grantRewards([milestone.adReward]);
+    EventBus.emit('eventBoard:changed');
+    return true;
   }
 
   /** 该格是否是可开启的容器（宝箱/红包/钻石袋/体力箱） */
@@ -761,7 +872,7 @@ class EventBoardManagerClass {
     if (this._discoveredItemIds.has(itemId)) return;
     this._discoveredItemIds.add(itemId);
     EventBus.emit('eventBoard:discovered', itemId);
-    // 图鉴奖励进入待领取状态，由图鉴奖励页统一领取；GM 放置时仍只记录发现，不发奖。
+    // 图鉴分组奖励进入待领取状态，由珠宝图鉴页统一领取；GM 放置时仍只记录发现，不发奖。
     if (!grantReward || !EVENT_DISCOVERY_REWARDS.some(r => r.itemId === itemId)) {
       this._claimedDiscoveryRewardItemIds.add(itemId);
     }
@@ -837,6 +948,9 @@ class EventBoardManagerClass {
           break;
         case 'huayuan':
           CurrencyManager.addHuayuan(reward.amount);
+          break;
+        case 'flowerSignTickets':
+          FlowerSignTicketManager.add(reward.amount);
           break;
         case 'boxItem':
           for (let i = 0; i < reward.count; i++) {

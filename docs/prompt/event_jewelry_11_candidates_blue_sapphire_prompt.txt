@@ -1,0 +1,24 @@
+Create one clean horizontal concept sheet for a cozy 2D merge-game jewelry item icon.
+
+Canvas and layout:
+Four separate candidate icons in a single row, evenly spaced on a pure white background. Each candidate is centered, large, and isolated with generous white gutters. NO TEXT, no labels, no captions, no numbers, no watermark.
+
+Purpose:
+Redesign only the level 11 jewelry icon. It should feel richer and more valuable than the current simple emerald necklace, but still clearly less elaborate than the level 12 red ruby collar and level 13 red-green royal necklace. The icon must read well at 128 px on a merge board: bold silhouette, not tiny fragments, not too many dangling details.
+
+Shared art style:
+Polished 2D mobile game item icon, cute but premium. Use soft glossy gemstone volume, layered color gradients, clean warm outlines, bright highlight arcs, and subtle metal shine. Avoid thick black outlines, flat simple drawing, sticker-like outlines, photoreal jewelry photos, excessive tiny beads, or clutter. Show refinement through gemstone facets, cabochon glow, metal highlights, and elegant symmetry.
+
+Candidate 1:
+Emerald and champagne-gold crescent collar necklace. A stronger upgrade of the current level 11: rounded crescent collar, several larger emerald cabochons, tiny diamond accents only as highlights, polished gold frame, bold readable shape.
+
+Candidate 2:
+Blue sapphire and white platinum collar necklace. Main gemstone color is deep sapphire blue, paired with white gold / platinum metal and small diamond-white highlights. Elegant cool-toned luxury, not green-dominant, not rainbow.
+
+Candidate 3:
+Amethyst and rose-gold fan collar. A scalloped fan-shaped choker with violet amethyst oval gems, warm rose-gold frame, a central larger stone, compact silhouette, refined and high-end.
+
+Candidate 4:
+Ruby and pale-gold floral collar choker. Red ruby cabochons arranged in a graceful collar with a few gold floral curls, but simpler than level 13 and less dense than level 12. Premium, readable, not messy.
+
+All four candidates should be similar in category and level: high-jewelry collar / necklace icons for level 11. They should differ mainly by gemstone color, metal color, and silhouette details.

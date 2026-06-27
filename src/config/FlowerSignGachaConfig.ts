@@ -46,7 +46,7 @@ export type FlowerSignPoolEntry =
     };
 
 /** 大类占比（相对 FLOWER_SIGN_WEIGHT_SCALE）；许愿硬币不进奖池 */
-const BUCKET_PREMIUM = 9_000; // 9% 金剪刀+万能水晶+幸运金币
+const BUCKET_PREMIUM = 9_000; // 9% 高级道具；金剪刀/万能水晶更稀有，主要权重给幸运金币
 const BUCKET_TOOLS = 12_000; // 12% 1 级生产工具（种子工具）
 /** 20%：普通宝箱 + 体力宝箱 + 钻石袋 + 红包（同一大类内按等级衰减分权） */
 const BUCKET_CHEST_GROUP = 20_000;
@@ -60,6 +60,11 @@ const BUCKET_MAIN =
   BUCKET_DIRECT;
 
 const PREMIUM_IDS = [GOLDEN_SCISSORS_ITEM_ID, CRYSTAL_BALL_ITEM_ID, LUCKY_COIN_ITEM_ID] as const;
+const PREMIUM_RELATIVE_WEIGHTS: Readonly<Record<(typeof PREMIUM_IDS)[number], number>> = {
+  [GOLDEN_SCISSORS_ITEM_ID]: 1,
+  [CRYSTAL_BALL_ITEM_ID]: 1,
+  [LUCKY_COIN_ITEM_ID]: 4,
+};
 /** 旧 id 若仍出现在配置中则排除；许愿硬币不进奖池 */
 const EXCLUDED_FROM_GACHA_IDS = new Set<string>([LEGACY_FLOWER_SIGN_COIN_ITEM_ID]);
 /** 许愿池只补 1 级种子工具；高阶会直接抬产能，不能从抽奖获得。果切线走升级/礼包发放。 */
@@ -102,6 +107,24 @@ function distributeEqualIds(ids: string[], totalWeight: number): FlowerSignPoolE
     if (rem > 0) rem -= 1;
     return { kind: 'reward_box_item' as const, itemId, weight: Math.max(1, base + extra), count: 1 };
   });
+}
+
+function distributeWeightedIds(ids: string[], totalWeight: number): FlowerSignPoolEntry[] {
+  if (ids.length === 0 || totalWeight <= 0) return [];
+  const weights = ids.map((itemId) => Math.max(0, PREMIUM_RELATIVE_WEIGHTS[itemId as (typeof PREMIUM_IDS)[number]] ?? 1));
+  const sumWeight = weights.reduce((a, b) => a + b, 0);
+  if (sumWeight <= 0) return distributeEqualIds(ids, totalWeight);
+  const out: FlowerSignPoolEntry[] = [];
+  let allocated = 0;
+  for (let i = 0; i < ids.length; i++) {
+    const last = i === ids.length - 1;
+    const weight = last
+      ? Math.max(1, totalWeight - allocated)
+      : Math.max(1, Math.floor((totalWeight * weights[i]!) / sumWeight));
+    out.push({ kind: 'reward_box_item', itemId: ids[i]!, weight, count: 1 });
+    allocated += weight;
+  }
+  return out;
 }
 
 function isGachaEligibleProducerTool(def: ItemDef): boolean {
@@ -202,7 +225,7 @@ function buildFlowerSignGachaPool(): FlowerSignPoolEntry[] {
   pool.push(...distributeRewardBoxItems(tools, BUCKET_TOOLS));
 
   const premiumIds = PREMIUM_IDS.filter((id) => ITEM_DEFS.has(id));
-  pool.push(...distributeEqualIds([...premiumIds], BUCKET_PREMIUM));
+  pool.push(...distributeWeightedIds([...premiumIds], BUCKET_PREMIUM));
 
   pool.push(...buildDirectEntries(BUCKET_DIRECT));
 
@@ -213,7 +236,7 @@ function buildFlowerSignGachaPool(): FlowerSignPoolEntry[] {
  * 全物品加权随机（仅 `ITEM_DEFS` 内有效 id）。
  * - 约 44%：鲜花/饮品/棋盘货币块（不含许愿硬币）等，等级越高权重越低。
  * - 15%：直加体力 + 直加钻石（多档 amount）。
- * - 20%：宝箱+体力箱+钻石袋+红包；12%：1 级生产工具（不含果切，桶内按线 maxLevel 衰减）；9%：金剪刀+万能水晶+幸运金币。
+ * - 20%：宝箱+体力箱+钻石袋+红包；12%：1 级生产工具（不含果切，桶内按线 maxLevel 衰减）；9%：高级道具，其中幸运金币高于金剪刀/万能水晶。
  * - 许愿硬币不参与抽奖。
  */
 export const FLOWER_SIGN_GACHA_POOL: FlowerSignPoolEntry[] = buildFlowerSignGachaPool();

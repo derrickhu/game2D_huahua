@@ -1,4 +1,9 @@
-import { EVENT_JEWELRY_STARTER_BOX_ID } from './ItemConfig';
+import {
+  CRYSTAL_BALL_ITEM_ID,
+  EVENT_JEWELRY_STARTER_BOX_ID,
+  GOLDEN_SCISSORS_ITEM_ID,
+  LUCKY_COIN_ITEM_ID,
+} from './ItemConfig';
 
 export const JEWELRY_EVENT_ID = 'jewelry_box_event';
 export const JEWELRY_EVENT_NAME = '花间珠匣';
@@ -77,10 +82,104 @@ export type EventRewardDef =
   | { kind: 'stamina'; amount: number }
   | { kind: 'diamond'; amount: number }
   | { kind: 'huayuan'; amount: number }
+  | { kind: 'flowerSignTickets'; amount: number }
   /** 货币拾取块等：优先落到活动棋盘空格，满了进收纳盒 */
   | { kind: 'boxItem'; itemId: string; count: number }
   /** 宝箱/钻石袋/红包等：直接进收纳盒（活动棋盘开不了） */
   | { kind: 'boxReward'; itemId: string; count: number };
+
+export type EventProgressEchoObjective =
+  | { kind: 'codex_discovered'; target: number }
+  | { kind: 'merge_count'; target: number }
+  | { kind: 'item_discovered'; itemId: string };
+
+export interface EventProgressEchoMilestoneDef {
+  id: string;
+  title: string;
+  objective: EventProgressEchoObjective;
+  primaryReward: EventRewardDef;
+  adReward: EventRewardDef;
+}
+
+export const EVENT_PROGRESS_ECHO_MILESTONES: readonly EventProgressEchoMilestoneDef[] = [
+  {
+    id: 'codex_5',
+    title: '解锁 5 件首饰',
+    objective: { kind: 'codex_discovered', target: 5 },
+    primaryReward: { kind: 'stamina', amount: 30 },
+    adReward: { kind: 'flowerSignTickets', amount: 2 },
+  },
+  {
+    id: 'jewelry_7',
+    title: '解锁云翠金镯',
+    objective: { kind: 'item_discovered', itemId: `${JEWELRY_ITEM_PREFIX}7` },
+    primaryReward: { kind: 'diamond', amount: 5 },
+    adReward: { kind: 'boxReward', itemId: LUCKY_COIN_ITEM_ID, count: 1 },
+  },
+  {
+    id: 'codex_10',
+    title: '解锁 10 件首饰',
+    objective: { kind: 'codex_discovered', target: 10 },
+    primaryReward: { kind: 'stamina', amount: 60 },
+    adReward: { kind: 'flowerSignTickets', amount: 3 },
+  },
+  {
+    id: 'jewelry_10',
+    title: '解锁翠纹华臂',
+    objective: { kind: 'item_discovered', itemId: `${JEWELRY_ITEM_PREFIX}10` },
+    primaryReward: { kind: 'boxReward', itemId: 'stamina_chest_1', count: 1 },
+    adReward: { kind: 'boxReward', itemId: CRYSTAL_BALL_ITEM_ID, count: 1 },
+  },
+  {
+    id: 'dian_cui_6',
+    title: '解锁点翠高冠',
+    objective: { kind: 'item_discovered', itemId: `${DIAN_CUI_ITEM_PREFIX}6` },
+    primaryReward: { kind: 'diamond', amount: 10 },
+    adReward: { kind: 'boxReward', itemId: LUCKY_COIN_ITEM_ID, count: 1 },
+  },
+  {
+    id: 'merge_2000',
+    title: '合成首饰 2000 次',
+    objective: { kind: 'merge_count', target: 2000 },
+    primaryReward: { kind: 'stamina', amount: 50 },
+    adReward: { kind: 'boxReward', itemId: CRYSTAL_BALL_ITEM_ID, count: 1 },
+  },
+  {
+    id: 'jewelry_13',
+    title: '解锁绯翠华链',
+    objective: { kind: 'item_discovered', itemId: `${JEWELRY_ITEM_PREFIX}13` },
+    primaryReward: { kind: 'diamond', amount: 10 },
+    adReward: { kind: 'flowerSignTickets', amount: 5 },
+  },
+  {
+    id: 'codex_15',
+    title: '解锁 15 件首饰',
+    objective: { kind: 'codex_discovered', target: 15 },
+    primaryReward: { kind: 'boxReward', itemId: 'diamond_bag_1', count: 1 },
+    adReward: { kind: 'boxReward', itemId: LUCKY_COIN_ITEM_ID, count: 1 },
+  },
+  {
+    id: 'codex_20',
+    title: '解锁 20 件首饰',
+    objective: { kind: 'codex_discovered', target: 20 },
+    primaryReward: { kind: 'stamina', amount: 120 },
+    adReward: { kind: 'boxReward', itemId: GOLDEN_SCISSORS_ITEM_ID, count: 1 },
+  },
+  {
+    id: 'merge_5000',
+    title: '合成首饰 5000 次',
+    objective: { kind: 'merge_count', target: 5000 },
+    primaryReward: { kind: 'boxReward', itemId: 'diamond_bag_1', count: 1 },
+    adReward: { kind: 'boxReward', itemId: GOLDEN_SCISSORS_ITEM_ID, count: 1 },
+  },
+  {
+    id: 'codex_21',
+    title: '解锁全部图鉴',
+    objective: { kind: 'codex_discovered', target: 21 },
+    primaryReward: { kind: 'stamina', amount: 120 },
+    adReward: { kind: 'boxReward', itemId: GOLDEN_SCISSORS_ITEM_ID, count: 1 },
+  },
+];
 
 /** 合成掉落加权项 */
 export interface EventDropEntry {
@@ -93,7 +192,7 @@ export const EVENT_BOARD_STAGES: EventBoardStageDef[] = [
     id: 'stage_1',
     name: '第一层',
     goalItemId: 'event_jewelry_9',
-    goalText: '合出绿宝项链',
+    goalText: '合出碧珠流光',
     // 棋盘 6×5；四角全锁，紧邻角的边缘半锁，其余开放
     peekCells: [1, 4, 6, 11, 18, 23, 25, 28],
     fogCells: [0, 5, 24, 29],
@@ -105,7 +204,7 @@ export const EVENT_BOARD_STAGES: EventBoardStageDef[] = [
     id: 'stage_2',
     name: '第二层',
     goalItemId: 'event_jewelry_11',
-    goalText: '合出彩宝项圈',
+    goalText: '合出绯花流苏',
     // 棋盘 6×6：在 6×5 基础上底部加一行，顶/底行对称全锁角 + 半锁边
     rows: 6,
     peekCells: [2, 3, 7, 10, 12, 17, 19, 22, 26, 27, 32, 33],
@@ -118,7 +217,7 @@ export const EVENT_BOARD_STAGES: EventBoardStageDef[] = [
     id: 'stage_3',
     name: '第三层',
     goalItemId: 'event_jewelry_12',
-    goalText: '合出钻石皇冠',
+    goalText: '合出绯月璎珞',
     // 棋盘 6×7（多 2 行）：中部 4×3 开放核心 + 时空门(21)，外圈半锁、最外圈全锁
     rows: 7,
     peekCells: [7, 8, 9, 10, 12, 17, 18, 23, 24, 29, 31, 32, 33, 34],
@@ -131,7 +230,7 @@ export const EVENT_BOARD_STAGES: EventBoardStageDef[] = [
     id: 'stage_4',
     name: '最终层',
     goalItemId: 'event_jewelry_13',
-    goalText: '合出星辉王冠',
+    goalText: '合出绯翠华链',
     // 棋盘 6×7（多 2 行）：菱形开放区，外圈层层半锁 / 全锁；最终层无时空门
     rows: 7,
     peekCells: [8, 9, 13, 16, 18, 23, 25, 28, 32, 33],

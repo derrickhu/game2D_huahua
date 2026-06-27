@@ -174,9 +174,9 @@ export function isEventProducerItem(itemId: string): boolean {
 
 const EVENT_JEWELRY_DATA: [EventLine, string[]][] = [
   [EventLine.JEWELRY, [
-    '小原石', '亮宝石', '宝石戒指', '花耳钉', '小项坠', '珍珠手链',
-    '宝石耳坠', '红宝胸针', '绿宝项链', '蓝宝发冠', '彩宝项圈', '钻石皇冠',
-    '星辉王冠',
+    '翠心原胚', '碧光宝晶', '翠曜金戒', '蝶影翠章', '珠环映翠', '晴岚珠串',
+    '云翠金镯', '翠泪耳坠', '碧珠流光', '翠纹华臂', '绯花流苏', '绯月璎珞',
+    '绯翠华链',
   ]],
   [EventLine.DIAN_CUI, [
     '点翠发簪', '点翠发梳', '点翠小冠', '点翠半冠',

@@ -1,0 +1,36 @@
+Create a clean 2D mobile game item icon sheet for a cozy pastel flower-shop merge game. Generate a redesigned 13-level jewelry progression line, arranged as 13 separate centered icons on a plain white background, two rows: 7 icons on top row and 6 icons on bottom row.
+
+CRITICAL: icons only. Absolutely NO text anywhere. No English words, no Chinese words, no item names, no captions under icons, no labels, no numbers, no typography, no watermark. Leave only the 13 jewelry objects on white background. Do not write descriptions below the objects.
+Also critical: generate EXACTLY 13 icons and nothing else. No extra fragments, no loose beads, no duplicate partial jewelry pieces floating between rows.
+
+This is a redesign of a jewelry event item line. The style should reference the successful dian-cui line quality: clear silhouettes, large readable shapes, polished 2D game icon rendering, soft warm outlines only where needed, refined gold structure, strong volume from color and lighting, not from excessive linework. Do NOT copy dian-cui blue feather crowns; only borrow its clean, elegant, cohesive game-icon finish.
+
+Key visual rules:
+- Each item must be one large object filling 80% to 90% of its cell, readable at small board size.
+- Do not make the whole line emerald-green. Use varied gemstone colors across the line: ruby, sapphire, emerald, amethyst, topaz, opal, pearl, aquamarine, diamond, etc.
+- Each item should have ONE dominant gemstone color and a simple supporting metal color. Avoid rainbow clutter inside a single item.
+- Make icons feel delicate through creative silhouette, faceted gem volume, soft gradients, highlight shapes, and tasteful material contrast. Do NOT add many tiny beads, dense filigree, small scattered gems, thin chains, or excessive outlines.
+- Use bigger color masses, clean forms, and soft painterly 2D volume. Keep details broad and chunky.
+- Thin objects such as hairpins, earrings, combs, and butterfly clasps must be enlarged and chunky enough to fill the cell; avoid long skinny silhouettes.
+- Consistent icon style: warm champagne-gold metal, pastel high-key lighting, soft brown edge accents, glossy gem facets, subtle shadow, transparent-friendly edges.
+- Avoid photorealism, avoid realistic jewelry catalog photos, avoid flat vector-only look.
+
+Progression concept: "Gemstone Court Ornaments" — each level is a different jewelry type with a single main gemstone color, growing from raw gem to elegant royal ornament.
+
+Design each level:
+1. Rough gem in stone cradle: a chunky warm-gray rock holding a large uncut pink amethyst crystal, simple and bold.
+2. Large cut gemstone: one oversized cushion-cut emerald or teal gemstone, faceted, fills the cell, no setting.
+3. Ruby signet ring: thick gold ring with one large ruby red oval gem, simple diagonal shape.
+4. Sapphire hairpin: one elegant gold hairpin with a large blue sapphire flower head, big readable silhouette, no tiny dangling chains.
+5. Topaz pendant brooch: one golden pendant/brooch with a large honey-yellow topaz center, compact oval outline.
+6. Amethyst butterfly clasp: simplified butterfly-shaped clasp with one purple amethyst wing mass on each side, not many small gems.
+7. Pearl opal bracelet: chunky bracelet with large cream pearl / opal beads, soft iridescent center, simple circular silhouette.
+8. Emerald drop earrings: pair of large green teardrop earrings, elegant and readable, very clean.
+9. Sapphire moon necklace: crescent necklace with one large deep-blue sapphire centerpiece, bold arc silhouette.
+10. Ruby floral comb: gold hair comb with one large red ruby flower form, fewer petals, strong shape.
+11. Aquamarine collar: broad collar necklace with large pale-blue aquamarine cabochons, smooth and luxurious.
+12. Diamond star tiara: compact tiara with one large pale diamond star centerpiece, white-blue glow, clean crown silhouette.
+13. Royal gemstone crown: final max-level producer item, a grand but not cluttered crown with one large central multicolor opal or diamond and two supporting side gems, strong silhouette, largest volume, refined and premium.
+
+Composition:
+Plain white background. Clear gutters between icons. No UI frames, no grid lines, no item names, no captions. Each icon should be centered and similar scale. Make the sheet useful as a preview for later splitting into game icons.

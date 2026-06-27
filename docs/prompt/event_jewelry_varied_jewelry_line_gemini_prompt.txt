@@ -1,0 +1,35 @@
+Create a clean 2D mobile game item icon sheet for a cozy pastel flower-shop merge game. Generate a redesigned 13-level event jewelry progression line on a plain white background. The composition must be a strict contact sheet with exactly two rows: exactly 7 icons evenly spaced on the top row, exactly 6 icons evenly spaced on the bottom row.
+
+CRITICAL OUTPUT RULES:
+Only 13 icons total. Absolutely no text anywhere. No labels, no captions, no numbers, no item names, no watermark, no grid lines, no UI frames, no extra fragments, no loose beads, no duplicate partial objects.
+
+This line MUST be a set of actual jewelry and ornaments, not just standalone gemstones and not abstract gem emblems. Each icon should clearly read as a wearable jewelry item or ornate accessory. However, do not simply copy the old existing line. Redesign the shapes with stronger creativity, cleaner silhouettes, and more premium 2D volume.
+
+Core style:
+Reference the successful dian-cui line for quality only: large readable board-game icons, clean silhouette, polished 2D volume, soft warm outlines, refined gold structures, smooth highlights. Do not copy blue feathers or phoenix crowns. Use the same level of finish and cohesion.
+
+Main visual rules:
+- Each jewelry item fills 80% to 90% of its cell and reads clearly at small board size.
+- Each item has ONE dominant gemstone color, with simple warm champagne-gold metal support.
+- Across the line, use varied gemstone colors: rose quartz pink, emerald green, ruby red, sapphire blue, honey topaz, amethyst purple, pearl opal cream, aquamarine cyan, jade green, garnet red, moonstone white-blue, violet diamond, rainbow opal.
+- The item must feel refined through shape design, big gem volume, soft gradients, lighting, and material contrast. Do NOT use many tiny stones, dense filigree, thin chains, pearl strings, scattered beads, or excessive linework.
+- Use chunky compact silhouettes. Avoid long skinny shapes. Avoid realistic jewelry product photos. Avoid flat vector-only style.
+- The whole sheet should feel like one coherent luxury jewelry collection: shared gold metal color, shared soft brown edge accents, shared glossy 2D rendering.
+
+Design 13 varied jewelry items. These are design briefs only; do not write any names in the image:
+1. Rough pink crystal charm: a large raw rose-quartz crystal set into a simple chunky gold base, starting material but already ornament-like.
+2. Teal gemstone cabochon brooch: one large teal cushion gem in a simple rounded gold brooch frame.
+3. Ruby signet ring: thick gold ring with a single oversized ruby, compact diagonal ring silhouette.
+4. Sapphire floral hairpin: chunky short gold hairpin with one large blue sapphire flower head; make the flower head big, not a thin stick.
+5. Honey topaz pendant: large oval topaz pendant in a simple gold frame with one bold loop, no tiny chain.
+6. Amethyst butterfly brooch: butterfly-shaped brooch with two large purple gem wings and a gold body, clean and broad.
+7. Pearl opal bracelet: chunky round bracelet made of large cream opal pearls, simple circular silhouette.
+8. Emerald drop earrings: a pair of large emerald teardrop earrings, symmetrical and readable, no tiny chains.
+9. Sapphire crescent necklace: bold crescent-shaped necklace with one deep blue sapphire center, thick gold arc.
+10. Garnet bow hair comb: compact gold comb topped by a big red garnet bow, chunky not thin.
+11. Aquamarine collar necklace: broad collar necklace with three large cyan aquamarine cabochons, smooth and luxurious.
+12. Violet diamond tiara: compact tiara with one large violet diamond star centerpiece and two side gems, clean crown silhouette.
+13. Royal opal crown: final max-level producer item, grand wearable crown with one huge rainbow opal center and two large side gems, premium but not cluttered.
+
+Composition:
+Plain white background. Clear gutters between icons. Similar scale across all 13. Use only two horizontal rows; the space between rows must remain empty white background. The sheet should be useful as a preview for later splitting into game icons.

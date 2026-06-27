@@ -1,0 +1,41 @@
+Create a clean 2D mobile game item icon sheet for a cozy pastel flower-shop merge game. Redraw the existing 13-level event jewelry line while keeping the current item types and approximate silhouettes. Arrange exactly 13 icons on a plain white background in two rows: 7 icons on the top row and 6 icons on the bottom row.
+
+CRITICAL OUTPUT RULES:
+Only 13 icons. No text, no numbers, no labels, no captions, no watermark, no grid lines, no UI frames, no extra loose objects.
+
+Important task:
+Do NOT redesign the item planning. Keep the existing progression and object types:
+1 rough emerald-in-stone, 2 large green cut gemstone, 3 emerald ring, 4 butterfly / wing brooch, 5 flower gem brooch, 6 ornate pearl bracelet / small jewel ornament, 7 tiara, 8 green drop earrings, 9 green bead necklace, 10 gold crown, 11 emerald collar necklace, 12 red gem necklace/collar, 13 floral green bracelet/collar.
+
+Style target:
+Unify all 13 icons to match the good existing level 8 and level 9 style. They should look like the same artist and same item line:
+- refined 2D board-game jewelry icons,
+- thin warm brown outlines, not thick cartoon outlines,
+- polished emerald gemstone facets,
+- layered green color with darker edges and bright inner highlights,
+- warm gold metal with subtle gradients and thickness,
+- small pearl highlights only where useful,
+- compact readable silhouette that fills the board cell.
+
+Reference feeling:
+Level 8 should feel like elegant green teardrop earrings with visible gem facets and delicate gold frame. Level 9 should feel like a bold emerald bead necklace with strong shape and glossy green volume. Use that level of material quality for all items.
+
+Readability rules:
+Each icon should fill 80% to 90% of its cell. Avoid long skinny shapes. Avoid too many tiny gems, dense beads, noisy filigree, and clutter. For currently weak/fragmented items, simplify but keep their identity. Use color volume and lighting to show refinement, not many small parts.
+
+Per-level guidance:
+1 rough stone: make the emerald larger and more glossy, rock base smaller and cleaner.
+2 cut gemstone: keep a big cushion-cut emerald, richer facets.
+3 ring: keep as gold ring with large emerald, chunkier and cleaner.
+4 butterfly/wing brooch: keep butterfly/wing idea, but simplify into two large green gem wings with gold frame.
+5 flower brooch: keep flower brooch, make petals larger gem masses, reduce tiny stones.
+6 ornate pearl bracelet/small jewel ornament: keep ornamental bracelet feeling, use one green gem focus and fewer pearls.
+7 tiara: keep tiara, but align to emerald-gold style, less spiky clutter.
+8 green drop earrings: keep close to current good style, refined and large.
+9 green bead necklace: keep close to current good style, bold and glossy.
+10 crown: keep gold crown, add emerald facets, make silhouette clean.
+11 emerald collar necklace: keep collar necklace, larger emeralds, less chain detail.
+12 red gem necklace/collar: keep red gem collar, make it coherent with gold style and less noisy.
+13 floral green bracelet/collar: keep floral green bracelet/collar idea, refine into a premium final item with strong green gem focal point, not cluttered.
+
+Plain white background only. Clear gutters between icons. Similar scale. Suitable as a preview sheet for later splitting into game board icons.

@@ -1,0 +1,20 @@
+Create a 2D mobile game jewelry icon test sheet for a cozy pastel flower-shop merge game. Generate exactly 4 high-level jewelry icons on a plain white background, arranged in one horizontal row with clear spacing. No text, no numbers, no labels, no captions, no watermark, no UI frame, no grid lines, no extra objects, no duplicate row.
+
+Style target:
+Use the same rendering style as the recent selected jewelry test: polished 2D game icons with soft hand-painted color layers, translucent gemstones, warm gold shading, and relatively light warm-brown outlines. Keep the items readable on a board cell and premium up close.
+
+Important style constraints:
+- Light, delicate outlines; avoid thick sticker borders.
+- Use color depth, gemstone facets, inner highlights, gold gradients, and soft shadows for quality.
+- Each icon fills 80% to 90% of its cell.
+- Avoid dense filigree, many tiny gems, pearl strings, noisy dangling parts, and overly complex crowns.
+- Keep the forms compact and suitable for transparent board item icons.
+
+Generate exactly these 4 icons:
+1. Level 10: elegant crown headband / tiara, NOT a full hat and NOT a bulky crown. It should be a low arched gold headband with a few green emerald gems, open center, refined and readable.
+2. Level 11: emerald necklace / neck ornament with a distinct hanging pendant silhouette. It should have a gold upper arc, several large green emerald beads, and one central square emerald pendant hanging lower. Make it clearly different from level 12: more green, more pendant-like, with a vertical drop.
+3. Level 12: ruby court collar necklace, broad rounded red-gem collar with many ruby cabochons arranged in a fan/collar shape. Keep the old red gemstone necklace identity, but make it cleaner and premium. It should be red-dominant, dense enough to feel high-level, and NOT the same silhouette as level 11.
+4. Level 13: final premium classical red-and-green gemstone floral collar / necklace, inspired by the old level 13 classical floral design. It must NOT look like an arm ring or bangle. Use an open necklace/collar silhouette with a central dangling emerald, red and green gemstones, small floral gold motifs, and an antique court-jewelry feeling. Preserve the red-green classical charm of the old item while improving rendering quality.
+
+Composition:
+Plain white background only. Exactly four separated icons in a single row. Similar scale. Suitable for later splitting into transparent game board item icons.

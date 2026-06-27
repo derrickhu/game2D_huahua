@@ -1,0 +1,20 @@
+Generate a clean 2D mobile game item icon sheet for a cozy pastel flower-shop merge game. Create a free-design set of 13 different jewelry item icons on a plain white background. Arrange as a neat contact sheet with 13 centered icons. No text, no numbers, no labels, no captions, no watermark, no UI frame, no grid lines.
+
+Goal:
+Freely invent varied jewelry pieces, but make the art style and quality align with the existing dian-cui event jewelry line: elegant 2D board-game icons, refined color layering, polished material texture, clear silhouettes, delicate but not cluttered. Do not copy the exact dian-cui shapes; only match its finish quality and visual sophistication.
+
+Style requirements:
+- 2D polished game icons, not flat vector stickers and not photorealistic catalog jewelry.
+- Thin warm brown outline, never thick cartoon outline.
+- Rich color gradients, gemstone translucency, inner highlights, soft facet shapes, gold material thickness.
+- Each icon should have one main jewelry object with a strong silhouette, filling about 80% to 90% of its cell.
+- Use varied jewelry types and varied gemstone colors: earrings, brooches, pendants, rings, hair ornaments, bracelets, necklaces, tiaras, crowns, clasps, charms, gemstone ornaments.
+- Each individual jewelry piece should have a clear main gemstone color; avoid rainbow clutter inside one item.
+- Refined but simple: avoid many tiny beads, dense filigree, thin chains, scattered gem dust, overly small dangling pieces.
+- The whole sheet should feel like one coherent luxury jewelry collection, matching the dian-cui line's premium 2D rendering and board-cell readability.
+
+Creative freedom:
+Do not follow old item names. Do not follow a fixed list of jewelry types. Freely design attractive jewelry icons with different shapes and colors, but keep them all suitable as merge-game board items.
+
+Composition:
+Plain white background. Clear spacing. Similar scale. Exactly 13 icons only.
