@@ -1,0 +1,37 @@
+Create a clean 2D mobile game item icon sheet for a cozy pastel flower-shop merge game. Generate a completely redesigned 13-level event jewelry progression line on a plain white background. The composition must be a strict contact sheet with exactly two rows: exactly 7 icons evenly spaced on the top row, exactly 6 icons evenly spaced on the bottom row. No middle row.
+
+CRITICAL OUTPUT RULES:
+Only 13 icons total. Absolutely no text anywhere. No labels, no captions, no numbers, no item names, no watermark, no grid lines, no UI frames, no extra fragments, no loose beads, no duplicate partial objects. Do not add an extra shell, extra gem, extra bead, or decorative object between the two rows.
+
+Do NOT follow the old item names or old jewelry forms. Do NOT make a normal catalog of ring, earrings, necklace, comb, crown. The new line should feel freshly designed as a cohesive set of magical gemstone emblems / wearable treasure relics from a fantasy jewelry box. They may imply wearable ornaments, but each icon should be a bold designed object, not a realistic jewelry product.
+
+Core art direction:
+Reference the successful dian-cui line only for its clean board-game icon quality: large readable shapes, elegant 2D volume, polished highlights, soft warm outlines, refined gold structure, and strong silhouette. Do not copy dian-cui blue feathers or phoenix crowns.
+
+Design language:
+- One large central gemstone mass per icon, with one dominant color per level.
+- Each level uses a different main gemstone color: rose quartz pink, emerald teal, ruby red, sapphire blue, honey topaz, amethyst purple, pearl opal cream, aquamarine cyan, jade green, garnet red, moonstone white-blue, violet diamond, rainbow opal.
+- A shared warm champagne-gold setting system ties the whole line together: chunky gold bezels, soft ruyi-cloud curves, ribbon-like gold arcs, simple petal or crescent silhouettes.
+- The sense of refinement must come from creative silhouette, big clean gem facets, soft gradients, and light/shadow volume. Do NOT use many tiny gems, dense filigree, thin chains, pearl strings, small dangling parts, or excessive outlines.
+- Every icon must fill 82% to 92% of its cell. Use chunky, compact silhouettes suitable for board cells.
+- Use broad color masses and painterly 2D gem volume. Avoid skinny shapes. Avoid realistic jewelry photography. Avoid flat vector-only style.
+
+Progression concept: "Gemstone Treasure Emblems" — an evolving set of magical court ornaments from raw gem to grand treasure relic. The forms should feel related through shared gold bezel arcs and a central gem, but each level has a clear unique silhouette.
+
+Level design, do not write these names in the image:
+1. A chunky rose-quartz crystal growing from a small rounded stone base, simple and bold.
+2. A large teal cushion-cut gem with a tiny gold foot/base, mostly gemstone volume.
+3. A ruby heart-seal ornament: big red oval/heart gem in a thick gold seal frame, compact.
+4. A sapphire four-petal flower emblem: one large blue flower-shaped gem cluster, broad petals, gold rim.
+5. A honey-topaz sun medallion: round amber gem center with simple gold sun rays, chunky.
+6. An amethyst butterfly emblem: simplified butterfly silhouette made from two large purple gem wings and gold body, no small gems.
+7. A pearl-opal shell brooch: large cream opal shell shape with soft rainbow shine, gold bottom rim.
+8. An aquamarine crescent charm: big cyan crescent gem held by a gold ruyi-cloud arc, compact.
+9. A jade fan ornament: wide fan silhouette made from three large jade-green gem panels, gold base.
+10. A garnet bow clasp: bold red bow-like jewel with two big gem loops and a gold center, chunky.
+11. A moonstone lotus diadem: white-blue lotus-shaped gem ornament with one big central petal and two side petals, not a crown.
+12. A violet starburst relic: large violet diamond/star gem in a simple gold star frame, strong silhouette.
+13. Final grand treasure emblem: a premium opal-rainbow royal relic with one huge central gem, simple gold crown-like base and two large side gems, powerful silhouette, luxurious but not cluttered.
+
+Composition:
+Plain white background. Clear gutters between icons. Similar scale across all 13. Use only two horizontal rows; the space between rows must remain empty white background. The sheet should be useful as a preview for later splitting into game icons.

@@ -1,0 +1,25 @@
+Clean 2D mobile game item icon sheet for a cozy pastel flower-shop merge game. Create a unified 13-level jewelry progression line named "Emerald Court Jewelry", shown as 13 separate centered item icons on a clean plain white background, arranged in two rows: 7 icons on the first row and 6 icons on the second row. No text, no labels, no numbers, no watermark.
+
+Art direction:
+Cute polished 2D game icons, soft brown outlines, high-key pastel lighting, glossy gemstone highlights, warm champagne-gold metal, porcelain cream pearls, and a consistent emerald-green main gemstone identity. This line must feel distinct from the blue-gold dian-cui feather crown line: do not use blue kingfisher feathers or phoenix crown shapes. The signature should be emerald green + gold + pearls + light rose accents, Chinese-Western mixed court jewelry.
+
+Important readability requirements:
+Each icon must be one large clear subject that fills its cell about 78% to 88% of the available space. Avoid tiny scattered pieces, thin chains, over-dense filigree, or many small gems. Silhouettes must read well at small board-cell size. Keep each icon compact, centered, and game-ready. Use consistent camera angle, lighting, line weight, gem rendering, and metal color across all 13 icons.
+
+Design each level:
+1. Emerald-in-stone rough: a chunky gray-beige rock cradle holding one large square emerald, simple and readable.
+2. Large cut emerald: one oversized cushion-cut emerald gemstone, bold and faceted, filling the cell.
+3. Emerald gold ring: thick gold ring with one oversized emerald, compact diagonal composition.
+4. Emerald leaf studs: a pair of symmetrical leaf-shaped emerald earrings, simple and large, no tiny clutter.
+5. Pearl emerald pendant: one large emerald pendant with a pearl drop and warm gold frame.
+6. Emerald vine bangle: round gold bangle with several larger emerald leaf nodes, strong circular silhouette.
+7. Emerald hair comb: gold comb with emerald leaf ornaments and a few pearls, not blue feather dian-cui.
+8. Emerald drop earrings: pair of large teardrop emerald earrings, elegant and readable, based on the good existing level-8 feeling.
+9. Grand emerald necklace: round necklace with large emerald beads and center square emerald, bold like a board icon.
+10. Emerald court tiara: small tiara / hair crown with large emerald points and pearls, not a blue feather crown.
+11. Emerald collar necklace: ornate but compact court collar with large emerald cabochons and pearls.
+12. Emerald floral crown: crown with big emerald center gems and pearl flower motifs, larger and more luxurious.
+13. Emerald radiance crown: final max-level producer item, grand emerald-and-gold crown with the clearest silhouette, biggest central emerald, luxurious but not cluttered.
+
+Composition:
+White background only. Leave clear gutters between icons. Do not draw UI frames, labels, shadows under cells, or grid borders. Each icon should have transparent-friendly clean edges even though the preview background is white.

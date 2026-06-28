@@ -1,0 +1,15 @@
+Clean 2D vector mobile game UI for a cozy pastel flower-shop merge game, kawaii casual style, vertical full-screen 9:16 event reward encyclopedia page shell.
+
+Use the attached reference image only for the good top-frame quality and overall page-shell composition: an ornate top header area, a chunky round close button at the upper right, a large central content field, and a decorative bottom flourish. Redesign it for a jewelry-and-flower event: soft lilac, pastel pink, cream, mint, warm gold, emerald green accents, pearls, faceted gemstones, roses, small blossoms, delicate curling filigree.
+
+Top area: ornate jewelry-and-flower canopy with rounded golden trim, gem decorations, roses and leaves, soft sparkles. Include a cream-and-gold title plaque with the exact Chinese title text: 珠宝图鉴. The title should be large, readable, centered, cute mobile game UI lettering, warm golden-brown outline, cream highlight. Upper right has a large cute circular close button with a teal-green X, matching the reference style.
+
+Middle area: one large clean pure solid blank content panel, warm cream or very pale peach fill, with a thin pastel border. The middle must be empty and usable for game UI overlays. No rows, no item icons, no cards, no progress bars, no labels, no numbers, no question marks.
+
+Bottom area: do NOT use ocean waves or water splashes. Instead, use a jewelry-themed base: folded plush velvet cloth in soft lavender and rose pink, small cushions, pearl strings, scattered emerald/ruby/sapphire gems, gold filigree scrolls, tiny roses and leaves. It should feel like a jewelry display case, not a water event. Keep it ornamental only, leaving the central content panel empty.
+
+The whole image should be a finished game UI background shell, high-key pastel, soft brown outlines, gentle gradients only for depth, polished mobile game UI, no photorealism, no watermark, no logo.
+
+Background outside the panel must be a flat pure chroma green #00FF00, perfectly solid and uniform, no texture, no shadows blending into it, for clean background removal. The panel itself must not contain green screen color.
+
+No extra text besides the exact title 珠宝图鉴. No labels, no captions, no other writing, no readable letters, no numbers, no progress bar, no reward items, no grid contents, no icons in the center, no characters.

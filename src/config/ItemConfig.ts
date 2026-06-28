@@ -18,6 +18,7 @@ export enum Category {
   BUILDING = 'building',
   CHEST = 'chest',
   CURRENCY = 'currency',
+  EVENT = 'event',
 }
 
 /** 物品的交互机制——决定点击行为、是否走 CD / 宝箱散落等 */
@@ -69,6 +70,12 @@ export enum ToolLine {
   BAKE = 'bake',         // 烘焙工具 → 甜品线
   FARM = 'farm',         // 农田工具 → 整果
   FRUIT_CUT = 'fruit_cut', // 果切工具：整果拖入后加工为对应果切
+}
+
+export enum EventLine {
+  JEWELRY = 'jewelry',
+  /** 花间珠匣副产物线：点翠凤冠系列，仅活动棋盘掉落/合成 */
+  DIAN_CUI = 'jewelry_dian_cui',
 }
 
 /** 工具线 → 对应产品线的映射 */
@@ -151,6 +158,30 @@ const FOOD_DATA: [FoodLine, string[]][] = [
   [FoodLine.CUT_WATERMELON, ['西瓜角', '竹盘西瓜', '缤纷果篮']],
   [FoodLine.CUT_PINEAPPLE, ['菠萝环片', '竹盘菠萝', '菠萝船']],
   [FoodLine.CUT_DRAGONFRUIT, ['半切火龙果', '木盘火龙果', '火龙果果篮']],
+];
+
+export const EVENT_JEWELRY_STARTER_BOX_ID = 'event_jewelry_starter_box';
+export const EVENT_JEWELRY_PRODUCER_ITEM_ID = 'event_jewelry_13';
+export const EVENT_DIAN_CUI_PRODUCER_ITEM_ID = 'event_jewelry_dian_cui_8';
+export const EVENT_PRODUCER_ITEM_IDS: readonly string[] = [
+  EVENT_JEWELRY_PRODUCER_ITEM_ID,
+  EVENT_DIAN_CUI_PRODUCER_ITEM_ID,
+];
+
+export function isEventProducerItem(itemId: string): boolean {
+  return EVENT_PRODUCER_ITEM_IDS.includes(itemId);
+}
+
+const EVENT_JEWELRY_DATA: [EventLine, string[]][] = [
+  [EventLine.JEWELRY, [
+    '翠心原胚', '碧光宝晶', '翠曜金戒', '蝶影翠章', '珠环映翠', '晴岚珠串',
+    '云翠金镯', '翠泪耳坠', '碧珠流光', '翠纹华臂', '绯花流苏', '绯月璎珞',
+    '绯翠华链',
+  ]],
+  [EventLine.DIAN_CUI, [
+    '点翠发簪', '点翠发梳', '点翠小冠', '点翠半冠',
+    '点翠羽冠', '点翠高冠', '点翠凤冠', '点翠华凤冠',
+  ]],
 ];
 
 // ═══════════════ 工具数据 ═══════════════
@@ -335,6 +366,39 @@ function buildItemDefs(): Map<string, ItemDef> {
     }
   }
 
+  // 活动首饰线：活动棋盘专用，不进入主订单池；L3 起均为完整首饰。
+  for (const [line, names] of EVENT_JEWELRY_DATA) {
+    const maxLv = names.length;
+    for (let i = 0; i < names.length; i++) {
+      const id = `event_${line}_${i + 1}`;
+      map.set(id, {
+        id,
+        name: names[i],
+        category: Category.EVENT,
+        line,
+        level: i + 1,
+        maxLevel: maxLv,
+        icon: `event_${line}_${i + 1}`,
+        interactType: isEventProducerItem(id) ? InteractType.TOOL : InteractType.NONE,
+        sellable: false,
+        storable: false,
+      });
+    }
+  }
+
+  map.set(EVENT_JEWELRY_STARTER_BOX_ID, {
+    id: EVENT_JEWELRY_STARTER_BOX_ID,
+    name: '原石包',
+    category: Category.EVENT,
+    line: 'jewelry_box',
+    level: 1,
+    maxLevel: 1,
+    icon: EVENT_JEWELRY_STARTER_BOX_ID,
+    interactType: InteractType.NONE,
+    sellable: false,
+    storable: false,
+  });
+
   // 工具（BUILDING 品类，可合成升级）
   for (const [line, names] of TOOL_DATA) {
     const maxLv = names.length;
@@ -366,8 +430,8 @@ function buildItemDefs(): Map<string, ItemDef> {
   // 货币物品：体力 / 钻石 各 4 级；花愿利是为独立块（见下）
   // 棋盘货币双击入账：无单独「合成奖励」，故每级 amount 须严格 > 2×上一级，合成到顶才不亏于全点低级（体力曾违反此条已修正）
   const CURRENCY_DATA: [CurrencyLine, string[], 'stamina' | 'huayuan' | 'diamond', string, number[]][] = [
-    [CurrencyLine.STAMINA, ['体力瓶', '体力罐', '体力桶', '精粹体力壶'], 'stamina', 'icon_energy', [3, 10, 30, 70]],
-    [CurrencyLine.DIAMOND, ['碎钻', '钻石', '大钻石', '璨钻'], 'diamond', 'icon_gem', [1, 3, 8, 18]],
+    [CurrencyLine.STAMINA, ['1级体力', '2级体力', '3级体力', '4级体力'], 'stamina', 'icon_energy', [3, 10, 25, 60]],
+    [CurrencyLine.DIAMOND, ['1级钻石', '2级钻石', '3级钻石', '4级钻石'], 'diamond', 'icon_gem', [1, 3, 8, 18]],
   ];
   for (const [line, names, rewardType, icon, amounts] of CURRENCY_DATA) {
     for (let i = 0; i < names.length; i++) {
@@ -388,9 +452,9 @@ function buildItemDefs(): Map<string, ItemDef> {
     }
   }
 
-  // 花愿利是（4级，仅红包线等产出；入账花愿）
-  const huayuanPickupNames = ['碎愿利是', '花愿小利是', '花愿大利是', '花愿豪利是'];
-  const huayuanPickupAmounts = [6, 16, 42, 110];
+  // 花愿利是（5级，仅红包线等产出；入账花愿）
+  const huayuanPickupNames = ['1级花愿', '2级花愿', '3级花愿', '4级花愿', '5级花愿'];
+  const huayuanPickupAmounts = [15, 40, 100, 233, 500];
   for (let i = 0; i < huayuanPickupNames.length; i++) {
     const line = CurrencyLine.HUAYUAN_PICKUP;
     const id = `currency_${line}_${i + 1}`;

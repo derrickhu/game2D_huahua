@@ -1,0 +1,7 @@
+Clean 2D vector mobile game UI progress-strip background for a cozy pastel flower-shop jewelry merge event, kawaii casual style. A single long, slim, low horizontal banner, very wide thin aspect ratio (about 7:1, matching the in-game display), centered on a flat pure magenta background #FF00FF that fills the whole canvas edge to edge with generous magenta margins above and below the slim banner.
+
+The banner should match the new refined Chinese-Western mixed event background: simpler, calmer, and more readable. Use a soft pale jade / blue-green / porcelain cream center field with antique-gold trim, slightly darker than the cream page background so it clearly separates from the page. Add a thin warm gold outline and a subtle teal outer rim. The shape is a long rounded pill with very gentle ruyi-cloud notches at both ends, not an ornate jewelry frame.
+
+Decorations must be minimal: only two small end caps, each with one tiny jade bead or dian-cui blue enamel dot and one simple cloud-scroll curl. No scattered gemstones, no pearl chains, no dense filigree, no flowers along the length, no complex scalloped border. The long center area must stay smooth and empty, reserved for a progress line, item icons, and key badges drawn by code.
+
+High-key pastel but with stronger separation than the main background: pale jade, turquoise teal, porcelain cream, muted antique gold, very soft shadow for depth only. No readable text, no numbers, no letters, no watermark, no photoreal, no heavy texture. Everything outside the slim banner is solid magenta #FF00FF.

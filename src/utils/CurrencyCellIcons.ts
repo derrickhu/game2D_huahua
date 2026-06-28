@@ -1,5 +1,5 @@
 /**
- * 货币物品在格子内的多图标簇（与棋盘 ItemView 一致：L1×1、L2×2 斜排、L3 三枚三角、L4 四枚 2×2）
+ * 货币物品在格子内的多图标簇（与棋盘 ItemView 一致：L1×1、L2×2、L3 三角、L4 2×2、L5 五点花簇）
  */
 import * as PIXI from 'pixi.js';
 import { Category, type ItemDef } from '@/config/ItemConfig';
@@ -13,7 +13,7 @@ export function createCurrencyIconCluster(def: ItemDef, cs: number): PIXI.Contai
   if (!texture) return null;
 
   const container = new PIXI.Container();
-  const count = Math.min(Math.max(def.level, 1), 4);
+  const count = Math.min(Math.max(def.level, 1), 5);
 
   if (count === 1) {
     const sp = new PIXI.Sprite(texture);
@@ -50,13 +50,29 @@ export function createCurrencyIconCluster(def: ItemDef, cs: number): PIXI.Contai
       sp.position.set(cs / 2 + ox, cs / 2 + oy);
       container.addChild(sp);
     }
-  } else {
+  } else if (count === 4) {
     const iconSize = cs * 0.38;
     const s = iconSize / Math.max(texture.width, texture.height);
     const gap = cs * 0.14;
     const positions: [number, number][] = [
       [-gap, -gap], [gap, -gap],
       [-gap, gap], [gap, gap],
+    ];
+    for (const [ox, oy] of positions) {
+      const sp = new PIXI.Sprite(texture);
+      sp.scale.set(s);
+      sp.anchor.set(0.5, 0.5);
+      sp.position.set(cs / 2 + ox, cs / 2 + oy);
+      container.addChild(sp);
+    }
+  } else {
+    const iconSize = cs * 0.34;
+    const s = iconSize / Math.max(texture.width, texture.height);
+    const gap = cs * 0.16;
+    const positions: [number, number][] = [
+      [-gap, -gap], [gap, -gap],
+      [-gap, gap], [gap, gap],
+      [0, 0],
     ];
     for (const [ox, oy] of positions) {
       const sp = new PIXI.Sprite(texture);

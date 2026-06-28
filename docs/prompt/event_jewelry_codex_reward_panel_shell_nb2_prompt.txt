@@ -1,0 +1,15 @@
+Clean 2D vector mobile game UI for a cozy pastel flower-shop merge game, kawaii casual style, vertical full-screen 9:16 event progress milestone panel shell.
+
+Design an event progress milestone panel shell named "进度回响". It should be related to jewelry and dian-cui craftsmanship but clearly different from the existing pink-purple jewelry encyclopedia UI. Use a classical Chinese-inspired dian-cui palette: rich turquoise blue, teal, kingfisher blue, pale jade, porcelain cream, muted antique gold, small touches of coral red. Avoid the previous pink-purple treasure-box feeling.
+
+Overall structure: ornate top decorative header, right-top cute circular close button with teal-green X, large central blank content area for later programmatic reward rows, and a decorative bottom base. The central content area must be a clean pure solid warm cream or very pale peach blank field with a soft pastel border; no rows or icons inside.
+
+Top area: include an antique gold and turquoise enamel title plaque with the exact Chinese title text: 进度回响. Add dian-cui-style feather ornaments, blue enamel cloud scrolls, jade beads, tiny gold filigree, and small porcelain-like floral accents around the title. The silhouette should be distinct from the existing "珠宝图鉴" shell: more classical blue enamel award-board motif, not a floral crown, not a pink treasure page.
+
+Bottom area: do NOT use ocean waves and do NOT use the previous pink jewel chest / pearl cushion arrangement. Use classical dian-cui themed decorations instead: folded teal silk brocade, kingfisher-blue feather fan motifs, antique gold cloud scrolls, jade pendants, small blue enamel medallions, porcelain cream flowers, and a few coral-red bead accents. It should feel like a refined antique progress reward board.
+
+The whole image should be a finished game UI background shell, high-key pastel, soft brown outlines, gentle gradients only for depth, polished mobile game UI, no photorealism, no watermark, no logo.
+
+Background outside the panel must be flat pure chroma green #00FF00, perfectly solid and uniform, no texture, no shadow blending into it, for clean background removal. The panel itself must not contain green screen color.
+
+No extra text besides the exact title 进度回响. No labels, no captions, no other writing, no readable letters, no numbers, no progress bar, no reward items in the central content field, no grid contents, no characters.

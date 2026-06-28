@@ -1,0 +1,11 @@
+Create one standalone jewelry merge-game item icon on a square 1:1 canvas. Use the attached reference only to preserve the same jewelry identity: a circular emerald necklace with a central rectangular emerald and simplified teardrop fringe drops. Convert into the existing huahua jewelry merge-game icon style: cute polished 2D mobile game icon, soft glossy volume, clear gemstone facets, bright white highlight arcs, smooth color gradients, thin clean same-color outlines, warm gold metal highlights.
+
+Critical composition rules for small board readability:
+- The jewelry must be LARGE and centered, filling about 88% to 94% of the canvas width and height.
+- Make the necklace form a bold compact circle or collar that fills the square, not a thin ring with huge empty center and corners.
+- Simplify heavily: one large center emerald, 4 to 6 chunky teardrop drops around the bottom arc only, a few round white pearl accents maximum. No dense fringe of many tiny drops, no micro gems.
+- Readable at 128 px thumbnail on a 6x6 merge board.
+
+Subject: Level 9 green emerald necklace. Premium simplified collar necklace, mainly vivid emerald green with minimal white pearl accents and gold links. Clear necklace silhouette.
+
+Pure white background only. No grid, no UI, no text, no labels, no numbers, no watermark.

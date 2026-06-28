@@ -11,6 +11,10 @@
     {
       "name": "items",
       "root": "subpkg_items/"
+    },
+    {
+      "name": "events",
+      "root": "subpkg_events/"
     }
   ]
 }

@@ -8,7 +8,10 @@ import * as PIXI from 'pixi.js';
 import { EventBus } from '@/core/EventBus';
 import { TweenManager, Ease } from '@/core/TweenManager';
 import { EventManager } from '@/managers/EventManager';
+import { EventBoardManager } from '@/managers/EventBoardManager';
 import { QuestManager } from '@/managers/QuestManager';
+import { LevelManager } from '@/managers/LevelManager';
+import { isJewelryEventUnlocked } from '@/config/EventBoardConfig';
 import { FloatingMenu } from './FloatingMenu';
 import { RewardBoxButton } from '@/gameobjects/ui/RewardBoxButton';
 import { TextureCache } from '@/utils/TextureCache';
@@ -67,10 +70,11 @@ const TASK_DEFS: TaskDef[] = [
   },
   {
     id: 'event',
-    texKey: 'icon_gift',
+    texKey: 'icon_jewelry_event_nb2',
     event: 'nav:openEvent',
     redDotKey: 'event',
-    isVisible: () => EventManager.hasActiveEvent,
+    isVisible: () => isJewelryEventUnlocked(LevelManager.level)
+      && (EventManager.hasActiveEvent || EventBoardManager.stageCount > 0),
   },
 ];
 
@@ -100,6 +104,7 @@ export class ShopRowPanoramaScroll extends PIXI.Container {
   /** 可领奖励呼吸相位（任务图标 + 展开钮共用） */
   private _claimBreathPhase = 0;
   private _expandClaimSkinActive = false;
+  private _textureUnsub: (() => void) | null = null;
 
   /** 展开/收起按钮中心 Y：与 `RewardBoxButton` 在店铺块内中心同高 */
   private _expandToggleCenterY(): number {
@@ -179,6 +184,10 @@ export class ShopRowPanoramaScroll extends PIXI.Container {
     if (ENABLE_SHOP_ACTIVITY_EXPAND) {
       this._buildActivityColumn();
     }
+    this._textureUnsub = TextureCache.onKeysLoaded(
+      TASK_DEFS.map(def => def.texKey),
+      key => this._refreshTaskIcon(key),
+    );
     this._redrawUnderlay();
     this._drawViewportMask();
     this._scrollContent.x = ENABLE_SHOP_ACTIVITY_EXPAND ? -this._activityW : 0;
@@ -225,6 +234,8 @@ export class ShopRowPanoramaScroll extends PIXI.Container {
 
   destroy(options?: PIXI.IDestroyOptions | boolean): void {
     this._stopped = true;
+    this._textureUnsub?.();
+    this._textureUnsub = null;
     TweenManager.cancelTarget(this._scrollContent);
     super.destroy(options);
   }
@@ -471,6 +482,18 @@ export class ShopRowPanoramaScroll extends PIXI.Container {
     }
 
     return { root, redDot, def };
+  }
+
+  private _refreshTaskIcon(texKey: string): void {
+    for (const [, card] of this._taskCards) {
+      if (card.def.texKey !== texKey) continue;
+      const tex = TextureCache.get(texKey);
+      const icon = card.root.children.find(child => child instanceof PIXI.Sprite) as PIXI.Sprite | undefined;
+      if (!icon || !tex || tex.width <= 0) return;
+      icon.texture = tex;
+      const s = Math.min(BIG_ICON / tex.width, BIG_ICON / tex.height);
+      icon.scale.set(s);
+    }
   }
 
   private _layoutActivityColumn(): void {

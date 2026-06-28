@@ -14,7 +14,11 @@ import { AudioManager } from '@/core/AudioManager';
 import { EventBus } from '@/core/EventBus';
 import { CurrencyManager } from '@/managers/CurrencyManager';
 import { GMManager } from '@/managers/GMManager';
+import { EventBoardManager } from '@/managers/EventBoardManager';
 import { WeekendHuayuanBoostManager } from '@/managers/WeekendHuayuanBoostManager';
+import {
+  isJewelryEventUnlocked,
+} from '@/config/EventBoardConfig';
 import { FloatingMenu } from '@/gameobjects/ui/FloatingMenu';
 import { COLORS, DESIGN_WIDTH, FONT_FAMILY } from '@/config/Constants';
 import { TextureCache } from '@/utils/TextureCache';
@@ -74,11 +78,19 @@ const RIGHT_MENU_RESERVE = 172;
 /** 每日挑战：体力条下方偏左（红框区），略向右下（仅合成页） */
 const QUEST_ICON_SIZE = 58;
 const QUEST_HIT = 64;
+/** 首饰活动：图标视觉更大、且与客人区横向滑动层重叠，单独加大热区 */
+const EVENT_ICON_SIZE = 62;
+const EVENT_HIT_W = 88;
+const EVENT_HIT_H = 92;
+/** 热区向上多探入顶栏带，减少被店铺区抢点击 */
+const EVENT_HIT_SHIFT_Y = -14;
 const GM_BTN_CX = 66;
 const GM_BTN_CY = TOP_BAR_HEIGHT + 10;
 /** 锚在体力条左段下方（红框区），再略向右下 */
 const QUEST_BTN_CX = STA_X + 42;
 const QUEST_BTN_CY = TOP_BAR_HEIGHT + 18;
+const EVENT_BTN_CX = QUEST_BTN_CX + QUEST_HIT + 14;
+const EVENT_BTN_CY = QUEST_BTN_CY;
 // ── 颜色（体力胶囊参考：浅粉框 + 鲜绿填充 + 绿圆加号）──
 const C = {
   /** 胶囊外沿浅粉米 */
@@ -110,9 +122,14 @@ export class TopBar extends PIXI.Container {
   /** 周末图标接入前 GM 槽左缘（仅用于周末图标定位） */
   private _gmSlotLeft = DIAMOND_BAR_RIGHT + 10;
   private _questRedDot: PIXI.Graphics | null = null;
+  private _eventRedDot: PIXI.Graphics | null = null;
+  private _eventBoardBtnWrap: PIXI.Container | null = null;
+  private _eventBoardIcon: PIXI.Sprite | null = null;
+  private _eventIconUnsub: (() => void) | null = null;
 
   constructor(opts?: TopBarOptions) {
     super();
+    this.sortableChildren = true;
     this._opts = opts ?? {};
     this._buildHuayuan();
     this._buildStaminaPill();
@@ -126,9 +143,17 @@ export class TopBar extends PIXI.Container {
     this._buildGmButton();
     if (this._opts.showDailyChallenge) {
       this._buildDailyChallengeButton();
+      this._buildEventBoardButton();
+      this._eventIconUnsub = TextureCache.onKeysLoaded(['icon_jewelry_event_nb2'], () => this._refreshEventBoardIcon());
     }
     this._bindEvents();
     this._updateAll();
+  }
+
+  destroy(options?: PIXI.IDestroyOptions | boolean): void {
+    this._eventIconUnsub?.();
+    this._eventIconUnsub = null;
+    super.destroy(options);
   }
 
   /* ============== 体力胶囊（参考：粉框 + 内绿进度 + 闪电叠压 + 闪电角绿圆加号） ============== */
@@ -502,10 +527,10 @@ export class TopBar extends PIXI.Container {
   private _buildDailyChallengeButton(): void {
     const wrap = new PIXI.Container();
     wrap.position.set(QUEST_BTN_CX, QUEST_BTN_CY);
-    wrap.hitArea = new PIXI.Rectangle(-QUEST_HIT / 2, -QUEST_HIT / 2, QUEST_HIT, QUEST_HIT);
+    wrap.hitArea = new PIXI.Rectangle(-QUEST_HIT / 2, -QUEST_HIT / 2 - 10, QUEST_HIT, QUEST_HIT + 14);
     wrap.eventMode = 'static';
     wrap.cursor = 'pointer';
-    wrap.zIndex = 21;
+    wrap.zIndex = 25;
     wrap.name = 'dailyQuestBtn';
 
     const tex = TextureCache.get('icon_quest');
@@ -546,10 +571,94 @@ export class TopBar extends PIXI.Container {
     this.updateQuestRedDot();
   }
 
+  /** 首饰活动入口：放在每日挑战旁边，3 级开放 */
+  private _buildEventBoardButton(): void {
+    const wrap = new PIXI.Container();
+    wrap.position.set(EVENT_BTN_CX, EVENT_BTN_CY);
+    wrap.hitArea = new PIXI.Rectangle(
+      -EVENT_HIT_W / 2,
+      -EVENT_HIT_H / 2 + EVENT_HIT_SHIFT_Y,
+      EVENT_HIT_W,
+      EVENT_HIT_H,
+    );
+    wrap.eventMode = 'static';
+    wrap.cursor = 'pointer';
+    wrap.zIndex = 25;
+    wrap.name = 'eventBoardBtn';
+
+    const tex = TextureCache.get('icon_jewelry_event_nb2') ?? TextureCache.get('icon_gift');
+    if (tex && tex.width > 0) {
+      const sp = new PIXI.Sprite(tex);
+      sp.anchor.set(0.5);
+      const s = Math.min(EVENT_ICON_SIZE / tex.width, EVENT_ICON_SIZE / tex.height);
+      sp.scale.set(s);
+      sp.eventMode = 'none';
+      wrap.addChild(sp);
+      this._eventBoardIcon = sp;
+    } else {
+      const fb = new PIXI.Text('活动', {
+        fontSize: 12,
+        fontFamily: FONT_FAMILY,
+        fill: 0x5d4037,
+        fontWeight: 'bold',
+      });
+      fb.anchor.set(0.5);
+      wrap.addChild(fb);
+    }
+
+    const redDot = new PIXI.Graphics();
+    redDot.beginFill(0xff3333);
+    redDot.drawCircle(QUEST_HIT / 2 - 5, -QUEST_HIT / 2 + 7, 6);
+    redDot.endFill();
+    redDot.lineStyle(1.5, 0xffffff);
+    redDot.drawCircle(QUEST_HIT / 2 - 5, -QUEST_HIT / 2 + 7, 6);
+    redDot.visible = false;
+    wrap.addChild(redDot);
+    this._eventRedDot = redDot;
+
+    this._bindButtonClickSfx(wrap);
+    wrap.on('pointertap', (e: PIXI.FederatedPointerEvent) => {
+      e.stopPropagation();
+      EventBus.emit('nav:openEvent');
+    });
+
+    this.addChild(wrap);
+    this._eventBoardBtnWrap = wrap;
+    this.updateEventBoardButtonVisibility();
+    this.updateEventRedDot();
+  }
+
+  private _refreshEventBoardIcon(): void {
+    if (!this._eventBoardIcon) return;
+    const tex = TextureCache.get('icon_jewelry_event_nb2');
+    if (!tex || tex.width <= 0) return;
+    this._eventBoardIcon.texture = tex;
+    const s = Math.min(EVENT_ICON_SIZE / tex.width, EVENT_ICON_SIZE / tex.height);
+    this._eventBoardIcon.scale.set(s);
+  }
+
+  /** 未达开放等级时隐藏活动入口 */
+  updateEventBoardButtonVisibility(): void {
+    const wrap = this._eventBoardBtnWrap;
+    if (!wrap) return;
+    wrap.visible = isJewelryEventUnlocked(CurrencyManager.state.level);
+    if (!wrap.visible && this._eventRedDot) {
+      this._eventRedDot.visible = false;
+    }
+  }
+
   /** 每日挑战红点（由 MainScene 红点刷新或 quest 事件触发） */
   updateQuestRedDot(): void {
     if (this._questRedDot) {
       this._questRedDot.visible = FloatingMenu.getRedDot('quest');
+    }
+  }
+
+  updateEventRedDot(): void {
+    if (this._eventRedDot) {
+      const unlocked = isJewelryEventUnlocked(CurrencyManager.state.level);
+      this._eventRedDot.visible = unlocked
+        && (EventBoardManager.hasClaimable || FloatingMenu.getRedDot('event'));
     }
   }
 
@@ -602,6 +711,11 @@ export class TopBar extends PIXI.Container {
     });
     EventBus.on('quest:updated', () => this.updateQuestRedDot());
     EventBus.on('quest:taskCompleted', () => this.updateQuestRedDot());
+    EventBus.on('eventBoard:changed', () => this.updateEventRedDot());
+    EventBus.on('star:levelUp', () => {
+      this.updateEventBoardButtonVisibility();
+      this.updateEventRedDot();
+    });
   }
 
   private _updateAll(): void {
@@ -612,6 +726,8 @@ export class TopBar extends PIXI.Container {
     this._diamondText.text = this._fmtNum(s.diamond);
     const barRatio = cap > 0 ? Math.min(1, s.stamina / cap) : 0;
     this._drawStaminaBar(barRatio);
+    this.updateEventBoardButtonVisibility();
+    this.updateEventRedDot();
   }
 
   /** 由外部 ticker 调用，刷新体力倒计时 */
@@ -662,6 +778,11 @@ export class TopBar extends PIXI.Container {
     return { x: HYUAN_CX, y: CURRENCY_ICON_CY };
   }
 
+  /** 首饰活动入口图标在 TopBar 内的中心坐标 */
+  getEventBoardIconPos(): { x: number; y: number } {
+    return { x: EVENT_BTN_CX, y: EVENT_BTN_CY };
+  }
+
   /** @deprecated 花露/星星顶栏已移除，飞入花愿槽位 */
   getHualuIconPos(): { x: number; y: number } {
     return this.getHuayuanIconPos();
@@ -686,6 +807,29 @@ export class TopBar extends PIXI.Container {
   /** 花愿数值闪烁弹跳效果 */
   flashHuayuan(): void {
     this._flashText(this._huayuanText);
+  }
+
+  /** 首饰活动入口图标弹跳反馈（原石飞入落点） */
+  flashEventBoard(): void {
+    const wrap = this._eventBoardBtnWrap;
+    if (!wrap) return;
+    TweenManager.cancelTarget(wrap.scale);
+    const base = 1;
+    wrap.scale.set(base, base);
+    TweenManager.to({
+      target: wrap.scale,
+      props: { x: base * 1.35, y: base * 1.35 },
+      duration: 0.15,
+      ease: Ease.easeOutQuad,
+      onComplete: () => {
+        TweenManager.to({
+          target: wrap.scale,
+          props: { x: base, y: base },
+          duration: 0.2,
+          ease: Ease.easeOutBack,
+        });
+      },
+    });
   }
 
   /** @deprecated 花露/星星顶栏已移除 */

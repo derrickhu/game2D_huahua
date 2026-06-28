@@ -33,6 +33,8 @@ export const AD_UNIT_CONFIG: Record<'wechat' | 'douyin', PlatformAdUnitConfig> =
       weekend_huayuan_boost: 'adunit-b6400a6a24ed1fb8',
       /** 清涟荷影换装：与家具 `special_deco_unlock` 同广告位 */
       dressup_outfit_qinglian: 'adunit-73ce0cce0986d5b3',
+      /** 花间珠匣 · 进度回响广告奖励 */
+      event_progress_echo: 'adunit-ee586fd11571a756',
     },
     interstitial: 'adunit-yyyyyyyyyyyyyyyyyy',
     banner: 'adunit-zzzzzzzzzzzzzzzzzz',

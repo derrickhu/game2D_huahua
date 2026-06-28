@@ -14,6 +14,11 @@ import {
   ORDER_TIER_HUAYUAN_MULT,
   SINGLE_SLOT_MERGE_PARITY_FACTOR,
 } from '@/config/OrderHuayuanConfig';
+import {
+  getEventOrderStoneChance,
+  rollEventOrderStoneAmount,
+  isJewelryEventUnlocked,
+} from '@/config/EventBoardConfig';
 import { CUSTOMER_TYPES, CUSTOMER_TYPE_MAP, type CustomerTypeDef } from '@/config/CustomerConfig';
 import { Category, ITEM_DEFS, findItemId } from '@/config/ItemConfig';
 import {
@@ -71,6 +76,8 @@ export interface CustomerInstance {
   diamondReward?: number;
   /** 富贵花商限时单：体力箱奖励 itemId */
   staminaChestReward?: string;
+  /** 首饰活动原石奖励：命中的普通订单额外送 1 原石（生成时决定并展示） */
+  eventStoneReward?: number;
   /** 预留：连续订单序号 */
   chainIndex?: number;
   /** 预留：奖励倍率 */
@@ -97,6 +104,7 @@ export interface CustomerSaveEntry {
   timeLimit: number | null;
   diamondReward?: number;
   staminaChestReward?: string;
+  eventStoneReward?: number;
   chainIndex?: number;
   bonusMultiplier?: number;
   /** 缺省时读档按 orderType + bonusMultiplier 推断 */
@@ -222,6 +230,10 @@ function normalizeCustomerPersistState(raw: unknown): CustomerPersistState | nul
       timeLimit,
       diamondReward,
       staminaChestReward,
+      eventStoneReward:
+        typeof r.eventStoneReward === 'number' && r.eventStoneReward > 0
+          ? Math.floor(r.eventStoneReward)
+          : undefined,
       chainIndex: typeof r.chainIndex === 'number' ? r.chainIndex : undefined,
       bonusMultiplier,
       orderKind,
@@ -340,6 +352,7 @@ class CustomerManagerClass {
         timeLimit: c.timeLimit,
         diamondReward: c.diamondReward,
         staminaChestReward: c.staminaChestReward,
+        eventStoneReward: c.eventStoneReward,
         chainIndex: c.chainIndex,
         bonusMultiplier: c.bonusMultiplier,
         orderKind: c.orderKind,
@@ -376,6 +389,7 @@ class CustomerManagerClass {
           : e.timeLimit,
         diamondReward: e.diamondReward,
         staminaChestReward: e.staminaChestReward,
+        eventStoneReward: e.eventStoneReward,
         chainIndex: e.chainIndex,
         bonusMultiplier: e.bonusMultiplier,
         orderKind: e.orderKind ?? inferOrderKindFromLegacy(e),
@@ -749,6 +763,15 @@ class CustomerManagerClass {
       bonusMultiplier: gen.bonusMultiplier,
       orderKind: gen.generationKind,
     };
+
+    // 主玩法普通订单按档位概率携带原石（首饰活动）：越高级的单越容易出、数量越多，生成即定、订单上展示
+    if (
+      customer.orderType === 'normal'
+      && isJewelryEventUnlocked(level)
+      && Math.random() < getEventOrderStoneChance(customer.tier)
+    ) {
+      customer.eventStoneReward = rollEventOrderStoneAmount(customer.tier);
+    }
 
     if (customer.orderKind === 'timedFlorist') {
       this._timedFloristOrdersToday = Math.min(

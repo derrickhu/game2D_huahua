@@ -1,0 +1,7 @@
+A 2x2 grid sprite sheet of jewelry-box velvet cloth cell covers for a kawaii pastel 2D mobile merge game, clean vector cel-shaded style. Flat pure magenta background #FF00FF everywhere outside the cloth, with a thin even magenta gutter separating the four square cells. Each of the four cells is a perfect square (1:1).
+
+TOP-LEFT and TOP-RIGHT cells: a FULL square block of rich soft purple velvet completely filling the whole square cell, smooth plush fabric with gentle sheen, subtle soft folds and a faint rounded inner highlight, slightly darker purple at the edges; the velvet covers the entire square edge to edge (no magenta showing inside the square). This is the "fully covered / locked" cloth.
+
+BOTTOM-LEFT and BOTTOM-RIGHT cells: the SAME purple velvet but PEELED HALF OPEN — the velvet cloth is folded/lifted back from the top, covering only the LOWER half of the square with a soft curved folded-over flap and a lighter satin underside highlight along the fold; the UPPER half of the square is empty pure magenta #FF00FF (so it will become transparent). This is the "half-open / peek" cloth.
+
+High-key pastel purple jewelry palette, soft gradients, gentle shadows, no text, no numbers, no jewels, no watermark, no photoreal. Keep all four cells the same size and aligned in a clean 2x2 grid on solid magenta #FF00FF.

@@ -1,0 +1,11 @@
+Cute 2D mobile merge-game item icons, kawaii casual style, glossy jewelry, soft pastel high-key palette, gentle cel shading with soft volume and clean rounded forms, subtle sparkle highlights, each object centered. Pure flat white background #FFFFFF, no ground shadow, no scene. NO TEXT, no labels, no numbers, no watermark anywhere.
+
+Layout: exactly 3 columns x 2 rows, 6 separate icons evenly spaced, each icon centered inside its own cell, uniform size, generous even margins, clear empty white gutters between cells so each piece can be cropped individually.
+
+A progression of high-end jewelry inspired by museum masterpieces, increasingly luxurious and ornate:
+Cell 1 (top-left): a pair of dangling drop earrings, purple gems on slim gold hooks.
+Cell 2 (top-middle): an ornate ruby brooch, golden filigree scrollwork around a glowing red gemstone.
+Cell 3 (top-right): an emerald necklace, green gems set along a delicate gold chain.
+Cell 4 (bottom-left): a sapphire tiara / hair crown, blue gems set in an elegant gold frame.
+Cell 5 (bottom-middle): an ornate colorful gemstone collar choker necklace, multi-color gems, rich and regal.
+Cell 6 (bottom-right): a complete luxurious jewelry set displayed together (small crown plus necklace plus earrings), many sparkling multi-color gems, a treasure-chest masterpiece.

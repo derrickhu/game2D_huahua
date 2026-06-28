@@ -3,7 +3,15 @@
  */
 import * as PIXI from 'pixi.js';
 import { BoardMetrics, COLORS, FONT_FAMILY } from '@/config/Constants';
-import { ITEM_DEFS, Category, FlowerLine, DrinkLine, FoodLine, usesLargeBoardIconFill } from '@/config/ItemConfig';
+import {
+  ITEM_DEFS,
+  Category,
+  FlowerLine,
+  DrinkLine,
+  FoodLine,
+  isEventProducerItem,
+  usesLargeBoardIconFill,
+} from '@/config/ItemConfig';
 import { findBoardProducerDef, toolUsesStamina } from '@/config/BuildingConfig';
 import { TextureCache } from '@/utils/TextureCache';
 import { TweenManager, Ease } from '@/core/TweenManager';
@@ -217,10 +225,11 @@ export class ItemView extends PIXI.Container {
 
       this._iconSprite = new PIXI.Sprite(texture);
       const producer = findBoardProducerDef(itemId);
+      const isProducerIcon = !!producer?.canProduce || isEventProducerItem(itemId);
       const fill =
         usesLargeBoardIconFill(def)
           ? BOUQUET_CELL_FILL
-          : producer?.canProduce
+          : isProducerIcon
             ? BOARD_PRODUCER_CELL_FILL
             : ITEM_CELL_FILL;
       const maxSize = cs * fill;
@@ -313,7 +322,7 @@ export class ItemView extends PIXI.Container {
 
   /**
    * 宝箱/红包待散落：`remaining` 为仍待落到棋盘的件数（`total` 仅校验用）。
-   * 右下角小角标：表盘图标 + 剩余件数；传 (0,0) 隐藏。
+   * 右下角小角标：金色小圆牌 + 剩余件数；传 (0,0) 隐藏。
    */
   setChestDispatch(remaining: number, total: number): void {
     const cs = BoardMetrics.cellSize;
@@ -323,40 +332,35 @@ export class ItemView extends PIXI.Container {
     }
 
     const pad = Math.max(4, Math.round(cs * 0.055));
-    const h = Math.max(16, Math.round(cs * 0.2));
-    const clockR = Math.max(4, Math.round(h * 0.28));
-    const gap = 3;
-    const padX = 5;
+    const r = Math.max(12, Math.round(cs * 0.13));
 
     this._chestBadgeLabel.text = String(remaining);
-    const tw = Math.max(this._chestBadgeLabel.width, 8);
-    const innerW = padX + (clockR * 2 + 2) + gap + tw + padX;
-    const r = Math.floor(h / 2);
+    this._chestBadgeLabel.style.fontSize = remaining >= 10 ? 10 : 12;
+    this._chestBadgeLabel.anchor.set(0.5);
+    this._chestBadgeLabel.position.set(0, 1);
 
     this._chestBadgeBg.clear();
-    this._chestBadgeBg.lineStyle(1, 0x8b6914, 0.95);
-    this._chestBadgeBg.beginFill(0x2a1810, 0.9);
-    this._chestBadgeBg.drawRoundedRect(-innerW, -h, innerW, h, r);
+    this._chestBadgeBg.lineStyle(2.5, 0x7a4b1a, 0.96);
+    this._chestBadgeBg.beginFill(0xffcf5a, 1);
+    this._chestBadgeBg.drawCircle(0, 0, r);
+    this._chestBadgeBg.endFill();
+    this._chestBadgeBg.lineStyle(1.2, 0xffffff, 0.92);
+    this._chestBadgeBg.beginFill(0xfff2b8, 0.42);
+    this._chestBadgeBg.drawCircle(-r * 0.22, -r * 0.28, r * 0.46);
     this._chestBadgeBg.endFill();
 
-    const cx = -innerW + padX + clockR + 1;
-    const cy = -h / 2;
     this._chestBadgeClock.clear();
-    this._chestBadgeClock.lineStyle(1.1, 0xf5e6a8, 1);
-    this._chestBadgeClock.drawCircle(cx, cy, clockR);
-    this._chestBadgeClock.lineStyle(0);
-    this._chestBadgeClock.beginFill(0xf5e6a8, 1);
-    this._chestBadgeClock.drawCircle(cx, cy - clockR * 0.35, 1.1);
-    this._chestBadgeClock.endFill();
-    this._chestBadgeClock.lineStyle(1, 0xf5e6a8, 1);
-    this._chestBadgeClock.moveTo(cx, cy - 1);
-    this._chestBadgeClock.lineTo(cx, cy - clockR * 0.55);
-    this._chestBadgeClock.moveTo(cx, cy - 1);
-    this._chestBadgeClock.lineTo(cx + clockR * 0.45, cy + clockR * 0.15);
+    this._chestBadgeClock.lineStyle(1.2, 0xffffff, 0.9);
+    this._chestBadgeClock.moveTo(-r * 0.56, -r * 0.72);
+    this._chestBadgeClock.lineTo(-r * 0.56, -r * 0.38);
+    this._chestBadgeClock.moveTo(-r * 0.73, -r * 0.55);
+    this._chestBadgeClock.lineTo(-r * 0.39, -r * 0.55);
+    this._chestBadgeClock.moveTo(r * 0.58, r * 0.35);
+    this._chestBadgeClock.lineTo(r * 0.58, r * 0.56);
+    this._chestBadgeClock.moveTo(r * 0.48, r * 0.46);
+    this._chestBadgeClock.lineTo(r * 0.69, r * 0.46);
 
-    this._chestBadgeLabel.position.set(-padX, cy);
-
-    this._chestBadgeRoot.position.set(cs - pad, cs - pad);
+    this._chestBadgeRoot.position.set(cs - pad - r * 0.15, cs - pad - r * 0.15);
     this._chestBadgeRoot.visible = true;
 
     this._bringToolEnergyThenPeekOnTop();
@@ -445,7 +449,7 @@ export class ItemView extends PIXI.Container {
   private _syncToolSparkle(category: Category): void {
     this._hideToolSparkle();
     const td = findBoardProducerDef(this._itemId);
-    if (!td?.canProduce) return;
+    if (!td?.canProduce && !isEventProducerItem(this._itemId)) return;
     const cs = BoardMetrics.cellSize;
     const layer = new ToolSparkleLayer(cs, cs);
     layer.position.set(0, 0);
@@ -573,6 +577,7 @@ export class ItemView extends PIXI.Container {
       case Category.BUILDING: return '建';
       case Category.CHEST: return '箱';
       case Category.CURRENCY: return '币';
+      case Category.EVENT: return '饰';
       default: return '物';
     }
   }
@@ -585,6 +590,7 @@ export class ItemView extends PIXI.Container {
       case Category.BUILDING: return 0x8B4513;
       case Category.CHEST: return 0xDAA520;
       case Category.CURRENCY: return 0x4CAF50;
+      case Category.EVENT: return 0x8e6ad8;
       default: return 0xCCCCCC;
     }
   }
@@ -607,6 +613,10 @@ export class ItemView extends PIXI.Container {
         return 0xf5c542;
       case FoodLine.CUT_DRAGONFRUIT:
         return 0xe0568a;
+      case 'jewelry':
+        return 0x8e6ad8;
+      case 'jewelry_box':
+        return 0x50b7c8;
       default: return 0x999999;
     }
   }

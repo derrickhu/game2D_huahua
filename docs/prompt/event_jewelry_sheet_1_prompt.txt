@@ -1,0 +1,11 @@
+Cute 2D mobile merge-game item icons, kawaii casual style, glossy jewelry, soft pastel high-key palette, gentle cel shading with soft volume and clean rounded forms, subtle sparkle highlights, each object centered. Pure flat white background #FFFFFF, no ground shadow, no scene. NO TEXT, no labels, no numbers, no watermark anywhere.
+
+Layout: exactly 3 columns x 2 rows, 6 separate icons evenly spaced, each icon centered inside its own cell, uniform size, generous even margins, clear empty white gutters between cells so each piece can be cropped individually.
+
+A progression of jewelry, all in the same lilac-violet jewel family, increasingly refined:
+Cell 1 (top-left): a single small rough uncut raw crystal stone, pale lilac, chunky and cute.
+Cell 2 (top-middle): a single polished faceted bright gemstone, violet-purple, sparkling, teardrop facet cut.
+Cell 3 (top-right): a simple dainty gold ring with one round purple gemstone on top.
+Cell 4 (bottom-left): a flower-shaped stud earring, soft gold petals with a small purple gem center.
+Cell 5 (bottom-middle): a small teardrop pendant hanging on a thin gold chain, purple gem.
+Cell 6 (bottom-right): a pearl bracelet, a neat row of glossy white pearls with a small gold clasp.

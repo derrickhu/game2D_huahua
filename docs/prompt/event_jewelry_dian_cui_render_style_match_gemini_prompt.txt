@@ -1,0 +1,25 @@
+Create a 2D mobile game item icon sheet for a cozy pastel flower-shop merge game. Generate 13 varied jewelry icons on a plain white background, as a preview sheet. No text, no labels, no numbers, no watermark, no grid lines, no UI frames.
+
+Use the attached reference image primarily for RENDERING STYLE, not for exact shapes:
+- Match the dian-cui reference quality: light warm-brown outlines, not thick dark outlines.
+- Match the soft hand-painted 2D game icon finish: layered color, subtle gradients, gemstone translucency, gentle highlights, delicate gold shading.
+- Match the small board-cell readability: each icon has a clear shape, fills the cell, and does not rely on tiny details.
+- Match the elegant, slightly soft, premium texture of the reference, especially the turquoise/gold dian-cui pieces and the green earrings/necklace.
+
+Do NOT copy the dian-cui blue feather crown shapes. Do NOT make the whole set blue. Do NOT make flat Western sticker icons. Do NOT use heavy black/brown stroke, thick cartoon outlines, hard vector shapes, or simple clipart.
+
+Jewelry design requirements:
+- Create varied actual jewelry pieces: earrings, brooches, pendants, rings, hair ornaments, bracelets, necklaces, tiaras, crowns, clasps, charms.
+- Each piece should have one main gemstone color and one simple gold setting.
+- Use varied gem colors across the set, but each item should be visually clean and not rainbow-cluttered.
+- Use refinement from color, volume, light, and form; not from many tiny beads or dense filigree.
+- Keep silhouettes compact and suitable for merge-game board icons. Avoid long skinny pieces.
+
+Rendering details:
+- Thin soft outline, around the feeling of the reference icons.
+- Gold should have warm orange-to-yellow gradients and gentle shadow, not flat yellow.
+- Gems should have interior facets, darker rim, lighter center/highlights, subtle transparency.
+- Keep small decorative elements minimal and softly integrated.
+
+Composition:
+Exactly 13 separate centered icons on white background. Clear spacing. Similar scale. No captions or extra objects.

@@ -75,6 +75,11 @@ import { DressUpManager } from '@/managers/DressUpManager';
 import { getOwnerBoardDisplayScale } from '@/config/DressUpConfig';
 import { SocialManager } from '@/managers/SocialManager';
 import { EventManager } from '@/managers/EventManager';
+import { EventBoardManager } from '@/managers/EventBoardManager';
+import {
+  isJewelryEventUnlocked,
+  JEWELRY_EVENT_UNLOCK_LEVEL,
+} from '@/config/EventBoardConfig';
 import { ENABLE_CHALLENGE_LEVEL_FEATURE } from '@/config/FeatureFlags';
 import { ChallengeManager } from '@/managers/ChallengeManager';
 import { HapticSystem } from '@/systems/HapticSystem';
@@ -86,6 +91,7 @@ import {
   playShopDecorationStarFly,
 } from '@/gameobjects/ui/ShopDecorationStarFly';
 import { EventPanel } from '@/gameobjects/ui/EventPanel';
+import { EventBoardPanel } from '@/gameobjects/ui/EventBoardPanel';
 import { ChallengePanel } from '@/gameobjects/ui/ChallengePanel';
 import { LeaderboardPanel } from '@/gameobjects/ui/LeaderboardPanel';
 import { RewardBoxButton } from '@/gameobjects/ui/RewardBoxButton';
@@ -184,6 +190,7 @@ export class MainScene implements Scene {
   /** 主场景：与花店 `decoration:shopStarFly` 同款飞星粒子层（装扮解锁用） */
   private _dressShopStarFlyLayer: PIXI.Container | null = null;
   private _eventPanel!: EventPanel;
+  private _eventBoardPanel!: EventBoardPanel;
   private _challengePanel!: ChallengePanel;
   private _leaderboardPanel!: LeaderboardPanel;
 
@@ -390,10 +397,13 @@ export class MainScene implements Scene {
       this.container.addChild(sceneBg);
     }
 
-    // 顶部信息栏（紧贴安全区下方）
+    // 顶部信息栏（紧贴安全区下方；zIndex 高于店铺区，避免活动/挑战按钮被客人滑动层挡住）
     this._topBar = new TopBar({ showDailyChallenge: true });
     this._topBar.position.set(0, y);
+    this.container.sortableChildren = true;
+    this._topBar.zIndex = 35;
     this.container.addChild(this._topBar);
+    this.container.sortChildren();
     y += TOP_BAR_HEIGHT + 4;
 
     // 店铺区域（店主左侧 + 客人横向滚动；任务/活动入口在客人区上方）
@@ -505,6 +515,9 @@ export class MainScene implements Scene {
 
     this._eventPanel = new EventPanel();
     overlay.addChild(this._eventPanel);
+
+    this._eventBoardPanel = new EventBoardPanel();
+    overlay.addChild(this._eventBoardPanel);
 
     this._challengePanel = new ChallengePanel();
     overlay.addChild(this._challengePanel);
@@ -669,7 +682,8 @@ export class MainScene implements Scene {
 
     const customerAreaW = W - CUSTOMER_LEFT - PAD;
     // 左侧活动列仅按钮展开；客人区全高可横向拖，避免与整行滑动抢手势
-    this._customerScrollArea = new CustomerScrollArea(customerAreaW, 0);
+    // 顶部 ~52px 与顶栏活动/挑战按钮重叠，不参与横向拖命中，避免抢点击
+    this._customerScrollArea = new CustomerScrollArea(customerAreaW, 52);
     this._customerScrollArea.position.set(CUSTOMER_LEFT, 0);
     this._shopMainBlock.addChild(this._customerScrollArea);
     this._customerScrollArea.zIndex = 10;
@@ -763,6 +777,24 @@ export class MainScene implements Scene {
           this._topBar.flashHuayuan();
           onAnimDone();
         }, 0, false);
+      }
+
+      const stoneFly = Math.max(0, Math.floor(customer.eventStoneReward ?? 0));
+      if (stoneFly > 0 && cv) {
+        const stoneLocal = cv.getEventStoneRewardIconLocalCenter();
+        if (stoneLocal) {
+          pendingAnims++;
+          const sg = cv.toGlobal(stoneLocal);
+          const sx = this.container.toLocal(sg).x;
+          const sy = this.container.toLocal(sg).y;
+          const evtPos = this._topBar.getEventBoardIconPos();
+          const endX = this._topBar.x + evtPos.x;
+          const endY = this._topBar.y + evtPos.y;
+          this._playRewardFly('event_jewelry_1', sx, sy, endX, endY, stoneFly, () => {
+            this._topBar.flashEventBoard();
+            onAnimDone();
+          }, 0.12, false);
+        }
       }
 
       // 无奖励时直接交付
@@ -1389,6 +1421,18 @@ export class MainScene implements Scene {
       this._scheduleRewardBoxHint(900, true);
     });
 
+    // 花间珠匣整页打开时收起奖励篮软提醒，关闭后再尝试弹出
+    EventBus.on('panel:openEventBoard', () => {
+      this._rewardBoxHintOverlay.hide();
+      if (this._rewardBoxHintTimer) {
+        clearTimeout(this._rewardBoxHintTimer);
+        this._rewardBoxHintTimer = null;
+      }
+    });
+    EventBus.on('panel:closeEventBoard', () => {
+      this._scheduleRewardBoxHint(800, true);
+    });
+
     // ---- 体力系统事件 ----
 
     // 体力不足 → 弹出体力面板引导
@@ -1476,7 +1520,11 @@ export class MainScene implements Scene {
 
     // ---- 限时活动入口 ----
     EventBus.on('nav:openEvent', () => {
-      EventBus.emit('panel:openEvent');
+      if (!isJewelryEventUnlocked(LevelManager.level)) {
+        ToastMessage.show(`花间珠匣将在 ${JEWELRY_EVENT_UNLOCK_LEVEL}级 开放`);
+        return;
+      }
+      EventBus.emit('panel:openEventBoard');
     });
 
     // ---- 挑战关卡入口（关闭时事件无效果，面板与 Manager 内亦有开关） ----
@@ -1514,6 +1562,10 @@ export class MainScene implements Scene {
     EventBus.on('event:started', (event: any) => {
       this._markRedDotsDirty();
       ToastMessage.show(`限时活动开启：${event.name}！`);
+    });
+
+    EventBus.on('eventBoard:changed', () => {
+      this._markRedDotsDirty();
     });
 
     // ---- 挑战事件 ----
@@ -1564,7 +1616,11 @@ export class MainScene implements Scene {
   /** 更新红点 */
   private _updateRedDots(): void {
     // 活动红点
-    this._floatingMenu.setRedDot('event', EventManager.hasClaimableTask);
+    const eventUnlocked = isJewelryEventUnlocked(LevelManager.level);
+    this._floatingMenu.setRedDot(
+      'event',
+      eventUnlocked && (EventManager.hasClaimableTask || EventBoardManager.hasClaimable),
+    );
     this._floatingMenu.setRedDot('quest', QuestManager.hasClaimableQuest);
 
     // 底部栏红点（装修按钮）
@@ -1572,6 +1628,7 @@ export class MainScene implements Scene {
 
     this._shopRowPanorama.updateRedDots();
     this._topBar.updateQuestRedDot();
+    this._topBar.updateEventRedDot();
   }
 
   private _markRedDotsDirty(): void {
@@ -1835,7 +1892,8 @@ export class MainScene implements Scene {
       || TutorialManager.isActive
       || this._checkInPanel.visible
       || this._offlineRewardPanel.visible
-      || this._levelUpPopup.visible;
+      || this._levelUpPopup.visible
+      || this._eventBoardPanel.visible;
 
     if (blocked) {
       if (this._rewardBoxHintRetryCount < MainScene._REWARD_BOX_HINT_MAX_RETRY) {

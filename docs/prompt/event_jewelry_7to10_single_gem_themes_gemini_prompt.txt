@@ -1,0 +1,22 @@
+Create a square 1:1 image containing a clean 2 columns x 2 rows grid sheet of exactly 4 jewelry merge-game item icons. Use the attached jewelry sheet reference only for style consistency: cute polished 2D mobile game icons, soft glossy volume, refined gemstone facets, thin clean same-color outlines, warm gold or platinum highlights, readable silhouette at 128 px. Do not copy the reference objects exactly. Create four new standalone jewelry icons.
+
+Important art direction:
+- These four items must feel more refined and high-end than colorful toy jewelry.
+- Each item should have ONE clear gemstone color theme, not many random gem colors on the same piece.
+- Use restrained accent colors only when needed for metal highlights or tiny diamond-white sparkle, never rainbow decoration.
+- Do not use deep black outlines. Use dark gold, warm brown, dark emerald, ruby red, sapphire blue, violet, or soft gray outlines that match the local color.
+- Show delicacy through gemstone facets, smooth color gradients, inner shadows, clean silhouettes, and bright highlight arcs.
+- No pearls, no pearl beads, no white pearl balls.
+- Clean pure white background, generous white gutters, no UI frame, no text, no labels, no numbers, no watermark.
+
+Grid content, left-to-right top row then bottom row:
+
+Cell 1, Level 7: emerald earrings. A pair of elegant emerald earrings, mainly vivid emerald green gemstones with gold setting. Distinct from previous stud earrings: longer refined drop or leaf-drop shape, but not too long, no extra random colored gems. One pair shown together, balanced and readable.
+
+Cell 2, Level 8: purple and yellow gemstone brooch. A single refined brooch using amethyst purple and yellow topaz as the main two colors, warm gold frame. Unique shape such as a small fan, sunburst flower, or art-deco bow, but not a necklace and not an earring. Keep it sophisticated, not gaudy.
+
+Cell 3, Level 9: ruby hair accessory. A red ruby hair ornament or hair comb, mainly rich ruby red gemstones with gold or rose-gold structure. It should read clearly as a hair accessory, not a crown and not a necklace. Use a graceful curved comb, floral hairpin, or small hair barrette silhouette.
+
+Cell 4, Level 10: sapphire necklace. A refined sapphire blue necklace, mainly deep blue sapphire gems with white platinum or pale gold chain. It should read clearly as a necklace, more premium than Level 9, with one central blue sapphire pendant or elegant collar curve. Avoid mixing many colored gems.
+
+Make all four icons distinct in jewelry type, silhouette, and main gem color. Keep them harmonious with the existing gemstone chain and the flower-shop merge-game icon style.

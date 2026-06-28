@@ -1,0 +1,11 @@
+High-saturation 2D mobile merge-game item icons, exactly the same art style as a cozy flower-shop merge game bouquet line: bold clean dark outline, chunky simple readable shapes, glossy hand-painted cel shading with soft volume, rich vivid candy colors. Describe each object through color blocks and soft shadow rather than tiny fine details, so it stays clear and pretty as a small board icon. Single centered object per cell. Pure flat white background, no scene, faint soft contact shadow only. NO TEXT, no labels, no numbers, no watermark anywhere.
+
+Layout: exactly 3 columns x 2 rows, 6 separate icons, evenly spaced, each icon large and centered in its own cell, wide even white gutters between cells so each piece can be cropped individually.
+
+A high-end jewelry progression, each a SINGLE simple piece (no full sets, only one object per cell):
+Cell 1 (top-left): one single drop earring, a purple teardrop gem on a slim gold hook (only one earring, not a pair).
+Cell 2 (top-middle): one ruby brooch, a bold red gem in a simple gold scroll frame.
+Cell 3 (top-right): one emerald necklace, a green gem on a simple gold chain.
+Cell 4 (bottom-left): one sapphire tiara, a delicate gold hair crown with blue gems.
+Cell 5 (bottom-middle): one ornate gemstone collar choker necklace, a few bold multi-color gems.
+Cell 6 (bottom-right): one grand royal crown, a single full gold crown with bold sparkling gems, the most luxurious single piece.

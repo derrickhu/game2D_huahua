@@ -213,7 +213,7 @@ export const DECO_DEFS: DecoDef[] = [
   { id: 'orn_pot',        name: '藤编收纳篮',  slot: DecoSlot.ORNAMENT, rarity: DecoRarity.COMMON, cost: 165, starValue: 3,  icon: 'orn_pot',       desc: '手编篮配干花丝带，非盆栽', unlockRequirement: { level: 2 }, defaultScale: 0.63 },
   { id: 'orn_vase',       name: '花瓶',        slot: DecoSlot.ORNAMENT, rarity: DecoRarity.COMMON, cost: 306, starValue: 1, icon: 'orn_vase',      desc: '插一枝花就很美', unlockRequirement: { level: 4 }, defaultScale: 0.53 },
   { id: 'orn_fountain',   name: '迷你喷泉',    slot: DecoSlot.ORNAMENT, rarity: DecoRarity.FINE,   cost: 1044, starValue: 3, icon: 'orn_fountain',  desc: '轻线稿小喷泉，卵石底无方格地台', unlockRequirement: { level: 6 }, defaultScale: 1.2, decorationPanelTab: 'garden' },
-  { id: 'orn_candle',     name: '香薰蜡烛',    slot: DecoSlot.ORNAMENT, rarity: DecoRarity.COMMON, cost: 215, starValue: 1, icon: 'orn_candle',    desc: '玻璃罐浮雕花香款，精致柔线稿', defaultScale: 0.36 },
+  { id: 'orn_candle',     name: '香薰蜡烛',    slot: DecoSlot.ORNAMENT, rarity: DecoRarity.COMMON, cost: 215, starValue: 1, icon: 'orn_candle',    desc: '玻璃罐浮雕花香款，精致柔线稿', defaultScale: 0.26 },
   { id: 'orn_clock',      name: '复古挂钟',    slot: DecoSlot.ORNAMENT, rarity: DecoRarity.FINE,   cost: 1060, starValue: 5, icon: 'orn_clock',     desc: '滴答滴答的复古时光', unlockRequirement: { level: 8 }, defaultScale: 0.55 },
   { id: 'orn_fireplace',  name: '壁炉',        slot: DecoSlot.ORNAMENT, rarity: DecoRarity.FINE,   cost: 1080, starValue: 3, icon: 'orn_fireplace', desc: '砖木壁炉柔线稿，台面双瓶花', unlockRequirement: { level: 5 }, defaultScale: 1.35, decorationPanelTab: 'furniture' },
 
@@ -247,6 +247,10 @@ export const DECO_DEFS: DecoDef[] = [
   { id: 'promo_mint_fridge', name: '薄荷小冰箱', slot: DecoSlot.LIGHT, rarity: DecoRarity.FINE, cost: 780, starValue: 4, icon: 'promo_mint_fridge', desc: '圆角复古冰箱，冰饮和鲜花都能清清爽爽', defaultScale: 1.08 },
   { id: 'promo_doll_hug_pillow', name: '兔兔抱枕玩偶', slot: DecoSlot.ORNAMENT, rarity: DecoRarity.FINE, cost: 560, starValue: 3, icon: 'promo_doll_hug_pillow', desc: '抱着粉心枕的软萌兔兔，角落立刻变可爱', defaultScale: 0.62 },
   { id: 'promo_pearl_bead_curtain', name: '珍珠花珠帘', slot: DecoSlot.WALLART, rarity: DecoRarity.FINE, cost: 680, starValue: 3, icon: 'promo_pearl_bead_curtain', desc: '珍珠、花珠和薄荷小叶串成的温柔墙饰', defaultScale: 1.95 },
+  // 花间珠匣活动奖励：通过活动进度发放，花愿售价与星值均为 0。
+  { id: 'event_jewelry_jade_curtain', name: '翠玉珠帘', slot: DecoSlot.WALLART, rarity: DecoRarity.LIMITED, cost: 0, starValue: 0, icon: 'event_jewelry_jade_curtain', desc: '翠玉珠与珍珠垂成的活动限定墙饰', unlockRequirement: { questId: 'event_jewelry_reward_jade_curtain', conditionText: '活动解锁', questDetailText: '参与花间珠匣活动进度奖励后解锁' }, defaultScale: 1.7, allowedSceneIds: ['flower_shop'] },
+  { id: 'event_jewelry_back_sofa', name: '珠绣背向沙发', slot: DecoSlot.ORNAMENT, rarity: DecoRarity.LIMITED, cost: 0, starValue: 0, icon: 'event_jewelry_back_sofa', desc: '面向墙摆放的限定沙发，背面有柔和珠绣花纹', unlockRequirement: { questId: 'event_jewelry_reward_back_sofa', conditionText: '活动解锁', questDetailText: '参与花间珠匣活动进度奖励后解锁' }, defaultScale: 1.28, decorationPanelTab: 'furniture', allowedSceneIds: ['flower_shop'] },
+  { id: 'event_jewelry_empty_tea_table', name: '珠缘空茶几', slot: DecoSlot.TABLE, rarity: DecoRarity.LIMITED, cost: 0, starValue: 0, icon: 'event_jewelry_empty_tea_table', desc: '留出干净台面的活动限定茶几，适合后续摆放小物', unlockRequirement: { questId: 'event_jewelry_reward_empty_tea_table', conditionText: '活动解锁', questDetailText: '参与花间珠匣活动进度奖励后解锁' }, defaultScale: 1.05, decorationPanelTab: 'furniture', allowedSceneIds: ['flower_shop'] },
   { id: 'wallart_lace_curtain', name: '柔纱短帘', slot: DecoSlot.WALLART,  rarity: DecoRarity.FINE,   cost: 300, starValue: 4, icon: 'wallart_lace_curtain', desc: '蕾丝咖啡馆风情', unlockRequirement: { level: 2 }, defaultScale: 1.8 },
   { id: 'garden_wood_trough', name: '木质长花箱',   slot: DecoSlot.GARDEN,   rarity: DecoRarity.COMMON, cost: 252, starValue: 1, icon: 'garden_wood_trough', desc: '一长条春天开在门口', unlockRequirement: { level: 4 }, defaultScale: 0.97 },
 

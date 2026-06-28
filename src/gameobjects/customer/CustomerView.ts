@@ -220,6 +220,20 @@ export class CustomerView extends PIXI.Container {
     return new PIXI.Point(cx, cy);
   }
 
+  /** 首饰活动原石奖励图标中心（CustomerView 局部坐标；无原石奖励时 null） */
+  getEventStoneRewardIconLocalCenter(): PIXI.Point | null {
+    if (!this._rewardBadge) return null;
+    const cap = this._rewardBadge.children.find(
+      (c) => c.name === 'eventStoneRewardCapsule',
+    ) as PIXI.Container | undefined;
+    if (!cap) return null;
+    const iconCx = REWARD_BADGE_PAD_X + REWARD_BADGE_ICON / 2;
+    const iconCy = cap.height / 2;
+    const g = cap.toGlobal(new PIXI.Point(iconCx, iconCy));
+    const local = this.toLocal(g);
+    return new PIXI.Point(local.x, local.y);
+  }
+
   /**
    * 「完成」按钮中心的全局坐标（订单已齐且按钮已显示时；供新手引导手指定位）
    */
@@ -378,6 +392,16 @@ export class CustomerView extends PIXI.Container {
     const capsules: { node: PIXI.Container; w: number; h: number }[] = [
       this._makeRewardCapsule(baseItems, 16),
     ];
+
+    // 首饰活动原石：命中订单在花愿奖励基础上额外展示原石图标 + 数量
+    const stoneReward = this._customer.eventStoneReward ?? 0;
+    if (stoneReward > 0) {
+      const stoneCap = this._makeRewardCapsule([
+        { icon: 'event_jewelry_1', value: stoneReward, fill: 0x6B51B0 },
+      ], 16);
+      stoneCap.node.name = 'eventStoneRewardCapsule';
+      capsules.push(stoneCap);
+    }
 
     const weekendBonus = this._customer.weekendHuayuanBonus ?? 0;
     if (weekendBonus > 0) {

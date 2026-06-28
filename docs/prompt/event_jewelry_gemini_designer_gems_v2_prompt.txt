@@ -1,0 +1,32 @@
+Create a square 1:1 image containing a clean 4 columns x 4 rows grid sheet of designer gemstone merge-game item icons. Use the attached bouquet reference image only for the rendering style: cute polished 2D mobile game item icons, saturated joyful colors, soft glossy volume, rounded readable silhouettes, thin clean same-color outlines, bright white highlight arcs, and color-gradient shading. Do not copy flowers, bouquet shapes, wrapping paper, ribbons, or any floral object. Create standalone gemstone jewelry icons only.
+
+The sheet must contain exactly 13 jewelry icons in the first 13 cells, left-to-right top-to-bottom. Leave the last 3 cells completely blank white. Every used cell must contain one unique centered object, large and readable at 128 px, with generous white gutters. Clean pure white background only. NO TEXT, no labels, no numbers, no captions, no watermark, no readable writing anywhere.
+
+Core art direction:
+- More refined and designer-like than ordinary jewelry icons. Avoid tacky, rustic, cheap, toy-like, or generic mall jewelry.
+- The theme is GEMSTONES. Use faceted gems as the main visual language in every item.
+- Absolutely no pearls, no pearl bracelet, no pearl beads, no white pearl balls, no pearl crown tips. Replace all pearl ideas with colored gemstones or diamond-like faceted crystals.
+- Do not use deep black outlines. Use warm brown, dark gold, dark emerald, dark ruby, deep sapphire, violet, or soft gray outlines that match the local color.
+- Show volume and delicacy through color depth, soft gradients, highlight arcs, inner shadows, and faceted gemstone planes, not through dense tiny lines.
+- Metals can be brushed gold, rose gold, pale champagne gold, and white platinum. Use elegant mixed-metal accents when beautiful.
+- Use rich gemstone colors: emerald green, ruby red, sapphire blue, amethyst purple, yellow topaz, pink tourmaline, teal opal-like gem, diamond white.
+- Each icon needs a distinct design identity: different silhouette, different gem rhythm, different metal structure. No repeated ring/necklace/crown shapes.
+
+Required first two cells:
+Cell 1: a small rough raw ore stone, mostly warm light gray rock, rounded chunky shape, with one exposed vivid emerald-green faceted gem window in the middle. It must clearly be gray stone with a green jewel showing, not a purple crystal and not a fully green rock.
+Cell 2: one loose polished emerald gemstone, bright vivid green, large faceted oval or cushion cut, glossy and cute, no metal setting.
+
+Designer gemstone progression for Cells 3 to 13:
+Cell 3: an elegant asymmetrical gold ring with one emerald cushion-cut gem and two tiny blue sapphire side stones, clean and refined.
+Cell 4: a single butterfly-wing ear cuff, rose gold frame, emerald and sapphire wing gems, one small pink gem accent, not a pair.
+Cell 5: a white-platinum constellation pendant, crescent or star arc shape, with green emerald, purple amethyst, and diamond-white faceted crystals. No pearls.
+Cell 6: a gemstone bracelet, NOT pearl: a slim rose-gold bracelet loop with alternating emerald, ruby, sapphire, and yellow topaz cabochons, one larger emerald charm.
+Cell 7: one long asymmetric designer drop earring, stacked geometric gems: emerald rectangle, ruby marquise, diamond white kite, sapphire small stone. Single earring only.
+Cell 8: an art-nouveau brooch shaped like a flowing leaf or flame, champagne-gold curves with emerald, ruby, and teal gems, elegant not old-fashioned.
+Cell 9: a sculptural high-jewelry necklace with a large emerald center, side gems in sapphire blue, ruby red, and yellow topaz, open airy metal structure.
+Cell 10: a delicate designer tiara in white platinum and pale gold, fan-like gem rhythm with emerald center and blue/purple side gems, no pearls.
+Cell 11: an ornate gemstone collar choker, rose-gold base with a rhythm of multicolor faceted gems, emerald center drop, refined and fashionable, no beads.
+Cell 12: a royal gemstone crown, elegant high-jewelry crown with faceted emerald, sapphire, ruby, yellow topaz, and diamond white crystals. Avoid bulky cartoon crown; make it graceful.
+Cell 13: the final most beautiful star-emerald crown or headpiece, high-design silhouette, emerald star or shield center, rainbow gemstone accents, white-platinum and gold mixed metal, premium and elegant, still readable as a small board icon.
+
+Let the model improve cells 3 to 13 creatively if it can make them more beautiful, refined, and distinctive. Prioritize gemstone richness, elegant design, and harmony with the bouquet icon rendering style.

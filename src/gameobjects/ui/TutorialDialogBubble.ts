@@ -79,23 +79,23 @@ export class TutorialDialogBubble extends PIXI.Container {
       : null;
 
     const bodyText = new PIXI.Text(opts.body, {
-      fontSize: variant === 'dialog' ? 22 : 23,
+      fontSize: variant === 'dialog' ? 19 : 23,
       fill: 0x5c4a3d,
       fontFamily: FONT_FAMILY,
       wordWrap: true,
       wordWrapWidth: textW,
-      lineHeight: variant === 'dialog' ? 33 : 35,
+      lineHeight: variant === 'dialog' ? 28 : 35,
     });
 
     const actionText = opts.actionText
       ? new PIXI.Text(opts.actionText, {
-          fontSize: 20,
+          fontSize: variant === 'dialog' ? 18 : 20,
           fill: 0x6a4a2f,
           fontFamily: FONT_FAMILY,
           fontWeight: 'bold',
           wordWrap: true,
-          wordWrapWidth: textW - 28,
-          lineHeight: 28,
+          wordWrapWidth: textW - 52,
+          lineHeight: variant === 'dialog' ? 25 : 28,
         })
       : null;
 

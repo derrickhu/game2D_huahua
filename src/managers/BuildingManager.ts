@@ -443,6 +443,47 @@ export function findRepresentativeChestForDrop(
   return null;
 }
 
+/** 该物品是否为容器（宝箱 / 红包 / 钻石袋 / 体力箱） */
+export function isChestItem(itemId: string): boolean {
+  return CHEST_DEFS.some(c => c.itemId === itemId);
+}
+
+function _chestWeightedPick<T extends { weight: number }>(items: T[]): T | null {
+  const total = items.reduce((s, it) => s + it.weight, 0);
+  if (total <= 0) return null;
+  let roll = Math.random() * total;
+  for (const it of items) {
+    roll -= it.weight;
+    if (roll <= 0) return it;
+  }
+  return items[items.length - 1] ?? null;
+}
+
+/**
+ * 给容器 id 直接 roll 出整队棋盘掉落物（与主棋盘 `_rollChestProduce` 同规则），
+ * 纯函数、不触碰主棋盘状态。供活动棋盘开箱复用。容器非法返回 null。
+ */
+export function rollChestBoardDrops(itemId: string): string[] | null {
+  const chest = CHEST_DEFS.find(c => c.itemId === itemId);
+  if (!chest) return null;
+  const queue: string[] = [];
+  for (let i = 0; i < chest.boardDropCount; i++) {
+    const opt = _chestWeightedPick(chest.produceItems);
+    if (!opt) continue;
+    let id: string | null = null;
+    if (opt.type === 'tool') {
+      id = ALL_LV1_TOOLS[Math.floor(Math.random() * ALL_LV1_TOOLS.length)] ?? null;
+    } else if (opt.type === 'product' && opt.category && opt.lines && opt.levelRange) {
+      const line = opt.lines[Math.floor(Math.random() * opt.lines.length)];
+      const [minLv, maxLv] = opt.levelRange;
+      const level = minLv + Math.floor(Math.random() * (maxLv - minLv + 1));
+      id = findItemId(opt.category, line, level);
+    }
+    if (id) queue.push(id);
+  }
+  return queue;
+}
+
 /**
  * 与单次 `_rollChestProduce` 一致：先按 weight 选条目，再 tool 均匀抽 Lv1 工具 / product 均匀抽线+等级。
  * 用于合成线面板产出概率悬浮窗。

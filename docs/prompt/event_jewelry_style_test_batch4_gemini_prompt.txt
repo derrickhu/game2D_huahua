@@ -1,0 +1,22 @@
+Create a small 2D mobile game item icon test sheet for a cozy pastel flower-shop merge game. Generate exactly 4 jewelry icons on a plain white background, arranged in one row with clear spacing. No text, no numbers, no labels, no captions, no watermark, no UI frame, no grid lines, no extra objects.
+
+Purpose:
+This is only a style test for the event jewelry line. Match the rendering quality of the attached reference icons: especially the dian-cui crown pieces and the good green earrings/necklace. Learn the rendering style, not the exact shapes.
+
+Rendering style must match the reference:
+- Thin warm brown outline, very light and elegant, not thick cartoon stroke.
+- Soft hand-painted 2D game icon texture.
+- Layered colors and subtle gradients, not flat vector.
+- Gems have translucent depth, darker edge, lighter center, faceted highlights.
+- Gold has warm shaded thickness, soft orange-yellow gradients, not flat yellow.
+- The icon should look simple at board size but premium up close.
+- Use few details, but make each detail high quality.
+
+Generate exactly these 4 jewelry icons:
+1. Jade bangle: a chunky round jade bangle, pale green translucent stone, with two or three small gold bands and one tiny red bead accent. This should feel fresh and memorable, based on the good jade-bangle idea, but rendered in the reference style.
+2. Emerald drop earrings: a pair of large green teardrop earrings, close to the good existing green earrings feeling, with thin gold frame and visible gem facets.
+3. Ruby gold ring: a thick gold ring with one large ruby gemstone, compact diagonal silhouette, refined shading.
+4. Small gemstone hair crown: compact gold hair crown / hair ornament with one large blue-green central gem and two side gems, not a dian-cui feather crown, not too spiky.
+
+Readability:
+Each icon fills 80% to 90% of its cell. Avoid long skinny silhouettes. Avoid dense filigree, pearl strings, many tiny stones, extra loose beads, and thick outlines. Keep each icon centered and suitable for splitting into transparent game board item icons later.

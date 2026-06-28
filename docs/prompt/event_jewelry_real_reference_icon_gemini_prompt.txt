@@ -1,0 +1,22 @@
+Create one standalone jewelry game item icon based directly on the attached real jewelry reference photo.
+
+Faithfully preserve the reference jewelry's identity:
+- Keep the same jewelry type: earring pair, collar necklace, bib necklace, pendant necklace, tiara/crown, or headpiece as shown in the photo.
+- Keep the same main silhouette and construction: hoops, arcs, fringe drops, tassels, halos, flower clusters, scalloped diamond pave edges, graduated center stone, or chandelier rows if present.
+- Keep the same primary gemstone family and color: emerald green, ruby pink/red, sapphire blue, or diamond white. Do not turn it into a different gem theme.
+- Keep the same high-jewelry feeling: museum display, fine pave diamonds, large central cabochon or faceted stones, delicate metalwork.
+
+Convert the photo into the existing game art style:
+- Cute polished 2D mobile merge-game item icon, refined and luxurious.
+- Soft glossy volume, clear gemstone facets, bright white highlight arcs, smooth color gradients, small diamond sparkle clusters.
+- Thin clean outlines in local colors only: dark emerald, deep ruby, dark sapphire, warm gold, or soft gray. No heavy black outlines.
+- Use simplified but elegant shapes so the icon is readable at 128 px. Do not include tiny photo-level clutter.
+- Center one single jewelry object on a pure white background with generous margins.
+
+Important cleanup:
+- Remove the museum display stand, glass reflections, people, room background, photo watermark, text, labels, UI, and shadows from the photo.
+- Do not include readable text, numbers, captions, signatures, watermarks, or logos anywhere.
+- No pearls unless the reference clearly contains pearl-like elements; otherwise use diamond-white faceted stones instead.
+- No random rainbow gems. Preserve the reference's main gemstone palette.
+
+The output should be a polished transparent-background-ready icon composition on pure white background, matching the current jewelry merge item visual style.

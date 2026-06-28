@@ -1,0 +1,21 @@
+Create a square 1:1 image containing a clean 1 column x 3 rows grid sheet of exactly 3 high-jewelry merge-game item icons for levels 11, 12, and 13. Use the attached existing jewelry game icon sheet only for rendering style: cute polished 2D mobile game icons, soft glossy volume, saturated gemstone colors, thin clean same-color outlines, bright white highlight arcs, color-gradient shading, readable at 128 px. Do not copy any existing icon exactly. Do not copy flowers or bouquets.
+
+These three icons must feel much more high-end, luxurious, and haute-joaillerie than ordinary game jewelry. Take design inspiration from real museum-quality jewelry: emerald-and-diamond bib necklaces, ruby cabochon collar necklaces, sapphire-and-diamond fringe necklaces, emerald tassel necklaces, and grand tiara crowns. Translate that luxury into simplified but refined 2D game icons, not photoreal product photos.
+
+Global style rules:
+- Refined designer jewelry, elegant and expensive, not tacky, not cartoon crown toys, not rainbow cheap gems.
+- No deep black outlines. Use dark gold, warm brown, dark emerald, ruby red, sapphire blue, violet, or soft gray outlines.
+- Show luxury through gemstone facets, diamond pavé sparkle, layered halos, cabochon glow, metal highlights, and graceful silhouettes.
+- No pearls, no pearl beads, no white pearl balls.
+- Pure white background, generous gutters, centered large icons, NO TEXT, no labels, no numbers, no watermark.
+
+Cell 1, Level 11 gemstone collar choker:
+Inspired by a ruby-and-diamond bib collar necklace. A wide ornate collar choker with rows of oval ruby-red cabochon gems surrounded by tiny diamond-white sparkle halos, rose-gold or champagne-gold metal barely visible. Symmetrical bib shape, scalloped lower edge, maybe one central larger ruby drop. Main color theme: ruby red + diamond white + gold. Not multicolor rainbow.
+
+Cell 2, Level 12 diamond royal crown:
+Inspired by an emerald-and-diamond grand necklace or bib collar translated into an elegant royal crown. A graceful high-jewelry crown with emerald-green cushion or oval gems in diamond pavé halos, white platinum and pale gold mixed metal, refined arches not bulky cartoon spikes. Main color theme: emerald green + diamond white + platinum gold. Premium but readable.
+
+Cell 3, Level 13 starlight royal crown:
+Inspired by a sapphire-and-diamond haute-joaillerie fringe necklace or the most luxurious tiara crown. The final ultimate piece: a star-emerald or star-sapphire royal crown/headpiece with a large central star-shaped gem, sapphire-blue and diamond-white accents, white platinum frame, extremely elegant and precious, the most beautiful icon of the three. Main color theme: sapphire blue + emerald or diamond accent + platinum. Avoid cheap rainbow clutter.
+
+Each icon must have a distinct jewelry type and silhouette. Level 11 is collar choker, Level 12 is crown, Level 13 is final star crown/headpiece. Make them feel like a clear luxury progression.

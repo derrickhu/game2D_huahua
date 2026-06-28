@@ -1,0 +1,15 @@
+Create one standalone 2D vector game furniture asset for a cozy pastel flower-shop room decoration game.
+
+Use the reference image only to understand the room perspective: an isometric cutaway room with two back walls meeting at a corner. The furniture must be a wall-hung jade bead curtain that fits naturally on the back wall perspective, not a front-facing flat object.
+
+Asset requirements:
+Pure white background. One object only. NO room, no character, no floor, no window, no text, no labels, no watermark. Keep generous margins around the object.
+
+Style:
+Match existing in-game furniture: cute pastel 2D vector, soft brown line art, clean readable silhouette, gentle cel shading, simple cozy shapes. Avoid tiny noisy details. Transparent-background friendly after cutout.
+
+Object:
+Jade bead curtain wall decoration for the Jewel Bloom event. It is mounted on a rose-gold floral rail, with jade beads, pearl beads, small emerald leaf charms, and two soft tassels. It should still feel elegant and limited-event themed, but simpler and cleaner than a jewelry icon.
+
+Perspective and placement:
+This is the most important requirement. Draw it as a wall decoration seen in the same isometric room angle as the reference screenshot. The top rail should NOT be horizontal front view. The rail should be slanted in perspective, like it is attached along the back wall near the corner of the room. The bead strings hang vertically downward in screen space, but their attachment points follow the angled rail, so the whole curtain looks like it lies on the wall plane. Slight 3/4 top-down view, with the left side and right side receding subtly. It must be usable as a wall-hung furniture sprite in an isometric room, visually parallel to the wall, not floating flat toward the camera.

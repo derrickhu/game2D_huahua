@@ -1,0 +1,9 @@
+Clean 2D vector mobile game UI icon for a cozy pastel flower-shop merge game, kawaii casual style, square 1:1.
+
+Create a distinctive event progress echo reward entry icon for a panel named "进度回响", visually different from both a book icon and a pink jewelry reward chest. The icon should feel classical Chinese and dian-cui inspired: a compact turquoise-blue enamel progress talisman or small antique jade-and-gold echo plaque, with kingfisher-blue feather fan shapes, tiny gold cloud scrolls, jade beads, and a subtle circular milestone medallion feeling. It should clearly communicate "progress milestone rewards", not "open encyclopedia book".
+
+Style must match the jewelry event UI but use a new palette: rich turquoise blue, teal, pale jade, porcelain cream, antique gold trim, tiny coral-red bead accents, soft brown outlines, gentle highlights, cute mobile game proportions. Avoid pink-purple, avoid ruby-heavy treasure chest imagery, avoid open book shapes. It must stand out when placed on a bright decorative event background, with a readable silhouette and slightly stronger outline/contrast than the background.
+
+No text, no numbers, no letters, no labels, no watermark, no logo. The icon is a single centered object with generous margins.
+
+Background outside the icon must be flat pure chroma green #00FF00, perfectly solid and uniform, no texture, for clean background removal. The icon itself must not contain green screen color.

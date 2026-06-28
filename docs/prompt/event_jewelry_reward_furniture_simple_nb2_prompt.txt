@@ -1,0 +1,9 @@
+Create a clean 2D vector game furniture asset sheet for a cozy pastel flower-shop merge game.
+
+Canvas and layout: 2 separate vertical panels in one horizontal row, equal width, with a wide white gutter between panels. Each panel contains exactly one standalone furniture asset centered on a pure white background. Keep each asset fully inside its panel with generous margins. NO TEXT, no labels, no captions, no writing, no numbers, no watermark anywhere in the image.
+
+Shared furniture style: match the existing in-game furniture style. Simple readable silhouettes, large clean color blocks, soft brown line art, gentle cel shading, pastel colors, rounded cozy shapes. Avoid tiny clutter, avoid many small gemstones, avoid busy jewelry trays, avoid thin noisy details. These should feel like functional furniture pieces for room decoration, not collectible item icons.
+
+Panel 1: Back-facing wall sofa. A cute elegant sofa intended to be placed facing a wall, so the visible side is mainly the sofa back. Show the rear backrest clearly: rounded rectangular padded back, soft ivory and blush upholstery, rose-gold wooden trim, subtle floral embroidery on the back panel, two rounded arm ends visible from behind, small short legs. Add only a few simple jewel-inspired accents such as two ruby flower buttons and pearl piping. No pillows, no objects on it, no front seat details. It should read as a sofa back view for a room cutaway.
+
+Panel 2: Empty tea table. A low oval or rounded rectangular tea table, clean and mostly empty for players to place items later. Use ivory tabletop, rose-gold trim, soft jade inlay line, simple curved legs. The tabletop must be clear with no cups, no jewelry, no flowers, no books, no clutter. Add only a tiny subtle engraved flower motif on the side or leg, not on the tabletop. It should be visually calm, practical, and easy to decorate around.

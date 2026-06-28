@@ -1,0 +1,16 @@
+Clean 2D mobile game furniture asset for a cozy pastel flower-shop room, matching the provided isometric room screenshot exactly.
+
+Camera and perspective:
+Use the same 2.5D isometric room perspective as the reference room: the floor planks run diagonally, furniture sits naturally on that floor, top surfaces are visible as soft ellipses or angled planes, and vertical faces lean consistently with the room walls. The object must not look front-facing or flat side-view. It should fit the red highlighted floor area in the reference screenshot.
+
+Art style:
+Pastel casual merge-game decoration, soft brown line art, gentle cel shading, clean readable silhouette, warm cream and blush-pink palette with mint green accents and tiny jewel details. No photorealism, no heavy texture, no text, no labels, no watermark, no letters or numbers anywhere.
+
+Asset A, jewelry reward sofa:
+A plush soft loveseat seen from the same isometric angle as the room. The backrest should face slightly toward the lower-right/front of the image, with the seat cushion and inner side visible. Make it feel soft and squishy: rounded overstuffed cushions, pillowy armrests, slightly puffy back cushion, subtle seams, gentle sag in the seat, tiny feet touching the floor plane. Blush pink and cream upholstery, elegant jewelry-event details: small pearl trim, tiny ruby or emerald floral ornament, very subtle gold edging. It should look like a cozy sofa, not a hard bench, not a flat signboard.
+
+Asset B, jewelry reward tea table:
+A matching low oval tea table seen from the same isometric angle as the room. The tabletop ellipse must align with the room perspective and the legs must stand naturally on the diagonal floor. Cream tabletop, blush pink rim, mint jade trim, small pearl or jewel ornament, delicate curved legs. It should match the sofa in style and scale.
+
+Composition:
+Generate a clean single object per image on a plain light background or transparent-like empty background, centered with enough padding. Keep the whole object visible, no crop. NO TEXT, no labels, no captions, no writing anywhere in the image.

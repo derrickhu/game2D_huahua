@@ -1,0 +1,33 @@
+Create a high-quality 2D mobile game item icon sheet for a cozy pastel flower-shop merge game. Generate a redesigned 13-level event jewelry progression line on a plain white background. Strict contact sheet: exactly 7 icons on the top row, exactly 6 icons on the bottom row. No text, no labels, no numbers, no watermark, no grid lines, no extra fragments.
+
+Quality reference:
+Match the refined board-icon quality of the existing good jewelry icons and the dian-cui line: elegant, layered color, gemstone translucency, soft internal highlights, subtle metal shading, thin warm outlines, polished premium 2D game art. The icons should look simple at small size but not like simple drawings. They need visible material depth: gemstone facets, glassy gradients, gold thickness, soft shadows, and delicate inner line accents.
+
+Avoid:
+Do NOT create flat vector stickers. Do NOT use thick cartoon outlines. Do NOT make simple clipart. Do NOT use many tiny stones, dense pearl strings, excessive filigree, or noisy small parts. Do NOT make the whole line one gemstone color. Do NOT copy blue feather dian-cui shapes.
+
+Core style rules:
+- Every icon is a real jewelry item or ornate wearable accessory.
+- Each icon has one dominant gemstone color and one clear jewelry form.
+- Use varied main colors across the line: rose pink, teal green, ruby red, sapphire blue, honey topaz, amethyst purple, pearl opal cream, emerald green, deep sapphire, garnet red, aquamarine blue, violet diamond, rainbow opal.
+- Fill each cell 80% to 90%, with strong silhouette and board-cell readability.
+- Refinement comes from form design and lighting: broad gem facets, translucent color depth, inner highlights, soft shadows, brushed gold gradients, and careful but thin edge accents.
+- Shared collection language: warm champagne-gold settings, soft brown thin outline, pastel high-key lighting, slightly rounded cute mobile-game proportions.
+
+Design the 13 icons as a coherent varied jewelry collection:
+1. Rose quartz crystal charm: large raw pink crystal mounted in a small gold base, more polished and ornament-like than a plain rock.
+2. Teal cut gemstone brooch: oversized teal cushion gem in a thin rounded gold bezel, mostly gemstone volume.
+3. Ruby signet ring: thick gold ring with one large ruby cabochon/facet, elegant diagonal silhouette.
+4. Sapphire floral hairpin: short chunky gold hairpin with a large blue sapphire flower head; the head must be large, detailed with soft gem facets, not skinny.
+5. Honey topaz pendant: large oval topaz pendant with layered gold rim, no thin chain.
+6. Amethyst butterfly brooch: butterfly-shaped brooch with large purple gem wings, subtle inner gradients, clean gold body.
+7. Opal pearl bracelet: chunky bracelet with large opalescent pearls, iridescent color and soft shadow, not a flat bead ring.
+8. Emerald drop earrings: pair of large emerald teardrop earrings, similar high-quality feeling to the existing good green earrings, thin gold frame, visible gem facets.
+9. Sapphire moon necklace: bold crescent necklace with deep blue sapphire center, polished gold arc, premium volume, not flat.
+10. Garnet flower hair comb: compact gold comb topped by a large garnet flower jewel, refined red gem petals with depth.
+11. Aquamarine collar necklace: broad collar necklace with large cyan aquamarine cabochons, smooth metal thickness and soft highlights.
+12. Violet diamond tiara: compact tiara with one large violet diamond star and two side gems, premium but not cluttered.
+13. Royal opal crown: final max-level item, grand wearable crown with huge rainbow opal center and two large side gems, gold body with soft gradients, luxurious but readable.
+
+Composition:
+Plain white background only. Exactly 13 jewelry icons. Clear gutters. No captions. No UI frames. Similar scale. Suitable for splitting into game board item icons later.

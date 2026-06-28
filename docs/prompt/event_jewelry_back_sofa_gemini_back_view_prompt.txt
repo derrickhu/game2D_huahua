@@ -1,0 +1,18 @@
+Create one transparent-background style 2D mobile game decoration asset for the cozy flower-shop room shown in the reference image.
+
+Asset: event reward sofa, BACK VIEW ONLY.
+
+Most important requirement:
+The sofa is placed facing the wall, so the player should see the outside back of the sofa, not the front seat. Show the sofa back panel prominently, like a back-facing loveseat in the room. The seat cushion should be hidden or only barely visible as a tiny top rim. Do NOT show a front-facing couch with open seat cushions. Do NOT show a sofa facing the viewer.
+
+Perspective:
+Match the exact 2.5D isometric perspective of the reference room screenshot. The sofa back should align with the right wall/floor perspective in the highlighted area. The bottom feet must sit on the diagonal wooden floor plane. The long back panel should run in the same direction as furniture placed against the right wall. It must look natural inside the room, not like a flat side-view sticker and not like a top-down object.
+
+Design:
+Pastel jewelry-event loveseat, blush pink and cream upholstery, soft brown outline, tiny pearl trim, small ruby / emerald ornament, subtle gold edge. It should feel soft and plush even from the back: rounded padded back panel, puffy side arms, slightly cushioned back with soft seams, small rounded feet. Back side can have elegant embroidery and jewel detail.
+
+Game art style:
+Clean 2D casual merge-game decoration, kawaii pastel, gentle cel shading, readable silhouette at small size, no photorealism, no heavy texture.
+
+Output:
+Single centered object, full object visible with padding, plain light background is OK. NO TEXT, no labels, no captions, no writing, no watermark.

@@ -1,0 +1,24 @@
+Create a 2D mobile game jewelry icon test sheet for a cozy pastel flower-shop merge game. Generate exactly 4 jewelry icons on a plain white background, arranged in one horizontal row with clear spacing. No text, no numbers, no labels, no captions, no watermark, no UI frame, no grid lines, no extra objects, no duplicate row.
+
+Use the attached dian-cui reference image ONLY as a rendering-style reference:
+- Copy its delicate line weight: very light warm-brown outlines, not thick sticker borders.
+- Copy its material treatment: layered painted colors, subtle gradients, small internal highlights, shaded gold thickness.
+- Copy its board icon finish: simple readable silhouette but refined hand-painted 2D texture up close.
+- Do NOT copy the blue feather crown shapes. Do NOT make these four items into dian-cui crowns.
+
+Generate these 4 jewelry concepts:
+1. Emerald butterfly ornament: large green gemstone wings, simple gold body, compact readable silhouette.
+2. Emerald pearl bracelet: gold bracelet with a central green gem and a few large pearls, simplified curls.
+3. Turquoise bead bracelet: rounded turquoise beads with soft jade-like depth, minimal gold connector.
+4. Pale jade bangle: chunky translucent jade bangle with two small gold bands and one small red bead accent.
+
+Strict rendering requirements:
+- The outer contour must be thin and local-color-friendly, closer to the dian-cui reference, not a dark outline.
+- Avoid thick brown/black contour, cartoon sticker border, hard vector edge, or clipart look.
+- Use color contrast and inner shading for readability.
+- Gold should be shaded with warm ochre/orange gradients and tiny highlights.
+- Gemstones/jade should show darker rim, lighter center, soft translucent depth, and a few clean highlight facets.
+- Each item fills 80% to 90% of its cell. Keep the form large and compact.
+- No many tiny beads, no dense filigree, no noisy small decorations.
+
+Plain white background. Exactly four icons only.

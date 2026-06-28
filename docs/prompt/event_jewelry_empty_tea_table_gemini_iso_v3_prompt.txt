@@ -1,0 +1,16 @@
+Create one 2D mobile game decoration asset: a low oval tea table matching the provided back-facing pink pearl sofa and the cozy flower-shop room perspective.
+
+Critical camera correction:
+Use a LOWER 2.5D isometric furniture view, not top-down. The tabletop should look like a narrow oval ellipse, with the vertical side apron clearly visible. The table's front side and short legs should be visible, but the tabletop must not dominate the image like a flat top-view oval.
+
+Perspective:
+Match the room screenshot floor perspective. The table's long axis must run parallel to the back-facing sofa's long back panel, fitting the highlighted floor area. The near/front edge should be lower in the image; the far/back edge should be higher. Legs must touch the diagonal floor plane at believable positions. The table should look like it can be placed directly in front of the back-facing sofa.
+
+Style:
+Use the same Gemini sofa style: blush pink padded rounded rim, cream inset tabletop, pearl bead trim, small emerald/ruby jewel ornament, warm brown outline, soft pastel shading. Compact and low, with short rounded legs and gold feet. It should feel like the matching table from the same furniture set, not a generic table.
+
+Avoid:
+No top-down table. No flat side-view table. No wrong diagonal angle. No hard realistic furniture. No text.
+
+Output:
+Single centered object, full object visible with padding, plain light or transparent-like background. NO TEXT, no labels, no captions, no writing, no watermark.

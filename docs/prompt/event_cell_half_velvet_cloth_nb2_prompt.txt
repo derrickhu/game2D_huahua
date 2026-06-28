@@ -1,0 +1,7 @@
+Clean 2D vector mobile game UI asset for a cozy pastel flower-shop merge game, ornate jewelry event style. A single PURPLE SATIN RIBBON cover used for a semi-locked / peek merge-board cell, matching a dreamy pastel jewelry event page with lavender, cream, gold, amethyst and emerald accents.
+
+The asset is an elegant wide purple satin ribbon covering the lower half of a square cell. The ribbon spans nearly the full width, with soft rounded lower corners and a graceful wavy top edge around the middle of the canvas. Add a folded ribbon lip along the top edge, silky lavender-purple gradients, pearl-like highlights, subtle darker violet shadows under the fold, thin warm gold piping along the top fold and bottom edge, and a tiny centered amethyst jewel accent on the ribbon band. It should look like a polished jewelry gift ribbon, not rough fabric.
+
+The upper half of the canvas must be empty pure magenta so it becomes transparent after background removal and reveals the item underneath. The ribbon covers only the lower 45% to 52% of the square. Keep the shape simple and readable at small board-cell size. No loose jewels, no box, no text.
+
+Background: flat pure magenta #FF00FF everywhere outside the ribbon, including the entire upper half. No text, no numbers, no watermark, no photoreal, no extra objects, no readable symbols.

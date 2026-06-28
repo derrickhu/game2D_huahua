@@ -1,0 +1,18 @@
+Full-screen 9:16 portrait BACKGROUND template for a limited-time jewelry event page in a cozy flower-shop merge mobile game. Refined Chinese-Western mixed jewelry garden style: pastel mobile game UI, soft 2D illustration, warm cream and pale jade base, blush pink and lavender accents, antique gold trim, a few jewel-tone accents. It should feel elegant, airy, and readable, not overloaded. Avoid fully Western royal filigree, avoid dense scattered tiny decorations, avoid a huge rigid title. The WHOLE image must feel harmonious and color-coordinated, soft and dreamy, no watermark.
+
+Strict vertical layout with a COMPACT airy header, a LONG empty center, and a decorated footer:
+
+TOP HEADER (top ~20% to 22% of the height) — keep it clean and compact, do NOT let art spill below this band:
+- Create one smaller lively title plaque near the upper center. The plaque should combine Western cameo-jewelry curves with Chinese cloud-scroll / ruyi shapes, jade beads, light enamel, and a soft silk-ribbon edge. Use fewer, larger decorative shapes instead of many tiny pieces.
+- Inside the plaque, render the Chinese event title text "花间珠匣" in moderately sized playful elegant characters, warm gold with soft brown outline, slightly rounded and lively, perfectly centered, clearly legible, correct strokes. The title should be smaller than before and leave visible breathing room around it.
+- Top decoration should be organized into clear blocks: a soft Chinese lattice / screen-corner hint on one side, a small Western jewelry cameo / gem cluster on the other, and a few pastel flowers. Add subtle dian-cui blue-green touches and jade accents to avoid a purely Western style.
+- Keep the lower part of the header visually calm: mostly pale blush / cream / lavender background with only faint glow, so game UI icons placed over this area remain readable. No loose gems, no dense sparkles, no tiny scattered curls behind the future buttons. This calm transition band must be short; do not make a large empty gap between the title and the main center panel.
+
+CENTER PANEL (a TALL band, about 58% of the height, matching the existing game layout exactly, from about 28% down to about 85.5% of the full image height) — MUST stay clean and empty:
+- One large smooth SOLID-COLOR panel (soft cream or pale mint, gentle subtle vertical gradient only) with a simple elegant rounded pastel-and-gold frame border. The top edge of this panel should begin around 28% of the full image height, and the bottom edge around 85.5%, because the game board is already positioned to this area. Make this panel clearly TALL / elongated with plenty of vertical room, since a game board with extra rows will be placed on top later.
+- Absolutely NOTHING inside this panel: no jewelry, no gems, no flowers, no board, no grid, no cells, no icons, no text, no pattern — just clean flat solid color so UI reads clearly on top.
+
+BOTTOM FOOTER (bottom ~18%) — decorated with floral ornament:
+- A pretty decorative band: pastel roses, jade leaves, a few gems, silk ribbons, antique gold ruyi cloud scrolls, and subtle Western pearl strands running along the bottom. It can be richer than the header, but keep it BELOW the center panel. No buttons, no progress bar, no counters, no UI widgets, no text.
+
+Only the title "花间珠匣" may contain text; everywhere else there must be NO letters, NO numbers, NO garbled glyphs. Crisp, sharp, balanced soft contrast, cohesive pastel-jewel color harmony across the whole picture.

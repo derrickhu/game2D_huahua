@@ -1,0 +1,26 @@
+Create a 2D mobile game item icon test sheet for a cozy pastel flower-shop merge game. Generate exactly 4 jewelry icons on a plain white background, arranged in one horizontal row with clear spacing. No second row. Do not duplicate the icons. No text, no numbers, no labels, no captions, no watermark, no UI frame, no grid lines, no extra objects.
+
+Use the attached reference image for the four item ideas:
+1. Emerald butterfly brooch / ornament.
+2. Emerald-and-pearl gold bracelet with a central green gem.
+3. Turquoise bead bracelet.
+4. Pale jade bangle with small gold bands and a tiny red bead accent.
+
+Keep these four item concepts, but redraw them into one unified premium style. Improve the style toward the high-quality dian-cui event jewelry rendering:
+- Extremely thin warm-brown outlines, light and delicate like the dian-cui reference. The outer contour should feel like a hairline accent, not a visible sticker border.
+- Rich layered color, not flat vector.
+- Gemstones and jade should have translucent depth, darker edge, lighter center, soft facet highlights, and subtle internal gradients.
+- Gold metal should show warm orange-to-yellow shading and real thickness, not flat yellow.
+- Overall should look like polished 2D game icons: simple and readable at board size, but refined up close.
+
+Important visual constraints:
+- Each icon should fill 80% to 90% of its cell, compact and centered.
+- Avoid many tiny stones, dense filigree, pearl strings, extra loose beads, or clutter.
+- Do not make heavy black outlines, thick brown outlines, cartoon strokes, sticker borders, or dark rims around every shape. Do not use outline thickness to create readability; use silhouette, color contrast, gradients, inner shadows, and highlights instead.
+- The butterfly should keep large emerald wing masses and a clean silhouette.
+- The emerald-pearl bracelet should keep its ornate gold-and-pearl identity but simplify tiny curls.
+- The turquoise bead bracelet should gain more soft jade/turquoise material depth and lighter outline.
+- The jade bangle should be chunky, translucent, and memorable, with only minimal gold/red accents.
+
+Composition:
+Plain white background only. Exactly four separated icons in a single row. No repeated row. No alternate versions. Similar scale. Suitable for later splitting into transparent game board item icons.

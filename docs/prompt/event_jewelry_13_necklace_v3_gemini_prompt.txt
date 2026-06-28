@@ -1,0 +1,11 @@
+Create one standalone jewelry merge-game item icon on a square 1:1 canvas. Use the attached reference only to preserve the same jewelry identity: a luxurious gold necklace with green flower clusters and a central teardrop emerald pendant. Convert into the existing huahua jewelry merge-game icon style: cute polished 2D mobile game icon, soft glossy volume, clear gemstone facets, bright white highlight arcs, smooth color gradients, thin clean same-color outlines, warm gold metal highlights.
+
+Critical composition rules for small board readability:
+- The jewelry must be LARGE and centered, filling about 88% to 94% of the canvas width and height.
+- Simplify the necklace into a compact bold shape that fills the square, not a thin ring with huge empty corners.
+- Use 3 large flower motifs maximum, each with 4 to 5 chunky green petals and one small red center gem. One large teardrop emerald pendant. No tiny accent beads, no thin connecting wires, no excessive small gems.
+- Readable at 128 px thumbnail on a 6x6 merge board.
+
+Subject: Level 13 starlight royal necklace / final-tier gold jewelry. Premium simplified ornate gold necklace, mainly emerald green with small ruby red accents, one bold hanging teardrop emerald. Feels like the highest jewelry tier but still clean and readable.
+
+Pure white background only. No grid, no UI, no text, no labels, no numbers, no watermark.

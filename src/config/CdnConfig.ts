@@ -45,6 +45,7 @@ export const CDN_CONFIG: CdnConfig = {
   bundledDirs: [
     'images',
     'subpkg_items/images',
+    'subpkg_events/images',
   ],
   ignoreFiles: ['game.js', '.DS_Store', 'Thumbs.db'],
 };

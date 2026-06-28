@@ -15,6 +15,7 @@ import { AttributionManager } from '@/analytics/AttributionManager';
 import { Game } from '@/core/Game';
 import { SceneManager } from '@/core/SceneManager';
 import { BoardManager } from '@/managers/BoardManager';
+import { EventBoardManager } from '@/managers/EventBoardManager';
 import { MergeCompanionManager } from '@/managers/MergeCompanionManager';
 import { BuildingManager } from '@/managers/BuildingManager';
 import { SaveManager } from '@/managers/SaveManager';
@@ -240,6 +241,8 @@ async function main(): Promise<void> {
     // 初始化棋盘数据
     BoardManager.init();
     console.log('[main] BoardManager.init 完成');
+    EventBoardManager.init();
+    console.log('[main] EventBoardManager.init 完成');
 
     MergeCompanionManager.init();
 

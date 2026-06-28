@@ -1,0 +1,27 @@
+Generate one empty modal panel shell for the "Flower Jewelry Box" activity reward codex page.
+
+Use the attached reference image mainly for the overall vertical collection-panel structure, but remove all inner content. Match the current Huahua Flower Jewelry Box activity page style: soft pastel pink/lilac/gold jewelry UI, cute mobile game, rounded, clean, high-key, not realistic.
+
+Canvas and output:
+- full-screen 9:16 mobile game UI prototype;
+- centered vertical modal shell occupying most of the screen;
+- do not generate item slots, progress bars, text, labels, numbers, or reward icons inside the panel.
+
+Panel shell design:
+- thick soft lilac-lavender rounded outer frame;
+- thinner pastel pink inner lip;
+- large plain cream / very light warm-white content area in the middle, pure solid fill, no grid, no item icons, no progress bar;
+- top decoration: ornate jewelry-and-flower header frame with warm gold trim, small pastel flowers, tiny gems, and a blank title plaque area;
+- bottom decoration: matching ornate floral/jewelry trim, soft ribbons or scrollwork, but not too busy;
+- top-right: chunky teal circular close button with simple white X, clearly visible.
+
+Style requirements:
+- same softness and pastel palette as the existing in-game activity page, not a different game;
+- clean 2D vector / cel-shaded mobile game UI, gentle highlights and soft shadows;
+- no heavy photoreal texture, no dark fantasy, no western realistic ornate frame;
+- content area must remain clean and usable for programmatic UI drawing later.
+
+Strict rules:
+- NO readable text, NO fake text, NO pseudo letters, NO Chinese characters, NO numbers;
+- NO item grid, NO collection icons, NO progress bar, NO rewards inside the panel;
+- NO watermark, NO logo.

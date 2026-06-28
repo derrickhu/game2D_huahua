@@ -1,0 +1,14 @@
+Create a square 1:1 image containing a clean 1 column x 3 rows grid sheet of exactly 3 alternate high-jewelry merge-game item icons for levels 11, 12, and 13. Use the attached existing jewelry game icon sheet only for rendering style: cute polished 2D mobile game icons, soft glossy volume, saturated colors, thin same-color outlines, bright highlight arcs, readable at 128 px.
+
+Design alternate luxury versions inspired by real haute-joaillerie jewelry, but simplified into elegant board-game icons:
+
+Cell 1, Level 11 alternate collar choker:
+Inspired by an emerald-and-ruby floral necklace with a gemstone tassel. An ornate collar choker with emerald cabochon flower clusters, tiny ruby accents, and a short elegant emerald bead tassel drop at center. Main colors: emerald green + ruby red + gold. Sophisticated, not rainbow.
+
+Cell 2, Level 12 alternate royal crown:
+Inspired by a historic emerald-and-diamond fringe necklace. A refined royal crown with graduated emerald rectangles and diamond halos, delicate teardrop emerald drops along the lower edge, platinum-gold frame. Main colors: emerald green + diamond white. Graceful museum-jewelry feeling.
+
+Cell 3, Level 13 alternate star crown:
+Inspired by a grand emerald-and-diamond graduated necklace with pear-diamond floral halos. The ultimate star-emerald royal crown or headpiece: large central emerald star or shield, surrounded by pear-diamond petal halos, layered luxury, white gold frame, the most precious final icon. Main colors: emerald green + diamond white + subtle gold.
+
+No pearls. No deep black outlines. No text. Pure white background. High-end, designer, elegant, not tacky.

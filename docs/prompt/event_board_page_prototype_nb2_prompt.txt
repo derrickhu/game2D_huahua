@@ -1,0 +1,24 @@
+Full-screen 9:16 portrait UI mockup for a cozy pastel flower-shop merge mobile game, kawaii casual style, clean 2D vector illustration with soft hand-painted cel shading, high-key pastel palette (lilac, soft pink, cream, mint, honey gold), bold clean dark outlines, glossy soft volume, gentle drop shadows, no photoreal, no watermark. This is a limited-time JEWELRY merge event sub-board screen.
+
+Overall background: a softly blurred warm cozy flower-shop interior, peach and lavender tones with faint sparkles and bokeh, framed top and bottom by decorative pastel floral and ribbon garlands so the board feels like a special event window.
+
+Top header (top 18% of screen):
+- A wide ornate golden-yellow scalloped title banner centered at the very top, plump and rounded, with a small empty blank cartouche in its center reserved for a title (leave it blank, no readable text).
+- Just under the banner center, a small light-brown rounded capsule pill shaped like a countdown timer with a tiny gold pocket-watch icon on the left (leave the time area blank).
+- Top-left corner: a small round info / rules button (cream circle with a soft question-mark glyph) carrying a tiny red alert dot badge; beside it a small pale capsule showing a discovery-progress counter (a gem icon plus a blank number area).
+- Top-right corner: a chunky circular red close button with a white X slightly past the frame; just left of it a small round page-switch arrow button and a small square "merge hint" button.
+
+Stage progress strip (just below header, ~8% tall):
+- A horizontal pastel track with four evenly spaced golden KEY icons as stage milestones, the first key glowing/unlocked and the rest dimmed; a tiny "stage" capsule label at the left end (blank number).
+- Directly under it, a thin horizontal PROGRESSION BAR strip showing a row of about 12 tiny jewelry item icons from simple to fancy (rough raw gemstone, polished gem, gem ring, flower stud earring, small pendant, pearl bracelet, gem drop earring, ruby brooch, green-gem necklace, blue-gem tiara, multi-gem collar, diamond crown), the early ones lit in full color and the later ones greyed out as not-yet-discovered.
+
+Main board (center, ~55% of screen): a 6-columns by 5-rows grid of rounded square cells on a soft mint-and-cream board panel with a pastel rounded frame.
+- OPEN cells: bright, filled with cute glossy jewelry-event items — small rough raw gemstones, sparkling cut gems, a gem ring, a flower stud earring, a small pendant, plus a few round golden "currency coin" pickup tokens and a tiny lightning stamina token.
+- A few SEMI-LOCKED (peek) cells along the inner ring: each shows a faintly dimmed jewelry item underneath a translucent soft-pink ribbon/sash overlay with a tiny ribbon bow, clearly half-hidden but the item still visible.
+- The outer ring of FULLY-LOCKED cells: frosted pale-blue ice-glass cells with a soft snowflake / padlock motif, blocking the items beneath.
+
+Bottom bar (bottom ~12%):
+- Bottom-left: a chunky rounded inventory button shaped like a small treasure pouch / jewelry box brimming with raw gemstones, with a small count badge (blank number) — this is the "raw stone stock" you tap to drop one stone onto the board.
+- Bottom-right: a rounded reward-box / chest button with a soft glow, the event reward storage.
+
+Leave ALL text and numbers blank or as simple decorative shapes (no readable letters, no garbled glyphs); the layout, icons and color design are what matters. Crisp, sharp, well-lit, not overexposed, balanced soft contrast.
