@@ -34,7 +34,7 @@ const PROGRESS_BELOW_RIBBON = 8;
 const PROGRESS_TO_DIVIDER = 14;
 const DIVIDER_TO_CONTENT = 6;
 const HEADER_DIVIDER_WIDTH_RATIO = 0.56;
-const CONTENT_BOTTOM = 10;
+const CONTENT_BOTTOM = 148;
 const GRID_MARGIN_H = 22;
 
 const GRID_COLS = 2;
@@ -65,6 +65,32 @@ function dressGridListTopPad(availH: number, totalRows: number, ch: number): num
   return Math.min(10, Math.max(0, Math.floor(spare * 0.28)));
 }
 
+function nativeClientToDesignY(clientY: number): number {
+  return (clientY * Game.designHeight) / Game.screenHeight;
+}
+
+function federatedPointerToDesignY(e: PIXI.FederatedPointerEvent): number {
+  const native = e.nativeEvent as PointerEvent | MouseEvent | undefined;
+  if (native != null && typeof (native as PointerEvent).clientY === 'number') {
+    return nativeClientToDesignY((native as PointerEvent).clientY);
+  }
+  return e.global.y / Game.scale;
+}
+
+function isActivityLockedOutfit(outfit: Outfit): boolean {
+  return Boolean(
+    outfit.unlockRequirement?.questId && outfit.unlockRequirement.conditionText === '活动解锁',
+  );
+}
+
+function outfitSortRank(outfit: Outfit & { unlocked: boolean; equipped: boolean }): number {
+  if (outfit.unlocked) return 0;
+  if (outfit.id === 'outfit_default') return 0;
+  if (isActivityLockedOutfit(outfit)) return 1;
+  if (DressUpManager.isAdUnlockOutfit(outfit.id)) return 1;
+  return 2;
+}
+
 export class DressUpPanel extends PIXI.Container {
   private _bg!: PIXI.Graphics;
   private _content!: PIXI.Container;
@@ -82,6 +108,11 @@ export class DressUpPanel extends PIXI.Container {
   private _contentTopY = 168;
   private _scrollY = 0;
   private _maxScrollY = 0;
+  private _draggingGrid = false;
+  private _dragStartDesignY = 0;
+  private _dragStartScrollY = 0;
+  private _dragMoved = false;
+  private _ignoreNextCardTap = false;
   private _isOpen = false;
   private _opening = false;
   /** 记录面板高度，logicHeight 变化时拉伸底图与遮罩 */
@@ -98,6 +129,17 @@ export class DressUpPanel extends PIXI.Container {
     EventBus.on('panel:openDressUp', () => this.open());
     EventBus.on('decoration:shopStarFlyComplete', () => this._onDressUpStarFlyComplete());
   }
+
+  private readonly _onCanvasGridMove = (ev: PointerEvent): void => {
+    if (!this._isOpen || !this._draggingGrid) return;
+    const dy = nativeClientToDesignY(ev.clientY) - this._dragStartDesignY;
+    if (Math.abs(dy) > 4) this._dragMoved = true;
+    this._setScrollY(this._dragStartScrollY + dy);
+  };
+
+  private readonly _onCanvasGridUp = (ev: PointerEvent): void => {
+    this._finishGridScroll(ev);
+  };
 
   private _grantPendingDressUpStarIfAny(): void {
     if (this._pendingDressUpStarGrant <= 0) return;
@@ -153,6 +195,7 @@ export class DressUpPanel extends PIXI.Container {
     this._isOpen = false;
     this._assetUnsub?.();
     this._assetUnsub = null;
+    this._unbindCanvasGridScroll();
     const h = Game.logicHeight;
     TweenManager.cancelTarget(this._content.position);
     TweenManager.to({ target: this._content.position, props: { y: h }, duration: 0.22, ease: Ease.easeInQuad });
@@ -260,6 +303,59 @@ export class DressUpPanel extends PIXI.Container {
     if (inner) inner.y = this._scrollY;
   }
 
+  private _setScrollY(nextY: number): void {
+    this._scrollY = Math.max(-this._maxScrollY, Math.min(0, nextY));
+    this._applyScroll();
+  }
+
+  private _onGridPointerDown(e: PIXI.FederatedPointerEvent): void {
+    if (this._maxScrollY <= 0) return;
+    if (this._draggingGrid) return;
+    this._draggingGrid = true;
+    this._dragMoved = false;
+    this._ignoreNextCardTap = false;
+    this._dragStartDesignY = federatedPointerToDesignY(e);
+    this._dragStartScrollY = this._scrollY;
+    const canvas = Game.app.view as unknown as HTMLCanvasElement | undefined;
+    if (canvas?.addEventListener) {
+      canvas.addEventListener('pointermove', this._onCanvasGridMove);
+      canvas.addEventListener('pointerup', this._onCanvasGridUp);
+      canvas.addEventListener('pointercancel', this._onCanvasGridUp);
+    }
+  }
+
+  private _onGridPointerMove(e: PIXI.FederatedPointerEvent): void {
+    if (!this._draggingGrid) return;
+    const dy = federatedPointerToDesignY(e) - this._dragStartDesignY;
+    if (Math.abs(dy) > 4) this._dragMoved = true;
+    if (this._dragMoved) e.stopPropagation();
+    this._setScrollY(this._dragStartScrollY + dy);
+  }
+
+  private _onGridPointerEnd(e?: PIXI.FederatedPointerEvent): void {
+    this._finishGridScroll(e);
+  }
+
+  private _unbindCanvasGridScroll(): void {
+    const canvas = Game.app.view as unknown as HTMLCanvasElement | undefined;
+    if (!canvas?.removeEventListener) return;
+    canvas.removeEventListener('pointermove', this._onCanvasGridMove);
+    canvas.removeEventListener('pointerup', this._onCanvasGridUp);
+    canvas.removeEventListener('pointercancel', this._onCanvasGridUp);
+  }
+
+  private _finishGridScroll(e?: PIXI.FederatedPointerEvent | PointerEvent): void {
+    if (!this._draggingGrid) return;
+    this._unbindCanvasGridScroll();
+    if (this._dragMoved) {
+      this._ignoreNextCardTap = true;
+      window.setTimeout(() => { this._ignoreNextCardTap = false; }, 250);
+      if (e != null && 'stopPropagation' in e) e.stopPropagation();
+    }
+    this._draggingGrid = false;
+    this._dragMoved = false;
+  }
+
   private _rebuildGrid(): void {
     this._syncDressGridClip();
     this._gridContainer.removeChildren();
@@ -268,7 +364,18 @@ export class DressUpPanel extends PIXI.Container {
     const availH = panelH - this._contentTopY - CONTENT_BOTTOM;
     const gridW = PANEL_W - GRID_MARGIN_H * 2;
 
-    const outfits = DressUpManager.getAllOutfits();
+    const outfits = DressUpManager.getAllOutfits()
+      .map((outfit, index) => ({ outfit, index }))
+      .sort((a, b) => {
+        const ra = outfitSortRank(a.outfit);
+        const rb = outfitSortRank(b.outfit);
+        if (ra !== rb) return ra - rb;
+        const la = a.outfit.unlockRequirement?.level ?? 0;
+        const lb = b.outfit.unlockRequirement?.level ?? 0;
+        if (la !== lb) return la - lb;
+        return a.index - b.index;
+      })
+      .map(entry => entry.outfit);
     const { cw, ch, startX } = measureDressGrid(gridW);
     const cols = GRID_COLS;
     const totalRows = Math.ceil(outfits.length / cols);
@@ -559,7 +666,7 @@ export class DressUpPanel extends PIXI.Container {
     const maxPortraitW = cw - 16;
     const portraitCy = portraitTop + maxPortraitH / 2;
 
-    const showPortrait = isUnlocked || reqMet || needsAdGate;
+    const showPortrait = isUnlocked || reqMet || needsAdGate || isActivityLockedOutfit(outfit);
     if (!showPortrait) {
       const mysteryWrap = new PIXI.Container();
       mysteryWrap.position.set(cw / 2, portraitCy);
@@ -655,10 +762,15 @@ export class DressUpPanel extends PIXI.Container {
 
     card.eventMode = 'static';
     card.hitArea = new PIXI.Rectangle(0, 0, cw, ch);
+    card.on('pointerdown', (e: PIXI.FederatedPointerEvent) => this._onGridPointerDown(e));
     if (!isEquipped) {
       card.cursor = (isUnlocked || needsAdGate || canTapPurchase) ? 'pointer' : 'default';
       card.on('pointertap', (e: PIXI.FederatedPointerEvent) => {
         e.stopPropagation();
+        if (this._ignoreNextCardTap) {
+          this._ignoreNextCardTap = false;
+          return;
+        }
         if (isUnlocked) {
           if (DressUpManager.equip(outfit.id)) {
             ToastMessage.show(`已切换为「${outfit.name}」`);
@@ -702,7 +814,10 @@ export class DressUpPanel extends PIXI.Container {
       });
     } else {
       card.cursor = 'default';
-      card.on('pointertap', (e: PIXI.FederatedPointerEvent) => e.stopPropagation());
+      card.on('pointertap', (e: PIXI.FederatedPointerEvent) => {
+        e.stopPropagation();
+        if (this._ignoreNextCardTap) this._ignoreNextCardTap = false;
+      });
     }
 
     return card;
@@ -822,6 +937,12 @@ export class DressUpPanel extends PIXI.Container {
     this._gridViewport.position.set(GRID_MARGIN_H, this._contentTopY);
     this._gridViewport.eventMode = 'static';
     this._gridViewport.hitArea = new PIXI.Rectangle(0, 0, gridW, gridH);
+    this._gridViewport.on('pointerdown', (e: PIXI.FederatedPointerEvent) => this._onGridPointerDown(e));
+    this._gridViewport.on('pointermove', (e: PIXI.FederatedPointerEvent) => this._onGridPointerMove(e));
+    this._gridViewport.on('globalpointermove', (e: PIXI.FederatedPointerEvent) => this._onGridPointerMove(e));
+    this._gridViewport.on('pointerup', (e: PIXI.FederatedPointerEvent) => this._onGridPointerEnd(e));
+    this._gridViewport.on('pointerupoutside', (e: PIXI.FederatedPointerEvent) => this._onGridPointerEnd(e));
+    this._gridViewport.on('pointercancel', (e: PIXI.FederatedPointerEvent) => this._onGridPointerEnd(e));
     this._content.addChild(this._gridViewport);
 
     this._gridMask = new PIXI.Graphics();
@@ -836,9 +957,9 @@ export class DressUpPanel extends PIXI.Container {
     this._gridContainer.mask = this._gridMask;
 
     this._gridContainer.eventMode = 'static';
+    this._gridContainer.on('pointerdown', (e: PIXI.FederatedPointerEvent) => this._onGridPointerDown(e));
     this._gridContainer.on('wheel', (e: any) => {
-      this._scrollY = Math.max(-this._maxScrollY, Math.min(0, this._scrollY - (e.deltaY || 0)));
-      this._applyScroll();
+      this._setScrollY(this._scrollY - (e.deltaY || 0));
     });
 
     const closeTex = TextureCache.get('warehouse_close_btn');

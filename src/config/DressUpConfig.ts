@@ -55,6 +55,7 @@ export const AD_UNLOCK_OUTFIT_IDS = new Set<string>(['outfit_qinglian']);
 
 /** 花之女王等活动赠送套装：活动结算处请调用 `DressUpManager.grantOutfitFromActivity('outfit_queen')`（会同步 grantQuest，条件与存档一致） */
 export const OUTFIT_QUEEN_ACTIVITY_QUEST_ID = 'dressup_activity_outfit_queen';
+export const OUTFIT_JEWEL_BLOOM_ACTIVITY_QUEST_ID = 'dressup_activity_outfit_jewel_bloom';
 
 /**
  * 活动解锁的套装：完成对应活动时应调用 `grantOutfitFromActivity`，勿仅改存档。
@@ -62,9 +63,10 @@ export const OUTFIT_QUEEN_ACTIVITY_QUEST_ID = 'dressup_activity_outfit_queen';
  */
 export const OUTFIT_ACTIVITY_QUEST_BY_ID: Readonly<Record<string, string>> = {
   outfit_queen: OUTFIT_QUEEN_ACTIVITY_QUEST_ID,
+  outfit_jewel_bloom: OUTFIT_JEWEL_BLOOM_ACTIVITY_QUEST_ID,
 };
 
-/** 形象换装面板展示的套装（2 列网格，暂不含活动隐藏套） */
+/** 形象换装面板展示的套装（2 列网格，活动套可用 quest 条件显示「活动解锁」） */
 export const DRESSUP_PANEL_OUTFITS: Outfit[] = [
   { id: 'outfit_default',  name: '自然少女',    desc: '清新自然，田园花店的日常装扮',              icon: '', huayuanCost: 0, starValue: 0 },
   { id: 'outfit_florist',  name: '花店小姐姐',  desc: '专业花艺师的精致工装，满满花香',            icon: '', huayuanCost: 600, starValue: 3, unlockRequirement: { level: 2 } },
@@ -78,6 +80,19 @@ export const DRESSUP_PANEL_OUTFITS: Outfit[] = [
     icon: '',
     huayuanCost: 999,
     starValue: 5,
+  },
+  {
+    id: 'outfit_jewel_bloom',
+    name: '珠光花影',
+    desc: '旗袍、满天星与红宝石点缀的花间珠匣限定装扮',
+    icon: '',
+    huayuanCost: 0,
+    starValue: 10,
+    unlockRequirement: {
+      questId: OUTFIT_JEWEL_BLOOM_ACTIVITY_QUEST_ID,
+      conditionText: '活动解锁',
+      questDetailText: '完成花间珠匣活动进度后自动获得该套装',
+    },
   },
 ];
 

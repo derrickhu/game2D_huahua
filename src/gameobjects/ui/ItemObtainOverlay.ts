@@ -186,6 +186,12 @@ export function createItemObtainRewardCell(
 export interface ObtainStyleLayoutParams {
   ribbonTexKey: string;
   titleText: string;
+  /** 奖励格尺寸，默认 96；单奖励展示可放大，不影响升级弹窗默认样式 */
+  cellSize?: number;
+  /** 奖励格间距，默认 28 */
+  gap?: number;
+  /** 数量/标签字号，默认跟随奖励格组件自身规则 */
+  qtyFontSize?: number;
 }
 
 export interface ObtainStyleLayoutOutcome {
@@ -207,10 +213,12 @@ export function layoutObtainStyleRewardBlock(
   const boardItemSlots: ObtainStyleLayoutOutcome['boardItemSlots'] = [];
 
   const n = rewards.length;
+  const cellSize = params.cellSize ?? CELL;
+  const gap = params.gap ?? GAP;
   const cols = n <= 1 ? 1 : Math.min(5, n);
   const rows = Math.ceil(n / cols) || 1;
-  const gridW = cols * CELL + (cols - 1) * GAP;
-  const gridH = rows * CELL + (rows - 1) * GAP;
+  const gridW = cols * cellSize + (cols - 1) * gap;
+  const gridH = rows * cellSize + (rows - 1) * gap;
 
   const ribTex = TextureCache.get(params.ribbonTexKey);
   const layoutTargetW = Math.min(RIBBON_LAYOUT_MAX_W, W - 40);
@@ -315,9 +323,12 @@ export function layoutObtainStyleRewardBlock(
     const rw = Math.floor(i / cols);
     const c = i % cols;
     const entry = rewards[i]!;
-    const cell = createItemObtainRewardCell(entry);
-    const cx = startX + c * (CELL + GAP) + CELL / 2;
-    const cy = startY + rw * (CELL + GAP) + CELL / 2;
+    const cell = createItemObtainRewardCell(entry, {
+      cellSize,
+      qtyFontSize: params.qtyFontSize,
+    });
+    const cx = startX + c * (cellSize + gap) + cellSize / 2;
+    const cy = startY + rw * (cellSize + gap) + cellSize / 2;
     cell.position.set(cx, cy);
     content.addChild(cell);
     if (entry.kind === 'board_item') {

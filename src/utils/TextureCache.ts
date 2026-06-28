@@ -26,12 +26,8 @@ const MAIN_IMAGE_MAP: Record<string, string> = {
   icon_shop_nb2: 'images/ui/icon_shop_nb2.png',
   /** 周末订单花愿 +50% 顶栏入口（NB2 物件 + rembg） */
   icon_weekend_huayuan_boost_nb2: 'images/ui/icon_weekend_huayuan_boost_nb2.png',
-  /** 花间珠匣活动入口：打开首饰盒 + 大颗宝石（NB2 + rembg） */
+  /** 花间珠匣活动入口：打开首饰盒 + 大颗宝石（主页面常驻入口，留在主包） */
   icon_jewelry_event_nb2: 'images/ui/icon_jewelry_event_nb2.png',
-  /** 花间珠匣珠宝图鉴入口：小册子本体（Gemini + rembg；感叹号/进度条由程序绘制） */
-  event_jewelry_reward_book_icon: 'images/ui/event_jewelry_reward_book_icon.png',
-  /** 花间珠匣进度回响入口：点翠蓝绿进度徽章（Gemini + rembg） */
-  event_jewelry_codex_reward_icon: 'images/ui/event_jewelry_codex_reward_icon.png',
   /** NB2+rembg：激励视频 / 看广告统一小图标（粉紫边框 + 播放三角） */
   icon_ad_reward_nb2: 'images/ui/icon_ad_reward_nb2.png',
   icon_heart:  'images/ui/icon_heart.png',
@@ -71,9 +67,9 @@ const MAIN_IMAGE_MAP: Record<string, string> = {
   cell_locked_v2: 'images/ui/cell_locked_v2.png',
   cell_peek:      'images/ui/cell_peek.png',
   cell_key:       'images/ui/cell_key.png',
-  shop_scene_bg:  'images/ui/shop_scene_bg_floral_nb2.png',
+  shop_scene_bg:  'images/ui/shop_scene_bg_floral_nb2.jpg',
   /** 主界面客区试看：花团锦簇强虚化 NB2 稿 */
-  shop_scene_bg_floral_nb2: 'images/ui/shop_scene_bg_floral_nb2.png',
+  shop_scene_bg_floral_nb2: 'images/ui/shop_scene_bg_floral_nb2.jpg',
   /** 启动 Loading 全屏底图（NB2 9:16，主包随下） */
   loading_splash_run_to_shop_nb2: 'images/ui/loading_splash_run_to_shop_nb2.jpg',
   /** Loading 顶栏游戏名（NB2 上半可爱版 + rembg 透明底） */
@@ -111,6 +107,10 @@ const CHARS_IMAGE_MAP: Record<string, string> = {
   owner_full_outfit_queen: 'subpkg_chars/images/owner/full_outfit_queen.png',
   owner_full_outfit_queen_blink: 'subpkg_chars/images/owner/full_outfit_queen_eyesclosed.png',
   owner_chibi_outfit_queen: 'subpkg_chars/images/owner/chibi_outfit_queen.png',
+
+  owner_full_outfit_jewel_bloom: 'subpkg_chars/images/owner/full_outfit_jewel_bloom.png',
+  owner_full_outfit_jewel_bloom_blink: 'subpkg_chars/images/owner/full_outfit_jewel_bloom_eyesclosed.png',
+  owner_chibi_outfit_jewel_bloom: 'subpkg_chars/images/owner/chibi_outfit_jewel_bloom.png',
 
   customer_child:   'subpkg_chars/images/customer/child.png',
   customer_student: 'subpkg_chars/images/customer/student.png',
@@ -193,26 +193,6 @@ const PANELS_IMAGE_MAP: Record<string, string> = {
   warehouse_close_btn: 'subpkg_panels/images/ui/warehouse_close_btn.png',
   warehouse_slot_lock: 'subpkg_panels/images/ui/warehouse_slot_lock.png',
   merge_chain_ribbon: 'subpkg_panels/images/ui/merge_chain_ribbon.png',
-  /** 花间珠匣活动整页背景：NB2 珠匣华丽底图（顶部金标题牌 + 中部纯色棋盘区 + 底部花纹） */
-  event_board_bg: 'subpkg_panels/images/ui/event_board_bg_nb2.png',
-  /** 花间珠匣：底部原石投放器「珠宝匣」图标（NB2 + birefnet 去底） */
-  event_jewelry_casket: 'subpkg_panels/images/ui/event_jewelry_casket_nb2.png',
-  /** 花间珠匣：棋盘上的「时空门」棋子（NB2 + birefnet 去底；集齐钥匙点击进下一层） */
-  event_portal_gate: 'subpkg_panels/images/ui/event_portal_gate_nb2.png',
-  /** 花间珠匣：阶段信息条纯色淡紫底（NB2 + birefnet 去底；其上叠绘标题/进度/图标） */
-  event_stage_card_bg: 'subpkg_panels/images/ui/event_stage_card_bg_nb2.png',
-  /** 花间珠匣：全锁格关闭首饰箱（NB2 + birefnet 去底） */
-  event_cell_fog: 'subpkg_panels/images/ui/event_cell_fog_nb2.png',
-  /** 花间珠匣：半锁格半块丝绒布（上半透明露出压着的物品） */
-  event_cell_peek: 'subpkg_panels/images/ui/event_cell_peek_nb2.png',
-  /** 花间珠匣：进度条上可获得钥匙节点的金钥匙角标（NB2 + birefnet 去底） */
-  event_key_badge: 'subpkg_panels/images/ui/event_key_badge_nb2.png',
-  /** 花间珠匣：珠宝图鉴页空面板壳（透明底，内容由程序绘制） */
-  event_jewelry_codex_panel_shell: 'subpkg_panels/images/ui/event_jewelry_codex_panel_shell.png',
-  /** 花间珠匣：珠宝图鉴分组空面板（标题头 + 右侧奖励预留 + 空内容区） */
-  event_jewelry_codex_reward_section_shell: 'subpkg_panels/images/ui/event_jewelry_codex_reward_section_shell.png',
-  /** 花间珠匣：进度回响空面板壳（后续程序绘制达标奖励列表） */
-  event_jewelry_codex_reward_panel_shell: 'subpkg_panels/images/ui/event_jewelry_codex_reward_panel_shell.png',
   /** 升级奖励等：粉色彩带标题条（叠字「恭喜升级」） */
   pink_bar: 'subpkg_panels/images/ui/pink_bar.png',
   merge_chain_panel: 'subpkg_panels/images/ui/merge_chain_panel.png',
@@ -512,28 +492,67 @@ const ITEMS_IMAGE_MAP: Record<string, string> = {
   icon_crystal_ball: 'subpkg_items/images/special/special_crystal_ball.png',
   icon_golden_scissors: 'subpkg_items/images/special/special_golden_scissors.png',
 
-  // ---- 活动首饰线（花间珠匣活动棋盘，L1 原石 → L12 珠宝套装，1:1 白底合图 + birefnet-general）----
-  event_jewelry_1: 'subpkg_items/images/jewelry/event_jewelry_1.png',
-  event_jewelry_2: 'subpkg_items/images/jewelry/event_jewelry_2.png',
-  event_jewelry_3: 'subpkg_items/images/jewelry/event_jewelry_3.png',
-  event_jewelry_4: 'subpkg_items/images/jewelry/event_jewelry_4.png',
-  event_jewelry_5: 'subpkg_items/images/jewelry/event_jewelry_5.png',
-  event_jewelry_6: 'subpkg_items/images/jewelry/event_jewelry_6.png',
-  event_jewelry_7: 'subpkg_items/images/jewelry/event_jewelry_7.png',
-  event_jewelry_8: 'subpkg_items/images/jewelry/event_jewelry_8.png',
-  event_jewelry_9: 'subpkg_items/images/jewelry/event_jewelry_9.png',
-  event_jewelry_10: 'subpkg_items/images/jewelry/event_jewelry_10.png',
-  event_jewelry_11: 'subpkg_items/images/jewelry/event_jewelry_11.png',
-  event_jewelry_12: 'subpkg_items/images/jewelry/event_jewelry_12.png',
-  event_jewelry_13: 'subpkg_items/images/jewelry/event_jewelry_13.png',
-  event_jewelry_dian_cui_1: 'subpkg_items/images/jewelry/event_jewelry_dian_cui_1.png',
-  event_jewelry_dian_cui_2: 'subpkg_items/images/jewelry/event_jewelry_dian_cui_2.png',
-  event_jewelry_dian_cui_3: 'subpkg_items/images/jewelry/event_jewelry_dian_cui_3.png',
-  event_jewelry_dian_cui_4: 'subpkg_items/images/jewelry/event_jewelry_dian_cui_4.png',
-  event_jewelry_dian_cui_5: 'subpkg_items/images/jewelry/event_jewelry_dian_cui_5.png',
-  event_jewelry_dian_cui_6: 'subpkg_items/images/jewelry/event_jewelry_dian_cui_6.png',
-  event_jewelry_dian_cui_7: 'subpkg_items/images/jewelry/event_jewelry_dian_cui_7.png',
-  event_jewelry_dian_cui_8: 'subpkg_items/images/jewelry/event_jewelry_dian_cui_8.png',
+};
+
+// ================================================================
+// events 分包资源：限时活动独有 UI + 物品图，按 eventId 独立目录存放，便于整套替换
+// ================================================================
+const JEWELRY_BOX_EVENT_IMAGE_MAP: Record<string, string> = {
+  /** 花间珠匣活动整页背景：NB2 珠匣华丽底图（顶部金标题牌 + 中部纯色棋盘区 + 底部花纹） */
+  event_board_bg: 'subpkg_events/images/jewelry_box_event/ui/event_board_bg_nb2.png',
+  /** 花间珠匣：底部原石投放器「珠宝匣」图标（NB2 + birefnet 去底） */
+  event_jewelry_casket: 'subpkg_events/images/jewelry_box_event/ui/event_jewelry_casket_nb2.png',
+  /** 花间珠匣：棋盘上的「时空门」棋子（NB2 + birefnet 去底；集齐钥匙点击进下一层） */
+  event_portal_gate: 'subpkg_events/images/jewelry_box_event/ui/event_portal_gate_nb2.png',
+  /** 花间珠匣：阶段信息条纯色淡紫底（NB2 + birefnet 去底；其上叠绘标题/进度/图标） */
+  event_stage_card_bg: 'subpkg_events/images/jewelry_box_event/ui/event_stage_card_bg_nb2.png',
+  /** 花间珠匣：全锁格关闭首饰箱（NB2 + birefnet 去底） */
+  event_cell_fog: 'subpkg_events/images/jewelry_box_event/ui/event_cell_fog_nb2.png',
+  /** 花间珠匣：半锁格半块丝绒布（上半透明露出压着的物品） */
+  event_cell_peek: 'subpkg_events/images/jewelry_box_event/ui/event_cell_peek_nb2.png',
+  /** 花间珠匣：进度条上可获得钥匙节点的金钥匙角标（NB2 + birefnet 去底） */
+  event_key_badge: 'subpkg_events/images/jewelry_box_event/ui/event_key_badge_nb2.png',
+  /** 花间珠匣珠宝图鉴入口：小册子本体（Gemini + rembg；感叹号/进度条由程序绘制） */
+  event_jewelry_reward_book_icon: 'subpkg_events/images/jewelry_box_event/ui/event_jewelry_reward_book_icon.png',
+  /** 花间珠匣进度回响入口：点翠蓝绿进度徽章（Gemini + rembg） */
+  event_jewelry_codex_reward_icon: 'subpkg_events/images/jewelry_box_event/ui/event_jewelry_codex_reward_icon.png',
+  /** 花间珠匣：珠宝图鉴页空面板壳（透明底，内容由程序绘制） */
+  event_jewelry_codex_panel_shell: 'subpkg_events/images/jewelry_box_event/ui/event_jewelry_codex_panel_shell.png',
+  /** 花间珠匣：珠宝图鉴分组空面板（标题头 + 右侧奖励预留 + 空内容区） */
+  event_jewelry_codex_reward_section_shell: 'subpkg_events/images/jewelry_box_event/ui/event_jewelry_codex_reward_section_shell.png',
+  /** 花间珠匣：进度回响空面板壳（后续程序绘制达标奖励列表） */
+  event_jewelry_codex_reward_panel_shell: 'subpkg_events/images/jewelry_box_event/ui/event_jewelry_codex_reward_panel_shell.png',
+
+  // ---- 活动首饰线（花间珠匣活动棋盘，L1 原石 → L13 珠宝套装）----
+  event_jewelry_1: 'subpkg_events/images/jewelry_box_event/items/event_jewelry_1.png',
+  event_jewelry_2: 'subpkg_events/images/jewelry_box_event/items/event_jewelry_2.png',
+  event_jewelry_3: 'subpkg_events/images/jewelry_box_event/items/event_jewelry_3.png',
+  event_jewelry_4: 'subpkg_events/images/jewelry_box_event/items/event_jewelry_4.png',
+  event_jewelry_5: 'subpkg_events/images/jewelry_box_event/items/event_jewelry_5.png',
+  event_jewelry_6: 'subpkg_events/images/jewelry_box_event/items/event_jewelry_6.png',
+  event_jewelry_7: 'subpkg_events/images/jewelry_box_event/items/event_jewelry_7.png',
+  event_jewelry_8: 'subpkg_events/images/jewelry_box_event/items/event_jewelry_8.png',
+  event_jewelry_9: 'subpkg_events/images/jewelry_box_event/items/event_jewelry_9.png',
+  event_jewelry_10: 'subpkg_events/images/jewelry_box_event/items/event_jewelry_10.png',
+  event_jewelry_11: 'subpkg_events/images/jewelry_box_event/items/event_jewelry_11.png',
+  event_jewelry_12: 'subpkg_events/images/jewelry_box_event/items/event_jewelry_12.png',
+  event_jewelry_13: 'subpkg_events/images/jewelry_box_event/items/event_jewelry_13.png',
+  event_jewelry_dian_cui_1: 'subpkg_events/images/jewelry_box_event/items/event_jewelry_dian_cui_1.png',
+  event_jewelry_dian_cui_2: 'subpkg_events/images/jewelry_box_event/items/event_jewelry_dian_cui_2.png',
+  event_jewelry_dian_cui_3: 'subpkg_events/images/jewelry_box_event/items/event_jewelry_dian_cui_3.png',
+  event_jewelry_dian_cui_4: 'subpkg_events/images/jewelry_box_event/items/event_jewelry_dian_cui_4.png',
+  event_jewelry_dian_cui_5: 'subpkg_events/images/jewelry_box_event/items/event_jewelry_dian_cui_5.png',
+  event_jewelry_dian_cui_6: 'subpkg_events/images/jewelry_box_event/items/event_jewelry_dian_cui_6.png',
+  event_jewelry_dian_cui_7: 'subpkg_events/images/jewelry_box_event/items/event_jewelry_dian_cui_7.png',
+  event_jewelry_dian_cui_8: 'subpkg_events/images/jewelry_box_event/items/event_jewelry_dian_cui_8.png',
+};
+
+const EVENT_IMAGE_MAPS: Record<string, Record<string, string>> = {
+  jewelry_box_event: JEWELRY_BOX_EVENT_IMAGE_MAP,
+};
+
+const EVENTS_IMAGE_MAP: Record<string, string> = {
+  ...JEWELRY_BOX_EVENT_IMAGE_MAP,
 };
 
 // ================================================================
@@ -605,6 +624,7 @@ const DECO_IMAGE_MAP: Record<string, string> = {
   wallart_winter: 'subpkg_deco/images/furniture/wallart_winter.png',
   wallart_lace_curtain: 'subpkg_deco/images/furniture/wallart_lace_curtain.png',
   promo_pearl_bead_curtain: 'subpkg_deco/images/furniture/promo_pearl_bead_curtain.png',
+  event_jewelry_jade_curtain: 'subpkg_deco/images/furniture/event_jewelry_jade_curtain.png',
   // 庭院
   garden_flowerbed: 'subpkg_deco/images/furniture/garden_flowerbed.png',
   garden_arbor:     'subpkg_deco/images/furniture/garden_arbor.png',
@@ -844,6 +864,10 @@ const DECO_IMAGE_MAP: Record<string, string> = {
   qinglian_silk_daybed: 'subpkg_deco/images/furniture/qinglian_silk_daybed.png',
   qinglian_lotus_canopy_bed: 'subpkg_deco/images/furniture/qinglian_lotus_canopy_bed.png',
 
+  // ---- 花间珠匣活动奖励家具 ----
+  event_jewelry_back_sofa: 'subpkg_deco/images/furniture/event_jewelry_back_sofa.png',
+  event_jewelry_empty_tea_table: 'subpkg_deco/images/furniture/event_jewelry_empty_tea_table.png',
+
   // ---- 房间背景 ----
   bg_room_default: 'subpkg_deco/images/house/bg_room_default_soft_nb2.png',
   /** 蝴蝶小屋默认房壳（当前先接 preview 资源，后续定稿可替换正式路径） */
@@ -895,6 +919,7 @@ const IMAGE_MAP: Record<string, string> = {
   ...CHARS_IMAGE_MAP,
   ...PANELS_IMAGE_MAP,
   ...ITEMS_IMAGE_MAP,
+  ...EVENTS_IMAGE_MAP,
   ...DECO_IMAGE_MAP,
   ...CRITICAL_IMAGE_MAP,
 };
@@ -1100,6 +1125,8 @@ const ALL_MAIN_KEYS = Object.keys(MAIN_IMAGE_MAP);
 const ALL_CHARS_KEYS = Object.keys(CHARS_IMAGE_MAP);
 const ALL_PANELS_KEYS = Object.keys(PANELS_IMAGE_MAP);
 const ALL_ITEMS_KEYS = Object.keys(ITEMS_IMAGE_MAP);
+const ALL_EVENTS_KEYS = Object.keys(EVENTS_IMAGE_MAP);
+const JEWELRY_BOX_EVENT_KEYS = Object.keys(JEWELRY_BOX_EVENT_IMAGE_MAP);
 const ALL_DECO_KEYS = Object.keys(DECO_IMAGE_MAP);
 const ALL_CRITICAL_KEYS = Object.keys(CRITICAL_IMAGE_MAP);
 const OWNER_OUTFIT_KEYS = keysWhere(CHARS_IMAGE_MAP, key => key.startsWith('owner_'));
@@ -1125,6 +1152,8 @@ export type TextureAssetGroup =
   | 'newbieGiftPack'
   | 'main'
   | 'items'
+  | 'events'
+  | 'jewelryBoxEvent'
   | 'chars'
   | 'panels'
   | 'critical'
@@ -1150,6 +1179,8 @@ const ASSET_GROUP_KEYS: Record<TextureAssetGroup, readonly string[]> = {
   newbieGiftPack: NEWBIE_GIFT_PANEL_KEYS,
   main: [],
   items: [],
+  events: [],
+  jewelryBoxEvent: JEWELRY_BOX_EVENT_KEYS,
   chars: [],
   panels: [],
   critical: [],
@@ -1162,6 +1193,8 @@ const ASSET_GROUP_NOTIFY_KEYS: Record<TextureAssetGroup, readonly string[]> = {
   ...ASSET_GROUP_KEYS,
   main: ALL_MAIN_KEYS,
   items: ALL_ITEMS_KEYS,
+  events: ALL_EVENTS_KEYS,
+  jewelryBoxEvent: JEWELRY_BOX_EVENT_KEYS,
   chars: ALL_CHARS_KEYS,
   panels: ALL_PANELS_KEYS,
   critical: ALL_CRITICAL_KEYS,
@@ -1199,6 +1232,7 @@ class TextureCacheClass {
   private _failed = new Set<string>();
   private _decoLoaded = false;
   private _itemsLoaded = false;
+  private _eventsLoaded = false;
   private _charsLoaded = false;
   private _panelsLoaded = false;
 
@@ -1295,6 +1329,18 @@ class TextureCacheClass {
     });
   }
 
+  /** 加载 events 分包；限时活动资源按 eventId 懒加载，避免进入主包或常驻 items。 */
+  loadEventsSubpackage(onProgress?: (loaded: number, total: number) => void): Promise<void> {
+    if (this._eventsLoaded) {
+      return this._preloadImageMap(EVENTS_IMAGE_MAP, 'events', onProgress);
+    }
+
+    return this._loadSubpackage('events').then(() => {
+      this._eventsLoaded = true;
+      return this._preloadImageMap(EVENTS_IMAGE_MAP, 'events', onProgress);
+    });
+  }
+
   /** 预加载 deco 图片；当前配置下走 CDN，非 CDN 配置才会加载微信分包。 */
   loadDecoSubpackage(onProgress?: (loaded: number, total: number) => void): Promise<void> {
     if (this._decoLoaded) {
@@ -1382,6 +1428,38 @@ class TextureCacheClass {
   /** 面板打开前的统一资源确保入口。 */
   preloadPanelAssets(panel: TextureAssetGroup): Promise<void> {
     return this.preloadSceneWarmup(panel);
+  }
+
+  /** 活动打开前的统一预加载入口；同一 events 分包可承载多个活动目录。 */
+  preloadEventAssets(eventId: string, onProgress?: (loaded: number, total: number) => void): Promise<void> {
+    const imageMap = EVENT_IMAGE_MAPS[eventId];
+    if (!imageMap) {
+      console.warn(`[TextureCache] 未注册活动资源: ${eventId}`);
+      return Promise.resolve();
+    }
+    const load = this._eventsLoaded
+      ? Promise.resolve()
+      : this._loadSubpackage('events').then(() => {
+        this._eventsLoaded = true;
+      });
+    return load.then(() => this._preloadImageMap(imageMap, `event:${eventId}`, onProgress));
+  }
+
+  /** 活动页首屏关键资源预热；避免打开页面时与整套活动图标并发抢加载。 */
+  preloadEventKeys(eventId: string, keys: readonly string[], onProgress?: (loaded: number, total: number) => void): Promise<void> {
+    const imageMap = EVENT_IMAGE_MAPS[eventId];
+    if (!imageMap) {
+      console.warn(`[TextureCache] 未注册活动资源: ${eventId}`);
+      return Promise.resolve();
+    }
+    const validKeys = keys.filter(key => !!imageMap[key]);
+    if (validKeys.length === 0) return Promise.resolve();
+    const load = this._eventsLoaded
+      ? Promise.resolve()
+      : this._loadSubpackage('events').then(() => {
+        this._eventsLoaded = true;
+      });
+    return load.then(() => this.preloadKeys(validKeys, onProgress));
   }
 
   /** 顶栏内购商店必须资源：打开前严格等待，避免 CDN 首次下载时显示空壳。 */
@@ -1500,6 +1578,10 @@ class TextureCacheClass {
   /** items 分包是否已加载 */
   get isItemsLoaded(): boolean {
     return this._itemsLoaded;
+  }
+
+  get isEventsLoaded(): boolean {
+    return this._eventsLoaded;
   }
 
   get isCharsLoaded(): boolean {
@@ -1654,7 +1736,7 @@ class TextureCacheClass {
   /**
    * 图片 onerror 时尝试加载微信分包后重试。
    * chars/panels/deco/audio 在 CdnConfig.cdnDirs 中，安装包不携带、game.json 也无对应分包，
-   * 不得 loadSubpackage（必报 does not exist）；仅 items 等非 CDN 路径可走分包兜底。
+   * 不得 loadSubpackage（必报 does not exist）；仅 items/events 等非 CDN 路径可走分包兜底。
    */
   private async _ensureSubpackageForLocalFallback(path: string): Promise<boolean> {
     const normalized = path.replace(/^\/+/, '').replace(/^minigame\//, '');
@@ -1668,6 +1750,16 @@ class TextureCacheClass {
         return true;
       } catch (err) {
         console.warn('[TextureCache] items 分包加载失败，本地兜底不可用', err);
+        return false;
+      }
+    }
+    if (normalized.startsWith('subpkg_events/') && !this._eventsLoaded) {
+      try {
+        await this._loadSubpackage('events');
+        this._eventsLoaded = true;
+        return true;
+      } catch (err) {
+        console.warn('[TextureCache] events 分包加载失败，本地兜底不可用', err);
         return false;
       }
     }

@@ -6,7 +6,7 @@ import {
   ITEM_DEFS,
   getMergeResultId,
   isEventProducerItem,
-  CRYSTAL_BALL_ITEM_ID,
+  LUCKY_COIN_ITEM_ID,
 } from '@/config/ItemConfig';
 import {
   EVENT_BOARD_COLS,
@@ -29,6 +29,8 @@ import {
   EVENT_ORDER_BOX_CHANCE,
   EVENT_ORDER_BOX_DAILY_GUARANTEE,
   EVENT_ORDER_BOX_DAILY_LIMIT,
+  EVENT_STARTER_STONE_LEVEL2_CHANCE,
+  EVENT_STARTER_STONE_LEVEL3_CHANCE,
   JEWELRY_EVENT_NAME,
   DIAN_CUI_ITEM_PREFIX,
   JEWELRY_ITEM_PREFIX,
@@ -42,6 +44,10 @@ import { FlowerSignTicketManager } from './FlowerSignTicketManager';
 import { LevelManager } from './LevelManager';
 import { RewardBoxManager } from './RewardBoxManager';
 import { isChestItem, rollChestBoardDrops } from './BuildingManager';
+import { DECO_DEFS } from '@/config/DecorationConfig';
+import { DecorationManager } from './DecorationManager';
+import { DressUpManager } from './DressUpManager';
+import { grantQuest } from '@/utils/UnlockChecker';
 
 export interface EventBoardCellData {
   index: number;
@@ -59,18 +65,14 @@ export interface EventBoardPersistState {
   cells: EventBoardCellData[];
   stageIndex: number;
   keys: number;
-  /** 活动底部库存：订单获得的原石数量。旧档 pendingStarterBoxes 会迁移到这里。 */
-  pendingStarterStones?: number;
-  /** @deprecated 旧版字段：原石包数量。 */
-  pendingStarterBoxes: number;
+  /** 活动底部库存：订单获得的原石数量。 */
+  pendingStarterStones: number;
   discoveredItemIds: string[];
   claimedDiscoveryRewardItemIds?: string[];
   completedStageIds: string[];
   dailyKey: string;
   dailyOrderDeliveries: number;
-  dailyStarterStones?: number;
-  /** @deprecated 旧版字段：每日原石包数量。 */
-  dailyStarterBoxes: number;
+  dailyStarterStones: number;
   dailyDropCounts: Record<string, number>;
   claimedCodexRewardIds?: string[];
   progressEchoMergeCount?: number;
@@ -115,15 +117,13 @@ function emptyPersistState(): EventBoardPersistState {
     cells: [],
     stageIndex: 0,
     keys: 0,
-    pendingStarterStones: 6,
-    pendingStarterBoxes: 0,
+    pendingStarterStones: 0,
     discoveredItemIds: [],
     claimedDiscoveryRewardItemIds: [],
     completedStageIds: [],
     dailyKey: localDateKey(),
     dailyOrderDeliveries: 0,
     dailyStarterStones: 0,
-    dailyStarterBoxes: 0,
     dailyDropCounts: {},
     claimedCodexRewardIds: [],
     progressEchoMergeCount: 0,
@@ -136,7 +136,7 @@ class EventBoardManagerClass {
   private _cells: EventBoardCellData[] = [];
   private _stageIndex = 0;
   private _keys = 0;
-  private _pendingStarterStones = 6;
+  private _pendingStarterStones = 0;
   private _discoveredItemIds: Set<string> = new Set();
   private _claimedDiscoveryRewardItemIds: Set<string> = new Set();
   private _completedStageIds: Set<string> = new Set();
@@ -184,8 +184,6 @@ class EventBoardManagerClass {
   get currentTotal(): number { return getStageTotal(this.currentStage); }
   get keys(): number { return this._keys; }
   get pendingStarterStones(): number { return this._pendingStarterStones; }
-  /** @deprecated UI 请使用 pendingStarterStones */
-  get pendingStarterBoxes(): number { return this._pendingStarterStones; }
   get discoveredCount(): number { return this._discoveredItemIds.size; }
   get codexTotalCount(): number { return EVENT_CODEX_ITEM_IDS.length; }
   get codexDiscoveredCount(): number {
@@ -193,10 +191,7 @@ class EventBoardManagerClass {
   }
   isDiscovered(itemId: string): boolean { return this._discoveredItemIds.has(itemId); }
   get hasClaimableDiscoveryReward(): boolean {
-    return (
-      this.isCodexSectionRewardClaimable('jewelry') ||
-      this.isCodexSectionRewardClaimable('dian_cui')
-    );
+    return false;
   }
   isCodexSectionRewardClaimed(section: 'jewelry' | 'dian_cui'): boolean {
     return this._claimedCodexRewardIds.has(section);
@@ -259,14 +254,12 @@ class EventBoardManagerClass {
       stageIndex: this._stageIndex,
       keys: this._keys,
       pendingStarterStones: this._pendingStarterStones,
-      pendingStarterBoxes: 0,
       discoveredItemIds: Array.from(this._discoveredItemIds),
       claimedDiscoveryRewardItemIds: Array.from(this._claimedDiscoveryRewardItemIds),
       completedStageIds: Array.from(this._completedStageIds),
       dailyKey: this._dailyKey,
       dailyOrderDeliveries: this._dailyOrderDeliveries,
       dailyStarterStones: this._dailyStarterStones,
-      dailyStarterBoxes: 0,
       dailyDropCounts: { ...this._dailyDropCounts },
       claimedCodexRewardIds: Array.from(this._claimedCodexRewardIds),
       progressEchoMergeCount: this._progressEchoMergeCount,
@@ -279,10 +272,7 @@ class EventBoardManagerClass {
     const state = raw ?? emptyPersistState();
     this._stageIndex = Math.max(0, Math.min(EVENT_BOARD_STAGES.length - 1, Math.floor(state.stageIndex ?? 0)));
     this._keys = Math.max(0, Math.floor(state.keys ?? 0));
-    this._pendingStarterStones = Math.max(
-      0,
-      Math.floor(state.pendingStarterStones ?? state.pendingStarterBoxes ?? 0),
-    );
+    this._pendingStarterStones = Math.max(0, Math.floor(state.pendingStarterStones ?? 0));
     this._discoveredItemIds = new Set((state.discoveredItemIds ?? []).filter(id => ITEM_DEFS.has(id)));
     this._claimedDiscoveryRewardItemIds = new Set(
       (state.claimedDiscoveryRewardItemIds ?? []).filter(id => ITEM_DEFS.has(id)),
@@ -290,10 +280,7 @@ class EventBoardManagerClass {
     this._completedStageIds = new Set(state.completedStageIds ?? []);
     this._dailyKey = typeof state.dailyKey === 'string' ? state.dailyKey : localDateKey();
     this._dailyOrderDeliveries = Math.max(0, Math.floor(state.dailyOrderDeliveries ?? 0));
-    this._dailyStarterStones = Math.max(
-      0,
-      Math.floor(state.dailyStarterStones ?? state.dailyStarterBoxes ?? 0),
-    );
+    this._dailyStarterStones = Math.max(0, Math.floor(state.dailyStarterStones ?? 0));
     this._dailyDropCounts = { ...(state.dailyDropCounts ?? {}) };
     this._progressEchoMergeCount = Math.max(0, Math.floor(state.progressEchoMergeCount ?? 0));
     this._claimedCodexRewardIds = new Set(
@@ -319,8 +306,10 @@ class EventBoardManagerClass {
               ? CellState.PEEK
               : CellState.OPEN;
         let itemId = c.itemId && ITEM_DEFS.has(c.itemId) ? c.itemId : null;
-        // 旧档半锁格可能为空，回填压着的物品，保证可合成解锁
-        if (state2 === CellState.PEEK && !itemId) itemId = peekItemId;
+        const lockedCellItemId = this._lockedCellItemId(stageDef, index);
+        // 锁格必须压着配置物品，保证可合成解锁。
+        if (state2 === CellState.PEEK && (!itemId || itemId === peekItemId)) itemId = lockedCellItemId;
+        if (state2 === CellState.FOG && (!itemId || itemId === peekItemId)) itemId = lockedCellItemId;
         const chestQueue = Array.isArray(c.chestQueue)
           ? c.chestQueue.filter(id => ITEM_DEFS.has(id))
           : undefined;
@@ -337,11 +326,17 @@ class EventBoardManagerClass {
     } else {
       this._resetStage(this._stageIndex, false);
     }
+    this._syncVisibleBoardDiscoveries();
     this._checkDailyReset();
     EventBus.emit('eventBoard:changed');
   }
 
-  private _resetStage(stageIndex: number, emit = true, grantStarterDiscoveryRewards = emit): void {
+  private _resetStage(
+    stageIndex: number,
+    emit = true,
+    grantStarterDiscoveryRewards = emit,
+    placeStarterItems = true,
+  ): void {
     const stage = EVENT_BOARD_STAGES[stageIndex] ?? EVENT_BOARD_STAGES[0];
     const peek = new Set(stage.peekCells);
     const fog = new Set(stage.fogCells);
@@ -352,8 +347,8 @@ class EventBoardManagerClass {
       return {
         index,
         state: isFog ? CellState.FOG : isPeek ? CellState.PEEK : CellState.OPEN,
-        // 半锁格压着一件 peekItemId，拖相同物品过去合成才解锁
-        itemId: isPeek ? stage.peekItemId : null,
+        // 半锁格压着一件物品，拖相同物品过去合成才解锁；全锁格内物品揭开后显示。
+        itemId: isPeek || isFog ? this._lockedCellItemId(stage, index) : null,
       };
     });
 
@@ -368,10 +363,7 @@ class EventBoardManagerClass {
       }
     }
 
-    for (const itemId of stage.starterItems) {
-      this._placeItemInFirstEmpty(itemId);
-    this._markDiscovered(itemId, grantStarterDiscoveryRewards);
-    }
+    if (placeStarterItems) this._placeStageStarterItems(stage, grantStarterDiscoveryRewards);
 
     if (emit) {
       EventBus.emit('eventBoard:stageChanged', this.currentStage);
@@ -379,7 +371,22 @@ class EventBoardManagerClass {
     }
   }
 
-  /** 依当前层配置校正「时空门」格（迁移旧档 / 防止门格被占用） */
+  private _lockedCellItemId(
+    stage: { peekItemId: string; lockedCellItems?: Record<number, string> },
+    index: number,
+  ): string {
+    const itemId = stage.lockedCellItems?.[index] ?? stage.peekItemId;
+    return ITEM_DEFS.has(itemId) ? itemId : stage.peekItemId;
+  }
+
+  private _placeStageStarterItems(stage: { starterItems: string[] }, grantStarterDiscoveryRewards: boolean): void {
+    for (const itemId of stage.starterItems) {
+      const idx = this._placeItemInFirstEmpty(itemId);
+      if (idx >= 0) this._markDiscovered(itemId, grantStarterDiscoveryRewards);
+    }
+  }
+
+  /** 依当前层配置校正「时空门」格，防止门格被占用。 */
   private _applyPortalCell(): void {
     const stage = this.currentStage;
     const isLast = this._stageIndex >= EVENT_BOARD_STAGES.length - 1;
@@ -387,7 +394,7 @@ class EventBoardManagerClass {
     if (isLast || typeof stage.portalCell !== 'number') return;
     const pc = this._cells[stage.portalCell];
     if (!pc) return;
-    // 门格若被占用（旧档/异常），把物品挪到首个空格，挪不动则丢弃
+    // 门格若被占用，把物品挪到首个空格，挪不动则丢弃。
     if (pc.itemId) {
       const relocate = this._cells.find(
         c => c.index !== pc.index && c.state === CellState.OPEN && !c.itemId && !c.isPortal,
@@ -403,6 +410,14 @@ class EventBoardManagerClass {
     pc.chestQueue = undefined;
     pc.chestTotal = undefined;
     pc.isPortal = true;
+  }
+
+  /** 开放格上的活动物品一旦出现在棋盘，即应计入图鉴；锁格压物不提前解锁。 */
+  private _syncVisibleBoardDiscoveries(): void {
+    for (const cell of this._cells) {
+      if (cell.state !== CellState.OPEN || cell.isPortal || !cell.itemId) continue;
+      this._markDiscovered(cell.itemId, true);
+    }
   }
 
   /** 该格是否为「时空门」棋子 */
@@ -447,7 +462,12 @@ class EventBoardManagerClass {
     if (this._pendingStarterStones <= 0) return -1;
     if (this.emptyOpenCellCount < 1) return -1;
     this._pendingStarterStones--;
-    const itemId = 'event_jewelry_1';
+    const roll = Math.random();
+    const itemId = roll < EVENT_STARTER_STONE_LEVEL3_CHANCE
+      ? `${JEWELRY_ITEM_PREFIX}3`
+      : roll < EVENT_STARTER_STONE_LEVEL3_CHANCE + EVENT_STARTER_STONE_LEVEL2_CHANCE
+        ? `${JEWELRY_ITEM_PREFIX}2`
+        : `${JEWELRY_ITEM_PREFIX}1`;
     const idx = this._placeItemInFirstEmpty(itemId);
     if (idx < 0) {
       this._pendingStarterStones++;
@@ -465,6 +485,14 @@ class EventBoardManagerClass {
 
   get carryableEventItemCount(): number {
     return this._collectCarryItemsForNextStage().length;
+  }
+
+  get rewardBoxItemCountOnStageChange(): number {
+    return this._collectRewardBoxItemsForStageChange().length;
+  }
+
+  get mergeableCarryEventItemName(): string | null {
+    return this._findMergeableCarryEventItemName();
   }
 
   /** GM：清空活动棋盘开放格上的物品（不含时空门格、半锁/全锁格） */
@@ -531,7 +559,12 @@ class EventBoardManagerClass {
 
   private _isCarryableBoardItem(itemId: string | null | undefined): itemId is string {
     if (!itemId) return false;
-    return ITEM_DEFS.has(itemId);
+    const def = ITEM_DEFS.get(itemId);
+    return Boolean(
+      def &&
+      def.category === Category.EVENT &&
+      (def.line === EventLine.JEWELRY || def.line === EventLine.DIAN_CUI),
+    );
   }
 
   private _collectCarryItemsForNextStage(): EventBoardCarryItem[] {
@@ -542,6 +575,42 @@ class EventBoardManagerClass {
         chestQueue: c.chestQueue ? [...c.chestQueue] : undefined,
         chestTotal: c.chestTotal,
       }));
+  }
+
+  private _findMergeableCarryEventItemName(): string | null {
+    const counts = new Map<string, number>();
+    for (const cell of this._cells) {
+      if (cell.state !== CellState.OPEN || cell.isPortal || !this._isCarryableBoardItem(cell.itemId)) continue;
+      if (!getMergeResultId(cell.itemId)) continue;
+      const nextCount = (counts.get(cell.itemId) ?? 0) + 1;
+      if (nextCount >= 2) return ITEM_DEFS.get(cell.itemId)?.name ?? cell.itemId;
+      counts.set(cell.itemId, nextCount);
+    }
+    return null;
+  }
+
+  private _collectRewardBoxItemsForStageChange(): EventBoardCarryItem[] {
+    return this._cells
+      .filter(c => c.state === CellState.OPEN && !c.isPortal && !!c.itemId && !this._isCarryableBoardItem(c.itemId))
+      .map(c => ({
+        itemId: c.itemId!,
+        chestQueue: c.chestQueue ? [...c.chestQueue] : undefined,
+        chestTotal: c.chestTotal,
+      }));
+  }
+
+  private _moveNonCarryItemsToRewardBoxBeforeNextStage(): number {
+    let moved = 0;
+    for (const cell of this._cells) {
+      if (cell.state !== CellState.OPEN || cell.isPortal || !cell.itemId) continue;
+      if (this._isCarryableBoardItem(cell.itemId)) continue;
+      RewardBoxManager.addItem(cell.itemId, 1);
+      cell.itemId = null;
+      cell.chestQueue = undefined;
+      cell.chestTotal = undefined;
+      moved++;
+    }
+    return moved;
   }
 
   private _placeCarryItemsIntoNewStage(items: EventBoardCarryItem[]): number {
@@ -560,9 +629,7 @@ class EventBoardManagerClass {
       }
     };
 
-    // 继承物优先压入锁格，保留该格锁态，后续按原规则合成解锁。
-    placeInto(this._cells.filter(c => c.state === CellState.PEEK && !c.isPortal).map(c => c.index));
-    placeInto(this._cells.filter(c => c.state === CellState.FOG && !c.isPortal).map(c => c.index));
+    // 继承物只放入下一阶段的普通空格，不压入半锁/全锁格，避免干扰新阶段解锁节奏。
     placeInto(this._cells.filter(c => c.state === CellState.OPEN && !c.itemId && !c.isPortal).map(c => c.index));
     return placed;
   }
@@ -576,6 +643,7 @@ class EventBoardManagerClass {
     const dst = this._cells[dstIndex];
     if (!src || !dst || srcIndex === dstIndex) return false;
     if (src.state !== CellState.OPEN || !src.itemId) return false;
+    if (this._isRewardBoxCollectibleItem(src.itemId) && !this._isRewardBoxMergeableItem(src.itemId)) return false;
     if (dst.state !== CellState.OPEN && dst.state !== CellState.PEEK) return false;
     if (src.itemId !== dst.itemId) return false;
     return !!getMergeResultId(src.itemId);
@@ -591,7 +659,11 @@ class EventBoardManagerClass {
       const dstWasPeek = dst.state === CellState.PEEK;
       const resultId = getMergeResultId(src.itemId)!;
       src.itemId = null;
+      src.chestQueue = undefined;
+      src.chestTotal = undefined;
       dst.itemId = resultId;
+      dst.chestQueue = undefined;
+      dst.chestTotal = undefined;
       // 合成到半锁格：解锁该格并级联揭开相邻全锁格
       if (dstWasPeek) {
         dst.state = CellState.OPEN;
@@ -606,6 +678,8 @@ class EventBoardManagerClass {
       EventBus.emit('eventBoard:changed');
       return dstWasPeek ? 'unlocked' : 'merged';
     }
+
+    if (this._isRewardBoxCollectibleItem(src.itemId)) return 'blocked';
 
     // 拖入空的开放格：普通移动（半锁格不接受单纯移动；时空门格不可占用）
     if (dst.state === CellState.OPEN && !dst.itemId && !dst.isPortal) {
@@ -623,20 +697,27 @@ class EventBoardManagerClass {
     return 'blocked';
   }
 
-  /** 半锁格被解锁后，把其正交相邻的全锁格揭开为半锁（并压上 peekItemId） */
+  /** 半锁格被解锁后，按主棋盘规则把周围 3×3 的全锁格揭开为半锁（并压上配置物品）。 */
   private _revealAdjacentFog(index: number): void {
-    const peekItemId = this.currentStage.peekItemId;
-    const col = index % EVENT_BOARD_COLS;
-    const neighbors: number[] = [];
-    if (col > 0) neighbors.push(index - 1);
-    if (col < EVENT_BOARD_COLS - 1) neighbors.push(index + 1);
-    neighbors.push(index - EVENT_BOARD_COLS);
-    neighbors.push(index + EVENT_BOARD_COLS);
-    for (const n of neighbors) {
-      const cell = this._cells[n];
-      if (cell && cell.state === CellState.FOG) {
-        cell.state = CellState.PEEK;
-        cell.itemId = cell.itemId ?? peekItemId;
+    this._revealFogAround3x3(index);
+  }
+
+  private _revealFogAround3x3(centerIndex: number): void {
+    const rows = getStageRows(this.currentStage);
+    const centerRow = Math.floor(centerIndex / EVENT_BOARD_COLS);
+    const centerCol = centerIndex % EVENT_BOARD_COLS;
+    for (let dr = -1; dr <= 1; dr++) {
+      for (let dc = -1; dc <= 1; dc++) {
+        if (dr === 0 && dc === 0) continue;
+        const row = centerRow + dr;
+        const col = centerCol + dc;
+        if (row < 0 || row >= rows || col < 0 || col >= EVENT_BOARD_COLS) continue;
+        const index = row * EVENT_BOARD_COLS + col;
+        const cell = this._cells[index];
+        if (cell && cell.state === CellState.FOG) {
+          cell.state = CellState.PEEK;
+          cell.itemId = cell.itemId ?? this._lockedCellItemId(this.currentStage, index);
+        }
       }
     }
   }
@@ -648,8 +729,41 @@ class EventBoardManagerClass {
     if (!src || !dst || srcIndex === dstIndex) return false;
     if (src.state !== CellState.OPEN || !src.itemId) return false;
     if (this.canMerge(srcIndex, dstIndex)) return true;
+    if (this._isRewardBoxCollectibleItem(src.itemId)) return false;
     if (dst.state === CellState.OPEN && !dst.itemId && !dst.isPortal) return true;
     return false;
+  }
+
+  private _isRewardBoxCollectibleItem(itemId: string): boolean {
+    return itemId === LUCKY_COIN_ITEM_ID || isChestItem(itemId);
+  }
+
+  /** 活动棋盘上仍允许合并、但不允许点击打开的奖励箱。 */
+  private _isRewardBoxMergeableItem(itemId: string): boolean {
+    return itemId.startsWith('stamina_chest_') && !!getMergeResultId(itemId);
+  }
+
+  isRewardBoxCollectibleCell(index: number): boolean {
+    const cell = this._cells[index];
+    return Boolean(cell?.itemId && this._isRewardBoxCollectibleItem(cell.itemId));
+  }
+
+  isRewardBoxMergeableCell(index: number): boolean {
+    const cell = this._cells[index];
+    return Boolean(cell?.itemId && this._isRewardBoxMergeableItem(cell.itemId));
+  }
+
+  collectRewardBoxItemCell(index: number): { collected: boolean; itemId?: string; name?: string } {
+    const cell = this._cells[index];
+    if (!cell?.itemId || !this._isRewardBoxCollectibleItem(cell.itemId)) return { collected: false };
+    const itemId = cell.itemId;
+    const name = ITEM_DEFS.get(itemId)?.name ?? itemId;
+    RewardBoxManager.addItem(itemId, 1);
+    cell.itemId = null;
+    EventBus.emit('rewardBox:collectedFromBoard', itemId);
+    EventBus.emit('eventBoard:rewardGranted', [{ kind: 'boxReward', itemId, count: 1 }]);
+    EventBus.emit('eventBoard:changed');
+    return { collected: true, itemId, name };
   }
 
   collectCurrencyCell(index: number): EventCurrencyCollectResult {
@@ -669,15 +783,7 @@ class EventBoardManagerClass {
 
   claimCodexSectionReward(section: 'jewelry' | 'dian_cui'): boolean {
     if (!this.isCodexSectionRewardClaimable(section)) return false;
-    this._claimedCodexRewardIds.add(section);
-    if (section === 'jewelry') {
-      CurrencyManager.addStamina(500);
-      EventBus.emit('eventBoard:rewardGranted', [{ kind: 'stamina', amount: 500 }]);
-    } else {
-      RewardBoxManager.addItem(CRYSTAL_BALL_ITEM_ID, 2);
-      EventBus.emit('eventBoard:rewardGranted', [{ kind: 'boxReward', itemId: CRYSTAL_BALL_ITEM_ID, count: 2 }]);
-    }
-    EventBus.emit('eventBoard:changed');
+    this._claimCodexSectionReward(section, 'manual');
     return true;
   }
 
@@ -686,6 +792,7 @@ class EventBoardManagerClass {
     if (!milestone || !this.isProgressEchoPrimaryClaimable(milestone)) return false;
     this._claimedProgressEchoPrimaryIds.add(id);
     this._grantRewards([milestone.primaryReward]);
+    EventBus.emit('eventBoard:rewardClaimed', id, 'primary');
     EventBus.emit('eventBoard:changed');
     return true;
   }
@@ -695,6 +802,7 @@ class EventBoardManagerClass {
     if (!milestone || !this.isProgressEchoAdClaimable(milestone)) return false;
     this._claimedProgressEchoAdIds.add(id);
     this._grantRewards([milestone.adReward]);
+    EventBus.emit('eventBoard:rewardClaimed', id, 'ad');
     EventBus.emit('eventBoard:changed');
     return true;
   }
@@ -702,7 +810,11 @@ class EventBoardManagerClass {
   /** 该格是否是可开启的容器（宝箱/红包/钻石袋/体力箱） */
   isContainerCell(index: number): boolean {
     const cell = this._cells[index];
-    return !!cell && cell.state === CellState.OPEN && !!cell.itemId && isChestItem(cell.itemId);
+    return !!cell
+      && cell.state === CellState.OPEN
+      && !!cell.itemId
+      && isChestItem(cell.itemId)
+      && !this._isRewardBoxCollectibleItem(cell.itemId);
   }
 
   /** 该格是否是活动满级产出工具（主线 L13 / 点翠 L8）。 */
@@ -767,7 +879,13 @@ class EventBoardManagerClass {
     remaining: number;
   } {
     const cell = this._cells[index];
-    if (!cell || cell.state !== CellState.OPEN || !cell.itemId || !isChestItem(cell.itemId)) {
+    if (
+      !cell ||
+      cell.state !== CellState.OPEN ||
+      !cell.itemId ||
+      !isChestItem(cell.itemId) ||
+      this._isRewardBoxCollectibleItem(cell.itemId)
+    ) {
       return { result: 'invalid', placed: 0, remaining: 0 };
     }
 
@@ -795,6 +913,8 @@ class EventBoardManagerClass {
       const itemId = queue[0];
       const ti = targets.shift()!;
       this._cells[ti].itemId = itemId;
+      this._markDiscovered(itemId, true);
+      EventBus.emit('eventBoard:produced', index, ti, itemId);
       queue.shift();
       placed++;
     }
@@ -844,6 +964,8 @@ class EventBoardManagerClass {
     }
 
     this._cells[targetIndex].itemId = itemId;
+    this._markDiscovered(itemId, true);
+    EventBus.emit('eventBoard:produced', index, targetIndex, itemId);
     const remaining = cell.chestQueue.length;
     if (remaining <= 0) {
       cell.itemId = null;
@@ -856,10 +978,13 @@ class EventBoardManagerClass {
 
   nextStage(): boolean {
     if (this._keys <= 0 || this._stageIndex >= EVENT_BOARD_STAGES.length - 1) return false;
+    if (this._findMergeableCarryEventItemName()) return false;
     const carryItems = this._collectCarryItemsForNextStage();
+    this._moveNonCarryItemsToRewardBoxBeforeNextStage();
     this._keys--;
-    this._resetStage(this._stageIndex + 1, false, true);
+    this._resetStage(this._stageIndex + 1, false, true, false);
     this._placeCarryItemsIntoNewStage(carryItems);
+    this._placeStageStarterItems(this.currentStage, true);
     EventBus.emit('eventBoard:stageChanged', this.currentStage);
     EventBus.emit('eventBoard:changed');
     return true;
@@ -872,10 +997,29 @@ class EventBoardManagerClass {
     if (this._discoveredItemIds.has(itemId)) return;
     this._discoveredItemIds.add(itemId);
     EventBus.emit('eventBoard:discovered', itemId);
-    // 图鉴分组奖励进入待领取状态，由珠宝图鉴页统一领取；GM 放置时仍只记录发现，不发奖。
+    if (grantReward) this._autoClaimCompletedCodexRewards();
+    // 图鉴分组奖励在集齐时自动发放；GM 放置时仍只记录发现，不发奖。
     if (!grantReward || !EVENT_DISCOVERY_REWARDS.some(r => r.itemId === itemId)) {
       this._claimedDiscoveryRewardItemIds.add(itemId);
     }
+  }
+
+  private _autoClaimCompletedCodexRewards(): void {
+    this._claimCodexSectionReward('jewelry', 'auto');
+    this._claimCodexSectionReward('dian_cui', 'auto');
+  }
+
+  private _claimCodexSectionReward(section: 'jewelry' | 'dian_cui', source: 'auto' | 'manual'): boolean {
+    if (!this.isCodexSectionRewardClaimable(section)) return false;
+    const reward: EventRewardDef = section === 'jewelry'
+      ? { kind: 'outfit', outfitId: 'outfit_jewel_bloom' }
+      : { kind: 'deco', decoId: 'event_jewelry_jade_curtain' };
+    this._claimedCodexRewardIds.add(section);
+    this._grantRewards([reward]);
+    EventBus.emit('eventBoard:rewardClaimed', section);
+    if (source === 'auto') EventBus.emit('eventBoard:codexSectionRewardAutoClaimed', section, reward);
+    EventBus.emit('eventBoard:changed');
+    return true;
   }
 
   private _tryCompleteStage(resultId: string): void {
@@ -955,17 +1099,34 @@ class EventBoardManagerClass {
         case 'boxItem':
           for (let i = 0; i < reward.count; i++) {
             const idx = this._placeItemInPreferredEmpty(reward.itemId, i === 0 ? preferredCellIndex : -1);
-            if (idx >= 0) placements.push({ itemId: reward.itemId, cellIndex: idx });
-            else RewardBoxManager.addItem(reward.itemId, 1);
+            if (idx >= 0) {
+              this._markDiscovered(reward.itemId, true);
+              placements.push({ itemId: reward.itemId, cellIndex: idx });
+            } else {
+              RewardBoxManager.addItem(reward.itemId, 1);
+            }
           }
           break;
         case 'boxReward':
           // 宝箱/钻石袋/红包：直接落到活动棋盘空格（点击开箱散落货币块）；棋盘满了才退收纳盒
           for (let i = 0; i < reward.count; i++) {
             const idx = this._placeItemInPreferredEmpty(reward.itemId, i === 0 ? preferredCellIndex : -1);
-            if (idx >= 0) placements.push({ itemId: reward.itemId, cellIndex: idx });
-            else RewardBoxManager.addItem(reward.itemId, 1);
+            if (idx >= 0) {
+              this._markDiscovered(reward.itemId, true);
+              placements.push({ itemId: reward.itemId, cellIndex: idx });
+            } else {
+              RewardBoxManager.addItem(reward.itemId, 1);
+            }
           }
+          break;
+        case 'deco': {
+          const questId = DECO_DEFS.find(d => d.id === reward.decoId)?.unlockRequirement?.questId;
+          if (questId) grantQuest(questId);
+          DecorationManager.gmUnlockDeco(reward.decoId);
+          break;
+        }
+        case 'outfit':
+          DressUpManager.grantOutfitFromActivity(reward.outfitId);
           break;
       }
     }

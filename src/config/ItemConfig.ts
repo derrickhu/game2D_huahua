@@ -430,8 +430,8 @@ function buildItemDefs(): Map<string, ItemDef> {
   // 货币物品：体力 / 钻石 各 4 级；花愿利是为独立块（见下）
   // 棋盘货币双击入账：无单独「合成奖励」，故每级 amount 须严格 > 2×上一级，合成到顶才不亏于全点低级（体力曾违反此条已修正）
   const CURRENCY_DATA: [CurrencyLine, string[], 'stamina' | 'huayuan' | 'diamond', string, number[]][] = [
-    [CurrencyLine.STAMINA, ['体力瓶', '体力罐', '体力桶', '精粹体力壶'], 'stamina', 'icon_energy', [3, 10, 30, 70]],
-    [CurrencyLine.DIAMOND, ['碎钻', '钻石', '大钻石', '璨钻'], 'diamond', 'icon_gem', [1, 3, 8, 18]],
+    [CurrencyLine.STAMINA, ['1级体力', '2级体力', '3级体力', '4级体力'], 'stamina', 'icon_energy', [3, 10, 25, 60]],
+    [CurrencyLine.DIAMOND, ['1级钻石', '2级钻石', '3级钻石', '4级钻石'], 'diamond', 'icon_gem', [1, 3, 8, 18]],
   ];
   for (const [line, names, rewardType, icon, amounts] of CURRENCY_DATA) {
     for (let i = 0; i < names.length; i++) {
@@ -452,9 +452,9 @@ function buildItemDefs(): Map<string, ItemDef> {
     }
   }
 
-  // 花愿利是（4级，仅红包线等产出；入账花愿）
-  const huayuanPickupNames = ['碎愿利是', '花愿小利是', '花愿大利是', '花愿豪利是'];
-  const huayuanPickupAmounts = [6, 16, 42, 110];
+  // 花愿利是（5级，仅红包线等产出；入账花愿）
+  const huayuanPickupNames = ['1级花愿', '2级花愿', '3级花愿', '4级花愿', '5级花愿'];
+  const huayuanPickupAmounts = [15, 40, 100, 233, 500];
   for (let i = 0; i < huayuanPickupNames.length; i++) {
     const line = CurrencyLine.HUAYUAN_PICKUP;
     const id = `currency_${line}_${i + 1}`;

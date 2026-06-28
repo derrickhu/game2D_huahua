@@ -1,0 +1,18 @@
+Create one transparent-background style 2D mobile game decoration asset for the cozy flower-shop room shown in the reference image.
+
+Asset: event reward low oval tea table.
+
+Most important requirement:
+The table must match the exact 2.5D isometric perspective of the reference room screenshot. It should sit naturally in the highlighted floor area. The oval tabletop must align with the diagonal wooden floor perspective, and all legs must touch the same floor plane. Do NOT make a flat front-view table, do NOT make a top-down table.
+
+Perspective details:
+Use the same room camera angle as the screenshot. The long axis of the oval table should follow the same direction as the sofa / furniture placement along the right wall. The front legs should appear lower in the image, rear legs slightly higher, with consistent scale and foreshortening.
+
+Design:
+Low oval tea table matching the jewelry-event sofa. Cream tabletop, blush pink rim, mint jade trim, small pearl / jewel ornament, delicate curved legs, subtle gold details. Elegant but simple; no objects on top.
+
+Game art style:
+Clean 2D casual merge-game decoration, kawaii pastel, soft brown outline, gentle cel shading, readable silhouette at small size, no photorealism, no heavy texture.
+
+Output:
+Single centered object, full object visible with padding, plain light background is OK. NO TEXT, no labels, no captions, no writing, no watermark.

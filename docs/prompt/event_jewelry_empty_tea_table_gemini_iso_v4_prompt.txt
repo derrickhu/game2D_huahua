@@ -1,0 +1,14 @@
+Square 1:1 image, one single furniture prop centered with generous margin.
+
+Create a low oval tea table for a cozy flower-shop merge game, using the project furniture perspective exactly:
+Cute kawaii 2.5D isometric view from upper-left about 45 degrees. The object must clearly show the tabletop plus the front-right side/apron. This is the same view as the accepted low tea table reference, not a top-down oval and not a flat side-view.
+
+Critical perspective requirements:
+The oval tabletop long axis must be diagonal in canvas space, running from upper-left toward lower-right, matching classic upper-left 45 degree isometric furniture. The near/front-right apron should be visible along the lower-right edge, with short rounded legs touching the same implied isometric floor plane. The far/back edge should sit higher in the image. Avoid a horizontal left-to-right table; avoid top-down ellipse.
+
+Style and set matching:
+Match the provided back-facing sofa set: blush pink padded rounded rim, cream inset tabletop, pearl bead trim, one small emerald/ruby jewelry ornament, warm soft brown outlines, gentle upper-left lighting, plush rounded pastel jewelry-event style. Compact and low, readable at small decoration icon size.
+
+No text, no labels, no captions, no writing, no logo, no characters, no room shell, no walls, no floor plane, no heavy shadow.
+
+Background pure solid white #FFFFFF only for cutout.

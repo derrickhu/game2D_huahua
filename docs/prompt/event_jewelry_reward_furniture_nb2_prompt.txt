@@ -1,0 +1,11 @@
+Create a clean 2D vector game furniture asset sheet for a cozy pastel flower-shop merge game.
+
+Canvas and layout: 3 separate vertical panels in one horizontal row, equal width, with wide white gutters between panels. Each panel contains exactly one standalone furniture asset centered on a pure white background. Keep each asset fully inside its panel with generous margins. No shadows that connect to the panel border. NO TEXT, no labels, no captions, no writing, no numbers, no watermark anywhere in the image.
+
+Shared style: cute high-key pastel mobile game furniture, soft brown line art, gentle cel shading, slightly rounded shapes, warm jewel-box event theme. Use jade green, emerald, pearl white, rose gold, pale lavender, soft sapphire blue, and tiny flower accents. Keep the shapes readable when scaled down as in-game decoration icons. Transparent-friendly silhouette, no complex thin noise, no photo realism, no 3D render, no black outlines.
+
+Panel 1: Jade bead curtain wall decoration. A hanging wall ornament made from multiple strings of translucent jade beads and small pearl beads, suspended from a warm rose-gold floral rail. Add small emerald leaf charms and two soft tassels at the bottom. It should read clearly as a WALL DECORATION, mostly vertical, airy but not too thin, elegant and festive.
+
+Panel 2: Open jewelry box ornament. A small tabletop display ornament: an open rounded jewelry box with a blush velvet interior, rose-gold trim, tiny flower engraving, and several colorful gems and pearls inside. Lid open at a cute angle, compact silhouette, no readable text, no brand mark. It should read clearly as a DECORATIVE ORNAMENT.
+
+Panel 3: Jewelry display cabinet furniture. A cozy pastel glass display cabinet for a flower shop corner, with rounded wood frame, rose-gold details, transparent glass shelves, soft internal glow, small necklaces and gemstones displayed inside, and a few flower garlands. It should read clearly as a FURNITURE DISPLAY CABINET, front-facing slightly 3/4, stable base, not too tall or narrow.

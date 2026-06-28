@@ -1,0 +1,23 @@
+Create one 2D mobile game decoration asset: a low tea table that belongs to the same jewelry-event furniture set as the provided back-facing sofa.
+
+Use the reference image for TWO things:
+1. Match the cozy flower-shop room's 2.5D isometric perspective.
+2. Match the style of the back-facing pink pearl sofa asset.
+
+Most important perspective requirement:
+The table must sit naturally on the same diagonal wooden floor plane as the room screenshot. The long axis of the tabletop should run in the same direction as the sofa back panel / right-wall furniture placement. The near/front edge should be lower in the image, the far/back edge should be higher, with consistent foreshortening. The legs must touch the floor at believable isometric positions.
+
+Avoid the wrong old look:
+Do NOT make a flat side-view table.
+Do NOT make a top-down oval table.
+Do NOT make the tabletop lean in a different direction from the room floor.
+Do NOT make it look like generic built-in model style; match the Gemini sofa's soft pearl jewelry style.
+
+Design:
+A compact low oval tea table, smaller and lower than the sofa. Blush pink padded rim, cream tabletop, pearl bead trim, one small ruby/emerald jewel ornament, soft brown outlines, gentle cel shading. Legs are short, rounded, and slightly carved, with small gold feet. The silhouette should feel like the same set as the sofa: plush, rounded, pearl-trimmed, pastel jewelry-event furniture.
+
+Game art style:
+Clean 2D casual merge-game decoration, kawaii pastel, warm soft shading, readable at small size, no photorealism, no heavy texture.
+
+Output:
+Single centered object with full object visible and padding. Plain light or transparent-like background is OK. NO TEXT, no labels, no captions, no writing, no watermark.

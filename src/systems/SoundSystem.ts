@@ -46,6 +46,10 @@ class SoundSystemClass {
       this._playMergeSuccessSound();
     });
 
+    EventBus.on('eventBoard:merged', () => {
+      this._playMergeSuccessSound();
+    });
+
     EventBus.on('board:fruitCutProcessed', () => {
       this._playMergeSuccessSound();
     });
@@ -53,6 +57,34 @@ class SoundSystemClass {
     // 建筑产出（点击建筑成功产出时）
     EventBus.on('building:produced', () => {
       AudioManager.play('tap_building');
+    });
+
+    EventBus.on('eventBoard:produced', () => {
+      AudioManager.play('tap_building');
+    });
+
+    EventBus.on('eventBoard:starterStonePlaced', (itemId?: string) => {
+      const boostedRate = itemId === 'event_jewelry_3'
+        ? 1.36
+        : itemId === 'event_jewelry_2'
+          ? 1.22
+          : 1;
+      AudioManager.play('tap_building', {
+        playbackRate: boostedRate,
+        bypassThrottle: boostedRate > 1,
+      });
+    });
+
+    EventBus.on('eventBoard:discovered', () => {
+      AudioManager.play('collection_unlock');
+    });
+
+    EventBus.on('eventBoard:rewardClaimed', () => {
+      AudioManager.play('customer_deliver', { bypassThrottle: true });
+    });
+
+    EventBus.on('rewardBox:collectedFromBoard', () => {
+      AudioManager.play('customer_deliver', { bypassThrottle: true });
     });
 
     // 客人到达

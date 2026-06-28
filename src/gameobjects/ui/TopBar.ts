@@ -124,6 +124,8 @@ export class TopBar extends PIXI.Container {
   private _questRedDot: PIXI.Graphics | null = null;
   private _eventRedDot: PIXI.Graphics | null = null;
   private _eventBoardBtnWrap: PIXI.Container | null = null;
+  private _eventBoardIcon: PIXI.Sprite | null = null;
+  private _eventIconUnsub: (() => void) | null = null;
 
   constructor(opts?: TopBarOptions) {
     super();
@@ -142,9 +144,16 @@ export class TopBar extends PIXI.Container {
     if (this._opts.showDailyChallenge) {
       this._buildDailyChallengeButton();
       this._buildEventBoardButton();
+      this._eventIconUnsub = TextureCache.onKeysLoaded(['icon_jewelry_event_nb2'], () => this._refreshEventBoardIcon());
     }
     this._bindEvents();
     this._updateAll();
+  }
+
+  destroy(options?: PIXI.IDestroyOptions | boolean): void {
+    this._eventIconUnsub?.();
+    this._eventIconUnsub = null;
+    super.destroy(options);
   }
 
   /* ============== 体力胶囊（参考：粉框 + 内绿进度 + 闪电叠压 + 闪电角绿圆加号） ============== */
@@ -585,6 +594,7 @@ export class TopBar extends PIXI.Container {
       sp.scale.set(s);
       sp.eventMode = 'none';
       wrap.addChild(sp);
+      this._eventBoardIcon = sp;
     } else {
       const fb = new PIXI.Text('活动', {
         fontSize: 12,
@@ -616,6 +626,15 @@ export class TopBar extends PIXI.Container {
     this._eventBoardBtnWrap = wrap;
     this.updateEventBoardButtonVisibility();
     this.updateEventRedDot();
+  }
+
+  private _refreshEventBoardIcon(): void {
+    if (!this._eventBoardIcon) return;
+    const tex = TextureCache.get('icon_jewelry_event_nb2');
+    if (!tex || tex.width <= 0) return;
+    this._eventBoardIcon.texture = tex;
+    const s = Math.min(EVENT_ICON_SIZE / tex.width, EVENT_ICON_SIZE / tex.height);
+    this._eventBoardIcon.scale.set(s);
   }
 
   /** 未达开放等级时隐藏活动入口 */

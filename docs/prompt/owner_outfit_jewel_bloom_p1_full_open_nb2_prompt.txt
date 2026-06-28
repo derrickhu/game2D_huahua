@@ -1,0 +1,18 @@
+Use the reference image only for the jewelry styling direction, makeup mood, elegant updo, baby's-breath hair decoration, red gemstone necklace and earrings, and refined formal outfit feeling. Convert it into the established cute 2D chibi flower-shop owner sprite style.
+
+CHIBI PROPORTION -- critical for the full-body game sprite:
+Create one super-deformed chibi shop owner character, about 2.4 heads tall, head and hair together 45% to 50% of total body height. Short neck, tiny rounded torso, short thick arms and legs, small rounded hands and shoes. Do not make a fashion illustration body, do not make long legs, do not make a 4-head or 5-head anime girl.
+
+ART STYLE:
+Hand-drawn 2D casual merge-game NPC sprite, warm pastel colors, soft brown line art, gentle cel shading, soft blush, big brown eyes with bright highlights. Cute, polished, readable at small size. No oil painting, no photorealism, no cinematic 3D render, no hard black outlines.
+
+LAYOUT STANDARD for game sprites -- follow exactly:
+Single character only, full body, 9:16 portrait canvas. Pure solid magenta background #FF00FF, no gradient, no pattern. Character centered. Feet bottom should sit about 10% to 14% above the bottom edge. Hair top and gemstone headpiece should sit about 16% to 22% below the top edge. Leave about 8% to 12% magenta margin on both left and right sides. NO TEXT, no labels, no captions, no writing, no numbers, no watermark.
+
+Identity:
+The cozy flower-shop owner, an 18-year-old gentle girl with big brown eyes, friendly expression, warm cheeks, and the same approachable identity as the default owner. Full body, 3/4 facing right, eyes open, arms naturally relaxed slightly outward.
+
+Outfit theme: Jewel Bloom event outfit.
+Elegant Chinese qipao-inspired chibi outfit, very refined and festive. Use an ivory short qipao dress with rounded high collar, tiny cap sleeves, pale blush floral embroidery, emerald vine embroidery, rose-gold piping, and a simplified A-line skirt shape so the chibi legs stay visible. Add a small cream shawl draped around the upper arms, simplified for readability.
+
+Hair and jewelry are the focus. Hair is a neat black-brown updo / low bun with smooth side part, decorated on both sides with clusters of baby's-breath flowers, plus a compact ornate hair comb with large red gemstones and pearls. Earrings are large red ruby drop earrings. Necklace is a large red ruby teardrop necklace with pearl-and-gold settings, clearly visible even at small size. Add a ruby bracelet. Makeup is elegant but cute: refined lashes, rosy blush, and clear red lips. Keep all gems large and readable, not tiny specks.
