@@ -1493,6 +1493,11 @@ class TextureCacheClass {
     return null;
   }
 
+  /** 判断纹理是否已经成功进入缓存；用于首屏资源重试与刷新判断。 */
+  has(key: string): boolean {
+    return this._cache.has(key);
+  }
+
   /**
    * 获取可直接传给微信分享 imageUrl 的图片路径。
    * CDN 资源优先返回已下载缓存；未命中时返回本地分包逻辑路径。

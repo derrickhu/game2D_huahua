@@ -84,6 +84,11 @@ const JEWELRY_EVENT_CRITICAL_KEYS: readonly string[] = [
   'event_jewelry_codex_reward_panel_shell',
   'event_jewelry_1',
 ];
+const JEWELRY_EVENT_LOCK_OVERLAY_KEYS: readonly string[] = [
+  'event_portal_gate',
+  'event_cell_fog',
+  'event_cell_peek',
+];
 
 /**
  * 花间珠匣活动 —— 独立整页（铺满不透明背景 + 顶部返回栏）。
@@ -164,6 +169,7 @@ export class EventBoardPanel extends PIXI.Container {
   private _codexUnlockAnimating = false;
   private _codexRewardShowcasePlaying = false;
   private _pendingCodexRewardShowcases: { section: 'jewelry' | 'dian_cui'; reward: EventRewardDef }[] = [];
+  private _pendingCodexUnlocks: { itemId: string; name: string }[] = [];
   private _starterStoneHint: TutorialDialogBubble | null = null;
   private _pendingProgressRevealItemIds: Set<string> = new Set();
 
@@ -211,6 +217,7 @@ export class EventBoardPanel extends PIXI.Container {
       this._syncLockOverlays();
       this._refresh();
     });
+    this._ensureFormalLockAssets();
     setTimeout(() => {
       requestAnimationFrame(() => {
         if (this._isOpen && this._dragSrcIndex < 0) {
@@ -229,6 +236,7 @@ export class EventBoardPanel extends PIXI.Container {
     this._hideStarterStoneHint();
     this._pendingProgressRevealItemIds.clear();
     this._pendingCodexRewardShowcases.length = 0;
+    this._pendingCodexUnlocks.length = 0;
     this._codexUnlockAnimating = false;
     this._codexRewardShowcasePlaying = false;
     this._hideRewardCodexPanel();
@@ -268,8 +276,8 @@ export class EventBoardPanel extends PIXI.Container {
       const name = ITEM_DEFS.get(itemId)?.name ?? '新首饰';
       if (this._isOpen) {
         this._pendingProgressRevealItemIds.add(itemId);
-        this._drawShell();
-        this._playCodexUnlockFly(itemId, name);
+        this._pendingCodexUnlocks.push({ itemId, name });
+        this._playPendingCodexUnlock();
       }
     });
     EventBus.on('eventBoard:codexSectionRewardAutoClaimed', (section: 'jewelry' | 'dian_cui', reward: EventRewardDef) => {
@@ -404,6 +412,21 @@ export class EventBoardPanel extends PIXI.Container {
       !this._stonePlaceAnimating &&
       this._flyStoneTargetIndex < 0
     );
+  }
+
+  private _ensureFormalLockAssets(attempt = 1): void {
+    void TextureCache.preloadEventKeys(JEWELRY_EVENT_ID, JEWELRY_EVENT_LOCK_OVERLAY_KEYS).catch(err => {
+      console.warn('[EventBoardPanel] 门与锁格资源加载失败，稍后重试', err);
+    }).finally(() => {
+      if (!this._isOpen || this._dragSrcIndex >= 0) return;
+      this._syncLockOverlays();
+      this._refreshGrid();
+      const ready = JEWELRY_EVENT_LOCK_OVERLAY_KEYS.every(key => TextureCache.has(key));
+      if (ready || attempt >= 4) return;
+      window.setTimeout(() => {
+        if (this._isOpen && this._dragSrcIndex < 0) this._ensureFormalLockAssets(attempt + 1);
+      }, 350 * attempt);
+    });
   }
 
   /** 应用珠匣背景图：按"cover"铺满整屏并水平居中 */
@@ -2273,7 +2296,7 @@ export class EventBoardPanel extends PIXI.Container {
     const count = EventBoardManager.pendingStarterStones;
     badgeText.text = `${count}`;
     badgeText.style.fontSize = count >= 100 ? 24 : 28;
-    if (count <= 0) this._refresh();
+    if (count <= 0 && this._flyStoneTargetIndex < 0 && !this._stonePlaceAnimating) this._refresh();
   }
 
   private _isStageTransitionReady(): boolean {
@@ -2420,8 +2443,9 @@ export class EventBoardPanel extends PIXI.Container {
         this._stoneFlyAnim = null;
         this._clearStoneFly();
         this._flyStoneTargetIndex = -1;
-        this._refreshGrid();
+        this._refresh();
         this._playStoneLandPop(tx, ty, cellIndex);
+        this._playPendingCodexUnlock();
       },
     });
   }
@@ -2532,12 +2556,28 @@ export class EventBoardPanel extends PIXI.Container {
   }
 
   /** 首次解锁图鉴：全屏遮罩展示大图标与名称，随后图标飞入左上图鉴入口。 */
+  private _playPendingCodexUnlock(): void {
+    if (
+      !this._isOpen ||
+      this._codexUnlockAnimating ||
+      this._stonePlaceAnimating ||
+      this._flyStoneTargetIndex >= 0
+    ) {
+      return;
+    }
+    const next = this._pendingCodexUnlocks.shift();
+    if (!next) return;
+    this._drawShell();
+    this._playCodexUnlockFly(next.itemId, next.name);
+  }
+
   private _playCodexUnlockFly(itemId: string, itemName: string): void {
     const tex = TextureCache.get(itemId);
     if (!tex || tex.width <= 1) {
       this._pendingProgressRevealItemIds.delete(itemId);
       this._drawShell();
       this._codexUnlockAnimating = false;
+      this._playPendingCodexUnlock();
       this._playNextCodexRewardShowcase();
       return;
     }
@@ -2621,6 +2661,7 @@ export class EventBoardPanel extends PIXI.Container {
               this._drawShell();
               this._playProgressTrackItemPulse(target.x, target.y);
               this._codexUnlockAnimating = false;
+              this._playPendingCodexUnlock();
               this._playNextCodexRewardShowcase();
             });
           },
