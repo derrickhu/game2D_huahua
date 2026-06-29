@@ -1235,6 +1235,9 @@ class TextureCacheClass {
   private _eventsLoaded = false;
   private _charsLoaded = false;
   private _panelsLoaded = false;
+  /** 分包加载去重：同一分包并发加载时复用同一 Promise，避免重复 wx.loadSubpackage 冲突。 */
+  private _subpackageLoads = new Map<string, Promise<void>>();
+  private _loadedSubpackages = new Set<string>();
 
   /**
    * 预加载主包图片（UI + 角色等核心资源）
@@ -1601,6 +1604,26 @@ class TextureCacheClass {
    * 通用分包加载方法
    */
   private _loadSubpackage(name: string): Promise<void> {
+    // 已加载：直接通过
+    if (this._loadedSubpackages.has(name)) return Promise.resolve();
+    // 加载中：复用同一 Promise，避免并发重复调用 wx.loadSubpackage（重复任务可能互相冲突 / reject，
+    // 进而污染本批纹理加载，导致活动图标卡在兜底绘制不刷新）。
+    const inflight = this._subpackageLoads.get(name);
+    if (inflight) return inflight;
+
+    const promise = this._doLoadSubpackage(name).then(() => {
+      this._loadedSubpackages.add(name);
+      this._subpackageLoads.delete(name);
+    }).catch(err => {
+      // 失败后清掉缓存，允许后续重试
+      this._subpackageLoads.delete(name);
+      throw err;
+    });
+    this._subpackageLoads.set(name, promise);
+    return promise;
+  }
+
+  private _doLoadSubpackage(name: string): Promise<void> {
     return new Promise<void>((resolve, reject) => {
       const platform = typeof wx !== 'undefined' ? wx : typeof tt !== 'undefined' ? tt : null;
       if (!platform || !platform.loadSubpackage) {
