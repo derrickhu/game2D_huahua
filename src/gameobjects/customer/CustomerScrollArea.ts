@@ -89,6 +89,8 @@ export class CustomerScrollArea extends PIXI.Container {
 
     // 限时单倒计时复用每日挑战秒表图，提前拉取避免首帧空白
     void TextureCache.preloadKeys(['daily_challenge_countdown_stopwatch_nb2']);
+    // 活动原石会显示在主页面订单奖励里，先预热避免活动分包图晚于订单卡渲染。
+    void TextureCache.preloadKeys(['event_jewelry_1']);
   }
 
   /** 区域高度 */

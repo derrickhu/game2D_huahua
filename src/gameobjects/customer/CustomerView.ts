@@ -76,6 +76,7 @@ export class CustomerView extends PIXI.Container {
 
   private _avatarSprite: PIXI.Sprite;
   private _infoPanel: PIXI.Container;
+  private _eventStoneTextureUnsub: (() => void) | null = null;
   private _affinityHeartBadge: PIXI.Container | null = null;
   private _completeBtn: PIXI.Container | null = null;
   private _bounceTween: { config: any; startValues: any; elapsed: number; delayRemaining: number } | null = null;
@@ -105,6 +106,9 @@ export class CustomerView extends PIXI.Container {
 
     this.sortChildren();
     this.visible = false;
+    this._eventStoneTextureUnsub = TextureCache.onKeysLoaded(['event_jewelry_1'], () => {
+      if ((this._customer?.eventStoneReward ?? 0) > 0) this.refreshSlots();
+    });
   }
 
   get customerUid(): number {
@@ -200,6 +204,12 @@ export class CustomerView extends PIXI.Container {
     if (!this._customer) return;
     this._rebuildInfoPanel();
     this._buildStaminaChestBadge();
+  }
+
+  override destroy(options?: PIXI.IDestroyOptions | boolean): void {
+    this._eventStoneTextureUnsub?.();
+    this._eventStoneTextureUnsub = null;
+    super.destroy(options);
   }
 
   /**
@@ -345,6 +355,9 @@ export class CustomerView extends PIXI.Container {
         sp.position.set(offsetX, rowH / 2);
         content.addChild(sp);
         offsetX += iconSize + gap;
+      } else if (item.icon === 'event_jewelry_1') {
+        this._drawEventStoneRewardFallback(content, offsetX, rowH / 2, iconSize);
+        offsetX += iconSize + gap;
       }
       const val = new PIXI.Text(`${item.prefix ?? ''}${item.value}`, {
         fontSize,
@@ -374,6 +387,28 @@ export class CustomerView extends PIXI.Container {
     node.addChild(bg);
     node.addChild(content);
     return { node, w: bw, h: bh };
+  }
+
+  private _drawEventStoneRewardFallback(target: PIXI.Container, x: number, cy: number, size: number): void {
+    const g = new PIXI.Graphics();
+    const cx = x + size / 2;
+    const top = cy - size * 0.43;
+    const mid = cy - size * 0.08;
+    const bottom = cy + size * 0.43;
+    g.lineStyle(1.5, 0xffffff, 0.9);
+    g.beginFill(0x37c678, 1);
+    g.drawPolygon([
+      cx, top,
+      cx + size * 0.4, mid,
+      cx + size * 0.18, bottom,
+      cx - size * 0.18, bottom,
+      cx - size * 0.4, mid,
+    ]);
+    g.endFill();
+    g.beginFill(0xb86cff, 0.42);
+    g.drawPolygon([cx, top + 2, cx + size * 0.18, mid, cx, bottom - 2, cx - size * 0.18, mid]);
+    g.endFill();
+    target.addChild(g);
   }
 
   private _buildRewardBadge(): void {
