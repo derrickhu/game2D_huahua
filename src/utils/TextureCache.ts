@@ -1238,6 +1238,10 @@ class TextureCacheClass {
   /** 分包加载去重：同一分包并发加载时复用同一 Promise，避免重复 wx.loadSubpackage 冲突。 */
   private _subpackageLoads = new Map<string, Promise<void>>();
   private _loadedSubpackages = new Set<string>();
+  /** 纹理加载失败后的有限次自动重试：保证瞬时失败（分包未就绪 / CDN 抖动）最终能加载并发出 texture:loaded 触发自动刷新。 */
+  private _retryCounts = new Map<string, number>();
+  private _retryTimers = new Map<string, ReturnType<typeof setTimeout>>();
+  private static readonly MAX_TEXTURE_RETRY = 5;
 
   /**
    * 预加载主包图片（UI + 角色等核心资源）
@@ -1709,6 +1713,9 @@ class TextureCacheClass {
           console.warn(`[TextureCache] 图片加载失败: ${key} (${path})`, err);
           this._failed.add(key);
           this._loading.delete(key);
+          // 失败后排队有限次自动重试：分包资源（events/items）多因首屏时序竞态首次失败，
+          // 重试可在分包就绪后加载成功并发出 texture:loaded，让兜底绘制自动刷成正常图。
+          this._scheduleTextureRetry(key, path);
           resolve();
         };
         img.onload = () => {
@@ -1716,6 +1723,7 @@ class TextureCacheClass {
             const baseTexture = PIXI.BaseTexture.from(img as any);
             const texture = new PIXI.Texture(baseTexture);
             this._cache.set(key, texture);
+            this._retryCounts.delete(key);
             EventBus.emit(TEXTURE_LOADED_EVENT, key);
           } catch (e) {
             console.warn(`[TextureCache] 创建纹理失败: ${key}`, e);
@@ -1746,6 +1754,7 @@ class TextureCacheClass {
             console.warn(`[TextureCache] CDN 解析失败，尝试终止加载: ${key} (${path})`, err);
             this._failed.add(key);
             this._loading.delete(key);
+            this._scheduleTextureRetry(key, path);
             resolve();
           });
       } catch (e) {
@@ -1762,36 +1771,52 @@ class TextureCacheClass {
   }
 
   /**
+   * 失败纹理的有限次自动重试。瞬时失败（分包首屏未就绪、CDN 抖动）经重试后多能加载成功，
+   * 加载成功会发出 texture:loaded，让 ItemView / 活动面板等订阅方把兜底绘制自动刷成正常图。
+   */
+  private _scheduleTextureRetry(key: string, path: string): void {
+    if (this._cache.has(key)) return;
+    if (this._retryTimers.has(key)) return;
+    const attempts = this._retryCounts.get(key) ?? 0;
+    if (attempts >= TextureCacheClass.MAX_TEXTURE_RETRY) return;
+    const delay = 600 * (attempts + 1);
+    const timer = setTimeout(() => {
+      this._retryTimers.delete(key);
+      if (this._cache.has(key)) return;
+      this._retryCounts.set(key, attempts + 1);
+      this._failed.delete(key);
+      void this._loadTexture(key, path);
+    }, delay);
+    this._retryTimers.set(key, timer);
+  }
+
+  /**
    * 图片 onerror 时尝试加载微信分包后重试。
    * chars/panels/deco/audio 在 CdnConfig.cdnDirs 中，安装包不携带、game.json 也无对应分包，
-   * 不得 loadSubpackage（必报 does not exist）；仅 items/events 等非 CDN 路径可走分包兜底。
+   * 不得 loadSubpackage（必报 does not exist）；仅 items/events 等本地分包可走分包兜底。
+   *
+   * 注意：不要用 _itemsLoaded/_eventsLoaded 作为短路条件——标志位为 true 不代表该图片首次
+   * img.src 没有因首屏时序竞态失败。统一再 ensure 一次即可（_loadSubpackage 已去重，已加载时瞬时返回），
+   * 确保竞态失败的单张图仍能重试 img.src 加载成功。
    */
   private async _ensureSubpackageForLocalFallback(path: string): Promise<boolean> {
     const normalized = path.replace(/^\/+/, '').replace(/^minigame\//, '');
     if (CdnAssetService.isCdnPath(normalized)) {
       return false;
     }
-    if (normalized.startsWith('subpkg_items/') && !this._itemsLoaded) {
-      try {
-        await this._loadSubpackage('items');
-        this._itemsLoaded = true;
-        return true;
-      } catch (err) {
-        console.warn('[TextureCache] items 分包加载失败，本地兜底不可用', err);
-        return false;
-      }
+    let subpackage: string | null = null;
+    if (normalized.startsWith('subpkg_items/')) subpackage = 'items';
+    else if (normalized.startsWith('subpkg_events/')) subpackage = 'events';
+    if (!subpackage) return false;
+    try {
+      await this._loadSubpackage(subpackage);
+      if (subpackage === 'items') this._itemsLoaded = true;
+      else this._eventsLoaded = true;
+      return true;
+    } catch (err) {
+      console.warn(`[TextureCache] ${subpackage} 分包加载失败，本地兜底不可用`, err);
+      return false;
     }
-    if (normalized.startsWith('subpkg_events/') && !this._eventsLoaded) {
-      try {
-        await this._loadSubpackage('events');
-        this._eventsLoaded = true;
-        return true;
-      } catch (err) {
-        console.warn('[TextureCache] events 分包加载失败，本地兜底不可用', err);
-        return false;
-      }
-    }
-    return false;
   }
 }
 
