@@ -1746,17 +1746,21 @@ class TextureCacheClass {
           }
           markFailed(err);
         };
-        void CdnAssetService.resolveOrDownload(path)
-          .then((resolvedPath) => {
-            img.src = resolvedPath;
-          })
-          .catch((err) => {
-            console.warn(`[TextureCache] CDN 解析失败，尝试终止加载: ${key} (${path})`, err);
-            this._failed.add(key);
-            this._loading.delete(key);
-            this._scheduleTextureRetry(key, path);
-            resolve();
-          });
+        // 关键：本地分包资源（subpkg_events / subpkg_items）在设置 img.src 之前先确保分包已加载，
+        // 避免「打开活动页同步 _refresh 抢先 get()，撞上 events 分包尚未就绪」的竞态——
+        // 之前依赖 onerror 之后再补救，时序上仍会让原石 / 锁格首次失败。CDN 路径会瞬时跳过此步。
+        const startLoad = async (): Promise<void> => {
+          await this._ensureSubpackageForLocalFallback(path);
+          const resolvedPath = await CdnAssetService.resolveOrDownload(path);
+          img.src = resolvedPath;
+        };
+        void startLoad().catch((err) => {
+          console.warn(`[TextureCache] 资源解析失败，尝试终止加载: ${key} (${path})`, err);
+          this._failed.add(key);
+          this._loading.delete(key);
+          this._scheduleTextureRetry(key, path);
+          resolve();
+        });
       } catch (e) {
         console.warn(`[TextureCache] 加载异常: ${key}`, e);
         this._failed.add(key);
