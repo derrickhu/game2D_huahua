@@ -1,0 +1,246 @@
+{
+  "task": "furniture_modern_lv25_35_nb2",
+  "stylePrefix": "Square game asset 1:1. Single furniture or decoration prop centered with generous margin. Cute kawaii 2.5D isometric view from upper-left about 45 degrees, hand-painted mobile merge-game flower shop style. Soft brown outlines, rounded chibi-friendly proportions, readable silhouette, gentle upper-left lighting. Modern cozy home and flower-shop decor, not ancient, not fantasy palace, not traditional Chinese antique. No text, no labels, no captions, no writing anywhere in the image, no watermark, no characters. Background pure solid white #FFFFFF only for cutout.",
+  "items": [
+    {
+      "level": 25,
+      "id": "modern_air_purifier_tower",
+      "name": "云朵空气净化塔",
+      "slot": "LIGHT",
+      "tab": "appliance",
+      "prompt": "Square game asset 1:1. Single modern appliance prop centered with generous margin. Cute kawaii 2.5D isometric view from upper-left about 45 degrees, hand-painted mobile merge-game flower shop style. Soft brown outlines, rounded chibi-friendly proportions, gentle upper-left lighting. A compact pastel cream air purifier tower with rounded vents shaped like soft cloud slits, small mint control dots without readable symbols, a tiny potted sprout on top, subtle translucent clean-air swirl shapes as decorative plastic fins. Cozy modern home appliance, premium but cute. Not ancient, no wood carving, no Chinese antique style. No text, no labels, no captions, no writing anywhere in the image, no watermark, no characters. Background pure solid white #FFFFFF only for cutout."
+    },
+    {
+      "level": 25,
+      "id": "modern_folding_laundry_rack",
+      "name": "阳台折叠晾衣架",
+      "slot": "ORNAMENT",
+      "tab": "furniture",
+      "prompt": "Square game asset 1:1. Single household furniture prop centered with generous margin. Cute kawaii 2.5D isometric view from upper-left about 45 degrees, hand-painted mobile merge-game flower shop style. Soft brown outlines, rounded chibi-friendly proportions, gentle upper-left lighting. A modern folding balcony laundry rack made of white rounded metal tubes, pale teal joints, several pastel towels and small socks hanging neatly, one tiny clothespin basket at the base. Readable zigzag folding silhouette, cozy apartment life mood. Not ancient, not rustic medieval, not traditional. No text, no labels, no captions, no writing anywhere in the image, no watermark, no characters. Background pure solid white #FFFFFF only for cutout."
+    },
+    {
+      "level": 26,
+      "id": "modern_hotdog_roller",
+      "name": "迷你烤肠机",
+      "slot": "TABLE",
+      "tab": "furniture",
+      "prompt": "Square game asset 1:1. Single countertop food machine prop centered with generous margin. Cute kawaii 2.5D isometric view from upper-left about 45 degrees, hand-painted mobile merge-game flower shop style. Soft brown outlines, rounded chibi-friendly proportions, gentle upper-left lighting. A cute modern hot dog roller machine with a clear rounded glass cover, warm cream base, coral side knobs without symbols, several tiny golden sausages on silver rollers, a small tray of buns beside it. Snack-shop appliance feeling, unusual and playful. Not ancient, not steampunk, not realistic metal photo. No text, no labels, no captions, no writing anywhere in the image, no watermark, no characters. Background pure solid white #FFFFFF only for cutout."
+    },
+    {
+      "level": 26,
+      "id": "modern_recycling_bins",
+      "name": "分类回收桶组",
+      "slot": "ORNAMENT",
+      "tab": "furniture",
+      "prompt": "Square game asset 1:1. Single modern utility decor prop centered with generous margin. Cute kawaii 2.5D isometric view from upper-left about 45 degrees, hand-painted mobile merge-game flower shop style. Soft brown outlines, rounded chibi-friendly proportions, gentle upper-left lighting. A set of three rounded recycling trash bins in mint, butter yellow, and soft blue, with hinged lids, tiny flower stickers as abstract icons, no readable text, sitting on a small pale wood base. Clean cozy shop utility item, charming but practical. Not dirty, not grungy, not ancient. No text, no labels, no captions, no writing anywhere in the image, no watermark, no characters. Background pure solid white #FFFFFF only for cutout."
+    },
+    {
+      "level": 26,
+      "id": "modern_glass_drink_dispenser",
+      "name": "玻璃饮料机",
+      "slot": "LIGHT",
+      "tab": "appliance",
+      "prompt": "Square game asset 1:1. Single beverage appliance prop centered with generous margin. Cute kawaii 2.5D isometric view from upper-left about 45 degrees, hand-painted mobile merge-game flower shop style. Soft brown outlines, rounded chibi-friendly proportions, gentle upper-left lighting. A modern twin glass drink dispenser station with two rounded transparent tanks of pastel lemonade and berry tea, small chrome taps, cream base tray, citrus slices and mint leaves visible inside, no logo, no words. Bright cafe corner feeling. Not ancient, not ornate. No text, no labels, no captions, no writing anywhere in the image, no watermark, no characters. Background pure solid white #FFFFFF only for cutout."
+    },
+    {
+      "level": 27,
+      "id": "modern_outdoor_bbq_grill",
+      "name": "庭院烧烤架",
+      "slot": "GARDEN",
+      "tab": "garden",
+      "prompt": "Square game asset 1:1. Single outdoor furniture prop centered with generous margin. Cute kawaii 2.5D isometric view from upper-left about 45 degrees, hand-painted mobile merge-game flower shop style. Soft brown outlines, rounded chibi-friendly proportions, gentle upper-left lighting. A compact modern outdoor barbecue grill with rounded black lid, warm wooden side shelf, tiny pastel vegetable skewers, silver wheels, a small hanging tong, soft cozy backyard style. Clean and cute, no smoke cloud covering the object. Not ancient brazier, not realistic metal photo. No text, no labels, no captions, no writing anywhere in the image, no watermark, no characters. Background pure solid white #FFFFFF only for cutout."
+    },
+    {
+      "level": 27,
+      "id": "modern_camping_tent",
+      "name": "奶油露营帐篷",
+      "slot": "GARDEN",
+      "tab": "garden",
+      "prompt": "Square game asset 1:1. Single outdoor camping prop centered with generous margin. Cute kawaii 2.5D isometric view from upper-left about 45 degrees, hand-painted mobile merge-game flower shop style. Soft brown outlines, rounded chibi-friendly proportions, gentle upper-left lighting. A small cream canvas A-frame camping tent with mint trim, open flap showing a peach blanket and pillow, tiny warm fairy light bulbs along the ridge, two flower pots beside the entrance. Modern glamping mood, compact game prop. Not ancient, not military, not large scene. No text, no labels, no captions, no writing anywhere in the image, no watermark, no characters. Background pure solid white #FFFFFF only for cutout."
+    },
+    {
+      "level": 27,
+      "id": "modern_picnic_cooler_cart",
+      "name": "野餐冰桶推车",
+      "slot": "TABLE",
+      "tab": "furniture",
+      "prompt": "Square game asset 1:1. Single wheeled utility table prop centered with generous margin. Cute kawaii 2.5D isometric view from upper-left about 45 degrees, hand-painted mobile merge-game flower shop style. Soft brown outlines, rounded chibi-friendly proportions, gentle upper-left lighting. A pastel picnic cooler cart with a rounded teal ice bucket, cream lid propped open, bottles and fruit peeking out, small wooden handle, tiny wheels, folded striped picnic cloth on lower shelf. Modern outdoor party furniture. Not ancient, not industrial. No text, no labels, no captions, no writing anywhere in the image, no watermark, no characters. Background pure solid white #FFFFFF only for cutout."
+    },
+    {
+      "level": 28,
+      "id": "modern_plush_cloud_pile",
+      "name": "毛绒云朵玩具堆",
+      "slot": "ORNAMENT",
+      "tab": "furniture",
+      "prompt": "Square game asset 1:1. Single soft decoration prop centered with generous margin. Cute kawaii 2.5D isometric view from upper-left about 45 degrees, hand-painted mobile merge-game flower shop style. Soft brown outlines, rounded chibi-friendly proportions, gentle upper-left lighting. A cozy pile of plush toys: cloud pillow, little lemon plush, bunny cushion, and round bear plush stacked like a soft nest, pastel cream, blue, yellow and pink, with stitched details but no letters. Modern cute living room decor, very huggable. Not ancient, not character franchise, no recognizable mascot. No text, no labels, no captions, no writing anywhere in the image, no watermark, no characters. Background pure solid white #FFFFFF only for cutout."
+    },
+    {
+      "level": 28,
+      "id": "modern_wall_fairy_lights",
+      "name": "节日星星串灯",
+      "slot": "WALLART",
+      "tab": "wallart",
+      "prompt": "Square game asset 1:1. Single wall decoration prop centered with generous margin. Cute kawaii 2.5D isometric view from upper-left about 45 degrees, hand-painted mobile merge-game flower shop style. Soft brown outlines, rounded chibi-friendly proportions, gentle upper-left lighting. A modern wall string light decoration: a curved copper wire with warm star, moon and flower-shaped bulbs, two tiny transparent suction hooks, several dangling pastel beads, designed as a wall-mounted prop with no wall background. Festive cozy room detail. Not ancient lanterns, not Christmas-only, no text. No labels, no captions, no writing anywhere in the image, no watermark, no characters. Background pure solid white #FFFFFF only for cutout."
+    },
+    {
+      "level": 28,
+      "id": "modern_tall_flower_vase",
+      "name": "高身鲜花陶瓶",
+      "slot": "ORNAMENT",
+      "tab": "furniture",
+      "prompt": "Square game asset 1:1. Single floral decor prop centered with generous margin. Cute kawaii 2.5D isometric view from upper-left about 45 degrees, hand-painted mobile merge-game flower shop style. Soft brown outlines, rounded chibi-friendly proportions, gentle upper-left lighting. A tall modern ceramic floor vase in matte cream with coral rim, filled with stylized fresh flowers, eucalyptus stems, tulips, small daisies, and broad green leaves; asymmetrical bouquet silhouette, premium flower shop display. Not ancient porcelain, not blue-and-white traditional vase, not realistic botanical illustration. No text, no labels, no captions, no writing anywhere in the image, no watermark, no characters. Background pure solid white #FFFFFF only for cutout."
+    },
+    {
+      "level": 29,
+      "id": "modern_capsule_drink_fridge",
+      "name": "胶囊饮料冰柜",
+      "slot": "SHELF",
+      "tab": "furniture",
+      "prompt": "Square game asset 1:1. Single modern cabinet appliance prop centered with generous margin. Cute kawaii 2.5D isometric view from upper-left about 45 degrees, hand-painted mobile merge-game flower shop style. Soft brown outlines, rounded chibi-friendly proportions, gentle upper-left lighting. A rounded capsule-shaped drink fridge with transparent curved door, mint frame, peach side panel, rows of tiny colorful bottles and cans represented by abstract shapes with no text, small flower magnet on the door. Cozy cafe-store furniture, futuristic but soft. Not vending machine with words, not ancient. No text, no labels, no captions, no writing anywhere in the image, no watermark, no characters. Background pure solid white #FFFFFF only for cutout."
+    },
+    {
+      "level": 29,
+      "id": "modern_waffle_snack_cart",
+      "name": "华夫点心小车",
+      "slot": "TABLE",
+      "tab": "furniture",
+      "prompt": "Square game asset 1:1. Single snack cart furniture prop centered with generous margin. Cute kawaii 2.5D isometric view from upper-left about 45 degrees, hand-painted mobile merge-game flower shop style. Soft brown outlines, rounded chibi-friendly proportions, gentle upper-left lighting. A small wheeled waffle snack cart with cream body, peach awning without stripes text, open mini waffle maker, stack of golden heart waffles, berry bowl, syrup bottle with no label, lower shelf with plates. Modern cute dessert-shop prop. Not ancient, not large scene. No text, no labels, no captions, no writing anywhere in the image, no watermark, no characters. Background pure solid white #FFFFFF only for cutout."
+    },
+    {
+      "level": 29,
+      "id": "modern_robot_vacuum_dock",
+      "name": "圆圆扫地机座",
+      "slot": "LIGHT",
+      "tab": "appliance",
+      "prompt": "Square game asset 1:1. Single modern appliance prop centered with generous margin. Cute kawaii 2.5D isometric view from upper-left about 45 degrees, hand-painted mobile merge-game flower shop style. Soft brown outlines, rounded chibi-friendly proportions, gentle upper-left lighting. A cute round robot vacuum dock: small circular cream robot with cat-ear bumpers, mint charging base, tiny dust bin tower behind it, a few stylized flower petal dust bits nearby, no screen text. Cozy smart home appliance. Not ancient, not realistic photo, not character mascot. No text, no labels, no captions, no writing anywhere in the image, no watermark, no characters. Background pure solid white #FFFFFF only for cutout."
+    },
+    {
+      "level": 30,
+      "id": "modern_balcony_drying_cabinet",
+      "name": "暖风烘衣柜",
+      "slot": "LIGHT",
+      "tab": "appliance",
+      "prompt": "Square game asset 1:1. Single modern appliance furniture prop centered with generous margin. Cute kawaii 2.5D isometric view from upper-left about 45 degrees, hand-painted mobile merge-game flower shop style. Soft brown outlines, rounded chibi-friendly proportions, gentle upper-left lighting. A compact warm-air clothes drying cabinet with rounded transparent front, cream frame, pastel shirts hanging inside, tiny vent fan at the base, small potted lavender on top. Modern laundry appliance, clean and cozy. Not ancient wardrobe, not realistic metal box. No text, no labels, no captions, no writing anywhere in the image, no watermark, no characters. Background pure solid white #FFFFFF only for cutout."
+    },
+    {
+      "level": 30,
+      "id": "modern_plant_grow_light_shelf",
+      "name": "植物补光培育架",
+      "slot": "SHELF",
+      "tab": "furniture",
+      "prompt": "Square game asset 1:1. Single plant shelf prop centered with generous margin. Cute kawaii 2.5D isometric view from upper-left about 45 degrees, hand-painted mobile merge-game flower shop style. Soft brown outlines, rounded chibi-friendly proportions, gentle upper-left lighting. A modern two-tier indoor plant propagation shelf with pale wood shelves, mint metal frame, soft pink grow light bar under the top shelf, glass jars with cuttings, tiny seedling trays, and trailing vines. Cozy flower shop science corner. Not ancient rack, not traditional plant stand. No text, no labels, no captions, no writing anywhere in the image, no watermark, no characters. Background pure solid white #FFFFFF only for cutout."
+    },
+    {
+      "level": 30,
+      "id": "modern_citrus_soda_machine",
+      "name": "柑橘气泡饮料机",
+      "slot": "LIGHT",
+      "tab": "appliance",
+      "prompt": "Square game asset 1:1. Single beverage appliance prop centered with generous margin. Cute kawaii 2.5D isometric view from upper-left about 45 degrees, hand-painted mobile merge-game flower shop style. Soft brown outlines, rounded chibi-friendly proportions, gentle upper-left lighting. A cute modern citrus soda machine with rounded yellow-orange body, transparent bubbling tank, mint lever, small cup tray, lemon and orange slices as decorative shapes, no brand, no text. Cheerful cafe appliance, unusual item silhouette. Not ancient, not vending machine with writing. No text, no labels, no captions, no writing anywhere in the image, no watermark, no characters. Background pure solid white #FFFFFF only for cutout."
+    },
+    {
+      "level": 31,
+      "id": "modern_hydroponic_herb_stand",
+      "name": "水培香草站",
+      "slot": "TABLE",
+      "tab": "furniture",
+      "prompt": "Square game asset 1:1. Single modern plant furniture prop centered with generous margin. Cute kawaii 2.5D isometric view from upper-left about 45 degrees, hand-painted mobile merge-game flower shop style. Soft brown outlines, rounded chibi-friendly proportions, gentle upper-left lighting. A compact hydroponic herb station on a rounded white table, transparent water tubes, mint pump base, small basil, mint and strawberry sprouts in pastel pods, soft blue water highlights. Modern botanical gadget, flower shop meets smart garden. Not ancient, not laboratory realistic. No text, no labels, no captions, no writing anywhere in the image, no watermark, no characters. Background pure solid white #FFFFFF only for cutout."
+    },
+    {
+      "level": 31,
+      "id": "modern_pegboard_hobby_wall",
+      "name": "软木洞洞板",
+      "slot": "WALLART",
+      "tab": "wallart",
+      "prompt": "Square game asset 1:1. Single wall organizer decoration prop centered with generous margin. Cute kawaii 2.5D isometric view from upper-left about 45 degrees, hand-painted mobile merge-game flower shop style. Soft brown outlines, rounded chibi-friendly proportions, gentle upper-left lighting. A modern pastel pegboard wall organizer with rounded rectangular board, small shelves holding tiny vases, scissors, ribbon rolls, flower cards as abstract colored rectangles with no writing, hooks and mini baskets. Practical craft-room decoration. Not ancient, not tool shed, no text. No labels, no captions, no writing anywhere in the image, no watermark, no characters. Background pure solid white #FFFFFF only for cutout."
+    },
+    {
+      "level": 31,
+      "id": "modern_glass_shower_pod",
+      "name": "玻璃淋浴隔间",
+      "slot": "ORNAMENT",
+      "tab": "furniture",
+      "prompt": "Square game asset 1:1. Single modern interior prop centered with generous margin. Cute kawaii 2.5D isometric view from upper-left about 45 degrees, hand-painted mobile merge-game flower shop style. Soft brown outlines, rounded chibi-friendly proportions, gentle upper-left lighting. A compact decorative glass shower pod with rounded transparent panels, pale blue metal frame, tiny rainfall shower head, folded towel on a small shelf, small plant outside the corner. Modern apartment bathroom furniture prop, clean and bright, not a full room. Not ancient, not realistic bathroom photo. No text, no labels, no captions, no writing anywhere in the image, no watermark, no characters. Background pure solid white #FFFFFF only for cutout."
+    },
+    {
+      "level": 32,
+      "id": "modern_rooftop_firepit_set",
+      "name": "露台围炉茶几",
+      "slot": "TABLE",
+      "tab": "furniture",
+      "prompt": "Square game asset 1:1. Single outdoor table furniture prop centered with generous margin. Cute kawaii 2.5D isometric view from upper-left about 45 degrees, hand-painted mobile merge-game flower shop style. Soft brown outlines, rounded chibi-friendly proportions, gentle upper-left lighting. A modern low round firepit coffee table with cream stone rim, tiny safe blue-orange flame in center, two small marshmallow sticks on side tray, pastel cushions tucked underneath, cozy rooftop glamping mood. Not ancient brazier, not dark camping scene. No text, no labels, no captions, no writing anywhere in the image, no watermark, no characters. Background pure solid white #FFFFFF only for cutout."
+    },
+    {
+      "level": 32,
+      "id": "modern_pastel_capsule_shelf",
+      "name": "胶囊玩具展示架",
+      "slot": "SHELF",
+      "tab": "furniture",
+      "prompt": "Square game asset 1:1. Single display shelf prop centered with generous margin. Cute kawaii 2.5D isometric view from upper-left about 45 degrees, hand-painted mobile merge-game flower shop style. Soft brown outlines, rounded chibi-friendly proportions, gentle upper-left lighting. A modern pastel capsule-toy display shelf: rounded cream arch frame, small transparent capsule domes in cubbies, tiny plush and flower miniatures inside, mint drawers at bottom with no handles text. Playful shop display, unique silhouette. Not vending text, not ancient cabinet. No text, no labels, no captions, no writing anywhere in the image, no watermark, no characters. Background pure solid white #FFFFFF only for cutout."
+    },
+    {
+      "level": 32,
+      "id": "modern_countertop_icecream_machine",
+      "name": "软冰淇淋机",
+      "slot": "LIGHT",
+      "tab": "appliance",
+      "prompt": "Square game asset 1:1. Single dessert appliance prop centered with generous margin. Cute kawaii 2.5D isometric view from upper-left about 45 degrees, hand-painted mobile merge-game flower shop style. Soft brown outlines, rounded chibi-friendly proportions, gentle upper-left lighting. A countertop soft-serve ice cream machine with rounded mint and cream body, two swirl nozzles, small cone tray, pastel strawberry and vanilla swirl samples, buttons as simple colored dots with no symbols. Modern dessert cafe appliance. Not ancient, not realistic stainless steel. No text, no labels, no captions, no writing anywhere in the image, no watermark, no characters. Background pure solid white #FFFFFF only for cutout."
+    },
+    {
+      "level": 33,
+      "id": "modern_karaoke_corner",
+      "name": "迷你唱歌角",
+      "slot": "ORNAMENT",
+      "tab": "furniture",
+      "prompt": "Square game asset 1:1. Single entertainment furniture prop centered with generous margin. Cute kawaii 2.5D isometric view from upper-left about 45 degrees, hand-painted mobile merge-game flower shop style. Soft brown outlines, rounded chibi-friendly proportions, gentle upper-left lighting. A mini karaoke corner prop: rounded speaker box, two pastel microphones on a stand, small crescent light, soft cushion stool, no screen text, no lyrics. Modern cozy party decor, compact and readable. Not nightclub, not ancient instrument stand. No text, no labels, no captions, no writing anywhere in the image, no watermark, no characters. Background pure solid white #FFFFFF only for cutout."
+    },
+    {
+      "level": 33,
+      "id": "modern_aquarium_side_table",
+      "name": "水族小边桌",
+      "slot": "TABLE",
+      "tab": "furniture",
+      "prompt": "Square game asset 1:1. Single modern side table prop centered with generous margin. Cute kawaii 2.5D isometric view from upper-left about 45 degrees, hand-painted mobile merge-game flower shop style. Soft brown outlines, rounded chibi-friendly proportions, gentle upper-left lighting. A rounded glass aquarium side table with cream top tray, transparent blue tank base, tiny stylized fish shapes, pebbles, aquatic plants, and a small flower vase on top. Modern whimsical furniture, bright and clean. Not ancient fish bowl, not realistic aquarium photo. No text, no labels, no captions, no writing anywhere in the image, no watermark, no characters. Background pure solid white #FFFFFF only for cutout."
+    },
+    {
+      "level": 33,
+      "id": "modern_plush_display_ladder",
+      "name": "毛绒梯形陈列架",
+      "slot": "SHELF",
+      "tab": "furniture",
+      "prompt": "Square game asset 1:1. Single display shelf prop centered with generous margin. Cute kawaii 2.5D isometric view from upper-left about 45 degrees, hand-painted mobile merge-game flower shop style. Soft brown outlines, rounded chibi-friendly proportions, gentle upper-left lighting. A modern ladder-shaped plush toy display rack with pale wood side rails, mint shelves, small plush cloud, bear, lemon and flower cushions arranged neatly, tiny string lights wrapped around one side, no letters. Cozy store display. Not ancient ladder, not rustic farm tool. No text, no labels, no captions, no writing anywhere in the image, no watermark, no characters. Background pure solid white #FFFFFF only for cutout."
+    },
+    {
+      "level": 34,
+      "id": "modern_lv34_instant_snack_bar",
+      "name": "深夜零食吧台",
+      "slot": "TABLE",
+      "tab": "furniture",
+      "prompt": "Square game asset 1:1. Single modern snack counter prop centered with generous margin. Cute kawaii 2.5D isometric view from upper-left about 45 degrees, hand-painted mobile merge-game flower shop style. Soft brown outlines, rounded chibi-friendly proportions, gentle upper-left lighting. A compact instant snack bar table with cream counter, tiny electric kettle, cup noodle bowls represented by plain pastel cups with no text, snack baskets, sauce bottles without labels, warm under-shelf light. Modern convenience-store corner, playful and unusual. Not ancient food stall, not cluttered full scene. No text, no labels, no captions, no writing anywhere in the image, no watermark, no characters. Background pure solid white #FFFFFF only for cutout."
+    },
+    {
+      "level": 34,
+      "id": "modern_lv34_arch_lamp_plant",
+      "name": "拱形绿植落地灯",
+      "slot": "LIGHT",
+      "tab": "appliance",
+      "prompt": "Square game asset 1:1. Single modern floor lamp prop centered with generous margin. Cute kawaii 2.5D isometric view from upper-left about 45 degrees, hand-painted mobile merge-game flower shop style. Soft brown outlines, rounded chibi-friendly proportions, gentle upper-left lighting. A tall arch floor lamp with warm glowing round shade, slim cream metal curve, integrated hanging plant basket with trailing vines, small round marble base in soft pink. Modern cozy living room decor, distinctive silhouette. Not ancient lantern, not ornate palace lamp. No text, no labels, no captions, no writing anywhere in the image, no watermark, no characters. Background pure solid white #FFFFFF only for cutout."
+    },
+    {
+      "level": 35,
+      "id": "modern_patio_swing_sofa",
+      "name": "露台吊椅沙发",
+      "slot": "ORNAMENT",
+      "tab": "furniture",
+      "prompt": "Square game asset 1:1. Single outdoor seating furniture prop centered with generous margin. Cute kawaii 2.5D isometric view from upper-left about 45 degrees, hand-painted mobile merge-game flower shop style. Soft brown outlines, rounded chibi-friendly proportions, gentle upper-left lighting. A modern patio swing sofa with rounded cream metal frame, suspended peach cushion bench, mint throw pillows, small flower garland along the top bar, compact freestanding base. Premium but cozy terrace furniture. Not ancient swing, not rustic heavy wood. No text, no labels, no captions, no writing anywhere in the image, no watermark, no characters. Background pure solid white #FFFFFF only for cutout."
+    },
+    {
+      "level": 35,
+      "id": "modern_solar_garden_bench",
+      "name": "太阳能花园长椅",
+      "slot": "GARDEN",
+      "tab": "garden",
+      "prompt": "Square game asset 1:1. Single modern outdoor bench prop centered with generous margin. Cute kawaii 2.5D isometric view from upper-left about 45 degrees, hand-painted mobile merge-game flower shop style. Soft brown outlines, rounded chibi-friendly proportions, gentle upper-left lighting. A modern garden bench with warm wood slats, mint metal legs, tiny solar panel canopy above, integrated flower boxes on both sides filled with daisies and trailing greens, small warm light bulbs under the canopy. Smart eco outdoor furniture, readable silhouette. Not ancient, not park realism. No text, no labels, no captions, no writing anywhere in the image, no watermark, no characters. Background pure solid white #FFFFFF only for cutout."
+    }
+  ]
+}

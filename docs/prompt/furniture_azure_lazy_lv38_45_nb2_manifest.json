@@ -1,0 +1,71 @@
+{
+  "task": "furniture_azure_lazy_lv38_45_nb2",
+  "referenceImage": "../game_assets/huahua/assets/ref/azure_lazy_summer_balcony_ref.png",
+  "stylePrefix": "Square game asset 1:1. Single furniture prop centered with generous margin. Match the reference mood: lazy Mediterranean summer balcony, beautiful blue palette (sky blue, cerulean, denim blue, light wicker wood), lemon yellow accents only as tiny pops, airy cozy afternoon feeling. Cute kawaii 2.5D isometric view from upper-left about 45 degrees, hand-painted mobile merge-game flower shop style. Soft brown outlines, rounded chibi-friendly proportions, readable silhouette, gentle upper-left lighting. Relaxed lazy summer decor, not ancient Chinese, not dark gothic, not photoreal. No text, no labels, no captions, no writing anywhere in the image, no watermark, no human characters, no living animals. Background pure solid white #FFFFFF only for cutout.",
+  "items": [
+    {
+      "level": 38,
+      "id": "azure_lazy_wicker_loveseat",
+      "name": "海蓝藤编双人沙发",
+      "slot": "ORNAMENT",
+      "tab": "furniture",
+      "prompt": "Square game asset 1:1. Single lazy summer seating prop centered with generous margin. Match reference mood: beautiful blue palette, light wicker rattan, lemon yellow accent pops, airy cozy balcony feeling. Cute kawaii 2.5D isometric from upper-left about 45 degrees, hand-painted merge-game flower shop style, soft brown outlines. A low-profile wicker rattan loveseat with pale natural cane frame, soft sky-blue seat cushion, draped denim-blue blanket with white star-map pattern, one plump lemon-slice shaped pillow. Compact readable silhouette, lazy afternoon mood. No text, no watermark, no characters, no animals. Background pure solid white #FFFFFF only for cutout."
+    },
+    {
+      "level": 39,
+      "id": "azure_lazy_wicker_armchair",
+      "name": "海蓝藤编单椅",
+      "slot": "ORNAMENT",
+      "tab": "furniture",
+      "prompt": "Square game asset 1:1. Single lazy summer armchair prop centered with generous margin. Beautiful blue summer palette, light wicker wood, cute kawaii 2.5D isometric from upper-left about 45 degrees, hand-painted merge-game style, soft brown outlines. A rounded wicker rattan armchair with pale cane frame, powder-blue seat cushion, one cute cat-face shaped pillow in light blue fabric with simple embroidered eyes (pillow only, no real cat). Relaxed cozy balcony chair, readable silhouette. No text, no watermark, no living animals. Background pure solid white #FFFFFF only for cutout."
+    },
+    {
+      "level": 40,
+      "id": "azure_lazy_ladder_towel_rack",
+      "name": "海蓝梯式毛巾架",
+      "slot": "ORNAMENT",
+      "tab": "furniture",
+      "prompt": "Square game asset 1:1. Single decorative ladder towel rack prop centered with generous margin. Beautiful blue summer palette, cute kawaii 2.5D isometric from upper-left about 45 degrees, hand-painted merge-game style, soft brown outlines. A leaning wooden ladder painted soft sky blue, three rungs with folded pastel blue towels draped over, a small yellow starfish ornament hanging from one side, light natural wood steps. Cozy balcony decor, not a full room scene. No text, no watermark, no characters. Background pure solid white #FFFFFF only for cutout."
+    },
+    {
+      "level": 41,
+      "id": "azure_lazy_glass_shell_table",
+      "name": "玻璃海星小边桌",
+      "slot": "TABLE",
+      "tab": "furniture",
+      "prompt": "Square game asset 1:1. Single side table prop centered with generous margin. Beautiful blue summer palette, cute kawaii 2.5D isometric from upper-left about 45 degrees, hand-painted merge-game style, soft brown outlines. A low round transparent glass bowl table filled with clear blue-tinted water, decorative seashells and tiny yellow star ornaments at the bottom, slim pale wood rim and three short legs. Whimsical lazy seaside balcony mood, compact readable silhouette. No text, no watermark, no characters. Background pure solid white #FFFFFF only for cutout."
+    },
+    {
+      "level": 42,
+      "id": "azure_lazy_star_border_rug",
+      "name": "星纹蓝海地毯",
+      "slot": "ORNAMENT",
+      "tab": "furniture",
+      "prompt": "Square game asset 1:1. Single floor rug prop centered with generous margin, shown flat from isometric angle. Beautiful blue summer palette, cute kawaii 2.5D isometric from upper-left about 45 degrees, hand-painted merge-game style, soft brown outlines. A rectangular area rug in denim blue with cream white decorative border pattern and short tassels at both ends, subtle woven texture, cozy lazy balcony floor mat feeling. No text, no watermark, no characters. Background pure solid white #FFFFFF only for cutout."
+    },
+    {
+      "level": 43,
+      "id": "azure_lazy_barrel_stool",
+      "name": "木纹海蓝圆凳",
+      "slot": "ORNAMENT",
+      "tab": "furniture",
+      "prompt": "Square game asset 1:1. Single stool prop centered with generous margin. Beautiful blue summer palette, cute kawaii 2.5D isometric from upper-left about 45 degrees, hand-painted merge-game style, soft brown outlines. A small round side stool like a short wooden barrel with vertical pale wood slats, soft cerulean blue painted bands, flat cream top surface. Simple cozy balcony seat, readable silhouette. No text, no watermark, no characters. Background pure solid white #FFFFFF only for cutout."
+    },
+    {
+      "level": 44,
+      "id": "azure_lazy_star_lantern_string",
+      "name": "星月蓝串灯",
+      "slot": "WALLART",
+      "tab": "furniture",
+      "prompt": "Square game asset 1:1. Single hanging string light decoration prop centered with generous margin. Beautiful blue summer palette with warm yellow glow accents, cute kawaii 2.5D isometric from upper-left about 45 degrees, hand-painted merge-game style, soft brown outlines. A draped string of fairy lights with round glowing yellow bulbs and small star-shaped lanterns in soft blue and cream, thin cord in gentle curve, lazy summer evening mood. Wall or ceiling hanging decor, not a full room. No text, no watermark, no characters. Background pure solid white #FFFFFF only for cutout."
+    },
+    {
+      "level": 45,
+      "id": "azure_lazy_lemon_tree_pot",
+      "name": "柠檬蓝海花盆",
+      "slot": "ORNAMENT",
+      "tab": "furniture",
+      "prompt": "Square game asset 1:1. Single potted plant prop centered with generous margin. Beautiful blue summer palette, cute kawaii 2.5D isometric from upper-left about 45 degrees, hand-painted merge-game style, soft brown outlines. A small lemon tree in a round cerulean blue ceramic pot, bright yellow lemons on branches, fresh green leaves, cozy balcony planter mood. Cute stylized plant not photoreal. No text, no watermark, no characters. Background pure solid white #FFFFFF only for cutout."
+    }
+  ]
+}

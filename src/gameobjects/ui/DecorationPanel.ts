@@ -555,6 +555,7 @@ export class DecorationPanel extends PIXI.Container {
     // 面板实例在主场景初始化时已构建；发版后冷启动时贴图常在 open 前的预加载阶段才进入缓存。
     // 这里主动应用一次已加载贴图，避免错过 texture:loaded 事件后首帧仍停留在矢量/空贴图兜底态。
     this._applyLoadedPanelTextures();
+    this._scrollY = 0;
     this._refreshAll();
     this._scheduleAssetRefresh();
     setTimeout(() => this._scheduleAssetRefresh(), 120);
@@ -1300,6 +1301,7 @@ export class DecorationPanel extends PIXI.Container {
       this._addScrollPlate(inner, gridW, availH);
       this._maxScrollY = 0;
       this._scrollY = 0;
+      this._applyScroll();
       return;
     }
 
@@ -1316,7 +1318,7 @@ export class DecorationPanel extends PIXI.Container {
     const contentH = listTopPad + CARD_GAP + totalRows * (ch + CARD_GAP);
     this._addScrollPlate(inner, gridW, contentH);
     this._maxScrollY = Math.max(0, contentH - availH);
-    this._scrollY = 0;
+    this._restoreGridScrollAfterRebuild();
     if (
       TutorialManager.isActive
       && TutorialManager.currentStep === TutorialStep.GUIDE_BUY_FURNITURE
@@ -1347,6 +1349,7 @@ export class DecorationPanel extends PIXI.Container {
       this._addScrollPlate(inner, gridW, availH);
       this._maxScrollY = 0;
       this._scrollY = 0;
+      this._applyScroll();
       return;
     }
     const totalRows = Math.ceil(stylesSorted.length / cols);
@@ -1362,7 +1365,7 @@ export class DecorationPanel extends PIXI.Container {
     const contentH = listTopPad + CARD_GAP + totalRows * (ch + CARD_GAP);
     this._addScrollPlate(inner, gridW, contentH);
     this._maxScrollY = Math.max(0, contentH - availH);
-    this._scrollY = 0;
+    this._restoreGridScrollAfterRebuild();
   }
 
   // ─── card chrome (programmatic gold-edge card) ────────────
@@ -2387,6 +2390,12 @@ export class DecorationPanel extends PIXI.Container {
   }
 
   // ─── utils ────────────────────────────────────────────────
+
+  /** 网格重建后保留当前滚动位置（购买/刷新卡片时不跳回顶部） */
+  private _restoreGridScrollAfterRebuild(): void {
+    this._scrollY = Math.max(-this._maxScrollY, Math.min(0, this._scrollY));
+    this._applyScroll();
+  }
 
   private _applyScroll(): void {
     const inner = this._gridContainer.children[0] as PIXI.Container | undefined;

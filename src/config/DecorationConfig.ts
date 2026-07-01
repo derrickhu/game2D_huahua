@@ -343,7 +343,7 @@ export const DECO_DEFS: DecoDef[] = [
   { id: 'deco_lv14_light_blossom_sconce', name: '花露壁灯', slot: DecoSlot.LIGHT, rarity: DecoRarity.FINE, cost: 4000, starValue: 6, icon: 'deco_lv14_light_blossom_sconce', desc: '玫瑰金花枝托起露珠灯罩，给蝶园套做温柔过渡', unlockRequirement: { level: 14 }, defaultScale: 0.62 },
   { id: 'deco_lv15_garden_pool', name: '海盐小泳池', slot: DecoSlot.GARDEN, rarity: DecoRarity.LIMITED, cost: 8200, starValue: 15, icon: 'deco_lv15_garden_pool', desc: '奶油白浅池配海盐蓝水面，像把夏天摆进庭院', unlockRequirement: { level: 15 }, defaultScale: 2.22, decorationPanelTab: 'garden' },
   { id: 'deco_lv15_garden_parasol', name: '海风遮阳伞', slot: DecoSlot.GARDEN, rarity: DecoRarity.RARE, cost: 2600, starValue: 8, icon: 'deco_lv15_garden_parasol', desc: '海盐蓝条纹大伞，浅柚木伞柄与小花盆底座', unlockRequirement: { level: 12 }, defaultScale: 1.65, decorationPanelTab: 'garden' },
-  { id: 'deco_lv15_light_drink_cooler', name: '海盐饮品冰柜', slot: DecoSlot.LIGHT, rarity: DecoRarity.RARE, cost: 2300, starValue: 7, icon: 'deco_lv15_light_drink_cooler', desc: '薄荷蓝小冰柜，玻璃门里排着清爽瓶饮与花冰块', unlockRequirement: { level: 11 }, defaultScale: 0.85 },
+  { id: 'deco_lv15_light_drink_cooler', name: '海盐饮品冰柜', slot: DecoSlot.LIGHT, rarity: DecoRarity.RARE, cost: 5000, starValue: 7, icon: 'deco_lv15_light_drink_cooler', desc: '薄荷蓝小冰柜，玻璃门里排着清爽瓶饮与花冰块', unlockRequirement: { level: 11 }, defaultScale: 0.85 },
   { id: 'deco_lv16_orn_hanging_chair', name: '藤编吊篮秋千', slot: DecoSlot.ORNAMENT, rarity: DecoRarity.RARE, cost: 6600, starValue: 6, icon: 'deco_lv16_orn_hanging_chair', desc: '柚木支架吊起藤编篮椅，珊瑚抱枕带来度假感', unlockRequirement: { level: 16 }, defaultScale: 1.58, decorationPanelTab: 'furniture' },
   { id: 'deco_lv16_wall_shell_mirror', name: '贝壳壁挂镜', slot: DecoSlot.WALLART, rarity: DecoRarity.FINE, cost: 5000, starValue: 6, icon: 'deco_lv16_wall_shell_mirror', desc: '贝壳弧形镜框点缀小珍珠，墙面多了一点海风', unlockRequirement: { level: 16 }, defaultScale: 0.85 },
   { id: 'deco_lv16_garden_coral_planter', name: '珊瑚花箱', slot: DecoSlot.GARDEN, rarity: DecoRarity.RARE, cost: 5400, starValue: 8, icon: 'deco_lv16_garden_coral_planter', desc: '珊瑚色长花箱盛着海风小花，和泳池伞组自然成套', unlockRequirement: { level: 16 }, defaultScale: 1.22, decorationPanelTab: 'garden' },
@@ -379,7 +379,7 @@ export const DECO_DEFS: DecoDef[] = [
   // —— 法式咖啡烘焙套（甜品柜+手冲架+复古烤箱+马卡龙塔；适配复古花坊 confetti）——
   { id: 'deco_lv13_table_french_pastry_counter', name: '法式甜品玻璃柜', slot: DecoSlot.TABLE, rarity: DecoRarity.RARE, cost: 3000, starValue: 6, icon: 'deco_lv13_table_french_pastry_counter', desc: '奶薄荷柜身配玻璃罩，里面摆着马卡龙与小塔', unlockRequirement: { level: 13 }, defaultScale: 1.30, decorationPanelTab: 'furniture' },
   { id: 'deco_lv14_shelf_handbrew_coffee_bar', name: '手冲咖啡架', slot: DecoSlot.SHELF, rarity: DecoRarity.RARE, cost: 4200, starValue: 7, icon: 'deco_lv14_shelf_handbrew_coffee_bar', desc: '蜜木双层架配手冲套与豆罐，店里多一个咖啡角', unlockRequirement: { level: 14 }, defaultScale: 1.30 },
-  { id: 'deco_lv15_light_vintage_oven', name: '奶黄复古烤箱', slot: DecoSlot.LIGHT, rarity: DecoRarity.RARE, cost: 2400, starValue: 8, icon: 'deco_lv15_light_vintage_oven', desc: '圆胖奶黄烤箱，玻璃门里看见可颂在烤', unlockRequirement: { level: 12 }, defaultScale: 0.65 },
+  { id: 'deco_lv15_light_vintage_oven', name: '奶黄复古烤箱', slot: DecoSlot.LIGHT, rarity: DecoRarity.RARE, cost: 5000, starValue: 8, icon: 'deco_lv15_light_vintage_oven', desc: '圆胖奶黄烤箱，玻璃门里看见可颂在烤', unlockRequirement: { level: 12 }, defaultScale: 0.65 },
   { id: 'deco_lv16_orn_macaron_tower', name: '马卡龙塔', slot: DecoSlot.ORNAMENT, rarity: DecoRarity.FINE, cost: 5000, starValue: 5, icon: 'deco_lv16_orn_macaron_tower', desc: '三层瓷盘配粉黄紫蓝马卡龙，下午茶担当', unlockRequirement: { level: 16 }, defaultScale: 0.78 },
 
   // —— 古董图书套（书架+地球仪桌+切斯特皮椅+植物标本；dark academia，适配复古/月辉）——
@@ -407,7 +407,7 @@ export const DECO_DEFS: DecoDef[] = [
   { id: 'deco_lv14_orn_carousel_music_box', name: '旋转木马音乐盒', slot: DecoSlot.ORNAMENT, rarity: DecoRarity.RARE, cost: 4100, starValue: 7, icon: 'deco_lv14_orn_carousel_music_box', desc: '奶粉色基座配香槟金螺旋柱与三匹粉绿玫瑰木马', unlockRequirement: { level: 14 }, defaultScale: 0.65 },
   { id: 'deco_lv15_light_terrarium_lamp', name: '玻璃花房灯', slot: DecoSlot.LIGHT, rarity: DecoRarity.RARE, cost: 2300, starValue: 7, icon: 'deco_lv15_light_terrarium_lamp', desc: '尖顶玻璃罩做小温室，里面有暖黄灯泡与小花苔藓', unlockRequirement: { level: 11 }, defaultScale: 0.65 },
   { id: 'deco_lv16_wallart_harbor_arch_window', name: '海港拱窗景', slot: DecoSlot.WALLART, rarity: DecoRarity.RARE, cost: 5500, starValue: 8, icon: 'deco_lv16_wallart_harbor_arch_window', desc: '奶白拱窗框里收着金色海港落日，有小帆船与玫瑰窗台', unlockRequirement: { level: 16 }, defaultScale: 1.30 },
-  { id: 'deco_lv20_orn_white_grand_piano', name: '白色三角钢琴', slot: DecoSlot.ORNAMENT, rarity: DecoRarity.LIMITED, cost: 20000, starValue: 12, icon: 'deco_lv20_orn_white_grand_piano', desc: '奶白漆三角钢琴，香槟金腿与玫瑰花束、水晶烛台', unlockRequirement: { level: 20 }, defaultScale: 1.5, decorationPanelTab: 'furniture' },
+  { id: 'deco_lv20_orn_white_grand_piano', name: '白色三角钢琴', slot: DecoSlot.ORNAMENT, rarity: DecoRarity.LIMITED, cost: 42000, starValue: 12, icon: 'deco_lv20_orn_white_grand_piano', desc: '奶白漆三角钢琴，香槟金腿与玫瑰花束、水晶烛台', unlockRequirement: { level: 20 }, defaultScale: 1.5, decorationPanelTab: 'furniture' },
   { id: 'jiangnan_wash_bench', name: '临河浣衣凳', slot: DecoSlot.ORNAMENT, rarity: DecoRarity.COMMON, cost: 3600, starValue: 1, icon: 'jiangnan_wash_bench', desc: '旧木矮凳叠着白布，底下藤篮装着浣衣日常', unlockRequirement: { level: 20 }, defaultScale: 0.95, decorationPanelTab: 'furniture' },
 
   // ═══════ ⑭ 仙气古风扩展 Lv21–30（batch53 · 全场景通用 · 家具/摆件/墙饰/庭院 Tab）
@@ -431,6 +431,46 @@ export const DECO_DEFS: DecoDef[] = [
   { id: 'xianqi_bamboo_joint_desk', name: '竹节书案', slot: DecoSlot.TABLE, rarity: DecoRarity.FINE, cost: 10200, starValue: 5, icon: 'xianqi_bamboo_joint_desk', desc: '竹节腿书案，淡绿纸卷与玉镇纸', unlockRequirement: { level: 29 }, defaultScale: 1.18 },
   { id: 'xianqi_bamboo_book_tower', name: '竹筒书塔', slot: DecoSlot.SHELF, rarity: DecoRarity.FINE, cost: 11000, starValue: 6, icon: 'xianqi_bamboo_book_tower', desc: '竹筒螺旋书塔，素卷与兰芽点缀', unlockRequirement: { level: 30 }, defaultScale: 1.55 },
   { id: 'xianqi_bamboo_mist_daybed', name: '竹影卧榻', slot: DecoSlot.ORNAMENT, rarity: DecoRarity.RARE, cost: 12800, starValue: 7, icon: 'xianqi_bamboo_mist_daybed', desc: '竹框卧榻配鼠尾草垫，一端垂雾灰纱', unlockRequirement: { level: 30 }, defaultScale: 1.55, decorationPanelTab: 'furniture' },
+
+  // ═══════ ⑭.4 现代生活扩展 Lv25–35（高价常驻 · 电器 / 露营 / 软装 / 店铺小设备）
+  { id: 'modern_folding_laundry_rack', name: '阳台折叠晾衣架', slot: DecoSlot.ORNAMENT, rarity: DecoRarity.RARE, cost: 16650, starValue: 4, icon: 'modern_folding_laundry_rack', desc: '白管折叠架挂满柔色衣物，带来阳台生活气', unlockRequirement: { level: 25 }, defaultScale: 1.15, decorationPanelTab: 'furniture' },
+  { id: 'modern_kitchen_base_counter', name: '奶油蓝长厨柜', slot: DecoSlot.TABLE, rarity: DecoRarity.RARE, cost: 24120, starValue: 4, icon: 'modern_kitchen_base_counter', desc: '淡蓝拱形柜门连成一排，奶油台面空无一物，方便摆小家电与摆件', unlockRequirement: { level: 25 }, defaultScale: 1.98, decorationPanelTab: 'furniture' },
+  { id: 'modern_hotdog_roller', name: '迷你烤肠机', slot: DecoSlot.LIGHT, rarity: DecoRarity.RARE, cost: 18450, starValue: 5, icon: 'modern_hotdog_roller', desc: '透明罩小烤肠机，银色滚轴与面包托盘，可摆在厨柜台面', unlockRequirement: { level: 21 }, defaultScale: 0.92, depthSortFeetYFudge: 130 },
+  { id: 'modern_glass_drink_dispenser', name: '玻璃饮料机', slot: DecoSlot.LIGHT, rarity: DecoRarity.RARE, cost: 19350, starValue: 5, icon: 'modern_glass_drink_dispenser', desc: '双缸水果饮料机，柠檬茶与莓果茶清爽并排，适合厨柜台面', unlockRequirement: { level: 21 }, defaultScale: 0.72, depthSortFeetYFudge: 130 },
+  { id: 'modern_camping_tent', name: '奶油露营帐篷', slot: DecoSlot.GARDEN, rarity: DecoRarity.RARE, cost: 22050, starValue: 6, icon: 'modern_camping_tent', desc: '奶油帆布小帐篷配串灯与花盆，庭院立刻有露营感', unlockRequirement: { level: 27 }, defaultScale: 1.65, decorationPanelTab: 'garden' },
+  { id: 'modern_picnic_cooler_cart', name: '野餐冰桶推车', slot: DecoSlot.TABLE, rarity: DecoRarity.RARE, cost: 19800, starValue: 5, icon: 'modern_picnic_cooler_cart', desc: '薄荷冰桶小推车，饮料水果与格纹毯准备好出发', unlockRequirement: { level: 22 }, defaultScale: 1.05, decorationPanelTab: 'furniture' },
+  { id: 'modern_plush_cloud_pile', name: '毛绒云朵玩具堆', slot: DecoSlot.ORNAMENT, rarity: DecoRarity.RARE, cost: 20250, starValue: 5, icon: 'modern_plush_cloud_pile', desc: '云朵、兔兔、小熊与柠檬抱枕叠成软乎乎角落', unlockRequirement: { level: 28 }, defaultScale: 0.9 },
+  { id: 'modern_wall_fairy_lights', name: '节日星星串灯', slot: DecoSlot.WALLART, rarity: DecoRarity.FINE, cost: 18900, starValue: 4, icon: 'modern_wall_fairy_lights', desc: '星星月亮小挂灯串，墙面多一点节日暖光', unlockRequirement: { level: 28 }, defaultScale: 1.25 },
+  { id: 'modern_tall_flower_vase', name: '高身鲜花陶瓶', slot: DecoSlot.ORNAMENT, rarity: DecoRarity.RARE, cost: 20700, starValue: 5, icon: 'modern_tall_flower_vase', desc: '高身奶油陶瓶插满郁金香与小雏菊，清新但有体量', unlockRequirement: { level: 28 }, defaultScale: 0.85 },
+  { id: 'modern_capsule_drink_fridge', name: '胶囊饮料冰柜', slot: DecoSlot.LIGHT, rarity: DecoRarity.RARE, cost: 8820, starValue: 4, icon: 'modern_capsule_drink_fridge', desc: '圆角胶囊冰柜排满彩色饮品，可摆在厨柜或台面上', unlockRequirement: { level: 22 }, defaultScale: 0.85, depthSortFeetYFudge: 130 },
+  { id: 'modern_waffle_snack_cart', name: '华夫点心小车', slot: DecoSlot.TABLE, rarity: DecoRarity.RARE, cost: 22320, starValue: 6, icon: 'modern_waffle_snack_cart', desc: '暖橙棚顶小车摆着华夫饼、浆果与糖浆瓶', unlockRequirement: { level: 21 }, defaultScale: 1.05, decorationPanelTab: 'furniture' },
+  { id: 'modern_robot_vacuum_dock', name: '圆圆扫地机座', slot: DecoSlot.LIGHT, rarity: DecoRarity.FINE, cost: 21150, starValue: 5, icon: 'modern_robot_vacuum_dock', desc: '猫耳扫地机停在充电座旁，店里也要轻松保持整洁', unlockRequirement: { level: 29 }, defaultScale: 0.85 },
+  { id: 'modern_balcony_drying_cabinet', name: '暖风烘衣柜', slot: DecoSlot.LIGHT, rarity: DecoRarity.RARE, cost: 24750, starValue: 6, icon: 'modern_balcony_drying_cabinet', desc: '透明小烘衣柜挂着柔色衣物，顶部一盆薰衣草压住生活感', unlockRequirement: { level: 30 }, defaultScale: 1.35 },
+  { id: 'modern_plant_grow_light_shelf', name: '植物补光培育架', slot: DecoSlot.SHELF, rarity: DecoRarity.RARE, cost: 25650, starValue: 6, icon: 'modern_plant_grow_light_shelf', desc: '双层植物培育架配粉色补光灯，水培瓶与苗盘井井有条', unlockRequirement: { level: 30 }, defaultScale: 1.65, decorationPanelTab: 'furniture' },
+  { id: 'modern_citrus_soda_machine', name: '柑橘气泡饮料机', slot: DecoSlot.LIGHT, rarity: DecoRarity.RARE, cost: 25200, starValue: 6, icon: 'modern_citrus_soda_machine', desc: '橙黄色气泡饮料机，玻璃缸里冒着柑橘泡泡，适合厨柜台面', unlockRequirement: { level: 22 }, defaultScale: 0.72, depthSortFeetYFudge: 130 },
+  { id: 'modern_pegboard_hobby_wall', name: '软木洞洞板', slot: DecoSlot.WALLART, rarity: DecoRarity.RARE, cost: 26550, starValue: 6, icon: 'modern_pegboard_hobby_wall', desc: '粉色洞洞板收纳丝带、剪刀、小花瓶与便签色块', unlockRequirement: { level: 31 }, defaultScale: 0.9 },
+  { id: 'modern_countertop_icecream_machine', name: '软冰淇淋机', slot: DecoSlot.LIGHT, rarity: DecoRarity.RARE, cost: 28350, starValue: 7, icon: 'modern_countertop_icecream_machine', desc: '薄荷奶油色冰淇淋机，两个小甜筒刚好接住软雪糕，适合厨柜台面', unlockRequirement: { level: 24 }, defaultScale: 0.72, depthSortFeetYFudge: 130 },
+  { id: 'modern_aquarium_side_table', name: '水族小边桌', slot: DecoSlot.TABLE, rarity: DecoRarity.RARE, cost: 30150, starValue: 8, icon: 'modern_aquarium_side_table', desc: '圆鼓水族箱托起小边桌，鱼儿与水草在桌下发光', unlockRequirement: { level: 33 }, defaultScale: 0.9, decorationPanelTab: 'furniture' },
+  { id: 'modern_plush_display_ladder', name: '毛绒梯形陈列架', slot: DecoSlot.SHELF, rarity: DecoRarity.RARE, cost: 29520, starValue: 7, icon: 'modern_plush_display_ladder', desc: '梯形木架陈列云朵、小熊与花朵毛绒，边上还绕着细灯', unlockRequirement: { level: 33 }, defaultScale: 1.2, decorationPanelTab: 'furniture' },
+  { id: 'modern_patio_swing_sofa', name: '露台吊椅沙发', slot: DecoSlot.ORNAMENT, rarity: DecoRarity.LIMITED, cost: 34200, starValue: 9, icon: 'modern_patio_swing_sofa', desc: '奶油金属架吊起珊瑚软垫双人椅，花藤把露台变成小假日', unlockRequirement: { level: 35 }, defaultScale: 1.65, decorationPanelTab: 'furniture' },
+  { id: 'modern_plush_capybara', name: '卡皮玩偶', slot: DecoSlot.ORNAMENT, rarity: DecoRarity.RARE, cost: 31500, starValue: 5, icon: 'modern_plush_capybara', desc: '圆滚滚卡皮巴拉毛绒，头顶还平衡着一片小橙片，懒萌到犯规', unlockRequirement: { level: 35 }, defaultScale: 0.75 },
+  { id: 'modern_plush_clownfish', name: '小丑鱼玩偶', slot: DecoSlot.ORNAMENT, rarity: DecoRarity.RARE, cost: 32400, starValue: 5, icon: 'modern_plush_clownfish', desc: '橙白条纹小丑鱼毛绒，圆眼睛与短鳍摇摇晃晃，像从水族箱跳出来的', unlockRequirement: { level: 36 }, defaultScale: 0.7 },
+  { id: 'modern_plush_tree_spirit', name: '树人玩偶', slot: DecoSlot.ORNAMENT, rarity: DecoRarity.RARE, cost: 33300, starValue: 6, icon: 'modern_plush_tree_spirit', desc: '苔藓绿小树人毛绒，叶子头发与胸前花苞，森林精灵也软乎乎', unlockRequirement: { level: 37 }, defaultScale: 0.75 },
+
+  // ═══════ ⑭.4b 海蓝慵懒夏日 Lv38–45（参考地中海阳台蓝系软装）
+  { id: 'azure_lazy_wicker_loveseat', name: '海蓝藤编双人沙发', slot: DecoSlot.ORNAMENT, rarity: DecoRarity.RARE, cost: 29520, starValue: 5, icon: 'azure_lazy_wicker_loveseat', desc: '浅藤编低沙发配天蓝坐垫，星图毯与柠檬片抱枕，慵懒午后标配', unlockRequirement: { level: 38 }, defaultScale: 1.35, decorationPanelTab: 'furniture' },
+  { id: 'azure_lazy_wicker_armchair', name: '海蓝藤编单椅', slot: DecoSlot.ORNAMENT, rarity: DecoRarity.RARE, cost: 20520, starValue: 5, icon: 'azure_lazy_wicker_armchair', desc: '圆角藤编单椅搭粉蓝猫脸抱枕，一个人也能窝着发呆', unlockRequirement: { level: 39 }, defaultScale: 1.05, decorationPanelTab: 'furniture' },
+  { id: 'azure_lazy_ladder_towel_rack', name: '海蓝梯式毛巾架', slot: DecoSlot.ORNAMENT, rarity: DecoRarity.FINE, cost: 11880, starValue: 4, icon: 'azure_lazy_ladder_towel_rack', desc: '天蓝木梯挂着柔色毛巾与海星小挂饰，像迷你阳台角落', unlockRequirement: { level: 40 }, defaultScale: 1.3, decorationPanelTab: 'furniture' },
+  { id: 'azure_lazy_glass_shell_table', name: '玻璃海星小边桌', slot: DecoSlot.TABLE, rarity: DecoRarity.RARE, cost: 22140, starValue: 6, icon: 'azure_lazy_glass_shell_table', desc: '透明玻璃圆缸边桌，水底贝壳与海星轻轻晃，清凉又有趣', unlockRequirement: { level: 41 }, defaultScale: 0.85, decorationPanelTab: 'furniture' },
+  { id: 'azure_lazy_star_border_rug', name: '星纹蓝海地毯', slot: DecoSlot.ORNAMENT, rarity: DecoRarity.FINE, cost: 10620, starValue: 4, icon: 'azure_lazy_star_border_rug', desc: '牛仔蓝长毯配奶油星纹边与流苏，光脚踩上去就慢下来', unlockRequirement: { level: 42 }, defaultScale: 2.05, depthSortYLift: 0, depthSortFloorMat: true, decorationPanelTab: 'furniture' },
+  { id: 'azure_lazy_barrel_stool', name: '木纹海蓝圆凳', slot: DecoSlot.ORNAMENT, rarity: DecoRarity.FINE, cost: 9450, starValue: 4, icon: 'azure_lazy_barrel_stool', desc: '短木桶造型圆凳，浅木条与蔚蓝环带，随手一放就是座位', unlockRequirement: { level: 43 }, defaultScale: 0.55, decorationPanelTab: 'furniture' },
+  { id: 'azure_lazy_star_lantern_string', name: '星月蓝串灯', slot: DecoSlot.WALLART, rarity: DecoRarity.RARE, cost: 13140, starValue: 5, icon: 'azure_lazy_star_lantern_string', desc: '星形与圆球串灯暖黄点亮，把夏夜阳台挂成小小银河', unlockRequirement: { level: 44 }, defaultScale: 1.5 },
+  { id: 'azure_lazy_lemon_tree_pot', name: '柠檬蓝海花盆', slot: DecoSlot.ORNAMENT, rarity: DecoRarity.RARE, cost: 16650, starValue: 6, icon: 'azure_lazy_lemon_tree_pot', desc: '蔚蓝陶盆种着小柠檬树，黄果实与绿叶把夏天留在店里', unlockRequirement: { level: 45 }, defaultScale: 1.15, decorationPanelTab: 'furniture' },
+
+  // ═══════ ⑭.4c 慵懒客厅 Lv41–43（豆袋沙发 · 大提琴）
+  { id: 'modern_lazy_bean_bag_coral', name: '珊瑚懒人豆袋', slot: DecoSlot.ORNAMENT, rarity: DecoRarity.RARE, cost: 29520, starValue: 5, icon: 'modern_lazy_bean_bag_coral', desc: '南瓜分段珊瑚粉豆袋，顶上有小提环，一屁股陷进去就不想起来', unlockRequirement: { level: 41 }, defaultScale: 1.08, decorationPanelTab: 'furniture' },
+  { id: 'azure_lazy_bean_bag', name: '海蓝懒人豆袋', slot: DecoSlot.ORNAMENT, rarity: DecoRarity.RARE, cost: 30420, starValue: 5, icon: 'azure_lazy_bean_bag', desc: '同款豆袋换成天蓝面料，软乎乎像一朵云，适合窝着看投影', unlockRequirement: { level: 42 }, defaultScale: 1.08, decorationPanelTab: 'furniture' },
+  { id: 'modern_floor_cello', name: '立式大提琴', slot: DecoSlot.ORNAMENT, rarity: DecoRarity.RARE, cost: 31320, starValue: 6, icon: 'modern_floor_cello', desc: '蜂蜜色木身大提琴斜靠而立，四弦与琴头卷纹把客厅变成小音乐厅', unlockRequirement: { level: 43 }, defaultScale: 1.25, decorationPanelTab: 'furniture' },
 
   // ═══════ ⑭.5 茶香小院专属家具（tea_house Lv25 解锁；decorationPanelTab=flower_room → 左侧「茶香小院」Tab）
   { id: 'gucha_tea_bench', name: '茶寮长凳', slot: DecoSlot.ORNAMENT, rarity: DecoRarity.COMMON, cost: 3400, starValue: 1, icon: 'gucha_tea_bench', desc: '素木长凳磨得发亮，台面留着一圈茶渍印', unlockRequirement: { level: 25 }, defaultScale: 1.1, decorationPanelTab: 'flower_room', allowedSceneIds: ['tea_house'] },
@@ -604,8 +644,8 @@ export function getDepthSortFeetYFudge(deco: DecoDef): number {
 
   if (deco.slot === DecoSlot.LIGHT) {
     const ds = deco.defaultScale ?? 1;
-    if (ds < 0.72) return 110;
-    if (ds < 0.98) return 28;
+    /** 台面小家电：脚点 y 常比桌/柜小一整档，须接近 ORNAMENT 小件的 95～110 补偿 */
+    if (ds < 0.98) return 110;
     return 0;
   }
 
