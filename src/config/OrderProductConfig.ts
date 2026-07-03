@@ -52,6 +52,7 @@ const FOOD_C_B_WEIGHT: Record<OrderTier, number> = { C: 1, B: 1, A: 0, S: 0 };
 const FOOD_B_ONLY_WEIGHT: Record<OrderTier, number> = { C: 0, B: 1, A: 0, S: 0 };
 const FOOD_B_A_WEIGHT: Record<OrderTier, number> = { C: 0, B: 1, A: 1, S: 0 };
 const FOOD_B_A_S_WEIGHT: Record<OrderTier, number> = { C: 0, B: 1, A: 1, S: 1 };
+const FRUIT_CUT_ORDER_POOL_WEIGHT = 0.75;
 
 /** 棋盘同时有可产出农田（L3+）与果切工具时，才允许刷果切订单。 */
 export function hasFruitCutOrderCapability(ulk: UnlockedLines): boolean {
@@ -331,25 +332,25 @@ export function productOrderSpecsForTier(tier: OrderTier, ulk: UnlockedLines): P
       return [
         ...productSpecsForRange(simpleFlowerIds, [1, 2], ulk, 1),
         ...productSpecsForRange(simpleFlowerIds, [2, 3], ulk, 1),
-        ...productSpecsForTierRanges(foodCIds, tier, ulk, 1),
+        ...productSpecsForTierRanges(foodCIds, tier, ulk, FRUIT_CUT_ORDER_POOL_WEIGHT),
       ];
     case 'B':
       return [
         ...productSpecsForRange(flowerIds, [2, 5], ulk, 1),
         ...productSpecsForRange(drinkBIds, [2, 4], ulk, 1),
-        ...productSpecsForTierRanges(foodBIds, tier, ulk, 1),
+        ...productSpecsForTierRanges(foodBIds, tier, ulk, FRUIT_CUT_ORDER_POOL_WEIGHT),
       ];
     case 'A':
       return [
         ...productSpecsForRange(flowerIds, [4, 7], ulk, 1),
         ...productSpecsForRange(drinkAllIds, [3, 6], ulk, 1),
-        ...productSpecsForTierRanges(foodAIds, tier, ulk, 1),
+        ...productSpecsForTierRanges(foodAIds, tier, ulk, FRUIT_CUT_ORDER_POOL_WEIGHT),
       ];
     case 'S':
       return [
         ...productSpecsForRange(flowerIds, [6, 13], ulk, 1),
         ...productSpecsForRange(drinkAllIds, [5, 10], ulk, 1),
-        ...productSpecsForTierRanges(foodSIds, tier, ulk, 1),
+        ...productSpecsForTierRanges(foodSIds, tier, ulk, FRUIT_CUT_ORDER_POOL_WEIGHT),
       ];
     default:
       return [];
@@ -371,7 +372,7 @@ export function comboOrderSpecsForTier(tier: OrderTier, ulk: UnlockedLines): Pro
       ['cut_avocado', 'cut_watermelon', 'cut_pineapple', 'cut_dragonfruit'],
       tier,
       ulk,
-      1,
+      FRUIT_CUT_ORDER_POOL_WEIGHT,
     ),
-  ].map(spec => ({ ...spec, weight: 1 }));
+  ];
 }
