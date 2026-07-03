@@ -1,0 +1,34 @@
+Create one empty game-ready isometric cutaway room shell for a cozy pastel flower-shop merge game.
+
+Use the attached furnished dream-cloud concept image as the main visual reference. The goal is to keep the improved shell design from that concept, but REMOVE all furniture and characters. Use the attached current empty dream-cloud shell only as a reminder that this must be an empty room shell asset.
+
+Keep from the furnished concept:
+- Rounded arched cloud-house silhouette with dreamy rainbow/cloud atmosphere.
+- Two-story open-front cutaway bedroom/lounge room.
+- Large upper floor platform with curved front edge.
+- Broad lower floor platform.
+- Soft cloud walls, cloud roof cap, moon porthole/window, cloud edges, moon-and-star hanging decorations.
+- Warm pastel volume and gentle painterly rendering.
+
+Important empty-shell requirements:
+- No furniture at all: no bed, no sofa, no table, no vanity, no rug, no shelves, no lamps, no books, no cushions.
+- No characters.
+- Keep it as an empty room shell for players to place furniture.
+- Front is open, no front wall.
+- Back and side walls remain visible as soft cloud-plaster surfaces.
+- Two floors should be readable and usable; lower floor should remain open, upper floor should be open.
+- Include the small right-side puffy cloud ladder connecting lower and upper floor, with a railing opening.
+
+Style and quality:
+- More like the furnished concept: premium soft 3D volume, warm ambient occlusion, thin lavender-brown linework, no heavy black outlines.
+- Dreamy, magical, nighttime bedroom/lounge feeling, but bright and cozy.
+- Cloud walls and floor should have thickness and material depth, not flat stickers.
+- Palette: cream cloud white, powder pink, lavender, pale sky blue, soft moon gold, butter yellow highlights, tiny mint accents.
+
+Composition:
+- Single centered 1:1 PNG-style room shell, generous margin, transparent or easily removable empty background.
+- No full environment background behind the shell; only the shell asset itself.
+
+NO TEXT, no labels, no readable signs, no numbers, no logo, no watermark.
+
+Avoid: furniture, character, clutter, thick black outlines, sticker border, treehouse, tea house, butterfly house, dark gothic night, hard sci-fi, photorealism.

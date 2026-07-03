@@ -1,0 +1,29 @@
+Create one game-ready isometric cutaway room shell for a cozy pastel merge game. Use the attached dream cloud shell as the direct reference. Keep the SAME overall composition, proportions, materials and palette as the reference. Only make the small changes listed below.
+
+Theme: magical dream + clouds + moonlight. Two-story cloud house with a broad open lower floor and a LARGE high second-floor cloud deck near the roof.
+
+KEEP EXACTLY LIKE THE REFERENCE:
+- Same tall two-story layout: big deep upper cloud deck wrapping the back and left walls, raised high just under the roof, with a tall full-story open gap below.
+- Same broad open lower cloud floor with swirl-cloud parquet and star inlays.
+- Same tall back wall (sleepy cloud window) and right wall (round moon porthole).
+- Same partial high cloud roof/eaves with lavender-blue underside, moon-gold trim, dangling star and moon charms.
+- Same kawaii pastel style and dreamy palette.
+
+CHANGES TO MAKE (only these):
+1) REMOVE the central cloud support pillar/column that stands in the middle of the lower floor. The lower floor center must be completely open and empty. The upper deck is supported only by the back and side walls (slim edge supports, none in the middle).
+2) Turn the exterior cloud ladder into an INTERIOR cloud-step ladder that clearly CONNECTS the lower floor up to the second-floor deck. It is a soft white puffy cloud-step ladder rising from the lower floor up to the edge of the upper deck (place it toward the right/front area). Both its bottom (on the lower floor) and its top (meeting the upper deck edge) are visible.
+3) The upper-deck cloud-bead railing must have a clear GAP / opening exactly where the ladder meets the upper deck, so the ladder connects into the second floor through the railing break. The railing is continuous elsewhere.
+
+Strict empty shell requirements:
+- No furniture, no bed, no sofa, no shelf, no table, no chair, no curtains, no plants, no characters, no rugs.
+- No central pillar. No red annotation lines or marks. No text.
+- Open front for placing game furniture.
+
+Style and palette:
+2D casual mobile game illustration, kawaii pastel, hand-painted vector-like asset, soft brown/lavender linework, upper-left isometric view, soft ambient occlusion, crisp readable edges. Palette: cloud white, pearl cream, pale sky blue, lavender, powder pink, moon gold, tiny mint highlights. Bright dreamy dawn, not dark night.
+
+NO TEXT, no labels, no readable signs, no numbers, no logo, no watermark, no captions anywhere.
+
+Avoid: central pillar/column in the lower floor, small narrow second-floor balcony, low second floor, blocked lower floor, ladder that does not reach the second floor, continuous railing with no gap at the ladder, tea house silhouette, butterfly house silhouette, treehouse, photorealism, clutter, closed front wall, full roof lid.
+
+Output: single centered room-shell PNG composition, square 1:1, generous transparent or removable empty margin around the shell.

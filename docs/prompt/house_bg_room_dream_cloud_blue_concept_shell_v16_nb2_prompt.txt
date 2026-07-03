@@ -1,0 +1,45 @@
+Create one empty game-ready isometric cutaway room shell for a cozy pastel flower-shop merge game.
+
+Use the attached furnished concept image as the ONLY visual reference. Do NOT reference or copy the older purple dream-cloud shell. The goal is to recreate the BLUE room shell from the concept image, but remove all furniture.
+
+What to keep from the attached concept image:
+- The rounded arched blue cloud-room silhouette.
+- The soft pastel blue interior wall color.
+- The clean simple two-story structure: broad lower bedroom floor + large upper lounge floor.
+- The curved front edge of the upper floor.
+- The thin, soft lavender-brown outlines and gentle line details.
+- The soft cloud roof cap and cloud side edges.
+- The round moon window on the upper wall.
+- The small cloud shelf / moon shelf shapes may be kept as architectural built-in wall shelves only if they are empty, but no loose items on them.
+- The right-side puffy cloud ladder connecting lower and upper floor.
+- The warm rainbow/cloud atmosphere in the silhouette, but output should be the room shell asset itself, not a full environment scene.
+
+Remove all furniture and loose decorations:
+- Remove the bed, sofa, tea table, vanity, rug, cushions, shelves with books, chest, lamps, cups, and all small loose props.
+- No characters.
+- Leave both floors open and usable for player furniture placement.
+
+Room structure:
+- Two-story open-front cutaway shell.
+- Back and side walls are visible as soft blue cloud-plaster walls.
+- Front is open, no front wall.
+- Lower floor is a broad simple blue/lavender moonstone floor.
+- Upper floor is a large open blue platform, similar size to the concept, with a curved front edge and enough placement area.
+- Keep the right cloud ladder and a railing/opening feel if appropriate.
+- Keep the cloud roof and arch framing compact and readable.
+
+Art style and quality:
+- Follow the concept image's blue shell color, structure, and fine outline details.
+- Soft hand-painted volume, gentle ambient occlusion, pastel gradients.
+- Thin lavender-brown linework only; no heavy black outline.
+- Cozy dreamy nighttime bedroom/lounge feeling, but bright and cute.
+- Palette: soft sky blue, pale lavender-blue, cream cloud white, powder pink accents, moon gold highlights, tiny warm yellow lights.
+
+Composition:
+- Single centered 1:1 PNG-style room shell, generous margin.
+- Transparent or easily removable plain background.
+- No full background landscape behind the shell.
+
+NO TEXT, no labels, no readable signs, no numbers, no logo, no watermark.
+
+Avoid: the older purple shell design, thick sticker border, heavy outlines, furniture, clutter, treehouse, tea house, butterfly house, dark gothic night, photorealism.

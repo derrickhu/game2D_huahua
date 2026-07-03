@@ -1,0 +1,41 @@
+Create one game-ready isometric cutaway room shell for a cozy pastel merge game. Use the attached dream cloud shell as the direct reference for theme and materials. The goal is to fix the second floor: make it HIGH and LARGE.
+
+Theme: magical dream + clouds + moonlight. Keep the same cloud walls, moon windows, pastel cloud roof, dreamy palette, and broad lower cloud floor.
+
+TARGET LAYOUT (follow exactly):
+- This is a TALL two-story cloud house. Imagine the shell split into three horizontal bands.
+  - TOP band: high cloud roof / eaves.
+  - UPPER-MIDDLE band: a LARGE second-floor cloud deck sitting high, its floor surface just below the roof. This upper deck is deep and broad — about the SAME footprint size as the lower floor, like a real full upper story, NOT a thin balcony strip or narrow L-ledge.
+  - LOWER band: a broad open lower cloud floor for furniture placement.
+- Between the underside of the big upper deck and the lower floor there is a TALL full-story open gap (double-height clearance). Furniture can sit under the overhanging upper deck.
+- The upper deck overhangs forward toward the viewer, deep like a full floor, but raised high enough that the lower floor underneath stays open and readable.
+- Do NOT make the second floor a small narrow railing ledge. It must be a big deep platform.
+- Do NOT lower the second floor into the middle of the room. Keep it high, near the roof line.
+
+Second floor detail:
+- Large deep cloud platform along the back and left, extending forward, pale lavender-blue moonstone surface, usable for multiple decorations.
+- Thin cloud-bead railing along the open front edge of the upper deck.
+- Slim cloud supports only at the back/side edges connecting to tall walls; no thick columns in the lower floor.
+
+Lower floor:
+- Broad rounded crescent-cloud island platform, smooth flat moonstone floor with subtle swirl-cloud parquet and tiny star inlays.
+- Kept open and empty under the high upper deck. No obstacle, no central moon, no interior staircase, no thick column.
+
+Walls, roof, access:
+- Tall back wall and right wall only; front open, no left wall, no full roof lid.
+- Back wall: tall cloud-plaster wall with sleepy cloud window. Right wall: tall cloud-plaster wall with round moon porthole (pearl rim, soft gradient glass).
+- Roof/eaves: partial high cloud canopy strips only, lavender-blue underside, moon-gold trim, tiny dangling star charms.
+- Access: only a few tiny soft white cloud-step puffs outside the far right exterior edge. No large interior staircase.
+
+Strict empty shell requirements:
+- No furniture, no bed, no sofa, no shelf, no table, no chair, no curtains, no plants, no characters, no rugs.
+- No red annotation lines or marks. No text.
+
+Style and palette:
+2D casual mobile game illustration, kawaii pastel, hand-painted vector-like asset, soft brown/lavender linework, upper-left isometric view, soft ambient occlusion, crisp readable edges. Palette: cloud white, pearl cream, pale sky blue, lavender, powder pink, moon gold, tiny mint highlights. Bright dreamy dawn, not dark night.
+
+NO TEXT, no labels, no readable signs, no numbers, no logo, no watermark, no captions anywhere.
+
+Avoid: small narrow second-floor balcony, thin L-ledge upper floor, second floor in the middle, low second floor, short walls, blocked lower floor, interior staircase, tea house silhouette, butterfly house silhouette, treehouse, photorealism, clutter, closed front wall, full roof lid.
+
+Output: single centered room-shell PNG composition, square 1:1, generous transparent or removable empty margin around the shell.

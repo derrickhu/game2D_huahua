@@ -1,0 +1,20 @@
+Clean 2D hand-painted mobile game world map building asset for a cozy pastel flower-shop merge game, healing iyashikei style, soft brown line art, high-angle isometric-lite view from above-front. The asset should sit naturally on a circular green world-map slot like the existing map houses.
+
+Subject: a distinctive side-story dream cloud cottage, "dream + clouds" theme. It is a small magical house made from fluffy clouds and soft crescent-moon architecture, dreamy and whimsical but still readable as a purchasable house node on the world map.
+
+Architecture:
+- Main body: rounded cream-white cloud walls, soft puffy cloud volumes forming the lower house base.
+- Two-story identity visible from outside: a small upper cloud loft tower with a tiny balcony, connected visually by a curved moonbeam stair or swirl-cloud ramp on the side.
+- Roof: pastel lavender-blue dream roof made of layered soft cloud tiles and crescent moon trim, not a normal village roof. Add a tiny golden crescent finial and a few dangling star charms under the eave.
+- Door: small arched sleepy door in warm cream wood, with a moon-shaped handle, no text.
+- Windows: round and star-shaped windows glowing pale warm yellow, plus one crescent window on the upper loft.
+- Dream details: floating mini clouds, tiny stars, pearly bubbles, one small ribbon banner with no letters, a few pastel flower tufts around the base.
+- Ground: flat soft green grass patch directly under the building, suitable for the highlighted circular map slot. Add a faint cloud shadow but keep it grounded enough for the map.
+
+Palette: cloud white, cream, pale sky blue, lavender, powder pink, soft gold, tiny mint accents. Bright, cute, dreamy, magical, high-key pastel. It must harmonize with the existing flower-shop map, butterfly house, tea house, and event building while being clearly unique.
+
+Composition: single centered building asset, no background scene, generous transparent or removable margin, square 1:1. Keep silhouette compact and readable at small map size.
+
+NO TEXT, no labels, no readable signs, no numbers, no logo, no watermark, no characters, no UI frame.
+
+Avoid photorealism, dark gothic fantasy, hard sci-fi, realistic clouds, excessive sparkles, clutter, or a full background landscape.

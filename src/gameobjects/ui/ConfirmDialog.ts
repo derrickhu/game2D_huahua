@@ -5,6 +5,7 @@ import * as PIXI from 'pixi.js';
 import { Game } from '@/core/Game';
 import { DESIGN_WIDTH, COLORS, FONT_FAMILY } from '@/config/Constants';
 import { TweenManager, Ease } from '@/core/TweenManager';
+import { TextureCache } from '@/utils/TextureCache';
 
 const BUBBLE_R = 26;
 const INNER_PAD = 28;
@@ -20,9 +21,10 @@ export class ConfirmDialog extends PIXI.Container {
     message: string,
     confirmText = '确定',
     cancelText = '取消',
+    currencyCost?: number,
   ): Promise<boolean> {
     return new Promise((resolve) => {
-      const dialog = new ConfirmDialog(title, message, confirmText, cancelText);
+      const dialog = new ConfirmDialog(title, message, confirmText, cancelText, currencyCost);
       dialog._resolve = resolve;
       dialog.zIndex = 30000;
       Game.stage.addChild(dialog);
@@ -35,6 +37,7 @@ export class ConfirmDialog extends PIXI.Container {
     message: string,
     confirmText: string,
     cancelText: string,
+    currencyCost?: number,
   ) {
     super();
     const W = DESIGN_WIDTH;
@@ -59,6 +62,8 @@ export class ConfirmDialog extends PIXI.Container {
       align: 'center',
     });
     msgTxt.anchor.set(0.5, 0);
+    const currencyLineH = currencyCost !== undefined ? 34 : 0;
+    const msgBlockH = msgTxt.height + currencyLineH;
 
     const BTN_W = 168;
     const BTN_H = 50;
@@ -67,7 +72,7 @@ export class ConfirmDialog extends PIXI.Container {
     const titleBlockH = TITLE_H + 14;
     const panelH = Math.max(
       232,
-      INNER_PAD + 8 + titleBlockH + msgTxt.height + 26 + BTN_H + INNER_PAD + 6,
+      INNER_PAD + 8 + titleBlockH + msgBlockH + 26 + BTN_H + INNER_PAD + 6,
     );
 
     const px = (W - panelW) / 2;
@@ -126,6 +131,13 @@ export class ConfirmDialog extends PIXI.Container {
     panelRoot.addChild(titleText);
     contentY += titleBlockH;
 
+    if (currencyCost !== undefined) {
+      const costRow = this._makeHuayuanCostRow(currencyCost);
+      costRow.position.set(panelW / 2, contentY + 2);
+      panelRoot.addChild(costRow);
+      contentY += currencyLineH;
+    }
+
     msgTxt.position.set(panelW / 2, contentY);
     panelRoot.addChild(msgTxt);
     contentY += msgTxt.height + 22;
@@ -163,6 +175,38 @@ export class ConfirmDialog extends PIXI.Container {
       duration: 0.28,
       ease: Ease.easeOutBack,
     });
+  }
+
+  private _makeHuayuanCostRow(cost: number): PIXI.Container {
+    const row = new PIXI.Container();
+    row.eventMode = 'none';
+    const iconSize = 30;
+    const gap = 8;
+    const iconTex = TextureCache.get('icon_huayuan');
+    const numText = new PIXI.Text(`${cost}`, {
+      fontSize: 23,
+      fill: 0x5c4a3d,
+      fontFamily: FONT_FAMILY,
+      fontWeight: 'bold',
+      stroke: 0xffffff,
+      strokeThickness: 2,
+    });
+    numText.anchor.set(0, 0.5);
+
+    const totalW = iconSize + gap + numText.width;
+    if (iconTex) {
+      const icon = new PIXI.Sprite(iconTex);
+      icon.anchor.set(0, 0.5);
+      icon.width = iconSize;
+      icon.height = iconSize;
+      icon.position.set(-totalW / 2, 0);
+      icon.eventMode = 'none';
+      row.addChild(icon);
+    }
+
+    numText.position.set(-totalW / 2 + iconSize + gap, 0);
+    row.addChild(numText);
+    return row;
   }
 
   private _makePrimaryBtn(

@@ -5,6 +5,8 @@
 import { DEFAULT_SCENE_ID } from '@/config/StarLevelConfig';
 
 export interface SceneRenovationProfile {
+  /** 场景外景底图 TextureCache key；不填则使用通用 house_bg */
+  backgroundTexture?: string;
   /** 房壳相对通用公式的额外倍率（叠在 ShopScene 基础 fit 公式上） */
   buildingScaleMultiplier: number;
   /** 叠在 SHOP_FURNITURE_DISPLAY_SCALE_MULTIPLIER 上 */
@@ -44,6 +46,10 @@ const SCENE_OVERRIDES: Record<string, Partial<SceneRenovationProfile>> = {
   butterfly_house: { buildingScaleMultiplier: 1.3 },
   tea_house: { buildingScaleMultiplier: 1.4 },
   forest_treehouse: { buildingScaleMultiplier: 1.4 },
+  dream_cloud_house: {
+    backgroundTexture: 'house_bg_dream_cloud_sky_nb2',
+    buildingScaleMultiplier: 1.2,
+  },
   garden_villa: {
     buildingScaleMultiplier: 1.88,
     // 之前缩得太狠，家具/人物显得过小；上调让其在大房间里比例更合理（尤其家具）

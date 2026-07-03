@@ -1,0 +1,39 @@
+Create a 5 columns x 2 rows furniture design sheet for a cozy pastel flower-shop merge game. There are 10 separate furniture assets for the attached dream-cloud house scene.
+
+Use the attached furnished concept and empty shell as style references. The furniture theme is dreamy, magical, wonderful nighttime bedroom + leisure. It should fit the dream-cloud room shell and rainbow cloud background.
+
+Sheet format:
+- 5 columns x 2 rows, 10 distinct items, one item per cell.
+- White or very light plain background in each cell, no room background.
+- Center each item with generous spacing; do not let items overlap cell boundaries.
+- No text, no labels, no numbers, no captions, no UI frames.
+- Keep each item as a clean isolated asset suitable for later background removal.
+
+Furniture list, left to right, top row then bottom row:
+1. Large cloud dream bed: oversized soft bed, cream cloud frame, lavender quilted blanket, powder pink and pale blue pillows, moon/star pillows, plush and cozy.
+2. Large moonlight lounge sofa: big soft L-shaped sofa/couch, cream body, rounded cloud-like cushions, varied powder pink/lavender/blue pillows, moon-gold accents.
+3. Star-cloud plush rug: large fluffy star/cloud rug, pale sky blue with lavender shadow, soft pile, pearly highlights.
+4. Moon bedside table with night lamp: small cloud bedside cabinet, crescent moon lamp glowing warm butter yellow, tiny star handle.
+5. Star mirror vanity: powder pink-lavender dressing table, star-shaped mirror frame with moon-gold trim, small round stool, dreamy bedroom feel.
+6. Mint cloud tea table: low rounded mint-blue tea table, cloud legs, moon-gold rim, two cute cups or tiny star tray.
+7. Floating cloud bookshelf: cloud shelf with pastel books, small crystal/moon orb, star charms, should read as shelf/wall decor.
+8. Crescent lazy cushion: large crescent moon floor cushion with star pillow, soft yellow and cream, for leisure corner.
+9. Starry floor lamp: elegant moon-and-star standing lamp, warm glow, cloud base, thin lavender-brown stand.
+10. Dream storage chest: small cloud storage box/chest, cream body, lavender lid, moon/star lock, cozy bedroom storage.
+
+Style:
+- 2D casual mobile game furniture asset style, soft hand-painted volume, gentle ambient occlusion, thin lavender-brown outlines.
+- Avoid thick black outlines and sticker-like flatness.
+- More dimensional and premium, matching the improved dream cloud shell.
+- Use varied but harmonious colors: cream white, powder pink, lavender, pale sky blue, soft moon gold, butter yellow, tiny mint accents.
+- Do not make all items one color; each should have its own accent color but still belong to one collection.
+- Cute, plush, bedtime, dreamy, magical, soft night lounge mood.
+
+Technical:
+- Square 1:1 image, 5x2 sheet.
+- All items should be fully visible and not cropped.
+- No shadows that connect multiple cells; each item should be separable.
+
+NO TEXT, no labels, no readable signs, no numbers, no logo, no watermark.
+
+Avoid: human characters, house shell, complete room scene, cluttered tiny props, realistic furniture, hard sci-fi, dark gothic, neon palette, thick black outlines, monochrome same-color set.

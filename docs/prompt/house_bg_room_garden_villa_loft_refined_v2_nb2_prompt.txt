@@ -1,0 +1,32 @@
+Create one refined game-ready isometric cutaway ROOM SHELL for a cozy pastel merge mobile game. The subject is a MODERN WESTERN GARDEN VILLA, empty, no furniture.
+
+Use the attached current garden villa shell as the strict layout reference. Preserve its overall playable structure:
+- same staggered two-floor geometry: a large open lower floor at the front-left, and a raised upper floor shifted to the back-right.
+- same open-front dollhouse cutaway view, upper-left isometric camera.
+- same broad blank shared back/inner wall for wall decorations.
+- same slim right-side stair position, peripheral and not blocking either floor.
+- same large clean lower-floor and upper-floor usable areas for placing furniture.
+
+Make it more beautiful and premium while keeping it practical:
+- richer but still clean cream villa walls, with subtle bevels, soft wall thickness, and gentle pastel shadows.
+- more elegant dusty-terracotta roof eaves with layered tiles, rounded trim, and better volume, but no roof lid covering the rooms.
+- refined upper-floor railing: delicate cream or pale-gold metal rails, small rounded posts, see-through and thin.
+- lower floor: polished pale cream marble / stone slab floor with soft, low-contrast veining and warm highlights.
+- upper floor: light honey oak planks with clean seams and soft shading.
+- exterior garden accents ONLY outside the playable floor: small rose bushes, low hedges, tiny lawn patches, and soft pastel flowers around the foundation. Keep them low and behind/outside the room shell, not taking interior space.
+- add a prettier low stone foundation, rounded front step, and small garden-villa trim details.
+
+Important game rules:
+- EMPTY ROOM SHELL ONLY. No furniture, no sofa, no bed, no table, no chair, no cabinet, no lamps, no rugs, no plants inside the playable floors.
+- Keep the lower floor and upper floor visually open and easy to decorate.
+- No front wall, no left wall blocking the view, no glass facade across the open front.
+- Avoid clutter. Exterior garden decoration must not expand too far outside the shell.
+- Keep the silhouette compact and centered, similar to the attached shell.
+
+Art style:
+2D casual mobile game illustration, cozy high-key pastel, soft 3D volume, clean hand-painted vector look, gentle warm lighting, crisp but light brown outlines, charming garden-villa elegance. More polished and detailed than the reference, but still clean and readable for mobile.
+
+Output:
+single centered transparent/easy-removable PNG asset, square 1:1, similar scale and margins to the attached current shell.
+
+NO TEXT, no labels, no numbers, no logo, no watermark, no captions anywhere.

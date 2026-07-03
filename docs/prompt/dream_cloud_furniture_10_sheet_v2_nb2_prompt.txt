@@ -1,0 +1,35 @@
+Create a clean 5 columns x 2 rows furniture design sheet for a cozy pastel flower-shop merge game. There must be exactly 10 separate furniture assets for the attached dream-cloud house scene.
+
+CRITICAL: NO TEXT ANYWHERE. Do not write item names. Do not add labels. Do not add captions. Do not add numbers. Do not add watermarks. The sheet should contain only the furniture drawings.
+
+Use the attached first furniture sheet only as a design reference for the item shapes and palette, but remove all writing and make the layout cleaner. Use the attached empty dream-cloud shell as style reference.
+
+Sheet layout:
+- 5 columns x 2 rows, exactly one item centered in each cell.
+- Use generous spacing between items.
+- Plain white / off-white background only.
+- No cell labels, no item names, no captions, no typography, no UI.
+- Each item should be fully visible and separated, easy to crop later.
+
+Furniture items, in order:
+1. Large cloud dream bed: cream cloud frame, lavender quilted blanket, powder pink and pale blue pillows, moon/star pillows.
+2. Large moonlight L-shaped sofa: cream plush sofa, rounded cushions, varied pink/lavender/blue pillows.
+3. Star-cloud plush rug: fluffy pale blue star/cloud rug with lavender shadow and pearly highlights.
+4. Moon bedside table with night lamp: small cloud cabinet, warm crescent moon lamp, star handle.
+5. Star mirror vanity: pink-lavender dressing table, star mirror, moon-gold trim, small stool.
+6. Mint cloud tea table: low rounded mint-blue table, cloud legs, moon-gold rim, tiny tea cups.
+7. Floating cloud bookshelf: cloud shelf with pastel books, moon orb, tiny star charms.
+8. Crescent lazy cushion: large crescent moon floor cushion with star pillow, cream and butter yellow.
+9. Starry floor lamp: slim standing lamp, moon-and-star shade, cloud base, warm glow.
+10. Dream storage chest: cream cloud storage chest, lavender lid, moon/star lock.
+
+Style:
+- Soft 2D mobile game furniture asset style.
+- Dreamy, magical, nighttime bedroom + leisure.
+- Soft hand-painted volume, gentle ambient occlusion, thin lavender-brown outlines, no thick black outlines.
+- Varied but harmonious palette: cream white, powder pink, lavender, pale sky blue, moon gold, butter yellow, tiny mint accents.
+- Match the dream cloud house shell; premium cozy plush feel, not flat stickers.
+
+NO TEXT, NO LETTERS, NO WORDS, NO LABELS, NO NUMBERS, NO LOGO, NO WATERMARK.
+
+Avoid: room background, house shell, characters, labels under items, captions, typography, black outlines, realistic furniture, clutter, neon colors, gothic style.

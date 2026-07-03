@@ -250,6 +250,8 @@ export class ShopScene implements Scene {
   private _progressLevelText: PIXI.Text | null = null;
   /** 飞星动画层（盖在房间之上） */
   private _starFlyLayer!: PIXI.Container;
+  /** 场景外景底图层（可随装修场景切换） */
+  private _backgroundLayer: PIXI.Container | null = null;
   /** 装修全屏遮罩打开时，进度条+飞星曾挂到 overlay，关闭时还原 */
   private _shopHudLiftedForDeco = false;
   private _shopHudSavedIndices: { progress: number; star: number } | null = null;
@@ -313,6 +315,9 @@ export class ShopScene implements Scene {
   /** 大地图切换装修房后刷新房间底板、家具与店主站位 */
   private readonly _onRenovationSceneChanged = (): void => {
     if (SceneManager.current?.name !== 'shop') return;
+    const bgKey = getSceneRenovationProfile(CurrencyManager.state.sceneId).backgroundTexture;
+    if (bgKey) void TextureCache.preloadKeys([bgKey]).catch(() => undefined);
+    this._buildBackground(DESIGN_WIDTH, Game.logicHeight);
     this._refreshShopBuildingTexture();
     this._renderFurnitureLayout();
     this._updateProgressBar();
@@ -494,6 +499,7 @@ export class ShopScene implements Scene {
       { groups: ['main', 'shop', 'deco', 'items', 'panels', 'affinity', 'customers', 'ownerOutfits'] },
       () => {
         if (SceneManager.current?.name !== 'shop') return;
+        this._buildBackground(DESIGN_WIDTH, Game.logicHeight);
         this._refreshActivityButtonTextures();
         this._refreshShopBuildingTexture();
         if (this._isEditMode) {
@@ -729,32 +735,41 @@ export class ShopScene implements Scene {
   // ─────────────────── 背景 ───────────────────
 
   private _buildBackground(w: number, h: number): void {
-    // 使用 house/bg.jpg（室外草地，TextureCache.house_bg）作为背景
-    const bgTex = TextureCache.get('house_bg');
+    if (!this._backgroundLayer) {
+      this._backgroundLayer = new PIXI.Container();
+      this._backgroundLayer.zIndex = -1000;
+      this.container.addChildAt(this._backgroundLayer, 0);
+    } else {
+      this._backgroundLayer.removeChildren();
+    }
+
+    // 默认使用草地外景；个别支线房可在 SceneRenovationProfile 指定专属外景底图。
+    const profile = getSceneRenovationProfile(CurrencyManager.state.sceneId);
+    const bgTex = TextureCache.get(profile.backgroundTexture ?? 'house_bg');
     if (bgTex) {
       const bgSprite = new PIXI.Sprite(bgTex);
       const bgScale = Math.max(w / bgTex.width, h / bgTex.height);
       bgSprite.scale.set(bgScale);
       bgSprite.anchor.set(0.5, 0.5);
       bgSprite.position.set(w / 2, h / 2);
-      this.container.addChild(bgSprite);
+      this._backgroundLayer.addChild(bgSprite);
       // 均匀薄提亮（无形状边缘），略压暗的贴图整体抬一档明度
       const lift = new PIXI.Graphics();
       lift.beginFill(0xFFFAF2, 0.045);
       lift.drawRect(0, 0, w, h * 0.88);
       lift.endFill();
-      this.container.addChild(lift);
+      this._backgroundLayer.addChild(lift);
     } else {
       const bg = new PIXI.Graphics();
       bg.beginFill(C.BG_TOP);
       bg.drawRect(0, 0, w, h);
       bg.endFill();
-      this.container.addChild(bg);
+      this._backgroundLayer.addChild(bg);
       const lower = new PIXI.Graphics();
       lower.beginFill(C.BG_BOTTOM, 0.45);
       lower.drawRect(0, h * 0.55, w, h * 0.45);
       lower.endFill();
-      this.container.addChild(lower);
+      this._backgroundLayer.addChild(lower);
     }
 
     // 底部地面区域（略提亮）
@@ -762,7 +777,7 @@ export class ShopScene implements Scene {
     ground.beginFill(0xE8DFD2, 0.42);
     ground.drawRect(0, h * 0.82, w, h * 0.18);
     ground.endFill();
-    this.container.addChild(ground);
+    this._backgroundLayer.addChild(ground);
 
     // 自然环境光：模拟天光自上而下的漫反射，全宽水平带叠层，不用椭圆以免「舞台灯」感
     this._addSkyAmbientBands(w, h);
@@ -786,7 +801,7 @@ export class ShopScene implements Scene {
     g.beginFill(C.WARM_LIGHT, 0.018);
     g.drawRect(0, 0, w, h * 0.35);
     g.endFill();
-    this.container.addChild(g);
+    (this._backgroundLayer ?? this.container).addChild(g);
   }
 
   // ─────────────────── 花店房间 ───────────────────

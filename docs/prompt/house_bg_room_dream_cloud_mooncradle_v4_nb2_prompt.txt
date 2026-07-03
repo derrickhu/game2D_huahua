@@ -1,0 +1,43 @@
+Create one game-ready isometric cutaway room shell for a cozy pastel merge game. Use the attached v3 dream cloud shell ONLY as style reference: dreamy cloud walls, pastel moonlight palette, two-story cutaway, soft cloud eaves. Fix the gameplay layout: remove the big interior staircase, raise the upper floor much higher, and keep the lower-floor corners free for decoration placement.
+
+Subject: a two-story dream cloud room shell, empty interior, no furniture. Theme: magical dream + clouds + moonlight, soft and whimsical, but highly practical for placing game decorations.
+
+Critical corrections from the reference:
+- REMOVE the large curved staircase completely. Do not draw a thick stair ribbon or sweeping stair inside the room.
+- Replace it with only a few small soft white cloud-step puffs along the OUTER right edge of the house, like 4 to 6 tiny floating clouds leading upward. These steps should be narrow, decorative, and outside the playable room area.
+- The cloud steps must not cover the lower floor, must not pass through the center, and must not block the right interior corner.
+- Raise the upper loft significantly higher than v3. Add clear vertical air space between the underside of the loft and the lower floor.
+- Move upper loft supports to the walls/outer edges only. Do not place thick cloud columns in the lower-floor center or front-right corner.
+- Keep the lower-floor back-right and center-right area open and visible for furniture placement.
+- The lower floor should feel like one broad usable cloud platform, not divided by stair/column obstacles.
+
+Layout:
+- LOWER FLOOR: large rounded crescent-cloud island platform, smooth flat moonstone floor with subtle swirl-cloud parquet and tiny star inlays. At least 75% of the lower floor is open empty placement space.
+- UPPER LOFT: higher floating cloud balcony/deck along the back-left/back side. Make it a bit larger but keep it visually separated above the lower floor. It should not cover the main center-right lower floor.
+- ACCESS: tiny exterior floating cloud steps only, attached outside the right wall edge. They are optional-looking, cute, and do not consume interior space.
+- SIDE MOON ARCH: keep a small crescent moon accent on the right wall or eave, but it must be flat/edge-aligned and not protrude into the lower floor.
+
+Walls and roof:
+- Only BACK and RIGHT wall planes; front completely open, no left wall.
+- Back wall: curved cloud-plaster wall with sleepy cloud window and small crescent cutout, broad blank surface.
+- Right wall: round moon porthole window, pearl rim, soft gradient glass, broad blank wall around it.
+- Roof/eaves: partial floating cloud canopy strips only along the back/right upper edges. No full roof lid. Keep the interior visible.
+
+Dream details:
+- Small pearly bubbles, tiny stars, dangling star charms only around roof/eave edges and outside corners.
+- Soft cloud puffs may decorate the outer base, but not the playable lower floor.
+- Use moon-gold accents sparingly.
+
+Strict empty shell requirements:
+- No furniture, no bed, no sofa, no shelf, no table, no chair, no curtains, no plants, no characters, no rugs.
+- No large staircase, no interior stair ribbon, no thick central moon, no thick lower-floor cloud column, no obstacle in the lower center/right.
+- Open front for placing game furniture. Lower floor and upper loft must both be readable and usable.
+
+Style and palette:
+2D casual mobile game illustration, kawaii pastel, hand-painted vector-like asset, soft brown/lavender linework, upper-left isometric view, soft ambient occlusion, crisp readable edges. Palette: cloud white, pearl cream, pale sky blue, lavender, powder pink, moon gold, tiny mint highlights. Bright dreamy dawn, not dark night.
+
+NO TEXT, no labels, no readable signs, no numbers, no logo, no watermark, no captions anywhere.
+
+Avoid: large interior staircase, blocked lower-floor corner, low upper loft, oversized central crescent, tea house silhouette, butterfly house silhouette, Asian pavilion roof, bamboo, tree trunk, forest treehouse, ordinary rectangular cottage, photorealism, clutter, closed front wall, full roof lid.
+
+Output: single centered room-shell PNG composition, square 1:1, generous transparent or removable empty margin around the shell.

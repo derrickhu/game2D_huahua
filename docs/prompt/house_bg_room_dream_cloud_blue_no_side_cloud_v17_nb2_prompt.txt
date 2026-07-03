@@ -1,0 +1,32 @@
+Create one empty game-ready isometric cutaway room shell for a cozy pastel flower-shop merge game.
+
+Use the attached blue dream-cloud shell as the visual reference. Keep the same blue room shell style, but REMOVE the large exterior cloud masses on the left and right sides that extend beyond the room.
+
+Critical change:
+- Remove the big outside cloud banks on both left and right edges.
+- The final asset bounding box should be tight around the room shell itself, not widened by side clouds.
+- Keep only small cloud details that are attached to the room frame, such as the top cloud cap and small wall clouds.
+- Do NOT add any large external cloud background, rainbow, or side cloud masses.
+
+Keep:
+- Blue arched cloud-room silhouette.
+- Two-story open-front cutaway structure.
+- Broad lower floor and large upper floor.
+- Right-side puffy cloud ladder.
+- Soft blue cloud-plaster walls.
+- Round moon window.
+- Thin lavender-brown outlines.
+- Soft 3D volume and gentle pastel shading.
+
+Remove all furniture and loose props:
+- no bed, no sofa, no table, no shelf items, no rug, no lamps, no characters.
+
+Composition:
+- Single centered 1:1 transparent/easy-removable room shell asset.
+- Generous but not excessive margin.
+- No full background landscape.
+- No side cloud banks extending outside the room shell.
+
+NO TEXT, no labels, no readable signs, no numbers, no logo, no watermark.
+
+Avoid: side clouds that make the asset wider, full cloud background, rainbow background, furniture, character, thick black outline, sticker look.

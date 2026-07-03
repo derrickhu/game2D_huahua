@@ -1,0 +1,42 @@
+Create one game-ready isometric cutaway room shell for a cozy pastel merge game. Use the attached v4 dream cloud shell as the direct style and layout reference, but fix the floor height: the second floor is still too low. Raise the walls and move the entire upper loft upward so the lower floor has real vertical space underneath.
+
+Subject: a two-story dream cloud room shell, empty interior, no furniture. Theme: magical dream + clouds + moonlight, soft and whimsical, practical for decoration placement.
+
+Most important correction:
+- RAISE THE BACK WALL AND RIGHT WALL HEIGHT SIGNIFICANTLY, about 30-40% taller than the reference.
+- MOVE THE UPPER LOFT UPWARD into the upper half of the shell. The underside of the upper loft should be clearly above the lower floor, not almost touching it.
+- Keep a large visible vertical gap between lower floor and upper loft, especially in the red-marked central/back-right area of the reference. The lower floor corner under the loft must feel usable for furniture placement.
+- Raise the roof/eaves together with the taller walls. The roof should sit higher, leaving more headroom and air space below it.
+- Do NOT simply scale the whole building. Preserve the lower floor size, but extend the wall height upward and place the second level higher.
+
+Layout requirements:
+- LOWER FLOOR: large rounded crescent-cloud island platform, smooth flat moonstone floor with subtle swirl-cloud parquet and tiny star inlays. Keep the lower floor broad, empty, and readable.
+- UPPER LOFT: high floating cloud balcony/deck along the back-left/back side. It should be visibly higher than v4, with enough vertical clearance below. It can be slightly larger, but must not visually crush the lower floor.
+- SUPPORTS: move cloud supports close to the back wall / side wall and make them slimmer. Avoid thick cloud columns in the lower-floor center.
+- ACCESS: only a few small soft white cloud-step puffs along the OUTER right edge, outside the playable room area. No large interior staircase.
+- SIDE MOON ACCENT: a small flat crescent moon accent may stay on the right wall or eave, edge-aligned and not intruding into the lower floor.
+
+Walls and roof:
+- Only BACK and RIGHT wall planes; front completely open, no left wall.
+- Back wall: taller curved cloud-plaster wall with sleepy cloud window and small crescent cutout, broad blank surface.
+- Right wall: taller wall with round moon porthole window, pearl rim, soft gradient glass. The porthole can be slightly higher to emphasize wall height.
+- Roof/eaves: partial floating cloud canopy strips only along the back/right upper edges. No full roof lid. Roof is higher than reference and should not overlap the second floor too tightly.
+
+Dream details:
+- Small pearly bubbles, tiny stars, dangling star charms only around roof/eave edges and outside corners.
+- Soft cloud puffs may decorate the outer base, but not the playable lower floor.
+- Use moon-gold accents sparingly.
+
+Strict empty shell requirements:
+- No furniture, no bed, no sofa, no shelf, no table, no chair, no curtains, no plants, no characters, no rugs.
+- No large staircase, no interior stair ribbon, no thick central moon, no thick lower-floor cloud column, no obstacle in the lower center/right.
+- Open front for placing game furniture. Lower floor and upper loft must both be readable and usable.
+
+Style and palette:
+2D casual mobile game illustration, kawaii pastel, hand-painted vector-like asset, soft brown/lavender linework, upper-left isometric view, soft ambient occlusion, crisp readable edges. Palette: cloud white, pearl cream, pale sky blue, lavender, powder pink, moon gold, tiny mint highlights. Bright dreamy dawn, not dark night.
+
+NO TEXT, no labels, no readable signs, no numbers, no logo, no watermark, no captions anywhere.
+
+Avoid: low second floor, short walls, upper loft pressed against lower floor, large interior staircase, blocked lower-floor corner, oversized central crescent, tea house silhouette, butterfly house silhouette, Asian pavilion roof, bamboo, tree trunk, forest treehouse, ordinary rectangular cottage, photorealism, clutter, closed front wall, full roof lid.
+
+Output: single centered room-shell PNG composition, square 1:1, generous transparent or removable empty margin around the shell.

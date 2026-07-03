@@ -1,0 +1,27 @@
+Create a vertical 9:16 background illustration for a cozy pastel flower-shop merge game. This background will sit behind a transparent dream-cloud room shell. It must feel more present and atmospheric than the previous pale version, while still not overpowering the room shell.
+
+Theme: warm dreamy sky garden above the clouds, with pastel rainbow and cloud sea.
+
+Composition:
+- Full-screen vertical mobile background, no building, no house, no room shell, no furniture, no characters.
+- Center area stays open enough for the room shell, but the background should still be visible and rich around it.
+- Top area: deeper warm mint-blue sky gradient, soft golden dawn glow, a few fluffy cream clouds with visible volume.
+- Middle area: layered cloud banks with lavender-pink shadows, a broad soft rainbow arc, small moon/star motifs, pearly sparkles.
+- Lower area: stronger cloud sea platform with soft pink-blue shadows, tiny warm flower patches at bottom corners, subtle floating cloud islands.
+- Add depth: foreground clouds, midground rainbow, distant sky. Use atmospheric layers, not a flat wallpaper.
+
+Color palette:
+- More saturated than the previous pale background, but still pastel and cozy.
+- Use warm powder pink, creamy white, pale sky blue, lavender, soft butter yellow, mint green highlights.
+- Rainbow should be visible and warm, not neon.
+
+Art style:
+Clean 2D casual mobile game illustration, kawaii cozy style, soft hand-painted volume, gentle gradients and ambient light. Harmonize with the dream cloud room shell and the oak treehouse's warm dimensional rendering.
+
+Technical:
+- 9:16 vertical phone background.
+- No transparent background; this is a full JPG-style environment background.
+- No text, no labels, no readable signs, no numbers, no logo, no watermark.
+- No building, no room shell, no furniture, no character, no UI frame.
+
+Avoid: washed-out low-contrast colors, pure white empty center, photoreal clouds, dark night, hard sci-fi, busy clutter, high contrast objects under the room shell.

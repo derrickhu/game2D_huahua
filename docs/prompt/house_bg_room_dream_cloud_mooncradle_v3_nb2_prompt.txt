@@ -1,0 +1,45 @@
+Create one game-ready isometric cutaway room shell for a cozy pastel merge game. Use the attached previous dream cloud moon-cradle shell ONLY as a style reference for dreamy cloud/moon materials and pastel rendering. Improve the layout for gameplay: more usable lower-floor space, larger upper-floor platform, and more vertical separation between floors. Do NOT copy the oversized central crescent shape that blocks the room.
+
+Subject: a spectacular two-story dream cloud room shell, empty interior, no furniture. Theme: magical dream + clouds + moonlight, a purchasable side-story house scene. It should feel unique and structurally memorable, but the floor must remain practical for placing decorations.
+
+Critical layout changes from reference:
+- The big crescent moon structure must be MUCH SMALLER and moved to the back/right side as an architectural arch or side support. It must NOT stand in the middle of the lower floor.
+- Keep the lower floor center mostly open and flat. At least 70% of the lower floor should be clear playable placement area.
+- Increase vertical spacing between lower floor and upper loft: the upper loft should sit noticeably higher, leaving clear visual air below it and reducing overlap over the lower floor.
+- Make the upper loft larger and more usable, but place it toward the back-left/back side so it does not visually cover the main lower-floor center.
+- The staircase should run along the far right outer edge or back-right wall as compact cloud steps, not sweep across the center.
+
+Core structure:
+- LOWER FLOOR: a broad rounded crescent-cloud island platform, smooth flat moonstone floor with subtle swirl-cloud parquet and tiny star inlays. Wide, empty, furniture-ready.
+- UPPER LOFT: a larger floating cloud balcony/deck, high above the lower floor, with pale lavender-blue moonstone surface. It wraps softly along the back wall and left/back corner, supported by slim cloud columns near the walls only.
+- SIDE MOON ARCH: a small elegant crescent-moon arch hugs the back/right wall or forms a side doorway/window frame. It provides theme identity without blocking the room.
+- STAIRS: compact curved cloud staircase attached to the right wall, rising from the lower right edge to upper loft. Keep stairs narrow and edge-aligned.
+
+Architectural silhouette:
+- Avoid tea-house / butterfly-house rectangular box identity. The walls can be curved cloud plaster, but only BACK and RIGHT wall planes are present. Front must be open.
+- Back wall: scalloped cloud-plaster surface with one large sleepy cloud window and a small crescent cutout, soft dawn-blue-pink glow.
+- Right wall: round moon porthole window, pearl rim, soft gradient glass.
+- Roof/eaves: floating partial cloud canopy strips only along back/right upper edges, lavender-blue underside, moon-gold trim, dangling tiny star charms. No full roof lid.
+
+Dream details:
+- Floating mini cloud puffs only around outer edges.
+- Tiny pearly bubbles and soft stars around eave corners.
+- Soft moon-gold accents sparingly.
+- Keep the lower floor free of decorative props; no large moon shape or cloud mass on the floor center.
+
+Strict empty shell requirements:
+- Open front side for placing game furniture.
+- Broad readable lower floor and visible upper loft.
+- Clear spacing between floors; avoid upper loft visually flattening onto lower floor.
+- No front wall, no left wall, no closed box.
+- No furniture, no bed, no sofa, no shelf, no table, no chair, no curtains, no plants, no characters, no rugs.
+- No large structural object in the center of lower floor.
+
+Style and palette:
+2D casual mobile game illustration, kawaii pastel, hand-painted vector-like asset, soft brown/lavender linework, upper-left isometric view, soft ambient occlusion, crisp readable edges. Palette: cloud white, pearl cream, pale sky blue, lavender, powder pink, moon gold, tiny mint highlights. Bright dreamy dawn, not dark night.
+
+NO TEXT, no labels, no readable signs, no numbers, no logo, no watermark, no captions anywhere.
+
+Avoid: oversized central crescent, blocked lower floor, low upper loft that hides the lower floor, tea house silhouette, butterfly house silhouette, Asian pavilion roof, bamboo, tree trunk, forest treehouse, ordinary rectangular cottage, realistic clouds, photorealism, heavy shadows, clutter, sci-fi crystal palace, closed front wall, full roof lid.
+
+Output: single centered room-shell PNG composition, square 1:1, generous transparent or removable empty margin around the shell.

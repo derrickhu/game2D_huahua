@@ -1,0 +1,41 @@
+Create one game-ready isometric cutaway room shell for a cozy pastel flower-shop merge game. Use the attached dream cloud room image as the STRUCTURE reference and the attached oak treehouse image as the RENDERING QUALITY reference.
+
+Keep the dream cloud room STRUCTURE unchanged:
+- Two-story open-front cutaway shell.
+- Large high second-floor cloud platform near the roof, similar area to the first floor.
+- Open lower floor with broad smooth moonstone/cloud floor.
+- Right-side small puffy cloud ladder connects to the second-floor railing opening.
+- Back and right cloud walls only, no front wall, no left wall.
+- Same cloud roof/eaves, sleepy cloud window, moon porthole, dangling moon/star charms.
+- Empty shell only: no furniture, no characters, no rugs, no plants, no props.
+
+Most important visual direction:
+- Improve rendering quality to match the oak treehouse reference: soft 3D volume, gentle material thickness, warm ambient occlusion, subtle cast shadows, readable depth.
+- Reduce the sticker feeling. Do NOT use thick dark black outlines.
+- Use thin soft lavender-brown outlines like the oak treehouse: light, elegant, integrated into the painting.
+- Clouds should have soft rounded volume and cream-white thickness, with warm shadow undersides and subtle blue/pink bounce light.
+- Walls should feel like thick cloud-plaster planes, not flat paper cutouts.
+- Floors should have moonstone/cloud material volume: soft bevels, gentle edge thickness, clear underside shadow, pearly highlights.
+- Roof should have depth like a real soft roof layer, not a flat sticker strip.
+- The overall asset should feel like a premium room shell, closer to the oak treehouse's painterly volume while keeping the dreamy cloud identity.
+
+Color and lighting:
+- Warm pastel but with more contrast than the old dream cloud shell.
+- Palette: creamy cloud white, pearl ivory, powder pink, pale sky blue, soft lavender, moon gold, tiny warm yellow highlights.
+- Add soft top-left light and subtle ambient occlusion in wall corners, under the second floor, under the roof eaves, and under cloud edges.
+- Keep the image bright and cute, not dark, but avoid washed-out low-contrast flatness.
+
+Line and texture:
+- Thin soft brown/lavender linework only, not black.
+- No heavy outer stroke, no sticker border, no harsh cutout outline.
+- Use painterly gradients and soft shading for volume.
+- Add tiny material texture on moonstone floor and cloud plaster, very subtle.
+
+Composition:
+- Single centered transparent-background room shell, 1:1 square, generous margin.
+- Front open for placing game furniture.
+- No background scene behind the room shell.
+
+NO TEXT, no labels, no readable signs, no numbers, no logo, no watermark.
+
+Avoid: thick black outlines, sticker asset look, flat pastel paper cutout, over-saturated cartoon, photorealism, clutter, changing the room layout, adding furniture, adding a central pillar, adding an interior big ladder.

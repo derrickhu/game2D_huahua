@@ -1,0 +1,32 @@
+Redraw the attached dream cloud room shell with the SAME exact structure and composition, but improve the rendering quality.
+
+Do not redesign the room. Keep the attached image layout:
+- same open-front two-story dream cloud cutaway room
+- same high large second-floor cloud platform
+- same broad lower moonstone floor
+- same back and right cloud walls
+- same cloud roof/eaves with moon and star charms
+- same sleepy cloud window and moon porthole
+- same small right-side puffy cloud ladder connecting to the upper-floor railing opening
+- no central pillar, no interior big ladder, no furniture, no characters
+
+Only improve the ART STYLE and MATERIAL QUALITY:
+- Make it more premium and dimensional, with soft 3D volume and gentle painterly shading.
+- Reduce the heavy sticker look. Remove the thick dark outer stroke.
+- Use thin soft lavender-brown linework, not black outlines.
+- Add warm ambient occlusion in corners, under the roof eaves, under the upper floor, under cloud edges, and around floor bevels.
+- Add soft material thickness: clouds are rounded and fluffy with cream-white depth; walls are thick cloud-plaster; floors have beveled moonstone edges and pearly highlights.
+- Keep the pastel dream identity, but increase contrast slightly so the room has presence in game.
+- Keep colors harmonious: pearl white, creamy cloud, powder pink, pale blue, lavender, moon-gold accents, warm yellow highlights.
+
+Important:
+- This is NOT a treehouse. Do not add any tree trunk, bark, wood grain, forest branches, moss roof, mushrooms, or green forest elements.
+- Do not copy any tea house, butterfly house, or oak treehouse structure.
+- Do not change the room structure, floor sizes, ladder placement, or railing gap.
+- No background scene behind the shell; transparent or easily removable empty background only.
+
+Output a single centered 1:1 game room shell asset with generous margin.
+
+NO TEXT, no labels, no readable signs, no numbers, no logo, no watermark.
+
+Avoid: thick black outlines, sticker border, flat paper cutout, tree trunk, wooden treehouse, closed box front, furniture, character, clutter, photorealism.

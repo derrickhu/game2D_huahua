@@ -28,6 +28,11 @@ export interface MapNodeDef {
   unlockLevel: number;
   /** type=house 时：对应装修场景 sceneId */
   targetSceneId?: string;
+  /**
+   * 支线房屋：需花愿一次性购买解锁后才能进入（如梦云小屋）。
+   * 设置后，达到 unlockLevel 也仅显示为可购买；点击弹出确认，扣花愿并写入已购记录后方可进入。
+   */
+  purchaseCost?: number;
   /** type=popup_shop / gacha 时：EventBus 事件名 */
   popupEvent?: string;
   /** type=popup_shop 时：商店 ID */
@@ -78,6 +83,12 @@ export const FOREST_TREEHOUSE_UNLOCK_LEVEL = 35;
 /** 花园别墅进入所需综合等级（与 LevelUnlockConfig 40 级仪式一致） */
 export const GARDEN_VILLA_UNLOCK_LEVEL = 40;
 
+/** 梦云小屋（支线）开放综合等级：20 级起可在大地图花愿购买解锁 */
+export const DREAM_CLOUD_HOUSE_UNLOCK_LEVEL = 20;
+
+/** 梦云小屋购买解锁所需花愿 */
+export const DREAM_CLOUD_HOUSE_PURCHASE_COST = 150000;
+
 /** 大地图「当前店铺」实时缩略图：截取最长边像素（略小于节点 thumbSize，省显存） */
 export const LIVE_HOUSE_THUMB_CAPTURE_MAX = 160;
 
@@ -110,19 +121,6 @@ export const MAP_NODES: MapNodeDef[] = [
     /** 与花店主页「许愿」入口共享同一门槛，玩家在大地图开放前就能从花店主页直达许愿。 */
     unlockLevel: WISHING_FOUNTAIN_UNLOCK_LEVEL,
     popupEvent: 'panel:openFlowerSignGacha',
-  },
-  {
-    id: 'timed_event',
-    type: 'gacha',
-    label: '限时活动',
-    /** 左下沿路空地（喜庆入口占位，点击打开活动面板） */
-    x: 310,
-    y: 1120,
-    thumbKey: 'worldmap_thumb_timed_event',
-    thumbSize: 300,
-    unlockLevel: 1,
-    popupEvent: 'panel:openEvent',
-    useLiveMapThumb: false,
   },
   {
     id: 'butterfly_house',
@@ -188,5 +186,19 @@ export const MAP_NODES: MapNodeDef[] = [
     unlockLevel: FOREST_TREEHOUSE_UNLOCK_LEVEL,
     useLiveMapThumb: false,
     targetSceneId: 'forest_treehouse',
+  },
+  {
+    id: 'dream_cloud_house',
+    type: 'house',
+    label: '梦云小屋',
+    /** 左下沿路圆形空地（原限时活动占位处） */
+    x: 310,
+    y: 1120,
+    thumbKey: 'worldmap_thumb_dream_cloud_house',
+    thumbSize: 340,
+    unlockLevel: DREAM_CLOUD_HOUSE_UNLOCK_LEVEL,
+    purchaseCost: DREAM_CLOUD_HOUSE_PURCHASE_COST,
+    useLiveMapThumb: false,
+    targetSceneId: 'dream_cloud_house',
   },
 ];

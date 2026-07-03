@@ -254,6 +254,8 @@ const PANELS_IMAGE_MAP: Record<string, string> = {
   worldmap_thumb_garden_villa: 'subpkg_panels/images/ui/worldmap_thumb_garden_villa.png',
   worldmap_thumb_tea_house: 'subpkg_panels/images/ui/worldmap_thumb_tea_house.png',
   worldmap_thumb_forest_treehouse: 'subpkg_panels/images/ui/worldmap_thumb_forest_treehouse.png',
+  /** 大地图梦云小屋立绘（支线，花愿购买解锁） */
+  worldmap_thumb_dream_cloud_house: 'subpkg_panels/images/ui/worldmap_thumb_dream_cloud_house.png',
   /** 大地图蛋糕房立绘（钩子，后续接 sceneId） */
   worldmap_thumb_cake_shop: 'subpkg_panels/images/ui/worldmap_thumb_cake_shop.png',
   /** 大地图限时活动入口（喜庆占位，点开 EventPanel） */
@@ -562,6 +564,7 @@ const DECO_IMAGE_MAP: Record<string, string> = {
   // ---- 花店建筑场景 ----
   house_shop: 'subpkg_deco/images/house/bg_room_default_soft_nb2.png',
   house_bg:   'subpkg_deco/images/house/bg_integrated_grass_nb2.jpg',
+  house_bg_dream_cloud_sky_nb2: 'subpkg_deco/images/house/bg_dream_cloud_sky_nb2.jpg',
 
   // ---- 新家具素材 furniture/ (含 NB2 扩展，已扣底) ----
   // 花架
@@ -821,6 +824,18 @@ const DECO_IMAGE_MAP: Record<string, string> = {
   sea_treasure_chest: 'subpkg_deco/images/furniture/sea_treasure_chest.png',
   sea_coral_cabinet: 'subpkg_deco/images/furniture/sea_coral_cabinet.png',
 
+  // ---- 梦云小屋专属家具（dream_cloud_house Lv20–24 卧室休闲套）----
+  dream_cloud_bed: 'subpkg_deco/images/furniture/dream_cloud_bed.png',
+  dream_cloud_sofa: 'subpkg_deco/images/furniture/dream_cloud_sofa.png',
+  dream_cloud_star_rug: 'subpkg_deco/images/furniture/dream_cloud_star_rug.png',
+  dream_cloud_moon_nightstand: 'subpkg_deco/images/furniture/dream_cloud_moon_nightstand.png',
+  dream_cloud_star_vanity: 'subpkg_deco/images/furniture/dream_cloud_star_vanity.png',
+  dream_cloud_tea_table: 'subpkg_deco/images/furniture/dream_cloud_tea_table.png',
+  dream_cloud_bookshelf: 'subpkg_deco/images/furniture/dream_cloud_bookshelf.png',
+  dream_cloud_crescent_cushion: 'subpkg_deco/images/furniture/dream_cloud_crescent_cushion.png',
+  dream_cloud_floor_lamp: 'subpkg_deco/images/furniture/dream_cloud_floor_lamp.png',
+  dream_cloud_storage_chest: 'subpkg_deco/images/furniture/dream_cloud_storage_chest.png',
+
   // ---- 古风/民俗/奇匠 Lv30-35（batch51）----
   ancient_brush_mountain: 'subpkg_deco/images/furniture/ancient_brush_mountain.png',
   ancient_inkstone_desk: 'subpkg_deco/images/furniture/ancient_inkstone_desk.png',
@@ -918,6 +933,11 @@ const DECO_IMAGE_MAP: Record<string, string> = {
   bg_room_tea_house_darkwood_two_story_nb2: 'subpkg_deco/images/house/bg_room_tea_house_darkwood_two_story_nb2.png',
   /** 橡树小屋 — 童话森林双层树屋 cutaway 空壳 */
   bg_room_forest_treehouse_oak_nb2: 'subpkg_deco/images/house/bg_room_forest_treehouse_oak_nb2.png',
+  bg_room_forest_treehouse_spring_bloom_nb2: 'subpkg_deco/images/house/bg_room_forest_treehouse_spring_bloom_nb2.png',
+  /** 梦云小屋 — 云朵双层 cutaway 空壳（支线场景默认壳） */
+  bg_room_dream_cloud_two_story_nb2: 'subpkg_deco/images/house/bg_room_dream_cloud_two_story_nb2.png',
+  bg_room_dream_cloud_blue_concept_nb2: 'subpkg_deco/images/house/bg_room_dream_cloud_blue_concept_nb2.png',
+  bg_room_dream_cloud_purple_mooncradle_nb2: 'subpkg_deco/images/house/bg_room_dream_cloud_purple_mooncradle_nb2.png',
   /** 花园别墅 — 宽景分层西式洋房 cutaway 空壳 */
   bg_room_garden_villa_loft_nb2: 'subpkg_deco/images/house/bg_room_garden_villa_loft_nb2.png',
   /** 花园别墅 — 旧版木骨双层洋房（保留备用） */
@@ -962,6 +982,7 @@ const IMAGE_MAP: Record<string, string> = {
 
 const SHOP_WARMUP_KEYS = [
   'house_bg',
+  'house_bg_dream_cloud_sky_nb2',
   'house_shop',
   'owner_full_default',
   'owner_full_default_blink',
@@ -1046,6 +1067,7 @@ const WORLDMAP_WARMUP_KEYS = [
   'worldmap_thumb_garden_villa',
   'worldmap_thumb_tea_house',
   'worldmap_thumb_forest_treehouse',
+  'worldmap_thumb_dream_cloud_house',
   'worldmap_thumb_timed_event',
   'worldmap_thumb_wishing_fountain_1',
   'worldmap_thumb_wishing_fountain_2',

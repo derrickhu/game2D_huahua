@@ -1,0 +1,20 @@
+Create a vertical 9:16 background illustration for a cozy pastel flower-shop merge game. This is the outdoor environment behind a transparent two-story dream-cloud room shell, so the background must feel harmonious and dreamy but should not compete with the room shell.
+
+Theme: a warm magical sky above soft clouds. The scene is high in the clouds, gentle and inviting, like a dreamy cloud island at sunrise.
+
+Composition:
+- Full-screen vertical mobile background, no foreground building, no house, no room shell, no furniture, no characters.
+- Top area: soft mint-blue sky with pale cream clouds, subtle warm sunlight, very light floating sparkles.
+- Middle area: distant cloud banks, a broad pastel rainbow arc, small puffy clouds, faint moon-and-star motifs. Keep details soft and behind the future room shell.
+- Lower area: soft cloud platform / cloud sea with hints of pastel flower patches and tiny dreamy grass shapes only at the very bottom edges. The lower center should stay calm and light so the room shell can sit clearly on top.
+- The background should have enough open space in the center, not too busy.
+
+Color palette: warm pastel white, powder pink, pale sky blue, lavender, soft butter yellow, tiny mint green highlights. Bright dreamy morning, not dark night. The rainbow should be subtle and soft, not saturated.
+
+Art style: clean 2D mobile game illustration, kawaii cozy casual style, hand-painted vector-like softness, soft brown/lavender linework only for distant decorative elements, smooth gradients for sky and cloud depth. Match the gentle pastel style of the existing dream cloud house shell.
+
+Technical requirements:
+- 9:16 vertical background for phone screen.
+- No text, no labels, no readable signs, no numbers, no logo, no watermark.
+- No building, no house, no room interior, no furniture, no character, no UI frame.
+- Avoid dark fantasy, photoreal clouds, hard sci-fi, strong saturated rainbow, clutter, high contrast, detailed objects in the center.

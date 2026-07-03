@@ -11,6 +11,7 @@ import { EventBus } from '@/core/EventBus';
 import { TweenManager, Ease } from '@/core/TweenManager';
 import { TextureCache } from '@/utils/TextureCache';
 import { ToastMessage } from '@/gameobjects/ui/ToastMessage';
+import { ConfirmDialog } from '@/gameobjects/ui/ConfirmDialog';
 import { CurrencyManager } from '@/managers/CurrencyManager';
 import { OverlayManager } from '@/core/OverlayManager';
 import { COLORS, DESIGN_WIDTH, FONT_FAMILY } from '@/config/Constants';
@@ -250,6 +251,9 @@ export class WorldMapPanel extends PIXI.Container {
       case 'forest_treehouse':
         keys.push('bg_room_forest_treehouse_oak_nb2', 'icon_build');
         break;
+      case 'dream_cloud_house':
+        keys.push('bg_room_dream_cloud_two_story_nb2', 'icon_build');
+        break;
       case 'garden_villa':
         keys.push('bg_room_garden_villa_loft_nb2', 'icon_build');
         break;
@@ -457,8 +461,26 @@ export class WorldMapPanel extends PIXI.Container {
     }
   }
 
+  /**
+   * 节点是否显示为「已开放」（决定 alpha 与名称锁）。
+   * 支线购买房：达到 unlockLevel 但未购买时仍显示为锁定（点击弹出购买）。
+   */
+  private _nodeVisualUnlocked(node: MapNodeDef): boolean {
+    if (CurrencyManager.globalLevel < node.unlockLevel) return false;
+    return true;
+  }
+
+  /** 名称右侧是否显示锁；支线房未购买时仍显示锁，但建筑本体保持实图。 */
+  private _nodeNameLocked(node: MapNodeDef): boolean {
+    if (CurrencyManager.globalLevel < node.unlockLevel) return true;
+    if (node.purchaseCost && node.purchaseCost > 0 && node.targetSceneId
+      && !CurrencyManager.isHousePurchased(node.targetSceneId)) {
+      return true;
+    }
+    return false;
+  }
+
   private _refreshNodes(): void {
-    const globalLevel = CurrencyManager.globalLevel;
     const currentSceneId = CurrencyManager.state.sceneId;
 
     for (let i = 0; i < MAP_NODES.length; i++) {
@@ -466,7 +488,8 @@ export class WorldMapPanel extends PIXI.Container {
       const nc = this._nodeContainers[i];
       if (!nc) continue;
 
-      const unlocked = globalLevel >= node.unlockLevel;
+      const unlocked = this._nodeVisualUnlocked(node);
+      const nameLocked = this._nodeNameLocked(node);
       const isCurrent = node.targetSceneId === currentSceneId;
 
       nc.alpha = unlocked ? 1 : (node.unmetUnlockAlpha ?? MAP_NODE_UNMET_UNLOCK_ALPHA);
@@ -483,11 +506,19 @@ export class WorldMapPanel extends PIXI.Container {
         nc.addChild(badge);
       }
 
+      if (this._shouldShowPurchasePrice(node)) {
+        const priceBadge = this._createPurchasePriceBadge(node.purchaseCost ?? 0);
+        (priceBadge as any)._isBadge = true;
+        const thumbSize = node.thumbSize ?? 150;
+        priceBadge.y = -thumbSize * 0.5 - 18;
+        nc.addChild(priceBadge);
+      }
+
       const namePlate = (nc as any)._namePlate as PIXI.Container | undefined;
       const mapLabel = (nc as any)._mapLabel as PIXI.Text | undefined;
       const mapLockAfterName = (nc as any)._mapLockAfterName as PIXI.Container | undefined;
       if (namePlate && mapLabel && mapLockAfterName) {
-        this._layoutMapNodeNameRow(namePlate, mapLabel, mapLockAfterName, !unlocked);
+        this._layoutMapNodeNameRow(namePlate, mapLabel, mapLockAfterName, nameLocked);
       }
 
       nc.removeAllListeners('pointerdown');
@@ -497,6 +528,12 @@ export class WorldMapPanel extends PIXI.Container {
     }
 
     this._syncLiveBuildingThumbTexture();
+  }
+
+  private _shouldShowPurchasePrice(node: MapNodeDef): boolean {
+    return !!(node.purchaseCost && node.purchaseCost > 0 && node.targetSceneId
+      && CurrencyManager.globalLevel >= node.unlockLevel
+      && !CurrencyManager.isHousePurchased(node.targetSceneId));
   }
 
   /** 与当前存档 sceneId 一致的节点用实时截图，其余恢复静态 thumb */
@@ -580,6 +617,51 @@ export class WorldMapPanel extends PIXI.Container {
     return c;
   }
 
+  private _createPurchasePriceBadge(cost: number): PIXI.Container {
+    const c = new PIXI.Container();
+    c.eventMode = 'none';
+
+    const iconSize = 28;
+    const gap = 6;
+    const padX = 10;
+    const padY = 6;
+    const priceText = new PIXI.Text(`${cost}`, {
+      fontSize: 19,
+      fill: 0xFFF8F0,
+      fontFamily: FONT_FAMILY,
+      fontWeight: 'bold',
+      stroke: 0x5C3A1A,
+      strokeThickness: 3,
+    });
+    priceText.anchor.set(0, 0.5);
+
+    const contentW = iconSize + gap + priceText.width;
+    const w = contentW + padX * 2;
+    const h = Math.max(iconSize, priceText.height) + padY * 2;
+    const bg = new PIXI.Graphics();
+    bg.lineStyle(2, 0xFFF3B8, 0.95);
+    bg.beginFill(0x8A5A32, 0.86);
+    bg.drawRoundedRect(-w / 2, -h / 2, w, h, 16);
+    bg.endFill();
+    c.addChild(bg);
+
+    const startX = -contentW / 2;
+    const iconTex = TextureCache.get('icon_huayuan');
+    if (iconTex) {
+      const icon = new PIXI.Sprite(iconTex);
+      icon.anchor.set(0, 0.5);
+      icon.width = iconSize;
+      icon.height = iconSize;
+      icon.position.set(startX, 0);
+      icon.eventMode = 'none';
+      c.addChild(icon);
+    }
+
+    priceText.position.set(startX + iconSize + gap, 0);
+    c.addChild(priceText);
+    return c;
+  }
+
   /** 名称 + 未解锁时右侧小锁（与装修面板 createSmallNameLockIcon 同源） */
   private _layoutMapNodeNameRow(
     namePlate: PIXI.Container,
@@ -601,6 +683,17 @@ export class WorldMapPanel extends PIXI.Container {
   }
 
   private _onNodeTap(node: MapNodeDef, unlocked: boolean, isCurrent: boolean): void {
+    // 支线房屋：花愿购买解锁
+    if (node.purchaseCost && node.purchaseCost > 0 && node.targetSceneId
+      && !CurrencyManager.isHousePurchased(node.targetSceneId)) {
+      if (CurrencyManager.globalLevel < node.unlockLevel) {
+        ToastMessage.show(`${node.unlockLevel}级解锁「${node.label}」`);
+        return;
+      }
+      void this._promptPurchaseHouse(node);
+      return;
+    }
+
     if (!unlocked) {
       ToastMessage.show(`综合等级 ${node.unlockLevel} 解锁「${node.label}」`);
       return;
@@ -634,6 +727,47 @@ export class WorldMapPanel extends PIXI.Container {
         ToastMessage.show(`综合等级 ${node.unlockLevel} 解锁「${node.label}」`);
         break;
     }
+  }
+
+  /** 支线房屋：弹确认框，花愿购买解锁后进入 */
+  private async _promptPurchaseHouse(node: MapNodeDef): Promise<void> {
+    const cost = node.purchaseCost ?? 0;
+    const sceneId = node.targetSceneId;
+    if (!sceneId || cost <= 0) return;
+
+    const ok = await ConfirmDialog.show(
+      `解锁${node.label}`,
+      `解锁并进入「${node.label}」，确定吗？`,
+      '购买',
+      '取消',
+      cost,
+    );
+    if (!ok) return;
+
+    // 二次确认已购买（防连点）
+    if (CurrencyManager.isHousePurchased(sceneId)) {
+      this._refreshNodes();
+      this.close();
+      EventBus.emit('worldmap:switchScene', sceneId);
+      return;
+    }
+
+    if (CurrencyManager.state.huayuan < cost) {
+      ToastMessage.show('花愿不足，无法购买');
+      return;
+    }
+
+    const success = CurrencyManager.purchaseHouse(sceneId, cost);
+    if (!success) {
+      ToastMessage.show('花愿不足，无法购买');
+      return;
+    }
+
+    this._refreshNodes();
+    this._refreshHud();
+    ToastMessage.show(`已解锁「${node.label}」`);
+    this.close();
+    EventBus.emit('worldmap:switchScene', sceneId);
   }
 
   // ═══════════════ 滚动与拖拽 ═══════════════

@@ -1,0 +1,32 @@
+Create one game-ready isometric cutaway room shell for a cozy pastel merge game. Use the attached existing oak treehouse shell ONLY for layout lock: same upper-left isometric camera, same two-story cutaway proportions, same open-front composition, same central trunk position, same lower L-shaped floor footprint, same upper loft/deck wrapping the trunk, same rope-and-wood ladder on the trunk, same back wall + right wall only, same partial perimeter roof strips that do NOT cover the interior. Do NOT change the gameplay silhouette or wall placement. This is a spring-bloom reskin of the same treehouse shell, not a new building shape.
+
+Subject: whimsical fairytale oak treehouse interior room shell, empty, no furniture. SPRING VERSION. The signature identity remains a massive warm oak tree trunk rising through the center from lower floor through upper loft, but the tree and shell now feel like early spring morning in an enchanted forest.
+
+SPRING TREE (center trunk — most important change):
+- Same thick rounded trunk position and scale as reference, but bark is warmer honey-caramel with fresh spring energy.
+- Replace dark moss patches with bright spring moss-green buds and tiny new leaves.
+- Climbing flowering vines spiral up the trunk from lower floor to upper loft: soft ivy tendrils with pastel pink cherry blossoms, butter-yellow wildflowers, lavender bell flowers, and tiny white daisy clusters — colorful but not cluttered, kawaii chibi scale, readable at mobile game size.
+- A few loose petals drift near the trunk base only; keep the playable floor mostly clear.
+- Trunk porthole windows stay, but show soft spring sky: pale blue morning with faint pink clouds, not dark starry night.
+
+SPRING ROOF (distinct from mossy green-brown shingles in reference):
+- Partial roof/eave strips along back and right wall tops only; must NOT lid the room.
+- Replace heavy mossy shingles with fresh spring cottage roof: pale mint-green wooden shingles with cream edges, tiny pastel flower buds along the eave line, and one or two slender new-leaf branches resting on the roof edge.
+- Add ONE cute chibi bird nest on the roof ridge or upper eave corner: small woven twig nest with two tiny blue eggs or one round baby bird peeking out — adorable, not realistic, no blood, no mess.
+- Roof feels lighter, airier, more blossom-season than the reference moss roof.
+
+Architecture (match reference structure exactly):
+- TWO-STORY CUTAWAY: broad lower wooden platform; upper loft/deck with simple wooden railing around trunk; rope-and-wood ladder on trunk.
+- FLOOR: same irregular softened polygon footprint — pale cream oak plank with subtle tree-ring parquet accents; add only a few tiny spring flower decals embedded in floor grain at far edges, not blocking placement.
+- WALLS: back wall mixes bark-textured wood panels and cream plaster; right wall smooth cream wood with one small round window showing spring sky. Broad blank install-ready surfaces.
+- EXTERIOR EDGE ACCENTS ONLY: replace red mushrooms with tiny spring tulip sprouts and soft clover at foundation corners; keep minimal. One tiny hanging wooden lantern at outer corner without flame detail.
+
+PALETTE: honey caramel oak, fresh spring leaf green, blossom pink, butter yellow, soft lavender, cream wood, pale pebble stone. High-key pastel, clean soft brown linework, bright morning enchanted woodland — not dark, not autumn, not winter, not photoreal.
+
+Structure requirements: same two-story cutaway treehouse shell as reference; open front; broad lower floor; visible upper loft; two interior walls only; no front wall, no left wall; no furniture, no bed, no shelf, no table, no chair, no interior potted plants, no characters, no railings blocking lower floor center except trunk and upper loft railing only.
+
+NO TEXT, no labels, no readable signs, no numbers, no logo, no watermark, no captions anywhere.
+
+Art style: 2D casual mobile game illustration, kawaii pastel, hand-painted vector-like asset, upper-left isometric view, soft ambient occlusion, gentle highlights, crisp readable edges, transparent background or plain background suitable for background removal. Avoid photorealism, heavy shadows, dense clutter, Asian pavilion details, greenhouse glass walls.
+
+Output: single centered room-shell PNG, square 1:1, generous margin around shell.

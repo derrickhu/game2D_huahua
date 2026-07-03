@@ -34,6 +34,8 @@ export interface CurrencyState {
   sceneId: string;
   /** 所有场景的星星进度（含已完成场景） */
   sceneProgresses: SceneStarProgress[];
+  /** 已用花愿购买解锁的支线房屋 sceneId 列表（如 dream_cloud_house） */
+  purchasedHouses?: string[];
   /** 距上次体力恢复已过的秒数（用于恢复倒计时的持久化） */
   staminaRecoverElapsed?: number;
   /** 当日已钻石购买体力次数（与 dailyStaminaQuotaDate 配套） */
@@ -67,6 +69,7 @@ class CurrencyManagerClass {
       starLevel: 1,
       completed: false,
     }],
+    purchasedHouses: [],
   };
 
   private _lastStaminaRecover = 0;
@@ -118,6 +121,27 @@ class CurrencyManagerClass {
     if (amount > 0) {
       EventBus.emit('quest:huayuanEarned', amount);
     }
+  }
+
+  /** 支线房屋是否已用花愿购买解锁 */
+  isHousePurchased(sceneId: string): boolean {
+    return (this._state.purchasedHouses ?? []).includes(sceneId);
+  }
+
+  /**
+   * 花愿购买解锁支线房屋。花愿不足或已购买则返回 false。
+   * 成功后扣除花愿并写入已购记录（存档持久化）。
+   */
+  purchaseHouse(sceneId: string, cost: number): boolean {
+    if (this.isHousePurchased(sceneId)) return true;
+    if (cost > 0 && this._state.huayuan < cost) return false;
+    if (cost > 0) this.addHuayuan(-cost);
+    if (!this._state.purchasedHouses) this._state.purchasedHouses = [];
+    this._state.purchasedHouses.push(sceneId);
+    AudioManager.play('purchase_tap');
+    console.log(`[Currency] 购买解锁支线房屋 ${sceneId} -${cost} 花愿`);
+    EventBus.emit('house:purchased', sceneId, cost);
+    return true;
   }
 
   addDiamond(amount: number): void {
@@ -368,6 +392,11 @@ class CurrencyManagerClass {
     }
 
     Object.assign(this._state, rest);
+
+    // 兼容旧档：无购房记录字段时初始化为空数组
+    if (!Array.isArray(this._state.purchasedHouses)) {
+      this._state.purchasedHouses = [];
+    }
 
     // 旧存档可能有 hualu/exp 字段，直接忽略
     delete (this._state as any).hualu;
