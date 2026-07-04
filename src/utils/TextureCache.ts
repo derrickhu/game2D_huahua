@@ -1146,9 +1146,7 @@ const AFFINITY_PANEL_KEYS = [
   'affinity_codex_btn',
   'affinity_codex_panel_frame',
   'affinity_codex_overview_shell_nb2',
-  'affinity_codex_overview_banner_nb2',
   'affinity_codex_detail_shell_nb2',
-  'affinity_codex_detail_header_nb2',
   'warehouse_slot_lock',
   'ui_order_check_badge',
 ] as const;

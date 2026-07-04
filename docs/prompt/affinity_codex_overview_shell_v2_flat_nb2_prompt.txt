@@ -1,0 +1,37 @@
+Single full-screen vertical mobile game UI asset, 9:16 aspect ratio, one flattened decorative SHELL ONLY for a friendship card codex overview modal. Cozy pastel flower-shop merge game. High resolution, crisp flat vector edges.
+
+USE THE ATTACHED REFERENCE IMAGE as the STRICT flat-modal template (dress-up / workshop family):
+- same centered tall modal silhouette, corner radius, and flat 2D vector style
+- same small flat top-right close button size and placement
+- same clean matte surfaces — NOT glossy, NOT 3D bevel, NOT embossed candy UI
+
+THIS IS AN EMPTY BACKPLATE ONLY. Game code overlays title, reward banner, avatars, and text later.
+
+REPLAN vertical space — friendship codex overview needs a slim header and a LARGE reward area:
+
+1) OUTER FRAME: thick soft warm peach-coral outer rim, thinner pastel-blush inner lip, flat gentle highlight only. Warm friendship palette — peach, blush, buttercream (NOT purple workshop, NOT muddy brown).
+
+2) TOP HEADER BAND (~9% height ONLY — slim, NOT a big title plaque):
+   soft peach-pink fill, very subtle vertical pinstripe, completely EMPTY. NO golden scalloped banner, NO ornate embossed title plate, NO large decorative crest.
+
+3) TOP-RIGHT: small flat circular red close button with simple white X — same modest size as reference, NOT oversized, NOT glossy 3D.
+
+4) REWARD HERO ZONE (~32% of panel inner height, directly below header):
+   one wide flat rounded-rectangle inset spanning ~90% of inner width, centered.
+   soft warm cream-peach matte fill, hairline flat border only, minimal corner radius.
+   completely EMPTY — no landscape art, no progress bar, no icons, no text.
+   this zone must feel spacious and prominent.
+
+5) MAIN CONTENT FIELD (remaining height below reward zone):
+   large flat warm cream body, very subtle all-over damask ~5% opacity.
+   completely EMPTY — no circular cutouts, no portrait holes, no pill grooves, no pre-drawn slots.
+
+6) Bottom: cream field continues cleanly — NO footer strip, NO diamond divider, NO extra inset boxes.
+
+STRICTLY FORBIDDEN:
+large title plaque, golden baroque banner, embossed bevel, heavy drop shadow, glossy candy button, oversized close button, circular avatar recesses, progress grooves, Chinese/English text, numbers, icons, characters, footer bar, 3D skeuomorphic notebook style.
+
+Art style: clean flat 2D vector kawaii mobile UI — visually sibling to furniture workshop / dress-up flat shells. Soft pastel, gentle flat gradients only. No photoreal.
+
+TECHNICAL BACKGROUND:
+ONLY margins OUTSIDE the rounded modal = pure green RGB 0,255,0. Modal interior ZERO green pixels.

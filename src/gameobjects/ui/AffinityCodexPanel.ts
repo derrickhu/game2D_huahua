@@ -30,69 +30,54 @@ interface ShellSpec {
   H: number;
 }
 
-const OVERVIEW_SHELL: ShellSpec = { W: 761, H: 1343 };
-const DETAIL_SHELL: ShellSpec = { W: 697, H: 1281 };
+const OVERVIEW_SHELL: ShellSpec = { W: 680, H: 1075 };
+const DETAIL_SHELL: ShellSpec = { W: 680, H: 1211 };
 
-const OVERVIEW_LAYOUT = {
-  TITLE_CX: 380.5,
-  TITLE_CY: 158,
-  CLOSE_CX: 685,
-  CLOSE_CY: 74,
-  CLOSE_R: 48,
-  BANNER_X: 79,
-  BANNER_Y: 258,
-  BANNER_W: 603,
-  CIRCLE_CX: [170, 380.5, 591],
-  CIRCLE_CY: 664,
-  CIRCLE_SIZE: 145,
-  PILL_Y: 733,
-  BOTTOM_HINT_Y: 1224,
-};
-
+/** v3 初春详情壳（680×1217）：烘焙返回钮 + 紧凑 info inset + 大卡片区 */
 const DETAIL_LAYOUT = {
-  TITLE_CX: 348.5,
-  TITLE_CY: 83,
-  BACK_CX: 79,
-  BACK_CY: 84,
-  BACK_R: 34,
-  CLOSE_CX: 620,
-  CLOSE_CY: 79,
-  CLOSE_R: 46,
-  HEADER_X: 74,
-  HEADER_Y: 300,
-  HEADER_W: 548,
-  GRID_X: 72,
-  GRID_Y: 640,
-  GRID_W: 554,
-  GRID_H: 470,
+  TITLE_Y_FRAC: 0.082,
+  TITLE_Y_NUDGE_PX: 6,
+  CLOSE_CX_PX: 640,
+  CLOSE_CY_PX: 44,
+  CLOSE_HIT_R_PX: 38,
+  BACK_CX_PX: 80,
+  BACK_CY_PX: 67,
+  BACK_HIT_W_PX: 108,
+  BACK_HIT_H_PX: 48,
+  INFO_X_FRAC: 0.088,
+  INFO_Y_FRAC: 0.148,
+  INFO_W_FRAC: 0.824,
+  INFO_H_FRAC: 0.228,
+  GRID_X_FRAC: 0.102,
+  GRID_Y_FRAC: 0.382,
+  GRID_W_FRAC: 0.796,
+  GRID_H_FRAC: 0.458,
+  GRID_INSET_X_PX: 14,
+  GRID_INSET_Y_PX: 12,
+  ARROW_Y_FRAC: 0.608,
+  ARROW_INSET_X_PX: 26,
 };
 
-const OVERVIEW_BANNER_ASSET = {
-  W: 1252,
-  H: 671,
-  TITLE_Y: 359,
-  REWARD_Y: 382,
-  PROGRESS_X: 242,
-  PROGRESS_Y: 516,
-  PROGRESS_W: 768,
+/** v3 初春主题壳（680×1075）：顶/底樱花插画 + 大奖励 inset + 净 cream 中区 */
+const OVERVIEW_LAYOUT = {
+  TITLE_Y_FRAC: 0.085,
+  TITLE_Y_NUDGE_PX: 8,
+  CLOSE_CX_PX: 640,
+  CLOSE_CY_PX: 44,
+  CLOSE_HIT_R_PX: 38,
+  BANNER_X_FRAC: 0.088,
+  BANNER_Y_FRAC: 0.155,
+  BANNER_W_FRAC: 0.824,
+  BANNER_H_FRAC: 0.30,
+  CIRCLE_CX_FRAC: [0.24, 0.5, 0.76] as const,
+  CIRCLE_CY_FRAC: 0.545,
+  CIRCLE_SIZE_FRAC: 0.20,
+  BOTTOM_HINT_Y_FRAC: 0.78,
 };
 
-const DETAIL_HEADER_ASSET = {
-  W: 1289,
-  H: 706,
-  PORTRAIT_CX: 352,
-  PORTRAIT_CY: 269,
-  PORTRAIT_R: 187,
-  REWARD_BOX_X: 658,
-  REWARD_BOX_Y: 90,
-  REWARD_BOX_W: 470,
-  REWARD_BOX_H: 178,
-  PROGRESS_X: 86,
-  PROGRESS_Y: 504,
-  PROGRESS_W: 1090,
-  TICKET_CX: 245,
-  TICKET_CY: 634,
-};
+/** 壳体顶边距 safeTop 的额外留白，避开微信胶囊/关闭钮 */
+const CODEX_PANEL_TOP_PAD = 58;
+const CODEX_PANEL_BOTTOM_PAD = 28;
 
 function computeScaledShellLayout(spec: ShellSpec): {
   scale: number;
@@ -105,9 +90,9 @@ function computeScaledShellLayout(spec: ShellSpec): {
 } {
   const W = DESIGN_WIDTH;
   const H = Game.logicHeight;
-  const top = Game.safeTop + 16;
-  const bottom = H - 24;
-  const availH = Math.max(300, bottom - top);
+  const minTop = Game.safeTop + CODEX_PANEL_TOP_PAD;
+  const bottom = H - CODEX_PANEL_BOTTOM_PAD;
+  const availH = Math.max(300, bottom - minTop);
   const availW = W - 24;
   const scaleByW = availW / spec.W;
   const scaleByH = availH / spec.H;
@@ -115,7 +100,7 @@ function computeScaledShellLayout(spec: ShellSpec): {
   const shellW = spec.W * scale;
   const shellH = spec.H * scale;
   const cx = W / 2;
-  const cy = top + shellH / 2;
+  const cy = minTop + availH / 2;
   return { scale, shellW, shellH, cx, cy, ox: cx - shellW / 2, oy: cy - shellH / 2 };
 }
 
@@ -179,6 +164,7 @@ export class AffinityCodexPanel extends PIXI.Container {
     this._bg = new PIXI.Graphics();
     this.addChild(this._bg);
     this._root = new PIXI.Container();
+    this._root.sortableChildren = true;
     this.addChild(this._root);
 
     EventBus.on('affinityCard:dropped', () => {
@@ -281,8 +267,12 @@ export class AffinityCodexPanel extends PIXI.Container {
 
   private _buildOverviewScreen(): void {
     const layout = computeScaledShellLayout(OVERVIEW_SHELL);
-    const pt = (x: number, y: number): PIXI.Point =>
-      new PIXI.Point(layout.ox + x * layout.scale, layout.oy + y * layout.scale);
+    const sxFrac = (frac: number) => layout.ox + frac * layout.shellW;
+    const syFrac = (frac: number) => layout.oy + frac * layout.shellH;
+    const ptFrac = (xf: number, yf: number): PIXI.Point =>
+      new PIXI.Point(sxFrac(xf), syFrac(yf));
+    const ptPx = (px: number, py: number): PIXI.Point =>
+      new PIXI.Point(layout.ox + px * layout.scale, layout.oy + py * layout.scale);
 
     const shellTex = TextureCache.get('affinity_codex_overview_shell_nb2');
     if (shellTex && shellTex.width > 0) {
@@ -296,52 +286,53 @@ export class AffinityCodexPanel extends PIXI.Container {
     }
 
     const title = new PIXI.Text(`友谊图鉴 · ${CURRENT_SEASON.tag}`, {
-      fontSize: 30,
-      fill: 0x6a3b00,
+      fontSize: Math.max(28, Math.round(34 * layout.scale)),
+      fill: 0xffffff,
       fontFamily: FONT_FAMILY,
-      fontWeight: 'bold',
-      stroke: 0xfff6e6,
+      fontWeight: '900',
+      stroke: 0xc46848,
       strokeThickness: 5,
     } as PIXI.TextStyle);
     title.anchor.set(0.5);
-    const titlePos = pt(OVERVIEW_LAYOUT.TITLE_CX, OVERVIEW_LAYOUT.TITLE_CY);
-    title.position.copyFrom(titlePos);
+    title.position.copyFrom(ptFrac(0.5, OVERVIEW_LAYOUT.TITLE_Y_FRAC));
+    title.position.y += OVERVIEW_LAYOUT.TITLE_Y_NUDGE_PX * layout.scale;
     this._root.addChild(title);
 
     this._addCloseHit(
-      pt(OVERVIEW_LAYOUT.CLOSE_CX, OVERVIEW_LAYOUT.CLOSE_CY),
-      OVERVIEW_LAYOUT.CLOSE_R * layout.scale,
+      ptPx(OVERVIEW_LAYOUT.CLOSE_CX_PX, OVERVIEW_LAYOUT.CLOSE_CY_PX),
+      OVERVIEW_LAYOUT.CLOSE_HIT_R_PX * layout.scale,
     );
 
-    const banner = this._buildOverviewBanner(OVERVIEW_LAYOUT.BANNER_W * layout.scale);
-    const bannerPos = pt(OVERVIEW_LAYOUT.BANNER_X, OVERVIEW_LAYOUT.BANNER_Y);
-    banner.position.copyFrom(bannerPos);
+    const bannerW = OVERVIEW_LAYOUT.BANNER_W_FRAC * layout.shellW;
+    const bannerH = OVERVIEW_LAYOUT.BANNER_H_FRAC * layout.shellH;
+    const banner = this._buildOverviewRewardBlock(bannerW, bannerH);
+    banner.position.copyFrom(ptFrac(OVERVIEW_LAYOUT.BANNER_X_FRAC, OVERVIEW_LAYOUT.BANNER_Y_FRAC));
     this._root.addChild(banner);
 
+    const circleSize = OVERVIEW_LAYOUT.CIRCLE_SIZE_FRAC * layout.shellW;
     for (let i = 0; i < SEASON_TYPE_IDS.length; i++) {
       const typeId = SEASON_TYPE_IDS[i]!;
-      const entry = this._buildOverviewNode(typeId, OVERVIEW_LAYOUT.CIRCLE_SIZE * layout.scale);
+      const entry = this._buildOverviewNode(typeId, circleSize);
       entry.position.set(
-        layout.ox + OVERVIEW_LAYOUT.CIRCLE_CX[i]! * layout.scale,
-        layout.oy + OVERVIEW_LAYOUT.CIRCLE_CY * layout.scale,
+        sxFrac(OVERVIEW_LAYOUT.CIRCLE_CX_FRAC[i]!),
+        syFrac(OVERVIEW_LAYOUT.CIRCLE_CY_FRAC),
       );
       this._root.addChild(entry);
     }
 
     if (CURRENT_SEASON.tagline) {
       const tagline = new PIXI.Text(CURRENT_SEASON.tagline, {
-        fontSize: 15,
+        fontSize: Math.max(13, Math.round(15 * layout.scale)),
         fill: 0x9a6d45,
         fontFamily: FONT_FAMILY,
         fontWeight: 'bold',
         wordWrap: true,
-        wordWrapWidth: 560 * layout.scale,
+        wordWrapWidth: layout.shellW * 0.82,
         breakWords: true,
         align: 'center',
       } as PIXI.TextStyle);
       tagline.anchor.set(0.5);
-      const p = pt(OVERVIEW_LAYOUT.TITLE_CX, OVERVIEW_LAYOUT.BOTTOM_HINT_Y);
-      tagline.position.copyFrom(p);
+      tagline.position.copyFrom(ptFrac(0.5, OVERVIEW_LAYOUT.BOTTOM_HINT_Y_FRAC));
       this._root.addChild(tagline);
     }
   }
@@ -356,74 +347,43 @@ export class AffinityCodexPanel extends PIXI.Container {
     return { obtained, total };
   }
 
-  private _buildOverviewBanner(width: number): PIXI.Container {
+  /** 总览奖励区：直接绘制在壳体 inset 上，不再贴 banner 小图 */
+  private _buildOverviewRewardBlock(width: number, height: number): PIXI.Container {
     const c = new PIXI.Container();
-    const tex = TextureCache.get('affinity_codex_overview_banner_nb2');
-    const scale = tex && tex.width > 0 ? width / tex.width : 1;
-    const H = tex && tex.width > 0 ? tex.height * scale : width * 0.54;
-    if (tex && tex.width > 0) {
-      const sp = new PIXI.Sprite(tex);
-      sp.scale.set(scale);
-      c.addChild(sp);
-    } else {
-      const fb = new PIXI.Graphics();
-      fb.beginFill(0xfff2de, 1);
-      fb.lineStyle(2, 0xe7bb84, 1);
-      fb.drawRoundedRect(0, 0, width, H, 24);
-      fb.endFill();
-      c.addChild(fb);
-    }
+    c.eventMode = 'none';
+    const padX = Math.max(8, Math.round(width * 0.04));
+    const innerW = width - padX * 2;
 
-    const remainMs = Math.max(0, CURRENT_SEASON.endAt - Date.now());
-    const remainTxt = remainMs > 0 ? this._fmtRemain(remainMs) : '已结束';
-    const timeChip = new PIXI.Graphics();
-    timeChip.beginFill(0xfff4d7, 0.94);
-    timeChip.lineStyle(1.5, 0xf0c37a, 1);
-    timeChip.drawRoundedRect(0, 0, 136, 28, 14);
-    timeChip.endFill();
-    const timeTxt = new PIXI.Text(`赛季剩 ${remainTxt}`, {
-      fontSize: 13,
-      fill: 0xa56d1f,
-      fontFamily: FONT_FAMILY,
-      fontWeight: 'bold',
-    } as PIXI.TextStyle);
-    timeTxt.anchor.set(0.5);
-    timeTxt.position.set(68, 14);
-    timeChip.addChild(timeTxt);
-    timeChip.position.set((width - 136) / 2, 18);
-    c.addChild(timeChip);
-
-    const rewardsInline = new PIXI.Container();
     const head = new PIXI.Text('完成全图鉴可赢取：', {
-      fontSize: 21,
+      fontSize: Math.max(16, Math.round(width * 0.042)),
       fill: 0xa15b3d,
       fontFamily: FONT_FAMILY,
       fontWeight: 'bold',
     } as PIXI.TextStyle);
-    head.anchor.set(0, 0);
-    rewardsInline.addChild(head);
+    head.anchor.set(0.5, 0);
+    const headY = Math.round(height * 0.08);
+    head.position.set(width / 2, headY);
+    c.addChild(head);
 
+    const iconDisp = Math.min(68, Math.max(50, Math.round(width * 0.19)));
+    const rewardGap = Math.max(22, Math.round(width * 0.05));
     const rewards = this._grandRewardChipList(CURRENT_SEASON.grandReward);
-    const rewardRow = this._buildDetailRewardIconRow(rewards, width - 24, 52 * scale);
-    rewardRow.position.set(head.width + 14 * scale, -2 * scale);
-    rewardsInline.addChild(rewardRow);
-    rewardsInline.position.set(
-      (width - rewardsInline.width) / 2 - 10 * scale,
-      OVERVIEW_BANNER_ASSET.TITLE_Y * scale,
-    );
-    c.addChild(rewardsInline);
+    const rewardRow = this._buildDetailRewardIconRow(rewards, innerW, iconDisp, rewardGap);
 
     const total = this._totalSeasonProgress();
-    const prog = this._buildOverviewProgressPill(
-      OVERVIEW_BANNER_ASSET.PROGRESS_W * scale,
-      total.obtained,
-      total.total,
-    );
-    prog.position.set(
-      OVERVIEW_BANNER_ASSET.PROGRESS_X * scale,
-      OVERVIEW_BANNER_ASSET.PROGRESS_Y * scale,
-    );
+    const progW = Math.min(innerW, Math.round(width * 0.88));
+    const prog = this._buildOverviewProgressPill(progW, total.obtained, total.total);
+    const progY = Math.round(height * 0.74);
+    prog.position.set(Math.round((width - progW) / 2), progY);
     c.addChild(prog);
+
+    const midTop = headY + head.height + Math.round(height * 0.05);
+    const midBottom = progY - Math.round(height * 0.02);
+    rewardRow.position.set(
+      Math.round((width - rewardRow.width) / 2),
+      Math.round((midTop + midBottom - rewardRow.height) / 2),
+    );
+    c.addChild(rewardRow);
 
     return c;
   }
@@ -497,8 +457,12 @@ export class AffinityCodexPanel extends PIXI.Container {
     const typeId = this._detailTypeId;
     if (!typeId) { this._backToOverview(); return; }
     const layout = computeScaledShellLayout(DETAIL_SHELL);
-    const pt = (x: number, y: number): PIXI.Point =>
-      new PIXI.Point(layout.ox + x * layout.scale, layout.oy + y * layout.scale);
+    const sxFrac = (frac: number) => layout.ox + frac * layout.shellW;
+    const syFrac = (frac: number) => layout.oy + frac * layout.shellH;
+    const ptFrac = (xf: number, yf: number): PIXI.Point =>
+      new PIXI.Point(sxFrac(xf), syFrac(yf));
+    const ptPx = (px: number, py: number): PIXI.Point =>
+      new PIXI.Point(layout.ox + px * layout.scale, layout.oy + py * layout.scale);
 
     const shellTex = TextureCache.get('affinity_codex_detail_shell_nb2');
     if (shellTex && shellTex.width > 0) {
@@ -506,6 +470,7 @@ export class AffinityCodexPanel extends PIXI.Container {
       sp.anchor.set(0.5);
       sp.position.set(layout.cx, layout.cy);
       sp.scale.set(layout.scale);
+      sp.eventMode = 'none';
       this._root.addChild(sp);
     } else {
       this._addFallbackShell(layout);
@@ -513,36 +478,38 @@ export class AffinityCodexPanel extends PIXI.Container {
 
     const titleStr = AFFINITY_MAP.get(typeId)?.bondName ?? '友谊图鉴';
     const title = new PIXI.Text(titleStr, {
-      fontSize: 34,
-      fill: 0x6a3b00,
+      fontSize: Math.max(26, Math.round(32 * layout.scale)),
+      fill: 0xffffff,
       fontFamily: FONT_FAMILY,
-      fontWeight: 'bold',
-      stroke: 0xfff6e6,
+      fontWeight: '900',
+      stroke: 0xc46848,
       strokeThickness: 5,
     } as PIXI.TextStyle);
     title.anchor.set(0.5);
-    title.position.copyFrom(pt(DETAIL_LAYOUT.TITLE_CX, DETAIL_LAYOUT.TITLE_CY));
+    title.eventMode = 'none';
+    title.position.copyFrom(ptFrac(0.5, DETAIL_LAYOUT.TITLE_Y_FRAC));
+    title.position.y += DETAIL_LAYOUT.TITLE_Y_NUDGE_PX * layout.scale;
     this._root.addChild(title);
 
-    this._addCloseHit(
-      pt(DETAIL_LAYOUT.CLOSE_CX, DETAIL_LAYOUT.CLOSE_CY),
-      DETAIL_LAYOUT.CLOSE_R * layout.scale,
-    );
-    this._addBackHit(
-      pt(DETAIL_LAYOUT.BACK_CX, DETAIL_LAYOUT.BACK_CY),
-      DETAIL_LAYOUT.BACK_R * layout.scale,
-    );
+    const infoW = DETAIL_LAYOUT.INFO_W_FRAC * layout.shellW;
+    const infoH = DETAIL_LAYOUT.INFO_H_FRAC * layout.shellH;
+    const info = this._buildDetailInfoBlock(typeId, infoW, infoH);
+    info.position.copyFrom(ptFrac(DETAIL_LAYOUT.INFO_X_FRAC, DETAIL_LAYOUT.INFO_Y_FRAC));
+    this._root.addChild(info);
 
-    const header = this._buildDetailHeader(typeId, DETAIL_LAYOUT.HEADER_W * layout.scale);
-    header.position.copyFrom(pt(DETAIL_LAYOUT.HEADER_X, DETAIL_LAYOUT.HEADER_Y));
-    this._root.addChild(header);
-
+    const gridOuterW = DETAIL_LAYOUT.GRID_W_FRAC * layout.shellW;
+    const gridOuterH = DETAIL_LAYOUT.GRID_H_FRAC * layout.shellH;
+    const gridPadX = DETAIL_LAYOUT.GRID_INSET_X_PX * layout.scale;
+    const gridPadY = DETAIL_LAYOUT.GRID_INSET_Y_PX * layout.scale;
     const grid = this._buildGrid(
-      DETAIL_LAYOUT.GRID_W * layout.scale,
-      DETAIL_LAYOUT.GRID_H * layout.scale,
+      Math.max(120, gridOuterW - gridPadX * 2),
+      Math.max(100, gridOuterH - gridPadY * 2),
       typeId,
     );
-    grid.position.copyFrom(pt(DETAIL_LAYOUT.GRID_X, DETAIL_LAYOUT.GRID_Y));
+    grid.position.set(
+      sxFrac(DETAIL_LAYOUT.GRID_X_FRAC) + gridPadX,
+      syFrac(DETAIL_LAYOUT.GRID_Y_FRAC) + gridPadY,
+    );
     this._root.addChild(grid);
 
     const idx = SEASON_TYPE_IDS.indexOf(typeId);
@@ -551,11 +518,28 @@ export class AffinityCodexPanel extends PIXI.Container {
       const next = SEASON_TYPE_IDS[(idx + 1) % SEASON_TYPE_IDS.length]!;
       const leftArrow = this._buildPageArrow('left', prev);
       const rightArrow = this._buildPageArrow('right', next);
-      leftArrow.position.set(layout.ox + 24 * layout.scale, layout.oy + 906 * layout.scale);
-      rightArrow.position.set(layout.ox + 673 * layout.scale, layout.oy + 906 * layout.scale);
+      leftArrow.position.set(
+        layout.ox + DETAIL_LAYOUT.ARROW_INSET_X_PX * layout.scale,
+        syFrac(DETAIL_LAYOUT.ARROW_Y_FRAC),
+      );
+      rightArrow.position.set(
+        layout.ox + layout.shellW - DETAIL_LAYOUT.ARROW_INSET_X_PX * layout.scale,
+        syFrac(DETAIL_LAYOUT.ARROW_Y_FRAC),
+      );
       this._root.addChild(leftArrow);
       this._root.addChild(rightArrow);
     }
+
+    // 顶栏热区最后添加，避免被内容层遮挡
+    this._addCloseHit(
+      ptPx(DETAIL_LAYOUT.CLOSE_CX_PX, DETAIL_LAYOUT.CLOSE_CY_PX),
+      DETAIL_LAYOUT.CLOSE_HIT_R_PX * layout.scale,
+    );
+    this._addBackHitArea(
+      ptPx(DETAIL_LAYOUT.BACK_CX_PX, DETAIL_LAYOUT.BACK_CY_PX),
+      DETAIL_LAYOUT.BACK_HIT_W_PX * layout.scale,
+      DETAIL_LAYOUT.BACK_HIT_H_PX * layout.scale,
+    );
   }
 
   private _milestoneChipList(m: { reward: CardReward; decoUnlockId?: string }): RewardChip[] {
@@ -585,82 +569,67 @@ export class AffinityCodexPanel extends PIXI.Container {
     return out;
   }
 
-  private _buildDetailHeader(typeId: string, width: number): PIXI.Container {
+  /** 详情 info 区：直接绘制在壳体 inset 上，不再贴 header 小图 */
+  private _buildDetailInfoBlock(typeId: string, width: number, height: number): PIXI.Container {
     const c = new PIXI.Container();
-    const tex = TextureCache.get('affinity_codex_detail_header_nb2');
-    const scale = tex && tex.width > 0 ? width / tex.width : 1;
-    const H = tex && tex.width > 0 ? tex.height * scale : width * 0.55;
-    if (tex && tex.width > 0) {
-      const sp = new PIXI.Sprite(tex);
-      sp.scale.set(scale);
-      c.addChild(sp);
-    } else {
-      const fb = new PIXI.Graphics();
-      fb.beginFill(0xfff6e8, 1);
-      fb.lineStyle(2, 0xe6bc89, 1);
-      fb.drawRoundedRect(0, 0, width, H, 22);
-      fb.endFill();
-      c.addChild(fb);
-    }
+    c.eventMode = 'none';
+    const padX = Math.max(6, Math.round(width * 0.03));
+    const topPad = Math.round(height * 0.08);
+    const rewardTop = topPad;
 
-    const portrait = this._buildHeaderPortrait(typeId, DETAIL_HEADER_ASSET.PORTRAIT_R * 2 * scale);
-    portrait.position.set(
-      DETAIL_HEADER_ASSET.PORTRAIT_CX * scale,
-      DETAIL_HEADER_ASSET.PORTRAIT_CY * scale,
-    );
+    const portraitD = Math.min(height * 0.46, width * 0.26);
+    const portraitCy = topPad + portraitD / 2 + 6;
+    const portrait = this._buildHeaderPortrait(typeId, portraitD);
+    portrait.position.set(padX + portraitD / 2, portraitCy);
     c.addChild(portrait);
 
+    const p = AffinityCardManager.progress(typeId);
+    const progW = Math.round(portraitD * 0.9);
+    const progH = Math.max(15, Math.round(height * 0.085));
+    const progress = this._buildPurpleProgressPill(progW, p.obtained, p.total, progH);
+    progress.position.set(
+      padX + Math.round((portraitD - progW) / 2),
+      topPad + portraitD + Math.round(height * 0.035),
+    );
+    c.addChild(progress);
+
+    const rewardLeft = padX + portraitD + Math.round(width * 0.045);
+    const rewardW = width - rewardLeft - padX;
+
     const head = new PIXI.Text('完成该系列以赢得：', {
-      fontSize: 24 * scale,
+      fontSize: Math.max(14, Math.round(width * 0.038)),
       fill: 0xa25d45,
       fontFamily: FONT_FAMILY,
       fontWeight: 'bold',
     } as PIXI.TextStyle);
-    head.anchor.set(0.5, 0);
-    head.position.set(
-      (DETAIL_HEADER_ASSET.REWARD_BOX_X + DETAIL_HEADER_ASSET.REWARD_BOX_W / 2) * scale,
-      (DETAIL_HEADER_ASSET.REWARD_BOX_Y + 20) * scale,
-    );
+    head.anchor.set(0, 0);
+    head.position.set(rewardLeft, rewardTop);
     c.addChild(head);
 
     const milestones = getCustomerMilestones(typeId);
     const fullMilestone = milestones[milestones.length - 1];
+    const iconDisp = Math.min(
+      76,
+      Math.max(54, Math.round(Math.min(rewardW * 0.27, height * 0.38))),
+    );
+    const rewardGap = Math.max(16, Math.round(width * 0.042));
+
     if (fullMilestone) {
       const chips = this._milestoneChipList(fullMilestone);
-      const rowMaxW = DETAIL_HEADER_ASSET.REWARD_BOX_W * scale - 24;
-      const row = this._buildDetailRewardIconRow(chips, rowMaxW, 72 * scale);
-      if (row.width > rowMaxW && row.width > 0) {
-        const s = rowMaxW / row.width;
-        row.scale.set(s);
-      }
-      row.position.set(
-        DETAIL_HEADER_ASSET.REWARD_BOX_X * scale + (rowMaxW - row.width * row.scale.x) / 2,
-        (DETAIL_HEADER_ASSET.REWARD_BOX_Y + 76) * scale,
-      );
+      const row = this._buildDetailRewardIconRow(chips, rewardW, iconDisp, rewardGap);
+      row.position.set(rewardLeft, head.y + head.height + Math.round(height * 0.05));
       c.addChild(row);
 
       if (fullMilestone.permanentHuayuanMult && fullMilestone.permanentHuayuanMult > 1) {
-        const bonusRow = this._buildDetailPermanentBonusRow(
+        const bonusChip = this._buildPermanentHuayuanBonusChip(
           fullMilestone.permanentHuayuanMult,
           AffinityCardManager.huayuanMultFor(typeId) > 1,
-          DETAIL_HEADER_ASSET.REWARD_BOX_W * scale + 120 * scale,
-          26 * scale,
+          rewardW,
         );
-        bonusRow.position.set(
-          (DETAIL_HEADER_ASSET.REWARD_BOX_X + DETAIL_HEADER_ASSET.REWARD_BOX_W / 2) * scale,
-          (DETAIL_HEADER_ASSET.REWARD_BOX_Y + 248) * scale,
-        );
-        c.addChild(bonusRow);
+        bonusChip.position.set(rewardLeft, row.y + row.height + Math.round(height * 0.055));
+        c.addChild(bonusChip);
       }
     }
-
-    const p = AffinityCardManager.progress(typeId);
-    const progress = this._buildPurpleProgressPill(DETAIL_HEADER_ASSET.PROGRESS_W * scale, p.obtained, p.total);
-    progress.position.set(
-      DETAIL_HEADER_ASSET.PROGRESS_X * scale,
-      DETAIL_HEADER_ASSET.PROGRESS_Y * scale,
-    );
-    c.addChild(progress);
 
     return c;
   }
@@ -702,6 +671,11 @@ export class AffinityCodexPanel extends PIXI.Container {
     hit.position.copyFrom(center);
     hit.eventMode = 'static';
     hit.cursor = 'pointer';
+    hit.zIndex = 20;
+    hit.on('pointerdown', (e: PIXI.FederatedPointerEvent) => {
+      e.stopPropagation();
+      this.close();
+    });
     hit.on('pointertap', (e: PIXI.FederatedPointerEvent) => {
       e.stopPropagation();
       this.close();
@@ -709,41 +683,22 @@ export class AffinityCodexPanel extends PIXI.Container {
     this._root.addChild(hit);
   }
 
-  private _addBackHit(center: PIXI.Point, r: number): void {
-    const buttonW = Math.max(62, r * 2.18);
-    const buttonH = Math.max(36, r * 1.26);
-    const radius = buttonH / 2;
-    const plate = new PIXI.Graphics();
-    plate.beginFill(0xfff4d7, 0.98);
-    plate.lineStyle(Math.max(2, r * 0.07), 0xe0a95c, 1);
-    plate.drawRoundedRect(-buttonW / 2, -buttonH / 2, buttonW, buttonH, radius);
-    plate.endFill();
-    plate.position.copyFrom(center);
-    this._root.addChild(plate);
-
-    const label = new PIXI.Text('返回', {
-      fontSize: Math.max(18, Math.round(r * 0.58)),
-      fill: 0x9a6326,
-      fontFamily: FONT_FAMILY,
-      fontWeight: 'bold',
-      stroke: 0xfff8df,
-      strokeThickness: Math.max(2, Math.round(r * 0.08)),
-    } as PIXI.TextStyle);
-    label.anchor.set(0.5);
-    label.position.copyFrom(center);
-    this._root.addChild(label);
-
+  /** 壳体已烘焙「返回」视觉，此处仅透明热区 */
+  private _addBackHitArea(center: PIXI.Point, w: number, h: number): void {
     const hit = new PIXI.Graphics();
     hit.beginFill(0xffffff, 0.001);
-    hit.drawRoundedRect(-buttonW / 2 - 6, -buttonH / 2 - 6, buttonW + 12, buttonH + 12, radius + 6);
+    hit.drawRoundedRect(-w / 2, -h / 2, w, h, h / 2);
     hit.endFill();
     hit.position.copyFrom(center);
     hit.eventMode = 'static';
     hit.cursor = 'pointer';
-    hit.on('pointertap', (e: PIXI.FederatedPointerEvent) => {
+    hit.zIndex = 20;
+    const onBack = (e: PIXI.FederatedPointerEvent) => {
       e.stopPropagation();
       this._backToOverview();
-    });
+    };
+    hit.on('pointerdown', onBack);
+    hit.on('pointertap', onBack);
     this._root.addChild(hit);
   }
 
@@ -855,9 +810,14 @@ export class AffinityCodexPanel extends PIXI.Container {
     return c;
   }
 
-  private _buildPurpleProgressPill(width: number, cur: number, total: number): PIXI.Container {
+  private _buildPurpleProgressPill(
+    width: number,
+    cur: number,
+    total: number,
+    heightPx?: number,
+  ): PIXI.Container {
     const c = new PIXI.Container();
-    const H = Math.max(20, Math.round(width * 0.075));
+    const H = heightPx ?? Math.max(20, Math.round(width * 0.075));
     const ratio = total > 0 ? Math.max(0, Math.min(1, cur / total)) : 0;
 
     const track = new PIXI.Graphics();
@@ -878,7 +838,7 @@ export class AffinityCodexPanel extends PIXI.Container {
     }
 
     const text = new PIXI.Text(`${cur}/${total}`, {
-      fontSize: Math.max(12, Math.round(H * 0.65)),
+      fontSize: Math.max(10, Math.round(H * 0.62)),
       fill: 0xffffff,
       fontFamily: FONT_FAMILY,
       fontWeight: 'bold',
@@ -947,9 +907,11 @@ export class AffinityCodexPanel extends PIXI.Container {
     return c;
   }
 
-  private _buildDetailRewardIconRow(chips: RewardChip[], maxWidth: number, iconDisp: number): PIXI.Container {
+  private _buildDetailRewardIconRow(
+    chips: RewardChip[], maxWidth: number, iconDisp: number, minGap = 8,
+  ): PIXI.Container {
     const c = new PIXI.Container();
-    const gap = Math.max(8, Math.round(iconDisp * 0.12));
+    const gap = Math.max(minGap, Math.round(iconDisp * 0.12));
     let x = 0;
     for (const chip of chips) {
       const item = this._buildDetailRewardIconItem(chip, iconDisp);
@@ -1007,44 +969,78 @@ export class AffinityCodexPanel extends PIXI.Container {
     return c;
   }
 
-  private _buildDetailPermanentBonusRow(
+  /** 永久花愿加成 — 单行胶囊 */
+  private _buildPermanentHuayuanBonusChip(
     mult: number,
     active: boolean,
     maxWidth: number,
-    fontSize: number,
   ): PIXI.Container {
     const c = new PIXI.Container();
     const pct = Math.round((mult - 1) * 100);
-    const text = new PIXI.Text(`永久订单花愿 +${pct}%`, {
-      fontSize,
-      fill: active ? 0xb06432 : 0xc09a7c,
+    const H = Math.max(32, Math.round(maxWidth * 0.115));
+    const padX = 10;
+    const iconSize = Math.round(H * 0.7);
+    const gap = 7;
+
+    const label = new PIXI.Text(`永久订单花愿 +${pct}%`, {
+      fontSize: Math.max(12, Math.round(H * 0.4)),
+      fill: active ? 0x8a4a18 : 0x9a8878,
       fontFamily: FONT_FAMILY,
       fontWeight: 'bold',
-      stroke: 0xfffaef,
-      strokeThickness: Math.max(2, Math.round(fontSize * 0.14)),
+      stroke: active ? 0xfff8e8 : 0xfff6ef,
+      strokeThickness: Math.max(2, Math.round(H * 0.05)),
     } as PIXI.TextStyle);
-    text.anchor.set(0, 0.5);
-    text.position.set(0, 0);
-    c.addChild(text);
+    label.anchor.set(0, 0.5);
+
+    const innerW = iconSize + gap + label.width;
+    const W = Math.min(maxWidth, innerW + padX * 2);
+
+    const bg = new PIXI.Graphics();
+    bg.beginFill(active ? 0xfff4d6 : 0xf8efe6, 1);
+    bg.lineStyle(2, active ? 0xf0b84a : 0xd8c4a8, 1);
+    bg.drawRoundedRect(0, 0, W, H, H / 2);
+    bg.endFill();
+    if (active) {
+      bg.beginFill(0xffffff, 0.32);
+      bg.drawRoundedRect(2, 2, W - 4, Math.max(6, Math.round(H * 0.34)), Math.max(3, H / 2 - 2));
+      bg.endFill();
+    }
+    c.addChild(bg);
+
+    const iconWrap = new PIXI.Container();
+    iconWrap.position.set(padX, (H - iconSize) / 2);
+    c.addChild(iconWrap);
+    const tex = TextureCache.get('icon_huayuan');
+    if (tex && tex.width > 0) {
+      const sp = new PIXI.Sprite(tex);
+      sp.anchor.set(0.5);
+      const k = iconSize / Math.max(tex.width, tex.height);
+      sp.scale.set(k);
+      sp.position.set(iconSize / 2, iconSize / 2);
+      iconWrap.addChild(sp);
+    } else {
+      const fb = new PIXI.Graphics();
+      fb.beginFill(0x7ed957, 1);
+      fb.drawRoundedRect(0, 0, iconSize, iconSize, iconSize * 0.22);
+      fb.endFill();
+      iconWrap.addChild(fb);
+    }
+
+    label.position.set(padX + iconSize + gap, H / 2);
+    c.addChild(label);
 
     if (active) {
-      const badgeTex = TextureCache.get('ui_order_check_badge');
-      if (badgeTex) {
-        const badge = new PIXI.Sprite(badgeTex);
-        const side = Math.max(22, Math.round(fontSize * 1.15));
-        const s = side / Math.max(badgeTex.width, badgeTex.height);
-        badge.scale.set(s);
-        badge.anchor.set(0, 0.5);
-        badge.position.set(text.width + 8, 0);
-        c.addChild(badge);
-      }
+      const star = new PIXI.Text('★', {
+        fontSize: Math.max(9, Math.round(H * 0.24)),
+        fill: 0xffd257,
+        fontFamily: FONT_FAMILY,
+        fontWeight: 'bold',
+      } as PIXI.TextStyle);
+      star.anchor.set(1, 0);
+      star.position.set(W - 5, 2);
+      c.addChild(star);
     }
 
-    if (c.width > maxWidth && c.width > 0) {
-      const s = maxWidth / c.width;
-      c.scale.set(s);
-    }
-    c.pivot.set(c.width / 2, 0);
     return c;
   }
 
@@ -1105,7 +1101,7 @@ export class AffinityCodexPanel extends PIXI.Container {
   }
 
   /**
-   * 3 列 × N 行网格，每格用方形 art 主视觉（thumb），垂直拖拽滚动。
+   * 2 列 × N 行网格，每格用方形 art 主视觉（thumb），垂直拖拽滚动。
    *
    * 滚动实现要点（PIXI v7）：
    *  - 视口（wrap）开 `eventMode='static'` + 全覆盖 hitArea，保证手指按在卡片间隙也能拖动。
@@ -1115,9 +1111,9 @@ export class AffinityCodexPanel extends PIXI.Container {
   private _buildGrid(width: number, height: number, typeId: string): PIXI.Container {
     const wrap = new PIXI.Container();
     const cards = AffinityCardManager.listCards(typeId);
-    const COLS = 3;
-    const COL_GAP = 14;
-    const ROW_GAP = 14;
+    const COLS = 2;
+    const COL_GAP = 18;
+    const ROW_GAP = 22;
     const cellW = Math.floor((width - COL_GAP * (COLS - 1)) / COLS);
     const cellH = thumbHeightFor(cellW);
 
@@ -1191,6 +1187,34 @@ export class AffinityCodexPanel extends PIXI.Container {
   // 卡片放大查看
   // ============================================================
 
+  private _computeCodexCardDetailLayout(): {
+    scale: number; cx: number; cy: number; cardW: number; cardH: number;
+    hintY: number;
+  } {
+    const layout = computeScaledShellLayout(DETAIL_SHELL);
+    const marginX = layout.shellW * 0.035;
+    const availW = layout.shellW - marginX * 2;
+
+    // 从 info 区中部到底部（进度条已移至头像下，右侧奖励可占满高度）
+    const cardZoneTop = layout.oy + layout.shellH * (
+      DETAIL_LAYOUT.INFO_Y_FRAC + DETAIL_LAYOUT.INFO_H_FRAC * 0.62
+    );
+    const cardZoneBottom = layout.oy + layout.shellH * (
+      DETAIL_LAYOUT.GRID_Y_FRAC + DETAIL_LAYOUT.GRID_H_FRAC - 0.012
+    );
+    const hintReserve = 36;
+    const availH = Math.max(140, cardZoneBottom - cardZoneTop - hintReserve);
+
+    const scale = Math.min(availW / LARGE_CARD_W, availH / LARGE_CARD_H, 2.28);
+    const cardW = LARGE_CARD_W * scale;
+    const cardH = LARGE_CARD_H * scale;
+    const cx = layout.cx;
+    const cy = cardZoneTop + availH / 2;
+    const hintY = cardZoneTop + availH + Math.max(14, hintReserve * 0.55);
+
+    return { scale, cx, cy, cardW, cardH, hintY };
+  }
+
   private _openCardDetail(card: AffinityCardDef): void {
     if (this._detailLayer) {
       this._detailLayer.destroy({ children: true });
@@ -1216,14 +1240,24 @@ export class AffinityCodexPanel extends PIXI.Container {
       mode: 'codex',
       ownedCount,
     });
-    front.position.set((W - LARGE_CARD_W) / 2, (H - LARGE_CARD_H) / 2 - 10);
+    const cardLayout = this._computeCodexCardDetailLayout();
+    front.scale.set(cardLayout.scale);
+    front.position.set(
+      cardLayout.cx - cardLayout.cardW / 2,
+      cardLayout.cy - cardLayout.cardH / 2,
+    );
     layer.addChild(front);
 
     const hint = new PIXI.Text('点击空白处关闭', {
-      fontSize: 13, fill: 0xffffff, fontFamily: FONT_FAMILY,
+      fontSize: Math.max(18, Math.round(16 + cardLayout.scale * 5)),
+      fill: 0xffffff,
+      fontFamily: FONT_FAMILY,
+      fontWeight: 'bold',
+      stroke: 0x3a2030,
+      strokeThickness: 4,
     } as PIXI.TextStyle);
     hint.anchor.set(0.5);
-    hint.position.set(W / 2, (H - LARGE_CARD_H) / 2 - 10 + LARGE_CARD_H + 22);
+    hint.position.set(cardLayout.cx, cardLayout.hintY);
     layer.addChild(hint);
 
     layer.zIndex = 9999;

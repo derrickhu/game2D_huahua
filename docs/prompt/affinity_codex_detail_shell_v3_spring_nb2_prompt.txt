@@ -1,0 +1,38 @@
+Single full-screen vertical mobile game UI asset, 9:16 aspect ratio, one decorative SHELL ONLY for a friendship card codex DETAIL / sub-page modal. Season theme: early spring flower friendship (初春繁花季). Cozy pastel flower-shop merge game. High resolution, crisp 2D illustrated UI art.
+
+USE THE ATTACHED OVERVIEW SHELL REFERENCE for the SAME modal family — matching illustration style, cherry blossom spring motifs, and proportions — but this is the DETAIL sub-page variant.
+
+SUB-PAGE COLOR TWIST (same theme, different emphasis):
+- keep cherry blossom / envelope / ribbon motifs
+- shift primary rim slightly toward soft blush-lavender and sage-mint accents (secondary to overview's peach-coral)
+- still warm, still spring — NOT purple workshop, NOT teal dian-cui
+
+THIS IS AN EMPTY BACKPLATE. Runtime code overlays character name, portrait, rewards, card grid.
+
+TOP BAR (~11% height):
+- spring floral corner ornaments (lighter than overview)
+- TOP-LEFT (BAKED, mandatory): small rounded pill back button with exact Chinese text "返回" in warm brown on cream-peach fill, soft gold border — this button must be part of the shell art, NOT blank
+- TOP-CENTER: clear calm band for runtime guest name title — NO large golden title plaque
+- TOP-RIGHT: small flat red circular close button with white X — same modest size as overview reference, NOT oversized
+
+SERIES INFO ZONE (~24% height, below top bar):
+- one wide flat rounded cream inset spanning ~88% inner width
+- completely EMPTY — for runtime portrait (left) + reward icons (right) + progress bar
+- compact height, NOT tall empty header waste
+
+CARD GRID ZONE (~52% height, largest area):
+- one large flat warm cream panel filling most lower-middle height
+- almost plain matte, faint petal scatter only (~3% opacity)
+- completely EMPTY — NO grid slots, NO card placeholders, NO square grooves
+
+BOTTOM DECORATIVE FOOTER (~10% height):
+- lighter spring footer: cherry petals, ribbon corner, small envelope hint
+- stay in bottom band only
+
+OUTER FRAME: soft blush-peach-lavender rim with sage-mint accent touches, gentle 2D illustration depth, soft brown outlines.
+
+STRICTLY FORBIDDEN:
+vertical pinstripes, heavy damask wallpaper, oversized close button, blank back button (must show 返回), giant title plaque, embedded card grid, portrait holes, Chinese text except the exact back label 返回, numbers, sample characters.
+
+TECHNICAL BACKGROUND:
+ONLY margins OUTSIDE rounded modal = pure green RGB 0,255,0. Interior ZERO green pixels.

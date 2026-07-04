@@ -1,0 +1,45 @@
+Single full-screen vertical mobile game UI asset, 9:16 aspect ratio, one decorative SHELL ONLY for a friendship card codex overview modal — season theme: early spring flower friendship (初春繁花季). Cozy pastel flower-shop merge game. High resolution, crisp 2D illustrated UI art.
+
+USE THE ATTACHED LAYOUT REFERENCE for EXACT modal proportions and inner reward inset placement:
+- same centered tall modal silhouette and corner radius
+- same wide reward hero inset zone (~32% height, ~90% width) below header — keep EMPTY
+- same large clean content field below reward zone — keep EMPTY for runtime avatars
+- same small flat top-right red close button size and placement
+
+USE THE ATTACHED STYLE REFERENCE (progress echo panel) ONLY for decorative approach:
+- ornate themed illustration at TOP and BOTTOM edges
+- large clean cream middle for programmatic UI
+- NOT for copying its teal peacock / dian-cui palette or exact motifs
+
+THIS IS AN EMPTY BACKPLATE. Game overlays title, reward banner, avatars later. NO readable text except decorative non-text shapes.
+
+SPRING FRIENDSHIP THEME (S1 — warm peach, blush pink, buttercream, soft gold, cherry blossom pink, mint leaf green accents):
+- NOT workshop flat purple minimalism
+- NOT vertical pinstripes in header
+- NOT all-over damask wallpaper in the middle content field
+
+TOP DECORATIVE HEADER (~14% height):
+- painted spring floral garland framing the top: cherry blossom branches, soft sakura petals, small wildflowers, golden ribbon scrolls, tiny friendship envelope or card corner motifs
+- warm peach-coral and blush palette with muted antique gold linework
+- leave a calm clear center band for runtime title overlay — decorations hug left/right/top corners, not a giant embossed title plaque
+- small flat red circular close button top-right, modest size
+
+REWARD HERO ZONE (~32% height, directly below header):
+- one wide flat rounded cream-peach inset, hairline soft border, completely EMPTY
+- no landscape painting inside, no progress bar, no icons
+
+MAIN CONTENT FIELD (middle-lower ~38%):
+- smooth warm cream matte, almost plain — at most extremely faint petal scatter texture (~3% opacity), NO heavy damask, NO repeating baroque wallpaper
+
+BOTTOM DECORATIVE FOOTER (~14% height):
+- themed spring illustration like progress echo bottom painting but flower-shop spring style:
+  folded blush silk ribbon, cherry blossom clusters, small envelope with wax seal motif, scattered petals, tiny golden leaf filigree, soft meadow grass hints at corners
+- decorations stay in bottom band — do NOT intrude into avatar content field above
+
+OUTER FRAME: soft warm peach-coral rim, thinner blush inner lip, gentle 2D illustration depth — polished mobile game UI, soft brown outlines, NOT photoreal, NOT hyper-glossy 3D candy.
+
+STRICTLY FORBIDDEN:
+vertical pinstripes, all-over damask middle, workshop lilac-purple, teal peacock feathers copied from reference, Chinese/English text, numbers, character portraits, circular avatar holes, progress grooves, oversized glossy close button.
+
+TECHNICAL BACKGROUND:
+ONLY margins OUTSIDE rounded modal = pure green RGB 0,255,0. Interior ZERO green pixels.

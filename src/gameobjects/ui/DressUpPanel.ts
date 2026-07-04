@@ -243,7 +243,6 @@ export class DressUpPanel extends PIXI.Container {
     }
 
     this._titleText.position.set(layout.sxFrac(0.5), layout.syFrac(SHELL.TITLE_Y_FRAC));
-    this._titleText.style.fontSize = Math.max(28, Math.round(38 * layout.scale));
 
     this._progressText.position.set(layout.sxFrac(0.5), layout.syFrac(SHELL.PROGRESS_Y_FRAC));
     this._progressText.style.fontSize = Math.max(16, Math.round(20 * layout.scale));

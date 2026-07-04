@@ -30,7 +30,7 @@ const LARGE_INFO_TOP = LARGE_ART_PAD + LARGE_ART_SIZE + 8; // 378
 
 // ─── 网格缩略卡（codex grid）──────────────────────────────────────────────────
 /** 卡片底部胶囊条整体高度（含上下空隙） */
-const THUMB_TITLE_BAND = 44;
+const THUMB_TITLE_BAND = 58;
 const THUMB_PAD = 4;
 
 /** 稀有度 → 底部胶囊主色（饱和度温和的 pastel，区别于 _buildRarityChip 的色板） */
@@ -345,10 +345,10 @@ export function buildAffinityCardThumb(
   }
 
   // ── 底部稀有度胶囊条（图鉴关键视觉）──
-  const capH = 26;
+  const capH = Math.max(32, Math.round(w * 0.11));
   const capW = w - THUMB_PAD * 2;
   const capX = THUMB_PAD;
-  const capY = THUMB_PAD + (w - THUMB_PAD * 2) + 8;
+  const capY = THUMB_PAD + (w - THUMB_PAD * 2) + 10;
   const capsule = new PIXI.Graphics();
   capsule.beginFill(capsuleColor, 1);
   capsule.lineStyle(1.5, capsuleStroke, 0.85);
@@ -364,9 +364,9 @@ export function buildAffinityCardThumb(
 
   // 胶囊内左侧：白色圆角小徽章 + 稀有度字母（N / R / SR / SSR）
   const badgeText = card.rarity;
-  const badgeFontSize = badgeText.length >= 3 ? 10 : 12;
-  const badgeH = capH - 8;
-  const badgeW = badgeText.length >= 3 ? 30 : 22;
+  const badgeFontSize = badgeText.length >= 3 ? 12 : 14;
+  const badgeH = capH - 10;
+  const badgeW = badgeText.length >= 3 ? 36 : 26;
   const badgeX = capX + 5;
   const badgeY = capY + (capH - badgeH) / 2;
   const badge = new PIXI.Graphics();
@@ -390,12 +390,12 @@ export function buildAffinityCardThumb(
   const titleX = badgeX + badgeW + 6;
   const titleAvailW = capX + capW - titleX - 8;
   const title = new PIXI.Text(titleStr, {
-    fontSize: 13,
+    fontSize: Math.max(16, Math.round(w * 0.052)),
     fill: 0xffffff,
     fontFamily: FONT_FAMILY,
     fontWeight: 'bold',
     stroke: capsuleStroke,
-    strokeThickness: 2.5,
+    strokeThickness: 3,
     wordWrap: false,
     breakWords: true,
   } as PIXI.TextStyle);

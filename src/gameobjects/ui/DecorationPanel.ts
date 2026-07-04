@@ -62,10 +62,13 @@ const SHELL_TEX_H = 1267;
 /** v5 壳无烘焙关闭钮，叠 deco_nb2_close_btn；v10+ 改 true 并对齐 SHELL_CLOSE_* */
 const SHELL_BAKED_CLOSE_BTN = false;
 const SHELL_CLOSE_X_FRAC = 666 / 710;
-const SHELL_CLOSE_Y_TEX_FRAC = 48 / 1272;
+const SHELL_CLOSE_Y_TEX_FRAC = 48 / SHELL_TEX_H;
 const SHELL_CLOSE_HIT_R_TEX = 46 / 710;
-const SHELL_TITLE_TEX_FRAC = 55 / SHELL_TEX_H;
+/** 顶栏 header 带上下沿（壳图 0~1）；标题居中于该带，略低于旧 55/texH 避免贴顶 */
+const SHELL_HEADER_TOP_TEX_FRAC = 48 / SHELL_TEX_H;
 const SHELL_HEADER_BOTTOM_TEX_FRAC = 140 / SHELL_TEX_H;
+const SHELL_TITLE_TEX_FRAC =
+  (SHELL_HEADER_TOP_TEX_FRAC + SHELL_HEADER_BOTTOM_TEX_FRAC) / 2;
 const SHELL_FILTER_ROW_GAP_BELOW_HEADER = 18;
 const SHELL_GRID_VIEWPORT_TOP_INSET = 0;
 
@@ -89,7 +92,7 @@ const PANEL_H_RATIO = 0.92;
 const PANEL_TOP_R = 20;
 /** 顶栏与米色身区分界线在面板内的比例（对齐 NB2 薄顶栏底边；筛选条以此为基准下移） */
 const PANEL_PINK_BAND_BOTTOM_RATIO = 0.258;
-/** 标题「家具」中心 Y：落在顶栏下沿横框附近（与 PINK 底边对齐感） */
+/** 标题「家具」中心 Y：落在顶栏下沿横框附近（legacy 底板；flat 单壳用 SHELL_TITLE_TEX_FRAC） */
 const PANEL_TITLE_Y_RATIO = 0.224;
 
 /**
@@ -896,8 +899,11 @@ export class DecorationPanel extends PIXI.Container {
       this._closeBtn.hitArea = new PIXI.Circle(0, 0, hitR);
       return;
     }
-    const titleY = this._titleCenterY(panelH);
-    this._closeBtn.position.set(PANEL_W - DECO_CLOSE_BTN_INSET_RIGHT, titleY);
+    const closeY =
+      this._usesFlatShell && this._panelBaseSprite
+        ? this._shellMapY(panelH, SHELL_CLOSE_Y_TEX_FRAC)
+        : this._titleCenterY(panelH);
+    this._closeBtn.position.set(PANEL_W - DECO_CLOSE_BTN_INSET_RIGHT, closeY);
     const closeTex = TextureCache.get('deco_nb2_close_btn_1x1') ?? TextureCache.get('warehouse_close_btn');
     const closeSp = new PIXI.Sprite(closeTex ?? PIXI.Texture.EMPTY);
     closeSp.anchor.set(0.5);
