@@ -40,9 +40,25 @@ const CARD_BASE_W = 140;
 const CARD_BASE_H = 168;
 const CARD_MAX_W = 256;
 const CARD_MIN_W = 96;
-/** 半身预览在卡内留白内再放大一点 */
-const PORTRAIT_DISPLAY_BOOST = 1.28;
+/** 半身预览略放大；中心锚点稍上移，与名称留出间距 */
+const PORTRAIT_DISPLAY_BOOST = 1.18;
+const PORTRAIT_CENTER_NUDGE_Y = -8;
 const CARD_R = 10;
+/** 卡内分区：顶栏星标 / 肖像 / 名称 / 底栏按钮 */
+const CARD_FOOTER_BOTTOM_PAD = 10;
+const CARD_NAME_GAP_ABOVE_BTN = 5;
+const CARD_NAME_GAP_BELOW_PORTRAIT = 10;
+const CARD_PORTRAIT_TOP_INSET = 14;
+
+function measureDressCardFooter(ch: number): { bottomPad: number; btnH: number; btnTop: number } {
+  const bottomPad = CARD_FOOTER_BOTTOM_PAD;
+  const btnH = Math.min(44, Math.round((34 * ch) / CARD_BASE_H));
+  return { bottomPad, btnH, btnTop: ch - bottomPad - btnH };
+}
+
+function dressCardNameFontSize(cw: number): number {
+  return Math.max(14, Math.min(16, Math.round((15 * cw) / CARD_BASE_W)));
+}
 
 const ROSE_LINE = 0xf0b8d0;
 const ROSE_INNER = 0xe8a0c0;
@@ -387,18 +403,6 @@ export class DressUpPanel extends PIXI.Container {
     card.addChild(bg);
   }
 
-  private _addEquipBadge(card: PIXI.Container, cw: number): void {
-    const g = new PIXI.Graphics();
-    g.beginFill(COLORS.BUTTON_PRIMARY);
-    g.drawCircle(cw - 14, 14, 11);
-    g.endFill();
-    card.addChild(g);
-    const t = new PIXI.Text('√', { fontSize: 13, fill: 0xffffff, fontFamily: FONT_FAMILY, fontWeight: 'bold' });
-    t.anchor.set(0.5, 0.5);
-    t.position.set(cw - 14, 14);
-    card.addChild(t);
-  }
-
   /** 购买后获得的星分角标（与 DecorationPanel 一致） */
   private _addStarValueBadge(card: PIXI.Container, cw: number, starValue: number): void {
     if (starValue <= 0) return;
@@ -461,9 +465,8 @@ export class DressUpPanel extends PIXI.Container {
     line: string,
     purchaseHualuCost?: number,
   ): void {
-    const bottomPad = 10;
+    const { bottomPad, btnH: targetH, btnTop } = measureDressCardFooter(ch);
     const maxBtnW = cw - 12;
-    const targetH = Math.min(44, Math.round((34 * ch) / CARD_BASE_H));
     const labelFont = 16;
     const labelStyle = {
       fontSize: labelFont,
@@ -476,14 +479,14 @@ export class DressUpPanel extends PIXI.Container {
 
     const key = mode === 'equipped' ? 'deco_card_btn_1' : mode === 'locked' ? 'deco_card_btn_2' : 'deco_card_btn_3';
     const tex = TextureCache.get(key);
-    const pillCenterY = (btnHScaled: number) => ch - bottomPad - btnHScaled / 2;
+    const pillCenterY = (btnHScaled: number) => btnTop + btnHScaled / 2;
 
     if (tex?.width) {
       const sp = new PIXI.Sprite(tex);
       const s = Math.min(maxBtnW / tex.width, targetH / tex.height);
       sp.scale.set(s);
-      sp.anchor.set(0.5, 1);
-      sp.position.set(cw / 2, ch - bottomPad);
+      sp.anchor.set(0.5, 0);
+      sp.position.set(cw / 2, btnTop);
       card.addChild(sp);
       const scaledH = tex.height * s;
       const cy = pillCenterY(scaledH);
@@ -528,7 +531,7 @@ export class DressUpPanel extends PIXI.Container {
     } else {
       const btnW = Math.min(maxBtnW, 100);
       const btnH = targetH;
-      const btnY = ch - bottomPad - btnH;
+      const btnY = btnTop;
       const color = mode === 'equipped' ? 0xbb88dd : mode === 'locked' ? 0xf0a030 : mode === 'ready' ? COLORS.BUTTON_PRIMARY : 0x4caf50;
       const g = new PIXI.Graphics();
       g.beginFill(color);
@@ -620,14 +623,41 @@ export class DressUpPanel extends PIXI.Container {
 
     this._drawCardBg(card, cw, ch, cardUnlockedLook, isEquipped);
 
-    const nameY = Math.round((ch * 93) / CARD_BASE_H);
-    const portraitTop = 4;
-    const portraitBottom = nameY - 2;
+    const showPortrait = isUnlocked || reqMet || needsAdGate || isActivityLockedOutfit(outfit);
+    const { btnTop } = measureDressCardFooter(ch);
+    const nameFontSize = dressCardNameFontSize(cw);
+    const nameBottomY = btnTop - CARD_NAME_GAP_ABOVE_BTN;
+
+    let nameBlockH = Math.round(nameFontSize * 1.2);
+    if (!showPortrait) {
+      const nameGap = 12;
+      const lockSlot = Math.max(26, Math.round((28 * cw) / CARD_BASE_W));
+      const nameWrap = Math.max(36, cw - 12 - nameGap - lockSlot);
+      const probe = new PIXI.Text(outfit.name, {
+        fontSize: nameFontSize,
+        fontFamily: FONT_FAMILY,
+        fontWeight: 'bold',
+        wordWrap: true,
+        wordWrapWidth: nameWrap,
+      });
+      nameBlockH = Math.max(nameBlockH, Math.ceil(probe.height));
+    } else {
+      const probe = new PIXI.Text(outfit.name, {
+        fontSize: nameFontSize,
+        fontFamily: FONT_FAMILY,
+        fontWeight: 'bold',
+        wordWrap: true,
+        wordWrapWidth: cw - 10,
+      });
+      nameBlockH = Math.max(nameBlockH, Math.ceil(probe.height));
+    }
+
+    const portraitTop = Math.max(12, Math.round((CARD_PORTRAIT_TOP_INSET * ch) / CARD_BASE_H));
+    const portraitBottom = nameBottomY - nameBlockH - CARD_NAME_GAP_BELOW_PORTRAIT;
     const maxPortraitH = Math.max(44, portraitBottom - portraitTop);
     const maxPortraitW = cw - 6;
-    const portraitCy = portraitTop + maxPortraitH / 2;
+    const portraitCy = portraitTop + maxPortraitH / 2 + PORTRAIT_CENTER_NUDGE_Y;
 
-    const showPortrait = isUnlocked || reqMet || needsAdGate || isActivityLockedOutfit(outfit);
     if (!showPortrait) {
       const mysteryWrap = new PIXI.Container();
       mysteryWrap.position.set(cw / 2, portraitCy);
@@ -650,11 +680,10 @@ export class DressUpPanel extends PIXI.Container {
         card.addChild(sp);
         this._addStarValueBadge(card, cw, outfit.starValue);
       } else {
-        const iconCy = Math.round((ch * 54) / CARD_BASE_H);
         const mark = outfit.icon?.trim() ? outfit.icon : outfit.name.charAt(0) || '?';
         const icon = new PIXI.Text(mark, { fontSize: Math.round((44 * cw) / CARD_BASE_W), fontFamily: FONT_FAMILY });
         icon.anchor.set(0.5, 0.5);
-        icon.position.set(cw / 2, iconCy);
+        icon.position.set(cw / 2, portraitCy);
         card.addChild(icon);
         this._addStarValueBadge(card, cw, outfit.starValue);
       }
@@ -664,15 +693,13 @@ export class DressUpPanel extends PIXI.Container {
       this._addStarValueBadge(card, cw, outfit.starValue);
     }
 
-    if (isEquipped) this._addEquipBadge(card, cw);
-
     if (!showPortrait) {
       const nameGap = 12;
       const lockSlot = Math.max(26, Math.round((28 * cw) / CARD_BASE_W));
       const nameWrap = Math.max(36, cw - 12 - nameGap - lockSlot);
       const nameRow = new PIXI.Container();
       const name = new PIXI.Text(outfit.name, {
-        fontSize: 15,
+        fontSize: nameFontSize,
         fill: COLORS.TEXT_DARK,
         fontFamily: FONT_FAMILY,
         fontWeight: 'bold',
@@ -680,26 +707,26 @@ export class DressUpPanel extends PIXI.Container {
         wordWrap: true,
         wordWrapWidth: nameWrap,
       });
-      name.anchor.set(0, 0);
+      name.anchor.set(0, 1);
       nameRow.addChild(name);
       const lockIcon = createSmallNameLockIcon(cw, CARD_BASE_W);
-      lockIcon.position.set(name.width + nameGap, name.height * 0.5);
+      lockIcon.position.set(name.width + nameGap, -name.height * 0.5);
       nameRow.addChild(lockIcon);
       const nb = nameRow.getLocalBounds();
-      nameRow.position.set(Math.round((cw - nb.width) / 2 - nb.x), nameY - nb.y - 2);
+      nameRow.position.set(Math.round((cw - nb.width) / 2 - nb.x), nameBottomY - nb.y);
       card.addChild(nameRow);
     } else {
       const name = new PIXI.Text(outfit.name, {
-        fontSize: 15,
+        fontSize: nameFontSize,
         fill: isUnlocked || reqMet ? COLORS.TEXT_DARK : COLORS.TEXT_LIGHT,
         fontFamily: FONT_FAMILY,
         fontWeight: 'bold',
         align: 'center',
         wordWrap: true,
-        wordWrapWidth: cw - 12,
+        wordWrapWidth: cw - 10,
       });
-      name.anchor.set(0.5, 0);
-      name.position.set(cw / 2, nameY);
+      name.anchor.set(0.5, 1);
+      name.position.set(cw / 2, nameBottomY);
       card.addChild(name);
     }
 
