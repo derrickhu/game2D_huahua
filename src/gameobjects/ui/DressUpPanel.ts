@@ -1,12 +1,11 @@
 /**
- * 换装面板 — 复用装修面板的金边抽屉壳与资源（merge_chain_panel / ribbon / 关闭钮 / 卡片底）
- *
- * 2 列形象卡：花愿解锁 / 条件解锁 / 切换穿戴
+ * 形象换装面板 — 单张壳体 + PIXI 叠标题/进度/3 列形象卡网格
  */
 import * as PIXI from 'pixi.js';
 import { Game } from '@/core/Game';
 import { AudioManager } from '@/core/AudioManager';
 import { EventBus } from '@/core/EventBus';
+import { OverlayManager } from '@/core/OverlayManager';
 import { TweenManager, Ease } from '@/core/TweenManager';
 import { DressUpManager, Outfit } from '@/managers/DressUpManager';
 import { getOwnerChibiTextureKey, getOwnerFullOpenTextureKey } from '@/config/DressUpConfig';
@@ -21,37 +20,38 @@ import { ToastMessage } from './ToastMessage';
 import { addMysteryCardPlaceholder, createSmallNameLockIcon } from '@/gameobjects/ui/mysteryCardPlaceholder';
 import { DESIGN_WIDTH, FONT_FAMILY, COLORS } from '@/config/Constants';
 
-const PANEL_W = DESIGN_WIDTH - 40;
-const PANEL_MARGIN_LEFT = 36;
-const PANEL_H_RATIO = 0.74;
-const PANEL_TOP_R = 20;
+/** 壳体锚点：相对壳图宽/高的比例或壳图 px，经 scale 映射到屏幕 */
+const SHELL = {
+  W: 680,
+  H: 1218,
+  TITLE_Y_FRAC: 0.088,
+  CLOSE_CX_PX: 640,
+  CLOSE_CY_PX: 44,
+  CLOSE_HIT_R_PX: 46,
+  PROGRESS_Y_FRAC: 0.134,
+  INNER_PAD_X_FRAC: 0.076,
+  CONTENT_TOP_FRAC: 0.158,
+  CONTENT_BOTTOM_FRAC: 0.96,
+};
 
-const RIBBON_MAX_W = Math.min(PANEL_W - 8, Math.round(PANEL_W * 0.98));
-const RIBBON_MAX_H = 124;
-const RIBBON_Y = 34;
-const CLOSE_BTN_INSET_RIGHT = 56;
-const PROGRESS_BELOW_RIBBON = 8;
-const PROGRESS_TO_DIVIDER = 14;
-const DIVIDER_TO_CONTENT = 6;
-const HEADER_DIVIDER_WIDTH_RATIO = 0.56;
-const CONTENT_BOTTOM = 148;
-const GRID_MARGIN_H = 22;
-
-const GRID_COLS = 2;
-const CARD_GAP = 10;
-const CARD_BASE_W = 140;
-const CARD_BASE_H = 160;
-const CARD_MAX_W = 200;
+const GRID_COLS = 3;
+const CARD_GAP = 8;
+const CARD_BASE_W = 130;
+const CARD_BASE_H = 155;
+const CARD_MAX_W = 185;
+const CARD_MIN_W = 96;
+/** 半身预览在卡内留白内再放大一点 */
+const PORTRAIT_DISPLAY_BOOST = 1.12;
 const CARD_R = 10;
 
-const GOLD_LINE = 0xe8c078;
-const GOLD_INNER = 0xd4a84b;
-const CREAM_FILL = 0xfff9ec;
-const SHADOW_COLOR = 0x8b7355;
+const ROSE_LINE = 0xf0a896;
+const ROSE_INNER = 0xe88878;
+const CREAM_FILL = 0xfff9f5;
+const SHADOW_COLOR = 0xc49a8a;
 
 function measureDressGrid(gridW: number): { cw: number; ch: number; startX: number } {
   const cwRaw = Math.floor((gridW - CARD_GAP * (GRID_COLS + 1)) / GRID_COLS);
-  const cw = Math.max(110, Math.min(CARD_MAX_W, cwRaw));
+  const cw = Math.max(CARD_MIN_W, Math.min(CARD_MAX_W, cwRaw));
   const ch = Math.round((cw * CARD_BASE_H) / CARD_BASE_W);
   const blockW = GRID_COLS * cw + (GRID_COLS - 1) * CARD_GAP;
   const startX = Math.floor((gridW - blockW) / 2);
@@ -92,20 +92,18 @@ function outfitSortRank(outfit: Outfit & { unlocked: boolean; equipped: boolean 
 }
 
 export class DressUpPanel extends PIXI.Container {
-  private _bg!: PIXI.Graphics;
-  private _content!: PIXI.Container;
+  private _overlay!: PIXI.Graphics;
+  private _panel!: PIXI.Container;
+  private _shellSprite!: PIXI.Sprite;
   private _gridViewport!: PIXI.Container;
   private _gridContainer!: PIXI.Container;
   private _gridMask!: PIXI.Graphics;
   private _titleText!: PIXI.Text;
   private _progressText!: PIXI.Text;
-  private _headerDivider!: PIXI.Graphics;
-  private _closeBtn: PIXI.Sprite | PIXI.Text | null = null;
-  private _panelBgSprite: PIXI.Sprite | null = null;
-  private _panelFallbackBg: PIXI.DisplayObject | null = null;
-  private _ribbonSprite: PIXI.Sprite | null = null;
-  private _titleCenterY = 58;
-  private _contentTopY = 168;
+  private _closeHit!: PIXI.Container;
+  private _layoutScale = 1;
+  private _contentW = 0;
+  private _contentH = 0;
   private _scrollY = 0;
   private _maxScrollY = 0;
   private _draggingGrid = false;
@@ -115,8 +113,6 @@ export class DressUpPanel extends PIXI.Container {
   private _ignoreNextCardTap = false;
   private _isOpen = false;
   private _opening = false;
-  /** 记录面板高度，logicHeight 变化时拉伸底图与遮罩 */
-  private _panelHBuilt = 0;
   /** 飞星动画结束后再入账的星星数（与 DressUpManager.unlock defer 配对） */
   private _pendingDressUpStarGrant = 0;
   private _assetUnsub: (() => void) | null = null;
@@ -166,26 +162,20 @@ export class DressUpPanel extends PIXI.Container {
     if (this._isOpen) return;
     this._isOpen = true;
     this.visible = true;
+    OverlayManager.bringToFront();
     this._assetUnsub = TextureCache.onAssetGroupLoaded('dressup', () => {
       if (!this._isOpen) return;
-      this._applyLoadedPanelTextures();
+      this._applyShellLayout();
+      this._refreshHeaderNumbers();
       this._rebuildGrid();
     });
-    this._applyLoadedPanelTextures();
-    this._resizePanelIfNeeded();
+    this._applyShellLayout();
     this._refreshHeaderNumbers();
     this._rebuildGrid();
 
-    const h = Game.logicHeight;
-    const panelH = Math.round(h * PANEL_H_RATIO);
-    const panelY = h - panelH;
-    const panelX = this._content.position.x;
-
-    TweenManager.cancelTarget(this._content.position);
-    this._content.position.set(panelX, h);
     this.alpha = 0;
-    TweenManager.to({ target: this, props: { alpha: 1 }, duration: 0.18, ease: Ease.easeOutQuad });
-    TweenManager.to({ target: this._content.position, props: { y: panelY }, duration: 0.28, ease: Ease.easeOutQuad });
+    TweenManager.cancelTarget(this);
+    TweenManager.to({ target: this, props: { alpha: 1 }, duration: 0.22, ease: Ease.easeOutQuad });
   }
 
   close(): void {
@@ -196,102 +186,72 @@ export class DressUpPanel extends PIXI.Container {
     this._assetUnsub?.();
     this._assetUnsub = null;
     this._unbindCanvasGridScroll();
-    const h = Game.logicHeight;
-    TweenManager.cancelTarget(this._content.position);
-    TweenManager.to({ target: this._content.position, props: { y: h }, duration: 0.22, ease: Ease.easeInQuad });
+    TweenManager.cancelTarget(this);
     TweenManager.to({
-      target: this, props: { alpha: 0 }, duration: 0.2, ease: Ease.easeInQuad,
+      target: this, props: { alpha: 0 }, duration: 0.18, ease: Ease.easeInQuad,
       onComplete: () => { this.visible = false; },
     });
   }
 
-  private _layoutCloseButton(): void {
-    if (!this._closeBtn) return;
-    this._closeBtn.position.set(PANEL_W - CLOSE_BTN_INSET_RIGHT, this._titleCenterY);
+  private _shellLayout() {
+    const shellTex = TextureCache.get('dressup_panel_shell_nb2');
+    const sw = shellTex?.width ?? SHELL.W;
+    const sh = shellTex?.height ?? SHELL.H;
+    const panelW = DESIGN_WIDTH - 24;
+    const scale = panelW / sw;
+    const dispH = sh * scale;
+    const panelX = DESIGN_WIDTH / 2 - panelW / 2;
+    const panelY = Math.max(36, (Game.logicHeight - dispH) / 2);
+    const sx = (px: number) => px * scale;
+    const sy = (py: number) => py * scale;
+    const sxFrac = (frac: number) => sx(sw * frac);
+    const syFrac = (frac: number) => sy(sh * frac);
+    return { scale, panelX, panelY, panelW, dispH, sw, sh, sx, sy, sxFrac, syFrac, shellTex };
   }
 
-  private _refreshCloseButtonTexture(): void {
-    const closeTex = TextureCache.get('warehouse_close_btn');
-    if (!closeTex?.width || this._closeBtn instanceof PIXI.Sprite) return;
-    const old = this._closeBtn as PIXI.DisplayObject | null;
-    if (!old) return;
-    old.parent?.removeChild(old);
-    old.destroy();
+  private _applyShellLayout(): void {
+    const layout = this._shellLayout();
+    this._layoutScale = layout.scale;
+    this._panel.position.set(layout.panelX, layout.panelY);
 
-    const closeBtn = new PIXI.Sprite(closeTex);
-    const cs = Math.min(54 / closeTex.width, 54 / closeTex.height);
-    closeBtn.scale.set(cs);
-    closeBtn.anchor.set(0.5, 0.5);
-    closeBtn.eventMode = 'static';
-    closeBtn.cursor = 'pointer';
-    closeBtn.zIndex = 2000;
-    closeBtn.on('pointertap', (e: PIXI.FederatedPointerEvent) => { e.stopPropagation(); this.close(); });
-    this._content.addChild(closeBtn);
-    this._closeBtn = closeBtn;
-    this._layoutCloseButton();
-  }
-
-  private _applyLoadedPanelTextures(): void {
-    const panelH = Math.round(Game.logicHeight * PANEL_H_RATIO);
-    const panelTex = TextureCache.get('merge_chain_panel');
-    if (panelTex?.width && !this._panelBgSprite) {
-      if (this._panelFallbackBg?.parent) {
-        this._panelFallbackBg.parent.removeChild(this._panelFallbackBg);
-        this._panelFallbackBg.destroy({ children: true });
-      }
-      this._panelFallbackBg = null;
-
-      const panelBg = new PIXI.Sprite(panelTex);
-      panelBg.width = PANEL_W;
-      panelBg.height = panelH;
-      panelBg.eventMode = 'static';
-      panelBg.zIndex = 0;
-      this._content.addChildAt(panelBg, 0);
-      this._panelBgSprite = panelBg;
+    const shellTex = layout.shellTex;
+    if (shellTex) {
+      this._shellSprite.texture = shellTex;
+      this._shellSprite.scale.set(layout.scale);
+      this._shellSprite.visible = true;
+    } else {
+      this._shellSprite.visible = false;
     }
 
-    const ribbonTex = TextureCache.get('merge_chain_ribbon');
-    if (ribbonTex?.width && !this._ribbonSprite) {
-      const rib = new PIXI.Sprite(ribbonTex);
-      const s = Math.min(RIBBON_MAX_W / ribbonTex.width, RIBBON_MAX_H / ribbonTex.height);
-      rib.scale.set(s);
-      rib.anchor.set(0.5, 0);
-      rib.position.set(PANEL_W / 2, RIBBON_Y);
-      rib.eventMode = 'static';
-      rib.zIndex = 5;
-      this._content.addChild(rib);
-      this._ribbonSprite = rib;
-      this._content.sortChildren();
-    }
+    this._titleText.position.set(layout.sxFrac(0.5), layout.syFrac(SHELL.TITLE_Y_FRAC));
+    this._titleText.style.fontSize = Math.max(28, Math.round(38 * layout.scale));
 
-    this._refreshCloseButtonTexture();
-    this._syncHeaderLayout();
-  }
+    this._progressText.position.set(layout.sxFrac(0.5), layout.syFrac(SHELL.PROGRESS_Y_FRAC));
+    this._progressText.style.fontSize = Math.max(16, Math.round(20 * layout.scale));
 
-  private _syncHeaderLayout(): void {
-    let titleCenterY = 58;
-    let ribbonBottom = titleCenterY + 36;
-    const ribbonTex = this._ribbonSprite?.texture;
-    if (this._ribbonSprite && ribbonTex?.width) {
-      titleCenterY = RIBBON_Y + (ribbonTex.height * this._ribbonSprite.scale.y) * 0.45;
-      ribbonBottom = RIBBON_Y + ribbonTex.height * this._ribbonSprite.scale.y;
-    }
-    this._titleCenterY = titleCenterY;
-    this._titleText.position.set(PANEL_W / 2, titleCenterY);
+    this._closeHit.position.set(
+      layout.sx(SHELL.CLOSE_CX_PX),
+      layout.sy(SHELL.CLOSE_CY_PX),
+    );
+    this._closeHit.hitArea = new PIXI.Circle(0, 0, layout.sx(SHELL.CLOSE_HIT_R_PX));
 
-    const progressY = Math.round(ribbonBottom + PROGRESS_BELOW_RIBBON);
-    this._progressText.position.set(PANEL_W / 2, progressY);
+    const padX = layout.sxFrac(SHELL.INNER_PAD_X_FRAC);
+    const contentTop = layout.syFrac(SHELL.CONTENT_TOP_FRAC);
+    const contentBottom = layout.syFrac(SHELL.CONTENT_BOTTOM_FRAC);
+    this._contentW = layout.panelW - padX * 2;
+    this._contentH = Math.max(120, contentBottom - contentTop);
 
-    const dividerY = Math.round(progressY + PROGRESS_TO_DIVIDER);
-    const divHalfW = Math.round((PANEL_W * HEADER_DIVIDER_WIDTH_RATIO) / 2);
-    this._headerDivider.clear();
-    this._headerDivider.lineStyle(2, GOLD_LINE, 0.75);
-    this._headerDivider.moveTo(Math.round(PANEL_W / 2) - divHalfW, dividerY);
-    this._headerDivider.lineTo(Math.round(PANEL_W / 2) + divHalfW, dividerY);
+    this._gridViewport.position.set(padX, contentTop);
+    this._gridViewport.hitArea = new PIXI.Rectangle(0, 0, this._contentW, this._contentH);
+    this._gridMask.clear();
+    this._gridMask.beginFill(0xffffff);
+    this._gridMask.drawRect(padX, contentTop, this._contentW, this._contentH);
+    this._gridMask.endFill();
 
-    this._contentTopY = Math.round(dividerY + DIVIDER_TO_CONTENT);
-    this._layoutCloseButton();
-    this._syncDressGridClip();
+    this._overlay.clear();
+    this._overlay.beginFill(0x000000, 0.48);
+    this._overlay.drawRect(0, 0, DESIGN_WIDTH, Game.logicHeight);
+    this._overlay.endFill();
   }
 
   private _refreshHeaderNumbers(): void {
@@ -357,12 +317,10 @@ export class DressUpPanel extends PIXI.Container {
   }
 
   private _rebuildGrid(): void {
-    this._syncDressGridClip();
     this._gridContainer.removeChildren();
-    const h = Game.logicHeight;
-    const panelH = Math.round(h * PANEL_H_RATIO);
-    const availH = panelH - this._contentTopY - CONTENT_BOTTOM;
-    const gridW = PANEL_W - GRID_MARGIN_H * 2;
+    const gridW = this._contentW;
+    const availH = this._contentH;
+    if (gridW <= 0 || availH <= 0) return;
 
     const outfits = DressUpManager.getAllOutfits()
       .map((outfit, index) => ({ outfit, index }))
@@ -413,14 +371,14 @@ export class DressUpPanel extends PIXI.Container {
     if (equipped) {
       bg.lineStyle(2.5, COLORS.BUTTON_PRIMARY, 0.95);
     } else {
-      bg.lineStyle(2, GOLD_LINE, unlocked ? 0.85 : 0.45);
+      bg.lineStyle(2, ROSE_LINE, unlocked ? 0.85 : 0.45);
     }
-    bg.beginFill(unlocked ? CREAM_FILL : 0xf0ecea, unlocked ? 0.98 : 0.75);
+    bg.beginFill(unlocked ? CREAM_FILL : 0xf5ece8, unlocked ? 0.98 : 0.75);
     bg.drawRoundedRect(0, 0, cw, ch, CARD_R);
     bg.endFill();
 
     if (unlocked) {
-      bg.lineStyle(1, GOLD_INNER, equipped ? 0.35 : 0.45);
+      bg.lineStyle(1, ROSE_INNER, equipped ? 0.35 : 0.45);
       bg.drawRoundedRect(3, 3, cw - 6, ch - 6, Math.max(6, CARD_R - 2));
     }
     card.addChild(bg);
@@ -659,11 +617,11 @@ export class DressUpPanel extends PIXI.Container {
 
     this._drawCardBg(card, cw, ch, cardUnlockedLook, isEquipped);
 
-    const nameY = Math.round((ch * 88) / CARD_BASE_H);
-    const portraitTop = 10;
-    const portraitBottom = nameY - 6;
-    const maxPortraitH = Math.max(40, portraitBottom - portraitTop);
-    const maxPortraitW = cw - 16;
+    const nameY = Math.round((ch * 93) / CARD_BASE_H);
+    const portraitTop = 8;
+    const portraitBottom = nameY - 4;
+    const maxPortraitH = Math.max(44, portraitBottom - portraitTop);
+    const maxPortraitW = cw - 12;
     const portraitCy = portraitTop + maxPortraitH / 2;
 
     const showPortrait = isUnlocked || reqMet || needsAdGate || isActivityLockedOutfit(outfit);
@@ -683,7 +641,7 @@ export class DressUpPanel extends PIXI.Container {
       if (previewTex) {
         const sp = new PIXI.Sprite(previewTex);
         sp.anchor.set(0.5, 0.5);
-        const s = Math.min(maxPortraitW / previewTex.width, maxPortraitH / previewTex.height);
+        const s = Math.min(maxPortraitW / previewTex.width, maxPortraitH / previewTex.height) * PORTRAIT_DISPLAY_BOOST;
         sp.scale.set(s);
         sp.position.set(cw / 2, portraitCy);
         card.addChild(sp);
@@ -824,197 +782,80 @@ export class DressUpPanel extends PIXI.Container {
   }
 
   private _build(): void {
-    const w = DESIGN_WIDTH;
-    const h = Game.logicHeight;
+    this._overlay = new PIXI.Graphics();
+    this._overlay.eventMode = 'static';
+    this._overlay.on('pointerdown', () => this.close());
+    this.addChild(this._overlay);
 
-    this._bg = new PIXI.Graphics();
-    this._bg.beginFill(0x000000, 0.5);
-    this._bg.drawRect(0, 0, w, h);
-    this._bg.endFill();
-    this._bg.eventMode = 'static';
-    this._bg.on('pointertap', () => this.close());
-    this.addChild(this._bg);
+    this._panel = new PIXI.Container();
+    this._panel.sortableChildren = true;
+    this._panel.eventMode = 'static';
+    this._panel.on('pointerdown', (e: PIXI.FederatedPointerEvent) => e.stopPropagation());
+    this.addChild(this._panel);
 
-    const panelH = Math.round(h * PANEL_H_RATIO);
-    const panelX = PANEL_MARGIN_LEFT;
-    const panelY = h - panelH;
-
-    this._content = new PIXI.Container();
-    this._content.sortableChildren = true;
-    this._content.position.set(panelX, panelY);
-    this.addChild(this._content);
-
-    const panelTex = TextureCache.get('merge_chain_panel');
-    if (panelTex?.width) {
-      const panelBg = new PIXI.Sprite(panelTex);
-      panelBg.width = PANEL_W;
-      panelBg.height = panelH;
-      panelBg.eventMode = 'static';
-      this._content.addChild(panelBg);
-      this._panelBgSprite = panelBg;
-    } else {
-      const g = new PIXI.Graphics();
-      g.lineStyle(3, 0xd97b00);
-      g.beginFill(0xfff9e6);
-      g.drawRoundedRect(0, 0, PANEL_W, panelH, PANEL_TOP_R);
-      g.endFill();
-      g.lineStyle(2, 0xffd700);
-      g.drawRoundedRect(3, 3, PANEL_W - 6, panelH - 6, PANEL_TOP_R - 2);
-      g.eventMode = 'static';
-      this._content.addChild(g);
-      this._panelFallbackBg = g;
-    }
-
-    const ribbonTex = TextureCache.get('merge_chain_ribbon');
-    let titleCenterY = 58;
-    let ribbonBottom = titleCenterY + 36;
-    if (ribbonTex?.width) {
-      const rib = new PIXI.Sprite(ribbonTex);
-      const s = Math.min(RIBBON_MAX_W / ribbonTex.width, RIBBON_MAX_H / ribbonTex.height);
-      rib.scale.set(s);
-      rib.anchor.set(0.5, 0);
-      rib.position.set(PANEL_W / 2, RIBBON_Y);
-      rib.eventMode = 'static';
-      rib.zIndex = 5;
-      this._content.addChild(rib);
-      this._ribbonSprite = rib;
-      titleCenterY = RIBBON_Y + (ribbonTex.height * s) * 0.45;
-      ribbonBottom = RIBBON_Y + ribbonTex.height * s;
-    }
-    this._titleCenterY = titleCenterY;
+    this._shellSprite = new PIXI.Sprite(PIXI.Texture.EMPTY);
+    this._panel.addChild(this._shellSprite);
 
     this._titleText = new PIXI.Text('形象换装', {
-      fontSize: 30,
+      fontSize: 38,
       fill: 0xffffff,
       fontFamily: FONT_FAMILY,
-      fontWeight: 'bold',
-      stroke: 0x7a4530,
+      fontWeight: '900',
+      stroke: 0xc4728a,
       strokeThickness: 5,
-      dropShadow: true,
-      dropShadowColor: 0x5a2d10,
-      dropShadowBlur: 2,
-      dropShadowDistance: 1,
-    } as any);
-    this._titleText.anchor.set(0.5, 0.5);
-    this._titleText.position.set(PANEL_W / 2, titleCenterY);
-    this._titleText.zIndex = 6;
-    this._content.addChild(this._titleText);
-
-    const progressY = Math.round(ribbonBottom + PROGRESS_BELOW_RIBBON);
+    } as PIXI.ITextStyle);
+    this._titleText.anchor.set(0.5);
+    this._titleText.zIndex = 20;
+    this._panel.addChild(this._titleText);
 
     this._progressText = new PIXI.Text('', {
       fontSize: 20,
-      fill: 0xfff5e8,
+      fill: 0xc4728a,
       fontFamily: FONT_FAMILY,
-      fontWeight: 'bold',
-      stroke: 0xb86b4a,
-      strokeThickness: 3,
-      dropShadow: true,
-      dropShadowColor: 0x4a3020,
-      dropShadowBlur: 2,
-      dropShadowDistance: 1,
-    } as any);
-    this._progressText.anchor.set(0.5, 0.5);
-    this._progressText.position.set(PANEL_W / 2, progressY);
-    this._progressText.zIndex = 6;
-    this._content.addChild(this._progressText);
+      fontWeight: '900',
+      stroke: 0xa05870,
+      strokeThickness: 1,
+    } as PIXI.ITextStyle);
+    this._progressText.anchor.set(0.5);
+    this._progressText.zIndex = 20;
+    this._panel.addChild(this._progressText);
 
-    const dividerY = Math.round(progressY + PROGRESS_TO_DIVIDER);
-    const divHalfW = Math.round((PANEL_W * HEADER_DIVIDER_WIDTH_RATIO) / 2);
-    this._headerDivider = new PIXI.Graphics();
-    this._headerDivider.zIndex = 5;
-    this._headerDivider.lineStyle(2, GOLD_LINE, 0.75);
-    this._headerDivider.moveTo(Math.round(PANEL_W / 2) - divHalfW, dividerY);
-    this._headerDivider.lineTo(Math.round(PANEL_W / 2) + divHalfW, dividerY);
-    this._content.addChild(this._headerDivider);
-
-    this._contentTopY = Math.round(dividerY + DIVIDER_TO_CONTENT);
-
-    const gridW = PANEL_W - GRID_MARGIN_H * 2;
-    const gridH = panelH - this._contentTopY - CONTENT_BOTTOM;
+    this._closeHit = new PIXI.Container();
+    this._closeHit.zIndex = 100;
+    this._closeHit.eventMode = 'static';
+    this._closeHit.cursor = 'pointer';
+    const onCloseTap = (e: PIXI.FederatedPointerEvent) => {
+      e.stopPropagation();
+      this.close();
+    };
+    this._closeHit.on('pointerdown', onCloseTap);
+    this._closeHit.on('pointertap', onCloseTap);
+    this._panel.addChild(this._closeHit);
 
     this._gridViewport = new PIXI.Container();
-    this._gridViewport.position.set(GRID_MARGIN_H, this._contentTopY);
+    this._gridViewport.zIndex = 10;
     this._gridViewport.eventMode = 'static';
-    this._gridViewport.hitArea = new PIXI.Rectangle(0, 0, gridW, gridH);
     this._gridViewport.on('pointerdown', (e: PIXI.FederatedPointerEvent) => this._onGridPointerDown(e));
     this._gridViewport.on('pointermove', (e: PIXI.FederatedPointerEvent) => this._onGridPointerMove(e));
     this._gridViewport.on('globalpointermove', (e: PIXI.FederatedPointerEvent) => this._onGridPointerMove(e));
     this._gridViewport.on('pointerup', (e: PIXI.FederatedPointerEvent) => this._onGridPointerEnd(e));
     this._gridViewport.on('pointerupoutside', (e: PIXI.FederatedPointerEvent) => this._onGridPointerEnd(e));
     this._gridViewport.on('pointercancel', (e: PIXI.FederatedPointerEvent) => this._onGridPointerEnd(e));
-    this._content.addChild(this._gridViewport);
+    this._panel.addChild(this._gridViewport);
 
     this._gridMask = new PIXI.Graphics();
-    this._gridMask.beginFill(0xffffff);
-    this._gridMask.drawRect(0, 0, gridW, gridH);
-    this._gridMask.endFill();
     this._gridMask.eventMode = 'none';
-    this._gridViewport.addChild(this._gridMask);
+    this._panel.addChild(this._gridMask);
+    this._gridViewport.mask = this._gridMask;
 
     this._gridContainer = new PIXI.Container();
     this._gridViewport.addChild(this._gridContainer);
-    this._gridContainer.mask = this._gridMask;
-
     this._gridContainer.eventMode = 'static';
     this._gridContainer.on('pointerdown', (e: PIXI.FederatedPointerEvent) => this._onGridPointerDown(e));
-    this._gridContainer.on('wheel', (e: any) => {
+    this._gridContainer.on('wheel', (e: WheelEvent) => {
       this._setScrollY(this._scrollY - (e.deltaY || 0));
     });
 
-    const closeTex = TextureCache.get('warehouse_close_btn');
-    if (closeTex?.width) {
-      const closeBtn = new PIXI.Sprite(closeTex);
-      const cs = Math.min(54 / closeTex.width, 54 / closeTex.height);
-      closeBtn.scale.set(cs);
-      closeBtn.anchor.set(0.5, 0.5);
-      closeBtn.eventMode = 'static';
-      closeBtn.cursor = 'pointer';
-      closeBtn.zIndex = 2000;
-      closeBtn.on('pointertap', (e: PIXI.FederatedPointerEvent) => { e.stopPropagation(); this.close(); });
-      this._content.addChild(closeBtn);
-      this._closeBtn = closeBtn;
-    } else {
-      const closeBtn = new PIXI.Text('×', {
-        fontSize: 34, fill: 0xffffff, fontFamily: FONT_FAMILY, fontWeight: 'bold',
-        stroke: 0x7a4530, strokeThickness: 4,
-      } as any);
-      closeBtn.anchor.set(0.5, 0.5);
-      closeBtn.eventMode = 'static';
-      closeBtn.cursor = 'pointer';
-      closeBtn.zIndex = 2000;
-      closeBtn.on('pointertap', (e: PIXI.FederatedPointerEvent) => { e.stopPropagation(); this.close(); });
-      this._content.addChild(closeBtn);
-      this._closeBtn = closeBtn;
-    }
-    this._layoutCloseButton();
-
-    this._panelHBuilt = panelH;
-  }
-
-  private _syncDressGridClip(): void {
-    const panelH = Math.round(Game.logicHeight * PANEL_H_RATIO);
-    const gridW = PANEL_W - GRID_MARGIN_H * 2;
-    const gridH = panelH - this._contentTopY - CONTENT_BOTTOM;
-    this._gridViewport.position.set(GRID_MARGIN_H, this._contentTopY);
-    this._gridViewport.hitArea = new PIXI.Rectangle(0, 0, gridW, gridH);
-    this._gridMask.clear();
-    this._gridMask.beginFill(0xffffff);
-    this._gridMask.drawRect(0, 0, gridW, gridH);
-    this._gridMask.endFill();
-  }
-
-  private _resizePanelIfNeeded(): void {
-    const h = Game.logicHeight;
-    const panelH = Math.round(h * PANEL_H_RATIO);
-    if (panelH === this._panelHBuilt) return;
-    const bg = this._content.children[0];
-    if (this._panelBgSprite) {
-      this._panelBgSprite.height = panelH;
-    } else if (bg instanceof PIXI.Sprite) {
-      bg.height = panelH;
-    }
-    this._syncDressGridClip();
-    this._panelHBuilt = panelH;
+    this._applyShellLayout();
   }
 }

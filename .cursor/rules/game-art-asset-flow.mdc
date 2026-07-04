@@ -40,6 +40,7 @@ alwaysApply: true
 ## 模型与命令
 
 - **NB2** = `gemini-3.1-flash-image-preview`（gemini-image-gen skill）。
+- **生图工具优先级（游戏内入库资源）**：**必须默认 Gemini NB2**（`generate_images.py`）。**禁止**在未尝试 Gemini、且用户未明确要求时，使用 Cursor 内置 `GenerateImage` 生成面板壳 / 房壳 / 家具 / 角色等写入 `minigame/` 的资源。（**例外**：微信对外推广 JPG 仍按 `wechat-minigame-promo-assets.mdc` 用内置 `GenerateImage`。）
 - **HTTP(S) 代理**：`generate_images.py` 默认 `http://127.0.0.1:7897`（与 macOS 系统代理及 Clash Verge / Mihomo 常见监听一致）；其它端口 `export HTTPS_PROXY=...`；直连与 `GEMINI_IMAGE_NO_PROXY` 见 gemini-image-gen skill。
 - 竖版全屏背景常用 `--aspect-ratio 9:16`；**512 合图**用 `--aspect-ratio 1:1`（见上条）。
 - 使用 **prompt 文件** 避免超长命令行：
@@ -94,7 +95,8 @@ cp "../game_assets/huahua/assets/raw/house_yard_bg_nb2.png" \
 
 - `prompt.txt` 内**只写发送给模型的正文**，不要夹带 `#` 注释行（会一并提交给 API）。
 - 流程说明、任务元数据写在 `docs/游戏资产生图与入库流程.md` 或本规则中即可。
-- API/代理失败时：可改用 Cursor `GenerateImage` 等兜底；**同一工作流内须立即** `cp`/`mv` 到 `../game_assets/huahua/assets/raw/{任务名}.png`（或与下表一致的子目录），**不得**仅以 Cursor `.cursor/.../assets/` 下的文件为准；然后再执行抠图/裁切后拷贝进 `minigame/`。
+- API/代理失败时：可改用 Cursor `GenerateImage` **兜底**；**同一工作流内须立即** `cp`/`mv` 到 `../game_assets/huahua/assets/raw/{任务名}.png`（或与下表一致的子目录），**不得**仅以 Cursor `.cursor/.../assets/` 下的文件为准；然后再执行抠图/裁切后拷贝进 `minigame/`。
+- **面板壳生图**：附 `--image` 参考已有简洁壳体（如 `furniture_workshop_panel_shell_nb2.png`）锁布局；prompt 要求**极简 flat vector**，禁止巴洛克金框、蕾丝角饰、心形分割线等过度装饰。
 
 ## 花店草地背景（当前任务映射）
 

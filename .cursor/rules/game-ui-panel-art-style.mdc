@@ -27,15 +27,17 @@ alwaysApply: true
 ## 质感与禁忌
 
 - **要**：圆角大、层次清、阴影柔和、色彩干净透亮。
-- **不要**：照片级 UI、水印、品牌 Logo、与花店温馨调性冲突的冷硬科幻风、满屏杂纹背景。
+- **不要**：照片级 UI、水印、品牌 Logo、与花店温馨调性冲突的冷硬科幻风、满屏杂纹背景、**过度装饰的巴洛克/蕾丝/角花边框**（面板壳应接近工坊壳的 flat vector 简洁度）。
 
 ## NB2 提示词撰写
 
 - 正文用 **英文**；**不要**在发给模型的 prompt 文件里写 `#` 注释行（会进 API）。
+- **生图工具**：游戏内面板壳 **必须 Gemini NB2**（`generate_images.py`），**禁止**默认用 Cursor 内置 `GenerateImage`（推广 JPG 除外，见 `game-art-asset-flow.mdc`）。
 - 原型 / 底板类资源：优先要求 **无可读文字与数字**（避免乱码），文案由工程内 `PIXI.Text` 叠加。
 - **模型**：与项目统一，面板整页原型用 **`gemini-3.1-flash-image-preview`**，**`--aspect-ratio 9:16`**（竖屏全屏弹层）。
-- **范本提示词**（可节选合并进新面板 prompt）：`docs/prompt/daily_challenge_panel_shell_nb2_prompt.txt`（粉紫框 + **中间淡粉纯色实底**（非镂空）+ 金标题 + 红关闭 + 空胶囊条；**仅弹窗外围**可用绿幕 0,255,0 **辅助**生图——**入库去底仍以 BiRefNet / `birefnet-general` 为准**，见 `remove-background-game-art.mdc`，窗内不得出现绿色）。
-- **分层拆图**：大面板可拆「壳 + 内容区底板 + 列表行 + 底栏进度轨」等多张 PNG 拼接，每张 prompt 可写明 **透明底** 或 **品红底 `#FF00FF`** 方便人工区分图层；**禁止**仅靠色键当终稿，**必须**按 **`remove-background-game-art.mdc`** 用 **`birefnet-general`** 抠图入库。
+- **单张壳体（推荐）**：参考 **`furniture_workshop_panel_shell_nb2`** 实现——**一张 PNG 壳 + 代码叠内容**；prompt 附 `--image` 参考已有壳体锁**布局简洁度**。壳体只保留：外框 + 空标题牌 + 空白内容区 + 红关闭；**禁止**巴洛克金框、蕾丝角饰、心形/花卉分割线、角落 vignette、高对比 damask 纹理。
+- **范本提示词**（可节选合并进新面板 prompt）：`docs/prompt/furniture_workshop_panel_shell_v6_nb2_prompt.txt`（极简 vector 壳）；换装页见 `docs/prompt/dressup_panel_shell_nb2_prompt.txt`（玫瑰框、同简洁度）。
+- **绿幕抠图**：面板壳外缘绿幕 0,255,0 → `scripts/process_*_panel_shell_nb2.py` 洪水去绿（**勿 rembg**，会吃掉外框）；其它 UI 层仍按 **`remove-background-game-art.mdc`**。
 
 ## 资产落盘
 

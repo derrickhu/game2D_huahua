@@ -306,6 +306,8 @@ const PANELS_IMAGE_MAP: Record<string, string> = {
   collection_panel_shell_nb2: 'subpkg_panels/images/ui/collection_panel_shell_nb2.png',
   /** 家具工坊：NB2 粉紫壳（顶栏/材料 tray/内容区/底栏由贴图，文案与列表由代码叠） */
   furniture_workshop_panel_shell_nb2: 'subpkg_panels/images/ui/furniture_workshop_panel_shell_nb2.png',
+  /** 形象换装面板壳：玫瑰金框 + 空白内容区（PIXI 叠标题/进度/网格） */
+  dressup_panel_shell_nb2: 'subpkg_panels/images/ui/dressup_panel_shell_nb2.png',
 
   /** 友谊卡 / 图鉴系统：通用卡背、（V1 遗留）友谊点图标、顶栏图鉴入口、图鉴面板壳 */
   affinity_card_back_default: 'subpkg_panels/images/ui/affinity_card_back_default.png',
@@ -1163,9 +1165,10 @@ const MERGE_CHAIN_PANEL_KEYS = [
 ] as const;
 
 const DRESSUP_PANEL_KEYS = [
-  'merge_chain_panel',
-  'merge_chain_ribbon',
-  'warehouse_close_btn',
+  'dressup_panel_shell_nb2',
+  'deco_card_btn_1',
+  'deco_card_btn_2',
+  'deco_card_btn_3',
   'owner_chibi_default',
   'owner_full_default',
   'owner_full_default_blink',

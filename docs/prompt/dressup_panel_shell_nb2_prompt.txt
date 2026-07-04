@@ -1,0 +1,28 @@
+Single full-screen vertical mobile game UI asset, 9:16 aspect ratio, one flattened decorative SHELL ONLY for a character dress-up modal panel. Cozy pastel flower-shop merge game. High resolution, crisp flat vector edges.
+
+USE THE ATTACHED WORKSHOP PANEL SHELL REFERENCE IMAGE as the STRICT structural template.
+Recreate the SAME shell architecture as the reference:
+- same outer frame thickness and corner radius
+- same TOP HEADER BAND height and flat 2D look
+- same large cream MAIN CONTENT FIELD proportions
+- same level of subtle background damask texture (~5–6% opacity)
+But RECOLOR from lilac-purple to harmonious warm rose-peach-blush.
+REMOVE from the reference: material tray frame, bottom footer strip, and any workshop-only inset boxes.
+DO NOT invent new elements.
+
+THIS IS AN EMPTY BACKPLATE ONLY.
+
+INCLUDE ONLY:
+1) OUTER FRAME: thick soft rose-coral outer rim, thinner pastel-blush inner lip, very gentle flat highlight — same as reference frame but rose tones. Flat 2D, NOT 3D, NOT glossy, NOT beveled.
+2) TOP HEADER BAND (~13% height): soft rose-peach fill with VERY SUBTLE vertical pinstripe texture and faint low-contrast damask watermark, gentle flat gradient. Completely EMPTY — no title text, no letters, no numbers. Title will be PIXI text overlaid like the workshop panel. **NO golden scalloped banner. NO separate title plaque. NO baroque frame.**
+3) TOP-RIGHT: flat circular red close button with white X, same placement as reference.
+4) MAIN CONTENT FIELD: large warm cream / blush-white area filling all remaining height — flat matte, VERY SUBTLE all-over floral scroll damask watermark at ~5–6% opacity (same quiet texture as reference cream zone). Completely EMPTY. No cards, no portraits, no grid, no tabs, no tray, no footer, no corner lace, no heart icons.
+5) Bottom: cream field continues cleanly to inner bottom — NO footer bar.
+
+STRICTLY FORBIDDEN:
+golden scalloped title banner, baroque gold frame, title plaque, heart divider, lace corners, strong corner vignettes, 3D bevel, heavy shadow, glossy button, material tray, footer strip, Chinese/English text, numbers, outfit cards, purple/lilac colors copied from reference.
+
+Art style: clean flat 2D vector kawaii mobile UI, harmonious rose-peach-cream palette, soft gradients only for flat depth — visually sibling to the attached workshop shell, not a different UI genre. No photoreal.
+
+TECHNICAL BACKGROUND:
+ONLY margins OUTSIDE the rounded modal = pure green RGB 0,255,0. Modal interior contains ZERO green pixels.
