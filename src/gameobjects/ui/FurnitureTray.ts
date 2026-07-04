@@ -498,7 +498,7 @@ export class FurnitureTray extends PIXI.Container {
   }
 
   private _buildModeToggle(): void {
-    this._modeToggleRow.removeChildren();
+    this._modeToggleRow.removeChildren().forEach(ch => ch.destroy({ children: true }));
     this._modeToggleRow.position.set(MODE_TOGGLE_X, MODE_TOGGLE_Y);
 
     let x = 0;
@@ -542,7 +542,7 @@ export class FurnitureTray extends PIXI.Container {
   }
 
   private _buildTabs(): void {
-    this._tabContainer.removeChildren();
+    this._tabContainer.removeChildren().forEach(ch => ch.destroy({ children: true }));
 
     const tabs = this._getActiveTrayTabs();
     const n = tabs.length;
@@ -597,7 +597,7 @@ export class FurnitureTray extends PIXI.Container {
   }
 
   private _buildFilterRow(): void {
-    this._filterRow.removeChildren();
+    this._filterRow.removeChildren().forEach(ch => ch.destroy({ children: true }));
     if (this._currentTab === 'room_styles') {
       this._filterRow.visible = false;
       return;
@@ -656,7 +656,7 @@ export class FurnitureTray extends PIXI.Container {
   private _buildGrid(): void {
     this._teardownTrayScroll();
     this._trayScrollInner = null;
-    this._gridContainer.removeChildren();
+    this._gridContainer.removeChildren().forEach(ch => ch.destroy({ children: true }));
 
     if (this._currentTab === 'room_styles') {
       this._buildRoomStylesGrid();

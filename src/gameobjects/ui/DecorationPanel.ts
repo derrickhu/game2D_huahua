@@ -783,7 +783,7 @@ export class DecorationPanel extends PIXI.Container {
 
   /** 筛选条下方：board_bar（flat 单壳无装饰线，仍叠代码 board_bar） */
   private _layoutHeaderDivider(dividerY: number): void {
-    this._headerDivider.removeChildren();
+    this._headerDivider.removeChildren().forEach(ch => ch.destroy({ children: true }));
     this._headerDivider.visible = true;
     const barTex = TextureCache.get('board_bar');
     const barW = Math.max(200, PANEL_W - HEADER_BOARD_BAR_SIDE_INSET * 2);
@@ -890,7 +890,7 @@ export class DecorationPanel extends PIXI.Container {
   /** flat 单壳关闭钮：烘焙在壳上则仅热区；否则叠 deco_nb2_close_btn */
   private _layoutCloseBtn(panelH: number): void {
     if (!this._closeBtn) return;
-    this._closeBtn.removeChildren();
+    this._closeBtn.removeChildren().forEach(ch => ch.destroy({ children: true }));
     if (this._usesFlatShell && this._panelBaseSprite && SHELL_BAKED_CLOSE_BTN) {
       const cx = PANEL_W * SHELL_CLOSE_X_FRAC;
       const cy = this._shellMapY(panelH, SHELL_CLOSE_Y_TEX_FRAC);
@@ -1101,7 +1101,7 @@ export class DecorationPanel extends PIXI.Container {
 
   /** 右侧五格筛选：全部 / 已放置 / 未放置 / 未购买 / 未解锁（程序绘制药丸，同工坊分类条） */
   private _buildInventoryFilterBar(gridW: number): void {
-    this._filterBar.removeChildren();
+    this._filterBar.removeChildren().forEach(ch => ch.destroy({ children: true }));
     const n = DECO_INV_FILTER_SPECS.length;
     const gap = 6;
     const cellW = (gridW - gap * (n - 1)) / n;
@@ -1194,7 +1194,7 @@ export class DecorationPanel extends PIXI.Container {
   // ─── category tabs (top horizontal, 1–2 rows) ───────────
 
   private _buildCategoryTabs(contentW: number): void {
-    this._tabContainer.removeChildren();
+    this._tabContainer.removeChildren().forEach(ch => ch.destroy({ children: true }));
     const { cols, tabW, tabH } = categoryTabGridLayout(contentW);
     const gap = CATEGORY_TAB_GAP;
     const fontSize = CATEGORY_TAB_FONT_SIZE;
@@ -1276,7 +1276,7 @@ export class DecorationPanel extends PIXI.Container {
 
   /** 仅清除滚动内容（遮罩在 viewport 上，不在 gridContainer 内） */
   private _clearGridScrollContent(): void {
-    this._gridContainer.removeChildren();
+    this._gridContainer.removeChildren().forEach(ch => ch.destroy({ children: true }));
   }
 
   private _buildGrid(availH: number): void {

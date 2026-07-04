@@ -118,9 +118,9 @@ export const TIMED_FLORIST_ORDER_TIME_LIMIT_SECONDS = 8 * 60 * 60;
 /** 家具工匠材料单：10 级后开放，非限时，组合单槽位规则 + 至少 1 槽 L6+ 花束，花愿 ×0.5，随机 1 种材料 ×1 */
 export const WORKSHOP_ORDER_MIN_PLAYER_LEVEL = 10;
 export const WORKSHOP_ORDER_DAILY_CAP = 4;
-/** 高于限时钻石(0.06)与富贵花商(0.05) */
-export const WORKSHOP_ORDER_BASE_CHANCE = 0.10;
-export const WORKSHOP_ORDER_FIRST_DAILY_CHANCE_MULT = 1.6;
+/** 刷客掷骰：首单 20%，后续 15%（仍高于钻石 6% / 花商 5%） */
+export const WORKSHOP_ORDER_BASE_CHANCE = 0.15;
+export const WORKSHOP_ORDER_FIRST_DAILY_CHANCE_MULT = 20 / 15;
 export const WORKSHOP_ORDER_HUAYUAN_MULT = 0.5;
 /** 工匠单至少含 1 个该等级及以上的花束槽 */
 export const WORKSHOP_ORDER_MIN_BOUQUET_LEVEL = 6;

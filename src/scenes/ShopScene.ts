@@ -765,7 +765,7 @@ export class ShopScene implements Scene {
       this._backgroundLayer.zIndex = -1000;
       this.container.addChildAt(this._backgroundLayer, 0);
     } else {
-      this._backgroundLayer.removeChildren();
+      this._backgroundLayer.removeChildren().forEach(ch => ch.destroy({ children: true }));
     }
 
     // 默认使用草地外景；个别支线房可在 SceneRenovationProfile 指定专属外景底图。
@@ -901,7 +901,10 @@ export class ShopScene implements Scene {
     for (const child of this._roomContainer.children) {
       if ((child as any)._decoId) toRemove.push(child);
     }
-    toRemove.forEach(c => this._roomContainer.removeChild(c));
+    toRemove.forEach(c => {
+      this._roomContainer.removeChild(c);
+      c.destroy({ children: true });
+    });
 
     // 启用排序
     this._roomContainer.sortableChildren = true;
