@@ -43,6 +43,8 @@ export interface TutorialOverlayOptions {
   itemInfoBar?: ItemInfoBar | null;
   /** 花店场景：升星进度条（星星 + 条 + 礼包）镂空区域，与 ShopScene.container 同坐标系 */
   getShopStarProgressSpotlight?: () => SpotlightRect | null;
+  /** 花店场景：底栏「家具」圆钮镂空区域，与 ShopScene.container 同坐标系 */
+  getDecoButtonSpotlight?: () => SpotlightRect | null;
 }
 
 export class TutorialOverlay {
@@ -51,6 +53,7 @@ export class TutorialOverlay {
   private _customerScrollArea: CustomerScrollArea | null;
   private _itemInfoBar: ItemInfoBar | null;
   private _getShopStarProgressSpotlight: (() => SpotlightRect | null) | null;
+  private _getDecoButtonSpotlight: (() => SpotlightRect | null) | null;
   private _currentBubble: TutorialDialogBubble | null = null;
   private _transientHint: PIXI.Text | null = null;
   private _fingerAnim: { finger: PIXI.Container; cancel: () => void } | null = null;
@@ -65,6 +68,7 @@ export class TutorialOverlay {
     this._customerScrollArea = options?.customerScrollArea ?? null;
     this._itemInfoBar = options?.itemInfoBar ?? null;
     this._getShopStarProgressSpotlight = options?.getShopStarProgressSpotlight ?? null;
+    this._getDecoButtonSpotlight = options?.getDecoButtonSpotlight ?? null;
     this._overlay = new PIXI.Container();
     this._overlay.visible = false;
     this._overlay.zIndex = 8000;
@@ -1253,22 +1257,20 @@ export class TutorialOverlay {
   private _showGuideBuyFurniture(): void {
     void TextureCache.preloadTutorialDeco();
 
+    let retryTimer: ReturnType<typeof setTimeout> | null = null;
+
     const showBtnGuide = (): void => {
       this._clearOverlay();
       this._overlay.visible = true;
 
-      const ICON_R = 40;
-      const btnCX = ICON_R + 14;
-      const btnCY = Game.logicHeight - 92;
-      const hitR = ICON_R + 18;
-      const pad = 12;
-      const rect: SpotlightRect = {
-        x: Math.max(0, btnCX - hitR - pad),
-        y: btnCY - hitR - pad,
-        w: (hitR + pad) * 2,
-        h: (hitR + pad) * 2,
-        r: hitR,
-      };
+      const rect = this._getDecoButtonSpotlight?.() ?? null;
+      if (!rect) {
+        retryTimer = setTimeout(showBtnGuide, 55);
+        return;
+      }
+      const btnCX = rect.x + rect.w / 2;
+      const btnCY = rect.y + rect.h / 2;
+      const hitR = rect.r ?? 58;
 
       this._drawSpotlightMask([rect], 0.68);
       this._drawGlowBorder(rect);
@@ -1286,8 +1288,6 @@ export class TutorialOverlay {
     };
 
     showBtnGuide();
-
-    let retryTimer: ReturnType<typeof setTimeout> | null = null;
 
     const onDecoOpen = (): void => {
       this._clearOverlay();
@@ -1518,8 +1518,11 @@ export class TutorialOverlay {
     const onPlaced = (): void => {
       if (placed) return;
       placed = true;
-      const first = RoomLayoutManager.getLayout()[0] ?? null;
-      showMoveGuide(first);
+      // 从托盘首次拖入即完成摆放，无需再拖第二次才进「完成装修」
+      if (!moved) {
+        moved = true;
+        showFinishGuide();
+      }
     };
 
     const onMoved = (): void => {

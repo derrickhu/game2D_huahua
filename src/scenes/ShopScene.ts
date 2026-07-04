@@ -603,6 +603,7 @@ export class ShopScene implements Scene {
         || TutorialManager.currentStep === TutorialStep.SWITCH_BACK_MERGE) {
         this._tutorialOverlay = new TutorialOverlay(this.container, {
           getShopStarProgressSpotlight: () => this._getTutorialStarProgressSpotlightRect(),
+          getDecoButtonSpotlight: () => this._getTutorialDecoButtonSpotlightRect(),
         });
         this._tutorialOverlay.bind('shop');
       }
@@ -1274,6 +1275,25 @@ export class ShopScene implements Scene {
   }
 
   // ─────────────────── 装修进度条 ───────────────────
+
+  /** 新手引导「选购家具」：镂空底栏「家具」圆钮（与地图/许愿同排） */
+  _getTutorialDecoButtonSpotlightRect(): { x: number; y: number; w: number; h: number; r: number } | null {
+    const entry = this._activityBtns.get('deco');
+    const btn = entry?.container;
+    if (!btn?.parent) return null;
+    const iconR = WORLD_MAP_ICON_R;
+    const hitR = iconR + 18;
+    const pad = 12;
+    const btnCX = btn.position.x;
+    const btnCY = btn.position.y;
+    return {
+      x: Math.max(0, btnCX - hitR - pad),
+      y: btnCY - hitR - pad,
+      w: (hitR + pad) * 2,
+      h: (hitR + pad) * 2,
+      r: hitR,
+    };
+  }
 
   /** 新手引导「装修能升星」：镂空星星 + 进度条 + 右侧礼包预览钮 */
   _getTutorialStarProgressSpotlightRect(): { x: number; y: number; w: number; h: number; r: number } | null {

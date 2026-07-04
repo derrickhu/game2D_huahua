@@ -3,7 +3,7 @@ import { DECO_MAP, DecoSlot } from '@/config/DecorationConfig';
 import { FURNITURE_RENDER_MAP } from '@/config/FurnitureRenderConfig';
 import { WORKSHOP_ORDER_MIN_PLAYER_LEVEL } from '@/config/OrderSpawnConfig';
 
-/** 家具工坊入口开放等级（与家具工匠订单一致，12 级） */
+/** 家具工坊入口开放等级（与家具工匠订单一致，10 级） */
 export const FURNITURE_WORKSHOP_UNLOCK_LEVEL = WORKSHOP_ORDER_MIN_PLAYER_LEVEL;
 
 export type WorkshopBlueprintRarity = 'common' | 'rare' | 'epic' | 'limited';

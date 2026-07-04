@@ -178,6 +178,23 @@ const LEVEL_UNLOCK_BASE: Record<number, Omit<LevelUnlockDef, 'level'>> = {
       },
     ],
   },
+  10: {
+    ceremonyTitle: '匠坊初启',
+    entries: [
+      {
+        kind: 'feature',
+        title: '家具工坊',
+        desc: '底栏开放工坊入口，购买图纸后可制作专属家具。',
+        iconKey: 'icon_furniture_workshop',
+      },
+      {
+        kind: 'feature',
+        title: '家具工匠',
+        desc: '订单中会出现家具工匠，完成委托可得工坊材料。',
+        iconKey: 'customer_furniture_craftswoman',
+      },
+    ],
+  },
   11: {
     ceremonyTitle: '鲜果上新',
     entries: [
@@ -204,18 +221,6 @@ const LEVEL_UNLOCK_BASE: Record<number, Omit<LevelUnlockDef, 'level'>> = {
   12: {
     ceremonyTitle: '湖窗手札',
     entries: [
-      {
-        kind: 'feature',
-        title: '家具工坊',
-        desc: '底栏开放工坊入口，购买图纸后可制作专属家具。',
-        iconKey: 'icon_furniture_workshop',
-      },
-      {
-        kind: 'feature',
-        title: '家具工匠',
-        desc: '订单中会出现家具工匠，完成委托可得工坊材料。',
-        iconKey: 'customer_furniture_craftswoman',
-      },
       {
         kind: 'cosmetic',
         title: '观蝶书写桌',
