@@ -16,7 +16,7 @@ import {
 } from '@/config/FurnitureWorkshopConfig';
 import { collectFurniturePreloadKeys, resolveFurnitureTexture } from '@/config/FurnitureRenderConfig';
 import { TextureCache } from '@/utils/TextureCache';
-import { appendWorkshopBlueprintFeatureTags } from '@/utils/WorkshopBlueprintDisplay';
+import { appendWorkshopBlueprintFeatureTags, appendWorkshopStarValueBadge } from '@/utils/WorkshopBlueprintDisplay';
 
 const POP_W = 400;
 const POP_PAD_X = 28;
@@ -135,11 +135,11 @@ export class FurnitureWorkshopBlueprintPreviewPopup extends PIXI.Container {
     previewBox.addChild(this._previewSprite);
 
     this._starBadgeWrap = new PIXI.Container();
-    this._starBadgeWrap.position.set(halfW - 8, -halfH + 8);
+    this._starBadgeWrap.position.set(-halfW + 8, -halfH + 8);
     previewBox.addChild(this._starBadgeWrap);
 
     this._featureTagWrap = new PIXI.Container();
-    this._featureTagWrap.position.set(-halfW + 8, -halfH + 8);
+    this._featureTagWrap.position.set(halfW - 8, -halfH + 8);
     previewBox.addChild(this._featureTagWrap);
 
     this._nameText = new PIXI.Text('', textStyle({
@@ -424,61 +424,13 @@ export class FurnitureWorkshopBlueprintPreviewPopup extends PIXI.Container {
       fontSize: 12,
       layout: 'vertical',
       gap: 4,
+      align: 'right',
     });
   }
 
   private _updateStarBadge(starValue: number): void {
     this._starBadgeWrap.removeChildren();
-    if (starValue <= 0) return;
-
-    const iconH = 18;
-    const gap = 4;
-    const fontSize = 13;
-    const wrap = new PIXI.Container();
-
-    const content = new PIXI.Container();
-    let iconW = iconH;
-    const starTex = TextureCache.get('icon_star');
-    if (starTex?.width) {
-      const sp = new PIXI.Sprite(starTex);
-      sp.height = iconH;
-      sp.width = (starTex.width / starTex.height) * iconH;
-      content.addChild(sp);
-      iconW = sp.width;
-    } else {
-      const fb = new PIXI.Text('★', { fontSize: Math.round(iconH * 0.9), fontFamily: FONT_FAMILY });
-      content.addChild(fb);
-      iconW = fb.width;
-    }
-
-    const num = new PIXI.Text(String(starValue), {
-      fontSize,
-      fill: 0x8d4a1a,
-      fontFamily: FONT_FAMILY,
-      fontWeight: 'bold',
-      stroke: 0xffffff,
-      strokeThickness: 2,
-    } as PIXI.ITextStyle);
-    num.anchor.set(0, 0.5);
-    num.position.set(iconW + gap, iconH / 2);
-    content.addChild(num);
-
-    const pillPadX = 6;
-    const pillPadY = 3;
-    const pillW = pillPadX * 2 + iconW + gap + num.width;
-    const pillH = pillPadY * 2 + iconH;
-
-    const pill = new PIXI.Graphics();
-    pill.beginFill(0xfff3e0, 0.95);
-    pill.lineStyle(1.2, 0xffb74d, 0.88);
-    pill.drawRoundedRect(0, 0, pillW, pillH, 9);
-    pill.endFill();
-    wrap.addChild(pill);
-    content.position.set(pillPadX, pillPadY);
-    wrap.addChild(content);
-    wrap.pivot.set(pillW, 0);
-
-    this._starBadgeWrap.addChild(wrap);
+    appendWorkshopStarValueBadge(this._starBadgeWrap, starValue, 0, 0);
   }
 
   private _makeButton(label: string, color: number, w: number, h: number, onTap: () => void): PIXI.Container {

@@ -1,0 +1,29 @@
+Single full-screen vertical mobile game UI asset, 9:16 aspect ratio, one flattened decorative SHELL ONLY for a character dress-up modal panel. Cozy pastel flower-shop merge game. High resolution.
+
+THIS IS AN EMPTY BACKPLATE ONLY — game code overlays title text, tabs, and cards later.
+
+PANEL STRUCTURE (mandatory):
+1) OUTER FRAME: tall centered modal, very rounded corners, thick soft glossy pink outer rim (#F0A8C8 to #F5B8D0) with thinner pale pink inner lip (#FCE0EC), gentle soft-bevel highlight, kawaii mobile UI style.
+2) TOP HEADER BAND (~13% of panel height): gentle blush pink (#F8C8DC), flat and uniform. ONLY extremely subtle vertical pinstripes at ~2–3% contrast — same pink tone family, barely visible. The header must look like a clean empty title bar.
+3) TOP-RIGHT CLOSE BUTTON: chunky circular red button with simple white X, slightly overlapping the frame corner — same as typical mobile game modals.
+4) MAIN CONTENT FIELD: large warm cream-pink area (#FFF6F9) filling all remaining height below header. VERY SUBTLE all-over floral scroll damask watermark at ~5% opacity ONLY in this content zone — NOT in the header.
+5) Bottom: cream field continues cleanly to inner bottom edge. NO footer bar, NO material tray, NO inset boxes, NO divider ornaments.
+
+HEADER — ABSOLUTELY CRITICAL (title text will be drawn here in code):
+- The header band must be COMPLETELY EMPTY and UNIFORM
+- NO centered emblem, NO crest, NO logo, NO floral medallion, NO damask mark, NO dark watermark, NO high-contrast ornament anywhere in the header
+- NO damask texture in the header at all — pinstripes only
+- Header background must stay evenly light blush pink so white or dark text reads clearly
+
+COLOR PALETTE:
+- outer frame: soft clear pastel pink, visible but not muddy, not neon
+- header: light blush pink, uniform, low contrast
+- main body: warm cream-pink with faint damask only below header
+
+STRICTLY FORBIDDEN:
+centered header emblem, header damask, header crest, header logo, dark floral mark in header, golden title banner, baroque frame, text, numbers, Chinese, English, outfit cards, tabs, footer strip, material tray, hot bubble-gum pink, neon magenta, muddy brown-pink
+
+Art style: clean kawaii 2D mobile game UI, soft pastel pink, gentle gradients for depth only. No photoreal, no watermark.
+
+TECHNICAL BACKGROUND:
+ONLY margins OUTSIDE the rounded modal silhouette = pure bright screen green RGB exactly 0,255,0. Modal interior contains ZERO green pixels.

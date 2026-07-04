@@ -6,23 +6,29 @@ Recreate the SAME shell architecture as the reference:
 - same TOP HEADER BAND height and flat 2D look
 - same large cream MAIN CONTENT FIELD proportions
 - same level of subtle background damask texture (~5–6% opacity)
-But RECOLOR from lilac-purple to harmonious warm rose-peach-blush.
+But RECOLOR to a SOFT PINK-WHITE palette — airy, clean, low-saturation blush, NOT neon, NOT hot bubble-gum pink.
 REMOVE from the reference: material tray frame, bottom footer strip, and any workshop-only inset boxes.
 DO NOT invent new elements.
+
+COLOR PALETTE (mandatory — 粉白色 / pink-white):
+- outer rim: pale pink-white #F5E4EC to #F0D8E4, gentle and soft, NOT saturated, NOT brown, NOT grey-mauve
+- inner lip: lighter pink-white #FAF0F5
+- header band: very pale blush pink #F8ECF2 with VERY SUBTLE vertical pinstripe
+- main body: warm off-white with faint pink tint #FFFCFD / #FFF9FB, subtle damask ~5% opacity
 
 THIS IS AN EMPTY BACKPLATE ONLY.
 
 INCLUDE ONLY:
-1) OUTER FRAME: thick soft rose-coral outer rim, thinner pastel-blush inner lip, very gentle flat highlight — same as reference frame but rose tones. Flat 2D, NOT 3D, NOT glossy, NOT beveled.
-2) TOP HEADER BAND (~13% height): soft rose-peach fill with VERY SUBTLE vertical pinstripe texture and faint low-contrast damask watermark, gentle flat gradient. Completely EMPTY — no title text, no letters, no numbers. Title will be PIXI text overlaid like the workshop panel. **NO golden scalloped banner. NO separate title plaque. NO baroque frame.**
+1) OUTER FRAME: thick soft pink-white outer rim, thinner pale blush inner lip, very gentle flat highlight. Flat 2D, NOT 3D, NOT glossy, NOT beveled, NOT muddy, NOT neon bright.
+2) TOP HEADER BAND (~13% height): pale blush-pink fill with VERY SUBTLE vertical pinstripe and faint low-contrast damask watermark. Completely EMPTY — no title text. **NO golden scalloped banner. NO baroque frame.**
 3) TOP-RIGHT: flat circular red close button with white X, same placement as reference.
-4) MAIN CONTENT FIELD: large warm cream / blush-white area filling all remaining height — flat matte, VERY SUBTLE all-over floral scroll damask watermark at ~5–6% opacity (same quiet texture as reference cream zone). Completely EMPTY. No cards, no portraits, no grid, no tabs, no tray, no footer, no corner lace, no heart icons.
+4) MAIN CONTENT FIELD: large warm pink-white area filling all remaining height — flat matte, VERY SUBTLE all-over floral scroll damask at ~5–6% opacity. Completely EMPTY.
 5) Bottom: cream field continues cleanly to inner bottom — NO footer bar.
 
 STRICTLY FORBIDDEN:
-golden scalloped title banner, baroque gold frame, title plaque, heart divider, lace corners, strong corner vignettes, 3D bevel, heavy shadow, glossy button, material tray, footer strip, Chinese/English text, numbers, outfit cards, purple/lilac colors copied from reference.
+hot bubble-gum pink, neon magenta, dusty brown-pink, grey-mauve, terracotta, amber, saturated candy pink, golden title banner, baroque frame, text, numbers, outfit cards, purple/lilac from reference, 3D bevel, heavy shadow.
 
-Art style: clean flat 2D vector kawaii mobile UI, harmonious rose-peach-cream palette, soft gradients only for flat depth — visually sibling to the attached workshop shell, not a different UI genre. No photoreal.
+Art style: clean flat 2D vector kawaii mobile UI, soft pink-white + blush-white, gentle pastel, soft gradients only for flat depth. No photoreal.
 
 TECHNICAL BACKGROUND:
 ONLY margins OUTSIDE the rounded modal = pure green RGB 0,255,0. Modal interior contains ZERO green pixels.

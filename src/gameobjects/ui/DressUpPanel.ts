@@ -29,25 +29,28 @@ const SHELL = {
   CLOSE_CY_PX: 44,
   CLOSE_HIT_R_PX: 46,
   PROGRESS_Y_FRAC: 0.134,
-  INNER_PAD_X_FRAC: 0.076,
+  INNER_PAD_X_FRAC: 0.048,
   CONTENT_TOP_FRAC: 0.158,
   CONTENT_BOTTOM_FRAC: 0.96,
 };
 
 const GRID_COLS = 3;
-const CARD_GAP = 8;
-const CARD_BASE_W = 130;
-const CARD_BASE_H = 155;
-const CARD_MAX_W = 185;
+const CARD_GAP = 6;
+const CARD_BASE_W = 140;
+const CARD_BASE_H = 168;
+const CARD_MAX_W = 256;
 const CARD_MIN_W = 96;
 /** 半身预览在卡内留白内再放大一点 */
-const PORTRAIT_DISPLAY_BOOST = 1.12;
+const PORTRAIT_DISPLAY_BOOST = 1.28;
 const CARD_R = 10;
 
-const ROSE_LINE = 0xf0a896;
-const ROSE_INNER = 0xe88878;
-const CREAM_FILL = 0xfff9f5;
-const SHADOW_COLOR = 0xc49a8a;
+const ROSE_LINE = 0xf0b8d0;
+const ROSE_INNER = 0xe8a0c0;
+const CREAM_FILL = 0xfff6f9;
+const SHADOW_COLOR = 0xd898b0;
+/** 标题 / 进度字：清爽淡粉，与壳体同系 */
+const DRESSUP_TITLE_STROKE = 0xcc6890;
+const DRESSUP_SUBTITLE_STROKE = 0xb05880;
 
 function measureDressGrid(gridW: number): { cw: number; ch: number; startX: number } {
   const cwRaw = Math.floor((gridW - CARD_GAP * (GRID_COLS + 1)) / GRID_COLS);
@@ -618,10 +621,10 @@ export class DressUpPanel extends PIXI.Container {
     this._drawCardBg(card, cw, ch, cardUnlockedLook, isEquipped);
 
     const nameY = Math.round((ch * 93) / CARD_BASE_H);
-    const portraitTop = 8;
-    const portraitBottom = nameY - 4;
+    const portraitTop = 4;
+    const portraitBottom = nameY - 2;
     const maxPortraitH = Math.max(44, portraitBottom - portraitTop);
-    const maxPortraitW = cw - 12;
+    const maxPortraitW = cw - 6;
     const portraitCy = portraitTop + maxPortraitH / 2;
 
     const showPortrait = isUnlocked || reqMet || needsAdGate || isActivityLockedOutfit(outfit);
@@ -801,7 +804,7 @@ export class DressUpPanel extends PIXI.Container {
       fill: 0xffffff,
       fontFamily: FONT_FAMILY,
       fontWeight: '900',
-      stroke: 0xc4728a,
+      stroke: DRESSUP_TITLE_STROKE,
       strokeThickness: 5,
     } as PIXI.ITextStyle);
     this._titleText.anchor.set(0.5);
@@ -810,10 +813,10 @@ export class DressUpPanel extends PIXI.Container {
 
     this._progressText = new PIXI.Text('', {
       fontSize: 20,
-      fill: 0xc4728a,
+      fill: DRESSUP_TITLE_STROKE,
       fontFamily: FONT_FAMILY,
       fontWeight: '900',
-      stroke: 0xa05870,
+      stroke: DRESSUP_SUBTITLE_STROKE,
       strokeThickness: 1,
     } as PIXI.ITextStyle);
     this._progressText.anchor.set(0.5);

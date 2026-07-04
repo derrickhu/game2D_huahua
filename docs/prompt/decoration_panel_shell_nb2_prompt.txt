@@ -1,0 +1,33 @@
+Single vertical mobile game UI asset, 9:16 aspect ratio, one flattened decorative SHELL ONLY for a flower-shop FURNITURE / decoration BOTTOM-SHEET panel. Cozy pastel merge game. High resolution, crisp flat vector edges.
+
+USE THE ATTACHED V5 BOTTOM-SHEET SHELL REFERENCE for EXACT layout and proportions:
+- same full-width bottom sheet silhouette (full-bleed left/right/bottom, large rounded top corners)
+- same flat three-layer structure: outer frame + slim header band + one continuous cream body
+- same NO inset wells, NO sidebar lanes, NO recessed panels, NO divider lines, NO horizontal separator, NO decorative line, NO diamond ornament
+ONLY recolor and add close button — do NOT change layout proportions.
+
+RECOLOR from apricot/honey to EXACT dress-up rose palette:
+- outer rim: soft rose-coral, inner lip: pastel-blush (NOT apricot, NOT amber, NOT terracotta)
+- header band: rose-peach with subtle vertical pinstripe + faint damask (~5% opacity)
+- main body: warm cream / blush-white matte with subtle damask (~5–6% opacity)
+
+ADD ONLY ONE NEW ELEMENT vs reference:
+- TOP-RIGHT CLOSE BUTTON: chunky flat circular red close button with simple white X — identical to dress-up / workshop panel shells, top-right on the frame.
+
+THIS IS AN EMPTY BACKPLATE — game overlays title, filter pills, board_bar, cards later.
+
+INCLUDE ONLY:
+1) OUTER FRAME: thick soft rose-coral rim, thinner pastel-blush inner lip, flat 2D highlight.
+2) TOP HEADER BAND (~13% of sheet): rose-peach, subtle pinstripe + damask. EMPTY — no text, no icons.
+3) TOP-RIGHT CLOSE BUTTON (mandatory).
+4) MAIN BODY: one flat warm cream plane below header — full width, subtle damask, EMPTY.
+
+STRICTLY FORBIDDEN:
+ANY divider line, horizontal separator, decorative line, diamond ornament, board_bar, footer strip
+apricot, amber, honey, terracotta, lilac, purple, mint, sage, green inside panel
+text, numbers, tab pills, filter chips, furniture cards, inset panels, inner shadows, sidebar lanes
+
+Art style: clean flat 2D vector kawaii, rose-peach-cream — color match dress-up shell, layout match v5 reference. No photoreal.
+
+TECHNICAL BACKGROUND:
+ONLY area above the bottom sheet and outside silhouette = pure green RGB 0,255,0. Interior ZERO green pixels.

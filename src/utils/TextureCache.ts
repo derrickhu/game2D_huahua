@@ -217,6 +217,8 @@ const PANELS_IMAGE_MAP: Record<string, string> = {
   merge_companion_flower_bubble: 'subpkg_panels/images/ui/merge_companion_flower_bubble_nb2.png',
   /** 花店装修面板底图：NB2 空白壳 + rembg（仅 DecorationPanel；合成线仍用 merge_chain_panel） */
   decoration_panel_bg_nb2: 'subpkg_panels/images/ui/decoration_panel_bg_nb2.png',
+  /** 花店装修面板：杏琥珀 flat vector 单壳底栏（优先于 decoration_panel_bg_nb2） */
+  decoration_panel_shell_nb2: 'subpkg_panels/images/ui/decoration_panel_shell_nb2.png',
   /** 装修面板左侧分类 Tab：NB2 品红底 + rembg；未选中 / 选中 */
   deco_panel_tab_idle_nb2: 'subpkg_panels/images/ui/deco_panel_tab_idle_nb2.png',
   deco_panel_tab_selected_nb2: 'subpkg_panels/images/ui/deco_panel_tab_selected_nb2.png',
@@ -1024,6 +1026,7 @@ const SHOP_WARMUP_KEYS = [
 ] as const;
 
 const DECO_PANEL_WARMUP_KEYS = [
+  'decoration_panel_shell_nb2',
   'decoration_panel_bg_nb2',
   'deco_panel_tab_idle_nb2',
   'deco_panel_tab_selected_nb2',
@@ -1063,6 +1066,7 @@ const TUTORIAL_DECO_KEYS = [
   'house_bg',
   'house_shop',
   'shelf_wood',
+  'decoration_panel_shell_nb2',
   'decoration_panel_bg_nb2',
   'deco_panel_tab_idle_nb2',
   'deco_panel_tab_selected_nb2',

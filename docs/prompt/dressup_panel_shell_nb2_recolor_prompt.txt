@@ -1,0 +1,24 @@
+Single vertical mobile game UI asset, 9:16 aspect ratio.
+
+USE THE ATTACHED REFERENCE IMAGE.
+
+Your job is ONLY to recolor this exact dress-up panel shell. Keep EVERYTHING else identical:
+- same silhouette, proportions, corner radius, frame thickness
+- same glossy soft-bevel 3D frame style and highlights
+- same header band height and vertical pinstripe texture
+- same main content field size, inset, and subtle damask watermark (~5% opacity)
+- same close button size, shape, position, red color, white X
+- do NOT change layout, do NOT flatten to flat vector, do NOT add or remove UI parts
+
+ONLY recolor from the reference's dusty brownish-rose to a cleaner fresh pastel pink:
+- outer frame: soft clear pink #F0A8C8 to #F5B8D0 (NOT brown, NOT grey-mauve, NOT muddy)
+- header band: gentle blush pink #F8C8DC with same pinstripes
+- inner lip: pale pink #FCE0EC
+- main body: warm cream-pink #FFF6F9, keep faint damask
+
+ONE small fix for title text overlay: remove the centered dark floral emblem in the header only. Header stays pinstripes + uniform blush pink, no dark crest.
+
+No text, no cards, no tabs. Same kawaii mobile UI as reference.
+
+TECHNICAL BACKGROUND:
+ONLY area outside the rounded panel silhouette = pure green RGB 0,255,0. Interior ZERO green pixels.

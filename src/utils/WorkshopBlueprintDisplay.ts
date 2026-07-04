@@ -137,8 +137,65 @@ export function appendWorkshopBlueprintFeatureTags(
     wrapH = rowH;
   }
 
-  const posX = align === 'right' ? x - wrapW : x;
-  wrap.position.set(posX, y);
+  parent.addChild(wrap);
+  return wrap;
+}
+
+/** 星星值角标（左上角锚点，与装修面板家具卡一致） */
+export function appendWorkshopStarValueBadge(
+  parent: PIXI.Container,
+  starValue: number,
+  x: number,
+  y: number,
+): PIXI.Container | null {
+  if (starValue <= 0) return null;
+
+  const iconH = 18;
+  const gap = 4;
+  const fontSize = 13;
+  const wrap = new PIXI.Container();
+  wrap.position.set(x, y);
+
+  const content = new PIXI.Container();
+  let iconW = iconH;
+  const starTex = TextureCache.get('icon_star');
+  if (starTex?.width) {
+    const sp = new PIXI.Sprite(starTex);
+    sp.height = iconH;
+    sp.width = (starTex.width / starTex.height) * iconH;
+    content.addChild(sp);
+    iconW = sp.width;
+  } else {
+    const fb = new PIXI.Text('★', { fontSize: Math.round(iconH * 0.9), fontFamily: FONT_FAMILY });
+    content.addChild(fb);
+    iconW = fb.width;
+  }
+
+  const num = new PIXI.Text(String(starValue), {
+    fontSize,
+    fill: 0x8d4a1a,
+    fontFamily: FONT_FAMILY,
+    fontWeight: 'bold',
+    stroke: 0xffffff,
+    strokeThickness: 2,
+  } as PIXI.ITextStyle);
+  num.anchor.set(0, 0.5);
+  num.position.set(iconW + gap, iconH / 2);
+  content.addChild(num);
+
+  const pillPadX = 6;
+  const pillPadY = 3;
+  const pillW = pillPadX * 2 + iconW + gap + num.width;
+  const pillH = pillPadY * 2 + iconH;
+
+  const pill = new PIXI.Graphics();
+  pill.beginFill(0xfff3e0, 0.95);
+  pill.lineStyle(1.2, 0xffb74d, 0.88);
+  pill.drawRoundedRect(0, 0, pillW, pillH, 9);
+  pill.endFill();
+  wrap.addChild(pill);
+  content.position.set(pillPadX, pillPadY);
+  wrap.addChild(content);
   parent.addChild(wrap);
   return wrap;
 }
