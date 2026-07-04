@@ -240,6 +240,30 @@ class DecorationManagerClass {
     return true;
   }
 
+  /**
+   * 家具工坊：图纸/材料校验由 FurnitureWorkshopManager 负责，这里只处理花愿加工费、
+   * 星星与最终家具拥有状态。不要复用 gmUnlockDeco，否则会把付费制作误当成免费赠予。
+   */
+  unlockFromWorkshop(decoId: string, huayuanCost: number, options?: { deferStarGrant?: boolean }): boolean {
+    if (this._unlocked.has(decoId)) return false;
+    const deco = DECO_MAP.get(decoId);
+    if (!deco) return false;
+    const cost = Math.max(0, Math.floor(huayuanCost));
+    if (CurrencyManager.state.huayuan < cost) return false;
+
+    if (cost > 0) CurrencyManager.addHuayuan(-cost);
+    if (deco.starValue > 0 && !options?.deferStarGrant) {
+      CurrencyManager.addStar(deco.starValue);
+    }
+    this._unlocked.add(decoId);
+    this._save();
+
+    console.log(`[Decoration] 工坊制作解锁: ${deco.name}${cost > 0 ? ` (-${cost}花愿)` : ''} +${deco.starValue}星`);
+    EventBus.emit('decoration:unlocked', decoId, deco);
+    EventBus.emit('decoration:workshopUnlocked', decoId, deco);
+    return true;
+  }
+
   unlockAdPurchaseGate(decoId: string): boolean {
     const deco = DECO_MAP.get(decoId);
     if (!deco || !this.isAdUnlockDeco(decoId)) return false;

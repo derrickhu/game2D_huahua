@@ -322,6 +322,17 @@ export class ItemInfoBar extends PIXI.Container {
     return { x: cx - ext, y: cy - ext, w: ext * 2, h: ext * 2 };
   }
 
+  /** 左下花店入口按钮中心（全局坐标），供订单材料飞入动画落点 */
+  getHouseButtonGlobalCenter(): PIXI.Point {
+    return this._houseBtn.toGlobal(new PIXI.Point(0, 0));
+  }
+
+  /** 材料飞入花店按钮时的反馈缩放 */
+  flashHouseButton(): void {
+    if (!this._houseVisual || this._houseVisual.destroyed) return;
+    this._playBtnBounce(this._houseVisual);
+  }
+
   private _buildWarehouseBtn(): void {
     this._warehouseBtn = new PIXI.Container();
     const cx = DESIGN_WIDTH - SIDE_PAD;

@@ -15,6 +15,10 @@ import {
   type ItemDef,
 } from './ItemConfig';
 
+import {
+  WORKSHOP_GACHA_DYE_IDS,
+} from './FurnitureWorkshopConfig';
+
 export const FLOWER_SIGN_DRAW_COST_SINGLE = 1;
 export const FLOWER_SIGN_DRAW_COST_MULTI = 10;
 
@@ -43,6 +47,13 @@ export type FlowerSignPoolEntry =
       kind: 'direct_diamond';
       weight: number;
       amount: number;
+    }
+  | {
+      /** 家具工坊分色染料 ×1（直加 FurnitureWorkshopManager，非收纳盒） */
+      kind: 'workshop_dye';
+      materialId: string;
+      weight: number;
+      count?: number;
     };
 
 /** 大类占比（相对 FLOWER_SIGN_WEIGHT_SCALE）；许愿硬币不进奖池 */
@@ -51,13 +62,16 @@ const BUCKET_TOOLS = 12_000; // 12% 1 级生产工具（种子工具）
 /** 20%：普通宝箱 + 体力宝箱 + 钻石袋 + 红包（同一大类内按等级衰减分权） */
 const BUCKET_CHEST_GROUP = 20_000;
 const BUCKET_DIRECT = 15_000; // 15% 直加体力+钻石
+/** 5%：家具工坊四色染料（四色均分，约 20 抽出 1 个染料） */
+const BUCKET_WORKSHOP_DYE = 5_000;
 
 const BUCKET_MAIN =
   FLOWER_SIGN_WEIGHT_SCALE -
   BUCKET_PREMIUM -
   BUCKET_TOOLS -
   BUCKET_CHEST_GROUP -
-  BUCKET_DIRECT;
+  BUCKET_DIRECT -
+  BUCKET_WORKSHOP_DYE;
 
 const PREMIUM_IDS = [GOLDEN_SCISSORS_ITEM_ID, CRYSTAL_BALL_ITEM_ID, LUCKY_COIN_ITEM_ID] as const;
 const PREMIUM_RELATIVE_WEIGHTS: Readonly<Record<(typeof PREMIUM_IDS)[number], number>> = {
@@ -229,6 +243,13 @@ function buildFlowerSignGachaPool(): FlowerSignPoolEntry[] {
 
   pool.push(...buildDirectEntries(BUCKET_DIRECT));
 
+  pool.push(...distributeEqualIds([...WORKSHOP_GACHA_DYE_IDS], BUCKET_WORKSHOP_DYE).map(e => ({
+    kind: 'workshop_dye' as const,
+    materialId: e.itemId,
+    weight: e.weight,
+    count: 1,
+  })));
+
   return pool;
 }
 
@@ -237,6 +258,7 @@ function buildFlowerSignGachaPool(): FlowerSignPoolEntry[] {
  * - 约 44%：鲜花/饮品/棋盘货币块（不含许愿硬币）等，等级越高权重越低。
  * - 15%：直加体力 + 直加钻石（多档 amount）。
  * - 20%：宝箱+体力箱+钻石袋+红包；12%：1 级生产工具（不含果切，桶内按线 maxLevel 衰减）；9%：高级道具，其中幸运金币高于金剪刀/万能水晶。
+ * - 5%：家具工坊四色染料（四色均分，约 20 抽 1 个）。
  * - 许愿硬币不参与抽奖。
  */
 export const FLOWER_SIGN_GACHA_POOL: FlowerSignPoolEntry[] = buildFlowerSignGachaPool();

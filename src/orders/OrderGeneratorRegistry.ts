@@ -9,6 +9,7 @@ import {
 } from '@/config/OrderTierConfig';
 import {
   Category,
+  FlowerLine,
   ITEM_DEFS,
   findItemId,
 } from '@/config/ItemConfig';
@@ -29,6 +30,7 @@ import {
   ORDER_GROWTH_BONUS_MULTIPLIER,
   ORDER_GROWTH_MIN_MAX_NORM,
   ORDER_ITEM_LEVEL_PICK_EXPONENT,
+  ORDER_SPAWN_MAX_ATTEMPTS,
   TIMED_DIAMOND_ORDER_BASE_CHANCE,
   TIMED_DIAMOND_ORDER_FIRST_DAILY_CHANCE_MULT,
   TIMED_DIAMOND_ORDER_MIN_ITEM_LEVEL,
@@ -41,11 +43,17 @@ import {
   TIMED_FLORIST_ORDER_MIN_PLAYER_LEVEL,
   TIMED_FLORIST_ORDER_SLOT_COUNT,
   TIMED_FLORIST_ORDER_TIME_LIMIT_SECONDS,
+  WORKSHOP_ORDER_BASE_CHANCE,
+  WORKSHOP_ORDER_FIRST_DAILY_CHANCE_MULT,
+  WORKSHOP_ORDER_HUAYUAN_MULT,
+  WORKSHOP_ORDER_MIN_BOUQUET_LEVEL,
+  WORKSHOP_ORDER_MIN_PLAYER_LEVEL,
   computeFloristStaminaChestReward,
   computeTimedDiamondReward,
   maxSlotNormForSlots,
   orderComboEffectiveChance,
   orderGrowthRollChance,
+  rollWorkshopOrderMaterialReward,
 } from '@/config/OrderSpawnConfig';
 import {
   type OrderGenContext,
@@ -274,6 +282,58 @@ function tryGenerateCombo(
   return slots;
 }
 
+function isBouquetAtMinLevel(itemId: string, minLevel: number): boolean {
+  const def = ITEM_DEFS.get(itemId);
+  return def?.line === FlowerLine.BOUQUET && (def.level ?? 0) >= minLevel;
+}
+
+function orderHasWorkshopBouquetRequirement(slots: readonly OrderGenSlot[]): boolean {
+  return slots.some(s => isBouquetAtMinLevel(s.itemId, WORKSHOP_ORDER_MIN_BOUQUET_LEVEL));
+}
+
+function pickWorkshopBouquetItem(
+  tier: OrderTier,
+  ulk: UnlockedLines,
+  usedIds: Set<string>,
+  rng: () => number,
+  playerLevel: number,
+): string | null {
+  if (!ulk.hasBouquet || ulk.maxArrangeToolLevel <= 0) return null;
+  const bouquetSpec = comboOrderSpecsForTier(tier, ulk).find(s => s.productId === 'bouquet');
+  if (!bouquetSpec) return null;
+  const minLv = Math.max(WORKSHOP_ORDER_MIN_BOUQUET_LEVEL, bouquetSpec.minLv);
+  return tryPickProductItem({ ...bouquetSpec, minLv }, ulk, usedIds, tier, rng, playerLevel);
+}
+
+/** 组合单基础上保证至少 1 槽为 L6+ 花束；无花束产线或工具不足时返回 null */
+function tryGenerateWorkshopComboSlots(ctx: OrderGenContext): OrderGenSlot[] | null {
+  const { tier, lines, rng, playerLevel } = ctx;
+  if (!lines.hasBouquet || lines.maxArrangeToolLevel <= 0) return null;
+
+  for (let attempt = 0; attempt < ORDER_SPAWN_MAX_ATTEMPTS; attempt++) {
+    const comboSlots = tryGenerateCombo(tier, lines, rng, playerLevel);
+    if (!comboSlots || comboSlots.length < 2) continue;
+
+    let slots = comboSlots;
+    if (!orderHasWorkshopBouquetRequirement(slots)) {
+      const replaceIdx = slots.findIndex(
+        s => !isBouquetAtMinLevel(s.itemId, WORKSHOP_ORDER_MIN_BOUQUET_LEVEL),
+      );
+      if (replaceIdx < 0) continue;
+      const used = new Set(slots.map(s => s.itemId));
+      used.delete(slots[replaceIdx]!.itemId);
+      const bouquetId = pickWorkshopBouquetItem(tier, lines, used, rng, playerLevel);
+      if (!bouquetId) continue;
+      slots = slots.map((s, i) => (i === replaceIdx ? { itemId: bouquetId } : s));
+    }
+
+    if (!orderHasWorkshopBouquetRequirement(slots)) continue;
+    if (!validateOrderSlotsToolCap(slots, lines)) continue;
+    return slots;
+  }
+  return null;
+}
+
 type TimedCandidate = {
   itemId: string;
   productId: OrderProductId;
@@ -388,6 +448,36 @@ function timedFloristOrderFromSlots(slots: OrderGenSlot[]): OrderGenResult {
   };
 }
 
+function workshopOrderFromComboSlots(
+  slots: OrderGenSlot[],
+  rng: () => number,
+): OrderGenResult {
+  return {
+    slots,
+    orderType: 'challenge',
+    timeLimit: null,
+    bonusMultiplier: WORKSHOP_ORDER_HUAYUAN_MULT,
+    workshopMaterialRewards: [rollWorkshopOrderMaterialReward(rng)],
+    customerTypeId: DEFAULT_SPECIAL_CUSTOMER_BY_ORDER_KIND.timedWorkshop,
+    generationKind: 'timedWorkshop',
+  };
+}
+
+function tryGenerateWorkshopOrder(ctx: OrderGenContext): OrderGenResult | null {
+  if (!ctx.allowWorkshopOrder) return null;
+  if (ctx.playerLevel < WORKSHOP_ORDER_MIN_PLAYER_LEVEL) return null;
+  if (ctx.lines.unlockedLineCount < 2) return null;
+
+  const todayCount = Math.max(0, ctx.workshopOrdersToday ?? 0);
+  const chance = WORKSHOP_ORDER_BASE_CHANCE
+    * (todayCount === 0 ? WORKSHOP_ORDER_FIRST_DAILY_CHANCE_MULT : 1);
+  if (ctx.rng() >= chance) return null;
+
+  const comboSlots = tryGenerateWorkshopComboSlots(ctx);
+  if (!comboSlots) return null;
+  return workshopOrderFromComboSlots(comboSlots, ctx.rng);
+}
+
 function tryGenerateTimedFloristOrder(ctx: OrderGenContext): OrderGenResult | null {
   if (!ctx.allowTimedFloristOrder) return null;
   if (ctx.playerLevel < TIMED_FLORIST_ORDER_MIN_PLAYER_LEVEL) return null;
@@ -430,6 +520,13 @@ export function forceGenerateTimedFloristOrder(ctx: OrderGenContext): OrderGenRe
   return timedFloristOrderFromSlots(slots);
 }
 
+/** GM / 调试：强制生成家具工匠材料单（组合单规则 + 花愿 ×0.5 + 1 材料） */
+export function forceGenerateWorkshopOrder(ctx: OrderGenContext): OrderGenResult | null {
+  const comboSlots = tryGenerateWorkshopComboSlots(ctx);
+  if (!comboSlots) return null;
+  return workshopOrderFromComboSlots(comboSlots, ctx.rng);
+}
+
 /** 当前解锁工具能力下，订单槽位是否不超过 cap+1（与 aspirational 上限一致） */
 export function validateOrderSlotsToolCap(
   slots: readonly { itemId: string }[],
@@ -461,6 +558,7 @@ export function generateOrderDemands(ctx: OrderGenContext): OrderGenResult | nul
       orderType: hook.orderType ?? tierDef.orderType,
       timeLimit: hook.timeLimit ?? tierDef.timeLimit,
       diamondReward: hook.diamondReward,
+      workshopMaterialRewards: hook.workshopMaterialRewards,
       bonusMultiplier: hook.bonusMultiplier,
       customerTypeId: hook.customerTypeId,
       generationKind: 'eventStub',
@@ -469,6 +567,9 @@ export function generateOrderDemands(ctx: OrderGenContext): OrderGenResult | nul
 
   const { tier, lines, rng } = ctx;
   const tierDef = ORDER_TIERS[tier];
+
+  const workshop = tryGenerateWorkshopOrder(ctx);
+  if (workshop) return workshop;
 
   const timedFlorist = tryGenerateTimedFloristOrder(ctx);
   if (timedFlorist) return timedFlorist;

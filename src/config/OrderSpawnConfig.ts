@@ -115,6 +115,28 @@ export const TIMED_FLORIST_ORDER_SLOT_COUNT = 3;
 export const TIMED_FLORIST_ORDER_MIN_ITEM_LEVEL = 6;
 export const TIMED_FLORIST_ORDER_TIME_LIMIT_SECONDS = 8 * 60 * 60;
 
+/** 家具工匠材料单：12 级后开放，非限时，组合单槽位规则 + 至少 1 槽 L6+ 花束，花愿 ×0.5，随机 1 种材料 ×1 */
+export const WORKSHOP_ORDER_MIN_PLAYER_LEVEL = 12;
+export const WORKSHOP_ORDER_DAILY_CAP = 4;
+/** 高于限时钻石(0.06)与富贵花商(0.05) */
+export const WORKSHOP_ORDER_BASE_CHANCE = 0.10;
+export const WORKSHOP_ORDER_FIRST_DAILY_CHANCE_MULT = 1.6;
+export const WORKSHOP_ORDER_HUAYUAN_MULT = 0.5;
+/** 工匠单至少含 1 个该等级及以上的花束槽 */
+export const WORKSHOP_ORDER_MIN_BOUQUET_LEVEL = 6;
+
+export const WORKSHOP_ORDER_MATERIAL_POOL = [
+  'workshop_material',
+] as const;
+
+export function rollWorkshopOrderMaterialReward(
+  rng: () => number = Math.random,
+): { materialId: string; count: number } {
+  const pool = WORKSHOP_ORDER_MATERIAL_POOL;
+  const materialId = pool[Math.floor(rng() * pool.length)] ?? pool[0]!;
+  return { materialId, count: 1 };
+}
+
 /** 按需求物品等级映射体力箱档位 */
 export function computeFloristStaminaChestReward(
   slots: readonly OrderGenSlot[],

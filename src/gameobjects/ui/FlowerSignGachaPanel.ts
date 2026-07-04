@@ -26,6 +26,7 @@ import { AdManager, AdScene } from '@/managers/AdManager';
 import { AdEntitlementManager, DailyAdEntitlement } from '@/managers/AdEntitlementManager';
 import { SaveManager } from '@/managers/SaveManager';
 import { ItemObtainOverlay, type ItemObtainEntry } from '@/gameobjects/ui/ItemObtainOverlay';
+import { getWorkshopMaterialDisplayName } from '@/config/FurnitureWorkshopConfig';
 
 function flowerSignRewardsToObtainEntries(rewards: FlowerSignReward[]): ItemObtainEntry[] {
   return rewards.map((r) => {
@@ -38,6 +39,13 @@ function flowerSignRewardsToObtainEntries(rewards: FlowerSignReward[]): ItemObta
         return { kind: 'direct_currency', currency: 'huayuan', amount: r.amount };
       case 'direct_diamond':
         return { kind: 'direct_currency', currency: 'diamond', amount: r.amount };
+      case 'workshop_dye':
+        return {
+          kind: 'workshop_material',
+          materialId: r.materialId,
+          count: r.count,
+          label: getWorkshopMaterialDisplayName(r.materialId),
+        };
     }
   });
 }

@@ -23,6 +23,7 @@ import { TweenManager, Ease } from '@/core/TweenManager';
 import { EventBus } from '@/core/EventBus';
 import { CustomerInstance } from '@/managers/CustomerManager';
 import { AffinityManager } from '@/managers/AffinityManager';
+import { resolveWorkshopMaterialIconKey } from '@/config/FurnitureWorkshopConfig';
 import { ToastMessage } from '@/gameobjects/ui/ToastMessage';
 import { AFFINITY_MAP } from '@/config/AffinityConfig';
 /** 单格物品显示边长（3 个并排仍落在 PANEL_W 内） */
@@ -244,6 +245,20 @@ export class CustomerView extends PIXI.Container {
     return new PIXI.Point(local.x, local.y);
   }
 
+  /** 家具工匠材料奖励图标中心（CustomerView 局部坐标；无材料奖励时 null） */
+  getWorkshopMaterialRewardIconLocalCenter(): PIXI.Point | null {
+    if (!this._rewardBadge) return null;
+    const cap = this._rewardBadge.children.find(
+      (c) => c.name === 'workshopMaterialRewardCapsule',
+    ) as PIXI.Container | undefined;
+    if (!cap) return null;
+    const iconCx = REWARD_BADGE_PAD_X + REWARD_BADGE_ICON / 2;
+    const iconCy = cap.height / 2;
+    const g = cap.toGlobal(new PIXI.Point(iconCx, iconCy));
+    const local = this.toLocal(g);
+    return new PIXI.Point(local.x, local.y);
+  }
+
   /**
    * 「完成」按钮中心的全局坐标（订单已齐且按钮已显示时；供新手引导手指定位）
    */
@@ -436,6 +451,18 @@ export class CustomerView extends PIXI.Container {
       ], 16);
       stoneCap.node.name = 'eventStoneRewardCapsule';
       capsules.push(stoneCap);
+    }
+
+    const workshopRewards = this._customer.workshopMaterialRewards ?? [];
+    const workshopMaterialCount = workshopRewards
+      .reduce((sum, r) => sum + Math.max(0, r.count), 0);
+    if (workshopMaterialCount > 0) {
+      const matIcon = resolveWorkshopMaterialIconKey(workshopRewards[0]?.materialId ?? '');
+      const workshopCap = this._makeRewardCapsule([
+        { icon: matIcon, value: workshopMaterialCount, prefix: '+', fill: 0x7b5bb8 },
+      ], 16);
+      workshopCap.node.name = 'workshopMaterialRewardCapsule';
+      capsules.push(workshopCap);
     }
 
     const weekendBonus = this._customer.weekendHuayuanBonus ?? 0;

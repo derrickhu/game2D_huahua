@@ -43,15 +43,24 @@ import {
   MERCH_MYSTERY_SPECIAL_CONSUMABLE_DIAMOND_SPREAD,
   MERCH_MYSTERY_SPECIAL_CONSUMABLE_WEIGHT,
   MERCH_MYSTERY_UNLOCKED_LEVEL_NUM,
+  MERCH_MYSTERY_WORKSHOP_DYE_DIAMOND_BASE,
+  MERCH_MYSTERY_WORKSHOP_DYE_DIAMOND_SPREAD,
+  MERCH_MYSTERY_WORKSHOP_DYE_WEIGHT,
   MERCH_SHELVES,
   type MerchPoolEntry,
   type MerchPriceType,
   type MerchShelfDef,
 } from '@/config/MerchShopConfig';
+import {
+  WORKSHOP_GACHA_DYE_IDS,
+  WORKSHOP_RESOURCE_MAP,
+  getWorkshopMaterialDisplayName,
+} from '@/config/FurnitureWorkshopConfig';
 import { CollectionCategory, CollectionManager } from '@/managers/CollectionManager';
 import { CurrencyManager } from '@/managers/CurrencyManager';
 import { BoardManager } from '@/managers/BoardManager';
 import { RewardBoxManager } from '@/managers/RewardBoxManager';
+import { FurnitureWorkshopManager } from '@/managers/FurnitureWorkshopManager';
 import { AdManager, AdScene } from '@/managers/AdManager';
 import { AdEntitlementManager, DailyAdEntitlement } from '@/managers/AdEntitlementManager';
 import { ToastMessage } from '@/gameobjects/ui/ToastMessage';
@@ -156,8 +165,29 @@ interface MysteryCandidate {
   weight: number;
   isToolL1: boolean;
   isSpecialConsumable: boolean;
+  isWorkshopDye: boolean;
   lockedLine: boolean;
-  def: ItemDef;
+  def?: ItemDef;
+}
+
+const WORKSHOP_DYE_MERCH_SET = new Set<string>(WORKSHOP_GACHA_DYE_IDS);
+
+function isWorkshopDyeMerchItemId(itemId: string): boolean {
+  return WORKSHOP_DYE_MERCH_SET.has(itemId);
+}
+
+function merchItemDisplayName(itemId: string): string {
+  if (isWorkshopDyeMerchItemId(itemId)) {
+    return getWorkshopMaterialDisplayName(itemId);
+  }
+  return ITEM_DEFS.get(itemId)?.name ?? itemId;
+}
+
+function merchItemIconKey(itemId: string): string {
+  if (isWorkshopDyeMerchItemId(itemId)) {
+    return WORKSHOP_RESOURCE_MAP.get(itemId)?.icon ?? 'icon_workshop_dye_pink';
+  }
+  return ITEM_DEFS.get(itemId)?.icon ?? 'icon_gem';
 }
 
 /** 神秘商店低概率棋盘消耗品（幸运金币 / 万能水晶 / 金剪刀） */
@@ -185,6 +215,7 @@ function buildMysteryCandidates(): MysteryCandidate[] {
           weight: Math.max(1, Math.round(w)),
           isToolL1: true,
           isSpecialConsumable: false,
+          isWorkshopDye: false,
           lockedLine,
           def,
         });
@@ -220,6 +251,7 @@ function buildMysteryCandidates(): MysteryCandidate[] {
         weight: w,
         isToolL1: false,
         isSpecialConsumable: false,
+        isWorkshopDye: false,
         lockedLine,
         def,
       });
@@ -234,8 +266,20 @@ function buildMysteryCandidates(): MysteryCandidate[] {
       weight: MERCH_MYSTERY_SPECIAL_CONSUMABLE_WEIGHT,
       isToolL1: false,
       isSpecialConsumable: true,
+      isWorkshopDye: false,
       lockedLine: false,
       def,
+    });
+  }
+
+  for (const materialId of WORKSHOP_GACHA_DYE_IDS) {
+    out.push({
+      itemId: materialId,
+      weight: MERCH_MYSTERY_WORKSHOP_DYE_WEIGHT,
+      isToolL1: false,
+      isSpecialConsumable: false,
+      isWorkshopDye: true,
+      lockedLine: false,
     });
   }
 
@@ -243,8 +287,20 @@ function buildMysteryCandidates(): MysteryCandidate[] {
 }
 
 function finalizeMysterySlot(c: MysteryCandidate): MerchSlotState {
-  const { def, lockedLine, isToolL1, isSpecialConsumable } = c;
+  const { def, lockedLine, isToolL1, isSpecialConsumable, isWorkshopDye } = c;
   const fluct = mysteryPriceFluctuationMult();
+
+  if (isWorkshopDye) {
+    const baseDia =
+      MERCH_MYSTERY_WORKSHOP_DYE_DIAMOND_BASE +
+      Math.floor(Math.random() * MERCH_MYSTERY_WORKSHOP_DYE_DIAMOND_SPREAD);
+    return {
+      itemId: c.itemId,
+      remaining: 1,
+      priceType: 'diamond',
+      priceAmount: Math.max(1, Math.round(baseDia * fluct)),
+    };
+  }
 
   if (isSpecialConsumable) {
     const baseDia =
@@ -255,6 +311,15 @@ function finalizeMysterySlot(c: MysteryCandidate): MerchSlotState {
       remaining: 1,
       priceType: 'diamond',
       priceAmount: Math.max(1, Math.round(baseDia * fluct)),
+    };
+  }
+
+  if (!def) {
+    return {
+      itemId: c.itemId,
+      remaining: 1,
+      priceType: 'diamond',
+      priceAmount: Math.max(1, Math.round(MERCH_MYSTERY_DIAMOND_BASE * fluct)),
     };
   }
 
@@ -276,6 +341,8 @@ function finalizeMysterySlot(c: MysteryCandidate): MerchSlotState {
   const tryHuayuan =
     !isToolL1 &&
     !isSpecialConsumable &&
+    !isWorkshopDye &&
+    def &&
     def.level <= MERCH_MYSTERY_HUAYUAN_MAX_LEVEL &&
     Math.random() < hyChance;
 
@@ -329,7 +396,9 @@ function finalizeMysterySlot(c: MysteryCandidate): MerchSlotState {
 
 function rollMysteryShopSlots(def: MerchShelfDef): MerchSlotState[] {
   const fullBag = (): MysteryCandidate[] =>
-    buildMysteryCandidates().filter((c) => ITEM_DEFS.has(c.itemId));
+    buildMysteryCandidates().filter(
+      (c) => c.isWorkshopDye || (c.def != null && ITEM_DEFS.has(c.itemId)),
+    );
 
   let bag = fullBag();
   if (bag.length === 0) {
@@ -636,19 +705,20 @@ class MerchShopManagerClass {
         shelfId: def.id,
         nextRefreshAt: s.nextRefreshAt,
         refreshIntervalSec: def.refreshIntervalSec,
-        slots: s.slots.map((sl) => {
-          const d = ITEM_DEFS.get(sl.itemId);
-          return {
-            ...sl,
-            name: d?.name ?? sl.itemId,
-            icon: d?.icon ?? 'icon_gem',
-          };
-        }),
+        slots: s.slots.map((sl) => ({
+          ...sl,
+          name: merchItemDisplayName(sl.itemId),
+          icon: merchItemIconKey(sl.itemId),
+        })),
       };
     });
   }
 
   private grantItem(itemId: string): void {
+    if (isWorkshopDyeMerchItemId(itemId)) {
+      FurnitureWorkshopManager.addMaterial(itemId, 1);
+      return;
+    }
     const idx = BoardManager.findEmptyOpenCell();
     if (idx >= 0 && BoardManager.placeItem(idx, itemId)) return;
     RewardBoxManager.addItem(itemId, 1);
@@ -697,7 +767,7 @@ class MerchShopManagerClass {
     slot.remaining = Math.max(0, slot.remaining - 1);
     EventBus.emit('merchShop:purchased', shelfIndex, slot, false);
     EventBus.emit('merchShop:changed');
-    ToastMessage.show(`获得 ${ITEM_DEFS.get(slot.itemId)?.name ?? slot.itemId}`);
+    ToastMessage.show(`获得 ${merchItemDisplayName(slot.itemId)}`);
     return true;
   }
 
@@ -730,7 +800,7 @@ class MerchShopManagerClass {
       sl.remaining = Math.max(0, sl.remaining - 1);
       EventBus.emit('merchShop:purchased', shelfIndex, sl, true);
       EventBus.emit('merchShop:changed');
-      ToastMessage.show(`获得 ${ITEM_DEFS.get(sl.itemId)?.name ?? sl.itemId}`);
+      ToastMessage.show(`获得 ${merchItemDisplayName(sl.itemId)}`);
     });
   }
 }

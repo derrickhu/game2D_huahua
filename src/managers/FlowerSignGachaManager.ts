@@ -9,10 +9,12 @@ import {
   FLOWER_SIGN_GACHA_POOL,
   type FlowerSignPoolEntry,
 } from '@/config/FlowerSignGachaConfig';
+import { WORKSHOP_GACHA_DYE_IDS } from '@/config/FurnitureWorkshopConfig';
 import { WISHING_FOUNTAIN_UNLOCK_LEVEL } from '@/config/WorldMapConfig';
 import { PersistService } from '@/core/PersistService';
 import { AdEntitlementManager, DailyAdEntitlement } from '@/managers/AdEntitlementManager';
 import { CurrencyManager } from '@/managers/CurrencyManager';
+import { FurnitureWorkshopManager } from '@/managers/FurnitureWorkshopManager';
 import { RewardBoxManager } from '@/managers/RewardBoxManager';
 import { FlowerSignTicketManager } from '@/managers/FlowerSignTicketManager';
 import { formatLocalDateString } from '@/utils/WeeklyCycle';
@@ -39,11 +41,15 @@ export type FlowerSignReward =
   | { kind: 'reward_box_item'; itemId: string; count: number }
   | { kind: 'direct_stamina'; amount: number }
   | { kind: 'direct_huayuan'; amount: number }
-  | { kind: 'direct_diamond'; amount: number };
+  | { kind: 'direct_diamond'; amount: number }
+  | { kind: 'workshop_dye'; materialId: string; count: number };
+
+const WORKSHOP_GACHA_DYE_SET = new Set<string>(WORKSHOP_GACHA_DYE_IDS);
 
 function buildValidPool(): FlowerSignPoolEntry[] {
   return FLOWER_SIGN_GACHA_POOL.filter((e) => {
     if (e.kind === 'reward_box_item') return ITEM_DEFS.has(e.itemId);
+    if (e.kind === 'workshop_dye') return WORKSHOP_GACHA_DYE_SET.has(e.materialId);
     return e.amount > 0;
   });
 }
@@ -62,6 +68,12 @@ function poolEntryToReward(e: FlowerSignPoolEntry): FlowerSignReward {
       return { kind: 'direct_huayuan', amount: Math.max(1, Math.floor(e.amount)) };
     case 'direct_diamond':
       return { kind: 'direct_diamond', amount: Math.max(1, Math.floor(e.amount)) };
+    case 'workshop_dye':
+      return {
+        kind: 'workshop_dye',
+        materialId: e.materialId,
+        count: Math.max(1, Math.floor(e.count ?? 1)),
+      };
   }
 }
 
@@ -98,6 +110,11 @@ export function grantFlowerSignRewards(rewards: FlowerSignReward[]): void {
       case 'direct_diamond':
         CurrencyManager.addDiamond(rw.amount);
         break;
+      case 'workshop_dye':
+        if (rw.count > 0) {
+          FurnitureWorkshopManager.addMaterial(rw.materialId, rw.count);
+        }
+        break;
     }
   }
 }
@@ -122,6 +139,7 @@ function trackDraw(
   let directHuayuan = 0;
   let directDiamond = 0;
   let directStamina = 0;
+  let workshopDye = 0;
   for (const r of rewards) {
     switch (r.kind) {
       case 'reward_box_item':
@@ -136,6 +154,9 @@ function trackDraw(
       case 'direct_stamina':
         directStamina += r.amount;
         break;
+      case 'workshop_dye':
+        workshopDye += r.count;
+        break;
     }
   }
   analytics.track(EVENT_NAMES.FOUNTAIN_DRAW, {
@@ -146,6 +167,7 @@ function trackDraw(
     direct_huayuan: directHuayuan,
     direct_diamond: directDiamond,
     direct_stamina: directStamina,
+    workshop_dye: workshopDye,
   });
 }
 

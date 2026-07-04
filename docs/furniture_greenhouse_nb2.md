@@ -16,6 +16,8 @@ mkdir -p ../game_assets/huahua/assets/raw
 4. 裁透明边：`game-art-pipeline` 的 `crop_trim.py --padding 4`。
 5. 成品 PNG 写入 `minigame/subpkg_deco/images/furniture/<key>.png`；`TextureCache` 与 `DecorationConfig` 已登记同名 key。
 
+**放置与深度排序**：新家具入库时在 `DecorationConfig` 中按品类配置 `depthSortFloorMat` / `depthSortFeetYFudge` / `depthSortYLift`（台面小物、地毯、地面大件规则见 **`.cursor/rules/furniture-deco-art-spec.mdc` §放置与深度排序**）；入库后在编辑模式实测台面与地毯遮挡。
+
 ## 占位与重试
 
 - 若尚未跑完脚本，仓库内可能暂为 **64×64 透明占位 PNG**（避免缺图路径报错）；跑通 `gen_furniture_greenhouse_nb2.sh` 后即被正式图覆盖。

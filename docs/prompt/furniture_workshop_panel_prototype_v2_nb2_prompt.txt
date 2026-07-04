@@ -1,0 +1,38 @@
+Single full-screen vertical mobile game UI mockup, 9:16, NEW original layout design for a cozy pastel flower-shop merge game furniture workshop. Do NOT copy any existing screenshot — invent a cleaner, more spacious composition.
+
+DESIGN GOALS: purple-lilac kawaii panel like daily-challenge / decoration panels; generous whitespace; clear vertical hierarchy; room to grow (more materials and bottom shortcuts later).
+
+MODAL SHELL: centered tall rounded rectangle. Thick outer rim soft lilac-lavender, thin inner pastel-pink lip, soft shadow. Interior split into TWO vertical zones:
+
+ZONE A — PURPLE HEADER (top ~14% height, solid soft purple band only):
+- Centered white bold Chinese title "家具工坊" with gentle stroke.
+- Top-right red circular close button white X, slightly overlapping corner.
+- NO resource icons in this purple band — keep header clean and airy.
+
+ZONE B — CREAM CONTENT (remaining height, warm off-white matte fill):
+
+B1 MATERIAL TRAY (first element inside cream, with clear top padding ~20px below purple header):
+- Wide inset rounded tray, taller than a thin pill (~56px tall), soft white fill, lilac border.
+- Small muted label "材料" top-left inside tray optional.
+- SIX equal circular slots in one horizontal row spanning most tray width:
+  - Slot 1 hammer icon + number "2"
+  - Slot 2 pink dye bottle + "0"
+  - Slot 3 yellow dye bottle + "0"
+  - Slots 4–6 EMPTY reserved placeholders: dashed lavender circles with faint "+" hint, no icons yet — shows future expansion space.
+- Slots evenly spaced with comfortable gaps, NOT cramped.
+
+B2 CATEGORY TABS (~16px below material tray):
+- Five rounded capsule tabs in one row: "全部" selected deep lavender white text; "家具" "家电" "摆件" "墙饰" idle pale lilac purple text.
+- Tabs slightly smaller height than material tray, full content width minus side padding.
+
+B3 CRAFT GRID (largest middle area):
+- Two-column grid with generous gutters.
+- ONE sample card top-left: soft white card, subtle green border, large green L-sofa thumbnail, name "明绿弧翼大沙发", green "制作" button.
+- Second column and lower rows empty calm cream space — do not clutter.
+
+B4 BOTTOM SHORTCUT DOCK (last element inside cream, inset from bottom edge ~14px, NOT a harsh full-bleed orange bar):
+- Soft lavender-tint inset rounded panel spanning content width, height ~90px, very subtle fill (#F3EBFF), thin lilac stroke.
+- LEFT two-thirds intentionally EMPTY quiet reserve for future shortcut icons (no text needed, just breathing room).
+- RIGHT ONE polished shortcut chip: white rounded square tile (~72px) with cute lavender blueprint scroll icon centered, label "图纸商店" below chip in small purple text — chip floats with margin from dock right edge, looks like a proper app shortcut not a cramped corner sticker.
+
+Art style: clean 2D vector kawaii mobile UI, pastel purple family, soft rim gradients only, readable Chinese, no photoreal, no watermark. Outside modal: flat pure white RGB 255,255,255 margins.

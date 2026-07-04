@@ -3,10 +3,16 @@
  */
 import * as PIXI from 'pixi.js';
 import { Game } from '@/core/Game';
+import { OverlayManager } from '@/core/OverlayManager';
 import { TweenManager, Ease } from '@/core/TweenManager';
 import { TextureCache } from '@/utils/TextureCache';
 import { DESIGN_WIDTH, FONT_FAMILY } from '@/config/Constants';
 import { TOP_BAR_HEIGHT } from '@/gameobjects/ui/TopBar';
+
+/** 高于工坊/装修面板内容，低于庆祝弹层（12000） */
+const OVERLAY_STAR_FLY_Z = 10950;
+
+let overlayStarFlyLayer: PIXI.Container | null = null;
 
 /** 与 ShopScene 内 `_buildProgressBar` 一致，用于主场景无进度条时对齐同一屏幕落点 */
 const PROGRESS_BAR_W = 400;
@@ -21,6 +27,55 @@ export function getShopProgressStarTargetLocalInSceneRoot(): { x: number; y: num
     x: cx - PROGRESS_BAR_W / 2 - 22,
     y: y + PROGRESS_BAR_H / 2,
   };
+}
+
+/** 覆盖层面飞星粒子层（盖在 Overlay 面板上，避免被 zIndex=10000 的弹层挡住） */
+export function ensureOverlayShopStarFlyLayer(): PIXI.Container {
+  if (!overlayStarFlyLayer || overlayStarFlyLayer.destroyed) {
+    overlayStarFlyLayer = new PIXI.Container();
+    overlayStarFlyLayer.eventMode = 'none';
+    overlayStarFlyLayer.zIndex = OVERLAY_STAR_FLY_Z;
+    const ov = OverlayManager.container;
+    ov.sortableChildren = true;
+    ov.addChild(overlayStarFlyLayer);
+    ov.sortChildren();
+  }
+  return overlayStarFlyLayer;
+}
+
+export function sceneLocalToOverlayLocal(
+  sceneRoot: PIXI.Container,
+  localX: number,
+  localY: number,
+): PIXI.Point {
+  const global = sceneRoot.toGlobal(new PIXI.Point(localX, localY));
+  return OverlayManager.container.toLocal(global);
+}
+
+/** 在 Overlay 层播放飞星（起点全局坐标；落点为 sceneRoot 局部坐标） */
+export function playShopDecorationStarFlyOverOverlay(params: {
+  sceneRoot: PIXI.Container;
+  startGlobalX: number;
+  startGlobalY: number;
+  targetSceneLocalX: number;
+  targetSceneLocalY: number;
+  amount: number;
+  onComplete: () => void;
+}): void {
+  const target = sceneLocalToOverlayLocal(
+    params.sceneRoot,
+    params.targetSceneLocalX,
+    params.targetSceneLocalY,
+  );
+  playShopDecorationStarFly({
+    flyLayer: ensureOverlayShopStarFlyLayer(),
+    startGlobalX: params.startGlobalX,
+    startGlobalY: params.startGlobalY,
+    targetLocalX: target.x,
+    targetLocalY: target.y,
+    amount: params.amount,
+    onComplete: params.onComplete,
+  });
 }
 
 /**

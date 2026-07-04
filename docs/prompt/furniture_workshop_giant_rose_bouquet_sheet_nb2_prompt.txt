@@ -1,0 +1,39 @@
+Create ONE clean 2D game furniture spritesheet for a cozy pastel flower-shop merge game.
+
+Canvas and layout (CRITICAL — single image, two states):
+- Square 1:1 canvas.
+- EXACTLY 2 equal columns × 1 row ONLY (NOT 2 rows, NOT 4 panels, NO duplicated rows).
+- Wide pure white gutter between the two panels.
+- Each panel contains exactly ONE standalone ornament prop, centered, with generous white margin inside its cell.
+- Both panels must show the SAME vase, SAME overall silhouette size, SAME isometric angle, SAME accent flower placement — ONLY the rose bloom stage changes between left and right.
+- NO TEXT, no labels, no captions, no numbers, no watermark.
+
+Art style:
+- Cute kawaii 2.5D isometric view from upper-left about 45 degrees (classic flower-shop room cutaway angle).
+- Hand-painted mobile merge-game flower shop ornament.
+- Soft warm brown outlines, gentle upper-left lighting, soft volumetric shading.
+- Readable silhouette at small grid size. Premium florist centerpiece mood, still cute merge-game prop, not photoreal, not flat UI icon.
+
+Subject — large vase arrangement (NOT hand-wrapped bouquet):
+- A statement centerpiece: an oversized floral arrangement planted IN a decorative ceramic vase.
+- The vase is elegant and designed: cream-white glazed ceramic with subtle blush pink banding, gentle gold rim line, slightly flared lip, stable rounded base. Vase height about one-third of total prop height.
+- The arrangement is tall, lush, and intentionally designed like a professional florist piece — layered heights, color rhythm, not a random pile of flowers.
+
+Flower design (both panels share the same recipe):
+- HERO flowers: many classic red roses forming the crown (about 60% visual weight).
+- ACCENT flowers for design interest: soft blush pink spray roses tucked lower left, tiny white baby's breath clouds weaving through gaps, a few lavender-blue delphinium spikes rising behind for vertical accent, small cream peony buds near the front edge, fresh eucalyptus sprigs and deep green foliage framing the base.
+- Stems and leaves emerge naturally from the vase mouth; no wrapping paper, no ribbon bow, no cut-flower bundle.
+
+Panel 1 (LEFT column) — BUD stage:
+- Every red rose is a tight closed bud: round, pointed tips, velvety deep red, no open petals.
+- Accent flowers also mostly closed or tiny (baby's breath as small dots, peony as tight buds, delphinium as closed spikes).
+- Silhouette reads "含苞待放" — elegant restraint, about to bloom.
+
+Panel 2 (RIGHT column) — FULL BLOOM stage:
+- The SAME arrangement recipe and vase, but every red rose is fully open with layered velvet petals and soft golden centers.
+- Accent flowers also opened: spray roses blooming, peonies softly open, delphinium florets visible, baby's breath airy.
+- Must read unmistakably as the same designed vase piece after blooming, not a different arrangement.
+
+Restrictions:
+- NO wrapping paper bouquet, NO handheld bouquet, NO table, NO room shell, NO floor, NO wall, NO characters, NO other furniture.
+- Background pure solid white #FFFFFF only for cutout.

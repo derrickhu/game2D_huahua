@@ -1,0 +1,39 @@
+Single full-screen vertical mobile game UI mockup, 9:16, ONE cohesive illustrated furniture workshop panel for a cozy pastel flower-shop merge game. Must feel like a unified art-designed mobile popup — NOT a wireframe, NOT labeled zones, NOT a checklist layout, NOT stiff boxed UI blocks pasted together.
+
+OVERALL MOOD: soft dreamy lilac-purple workshop atmosphere, gentle luxury, kawaii but refined — similar design polish to a high-end casual game crafting screen (subtle background pattern, layered purple tones, rounded friendly shapes, decorative depth). Do NOT copy any specific reference screenshot layout literally — invent our own composition with comparable craftsmanship.
+
+MODAL SHELL:
+- Tall centered panel, very rounded corners, thick lavender outer rim with soft inner pink lip and delicate gold-ish highlight stroke on top edge.
+- Entire interior feels like ONE continuous designed surface — avoid harsh rectangles stacked on rectangles.
+
+HEADER (top purple band ~13% height):
+- Rich soft purple with VERY SUBTLE vertical stripe or faint floral damask watermark texture (low contrast, elegant, not noisy).
+- Center title "家具工坊" white bold Chinese, slight glow.
+- Top-right red close button, cute and chunky.
+- Header has depth — gentle gradient darker at top, lighter toward cream transition. NO material icons in header.
+
+MATERIAL STRIP (inside upper cream zone, below header with comfortable breathing room):
+- Integrated decorative tray — NOT a plain white pill box. Soft cream-lavender inset panel with rounded ends, thin lilac ornamental border, whisper of inner shadow.
+- Tiny label "材料" in muted purple optional, small and elegant.
+- Show ONLY three material items in a relaxed row: hammer "2", pink dye "0", yellow dye "0" — cute icons with numbers.
+- To the right: quiet empty reserved space (soft blank cream-lavender area) suggesting future materials — NO plus sign, NO dashed circles, NO "empty" text, NO placeholder icons — just elegant unused space within the tray.
+
+CATEGORY TABS:
+- Five capsule tabs with craft: "全部" selected (richer purple gradient, white text, subtle highlight); "家具" "家电" "摆件" "墙饰" idle (soft lilac, purple text).
+- Tabs feel embossed / tactile, not flat rectangles.
+
+MAIN CRAFT AREA (hero zone):
+- Large cream field with VERY SUBTLE all-over floral or scroll pattern watermark at ~6% opacity — gives texture without clutter.
+- Two-column grid, ONE beautiful sample card top-left:
+  - Soft white card with gentle drop shadow, thin mint-green accent border, rounded corners.
+  - Charming isometric green L-sofa illustration inside.
+  - Name "明绿弧翼大沙发" in warm brown-purple.
+  - Plump green "制作" button with soft highlight.
+- Remaining grid area calm and open — maybe faint ghost grid guides at very low opacity, NOT empty white boxes.
+
+BOTTOM SHORTCUT ZONE:
+- Integrated footer area — same cream-lilac family, subtle horizontal gradient, faint decorative line separator from grid above (not a harsh bar).
+- Right side: ONE polished shortcut tile — lavender blueprint scroll icon on soft white rounded tile with shadow, label "图纸商店" below in small purple. Tile feels designed, not pasted.
+- Left side open calm space for future shortcuts — no icons, no labels.
+
+Art style: premium 2D vector mobile game UI illustration, pastel purple palette, soft gradients, ornamental texture, readable Chinese, no photoreal, no watermark, no annotation letters, no wireframe labels. Outside modal: pure white RGB 255,255,255 margins only.

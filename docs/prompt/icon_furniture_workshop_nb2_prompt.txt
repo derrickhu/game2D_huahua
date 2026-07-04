@@ -1,0 +1,9 @@
+Single mobile game HUD bottom-nav icon, square 1:1 canvas, one object centered with generous margin.
+
+Subject: ONE simple cute wooden CRAFT WORKBENCH / small carpenter table ONLY — a compact flower-shop furniture making station. Warm honey-brown wood tabletop in slight 3/4 view, two short sturdy legs, soft lavender-lilac purple apron or drawer front under the top (workshop purple accent). Optional: one tiny pastel pink flower in a small clay pot on a corner of the table — very subtle, keep the table the hero. Chunky toy proportions like merge-game nav icons.
+
+CRITICAL: NO hammer, NO wrench, NO blueprint scroll, NO paper roll, NO hand tools, NO saw — only the simple bench/table, with at most one tiny flower pot.
+
+Art style: MUST match neighboring HUD icons (coral pink sofa, lavender scroll, pink dress on hanger) — thick soft outline warm dark brown chocolate, very clean bold silhouette, minimal internal lines, volume from smooth pure-color gradients and one white curved highlight on the wood top. Two tiny white four-pointed star sparkles. Reads clearly at 128px.
+
+NO text, NO watermark, NO UI frame. Background flat pure white #FFFFFF only.

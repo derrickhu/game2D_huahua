@@ -52,6 +52,55 @@ npm run check:deco-textures
 
 该脚本会扫描 `DecorationConfig` 的全部 `icon` / `bgTexture`，检查 `TextureCache` key 是否存在、映射文件是否真实存在；有任何缺失都必须先修复再发版。
 
+## 放置与深度排序（生图 + 注册 — 强制）
+
+房间**没有**「吸附到桌面」的物理碰撞；玩家自由拖拽，**能否看起来摆在桌子/柜台上、地毯是否永远贴在最底层**，全靠 `DecorationConfig` 深度字段 + `defaultScale` + 生图脚点。**设计新家具时先归类，再写 prompt、再登记配置**（见 `RoomDepthSort.ts`、`getDepthSortTypeLift` / `getDepthSortFeetYFudge`）。
+
+### 四类放置意图（设计阶段先选一类）
+
+| 放置意图 | 典型品类 | `DecoSlot` | `DecorationConfig` 必填/推荐 | 生图注意 |
+|----------|----------|------------|------------------------------|----------|
+| **A. 台面小物** | 花瓶、蜡烛、玩偶、果盘、大捧花、台面家电 | `ORNAMENT` 或 `LIGHT` | 见下表「台面小物」 | 脚点在**物体最底**（瓶底/托盘底）；**勿**画地面投影条、勿画整片假地板 |
+| **B. 贴地地毯 / 地垫** | 圆毯、长毯、针织毯、星纹毯 | `ORNAMENT`（常归 furniture / flower_room Tab） | `depthSortFloorMat: true`，`depthSortYLift: 0` | 俯视**平铺**感、薄毯体；无立体桌腿高度 |
+| **C. 地面大件** | 沙发、床、长凳、展示柜、落地钟 | `ORNAMENT` / `TABLE` / `SHELF` | 一般**不设** depth 覆盖；`defaultScale` 常 **> 0.92** | 完整落地体量，脚点贴地 |
+| **D. 墙饰 / 庭院** | 挂画、窗帘、户外花架 | `WALLART` / `GARDEN` | 墙饰见下文「墙饰例外」；庭院按地面大件 | 墙饰贴立面透视，非台面逻辑 |
+
+### A. 台面小物 — 配置规则
+
+引擎默认：`ORNAMENT` 且 `defaultScale ≤ 0.92` 会自动获得 `depthSortFeetYFudge: 95` 与 `depthSortYLift: 140`。**但** `decorationPanelTab: 'furniture'` 且 **`defaultScale > 0.92` 会被当成地面大件（补偿为 0）**——大捧玫瑰、大花瓶等「视觉偏大、却要摆桌面」的件**必须显式写**：
+
+```typescript
+depthSortFeetYFudge: 95,   // 小摆件默认；偏大或 LIGHT 台面件可用 110～130
+depthSortYLift: 140,       // 同 Y 带内略压过桌沿；显式 0 表示按地板大件
+```
+
+参考：`orn_vase`（0.53，自动台面）、`modern_hotdog_roller`（LIGHT + `depthSortFeetYFudge: 130`）、`workshop_giant_rose_bouquet`（1.15 + 显式 110/140）。
+
+- **`defaultScale`**：台面小物优先 **0.45～0.92**；若美术需要更大，保留大 scale 但**仍加**上述 depth 字段。
+- **验收**：编辑模式拖到 `table_round_cafe`、厨柜、茶几上，确认**不被桌面挡住**、脚点视觉上在台面而非地板。
+
+### B. 地毯 / 地垫 — 配置规则
+
+**必须**同时满足，否则地毯会盖住桌椅、店主脚：
+
+```typescript
+depthSortFloorMat: true,
+depthSortYLift: 0,
+```
+
+参考：`orn_greenhouse_rug`、`dream_cloud_star_rug`、`azure_lazy_star_border_rug`。
+
+- **禁止**对地毯设置 `depthSortFeetYFudge`（贴地排序，不需抬脚点）。
+- **验收**：与同区域沙发/桌几重叠时，地毯恒在**最底层**（仅高于房壳），不挡人物腿。
+
+### 入库检查清单（`DECO_DEFS` 新行必过）
+
+1. 已选放置意图 A/B/C/D，且与策划描述一致（「可摆台面」≠ 默认地面大件）。
+2. 台面小物：若 `furniture` Tab 且 `defaultScale > 0.92` → 已写 `depthSortFeetYFudge` + `depthSortYLift`。
+3. 地毯类：已写 `depthSortFloorMat: true` 且 `depthSortYLift: 0`。
+4. 地面大件：未误加台面补偿（避免整件浮在桌面前面）。
+5. 游戏内编辑模式实测：台面件能摆上桌子；地毯不挡家具/人物。
+
 ## 压缩与像素规格（须对齐现有家具）
 
 - **像素**：等比缩放后 **最长边不宜超过 171 px**（与 `scripts/normalize_greenhouse_furniture_pngs.py` 中 `MAX_SIDE` 及当前多数已验收家具一致）。勿将未缩放的高分辨率生图直接长期留在 `furniture/`。
@@ -94,3 +143,53 @@ python3 scripts/compress_furniture_deco_pngs.py --dry-run
 
 1. **单件单提示词（首选 / 风险最低）**：每件 1:1 512px 单图，**避免** grid 切割误伤边缘（曾在熟客家具批次出现：trophy case 右框、balcony rack 铁艺纹被切到相邻 cell）。文件命名 `furniture_<id>_nb2_prompt.txt`，输出 `../game_assets/huahua/assets/raw/<id>_nb2.png`，直接 rembg → crop_trim → ship，无 split 步骤。
 2. **批量 grid（仅用于强风格统一 + 单件偏小的场景，如盆栽线）**：在 prompt 里**显式**要求每个 cell 的 prop 只占 cell 中央约 **55%–60%**，四周留宽白边；`split_grid.py --margin 0`（让边缘安全带留给 prop），同时核对生成图每个 cell 的 silhouette 都收敛在 cell 内，再走 rembg 流程。**禁止**对体量较大、轮廓饱满的家具（带玻璃柜、雕花花架、长条桌等）走 grid 出图——优先走方案 1。
+
+## 家具雪碧图合图（同族多形态 — 强制）
+
+**同一家具族的多种形态必须写入一张 PNG 雪碧图（sprite sheet）**，运行时由 `FurnitureRenderConfig.ts` + `TextureCache` 按帧切分；**禁止**为同一族的正/背、多配色、可交互态各放独立 PNG（除非历史兼容且尚未迁移）。
+
+### 布局约定
+
+| 维度 | 列（col） | 行（row） |
+|------|-----------|-----------|
+| **四向旋转（fourFacing）** | col **0 = 正面**（front），col **1 = 背面**（back）；左右向由引擎 **水平翻转** 正/背帧 | 默认 **row 0**；多配色时 **每种配色占一行** |
+| **多配色（同族）** | 仍用 front/back 两列 | row 0 = 默认色，row 1 = 分色（例：弧翼沙发 default + sakura → 同一 `{family}_sheet.png` 两行） |
+| **可交互态** | 若仍四向：每种交互态 **占一行**，列仍为 front/back | 例：row0=默认关，row1=打开 |
+| **不可旋转 + 多态** | 按列扩展各态 | 单行 |
+
+- **合图文件**：`minigame/subpkg_deco/images/furniture/{family}_sheet.png`
+- **TextureCache key**：`{family}_sheet`；子帧：`{sheetKey}#{col},{row}`
+- **DecorationConfig.icon**：仍写 **deco id**；托盘/卡片默认 **正面帧**（别名）
+- **工程**：`FurnitureRenderConfig.ts` 登记 `renderMode` + `atlas`；`TextureCache` 登记 sheet key
+
+### 生图（Gemini / NB2）
+
+- **四向家具**：**一张图生成正+背**（2 列 × 1 行），白底宽缝，同模型、同等距视角、同尺度；范本：`furniture_workshop_puffy_petal_sofa_front_back_sheet_nb2_prompt.txt`
+- **附参考图**：生成背面时 **必须附正面已验收图**（`--image`）
+- **比例**：合图整体 **1:1**（512×512）
+- **抠图**：整图 **`birefnet-general`** → `crop_trim --padding 4`
+- **压缩**：`python3 scripts/compress_furniture_deco_pngs.py --force .../{family}_sheet.png`（`*_sheet.png` **只 re-encode、不整图缩到 171**）
+- **合图尺寸**：先用 `scripts/process_furniture_atlas_sheet.py` 按 **每格** `--max-side 171` 拼 sheet，再跑压缩脚本
+
+### 运行时
+
+- `fourFacing` → 编辑栏 **「旋转」**（非镜像翻转）
+- 预加载：`collectFurniturePreloadKeys()` 只拉 sheetKey
+
+## 反例（勿做）
+
+- 棋盘 **工具图标** 那套 **3/4 俯视小物件**（见 `tool-icon-art-style.mdc`）— **家具用等距花店风，二者勿混用为同一参考图。**
+- 写实 IKEA 照片风、暗黑低饱和、细黑线稿扁平 UI 图标风。
+- 带第四面墙或透视地板的「小场景」而非单件家具。
+- **同一家具族** 正/背/分色/交互态 **各一张独立 PNG**（应合并为 `{family}_sheet.png`）。
+
+## 墙饰 / 窗帘（`DecoSlot.WALLART` — 视角例外）
+
+地面家具/摆件用 **upper-left ~45° 等距道具角**（顶面 + 立面）；**墙饰、挂帘、挂画** 须贴 **后墙 / 右墙立面**，与 `wallart_*_isometric_nb2_prompt.txt`、`event_jewelry_jade_curtain_isometric_nb2_prompt.txt` 一致：
+
+| 要求 | 说明 |
+|------|------|
+| 透视 | **禁止** 正面平视 billboard（横平竖直窗帘杆）。须 **等距墙面透视**：杆/框上沿 **左高右低** 斜向，整体像贴在墙面上 |
+| 参考 | 生图附 **`wallart_lace_curtain.png`** 或已验收 **`deco_lv20_wall_moon_sheer_curtain.png`** 锁角度；主体设计写在 prompt 正文 |
+| 脚本 | 批量墙饰：`scripts/gen_wallart_isometric_nb2.sh`；单件亦用 **`gemini-3.1-flash-image-preview`** + `--image` 参考 |
+| 反例 | `isometric-ish front view`、纯正面窗帘（会与房壳 L 形后墙夹角不匹配） |

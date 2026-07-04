@@ -1,0 +1,7 @@
+Single mobile game HUD icon, square 1:1 canvas, one cute object centered with generous margin.
+
+Subject: ONE chunky golden-yellow carpenter claw hammer with warm honey-brown wooden handle, cozy furniture workshop craft material icon. Rounded toy-like hammer head with soft bevel, cute proportions for a merge game inventory item. NOT crossed with paintbrush or other tools, NOT a wrench, NOT a toolbox — only the hammer.
+
+Art style: thick soft outline in warm dark brown or chocolate (never pure black), chunky rounded forms, gentle cel shading with soft gradients, bright white specular edge highlights, polished casual 2D vector merge-game icon for a cozy pastel flower shop. Add two or three tiny white four-pointed star sparkles near the hammer. Three-quarter view from front-above, must read clearly at about 128 pixels.
+
+NO text, NO letters, NO watermark, NO UI frame, NO ground tiles — only the hammer object. Background must be flat uniform magenta chroma key exactly FF00FF, no gradient in the backdrop.

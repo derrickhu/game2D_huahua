@@ -1,0 +1,23 @@
+Create a clean 2D game furniture asset sheet for a cozy pastel flower-shop merge game.
+
+CRITICAL LAYOUT — READ FIRST:
+Exactly ONE horizontal row with TWO equal panels only: 2 columns x 1 row sprite sheet.
+FORBIDDEN: 2 rows, 2x2 grid, four rotation views, four panels, quad layout, extra copies below or above.
+Only TWO panels side by side with a wide pure white gutter between them. Nothing else on the canvas.
+
+Match the attached reference sheet layout: same 2-column x 1-row structure as the puffy sofa example (left = front, right = back).
+
+Match the attached living-room TV cabinet reference for proportions and mood:
+Large living-room scale floor unit — NOT a tiny bedroom TV. The TV screen should feel wide and dominant over the cabinet.
+
+Shared style:
+Cute kawaii 2.5D isometric view from upper-left about 45 degrees. Hand-painted mobile merge-game furniture. Soft warm brown outlines, gentle upper-left lighting, cozy warm wood interior palette.
+
+Subject — large black ultra-thin floor TV on wooden TV cabinet (NOT wall-mounted):
+A floor-standing entertainment unit. Top: a BIG wide flat-screen TV with very thin black bezel and ultra-slim profile; screen is dark charcoal/black and OFF (plain dark glass, no picture, no UI, no logos, no text). Bottom: a LONG low wooden TV cabinet in warm honey-oak / light walnut wood with THREE open shelf bays (left bay with a few books or small boxes, middle bay empty, right bay with small decor blocks). Short sturdy cabinet feet on the ground. Overall width clearly wider than height of the cabinet; TV width matches cabinet width. Readable silhouette at game icon size.
+
+Panel 1 (left column ONLY): FRONT facing view — black screen toward camera, open shelves visible on the cabinet front.
+
+Panel 2 (right column ONLY): BACK view of the SAME unit at the SAME scale — plain dark gray/black TV back panel, plain wooden cabinet back with simple vent slots, same feet.
+
+No room shell, no floor, no wall, no characters. Background pure solid white #FFFFFF only for cutout. NO TEXT anywhere.

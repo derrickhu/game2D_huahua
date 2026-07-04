@@ -1,0 +1,24 @@
+Single full-screen vertical mobile game UI asset, 9:16 aspect ratio, one flattened decorative SHELL ONLY for a furniture workshop modal panel in a cozy pastel flower-shop merge game. High resolution, crisp anti-aliased vector edges.
+
+STYLE MUST MATCH THE ATTACHED REFERENCE PANEL SHELL EXACTLY:
+Clean flat 2D cartoon mobile game UI, kawaii casual merge-game look, NOT ornate Victorian, NOT lace, NOT roses, NOT gold filigree, NOT gems, NOT quilted leather, NOT realistic 3D, NOT heavy damask wallpaper, NOT fancy scrollwork corners. Use simple bold warm-brown comic outlines, flat pastel fills, and only gentle soft shading on the purple frame, pink lip, gold banner, and red close button — same visual DNA as the reference daily-challenge panel shell.
+
+THIS IS AN EMPTY BACKPLATE ONLY. No functional UI content.
+
+INCLUDE ONLY:
+- Tall centered modal, very rounded corners.
+- Thick outer rim soft lilac-lavender, thinner inner pastel-pink lip, simple warm-brown outline stroke, minimal depth.
+- TOP: centered golden-yellow scalloped title banner with empty center, no text.
+- TOP-RIGHT: chunky circular red close button with simple white X only.
+- HEADER BAND directly below the gold banner: one short soft-purple horizontal band with VERY subtle low-contrast vertical stripes only, completely empty, no icons, no title text.
+- UPPER TRAY SLOT: below the purple band, one wide simple empty rounded rectangle inset in warm cream, thin lilac border, flat matte interior, completely blank — reserved for future material icons. Keep the shape plain and cute, not ornamental.
+- MAIN CONTENT FIELD: large flat warm cream ivory area filling most of the panel, perfectly uniform matte fill, at most an extremely faint barely-visible floral watermark at 3% opacity or none at all. Completely empty — no cards, no grid, no dashed boxes, no tabs, no icons.
+- BOTTOM FOOTER: one simple integrated soft-lilac footer strip at the bottom, separated by a thin horizontal divider line with a tiny plain diamond or dot in the center only. Footer completely empty, no buttons, no icons.
+
+STRICTLY FORBIDDEN:
+Chinese text, English text, numbers, labels, tab buttons, material icons, dye bottles, hammers, blueprint icons, furniture thumbnails, craft buttons, plus signs, dashed slots, lace edges, ribbon bows, rose clusters, gemstone ornaments, carved gold corners, heavy patterns, annotation boxes, wireframe labels.
+
+Art style: clean 2D vector kawaii mobile UI, pastel purple palette, simple comic-game shapes, minimal decoration, gentle shading only on frame elements. No photoreal, no watermark.
+
+TECHNICAL BACKGROUND FOR CLEAN CUTOUT:
+ONLY the margins OUTSIDE the rounded modal silhouette must be pure bright screen green RGB exactly 0,255,0, flat, no gradient. The modal interior must contain ZERO green pixels.

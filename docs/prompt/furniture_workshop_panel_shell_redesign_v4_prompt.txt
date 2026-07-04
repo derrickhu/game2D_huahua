@@ -1,0 +1,25 @@
+Clean 2D vector mobile game UI background shell for a cozy pastel flower-shop merge game, furniture workshop theme.
+
+Create one tall rounded modal panel shell only, portrait mobile game aspect ratio 9:16. The panel should feel like a polished illustrated game UI asset, not a wireframe and not a screenshot of an existing app.
+
+Visual direction:
+Soft kawaii casual style, warm lavender, creamy ivory, blush pink, pale mint, honey gold accents. Thick rounded lavender outer frame with soft depth, a thin pink inner lip, gentle highlight strokes, and a subtle floating shadow. The overall feeling is a cute handmade furniture atelier inside a flower shop: soft fabric, carved wood, tiny sewing and carpentry motifs, elegant floral curls.
+
+Composition:
+- Top header area: integrated curved lavender header cap, no title text, no readable characters. Add subtle vertical fabric stripes, soft inner glow, and small decorative motifs such as tiny carved swirls, flower buds, ribbon knots, or small brass pins. Leave the center empty for future program text.
+- Top-right close button: keep a chunky circular red-pink button with a simple white X only. No other symbols.
+- Main body: large uninterrupted warm cream panel with very faint damask/floral wallpaper pattern and light paper texture. It must be clean enough for program-rendered UI to sit on top.
+- Upper decorative band: include an empty soft tray-like area inspired by a workshop materials shelf, but make it decorative and blank: rounded ivory inset with scalloped/lace-like lavender border, small corner curls, and a very subtle stitched fabric edge. Do not place item icons, numbers, plus signs, labels, slots, or dashed circles.
+- Middle area: leave a spacious blank content field. Add only extremely subtle background ornament: faint floral arabesque, barely visible guide-like texture, no cards, no grid, no dashed placeholders.
+- Bottom footer: integrated rounded lavender-pink footer platform, slightly translucent and cushion-like, with a small central gem or ribbon divider. Keep the right side blank for a future blueprint shop button, but do not draw an icon or text.
+
+Important exclusions:
+NO TEXT, no Chinese, no English, no labels, no captions, no numbers, no readable writing anywhere.
+No material icons, no hammer, no dye bottles, no blueprint icon, no sofa, no item cards, no tab names, no plus signs, no dashed slots, no red annotation boxes.
+Do not make it too square, too flat, too rigid, or like a functional wireframe. It should be an elegant blank illustrated shell with decorative personality.
+
+Background outside the panel:
+Use solid chroma green #00FF00 outside the outer panel silhouette for later background removal. The panel itself must not contain green.
+
+Rendering:
+High resolution, crisp edges, polished mobile game UI, soft gradients only for depth, clean 2D vector illustration, no photorealism, no watermark.

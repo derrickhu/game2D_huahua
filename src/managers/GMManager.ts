@@ -34,6 +34,13 @@ import { RoomLayoutManager } from './RoomLayoutManager';
 import { TutorialManager } from './TutorialManager';
 import { AffinityManager } from './AffinityManager';
 import { CustomerManager } from './CustomerManager';
+import { FurnitureWorkshopManager } from './FurnitureWorkshopManager';
+import {
+  WORKSHOP_DYE_BLUE_ID,
+  WORKSHOP_DYE_GREEN_ID,
+  WORKSHOP_DYE_PINK_ID,
+  WORKSHOP_DYE_YELLOW_ID,
+} from '@/config/FurnitureWorkshopConfig';
 import { CUSTOMER_TYPES } from '@/config/CustomerConfig';
 import { AffinityCardManager } from './AffinityCardManager';
 import { DailyCandyManager } from './DailyCandyManager';
@@ -121,6 +128,7 @@ const GM_GROUP_ORDER: readonly string[] = [
   ' 棋盘操作',
   ' 活动棋盘',
   ' 订单/客人',
+  ' 家具工坊',
   ' 增加物品',
   ' 装修系统',
   ' 系统测试',
@@ -689,8 +697,134 @@ class GMManagerClass {
       execute: () => CustomerManager.gmSpawnTimedDiamondOrder(),
     });
 
+    this._commands.push({
+      id: 'gm_add_workshop_materials_bundle',
+      group: ' 家具工坊',
+      name: ' 发放全套工坊材料',
+      desc: '锤子×50 + 粉/黄/蓝/绿染料各×10',
+      execute: () => {
+        FurnitureWorkshopManager.addWorkshopMaterial(50);
+        FurnitureWorkshopManager.addMaterial(WORKSHOP_DYE_PINK_ID, 10);
+        FurnitureWorkshopManager.addMaterial(WORKSHOP_DYE_YELLOW_ID, 10);
+        FurnitureWorkshopManager.addMaterial(WORKSHOP_DYE_BLUE_ID, 10);
+        FurnitureWorkshopManager.addMaterial(WORKSHOP_DYE_GREEN_ID, 10);
+        return ' 已发放：锤子×50，粉/黄/蓝/绿染料各×10';
+      },
+    });
+
+    this._commands.push({
+      id: 'gm_add_workshop_hammer',
+      group: ' 家具工坊',
+      name: ' 工坊材料（锤子）+50',
+      desc: '发放工坊建造材料，用于制作家具',
+      execute: () => {
+        FurnitureWorkshopManager.addWorkshopMaterial(50);
+        return ' 已发放工坊材料×50';
+      },
+    });
+
+    this._commands.push({
+      id: 'gm_add_workshop_dyes',
+      group: ' 家具工坊',
+      name: ' 四色染料各+10',
+      desc: '发放粉/黄/蓝/绿染料，用于分色染色',
+      execute: () => {
+        FurnitureWorkshopManager.addMaterial(WORKSHOP_DYE_PINK_ID, 10);
+        FurnitureWorkshopManager.addMaterial(WORKSHOP_DYE_YELLOW_ID, 10);
+        FurnitureWorkshopManager.addMaterial(WORKSHOP_DYE_BLUE_ID, 10);
+        FurnitureWorkshopManager.addMaterial(WORKSHOP_DYE_GREEN_ID, 10);
+        return ' 已发放粉/黄/蓝/绿染料各×10';
+      },
+    });
+
+    this._commands.push({
+      id: 'gm_add_workshop_dye_pink',
+      group: ' 家具工坊',
+      name: ' 樱粉染料+10',
+      desc: '发放 workshop_dye_pink',
+      execute: () => {
+        FurnitureWorkshopManager.addMaterial(WORKSHOP_DYE_PINK_ID, 10);
+        return ' 已发放樱粉染料×10';
+      },
+    });
+
+    this._commands.push({
+      id: 'gm_add_workshop_dye_yellow',
+      group: ' 家具工坊',
+      name: ' 蜜黄染料+10',
+      desc: '发放 workshop_dye_yellow',
+      execute: () => {
+        FurnitureWorkshopManager.addMaterial(WORKSHOP_DYE_YELLOW_ID, 10);
+        return ' 已发放蜜黄染料×10';
+      },
+    });
+
+    this._commands.push({
+      id: 'gm_add_workshop_dye_blue',
+      group: ' 家具工坊',
+      name: ' 天蓝染料+10',
+      desc: '发放 workshop_dye_blue',
+      execute: () => {
+        FurnitureWorkshopManager.addMaterial(WORKSHOP_DYE_BLUE_ID, 10);
+        return ' 已发放天蓝染料×10';
+      },
+    });
+
+    this._commands.push({
+      id: 'gm_add_workshop_dye_green',
+      group: ' 家具工坊',
+      name: ' 薄荷绿染料+10',
+      desc: '发放 workshop_dye_green',
+      execute: () => {
+        FurnitureWorkshopManager.addMaterial(WORKSHOP_DYE_GREEN_ID, 10);
+        return ' 已发放薄荷绿染料×10';
+      },
+    });
+
+    this._commands.push({
+      id: 'gm_grant_workshop_blueprint_sofa',
+      group: ' 家具工坊',
+      name: ' 发放弧翼大沙发图纸',
+      desc: '向家具工坊发放首张工坊家具图纸（已拥有则跳过）',
+      execute: () => {
+        const ok = FurnitureWorkshopManager.grantBlueprint('blueprint_workshop_plush_green_sofa');
+        return ok ? ' 已发放弧翼大沙发图纸' : ' 图纸已拥有或配置缺失';
+      },
+    });
+
+    this._commands.push({
+      id: 'gm_grant_workshop_blueprint_healing_set',
+      group: ' 家具工坊',
+      name: ' 发放治愈系三件套图纸',
+      desc: '泡芙沙发 / 玫瑰垂幔帘 / 蕾丝铁艺床',
+      execute: () => {
+        const ids = [
+          'blueprint_workshop_puffy_petal_sofa',
+          'blueprint_workshop_rose_cascade_drape',
+          'blueprint_workshop_lace_ribbon_bed',
+        ];
+        let n = 0;
+        for (const id of ids) {
+          if (FurnitureWorkshopManager.grantBlueprint(id)) n++;
+        }
+        return ` 已发放 ${n} 张新图纸（已有则跳过）`;
+      },
+    });
+
+    this._commands.push({
+      id: 'gm_spawn_workshop_order',
+      group: ' 家具工坊',
+      name: ' 立即刷家具工匠单',
+      desc: '清空现有客人后刷出家具工匠材料单（组合单+花愿×0.5+1材料，绕过概率/每日上限）',
+      execute: () => CustomerManager.gmSpawnWorkshopOrder(),
+    });
+
     for (const customerType of CUSTOMER_TYPES) {
-      const specialHint = customerType.specialOnly ? '（限时钻石单）' : '（随机配套订单）';
+      let specialHint = '（随机配套订单）';
+      if (customerType.id === 'tycoon') specialHint = '（限时钻石单）';
+      else if (customerType.id === 'florist_merchant') specialHint = '（富贵花商限时单）';
+      else if (customerType.id === 'furniture_craftswoman') specialHint = '（家具工匠材料单）';
+      else if (customerType.specialOnly) specialHint = '（特殊订单）';
       this._commands.push({
         id: `gm_spawn_customer_${customerType.id}`,
         group: ' 订单/客人',

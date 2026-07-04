@@ -1,0 +1,19 @@
+Single full-screen vertical mobile game UI mockup, 9:16 aspect ratio, flattened illustration for a cozy pastel flower-shop merge game. High resolution, crisp vector edges.
+
+SCREEN: centered large modal panel — furniture workshop feature.
+
+OUTER FRAME: thick soft lilac-lavender rounded rectangle, thinner pastel pink inner lip, gentle drop shadow. Top title area on purple header band.
+
+TITLE: centered Chinese text "家具工坊" in bold white with soft purple stroke (readable, correct characters).
+
+TOP-RIGHT: chunky circular red close button with white X slightly past the corner.
+
+RESOURCE BAR: below title, one wide white rounded pill bar with three small icon slots left-to-right (leave icons as simple cute placeholders: brown hammer silhouette, pink dye bottle, yellow dye bottle) and small quantity numbers "2" "0" "0" — numbers may be placeholder.
+
+CATEGORY TABS ROW: five equal rounded pill tabs — "全部" selected (deeper lavender fill, white text), then "家具" "家电" "摆件" "墙饰" unselected (pale lilac fill, purple text).
+
+MAIN CONTENT: large cream-white inner field. Two-column grid with ONE sample furniture card visible (top-left): white rounded card, green thin border, large isometric green L-shaped sofa thumbnail inside, name "明绿弧翼大沙发" below, green rounded "制作" button at card bottom. Rest of grid empty clean space.
+
+BOTTOM DOCK: light warm beige strip inside the modal bottom, one circular icon button bottom-right — lavender circle with rolled blueprint scroll icon inside, tiny label "图纸商店" under icon in purple text.
+
+Art style: clean 2D vector kawaii mobile UI, pastel purple family consistent with daily challenge panels, soft gradients only on frame rims, no photoreal, no watermark. Outside modal: flat pure white RGB 255,255,255 only for cutout margins.

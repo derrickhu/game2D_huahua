@@ -13,6 +13,12 @@
 import { EventBus } from '@/core/EventBus';
 import { PersistService } from '@/core/PersistService';
 import { DECO_MAP, DecoSlot, isDecoAllowedInScene } from '@/config/DecorationConfig';
+import {
+  FURNITURE_RENDER_MAP,
+  nextFurnitureFacing,
+  nextInteractionState,
+  type FurnitureFacing4,
+} from '@/config/FurnitureRenderConfig';
 import { CurrencyManager } from './CurrencyManager';
 import { DEFAULT_SCENE_ID } from '@/config/StarLevelConfig';
 
@@ -51,6 +57,10 @@ export interface FurniturePlacement {
   scale: number;
   /** 是否水平翻转 */
   flipped: boolean;
+  /** 新工坊家具：四角度朝向；旧家具缺省时继续使用 flipped。 */
+  facing?: FurnitureFacing4;
+  /** 新工坊家具：点击交互状态，如 closed/open。 */
+  interactionState?: string;
   /** 图层偏移（默认 0；新放入时自动递增，仅同 Y 带内微调） */
   zLayer?: number;
   /**
@@ -211,6 +221,8 @@ class RoomLayoutManagerClass {
     y: number;
     scale?: number;
     flipped?: boolean;
+    facing?: FurnitureFacing4;
+    interactionState?: string;
     zLayer?: number;
     depthManualBias?: number;
   }): FurniturePlacement {
@@ -220,9 +232,15 @@ class RoomLayoutManagerClass {
       y: p.y,
       scale: clampPlacementScale(p.scale ?? 1),
       flipped: !!p.flipped,
+      facing: this._isFacing4(p.facing) ? p.facing : undefined,
+      interactionState: typeof p.interactionState === 'string' ? p.interactionState : undefined,
       zLayer: p.zLayer ?? 0,
       depthManualBias: typeof p.depthManualBias === 'number' ? p.depthManualBias : 0,
     };
+  }
+
+  private _isFacing4(v: unknown): v is FurnitureFacing4 {
+    return v === 'front_right' || v === 'front_left' || v === 'back_right' || v === 'back_left';
   }
 
   // ---- 查询 ----
@@ -389,6 +407,30 @@ class RoomLayoutManagerClass {
     return true;
   }
 
+  rotateFurnitureFacing(decoId: string): boolean {
+    const p = this._placements.find(p => p.decoId === decoId);
+    if (!p) return false;
+    const render = FURNITURE_RENDER_MAP.get(decoId);
+    if (!render || render.renderMode !== 'fourFacing') return false;
+
+    p.facing = nextFurnitureFacing(p.facing ?? render.defaultFacing);
+    this._debounceSave();
+    EventBus.emit('roomlayout:updated', p);
+    return true;
+  }
+
+  toggleFurnitureInteractionState(decoId: string): boolean {
+    const p = this._placements.find(p => p.decoId === decoId);
+    if (!p) return false;
+    const interaction = FURNITURE_RENDER_MAP.get(decoId)?.interaction;
+    if (!interaction) return false;
+
+    p.interactionState = nextInteractionState(interaction, p.interactionState);
+    this._debounceSave();
+    EventBus.emit('roomlayout:updated', p);
+    return true;
+  }
+
   /**
    * 批量更新整个布局（用于撤销/重做）
    */
@@ -399,6 +441,8 @@ class RoomLayoutManagerClass {
       y: this._clampY(p.y),
       scale: clampPlacementScale(p.scale),
       flipped: p.flipped,
+      facing: this._isFacing4(p.facing) ? p.facing : undefined,
+      interactionState: typeof p.interactionState === 'string' ? p.interactionState : undefined,
       zLayer: p.zLayer ?? 0,
       depthManualBias: p.depthManualBias ?? 0,
     }));

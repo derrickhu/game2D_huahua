@@ -1,8 +1,9 @@
 import type { OrderType, OrderTier, UnlockedLines } from '@/config/OrderTierConfig';
+import type { WorkshopMaterialReward } from '@/config/FurnitureWorkshopConfig';
 
 /** 本帧生成语义：基础 / 成长加成 / 跨链组合 / 限时钻石 / 活动预留 */
 /** @deprecated 读档遇 `growth` 会迁移为 `basic` */
-export type OrderGenerationKind = 'basic' | 'growth' | 'combo' | 'timedDiamond' | 'timedFlorist' | 'eventStub';
+export type OrderGenerationKind = 'basic' | 'growth' | 'combo' | 'timedDiamond' | 'timedFlorist' | 'timedWorkshop' | 'eventStub';
 
 export interface OrderGenSlot {
   itemId: string;
@@ -20,6 +21,10 @@ export interface OrderGenContext {
   allowTimedFloristOrder?: boolean;
   /** 今日已刷出的富贵花商单数量 */
   timedFloristOrdersToday?: number;
+  /** 本次刷单是否允许家具工匠材料单 */
+  allowWorkshopOrder?: boolean;
+  /** 今日已刷出的家具工匠单数量 */
+  workshopOrdersToday?: number;
   rng: () => number;
 }
 
@@ -30,6 +35,8 @@ export interface OrderGenResult {
   diamondReward?: number;
   /** 富贵花商限时单：交付后入奖励收纳盒的体力箱 itemId */
   staminaChestReward?: string;
+  /** 家具工坊特殊订单：交付后直接进入工坊材料库存 */
+  workshopMaterialRewards?: WorkshopMaterialReward[];
   bonusMultiplier?: number;
   /** 特殊订单可指定专属客人；普通订单留空走多样性随机 */
   customerTypeId?: string;
@@ -42,6 +49,7 @@ export type ActivityOrderPartial = Partial<{
   orderType: OrderType;
   timeLimit: number | null;
   diamondReward: number;
+  workshopMaterialRewards: WorkshopMaterialReward[];
   bonusMultiplier: number;
   customerTypeId: string;
 }>;

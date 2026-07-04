@@ -61,7 +61,8 @@ const SCENE_OVERRIDES: Record<string, Partial<SceneRenovationProfile>> = {
     editViewScaleMin: 0.45,
     editViewScaleMax: 2.6,
     editViewScaleDefault: 0.58,
-    layoutBounds: { minX: 18, maxX: 732, minY: 200 },
+    // minX/maxX 由 ShopScene 按房壳贴图宽动态扩展；此处仅保留 Y 下限
+    layoutBounds: { minY: 200 },
   },
 };
 

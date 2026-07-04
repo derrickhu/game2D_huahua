@@ -9,7 +9,7 @@
  * - `purchaseStock`：本波该槽位可购买次数（默认 1，范围 1～99）；每次购买 `remaining--`，到 0 售罄至下次刷新。
  * - 所有 `itemId` 须存在于 `ITEM_DEFS`，否则 roll 时跳过。
  * - `dynamicFreeShopPool`：为 true 时忽略 `pool`，由 `MerchShopManager` 按图鉴动态生成（已解锁、等级小于 6、非 `tool_*`、全部免费；另低权重含 1 级红包/体力宝箱/宝石袋）；**每格可购次数固定为 1**。
- * - `dynamicMysteryShopPool`：为 true 时忽略 `pool`，由 `MerchShopManager` 生成神秘商店（已解锁线全等级高权；未解锁线低权少货贵价；`tool_*` 仅 1 级极低权高价；钻石售价带波动；低等级可概率花愿；**不含钻石袋线 `diamond_bag_*`**；幸运金币/万能水晶/金剪刀低权重入池、每格库存 1）。**第三栏 `shelf_mixed` 当前与第二栏相同规则占位**，后续可单独改配置。
+ * - `dynamicMysteryShopPool`：为 true 时忽略 `pool`，由 `MerchShopManager` 生成神秘商店（已解锁线全等级高权；未解锁线低权少货贵价；`tool_*` 仅 1 级极低权高价；钻石售价带波动；低等级可概率花愿；**不含钻石袋线 `diamond_bag_*`**；幸运金币/万能水晶/金剪刀低权重入池、每格库存 1；**四色工坊染料**低权重约 5%/格、钻石价、库存 1）。**第三栏 `shelf_mixed` 当前与第二栏相同规则占位**，后续可单独改配置。
  * - `MERCH_DIAMOND_REFRESH_SHELF_COST`：面板内每层板旁「钻石刷新」仅重 roll 该路货架并重置该路 CD。
  */
 export type MerchPriceType = 'free' | 'diamond' | 'huayuan' | 'ad';
@@ -80,6 +80,11 @@ export const MERCH_MYSTERY_SPECIAL_CONSUMABLE_WEIGHT = 3;
 /** 上述棋盘消耗品：仅钻石价、每格库存 1；base + [0, spread)，再乘售价波动后约 16～26 */
 export const MERCH_MYSTERY_SPECIAL_CONSUMABLE_DIAMOND_BASE = 16;
 export const MERCH_MYSTERY_SPECIAL_CONSUMABLE_DIAMOND_SPREAD = 8;
+/** 四色工坊染料（樱粉/蜜黄/天蓝/薄荷绿）：单条权重；四色合计约等于单格 ~5% 命中（相对常规图鉴池） */
+export const MERCH_MYSTERY_WORKSHOP_DYE_WEIGHT = 50;
+/** 工坊染料：仅钻石价、每格库存 1；base + [0, spread)，再乘售价波动后约 14～22 */
+export const MERCH_MYSTERY_WORKSHOP_DYE_DIAMOND_BASE = 14;
+export const MERCH_MYSTERY_WORKSHOP_DYE_DIAMOND_SPREAD = 8;
 /** 售价随机波动：最终价 × U(min, max) */
 export const MERCH_MYSTERY_PRICE_MULT_MIN = 0.82;
 export const MERCH_MYSTERY_PRICE_MULT_MAX = 1.18;

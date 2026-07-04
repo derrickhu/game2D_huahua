@@ -15,6 +15,8 @@ import {
 } from '@/managers/RoomLayoutManager';
 import { FurnitureDragSystem } from '@/systems/FurnitureDragSystem';
 import { DECO_MAP } from '@/config/DecorationConfig';
+import { isFourFacingFurniture } from '@/config/FurnitureRenderConfig';
+import { getDecoDisplayName } from '@/config/FurnitureWorkshopConfig';
 import { FONT_FAMILY, COLORS } from '@/config/Constants';
 import { TextureCache } from '@/utils/TextureCache';
 
@@ -62,6 +64,7 @@ export class RoomEditToolbar extends PIXI.Container {
   private _buttons: PIXI.Container[] = [];
   private _nameLabel!: PIXI.Text;
   private _currentDecoId: string | null = null;
+  private _flipTooltipLabel: PIXI.Text | null = null;
   private _assetUnsub: (() => void) | null = null;
   /** 与 _build 底板宽度一致，供 show 水平居中 */
   private _toolbarTotalW = 750;
@@ -89,7 +92,10 @@ export class RoomEditToolbar extends PIXI.Container {
     const deco = DECO_MAP.get(decoId);
     if (!deco) return;
 
-    this._nameLabel.text = deco.name;
+    this._nameLabel.text = getDecoDisplayName(decoId);
+    if (this._flipTooltipLabel) {
+      this._flipTooltipLabel.text = isFourFacingFurniture(decoId) ? '旋转' : '翻转';
+    }
     this.visible = true;
 
     // 固定在屏幕水平居中、roomBounds 上方（不遮挡家具）
@@ -268,6 +274,9 @@ export class RoomEditToolbar extends PIXI.Container {
     tooltip.anchor.set(0.5, 0);
     tooltip.position.set(slotW / 2, iconMax + 4);
     container.addChild(tooltip);
+    if (def.tooltip === '翻转' || def.tooltip === '旋转') {
+      this._flipTooltipLabel = tooltip;
+    }
 
     container.hitArea = new PIXI.Rectangle(0, 0, slotW, iconMax + LABEL_BELOW + 8);
     this._wireTap(container, def.action);
@@ -367,7 +376,11 @@ export class RoomEditToolbar extends PIXI.Container {
 
   private _onFlip(): void {
     if (!this._currentDecoId) return;
-    RoomLayoutManager.flipFurniture(this._currentDecoId);
+    if (isFourFacingFurniture(this._currentDecoId)) {
+      RoomLayoutManager.rotateFurnitureFacing(this._currentDecoId);
+    } else {
+      RoomLayoutManager.flipFurniture(this._currentDecoId);
+    }
     // roomlayout:updated 事件已由 RoomLayoutManager 内部发射
   }
 
@@ -392,7 +405,7 @@ export class RoomEditToolbar extends PIXI.Container {
     FurnitureDragSystem.deselect();
 
     if (deco) {
-      ToastMessage.show( `已移除「${deco.name}」`);
+      ToastMessage.show( `已移除「${getDecoDisplayName(decoId)}」`);
     }
     EventBus.emit('roomlayout:changed');
   }
@@ -400,17 +413,16 @@ export class RoomEditToolbar extends PIXI.Container {
   /** 确认当前家具编辑（取消选中，但保持编辑模式） */
   private _onConfirm(): void {
     if (!this._currentDecoId) return;
-    const deco = DECO_MAP.get(this._currentDecoId);
+    const decoId = this._currentDecoId;
+    const deco = DECO_MAP.get(decoId);
 
-    // 取消选中 + 隐藏工具栏
     FurnitureDragSystem.deselect();
     this.hide();
 
-    // 保存当前布局
     RoomLayoutManager.saveNow();
 
     if (deco) {
-      ToastMessage.show( `「${deco.name}」已确认`);
+      ToastMessage.show(`「${getDecoDisplayName(decoId)}」已确认`);
     }
   }
 }

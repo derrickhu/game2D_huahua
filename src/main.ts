@@ -28,6 +28,7 @@ import { CloudSyncManager } from '@/managers/CloudSyncManager';
 import { TutorialManager } from '@/managers/TutorialManager';
 import { DecorationManager } from '@/managers/DecorationManager';
 import { NewbieGiftPackManager } from '@/managers/NewbieGiftPackManager';
+import { FurnitureWorkshopManager } from '@/managers/FurnitureWorkshopManager';
 import { UserIdentityManager } from '@/managers/UserIdentityManager';
 import { WechatGiftManager } from '@/managers/WechatGiftManager';
 import { WechatWelfareManager } from '@/managers/WechatWelfareManager';
@@ -176,6 +177,9 @@ async function main(): Promise<void> {
       if (info.changedKeys.includes('huahua_room_layout')) {
         RoomLayoutManager.reloadFromStorage();
       }
+      if (info.changedKeys.includes('huahua_furniture_workshop')) {
+        FurnitureWorkshopManager.reloadFromStorage();
+      }
       if (info.changedKeys.includes('huahua_save')) {
         if (initialSaveLoaded) {
           TutorialManager.ensureCompletedIfVeteranSave(true);
@@ -278,6 +282,7 @@ async function main(): Promise<void> {
     // 星级升档奖励须在首帧 addStar 前就绪（不依赖 MainScene 是否已构建）
     LevelManager.init();
     RewardBoxHintManager.init();
+    FurnitureWorkshopManager.init();
     void WechatGiftManager.syncAndGrant('startup');
 
     // 再次确认棋盘状态

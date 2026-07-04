@@ -103,6 +103,8 @@ export interface DecoDef {
   allowedSceneIds?: string[];
   /** 临时从装修面板隐藏，但仍允许通过 GM / 任务等路径发放 */
   hideInDecorationPanel?: boolean;
+  /** 仅家具工坊制作获得；未拥有前不在装修商店展示 */
+  workshopExclusive?: boolean;
 }
 
 /** 房间整体风格定义 */
@@ -245,6 +247,18 @@ export const DECO_DEFS: DecoDef[] = [
   { id: 'orn_pastel_bench',   name: '马卡龙长凳',   slot: DecoSlot.ORNAMENT, rarity: DecoRarity.FINE,   cost: 555, starValue: 5, icon: 'orn_pastel_bench',   desc: '薄荷木色配珊瑚软垫', unlockRequirement: { level: 2 }, defaultScale: 1.1, decorationPanelTab: 'furniture' },
   // 宣传款：仅广告解锁购买资格 + 花愿购买，不设花店等级门槛（见 AdConfig.AD_UNLOCK_DECO_IDS）
   { id: 'promo_floral_sofa',  name: '花漾木扶手沙发', slot: DecoSlot.ORNAMENT, rarity: DecoRarity.RARE, cost: 299, starValue: 6, icon: 'promo_floral_sofa', desc: '宣传图同款浅木扶手双人沙发，碎花抱枕很适合休息角', defaultScale: 1.18, decorationPanelTab: 'furniture' },
+
+  // ═══════ 家具工坊专属（workshopExclusive：仅制作获得，不进直购）═══════
+  { id: 'workshop_plush_green_sofa', name: '弧翼大沙发', slot: DecoSlot.ORNAMENT, rarity: DecoRarity.LIMITED, cost: 0, starValue: 9, icon: 'workshop_plush_green_sofa', desc: '工坊匠心：明亮春绿三人沙发，双侧胡桃木扶手，橙白撞色抱枕', workshopExclusive: true, defaultScale: 2.08, decorationPanelTab: 'furniture' },
+  { id: 'workshop_plush_sofa_sakura', name: '樱粉弧翼大沙发', slot: DecoSlot.ORNAMENT, rarity: DecoRarity.LIMITED, cost: 0, starValue: 9, icon: 'workshop_plush_sofa_sakura', desc: '工坊染色：樱粉软绒沙发，浅黄与粉紫抱枕，同款弧翼造型', workshopExclusive: true, defaultScale: 2.08, decorationPanelTab: 'furniture' },
+  { id: 'workshop_puffy_petal_sofa', name: '泡芙拼块沙发', slot: DecoSlot.ORNAMENT, rarity: DecoRarity.LIMITED, cost: 0, starValue: 10, icon: 'workshop_puffy_petal_sofa', desc: '工坊匠心：泡芙感拼块沙发，樱粉与奶白软垫叠层，低趴治愈风', workshopExclusive: true, defaultScale: 1.95, decorationPanelTab: 'furniture' },
+  { id: 'workshop_rose_cascade_drape', name: '玫瑰垂幔帘', slot: DecoSlot.WALLART, rarity: DecoRarity.LIMITED, cost: 0, starValue: 8, icon: 'workshop_rose_cascade_drape', desc: '工坊匠心：高挑玫瑰隔断帘，樱粉布面与玫瑰点缀，中间与底部留空', workshopExclusive: true, defaultScale: 2.05, decorationPanelTab: 'furniture' },
+  { id: 'workshop_rose_cascade_drape_moon', name: '天蓝玫瑰垂幔帘', slot: DecoSlot.WALLART, rarity: DecoRarity.LIMITED, cost: 0, starValue: 8, icon: 'workshop_rose_cascade_drape_moon', desc: '工坊染色：天蓝垂幔帘，薰衣草紫玫瑰点缀，同款飘逸隔断造型', workshopExclusive: true, defaultScale: 2.05, decorationPanelTab: 'furniture' },
+  { id: 'workshop_rose_cascade_drape_honey', name: '蜜黄玫瑰垂幔帘', slot: DecoSlot.WALLART, rarity: DecoRarity.LIMITED, cost: 0, starValue: 8, icon: 'workshop_rose_cascade_drape_honey', desc: '工坊染色：蜜黄垂幔帘，绯红玫瑰点缀，同款飘逸隔断造型', workshopExclusive: true, defaultScale: 2.05, decorationPanelTab: 'furniture' },
+  { id: 'workshop_lace_ribbon_bed', name: '蕾丝铁艺床', slot: DecoSlot.ORNAMENT, rarity: DecoRarity.LIMITED, cost: 0, starValue: 7, icon: 'workshop_lace_ribbon_bed', desc: '工坊匠心：白色卷曲铁艺床架，樱粉荷叶边床品与心形抱枕', workshopExclusive: true, defaultScale: 2.15, decorationPanelTab: 'furniture' },
+  { id: 'workshop_giant_rose_bouquet', name: '大捧玫瑰', slot: DecoSlot.ORNAMENT, rarity: DecoRarity.LIMITED, cost: 0, starValue: 8, icon: 'workshop_giant_rose_bouquet', desc: '工坊匠心：瓷瓶超大捧红玫瑰，满天星与飞燕草点缀，单击含苞与盛放切换', workshopExclusive: true, defaultScale: 1.15, decorationPanelTab: 'furniture', depthSortFeetYFudge: 110, depthSortYLift: 140 },
+  { id: 'workshop_pastel_tv_cabinet', name: '黑色超薄电视柜', slot: DecoSlot.LIGHT, rarity: DecoRarity.LIMITED, cost: 0, starValue: 15, icon: 'workshop_pastel_tv_cabinet', desc: '工坊匠心：大屏超薄黑框电视 + 暖木三格电视柜，落地摆放可四面旋转', workshopExclusive: true, defaultScale: 1.68 },
+
   { id: 'promo_wood_tea_table', name: '原木花茶几', slot: DecoSlot.TABLE, rarity: DecoRarity.FINE, cost: 359, starValue: 2, icon: 'promo_wood_tea_table', desc: '厚木板小茶几，摆一杯花茶就有午后感', defaultScale: 0.98, decorationPanelTab: 'furniture' },
   { id: 'promo_petal_chaise', name: '花瓣奶油躺椅', slot: DecoSlot.ORNAMENT, rarity: DecoRarity.RARE, cost: 920, starValue: 5, icon: 'promo_petal_chaise', desc: '奶油躺椅配花瓣靠背，午后小憩像躺进花心里', defaultScale: 1.15, decorationPanelTab: 'furniture' },
   { id: 'promo_mint_fridge', name: '薄荷小冰箱', slot: DecoSlot.LIGHT, rarity: DecoRarity.FINE, cost: 780, starValue: 4, icon: 'promo_mint_fridge', desc: '圆角复古冰箱，冰饮和鲜花都能清清爽爽', defaultScale: 1.08 },
@@ -495,15 +509,15 @@ export const DECO_DEFS: DecoDef[] = [
   { id: 'sea_coral_cabinet', name: '珊瑚展柜', slot: DecoSlot.SHELF, rarity: DecoRarity.RARE, cost: 15500, starValue: 7, icon: 'sea_coral_cabinet', desc: '拱顶玻璃木柜，粉珊瑚与贝壳分层陈列', unlockRequirement: { level: 38 }, defaultScale: 1.58, decorationPanelTab: 'flower_room', allowedSceneIds: ['forest_treehouse'] },
 
   // ═══════ ⑭.7 梦云小屋专属家具（dream_cloud_house Lv20–24 · 梦幻卧室休闲套）
-  { id: 'dream_cloud_bed', name: '月云大软床', slot: DecoSlot.ORNAMENT, rarity: DecoRarity.RARE, cost: 50000, starValue: 8, icon: 'dream_cloud_bed', desc: '云朵床框托起浅紫绗缝被，月亮与星星抱枕软乎乎地窝在床头', unlockRequirement: { level: 20 }, defaultScale: 1.85, decorationPanelTab: 'flower_room', allowedSceneIds: ['dream_cloud_house'] },
-  { id: 'dream_cloud_sofa', name: '星月转角沙发', slot: DecoSlot.ORNAMENT, rarity: DecoRarity.RARE, cost: 42000, starValue: 8, icon: 'dream_cloud_sofa', desc: '奶油白大转角沙发配粉紫蓝抱枕，像睡前云朵客厅一样柔软', unlockRequirement: { level: 20 }, defaultScale: 1.88, decorationPanelTab: 'flower_room', allowedSceneIds: ['dream_cloud_house'] },
-  { id: 'dream_cloud_star_rug', name: '星云软绒地毯', slot: DecoSlot.ORNAMENT, rarity: DecoRarity.FINE, cost: 18800, starValue: 6, icon: 'dream_cloud_star_rug', desc: '浅蓝星云绒毯铺在月石地面上，轻柔星光像云雾一样散开', unlockRequirement: { level: 21 }, defaultScale: 1.55, decorationPanelTab: 'flower_room', allowedSceneIds: ['dream_cloud_house'], depthSortYLift: 0, depthSortFloorMat: true },
-  { id: 'dream_cloud_moon_nightstand', name: '月灯床头柜', slot: DecoSlot.TABLE, rarity: DecoRarity.FINE, cost: 19600, starValue: 6, icon: 'dream_cloud_moon_nightstand', desc: '小云柜托着暖黄色月牙夜灯，星星抽屉把手带来睡前微光', unlockRequirement: { level: 21 }, defaultScale: 1.05, decorationPanelTab: 'flower_room', allowedSceneIds: ['dream_cloud_house'] },
-  { id: 'dream_cloud_star_vanity', name: '星镜梳妆台', slot: DecoSlot.TABLE, rarity: DecoRarity.RARE, cost: 31800, starValue: 7, icon: 'dream_cloud_star_vanity', desc: '粉紫梳妆台配星形镜框和月金描边，适合摆在梦云卧室一角', unlockRequirement: { level: 22 }, defaultScale: 1.38, decorationPanelTab: 'flower_room', allowedSceneIds: ['dream_cloud_house'] },
+  { id: 'dream_cloud_bed', name: '月云大软床', slot: DecoSlot.ORNAMENT, rarity: DecoRarity.RARE, cost: 50000, starValue: 8, icon: 'dream_cloud_bed', desc: '云朵床框托起浅紫绗缝被，月亮与星星抱枕软乎乎地窝在床头', unlockRequirement: { level: 20 }, defaultScale: 1.95, decorationPanelTab: 'flower_room', allowedSceneIds: ['dream_cloud_house'] },
+  { id: 'dream_cloud_sofa', name: '星月转角沙发', slot: DecoSlot.ORNAMENT, rarity: DecoRarity.RARE, cost: 42000, starValue: 8, icon: 'dream_cloud_sofa', desc: '奶油白大转角沙发配粉紫蓝抱枕，像睡前云朵客厅一样柔软', unlockRequirement: { level: 20 }, defaultScale: 2.18, decorationPanelTab: 'flower_room', allowedSceneIds: ['dream_cloud_house'] },
+  { id: 'dream_cloud_star_rug', name: '星云软绒地毯', slot: DecoSlot.ORNAMENT, rarity: DecoRarity.FINE, cost: 18800, starValue: 6, icon: 'dream_cloud_star_rug', desc: '浅蓝星云绒毯铺在月石地面上，轻柔星光像云雾一样散开', unlockRequirement: { level: 21 }, defaultScale: 1.65, decorationPanelTab: 'flower_room', allowedSceneIds: ['dream_cloud_house'], depthSortYLift: 0, depthSortFloorMat: true },
+  { id: 'dream_cloud_moon_nightstand', name: '月灯床头柜', slot: DecoSlot.TABLE, rarity: DecoRarity.FINE, cost: 19600, starValue: 6, icon: 'dream_cloud_moon_nightstand', desc: '小云柜托着暖黄色月牙夜灯，星星抽屉把手带来睡前微光', unlockRequirement: { level: 21 }, defaultScale: 1.15, decorationPanelTab: 'flower_room', allowedSceneIds: ['dream_cloud_house'] },
+  { id: 'dream_cloud_star_vanity', name: '星镜梳妆台', slot: DecoSlot.TABLE, rarity: DecoRarity.RARE, cost: 31800, starValue: 7, icon: 'dream_cloud_star_vanity', desc: '粉紫梳妆台配星形镜框和月金描边，适合摆在梦云卧室一角', unlockRequirement: { level: 22 }, defaultScale: 1.48, decorationPanelTab: 'flower_room', allowedSceneIds: ['dream_cloud_house'] },
   { id: 'dream_cloud_tea_table', name: '薄荷云茶几', slot: DecoSlot.TABLE, rarity: DecoRarity.FINE, cost: 20800, starValue: 6, icon: 'dream_cloud_tea_table', desc: '薄荷蓝圆茶几踩着云朵小脚，月金边框和小茶具让休闲角更温柔', unlockRequirement: { level: 22 }, defaultScale: 1.24, decorationPanelTab: 'flower_room', allowedSceneIds: ['dream_cloud_house'] },
-  { id: 'dream_cloud_bookshelf', name: '浮云星书架', slot: DecoSlot.WALLART, rarity: DecoRarity.FINE, cost: 21800, starValue: 6, icon: 'dream_cloud_bookshelf', desc: '漂浮云朵书架摆着彩色睡前书和水晶月球，下方垂着小星星', unlockRequirement: { level: 23 }, defaultScale: 1.02, decorationPanelTab: 'flower_room', allowedSceneIds: ['dream_cloud_house'] },
+  { id: 'dream_cloud_bookshelf', name: '浮云星书架', slot: DecoSlot.WALLART, rarity: DecoRarity.FINE, cost: 21800, starValue: 6, icon: 'dream_cloud_bookshelf', desc: '漂浮云朵书架摆着彩色睡前书和水晶月球，下方垂着小星星', unlockRequirement: { level: 23 }, defaultScale: 1.32, decorationPanelTab: 'flower_room', allowedSceneIds: ['dream_cloud_house'] },
   { id: 'dream_cloud_crescent_cushion', name: '月牙懒人坐垫', slot: DecoSlot.ORNAMENT, rarity: DecoRarity.FINE, cost: 22800, starValue: 6, icon: 'dream_cloud_crescent_cushion', desc: '金黄月牙抱着软垫和星星靠枕，是二楼休闲角的梦境座位', unlockRequirement: { level: 23 }, defaultScale: 1.18, decorationPanelTab: 'flower_room', allowedSceneIds: ['dream_cloud_house'] },
-  { id: 'dream_cloud_floor_lamp', name: '星梦落地灯', slot: DecoSlot.LIGHT, rarity: DecoRarity.FINE, cost: 17500, starValue: 6, icon: 'dream_cloud_floor_lamp', desc: '云朵底座托起细高灯杆，月星灯罩洒下温暖睡前光', unlockRequirement: { level: 24 }, defaultScale: 1.18, decorationPanelTab: 'flower_room', allowedSceneIds: ['dream_cloud_house'] },
+  { id: 'dream_cloud_floor_lamp', name: '星梦落地灯', slot: DecoSlot.LIGHT, rarity: DecoRarity.FINE, cost: 17500, starValue: 6, icon: 'dream_cloud_floor_lamp', desc: '云朵底座托起细高灯杆，月星灯罩洒下温暖睡前光', unlockRequirement: { level: 24 }, defaultScale: 1.28, decorationPanelTab: 'flower_room', allowedSceneIds: ['dream_cloud_house'] },
   { id: 'dream_cloud_storage_chest', name: '梦境收纳箱', slot: DecoSlot.ORNAMENT, rarity: DecoRarity.FINE, cost: 19800, starValue: 6, icon: 'dream_cloud_storage_chest', desc: '奶油云朵箱身配浅紫箱盖，月牙锁扣收藏睡前小秘密', unlockRequirement: { level: 24 }, defaultScale: 0.98, decorationPanelTab: 'flower_room', allowedSceneIds: ['dream_cloud_house'] },
 
   // ═══════ ⑮ 古风/民俗/奇匠扩展 Lv30–35（batch51 · 全场景通用 · 售价高于 Lv21–30 档）
@@ -722,6 +736,15 @@ export const FURNITURE_TRAY_THEME_TABS: FurnitureTrayTabId[] = [
   'qinglian',
 ];
 
+/** 工坊线 Tab（仅 workshopExclusive 家具；无房壳 / 房屋专属 / 主题套） */
+export const FURNITURE_TRAY_WORKSHOP_TABS: FurnitureTrayTabId[] = [
+  'furniture',
+  'appliance',
+  DecoSlot.ORNAMENT,
+  DecoSlot.WALLART,
+  DecoSlot.GARDEN,
+];
+
 export const FURNITURE_TRAY_TABS: FurnitureTrayTabId[] = [
   ...FURNITURE_TRAY_REGULAR_TABS,
   ...FURNITURE_TRAY_THEME_TABS,
@@ -818,6 +841,27 @@ export function furnitureTrayTabForDeco(deco: DecoDef): FurnitureTrayTabId {
   if (deco.decorationPanelTab === 'garden') return DecoSlot.GARDEN;
   if (deco.decorationPanelTab === 'qinglian') return 'qinglian';
   return furnitureTrayTabFromSlot(deco.slot);
+}
+
+/** 工坊托盘：按槽位 / 面板 Tab 归入子分类（不含房壳与场景专属） */
+export function getWorkshopTrayTabForDeco(deco: DecoDef): FurnitureTrayTabId {
+  if (deco.slot === DecoSlot.LIGHT) return 'appliance';
+  if (deco.slot === DecoSlot.WALLART) return DecoSlot.WALLART;
+  if (deco.slot === DecoSlot.GARDEN) return DecoSlot.GARDEN;
+  if (deco.slot === DecoSlot.ORNAMENT && deco.decorationPanelTab !== 'furniture') {
+    return DecoSlot.ORNAMENT;
+  }
+  return 'furniture';
+}
+
+/** 编辑托盘「工坊」顶栏：仅已配置为 workshopExclusive 的家具 */
+export function getWorkshopDecosForTrayTab(tab: FurnitureTrayTabId, sceneId: string): DecoDef[] {
+  return DECO_DEFS.filter(d => {
+    if (!d.workshopExclusive) return false;
+    if (isDecoSpecialUiCategory(d)) return false;
+    if (!isDecoAllowedInScene(d, sceneId)) return false;
+    return getWorkshopTrayTabForDeco(d) === tab;
+  });
 }
 
 export function getDecosForDecorationPanelTab(tab: DecoPanelTabId, sceneId: string): DecoDef[] {

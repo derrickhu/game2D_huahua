@@ -1,0 +1,13 @@
+Square game asset 1:1. Single large furniture prop centered, filling about 76% of frame width.
+
+Use the attached reference image ONLY for exact same sofa shape, pose, angle, silhouette, walnut armrests, brass trim, chaise extension, and cushion layout. Do NOT change structure or camera.
+
+Recolor the entire upholstery to soft sakura cherry-blossom pink — bright cheerful pastel pink, high-key and sunny, not dusty or dark. Keep vertical channel stitching readable with gentle pink shadows only.
+
+Replace accent pillows ONLY: left round bolster becomes butter-light-yellow / pale lemon yellow; right square cushion becomes soft pastel pink with tiny white dot pattern or plain pink — two pillows only, bright and cute.
+
+Keep walnut arms, brass leg caps, brown outlines, same lighting direction. No side cabinet, no drawer.
+
+No text, no labels, no watermark, no characters, no room shell.
+
+Background pure solid white #FFFFFF only for cutout.

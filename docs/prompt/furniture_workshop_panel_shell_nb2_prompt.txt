@@ -1,0 +1,18 @@
+Single full-screen vertical mobile game UI asset, 9:16 aspect ratio, flattened decorative SHELL ONLY for a furniture workshop modal panel — cozy pastel flower-shop merge game. High resolution, crisp vector edges.
+
+THIS IS AN EMPTY PANEL BACKPLATE — NO functional content, NO icons, NO items, NO buttons except the standard close control.
+
+INCLUDE ONLY:
+- Tall centered modal, very rounded corners.
+- Thick outer rim soft lilac-lavender, thinner inner pastel-pink lip, delicate light highlight on top edge, unified cohesive illustration (not stacked wireframe boxes).
+- TOP HEADER BAND (~13% height): rich soft purple with VERY SUBTLE vertical stripe texture and faint damask watermark, gentle top-to-bottom gradient. Completely EMPTY — absolutely NO title text, NO letters, NO numbers, NO icons in header except close button.
+- TOP-RIGHT: chunky circular red close button with simple white X mark only.
+- UPPER INSET TRAY FRAME: below header inside cream zone, one wide ornamental empty tray — soft cream-lavender inset with rounded ends, thin lilac decorative border with small corner flourishes, inner shadow — tray interior COMPLETELY BLANK (reserved for future material icons, do not draw any icons or labels).
+- MAIN CONTENT FIELD: large cream-lavender area filling most height, VERY SUBTLE all-over floral scroll damask watermark at low opacity (~6%), smooth matte — COMPLETELY EMPTY, no cards, no grid lines, no dashed boxes, no tabs, no furniture images.
+- BOTTOM FOOTER ZONE: integrated soft lilac footer strip with faint horizontal decorative divider line above it, small centered diamond or scroll ornament on divider — footer COMPLETELY EMPTY, no shortcut tiles, no shop icon, no text.
+
+STRICTLY FORBIDDEN: Chinese text, English text, numbers, tab buttons, material icons, dye bottles, hammers, blueprint icons, furniture thumbnails, craft buttons, placeholder plus signs, dashed empty slots, wireframe labels, annotation letters.
+
+Art style: premium 2D vector kawaii mobile UI, pastel purple palette, soft gradients, ornamental texture, gentle depth — same visual DNA as an polished empty crafting panel shell. No photoreal, no watermark.
+
+TECHNICAL BACKGROUND: margins OUTSIDE the modal silhouette only — flat pure bright screen green RGB exactly 0,255,0 for chroma cutout. The modal interior must contain ZERO green pixels.

@@ -39,6 +39,7 @@ import {
 import { RoomEditToolbar } from '@/gameobjects/ui/RoomEditToolbar';
 import { TextureCache } from '@/utils/TextureCache';
 import { DECO_MAP, DecoDef, DecoSlot, SHOP_FURNITURE_DISPLAY_SCALE_MULTIPLIER, SHOP_FURNITURE_TEX_BASE_PX } from '@/config/DecorationConfig';
+import { resolveFurnitureTexture, collectFurniturePreloadKeys, FURNITURE_RENDER_MAP } from '@/config/FurnitureRenderConfig';
 import { DESIGN_WIDTH, COLORS, FONT_FAMILY } from '@/config/Constants';
 import { roomDepthZForPlacement, roomDepthZForOwner } from '@/config/RoomDepthSort';
 import { ToastMessage } from '@/gameobjects/ui/ToastMessage';
@@ -62,8 +63,9 @@ import { SoundSystem } from '@/systems/SoundSystem';
 import { TutorialManager, TutorialStep } from '@/managers/TutorialManager';
 import { AffinityManager } from '@/managers/AffinityManager';
 import { CARD_SYSTEM_UNLOCK_LEVEL } from '@/config/AffinityCardConfig';
+import { FURNITURE_WORKSHOP_UNLOCK_LEVEL } from '@/config/FurnitureWorkshopConfig';
 import { TutorialOverlay } from '@/systems/TutorialOverlay';
-import { playShopDecorationStarFly } from '@/gameobjects/ui/ShopDecorationStarFly';
+import { playShopDecorationStarFly, playShopDecorationStarFlyOverOverlay } from '@/gameobjects/ui/ShopDecorationStarFly';
 import { Platform } from '@/core/PlatformService';
 import { SocialManager } from '@/managers/SocialManager';
 import { SettingsPanel } from '@/gameobjects/ui/SettingsPanel';
@@ -208,9 +210,10 @@ interface MiscDrawerBtnDef {
   stroke: number;
 }
 
-/** 左下角横排 — 家具 / 装扮（无遮罩，大图标） */
+/** 底栏左排 — 家具 / 工坊 / 装扮（与地图·许愿同 y、同间距） */
 const DECO_PAIR_BUTTONS: SideBtnDef[] = [
   { id: 'deco',    icon: '', texKey: 'icon_furniture', label: '家具', event: 'nav:openDeco',    iconBg: 0xFFB347, labelColor: 0xD48B2E },
+  { id: 'workshop', icon: '', texKey: 'icon_furniture_workshop', label: '工坊', event: 'nav:openFurnitureWorkshop', iconBg: 0xCBA6F7, labelColor: 0x8B5BC2 },
   { id: 'dressup', icon: '', texKey: 'icon_dress',      label: '装扮', event: 'nav:openDressup', iconBg: 0xFF7EB3, labelColor: 0xE0559C },
 ];
 
@@ -305,7 +308,23 @@ export class ShopScene implements Scene {
 
   private readonly _onDecorationShopStarFly = (payload: { globalX: number; globalY: number; amount: number }): void => {
     if (SceneManager.current?.name !== 'shop') return;
-    this._playStarFlyFromGlobal(payload.globalX, payload.globalY, payload.amount);
+    if (
+      this._starFlyLayer?.parent === OverlayManager.container
+      && this._progressBarRoot?.parent === OverlayManager.container
+    ) {
+      this._playStarFlyFromGlobal(payload.globalX, payload.globalY, payload.amount);
+      return;
+    }
+    if (!this._progressBarRoot) return;
+    playShopDecorationStarFlyOverOverlay({
+      sceneRoot: this.container,
+      startGlobalX: payload.globalX,
+      startGlobalY: payload.globalY,
+      targetSceneLocalX: this._progressBarRoot.x - 22,
+      targetSceneLocalY: this._progressBarRoot.y + PROGRESS_BAR_H / 2,
+      amount: payload.amount,
+      onComplete: () => EventBus.emit('decoration:shopStarFlyComplete'),
+    });
   };
 
   private readonly _onShopCurrencyForProgress = (): void => {
@@ -367,10 +386,12 @@ export class ShopScene implements Scene {
     if (this._furnitureTray.isOpen) this._furnitureTray.refresh();
   };
 
-  private readonly _onRoomLayoutUpdated = (placement: { decoId?: string; scale?: number; flipped?: boolean } | undefined): void => {
-    if (this._isEditMode && placement && placement.decoId) {
-      this._updateSpriteVisual(placement as { decoId: string; scale: number; flipped: boolean });
-      FurnitureDragSystem.sortByDepth();
+  private readonly _onRoomLayoutUpdated = (placement: FurniturePlacement | undefined): void => {
+    if (placement?.decoId) {
+      this._updateSpriteVisual(placement);
+      if (this._isEditMode) {
+        FurnitureDragSystem.sortByDepth();
+      }
     }
   };
 
@@ -380,6 +401,7 @@ export class ShopScene implements Scene {
     this._syncAffinityCodexButtonVisibility();
     this._refreshWorldMapBtnVisibility();
     this._refreshWishingBtnVisibility();
+    this._syncFurnitureWorkshopButtonVisibility();
     const flyTarget = this._returnBtn?.toGlobal(new PIXI.Point(0, 0));
     this._levelUpPopup.show(
       level,
@@ -555,6 +577,7 @@ export class ShopScene implements Scene {
     this._syncAffinityCodexButtonVisibility();
     this._refreshWorldMapBtnVisibility();
     this._refreshWishingBtnVisibility();
+    this._syncFurnitureWorkshopButtonVisibility();
   }
 
   private _finishShopEnter(instant: boolean): void {
@@ -684,10 +707,7 @@ export class ShopScene implements Scene {
     // ============== 6. 右侧快捷按钮（签到/任务） ==============
     this._buildQuickButtons();
 
-    // ============== 7. 左下横排装修/装扮按钮（无遮罩，大图标） ==============
-    this._buildDecoPairBtns();
-
-    // ============== 7b. 左下隐藏功能条（冷门功能折叠入口） ==============
+    // ============== 7. 左下隐藏功能条（冷门功能折叠入口） ==============
     this._buildMiscDrawer();
 
     // ============== 8. 右下角返回按钮（参考四季物语的大箭头） ==============
@@ -698,6 +718,9 @@ export class ShopScene implements Scene {
 
     // ============== 8c. 许愿入口按钮（大地图按钮左侧；3 级解锁，未解锁仍显示锁徽） ==============
     this._buildWishingButton();
+
+    // ============== 8d. 底栏左排 — 家具 / 工坊 / 装扮（与地图·许愿同 y） ==============
+    this._buildDecoPairBtns();
 
     // ============== 9. 编辑模式组件（初始隐藏） ==============
     this._furnitureTray = new FurnitureTray();
@@ -909,7 +932,8 @@ export class ShopScene implements Scene {
   private _createFurnitureSpriteFromPlacement(placement: FurniturePlacement, stackIndex: number): PIXI.Sprite | null {
     const deco = DECO_MAP.get(placement.decoId);
     if (!deco) return null;
-    const texture = TextureCache.get(deco.icon);
+    const resolved = resolveFurnitureTexture(deco.id, deco.icon, placement);
+    const texture = TextureCache.get(resolved.textureKey);
     if (!texture) return null;
 
     const sprite = new PIXI.Sprite(texture);
@@ -917,7 +941,7 @@ export class ShopScene implements Scene {
     const s = Math.min(baseSize / texture.width, baseSize / texture.height)
       * placement.scale
       * this._effectiveFurnitureDisplayScale();
-    sprite.scale.set(placement.flipped ? -s : s, s);
+    sprite.scale.set(resolved.flipped ? -s : s, s);
     sprite.anchor.set(0.5, 0.8);
     sprite.position.set(placement.x, placement.y);
     const stackTie = Math.min(stackIndex, 999);
@@ -957,10 +981,11 @@ export class ShopScene implements Scene {
     this._clearOwnerPressTracking();
   }
 
-  /** 非编辑模式：双击家具进入装修并选中该件 */
+  /** 非编辑模式：单击可交互家具切换形态；双击进入装修并选中该件 */
   private _attachFurnitureBrowseDoubleTap(sprite: PIXI.Sprite, decoId: string): void {
     sprite.eventMode = 'static';
     sprite.cursor = 'pointer';
+    const interactive = !!FURNITURE_RENDER_MAP.get(decoId)?.interaction;
     sprite.on('pointertap', () => {
       if (this._isEditMode) return;
       if (this._furnitureBrowseTapTimer != null) {
@@ -971,6 +996,9 @@ export class ShopScene implements Scene {
           this._enterEditModeForFurniture(decoId);
           return;
         }
+      }
+      if (interactive) {
+        RoomLayoutManager.toggleFurnitureInteractionState(decoId);
       }
       this._furnitureBrowsePendingDecoId = decoId;
       this._furnitureBrowseTapTimer = setTimeout(() => {
@@ -1596,6 +1624,17 @@ export class ShopScene implements Scene {
     this._setFeatureLockBadge(entry.container, !unlocked, 'affinity_codex_lock');
   }
 
+  /** 底栏「工坊」：未达开放等级时显示锁标，点击提示等级。 */
+  private _syncFurnitureWorkshopButtonVisibility(): void {
+    const entry = this._activityBtns.get('workshop');
+    if (!entry) return;
+    const unlocked = CurrencyManager.state.level >= FURNITURE_WORKSHOP_UNLOCK_LEVEL;
+    entry.container.visible = true;
+    entry.container.eventMode = 'static';
+    entry.container.alpha = 1;
+    this._setFeatureLockBadge(entry.container, !unlocked, 'furniture_workshop_lock');
+  }
+
   private _setFeatureLockBadge(container: PIXI.Container, locked: boolean, badgeName: string): void {
     const existing = container.children.find(child => child.name === badgeName);
     if (!locked) {
@@ -1635,7 +1674,7 @@ export class ShopScene implements Scene {
     }
     for (const def of DECO_PAIR_BUTTONS) {
       const btn = this._activityBtns.get(def.id);
-      if (btn) this._refreshBareIconButtonIcon(btn.container, def, 40);
+      if (btn) this._refreshBareIconButtonIcon(btn.container, def, WORLD_MAP_ICON_R);
     }
   }
 
@@ -1685,22 +1724,24 @@ export class ShopScene implements Scene {
     }
   }
 
-  // ─────────────────── 左下横排装修/装扮按钮 ───────────────────
+  // ─────────────────── 底栏左排：家具 / 工坊 / 装扮 ───────────────────
 
   private _buildDecoPairBtns(): void {
-    const ICON_R = 40;
-    const GAP = 18;
-    const pairY = Game.logicHeight - 92;
-    const startX = ICON_R + 14;      // 第一个按钮中心 x
-    const stepX = ICON_R * 2 + GAP;  // 两按钮间距
+    if (!this._worldMapBtn) return;
+
+    const iconR = WORLD_MAP_ICON_R;
+    const stepX = WISHING_TO_WORLDMAP_GAP_X;
+    const rowY = this._worldMapBtn.position.y;
+    const startX = iconR + 14;
 
     for (let i = 0; i < DECO_PAIR_BUTTONS.length; i++) {
       const def = DECO_PAIR_BUTTONS[i];
       const cx = startX + i * stepX;
-      const btn = this._createBareIconBtn(def, cx, pairY, ICON_R);
+      const btn = this._createBareIconBtn(def, cx, rowY, iconR);
       this.container.addChild(btn.container);
       this._activityBtns.set(def.id, btn);
     }
+    this._syncFurnitureWorkshopButtonVisibility();
   }
 
   private _buildMiscDrawer(): void {
@@ -2048,7 +2089,7 @@ export class ShopScene implements Scene {
     this._syncGameClubCanvasButtonInteractivity(false);
   }
 
-  /** 无遮罩底板的纯图标按钮（用于左下横排） */
+  /** 无遮罩底板的纯图标按钮（用于底栏左排：家具 / 工坊 / 装扮） */
   private _createBareIconBtn(
     def: SideBtnDef, cx: number, cy: number, iconR: number,
   ): { container: PIXI.Container; redDot: PIXI.Graphics } {
@@ -2116,6 +2157,10 @@ export class ShopScene implements Scene {
       });
       if (def.id === 'affinity_codex' && !AffinityManager.isCardSystemUnlocked()) {
         ToastMessage.show(`友谊卡将在 ${CARD_SYSTEM_UNLOCK_LEVEL}级 开放`);
+        return;
+      }
+      if (def.id === 'workshop' && CurrencyManager.state.level < FURNITURE_WORKSHOP_UNLOCK_LEVEL) {
+        ToastMessage.show(`家具工坊将在 ${FURNITURE_WORKSHOP_UNLOCK_LEVEL}级 开放`);
         return;
       }
       EventBus.emit(def.event);
@@ -2572,7 +2617,7 @@ export class ShopScene implements Scene {
     if (SceneManager.current?.name !== 'shop') return;
     const deco = DECO_MAP.get(decoId);
     if (!deco) return;
-    void TextureCache.preloadKeys([deco.icon]);
+    void TextureCache.preloadKeys(collectFurniturePreloadKeys(deco.id, deco.icon));
 
     const wasEdit = this._isEditMode;
     const placed = !!RoomLayoutManager.getPlacement(decoId);
@@ -2632,16 +2677,21 @@ export class ShopScene implements Scene {
   };
 
   /** 编辑模式下实时更新家具 Sprite 的缩放/翻转视觉（不重建） */
-  private _updateSpriteVisual(placement: { decoId: string; scale: number; flipped: boolean }): void {
+  private _updateSpriteVisual(placement: FurniturePlacement): void {
     for (const child of this._roomContainer.children) {
       if ((child as any)._decoId === placement.decoId && child instanceof PIXI.Sprite) {
+        const deco = DECO_MAP.get(placement.decoId);
+        if (!deco) return;
+        const resolved = resolveFurnitureTexture(deco.id, deco.icon, placement);
+        const nextTexture = TextureCache.get(resolved.textureKey);
+        if (nextTexture && child.texture !== nextTexture) child.texture = nextTexture;
         const texture = child.texture;
         const baseSize = SHOP_FURNITURE_TEX_BASE_PX;
         const s = Math.min(baseSize / texture.width, baseSize / texture.height)
           * placement.scale
           * this._effectiveFurnitureDisplayScale();
         child.scale.set(
-          placement.flipped ? -s : s,
+          resolved.flipped ? -s : s,
           s
         );
         break;
@@ -3221,6 +3271,7 @@ export class ShopScene implements Scene {
     }
     // 友谊卡未达开放等级时保持锁态；上面对全部入口统一 visible=true 后需刷新 alpha/锁标。
     this._syncAffinityCodexButtonVisibility();
+    this._syncFurnitureWorkshopButtonVisibility();
 
     // 刷新房间渲染
     this._renderFurnitureLayout();
@@ -3321,12 +3372,24 @@ export class ShopScene implements Scene {
       maxScreenY = opts?.browseMaxScreenY ?? Math.round(Game.logicHeight * 0.80);
     }
     const maxLocalY = Math.round(this._designToRoomLocal(midX, maxScreenY).y);
-    RoomLayoutManager.updateBounds({
-      minX: profile.layoutBounds?.minX ?? 50,
-      maxX: profile.layoutBounds?.maxX ?? 700,
-      minY: profile.layoutBounds?.minY ?? 280,
-      maxY: maxLocalY,
-    });
+
+    let minX = profile.layoutBounds?.minX ?? 50;
+    let maxX = profile.layoutBounds?.maxX ?? 700;
+    const minY = profile.layoutBounds?.minY ?? 280;
+
+    // 大房壳（花园别墅等 buildingScaleMultiplier>1）贴图宽于屏幕：须按房壳实际 footprint 扩 X，
+    // 否则左右露台/错层区会被默认 50–700 裁掉。
+    const sp = this._shopBuildingSprite;
+    const BUILDING_BOUNDS_INSET = 14;
+    if (sp?.texture?.valid) {
+      const bw = sp.texture.width * Math.abs(sp.scale.x);
+      const left = sp.position.x - bw / 2;
+      const right = sp.position.x + bw / 2;
+      minX = Math.min(minX, Math.round(left + BUILDING_BOUNDS_INSET));
+      maxX = Math.max(maxX, Math.round(right - BUILDING_BOUNDS_INSET));
+    }
+
+    RoomLayoutManager.updateBounds({ minX, maxX, minY, maxY: maxLocalY });
   }
 
   private _ensureRoomPanHitLayer(): void {
@@ -3888,6 +3951,7 @@ export class ShopScene implements Scene {
 
     this._refreshWorldMapBtnVisibility();
     this._refreshWishingBtnVisibility();
+    this._syncFurnitureWorkshopButtonVisibility();
   }
 
   /**

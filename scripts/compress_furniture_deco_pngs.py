@@ -49,8 +49,14 @@ def process_one(
     except Exception as e:
         return old, old, False, f"SKIP open: {e}"
 
-    out = fit_max_rgba(im, max_side)
-    resized = out.size != im.size
+    # 家具雪碧图：每格已在 process_furniture_atlas_sheet.py 按 max-side 处理，此处仅 re-encode
+    is_atlas_sheet = path.name.endswith("_sheet.png")
+    if is_atlas_sheet:
+        out = im.convert("RGBA") if im.mode != "RGBA" else im
+        resized = False
+    else:
+        out = fit_max_rgba(im, max_side)
+        resized = out.size != im.size
 
     fd, tmp = tempfile.mkstemp(suffix=".png")
     os.close(fd)
@@ -68,6 +74,8 @@ def process_one(
                 tmp = ""
             if resized:
                 reason = "resized"
+            elif is_atlas_sheet:
+                reason = "sheet-optimize"
             elif force and new == old:
                 reason = "force-same"
             elif force:

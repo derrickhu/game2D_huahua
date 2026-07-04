@@ -1,0 +1,17 @@
+Single full-screen vertical mobile game UI mockup, 9:16 aspect ratio, flattened illustration for a cozy pastel flower-shop merge game.
+
+SCREEN: same furniture workshop modal shell as main page — lilac outer frame, purple header "家具工坊", white resource pill bar with three material icons, red close top-right.
+
+INNER SUB-PAGE: blueprint shop view replacing main grid (category tabs hidden).
+
+SUB-HEADER: centered "图纸商店" title in dark purple, left side small lavender rounded "返回" back button.
+
+LIST AREA: cream-white field with TWO horizontal list rows as examples:
+
+Row 1: white rounded row card, left blueprint scroll thumbnail with dark furniture silhouette, center title "明绿弧翼大沙发" and subtitle "30钻石购买", right blue rounded buy button showing "30" + small diamond gem + "购买".
+
+Row 2: same layout but subtitle "已拥有图纸", right side green text "已购买" instead of button.
+
+BOTTOM DOCK: same beige strip visible, blueprint shop icon highlighted bottom-right (lavender circle + scroll icon + "图纸商店" label).
+
+Art style: clean 2D vector kawaii mobile UI, purple-lilac-cream palette consistent with other game panels, soft rim shading, readable Chinese labels for design prototype. Outside modal: flat pure white RGB 255,255,255 margins for cutout.

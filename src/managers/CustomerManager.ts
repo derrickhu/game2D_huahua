@@ -35,6 +35,8 @@ import {
   TIMED_DIAMOND_ORDER_MIN_PLAYER_LEVEL,
   TIMED_FLORIST_ORDER_DAILY_CAP,
   TIMED_FLORIST_ORDER_MIN_PLAYER_LEVEL,
+  WORKSHOP_ORDER_DAILY_CAP,
+  WORKSHOP_ORDER_MIN_PLAYER_LEVEL,
   computeFloristStaminaChestReward,
   computeTimedDiamondReward,
   getCustomerRefreshInitialDelay,
@@ -45,11 +47,17 @@ import { computeUnlockedLines } from '@/orders/unlockedLines';
 import {
   forceGenerateTimedDiamondOrder,
   forceGenerateTimedFloristOrder,
+  forceGenerateWorkshopOrder,
   generateOrderDemands,
   validateOrderSlotsToolCap,
 } from '@/orders/OrderGeneratorRegistry';
 import { RewardBoxManager } from './RewardBoxManager';
+import { FurnitureWorkshopManager } from '@/managers/FurnitureWorkshopManager';
 import type { OrderGenResult, OrderGenerationKind } from '@/orders/types';
+import {
+  WORKSHOP_MATERIAL_ID,
+  type WorkshopMaterialReward,
+} from '@/config/FurnitureWorkshopConfig';
 import { AffinityManager } from './AffinityManager';
 import { WeekendHuayuanBoostManager } from './WeekendHuayuanBoostManager';
 
@@ -76,6 +84,8 @@ export interface CustomerInstance {
   diamondReward?: number;
   /** 富贵花商限时单：体力箱奖励 itemId */
   staminaChestReward?: string;
+  /** 家具工坊特殊订单：交付后进入工坊材料库存 */
+  workshopMaterialRewards?: WorkshopMaterialReward[];
   /** 首饰活动原石奖励：命中的普通订单额外送 1 原石（生成时决定并展示） */
   eventStoneReward?: number;
   /** 预留：连续订单序号 */
@@ -104,6 +114,7 @@ export interface CustomerSaveEntry {
   timeLimit: number | null;
   diamondReward?: number;
   staminaChestReward?: string;
+  workshopMaterialRewards?: WorkshopMaterialReward[];
   eventStoneReward?: number;
   chainIndex?: number;
   bonusMultiplier?: number;
@@ -119,6 +130,8 @@ export interface CustomerPersistState {
   timedDiamondOrdersToday?: number;
   timedFloristOrderDate?: string;
   timedFloristOrdersToday?: number;
+  workshopOrderDate?: string;
+  workshopOrdersToday?: number;
 }
 
 const VALID_ORDER_TYPES = new Set<OrderType>(['normal', 'timed', 'chain', 'challenge']);
@@ -128,6 +141,7 @@ const VALID_ORDER_KINDS = new Set<OrderGenerationKind>([
   'combo',
   'timedDiamond',
   'timedFlorist',
+  'timedWorkshop',
   'eventStub',
 ]);
 
@@ -139,6 +153,36 @@ function localDateKey(ts = Date.now()): string {
   const m = `${d.getMonth() + 1}`.padStart(2, '0');
   const day = `${d.getDate()}`.padStart(2, '0');
   return `${y}-${m}-${day}`;
+}
+
+const WORKSHOP_REWARD_MATERIAL_IDS = new Set([
+  WORKSHOP_MATERIAL_ID,
+  'workshop_wood',
+  'workshop_fabric',
+  'workshop_metal',
+  'workshop_stardust',
+  'workshop_dye',
+  'workshop_dye_pink',
+  'workshop_dye_yellow',
+  'workshop_dye_blue',
+  'workshop_dye_green',
+  'dye_moon_blue',
+  'dye_sakura_pink',
+]);
+
+function normalizeWorkshopMaterialRewards(raw: unknown): WorkshopMaterialReward[] | undefined {
+  if (!Array.isArray(raw)) return undefined;
+  const rewards: WorkshopMaterialReward[] = [];
+  for (const row of raw) {
+    if (!row || typeof row !== 'object') continue;
+    const r = row as Record<string, unknown>;
+    const materialId = typeof r.materialId === 'string' ? r.materialId : '';
+    const count = typeof r.count === 'number' && Number.isFinite(r.count) ? Math.floor(r.count) : 0;
+    if (count > 0 && WORKSHOP_REWARD_MATERIAL_IDS.has(materialId)) {
+      rewards.push({ materialId, count });
+    }
+  }
+  return rewards.length > 0 ? rewards : undefined;
 }
 
 function normalizeCustomerPersistState(raw: unknown): CustomerPersistState | null {
@@ -230,6 +274,7 @@ function normalizeCustomerPersistState(raw: unknown): CustomerPersistState | nul
       timeLimit,
       diamondReward,
       staminaChestReward,
+      workshopMaterialRewards: normalizeWorkshopMaterialRewards(r.workshopMaterialRewards),
       eventStoneReward:
         typeof r.eventStoneReward === 'number' && r.eventStoneReward > 0
           ? Math.floor(r.eventStoneReward)
@@ -268,6 +313,15 @@ function normalizeCustomerPersistState(raw: unknown): CustomerPersistState | nul
       ? Math.max(0, Math.floor(o.timedFloristOrdersToday))
       : 0;
 
+  const workshopOrderDate =
+    typeof o.workshopOrderDate === 'string' && o.workshopOrderDate
+      ? o.workshopOrderDate
+      : localDateKey();
+  const workshopOrdersToday =
+    typeof o.workshopOrdersToday === 'number' && Number.isFinite(o.workshopOrdersToday)
+      ? Math.max(0, Math.floor(o.workshopOrdersToday))
+      : 0;
+
   return {
     list,
     nextUid,
@@ -276,6 +330,8 @@ function normalizeCustomerPersistState(raw: unknown): CustomerPersistState | nul
     timedDiamondOrdersToday,
     timedFloristOrderDate,
     timedFloristOrdersToday,
+    workshopOrderDate,
+    workshopOrdersToday,
   };
 }
 
@@ -304,6 +360,8 @@ class CustomerManagerClass {
   private _timedDiamondOrdersToday = 0;
   private _timedFloristOrderDate = localDateKey();
   private _timedFloristOrdersToday = 0;
+  private _workshopOrderDate = localDateKey();
+  private _workshopOrdersToday = 0;
   private _preparedOfflineSeconds = 0;
   private _timedOrderRefreshTicker = 0;
   /** 上一刷客人的 typeId，用于避免连续同人设（池子 >1 时） */
@@ -336,6 +394,8 @@ class CustomerManagerClass {
         timedDiamondOrdersToday: p.timedDiamondOrdersToday,
         timedFloristOrderDate: p.timedFloristOrderDate,
         timedFloristOrdersToday: p.timedFloristOrdersToday,
+        workshopOrderDate: p.workshopOrderDate,
+        workshopOrdersToday: p.workshopOrdersToday,
       };
     }
     return {
@@ -352,6 +412,7 @@ class CustomerManagerClass {
         timeLimit: c.timeLimit,
         diamondReward: c.diamondReward,
         staminaChestReward: c.staminaChestReward,
+        workshopMaterialRewards: c.workshopMaterialRewards,
         eventStoneReward: c.eventStoneReward,
         chainIndex: c.chainIndex,
         bonusMultiplier: c.bonusMultiplier,
@@ -363,6 +424,8 @@ class CustomerManagerClass {
       timedDiamondOrdersToday: this._timedDiamondOrdersToday,
       timedFloristOrderDate: this._timedFloristOrderDate,
       timedFloristOrdersToday: this._timedFloristOrdersToday,
+      workshopOrderDate: this._workshopOrderDate,
+      workshopOrdersToday: this._workshopOrdersToday,
     };
   }
 
@@ -389,6 +452,7 @@ class CustomerManagerClass {
           : e.timeLimit,
         diamondReward: e.diamondReward,
         staminaChestReward: e.staminaChestReward,
+        workshopMaterialRewards: e.workshopMaterialRewards,
         eventStoneReward: e.eventStoneReward,
         chainIndex: e.chainIndex,
         bonusMultiplier: e.bonusMultiplier,
@@ -401,6 +465,8 @@ class CustomerManagerClass {
       this._timedDiamondOrdersToday = p.timedDiamondOrdersToday ?? 0;
       this._timedFloristOrderDate = p.timedFloristOrderDate ?? localDateKey();
       this._timedFloristOrdersToday = p.timedFloristOrdersToday ?? 0;
+      this._workshopOrderDate = p.workshopOrderDate ?? localDateKey();
+      this._workshopOrdersToday = p.workshopOrdersToday ?? 0;
       const maxCap = getDynamicMaxCustomers(LevelManager.level);
       if (this._customers.length > maxCap) {
         this._customers = this._customers.slice(0, maxCap);
@@ -414,11 +480,14 @@ class CustomerManagerClass {
       this._timedDiamondOrdersToday = 0;
       this._timedFloristOrderDate = localDateKey();
       this._timedFloristOrdersToday = 0;
+      this._workshopOrderDate = localDateKey();
+      this._workshopOrdersToday = 0;
       this._preparedOfflineSeconds = 0;
     }
 
     this._syncTimedDiamondDailyState();
     this._syncTimedFloristDailyState();
+    this._syncWorkshopDailyState();
     this._syncAntiRepeatFromQueueTail();
     this._bindBoardEvents();
     EventBus.on('tutorial:completed', this._onTutorialCompleted);
@@ -576,6 +645,11 @@ class CustomerManagerClass {
     if (customer.staminaChestReward) {
       RewardBoxManager.addItem(customer.staminaChestReward, 1);
     }
+    if (customer.workshopMaterialRewards?.length) {
+      for (const reward of customer.workshopMaterialRewards) {
+        FurnitureWorkshopManager.addMaterial(reward.materialId, reward.count);
+      }
+    }
 
     // 友谊卡进度：普通订单交付后统一走掉卡/里程碑结算
     if (AffinityManager.isAffinityType(customer.typeId)) {
@@ -583,7 +657,7 @@ class CustomerManagerClass {
     }
 
     console.log(
-      `[Customer] 交付完成: ${customer.name}(${customer.tier}), 花愿+${hy}${weekendBonus > 0 ? ` (周末+${weekendBonus})` : ''}${diamonds > 0 ? `, 钻石+${diamonds}` : ''}${customer.staminaChestReward ? `, 体力箱→收纳盒 ${customer.staminaChestReward}` : ''}`,
+      `[Customer] 交付完成: ${customer.name}(${customer.tier}), 花愿+${hy}${weekendBonus > 0 ? ` (周末+${weekendBonus})` : ''}${diamonds > 0 ? `, 钻石+${diamonds}` : ''}${customer.staminaChestReward ? `, 体力箱→收纳盒 ${customer.staminaChestReward}` : ''}${customer.workshopMaterialRewards?.length ? `, 工坊材料+${customer.workshopMaterialRewards.length}种` : ''}`,
     );
 
     this._customers.splice(idx, 1);
@@ -696,11 +770,15 @@ class CustomerManagerClass {
     const lines = computeUnlockedLines(BoardManager.cells);
     this._syncTimedDiamondDailyState();
     this._syncTimedFloristDailyState();
+    this._syncWorkshopDailyState();
     const weights = getOrderTierWeights(level, lines);
 
     const tier = pickTierByWeight(weights);
 
     const noTimedInQueue = !this._customers.some(c => c.orderType === 'timed');
+    const allowWorkshopOrder =
+      level >= WORKSHOP_ORDER_MIN_PLAYER_LEVEL &&
+      this._workshopOrdersToday < WORKSHOP_ORDER_DAILY_CAP;
     const allowTimedFloristOrder =
       level >= TIMED_FLORIST_ORDER_MIN_PLAYER_LEVEL &&
       this._timedFloristOrdersToday < TIMED_FLORIST_ORDER_DAILY_CAP &&
@@ -717,6 +795,8 @@ class CustomerManagerClass {
         tier,
         lines,
         playerLevel: level,
+        allowWorkshopOrder,
+        workshopOrdersToday: this._workshopOrdersToday,
         allowTimedFloristOrder,
         timedFloristOrdersToday: this._timedFloristOrdersToday,
         allowTimedDiamondOrder,
@@ -760,6 +840,7 @@ class CustomerManagerClass {
       timeLimit: gen.timeLimit,
       diamondReward: gen.diamondReward,
       staminaChestReward: gen.staminaChestReward,
+      workshopMaterialRewards: gen.workshopMaterialRewards,
       bonusMultiplier: gen.bonusMultiplier,
       orderKind: gen.generationKind,
     };
@@ -773,7 +854,12 @@ class CustomerManagerClass {
       customer.eventStoneReward = rollEventOrderStoneAmount(customer.tier);
     }
 
-    if (customer.orderKind === 'timedFlorist') {
+    if (customer.orderKind === 'timedWorkshop') {
+      this._workshopOrdersToday = Math.min(
+        WORKSHOP_ORDER_DAILY_CAP,
+        this._workshopOrdersToday + 1,
+      );
+    } else if (customer.orderKind === 'timedFlorist') {
       this._timedFloristOrdersToday = Math.min(
         TIMED_FLORIST_ORDER_DAILY_CAP,
         this._timedFloristOrdersToday + 1,
@@ -811,6 +897,14 @@ class CustomerManagerClass {
     if (this._timedFloristOrderDate !== today) {
       this._timedFloristOrderDate = today;
       this._timedFloristOrdersToday = 0;
+    }
+  }
+
+  private _syncWorkshopDailyState(): void {
+    const today = localDateKey();
+    if (this._workshopOrderDate !== today) {
+      this._workshopOrderDate = today;
+      this._workshopOrdersToday = 0;
     }
   }
 
@@ -886,6 +980,11 @@ class CustomerManagerClass {
     return this.gmClearAndSpawnCustomer('tycoon');
   }
 
+  /** GM 专用：立即刷出家具工匠材料单，绕过概率、等级与每日上限。 */
+  gmSpawnWorkshopOrder(): string {
+    return this.gmClearAndSpawnCustomer('furniture_craftswoman');
+  }
+
   /**
    * GM 专用：清空现有客人队列，再刷出指定类型客人（含配套订单）。
    * 特殊客人（如大富翁）走限时钻石单；其余走常规订单生成并强制人设。
@@ -922,6 +1021,16 @@ class CustomerManagerClass {
       });
       if (!gen || gen.slots.length === 0) {
         return '无法生成限时钻石单：需有足够解锁产线且物品等级≥6';
+      }
+    } else if (typeId === 'furniture_craftswoman') {
+      gen = forceGenerateWorkshopOrder({
+        tier: 'A',
+        lines,
+        playerLevel: level,
+        rng: Math.random,
+      });
+      if (!gen || gen.slots.length === 0) {
+        return '无法生成家具工匠单：需至少解锁 2 条产线、已解锁花束且包装工具可产出 L6+ 花束';
       }
     } else if (typeDef.specialOnly) {
       return `未配置特殊订单生成：${typeId}`;
@@ -976,6 +1085,7 @@ class CustomerManagerClass {
       timeLimit: gen.timeLimit,
       diamondReward: gen.diamondReward,
       staminaChestReward: gen.staminaChestReward,
+      workshopMaterialRewards: gen.workshopMaterialRewards,
       bonusMultiplier: gen.bonusMultiplier,
       orderKind: gen.generationKind,
     };
@@ -991,6 +1101,12 @@ class CustomerManagerClass {
     EventBus.emit('customer:arrived', customer);
     this._rescanAll();
 
+    if (customer.orderKind === 'timedWorkshop') {
+      const mat = customer.workshopMaterialRewards?.[0];
+      const matName = mat ? '工坊材料' : '';
+      const slotDesc = customer.slots.map(s => s.itemId).join('、');
+      return `已清空并刷出 ${customer.name}：组合单 ${slotDesc}，花愿×0.5，材料 ${matName}×${mat?.count ?? 1}`;
+    }
     if (customer.orderKind === 'timedFlorist') {
       const hours = Math.round((gen.timeLimit ?? 0) / 3600);
       const itemId = customer.slots[0]?.itemId ?? '';

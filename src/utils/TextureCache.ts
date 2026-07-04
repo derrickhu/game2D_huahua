@@ -10,6 +10,14 @@
 import * as PIXI from 'pixi.js';
 import { CdnAssetService } from '@/core/CdnAssetService';
 import { EventBus } from '@/core/EventBus';
+import {
+  buildFurnitureIconAliasMap,
+  furnitureAtlasFrameKey,
+  FURNITURE_RENDER_DEFS,
+  type FurnitureAtlasFrameRef,
+} from '@/config/FurnitureRenderConfig';
+
+const FURNITURE_ICON_ALIASES = buildFurnitureIconAliasMap();
 
 // ================================================================
 // 主包资源（随主包一起下载，无需等待分包）
@@ -54,6 +62,14 @@ const MAIN_IMAGE_MAP: Record<string, string> = {
   /** 挑战关卡入口占位（正式图标就绪后替换路径或 key） */
   icon_challenge: 'images/ui/icon_level_badge.png',
   icon_build:     'images/ui/icon_build.png',
+  icon_workshop_material: 'images/ui/icon_workshop_material.png',
+  icon_workshop_dye_pink: 'images/ui/icon_workshop_dye_pink.png',
+  icon_workshop_dye_yellow: 'images/ui/icon_workshop_dye_yellow.png',
+  icon_workshop_dye_blue: 'images/ui/icon_workshop_dye_blue.png',
+  icon_workshop_dye_green: 'images/ui/icon_workshop_dye_green.png',
+  icon_furniture_workshop: 'images/ui/icon_furniture_workshop.png',
+  /** 工坊面板右下角「图纸商店」卷轴（与底栏工坊建造台区分） */
+  icon_workshop_blueprint_scroll: 'images/ui/icon_workshop_blueprint_scroll.png',
   icon_worldmap_nav: 'images/ui/icon_worldmap_nav.png',
   /** 花店主页「许愿」入口（3 级解锁；与 icon_worldmap_nav 同款 HUD 银色硬币 + 薄荷水纹） */
   icon_wishing_nav: 'images/ui/icon_wishing_nav.png',
@@ -127,6 +143,7 @@ const CHARS_IMAGE_MAP: Record<string, string> = {
   customer_celebrity: 'subpkg_chars/images/customer/celebrity.png',
   customer_tycoon:    'subpkg_chars/images/customer/tycoon.png',
   customer_florist_merchant: 'subpkg_chars/images/customer/florist_merchant.png',
+  customer_furniture_craftswoman: 'subpkg_chars/images/customer/furniture_craftswoman.png',
 
   // 友谊卡 / 图鉴系统：S1 首发卡面（路径 affinity_cards/）
   affinity_card_student_01: 'subpkg_chars/images/affinity_cards/card_student_01.png',
@@ -287,6 +304,8 @@ const PANELS_IMAGE_MAP: Record<string, string> = {
 
   /** 图鉴面板壳体：笔记本风格粉紫框 + 金色标题栏 + 绿色翻页箭头 */
   collection_panel_shell_nb2: 'subpkg_panels/images/ui/collection_panel_shell_nb2.png',
+  /** 家具工坊：NB2 粉紫壳（顶栏/材料 tray/内容区/底栏由贴图，文案与列表由代码叠） */
+  furniture_workshop_panel_shell_nb2: 'subpkg_panels/images/ui/furniture_workshop_panel_shell_nb2.png',
 
   /** 友谊卡 / 图鉴系统：通用卡背、（V1 遗留）友谊点图标、顶栏图鉴入口、图鉴面板壳 */
   affinity_card_back_default: 'subpkg_panels/images/ui/affinity_card_back_default.png',
@@ -613,6 +632,15 @@ const DECO_IMAGE_MAP: Record<string, string> = {
   orn_floral_chest: 'subpkg_deco/images/furniture/orn_floral_chest.png',
   orn_pastel_bench: 'subpkg_deco/images/furniture/orn_pastel_bench.png',
   promo_floral_sofa: 'subpkg_deco/images/furniture/promo_floral_sofa.png',
+  /** 弧翼大沙发：1 列 × 2 行（默认绿 / 樱粉） */
+  workshop_plush_sofa_sheet: 'subpkg_deco/images/furniture/workshop_plush_sofa_sheet.png',
+  /** 泡芙拼块沙发：2 列合图 col0=front col1=back */
+  workshop_puffy_petal_sofa_sheet: 'subpkg_deco/images/furniture/workshop_puffy_petal_sofa_sheet.png',
+  workshop_giant_rose_bouquet_sheet: 'subpkg_deco/images/furniture/workshop_giant_rose_bouquet_sheet.png',
+  workshop_pastel_tv_cabinet_sheet: 'subpkg_deco/images/furniture/workshop_pastel_tv_cabinet_sheet.png',
+  workshop_rose_cascade_drape_sheet: 'subpkg_deco/images/furniture/workshop_rose_cascade_drape_sheet.png',
+  workshop_lace_ribbon_bed: 'subpkg_deco/images/furniture/workshop_lace_ribbon_bed.png',
+  workshop_blueprint_generic: 'subpkg_deco/images/furniture/workshop_blueprint_generic.png',
   promo_petal_chaise: 'subpkg_deco/images/furniture/promo_petal_chaise.png',
   promo_doll_hug_pillow: 'subpkg_deco/images/furniture/promo_doll_hug_pillow.png',
   orn_lounge_chaise: 'subpkg_deco/images/furniture/orn_lounge_chaise.png',
@@ -1094,6 +1122,19 @@ const COLLECTION_PANEL_KEYS = [
   'ui_order_check_badge',
 ] as const;
 
+const FURNITURE_WORKSHOP_PANEL_KEYS = [
+  'furniture_workshop_panel_shell_nb2',
+  'icon_workshop_material',
+  'icon_workshop_dye_pink',
+  'icon_workshop_dye_yellow',
+  'icon_workshop_dye_blue',
+  'icon_workshop_dye_green',
+  'icon_furniture_workshop',
+  'icon_workshop_blueprint_scroll',
+  'workshop_blueprint_generic',
+  'icon_gem',
+] as const;
+
 const AFFINITY_PANEL_KEYS = [
   'affinity_card_back_default',
   'affinity_codex_btn',
@@ -1200,6 +1241,7 @@ export type TextureAssetGroup =
   | 'worldmap'
   | 'quest'
   | 'collection'
+  | 'furnitureWorkshop'
   | 'affinity'
   | 'warehouse'
   | 'mergeChain'
@@ -1227,6 +1269,7 @@ const ASSET_GROUP_KEYS: Record<TextureAssetGroup, readonly string[]> = {
   worldmap: WORLDMAP_WARMUP_KEYS,
   quest: QUEST_PANEL_KEYS,
   collection: COLLECTION_PANEL_KEYS,
+  furnitureWorkshop: FURNITURE_WORKSHOP_PANEL_KEYS,
   affinity: AFFINITY_PANEL_KEYS,
   warehouse: WAREHOUSE_PANEL_KEYS,
   mergeChain: MERGE_CHAIN_PANEL_KEYS,
@@ -1267,6 +1310,7 @@ const ASSET_GROUP_NOTIFY_KEYS: Record<TextureAssetGroup, readonly string[]> = {
   worldmap: uniqueKeys(WORLDMAP_WARMUP_KEYS, WORLDMAP_KEYS),
   quest: uniqueKeys(QUEST_PANEL_KEYS, ALL_ITEMS_KEYS, ALL_DECO_KEYS),
   collection: uniqueKeys(COLLECTION_PANEL_KEYS, ALL_ITEMS_KEYS),
+  furnitureWorkshop: uniqueKeys(FURNITURE_WORKSHOP_PANEL_KEYS, ALL_DECO_KEYS),
   affinity: uniqueKeys(AFFINITY_PANEL_KEYS, AFFINITY_CARD_KEYS, CUSTOMER_KEYS, ALL_DECO_KEYS, ALL_ITEMS_KEYS),
   warehouse: uniqueKeys(WAREHOUSE_PANEL_KEYS, ALL_ITEMS_KEYS),
   mergeChain: uniqueKeys(MERGE_CHAIN_PANEL_KEYS, ALL_ITEMS_KEYS),
@@ -1546,8 +1590,31 @@ class TextureCacheClass {
     return this.preloadKeysStrict(TUTORIAL_DECO_KEYS, 'tutorialDeco');
   }
 
-  /** 获取已缓存的纹理 */
+  /** 获取已缓存的纹理（支持家具合图子帧与 icon 别名） */
   get(key: string): PIXI.Texture | null {
+    const alias = FURNITURE_ICON_ALIASES.get(key);
+    if (alias) {
+      const framed = this._getFurnitureAtlasFrame(alias);
+      if (framed) return framed;
+    }
+
+    const frameMatch = /^(.+)#(\d+),(\d+)$/.exec(key);
+    if (frameMatch) {
+      const sheetKey = frameMatch[1]!;
+      const col = Number(frameMatch[2]);
+      const row = Number(frameMatch[3]);
+      const atlas = FURNITURE_RENDER_DEFS.find(d => d.atlas?.sheetKey === sheetKey)?.atlas;
+      if (atlas) {
+        return this._getFurnitureAtlasFrame({
+          sheetKey,
+          col,
+          row,
+          columns: atlas.columns,
+          rows: atlas.rows,
+        });
+      }
+    }
+
     const cached = this._cache.get(key);
     if (cached) return cached;
 
@@ -1556,6 +1623,72 @@ class TextureCacheClass {
       void this._loadTexture(key, path);
     }
     return null;
+  }
+
+  private _getFurnitureAtlasFrame(ref: FurnitureAtlasFrameRef): PIXI.Texture | null {
+    const frameKey = furnitureAtlasFrameKey(ref.sheetKey, ref.col, ref.row);
+    const cached = this._cache.get(frameKey);
+    if (cached) return cached;
+
+    const sheet = this._cache.get(ref.sheetKey);
+    if (!sheet?.valid) {
+      const path = IMAGE_MAP[ref.sheetKey];
+      if (path && !this._loading.has(ref.sheetKey) && !this._failed.has(ref.sheetKey)) {
+        void this._loadTexture(ref.sheetKey, path);
+      }
+      return null;
+    }
+
+    return this._sliceFurnitureAtlasFrame(ref);
+  }
+
+  private _sliceFurnitureAtlasFrame(ref: FurnitureAtlasFrameRef): PIXI.Texture {
+    const frameKey = furnitureAtlasFrameKey(ref.sheetKey, ref.col, ref.row);
+    const existing = this._cache.get(frameKey);
+    if (existing) return existing;
+
+    const sheet = this._cache.get(ref.sheetKey)!;
+    const fw = Math.max(1, Math.floor(sheet.width / ref.columns));
+    const fh = Math.max(1, Math.floor(sheet.height / ref.rows));
+    const frame = new PIXI.Texture(
+      sheet.baseTexture,
+      new PIXI.Rectangle(ref.col * fw, ref.row * fh, fw, fh),
+    );
+    this._cache.set(frameKey, frame);
+    EventBus.emit(TEXTURE_LOADED_EVENT, frameKey);
+    for (const [aliasKey, aliasRef] of FURNITURE_ICON_ALIASES) {
+      if (
+        aliasRef.sheetKey === ref.sheetKey
+        && aliasRef.col === ref.col
+        && aliasRef.row === ref.row
+      ) {
+        EventBus.emit(TEXTURE_LOADED_EVENT, aliasKey);
+      }
+    }
+    return frame;
+  }
+
+  private _materializeFurnitureSheetFrames(sheetKey: string): void {
+    for (const def of FURNITURE_RENDER_DEFS) {
+      const atlas = def.atlas;
+      if (!atlas || atlas.sheetKey !== sheetKey) continue;
+      for (let row = 0; row < atlas.rows; row++) {
+        for (let col = 0; col < atlas.columns; col++) {
+          this._sliceFurnitureAtlasFrame({
+            sheetKey,
+            col,
+            row,
+            columns: atlas.columns,
+            rows: atlas.rows,
+          });
+        }
+      }
+    }
+  }
+
+  /** @deprecated 内部使用 get；保留兼容 */
+  getTexture(key: string): PIXI.Texture | null {
+    return this.get(key);
   }
 
   /** 判断纹理是否已经成功进入缓存；用于首屏资源重试与刷新判断。 */
@@ -1781,6 +1914,9 @@ class TextureCacheClass {
             const baseTexture = PIXI.BaseTexture.from(img as any);
             const texture = new PIXI.Texture(baseTexture);
             this._cache.set(key, texture);
+            if (FURNITURE_RENDER_DEFS.some(d => d.atlas?.sheetKey === key)) {
+              this._materializeFurnitureSheetFrames(key);
+            }
             this._retryCounts.delete(key);
             EventBus.emit(TEXTURE_LOADED_EVENT, key);
           } catch (e) {

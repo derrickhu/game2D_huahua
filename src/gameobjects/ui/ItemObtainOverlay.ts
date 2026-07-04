@@ -9,6 +9,10 @@ import { OverlayManager } from '@/core/OverlayManager';
 import { TweenManager, Ease } from '@/core/TweenManager';
 import { DESIGN_WIDTH, FONT_FAMILY } from '@/config/Constants';
 import { ITEM_DEFS } from '@/config/ItemConfig';
+import {
+  getWorkshopMaterialDisplayName,
+  resolveWorkshopMaterialIconKey,
+} from '@/config/FurnitureWorkshopConfig';
 import { TextureCache } from '@/utils/TextureCache';
 import { captureContainerShareImageUrl } from '@/utils/shareSnapshot';
 
@@ -24,6 +28,8 @@ export type ItemObtainEntry =
       currency: 'stamina' | 'huayuan' | 'diamond' | 'flowerSign';
       amount: number;
     }
+  /** 家具工坊材料/染料（直加，不进收纳盒） */
+  | { kind: 'workshop_material'; materialId: string; count: number; label?: string }
   /** 升星解锁区：仅图标 + 短标签（无底板卡片） */
   | { kind: 'unlock_icon'; iconKey: string; label: string };
 
@@ -117,6 +123,9 @@ export function createItemObtainRewardCell(
     qtyStr = entry.label;
     labelFontSize = qtyFs >= 14 ? qtyFs : Math.max(13, Math.round(cell * 0.155));
     labelWrapWidth = cell + 14;
+  } else if (entry.kind === 'workshop_material') {
+    texKey = resolveWorkshopMaterialIconKey(entry.materialId);
+    qtyStr = `×${entry.count}`;
   } else {
     texKey = DIRECT_CURRENCY_ICON[entry.currency];
     qtyStr = `${entry.amount}`;

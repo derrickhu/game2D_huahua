@@ -1,0 +1,12 @@
+Create a clean 2D game furniture asset sheet for a cozy pastel flower-shop merge game.
+
+Canvas and layout: exactly 2 equal vertical panels in one horizontal row (2 columns x 1 row sprite sheet), with a wide pure white gutter between panels. Each panel contains exactly one standalone sofa asset centered on pure white #FFFFFF. Keep each asset fully inside its panel with generous margins. NO TEXT, no labels, no captions, no numbers, no watermark.
+
+Shared style — MUST match the attached reference front sofa exactly:
+Cute kawaii 2.5D isometric view from upper-left about 45 degrees (classic flower-shop room cutaway angle). Hand-painted mobile merge-game furniture. Soft warm brown outlines, gentle upper-left lighting, HIGH-KEY bright pastel healing cottagecore palette. Low-profile PUFFY MODULAR SOFA made of soft oval cushion segments like cloud blobs. No visible legs or hard frame — stacked plush poufs forming one wide loveseat. Extremely soft rounded minimal silhouette. Tiny fabric rose accent on one corner only.
+
+Panel 1 (left column): FRONT / default facing view of the puffy petal sofa. Back row: three dusty-rose pink rounded segments. Seat row: three creamy off-white oval segments in front. Left armrest: small pink oval cushion. Right armrest: small cream oval cushion with tiny pink rose ornament. Match the reference image proportions, colors, and cushion layout as closely as possible.
+
+Panel 2 (right column): BACK view of the SAME sofa model at the SAME scale and angle. Show the rear backrest clearly: three pink rounded back cushions aligned like panel 1 but seen from behind. Seat back edge and rear armrest blobs visible. Same pink + cream colors, same soft blob segments, same tiny rose accent repositioned naturally for back view. NO front seat cushions facing camera. Must read unmistakably as the back of the same piece, not a different sofa.
+
+No room shell, no floor, no characters, no other furniture. Background pure solid white #FFFFFF only for cutout.

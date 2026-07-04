@@ -1,0 +1,21 @@
+Single full-screen vertical mobile game UI mockup, 9:16 aspect ratio, flattened illustration for a cozy pastel flower-shop merge game.
+
+COMPOSITION: dimmed purple-tinted overlay on a blurred cozy room background (very soft, low detail). Centered smaller modal popup — furniture craft confirmation dialog.
+
+POPUP FRAME: rounded rectangle, thick lilac-lavender border, thinner pink inner lip, cream-white interior fill.
+
+HEADER: purple band with centered white Chinese title "制作家具" bold readable.
+
+TOP-RIGHT on popup: small red circular close button white X.
+
+PREVIEW AREA: large white rounded square frame, centered isometric green L-shaped plush sofa with wooden arms and colorful pillows.
+
+BELOW PREVIEW: item name "明绿弧翼大沙发" in dark purple-brown bold text.
+
+COLOR ROW: two circular color chips side by side — bright green selected (brown ring), sakura pink unselected — labels "明绿" and "樱粉" tiny under chips.
+
+COST ROWS: two horizontal rows with small icons left and fraction text right — row1 hammer icon "13/2", row2 pink flower coin icon "10000/116093". Use red tint when insufficient, green when sufficient (show one red one green as example).
+
+FOOTER BUTTONS: bottom of popup — left pink rounded "取消", right gray-lavender rounded "未满足" (disabled craft state).
+
+Art style: match furniture workshop main panel — clean 2D vector kawaii, purple pastel palette, soft shadows, readable Chinese UI labels for design approval prototype. Outside popup and overlay vignette: flat white RGB 255,255,255 margins if any, or full-bleed mock acceptable.

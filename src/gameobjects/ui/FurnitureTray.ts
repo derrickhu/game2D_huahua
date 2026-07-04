@@ -12,6 +12,7 @@ import { DecorationManager } from '@/managers/DecorationManager';
 import { RoomLayoutManager } from '@/managers/RoomLayoutManager';
 import { FurnitureDragSystem } from '@/systems/FurnitureDragSystem';
 import { TextureCache } from '@/utils/TextureCache';
+import { getDecoDisplayName } from '@/config/FurnitureWorkshopConfig';
 import {
   DecoSlot,
   DECO_MAP,
@@ -19,13 +20,15 @@ import {
   DecoDef,
   FURNITURE_TRAY_REGULAR_TABS,
   FURNITURE_TRAY_THEME_TABS,
-  FURNITURE_TRAY_TABS,
+  FURNITURE_TRAY_WORKSHOP_TABS,
   sortRoomStylesByUnlockLevelThenCost,
   type FurnitureTrayTabId,
   type DecoPanelTabId,
   type RoomStyleDef,
   getDecorationTabLabel,
   getDecosForDecorationPanelTab,
+  getWorkshopDecosForTrayTab,
+  getWorkshopTrayTabForDeco,
   getRoomStylesForScene,
   isDecoAllowedInScene,
   furnitureTrayTabFromSlot,
@@ -122,16 +125,17 @@ type TrayScrollMode = 'scroll' | 'drag' | 'neutral';
 
 type TrayListFilter = 'all' | 'unplaced';
 
-/** 托盘顶栏：常规分类 vs 主题线 */
-type TraySection = 'regular' | 'theme';
+/** 托盘顶栏：常规 / 主题 / 工坊 */
+type TraySection = 'regular' | 'theme' | 'workshop';
 
 const MODE_TOGGLE_X = 24;
 const MODE_TOGGLE_Y = 10;
 const MODE_CHIP_H = 32;
-const MODE_CHIP_GAP = 8;
+const MODE_CHIP_GAP = 6;
 const MODE_CHIPS: { id: TraySection; label: string; w: number }[] = [
-  { id: 'regular', label: '常规', w: 68 },
-  { id: 'theme', label: '主题', w: 68 },
+  { id: 'regular', label: '常规', w: 60 },
+  { id: 'theme', label: '主题', w: 60 },
+  { id: 'workshop', label: '工坊', w: 60 },
 ];
 
 export class FurnitureTray extends PIXI.Container {
@@ -141,7 +145,7 @@ export class FurnitureTray extends PIXI.Container {
   private _bgFallback: PIXI.DisplayObject | null = null;
   private _handle!: PIXI.Container;
   private _tabContainer!: PIXI.Container;
-  /** 顶栏左侧：常规 / 主题 */
+  /** 顶栏左侧：常规 / 主题 / 工坊 */
   private _modeToggleRow!: PIXI.Container;
   private _gridContainer!: PIXI.Container;
   private _gridMask!: PIXI.Graphics;
@@ -235,13 +239,16 @@ export class FurnitureTray extends PIXI.Container {
 
     this.y = this._closedY;
     if (trayArg != null && typeof trayArg === 'object' && 'deco' in trayArg) {
-      const tab = furnitureTrayTabForDeco(trayArg.deco);
-      if (tab === 'qinglian') {
+      const deco = trayArg.deco;
+      if (deco.workshopExclusive) {
+        this._traySection = 'workshop';
+        this._currentTab = getWorkshopTrayTabForDeco(deco);
+      } else if (furnitureTrayTabForDeco(deco) === 'qinglian') {
         this._traySection = 'theme';
         this._currentTab = 'qinglian';
       } else {
         this._traySection = 'regular';
-        this._currentTab = tab;
+        this._currentTab = furnitureTrayTabForDeco(deco);
       }
     } else if (trayArg != null) {
       this._traySection = 'regular';
@@ -465,7 +472,7 @@ export class FurnitureTray extends PIXI.Container {
     if (pending && moved < TRAY_TAP_SLOP_PX) {
       if (pending.isPlaced) {
         FurnitureDragSystem.select(pending.decoId);
-        const name = DECO_MAP.get(pending.decoId)?.name ?? '家具';
+        const name = getDecoDisplayName(pending.decoId);
         ToastMessage.show(`已选中「${name}」，可在房间中拖动`);
       } else {
         ToastMessage.show('拖住图标向上拖入房间即可放置');
@@ -474,7 +481,9 @@ export class FurnitureTray extends PIXI.Container {
   }
 
   private _getActiveTrayTabs(): FurnitureTrayTabId[] {
-    return this._traySection === 'theme' ? FURNITURE_TRAY_THEME_TABS : FURNITURE_TRAY_REGULAR_TABS;
+    if (this._traySection === 'workshop') return FURNITURE_TRAY_WORKSHOP_TABS;
+    if (this._traySection === 'theme') return FURNITURE_TRAY_THEME_TABS;
+    return FURNITURE_TRAY_REGULAR_TABS;
   }
 
   private _setTraySection(section: TraySection): void {
@@ -482,7 +491,7 @@ export class FurnitureTray extends PIXI.Container {
     this._traySection = section;
     const tabs = this._getActiveTrayTabs();
     if (!tabs.includes(this._currentTab)) {
-      this._currentTab = tabs[0] ?? 'flower_room';
+      this._currentTab = tabs[0] ?? 'furniture';
     }
     this._scrollX = 0;
     this._refreshAll();
@@ -655,7 +664,10 @@ export class FurnitureTray extends PIXI.Container {
     }
 
     const sceneId = CurrencyManager.state.sceneId;
-    const candidates = getDecosForDecorationPanelTab(this._currentTab as DecoPanelTabId, sceneId);
+    const candidates = this._traySection === 'workshop'
+      ? getWorkshopDecosForTrayTab(this._currentTab, sceneId)
+      : getDecosForDecorationPanelTab(this._currentTab as DecoPanelTabId, sceneId)
+          .filter(d => !d.workshopExclusive);
     const layout = RoomLayoutManager.getLayout();
     const unlocked = candidates.filter(
       d => DecorationManager.isUnlocked(d.id) && isDecoAllowedInScene(d, sceneId),
@@ -666,7 +678,11 @@ export class FurnitureTray extends PIXI.Container {
         : unlocked;
 
     if (unlocked.length === 0) {
-      const emptyText = new PIXI.Text('暂无已解锁的装饰\n去装修面板解锁吧~', {
+      const emptyText = new PIXI.Text(
+        this._traySection === 'workshop'
+          ? '暂无工坊家具\n去家具工坊制作吧~'
+          : '暂无已解锁的装饰\n去装修面板解锁吧~',
+        {
         fontSize: 16, fill: COLORS.TEXT_LIGHT, fontFamily: FONT_FAMILY,
         align: 'center',
       });
@@ -913,7 +929,7 @@ export class FurnitureTray extends PIXI.Container {
     }
 
     // 名称：在圆角方块下方（不占卡片内白底）
-    const nameText = new PIXI.Text(deco.name, {
+    const nameText = new PIXI.Text(getDecoDisplayName(deco.id), {
       fontSize: 14,
       fill: COLORS.TEXT_DARK,
       fontFamily: FONT_FAMILY,

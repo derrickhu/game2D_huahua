@@ -1,0 +1,27 @@
+Create ONE standalone 2D wall-decoration sprite for a cozy pastel flower-shop merge game.
+
+ATTACHED IMAGE = DESIGN REFERENCE (copy this curtain design closely):
+Study the attached in-game screenshot. Extract ONLY the tall rose curtain partition — ignore the white cabinet, air conditioner, plush toy, floor tiles, and walls. Re-draw that exact curtain design as a clean isolated game prop on pure white background.
+
+DESIGN — must match the reference, NOT a generic short window curtain:
+- TALL room-divider curtain reaching nearly floor-to-ceiling height (about 85–90% of canvas height). Used as a decorative partition, much taller than small cafe curtains.
+- Light gold / warm wood curtain rod with round ball finials, mounted on isometric back wall.
+- TOP: dramatic pink fabric valance swag draped over rod with deep U-curve sag in the center; cream scalloped ruffle trim on the swag edge; OPEN GAP under the center swag so the middle feels airy and not sealed shut.
+- LEFT PANEL: long flowing dusty-pink curtain tail hanging down with dynamic swooping folds, pulled back and anchored by a large cluster of fabric roses near the lower-left; fabric pools softly on the floor with natural curves.
+- RIGHT PANEL: tall cream-white semi-sheer panel with pink scalloped trim along its inner edge; vertical wavy ripples and lively fabric movement, not stiff flat cloth.
+- CENTER: wide vertical OPENING between left and right panels — the middle is visibly open / see-through, like a partition arch, NOT one solid flat curtain sheet.
+- BOTTOM: fabric trails and rose petal accents near the base; keep a sense of leakage / openness at the bottom rather than a heavy sealed block.
+- Dynamic romantic movement in every fold — elegant, luxurious, shabby-chic rose cottagecore.
+
+PERSPECTIVE — mandatory (same as project's fixed wall-art angle):
+Isometric back-wall mount for upper-left ~45° L-room. Rod slants with LEFT END HIGHER and RIGHT END LOWER (not horizontal front view). Entire unit lies flush on the vertical back wall plane, parallel to room shell walls. Fabric hangs downward in screen space with the same wall angle as approved wall decorations in this game.
+
+Style:
+Cute kawaii hand-painted mobile merge-game flower shop wall art. Soft warm brown outlines, pastel high-key, gentle upper-left lighting, soft cel shading. Readable silhouette at small grid size. Not photoreal.
+
+Canvas:
+Square 1:1, single object centered, generous white margin.
+
+Restrictions:
+NO room shell, NO furniture, NO window frame, NO characters, NO text, NO watermark.
+Background pure solid white #FFFFFF only for cutout.

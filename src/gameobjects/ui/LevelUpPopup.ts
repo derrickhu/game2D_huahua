@@ -3,6 +3,7 @@
  * 星级礼包「仅预览」：`flower_egg_reward_bg` + `item_info_title_ribbon` + 奖励图标网格 + 点遮罩关闭。
  */
 import * as PIXI from 'pixi.js';
+import { EventBus } from '@/core/EventBus';
 import { Game } from '@/core/Game';
 import { AudioManager } from '@/core/AudioManager';
 import { TweenManager, Ease } from '@/core/TweenManager';
@@ -681,6 +682,7 @@ export class LevelUpPopup extends PIXI.Container {
         this._showStamina = 0;
         this._showDiamond = 0;
         closedCb?.();
+        EventBus.emit('levelUpPopup:closed');
       },
     });
   }

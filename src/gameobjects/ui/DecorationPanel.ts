@@ -37,6 +37,7 @@ import {
   isDecoAllowedInScene,
   formatAllowedScenesShort,
 } from '@/config/DecorationConfig';
+import { getDecoDisplayName } from '@/config/FurnitureWorkshopConfig';
 import { CurrencyManager } from '@/managers/CurrencyManager';
 import { LevelManager } from '@/managers/LevelManager';
 import { BOARD_BAR_HEIGHT, DESIGN_WIDTH, FONT_FAMILY, COLORS } from '@/config/Constants';
@@ -286,7 +287,9 @@ function decoMatchesInvFilter(deco: DecoDef, filter: DecoInvFilter, sceneId: str
 }
 
 function shouldShowDecoInDecorationPanel(deco: DecoDef): boolean {
-  return !deco.hideInDecorationPanel;
+  if (deco.hideInDecorationPanel) return false;
+  if (deco.workshopExclusive && !DecorationManager.isUnlocked(deco.id)) return false;
+  return true;
 }
 
 /**
@@ -1276,7 +1279,9 @@ export class DecorationPanel extends PIXI.Container {
 
     const sceneId = CurrencyManager.state.sceneId;
     let decos = sortDecosForInvFilter(
-      getDecosForDecorationPanelTab(this._activeTab, sceneId).filter(shouldShowDecoInDecorationPanel),
+      getDecosForDecorationPanelTab(this._activeTab, sceneId)
+        .filter(shouldShowDecoInDecorationPanel)
+        .filter(d => !d.workshopExclusive),
       this._decoInvFilter,
       sceneId,
     );
@@ -1707,7 +1712,7 @@ export class DecorationPanel extends PIXI.Container {
     const nameWrap = lockAfterName ? Math.max(36, cw - 12 - nameGap - lockSlot) : cw - 12;
 
     const nameRow = new PIXI.Container();
-    const nameText = new PIXI.Text(deco.name, {
+    const nameText = new PIXI.Text(getDecoDisplayName(deco.id), {
       fontSize: 15,
       fill: COLORS.TEXT_DARK,
       fontFamily: FONT_FAMILY,
@@ -2033,7 +2038,7 @@ export class DecorationPanel extends PIXI.Container {
         ToastMessage.show('家具已不可解锁');
         return;
       }
-      ToastMessage.show(`已解锁「${deco.name}」购买资格`);
+      ToastMessage.show(`已解锁「${getDecoDisplayName(deco.id)}」购买资格`);
       this._refreshAll();
       this._showAdGateUnlockedPopup(deco);
     });
@@ -2145,7 +2150,7 @@ export class DecorationPanel extends PIXI.Container {
     const cx = contentW / 2;
     let y = 0;
 
-    const sub = new PIXI.Text(`「${deco.name}」`, {
+    const sub = new PIXI.Text(`「${getDecoDisplayName(deco.id)}」`, {
       fontSize: 19,
       fill: 0x5c4a3d,
       fontFamily: FONT_FAMILY,
@@ -2298,7 +2303,7 @@ export class DecorationPanel extends PIXI.Container {
     const cx = contentW / 2;
     let y = 0;
 
-    const sub = new PIXI.Text(`「${deco.name}」`, {
+    const sub = new PIXI.Text(`「${getDecoDisplayName(deco.id)}」`, {
       fontSize: 19,
       fill: 0x5c4a3d,
       fontFamily: FONT_FAMILY,

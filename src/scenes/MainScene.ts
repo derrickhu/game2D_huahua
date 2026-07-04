@@ -56,6 +56,7 @@ import { GMPanel } from '@/gameobjects/ui/GMPanel';
 import { DecorationManager } from '@/managers/DecorationManager';
 import { StaminaPanel } from '@/gameobjects/ui/StaminaPanel';
 import { DecorationPanel } from '@/gameobjects/ui/DecorationPanel';
+import { FurnitureWorkshopPanel } from '@/gameobjects/ui/FurnitureWorkshopPanel';
 import { FloatingMenu } from '@/gameobjects/ui/FloatingMenu';
 import { SceneSwitch } from '@/gameobjects/ui/SceneSwitch';
 import {
@@ -67,6 +68,7 @@ import {
   BoardMetrics,
 } from '@/config/Constants';
 import { ITEM_DEFS } from '@/config/ItemConfig';
+import { resolveWorkshopMaterialIconKey } from '@/config/FurnitureWorkshopConfig';
 import { TextureCache } from '@/utils/TextureCache';
 import { AdManager } from '@/managers/AdManager';
 import { CollectionManager } from '@/managers/CollectionManager';
@@ -89,6 +91,7 @@ import { DressUpPanel } from '@/gameobjects/ui/DressUpPanel';
 import {
   getShopProgressStarTargetLocalInSceneRoot,
   playShopDecorationStarFly,
+  playShopDecorationStarFlyOverOverlay,
 } from '@/gameobjects/ui/ShopDecorationStarFly';
 import { EventPanel } from '@/gameobjects/ui/EventPanel';
 import { EventBoardPanel } from '@/gameobjects/ui/EventBoardPanel';
@@ -177,6 +180,7 @@ export class MainScene implements Scene {
   // ---- 新增系统 ----
   private _staminaPanel!: StaminaPanel;
   private _decoPanel!: DecorationPanel;
+  private _furnitureWorkshopPanel!: FurnitureWorkshopPanel;
 
   // ---- 新UI架构 ----
   private _floatingMenu!: FloatingMenu;
@@ -499,6 +503,9 @@ export class MainScene implements Scene {
     this._decoPanel = new DecorationPanel();
     overlay.addChild(this._decoPanel);
 
+    this._furnitureWorkshopPanel = new FurnitureWorkshopPanel();
+    overlay.addChild(this._furnitureWorkshopPanel);
+
     // GM 调试面板（最高层级）
     this._gmPanel = new GMPanel();
     overlay.addChild(this._gmPanel);
@@ -797,6 +804,31 @@ export class MainScene implements Scene {
         }
       }
 
+      const workshopRewards = customer.workshopMaterialRewards ?? [];
+      if (workshopRewards.length > 0 && cv) {
+        const matLocal = cv.getWorkshopMaterialRewardIconLocalCenter();
+        if (matLocal) {
+          const houseGlobal = this._infoBar.getHouseButtonGlobalCenter();
+          const endLocal = this.container.toLocal(houseGlobal);
+          const sg = cv.toGlobal(matLocal);
+          const sx = this.container.toLocal(sg).x;
+          const sy = this.container.toLocal(sg).y;
+          let matFlyIdx = 0;
+          for (const reward of workshopRewards) {
+            const count = Math.max(0, Math.floor(reward.count));
+            if (count <= 0) continue;
+            pendingAnims++;
+            const iconKey = resolveWorkshopMaterialIconKey(reward.materialId);
+            const delay = 0.12 + matFlyIdx * 0.08;
+            matFlyIdx++;
+            this._playRewardFly(iconKey, sx, sy, endLocal.x, endLocal.y, count, () => {
+              this._infoBar.flashHouseButton();
+              onAnimDone();
+            }, delay, false);
+          }
+        }
+      }
+
       // 无奖励时直接交付
       if (pendingAnims === 0) {
         CustomerManager.deliver(uid);
@@ -1024,12 +1056,12 @@ export class MainScene implements Scene {
   }): void => {
     if (SceneManager.current?.name !== 'main') return;
     const t = getShopProgressStarTargetLocalInSceneRoot();
-    playShopDecorationStarFly({
-      flyLayer: this._ensureDressShopStarFlyLayer(),
+    playShopDecorationStarFlyOverOverlay({
+      sceneRoot: this.container,
       startGlobalX: payload.globalX,
       startGlobalY: payload.globalY,
-      targetLocalX: t.x,
-      targetLocalY: t.y,
+      targetSceneLocalX: t.x,
+      targetSceneLocalY: t.y,
       amount: payload.amount,
       onComplete: () => EventBus.emit('decoration:shopStarFlyComplete'),
     });
@@ -1503,6 +1535,11 @@ export class MainScene implements Scene {
         ? TextureCache.preloadTutorialDeco()
         : TextureCache.preloadSceneWarmup('deco');
       void preload.finally(() => this._decoPanel.open());
+    });
+
+    EventBus.on('nav:openFurnitureWorkshop', () => {
+      void TextureCache.preloadPanelAssets('furnitureWorkshop')
+        .finally(() => this._furnitureWorkshopPanel.open());
     });
 
     // ---- 场景入口事件（左侧浮动按钮） ----

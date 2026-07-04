@@ -1,0 +1,22 @@
+Single full-screen vertical mobile game UI asset, 9:16 aspect ratio, one flattened decorative SHELL ONLY for a furniture workshop modal panel in a cozy pastel flower-shop merge game. High resolution, crisp anti-aliased vector edges.
+
+USE THE ATTACHED REFERENCE IMAGE ONLY FOR OUTER SHELL STYLE AND LAYOUT PROPORTIONS.
+Recreate the same panel silhouette, purple frame, header band, empty material tray frame shape, cream content field, and bottom footer zone — but REMOVE every functional UI element from the reference.
+
+THIS IS AN EMPTY BACKPLATE ONLY. No gameplay content.
+
+KEEP ONLY THESE SHELL PARTS:
+- Tall centered modal, very rounded corners, thick soft lilac-lavender outer rim with thinner pastel-pink inner lip, gentle highlight, unified cohesive 2D cartoon illustration.
+- TOP HEADER BAND (~13% height): rich soft purple with VERY SUBTLE vertical stripe texture and faint low-contrast damask watermark, gentle top-to-bottom gradient. Completely EMPTY — no title text, no Chinese, no letters, no numbers.
+- TOP-RIGHT: chunky circular red close button with simple white X only.
+- UPPER MATERIAL TRAY FRAME: below header inside cream zone, one wide ornamental empty tray — soft cream-lavender inset with rounded ends, thin lilac decorative border with small corner flourishes, inner shadow. Tray interior COMPLETELY BLANK. Do NOT draw material icons, dye bottles, hammers, numbers, labels, plus signs, or the word for materials.
+- MAIN CONTENT FIELD: large cream-lavender area filling most height, VERY SUBTLE all-over floral scroll damask watermark at low opacity (~6%), smooth matte. COMPLETELY EMPTY — no category tabs, no furniture cards, no craft buttons, no grid lines, no dashed boxes, no placeholder slots, no sofa images.
+- BOTTOM FOOTER ZONE: integrated soft lilac footer strip with faint horizontal decorative divider line above it, small centered diamond or scroll ornament on divider. Footer COMPLETELY EMPTY — no blueprint shop icon, no shortcut tile, no buttons, no text.
+
+STRICTLY FORBIDDEN:
+Chinese text, English text, numbers, tab buttons, material icons, dye bottles, hammers, blueprint icons, furniture thumbnails, craft buttons, placeholder plus signs, dashed empty slots, wireframe labels, annotation letters, red boxes.
+
+Art style: clean 2D vector kawaii mobile game UI, pastel purple palette, soft gradients, ornamental texture, gentle depth — same visual DNA as the reference shell, not a wireframe, not a screenshot with content removed by blur. No photoreal, no watermark.
+
+TECHNICAL BACKGROUND FOR CLEAN CUTOUT:
+ONLY the margins OUTSIDE the rounded modal silhouette must be pure bright screen green RGB exactly 0,255,0, flat, no gradient. The modal interior must contain ZERO green pixels.

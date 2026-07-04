@@ -73,6 +73,16 @@ python3 scripts/split_sheet_row_by_gutter.py \
 
 若资源需去底 PNG：**强制**遵循 **`remove-background-game-art.mdc`**。**`subpkg_items` 棋盘物品**（鲜花、饮品、工具小图标等）默认 **`rembg -m isnet-anime`**；店主 / 客人 / 装修大图等仍用 **`birefnet-general`**（见该规则分工表）。**禁止**以色键/魔棒/颜色阈值作为入库终稿。
 
+## 装修家具放置（deco 分包 — 与入库同步）
+
+凡新增/替换 **`minigame/subpkg_deco/images/furniture/`**（及同类可摆放 deco），在写入 `DecorationConfig.ts` 时**必须**按放置意图配置深度字段，不能只登记 PNG + `defaultScale`：
+
+- **台面小物**（花瓶、蜡烛、台面家电等）：须能摆在桌子/柜面上 → 见 **`furniture-deco-art-spec.mdc` §放置与深度排序**；`furniture` Tab 且 `defaultScale > 0.92` 时**显式** `depthSortFeetYFudge` + `depthSortYLift`。
+- **地毯 / 地垫**：**必须** `depthSortFloorMat: true`、`depthSortYLift: 0`，保证永远在最底层。
+- **地面大件**（沙发、床等）：勿误加台面补偿。
+
+入库后编辑模式拖放到圆桌/地毯上做一次遮挡验收。
+
 ## 入库到游戏
 
 生成成功后 **再拷贝** 到工程内目标路径（示例：花店室外背景）：
