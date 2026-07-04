@@ -397,6 +397,7 @@ class FurnitureWorkshopManagerClass {
           if (typeof id === 'string' && legacyMap[id]) this._craftedVariants.add(legacyMap[id]);
         }
       }
+
     } catch (e) {
       console.warn('[FurnitureWorkshop] 加载失败:', e);
     }

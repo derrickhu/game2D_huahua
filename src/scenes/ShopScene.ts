@@ -107,6 +107,7 @@ const WISHING_TO_WORLDMAP_GAP_X = WORLD_MAP_ICON_R * 2 + 24;
 /** 新手礼包入口在「许愿」左侧，间距与许愿-地图一致 */
 const NEWBIE_GIFT_TO_WISHING_GAP_X = WISHING_TO_WORLDMAP_GAP_X;
 const WISHING_FREE_PROMO_BADGE_NAME = 'wishing_free_multi_promo';
+const FURNITURE_WORKSHOP_NEW_LAUNCH_BADGE_NAME = 'furniture_workshop_new_launch_promo';
 /** 左下隐藏功能条：收起态小竖签 + 展开态横条 */
 const MISC_DRAWER_Y_FROM_BOTTOM = 236;
 const MISC_DRAWER_TAB_W = 24;
@@ -1626,6 +1627,7 @@ export class ShopScene implements Scene {
 
   /** 底栏「工坊」：未达开放等级时显示锁标，点击提示等级。 */
   private _syncFurnitureWorkshopButtonVisibility(): void {
+    if (!this._activityBtns) return;
     const entry = this._activityBtns.get('workshop');
     if (!entry) return;
     const unlocked = CurrencyManager.state.level >= FURNITURE_WORKSHOP_UNLOCK_LEVEL;
@@ -1633,6 +1635,79 @@ export class ShopScene implements Scene {
     entry.container.eventMode = 'static';
     entry.container.alpha = 1;
     this._setFeatureLockBadge(entry.container, !unlocked, 'furniture_workshop_lock');
+    this._syncFurnitureWorkshopNewLaunchBadge(entry.container);
+  }
+
+  /** 工坊图标左上角「新上线」横幅（始终显示，未解锁时点击仍提示等级） */
+  private _syncFurnitureWorkshopNewLaunchBadge(container: PIXI.Container): void {
+    const existing = container.children.find(c => c.name === FURNITURE_WORKSHOP_NEW_LAUNCH_BADGE_NAME) as PIXI.Container | undefined;
+    const badge = existing ?? this._createWorkshopNewLaunchBadge(container);
+    badge.visible = true;
+    if (container.sortableChildren) container.sortChildren();
+  }
+
+  private _createWorkshopNewLaunchBadge(container: PIXI.Container): PIXI.Container {
+    const iconR = WORLD_MAP_ICON_R;
+    const promo = new PIXI.Container();
+    promo.name = FURNITURE_WORKSHOP_NEW_LAUNCH_BADGE_NAME;
+    promo.eventMode = 'none';
+    promo.zIndex = 20;
+    promo.position.set(-iconR + 10, -iconR - 2);
+    promo.rotation = -0.12;
+
+    const w = 66;
+    const h = 26;
+    const bg = new PIXI.Graphics();
+    bg.lineStyle(2.5, 0xffffff, 0.98);
+    bg.beginFill(0xff3d00, 0.98);
+    bg.drawRoundedRect(0, -h, w, h, 11);
+    bg.endFill();
+    bg.lineStyle(1.5, 0xb71c1c, 0.55);
+    bg.drawRoundedRect(0, -h, w, h, 11);
+    promo.addChild(bg);
+
+    const shine = new PIXI.Graphics();
+    shine.beginFill(0xffab91, 0.42);
+    shine.drawRoundedRect(3, -h + 3, w - 6, Math.round(h * 0.42), 8);
+    shine.endFill();
+    promo.addChild(shine);
+
+    const label = new PIXI.Text('新上线', {
+      fontSize: 14,
+      fill: 0xffffff,
+      fontFamily: FONT_FAMILY,
+      fontWeight: 'bold',
+      stroke: 0xc62828,
+      strokeThickness: 2.5,
+    });
+    label.anchor.set(0.5);
+    label.position.set(w / 2, -h / 2);
+    promo.addChild(label);
+
+    container.sortableChildren = true;
+    container.addChild(promo);
+    const pulsePromo = (): void => {
+      if (!promo.visible || !promo.parent) return;
+      TweenManager.cancelTarget(promo.scale);
+      promo.scale.set(1, 1);
+      TweenManager.to({
+        target: promo.scale,
+        props: { x: 1.08, y: 1.08 },
+        duration: 0.75,
+        ease: Ease.easeInOutQuad,
+        onComplete: () => {
+          TweenManager.to({
+            target: promo.scale,
+            props: { x: 1, y: 1 },
+            duration: 0.75,
+            ease: Ease.easeInOutQuad,
+            onComplete: pulsePromo,
+          });
+        },
+      });
+    };
+    pulsePromo();
+    return promo;
   }
 
   private _setFeatureLockBadge(container: PIXI.Container, locked: boolean, badgeName: string): void {
@@ -2562,6 +2637,9 @@ export class ShopScene implements Scene {
   // ─────────────────── 事件 ───────────────────
 
   private _bindEvents(): void {
+    // 已废弃事件：清掉热重载/旧包残留的监听器，避免 this 丢失报错
+    EventBus.clear('furnitureWorkshop:entryPromoDismissed');
+
     EventBus.on('decoration:decoPanelBackdrop', this._onDecoPanelBackdrop);
     EventBus.on('decoration:room_style', this._refreshShopBuildingTexture);
     EventBus.on('dressup:equipped', this._onDressUpEquipped);
