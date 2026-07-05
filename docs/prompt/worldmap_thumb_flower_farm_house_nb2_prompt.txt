@@ -1,20 +1,29 @@
-Clean 2D hand-painted mobile game world map building asset for a cozy pastel flower-shop merge game, healing iyashikei style, soft brown line art, high-angle isometric-lite view from above-front. The asset should sit naturally on a circular green world-map slot like the existing map houses.
+Clean 2D hand-painted mobile game WORLD MAP concept icon for a cozy pastel flower-shop merge game, healing iyashikei style, soft brown line art, high-angle isometric-lite from above-front.
 
-Subject: a distinctive side-story pastoral farm cottage, "flower field farmstead" theme. It is a small warm wooden countryside house with harvest charm, cute and readable as a purchasable house node on the world map.
+Use attached reference ONLY for world-map node rendering style: compact collectible house icon on a circular green grass pad, charming silhouette, same illustration vocabulary as other purchasable map nodes — NOT a room cutaway shell.
 
-Architecture:
-- Main body: single-story warm cream plaster and honey wood cottage, compact and cozy, not a giant barn.
-- Roof: soft terracotta-red clay tile roof with gentle slope, tiny brick chimney with a wisp of pale smoke optional.
-- Fence and garden: short white picket fence wrapping a tiny vegetable patch beside the house with 3-4 neat green crop rows and tiny colorful stylized vegetables (carrot tops, lettuce, tomato red dots), cute not realistic.
-- Door: small arched wooden door in warm oak, no text.
-- Windows: two square paned windows with cream frames and pale yellow warm glow inside.
-- Farm details: one small wooden wheelbarrow leaning near fence, a tiny hay bale, optional mini windmill silhouette behind roof (very small), a few pastel wildflower tufts around base.
-- Ground: flat soft green grass patch directly under the building, suitable for the highlighted circular map slot.
+Subject: "Sunlit Farm Courtyard" map concept — an OPEN outdoor farm yard vignette, iconic and inviting. This is a MAP NODE illustration, NOT the in-game room shell, NOT architectural L-corner walls, NOT a building cutaway.
 
-Palette: cream white, honey wood, soft terracotta red, sage green, butter yellow accents, tiny coral and mint vegetable dots. Bright, cute, pastoral, high-key pastel. Must harmonize with existing flower-shop map houses while clearly unique as a farm cottage.
+MANDATORY — NOT A HOUSE / NOT A SHELL:
+- NO cream house walls, NO L-corner exterior walls, NO door, NO window frames on a building, NO terracotta roof eaves, NO room-shell layout.
+- Draw an open courtyard garden icon instead.
 
-Composition: single centered building asset, no background scene, generous transparent or removable margin, square 1:1. Keep silhouette compact and readable at small map size.
+Courtyard concept composition:
+- Flat soft circular green grass pad under the whole icon (for map slot).
+- Low curved white picket fence + honey-wood lattice trellis arch/gate wrapped with bright green ivy and tiny purple grape bunches — defines the yard, replaces any house walls.
+- Inside the sunny open yard (warm tan soil paths + grass tufts + golden komorebi dappled light spots):
+  • cute chibi scarecrow with straw hat and pink scarf (center-left landmark)
+  • small red-roof hen coop with two round white chickens
+  • wooden A-frame melon trellis with striped hanging melons
+  • four-grid vegetable patch (cabbage, scallions, chili, carrots — vivid colors)
+  • tiny golden hay bale
+  • honey bamboo slat rocking chair on a small wooden deck plank corner (deck is a tiny yard platform, NOT house porch)
+  • optional tiny red diamond Fu paper pinned on trellis post (no readable text)
 
-NO TEXT, no labels, no readable signs, no numbers, no logo, no watermark, no characters, no UI frame.
+Palette: honey wood, sage green, white picket, saturated veg colors, butter sunlight, high-key pastel pastoral. Cute, storybook, instantly readable at small map size like tea-house map icon.
 
-Avoid photorealism, industrial farm machinery, dark gritty barn, giant silo, clutter, or full background landscape.
+Single centered icon, square 1:1, generous transparent margin.
+
+NO TEXT, no labels, no watermark, no characters, no UI frame, no background landscape, no big cottage building, no windmill, no room shell.
+
+Avoid photorealism, architectural cutaway, empty generic garden, dark muddy palette.

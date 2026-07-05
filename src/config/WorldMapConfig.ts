@@ -212,8 +212,8 @@ export const MAP_NODES: MapNodeDef[] = [
     type: 'house',
     label: '花田农舍',
     /** 茶香与橡树之间圆形草地（Lv30 支线） */
-    x: 1760,
-    y: 920,
+    x: 1660,
+    y: 1120,
     thumbKey: 'worldmap_thumb_flower_farm_house',
     thumbSize: 340,
     unlockLevel: FLOWER_FARM_HOUSE_UNLOCK_LEVEL,
