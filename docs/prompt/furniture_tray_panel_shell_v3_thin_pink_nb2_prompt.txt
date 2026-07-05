@@ -1,0 +1,34 @@
+Single horizontal UI asset for a mobile game bottom drawer shell — wide SHORT bottom sheet, landscape 16:9. Cozy pastel flower-shop merge game.
+
+USE ATTACHED REFERENCE ONLY to understand what to REMOVE: delete the thick outer lilac-purple frame entirely. Keep and refine ONLY a thin soft pastel-pink rounded border as the outermost edge of the panel.
+
+SHAPE:
+- Wide flat bottom-sheet rectangle, straight flat top, large rounded bottom corners, slight top corner radius.
+- Panel fills ~96% of image width and ~86% of image height — minimal green margin outside only.
+- NO arch, NO dome, NO purple header band, NO outer lavender rim, NO thick multi-layer frame.
+
+OUTERMOST EDGE (only one frame):
+- Single thin pastel-pink lip border (~3–4 px visual weight at 1K), soft kawaii 2D vector, gentle highlight, warm brown hairline stroke optional.
+- NO second purple/lilac frame outside the pink border.
+
+INTERIOR — TWO SUBTLE ZONES (no hard divider line, no inset boxes, no slots):
+
+ZONE A — TOP TOOLBAR STRIP (~18–20% of panel inner height, keep narrow):
+- Warm cream-pink matte fill, slightly cooler/lighter than bottom zone.
+- VERY SUBTLE fine vertical pinstripe or soft woven-fabric micro-texture at ~4% opacity — barely visible, suggests a compact control bar area.
+- Completely empty — no buttons, no tabs, no text, no icons, no handle pill, no recessed groove.
+
+ZONE B — MAIN CONTENT FIELD (~80–82% of panel inner height, dominant):
+- Warm cream-ivory matte fill, main furniture card display area.
+- VERY SUBTLE floral scroll damask watermark at ~5–6% opacity — same ornamental family as furniture workshop panel, elegant and calm.
+- Slightly different pattern from Zone A so the two layers are distinguishable only on close look — NO horizontal divider bar, NO shadow seam, NO nested rounded rectangle, NO card slot outlines.
+
+Transition between zones: only a whisper-soft tonal shift and pattern change — like two paper textures meeting, NOT a carved step or inset tray.
+
+STRICTLY FORBIDDEN:
+Thick purple/lilac outer frame, double frame, header band, inset trays, depressed slots, dashed placeholders, handle pill, close button, Chinese, English, numbers, tab buttons, furniture thumbnails, footer strip, baroque decoration, hard black divider lines.
+
+Art style: clean 2D vector kawaii mobile UI, pastel high-key, light airy, modern flat bottom sheet. Not photoreal, not wireframe.
+
+TECHNICAL BACKGROUND:
+ONLY pixels OUTSIDE the panel silhouette = pure bright screen green RGB exactly 0,255,0. Panel interior ZERO green pixels.

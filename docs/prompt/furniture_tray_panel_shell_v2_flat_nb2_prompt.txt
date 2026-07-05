@@ -1,0 +1,27 @@
+Single horizontal UI asset for a mobile game bottom drawer shell — NOT a full-screen modal. Cozy pastel flower-shop merge game, same visual family as furniture workshop panel.
+
+USE ATTACHED REFERENCE ONLY for lilac-lavender frame color, pink inner lip, cream tone, and subtle damask texture style. Do NOT copy the tall modal proportions or header band layout.
+
+SHAPE AND PROPORTIONS (critical — maximize usable interior):
+- One wide SHORT bottom-sheet panel centered on canvas, landscape ~16:9 silhouette.
+- Flat straight top edge (NO arch, NO dome, NO scalloped crown).
+- Large rounded bottom-left and bottom-right corners only; top corners slightly rounded but mostly square — like iOS bottom sheet.
+- Panel occupies ~94% of image WIDTH and ~82% of image HEIGHT — minimal outer margin, do NOT shrink panel with huge empty margins.
+- INNER cream field must extend very close to the purple frame: target only a THIN decorative rim (~2–3% of panel width per side). Avoid wide lavender gutters or thick empty side padding inside the frame.
+
+FRAME:
+- Outer rim: soft lilac-lavender (#B8A0D8 family), thinner pastel-pink inner lip, gentle kawaii 2D vector highlights, warm brown outline stroke like workshop shell.
+- Top edge: integrated tiny handle hint ONLY — one small centered rounded gray-lavender pill bar (~8% panel width, very shallow), painted ON the top rim surface, NOT a recessed slot or carved groove.
+
+INTERIOR (one unified zone — no zones, no layers):
+- Single continuous warm cream-ivory matte fill (#FFF8F0 / #FFF6EC) filling almost entire panel below top rim.
+- VERY SUBTLE all-over floral scroll damask watermark at ~5–6% opacity ONLY in this cream zone — same ornamental DNA as workshop content field, barely visible, elegant not busy.
+- Perfectly flat matte surface — NO inset trays, NO depressed pockets, NO card slots, NO dashed placeholders, NO divider lines, NO footer strip, NO header purple band, NO nested rounded rectangles, NO shadow wells.
+
+STRICTLY FORBIDDEN:
+Chinese, English, numbers, text, tab buttons, category icons, furniture thumbnails, close button, green action buttons, material tray shape, blueprint footer, baroque gold frame, lace corners, heart dividers, wireframe labels, annotation boxes.
+
+Art style: clean 2D vector kawaii mobile UI, pastel high-key, soft gradients only on frame rim for depth. Not photoreal, not screenshot mockup, not wireframe.
+
+TECHNICAL BACKGROUND:
+ONLY pixels OUTSIDE the panel silhouette = pure bright screen green RGB exactly 0,255,0 flat. Panel interior contains ZERO green pixels.

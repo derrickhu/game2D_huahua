@@ -17,6 +17,10 @@ import { BoardManager } from '@/managers/BoardManager';
 import { CustomerManager } from '@/managers/CustomerManager';
 import { DESIGN_WIDTH, FONT_FAMILY, BoardMetrics, BOARD_COLS, CELL_GAP } from '@/config/Constants';
 import { TOP_BAR_HEIGHT } from '@/gameobjects/ui/TopBar';
+import {
+  furnitureTrayEditCompleteSpotlightRect,
+  furnitureTrayOpenTopY,
+} from '@/gameobjects/ui/FurnitureTray';
 import { TutorialDialogBubble, type DialogBubbleOptions } from '@/gameobjects/ui/TutorialDialogBubble';
 import { StorySequenceOverlay } from '@/gameobjects/ui/StorySequenceOverlay';
 import { TextureCache } from '@/utils/TextureCache';
@@ -1494,14 +1498,9 @@ export class TutorialOverlay {
       this._clearOverlay();
       this._overlay.visible = true;
 
-      const trayOpenY = Game.logicHeight - 310 - 50 + 30;
-      const rect: SpotlightRect = {
-        x: DESIGN_WIDTH / 2 - 142,
-        y: trayOpenY + 36 - 40,
-        w: 284,
-        h: 80,
-        r: 28,
-      };
+      const trayTopY = furnitureTrayOpenTopY(Game.logicHeight);
+      const sp = furnitureTrayEditCompleteSpotlightRect(trayTopY);
+      const rect: SpotlightRect = { ...sp, r: 28 };
       this._drawSpotlightMask([rect], 0.62);
       this._drawGlowBorder(rect);
       this._startFingerTapAnim(rect.x + rect.w / 2, rect.y + rect.h / 2);

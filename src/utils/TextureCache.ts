@@ -61,7 +61,6 @@ const MAIN_IMAGE_MAP: Record<string, string> = {
   icon_quest:     'images/ui/icon_quest.png',
   /** 挑战关卡入口占位（正式图标就绪后替换路径或 key） */
   icon_challenge: 'images/ui/icon_level_badge.png',
-  icon_build:     'images/ui/icon_build.png',
   icon_workshop_material: 'images/ui/icon_workshop_material.png',
   icon_workshop_dye_pink: 'images/ui/icon_workshop_dye_pink.png',
   icon_workshop_dye_yellow: 'images/ui/icon_workshop_dye_yellow.png',
@@ -225,8 +224,6 @@ const PANELS_IMAGE_MAP: Record<string, string> = {
   furniture_tray_tab_garden_idle: 'subpkg_panels/images/ui/furniture_tray_tab_garden_idle.png',
   furniture_tray_tab_room_styles_idle: 'subpkg_panels/images/ui/furniture_tray_tab_room_styles_idle.png',
   furniture_tray_tab_qinglian_idle: 'subpkg_panels/images/ui/furniture_tray_tab_qinglian_idle.png',
-  /** 编辑工具栏「确认」：绿色胶囊对勾，rembg 透明底 */
-  furniture_tray_confirm_btn: 'subpkg_panels/images/ui/furniture_tray_confirm_btn.png',
   /** 房间编辑条：6 枚独立图标（横排；由合图 split 脚本产出） */
   room_edit_toolbar_zoom_in: 'subpkg_panels/images/ui/room_edit_toolbar_zoom_in.png',
   room_edit_toolbar_zoom_out: 'subpkg_panels/images/ui/room_edit_toolbar_zoom_out.png',
@@ -238,8 +235,13 @@ const PANELS_IMAGE_MAP: Record<string, string> = {
   edit_complete_pill_4x2_nb2: 'subpkg_panels/images/ui/pill_btn_4x2_r1c1_idx01.png',
   /** 花店主界面「装修」入口：一体式 NB2 胶囊按钮（文字烘焙） */
   shop_edit_deco_btn_nb2: 'subpkg_panels/images/ui/shop_edit_deco_btn_nb2.png',
-  /** 家具托盘底板壳：NB2+rembg；贴图已 180° 调向，平底在上、拱顶在下，顶对齐裁切后少占竖向 */
+  /** 编辑托盘顶右「清空」：圆钮 + 垃圾桶 + 清空字 */
+  furniture_edit_clear_icon_nb2: 'subpkg_panels/images/ui/furniture_edit_clear_icon_nb2.png',
+  /** 家具托盘底板壳（legacy 拱顶） */
   furniture_tray_panel_shell_nb2: 'subpkg_panels/images/ui/furniture_tray_panel_shell_nb2.png',
+  /** 装修编辑托盘 v3：薄粉边 + 上竖纹/下 damask 双区 flat bottom sheet */
+  furniture_tray_panel_shell_v3_thin_pink_nb2:
+    'subpkg_panels/images/ui/furniture_tray_panel_shell_v3_thin_pink_nb2.png',
   /** 万能水晶/金剪刀确认弹窗：NB2+rembg，与合成线彩带同风格 */
   special_consumable_panel_bg: 'subpkg_panels/images/ui/special_consumable_panel_bg.png',
   special_consumable_use_btn: 'subpkg_panels/images/ui/special_consumable_use_btn.png',
@@ -1031,6 +1033,17 @@ const SHOP_WARMUP_KEYS = [
   'owner_full_default',
   'owner_full_default_blink',
   'shop_edit_deco_btn_nb2',
+  'furniture_tray_panel_shell_v3_thin_pink_nb2',
+  'furniture_tray_tab_flower_room_idle',
+  'furniture_tray_tab_furniture_idle',
+  'furniture_tray_tab_appliance_idle',
+  'furniture_tray_tab_ornament_idle',
+  'furniture_tray_tab_wallart_idle',
+  'furniture_tray_tab_garden_idle',
+  'furniture_tray_tab_room_styles_idle',
+  'furniture_tray_tab_qinglian_idle',
+  'furniture_edit_clear_icon_nb2',
+  'edit_complete_pill_4x2_nb2',
   'icon_worldmap_nav',
   'icon_wishing_nav',
   'icon_weekend_huayuan_boost_nb2',
@@ -1084,13 +1097,14 @@ const TUTORIAL_DECO_KEYS = [
   'deco_rarity_tag_common',
   'deco_rarity_tag_fine',
   'furniture_tray_panel_shell_nb2',
+  'furniture_tray_panel_shell_v3_thin_pink_nb2',
   'furniture_tray_tab_flower_room_idle',
   'furniture_tray_tab_furniture_idle',
   'furniture_tray_tab_ornament_idle',
   'furniture_tray_tab_garden_idle',
   'furniture_tray_tab_qinglian_idle',
-  'furniture_tray_confirm_btn',
   'edit_complete_pill_4x2_nb2',
+  'furniture_edit_clear_icon_nb2',
   'ui_order_check_badge',
   'room_edit_toolbar_zoom_in',
   'room_edit_toolbar_zoom_out',

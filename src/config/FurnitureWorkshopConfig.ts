@@ -57,19 +57,19 @@ const WORKSHOP_RESOURCE_HELP: Record<string, WorkshopResourceHelp> = {
   },
   [WORKSHOP_DYE_PINK_ID]: {
     purpose: '可以制作出樱粉色的物品。',
-    acquire: '许愿池，神秘商店，其他活动。',
+    acquire: '许愿池，神秘商店，签到，其他活动。',
   },
   [WORKSHOP_DYE_YELLOW_ID]: {
     purpose: '可以制作出蜜黄色的物品。',
-    acquire: '许愿池，神秘商店，其他活动。',
+    acquire: '许愿池，神秘商店，签到，其他活动。',
   },
   [WORKSHOP_DYE_BLUE_ID]: {
     purpose: '可以制作出天蓝色的物品。',
-    acquire: '许愿池，神秘商店，其他活动。',
+    acquire: '许愿池，神秘商店，签到，其他活动。',
   },
   [WORKSHOP_DYE_GREEN_ID]: {
     purpose: '可以制作出薄荷绿色的物品。',
-    acquire: '许愿池，神秘商店，其他活动。',
+    acquire: '许愿池，神秘商店，签到，其他活动。',
   },
 };
 

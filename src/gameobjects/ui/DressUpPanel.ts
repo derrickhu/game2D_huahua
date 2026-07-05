@@ -706,13 +706,14 @@ export class DressUpPanel extends PIXI.Container {
         wordWrap: true,
         wordWrapWidth: nameWrap,
       });
-      name.anchor.set(0, 1);
+      name.anchor.set(0, 0);
       nameRow.addChild(name);
       const lockIcon = createSmallNameLockIcon(cw, CARD_BASE_W);
-      lockIcon.position.set(name.width + nameGap, -name.height * 0.5);
+      lockIcon.position.set(name.width + nameGap, name.height * 0.5);
       nameRow.addChild(lockIcon);
       const nb = nameRow.getLocalBounds();
-      nameRow.position.set(Math.round((cw - nb.width) / 2 - nb.x), nameBottomY - nb.y);
+      const nameTopY = nameBottomY - nameBlockH;
+      nameRow.position.set(Math.round((cw - nb.width) / 2 - nb.x), nameTopY - nb.y);
       card.addChild(nameRow);
     } else {
       const name = new PIXI.Text(outfit.name, {

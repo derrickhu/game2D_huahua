@@ -1,0 +1,25 @@
+Full-screen vertical mobile game UI mockup, 9:16, cozy pastel flower-shop merge game — DECORATION EDIT MODE prototype V3 "thin chrome, fat content".
+
+Scene top 72%: isometric flower shop room, green yard, warm daylight. Black translucent tutorial strip mid-scene with short Chinese hint text.
+
+KEY IDEA: Move ALL chrome to scene overlay; bottom drawer is almost pure content grid.
+
+SCENE OVERLAY BAR (just above drawer, floating, ~48px tall transparent dark-blur strip OR no strip — buttons float directly):
+- Left: text "装修模式" small white label with lilac dot.
+- Center-right cluster: [完成装修] compact green capsule (smaller than current huge pill).
+- Far right: icon-only buttons — trash outline (清空), no large orange pill.
+
+BOTTOM DRAWER (~28% screen — thinnest possible while usable):
+- Very subtle flat bottom sheet: only 8px visible lilac top border + cream fill, almost frameless modern look (like iOS home indicator sheet).
+- NO purple arch, NO thick decorative frame wasting pixels.
+- Top of cream area: single merged tab bar — icon+micro-label hybrid:
+  • Segmented mini tabs "常规|主题|工坊" as underline style (not chunky boxes)
+  • Immediately continues into category icons on SAME baseline (flower, chair, lamp, vase, frame, bush, house) — one continuous scannable row
+- Below: furniture horizontal scroll taking ~75% of drawer height — big touch targets, 5 cards visible.
+- Bottom edge: hairline divider + right-aligned tiny text toggle "未放置 · 全部" as inline text links, not button blocks.
+
+Show 3 furniture cards: farm rocking chair, fu sticker wall, moon nightstand — pastel isometric thumbnails.
+
+Match updated game UI: lavender-pink-cream palette from furniture workshop panel shell v6, kawaii flat vector, generous whitespace inside drawer, no baroque decoration.
+
+No watermark, no photoreal.

@@ -1,0 +1,22 @@
+Full-screen vertical mobile game UI mockup, 9:16, cozy pastel flower-shop merge game DECORATION EDIT MODE. Show the isometric wooden flower-shop room in the upper ~68% (grass, trees, L-shaped room with small character inside). Lower ~32% is a compact bottom drawer — do NOT make the drawer taller than shown.
+
+DESIGN GOAL: Redesign the cramped edit-mode tray to match newer furniture/workshop/dress-up panels — clean lavender kawaii flat vector, less button clutter, same compact height.
+
+SCENE (top):
+- Cute isometric flower shop room on green lawn, soft daytime lighting.
+- Semi-transparent dark hint banner in scene center: "拖动家具；向上拖入托盘图标即可放置" (small white text).
+- NO other HUD clutter in scene except one floating action cluster.
+
+FLOATING ACTIONS (above drawer, NOT inside drawer chrome):
+- Center-top of the drawer zone, slightly overlapping scene: ONE primary pill button "完成装修" — soft mint-green, white bold text, gentle glow, kawaii mobile style.
+- Top-right of screen (above drawer): small circular orange icon button with trash/clear symbol + tiny label "清空" underneath — secondary destructive action, NOT a big orange pill beside the green button.
+
+BOTTOM DRAWER SHELL (compact, ~32% screen height):
+- Flat modern bottom sheet (NO arch/dome top) — thick soft lilac-lavender outer rim, thin pastel-pink inner lip, warm cream interior. Matches furniture workshop panel family.
+- Thin gray drag handle centered on top edge of sheet only.
+- Row 1 inside sheet (~36px): ONE horizontal segmented control spanning most width — three equal capsules "常规" (selected deep lavender) | "主题" | "工坊". Clean, not cramped with other buttons on same row.
+- Row 2 (~44px): seven category ICON tabs only (flower selected orange ring, chair, lamp, vase, frame, bush, house) — evenly spaced, no text labels.
+- Row 3 (largest): horizontal scroll of furniture cards — 6 small rounded cards with cute isometric furniture thumbnails and names below. Show 2–3 sample items (green sofa, pink chair, flower pot) plus empty slots fading right.
+- Bottom-right corner INSIDE cream area: tiny toggle chips "全部" | "未放置" (selected) — small, not a full-width bar.
+
+STYLE: Clean 2D vector kawaii mobile UI, pastel high-key, soft shadows, no photoreal, no watermark. Clear visual hierarchy: scene > floating complete > drawer content.

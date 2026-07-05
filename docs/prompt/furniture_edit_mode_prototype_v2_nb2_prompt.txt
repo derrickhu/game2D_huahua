@@ -1,0 +1,31 @@
+Full-screen vertical mobile game UI mockup, 9:16, cozy pastel flower-shop merge game DECORATION EDIT MODE — ALTERNATIVE compact layout.
+
+Upper 70%: same isometric flower-shop room on grass (L-shaped wooden room, tiny shopkeeper inside). Keep generous visible floor for placing furniture.
+
+Upper-right corner of screen (floating on scene, NOT in drawer):
+- Chunky circular GREEN button with white checkmark ✓ — primary "done decorating" action, no text on button itself.
+- Directly below it, tiny caption "完成" in white with dark stroke for readability on grass.
+
+Bottom drawer ~30% height — ultra-minimal flat lavender bottom sheet, cream interior, thin handle bar.
+
+INSIDE DRAWER — only TWO control rows before content (save vertical space):
+
+ROW A — combined toolbar (single row, full width minus padding):
+- Left: compact dropdown pill showing "常规 ▾" (one control replaces three separate chips).
+- Center: seven small circular category icons in a tight row (flower highlighted).
+- Right: filter icon toggle — funnel icon with orange dot when "未placed only" active; no separate "全部/未放置" text bar.
+
+ROW B — furniture strip (maximize this area):
+- One tall horizontal carousel of furniture cards — larger thumbnails than current design, 5 visible cards, soft white cards with green border on first item.
+- Sample items: rocking chair, tea table, flower shelf — cute isometric merge-game style.
+- Empty state NOT shown — show populated list.
+
+REMOVED vs old design (do NOT draw):
+- No "完成装修" big green pill inside drawer top
+- No "一键清空" orange pill beside it
+- No separate bottom filter bar eating height
+- No arch-top panel shape
+
+Floating bottom-left of scene (optional subtle): small "⋯" more menu icon — implies clear-all is inside menu, not always visible.
+
+Style: same family as furniture workshop + dress-up panels — lilac frame, cream body, kawaii 2D vector, soft pastel, no photoreal.

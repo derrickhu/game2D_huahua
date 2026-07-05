@@ -35,6 +35,7 @@ import {
   FURNITURE_TRAY_H,
   FURNITURE_TRAY_OPEN_OFFSET_UP,
   FURNITURE_TRAY_OPEN_NUDGE_DOWN,
+  FURNITURE_TRAY_CLEAR_ICON_TARGET_H,
 } from '@/gameobjects/ui/FurnitureTray';
 import { RoomEditToolbar } from '@/gameobjects/ui/RoomEditToolbar';
 import { TextureCache } from '@/utils/TextureCache';
@@ -125,22 +126,15 @@ const trayOpenTopY = (logicH: number) =>
   FURNITURE_TRAY_OPEN_OFFSET_UP +
   FURNITURE_TRAY_OPEN_NUDGE_DOWN;
 
-/** 托盘内「完成装修」：顶部水平居中，贴在手柄带下方。 */
-const TRAY_EDIT_COMPLETE_TOP_Y = 36;
-const TRAY_EDIT_COMPLETE_MAX_W = 268;
+/** 底栏「完成装修」：面板底边水平居中（约 2× 原 132×36） */
+const TRAY_EDIT_COMPLETE_MAX_W = 264;
 const TRAY_EDIT_COMPLETE_MAX_H = 72;
-/** 「一键清空」：贴在「完成装修」右侧 */
-const TRAY_EDIT_CLEAR_BTN_W = 116;
-const TRAY_EDIT_CLEAR_BTN_H = 48;
-const TRAY_EDIT_CLEAR_GAP = 12;
-const TRAY_EDIT_CLEAR_CENTER_X =
-  DESIGN_WIDTH / 2 + TRAY_EDIT_COMPLETE_MAX_W / 2 + TRAY_EDIT_CLEAR_GAP + TRAY_EDIT_CLEAR_BTN_W / 2;
+/** 编辑托盘顶右「清空」图标目标高度 */
+const TRAY_EDIT_CLEAR_ICON_TARGET_H = FURNITURE_TRAY_CLEAR_ICON_TARGET_H;
 
 /** 底部「装修」主按钮目标尺寸（与 _buildEditButton 一致） */
 const EDIT_MAIN_BTN_W = (): number => Math.round(DESIGN_WIDTH * 0.58);
 const EDIT_MAIN_BTN_MAX_H = 66;
-const EDIT_MAIN_BTN_FALLBACK_H = 66;
-const EDIT_MAIN_BTN_FALLBACK_R = 16;
 
 /** 花店建筑竖直位置：中心 Y ≈ logicH * ratio + offset，ratio 增大则整体下移（原 0.405 偏上易顶到进度条） */
 const SHOP_BUILDING_CENTER_Y_RATIO = 0.442;
@@ -253,7 +247,7 @@ export class ShopScene implements Scene {
   private _furnitureTray!: FurnitureTray;
   /** 编辑态托盘右下角「完成编辑」贴图（与 _editBtn 互斥显示） */
   private _editCompletePill: PIXI.Container | null = null;
-  /** 编辑态「一键清空」按钮（完成装修右侧） */
+  /** 编辑态「清空」图标（托盘顶右，替代原底栏按钮） */
   private _editClearAllPill: PIXI.Container | null = null;
   private _editToolbar!: RoomEditToolbar;
   private _shopBuildingSprite: PIXI.Sprite | null = null;
@@ -2833,6 +2827,17 @@ export class ShopScene implements Scene {
     this._applyShopEditButtonChrome();
   }
 
+  /** 移除加载占位（旧版曾叠 PIXI.Text，须全部清掉避免与烘焙字重叠） */
+  private _clearShopEditButtonFallback(): void {
+    if (!this._editBtn) return;
+    for (const child of [...this._editBtn.children]) {
+      if ((child as PIXI.DisplayObject & { _shopEditBtnFallback?: boolean })._shopEditBtnFallback) {
+        this._editBtn.removeChild(child);
+        child.destroy();
+      }
+    }
+  }
+
   private _applyShopEditButtonChrome(): void {
     const btn = this._editBtn;
     const btnW = EDIT_MAIN_BTN_W();
@@ -2840,13 +2845,7 @@ export class ShopScene implements Scene {
       c => (c as PIXI.DisplayObject & { _shopEditBtnSprite?: boolean })._shopEditBtnSprite,
     ) as PIXI.Sprite | undefined;
 
-    const oldFallback = btn.children.find(
-      c => (c as PIXI.DisplayObject & { _shopEditBtnFallback?: boolean })._shopEditBtnFallback,
-    );
-    if (oldFallback) {
-      btn.removeChild(oldFallback);
-      oldFallback.destroy();
-    }
+    this._clearShopEditButtonFallback();
 
     let halfW: number;
     let halfH: number;
@@ -2860,32 +2859,14 @@ export class ShopScene implements Scene {
       btnSprite.texture = btnTex;
       btnSprite.scale.set(ps);
       btnSprite.visible = true;
+      btn.visible = true;
       halfW = (btnTex.width * ps) / 2;
       halfH = (btnTex.height * ps) / 2;
     } else {
       if (btnSprite) btnSprite.visible = false;
       halfW = btnW / 2;
-      halfH = EDIT_MAIN_BTN_FALLBACK_H / 2;
-      const bg = new PIXI.Graphics();
-      bg.beginFill(0xec4899, 0.98);
-      bg.drawRoundedRect(-halfW, -halfH, btnW, EDIT_MAIN_BTN_FALLBACK_H, EDIT_MAIN_BTN_FALLBACK_R);
-      bg.endFill();
-      bg.lineStyle(3, 0xbe185d, 1);
-      bg.drawRoundedRect(-halfW, -halfH, btnW, EDIT_MAIN_BTN_FALLBACK_H, EDIT_MAIN_BTN_FALLBACK_R);
-      (bg as PIXI.Graphics & { _shopEditBtnFallback?: boolean })._shopEditBtnFallback = true;
-      btn.addChildAt(bg, 0);
-
-      const label = new PIXI.Text('装修', {
-        fontSize: 24,
-        fill: 0xffffff,
-        fontFamily: FONT_FAMILY,
-        fontWeight: '900',
-        stroke: 0x8b65a5,
-        strokeThickness: 3,
-      });
-      label.anchor.set(0.5, 0.5);
-      (label as PIXI.Text & { _shopEditBtnFallback?: boolean })._shopEditBtnFallback = true;
-      btn.addChild(label);
+      halfH = EDIT_MAIN_BTN_MAX_H / 2;
+      btn.visible = false;
     }
 
     btn.hitArea = new PIXI.Rectangle(-halfW - 14, -halfH - 14, halfW * 2 + 28, halfH * 2 + 28);
@@ -2975,6 +2956,7 @@ export class ShopScene implements Scene {
     }
 
     this._ensureEditCompletePill();
+    void this._preloadEditTrayUiTextures();
 
     // 隐藏返回按钮和侧边按钮（编辑模式下不能退出场景）
     this._returnBtn.visible = false;
@@ -3000,19 +2982,19 @@ export class ShopScene implements Scene {
     EventBus.emit('furniture:edit_enabled');
   }
 
-  /** 「完成装修」白字：深绿描边 + 轻阴影，浅绿底上可读 */
+  /** 「完成装修」白字：深绿描边 + 轻阴影，浅绿底上可读（随按钮约 2× 放大） */
   private static readonly _EDIT_COMPLETE_LABEL_STYLE: Partial<PIXI.ITextStyle> = {
-    fontSize: 20,
+    fontSize: 32,
     fill: 0xffffff,
     fontFamily: FONT_FAMILY,
     fontWeight: 'bold',
     stroke: 0x14532a,
-    strokeThickness: 4,
+    strokeThickness: 6,
     dropShadow: true,
     dropShadowColor: 0x000000,
     dropShadowAlpha: 0.42,
-    dropShadowBlur: 2,
-    dropShadowDistance: 1,
+    dropShadowBlur: 3,
+    dropShadowDistance: 2,
   };
 
   private _makeEditCompletePillLabel(): PIXI.Text {
@@ -3028,11 +3010,11 @@ export class ShopScene implements Scene {
     const w = TRAY_EDIT_COMPLETE_MAX_W;
     const h = TRAY_EDIT_COMPLETE_MAX_H;
     g.beginFill(0xbbe68d, 1);
-    g.lineStyle(4, 0x5a7a38, 0.85);
+    g.lineStyle(6, 0x5a7a38, 0.85);
     g.drawRoundedRect(-w / 2, -h / 2, w, h, h / 2);
     g.endFill();
-    g.lineStyle(2, 0xe8ffd0, 0.7);
-    g.drawRoundedRect(-w / 2 + 5, -h / 2 + 5, w - 10, h - 10, Math.max(8, h / 2 - 5));
+    g.lineStyle(3, 0xe8ffd0, 0.7);
+    g.drawRoundedRect(-w / 2 + 8, -h / 2 + 8, w - 16, h - 16, Math.max(12, h / 2 - 8));
     return g;
   }
 
@@ -3053,7 +3035,7 @@ export class ShopScene implements Scene {
       bw = tex.width * s;
       bh = tex.height * s;
     }
-    wrap.position.set(DESIGN_WIDTH / 2, TRAY_EDIT_COMPLETE_TOP_Y);
+    wrap.position.set(0, 0);
     wrap.hitArea = new PIXI.Rectangle(-bw / 2, -bh / 2, bw, bh);
     for (const c of wrap.children) {
       if (c instanceof PIXI.Text && c.text === '完成装修') {
@@ -3063,6 +3045,7 @@ export class ShopScene implements Scene {
         break;
       }
     }
+    this._furnitureTray.layoutEditFooterButtons(wrap);
   }
 
   /** 完成装修钮柔和呼吸（吸引注意；退出编辑时取消） */
@@ -3132,28 +3115,83 @@ export class ShopScene implements Scene {
     this._ensureEditClearAllPill();
   }
 
+  private _makeEditClearAllIconFallback(wrap: PIXI.Container): void {
+    const r = 32;
+    const g = new PIXI.Graphics();
+    g.beginFill(0xffb080, 1);
+    g.lineStyle(3, 0x8b4513, 0.95);
+    g.drawCircle(0, 0, r);
+    g.endFill();
+    g.beginFill(0xffffff, 1);
+    g.lineStyle(2, 0x8b4513, 1);
+    g.drawRoundedRect(-14, -10, 28, 22, 4);
+    g.endFill();
+    wrap.addChild(g);
+  }
+
+  private _syncEditClearAllIconLayout(wrap: PIXI.Container): void {
+    let bw = TRAY_EDIT_CLEAR_ICON_TARGET_H;
+    let bh = TRAY_EDIT_CLEAR_ICON_TARGET_H;
+    const bg = wrap.children[0];
+    if (bg instanceof PIXI.Sprite && bg.texture?.width) {
+      const tex = bg.texture;
+      const s = TRAY_EDIT_CLEAR_ICON_TARGET_H / Math.max(tex.width, tex.height);
+      bg.anchor.set(0.5, 0.5);
+      bg.position.set(0, 0);
+      bg.scale.set(s);
+      bw = tex.width * s;
+      bh = tex.height * s;
+    }
+    wrap.hitArea = new PIXI.Rectangle(-bw / 2 - 8, -bh / 2 - 8, bw + 16, bh + 16);
+    this._furnitureTray.mountEditClearIcon(wrap);
+  }
+
+  private _refreshEditClearAllIconTexture(): void {
+    const btn = this._editClearAllPill;
+    const tex = TextureCache.get('furniture_edit_clear_icon_nb2');
+    if (!btn || !tex?.width) return;
+    for (const ch of [...btn.children]) {
+      if (ch instanceof PIXI.Text) {
+        btn.removeChild(ch);
+        ch.destroy();
+      }
+    }
+    const bg = btn.children[0];
+    if (bg instanceof PIXI.Sprite && bg.texture === tex) {
+      this._syncEditClearAllIconLayout(btn);
+      return;
+    }
+    if (bg) {
+      btn.removeChild(bg);
+      bg.destroy({ children: true });
+    }
+    btn.addChild(new PIXI.Sprite(tex));
+    this._syncEditClearAllIconLayout(btn);
+  }
+
+  private _preloadEditTrayUiTextures(): void {
+    void TextureCache.preloadKeys([
+      'furniture_edit_clear_icon_nb2',
+      'edit_complete_pill_4x2_nb2',
+    ]).then(() => {
+      if (!this._isEditMode) return;
+      this._refreshEditClearAllIconTexture();
+      this._refreshEditCompletePillTexture();
+      if (this._editClearAllPill?.visible) {
+        this._ensureEditClearAllPill();
+      }
+    });
+  }
+
   private _makeEditClearAllPill(): PIXI.Container {
     const wrap = new PIXI.Container();
-    const w = TRAY_EDIT_CLEAR_BTN_W;
-    const h = TRAY_EDIT_CLEAR_BTN_H;
-    const bg = new PIXI.Graphics();
-    bg.beginFill(0xff8c5a, 1);
-    bg.lineStyle(3, 0xd84315, 0.95);
-    bg.drawRoundedRect(-w / 2, -h / 2, w, h, h / 2);
-    bg.endFill();
-    wrap.addChild(bg);
-    const label = new PIXI.Text('一键清空', {
-      fontFamily: FONT_FAMILY,
-      fontWeight: '900',
-      fontSize: 18,
-      fill: 0xffffff,
-      stroke: 0xb8320a,
-      strokeThickness: 3,
-    } as PIXI.ITextStyle);
-    label.anchor.set(0.5);
-    wrap.addChild(label);
-    wrap.position.set(TRAY_EDIT_CLEAR_CENTER_X, TRAY_EDIT_COMPLETE_TOP_Y);
-    wrap.hitArea = new PIXI.Rectangle(-w / 2 - 4, -h / 2 - 4, w + 8, h + 8);
+    const tex = TextureCache.get('furniture_edit_clear_icon_nb2');
+    if (tex?.width) {
+      wrap.addChild(new PIXI.Sprite(tex));
+    } else {
+      this._makeEditClearAllIconFallback(wrap);
+    }
+    this._syncEditClearAllIconLayout(wrap);
     wrap.eventMode = 'static';
     wrap.cursor = 'pointer';
     wrap.on('pointertap', (e: PIXI.FederatedPointerEvent) => {
@@ -3170,17 +3208,16 @@ export class ShopScene implements Scene {
     const btn = this._editClearAllPill;
     btn.visible = true;
     btn.eventMode = 'static';
-    if (btn.parent !== this._furnitureTray) {
-      this._furnitureTray.addChild(btn);
-    }
+    this._syncEditClearAllIconLayout(btn);
+    this._refreshEditClearAllIconTexture();
   }
 
   private _hideEditClearAllPill(): void {
     if (!this._editClearAllPill) return;
     this._editClearAllPill.visible = false;
     this._editClearAllPill.eventMode = 'none';
-    if (this._editClearAllPill.parent === this._furnitureTray) {
-      this._furnitureTray.removeChild(this._editClearAllPill);
+    if (this._editClearAllPill.parent) {
+      this._editClearAllPill.parent.removeChild(this._editClearAllPill);
     }
   }
 
@@ -3266,11 +3303,6 @@ export class ShopScene implements Scene {
     toRemoveBg.forEach(c => { this._editBtn.removeChild(c); c.destroy(); });
 
     // 还原编辑按钮（编辑态仅隐藏主钮，退出后恢复显隐与布局）
-    this._editBtn.visible = true;
-    for (const child of this._editBtn.children) {
-      child.visible = true;
-    }
-
     const h = Game.logicHeight;
     this._editBtn.position.set(DESIGN_WIDTH / 2, h - 118);
     this._applyShopEditButtonChrome();

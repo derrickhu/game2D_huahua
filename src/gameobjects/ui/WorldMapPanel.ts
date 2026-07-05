@@ -29,6 +29,9 @@ const FRICTION = 0.92;
 const MIN_VELOCITY = 0.4;
 const DRAG_THRESHOLD = 6;
 
+/** 大地图节点缩略图通用兜底（专用 thumb / 房间底图均缺失时） */
+const MAP_NODE_THUMB_GENERIC_FALLBACKS = ['worldmap_house_flower_shop', 'house_shop'] as const;
+
 /** 高于花店内 UI，低于地图弹窗商店 */
 export const WORLD_MAP_PANEL_Z = 10500;
 
@@ -239,30 +242,25 @@ export class WorldMapPanel extends PIXI.Container {
       case 'wishing_fountain':
         keys.push('worldmap_thumb_wishing_fountain_2', 'icon_worldmap');
         break;
-      case 'butterfly_house':
-        keys.push('icon_build');
-        break;
-      case 'cake_shop':
-        keys.push('icon_build');
-        break;
       case 'tea_house':
-        keys.push('bg_room_tea_house_xianqi_two_story_nb2', 'icon_build');
+        keys.push('bg_room_tea_house_xianqi_two_story_nb2');
         break;
       case 'forest_treehouse':
-        keys.push('bg_room_forest_treehouse_oak_nb2', 'icon_build');
+        keys.push('bg_room_forest_treehouse_oak_nb2');
         break;
       case 'dream_cloud_house':
-        keys.push('bg_room_dream_cloud_two_story_nb2', 'icon_build');
+        keys.push('bg_room_dream_cloud_two_story_nb2');
         break;
       case 'flower_farm_house':
-        keys.push('bg_room_flower_farm_courtyard_sunny_nb2', 'icon_build');
+        keys.push('bg_room_flower_farm_courtyard_sunny_nb2');
         break;
       case 'garden_villa':
-        keys.push('bg_room_garden_villa_loft_nb2', 'icon_build');
+        keys.push('bg_room_garden_villa_loft_nb2');
         break;
       default:
         break;
     }
+    keys.push(...MAP_NODE_THUMB_GENERIC_FALLBACKS);
     for (const k of keys) {
       const t = TextureCache.get(k);
       if (t && t.width > 1) return t;
