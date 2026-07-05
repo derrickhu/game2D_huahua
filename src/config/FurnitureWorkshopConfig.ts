@@ -219,7 +219,7 @@ export const WORKSHOP_BLUEPRINT_DEFS: WorkshopBlueprintDef[] = [
         outputDecoId: 'workshop_rose_cascade_drape',
         materialCost: 11,
         dyeCost: 0,
-        huayuanCost: 19999,
+        huayuanCost: 30000,
       },
       {
         id: 'moon',
@@ -228,7 +228,7 @@ export const WORKSHOP_BLUEPRINT_DEFS: WorkshopBlueprintDef[] = [
         materialCost: 10,
         dyeCost: 1,
         dyeMaterialId: WORKSHOP_DYE_BLUE_ID,
-        huayuanCost: 15000,
+        huayuanCost: 35000,
       },
       {
         id: 'honey',
@@ -237,7 +237,7 @@ export const WORKSHOP_BLUEPRINT_DEFS: WorkshopBlueprintDef[] = [
         materialCost: 10,
         dyeCost: 1,
         dyeMaterialId: WORKSHOP_DYE_YELLOW_ID,
-        huayuanCost: 15000,
+        huayuanCost: 30000,
       },
     ],
   },
@@ -266,10 +266,10 @@ export const WORKSHOP_BLUEPRINT_DEFS: WorkshopBlueprintDef[] = [
     name: '大捧玫瑰图纸',
     outputDecoId: 'workshop_giant_rose_bouquet',
     rarity: 'rare',
-    sourceText: '56 钻石购买',
+    sourceText: '99 钻石购买',
     icon: 'workshop_blueprint_generic',
     category: 'ornament',
-    acquire: [{ kind: 'diamond', cost: 56 }],
+    acquire: [{ kind: 'diamond', cost: 99 }],
     colorOptions: [
       {
         id: 'default',
@@ -277,7 +277,7 @@ export const WORKSHOP_BLUEPRINT_DEFS: WorkshopBlueprintDef[] = [
         outputDecoId: 'workshop_giant_rose_bouquet',
         materialCost: 12,
         dyeCost: 0,
-        huayuanCost: 9999,
+        huayuanCost: 52000,
       },
     ],
   },

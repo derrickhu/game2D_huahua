@@ -16,38 +16,40 @@ import { TextureCache } from '@/utils/TextureCache';
 import { appendWorkshopBlueprintIcon, appendWorkshopBlueprintFeatureTags } from '@/utils/WorkshopBlueprintDisplay';
 import { FurnitureWorkshopBlueprintPreviewPopup } from '@/gameobjects/ui/FurnitureWorkshopBlueprintPreviewPopup';
 
-/** 与工坊壳体内缘对齐，占满 Tab 行～内容底（设计稿壳图 px） */
-const WORKSHOP_SHELL_W = 680;
-const WORKSHOP_SHELL_H = 1238;
-const SHOP_HPAD_FRAC = 0.038;
-/** 顶边：与工坊分类 Tab 行顶对齐（略覆盖嵌套感） */
-export const SHOP_PAGE_TOP_FRAC = 0.278 + 25 / WORKSHOP_SHELL_H;
-const SHOP_PAGE_BOTTOM_FRAC = 0.858 + 48 / WORKSHOP_SHELL_H;
+/** 图纸商店壳图设计尺寸（与入库 PNG 一致） */
+const SHOP_SHELL_TEX_W = 628;
+const SHOP_SHELL_TEX_H = 972;
+/** 顶边：相对工坊主壳高度，留出异形壳完整高度 */
+export const SHOP_PAGE_TOP_FRAC = 0.2;
 
-const POP_W = Math.round(WORKSHOP_SHELL_W * (1 - SHOP_HPAD_FRAC * 2));
-const POP_H = Math.round((SHOP_PAGE_BOTTOM_FRAC - SHOP_PAGE_TOP_FRAC) * WORKSHOP_SHELL_H);
+const POP_W = SHOP_SHELL_TEX_W;
+const POP_H = SHOP_SHELL_TEX_H;
+/** 壳图锚点：标题 / 关闭热区 / 内容区（0~1 再乘 POP_W/H） */
+const SHELL_TITLE_Y_FRAC = 152 / SHOP_SHELL_TEX_H;
+const SHELL_CLOSE_X_FRAC = 586 / SHOP_SHELL_TEX_W;
+const SHELL_CLOSE_Y_FRAC = 52 / SHOP_SHELL_TEX_H;
+const SHELL_CLOSE_HIT_R = 40;
+const SHELL_LIST_PAD_X_FRAC = 54 / SHOP_SHELL_TEX_W;
+const SHELL_TAB_ROW_Y_FRAC = 225 / SHOP_SHELL_TEX_H;
+const SHELL_LIST_TOP_FRAC = 270 / SHOP_SHELL_TEX_H;
+const SHELL_CONTENT_BOTTOM_FRAC = 838 / SHOP_SHELL_TEX_H;
+
 const SHOP_ROW_H = 92;
 const SHOP_ROW_GAP = 10;
-const LIST_PAD = 20;
-const TAB_ROW_Y = 58;
+const LIST_PAD = Math.round(SHELL_LIST_PAD_X_FRAC * POP_W);
+const TAB_ROW_Y = Math.round(SHELL_TAB_ROW_Y_FRAC * POP_H);
 const TAB_ROW_H = 32;
 const TAB_GAP = 6;
-const LIST_TOP = TAB_ROW_Y + TAB_ROW_H + 10;
+const LIST_TOP = Math.round(SHELL_LIST_TOP_FRAC * POP_H);
 const PAGER_H = 44;
-const CONTENT_BOTTOM = POP_H - 16;
+const CONTENT_BOTTOM = Math.round(SHELL_CONTENT_BOTTOM_FRAC * POP_H);
 const LIST_VIEWPORT_H = CONTENT_BOTTOM - LIST_TOP - PAGER_H;
 const ROWS_PER_PAGE = Math.max(
   1,
   Math.floor((LIST_VIEWPORT_H + SHOP_ROW_GAP) / (SHOP_ROW_H + SHOP_ROW_GAP)),
 );
 
-/** 与主工坊面板（薰衣草紫壳）区分：暖蜜金外框 + 奶油内底 */
-const SHOP_THEME = {
-  FRAME: 0xf2c56d,
-  CONTENT: 0xfffbf3,
-  TITLE_STROKE: 0xa87328,
-  SHADOW: 0x4a3210,
-} as const;
+const SHOP_TITLE_PURPLE = 0x8b65a5;
 
 function textStyle(base: Partial<PIXI.ITextStyle>): PIXI.ITextStyle {
   return { fontFamily: FONT_FAMILY, fill: COLORS.TEXT_DARK, ...base } as PIXI.ITextStyle;
@@ -85,6 +87,10 @@ function collectShopBlueprints(category: WorkshopCraftCategoryFilter): WorkshopB
 
 export class FurnitureWorkshopShopPopup extends PIXI.Container {
   private _card!: PIXI.Container;
+  private _shellSprite!: PIXI.Sprite;
+  private _fallbackBg!: PIXI.Graphics;
+  private _closeHit!: PIXI.Container;
+  private _titleText!: PIXI.Text;
   private _categoryTabRow!: PIXI.Container;
   private _listContent!: PIXI.Container;
   private _pagerRow!: PIXI.Container;
@@ -93,6 +99,7 @@ export class FurnitureWorkshopShopPopup extends PIXI.Container {
   private _pageIndex = 0;
   private _onClose: (() => void) | null = null;
   private _onChanged: (() => void) | null = null;
+  private _unsubTextures: (() => void) | null = null;
 
   constructor() {
     super();
@@ -109,11 +116,15 @@ export class FurnitureWorkshopShopPopup extends PIXI.Container {
     this._pageIndex = 0;
     this.eventMode = 'static';
     this.visible = true;
+    this._bindTextureRefresh();
+    this._applyShellLayout();
     this._refresh();
   }
 
   close(): void {
     this._previewPopup.close();
+    this._unsubTextures?.();
+    this._unsubTextures = null;
     this.visible = false;
     this.eventMode = 'none';
     this._onClose?.();
@@ -136,59 +147,108 @@ export class FurnitureWorkshopShopPopup extends PIXI.Container {
     this.addChild(blocker);
 
     this._card = new PIXI.Container();
+    this._card.sortableChildren = true;
     this._card.position.set(-POP_W / 2, 0);
     this._card.eventMode = 'static';
     this._card.on('pointerdown', (e: PIXI.FederatedPointerEvent) => e.stopPropagation());
 
-    const shadow = new PIXI.Graphics();
-    shadow.beginFill(SHOP_THEME.SHADOW, 0.16);
-    shadow.drawRoundedRect(6, 10, POP_W, POP_H, 28);
-    shadow.endFill();
-    this._card.addChild(shadow);
+    this._shellSprite = new PIXI.Sprite(PIXI.Texture.EMPTY);
+    this._shellSprite.width = POP_W;
+    this._shellSprite.height = POP_H;
+    this._shellSprite.eventMode = 'none';
+    this._shellSprite.zIndex = 0;
+    this._card.addChild(this._shellSprite);
+
+    this._fallbackBg = new PIXI.Graphics();
+    this._fallbackBg.zIndex = 0;
+    this._fallbackBg.visible = false;
+    this._card.addChild(this._fallbackBg);
 
     this.addChild(this._card);
 
-    const bg = new PIXI.Graphics();
-    bg.beginFill(SHOP_THEME.FRAME, 1);
-    bg.drawRoundedRect(0, 0, POP_W, POP_H, 28);
-    bg.endFill();
-    bg.lineStyle(3, 0xffffff, 0.55);
-    bg.drawRoundedRect(2, 2, POP_W - 4, POP_H - 4, 26);
-    bg.beginFill(SHOP_THEME.CONTENT, 1);
-    bg.drawRoundedRect(16, 56, POP_W - 32, POP_H - 72, 22);
-    bg.endFill();
-    this._card.addChild(bg);
-
-    const title = new PIXI.Text('图纸商店', textStyle({
-      fontSize: 32,
+    this._titleText = new PIXI.Text('图纸商店', textStyle({
+      fontSize: 28,
       fill: 0xffffff,
       fontWeight: '900',
-      stroke: SHOP_THEME.TITLE_STROKE,
+      stroke: SHOP_TITLE_PURPLE,
       strokeThickness: 4,
     }));
-    title.anchor.set(0.5, 0);
-    title.position.set(POP_W / 2, 14);
-    this._card.addChild(title);
+    this._titleText.anchor.set(0.5);
+    this._titleText.zIndex = 20;
+    this._card.addChild(this._titleText);
 
-    const closeBtn = this._makeButton('×', 0xe85d75, 48, 48, () => this.close());
-    closeBtn.position.set(POP_W - 36, 36);
-    this._card.addChild(closeBtn);
+    this._closeHit = new PIXI.Container();
+    this._closeHit.zIndex = 100;
+    this._closeHit.eventMode = 'static';
+    this._closeHit.cursor = 'pointer';
+    const onCloseTap = (e: PIXI.FederatedPointerEvent) => {
+      e.stopPropagation();
+      this.close();
+    };
+    this._closeHit.on('pointerdown', onCloseTap);
+    this._closeHit.on('pointertap', onCloseTap);
+    this._card.addChild(this._closeHit);
 
     this._categoryTabRow = new PIXI.Container();
+    this._categoryTabRow.zIndex = 10;
     this._categoryTabRow.position.set(LIST_PAD, TAB_ROW_Y);
     this._card.addChild(this._categoryTabRow);
 
     this._listContent = new PIXI.Container();
+    this._listContent.zIndex = 10;
     this._listContent.position.set(LIST_PAD, LIST_TOP);
     this._card.addChild(this._listContent);
 
     this._pagerRow = new PIXI.Container();
+    this._pagerRow.zIndex = 10;
     this._pagerRow.position.set(LIST_PAD, CONTENT_BOTTOM - PAGER_H);
     this._card.addChild(this._pagerRow);
 
     this._previewPopup = new FurnitureWorkshopBlueprintPreviewPopup();
     this._previewPopup.position.set(0, POP_H / 2);
     this.addChild(this._previewPopup);
+
+    this._applyShellLayout();
+  }
+
+  private _bindTextureRefresh(): void {
+    this._unsubTextures?.();
+    this._unsubTextures = TextureCache.observeTextureDependencies(
+      { keys: ['furniture_workshop_blueprint_shop_shell_nb2'] },
+      () => {
+        if (!this.visible) return;
+        this._applyShellLayout();
+      },
+    );
+  }
+
+  private _applyShellLayout(): void {
+    const shellTex = TextureCache.get('furniture_workshop_blueprint_shop_shell_nb2');
+    const hasShell = !!shellTex?.width;
+
+    if (hasShell) {
+      this._shellSprite.texture = shellTex!;
+      this._shellSprite.width = POP_W;
+      this._shellSprite.height = POP_H;
+      this._shellSprite.visible = true;
+      this._fallbackBg.visible = false;
+    } else {
+      this._shellSprite.visible = false;
+      this._fallbackBg.visible = true;
+      this._fallbackBg.clear();
+      this._fallbackBg.beginFill(0xe8dcff, 1);
+      this._fallbackBg.drawRoundedRect(0, 0, POP_W, POP_H, 24);
+      this._fallbackBg.endFill();
+      this._fallbackBg.beginFill(0xfffbf3, 1);
+      this._fallbackBg.drawRoundedRect(16, 56, POP_W - 32, POP_H - 72, 20);
+      this._fallbackBg.endFill();
+    }
+
+    this._titleText.position.set(POP_W / 2, POP_H * SHELL_TITLE_Y_FRAC);
+
+    this._closeHit.position.set(POP_W * SHELL_CLOSE_X_FRAC, POP_H * SHELL_CLOSE_Y_FRAC);
+    this._closeHit.hitArea = new PIXI.Circle(0, 0, SHELL_CLOSE_HIT_R);
+    this._card.sortChildren();
   }
 
   private _refresh(): void {
@@ -234,7 +294,7 @@ export class FurnitureWorkshopShopPopup extends PIXI.Container {
         if (this._categoryFilter === def.id) return;
         this._categoryFilter = def.id;
         this._pageIndex = 0;
-        this._refreshList();
+        this._refresh();
       });
 
       this._categoryTabRow.addChild(tab);
@@ -347,7 +407,7 @@ export class FurnitureWorkshopShopPopup extends PIXI.Container {
     box.endFill();
     this._listContent.addChild(box);
 
-    const title = new PIXI.Text(titleText, textStyle({ fontSize: 24, fontWeight: '900', fill: SHOP_THEME.TITLE_STROKE }));
+    const title = new PIXI.Text(titleText, textStyle({ fontSize: 24, fontWeight: '900', fill: SHOP_TITLE_PURPLE }));
     title.anchor.set(0.5, 0);
     title.position.set(listW / 2, 36);
     this._listContent.addChild(title);
@@ -421,11 +481,12 @@ export class FurnitureWorkshopShopPopup extends PIXI.Container {
     });
     root.addChild(previewHit);
 
-    appendWorkshopBlueprintFeatureTags(root, blueprint, tagRight, SHOP_ROW_H / 2 - 12, {
-      fontSize: 12,
+    appendWorkshopBlueprintFeatureTags(root, blueprint, tagRight, SHOP_ROW_H / 2, {
+      fontSize: 16,
       layout: 'vertical',
       align: 'right',
-      gap: 4,
+      gap: 5,
+      corner: 'center-right',
     });
 
     if (owned) {
@@ -471,34 +532,6 @@ export class FurnitureWorkshopShopPopup extends PIXI.Container {
       case 'not_enough_diamond': return '钻石不足';
       default: return '暂时无法购买';
     }
-  }
-
-  private _makeButton(label: string, color: number, w: number, h: number, onTap: () => void): PIXI.Container {
-    const btn = new PIXI.Container();
-    const bg = new PIXI.Graphics();
-    bg.beginFill(color, 1);
-    bg.drawRoundedRect(-w / 2, -h / 2, w, h, h / 2);
-    bg.endFill();
-    bg.lineStyle(3, 0xffffff, 0.85);
-    bg.drawRoundedRect(-w / 2 + 2, -h / 2 + 2, w - 4, h - 4, h / 2 - 2);
-    btn.addChild(bg);
-
-    const txt = new PIXI.Text(label, textStyle({
-      fontSize: label === '×' ? 34 : 21,
-      fill: 0xffffff,
-      fontWeight: '900',
-    }));
-    txt.anchor.set(0.5);
-    txt.y = label === '×' ? -2 : 0;
-    btn.addChild(txt);
-
-    btn.eventMode = 'static';
-    btn.cursor = 'pointer';
-    btn.on('pointerdown', (e: PIXI.FederatedPointerEvent) => {
-      e.stopPropagation();
-      onTap();
-    });
-    return btn;
   }
 
   private _createDiamondBuyButton(

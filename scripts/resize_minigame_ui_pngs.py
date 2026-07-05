@@ -22,8 +22,6 @@ RULES: dict[str, int | tuple[int, int]] = {
     # ~48～78 逻辑像素的小图标 / 锁
     "warehouse_close_btn.png": 256,
     "warehouse_slot_lock.png": 256,
-    # 收纳盒格 92 逻辑像素、crop 铺满，原图 1376 严重超采样
-    "cell_locked_v2.png": 512,
     # 按钮绘制约 200×50
     "flower_egg_btn_claim.png": 480,
     # 标题条 fallback 宽约 220～440

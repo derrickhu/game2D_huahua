@@ -79,8 +79,6 @@ const MAIN_IMAGE_MAP: Record<string, string> = {
   board_bg:       'images/ui/board_bg.png',
   board_bar:      'images/ui/board_bar.png',
   cell_locked:    'images/ui/cell_locked.png',
-  /** 奖励收纳入口按钮底图（收起态礼盒） */
-  cell_locked_v2: 'images/ui/cell_locked_v2.png',
   cell_peek:      'images/ui/cell_peek.png',
   cell_key:       'images/ui/cell_key.png',
   shop_scene_bg:  'images/ui/shop_scene_bg_floral_nb2.jpg',
@@ -215,13 +213,8 @@ const PANELS_IMAGE_MAP: Record<string, string> = {
   merge_chain_panel: 'subpkg_panels/images/ui/merge_chain_panel.png',
   /** 花语泡泡外框：NB2 淡粉花瓣形 + 白底 rembg；局内再叠 alpha 透出棋盘 */
   merge_companion_flower_bubble: 'subpkg_panels/images/ui/merge_companion_flower_bubble_nb2.png',
-  /** 花店装修面板底图：NB2 空白壳 + rembg（仅 DecorationPanel；合成线仍用 merge_chain_panel） */
-  decoration_panel_bg_nb2: 'subpkg_panels/images/ui/decoration_panel_bg_nb2.png',
-  /** 花店装修面板：杏琥珀 flat vector 单壳底栏（优先于 decoration_panel_bg_nb2） */
+  /** 花店装修面板：杏琥珀 flat vector 单壳底栏（DecorationPanel） */
   decoration_panel_shell_nb2: 'subpkg_panels/images/ui/decoration_panel_shell_nb2.png',
-  /** 装修面板左侧分类 Tab：NB2 品红底 + rembg；未选中 / 选中 */
-  deco_panel_tab_idle_nb2: 'subpkg_panels/images/ui/deco_panel_tab_idle_nb2.png',
-  deco_panel_tab_selected_nb2: 'subpkg_panels/images/ui/deco_panel_tab_selected_nb2.png',
   /** 编辑托盘 Tab 图标（6×2 表切图 + rembg；顺序同 FURNITURE_TRAY_TABS） */
   /** 家具托盘 Tab 图标（单态；选中由程序描边/底色区分） */
   furniture_tray_tab_flower_room_idle: 'subpkg_panels/images/ui/furniture_tray_tab_flower_room_idle.png',
@@ -250,7 +243,6 @@ const PANELS_IMAGE_MAP: Record<string, string> = {
   /** 万能水晶/金剪刀确认弹窗：NB2+rembg，与合成线彩带同风格 */
   special_consumable_panel_bg: 'subpkg_panels/images/ui/special_consumable_panel_bg.png',
   special_consumable_use_btn: 'subpkg_panels/images/ui/special_consumable_use_btn.png',
-  deco_panel_popup_frame: 'subpkg_panels/images/ui/deco_panel_popup_frame.png',
   deco_panel_title_ribbon: 'subpkg_panels/images/ui/deco_panel_title_ribbon.png',
   item_info_title_ribbon: 'subpkg_panels/images/ui/item_info_title_ribbon.png',
   deco_card_btn_1: 'subpkg_panels/images/ui/deco_card_btn_1.png',
@@ -277,8 +269,6 @@ const PANELS_IMAGE_MAP: Record<string, string> = {
   worldmap_thumb_dream_cloud_house: 'subpkg_panels/images/ui/worldmap_thumb_dream_cloud_house.png',
   /** 大地图蛋糕房立绘（钩子，后续接 sceneId） */
   worldmap_thumb_cake_shop: 'subpkg_panels/images/ui/worldmap_thumb_cake_shop.png',
-  /** 大地图限时活动入口（喜庆占位，点开 EventPanel） */
-  worldmap_thumb_timed_event: 'subpkg_panels/images/ui/worldmap_thumb_timed_event.png',
   icon_worldmap: 'subpkg_panels/images/ui/icon_worldmap.png',
   /** 大地图许愿喷泉双帧（水流动画） */
   worldmap_thumb_wishing_fountain_1: 'subpkg_panels/images/ui/worldmap_thumb_wishing_fountain_1.png',
@@ -308,19 +298,17 @@ const PANELS_IMAGE_MAP: Record<string, string> = {
   collection_panel_shell_nb2: 'subpkg_panels/images/ui/collection_panel_shell_nb2.png',
   /** 家具工坊：NB2 粉紫壳（顶栏/材料 tray/内容区/底栏由贴图，文案与列表由代码叠） */
   furniture_workshop_panel_shell_nb2: 'subpkg_panels/images/ui/furniture_workshop_panel_shell_nb2.png',
+  /** 图纸商店弹窗：星空卷轴异形壳（PIXI 叠标题/Tab/列表） */
+  furniture_workshop_blueprint_shop_shell_nb2: 'subpkg_panels/images/ui/furniture_workshop_blueprint_shop_shell_nb2.png',
   /** 形象换装面板壳：玫瑰金框 + 空白内容区（PIXI 叠标题/进度/网格） */
   dressup_panel_shell_nb2: 'subpkg_panels/images/ui/dressup_panel_shell_nb2.png',
 
-  /** 友谊卡 / 图鉴系统：通用卡背、（V1 遗留）友谊点图标、顶栏图鉴入口、图鉴面板壳 */
+  /** 友谊卡 / 图鉴：通用卡背、（V1 遗留）友谊点图标、图鉴总览/详情壳 */
   affinity_card_back_default: 'subpkg_panels/images/ui/affinity_card_back_default.png',
   /** （V1 遗留）友谊点碎片图标；V2 重复卡直接发花愿/钻石/体力，已不再使用，仅保留资源 */
   affinity_shard_icon: 'subpkg_panels/images/ui/affinity_shard_icon.png',
-  affinity_codex_btn: 'subpkg_panels/images/ui/affinity_codex_btn.png',
-  affinity_codex_panel_frame: 'subpkg_panels/images/ui/affinity_codex_panel_frame.png',
   affinity_codex_overview_shell_nb2: 'subpkg_panels/images/ui/affinity_codex_overview_shell_nb2.png',
-  affinity_codex_overview_banner_nb2: 'subpkg_panels/images/ui/affinity_codex_overview_banner_nb2.png',
   affinity_codex_detail_shell_nb2: 'subpkg_panels/images/ui/affinity_codex_detail_shell_nb2.png',
-  affinity_codex_detail_header_nb2: 'subpkg_panels/images/ui/affinity_codex_detail_header_nb2.png',
   /** 图鉴未解锁物品占位卡：蓝色格纹方块 */
   collection_item_placeholder_nb2: 'subpkg_panels/images/ui/collection_item_placeholder_nb2.png',
 
@@ -1027,9 +1015,6 @@ const SHOP_WARMUP_KEYS = [
 
 const DECO_PANEL_WARMUP_KEYS = [
   'decoration_panel_shell_nb2',
-  'decoration_panel_bg_nb2',
-  'deco_panel_tab_idle_nb2',
-  'deco_panel_tab_selected_nb2',
   'deco_nb2_close_btn_1x1',
   'deco_card_btn_1',
   'deco_card_btn_2',
@@ -1067,9 +1052,6 @@ const TUTORIAL_DECO_KEYS = [
   'house_shop',
   'shelf_wood',
   'decoration_panel_shell_nb2',
-  'decoration_panel_bg_nb2',
-  'deco_panel_tab_idle_nb2',
-  'deco_panel_tab_selected_nb2',
   'deco_nb2_close_btn_1x1',
   'deco_card_btn_1',
   'deco_card_btn_2',
@@ -1102,7 +1084,6 @@ const WORLDMAP_WARMUP_KEYS = [
   'worldmap_thumb_tea_house',
   'worldmap_thumb_forest_treehouse',
   'worldmap_thumb_dream_cloud_house',
-  'worldmap_thumb_timed_event',
   'worldmap_thumb_wishing_fountain_1',
   'worldmap_thumb_wishing_fountain_2',
   'icon_worldmap',
@@ -1130,6 +1111,7 @@ const COLLECTION_PANEL_KEYS = [
 
 const FURNITURE_WORKSHOP_PANEL_KEYS = [
   'furniture_workshop_panel_shell_nb2',
+  'furniture_workshop_blueprint_shop_shell_nb2',
   'icon_workshop_material',
   'icon_workshop_dye_pink',
   'icon_workshop_dye_yellow',
@@ -1143,8 +1125,6 @@ const FURNITURE_WORKSHOP_PANEL_KEYS = [
 
 const AFFINITY_PANEL_KEYS = [
   'affinity_card_back_default',
-  'affinity_codex_btn',
-  'affinity_codex_panel_frame',
   'affinity_codex_overview_shell_nb2',
   'affinity_codex_detail_shell_nb2',
   'warehouse_slot_lock',

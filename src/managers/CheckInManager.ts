@@ -9,8 +9,19 @@
 import { EventBus } from '@/core/EventBus';
 import { PersistService } from '@/core/PersistService';
 import { ITEM_DEFS } from '@/config/ItemConfig';
+import {
+  WORKSHOP_DYE_BLUE_ICON,
+  WORKSHOP_DYE_BLUE_ID,
+  WORKSHOP_DYE_GREEN_ICON,
+  WORKSHOP_DYE_GREEN_ID,
+  WORKSHOP_DYE_PINK_ICON,
+  WORKSHOP_DYE_PINK_ID,
+  WORKSHOP_DYE_YELLOW_ICON,
+  WORKSHOP_DYE_YELLOW_ID,
+} from '@/config/FurnitureWorkshopConfig';
 import { CurrencyManager } from './CurrencyManager';
 import { DecorationManager } from './DecorationManager';
+import { FurnitureWorkshopManager } from './FurnitureWorkshopManager';
 import { grantQuest } from '@/utils/UnlockChecker';
 
 declare const wx: any;
@@ -20,13 +31,17 @@ const _api = typeof wx !== 'undefined' ? wx : typeof tt !== 'undefined' ? tt : n
 const CHECKIN_STORAGE_KEY = 'huahua_checkin';
 
 export interface RewardItem {
-  type: 'stamina' | 'diamond' | 'huayuan' | 'board' | 'deco';
+  type: 'stamina' | 'diamond' | 'huayuan' | 'board' | 'deco' | 'workshop_dye';
   amount: number;
   textureKey: string;
   /** type === board 时发放的物品 id */
   itemId?: string;
   /** type === deco 时发放的家具 id */
   decoId?: string;
+  /** type === workshop_dye 时发放的染料 materialId */
+  materialId?: string;
+  /** UI 短标签（如「樱粉染料」） */
+  label?: string;
 }
 
 export interface CheckInReward {
@@ -40,6 +55,9 @@ export interface CheckInReward {
   decoUnlockId?: string;
   /** 解锁家具对应 questId，用于装修面板锁定说明 */
   decoQuestId?: string;
+  /** 第 7 天轮转工坊染料（四色循环） */
+  workshopDyeMaterialId?: string;
+  workshopDyeCount?: number;
   desc: string;
   icon: string;
   items: RewardItem[];
@@ -62,6 +80,23 @@ export const CHECKIN_MONTH1_MILESTONE_DECO_REWARD = {
   questId: 'checkin_m1_28_rocking_horse',
 } as const;
 
+/** 第 7 天签到：四色染料按 7 日周期轮转（cycleIndex % 4） */
+export const CHECKIN_WEEKLY_DYE_REWARDS: ReadonlyArray<{
+  materialId: string;
+  icon: string;
+  label: string;
+}> = [
+  { materialId: WORKSHOP_DYE_PINK_ID, icon: WORKSHOP_DYE_PINK_ICON, label: '樱粉染料' },
+  { materialId: WORKSHOP_DYE_YELLOW_ID, icon: WORKSHOP_DYE_YELLOW_ICON, label: '蜜黄染料' },
+  { materialId: WORKSHOP_DYE_BLUE_ID, icon: WORKSHOP_DYE_BLUE_ICON, label: '天蓝染料' },
+  { materialId: WORKSHOP_DYE_GREEN_ID, icon: WORKSHOP_DYE_GREEN_ICON, label: '薄荷染料' },
+] as const;
+
+export function getCheckInDyeForCycle(cycleIndex: number): (typeof CHECKIN_WEEKLY_DYE_REWARDS)[number] {
+  const n = CHECKIN_WEEKLY_DYE_REWARDS.length;
+  return CHECKIN_WEEKLY_DYE_REWARDS[((cycleIndex % n) + n) % n]!;
+}
+
 function _buildItems(r: Omit<CheckInReward, 'items'>): RewardItem[] {
   const items: RewardItem[] = [];
   if (r.stamina) items.push({ type: 'stamina', amount: r.stamina, textureKey: 'icon_energy' });
@@ -82,10 +117,21 @@ function _buildItems(r: Omit<CheckInReward, 'items'>): RewardItem[] {
   if (r.decoUnlockId) {
     items.push({ type: 'deco', amount: 1, textureKey: r.decoUnlockId, decoId: r.decoUnlockId });
   }
+  if (r.workshopDyeMaterialId) {
+    const dyeDef = CHECKIN_WEEKLY_DYE_REWARDS.find(d => d.materialId === r.workshopDyeMaterialId);
+    const count = Math.max(1, r.workshopDyeCount ?? 1);
+    items.push({
+      type: 'workshop_dye',
+      amount: count,
+      textureKey: dyeDef?.icon ?? WORKSHOP_DYE_PINK_ICON,
+      materialId: r.workshopDyeMaterialId,
+      label: dyeDef?.label ?? '工坊染料',
+    });
+  }
   return items;
 }
 
-/** 7 日签到：1–6 天固定 10 钻 + 60 体力；第 7 天 30 钻 + 60 体力 + 按周期专属家具（见 `getCheckInRewardForCycleDay`） */
+/** 7 日签到：1–6 天固定 10 钻 + 60 体力；第 7 天 25 钻 + 60 体力 + 轮转染料 + 周期专属家具（见 `getCheckInRewardForCycleDay`） */
 export const CHECK_IN_REWARDS: CheckInReward[] = [
   { day: 1, diamond: 10, stamina: 60, desc: '钻石×10 体力×60', icon: '' },
   { day: 2, diamond: 10, stamina: 60, desc: '钻石×10 体力×60', icon: '' },
@@ -93,20 +139,30 @@ export const CHECK_IN_REWARDS: CheckInReward[] = [
   { day: 4, diamond: 10, stamina: 60, desc: '钻石×10 体力×60', icon: '' },
   { day: 5, diamond: 10, stamina: 60, desc: '钻石×10 体力×60', icon: '' },
   { day: 6, diamond: 10, stamina: 60, desc: '钻石×10 体力×60', icon: '' },
-  { day: 7, diamond: 30, stamina: 60, desc: '钻石×30 体力×60', icon: '' },
+  { day: 7, diamond: 25, stamina: 60, desc: '钻石×25 体力×60', icon: '' },
 ].map(r => ({ ...r, items: _buildItems(r as any) }));
 
 export function getCheckInRewardForCycleDay(day: number, cycleIndex: number): CheckInReward {
   const base = CHECK_IN_REWARDS[Math.max(0, Math.min(6, day - 1))];
   if (day !== 7) return base;
-  const deco = CHECKIN_MONTH1_WEEKLY_DECO_REWARDS.find(r => r.cycleIndex === cycleIndex);
-  if (!deco) return base;
-  const reward: Omit<CheckInReward, 'items'> = {
+
+  const dye = getCheckInDyeForCycle(cycleIndex);
+  let reward: Omit<CheckInReward, 'items'> = {
     ...base,
-    decoUnlockId: deco.decoUnlockId,
-    decoQuestId: deco.questId,
-    desc: `${base.desc} 专属家具×1`,
+    workshopDyeMaterialId: dye.materialId,
+    workshopDyeCount: 1,
+    desc: `${base.desc} ${dye.label}×1`,
   };
+
+  const deco = CHECKIN_MONTH1_WEEKLY_DECO_REWARDS.find(r => r.cycleIndex === cycleIndex);
+  if (deco) {
+    reward = {
+      ...reward,
+      decoUnlockId: deco.decoUnlockId,
+      decoQuestId: deco.questId,
+      desc: `${reward.desc} 专属家具×1`,
+    };
+  }
   return { ...reward, items: _buildItems(reward) };
 }
 
@@ -119,12 +175,12 @@ export interface MilestoneDef {
 
 export const MILESTONES: MilestoneDef[] = [
   { threshold: 8,  reward: { diamond: 25 } },
-  { threshold: 15, reward: { diamond: 40 } },
-  { threshold: 22, reward: { diamond: 60 } },
+  { threshold: 15, reward: { diamond: 35 } },
+  { threshold: 22, reward: { diamond: 50 } },
   {
     threshold: CHECKIN_MONTH1_MILESTONE_DECO_REWARD.threshold,
     reward: {
-      diamond: 100,
+      diamond: 80,
       decoUnlockId: CHECKIN_MONTH1_MILESTONE_DECO_REWARD.decoUnlockId,
       decoQuestId: CHECKIN_MONTH1_MILESTONE_DECO_REWARD.questId,
     },
@@ -266,6 +322,9 @@ class CheckInManagerClass {
 
     if (reward.stamina) CurrencyManager.addStamina(reward.stamina);
     if (reward.diamond) CurrencyManager.addDiamond(reward.diamond);
+    if (reward.workshopDyeMaterialId && (reward.workshopDyeCount ?? 0) > 0) {
+      FurnitureWorkshopManager.addMaterial(reward.workshopDyeMaterialId, reward.workshopDyeCount ?? 1);
+    }
     this._grantDecoReward(reward.decoUnlockId, reward.decoQuestId, 'daily');
     const streakBonus = this._getStreakBonus();
     if (streakBonus > 0) {

@@ -2,7 +2,7 @@
  * 花店装修面板
  *
  * 布局：
- * - 底图优先 decoration_panel_shell_nb2（v5 布局玫瑰 flat 单壳 + 壳内关闭钮，无壳体分隔线）；缺图时回退 legacy
+ * - 底图 decoration_panel_shell_nb2（flat 单壳 + 壳内关闭钮）；缺图时回退 merge_chain_panel
  * - 顶栏：标题 + 库存筛选条 + 分类 Tab（1～2 行横排，全宽）+ board_bar；家具 3 列网格全宽
  * - 卡片：双层金边圆角 + 贴图按钮 + 家具卡左上角星星值角标（房间风格卡同）
  * - 顶栏右上 `deco_nb2_close_btn_1x1` 关闭；星级条在遮罩之上时点条身穿透落到遮罩关闭
@@ -54,8 +54,6 @@ const DECO_PANEL_Z_INDEX = 5000;
 const DECO_CLOSE_BTN_MAX_SIDE = 56;
 const DECO_CLOSE_BTN_HIT_PAD = 12;
 const DECO_CLOSE_BTN_INSET_RIGHT = 44;
-/** NB2 旧底板竖向取样比例（legacy decoration_panel_bg_nb2；flat 单壳不裁切） */
-const DECO_PANEL_BG_TOP_RATIO = 0.84;
 /** flat 单壳锚点（相对壳图宽/高 0~1，经底贴齐缩放映射到 panel） */
 const SHELL_TEX_W = 703;
 const SHELL_TEX_H = 1267;
@@ -75,16 +73,7 @@ const SHELL_GRID_VIEWPORT_TOP_INSET = 0;
 function resolveDecorationPanelBg(): { tex: PIXI.Texture | null; flatShell: boolean } {
   const shell = TextureCache.get('decoration_panel_shell_nb2');
   if (shell?.width) return { tex: shell, flatShell: true };
-  const legacy = TextureCache.get('decoration_panel_bg_nb2');
-  if (legacy?.width) return { tex: legacy, flatShell: false };
   return { tex: null, flatShell: false };
-}
-
-function panelBgDisplayTexture(tex: PIXI.Texture, flatShell: boolean): PIXI.Texture {
-  if (flatShell) return tex;
-  const fr = tex.frame;
-  const cropH = Math.max(1, Math.floor(fr.height * DECO_PANEL_BG_TOP_RATIO));
-  return new PIXI.Texture(tex.baseTexture, new PIXI.Rectangle(fr.x, fr.y, fr.width, cropH));
 }
 const PANEL_MARGIN_LEFT = 0;
 /** 面板占逻辑屏高度比例（越大底栏上沿越接近顶区「家具」参考位） */
@@ -843,7 +832,7 @@ export class DecorationPanel extends PIXI.Container {
     this._tearDownPanelBgLayer();
     this._usesFlatShell = flatShell;
 
-    const displayTex = panelBgDisplayTexture(tex, flatShell);
+    const displayTex = tex;
     const panelBg = new PIXI.Sprite(displayTex);
     panelBg.anchor.set(0.5, 1);
     panelBg.eventMode = 'none';
@@ -981,7 +970,7 @@ export class DecorationPanel extends PIXI.Container {
     this._content.position.set(panelX, panelY);
     this.addChild(this._content);
 
-    // --- panel background: flat 单壳 / legacy NB2 / merge_chain_panel ---
+    // --- panel background: flat 单壳 / merge_chain_panel ---
     const { tex: panelTex } = resolveDecorationPanelBg();
     const mergeTex = TextureCache.get('merge_chain_panel');
     this._panelBaseSprite = null;

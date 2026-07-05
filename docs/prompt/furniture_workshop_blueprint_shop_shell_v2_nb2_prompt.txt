@@ -1,0 +1,40 @@
+Single vertical mobile game UI decorative SHELL ONLY for a blueprint scroll shop modal nested inside the SAME furniture workshop panel as a cozy pastel flower-shop merge game. One flattened PNG asset, 3:4 portrait aspect ratio, high resolution, crisp anti-aliased 2D vector illustration.
+
+USE THE ATTACHED REFERENCE IMAGE ONLY FOR COLOR PALETTE, MATERIAL FEEL, LINE WEIGHT, AND OVERALL PASTEL KAWAII UI DNA.
+Match the reference workshop shell: soft high-key lilac-lavender, cream-ivory interior, pastel pink accents, gentle highlights — NOT dark, NOT heavy, NOT night-black.
+
+THIS IS AN EMPTY BACKPLATE ONLY — no gameplay UI, no list rows, no tabs, no buttons except the close control.
+
+PANEL SILHOUETTE — SOFT IRREGULAR, STILL REFINED:
+- Tall centered modal with a gentle fantasy silhouette: softly wavy side edges and a subtle scroll-crystal crown on top, curved bottom arc — organic but elegant, NOT a plain rectangle. Floating feel with very soft lilac drop shadow.
+- Outer rim: THIN delicate lilac-lavender stroke only (about 2–3 px visual weight), with a softer pastel-pink inner lip and tiny white highlight — refined, airy, premium mobile UI. Absolutely NO thick dark outline, NO heavy black border, NO chunky bevel.
+
+COLOR HARMONY — LIGHT MYSTICAL SCROLL SHOP (must coordinate):
+- Primary: soft lilac #E8DCFF family, lavender mist, cream-ivory #FFF9F3.
+- Secondary accents: pastel periwinkle sky blue, soft pink, tiny mint star glints.
+- Mystical touches stay BRIGHT and dreamy: pale star sparkles, faint constellation dots, tiny crescent and scroll ornaments in light blue-lilac — like a daytime dream sky inside the workshop, NOT a dark cosmic night panel.
+- NO deep navy, NO midnight indigo, NO muddy purple, NO yellow/gold/amber.
+
+TOP ZONE (~18% height):
+- Soft pastel lilac header band with extremely subtle damask watermark at ~5% opacity, gentle top-to-bottom gradient.
+- Small decorative ornaments only: tiny twinkling stars, a small pale crescent moon, miniature rolled blueprint scroll corners and soft crystal gems at the sides — all light and cute.
+- Empty scalloped title banner shape in soft lavender-cream gradient — completely EMPTY center, no text, no letters, no numbers, no Chinese.
+- Top-right: same chunky circular red close button with simple white X as the reference workshop shell, slightly past the frame corner.
+
+MIDDLE CONTENT VOID (~62% height) — MUST STAY BLANK:
+- Large flat cream-lavender interior field for runtime list rendering: smooth matte, very subtle star-dust or floral damask watermark at ~4% opacity only.
+- Light, bright, clean, airy — same cream content feel as the reference workshop shell.
+- COMPLETELY EMPTY: no category tabs, no item rows, no scroll icons, no prices, no diamonds, no purchase buttons, no pagination, no wireframes, no placeholder boxes.
+
+BOTTOM FOOTER ZONE (~20% height):
+- Soft integrated lilac-periwinkle footer strip with a faint thin decorative divider line and tiny centered scroll seal or star ornament — delicate, low contrast.
+- Optional tiny pastel constellation arc along the bottom edge — very subtle.
+- Footer interior COMPLETELY EMPTY — no page buttons, no text, no numbers.
+
+STRICTLY FORBIDDEN:
+Dark backgrounds, heavy outlines, thick borders, black strokes, Chinese text, English text, numbers, category tabs, shop list rows, blueprint thumbnails, gem icons, buy buttons, pagination, wireframe labels, watermark, photoreal metal, logo, yellow/gold/amber.
+
+Art style: clean 2D vector kawaii mobile game UI, pastel high-key, soft gradients for depth only, ornamental but minimal and refined — clearly the same game family as the reference workshop shell. Not a screenshot, not a mockup with content removed.
+
+TECHNICAL BACKGROUND FOR CLEAN CUTOUT:
+ONLY the margins OUTSIDE the irregular panel silhouette must be pure bright screen green RGB exactly 0,255,0, flat, no gradient. The panel interior must contain ZERO green pixels.

@@ -178,7 +178,7 @@ export class FurnitureWorkshopCraftPopup extends PIXI.Container {
     previewBox.addChild(this._starBadgeWrap);
 
     this._featureTagWrap = new PIXI.Container();
-    this._featureTagWrap.position.set(halfW - 8, -halfH + 8);
+    this._featureTagWrap.position.set(halfW - 8, halfH - 8);
     previewBox.addChild(this._featureTagWrap);
 
     this._nameText = new PIXI.Text('', textStyle({ fontSize: 26, fontWeight: '900', fill: 0x6a4b7f }));
@@ -322,10 +322,11 @@ export class FurnitureWorkshopCraftPopup extends PIXI.Container {
   private _updateFeatureTags(def: WorkshopBlueprintDef): void {
     this._featureTagWrap.removeChildren();
     appendWorkshopBlueprintFeatureTags(this._featureTagWrap, def, 0, 0, {
-      fontSize: 12,
+      fontSize: 16,
       layout: 'vertical',
-      gap: 4,
+      gap: 5,
       align: 'right',
+      corner: 'bottom-right',
     });
   }
 

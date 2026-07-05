@@ -54,8 +54,33 @@ export interface WorkshopFeatureTagOptions {
   layout?: 'horizontal' | 'vertical';
   gap?: number;
   maxWidth?: number;
-  /** x 为左缘（默认）或右缘（right 时标签组右对齐到 x） */
+  /** 垂直堆叠时各 pill 在组内的左右对齐 */
   align?: 'left' | 'right';
+  /** (x,y) 锚点：决定标签组哪一角落在此坐标 */
+  corner?: 'top-left' | 'top-right' | 'bottom-left' | 'bottom-right' | 'center-left' | 'center-right';
+}
+
+function resolveFeatureTagWrapPosition(
+  x: number,
+  y: number,
+  wrapW: number,
+  wrapH: number,
+  corner: NonNullable<WorkshopFeatureTagOptions['corner']>,
+): { px: number; py: number } {
+  switch (corner) {
+    case 'top-right':
+      return { px: x - wrapW, py: y };
+    case 'bottom-left':
+      return { px: x, py: y - wrapH };
+    case 'bottom-right':
+      return { px: x - wrapW, py: y - wrapH };
+    case 'center-left':
+      return { px: x, py: y - wrapH / 2 };
+    case 'center-right':
+      return { px: x - wrapW, py: y - wrapH / 2 };
+    default:
+      return { px: x, py: y };
+  }
 }
 
 function makeFeatureTagPill(label: string, fontSize: number): PIXI.Container {
@@ -66,14 +91,14 @@ function makeFeatureTagPill(label: string, fontSize: number): PIXI.Container {
     fill: style.text,
     fontWeight: '800',
   });
-  const padX = 7;
-  const padY = 3;
+  const padX = Math.max(8, Math.round(fontSize * 0.55));
+  const padY = Math.max(4, Math.round(fontSize * 0.28));
   const w = txt.width + padX * 2;
   const h = txt.height + padY * 2;
   const pill = new PIXI.Container();
   const bg = new PIXI.Graphics();
   bg.beginFill(style.bg, 0.96);
-  bg.lineStyle(1.2, style.border, 0.92);
+  bg.lineStyle(Math.max(1.4, fontSize * 0.1), style.border, 0.92);
   bg.drawRoundedRect(0, 0, w, h, h / 2);
   bg.endFill();
   pill.addChild(bg);
@@ -93,11 +118,12 @@ export function appendWorkshopBlueprintFeatureTags(
   const labels = getWorkshopBlueprintFeatureLabels(blueprint);
   if (labels.length === 0) return null;
 
-  const fontSize = opts?.fontSize ?? 13;
-  const gap = opts?.gap ?? 5;
+  const fontSize = opts?.fontSize ?? 16;
+  const gap = opts?.gap ?? 6;
   const layout = opts?.layout ?? 'horizontal';
   const maxWidth = opts?.maxWidth;
   const align = opts?.align ?? 'left';
+  const corner = opts?.corner ?? 'top-left';
 
   const wrap = new PIXI.Container();
 
@@ -135,8 +161,13 @@ export function appendWorkshopBlueprintFeatureTags(
   } else {
     wrapW = cursorX > 0 ? cursorX - gap : 0;
     wrapH = rowH;
+    if (align === 'right') {
+      for (const pill of pills) pill.x = wrapW - pill.width;
+    }
   }
 
+  const { px, py } = resolveFeatureTagWrapPosition(x, y, wrapW, wrapH, corner);
+  wrap.position.set(px, py);
   parent.addChild(wrap);
   return wrap;
 }

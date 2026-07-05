@@ -1,0 +1,32 @@
+Single vertical mobile game UI decorative SHELL ONLY for a mystical blueprint scroll shop modal inside a cozy flower-shop merge game. One flattened PNG asset, 3:4 portrait aspect ratio, high resolution, crisp anti-aliased 2D vector illustration.
+
+THIS IS AN EMPTY BACKPLATE ONLY — no gameplay UI, no list rows, no tabs, no buttons except the close control.
+
+PANEL SILHOUETTE — IRREGULAR, NOT A RECTANGLE:
+- Tall centered modal with an organic fantasy silhouette: softly asymmetric crystal-scroll shape with gently wavy side edges, slightly pointed top crown and a curved bottom arc like a floating arcane tablet. Very rounded but NOT a plain rounded rectangle or square. Subtle floating feel with soft drop shadow beneath the whole panel.
+- Outer rim: thick deep indigo-violet border with thinner periwinkle inner lip and faint cosmic glow highlights. NO yellow, NO gold, NO amber, NO honey tones anywhere.
+
+MYSTICAL STAR SKY THEME — blue and purple only:
+- Palette: midnight indigo, cosmic violet, soft periwinkle, lavender mist, teal star glints. Mysterious, dreamy, starry night merchant vibe.
+- Tiny twinkling stars, faint constellation dotted lines, soft nebula wisps, subtle stardust particles — decorative only, low contrast.
+
+TOP ZONE (~18% height):
+- Ornate mystical header cap: crescent moon, scattered stars, small floating rolled blueprint scroll corners and tiny crystal gems as corner ornaments only.
+- A horizontal title banner shape in deep blue-violet with soft gradient — completely EMPTY center, no text, no letters, no numbers, no Chinese.
+- Top-right: chunky circular red close button with simple white X, slightly past the frame corner, mobile game style.
+
+MIDDLE CONTENT VOID (~62% height) — MUST STAY BLANK:
+- Large flat interior field for runtime list rendering: smooth matte blue-lavender to deep navy-lavender fill, extremely subtle star-dust texture at very low opacity (~4%), no strong patterns.
+- COMPLETELY EMPTY: no category tabs, no item rows, no scroll icons, no prices, no diamonds, no purchase buttons, no pagination, no wireframes, no placeholder boxes, no dashed slots.
+
+BOTTOM FOOTER ZONE (~20% height):
+- Decorative mystical footer: curved nebula band, small crystal cluster, faint constellation arc and tiny floating scroll seal ornaments along the bottom edge.
+- Footer interior COMPLETELY EMPTY — no page buttons, no text, no numbers.
+
+STRICTLY FORBIDDEN:
+Chinese text, English text, numbers, readable glyphs, yellow/gold/amber colors, category tabs, shop list rows, blueprint thumbnails, gem icons, buy buttons, pagination, wireframe labels, watermark, photoreal metal, logo.
+
+Art style: clean 2D vector kawaii mobile game UI, cosmic fantasy mystery shop, soft gradients for depth only, ornamental but not noisy. Not a screenshot, not a mockup with content removed.
+
+TECHNICAL BACKGROUND FOR CLEAN CUTOUT:
+ONLY the margins OUTSIDE the irregular panel silhouette must be pure bright screen green RGB exactly 0,255,0, flat, no gradient. The panel interior must contain ZERO green pixels.

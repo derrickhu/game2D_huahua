@@ -276,6 +276,11 @@ export class FurnitureWorkshopPanel extends PIXI.Container {
     this._closeHit.cursor = 'pointer';
     const onCloseTap = (e: PIXI.FederatedPointerEvent) => {
       e.stopPropagation();
+      if (this._shopPopup.visible) {
+        this._shopPopup.close();
+        this._refreshDockHighlight();
+        return;
+      }
       this.close();
     };
     this._closeHit.on('pointerdown', onCloseTap);
@@ -916,6 +921,11 @@ export class FurnitureWorkshopPanel extends PIXI.Container {
     this._categoryTabRow.visible = !shopOpen;
     this._content.visible = !shopOpen;
     this._contentMask.visible = !shopOpen;
+    // 图纸商店打开时置于工坊关闭钮之上，保证壳体红 X 热区可点
+    if (this._shopPopup) {
+      this._shopPopup.zIndex = shopOpen ? 110 : 58;
+      this._panel.sortChildren();
+    }
   }
 
   private _renderCraftGrid(): void {
@@ -1024,10 +1034,12 @@ export class FurnitureWorkshopPanel extends PIXI.Container {
     preview.position.set(cardW / 2, pad + BLUEPRINT_IMAGE_H / 2);
     root.addChild(preview);
 
-    appendWorkshopBlueprintFeatureTags(root, blueprint, pad + 6, pad + 6, {
-      fontSize: 11,
+    appendWorkshopBlueprintFeatureTags(root, blueprint, pad + imageW - 6, pad + BLUEPRINT_IMAGE_H - 6, {
+      fontSize: 15,
       layout: 'vertical',
-      gap: 4,
+      gap: 5,
+      align: 'right',
+      corner: 'bottom-right',
     });
 
     const name = new PIXI.Text(displayName, textStyle({

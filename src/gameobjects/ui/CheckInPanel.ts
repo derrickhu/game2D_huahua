@@ -527,7 +527,11 @@ export class CheckInPanel extends PIXI.Container {
       parent.addChild(fb);
     }
 
-    const qtyText = item.type === 'deco' ? '专属家具' : `×${item.amount}`;
+    const qtyText = item.type === 'deco'
+      ? '专属家具'
+      : item.type === 'workshop_dye'
+        ? (item.label ?? '染料')
+        : `×${item.amount}`;
     const amt = new PIXI.Text(qtyText, {
       fontSize: 16, fill: dimmed ? 0xAAAAAA : 0x4E342E,
       fontFamily: FONT_FAMILY, fontWeight: 'bold',

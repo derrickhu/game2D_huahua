@@ -257,9 +257,6 @@ export class WorldMapPanel extends PIXI.Container {
       case 'garden_villa':
         keys.push('bg_room_garden_villa_loft_nb2', 'icon_build');
         break;
-      case 'timed_event':
-        keys.push('icon_worldmap');
-        break;
       default:
         break;
     }

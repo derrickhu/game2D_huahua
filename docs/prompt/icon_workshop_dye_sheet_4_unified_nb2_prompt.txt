@@ -1,0 +1,21 @@
+Single square 1:1 image: a clean 2×2 icon sheet for a cozy pastel merge-game flower shop UI. Four cells in one unified art pass — identical bottle design, only the dye liquid color changes.
+
+LAYOUT (equal quadrants, one object centered per cell with generous margin, no overlap between cells):
+Top-left cell: sakura pink dye bottle.
+Top-right cell: lemon yellow dye bottle.
+Bottom-left cell: sky blue dye bottle.
+Bottom-right cell: mint green dye bottle.
+
+BOTTLE DESIGN (MUST be exactly the same shape, size, angle, cork, highlights, and outline weight in all four cells):
+Small kawaii round glass potion bottle for furniture recolor craft material. Short wide neck, light honey-tan wooden cork stopper with simple rounded top. Bulbous transparent glass body about three-quarters filled with thick opaque dye liquid. Soft cel shading, gentle inner glass rim line, one bright white curved specular highlight on the upper-left of the glass, one lighter horizontal band on the liquid surface. Thick soft outline in warm dark chocolate brown (never pure black). Cute chunky 2D vector casual mobile game icon style, polished and consistent across all four.
+
+COLOR RULES:
+Pink cell: only pink liquid + neutral glass/cork/brown outline.
+Yellow cell: only yellow liquid + neutral glass/cork/brown outline.
+Blue cell: only blue liquid + neutral glass/cork/brown outline.
+Green cell: only green liquid + neutral glass/cork/brown outline.
+No color bleeding between cells. No extra props, no labels, no numbers.
+
+Optional: one tiny white four-point star sparkle near each bottle (same placement logic in each cell).
+
+Background: flat pure solid white exactly FFFFFF across the entire sheet, no gradient, no shadow floor, no divider lines, no text, no watermark, no UI frame.
