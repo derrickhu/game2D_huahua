@@ -1,0 +1,34 @@
+Single mobile game HUD primary CTA button asset, wide horizontal layout on a 16:9 canvas.
+
+USE THE ATTACHED REFERENCE IMAGE as the EXACT layout and composition authority:
+- SAME complete pill capsule shape and proportions
+- SAME left hammer + paintbrush + tiny flower + sparkles
+- SAME custom illustrated 装修 lettering style, size, position, and personality on the right
+- SAME crisp green-screen friendly silhouette and matte rendering style
+- ONLY recolor the capsule body and harmonize text stroke colors — do NOT change layout, do NOT change icons, do NOT simplify, do NOT add or remove elements.
+
+RECOLOR — WARM MANGO-HONEY YELLOW CAPSULE (legacy shop yellow pill):
+- Replace ALL rose/pink capsule colors with warm cream-honey to mango-gold yellow family — the classic cozy merge-game shop CTA yellow, eye-catching and warm, NOT pink, NOT lavender, NOT purple body.
+- Smooth matte volume from yellow shades only:
+  top face pale cream-honey #FFF4D6
+  upper-mid soft honey #F7D98B
+  mid warm mango #F2C56D
+  lower deep honey gold #E8A838
+  bottom edge rich amber #C9852A
+- Thin crisp outer rim warm brown #8D6E63 or deep amber #A67C52 — same family as legacy yellow shop buttons, NOT pink rim, NOT purple rim.
+
+TEXT 装修 — keep the SAME bespoke lettering design as reference, recolor to match yellow capsule:
+- fill warm cream #FFF8E7 or champagne #FEF3C7
+- inner shading warm amber #B45309
+- outer stroke warm chocolate brown #8D6E63 or #6D4C41 — coordinated with yellow capsule, NOT pink/plum stroke.
+
+CAPSULE RULES:
+- NO pink, NO magenta, NO rose, NO lavender body.
+- NO white glossy highlight, NO neon yellow, NO horizontal stripe bands.
+- ENTIRE capsule fully visible, both rounded ends intact, centered with equal margin.
+
+CRISP CUTOUT:
+- Pure flat green RGB 0,255,0 outside button only. ZERO green inside button.
+
+FORBIDDEN:
+Pink/magenta/rose/lavender capsule, changing layout, changing icon set, changing font style, cyan text, English text, watermark, phone frame, drop shadow on green.

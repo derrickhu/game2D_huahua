@@ -1,0 +1,44 @@
+Create one game-ready isometric outdoor courtyard room shell for a cozy pastel flower-shop merge game.
+
+Use the attached tea house / xianqi room shell ONLY for linework weight and rendering quality: clean soft brown outlines slightly thicker than hairline, light airy pastel, NO thick black outlines, NO heavy sticker borders, NO bold comic inking.
+
+Use the attached previous farm courtyard shell ONLY for layout intent: L-corner outdoor yard, two exterior house walls, wooden deck along walls, low fence with ivy on left, bright sunlit mood. Improve the problems of the old version.
+
+Subject: empty farm courtyard scene shell — outdoor yard beside a countryside house. Players place furniture on the yard ground.
+
+Structure:
+- OUTDOOR COURTYARD L-SHAPE: back corner formed by two perpendicular EXTERIOR house walls; front and left open toward viewer.
+- RIGHT WALL: warm cream-white plaster exterior wall, honey wood window frame, large bright window, wooden door with tiny abstract red paper rectangles only — NO readable text.
+- BACK WALL: same cream exterior wall, mostly blank for wall decor, optional one small high window.
+- LEFT: low wooden picket fence with bright green ivy trellis — vivid spring green.
+- WOODEN DECK: thin raised wooden porch only along the two house walls — honey oak planks, very low profile, just 1-2 plank steps above yard, NOT a tall platform.
+- YARD GROUND: broad flat courtyard floor in front — warm light sandy-tan packed earth with soft grass tufts at edges, a few flat grey stepping stones optional. Ground must feel ALMOST FLUSH with the bottom of the asset.
+
+CRITICAL — ground transition for compositing on isometric background:
+- NO thick dark isometric base block under the entire shell.
+- NO tall cliff-like side walls exposing dark brown earth under the yard.
+- NO heavy shadow skirt or floating platform pedestal.
+- The front and bottom edges of the yard ground should taper gently and meet the bottom margin naturally, as if the yard continues outward — smooth low transition, ground height minimal.
+- The shell should look like it sits ON the same ground plane as the background, not hovering above it.
+
+Roof: only thin terracotta eave strip along wall tops, decorative.
+
+Lighting: warm golden sunlight upper right, soft komorebi dappled spots on deck and ground — light golden-green only, not dark shadows.
+
+Linework (match other house shells in this game):
+- Soft brown/lavender-brown outlines, hairline-to-slightly-thicker, rounded and gentle.
+- FORBIDDEN: thick black outlines, heavy ink, high-contrast sticker look, dark contour lines on grass/earth.
+
+Color: high-key bright pastoral — cream walls, honey wood, vivid green ivy, light tan earth, butter sunlight. Juicy saturated pastels, not muddy.
+
+Camera: strict upper-left isometric about 45 degrees, same as tea house / flower shop room shells.
+
+Empty: NO furniture, NO pots, NO plants, NO tools, NO animals, NO characters, NO clutter.
+
+NO TEXT, no labels, no readable signs, no numbers, no logo, no watermark.
+
+Background: transparent or plain for removal; generous margin.
+
+Output: square 1:1 centered empty courtyard shell PNG.
+
+Avoid: thick black outlines, tall platform base, dark brown cliff sides, indoor cutaway room, dark muddy palette, photorealism, night scene.

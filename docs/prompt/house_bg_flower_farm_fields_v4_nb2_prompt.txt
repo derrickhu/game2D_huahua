@@ -1,0 +1,37 @@
+Create a vertical 9:16 full-screen outdoor background for a cozy pastel flower-shop merge game.
+
+Use the attached v4 courtyard shell for COLOR and BRIGHTNESS ONLY: very bright, warm, high-key, vivid yellow-green grass, warm sandy-tan earth, sunny golden lighting — same cheerful world as the shell.
+
+CRITICAL CAMERA: upper-left isometric about 45 degrees, same as the courtyard shell.
+
+COMPOSITION — follow this vertical split strictly:
+
+UPPER HALF (~50% of frame, below a small sky strip):
+- Rolling isometric farmland: golden wheat bands, bright green crop rows, light brown tilled soil, distant hedgerows.
+- Tiny windmill or red-roof barn far away optional.
+- White fence segments, soft hills — all farmland scenery stays in UPPER half only.
+- NO farmland, NO crop rows, NO vegetable plots, NO wheat fields in the lower half.
+
+TOP SKY — SMALL only (~12-18% of frame height, not more):
+- Narrow band of bright summer sky: pale blue to butter-cream.
+- A few soft fluffy clouds with warm highlights.
+- Keep sky minimal — most of the image should be land, not empty sky.
+
+LOWER HALF (~50% of frame) — SIMPLE OPEN YARD:
+- This is the most important area. A broad, calm, simple isometric ground plane.
+- Mostly open space: warm light sandy-tan earth clearing in center-bottom for placing the courtyard shell.
+- Bright yellow-green grass tufts at left/right edges only — soft and sparse.
+- Scatter small vivid wildflowers (red, yellow, pink, white) on grass edges — cute, not dense.
+- Optional very soft komorebi dappled sunlight spots on ground.
+- NO crop rows, NO wheat, NO vegetable beds, NO plowed furrows, NO field partitions in lower half.
+- NO bushes blocking center, NO white fence in lower half, NO busy patterns — just simple grass + flowers + open earth like a peaceful farm meadow waiting for a courtyard.
+
+Color: bright saturated pastels matching shell — NOT dull, NOT gray, NOT muddy.
+
+Linework: very soft brown hairline on distant upper fields only.
+
+Style: 2D casual mobile merge game, kawaii cozy, hand-painted.
+
+Technical: 9:16 opaque full background. No text, no logo, no building, no room shell, no fence near center bottom.
+
+Avoid: farmland in bottom half, large sky occupying top third, busy vegetable plots near shell area, dark desaturated colors, flat non-isometric view, cliffs at bottom.

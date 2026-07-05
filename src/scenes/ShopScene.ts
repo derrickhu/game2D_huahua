@@ -136,29 +136,11 @@ const TRAY_EDIT_CLEAR_GAP = 12;
 const TRAY_EDIT_CLEAR_CENTER_X =
   DESIGN_WIDTH / 2 + TRAY_EDIT_COMPLETE_MAX_W / 2 + TRAY_EDIT_CLEAR_GAP + TRAY_EDIT_CLEAR_BTN_W / 2;
 
-/** 「装修花店」主按钮宽度（与 _buildEditButton 一致） */
+/** 底部「装修」主按钮目标尺寸（与 _buildEditButton 一致） */
 const EDIT_MAIN_BTN_W = (): number => Math.round(DESIGN_WIDTH * 0.58);
-const EDIT_MAIN_BTN_H = 76;
-const EDIT_MAIN_BTN_R = 22;
-/** 标题字相对按钮中心的水平偏移（略偏右，给左侧施工图标留空） */
-const EDIT_MAIN_BTN_LABEL_OFFSET_X = 24;
-
-/**
- * 底部「装修花店」标题：柔和圆角字感（重字重 + 描边），配色走暖花粉橘系，与仓库紫系区分；阴影刻意偏弱。
- */
-const SHOP_EDIT_BTN_LABEL_STYLE: Partial<PIXI.ITextStyle> = {
-  fontSize: 25,
-  fill: 0xfffcf8,
-  fontFamily: FONT_FAMILY,
-  fontWeight: '900',
-  stroke: 0xe8a598,
-  strokeThickness: 3,
-  dropShadow: true,
-  dropShadowColor: 0x8d6e63,
-  dropShadowAlpha: 0.14,
-  dropShadowBlur: 1,
-  dropShadowDistance: 1,
-};
+const EDIT_MAIN_BTN_MAX_H = 66;
+const EDIT_MAIN_BTN_FALLBACK_H = 66;
+const EDIT_MAIN_BTN_FALLBACK_R = 16;
 
 /** 花店建筑竖直位置：中心 Y ≈ logicH * ratio + offset，ratio 增大则整体下移（原 0.405 偏上易顶到进度条） */
 const SHOP_BUILDING_CENTER_Y_RATIO = 0.442;
@@ -2802,30 +2784,14 @@ export class ShopScene implements Scene {
 
   // ─────────────────── 编辑模式 ───────────────────
 
-  /** 创建编辑模式入口按钮（胶囊贴图 + 左叠施工图标 + 居中标题字） */
+  /** 创建编辑模式入口按钮（一体式「装修」贴图，文字烘焙在壳内） */
   private _buildEditButton(w: number, h: number): void {
     this._editBtn = new PIXI.Container();
 
-    const label = new PIXI.Text('装修花店', SHOP_EDIT_BTN_LABEL_STYLE);
-    label.anchor.set(0.5, 0.5);
-    this._editBtn.addChild(label);
-
-    const pencilTex = TextureCache.get('icon_build');
-    if (pencilTex?.width) {
-      const sp = new PIXI.Sprite(pencilTex);
-      sp.anchor.set(0.5);
-      (sp as PIXI.Sprite & { _shopEditBtnIcon?: boolean })._shopEditBtnIcon = true;
-      this._editBtn.addChild(sp);
-    } else {
-      const iconText = new PIXI.Text('修', {
-        fontSize: 22,
-        fontFamily: FONT_FAMILY,
-        fill: COLORS.TEXT_DARK,
-      });
-      iconText.anchor.set(0.5, 0.5);
-      (iconText as PIXI.Text & { _shopEditBtnIcon?: boolean })._shopEditBtnIcon = true;
-      this._editBtn.addChild(iconText);
-    }
+    const btnSprite = new PIXI.Sprite(PIXI.Texture.EMPTY);
+    btnSprite.anchor.set(0.5, 0.5);
+    (btnSprite as PIXI.Sprite & { _shopEditBtnSprite?: boolean })._shopEditBtnSprite = true;
+    this._editBtn.addChild(btnSprite);
 
     this._applyShopEditButtonChrome();
 
@@ -2859,7 +2825,7 @@ export class ShopScene implements Scene {
   }
 
   /**
-   * 刷新「装修花店」胶囊底图与图标布局。
+   * 刷新底部「装修」一体式按钮贴图。
    * 首帧 build 时 panels 分包可能尚未就绪，会先走白底 fallback；贴图加载后须再调一次。
    */
   private _refreshShopEditButtonChrome(): void {
@@ -2870,72 +2836,56 @@ export class ShopScene implements Scene {
   private _applyShopEditButtonChrome(): void {
     const btn = this._editBtn;
     const btnW = EDIT_MAIN_BTN_W();
-    const btnH = EDIT_MAIN_BTN_H;
-    const cornerR = EDIT_MAIN_BTN_R;
+    const btnSprite = btn.children.find(
+      c => (c as PIXI.DisplayObject & { _shopEditBtnSprite?: boolean })._shopEditBtnSprite,
+    ) as PIXI.Sprite | undefined;
 
-    const oldBg = btn.children.find(
-      c => (c as PIXI.DisplayObject & { _shopEditBtnBg?: boolean })._shopEditBtnBg,
+    const oldFallback = btn.children.find(
+      c => (c as PIXI.DisplayObject & { _shopEditBtnFallback?: boolean })._shopEditBtnFallback,
     );
-    if (oldBg) {
-      btn.removeChild(oldBg);
-      oldBg.destroy();
+    if (oldFallback) {
+      btn.removeChild(oldFallback);
+      oldFallback.destroy();
     }
 
     let halfW: number;
     let halfH: number;
-    const pillTex = TextureCache.get('shop_edit_deco_pill_4x2_nb2');
-    if (pillTex?.width) {
-      const ps = Math.min(btnW / pillTex.width, btnH / pillTex.height);
-      const sw = pillTex.width * ps;
-      const sh = pillTex.height * ps;
-      halfW = sw / 2;
-      halfH = sh / 2;
-      const pillSp = new PIXI.Sprite(pillTex);
-      pillSp.anchor.set(0.5, 0.5);
-      pillSp.scale.set(ps);
-      pillSp.position.set(0, 0);
-      (pillSp as PIXI.Sprite & { _shopEditBtnBg?: boolean })._shopEditBtnBg = true;
-      btn.addChildAt(pillSp, 0);
+    const btnTex = TextureCache.get('shop_edit_deco_btn_nb2');
+    if (btnSprite && btnTex?.width) {
+      let ps = btnW / btnTex.width;
+      const scaledH = btnTex.height * ps;
+      if (scaledH > EDIT_MAIN_BTN_MAX_H) {
+        ps = EDIT_MAIN_BTN_MAX_H / btnTex.height;
+      }
+      btnSprite.texture = btnTex;
+      btnSprite.scale.set(ps);
+      btnSprite.visible = true;
+      halfW = (btnTex.width * ps) / 2;
+      halfH = (btnTex.height * ps) / 2;
     } else {
+      if (btnSprite) btnSprite.visible = false;
       halfW = btnW / 2;
-      halfH = btnH / 2;
+      halfH = EDIT_MAIN_BTN_FALLBACK_H / 2;
       const bg = new PIXI.Graphics();
-      bg.beginFill(0xffffff, 0.97);
-      bg.drawRoundedRect(-halfW, -halfH, btnW, btnH, cornerR);
+      bg.beginFill(0xec4899, 0.98);
+      bg.drawRoundedRect(-halfW, -halfH, btnW, EDIT_MAIN_BTN_FALLBACK_H, EDIT_MAIN_BTN_FALLBACK_R);
       bg.endFill();
-      bg.lineStyle(2.5, COLORS.BUTTON_PRIMARY, 0.55);
-      bg.drawRoundedRect(-halfW, -halfH, btnW, btnH, cornerR);
-      (bg as PIXI.Graphics & { _shopEditBtnBg?: boolean })._shopEditBtnBg = true;
+      bg.lineStyle(3, 0xbe185d, 1);
+      bg.drawRoundedRect(-halfW, -halfH, btnW, EDIT_MAIN_BTN_FALLBACK_H, EDIT_MAIN_BTN_FALLBACK_R);
+      (bg as PIXI.Graphics & { _shopEditBtnFallback?: boolean })._shopEditBtnFallback = true;
       btn.addChildAt(bg, 0);
-    }
 
-    for (const child of btn.children) {
-      if (child instanceof PIXI.Text && child.text === '装修花店') {
-        child.anchor.set(0.5, 0.5);
-        child.position.set(EDIT_MAIN_BTN_LABEL_OFFSET_X, 0);
-        Object.assign(child.style, SHOP_EDIT_BTN_LABEL_STYLE);
-        continue;
-      }
-      if (!(child as PIXI.DisplayObject & { _shopEditBtnIcon?: boolean })._shopEditBtnIcon) continue;
-
-      const pillH = halfH * 2;
-      const iconMaxH = Math.min(60, Math.floor(pillH * 0.88));
-      const iconMaxW = Math.min(70, Math.floor(halfW * 2 * 0.38));
-      const iconPadL = 12;
-
-      if (child instanceof PIXI.Sprite) {
-        const pencilTex = TextureCache.get('icon_build');
-        if (!pencilTex?.width) continue;
-        child.texture = pencilTex;
-        const s = Math.min(iconMaxH / pencilTex.height, iconMaxW / pencilTex.width);
-        child.scale.set(s);
-        const iw = pencilTex.width * s;
-        child.position.set(-halfW + iconPadL + iw / 2, 0);
-      } else if (child instanceof PIXI.Text) {
-        const fs = Math.min(iconMaxH, iconMaxW);
-        child.style.fontSize = Math.round(fs * 0.72);
-        child.position.set(-halfW + iconPadL + fs * 0.42, 0);
-      }
+      const label = new PIXI.Text('装修', {
+        fontSize: 24,
+        fill: 0xffffff,
+        fontFamily: FONT_FAMILY,
+        fontWeight: '900',
+        stroke: 0x8b65a5,
+        strokeThickness: 3,
+      });
+      label.anchor.set(0.5, 0.5);
+      (label as PIXI.Text & { _shopEditBtnFallback?: boolean })._shopEditBtnFallback = true;
+      btn.addChild(label);
     }
 
     btn.hitArea = new PIXI.Rectangle(-halfW - 14, -halfH - 14, halfW * 2 + 28, halfH * 2 + 28);
@@ -3315,26 +3265,10 @@ export class ShopScene implements Scene {
     }
     toRemoveBg.forEach(c => { this._editBtn.removeChild(c); c.destroy(); });
 
-    // 还原编辑按钮（新版编辑态不再改文案，仅恢复显隐与布局）
+    // 还原编辑按钮（编辑态仅隐藏主钮，退出后恢复显隐与布局）
     this._editBtn.visible = true;
-    const children = this._editBtn.children;
-    const btnW = EDIT_MAIN_BTN_W();
-    for (const child of children) {
+    for (const child of this._editBtn.children) {
       child.visible = true;
-      if (child instanceof PIXI.Text) {
-        if (child.text.includes('完成编辑')) {
-          child.text = '装修花店';
-          Object.assign(child.style, SHOP_EDIT_BTN_LABEL_STYLE);
-          child.anchor.set(0.5, 0.5);
-          child.position.set(EDIT_MAIN_BTN_LABEL_OFFSET_X, 0);
-        }
-        if (child.text.includes('摆放家具')) {
-          child.visible = true;
-        }
-      }
-      if (child instanceof PIXI.Graphics) {
-        child.visible = true;
-      }
     }
 
     const h = Game.logicHeight;

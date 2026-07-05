@@ -1,0 +1,40 @@
+Single mobile game HUD primary CTA button asset, wide horizontal layout on a 16:9 canvas. One elongated pill capsule button centered, occupying about 74% of canvas width and 40% of canvas height, with generous margin above and below.
+
+SUBJECT — ONE wide pink pill capsule button:
+- Shape: long horizontal capsule with fully rounded ends, like a mobile game primary action chip.
+- Left third: cute illustrated hammer and paintbrush crossed, tiny pink five-petal flower with one green leaf, two tiny four-pointed star sparkles. Hammer warm gold-yellow, brush handle soft lavender-purple, brush bristles pink. Clean soft toy proportions, NOT heavy comic black outlines.
+- Right two-thirds: large bold rounded Chinese text exactly 装修 baked into the button.
+
+TEXT 装修 — ABSOLUTE REQUIREMENTS:
+- Letter fill: pure white #FFFFFF only.
+- Letter stroke: medium-deep lavender-purple #7C3AED or #9333EA, rounded thick outline.
+- FORBIDDEN text colors: cyan, teal, aqua, blue-green, green, yellow text, brown text.
+
+CAPSULE BODY — DEEP SATURATED PINK WITH WEIGHT:
+- The button must feel solid and weighted, NOT pale pastel, NOT washed-out, NOT milky.
+- Use ONLY rich pink/magenta family tones. NO cream, NO pale yellow, NO near-white body, NO glossy glass reflection, NO specular shine, NO plastic bubble glare.
+- Matte volume from deeper pink bands only:
+  top face medium-light pink #EC4899
+  upper-mid strong pink #DB2777
+  lower-mid deep rose #BE185D
+  bottom edge darkest #9D174D
+- Thin crisp outer rim deep lilac-magenta #A855F7 directly on the capsule edge — solid stroke, clean vector edge.
+- FORBIDDEN rim colors: gold, yellow, tan, orange border, pale lavender wash.
+
+CRISP CUTOUT — CRITICAL FOR CHROMA KEY:
+- The button silhouette must be EASY to key out from green screen.
+- NO drop shadow on the green background. NO outer glow. NO soft halo. NO feathered white fringe between capsule and green.
+- NO light gray or white outline sitting outside the purple rim on top of green.
+- The capsule outer edge must be a clean hard graphic shape with at most 1px anti-alias against green — like a game UI sticker cut on green screen.
+- Green background must NEVER appear inside the capsule, inside icons, or inside text.
+
+RENDERING STYLE:
+- 2D casual merge-game flower-shop UI, flat but refined, saturated kawaii, confident color weight.
+- Matte finish. Volume from pure-color pink shading only.
+- Readable when scaled to ~320px wide in-game.
+
+FORBIDDEN:
+Pale washed pink body, yellow plaque, hex diamond badge, cyan/teal 装修 text, gold capsule border, flat Material UI, English text, 装修花店, watermark, phone frame, white/cream body gradient, white reflective highlight, heavy black comic outlines, fuzzy soft shadow on green.
+
+BACKGROUND FOR CUTOUT:
+Only the area OUTSIDE the illustrated button must be pure flat screen green RGB exactly 0,255,0 edge-to-edge, uniform, no gradient, no vignette. Button interior must contain ZERO green pixels.

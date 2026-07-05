@@ -1,0 +1,20 @@
+Clean 2D hand-painted mobile game world map building asset for a cozy pastel flower-shop merge game, healing iyashikei style, soft brown line art, high-angle isometric-lite view from above-front. The asset should sit naturally on a circular green world-map slot like the existing map houses.
+
+Subject: a distinctive side-story pastoral farm cottage, "flower field farmstead" theme. It is a small warm wooden countryside house with harvest charm, cute and readable as a purchasable house node on the world map.
+
+Architecture:
+- Main body: single-story warm cream plaster and honey wood cottage, compact and cozy, not a giant barn.
+- Roof: soft terracotta-red clay tile roof with gentle slope, tiny brick chimney with a wisp of pale smoke optional.
+- Fence and garden: short white picket fence wrapping a tiny vegetable patch beside the house with 3-4 neat green crop rows and tiny colorful stylized vegetables (carrot tops, lettuce, tomato red dots), cute not realistic.
+- Door: small arched wooden door in warm oak, no text.
+- Windows: two square paned windows with cream frames and pale yellow warm glow inside.
+- Farm details: one small wooden wheelbarrow leaning near fence, a tiny hay bale, optional mini windmill silhouette behind roof (very small), a few pastel wildflower tufts around base.
+- Ground: flat soft green grass patch directly under the building, suitable for the highlighted circular map slot.
+
+Palette: cream white, honey wood, soft terracotta red, sage green, butter yellow accents, tiny coral and mint vegetable dots. Bright, cute, pastoral, high-key pastel. Must harmonize with existing flower-shop map houses while clearly unique as a farm cottage.
+
+Composition: single centered building asset, no background scene, generous transparent or removable margin, square 1:1. Keep silhouette compact and readable at small map size.
+
+NO TEXT, no labels, no readable signs, no numbers, no logo, no watermark, no characters, no UI frame.
+
+Avoid photorealism, industrial farm machinery, dark gritty barn, giant silo, clutter, or full background landscape.

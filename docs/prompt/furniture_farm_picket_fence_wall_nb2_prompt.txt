@@ -1,0 +1,15 @@
+Square game asset 1:1. Single wall-decor / yard-edge prop centered with generous margin.
+
+Use attached old courtyard shell reference ONLY for the LEFT-SIDE wooden fence segment — low picket posts plus diamond-lattice trellis with bright green ivy vine and tiny purple grape clusters. Extract and redraw that fence as ONE standalone cutout object.
+
+Cute kawaii 2.5D isometric view from upper-left about 45 degrees, hand-painted mobile merge-game style. Soft brown outlines, bright vivid spring-green ivy, warm honey wood pickets and lattice. NOT dull, NOT dark.
+
+Subject: Draw EXACTLY ONE object only — the tall farm wooden trellis fence from the reference left side: rounded picket posts along the bottom, diamond-grid wooden lattice above, lush ivy climbing the lattice with a few cute purple grape bunches. Single cohesive fence piece, medium-tall vertical silhouette.
+
+Forbidden: a second shorter picket-only fence, duplicate fence segments, two separate fence objects, house wall, plaster, room shell, ground plane, deck.
+
+Players paste this ONE fence segment onto walls or yard edges in-game — just the fence and ivy alone.
+
+No text, no watermark, no characters.
+
+Background pure solid white #FFFFFF only for cutout.

@@ -89,6 +89,12 @@ export const DREAM_CLOUD_HOUSE_UNLOCK_LEVEL = 20;
 /** 梦云小屋购买解锁所需花愿 */
 export const DREAM_CLOUD_HOUSE_PURCHASE_COST = 150000;
 
+/** 花田农舍（支线）开放综合等级：30 级起可在大地图花愿购买解锁 */
+export const FLOWER_FARM_HOUSE_UNLOCK_LEVEL = 30;
+
+/** 花田农舍购买解锁所需花愿 */
+export const FLOWER_FARM_HOUSE_PURCHASE_COST = 180000;
+
 /** 大地图「当前店铺」实时缩略图：截取最长边像素（略小于节点 thumbSize，省显存） */
 export const LIVE_HOUSE_THUMB_CAPTURE_MAX = 160;
 
@@ -200,5 +206,19 @@ export const MAP_NODES: MapNodeDef[] = [
     purchaseCost: DREAM_CLOUD_HOUSE_PURCHASE_COST,
     useLiveMapThumb: false,
     targetSceneId: 'dream_cloud_house',
+  },
+  {
+    id: 'flower_farm_house',
+    type: 'house',
+    label: '花田农舍',
+    /** 茶香与橡树之间圆形草地（Lv30 支线） */
+    x: 1760,
+    y: 920,
+    thumbKey: 'worldmap_thumb_flower_farm_house',
+    thumbSize: 340,
+    unlockLevel: FLOWER_FARM_HOUSE_UNLOCK_LEVEL,
+    purchaseCost: FLOWER_FARM_HOUSE_PURCHASE_COST,
+    useLiveMapThumb: false,
+    targetSceneId: 'flower_farm_house',
   },
 ];

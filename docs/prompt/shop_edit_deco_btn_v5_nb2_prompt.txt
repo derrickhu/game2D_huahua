@@ -1,0 +1,32 @@
+Single mobile game HUD primary CTA button asset, wide horizontal layout on a 16:9 canvas. One elongated pill capsule button centered, occupying about 72% of canvas width and 38% of canvas height, with comfortable margin above and below.
+
+SUBJECT — ONE wide pink pill capsule button:
+- Shape: long horizontal capsule with fully rounded ends, like a mobile game primary action chip.
+- Left third: cute illustrated hammer and paintbrush crossed, tiny pink five-petal flower with one green leaf, two tiny four-pointed star sparkles. Hammer warm gold-yellow, brush handle soft lavender-purple, brush bristles pink. Clean soft toy proportions, NOT heavy comic black outlines.
+- Right two-thirds: large bold rounded Chinese text exactly 装修 baked into the button.
+
+TEXT 装修 — ABSOLUTE REQUIREMENTS:
+- Letter fill: pure white #FFFFFF only.
+- Letter stroke: soft medium lavender-purple #9333EA or #A855F7, rounded thick outline.
+- FORBIDDEN text colors: cyan, teal, aqua, blue-green, green, yellow text, brown text.
+
+CAPSULE BODY — PURE PINK MATTE VOLUME ONLY:
+- Background uses ONLY pink/magenta family. NO white, NO cream, NO pale yellow, NO near-white highlight, NO glossy glass reflection, NO specular shine, NO plastic bubble glare, NO bright white stripe on top.
+- Smooth matte volume from pink shades only:
+  top face light pink #F472B6
+  upper-mid #EC4899
+  lower-mid #DB2777
+  bottom edge #BE185D
+- Thin soft lilac-purple outer rim #C084FC around the whole capsule.
+- FORBIDDEN rim colors: gold, yellow, tan, orange border.
+
+RENDERING STYLE:
+- 2D casual merge-game flower-shop UI, flat but refined, pastel high-key, soft kawaii.
+- Matte finish. Volume from pure-color pink shading only.
+- Readable when scaled to ~320px wide in-game.
+
+FORBIDDEN:
+Yellow plaque, hex diamond badge, cyan/teal 装修 text, gold capsule border, flat Material UI, English text, 装修花店, watermark, phone frame, white/cream body gradient, white reflective highlight, heavy black comic outlines.
+
+BACKGROUND FOR CUTOUT:
+Only the area OUTSIDE the illustrated button must be pure flat screen green RGB exactly 0,255,0 edge-to-edge. Button interior must contain ZERO green pixels.

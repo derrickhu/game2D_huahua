@@ -1,0 +1,34 @@
+Create a vertical 9:16 full-screen outdoor background for a cozy pastel flower-shop merge game.
+
+Use the attached v4 courtyard shell ONLY for COLOR and BRIGHTNESS matching — the background must feel like the same sunny world as this shell: very bright, warm, high-key, juicy saturated pastels, NOT dull, NOT gray-washed, NOT desaturated watercolor.
+
+Also match the COLOR MOOD of the first farm background version: vivid golden wheat, bright spring-green fields, clear cheerful sky, saturated tiny wildflowers — much brighter than the muted v2 background.
+
+CRITICAL CAMERA: strict upper-left ISOMETRIC about 45 degrees — same ground perspective as the attached courtyard shell. NOT flat landscape horizon photo, NOT side-view illustration. Near ground is an isometric tilted ground plane.
+
+COLOR PALETTE — must match shell (very important):
+- Near earth: warm light sandy-tan packed soil, same family as shell yard dirt — bright and warm, not gray-brown.
+- Grass: vivid yellow-green spring grass like shell ivy/lawn — bright and lively, not olive, not muted sage.
+- Sky: clear pale blue with warm butter-cream horizon glow, sunny midday, high luminosity.
+- Wheat: rich honey-gold yellow fields, saturated and glowing.
+- Crop rows: bright mint-green vegetable bands.
+- Wildflowers: small saturated red, butter-yellow, pink, white blossoms — cute and vivid, not pale dots.
+- Lighting: strong warm golden sunlight from upper right; optional soft komorebi dappled light spots on near ground matching shell deck lighting.
+
+Composition (isometric, bottom to top):
+- BOTTOM 35-45%: broad isometric near ground plane — light tan earth center clearing for shell placement, bright grass tufts at sides, scattered vivid tiny flowers on grass. Center-bottom calm and plain. Soft komorebi spots allowed.
+- LOWER-MIDDLE: isometric diagonal crop bands — golden wheat, bright green rows, light brown tilled soil.
+- UPPER-MIDDLE: rolling isometric farmland layers, hedgerows, distant white fence, tiny windmill/barn far away.
+- TOP: bright summer sky, fluffy white clouds with warm peach highlights.
+
+Integration:
+- NO building, wall, fence, deck, room shell, furniture, characters.
+- Near ground must blend with shell when placed centered on lower area.
+
+Linework: very soft brown hairline on distant elements only, light and airy.
+
+Art style: 2D casual mobile merge game, kawaii cozy, hand-painted soft volume, SAME brightness level as attached shell.
+
+Technical: 9:16 vertical opaque JPG-style full background. No text, no logo, no watermark.
+
+Avoid: dull desaturated colors, muddy gray-green, dusty autumn palette, dark shadows, flat non-isometric landscape, steep cliff bottom, busy center, washed-out pastel that looks dim.

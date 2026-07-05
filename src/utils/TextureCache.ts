@@ -236,8 +236,8 @@ const PANELS_IMAGE_MAP: Record<string, string> = {
   room_edit_toolbar_remove: 'subpkg_panels/images/ui/room_edit_toolbar_remove.png',
   /** 编辑模式「完成编辑」：4×2 表 pill_btn_4x2_r1c1_idx01，托盘右下角 */
   edit_complete_pill_4x2_nb2: 'subpkg_panels/images/ui/pill_btn_4x2_r1c1_idx01.png',
-  /** 花店主界面「装修花店」入口：4×2 表 pill_btn_4x2_r1c3_idx03 */
-  shop_edit_deco_pill_4x2_nb2: 'subpkg_panels/images/ui/pill_btn_4x2_r1c3_idx03.png',
+  /** 花店主界面「装修」入口：一体式 NB2 胶囊按钮（文字烘焙） */
+  shop_edit_deco_btn_nb2: 'subpkg_panels/images/ui/shop_edit_deco_btn_nb2.png',
   /** 家具托盘底板壳：NB2+rembg；贴图已 180° 调向，平底在上、拱顶在下，顶对齐裁切后少占竖向 */
   furniture_tray_panel_shell_nb2: 'subpkg_panels/images/ui/furniture_tray_panel_shell_nb2.png',
   /** 万能水晶/金剪刀确认弹窗：NB2+rembg，与合成线彩带同风格 */
@@ -267,6 +267,8 @@ const PANELS_IMAGE_MAP: Record<string, string> = {
   worldmap_thumb_forest_treehouse: 'subpkg_panels/images/ui/worldmap_thumb_forest_treehouse.png',
   /** 大地图梦云小屋立绘（支线，花愿购买解锁） */
   worldmap_thumb_dream_cloud_house: 'subpkg_panels/images/ui/worldmap_thumb_dream_cloud_house.png',
+  /** 大地图花田农舍立绘（支线，花愿购买解锁） */
+  worldmap_thumb_flower_farm_house: 'subpkg_panels/images/ui/worldmap_thumb_flower_farm_house.png',
   /** 大地图蛋糕房立绘（钩子，后续接 sceneId） */
   worldmap_thumb_cake_shop: 'subpkg_panels/images/ui/worldmap_thumb_cake_shop.png',
   icon_worldmap: 'subpkg_panels/images/ui/icon_worldmap.png',
@@ -576,6 +578,7 @@ const DECO_IMAGE_MAP: Record<string, string> = {
   house_shop: 'subpkg_deco/images/house/bg_room_default_soft_nb2.png',
   house_bg:   'subpkg_deco/images/house/bg_integrated_grass_nb2.jpg',
   house_bg_dream_cloud_sky_nb2: 'subpkg_deco/images/house/bg_dream_cloud_sky_nb2.jpg',
+  house_bg_flower_farm_fields_nb2: 'subpkg_deco/images/house/bg_flower_farm_fields_nb2.jpg',
 
   // ---- 新家具素材 furniture/ (含 NB2 扩展，已扣底) ----
   // 花架
@@ -856,6 +859,20 @@ const DECO_IMAGE_MAP: Record<string, string> = {
   dream_cloud_floor_lamp: 'subpkg_deco/images/furniture/dream_cloud_floor_lamp.png',
   dream_cloud_storage_chest: 'subpkg_deco/images/furniture/dream_cloud_storage_chest.png',
 
+  // ---- 花田农舍专属家具（flower_farm_house Lv30–34 拾光田园套 v2）----
+  farm_vegetable_patch_rug: 'subpkg_deco/images/furniture/farm_vegetable_patch_rug.png',
+  farm_garden_tool_stand: 'subpkg_deco/images/furniture/farm_garden_tool_stand.png',
+  farm_fruit_crate_stack: 'subpkg_deco/images/furniture/farm_fruit_crate_stack.png',
+  farm_scarecrow: 'subpkg_deco/images/furniture/farm_scarecrow.png',
+  farm_hen_coop: 'subpkg_deco/images/furniture/farm_hen_coop.png',
+  farm_melon_trellis: 'subpkg_deco/images/furniture/farm_melon_trellis.png',
+  farm_hay_bench: 'subpkg_deco/images/furniture/farm_hay_bench.png',
+  farm_beehive_stand: 'subpkg_deco/images/furniture/farm_beehive_stand.png',
+  farm_fu_sticker_wall: 'subpkg_deco/images/furniture/farm_fu_sticker_wall.png',
+  farm_ivy_wall: 'subpkg_deco/images/furniture/farm_ivy_wall.png',
+  farm_rocking_chair: 'subpkg_deco/images/furniture/farm_rocking_chair.png',
+  farm_picket_fence_wall: 'subpkg_deco/images/furniture/farm_picket_fence_wall.png',
+
   // ---- 古风/民俗/奇匠 Lv30-35（batch51）----
   ancient_brush_mountain: 'subpkg_deco/images/furniture/ancient_brush_mountain.png',
   ancient_inkstone_desk: 'subpkg_deco/images/furniture/ancient_inkstone_desk.png',
@@ -958,6 +975,12 @@ const DECO_IMAGE_MAP: Record<string, string> = {
   bg_room_dream_cloud_two_story_nb2: 'subpkg_deco/images/house/bg_room_dream_cloud_two_story_nb2.png',
   bg_room_dream_cloud_blue_concept_nb2: 'subpkg_deco/images/house/bg_room_dream_cloud_blue_concept_nb2.png',
   bg_room_dream_cloud_purple_mooncradle_nb2: 'subpkg_deco/images/house/bg_room_dream_cloud_purple_mooncradle_nb2.png',
+  /** 花田农舍 — 单层暖木农舍 cutaway 空壳 */
+  /** 花田农舍 — 日光户外小院 cutaway 空壳（默认） */
+  bg_room_flower_farm_courtyard_sunny_nb2: 'subpkg_deco/images/house/bg_room_flower_farm_courtyard_sunny_nb2.png',
+  /** 花田农舍 — 旧版室内暖木壳（保留备用） */
+  bg_room_flower_farm_cottage_nb2: 'subpkg_deco/images/house/bg_room_flower_farm_cottage_nb2.png',
+  bg_room_flower_farm_spring_vine_nb2: 'subpkg_deco/images/house/bg_room_flower_farm_spring_vine_nb2.png',
   /** 花园别墅 — 宽景分层西式洋房 cutaway 空壳 */
   bg_room_garden_villa_loft_nb2: 'subpkg_deco/images/house/bg_room_garden_villa_loft_nb2.png',
   /** 花园别墅 — 旧版木骨双层洋房（保留备用） */
@@ -1003,10 +1026,11 @@ const IMAGE_MAP: Record<string, string> = {
 const SHOP_WARMUP_KEYS = [
   'house_bg',
   'house_bg_dream_cloud_sky_nb2',
+  'house_bg_flower_farm_fields_nb2',
   'house_shop',
   'owner_full_default',
   'owner_full_default_blink',
-  'shop_edit_deco_pill_4x2_nb2',
+  'shop_edit_deco_btn_nb2',
   'icon_worldmap_nav',
   'icon_wishing_nav',
   'icon_weekend_huayuan_boost_nb2',
@@ -1084,6 +1108,7 @@ const WORLDMAP_WARMUP_KEYS = [
   'worldmap_thumb_tea_house',
   'worldmap_thumb_forest_treehouse',
   'worldmap_thumb_dream_cloud_house',
+  'worldmap_thumb_flower_farm_house',
   'worldmap_thumb_wishing_fountain_1',
   'worldmap_thumb_wishing_fountain_2',
   'icon_worldmap',

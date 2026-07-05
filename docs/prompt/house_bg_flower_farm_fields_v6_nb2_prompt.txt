@@ -1,0 +1,23 @@
+Create a vertical 9:16 outdoor game background. Use attached shell for bright warm colors only.
+
+STRICT LAYOUT:
+
+TOP 15%: narrow sky, pale blue, few clouds.
+
+NEXT 35%: isometric farmland — wheat, green rows, windmill, barn, fences. Farmland ends here.
+
+BOTTOM 50% — ENTIRE lower half must be ONE FLAT FIELD:
+- 100% continuous warm light sandy-tan earth color across full width.
+- Absolutely NO green grass anywhere in bottom 50%.
+- NO lawn patches, NO side grass clumps, NO oval grass border, NO green islands.
+- Only warm tan/beige dirt texture with subtle variation.
+- Optional: 8-12 tiny vivid flower dots (red yellow pink white) scattered on the tan dirt — flowers only, no grass under them.
+- Optional: very soft komorebi light circles on tan dirt.
+
+This bottom half is empty open farmyard ground for placing a building shell in the center.
+
+Isometric 45 degree view. Bright high-key pastel, NOT dull.
+
+No text, no building, no shell, no fence in bottom half.
+
+Forbidden in bottom 50%: any green color, grass, lawn, crop rows, wheat, bushes.

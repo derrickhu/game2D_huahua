@@ -1,0 +1,21 @@
+EDIT the attached reference background image. This is a minimal local edit — recreate the SAME image with ONE small change only.
+
+REFERENCE = the attached v4 flower-farm fields background. Copy it as closely as possible: same composition, same colors, same brightness, same isometric 45-degree camera, same sky, same upper farmland, same windmill, same haze band, same central sandy-tan clearing, same bottom grass border with flowers, same flower colors and density everywhere else.
+
+THE ONLY CHANGE — remove two small side grass clumps:
+- In the middle horizontal band of the lower half, on the LEFT edge and RIGHT edge, there are small patches of bright yellow-green grass with tiny red/yellow/pink/white flowers protruding inward into the sandy clearing.
+- DELETE those two side grass+flower patches only.
+- Replace them with the same warm sandy-tan earth texture as the adjacent clearing ground — seamless, natural, no visible edit seam.
+- The clearing should read as slightly wider open dirt, but still framed by bottom foreground grass at the very bottom.
+
+DO NOT CHANGE anything else:
+- Keep upper farmland, hills, wheat, crop rows, fences, windmill, barn exactly as reference.
+- Keep narrow sky and clouds exactly as reference.
+- Keep bottom foreground grass strip and flowers along the bottom edge exactly as reference.
+- Keep komorebi light spots on tan ground.
+- Do NOT flatten the whole lower half to plain dirt.
+- Do NOT remove bottom grass.
+- Do NOT redraw as a new scene.
+- Do NOT change art style, saturation, or layout.
+
+Output: vertical 9:16, opaque, no text, no building, no room shell.

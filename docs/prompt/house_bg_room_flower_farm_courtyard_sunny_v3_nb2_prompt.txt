@@ -1,0 +1,35 @@
+Create one game-ready isometric outdoor courtyard room shell for a cozy pastel flower-shop merge game.
+
+Use the attached tea house shell for LIGHT LINEWORK ONLY: soft brown hairline outlines slightly thicker than hair, airy pastel, absolutely NO thick black outlines, NO heavy sticker inking, NO bold comic contours.
+
+Use the attached isometric farm background for GROUND PLANE ALIGNMENT ONLY: the yard floor must sit on the same flat isometric ground level, not hover above it.
+
+Subject: empty sunlit farm courtyard shell — L-corner exterior walls + open yard.
+
+Layout:
+- Two cream plaster exterior house walls in back corner, terracotta roof eave strip on top.
+- Right wall: honey wood window + wooden door, tiny abstract red paper shapes only, no readable text.
+- Back wall: blank plaster, optional small high window.
+- Left: short wooden fence with bright green ivy trellis.
+- Thin low wooden deck along walls only (1 plank step, not a tall stage).
+
+GROUND — MOST CRITICAL FIX:
+- Draw ONLY the TOP surface of the yard ground (dirt + grass + a few flat stones).
+- The ground is a flat isometric floor tile, like a game room floor — NOT a 3D extruded earth block.
+- FORBIDDEN: visible vertical side faces under the yard, thick beige platform slab, cliff edges, box pedestal, tall isometric block base, dark brown earth walls showing thickness.
+- The bottom silhouette of the asset should be a soft irregular grass/dirt edge that fades out — ground continues outward invisibly.
+- Front yard area broad, light sandy-tan earth, almost flush elevation, gentle transition to bottom margin.
+
+Linework: soft brown/lavender-brown, light and delicate, matching tea house shell.
+
+Lighting: warm sun upper-right, soft komorebi spots, bright high-key pastels.
+
+Camera: upper-left isometric 45 degrees, same as flower shop room shells.
+
+Empty: no furniture, plants, tools, animals, characters.
+
+NO TEXT, no watermark.
+
+Transparent/plain background, square 1:1, generous margin.
+
+Avoid: thick black outlines, 3D platform base, extruded ground block, dark muddy colors, indoor room cutaway.

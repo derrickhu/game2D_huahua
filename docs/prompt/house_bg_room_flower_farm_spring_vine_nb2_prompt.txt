@@ -1,0 +1,19 @@
+Create one game-ready isometric cutaway room shell recolor variant for a cozy pastel merge game. Use the attached default flower farm cottage shell as the EXACT layout and structure reference: same single-story cutaway, same camera, same wall positions, same floor shape, same open front, same roof eave placement. ONLY change colors and seasonal vine decoration.
+
+Subject: spring vine recolor of the pastoral farm cottage interior shell, empty, no furniture.
+
+Changes from reference:
+- Walls: same structure but add soft climbing ivy and small yellow wildflowers on back wall lower half and right wall corner, still leaving large blank areas for wall decor.
+- Floor: slightly more mint-sage wash on wheat wood planks, still flat and readable.
+- Beams and porch: honey wood unchanged or slightly greener tint.
+- Roof eave: swap terracotta tiles to soft gray-green wooden shingles with tiny moss hints.
+- Window: same position, outside view slightly more spring blossoms.
+- Keep single-story ONLY, no loft, no stairs, no furniture.
+
+Palette: cream, honey wood, mint-sage, soft gray-green roof, butter yellow tiny flowers, high-key pastel.
+
+NO TEXT, no labels, no readable signs, no numbers, no logo, no watermark.
+
+Art style: 2D casual mobile game, kawaii pastel, upper-left isometric, soft brown linework, transparent or plain background for removal. Same shell proportions as reference.
+
+Output: square 1:1 centered room shell, generous margin.

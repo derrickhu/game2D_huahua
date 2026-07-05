@@ -1,0 +1,20 @@
+Attached reference image is the APPROVED flower farm courtyard shell (图2). Recreate this EXACT game asset.
+
+LOCK — must stay identical to the reference:
+- Same isometric upper-left 45 degree camera, same scale, same centering, same composition.
+- Same L-corner outdoor courtyard layout: cream plaster exterior walls, terracotta roof eaves, honey wood door and large window on right wall, small high window on back wall, wooden deck along walls, picket fence with green ivy trellis on left.
+- Same warm sunny color palette, same dappled komorebi light spots on deck and ground, same cute cottagecore farm mood.
+- Same window shapes, door shape, fence style, roof tile style — do NOT redesign into Chinese lattice windows, do NOT add wisteria purple flowers, do NOT change to a different architectural style.
+- Still completely empty: no furniture, no extra plants, no tools, no animals, no characters.
+
+ONLY TWO MICRO-ADJUSTMENTS — nothing else:
+
+1) LIGHTER OUTLINES: make linework slightly thinner and softer than the reference — soft brown hairline outlines matching other flower-shop room shells, about 20-30% lighter than reference. NOT thick black ink, NOT bold sticker contours. Keep the same drawing style.
+
+2) FLATTER GROUND BASE: the reference has visible vertical side faces / thickness on the bottom edges of the yard ground block (red-box problem areas). Remove or greatly reduce those vertical earth sides. Show mostly the TOP surface of dirt and grass only; bottom silhouette should be a soft tapered grass/dirt edge with minimal thickness, so the yard sits lower and blends onto the isometric background. Do NOT make the courtyard taller. Do NOT add a new raised platform. Do NOT increase deck height.
+
+NO TEXT, no readable signs, no watermark.
+
+Output: square 1:1 PNG, transparent or plain background for removal, generous margin, game-ready isolated courtyard shell.
+
+Forbidden: style change, taller structure, new architecture, heavy black outlines, thick 3D base block, indoor room cutaway, photorealism, dark muddy palette.

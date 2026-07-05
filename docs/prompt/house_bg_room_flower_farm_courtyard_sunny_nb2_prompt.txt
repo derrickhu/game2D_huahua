@@ -1,0 +1,37 @@
+Create one game-ready isometric outdoor courtyard room shell for a cozy pastel flower-shop merge game. Use the attached reference image ONLY for layout intent and lighting mood: a bright sunlit grandparents backyard corner, isometric upper-left view, warm premium cottagecore feeling. Do NOT copy the reference clutter, cat, fish tank, tools, potted plants, or readable text.
+
+Subject: an empty purchasable farm courtyard scene shell — NOT an indoor cutaway room. The playable space is an outdoor small yard beside a countryside house. Players will place furniture on the yard ground like decorating a garden patio.
+
+Structure (critical — different from normal indoor house shells):
+- OUTDOOR COURTYARD L-SHAPE: two perpendicular EXTERIOR house walls form the back corner; the front and left side stay open toward the viewer for decoration space.
+- RIGHT WALL: exterior house wall in warm cream-white plaster with dark honey wood window frame and a large bright glass window (warm yellow interior glow). Below or beside window, one wooden cottage door with simple red decorative festival paper strips — abstract red rectangles ONLY, absolutely NO readable Chinese characters, NO couplet text, NO numbers.
+- BACK WALL: continuation of the same exterior house wall, mostly blank plaster surface suitable for future wall decor, with one small high window optional. Warm cream plaster, clean and bright.
+- LEFT BOUNDARY (partial): a low wooden fence segment with lush bright green ivy trellis climbing it — vivid spring green, not dark olive, not muddy. Fence should frame the yard but leave the central yard open and spacious.
+- FLOOR / GROUND (two levels, very readable for game placement):
+  1) Raised wooden deck/platform running along the house walls — warm honey oak planks, clean, sunlit.
+  2) Lower courtyard ground in front — warm packed earth mixed with soft stone patches and a little fresh grass edge, flat and broad, occupying most of the composition for placing outdoor furniture.
+- NO roof lid over the yard. Optional tiny roof eave overhang slice at the top edge of the house walls only, terracotta or warm brown tiles, decorative not blocking the yard.
+- NO second floor interior platform. This is a single-level outdoor yard shell.
+
+Lighting and color (must feel worth buying — bright, juicy, inviting):
+- Strong warm golden sunlight from upper right, cheerful midday summer mood.
+- Beautiful dappled leaf-light patterns (komorebi) cast softly across the wooden deck and courtyard ground — light golden-green shadows, NOT dark gray, NOT gloomy, NOT heavy contrast.
+- High-key pastel illustration with saturated but soft colors: vivid spring greens, honey wood, cream walls, butter-yellow sunlight, tiny sky-blue accents, warm terracotta roof hints.
+- Avoid muddy browns, desaturated gray-green, dim indoor lighting, or brown-on-brown monotony.
+
+Style:
+- 2D casual mobile merge game illustration, kawaii cottagecore, hand-painted with soft brown outlines slightly thicker than hairline.
+- Premium cozy rural nostalgia, like a sunlit flower-farm side yard in a healing slice-of-life game.
+- Upper-left isometric about 45 degrees, crisp readable edges, gentle volume, airy and bright.
+
+Must be completely empty:
+- NO furniture, NO bench, NO pots, NO plants, NO vegetables planted, NO tools, NO wheelbarrow, NO animals, NO cat, NO fish tank, NO hanging laundry with detail, NO clutter, NO characters.
+- Only architectural shell: walls, fence segment, deck, ground, tiny eave, window, door.
+
+NO TEXT, no labels, no readable signs, no numbers, no logo, no watermark, no captions anywhere.
+
+Background: transparent or plain isolated composition suitable for background removal; generous margin around the courtyard shell.
+
+Output: square 1:1 centered composition, game-ready empty farm courtyard shell PNG.
+
+Avoid: indoor room cutaway with interior walls, dark teahouse palette, cloud fantasy, industrial barn, photorealism, night scene, rain, fog, desaturated dull colors, tiny cramped yard, full fourth wall blocking the front.

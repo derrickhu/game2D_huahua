@@ -50,6 +50,14 @@ const SCENE_OVERRIDES: Record<string, Partial<SceneRenovationProfile>> = {
     backgroundTexture: 'house_bg_dream_cloud_sky_nb2',
     buildingScaleMultiplier: 1.2,
   },
+  flower_farm_house: {
+    backgroundTexture: 'house_bg_flower_farm_fields_nb2',
+    buildingScaleMultiplier: 1.05,
+    browseViewScale: 0.88,
+    editViewScaleMin: 0.75,
+    editViewScaleMax: 2.2,
+    editViewScaleDefault: 0.88,
+  },
   garden_villa: {
     buildingScaleMultiplier: 1.88,
     // 之前缩得太狠，家具/人物显得过小；上调让其在大房间里比例更合理（尤其家具）

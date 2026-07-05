@@ -1,0 +1,39 @@
+Single mobile game HUD primary CTA button asset, wide horizontal layout on a 16:9 canvas. One COMPLETE elongated pill capsule button centered both horizontally and vertically, occupying about 70% of canvas width and 34% of canvas height. The ENTIRE capsule must be fully visible with equal margin above and below — both rounded ends intact, NOT cropped, NOT clipped, NOT cut flat at the bottom.
+
+SUBJECT — ONE wide rose-pink pill capsule button:
+- Shape: long horizontal capsule with fully rounded semicircle ends on BOTH left and right, symmetric top and bottom curves.
+- Left third: cute illustrated hammer and paintbrush crossed, tiny pink five-petal flower with one green leaf, two tiny four-pointed star sparkles. Hammer warm muted gold, brush handle soft plum-lilac, brush bristles dusty rose. Clean soft toy proportions, NOT heavy comic black outlines.
+
+TEXT 装修 — CUSTOM GAME UI LETTERING (NOT generic system font, NOT plain white sticker text):
+- Design bespoke illustrated Chinese title lettering 装修 that feels baked into the same art style as the capsule — cozy merge-game flower-shop CTA typography with personality.
+- Letter style: bold rounded bubble letters with soft inner warmth, slight playful tilt, harmonious with the rose-pink capsule — like a cute hand-lettered shop sign embossed on the button.
+- Letter colors coordinated with capsule palette:
+  fill warm cream-peach #FFF0E6 or soft champagne #FEF3C7
+  inner shading dusty rose #C2185B
+  outer stroke deep plum-rose #831843 or #9D174D — same family as capsule rim, NOT generic purple comic outline, NOT cyan, NOT pure white flat fill only.
+- Large, readable, right two-thirds of capsule, vertically centered.
+
+CAPSULE BODY — WARM ROSE PINK, BALANCED NOT NEON:
+- Use warm dusty rose / coral-rose pink family. Solid and pleasant, NOT fluorescent hot pink, NOT neon magenta, NOT oversaturated candy pink, NOT horizontal stripe bands.
+- Smooth matte volume from subtle rose shades only:
+  top face soft rose #E879A9
+  mid warm rose #DB7093
+  lower deep rose #BE5978
+  bottom edge plum-rose #9D4459
+- Thin crisp outer rim deep rose-plum #AD4070 directly on capsule edge.
+- NO white glossy highlight, NO cream-yellow wash on right half, NO plastic shine.
+
+CRISP CUTOUT — CRITICAL:
+- Easy green-screen key. NO drop shadow on green. NO outer glow. NO white fringe outside rim on green.
+- Capsule outer edge clean hard graphic shape, at most 1px anti-alias against green.
+
+RENDERING STYLE:
+- 2D casual merge-game flower-shop UI, flat but refined, warm pastel with color weight, soft kawaii.
+- Matte finish. Smooth rose shading, NOT stripe texture.
+- Readable at ~320px wide in-game.
+
+FORBIDDEN:
+Neon magenta, fluorescent pink, horizontal color stripes on capsule, flat bottom cut capsule, cyan/teal text, generic white-only 装修 with purple outline, gold border, English text, 装修花店, watermark, phone frame, white reflective highlight, heavy black comic outlines, fuzzy shadow on green.
+
+BACKGROUND FOR CUTOUT:
+Only OUTSIDE the button: pure flat screen green RGB exactly 0,255,0 edge-to-edge, uniform. Button interior ZERO green pixels.

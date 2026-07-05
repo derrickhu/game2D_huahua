@@ -1,0 +1,30 @@
+Create a vertical 9:16 full-screen outdoor background for a cozy pastel flower-shop merge game.
+
+CRITICAL CAMERA: strict upper-left ISOMETRIC about 45 degrees — the SAME ground perspective as the attached courtyard shell and tea house room shells in this game. This is NOT a flat landscape horizon photo, NOT a side-view countryside illustration, NOT aerial top-down. The near ground must read as an isometric ground plane tilting toward the viewer, aligned with game furniture and room shell placement.
+
+Use the attached courtyard shell for near-ground color matching: warm light sandy-tan earth, bright yellow-green grass patches, sunny cottagecore palette.
+
+Theme: sunlit farm environment behind a transparent isometric courtyard shell.
+
+Composition (isometric depth, bottom to top):
+- BOTTOM / NEAR GROUND (most important): a broad isometric ground plane filling the lower 35-45% of the frame. Flat readable tilted earth surface — warm light tan packed soil with soft bright grass borders at left/right edges. Scatter sparse vivid tiny wildflowers (red, yellow, pink, white) on the grass edges. Center-bottom stays calm and relatively plain so the courtyard shell sits on it cleanly. Ground plane edges fade softly toward bottom corners. Same elevation feel as shell yard — NOT a cliff, NOT a hill dropping away.
+- LOWER-MIDDLE: isometric bands of nearer meadow and field rows receding in perspective — green crop rows, golden wheat strips, light brown tilled soil, drawn with isometric diagonal field lines not horizontal landscape stripes.
+- UPPER-MIDDLE / FAR VIEW: rolling isometric farmland layers, distant hedgerows, tiny windmill or barn silhouette far away, soft atmospheric perspective.
+- TOP / SKY: bright warm summer sky, pale blue to butter-cream horizon, soft fluffy clouds, golden sunlight from upper right.
+
+Integration rules:
+- Do NOT draw any building, wall, fence, deck, room shell, or courtyard structure.
+- Near ground color/tone must blend seamlessly when the shell is placed centered on lower portion.
+- Optional very soft komorebi light spots on near ground — light only.
+
+Linework: soft brown hairline outlines on distant field elements only; lighter than foreground game props; no heavy black ink.
+
+Color: high-key juicy pastoral pastels — vivid green, honey gold wheat, cream sky, light tan earth, bright flower accents. NOT muddy, NOT dim.
+
+Art style: 2D casual mobile merge game, kawaii cozy, hand-painted soft volume, matches tea house / flower shop isometric backgrounds.
+
+Technical:
+- 9:16 vertical full opaque environment background for JPG.
+- No text, no labels, no logo, no watermark, no characters, no furniture, no buildings.
+
+Avoid: flat landscape horizon painting, camera looking straight at hills, aerial satellite view, dark muddy ground, thick black outlines, perspective mismatch with isometric shell, steep cliff at bottom, busy center foreground.

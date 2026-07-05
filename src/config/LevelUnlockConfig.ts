@@ -310,8 +310,14 @@ const LEVEL_UNLOCK_BASE: Record<number, Omit<LevelUnlockDef, 'level'>> = {
     ],
   },
   30: {
-    ceremonyTitle: '进阶花境',
+    ceremonyTitle: '花田拾光',
     entries: [
+      {
+        kind: 'map',
+        title: '花田农舍开放',
+        desc: '大地图茶香与橡树之间的田园空地可花愿解锁，青畦果筐与暖巢鸡舍等你布置。',
+        iconKey: 'worldmap_thumb_flower_farm_house',
+      },
       {
         kind: 'feature',
         title: '银宝箱补给',

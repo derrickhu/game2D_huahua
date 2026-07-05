@@ -1,0 +1,26 @@
+Create one game-ready isometric cutaway room shell for a cozy pastel merge game. Use the attached tea house or dream cloud two-story shell ONLY for camera/layout intent: same approximate upper-left isometric camera, open-front cutaway, readable interior floor, two interior walls (back + right), partial perimeter roof/eave strips that do NOT cover the interior, centered isolated composition. Do NOT copy Asian pavilion, cloud fantasy, or treehouse details.
+
+Subject: a single-story pastoral farm cottage interior room shell, empty, no furniture. Side-story purchasable house around midgame: warm countryside harvest theme, soft and cozy, like a small home beside flower fields.
+
+Architecture and distinctive features:
+- SINGLE-STORY CUTAWAY ONLY: one broad main floor platform, NO second floor deck, NO loft platform, NO stairs blocking center. Optional tiny attic window shape on back wall only, not a playable upper level.
+- FLOOR: broad flat warm wheat-beige wood plank floor or pressed earth tiles with subtle grout, highly readable and usable for furniture placement. Must stay smooth and game-friendly across the whole lower area.
+- WALLS: only BACK wall and RIGHT wall planes; front completely open. Walls are smooth cream plaster with exposed honey wood beams at corners and ceiling edge, broad blank install-ready surfaces for wall decorations. One square paned window on right wall showing soft green field and pale sky outside.
+- ROOF: partial roof/eave strips along top outer edges only, not a full lid. Soft terracotta clay tile eave with warm wood beam underside. Roof must NOT cover interior floor.
+- PORCH ACCENT: small wooden porch step/threshold at front edge only, 2 low steps max, decorative not blocking center floor.
+- EXTERIOR EDGE ACCENTS ONLY: tiny hay corner bundle, small clay pot with herbs outside playable floor at one corner. Minimal clutter.
+
+Farm cottage identity:
+- Warm pastoral mood: honey wood, cream plaster, sage green hints through window, terracotta roof trim.
+- Cute mobile game readability over realism.
+- Mood is "sunlit harvest afternoon": calm, warm, clean, bright.
+
+Palette: cream white, honey oak, wheat beige floor, soft terracotta, sage green window view, butter highlights. High-key pastel, clean soft brown linework, airy and bright.
+
+Structure requirements: clear single-story cutaway cottage shell; open front for placing game furniture; broad readable floor; two interior walls only; no front wall, no left wall; no blocking objects inside; no furniture, no bed, no shelf, no table, no chair, no plants inside the room, no characters, no rugs, no animals inside.
+
+NO TEXT, no labels, no readable signs, no numbers, no logo, no watermark, no captions anywhere in the image.
+
+Art style: 2D casual mobile game illustration, kawaii pastel, hand-painted vector-like asset, upper-left isometric view, soft ambient occlusion, gentle highlights, crisp readable edges, transparent background or simple isolated object on plain background suitable for background removal. Avoid photorealism, heavy shadows, dense clutter, dark palette, industrial barn, and perspective distortion.
+
+Output: single centered room-shell PNG composition, square 1:1, generous transparent or removable empty margin around the shell.

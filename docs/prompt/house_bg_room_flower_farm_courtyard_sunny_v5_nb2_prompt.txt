@@ -1,0 +1,23 @@
+EDIT the attached reference courtyard shell image. Recreate the SAME asset with ONLY two removals.
+
+REFERENCE = current approved flower farm sunny courtyard shell. Copy composition, scale, colors, camera, walls, roof, deck, windows, door shape, ground, komorebi light spots, ivy on left wall — everything identical.
+
+REMOVAL 1 — LEFT PICKET FENCE:
+- Delete the entire short wooden picket fence on the left side of the yard (the small vertical fence segment by the left wall).
+- Replace that area with continuous yard ground only: same dirt/grass texture as the rest of the yard edge.
+- Keep the green ivy / vine growing on the left wall — only remove the fence posts and rails, NOT the wall ivy.
+- Do NOT add any new fence anywhere.
+
+REMOVAL 2 — RED PAPER ON DOOR:
+- Remove all red paper strips / Fu decorations from the wooden door and from the wall beside the door.
+- Show a clean plain honey-wood door with no red paper, no red diamond, no couplets.
+- Door panels and handle unchanged otherwise.
+
+DO NOT CHANGE anything else:
+- Same L-corner layout, same deck planks, same window frames, same roof eaves, same ground base thickness, same outline weight, same brightness.
+- Still empty: no furniture, no tools, no animals, no characters.
+- No text, no watermark.
+
+Square 1:1 game room shell, generous margin, white or transparent background for cutout.
+
+Forbidden: redesign architecture, add fence elsewhere, add red paper back, indoor cutaway, style drift.

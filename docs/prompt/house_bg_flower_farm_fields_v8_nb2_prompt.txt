@@ -1,0 +1,23 @@
+The attached image is the target background with RED RECTANGLES drawn by the user marking exactly what to fix.
+
+TASK: Recreate this exact same background illustration, but REMOVE the green grass and flowers inside the two RED rectangles only.
+
+Inside each red rectangle (left side and right side, middle horizontal band):
+- Delete all yellow-green grass tufts and all small flowers.
+- Fill with the same warm sandy-tan earth texture as the center clearing beside the boxes.
+- Seamless natural ground, no grass, no flowers, no green.
+
+OUTSIDE the red rectangles — keep IDENTICAL to the reference:
+- Top sky, clouds, rolling hills, wheat fields, crop rows, windmill, barn, fences — unchanged.
+- Center sandy clearing — unchanged.
+- Bottom foreground grass border with flowers along the very bottom edge — unchanged.
+- Same colors, same brightness, same isometric 45-degree view, same art style.
+
+CRITICAL:
+- Output must have NO red rectangles, NO red marks, NO annotations.
+- Do NOT remove bottom grass strip.
+- Do NOT remove upper farmland.
+- Do NOT redesign the scene.
+- Only erase the side grass patches that the red boxes highlight.
+
+Vertical 9:16 game background. No text. No building.

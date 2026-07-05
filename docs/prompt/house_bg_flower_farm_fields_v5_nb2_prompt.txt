@@ -1,0 +1,32 @@
+Create a vertical 9:16 full-screen outdoor background for a cozy pastel flower-shop merge game.
+
+Use the attached reference background ONLY to know what to REMOVE: delete the left and right grass patches with flowers in the middle horizontal band around the courtyard placement zone. Replace those grass patches with the same continuous warm sandy-tan open earth as the center clearing.
+
+Use the attached courtyard shell for COLOR matching: bright, warm, high-key, vivid tones.
+
+CRITICAL CAMERA: upper-left isometric about 45 degrees.
+
+COMPOSITION:
+
+TOP SKY — small band only (~12-15% height):
+- Narrow bright summer sky, pale blue to butter-cream, few soft clouds.
+
+UPPER HALF — farmland only:
+- Golden wheat, green crop rows, brown tilled soil, distant windmill/barn, white fences on hills.
+- All structured farmland stays above the middle line. NO crops in lower half.
+
+LOWER HALF — ONE CONTINUOUS OPEN MEADOW FLOOR (critical):
+- A single unified warm light sandy-tan earth surface across the entire lower half — left, center, and right.
+- NO separate side grass patches, NO left/right grass clumps flanking the center, NO green lawn islands in the middle band.
+- The ground where the courtyard shell sits must be continuous open dirt/earth from left edge to right edge.
+- Optional: a few tiny vivid wildflowers (red, yellow, pink, white) scattered directly on the tan earth — sparse, not forming grass beds.
+- Optional: very thin grass+f lower strip ONLY at the very bottom 8% edge of the frame — but the main shell placement zone (middle-lower area) must remain grass-free open tan earth.
+- Optional soft komorebi light spots on tan ground.
+
+Color: bright saturated pastels matching shell — vivid but warm, NOT dull.
+
+Style: 2D casual mobile merge game, kawaii cozy, soft brown hairline on distant fields only.
+
+Technical: 9:16 opaque background. No text, no logo, no building, no room shell.
+
+Avoid: side grass patches in middle band, left/right lawn clumps, crop rows in lower half, large sky, busy patterns near center bottom, dark muddy colors.

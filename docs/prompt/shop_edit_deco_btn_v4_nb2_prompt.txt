@@ -1,0 +1,25 @@
+Single mobile game HUD bottom-nav CTA button asset, square 1:1 canvas, one object centered with comfortable margin.
+
+USE THE ATTACHED REFERENCE IMAGE as the ONLY style authority. The reference shows three neighboring bottom-nav icons (coral sofa, lavender workshop table, pink dress). Your output MUST look like it belongs in the same icon family — same outline weight, same cel-shaded chunky toy illustration, same sparkle language, same warm pastel merge-game flower-shop DNA. If it looks like flat vector UI, flat Material design, or a glossy pill button, it is WRONG.
+
+SUBJECT — ONE cute illustrated yellow renovation sign badge (异形，长方菱形):
+- A wide horizontal hex-diamond / elongated diamond plaque (flat top, flat bottom, soft pointed left and right tips), like a cozy game nameplate — NOT a plain pill capsule, NOT a flat geometric hex with no illustration depth.
+- Warm mango-honey yellow body (#FFB347 to #F2A93A cel bands), reads eye-catching vs pink/purple neighbors but same rendering technique as reference icons.
+- Optional tiny cute accents ONLY in the same illustrated style: two small cream corner studs or short ribbon tabs — keep minimal, 2–4 elements max, still chunky toy shapes with brown outline.
+
+RENDERING — MUST MATCH REFERENCE ICONS:
+- Thick soft outline warm dark chocolate brown (same as sofa / table / dress icons).
+- Volume from smooth pure-color cel gradients, NOT glossy glass, NOT photoreal metal, NOT heavy 3D bevel.
+- One soft white curved highlight band on the upper plaque surface.
+- Two tiny white four-pointed star sparkles (same as reference icons).
+- Clean bold silhouette readable at ~128px width when scaled down.
+
+TEXT — baked into the badge, ONLY Chinese "装修" (two characters):
+- Large bold rounded game font, white fill with thick warm dark brown outline — same label treatment as the white Chinese labels under reference icons.
+- Centered on the yellow plaque. NO "装修花店". NO English. NO numbers.
+
+FORBIDDEN:
+Flat vector-only badge, lavender/purple plaque body, hammer/paintbrush/tools, flowers, busy scene, watermark, phone frame, separate floating text outside the plaque, glossy bubble pill, photoreal wood, dark navy, English text.
+
+BACKGROUND FOR CUTOUT:
+Only margins OUTSIDE the illustrated badge must be pure bright screen green RGB exactly 0,255,0 flat, edge-to-edge. Badge interior must contain ZERO green pixels.

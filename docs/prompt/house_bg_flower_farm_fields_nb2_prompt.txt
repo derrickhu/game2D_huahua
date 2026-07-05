@@ -1,0 +1,27 @@
+Create a vertical 9:16 full-screen outdoor background illustration for a cozy pastel flower-shop merge game. Use the attached courtyard shell image ONLY to match near-ground colors and soil/grass style — warm light tan packed earth, bright yellow-green grass patches, sunny cottagecore farm mood. This background sits BEHIND a transparent isometric farm courtyard room shell, so do NOT draw any building, walls, fence, deck, or room structure.
+
+Theme: sunlit countryside farm landscape — distant farmland beyond a cozy yard foreground.
+
+Composition (top to bottom):
+- TOP / SKY: bright warm summer sky, soft gradient from pale sky blue to butter-cream near horizon, a few fluffy white clouds, gentle golden sunlight from upper right. Cheerful midday, not sunset, not overcast.
+- UPPER-MIDDLE / FAR VIEW: rolling farmland panorama — neat pastel crop fields in bands of golden wheat, mint-green vegetable rows, and soft brown tilled earth. Distant low hills or tree lines as soft silhouettes. A few tiny farm hints far away (optional windmill silhouette or barn roof, very small, not dominant). Atmospheric perspective, soft and dreamy.
+- LOWER-MIDDLE / MID VIEW: transition from fields to nearer meadow — more saturated greens, hedgerow bushes, maybe a distant white fence line, still no buildings in front.
+- BOTTOM / NEAR VIEW (critical — must blend with attached shell ground): foreground ground plane matching the shell's yard soil style — warm light sandy-tan earth with organic bright grass tufts at edges, same color family as the shell (not gray mud, not dark brown). Scatter small clusters of vivid cute wildflowers across the near ground: tiny red, yellow, pink, and white blossoms, sparse and charming, not a dense flower bed. Keep the lower center relatively calm and readable so the courtyard shell sits clearly on top, but left/right lower corners can have more grass and flowers.
+- Optional: very soft dappled sunlight spots (komorebi) on the near ground, light golden-green, subtle, not dark shadows.
+
+Color palette:
+- High-key bright pastoral: vivid spring green, honey-gold wheat, warm cream sky, light tan earth, pops of coral-red / butter-yellow / pink flower accents.
+- Must feel premium and purchase-worthy — juicy saturated pastels, NOT muddy, NOT desaturated gray-green, NOT dim indoor tones.
+
+Art style:
+- Clean 2D casual mobile game illustration, kawaii cozy healing style, soft brown linework on distant elements only.
+- Hand-painted soft volume, gentle gradients, match the bright sunny courtyard shell aesthetic.
+- Harmonize with existing flower-shop merge game outdoor backgrounds.
+
+Technical:
+- 9:16 vertical full-screen environment background (phone portrait).
+- Full opaque illustration suitable for JPG export — no transparency, no alpha holes.
+- No text, no labels, no readable signs, no numbers, no logo, no watermark.
+- NO building, NO house, NO courtyard walls, NO wooden deck, NO fence, NO room shell, NO furniture, NO characters, NO animals, NO UI frame.
+
+Avoid: indoor room, dark storm sky, night scene, snow, industrial factory farm, photoreal aerial photo, muddy brown monotone ground, dense cluttered foreground, giant objects blocking center, horror, sci-fi.

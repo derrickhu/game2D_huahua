@@ -162,6 +162,28 @@ const DREAM_CLOUD_HOUSE_MILESTONES: StarMilestoneDef[] = [
   { star: 120, rewards: [{ type: 'diamond', amount: 25 }, { type: 'chest', amount: 1, itemId: 'chest_4' }] },
 ];
 
+/** 花田农舍：支线（花愿购买解锁），与梦云小屋同档占位 */
+const FLOWER_FARM_HOUSE_THRESHOLDS: StarLevelThreshold[] = [
+  { level: 1,  starRequired: 0,   label: '一星' },
+  { level: 2,  starRequired: 9,   label: '二星' },
+  { level: 3,  starRequired: 20,  label: '三星' },
+  { level: 4,  starRequired: 30,  label: '四星' },
+  { level: 5,  starRequired: 45,  label: '五星' },
+  { level: 6,  starRequired: 65,  label: '六星' },
+  { level: 7,  starRequired: 90,  label: '七星' },
+  { level: 8,  starRequired: 120, label: '八星' },
+];
+
+const FLOWER_FARM_HOUSE_MILESTONES: StarMilestoneDef[] = [
+  { star: 9,   rewards: [{ type: 'stamina', amount: 25 }] },
+  { star: 18,  rewards: [{ type: 'chest', amount: 1, itemId: 'chest_1' }] },
+  { star: 30,  rewards: [{ type: 'diamond', amount: 8 }, { type: 'chest', amount: 1, itemId: 'chest_2' }] },
+  { star: 45,  rewards: [{ type: 'stamina', amount: 35 }, { type: 'diamond', amount: 10 }] },
+  { star: 65,  rewards: [{ type: 'chest', amount: 1, itemId: 'chest_3' }] },
+  { star: 90,  rewards: [{ type: 'diamond', amount: 15 }, { type: 'stamina', amount: 45 }] },
+  { star: 120, rewards: [{ type: 'diamond', amount: 25 }, { type: 'chest', amount: 1, itemId: 'chest_4' }] },
+];
+
 export const SCENE_DEFS: SceneDef[] = [
   {
     sceneId: 'flower_shop',
@@ -211,6 +233,13 @@ export const SCENE_DEFS: SceneDef[] = [
     maxStarLevel: 8,
     thresholds: DREAM_CLOUD_HOUSE_THRESHOLDS,
     milestones: DREAM_CLOUD_HOUSE_MILESTONES,
+  },
+  {
+    sceneId: 'flower_farm_house',
+    name: '花田农舍',
+    maxStarLevel: 8,
+    thresholds: FLOWER_FARM_HOUSE_THRESHOLDS,
+    milestones: FLOWER_FARM_HOUSE_MILESTONES,
   },
 ];
 

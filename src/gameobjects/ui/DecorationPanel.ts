@@ -487,20 +487,42 @@ export class DecorationPanel extends PIXI.Container {
   /** 当前网格中首张「可花愿购买」卡片的购买区锚点（卡片局部坐标系中的点） */
   private _tutorialPurchaseAnchor: PIXI.Container | null = null;
   private _assignTutorialPurchaseAnchorDone = false;
+  /** 避免 pointer 栈内 _refreshAll 销毁卡片后 Pixi updateTransform 读 null（与 QuestPanel 同因） */
+  private _gridRefreshRaf: number | null = null;
+  private _gridTapActionRaf: number | null = null;
+
+  private _scheduleGridRefresh(): void {
+    if (!this._isOpen) return;
+    if (this._gridRefreshRaf !== null) return;
+    this._gridRefreshRaf = requestAnimationFrame(() => {
+      this._gridRefreshRaf = null;
+      if (this._isOpen) this._refreshAll();
+    });
+  }
+
+  private _captureFlyCardGlobal(flyCard: PIXI.Container): { x: number; y: number } | null {
+    if (flyCard.destroyed) return null;
+    try {
+      const gp = flyCard.toGlobal(new PIXI.Point(14, 14));
+      return { x: gp.x, y: gp.y };
+    } catch {
+      return null;
+    }
+  }
 
   private readonly _onCurrencyChangedForGrid = (type?: string): void => {
     if (!this._isOpen || type !== 'huayuan') return;
-    this._refreshAll();
+    this._scheduleGridRefresh();
   };
 
   private readonly _onCollectionDiscoveredForGrid = (): void => {
     if (!this._isOpen) return;
-    this._refreshAll();
+    this._scheduleGridRefresh();
   };
 
   private readonly _onDecoNewUnlockChanged = (): void => {
     if (!this._isOpen) return;
-    this._refreshAll();
+    this._scheduleGridRefresh();
   };
 
   constructor() {
@@ -546,8 +568,13 @@ export class DecorationPanel extends PIXI.Container {
     const pending = this._pendingGridTap;
     this._pendingGridTap = null;
     if (movedPx < 12 && pending) {
-      if (pending.type === 'deco') this._onCardTap(pending.deco, pending.flyCard);
-      else this._onRoomStyleTap(pending.style, pending.flyCard);
+      if (this._gridTapActionRaf !== null) cancelAnimationFrame(this._gridTapActionRaf);
+      this._gridTapActionRaf = requestAnimationFrame(() => {
+        this._gridTapActionRaf = null;
+        if (!this._isOpen) return;
+        if (pending.type === 'deco') this._onCardTap(pending.deco, pending.flyCard);
+        else this._onRoomStyleTap(pending.style, pending.flyCard);
+      });
     }
   }
 
@@ -676,6 +703,14 @@ export class DecorationPanel extends PIXI.Container {
     this._pendingNewDecoAfterLevelUp = null;
     this._dismissUnlockPopup();
     this._teardownScroll();
+    if (this._gridRefreshRaf !== null) {
+      cancelAnimationFrame(this._gridRefreshRaf);
+      this._gridRefreshRaf = null;
+    }
+    if (this._gridTapActionRaf !== null) {
+      cancelAnimationFrame(this._gridTapActionRaf);
+      this._gridTapActionRaf = null;
+    }
     this._isOpen = false;
     const h = Game.logicHeight;
     TweenManager.cancelTarget(this._content.position);
@@ -1939,11 +1974,25 @@ export class DecorationPanel extends PIXI.Container {
 
   // ─── tap handlers ─────────────────────────────────────────
 
-  private _emitShopStarFly(flyCard: PIXI.Container, starAmount: number): void {
+  private _emitShopStarFly(
+    flyCard: PIXI.Container,
+    starAmount: number,
+    flyOrigin?: { x: number; y: number } | null,
+  ): void {
     if (starAmount <= 0) return;
-    const lp = new PIXI.Point(14, 14);
-    const gp = flyCard.toGlobal(lp);
-    EventBus.emit('decoration:shopStarFly', { globalX: gp.x, globalY: gp.y, amount: starAmount });
+    let gx: number;
+    let gy: number;
+    if (flyOrigin) {
+      gx = flyOrigin.x;
+      gy = flyOrigin.y;
+    } else if (!flyCard.destroyed) {
+      const gp = flyCard.toGlobal(new PIXI.Point(14, 14));
+      gx = gp.x;
+      gy = gp.y;
+    } else {
+      return;
+    }
+    EventBus.emit('decoration:shopStarFly', { globalX: gx, globalY: gy, amount: starAmount });
   }
 
   /** 关闭装修面板并切花店场景，携带待摆放家具（编辑模式 + 托盘拖入） */
@@ -1996,6 +2045,7 @@ export class DecorationPanel extends PIXI.Container {
       ToastMessage.show('请稍候，星级正在飞入~');
       return;
     }
+    const flyOrigin = this._captureFlyCardGlobal(flyCard);
     const onShopScene = SceneManager.current?.name === 'shop';
     if (deco.starValue > 0 && onShopScene) {
       if (!DecorationManager.unlock(deco.id, { deferStarGrant: true })) {
@@ -2004,8 +2054,8 @@ export class DecorationPanel extends PIXI.Container {
       }
       if (deco.cost > 0) AudioManager.play('purchase_tap');
       this._pendingDecoGrantStar = deco;
-      this._emitShopStarFly(flyCard, deco.starValue);
-      this._refreshAll();
+      this._emitShopStarFly(flyCard, deco.starValue, flyOrigin);
+      this._scheduleGridRefresh();
     } else {
       if (!DecorationManager.unlock(deco.id)) {
         ToastMessage.show(DecorationManager.canPurchaseDeco(deco.id)
@@ -2014,8 +2064,8 @@ export class DecorationPanel extends PIXI.Container {
         return;
       }
       if (deco.cost > 0) AudioManager.play('purchase_tap');
-      this._emitShopStarFly(flyCard, deco.starValue);
-      this._refreshAll();
+      this._emitShopStarFly(flyCard, deco.starValue, flyOrigin);
+      this._scheduleGridRefresh();
       this._showNewDecoUnlockPopup(deco);
     }
   }
@@ -2388,9 +2438,10 @@ export class DecorationPanel extends PIXI.Container {
       if (DecorationManager.unlockRoomStyle(style.id)) {
         if (style.cost > 0) AudioManager.play('purchase_tap');
         DecorationManager.equipRoomStyle(style.id);
-        this._emitShopStarFly(flyCard, style.starValue);
+        const flyOrigin = this._captureFlyCardGlobal(flyCard);
+        this._emitShopStarFly(flyCard, style.starValue, flyOrigin);
         ToastMessage.show(`已解锁「${style.name}」！`);
-        this._refreshAll();
+        this._scheduleGridRefresh();
       } else {
         ToastMessage.show(`花愿不足，需要 ${style.cost} 花愿`);
       }
