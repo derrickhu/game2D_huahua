@@ -7,6 +7,9 @@
 - RGBA → 256 色 FASTOCTREE + Floyd–Steinberg，zlib 9 + optimize
 - 中间文件写入系统临时目录（避免微信开发者工具缓存 ENOENT）
 
+**跳过** `*_shell*.png` 全屏面板壳体：壳图须保持 ~680×1240 RGBA 原分辨率，
+代码按 `panelW / texture.width` 放大到 726px 宽；256 色 + 缩到 1024 会明显发糊。
+
 用法（仓库根）:
   python3 scripts/compress_subpkg_panels_ui_pngs.py
   python3 scripts/compress_subpkg_panels_ui_pngs.py --dry-run
@@ -26,6 +29,13 @@ from PIL import Image
 
 REPO = Path(__file__).resolve().parents[1]
 ROOT = REPO / "minigame" / "subpkg_panels" / "images" / "ui"
+
+# 全屏弹窗壳体：禁止 256 色量化/降分辨率（见脚本头说明）
+SKIP_SHELL_GLOB = "*_shell*.png"
+
+
+def is_panel_shell_png(path: Path) -> bool:
+    return path.match(SKIP_SHELL_GLOB)
 
 
 def shrink_max_side(im: Image.Image, max_side: int) -> Image.Image:
@@ -96,6 +106,8 @@ def main() -> int:
     )
     args = ap.parse_args()
 
+    skipped_shells: list[Path] = []
+
     if args.paths:
         pngs = []
         for p in args.paths:
@@ -103,6 +115,9 @@ def main() -> int:
             if not p.is_file():
                 print(f"Not a file: {p}", file=sys.stderr)
                 return 1
+            if is_panel_shell_png(p):
+                print(f"SKIP shell (use lossless): {p.relative_to(REPO)}", file=sys.stderr)
+                continue
             pngs.append(p)
     else:
         if not ROOT.is_dir():
@@ -111,10 +126,15 @@ def main() -> int:
         pngs = sorted(p for p in ROOT.rglob("*.png") if p.is_file())
         if not args.all_ui:
             pngs = [p for p in pngs if p.name.startswith("daily_challenge")]
+        skipped_shells = [p for p in pngs if is_panel_shell_png(p)]
+        pngs = [p for p in pngs if not is_panel_shell_png(p)]
 
     total_old = sum(p.stat().st_size for p in pngs)
     changed = 0
     saved = 0
+
+    for p in skipped_shells:
+        print(f"SKIP shell (use lossless): {p.relative_to(REPO)}")
 
     for p in pngs:
         o, n, ch = compress_one(p, args.max_side, args.colors, args.dry_run)

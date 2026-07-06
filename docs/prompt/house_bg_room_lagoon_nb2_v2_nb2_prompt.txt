@@ -1,0 +1,31 @@
+Square game asset, EXACTLY 1024 by 1024 pixels, 1:1 aspect ratio — same canvas size, centering, margins, and footprint as the attached reference PNG.
+
+Attached reference image: the current Lagoon / Tropical room shell — replicate EXACTLY the same isometric L-shaped open room structure, same roof silhouette, same corner posts, same three-window layout (one large on back wall, two on right wall), same square ceramic tile floor grid, same stone foundation, same front steps, same outdoor patch. Do NOT crop tighter, do NOT zoom in, do NOT change building scale relative to canvas. This is a STYLE REDRAW of the same lagoon-themed shell, not a new building shape.
+
+STYLE REDRAW GOAL (most important — match the forest treehouse spring-bloom shell and the refined default flower-shop v3 / candy v2 art quality in this game):
+- Replace heavy dark-brown comic outlines with thin soft warm-taupe linework, barely darker than local fill — elegant 2D manga / watercolor illustration strokes, NOT thick black or chocolate-brown borders.
+- Coloring must feel delicate and layered: soft watercolor-like gradients, gentle material texture, airy ambient occlusion in corners — readable without photorealism.
+- High-key pastel daylight from upper-left; tropical lagoon mood but REFINED and SOFT, not loud, neon, or oversaturated.
+
+LAGOON THEME — keep identity, soften everything:
+- ROOF: same scalloped tile layout as reference — soft seafoam mint (#C8E8DC) to pale aqua (#D4F0E8) tiles with gentle highlight on each scallop; ridge cap and eave trim muted coral blush (#F0C8B8), NOT vivid orange-red. Delicate groove shadows between rows.
+- WALLS: keep the same horizontal stripe band layout as reference (cream top, blue band, warm accent band, soft purple bottom) but MUCH SOFTER: warm cream (#FFFBF7), pale sky blue (#D8ECF8), soft peach-coral (#F8DCC8), whisper lavender (#E8E0F0) — low contrast between bands, watercolor wash feel, NOT bright orange or saturated purple blocks.
+- WOOD POSTS / BEAMS: sun-bleached driftwood tan (#D8C4A8) with fine grain hatching, slender proportions; post cap accents soft coral (#E8C0A8), not hot orange.
+- WINDOW FRAMES: same layout; frames soft sand-wood (#D0B898). Glass: pale light blue (#D8ECF8 to #E8F4FC) with soft inner glow — 淡蓝, NOT teal-green or deep aqua.
+- BASEBOARD: thin pale aqua strip (#D0E8E0) between wall and floor.
+- FLOOR (critical change): keep the same large square ceramic tile grid as reference, but tiles in PALE LIGHT BLUE family — powder sky blue (#D0E8F4), whisper aqua (#DCEEF8), and scattered sandy ivory accent tiles (#F5EDE4); thin soft white grout lines, gentle matte sheen with subtle watercolor highlight, NOT glossy neon turquoise or saturated lagoon teal.
+- FOUNDATION: warm light gray-beige cobble (#D0C8C0), softly shaded stones.
+- OUTDOOR PATCH: pale sand (#F5EDE4), one or two tiny soft grass tufts only.
+
+STRUCTURE (must match reference exactly):
+- Open room: only TWO walls in L-shape — BACK wall and RIGHT wall. Front and left fully open.
+- Interior completely EMPTY — no furniture, no plants, no palm trees, no water puddle, no characters, no text, no watermark.
+- 1–2 short wooden steps at front-left.
+
+Viewpoint: classic isometric from upper-left (~45°), consistent vanishing.
+
+NO TEXT, no labels, no readable signs, no numbers, no logo, no watermark, no captions anywhere.
+
+BACKGROUND outside the structure: pure solid white #FFFFFF for rembg cutout pipeline.
+
+Art style summary: 2D manga watercolor mobile game lagoon room shell — thin soft lines, delicate layered pastel color, gentle volume, treehouse-shell polish. Avoid photorealism, harsh black outlines, heavy shadows, vivid tropical neons, saturated orange stripes, or flat zero-shading vector look.

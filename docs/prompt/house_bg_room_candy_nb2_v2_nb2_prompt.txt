@@ -1,0 +1,31 @@
+Square game asset, EXACTLY 1024 by 1024 pixels, 1:1 aspect ratio — same canvas size, centering, margins, and footprint as the attached reference PNG.
+
+Attached reference image: the current Candy Flower Shop room shell — replicate EXACTLY the same isometric L-shaped open room structure, same roof silhouette, same corner posts, same three-window layout (one large on back wall, two on right wall), same wide diagonal candy floor stripe direction, same stone foundation, same front steps, same outdoor patch. Do NOT crop tighter, do NOT zoom in, do NOT change building scale relative to canvas. This is a STYLE REDRAW of the same candy-themed shell, not a new building shape.
+
+STYLE REDRAW GOAL (most important — match the forest treehouse spring-bloom shell and the refined default flower-shop v3 art quality in this game):
+- Replace heavy dark-brown comic outlines with thin soft warm-taupe linework, barely darker than local fill — elegant 2D manga / watercolor illustration strokes, NOT thick black or chocolate-brown borders.
+- Coloring must feel delicate and layered: soft watercolor-like gradients, gentle material texture, airy ambient occlusion in corners — readable without photorealism.
+- High-key pastel daylight from upper-left; kawaii candy mood but REFINED and SOFT, not loud or neon.
+
+CANDY THEME — keep identity, soften everything:
+- ROOF: same scalloped candy tile layout as reference — alternating soft powder rose (#F5C6D4), pale butter (#FFF4D8), and whisper mint (#D8F2E8) rows; delicate highlight on each scallop curve, soft groove shadow between rows; ridge cap gentle rose, NOT hot pink or saturated candy red.
+- WALLS: warm cream base (#FFFBF7) with LOW-CONTRAST playful polka dots in baby pink (#FADCE8), pale periwinkle (#E4E8F8), and soft lavender (#EDE4F5) — dots small and airy, pattern cute but subtle, not bold circus dots.
+- WOOD POSTS / BEAMS: honey blonde (#E8D0B0) with fine grain hatching, slender proportions, thin soft outlines.
+- WINDOW FRAMES: soft mint sage (#A8D8C4) — muted pastel, not saturated green. Glass: pale aqua-mint (#E4F6F0) with soft inner glow.
+- BASEBOARD: soft peach blush strip (#F8E0D8) between wall and floor, thin and gentle.
+- FLOOR (critical change): keep the same wide diagonal candy ribbon stripes as reference, but use MUCH LIGHTER powder pink (#FADCE8 to #F8E8F0) alternating with vanilla cream (#FFF8F0) — about 4 to 6 wide matte bands across the interior diamond, soft watercolor shading, thin warm-taupe edge lines. NO hot magenta, NO high-contrast fuchsia, NO dark pink stripes.
+- FOUNDATION: warm light gray-beige cobble (#D0C8C0), softly shaded stones.
+- OUTDOOR PATCH: pale apricot sand (#F5EDE4), one or two tiny soft grass tufts only.
+
+STRUCTURE (must match reference exactly):
+- Open room: only TWO walls in L-shape — BACK wall and RIGHT wall. Front and left fully open.
+- Interior completely EMPTY — no furniture, no plants, no characters, no shop sign, no text, no watermark.
+- 1–2 short wooden steps at front-left.
+
+Viewpoint: classic isometric from upper-left (~45°), consistent vanishing.
+
+NO TEXT, no labels, no readable signs, no numbers, no logo, no watermark, no captions anywhere.
+
+BACKGROUND outside the structure: pure solid white #FFFFFF for rembg cutout pipeline.
+
+Art style summary: 2D manga watercolor mobile game candy room shell — thin soft lines, delicate layered pastel color, gentle volume, treehouse-shell polish. Avoid photorealism, harsh black outlines, heavy shadows, loud saturated candy colors, or flat zero-shading vector look.

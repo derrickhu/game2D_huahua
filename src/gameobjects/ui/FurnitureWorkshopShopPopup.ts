@@ -17,10 +17,22 @@ import { appendWorkshopBlueprintIcon, appendWorkshopBlueprintFeatureTags } from 
 import { FurnitureWorkshopBlueprintPreviewPopup } from '@/gameobjects/ui/FurnitureWorkshopBlueprintPreviewPopup';
 
 /** 图纸商店壳图设计尺寸（与入库 PNG 一致） */
-const SHOP_SHELL_TEX_W = 628;
-const SHOP_SHELL_TEX_H = 972;
+export const SHOP_SHELL_DESIGN_W = 628;
+export const SHOP_SHELL_DESIGN_H = 972;
+const SHOP_SHELL_TEX_W = SHOP_SHELL_DESIGN_W;
+const SHOP_SHELL_TEX_H = SHOP_SHELL_DESIGN_H;
 /** 顶边：相对工坊主壳高度，留出异形壳完整高度 */
 export const SHOP_PAGE_TOP_FRAC = 0.2;
+
+/**
+ * 图纸商店独立壳（628×972）高于/宽于工坊主壳内容区；384268a 接入壳图后若与主面板同 scale 会溢出屏幕。
+ * 按主壳剩余高宽计算 ≤1 的 fit，再乘主面板 scale。
+ */
+export function computeShopPopupFitScale(mainShellW: number, mainShellH: number): number {
+  const availH = mainShellH * (1 - SHOP_PAGE_TOP_FRAC);
+  const availW = mainShellW;
+  return Math.min(1, availH / SHOP_SHELL_TEX_H, availW / SHOP_SHELL_TEX_W);
+}
 
 const POP_W = SHOP_SHELL_TEX_W;
 const POP_H = SHOP_SHELL_TEX_H;

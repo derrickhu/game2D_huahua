@@ -1,0 +1,37 @@
+Square game asset, EXACTLY 1024 by 1024 pixels, 1:1 aspect ratio — same canvas size, centering, margins, and footprint as the attached reference PNG.
+
+Attached reference image: the current default flower-shop room shell — replicate EXACTLY the same isometric L-shaped open room structure, same roof silhouette, same corner posts, same window count and placement, same herringbone floor footprint, same stone foundation, same front steps, same outdoor patch. Do NOT crop tighter, do NOT zoom in, do NOT change building scale relative to canvas. This is a STYLE REDRAW of the same shell, not a new building shape.
+
+STYLE REDRAW GOAL (most important — match the forest treehouse spring-bloom shell art quality in this game):
+- Replace the current heavy dark-brown comic outlines with thin soft warm-taupe linework, barely darker than local fill color — elegant 2D manga / watercolor illustration strokes, NOT thick black or chocolate-brown borders.
+- Coloring must feel delicate and layered: soft watercolor-like gradients on plaster walls, gentle wood-grain hatching on beams and floor strips, subtle tile highlight on each scalloped roof row, airy ambient occlusion in corners — readable material texture without photorealism.
+- High-key pastel daylight from upper-left; bright cozy flower-shop mood; keep 2D hand-painted mobile merge game illustration, kawaii but refined — like the treehouse shells in this project (lighter, airier, more polished than the attached reference).
+
+SUBJECT: default cozy flower shop room shell, empty interior, no furniture, no characters, no plants inside.
+
+ROOF: keep the same pastel pink scalloped clay tile shape and L-corner ridge cap as reference — but render tiles with delicate gloss highlights and soft groove shadows between rows; powder rose to soft peach pink (#F4C2CC–#E8A8B8), outward eaves, cute rounded ridge roll at the L-corner. Lighter and more refined than the reference, not candy-flat.
+
+WALLS: warm cream ivory plaster (#FFFBF7) with very subtle warm shadow under the roof overhang; slender corner posts in warm honey-maple wood (#C4956A) with fine grain lines, NOT thick log columns.
+
+WINDOWS (same layout as reference):
+- BACK wall: one large window, warm caramel wood frame, 3x2 panes, glass pale aqua-mint (#D8F2EC) with soft inner glow.
+- RIGHT wall: two windows, same frame style, evenly spaced.
+- Window frames drawn with thin soft brown lines and gentle inner shadow, not heavy outlines.
+
+FLOOR: same herringbone / chevron parquet footprint as reference — many small narrow honey-oak strips with delicate grain and soft plank-edge shading; fine-scale repeat across the full floor, NOT huge wide planks.
+
+FOUNDATION: light warm-gray cobblestone (#C5C0BA), softly shaded individual stones, proportionally scaled to slender walls.
+
+OUTDOOR PATCH front-left: pale cream sand (#F2E8D8), a few flat gray stepping stones, tiny soft grass clumps and one or two micro white flower dots — painted lightly, not bold cartoon blobs.
+
+STRUCTURE (must match reference exactly):
+- Open room: only TWO walls in L-shape — BACK wall and RIGHT wall. Front and left sides fully open. NO fourth wall, NO door, NO shop sign, NO awning, NO furniture, NO indoor plants, NO text, no watermark.
+- 1–2 short wooden steps at front-left, slender proportions.
+
+Viewpoint: classic isometric from upper-left (~45°), consistent vanishing.
+
+NO TEXT, no labels, no readable signs, no numbers, no logo, no watermark, no captions anywhere.
+
+BACKGROUND outside the structure: pure solid white #FFFFFF for rembg cutout pipeline.
+
+Art style summary: 2D manga watercolor mobile game room shell — thin soft lines, delicate layered color, gentle volume, treehouse-shell polish applied to the default flower-shop L-room layout. Avoid photorealism, harsh black outlines, heavy shadows, muddy colors, or flat zero-shading vector look.

@@ -22,7 +22,11 @@ import { TextureCache } from '@/utils/TextureCache';
 import { appendWorkshopBlueprintFeatureTags } from '@/utils/WorkshopBlueprintDisplay';
 import { resolveFurnitureTexture } from '@/config/FurnitureRenderConfig';
 import { FurnitureWorkshopCraftPopup } from '@/gameobjects/ui/FurnitureWorkshopCraftPopup';
-import { FurnitureWorkshopShopPopup, SHOP_PAGE_TOP_FRAC } from '@/gameobjects/ui/FurnitureWorkshopShopPopup';
+import {
+  FurnitureWorkshopShopPopup,
+  SHOP_PAGE_TOP_FRAC,
+  computeShopPopupFitScale,
+} from '@/gameobjects/ui/FurnitureWorkshopShopPopup';
 import {
   celebrateDecoObtain,
   dismissDecoObtainCelebrate,
@@ -413,11 +417,12 @@ export class FurnitureWorkshopPanel extends PIXI.Container {
     this._craftPopup.position.set(layout.sxFrac(0.5), layout.syFrac(SHELL.CRAFT_POPUP_Y_FRAC));
     this._craftPopup.scale.set(layout.scale);
 
+    const shopFit = computeShopPopupFitScale(layout.sw, layout.sh);
     this._shopPopup.position.set(
       layout.sxFrac(0.5),
       layout.syFrac(SHOP_PAGE_TOP_FRAC),
     );
-    this._shopPopup.scale.set(layout.scale);
+    this._shopPopup.scale.set(layout.scale * shopFit);
     this._shopPopup.zIndex = 58;
 
     this._panel.sortChildren();
