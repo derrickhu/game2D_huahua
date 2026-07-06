@@ -66,19 +66,19 @@ export const OUTFIT_ACTIVITY_QUEST_BY_ID: Readonly<Record<string, string>> = {
   outfit_jewel_bloom: OUTFIT_JEWEL_BLOOM_ACTIVITY_QUEST_ID,
 };
 
-/** 形象换装面板展示的套装（2 列网格，活动套可用 quest 条件显示「活动解锁」） */
+/** 形象换装面板展示的套装（2 列网格，活动套可用 quest 条件显示「活动解锁」；有花愿售价套相对初版 ×2） */
 export const DRESSUP_PANEL_OUTFITS: Outfit[] = [
   { id: 'outfit_default',  name: '自然少女',    desc: '清新自然，田园花店的日常装扮',              icon: '', huayuanCost: 0, starValue: 0 },
-  { id: 'outfit_florist',  name: '花店小姐姐',  desc: '专业花艺师的精致工装，满满花香',            icon: '', huayuanCost: 600, starValue: 3, unlockRequirement: { level: 2 } },
-  { id: 'outfit_spring',   name: '春日樱花',    desc: '樱花盛开的季节，粉嫩少女感满分',           icon: '', huayuanCost: 1400, starValue: 6, unlockRequirement: { level: 8 } },
-  { id: 'outfit_summer',   name: '夏日向日葵',  desc: '明媚阳光下，活力四射的夏日装扮',           icon: '', huayuanCost: 1080, starValue: 6, unlockRequirement: { level: 6 } },
-  { id: 'outfit_vintage',  name: '丝绒蔷薇',    desc: '酒红丝绒与蕾丝的复古礼装，优雅迷人',       icon: '', huayuanCost: 2800, starValue: 9, unlockRequirement: { level: 9 } },
+  { id: 'outfit_florist',  name: '花店小姐姐',  desc: '专业花艺师的精致工装，满满花香',            icon: '', huayuanCost: 1200, starValue: 3, unlockRequirement: { level: 2 } },
+  { id: 'outfit_spring',   name: '春日樱花',    desc: '樱花盛开的季节，粉嫩少女感满分',           icon: '', huayuanCost: 10600, starValue: 6, unlockRequirement: { level: 8 } },
+  { id: 'outfit_summer',   name: '夏日向日葵',  desc: '明媚阳光下，活力四射的夏日装扮',           icon: '', huayuanCost: 2160, starValue: 6, unlockRequirement: { level: 6 } },
+  { id: 'outfit_vintage',  name: '丝绒蔷薇',    desc: '酒红丝绒与蕾丝的复古礼装，优雅迷人',       icon: '', huayuanCost: 5600, starValue: 9, unlockRequirement: { level: 9 } },
   {
     id: 'outfit_qinglian',
     name: '清涟荷影',
     desc: '薄荷青瓷与粉荷纹的古风襦裙，莲影摇曳',
     icon: '',
-    huayuanCost: 999,
+    huayuanCost: 6998,
     starValue: 5,
   },
   {
