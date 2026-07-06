@@ -106,10 +106,12 @@ const GRID_LIST_PAD_Y = 16;
 /** 圆角卡片底边与下方名称文案的间距 */
 const CARD_NAME_BELOW_GAP = 4;
 const GRID_CARD_GAP = 8;
-/** 一屏约 4 张，单卡更大（利用列表区下方留白） */
+/** 一屏约 4 张；单卡略缩小，避免编辑态底栏家具框过大 */
 const GRID_TARGETS_PER_ROW = 4;
-const CARD_NAME_FONT_SIZE = 16;
-const CARD_NAME_LINE_HEIGHT = 20;
+/** 在预算边长上再缩放（仅缩方块，名称区单独计高） */
+const CARD_SIZE_SCALE = 0.86;
+const CARD_NAME_FONT_SIZE = 15;
+const CARD_NAME_LINE_HEIGHT = 19;
 /** 名称区占用高度（单行居中；过长仍可换行但尽量不超出视口） */
 const CARD_NAME_BLOCK_H = CARD_NAME_BELOW_GAP + CARD_NAME_LINE_HEIGHT;
 const CARD_W_BUDGET = Math.floor(
@@ -118,9 +120,12 @@ const CARD_W_BUDGET = Math.floor(
     (GRID_TARGETS_PER_ROW - 1) * GRID_CARD_GAP) /
     GRID_TARGETS_PER_ROW,
 );
-const CARD_SIZE = Math.min(
-  CARD_W_BUDGET,
-  GRID_SCROLL_H - GRID_LIST_PAD_Y - CARD_NAME_BLOCK_H,
+const CARD_SIZE = Math.max(
+  92,
+  Math.round(
+    Math.min(CARD_W_BUDGET, GRID_SCROLL_H - GRID_LIST_PAD_Y - CARD_NAME_BLOCK_H) *
+      CARD_SIZE_SCALE,
+  ),
 );
 const CARD_CORNER_RADIUS = Math.max(8, Math.round(CARD_SIZE * 0.05));
 const CARD_ICON_INSET = Math.max(5, Math.round(CARD_SIZE * 0.04));
