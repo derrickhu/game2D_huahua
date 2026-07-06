@@ -1,0 +1,19 @@
+Square game asset 1:1. Single prop centered with generous margin.
+
+Cute kawaii 2.5D isometric view from upper-left about 45 degrees, hand-painted mobile merge-game flower shop illustrated encyclopedia collectible style. THIN soft warm-taupe outlines, HIGH-SATURATION vivid colors that read clearly on wood floors, gentle volume and soft highlights, chibi-friendly readable silhouette. Match the attached reference daisy pot for line weight and overall color pop — flowers must be MUCH more saturated than pale watercolor wash.
+
+Subject: tall celadon-green ceramic ikebana vase holding one graceful flowering branch with dense clusters of BRIGHT vivid sakura-pink blossoms and a few falling petals. Minimal elegant Japanese flower arrangement, slender vase, airy negative space.
+
+FLOWER COLOR (critical — must NOT be faint, pale, or desaturated):
+- Petals: rich saturated cherry pink to hot pink (#F06292, #EC407A, #E91E63, #FF4081) with clear gradient from lighter pink tips to deeper magenta-pink bases.
+- Flower centers: warm coral-red or golden-yellow stamens for contrast — visible at game icon scale.
+- Buds: slightly deeper pink than open blooms.
+- NO dusty pastel, NO barely-visible blush pink, NO grey-tinted washed-out flowers.
+
+Branch: warm brown wood with readable gnarled silhouette. A few small fresh green leaves OK. 2–4 falling petals in the same vivid pink.
+
+Vase: celadon mint-green ceramic with soft highlight, elegant meiping silhouette.
+
+Readable silhouette. No text, no watermark, no characters, no real room.
+
+Background pure solid white #FFFFFF only for cutout.

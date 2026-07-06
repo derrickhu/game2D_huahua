@@ -688,6 +688,18 @@ const DECO_IMAGE_MAP: Record<string, string> = {
   greenhouse_vase_tulip: 'subpkg_deco/images/furniture/greenhouse_vase_tulip.png',
   greenhouse_vase_peony: 'subpkg_deco/images/furniture/greenhouse_vase_peony.png',
   greenhouse_vase_lotus: 'subpkg_deco/images/furniture/greenhouse_vase_lotus.png',
+  // 鲜花摆件批次 10（全场景摆件 Tab）
+  orn_flora_hanging_spider_plant: 'subpkg_deco/images/furniture/orn_flora_hanging_spider_plant.png',
+  orn_flora_wall_ivy_trellis: 'subpkg_deco/images/furniture/orn_flora_wall_ivy_trellis.png',
+  orn_flora_fiddle_leaf_pot: 'subpkg_deco/images/furniture/orn_flora_fiddle_leaf_pot.png',
+  orn_flora_hyacinth_glass_vase: 'subpkg_deco/images/furniture/orn_flora_hyacinth_glass_vase.png',
+  orn_flora_wildflower_mason_jar: 'subpkg_deco/images/furniture/orn_flora_wildflower_mason_jar.png',
+  orn_flora_blooming_cactus: 'subpkg_deco/images/furniture/orn_flora_blooming_cactus.png',
+  orn_flora_lavender_window_box: 'subpkg_deco/images/furniture/orn_flora_lavender_window_box.png',
+  orn_flora_cherry_branch_vase: 'subpkg_deco/images/furniture/orn_flora_cherry_branch_vase.png',
+  orn_flora_fern_terrarium: 'subpkg_deco/images/furniture/orn_flora_fern_terrarium.png',
+  orn_flora_hanging_petunia: 'subpkg_deco/images/furniture/orn_flora_hanging_petunia.png',
+  orn_flora_pink_phalaenopsis_pot: 'subpkg_deco/images/furniture/orn_flora_pink_phalaenopsis_pot.png',
   // 蝴蝶小屋专属家具（由合图拆分）
   butterfly_house_display_case: 'subpkg_deco/images/furniture/butterfly_house_display_case.png',
   butterfly_house_writing_desk: 'subpkg_deco/images/furniture/butterfly_house_writing_desk.png',

@@ -1,0 +1,9 @@
+鲜花摆件批次 10 — 全场景摆件（DecorationConfig 无 allowedSceneIds）
+
+画风：图鉴解锁卡同款 — 明亮饱和 pastel 花色、细软暖棕描边、upper-left 45° 等距、白底抠图。
+与 greenhouse_pot_* / greenhouse_vase_* 图鉴线区分：本批为全新品类（吊兰、爬藤、大绿植、风信子、野花花束、仙人掌、薰衣草、樱花折枝、生态瓶、吊篮）。
+
+Raw: ../game_assets/huahua/assets/raw/furniture_<key>_nb2.png
+Game: minigame/subpkg_deco/images/furniture/<key>.png
+
+一键: ./scripts/gen_furniture_orn_flora_batch10_nb2.sh
