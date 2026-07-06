@@ -1,0 +1,11 @@
+Square game asset 1:1. Single tall wall-hanging curtain prop centered, filling about 70% of frame height.
+
+DEPRECATED — use docs/prompt/wallart_rose_swag_drape_isometric_nb2_prompt.txt with --image deco_lv20_wall_moon_sheer_curtain.png and aspect 3:4.
+
+Cute kawaii 2.5D isometric wall perspective for a cozy flower-shop merge game: curtain rod upper-left to lower-right slant, fabric hangs on back/right wall plane — NOT front-facing billboard. Soft brown outlines, upper-left lighting.
+
+Subject: warm wood curtain rod with round finials. Dusty rose pink outer drapes swagged over rod with rose-bud fabric ties on both sides, cream inner curtain panels behind, scalloped lace trim on pink edges. Elegant tall room divider curtain feel, middle and bottom airy — no floor clutter.
+
+No text, no watermark, no characters, no room shell.
+
+Background pure solid white #FFFFFF only for cutout.

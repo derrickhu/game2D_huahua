@@ -231,11 +231,14 @@ const PANELS_IMAGE_MAP: Record<string, string> = {
   room_edit_toolbar_layer_up: 'subpkg_panels/images/ui/room_edit_toolbar_layer_up.png',
   room_edit_toolbar_layer_down: 'subpkg_panels/images/ui/room_edit_toolbar_layer_down.png',
   room_edit_toolbar_remove: 'subpkg_panels/images/ui/room_edit_toolbar_remove.png',
-  /** 编辑模式「完成编辑」：4×2 表 pill_btn_4x2_r1c1_idx01，托盘右下角 */
+  /** 编辑模式「完成编辑」：顶右圆钮 + 对勾（无字） */
+  furniture_edit_complete_icon_nb2:
+    'subpkg_panels/images/ui/furniture_edit_complete_icon_nb2.png',
+  /** 编辑模式「完成编辑」legacy 胶囊（保留映射，托盘已改用圆钮） */
   edit_complete_pill_4x2_nb2: 'subpkg_panels/images/ui/pill_btn_4x2_r1c1_idx01.png',
   /** 花店主界面「装修」入口：一体式 NB2 胶囊按钮（文字烘焙） */
   shop_edit_deco_btn_nb2: 'subpkg_panels/images/ui/shop_edit_deco_btn_nb2.png',
-  /** 编辑托盘顶右「清空」：圆钮 + 垃圾桶 + 清空字 */
+  /** 编辑托盘顶左「清空」：圆钮 + 垃圾桶（无字） */
   furniture_edit_clear_icon_nb2: 'subpkg_panels/images/ui/furniture_edit_clear_icon_nb2.png',
   /** 家具托盘底板壳（legacy 拱顶） */
   furniture_tray_panel_shell_nb2: 'subpkg_panels/images/ui/furniture_tray_panel_shell_nb2.png',
@@ -629,13 +632,16 @@ const DECO_IMAGE_MAP: Record<string, string> = {
   orn_floral_chest: 'subpkg_deco/images/furniture/orn_floral_chest.png',
   orn_pastel_bench: 'subpkg_deco/images/furniture/orn_pastel_bench.png',
   promo_floral_sofa: 'subpkg_deco/images/furniture/promo_floral_sofa.png',
-  /** 弧翼大沙发：1 列 × 2 行（默认绿 / 樱粉） */
+  /** 弧翼大沙发：1 列 × 3 行（默认绿 / 樱粉 / 海蓝）；每格 max-side 342 高清合图 */
   workshop_plush_sofa_sheet: 'subpkg_deco/images/furniture/workshop_plush_sofa_sheet.png',
-  /** 泡芙拼块沙发：2 列合图 col0=front col1=back */
+  /** 泡芙拼块沙发：2 列合图 col0=front col1=back；每格 max-side 342 */
   workshop_puffy_petal_sofa_sheet: 'subpkg_deco/images/furniture/workshop_puffy_petal_sofa_sheet.png',
   workshop_giant_rose_bouquet_sheet: 'subpkg_deco/images/furniture/workshop_giant_rose_bouquet_sheet.png',
+  /** 黑色超薄电视柜：2 列正/背合图；每格 max-side 342 */
   workshop_pastel_tv_cabinet_sheet: 'subpkg_deco/images/furniture/workshop_pastel_tv_cabinet_sheet.png',
+  /** 玫瑰垂幔帘：1 列 × 3 行（樱粉 / 天蓝 / 蜜黄）；每格 max-side 342 */
   workshop_rose_cascade_drape_sheet: 'subpkg_deco/images/furniture/workshop_rose_cascade_drape_sheet.png',
+  /** 蕾丝铁艺床：单张 PNG，max-side 342 */
   workshop_lace_ribbon_bed: 'subpkg_deco/images/furniture/workshop_lace_ribbon_bed.png',
   workshop_blueprint_generic: 'subpkg_deco/images/furniture/workshop_blueprint_generic.png',
   promo_petal_chaise: 'subpkg_deco/images/furniture/promo_petal_chaise.png',
@@ -651,6 +657,7 @@ const DECO_IMAGE_MAP: Record<string, string> = {
   wallart_spring: 'subpkg_deco/images/furniture/wallart_spring.png',
   wallart_winter: 'subpkg_deco/images/furniture/wallart_winter.png',
   wallart_lace_curtain: 'subpkg_deco/images/furniture/wallart_lace_curtain.png',
+  wallart_rose_swag_drape: 'subpkg_deco/images/furniture/wallart_rose_swag_drape.png',
   promo_pearl_bead_curtain: 'subpkg_deco/images/furniture/promo_pearl_bead_curtain.png',
   event_jewelry_jade_curtain: 'subpkg_deco/images/furniture/event_jewelry_jade_curtain.png',
   // 庭院
@@ -1043,7 +1050,7 @@ const SHOP_WARMUP_KEYS = [
   'furniture_tray_tab_room_styles_idle',
   'furniture_tray_tab_qinglian_idle',
   'furniture_edit_clear_icon_nb2',
-  'edit_complete_pill_4x2_nb2',
+  'furniture_edit_complete_icon_nb2',
   'icon_worldmap_nav',
   'icon_wishing_nav',
   'icon_weekend_huayuan_boost_nb2',
@@ -1103,8 +1110,8 @@ const TUTORIAL_DECO_KEYS = [
   'furniture_tray_tab_ornament_idle',
   'furniture_tray_tab_garden_idle',
   'furniture_tray_tab_qinglian_idle',
-  'edit_complete_pill_4x2_nb2',
   'furniture_edit_clear_icon_nb2',
+  'furniture_edit_complete_icon_nb2',
   'ui_order_check_badge',
   'room_edit_toolbar_zoom_in',
   'room_edit_toolbar_zoom_out',

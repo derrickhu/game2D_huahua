@@ -103,15 +103,37 @@ depthSortYLift: 0,
 
 ## 压缩与像素规格（须对齐现有家具）
 
-- **像素**：等比缩放后 **最长边不宜超过 171 px**（与 `scripts/normalize_greenhouse_furniture_pngs.py` 中 `MAX_SIDE` 及当前多数已验收家具一致）。勿将未缩放的高分辨率生图直接长期留在 `furniture/`。
+- **像素（普通购买线 / Lv 家具）**：等比缩放后 **最长边不宜超过 171 px**（与 `scripts/normalize_greenhouse_furniture_pngs.py` 中 `MAX_SIDE` 及当前多数已验收家具一致）。勿将未缩放的高分辨率生图直接长期留在 `furniture/`。
 - **编码**：RGBA PNG，`optimize=True`、`compress_level=9`（与花房归一化脚本写入方式一致）；**不使用**棋盘物品那套 256 色量化（`compress_subpkg_items_pngs.py`），以免装修大图色带。
 - **体积参考**：同目录现有成品中，简单小件约 **8～20 KB**，桌架类复杂件常见 **35～55 KB**；若同类单品 **显著偏大**（例如远大于 100 KB 且无特殊理由），应检查是否未缩放或未优化。
-- **入库前整目录（推荐）**：
+- **入库前整目录（推荐，仅普通家具）**：
 
 ```bash
 python3 scripts/compress_furniture_deco_pngs.py
 # 或先看变化：
 python3 scripts/compress_furniture_deco_pngs.py --dry-run
+```
+
+## 工坊家具清晰度（`workshopExclusive`）
+
+工坊大件在房间里 **`defaultScale` 往往 ≥ 1.7**，若仍按 **171 px** 入库，手机上放大后会发糊。**验收标杆**：弧翼大沙发三色合图 `workshop_plush_sofa_sheet`（每格 **342 px**）——真机已够清晰，**不必再提到 512**。
+
+**与普通家具的唯一差别**：入库时 **`--max-side 342`**，其余流程相同（rembg → crop_trim → 合图/压缩）。
+
+| 类型 | 命令要点 |
+|------|----------|
+| 合图（正/背或多配色） | `process_furniture_atlas_sheet.py --max-side 342 …` → `compress_furniture_deco_pngs.py --force` |
+| 单张 PNG（如床） | `compress_furniture_deco_pngs.py --max-side 342 --force <path>` |
+
+**注意**：工坊 PNG 入库后**勿**再跑默认 `--max-side 171` 的整目录压缩，否则会被压糊。
+
+```bash
+# 示例：1 列 × 3 行多配色（弧翼沙发）
+python3 scripts/process_furniture_atlas_sheet.py \
+  --compose .../green.png --compose .../sakura.png --compose .../blue.png \
+  --columns 1 --rows 3 --max-side 342 --padding 4 \
+  -o minigame/subpkg_deco/images/furniture/workshop_plush_sofa_sheet.png
+python3 scripts/compress_furniture_deco_pngs.py --force minigame/.../workshop_plush_sofa_sheet.png
 ```
 
 ## 反例（勿做）
@@ -168,8 +190,8 @@ python3 scripts/compress_furniture_deco_pngs.py --dry-run
 - **附参考图**：生成背面时 **必须附正面已验收图**（`--image`）
 - **比例**：合图整体 **1:1**（512×512）
 - **抠图**：整图 **`birefnet-general`** → `crop_trim --padding 4`
-- **压缩**：`python3 scripts/compress_furniture_deco_pngs.py --force .../{family}_sheet.png`（`*_sheet.png` **只 re-encode、不整图缩到 171**）
-- **合图尺寸**：先用 `scripts/process_furniture_atlas_sheet.py` 按 **每格** `--max-side 171` 拼 sheet，再跑压缩脚本
+- **压缩**：与普通家具相同，`compress_furniture_deco_pngs.py --force`；`*_sheet.png` 不会整图缩到 171（见脚本 `sheet-optimize`）
+- **合图尺寸**：工坊 **`--max-side 342`**（弧翼沙发三色合图为标杆）；普通 Lv 家具 **171**
 
 ### 运行时
 
@@ -183,13 +205,16 @@ python3 scripts/compress_furniture_deco_pngs.py --dry-run
 - 带第四面墙或透视地板的「小场景」而非单件家具。
 - **同一家具族** 正/背/分色/交互态 **各一张独立 PNG**（应合并为 `{family}_sheet.png`）。
 
-## 墙饰 / 窗帘（`DecoSlot.WALLART` — 视角例外）
+## 墙饰 / 窗帘（`DecoSlot.WALLART` — 视角强制）
 
-地面家具/摆件用 **upper-left ~45° 等距道具角**（顶面 + 立面）；**墙饰、挂帘、挂画** 须贴 **后墙 / 右墙立面**，与 `wallart_*_isometric_nb2_prompt.txt`、`event_jewelry_jade_curtain_isometric_nb2_prompt.txt` 一致：
+地面家具/摆件用 **upper-left ~45° 等距道具角**（顶面 + 立面）；**墙饰、挂帘、挂画、标本框** 须 **与房壳后墙 / 右墙立面平行**，贴在墙面上 — **不是** 地面道具角，**不是** 正面 billboard。
 
 | 要求 | 说明 |
 |------|------|
-| 透视 | **禁止** 正面平视 billboard（横平竖直窗帘杆）。须 **等距墙面透视**：杆/框上沿 **左高右低** 斜向，整体像贴在墙面上 |
-| 参考 | 生图附 **`wallart_lace_curtain.png`** 或已验收 **`deco_lv20_wall_moon_sheer_curtain.png`** 锁角度；主体设计写在 prompt 正文 |
-| 脚本 | 批量墙饰：`scripts/gen_wallart_isometric_nb2.sh`；单件亦用 **`gemini-3.1-flash-image-preview`** + `--image` 参考 |
-| 反例 | `isometric-ish front view`、纯正面窗帘（会与房壳 L 形后墙夹角不匹配） |
+| **墙面平行（强制）** | 整件道具落在 **单一竖直墙平面** 上；杆/框上沿 **左高右低** 轻斜（与后墙透视一致）；**禁止** 横平竖直正面杆、**禁止** 地面家具式 45° 道具角（顶面可见）、**禁止** 杆向右上翘或任意斜向 |
+| 透视句 | prompt 须含 **「parallel to back wall plane / lies flat on vertical wall / top edge slopes down toward the right」**；范本：`wallart_*_isometric_nb2_prompt.txt`、`deco_late_lv7_wall_01_isometric_nb2_prompt.txt` |
+| 参考图（锁角） | 生图 **必须** `--image` 附已验收墙饰：**`deco_lv20_wall_moon_sheer_curtain.png`**（挂帘）或 **`wallart_frame.png`**（挂画/标本框）；**只锁透视角**，主体设计写在 prompt 正文 |
+| 比例 | 挂帘 **3:4**；宽画/三联框 **4:3**；方画 **3:4** 或 **1:1**（见 `gen_wallart_isometric_nb2.sh`） |
+| 脚本 | 批量：`scripts/gen_wallart_isometric_nb2.sh`；单件 **`gemini-3.1-flash-image-preview`** + 参考图 |
+| 入库 | rembg **`birefnet-general`** → `crop_trim --padding 4` → **`compress_furniture_deco_pngs.py --max-side 171 --force`** |
+| 反例 | 纯正面窗帘/画框、地面等距角、杆水平、与参考墙饰角度不一致（进房后显「歪」） |

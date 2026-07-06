@@ -74,6 +74,12 @@ export function initAnalytics(opts?: { endpoint?: string; userId?: string; debug
   });
 
   inited = true;
+
+  if (Platform.isDevtools) {
+    console.info(
+      '[analytics] 开发者工具内 wx.request 可能报 request:fail（域名/网络限制），属经分上报通道，不影响玩法；真机 + 合法域名配置后应正常。',
+    );
+  }
 }
 
 /**

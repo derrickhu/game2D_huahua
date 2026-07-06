@@ -63,8 +63,8 @@ const TRAY_TOP_PAD = 4;
 const GRID_CLIP_INSET_X = 12;
 /** 列表裁切右缘额外内收（避免横滑时卡片贴出壳体） */
 const GRID_CLIP_INSET_RIGHT_EXTRA = 11;
-/** 左侧连体竖 Tab */
-const SECTION_RAIL_W = 40;
+/** 左侧连体竖 Tab（再向右加宽约 5px） */
+const SECTION_RAIL_W = 45;
 const SECTION_RAIL_OFFSET_X = 5;
 const SECTION_RAIL_GAP = 4;
 /** 竖 Tab 相对布局基准的水平微调（仅移动左侧 rail） */
@@ -84,17 +84,16 @@ const CATEGORY_TAB_ICON_SELECTED_SCALE = 1.22;
 const CATEGORY_TAB_ICON_SHADOW_ALPHA = 0.24;
 /** 分类图标行相对顶部的额外下移 */
 const CATEGORY_TAB_ROW_EXTRA_Y = 16;
-/** 底栏：完成装修 + 筛选 */
+/** 底栏：全部/未放置筛选 chip（托盘底边水平居中） */
 const GRID_FILTER_BAR_H = 40;
-/** 全部/未放置筛选 chip */
-const FILTER_CHIP_OFFSET_Y = -16;
-const FILTER_CHIP_OFFSET_X = -10;
 const FILTER_CHIP_H = 36;
 const FILTER_CHIP_FONT = 18;
 const FILTER_CHIP_RADIUS = 12;
 const FILTER_CHIP_GAP = 8;
 const FILTER_CHIP_W_ALL = 72;
 const FILTER_CHIP_W_UNPLACED = 96;
+/** 底栏 chip 相对居中位置的垂直微调（负值上移） */
+const FILTER_CHIP_NUDGE_Y = -15;
 const TAB_BAND_BOTTOM = TRAY_TOP_PAD + CATEGORY_TAB_ROW_EXTRA_Y + TAB_BAR_H + 8;
 const CONTENT_LEFT = GRID_CLIP_INSET_X + SECTION_RAIL_OFFSET_X + SECTION_RAIL_W + SECTION_RAIL_GAP;
 const GRID_SCROLL_H = TRAY_H - TAB_BAND_BOTTOM - GRID_FILTER_BAR_H;
@@ -107,8 +106,12 @@ const GRID_LIST_PAD_Y = 16;
 /** 圆角卡片底边与下方名称文案的间距 */
 const CARD_NAME_BELOW_GAP = 4;
 const GRID_CARD_GAP = 8;
-/** 一屏约 5 张，单卡更大 */
-const GRID_TARGETS_PER_ROW = 5;
+/** 一屏约 4 张，单卡更大（利用列表区下方留白） */
+const GRID_TARGETS_PER_ROW = 4;
+const CARD_NAME_FONT_SIZE = 16;
+const CARD_NAME_LINE_HEIGHT = 20;
+/** 名称区占用高度（单行居中；过长仍可换行但尽量不超出视口） */
+const CARD_NAME_BLOCK_H = CARD_NAME_BELOW_GAP + CARD_NAME_LINE_HEIGHT;
 const CARD_W_BUDGET = Math.floor(
   (GRID_CLIP_INNER_W -
     GRID_LIST_PAD_RIGHT -
@@ -117,41 +120,45 @@ const CARD_W_BUDGET = Math.floor(
 );
 const CARD_SIZE = Math.min(
   CARD_W_BUDGET,
-  GRID_SCROLL_H - GRID_LIST_PAD_Y - 20,
+  GRID_SCROLL_H - GRID_LIST_PAD_Y - CARD_NAME_BLOCK_H,
 );
+const CARD_CORNER_RADIUS = Math.max(8, Math.round(CARD_SIZE * 0.05));
+const CARD_ICON_INSET = Math.max(5, Math.round(CARD_SIZE * 0.04));
 
-/** 编辑态「清空」圆钮目标边长（仅圆形图标，无字） */
-export const FURNITURE_TRAY_CLEAR_ICON_TARGET_H = 64;
-/** 面板顶右圆心 Y（相对托盘顶） */
-export const FURNITURE_TRAY_CLEAR_ICON_Y = -26;
-/** 距面板右缘 */
-export const FURNITURE_TRAY_CLEAR_ICON_RIGHT_PAD = 14;
-/** 底栏「完成装修」贴面板底边的内留白 */
-const FOOTER_COMPLETE_BOTTOM_PAD = 6;
-/** 编辑态底栏「完成装修」按钮目标尺寸（与 ShopScene TRAY_EDIT_COMPLETE_MAX 一致） */
-export const FURNITURE_TRAY_EDIT_COMPLETE_BTN_W = 264;
-export const FURNITURE_TRAY_EDIT_COMPLETE_BTN_H = 72;
+/** 编辑态顶栏圆钮目标边长（清空 / 完成，仅圆形图标无字） */
+export const FURNITURE_TRAY_EDIT_CORNER_ICON_TARGET_H = 64;
+/** @deprecated 兼容旧引用 */
+export const FURNITURE_TRAY_CLEAR_ICON_TARGET_H = FURNITURE_TRAY_EDIT_CORNER_ICON_TARGET_H;
+/** 面板顶栏圆钮圆心 Y（相对托盘顶） */
+export const FURNITURE_TRAY_EDIT_CORNER_ICON_Y = -26;
+/** @deprecated */
+export const FURNITURE_TRAY_CLEAR_ICON_Y = FURNITURE_TRAY_EDIT_CORNER_ICON_Y;
+/** 距面板左/右缘 */
+export const FURNITURE_TRAY_EDIT_CORNER_ICON_SIDE_PAD = 14;
+/** @deprecated */
+export const FURNITURE_TRAY_CLEAR_ICON_RIGHT_PAD = FURNITURE_TRAY_EDIT_CORNER_ICON_SIDE_PAD;
 
 /** 编辑态托盘顶边设计 Y（与 open() / ShopScene trayOpenTopY 一致） */
 export function furnitureTrayOpenTopY(logicH: number): number {
   return logicH - TRAY_H - FURNITURE_TRAY_OPEN_OFFSET_UP + FURNITURE_TRAY_OPEN_NUDGE_DOWN;
 }
 
-/** 教程高亮「完成装修」按钮矩形（场景设计坐标，与 layoutEditFooterButtons 一致） */
+/** 教程高亮「完成装修」顶右圆钮矩形（场景设计坐标，与 layoutEditCompleteIcon 一致） */
 export function furnitureTrayEditCompleteSpotlightRect(trayTopY: number): {
   x: number;
   y: number;
   w: number;
   h: number;
 } {
-  const w = FURNITURE_TRAY_EDIT_COMPLETE_BTN_W;
-  const h = FURNITURE_TRAY_EDIT_COMPLETE_BTN_H;
-  const cy = trayTopY + TRAY_H - FOOTER_COMPLETE_BOTTOM_PAD - h / 2;
+  const size = FURNITURE_TRAY_EDIT_CORNER_ICON_TARGET_H + 16;
+  const cx =
+    DESIGN_WIDTH - FURNITURE_TRAY_EDIT_CORNER_ICON_SIDE_PAD - size / 2 + 8;
+  const cy = trayTopY + FURNITURE_TRAY_EDIT_CORNER_ICON_Y;
   return {
-    x: DESIGN_WIDTH / 2 - w / 2,
-    y: cy - h / 2,
-    w,
-    h,
+    x: cx - size / 2,
+    y: cy - size / 2,
+    w: size,
+    h: size,
   };
 }
 
@@ -286,8 +293,8 @@ export class FurnitureTray extends PIXI.Container {
   private _tabContainer!: PIXI.Container;
   /** 左侧竖 Tab 层（独立 zIndex，避免被壳体/遮罩盖住） */
   private _sectionRailLayer!: PIXI.Container;
-  /** 顶右「清空」图标层 */
-  private _clearIconLayer!: PIXI.Container;
+  /** 顶栏「清空 / 完成」圆钮层 */
+  private _cornerIconLayer!: PIXI.Container;
   /** 顶栏左侧：常规 / 主题 / 工坊 */
   private _modeToggleRow!: PIXI.Container;
   /** 竖 Tab 与内容区分隔线 */
@@ -450,34 +457,32 @@ export class FurnitureTray extends PIXI.Container {
     return this._isOpen;
   }
 
-  /**
-   * 底栏布局：「完成装修」面板底边水平居中。
-   * @returns 底栏中心 Y（相对托盘）
-   */
-  layoutEditFooterButtons(complete: PIXI.Container): number {
-    const completeHit = complete.hitArea;
-    const completeHalfH =
-      completeHit instanceof PIXI.Rectangle ? completeHit.height / 2 : 36;
-    const cy = TRAY_H - FOOTER_COMPLETE_BOTTOM_PAD - completeHalfH;
-    complete.position.set(DESIGN_WIDTH / 2, cy);
-    complete.zIndex = 30;
-
-    if (this._filterRow) this._filterRow.zIndex = 15;
-    this.sortChildren();
-    return cy;
-  }
-
-  /** 「清空」圆钮：面板顶栏右缘（竖纹区内，避免负 Y 被裁切） */
+  /** 「清空」圆钮：面板顶栏左缘 */
   layoutEditClearIcon(clear: PIXI.Container): void {
     const hit = clear.hitArea;
-    const w = hit instanceof PIXI.Rectangle ? hit.width : FURNITURE_TRAY_CLEAR_ICON_TARGET_H;
+    const w = hit instanceof PIXI.Rectangle ? hit.width : FURNITURE_TRAY_EDIT_CORNER_ICON_TARGET_H;
     clear.position.set(
-      DESIGN_WIDTH - FURNITURE_TRAY_CLEAR_ICON_RIGHT_PAD - w / 2,
-      FURNITURE_TRAY_CLEAR_ICON_Y,
+      FURNITURE_TRAY_EDIT_CORNER_ICON_SIDE_PAD + w / 2,
+      FURNITURE_TRAY_EDIT_CORNER_ICON_Y,
     );
     clear.zIndex = 1;
-    if (clear.parent !== this._clearIconLayer) {
-      this._clearIconLayer.addChild(clear);
+    if (clear.parent !== this._cornerIconLayer) {
+      this._cornerIconLayer.addChild(clear);
+    }
+    this.sortChildren();
+  }
+
+  /** 「完成装修」圆钮：面板顶栏右缘（原清空位置） */
+  layoutEditCompleteIcon(complete: PIXI.Container): void {
+    const hit = complete.hitArea;
+    const w = hit instanceof PIXI.Rectangle ? hit.width : FURNITURE_TRAY_EDIT_CORNER_ICON_TARGET_H;
+    complete.position.set(
+      DESIGN_WIDTH - FURNITURE_TRAY_EDIT_CORNER_ICON_SIDE_PAD - w / 2,
+      FURNITURE_TRAY_EDIT_CORNER_ICON_Y,
+    );
+    complete.zIndex = 2;
+    if (complete.parent !== this._cornerIconLayer) {
+      this._cornerIconLayer.addChild(complete);
     }
     this.sortChildren();
   }
@@ -485,6 +490,11 @@ export class FurnitureTray extends PIXI.Container {
   /** 供 ShopScene 挂载编辑态清空图标 */
   mountEditClearIcon(clear: PIXI.Container): void {
     this.layoutEditClearIcon(clear);
+  }
+
+  /** 供 ShopScene 挂载编辑态完成图标 */
+  mountEditCompleteIcon(complete: PIXI.Container): void {
+    this.layoutEditCompleteIcon(complete);
   }
 
   /** 刷新内容（外部调用，如装饰解锁后） */
@@ -589,9 +599,9 @@ export class FurnitureTray extends PIXI.Container {
     this._sectionRailLayer.zIndex = 25;
     this.addChild(this._sectionRailLayer);
 
-    this._clearIconLayer = new PIXI.Container();
-    this._clearIconLayer.zIndex = 40;
-    this.addChild(this._clearIconLayer);
+    this._cornerIconLayer = new PIXI.Container();
+    this._cornerIconLayer.zIndex = 40;
+    this.addChild(this._cornerIconLayer);
 
     this._modeToggleRow = new PIXI.Container();
     this._modeToggleRow.position.set(
@@ -633,10 +643,6 @@ export class FurnitureTray extends PIXI.Container {
 
     this._filterRow = new PIXI.Container();
     this._filterRow.zIndex = 14;
-    this._filterRow.position.set(
-      CONTENT_LEFT + FILTER_CHIP_OFFSET_X,
-      gridTopY + GRID_SCROLL_H + FILTER_CHIP_OFFSET_Y,
-    );
     this.addChild(this._filterRow);
 
     this._buildModeToggle();
@@ -855,6 +861,13 @@ export class FurnitureTray extends PIXI.Container {
     });
   }
 
+  private _layoutFilterRowPosition(rowW: number): void {
+    this._filterRow.position.set(
+      (DESIGN_WIDTH - rowW) / 2,
+      FURNITURE_TRAY_FOOTER_Y + Math.max(0, (GRID_FILTER_BAR_H - FILTER_CHIP_H) / 2) + FILTER_CHIP_NUDGE_Y,
+    );
+  }
+
   private _buildFilterRow(): void {
     this._filterRow.removeChildren().forEach(ch => ch.destroy({ children: true }));
     if (this._currentTab === 'room_styles') {
@@ -870,7 +883,8 @@ export class FurnitureTray extends PIXI.Container {
       { id: 'unplaced', label: '未放置', w: FILTER_CHIP_W_UNPLACED },
     ];
     const rowW = chips.reduce((s, c, i) => s + c.w + (i > 0 ? CHIP_GAP : 0), 0);
-    let x = GRID_CLIP_INNER_W - rowW;
+    this._layoutFilterRowPosition(rowW);
+    let x = 0;
     for (const { id, label, w } of chips) {
       const chip = new PIXI.Container();
       chip.position.set(x, PAD_Y);
@@ -1052,20 +1066,20 @@ export class FurnitureTray extends PIXI.Container {
 
     const bg = new PIXI.Graphics();
     bg.beginFill(0xffffff);
-    bg.drawRoundedRect(0, 0, CARD_SIZE, CARD_SIZE, 8);
+    bg.drawRoundedRect(0, 0, CARD_SIZE, CARD_SIZE, CARD_CORNER_RADIUS);
     bg.endFill();
     if (equipped) {
       bg.lineStyle(2, COLORS.BUTTON_PRIMARY);
     } else {
       bg.lineStyle(1, 0xE0D0C0);
     }
-    bg.drawRoundedRect(0, 0, CARD_SIZE, CARD_SIZE, 8);
+    bg.drawRoundedRect(0, 0, CARD_SIZE, CARD_SIZE, CARD_CORNER_RADIUS);
     card.addChild(bg);
 
     const roomTex = TextureCache.get(style.bgTexture);
     if (roomTex?.width) {
       const sprite = new PIXI.Sprite(roomTex);
-      const iconInset = 5;
+      const iconInset = CARD_ICON_INSET;
       const maxSize = CARD_SIZE - iconInset * 2;
       const s = Math.min(maxSize / roomTex.width, maxSize / roomTex.height);
       sprite.scale.set(s);
@@ -1073,7 +1087,11 @@ export class FurnitureTray extends PIXI.Container {
       sprite.position.set(CARD_SIZE / 2, CARD_SIZE / 2);
       card.addChild(sprite);
     } else {
-      const ph = new PIXI.Text('房', { fontSize: 28, fontFamily: FONT_FAMILY, fill: COLORS.TEXT_DARK });
+      const ph = new PIXI.Text('房', {
+        fontSize: Math.round(CARD_SIZE * 0.22),
+        fontFamily: FONT_FAMILY,
+        fill: COLORS.TEXT_DARK,
+      });
       ph.anchor.set(0.5, 0.5);
       ph.position.set(CARD_SIZE / 2, CARD_SIZE / 2);
       card.addChild(ph);
@@ -1100,14 +1118,14 @@ export class FurnitureTray extends PIXI.Container {
     }
 
     const nameText = new PIXI.Text(style.name, {
-      fontSize: 14,
+      fontSize: CARD_NAME_FONT_SIZE,
       fill: COLORS.TEXT_DARK,
       fontFamily: FONT_FAMILY,
       fontWeight: 'bold',
       wordWrap: true,
       wordWrapWidth: CARD_SIZE,
       align: 'center',
-      lineHeight: 18,
+      lineHeight: CARD_NAME_LINE_HEIGHT,
     });
     nameText.anchor.set(0.5, 0);
     nameText.position.set(CARD_SIZE / 2, CARD_SIZE + CARD_NAME_BELOW_GAP);
@@ -1147,17 +1165,17 @@ export class FurnitureTray extends PIXI.Container {
     // 卡片背景（已放置与未放置同样式，仅用右下角对勾区分）
     const bg = new PIXI.Graphics();
     bg.beginFill(0xFFFFFF);
-    bg.drawRoundedRect(0, 0, CARD_SIZE, CARD_SIZE, 8);
+    bg.drawRoundedRect(0, 0, CARD_SIZE, CARD_SIZE, CARD_CORNER_RADIUS);
     bg.endFill();
     bg.lineStyle(1, 0xE0D0C0);
-    bg.drawRoundedRect(0, 0, CARD_SIZE, CARD_SIZE, 8);
+    bg.drawRoundedRect(0, 0, CARD_SIZE, CARD_SIZE, CARD_CORNER_RADIUS);
     card.addChild(bg);
 
     // 家具图标（卡片内铺满，名称已移到方块外下方）
     const texture = TextureCache.get(deco.icon);
     if (texture) {
       const sprite = new PIXI.Sprite(texture);
-      const iconInset = 5;
+      const iconInset = CARD_ICON_INSET;
       const maxSize = CARD_SIZE - iconInset * 2;
       const s = Math.min(maxSize / texture.width, maxSize / texture.height);
       sprite.scale.set(s);
@@ -1191,14 +1209,14 @@ export class FurnitureTray extends PIXI.Container {
 
     // 名称：在圆角方块下方（不占卡片内白底）
     const nameText = new PIXI.Text(getDecoDisplayName(deco.id), {
-      fontSize: 14,
+      fontSize: CARD_NAME_FONT_SIZE,
       fill: COLORS.TEXT_DARK,
       fontFamily: FONT_FAMILY,
       fontWeight: 'bold',
       wordWrap: true,
       wordWrapWidth: CARD_SIZE,
       align: 'center',
-      lineHeight: 18,
+      lineHeight: CARD_NAME_LINE_HEIGHT,
     });
     nameText.anchor.set(0.5, 0);
     nameText.position.set(CARD_SIZE / 2, CARD_SIZE + CARD_NAME_BELOW_GAP);

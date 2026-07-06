@@ -47,14 +47,9 @@ class PlatformServiceClass {
     return this.name === 'douyin';
   }
 
-  /** 微信开发者工具（非真机） */
+  /** 微信开发者工具（非真机）；brand/environment 亦可能为 devtools（模拟器 platform 常为 ios） */
   get isDevtools(): boolean {
-    if (!this.isMinigame) return false;
-    try {
-      return this._api?.getSystemInfoSync?.()?.platform === 'devtools';
-    } catch {
-      return false;
-    }
+    return this._isDevtools();
   }
 
   /** 鸿蒙微信当前不稳定支持 PageManager openlink，福利半屏需降级。 */
@@ -284,6 +279,7 @@ class PlatformServiceClass {
   }
 
   private _isDevtools(): boolean {
+    if (!this.isMinigame) return false;
     try {
       const info = this._api?.getSystemInfoSync?.();
       if (!info) return false;

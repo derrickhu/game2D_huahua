@@ -1,0 +1,13 @@
+Square game asset 1:1. Single large furniture prop centered, filling about 76% of frame width.
+
+Use the attached reference image ONLY for exact same sofa shape, pose, angle, silhouette, walnut armrests, brass trim, chaise extension, and cushion layout. Do NOT change structure or camera.
+
+Recolor the entire upholstery to rich teal ocean blue — bright cheerful cyan-teal, high-key and sunny, clearly blue-green not forest green, not dusty navy. Keep vertical channel stitching readable with gentle blue shadows only.
+
+Replace accent pillows ONLY: left round bolster stays burnt-orange terracotta with button; right bolster becomes cylindrical with soft lavender and off-white horizontal stripes — two pillows only.
+
+Keep walnut arms, brass leg caps, brown outlines, same lighting direction. No side cabinet, no drawer.
+
+No text, no labels, no watermark, no characters, no room shell.
+
+Background pure solid white #FFFFFF only for cutout.

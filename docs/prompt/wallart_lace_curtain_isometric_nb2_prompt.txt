@@ -1,0 +1,18 @@
+Single game sprite: one short cafe-style lace curtain wall hanging for a cozy pastel merge flower shop.
+
+REFERENCE IMAGE RULE — critical: use the attached reference ONLY to copy its wall-plane angle (rod skew left-high right-low). Do NOT copy its stars, moons, blue swags, bows, or any other design from the reference. Draw ONLY the lace cafe curtain described below.
+
+PERSPECTIVE — mandatory (match reference wall-plane angle only):
+Designed for the BACK wall plane of an isometric L-shaped dollhouse room (camera ~45° from upper-left into the corner). The entire curtain unit lies flat on that vertical wall — parallel to the wall surface, NOT a front-facing billboard, NOT a floor-prop isometric angle with visible top surfaces.
+
+Copy the reference image wall-plane skew ONLY:
+- Wooden curtain rod top edge slopes gently DOWN toward the RIGHT (left end higher, right end lower)
+- Rod is NOT horizontal front view; NOT steep diagonal like a floating floor prop
+- Lace panel hangs downward in screen space; fabric folds follow the oblique wall plane
+- Outer silhouette reads as one foreshortened quadrilateral on the wall
+
+SUBJECT: slim warm-oak curtain rod with round finials and two small wall brackets; cream/off-white lace cafe curtain panel ONLY — simple small floral eyelet lace pattern and scalloped bottom hem, slightly gathered at rod. NO stars, NO moons, NO blue fabric, NO bows. No window glass — curtain unit only.
+
+STYLE: kawaii casual mobile game prop, soft brown outlines, pastel cream and blush, upper-left soft key light, readable silhouette, no photoreal, no readable text, no watermark.
+
+BACKGROUND: pure solid white #FFFFFF only around the skewed curtain unit; no room shell, no floor, no characters.

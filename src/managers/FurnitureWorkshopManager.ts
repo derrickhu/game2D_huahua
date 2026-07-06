@@ -392,6 +392,7 @@ class FurnitureWorkshopManagerClass {
         const legacyMap: Record<string, string> = {
           recipe_workshop_plush_green_sofa: makeWorkshopVariantKey('blueprint_workshop_plush_green_sofa', 'default'),
           recipe_workshop_plush_sofa_sakura: makeWorkshopVariantKey('blueprint_workshop_plush_green_sofa', 'sakura'),
+          recipe_workshop_plush_sofa_blue: makeWorkshopVariantKey('blueprint_workshop_plush_green_sofa', 'blue'),
         };
         for (const id of data.craftedRecipeIds) {
           if (typeof id === 'string' && legacyMap[id]) this._craftedVariants.add(legacyMap[id]);

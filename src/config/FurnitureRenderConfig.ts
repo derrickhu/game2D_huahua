@@ -84,7 +84,7 @@ export const FURNITURE_RENDER_DEFS: FurnitureRenderDef[] = [
     atlas: {
       sheetKey: 'workshop_plush_sofa_sheet',
       columns: 1,
-      rows: 2,
+      rows: 3,
       row: 0,
     },
   },
@@ -94,8 +94,18 @@ export const FURNITURE_RENDER_DEFS: FurnitureRenderDef[] = [
     atlas: {
       sheetKey: 'workshop_plush_sofa_sheet',
       columns: 1,
-      rows: 2,
+      rows: 3,
       row: 1,
+    },
+  },
+  {
+    decoId: 'workshop_plush_sofa_blue',
+    renderMode: 'single',
+    atlas: {
+      sheetKey: 'workshop_plush_sofa_sheet',
+      columns: 1,
+      rows: 3,
+      row: 2,
     },
   },
   {

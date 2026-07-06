@@ -1,6 +1,12 @@
 Single game sprite: one wide triptych wall hanging — three narrow vertical specimen frames mounted as one unit, for a cozy pastel merge flower shop. Tier 2 mid item — must look clearly different from a single painting: three separate panes in a row.
 
-PERSPECTIVE — mandatory: Same wall rule as other wall decors — left isometric interior wall, camera ~45° into the corner. The entire triptych block is one foreshortened object on the vertical wall plane. Do NOT use a flat frontal poster. The outer silhouette is a wide skewed quadrilateral; top edge slopes down toward the right; glass and wood follow that oblique wall.
+PERSPECTIVE — mandatory (match reference image EXACTLY for angle only):
+Designed for the BACK wall plane of an isometric L-shaped dollhouse room (camera ~45° from upper-left into the corner). The entire triptych lies flat on that vertical wall — parallel to the wall surface, NOT a flat frontal poster, NOT a floor-prop isometric angle.
+
+Copy the reference image wall-plane skew ONLY:
+- Top edge of the frame block slopes gently DOWN toward the RIGHT (left end higher, right end lower)
+- Three frames share one foreshortened wide quadrilateral on the oblique wall
+- Vertical frame edges follow the wall oblique; glass and wood follow the same plane
 
 LAYOUT: three equal-height vertical mini frames side by side with thin gaps, shared light oak wood style, optional tiny brass corner dots. Each pane shows a different pressed flower or herbarium specimen behind frosted glass look: e.g. fern frond, lavender sprig, dried rose — flat botanical collage aesthetic, craft-shop charm.
 

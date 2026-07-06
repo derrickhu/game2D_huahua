@@ -35,7 +35,7 @@ import {
   FURNITURE_TRAY_H,
   FURNITURE_TRAY_OPEN_OFFSET_UP,
   FURNITURE_TRAY_OPEN_NUDGE_DOWN,
-  FURNITURE_TRAY_CLEAR_ICON_TARGET_H,
+  FURNITURE_TRAY_EDIT_CORNER_ICON_TARGET_H,
 } from '@/gameobjects/ui/FurnitureTray';
 import { RoomEditToolbar } from '@/gameobjects/ui/RoomEditToolbar';
 import { TextureCache } from '@/utils/TextureCache';
@@ -126,11 +126,8 @@ const trayOpenTopY = (logicH: number) =>
   FURNITURE_TRAY_OPEN_OFFSET_UP +
   FURNITURE_TRAY_OPEN_NUDGE_DOWN;
 
-/** 底栏「完成装修」：面板底边水平居中（约 2× 原 132×36） */
-const TRAY_EDIT_COMPLETE_MAX_W = 264;
-const TRAY_EDIT_COMPLETE_MAX_H = 72;
-/** 编辑托盘顶右「清空」图标目标高度 */
-const TRAY_EDIT_CLEAR_ICON_TARGET_H = FURNITURE_TRAY_CLEAR_ICON_TARGET_H;
+/** 编辑托盘顶栏圆钮（清空 / 完成）目标边长 */
+const TRAY_EDIT_CORNER_ICON_TARGET_H = FURNITURE_TRAY_EDIT_CORNER_ICON_TARGET_H;
 
 /** 底部「装修」主按钮目标尺寸（与 _buildEditButton 一致） */
 const EDIT_MAIN_BTN_W = (): number => Math.round(DESIGN_WIDTH * 0.58);
@@ -2982,70 +2979,93 @@ export class ShopScene implements Scene {
     EventBus.emit('furniture:edit_enabled');
   }
 
-  /** 「完成装修」白字：深绿描边 + 轻阴影，浅绿底上可读（随按钮约 2× 放大） */
-  private static readonly _EDIT_COMPLETE_LABEL_STYLE: Partial<PIXI.ITextStyle> = {
-    fontSize: 32,
-    fill: 0xffffff,
-    fontFamily: FONT_FAMILY,
-    fontWeight: 'bold',
-    stroke: 0x14532a,
-    strokeThickness: 6,
-    dropShadow: true,
-    dropShadowColor: 0x000000,
-    dropShadowAlpha: 0.42,
-    dropShadowBlur: 3,
-    dropShadowDistance: 2,
-  };
-
-  private _makeEditCompletePillLabel(): PIXI.Text {
-    const label = new PIXI.Text('完成装修', ShopScene._EDIT_COMPLETE_LABEL_STYLE);
-    label.anchor.set(0.5, 0.5);
-    label.position.set(0, 0);
-    label.eventMode = 'none';
-    return label;
+  /** 顶栏「完成装修」圆钮（懒创建，随托盘位移） */
+  private _ensureEditCompleteIcon(): void {
+    if (this._editCompletePill) {
+      const btn = this._editCompletePill;
+      btn.visible = true;
+      btn.eventMode = 'static';
+      this._syncEditCompleteIconLayout(btn);
+      this._refreshEditCompleteIconTexture();
+      this._pulseEditCompletePill();
+      this._ensureEditClearAllPill();
+      return;
+    }
+    const wrap = this._makeEditCompleteIcon();
+    this._editCompletePill = wrap;
+    this._pulseEditCompletePill();
+    this._ensureEditClearAllPill();
   }
 
-  private _makeEditCompletePillFallbackBg(): PIXI.Graphics {
+  private _makeEditCompleteIconFallback(wrap: PIXI.Container): void {
+    const r = 32;
     const g = new PIXI.Graphics();
-    const w = TRAY_EDIT_COMPLETE_MAX_W;
-    const h = TRAY_EDIT_COMPLETE_MAX_H;
     g.beginFill(0xbbe68d, 1);
-    g.lineStyle(6, 0x5a7a38, 0.85);
-    g.drawRoundedRect(-w / 2, -h / 2, w, h, h / 2);
+    g.lineStyle(3, 0x5a7a38, 0.95);
+    g.drawCircle(0, 0, r);
     g.endFill();
-    g.lineStyle(3, 0xe8ffd0, 0.7);
-    g.drawRoundedRect(-w / 2 + 8, -h / 2 + 8, w - 16, h - 16, Math.max(12, h / 2 - 8));
-    return g;
+    g.lineStyle(5, 0xffffff, 1);
+    g.moveTo(-14, 2);
+    g.lineTo(-4, 14);
+    g.lineTo(16, -12);
+    wrap.addChild(g);
   }
 
-  /** 顶中大钮：贴图与热区以容器中心为锚点 */
-  private _syncEditCompletePillLayout(wrap: PIXI.Container): void {
-    let bw = TRAY_EDIT_COMPLETE_MAX_W;
-    let bh = TRAY_EDIT_COMPLETE_MAX_H;
+  private _syncEditCompleteIconLayout(wrap: PIXI.Container): void {
+    let bw = TRAY_EDIT_CORNER_ICON_TARGET_H;
+    let bh = TRAY_EDIT_CORNER_ICON_TARGET_H;
     const bg = wrap.children[0];
-    if (bg instanceof PIXI.Sprite && bg.texture?.width > 0) {
+    if (bg instanceof PIXI.Sprite && bg.texture?.width) {
       const tex = bg.texture;
-      const s = Math.min(
-        TRAY_EDIT_COMPLETE_MAX_W / tex.width,
-        TRAY_EDIT_COMPLETE_MAX_H / tex.height,
-      );
+      const s = TRAY_EDIT_CORNER_ICON_TARGET_H / Math.max(tex.width, tex.height);
       bg.anchor.set(0.5, 0.5);
       bg.position.set(0, 0);
       bg.scale.set(s);
       bw = tex.width * s;
       bh = tex.height * s;
     }
-    wrap.position.set(0, 0);
-    wrap.hitArea = new PIXI.Rectangle(-bw / 2, -bh / 2, bw, bh);
-    for (const c of wrap.children) {
-      if (c instanceof PIXI.Text && c.text === '完成装修') {
-        c.anchor.set(0.5, 0.5);
-        c.position.set(0, 0);
-        Object.assign(c.style, ShopScene._EDIT_COMPLETE_LABEL_STYLE);
-        break;
+    wrap.hitArea = new PIXI.Rectangle(-bw / 2 - 8, -bh / 2 - 8, bw + 16, bh + 16);
+    this._furnitureTray.mountEditCompleteIcon(wrap);
+  }
+
+  private _makeEditCompleteIcon(): PIXI.Container {
+    const wrap = new PIXI.Container();
+    const tex = TextureCache.get('furniture_edit_complete_icon_nb2');
+    if (tex?.width) {
+      wrap.addChild(new PIXI.Sprite(tex));
+    } else {
+      this._makeEditCompleteIconFallback(wrap);
+    }
+    this._syncEditCompleteIconLayout(wrap);
+    wrap.eventMode = 'static';
+    wrap.cursor = 'pointer';
+    wrap.on('pointertap', () => {
+      this._exitEditMode();
+    });
+    return wrap;
+  }
+
+  private _refreshEditCompleteIconTexture(): void {
+    const btn = this._editCompletePill;
+    const tex = TextureCache.get('furniture_edit_complete_icon_nb2');
+    if (!btn || !tex?.width) return;
+    for (const ch of [...btn.children]) {
+      if (ch instanceof PIXI.Text) {
+        btn.removeChild(ch);
+        ch.destroy();
       }
     }
-    this._furnitureTray.layoutEditFooterButtons(wrap);
+    const bg = btn.children[0];
+    if (bg instanceof PIXI.Sprite && bg.texture === tex) {
+      this._syncEditCompleteIconLayout(btn);
+      return;
+    }
+    if (bg) {
+      btn.removeChild(bg);
+      bg.destroy({ children: true });
+    }
+    btn.addChild(new PIXI.Sprite(tex));
+    this._syncEditCompleteIconLayout(btn);
   }
 
   /** 完成装修钮柔和呼吸（吸引注意；退出编辑时取消） */
@@ -3076,43 +3096,9 @@ export class ShopScene implements Scene {
     step();
   }
 
-  /** 托盘右下角「完成编辑」贴图（懒创建，随托盘位移） */
+  /** 托盘顶右「完成编辑」圆钮（懒创建，随托盘位移） */
   private _ensureEditCompletePill(): void {
-    if (this._editCompletePill) {
-      const p = this._editCompletePill;
-      p.visible = true;
-      p.eventMode = 'static';
-      if (p.children.length === 1) {
-        p.addChild(this._makeEditCompletePillLabel());
-      } else {
-        for (const c of p.children) {
-          if (c instanceof PIXI.Text && c.text === '完成装修') {
-            Object.assign(c.style, ShopScene._EDIT_COMPLETE_LABEL_STYLE);
-            break;
-          }
-        }
-      }
-      this._syncEditCompletePillLayout(p);
-      this._furnitureTray.addChild(p);
-      this._refreshEditCompletePillTexture();
-      this._pulseEditCompletePill();
-      this._ensureEditClearAllPill();
-      return;
-    }
-    const tex = TextureCache.get('edit_complete_pill_4x2_nb2');
-    const wrap = new PIXI.Container();
-    wrap.addChild(tex ? new PIXI.Sprite(tex) : this._makeEditCompletePillFallbackBg());
-    wrap.addChild(this._makeEditCompletePillLabel());
-    this._syncEditCompletePillLayout(wrap);
-    wrap.eventMode = 'static';
-    wrap.cursor = 'pointer';
-    wrap.on('pointertap', () => {
-      this._exitEditMode();
-    });
-    this._editCompletePill = wrap;
-    this._furnitureTray.addChild(wrap);
-    this._pulseEditCompletePill();
-    this._ensureEditClearAllPill();
+    this._ensureEditCompleteIcon();
   }
 
   private _makeEditClearAllIconFallback(wrap: PIXI.Container): void {
@@ -3130,12 +3116,12 @@ export class ShopScene implements Scene {
   }
 
   private _syncEditClearAllIconLayout(wrap: PIXI.Container): void {
-    let bw = TRAY_EDIT_CLEAR_ICON_TARGET_H;
-    let bh = TRAY_EDIT_CLEAR_ICON_TARGET_H;
+    let bw = TRAY_EDIT_CORNER_ICON_TARGET_H;
+    let bh = TRAY_EDIT_CORNER_ICON_TARGET_H;
     const bg = wrap.children[0];
     if (bg instanceof PIXI.Sprite && bg.texture?.width) {
       const tex = bg.texture;
-      const s = TRAY_EDIT_CLEAR_ICON_TARGET_H / Math.max(tex.width, tex.height);
+      const s = TRAY_EDIT_CORNER_ICON_TARGET_H / Math.max(tex.width, tex.height);
       bg.anchor.set(0.5, 0.5);
       bg.position.set(0, 0);
       bg.scale.set(s);
@@ -3172,11 +3158,11 @@ export class ShopScene implements Scene {
   private _preloadEditTrayUiTextures(): void {
     void TextureCache.preloadKeys([
       'furniture_edit_clear_icon_nb2',
-      'edit_complete_pill_4x2_nb2',
+      'furniture_edit_complete_icon_nb2',
     ]).then(() => {
       if (!this._isEditMode) return;
       this._refreshEditClearAllIconTexture();
-      this._refreshEditCompletePillTexture();
+      this._refreshEditCompleteIconTexture();
       if (this._editClearAllPill?.visible) {
         this._ensureEditClearAllPill();
       }
@@ -3258,29 +3244,14 @@ export class ShopScene implements Scene {
     }
   }
 
-  private _refreshEditCompletePillTexture(): void {
-    const pill = this._editCompletePill;
-    const tex = TextureCache.get('edit_complete_pill_4x2_nb2');
-    if (!pill || !tex?.width) return;
-    if (pill.children[0] instanceof PIXI.Sprite && (pill.children[0] as PIXI.Sprite).texture === tex) return;
-    const oldBg = pill.children[0];
-    const sp = new PIXI.Sprite(tex);
-    pill.addChildAt(sp, 0);
-    if (oldBg) {
-      pill.removeChild(oldBg);
-      oldBg.destroy({ children: true });
-    }
-    this._syncEditCompletePillLayout(pill);
-  }
-
   private _hideEditCompletePill(): void {
     if (!this._editCompletePill) return;
     TweenManager.cancelTarget(this._editCompletePill.scale);
     this._editCompletePill.scale.set(1);
     this._editCompletePill.visible = false;
     this._editCompletePill.eventMode = 'none';
-    if (this._editCompletePill.parent === this._furnitureTray) {
-      this._furnitureTray.removeChild(this._editCompletePill);
+    if (this._editCompletePill.parent) {
+      this._editCompletePill.parent.removeChild(this._editCompletePill);
     }
     this._hideEditClearAllPill();
   }

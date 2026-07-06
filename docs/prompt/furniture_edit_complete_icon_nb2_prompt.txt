@@ -1,0 +1,13 @@
+Clean 2D vector mobile game UI icon for a cozy pastel flower-shop merge game, kawaii casual style.
+
+Single circular action button ONLY on solid pure magenta #FF00FF background (for chroma removal).
+
+Match the attached reference button style exactly: same glossy round circle shape, soft 3D bubble bevel, warm gradient, thin dark brown outline, same size and proportions as the reference trash button.
+
+Color: fresh soft sage-green to mint-green gradient circle (finish/done action), NOT orange.
+
+Inside circle ONLY: cute bold white checkmark tick pictogram with thick dark brown outline, simple flat cartoon, clearly readable at small size.
+
+CRITICAL: NO text anywhere. NO Chinese characters. NO label below the circle. NO caption. Icon is circle + checkmark pictogram only.
+
+No watermark, no panel frame, no extra decorations. Square canvas, icon centered.

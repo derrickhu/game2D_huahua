@@ -181,6 +181,15 @@ export const WORKSHOP_BLUEPRINT_DEFS: WorkshopBlueprintDef[] = [
         dyeMaterialId: WORKSHOP_DYE_PINK_ID,
         huayuanCost: 13000,
       },
+      {
+        id: 'blue',
+        name: '海蓝',
+        outputDecoId: 'workshop_plush_sofa_blue',
+        materialCost: 10,
+        dyeCost: 5,
+        dyeMaterialId: WORKSHOP_DYE_BLUE_ID,
+        huayuanCost: 13000,
+      },
     ],
   },
   {

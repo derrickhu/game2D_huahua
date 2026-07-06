@@ -1,0 +1,18 @@
+Single game sprite: one tall rose swag wall curtain for a cozy pastel merge flower shop.
+
+REFERENCE IMAGE RULE — critical: use the attached reference ONLY to copy its wall-plane angle (rod skew left-high right-low). Do NOT copy its stars, moons, blue swags, bows, or exact layout from the reference. Draw ONLY the rose swag curtain described below.
+
+PERSPECTIVE — mandatory (match reference wall-plane angle only):
+Designed for the BACK wall plane of an isometric L-shaped dollhouse room (camera ~45° from upper-left into the corner). The entire curtain hangs flat on that vertical wall — parallel to the wall surface, NOT a front-facing billboard, NOT a floor-prop isometric angle.
+
+Copy the reference image wall-plane skew ONLY:
+- Wooden curtain rod top edge slopes gently DOWN toward the RIGHT (left end higher, right end lower)
+- Rod is NOT horizontal front view; NOT steep diagonal; NOT slanting up toward the right
+- Pink swags and cream inner panels hang downward; all fabric follows the same oblique wall plane
+- Outer silhouette is one tall foreshortened shape on the wall
+
+SUBJECT: warm wood curtain rod with round finials. Dusty rose pink outer drapes swagged over rod with rose-bud fabric tiebacks on both sides; cream inner curtain panels behind; scalloped white lace trim on pink edges. NO stars, NO moons, NO blue fabric. Elegant tall wall curtain — airy middle and bottom, no floor clutter.
+
+STYLE: kawaii casual mobile game prop, soft brown outlines, pastel rose and cream, upper-left soft key light, readable silhouette, no photoreal, no readable text, no watermark.
+
+BACKGROUND: pure solid white #FFFFFF only around the skewed curtain; no room shell, no floor, no characters.

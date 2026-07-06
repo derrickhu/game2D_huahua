@@ -4,6 +4,8 @@
 
 避免 compress_furniture_deco_pngs 对整张 sheet 缩到 171 导致每格过小。
 
+工坊家具（workshopExclusive）：每格 `--max-side 342`（手机清晰度标杆见 `workshop_plush_sofa_sheet`）。普通 Lv 家具默认 171。
+
 用法（仓库根）:
   # 从已有 2 列合图重建（正/背）
   python3 scripts/process_furniture_atlas_sheet.py \\
