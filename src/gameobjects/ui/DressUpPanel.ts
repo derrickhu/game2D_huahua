@@ -9,6 +9,19 @@ import { OverlayManager } from '@/core/OverlayManager';
 import { TweenManager, Ease } from '@/core/TweenManager';
 import { DressUpManager, Outfit } from '@/managers/DressUpManager';
 import { getOwnerChibiTextureKey, getOwnerFullOpenTextureKey } from '@/config/DressUpConfig';
+import {
+  DRESSUP_ALIGN_OVERRIDES,
+  DRESSUP_CANVAS_H,
+  DRESSUP_ITEM_MAP,
+  DRESSUP_ITEMS,
+  DRESSUP_SLOT_NAMES,
+  DRESSUP_SLOT_ORDER,
+  getItemPlacement,
+  getItemsBySlot,
+} from '@/config/DressUpItemConfig';
+import type { DressUpItem, DressUpSlot } from '@/config/DressUpItemConfig';
+import { buildAvatarLayers, OwnerAvatarService } from '@/gameobjects/LayeredOwnerAvatar';
+import { GMManager } from '@/managers/GMManager';
 import { AdManager, AdScene } from '@/managers/AdManager';
 import { CurrencyManager } from '@/managers/CurrencyManager';
 import { ConfirmDialog } from './ConfirmDialog';
@@ -96,6 +109,14 @@ function federatedPointerToDesignY(e: PIXI.FederatedPointerEvent): number {
   return e.global.y / Game.scale;
 }
 
+/** 面板 Tab：整套形象 + 各部件槽位 */
+type DressTab = 'outfits' | DressUpSlot;
+const DRESS_TABS: readonly DressTab[] = ['outfits', ...DRESSUP_SLOT_ORDER];
+const DRESS_TAB_NAMES: Readonly<Record<string, string>> = { outfits: '套装', ...DRESSUP_SLOT_NAMES };
+const TAB_BAR_H = 46;
+/** 部件 Tab 顶部实时预览区高度（内容区坐标） */
+const PREVIEW_H = 286;
+
 function isActivityLockedOutfit(outfit: Outfit): boolean {
   return Boolean(
     outfit.unlockRequirement?.questId && outfit.unlockRequirement.conditionText === '活动解锁',
@@ -136,6 +157,17 @@ export class DressUpPanel extends PIXI.Container {
   private _pendingDressUpStarGrant = 0;
   private _assetUnsub: (() => void) | null = null;
 
+  // ── 分部件换装 ──
+  private _activeTab: DressTab = 'outfits';
+  private _tabBar!: PIXI.Container;
+  private _previewBox!: PIXI.Container;
+  private _previewAvatar: PIXI.Container | null = null;
+  private _previewScale = 1;
+  /** GM 部件对齐模式 */
+  private _alignMode = false;
+  private _alignDragging = false;
+  private _alignDragStart = { px: 0, py: 0, x: 0, y: 0 };
+
   constructor() {
     super();
     this.visible = false;
@@ -143,6 +175,11 @@ export class DressUpPanel extends PIXI.Container {
     this._build();
     EventBus.on('panel:openDressUp', () => this.open());
     EventBus.on('decoration:shopStarFlyComplete', () => this._onDressUpStarFlyComplete());
+    EventBus.on('dressup:itemsChanged', () => {
+      if (!this._isOpen) return;
+      this._refreshPreview();
+      this._rebuildGrid();
+    });
   }
 
   private readonly _onCanvasGridMove = (ev: PointerEvent): void => {
@@ -257,14 +294,23 @@ export class DressUpPanel extends PIXI.Container {
     const contentTop = layout.syFrac(SHELL.CONTENT_TOP_FRAC);
     const contentBottom = layout.syFrac(SHELL.CONTENT_BOTTOM_FRAC);
     this._contentW = layout.panelW - padX * 2;
-    this._contentH = Math.max(120, contentBottom - contentTop);
 
-    this._gridViewport.position.set(padX, contentTop);
+    // Tab 栏占内容区顶部；部件 Tab 再让出预览区高度
+    this._tabBar.position.set(padX, contentTop);
+    this._rebuildTabBar();
+    const isPartsTab = this._activeTab !== 'outfits';
+    this._previewBox.visible = isPartsTab;
+    this._previewBox.position.set(padX, contentTop + TAB_BAR_H);
+    const gridTop = contentTop + TAB_BAR_H + (isPartsTab ? PREVIEW_H : 0);
+    this._contentH = Math.max(120, contentBottom - gridTop);
+
+    this._gridViewport.position.set(padX, gridTop);
     this._gridViewport.hitArea = new PIXI.Rectangle(0, 0, this._contentW, this._contentH);
     this._gridMask.clear();
     this._gridMask.beginFill(0xffffff);
-    this._gridMask.drawRect(padX, contentTop, this._contentW, this._contentH);
+    this._gridMask.drawRect(padX, gridTop, this._contentW, this._contentH);
     this._gridMask.endFill();
+    if (isPartsTab) this._refreshPreview();
 
     this._overlay.clear();
     this._overlay.beginFill(0x000000, 0.48);
@@ -340,6 +386,11 @@ export class DressUpPanel extends PIXI.Container {
     const availH = this._contentH;
     if (gridW <= 0 || availH <= 0) return;
 
+    if (this._activeTab !== 'outfits') {
+      this._rebuildItemGrid(gridW, availH);
+      return;
+    }
+
     const outfits = DressUpManager.getAllOutfits()
       .map((outfit, index) => ({ outfit, index }))
       .sort((a, b) => {
@@ -376,6 +427,171 @@ export class DressUpPanel extends PIXI.Container {
 
     this._maxScrollY = Math.max(0, contentH - availH);
     this._scrollY = 0;
+  }
+
+  /** 部件 Tab：本槽位部件卡网格 */
+  private _rebuildItemGrid(gridW: number, availH: number): void {
+    const slot = this._activeTab as DressUpSlot;
+    const items = getItemsBySlot(slot)
+      .map((item, index) => ({ item, index, unlocked: DressUpManager.isItemUnlocked(item.id) }))
+      .sort((a, b) => {
+        if (a.unlocked !== b.unlocked) return a.unlocked ? -1 : 1;
+        return a.index - b.index;
+      });
+
+    const { cw, ch, startX } = measureDressGrid(gridW);
+    const cols = GRID_COLS;
+    const totalRows = Math.max(1, Math.ceil(items.length / cols));
+
+    const inner = new PIXI.Container();
+    this._gridContainer.addChild(inner);
+
+    if (items.length === 0) {
+      const empty = new PIXI.Text('该部位暂无可换部件', {
+        fontSize: 18, fill: COLORS.TEXT_LIGHT, fontFamily: FONT_FAMILY,
+      });
+      empty.anchor.set(0.5, 0);
+      empty.position.set(gridW / 2, 32);
+      inner.addChild(empty);
+    }
+
+    items.forEach(({ item }, i) => {
+      const col = i % cols;
+      const row = Math.floor(i / cols);
+      const x = startX + col * (cw + CARD_GAP);
+      const y = CARD_GAP + row * (ch + CARD_GAP);
+      inner.addChild(this._buildItemCard(item, x, y, cw, ch));
+    });
+
+    const contentH = CARD_GAP + totalRows * (ch + CARD_GAP);
+    const plate = new PIXI.Container();
+    plate.eventMode = 'static';
+    plate.hitArea = new PIXI.Rectangle(0, 0, gridW, contentH);
+    inner.addChildAt(plate, 0);
+
+    this._maxScrollY = Math.max(0, contentH - availH);
+    this._scrollY = 0;
+    this._applyScroll();
+  }
+
+  /** 单个部件卡：图 + 名称 + 底部按钮（穿戴中/试穿/价格） */
+  private _buildItemCard(
+    item: DressUpItem, x: number, y: number, cw: number, ch: number,
+  ): PIXI.Container {
+    const card = new PIXI.Container();
+    card.position.set(x, y);
+
+    const isUnlocked = DressUpManager.isItemUnlocked(item.id);
+    const isEquipped = DressUpManager.isItemEquipped(item.id);
+    const reqResult = checkRequirement(item.unlockRequirement);
+    const reqMet = reqResult.met;
+
+    this._drawCardBg(card, cw, ch, isUnlocked || reqMet, isEquipped);
+
+    const { btnTop } = measureDressCardFooter(ch);
+    const nameFontSize = dressCardNameFontSize(cw);
+    const nameBottomY = btnTop - CARD_NAME_GAP_ABOVE_BTN;
+    const nameBlockH = Math.round(nameFontSize * 1.2);
+    const portraitTop = Math.max(12, Math.round((CARD_PORTRAIT_TOP_INSET * ch) / CARD_BASE_H));
+    const portraitBottom = nameBottomY - nameBlockH - CARD_NAME_GAP_BELOW_PORTRAIT;
+    const maxPortraitH = Math.max(44, portraitBottom - portraitTop);
+    const maxPortraitW = cw - 14;
+    const portraitCy = portraitTop + maxPortraitH / 2;
+
+    const tex = TextureCache.get(item.textureKey);
+    if (tex?.width) {
+      const sp = new PIXI.Sprite(tex);
+      sp.anchor.set(0.5, 0.5);
+      const s = Math.min(maxPortraitW / tex.width, maxPortraitH / tex.height);
+      sp.scale.set(s);
+      sp.position.set(cw / 2, portraitCy);
+      card.addChild(sp);
+    } else {
+      const ph = new PIXI.Text(item.name.charAt(0), {
+        fontSize: Math.round((40 * cw) / CARD_BASE_W), fontFamily: FONT_FAMILY,
+      });
+      ph.anchor.set(0.5);
+      ph.position.set(cw / 2, portraitCy);
+      card.addChild(ph);
+    }
+    if ((item.starValue ?? 0) > 0 && !isUnlocked) {
+      this._addStarValueBadge(card, cw, item.starValue!);
+    }
+
+    const name = new PIXI.Text(item.name, {
+      fontSize: nameFontSize,
+      fill: isUnlocked || reqMet ? COLORS.TEXT_DARK : COLORS.TEXT_LIGHT,
+      fontFamily: FONT_FAMILY,
+      fontWeight: 'bold',
+      align: 'center',
+      wordWrap: true,
+      wordWrapWidth: cw - 10,
+    });
+    name.anchor.set(0.5, 1);
+    name.position.set(cw / 2, nameBottomY);
+    card.addChild(name);
+
+    if (isEquipped) {
+      this._addDressFooter(card, cw, ch, 'equipped', '已穿上');
+    } else if (isUnlocked) {
+      this._addDressFooter(card, cw, ch, 'ready', '穿上');
+    } else if (!reqMet) {
+      this._addDressFooter(card, cw, ch, 'locked', reqResult.text);
+    } else if (item.huayuanCost > 0) {
+      this._addDressFooter(card, cw, ch, 'purchase', '', item.huayuanCost);
+    } else {
+      this._addDressFooter(card, cw, ch, 'ready', '领取');
+    }
+
+    card.eventMode = 'static';
+    card.hitArea = new PIXI.Rectangle(0, 0, cw, ch);
+    card.on('pointerdown', (e: PIXI.FederatedPointerEvent) => this._onGridPointerDown(e));
+    card.cursor = 'pointer';
+    card.on('pointertap', (e: PIXI.FederatedPointerEvent) => {
+      e.stopPropagation();
+      if (this._ignoreNextCardTap) {
+        this._ignoreNextCardTap = false;
+        return;
+      }
+      if (isEquipped) {
+        // 再点已穿的 → 脱下（妆容/饰品可空，衣物回退基本款）
+        if (DressUpManager.unequipSlot(item.slot)) {
+          ToastMessage.show(`已脱下「${item.name}」`);
+        }
+        return;
+      }
+      if (isUnlocked) {
+        if (DressUpManager.equipItem(item.id)) {
+          ToastMessage.show(`已穿上「${item.name}」`);
+        }
+        return;
+      }
+      if (!reqMet) {
+        ToastMessage.show(`${requirementHintText(reqResult)}`);
+        return;
+      }
+      if (item.huayuanCost > 0 && CurrencyManager.state.huayuan < item.huayuanCost) {
+        ToastMessage.show('花愿不足');
+        return;
+      }
+      const deferStar = (item.starValue ?? 0) > 0;
+      const flyLp = new PIXI.Point(14, 14);
+      const flyGlobal = deferStar ? card.toGlobal(flyLp) : null;
+      if (DressUpManager.unlockItem(item.id, { deferStarGrant: deferStar })) {
+        if (item.huayuanCost > 0) AudioManager.play('purchase_tap');
+        ToastMessage.show(`已获得「${item.name}」！`);
+        if (deferStar && flyGlobal) {
+          this._pendingDressUpStarGrant = item.starValue!;
+          EventBus.emit('decoration:shopStarFly', {
+            globalX: flyGlobal.x,
+            globalY: flyGlobal.y,
+            amount: item.starValue!,
+          });
+        }
+      }
+    });
+
+    return card;
   }
 
   private _drawCardBg(card: PIXI.Container, cw: number, ch: number, unlocked: boolean, equipped: boolean): void {
@@ -862,6 +1078,16 @@ export class DressUpPanel extends PIXI.Container {
     this._closeHit.on('pointertap', onCloseTap);
     this._panel.addChild(this._closeHit);
 
+    this._tabBar = new PIXI.Container();
+    this._tabBar.zIndex = 15;
+    this._panel.addChild(this._tabBar);
+
+    this._previewBox = new PIXI.Container();
+    this._previewBox.zIndex = 15;
+    this._previewBox.eventMode = 'static';
+    this._previewBox.on('pointerdown', (e: PIXI.FederatedPointerEvent) => e.stopPropagation());
+    this._panel.addChild(this._previewBox);
+
     this._gridViewport = new PIXI.Container();
     this._gridViewport.zIndex = 10;
     this._gridViewport.eventMode = 'static';
@@ -887,5 +1113,234 @@ export class DressUpPanel extends PIXI.Container {
     });
 
     this._applyShellLayout();
+  }
+
+  // ═══════════════ Tab 栏 ═══════════════
+
+  private _switchTab(tab: DressTab): void {
+    if (this._activeTab === tab) return;
+    this._activeTab = tab;
+    this._alignMode = false;
+    this._applyShellLayout();
+    this._rebuildGrid();
+  }
+
+  private _rebuildTabBar(): void {
+    this._tabBar.removeChildren();
+    const w = this._contentW;
+    if (w <= 0) return;
+    const gap = 4;
+    const tabW = Math.floor((w - gap * (DRESS_TABS.length - 1)) / DRESS_TABS.length);
+    const tabH = TAB_BAR_H - 8;
+
+    DRESS_TABS.forEach((tab, i) => {
+      const active = tab === this._activeTab;
+      const btn = new PIXI.Container();
+      btn.position.set(i * (tabW + gap), 0);
+
+      const g = new PIXI.Graphics();
+      g.beginFill(active ? ROSE_INNER : CREAM_FILL, active ? 0.95 : 0.9);
+      g.lineStyle(1.5, ROSE_LINE, 0.9);
+      g.drawRoundedRect(0, 0, tabW, tabH, 10);
+      g.endFill();
+      btn.addChild(g);
+
+      const label = new PIXI.Text(DRESS_TAB_NAMES[tab], {
+        fontSize: 18,
+        fill: active ? 0xffffff : DRESSUP_TITLE_STROKE,
+        fontFamily: FONT_FAMILY,
+        fontWeight: 'bold',
+      });
+      label.anchor.set(0.5);
+      label.position.set(tabW / 2, tabH / 2);
+      btn.addChild(label);
+
+      btn.eventMode = 'static';
+      btn.cursor = 'pointer';
+      btn.hitArea = new PIXI.Rectangle(0, 0, tabW, tabH);
+      btn.on('pointertap', (e: PIXI.FederatedPointerEvent) => {
+        e.stopPropagation();
+        this._switchTab(tab);
+      });
+      this._tabBar.addChild(btn);
+    });
+  }
+
+  // ═══════════════ 实时预览（部件 Tab） ═══════════════
+
+  private _refreshPreview(): void {
+    if (!this._previewBox || this._activeTab === 'outfits') return;
+    for (const c of this._previewBox.removeChildren()) c.destroy({ children: true });
+    this._previewAvatar = null;
+
+    const w = this._contentW;
+    const h = PREVIEW_H - 8;
+
+    const bg = new PIXI.Graphics();
+    bg.beginFill(CREAM_FILL, 0.96);
+    bg.lineStyle(1.5, ROSE_LINE, 0.85);
+    bg.drawRoundedRect(0, 0, w, h, 12);
+    bg.endFill();
+    this._previewBox.addChild(bg);
+
+    const layers = buildAvatarLayers(false);
+    if (!layers) {
+      const hint = new PIXI.Text('形象资源加载中…', {
+        fontSize: 18, fill: COLORS.TEXT_LIGHT, fontFamily: FONT_FAMILY,
+      });
+      hint.anchor.set(0.5);
+      hint.position.set(w / 2, h / 2);
+      this._previewBox.addChild(hint);
+      return;
+    }
+
+    const s = (h - 16) / DRESSUP_CANVAS_H;
+    this._previewScale = s;
+    layers.scale.set(s);
+    const lb = layers.getLocalBounds();
+    layers.position.set(w / 2 - (lb.x + lb.width / 2) * s, 8 - lb.y * s);
+    this._previewBox.addChild(layers);
+    this._previewAvatar = layers;
+
+    if (DressUpManager.mode !== 'custom') {
+      const tip = new PIXI.Text('点击下方部件试穿', {
+        fontSize: 15, fill: DRESSUP_SUBTITLE_STROKE, fontFamily: FONT_FAMILY,
+      });
+      tip.anchor.set(0.5, 0);
+      tip.position.set(w / 2, 6);
+      this._previewBox.addChild(tip);
+    }
+
+    if (GMManager.isEnabled) this._buildAlignTools(w, h);
+  }
+
+  // ═══════════════ GM 部件对齐 ═══════════════
+
+  /** 当前对齐目标：本槽位已穿部件 */
+  private _alignTargetItem(): DressUpItem | null {
+    if (this._activeTab === 'outfits') return null;
+    const id = DressUpManager.getEquippedItems()[this._activeTab as DressUpSlot];
+    return id ? DRESSUP_ITEM_MAP.get(id) ?? null : null;
+  }
+
+  private _applyAlignChange(item: DressUpItem, dx: number, dy: number, dScale: number): void {
+    const p = getItemPlacement(item);
+    DRESSUP_ALIGN_OVERRIDES.set(item.id, {
+      x: Math.round((p.x + dx) * 10) / 10,
+      y: Math.round((p.y + dy) * 10) / 10,
+      scale: Math.round((p.scale + dScale) * 1000) / 1000,
+    });
+    OwnerAvatarService.invalidate();
+    EventBus.emit('dressup:itemsChanged');
+  }
+
+  private _buildAlignTools(w: number, h: number): void {
+    const target = this._alignTargetItem();
+
+    const toggle = new PIXI.Text(this._alignMode ? '对齐:开' : '对齐:关', {
+      fontSize: 15, fill: this._alignMode ? 0xd03030 : 0x888888,
+      fontFamily: FONT_FAMILY, fontWeight: 'bold',
+    });
+    toggle.position.set(8, 6);
+    toggle.eventMode = 'static';
+    toggle.cursor = 'pointer';
+    toggle.on('pointertap', (e: PIXI.FederatedPointerEvent) => {
+      e.stopPropagation();
+      this._alignMode = !this._alignMode;
+      this._refreshPreview();
+    });
+    this._previewBox.addChild(toggle);
+
+    if (!this._alignMode) return;
+
+    const info = new PIXI.Text(
+      target ? `${target.name}\n(${getItemPlacement(target).x}, ${getItemPlacement(target).y}) ×${getItemPlacement(target).scale}` : '本槽位未穿部件',
+      { fontSize: 12, fill: 0x666666, fontFamily: FONT_FAMILY },
+    );
+    info.position.set(8, 30);
+    this._previewBox.addChild(info);
+
+    const mkBtn = (label: string, x: number, onTap: () => void): void => {
+      const t = new PIXI.Text(label, {
+        fontSize: 17, fill: 0xffffff, fontFamily: FONT_FAMILY, fontWeight: 'bold',
+        stroke: 0x333333, strokeThickness: 2,
+      } as any);
+      const btn = new PIXI.Container();
+      const g = new PIXI.Graphics();
+      g.beginFill(0x9a7ab8, 0.92);
+      g.drawRoundedRect(0, 0, 46, 30, 8);
+      g.endFill();
+      btn.addChild(g);
+      t.anchor.set(0.5);
+      t.position.set(23, 15);
+      btn.addChild(t);
+      btn.position.set(x, h - 38);
+      btn.eventMode = 'static';
+      btn.cursor = 'pointer';
+      btn.on('pointertap', (e: PIXI.FederatedPointerEvent) => {
+        e.stopPropagation();
+        onTap();
+      });
+      this._previewBox.addChild(btn);
+    };
+
+    mkBtn('大', 8, () => { const it = this._alignTargetItem(); if (it) { this._applyAlignChange(it, 0, 0, +0.02); this._refreshPreview(); } });
+    mkBtn('小', 58, () => { const it = this._alignTargetItem(); if (it) { this._applyAlignChange(it, 0, 0, -0.02); this._refreshPreview(); } });
+    mkBtn('导出', 108, () => {
+      const out: Record<string, { x: number; y: number; scale: number }> = {};
+      for (const it of DRESSUP_ITEMS) {
+        if (DRESSUP_ALIGN_OVERRIDES.has(it.id)) out[it.id] = getItemPlacement(it);
+      }
+      console.log('[DressUp][GM] 部件对齐导出（回填 DressUpItemConfig.ts 的 x/y/scale）:\n'
+        + JSON.stringify(out, null, 2));
+      ToastMessage.show('已导出到 Console');
+    });
+
+    // 拖拽微调：在预览区上盖一层拖拽热区
+    const dragPad = new PIXI.Container();
+    dragPad.eventMode = 'static';
+    dragPad.hitArea = new PIXI.Rectangle(0, 0, w, h - 46);
+    dragPad.position.set(0, 0);
+    dragPad.on('pointerdown', (e: PIXI.FederatedPointerEvent) => {
+      e.stopPropagation();
+      const it = this._alignTargetItem();
+      if (!it) return;
+      const p = getItemPlacement(it);
+      this._alignDragging = true;
+      this._alignDragStart = { px: e.global.x, py: e.global.y, x: p.x, y: p.y };
+    });
+    const onDragMove = (e: PIXI.FederatedPointerEvent): void => {
+      if (!this._alignDragging) return;
+      const it = this._alignTargetItem();
+      if (!it) return;
+      const dx = (e.global.x - this._alignDragStart.px) / Game.scale / this._previewScale;
+      const dy = (e.global.y - this._alignDragStart.py) / Game.scale / this._previewScale;
+      const p = getItemPlacement(it);
+      DRESSUP_ALIGN_OVERRIDES.set(it.id, {
+        x: Math.round((this._alignDragStart.x + dx) * 10) / 10,
+        y: Math.round((this._alignDragStart.y + dy) * 10) / 10,
+        scale: p.scale,
+      });
+      // 拖拽中只动预览层，松手再全量重合成，避免高频 RT 重建
+      if (this._previewAvatar) {
+        const sp = this._previewAvatar.children.find(
+          c => (c as PIXI.Sprite).texture === TextureCache.get(it.textureKey),
+        ) as PIXI.Sprite | undefined;
+        const np = getItemPlacement(it);
+        if (sp) sp.position.set(np.x, np.y);
+      }
+    };
+    const onDragEnd = (e: PIXI.FederatedPointerEvent): void => {
+      if (!this._alignDragging) return;
+      this._alignDragging = false;
+      e.stopPropagation();
+      OwnerAvatarService.invalidate();
+      EventBus.emit('dressup:itemsChanged');
+    };
+    dragPad.on('pointermove', onDragMove);
+    dragPad.on('globalpointermove', onDragMove);
+    dragPad.on('pointerup', onDragEnd);
+    dragPad.on('pointerupoutside', onDragEnd);
+    this._previewBox.addChild(dragPad);
   }
 }

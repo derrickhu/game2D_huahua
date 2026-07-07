@@ -125,6 +125,21 @@ const CHARS_IMAGE_MAP: Record<string, string> = {
   owner_full_outfit_jewel_bloom_blink: 'subpkg_chars/images/owner/full_outfit_jewel_bloom_eyesclosed.png',
   owner_chibi_outfit_jewel_bloom: 'subpkg_chars/images/owner/chibi_outfit_jewel_bloom.png',
 
+  // ── 分部件换装（叠层纸娃娃）：基础身体 + 部件，坐标见 DressUpItemConfig ──
+  owner_body_base: 'subpkg_chars/images/owner/parts/body_base.png',
+  owner_body_base_blink: 'subpkg_chars/images/owner/parts/body_base_eyesclosed.png',
+  owner_part_hair_bob_brown: 'subpkg_chars/images/owner/parts/hair_bob_brown.png',
+  owner_part_hair_twintail_pink: 'subpkg_chars/images/owner/parts/hair_twintail_pink.png',
+  owner_part_top_pink_puff: 'subpkg_chars/images/owner/parts/top_pink_puff.png',
+  owner_part_top_sailor_blue: 'subpkg_chars/images/owner/parts/top_sailor_blue.png',
+  owner_part_bottom_denim_skirt: 'subpkg_chars/images/owner/parts/bottom_denim_skirt.png',
+  owner_part_bottom_flower_skirt: 'subpkg_chars/images/owner/parts/bottom_flower_skirt.png',
+  owner_part_shoes_white_flats: 'subpkg_chars/images/owner/parts/shoes_white_flats.png',
+  owner_part_shoes_red_boots: 'subpkg_chars/images/owner/parts/shoes_red_boots.png',
+  owner_part_makeup_blush_pink: 'subpkg_chars/images/owner/parts/makeup_blush_pink.png',
+  owner_part_acc_pearl_necklace: 'subpkg_chars/images/owner/parts/acc_pearl_necklace.png',
+  owner_part_acc_star_earrings: 'subpkg_chars/images/owner/parts/acc_star_earrings.png',
+
   customer_child:   'subpkg_chars/images/customer/child.png',
   customer_student: 'subpkg_chars/images/customer/student.png',
   customer_worker:  'subpkg_chars/images/customer/worker.png',

@@ -1,0 +1,5 @@
+Paper-doll makeup overlay piece for a chibi dress-up game. The reference image shows the chibi base body face this overlay must fit.
+Draw ONLY a floating makeup overlay patch on pure white background. Nothing else: no face outline, no eyes, no head, no body.
+The overlay: two soft round rosy-pink blush circles (airbrushed edges) positioned for chibi cheeks at the same slight 3/4 angle as the reference (viewer-left cheek slightly smaller and closer to center), plus two or three tiny pale-pink sparkle stars near the blush.
+ART STYLE: 2D cute casual mobile game, soft pastel. Same rendering style as the reference.
+The overlay drawn large, filling about 60% of the canvas width. Pure white background, no text, no watermark.

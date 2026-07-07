@@ -14,11 +14,21 @@ import {
   OUTFIT_ACTIVITY_QUEST_BY_ID,
   OUTFIT_MAP,
 } from '@/config/DressUpConfig';
+import {
+  DRESSUP_DEFAULT_EQUIPPED,
+  DRESSUP_FREE_ITEM_IDS,
+  DRESSUP_ITEM_MAP,
+  DRESSUP_SLOT_ORDER,
+} from '@/config/DressUpItemConfig';
+import type { DressUpItem, DressUpSlot } from '@/config/DressUpItemConfig';
 import { grantQuest } from '@/utils/UnlockChecker';
 import type { Outfit } from '@/config/DressUpConfig';
 export type { Outfit } from '@/config/DressUpConfig';
 
 const STORAGE_KEY = 'huahua_dressup';
+
+/** 换装模式：outfit = 整套形象（旧）；custom = 分部件叠层 */
+export type DressUpMode = 'outfit' | 'custom';
 
 interface DressUpSave {
   /** 已解锁的形象 id 列表 */
@@ -27,17 +37,27 @@ interface DressUpSave {
   equipped: string;
   /** 已看广告、可花愿购买的形象 id（见 AD_UNLOCK_OUTFIT_IDS） */
   adPurchaseGates?: string[];
+  /** 换装模式（缺省 = outfit，兼容旧档） */
+  mode?: DressUpMode;
+  /** 已解锁的部件 id */
+  unlockedItems?: string[];
+  /** 各槽位穿戴的部件 id */
+  equippedItems?: Partial<Record<DressUpSlot, string>>;
 }
 
 class DressUpManagerClass {
   private _unlocked: Set<string> = new Set();
   private _adPurchaseGates: Set<string> = new Set();
   private _equippedId = 'outfit_default';
+  private _mode: DressUpMode = 'outfit';
+  private _unlockedItems: Set<string> = new Set();
+  private _equippedItems: Partial<Record<DressUpSlot, string>> = {};
 
   init(): void {
     this._unlocked.add('outfit_default');
+    for (const id of DRESSUP_FREE_ITEM_IDS) this._unlockedItems.add(id);
     this._loadState();
-    console.log(`[DressUp] 初始化完成，解锁 ${this._unlocked.size}/${DRESSUP_PANEL_OUTFITS.length} 套形象，当前穿戴: ${this._equippedId}`);
+    console.log(`[DressUp] 初始化完成，解锁 ${this._unlocked.size}/${DRESSUP_PANEL_OUTFITS.length} 套形象，当前穿戴: ${this._equippedId}，模式: ${this._mode}`);
   }
 
   /** 获取全部形象（附带解锁/穿戴状态） */
@@ -104,13 +124,117 @@ class DressUpManagerClass {
     return true;
   }
 
-  /** 切换已解锁的形象 */
+  /** 切换已解锁的形象（同时退出自定义分部件模式） */
   equip(outfitId: string): boolean {
     if (!this._unlocked.has(outfitId)) return false;
     this._equippedId = outfitId;
+    this._mode = 'outfit';
     this._saveState();
     EventBus.emit('dressup:equipped', outfitId);
     return true;
+  }
+
+  // ═══════════════ 分部件（自定义）模式 ═══════════════
+
+  /** 当前换装模式 */
+  get mode(): DressUpMode { return this._mode; }
+
+  /** 各槽位穿戴（只读快照） */
+  getEquippedItems(): Partial<Record<DressUpSlot, string>> {
+    return { ...this._equippedItems };
+  }
+
+  /** 当前穿戴中的部件定义（按槽位层序） */
+  getEquippedItemDefs(): DressUpItem[] {
+    const defs: DressUpItem[] = [];
+    for (const slot of DRESSUP_SLOT_ORDER) {
+      const id = this._equippedItems[slot];
+      if (!id) continue;
+      const def = DRESSUP_ITEM_MAP.get(id);
+      if (def) defs.push(def);
+    }
+    return defs;
+  }
+
+  isItemUnlocked(itemId: string): boolean { return this._unlockedItems.has(itemId); }
+
+  isItemEquipped(itemId: string): boolean {
+    const def = DRESSUP_ITEM_MAP.get(itemId);
+    if (!def) return false;
+    return this._mode === 'custom' && this._equippedItems[def.slot] === itemId;
+  }
+
+  /** 花愿购买解锁部件，成功后自动穿上 */
+  unlockItem(itemId: string, options?: { deferStarGrant?: boolean }): boolean {
+    if (this._unlockedItems.has(itemId)) return false;
+    const item = DRESSUP_ITEM_MAP.get(itemId);
+    if (!item) return false;
+
+    const req = checkRequirement(item.unlockRequirement);
+    if (!req.met) return false;
+
+    if (item.huayuanCost > 0) {
+      if (CurrencyManager.state.huayuan < item.huayuanCost) return false;
+      CurrencyManager.addHuayuan(-item.huayuanCost);
+    }
+    if ((item.starValue ?? 0) > 0 && !options?.deferStarGrant) {
+      CurrencyManager.addStar(item.starValue!);
+    }
+
+    this._unlockedItems.add(itemId);
+    EventBus.emit('dressup:itemUnlocked', itemId, item);
+    this.equipItem(itemId);
+    return true;
+  }
+
+  /**
+   * 穿上部件（进入/保持 custom 模式；同槽位替换）。
+   * 首次进入 custom 时用免费基本套补齐空槽位，避免光板尴尬。
+   */
+  equipItem(itemId: string): boolean {
+    const item = DRESSUP_ITEM_MAP.get(itemId);
+    if (!item || !this._unlockedItems.has(itemId)) return false;
+    if (this._mode !== 'custom') this._enterCustomMode();
+    this._equippedItems[item.slot] = itemId;
+    this._saveState();
+    EventBus.emit('dressup:itemsChanged');
+    return true;
+  }
+
+  /** 脱下某槽位部件（发型/上衣/下装/鞋子脱下后回退基本款，妆容/饰品可空） */
+  unequipSlot(slot: DressUpSlot): boolean {
+    if (this._mode !== 'custom' || !this._equippedItems[slot]) return false;
+    const fallback = DRESSUP_DEFAULT_EQUIPPED[slot];
+    if (fallback && this._equippedItems[slot] !== fallback) {
+      this._equippedItems[slot] = fallback;
+    } else if (!fallback) {
+      delete this._equippedItems[slot];
+    } else {
+      return false;
+    }
+    this._saveState();
+    EventBus.emit('dressup:itemsChanged');
+    return true;
+  }
+
+  /** GM/活动直接赠送部件（不扣花愿、不加星、不自动穿上） */
+  gmGrantItem(itemId: string): boolean {
+    if (!DRESSUP_ITEM_MAP.has(itemId) || this._unlockedItems.has(itemId)) return false;
+    this._unlockedItems.add(itemId);
+    this._saveState();
+    EventBus.emit('dressup:itemUnlocked', itemId, DRESSUP_ITEM_MAP.get(itemId));
+    return true;
+  }
+
+  private _enterCustomMode(): void {
+    this._mode = 'custom';
+    for (const slot of DRESSUP_SLOT_ORDER) {
+      if (this._equippedItems[slot]) continue;
+      const fallback = DRESSUP_DEFAULT_EQUIPPED[slot];
+      if (fallback && this._unlockedItems.has(fallback)) {
+        this._equippedItems[slot] = fallback;
+      }
+    }
   }
 
   /** 获取当前穿戴的形象 */
@@ -163,6 +287,9 @@ class DressUpManagerClass {
       unlocked: Array.from(this._unlocked),
       equipped: this._equippedId,
       adPurchaseGates: [...this._adPurchaseGates],
+      mode: this._mode,
+      unlockedItems: Array.from(this._unlockedItems),
+      equippedItems: { ...this._equippedItems },
     };
     PersistService.writeRaw(STORAGE_KEY, JSON.stringify(data));
   }
@@ -191,6 +318,22 @@ class DressUpManagerClass {
           if (AD_UNLOCK_OUTFIT_IDS.has(id)) this._adPurchaseGates.add(id);
         }
       }
+
+      // 分部件模式字段（缺省 = outfit 旧档）
+      if (Array.isArray(data.unlockedItems)) {
+        for (const id of data.unlockedItems) {
+          if (DRESSUP_ITEM_MAP.has(id)) this._unlockedItems.add(id);
+        }
+      }
+      if (data.equippedItems && typeof data.equippedItems === 'object') {
+        for (const slot of DRESSUP_SLOT_ORDER) {
+          const id = data.equippedItems[slot];
+          if (id && DRESSUP_ITEM_MAP.has(id) && this._unlockedItems.has(id)) {
+            this._equippedItems[slot] = id;
+          }
+        }
+      }
+      if (data.mode === 'custom') this._mode = 'custom';
     } catch (_) {}
   }
 }

@@ -29,6 +29,7 @@ import { QuestManager } from '@/managers/QuestManager';
 import { SaveManager } from '@/managers/SaveManager';
 import { DressUpManager } from '@/managers/DressUpManager';
 import { getOwnerShopDisplayScale } from '@/config/DressUpConfig';
+import { OwnerAvatarService } from '@/gameobjects/LayeredOwnerAvatar';
 import { FurnitureDragSystem } from '@/systems/FurnitureDragSystem';
 import {
   FurnitureTray,
@@ -1098,13 +1099,25 @@ export class ShopScene implements Scene {
     owner.hitArea = new PIXI.Rectangle(-w / 2 - padX, -h - padY, w + padX * 2, h + padY * 2);
   }
 
+  /** 店主全身睁眼贴图（自定义分部件模式优先用合成图） */
+  private _ownerFullOpenTex(): PIXI.Texture | null {
+    const composed = OwnerAvatarService.getComposed();
+    if (composed) return composed.full;
+    return TextureCache.get(this._ownerFullOpenTexKey()) ?? TextureCache.get('owner_full_default');
+  }
+
+  /** 店主全身闭眼贴图（自定义分部件模式优先用合成图） */
+  private _ownerFullBlinkTex(): PIXI.Texture | null {
+    const composed = OwnerAvatarService.getComposed();
+    if (composed) return composed.fullBlink;
+    return TextureCache.get(this._ownerFullBlinkTexKey()) ?? TextureCache.get('owner_full_default_blink');
+  }
+
   /** 按当前换装刷新花店店主全身贴图与缩放（含眨眼所用睁眼/闭眼键） */
   private _refreshShopOwnerOutfitTextures(): void {
     if (!this._ownerSprite) return;
-    const openKey = this._ownerFullOpenTexKey();
-    const blinkKey = this._ownerFullBlinkTexKey();
-    const openTex = TextureCache.get(openKey) ?? TextureCache.get('owner_full_default');
-    const blinkTex = TextureCache.get(blinkKey) ?? TextureCache.get('owner_full_default_blink');
+    const openTex = this._ownerFullOpenTex();
+    const blinkTex = this._ownerFullBlinkTex();
     if (!openTex?.width) return;
     const useClosed = this._isBlinking && blinkTex?.width;
     this._ownerSprite.texture = useClosed ? blinkTex! : openTex;
@@ -1121,8 +1134,7 @@ export class ShopScene implements Scene {
     owner.position.set(cx, cy);
     this._ownerContainer = owner;
 
-    const openKey = this._ownerFullOpenTexKey();
-    const tex = TextureCache.get(openKey) ?? TextureCache.get('owner_full_default');
+    const tex = this._ownerFullOpenTex();
     if (tex) {
       this._ownerSprite = new PIXI.Sprite(tex);
       this._ownerSprite.anchor.set(0.5, 1);
@@ -2639,6 +2651,7 @@ export class ShopScene implements Scene {
     EventBus.on('decoration:decoPanelBackdrop', this._onDecoPanelBackdrop);
     EventBus.on('decoration:room_style', this._refreshShopBuildingTexture);
     EventBus.on('dressup:equipped', this._onDressUpEquipped);
+    EventBus.on('dressup:itemsChanged', this._onDressUpEquipped);
     EventBus.on('decoration:shopStarFly', this._onDecorationShopStarFly);
     EventBus.on('currency:changed', this._onShopCurrencyForProgress);
     EventBus.on('level:up', this._onShopLevelUp);
@@ -2665,6 +2678,7 @@ export class ShopScene implements Scene {
     EventBus.off('decoration:decoPanelBackdrop', this._onDecoPanelBackdrop);
     EventBus.off('decoration:room_style', this._refreshShopBuildingTexture);
     EventBus.off('dressup:equipped', this._onDressUpEquipped);
+    EventBus.off('dressup:itemsChanged', this._onDressUpEquipped);
     EventBus.off('decoration:shopStarFly', this._onDecorationShopStarFly);
     EventBus.off('currency:changed', this._onShopCurrencyForProgress);
     EventBus.off('level:up', this._onShopLevelUp);
@@ -3959,16 +3973,14 @@ export class ShopScene implements Scene {
         this._isBlinking = false;
         this._blinkTimer = 0;
         this._blinkInterval = 2.5 + Math.random() * 3;
-        const openTex = TextureCache.get(this._ownerFullOpenTexKey())
-          ?? TextureCache.get('owner_full_default');
+        const openTex = this._ownerFullOpenTex();
         if (openTex) this._ownerSprite.texture = openTex;
       }
     } else {
       if (this._blinkTimer >= this._blinkInterval) {
         this._isBlinking = true;
         this._blinkTimer = 0;
-        const closedTex = TextureCache.get(this._ownerFullBlinkTexKey())
-          ?? TextureCache.get('owner_full_default_blink');
+        const closedTex = this._ownerFullBlinkTex();
         if (closedTex) this._ownerSprite.texture = closedTex;
       }
     }

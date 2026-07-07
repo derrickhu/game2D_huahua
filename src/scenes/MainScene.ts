@@ -75,6 +75,7 @@ import { CollectionManager } from '@/managers/CollectionManager';
 import { FlowerCardManager } from '@/managers/FlowerCardManager';
 import { DressUpManager } from '@/managers/DressUpManager';
 import { getOwnerBoardDisplayScale } from '@/config/DressUpConfig';
+import { OwnerAvatarService } from '@/gameobjects/LayeredOwnerAvatar';
 import { SocialManager } from '@/managers/SocialManager';
 import { EventManager } from '@/managers/EventManager';
 import { EventBoardManager } from '@/managers/EventBoardManager';
@@ -668,8 +669,9 @@ export class MainScene implements Scene {
     // 刷新装备显示
     this._refreshOwnerOutfit();
 
-    // 监听换装变化
+    // 监听换装变化（整套切换 / 分部件穿脱）
     EventBus.on('dressup:equipped', () => this._refreshOwnerOutfit());
+    EventBus.on('dressup:itemsChanged', () => this._refreshOwnerOutfit());
 
     // ═══════ 店铺主块（店主 + 礼包 + 客人），将装入整行全景滑动 ═══════
     this._shopMainBlock = new PIXI.Container();
@@ -706,14 +708,17 @@ export class MainScene implements Scene {
     const outfit = DressUpManager.getEquipped();
     const outfitId = outfit?.id || 'outfit_default';
 
+    // 自定义分部件模式：用叠层合成图的半身裁切
+    const composedBust = OwnerAvatarService.getComposed()?.bust ?? null;
+
     // TextureCache 中默认套 key 为 owner_chibi_default，其余为 owner_chibi_<outfitId>
     const chibiKey =
       outfitId === 'outfit_default' ? 'owner_chibi_default' : `owner_chibi_${outfitId}`;
-    const tex = TextureCache.get(chibiKey) ?? TextureCache.get('owner_chibi_default');
+    const tex = composedBust ?? TextureCache.get(chibiKey) ?? TextureCache.get('owner_chibi_default');
 
     if (tex && tex.width > 0 && tex.height > 0 && this._ownerSprite) {
       this._ownerSprite.texture = tex;
-      const mult = getOwnerBoardDisplayScale(outfitId) * BOARD_OWNER_SIZE_MULT;
+      const mult = (composedBust ? 1 : getOwnerBoardDisplayScale(outfitId)) * BOARD_OWNER_SIZE_MULT;
       const targetH = BOARD_OWNER_TARGET_H * mult;
       const maxW = BOARD_OWNER_MAX_W * mult;
       const scale = Math.min(maxW / tex.width, targetH / tex.height);

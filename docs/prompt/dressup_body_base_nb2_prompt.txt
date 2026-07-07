@@ -1,0 +1,14 @@
+CHIBI PROPORTION — critical, match the reference image (huahua shop owner in-game sprite) exactly:
+Super-deformed SD chibi. Full standing height from top of head to soles equals only 2 to 2.8 head-heights. The head must be very large: roughly 42% to 52% of total body height. Very short neck. Tiny compact torso. Arms and legs short, slightly chunky tubes, simplified joints. Small rounded hands and bare feet. Absolutely forbid semi-realistic 4-head or 5-head proportions.
+
+ART STYLE:
+2D cute casual mobile game character, soft pastel, gentle flat-to-soft shading, rosy cheek blush, huge round brown eyes with white sparkle highlight, warm brown soft line art. Same style and same identity as the reference image.
+
+LAYOUT STANDARD — follow exactly:
+Portrait 9:16, exactly one character, same pose, same slight 3/4 view facing viewer's right, same standing position and same body size as the reference image. Soles rest in the bottom 10% to 14% band; top of head reaches roughly the top 16% to 22% band. Figure centered with 8% to 12% magenta margin on both sides.
+Background: flat magenta RGB 255 0 255 only. No gradients, text, watermark.
+
+PAPER-DOLL BASE BODY — this is a dress-up base layer:
+The SAME girl as the reference but completely BALD: smooth rounded bald head, NO hair at all, no hair clip. Keep her face identical: large brown eyes open, gentle smile, rosy blush.
+She wears ONLY plain minimal underlayer clothing: a simple fitted cream-white sleeveless camisole and simple fitted cream-white shorts ending mid-thigh. No apron, no skirt, no shoes (bare feet), no accessories, no patterns.
+Arms relaxed at sides slightly away from body, exactly like the reference pose.

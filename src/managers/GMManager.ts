@@ -66,6 +66,8 @@ import {
   LUCKY_COIN_ITEM_ID,
 } from '@/config/ItemConfig';
 import { RewardBoxManager } from './RewardBoxManager';
+import { DressUpManager } from './DressUpManager';
+import { DRESSUP_ITEMS } from '@/config/DressUpItemConfig';
 import { MergeCompanionManager } from './MergeCompanionManager';
 import { EventBoardManager } from './EventBoardManager';
 import { STAMINA_MAX } from '@/config/Constants';
@@ -1381,6 +1383,23 @@ class GMManagerClass {
       execute: () => {
         EventBus.emit('panel:openDressUp');
         return ' 已打开换装面板';
+      },
+    });
+
+    this._commands.push({
+      id: 'dressup_unlock_all_items',
+      group: ' 新系统',
+      name: ' 解锁全部换装部件',
+      desc: '解锁所有分部件换装部件（发型/上衣/下装/鞋子/妆容/饰品），便于对齐调试',
+      execute: () => {
+        let n = 0;
+        for (const item of DRESSUP_ITEMS) {
+          if (!DressUpManager.isItemUnlocked(item.id)) {
+            DressUpManager.gmGrantItem(item.id);
+            n++;
+          }
+        }
+        return ` 已解锁 ${n} 个部件（共 ${DRESSUP_ITEMS.length}）`;
       },
     });
 

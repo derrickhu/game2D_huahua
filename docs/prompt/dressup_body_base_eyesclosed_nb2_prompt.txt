@@ -1,0 +1,3 @@
+Copy the reference image EXACTLY — same bald chibi girl, same pose, same cream-white camisole and shorts, same bare feet, same magenta background, same framing and size.
+Change ONLY one thing: her eyes are gently closed (two soft curved lash lines, happy relaxed smiling expression). Everything else must stay pixel-identical to the reference.
+Background: flat magenta RGB 255 0 255 only. No text, no watermark.
