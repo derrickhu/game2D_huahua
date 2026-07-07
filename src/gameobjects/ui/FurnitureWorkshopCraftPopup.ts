@@ -419,7 +419,8 @@ export class FurnitureWorkshopCraftPopup extends PIXI.Container {
   private _colorSwatch(colorId: string): number {
     switch (colorId) {
       case 'sakura': return 0xf5b4d4;
-      case 'moon': return 0x9ec5e8;
+      case 'blue': return 0x64b5f6;
+      case 'moon': return 0x64b5f6;
       case 'honey': return 0xf5d76e;
       default: return 0x8fd86b;
     }

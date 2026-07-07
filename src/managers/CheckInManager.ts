@@ -18,6 +18,7 @@ import {
   WORKSHOP_DYE_PINK_ID,
   WORKSHOP_DYE_YELLOW_ICON,
   WORKSHOP_DYE_YELLOW_ID,
+  getWorkshopMaterialDisplayName,
 } from '@/config/FurnitureWorkshopConfig';
 import { CurrencyManager } from './CurrencyManager';
 import { DecorationManager } from './DecorationManager';
@@ -40,7 +41,7 @@ export interface RewardItem {
   decoId?: string;
   /** type === workshop_dye 时发放的染料 materialId */
   materialId?: string;
-  /** UI 短标签（如「樱粉染料」） */
+  /** UI 短标签（如「粉色染料」） */
   label?: string;
 }
 
@@ -86,10 +87,10 @@ export const CHECKIN_WEEKLY_DYE_REWARDS: ReadonlyArray<{
   icon: string;
   label: string;
 }> = [
-  { materialId: WORKSHOP_DYE_PINK_ID, icon: WORKSHOP_DYE_PINK_ICON, label: '樱粉染料' },
-  { materialId: WORKSHOP_DYE_YELLOW_ID, icon: WORKSHOP_DYE_YELLOW_ICON, label: '蜜黄染料' },
-  { materialId: WORKSHOP_DYE_BLUE_ID, icon: WORKSHOP_DYE_BLUE_ICON, label: '天蓝染料' },
-  { materialId: WORKSHOP_DYE_GREEN_ID, icon: WORKSHOP_DYE_GREEN_ICON, label: '薄荷染料' },
+  { materialId: WORKSHOP_DYE_PINK_ID, icon: WORKSHOP_DYE_PINK_ICON, label: getWorkshopMaterialDisplayName(WORKSHOP_DYE_PINK_ID) },
+  { materialId: WORKSHOP_DYE_YELLOW_ID, icon: WORKSHOP_DYE_YELLOW_ICON, label: getWorkshopMaterialDisplayName(WORKSHOP_DYE_YELLOW_ID) },
+  { materialId: WORKSHOP_DYE_BLUE_ID, icon: WORKSHOP_DYE_BLUE_ICON, label: getWorkshopMaterialDisplayName(WORKSHOP_DYE_BLUE_ID) },
+  { materialId: WORKSHOP_DYE_GREEN_ID, icon: WORKSHOP_DYE_GREEN_ICON, label: getWorkshopMaterialDisplayName(WORKSHOP_DYE_GREEN_ID) },
 ] as const;
 
 export function getCheckInDyeForCycle(cycleIndex: number): (typeof CHECKIN_WEEKLY_DYE_REWARDS)[number] {

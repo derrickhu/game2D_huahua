@@ -1,27 +1,26 @@
 Create ONE standalone 2D wall-decoration sprite for a cozy pastel flower-shop merge game.
 
-ATTACHED IMAGE = DESIGN REFERENCE (copy this curtain design closely):
-Study the attached in-game screenshot. Extract ONLY the tall rose curtain partition — ignore the white cabinet, air conditioner, plush toy, floor tiles, and walls. Re-draw that exact curtain design as a clean isolated game prop on pure white background.
+ATTACHED COMPOSITE IMAGE — two references side by side:
+- LEFT half: PERSPECTIVE ONLY — copy this wall-plane angle exactly (subtle rod skew, back-wall mount).
+- RIGHT half: DESIGN ONLY — copy this rose curtain design (colors, folds, roses, valance, openings, proportions). Do NOT copy its wrong steep diagonal / rotated angle.
 
-DESIGN — must match the reference, NOT a generic short window curtain:
-- TALL room-divider curtain reaching nearly floor-to-ceiling height (about 85–90% of canvas height). Used as a decorative partition, much taller than small cafe curtains.
-- Light gold / warm wood curtain rod with round ball finials, mounted on isometric back wall.
-- TOP: dramatic pink fabric valance swag draped over rod with deep U-curve sag in the center; cream scalloped ruffle trim on the swag edge; OPEN GAP under the center swag so the middle feels airy and not sealed shut.
-- LEFT PANEL: long flowing dusty-pink curtain tail hanging down with dynamic swooping folds, pulled back and anchored by a large cluster of fabric roses near the lower-left; fabric pools softly on the floor with natural curves.
-- RIGHT PANEL: tall cream-white semi-sheer panel with pink scalloped trim along its inner edge; vertical wavy ripples and lively fabric movement, not stiff flat cloth.
-- CENTER: wide vertical OPENING between left and right panels — the middle is visibly open / see-through, like a partition arch, NOT one solid flat curtain sheet.
-- BOTTOM: fabric trails and rose petal accents near the base; keep a sense of leakage / openness at the bottom rather than a heavy sealed block.
-- Dynamic romantic movement in every fold — elegant, luxurious, shabby-chic rose cottagecore.
+PERSPECTIVE — mandatory (match LEFT reference, same as approved in-game wall hangings):
+Designed for the BACK wall plane of an isometric L-shaped dollhouse room (camera ~45° from upper-left into the corner). The entire unit lies flat on that vertical wall — parallel to the wall surface.
 
-PERSPECTIVE — mandatory (same as project's fixed wall-art angle):
-Isometric back-wall mount for upper-left ~45° L-room. Rod slants with LEFT END HIGHER and RIGHT END LOWER (not horizontal front view). Entire unit lies flush on the vertical back wall plane, parallel to room shell walls. Fabric hangs downward in screen space with the same wall angle as approved wall decorations in this game.
+Rod rules (critical):
+- Wooden rod top edge slopes GENTLY down toward the RIGHT (left end slightly higher, right end slightly lower) — about the same subtle skew as LEFT reference.
+- Rod is NOT horizontal front view. Rod is NOT a steep 45° diagonal. The outer silhouette is NOT a diamond / rotated floor prop.
+- Fabric hangs straight downward in screen space along the oblique wall plane. No visible top surface of the rod, no 3/4 object rotation.
 
-Style:
-Cute kawaii hand-painted mobile merge-game flower shop wall art. Soft warm brown outlines, pastel high-key, gentle upper-left lighting, soft cel shading. Readable silhouette at small grid size. Not photoreal.
+DESIGN — match RIGHT reference (pink default colorway):
+- TALL room-divider rose curtain partition (~85–90% canvas height).
+- Light gold / warm wood curtain rod with round ball finials.
+- TOP: dramatic dusty-pink valance swag with deep U-curve; cream scalloped ruffle; open airy center gap.
+- LEFT PANEL: long flowing pink tail, large fabric rose tie-back cluster lower-left, soft floor pool.
+- RIGHT PANEL: tall cream semi-sheer with pink scalloped trim; vertical ripples.
+- CENTER: wide vertical OPENING between panels.
+- Dynamic romantic fabric movement, kawaii hand-painted merge-game style, soft brown outlines, pastel high-key.
 
-Canvas:
-Square 1:1, single object centered, generous white margin.
+Canvas: Square 1:1, single object centered, generous pure white #FFFFFF background for cutout.
 
-Restrictions:
-NO room shell, NO furniture, NO window frame, NO characters, NO text, NO watermark.
-Background pure solid white #FFFFFF only for cutout.
+NO room shell, NO furniture, NO text, NO watermark.

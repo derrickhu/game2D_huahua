@@ -104,10 +104,10 @@ export const WORKSHOP_GACHA_DYE_IDS = [
 
 const WORKSHOP_MATERIAL_DISPLAY_NAMES: Record<string, string> = {
   [WORKSHOP_MATERIAL_ID]: '工坊材料',
-  [WORKSHOP_DYE_PINK_ID]: '樱粉染料',
-  [WORKSHOP_DYE_YELLOW_ID]: '蜜黄染料',
-  [WORKSHOP_DYE_BLUE_ID]: '天蓝染料',
-  [WORKSHOP_DYE_GREEN_ID]: '薄荷绿染料',
+  [WORKSHOP_DYE_PINK_ID]: '粉色染料',
+  [WORKSHOP_DYE_YELLOW_ID]: '黄色染料',
+  [WORKSHOP_DYE_BLUE_ID]: '蓝色染料',
+  [WORKSHOP_DYE_GREEN_ID]: '绿色染料',
 };
 
 export function getWorkshopMaterialDisplayName(materialId: string): string {
@@ -337,11 +337,23 @@ export function getDefaultWorkshopColorOption(blueprint: WorkshopBlueprintDef): 
   return blueprint.colorOptions.find(c => c.id === 'default') ?? blueprint.colorOptions[0];
 }
 
+const WORKSHOP_DYE_CHIP_LABELS: Record<string, string> = {
+  [WORKSHOP_DYE_PINK_ID]: '粉色',
+  [WORKSHOP_DYE_YELLOW_ID]: '黄色',
+  [WORKSHOP_DYE_BLUE_ID]: '蓝色',
+  [WORKSHOP_DYE_GREEN_ID]: '绿色',
+};
+
 export function getWorkshopColorChipLabel(
   blueprint: WorkshopBlueprintDef,
   option: WorkshopColorOption,
 ): string {
-  return isDefaultWorkshopColorOption(blueprint, option) ? '默认' : option.name;
+  if (isDefaultWorkshopColorOption(blueprint, option)) return '默认';
+  if (option.dyeMaterialId) {
+    return WORKSHOP_DYE_CHIP_LABELS[option.dyeMaterialId]
+      ?? getWorkshopMaterialDisplayName(option.dyeMaterialId).replace(/染料$/, '');
+  }
+  return option.name;
 }
 
 const WORKSHOP_DECO_BLUEPRINT_LOOKUP = new Map<

@@ -1,22 +1,16 @@
 Create ONE standalone 2D wall-decoration sprite for a cozy pastel flower-shop merge game.
 
-ATTACHED IMAGE = EXACT DESIGN REFERENCE — copy layout, silhouette, fold shapes, rod angle, valance curves, panel openings, and proportions IDENTICALLY. Only recolor as specified below.
+ATTACHED IMAGE = EXACT LAYOUT REFERENCE — copy silhouette, fold shapes, rod wall-plane angle, valance curves, panel openings, and proportions IDENTICALLY from the attached corrected pink version. Only recolor as specified below.
 
-COLOR RECOLOR (make it beautiful, not flat monochrome):
-- Main curtain fabric (left tail, valance swag, right colored sections): warm BUTTER YELLOW / soft sunshine yellow pastel instead of dusty pink. Gentle shading with slightly deeper golden-yellow in fold shadows.
-- Rose clusters and floor petal accents: true CRIMSON / cherry RED roses with muted green leaves — NOT yellow roses, NOT pink.
-- Inner cream-white sheer center/right panels: keep warm cream/off-white; scalloped ruffle trim stays cream with tiny warm peach shadow.
+PERSPECTIVE — do not change (must stay back-wall isometric like attached):
+Rod top edge: gentle slope down toward the right (left end slightly higher). NOT steep diagonal. NOT front-facing billboard. Fabric on vertical back wall plane.
+
+COLOR RECOLOR ONLY:
+- Main curtain fabric (left tail, valance swag, right colored sections): warm BUTTER YELLOW / soft sunshine yellow pastel instead of dusty pink.
+- Rose clusters and floor petal accents: true CRIMSON / cherry RED roses with muted green leaves.
+- Inner cream-white sheer panels: keep warm cream/off-white; scalloped trim stays cream.
 - Gold/warm wood curtain rod and ball finials: unchanged.
 
-DESIGN — same as reference:
-- TALL room-divider rose curtain partition (~85–90% canvas height).
-- Isometric back-wall mount: rod slants LEFT HIGHER, RIGHT LOWER.
-- Top yellow valance swag with deep U-curve; cream scalloped ruffle; open airy center gap.
-- Left panel: long flowing yellow tail, red rose tie-back cluster lower-left, soft floor pool.
-- Right panel: tall cream sheer with scalloped trim; vertical ripples.
-- Center wide vertical OPENING between panels.
-- Dynamic romantic fabric movement, kawaii hand-painted merge-game style, soft brown outlines, pastel high-key.
-
-Canvas: Square 1:1, single object centered, generous pure white #FFFFFF background for cutout.
+Canvas: Square 1:1, single object centered, pure white #FFFFFF background for cutout.
 
 NO room, NO furniture, NO text, NO watermark.
