@@ -17,8 +17,21 @@ const TITLE_NUDGE_Y = -30;
 /** 标题区：安全区下额外留白 */
 const TITLE_BELOW_SAFE = 20;
 
-/** 进度条距屏幕底边（设计坐标） */
-const BAR_INSET_FROM_BOTTOM = 148;
+/** 合规文案区距屏幕底边（设计坐标） */
+const LEGAL_BOTTOM_INSET = 28;
+/** 进度条与合规文案间距 */
+const BAR_ABOVE_LEGAL_GAP = 14;
+const LEGAL_FONT_SIZE = 13;
+const LEGAL_LINE_HEIGHT = 19;
+const LOADING_LEGAL_TEXT = [
+  '著作权人：深圳幸运呱科技有限公司',
+  '软著编号：2026SR0689689',
+  '',
+  '《健康游戏忠告》',
+  '抵制不良游戏，拒绝盗版游戏。注意自我保护，谨防受骗上当。',
+  '适度游戏益脑，沉迷游戏伤身。合理安排时间，享受健康生活。',
+].join('\n');
+
 const BAR_MAX_W = 560;
 const BAR_PAD_X = 24;
 /** 胖圆角胶囊条（半径=半高，最圆润） */
@@ -43,6 +56,7 @@ export class LoadingScreenOverlay extends PIXI.Container {
   private _track = new PIXI.Graphics();
   private _fill = new PIXI.Graphics();
   private _pctText: PIXI.Text;
+  private _legalText: PIXI.Text;
   private _barW = 480;
   private _barX = 0;
   private _barY = 0;
@@ -72,10 +86,28 @@ export class LoadingScreenOverlay extends PIXI.Container {
     this._pctText.anchor.set(0.5, 0.5);
     this._pctText.zIndex = 13;
 
+    this._legalText = new PIXI.Text(LOADING_LEGAL_TEXT, {
+      fontSize: LEGAL_FONT_SIZE,
+      fill: 0xffffff,
+      fontFamily: FONT_FAMILY,
+      align: 'center',
+      lineHeight: LEGAL_LINE_HEIGHT,
+      wordWrap: true,
+      dropShadow: true,
+      dropShadowColor: 0x1a2838,
+      dropShadowBlur: 2,
+      dropShadowAngle: Math.PI / 2,
+      dropShadowDistance: 1,
+      dropShadowAlpha: 0.65,
+    });
+    this._legalText.anchor.set(0.5, 1);
+    this._legalText.zIndex = 14;
+
     this.addChild(this._barShadow);
     this.addChild(this._track);
     this.addChild(this._fill);
     this.addChild(this._pctText);
+    this.addChild(this._legalText);
     this._relayout();
   }
 
@@ -105,7 +137,13 @@ export class LoadingScreenOverlay extends PIXI.Container {
 
     this._barW = Math.min(BAR_MAX_W, this._lw - BAR_PAD_X * 2);
     this._barX = (this._lw - this._barW) / 2;
-    this._barY = this._lh - BAR_INSET_FROM_BOTTOM - BAR_H;
+
+    this._legalText.style.wordWrapWidth = this._barW;
+    this._legalText.position.set(this._lw * 0.5, this._lh - LEGAL_BOTTOM_INSET);
+    this._barY = this._legalText.position.y
+      - this._legalText.height
+      - BAR_ABOVE_LEGAL_GAP
+      - BAR_H;
 
     this._pctText.position.set(this._lw * 0.5, this._barY + BAR_H * 0.5);
 
