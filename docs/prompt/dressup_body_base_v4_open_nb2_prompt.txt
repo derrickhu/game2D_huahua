@@ -1,0 +1,31 @@
+CHARACTER BASE MODEL FOR A LAYERED DRESS-UP SYSTEM.
+Use the reference image only for the Huahua shop owner identity and soft 2D mobile-game art style. Redesign the body proportions and pose as specified below.
+
+PROPORTION — young shopkeeper girl, NOT toddler:
+- Cute stylized young girl / petite shop owner, about 3.0 to 3.4 head-heights tall.
+- Still soft and cute, but less super-deformed than the previous tiny chibi.
+- Head is large but not baby-like: about 32% to 38% of total standing height.
+- Slightly longer neck and torso than the old chibi; arms and legs are short-cute but not baby tubes.
+- Avoid toddler, child, baby, toy doll, 2-head chibi, fashion-realistic 5-head body.
+
+POSE — critical for clothing layers:
+- Same slight 3/4 view facing viewer's right.
+- Standing naturally, feet planted, relaxed gentle smile.
+- Arms hang naturally but are clearly away from the torso, leaving visible empty magenta gaps between both arms and the body.
+- Elbows slightly bent outward, hands relaxed beside the hips, not touching the skirt/body.
+- This gap is required so later sleeves/tops/dresses can be layered without being hidden by hands.
+
+BASE BODY / NO OUTFIT:
+- Completely bald smooth head, no hair, no hair clip.
+- Open large brown eyes with sparkle highlight, gentle smile, rosy but subtle cheeks.
+- Wear only a plain cream-white sleeveless camisole and plain cream-white fitted shorts.
+- Bare feet, no shoes, no accessories, no patterns.
+
+ART STYLE:
+2D cute casual mobile game character, soft pastel, gentle flat-to-soft shading, warm brown soft line art, cozy flower shop vibe. Same general style as the reference, but with the updated less-childlike proportion.
+
+LAYOUT:
+Portrait 9:16, exactly one full-body character.
+Top of head in the upper 10% to 16% band of canvas; soles in the bottom 8% to 12% band.
+Figure centered, full body visible, enough magenta margin left/right for hair and arms.
+Background: flat magenta RGB 255 0 255 only. No gradients, no text, no watermark.

@@ -1,14 +1,14 @@
 /**
  * 分部件换装 — 叠层合成器
  *
- * 思路：所有部件坐标基于标准画布（DRESSUP_CANVAS_W/H），基础身体铺满画布，
- * 部件 Sprite 以画布坐标叠放。场景端**不**直接挂多层容器，而是在换装变更时
+ * 思路：正式部件使用 432×768 全画布原位透明 PNG，直接 (0,0) 叠放；
+ * legacy 裁切部件仍支持中心点坐标。场景端**不**直接挂多层容器，而是在换装变更时
  * 合成一次 RenderTexture（睁眼/闭眼两张），后续与旧整套图完全同构：
  *   - ShopScene 全身：单 Sprite 换 texture + 眨眼双图切换
  *   - MainScene 半身：全身合成图按 DRESSUP_BUST_CROP 裁切出 bust texture
  *
  * 性能：仅换装时合成（2 次离屏 draw call），运行时零逐帧开销；
- * 常驻显存 = 2 张 394×768 RT（约 2.4 MB），上一代 RT 延迟到下次合成时销毁，
+ * 常驻显存 = 2 张 432×768 RT（约 2.6 MB），上一代 RT 延迟到下次合成时销毁，
  * 避免场景 Sprite 在同一帧内引用已销毁纹理。
  */
 import * as PIXI from 'pixi.js';
@@ -19,6 +19,7 @@ import {
   DRESSUP_BODY_TEXTURE_KEY,
   DRESSUP_BODY_BLINK_TEXTURE_KEY,
   DRESSUP_BODY_Z,
+  DRESSUP_HAIR_BACK_Z,
   DRESSUP_BUST_CROP,
   DRESSUP_CANVAS_H,
   DRESSUP_CANVAS_W,
@@ -58,6 +59,8 @@ export function buildAvatarLayers(blink: boolean): PIXI.Container | null {
   root.addChild(body);
 
   for (const item of DressUpManager.getEquippedItemDefs()) {
+    const back = buildItemSprite(item, item.backTextureKey, DRESSUP_HAIR_BACK_Z);
+    if (back) root.addChild(back);
     const sp = buildItemSprite(item);
     if (sp) root.addChild(sp);
   }
@@ -65,16 +68,24 @@ export function buildAvatarLayers(blink: boolean): PIXI.Container | null {
   return root;
 }
 
-/** 单个部件 Sprite（画布坐标 + GM 覆盖），纹理未就绪返回 null */
-export function buildItemSprite(item: DressUpItem): PIXI.Sprite | null {
-  const tex = TextureCache.get(item.textureKey);
+/** 单个部件 Sprite（全画布原位层或 legacy 中心点精灵），纹理未就绪返回 null */
+export function buildItemSprite(item: DressUpItem, textureKey = item.textureKey, zIndex = DRESSUP_SLOT_Z[item.slot]): PIXI.Sprite | null {
+  const tex = TextureCache.get(textureKey);
   if (!tex?.width) return null;
   const sp = new PIXI.Sprite(tex);
-  sp.anchor.set(0.5, 0.5);
   const p = getItemPlacement(item);
-  sp.position.set(p.x, p.y);
-  sp.scale.set(p.scale);
-  sp.zIndex = DRESSUP_SLOT_Z[item.slot];
+  if (item.fullCanvas) {
+    sp.anchor.set(0, 0);
+    sp.position.set(p.x, p.y);
+    // 全画布层入库应已是 432×768；这里仍按画布尺寸归一，防 Gemini 输出尺寸轻微漂移。
+    sp.width = DRESSUP_CANVAS_W * p.scale;
+    sp.height = DRESSUP_CANVAS_H * p.scale;
+  } else {
+    sp.anchor.set(0.5, 0.5);
+    sp.position.set(p.x, p.y);
+    sp.scale.set(p.scale);
+  }
+  sp.zIndex = zIndex;
   return sp;
 }
 
@@ -102,6 +113,7 @@ class OwnerAvatarServiceClass {
   private _texturesReady(): boolean {
     if (!TextureCache.get(DRESSUP_BODY_TEXTURE_KEY)?.width) return false;
     for (const item of DressUpManager.getEquippedItemDefs()) {
+      if (item.backTextureKey && !TextureCache.get(item.backTextureKey)?.width) return false;
       if (!TextureCache.get(item.textureKey)?.width) return false;
     }
     return true;
@@ -116,7 +128,7 @@ class OwnerAvatarServiceClass {
     const items = DressUpManager.getEquippedItemDefs();
     return items.map(i => {
       const p = getItemPlacement(i);
-      return `${i.id}@${p.x},${p.y},${p.scale}`;
+      return `${i.id}@${i.backTextureKey ?? ''}@${i.fullCanvas ? 'canvas' : 'sprite'}@${p.x},${p.y},${p.scale}`;
     }).join('|');
   }
 

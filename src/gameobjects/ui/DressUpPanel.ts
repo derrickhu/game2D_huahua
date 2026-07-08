@@ -14,6 +14,7 @@ import {
   DRESSUP_CANVAS_H,
   DRESSUP_ITEM_MAP,
   DRESSUP_ITEMS,
+  DRESSUP_LAYERED_ITEMS_READY,
   DRESSUP_SLOT_NAMES,
   DRESSUP_SLOT_ORDER,
   getItemPlacement,
@@ -111,7 +112,7 @@ function federatedPointerToDesignY(e: PIXI.FederatedPointerEvent): number {
 
 /** 面板 Tab：整套形象 + 各部件槽位 */
 type DressTab = 'outfits' | DressUpSlot;
-const DRESS_TABS: readonly DressTab[] = ['outfits', ...DRESSUP_SLOT_ORDER];
+const DRESS_ALL_TABS: readonly DressTab[] = ['outfits', ...DRESSUP_SLOT_ORDER];
 const DRESS_TAB_NAMES: Readonly<Record<string, string>> = { outfits: '套装', ...DRESSUP_SLOT_NAMES };
 const TAB_BAR_H = 46;
 /** 部件 Tab 顶部实时预览区高度（内容区坐标） */
@@ -498,7 +499,7 @@ export class DressUpPanel extends PIXI.Container {
     const maxPortraitW = cw - 14;
     const portraitCy = portraitTop + maxPortraitH / 2;
 
-    const tex = TextureCache.get(item.textureKey);
+    const tex = TextureCache.get(item.previewTextureKey || item.textureKey);
     if (tex?.width) {
       const sp = new PIXI.Sprite(tex);
       sp.anchor.set(0.5, 0.5);
@@ -1118,6 +1119,7 @@ export class DressUpPanel extends PIXI.Container {
   // ═══════════════ Tab 栏 ═══════════════
 
   private _switchTab(tab: DressTab): void {
+    if (!this._availableTabs().includes(tab)) tab = 'outfits';
     if (this._activeTab === tab) return;
     this._activeTab = tab;
     this._alignMode = false;
@@ -1125,15 +1127,23 @@ export class DressUpPanel extends PIXI.Container {
     this._rebuildGrid();
   }
 
+  private _availableTabs(): readonly DressTab[] {
+    return DRESSUP_LAYERED_ITEMS_READY || GMManager.isEnabled
+      ? DRESS_ALL_TABS
+      : ['outfits'];
+  }
+
   private _rebuildTabBar(): void {
     this._tabBar.removeChildren();
     const w = this._contentW;
     if (w <= 0) return;
+    const tabs = this._availableTabs();
+    if (!tabs.includes(this._activeTab)) this._activeTab = 'outfits';
     const gap = 4;
-    const tabW = Math.floor((w - gap * (DRESS_TABS.length - 1)) / DRESS_TABS.length);
+    const tabW = Math.floor((w - gap * (tabs.length - 1)) / tabs.length);
     const tabH = TAB_BAR_H - 8;
 
-    DRESS_TABS.forEach((tab, i) => {
+    tabs.forEach((tab, i) => {
       const active = tab === this._activeTab;
       const btn = new PIXI.Container();
       btn.position.set(i * (tabW + gap), 0);

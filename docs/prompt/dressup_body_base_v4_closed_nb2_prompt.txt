@@ -1,0 +1,13 @@
+IMAGE EDITING TASK.
+Use the provided open-eye base body image as the locked reference.
+
+ABSOLUTE LOCKS:
+- Keep the same character, same body proportions, same pose, same arm gaps, same camisole and shorts, same bare feet.
+- Keep the same canvas framing and flat magenta RGB 255 0 255 background.
+- Do not change the mouth, head shape, body, clothing, hands, legs, or feet.
+
+CHANGE ONLY:
+- Her eyes are gently closed in a relaxed happy expression: two soft curved lash lines.
+
+OUTPUT:
+One full-body closed-eye base body. Same 9:16 magenta canvas. No text, no watermark.

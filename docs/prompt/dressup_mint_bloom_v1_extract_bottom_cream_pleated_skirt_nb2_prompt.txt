@@ -1,0 +1,36 @@
+STRICT IMAGE EDIT / OBJECT ISOLATION.
+Reference image: a complete dressed chibi character on a 9:16 magenta canvas.
+
+PURPOSE:
+Extract ONE dress-up layer from the reference while preserving its original worn position.
+This is for a paper-doll dress-up system that stacks 432x768 transparent PNG layers at (0,0).
+
+ABSOLUTE LOCKS:
+- Keep the same 9:16 canvas, same character position, same body pose, same scale and same magenta background as the reference image.
+- Do NOT redraw the item as a standalone product.
+- Do NOT center the item.
+- Do NOT change the angle or perspective.
+- The extracted item must stay exactly where it was when worn on the character in the reference image.
+- Remove/hide every other clothing, hair, body, face, skin, accessory and decoration.
+- Background must be flat magenta RGB 255 0 255 only.
+- NO text, no watermark, no shadows unrelated to the extracted item.
+
+THE FINAL IMAGE SHOULD LOOK ALMOST EMPTY:
+only the requested layer remains at its exact original worn position on the magenta canvas.
+
+FORBIDDEN:
+- no character body
+- no head or face
+- no arms, hands, legs, feet or skin unless the requested layer explicitly is makeup
+- no unrelated clothing
+- no unrelated accessories
+- no centered product-display item
+- no full character silhouette
+
+LAYER TO EXTRACT:
+only the light cream high-waist pleated skirt with tiny pastel flower embroidery near the hem; keep it exactly on the waist/hips from the reference, no legs, no top
+
+OUTPUT:
+Only the requested layer in its original worn position on the full 9:16 magenta canvas.
+Example: if extracting shoes, output only the shoes already aligned to the feet angle and position from the reference image; no feet, no legs, no product-display angle.
+Example: if extracting top, output only the top exactly where it wraps around the torso/arms in the reference image; no body.

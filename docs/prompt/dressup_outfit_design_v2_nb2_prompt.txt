@@ -1,0 +1,24 @@
+INPUT REFERENCE:
+Use the provided bald chibi base body as an exact locked template.
+
+ABSOLUTE LOCKS — do not change:
+- Same character identity, same face, same SD chibi proportions.
+- Same full-body pose, same arms, same feet stance, same 3/4 view facing viewer's right.
+- Same framing and same body size on a 9:16 portrait canvas.
+- Background stays flat magenta RGB 255 0 255 only.
+- NO text, no watermark, no frame.
+
+TASK:
+Create ONE complete dressed outfit design on top of the base body.
+All clothing and accessories must be WORN ON THE BODY, not floating stickers.
+Shoes must be drawn directly on the feet in the exact visible foot angle from the base body. Do NOT draw product-display shoes or shoes in a separate perspective.
+Sleeves must wrap around the visible arms, skirt/pants must start at the waist and follow the body, hair must sit on the head with the face visible.
+
+ART STYLE:
+2D cute casual mobile game character, soft pastel, gentle flat-to-soft shading, warm brown soft line art, same rendering style as the reference.
+
+OUTFIT DESCRIPTION:
+Warm light brown chin-length bob hair with soft straight bangs and a small pink five-petal flower clip on viewer's left; light pink short puff-sleeve blouse with a white pinafore apron layered over it, apron with two rounded front pockets; dusty blue knee-length A-line skirt; simple white Mary Jane flats with one thin strap, worn on the base body's feet; short pearl necklace with tiny pink heart pendant resting on upper chest; small golden star earrings on both ears; subtle rosy blush on cheeks.
+
+OUTPUT:
+One full-body dressed character, same canvas/framing as the base. Flat magenta background only.

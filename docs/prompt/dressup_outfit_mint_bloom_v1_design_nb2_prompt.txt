@@ -1,0 +1,26 @@
+IMAGE EDITING TASK FOR A LAYERED DRESS-UP SYSTEM.
+Use the provided bald base body as a locked base layer.
+
+ABSOLUTE LOCKS:
+- Do NOT redraw or alter the visible skin, face, eyes, mouth, ears, arms, hands, legs, feet, body pose, body size, or canvas framing.
+- Keep the natural arm gaps away from the torso; do not move the hands inward.
+- Add outfit elements ON TOP of the existing base only, like drawing transparent clothing layers.
+- Shoes must be drawn directly over the existing bare feet in their exact visible angle.
+- Hair must sit on the existing bald head and frame the existing face without changing the eyes or mouth.
+- Same 9:16 canvas and flat magenta RGB 255 0 255 background.
+- No text, no watermark.
+
+OUTFIT THEME — Mint Bloom Young Florist:
+- Hair: warm chestnut-brown shoulder-length half-up hair, soft side bangs, small mint ribbon bow near viewer's left side, airy but not too huge.
+- Top: soft mint-green cropped cardigan with short puff sleeves, worn open enough to show an ivory blouse underneath. The blouse has a small cream bow at the collar. Sleeves wrap naturally around the arms but keep the hands visible.
+- Bottom: light cream high-waist pleated skirt, above the knees, gentle pastel flower embroidery near the hem, no apron.
+- Shoes: caramel-brown Mary Jane loafers with cream socks, drawn directly on the exact existing feet angle.
+- Makeup: subtle peach blush, no heavy makeup.
+- Necklace: tiny gold flower pendant necklace at the collarbone.
+- Earrings: small mint flower stud earrings.
+
+ART STYLE:
+2D cute casual mobile game character, soft pastel, gentle flat-to-soft shading, warm brown soft line art, cozy flower shop vibe. Young shopkeeper girl, not toddler, not fashion-realistic.
+
+OUTPUT:
+One full-body dressed character. Same base body/pose/framing, outfit added on top. Flat magenta background only.

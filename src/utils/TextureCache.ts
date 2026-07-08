@@ -140,6 +140,22 @@ const CHARS_IMAGE_MAP: Record<string, string> = {
   owner_part_acc_pearl_necklace: 'subpkg_chars/images/owner/parts/acc_pearl_necklace.png',
   owner_part_acc_star_earrings: 'subpkg_chars/images/owner/parts/acc_star_earrings.png',
 
+  // v3 正式流程验证：整套穿好设计图 -> Gemini 严格原位拆层 -> fullCanvas 叠放
+  owner_part_default_v3_hair_bob_brown: 'subpkg_chars/images/owner/parts/default_v3/hair_bob_brown.png',
+  owner_part_default_v3_hair_bob_brown_thumb: 'subpkg_chars/images/owner/parts/default_v3/thumbs/hair_bob_brown.png',
+  owner_part_default_v3_top_pink_puff: 'subpkg_chars/images/owner/parts/default_v3/top_pink_puff.png',
+  owner_part_default_v3_top_pink_puff_thumb: 'subpkg_chars/images/owner/parts/default_v3/thumbs/top_pink_puff.png',
+  owner_part_default_v3_bottom_denim_skirt: 'subpkg_chars/images/owner/parts/default_v3/bottom_denim_skirt.png',
+  owner_part_default_v3_bottom_denim_skirt_thumb: 'subpkg_chars/images/owner/parts/default_v3/thumbs/bottom_denim_skirt.png',
+  owner_part_default_v3_shoes_white_flats: 'subpkg_chars/images/owner/parts/default_v3/shoes_white_flats.png',
+  owner_part_default_v3_shoes_white_flats_thumb: 'subpkg_chars/images/owner/parts/default_v3/thumbs/shoes_white_flats.png',
+  owner_part_default_v3_makeup_blush_pink: 'subpkg_chars/images/owner/parts/default_v3/makeup_blush_pink.png',
+  owner_part_default_v3_makeup_blush_pink_thumb: 'subpkg_chars/images/owner/parts/default_v3/thumbs/makeup_blush_pink.png',
+  owner_part_default_v3_acc_pearl_necklace: 'subpkg_chars/images/owner/parts/default_v3/acc_pearl_necklace.png',
+  owner_part_default_v3_acc_pearl_necklace_thumb: 'subpkg_chars/images/owner/parts/default_v3/thumbs/acc_pearl_necklace.png',
+  owner_part_default_v3_acc_star_earrings: 'subpkg_chars/images/owner/parts/default_v3/acc_star_earrings.png',
+  owner_part_default_v3_acc_star_earrings_thumb: 'subpkg_chars/images/owner/parts/default_v3/thumbs/acc_star_earrings.png',
+
   customer_child:   'subpkg_chars/images/customer/child.png',
   customer_student: 'subpkg_chars/images/customer/student.png',
   customer_worker:  'subpkg_chars/images/customer/worker.png',
