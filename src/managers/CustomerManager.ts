@@ -660,7 +660,11 @@ class CustomerManagerClass {
       `[Customer] 交付完成: ${customer.name}(${customer.tier}), 花愿+${hy}${weekendBonus > 0 ? ` (周末+${weekendBonus})` : ''}${diamonds > 0 ? `, 钻石+${diamonds}` : ''}${customer.staminaChestReward ? `, 体力箱→收纳盒 ${customer.staminaChestReward}` : ''}${customer.workshopMaterialRewards?.length ? `, 工坊材料+${customer.workshopMaterialRewards.length}种` : ''}`,
     );
 
-    this._customers.splice(idx, 1);
+    // removeItem 会触发 _rescanAll，并可能把仍可完成的其它客人排到队首；
+    // 因此这里不能再使用交付开始时缓存的 idx，否则会误删重排后的其它订单。
+    const removeIdx = this._customers.findIndex(c => c.uid === uid);
+    if (removeIdx < 0) return false;
+    this._customers.splice(removeIdx, 1);
     EventBus.emit('customer:delivered', uid, customer);
 
     this._rescanAll();
