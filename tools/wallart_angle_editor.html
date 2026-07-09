@@ -105,9 +105,9 @@
 <body>
   <h1>墙饰倾角微调 <span class="badge">本地工具 · 不上传</span></h1>
   <p class="hint">
-    推荐用「打开并绑定原文件」：Chrome / Edge 下可<strong>直接覆盖原路径</strong>。
-    浏览器出于安全不会显示完整磁盘路径，但会记住你选中的文件句柄。<br>
-    若只能普通选择/拖入：另存为会默认用<strong>原文件名</strong>；请手动存回原目录。导出始终为透明 PNG。
+    <strong>墙帘推荐「水平错切」</strong>：只改帘杆倾角，竖向褶皱保持竖直；整图旋转会把竖线一起拧歪，仅作备选。<br>
+    推荐用「打开并绑定原文件」：Chrome / Edge 可<strong>直接覆盖原路径</strong>。
+    另存为默认用<strong>原文件名</strong>。导出始终为透明 PNG。
   </p>
   <div class="layout">
     <div class="panel">
@@ -123,13 +123,19 @@
 
       <div class="filemeta" id="fileMeta">尚未加载图片</div>
 
-      <label>旋转角度（度，正=增大向右下斜） <span id="deltaLabel">0.0</span></label>
-      <input id="delta" type="range" min="-15" max="15" step="0.1" value="0" />
+      <label>调整方式</label>
+      <select id="mode">
+        <option value="skew" selected>水平错切（推荐 · 竖线不歪）</option>
+        <option value="rotate">整图旋转（竖线会歪）</option>
+      </select>
+
+      <label id="deltaTitle">倾角调整（度，正=增大向右下斜） <span id="deltaLabel">0.0</span></label>
+      <input id="delta" type="range" min="-20" max="20" step="0.1" value="0" />
       <div class="row">
         <input id="deltaNum" type="number" step="0.1" value="0" />
         <button class="ghost" id="resetBtn" type="button">归零</button>
       </div>
-      <label>对齐到目标角</label>
+      <label>对齐到目标角（顶边相对水平）</label>
       <div class="row">
         <input id="target" type="number" step="0.1" value="27.5" />
         <button class="secondary" id="snapBtn" type="button">对齐</button>
@@ -157,9 +163,11 @@
     const fileInput = document.getElementById('file');
     const fileNameInput = document.getElementById('fileName');
     const fileMeta = document.getElementById('fileMeta');
+    const modeSelect = document.getElementById('mode');
     const deltaRange = document.getElementById('delta');
     const deltaNum = document.getElementById('deltaNum');
     const deltaLabel = document.getElementById('deltaLabel');
+    const deltaTitle = document.getElementById('deltaTitle');
     const targetInput = document.getElementById('target');
     const stats = document.getElementById('stats');
     const preview = document.getElementById('preview');
@@ -206,6 +214,13 @@
       downloadBtn.disabled = !source;
     }
 
+    function updateDeltaTitle() {
+      const skew = modeSelect.value === 'skew';
+      deltaTitle.innerHTML = skew
+        ? `错切倾角（度，正=增大向右下斜，竖线保持竖直） <span id="deltaLabel">${Number(deltaRange.value).toFixed(1)}</span>`
+        : `旋转角度（度，正=增大向右下斜，竖线会歪） <span id="deltaLabel">${Number(deltaRange.value).toFixed(1)}</span>`;
+    }
+
     function measureTopEdgeAngle(imgData) {
       const { width: w, height: h, data } = imgData;
       const xs = [], ys = [];
@@ -235,40 +250,74 @@
       if (mode === '0') return;
       const ang = Number(mode) * Math.PI / 180;
       const cx = guide.width / 2, cy = guide.height * 0.28;
-      gctx.strokeStyle = 'rgba(201,123,132,0.7)';
+      gctx.strokeStyle = 'rgba(201,123,132,0.85)';
       gctx.lineWidth = 1.5;
       const len = Math.hypot(guide.width, guide.height);
+      // ±θ：后墙脚 / 右墙脚各一条
       for (const sign of [1, -1]) {
-        const dx = Math.cos(ang * sign) * len;
-        const dy = Math.sin(ang) * len;
+        const theta = ang * sign;
+        const dx = Math.cos(theta) * len;
+        const dy = Math.sin(theta) * len;
         gctx.beginPath();
         gctx.moveTo(cx - dx, cy - dy);
         gctx.lineTo(cx + dx, cy + dy);
         gctx.stroke();
       }
-      gctx.strokeStyle = 'rgba(180,80,90,0.45)';
+      // 竖向参考：错切后应与此平行
+      gctx.strokeStyle = 'rgba(80,120,180,0.55)';
+      gctx.lineWidth = 1.5;
       gctx.beginPath();
       gctx.moveTo(cx, 0); gctx.lineTo(cx, guide.height); gctx.stroke();
+      gctx.setLineDash([6, 5]);
+      gctx.beginPath();
+      gctx.moveTo(cx - 48, 0); gctx.lineTo(cx - 48, guide.height); gctx.stroke();
+      gctx.beginPath();
+      gctx.moveTo(cx + 48, 0); gctx.lineTo(cx + 48, guide.height); gctx.stroke();
+      gctx.setLineDash([]);
     }
 
-    function render() {
-      if (!source) return;
-      const delta = Number(deltaRange.value);
-      deltaLabel.textContent = delta.toFixed(1);
-      deltaNum.value = String(delta);
+    /** 水平错切：y' = y + k·x，竖线保持竖直，水平线倾角改变 */
+    function transformSkew(src, deltaDeg) {
+      const targetAng = baseAngle + deltaDeg;
+      const k = Math.tan(targetAng * Math.PI / 180) - Math.tan(baseAngle * Math.PI / 180);
+      const w = src.width, h = src.height;
+      const cornersY = [0, k * w, h, h + k * w];
+      const minY = Math.min(...cornersY);
+      const maxY = Math.max(...cornersY);
+      const nw = w;
+      const nh = Math.max(1, Math.ceil(maxY - minY + 1e-6));
+      const off = document.createElement('canvas');
+      off.width = nw; off.height = nh;
+      const octx = off.getContext('2d', { willReadFrequently: true });
+      octx.clearRect(0, 0, nw, nh);
+      octx.setTransform(1, k, 0, 1, 0, -minY);
+      octx.imageSmoothingEnabled = true;
+      octx.imageSmoothingQuality = 'high';
+      octx.drawImage(src, 0, 0);
+      octx.setTransform(1, 0, 0, 1, 0, 0);
+      return off;
+    }
 
-      const rad = -delta * Math.PI / 180;
+    function transformRotate(src, deltaDeg) {
+      const rad = -deltaDeg * Math.PI / 180;
       const cos = Math.abs(Math.cos(rad)), sin = Math.abs(Math.sin(rad));
-      const nw = Math.ceil(source.width * cos + source.height * sin);
-      const nh = Math.ceil(source.width * sin + source.height * cos);
+      const nw = Math.ceil(src.width * cos + src.height * sin);
+      const nh = Math.ceil(src.width * sin + src.height * cos);
       const off = document.createElement('canvas');
       off.width = nw; off.height = nh;
       const octx = off.getContext('2d', { willReadFrequently: true });
       octx.clearRect(0, 0, nw, nh);
       octx.translate(nw / 2, nh / 2);
       octx.rotate(rad);
-      octx.drawImage(source, -source.width / 2, -source.height / 2);
+      octx.imageSmoothingEnabled = true;
+      octx.imageSmoothingQuality = 'high';
+      octx.drawImage(src, -src.width / 2, -src.height / 2);
+      return off;
+    }
 
+    function trimOpaque(off) {
+      const nw = off.width, nh = off.height;
+      const octx = off.getContext('2d', { willReadFrequently: true });
       const data = octx.getImageData(0, 0, nw, nh);
       let minX = nw, minY = nh, maxX = 0, maxY = 0, found = false;
       for (let y = 0; y < nh; y++) {
@@ -280,7 +329,7 @@
           }
         }
       }
-      if (!found) return;
+      if (!found) return null;
       const pad = 4;
       minX = Math.max(0, minX - pad); minY = Math.max(0, minY - pad);
       maxX = Math.min(nw - 1, maxX + pad); maxY = Math.min(nh - 1, maxY + pad);
@@ -288,15 +337,32 @@
       const trimmed = document.createElement('canvas');
       trimmed.width = tw; trimmed.height = th;
       trimmed.getContext('2d').drawImage(off, minX, minY, tw, th, 0, 0, tw, th);
+      return trimmed;
+    }
 
+    function render() {
+      if (!source) return;
+      const delta = Number(deltaRange.value);
+      updateDeltaTitle();
+      deltaNum.value = String(delta);
+
+      const off = modeSelect.value === 'skew'
+        ? transformSkew(source, delta)
+        : transformRotate(source, delta);
+      const trimmed = trimOpaque(off);
+      if (!trimmed) return;
+
+      const tw = trimmed.width, th = trimmed.height;
       preview.width = tw; preview.height = th;
       pctx.clearRect(0, 0, tw, th);
       pctx.drawImage(trimmed, 0, 0);
 
       const ang = measureTopEdgeAngle(pctx.getImageData(0, 0, tw, th));
+      const modeName = modeSelect.value === 'skew' ? '水平错切' : '整图旋转';
       stats.innerHTML =
+        `方式：<b>${modeName}</b><br>` +
         `原始顶边角：<b>${baseAngle.toFixed(2)}°</b><br>` +
-        `当前旋转：<b>${delta.toFixed(1)}°</b><br>` +
+        `当前调整：<b>${delta.toFixed(1)}°</b><br>` +
         `当前顶边角：<b>${Number.isFinite(ang) ? ang.toFixed(2) + '°' : '—'}</b><br>` +
         `导出尺寸：${tw} × ${th}`;
       preview._exportCanvas = trimmed;
@@ -373,10 +439,17 @@
       deltaRange.value = String(deltaNum.value);
       render();
     });
+    modeSelect.addEventListener('change', () => {
+      updateDeltaTitle();
+      render();
+    });
     document.getElementById('resetBtn').onclick = () => { deltaRange.value = '0'; render(); };
     document.getElementById('snapBtn').onclick = () => {
       if (!Number.isFinite(baseAngle)) return;
-      deltaRange.value = String((Number(targetInput.value) - baseAngle).toFixed(1));
+      // 对齐：把顶边角调到 target（绝对值；符号跟当前顶边一致）
+      const want = Number(targetInput.value);
+      const signedTarget = baseAngle >= 0 ? Math.abs(want) : -Math.abs(want);
+      deltaRange.value = String((signedTarget - baseAngle).toFixed(1));
       render();
     };
     document.getElementById('guides').onchange = drawGuides;
