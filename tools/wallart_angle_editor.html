@@ -1,0 +1,454 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>墙饰倾角微调</title>
+  <style>
+    :root {
+      --bg: #f4efe6;
+      --card: #fffaf3;
+      --ink: #4a3b2f;
+      --accent: #c97b84;
+      --line: #d9cfc0;
+      --ok: #7a8f6e;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: "PingFang SC", "Hiragino Sans GB", sans-serif;
+      background: radial-gradient(circle at top, #fff8ef, var(--bg));
+      color: var(--ink);
+      min-height: 100vh;
+      padding: 24px;
+    }
+    h1 { font-size: 22px; margin: 0 0 8px; }
+    p.hint { margin: 0 0 20px; opacity: 0.75; font-size: 14px; line-height: 1.5; }
+    .layout { display: grid; grid-template-columns: 340px 1fr; gap: 20px; max-width: 1100px; }
+    @media (max-width: 860px) { .layout { grid-template-columns: 1fr; } }
+    .panel {
+      background: var(--card);
+      border: 1px solid var(--line);
+      border-radius: 16px;
+      padding: 16px;
+      box-shadow: 0 8px 24px rgba(74, 59, 47, 0.06);
+    }
+    label { display: block; font-size: 13px; margin: 12px 0 6px; font-weight: 600; }
+    input[type="file"], input[type="number"], button, select, input[type="text"] {
+      width: 100%;
+      font: inherit;
+      padding: 10px 12px;
+      border-radius: 10px;
+      border: 1px solid var(--line);
+      background: #fff;
+      color: var(--ink);
+    }
+    input[type="range"] { width: 100%; }
+    button {
+      margin-top: 10px;
+      background: var(--accent);
+      color: #fff;
+      border: none;
+      cursor: pointer;
+      font-weight: 700;
+    }
+    button:disabled { opacity: 0.45; cursor: not-allowed; }
+    button.secondary { background: var(--ok); }
+    button.ghost { background: #fff; color: var(--ink); border: 1px solid var(--line); }
+    .row { display: flex; gap: 8px; align-items: center; }
+    .row > * { flex: 1; }
+    .stats, .filemeta {
+      font-size: 13px; line-height: 1.6;
+      background: #fff; border-radius: 10px; padding: 10px;
+      border: 1px dashed var(--line);
+      word-break: break-all;
+    }
+    .filemeta b { color: var(--accent); }
+    .stage {
+      min-height: 520px;
+      display: grid;
+      place-items: center;
+      background:
+        linear-gradient(90deg, rgba(0,0,0,0.04) 1px, transparent 1px) 0 0 / 24px 24px,
+        linear-gradient(rgba(0,0,0,0.04) 1px, transparent 1px) 0 0 / 24px 24px,
+        #fff;
+      border-radius: 16px;
+      border: 1px solid var(--line);
+      overflow: hidden;
+      position: relative;
+    }
+    .stage.drag { outline: 2px dashed var(--accent); outline-offset: -8px; }
+    .guide {
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      opacity: 0.35;
+    }
+    canvas#preview { max-width: 100%; max-height: 500px; image-rendering: auto; }
+    .badge {
+      display: inline-block;
+      padding: 2px 8px;
+      border-radius: 999px;
+      background: #efe4d6;
+      font-size: 12px;
+      margin-left: 6px;
+    }
+    .toast {
+      position: fixed; right: 20px; bottom: 20px;
+      background: #4a3b2f; color: #fff; padding: 10px 14px;
+      border-radius: 10px; font-size: 13px; opacity: 0;
+      transition: opacity .2s; pointer-events: none; z-index: 9;
+    }
+    .toast.show { opacity: 1; }
+  </style>
+</head>
+<body>
+  <h1>墙饰倾角微调 <span class="badge">本地工具 · 不上传</span></h1>
+  <p class="hint">
+    推荐用「打开并绑定原文件」：Chrome / Edge 下可<strong>直接覆盖原路径</strong>。
+    浏览器出于安全不会显示完整磁盘路径，但会记住你选中的文件句柄。<br>
+    若只能普通选择/拖入：另存为会默认用<strong>原文件名</strong>；请手动存回原目录。导出始终为透明 PNG。
+  </p>
+  <div class="layout">
+    <div class="panel">
+      <label>打开图片</label>
+      <div class="row">
+        <button class="secondary" id="openBindBtn" type="button" style="margin-top:0">打开并绑定原文件</button>
+        <button class="ghost" id="openFallbackBtn" type="button" style="margin-top:0">普通选择</button>
+      </div>
+      <input id="file" type="file" accept="image/png,image/*" hidden />
+
+      <label>原文件名（另存为默认名）</label>
+      <input id="fileName" type="text" placeholder="尚未打开" />
+
+      <div class="filemeta" id="fileMeta">尚未加载图片</div>
+
+      <label>旋转角度（度，正=增大向右下斜） <span id="deltaLabel">0.0</span></label>
+      <input id="delta" type="range" min="-15" max="15" step="0.1" value="0" />
+      <div class="row">
+        <input id="deltaNum" type="number" step="0.1" value="0" />
+        <button class="ghost" id="resetBtn" type="button">归零</button>
+      </div>
+      <label>对齐到目标角</label>
+      <div class="row">
+        <input id="target" type="number" step="0.1" value="27.5" />
+        <button class="secondary" id="snapBtn" type="button">对齐</button>
+      </div>
+      <label>显示辅助线</label>
+      <select id="guides">
+        <option value="30">±30° 参考线</option>
+        <option value="27">±27° 参考线</option>
+        <option value="0">关闭</option>
+      </select>
+      <div class="stats" id="stats">尚未加载图片</div>
+      <button id="overwriteBtn" type="button" disabled>覆盖原文件</button>
+      <button class="secondary" id="saveAsBtn" type="button" disabled>另存为…</button>
+      <button class="ghost" id="downloadBtn" type="button" disabled>下载（默认原文件名）</button>
+    </div>
+    <div class="panel">
+      <div class="stage" id="stage">
+        <canvas class="guide" id="guide"></canvas>
+        <canvas id="preview"></canvas>
+      </div>
+    </div>
+  </div>
+  <div class="toast" id="toast"></div>
+  <script>
+    const fileInput = document.getElementById('file');
+    const fileNameInput = document.getElementById('fileName');
+    const fileMeta = document.getElementById('fileMeta');
+    const deltaRange = document.getElementById('delta');
+    const deltaNum = document.getElementById('deltaNum');
+    const deltaLabel = document.getElementById('deltaLabel');
+    const targetInput = document.getElementById('target');
+    const stats = document.getElementById('stats');
+    const preview = document.getElementById('preview');
+    const guide = document.getElementById('guide');
+    const stage = document.getElementById('stage');
+    const overwriteBtn = document.getElementById('overwriteBtn');
+    const saveAsBtn = document.getElementById('saveAsBtn');
+    const downloadBtn = document.getElementById('downloadBtn');
+    const pctx = preview.getContext('2d', { willReadFrequently: true });
+    const gctx = guide.getContext('2d');
+
+    let source = null;
+    let baseAngle = 0;
+    let fileHandle = null; // FileSystemFileHandle when bound
+    let originalName = '';
+    let sourceLabel = '';
+
+    const canFS = !!(window.showOpenFilePicker && window.showSaveFilePicker);
+
+    function toast(msg) {
+      const el = document.getElementById('toast');
+      el.textContent = msg;
+      el.classList.add('show');
+      setTimeout(() => el.classList.remove('show'), 2200);
+    }
+
+    function suggestedName() {
+      const typed = (fileNameInput.value || '').trim();
+      if (typed) return typed.endsWith('.png') ? typed : `${typed}.png`;
+      return originalName || 'wallart_angle_adjusted.png';
+    }
+
+    function updateFileMeta() {
+      const bind = fileHandle
+        ? '已绑定原文件句柄 → 可点「覆盖原文件」写回同一路径'
+        : '未绑定句柄 → 请用「另存为」或下载后手动覆盖原路径';
+      fileMeta.innerHTML =
+        `文件名：<b>${originalName || '—'}</b><br>` +
+        `来源：${sourceLabel || '—'}<br>` +
+        `状态：${bind}<br>` +
+        `<span style="opacity:.7">说明：浏览器不暴露完整绝对路径，但绑定后覆盖会写回你打开的那个文件。</span>`;
+      overwriteBtn.disabled = !(source && fileHandle);
+      saveAsBtn.disabled = !source;
+      downloadBtn.disabled = !source;
+    }
+
+    function measureTopEdgeAngle(imgData) {
+      const { width: w, height: h, data } = imgData;
+      const xs = [], ys = [];
+      for (let x = 0; x < w; x++) {
+        for (let y = 0; y < h; y++) {
+          if (data[(y * w + x) * 4 + 3] > 40) { xs.push(x); ys.push(y); break; }
+        }
+      }
+      if (xs.length < 8) return NaN;
+      const lo = Math.floor(xs.length * 0.15);
+      const hi = Math.max(lo + 4, Math.floor(xs.length * 0.85));
+      let n = hi - lo, sx = 0, sy = 0, sxx = 0, sxy = 0;
+      for (let i = lo; i < hi; i++) {
+        sx += xs[i]; sy += ys[i]; sxx += xs[i] * xs[i]; sxy += xs[i] * ys[i];
+      }
+      const den = n * sxx - sx * sx;
+      if (!den) return NaN;
+      const m = (n * sxy - sx * sy) / den;
+      return Math.atan(m) * 180 / Math.PI;
+    }
+
+    function drawGuides() {
+      guide.width = stage.clientWidth;
+      guide.height = stage.clientHeight;
+      gctx.clearRect(0, 0, guide.width, guide.height);
+      const mode = document.getElementById('guides').value;
+      if (mode === '0') return;
+      const ang = Number(mode) * Math.PI / 180;
+      const cx = guide.width / 2, cy = guide.height * 0.28;
+      gctx.strokeStyle = 'rgba(201,123,132,0.7)';
+      gctx.lineWidth = 1.5;
+      const len = Math.hypot(guide.width, guide.height);
+      for (const sign of [1, -1]) {
+        const dx = Math.cos(ang * sign) * len;
+        const dy = Math.sin(ang) * len;
+        gctx.beginPath();
+        gctx.moveTo(cx - dx, cy - dy);
+        gctx.lineTo(cx + dx, cy + dy);
+        gctx.stroke();
+      }
+      gctx.strokeStyle = 'rgba(180,80,90,0.45)';
+      gctx.beginPath();
+      gctx.moveTo(cx, 0); gctx.lineTo(cx, guide.height); gctx.stroke();
+    }
+
+    function render() {
+      if (!source) return;
+      const delta = Number(deltaRange.value);
+      deltaLabel.textContent = delta.toFixed(1);
+      deltaNum.value = String(delta);
+
+      const rad = -delta * Math.PI / 180;
+      const cos = Math.abs(Math.cos(rad)), sin = Math.abs(Math.sin(rad));
+      const nw = Math.ceil(source.width * cos + source.height * sin);
+      const nh = Math.ceil(source.width * sin + source.height * cos);
+      const off = document.createElement('canvas');
+      off.width = nw; off.height = nh;
+      const octx = off.getContext('2d', { willReadFrequently: true });
+      octx.clearRect(0, 0, nw, nh);
+      octx.translate(nw / 2, nh / 2);
+      octx.rotate(rad);
+      octx.drawImage(source, -source.width / 2, -source.height / 2);
+
+      const data = octx.getImageData(0, 0, nw, nh);
+      let minX = nw, minY = nh, maxX = 0, maxY = 0, found = false;
+      for (let y = 0; y < nh; y++) {
+        for (let x = 0; x < nw; x++) {
+          if (data.data[(y * nw + x) * 4 + 3] > 10) {
+            found = true;
+            if (x < minX) minX = x; if (y < minY) minY = y;
+            if (x > maxX) maxX = x; if (y > maxY) maxY = y;
+          }
+        }
+      }
+      if (!found) return;
+      const pad = 4;
+      minX = Math.max(0, minX - pad); minY = Math.max(0, minY - pad);
+      maxX = Math.min(nw - 1, maxX + pad); maxY = Math.min(nh - 1, maxY + pad);
+      const tw = Math.max(1, maxX - minX + 1), th = Math.max(1, maxY - minY + 1);
+      const trimmed = document.createElement('canvas');
+      trimmed.width = tw; trimmed.height = th;
+      trimmed.getContext('2d').drawImage(off, minX, minY, tw, th, 0, 0, tw, th);
+
+      preview.width = tw; preview.height = th;
+      pctx.clearRect(0, 0, tw, th);
+      pctx.drawImage(trimmed, 0, 0);
+
+      const ang = measureTopEdgeAngle(pctx.getImageData(0, 0, tw, th));
+      stats.innerHTML =
+        `原始顶边角：<b>${baseAngle.toFixed(2)}°</b><br>` +
+        `当前旋转：<b>${delta.toFixed(1)}°</b><br>` +
+        `当前顶边角：<b>${Number.isFinite(ang) ? ang.toFixed(2) + '°' : '—'}</b><br>` +
+        `导出尺寸：${tw} × ${th}`;
+      preview._exportCanvas = trimmed;
+      drawGuides();
+    }
+
+    async function loadFromBlob(blob, name, label, handle = null) {
+      const url = URL.createObjectURL(blob);
+      const img = new Image();
+      await new Promise((resolve, reject) => {
+        img.onload = resolve;
+        img.onerror = reject;
+        img.src = url;
+      });
+      source = document.createElement('canvas');
+      source.width = img.naturalWidth;
+      source.height = img.naturalHeight;
+      const sctx = source.getContext('2d', { willReadFrequently: true });
+      sctx.clearRect(0, 0, source.width, source.height);
+      sctx.drawImage(img, 0, 0);
+      baseAngle = measureTopEdgeAngle(sctx.getImageData(0, 0, source.width, source.height));
+      originalName = name || 'wallart.png';
+      if (!originalName.toLowerCase().endsWith('.png')) originalName += '.png';
+      fileNameInput.value = originalName;
+      sourceLabel = label;
+      fileHandle = handle;
+      deltaRange.value = '0';
+      updateFileMeta();
+      render();
+      URL.revokeObjectURL(url);
+    }
+
+    document.getElementById('openBindBtn').onclick = async () => {
+      if (!canFS) {
+        toast('当前浏览器不支持绑定覆盖，请用「普通选择」+ 另存为');
+        fileInput.click();
+        return;
+      }
+      try {
+        const [handle] = await window.showOpenFilePicker({
+          multiple: false,
+          types: [{ description: 'PNG', accept: { 'image/png': ['.png'], 'image/*': ['.png', '.webp'] } }],
+        });
+        const file = await handle.getFile();
+        await loadFromBlob(file, file.name, '已绑定（可覆盖原文件）', handle);
+        toast('已绑定：' + file.name);
+      } catch (e) {
+        if (e && e.name !== 'AbortError') toast('打开失败：' + e.message);
+      }
+    };
+
+    document.getElementById('openFallbackBtn').onclick = () => fileInput.click();
+    fileInput.addEventListener('change', async () => {
+      const f = fileInput.files?.[0];
+      if (!f) return;
+      await loadFromBlob(f, f.name, '普通选择（需另存为覆盖）', null);
+    });
+
+    // drag-drop onto stage
+    ;['dragenter', 'dragover'].forEach(ev => stage.addEventListener(ev, e => {
+      e.preventDefault(); stage.classList.add('drag');
+    }));
+    ;['dragleave', 'drop'].forEach(ev => stage.addEventListener(ev, e => {
+      e.preventDefault(); stage.classList.remove('drag');
+    }));
+    stage.addEventListener('drop', async (e) => {
+      const f = e.dataTransfer?.files?.[0];
+      if (!f) return;
+      await loadFromBlob(f, f.name, '拖放（需另存为覆盖）', null);
+    });
+
+    deltaRange.addEventListener('input', render);
+    deltaNum.addEventListener('change', () => {
+      deltaRange.value = String(deltaNum.value);
+      render();
+    });
+    document.getElementById('resetBtn').onclick = () => { deltaRange.value = '0'; render(); };
+    document.getElementById('snapBtn').onclick = () => {
+      if (!Number.isFinite(baseAngle)) return;
+      deltaRange.value = String((Number(targetInput.value) - baseAngle).toFixed(1));
+      render();
+    };
+    document.getElementById('guides').onchange = drawGuides;
+
+    function canvasToPngBlob(canvas) {
+      return new Promise((resolve) => canvas.toBlob(resolve, 'image/png'));
+    }
+
+    overwriteBtn.onclick = async () => {
+      if (!fileHandle || !preview._exportCanvas) return;
+      try {
+        const blob = await canvasToPngBlob(preview._exportCanvas);
+        const writable = await fileHandle.createWritable();
+        await writable.write(blob);
+        await writable.close();
+        toast('已覆盖原文件：' + (fileHandle.name || originalName));
+      } catch (e) {
+        toast('覆盖失败：' + (e.message || e) + '（可改用另存为）');
+      }
+    };
+
+    saveAsBtn.onclick = async () => {
+      if (!preview._exportCanvas) return;
+      const name = suggestedName();
+      const blob = await canvasToPngBlob(preview._exportCanvas);
+      if (canFS) {
+        try {
+          const handle = await window.showSaveFilePicker({
+            suggestedName: name,
+            types: [{ description: 'PNG', accept: { 'image/png': ['.png'] } }],
+          });
+          const writable = await handle.createWritable();
+          await writable.write(blob);
+          await writable.close();
+          // optionally re-bind to the saved file
+          fileHandle = handle;
+          originalName = handle.name || name;
+          fileNameInput.value = originalName;
+          sourceLabel = '已绑定（刚另存为的文件）';
+          updateFileMeta();
+          toast('已保存：' + originalName);
+          return;
+        } catch (e) {
+          if (e && e.name === 'AbortError') return;
+          // fall through to download
+        }
+      }
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(blob);
+      a.download = name;
+      a.click();
+      toast('已下载：' + name);
+    };
+
+    downloadBtn.onclick = async () => {
+      if (!preview._exportCanvas) return;
+      const name = suggestedName();
+      const blob = await canvasToPngBlob(preview._exportCanvas);
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(blob);
+      a.download = name;
+      a.click();
+      toast('已下载：' + name + '（请手动覆盖原路径）');
+    };
+
+    if (!canFS) {
+      document.getElementById('openBindBtn').textContent = '打开并绑定（需 Chrome/Edge）';
+      document.getElementById('openBindBtn').disabled = true;
+    }
+    window.addEventListener('resize', drawGuides);
+    updateFileMeta();
+    drawGuides();
+  </script>
+</body>
+</html>

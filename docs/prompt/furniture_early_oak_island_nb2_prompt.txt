@@ -1,0 +1,8 @@
+Square 1:1 image, one single freestanding furniture prop centered with generous white margin.
+Cute kawaii 2.5D true isometric furniture for a flower-shop merge game. Camera from upper-left into the L-room corner (same family as the room shell). On-screen top-face edges and base edges must sit near ±30° from horizontal — match the attached iso grid and room wall-base / floor diamond, NOT 45° wall slant, NOT flat front view. Height edges stay vertical. Visible top surface plus front-right side, left and right top edges symmetrically angled. Use the attached grid ONLY for perspective; do not copy the gray demo cube.
+Hand-painted mobile game style, soft brown outlines, rounded chibi-friendly shapes, gentle upper-left lighting, clean readable silhouette, refined woodcraft detail.
+Subject: an empty wooden kitchen island counter for early-game flower shop. Rectangular island with thick warm light-oak / honey wood countertop and matching wood cabinet base, soft wood grain, simple shaker-style panel doors or drawers with tiny brass knobs. COMPLETELY EMPTY clean top surface — no food, no plants, no cutting board, no stools, no chairs. Compact but elegant island mass, cozy and premium, matching early wooden furniture sets.
+Color palette: warm light oak, honey wood, soft cream undertones, tiny brass hardware, gentle warm shadows.
+Use the attached kitchen island reference only for island proportions and isometric angle; redesign fully in wood with empty clean top and no seating.
+NO TEXT, no labels, no captions, no writing anywhere, no logo, no characters, no room walls, no floor plane, no other furniture, no heavy cast shadow.
+Background pure solid white #FFFFFF only.

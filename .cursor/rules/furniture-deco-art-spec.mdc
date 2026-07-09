@@ -10,9 +10,29 @@ alwaysApply: false
 
 ## 视角（与房间一致）
 
-- 使用 **2.5D 等距视角**：**从左上方俯视的「经典等距」**，文档与提示词中写作 **upper-left ~45°**（与房间壳 `house_bg_room_default_v2_nb2_prompt.txt` 等中的 *Viewpoint: classic isometric from upper-left (~45°), consistent vanishing* 同一条视线）。
-- **禁止**：纯正面平视、纯侧视、强烈透视广角、室内全景带墙（家具图仅为 **单件道具**，不带房间几何）。
-- 物体摆放须能在该视角下读出 **顶面 + 朝向右下/右前的立面**，与房间内「后墙 + 右墙」的 L 形空间逻辑一致，避免像贴画一样只有一片平面。
+### 两套「角度」勿混用（强制）
+
+| 说法 | 含义 | 正确数值 |
+|------|------|----------|
+| **相机 / 视线** | 从左上俯看 L 形房间的描述 | prompt 可写 **upper-left isometric camera**（旧文「~45°」仅指相机方位，**不是**墙在画面上斜 45°） |
+| **屏上几何** | 墙脚线、地坪菱形边、家具顶面左右边相对水平线的倾角 | 当前验收房壳约 **±30°**（真等距）；接近 2:1 伪等距的 ±26.6° 也可，**禁止**把墙脚/台面边画成 ±45° |
+
+实测锚点（`bg_room_default_soft_nb2` / `bg_room_candy_nb2`）：后墙墙脚约 **-30°**，右墙墙脚约 **+30°**。家具顶面左右边应与此同族，左右对称；验收时若一侧偏平（如 +15°）或过陡（如 -47°），须重生。
+
+### 地面家具（道具角）
+
+- 使用 **2.5D 真等距**：相机 **upper-left**，与房间壳同一条视线；屏上顶面菱形边 **≈ ±30°**。
+- 须读出 **顶面 + 朝向右下/右前的立面**，与「后墙 + 右墙」L 形空间一致；竖边保持 **竖直**。
+- **锁角参考图（强制）**：生地面家具时 `--image` **必须**附  
+  **`docs/prompt/refs/furniture_iso_grid_pm30.png`**  
+  （白底 ±30° 菱形网格 + 中央示意方块；只锁透视，不锁配色/造型）。  
+  可选再附自家房壳裁切（墙脚+地坪）作第二参考；**禁止**用外游完整样板间当主 `--image`（易抄风格与家具造型）。
+- Prompt 须写明：*Use the attached grid ONLY for isometric angle (±30° top edges, vertical height edges); do not copy the gray demo cube.*
+- **禁止**：纯正面平视、纯侧视、强烈透视广角、室内全景带墙（家具图仅为 **单件道具**）；禁止把「45°」理解成墙面/台面边斜 45°。
+
+### 墙饰例外
+
+墙饰 / 挂帘走下文 **「墙饰 / 窗帘」** 节：贴墙面平行，**不是**地面道具角；**不要**附 `furniture_iso_grid_pm30.png`，改附已验收墙饰锁角图。
 
 ## 画风（锚点：花房盆栽线 + 长凳批次 — 视角与线稿为主）
 
@@ -36,8 +56,14 @@ alwaysApply: false
 ## 提示词写法（英文正文）
 
 1. 每条家具 **独立** `docs/prompt/furniture_<id>_nb2_prompt.txt`，**仅英文正文**（不要 `#` 注释行，避免打进 API）。
-2. 建议结构：**画布句**（Square 1:1…）→ **视角句**（Cute kawaii 2.5D isometric from upper-left about 45 degrees…）→ **风格句**（soft brown outlines + 该件具体配色与材质…）→ **主体描述** → **禁忌句**（No text…）→ **背景句**（Background pure solid white #FFFFFF…）。
+2. 建议结构：**画布句**（Square 1:1…）→ **视角句**（见下「视角句范本」）→ **风格句**（soft brown outlines + 该件具体配色与材质…）→ **主体描述** → **禁忌句**（No text…）→ **背景句**（Background pure solid white #FFFFFF…）。
 3. 与房间木作、窗框颜色需呼应时，可点明 *matching pink-tile / warm wood flower shop rooms* 等，但勿把整间房间画进图里。
+
+**视角句范本（地面家具，推荐置顶）**：
+
+```
+Cute kawaii 2.5D true isometric furniture for a flower-shop merge game. Camera from upper-left into the L-room corner (same family as the room shell). On-screen top-face edges and base edges must sit near ±30° from horizontal — match the attached iso grid and room wall-base / floor diamond, NOT 45° wall slant, NOT flat front view. Height edges stay vertical. Visible top surface plus front-right side, left and right top edges symmetrically angled. Use the attached grid ONLY for perspective; do not copy the gray demo cube.
+```
 
 ## 入库与流程
 
@@ -207,14 +233,15 @@ python3 scripts/compress_furniture_deco_pngs.py --force minigame/.../workshop_pl
 
 ## 墙饰 / 窗帘（`DecoSlot.WALLART` — 视角强制）
 
-地面家具/摆件用 **upper-left ~45° 等距道具角**（顶面 + 立面）；**墙饰、挂帘、挂画、标本框** 须 **与房壳后墙 / 右墙立面平行**，贴在墙面上 — **不是** 地面道具角，**不是** 正面 billboard。
+地面家具/摆件用 **真等距道具角**（顶面 + 立面，屏上边 ≈ ±30°）；**墙饰、挂帘、挂画、标本框** 须 **与房壳后墙 / 右墙立面平行**，贴在墙面上 — **不是** 地面道具角，**不是** 正面 billboard。
 
 | 要求 | 说明 |
 |------|------|
-| **墙面平行（强制）** | 整件道具落在 **单一竖直墙平面** 上；杆/框上沿 **左高右低** 轻斜（与后墙透视一致）；**禁止** 横平竖直正面杆、**禁止** 地面家具式 45° 道具角（顶面可见）、**禁止** 杆向右上翘或任意斜向 |
+| **墙面平行（强制）** | 整件道具落在 **单一竖直墙平面** 上；杆/框上沿 **左高右低** 轻斜（与后墙墙脚同族，约 **-30°** 量级）；**禁止** 横平竖直正面杆、**禁止** 地面家具式顶面菱形道具角、**禁止** 杆向右上翘或任意斜向 |
 | 透视句 | prompt 须含 **「parallel to back wall plane / lies flat on vertical wall / top edge slopes down toward the right」**；范本：`wallart_*_isometric_nb2_prompt.txt`、`deco_late_lv7_wall_01_isometric_nb2_prompt.txt` |
 | 参考图（锁角） | 生图 **必须** `--image` 附已验收墙饰：**`deco_lv20_wall_moon_sheer_curtain.png`**（挂帘）或 **`wallart_frame.png`**（挂画/标本框）；**只锁透视角**，主体设计写在 prompt 正文 |
 | 比例 | 挂帘 **3:4**；宽画/三联框 **4:3**；方画 **3:4** 或 **1:1**（见 `gen_wallart_isometric_nb2.sh`） |
 | 脚本 | 批量：`scripts/gen_wallart_isometric_nb2.sh`；单件 **`gemini-3.1-flash-image-preview`** + 参考图 |
 | 入库 | rembg **`birefnet-general`** → `crop_trim --padding 4` → **`compress_furniture_deco_pngs.py --max-side 171 --force`** |
 | 反例 | 纯正面窗帘/画框、地面等距角、杆水平、与参考墙饰角度不一致（进房后显「歪」） |
+| **倾角微调（推荐）** | 生图后若帘杆偏平/过陡：用 **`scripts/adjust_wallart_angle.py`** 对齐到目标角（如 `--target 27.5`），或打开 **`tools/wallart_angle_editor.html`** 拖图可视化微调后导出。分色合图前先统一各色顶边角，比反复 NB2 更稳 |

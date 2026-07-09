@@ -72,6 +72,8 @@ class FurnitureWorkshopManagerClass {
     if (this._initialized) return;
     this._initialized = true;
     this._load();
+    this._syncCraftedVariantsFromDecorations();
+    this._save();
     console.log(
       `[FurnitureWorkshop] 初始化: 图纸 ${this._blueprints.size}, 材料 ${this._workshopMaterial}, 粉染 ${this._workshopDyePink}, 黄染 ${this._workshopDyeYellow}, 蓝染 ${this._workshopDyeBlue}, 绿染 ${this._workshopDyeGreen}, 已制作 ${this._craftedVariants.size}`,
     );
@@ -86,6 +88,8 @@ class FurnitureWorkshopManagerClass {
     this._workshopDyeGreen = 0;
     this._craftedVariants.clear();
     this._load();
+    this._syncCraftedVariantsFromDecorations();
+    this._save();
     EventBus.emit('furnitureWorkshop:changed');
   }
 
@@ -121,11 +125,17 @@ class FurnitureWorkshopManagerClass {
     return this.getResourceCount(materialId);
   }
 
+  /**
+   * 某配色是否已制作：以当前账号是否已解锁对应家具为准。
+   * 不单独信任本地 craftedVariants（清云存档换新号时本地工坊记录会残留，导致误判「已制作」）。
+   */
   hasCraftedColor(blueprintId: string, colorId: string): boolean {
-    return this._craftedVariants.has(makeWorkshopVariantKey(blueprintId, colorId));
+    const option = getBlueprintColorOption(blueprintId, colorId);
+    if (!option) return false;
+    return DecorationManager.isUnlocked(option.outputDecoId);
   }
 
-  /** 该图纸所有配色均已制作 */
+  /** 该图纸所有配色均已制作（均已拥有对应家具） */
   isBlueprintFullyCrafted(blueprintId: string): boolean {
     const def = WORKSHOP_BLUEPRINT_MAP.get(blueprintId);
     if (!def || def.colorOptions.length === 0) return true;
@@ -258,7 +268,7 @@ class FurnitureWorkshopManagerClass {
     if (!this._blueprints.has(blueprintId)) {
       return { ok: false, reason: 'missing_blueprint' };
     }
-    if (this.hasCraftedColor(blueprintId, colorId) || DecorationManager.isUnlocked(option.outputDecoId)) {
+    if (DecorationManager.isUnlocked(option.outputDecoId)) {
       return { ok: false, reason: 'already_crafted' };
     }
     if (this._workshopMaterial < option.materialCost) {
@@ -300,7 +310,20 @@ class FurnitureWorkshopManagerClass {
     return { ok: true };
   }
 
+  /** 按当前已解锁家具重建「已制作」列表，避免本地残留挡住新号 */
+  private _syncCraftedVariantsFromDecorations(): void {
+    this._craftedVariants.clear();
+    for (const [blueprintId, def] of WORKSHOP_BLUEPRINT_MAP) {
+      for (const opt of def.colorOptions) {
+        if (DecorationManager.isUnlocked(opt.outputDecoId)) {
+          this._craftedVariants.add(makeWorkshopVariantKey(blueprintId, opt.id));
+        }
+      }
+    }
+  }
+
   exportState(): FurnitureWorkshopSaveData {
+    this._syncCraftedVariantsFromDecorations();
     return {
       blueprints: [...this._blueprints].filter(id => WORKSHOP_BLUEPRINT_MAP.has(id)),
       workshopMaterial: this._workshopMaterial,
@@ -380,6 +403,7 @@ class FurnitureWorkshopManagerClass {
         }
       }
 
+      // craftedVariants 仅作兼容字段；是否已制作以 DecorationManager 解锁为准（见 hasCraftedColor）
       if (Array.isArray(data.craftedVariants)) {
         for (const key of data.craftedVariants) {
           if (typeof key === 'string' && parseWorkshopVariantKey(key)) {
@@ -398,6 +422,9 @@ class FurnitureWorkshopManagerClass {
           if (typeof id === 'string' && legacyMap[id]) this._craftedVariants.add(legacyMap[id]);
         }
       }
+
+      // 读档后立即按当前家具解锁纠偏，避免旧号本地残留挡住新号制作
+      this._syncCraftedVariantsFromDecorations();
 
     } catch (e) {
       console.warn('[FurnitureWorkshop] 加载失败:', e);

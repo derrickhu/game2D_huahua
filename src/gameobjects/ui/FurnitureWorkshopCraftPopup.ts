@@ -220,7 +220,7 @@ export class FurnitureWorkshopCraftPopup extends PIXI.Container {
     this.pivot.set(POP_W / 2, POP_H / 2);
   }
 
-  /** 消耗行：仅图标 +「需要/已有」 */
+  /** 消耗行：仅图标 +「已有/需要」 */
   private _addResourceRow(
     parent: PIXI.Container,
     y: number,
@@ -243,7 +243,7 @@ export class FurnitureWorkshopCraftPopup extends PIXI.Container {
   }
 
   private _setCostFraction(text: PIXI.Text, need: number, have: number): void {
-    text.text = `${need}/${have}`;
+    text.text = `${have}/${need}`;
     text.style.fill = have >= need ? 0x58934b : 0xd15b4d;
   }
 
@@ -447,7 +447,7 @@ export class FurnitureWorkshopCraftPopup extends PIXI.Container {
   craftReasonText(reason: string | undefined): string {
     switch (reason) {
       case 'missing_blueprint': return '还没有这张图纸';
-      case 'already_crafted': return '这个颜色已经制作过了';
+      case 'already_crafted': return '已经拥有这个家具了';
       case 'locked': return '制作条件未满足';
       case 'missing_material': return '工坊材料不足';
       case 'missing_dye': return '染料不足';

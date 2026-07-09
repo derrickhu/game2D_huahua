@@ -26,7 +26,7 @@ STRUCTURE (follow exactly):
 - 1–2 short wooden steps at front-left, slender proportions.
 - OUTDOOR patch front-left: pale cream sand (#F2E8D8), a few flat gray stepping stones, tiny bright grass clumps (#8FD18A) and one or two micro white flower dots.
 
-Viewpoint: classic isometric from upper-left (~45°), consistent vanishing.
+Viewpoint: true isometric camera from upper-left into the L-corner (same family as furniture props). Wall-base and floor-diamond edges on screen must sit near ±30° from horizontal — NOT 45° wall slant, NOT steep forced perspective. Consistent vanishing with furniture top faces.
 
 BACKGROUND outside the structure: pure solid white #FFFFFF for easy cutout in pipeline.
 

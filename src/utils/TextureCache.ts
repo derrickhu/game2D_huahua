@@ -466,11 +466,12 @@ const ITEMS_IMAGE_MAP: Record<string, string> = {
   tool_fruit_cut_2: 'subpkg_items/images/tools/fruit_cut/tool_fruit_cut_2.png',
   tool_fruit_cut_3: 'subpkg_items/images/tools/fruit_cut/tool_fruit_cut_3.png',
 
-  // ---- 食物：整果合成线 L1–L4 ----
+  // ---- 食物：整果合成线 L1–L5 ----
   food_fruit_1: 'subpkg_items/images/food/whole/food_fruit_1.png',
   food_fruit_2: 'subpkg_items/images/food/whole/food_fruit_2.png',
   food_fruit_3: 'subpkg_items/images/food/whole/food_fruit_3.png',
   food_fruit_4: 'subpkg_items/images/food/whole/food_fruit_4.png',
+  food_fruit_5: 'subpkg_items/images/food/whole/food_fruit_5.png',
 
   // ---- 食物：果切线（4 线 × 3 级）----
   food_cut_avocado_1: 'subpkg_items/images/food/cut/food_cut_avocado_1.png',
@@ -485,6 +486,9 @@ const ITEMS_IMAGE_MAP: Record<string, string> = {
   food_cut_dragonfruit_1: 'subpkg_items/images/food/cut/food_cut_dragonfruit_1.png',
   food_cut_dragonfruit_2: 'subpkg_items/images/food/cut/food_cut_dragonfruit_2.png',
   food_cut_dragonfruit_3: 'subpkg_items/images/food/cut/food_cut_dragonfruit_3.png',
+  food_cut_orange_1: 'subpkg_items/images/food/cut/food_cut_orange_1.png',
+  food_cut_orange_2: 'subpkg_items/images/food/cut/food_cut_orange_2.png',
+  food_cut_orange_3: 'subpkg_items/images/food/cut/food_cut_orange_3.png',
 
   // ---- 宝箱 5 档（棋盘物品图统一最长边 128px + 256 色调色板，见 scripts/compress_subpkg_items_pngs.py）----
   chest_1: 'subpkg_items/images/chest/chest_1.png',
@@ -618,6 +622,12 @@ const DECO_IMAGE_MAP: Record<string, string> = {
   light_kettle_pastel: 'subpkg_deco/images/furniture/light_kettle_pastel.png',
   light_humidifier_cute: 'subpkg_deco/images/furniture/light_humidifier_cute.png',
   promo_mint_fridge: 'subpkg_deco/images/furniture/promo_mint_fridge.png',
+  early_ruby_tall_fridge: 'subpkg_deco/images/furniture/early_ruby_tall_fridge.png',
+  early_oak_island: 'subpkg_deco/images/furniture/early_oak_island.png',
+  early_sage_sink_cabinet: 'subpkg_deco/images/furniture/early_sage_sink_cabinet.png',
+  early_glass_bead_partition: 'subpkg_deco/images/furniture/early_glass_bead_partition.png',
+  early_blush_vine_sofa: 'subpkg_deco/images/furniture/early_blush_vine_sofa.png',
+  early_sky_vine_tea_table: 'subpkg_deco/images/furniture/early_sky_vine_tea_table.png',
   // 摆件
   orn_pot:       'subpkg_deco/images/furniture/orn_pot.png',
   orn_vase:      'subpkg_deco/images/furniture/orn_vase.png',

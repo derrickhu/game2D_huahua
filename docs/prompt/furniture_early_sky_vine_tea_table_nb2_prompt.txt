@@ -1,0 +1,8 @@
+Square 1:1 image, one single freestanding furniture prop centered with generous white margin.
+Cute kawaii 2.5D true isometric furniture for a flower-shop merge game. Camera from upper-left into the L-room corner (same family as the room shell). On-screen top-face edges and base edges must sit near ±30° from horizontal — match the attached iso grid and room wall-base / floor diamond, NOT 45° wall slant, NOT flat front view. Height edges stay vertical. Visible top surface plus front-right side, left and right top edges symmetrically angled. Use the attached grid ONLY for perspective; do not copy the gray demo cube.
+Hand-painted mobile game style, soft brown outlines, rounded chunky chibi-friendly shapes, gentle upper-left lighting, clean readable silhouette, refined cute detail.
+Subject: a two-tier rectangular coffee / tea table matching the vine-sofa family. Soft sky-blue / powder-blue painted base block with one drawer and a simple horizontal handle, four short rounded legs, thinner cream top surface with heavily rounded corners. Clean empty top — no cups, no plants, no decor on the table. Chunky kawaii proportions, premium early-game lounge table.
+Color palette: soft sky blue base, cream top, tiny brass or wood handle, gentle warm shadows.
+Use the attached coffee-table reference only for two-tier chunky silhouette and isometric angle; recolor base to sky blue and keep top empty.
+NO TEXT, no labels, no captions, no writing anywhere, no logo, no characters, no room walls, no floor plane, no other furniture, no heavy cast shadow.
+Background pure solid white #FFFFFF only.

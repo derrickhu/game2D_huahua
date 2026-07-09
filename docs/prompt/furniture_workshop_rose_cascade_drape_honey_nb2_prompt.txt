@@ -1,9 +1,9 @@
 Create ONE standalone 2D wall-decoration sprite for a cozy pastel flower-shop merge game.
 
-ATTACHED IMAGE = EXACT LAYOUT REFERENCE — copy silhouette, fold shapes, rod wall-plane angle, valance curves, panel openings, and proportions IDENTICALLY from the attached corrected pink version. Only recolor as specified below.
+ATTACHED IMAGE = EXACT GEOMETRY MASTER — copy the rod angle, finial positions, fabric silhouette, fold shapes, valance curves, panel openings, and proportions PIXEL-PERFECT from the attached pink curtain. Do NOT flatten the rod. Do NOT redesign.
 
-PERSPECTIVE — do not change (must stay back-wall isometric like attached):
-Rod top edge: gentle slope down toward the right (left end slightly higher). NOT steep diagonal. NOT front-facing billboard. Fabric on vertical back wall plane.
+PERSPECTIVE LOCK:
+Rod top edge must stay the same steep down-to-the-right slant as attached (~27–28°). Left finial higher than right. Fabric hangs true vertical.
 
 COLOR RECOLOR ONLY:
 - Main curtain fabric (left tail, valance swag, right colored sections): warm BUTTER YELLOW / soft sunshine yellow pastel instead of dusty pink.
@@ -12,5 +12,4 @@ COLOR RECOLOR ONLY:
 - Gold/warm wood curtain rod and ball finials: unchanged.
 
 Canvas: Square 1:1, single object centered, pure white #FFFFFF background for cutout.
-
 NO room, NO furniture, NO text, NO watermark.

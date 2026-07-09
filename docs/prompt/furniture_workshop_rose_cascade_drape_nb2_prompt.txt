@@ -1,26 +1,23 @@
 Create ONE standalone 2D wall-decoration sprite for a cozy pastel flower-shop merge game.
 
 ATTACHED COMPOSITE IMAGE — two references side by side:
-- LEFT half: PERSPECTIVE ONLY — copy this wall-plane angle exactly (subtle rod skew, back-wall mount).
-- RIGHT half: DESIGN ONLY — copy this rose curtain design (colors, folds, roses, valance, openings, proportions). Do NOT copy its wrong steep diagonal / rotated angle.
+- LEFT half: PERSPECTIVE LOCK — copy this wall-curtain rod skew EXACTLY (approved moon sheer curtain). Measure: rod slopes about 27–30 degrees down to the right.
+- RIGHT half: DESIGN ONLY — rose curtain look (pink fabric, cream sheer, rose tie-back, tall panels). IGNORE the right image's rod angle if flatter.
 
-PERSPECTIVE — mandatory (match LEFT reference, same as approved in-game wall hangings):
-Designed for the BACK wall plane of an isometric L-shaped dollhouse room (camera ~45° from upper-left into the corner). The entire unit lies flat on that vertical wall — parallel to the wall surface.
+CRITICAL ROD ANGLE (must match LEFT, ~30° from horizontal):
+- Left ball finial is MUCH HIGHER on the canvas than the right ball finial.
+- If you draw a nearly-horizontal rod, that is WRONG — reject that and redraw steeper like LEFT.
+- Target: rod top edge ≈ 28–32° from horizontal, same as room wall-base. NOT 10°, NOT 20°, NOT flat.
+- Fabric folds hang TRUE VERTICAL (straight down). Unit lies flat on back wall plane. No top face of rod, no floor-prop diamond.
 
-Rod rules (critical):
-- Wooden rod top edge slopes GENTLY down toward the RIGHT (left end slightly higher, right end slightly lower) — about the same subtle skew as LEFT reference.
-- Rod is NOT horizontal front view. Rod is NOT a steep 45° diagonal. The outer silhouette is NOT a diamond / rotated floor prop.
-- Fabric hangs straight downward in screen space along the oblique wall plane. No visible top surface of the rod, no 3/4 object rotation.
+DESIGN (pink default, from RIGHT reference style):
+- TALL rose cascade drape ~85–90% canvas height.
+- Warm wood / light gold rod with round finials.
+- Dusty-pink valance swag with deep U-curve and cream scalloped ruffle; open center gap.
+- Left: long pink tail with large pink rose tie-back cluster, soft fabric pool at bottom.
+- Right: tall cream semi-sheer with pink scalloped trim.
+- Soft brown outlines, kawaii hand-painted merge-game style, pastel high-key.
 
-DESIGN — match RIGHT reference (pink default colorway):
-- TALL room-divider rose curtain partition (~85–90% canvas height).
-- Light gold / warm wood curtain rod with round ball finials.
-- TOP: dramatic dusty-pink valance swag with deep U-curve; cream scalloped ruffle; open airy center gap.
-- LEFT PANEL: long flowing pink tail, large fabric rose tie-back cluster lower-left, soft floor pool.
-- RIGHT PANEL: tall cream semi-sheer with pink scalloped trim; vertical ripples.
-- CENTER: wide vertical OPENING between panels.
-- Dynamic romantic fabric movement, kawaii hand-painted merge-game style, soft brown outlines, pastel high-key.
+Canvas: Square 1:1, single object centered, pure white #FFFFFF background.
 
-Canvas: Square 1:1, single object centered, generous pure white #FFFFFF background for cutout.
-
-NO room shell, NO furniture, NO text, NO watermark.
+NO room, NO furniture, NO text, NO watermark. Do not copy LEFT curtain colors or charms — only its rod angle.

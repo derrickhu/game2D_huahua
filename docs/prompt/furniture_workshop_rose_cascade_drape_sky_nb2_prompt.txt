@@ -3,7 +3,7 @@ Create ONE standalone 2D wall-decoration sprite for a cozy pastel flower-shop me
 ATTACHED IMAGE = EXACT LAYOUT REFERENCE — copy silhouette, fold shapes, rod wall-plane angle, valance curves, panel openings, and proportions IDENTICALLY from the attached corrected pink version. Only recolor as specified below.
 
 PERSPECTIVE — do not change (must stay back-wall isometric like attached):
-Rod top edge: gentle slope down toward the right (left end slightly higher). NOT steep diagonal. NOT front-facing billboard. Fabric on vertical back wall plane.
+Rod top edge slopes down toward the right at about 28–32 degrees from horizontal (left end clearly higher). NOT nearly-horizontal. NOT steep 45°. NOT front-facing billboard. Fabric hangs true vertical on the wall plane.
 
 COLOR RECOLOR ONLY:
 - Main curtain fabric (left tail, valance swag, right colored sections): soft powder SKY BLUE / periwinkle-blue pastel instead of dusty pink.

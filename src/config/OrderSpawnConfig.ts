@@ -115,8 +115,8 @@ export const TIMED_FLORIST_ORDER_SLOT_COUNT = 3;
 export const TIMED_FLORIST_ORDER_MIN_ITEM_LEVEL = 6;
 export const TIMED_FLORIST_ORDER_TIME_LIMIT_SECONDS = 8 * 60 * 60;
 
-/** 家具工匠材料单：10 级后开放，非限时，组合单槽位规则 + 至少 1 槽 L6+ 花束，花愿 ×0.5，随机 1 种材料 ×1 */
-export const WORKSHOP_ORDER_MIN_PLAYER_LEVEL = 10;
+/** 家具工匠材料单：6 级后开放，非限时，组合单槽位规则 + 至少 1 槽 L6+ 花束，花愿 ×0.5，随机 1 种材料 ×1 */
+export const WORKSHOP_ORDER_MIN_PLAYER_LEVEL = 6;
 export const WORKSHOP_ORDER_DAILY_CAP = 4;
 /** 刷客掷骰：首单 20%，后续 15%（仍高于钻石 6% / 花商 5%） */
 export const WORKSHOP_ORDER_BASE_CHANCE = 0.15;

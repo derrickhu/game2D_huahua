@@ -22,7 +22,7 @@ STRUCTURE (must match reference exactly):
 - Interior completely EMPTY — no furniture, no plants, no palm trees, no water puddle, no characters, no text, no watermark.
 - 1–2 short wooden steps at front-left.
 
-Viewpoint: classic isometric from upper-left (~45°), consistent vanishing.
+Viewpoint: true isometric camera from upper-left into the L-corner (same family as furniture props). Wall-base and floor-diamond edges on screen must sit near ±30° from horizontal — NOT 45° wall slant, NOT steep forced perspective. Consistent vanishing with furniture top faces.
 
 NO TEXT, no labels, no readable signs, no numbers, no logo, no watermark, no captions anywhere.
 
