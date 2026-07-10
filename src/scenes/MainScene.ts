@@ -244,13 +244,13 @@ export class MainScene implements Scene {
       this._buildUI();
       this._boardView.refresh();
 
-      // 启动核心管理器
+      // 启动核心管理器（签到须先于周末/周二活动，否则 GM 虚拟日未加载会误清活动进度）
+      CheckInManager.init();
       WeekendHuayuanBoostManager.init();
       TuesdayStaminaUnlimitedManager.init();
       CustomerManager.init();
       QuestManager.init();
       RewardBoxHintManager.init();
-      CheckInManager.init();
       DailyCandyManager.init();
       AffinityManager.init();
       AffinityCardManager.init();

@@ -310,9 +310,21 @@ class CheckInManagerClass {
     return this._state.claimedMilestones.includes(threshold);
   }
 
+  /** 当前有效日历日（含 GM 虚拟偏移，UTC YYYY-MM-DD，与活动 dateKey 一致） */
+  get effectiveDateKey(): string {
+    return this._getTodayStr();
+  }
+
   init(): void {
     this._loadState();
     this._checkNewDay();
+  }
+
+  /** 云端覆盖本地后重读 GM 虚拟日与签到状态 */
+  reloadFromStorage(): void {
+    this._loadState();
+    this._checkNewDay();
+    EventBus.emit('checkin:dataChanged');
   }
 
   /** 签到结果：用于 UI 飞入动效（含连续签到钻石加成） */

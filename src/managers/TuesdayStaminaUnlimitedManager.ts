@@ -52,11 +52,8 @@ function effectiveNow(): Date {
   return d;
 }
 
-function localDateKey(now = effectiveNow()): string {
-  const y = now.getFullYear();
-  const m = `${now.getMonth() + 1}`.padStart(2, '0');
-  const d = `${now.getDate()}`.padStart(2, '0');
-  return `${y}-${m}-${d}`;
+function localDateKey(): string {
+  return CheckInManager.effectiveDateKey;
 }
 
 /** 活动期：仅周二（本地日历日） */

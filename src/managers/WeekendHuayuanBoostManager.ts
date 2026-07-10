@@ -23,11 +23,8 @@ function effectiveNow(): Date {
   return d;
 }
 
-function localDateKey(now = effectiveNow()): string {
-  const y = now.getFullYear();
-  const m = `${now.getMonth() + 1}`.padStart(2, '0');
-  const d = `${now.getDate()}`.padStart(2, '0');
-  return `${y}-${m}-${d}`;
+function localDateKey(): string {
+  return CheckInManager.effectiveDateKey;
 }
 
 /** 活动期：周六 0:00 起至周一 0:00 止（不含周一当日） */
@@ -68,6 +65,13 @@ class WeekendHuayuanBoostManagerClass {
       this._loaded = true;
     }
     this._checkDailyReset();
+  }
+
+  /** 云端覆盖本地后重读（须在 CheckInManager 已加载 GM 偏移后调用） */
+  reloadFromStorage(): void {
+    this._loaded = false;
+    this.init();
+    EventBus.emit('weekendHuayuanBoost:changed');
   }
 
   update(dt: number): void {
