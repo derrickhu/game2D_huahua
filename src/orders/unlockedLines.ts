@@ -62,7 +62,8 @@ export function computeUnlockedLines(cells: readonly OrderBoardCell[]): Unlocked
   if (maxFarmToolLevel >= 3 && maxFruitCutToolLevel >= 1) {
     hasFood = true;
     /**
-     * 有可产农田 + 果切工具即开放全部果切订单线。
+     * 有可产农田 + 果切工具即开放全部果切订单品种（池内再分牛油果/西瓜等）。
+     * 产线计数上果切只算 1 条，避免 5 个品种把组合单概率与线数评分顶满。
      * 农田只产低阶整果；更高水果靠合成，难度由订单档位（B/A/S）体现，不按当前产出锁线。
      */
     foodToolMaxByLine[FoodLine.CUT_AVOCADO] = maxFruitCutToolLevel;
@@ -76,7 +77,7 @@ export function computeUnlockedLines(cells: readonly OrderBoardCell[]): Unlocked
   if (hasBouquet) unlockedLineCount++;
   if (hasGreen) unlockedLineCount++;
   unlockedLineCount += drinkLinesOnBoard.size;
-  unlockedLineCount += Object.keys(foodToolMaxByLine).length;
+  if (hasFood) unlockedLineCount++;
 
   return {
     hasBouquet,

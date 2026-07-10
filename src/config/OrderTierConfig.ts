@@ -83,7 +83,7 @@ export interface UnlockedLines {
   drinkToolMaxByLine: Partial<Record<DrinkLine, number>>;
   /** 各果切线最高加工工具等级（仅农田+果切工具均在棋盘上时 >0）。 */
   foodToolMaxByLine: Partial<Record<FoodLine, number>>;
-  /** 已解锁可产出的独立产线数（花束/绿植/蝴蝶标本/冷饮/甜品等），用于动态客人上限 */
+  /** 已解锁可产出的独立产线数（花束/绿植/各饮品线/果切整线等；果切品种再多也只计 1），用于组合单与线数评分 */
   unlockedLineCount: number;
 }
 
@@ -135,17 +135,9 @@ function _toolPower(lines: UnlockedLines): number {
       powers.push(_linePower(toolLevel));
     }
   }
-  for (const line of [
-    FoodLine.CUT_AVOCADO,
-    FoodLine.CUT_WATERMELON,
-    FoodLine.CUT_PINEAPPLE,
-    FoodLine.CUT_DRAGONFRUIT,
-    FoodLine.CUT_ORANGE,
-  ]) {
-    const toolLevel = lines.foodToolMaxByLine[line] ?? 0;
-    if (toolLevel > 0) {
-      powers.push(_linePower(toolLevel));
-    }
+  // 果切整条产线只计一次（与 unlockedLineCount 一致），不按 5 个果切品种重复加权
+  if (lines.hasFood && lines.maxFruitCutToolLevel > 0) {
+    powers.push(_linePower(lines.maxFruitCutToolLevel));
   }
   if (powers.length === 0) return 0;
   return powers.reduce((a, b) => a + b, 0) / powers.length;

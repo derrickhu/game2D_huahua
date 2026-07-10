@@ -240,21 +240,32 @@ function tryGenerateCombo(
   const specs = comboOrderSpecsForTier(tier, ulk);
   if (specs.length < 2) return null;
 
-  const shuffled = [...specs].sort(() => rng() - 0.5);
-  const first = shuffled[0]!;
-
-  const second = shuffled.find(s => specKey(s) !== specKey(first));
-  if (!second) return null;
-
-  const used = new Set<string>();
+  const usedIds = new Set<string>();
+  const usedProductIds = new Set<string>();
   const slots: OrderGenSlot[] = [];
 
-  const a = tryPickProductItem(first, ulk, used, tier, rng, playerLevel);
+  /** 按池权重抽产品（果切整池共享 FRUIT_CUT_ORDER_POOL_WEIGHT），再落到具体 item */
+  const pickWeightedDistinctSlot = (): string | null => {
+    const available = specs.filter(s => !usedProductIds.has(specKey(s)));
+    if (available.length === 0) return null;
+    for (let attempt = 0; attempt < 24; attempt++) {
+      const spec = pickWeightedSpec(available, rng);
+      if (!spec) return null;
+      const itemId = tryPickProductItem(spec, ulk, usedIds, tier, rng, playerLevel);
+      if (itemId) {
+        usedProductIds.add(spec.productId);
+        usedIds.add(itemId);
+        return itemId;
+      }
+    }
+    return null;
+  };
+
+  const a = pickWeightedDistinctSlot();
   if (!a) return null;
-  used.add(a);
   slots.push({ itemId: a });
 
-  const b = tryPickProductItem(second, ulk, used, tier, rng, playerLevel);
+  const b = pickWeightedDistinctSlot();
   if (!b) return null;
   slots.push({ itemId: b });
 
@@ -270,13 +281,8 @@ function tryGenerateCombo(
     rng() < thirdSlotChance &&
     ulk.unlockedLineCount >= ORDER_COMBO_MIN_UNLOCKED_LINES_FOR_THIRD_SLOT
   ) {
-    const third = shuffled.find(
-      s => specKey(s) !== specKey(first) && specKey(s) !== specKey(second),
-    );
-    if (third) {
-      const c = tryPickProductItem(third, ulk, used, tier, rng, playerLevel);
-      if (c) slots.push({ itemId: c });
-    }
+    const c = pickWeightedDistinctSlot();
+    if (c) slots.push({ itemId: c });
   }
 
   return slots;

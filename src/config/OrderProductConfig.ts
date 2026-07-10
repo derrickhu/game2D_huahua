@@ -55,7 +55,11 @@ const FOOD_B_A_WEIGHT: Record<OrderTier, number> = { C: 0, B: 1, A: 1, S: 0 };
 const FOOD_B_A_S_WEIGHT: Record<OrderTier, number> = { C: 0, B: 1, A: 1, S: 1 };
 const FOOD_S_ONLY_WEIGHT: Record<OrderTier, number> = { C: 0, B: 0, A: 0, S: 1 };
 const FOOD_A_S_ONLY_WEIGHT: Record<OrderTier, number> = { C: 0, B: 0, A: 1, S: 1 };
-const FRUIT_CUT_ORDER_POOL_WEIGHT = 0.75;
+/**
+ * 果切整池相对花池/饮品池的权重（池内再均分到具体果切品种）。
+ * 明显低于 1，使「水果」整类低于饮品池单条线的体感。
+ */
+const FRUIT_CUT_ORDER_POOL_WEIGHT = 0.25;
 
 /** 棋盘同时有可产出农田（L3+）与果切工具时，才允许刷果切订单。 */
 export function hasFruitCutOrderCapability(ulk: UnlockedLines): boolean {
