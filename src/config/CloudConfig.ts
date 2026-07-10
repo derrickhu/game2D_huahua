@@ -66,6 +66,7 @@ export const CLOUD_SYNC_ALLOWLIST = [
   'huahua_ad_entitlements',
   'huahua_newbie_gift_pack',
   'huahua_weekend_huayuan_boost',
+  'huahua_tuesday_stamina_unlimited',
   'huahua_furniture_workshop',
   'huahua_feature_grants',
   'huahua_settings',

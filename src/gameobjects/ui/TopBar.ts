@@ -16,6 +16,7 @@ import { CurrencyManager } from '@/managers/CurrencyManager';
 import { GMManager } from '@/managers/GMManager';
 import { EventBoardManager } from '@/managers/EventBoardManager';
 import { WeekendHuayuanBoostManager } from '@/managers/WeekendHuayuanBoostManager';
+import { TuesdayStaminaUnlimitedManager } from '@/managers/TuesdayStaminaUnlimitedManager';
 import {
   isJewelryEventUnlocked,
 } from '@/config/EventBoardConfig';
@@ -72,6 +73,8 @@ const SHOP_ICON = 56;
 const SHOP_HIT = SHOP_ICON + 18;
 /** 周末活动入口：约为商店图标 2 倍显示尺寸 */
 const WEEKEND_ICON = SHOP_ICON * 2;
+/** 周二体力无限：略大于商店、明显小于周末（避免闪电信封图过大） */
+const TUESDAY_ICON = Math.round(SHOP_ICON * 1.35);
 const WEEKEND_HIT = WEEKEND_ICON + 24;
 /** 顶栏右侧为系统菜单胶囊预留，GM 入口在商店/钻石条右缘与此之间 */
 const RIGHT_MENU_RESERVE = 172;
@@ -376,8 +379,11 @@ export class TopBar extends PIXI.Container {
   private _weekendCountdownWrap: PIXI.Container | null = null;
   private _weekendCountdownText: PIXI.Text | null = null;
   private _lastWeekendCountdown = '';
+  private _limitedEventKind: 'weekend' | 'tuesday' | null = null;
 
-  /** 周末活动：商店旁 NB2 物件图标 → 宣传页；图标下显示距周一 0 点结束倒计时 */
+  /**
+   * 限时活动入口（商店旁）：周末花愿 / 周二体力无限互斥，共用槽位与倒计时样式。
+   */
   private _buildWeekendBoostButton(): void {
     const root = new PIXI.Container();
     this._weekendBoostRoot = root;
@@ -395,15 +401,27 @@ export class TopBar extends PIXI.Container {
       root.removeChildren();
       this._weekendCountdownText = null;
       this._weekendCountdownWrap = null;
-      const tex = TextureCache.get('icon_weekend_huayuan_boost_nb2');
+
+      const weekendOn = WeekendHuayuanBoostManager.isAvailableToday();
+      const tuesdayOn = TuesdayStaminaUnlimitedManager.isAvailableToday();
+      this._limitedEventKind = weekendOn ? 'weekend' : tuesdayOn ? 'tuesday' : null;
+
+      const isTuesday = this._limitedEventKind === 'tuesday';
+      const iconKey = isTuesday
+        ? 'icon_tuesday_stamina_unlimited_nb2'
+        : 'icon_weekend_huayuan_boost_nb2';
+      const fallbackLabel = isTuesday ? '体力' : '周末';
+      const iconSize = isTuesday ? TUESDAY_ICON : WEEKEND_ICON;
+
+      const tex = TextureCache.get(iconKey);
       if (tex) {
         const sp = new PIXI.Sprite(tex);
         sp.anchor.set(0.5);
-        sp.width = WEEKEND_ICON;
-        sp.height = WEEKEND_ICON;
+        sp.width = iconSize;
+        sp.height = iconSize;
         root.addChild(sp);
       } else {
-        const fb = new PIXI.Text('周末', {
+        const fb = new PIXI.Text(fallbackLabel, {
           fontSize: 14,
           fill: 0xff7f66,
           fontFamily: FONT_FAMILY,
@@ -414,7 +432,7 @@ export class TopBar extends PIXI.Container {
       }
 
       const countdownWrap = new PIXI.Container();
-      countdownWrap.position.set(0, WEEKEND_ICON / 2 - 6);
+      countdownWrap.position.set(0, iconSize / 2 - 6);
       const countdownBg = new PIXI.Graphics();
       countdownBg.beginFill(0x4e342e, 0.92);
       countdownBg.drawRoundedRect(-58, 0, 116, 24, 12);
@@ -435,7 +453,7 @@ export class TopBar extends PIXI.Container {
       this._weekendCountdownWrap = countdownWrap;
       this._weekendCountdownText = countdown;
 
-      root.visible = WeekendHuayuanBoostManager.isAvailableToday();
+      root.visible = this._limitedEventKind !== null;
       this._lastWeekendCountdown = '';
       this.updateWeekendCountdown();
     };
@@ -443,18 +461,27 @@ export class TopBar extends PIXI.Container {
     this._bindButtonClickSfx(root);
     root.on('pointertap', (e: PIXI.FederatedPointerEvent) => {
       e.stopPropagation();
-      EventBus.emit('panel:openWeekendHuayuanBoost');
+      if (this._limitedEventKind === 'tuesday') {
+        EventBus.emit('panel:openTuesdayStaminaUnlimited');
+      } else {
+        EventBus.emit('panel:openWeekendHuayuanBoost');
+      }
     });
     EventBus.on('weekendHuayuanBoost:changed', draw);
+    EventBus.on('tuesdayStaminaUnlimited:changed', draw);
     draw();
     this.addChild(root);
     this._gmSlotLeft += WEEKEND_HIT + 8;
   }
 
-  /** 顶栏周末活动倒计时（周六 0 点～周一 0 点，按结束时刻） */
+  /** 顶栏限时活动倒计时（周末花愿或周二体力无限） */
   updateWeekendCountdown(): void {
     if (!this._weekendCountdownText || !this._weekendBoostRoot) return;
-    const label = WeekendHuayuanBoostManager.countdownLabel();
+    const label = this._limitedEventKind === 'tuesday'
+      ? TuesdayStaminaUnlimitedManager.countdownLabel()
+      : this._limitedEventKind === 'weekend'
+        ? WeekendHuayuanBoostManager.countdownLabel()
+        : null;
     if (!label) {
       this._weekendBoostRoot.visible = false;
       return;

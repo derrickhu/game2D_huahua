@@ -117,8 +117,10 @@ import { RewardBoxManager } from '@/managers/RewardBoxManager';
 import { MERGE_BUBBLE_DISPLAY_NAME } from '@/config/MergeCompanionConfig';
 import { RoomLayoutManager } from '@/managers/RoomLayoutManager';
 import { WeekendHuayuanBoostManager } from '@/managers/WeekendHuayuanBoostManager';
+import { TuesdayStaminaUnlimitedManager } from '@/managers/TuesdayStaminaUnlimitedManager';
 import { NewbieGiftPackManager } from '@/managers/NewbieGiftPackManager';
 import { WeekendHuayuanBoostPanel } from '@/gameobjects/ui/WeekendHuayuanBoostPanel';
+import { TuesdayStaminaUnlimitedPanel } from '@/gameobjects/ui/TuesdayStaminaUnlimitedPanel';
 import { BuyFurnitureHintManager } from '@/managers/BuyFurnitureHintManager';
 import { RewardBoxHintManager } from '@/managers/RewardBoxHintManager';
 import { BuyFurnitureHintOverlay } from '@/gameobjects/ui/BuyFurnitureHintOverlay';
@@ -209,6 +211,7 @@ export class MainScene implements Scene {
   /** 合成顶栏 · 全屏摊位购买商店（NB2 框体） */
   private _merchShopPanel!: MerchShopPanel;
   private _weekendHuayuanBoostPanel!: WeekendHuayuanBoostPanel;
+  private _tuesdayStaminaUnlimitedPanel!: TuesdayStaminaUnlimitedPanel;
 
   private _affinityCardDropPopup!: AffinityCardDropPopup;
   private _affinityCodexPanel!: AffinityCodexPanel;
@@ -243,6 +246,7 @@ export class MainScene implements Scene {
 
       // 启动核心管理器
       WeekendHuayuanBoostManager.init();
+      TuesdayStaminaUnlimitedManager.init();
       CustomerManager.init();
       QuestManager.init();
       RewardBoxHintManager.init();
@@ -360,10 +364,12 @@ export class MainScene implements Scene {
     const offlineReward = IdleManager.calculateOfflineReward();
     if (offlineReward && !TutorialManager.isActive) {
       this._offlineRewardPanel.show(offlineReward);
+      this._scheduleLimitedEventPromoAutoOpen(3200);
       return;
     }
 
     if (this._tryShowFruitCutUpdateGrantPrompt()) {
+      this._scheduleLimitedEventPromoAutoOpen(3200);
       return;
     }
 
@@ -382,9 +388,37 @@ export class MainScene implements Scene {
       ToastMessage.show('每日挑战有可领取奖励！');
     }
 
+    this._scheduleLimitedEventPromoAutoOpen();
     this._scheduleBuyFurnitureHint(2800);
     RewardBoxHintManager.onMainSceneEnter();
     this._scheduleRewardBoxHint(6000, true);
+  }
+
+  /**
+   * 限时活动（周末花愿 / 周二体力无限）生效当日首次进主界面自动弹宣传页。
+   * 签到等弹窗优先，延迟后再尝试；教程中不弹。
+   */
+  private _scheduleLimitedEventPromoAutoOpen(delayMs = 0): void {
+    const baseDelay = CheckInManager.canCheckIn ? 2600 : 1200;
+    const delay = delayMs > 0 ? delayMs : baseDelay;
+    setTimeout(() => {
+      if (SceneManager.current?.name !== 'main') return;
+      if (TutorialManager.isActive) return;
+      if (this._checkInPanel?.visible) {
+        this._scheduleLimitedEventPromoAutoOpen(1600);
+        return;
+      }
+      if (this._weekendHuayuanBoostPanel?.isOpen || this._tuesdayStaminaUnlimitedPanel?.isOpen) {
+        return;
+      }
+      if (WeekendHuayuanBoostManager.shouldAutoOpenOnMainEnter()) {
+        EventBus.emit('panel:openWeekendHuayuanBoost');
+        return;
+      }
+      if (TuesdayStaminaUnlimitedManager.shouldAutoOpenOnMainEnter()) {
+        EventBus.emit('panel:openTuesdayStaminaUnlimited');
+      }
+    }, delay);
   }
 
   private _buildUI(): void {
@@ -545,6 +579,9 @@ export class MainScene implements Scene {
 
     this._weekendHuayuanBoostPanel = new WeekendHuayuanBoostPanel();
     overlay.addChild(this._weekendHuayuanBoostPanel);
+
+    this._tuesdayStaminaUnlimitedPanel = new TuesdayStaminaUnlimitedPanel();
+    overlay.addChild(this._tuesdayStaminaUnlimitedPanel);
 
     this._affinityCardDropPopup = new AffinityCardDropPopup();
     overlay.addChild(this._affinityCardDropPopup);
@@ -1446,6 +1483,7 @@ export class MainScene implements Scene {
       }
       this._scheduleBuyFurnitureHint(3500);
       this._scheduleRewardBoxHint(2800, true);
+      this._scheduleLimitedEventPromoAutoOpen(2800);
     });
 
     EventBus.on('rewardBoxHint:pending', () => {
@@ -1501,6 +1539,13 @@ export class MainScene implements Scene {
       const cur = SceneManager.current?.name;
       if (cur !== 'main') return;
       this._weekendHuayuanBoostPanel.open();
+    });
+
+    EventBus.on('panel:openTuesdayStaminaUnlimited', () => {
+      if (TutorialManager.isActive) return;
+      const cur = SceneManager.current?.name;
+      if (cur !== 'main' && cur !== 'shop') return;
+      this._tuesdayStaminaUnlimitedPanel.open();
     });
 
     // 兼容旧事件：熟客资料卡已废弃，统一跳友谊图鉴
@@ -1973,6 +2018,7 @@ export class MainScene implements Scene {
     this._hapticSystem.update(dt);
     ChallengeManager.update(dt);
     WeekendHuayuanBoostManager.update(dt);
+    TuesdayStaminaUnlimitedManager.update(dt);
 
     // 客人滚动区惯性动画
     this._customerScrollArea.update(dt);

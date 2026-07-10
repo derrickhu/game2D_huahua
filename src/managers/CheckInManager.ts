@@ -430,6 +430,14 @@ class CheckInManagerClass {
     EventBus.emit('checkin:gmVirtualDayAdvanced');
   }
 
+  /** GM：直接设置虚拟日期偏移（用于跳到指定星期测试活动入口） */
+  gmSetVirtualDayOffset(days: number): void {
+    this._gmDateOffsetDays = Math.trunc(Number.isFinite(days) ? days : 0);
+    this._saveState();
+    this._checkNewDay();
+    EventBus.emit('checkin:gmVirtualDayAdvanced');
+  }
+
   /** GM：直接覆盖连续签到天数（用于测试 DailyCandy 连签里程碑） */
   gmSetConsecutiveDays(n: number): void {
     const clamped = Math.max(0, Math.floor(n));

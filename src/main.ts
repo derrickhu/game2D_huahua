@@ -29,6 +29,7 @@ import { TutorialManager } from '@/managers/TutorialManager';
 import { DecorationManager } from '@/managers/DecorationManager';
 import { NewbieGiftPackManager } from '@/managers/NewbieGiftPackManager';
 import { FurnitureWorkshopManager } from '@/managers/FurnitureWorkshopManager';
+import { TuesdayStaminaUnlimitedManager } from '@/managers/TuesdayStaminaUnlimitedManager';
 import { UserIdentityManager } from '@/managers/UserIdentityManager';
 import { WechatGiftManager } from '@/managers/WechatGiftManager';
 import { WechatWelfareManager } from '@/managers/WechatWelfareManager';
@@ -179,6 +180,9 @@ async function main(): Promise<void> {
       }
       if (info.changedKeys.includes('huahua_furniture_workshop')) {
         FurnitureWorkshopManager.reloadFromStorage();
+      }
+      if (info.changedKeys.includes('huahua_tuesday_stamina_unlimited')) {
+        TuesdayStaminaUnlimitedManager.reloadFromStorage();
       }
       if (info.changedKeys.includes('huahua_save')) {
         if (initialSaveLoaded) {

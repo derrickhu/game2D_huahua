@@ -1,0 +1,15 @@
+Premium mobile game HUD activity icon, 1:1, readable at 64 pixels, matching a cozy pastel flower-shop merge game. Use the attached real energy icon as the main shape and color reference.
+
+Design a clean "Tuesday stamina value deal" icon:
+- Main object: one large polished stamina lightning-bolt token, very close to the attached real icon: yellow-lime glow, mint green lower shadow, purple/dark outline, angular bolt silhouette, glossy highlights.
+- The bolt sits partly inside a small pastel peach gift envelope / coupon pouch, suggesting a valuable reward pack. The pouch is simple, refined, and supports the bolt without covering it.
+- Add a tiny coral calendar corner tag at upper right, with two binder dots only, no readable text and no numbers.
+- Add 2 or 3 small pale-gold sparkles.
+
+Art direction: refined and polished like the project's friendship card / progress echo UI, soft chocolate outlines, subtle gradients, high-quality mobile-game icon. Not doodle-like, not childish, not cluttered.
+
+Generous margin. NO square UI button frame, NO white border, NO lower circle badge, NO teal coin, NO peacock feathers, NO character, NO tiny clutter.
+
+Background pure solid white #FFFFFF with clear object silhouette for model background removal.
+
+No watermark, no readable text, no numbers, no letters.

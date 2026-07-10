@@ -9,6 +9,8 @@ const CHECK_INTERVAL_SEC = 60;
 interface WeekendHuayuanBoostState {
   dateKey: string;
   activated: boolean;
+  /** 活动日已展示过宣传页（含自动弹 / 手动点开），当日不再自动弹 */
+  promoShownDate: string;
 }
 
 /** 与签到 GM 虚拟日偏移共用，便于「下一天」测试 */
@@ -45,7 +47,7 @@ function getEventPeriodEnd(now = effectiveNow()): Date | null {
 }
 
 function emptyState(): WeekendHuayuanBoostState {
-  return { dateKey: localDateKey(), activated: false };
+  return { dateKey: localDateKey(), activated: false, promoShownDate: '' };
 }
 
 class WeekendHuayuanBoostManagerClass {
@@ -60,6 +62,7 @@ class WeekendHuayuanBoostManagerClass {
         this._state = {
           dateKey: saved.dateKey,
           activated: !!saved.activated,
+          promoShownDate: typeof saved.promoShownDate === 'string' ? saved.promoShownDate : '',
         };
       }
       this._loaded = true;
@@ -81,6 +84,21 @@ class WeekendHuayuanBoostManagerClass {
   isAvailableToday(): boolean {
     this.init();
     return isInEventPeriod(effectiveNow());
+  }
+
+  /** 活动生效当日首次进主界面：尚未展示过宣传页则自动弹出 */
+  shouldAutoOpenOnMainEnter(): boolean {
+    this.init();
+    if (!isInEventPeriod()) return false;
+    return this._state.promoShownDate !== localDateKey();
+  }
+
+  markPromoShown(): void {
+    this.init();
+    const today = localDateKey();
+    if (this._state.promoShownDate === today) return;
+    this._state.promoShownDate = today;
+    this._save();
   }
 
   isActive(): boolean {
@@ -115,7 +133,11 @@ class WeekendHuayuanBoostManagerClass {
     if (!isInEventPeriod()) return false;
     const today = localDateKey();
     if (this._state.dateKey !== today || !this._state.activated) {
-      this._state = { dateKey: today, activated: true };
+      this._state = {
+        dateKey: today,
+        activated: true,
+        promoShownDate: this._state.promoShownDate,
+      };
       this._save();
       EventBus.emit('weekendHuayuanBoost:changed');
     }
@@ -128,7 +150,9 @@ class WeekendHuayuanBoostManagerClass {
       this._state.dateKey !== today ||
       (this._state.activated && !isInEventPeriod());
     if (!shouldReset) return;
-    this._state = { dateKey: today, activated: false };
+    const promoShownDate =
+      this._state.dateKey === today ? this._state.promoShownDate : '';
+    this._state = { dateKey: today, activated: false, promoShownDate };
     this._save();
     EventBus.emit('weekendHuayuanBoost:changed');
   }
@@ -136,7 +160,7 @@ class WeekendHuayuanBoostManagerClass {
   /** GM 虚拟下一天后：清除当日激活，按新日历日重算活动期 */
   resetAfterVirtualDayAdvance(): void {
     this.init();
-    this._state = { dateKey: localDateKey(), activated: false };
+    this._state = emptyState();
     this._save();
     EventBus.emit('weekendHuayuanBoost:changed');
   }

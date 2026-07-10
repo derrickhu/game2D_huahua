@@ -51,6 +51,8 @@ export enum AdScene {
   NEWBIE_GIFT_PACK = 'newbie_gift_pack',
   /** 周末订单花愿 +50% 活动 */
   WEEKEND_HUAYUAN_BOOST = 'weekend_huayuan_boost',
+  /** 周二体力无限：看广告攒进度领体力包 */
+  TUESDAY_STAMINA_UNLIMITED = 'tuesday_stamina_unlimited',
   /** 形象换装 · 清涟荷影：广告解锁购买资格 */
   DRESSUP_OUTFIT_QINGLIAN = 'dressup_outfit_qinglian',
   /** 花间珠匣 · 进度回响广告奖励 */

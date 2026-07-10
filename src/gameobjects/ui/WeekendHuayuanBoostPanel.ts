@@ -66,6 +66,7 @@ export class WeekendHuayuanBoostPanel extends PIXI.Container {
   private _openReady(): void {
     if (this._isOpen) return;
     this._isOpen = true;
+    WeekendHuayuanBoostManager.markPromoShown();
     OverlayManager.bringToFront();
     this.visible = true;
     this._rebuildArt();

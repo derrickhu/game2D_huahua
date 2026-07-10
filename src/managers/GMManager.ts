@@ -27,6 +27,7 @@ import { SaveManager } from './SaveManager';
 import { FlowerSignTicketManager } from './FlowerSignTicketManager';
 import { CheckInManager } from './CheckInManager';
 import { WeekendHuayuanBoostManager } from './WeekendHuayuanBoostManager';
+import { TuesdayStaminaUnlimitedManager } from './TuesdayStaminaUnlimitedManager';
 import { LevelManager } from './LevelManager';
 import { DecorationManager } from './DecorationManager';
 import { EventManager } from './EventManager';
@@ -1132,12 +1133,57 @@ class GMManagerClass {
       execute: () => {
         CheckInManager.gmAdvanceVirtualDay();
         WeekendHuayuanBoostManager.resetAfterVirtualDayAdvance();
+        TuesdayStaminaUnlimitedManager.resetAfterVirtualDayAdvance();
         const h = WeekendHuayuanBoostManager.countdownLabel();
+        const t = TuesdayStaminaUnlimitedManager.countdownLabel();
         return [
           ` 虚拟日 +1，偏移=${CheckInManager.gmDateOffsetDays} 天`,
           ` 周末入口=${WeekendHuayuanBoostManager.isAvailableToday() ? '显示' : '隐藏'}`,
           ` 已激活=${WeekendHuayuanBoostManager.isActive() ? '是' : '否'}`,
-          h ? ` 倒计时：${h}` : ' 倒计时：—',
+          h ? ` 周末倒计时：${h}` : ' 周末倒计时：—',
+          ` 周二体力入口=${TuesdayStaminaUnlimitedManager.isAvailableToday() ? '显示' : '隐藏'}`,
+          t ? ` 周二倒计时：${t}` : ' 周二倒计时：—',
+        ].join('；');
+      },
+    });
+
+    this._commands.push({
+      id: 'gm_tuesday_stamina_jump_to_tuesday',
+      group: ' 系统测试',
+      name: ' 周二体力：跳到周二',
+      desc: '把 GM 虚拟日期偏移到最近的周二，并重置三档进度用于测试入口/领奖',
+      execute: () => {
+        const baseOffset = CheckInManager.gmDateOffsetDays;
+        let addDays = 0;
+        for (let i = 0; i < 7; i++) {
+          const d = new Date();
+          d.setUTCDate(d.getUTCDate() + baseOffset + i);
+          if (d.getDay() === 2) {
+            addDays = i;
+            break;
+          }
+        }
+        CheckInManager.gmSetVirtualDayOffset(baseOffset + addDays);
+        WeekendHuayuanBoostManager.resetAfterVirtualDayAdvance();
+        TuesdayStaminaUnlimitedManager.resetAfterVirtualDayAdvance();
+        return [
+          ` 已跳到最近周二，偏移=${CheckInManager.gmDateOffsetDays} 天`,
+          ` 入口=${TuesdayStaminaUnlimitedManager.isAvailableToday() ? '显示' : '隐藏'}`,
+          ` 倒计时=${TuesdayStaminaUnlimitedManager.countdownLabel() ?? '—'}`,
+        ].join('；');
+      },
+    });
+
+    this._commands.push({
+      id: 'gm_tuesday_stamina_reset',
+      group: ' 系统测试',
+      name: ' 周二体力：重置当日进度',
+      desc: '清空三档广告进度与领取状态（需当前为周二才可测入口）',
+      execute: () => {
+        TuesdayStaminaUnlimitedManager.resetAfterVirtualDayAdvance();
+        return [
+          ` 入口=${TuesdayStaminaUnlimitedManager.isAvailableToday() ? '显示' : '隐藏'}`,
+          ` 倒计时=${TuesdayStaminaUnlimitedManager.countdownLabel() ?? '—'}`,
         ].join('；');
       },
     });

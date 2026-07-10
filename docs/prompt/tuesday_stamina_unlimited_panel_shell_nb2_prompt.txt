@@ -1,0 +1,43 @@
+Premium 2D mobile game activity panel shell for a cozy pastel flower-shop merge game, vertical full-screen 9:16. Use the attached friendship-card and progress-echo panels ONLY as quality/style references: refined layered UI, delicate floral details, soft brown outlines, subtle gradients, polished high-end casual-game finish. Do NOT copy their layout, title shape, peacock fan, jewelry ornaments, or bottom decorations.
+
+Create a completely new Tuesday stamina promotion page. It must feel delicate, harmonious, and clickable, not sketchy, not doodle-like, not a random pile of icons.
+
+Theme and message:
+- "Tuesday value stamina supply" / a generous limited-time stamina deal.
+- It should visually say: lots of stamina, very worthwhile, click to get rewards.
+- Main motif: a beautiful pastel flower-shop gift box / supply basket / glass reward jar overflowing with stamina energy icons, coupon ribbons, petals, and warm golden sparkles.
+
+Panel structure:
+- Tall rounded modal with thick pastel peach-pink outer rim, thin mint highlight inner rim, warm cream body, and soft floating shadow.
+- Top header is elegant but new: a rounded flower-shop signboard with soft mint enamel, peach ribbon loops, small blossoms, and gold trim. The exact title text 体力无限 is centered on it, large and refined, cream-gold letters with chocolate outline.
+- Top-right: chunky circular coral-red close button with simple white X.
+
+Upper promotional art area:
+- Design a polished centerpiece: an open pastel gift box or transparent reward jar sitting on a small flower-shop counter, overflowing with many stamina lightning icons.
+- The stamina icons must closely match the provided real game energy icon: angular lightning-bolt silhouette, yellow-lime glow, mint green lower shadow, purple/dark outline, glossy white highlights. Use them as reward tokens, not weather.
+- Show abundance through a controlled composition: several medium icons floating upward, some tucked inside the gift box/jar, and a neat pile near the base. Avoid chaotic clutter and avoid too many identical copies.
+- Add value/sale feeling with coupon ribbons and a small golden tag, but no numbers.
+- No clouds raining, no rain lines, no storm, no lightning weather.
+
+Integrated slogan:
+- The slogan must be printed on decorative UI elements, not floating naked text.
+- Use a peach coupon ribbon with exact Chinese text 周二特惠.
+- Use a mint-gold curved banner attached to the gift box / jar with exact Chinese text 体力补给超值拿.
+- Lettering should be refined rounded Chinese UI font, cream fill, chocolate outline, slight bevel/highlight, aligned to the ribbon/banner curve.
+
+Lower content reservation:
+- Reserve a large clean blank purchase area in the lower half for code-drawn reward rows. It must be a refined cream coupon board with rounded corners, subtle inner shadow, thin mint and peach double border, and small decorative corner flowers.
+- Keep the inside of this area EMPTY: no rows, no buttons, no icons, no numbers, no progress bars, no reward items.
+- The blank area should be visually connected to the upper art but clearly readable for UI rows.
+
+Bottom decoration:
+- Delicate flower-shop bottom trim: folded peach ribbon, tiny blossoms, mint leaves, gold sparkles, and two small stamina charms. Elegant and coordinated, not a big pile, not peacock, not jewelry pendants.
+
+Art quality requirements:
+- Refined, detailed, high quality mobile game UI. Smooth gradients, subtle highlights, balanced spacing, consistent line weight, soft chocolate outlines.
+- Avoid simple flat doodle, thick crude shapes, messy icon clusters, childish sketch look, photorealism, 3D render, watermark, logo.
+- Color palette: warm cream, peach pink, mint green, soft lavender accents, pale gold, small coral highlights. Harmonious and close to friendship-card/progress-echo polish.
+
+Background outside the panel: pure solid white #FFFFFF, no texture, no shadow outside the panel touching image edges. The panel should have a clear silhouette and margins so background removal model can cut it out cleanly.
+
+No extra text besides exact title 体力无限 and exact slogans 周二特惠 and 体力补给超值拿. No numbers, no English letters.

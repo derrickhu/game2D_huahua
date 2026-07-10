@@ -34,6 +34,8 @@ const MAIN_IMAGE_MAP: Record<string, string> = {
   icon_shop_nb2: 'images/ui/icon_shop_nb2.png',
   /** 周末订单花愿 +50% 顶栏入口（NB2 物件 + rembg） */
   icon_weekend_huayuan_boost_nb2: 'images/ui/icon_weekend_huayuan_boost_nb2.png',
+  /** 周二体力无限顶栏入口（NB2 + rembg） */
+  icon_tuesday_stamina_unlimited_nb2: 'images/ui/icon_tuesday_stamina_unlimited_nb2.png',
   /** 花间珠匣活动入口：打开首饰盒 + 大颗宝石（主页面常驻入口，留在主包） */
   icon_jewelry_event_nb2: 'images/ui/icon_jewelry_event_nb2.png',
   /** NB2+rembg：激励视频 / 看广告统一小图标（粉紫边框 + 播放三角） */
@@ -287,6 +289,8 @@ const PANELS_IMAGE_MAP: Record<string, string> = {
   daily_challenge_panel_shell_nb2: 'subpkg_panels/images/ui/daily_challenge_panel_shell_nb2.png',
   /** 周末花愿加成宣传卡（rembg 透明底，按钮文案由代码叠） */
   weekend_huayuan_boost_promo_panel_nb2: 'subpkg_panels/images/ui/weekend_huayuan_boost_promo_panel_nb2.png',
+  /** 周二体力无限活动壳（绿幕去底；上半宣传 + 下半空白叠购买行） */
+  tuesday_stamina_unlimited_panel_shell_nb2: 'subpkg_panels/images/ui/tuesday_stamina_unlimited_panel_shell_nb2.png',
   /** 清涟荷影新手礼包宣传卡（空奖励格 + 空按钮，文案与图标由代码叠） */
   newbie_gift_qinglian_promo_panel_nb2: 'subpkg_panels/images/ui/newbie_gift_qinglian_promo_panel_nb2.png',
   /** 中间浅蓝任务区底板（空，叠在列表背后） */
@@ -1079,6 +1083,7 @@ const SHOP_WARMUP_KEYS = [
   'icon_worldmap_nav',
   'icon_wishing_nav',
   'icon_weekend_huayuan_boost_nb2',
+  'icon_tuesday_stamina_unlimited_nb2',
   'icon_jewelry_event_nb2',
 ] as const;
 
@@ -1241,6 +1246,11 @@ const WEEKEND_HUAYUAN_BOOST_PANEL_KEYS = [
   'weekend_huayuan_boost_promo_panel_nb2',
 ] as const;
 
+const TUESDAY_STAMINA_UNLIMITED_PANEL_KEYS = [
+  'tuesday_stamina_unlimited_panel_shell_nb2',
+  'icon_energy',
+] as const;
+
 const NEWBIE_GIFT_PANEL_KEYS = [
   'newbie_gift_qinglian_promo_panel_nb2',
   'icon_coin',
@@ -1305,6 +1315,7 @@ export type TextureAssetGroup =
   | 'merchShop'
   | 'flowerSignGacha'
   | 'weekendHuayuanBoost'
+  | 'tuesdayStaminaUnlimited'
   | 'newbieGiftPack'
   | 'main'
   | 'items'
@@ -1333,6 +1344,7 @@ const ASSET_GROUP_KEYS: Record<TextureAssetGroup, readonly string[]> = {
   merchShop: MERCH_SHOP_PANEL_KEYS,
   flowerSignGacha: FLOWER_SIGN_GACHA_PANEL_KEYS,
   weekendHuayuanBoost: WEEKEND_HUAYUAN_BOOST_PANEL_KEYS,
+  tuesdayStaminaUnlimited: TUESDAY_STAMINA_UNLIMITED_PANEL_KEYS,
   newbieGiftPack: NEWBIE_GIFT_PANEL_KEYS,
   main: [],
   items: [],
@@ -1374,6 +1386,7 @@ const ASSET_GROUP_NOTIFY_KEYS: Record<TextureAssetGroup, readonly string[]> = {
   merchShop: uniqueKeys(MERCH_SHOP_PANEL_KEYS, ALL_ITEMS_KEYS),
   flowerSignGacha: uniqueKeys(FLOWER_SIGN_GACHA_PANEL_KEYS, ALL_ITEMS_KEYS, ALL_DECO_KEYS),
   weekendHuayuanBoost: [...WEEKEND_HUAYUAN_BOOST_PANEL_KEYS],
+  tuesdayStaminaUnlimited: [...TUESDAY_STAMINA_UNLIMITED_PANEL_KEYS],
   newbieGiftPack: uniqueKeys(NEWBIE_GIFT_PANEL_KEYS, ALL_DECO_KEYS, ALL_ITEMS_KEYS),
 };
 
