@@ -94,8 +94,8 @@ export const ORDER_SPAWN_VALIDATE_MAX_ATTEMPTS = 4;
  */
 export const ORDER_SPAWN_MAX_ATTEMPTS = 10;
 
-/** 限时钻石订单：6 级后开放，碎片化游玩按小时级倒计时 */
-export const TIMED_DIAMOND_ORDER_MIN_PLAYER_LEVEL = 6;
+/** 限时钻石订单：7 级后开放，碎片化游玩按小时级倒计时 */
+export const TIMED_DIAMOND_ORDER_MIN_PLAYER_LEVEL = 7;
 /** 每次正常刷客时的基础概率；再由每日上限与“当前已有一单”约束压住频率 */
 export const TIMED_DIAMOND_ORDER_BASE_CHANCE = 0.06;
 /** 当天还没出过限时单时，明显提高概率，让每日首单更有体感 */

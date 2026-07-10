@@ -123,8 +123,20 @@ const LEVEL_UNLOCK_BASE: Record<number, Omit<LevelUnlockDef, 'level'>> = {
     ],
   },
   6: {
-    ceremonyTitle: '烘焙之光',
+    ceremonyTitle: '匠坊初启',
     entries: [
+      {
+        kind: 'feature',
+        title: '家具工坊',
+        desc: '底栏开放工坊入口，购买图纸后可制作专属家具。',
+        iconKey: 'icon_furniture_workshop',
+      },
+      {
+        kind: 'feature',
+        title: '家具工匠',
+        desc: '订单中会出现家具工匠，完成委托可得工坊材料。',
+        iconKey: 'customer_furniture_craftswoman',
+      },
       {
         kind: 'tool',
         title: '擀面杖 Lv.1',
@@ -175,23 +187,6 @@ const LEVEL_UNLOCK_BASE: Record<number, Omit<LevelUnlockDef, 'level'>> = {
         title: '甜品 Lv.6 / 花束 Lv.7',
         desc: '高阶产物礼包送入收纳盒。',
         iconKey: 'drink_dessert_6',
-      },
-    ],
-  },
-  10: {
-    ceremonyTitle: '匠坊初启',
-    entries: [
-      {
-        kind: 'feature',
-        title: '家具工坊',
-        desc: '底栏开放工坊入口，购买图纸后可制作专属家具。',
-        iconKey: 'icon_furniture_workshop',
-      },
-      {
-        kind: 'feature',
-        title: '家具工匠',
-        desc: '订单中会出现家具工匠，完成委托可得工坊材料。',
-        iconKey: 'customer_furniture_craftswoman',
       },
     ],
   },

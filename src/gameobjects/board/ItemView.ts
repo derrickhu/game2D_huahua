@@ -613,6 +613,8 @@ export class ItemView extends PIXI.Container {
         return 0xf5c542;
       case FoodLine.CUT_DRAGONFRUIT:
         return 0xe0568a;
+      case FoodLine.CUT_ORANGE:
+        return 0xff8c42;
       case 'jewelry':
         return 0x8e6ad8;
       case 'jewelry_box':

@@ -1,7 +1,7 @@
 /**
  * 物品配置
  *
- * 产品线：花系（鲜花/绿植各13级、花束10级 + 包装中间品4级）+ 饮品：蝴蝶/甜品各10级、冷饮8级 + 食物：整果4级（牛油果→菠萝→火龙果→西瓜）+ 果切各3级
+ * 产品线：花系（鲜花/绿植各13级、花束10级 + 包装中间品4级）+ 饮品：蝴蝶/甜品各10级、冷饮8级 + 食物：整果5级（牛油果→菠萝→火龙果→西瓜→香橙）+ 果切各3级
  * 工具线：园艺6级、包装5级、捕虫网/冷饮/烘焙各5级；工具1–2级仅合成，其后可产出
  * 宝箱：5级；红包：4级（散落花愿利是，双击入账花愿）；钻石袋 / 体力箱工具：各 3 级（散落货币块）
  */
@@ -46,12 +46,13 @@ export enum DrinkLine {
 }
 
 export enum FoodLine {
-  /** 整果合成线 L1 牛油果 → L2 菠萝 → L3 火龙果 → L4 西瓜 */
+  /** 整果合成线 L1 牛油果 → L2 菠萝 → L3 火龙果 → L4 西瓜 → L5 香橙 */
   FRUIT = 'fruit',
   CUT_AVOCADO = 'cut_avocado',
   CUT_WATERMELON = 'cut_watermelon',
   CUT_PINEAPPLE = 'cut_pineapple',
   CUT_DRAGONFRUIT = 'cut_dragonfruit',
+  CUT_ORANGE = 'cut_orange',
 }
 
 export enum CurrencyLine {
@@ -153,11 +154,12 @@ const DRINK_DATA: [DrinkLine, string[]][] = [
 ];
 
 const FOOD_DATA: [FoodLine, string[]][] = [
-  [FoodLine.FRUIT, ['牛油果', '菠萝', '火龙果', '西瓜']],
+  [FoodLine.FRUIT, ['牛油果', '菠萝', '火龙果', '西瓜', '香橙']],
   [FoodLine.CUT_AVOCADO, ['半切牛油果', '木盘牛油果', '牛油果陶碗']],
   [FoodLine.CUT_WATERMELON, ['西瓜角', '竹盘西瓜', '缤纷果篮']],
   [FoodLine.CUT_PINEAPPLE, ['菠萝环片', '竹盘菠萝', '菠萝船']],
   [FoodLine.CUT_DRAGONFRUIT, ['半切火龙果', '木盘火龙果', '火龙果果篮']],
+  [FoodLine.CUT_ORANGE, ['切瓣香橙', '竹盘香橙', '香橙果篮']],
 ];
 
 export const EVENT_JEWELRY_STARTER_BOX_ID = 'event_jewelry_starter_box';
@@ -210,12 +212,13 @@ const TOOL_DATA: [ToolLine, string[]][] = [
   ]],
 ];
 
-/** 整果等级 → 对应果切线（L1 牛油果 … L4 西瓜） */
+/** 整果等级 → 对应果切线（L1 牛油果 … L5 香橙） */
 export const FRUIT_LEVEL_TO_CUT_LINE: Readonly<Record<number, FoodLine>> = {
   1: FoodLine.CUT_AVOCADO,
   2: FoodLine.CUT_PINEAPPLE,
   3: FoodLine.CUT_DRAGONFRUIT,
   4: FoodLine.CUT_WATERMELON,
+  5: FoodLine.CUT_ORANGE,
 };
 
 /** @deprecated 使用 getCutLineForWholeFruit */
@@ -227,6 +230,7 @@ export const LEGACY_WHOLE_FRUIT_ITEM_ID_MAP: Readonly<Record<string, string>> = 
   food_fruit_pineapple_1: 'food_fruit_2',
   food_fruit_dragonfruit_1: 'food_fruit_3',
   food_fruit_watermelon_1: 'food_fruit_4',
+  food_fruit_orange_1: 'food_fruit_5',
 };
 
 /** 果切工具 4 级 → 3 级（去掉 L1 水果刀，原 L2–L4 顺位为 L1–L3） */
@@ -712,7 +716,7 @@ export function getMergeChainName(itemId: string): string {
     [FoodLine.CUT_AVOCADO]: '牛油果果切',
     [FoodLine.CUT_WATERMELON]: '西瓜果切',
     [FoodLine.CUT_PINEAPPLE]: '菠萝果切',
-    [FoodLine.CUT_DRAGONFRUIT]: '火龙果果切',
+    [FoodLine.CUT_ORANGE]: '香橙果切',
     [ToolLine.PLANT]: '园艺工具',
     [ToolLine.ARRANGE]: '包装工具',
     [ToolLine.BUTTERFLY_NET]: '捕虫网',

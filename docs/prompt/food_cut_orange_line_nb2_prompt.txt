@@ -1,0 +1,21 @@
+Square 1:1 image, exactly 1 row x 3 columns on pure flat white background #FFFFFF. Three ORANGE (navel orange) fruit-cut icons only: Column 1 CUT L1, Column 2 CUT L2, Column 3 CUT L3.
+
+Match attached watermelon cut and avocado cut reference style AND flower_bouquet_4: cute polished 2D mobile merge-game icons, high saturation, joyful pastel-friendly colors, rounded plump shapes, smooth gradient shading on surfaces, small white gloss highlights, thin same-family colored outlines in orange/green families (NEVER thick black). Soft 3D volume — NOT photorealistic, NOT dark muddy colors.
+
+GLOBAL RULES:
+- NO knives, forks, spoons, chopsticks, or any utensils.
+- NO cast shadows, drop shadows, or gray blobs on white background. Pure flat white only.
+- NO text, NO watermark, NO gift ribbon bows, NO lacquer gift boxes.
+- NO cartoon eyes, NO mouth, NO face — food objects only, never anthropomorphic.
+- Each icon fills about 55-70% of its cell — compact and readable at 128px. Generous white margin.
+
+Column 1 — CUT L1 (single piece only):
+Exactly ONE large orange wedge segment (about one sixth of a peeled orange), standing upright showing bright orange juicy flesh with simplified white pith membrane lines on the curved back edge. Small hint of orange peel rim on the outer curve. ONLY ONE wedge — do NOT draw a whole peeled orange with multiple segments. Vivid orange and cream-white, instantly readable as fresh orange.
+
+Column 2 — CUT L2 (bamboo tray):
+One round woven bamboo serving tray with visible warm tan bamboo slats and rim (same cute style as watermelon L2 tray). On tray: 4-5 neat round orange slice discs with bright orange flesh and thin white pith ring, fan-arranged. ONE tiny green mint or citrus leaf accent. Warm golden-cream tray, lively orange colors. No utensils.
+
+Column 3 — CUT L3 (premium wicker basket):
+One small woven wicker fruit basket with curved handle, warm honey-brown weave texture and cream cloth liner peeking inside (same basket family as watermelon L3 but orange-themed). Inside: neat bright orange segments and round orange slices as the hero fruit (6-8 pieces). Add colorful garnish accents: 2-3 small red strawberries or raspberries, 1-2 green mint leaves, maybe 1 small yellow kiwi slice round — enough color dots but orange remains dominant. Largest, most festive icon in the row.
+
+Equal column widths, one product centered per cell, no overlap, consistent soft upper-left lighting on objects only.

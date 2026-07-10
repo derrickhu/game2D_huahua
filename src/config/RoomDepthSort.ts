@@ -8,7 +8,12 @@
  * 否则会出现 y 较小者反而盖住 y+1 行的错误遮挡。
  */
 
-import { getDepthSortTypeLift, getDepthSortFeetYFudge, type DecoDef } from '@/config/DecorationConfig';
+import {
+  DecoSlot,
+  getDepthSortTypeLift,
+  getDepthSortFeetYFudge,
+  type DecoDef,
+} from '@/config/DecorationConfig';
 
 /** 每条「floor(y) 台阶」的间隔，须大于同 Y 下 zLayer + stackTie + aux 的最大和 */
 export const ROOM_DEPTH_Y_MULT = 2000;
@@ -34,6 +39,11 @@ const OWNER_FRONT_BIAS = ROOM_DEPTH_Y_MULT - 1;
 
 /** 家具在同一 floor(y) 下的 z 后缀上限，须比 OWNER_FRONT_BIAS 至少小 1 */
 const FURNITURE_Z_SUFFIX_MAX = OWNER_FRONT_BIAS - 1;
+
+/** 顶面可摆：小物脚点相对立柜顶面的容差（设计坐标 px） */
+const TOP_SURFACE_Y_SLACK = 36;
+/** 顶面可摆：水平方向半宽容差（无 sprite 宽时用） */
+const TOP_SURFACE_X_FALLBACK = 70;
 
 export function roomDepthZForFurniture(
   feetY: number,
@@ -62,6 +72,8 @@ export function roomDepthZForPlacement(
   stackTie: number,
   deco: DecoDef,
   depthManualBias?: number,
+  /** 高大家电顶面可摆：额外抬高排序用脚点（仅小物） */
+  topSurfaceFeetBoost = 0,
 ): number {
   if (deco.depthSortFloorMat) {
     return roomDepthZForFloorMat(stackTie);
@@ -72,10 +84,74 @@ export function roomDepthZForPlacement(
     ROOM_DEPTH_AUX_MAX,
   );
   const aux = Math.min(ROOM_DEPTH_AUX_MAX, typeLift + manual);
-  const sortFeetY = feetY + getDepthSortFeetYFudge(deco);
+  const sortFeetY = feetY + getDepthSortFeetYFudge(deco) + Math.max(0, topSurfaceFeetBoost);
   return roomDepthZForFurniture(sortFeetY, zLayer, stackTie, aux);
 }
 
 export function roomDepthZForOwner(feetY: number): number {
   return Math.floor(feetY) * ROOM_DEPTH_Y_MULT + OWNER_FRONT_BIAS;
+}
+
+/** 是否为可摆上台面/顶面的小物（蜡烛、花瓶、小家电等） */
+export function isDepthSortSurfaceItem(deco: DecoDef): boolean {
+  if (deco.depthSortFloorMat) return false;
+  if (deco.slot === DecoSlot.WALLART || deco.slot === DecoSlot.GARDEN) return false;
+  if (deco.slot === DecoSlot.TABLE || deco.slot === DecoSlot.SHELF) return false;
+  if (deco.depthSortTopSurfaceHost) return false;
+  const ds = deco.defaultScale ?? 1;
+  if (deco.slot === DecoSlot.ORNAMENT) {
+    if (deco.decorationPanelTab === 'furniture' && ds > 0.92) return false;
+    if ((deco.decorationPanelTab === 'flower_room' || deco.decorationPanelTab === 'qinglian') && ds > 0.92) {
+      return false;
+    }
+    return true;
+  }
+  if (deco.slot === DecoSlot.LIGHT) {
+    return ds < 0.98;
+  }
+  return false;
+}
+
+export interface DepthSortPeer {
+  decoId: string;
+  x: number;
+  y: number;
+  deco: DecoDef;
+  /** 脚点以上的显示高度（设计坐标）；缺省时用 defaultScale 粗估 */
+  heightAboveFeet?: number;
+  /** 水平半宽（设计坐标）；缺省时用 fallback */
+  halfWidth?: number;
+}
+
+/**
+ * 若小物脚点落在某「顶面可摆」立柜顶面附近，返回应加到排序脚点上的 boost，
+ * 使小物压过该立柜（否则脚点 y 远小于立柜会被整机挡住）。
+ */
+export function getTopSurfaceFeetBoost(
+  item: DepthSortPeer,
+  peers: DepthSortPeer[],
+): number {
+  if (!isDepthSortSurfaceItem(item.deco)) return 0;
+
+  let best = 0;
+  for (const host of peers) {
+    if (host.decoId === item.decoId) continue;
+    if (!host.deco.depthSortTopSurfaceHost) continue;
+
+    const hostH =
+      host.heightAboveFeet ??
+      Math.max(80, Math.round(130 * (host.deco.defaultScale ?? 1) * 0.9 * 0.8));
+    const hostHalfW = host.halfWidth ?? TOP_SURFACE_X_FALLBACK;
+    const topY = host.y - hostH;
+
+    // 小物脚点应在顶面附近（略上/略下都允许）
+    if (item.y < topY - TOP_SURFACE_Y_SLACK) continue;
+    if (item.y > topY + TOP_SURFACE_Y_SLACK * 1.6) continue;
+    if (Math.abs(item.x - host.x) > hostHalfW + 24) continue;
+
+    // 抬到略高于立柜脚点，保证整档压过立柜
+    const boost = host.y - item.y + 8;
+    if (boost > best) best = boost;
+  }
+  return best;
 }

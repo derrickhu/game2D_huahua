@@ -43,7 +43,12 @@ import {
 } from '@/config/SceneRenovationConfig';
 import { ToastMessage } from '@/gameobjects/ui/ToastMessage';
 import { TextureCache } from '@/utils/TextureCache';
-import { ROOM_DEPTH_AUX_MAX, roomDepthZForPlacement } from '@/config/RoomDepthSort';
+import {
+  ROOM_DEPTH_AUX_MAX,
+  getTopSurfaceFeetBoost,
+  roomDepthZForPlacement,
+  type DepthSortPeer,
+} from '@/config/RoomDepthSort';
 
 // ---- 常量 ----
 
@@ -378,41 +383,62 @@ class FurnitureDragSystemClass {
     for (let i = 0; i < layout.length; i++) {
       stackOrder.set(layout[i].decoId, i);
     }
+
+    const peers: DepthSortPeer[] = [];
+    const sprites: PIXI.Sprite[] = [];
     for (const child of this._roomContainer.children) {
-      if (child instanceof PIXI.Sprite && (child as any)._decoId) {
-        const decoId = (child as any)._decoId as string;
-        const placement = RoomLayoutManager.getPlacement(decoId);
-        const deco = DECO_MAP.get(decoId);
-        if (!deco) continue;
-        const feetY = child.y;
-        // 从托盘拖入、尚未写入布局：用当前 y + 高后缀保证浮在前景，避免 zIndex=0 贴后墙
-        if (!placement) {
-          const dc = this._dragCtx;
-          if (dc?.isNew && dc.decoId === decoId && child === dc.sprite) {
-            child.zIndex = roomDepthZForPlacement(
-              feetY,
-              8,
-              999,
-              deco,
-              ROOM_DEPTH_AUX_MAX,
-            );
-            if (dc.newFurnitureGlow) {
-              dc.newFurnitureGlow.zIndex = child.zIndex - 2;
-            }
+      if (!(child instanceof PIXI.Sprite) || !(child as any)._decoId) continue;
+      const decoId = (child as any)._decoId as string;
+      const deco = DECO_MAP.get(decoId);
+      if (!deco) continue;
+      sprites.push(child);
+      peers.push({
+        decoId,
+        x: child.x,
+        y: child.y,
+        deco,
+        heightAboveFeet: Math.abs(child.height) * (child.anchor?.y ?? 0.8),
+        halfWidth: Math.abs(child.width) * 0.5,
+      });
+    }
+
+    for (const child of sprites) {
+      const decoId = (child as any)._decoId as string;
+      const placement = RoomLayoutManager.getPlacement(decoId);
+      const deco = DECO_MAP.get(decoId);
+      if (!deco) continue;
+      const feetY = child.y;
+      const peer = peers.find((p) => p.decoId === decoId)!;
+      const topBoost = getTopSurfaceFeetBoost(peer, peers);
+      // 从托盘拖入、尚未写入布局：用当前 y + 高后缀保证浮在前景，避免 zIndex=0 贴后墙
+      if (!placement) {
+        const dc = this._dragCtx;
+        if (dc?.isNew && dc.decoId === decoId && child === dc.sprite) {
+          child.zIndex = roomDepthZForPlacement(
+            feetY,
+            8,
+            999,
+            deco,
+            ROOM_DEPTH_AUX_MAX,
+            topBoost,
+          );
+          if (dc.newFurnitureGlow) {
+            dc.newFurnitureGlow.zIndex = child.zIndex - 2;
           }
-          continue;
         }
-        const zLayer = placement.zLayer ?? 0;
-        const pi = stackOrder.get(decoId) ?? 0;
-        const stackTie = Math.min(pi, 999);
-        child.zIndex = roomDepthZForPlacement(
-          feetY,
-          zLayer,
-          stackTie,
-          deco,
-          placement.depthManualBias,
-        );
+        continue;
       }
+      const zLayer = placement.zLayer ?? 0;
+      const pi = stackOrder.get(decoId) ?? 0;
+      const stackTie = Math.min(pi, 999);
+      child.zIndex = roomDepthZForPlacement(
+        feetY,
+        zLayer,
+        stackTie,
+        deco,
+        placement.depthManualBias,
+        topBoost,
+      );
     }
     this._roomContainer.sortChildren();
   }

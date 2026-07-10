@@ -1,0 +1,26 @@
+Square 1:1 image, exactly 1 row x 3 columns on pure flat white background #FFFFFF. Three ORANGE (navel orange) fruit-cut icons only: Column 1 CUT L1, Column 2 CUT L2, Column 3 CUT L3.
+
+Match attached style references for polish ONLY (cute 2D mobile merge-game icons, high saturation, rounded plump shapes, smooth gradient shading, small white gloss highlights, thin same-family colored outlines — NEVER thick black). Soft 3D volume — NOT photorealistic, NOT dark muddy colors.
+
+CRITICAL — ORANGE LINE MUST BE UNIQUE:
+- Do NOT use bamboo tray, bamboo plate, woven wicker basket, picnic basket, wooden cutting board, or pineapple-boat shell.
+- Each level must feel clearly upgraded: L1 single piece → L2 citrus-specific cup → L3 elegant porcelain serving.
+- Refined and appetizing, but use BIG simple shapes — max 4-5 fruit pieces per icon. No tiny scattered cubes, no overcrowded garnish.
+
+GLOBAL RULES:
+- NO knives, forks, spoons, chopsticks, or any utensils.
+- NO cast shadows, drop shadows, or gray blobs on white background. Pure flat white only.
+- NO text, NO watermark, NO gift ribbon bows, NO lacquer gift boxes.
+- NO cartoon eyes, NO mouth, NO face — food objects only.
+- Each icon fills about 55-70% of its cell — compact and readable at 128px. Generous white margin.
+
+Column 1 — CUT L1 (single hero piece):
+Exactly ONE thick peeled orange wedge segment (about one sixth of an orange), standing upright at a slight angle. Show bright saturated orange juicy flesh with 2-3 simplified white membrane lines. A small curled orange peel strip on one side for citrus character. ONE tiny green leaf accent optional. ONLY ONE wedge — no plate, no cup, no second fruit. Bold readable silhouette.
+
+Column 2 — CUT L2 (natural orange-peel cup — signature look):
+One cute half-orange-peel cup bowl made from a hollowed orange rind half — bright orange outer skin with subtle dimple texture, white pith rim visible inside. The peel cup stands upright like a natural citrus bowl. Inside the peel cup: exactly 3 thick round orange cross-section slice discs (bright orange flesh, thin white pith ring), stacked or slightly overlapping — chunky and simple. This must read instantly as "orange served in its own peel cup", NOT a bamboo tray.
+
+Column 3 — CUT L3 (footed porcelain compote — premium):
+One elegant short footed porcelain compote bowl / dessert compote in soft cream-white glaze with a delicate warm golden-orange rim band. Bowl is wider than tall, cute kawaii tea-party proportions. Inside: exactly 4 LARGE peeled orange segments standing upright in a neat fan — big chunky shapes, vivid orange, simplified white membrane lines. At most ONE small red strawberry or ONE mint sprig for a single color accent — orange remains 80%+ of the icon. NO basket handle, NO woven texture, NO mixed fruit pile.
+
+Equal column widths, one product centered per cell, no overlap, consistent soft upper-left lighting on objects only.

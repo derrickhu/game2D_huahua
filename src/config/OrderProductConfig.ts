@@ -14,7 +14,8 @@ export type OrderProductId =
   | 'cut_avocado'
   | 'cut_watermelon'
   | 'cut_pineapple'
-  | 'cut_dragonfruit';
+  | 'cut_dragonfruit'
+  | 'cut_orange';
 
 export const ORDER_PRODUCT_IDS: readonly OrderProductId[] = [
   'fresh',
@@ -27,6 +28,7 @@ export const ORDER_PRODUCT_IDS: readonly OrderProductId[] = [
   'cut_watermelon',
   'cut_pineapple',
   'cut_dragonfruit',
+  'cut_orange',
 ] as const;
 
 export interface OrderProductDef {
@@ -49,9 +51,10 @@ const FLOWER_WEIGHT: Record<OrderTier, number> = { C: 1, B: 1, A: 1, S: 1 };
 const DRINK_B_PLUS_WEIGHT: Record<OrderTier, number> = { C: 0, B: 1.5, A: 1, S: 1 };
 const DESSERT_WEIGHT: Record<OrderTier, number> = { C: 0, B: 0, A: 1, S: 1 };
 const FOOD_C_B_WEIGHT: Record<OrderTier, number> = { C: 1, B: 1, A: 0, S: 0 };
-const FOOD_B_ONLY_WEIGHT: Record<OrderTier, number> = { C: 0, B: 1, A: 0, S: 0 };
 const FOOD_B_A_WEIGHT: Record<OrderTier, number> = { C: 0, B: 1, A: 1, S: 0 };
 const FOOD_B_A_S_WEIGHT: Record<OrderTier, number> = { C: 0, B: 1, A: 1, S: 1 };
+const FOOD_S_ONLY_WEIGHT: Record<OrderTier, number> = { C: 0, B: 0, A: 0, S: 1 };
+const FOOD_A_S_ONLY_WEIGHT: Record<OrderTier, number> = { C: 0, B: 0, A: 1, S: 1 };
 const FRUIT_CUT_ORDER_POOL_WEIGHT = 0.75;
 
 /** 棋盘同时有可产出农田（L3+）与果切工具时，才允许刷果切订单。 */
@@ -173,14 +176,14 @@ export const ORDER_PRODUCT_DEFS: Record<OrderProductId, OrderProductDef> = {
     maxLevel: 3,
     tierLevelRanges: {
       C: null,
-      B: [1, 1],
-      A: [2, 2],
+      B: null,
+      A: [1, 1],
       S: [2, 3],
     },
     isUnlocked: ulk =>
       hasFruitCutOrderCapability(ulk) && (ulk.foodToolMaxByLine[FoodLine.CUT_WATERMELON] ?? 0) > 0,
     toolLevel: ulk => ulk.foodToolMaxByLine[FoodLine.CUT_WATERMELON] ?? 0,
-    weightByTier: FOOD_B_A_S_WEIGHT,
+    weightByTier: FOOD_A_S_ONLY_WEIGHT,
   },
   cut_pineapple: {
     id: 'cut_pineapple',
@@ -190,13 +193,13 @@ export const ORDER_PRODUCT_DEFS: Record<OrderProductId, OrderProductDef> = {
     tierLevelRanges: {
       C: null,
       B: [1, 2],
-      A: null,
+      A: [2, 3],
       S: null,
     },
     isUnlocked: ulk =>
       hasFruitCutOrderCapability(ulk) && (ulk.foodToolMaxByLine[FoodLine.CUT_PINEAPPLE] ?? 0) > 0,
     toolLevel: ulk => ulk.foodToolMaxByLine[FoodLine.CUT_PINEAPPLE] ?? 0,
-    weightByTier: FOOD_B_ONLY_WEIGHT,
+    weightByTier: FOOD_B_A_WEIGHT,
   },
   cut_dragonfruit: {
     id: 'cut_dragonfruit',
@@ -207,12 +210,28 @@ export const ORDER_PRODUCT_DEFS: Record<OrderProductId, OrderProductDef> = {
       C: null,
       B: [1, 2],
       A: [2, 3],
-      S: null,
+      S: [2, 3],
     },
     isUnlocked: ulk =>
       hasFruitCutOrderCapability(ulk) && (ulk.foodToolMaxByLine[FoodLine.CUT_DRAGONFRUIT] ?? 0) > 0,
     toolLevel: ulk => ulk.foodToolMaxByLine[FoodLine.CUT_DRAGONFRUIT] ?? 0,
-    weightByTier: FOOD_B_A_WEIGHT,
+    weightByTier: FOOD_B_A_S_WEIGHT,
+  },
+  cut_orange: {
+    id: 'cut_orange',
+    category: Category.FOOD,
+    itemLine: FoodLine.CUT_ORANGE,
+    maxLevel: 3,
+    tierLevelRanges: {
+      C: null,
+      B: null,
+      A: null,
+      S: [1, 3],
+    },
+    isUnlocked: ulk =>
+      hasFruitCutOrderCapability(ulk) && (ulk.foodToolMaxByLine[FoodLine.CUT_ORANGE] ?? 0) > 0,
+    toolLevel: ulk => ulk.foodToolMaxByLine[FoodLine.CUT_ORANGE] ?? 0,
+    weightByTier: FOOD_S_ONLY_WEIGHT,
   },
 };
 
@@ -319,12 +338,13 @@ export function productOrderSpecsForTier(tier: OrderTier, ulk: UnlockedLines): P
   const foodCIds: readonly OrderProductId[] = ['cut_avocado'];
   const foodBIds: readonly OrderProductId[] = [
     'cut_avocado',
-    'cut_watermelon',
     'cut_pineapple',
     'cut_dragonfruit',
   ];
-  const foodAIds: readonly OrderProductId[] = ['cut_watermelon', 'cut_dragonfruit'];
-  const foodSIds: readonly OrderProductId[] = ['cut_watermelon'];
+  /** A 档：西瓜 L1 + 火龙果/菠萝 */
+  const foodAIds: readonly OrderProductId[] = ['cut_dragonfruit', 'cut_pineapple', 'cut_watermelon'];
+  /** S 档：西瓜 L2–3 + 香橙 L1–3 + 火龙果 */
+  const foodSIds: readonly OrderProductId[] = ['cut_orange', 'cut_watermelon', 'cut_dragonfruit'];
 
   switch (tier) {
     case 'C':
@@ -369,7 +389,7 @@ export function comboOrderSpecsForTier(tier: OrderTier, ulk: UnlockedLines): Pro
     ...productSpecsForRange(['fresh', 'bouquet', 'green'], r.flower, ulk, 1),
     ...productSpecsForRange(['butterfly', 'cold', 'dessert'], r.drink, ulk, 1),
     ...productSpecsForTierRanges(
-      ['cut_avocado', 'cut_watermelon', 'cut_pineapple', 'cut_dragonfruit'],
+      ['cut_avocado', 'cut_watermelon', 'cut_pineapple', 'cut_dragonfruit', 'cut_orange'],
       tier,
       ulk,
       FRUIT_CUT_ORDER_POOL_WEIGHT,

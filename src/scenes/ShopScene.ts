@@ -42,7 +42,7 @@ import { TextureCache } from '@/utils/TextureCache';
 import { DECO_MAP, DecoDef, DecoSlot, SHOP_FURNITURE_DISPLAY_SCALE_MULTIPLIER, SHOP_FURNITURE_TEX_BASE_PX } from '@/config/DecorationConfig';
 import { resolveFurnitureTexture, collectFurniturePreloadKeys, FURNITURE_RENDER_MAP } from '@/config/FurnitureRenderConfig';
 import { DESIGN_WIDTH, COLORS, FONT_FAMILY } from '@/config/Constants';
-import { roomDepthZForPlacement, roomDepthZForOwner } from '@/config/RoomDepthSort';
+import { roomDepthZForPlacement, roomDepthZForOwner, getTopSurfaceFeetBoost, type DepthSortPeer } from '@/config/RoomDepthSort';
 import { ToastMessage } from '@/gameobjects/ui/ToastMessage';
 import { LevelUpPopup } from '@/gameobjects/ui/LevelUpPopup';
 import {
@@ -883,18 +883,63 @@ export class ShopScene implements Scene {
     this._roomContainer.sortableChildren = true;
 
     const layout = RoomLayoutManager.getLayout();
+    const sprites: PIXI.Sprite[] = [];
     for (let pi = 0; pi < layout.length; pi++) {
       const placement = layout[pi];
       const sprite = this._createFurnitureSpriteFromPlacement(placement, pi);
       if (!sprite) continue;
       this._roomContainer.addChild(sprite);
+      sprites.push(sprite);
 
       if (!this._isEditMode) {
         this._attachFurnitureBrowseDoubleTap(sprite, placement.decoId);
       }
     }
 
+    this._applyTopSurfaceDepthBoost(sprites, layout);
     this._roomContainer.sortChildren();
+  }
+
+  /** 高大家电顶面可摆：按当前房间内立柜位置抬高小物排序脚点 */
+  private _applyTopSurfaceDepthBoost(
+    sprites: PIXI.Sprite[],
+    layout: FurniturePlacement[],
+  ): void {
+    const stackOrder = new Map<string, number>();
+    for (let i = 0; i < layout.length; i++) {
+      stackOrder.set(layout[i].decoId, i);
+    }
+    const peers: DepthSortPeer[] = [];
+    for (const sprite of sprites) {
+      const decoId = (sprite as any)._decoId as string;
+      const deco = DECO_MAP.get(decoId);
+      if (!deco) continue;
+      peers.push({
+        decoId,
+        x: sprite.x,
+        y: sprite.y,
+        deco,
+        heightAboveFeet: Math.abs(sprite.height) * (sprite.anchor?.y ?? 0.8),
+        halfWidth: Math.abs(sprite.width) * 0.5,
+      });
+    }
+    for (const sprite of sprites) {
+      const decoId = (sprite as any)._decoId as string;
+      const deco = DECO_MAP.get(decoId);
+      const placement = layout.find((p) => p.decoId === decoId);
+      if (!deco || !placement) continue;
+      const peer = peers.find((p) => p.decoId === decoId)!;
+      const topBoost = getTopSurfaceFeetBoost(peer, peers);
+      const stackTie = Math.min(stackOrder.get(decoId) ?? 0, 999);
+      sprite.zIndex = roomDepthZForPlacement(
+        placement.y,
+        placement.zLayer ?? 0,
+        stackTie,
+        deco,
+        placement.depthManualBias,
+        topBoost,
+      );
+    }
   }
 
   private _effectiveFurnitureDisplayScale(): number {
@@ -1041,9 +1086,18 @@ export class ShopScene implements Scene {
     this._ownerContainer.cursor = inEdit ? 'grab' : 'pointer';
   }
 
-  private _beginOwnerDragFromClient(clientX: number, clientY: number, owner: PIXI.Container): void {
-    if (this._ownerDragging) return;
+  private _beginOwnerDragFromClient(
+    clientX: number,
+    clientY: number,
+    owner: PIXI.Container,
+    pointerId?: number | null,
+  ): void {
+    // 若上次 pointerup 丢失导致卡住，新按下应能重新开拖，而不是直接 return
+    if (this._ownerDragging) {
+      this._resetOwnerDragState();
+    }
     this._ownerDragging = true;
+    if (pointerId != null) this._ownerPointerDownId = pointerId;
     const designX = clientX * Game.designWidth / Game.screenWidth;
     const designY = clientY * Game.designHeight / Game.screenHeight;
     const local = this._roomLocalFromDesign(designX, designY);
@@ -1054,7 +1108,7 @@ export class ShopScene implements Scene {
 
   private _beginOwnerDrag(e: PIXI.FederatedPointerEvent, owner: PIXI.Container): void {
     const { x, y } = this._clientXYFromFederated(e);
-    this._beginOwnerDragFromClient(x, y, owner);
+    this._beginOwnerDragFromClient(x, y, owner, e.pointerId);
   }
 
   private _clearOwnerPressTracking(): void {
@@ -1090,8 +1144,9 @@ export class ShopScene implements Scene {
     const owner = this._ownerContainer;
     const sp = this._ownerSprite;
     if (!owner || owner.destroyed || !sp || sp.destroyed) return;
-    const w = Math.abs(sp.width * sp.scale.x);
-    const h = Math.abs(sp.height * sp.scale.y);
+    // Pixi Sprite.width/height 已含 scale，勿再乘 scale（否则热区≈视觉面积×scale，极易点空）
+    const w = Math.max(Math.abs(sp.width), SHOP_OWNER_HIT_MIN_R * 2);
+    const h = Math.max(Math.abs(sp.height), SHOP_OWNER_HIT_MIN_R * 2);
     if (w < 4 || h < 4) return;
     const padX = Math.max(10, w * 0.08);
     const padY = Math.max(8, h * 0.05);
@@ -1146,6 +1201,7 @@ export class ShopScene implements Scene {
       this._ownerSprite.eventMode = 'none';
     }
     owner.on('pointerdown', (e: PIXI.FederatedPointerEvent) => {
+      e.stopPropagation();
       if (this._isEditMode) {
         this._beginOwnerDrag(e, owner);
         return;
@@ -1172,8 +1228,9 @@ export class ShopScene implements Scene {
         const dy = clientY - this._ownerPressStartClient.y;
         if (Math.hypot(dx, dy) > SHOP_OWNER_DRAG_THRESHOLD_PX) {
           const o = this._ownerPointerDownOwner;
+          const pid = this._ownerPointerDownId;
           this._clearOwnerPressTracking();
-          this._beginOwnerDragFromClient(clientX, clientY, o);
+          this._beginOwnerDragFromClient(clientX, clientY, o, pid);
         }
       }
 
@@ -1190,8 +1247,21 @@ export class ShopScene implements Scene {
       this._roomContainer.sortChildren();
     };
     this._onOwnerRawUp = (rawEvt: any) => {
+      const upId = typeof rawEvt?.pointerId === 'number'
+        ? rawEvt.pointerId
+        : typeof rawEvt?.identifier === 'number'
+          ? rawEvt.identifier
+          : undefined;
       if (this._ownerDragging) {
+        if (
+          this._ownerPointerDownId != null
+          && upId !== undefined
+          && upId !== this._ownerPointerDownId
+        ) {
+          return;
+        }
         this._ownerDragging = false;
+        this._clearOwnerPressTracking();
         owner.alpha = 1;
         if (this._ownerSprite) {
           this._ownerSprite.tint = 0xffffff;
@@ -1199,11 +1269,10 @@ export class ShopScene implements Scene {
         RoomLayoutManager.setOwnerPos(owner.x, owner.y);
         return;
       }
-      const upId = rawEvt?.pointerId;
-      if (rawEvt?.type === 'pointercancel') {
+      if (rawEvt?.type === 'pointercancel' || rawEvt?.type === 'touchcancel') {
         if (
           this._ownerPointerDownOwner
-          && (this._ownerPointerDownId == null || upId === this._ownerPointerDownId)
+          && (this._ownerPointerDownId == null || upId === undefined || upId === this._ownerPointerDownId)
         ) {
           this._clearOwnerPressTracking();
         }
@@ -1212,7 +1281,7 @@ export class ShopScene implements Scene {
       // 轻点：未触发拖动阈值就松手 → 播对话
       if (
         this._ownerPointerDownOwner
-        && (this._ownerPointerDownId == null || upId === this._ownerPointerDownId)
+        && (this._ownerPointerDownId == null || upId === undefined || upId === this._ownerPointerDownId)
       ) {
         const tapped = this._ownerPointerDownOwner;
         this._clearOwnerPressTracking();
@@ -1242,7 +1311,13 @@ export class ShopScene implements Scene {
     canvas.addEventListener('pointercancel', this._onOwnerRawUp);
     this._onOwnerTouchEnd = (e: TouchEvent) => {
       const t = e.changedTouches?.[0];
-      if (t && this._onOwnerRawUp) this._onOwnerRawUp(t);
+      if (!t || !this._onOwnerRawUp) return;
+      // 微信端 touch.identifier 常与 Pixi pointerId 不一致；不传 pointerId，按「结束当前手势」处理
+      this._onOwnerRawUp({
+        clientX: t.clientX,
+        clientY: t.clientY,
+        type: e.type === 'touchcancel' ? 'touchcancel' : 'pointerup',
+      });
     };
     canvas.addEventListener('touchend', this._onOwnerTouchEnd);
     canvas.addEventListener('touchcancel', this._onOwnerTouchEnd);

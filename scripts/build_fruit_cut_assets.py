@@ -187,6 +187,26 @@ SHEETS: dict[str, dict] = {
             ("food_cut_dragonfruit_3", _ITEMS / "food/cut/food_cut_dragonfruit_3.png"),
         ],
     },
+    "orange_whole": {
+        "raw": "food_fruit_5_orange_v3_nb2.png",
+        "n": 1,
+        "rembg": "birefnet-general",
+        "padding": 8,
+        "outputs": [
+            ("food_fruit_5", _ITEMS / "food/whole/food_fruit_5.png"),
+        ],
+    },
+    "cut_orange": {
+        "raw": "food_cut_orange_line_v2_nb2.png",
+        "n": 3,
+        "rembg": "isnet-anime",
+        "padding": 8,
+        "outputs": [
+            ("food_cut_orange_1", _ITEMS / "food/cut/food_cut_orange_1.png"),
+            ("food_cut_orange_2", _ITEMS / "food/cut/food_cut_orange_2.png"),
+            ("food_cut_orange_3", _ITEMS / "food/cut/food_cut_orange_3.png"),
+        ],
+    },
 }
 
 

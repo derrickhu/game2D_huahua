@@ -16,6 +16,7 @@ const LINE_META = {
   cut_watermelon: { category: 'food', label: '西瓜果切', maxLevel: 3 },
   cut_pineapple: { category: 'food', label: '菠萝果切', maxLevel: 3 },
   cut_dragonfruit: { category: 'food', label: '火龙果果切', maxLevel: 3 },
+  cut_orange: { category: 'food', label: '香橙果切', maxLevel: 3 },
 };
 const ORDER_DIFFICULTY_REFERENCE_LEVEL = 13;
 
@@ -34,9 +35,10 @@ const PRODUCT_TIER_LEVELS = {
   cold: { B: [2, 4], A: [3, 6], S: [5, 8] },
   dessert: { A: [3, 6], S: [5, 10] },
   cut_avocado: { C: [1, 1], B: [1, 3] },
-  cut_watermelon: { B: [1, 1], A: [2, 2], S: [2, 3] },
-  cut_pineapple: { B: [1, 2] },
-  cut_dragonfruit: { B: [1, 2], A: [2, 3] },
+  cut_watermelon: { A: [1, 1], S: [2, 3] },
+  cut_pineapple: { B: [1, 2], A: [2, 3] },
+  cut_dragonfruit: { B: [1, 2], A: [2, 3], S: [2, 3] },
+  cut_orange: { S: [1, 3] },
 };
 
 const MULTI_SLOT_BONUS_RATE = 0.10;
@@ -51,15 +53,17 @@ const ORDER_TIER_HUAYUAN_MULT = {
 const ORDER_ITEM_LEVEL_PICK_EXPONENT = 1.12;
 const ORDER_ASPIRATIONAL_LEVEL_BONUS_CHANCE = 0.14;
 const CHALLENGE_ORDER_HUAYUAN_MULT = 1.06;
-const FRUIT_CUT_LINE_CHAIN = ['cut_avocado', 'cut_pineapple', 'cut_dragonfruit', 'cut_watermelon'];
-const FRUIT_CUT_CHAIN_STEPS = 12;
+const FRUIT_CUT_LINE_CHAIN = ['cut_avocado', 'cut_pineapple', 'cut_dragonfruit', 'cut_watermelon', 'cut_orange'];
+const FRUIT_CUT_PRE_ORANGE_STEPS = 12;
 const FRUIT_CUT_VS_BOUQUET_RATIO = 0.9;
-const FRUIT_CUT_MAX_HY = 300;
+const FRUIT_CUT_PRE_ORANGE_MAX_HY = 250;
+const FRUIT_CUT_ORANGE_HY = { 1: 218, 2: 280, 3: 350 };
 const FRUIT_CUT_ORDER_DIFFICULTY = {
   cut_avocado: { 1: 0.22, 2: 0.42, 3: 0.45 },
   cut_watermelon: { 1: 0.40, 2: 0.72, 3: 0.78 },
   cut_pineapple: { 1: 0.38, 2: 0.44, 3: 0.46 },
   cut_dragonfruit: { 1: 0.35, 2: 0.55, 3: 0.62 },
+  cut_orange: { 1: 0.80, 2: 0.88, 3: 0.92 },
 };
 
 function extractCurves() {
@@ -86,11 +90,18 @@ function price(line, level) {
   if (LINE_META[line]?.category === 'food') {
     const idx = FRUIT_CUT_LINE_CHAIN.indexOf(line);
     if (idx < 0 || level < 1) return 0;
+    const lv = Math.floor(level);
+    if (line === 'cut_orange') {
+      return FRUIT_CUT_ORANGE_HY[lv] ?? 0;
+    }
     const bouquetCurve = curves.bouquet;
     const startHy = Math.max(1, Math.round(bouquetCurve.base * FRUIT_CUT_VS_BOUQUET_RATIO));
-    const globalTier = idx * 3 + Math.floor(level);
-    const t = (globalTier - 1) / (FRUIT_CUT_CHAIN_STEPS - 1);
-    return Math.max(1, Math.round(startHy * (FRUIT_CUT_MAX_HY / startHy) ** t));
+    const globalTier = idx * 3 + lv;
+    if (globalTier <= FRUIT_CUT_PRE_ORANGE_STEPS) {
+      const t = (globalTier - 1) / (FRUIT_CUT_PRE_ORANGE_STEPS - 1);
+      return Math.max(1, Math.round(startHy * (FRUIT_CUT_PRE_ORANGE_MAX_HY / startHy) ** t));
+    }
+    return 0;
   }
   const curve = curves[line];
   if (!curve) throw new Error(`missing curve: ${line}`);
@@ -183,7 +194,7 @@ function toolPower(lines) {
     const toolLevel = lines.drinkToolMaxByLine[line] ?? 0;
     if (toolLevel > 0) powers.push(linePower(toolLevel, line));
   }
-  for (const line of ['cut_avocado', 'cut_watermelon', 'cut_pineapple', 'cut_dragonfruit']) {
+  for (const line of ['cut_avocado', 'cut_watermelon', 'cut_pineapple', 'cut_dragonfruit', 'cut_orange']) {
     const toolLevel = lines.foodToolMaxByLine?.[line] ?? 0;
     if (toolLevel > 0) powers.push(linePower(toolLevel, line));
   }
@@ -280,8 +291,9 @@ const AUDIT_LINES_FULL = {
     cut_watermelon: 3,
     cut_pineapple: 3,
     cut_dragonfruit: 3,
+    cut_orange: 3,
   },
-  unlockedLineCount: 10,
+  unlockedLineCount: 11,
 };
 
 function sampleTier(tier, count = 5000) {
@@ -365,20 +377,20 @@ function productOrderSpecsForTier(tier, lines) {
     return [
       ...productSpecsForRange(['fresh', 'bouquet', 'green'], PRODUCT_TIER_LEVELS.fresh.B, lines, 1),
       ...productSpecsForRange(['butterfly', 'cold'], PRODUCT_TIER_LEVELS.butterfly.B, lines, 1),
-      ...productSpecsForTierRanges(['cut_avocado', 'cut_watermelon', 'cut_pineapple', 'cut_dragonfruit'], tier, lines, 1),
+      ...productSpecsForTierRanges(['cut_avocado', 'cut_pineapple', 'cut_dragonfruit'], tier, lines, 1),
     ];
   }
   if (tier === 'A') {
     return [
       ...productSpecsForRange(['fresh', 'bouquet', 'green'], PRODUCT_TIER_LEVELS.fresh.A, lines, 1),
       ...productSpecsForRange(['butterfly', 'cold', 'dessert'], PRODUCT_TIER_LEVELS.butterfly.A, lines, 1),
-      ...productSpecsForTierRanges(['cut_watermelon', 'cut_dragonfruit'], tier, lines, 1),
+      ...productSpecsForTierRanges(['cut_dragonfruit', 'cut_pineapple', 'cut_watermelon'], tier, lines, 1),
     ];
   }
   return [
     ...productSpecsForRange(['fresh', 'bouquet', 'green'], PRODUCT_TIER_LEVELS.fresh.S, lines, 1),
     ...productSpecsForRange(['butterfly', 'cold', 'dessert'], PRODUCT_TIER_LEVELS.butterfly.S, lines, 1),
-    ...productSpecsForTierRanges(['cut_watermelon'], tier, lines, 1),
+    ...productSpecsForTierRanges(['cut_orange', 'cut_watermelon', 'cut_dragonfruit'], tier, lines, 1),
   ];
 }
 

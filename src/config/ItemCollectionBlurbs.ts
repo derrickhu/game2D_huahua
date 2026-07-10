@@ -128,6 +128,7 @@ const ITEM_UNLOCK_BLURB_EXTRA: Record<string, string> = {
   food_fruit_2: '金黄菠萝带着小冠，热带气息很醒目。',
   food_fruit_3: '玫红外皮像鳞片，整颗就很有热带味。',
   food_fruit_4: '圆滚滚的大西瓜，切开就是夏天。',
+  food_fruit_5: '圆胖香橙带着小绿叶，阳光般的橙黄很精神。',
   food_cut_avocado_1: '半切露大核，绿皮黄肉一眼分得清。',
   food_cut_avocado_2: '木盘扇排牛油果片，配青柠角很清爽。',
   food_cut_avocado_3: '粗陶碗盛牛油果丁，圣女果和玉米粒点彩。',
@@ -140,6 +141,9 @@ const ITEM_UNLOCK_BLURB_EXTRA: Record<string, string> = {
   food_cut_dragonfruit_1: '半切白肉黑籽，玫红外皮像一圈花边。',
   food_cut_dragonfruit_2: '浅木盘扇排圆片，小绿叶点缀，粉白绿很清爽。',
   food_cut_dragonfruit_3: '浅编篮盛大块果肉，粉边配芒果丁与小花，压轴感足。',
+  food_cut_orange_1: '大块厚切橙瓣，汁水饱满，一眼就很实在。',
+  food_cut_orange_2: '珊瑚边竹盘扇排橙片，彩带蝴蝶结，蓝莓薄荷点缀。',
+  food_cut_orange_3: '大方形果篮满装橙瓣，青提蓝莓草莓猕猴桃齐点缀，派对压轴。',
 
   currency_stamina_1: '小口补给，再撑一会儿。',
   currency_stamina_2: '一罐元气，继续打理花田。',

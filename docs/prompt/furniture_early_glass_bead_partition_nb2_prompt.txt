@@ -1,9 +1,9 @@
-Square 1:1 image, one single tall wall-mounted partition / wall panel prop centered with generous white margin.
-Cute kawaii 2.5D wall-art for a flower-shop merge game. The entire unit lies flat on a single vertical wall plane (parallel to the back wall), NOT a freestanding floor prop with a visible top diamond. Top edge of the frame slopes gently down toward the right, matching room wall-base angle near -30° from horizontal — NOT flat front billboard, NOT ground-furniture isometric corner.
-Hand-painted mobile game style, soft brown outlines, rounded chibi-friendly shapes, gentle upper-left lighting, clean readable silhouette.
-Subject: an EXTRA-TALL wall partition panel that nearly fills the vertical canvas — height must match a flower-shop room wall. Slim elegant vertical silhouette. Short warm honey wood base trim at the bottom, cream frame above, left side with a tall rounded vertical niche holding soft hanging copper-rose bead strands of varied lengths, right side with a tall refined grid of translucent pale mint glass blocks about 3 wide by 8-9 high. Premium boutique flower-shop wall divider, airy and refined.
-CRITICAL: maximize height; wood base is a slim wall trim, not a thick floor plinth; no deep top surface like a cabinet.
-Color palette: warm wood, cream frame, pale mint glass, soft copper-rose beads, gentle warm shadows.
-Use the attached partition reference only for glass/bead materials; redesign as wall-mounted and taller.
-NO TEXT, no labels, no captions, no writing anywhere, no logo, no characters, no room walls, no floor plane, no other furniture, no heavy cast shadow.
-Background pure solid white #FFFFFF only.
+Square 1:1 image, one single tall freestanding room partition / divider prop centered with generous white margin.
+Two attached references:
+1) Partition panel — LOCK camera, silhouette, lean, cream frame, wood base, mint glass grid layout EXACTLY. Keep ONE flat panel (not L-corner).
+2) Pearl bead curtain — use ONLY for bead style: continuous dense hanging pearl strands, pretty soft pink/cream pearls. Do NOT copy the curtain's overall shape onto the partition; only the bead look.
+Cute kawaii 2.5D true isometric flower-shop furniture. Soft brown outlines, rounded shapes, upper-left light.
+LEFT oval niche: fill with 5–6 continuous hanging pearl strands like a boutique bead curtain. Beads densely packed top-to-bottom on each strand (touching neighbors). Pretty soft rose-pink and champagne pearls with tiny mint accents. Glossy cute pearls. NO abacus gaps, NO floating clusters, NO muddy brown beads.
+RIGHT: mint glass blocks ~3x6–7, big readable.
+Cream ivory frame, honey wood base.
+NO TEXT. Background pure solid white #FFFFFF only.

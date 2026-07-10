@@ -61,14 +61,15 @@ export function computeUnlockedLines(cells: readonly OrderBoardCell[]): Unlocked
 
   if (maxFarmToolLevel >= 3 && maxFruitCutToolLevel >= 1) {
     hasFood = true;
-    /** L3 农田可产整果 + 任意果切工具：开放牛油果/西瓜果切订单 */
+    /**
+     * 有可产农田 + 果切工具即开放全部果切订单线。
+     * 农田只产低阶整果；更高水果靠合成，难度由订单档位（B/A/S）体现，不按当前产出锁线。
+     */
     foodToolMaxByLine[FoodLine.CUT_AVOCADO] = maxFruitCutToolLevel;
+    foodToolMaxByLine[FoodLine.CUT_PINEAPPLE] = maxFruitCutToolLevel;
+    foodToolMaxByLine[FoodLine.CUT_DRAGONFRUIT] = maxFruitCutToolLevel;
     foodToolMaxByLine[FoodLine.CUT_WATERMELON] = maxFruitCutToolLevel;
-    /** L4 农田可产 L2 整果：再开放菠萝/火龙果果切订单 */
-    if (maxFarmToolLevel >= 4) {
-      foodToolMaxByLine[FoodLine.CUT_PINEAPPLE] = maxFruitCutToolLevel;
-      foodToolMaxByLine[FoodLine.CUT_DRAGONFRUIT] = maxFruitCutToolLevel;
-    }
+    foodToolMaxByLine[FoodLine.CUT_ORANGE] = maxFruitCutToolLevel;
   }
 
   let unlockedLineCount = 0;

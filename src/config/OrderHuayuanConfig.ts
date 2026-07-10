@@ -50,7 +50,8 @@ export type OrderDeliveryLine =
   | 'cut_avocado'
   | 'cut_watermelon'
   | 'cut_pineapple'
-  | 'cut_dragonfruit';
+  | 'cut_dragonfruit'
+  | 'cut_orange';
 
 export interface OrderDeliveryCurve {
   /** L1 单价基准 */
@@ -85,23 +86,36 @@ export const ORDER_DELIVERY_CURVES: Record<OrderDeliveryCategory, Record<string,
 };
 
 /**
- * 果切全链顺位（与整果 L1→L4 一致）：牛油果 L1–3 → 菠萝 L1–3 → 火龙果 L1–3 → 西瓜 L1–3，
- * 共 12 步；全链几何平滑：起点 = 花束 L1 × 90%，终点 = 300 花愿（西瓜 L3 顶格）。
+ * 果切定价：前链几何下调 + 香橙独立三档（新链顶，高于原西瓜 L3=300）。
+ * - 前 12 步（牛油果 → 西瓜 L3）：顶 250 花愿（较原 12 步链 300 略低，较近期 125 回调）
+ * - 香橙 L1–L3：218 / 280 / 350（按原橙段 192/240/300 同比上浮至新顶 +17%，L3 明确高于旧顶价）
  */
 const FRUIT_CUT_LINE_CHAIN: readonly OrderDeliveryLine[] = [
   'cut_avocado',
   'cut_pineapple',
   'cut_dragonfruit',
   'cut_watermelon',
+  'cut_orange',
 ];
 
-const FRUIT_CUT_CHAIN_STEPS = 12;
+/** 香橙入链前步数（西瓜 L3 = 第 12 步） */
+const FRUIT_CUT_PRE_ORANGE_STEPS = 12;
 
 /** 链首锚点：相对花束 L1 的折扣 */
 const FRUIT_CUT_VS_BOUQUET_RATIO = 0.9;
 
-/** 果切全链最高价（西瓜 L3 顶格） */
-const FRUIT_CUT_MAX_HY = 300;
+/** 香橙前全链顶价（西瓜 L3；原 12 步链 300，现略低） */
+const FRUIT_CUT_PRE_ORANGE_MAX_HY = 250;
+
+/** 原 12 步链顶价（西瓜 L3，加香橙前） */
+const FRUIT_CUT_LEGACY_TOP_HY = 300;
+
+/** 香橙各阶单价（新链顶；L3 高于 FRUIT_CUT_LEGACY_TOP_HY） */
+const FRUIT_CUT_ORANGE_HY: Readonly<Record<number, number>> = {
+  1: 218,
+  2: 280,
+  3: 350,
+};
 
 function deliverHuayuanForCurve(level: number, curve: OrderDeliveryCurve): number {
   if (!Number.isFinite(level) || level < 1) return 0;
@@ -117,13 +131,23 @@ function fruitCutGlobalTier(line: string, level: number): number {
 function deliverHuayuanForFruitCut(line: string, level: number): number {
   const globalTier = fruitCutGlobalTier(line, level);
   if (globalTier < 1) return 0;
+  const lv = Math.floor(level);
+  if (line === 'cut_orange') {
+    return FRUIT_CUT_ORANGE_HY[lv] ?? 0;
+  }
   const bouquetCurve = ORDER_DELIVERY_CURVES.flower.bouquet;
   const startHy = Math.max(
     1,
     Math.round(deliverHuayuanForCurve(1, bouquetCurve) * FRUIT_CUT_VS_BOUQUET_RATIO),
   );
-  const t = (globalTier - 1) / (FRUIT_CUT_CHAIN_STEPS - 1);
-  return Math.max(1, Math.round(startHy * (FRUIT_CUT_MAX_HY / startHy) ** t));
+  if (globalTier <= FRUIT_CUT_PRE_ORANGE_STEPS) {
+    const t = (globalTier - 1) / (FRUIT_CUT_PRE_ORANGE_STEPS - 1);
+    return Math.max(
+      1,
+      Math.round(startHy * (FRUIT_CUT_PRE_ORANGE_MAX_HY / startHy) ** t),
+    );
+  }
+  return 0;
 }
 
 /** 指定产品线的单笔交付单价；未知线返回 0，避免误把包装/工具线纳入订单价值。 */

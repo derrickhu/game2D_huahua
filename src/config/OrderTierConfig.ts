@@ -15,6 +15,7 @@ const FRUIT_CUT_ORDER_DIFFICULTY: Readonly<Record<string, Readonly<Record<number
   [FoodLine.CUT_WATERMELON]: { 1: 0.40, 2: 0.72, 3: 0.78 },
   [FoodLine.CUT_PINEAPPLE]: { 1: 0.38, 2: 0.44, 3: 0.46 },
   [FoodLine.CUT_DRAGONFRUIT]: { 1: 0.35, 2: 0.55, 3: 0.62 },
+  [FoodLine.CUT_ORANGE]: { 1: 0.80, 2: 0.88, 3: 0.92 },
 };
 
 export type OrderType = 'normal' | 'timed' | 'chain' | 'challenge';
@@ -139,6 +140,7 @@ function _toolPower(lines: UnlockedLines): number {
     FoodLine.CUT_WATERMELON,
     FoodLine.CUT_PINEAPPLE,
     FoodLine.CUT_DRAGONFRUIT,
+    FoodLine.CUT_ORANGE,
   ]) {
     const toolLevel = lines.foodToolMaxByLine[line] ?? 0;
     if (toolLevel > 0) {

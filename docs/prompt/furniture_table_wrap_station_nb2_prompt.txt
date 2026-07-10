@@ -1,9 +1,11 @@
-Square game asset 1:1. Single furniture prop centered with generous margin.
-
-Cute kawaii 2.5D isometric view from upper-left about 45 degrees, hand-painted mobile merge-game flower shop style. Warm light oak wood, soft brown line art, pastel accents.
-
-A small florist gift-wrapping counter table: rectangular tabletop with one upright kraft paper roll on a rod, two spools of satin ribbon in lavender and peach, golden scissors with rounded tips, a few sheets of tissue paper, and one pre-wrapped tiny bouquet box. Chunky cute proportions, front three-quarter view.
-
-Readable silhouette. No text, no watermark, no characters, no full shop interior.
-
-Background pure solid white #FFFFFF only for cutout.
+Square 1:1 image, one single floral gift-wrapping station table prop centered with generous white margin.
+Cute kawaii 2.5D true isometric furniture for a flower-shop merge game. Camera from upper-left; on-screen top edges near ±30°. Soft brown outlines slightly thicker than hairline, rounded chibi-friendly shapes, gentle upper-left lighting, clean readable silhouette.
+Use the attached grid ONLY for isometric angle (±30° top edges, vertical height edges); do not copy the gray demo cube.
+Subject — wrapping station (花艺包装台), DISTINCT from flower workbench: focus on BOUQUETS + COLORFUL WRAPPING PAPER, not messy micro clutter.
+- Structure: warm honey wood single table, chunky rounded legs, clean silhouette.
+- Back / top: a large roll of COLORFUL wrapping paper (soft blush-pink with tiny white dots OR mint stripe — NOT plain muddy kraft brown only) on a wooden spindle. A sheet of colorful paper partially unrolled on the table.
+- Focal props (few, big, pretty): ONE finished wrapped flower bouquet (kraft or pastel paper cone with pink roses peeking out, satin ribbon bow). ONE neat stack of colorful wrapping sheets (pink, mint, cream). TWO chunky ribbon spools (blush + mint). Optional one cute gift box with big bow.
+- Avoid: tiny scissors as main focus, scattered yarn balls, brown-only monochrome mess, too many small objects.
+Color character: pastel pink / mint / cream wrapping + warm wood + pink bouquet — clear gift-wrapping identity.
+NO TEXT, no labels, no captions, no writing, no logo, no characters, no room walls, no floor tiles, no other furniture, no heavy cast shadow blob.
+Background pure solid white #FFFFFF only.

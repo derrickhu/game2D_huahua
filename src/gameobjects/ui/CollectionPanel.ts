@@ -37,6 +37,7 @@ const COLLECTION_PAGES: CollectionPage[] = [
   { collectionCat: CollectionCategory.FOOD, itemCategory: Category.FOOD, line: FoodLine.FRUIT, title: '水果' },
   { collectionCat: CollectionCategory.FOOD, itemCategory: Category.FOOD, line: FoodLine.CUT_AVOCADO, title: '牛油果果切' },
   { collectionCat: CollectionCategory.FOOD, itemCategory: Category.FOOD, line: FoodLine.CUT_WATERMELON, title: '西瓜果切' },
+  { collectionCat: CollectionCategory.FOOD, itemCategory: Category.FOOD, line: FoodLine.CUT_ORANGE, title: '香橙果切' },
   { collectionCat: CollectionCategory.FOOD, itemCategory: Category.FOOD, line: FoodLine.CUT_PINEAPPLE, title: '菠萝果切' },
   { collectionCat: CollectionCategory.FOOD, itemCategory: Category.FOOD, line: FoodLine.CUT_DRAGONFRUIT, title: '火龙果果切' },
   { collectionCat: CollectionCategory.BUILDING, itemCategory: Category.BUILDING, line: 'farm',        title: '农田工具' },
