@@ -1,0 +1,35 @@
+Generate one empty full-screen 9:16 mobile game activity panel shell for the Cool Summer shop page.
+
+Use the attached jewelry-box codex panel ONLY as the art-quality and structure reference:
+- same soft painterly pastel mobile-game rendering, gentle volume, polished highlights and soft shadows;
+- same overall layout language: ornate illustrated header, very large clean cream content field, rich illustrated footer, chunky circular close button;
+- but replace ALL jewelry / rose / gem / cushion / gold-filigree motifs with a refreshing summer cool theme.
+
+Canvas and cutout:
+- full-screen 9:16 portrait;
+- solid pure green #00FF00 background outside the panel silhouette, full bleed;
+- centered tall rounded panel occupying about 94% height and 92% width;
+- top-right chunky circular close button with simple white X (mint-teal or soft coral red is fine, matching the summer palette).
+
+Panel frame:
+- thick soft rounded outer rim in mint-cyan / sea-glass pastel;
+- thinner warm peach-coral or soft gold inner lip;
+- soft casual volume like the jewelry reference, NOT flat clip-art.
+
+Top illustration, limited to upper ~20%:
+- soft painterly summer still-life framing a blank scalloped golden title plaque in the center (absolutely empty, no text);
+- include a striped mint beach umbrella, an icy drink with ice cubes, a watermelon wedge, and one or two modern round handheld fans;
+- keep the same soft volumetric shading quality as the jewelry roses and gems in the reference.
+
+Middle programmatic content field:
+- one extremely large uninterrupted cream / warm-ivory rounded rectangle from roughly 22% to 76% of panel height;
+- pure nearly flat fill, no grid, no cards, no shelves, no icons, no pattern, no texture;
+- generous safe margins for code-drawn shop UI.
+
+Bottom illustration, limited to lower ~24%:
+- soft painterly summer base: curved turquoise pool water, picnic cloth, orange slice, watermelon, tropical leaves, tiny ice cubes;
+- rich and decorative like the jewelry footer cushions, but summer-themed and not overcrowding the cream field.
+
+Art style: match the jewelry reference softness and volume; high-key pastel mint, cream, coral, soft gold; cute cozy flower-shop mobile game; no photorealism.
+
+Strict rules: NO readable text, NO fake text, NO pseudo letters, NO Chinese characters, NO numbers, NO item cards, NO currency counters, NO progress bars, NO watermark, NO logo.

@@ -1,0 +1,12 @@
+Square 1:1 image, one single TALL floor-standing pedestal fan prop centered with generous white margin.
+Cute kawaii 2.5D true isometric furniture for a flower-shop merge game. Camera from upper-left into the L-room corner (same family as the room shell). On-screen top-face edges and base edges must sit near ±30° from horizontal — match the attached iso grid, NOT 45° wall slant, NOT flat front view. Height edges stay vertical. Use the attached grid ONLY for perspective; do not copy the gray demo cube.
+Soft brown outlines slightly thicker than hairline, rounded chibi-friendly shapes, gentle upper-left lighting, clean readable silhouette at small size.
+Subject — tall standing pedestal floor fan (落地立式电扇), NOT a short desk fan:
+- IMPORTANT SCALE: tall freestanding appliance about as tall as a person sitting, roughly 2.5x to 3x the fan-head diameter in total height. Long slim pole clearly visible between head and base.
+- Round fan head with cream-white safety grill cage, soft mint / seafoam blades, cute chunky hub.
+- Long pastel mint-cream vertical pole with one height adjustment ring, small friendly control knob (no readable labels).
+- Wide round weighted floor base in cream with soft teal accent ring. Optional neat coiled power cord at base.
+- High-key summer pastel: mint, cream, soft sky blue accents. Soft glossy plastic feel.
+- Silhouette must read as FLOOR STANDING: head (top) + long pole (middle) + round base (bottom). Do NOT make a short stubby desk fan.
+NO TEXT, no labels, no captions, no writing, no logo, no characters, no room walls, no floor tiles, no other furniture, no table, no heavy cast shadow blob.
+Background pure solid white #FFFFFF only.

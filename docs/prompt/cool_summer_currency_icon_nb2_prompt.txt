@@ -1,0 +1,18 @@
+Single square 1:1 mobile game currency icon. Match the glossy soft-3D candy style of the reference pink flower and yellow-green energy bolt: chunky, polished, opaque, readable at 24px.
+
+Subject must clearly read as a HANDHELD SUMMER FAN, not a magnifying glass, not a coin, not a mirror:
+- Broad opaque round paddle fan head (uchiwa)
+- Short thick rounded wooden-style handle centered at the bottom
+- Slight right tilt
+- Fan face is OPAQUE solid candy plastic / glazed ceramic — NOT transparent glass, NOT a lens
+
+Volume:
+- Soft white highlight on upper-left of the opaque face
+- Deeper teal shadow on lower-right rim for thickness
+- Rounded bevel rim
+- Handle with highlight + shadow
+- One tiny sparkle optional
+
+Palette: ONE aqua-teal family only (light mint, mid aqua, deep teal outline). No orange, coral, multicolor rings, patterns, fruit, tassels, spokes, text, numbers, frames.
+
+Background: solid flat magenta #FF00FF full bleed.

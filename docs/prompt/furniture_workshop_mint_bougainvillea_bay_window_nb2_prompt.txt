@@ -1,0 +1,14 @@
+Strict IMAGE EDIT of the attached bay-window sprite.
+
+KEEP IDENTICAL (do not flatten, do not redesign camera):
+- Same 3/4 isometric / oblique bay viewpoint as the attachment (NOT front-on)
+- Same slim thin mint frame (no thick wall borders)
+- Same bougainvillea, pillows, throw, rattan seat style
+- Soft blue sky + green foliage through glass
+
+ONLY CHANGE:
+- Make the whole prop WIDER horizontally (landscape). Widen the bay seat and panes left-right.
+- Keep prop sizes chunky; do not shrink pillows.
+- Aspect should read clearly wider than tall.
+
+Pure white #FFFFFF outside silhouette. No text. No watermark. No front-facing redesign.

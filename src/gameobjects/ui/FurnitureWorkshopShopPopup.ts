@@ -6,7 +6,7 @@ import {
   getBlueprintCraftCategory,
   getBlueprintDiamondCost,
   getBlueprintDisplayName,
-  isBlueprintDiamondPurchasable,
+  isBlueprintListedInShop,
   type WorkshopBlueprintDef,
   type WorkshopCraftCategoryFilter,
 } from '@/config/FurnitureWorkshopConfig';
@@ -92,7 +92,7 @@ function filterShopBlueprintsByCategory(
 function collectShopBlueprints(category: WorkshopCraftCategoryFilter): WorkshopBlueprintDef[] {
   const base = sortShopBlueprints(
     WORKSHOP_BLUEPRINT_DEFS.filter(
-      b => isBlueprintDiamondPurchasable(b.id) || FurnitureWorkshopManager.hasBlueprint(b.id),
+      b => isBlueprintListedInShop(b.id) || FurnitureWorkshopManager.hasBlueprint(b.id),
     ),
   );
   return filterShopBlueprintsByCategory(base, category);

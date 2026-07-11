@@ -60,6 +60,7 @@ import {
 } from '@/config/FurnitureWorkshopConfig';
 import { AffinityManager } from './AffinityManager';
 import { WeekendHuayuanBoostManager } from './WeekendHuayuanBoostManager';
+import { CoolSummerEventManager } from './CoolSummerEventManager';
 
 export interface DemandSlot {
   itemId: string;
@@ -88,6 +89,8 @@ export interface CustomerInstance {
   workshopMaterialRewards?: WorkshopMaterialReward[];
   /** 首饰活动原石奖励：命中的普通订单额外送 1 原石（生成时决定并展示） */
   eventStoneReward?: number;
+  /** 清凉一夏：含冷饮/果切订单额外产出的清凉小扇（生成时固化并展示） */
+  coolSummerFanReward?: number;
   /** 预留：连续订单序号 */
   chainIndex?: number;
   /** 预留：奖励倍率 */
@@ -116,6 +119,7 @@ export interface CustomerSaveEntry {
   staminaChestReward?: string;
   workshopMaterialRewards?: WorkshopMaterialReward[];
   eventStoneReward?: number;
+  coolSummerFanReward?: number;
   chainIndex?: number;
   bonusMultiplier?: number;
   /** 缺省时读档按 orderType + bonusMultiplier 推断 */
@@ -279,6 +283,10 @@ function normalizeCustomerPersistState(raw: unknown): CustomerPersistState | nul
         typeof r.eventStoneReward === 'number' && r.eventStoneReward > 0
           ? Math.floor(r.eventStoneReward)
           : undefined,
+      coolSummerFanReward:
+        typeof r.coolSummerFanReward === 'number' && r.coolSummerFanReward > 0
+          ? Math.floor(r.coolSummerFanReward)
+          : undefined,
       chainIndex: typeof r.chainIndex === 'number' ? r.chainIndex : undefined,
       bonusMultiplier,
       orderKind,
@@ -414,6 +422,7 @@ class CustomerManagerClass {
         staminaChestReward: c.staminaChestReward,
         workshopMaterialRewards: c.workshopMaterialRewards,
         eventStoneReward: c.eventStoneReward,
+        coolSummerFanReward: c.coolSummerFanReward,
         chainIndex: c.chainIndex,
         bonusMultiplier: c.bonusMultiplier,
         orderKind: c.orderKind,
@@ -454,6 +463,11 @@ class CustomerManagerClass {
         staminaChestReward: e.staminaChestReward,
         workshopMaterialRewards: e.workshopMaterialRewards,
         eventStoneReward: e.eventStoneReward,
+        coolSummerFanReward: CoolSummerEventManager.isActive()
+          ? (e.coolSummerFanReward
+            ?? CoolSummerEventManager.calculateOrderReward(e.slots.map(s => s.itemId))
+            ?? undefined)
+          : undefined,
         chainIndex: e.chainIndex,
         bonusMultiplier: e.bonusMultiplier,
         orderKind: e.orderKind ?? inferOrderKindFromLegacy(e),
@@ -491,6 +505,7 @@ class CustomerManagerClass {
     this._syncAntiRepeatFromQueueTail();
     this._bindBoardEvents();
     EventBus.on('tutorial:completed', this._onTutorialCompleted);
+    EventBus.on('coolSummerEvent:periodChanged', () => this.refreshCoolSummerRewards());
     this._refreshWeekendHuayuanBonuses(false);
     this._rescanAll();
     this._bootstrapLowLevelQueue();
@@ -858,6 +873,13 @@ class CustomerManagerClass {
       customer.eventStoneReward = rollEventOrderStoneAmount(customer.tier);
     }
 
+    const coolSummerFanReward = CoolSummerEventManager.calculateOrderReward(
+      customer.slots.map(s => s.itemId),
+    );
+    if (CoolSummerEventManager.isActive() && coolSummerFanReward > 0) {
+      customer.coolSummerFanReward = coolSummerFanReward;
+    }
+
     if (customer.orderKind === 'timedWorkshop') {
       this._workshopOrdersToday = Math.min(
         WORKSHOP_ORDER_DAILY_CAP,
@@ -886,6 +908,22 @@ class CustomerManagerClass {
     EventBus.emit('customer:arrived', customer);
 
     this._rescanAll();
+  }
+
+  /** 活动跨日启停时刷新当前队列：活动开始补标，结束立即移除，避免旧订单过期后仍产扇。 */
+  refreshCoolSummerRewards(): void {
+    const active = CoolSummerEventManager.isActive();
+    let changed = false;
+    for (const customer of this._customers) {
+      const next = active
+        ? CoolSummerEventManager.calculateOrderReward(customer.slots.map(s => s.itemId))
+        : 0;
+      const normalized = next > 0 ? next : undefined;
+      if (customer.coolSummerFanReward === normalized) continue;
+      customer.coolSummerFanReward = normalized;
+      changed = true;
+    }
+    if (changed) EventBus.emit('customer:rewardBonusChanged');
   }
 
   private _syncTimedDiamondDailyState(): void {

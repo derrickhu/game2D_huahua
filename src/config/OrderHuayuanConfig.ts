@@ -90,7 +90,8 @@ export const ORDER_DELIVERY_CURVES: Record<OrderDeliveryCategory, Record<string,
  * - 前 12 步（牛油果 → 西瓜 L3）：顶 250 花愿（较原 12 步链 300 略低，较近期 125 回调）
  * - 香橙 L1–L3：218 / 280 / 350（按原橙段 192/240/300 同比上浮至新顶 +17%，L3 明确高于旧顶价）
  */
-const FRUIT_CUT_LINE_CHAIN: readonly OrderDeliveryLine[] = [
+/** 果切隐藏全链：活动计价、订单难度与花愿定价应共用这一顺序。 */
+export const FRUIT_CUT_LINE_CHAIN: readonly OrderDeliveryLine[] = [
   'cut_avocado',
   'cut_pineapple',
   'cut_dragonfruit',
@@ -122,7 +123,8 @@ function deliverHuayuanForCurve(level: number, curve: OrderDeliveryCurve): numbe
   return Math.max(1, Math.round(curve.base * curve.growth ** (Math.floor(level) - 1)));
 }
 
-function fruitCutGlobalTier(line: string, level: number): number {
+/** 将每种水果表面的 L1–L3 换算为隐藏全链 L1–L15。 */
+export function fruitCutGlobalTier(line: string, level: number): number {
   const idx = FRUIT_CUT_LINE_CHAIN.indexOf(line as OrderDeliveryLine);
   if (idx < 0 || !Number.isFinite(level) || level < 1) return 0;
   return idx * 3 + Math.floor(level);

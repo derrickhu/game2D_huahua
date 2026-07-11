@@ -16,6 +16,10 @@ import { MergeCompanionManager, type MergeCompanionPersistState } from './MergeC
 import { MerchShopManager, type MerchShopPersistState } from './MerchShopManager';
 import { FlowerSignTicketManager } from './FlowerSignTicketManager';
 import { EventBoardManager, type EventBoardPersistState } from './EventBoardManager';
+import {
+  CoolSummerEventManager,
+  type CoolSummerEventPersistState,
+} from './CoolSummerEventManager';
 import { EventBus } from '@/core/EventBus';
 import { PersistService } from '@/core/PersistService';
 import { CdnAssetService } from '@/core/CdnAssetService';
@@ -110,12 +114,15 @@ interface SaveData {
   flowerSignTickets?: number;
   /** 限时活动独立棋盘（不参与主棋盘布局指纹） */
   eventBoard?: EventBoardPersistState;
+  /** 清凉一夏兑换活动（赛季 ID 自行处理跨季重置） */
+  coolSummerEvent?: CoolSummerEventPersistState;
 }
 
 class SaveManagerClass {
   private _lastSave = 0;
   private _mergeCompanionSaveTimer: ReturnType<typeof setTimeout> | null = null;
   private _eventBoardSaveTimer: ReturnType<typeof setTimeout> | null = null;
+  private _coolSummerEventSaveTimer: ReturnType<typeof setTimeout> | null = null;
 
   constructor() {
     /** 花语泡泡等伴生物变化后尽快落盘，避免仅依赖 30s 异步档或未触发 onHide 时丢档 */
@@ -133,14 +140,21 @@ class SaveManagerClass {
         this._persistToStorage(false);
       }, 200);
     });
+    EventBus.on('coolSummerEvent:changed', () => {
+      if (this._coolSummerEventSaveTimer) clearTimeout(this._coolSummerEventSaveTimer);
+      this._coolSummerEventSaveTimer = setTimeout(() => {
+        this._coolSummerEventSaveTimer = null;
+        this._persistToStorage(false);
+      }, 200);
+    });
   }
 
   private _buildSaveData(): string {
     const data: SaveData = {
       fingerprint: CONFIG_FINGERPRINT,
       timestamp: Date.now(),
-      /** v8：许愿硬币（flowerSignTickets，键名兼容旧档） */
-      version: 8,
+      /** v9：增加清凉一夏赛季兑换状态；字段可选，旧档安全初始化 */
+      version: 9,
       currency: CurrencyManager.exportState(),
       board: BoardManager.exportState(),
       buildings: BuildingManager.exportState(),
@@ -151,6 +165,7 @@ class SaveManagerClass {
       merchShop: MerchShopManager.exportState(),
       flowerSignTickets: FlowerSignTicketManager.exportState(),
       eventBoard: EventBoardManager.exportState(),
+      coolSummerEvent: CoolSummerEventManager.exportState(),
     };
     return JSON.stringify(data);
   }
@@ -250,6 +265,7 @@ class SaveManagerClass {
       BoardManager.loadState(data.board);
       BuildingManager.loadState(data.buildings);
       EventBoardManager.loadState(data.eventBoard);
+      CoolSummerEventManager.loadState(data.coolSummerEvent);
       if (data.warehouse) {
         WarehouseManager.loadState(data.warehouse);
       }

@@ -79,6 +79,7 @@ export class CustomerView extends PIXI.Container {
   private _infoPanel: PIXI.Container;
   private _eventStoneTextureUnsub: (() => void) | null = null;
   private _affinityHeartBadge: PIXI.Container | null = null;
+  private _coolSummerFanBadge: PIXI.Container | null = null;
   private _completeBtn: PIXI.Container | null = null;
   private _bounceTween: { config: any; startValues: any; elapsed: number; delayRemaining: number } | null = null;
   private _queueIndex = 0;
@@ -107,9 +108,17 @@ export class CustomerView extends PIXI.Container {
 
     this.sortChildren();
     this.visible = false;
-    this._eventStoneTextureUnsub = TextureCache.onKeysLoaded(['event_jewelry_1'], () => {
-      if ((this._customer?.eventStoneReward ?? 0) > 0) this.refreshSlots();
-    });
+    this._eventStoneTextureUnsub = TextureCache.onKeysLoaded(
+      ['event_jewelry_1', 'icon_cool_summer_fan'],
+      () => {
+        if (
+          (this._customer?.eventStoneReward ?? 0) > 0
+          || (this._customer?.coolSummerFanReward ?? 0) > 0
+        ) {
+          this.refreshSlots();
+        }
+      },
+    );
   }
 
   get customerUid(): number {
@@ -127,6 +136,7 @@ export class CustomerView extends PIXI.Container {
       TweenManager.cancelTarget(this);
       TweenManager.cancelTarget(this.scale);
       this._clearAffinityHeartBadge();
+      this._clearCoolSummerFanBadge();
       this._clearStaminaChestBadge();
       this._boundCustomerUid = -1;
       this._customer = null;
@@ -205,11 +215,13 @@ export class CustomerView extends PIXI.Container {
     if (!this._customer) return;
     this._rebuildInfoPanel();
     this._buildStaminaChestBadge();
+    this._buildCoolSummerFanBadge();
   }
 
   override destroy(options?: PIXI.IDestroyOptions | boolean): void {
     this._eventStoneTextureUnsub?.();
     this._eventStoneTextureUnsub = null;
+    this._clearCoolSummerFanBadge();
     super.destroy(options);
   }
 
@@ -237,6 +249,17 @@ export class CustomerView extends PIXI.Container {
     const cap = this._rewardBadge.children.find(
       (c) => c.name === 'eventStoneRewardCapsule',
     ) as PIXI.Container | undefined;
+    if (!cap) return null;
+    const iconCx = REWARD_BADGE_PAD_X + REWARD_BADGE_ICON / 2;
+    const iconCy = cap.height / 2;
+    const g = cap.toGlobal(new PIXI.Point(iconCx, iconCy));
+    const local = this.toLocal(g);
+    return new PIXI.Point(local.x, local.y);
+  }
+
+  /** 清凉一夏小扇奖励图标中心（CustomerView 局部坐标；无奖励时 null） */
+  getCoolSummerFanRewardIconLocalCenter(): PIXI.Point | null {
+    const cap = this._coolSummerFanBadge;
     if (!cap) return null;
     const iconCx = REWARD_BADGE_PAD_X + REWARD_BADGE_ICON / 2;
     const iconCy = cap.height / 2;
@@ -274,6 +297,7 @@ export class CustomerView extends PIXI.Container {
     this._infoPanel.removeChildren();
     this._clearCompleteBtn();
     this._clearRewardBadge();
+    this._clearCoolSummerFanBadge();
     this._clearStaminaChestBadge();
     this._clearTierBadge();
     this._clearTimedOrderBadge();
@@ -283,6 +307,7 @@ export class CustomerView extends PIXI.Container {
 
     // 奖励徽章（头像底部；花愿与交付到账一致）
     this._buildRewardBadge();
+    this._buildCoolSummerFanBadge();
 
     // 档位角标（需求面板左上角小圆标）
     this._buildTierBadge();
@@ -496,6 +521,46 @@ export class CustomerView extends PIXI.Container {
       this._rewardBadge.destroy({ children: true });
       this._rewardBadge = null;
     }
+  }
+
+  private _buildCoolSummerFanBadge(): void {
+    this._clearCoolSummerFanBadge();
+    if (!this._customer) return;
+    const fanReward = this._customer.coolSummerFanReward ?? 0;
+    if (fanReward <= 0) return;
+
+    const fanCap = this._makeRewardCapsule([
+      { icon: 'icon_cool_summer_fan', value: fanReward, fill: 0x1B6B66 },
+    ], 16);
+    const badge = fanCap.node;
+    badge.name = 'coolSummerFanRewardCapsule';
+    badge.eventMode = 'none';
+    badge.zIndex = 12;
+
+    let x = -CARD_LAYOUT_HALF + 6;
+    let y = AVATAR_FEET_Y - 92;
+    const avatar = this._getAvatarSpriteMetrics();
+    if (avatar) {
+      const gapOutside = 6;
+      x = -avatar.halfW - fanCap.w - gapOutside;
+      y = avatar.topY + avatar.fullH * 0.56 - fanCap.h / 2;
+      const minX = -CARD_LAYOUT_HALF + 4;
+      x = Math.max(minX, x);
+    }
+
+    badge.position.set(x, y);
+    this.addChild(badge);
+    this._coolSummerFanBadge = badge;
+    this.sortChildren();
+  }
+
+  private _clearCoolSummerFanBadge(): void {
+    if (!this._coolSummerFanBadge) return;
+    if (this._coolSummerFanBadge.parent) {
+      this._coolSummerFanBadge.parent.removeChild(this._coolSummerFanBadge);
+    }
+    this._coolSummerFanBadge.destroy({ children: true });
+    this._coolSummerFanBadge = null;
   }
 
   private static readonly TIER_BADGE_R = 11;

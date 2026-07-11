@@ -21,6 +21,7 @@ import { ENABLE_CHALLENGE_LEVEL_FEATURE } from '@/config/FeatureFlags';
 import { EventBus } from '@/core/EventBus';
 import { Platform } from '@/core/PlatformService';
 import { PersistService } from '@/core/PersistService';
+import { ToastMessage } from '@/gameobjects/ui/ToastMessage';
 import { BoardManager } from './BoardManager';
 import { CurrencyManager } from './CurrencyManager';
 import { SaveManager } from './SaveManager';
@@ -70,6 +71,7 @@ import {
 import { RewardBoxManager } from './RewardBoxManager';
 import { MergeCompanionManager } from './MergeCompanionManager';
 import { EventBoardManager } from './EventBoardManager';
+import { CoolSummerEventManager } from './CoolSummerEventManager';
 import { STAMINA_MAX } from '@/config/Constants';
 
 declare const wx: any;
@@ -687,6 +689,58 @@ class GMManagerClass {
           parts.push(`${level}级✓`);
         }
         return ` ${parts.join(' ')}，剩余空格 ${EventBoardManager.emptyOpenCellCount}`;
+      },
+    });
+
+    this._commands.push({
+      id: 'gm_open_cool_summer',
+      group: ' 活动棋盘',
+      name: ' 打开清凉一夏',
+      desc: '临时开放活动并打开兑换页（仅本次运行，不写入正式活动时间）',
+      execute: () => {
+        CoolSummerEventManager.gmSetActiveOverride(true);
+        CustomerManager.refreshCoolSummerRewards();
+        EventBus.emit('panel:openCoolSummerEvent');
+        return ' 已临时开放清凉一夏';
+      },
+    });
+
+    this._commands.push({
+      id: 'gm_add_cool_summer_fans',
+      group: ' 活动棋盘',
+      name: ' 清凉小扇 +500',
+      desc: '临时开放活动并增加 500 把清凉小扇，方便兑换测试',
+      execute: () => {
+        CoolSummerEventManager.gmSetActiveOverride(true);
+        CustomerManager.refreshCoolSummerRewards();
+        const bal = CoolSummerEventManager.gmAddCurrency(500);
+        ToastMessage.show(`清凉小扇 +500，当前 ${bal}`);
+        return ` 清凉小扇余额：${bal}`;
+      },
+    });
+
+    this._commands.push({
+      id: 'gm_add_cool_summer_fans_2k',
+      group: ' 活动棋盘',
+      name: ' 清凉小扇 +2000',
+      desc: '临时开放活动并增加 2000 把清凉小扇，方便清店测试',
+      execute: () => {
+        CoolSummerEventManager.gmSetActiveOverride(true);
+        CustomerManager.refreshCoolSummerRewards();
+        const bal = CoolSummerEventManager.gmAddCurrency(2000);
+        ToastMessage.show(`清凉小扇 +2000，当前 ${bal}`);
+        return ` 清凉小扇余额：${bal}`;
+      },
+    });
+
+    this._commands.push({
+      id: 'gm_reset_cool_summer',
+      group: ' 活动棋盘',
+      name: ' 重置清凉一夏',
+      desc: '清空小扇、购买次数与分类奖励领取状态',
+      execute: () => {
+        CoolSummerEventManager.gmReset();
+        return ' 已重置清凉一夏活动进度';
       },
     });
 

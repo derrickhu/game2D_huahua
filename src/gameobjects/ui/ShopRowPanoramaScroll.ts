@@ -9,6 +9,7 @@ import { EventBus } from '@/core/EventBus';
 import { TweenManager, Ease } from '@/core/TweenManager';
 import { EventManager } from '@/managers/EventManager';
 import { EventBoardManager } from '@/managers/EventBoardManager';
+import { CoolSummerEventManager } from '@/managers/CoolSummerEventManager';
 import { QuestManager } from '@/managers/QuestManager';
 import { LevelManager } from '@/managers/LevelManager';
 import { isJewelryEventUnlocked } from '@/config/EventBoardConfig';
@@ -25,11 +26,13 @@ export const SHOP_PANORAMA_VIEW_H = 310;
 
 const BIG_BTN = 92;
 const BIG_ICON = 72;
-const BIG_GAP = 20;
+/** 清凉一夏入口图留白较多，单独放大 */
+const COOL_SUMMER_BIG_ICON = 86;
+const BIG_GAP = 8;
 const BIG_R = 18;
 /** 任务/活动大图标右上角红点半径（略大便于辨认） */
 const RED_DOT_R = 8;
-const ACTIVITY_PAD_TOP = 28;
+const ACTIVITY_PAD_TOP = 4;
 
 /**
  * 展开/收起：左侧竖向胶囊；**垂直与主场景收纳篮中心对齐**（见 `MainScene._buildShopArea` 的 `CHAR_BOTTOM_Y + 8`），避免压住客人胸像。
@@ -58,10 +61,18 @@ interface TaskDef {
   texKey: string;
   event: string;
   redDotKey?: string;
+  hasRedDot?: () => boolean;
   isVisible?: () => boolean;
 }
 
 const TASK_DEFS: TaskDef[] = [
+  {
+    id: 'coolSummer',
+    texKey: 'icon_cool_summer_event_nb2',
+    event: 'panel:openCoolSummerEvent',
+    isVisible: () => CoolSummerEventManager.isActive(),
+    hasRedDot: () => CoolSummerEventManager.hasRedDot,
+  },
   {
     id: 'challenge',
     texKey: 'icon_challenge',
@@ -216,6 +227,8 @@ export class ShopRowPanoramaScroll extends PIXI.Container {
       }
       if (card.def.redDotKey) {
         card.redDot.visible = FloatingMenu.getRedDot(card.def.redDotKey);
+      } else if (card.def.hasRedDot) {
+        card.redDot.visible = card.def.hasRedDot();
       }
     }
     this._layoutActivityColumn();
@@ -446,7 +459,8 @@ export class ShopRowPanoramaScroll extends PIXI.Container {
     icon.anchor.set(0.5);
     icon.position.set(BIG_BTN / 2, BIG_BTN / 2);
     if (tex && tex.width > 0) {
-      const s = Math.min(BIG_ICON / tex.width, BIG_ICON / tex.height);
+      const target = def.id === 'coolSummer' ? COOL_SUMMER_BIG_ICON : BIG_ICON;
+      const s = Math.min(target / tex.width, target / tex.height);
       icon.scale.set(s);
     }
     root.addChild(icon);
@@ -491,7 +505,8 @@ export class ShopRowPanoramaScroll extends PIXI.Container {
       const icon = card.root.children.find(child => child instanceof PIXI.Sprite) as PIXI.Sprite | undefined;
       if (!icon || !tex || tex.width <= 0) return;
       icon.texture = tex;
-      const s = Math.min(BIG_ICON / tex.width, BIG_ICON / tex.height);
+      const target = card.def.id === 'coolSummer' ? COOL_SUMMER_BIG_ICON : BIG_ICON;
+      const s = Math.min(target / tex.width, target / tex.height);
       icon.scale.set(s);
     }
   }

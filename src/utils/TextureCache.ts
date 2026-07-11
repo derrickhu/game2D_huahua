@@ -41,6 +41,10 @@ const MAIN_IMAGE_MAP: Record<string, string> = {
   icon_thursday_magic_time_nb2: 'images/ui/icon_thursday_magic_time_nb2.png',
   /** 花间珠匣活动入口：打开首饰盒 + 大颗宝石（主页面常驻入口，留在主包） */
   icon_jewelry_event_nb2: 'images/ui/icon_jewelry_event_nb2.png',
+  /** 清凉一夏限时活动入口：冰饮 + 西瓜 + 清凉小扇（主包顶栏入口） */
+  icon_cool_summer_event_nb2: 'images/ui/icon_cool_summer_event_nb2.png',
+  /** 清凉一夏订单兑换物：现代圆角手持小扇 */
+  icon_cool_summer_fan: 'images/ui/icon_cool_summer_fan.png',
   /** NB2+rembg：激励视频 / 看广告统一小图标（粉紫边框 + 播放三角） */
   icon_ad_reward_nb2: 'images/ui/icon_ad_reward_nb2.png',
   icon_heart:  'images/ui/icon_heart.png',
@@ -580,12 +584,20 @@ const JEWELRY_BOX_EVENT_IMAGE_MAP: Record<string, string> = {
   event_jewelry_dian_cui_8: 'subpkg_events/images/jewelry_box_event/items/event_jewelry_dian_cui_8.png',
 };
 
+const COOL_SUMMER_EVENT_IMAGE_MAP: Record<string, string> = {
+  /** 清凉一夏兑换页空壳：上下夏日场景 + 中部程序化商品区 */
+  cool_summer_event_panel_shell_v2:
+    'subpkg_events/images/cool_summer_event/ui/cool_summer_event_panel_shell_v2.png',
+};
+
 const EVENT_IMAGE_MAPS: Record<string, Record<string, string>> = {
   jewelry_box_event: JEWELRY_BOX_EVENT_IMAGE_MAP,
+  cool_summer_2026: COOL_SUMMER_EVENT_IMAGE_MAP,
 };
 
 const EVENTS_IMAGE_MAP: Record<string, string> = {
   ...JEWELRY_BOX_EVENT_IMAGE_MAP,
+  ...COOL_SUMMER_EVENT_IMAGE_MAP,
 };
 
 // ================================================================
@@ -625,6 +637,8 @@ const DECO_IMAGE_MAP: Record<string, string> = {
   light_pendant: 'subpkg_deco/images/furniture/light_pendant.png',
   light_crystal: 'subpkg_deco/images/furniture/light_crystal.png',
   light_summer:  'subpkg_deco/images/furniture/light_summer.png',
+  season_summer_floor_fan: 'subpkg_deco/images/furniture/season_summer_floor_fan.png',
+  season_summer_dining_table: 'subpkg_deco/images/furniture/season_summer_dining_table.png',
   light_plant_strip: 'subpkg_deco/images/furniture/light_plant_strip.png',
   light_radio_vintage: 'subpkg_deco/images/furniture/light_radio_vintage.png',
   light_fan_desk: 'subpkg_deco/images/furniture/light_fan_desk.png',
@@ -662,6 +676,12 @@ const DECO_IMAGE_MAP: Record<string, string> = {
   workshop_rose_cascade_drape_sheet: 'subpkg_deco/images/furniture/workshop_rose_cascade_drape_sheet.png',
   /** 蕾丝铁艺床：单张 PNG，max-side 342 */
   workshop_lace_ribbon_bed: 'subpkg_deco/images/furniture/workshop_lace_ribbon_bed.png',
+  /** 夏日荷塘拱窗：单张墙饰 PNG，max-side 342（清凉一夏活动图纸） */
+  workshop_summer_lotus_arch_window: 'subpkg_deco/images/furniture/workshop_summer_lotus_arch_window.png',
+  /** 薄荷三角梅飘窗：单张墙饰 PNG，max-side 342 */
+  workshop_mint_bougainvillea_bay_window: 'subpkg_deco/images/furniture/workshop_mint_bougainvillea_bay_window.png',
+  /** 柳影木色飘窗：薄荷飘窗染色款，max-side 342 */
+  workshop_willow_wood_bay_window: 'subpkg_deco/images/furniture/workshop_willow_wood_bay_window.png',
   workshop_blueprint_generic: 'subpkg_deco/images/furniture/workshop_blueprint_generic.png',
   promo_petal_chaise: 'subpkg_deco/images/furniture/promo_petal_chaise.png',
   promo_doll_hug_pillow: 'subpkg_deco/images/furniture/promo_doll_hug_pillow.png',
@@ -1300,6 +1320,7 @@ const ALL_PANELS_KEYS = Object.keys(PANELS_IMAGE_MAP);
 const ALL_ITEMS_KEYS = Object.keys(ITEMS_IMAGE_MAP);
 const ALL_EVENTS_KEYS = Object.keys(EVENTS_IMAGE_MAP);
 const JEWELRY_BOX_EVENT_KEYS = Object.keys(JEWELRY_BOX_EVENT_IMAGE_MAP);
+const COOL_SUMMER_EVENT_KEYS = Object.keys(COOL_SUMMER_EVENT_IMAGE_MAP);
 const ALL_DECO_KEYS = Object.keys(DECO_IMAGE_MAP);
 const ALL_CRITICAL_KEYS = Object.keys(CRITICAL_IMAGE_MAP);
 const OWNER_OUTFIT_KEYS = keysWhere(CHARS_IMAGE_MAP, key => key.startsWith('owner_'));
@@ -1330,6 +1351,7 @@ export type TextureAssetGroup =
   | 'items'
   | 'events'
   | 'jewelryBoxEvent'
+  | 'coolSummerEvent'
   | 'chars'
   | 'panels'
   | 'critical'
@@ -1365,6 +1387,11 @@ const ASSET_GROUP_KEYS: Record<TextureAssetGroup, readonly string[]> = {
   items: [],
   events: [],
   jewelryBoxEvent: JEWELRY_BOX_EVENT_KEYS,
+  coolSummerEvent: [
+    'icon_cool_summer_event_nb2',
+    'icon_cool_summer_fan',
+    ...COOL_SUMMER_EVENT_KEYS,
+  ],
   chars: [],
   panels: [],
   critical: [],
@@ -1379,6 +1406,11 @@ const ASSET_GROUP_NOTIFY_KEYS: Record<TextureAssetGroup, readonly string[]> = {
   items: ALL_ITEMS_KEYS,
   events: ALL_EVENTS_KEYS,
   jewelryBoxEvent: JEWELRY_BOX_EVENT_KEYS,
+  coolSummerEvent: [
+    'icon_cool_summer_event_nb2',
+    'icon_cool_summer_fan',
+    ...COOL_SUMMER_EVENT_KEYS,
+  ],
   chars: ALL_CHARS_KEYS,
   panels: ALL_PANELS_KEYS,
   critical: ALL_CRITICAL_KEYS,

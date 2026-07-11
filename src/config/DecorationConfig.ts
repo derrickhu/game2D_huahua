@@ -271,15 +271,18 @@ export const DECO_DEFS: DecoDef[] = [
 
   // ═══════ 家具工坊专属（workshopExclusive：仅制作获得，不进直购）═══════
   { id: 'workshop_plush_green_sofa', name: '弧翼大沙发', slot: DecoSlot.ORNAMENT, rarity: DecoRarity.LIMITED, cost: 0, starValue: 9, icon: 'workshop_plush_green_sofa', desc: '工坊匠心：明亮春绿三人沙发，双侧胡桃木扶手，橙白撞色抱枕', workshopExclusive: true, defaultScale: 2.08, decorationPanelTab: 'furniture' },
-  { id: 'workshop_plush_sofa_sakura', name: '樱粉弧翼大沙发', slot: DecoSlot.ORNAMENT, rarity: DecoRarity.LIMITED, cost: 0, starValue: 9, icon: 'workshop_plush_sofa_sakura', desc: '工坊染色：樱粉软绒沙发，浅黄与粉紫抱枕，同款弧翼造型', workshopExclusive: true, defaultScale: 2.08, decorationPanelTab: 'furniture' },
+  { id: 'workshop_plush_sofa_sakura', name: '樱粉弧翼大沙发', slot: DecoSlot.ORNAMENT, rarity: DecoRarity.LIMITED, cost: 0, starValue: 9, icon: 'workshop_plush_sofa_sakura', desc: '工坊染色：樱粉软绒沙发，浅黄与粉紫抱枕，同款弧翼造型', workshopExclusive: true, defaultScale: 1.88, decorationPanelTab: 'furniture' },
   { id: 'workshop_plush_sofa_blue', name: '海蓝弧翼大沙发', slot: DecoSlot.ORNAMENT, rarity: DecoRarity.LIMITED, cost: 0, starValue: 9, icon: 'workshop_plush_sofa_blue', desc: '工坊染色：海蓝软绒沙发，橙陶与紫白条纹抱枕，同款弧翼造型', workshopExclusive: true, defaultScale: 2.08, decorationPanelTab: 'furniture' },
   { id: 'workshop_puffy_petal_sofa', name: '泡芙拼块沙发', slot: DecoSlot.ORNAMENT, rarity: DecoRarity.LIMITED, cost: 0, starValue: 10, icon: 'workshop_puffy_petal_sofa', desc: '工坊匠心：泡芙感拼块沙发，樱粉与奶白软垫叠层，低趴治愈风', workshopExclusive: true, defaultScale: 1.95, decorationPanelTab: 'furniture' },
   { id: 'workshop_rose_cascade_drape', name: '玫瑰垂幔帘', slot: DecoSlot.WALLART, rarity: DecoRarity.LIMITED, cost: 0, starValue: 8, icon: 'workshop_rose_cascade_drape', desc: '工坊匠心：高挑玫瑰隔断帘，樱粉布面与玫瑰点缀，中间与底部留空', workshopExclusive: true, defaultScale: 2.05, decorationPanelTab: 'furniture' },
   { id: 'workshop_rose_cascade_drape_moon', name: '天蓝玫瑰垂幔帘', slot: DecoSlot.WALLART, rarity: DecoRarity.LIMITED, cost: 0, starValue: 8, icon: 'workshop_rose_cascade_drape_moon', desc: '工坊染色：天蓝垂幔帘，薰衣草紫玫瑰点缀，同款飘逸隔断造型', workshopExclusive: true, defaultScale: 2.05, decorationPanelTab: 'furniture' },
   { id: 'workshop_rose_cascade_drape_honey', name: '蜜黄玫瑰垂幔帘', slot: DecoSlot.WALLART, rarity: DecoRarity.LIMITED, cost: 0, starValue: 8, icon: 'workshop_rose_cascade_drape_honey', desc: '工坊染色：蜜黄垂幔帘，绯红玫瑰点缀，同款飘逸隔断造型', workshopExclusive: true, defaultScale: 2.05, decorationPanelTab: 'furniture' },
-  { id: 'workshop_lace_ribbon_bed', name: '蕾丝铁艺床', slot: DecoSlot.ORNAMENT, rarity: DecoRarity.LIMITED, cost: 0, starValue: 7, icon: 'workshop_lace_ribbon_bed', desc: '工坊匠心：白色卷曲铁艺床架，樱粉荷叶边床品与心形抱枕', workshopExclusive: true, defaultScale: 2.15, decorationPanelTab: 'furniture' },
-  { id: 'workshop_giant_rose_bouquet', name: '大捧玫瑰', slot: DecoSlot.ORNAMENT, rarity: DecoRarity.LIMITED, cost: 0, starValue: 8, icon: 'workshop_giant_rose_bouquet', desc: '工坊匠心：瓷瓶超大捧红玫瑰，满天星与飞燕草点缀，单击含苞与盛放切换', workshopExclusive: true, defaultScale: 0.85, decorationPanelTab: 'furniture', depthSortFeetYFudge: 110, depthSortYLift: 140 },
+  { id: 'workshop_lace_ribbon_bed', name: '蕾丝铁艺床', slot: DecoSlot.ORNAMENT, rarity: DecoRarity.LIMITED, cost: 0, starValue: 7, icon: 'workshop_lace_ribbon_bed', desc: '工坊匠心：白色卷曲铁艺床架，樱粉荷叶边床品与心形抱枕', workshopExclusive: true, defaultScale: 2.05, decorationPanelTab: 'furniture' },
+  { id: 'workshop_giant_rose_bouquet', name: '大捧玫瑰', slot: DecoSlot.ORNAMENT, rarity: DecoRarity.LIMITED, cost: 0, starValue: 8, icon: 'workshop_giant_rose_bouquet', desc: '工坊匠心：瓷瓶超大捧红玫瑰，满天星与飞燕草点缀，单击含苞与盛放切换', workshopExclusive: true, defaultScale: 0.95, decorationPanelTab: 'furniture', depthSortFeetYFudge: 110, depthSortYLift: 140 },
   { id: 'workshop_pastel_tv_cabinet', name: '黑色超薄电视柜', slot: DecoSlot.LIGHT, rarity: DecoRarity.LIMITED, cost: 0, starValue: 15, icon: 'workshop_pastel_tv_cabinet', desc: '工坊匠心：大屏超薄黑框电视 + 暖木三格电视柜，落地摆放可四面旋转', workshopExclusive: true, defaultScale: 1.68 },
+  { id: 'workshop_summer_lotus_arch_window', name: '夏日荷塘拱窗', slot: DecoSlot.WALLART, rarity: DecoRarity.LIMITED, cost: 0, starValue: 9, icon: 'workshop_summer_lotus_arch_window', desc: '工坊匠心：香槟金拱门垂薄荷纱帘，门内一池粉荷与柳影，鸟笼花饰点缀', workshopExclusive: true, defaultScale: 1.98, decorationPanelTab: 'furniture' },
+  { id: 'workshop_mint_bougainvillea_bay_window', name: '薄荷三角梅飘窗', slot: DecoSlot.WALLART, rarity: DecoRarity.LIMITED, cost: 0, starValue: 10, icon: 'workshop_mint_bougainvillea_bay_window', desc: '工坊匠心：薄荷蓝飘窗座，凹进窗台显空间感，窗外粉紫三角梅', workshopExclusive: true, defaultScale: 2.52, decorationPanelTab: 'furniture' },
+  { id: 'workshop_willow_wood_bay_window', name: '柳影木色飘窗', slot: DecoSlot.WALLART, rarity: DecoRarity.LIMITED, cost: 0, starValue: 10, icon: 'workshop_willow_wood_bay_window', desc: '工坊染色：暖木细框飘窗座，黄油黄抱枕，窗外垂柳疏影', workshopExclusive: true, defaultScale: 2.52, decorationPanelTab: 'furniture' },
 
   { id: 'promo_wood_tea_table', name: '原木花茶几', slot: DecoSlot.TABLE, rarity: DecoRarity.FINE, cost: 359, starValue: 2, icon: 'promo_wood_tea_table', desc: '厚木板小茶几，摆一杯花茶就有午后感', defaultScale: 0.98, decorationPanelTab: 'furniture' },
   { id: 'promo_petal_chaise', name: '花瓣奶油躺椅', slot: DecoSlot.ORNAMENT, rarity: DecoRarity.RARE, cost: 920, starValue: 5, icon: 'promo_petal_chaise', desc: '奶油躺椅配花瓣靠背，午后小憩像躺进花心里', defaultScale: 1.15, decorationPanelTab: 'furniture' },
@@ -365,6 +368,39 @@ export const DECO_DEFS: DecoDef[] = [
   { id: 'season_spring_wall', name: '樱花挂画', slot: DecoSlot.WALLART, rarity: DecoRarity.RARE, cost: 3910, starValue: 8, icon: 'wallart_spring', desc: '鎏金框油画风樱花径，等距墙面透视', unlockRequirement: { level: 8 }, defaultScale: 0.81 },
   { id: 'season_summer_light', name: '向日葵灯', slot: DecoSlot.LIGHT, rarity: DecoRarity.COMMON, cost: 390, starValue: 1, icon: 'light_summer', desc: '阳光感的向日葵造型灯具', unlockRequirement: { level: 4 }, defaultScale: 0.53 },
   { id: 'season_summer_garden', name: '花园喷泉', slot: DecoSlot.GARDEN, rarity: DecoRarity.LIMITED, cost: 5680, starValue: 11, icon: 'garden_summer', desc: '三层石喷泉，自然草边无菱形草皮', unlockRequirement: { level: 9 }, defaultScale: 1.68 },
+  {
+    id: 'season_summer_floor_fan',
+    name: '清凉立式电扇',
+    slot: DecoSlot.LIGHT,
+    rarity: DecoRarity.LIMITED,
+    cost: 0,
+    starValue: 0,
+    icon: 'season_summer_floor_fan',
+    desc: '薄荷绿落地立式电扇，夏日花店的清凉一角',
+    unlockRequirement: {
+      questId: 'cool_summer_reward_floor_fan',
+      conditionText: '活动解锁',
+      questDetailText: '清凉一夏活动获取',
+    },
+    defaultScale: 1.35,
+  },
+  {
+    id: 'season_summer_dining_table',
+    name: '夏日西瓜餐桌',
+    slot: DecoSlot.TABLE,
+    rarity: DecoRarity.LIMITED,
+    cost: 0,
+    starValue: 0,
+    icon: 'season_summer_dining_table',
+    desc: '方桌铺薄荷绿桌布，西瓜与冰饮摆出夏日午后感',
+    unlockRequirement: {
+      questId: 'cool_summer_reward_dining_table',
+      conditionText: '活动解锁',
+      questDetailText: '清凉一夏活动获取',
+    },
+    defaultScale: 1.28,
+    decorationPanelTab: 'furniture',
+  },
   { id: 'season_autumn_orn', name: '南瓜灯笼', slot: DecoSlot.ORNAMENT, rarity: DecoRarity.RARE, cost: 4055, starValue: 6, icon: 'orn_pumpkin', desc: '暖色调丰收风灯笼', unlockRequirement: { level: 9 }, defaultScale: 0.65 },
   { id: 'season_autumn_table', name: '枫叶柜台', slot: DecoSlot.TABLE, rarity: DecoRarity.RARE, cost: 5735, starValue: 5, icon: 'table_autumn', desc: '铺满红叶的木质柜台', unlockRequirement: { level: 10 }, defaultScale: 1.48 },
   { id: 'season_winter_wallart', name: '复古落地钟', slot: DecoSlot.ORNAMENT, rarity: DecoRarity.RARE, cost: 3025, starValue: 7, icon: 'wallart_winter', desc: '胡桃木落地钟，柔线稿无数字', unlockRequirement: { level: 9 }, defaultScale: 1.34, decorationPanelTab: 'furniture' },
@@ -932,11 +968,22 @@ export function getDecosForDecorationPanelTab(tab: DecoPanelTabId, sceneId: stri
       return d.decorationPanelTab === 'qinglian';
     }
     if (tab === 'appliance') {
-      return d.slot === DecoSlot.LIGHT && d.decorationPanelTab !== 'furniture' && d.decorationPanelTab !== 'garden';
+      return (
+        d.slot === DecoSlot.LIGHT &&
+        d.decorationPanelTab !== 'furniture' &&
+        d.decorationPanelTab !== 'flower_room' &&
+        d.decorationPanelTab !== 'garden' &&
+        d.decorationPanelTab !== 'qinglian'
+      );
     }
     if (tab === DecoSlot.GARDEN) {
       if (d.decorationPanelTab === 'garden') return true;
-      return d.slot === DecoSlot.GARDEN && d.decorationPanelTab !== 'furniture' && d.decorationPanelTab !== 'flower_room';
+      return (
+        d.slot === DecoSlot.GARDEN &&
+        d.decorationPanelTab !== 'furniture' &&
+        d.decorationPanelTab !== 'flower_room' &&
+        d.decorationPanelTab !== 'qinglian'
+      );
     }
     if (tab === DecoSlot.ORNAMENT || tab === DecoSlot.WALLART) {
       return (

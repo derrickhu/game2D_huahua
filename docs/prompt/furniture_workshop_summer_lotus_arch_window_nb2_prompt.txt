@@ -1,0 +1,25 @@
+Create ONE tall wall-decoration sprite for a cozy pastel flower-shop merge game (workshop exclusive wallart).
+
+ATTACHED REFERENCES:
+- Use the attached arched-window asset ONLY for wall-plane perspective and overall arch-window silhouette language (cream frame, slight wall tilt, sill at bottom). Do NOT copy its harbor sea view, sailboat, rose vase, or letter.
+- If a second reference shows an arched doorway with sheer curtains and outdoor garden view: take the DESIGN IDEA only (gold arch + airy sheer curtains framing a scenic opening). Adapt into the game art style below. Do NOT copy photoreal materials or the full room.
+
+PERSPECTIVE (mandatory — wall decoration, NOT floor furniture):
+- Entire prop lies flat on a vertical BACK WALL plane of an isometric L-room.
+- Arch top edge gently slopes left-high / right-low (about 25–30° family), same wall-plane language as approved wall curtains / arch windows.
+- Height edges stay vertical. NO floor-prop isometric diamond top face. NO pure front billboard rod.
+
+SUBJECT — Cool-summer lotus-pond arch window with sheer curtains:
+- Tall elegant arched doorway / trompe-l'oeil wall window, about 85–90% of canvas height, centered with generous white margin.
+- Slim polished champagne-gold / soft brass Art Nouveau arch frame with delicate curved moldings; soft mint-cream inner lip.
+- Airy semi-transparent white-to-mint sheer curtains gathered at the arch crown, soft swags across the top, then cascading down both sides like soft wings; center of the arch stays OPEN so the outdoor view reads clearly.
+- Tiny mint silk scalloped valance or soft lotus-petal fabric gather at the crown for extra design flair.
+- Through the open arch: a dreamy lotus pond — pastel mint-teal water with gentle ripples, pink and ivory lotus blooms, round green lily pads, soft misty willow tips in the distance, warm high-key pastel sky. Romantic, serene, readable at small size.
+- Extra decorations for premium workshop feel (keep sparse and elegant, not cluttered):
+  - Small gold birdcage charm hanging from one side of the arch, filled with tiny pink lotus buds / roses.
+  - Narrow cream sill at the base with one celadon mint vase holding a few lotus buds, and a soft silk ribbon trail.
+  - Optional tiny hanging lotus-lantern or gold lotus charm on the opposite side for balance.
+- Soft brown outlines, rounded kawaii hand-painted merge-game style, pastel high-key cool-summer palette (mint, blush pink, champagne gold, cream, soft teal water). Gentle upper-left lighting, clean readable silhouette.
+
+Canvas: portrait 3:4, single object centered, pure solid white #FFFFFF background only.
+NO room walls, NO floor plane, NO furniture cluster, NO characters, NO readable text, NO watermark, NO photoreal.

@@ -26,6 +26,7 @@ import { FURNITURE_TRAY_SPAWN_ROOM_LOCAL, RoomLayoutManager, type FurniturePlace
 import { CurrencyManager } from '@/managers/CurrencyManager';
 import { CheckInManager } from '@/managers/CheckInManager';
 import { QuestManager } from '@/managers/QuestManager';
+import { CoolSummerEventManager } from '@/managers/CoolSummerEventManager';
 import { SaveManager } from '@/managers/SaveManager';
 import { DressUpManager } from '@/managers/DressUpManager';
 import { getOwnerShopDisplayScale } from '@/config/DressUpConfig';
@@ -197,10 +198,11 @@ const LEFT_TOP_BUTTONS: SideBtnDef[] = [
   { id: 'affinity_codex', icon: '', texKey: 'icon_affinity_card', label: '友谊卡', event: 'affinityCodex:open', iconBg: 0xFFB1CC, labelColor: 0xC75D8B },
 ];
 
-/** 右侧 — 活动快捷按钮（签到/任务） */
+/** 右侧 — 活动快捷按钮（签到/任务/清凉一夏） */
 const RIGHT_BUTTONS: SideBtnDef[] = [
   { id: 'checkin', icon: '', texKey: 'icon_checkin', label: '签到', event: 'nav:openCheckIn', iconBg: 0xFFA726, labelColor: 0xD48B2E },
   { id: 'quest',   icon: '', texKey: 'icon_quest',   label: '任务', event: 'nav:openQuest',   iconBg: 0x42A5F5, labelColor: 0x1976D2 },
+  { id: 'cool_summer', icon: '', texKey: 'icon_cool_summer_event_nb2', label: '清凉', event: 'panel:openCoolSummerEvent', iconBg: 0x4DB6AC, labelColor: 0x1B6B66 },
 ];
 
 /** 左下折叠冷门功能区；当前先放「游戏圈」，后续可继续追加。 */
@@ -2331,6 +2333,15 @@ export class ShopScene implements Scene {
       this.container.addChild(btn.container);
       this._activityBtns.set(def.id, btn);
     }
+    this._refreshCoolSummerButtonVisibility();
+  }
+
+  private _refreshCoolSummerButtonVisibility(): void {
+    const btn = this._activityBtns.get('cool_summer');
+    if (!btn) return;
+    const active = CoolSummerEventManager.isActive();
+    btn.container.visible = active;
+    if (!active) btn.redDot.visible = false;
   }
 
   /**
@@ -2728,7 +2739,14 @@ export class ShopScene implements Scene {
     EventBus.on('roomlayout:removed', this._onRoomLayoutRemoved);
     EventBus.on('roomlayout:updated', this._onRoomLayoutUpdated);
     EventBus.on('furniture:drag_pointer_down', this._onFurnitureDragPointerDown);
+    EventBus.on('coolSummerEvent:changed', this._onCoolSummerChanged);
+    EventBus.on('coolSummerEvent:periodChanged', this._onCoolSummerChanged);
   }
+
+  private readonly _onCoolSummerChanged = (): void => {
+    this._refreshCoolSummerButtonVisibility();
+    this._updateRedDots();
+  };
 
   private readonly _onFurnitureDragPointerDown = (): void => {
     if (!this._isEditMode) return;
@@ -2752,6 +2770,8 @@ export class ShopScene implements Scene {
     EventBus.off('roomlayout:removed', this._onRoomLayoutRemoved);
     EventBus.off('roomlayout:updated', this._onRoomLayoutUpdated);
     EventBus.off('furniture:drag_pointer_down', this._onFurnitureDragPointerDown);
+    EventBus.off('coolSummerEvent:changed', this._onCoolSummerChanged);
+    EventBus.off('coolSummerEvent:periodChanged', this._onCoolSummerChanged);
   }
 
   /**
@@ -4057,6 +4077,13 @@ export class ShopScene implements Scene {
     // 任务红点
     const questBtn = this._activityBtns.get('quest');
     if (questBtn) questBtn.redDot.visible = QuestManager.hasClaimableQuest;
+
+    // 清凉一夏红点
+    const coolSummerBtn = this._activityBtns.get('cool_summer');
+    if (coolSummerBtn) {
+      coolSummerBtn.redDot.visible = coolSummerBtn.container.visible
+        && CoolSummerEventManager.hasRedDot;
+    }
 
     // 装修红点（有可购买的新装饰）
     const decoBtn = this._activityBtns.get('deco');

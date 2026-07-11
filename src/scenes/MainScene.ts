@@ -95,6 +95,7 @@ import {
 } from '@/gameobjects/ui/ShopDecorationStarFly';
 import { EventPanel } from '@/gameobjects/ui/EventPanel';
 import { EventBoardPanel } from '@/gameobjects/ui/EventBoardPanel';
+import { CoolSummerEventPanel } from '@/gameobjects/ui/CoolSummerEventPanel';
 import { ChallengePanel } from '@/gameobjects/ui/ChallengePanel';
 import { LeaderboardPanel } from '@/gameobjects/ui/LeaderboardPanel';
 import { RewardBoxButton } from '@/gameobjects/ui/RewardBoxButton';
@@ -119,6 +120,7 @@ import { RoomLayoutManager } from '@/managers/RoomLayoutManager';
 import { WeekendHuayuanBoostManager } from '@/managers/WeekendHuayuanBoostManager';
 import { TuesdayStaminaUnlimitedManager } from '@/managers/TuesdayStaminaUnlimitedManager';
 import { ThursdayMagicTimeManager } from '@/managers/ThursdayMagicTimeManager';
+import { CoolSummerEventManager } from '@/managers/CoolSummerEventManager';
 import { NewbieGiftPackManager } from '@/managers/NewbieGiftPackManager';
 import { WeekendHuayuanBoostPanel } from '@/gameobjects/ui/WeekendHuayuanBoostPanel';
 import { TuesdayStaminaUnlimitedPanel } from '@/gameobjects/ui/TuesdayStaminaUnlimitedPanel';
@@ -199,6 +201,7 @@ export class MainScene implements Scene {
   private _dressShopStarFlyLayer: PIXI.Container | null = null;
   private _eventPanel!: EventPanel;
   private _eventBoardPanel!: EventBoardPanel;
+  private _coolSummerEventPanel!: CoolSummerEventPanel;
   private _challengePanel!: ChallengePanel;
   private _leaderboardPanel!: LeaderboardPanel;
 
@@ -572,6 +575,9 @@ export class MainScene implements Scene {
     this._eventBoardPanel = new EventBoardPanel();
     overlay.addChild(this._eventBoardPanel);
 
+    this._coolSummerEventPanel = new CoolSummerEventPanel();
+    overlay.addChild(this._coolSummerEventPanel);
+
     this._challengePanel = new ChallengePanel();
     overlay.addChild(this._challengePanel);
 
@@ -853,6 +859,26 @@ export class MainScene implements Scene {
             this._topBar.flashEventBoard();
             onAnimDone();
           }, 0.12, false);
+        }
+      }
+
+      const summerFanFly = CoolSummerEventManager.isActive()
+        ? Math.max(0, Math.floor(customer.coolSummerFanReward ?? 0))
+        : 0;
+      if (summerFanFly > 0 && cv) {
+        const fanLocal = cv.getCoolSummerFanRewardIconLocalCenter();
+        if (fanLocal) {
+          pendingAnims++;
+          const sg = cv.toGlobal(fanLocal);
+          const sx = this.container.toLocal(sg).x;
+          const sy = this.container.toLocal(sg).y;
+          const eventPos = this._topBar.getCoolSummerEventIconPos();
+          const endX = this._topBar.x + eventPos.x;
+          const endY = this._topBar.y + eventPos.y;
+          this._playRewardFly('icon_cool_summer_fan', sx, sy, endX, endY, summerFanFly, () => {
+            this._topBar.flashCoolSummerEvent();
+            onAnimDone();
+          }, 0.16, false);
         }
       }
 
@@ -1997,7 +2023,8 @@ export class MainScene implements Scene {
       || this._checkInPanel.visible
       || this._offlineRewardPanel.visible
       || this._levelUpPopup.visible
-      || this._eventBoardPanel.visible;
+      || this._eventBoardPanel.visible
+      || this._coolSummerEventPanel.visible;
 
     if (blocked) {
       if (this._rewardBoxHintRetryCount < MainScene._REWARD_BOX_HINT_MAX_RETRY) {
@@ -2042,6 +2069,7 @@ export class MainScene implements Scene {
     WeekendHuayuanBoostManager.update(dt);
     TuesdayStaminaUnlimitedManager.update(dt);
     ThursdayMagicTimeManager.update(dt);
+    CoolSummerEventManager.update(dt);
 
     // 客人滚动区惯性动画
     this._customerScrollArea.update(dt);

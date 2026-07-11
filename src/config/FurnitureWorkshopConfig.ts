@@ -310,6 +310,55 @@ export const WORKSHOP_BLUEPRINT_DEFS: WorkshopBlueprintDef[] = [
       },
     ],
   },
+  {
+    id: 'blueprint_workshop_summer_lotus_arch_window',
+    name: '夏日荷塘拱窗图纸',
+    outputDecoId: 'workshop_summer_lotus_arch_window',
+    rarity: 'rare',
+    sourceText: '活动获得',
+    icon: 'workshop_blueprint_generic',
+    category: 'wallart',
+    acquire: [{ kind: 'event', label: '清凉一夏' }],
+    colorOptions: [
+      {
+        id: 'default',
+        name: '默认',
+        outputDecoId: 'workshop_summer_lotus_arch_window',
+        materialCost: 12,
+        dyeCost: 0,
+        huayuanCost: 32000,
+      },
+    ],
+  },
+  {
+    id: 'blueprint_workshop_mint_bougainvillea_bay_window',
+    name: '柳影木色飘窗图纸',
+    outputDecoId: 'workshop_willow_wood_bay_window',
+    rarity: 'rare',
+    sourceText: '活动获得',
+    icon: 'workshop_blueprint_generic',
+    category: 'wallart',
+    acquire: [{ kind: 'event', label: '清凉一夏' }],
+    colorOptions: [
+      {
+        id: 'default',
+        name: '柳影木色',
+        outputDecoId: 'workshop_willow_wood_bay_window',
+        materialCost: 14,
+        dyeCost: 0,
+        huayuanCost: 36000,
+      },
+      {
+        id: 'mint',
+        name: '薄荷三角梅',
+        outputDecoId: 'workshop_mint_bougainvillea_bay_window',
+        materialCost: 12,
+        dyeCost: 1,
+        dyeMaterialId: WORKSHOP_DYE_GREEN_ID,
+        huayuanCost: 38000,
+      },
+    ],
+  },
 ];
 
 export const WORKSHOP_BLUEPRINT_MAP = new Map(WORKSHOP_BLUEPRINT_DEFS.map(b => [b.id, b]));
@@ -398,6 +447,17 @@ export function getBlueprintDiamondCost(blueprintId: string): number | undefined
 export function isBlueprintDiamondPurchasable(blueprintId: string): boolean {
   const cost = getBlueprintDiamondCost(blueprintId);
   return typeof cost === 'number' && cost > 0;
+}
+
+/** 活动发放图纸（图纸商店展示「活动获得」，不可钻石购买） */
+export function isBlueprintEventAcquire(blueprintId: string): boolean {
+  const def = WORKSHOP_BLUEPRINT_MAP.get(blueprintId);
+  return !!def?.acquire?.some(a => a.kind === 'event');
+}
+
+/** 图纸商店列表：钻石可购 / 活动展示 / 已拥有 */
+export function isBlueprintListedInShop(blueprintId: string): boolean {
+  return isBlueprintDiamondPurchasable(blueprintId) || isBlueprintEventAcquire(blueprintId);
 }
 
 /** 工坊制作页 Tab 分类：优先 blueprint.category，否则按家具 slot / 装修 Tab 推断 */

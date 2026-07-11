@@ -1,0 +1,15 @@
+Strict IMAGE EDIT of the attached bay-window furniture sprite. Keep camera and layout identical.
+
+LOCKED from attachment:
+- Same 3/4 isometric bay angle and recessed depth
+- Same slim thin frame thickness (no thick wall slab)
+- Same pillow / throw / rattan seat positions and near-camera scale
+- Soft blue sky + soft green garden scenery through the glass (keep outdoor view, not white/black void)
+
+RECOLOR / REPLACE ONLY:
+- Window frame → natural warm wood / light oak (木色), still slim
+- Interior textiles (pillows, seat cushion accents, throw tones) → yellow family: cream-yellow, soft gold, butter yellow, pale mustard — cozy sunny set
+- Outdoor vines/flowers → willow tree branches with long slender green willow leaves (柳树), graceful hanging twigs — NOT bougainvillea, NOT pink flowers
+
+Soft brown outlines, pastel merge-game style. Pure white #FFFFFF only outside the silhouette.
+NO new camera, NO thick borders, NO empty glass, NO text, NO watermark.

@@ -1,6 +1,7 @@
 import * as PIXI from 'pixi.js';
 import { FONT_FAMILY } from '@/config/Constants';
 import { DECO_MAP } from '@/config/DecorationConfig';
+import { resolveFurnitureTexture } from '@/config/FurnitureRenderConfig';
 import {
   getWorkshopBlueprintFeatureLabels,
   type WorkshopBlueprintDef,
@@ -28,9 +29,9 @@ export function appendWorkshopBlueprintIcon(
     parent.addChild(scroll);
   }
 
-  const furnKey = DECO_MAP.get(outputDecoId)?.icon;
-  if (!furnKey) return;
-  const furnTex = TextureCache.get(furnKey);
+  const furnKey = DECO_MAP.get(outputDecoId)?.icon ?? outputDecoId;
+  const resolved = resolveFurnitureTexture(outputDecoId, furnKey);
+  const furnTex = TextureCache.get(resolved.textureKey);
   if (!furnTex?.width) return;
 
   const sil = new PIXI.Sprite(furnTex);
@@ -40,6 +41,7 @@ export function appendWorkshopBlueprintIcon(
   sil.position.set(centerX, centerY + boxSize * 0.02);
   sil.tint = WORKSHOP_BLUEPRINT_SILHOUETTE_TINT;
   sil.alpha = 0.92;
+  if (resolved.flipped) sil.scale.x *= -1;
   parent.addChild(sil);
 }
 

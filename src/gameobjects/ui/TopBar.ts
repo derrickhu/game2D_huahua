@@ -18,6 +18,7 @@ import { EventBoardManager } from '@/managers/EventBoardManager';
 import { WeekendHuayuanBoostManager } from '@/managers/WeekendHuayuanBoostManager';
 import { TuesdayStaminaUnlimitedManager } from '@/managers/TuesdayStaminaUnlimitedManager';
 import { ThursdayMagicTimeManager } from '@/managers/ThursdayMagicTimeManager';
+import { CoolSummerEventManager } from '@/managers/CoolSummerEventManager';
 import {
   isJewelryEventUnlocked,
 } from '@/config/EventBoardConfig';
@@ -84,6 +85,8 @@ const QUEST_ICON_SIZE = 58;
 const QUEST_HIT = 64;
 /** 首饰活动：图标视觉更大、且与客人区横向滑动层重叠，单独加大热区 */
 const EVENT_ICON_SIZE = 62;
+/** 清凉一夏入口图留白较多，单独放大以对齐花间珠匣视觉体量 */
+const COOL_SUMMER_ICON_SIZE = 76;
 const EVENT_HIT_W = 88;
 const EVENT_HIT_H = 92;
 /** 热区向上多探入顶栏带，减少被店铺区抢点击 */
@@ -95,6 +98,8 @@ const QUEST_BTN_CX = STA_X + 42;
 const QUEST_BTN_CY = TOP_BAR_HEIGHT + 18;
 const EVENT_BTN_CX = QUEST_BTN_CX + QUEST_HIT + 14;
 const EVENT_BTN_CY = QUEST_BTN_CY;
+const COOL_SUMMER_BTN_CX = EVENT_BTN_CX + EVENT_HIT_W + 4;
+const COOL_SUMMER_BTN_CY = EVENT_BTN_CY;
 // ── 颜色（体力胶囊参考：浅粉框 + 鲜绿填充 + 绿圆加号）──
 const C = {
   /** 胶囊外沿浅粉米 */
@@ -129,6 +134,9 @@ export class TopBar extends PIXI.Container {
   private _eventRedDot: PIXI.Graphics | null = null;
   private _eventBoardBtnWrap: PIXI.Container | null = null;
   private _eventBoardIcon: PIXI.Sprite | null = null;
+  private _coolSummerBtnWrap: PIXI.Container | null = null;
+  private _coolSummerIcon: PIXI.Sprite | null = null;
+  private _coolSummerRedDot: PIXI.Graphics | null = null;
   private _eventIconUnsub: (() => void) | null = null;
 
   constructor(opts?: TopBarOptions) {
@@ -148,7 +156,14 @@ export class TopBar extends PIXI.Container {
     if (this._opts.showDailyChallenge) {
       this._buildDailyChallengeButton();
       this._buildEventBoardButton();
-      this._eventIconUnsub = TextureCache.onKeysLoaded(['icon_jewelry_event_nb2'], () => this._refreshEventBoardIcon());
+      this._buildCoolSummerButton();
+      this._eventIconUnsub = TextureCache.onKeysLoaded(
+        ['icon_jewelry_event_nb2', 'icon_cool_summer_event_nb2'],
+        (key) => {
+          if (key === 'icon_jewelry_event_nb2') this._refreshEventBoardIcon();
+          if (key === 'icon_cool_summer_event_nb2') this._refreshCoolSummerIcon();
+        },
+      );
     }
     this._bindEvents();
     this._updateAll();
@@ -407,7 +422,6 @@ export class TopBar extends PIXI.Container {
       const tuesdayOn = TuesdayStaminaUnlimitedManager.isAvailableToday();
       const thursdayOn = ThursdayMagicTimeManager.isAvailableToday();
       this._limitedEventKind = weekendOn ? 'weekend' : tuesdayOn ? 'tuesday' : thursdayOn ? 'thursday' : null;
-
       const isTuesday = this._limitedEventKind === 'tuesday';
       const isThursday = this._limitedEventKind === 'thursday';
       const iconKey = isTuesday
@@ -674,6 +688,68 @@ export class TopBar extends PIXI.Container {
     this._eventBoardIcon.scale.set(s);
   }
 
+  /** 清凉一夏独立入口：与花间珠匣并列，不占用周末/周二/周四的互斥活动槽。 */
+  private _buildCoolSummerButton(): void {
+    const wrap = new PIXI.Container();
+    wrap.position.set(COOL_SUMMER_BTN_CX, COOL_SUMMER_BTN_CY);
+    wrap.hitArea = new PIXI.Rectangle(
+      -EVENT_HIT_W / 2,
+      -EVENT_HIT_H / 2 + EVENT_HIT_SHIFT_Y,
+      EVENT_HIT_W,
+      EVENT_HIT_H,
+    );
+    wrap.eventMode = 'static';
+    wrap.cursor = 'pointer';
+    wrap.zIndex = 25;
+    wrap.name = 'coolSummerEventBtn';
+
+    const tex = TextureCache.get('icon_cool_summer_event_nb2') ?? TextureCache.get('icon_gift');
+    if (tex?.width > 0) {
+      const sp = new PIXI.Sprite(tex);
+      sp.anchor.set(0.5);
+      sp.scale.set(Math.min(COOL_SUMMER_ICON_SIZE / tex.width, COOL_SUMMER_ICON_SIZE / tex.height));
+      sp.eventMode = 'none';
+      wrap.addChild(sp);
+      this._coolSummerIcon = sp;
+    }
+
+    const redDot = new PIXI.Graphics();
+    redDot.beginFill(0xff3333);
+    redDot.lineStyle(1.5, 0xffffff);
+    redDot.drawCircle(QUEST_HIT / 2 - 5, -QUEST_HIT / 2 + 7, 6);
+    redDot.endFill();
+    wrap.addChild(redDot);
+    this._coolSummerRedDot = redDot;
+
+    this._bindButtonClickSfx(wrap);
+    wrap.on('pointertap', (e: PIXI.FederatedPointerEvent) => {
+      e.stopPropagation();
+      EventBus.emit('panel:openCoolSummerEvent');
+    });
+    this.addChild(wrap);
+    this._coolSummerBtnWrap = wrap;
+    this.updateCoolSummerButton();
+  }
+
+  private _refreshCoolSummerIcon(): void {
+    if (!this._coolSummerIcon) return;
+    const tex = TextureCache.get('icon_cool_summer_event_nb2');
+    if (!tex?.width) return;
+    this._coolSummerIcon.texture = tex;
+    this._coolSummerIcon.scale.set(
+      Math.min(COOL_SUMMER_ICON_SIZE / tex.width, COOL_SUMMER_ICON_SIZE / tex.height),
+    );
+  }
+
+  updateCoolSummerButton(): void {
+    if (!this._coolSummerBtnWrap) return;
+    this._coolSummerBtnWrap.visible = CoolSummerEventManager.isActive();
+    if (this._coolSummerRedDot) {
+      this._coolSummerRedDot.visible = this._coolSummerBtnWrap.visible
+        && CoolSummerEventManager.hasRedDot;
+    }
+  }
+
   /** 未达开放等级时隐藏活动入口 */
   updateEventBoardButtonVisibility(): void {
     const wrap = this._eventBoardBtnWrap;
@@ -749,6 +825,8 @@ export class TopBar extends PIXI.Container {
     EventBus.on('quest:updated', () => this.updateQuestRedDot());
     EventBus.on('quest:taskCompleted', () => this.updateQuestRedDot());
     EventBus.on('eventBoard:changed', () => this.updateEventRedDot());
+    EventBus.on('coolSummerEvent:changed', () => this.updateCoolSummerButton());
+    EventBus.on('coolSummerEvent:periodChanged', () => this.updateCoolSummerButton());
     EventBus.on('star:levelUp', () => {
       this.updateEventBoardButtonVisibility();
       this.updateEventRedDot();
@@ -765,6 +843,7 @@ export class TopBar extends PIXI.Container {
     this._drawStaminaBar(barRatio);
     this.updateEventBoardButtonVisibility();
     this.updateEventRedDot();
+    this.updateCoolSummerButton();
   }
 
   /** 由外部 ticker 调用，刷新体力倒计时 */
@@ -820,6 +899,11 @@ export class TopBar extends PIXI.Container {
     return { x: EVENT_BTN_CX, y: EVENT_BTN_CY };
   }
 
+  /** 清凉一夏入口中心（清凉小扇飞入落点）。 */
+  getCoolSummerEventIconPos(): { x: number; y: number } {
+    return { x: COOL_SUMMER_BTN_CX, y: COOL_SUMMER_BTN_CY };
+  }
+
   /** @deprecated 花露/星星顶栏已移除，飞入花愿槽位 */
   getHualuIconPos(): { x: number; y: number } {
     return this.getHuayuanIconPos();
@@ -863,6 +947,28 @@ export class TopBar extends PIXI.Container {
           target: wrap.scale,
           props: { x: base, y: base },
           duration: 0.2,
+          ease: Ease.easeOutBack,
+        });
+      },
+    });
+  }
+
+  /** 清凉一夏入口弹跳反馈。 */
+  flashCoolSummerEvent(): void {
+    const wrap = this._coolSummerBtnWrap;
+    if (!wrap) return;
+    TweenManager.cancelTarget(wrap.scale);
+    wrap.scale.set(1);
+    TweenManager.to({
+      target: wrap.scale,
+      props: { x: 1.16, y: 1.16 },
+      duration: 0.12,
+      ease: Ease.easeOutQuad,
+      onComplete: () => {
+        TweenManager.to({
+          target: wrap.scale,
+          props: { x: 1, y: 1 },
+          duration: 0.18,
           ease: Ease.easeOutBack,
         });
       },
