@@ -639,6 +639,7 @@ const DECO_IMAGE_MAP: Record<string, string> = {
   light_summer:  'subpkg_deco/images/furniture/light_summer.png',
   season_summer_floor_fan: 'subpkg_deco/images/furniture/season_summer_floor_fan.png',
   season_summer_dining_table: 'subpkg_deco/images/furniture/season_summer_dining_table.png',
+  workshop_summer_dining_chair_sheet: 'subpkg_deco/images/furniture/workshop_summer_dining_chair_sheet.png',
   light_plant_strip: 'subpkg_deco/images/furniture/light_plant_strip.png',
   light_radio_vintage: 'subpkg_deco/images/furniture/light_radio_vintage.png',
   light_fan_desk: 'subpkg_deco/images/furniture/light_fan_desk.png',

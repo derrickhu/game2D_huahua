@@ -119,6 +119,14 @@ export const COOL_SUMMER_SHOP_PRODUCTS: readonly CoolSummerShopProduct[] = [
     grant: { kind: 'workshopMaterial', materialId: WORKSHOP_MATERIAL_ID, amount: 15 },
   },
   {
+    id: 'workshop_material_large_bundle',
+    categoryId: 'workshop_materials',
+    name: '工坊材料大箱',
+    cost: 100,
+    stock: 1,
+    grant: { kind: 'workshopMaterial', materialId: WORKSHOP_MATERIAL_ID, amount: 30 },
+  },
+  {
     id: 'workshop_dye_pink',
     categoryId: 'workshop_materials',
     name: '粉色染料',
@@ -154,7 +162,7 @@ export const COOL_SUMMER_SHOP_PRODUCTS: readonly CoolSummerShopProduct[] = [
     id: 'summer_blueprint_lotus_arch_window',
     categoryId: 'summer_collection',
     name: '夏日荷塘拱窗图纸',
-    cost: 200,
+    cost: 180,
     stock: 1,
     grant: { kind: 'blueprint', blueprintId: 'blueprint_workshop_summer_lotus_arch_window' },
   },
@@ -162,7 +170,7 @@ export const COOL_SUMMER_SHOP_PRODUCTS: readonly CoolSummerShopProduct[] = [
     id: 'summer_blueprint_mint_bay_window',
     categoryId: 'summer_collection',
     name: '柳影木色飘窗图纸',
-    cost: 220,
+    cost: 200,
     stock: 1,
     grant: { kind: 'blueprint', blueprintId: 'blueprint_workshop_mint_bougainvillea_bay_window' },
   },
@@ -181,6 +189,14 @@ export const COOL_SUMMER_SHOP_PRODUCTS: readonly CoolSummerShopProduct[] = [
     cost: 210,
     stock: 1,
     grant: { kind: 'deco', decoId: 'season_summer_dining_table' },
+  },
+  {
+    id: 'summer_blueprint_dining_chair',
+    categoryId: 'summer_collection',
+    name: '夏日西瓜餐椅图纸',
+    cost: 90,
+    stock: 1,
+    grant: { kind: 'blueprint', blueprintId: 'blueprint_workshop_summer_dining_chair' },
   },
 ];
 

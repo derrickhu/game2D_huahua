@@ -210,14 +210,60 @@ python3 scripts/compress_furniture_deco_pngs.py --force minigame/.../workshop_pl
 - **DecorationConfig.icon**：仍写 **deco id**；托盘/卡片默认 **正面帧**（别名）
 - **工程**：`FurnitureRenderConfig.ts` 登记 `renderMode` + `atlas`；`TextureCache` 登记 sheet key
 
-### 生图（Gemini / NB2）
+### 生图（Gemini / NB2）— 四向旋转（fourFacing）
 
-- **四向家具**：**一张图生成正+背**（2 列 × 1 行），白底宽缝，同模型、同等距视角、同尺度；范本：`furniture_workshop_puffy_petal_sofa_front_back_sheet_nb2_prompt.txt`
-- **附参考图**：生成背面时 **必须附正面已验收图**（`--image`）
-- **比例**：合图整体 **1:1**（512×512）
-- **抠图**：整图 **`birefnet-general`** → `crop_trim --padding 4`
-- **压缩**：与普通家具相同，`compress_furniture_deco_pngs.py --force`；`*_sheet.png` 不会整图缩到 171（见脚本 `sheet-optimize`）
-- **合图尺寸**：工坊 **`--max-side 342`**（弧翼沙发三色合图为标杆）；普通 Lv 家具 **171**
+**目标**：入库 sheet 的正/背两格必须 **同高度、脚底同基线、体量接近**；旋转时不能一大一小。
+
+#### 首选流程（分生再拼 — 强制推荐）
+
+一张图里同时画正+背时，模型常把某一侧画得更大；仅靠事后 `fit_max_side` **不能**修好「画小的那格被放大后变胖」。经验来自 `workshop_summer_dining_chair`：
+
+1. **先单独生正面**（`1:1`，附 `furniture_iso_grid_pm30.png` + 风格参考）。
+2. rembg **`birefnet-general`** → `crop_trim --padding 4` → 得到验收用 `…_front_nb2.png`。
+3. **再单独生背面**：`--image` **必须**附已验收正面；prompt 写死 **SIZE LOCK**（同绝对高度、同腿长、同木材粗细、同坐垫厚度；禁止把背面画大/画小、禁止坐垫变薄）。
+4. 背面同样 rembg → crop_trim。
+5. **拼 sheet**（见下「合图处理」），登记 `FurnitureRenderConfig` `fourFacing` + `TextureCache` `{family}_sheet`。
+
+| 提示词 | 用途 |
+|--------|------|
+| `furniture_*_front_nb2_prompt.txt` | 正面单件 |
+| `furniture_*_back_nb2_prompt.txt` | 背面单件（锁正面尺寸） |
+| 范例 | `furniture_season_summer_dining_chair_front_nb2_prompt.txt` / `…_back_nb2_prompt.txt` |
+
+背面 prompt 必含要点（英文正文，勿写 `#` 注释）：
+
+```
+CRITICAL: The attached chair is the FRONT view size lock. Draw the BACK view of that exact same chair at the EXACT SAME absolute size and scale — same overall height, same leg length, same wood thickness, same seat cushion thickness and plumpness. Do not enlarge or shrink. Do not make cushions thinner.
+```
+
+#### 备选：一张 2 列合图（仅体量大、轮廓简单时）
+
+- 2 列 × 1 行、白底宽缝；整体可用 **16:9**（两格横排更稳），勿假设 1:1 方图。
+- Prompt 仍须强调两侧 **identical absolute size**；范本：`furniture_workshop_puffy_petal_sofa_front_back_sheet_nb2_prompt.txt`。
+- 若验收发现两侧大小不一 → **改走上方「分生再拼」**，不要反复指望单次合图碰运气。
+
+#### 合图处理（强制）
+
+```bash
+# 工坊四向（每格 342）；普通家具改 --max-side 171
+python3 scripts/process_furniture_atlas_sheet.py \
+  --compose ../game_assets/huahua/assets/final/{id}_front_nb2.png \
+  --compose ../game_assets/huahua/assets/final/{id}_back_nb2.png \
+  --columns 2 --rows 1 --max-side 342 \
+  --match-height --bottom-align --width-ratio-max 1.08 \
+  -o minigame/subpkg_deco/images/furniture/{family}_sheet.png
+```
+
+| 参数 | 作用 |
+|------|------|
+| `--match-height` | 正/背 **统一缩到同一内容高度**（以高度为准，避免「画得矮的那格被 max-side 拉胖」） |
+| `--bottom-align` | **脚底贴同一基线**（旋转时脚点不跳） |
+| `--width-ratio-max` | 相对正面限制背面宽度比（默认建议 `1.08`）；超了则等比缩小后再拉回目标高度 |
+| `--max-side` | 工坊 **342**；普通 **171**。本餐椅等 `workshopExclusive` 四向件用 **342** |
+
+- **抠图**：`birefnet-general`（分生：各张；合图生：可整张再切格）。
+- **压缩**：`compress_furniture_deco_pngs.py --force`；`*_sheet.png` 走 sheet 逻辑，勿整图误缩。
+- **验收**：量两格 alpha bbox — **高度差 ≤ 2px**、顶/底 padding 接近、宽度比 ≤ `width-ratio-max`；编辑模式转一圈目视无缩放感。
 
 ### 运行时
 
@@ -230,6 +276,8 @@ python3 scripts/compress_furniture_deco_pngs.py --force minigame/.../workshop_pl
 - 写实 IKEA 照片风、暗黑低饱和、细黑线稿扁平 UI 图标风。
 - 带第四面墙或透视地板的「小场景」而非单件家具。
 - **同一家具族** 正/背/分色/交互态 **各一张独立 PNG**（应合并为 `{family}_sheet.png`）。
+- **四向正/背入库尺寸不一致**（一侧明显更大/更胖、脚底不齐）— 须分生 + `--match-height --bottom-align`，禁止只靠「看起来差不多」过验收。
+- **仅用一张 2 列合图且未做高度对齐**就当最终 sheet（易旋转跳变）。
 
 ## 墙饰 / 窗帘（`DecoSlot.WALLART` — 视角强制）
 

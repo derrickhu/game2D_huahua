@@ -1,0 +1,22 @@
+Create a clean 2D game furniture asset sheet for a cozy pastel flower-shop merge game.
+
+Canvas and layout: exactly 2 equal vertical panels in one horizontal row (2 columns x 1 row sprite sheet), with a wide pure white gutter between panels. Each panel contains exactly one standalone dining chair centered on pure white #FFFFFF. Keep each asset fully inside its panel with generous margins. NO TEXT, no labels, no captions, no numbers, no watermark.
+
+CRITICAL SIZE LOCK: Both chairs must be drawn at exactly the same absolute size and scale. Same overall height, same seat height, same leg length, same backrest height. The attached small chair reference is the size lock — match that chair's pixel scale in BOTH panels. Do NOT make the back-view chair larger or smaller than the front-view chair. If unsure, make both slightly smaller rather than mismatching.
+
+Shared style and perspective:
+Cute kawaii 2.5D true isometric furniture for a flower-shop merge game. Camera from upper-left into the L-room corner (same family as the room shell). On-screen top-face edges and base edges must sit near ±30° from horizontal — match the attached iso grid, NOT 45° wall slant, NOT flat front view. Height edges stay vertical. Use the attached grid ONLY for perspective; do not copy the gray demo cube.
+Soft brown outlines slightly thicker than hairline, rounded chibi-friendly shapes, gentle upper-left lighting, clean readable silhouette at small size.
+MUST visually match the attached summer watermelon dining table reference for wood tone and summer palette: warm honey / light oak wood, mint-green fabric accents, same cozy cool-summer vibe. Do NOT redraw the table — chair only.
+
+Shared chair design (same model in both panels):
+- Single cute dining chair with four short honey-oak legs, simple apron, and a medium-height backrest with gentle rounded top.
+- Seat cushion: soft mint-green fabric matching the tablecloth — CLEAN solid mint color only. Smooth soft fabric shading, NO speckles, NO seed dots, NO stains, NO dirty marks, NO texture noise, NO watermelon motifs.
+- Backrest: honey wood frame with a mint padded panel — CLEAN solid mint, same rules. NO watermelon slice, NO fruit icon, NO embroidery motif, NO decorative fruit pattern anywhere on the chair.
+- Chunky kawaii proportions, airy and clean, not ornate, no heavy carvings.
+
+Panel 1 (left column): FRONT / default facing view. Seat cushion facing toward the camera-front-right; backrest clearly behind the seat; four legs readable. Size must match panel 2.
+
+Panel 2 (right column): BACK view of the SAME chair at the EXACT SAME scale and isometric angle. Show the rear of the backrest clearly (wood frame + mint padding from behind); seat rear edge and rear legs visible. Must read unmistakably as the back of the same chair, not a different chair. Same absolute size as panel 1.
+
+No room shell, no floor tiles, no cast shadow blob, no characters, no table, no other furniture. Background pure solid white #FFFFFF only for cutout.

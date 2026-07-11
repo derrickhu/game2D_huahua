@@ -359,6 +359,26 @@ export const WORKSHOP_BLUEPRINT_DEFS: WorkshopBlueprintDef[] = [
       },
     ],
   },
+  {
+    id: 'blueprint_workshop_summer_dining_chair',
+    name: '夏日西瓜餐椅图纸',
+    outputDecoId: 'workshop_summer_dining_chair',
+    rarity: 'rare',
+    sourceText: '活动获得',
+    icon: 'workshop_blueprint_generic',
+    category: 'furniture',
+    acquire: [{ kind: 'event', label: '清凉一夏' }],
+    colorOptions: [
+      {
+        id: 'default',
+        name: '默认',
+        outputDecoId: 'workshop_summer_dining_chair',
+        materialCost: 8,
+        dyeCost: 0,
+        huayuanCost: 18000,
+      },
+    ],
+  },
 ];
 
 export const WORKSHOP_BLUEPRINT_MAP = new Map(WORKSHOP_BLUEPRINT_DEFS.map(b => [b.id, b]));

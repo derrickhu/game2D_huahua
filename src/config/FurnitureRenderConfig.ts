@@ -171,6 +171,19 @@ export const FURNITURE_RENDER_DEFS: FurnitureRenderDef[] = [
     },
     defaultFacing: 'front_right',
   },
+  {
+    decoId: 'workshop_summer_dining_chair',
+    renderMode: 'fourFacing',
+    atlas: {
+      sheetKey: 'workshop_summer_dining_chair_sheet',
+      columns: 2,
+      rows: 1,
+      row: 0,
+      frontCol: 0,
+      backCol: 1,
+    },
+    defaultFacing: 'front_right',
+  },
 ];
 
 export const FURNITURE_RENDER_MAP = new Map(FURNITURE_RENDER_DEFS.map(def => [def.decoId, def]));
