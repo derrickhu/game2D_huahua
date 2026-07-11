@@ -29,10 +29,10 @@ export const AD_UNIT_CONFIG: Record<'wechat' | 'douyin', PlatformAdUnitConfig> =
       /** 签到完成后加餐激励视频：与默认 rewardedVideo / 每日福利类一致 */
       checkin_ad_bonus: 'adunit-6ca54692fdb75515',
       newbie_gift_pack: 'adunit-afb2c19fab7b5c08',
-      /** 周末订单花愿加成（独立活动广告位） */
+      /** 限时活动统一广告位：周末花愿、周二体力、周四魔法时间及后续周内活动共用 */
       weekend_huayuan_boost: 'adunit-b6400a6a24ed1fb8',
-      /** 周二体力无限（专用广告位） */
-      tuesday_stamina_unlimited: 'adunit-1e387dbb7f5af3cd',
+      tuesday_stamina_unlimited: 'adunit-b6400a6a24ed1fb8',
+      thursday_magic_time: 'adunit-b6400a6a24ed1fb8',
       /** 清涟荷影换装：与家具 `special_deco_unlock` 同广告位 */
       dressup_outfit_qinglian: 'adunit-73ce0cce0986d5b3',
       /** 花间珠匣 · 进度回响广告奖励 */

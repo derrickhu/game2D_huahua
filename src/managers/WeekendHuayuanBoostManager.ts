@@ -16,7 +16,7 @@ interface WeekendHuayuanBoostState {
 /** 与签到 GM 虚拟日偏移共用，便于「下一天」测试 */
 function effectiveNow(): Date {
   const d = new Date();
-  const offset = CheckInManager.gmDateOffsetDays;
+  const offset = CheckInManager?.gmDateOffsetDays ?? 0;
   if (offset !== 0) {
     d.setUTCDate(d.getUTCDate() + offset);
   }
@@ -24,7 +24,7 @@ function effectiveNow(): Date {
 }
 
 function localDateKey(): string {
-  return CheckInManager.effectiveDateKey;
+  return CheckInManager?.effectiveDateKey ?? effectiveNow().toISOString().slice(0, 10);
 }
 
 /** 活动期：周六 0:00 起至周一 0:00 止（不含周一当日） */

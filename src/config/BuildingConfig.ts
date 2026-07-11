@@ -6,7 +6,16 @@
  * 工具放在棋盘上可点击产出（仅 canProduce），合成两个同级工具升级为下一级
  */
 
-import { Category, FlowerLine, DrinkLine, FoodLine, ToolLine, findItemId, isFruitCutLine } from './ItemConfig';
+import {
+  Category,
+  FlowerLine,
+  DrinkLine,
+  FoodLine,
+  ToolLine,
+  findItemId,
+  getMaxLevelForLine,
+  isFruitCutLine,
+} from './ItemConfig';
 
 /** 单次产出的明确目标：品类 + 产品线 + 产品等级 + 权重（相对权重即可） */
 export interface ToolProduceOutcome {
@@ -573,13 +582,24 @@ export function mergeOutcomePercents(entries: ToolProduceDisplayEntry[]): ToolPr
  * - 有 produceOutcomes：按 weight 加权；
  * - 否则按 produceTable 掷等级，再在 produceLinesRandom 或单条 produceLine 上均匀选线。
  */
-export function getBoardProducerOutcomePercents(def: ToolDef): ToolProduceDisplayEntry[] {
+function clampProducePreviewLevel(category: Category, line: string, level: number): number {
+  const maxLv = getMaxLevelForLine(category, line);
+  if (maxLv <= 0) return Math.max(1, level);
+  return Math.min(maxLv, Math.max(1, level));
+}
+
+export function getBoardProducerOutcomePercents(
+  def: ToolDef,
+  levelBonus = 0,
+): ToolProduceDisplayEntry[] {
+  const bonus = Math.max(0, Math.floor(levelBonus));
   if (def.produceOutcomes && def.produceOutcomes.length > 0) {
     const sum = def.produceOutcomes.reduce((s, o) => s + o.weight, 0);
     if (sum <= 0) return [];
     const raw: ToolProduceDisplayEntry[] = [];
     for (const o of def.produceOutcomes) {
-      const id = findItemId(o.category, o.line, o.level);
+      const level = clampProducePreviewLevel(o.category, o.line, o.level + bonus);
+      const id = findItemId(o.category, o.line, level);
       if (!id) continue;
       raw.push({ itemId: id, percent: (o.weight / sum) * 100 });
     }
@@ -597,7 +617,8 @@ export function getBoardProducerOutcomePercents(def: ToolDef): ToolProduceDispla
   const raw: ToolProduceDisplayEntry[] = [];
   for (const [lvl, w] of table) {
     for (const line of lines) {
-      const id = findItemId(def.produceCategory, line, lvl);
+      const level = clampProducePreviewLevel(def.produceCategory, line, lvl + bonus);
+      const id = findItemId(def.produceCategory, line, level);
       if (!id) continue;
       raw.push({ itemId: id, percent: (w / sumT) * (1 / lines.length) * 100 });
     }

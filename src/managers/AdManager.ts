@@ -53,6 +53,8 @@ export enum AdScene {
   WEEKEND_HUAYUAN_BOOST = 'weekend_huayuan_boost',
   /** 周二体力无限：看广告攒进度领体力包 */
   TUESDAY_STAMINA_UNLIMITED = 'tuesday_stamina_unlimited',
+  /** 周四魔法时间：看广告给单个工具附魔 */
+  THURSDAY_MAGIC_TIME = 'thursday_magic_time',
   /** 形象换装 · 清涟荷影：广告解锁购买资格 */
   DRESSUP_OUTFIT_QINGLIAN = 'dressup_outfit_qinglian',
   /** 花间珠匣 · 进度回响广告奖励 */
@@ -120,6 +122,15 @@ class AdManagerClass {
       return;
     }
 
+    // 微信开发者工具的广告桥接偶发 operateWXDataForAd / object clone 系统错误。
+    // 本地联调统一模拟成功，真机仍走真实广告位。
+    if (Platform.isDevtools) {
+      console.log('[AdManager] 微信开发者工具环境，激励视频使用开发模式模拟');
+      this._devMode = true;
+      this._adConfig = config;
+      return;
+    }
+
     // 检查是否配置了真实广告位 ID
     if (config.rewardedVideo.includes('xxxx')) {
       console.log('[AdManager] 广告位ID未配置，使用开发模式');
@@ -179,6 +190,13 @@ class AdManagerClass {
       err_code: errCode,
       err_msg: errMsg || 'unknown',
     });
+  }
+
+  private _adErrorSummary(err: any, fallback: string): { code: number; msg: string } {
+    return {
+      code: Number(err?.errCode ?? -1),
+      msg: String(err?.errMsg || err?.message || fallback),
+    };
   }
 
   /**
@@ -252,8 +270,9 @@ class AdManagerClass {
           this._trackAd(EVENT_NAMES.AD_SHOW, scene, adUnitId);
         })
         .catch((err: any) => {
-          console.error('[AdManager] 激励视频展示失败:', err);
-          this._reportAdErrorOnce(scene, adUnitId, Number(err?.errCode ?? -1), String(err?.errMsg || 'show_failed'));
+          const summary = this._adErrorSummary(err, 'show_failed');
+          console.error('[AdManager] 激励视频展示失败:', summary);
+          this._reportAdErrorOnce(scene, adUnitId, summary.code, summary.msg);
           this._finishRewardedAd(false, 'show_failed');
         });
     };
@@ -265,8 +284,9 @@ class AdManagerClass {
         doShow();
       })
       .catch((err: any) => {
-        console.error('[AdManager] 激励视频加载失败:', err);
-        this._reportAdErrorOnce(scene, adUnitId, Number(err?.errCode ?? -1), String(err?.errMsg || 'load_failed'));
+        const summary = this._adErrorSummary(err, 'load_failed');
+        console.error('[AdManager] 激励视频加载失败:', summary);
+        this._reportAdErrorOnce(scene, adUnitId, summary.code, summary.msg);
         this._finishRewardedAd(false, 'load_failed');
       });
   }
@@ -288,7 +308,8 @@ class AdManagerClass {
       this._loadedRewardedAdUnits.add(adUnitId);
     });
     ad.onError((err: any) => {
-      console.warn('[AdManager] 激励视频广告错误:', adUnitId, err);
+      const summary = this._adErrorSummary(err, 'unknown');
+      console.warn('[AdManager] 激励视频广告错误:', adUnitId, summary);
       this._loadedRewardedAdUnits.delete(adUnitId);
       // 仅当错误归属当前正在播放的广告才上报 ad_error（避免 wx/tt 后台 prefetch 失败这类
       // 与业务无关的"无主错误"污染 scene 桶）。cycle 标志保证与 show().catch() 通路不双计。
@@ -296,8 +317,8 @@ class AdManagerClass {
         this._reportAdErrorOnce(
           this._pendingScene,
           adUnitId,
-          Number(err?.errCode ?? -1),
-          String(err?.errMsg || 'unknown'),
+          summary.code,
+          summary.msg,
         );
       }
       if (this._pendingAdUnitId === adUnitId && this._pendingCallback) {

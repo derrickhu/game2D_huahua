@@ -1,0 +1,7 @@
+Single transparent-background game UI icon, square 1:1.
+
+Create one cute 2D mobile game energy bolt icon matching a cozy pastel merge game. The shape should be a chunky lightning bolt, very similar to a stamina / energy icon: rounded corners, glossy soft gradients, crisp cartoon outline, small sparkle highlights.
+
+Color direction: magical purple version. Main fill should be bright lavender and violet with a little pink glow, not green. Outline should be deep purple with a thin pale highlight rim. Keep it readable at tiny size as a corner badge on board tool icons.
+
+Composition: centered icon, large bolt filling about 75% of the canvas, transparent background, no shadow outside the transparent canvas except a very soft glow close to the bolt. No text, no labels, no numbers, no watermark, no border frame.

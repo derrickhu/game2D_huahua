@@ -25,6 +25,7 @@ const FURNITURE_ICON_ALIASES = buildFurnitureIconAliasMap();
 const MAIN_IMAGE_MAP: Record<string, string> = {
   // ---- UI 图标 ----
   icon_energy: 'images/ui/icon_energy.png',
+  icon_energy_magic: 'images/ui/icon_energy_magic_nb2.png',
   icon_gem:    'images/ui/icon_gem.png',
   icon_star:   'images/ui/icon_star.png',
   icon_plus:   'images/ui/icon_plus.png',
@@ -36,6 +37,8 @@ const MAIN_IMAGE_MAP: Record<string, string> = {
   icon_weekend_huayuan_boost_nb2: 'images/ui/icon_weekend_huayuan_boost_nb2.png',
   /** 周二体力无限顶栏入口（NB2 + rembg） */
   icon_tuesday_stamina_unlimited_nb2: 'images/ui/icon_tuesday_stamina_unlimited_nb2.png',
+  /** 周四魔法时间顶栏入口（魔法棒 + 紫色体力 + 效率箭头，NB2 + rembg） */
+  icon_thursday_magic_time_nb2: 'images/ui/icon_thursday_magic_time_nb2.png',
   /** 花间珠匣活动入口：打开首饰盒 + 大颗宝石（主页面常驻入口，留在主包） */
   icon_jewelry_event_nb2: 'images/ui/icon_jewelry_event_nb2.png',
   /** NB2+rembg：激励视频 / 看广告统一小图标（粉紫边框 + 播放三角） */
@@ -291,6 +294,8 @@ const PANELS_IMAGE_MAP: Record<string, string> = {
   weekend_huayuan_boost_promo_panel_nb2: 'subpkg_panels/images/ui/weekend_huayuan_boost_promo_panel_nb2.png',
   /** 周二体力无限活动壳（绿幕去底；上半宣传 + 下半空白叠购买行） */
   tuesday_stamina_unlimited_panel_shell_nb2: 'subpkg_panels/images/ui/tuesday_stamina_unlimited_panel_shell_nb2.png',
+  /** 周四魔法时间活动壳（魔法世界标题 + 中部空白叠双框交互） */
+  thursday_magic_time_panel_shell_nb2: 'subpkg_panels/images/ui/thursday_magic_time_panel_shell_nb2.png',
   /** 清涟荷影新手礼包宣传卡（空奖励格 + 空按钮，文案与图标由代码叠） */
   newbie_gift_qinglian_promo_panel_nb2: 'subpkg_panels/images/ui/newbie_gift_qinglian_promo_panel_nb2.png',
   /** 中间浅蓝任务区底板（空，叠在列表背后） */
@@ -1084,6 +1089,8 @@ const SHOP_WARMUP_KEYS = [
   'icon_wishing_nav',
   'icon_weekend_huayuan_boost_nb2',
   'icon_tuesday_stamina_unlimited_nb2',
+  'icon_thursday_magic_time_nb2',
+  'icon_energy_magic',
   'icon_jewelry_event_nb2',
 ] as const;
 
@@ -1249,6 +1256,7 @@ const WEEKEND_HUAYUAN_BOOST_PANEL_KEYS = [
 const TUESDAY_STAMINA_UNLIMITED_PANEL_KEYS = [
   'tuesday_stamina_unlimited_panel_shell_nb2',
   'icon_energy',
+  'icon_energy_magic',
 ] as const;
 
 const NEWBIE_GIFT_PANEL_KEYS = [
@@ -1316,6 +1324,7 @@ export type TextureAssetGroup =
   | 'flowerSignGacha'
   | 'weekendHuayuanBoost'
   | 'tuesdayStaminaUnlimited'
+  | 'thursdayMagicTime'
   | 'newbieGiftPack'
   | 'main'
   | 'items'
@@ -1345,6 +1354,12 @@ const ASSET_GROUP_KEYS: Record<TextureAssetGroup, readonly string[]> = {
   flowerSignGacha: FLOWER_SIGN_GACHA_PANEL_KEYS,
   weekendHuayuanBoost: WEEKEND_HUAYUAN_BOOST_PANEL_KEYS,
   tuesdayStaminaUnlimited: TUESDAY_STAMINA_UNLIMITED_PANEL_KEYS,
+  thursdayMagicTime: [
+    'icon_energy',
+    'icon_energy_magic',
+    'icon_thursday_magic_time_nb2',
+    'thursday_magic_time_panel_shell_nb2',
+  ],
   newbieGiftPack: NEWBIE_GIFT_PANEL_KEYS,
   main: [],
   items: [],
@@ -1387,6 +1402,12 @@ const ASSET_GROUP_NOTIFY_KEYS: Record<TextureAssetGroup, readonly string[]> = {
   flowerSignGacha: uniqueKeys(FLOWER_SIGN_GACHA_PANEL_KEYS, ALL_ITEMS_KEYS, ALL_DECO_KEYS),
   weekendHuayuanBoost: [...WEEKEND_HUAYUAN_BOOST_PANEL_KEYS],
   tuesdayStaminaUnlimited: [...TUESDAY_STAMINA_UNLIMITED_PANEL_KEYS],
+  thursdayMagicTime: [
+    'icon_energy',
+    'icon_energy_magic',
+    'icon_thursday_magic_time_nb2',
+    'thursday_magic_time_panel_shell_nb2',
+  ],
   newbieGiftPack: uniqueKeys(NEWBIE_GIFT_PANEL_KEYS, ALL_DECO_KEYS, ALL_ITEMS_KEYS),
 };
 

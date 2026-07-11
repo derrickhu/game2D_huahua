@@ -1,0 +1,10 @@
+Square 1:1 mobile game limited-time event icon, matching the bold readable home-screen activity icons of a cozy pastel flower-shop merge game.
+
+Make the icon extremely clear at tiny top-bar size. Use three big simple shapes only:
+1. a large chunky purple energy lightning bolt in the center, glossy and rounded;
+2. a thick golden magic wand crossing behind it, with a big star tip;
+3. a bright orange-yellow upward boost arrow / speed ribbon wrapping around the bolt.
+
+Style requirements: saturated bright colors, strong contrast, broad clean silhouette, soft 2D mobile game volume made with color gradients and highlights. Use chunky outlines like casual game icons. Avoid tiny sparkles, thin lines, small decorative fragments, tiny text, labels, numbers, UI frames, complicated background, or white sticker border dominating the shape.
+
+Palette: vivid purple, magenta highlights, warm gold, orange boost arrow, tiny cyan highlights only if very sparse. Transparent-friendly plain light background for background removal. No readable text, no watermark.

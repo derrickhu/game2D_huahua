@@ -62,6 +62,7 @@ export class ItemView extends PIXI.Container {
   private _currencyContainer: PIXI.Container | null = null;
 
   private _itemId: string = '';
+  private _magicEnergy = false;
   private _textureUnsub: (() => void) | null = null;
 
   constructor() {
@@ -169,9 +170,10 @@ export class ItemView extends PIXI.Container {
     this.addChild(this._chestBadgeRoot);
   }
 
-  setItem(itemId: string | null): void {
+  setItem(itemId: string | null, opts?: { magicEnergy?: boolean }): void {
     this._textureUnsub?.();
     this._textureUnsub = null;
+    this._magicEnergy = !!opts?.magicEnergy;
     if (!itemId) {
       this.setPeekRibbon(false);
       this.visible = false;
@@ -242,7 +244,7 @@ export class ItemView extends PIXI.Container {
       this.addChildAt(this._iconSprite, 1);
     } else {
       this._textureUnsub = TextureCache.onKeysLoaded([def.icon], () => {
-        if (this._itemId === itemId) this.setItem(itemId);
+        if (this._itemId === itemId) this.setItem(itemId, { magicEnergy: this._magicEnergy });
       });
       // 无纹理 fallback：柔和的图标占位
       this._iconBg.clear();
@@ -468,6 +470,7 @@ export class ItemView extends PIXI.Container {
     const sp = createToolEnergySprite(cs, cs, {
       maxSideFrac: BOARD_PRODUCER_ENERGY_MAX_SIDE_FRAC,
       pad: Math.max(5, Math.round(cs * 0.065)),
+      textureKey: this._magicEnergy ? 'icon_energy_magic' : 'icon_energy',
     });
     if (!sp) return;
     this._toolEnergySprite = sp;

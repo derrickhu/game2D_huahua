@@ -1,0 +1,18 @@
+Clean 2D mobile game event panel shell for a cozy pastel flower-shop merge game, matching the existing bright home-screen activity panels. Portrait modal card, large and readable, cute magical theme.
+
+Panel shape: a big rounded vertical event card with a slightly irregular magical silhouette. Thick soft lavender outer rim, pastel pink inner lip, creamy warm interior, soft floating shadow. Transparent-friendly plain white background outside the panel for background removal. Do not include a close button; the game will draw the close button.
+
+Top hero area: large designed Chinese title text exactly: 魔法时间. The title must be very readable, chunky, lavender-purple with white outline and soft golden highlight. Add a bold golden magic wand and a few large purple stars around the title. Avoid thin strokes and tiny decorative fragments.
+
+Under the title, bake three clear ribbon / pill labels into the artwork, readable Chinese text exactly:
+体力×2
+产出升阶
+效率翻倍
+
+Upper decoration: use a large purple energy lightning bolt, a magic wand, a glowing upgrade arrow, and soft magical clouds to show improved efficiency. Use saturated purple, pink, gold, and orange accents with glossy mobile-game volume.
+
+Central interaction area: leave a large clean blank cream area in the middle for game code to place two comparison boxes. The blank area should be about 78% of panel width and 36% of panel height, with only a subtle soft border. No text, no icons, no characters inside this central blank area.
+
+Bottom area: leave a clean blank rounded button zone near the lower center for game code to draw the CTA button. Around the bottom, add only large simple magical shapes: purple bolts, gold stars, ribbon curls, and a wand. Do not put text inside the button zone.
+
+Overall: saturated pastel kawaii casual game UI, high-key, strong color blocks, broad clean shapes, soft gradients for volume. No photorealism, no watermark, no logo, no extra text beyond 魔法时间, 体力×2, 产出升阶, 效率翻倍.

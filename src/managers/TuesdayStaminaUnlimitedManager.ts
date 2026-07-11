@@ -45,7 +45,7 @@ interface TuesdayStaminaState {
 
 function effectiveNow(): Date {
   const d = new Date();
-  const offset = CheckInManager.gmDateOffsetDays;
+  const offset = CheckInManager?.gmDateOffsetDays ?? 0;
   if (offset !== 0) {
     d.setUTCDate(d.getUTCDate() + offset);
   }
@@ -53,7 +53,7 @@ function effectiveNow(): Date {
 }
 
 function localDateKey(): string {
-  return CheckInManager.effectiveDateKey;
+  return CheckInManager?.effectiveDateKey ?? effectiveNow().toISOString().slice(0, 10);
 }
 
 /** 活动期：仅周二（本地日历日） */

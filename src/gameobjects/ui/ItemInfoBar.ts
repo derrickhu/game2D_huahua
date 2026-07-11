@@ -726,6 +726,7 @@ export class ItemInfoBar extends PIXI.Container {
     EventBus.on('board:itemRemoved', () => this._clearSelection());
     EventBus.on('board:itemSold', () => this._clearSelection());
     EventBus.on('toolproduce:policyChanged', () => this._refreshToolStaminaLabel());
+    EventBus.on('thursdayMagicTime:changed', () => this._refreshToolStaminaLabel());
     EventBus.on('collection:discovered', () => this.updateQuickBtnRedDots());
   }
 
@@ -742,8 +743,9 @@ export class ItemInfoBar extends PIXI.Container {
       return;
     }
     if (!this._staminaDescRow.visible) return;
-    const cost = ToolProducePolicy.getEffectiveStaminaCost(producerDef!.staminaCost);
-    this._staminaDescLabel.text = `消耗体力 ${cost}`;
+    const magic = BuildingManager.isMagicEnchanted(this._selectedCellIndex);
+    const cost = magic ? 2 : ToolProducePolicy.getEffectiveStaminaCost(producerDef!.staminaCost);
+    this._staminaDescLabel.text = magic ? `魔法时间：消耗体力 ${cost}，产出升 1 档` : `消耗体力 ${cost}`;
   }
 
   /** 主循环调用：选中工具时 CD 结束需从「加速」切回普通状态，无需重点格子。 */
@@ -898,10 +900,11 @@ export class ItemInfoBar extends PIXI.Container {
         this._staminaDescRow.visible = false;
         this._descText.text = this._getFruitCutToolDescription(producerDef);
       } else if (showStaminaRow) {
-        const cost = ToolProducePolicy.getEffectiveStaminaCost(producerDef!.staminaCost);
+        const magic = BuildingManager.isMagicEnchanted(cellIndex);
+        const cost = magic ? 2 : ToolProducePolicy.getEffectiveStaminaCost(producerDef!.staminaCost);
         this._descText.visible = false;
         this._staminaDescRow.visible = true;
-        this._staminaDescLabel.text = `消耗体力 ${cost}`;
+        this._staminaDescLabel.text = magic ? `魔法时间：消耗体力 ${cost}，产出升 1 档` : `消耗体力 ${cost}`;
       } else {
         this._descText.visible = true;
         this._staminaDescRow.visible = false;

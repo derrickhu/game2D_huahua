@@ -19,6 +19,7 @@ import {
   getMaxLevelForLine,
   FlowerLine,
   DrinkLine,
+  FoodLine,
   ToolLine,
 } from '@/config/ItemConfig';
 import {
@@ -29,6 +30,7 @@ import {
 } from '@/config/BuildingConfig';
 import { BOARD_COLS, BOARD_ROWS } from '@/config/Constants';
 import { ToolProducePolicy } from '@/managers/ToolProducePolicy';
+import { CheckInManager } from '@/managers/CheckInManager';
 
 /** 单次点击产出结果（工具 1 件；宝箱可能多件） */
 export type ProducePlacement = { itemId: string; targetIndex: number };
@@ -57,6 +59,8 @@ interface BuildingState {
   cdRemaining: number;
   usesLeft: number;
   freeProducesLeft: number;
+  /** 周四魔法时间：该工具实例附魔的有效日期 key */
+  magicEnchantDateKey?: string;
   /** 宝箱：`undefined` 未开箱；有数组则为待落到棋盘的物品 id */
   chestQueue?: string[];
   chestTotalBoardDrops?: number;
@@ -69,12 +73,17 @@ export interface BuildingPersistEntry {
   cdRemaining: number;
   usesLeft: number;
   freeProducesLeft: number;
+  magicEnchantDateKey?: string;
   chestQueue?: string[];
   chestTotalBoardDrops?: number;
 }
 
 /** 入仓时随物品保存（无格索引），取出后写回 BuildingManager */
 export type ToolStateSnapshot = Omit<BuildingPersistEntry, 'cellIndex'>;
+
+function currentEffectiveDateKey(): string {
+  return CheckInManager?.effectiveDateKey ?? new Date().toISOString().slice(0, 10);
+}
 
 // ═══════════════ 宝箱定义 ═══════════════
 
@@ -86,16 +95,23 @@ const CHEST_DEFS: ChestDef[] = [
       {
         type: 'product',
         category: Category.FLOWER,
-        lines: [FlowerLine.FRESH, FlowerLine.GREEN],
+        lines: [FlowerLine.FRESH, FlowerLine.BOUQUET, FlowerLine.GREEN],
         levelRange: [1, 1],
-        weight: 55,
+        weight: 43,
       },
       {
         type: 'product',
         category: Category.DRINK,
         lines: [DrinkLine.BUTTERFLY, DrinkLine.COLD, DrinkLine.DESSERT],
         levelRange: [1, 1],
-        weight: 45,
+        weight: 43,
+      },
+      {
+        type: 'product',
+        category: Category.FOOD,
+        lines: [FoodLine.FRUIT],
+        levelRange: [1, 1],
+        weight: 14,
       },
     ],
   },
@@ -106,16 +122,23 @@ const CHEST_DEFS: ChestDef[] = [
       {
         type: 'product',
         category: Category.FLOWER,
-        lines: [FlowerLine.FRESH, FlowerLine.GREEN],
-        levelRange: [1, 2],
-        weight: 57,
+        lines: [FlowerLine.FRESH, FlowerLine.BOUQUET, FlowerLine.GREEN],
+        levelRange: [2, 3],
+        weight: 43,
       },
       {
         type: 'product',
         category: Category.DRINK,
         lines: [DrinkLine.BUTTERFLY, DrinkLine.COLD, DrinkLine.DESSERT],
-        levelRange: [1, 2],
+        levelRange: [2, 3],
         weight: 43,
+      },
+      {
+        type: 'product',
+        category: Category.FOOD,
+        lines: [FoodLine.FRUIT],
+        levelRange: [2, 3],
+        weight: 14,
       },
     ],
   },
@@ -127,17 +150,23 @@ const CHEST_DEFS: ChestDef[] = [
       {
         type: 'product',
         category: Category.FLOWER,
-        lines: [FlowerLine.FRESH, FlowerLine.BOUQUET],
-        levelRange: [1, 3],
-        weight: 40,
+        lines: [FlowerLine.FRESH, FlowerLine.BOUQUET, FlowerLine.GREEN],
+        levelRange: [4, 5],
+        weight: 38,
       },
-      { type: 'product', category: Category.FLOWER, lines: [FlowerLine.GREEN], levelRange: [2, 3], weight: 17 },
       {
         type: 'product',
         category: Category.DRINK,
         lines: [DrinkLine.BUTTERFLY, DrinkLine.COLD, DrinkLine.DESSERT],
-        levelRange: [1, 3],
-        weight: 32,
+        levelRange: [4, 5],
+        weight: 38,
+      },
+      {
+        type: 'product',
+        category: Category.FOOD,
+        lines: [FoodLine.FRUIT],
+        levelRange: [4, 5],
+        weight: 13,
       },
     ],
   },
@@ -608,8 +637,12 @@ class BuildingManagerClass {
       return this._produceChest(cellIndex, chestDef);
     }
 
-    const staminaCost = ToolProducePolicy.getEffectiveStaminaCost(toolDef!.staminaCost);
     const state = this._getOrCreateState(cellIndex, cell.itemId);
+    const magicEnchanted = this.isMagicEnchanted(cellIndex);
+    const staminaCost = magicEnchanted
+      ? 2
+      : ToolProducePolicy.getEffectiveStaminaCost(toolDef!.staminaCost);
+    const produceLevelBonus = ToolProducePolicy.getProduceLevelBonus() + (magicEnchanted ? 1 : 0);
     if (state.cdRemaining > 0) {
       console.log(`[Building] CD 冷却中，剩余 ${state.cdRemaining.toFixed(0)}s`);
       EventBus.emit('building:onCooldown', cellIndex, state.cdRemaining);
@@ -633,7 +666,7 @@ class BuildingManagerClass {
 
     let producedId: string | null = null;
     if (toolDef!.produceOutcomes && toolDef!.produceOutcomes.length > 0) {
-      producedId = this._rollToolProduceOutcome(toolDef!.produceOutcomes);
+      producedId = this._rollToolProduceOutcome(toolDef!.produceOutcomes, produceLevelBonus);
     } else {
       let level = this._rollLevel(toolDef!.produceTable);
       const lines = toolDef!.produceLinesRandom;
@@ -644,7 +677,7 @@ class BuildingManagerClass {
       level = this._clampProduceLevel(
         toolDef!.produceCategory,
         line,
-        level + ToolProducePolicy.getProduceLevelBonus(),
+        level + produceLevelBonus,
       );
       producedId = findItemId(toolDef!.produceCategory, line, level);
     }
@@ -846,6 +879,60 @@ class BuildingManagerClass {
     return { remaining: state.chestQueue.length, total: Math.max(1, total) };
   }
 
+  isMagicEnchantableAt(cellIndex: number): boolean {
+    const cell = BoardManager.getCellByIndex(cellIndex);
+    if (!cell?.itemId || cell.state !== 'open') return false;
+    const def = findBoardProducerDef(cell.itemId);
+    if (!def?.canProduce || def.staminaCost <= 0) return false;
+    if (this._findChestDef(cell.itemId)) return false;
+    return !this.isMagicEnchanted(cellIndex);
+  }
+
+  isMagicEnchanted(cellIndex: number): boolean {
+    const cell = BoardManager.getCellByIndex(cellIndex);
+    if (!cell?.itemId) return false;
+    const state = this._states.get(cellIndex);
+    if (!state || state.boundItemId !== cell.itemId) return false;
+    return state.magicEnchantDateKey === currentEffectiveDateKey();
+  }
+
+  enchantMagicAt(cellIndex: number): boolean {
+    const cell = BoardManager.getCellByIndex(cellIndex);
+    if (!cell?.itemId) return false;
+    if (!this.isMagicEnchantableAt(cellIndex)) return false;
+    const state = this._getOrCreateState(cellIndex, cell.itemId);
+    state.magicEnchantDateKey = currentEffectiveDateKey();
+    EventBus.emit('thursdayMagicTime:changed');
+    return true;
+  }
+
+  enchantMagicItemGroup(itemId: string): boolean {
+    const def = findBoardProducerDef(itemId);
+    if (!def?.canProduce || def.staminaCost <= 0) return false;
+    if (this._findChestDef(itemId)) return false;
+
+    let changed = false;
+    for (const cell of BoardManager.cells) {
+      if (cell.itemId !== itemId || cell.state !== 'open') continue;
+      const state = this._getOrCreateState(cell.index, itemId);
+      if (state.magicEnchantDateKey === currentEffectiveDateKey()) continue;
+      state.magicEnchantDateKey = currentEffectiveDateKey();
+      changed = true;
+    }
+    if (changed) EventBus.emit('thursdayMagicTime:changed');
+    return changed;
+  }
+
+  clearMagicEnchantments(): void {
+    let changed = false;
+    for (const state of this._states.values()) {
+      if (!state.magicEnchantDateKey) continue;
+      state.magicEnchantDateKey = undefined;
+      changed = true;
+    }
+    if (changed) EventBus.emit('thursdayMagicTime:changed');
+  }
+
   exportState(): BuildingPersistEntry[] {
     const out: BuildingPersistEntry[] = [];
     for (const [cellIndex, s] of this._states) {
@@ -855,6 +942,7 @@ class BuildingManagerClass {
         cdRemaining: s.cdRemaining,
         usesLeft: s.usesLeft,
         freeProducesLeft: s.freeProducesLeft,
+        magicEnchantDateKey: s.magicEnchantDateKey,
         chestQueue: s.chestQueue ? [...s.chestQueue] : undefined,
         chestTotalBoardDrops: s.chestTotalBoardDrops,
       });
@@ -880,6 +968,7 @@ class BuildingManagerClass {
         cdRemaining: e.cdRemaining,
         usesLeft: e.usesLeft,
         freeProducesLeft: e.freeProducesLeft,
+        magicEnchantDateKey: e.magicEnchantDateKey,
         chestQueue: q,
         chestTotalBoardDrops: e.chestTotalBoardDrops,
       });
@@ -900,6 +989,7 @@ class BuildingManagerClass {
       cdRemaining: s.cdRemaining,
       usesLeft: s.usesLeft,
       freeProducesLeft: s.freeProducesLeft,
+      magicEnchantDateKey: s.magicEnchantDateKey,
       chestQueue: s.chestQueue ? [...s.chestQueue] : undefined,
       chestTotalBoardDrops: s.chestTotalBoardDrops,
     };
@@ -922,6 +1012,7 @@ class BuildingManagerClass {
       cdRemaining: snap.cdRemaining,
       usesLeft: snap.usesLeft,
       freeProducesLeft: snap.freeProducesLeft,
+      magicEnchantDateKey: snap.magicEnchantDateKey,
       chestQueue: q,
       chestTotalBoardDrops: snap.chestTotalBoardDrops,
     });
@@ -1044,9 +1135,10 @@ class BuildingManagerClass {
   }
 
   /** 按权重随机一条明确产出（品类+线+等级） */
-  private _rollToolProduceOutcome(outcomes: ToolProduceOutcome[]): string | null {
+  private _rollToolProduceOutcome(outcomes: ToolProduceOutcome[], levelBonus: number): string | null {
     const total = outcomes.reduce((s, o) => s + o.weight, 0);
     if (total <= 0) return null;
+    const bonus = Math.max(0, Math.floor(levelBonus));
     let roll = Math.random() * total;
     for (const o of outcomes) {
       roll -= o.weight;
@@ -1054,7 +1146,7 @@ class BuildingManagerClass {
         const lv = this._clampProduceLevel(
           o.category,
           o.line,
-          o.level + ToolProducePolicy.getProduceLevelBonus(),
+          o.level + bonus,
         );
         return findItemId(o.category, o.line, lv);
       }
@@ -1063,7 +1155,7 @@ class BuildingManagerClass {
     const lv = this._clampProduceLevel(
       last.category,
       last.line,
-      last.level + ToolProducePolicy.getProduceLevelBonus(),
+      last.level + bonus,
     );
     return findItemId(last.category, last.line, lv);
   }

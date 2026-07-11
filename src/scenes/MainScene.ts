@@ -118,9 +118,11 @@ import { MERGE_BUBBLE_DISPLAY_NAME } from '@/config/MergeCompanionConfig';
 import { RoomLayoutManager } from '@/managers/RoomLayoutManager';
 import { WeekendHuayuanBoostManager } from '@/managers/WeekendHuayuanBoostManager';
 import { TuesdayStaminaUnlimitedManager } from '@/managers/TuesdayStaminaUnlimitedManager';
+import { ThursdayMagicTimeManager } from '@/managers/ThursdayMagicTimeManager';
 import { NewbieGiftPackManager } from '@/managers/NewbieGiftPackManager';
 import { WeekendHuayuanBoostPanel } from '@/gameobjects/ui/WeekendHuayuanBoostPanel';
 import { TuesdayStaminaUnlimitedPanel } from '@/gameobjects/ui/TuesdayStaminaUnlimitedPanel';
+import { ThursdayMagicTimePanel } from '@/gameobjects/ui/ThursdayMagicTimePanel';
 import { BuyFurnitureHintManager } from '@/managers/BuyFurnitureHintManager';
 import { RewardBoxHintManager } from '@/managers/RewardBoxHintManager';
 import { BuyFurnitureHintOverlay } from '@/gameobjects/ui/BuyFurnitureHintOverlay';
@@ -212,6 +214,7 @@ export class MainScene implements Scene {
   private _merchShopPanel!: MerchShopPanel;
   private _weekendHuayuanBoostPanel!: WeekendHuayuanBoostPanel;
   private _tuesdayStaminaUnlimitedPanel!: TuesdayStaminaUnlimitedPanel;
+  private _thursdayMagicTimePanel!: ThursdayMagicTimePanel;
 
   private _affinityCardDropPopup!: AffinityCardDropPopup;
   private _affinityCodexPanel!: AffinityCodexPanel;
@@ -248,6 +251,7 @@ export class MainScene implements Scene {
       CheckInManager.init();
       WeekendHuayuanBoostManager.init();
       TuesdayStaminaUnlimitedManager.init();
+      ThursdayMagicTimeManager.init();
       CustomerManager.init();
       QuestManager.init();
       RewardBoxHintManager.init();
@@ -395,7 +399,7 @@ export class MainScene implements Scene {
   }
 
   /**
-   * 限时活动（周末花愿 / 周二体力无限）生效当日首次进主界面自动弹宣传页。
+   * 限时活动（周末花愿 / 周二体力无限 / 周四魔法时间）生效当日首次进主界面自动弹宣传页。
    * 签到等弹窗优先，延迟后再尝试；教程中不弹。
    */
   private _scheduleLimitedEventPromoAutoOpen(delayMs = 0): void {
@@ -408,7 +412,11 @@ export class MainScene implements Scene {
         this._scheduleLimitedEventPromoAutoOpen(1600);
         return;
       }
-      if (this._weekendHuayuanBoostPanel?.isOpen || this._tuesdayStaminaUnlimitedPanel?.isOpen) {
+      if (
+        this._weekendHuayuanBoostPanel?.isOpen ||
+        this._tuesdayStaminaUnlimitedPanel?.isOpen ||
+        this._thursdayMagicTimePanel?.isOpen
+      ) {
         return;
       }
       if (WeekendHuayuanBoostManager.shouldAutoOpenOnMainEnter()) {
@@ -417,6 +425,10 @@ export class MainScene implements Scene {
       }
       if (TuesdayStaminaUnlimitedManager.shouldAutoOpenOnMainEnter()) {
         EventBus.emit('panel:openTuesdayStaminaUnlimited');
+        return;
+      }
+      if (ThursdayMagicTimeManager.shouldAutoOpenOnMainEnter()) {
+        EventBus.emit('panel:openThursdayMagicTime');
       }
     }, delay);
   }
@@ -582,6 +594,9 @@ export class MainScene implements Scene {
 
     this._tuesdayStaminaUnlimitedPanel = new TuesdayStaminaUnlimitedPanel();
     overlay.addChild(this._tuesdayStaminaUnlimitedPanel);
+
+    this._thursdayMagicTimePanel = new ThursdayMagicTimePanel();
+    overlay.addChild(this._thursdayMagicTimePanel);
 
     this._affinityCardDropPopup = new AffinityCardDropPopup();
     overlay.addChild(this._affinityCardDropPopup);
@@ -1548,6 +1563,13 @@ export class MainScene implements Scene {
       this._tuesdayStaminaUnlimitedPanel.open();
     });
 
+    EventBus.on('panel:openThursdayMagicTime', () => {
+      if (TutorialManager.isActive) return;
+      const cur = SceneManager.current?.name;
+      if (cur !== 'main' && cur !== 'shop') return;
+      this._thursdayMagicTimePanel.open();
+    });
+
     // 兼容旧事件：熟客资料卡已废弃，统一跳友谊图鉴
     EventBus.on('panel:openCustomerProfile', (typeId: string) => {
       if (TutorialManager.isActive) return;
@@ -2019,6 +2041,7 @@ export class MainScene implements Scene {
     ChallengeManager.update(dt);
     WeekendHuayuanBoostManager.update(dt);
     TuesdayStaminaUnlimitedManager.update(dt);
+    ThursdayMagicTimeManager.update(dt);
 
     // 客人滚动区惯性动画
     this._customerScrollArea.update(dt);

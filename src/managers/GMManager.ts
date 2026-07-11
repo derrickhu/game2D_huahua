@@ -28,6 +28,7 @@ import { FlowerSignTicketManager } from './FlowerSignTicketManager';
 import { CheckInManager } from './CheckInManager';
 import { WeekendHuayuanBoostManager } from './WeekendHuayuanBoostManager';
 import { TuesdayStaminaUnlimitedManager } from './TuesdayStaminaUnlimitedManager';
+import { ThursdayMagicTimeManager } from './ThursdayMagicTimeManager';
 import { LevelManager } from './LevelManager';
 import { DecorationManager } from './DecorationManager';
 import { EventManager } from './EventManager';
@@ -1134,8 +1135,10 @@ class GMManagerClass {
         CheckInManager.gmAdvanceVirtualDay();
         WeekendHuayuanBoostManager.resetAfterVirtualDayAdvance();
         TuesdayStaminaUnlimitedManager.resetAfterVirtualDayAdvance();
+        ThursdayMagicTimeManager.resetAfterVirtualDayAdvance();
         const h = WeekendHuayuanBoostManager.countdownLabel();
         const t = TuesdayStaminaUnlimitedManager.countdownLabel();
+        const m = ThursdayMagicTimeManager.countdownLabel();
         return [
           ` 虚拟日 +1，偏移=${CheckInManager.gmDateOffsetDays} 天`,
           ` 周末入口=${WeekendHuayuanBoostManager.isAvailableToday() ? '显示' : '隐藏'}`,
@@ -1143,6 +1146,8 @@ class GMManagerClass {
           h ? ` 周末倒计时：${h}` : ' 周末倒计时：—',
           ` 周二体力入口=${TuesdayStaminaUnlimitedManager.isAvailableToday() ? '显示' : '隐藏'}`,
           t ? ` 周二倒计时：${t}` : ' 周二倒计时：—',
+          ` 周四魔法入口=${ThursdayMagicTimeManager.isAvailableToday() ? '显示' : '隐藏'}`,
+          m ? ` 周四倒计时：${m}` : ' 周四倒计时：—',
         ].join('；');
       },
     });
@@ -1166,6 +1171,7 @@ class GMManagerClass {
         CheckInManager.gmSetVirtualDayOffset(baseOffset + addDays);
         WeekendHuayuanBoostManager.resetAfterVirtualDayAdvance();
         TuesdayStaminaUnlimitedManager.resetAfterVirtualDayAdvance();
+        ThursdayMagicTimeManager.resetAfterVirtualDayAdvance();
         return [
           ` 已跳到最近周二，偏移=${CheckInManager.gmDateOffsetDays} 天`,
           ` 入口=${TuesdayStaminaUnlimitedManager.isAvailableToday() ? '显示' : '隐藏'}`,
@@ -1184,6 +1190,48 @@ class GMManagerClass {
         return [
           ` 入口=${TuesdayStaminaUnlimitedManager.isAvailableToday() ? '显示' : '隐藏'}`,
           ` 倒计时=${TuesdayStaminaUnlimitedManager.countdownLabel() ?? '—'}`,
+        ].join('；');
+      },
+    });
+
+    this._commands.push({
+      id: 'gm_thursday_magic_jump_to_thursday',
+      group: ' 系统测试',
+      name: ' 周四魔法：跳到周四',
+      desc: '把 GM 虚拟日期偏移到最近周四，并清空当日附魔用于测试入口/面板',
+      execute: () => {
+        const baseOffset = CheckInManager.gmDateOffsetDays;
+        let addDays = 0;
+        for (let i = 0; i < 7; i++) {
+          const d = new Date();
+          d.setUTCDate(d.getUTCDate() + baseOffset + i);
+          if (d.getDay() === 4) {
+            addDays = i;
+            break;
+          }
+        }
+        CheckInManager.gmSetVirtualDayOffset(baseOffset + addDays);
+        WeekendHuayuanBoostManager.resetAfterVirtualDayAdvance();
+        TuesdayStaminaUnlimitedManager.resetAfterVirtualDayAdvance();
+        ThursdayMagicTimeManager.resetAfterVirtualDayAdvance();
+        return [
+          ` 已跳到最近周四，偏移=${CheckInManager.gmDateOffsetDays} 天`,
+          ` 入口=${ThursdayMagicTimeManager.isAvailableToday() ? '显示' : '隐藏'}`,
+          ` 倒计时=${ThursdayMagicTimeManager.countdownLabel() ?? '—'}`,
+        ].join('；');
+      },
+    });
+
+    this._commands.push({
+      id: 'gm_thursday_magic_reset',
+      group: ' 系统测试',
+      name: ' 周四魔法：清空当日附魔',
+      desc: '清空工具附魔状态（需当前为周四才可测入口/附魔）',
+      execute: () => {
+        ThursdayMagicTimeManager.resetAfterVirtualDayAdvance();
+        return [
+          ` 入口=${ThursdayMagicTimeManager.isAvailableToday() ? '显示' : '隐藏'}`,
+          ` 倒计时=${ThursdayMagicTimeManager.countdownLabel() ?? '—'}`,
         ].join('；');
       },
     });

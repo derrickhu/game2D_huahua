@@ -215,10 +215,10 @@ export class BoardView extends PIXI.Container {
       );
 
       if (cell.state === CellState.PEEK && cell.itemId) {
-        itemView.setItem(cell.itemId);
+        itemView.setItem(cell.itemId, { magicEnergy: BuildingManager.isMagicEnchanted(i) });
         itemView.alpha = 1;
       } else if (cell.state === CellState.OPEN) {
-        itemView.setItem(cell.itemId);
+        itemView.setItem(cell.itemId, { magicEnergy: BuildingManager.isMagicEnchanted(i) });
         itemView.alpha = 1;
       } else {
         itemView.setItem(null);
@@ -345,6 +345,7 @@ export class BoardView extends PIXI.Container {
     });
     EventBus.on('building:produced', () => this.refresh());
     EventBus.on('building:exhausted', () => this.refresh());
+    EventBus.on('thursdayMagicTime:changed', () => this.refresh());
     EventBus.on('building:cdReady', (idx: number) => {
       this._itemViews[idx]?.setCooldown(0, 0);
     });
@@ -1067,7 +1068,7 @@ export class BoardView extends PIXI.Container {
             cellView.setState(cell.state);
             const itemView = this._itemViews[idx];
             if (cell.itemId && itemView) {
-              itemView.setItem(cell.itemId);
+              itemView.setItem(cell.itemId, { magicEnergy: BuildingManager.isMagicEnchanted(idx) });
               itemView.alpha = 1;
             }
 

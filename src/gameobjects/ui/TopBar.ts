@@ -17,6 +17,7 @@ import { GMManager } from '@/managers/GMManager';
 import { EventBoardManager } from '@/managers/EventBoardManager';
 import { WeekendHuayuanBoostManager } from '@/managers/WeekendHuayuanBoostManager';
 import { TuesdayStaminaUnlimitedManager } from '@/managers/TuesdayStaminaUnlimitedManager';
+import { ThursdayMagicTimeManager } from '@/managers/ThursdayMagicTimeManager';
 import {
   isJewelryEventUnlocked,
 } from '@/config/EventBoardConfig';
@@ -379,10 +380,10 @@ export class TopBar extends PIXI.Container {
   private _weekendCountdownWrap: PIXI.Container | null = null;
   private _weekendCountdownText: PIXI.Text | null = null;
   private _lastWeekendCountdown = '';
-  private _limitedEventKind: 'weekend' | 'tuesday' | null = null;
+  private _limitedEventKind: 'weekend' | 'tuesday' | 'thursday' | null = null;
 
   /**
-   * 限时活动入口（商店旁）：周末花愿 / 周二体力无限互斥，共用槽位与倒计时样式。
+   * 限时活动入口（商店旁）：周末花愿 / 周二体力无限 / 周四魔法时间互斥，共用槽位与倒计时样式。
    */
   private _buildWeekendBoostButton(): void {
     const root = new PIXI.Container();
@@ -404,14 +405,18 @@ export class TopBar extends PIXI.Container {
 
       const weekendOn = WeekendHuayuanBoostManager.isAvailableToday();
       const tuesdayOn = TuesdayStaminaUnlimitedManager.isAvailableToday();
-      this._limitedEventKind = weekendOn ? 'weekend' : tuesdayOn ? 'tuesday' : null;
+      const thursdayOn = ThursdayMagicTimeManager.isAvailableToday();
+      this._limitedEventKind = weekendOn ? 'weekend' : tuesdayOn ? 'tuesday' : thursdayOn ? 'thursday' : null;
 
       const isTuesday = this._limitedEventKind === 'tuesday';
+      const isThursday = this._limitedEventKind === 'thursday';
       const iconKey = isTuesday
         ? 'icon_tuesday_stamina_unlimited_nb2'
-        : 'icon_weekend_huayuan_boost_nb2';
-      const fallbackLabel = isTuesday ? '体力' : '周末';
-      const iconSize = isTuesday ? TUESDAY_ICON : WEEKEND_ICON;
+        : isThursday
+          ? 'icon_thursday_magic_time_nb2'
+          : 'icon_weekend_huayuan_boost_nb2';
+      const fallbackLabel = isTuesday ? '体力' : isThursday ? '魔法' : '周末';
+      const iconSize = isTuesday || isThursday ? TUESDAY_ICON : WEEKEND_ICON;
 
       const tex = TextureCache.get(iconKey);
       if (tex) {
@@ -463,12 +468,15 @@ export class TopBar extends PIXI.Container {
       e.stopPropagation();
       if (this._limitedEventKind === 'tuesday') {
         EventBus.emit('panel:openTuesdayStaminaUnlimited');
+      } else if (this._limitedEventKind === 'thursday') {
+        EventBus.emit('panel:openThursdayMagicTime');
       } else {
         EventBus.emit('panel:openWeekendHuayuanBoost');
       }
     });
     EventBus.on('weekendHuayuanBoost:changed', draw);
     EventBus.on('tuesdayStaminaUnlimited:changed', draw);
+    EventBus.on('thursdayMagicTime:changed', draw);
     draw();
     this.addChild(root);
     this._gmSlotLeft += WEEKEND_HIT + 8;
@@ -479,6 +487,8 @@ export class TopBar extends PIXI.Container {
     if (!this._weekendCountdownText || !this._weekendBoostRoot) return;
     const label = this._limitedEventKind === 'tuesday'
       ? TuesdayStaminaUnlimitedManager.countdownLabel()
+      : this._limitedEventKind === 'thursday'
+        ? ThursdayMagicTimeManager.countdownLabel()
       : this._limitedEventKind === 'weekend'
         ? WeekendHuayuanBoostManager.countdownLabel()
         : null;

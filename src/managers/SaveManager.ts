@@ -323,6 +323,7 @@ class SaveManagerClass {
         'huahua_daily_candy',
         'huahua_weekend_huayuan_boost',
         'huahua_tuesday_stamina_unlimited',
+        'huahua_thursday_magic_time',
         'huahua_haptic',
         CLOUD_SYNC_META_KEY,
         BACKEND_TOKEN_KEY,

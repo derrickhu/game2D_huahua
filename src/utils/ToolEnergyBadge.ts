@@ -15,6 +15,8 @@ export type ToolEnergyBadgeOptions = {
   pad?: number;
   /** 图标最大边相对盒子短边的比例，默认约 1/3 格更易辨认 */
   maxSideFrac?: number;
+  /** 默认绿色体力；周四魔法附魔工具使用紫色体力 */
+  textureKey?: 'icon_energy' | 'icon_energy_magic';
 };
 
 /** 棋盘上可产出工具：体力标相对格（或拖拽幽灵内容盒）短边的比例 */
@@ -28,7 +30,7 @@ export function createToolEnergySprite(
   boxH: number,
   opts?: ToolEnergyBadgeOptions,
 ): PIXI.Sprite | null {
-  const tex = TextureCache.get('icon_energy');
+  const tex = TextureCache.get(opts?.textureKey ?? 'icon_energy');
   if (!tex) return null;
   const short = Math.min(boxW, boxH);
   const pad = opts?.pad ?? Math.max(7, short * 0.10);

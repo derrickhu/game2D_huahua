@@ -30,6 +30,7 @@ import { DecorationManager } from '@/managers/DecorationManager';
 import { NewbieGiftPackManager } from '@/managers/NewbieGiftPackManager';
 import { FurnitureWorkshopManager } from '@/managers/FurnitureWorkshopManager';
 import { TuesdayStaminaUnlimitedManager } from '@/managers/TuesdayStaminaUnlimitedManager';
+import { ThursdayMagicTimeManager } from '@/managers/ThursdayMagicTimeManager';
 import { WeekendHuayuanBoostManager } from '@/managers/WeekendHuayuanBoostManager';
 import { CheckInManager } from '@/managers/CheckInManager';
 import { UserIdentityManager } from '@/managers/UserIdentityManager';
@@ -187,9 +188,13 @@ async function main(): Promise<void> {
         CheckInManager.reloadFromStorage();
         WeekendHuayuanBoostManager.reloadFromStorage();
         TuesdayStaminaUnlimitedManager.reloadFromStorage();
+        ThursdayMagicTimeManager.reloadFromStorage();
       }
       if (info.changedKeys.includes('huahua_tuesday_stamina_unlimited')) {
         TuesdayStaminaUnlimitedManager.reloadFromStorage();
+      }
+      if (info.changedKeys.includes('huahua_thursday_magic_time')) {
+        ThursdayMagicTimeManager.reloadFromStorage();
       }
       if (info.changedKeys.includes('huahua_weekend_huayuan_boost')) {
         WeekendHuayuanBoostManager.reloadFromStorage();
