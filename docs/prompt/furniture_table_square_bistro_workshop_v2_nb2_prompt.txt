@@ -1,0 +1,11 @@
+Square game asset 1:1. Single furniture prop centered, filling about 68% of frame width with generous white margin.
+
+Cute kawaii 2.5D true isometric furniture for a flower-shop merge game. Camera from upper-left into the L-room corner. On-screen top-face edges near ±30° from horizontal — match the attached iso grid ONLY for perspective; do not copy the gray demo cube. Height edges stay vertical.
+
+Hand-painted mobile merge-game furniture matching recent WORKSHOP series: soft warm brown outlines, soft 3D volume, HIGH-KEY bright pastel healing cottagecore, honey wood legs, pastel blush tabletop, rounded chibi-friendly shapes, readable silhouette.
+
+Subject: UPGRADED square bistro table. Soft blush-pink lacquered square top with gently rounded corners and a thin cream edge banding; four short stout honey-wood cylindrical legs with soft sheen. Tiny mint coaster and a single mini pink daisy in a thimble vase on the tabletop for charm (keep sparse — do not clutter). Cute premium early-game side table, much prettier than a flat plain pink square.
+
+NO text, no labels, no watermark, no characters, no room, no floor plane.
+
+Background pure solid white #FFFFFF only for cutout.

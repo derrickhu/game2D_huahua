@@ -1,11 +1,18 @@
-Square game asset 1:1. Single prop centered with generous margin.
+Square game asset 1:1. Single garden prop centered, filling about 74% of frame width with generous white margin.
 
-Cute kawaii 2.5D isometric view from upper-left about 45 degrees, hand-painted mobile merge-game flower shop garden style, aligned with small pot batch: very soft brown outlines, light hand-painted feel, romantic premium look — not heavy comic strokes. Rich pastel pinks, coral roses, fresh leaf greens, gentle depth and soft shadows for a dreamy archway.
+Cute kawaii 2.5D true isometric furniture for a flower-shop merge game. Camera from upper-left. On-screen top-face edges near ±30° from horizontal — match the attached iso grid ONLY for perspective; do not copy the gray demo cube. Height edges stay vertical.
 
-Rose garden tunnel: two parallel wooden or whitewashed trellis arches linked by top rails, forming a short walk-through passage. Dense climbing roses in layered blooms — mix of blush pink, soft red, and cream buds — with abundant glossy leaves filling the lattice. A few loose petals drifting for charm. Structure reads elegant and celebratory, high-tier garden decor.
+Hand-painted WORKSHOP series QUALITY: soft warm brown outlines slightly thicker than hairline, soft 3D volume, gentle cel shading, readable silhouette. Romantic premium garden decor, NOT heavy comic strokes.
 
-Base: natural irregular ring of mixed grass, tiny white wildflowers, and earth — softly dissolving into white. Absolutely no sharp diamond grass mat, no square ground tile, no geometric sod patch.
+CRITICAL SHAPE LOCK: Keep the SAME overall silhouette as the attached original rose garden arch — two parallel whitewashed or pale-wood trellis arches linked by top rails, forming a short walk-through passage. Dense climbing roses on lattice. Upgrade finish and line quality only.
 
-Readable silhouette. No text, no watermark, no characters, no distant landscape.
+Subject: ROSE GARDEN TUNNEL / ARCH (玫瑰花廊).
+- Pale cream-white or light birch wooden trellis arches with diamond lattice sides.
+- Dense climbing roses in layered blooms — blush pink, soft coral-red, and cream buds with glossy green leaves.
+- A few loose petals drifting for charm. Elegant celebratory garden decor.
+
+GROUNDING: natural irregular ring of mixed grass and tiny wildflowers — softly dissolving into white. Forbidden: sharp diamond grass mat, square ground tile, geometric sod patch.
+
+NO room backdrop, no distant landscape, no text, no watermark, no people.
 
 Background pure solid white #FFFFFF only for cutout.

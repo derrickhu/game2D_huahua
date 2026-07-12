@@ -1,0 +1,13 @@
+Square game asset 1:1. Single furniture prop centered, filling about 76% of frame width with generous white margin.
+
+Cute kawaii 2.5D true isometric furniture for a flower-shop merge game. Camera from upper-left into the L-room corner. On-screen top-face edges near ±30° from horizontal — match the attached iso grid ONLY for perspective; do not copy the gray demo cube. Height edges stay vertical.
+
+Hand-painted mobile merge-game furniture matching recent WORKSHOP series quality: soft warm brown outlines slightly thicker than hairline, soft 3D volume with gentle cel shading, HIGH-KEY bright pastel healing cottagecore palette, honey blonde wood with polished sheen, mint and blush accents, rounded chibi-friendly shapes, readable silhouette.
+
+Subject: UPGRADED wooden flower-shop CHECKOUT COUNTER desk only. Warm honey-oak rectangular counter with soft rounded corners, cream front panels framed in thin mint trim, polished wood grain. On the RIGHT of the countertop: cute vintage-style cash register in blush pink with cream buttons (NO readable numbers or text). On the LEFT: clear glass vase with a bright mixed wildflower bouquet (coral, white, soft purple), a tiny blank wooden chalkboard with NO writing, and a small jam jar with pink ribbon.
+
+CRITICAL: This is a freestanding POS checkout counter desk. NOT a bay window, NOT a window seat, NOT a sofa nook, NOT climbing vines on architecture, NOT a room corner. Keep only the counter furniture prop.
+
+NO text, no labels, no watermark, no characters, no room, no floor plane, no window panes.
+
+Background pure solid white #FFFFFF only for cutout.

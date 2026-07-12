@@ -1,10 +1,17 @@
 Square game asset 1:1. Single prop centered with generous margin.
 
-Cute kawaii 2.5D isometric view from upper-left about 45 degrees, hand-painted mobile merge-game flower shop style. Soft brown outlines, bright pastel colors, gentle highlights, chibi-friendly scale.
+REPAINT TASK: Recreate the attached reference image as a cleaner hand-painted version. The composition must be NEARLY IDENTICAL to the reference — same basket-weave cream pot shape and size, same number and positions of white daisy blooms (about five clustered together), same yellow centers, same green leaves, same overall proportions and viewing angle. This is a line-art cleanup pass, NOT a redesign.
 
-Small cream basket-weave textured pot with cheerful white daisy blooms, yellow centers, a few simple leaves.
+ONLY CHANGE: Make all outlines much thinner and softer — muted warm-brown painterly strokes like a delicate merge-game flower pot. Remove thick dark sticker outlines and heavy black contour lines. Basket weave grid lines should also be thin and light.
 
+DO NOT CHANGE:
+- Do NOT switch to a smooth ceramic pot.
+- Do NOT change to one tall single-stem flower.
+- Do NOT reduce flower count or rearrange the cluster.
+- Do NOT change colors or add new elements.
 
-Readable silhouette. No text, no watermark, no characters, no real room.
+Cute kawaii 2.5D isometric small potted plant for a flower-shop merge game. Soft 3D volume, gentle cel shading, bright pastel colors.
+
+NO room, no floor, no text, no watermark, no characters.
 
 Background pure solid white #FFFFFF only for cutout.

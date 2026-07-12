@@ -1,0 +1,27 @@
+Square game asset 1:1. Single furniture prop centered, filling about 76% of frame width with generous white margin.
+
+Cute kawaii 2.5D true isometric furniture for a flower-shop merge game. Camera from upper-left. On-screen top-face edges near ±30° from horizontal — match the attached iso grid ONLY for perspective; do not copy the gray demo cube. Height edges stay vertical.
+
+FLORAL RENDERING (CRITICAL — match attached encyclopedia flower pot references):
+- Flowers must have the SAME premium quality as the attached rose and hydrangea pot icons: vivid saturated colors, natural soft gradients on petals, layered petal depth, gentle cel shading, delicate soft brown outlines.
+- Each bloom reads clearly at small size — NOT flat blobs, NOT washed-out pastels, NOT muddy colors.
+- Ceramic pots on shelves have subtle glossy highlights and color (cream white, sky blue, soft terracotta) like the encyclopedia pots.
+
+Hand-painted mobile merge-game QUALITY: soft warm brown outlines slightly thicker than hairline, soft 3D volume, crisp readable silhouette.
+
+CRITICAL SHAPE LOCK: Keep the EXACT SAME A-frame ladder plant shelf silhouette as the attached original — triangular A-frame side rails with THREE widening horizontal shelves. Do NOT turn into staircase, bookcase, or pergola.
+
+WOOD (important — readable in a bright room, NOT washed-out white):
+- Warm natural honey-oak / light amber-tan wood with visible soft grain and gentle cel shading on edges.
+- Warm cream-tan to light caramel range with soft shadow on shelf undersides and post sides.
+- NOT bleached white, NOT pale grey-beige, NOT desaturated chalk-white wood.
+- Wood should feel warm, crafted, and clearly defined — still light enough for a cozy flower shop.
+
+PLANTS on all three shelves — BRIGHT colorful blooms in small pots:
+- Vivid pink-red roses, sunny yellow daisies, purple violets, coral-orange tulips, blush peonies.
+- Mix of flower types across shelves; flower heads LARGE and vivid with natural color transitions.
+- Fresh green leaves with soft highlight. Pots: cream, sky blue, terracotta ceramic.
+
+NO staircase silhouette. NO pink painted frame. NO mint paint. NO rectangular tower. NO room, no floor plane. NO text, no watermark, no characters.
+
+Background pure solid white #FFFFFF only for cutout.

@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
-# 藤蔓凉亭 / 玫瑰花廊 / 樱花花架 — NB2 重绘（轻线稿、自然接地、等距）→ rembg → crop_trim → 最长边 171
-# 断点续跑: ONLY_KEYS="shelf_spring" ./scripts/gen_furniture_garden_structures_refresh_nb2.sh
+# 藤蔓凉亭 / 玫瑰花廊 / 樱花花架 — NB2 重绘（工坊线稿、自然接地、等距）→ rembg → crop_trim → 大件最长边 342
+# 断点续跑: ONLY_KEYS="shelf_spring" MAX_SIDE=342 ./scripts/gen_furniture_garden_structures_refresh_nb2.sh
 set -euo pipefail
 WS="$(cd "$(dirname "$0")/.." && pwd)"
 GA="${GAME_ASSETS_HUAHUA:-"$WS/../game_assets/huahua"}"
@@ -40,7 +40,7 @@ for k in "${KEYS[@]}"; do
   python3 "$REMBG" "$raw_out" -o "$tmp" -m birefnet-general
   python3 "$CROP" "$tmp" -o "$OUT/${k}.png" --padding 4
   rm -f "$tmp"
-  python3 "$WS/scripts/compress_furniture_deco_pngs.py" --force --max-side 171 "$OUT/${k}.png"
+  python3 "$WS/scripts/compress_furniture_deco_pngs.py" --force --max-side "${MAX_SIDE:-342}" "$OUT/${k}.png"
   sleep 8
 done
 echo "OK: raw under $RAW, game PNG under $OUT/"

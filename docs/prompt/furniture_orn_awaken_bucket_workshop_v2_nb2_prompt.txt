@@ -1,0 +1,15 @@
+Square game asset 1:1. Single tabletop prop centered, filling about 62% of frame width with generous white margin.
+
+Cute kawaii 2.5D true isometric ornament for a flower-shop merge game. Camera from upper-left. Soft volume, height edges vertical. Match attached iso grid ONLY for perspective if needed; do not copy the gray demo cube.
+
+Hand-painted mobile merge-game furniture matching recent WORKSHOP series QUALITY (soft warm brown outlines, soft 3D metal volume, gentle cel shading, readable silhouette) — cool galvanized metal + floral bouquet palette, NOT mint furniture paint and NOT pink-only.
+
+Subject: UPGRADED metal flower-conditioning bucket (金属醒花桶). Pale blue-grey galvanized metal bucket with soft rivets and a simple wire handle. Filled with clear light-blue water. Inside: mixed roses in peach, soft apricot, and cream white, plus grey-green eucalyptus leaves. Premium florist hydrating bucket, cool metal contrast with warm flower colors.
+
+CRITICAL: Floating bucket alone — NO table, NO stool, NO wood board under it. Jar/bucket bottom is the lowest point.
+
+NO mint bucket. NO all-pink roses only. NO room, no floor plane.
+
+NO text, no labels, no watermark, no characters.
+
+Background pure solid white #FFFFFF only for cutout.

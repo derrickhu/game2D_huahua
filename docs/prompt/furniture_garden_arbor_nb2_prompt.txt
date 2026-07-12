@@ -1,11 +1,24 @@
-Square game asset 1:1. Single prop centered with generous margin.
+Square game asset 1:1. Single garden prop centered, filling about 74% of frame width with generous white margin.
 
-Cute kawaii 2.5D isometric view from upper-left about 45 degrees, hand-painted mobile merge-game flower shop garden style, same family as greenhouse flower pots: soft muted brown line art, gentle not bold, delicate painterly edges — avoid thick black sticker outlines. Warm sunlit pastel greens and lavender-purple wisteria, soft highlights on wood and petals, inviting and pretty.
+Cute kawaii 2.5D true isometric furniture for a flower-shop merge game. Camera from upper-left into the L-room corner. On-screen top-face edges near ±30° from horizontal — match the attached iso grid ONLY for perspective; do not copy the gray demo cube. Height edges stay vertical. Visible top surfaces plus front-right sides.
 
-Wooden pergola: four sturdy warm-tan posts and a simple slatted roof frame, romantic thick wisteria vines wrapping posts and cascading from the beams in long lush purple-lilac flower clusters with a few tender green leaves. A small cute wooden bench tucked inside for rest. Composition feels full and garden-fresh, not sparse.
+Hand-painted WORKSHOP series QUALITY: soft warm brown outlines slightly thicker than hairline, soft 3D volume, gentle cel shading, readable silhouette at small icon size. Romantic premium garden decor, not flat sticker art.
 
-Grounding: soft irregular patch of grass blades, tiny clover, and a hint of soil at the feet only — organic uneven edge fading into white. Forbidden: perfect diamond grass tile, square sod platform, isometric floor grid, or flat green rhombus base.
+Subject: WISTERIA VINE PERGOLA (藤蔓凉亭) — a charming four-post wooden garden arbor / pergola for a cozy flower shop courtyard.
 
-Readable silhouette. No text, no watermark, no people, no sky backdrop, no full yard scene.
+STRUCTURE (redesign — elegant and full):
+- Four slender pale birch / bleached-oak posts with subtle wood grain, warm cream-beige NOT orange-brown.
+- Arched lattice roof frame with curved cross-beams and open slats — romantic garden pavilion silhouette, slightly taller and more graceful than a plain box frame.
+- A small curved wooden bench tucked inside between two posts, same pale wood.
+- Thick woody wisteria vines spiral up each post from the ground.
+
+FLORA:
+- Lush cascading clusters of soft lavender-lilac wisteria hanging from the roof beams in 4–6 long drooping bunches.
+- Tender fresh green leaves mixed among the blooms; a few loose petals drifting for charm.
+- Flowers readable and pretty at icon size — layered petal shapes, not muddy blobs.
+
+GROUNDING: soft irregular organic patch of grass blades, tiny clover, and hint of soil at the feet only — uneven edge fading into white. Forbidden: perfect diamond grass tile, square sod platform, isometric floor grid, or flat green rhombus base.
+
+NO room backdrop, no sky, no fence, no distant landscape, no people, no text, no watermark.
 
 Background pure solid white #FFFFFF only for cutout.

@@ -1,11 +1,34 @@
-Square game asset 1:1. Single prop centered with generous margin.
+Square game asset 1:1. Single garden prop centered, filling about 72% of frame width with generous white margin.
 
-Cute kawaii 2.5D isometric view from upper-left about 45 degrees, hand-painted mobile merge-game flower shop style, same line quality as greenhouse pot props: delicate soft brown line art, refined not chunky, pretty and boutique. Warm honey wood tones, sakura pink blossoms, gentle cream paper lantern glow accents.
+REPAINT TASK: Recreate the attached original cherry blossom trellis shelf as a richer, clearer hand-painted version. Composition and silhouette must stay NEARLY IDENTICAL to the reference — this is a quality upgrade, NOT a simplification.
 
-Cherry blossom display trellis shelf: two vertical light-wood posts supporting an upper horizontal ladder rail and one wide mid-level display shelf. Flowering sakura branches drape over the top rail and trail down the posts with abundant soft pink five-petal blooms and a few drifting petals in the air. Two small round traditional paper lanterns hang from the upper corners — warm peachy light inside, tiny red tassels, cute but tasteful.
+Cute kawaii 2.5D true isometric furniture for a flower-shop merge game. Camera from upper-left. On-screen top-face edges near ±30° from horizontal — match the attached iso grid ONLY for perspective; do not copy the gray demo cube. Height edges stay vertical.
 
-Footing: subtle organic cluster of pebbles, moss specks, and a few grass tufts — irregular silhouette blending to white. Forbidden: diamond grass base, square platform, or tiled ground under the shelf.
+Hand-painted WORKSHOP series QUALITY: soft warm brown outlines, soft 3D volume, gentle cel shading with readable depth on every wooden beam. Delicate painterly edges — NOT thick sticker outlines, NOT flat minimal line art.
 
-Readable silhouette. No text, no watermark, no human figures, no building interior.
+CRITICAL SHAPE LOCK — CHERRY BLOSSOM DISPLAY TRELLIS SHELF (樱花花架):
+Match the attached original exactly:
+- Four slender vertical warm-wood posts supporting a FLAT horizontal ladder-style top rail (straight beams, NOT arched pergola).
+- ONE wide mid-level display shelf.
+- Four small round cream ceramic pots on the mid shelf, each with a tiny sakura sprig.
+- Abundant sakura branches draping over the top rail and winding down the posts.
+- TWO round peach paper lanterns with warm inner glow and red tassels hanging from upper corners.
+- Small pebbles and tiny grass tufts at the feet — small irregular cluster only.
+
+WOOD COLOR (CRITICAL — restore original warmth):
+- Warm honey-oak / light amber-tan wood with soft grain and gentle cel shading on beam edges.
+- Same warm wooden tone family as the attached original reference — NOT bleached white, NOT pale grey-beige, NOT chalk-white wood.
+- Shelf undersides and post sides have soft shadow for layered 3D depth.
+
+FLORAL RICHNESS (CRITICAL — more layers, NOT simpler):
+- Many soft pink five-petal cherry blossoms in lush clusters on branches — layered petals with natural color transitions like premium encyclopedia flower icons.
+- Several drifting sakura petals in the air around the stand.
+- Branches feel full and romantic, not sparse thin vines.
+- Tiny blooms in shelf pots match the same vivid soft-pink sakura style.
+
+FORBIDDEN:
+- NO arched pergola, NO bench, NO wisteria, NO large grass island, NO washed-out flat design.
+
+NO room, no building, no text, no watermark, no people.
 
 Background pure solid white #FFFFFF only for cutout.

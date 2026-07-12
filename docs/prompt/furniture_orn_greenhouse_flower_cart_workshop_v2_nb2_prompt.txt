@@ -1,0 +1,21 @@
+Square game asset 1:1. Single furniture prop centered, filling about 72% of frame width with generous white margin.
+
+Cute kawaii 2.5D true isometric ornament for a flower-shop merge game. Camera from upper-left into the L-room corner. On-screen top-face edges near ±30° from horizontal — match the attached iso grid ONLY for perspective; do not copy the gray demo cube. Height edges stay vertical. Visible top surfaces plus front-right sides.
+
+Hand-painted WORKSHOP series QUALITY: soft warm brown outlines slightly thicker than hairline, soft 3D volume, gentle cel shading, readable silhouette at small icon size.
+
+Subject: WOODEN WHEEL FLOWER CART (木轮鲜花推车) — a charming rustic flower-shop handcart overflowing with fresh blooms.
+
+CRITICAL SHAPE LOCK: Keep the SAME overall silhouette as the attached original flower cart — rectangular wooden box bed on a frame, TWO round spoked wooden wheels on the left side (visible in isometric), two wooden support legs and long push handles extending to the right. Classic garden flower barrow, NOT a modern metal trolley, NOT a bicycle cart.
+
+WOOD: Pale soft birch / bleached-oak planks with subtle grain — light cream-beige matching the attached shop counter wood. NOT orange-brown, NOT dark walnut, NOT saturated caramel.
+
+FLOWERS (overflowing generously, readable at icon size):
+- Left cluster: soft blush-pink roses with layered petals.
+- Center and right: upright pink tulips and sunny butter-yellow tulips mixed together.
+- Front: a few small cream daisies and fresh green leaves tucked around the blooms.
+- Bouquet feels full, fresh, and shop-ready — not sparse.
+
+NO room backdrop, no pavement tile, no diamond floor, no people, no text, no watermark, no price tag.
+
+Background pure solid white #FFFFFF only for cutout.

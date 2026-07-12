@@ -1,5 +1,23 @@
-Square 1:1 canvas, one large courtyard lemon tree, trunk and crown fill about 92–98 percent of frame height. Cute kawaii 2.5D isometric from upper-left about 45 degrees, merge-game tropical yard prop, soft brown outlines slightly thicker than hairline.
+Square game asset 1:1. Single large courtyard tree centered, filling about 92–98% of frame height with generous margin.
 
-BASE (strict): Only the tree — trunk into a few smooth cute brown roots as the bottom of the asset. No isometric floor tile, no paver diamond, no stone slab, no ground platform beneath the roots. Roots are the lowest pixels; white empty space can show between root tips for easy cutout. No grass clumps at the base. Broad dense crown of glossy deep green citrus leaves, cute round green lemons, tiny white-yellow blossoms, not bonsai, no large pot. Tropical lagoon palette in leaves and fruit only.
+Cute kawaii 2.5D true isometric garden prop for a flower-shop merge game. Camera from upper-left. Match attached iso grid ONLY for perspective angle; do not copy the gray demo cube.
 
-Background pure solid white #FFFFFF only; do not paint a floor under the tree. Upper-left soft key light. Hand-painted mobile game art, not photoreal. No text, no watermark, no characters, no QR.
+Hand-painted WORKSHOP series QUALITY: soft warm brown outlines slightly thicker than hairline, soft 3D volume, gentle cel shading, readable silhouette. Delicate painterly edges — NOT thick sticker outlines.
+
+CRITICAL — THIS IS A LEMON TREE ONLY. Match the attached original reference tree silhouette exactly:
+- Broad dense round crown of glossy deep green citrus leaves.
+- Many cute oval yellow-green / lime-yellow lemons scattered in the foliage.
+- Small white-yellow citrus blossoms among the leaves.
+- Sturdy warm-brown trunk with vertical bark lines, branching into a few smooth stylized brown roots at the base.
+
+FORBIDDEN — absolutely do NOT draw:
+- NO birdcage, NO metal cage, NO gazebo, NO pavilion, NO pergola, NO bench
+- NO wisteria, NO purple hanging flowers, NO vines on a structure
+- NO grass island, NO stone platform, NO flower pot
+- NO building parts of any kind — ONLY a freestanding tree
+
+BASE (strict): Only the tree — roots are the lowest pixels. White empty space between root tips for cutout. No floor tile, no paver, no grass tufts.
+
+Not bonsai. NO text, no watermark, no characters.
+
+Background pure solid white #FFFFFF only for cutout. Upper-left soft key light.
