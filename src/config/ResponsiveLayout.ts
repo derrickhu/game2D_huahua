@@ -29,6 +29,11 @@ export interface MainSceneLayout {
   topBarY: number;
   shopY: number;
   topReserved: number;
+  middleGap: number;
+  infoBarY: number;
+  infoBarHeight: number;
+  infoBarSafeBottom: number;
+  board: ResponsiveBoardMetrics;
 }
 
 export interface ResponsiveBoardMetrics {
@@ -38,13 +43,26 @@ export interface ResponsiveBoardMetrics {
   areaHeight: number;
 }
 
-/**
- * 模拟器基准：旧版在 390×844 一类长屏上的实际间距约 70。
- * 固定后既保留客人订单盘完整露出，也不再随更长屏幕继续增大。
- */
+/** 客人区到棋盘的刚性间距。 */
 export const MAIN_BOARD_TOP_GAP = 70;
-/** 4:3 平板仍需容纳完整 9 行；手机上通常会由宽/高约束得到 80px 以上。 */
+/** 标准长屏固定棋盘格；短屏/平板空间不足时才进入紧凑档。 */
+export const MAIN_PREFERRED_CELL_SIZE = 102;
+/** 上区与客人区之间至少保留的弹性带。 */
+export const MAIN_MIN_MIDDLE_GAP = 12;
+/** 长安全区设备压缩详情主体到 76px，安全区本身仍完整保留。 */
+export const MAIN_INFO_CONTENT_HEIGHT = 76;
+/** 4:3 平板仍需容纳完整 9 行。 */
 export const MIN_RESPONSIVE_CELL_SIZE = 44;
+
+/** 装修页房屋内部坐标以 390×844 长屏为母版，切换设备只平移整个房屋层。 */
+export const SHOP_ROOM_CANONICAL_CENTER_Y =
+  (844 / 390 * DESIGN_WIDTH) * 0.442;
+const SHOP_REFERENCE_LOGIC_HEIGHT = 844 / 390 * DESIGN_WIDTH;
+const SHOP_REFERENCE_SAFE_BOTTOM = (844 - 810) / 390 * DESIGN_WIDTH;
+export const SHOP_ROOM_CENTER_FROM_SAFE_BOTTOM =
+  SHOP_REFERENCE_LOGIC_HEIGHT - SHOP_REFERENCE_SAFE_BOTTOM - SHOP_ROOM_CANONICAL_CENTER_Y;
+export const SHOP_ROOM_MIN_GAP_BELOW_HEADER = 310;
+export const SHOP_BROWSE_BOTTOM_RESERVED = 260;
 
 const finitePositive = (value: number | undefined, fallback: number): number =>
   Number.isFinite(value) && (value as number) > 0 ? (value as number) : fallback;
@@ -80,23 +98,58 @@ export function normalizeViewportMetrics(
 }
 
 export function computeMainSceneLayout(
+  logicHeight: number,
   safeTop: number,
+  safeBottom: number,
   topBarHeight: number,
   shopHeight: number,
   gap = 4,
 ): MainSceneLayout {
   const topBarY = Math.max(0, safeTop);
-  const shopY = topBarY + topBarHeight + gap;
+  const topClusterBottom = topBarY + topBarHeight + gap;
+  const infoBarSafeBottom = Math.max(24, safeBottom);
+  const infoBarHeight = Math.max(
+    INFO_BAR_HEIGHT,
+    MAIN_INFO_CONTENT_HEIGHT + infoBarSafeBottom,
+  );
+  const infoBarY = Math.round(logicHeight - infoBarHeight);
+  const maxCellByWidth = Math.floor(
+    (DESIGN_WIDTH - (BOARD_COLS - 1) * CELL_GAP) / BOARD_COLS,
+  );
+  const maxGridHeight =
+    infoBarY - BOARD_BAR_HEIGHT - MAIN_BOARD_TOP_GAP
+    - shopHeight - topClusterBottom - MAIN_MIN_MIDDLE_GAP;
+  const maxCellByHeight = Math.floor(
+    (maxGridHeight - (BOARD_ROWS - 1) * CELL_GAP) / BOARD_ROWS,
+  );
+  const cellSize = Math.max(
+    MIN_RESPONSIVE_CELL_SIZE,
+    Math.min(MAIN_PREFERRED_CELL_SIZE, maxCellByWidth, maxCellByHeight),
+  );
+  const gridWidth = cellSize * BOARD_COLS + CELL_GAP * (BOARD_COLS - 1);
+  const areaHeight = cellSize * BOARD_ROWS + CELL_GAP * (BOARD_ROWS - 1);
+  const boardTopY = infoBarY - BOARD_BAR_HEIGHT - areaHeight;
+  const shopY = boardTopY - MAIN_BOARD_TOP_GAP - shopHeight;
   return {
     topBarY,
     shopY,
     topReserved: shopY + shopHeight,
+    middleGap: shopY - topClusterBottom,
+    infoBarY,
+    infoBarHeight,
+    infoBarSafeBottom,
+    board: {
+      cellSize,
+      paddingX: Math.floor((DESIGN_WIDTH - gridWidth) / 2),
+      topY: boardTopY,
+      areaHeight,
+    },
   };
 }
 
 /**
- * 棋盘以前固定的顶部间距为准。不同长宽比的额外高度留在棋盘下方，
- * 防止客人区在长屏设备上被拉散。
+ * 兼容旧调用：仅用于 V2 关闭时的独立棋盘计算。
+ * V2 应直接消费 computeMainSceneLayout() 返回的 board。
  */
 export function calculateResponsiveBoardMetrics(
   logicHeight: number,
@@ -126,4 +179,22 @@ export function calculateResponsiveBoardMetrics(
     topY,
     areaHeight,
   };
+}
+
+/** 装修页顶部区结束位置；房屋在标准设备上相对底部固定，紧凑屏只做防顶栏兜底。 */
+export function computeShopRoomCenterY(
+  logicHeight: number,
+  safeTop: number,
+  safeBottom: number,
+  topBarHeight: number,
+  progressBarHeight: number,
+): number {
+  const headerBottom = safeTop + topBarHeight + 16 + progressBarHeight;
+  const bottomAnchored = logicHeight - safeBottom - SHOP_ROOM_CENTER_FROM_SAFE_BOTTOM;
+  return Math.max(headerBottom + SHOP_ROOM_MIN_GAP_BELOW_HEADER, bottomAnchored);
+}
+
+/** 浏览态可摆放下沿与底部操作区保持固定距离。 */
+export function computeShopBrowseMaxY(logicHeight: number, safeBottom: number): number {
+  return Math.round(logicHeight - safeBottom - SHOP_BROWSE_BOTTOM_RESERVED);
 }

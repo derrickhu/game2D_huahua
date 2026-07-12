@@ -226,7 +226,7 @@ export class ItemInfoBar extends PIXI.Container {
     this._cardLeft = midL + CARD_SIDE_TRIM;
     this._cardW = Math.max(208, fullSpan - CARD_SIDE_TRIM * 2);
     const innerH = this._actualHeight - this._safeBottom - 8;
-    this._cardH = Math.min(108, Math.max(82, innerH - 4));
+    this._cardH = Math.min(108, Math.max(76, innerH - 4));
     this._cardTop = (this._actualHeight - this._safeBottom - this._cardH) / 2;
     this._leafDisplayWMin = Math.min(
       LEAF_MAX_W,
@@ -270,8 +270,9 @@ export class ItemInfoBar extends PIXI.Container {
     this._contentCY = (this._actualHeight - this._safeBottom) / 2;
     this._layoutMetrics();
     this._drawBg();
-    this._houseBtn.position.y = this._contentCY;
-    this._warehouseBtn.position.y = this._contentCY;
+    const sideButtonCY = Math.max(SIDE_BTN_R, this._contentCY);
+    this._houseBtn.position.y = sideButtonCY;
+    this._warehouseBtn.position.y = sideButtonCY;
 
     drawCardChrome(this._hintShadow, this._hintCard, this._cardLeft, this._cardTop, this._cardW, this._cardH);
     const hint = this._hintContainer.children[2] as PIXI.Text | undefined;
@@ -299,7 +300,7 @@ export class ItemInfoBar extends PIXI.Container {
     this._houseBtn = new PIXI.Container();
     this._houseVisual = new PIXI.Container();
     const cx = SIDE_PAD;
-    const cy = this._contentCY;
+    const cy = Math.max(SIDE_BTN_R, this._contentCY);
 
     const houseTex = TextureCache.get('icon_enter_house');
     if (houseTex) {
@@ -371,7 +372,7 @@ export class ItemInfoBar extends PIXI.Container {
   private _buildWarehouseBtn(): void {
     this._warehouseBtn = new PIXI.Container();
     const cx = DESIGN_WIDTH - SIDE_PAD;
-    const cy = this._contentCY;
+    const cy = Math.max(SIDE_BTN_R, this._contentCY);
 
     const chestTex = TextureCache.get('icon_basket');
     if (chestTex) {

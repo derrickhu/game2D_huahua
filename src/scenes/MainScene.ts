@@ -368,20 +368,21 @@ export class MainScene implements Scene {
   relayout(): void {
     if (!this._initialized || !ENABLE_RESPONSIVE_LAYOUT_V2) return;
     const layout = computeMainSceneLayout(
+      Game.logicHeight,
       Game.safeTop,
+      Game.safeBottom,
       TOP_BAR_HEIGHT,
       MainScene.SHOP_HEIGHT,
     );
-    computeBoardMetrics(Game.logicHeight, layout.topReserved);
+    computeBoardMetrics(Game.logicHeight, layout.topReserved, layout.board);
     this._topBar.position.set(0, layout.topBarY);
     this._shopArea.position.set(0, layout.shopY);
     this._boardView.relayout();
     if (this._sceneBg) this._sceneBg.height = BoardMetrics.topY;
 
-    const barY = BoardMetrics.topY + BoardMetrics.areaHeight + BOARD_BAR_HEIGHT;
-    const barH = Math.max(INFO_BAR_HEIGHT, Game.logicHeight - barY);
-    this._infoBar.position.set(0, barY);
-    this._infoBar.relayout(barH, Game.safeBottom);
+    this._infoBar.position.set(0, layout.infoBarY);
+    this._infoBar.relayout(layout.infoBarHeight, layout.infoBarSafeBottom);
+    this._tutorialOverlay?.refreshLayout();
   }
 
   /** 游戏就绪后的启动流程 */
@@ -467,7 +468,16 @@ export class MainScene implements Scene {
   }
 
   private _buildUI(): void {
-    let y = Game.safeTop;
+    const responsiveLayout = ENABLE_RESPONSIVE_LAYOUT_V2
+      ? computeMainSceneLayout(
+        Game.logicHeight,
+        Game.safeTop,
+        Game.safeBottom,
+        TOP_BAR_HEIGHT,
+        MainScene.SHOP_HEIGHT,
+      )
+      : null;
+    let y = responsiveLayout?.topBarY ?? Game.safeTop;
 
     // 上半部分花店场景背景（从屏幕顶部 y=0 覆盖到棋盘顶部）
     const sceneBgTex =
@@ -488,7 +498,7 @@ export class MainScene implements Scene {
     this._topBar.zIndex = 35;
     this.container.addChild(this._topBar);
     this.container.sortChildren();
-    y += TOP_BAR_HEIGHT + 4;
+    y = responsiveLayout?.shopY ?? (y + TOP_BAR_HEIGHT + 4);
 
     // 店铺区域（店主左侧 + 客人横向滚动；任务/活动入口在客人区上方）
     this._shopArea = new PIXI.Container();
@@ -500,10 +510,11 @@ export class MainScene implements Scene {
     this._boardView = new BoardView();
     this.container.addChild(this._boardView);
 
-    // 底部物品信息栏（紧贴棋盘下方装饰条之后，填满剩余空间）
+    // 底部物品信息栏：V2 由底边反推固定高度，不再吸收长屏剩余空间。
     const barY = BoardMetrics.topY + BoardMetrics.areaHeight + BOARD_BAR_HEIGHT;
     const barH = Game.logicHeight - barY;
-    this._infoBar = new ItemInfoBar(barH, Game.safeBottom);
+    const infoSafeBottom = responsiveLayout?.infoBarSafeBottom ?? Game.safeBottom;
+    this._infoBar = new ItemInfoBar(barH, infoSafeBottom);
     this._infoBar.position.set(0, barY);
     this.container.addChild(this._infoBar);
 

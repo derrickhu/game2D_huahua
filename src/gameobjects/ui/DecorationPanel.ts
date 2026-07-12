@@ -692,6 +692,17 @@ export class DecorationPanel extends PIXI.Container {
     });
   }
 
+  /** 视口变化后保持遮罩铺满、面板贴底；不重置 Tab、滚动或教程子阶段。 */
+  relayout(): void {
+    this._redrawDimMask();
+    this._resizePanelIfNeeded();
+    if (!this._isOpen) return;
+    const panelH = Math.round(Game.logicHeight * PANEL_H_RATIO);
+    TweenManager.cancelTarget(this._content.position);
+    this._content.position.y = Game.logicHeight - panelH;
+    this._refreshAll();
+  }
+
   close(): void {
     if (!this._isOpen) return;
     EventBus.off('currency:changed', this._onCurrencyChangedForGrid);

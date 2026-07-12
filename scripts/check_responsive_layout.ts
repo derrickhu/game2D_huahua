@@ -1,7 +1,11 @@
 import assert from 'node:assert/strict';
 import {
   MAIN_BOARD_TOP_GAP,
-  calculateResponsiveBoardMetrics,
+  MAIN_MIN_MIDDLE_GAP,
+  MAIN_PREFERRED_CELL_SIZE,
+  SHOP_ROOM_CANONICAL_CENTER_Y,
+  computeShopBrowseMaxY,
+  computeShopRoomCenterY,
   computeMainSceneLayout,
   normalizeViewportMetrics,
 } from '../src/config/ResponsiveLayout';
@@ -9,7 +13,6 @@ import {
 const TOP_BAR_HEIGHT = 76;
 const SHOP_HEIGHT = 250;
 const DESIGN_WIDTH = 750;
-const INFO_BAR_HEIGHT = 112;
 const BOARD_BAR_HEIGHT = 22;
 
 const cases = [
@@ -29,18 +32,47 @@ for (const c of cases) {
     safeAreaBottom: c.safeBottom,
   });
   const safeTop = Math.round(viewport.safeTopPx * DESIGN_WIDTH / viewport.width);
+  const safeBottom = Math.round(viewport.safeBottomPx * DESIGN_WIDTH / viewport.width);
   const logicHeight = viewport.height / viewport.width * DESIGN_WIDTH;
-  const main = computeMainSceneLayout(safeTop, TOP_BAR_HEIGHT, SHOP_HEIGHT);
-  const board = calculateResponsiveBoardMetrics(logicHeight, main.topReserved);
-
-  assert.equal(main.shopY - main.topBarY, TOP_BAR_HEIGHT + 4, `${c.name}: 顶栏/客人间距`);
-  assert.equal(board.topY - main.topReserved, MAIN_BOARD_TOP_GAP, `${c.name}: 客人/棋盘间距`);
-  assert.ok(board.cellSize > 0 && board.paddingX >= 0, `${c.name}: 棋盘尺寸有效`);
-  assert.ok(
-    board.topY + board.areaHeight + BOARD_BAR_HEIGHT + INFO_BAR_HEIGHT <= logicHeight,
-    `${c.name}: 棋盘和底栏不得越界`,
+  const main = computeMainSceneLayout(
+    logicHeight,
+    safeTop,
+    safeBottom,
+    TOP_BAR_HEIGHT,
+    SHOP_HEIGHT,
   );
+  const board = main.board;
+
+  assert.equal(
+    main.shopY - main.topBarY,
+    TOP_BAR_HEIGHT + 4 + main.middleGap,
+    `${c.name}: 中间弹性带只位于顶栏与客人区之间`,
+  );
+  assert.equal(board.topY - main.topReserved, MAIN_BOARD_TOP_GAP, `${c.name}: 客人/棋盘间距`);
+  assert.ok(
+    main.middleGap >= MAIN_MIN_MIDDLE_GAP - 1,
+    `${c.name}: 额外高度必须位于上下固定区之间`,
+  );
+  assert.ok(board.cellSize > 0 && board.cellSize <= MAIN_PREFERRED_CELL_SIZE, `${c.name}: 棋盘尺寸有效`);
+  assert.equal(
+    board.topY + board.areaHeight + BOARD_BAR_HEIGHT,
+    main.infoBarY,
+    `${c.name}: 棋盘、装饰条与详情栏连续`,
+  );
+  assert.equal(main.infoBarY + main.infoBarHeight, Math.round(logicHeight), `${c.name}: 详情栏贴底`);
+  assert.ok(main.infoBarSafeBottom >= safeBottom, `${c.name}: 详情栏完整避让底部安全区`);
   assert.ok(viewport.safeTopPx >= 0 && viewport.safeBottomPx >= 0, `${c.name}: 安全区有效`);
+
+  const roomCenterY = computeShopRoomCenterY(
+    logicHeight,
+    safeTop,
+    safeBottom,
+    TOP_BAR_HEIGHT,
+    28,
+  );
+  const browseMaxY = computeShopBrowseMaxY(logicHeight, safeBottom);
+  assert.ok(roomCenterY > safeTop + TOP_BAR_HEIGHT, `${c.name}: 房屋不得侵入顶部固定区`);
+  assert.ok(browseMaxY < logicHeight - safeBottom, `${c.name}: 房屋操作区须避开底部控件`);
 }
 
 const invalidCapsule = normalizeViewportMetrics({
@@ -51,25 +83,37 @@ const invalidCapsule = normalizeViewportMetrics({
 });
 assert.equal(invalidCapsule.safeTopPx, 50, '异常胶囊坐标应回退 statusBarHeight + 6');
 
-// 视觉基准：390×844 模拟器改版前棋盘 topY≈491、说明栏 topY≈1474。
-// 新版修正 TopBar 60→76 后用固定 70px 间距抵消，二者应保持在 1px 内。
+// 视觉基准：390×844 模拟器上，详情栏缩短、棋盘整体下移，
+// 从而把多出的高度还给顶部图标与客人之间的弹性带。
 const baselineSafeTop = Math.round(47 * DESIGN_WIDTH / 390);
+const baselineSafeBottom = Math.round(34 * DESIGN_WIDTH / 390);
 const baselineLogicH = 844 / 390 * DESIGN_WIDTH;
 const baselineMain = computeMainSceneLayout(
+  baselineLogicH,
   baselineSafeTop,
+  baselineSafeBottom,
   TOP_BAR_HEIGHT,
   SHOP_HEIGHT,
 );
-const baselineBoard = calculateResponsiveBoardMetrics(
-  baselineLogicH,
-  baselineMain.topReserved,
+const baselineBoard = baselineMain.board;
+assert.equal(baselineBoard.cellSize, MAIN_PREFERRED_CELL_SIZE, '模拟器使用标准棋盘格');
+assert.ok(baselineBoard.topY > 491, '模拟器棋盘应较问题版本下移');
+assert.ok(baselineMain.infoBarHeight < 149, '模拟器详情栏应较问题版本缩短');
+assert.ok(
+  baselineMain.middleGap >= 30,
+  '模拟器顶部图标与客人之间应恢复明显弹性间距',
 );
-assert.ok(Math.abs(baselineBoard.topY - 491) <= 1, '模拟器棋盘顶边应保持改版前位置');
 assert.ok(
   Math.abs(
-    baselineBoard.topY + baselineBoard.areaHeight + BOARD_BAR_HEIGHT - 1474,
+    computeShopRoomCenterY(
+      baselineLogicH,
+      baselineSafeTop,
+      baselineSafeBottom,
+      TOP_BAR_HEIGHT,
+      28,
+    ) - SHOP_ROOM_CANONICAL_CENTER_Y
   ) <= 1,
-  '模拟器说明栏顶边应保持改版前位置',
+  '模拟器装修房屋应保持母版位置',
 );
 
 console.log(`responsive layout checks passed (${cases.length} viewport cases)`);

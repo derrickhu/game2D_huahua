@@ -38,6 +38,14 @@ interface SpotlightRect {
   x: number; y: number; w: number; h: number; r?: number;
 }
 
+interface FurniturePlacementGuide {
+  rect: SpotlightRect;
+  fromX: number;
+  fromY: number;
+  toX: number;
+  toY: number;
+}
+
 type StepCleanup = (() => void) | null;
 
 export interface TutorialOverlayOptions {
@@ -49,6 +57,14 @@ export interface TutorialOverlayOptions {
   getShopStarProgressSpotlight?: () => SpotlightRect | null;
   /** 花店场景：底栏「家具」圆钮镂空区域，与 ShopScene.container 同坐标系 */
   getDecoButtonSpotlight?: () => SpotlightRect | null;
+  /** 花店装修态：托盘「完成装修」圆钮实时镂空区域 */
+  getEditCompleteSpotlight?: () => SpotlightRect | null;
+  /** 花店浏览态：右下返回合成按钮实时镂空区域 */
+  getReturnButtonSpotlight?: () => SpotlightRect | null;
+  /** 花店装修态：把房间本地摆放坐标转换成场景设计坐标 */
+  getFurniturePlacementGuide?: (
+    placement?: { x: number; y: number } | null,
+  ) => FurniturePlacementGuide | null;
 }
 
 export class TutorialOverlay {
@@ -58,6 +74,10 @@ export class TutorialOverlay {
   private _itemInfoBar: ItemInfoBar | null;
   private _getShopStarProgressSpotlight: (() => SpotlightRect | null) | null;
   private _getDecoButtonSpotlight: (() => SpotlightRect | null) | null;
+  private _getEditCompleteSpotlight: (() => SpotlightRect | null) | null;
+  private _getReturnButtonSpotlight: (() => SpotlightRect | null) | null;
+  private _getFurniturePlacementGuide:
+    ((placement?: { x: number; y: number } | null) => FurniturePlacementGuide | null) | null;
   private _currentBubble: TutorialDialogBubble | null = null;
   private _transientHint: PIXI.Text | null = null;
   private _fingerAnim: { finger: PIXI.Container; cancel: () => void } | null = null;
@@ -66,6 +86,9 @@ export class TutorialOverlay {
   private _overlayTop: PIXI.Container | null = null;
   private _cleanup: StepCleanup = null;
   private _stepChangedHandler: ((step: TutorialStep) => void) | null = null;
+  private _boundScene: 'main' | 'shop' | null = null;
+  /** 个别步骤包含内部子阶段，resize 时只重绘当前子阶段，不能重跑整个状态机。 */
+  private _layoutRefresh: (() => void) | null = null;
 
   constructor(parentContainer: PIXI.Container, options?: TutorialOverlayOptions) {
     this._container = parentContainer;
@@ -73,6 +96,9 @@ export class TutorialOverlay {
     this._itemInfoBar = options?.itemInfoBar ?? null;
     this._getShopStarProgressSpotlight = options?.getShopStarProgressSpotlight ?? null;
     this._getDecoButtonSpotlight = options?.getDecoButtonSpotlight ?? null;
+    this._getEditCompleteSpotlight = options?.getEditCompleteSpotlight ?? null;
+    this._getReturnButtonSpotlight = options?.getReturnButtonSpotlight ?? null;
+    this._getFurniturePlacementGuide = options?.getFurniturePlacementGuide ?? null;
     this._overlay = new PIXI.Container();
     this._overlay.visible = false;
     this._overlay.zIndex = 8000;
@@ -81,6 +107,7 @@ export class TutorialOverlay {
 
   bind(scene: 'main' | 'shop'): void {
     this._unbind();
+    this._boundScene = scene;
     this._stepChangedHandler = (step: TutorialStep) => {
       this._onStepChanged(step, scene);
     };
@@ -95,12 +122,22 @@ export class TutorialOverlay {
     this._unbind();
   }
 
+  /** 视口或场景布局变化后重绘当前步骤，不推进教程进度。 */
+  refreshLayout(): void {
+    if (!TutorialManager.isActive || !this._boundScene) return;
+    // 只刷新明确声明为幂等的视觉子阶段。通用重跑会把购买面板、
+    // 确认弹窗等内部子阶段退回步骤开头，反而可能卡住教程。
+    this._layoutRefresh?.();
+  }
+
   private _unbind(): void {
     if (this._stepChangedHandler) {
       EventBus.off('tutorial:stepChanged', this._stepChangedHandler);
       this._stepChangedHandler = null;
     }
     this._runCleanup();
+    this._boundScene = null;
+    this._layoutRefresh = null;
     this._clearOverlay();
     this._overlay.visible = false;
   }
@@ -111,6 +148,7 @@ export class TutorialOverlay {
 
   private _onStepChanged(step: TutorialStep, scene: 'main' | 'shop'): void {
     this._runCleanup();
+    this._layoutRefresh = null;
     this._clearOverlay();
 
     if (scene === 'main') {
@@ -1264,6 +1302,7 @@ export class TutorialOverlay {
     let retryTimer: ReturnType<typeof setTimeout> | null = null;
 
     const showBtnGuide = (): void => {
+      this._layoutRefresh = showBtnGuide;
       this._clearOverlay();
       this._overlay.visible = true;
 
@@ -1291,9 +1330,19 @@ export class TutorialOverlay {
       });
     };
 
-    showBtnGuide();
+    const refreshPanelGuide = (): void => {
+      const unlock = DecorationPanel.shared?.getTutorialUnlockPlaceRoomButtonGlobal() ?? null;
+      if (unlock) {
+        this._showDecoUnlockPlaceGuideAt(unlock);
+        return;
+      }
+      const panel = DecorationPanel.shared;
+      const purchase = panel?.getTutorialPurchasableBuyButtonGlobal() ?? null;
+      if (panel?.isOpen && purchase) this._showDecoPurchaseGuideAt(purchase);
+    };
 
     const onDecoOpen = (): void => {
+      this._layoutRefresh = refreshPanelGuide;
       this._clearOverlay();
       this._overlay.visible = false;
       OverlayManager.bringToFront();
@@ -1319,6 +1368,7 @@ export class TutorialOverlay {
 
     const onPurchaseAnchorReady = (): void => {
       if (TutorialManager.currentStep !== TutorialStep.GUIDE_BUY_FURNITURE) return;
+      this._layoutRefresh = refreshPanelGuide;
       requestAnimationFrame(() => {
         const panel = DecorationPanel.shared;
         const g = panel?.getTutorialPurchasableBuyButtonGlobal() ?? null;
@@ -1332,6 +1382,7 @@ export class TutorialOverlay {
     };
 
     const onUnlockPlaceReady = (): void => {
+      this._layoutRefresh = refreshPanelGuide;
       let n = 0;
       const tryUnlockGuide = (): void => {
         const g = DecorationPanel.shared?.getTutorialUnlockPlaceRoomButtonGlobal() ?? null;
@@ -1354,6 +1405,7 @@ export class TutorialOverlay {
     EventBus.on('furniture:edit_enabled', onEditEnabled);
     EventBus.on('decoration:tutorialUnlockPlaceReady', onUnlockPlaceReady);
     EventBus.on('decoration:tutorialUnlockPopupClosed', onUnlockPopupClosed);
+    showBtnGuide();
 
     const cleanup = (): void => {
       if (retryTimer !== null) {
@@ -1461,7 +1513,7 @@ export class TutorialOverlay {
     this._clearOverlay();
 
     const bounds = RoomLayoutManager.bounds;
-    const placeRect: SpotlightRect = {
+    const fallbackPlaceRect: SpotlightRect = {
       x: bounds.minX,
       y: bounds.minY,
       w: bounds.maxX - bounds.minX,
@@ -1473,15 +1525,19 @@ export class TutorialOverlay {
     let moved = false;
 
     const showMoveGuide = (placement?: { x: number; y: number } | null): void => {
+      const liveGuide = this._getFurniturePlacementGuide?.(placement) ?? null;
+      const placeRect = liveGuide?.rect ?? fallbackPlaceRect;
       this._clearOverlay();
       this._overlay.visible = true;
       this._drawNonBlockingDim(0.25);
       this._drawGlowBorder(placeRect);
 
-      const fromX = placement?.x ?? (placeRect.x + placeRect.w * 0.56);
-      const fromY = placement?.y ?? (placeRect.y + placeRect.h * 0.54);
-      const toX = Math.max(bounds.minX + 40, Math.min(bounds.maxX - 40, fromX - 130));
-      const toY = Math.max(bounds.minY + 40, Math.min(bounds.maxY - 40, fromY - 70));
+      const fromX = liveGuide?.fromX ?? placement?.x ?? (placeRect.x + placeRect.w * 0.56);
+      const fromY = liveGuide?.fromY ?? placement?.y ?? (placeRect.y + placeRect.h * 0.54);
+      const toX = liveGuide?.toX
+        ?? Math.max(bounds.minX + 40, Math.min(bounds.maxX - 40, fromX - 130));
+      const toY = liveGuide?.toY
+        ?? Math.max(bounds.minY + 40, Math.min(bounds.maxY - 40, fromY - 70));
       this._startFingerDragAnim(fromX, fromY, toX, toY);
 
       this._showBubble({
@@ -1492,15 +1548,17 @@ export class TutorialOverlay {
         spotlightBottom: placeRect.y + placeRect.h,
         showAvatar: true,
       });
+      this._layoutRefresh = () => showMoveGuide(placement);
     };
 
     const showFinishGuide = (): void => {
       this._clearOverlay();
       this._overlay.visible = true;
 
-      const trayTopY = furnitureTrayOpenTopY(Game.logicHeight);
-      const sp = furnitureTrayEditCompleteSpotlightRect(trayTopY);
-      const rect: SpotlightRect = { ...sp, r: 28 };
+      const rect = this._getEditCompleteSpotlight?.() ?? {
+        ...furnitureTrayEditCompleteSpotlightRect(furnitureTrayOpenTopY(Game.logicHeight)),
+        r: 28,
+      };
       this._drawSpotlightMask([rect], 0.62);
       this._drawGlowBorder(rect);
       this._startFingerTapAnim(rect.x + rect.w / 2, rect.y + rect.h / 2);
@@ -1512,6 +1570,7 @@ export class TutorialOverlay {
         spotlightBottom: rect.y + rect.h,
         showAvatar: true,
       });
+      this._layoutRefresh = showFinishGuide;
     };
 
     const onPlaced = (): void => {
@@ -1582,23 +1641,26 @@ export class TutorialOverlay {
       spotlightCenterX: hudRect ? hudRect.x + hudRect.w / 2 : undefined,
       onButton: () => TutorialManager.advanceTo(TutorialStep.SWITCH_BACK_MERGE),
     });
+    this._layoutRefresh = () => this._showShopCompleteDialog();
   }
 
   private _showSwitchBackMerge(): void {
     this._overlay.visible = true;
     this._clearOverlay();
 
-    const btnCX = DESIGN_WIDTH - 72;
-    const btnCY = Game.logicHeight - 90;
+    const fallbackCX = DESIGN_WIDTH - 72;
+    const fallbackCY = Game.logicHeight - 90;
     const hitR = 52;
     const pad = 8;
-    const rect: SpotlightRect = {
-      x: btnCX - hitR - pad,
-      y: btnCY - hitR - pad,
+    const rect: SpotlightRect = this._getReturnButtonSpotlight?.() ?? {
+      x: fallbackCX - hitR - pad,
+      y: fallbackCY - hitR - pad,
       w: (hitR + pad) * 2,
       h: (hitR + pad) * 2,
       r: hitR,
     };
+    const btnCX = rect.x + rect.w / 2;
+    const btnCY = rect.y + rect.h / 2;
 
     this._drawSpotlightMask([rect], 0.62);
     this._drawGlowBorder(rect);
@@ -1612,6 +1674,7 @@ export class TutorialOverlay {
       spotlightBottom: rect.y + rect.h,
     });
 
+    this._layoutRefresh = () => this._showSwitchBackMerge();
     this._cleanup = () => {};
   }
 

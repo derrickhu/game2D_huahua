@@ -11,7 +11,10 @@ import {
   DESIGN_WIDTH,
   INFO_BAR_HEIGHT,
 } from './LayoutPrimitives';
-import { calculateResponsiveBoardMetrics } from './ResponsiveLayout';
+import {
+  calculateResponsiveBoardMetrics,
+  type ResponsiveBoardMetrics,
+} from './ResponsiveLayout';
 import { ENABLE_RESPONSIVE_LAYOUT_V2 } from './FeatureFlags';
 
 export {
@@ -45,7 +48,11 @@ export function getCellSize(): number { return BoardMetrics.cellSize; }
  * @param logicHeight  设计坐标下的逻辑屏幕高度
  * @param topReserved  顶部已被占用的设计坐标高度（safeTop + TopBar + ShopArea + 间距）
  */
-export function computeBoardMetrics(logicHeight: number, topReserved: number): void {
+export function computeBoardMetrics(
+  logicHeight: number,
+  topReserved: number,
+  responsiveMetrics?: ResponsiveBoardMetrics,
+): void {
   if (!ENABLE_RESPONSIVE_LAYOUT_V2) {
     const topMargin = 2;
     const bottomMargin = 8;
@@ -65,7 +72,7 @@ export function computeBoardMetrics(logicHeight: number, topReserved: number): v
     return;
   }
 
-  const next = calculateResponsiveBoardMetrics(logicHeight, topReserved);
+  const next = responsiveMetrics ?? calculateResponsiveBoardMetrics(logicHeight, topReserved);
   BoardMetrics.cellSize = next.cellSize;
   BoardMetrics.paddingX = next.paddingX;
   BoardMetrics.topY = next.topY;

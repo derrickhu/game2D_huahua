@@ -33,16 +33,21 @@ import { getOwnerShopDisplayScale } from '@/config/DressUpConfig';
 import { FurnitureDragSystem } from '@/systems/FurnitureDragSystem';
 import {
   FurnitureTray,
-  FURNITURE_TRAY_H,
-  FURNITURE_TRAY_OPEN_OFFSET_UP,
-  FURNITURE_TRAY_OPEN_NUDGE_DOWN,
   FURNITURE_TRAY_EDIT_CORNER_ICON_TARGET_H,
+  furnitureTrayEditCompleteSpotlightRect,
+  furnitureTrayOpenTopY,
 } from '@/gameobjects/ui/FurnitureTray';
 import { RoomEditToolbar } from '@/gameobjects/ui/RoomEditToolbar';
+import { DecorationPanel } from '@/gameobjects/ui/DecorationPanel';
 import { TextureCache } from '@/utils/TextureCache';
 import { DECO_MAP, DecoDef, DecoSlot, SHOP_FURNITURE_DISPLAY_SCALE_MULTIPLIER, SHOP_FURNITURE_TEX_BASE_PX } from '@/config/DecorationConfig';
 import { resolveFurnitureTexture, collectFurniturePreloadKeys, FURNITURE_RENDER_MAP } from '@/config/FurnitureRenderConfig';
 import { DESIGN_WIDTH, COLORS, FONT_FAMILY } from '@/config/Constants';
+import {
+  SHOP_ROOM_CANONICAL_CENTER_Y,
+  computeShopBrowseMaxY,
+  computeShopRoomCenterY,
+} from '@/config/ResponsiveLayout';
 import { roomDepthZForPlacement, roomDepthZForOwner, getTopSurfaceFeetBoost, type DepthSortPeer } from '@/config/RoomDepthSort';
 import { ToastMessage } from '@/gameobjects/ui/ToastMessage';
 import { LevelUpPopup } from '@/gameobjects/ui/LevelUpPopup';
@@ -123,14 +128,6 @@ const MISC_DRAWER_ITEM_W = 74;
 const MISC_DRAWER_ITEM_GAP = 10;
 
 /** 与 FurnitureTray 一致，避免遮挡过多场景 */
-/** 编辑态托盘顶边设计坐标：logicH - 高度 - 上移量 */
-const trayOpenTopY = (logicH: number, safeBottom = 0) =>
-  logicH -
-  safeBottom -
-  FURNITURE_TRAY_H -
-  FURNITURE_TRAY_OPEN_OFFSET_UP +
-  FURNITURE_TRAY_OPEN_NUDGE_DOWN;
-
 /** 编辑托盘顶栏圆钮（清空 / 完成）目标边长 */
 const TRAY_EDIT_CORNER_ICON_TARGET_H = FURNITURE_TRAY_EDIT_CORNER_ICON_TARGET_H;
 
@@ -138,8 +135,6 @@ const TRAY_EDIT_CORNER_ICON_TARGET_H = FURNITURE_TRAY_EDIT_CORNER_ICON_TARGET_H;
 const EDIT_MAIN_BTN_W = (): number => Math.round(DESIGN_WIDTH * 0.58);
 const EDIT_MAIN_BTN_MAX_H = 66;
 
-/** 花店建筑竖直位置：中心 Y ≈ logicH * ratio + offset，ratio 增大则整体下移（原 0.405 偏上易顶到进度条） */
-const SHOP_BUILDING_CENTER_Y_RATIO = 0.442;
 const SHOP_BUILDING_ANCHOR_OFFSET_Y = 18;
 /** 试调：房间可摆空间显大一些，店主显示缩到 90%。 */
 const SHOP_OWNER_DISPLAY_SCALE_MULTIPLIER = 0.9;
@@ -321,9 +316,8 @@ export class ShopScene implements Scene {
     this._renderFurnitureLayout();
     this._updateProgressBar();
     const w = DESIGN_WIDTH;
-    const h = Game.logicHeight;
     const centerX = w / 2;
-    const centerY = h * SHOP_BUILDING_CENTER_Y_RATIO;
+    const centerY = SHOP_ROOM_CANONICAL_CENTER_Y;
     const savedPos = RoomLayoutManager.ownerPos;
     const ownerX = savedPos?.x ?? (centerX + 140);
     const ownerY = savedPos?.y ?? (centerY + 120);
@@ -584,6 +578,9 @@ export class ShopScene implements Scene {
         this._tutorialOverlay = new TutorialOverlay(this.container, {
           getShopStarProgressSpotlight: () => this._getTutorialStarProgressSpotlightRect(),
           getDecoButtonSpotlight: () => this._getTutorialDecoButtonSpotlightRect(),
+          getEditCompleteSpotlight: () => this._getTutorialEditCompleteSpotlightRect(),
+          getReturnButtonSpotlight: () => this._getTutorialReturnButtonSpotlightRect(),
+          getFurniturePlacementGuide: placement => this._getTutorialFurniturePlacementGuide(placement),
         });
         this._tutorialOverlay.bind('shop');
       }
@@ -715,7 +712,7 @@ export class ShopScene implements Scene {
       this._miscDrawerPanel.position.set(54, drawerY - 1);
     }
 
-    this._furnitureTray.relayout(bottom);
+    this._furnitureTray.relayout();
     if (this._roomPanHitLayer) {
       this._roomPanHitLayer.hitArea = new PIXI.Rectangle(0, 0, DESIGN_WIDTH, h);
     }
@@ -729,10 +726,12 @@ export class ShopScene implements Scene {
 
     this._refreshShopBuildingTexture();
     if (this._isEditMode) {
-      this._applySceneEditViewProfile(false, trayOpenTopY(h, bottom));
+      this._applySceneEditViewProfile(false, furnitureTrayOpenTopY(h));
     } else {
       this._applyBrowseViewScale();
     }
+    DecorationPanel.shared?.relayout();
+    this._tutorialOverlay?.refreshLayout();
   }
 
   private _cleanupOwnerDragEvents(): void {
@@ -763,7 +762,7 @@ export class ShopScene implements Scene {
 
     // ============== 2. 花店房间内容 ==============
     this._roomContainer = new PIXI.Container();
-    this._buildRoom(w, h);
+    this._buildRoom(w);
     this.container.addChild(this._roomContainer);
 
     // ============== 3. 顶部 TopBar ==============
@@ -902,9 +901,9 @@ export class ShopScene implements Scene {
 
   // ─────────────────── 花店房间 ───────────────────
 
-  private _buildRoom(w: number, h: number): void {
+  private _buildRoom(w: number): void {
     const centerX = w / 2;
-    const centerY = h * SHOP_BUILDING_CENTER_Y_RATIO;
+    const centerY = SHOP_ROOM_CANONICAL_CENTER_Y;
 
     // ---- 花店建筑底板：房间风格图 bg_room_*（TextureCache 键）----
     const bgKey = DecorationManager.getRoomBgTextureKey();
@@ -912,7 +911,7 @@ export class ShopScene implements Scene {
     this._shopBuildingSprite = new PIXI.Sprite(shopTex ?? PIXI.Texture.EMPTY);
     this._shopBuildingSprite.visible = !!shopTex;
     if (shopTex) {
-      this._layoutShopBuildingSprite(w, h, centerX, centerY);
+      this._layoutShopBuildingSprite(w, centerX, centerY);
     }
     this._roomContainer.addChild(this._shopBuildingSprite);
 
@@ -935,12 +934,14 @@ export class ShopScene implements Scene {
     return CurrencyManager.state.sceneId === 'flower_shop' ? TextureCache.get('house_shop') : null;
   }
 
-  private _layoutShopBuildingSprite(w: number, h: number, centerX: number, centerY: number): void {
+  private _layoutShopBuildingSprite(w: number, centerX: number, centerY: number): void {
     if (!this._shopBuildingSprite) return;
     const tex = this._shopBuildingSprite.texture;
     const sceneId = CurrencyManager.state.sceneId;
     const roomScaleMultiplier = getSceneBuildingScaleMultiplier(sceneId);
-    const shopScale = Math.min((w * 1.18) / tex.width, (h * 0.72) / tex.height) * roomScaleMultiplier;
+    const referenceRoomHeight = (844 / 390 * DESIGN_WIDTH) * 0.72;
+    const shopScale = Math.min((w * 1.18) / tex.width, referenceRoomHeight / tex.height)
+      * roomScaleMultiplier;
     this._shopBuildingSprite.scale.set(shopScale);
     this._shopBuildingSprite.anchor.set(0.5, 0.5);
     this._shopBuildingSprite.position.set(centerX, centerY + SHOP_BUILDING_ANCHOR_OFFSET_Y);
@@ -950,9 +951,8 @@ export class ShopScene implements Scene {
   private _refreshShopBuildingTexture = (): void => {
     if (!this._shopBuildingSprite) return;
     const w = DESIGN_WIDTH;
-    const h = Game.logicHeight;
     const centerX = w / 2;
-    const centerY = h * SHOP_BUILDING_CENTER_Y_RATIO;
+    const centerY = SHOP_ROOM_CANONICAL_CENTER_Y;
     const bgKey = DecorationManager.getRoomBgTextureKey();
     const tex = this._getShopBuildingTexture(bgKey);
     if (!tex) {
@@ -961,7 +961,7 @@ export class ShopScene implements Scene {
     }
     this._shopBuildingSprite.visible = true;
     this._shopBuildingSprite.texture = tex;
-    this._layoutShopBuildingSprite(w, h, centerX, centerY);
+    this._layoutShopBuildingSprite(w, centerX, centerY);
     this._refreshShopBuildingPanHitAreaIfNeeded();
   };
 
@@ -1460,6 +1460,72 @@ export class ShopScene implements Scene {
       w: Math.round(PROGRESS_BAR_W + leftExt + rightExt + pad * 2),
       h: Math.round(PROGRESS_BAR_H + topExt + bottomExt + pad * 2),
       r: 16,
+    };
+  }
+
+  /** 新手引导「保存装修」：始终读取当前托盘实际位置。 */
+  _getTutorialEditCompleteSpotlightRect(): { x: number; y: number; w: number; h: number; r: number } | null {
+    if (!this._editCompletePill?.parent || !this._furnitureTray.visible) return null;
+    return {
+      ...furnitureTrayEditCompleteSpotlightRect(this._furnitureTray.y),
+      r: 28,
+    };
+  }
+
+  /** 新手引导「回到合成」：始终读取当前返回钮实际位置。 */
+  _getTutorialReturnButtonSpotlightRect(): { x: number; y: number; w: number; h: number; r: number } | null {
+    if (!this._returnBtn?.parent) return null;
+    const hitR = RETURN_BTN_SIZE / 2 + 12;
+    const pad = 8;
+    return {
+      x: this._returnBtn.x - hitR - pad,
+      y: this._returnBtn.y - hitR - pad,
+      w: (hitR + pad) * 2,
+      h: (hitR + pad) * 2,
+      r: hitR,
+    };
+  }
+
+  /** 新手引导「调整家具」：将房间本地 bounds/点转换到场景设计坐标。 */
+  _getTutorialFurniturePlacementGuide(
+    placement?: { x: number; y: number } | null,
+  ): {
+    rect: { x: number; y: number; w: number; h: number; r: number };
+    fromX: number;
+    fromY: number;
+    toX: number;
+    toY: number;
+  } {
+    const bounds = RoomLayoutManager.bounds;
+    const corners = [
+      this._roomLocalToDesign(bounds.minX, bounds.minY),
+      this._roomLocalToDesign(bounds.maxX, bounds.minY),
+      this._roomLocalToDesign(bounds.minX, bounds.maxY),
+      this._roomLocalToDesign(bounds.maxX, bounds.maxY),
+    ];
+    const xs = corners.map(p => p.x);
+    const ys = corners.map(p => p.y);
+    const rect = {
+      x: Math.min(...xs),
+      y: Math.min(...ys),
+      w: Math.max(...xs) - Math.min(...xs),
+      h: Math.max(...ys) - Math.min(...ys),
+      r: 22,
+    };
+
+    const fromLocalX = placement?.x ?? (bounds.minX + (bounds.maxX - bounds.minX) * 0.56);
+    const fromLocalY = placement?.y ?? (bounds.minY + (bounds.maxY - bounds.minY) * 0.54);
+    const toLocalX = Math.max(bounds.minX + 40, Math.min(bounds.maxX - 40, fromLocalX - 130));
+    const toLocalY = Math.max(bounds.minY + 40, Math.min(bounds.maxY - 40, fromLocalY - 70));
+    const from = this._roomLocalToDesign(fromLocalX, fromLocalY);
+    const to = this._roomLocalToDesign(toLocalX, toLocalY);
+
+    return {
+      rect,
+      fromX: from.x,
+      fromY: from.y,
+      toX: to.x,
+      toY: to.y,
     };
   }
 
@@ -3133,7 +3199,7 @@ export class ShopScene implements Scene {
     this._setShopHudVisible(false);
 
     const h = Game.logicHeight;
-    const trayTopY = trayOpenTopY(h, Game.safeBottom);
+    const trayTopY = furnitureTrayOpenTopY(h);
     this._applySceneEditViewProfile(true, trayTopY);
 
     // 启用拖拽系统
@@ -3520,7 +3586,7 @@ export class ShopScene implements Scene {
     this._viewScaleMin = profile.editViewScaleMin;
     this._viewScaleMax = profile.editViewScaleMax;
     this._viewScalePanBaseline = profile.editViewScaleDefault;
-    const topY = trayTopY ?? trayOpenTopY(Game.logicHeight, Game.safeBottom);
+    const topY = trayTopY ?? furnitureTrayOpenTopY(Game.logicHeight);
     if (resetZoom) {
       this._applyViewZoom(profile.editViewScaleDefault);
     } else {
@@ -3532,6 +3598,17 @@ export class ShopScene implements Scene {
   /** 相对默认缩放的超出量；大房壳默认 <1 时仍可在放大后平移 */
   private _viewScalePanExcess(): number {
     return Math.max(0, this._viewScale - this._viewScalePanBaseline);
+  }
+
+  /** 房屋层的屏幕锚点；标准设备底锚，紧凑屏只保留顶区最小操作间距。 */
+  private _roomScreenCenterY(): number {
+    return computeShopRoomCenterY(
+      Game.logicHeight,
+      Game.safeTop,
+      Game.safeBottom,
+      TOP_BAR_HEIGHT,
+      PROGRESS_BAR_H,
+    );
   }
 
   /** 放大后限制平移范围，避免拉出过多留白 */
@@ -3551,8 +3628,8 @@ export class ShopScene implements Scene {
       const bw = sp.texture.width * Math.abs(sp.scale.x) * s;
       const bh = sp.texture.height * Math.abs(sp.scale.y) * s;
       const viewH = this._isEditMode
-        ? trayOpenTopY(Game.logicHeight, Game.safeBottom)
-        : Game.logicHeight * 0.82;
+        ? furnitureTrayOpenTopY(Game.logicHeight)
+        : computeShopBrowseMaxY(Game.logicHeight, Game.safeBottom);
       maxX = Math.max(maxX, (bw - DESIGN_WIDTH) * 0.5 + 24);
       maxY = Math.max(maxY, (bh - viewH) * 0.45 + 16);
     }
@@ -3561,13 +3638,14 @@ export class ShopScene implements Scene {
     this._roomPanY = Math.max(-maxY, Math.min(maxY, this._roomPanY));
   }
 
-  /** 以屏幕中心为缩放基点，并叠加大画面平移 */
+  /** 以房屋母版中心为 pivot，整体平移到当前屏幕的底锚位置。 */
   private _syncRoomContainerTransform(): void {
     this._clampRoomPan();
     const cx = DESIGN_WIDTH / 2;
-    const cy = Game.logicHeight * SHOP_BUILDING_CENTER_Y_RATIO + SHOP_BUILDING_ANCHOR_OFFSET_Y;
-    this._roomContainer.pivot.set(cx, cy);
-    this._roomContainer.position.set(cx + this._roomPanX, cy + this._roomPanY);
+    const canonicalCY = SHOP_ROOM_CANONICAL_CENTER_Y + SHOP_BUILDING_ANCHOR_OFFSET_Y;
+    const screenCY = this._roomScreenCenterY() + SHOP_BUILDING_ANCHOR_OFFSET_Y;
+    this._roomContainer.pivot.set(cx, canonicalCY);
+    this._roomContainer.position.set(cx + this._roomPanX, screenCY + this._roomPanY);
     this._roomContainer.scale.set(this._viewScale);
   }
 
@@ -3605,7 +3683,8 @@ export class ShopScene implements Scene {
     if (opts?.trayTopY != null) {
       maxScreenY = opts.trayTopY - 24;
     } else {
-      maxScreenY = opts?.browseMaxScreenY ?? Math.round(Game.logicHeight * 0.80);
+      maxScreenY = opts?.browseMaxScreenY
+        ?? computeShopBrowseMaxY(Game.logicHeight, Game.safeBottom);
     }
     const maxLocalY = Math.round(this._designToRoomLocal(midX, maxScreenY).y);
 
@@ -3771,7 +3850,7 @@ export class ShopScene implements Scene {
 
   /**
    * 浏览（非编辑）模式：把整个房间容器缩放到当前场景的 browseViewScale，
-   * 以屏幕中心为基点（与编辑模式同一 pivot），令房壳全景可见、人物与家具等比缩小。
+   * 以房屋母版中心为基点（与编辑模式同一 pivot），令房壳全景可见、人物与家具等比缩小。
    * 大房壳（花园别墅）<1 全景，普通场景默认 1。
    */
   private _applyBrowseViewScale(): void {
@@ -3780,15 +3859,10 @@ export class ShopScene implements Scene {
     this._viewScale = profile.browseViewScale;
     this._roomPanX = 0;
     this._roomPanY = 0;
-    if (this._viewScale === 1) {
-      // 默认场景保持干净的恒等变换，避免无谓 pivot 偏移
-      this._roomContainer.pivot.set(0, 0);
-      this._roomContainer.position.set(0, 0);
-      this._roomContainer.scale.set(1);
-    } else {
-      this._syncRoomContainerTransform();
-    }
-    this._applySceneLayoutBounds({ browseMaxScreenY: Math.round(Game.logicHeight * 0.80) });
+    this._syncRoomContainerTransform();
+    this._applySceneLayoutBounds({
+      browseMaxScreenY: computeShopBrowseMaxY(Game.logicHeight, Game.safeBottom),
+    });
   }
 
   /**

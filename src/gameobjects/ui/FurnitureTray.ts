@@ -44,14 +44,6 @@ import { DESIGN_WIDTH, FONT_FAMILY, COLORS } from '@/config/Constants';
 /** 导出供 ShopScene 对齐编辑按钮位置；略低于旧 300px，少挡花店场景 */
 /** Tab 行下移后仍保留网格高度，与 TAB_ROW_TOP_PAD 同步增加 */
 export const FURNITURE_TRAY_H = 310;
-/**
- * 打开态托盘整体上移（相对「贴底 TRAY_H」基准），与编辑态透明操作区上沿对齐
- * @see ShopScene._enterEditMode trayTopY
- */
-export const FURNITURE_TRAY_OPEN_OFFSET_UP = 50;
-/** 在「上移对齐」基础上再整体下移，减少遮挡房间内家具（Pixi y 增大 = 向下） */
-export const FURNITURE_TRAY_OPEN_NUDGE_DOWN = 30;
-
 const TRAY_H = FURNITURE_TRAY_H;
 /** v3 壳体优先；缺图回退 legacy 拱顶壳 */
 const TRAY_SHELL_TEX_KEYS = [
@@ -145,7 +137,7 @@ export const FURNITURE_TRAY_CLEAR_ICON_RIGHT_PAD = FURNITURE_TRAY_EDIT_CORNER_IC
 
 /** 编辑态托盘顶边设计 Y（与 open() / ShopScene trayOpenTopY 一致） */
 export function furnitureTrayOpenTopY(logicH: number): number {
-  return logicH - TRAY_H - FURNITURE_TRAY_OPEN_OFFSET_UP + FURNITURE_TRAY_OPEN_NUDGE_DOWN;
+  return logicH - TRAY_H;
 }
 
 /** 教程高亮「完成装修」顶右圆钮矩形（场景设计坐标，与 layoutEditCompleteIcon 一致） */
@@ -397,9 +389,7 @@ export class FurnitureTray extends PIXI.Container {
 
     const logicH = Game.logicHeight;
     this._closedY = logicH;
-    this._openY =
-      logicH - Game.safeBottom - TRAY_H
-      - FURNITURE_TRAY_OPEN_OFFSET_UP + FURNITURE_TRAY_OPEN_NUDGE_DOWN;
+    this._openY = furnitureTrayOpenTopY(logicH);
 
     this.y = this._closedY;
     if (trayArg != null && typeof trayArg === 'object' && 'deco' in trayArg) {
@@ -464,12 +454,10 @@ export class FurnitureTray extends PIXI.Container {
   }
 
   /** 窗口变化后更新托盘开/关锚点，保留当前 Tab、滚动和开关状态。 */
-  relayout(safeBottom = Game.safeBottom): void {
+  relayout(): void {
     const logicH = Game.logicHeight;
     this._closedY = logicH;
-    this._openY =
-      logicH - safeBottom - TRAY_H
-      - FURNITURE_TRAY_OPEN_OFFSET_UP + FURNITURE_TRAY_OPEN_NUDGE_DOWN;
+    this._openY = furnitureTrayOpenTopY(logicH);
     TweenManager.cancelTarget(this);
     this.y = this._isOpen ? this._openY : this._closedY;
   }

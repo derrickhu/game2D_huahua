@@ -143,13 +143,19 @@ async function main(): Promise<void> {
     } catch (e) { console.warn('[main] EventSystem 诊断失败:', e); }
 
     const mainLayout = ENABLE_RESPONSIVE_LAYOUT_V2
-      ? computeMainSceneLayout(Game.safeTop, TOP_BAR_HEIGHT, MainScene.SHOP_HEIGHT)
+      ? computeMainSceneLayout(
+        Game.logicHeight,
+        Game.safeTop,
+        Game.safeBottom,
+        TOP_BAR_HEIGHT,
+        MainScene.SHOP_HEIGHT,
+      )
       : {
         topBarY: Game.safeTop,
         shopY: Game.safeTop + TOP_BAR_HEIGHT + 4,
         topReserved: Game.safeTop + 60 + 4 + MainScene.SHOP_HEIGHT,
       };
-    computeBoardMetrics(Game.logicHeight, mainLayout.topReserved);
+    computeBoardMetrics(Game.logicHeight, mainLayout.topReserved, 'board' in mainLayout ? mainLayout.board : undefined);
     console.log(`[main] BoardMetrics 计算完成, logicHeight:${Game.logicHeight}, safeTop:${Game.safeTop}, topReserved:${mainLayout.topReserved}`);
 
     Game.stage.sortableChildren = true;
