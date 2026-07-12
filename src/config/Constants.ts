@@ -2,18 +2,30 @@
  * 全局常量
  */
 
-// 设计分辨率
-export const DESIGN_WIDTH = 750;
-export const DESIGN_HEIGHT = 1334;
+import {
+  BOARD_COLS,
+  BOARD_BAR_HEIGHT,
+  BOARD_ROWS,
+  CELL_GAP,
+  DESIGN_HEIGHT,
+  DESIGN_WIDTH,
+  INFO_BAR_HEIGHT,
+} from './LayoutPrimitives';
+import { calculateResponsiveBoardMetrics } from './ResponsiveLayout';
+import { ENABLE_RESPONSIVE_LAYOUT_V2 } from './FeatureFlags';
+
+export {
+  BOARD_COLS,
+  BOARD_BAR_HEIGHT,
+  BOARD_ROWS,
+  CELL_GAP,
+  DESIGN_HEIGHT,
+  DESIGN_WIDTH,
+  INFO_BAR_HEIGHT,
+};
 
 // 棋盘
-export const BOARD_COLS = 7;
-export const BOARD_ROWS = 9;
 export const BOARD_TOTAL = BOARD_COLS * BOARD_ROWS;
-export const CELL_GAP = 2;
-/** 棋盘区上下装饰横条高度（与 `images/ui/board_bar.png`、MainScene 底栏间距一致） */
-export const BOARD_BAR_HEIGHT = 22;
-
 /**
  * 棋盘动态布局参数（用对象包裹防止 Terser 常量内联）
  * 在 computeBoardMetrics() 之后通过属性访问获取最新值
@@ -28,38 +40,39 @@ export const BoardMetrics = {
 // 兼容旧引用的 getter
 export function getCellSize(): number { return BoardMetrics.cellSize; }
 
-/** 底部信息栏高度（与 ItemInfoBar 默认高度对齐，供棋盘布局预留） */
-export const INFO_BAR_HEIGHT = 112;
-
 /**
  * 根据实际屏幕尺寸重新计算棋盘布局参数，需在 Game.init 之后调用
  * @param logicHeight  设计坐标下的逻辑屏幕高度
  * @param topReserved  顶部已被占用的设计坐标高度（safeTop + TopBar + ShopArea + 间距）
  */
 export function computeBoardMetrics(logicHeight: number, topReserved: number): void {
-  const navHeight = INFO_BAR_HEIGHT;
-  const bottomMargin = 8;
-  const topMargin = 2;
+  if (!ENABLE_RESPONSIVE_LAYOUT_V2) {
+    const topMargin = 2;
+    const bottomMargin = 8;
+    const maxCellByWidth = Math.floor(
+      (DESIGN_WIDTH - (BOARD_COLS - 1) * CELL_GAP) / BOARD_COLS,
+    );
+    const availableHeight = logicHeight - topReserved - topMargin - INFO_BAR_HEIGHT - bottomMargin;
+    const maxCellByHeight = Math.floor(
+      (availableHeight - (BOARD_ROWS - 1) * CELL_GAP) / BOARD_ROWS,
+    );
+    BoardMetrics.cellSize = Math.max(72, Math.min(maxCellByWidth, maxCellByHeight));
+    const gridWidth = BoardMetrics.cellSize * BOARD_COLS + CELL_GAP * (BOARD_COLS - 1);
+    BoardMetrics.paddingX = Math.floor((DESIGN_WIDTH - gridWidth) / 2);
+    BoardMetrics.areaHeight = BoardMetrics.cellSize * BOARD_ROWS + CELL_GAP * (BOARD_ROWS - 1);
+    const bottomSpace = logicHeight - (topReserved + topMargin) - BoardMetrics.areaHeight;
+    BoardMetrics.topY = topReserved + topMargin + Math.round(bottomSpace / 3);
+    return;
+  }
 
-  const maxCellByWidth = Math.floor((DESIGN_WIDTH - (BOARD_COLS - 1) * CELL_GAP) / BOARD_COLS);
-
-  const availableHeight = logicHeight - topReserved - topMargin - navHeight - bottomMargin;
-  const maxCellByHeight = Math.floor((availableHeight - (BOARD_ROWS - 1) * CELL_GAP) / BOARD_ROWS);
-
-  BoardMetrics.cellSize = Math.max(72, Math.min(maxCellByWidth, maxCellByHeight));
+  const next = calculateResponsiveBoardMetrics(logicHeight, topReserved);
+  BoardMetrics.cellSize = next.cellSize;
+  BoardMetrics.paddingX = next.paddingX;
+  BoardMetrics.topY = next.topY;
+  BoardMetrics.areaHeight = next.areaHeight;
 
   const gridWidth = BoardMetrics.cellSize * BOARD_COLS + CELL_GAP * (BOARD_COLS - 1);
-  BoardMetrics.paddingX = Math.floor((DESIGN_WIDTH - gridWidth) / 2);
-
-  const gridHeight = BoardMetrics.cellSize * BOARD_ROWS + CELL_GAP * (BOARD_ROWS - 1);
-  BoardMetrics.areaHeight = gridHeight;
-
-  // 棋盘下方剩余空间，将 1/3 分配到棋盘上方，2/3 留给底部按钮区
-  const bottomSpace = logicHeight - (topReserved + topMargin) - gridHeight;
-  const shiftDown = Math.round(bottomSpace / 3);
-  BoardMetrics.topY = topReserved + topMargin + shiftDown;
-
-  console.log(`[Board] 动态布局: cellSize=${BoardMetrics.cellSize}, topY=${BoardMetrics.topY}, topReserved=${topReserved}, paddingX=${BoardMetrics.paddingX}, area=${gridWidth}x${gridHeight}`);
+  console.log(`[Board] 响应式布局: cellSize=${BoardMetrics.cellSize}, topY=${BoardMetrics.topY}, topReserved=${topReserved}, paddingX=${BoardMetrics.paddingX}, area=${gridWidth}x${BoardMetrics.areaHeight}`);
 }
 
 // 客人（实际上限随星级等级变化，见 OrderTierConfig.getDynamicMaxCustomers，封顶 6）

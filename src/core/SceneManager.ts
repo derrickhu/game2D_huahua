@@ -11,12 +11,19 @@ export interface Scene {
   readonly container: PIXI.Container;
   onEnter?(): void;
   onExit?(): void;
+  relayout?(): void;
   update?(dt: number): void;
 }
 
 class SceneManagerClass {
   private _scenes: Map<string, Scene> = new Map();
   private _currentScene: Scene | null = null;
+
+  constructor() {
+    Game.onViewportChange(() => {
+      this._currentScene?.relayout?.();
+    });
+  }
 
   register(scene: Scene): void {
     this._scenes.set(scene.name, scene);

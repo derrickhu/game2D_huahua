@@ -66,6 +66,7 @@ import {
   INFO_BAR_HEIGHT,
   BOARD_BAR_HEIGHT,
   BoardMetrics,
+  computeBoardMetrics,
 } from '@/config/Constants';
 import { ITEM_DEFS } from '@/config/ItemConfig';
 import { resolveWorkshopMaterialIconKey } from '@/config/FurnitureWorkshopConfig';
@@ -82,7 +83,10 @@ import {
   isJewelryEventUnlocked,
   JEWELRY_EVENT_UNLOCK_LEVEL,
 } from '@/config/EventBoardConfig';
-import { ENABLE_CHALLENGE_LEVEL_FEATURE } from '@/config/FeatureFlags';
+import {
+  ENABLE_CHALLENGE_LEVEL_FEATURE,
+  ENABLE_RESPONSIVE_LAYOUT_V2,
+} from '@/config/FeatureFlags';
 import { ChallengeManager } from '@/managers/ChallengeManager';
 import { HapticSystem } from '@/systems/HapticSystem';
 import { CollectionPanel } from '@/gameobjects/ui/CollectionPanel';
@@ -132,6 +136,7 @@ import { RewardBoxHintOverlay } from '@/gameobjects/ui/RewardBoxHintOverlay';
 import { BUY_FURNITURE_HINT_HUAYUAN_MIN } from '@/config/BuyFurnitureHintConfig';
 import { createTutorialStyleModalFrame } from '@/gameobjects/ui/TutorialStyleModalFrame';
 import { FruitCutUpdateGrantManager } from '@/managers/FruitCutUpdateGrantManager';
+import { computeMainSceneLayout } from '@/config/ResponsiveLayout';
 
 /** 合成页左侧店主半身：目标高度与最大宽度（设计 px），统一 scale=min(宽限,高限) 保持宽高比、避免栏内「压扁」感 */
 const BOARD_OWNER_TARGET_H = 208;
@@ -161,6 +166,7 @@ export class MainScene implements Scene {
   private _customerScrollArea!: CustomerScrollArea;
   private _shopRowPanorama!: ShopRowPanoramaScroll;
   private _shopMainBlock!: PIXI.Container;
+  private _sceneBg: PIXI.Sprite | null = null;
 
   // ---- 体验增强系统 ----
   private _flowerEasterEgg!: FlowerEasterEggSystem;
@@ -313,6 +319,7 @@ export class MainScene implements Scene {
 
     if (this._initialized) {
       RewardFlyCoordinator.setBindings(this._createMainRewardFlyBindings());
+      this.relayout();
     }
     this._textureRefreshUnsub?.();
     this._textureRefreshUnsub = TextureCache.observeTextureDependencies(
@@ -352,6 +359,29 @@ export class MainScene implements Scene {
     if (this._hapticSystem) {
       this._hapticSystem.stopAll();
     }
+  }
+
+  /**
+   * 原地重排主界面。运行时 resize 保留已构建棋盘格尺寸，仅更新分区锚点，
+   * 避免重建 BoardView 导致拖拽/事件状态丢失。
+   */
+  relayout(): void {
+    if (!this._initialized || !ENABLE_RESPONSIVE_LAYOUT_V2) return;
+    const layout = computeMainSceneLayout(
+      Game.safeTop,
+      TOP_BAR_HEIGHT,
+      MainScene.SHOP_HEIGHT,
+    );
+    computeBoardMetrics(Game.logicHeight, layout.topReserved);
+    this._topBar.position.set(0, layout.topBarY);
+    this._shopArea.position.set(0, layout.shopY);
+    this._boardView.relayout();
+    if (this._sceneBg) this._sceneBg.height = BoardMetrics.topY;
+
+    const barY = BoardMetrics.topY + BoardMetrics.areaHeight + BOARD_BAR_HEIGHT;
+    const barH = Math.max(INFO_BAR_HEIGHT, Game.logicHeight - barY);
+    this._infoBar.position.set(0, barY);
+    this._infoBar.relayout(barH, Game.safeBottom);
   }
 
   /** 游戏就绪后的启动流程 */
@@ -448,6 +478,7 @@ export class MainScene implements Scene {
       sceneBg.width = DESIGN_WIDTH;
       sceneBg.height = BoardMetrics.topY;
       this.container.addChild(sceneBg);
+      this._sceneBg = sceneBg;
     }
 
     // 顶部信息栏（紧贴安全区下方；zIndex 高于店铺区，避免活动/挑战按钮被客人滑动层挡住）
@@ -472,7 +503,7 @@ export class MainScene implements Scene {
     // 底部物品信息栏（紧贴棋盘下方装饰条之后，填满剩余空间）
     const barY = BoardMetrics.topY + BoardMetrics.areaHeight + BOARD_BAR_HEIGHT;
     const barH = Game.logicHeight - barY;
-    this._infoBar = new ItemInfoBar(barH);
+    this._infoBar = new ItemInfoBar(barH, Game.safeBottom);
     this._infoBar.position.set(0, barY);
     this.container.addChild(this._infoBar);
 

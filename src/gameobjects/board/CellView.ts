@@ -21,6 +21,7 @@ export class CellView extends PIXI.Container {
   private _orderReserved = false;
   /** 拖拽中：与拿起物品同 id 的其他已解锁格，提示可合成 */
   private _mergePartnerHint = false;
+  private _highlighted = false;
 
   constructor(cellIndex: number) {
     super();
@@ -72,6 +73,7 @@ export class CellView extends PIXI.Container {
   }
 
   setHighlight(on: boolean): void {
+    this._highlighted = on;
     if (this._cornerBrackets) {
       this.removeChild(this._cornerBrackets);
       this._cornerBrackets.destroy();
@@ -117,6 +119,12 @@ export class CellView extends PIXI.Container {
       this.addChild(container);
       this._cornerBrackets = container;
     }
+  }
+
+  /** BoardMetrics 变化后按当前状态重绘，不重建事件节点。 */
+  relayout(): void {
+    this._redraw();
+    if (this._highlighted) this.setHighlight(true);
   }
 
   private _paintCellBase(): void {

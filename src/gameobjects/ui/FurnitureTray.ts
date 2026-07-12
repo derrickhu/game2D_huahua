@@ -198,7 +198,7 @@ function nativeClientToDesignX(clientX: number): number {
   return (clientX * Game.designWidth) / Game.screenWidth;
 }
 function nativeClientToDesignY(clientY: number): number {
-  return (clientY * Game.designHeight) / Game.screenHeight;
+  return (clientY * Game.coordinateHeight) / Game.screenHeight;
 }
 
 function federatedPointerToDesign(e: PIXI.FederatedPointerEvent): { x: number; y: number } {
@@ -209,7 +209,7 @@ function federatedPointerToDesign(e: PIXI.FederatedPointerEvent): { x: number; y
   }
   return {
     x: (e.global.x / Game.dpr) * Game.designWidth / Game.screenWidth,
-    y: (e.global.y / Game.dpr) * Game.designHeight / Game.screenHeight,
+    y: (e.global.y / Game.dpr) * Game.coordinateHeight / Game.screenHeight,
   };
 }
 
@@ -398,7 +398,8 @@ export class FurnitureTray extends PIXI.Container {
     const logicH = Game.logicHeight;
     this._closedY = logicH;
     this._openY =
-      logicH - TRAY_H - FURNITURE_TRAY_OPEN_OFFSET_UP + FURNITURE_TRAY_OPEN_NUDGE_DOWN;
+      logicH - Game.safeBottom - TRAY_H
+      - FURNITURE_TRAY_OPEN_OFFSET_UP + FURNITURE_TRAY_OPEN_NUDGE_DOWN;
 
     this.y = this._closedY;
     if (trayArg != null && typeof trayArg === 'object' && 'deco' in trayArg) {
@@ -460,6 +461,17 @@ export class FurnitureTray extends PIXI.Container {
 
   get isOpen(): boolean {
     return this._isOpen;
+  }
+
+  /** 窗口变化后更新托盘开/关锚点，保留当前 Tab、滚动和开关状态。 */
+  relayout(safeBottom = Game.safeBottom): void {
+    const logicH = Game.logicHeight;
+    this._closedY = logicH;
+    this._openY =
+      logicH - safeBottom - TRAY_H
+      - FURNITURE_TRAY_OPEN_OFFSET_UP + FURNITURE_TRAY_OPEN_NUDGE_DOWN;
+    TweenManager.cancelTarget(this);
+    this.y = this._isOpen ? this._openY : this._closedY;
   }
 
   /** 「清空」圆钮：面板顶栏左缘 */

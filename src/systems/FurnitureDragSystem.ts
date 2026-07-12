@@ -202,6 +202,11 @@ class FurnitureDragSystemClass {
     EventBus.emit('furniture:edit_disabled');
   }
 
+  /** 视口尺寸变化前取消活动拖拽，避免沿用旧坐标起点导致家具跳位。 */
+  cancelActiveDrag(): void {
+    if (this._dragCtx) this._cancelDrag();
+  }
+
   /** 是否正在编辑模式 */
   get isEnabled(): boolean {
     return this._enabled;
@@ -681,7 +686,7 @@ class FurnitureDragSystemClass {
     // global 坐标是 canvas 物理像素空间 [0, screenWidth*dpr]
     // 转为设计坐标 [0, designWidth]：除以 dpr 得到逻辑像素，再乘 designWidth/screenWidth
     const designX = (e.global.x / Game.dpr) * Game.designWidth / Game.screenWidth;
-    const designY = (e.global.y / Game.dpr) * Game.designHeight / Game.screenHeight;
+    const designY = (e.global.y / Game.dpr) * Game.coordinateHeight / Game.screenHeight;
     return this._designToLocal(designX, designY);
   }
 
@@ -690,7 +695,7 @@ class FurnitureDragSystemClass {
     const clientX = e.clientX ?? e.pageX ?? 0;
     const clientY = e.clientY ?? e.pageY ?? 0;
     const designX = clientX * Game.designWidth / Game.screenWidth;
-    const designY = clientY * Game.designHeight / Game.screenHeight;
+    const designY = clientY * Game.coordinateHeight / Game.screenHeight;
     return this._designToLocal(designX, designY);
   }
 

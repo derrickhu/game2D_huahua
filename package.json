@@ -7,6 +7,7 @@
     "dev": "vite build --watch",
     "check:assets": "node scripts/check_assets.js",
     "check:deco-textures": "node scripts/check_deco_texture_refs.js",
+    "check:responsive-layout": "esbuild scripts/check_responsive_layout.ts --bundle --platform=node --format=cjs --outfile=/tmp/huahua-responsive-layout-check.cjs && node /tmp/huahua-responsive-layout-check.cjs",
     "audit:order-pricing": "node scripts/audit_order_pricing.js"
   },
   "keywords": [],

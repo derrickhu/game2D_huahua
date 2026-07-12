@@ -48,6 +48,7 @@ import { MergeCompanionOverlay, createMergeBubbleDragReplica } from './MergeComp
 import { MergeCompanionManager } from '@/managers/MergeCompanionManager';
 
 export class BoardView extends PIXI.Container {
+  private _boardChrome!: PIXI.Container;
   /** 仅格子底与雾等，必须在物品下层，避免交错 addChild 导致右侧/下方格子盖住左侧物品 */
   private _cellsLayer!: PIXI.Container;
   private _itemsLayer!: PIXI.Container;
@@ -93,6 +94,8 @@ export class BoardView extends PIXI.Container {
   constructor() {
     super();
     this.position.set(0, BoardMetrics.topY);
+    this._boardChrome = new PIXI.Container();
+    this.addChild(this._boardChrome);
     this._drawBoardArea();
     this._cellsLayer = new PIXI.Container();
     this._itemsLayer = new PIXI.Container();
@@ -108,6 +111,7 @@ export class BoardView extends PIXI.Container {
   }
 
   private _drawBoardArea(): void {
+    const target = this._boardChrome;
     const w = DESIGN_WIDTH;
     const h = BoardMetrics.areaHeight;
     const BAR_H = BOARD_BAR_HEIGHT;
@@ -122,15 +126,15 @@ export class BoardView extends PIXI.Container {
       mask.beginFill(0xFFFFFF);
       mask.drawRoundedRect(0, 0, w, h, 8);
       mask.endFill();
-      this.addChild(mask);
+      target.addChild(mask);
       sp.mask = mask;
-      this.addChild(sp);
+      target.addChild(sp);
     } else {
       const bg = new PIXI.Graphics();
       bg.beginFill(0xF6CFA7, 0.96);
       bg.drawRoundedRect(0, 0, w, h, 8);
       bg.endFill();
-      this.addChild(bg);
+      target.addChild(bg);
     }
 
     const barTex = TextureCache.get('board_bar');
@@ -140,7 +144,7 @@ export class BoardView extends PIXI.Container {
       topBar.height = BAR_H;
       topBar.anchor.set(0, 1);
       topBar.position.set(0, 0);
-      this.addChild(topBar);
+      target.addChild(topBar);
 
       const botBar = new PIXI.Sprite(barTex);
       botBar.width = w;
@@ -149,15 +153,40 @@ export class BoardView extends PIXI.Container {
       // 与顶栏镜像：重暗部与底投影朝向棋盘一侧，上下两条观感一致
       botBar.scale.y = -1;
       botBar.position.set(0, h + BAR_H);
-      this.addChild(botBar);
+      target.addChild(botBar);
     } else {
       const fallbackBar = new PIXI.Graphics();
       fallbackBar.beginFill(0xC8B090, 0.7);
       fallbackBar.drawRoundedRect(0, -BAR_H, w, BAR_H, 4);
       fallbackBar.drawRoundedRect(0, h, w, BAR_H, 4);
       fallbackBar.endFill();
-      this.addChild(fallbackBar);
+      target.addChild(fallbackBar);
     }
+  }
+
+  /** 窗口比例变化后按最新 BoardMetrics 原地更新格子尺寸与位置。 */
+  relayout(): void {
+    if (this._dragSrcIndex >= 0) {
+      MergeManager.cancelDrag();
+      this._endDrag();
+      this._dragSrcIndex = -1;
+    }
+    if (this._mergeBubblePtr) {
+      this._mergeBubblePtr = null;
+      this._endBubbleDragVisuals();
+    }
+    this.position.set(0, BoardMetrics.topY);
+    this._boardChrome.removeChildren().forEach(child => child.destroy({ children: true }));
+    this._drawBoardArea();
+    for (let i = 0; i < this._cellViews.length; i++) {
+      const p = this._cellPositionForIndex(i);
+      this._cellViews[i].position.set(p.x, p.y);
+      this._cellViews[i].relayout();
+      this._itemViews[i].position.set(p.x, p.y);
+      this._itemViews[i].relayout();
+    }
+    this.hitArea = new PIXI.Rectangle(0, 0, DESIGN_WIDTH, BoardMetrics.areaHeight);
+    this.refresh();
   }
 
   private _buildGrid(): void {

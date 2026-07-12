@@ -136,6 +136,7 @@ export class ItemInfoBar extends PIXI.Container {
   private _bg!: PIXI.Graphics;
   private _actualHeight: number;
   private _contentCY: number;
+  private _safeBottom: number;
 
   /** 左下：进入花店/房屋（scene:switchToShop），勿与顶栏购买商店混淆 */
   private _houseBtn!: PIXI.Container;
@@ -196,10 +197,11 @@ export class ItemInfoBar extends PIXI.Container {
   /** 气泡「换花愿移除」入口（原在棋盘上，现仅底栏） */
   private _bubbleDismissLink!: PIXI.Text;
 
-  constructor(actualHeight?: number) {
+  constructor(actualHeight?: number, safeBottom = SAFE_BOTTOM) {
     super();
     this._actualHeight = actualHeight ?? INFO_BAR_HEIGHT;
-    this._contentCY = (this._actualHeight - SAFE_BOTTOM) / 2;
+    this._safeBottom = Math.max(SAFE_BOTTOM, safeBottom);
+    this._contentCY = (this._actualHeight - this._safeBottom) / 2;
     this._buildBg();
     this._buildHouseBtn();
     this._buildWarehouseBtn();
@@ -223,9 +225,9 @@ export class ItemInfoBar extends PIXI.Container {
     const fullSpan = cardRightEdge - midL;
     this._cardLeft = midL + CARD_SIDE_TRIM;
     this._cardW = Math.max(208, fullSpan - CARD_SIDE_TRIM * 2);
-    const innerH = this._actualHeight - SAFE_BOTTOM - 8;
+    const innerH = this._actualHeight - this._safeBottom - 8;
     this._cardH = Math.min(108, Math.max(82, innerH - 4));
-    this._cardTop = (this._actualHeight - SAFE_BOTTOM - this._cardH) / 2;
+    this._cardTop = (this._actualHeight - this._safeBottom - this._cardH) / 2;
     this._leafDisplayWMin = Math.min(
       LEAF_MAX_W,
       Math.max(168, Math.floor(this._cardW * 0.58)),
@@ -235,6 +237,12 @@ export class ItemInfoBar extends PIXI.Container {
 
   private _buildBg(): void {
     this._bg = new PIXI.Graphics();
+    this._drawBg();
+    this.addChild(this._bg);
+  }
+
+  private _drawBg(): void {
+    this._bg.clear();
     this._bg.beginFill(0xc68d2e, 0.68);
     this._bg.drawRect(0, -2.5, DESIGN_WIDTH, 2.5);
     this._bg.endFill();
@@ -245,15 +253,42 @@ export class ItemInfoBar extends PIXI.Container {
     this._bg.drawRect(0, 4, DESIGN_WIDTH, Math.max(10, this._actualHeight * 0.18));
     this._bg.endFill();
     this._bg.beginFill(0xe9b44b, 0.18);
-    this._bg.drawRect(0, Math.max(0, this._actualHeight - SAFE_BOTTOM - 18), DESIGN_WIDTH, 18);
+    this._bg.drawRect(0, Math.max(0, this._actualHeight - this._safeBottom - 18), DESIGN_WIDTH, 18);
     this._bg.endFill();
     this._bg.lineStyle(1.2, 0xffffff, 0.38);
     this._bg.moveTo(0, 5);
     this._bg.lineTo(DESIGN_WIDTH, 5);
     this._bg.lineStyle(1.2, 0xc78f2f, 0.28);
-    this._bg.moveTo(0, this._actualHeight - SAFE_BOTTOM - 2);
-    this._bg.lineTo(DESIGN_WIDTH, this._actualHeight - SAFE_BOTTOM - 2);
-    this.addChild(this._bg);
+    this._bg.moveTo(0, this._actualHeight - this._safeBottom - 2);
+    this._bg.lineTo(DESIGN_WIDTH, this._actualHeight - this._safeBottom - 2);
+  }
+
+  /** 窗口变化时原地更新尺寸，保留选中态和既有事件监听。 */
+  relayout(actualHeight: number, safeBottom = SAFE_BOTTOM): void {
+    this._actualHeight = Math.max(INFO_BAR_HEIGHT, actualHeight);
+    this._safeBottom = Math.max(SAFE_BOTTOM, safeBottom);
+    this._contentCY = (this._actualHeight - this._safeBottom) / 2;
+    this._layoutMetrics();
+    this._drawBg();
+    this._houseBtn.position.y = this._contentCY;
+    this._warehouseBtn.position.y = this._contentCY;
+
+    drawCardChrome(this._hintShadow, this._hintCard, this._cardLeft, this._cardTop, this._cardW, this._cardH);
+    const hint = this._hintContainer.children[2] as PIXI.Text | undefined;
+    hint?.position.set(this._cardLeft + this._cardW / 2, this._cardTop + this._cardH / 2);
+
+    drawCardChrome(this._infoShadow, this._infoCard, this._cardLeft, this._cardTop, this._cardW, this._cardH);
+    this._leafStrip.position.set(this._cardLeft - LEAF_LEFT_OVERHANG, this._cardTop - 10);
+    const titleY = this._cardTop - 6 + LEAF_TARGET_H * 0.5;
+    this._nameText.position.set(this._cardLeft + 30, titleY);
+    this._levelText.position.set(this._cardLeft + 30, titleY);
+    const descTop = this._cardTop + LEAF_TARGET_H + 4;
+    this._descText.position.set(this._cardLeft + 10, descTop);
+    this._descText.style.wordWrapWidth = Math.max(80, this._cardW - 20 - BTN_COL_W);
+    this._staminaDescRow.position.set(this._cardLeft + 10, descTop + 2);
+    this._syncLeafStrip();
+    this._syncActionButtonPositions(this._chainBtn.visible, this._sellBtn.visible);
+    if (this._selectedMergeBubbleId) this._refreshSelectedBubblePanel();
   }
 
   /**

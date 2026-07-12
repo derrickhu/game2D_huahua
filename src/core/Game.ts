@@ -5,6 +5,11 @@ import * as PIXI from 'pixi.js';
 import { ShaderSystem } from '@pixi/core';
 import { TweenManager } from './TweenManager';
 import { BuildingManager } from '@/managers/BuildingManager';
+import { ENABLE_RESPONSIVE_LAYOUT_V2 } from '@/config/FeatureFlags';
+import {
+  normalizeViewportMetrics,
+  type ViewportMetrics,
+} from '@/config/ResponsiveLayout';
 
 /* ---- @pixi/unsafe-eval 内联 patch ---- */
 
@@ -107,8 +112,13 @@ class GameClass {
 
   /** 安全区顶部偏移（设计坐标），位于微信胶囊按钮下方 */
   safeTop = 0;
+  /** 底部系统手势区高度（设计坐标） */
+  safeBottom = 0;
 
   private _initialized = false;
+  private _canvas: any = null;
+  private _viewportListeners = new Set<() => void>();
+  private _resizeTimer: ReturnType<typeof setTimeout> | null = null;
 
   /** 唯一实例标识，用于调试模块重复加载问题 */
   readonly _uid = Math.random().toString(36).slice(2, 8);
@@ -126,34 +136,9 @@ class GameClass {
     // 再次确保 patch（防止 bundler 重排）
     ensureUnsafeEvalPatch();
 
-    // 获取屏幕信息
-    const sysInfo = (typeof wx !== 'undefined' ? wx : typeof tt !== 'undefined' ? tt : null)
-      ?.getSystemInfoSync?.();
-
-    if (sysInfo) {
-      this.screenWidth = sysInfo.screenWidth;
-      this.screenHeight = sysInfo.screenHeight;
-      this.dpr = sysInfo.pixelRatio || 2;
-    }
-
-    // 计算安全区顶部（与微信胶囊按钮齐平），转为设计坐标
-    // TopBar 所有元素在胶囊左侧，不会重叠，因此对齐 capsule.top 即可
-    const _api: any = typeof wx !== 'undefined' ? wx : typeof tt !== 'undefined' ? tt : null;
-    let safeTopPx = 0;
-    try {
-      const capsule = _api?.getMenuButtonBoundingClientRect?.();
-      if (capsule && capsule.top) {
-        safeTopPx = capsule.top;
-      } else if (sysInfo?.statusBarHeight) {
-        safeTopPx = sysInfo.statusBarHeight + 6;
-      }
-    } catch (_) {}
-    if (safeTopPx <= 0) safeTopPx = 40;
-    this.safeTop = Math.round(safeTopPx * (this.designWidth / this.screenWidth));
-    console.log(`[Game] safeTop: ${safeTopPx}px → ${this.safeTop} 设计坐标`);
-
-    // 计算缩放：以宽度为基准适配
-    this.scale = this.screenWidth / this.designWidth * this.dpr;
+    const viewport = this._readViewportMetrics();
+    this._assignViewportMetrics(viewport);
+    this._canvas = canvas;
 
     const realWidth = this.screenWidth * this.dpr;
     const realHeight = this.screenHeight * this.dpr;
@@ -294,7 +279,124 @@ class GameClass {
     } catch (e) { console.warn('[Game] EventSystem patch 失败:', e); }
 
     this._initialized = true;
-    console.log(`[Game] 初始化完成: uid=${this._uid}, ${realWidth}x${realHeight}, scale=${this.scale.toFixed(2)}, dpr=${this.dpr}, stage=${!!this.stage}`);
+    this._bindViewportResize();
+    console.log(`[Game] 初始化完成: uid=${this._uid}, viewport=${this.screenWidth}x${this.screenHeight}, canvas=${realWidth}x${realHeight}, scale=${this.scale.toFixed(2)}, dpr=${this.dpr}, safeTop=${this.safeTop}, safeBottom=${this.safeBottom}, stage=${!!this.stage}`);
+  }
+
+  /** 监听可用窗口变化。返回取消监听函数。 */
+  onViewportChange(listener: () => void): () => void {
+    this._viewportListeners.add(listener);
+    return () => this._viewportListeners.delete(listener);
+  }
+
+  /** 重读窗口数据并同步 renderer/stage；尺寸未变化时不会触发布局。 */
+  refreshViewport(resizeInfo?: any): boolean {
+    if (!this._initialized) return false;
+    const next = this._readViewportMetrics(resizeInfo);
+    const nextSafeTop = Math.round(next.safeTopPx * this.designWidth / next.width);
+    const nextSafeBottom = Math.round(next.safeBottomPx * this.designWidth / next.width);
+    if (
+      next.width === this.screenWidth
+      && next.height === this.screenHeight
+      && next.pixelRatio === this.dpr
+      && nextSafeTop === this.safeTop
+      && nextSafeBottom === this.safeBottom
+    ) {
+      return false;
+    }
+
+    this._assignViewportMetrics(next);
+    const realWidth = Math.round(this.screenWidth * this.dpr);
+    const realHeight = Math.round(this.screenHeight * this.dpr);
+    try {
+      (this.app?.renderer as any)?.resize?.(realWidth, realHeight);
+    } catch (e) {
+      console.warn('[Game] renderer.resize 失败，回退直接更新 canvas:', e);
+      if (this._canvas) {
+        this._canvas.width = realWidth;
+        this._canvas.height = realHeight;
+      }
+    }
+    this.stage.scale.set(this.scale, this.scale);
+    console.log(`[Game] viewport 已更新: ${this.screenWidth}x${this.screenHeight}, safeTop=${this.safeTop}, safeBottom=${this.safeBottom}`);
+    for (const listener of [...this._viewportListeners]) {
+      try { listener(); } catch (e) { console.warn('[Game] viewport listener 失败:', e); }
+    }
+    return true;
+  }
+
+  private _assignViewportMetrics(metrics: ViewportMetrics): void {
+    this.screenWidth = metrics.width;
+    this.screenHeight = metrics.height;
+    this.dpr = metrics.pixelRatio;
+    this.safeTop = Math.round(metrics.safeTopPx * this.designWidth / metrics.width);
+    this.safeBottom = ENABLE_RESPONSIVE_LAYOUT_V2
+      ? Math.round(metrics.safeBottomPx * this.designWidth / metrics.width)
+      : 0;
+    this.scale = metrics.width / this.designWidth * metrics.pixelRatio;
+  }
+
+  private _readViewportMetrics(resizeInfo?: any): ViewportMetrics {
+    const globals = globalThis as any;
+    const api: any = globals.wx ?? globals.tt ?? null;
+    let sysInfo: any = null;
+    let windowInfo: any = null;
+    let capsule: any = null;
+    try { sysInfo = api?.getSystemInfoSync?.() ?? null; } catch (_) {}
+    try { capsule = api?.getMenuButtonBoundingClientRect?.() ?? null; } catch (_) {}
+    if (!ENABLE_RESPONSIVE_LAYOUT_V2) {
+      const legacySafeTop = capsule?.top
+        || (sysInfo?.statusBarHeight ? sysInfo.statusBarHeight + 6 : 40);
+      return {
+        width: sysInfo?.screenWidth || this.screenWidth,
+        height: sysInfo?.screenHeight || this.screenHeight,
+        pixelRatio: sysInfo ? (sysInfo.pixelRatio || 2) : this.dpr,
+        safeTopPx: legacySafeTop,
+        safeBottomPx: 0,
+      };
+    }
+    if (ENABLE_RESPONSIVE_LAYOUT_V2) {
+      try { windowInfo = api?.getWindowInfo?.() ?? null; } catch (_) {}
+    }
+
+    const browserW = typeof window !== 'undefined' ? Number(window.innerWidth) : 0;
+    const browserH = typeof window !== 'undefined' ? Number(window.innerHeight) : 0;
+    const source = ENABLE_RESPONSIVE_LAYOUT_V2 ? (windowInfo ?? sysInfo ?? {}) : (sysInfo ?? {});
+    const width = ENABLE_RESPONSIVE_LAYOUT_V2
+      ? resizeInfo?.windowWidth ?? source.windowWidth ?? source.screenWidth ?? browserW
+      : source.screenWidth;
+    const height = ENABLE_RESPONSIVE_LAYOUT_V2
+      ? resizeInfo?.windowHeight ?? source.windowHeight ?? source.screenHeight ?? browserH
+      : source.screenHeight;
+    const safeArea = source.safeArea ?? sysInfo?.safeArea;
+
+    return normalizeViewportMetrics({
+      width,
+      height,
+      pixelRatio: source.pixelRatio ?? sysInfo?.pixelRatio,
+      statusBarHeight: source.statusBarHeight ?? sysInfo?.statusBarHeight,
+      safeAreaTop: safeArea?.top,
+      safeAreaBottom: safeArea?.bottom,
+      capsuleTop: capsule?.top,
+    }, this.screenWidth, this.screenHeight);
+  }
+
+  private _bindViewportResize(): void {
+    if (!ENABLE_RESPONSIVE_LAYOUT_V2) return;
+    const globals = globalThis as any;
+    const api: any = globals.wx ?? globals.tt ?? null;
+    const schedule = (info?: any): void => {
+      if (this._resizeTimer) clearTimeout(this._resizeTimer);
+      this._resizeTimer = setTimeout(() => {
+        this._resizeTimer = null;
+        this.refreshViewport(info);
+      }, 120);
+    };
+    if (typeof api?.onWindowResize === 'function') {
+      api.onWindowResize(schedule);
+    } else if (typeof window !== 'undefined' && typeof window.addEventListener === 'function') {
+      window.addEventListener('resize', () => schedule());
+    }
   }
 
   /** 设计坐标转实际像素 */
@@ -310,6 +412,11 @@ class GameClass {
   /** 获取设计分辨率下的逻辑高度 */
   get logicHeight(): number {
     return this.screenHeight / this.screenWidth * this.designWidth;
+  }
+
+  /** 指针 Y 换算高度；关闭响应式开关时完整回退旧版固定设计高。 */
+  get coordinateHeight(): number {
+    return ENABLE_RESPONSIVE_LAYOUT_V2 ? this.logicHeight : this.designHeight;
   }
 }
 

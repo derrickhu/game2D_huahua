@@ -46,6 +46,9 @@ import { LoadingScreenOverlay } from '@/gameobjects/ui/LoadingScreenOverlay';
 import { MainScene } from '@/scenes/MainScene';
 import { ShopScene } from '@/scenes/ShopScene';
 import { computeBoardMetrics } from '@/config/Constants';
+import { TOP_BAR_HEIGHT } from '@/gameobjects/ui/TopBar';
+import { computeMainSceneLayout } from '@/config/ResponsiveLayout';
+import { ENABLE_RESPONSIVE_LAYOUT_V2 } from '@/config/FeatureFlags';
 declare const GameGlobal: any;
 
 // 全局错误捕获——确保真机上所有异常可见，并按经分 SOP 上报 app_error。
@@ -139,10 +142,15 @@ async function main(): Promise<void> {
         'supportsTouchEvents:', events?.supportsTouchEvents);
     } catch (e) { console.warn('[main] EventSystem 诊断失败:', e); }
 
-    // topReserved = safeTop + TopBar(60) + gap(4) + ShopArea(250)；与 MainScene.SHOP_HEIGHT 一致（全景视口可更高，略压棋盘顶边）
-    const topReserved = Game.safeTop + 60 + 4 + MainScene.SHOP_HEIGHT;
-    computeBoardMetrics(Game.logicHeight, topReserved);
-    console.log(`[main] BoardMetrics 计算完成, logicHeight:${Game.logicHeight}, safeTop:${Game.safeTop}, topReserved:${topReserved}`);
+    const mainLayout = ENABLE_RESPONSIVE_LAYOUT_V2
+      ? computeMainSceneLayout(Game.safeTop, TOP_BAR_HEIGHT, MainScene.SHOP_HEIGHT)
+      : {
+        topBarY: Game.safeTop,
+        shopY: Game.safeTop + TOP_BAR_HEIGHT + 4,
+        topReserved: Game.safeTop + 60 + 4 + MainScene.SHOP_HEIGHT,
+      };
+    computeBoardMetrics(Game.logicHeight, mainLayout.topReserved);
+    console.log(`[main] BoardMetrics 计算完成, logicHeight:${Game.logicHeight}, safeTop:${Game.safeTop}, topReserved:${mainLayout.topReserved}`);
 
     Game.stage.sortableChildren = true;
     const loadingOverlay = new LoadingScreenOverlay();

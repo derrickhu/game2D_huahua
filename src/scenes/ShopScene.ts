@@ -80,7 +80,10 @@ import {
   markFlowerSignAutoOpenedOnShopEnter,
   shouldAutoOpenFlowerSignOnShopEnter,
 } from '@/managers/FlowerSignGachaManager';
-import { ENABLE_SHOP_MISC_DRAWER } from '@/config/FeatureFlags';
+import {
+  ENABLE_RESPONSIVE_LAYOUT_V2,
+  ENABLE_SHOP_MISC_DRAWER,
+} from '@/config/FeatureFlags';
 
 // ── 布局常量 ──
 const PROGRESS_BAR_W = 400;
@@ -121,8 +124,9 @@ const MISC_DRAWER_ITEM_GAP = 10;
 
 /** 与 FurnitureTray 一致，避免遮挡过多场景 */
 /** 编辑态托盘顶边设计坐标：logicH - 高度 - 上移量 */
-const trayOpenTopY = (logicH: number) =>
+const trayOpenTopY = (logicH: number, safeBottom = 0) =>
   logicH -
+  safeBottom -
   FURNITURE_TRAY_H -
   FURNITURE_TRAY_OPEN_OFFSET_UP +
   FURNITURE_TRAY_OPEN_NUDGE_DOWN;
@@ -527,6 +531,7 @@ export class ShopScene implements Scene {
       this._uiBuilt = true;
       this._finishShopEnter(false);
     }
+    this.relayout();
   }
 
   /** 二次进店：复用已构建 UI，只刷新动态内容与事件 */
@@ -637,6 +642,97 @@ export class ShopScene implements Scene {
     RoomLayoutManager.saveNow();
     Game.ticker.remove(this._update, this);
     this.container.visible = false;
+  }
+
+  /** 原地更新花店 HUD 与房间锚点，不销毁组件、不重复绑定事件。 */
+  relayout(): void {
+    if (!this._uiBuilt || !ENABLE_RESPONSIVE_LAYOUT_V2) return;
+    const w = DESIGN_WIDTH;
+    const h = Game.logicHeight;
+    const bottom = Game.safeBottom;
+    if (this._isEditMode) FurnitureDragSystem.cancelActiveDrag();
+
+    this._buildBackground(w, h);
+    this._topBar.position.set(0, Game.safeTop);
+    this._progressBarRoot.position.set(
+      w / 2 - PROGRESS_BAR_W / 2,
+      Game.safeTop + TOP_BAR_HEIGHT + 16,
+    );
+
+    const sideBtnW = 84;
+    const sideBtnH = 84;
+    const sideGap = 10;
+    const sideStartY = Game.safeTop + TOP_BAR_HEIGHT + PROGRESS_BAR_H + 66 + sideBtnH / 2;
+    const leftX = sideBtnW / 2 + 14;
+    const rightX = w - sideBtnW / 2 - 14;
+    LEFT_TOP_BUTTONS.forEach((def, i) => {
+      this._activityBtns.get(def.id)?.container.position.set(
+        leftX,
+        sideStartY + i * (sideBtnH + sideGap),
+      );
+    });
+    RIGHT_BUTTONS.forEach((def, i) => {
+      this._activityBtns.get(def.id)?.container.position.set(
+        rightX,
+        sideStartY + i * (sideBtnH + sideGap),
+      );
+    });
+
+    const operateY = h - bottom - 90;
+    this._returnBtn.position.set(w - 72, operateY);
+    if (this._worldMapBtn) {
+      const r = WORLD_MAP_ICON_R;
+      const operateTopY = operateY - RETURN_BTN_SIZE / 2;
+      const labelY = r - 10;
+      const mapExtentBelowCenter = labelY + WORLD_MAP_LABEL_H;
+      const stripTopY = h - bottom - SHOP_BOTTOM_STRIP_TOP_OFFSET;
+      let mapY = Math.max(
+        operateTopY - WORLD_MAP_ABOVE_OPERATE_GAP - mapExtentBelowCenter,
+        stripTopY + r + 2,
+      ) - WORLD_MAP_BTN_LIFT_PX;
+      if (mapY - r < stripTopY) mapY = stripTopY + r + 2;
+      this._worldMapBtn.position.set(w - 72, mapY);
+      this._wishingBtn?.position.set(
+        this._worldMapBtn.x - WISHING_TO_WORLDMAP_GAP_X,
+        mapY,
+      );
+      this._newbieGiftPackEntry?.position.set(
+        (this._wishingBtn?.x ?? this._worldMapBtn.x) - NEWBIE_GIFT_TO_WISHING_GAP_X,
+        mapY,
+      );
+      DECO_PAIR_BUTTONS.forEach((def, i) => {
+        this._activityBtns.get(def.id)?.container.position.set(
+          WORLD_MAP_ICON_R + 14 + i * WISHING_TO_WORLDMAP_GAP_X,
+          mapY,
+        );
+      });
+    }
+    this._editBtn.position.set(w / 2, h - bottom - 118);
+
+    if (this._miscDrawerTab && this._miscDrawerPanel) {
+      const drawerY = h - bottom - MISC_DRAWER_Y_FROM_BOTTOM;
+      this._miscDrawerTab.position.set(18, drawerY);
+      this._miscDrawerPanel.position.set(54, drawerY - 1);
+    }
+
+    this._furnitureTray.relayout(bottom);
+    if (this._roomPanHitLayer) {
+      this._roomPanHitLayer.hitArea = new PIXI.Rectangle(0, 0, DESIGN_WIDTH, h);
+    }
+    if (this._zoomSlider) {
+      this._zoomSlider.position.set(
+        DESIGN_WIDTH - 6,
+        Math.max(0, (h - bottom - this._zoomSliderTrackH) / 2),
+      );
+      this._syncZoomSliderThumb();
+    }
+
+    this._refreshShopBuildingTexture();
+    if (this._isEditMode) {
+      this._applySceneEditViewProfile(false, trayOpenTopY(h, bottom));
+    } else {
+      this._applyBrowseViewScale();
+    }
   }
 
   private _cleanupOwnerDragEvents(): void {
@@ -1044,7 +1140,7 @@ export class ShopScene implements Scene {
 
   private _designPosFromFederated(e: PIXI.FederatedPointerEvent): { x: number; y: number } {
     const designX = (e.global.x / Game.dpr) * Game.designWidth / Game.screenWidth;
-    const designY = (e.global.y / Game.dpr) * Game.designHeight / Game.screenHeight;
+    const designY = (e.global.y / Game.dpr) * Game.coordinateHeight / Game.screenHeight;
     return { x: designX, y: designY };
   }
 
@@ -1065,7 +1161,7 @@ export class ShopScene implements Scene {
     const g = this._designPosFromFederated(e);
     return {
       x: (g.x / Game.designWidth) * Game.screenWidth,
-      y: (g.y / Game.designHeight) * Game.screenHeight,
+      y: (g.y / Game.coordinateHeight) * Game.screenHeight,
     };
   }
 
@@ -1103,7 +1199,7 @@ export class ShopScene implements Scene {
     this._ownerDragging = true;
     if (pointerId != null) this._ownerPointerDownId = pointerId;
     const designX = clientX * Game.designWidth / Game.screenWidth;
-    const designY = clientY * Game.designHeight / Game.screenHeight;
+    const designY = clientY * Game.coordinateHeight / Game.screenHeight;
     const local = this._roomLocalFromDesign(designX, designY);
     this._ownerDragOffset.x = owner.x - local.x;
     this._ownerDragOffset.y = owner.y - local.y;
@@ -1240,7 +1336,7 @@ export class ShopScene implements Scene {
 
       if (!this._ownerDragging) return;
       const designX = clientX * Game.designWidth / Game.screenWidth;
-      const designY = clientY * Game.designHeight / Game.screenHeight;
+      const designY = clientY * Game.coordinateHeight / Game.screenHeight;
       const c = this._roomContainer;
       const s = c.scale.x || 1;
       const localX = (designX - c.position.x) / s + c.pivot.x;
@@ -1898,7 +1994,7 @@ export class ShopScene implements Scene {
     if (!ENABLE_SHOP_MISC_DRAWER) return;
 
     const root = new PIXI.Container();
-    const drawerY = Game.logicHeight - MISC_DRAWER_Y_FROM_BOTTOM;
+    const drawerY = Game.logicHeight - Game.safeBottom - MISC_DRAWER_Y_FROM_BOTTOM;
 
     const tab = new PIXI.Container();
     tab.position.set(18, drawerY);
@@ -2436,7 +2532,7 @@ export class ShopScene implements Scene {
   private _buildReturnButton(w: number, h: number): void {
     this._returnBtn = new PIXI.Container();
     const cx = w - 72;
-    const cy = h - 90;
+    const cy = h - Game.safeBottom - 90;
 
     const r = RETURN_BTN_SIZE / 2;
 
@@ -2522,13 +2618,13 @@ export class ShopScene implements Scene {
     const r = WORLD_MAP_ICON_R;
     // 与「营业」同列；整体上沿受底部浅绿条顶边限制（见 SHOP_BOTTOM_STRIP_TOP_OFFSET）
     const cx = w - 72;
-    const operateCY = h - 90;
+    const operateCY = h - Game.safeBottom - 90;
     const operateR = RETURN_BTN_SIZE / 2;
     const operateTopY = operateCY - operateR;
     // 文案上提、略压图标下缘：锚点顶对齐，y < r 形成重叠
     const labelY = r - 10;
     const mapExtentBelowCenter = labelY + WORLD_MAP_LABEL_H;
-    const stripTopY = h - SHOP_BOTTOM_STRIP_TOP_OFFSET;
+    const stripTopY = h - Game.safeBottom - SHOP_BOTTOM_STRIP_TOP_OFFSET;
     const cyFromOperate =
       operateTopY - WORLD_MAP_ABOVE_OPERATE_GAP - mapExtentBelowCenter;
     const cyMinForStrip = stripTopY + r + 2;
@@ -2885,7 +2981,7 @@ export class ShopScene implements Scene {
     this._applyShopEditButtonChrome();
 
     // 底部居中，略上移避免与系统安全区/返回键重叠
-    this._editBtn.position.set(w / 2, h - 118);
+    this._editBtn.position.set(w / 2, h - Game.safeBottom - 118);
     this._editBtn.eventMode = 'static';
     this._editBtn.cursor = 'pointer';
     this._editBtn.on('pointerdown', () => {
@@ -3037,7 +3133,7 @@ export class ShopScene implements Scene {
     this._setShopHudVisible(false);
 
     const h = Game.logicHeight;
-    const trayTopY = trayOpenTopY(h);
+    const trayTopY = trayOpenTopY(h, Game.safeBottom);
     this._applySceneEditViewProfile(true, trayTopY);
 
     // 启用拖拽系统
@@ -3373,7 +3469,7 @@ export class ShopScene implements Scene {
 
     // 还原编辑按钮（编辑态仅隐藏主钮，退出后恢复显隐与布局）
     const h = Game.logicHeight;
-    this._editBtn.position.set(DESIGN_WIDTH / 2, h - 118);
+    this._editBtn.position.set(DESIGN_WIDTH / 2, h - Game.safeBottom - 118);
     this._applyShopEditButtonChrome();
 
     // 恢复脉冲动画
@@ -3424,9 +3520,11 @@ export class ShopScene implements Scene {
     this._viewScaleMin = profile.editViewScaleMin;
     this._viewScaleMax = profile.editViewScaleMax;
     this._viewScalePanBaseline = profile.editViewScaleDefault;
-    const topY = trayTopY ?? trayOpenTopY(Game.logicHeight);
+    const topY = trayTopY ?? trayOpenTopY(Game.logicHeight, Game.safeBottom);
     if (resetZoom) {
       this._applyViewZoom(profile.editViewScaleDefault);
+    } else {
+      this._syncRoomContainerTransform();
     }
     this._applySceneLayoutBounds({ trayTopY: topY });
   }
@@ -3452,7 +3550,9 @@ export class ShopScene implements Scene {
     if (sp?.texture?.valid) {
       const bw = sp.texture.width * Math.abs(sp.scale.x) * s;
       const bh = sp.texture.height * Math.abs(sp.scale.y) * s;
-      const viewH = this._isEditMode ? trayOpenTopY(Game.logicHeight) : Game.logicHeight * 0.82;
+      const viewH = this._isEditMode
+        ? trayOpenTopY(Game.logicHeight, Game.safeBottom)
+        : Game.logicHeight * 0.82;
       maxX = Math.max(maxX, (bw - DESIGN_WIDTH) * 0.5 + 24);
       maxY = Math.max(maxY, (bh - viewH) * 0.45 + 16);
     }
@@ -3622,7 +3722,7 @@ export class ShopScene implements Scene {
       const dxClient = ev.clientX - this._roomPanDragStartClientX;
       const dyClient = ev.clientY - this._roomPanDragStartClientY;
       this._roomPanX = this._roomPanDragStartPanX + dxClient * Game.designWidth / Game.screenWidth;
-      this._roomPanY = this._roomPanDragStartPanY + dyClient * Game.designHeight / Game.screenHeight;
+      this._roomPanY = this._roomPanDragStartPanY + dyClient * Game.coordinateHeight / Game.screenHeight;
       this._syncRoomContainerTransform();
     };
 
@@ -3697,7 +3797,7 @@ export class ShopScene implements Scene {
    */
   private _sliderLocalYFromClientY(clientY: number): number {
     const H = this._zoomSliderTrackH;
-    const gh = clientY * Game.logicHeight / Game.screenHeight;
+    const gh = clientY * Game.coordinateHeight / Game.screenHeight;
     const topY = this._zoomSlider?.position.y ?? (Game.logicHeight - H) / 2;
     return Math.max(0, Math.min(H, gh - topY));
   }

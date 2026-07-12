@@ -277,6 +277,11 @@ export class ItemView extends PIXI.Container {
     this._levelText.visible = false;
   }
 
+  /** BoardMetrics 变化后按当前物品重绘尺寸；业务状态由 BoardView.refresh 重新同步。 */
+  relayout(): void {
+    this.setItem(this._itemId || null, { magicEnergy: this._magicEnergy });
+  }
+
   get itemId(): string {
     return this._itemId;
   }
