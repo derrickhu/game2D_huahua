@@ -135,9 +135,8 @@ export class ThursdayMagicTimePanel extends PIXI.Container {
       strokeThickness: 4,
     } as PIXI.TextStyle);
     closeHint.anchor.set(0.5);
-    closeHint.zIndex = 1;
-    closeHint.position.set(DESIGN_WIDTH / 2, Game.logicHeight - 30);
-    this.addChild(closeHint);
+    closeHint.position.set(0, PANEL_H / 2 + 22);
+    this._root.addChild(closeHint);
 
     this._leftBox = new PIXI.Container();
     this._leftBox.position.set(-PANEL_W / 2 + 102, -92);
