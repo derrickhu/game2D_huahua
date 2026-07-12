@@ -27,12 +27,46 @@ for k in "${KEYS[@]}"; do
   raw_out="$RAW/furniture_${k}_nb2.png"
   echo "=== $k ==="
   [ -f "$pf" ] || { echo "missing prompt $pf"; exit 1; }
+  img_args=()
+  if [[ "$k" == "garden_arch" ]]; then
+    arch_ref="${GARDEN_ARCH_REF:-$WS/.tmp/garden_arch_prev.png}"
+    iso_ref="$WS/docs/prompt/refs/furniture_iso_grid_pm30.png"
+    composite="$RAW/furniture_${k}_layout_composite.png"
+    [ -f "$arch_ref" ] || arch_ref="/tmp/garden_arch_old.png"
+    python3 - <<PY
+from pathlib import Path
+from PIL import Image
+
+arch = Path("$arch_ref")
+iso = Path("$iso_ref")
+out = Path("$composite")
+
+def fit_h(im: Image.Image, h: int) -> Image.Image:
+    im = im.convert("RGBA")
+    s = h / im.height
+    nw = max(1, int(round(im.width * s)))
+    return im.resize((nw, h), Image.Resampling.LANCZOS)
+
+H = 480
+left = fit_h(Image.open(arch), H)
+right = fit_h(Image.open(iso), H)
+gap = 24
+canvas = Image.new("RGBA", (left.width + gap + right.width, H), (255, 255, 255, 255))
+canvas.paste(left, (0, 0), left)
+canvas.paste(right, (left.width + gap, 0), right)
+out.parent.mkdir(parents=True, exist_ok=True)
+canvas.save(out)
+print("composite ->", out, canvas.size)
+PY
+    img_args=(--image "$composite")
+  fi
   ok=0
   for attempt in 1 2 3 4 5 6 7 8; do
     python3 "$GEN" --prompt-file "$pf" \
       --output "$raw_out" \
       --model "$MODEL" \
-      --aspect-ratio 1:1 && [ -s "$raw_out" ] && ok=1 && break
+      --aspect-ratio 1:1 \
+      "${img_args[@]}" && [ -s "$raw_out" ] && ok=1 && break
     sleep 30
   done
   [ "$ok" = "1" ] || { echo "FAILED generate: $k"; exit 1; }

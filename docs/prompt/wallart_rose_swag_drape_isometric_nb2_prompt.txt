@@ -1,18 +1,26 @@
-Single game sprite: one tall rose swag wall curtain for a cozy pastel merge flower shop.
+Single game sprite: one tall PREMIUM rose swag wall curtain for a cozy pastel merge flower shop.
 
-REFERENCE IMAGE RULE — critical: use the attached reference ONLY to copy its wall-plane angle (rod skew left-high right-low). Do NOT copy its stars, moons, blue swags, bows, or exact layout from the reference. Draw ONLY the rose swag curtain described below.
+REPAINT TASK: Make this the CLEARLY MORE BEAUTIFUL curtain — richer, more romantic, more layered than the plain lace cafe curtain. Upgrade painterly workshop quality and sharp readable details.
 
-PERSPECTIVE — mandatory (match reference wall-plane angle only):
-Designed for the BACK wall plane of an isometric L-shaped dollhouse room (camera ~45° from upper-left into the corner). The entire curtain hangs flat on that vertical wall — parallel to the wall surface, NOT a front-facing billboard, NOT a floor-prop isometric angle.
+REFERENCE IMAGE RULE — critical:
+- LEFT reference (moon curtain): copy ONLY its wall-plane angle (rod skew left-high right-low).
+- RIGHT reference (rose swag): copy its rose-swag LAYOUT — pink outer drapes tied back, cream inner panels, lace trim — but repaint with richer color, clearer folds, and more premium charm.
+- Do NOT copy stars, moons, or blue fabric from the moon reference.
 
-Copy the reference image wall-plane skew ONLY:
+PERSPECTIVE — mandatory:
+Designed for the BACK wall plane of an isometric L-shaped dollhouse room. Entire curtain hangs flat on the vertical wall — parallel to wall surface, NOT front-facing billboard, NOT floor-prop isometric angle.
+
 - Wooden curtain rod top edge slopes gently DOWN toward the RIGHT (left end higher, right end lower)
-- Rod is NOT horizontal front view; NOT steep diagonal; NOT slanting up toward the right
 - Pink swags and cream inner panels hang downward; all fabric follows the same oblique wall plane
-- Outer silhouette is one tall foreshortened shape on the wall
 
-SUBJECT: warm wood curtain rod with round finials. Dusty rose pink outer drapes swagged over rod with rose-bud fabric tiebacks on both sides; cream inner curtain panels behind; scalloped white lace trim on pink edges. NO stars, NO moons, NO blue fabric. Elegant tall wall curtain — airy middle and bottom, no floor clutter.
+SUBJECT — PREMIUM ROSE SWAG DRAPE (玫瑰垂幔墙帘, visibly fancier):
+- Warm honey-oak curtain rod with round finials.
+- LUSH blush-pink / dusty-rose outer drapes swagged over rod with VISIBLE rose-bud fabric tiebacks on both sides — layered petals, tiny green leaves.
+- Cream inner curtain panels behind with soft airy middle opening.
+- Delicate white scalloped lace trim along pink drape edges — crisp and readable.
+- Richer fabric volume: more folds, softer highlights, deeper gentle shadows than a plain lace panel.
+- Romantic boutique flower-shop luxury — clearly prettier and more decorative than a simple cafe lace curtain.
 
-STYLE: kawaii casual mobile game prop, soft brown outlines, pastel rose and cream, upper-left soft key light, readable silhouette, no photoreal, no readable text, no watermark.
+STYLE: hand-painted WORKSHOP premium quality — soft warm brown outlines, painterly cel shading, vivid but pastel rose tones, crisp lace and rose details at icon size. Upper-left soft key light. NOT muddy, NOT blurry.
 
 BACKGROUND: pure solid white #FFFFFF only around the skewed curtain; no room shell, no floor, no characters.

@@ -1,18 +1,24 @@
 Single game sprite: one short cafe-style lace curtain wall hanging for a cozy pastel merge flower shop.
 
-REFERENCE IMAGE RULE — critical: use the attached reference ONLY to copy its wall-plane angle (rod skew left-high right-low). Do NOT copy its stars, moons, blue swags, bows, or any other design from the reference. Draw ONLY the lace cafe curtain described below.
+REPAINT TASK: Upgrade clarity and workshop line quality. Keep the SAME simple cafe-lace silhouette as the attached design reference — modest, clean, NOT ornate.
 
-PERSPECTIVE — mandatory (match reference wall-plane angle only):
-Designed for the BACK wall plane of an isometric L-shaped dollhouse room (camera ~45° from upper-left into the corner). The entire curtain unit lies flat on that vertical wall — parallel to the wall surface, NOT a front-facing billboard, NOT a floor-prop isometric angle with visible top surfaces.
+REFERENCE IMAGE RULE — critical:
+- LEFT reference (moon curtain): copy ONLY its wall-plane angle (rod skew left-high right-low).
+- RIGHT reference (lace curtain): copy ONLY its simple cafe-lace layout — slim rod, one gathered lace panel, scalloped hem.
+- Do NOT copy stars, moons, blue swags, bows, or rose decorations from any reference.
 
-Copy the reference image wall-plane skew ONLY:
+PERSPECTIVE — mandatory:
+Designed for the BACK wall plane of an isometric L-shaped dollhouse room. Entire curtain lies flat on the vertical wall — parallel to wall surface, NOT front-facing billboard, NOT floor-prop isometric angle.
+
 - Wooden curtain rod top edge slopes gently DOWN toward the RIGHT (left end higher, right end lower)
-- Rod is NOT horizontal front view; NOT steep diagonal like a floating floor prop
-- Lace panel hangs downward in screen space; fabric folds follow the oblique wall plane
-- Outer silhouette reads as one foreshortened quadrilateral on the wall
+- Lace panel hangs downward; fabric folds follow the oblique wall plane
 
-SUBJECT: slim warm-oak curtain rod with round finials and two small wall brackets; cream/off-white lace cafe curtain panel ONLY — simple small floral eyelet lace pattern and scalloped bottom hem, slightly gathered at rod. NO stars, NO moons, NO blue fabric, NO bows. No window glass — curtain unit only.
+SUBJECT — SIMPLE CAFE LACE (柔纱短帘, budget charm):
+- Slim warm-honey oak curtain rod with small round finials and two tiny wall brackets.
+- ONE cream/off-white lace cafe curtain panel — slightly gathered at rod, simple small floral eyelet lace texture, scalloped bottom hem.
+- Clean readable folds, soft but minimal decoration. Functional everyday cafe curtain — pleasant but plain.
+- NO pink swags, NO rose tiebacks, NO layered luxury drapes, NO extra bows or charms.
 
-STYLE: kawaii casual mobile game prop, soft brown outlines, pastel cream and blush, upper-left soft key light, readable silhouette, no photoreal, no readable text, no watermark.
+STYLE: hand-painted WORKSHOP quality — soft warm brown outlines, gentle cel shading, crisp lace edge readability at icon size. Pastel cream only. Upper-left soft key light. NOT muddy, NOT blurry, NOT flat sticker.
 
 BACKGROUND: pure solid white #FFFFFF only around the skewed curtain unit; no room shell, no floor, no characters.

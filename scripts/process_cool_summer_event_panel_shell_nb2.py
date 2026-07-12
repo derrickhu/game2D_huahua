@@ -16,6 +16,10 @@ OUT = os.path.join(
     REPO,
     "minigame/subpkg_events/images/cool_summer_event/ui/cool_summer_event_panel_shell.png",
 )
+OUT_V2 = os.path.join(
+    REPO,
+    "minigame/subpkg_events/images/cool_summer_event/ui/cool_summer_event_panel_shell_v2.png",
+)
 
 sys.path.insert(0, os.path.join(REPO, "scripts"))
 from process_dressup_panel_shell_nb2 import (  # noqa: E402
@@ -24,7 +28,7 @@ from process_dressup_panel_shell_nb2 import (  # noqa: E402
     matte_green_screen,
 )
 
-MAX_W = 680
+TARGET_W = 680
 PAD = 8
 
 
@@ -39,10 +43,10 @@ def main() -> int:
     defringe_green_edge(arr)
     im = crop_alpha_bbox(Image.fromarray(arr, "RGBA"), padding=PAD)
 
-    if im.width > MAX_W:
-        ratio = MAX_W / im.width
+    if im.width != TARGET_W:
+        ratio = TARGET_W / im.width
         im = im.resize(
-            (MAX_W, max(1, round(im.height * ratio))),
+            (TARGET_W, max(1, round(im.height * ratio))),
             Image.Resampling.LANCZOS,
         )
 
@@ -51,8 +55,10 @@ def main() -> int:
     im = Image.fromarray(arr, "RGBA")
 
     os.makedirs(os.path.dirname(OUT), exist_ok=True)
-    im.save(OUT, "PNG", optimize=True)
+    im.save(OUT, "PNG", optimize=True, compress_level=9)
+    im.save(OUT_V2, "PNG", optimize=True, compress_level=9)
     print(f"OK -> {OUT} {im.size}")
+    print(f"OK -> {OUT_V2} {im.size}")
     return 0
 
 
