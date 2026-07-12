@@ -20,6 +20,7 @@ import {
   type FurnitureFacing4,
 } from '@/config/FurnitureRenderConfig';
 import { CurrencyManager } from './CurrencyManager';
+import { DecorationManager } from './DecorationManager';
 import { DEFAULT_SCENE_ID } from '@/config/StarLevelConfig';
 
 declare const wx: any;
@@ -33,8 +34,9 @@ const SAVE_KEY = 'huahua_room_layout';
  *   v1 = 初始
  *   v2 = 家具贴图统一折半后 placement.scale 迁移
  *   v3 = 按 sceneId 分套存储（支持多房屋）
+ *   v4 = placement 增加 instanceId（支持同款多件）
  */
-const LAYOUT_SAVE_VERSION = 3;
+const LAYOUT_SAVE_VERSION = 4;
 
 /** placement.scale 合法区间（小贴图 defaultScale 可低于 0.5；上限略抬高供庭院大树再放大） */
 export const FURNITURE_PLACEMENT_SCALE_MIN = 0.1;
@@ -47,6 +49,8 @@ function clampPlacementScale(s: number): number {
 // ---- 数据结构 ----
 
 export interface FurniturePlacement {
+  /** 同一场景内稳定唯一的摆放实例 ID */
+  instanceId: string;
   /** 对应 DecorationConfig 中的装饰 ID */
   decoId: string;
   /** 设计坐标 x（基于 750×1334 设计分辨率） */
@@ -81,8 +85,8 @@ export interface SceneLayoutData {
   ownerPos?: { x: number; y: number };
 }
 
-export interface RoomLayoutSaveV3 {
-  version: 3;
+export interface RoomLayoutSaveV4 {
+  version: 4;
   scenes: Record<string, SceneLayoutData>;
 }
 
@@ -129,6 +133,8 @@ class RoomLayoutManagerClass {
   private _initialized = false;
   /** 从扁平存档迁入 v3 后需立即写盘 */
   private _migratedFlatToV3 = false;
+  private _migratedInstancesToV4 = false;
+  private _instanceSeq = 0;
 
   /**
    * 初始化：加载存档；若无存档则房间为空（家具需在花店装修模式中从托盘拖入摆放）
@@ -147,8 +153,9 @@ class RoomLayoutManagerClass {
     this._ensureSceneBucket(this._layoutActiveSceneId);
     this._hydrateFromScenes(this._layoutActiveSceneId);
 
-    if (this._migratedFlatToV3) {
+    if (this._migratedFlatToV3 || this._migratedInstancesToV4) {
       this._migratedFlatToV3 = false;
+      this._migratedInstancesToV4 = false;
       this.saveNow();
     } else if (isFresh) {
       this.saveNow();
@@ -216,6 +223,7 @@ class RoomLayoutManagerClass {
   }
 
   private _normalizePlacementRow(p: {
+    instanceId?: string;
     decoId: string;
     x: number;
     y: number;
@@ -227,6 +235,9 @@ class RoomLayoutManagerClass {
     depthManualBias?: number;
   }): FurniturePlacement {
     return {
+      instanceId: typeof p.instanceId === 'string' && p.instanceId
+        ? p.instanceId
+        : this._newInstanceId(p.decoId),
       decoId: p.decoId,
       x: p.x,
       y: p.y,
@@ -253,6 +264,22 @@ class RoomLayoutManagerClass {
   /** 获取指定装饰的摆放数据 */
   getPlacement(decoId: string): FurniturePlacement | undefined {
     return this._placements.find(p => p.decoId === decoId);
+  }
+
+  getPlacementByInstanceId(instanceId: string): FurniturePlacement | undefined {
+    return this._placements.find(p => p.instanceId === instanceId);
+  }
+
+  getPlacementsByDecoId(decoId: string): FurniturePlacement[] {
+    return this._placements.filter(p => p.decoId === decoId);
+  }
+
+  getPlacedCount(decoId: string): number {
+    return this._placements.reduce((n, p) => n + (p.decoId === decoId ? 1 : 0), 0);
+  }
+
+  getAvailableCount(decoId: string): number {
+    return Math.max(0, DecorationManager.getOwnedCount(decoId) - this.getPlacedCount(decoId));
   }
 
   /** 房间内家具数量 */
@@ -306,14 +333,15 @@ class RoomLayoutManagerClass {
     scale?: number,
     flipped?: boolean,
   ): FurniturePlacement | null {
-    // 不允许重复添加同一装饰
-    if (this._placements.some(p => p.decoId === decoId)) {
-      console.warn(`[RoomLayout] 装饰 ${decoId} 已存在于房间中`);
-      return null;
-    }
-
     const deco = DECO_MAP.get(decoId);
     if (!deco) return null;
+
+    const placedCount = this.getPlacedCount(decoId);
+    const ownedCount = DecorationManager.getOwnedCount(decoId);
+    if ((!deco.stackable && placedCount > 0) || placedCount >= ownedCount) {
+      console.warn(`[RoomLayout] 装饰 ${decoId} 当前场景已摆 ${placedCount}/${ownedCount}`);
+      return null;
+    }
 
     if (!isDecoAllowedInScene(deco, CurrencyManager.state.sceneId)) {
       console.warn(`[RoomLayout] 装饰 ${decoId} 不可在当前场景摆放`);
@@ -331,6 +359,7 @@ class RoomLayoutManagerClass {
     const zLayerForNew = Math.min(8, maxZExisting + 1);
 
     const placement: FurniturePlacement = {
+      instanceId: this._newInstanceId(decoId),
       decoId,
       x: this._clampX(x ?? defaults.x),
       y: this._clampY(y ?? defaults.y),
@@ -352,23 +381,23 @@ class RoomLayoutManagerClass {
    * 从房间中移除家具
    * @returns 被移除的 placement，不存在返回 null
    */
-  removeFurniture(decoId: string): FurniturePlacement | null {
-    const idx = this._placements.findIndex(p => p.decoId === decoId);
+  removeFurniture(instanceId: string): FurniturePlacement | null {
+    const idx = this._placements.findIndex(p => p.instanceId === instanceId);
     if (idx === -1) return null;
 
     const [removed] = this._placements.splice(idx, 1);
     this._debounceSave();
 
     EventBus.emit('roomlayout:removed', removed);
-    console.log(`[RoomLayout] 移除: ${decoId}`);
+    console.log(`[RoomLayout] 移除: ${removed.decoId}#${instanceId}`);
     return removed;
   }
 
   /**
    * 移动家具位置
    */
-  moveFurniture(decoId: string, x: number, y: number): boolean {
-    const p = this._placements.find(p => p.decoId === decoId);
+  moveFurniture(instanceId: string, x: number, y: number): boolean {
+    const p = this._placements.find(p => p.instanceId === instanceId);
     if (!p) return false;
 
     p.x = this._clampX(x);
@@ -382,8 +411,8 @@ class RoomLayoutManagerClass {
   /**
    * 更新家具缩放
    */
-  scaleFurniture(decoId: string, scale: number): boolean {
-    const p = this._placements.find(p => p.decoId === decoId);
+  scaleFurniture(instanceId: string, scale: number): boolean {
+    const p = this._placements.find(p => p.instanceId === instanceId);
     if (!p) return false;
 
     p.scale = clampPlacementScale(scale);
@@ -396,8 +425,8 @@ class RoomLayoutManagerClass {
   /**
    * 翻转家具
    */
-  flipFurniture(decoId: string): boolean {
-    const p = this._placements.find(p => p.decoId === decoId);
+  flipFurniture(instanceId: string): boolean {
+    const p = this._placements.find(p => p.instanceId === instanceId);
     if (!p) return false;
 
     p.flipped = !p.flipped;
@@ -407,10 +436,10 @@ class RoomLayoutManagerClass {
     return true;
   }
 
-  rotateFurnitureFacing(decoId: string): boolean {
-    const p = this._placements.find(p => p.decoId === decoId);
+  rotateFurnitureFacing(instanceId: string): boolean {
+    const p = this._placements.find(p => p.instanceId === instanceId);
     if (!p) return false;
-    const render = FURNITURE_RENDER_MAP.get(decoId);
+    const render = FURNITURE_RENDER_MAP.get(p.decoId);
     if (!render || render.renderMode !== 'fourFacing') return false;
 
     p.facing = nextFurnitureFacing(p.facing ?? render.defaultFacing);
@@ -419,10 +448,10 @@ class RoomLayoutManagerClass {
     return true;
   }
 
-  toggleFurnitureInteractionState(decoId: string): boolean {
-    const p = this._placements.find(p => p.decoId === decoId);
+  toggleFurnitureInteractionState(instanceId: string): boolean {
+    const p = this._placements.find(p => p.instanceId === instanceId);
     if (!p) return false;
-    const interaction = FURNITURE_RENDER_MAP.get(decoId)?.interaction;
+    const interaction = FURNITURE_RENDER_MAP.get(p.decoId)?.interaction;
     if (!interaction) return false;
 
     p.interactionState = nextInteractionState(interaction, p.interactionState);
@@ -436,6 +465,7 @@ class RoomLayoutManagerClass {
    */
   setLayout(placements: FurniturePlacement[]): void {
     this._placements = placements.map(p => ({
+      instanceId: p.instanceId || this._newInstanceId(p.decoId),
       decoId: p.decoId,
       x: this._clampX(p.x),
       y: this._clampY(p.y),
@@ -463,7 +493,7 @@ class RoomLayoutManagerClass {
   }
 
   /** 导出布局数据（v3 多房） */
-  exportState(): RoomLayoutSaveV3 {
+  exportState(): RoomLayoutSaveV4 {
     this._syncActiveSceneWithCurrency();
     this._flushActiveSceneToMap();
     const memoryScenes: Record<string, SceneLayoutData> = {};
@@ -474,7 +504,7 @@ class RoomLayoutManagerClass {
       };
     }
     const scenes = this._mergeScenesForSave(memoryScenes);
-    return { version: 3, scenes };
+    return { version: LAYOUT_SAVE_VERSION, scenes };
   }
 
   /**
@@ -545,7 +575,7 @@ class RoomLayoutManagerClass {
           version?: number;
           scenes?: Record<string, { placements?: FurniturePlacement[]; ownerPos?: { x: number; y: number } }>;
         };
-        if (data.version === 3 && data.scenes && typeof data.scenes === 'object') {
+        if ((data.version === 3 || data.version === 4) && data.scenes && typeof data.scenes === 'object') {
           for (const [sceneId, bucket] of Object.entries(data.scenes)) {
             if (!bucket || !Array.isArray(bucket.placements)) continue;
             const rows = bucket.placements
@@ -597,8 +627,8 @@ class RoomLayoutManagerClass {
         };
       }
       const scenes = this._mergeScenesForSave(memoryScenes);
-      const data: RoomLayoutSaveV3 = {
-        version: 3,
+      const data: RoomLayoutSaveV4 = {
+        version: LAYOUT_SAVE_VERSION,
         scenes,
       };
       const json = JSON.stringify(data);
@@ -622,7 +652,8 @@ class RoomLayoutManagerClass {
       };
 
       // ── v3：按 sceneId 分套 ──
-      if (data.version === 3 && data.scenes && typeof data.scenes === 'object' && !Array.isArray(data.scenes)) {
+      if ((data.version === 3 || data.version === 4) && data.scenes && typeof data.scenes === 'object' && !Array.isArray(data.scenes)) {
+        if (data.version === 3) this._migratedInstancesToV4 = true;
         this._scenes = {};
         for (const [sceneId, bucket] of Object.entries(data.scenes)) {
           if (!bucket || !Array.isArray(bucket.placements)) continue;
@@ -693,6 +724,11 @@ class RoomLayoutManagerClass {
   /** 限制 y 在房间范围内 */
   private _clampY(y: number): number {
     return Math.max(ROOM_BOUNDS.minY, Math.min(ROOM_BOUNDS.maxY, y));
+  }
+
+  private _newInstanceId(decoId: string): string {
+    this._instanceSeq = (this._instanceSeq + 1) % 1_000_000;
+    return `${decoId}:${Date.now().toString(36)}:${this._instanceSeq.toString(36)}`;
   }
 }
 

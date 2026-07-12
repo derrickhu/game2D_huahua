@@ -849,6 +849,18 @@ class GMManagerClass {
     });
 
     this._commands.push({
+      id: 'gm_grant_summer_dining_chairs_max',
+      group: ' 家具工坊',
+      name: ' 夏日餐椅设为4件',
+      desc: '发放餐椅图纸，并把可复数工坊餐椅拥有量设为 4（不加星）',
+      execute: () => {
+        FurnitureWorkshopManager.grantBlueprint('blueprint_workshop_summer_dining_chair');
+        const count = DecorationManager.gmSetOwnedCount('workshop_summer_dining_chair', 4);
+        return ` 夏日餐椅拥有量 ${count}/4`;
+      },
+    });
+
+    this._commands.push({
       id: 'gm_grant_workshop_blueprint_healing_set',
       group: ' 家具工坊',
       name: ' 发放治愈系三件套图纸',

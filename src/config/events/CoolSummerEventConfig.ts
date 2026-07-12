@@ -193,7 +193,7 @@ export const COOL_SUMMER_SHOP_PRODUCTS: readonly CoolSummerShopProduct[] = [
   {
     id: 'summer_blueprint_dining_chair',
     categoryId: 'summer_collection',
-    name: '夏日西瓜餐椅图纸',
+    name: '夏日餐椅图纸',
     cost: 90,
     stock: 1,
     grant: { kind: 'blueprint', blueprintId: 'blueprint_workshop_summer_dining_chair' },

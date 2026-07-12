@@ -16,6 +16,7 @@ import {
   type WorkshopCraftCategoryFilter,
 } from '@/config/FurnitureWorkshopConfig';
 import { CurrencyManager } from '@/managers/CurrencyManager';
+import { DecorationManager } from '@/managers/DecorationManager';
 import { DECO_MAP } from '@/config/DecorationConfig';
 import { ToastMessage } from '@/gameobjects/ui/ToastMessage';
 import { TextureCache } from '@/utils/TextureCache';
@@ -866,14 +867,18 @@ export class FurnitureWorkshopPanel extends PIXI.Container {
     this._craftPopup.open(
       blueprintId,
       () => {},
-      (decoId, flyGlobal) => {
+      (decoId, flyGlobal, isFirstCraft) => {
         const deco = DECO_MAP.get(decoId);
         if (!deco) {
           this._refresh();
           return;
         }
         AudioManager.play('purchase_tap');
-        celebrateDecoObtain(this, deco, flyGlobal);
+        if (isFirstCraft) {
+          celebrateDecoObtain(this, deco, flyGlobal);
+        } else {
+          ToastMessage.show(`制作成功，现有 ${DecorationManager.getOwnedCount(decoId)}/${DecorationManager.getMaxOwned(decoId)} 件`);
+        }
         this._refresh();
       },
     );
@@ -1004,6 +1009,13 @@ export class FurnitureWorkshopPanel extends PIXI.Container {
     const fullyCrafted = FurnitureWorkshopManager.isBlueprintFullyCrafted(blueprint.id);
     const previewDecoId = this._resolveBlueprintPreviewDecoId(blueprint);
     const deco = DECO_MAP.get(previewDecoId);
+    const defaultColor = blueprint.colorOptions[0];
+    const craftedCount = defaultColor
+      ? FurnitureWorkshopManager.getCraftedCount(blueprint.id, defaultColor.id)
+      : 0;
+    const craftLimit = defaultColor
+      ? FurnitureWorkshopManager.getCraftLimit(blueprint.id, defaultColor.id)
+      : 1;
     const displayName = getBlueprintDisplayName(blueprint);
 
     const pad = 12;
@@ -1060,12 +1072,16 @@ export class FurnitureWorkshopPanel extends PIXI.Container {
     root.addChild(name);
 
     if (fullyCrafted) {
-      const badge = new PIXI.Text('已完成', textStyle({ fontSize: 18, fill: 0x9a9088, fontWeight: '900' }));
+      const badge = new PIXI.Text(
+        deco?.stackable ? `已达上限 ${craftedCount}/${craftLimit}` : '已完成',
+        textStyle({ fontSize: 18, fill: 0x9a9088, fontWeight: '900' }),
+      );
       badge.anchor.set(0.5);
       badge.position.set(cardW / 2, btnY + 22);
       root.addChild(badge);
     } else {
-      const btn = this._createRoundButton('制作', 0x63b96f, 132, 44, () => this._openCraftPopup(blueprint.id));
+      const btnLabel = deco?.stackable ? `制作 ${craftedCount}/${craftLimit}` : '制作';
+      const btn = this._createRoundButton(btnLabel, 0x63b96f, 132, 44, () => this._openCraftPopup(blueprint.id));
       btn.position.set(cardW / 2, btnY + 22);
       root.addChild(btn);
     }

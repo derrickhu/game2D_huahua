@@ -124,7 +124,7 @@ export interface WorkshopMaterialReward {
   count: number;
 }
 
-/** 同款家具的一种配色（每色仅可制作一次） */
+/** 同款家具的一种配色；普通家具每色一次，DecoDef.stackable 可重复制作至 maxOwned */
 export interface WorkshopColorOption {
   id: string;
   name: string;
@@ -361,7 +361,7 @@ export const WORKSHOP_BLUEPRINT_DEFS: WorkshopBlueprintDef[] = [
   },
   {
     id: 'blueprint_workshop_summer_dining_chair',
-    name: '夏日西瓜餐椅图纸',
+    name: '夏日餐椅图纸',
     outputDecoId: 'workshop_summer_dining_chair',
     rarity: 'rare',
     sourceText: '活动获得',
@@ -554,6 +554,14 @@ export function getWorkshopBlueprintFeatureLabels(blueprint: WorkshopBlueprintDe
   const labels: string[] = [];
   if (isWorkshopBlueprintDyeable(blueprint)) labels.push('可染色');
   if (isWorkshopBlueprintFourFacing(blueprint)) labels.push('四面旋转');
+  const stackableMax = Math.max(
+    0,
+    ...collectBlueprintOutputDecoIds(blueprint).map(id => {
+      const deco = DECO_MAP.get(id);
+      return deco?.stackable ? Math.max(1, deco.maxOwned ?? 1) : 0;
+    }),
+  );
+  if (stackableMax > 1) labels.push(`可制作${stackableMax}件`);
   if (isWorkshopBlueprintInteractive(blueprint)) labels.push('可交互');
   return labels;
 }

@@ -15,6 +15,7 @@ import {
 } from '@/config/FurnitureWorkshopConfig';
 import { CurrencyManager } from '@/managers/CurrencyManager';
 import { FurnitureWorkshopManager } from '@/managers/FurnitureWorkshopManager';
+import { DecorationManager } from '@/managers/DecorationManager';
 import { ToastMessage } from '@/gameobjects/ui/ToastMessage';
 import { TextureCache } from '@/utils/TextureCache';
 import { appendWorkshopBlueprintFeatureTags, appendWorkshopStarValueBadge } from '@/utils/WorkshopBlueprintDisplay';
@@ -48,7 +49,7 @@ export class FurnitureWorkshopCraftPopup extends PIXI.Container {
   private _craftBtnLabel!: PIXI.Text;
   private _craftBtnBg!: PIXI.Graphics;
   private _onClose: (() => void) | null = null;
-  private _onCrafted: ((decoId: string, flyGlobal: PIXI.Point) => void) | null = null;
+  private _onCrafted: ((decoId: string, flyGlobal: PIXI.Point, isFirstCraft: boolean) => void) | null = null;
   private _textureUnsub: (() => void) | null = null;
 
   constructor() {
@@ -58,7 +59,11 @@ export class FurnitureWorkshopCraftPopup extends PIXI.Container {
     this._build();
   }
 
-  open(blueprintId: string, onClose: () => void, onCrafted?: (decoId: string, flyGlobal: PIXI.Point) => void): void {
+  open(
+    blueprintId: string,
+    onClose: () => void,
+    onCrafted?: (decoId: string, flyGlobal: PIXI.Point, isFirstCraft: boolean) => void,
+  ): void {
     const def = WORKSHOP_BLUEPRINT_MAP.get(blueprintId);
     if (!def || def.colorOptions.length === 0) return;
     this._blueprintId = blueprintId;
@@ -66,9 +71,9 @@ export class FurnitureWorkshopCraftPopup extends PIXI.Container {
     this._onCrafted = onCrafted ?? null;
     this.eventMode = 'static';
     const defaultOpt = getDefaultWorkshopColorOption(def)!;
-    this._selectedColorId = !FurnitureWorkshopManager.hasCraftedColor(blueprintId, defaultOpt.id)
+    this._selectedColorId = !FurnitureWorkshopManager.isCraftLimitReached(blueprintId, defaultOpt.id)
       ? defaultOpt.id
-      : (def.colorOptions.find(c => !FurnitureWorkshopManager.hasCraftedColor(blueprintId, c.id))?.id
+      : (def.colorOptions.find(c => !FurnitureWorkshopManager.isCraftLimitReached(blueprintId, c.id))?.id
         ?? def.colorOptions[0]!.id);
     this.visible = true;
     this._bindTextureRefresh(blueprintId);
@@ -288,7 +293,8 @@ export class FurnitureWorkshopCraftPopup extends PIXI.Container {
     }
 
     this._nameText.text = getWorkshopCraftDisplayName(def, option);
-    this._updateStarBadge(deco?.starValue ?? 0);
+    const ownedCount = DecorationManager.getOwnedCount(option.outputDecoId);
+    this._updateStarBadge(ownedCount === 0 ? (deco?.starValue ?? 0) : 0);
     this._updateFeatureTags(def);
     this._rebuildColorRow(def);
 
@@ -308,10 +314,14 @@ export class FurnitureWorkshopCraftPopup extends PIXI.Container {
     this._setCostFraction(this._costHuayuanText, option.huayuanCost, haveHy);
 
     const check = FurnitureWorkshopManager.canCraftColor(this._blueprintId, option.id);
-    const crafted = FurnitureWorkshopManager.hasCraftedColor(this._blueprintId, option.id);
-    this._craftBtnLabel.text = crafted ? '已制作' : (check.ok ? '立即制作' : '未满足');
+    const craftedCount = FurnitureWorkshopManager.getCraftedCount(this._blueprintId, option.id);
+    const craftLimit = FurnitureWorkshopManager.getCraftLimit(this._blueprintId, option.id);
+    const limitReached = craftedCount >= craftLimit;
+    this._craftBtnLabel.text = limitReached
+      ? '已达上限'
+      : (check.ok ? (craftedCount > 0 ? `再制作 ${craftedCount}/${craftLimit}` : '立即制作') : '未满足');
     this._craftBtnBg.clear();
-    const btnColor = crafted ? 0xb9aaa4 : (check.ok ? 0x7eb8ff : 0xb9aaa4);
+    const btnColor = limitReached ? 0xb9aaa4 : (check.ok ? 0x7eb8ff : 0xb9aaa4);
     this._craftBtnBg.beginFill(btnColor, 1);
     this._craftBtnBg.drawRoundedRect(-84, -26, 168, 52, 26);
     this._craftBtnBg.endFill();
@@ -345,18 +355,20 @@ export class FurnitureWorkshopCraftPopup extends PIXI.Container {
     let x = -totalW / 2 + chipR;
 
     for (const opt of def.colorOptions) {
-      const crafted = FurnitureWorkshopManager.hasCraftedColor(def.id, opt.id);
+      const craftedCount = FurnitureWorkshopManager.getCraftedCount(def.id, opt.id);
+      const craftLimit = FurnitureWorkshopManager.getCraftLimit(def.id, opt.id);
+      const limitReached = FurnitureWorkshopManager.isCraftLimitReached(def.id, opt.id);
       const selected = opt.id === this._selectedColorId;
       const chip = new PIXI.Container();
       chip.position.set(x, 0);
       chip.eventMode = 'static';
-      chip.cursor = crafted ? 'default' : 'pointer';
+      chip.cursor = limitReached ? 'default' : 'pointer';
 
       const circle = new PIXI.Graphics();
       if (isDefaultWorkshopColorOption(def, opt)) {
-        this._drawDefaultColorChip(circle, chipR, selected, crafted);
+        this._drawDefaultColorChip(circle, chipR, selected, limitReached);
       } else {
-        circle.beginFill(this._colorSwatch(opt.id), crafted ? 0.45 : 1);
+        circle.beginFill(this._colorSwatch(opt.id), limitReached ? 0.45 : 1);
         circle.drawCircle(0, 0, chipR);
         circle.endFill();
         if (selected) {
@@ -371,23 +383,26 @@ export class FurnitureWorkshopCraftPopup extends PIXI.Container {
 
       const label = new PIXI.Text(getWorkshopColorChipLabel(def, opt), textStyle({
         fontSize: 14,
-        fill: crafted ? 0xb0a5a0 : 0x735f52,
+        fill: limitReached ? 0xb0a5a0 : 0x735f52,
         fontWeight: '900',
       }));
       label.anchor.set(0.5, 0);
       label.y = chipR + 6;
       chip.addChild(label);
 
-      if (crafted) {
-        const mark = new PIXI.Text('✓', textStyle({ fontSize: 18, fill: 0xffffff, fontWeight: '900' }));
+      if (craftedCount > 0) {
+        const mark = new PIXI.Text(
+          craftLimit > 1 ? `${craftedCount}/${craftLimit}` : '✓',
+          textStyle({ fontSize: craftLimit > 1 ? 12 : 18, fill: 0xffffff, fontWeight: '900' }),
+        );
         mark.anchor.set(0.5);
         chip.addChild(mark);
       }
 
       chip.on('pointerdown', (e: PIXI.FederatedPointerEvent) => {
         e.stopPropagation();
-        if (crafted) {
-          ToastMessage.show('这个颜色已经制作过了');
+        if (limitReached) {
+          ToastMessage.show('这个颜色已经达到制作上限');
           return;
         }
         this._selectedColorId = opt.id;
@@ -429,15 +444,16 @@ export class FurnitureWorkshopCraftPopup extends PIXI.Container {
   private _onCraftTap(): void {
     const option = WORKSHOP_BLUEPRINT_MAP.get(this._blueprintId)?.colorOptions.find(c => c.id === this._selectedColorId);
     if (!option) return;
-    if (FurnitureWorkshopManager.hasCraftedColor(this._blueprintId, option.id)) {
-      ToastMessage.show('这个颜色已经制作过了');
+    if (FurnitureWorkshopManager.isCraftLimitReached(this._blueprintId, option.id)) {
+      ToastMessage.show('这个颜色已经达到制作上限');
       return;
     }
 
+    const isFirstCraft = FurnitureWorkshopManager.getCraftedCount(this._blueprintId, option.id) === 0;
     const result = FurnitureWorkshopManager.craftColor(this._blueprintId, option.id);
     if (result.ok) {
       const flyGlobal = this._previewSprite.toGlobal(new PIXI.Point(0, 0));
-      this._onCrafted?.(option.outputDecoId, flyGlobal);
+      this._onCrafted?.(option.outputDecoId, flyGlobal, isFirstCraft);
       this.close();
       return;
     }
@@ -448,6 +464,7 @@ export class FurnitureWorkshopCraftPopup extends PIXI.Container {
     switch (reason) {
       case 'missing_blueprint': return '还没有这张图纸';
       case 'already_crafted': return '已经拥有这个家具了';
+      case 'limit_reached': return '已达到制作上限';
       case 'locked': return '制作条件未满足';
       case 'missing_material': return '工坊材料不足';
       case 'missing_dye': return '染料不足';

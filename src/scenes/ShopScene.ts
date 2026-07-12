@@ -435,7 +435,7 @@ export class ShopScene implements Scene {
   private _ownerPressStartClient: { x: number; y: number } | null = null;
   /** 非编辑模式：家具双击进装修的第一下计时 */
   private _furnitureBrowseTapTimer: ReturnType<typeof setTimeout> | null = null;
-  private _furnitureBrowsePendingDecoId: string | null = null;
+  private _furnitureBrowsePendingInstanceId: string | null = null;
 
   // ── 编辑模式缩放相关 ──
   private _viewScale = 1.0;                   // 当前视图缩放倍数
@@ -894,7 +894,7 @@ export class ShopScene implements Scene {
       sprites.push(sprite);
 
       if (!this._isEditMode) {
-        this._attachFurnitureBrowseDoubleTap(sprite, placement.decoId);
+        this._attachFurnitureBrowseDoubleTap(sprite, placement.instanceId, placement.decoId);
       }
     }
 
@@ -905,11 +905,11 @@ export class ShopScene implements Scene {
   /** 高大家电顶面可摆：按当前房间内立柜位置抬高小物排序脚点 */
   private _applyTopSurfaceDepthBoost(
     sprites: PIXI.Sprite[],
-    layout: FurniturePlacement[],
+    layout: ReadonlyArray<FurniturePlacement>,
   ): void {
     const stackOrder = new Map<string, number>();
     for (let i = 0; i < layout.length; i++) {
-      stackOrder.set(layout[i].decoId, i);
+      stackOrder.set(layout[i].instanceId, i);
     }
     const peers: DepthSortPeer[] = [];
     for (const sprite of sprites) {
@@ -927,12 +927,13 @@ export class ShopScene implements Scene {
     }
     for (const sprite of sprites) {
       const decoId = (sprite as any)._decoId as string;
+      const instanceId = (sprite as any)._instanceId as string;
       const deco = DECO_MAP.get(decoId);
-      const placement = layout.find((p) => p.decoId === decoId);
+      const placement = layout.find((p) => p.instanceId === instanceId);
       if (!deco || !placement) continue;
-      const peer = peers.find((p) => p.decoId === decoId)!;
+      const peer = peers[sprites.indexOf(sprite)];
       const topBoost = getTopSurfaceFeetBoost(peer, peers);
-      const stackTie = Math.min(stackOrder.get(decoId) ?? 0, 999);
+      const stackTie = Math.min(stackOrder.get(instanceId) ?? 0, 999);
       sprite.zIndex = roomDepthZForPlacement(
         placement.y,
         placement.zLayer ?? 0,
@@ -978,6 +979,7 @@ export class ShopScene implements Scene {
       placement.depthManualBias,
     );
     (sprite as any)._decoId = placement.decoId;
+    (sprite as any)._instanceId = placement.instanceId;
     return sprite;
   }
 
@@ -986,12 +988,12 @@ export class ShopScene implements Scene {
     const layout = RoomLayoutManager.getLayout();
     for (let pi = 0; pi < layout.length; pi++) {
       const placement = layout[pi];
-      const existing = FurnitureDragSystem.getSpriteByDecoId(placement.decoId);
+      const existing = FurnitureDragSystem.getSpriteByInstanceId(placement.instanceId);
       if (existing && existing.parent === this._roomContainer && !existing.destroyed) continue;
       const sprite = this._createFurnitureSpriteFromPlacement(placement, pi);
       if (!sprite) continue;
       this._roomContainer.addChild(sprite);
-      FurnitureDragSystem.registerSprite(sprite, placement.decoId);
+      FurnitureDragSystem.registerSprite(sprite, placement.instanceId, placement.decoId);
     }
     FurnitureDragSystem.sortByDepth();
   }
@@ -1002,12 +1004,12 @@ export class ShopScene implements Scene {
       clearTimeout(this._furnitureBrowseTapTimer);
       this._furnitureBrowseTapTimer = null;
     }
-    this._furnitureBrowsePendingDecoId = null;
+    this._furnitureBrowsePendingInstanceId = null;
     this._clearOwnerPressTracking();
   }
 
   /** 非编辑模式：单击可交互家具切换形态；双击进入装修并选中该件 */
-  private _attachFurnitureBrowseDoubleTap(sprite: PIXI.Sprite, decoId: string): void {
+  private _attachFurnitureBrowseDoubleTap(sprite: PIXI.Sprite, instanceId: string, decoId: string): void {
     sprite.eventMode = 'static';
     sprite.cursor = 'pointer';
     const interactive = !!FURNITURE_RENDER_MAP.get(decoId)?.interaction;
@@ -1016,28 +1018,28 @@ export class ShopScene implements Scene {
       if (this._furnitureBrowseTapTimer != null) {
         clearTimeout(this._furnitureBrowseTapTimer);
         this._furnitureBrowseTapTimer = null;
-        if (this._furnitureBrowsePendingDecoId === decoId) {
-          this._furnitureBrowsePendingDecoId = null;
-          this._enterEditModeForFurniture(decoId);
+        if (this._furnitureBrowsePendingInstanceId === instanceId) {
+          this._furnitureBrowsePendingInstanceId = null;
+          this._enterEditModeForFurniture(instanceId, decoId);
           return;
         }
       }
       if (interactive) {
-        RoomLayoutManager.toggleFurnitureInteractionState(decoId);
+        RoomLayoutManager.toggleFurnitureInteractionState(instanceId);
       }
-      this._furnitureBrowsePendingDecoId = decoId;
+      this._furnitureBrowsePendingInstanceId = instanceId;
       this._furnitureBrowseTapTimer = setTimeout(() => {
         this._furnitureBrowseTapTimer = null;
-        this._furnitureBrowsePendingDecoId = null;
+        this._furnitureBrowsePendingInstanceId = null;
       }, SHOP_DOUBLE_TAP_MS);
     });
   }
 
-  private _enterEditModeForFurniture(decoId: string): void {
+  private _enterEditModeForFurniture(instanceId: string, decoId: string): void {
     if (this._isEditMode) return;
     const deco = DECO_MAP.get(decoId);
     this._enterEditMode(deco ? { deco } : undefined);
-    FurnitureDragSystem.select(decoId);
+    FurnitureDragSystem.select(instanceId);
   }
 
   private _designPosFromFederated(e: PIXI.FederatedPointerEvent): { x: number; y: number } {
@@ -2789,18 +2791,19 @@ export class ShopScene implements Scene {
     void TextureCache.preloadKeys(collectFurniturePreloadKeys(deco.id, deco.icon));
 
     const wasEdit = this._isEditMode;
-    const placed = !!RoomLayoutManager.getPlacement(decoId);
+    const available = RoomLayoutManager.getAvailableCount(decoId);
+    const firstPlaced = RoomLayoutManager.getPlacement(decoId);
 
     if (!wasEdit) {
       this._enterEditMode({ deco });
-    } else if (!placed) {
+    } else if (available > 0) {
       this._furnitureTray.open({ deco });
     }
 
-    if (placed) {
+    if (available <= 0 && firstPlaced) {
       this._ensureEditModeFurnitureSprites();
-      FurnitureDragSystem.select(decoId);
-      ToastMessage.show('该家具已在房间中，可在装修模式下调整位置');
+      FurnitureDragSystem.select(firstPlaced.instanceId);
+      ToastMessage.show(deco.stackable ? '当前场景已摆满该家具' : '该家具已在房间中，可在装修模式下调整位置');
       return;
     }
 
@@ -2813,7 +2816,7 @@ export class ShopScene implements Scene {
 
     const startDrag = (): boolean => {
       if (SceneManager.current?.name !== 'shop' || !this._isEditMode) return true;
-      if (RoomLayoutManager.getPlacement(decoId)) return true;
+      if (RoomLayoutManager.getAvailableCount(decoId) <= 0) return true;
       if (!TextureCache.get(deco.icon)) return false;
       const { x: spawnDesignX, y: spawnDesignY } = this._roomLocalToDesign(
         FURNITURE_TRAY_SPAWN_ROOM_LOCAL.x,
@@ -2848,7 +2851,7 @@ export class ShopScene implements Scene {
   /** 编辑模式下实时更新家具 Sprite 的缩放/翻转视觉（不重建） */
   private _updateSpriteVisual(placement: FurniturePlacement): void {
     for (const child of this._roomContainer.children) {
-      if ((child as any)._decoId === placement.decoId && child instanceof PIXI.Sprite) {
+      if ((child as any)._instanceId === placement.instanceId && child instanceof PIXI.Sprite) {
         const deco = DECO_MAP.get(placement.decoId);
         if (!deco) return;
         const resolved = resolveFurnitureTexture(deco.id, deco.icon, placement);

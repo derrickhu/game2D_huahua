@@ -64,6 +64,7 @@ export class RoomEditToolbar extends PIXI.Container {
   private _buttons: PIXI.Container[] = [];
   private _nameLabel!: PIXI.Text;
   private _currentDecoId: string | null = null;
+  private _currentInstanceId: string | null = null;
   private _flipTooltipLabel: PIXI.Text | null = null;
   private _assetUnsub: (() => void) | null = null;
   /** 与 _build 底板宽度一致，供 show 水平居中 */
@@ -87,7 +88,8 @@ export class RoomEditToolbar extends PIXI.Container {
   // ---- 公共方法 ----
 
   /** 显示工具栏（固定在屏幕中上方，不遮挡家具） */
-  show(decoId: string, _x?: number, _y?: number): void {
+  show(instanceId: string, decoId: string, _x?: number, _y?: number): void {
+    this._currentInstanceId = instanceId;
     this._currentDecoId = decoId;
     const deco = DECO_MAP.get(decoId);
     if (!deco) return;
@@ -115,6 +117,7 @@ export class RoomEditToolbar extends PIXI.Container {
   hide(): void {
     if (!this.visible) return;
     this._currentDecoId = null;
+    this._currentInstanceId = null;
 
     TweenManager.to({
       target: this,
@@ -221,12 +224,14 @@ export class RoomEditToolbar extends PIXI.Container {
   private _rebuildForLoadedIcons(): void {
     const wasVisible = this.visible;
     const currentDecoId = this._currentDecoId;
+    const currentInstanceId = this._currentInstanceId;
     this.removeChildren();
     this._buttons = [];
     this._build();
-    if (currentDecoId) {
+    if (currentDecoId && currentInstanceId) {
       this._currentDecoId = null;
-      this.show(currentDecoId);
+      this._currentInstanceId = null;
+      this.show(currentInstanceId, currentDecoId);
     } else {
       this.visible = wasVisible;
     }
@@ -338,10 +343,10 @@ export class RoomEditToolbar extends PIXI.Container {
   // ---- 事件处理 ----
 
   private _setupEvents(): void {
-    EventBus.on('furniture:selected', (decoId: string) => {
-      const placement = RoomLayoutManager.getPlacement(decoId);
+    EventBus.on('furniture:selected', (instanceId: string, decoId: string) => {
+      const placement = RoomLayoutManager.getPlacementByInstanceId(instanceId);
       if (placement) {
-        this.show(decoId, placement.x, placement.y);
+        this.show(instanceId, decoId, placement.x, placement.y);
       }
     });
 
@@ -357,41 +362,42 @@ export class RoomEditToolbar extends PIXI.Container {
   // ---- 操作回调 ----
 
   private _onScale(delta: number): void {
-    if (!this._currentDecoId) return;
-    const placement = RoomLayoutManager.getPlacement(this._currentDecoId);
+    if (!this._currentDecoId || !this._currentInstanceId) return;
+    const placement = RoomLayoutManager.getPlacementByInstanceId(this._currentInstanceId);
     if (!placement) return;
 
     const newScale = Math.max(
       FURNITURE_PLACEMENT_SCALE_MIN,
       Math.min(FURNITURE_PLACEMENT_SCALE_MAX, placement.scale + delta),
     );
-    RoomLayoutManager.scaleFurniture(this._currentDecoId, newScale);
+    RoomLayoutManager.scaleFurniture(this._currentInstanceId, newScale);
 
     // roomlayout:updated 事件已由 RoomLayoutManager 内部发射
     // ShopScene 会监听该事件实时更新 Sprite 视觉
 
     // 更新工具栏位置
-    this.show(this._currentDecoId, placement.x, placement.y);
+    this.show(this._currentInstanceId, this._currentDecoId, placement.x, placement.y);
   }
 
   private _onFlip(): void {
-    if (!this._currentDecoId) return;
+    if (!this._currentDecoId || !this._currentInstanceId) return;
     if (isFourFacingFurniture(this._currentDecoId)) {
-      RoomLayoutManager.rotateFurnitureFacing(this._currentDecoId);
+      RoomLayoutManager.rotateFurnitureFacing(this._currentInstanceId);
     } else {
-      RoomLayoutManager.flipFurniture(this._currentDecoId);
+      RoomLayoutManager.flipFurniture(this._currentInstanceId);
     }
     // roomlayout:updated 事件已由 RoomLayoutManager 内部发射
   }
 
   private _onRemove(): void {
-    if (!this._currentDecoId) return;
+    if (!this._currentDecoId || !this._currentInstanceId) return;
     const decoId = this._currentDecoId;
+    const instanceId = this._currentInstanceId;
     const deco = DECO_MAP.get(decoId);
 
     // 先从拖拽系统注销并获取 Sprite 引用
-    const sprite = FurnitureDragSystem.getSpriteByDecoId(decoId);
-    FurnitureDragSystem.unregisterSprite(decoId);
+    const sprite = FurnitureDragSystem.getSpriteByInstanceId(instanceId);
+    FurnitureDragSystem.unregisterSprite(instanceId);
 
     // 从视图中移除 Sprite 节点
     if (sprite && sprite.parent) {
@@ -399,7 +405,7 @@ export class RoomEditToolbar extends PIXI.Container {
       sprite.destroy();
     }
 
-    RoomLayoutManager.removeFurniture(decoId);
+    RoomLayoutManager.removeFurniture(instanceId);
 
     this.hide();
     FurnitureDragSystem.deselect();

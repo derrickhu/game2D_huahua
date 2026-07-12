@@ -35,7 +35,7 @@ export interface FurnitureWorkshopSaveData {
 
 export interface WorkshopCraftCheck {
   ok: boolean;
-  reason?: 'missing_blueprint' | 'already_crafted' | 'locked' | 'missing_material' | 'missing_dye' | 'not_enough_huayuan';
+  reason?: 'missing_blueprint' | 'already_crafted' | 'limit_reached' | 'locked' | 'missing_material' | 'missing_dye' | 'not_enough_huayuan';
 }
 
 export interface WorkshopBlueprintPurchaseCheck {
@@ -135,11 +135,25 @@ class FurnitureWorkshopManagerClass {
     return DecorationManager.isUnlocked(option.outputDecoId);
   }
 
+  getCraftedCount(blueprintId: string, colorId: string): number {
+    const option = getBlueprintColorOption(blueprintId, colorId);
+    return option ? DecorationManager.getOwnedCount(option.outputDecoId) : 0;
+  }
+
+  getCraftLimit(blueprintId: string, colorId: string): number {
+    const option = getBlueprintColorOption(blueprintId, colorId);
+    return option ? DecorationManager.getMaxOwned(option.outputDecoId) : 1;
+  }
+
+  isCraftLimitReached(blueprintId: string, colorId: string): boolean {
+    return this.getCraftedCount(blueprintId, colorId) >= this.getCraftLimit(blueprintId, colorId);
+  }
+
   /** 该图纸所有配色均已制作（均已拥有对应家具） */
   isBlueprintFullyCrafted(blueprintId: string): boolean {
     const def = WORKSHOP_BLUEPRINT_MAP.get(blueprintId);
     if (!def || def.colorOptions.length === 0) return true;
-    return def.colorOptions.every(c => this.hasCraftedColor(blueprintId, c.id));
+    return def.colorOptions.every(c => this.isCraftLimitReached(blueprintId, c.id));
   }
 
   grantBlueprint(blueprintId: string): boolean {
@@ -268,7 +282,12 @@ class FurnitureWorkshopManagerClass {
     if (!this._blueprints.has(blueprintId)) {
       return { ok: false, reason: 'missing_blueprint' };
     }
-    if (DecorationManager.isUnlocked(option.outputDecoId)) {
+    const outputDeco = DECO_MAP.get(option.outputDecoId);
+    if (outputDeco?.stackable) {
+      if (!DecorationManager.canOwnMore(option.outputDecoId)) {
+        return { ok: false, reason: 'limit_reached' };
+      }
+    } else if (DecorationManager.isUnlocked(option.outputDecoId)) {
       return { ok: false, reason: 'already_crafted' };
     }
     if (this._workshopMaterial < option.materialCost) {
@@ -288,11 +307,12 @@ class FurnitureWorkshopManagerClass {
     if (!check.ok) return check;
 
     const option = getBlueprintColorOption(blueprintId, colorId)!;
+    const ownedBefore = DecorationManager.getOwnedCount(option.outputDecoId);
     this._workshopMaterial = Math.max(0, this._workshopMaterial - option.materialCost);
     this._consumeDyeForOption(option);
 
     const outputDeco = DECO_MAP.get(option.outputDecoId);
-    const deferStarGrant = (outputDeco?.starValue ?? 0) > 0;
+    const deferStarGrant = ownedBefore === 0 && (outputDeco?.starValue ?? 0) > 0;
     const unlocked = DecorationManager.unlockFromWorkshop(option.outputDecoId, option.huayuanCost, {
       deferStarGrant,
     });
@@ -305,7 +325,14 @@ class FurnitureWorkshopManagerClass {
 
     this._craftedVariants.add(makeWorkshopVariantKey(blueprintId, colorId));
     this._save();
-    EventBus.emit('furnitureWorkshop:crafted', option.outputDecoId, { blueprintId, colorId, option });
+    EventBus.emit('furnitureWorkshop:crafted', option.outputDecoId, {
+      blueprintId,
+      colorId,
+      option,
+      ownedCount: ownedBefore + 1,
+      maxOwned: DecorationManager.getMaxOwned(option.outputDecoId),
+      isFirstCraft: ownedBefore === 0,
+    });
     EventBus.emit('furnitureWorkshop:changed');
     return { ok: true };
   }

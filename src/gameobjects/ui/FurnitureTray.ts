@@ -330,7 +330,7 @@ export class FurnitureTray extends PIXI.Container {
   private _trayStartScrollX = 0;
   private _trayMode: TrayScrollMode | null = null;
   private _trayDragStarted = false;
-  private _trayPending: { decoId: string; isPlaced: boolean } | null = null;
+  private _trayPending: { decoId: string; isPlaced: boolean; selectInstanceId?: string } | null = null;
 
   /** 列表筛选：默认仅显示尚未放入房间的家具 */
   private _listFilter: TrayListFilter = 'unplaced';
@@ -695,7 +695,7 @@ export class FurnitureTray extends PIXI.Container {
 
   private _beginTrayScroll(
     e: PIXI.FederatedPointerEvent,
-    pending: { decoId: string; isPlaced: boolean } | null,
+    pending: { decoId: string; isPlaced: boolean; selectInstanceId?: string } | null,
   ): void {
     if (this._trayScrollListening || !this._isOpen) return;
     const p = federatedPointerToDesign(e);
@@ -737,7 +737,7 @@ export class FurnitureTray extends PIXI.Container {
 
     if (pending && moved < TRAY_TAP_SLOP_PX) {
       if (pending.isPlaced) {
-        FurnitureDragSystem.select(pending.decoId);
+        if (pending.selectInstanceId) FurnitureDragSystem.select(pending.selectInstanceId);
         const name = getDecoDisplayName(pending.decoId);
         ToastMessage.show(`已选中「${name}」，可在房间中拖动`);
       } else {
@@ -954,7 +954,7 @@ export class FurnitureTray extends PIXI.Container {
     );
     const decos =
       this._listFilter === 'unplaced'
-        ? unlocked.filter(d => !layout.some(p => p.decoId === d.id))
+        ? unlocked.filter(d => RoomLayoutManager.getAvailableCount(d.id) > 0)
         : unlocked;
 
     if (unlocked.length === 0) {
@@ -1159,12 +1159,16 @@ export class FurnitureTray extends PIXI.Container {
     deco: DecoDef,
     x: number,
     y: number,
-    layout: ReadonlyArray<{ decoId: string }>,
+    layout: ReadonlyArray<{ instanceId: string; decoId: string }>,
   ): PIXI.Container {
     const card = new PIXI.Container();
     card.position.set(x, y);
 
-    const isPlaced = layout.some(p => p.decoId === deco.id);
+    const placements = layout.filter(p => p.decoId === deco.id);
+    const placedCount = placements.length;
+    const ownedCount = DecorationManager.getOwnedCount(deco.id);
+    const availableCount = Math.max(0, ownedCount - placedCount);
+    const isPlaced = availableCount <= 0;
     const rarityInfo = DECO_RARITY_INFO[deco.rarity];
 
     // 卡片背景（已放置与未放置同样式，仅用右下角对勾区分）
@@ -1195,6 +1199,18 @@ export class FurnitureTray extends PIXI.Container {
     rarityDot.drawCircle(CARD_SIZE - 10, 10, 5);
     rarityDot.endFill();
     card.addChild(rarityDot);
+
+    if (deco.stackable) {
+      const countText = new PIXI.Text(`可用${availableCount}/${ownedCount}`, {
+        fontSize: 12,
+        fill: 0x5b6f62,
+        fontFamily: FONT_FAMILY,
+        fontWeight: 'bold',
+      });
+      countText.anchor.set(0, 0);
+      countText.position.set(6, 5);
+      card.addChild(countText);
+    }
 
     // 已放置：右下角叠主包对勾角标（与订单格 / 任务领奖一致）
     if (isPlaced) {
@@ -1234,7 +1250,11 @@ export class FurnitureTray extends PIXI.Container {
     card.hitArea = new PIXI.Rectangle(0, 0, CARD_SIZE, hitH);
 
     card.on('pointerdown', (e: PIXI.FederatedPointerEvent) => {
-      this._beginTrayScroll(e, { decoId: deco.id, isPlaced });
+      this._beginTrayScroll(e, {
+        decoId: deco.id,
+        isPlaced,
+        selectInstanceId: placements[0]?.instanceId,
+      });
     });
 
     return card;

@@ -70,6 +70,8 @@ export interface DragContext {
   sprite: PIXI.Sprite;
   /** 对应的装饰 ID */
   decoId: string;
+  /** 已摆放家具的实例 ID；新拖入家具落地前为空 */
+  instanceId?: string;
   /** 拖拽起始时 sprite 的 x */
   startX: number;
   /** 拖拽起始时 sprite 的 y */
@@ -94,14 +96,14 @@ class FurnitureDragSystemClass {
   /** 房间家具容器（由 ShopScene 传入） */
   private _roomContainer: PIXI.Container | null = null;
 
-  /** decoId → PIXI.Sprite 映射 */
+  /** instanceId → PIXI.Sprite 映射 */
   private _spriteMap = new Map<string, PIXI.Sprite>();
 
   /** 当前拖拽上下文 */
   private _dragCtx: DragContext | null = null;
 
-  /** 当前选中的家具 ID */
-  private _selectedDecoId: string | null = null;
+  /** 当前选中的摆放实例 ID */
+  private _selectedInstanceId: string | null = null;
 
   /** canvas 事件引用（用于 cleanup） */
   private _onRawMove: ((e: any) => void) | null = null;
@@ -127,9 +129,9 @@ class FurnitureDragSystemClass {
 
     // 为所有家具 Sprite 启用交互
     for (const child of roomContainer.children) {
-      if (child instanceof PIXI.Sprite && (child as any)._decoId) {
+      if (child instanceof PIXI.Sprite && (child as any)._decoId && (child as any)._instanceId) {
         this._enableSpriteInteraction(child as PIXI.Sprite);
-        this._spriteMap.set((child as any)._decoId, child as PIXI.Sprite);
+        this._spriteMap.set((child as any)._instanceId, child as PIXI.Sprite);
       }
     }
 
@@ -207,15 +209,21 @@ class FurnitureDragSystemClass {
 
   /** 当前选中的家具 ID */
   get selectedDecoId(): string | null {
-    return this._selectedDecoId;
+    if (!this._selectedInstanceId) return null;
+    return (this._spriteMap.get(this._selectedInstanceId) as any)?._decoId ?? null;
+  }
+
+  get selectedInstanceId(): string | null {
+    return this._selectedInstanceId;
   }
 
   /**
    * 注册一个家具 Sprite（新添加到房间时调用）
    */
-  registerSprite(sprite: PIXI.Sprite, decoId: string): void {
+  registerSprite(sprite: PIXI.Sprite, instanceId: string, decoId: string): void {
     (sprite as any)._decoId = decoId;
-    this._spriteMap.set(decoId, sprite);
+    (sprite as any)._instanceId = instanceId;
+    this._spriteMap.set(instanceId, sprite);
     if (this._enabled) {
       this._enableSpriteInteraction(sprite);
     }
@@ -224,15 +232,15 @@ class FurnitureDragSystemClass {
   /**
    * 注销一个家具 Sprite（从房间移除时调用）
    */
-  unregisterSprite(decoId: string): void {
-    if (this._selectedDecoId === decoId) {
+  unregisterSprite(instanceId: string): void {
+    if (this._selectedInstanceId === instanceId) {
       this.deselect();
     }
-    const sprite = this._spriteMap.get(decoId);
+    const sprite = this._spriteMap.get(instanceId);
     if (sprite) {
       sprite.eventMode = 'none';
       sprite.removeAllListeners();
-      this._spriteMap.delete(decoId);
+      this._spriteMap.delete(instanceId);
     }
   }
 
@@ -243,10 +251,10 @@ class FurnitureDragSystemClass {
     }
     this.deselect();
 
-    const decoIds = [...this._spriteMap.keys()];
-    for (const decoId of decoIds) {
-      const sprite = this._spriteMap.get(decoId);
-      this.unregisterSprite(decoId);
+    const instanceIds = [...this._spriteMap.keys()];
+    for (const instanceId of instanceIds) {
+      const sprite = this._spriteMap.get(instanceId);
+      this.unregisterSprite(instanceId);
       if (sprite && !sprite.destroyed) {
         if (sprite.parent) sprite.parent.removeChild(sprite);
         sprite.destroy();
@@ -268,41 +276,41 @@ class FurnitureDragSystemClass {
   }
 
   /**
-   * 根据 decoId 获取对应的 Sprite 引用
+   * 根据实例 ID 获取对应的 Sprite 引用
    */
-  getSpriteByDecoId(decoId: string): PIXI.Sprite | undefined {
-    return this._spriteMap.get(decoId);
+  getSpriteByInstanceId(instanceId: string): PIXI.Sprite | undefined {
+    return this._spriteMap.get(instanceId);
   }
 
   /**
    * 选中家具
    */
-  select(decoId: string): void {
+  select(instanceId: string): void {
     // 先取消旧选中
-    if (this._selectedDecoId && this._selectedDecoId !== decoId) {
+    if (this._selectedInstanceId && this._selectedInstanceId !== instanceId) {
       this.deselect();
     }
 
-    this._selectedDecoId = decoId;
-    const sprite = this._spriteMap.get(decoId);
+    this._selectedInstanceId = instanceId;
+    const sprite = this._spriteMap.get(instanceId);
     if (sprite) {
       sprite.tint = 0xfff6cf;
       sprite.filters = null;
     }
-    EventBus.emit('furniture:selected', decoId);
+    EventBus.emit('furniture:selected', instanceId, (sprite as any)?._decoId);
   }
 
   /**
    * 取消选中
    */
   deselect(): void {
-    if (!this._selectedDecoId) return;
-    const sprite = this._spriteMap.get(this._selectedDecoId);
+    if (!this._selectedInstanceId) return;
+    const sprite = this._spriteMap.get(this._selectedInstanceId);
     if (sprite) {
       sprite.tint = 0xffffff;
       sprite.filters = null;
     }
-    this._selectedDecoId = null;
+    this._selectedInstanceId = null;
     EventBus.emit('furniture:deselected');
   }
 
@@ -381,7 +389,7 @@ class FurnitureDragSystemClass {
     const layout = RoomLayoutManager.getLayout();
     const stackOrder = new Map<string, number>();
     for (let i = 0; i < layout.length; i++) {
-      stackOrder.set(layout[i].decoId, i);
+      stackOrder.set(layout[i].instanceId, i);
     }
 
     const peers: DepthSortPeer[] = [];
@@ -404,11 +412,14 @@ class FurnitureDragSystemClass {
 
     for (const child of sprites) {
       const decoId = (child as any)._decoId as string;
-      const placement = RoomLayoutManager.getPlacement(decoId);
+      const instanceId = (child as any)._instanceId as string | undefined;
+      const placement = instanceId
+        ? RoomLayoutManager.getPlacementByInstanceId(instanceId)
+        : undefined;
       const deco = DECO_MAP.get(decoId);
       if (!deco) continue;
       const feetY = child.y;
-      const peer = peers.find((p) => p.decoId === decoId)!;
+      const peer = peers[sprites.indexOf(child)];
       const topBoost = getTopSurfaceFeetBoost(peer, peers);
       // 从托盘拖入、尚未写入布局：用当前 y + 高后缀保证浮在前景，避免 zIndex=0 贴后墙
       if (!placement) {
@@ -429,7 +440,7 @@ class FurnitureDragSystemClass {
         continue;
       }
       const zLayer = placement.zLayer ?? 0;
-      const pi = stackOrder.get(decoId) ?? 0;
+      const pi = instanceId ? (stackOrder.get(instanceId) ?? 0) : 0;
       const stackTie = Math.min(pi, 999);
       child.zIndex = roomDepthZForPlacement(
         feetY,
@@ -457,6 +468,7 @@ class FurnitureDragSystemClass {
       this._dragPointerId = e.pointerId;
 
       const decoId = (sprite as any)._decoId as string;
+      const instanceId = (sprite as any)._instanceId as string | undefined;
       const localPos = this._rawEventToDesign(e);
 
       // 用 scale.y 作为 originalScale（始终为正值，不受翻转影响）
@@ -465,6 +477,7 @@ class FurnitureDragSystemClass {
       this._dragCtx = {
         sprite,
         decoId,
+        instanceId,
         startX: sprite.x,
         startY: sprite.y,
         pointerStartX: localPos.x,
@@ -475,7 +488,7 @@ class FurnitureDragSystemClass {
       };
 
       // 选中该家具
-      this.select(decoId);
+      if (instanceId) this.select(instanceId);
     });
   }
 
@@ -582,9 +595,9 @@ class FurnitureDragSystemClass {
         );
         if (placement) {
           disposeNewDragExtras();
-          this.registerSprite(ctx.sprite, ctx.decoId);
+          this.registerSprite(ctx.sprite, placement.instanceId, ctx.decoId);
           this._playBounceAnimation(ctx.sprite, ctx.originalScale);
-          this.select(ctx.decoId);
+          this.select(placement.instanceId);
           EventBus.emit('furniture:placed', placement);
         } else {
           // 已存在，移除临时 Sprite
@@ -602,9 +615,10 @@ class FurnitureDragSystemClass {
     } else {
       // 移动已有家具
       if (inBounds) {
-        const moved = RoomLayoutManager.moveFurniture(ctx.decoId, finalX, finalY);
+        if (!ctx.instanceId) return;
+        const moved = RoomLayoutManager.moveFurniture(ctx.instanceId, finalX, finalY);
         this._playBounceAnimation(ctx.sprite, ctx.originalScale);
-        if (moved) EventBus.emit('furniture:moved', RoomLayoutManager.getPlacement(ctx.decoId));
+        if (moved) EventBus.emit('furniture:moved', RoomLayoutManager.getPlacementByInstanceId(ctx.instanceId));
       } else {
         // 拖出房间 → 回到原位
         TweenManager.to({

@@ -24,6 +24,8 @@ import { DecoNewUnlockManager } from '@/managers/DecoNewUnlockManager';
 export interface DecoSaveData {
   /** 已拥有装饰 ID（花愿购入后写入；与游玩语义「购买前置已满足」不同，勿混用） */
   unlocked: string[];
+  /** 可复数家具拥有量；旧存档缺省时 unlocked 中的对应家具按 1 件迁移 */
+  ownedCounts?: Record<string, number>;
   /** 当前装备：slot → decoId */
   equipped: Record<string, string>;
   /** 当前房间整体风格（对应 ROOM_STYLES） */
@@ -39,6 +41,8 @@ export interface DecoSaveData {
 class DecorationManagerClass {
   /** 已拥有（花愿购入）的装饰 ID；`unlockRequirement` 才是「允许购买」的前置 */
   private _unlocked = new Set<string>();
+  /** 仅记录 stackable 家具数量；普通家具继续由 _unlocked 表示 0/1 */
+  private _ownedCounts = new Map<string, number>();
   /** 当前装备：slot → decoId */
   private _equipped = new Map<string, string>();
   /** 当前房间风格 id（如 style_default），与当前场景装备同步 */
@@ -73,6 +77,7 @@ class DecorationManagerClass {
   /** 云同步写入 huahua_decoration 后重载（勿调用 _initRoomStyleDefaults，避免清空已解锁房壳） */
   reloadFromStorage(): void {
     this._unlocked.clear();
+    this._ownedCounts.clear();
     this._adUnlockedDecos.clear();
     this._equipped.clear();
     this._load();
@@ -151,6 +156,23 @@ class DecorationManagerClass {
   /** 是否已解锁 */
   isUnlocked(decoId: string): boolean {
     return this._unlocked.has(decoId);
+  }
+
+  /** 拥有数量；普通家具保持 0/1，复数家具读取数量存档。 */
+  getOwnedCount(decoId: string): number {
+    const deco = DECO_MAP.get(decoId);
+    if (!deco?.stackable) return this._unlocked.has(decoId) ? 1 : 0;
+    return this._ownedCounts.get(decoId) ?? (this._unlocked.has(decoId) ? 1 : 0);
+  }
+
+  getMaxOwned(decoId: string): number {
+    const deco = DECO_MAP.get(decoId);
+    if (!deco?.stackable) return 1;
+    return Math.max(1, Math.floor(deco.maxOwned ?? 1));
+  }
+
+  canOwnMore(decoId: string): boolean {
+    return this.getOwnedCount(decoId) < this.getMaxOwned(decoId);
   }
 
   isAdUnlockDeco(decoId: string): boolean {
@@ -245,22 +267,32 @@ class DecorationManagerClass {
    * 星星与最终家具拥有状态。不要复用 gmUnlockDeco，否则会把付费制作误当成免费赠予。
    */
   unlockFromWorkshop(decoId: string, huayuanCost: number, options?: { deferStarGrant?: boolean }): boolean {
-    if (this._unlocked.has(decoId)) return false;
     const deco = DECO_MAP.get(decoId);
     if (!deco) return false;
+    const ownedBefore = this.getOwnedCount(decoId);
+    const maxOwned = this.getMaxOwned(decoId);
+    if ((!deco.stackable && ownedBefore > 0) || ownedBefore >= maxOwned) return false;
     const cost = Math.max(0, Math.floor(huayuanCost));
     if (CurrencyManager.state.huayuan < cost) return false;
 
     if (cost > 0) CurrencyManager.addHuayuan(-cost);
-    if (deco.starValue > 0 && !options?.deferStarGrant) {
+    const isFirst = ownedBefore === 0;
+    if (isFirst && deco.starValue > 0 && !options?.deferStarGrant) {
       CurrencyManager.addStar(deco.starValue);
     }
     this._unlocked.add(decoId);
+    if (deco.stackable) this._ownedCounts.set(decoId, ownedBefore + 1);
     this._save();
 
-    console.log(`[Decoration] 工坊制作解锁: ${deco.name}${cost > 0 ? ` (-${cost}花愿)` : ''} +${deco.starValue}星`);
-    EventBus.emit('decoration:unlocked', decoId, deco);
-    EventBus.emit('decoration:workshopUnlocked', decoId, deco);
+    console.log(
+      `[Decoration] 工坊制作: ${deco.name} ${ownedBefore + 1}/${maxOwned}`
+      + `${cost > 0 ? ` (-${cost}花愿)` : ''}${isFirst ? ` +${deco.starValue}星` : ''}`,
+    );
+    if (isFirst) {
+      EventBus.emit('decoration:unlocked', decoId, deco);
+      EventBus.emit('decoration:workshopUnlocked', decoId, deco);
+    }
+    EventBus.emit('decoration:ownedCountChanged', decoId, ownedBefore + 1, maxOwned);
     return true;
   }
 
@@ -284,9 +316,27 @@ class DecorationManagerClass {
     const deco = DECO_MAP.get(decoId);
     if (!deco) return false;
     this._unlocked.add(decoId);
+    if (deco.stackable) this._ownedCounts.set(decoId, 1);
     this._save();
     EventBus.emit('decoration:unlocked', decoId, deco);
     return true;
+  }
+
+  /** GM：设置复数家具拥有量（不扣款、不加星），返回实际数量。 */
+  gmSetOwnedCount(decoId: string, count: number): number {
+    const deco = DECO_MAP.get(decoId);
+    if (!deco?.stackable) return this.getOwnedCount(decoId);
+    const next = Math.max(0, Math.min(this.getMaxOwned(decoId), Math.floor(count)));
+    if (next > 0) {
+      this._unlocked.add(decoId);
+      this._ownedCounts.set(decoId, next);
+    } else {
+      this._ownedCounts.delete(decoId);
+      this._unlocked.delete(decoId);
+    }
+    this._save();
+    EventBus.emit('decoration:ownedCountChanged', decoId, next, this.getMaxOwned(decoId));
+    return next;
   }
 
   /** GM：解锁配置中全部装饰件 */
@@ -379,6 +429,7 @@ class DecorationManagerClass {
       }
       const data: DecoSaveData = {
         unlocked: [...this._unlocked],
+        ownedCounts: this._exportOwnedCounts(),
         equipped: {},
         roomStyleId: this._roomStyleId,
         roomStyleByScene: Object.keys(roomStyleByScene).length ? roomStyleByScene : undefined,
@@ -400,6 +451,23 @@ class DecorationManagerClass {
       if (data.unlocked) {
         for (const id of data.unlocked) {
           this._unlocked.add(id);
+        }
+      }
+      if (data.ownedCounts && typeof data.ownedCounts === 'object') {
+        for (const [id, rawCount] of Object.entries(data.ownedCounts)) {
+          const deco = DECO_MAP.get(id);
+          if (!deco?.stackable || typeof rawCount !== 'number' || !Number.isFinite(rawCount)) continue;
+          const count = Math.max(0, Math.min(this.getMaxOwned(id), Math.floor(rawCount)));
+          if (count > 0) {
+            this._ownedCounts.set(id, count);
+            this._unlocked.add(id);
+          }
+        }
+      }
+      // 旧档迁移：已解锁的复数家具视为拥有 1 件。
+      for (const id of this._unlocked) {
+        if (DECO_MAP.get(id)?.stackable && !this._ownedCounts.has(id)) {
+          this._ownedCounts.set(id, 1);
         }
       }
       if (data.adUnlockedDecos) {
@@ -443,6 +511,7 @@ class DecorationManagerClass {
     }
     return {
       unlocked: [...this._unlocked],
+      ownedCounts: this._exportOwnedCounts(),
       equipped: {},
       roomStyleId: this._roomStyleId,
       roomStyleByScene: Object.keys(roomStyleByScene).length ? roomStyleByScene : undefined,
@@ -454,10 +523,19 @@ class DecorationManagerClass {
   /** 重置（GM 调试用） */
   reset(): void {
     this._unlocked.clear();
+    this._ownedCounts.clear();
     this._adUnlockedDecos.clear();
     this._equipped.clear();
     this.init();
     EventBus.emit('decoration:reset');
+  }
+
+  private _exportOwnedCounts(): Record<string, number> | undefined {
+    const result: Record<string, number> = {};
+    for (const [id, count] of this._ownedCounts) {
+      if (count > 0 && DECO_MAP.get(id)?.stackable) result[id] = count;
+    }
+    return Object.keys(result).length ? result : undefined;
   }
 }
 

@@ -294,11 +294,12 @@ function decoAllFilterRank(deco: DecoDef, sceneId: string): number {
   const isAdGate = DecorationManager.isAdUnlockDeco(deco.id);
   const purchaseAllowed = sceneOk && reqMet && (!isAdGate || DecorationManager.isAdUnlockSatisfied(deco.id));
   const blocked = !sceneOk || !purchaseAllowed;
-  const isPlaced = !!RoomLayoutManager.getPlacement(deco.id);
+  const isPlaced = RoomLayoutManager.getPlacedCount(deco.id) > 0;
+  const hasAvailable = RoomLayoutManager.getAvailableCount(deco.id) > 0;
 
   if (!owned && !blocked) return 0;      // 已解锁未购买
   if (!owned && blocked) return 1;       // 未解锁
-  if (owned && !isPlaced) return 2;      // 未放置
+  if (owned && hasAvailable) return 2;    // 仍有可放置数量
   return 3;                              // 已放置
 }
 
@@ -343,14 +344,15 @@ function decoMatchesInvFilter(deco: DecoDef, filter: DecoInvFilter, sceneId: str
   const isAdGate = DecorationManager.isAdUnlockDeco(deco.id);
   const purchaseAllowed = sceneOk && reqMet && (!isAdGate || DecorationManager.isAdUnlockSatisfied(deco.id));
   const blocked = !sceneOk || !purchaseAllowed;
-  const isPlaced = !!RoomLayoutManager.getPlacement(deco.id);
+  const isPlaced = RoomLayoutManager.getPlacedCount(deco.id) > 0;
+  const hasAvailable = RoomLayoutManager.getAvailableCount(deco.id) > 0;
   switch (filter) {
     case 'all':
       return true;
     case 'placed':
       return owned && isPlaced;
     case 'not_placed':
-      return owned && !isPlaced && sceneOk;
+      return owned && hasAvailable && sceneOk;
     case 'not_purchased':
       return !owned && !blocked;
     case 'locked':
@@ -1692,7 +1694,10 @@ export class DecorationPanel extends PIXI.Container {
     card.position.set(x, y);
 
     const isUnlocked = DecorationManager.isUnlocked(deco.id);
-    const isPlaced = !!RoomLayoutManager.getPlacement(deco.id);
+    const placedCount = RoomLayoutManager.getPlacedCount(deco.id);
+    const ownedCount = DecorationManager.getOwnedCount(deco.id);
+    const isPlaced = placedCount > 0;
+    const hasAvailable = placedCount < ownedCount;
     const reqResult = checkRequirement(deco.unlockRequirement);
     const reqMet = reqResult.met;
     const sceneOk = isDecoAllowedInScene(deco, CurrencyManager.state.sceneId);
@@ -1737,6 +1742,20 @@ export class DecorationPanel extends PIXI.Container {
       this._addNewUnlockBadge(card, cw);
     }
     if (isPlaced) this._addEquipBadge(card, cw);
+    if (deco.stackable && isUnlocked) {
+      const countBadge = new PIXI.Text(
+        `拥有${ownedCount} 已摆${placedCount} 可用${Math.max(0, ownedCount - placedCount)}`,
+        {
+        fontSize: 12,
+        fill: 0x4f6658,
+        fontFamily: FONT_FAMILY,
+        fontWeight: 'bold',
+        },
+      );
+      countBadge.anchor.set(0, 0);
+      countBadge.position.set(7, 6);
+      card.addChild(countBadge);
+    }
 
     const lockAfterName = !purchaseAllowed;
     const nameGap = 12;
@@ -1768,7 +1787,7 @@ export class DecorationPanel extends PIXI.Container {
 
     if (!sceneOk) {
       this._addFooter(card, cw, ch, 'locked', undefined, formatAllowedScenesShort(deco));
-    } else if (isUnlocked && isPlaced) this._addFooter(card, cw, ch, 'furniture_placed', undefined, '');
+    } else if (isUnlocked && !hasAvailable) this._addFooter(card, cw, ch, 'furniture_placed', undefined, '');
     else if (isUnlocked) this._addFooter(card, cw, ch, 'furniture_go_place', undefined, '');
     else if (needsAdGate) this._addFooter(card, cw, ch, 'ready', undefined, '免费解锁');
     else if (!purchaseAllowed) {
@@ -2008,7 +2027,6 @@ export class DecorationPanel extends PIXI.Container {
       return;
     }
     const isUnlocked = DecorationManager.isUnlocked(deco.id);
-    const isPlaced = !!RoomLayoutManager.getPlacement(deco.id);
     if (isUnlocked) {
       this._goToPlaceDeco(deco.id);
       return;
