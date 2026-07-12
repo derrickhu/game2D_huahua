@@ -321,7 +321,7 @@ const LEVEL_UNLOCK_BASE: Record<number, Omit<LevelUnlockDef, 'level'>> = {
       },
     ],
   },
-  35: {
+  32: {
     ceremonyTitle: '橡树小屋',
     entries: [
       {
@@ -338,7 +338,7 @@ const LEVEL_UNLOCK_BASE: Record<number, Omit<LevelUnlockDef, 'level'>> = {
       },
     ],
   },
-  40: {
+  36: {
     ceremonyTitle: '花园别墅',
     entries: [
       {

@@ -446,7 +446,9 @@ class GMManagerClass {
     addSetLevelCommand(10, '；原花店十星档');
     addSetLevelCommand(20, '；蛋糕房中后段');
     addSetLevelCommand(25, '；茶香小院开放');
-    addSetLevelCommand(30, '；花园别墅开放');
+    addSetLevelCommand(30, '；花田农舍开放');
+    addSetLevelCommand(32, '；橡树小屋开放');
+    addSetLevelCommand(36, '；花园别墅开放');
     addSetLevelCommand(40, '；中后期测试');
     addSetLevelCommand(50, '；显式等级表末段');
     addSetLevelCommand(60, '；验证 50 级后公式延伸');

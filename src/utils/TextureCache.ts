@@ -902,7 +902,7 @@ const DECO_IMAGE_MAP: Record<string, string> = {
   jiangnan_blue_cabinet: 'subpkg_deco/images/furniture/jiangnan_blue_cabinet.png',
   xianxia_meditation_platform: 'subpkg_deco/images/furniture/xianxia_meditation_platform.png',
 
-  // ---- 橡树小屋专属家具（forest_treehouse Lv35–38 航海奇遇套）----
+  // ---- 橡树小屋专属家具（forest_treehouse Lv32–35 航海奇遇套）----
   sea_wheel_wall: 'subpkg_deco/images/furniture/sea_wheel_wall.png',
   sea_anchor_bench: 'subpkg_deco/images/furniture/sea_anchor_bench.png',
   sea_treasure_chest: 'subpkg_deco/images/furniture/sea_treasure_chest.png',
@@ -920,7 +920,7 @@ const DECO_IMAGE_MAP: Record<string, string> = {
   dream_cloud_floor_lamp: 'subpkg_deco/images/furniture/dream_cloud_floor_lamp.png',
   dream_cloud_storage_chest: 'subpkg_deco/images/furniture/dream_cloud_storage_chest.png',
 
-  // ---- 花田农舍专属家具（flower_farm_house Lv30–34 拾光田园套 v2）----
+  // ---- 花田农舍专属家具（flower_farm_house Lv30–33 拾光田园套 v2）----
   farm_vegetable_patch_rug: 'subpkg_deco/images/furniture/farm_vegetable_patch_rug.png',
   farm_garden_tool_stand: 'subpkg_deco/images/furniture/farm_garden_tool_stand.png',
   farm_fruit_crate_stack: 'subpkg_deco/images/furniture/farm_fruit_crate_stack.png',

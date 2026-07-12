@@ -78,10 +78,10 @@ export const BUTTERFLY_HOUSE_UNLOCK_LEVEL = 8;
 export const TEA_HOUSE_UNLOCK_LEVEL = 25;
 
 /** 橡树小屋进入所需综合等级（与 LevelUnlockConfig 35 级仪式一致） */
-export const FOREST_TREEHOUSE_UNLOCK_LEVEL = 35;
+export const FOREST_TREEHOUSE_UNLOCK_LEVEL = 32;
 
 /** 花园别墅进入所需综合等级（与 LevelUnlockConfig 40 级仪式一致） */
-export const GARDEN_VILLA_UNLOCK_LEVEL = 40;
+export const GARDEN_VILLA_UNLOCK_LEVEL = 36;
 
 /** 梦云小屋（支线）开放综合等级：20 级起可在大地图花愿购买解锁 */
 export const DREAM_CLOUD_HOUSE_UNLOCK_LEVEL = 20;
