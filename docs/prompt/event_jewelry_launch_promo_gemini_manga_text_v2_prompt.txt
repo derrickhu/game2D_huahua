@@ -1,0 +1,17 @@
+Create a 16:9 horizontal WeChat Mini Game promotional poster for the cozy flower-shop merge game "花花妙屋", celebrating the new limited-time event "花间珠匣".
+
+IMPORTANT CHARACTER QUALITY: The shop owner character must look like premium advertising key art from a high-end built-in image model, not a simple flat mascot. She should be beautiful, lively, expressive, and polished: large sparkling anime eyes, charming smile, elegant face, soft brown hair, flower hair accessory, cute flower-shop apron outfit, graceful pointing gesture, detailed highlights, clean manga-style line art, soft 2D volume, and rich cel-shaded lighting. Make her more manga-inspired and dynamic while still cozy and kawaii.
+
+IMPORTANT TEXT REQUIREMENT: The poster must include clear, large, perfectly readable Simplified Chinese text as part of the image:
+Main headline in the upper-left on a soft cream rounded sticker: "花间珠匣上线"
+Subtitle below it on the same sticker: "合成珠宝 解锁限定好礼"
+Small decorative tag near the headline: "限时活动"
+Keep all Chinese characters accurate, clean, and easy to read. Do not invent extra text.
+
+Main composition: a large ornate open jewelry casket in the foreground, glowing emerald raw stones and gemstone jewelry pieces flying upward in a graceful arc. The cheerful shop owner stands on the right side, pointing toward the sparkling casket. Around the casket are cute treasure chests, raw gems, finished emerald jewelry, a magical portal jewel gate, roses, pearls, pastel lavender and pink flower-shop decorations.
+
+Art style: premium polished manga-inspired 2D casual mobile game advertising key art, cozy pastel flower-shop fantasy, soft brown line art, expressive anime eyes, saturated but soft colors, warm rim light, glossy jewel highlights, layered depth, crisp silhouettes, readable at thumbnail size. It should feel richer and more elegant than a simple vector UI illustration. Not photoreal, not hard 3D render.
+
+Composition requirements: strong central casket and gem sparkle focus, clear foreground/midground/background depth. Keep the upper-left text sticker bright, uncluttered, and highly readable. Official festive event launch poster feeling.
+
+Hard bans: no logo, no watermark, no app store badge, no QR code, no black border, no white border, no cluttered collage, no extra unreadable text beyond the required Chinese headline/subtitle/tag.

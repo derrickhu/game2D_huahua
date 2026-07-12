@@ -332,7 +332,7 @@ export const WORKSHOP_BLUEPRINT_DEFS: WorkshopBlueprintDef[] = [
   },
   {
     id: 'blueprint_workshop_mint_bougainvillea_bay_window',
-    name: '柳影木色飘窗图纸',
+    name: '暖阳飘窗图纸',
     outputDecoId: 'workshop_willow_wood_bay_window',
     rarity: 'rare',
     sourceText: '活动获得',
@@ -342,7 +342,7 @@ export const WORKSHOP_BLUEPRINT_DEFS: WorkshopBlueprintDef[] = [
     colorOptions: [
       {
         id: 'default',
-        name: '柳影木色',
+        name: '默认',
         outputDecoId: 'workshop_willow_wood_bay_window',
         materialCost: 14,
         dyeCost: 0,
@@ -350,7 +350,7 @@ export const WORKSHOP_BLUEPRINT_DEFS: WorkshopBlueprintDef[] = [
       },
       {
         id: 'mint',
-        name: '薄荷三角梅',
+        name: '薄荷',
         outputDecoId: 'workshop_mint_bougainvillea_bay_window',
         materialCost: 12,
         dyeCost: 1,

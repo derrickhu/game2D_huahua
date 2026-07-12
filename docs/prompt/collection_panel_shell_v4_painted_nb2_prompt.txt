@@ -1,0 +1,36 @@
+Single full-screen vertical mobile game UI asset, 9:16 aspect ratio, one decorative SHELL ONLY for an item collection codex album modal. Cozy pastel flower-shop merge game. High resolution, PAINTED 2D illustrated UI art.
+
+USE THE ATTACHED LAYOUT REFERENCE (original collection notebook shell) for EXACT panel form, structure, and color palette — keep these unchanged:
+- lilac-lavender purple thick outer rounded frame, pastel pink inner lip
+- left edge pink-lilac spiral notebook binding rings
+- centered golden-yellow scalloped title banner plaque at top, empty center
+- wide golden-yellow progress bar track below banner, empty
+- large warm cream ivory inner page field for item grid
+- small red circular close button top-right
+- pastel green circular left/right page-turn arrow buttons on outer sides, vertically centered
+- same modal proportions and element placement as the reference
+
+USE THE ATTACHED STYLE REFERENCE (friendship codex shell) ONLY for rendering quality and illustration technique — NOT for copying its layout, palette, or decorative motifs:
+- same polished painted illustration quality: soft watercolor-like shading, delicate warm brown linework, layered hand-painted detail
+- same flat-but-rich 2D game UI finish — NOT simple vector cartoon, NOT thick black outlines, NOT flat sticker UI, NOT 3D bevel or glossy candy
+- this shell must look painted by a skilled mobile-game illustrator
+
+CRITICAL — DO NOT copy friendship codex subject matter:
+- NO cherry blossoms, NO sakura, NO plum blossoms, NO wax-seal envelopes, NO friendship letter motifs
+- NO peach-coral friendship album frame replacing the purple notebook frame
+- decorations must stay subtle and match the PURPLE/PINK/GOLD/GREEN collection notebook identity
+
+Collection notebook decorative accents (minimal, corner-only):
+- tiny painted pastel roses, soft green leaves, small golden vine curls at top corners only
+- optional faint cream page texture with very subtle lavender floral watermark at ~4% opacity in content field
+- binding rings painted with soft highlights, not flat plastic circles
+
+THIS IS AN EMPTY BACKPLATE. NO readable text, NO numbers, NO item icons, NO grid cells, NO progress fill, NO chest icon.
+
+Art style: refined painted 2D mobile game UI — same illustration craftsmanship as friendship codex, but different theme and same purple notebook form as layout reference.
+
+STRICTLY FORBIDDEN:
+cherry blossom, sakura, plum blossom, friendship envelope, peach-coral album replacing purple frame, simple vector line art, thick black outlines, 3D emboss, readable text, numbers, item grid, watermark.
+
+TECHNICAL BACKGROUND:
+ONLY margins OUTSIDE rounded modal = pure green RGB 0,255,0. Interior ZERO green pixels.

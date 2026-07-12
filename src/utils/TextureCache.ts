@@ -679,9 +679,9 @@ const DECO_IMAGE_MAP: Record<string, string> = {
   workshop_lace_ribbon_bed: 'subpkg_deco/images/furniture/workshop_lace_ribbon_bed.png',
   /** 夏日荷塘拱窗：单张墙饰 PNG，max-side 342（清凉一夏活动图纸） */
   workshop_summer_lotus_arch_window: 'subpkg_deco/images/furniture/workshop_summer_lotus_arch_window.png',
-  /** 薄荷三角梅飘窗：单张墙饰 PNG，max-side 342 */
+  /** 薄荷暖阳飘窗：暖阳飘窗染色款，max-side 342 */
   workshop_mint_bougainvillea_bay_window: 'subpkg_deco/images/furniture/workshop_mint_bougainvillea_bay_window.png',
-  /** 柳影木色飘窗：薄荷飘窗染色款，max-side 342 */
+  /** 暖阳飘窗：默认木色款，max-side 342 */
   workshop_willow_wood_bay_window: 'subpkg_deco/images/furniture/workshop_willow_wood_bay_window.png',
   workshop_blueprint_generic: 'subpkg_deco/images/furniture/workshop_blueprint_generic.png',
   promo_petal_chaise: 'subpkg_deco/images/furniture/promo_petal_chaise.png',

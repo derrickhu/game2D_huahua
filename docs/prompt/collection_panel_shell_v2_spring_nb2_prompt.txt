@@ -1,0 +1,54 @@
+Single full-screen vertical mobile game UI asset, 9:16 aspect ratio, one flattened decorative SHELL ONLY for an item collection codex album modal. Cozy pastel flower-shop merge game. High resolution, crisp flat 2D illustrated UI art.
+
+USE THE ATTACHED LAYOUT REFERENCE (current collection notebook shell) for EXACT structural layout:
+- same centered tall notebook modal silhouette with left spiral binding rings
+- same top golden title banner plaque shape (empty center)
+- same wide progress bar track below banner
+- same large cream inner page field for item grid
+- same small green circular left/right page-turn arrows on outer sides
+- same small flat red close button top-right
+
+USE THE ATTACHED STYLE REFERENCE (friendship codex overview shell) ONLY for visual refinement:
+- flatter, more polished, less bubbly 3D candy UI
+- softer brown linework, gentle flat gradients, matte surfaces
+- spring friendship warmth — peach-gold accents on lilac notebook frame
+- NOT copying friendship codex cherry blossom motifs or reward inset layout
+
+THIS IS AN EMPTY BACKPLATE. Game overlays title, progress fill, item grid, chest later. NO readable text.
+
+OUTER NOTEBOOK FRAME:
+- soft lilac-lavender thick outer rim, thinner pastel-pink inner lip, flat gentle highlight only
+- left edge: cute spiral notebook binding rings in soft pink, clean flat vector style, NOT glossy 3D plastic
+- right edge clean
+
+TOP HEADER (~12% height):
+- centered flat golden-peach scalloped title banner plaque, empty center, modest size, thin soft outline
+- decorations minimal — small pastel flower corner accents only, NOT heavy embossed baroque
+
+TOP-RIGHT: small flat circular red close button with simple white X, modest size like friendship codex, NOT oversized glossy 3D
+
+PROGRESS BAR TRACK (~6% height, below banner):
+- one wide flat rounded golden-peach bar track, empty, hairline border, matte fill, no numbers, no fill progress
+
+MAIN CONTENT FIELD (~58% height):
+- large flat warm cream ivory matte page, almost plain
+- at most extremely faint notebook paper texture (~3% opacity)
+- thin soft pink inner border around cream page
+- completely EMPTY — no grid cells, no item icons, no slots
+
+BOTTOM FOOTER ZONE (~10% height inside cream page):
+- flat empty cream continuation for runtime reward chest overlay
+- no pre-drawn chest, no text
+
+SIDE NAVIGATION:
+- one flat pastel-green circular button on left outer margin, white left arrow
+- one flat pastel-green circular button on right outer margin, white right arrow
+- vertically centered on content field, modest flat style, NOT glossy candy balls
+
+Art style: clean flat 2D vector kawaii mobile UI sibling to friendship codex shells — refined, polished, soft pastel lilac/pink/gold/cream palette. Gentle flat shading only. No photoreal, no heavy drop shadow, no embossed bevel, no 3D skeuomorphic candy.
+
+STRICTLY FORBIDDEN:
+readable Chinese/English text, numbers, item icons, grid cells, progress fill, reward chest icon, character portraits, watermark, oversized glossy buttons, heavy 3D bevel, muddy brown notebook leather photoreal.
+
+TECHNICAL BACKGROUND:
+ONLY margins OUTSIDE rounded modal = pure green RGB 0,255,0. Interior ZERO green pixels.

@@ -1,0 +1,21 @@
+Create a colorful 16:9 horizontal social post illustration for a cozy flower-shop merge game, asking players to vote for their favorite furniture style.
+
+IMPORTANT TEXT REQUIREMENT: Include a clear, readable Simplified Chinese headline near the top center:
+"你最喜欢哪种家具风格？"
+Show four option labels clearly and accurately near four different furniture zones:
+"古风"  "现代风"  "赛博风"  "搞怪风"
+Keep the Chinese characters clean, large enough to read, and do not add any extra text.
+
+Composition: a charming showroom collage divided into four visually distinct furniture style zones, with many small but readable furniture pieces in each zone. Use a cozy flower-shop game atmosphere, bright appealing colors, soft rounded shapes, and playful details.
+
+Zone 1 - 古风: elegant traditional Chinese style furniture, carved wooden tea table, folding screen, porcelain vase, jade ornament, lantern, ink brush stand, warm wood and cream tones, delicate floral patterns.
+
+Zone 2 - 现代风: clean modern furniture, pastel sofa, simple coffee table, minimal shelf, glass lamp, soft rug, mint green and cream palette, tidy cozy apartment feeling.
+
+Zone 3 - 赛博风: cute cyber furniture, neon glowing chair, holographic table, futuristic plant pod, cyan-magenta light strips, translucent panels, but still kawaii and friendly, not dark or scary.
+
+Zone 4 - 搞怪风: funny whimsical furniture, mushroom stool, wobbly cartoon cabinet, teapot lamp, animal-shaped chair, oversized flower cushion, playful colors and silly shapes.
+
+Art style: polished 2D casual mobile game key art, kawaii cozy merge-game illustration, soft brown line art, pastel but saturated colors, gentle gradients, crisp silhouettes, readable furniture shapes, lively and cheerful. The image should feel like an official community poll poster.
+
+Hard bans: no logo, no watermark, no QR code, no app store badge, no black border, no white border, no unreadable extra text, no photorealism, no hard 3D render.

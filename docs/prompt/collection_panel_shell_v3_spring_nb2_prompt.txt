@@ -1,0 +1,50 @@
+Single full-screen vertical mobile game UI asset, 9:16 aspect ratio, one decorative SHELL ONLY for an item collection codex album modal — early spring flower-shop theme. Cozy pastel flower-shop merge game. High resolution, PAINTED 2D illustrated UI art with rich hand-drawn detail.
+
+CRITICAL STYLE RULE — COPY THE ATTACHED FRIENDSHIP CODEX SHELL REFERENCE EXACTLY for art quality and rendering approach:
+- same painted spring illustration quality: soft watercolor-like shading, delicate brown linework, layered floral painting
+- same warm peach-coral blush buttercream gold cherry-blossom palette
+- same ornate TOP and BOTTOM decorative illustration bands with cherry blossom branches, golden ribbon scrolls, scattered sakura petals, small envelope motifs
+- same polished mobile-game UI illustration — NOT simple vector cartoon, NOT thick black outlines, NOT flat kawaii sticker, NOT 3D bevel/glossy candy
+- this must look like it was painted by the SAME artist as the friendship codex shell
+
+THIS IS AN EMPTY BACKPLATE. Game overlays title text, progress fill, item icons, chest later. NO readable text, NO numbers.
+
+COLLECTION ALBUM LAYOUT (adapt friendship codex shell structure for item codex):
+
+OUTER FRAME (~full modal):
+- warm peach-coral rounded album cover rim, thinner blush inner lip, soft painted shadow
+- LEFT EDGE: illustrated spiral notebook binding — pink-lilac metal rings painted with soft highlights, integrated into frame like a scrapbook album (NOT simple flat vector rings)
+- decorations hug corners like friendship codex — painted cherry blossoms and golden ribbon on top-left binding area
+
+TOP DECORATIVE HEADER (~14% height):
+- painted spring floral garland across top: cherry blossom branches, soft petals, tiny wildflowers, golden ribbon, small craft tag or flower-shop label corner motifs
+- leave calm empty center band for runtime title overlay — NO giant embossed 3D title plaque, NO bubbly scalloped sticker banner
+- small flat red circular close button top-right, modest size, same as friendship codex
+
+PROGRESS TRACK ZONE (~7% height, below header garland):
+- one wide flat rounded cream-peach inset bar spanning ~82% inner width, hairline soft gold border, completely EMPTY track for runtime progress fill
+- painted subtle floral corner accents at bar ends only
+
+MAIN CONTENT PAGE (~52% height):
+- large warm cream ivory album page, smooth matte
+- extremely faint scattered sakura petal texture (~4% opacity) like friendship codex middle field
+- thin soft blush hairline inner border
+- completely EMPTY — no grid cells, no item slots, no icons
+
+BOTTOM DECORATIVE FOOTER (~12% height):
+- painted spring illustration matching friendship codex bottom band:
+  folded blush silk ribbon, cherry blossom clusters, small wax-seal envelope, golden leaf filigree, meadow grass hints
+- leave flat empty cream center-bottom zone (~18% width) for runtime reward chest overlay — decorations stay at corners
+
+SIDE PAGE-TURN CONTROLS:
+- left and right outer margins: small painted pastel-sage green circular buttons with simple white arrow chevrons
+- styled as flat illustrated UI buttons with soft brown outline and gentle painted shading — NOT neon green cartoon balls, NOT thick sticker circles
+- vertically centered on main content page height
+
+Art style keywords: painted illustration, hand-drawn floral UI frame, spring scrapbook album, refined casual mobile game, soft gradients for volume but NO 3D emboss, NO photoreal leather, NO simple line-art vector.
+
+STRICTLY FORBIDDEN:
+simple vector cartoon notebook, thick black outlines, flat kawaii sticker UI, purple workshop minimalism, vertical pinstripes, glossy 3D candy buttons, readable text, numbers, item icons, grid cells, progress fill, chest icon, character portraits, watermark.
+
+TECHNICAL BACKGROUND:
+ONLY margins OUTSIDE rounded modal = pure green RGB 0,255,0. Interior ZERO green pixels.

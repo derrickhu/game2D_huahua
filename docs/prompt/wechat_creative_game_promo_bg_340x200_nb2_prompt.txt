@@ -1,0 +1,19 @@
+Ultra-wide compact promotional background illustration for a cozy flower-shop merge and home decorating mobile game. Final delivery crop is 340x200 pixels, so the composition must read instantly at very small thumbnail size.
+
+Match the reference image mood and style: bright cheerful polished 2D casual game art, premium cute mobile game illustration, vivid turquoise-to-sky-blue background, warm saturated spring palette, smooth soft shading, clear silhouettes, strong foreground-background separation.
+
+Main composition optimized for tiny banner:
+- Left foreground: one cute young florist girl with a delighted smile, holding an oversized colorful bouquet. Face and bouquet must be large, bold, and instantly readable even when shrunk.
+- Right midground: charming flower shop cottage inside a soft circular vignette, cream walls, warm roof, flower boxes, garden path, tiny orange cat accent. Keep the house simplified and iconic, not tiny cluttered detail.
+- A few large floating pink petals for motion, but keep overall image clean and uncluttered.
+
+V2 optimization over reference:
+- Slightly cleaner layout with more breathing room between girl and house.
+- Stronger color contrast between subject and turquoise background.
+- Simpler bottom area for platform overlay safety.
+- Slightly more polished lighting and gloss on flowers.
+- Composition weighted to center band so center-crop to 17:10 still keeps both girl and shop visible.
+
+Color: vivid pink, coral, yellow, white flowers, lush green leaves, warm skin tones, turquoise background with soft lilac gradient. No white edges, no black edges.
+
+Hard bans: NO text, NO letters, NO Chinese characters, NO logo, NO watermark, NO UI, NO buttons, NO captions, NO speech bubbles, NO numbers, NO black border, NO white border, NO collage panels, NO dark muddy palette, NO photoreal, NO 3D render.
