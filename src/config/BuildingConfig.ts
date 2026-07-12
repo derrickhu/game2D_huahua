@@ -93,15 +93,15 @@ const MIXER_PRODUCE_TABLE_L4: [number, number][] = [[1, 58], [2, 42]];
 const MIXER_PRODUCE_TABLE_L5: [number, number][] = [[1, 45], [2, 35], [3, 20]];
 
 // ═══════════════ 蝴蝶线工具（tool_butterfly_net）专属产出等级表；产品共 10 级 ═══════════════
-/** tool_butterfly_net_3：入门 1～3 级 */
-const BUTTERFLY_NET_PRODUCE_TABLE_L3: [number, number][] = [[1, 62], [2, 28], [3, 10]];
-/** tool_butterfly_net_4：2～6 级 */
+/** tool_butterfly_net_3：入门 1～2 级 */
+const BUTTERFLY_NET_PRODUCE_TABLE_L3: [number, number][] = [[1, 70], [2, 30]];
+/** tool_butterfly_net_4：2～4 级 */
 const BUTTERFLY_NET_PRODUCE_TABLE_L4: [number, number][] = [
-  [2, 18], [3, 28], [4, 28], [5, 16], [6, 10],
+  [2, 45], [3, 40], [4, 15],
 ];
-/** tool_butterfly_net_5：中高等级，含 CD */
+/** tool_butterfly_net_5：4～7 级，7 级低概率，含 CD */
 const BUTTERFLY_NET_PRODUCE_TABLE_L5: [number, number][] = [
-  [4, 22], [5, 22], [6, 20], [7, 16], [8, 12], [9, 5], [10, 3],
+  [4, 45], [5, 35], [6, 17], [7, 3],
 ];
 
 // ═══════════════ 包装线工具 → 产出包装中间品（FlowerLine.WRAP） ═══════════════
