@@ -177,13 +177,13 @@ export const ROOM_STYLES: RoomStyleDef[] = [
   { id: 'style_tea_house_two_story_nb2', name: '仙茶小楼', cost: 0, starValue: 0, rarity: DecoRarity.COMMON, bgTexture: 'bg_room_tea_house_xianqi_two_story_nb2', desc: '茶香小院默认壳：轻盈 pastel 仙气双层茶寮，青玉屋瓦、回廊与明亮茶院空间', allowedSceneIds: ['tea_house'] },
   { id: 'style_tea_house_darkwood_two_story_nb2', name: '乌木茶寮', cost: 43000, starValue: 14, rarity: DecoRarity.FINE, bgTexture: 'bg_room_tea_house_darkwood_two_story_nb2', desc: '深色红木双层茶寮：乌木柱栏、黛青屋瓦与暖 cream 地砖，配古风家具更显沉稳', unlockRequirement: { level: 26 }, allowedSceneIds: ['tea_house'] },
   { id: 'style_forest_treehouse_oak_nb2', name: '橡树心舍', cost: 0, starValue: 0, rarity: DecoRarity.COMMON, bgTexture: 'bg_room_forest_treehouse_oak_nb2', desc: '橡树小屋默认壳：巨橡树干贯穿双层、苔藓木瓦与年轮地坪，童话森林树屋 cutaway', allowedSceneIds: ['forest_treehouse'] },
-  { id: 'style_forest_treehouse_spring_bloom_nb2', name: '春花藤巢', cost: 64500, starValue: 11, rarity: DecoRarity.FINE, bgTexture: 'bg_room_forest_treehouse_spring_bloom_nb2', desc: '春日换色壳：巨橡抽新芽，粉黄紫爬藤绕干，薄荷春花瓦檐与屋顶鸟巢', unlockRequirement: { level: 33 }, allowedSceneIds: ['forest_treehouse'] },
+  { id: 'style_forest_treehouse_spring_bloom_nb2', name: '春花藤巢', cost: 64500, starValue: 18, rarity: DecoRarity.FINE, bgTexture: 'bg_room_forest_treehouse_spring_bloom_nb2', desc: '春日换色壳：巨橡抽新芽，粉黄紫爬藤绕干，薄荷春花瓦檐与屋顶鸟巢', unlockRequirement: { level: 33 }, allowedSceneIds: ['forest_treehouse'] },
   { id: 'style_garden_villa_manor_nb2', name: '花园阁楼', cost: 0, starValue: 0, rarity: DecoRarity.COMMON, bgTexture: 'bg_room_garden_villa_loft_nb2', desc: '花园别墅默认壳：现代洋房错层空壳，正面敞开无窗，仅后墙右墙+前左一层后右二层错开', allowedSceneIds: ['garden_villa'] },
   { id: 'style_dream_cloud_two_story_nb2', name: '梦云蓝居', cost: 0, starValue: 0, rarity: DecoRarity.COMMON, bgTexture: 'bg_room_dream_cloud_two_story_nb2', desc: '梦云小屋默认壳：浅蓝云上卧室空壳，圆拱云墙、开阔双层平台与右侧云梯', allowedSceneIds: ['dream_cloud_house'] },
   {
     id: 'style_dream_cloud_purple_mooncradle_nb2', name: '紫月云台', cost: 86666, starValue: 12, rarity: DecoRarity.FINE, bgTexture: 'bg_room_dream_cloud_purple_mooncradle_nb2', desc: '梦云小屋换色壳：粉紫月云双层空壳，月石地面、星月吊饰与云梯围栏更梦幻', unlockRequirement: { level: 22 }, allowedSceneIds: ['dream_cloud_house'] },
   { id: 'style_flower_farm_cottage_nb2', name: '日光小院', cost: 0, starValue: 0, rarity: DecoRarity.COMMON, bgTexture: 'bg_room_flower_farm_courtyard_sunny_nb2', desc: '花田农舍默认壳：等距日光户外小院，轻描边、贴地院落，木平台与土院地面', allowedSceneIds: ['flower_farm_house'] },
-  { id: 'style_flower_farm_spring_vine_nb2', name: '青藤春棚', cost: 72000, starValue: 11, rarity: DecoRarity.FINE, bgTexture: 'bg_room_flower_farm_spring_vine_nb2', desc: '春日换色壳：常春藤爬墙、浅绿木瓦与 mint spring 氛围', unlockRequirement: { level: 32 }, allowedSceneIds: ['flower_farm_house'] },
+  { id: 'style_flower_farm_spring_vine_nb2', name: '青藤春棚', cost: 72000, starValue: 15, rarity: DecoRarity.FINE, bgTexture: 'bg_room_flower_farm_spring_vine_nb2', desc: '春日换色壳：常春藤爬墙、浅绿木瓦与 mint spring 氛围', unlockRequirement: { level: 31 }, allowedSceneIds: ['flower_farm_house'] },
 ];
 
 export const ROOM_STYLE_MAP = new Map<string, RoomStyleDef>(
