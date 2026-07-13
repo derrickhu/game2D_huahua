@@ -129,7 +129,8 @@ depthSortYLift: 0,
 
 ## 压缩与像素规格（须对齐现有家具）
 
-- **像素（普通购买线 / Lv 家具）**：等比缩放后 **最长边不宜超过 256 px**（与 `scripts/compress_furniture_deco_pngs.py` / `normalize_greenhouse_furniture_pngs.py` 默认 `MAX_SIDE` 一致）。勿将未缩放的高分辨率生图直接长期留在 `furniture/`。
+- **像素（普通购买线 / Lv 家具）**：等比缩放后 **最长边默认 256 px**（与 `scripts/compress_furniture_deco_pngs.py` / `normalize_greenhouse_furniture_pngs.py` 默认 `MAX_SIDE` 一致）。勿将未缩放的高分辨率生图直接长期留在 `furniture/`。
+- **何时用 342（从严）**：仅 **实在大件**——`defaultScale ≥ 1.6`，或厨柜 / 大地毯等屏上特别大的件。中件（约 1.2～1.5）**优先 256**，勿默认抬到 342。
 - **编码**：RGBA PNG，`optimize=True`、`compress_level=9`（与花房归一化脚本写入方式一致）；**不使用**棋盘物品那套 256 色量化（`compress_subpkg_items_pngs.py`），以免装修大图色带。
 - **体积参考**：同目录现有成品中，简单小件约 **15～40 KB**，桌架类复杂件常见 **50～90 KB**；若同类单品 **显著偏大**（例如远大于 150 KB 且无特殊理由），应检查是否未缩放或未优化。
 - **历史说明**：旧默认曾为 **171 px**；屏上 `defaultScale` 常 ≥ 1.0 时会发糊。已按 171 入库的图须从高清原图重跑 rembg→crop→compress，不能靠脚本放大。
@@ -145,7 +146,7 @@ python3 scripts/compress_furniture_deco_pngs.py --dry-run
 
 工坊大件在房间里 **`defaultScale` 往往 ≥ 1.7**，若仍按普通线 **256 px** 入库，手机上放大后仍可能发糊。**验收标杆**：弧翼大沙发三色合图 `workshop_plush_sofa_sheet`（每格 **342 px**）——真机已够清晰，**不必再提到 512**。
 
-**与普通家具的唯一差别**：入库时 **`--max-side 342`**，其余流程相同（rembg → crop_trim → 合图/压缩）。
+**与普通家具的差别**：入库时 **`--max-side 342`**（与上方「实在大件」同一档），其余流程相同（rembg → crop_trim → 合图/压缩）。
 
 | 类型 | 命令要点 |
 |------|----------|
