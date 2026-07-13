@@ -674,9 +674,7 @@ export class BoardView extends PIXI.Container {
   private _rawToLocal(e: any): PIXI.IPointData {
     const cx = e.clientX ?? e.x ?? 0;
     const cy = e.clientY ?? e.y ?? 0;
-    // clientX (逻辑像素) → 设计坐标：乘以 designWidth / screenWidth
-    const designX = cx * Game.designWidth / Game.screenWidth;
-    const designY = cy * Game.designWidth / Game.screenWidth;
+    const { x: designX, y: designY } = Game.clientToDesign(cx, cy);
     return {
       x: designX,
       y: designY - BoardMetrics.topY,

@@ -11,6 +11,10 @@ import { TweenManager } from './TweenManager';
 class OverlayManagerClass {
   private _container: PIXI.Container | null = null;
 
+  constructor() {
+    Game.onViewportChange(() => this.relayoutVisiblePanels());
+  }
+
   /** 获取全局覆盖层容器 */
   get container(): PIXI.Container {
     if (!this._container) {
@@ -70,6 +74,19 @@ class OverlayManagerClass {
         if (typeof (child as any)._isOpen !== 'undefined') {
           (child as any)._isOpen = false;
         }
+      }
+    }
+  }
+
+  /** 窗口变化时通知所有可见覆盖层；面板自行保留当前业务状态。 */
+  relayoutVisiblePanels(): void {
+    if (!this._container) return;
+    for (const child of this._container.children) {
+      if (!child.visible || typeof (child as any).relayout !== 'function') continue;
+      try {
+        (child as any).relayout();
+      } catch (e) {
+        console.warn('[OverlayManager] panel relayout 失败:', (child as any).constructor?.name, e);
       }
     }
   }

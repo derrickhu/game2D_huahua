@@ -104,7 +104,7 @@ function contentTopFrac(): number {
 
 /** 与 DecorationPanel / MerchShopPanel 一致：原生 clientY → 设计坐标纵轴 */
 function nativeClientToDesignY(clientY: number): number {
-  return (clientY * Game.designHeight) / Game.screenHeight;
+  return Game.clientToDesign(0, clientY).y;
 }
 
 function federatedPointerToDesignY(e: PIXI.FederatedPointerEvent): number {
@@ -112,7 +112,7 @@ function federatedPointerToDesignY(e: PIXI.FederatedPointerEvent): number {
   if (n != null && typeof (n as PointerEvent).clientY === 'number') {
     return nativeClientToDesignY((n as PointerEvent).clientY);
   }
-  return e.global.y / Game.scale;
+  return Game.globalToDesign(e.global.x, e.global.y).y;
 }
 
 function blueprintCardHeight(): number {
@@ -205,6 +205,19 @@ export class FurnitureWorkshopPanel extends PIXI.Container {
       this._opening = false;
       this._openReady();
     });
+  }
+
+  relayout(): void {
+    if (!this.visible) return;
+    const scrollY = this._contentScrollY;
+    this._teardownContentScroll();
+    this._overlay.clear();
+    this._overlay.beginFill(0x000000, 0.48);
+    this._overlay.drawRect(0, 0, DESIGN_WIDTH, Game.logicHeight);
+    this._overlay.endFill();
+    this._applyShellLayout();
+    this._refresh();
+    this._setContentScroll(scrollY);
   }
 
   private _openReady(): void {

@@ -105,7 +105,7 @@ function computeScaledShellLayout(spec: ShellSpec): {
 }
 
 function nativeClientToDesignY(clientY: number): number {
-  return (clientY * Game.designHeight) / Game.screenHeight;
+  return Game.clientToDesign(0, clientY).y;
 }
 
 function federatedPointerToDesignY(e: PIXI.FederatedPointerEvent): number {
@@ -113,7 +113,7 @@ function federatedPointerToDesignY(e: PIXI.FederatedPointerEvent): number {
   if (n != null && typeof (n as PointerEvent).clientY === 'number') {
     return nativeClientToDesignY((n as PointerEvent).clientY);
   }
-  return e.global.y / Game.scale;
+  return Game.globalToDesign(e.global.x, e.global.y).y;
 }
 
 export class AffinityCodexPanel extends PIXI.Container {
@@ -124,6 +124,7 @@ export class AffinityCodexPanel extends PIXI.Container {
   private _bg!: PIXI.Graphics;
   private _root!: PIXI.Container;
   private _detailLayer: PIXI.Container | null = null;
+  private _detailCard: AffinityCardDef | null = null;
 
   // ── grid 滚动（canvas 级 pointermove，和 QuestPanel 同套路，微信小游戏更稳） ──
   private _gridContent: PIXI.Container | null = null;
@@ -173,6 +174,14 @@ export class AffinityCodexPanel extends PIXI.Container {
   }
 
   get isOpen(): boolean { return this._isOpen; }
+
+  relayout(): void {
+    if (!this.visible) return;
+    const detailCard = this._detailCard;
+    if (this._detailLayer) this._closeCardDetail();
+    this._refresh();
+    if (detailCard) this._openCardDetail(detailCard);
+  }
 
   /**
    * @param typeId 不传 → 打开赛季总览；传了 → 直接进入该客人的图鉴页
@@ -1220,6 +1229,7 @@ export class AffinityCodexPanel extends PIXI.Container {
       this._detailLayer.destroy({ children: true });
       this._detailLayer = null;
     }
+    this._detailCard = card;
     const W = DESIGN_WIDTH;
     const H = Game.logicHeight;
     const layer = new PIXI.Container();
@@ -1269,6 +1279,7 @@ export class AffinityCodexPanel extends PIXI.Container {
     if (!this._detailLayer) return;
     this._detailLayer.destroy({ children: true });
     this._detailLayer = null;
+    this._detailCard = null;
   }
 }
 

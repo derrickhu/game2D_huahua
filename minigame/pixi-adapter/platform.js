@@ -66,6 +66,19 @@ const platform = {
   createImage: () => _api ? _api.createImage() : { src: '', onload: null, onerror: null },
 
   getSystemInfoSync: () => _api ? _safeCall(() => _api.getSystemInfoSync(), { platform: 'unknown', screenWidth: 375, screenHeight: 667 }) : { platform: 'unknown', screenWidth: 375, screenHeight: 667 },
+  getWindowInfo: () => {
+    if (_api && _api.getWindowInfo) {
+      try {
+        const info = _api.getWindowInfo();
+        if (info && (info.windowWidth || info.screenWidth) && (info.windowHeight || info.screenHeight)) {
+          return info;
+        }
+      } catch (_) {}
+    }
+    return _api
+      ? _safeCall(() => _api.getSystemInfoSync(), { windowWidth: 375, windowHeight: 667 })
+      : { windowWidth: 375, windowHeight: 667 };
+  },
 
   getStorageSync: (key) => _api ? _safeCall(() => _api.getStorageSync(key), '') : '',
   setStorageSync: (key, data) => _api ? _safeCall(() => _api.setStorageSync(key, data)) : undefined,

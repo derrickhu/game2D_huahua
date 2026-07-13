@@ -2656,7 +2656,8 @@ export class EventBoardPanel extends PIXI.Container {
             const startGlobal = root.toGlobal(icon.position);
             if (root.parent) root.parent.removeChild(root);
             root.destroy({ children: true });
-            this._playCodexIconFly(tex, startGlobal.x / Game.scale, startGlobal.y / Game.scale, target.x, target.y, () => {
+            const startDesign = Game.globalToDesign(startGlobal.x, startGlobal.y);
+            this._playCodexIconFly(tex, startDesign.x, startDesign.y, target.x, target.y, () => {
               this._pendingProgressRevealItemIds.delete(itemId);
               this._drawShell();
               this._playProgressTrackItemPulse(target.x, target.y);
@@ -3027,8 +3028,7 @@ export class EventBoardPanel extends PIXI.Container {
     const t0 = e.touches?.[0] ?? e.changedTouches?.[0];
     const cx = e.clientX ?? t0?.clientX ?? e.x ?? 0;
     const cy = e.clientY ?? t0?.clientY ?? e.y ?? 0;
-    const k = Game.designWidth / Game.screenWidth;
-    return { x: cx * k, y: cy * k };
+    return Game.clientToDesign(cx, cy);
   }
 
   private _createDragGhost(itemId: string): void {
