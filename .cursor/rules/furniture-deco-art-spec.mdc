@@ -129,9 +129,10 @@ depthSortYLift: 0,
 
 ## 压缩与像素规格（须对齐现有家具）
 
-- **像素（普通购买线 / Lv 家具）**：等比缩放后 **最长边不宜超过 171 px**（与 `scripts/normalize_greenhouse_furniture_pngs.py` 中 `MAX_SIDE` 及当前多数已验收家具一致）。勿将未缩放的高分辨率生图直接长期留在 `furniture/`。
+- **像素（普通购买线 / Lv 家具）**：等比缩放后 **最长边不宜超过 256 px**（与 `scripts/compress_furniture_deco_pngs.py` / `normalize_greenhouse_furniture_pngs.py` 默认 `MAX_SIDE` 一致）。勿将未缩放的高分辨率生图直接长期留在 `furniture/`。
 - **编码**：RGBA PNG，`optimize=True`、`compress_level=9`（与花房归一化脚本写入方式一致）；**不使用**棋盘物品那套 256 色量化（`compress_subpkg_items_pngs.py`），以免装修大图色带。
-- **体积参考**：同目录现有成品中，简单小件约 **8～20 KB**，桌架类复杂件常见 **35～55 KB**；若同类单品 **显著偏大**（例如远大于 100 KB 且无特殊理由），应检查是否未缩放或未优化。
+- **体积参考**：同目录现有成品中，简单小件约 **15～40 KB**，桌架类复杂件常见 **50～90 KB**；若同类单品 **显著偏大**（例如远大于 150 KB 且无特殊理由），应检查是否未缩放或未优化。
+- **历史说明**：旧默认曾为 **171 px**；屏上 `defaultScale` 常 ≥ 1.0 时会发糊。已按 171 入库的图须从高清原图重跑 rembg→crop→compress，不能靠脚本放大。
 - **入库前整目录（推荐，仅普通家具）**：
 
 ```bash
@@ -142,7 +143,7 @@ python3 scripts/compress_furniture_deco_pngs.py --dry-run
 
 ## 工坊家具清晰度（`workshopExclusive`）
 
-工坊大件在房间里 **`defaultScale` 往往 ≥ 1.7**，若仍按 **171 px** 入库，手机上放大后会发糊。**验收标杆**：弧翼大沙发三色合图 `workshop_plush_sofa_sheet`（每格 **342 px**）——真机已够清晰，**不必再提到 512**。
+工坊大件在房间里 **`defaultScale` 往往 ≥ 1.7**，若仍按普通线 **256 px** 入库，手机上放大后仍可能发糊。**验收标杆**：弧翼大沙发三色合图 `workshop_plush_sofa_sheet`（每格 **342 px**）——真机已够清晰，**不必再提到 512**。
 
 **与普通家具的唯一差别**：入库时 **`--max-side 342`**，其余流程相同（rembg → crop_trim → 合图/压缩）。
 
@@ -151,7 +152,7 @@ python3 scripts/compress_furniture_deco_pngs.py --dry-run
 | 合图（正/背或多配色） | `process_furniture_atlas_sheet.py --max-side 342 …` → `compress_furniture_deco_pngs.py --force` |
 | 单张 PNG（如床） | `compress_furniture_deco_pngs.py --max-side 342 --force <path>` |
 
-**注意**：工坊 PNG 入库后**勿**再跑默认 `--max-side 171` 的整目录压缩，否则会被压糊。
+**注意**：工坊 PNG 入库后**勿**再跑默认 `--max-side 256` 的整目录压缩，否则会被压糊。
 
 ```bash
 # 示例：1 列 × 3 行多配色（弧翼沙发）
@@ -245,7 +246,7 @@ CRITICAL: The attached chair is the FRONT view size lock. Draw the BACK view of 
 #### 合图处理（强制）
 
 ```bash
-# 工坊四向（每格 342）；普通家具改 --max-side 171
+# 工坊四向（每格 342）；普通家具改 --max-side 256
 python3 scripts/process_furniture_atlas_sheet.py \
   --compose ../game_assets/huahua/assets/final/{id}_front_nb2.png \
   --compose ../game_assets/huahua/assets/final/{id}_back_nb2.png \
@@ -259,7 +260,7 @@ python3 scripts/process_furniture_atlas_sheet.py \
 | `--match-height` | 正/背 **统一缩到同一内容高度**（以高度为准，避免「画得矮的那格被 max-side 拉胖」） |
 | `--bottom-align` | **脚底贴同一基线**（旋转时脚点不跳） |
 | `--width-ratio-max` | 相对正面限制背面宽度比（默认建议 `1.08`）；超了则等比缩小后再拉回目标高度 |
-| `--max-side` | 工坊 **342**；普通 **171**。本餐椅等 `workshopExclusive` 四向件用 **342** |
+| `--max-side` | 工坊 **342**；普通 **256**。本餐椅等 `workshopExclusive` 四向件用 **342** |
 
 - **抠图**：`birefnet-general`（分生：各张；合图生：可整张再切格）。
 - **压缩**：`compress_furniture_deco_pngs.py --force`；`*_sheet.png` 走 sheet 逻辑，勿整图误缩。
@@ -290,6 +291,6 @@ python3 scripts/process_furniture_atlas_sheet.py \
 | 参考图（锁角） | 生图 **必须** `--image` 附已验收墙饰：**`deco_lv20_wall_moon_sheer_curtain.png`**（挂帘）或 **`wallart_frame.png`**（挂画/标本框）；**只锁透视角**，主体设计写在 prompt 正文 |
 | 比例 | 挂帘 **3:4**；宽画/三联框 **4:3**；方画 **3:4** 或 **1:1**（见 `gen_wallart_isometric_nb2.sh`） |
 | 脚本 | 批量：`scripts/gen_wallart_isometric_nb2.sh`；单件 **`gemini-3.1-flash-image-preview`** + 参考图 |
-| 入库 | rembg **`birefnet-general`** → `crop_trim --padding 4` → **`compress_furniture_deco_pngs.py --max-side 171 --force`** |
+| 入库 | rembg **`birefnet-general`** → `crop_trim --padding 4` → **`compress_furniture_deco_pngs.py --max-side 256 --force`** |
 | 反例 | 纯正面窗帘/画框、地面等距角、杆水平、与参考墙饰角度不一致（进房后显「歪」） |
 | **倾角微调（推荐）** | 生图后若帘杆偏平/过陡：用 **`scripts/adjust_wallart_angle.py`** 对齐到目标角（如 `--target 27.5`），或打开 **`tools/wallart_angle_editor.html`** 拖图可视化微调后导出。分色合图前先统一各色顶边角，比反复 NB2 更稳 |

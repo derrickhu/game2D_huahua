@@ -2,9 +2,9 @@
 """
 家具雪碧图合图：按格 trim + 缩放，再拼成等尺寸帧。
 
-避免 compress_furniture_deco_pngs 对整张 sheet 缩到 171 导致每格过小。
+避免 compress_furniture_deco_pngs 对整张 sheet 缩到默认 max-side 导致每格过小。
 
-工坊家具（workshopExclusive）：每格 `--max-side 342`（手机清晰度标杆见 `workshop_plush_sofa_sheet`）。普通 Lv 家具默认 171。
+工坊家具（workshopExclusive）：每格 `--max-side 342`（手机清晰度标杆见 `workshop_plush_sofa_sheet`）。普通 Lv 家具默认 256。
 
 四向旋转（fourFacing）正/背：推荐分生后再 --compose，并加
   --match-height --bottom-align --width-ratio-max 1.08
@@ -20,7 +20,7 @@
   # 四向：分生正面+背面后拼合（推荐）
   python3 scripts/process_furniture_atlas_sheet.py \\
     --compose .../chair_front.png --compose .../chair_back.png \\
-    --columns 2 --rows 1 --max-side 171 \\
+    --columns 2 --rows 1 --max-side 256 \\
     --match-height --bottom-align --width-ratio-max 1.08 \\
     -o minigame/subpkg_deco/images/furniture/workshop_summer_dining_chair_sheet.png
 
@@ -176,7 +176,7 @@ def main() -> int:
     )
     ap.add_argument("--columns", type=int, default=2)
     ap.add_argument("--rows", type=int, default=1)
-    ap.add_argument("--max-side", type=int, default=171, help="Max longest side per cell/frame")
+    ap.add_argument("--max-side", type=int, default=256, help="Max longest side per cell/frame")
     ap.add_argument("--padding", type=int, default=4)
     ap.add_argument(
         "--match-height",

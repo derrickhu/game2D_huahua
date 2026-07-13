@@ -250,18 +250,32 @@
       if (mode === '0') return;
       const ang = Number(mode) * Math.PI / 180;
       const cx = guide.width / 2, cy = guide.height * 0.28;
-      gctx.strokeStyle = 'rgba(201,123,132,0.85)';
-      gctx.lineWidth = 1.5;
       const len = Math.hypot(guide.width, guide.height);
-      // ±θ：后墙脚 / 右墙脚各一条
+      // 平行斜线间距（垂直于斜线方向的像素距）；远处家具也可借线对齐
+      const spacing = 56;
+      const halfCount = Math.ceil(len / spacing) + 1;
+
+      // ±θ：后墙脚 / 右墙脚各一族平行参考线
       for (const sign of [1, -1]) {
         const theta = ang * sign;
-        const dx = Math.cos(theta) * len;
-        const dy = Math.sin(theta) * len;
-        gctx.beginPath();
-        gctx.moveTo(cx - dx, cy - dy);
-        gctx.lineTo(cx + dx, cy + dy);
-        gctx.stroke();
+        const ux = Math.cos(theta);
+        const uy = Math.sin(theta);
+        // 垂直于斜线的单位向量，用于平移出平行线
+        const nx = -uy;
+        const ny = ux;
+        for (let i = -halfCount; i <= halfCount; i++) {
+          const ox = cx + nx * i * spacing;
+          const oy = cy + ny * i * spacing;
+          const isMain = i === 0;
+          gctx.strokeStyle = isMain
+            ? 'rgba(201,123,132,0.9)'
+            : 'rgba(201,123,132,0.38)';
+          gctx.lineWidth = isMain ? 1.5 : 1;
+          gctx.beginPath();
+          gctx.moveTo(ox - ux * len, oy - uy * len);
+          gctx.lineTo(ox + ux * len, oy + uy * len);
+          gctx.stroke();
+        }
       }
       // 竖向参考：错切后应与此平行
       gctx.strokeStyle = 'rgba(80,120,180,0.55)';

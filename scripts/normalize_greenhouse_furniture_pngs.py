@@ -21,7 +21,7 @@ ROOT = Path(__file__).resolve().parents[1]
 FURN = ROOT / "minigame/subpkg_deco/images/furniture"
 FRESH = ROOT / "minigame/subpkg_items/images/flowers/fresh"
 
-MAX_SIDE = 171
+MAX_SIDE = 256
 
 PLACEHOLDER_FRESH = {
     # 仅当文件仍为空白占位时，用棋盘鲜花顶替（正式图已由 NB2+rembg 写入则走缩放分支）

@@ -1,15 +1,16 @@
 #!/usr/bin/env python3
 """
 将 minigame/subpkg_deco/images/furniture 下 PNG 与现有家具体量对齐：
-- 最长边不超过 MAX_SIDE（默认 171，与 normalize_greenhouse_furniture_pngs.py 一致）
+- 最长边不超过 MAX_SIDE（默认 256；工坊大件仍用 --max-side 342）
 - RGBA + LANCZOS 缩小（不量化调色板，避免装修大图色带）
 - zlib compress_level=9 + optimize；默认仅当缩小了分辨率或新文件更小才覆盖；加 --force 则凡成功写出即覆盖（保证全量过一遍规范）
+- 注意：本脚本只缩小不放大；已按旧默认 171 入库的图需从高清原图重跑 rembg→crop 才能变清晰
 
 用法（仓库根）:
   python3 scripts/compress_furniture_deco_pngs.py
   python3 scripts/compress_furniture_deco_pngs.py --force
   python3 scripts/compress_furniture_deco_pngs.py --dry-run
-  python3 scripts/compress_furniture_deco_pngs.py --max-side 171 path/to/one.png
+  python3 scripts/compress_furniture_deco_pngs.py --max-side 256 path/to/one.png
 """
 from __future__ import annotations
 
@@ -63,7 +64,7 @@ def process_one(
     try:
         out.save(tmp, format="PNG", optimize=True, compress_level=9)
         new = os.path.getsize(tmp)
-        # 强制模式：凡可写出且不长胖则覆盖（解决「已 171 边长但从未 zlib 优化」被跳过）
+        # 强制模式：凡可写出且不长胖则覆盖（解决「已达标边长但从未 zlib 优化」被跳过）
         write = resized or (new < old) or (force and new <= old)
         if write:
             if not dry_run:
@@ -94,7 +95,7 @@ def process_one(
 
 def main() -> int:
     ap = argparse.ArgumentParser()
-    ap.add_argument("--max-side", type=int, default=171)
+    ap.add_argument("--max-side", type=int, default=256)
     ap.add_argument(
         "--force",
         action="store_true",
