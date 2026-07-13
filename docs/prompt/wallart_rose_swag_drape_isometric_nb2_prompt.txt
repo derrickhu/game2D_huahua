@@ -1,10 +1,10 @@
-Single game sprite: one tall PREMIUM rose swag wall curtain for a cozy pastel merge flower shop.
+Single game sprite: one rose swag wall curtain for a cozy pastel merge flower shop.
 
-REPAINT TASK: Make this the CLEARLY MORE BEAUTIFUL curtain — richer, more romantic, more layered than the plain lace cafe curtain. Upgrade painterly workshop quality and sharp readable details.
+REPAINT TASK — CLARITY ONLY: Repaint the attached rose swag curtain reference in sharper, cleaner hand-painted workshop quality. The silhouette, bow tie-back positions, swag shape, and lace trim placement must stay NEARLY IDENTICAL to the reference. This is a resolution/clarity upgrade ONLY — NOT a redesign.
 
 REFERENCE IMAGE RULE — critical:
 - LEFT reference (moon curtain): copy ONLY its wall-plane angle (rod skew left-high right-low).
-- RIGHT reference (rose swag): copy its rose-swag LAYOUT — pink outer drapes tied back, cream inner panels, lace trim — but repaint with richer color, clearer folds, and more premium charm.
+- RIGHT reference (rose swag): copy its EXACT layout — pink outer drapes, simple pink fabric bow tie-backs on both sides, cream inner panel, scalloped lace trim on pink edges.
 - Do NOT copy stars, moons, or blue fabric from the moon reference.
 
 PERSPECTIVE — mandatory:
@@ -13,14 +13,13 @@ Designed for the BACK wall plane of an isometric L-shaped dollhouse room. Entire
 - Wooden curtain rod top edge slopes gently DOWN toward the RIGHT (left end higher, right end lower)
 - Pink swags and cream inner panels hang downward; all fabric follows the same oblique wall plane
 
-SUBJECT — PREMIUM ROSE SWAG DRAPE (玫瑰垂幔墙帘, visibly fancier):
-- Warm honey-oak curtain rod with round finials.
-- LUSH blush-pink / dusty-rose outer drapes swagged over rod with VISIBLE rose-bud fabric tiebacks on both sides — layered petals, tiny green leaves.
-- Cream inner curtain panels behind with soft airy middle opening.
-- Delicate white scalloped lace trim along pink drape edges — crisp and readable.
-- Richer fabric volume: more folds, softer highlights, deeper gentle shadows than a plain lace panel.
-- Romantic boutique flower-shop luxury — clearly prettier and more decorative than a simple cafe lace curtain.
+SUBJECT — 玫瑰垂幔墙帘 (match reference exactly):
+- Warm cream-beige curtain rod with round finials.
+- Dusty blush-pink outer drapes swagged over rod; BOTH sides tied back with simple pink fabric BOWS (not rose buds, not flowers).
+- Cream/off-white inner curtain panel behind with scalloped bottom edge.
+- Delicate white lace/cross-stitch trim along pink drape bottom edges — crisp and readable.
+- Same layout and charm as reference — do NOT add rose clusters, extra bows, or new ornaments.
 
-STYLE: hand-painted WORKSHOP premium quality — soft warm brown outlines, painterly cel shading, vivid but pastel rose tones, crisp lace and rose details at icon size. Upper-left soft key light. NOT muddy, NOT blurry.
+STYLE: hand-painted WORKSHOP quality — soft warm brown outlines, painterly cel shading, crisp lace and fold details. Pastel rose and cream. Upper-left soft key light. Sharp clean lines — NOT muddy, NOT blurry.
 
 BACKGROUND: pure solid white #FFFFFF only around the skewed curtain; no room shell, no floor, no characters.

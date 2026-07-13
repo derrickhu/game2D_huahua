@@ -47,7 +47,7 @@ const CONTENT_NW = 0.78;
 /** 略收矮，避免列表底边压进壳体底部装饰条 */
 const CONTENT_NH = 0.40;
 const CARD_W = 172;
-const CARD_H = 150;
+const CARD_H = 172;
 const CARD_GAP_X = 14;
 const CARD_GAP_Y = 14;
 const SECTION_HEADER_H = 76;
@@ -596,9 +596,9 @@ export class CoolSummerEventPanel extends PIXI.Container {
 
     const qty = this._grantValueLabel(product.grant);
     const hasQty = qty.length > 0;
-    const iconSize = product.grant.kind === 'deco' ? 52 : 60;
+    const iconSize = product.grant.kind === 'deco' ? 54 : 62;
     const icon = this._makeGrantIcon(product.grant, iconSize);
-    icon.position.set(hasQty ? cardW / 2 - 16 : cardW / 2, 70);
+    icon.position.set(hasQty ? cardW / 2 - 16 : cardW / 2, 74);
     root.addChild(icon);
 
     if (hasQty) {
@@ -611,41 +611,47 @@ export class CoolSummerEventPanel extends PIXI.Container {
         strokeThickness: 2,
       } as PIXI.TextStyle);
       amount.anchor.set(0, 0.5);
-      amount.position.set(cardW / 2 + 18, 72);
+      amount.position.set(cardW / 2 + 18, 76);
       root.addChild(amount);
     }
 
-    const btnY = CARD_H - 22;
-    const btnH = 30;
+    const btnH = 38;
+    const btnX = 12;
+    const btnW = cardW - 24;
+    const buyBtn = new PIXI.Container();
+    buyBtn.position.set(btnX, CARD_H - btnH - 10);
     const priceBg = new PIXI.Graphics();
     priceBg.beginFill(satisfied ? 0xBDB5AD : enabled ? 0xFF8A65 : 0xD7A999);
-    priceBg.drawRoundedRect(12, btnY - btnH / 2, cardW - 24, btnH, 14);
+    priceBg.drawRoundedRect(0, 0, btnW, btnH, 18);
     priceBg.endFill();
-    root.addChild(priceBg);
+    buyBtn.addChild(priceBg);
     const price = new PIXI.Text(
       satisfied ? '已购' : `${product.cost}`,
       {
-        fontSize: 16,
+        fontSize: 17,
         fill: 0xFFFFFF,
         fontFamily: FONT_FAMILY,
         fontWeight: 'bold',
       },
     );
     price.anchor.set(0.5);
-    price.position.set(cardW / 2 + (satisfied ? 0 : 12), btnY);
-    root.addChild(price);
+    price.position.set(btnW / 2 + (satisfied ? 0 : 12), btnH / 2);
+    buyBtn.addChild(price);
 
     if (!satisfied) {
-      const fan = this._makeIcon('icon_cool_summer_fan', 24);
-      fan.position.set(cardW / 2 - 24, btnY);
-      root.addChild(fan);
+      const fan = this._makeIcon('icon_cool_summer_fan', 26);
+      fan.position.set(btnW / 2 - 26, btnH / 2);
+      buyBtn.addChild(fan);
     }
+    root.addChild(buyBtn);
 
+    // 仅底部兑换按钮可点；卡片其余区域留给滑动，避免误兑
     if (!satisfied && remaining > 0) {
-      root.eventMode = 'static';
-      root.cursor = 'pointer';
-      root.hitArea = new PIXI.Rectangle(0, 0, cardW, CARD_H);
-      root.on('pointertap', () => {
+      buyBtn.eventMode = 'static';
+      buyBtn.cursor = 'pointer';
+      buyBtn.hitArea = new PIXI.Rectangle(0, 0, btnW, btnH);
+      buyBtn.on('pointertap', (e: PIXI.FederatedPointerEvent) => {
+        e.stopPropagation();
         if (this._dragMoved) return;
         this._purchase(product);
       });
@@ -744,9 +750,15 @@ export class CoolSummerEventPanel extends PIXI.Container {
   private _purchase(product: CoolSummerShopProduct): void {
     const result = CoolSummerEventManager.purchase(product.id);
     if (result.ok) {
-      AudioManager.play('purchase_tap');
-      ToastMessage.show(`获得 ${product.name}`);
+      const entry = this._grantToObtainEntry(product.grant);
       this._refresh();
+      if (entry) {
+        // ItemObtainOverlay 内播 ui_reward_fanfare（与升级/抽奖获得一致）
+        this._showObtainOverlay([entry]);
+      } else {
+        AudioManager.play('purchase_tap');
+        ToastMessage.show(`获得 ${product.name}`);
+      }
       return;
     }
     const messages: Record<string, string> = {
@@ -769,14 +781,18 @@ export class CoolSummerEventPanel extends PIXI.Container {
         .filter((e): e is ItemObtainEntry => e != null);
       this._refresh();
       if (entries.length > 0) {
-        void TextureCache.preloadKeys(['merge_chain_ribbon', 'pink_bar', ...this._obtainEntryIconKeys(entries)])
-          .finally(() => {
-            ItemObtainOverlay.show(entries, () => {});
-          });
+        this._showObtainOverlay(entries);
       }
       return;
     }
     ToastMessage.show(result.reason === 'not_complete' ? '请先兑换完本类奖励' : '暂时无法领取');
+  }
+
+  private _showObtainOverlay(entries: ItemObtainEntry[]): void {
+    void TextureCache.preloadKeys(['merge_chain_ribbon', 'pink_bar', ...this._obtainEntryIconKeys(entries)])
+      .finally(() => {
+        ItemObtainOverlay.show(entries, () => {});
+      });
   }
 
   private _grantToObtainEntry(grant: CoolSummerGrant): ItemObtainEntry | null {
