@@ -1,16 +1,18 @@
 #!/usr/bin/env python3
 """
 将 minigame/subpkg_deco/images/furniture 下 PNG 与现有家具体量对齐：
-- 最长边不超过 MAX_SIDE（默认 256；工坊大件仍用 --max-side 342）
+- 最长边不超过 MAX_SIDE（默认 256；工坊 / 清涟类主题用 --max-side 342 或 512）
 - RGBA + LANCZOS 缩小（不量化调色板，避免装修大图色带）
 - zlib compress_level=9 + optimize；默认仅当缩小了分辨率或新文件更小才覆盖；加 --force 则凡成功写出即覆盖（保证全量过一遍规范）
 - 注意：本脚本只缩小不放大；已按旧默认 171 入库的图需从高清原图重跑 rembg→crop 才能变清晰
+- 勿对工坊 sheet / qinglian_* 等高清档跑默认 256 整目录压缩
 
 用法（仓库根）:
   python3 scripts/compress_furniture_deco_pngs.py
   python3 scripts/compress_furniture_deco_pngs.py --force
   python3 scripts/compress_furniture_deco_pngs.py --dry-run
   python3 scripts/compress_furniture_deco_pngs.py --max-side 256 path/to/one.png
+  python3 scripts/compress_furniture_deco_pngs.py --max-side 512 --force minigame/.../qinglian_*.png
 """
 from __future__ import annotations
 
