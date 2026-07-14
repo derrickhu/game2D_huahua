@@ -382,8 +382,7 @@ export class MainScene implements Scene {
       const visible = Game.visibleBounds;
       this._sceneBg.position.set(visible.left, 0);
       this._sceneBg.width = visible.width;
-      // Pad 核心安全框之外也需要有底图；棋盘和详情栏仍在上层保持 750 宽。
-      this._sceneBg.height = Game.logicHeight;
+      this._sceneBg.height = BoardMetrics.topY;
     }
 
     this._infoBar.position.set(0, layout.infoBarY);
@@ -485,7 +484,7 @@ export class MainScene implements Scene {
       : null;
     let y = responsiveLayout?.topBarY ?? Game.safeTop;
 
-    // 花店场景背景铺满可见视口；棋盘/详情栏会在其上保持核心安全框布局。
+    // 上半部分花店场景背景（从屏幕顶部 y=0 覆盖到棋盘顶部）
     const sceneBgTex =
       TextureCache.get('shop_scene_bg_floral_nb2') ?? TextureCache.get('shop_scene_bg');
     if (sceneBgTex) {
@@ -493,7 +492,7 @@ export class MainScene implements Scene {
       const visible = Game.visibleBounds;
       sceneBg.position.set(visible.left, 0);
       sceneBg.width = visible.width;
-      sceneBg.height = Game.logicHeight;
+      sceneBg.height = BoardMetrics.topY;
       this.container.addChild(sceneBg);
       this._sceneBg = sceneBg;
     }

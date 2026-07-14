@@ -40,8 +40,6 @@ export class WorldMapPanel extends PIXI.Container {
   private _opening = false;
   private _assetUnsub: (() => void) | null = null;
   private _pageBg!: PIXI.Graphics;
-  /** Pad 核心安全框两侧的全屏地图延展底图。 */
-  private _pageBackdrop: PIXI.Sprite | null = null;
   private _scrollContent!: PIXI.Container;
   private _scrollMask!: PIXI.Graphics;
   private _topBar!: PIXI.Container;
@@ -196,15 +194,12 @@ export class WorldMapPanel extends PIXI.Container {
 
     // 整页不透明底色（禁止透出花店 UI，参考独立大地图页）
     this._pageBg = new PIXI.Graphics();
+    this._pageBg.beginFill(0x9AAB8C);
+    this._pageBg.drawRect(0, 0, W, H);
+    this._pageBg.endFill();
     this._pageBg.eventMode = 'static';
     this._pageBg.zIndex = 0;
     this.addChild(this._pageBg);
-
-    this._pageBackdrop = new PIXI.Sprite(PIXI.Texture.WHITE);
-    this._pageBackdrop.zIndex = 1;
-    this._pageBackdrop.eventMode = 'none';
-    this.addChild(this._pageBackdrop);
-    this._layoutFullBleedBackdrop();
 
     this._scrollMask = new PIXI.Graphics();
     this._scrollMask.beginFill(0xFFFFFF);
@@ -225,32 +220,6 @@ export class WorldMapPanel extends PIXI.Container {
     this._buildTopBar();
     EventBus.on('currency:changed', () => this._refreshHud());
     EventBus.on('currency:loaded', () => this._refreshHud());
-  }
-
-  /**
-   * 安全框模式下，地图主体和节点仍按 750 宽排布；此层只负责把地图氛围铺到 Pad 两侧，
-   * 避免露出上一个场景或默认白底。
-   */
-  private _layoutFullBleedBackdrop(): void {
-    const visible = Game.visibleBounds;
-    const H = Game.logicHeight;
-    this._pageBg.clear();
-    this._pageBg.beginFill(0x9AAB8C);
-    this._pageBg.drawRect(visible.left, 0, visible.width, H);
-    this._pageBg.endFill();
-
-    if (!this._pageBackdrop) return;
-    const tex = this._resolveWorldmapBgTexture();
-    if (!tex || tex.width <= 1 || tex.height <= 1) {
-      this._pageBackdrop.visible = false;
-      return;
-    }
-    const scale = Math.max(visible.width / tex.width, H / tex.height);
-    this._pageBackdrop.texture = tex;
-    this._pageBackdrop.anchor.set(0.5);
-    this._pageBackdrop.scale.set(scale);
-    this._pageBackdrop.position.set(visible.left + visible.width / 2, H / 2);
-    this._pageBackdrop.visible = true;
   }
 
   /** 底图缺失时回退到已加载的花店草地 / 主界面顶图，避免整屏纯色 */
@@ -367,25 +336,9 @@ export class WorldMapPanel extends PIXI.Container {
   private _rebuildMapContent(): void {
     this._scrollContent.removeChildren();
     this._nodeContainers = [];
-    this._layoutFullBleedBackdrop();
     this._drawMapBackground();
     this._buildNodes();
     this._setupDrag();
-  }
-
-  /** OverlayManager 在窗口或 Pad 分屏尺寸变化后调用。 */
-  relayout(): void {
-    if (!this.visible) return;
-    this._contentH = Game.logicHeight;
-    this._layoutFullBleedBackdrop();
-    this._scrollMask.clear();
-    this._scrollMask.beginFill(0xFFFFFF);
-    this._scrollMask.drawRect(0, 0, DESIGN_WIDTH, this._contentH);
-    this._scrollMask.endFill();
-    this._topBar.y = Game.safeTop;
-    this._rebuildMapContent();
-    this._applyBounce();
-    this._syncScroll();
   }
 
   private _createNodeContainer(node: MapNodeDef): PIXI.Container {
