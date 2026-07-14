@@ -38,6 +38,7 @@ import {
   furnitureTrayOpenTopY,
 } from '@/gameobjects/ui/FurnitureTray';
 import { RoomEditToolbar } from '@/gameobjects/ui/RoomEditToolbar';
+import { DecorationPanel } from '@/gameobjects/ui/DecorationPanel';
 import { TextureCache } from '@/utils/TextureCache';
 import { DECO_MAP, DecoDef, DecoSlot, SHOP_FURNITURE_DISPLAY_SCALE_MULTIPLIER, SHOP_FURNITURE_TEX_BASE_PX } from '@/config/DecorationConfig';
 import { resolveFurnitureTexture, collectFurniturePreloadKeys, FURNITURE_RENDER_MAP } from '@/config/FurnitureRenderConfig';
@@ -725,10 +726,11 @@ export class ShopScene implements Scene {
 
     this._refreshShopBuildingTexture();
     if (this._isEditMode) {
-      this._applySceneEditViewProfile(false, furnitureTrayOpenTopY(h, Game.safeBottom));
+      this._applySceneEditViewProfile(false, furnitureTrayOpenTopY(h));
     } else {
       this._applyBrowseViewScale();
     }
+    DecorationPanel.shared?.relayout();
     this._tutorialOverlay?.refreshLayout();
   }
 
@@ -828,8 +830,6 @@ export class ShopScene implements Scene {
   // ─────────────────── 背景 ───────────────────
 
   private _buildBackground(w: number, h: number): void {
-    const visible = Game.visibleBounds;
-    w = visible.width;
     if (!this._backgroundLayer) {
       this._backgroundLayer = new PIXI.Container();
       this._backgroundLayer.zIndex = -1000;
@@ -837,7 +837,6 @@ export class ShopScene implements Scene {
     } else {
       this._backgroundLayer.removeChildren().forEach(ch => ch.destroy({ children: true }));
     }
-    this._backgroundLayer.position.set(visible.left, visible.top);
 
     // 默认使用草地外景；个别支线房可在 SceneRenovationProfile 指定专属外景底图。
     const profile = getSceneRenovationProfile(CurrencyManager.state.sceneId);
@@ -1140,7 +1139,9 @@ export class ShopScene implements Scene {
   }
 
   private _designPosFromFederated(e: PIXI.FederatedPointerEvent): { x: number; y: number } {
-    return Game.globalToDesign(e.global.x, e.global.y);
+    const designX = (e.global.x / Game.dpr) * Game.designWidth / Game.screenWidth;
+    const designY = (e.global.y / Game.dpr) * Game.coordinateHeight / Game.screenHeight;
+    return { x: designX, y: designY };
   }
 
   private _roomLocalFromDesign(designX: number, designY: number): { x: number; y: number } {
@@ -1158,7 +1159,10 @@ export class ShopScene implements Scene {
       return { x: (native as PointerEvent).clientX, y: (native as PointerEvent).clientY };
     }
     const g = this._designPosFromFederated(e);
-    return Game.designToClient(g.x, g.y);
+    return {
+      x: (g.x / Game.designWidth) * Game.screenWidth,
+      y: (g.y / Game.coordinateHeight) * Game.screenHeight,
+    };
   }
 
   /** 结束店主拖拽/按下态，避免微信端丢失 pointerup 后一直半透明且占用手势 */
@@ -1194,7 +1198,8 @@ export class ShopScene implements Scene {
     }
     this._ownerDragging = true;
     if (pointerId != null) this._ownerPointerDownId = pointerId;
-    const { x: designX, y: designY } = Game.clientToDesign(clientX, clientY);
+    const designX = clientX * Game.designWidth / Game.screenWidth;
+    const designY = clientY * Game.coordinateHeight / Game.screenHeight;
     const local = this._roomLocalFromDesign(designX, designY);
     this._ownerDragOffset.x = owner.x - local.x;
     this._ownerDragOffset.y = owner.y - local.y;
@@ -1330,7 +1335,8 @@ export class ShopScene implements Scene {
       }
 
       if (!this._ownerDragging) return;
-      const { x: designX, y: designY } = Game.clientToDesign(clientX, clientY);
+      const designX = clientX * Game.designWidth / Game.screenWidth;
+      const designY = clientY * Game.coordinateHeight / Game.screenHeight;
       const c = this._roomContainer;
       const s = c.scale.x || 1;
       const localX = (designX - c.position.x) / s + c.pivot.x;
@@ -3193,7 +3199,7 @@ export class ShopScene implements Scene {
     this._setShopHudVisible(false);
 
     const h = Game.logicHeight;
-    const trayTopY = furnitureTrayOpenTopY(h, Game.safeBottom);
+    const trayTopY = furnitureTrayOpenTopY(h);
     this._applySceneEditViewProfile(true, trayTopY);
 
     // 启用拖拽系统
@@ -3580,7 +3586,7 @@ export class ShopScene implements Scene {
     this._viewScaleMin = profile.editViewScaleMin;
     this._viewScaleMax = profile.editViewScaleMax;
     this._viewScalePanBaseline = profile.editViewScaleDefault;
-    const topY = trayTopY ?? furnitureTrayOpenTopY(Game.logicHeight, Game.safeBottom);
+    const topY = trayTopY ?? furnitureTrayOpenTopY(Game.logicHeight);
     if (resetZoom) {
       this._applyViewZoom(profile.editViewScaleDefault);
     } else {
@@ -3622,7 +3628,7 @@ export class ShopScene implements Scene {
       const bw = sp.texture.width * Math.abs(sp.scale.x) * s;
       const bh = sp.texture.height * Math.abs(sp.scale.y) * s;
       const viewH = this._isEditMode
-        ? furnitureTrayOpenTopY(Game.logicHeight, Game.safeBottom)
+        ? furnitureTrayOpenTopY(Game.logicHeight)
         : computeShopBrowseMaxY(Game.logicHeight, Game.safeBottom);
       maxX = Math.max(maxX, (bw - DESIGN_WIDTH) * 0.5 + 24);
       maxY = Math.max(maxY, (bh - viewH) * 0.45 + 16);
@@ -3794,8 +3800,8 @@ export class ShopScene implements Scene {
       if (!this._roomPanDragging || ev.pointerId !== this._roomPanPointerId) return;
       const dxClient = ev.clientX - this._roomPanDragStartClientX;
       const dyClient = ev.clientY - this._roomPanDragStartClientY;
-      this._roomPanX = this._roomPanDragStartPanX + dxClient / Game.contentScale;
-      this._roomPanY = this._roomPanDragStartPanY + dyClient / Game.contentScale;
+      this._roomPanX = this._roomPanDragStartPanX + dxClient * Game.designWidth / Game.screenWidth;
+      this._roomPanY = this._roomPanDragStartPanY + dyClient * Game.coordinateHeight / Game.screenHeight;
       this._syncRoomContainerTransform();
     };
 
@@ -3865,7 +3871,7 @@ export class ShopScene implements Scene {
    */
   private _sliderLocalYFromClientY(clientY: number): number {
     const H = this._zoomSliderTrackH;
-    const gh = Game.clientToDesign(0, clientY).y;
+    const gh = clientY * Game.coordinateHeight / Game.screenHeight;
     const topY = this._zoomSlider?.position.y ?? (Game.logicHeight - H) / 2;
     return Math.max(0, Math.min(H, gh - topY));
   }

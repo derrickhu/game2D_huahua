@@ -85,7 +85,7 @@ const MERCH_SHELF_CLUSTER_SHIFT = -0.08;
 const MERCH_ITEMS_CLUSTER_OFFSET_REF = -36;
 
 function nativeClientToDesignY(clientY: number): number {
-  return Game.clientToDesign(0, clientY).y;
+  return (clientY * Game.designHeight) / Game.screenHeight;
 }
 
 function federatedPointerToDesignY(e: PIXI.FederatedPointerEvent): number {
@@ -93,7 +93,7 @@ function federatedPointerToDesignY(e: PIXI.FederatedPointerEvent): number {
   if (n != null && typeof (n as PointerEvent).clientY === 'number') {
     return nativeClientToDesignY((n as PointerEvent).clientY);
   }
-  return Game.globalToDesign(e.global.x, e.global.y).y;
+  return (e.global.y / Game.dpr) * (Game.designHeight / Game.screenHeight);
 }
 
 /** 剩余秒数 → `HH:MM:SS`（商店层板底部「刷新时间」） */
@@ -240,17 +240,6 @@ export class MerchShopPanel extends PIXI.Container {
       .finally(() => {
         this._opening = false;
       });
-  }
-
-  relayout(): void {
-    if (!this.visible) return;
-    const h = Game.logicHeight;
-    this._bg.clear();
-    this._bg.beginFill(0x000000, 0.5);
-    this._bg.drawRect(0, 0, DESIGN_WIDTH, h);
-    this._bg.endFill();
-    this._frameRoot.position.set(DESIGN_WIDTH / 2, h / 2);
-    this._rebuildFrameContents();
   }
 
   private _openReady(): void {

@@ -743,7 +743,8 @@ export class CoolSummerEventPanel extends PIXI.Container {
   private _rawToDesign(e: PointerEvent): { x: number; y: number } {
     const cx = e.clientX ?? 0;
     const cy = e.clientY ?? 0;
-    return Game.clientToDesign(cx, cy);
+    const k = Game.designWidth / Game.screenWidth;
+    return { x: cx * k, y: cy * k };
   }
 
   private _purchase(product: CoolSummerShopProduct): void {

@@ -25,24 +25,6 @@ export interface ViewportMetrics {
   safeBottomPx: number;
 }
 
-export type ViewportScaleMode = 'width-fit' | 'height-fit';
-
-export interface ViewportLayout {
-  mode: ViewportScaleMode;
-  /** CSS 逻辑像素到设计坐标的缩放，不包含 DPR。 */
-  contentScale: number;
-  /** 核心 750 宽内容在窗口中的 CSS 像素偏移。 */
-  contentOffsetX: number;
-  contentOffsetY: number;
-  /** 以核心内容左上角为原点，完整屏幕在设计坐标中的可见范围。 */
-  visibleLeft: number;
-  visibleTop: number;
-  visibleWidth: number;
-  visibleHeight: number;
-  safeTop: number;
-  safeBottom: number;
-}
-
 export interface MainSceneLayout {
   topBarY: number;
   shopY: number;
@@ -71,8 +53,6 @@ export const MAIN_MIN_MIDDLE_GAP = 12;
 export const MAIN_INFO_CONTENT_HEIGHT = 76;
 /** 4:3 平板仍需容纳完整 9 行。 */
 export const MIN_RESPONSIVE_CELL_SIZE = 44;
-/** 核心玩法最小设计高度；更宽的 Pad 改为高度适配，避免纵向压扁。 */
-export const MIN_CONTENT_HEIGHT = 1334;
 
 /** 装修页房屋内部坐标以 390×844 长屏为母版，切换设备只平移整个房屋层。 */
 export const SHOP_ROOM_CANONICAL_CENTER_Y =
@@ -86,35 +66,6 @@ export const SHOP_BROWSE_BOTTOM_RESERVED = 260;
 
 const finitePositive = (value: number | undefined, fallback: number): number =>
   Number.isFinite(value) && (value as number) > 0 ? (value as number) : fallback;
-
-/**
- * 计算核心安全框。
- * 长屏手机沿用宽适配；4:3 等短宽比设备按高度适配，并将 750 宽核心内容水平居中。
- */
-export function computeViewportLayout(
-  metrics: ViewportMetrics,
-  enablePadSafeFrame = true,
-): ViewportLayout {
-  const widthScale = metrics.width / DESIGN_WIDTH;
-  const heightScale = metrics.height / MIN_CONTENT_HEIGHT;
-  const useHeightFit = enablePadSafeFrame && heightScale < widthScale;
-  const contentScale = Math.max(0.0001, useHeightFit ? heightScale : widthScale);
-  const contentOffsetX = Math.max(0, (metrics.width - DESIGN_WIDTH * contentScale) / 2);
-  // 竖屏 UI 始终从窗口顶部起算；长屏多出的高度留给场景布局，不做垂直 letterbox。
-  const contentOffsetY = 0;
-  return {
-    mode: useHeightFit ? 'height-fit' : 'width-fit',
-    contentScale,
-    contentOffsetX,
-    contentOffsetY,
-    visibleLeft: -contentOffsetX / contentScale,
-    visibleTop: -contentOffsetY / contentScale,
-    visibleWidth: metrics.width / contentScale,
-    visibleHeight: metrics.height / contentScale,
-    safeTop: Math.max(0, (metrics.safeTopPx - contentOffsetY) / contentScale),
-    safeBottom: Math.max(0, (metrics.safeBottomPx - contentOffsetY) / contentScale),
-  };
-}
 
 /**
  * 将窗口、胶囊、安全区数据归一到同一个逻辑像素坐标系。
@@ -240,12 +191,7 @@ export function computeShopRoomCenterY(
 ): number {
   const headerBottom = safeTop + topBarHeight + 16 + progressBarHeight;
   const bottomAnchored = logicHeight - safeBottom - SHOP_ROOM_CENTER_FROM_SAFE_BOTTOM;
-  const compactProportional =
-    SHOP_ROOM_CANONICAL_CENTER_Y * logicHeight / SHOP_REFERENCE_LOGIC_HEIGHT;
-  const desiredCenter = logicHeight < SHOP_REFERENCE_LOGIC_HEIGHT
-    ? compactProportional
-    : bottomAnchored;
-  return Math.max(headerBottom + SHOP_ROOM_MIN_GAP_BELOW_HEADER, desiredCenter);
+  return Math.max(headerBottom + SHOP_ROOM_MIN_GAP_BELOW_HEADER, bottomAnchored);
 }
 
 /** 浏览态可摆放下沿与底部操作区保持固定距离。 */

@@ -85,7 +85,7 @@ function dressGridListTopPad(availH: number, totalRows: number, ch: number): num
 }
 
 function nativeClientToDesignY(clientY: number): number {
-  return Game.clientToDesign(0, clientY).y;
+  return (clientY * Game.designHeight) / Game.screenHeight;
 }
 
 function federatedPointerToDesignY(e: PIXI.FederatedPointerEvent): number {
@@ -93,7 +93,7 @@ function federatedPointerToDesignY(e: PIXI.FederatedPointerEvent): number {
   if (native != null && typeof (native as PointerEvent).clientY === 'number') {
     return nativeClientToDesignY((native as PointerEvent).clientY);
   }
-  return Game.globalToDesign(e.global.x, e.global.y).y;
+  return e.global.y / Game.scale;
 }
 
 function isActivityLockedOutfit(outfit: Outfit): boolean {
@@ -175,15 +175,6 @@ export class DressUpPanel extends PIXI.Container {
       this._opening = false;
       this._openReady();
     });
-  }
-
-  relayout(): void {
-    if (!this.visible) return;
-    const scrollY = this._scrollY;
-    this._finishGridScroll();
-    this._applyShellLayout();
-    this._rebuildGrid();
-    this._setScrollY(scrollY);
   }
 
   private _openReady(): void {

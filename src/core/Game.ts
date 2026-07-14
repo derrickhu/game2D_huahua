@@ -5,14 +5,9 @@ import * as PIXI from 'pixi.js';
 import { ShaderSystem } from '@pixi/core';
 import { TweenManager } from './TweenManager';
 import { BuildingManager } from '@/managers/BuildingManager';
+import { ENABLE_RESPONSIVE_LAYOUT_V2 } from '@/config/FeatureFlags';
 import {
-  ENABLE_PAD_SAFE_FRAME,
-  ENABLE_RESPONSIVE_LAYOUT_V2,
-} from '@/config/FeatureFlags';
-import {
-  computeViewportLayout,
   normalizeViewportMetrics,
-  type ViewportLayout,
   type ViewportMetrics,
 } from '@/config/ResponsiveLayout';
 
@@ -111,13 +106,6 @@ class GameClass {
 
   /** 缩放比 */
   scale = 1;
-  /** CSS 逻辑像素到设计坐标的缩放（不含 DPR）。 */
-  contentScale = 1;
-  /** 核心安全框在窗口中的 CSS 像素偏移。 */
-  contentOffsetX = 0;
-  contentOffsetY = 0;
-  /** 当前采用宽适配还是 Pad 高度适配。 */
-  viewportMode: ViewportLayout['mode'] = 'width-fit';
 
   /** 像素密度 */
   dpr = 1;
@@ -261,7 +249,6 @@ class GameClass {
 
     // 整体缩放到设计分辨率
     this.stage.scale.set(this.scale, this.scale);
-    this.stage.position.set(this.contentOffsetX * this.dpr, this.contentOffsetY * this.dpr);
 
     // 全局 ticker：Tween + 棋盘工具/宝箱 CD（与当前场景无关；切花店装修时主场景 _update 已移除，仍须走表）
     this.ticker.add(() => {
@@ -306,14 +293,8 @@ class GameClass {
   refreshViewport(resizeInfo?: any): boolean {
     if (!this._initialized) return false;
     const next = this._readViewportMetrics(resizeInfo);
-    const nextLayout = computeViewportLayout(
-      next,
-      ENABLE_RESPONSIVE_LAYOUT_V2 && ENABLE_PAD_SAFE_FRAME,
-    );
-    const nextSafeTop = Math.round(nextLayout.safeTop);
-    const nextSafeBottom = ENABLE_RESPONSIVE_LAYOUT_V2
-      ? Math.round(nextLayout.safeBottom)
-      : 0;
+    const nextSafeTop = Math.round(next.safeTopPx * this.designWidth / next.width);
+    const nextSafeBottom = Math.round(next.safeBottomPx * this.designWidth / next.width);
     if (
       next.width === this.screenWidth
       && next.height === this.screenHeight
@@ -337,7 +318,6 @@ class GameClass {
       }
     }
     this.stage.scale.set(this.scale, this.scale);
-    this.stage.position.set(this.contentOffsetX * this.dpr, this.contentOffsetY * this.dpr);
     console.log(`[Game] viewport 已更新: ${this.screenWidth}x${this.screenHeight}, safeTop=${this.safeTop}, safeBottom=${this.safeBottom}`);
     for (const listener of [...this._viewportListeners]) {
       try { listener(); } catch (e) { console.warn('[Game] viewport listener 失败:', e); }
@@ -346,22 +326,14 @@ class GameClass {
   }
 
   private _assignViewportMetrics(metrics: ViewportMetrics): void {
-    const layout = computeViewportLayout(
-      metrics,
-      ENABLE_RESPONSIVE_LAYOUT_V2 && ENABLE_PAD_SAFE_FRAME,
-    );
     this.screenWidth = metrics.width;
     this.screenHeight = metrics.height;
     this.dpr = metrics.pixelRatio;
-    this.contentScale = layout.contentScale;
-    this.contentOffsetX = layout.contentOffsetX;
-    this.contentOffsetY = layout.contentOffsetY;
-    this.viewportMode = layout.mode;
-    this.safeTop = Math.round(layout.safeTop);
+    this.safeTop = Math.round(metrics.safeTopPx * this.designWidth / metrics.width);
     this.safeBottom = ENABLE_RESPONSIVE_LAYOUT_V2
-      ? Math.round(layout.safeBottom)
+      ? Math.round(metrics.safeBottomPx * this.designWidth / metrics.width)
       : 0;
-    this.scale = this.contentScale * metrics.pixelRatio;
+    this.scale = metrics.width / this.designWidth * metrics.pixelRatio;
   }
 
   private _readViewportMetrics(resizeInfo?: any): ViewportMetrics {
@@ -439,42 +411,12 @@ class GameClass {
 
   /** 获取设计分辨率下的逻辑高度 */
   get logicHeight(): number {
-    return this.screenHeight / this.contentScale;
+    return this.screenHeight / this.screenWidth * this.designWidth;
   }
 
   /** 指针 Y 换算高度；关闭响应式开关时完整回退旧版固定设计高。 */
   get coordinateHeight(): number {
     return ENABLE_RESPONSIVE_LAYOUT_V2 ? this.logicHeight : this.designHeight;
-  }
-
-  /** 完整窗口在核心 750 坐标系中的可见范围；Pad 左侧通常为负值。 */
-  get visibleBounds(): { left: number; top: number; width: number; height: number; right: number; bottom: number } {
-    const left = -this.contentOffsetX / this.contentScale;
-    const top = -this.contentOffsetY / this.contentScale;
-    const width = this.screenWidth / this.contentScale;
-    const height = this.screenHeight / this.contentScale;
-    return { left, top, width, height, right: left + width, bottom: top + height };
-  }
-
-  /** 窗口 CSS 坐标转核心设计坐标，包含 Pad 居中偏移。 */
-  clientToDesign(clientX: number, clientY: number): { x: number; y: number } {
-    return {
-      x: (clientX - this.contentOffsetX) / this.contentScale,
-      y: (clientY - this.contentOffsetY) / this.contentScale,
-    };
-  }
-
-  /** renderer 全局物理坐标转核心设计坐标。 */
-  globalToDesign(globalX: number, globalY: number): { x: number; y: number } {
-    return this.clientToDesign(globalX / this.dpr, globalY / this.dpr);
-  }
-
-  /** 核心设计坐标转窗口 CSS 坐标。 */
-  designToClient(designX: number, designY: number): { x: number; y: number } {
-    return {
-      x: designX * this.contentScale + this.contentOffsetX,
-      y: designY * this.contentScale + this.contentOffsetY,
-    };
   }
 }
 

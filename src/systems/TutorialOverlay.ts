@@ -1556,9 +1556,7 @@ export class TutorialOverlay {
       this._overlay.visible = true;
 
       const rect = this._getEditCompleteSpotlight?.() ?? {
-        ...furnitureTrayEditCompleteSpotlightRect(
-          furnitureTrayOpenTopY(Game.logicHeight, Game.safeBottom),
-        ),
+        ...furnitureTrayEditCompleteSpotlightRect(furnitureTrayOpenTopY(Game.logicHeight)),
         r: 28,
       };
       this._drawSpotlightMask([rect], 0.62);

@@ -410,12 +410,12 @@ function shouldUseNextLevelUnlockLabel(deco: DecoDef, sceneOk: boolean): boolean
 
 /** global pixel -> design coordinate */
 function globalToDesignY(globalY: number): number {
-  return Game.globalToDesign(0, globalY).y;
+  return globalY / Game.scale;
 }
 
 /** 与 BoardView / FurnitureDragSystem 一致：原生 clientY → 设计坐标纵轴 */
 function nativeClientToDesignY(clientY: number): number {
-  return Game.clientToDesign(0, clientY).y;
+  return (clientY * Game.designHeight) / Game.screenHeight;
 }
 
 function federatedPointerToDesignY(e: PIXI.FederatedPointerEvent): number {

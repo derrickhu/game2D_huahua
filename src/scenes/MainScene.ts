@@ -378,12 +378,7 @@ export class MainScene implements Scene {
     this._topBar.position.set(0, layout.topBarY);
     this._shopArea.position.set(0, layout.shopY);
     this._boardView.relayout();
-    if (this._sceneBg) {
-      const visible = Game.visibleBounds;
-      this._sceneBg.position.set(visible.left, 0);
-      this._sceneBg.width = visible.width;
-      this._sceneBg.height = BoardMetrics.topY;
-    }
+    if (this._sceneBg) this._sceneBg.height = BoardMetrics.topY;
 
     this._infoBar.position.set(0, layout.infoBarY);
     this._infoBar.relayout(layout.infoBarHeight, layout.infoBarSafeBottom);
@@ -489,9 +484,8 @@ export class MainScene implements Scene {
       TextureCache.get('shop_scene_bg_floral_nb2') ?? TextureCache.get('shop_scene_bg');
     if (sceneBgTex) {
       const sceneBg = new PIXI.Sprite(sceneBgTex);
-      const visible = Game.visibleBounds;
-      sceneBg.position.set(visible.left, 0);
-      sceneBg.width = visible.width;
+      sceneBg.position.set(0, 0);
+      sceneBg.width = DESIGN_WIDTH;
       sceneBg.height = BoardMetrics.topY;
       this.container.addChild(sceneBg);
       this._sceneBg = sceneBg;

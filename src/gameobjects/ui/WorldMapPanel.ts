@@ -852,8 +852,10 @@ export class WorldMapPanel extends PIXI.Container {
    * 若两者混用，在高 DPR 设备上按下起点会比 move 坐标大一截，轻触也会被判定为拖拽。
    */
   private _designFromFederated(e: PIXI.FederatedPointerEvent): { gx: number; gy: number } {
-    const design = Game.globalToDesign(e.global.x, e.global.y);
-    return { gx: design.x, gy: design.y };
+    return {
+      gx: (e.global.x / Game.dpr) * Game.designWidth / Game.screenWidth,
+      gy: (e.global.y / Game.dpr) * Game.designWidth / Game.screenWidth,
+    };
   }
 
   private _rawToDesign(e: any): { gx: number; gy: number } {
@@ -862,8 +864,12 @@ export class WorldMapPanel extends PIXI.Container {
       : { left: 0, top: 0, width: Game.screenWidth, height: Game.screenHeight };
     const clientX = e.clientX ?? e.pageX ?? (e.changedTouches?.[0]?.clientX ?? 0);
     const clientY = e.clientY ?? e.pageY ?? (e.changedTouches?.[0]?.clientY ?? 0);
-    const design = Game.clientToDesign(clientX - rect.left, clientY - rect.top);
-    return { gx: design.x, gy: design.y };
+    const ratioX = Game.designWidth / (rect.width || Game.screenWidth);
+    const ratioY = Game.logicHeight / (rect.height || Game.screenHeight);
+    return {
+      gx: (clientX - rect.left) * ratioX,
+      gy: (clientY - rect.top) * ratioY,
+    };
   }
 
   private _cleanupRawEvents(): void {

@@ -82,17 +82,6 @@ export class CheckInPanel extends PIXI.Container {
     if (this._isOpen) this._refresh();
   }
 
-  relayout(): void {
-    if (!this.visible) return;
-    const h = Game.logicHeight;
-    this._bg.clear();
-    this._bg.beginFill(0x000000, 0.6);
-    this._bg.drawRect(0, 0, DESIGN_WIDTH, h);
-    this._bg.endFill();
-    this._bg.hitArea = new PIXI.Rectangle(0, 0, DESIGN_WIDTH, h);
-    this._refresh();
-  }
-
   /** 将签到内容层本地坐标转为场景全局坐标（用于飞入动效与 MainScene.container 对齐） */
   contentToGlobal(local: { x: number; y: number }): PIXI.Point {
     return this._content.toGlobal(new PIXI.Point(local.x, local.y));
