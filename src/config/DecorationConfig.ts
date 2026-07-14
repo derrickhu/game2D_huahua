@@ -209,7 +209,7 @@ export const DECO_DEFS: DecoDef[] = [
   // ═══════ ① 花架 / 展示架 (shelf) ═══════
   // 入门花架：低价带仍便于首周入手，但整体高于旧版（约多攒数单）
   { id: 'shelf_wood',    name: '简约木花架',  slot: DecoSlot.SHELF, rarity: DecoRarity.COMMON, cost: 5, starValue: 2, icon: 'shelf_wood',   desc: '三层原木架，朴素实用', defaultScale: 1.6, decorationPanelTab: 'flower_room', allowedSceneIds: ['flower_shop'] },
-  { id: 'shelf_step',    name: '阶梯花架',    slot: DecoSlot.SHELF, rarity: DecoRarity.COMMON, cost: 655, starValue: 2, icon: 'shelf_step',   desc: '层层叠叠，像小山丘', unlockRequirement: { level: 2 }, defaultScale: 1.35 },
+  { id: 'shelf_step',    name: '阶梯花架',    slot: DecoSlot.SHELF, rarity: DecoRarity.COMMON, cost: 655, starValue: 2, icon: 'shelf_step',   desc: '层层叠叠，像小山丘', unlockRequirement: { level: 2 }, defaultScale: 1.55 },
   { id: 'shelf_long',    name: '长条花台',    slot: DecoSlot.SHELF, rarity: DecoRarity.FINE,   cost: 835, starValue: 2, icon: 'shelf_long',   desc: '靠墙摆放的温馨花台', unlockRequirement: { level: 5 }, defaultScale: 1.25, decorationPanelTab: 'garden' },
   { id: 'shelf_iron',    name: '铁艺旋转架',  slot: DecoSlot.SHELF, rarity: DecoRarity.COMMON, cost: 1305, starValue: 3, icon: 'shelf_iron',   desc: '优雅的法式铁艺风格', unlockRequirement: { level: 7 }, defaultScale: 1.5 },
   { id: 'shelf_glass',   name: '玻璃展示柜',  slot: DecoSlot.SHELF, rarity: DecoRarity.RARE,   cost: 3525, starValue: 6, icon: 'shelf_glass',  desc: '高端玻璃门展示柜', unlockRequirement: { level: 10 }, defaultScale: 1.45 },
@@ -217,7 +217,7 @@ export const DECO_DEFS: DecoDef[] = [
   // ═══════ ② 桌台 / 工作台 (table) ═══════
   { id: 'table_counter',  name: '木质收银台',  slot: DecoSlot.TABLE, rarity: DecoRarity.COMMON, cost: 260, starValue: 3, icon: 'table_counter', desc: '温暖的原木收银台', defaultScale: 1.53 },
   { id: 'table_drawer',   name: '抽屉式柜台',  slot: DecoSlot.TABLE, rarity: DecoRarity.FINE, cost: 2015, starValue: 4, icon: 'table_drawer',  desc: '带抽屉的实用柜台', unlockRequirement: { level: 9 }, defaultScale: 1.23 },
-  { id: 'table_work',     name: '花艺工作台',  slot: DecoSlot.TABLE, rarity: DecoRarity.FINE,   cost: 1565, starValue: 2, icon: 'table_work',    desc: '蜜木双层台，瓶瓶罐罐都是好看的花', unlockRequirement: { level: 6 }, defaultScale: 1.38 },
+  { id: 'table_work',     name: '花艺工作台',  slot: DecoSlot.TABLE, rarity: DecoRarity.FINE,   cost: 1565, starValue: 2, icon: 'table_work',    desc: '蜜木双层台，瓶瓶罐罐都是好看的花', unlockRequirement: { level: 6 }, defaultScale: 1.28 },
   { id: 'table_marble',   name: '大理石桌',    slot: DecoSlot.TABLE, rarity: DecoRarity.RARE,   cost: 2840, starValue: 7, icon: 'table_marble',  desc: '冷峻优雅的大理石面', unlockRequirement: { level: 9 }, defaultScale: 1.38, decorationPanelTab: 'furniture' },
 
   // ═══════ ③ 灯具 (light) ═══════
@@ -245,7 +245,7 @@ export const DECO_DEFS: DecoDef[] = [
   // ═══════ ⑥ 庭院 / 户外 (garden) ═══════
   { id: 'garden_flowerbed', name: '小花圃',    slot: DecoSlot.GARDEN, rarity: DecoRarity.COMMON, cost: 200, starValue: 1,  icon: 'garden_flowerbed', desc: '门前的一小片花圃', defaultScale: 1.28 },
   { id: 'garden_arbor',    name: '藤蔓凉亭',   slot: DecoSlot.GARDEN, rarity: DecoRarity.FINE,   cost: 1735, starValue: 2, icon: 'garden_arbor',    desc: '紫藤木亭轻线稿，自然草边', unlockRequirement: { level: 5 }, defaultScale: 2.7 },
-  { id: 'garden_arch',     name: '玫瑰花廊',   slot: DecoSlot.GARDEN, rarity: DecoRarity.RARE,   cost: 3770, starValue: 9, icon: 'garden_arch',     desc: '双拱玫瑰廊轻线稿，无菱形草皮', unlockRequirement: { level: 7 }, defaultScale: 2.13 },
+  { id: 'garden_arch',     name: '玫瑰花廊',   slot: DecoSlot.GARDEN, rarity: DecoRarity.RARE,   cost: 3770, starValue: 9, icon: 'garden_arch',     desc: '双拱玫瑰廊轻线稿，无菱形草皮', unlockRequirement: { level: 7 }, defaultScale: 2.53 },
   { id: 'garden_zen',      name: '日式枯山水', slot: DecoSlot.GARDEN, rarity: DecoRarity.RARE, cost: 2140, starValue: 6, icon: 'garden_zen',      desc: '柔线枯山水浅皿，无硬方框', unlockRequirement: { level: 8 }, defaultScale: 1.63 },
 
   // ═══════ ⑦ 花店扩展家具（NB2 批次，画风与房间壳一致；缩放可后续 GM 校准）═══════
@@ -271,7 +271,7 @@ export const DECO_DEFS: DecoDef[] = [
   { id: 'orn_flora_fiddle_leaf_pot', name: '琴叶榕大绿植', slot: DecoSlot.ORNAMENT, rarity: DecoRarity.FINE, cost: 14000, starValue: 1, icon: 'orn_flora_fiddle_leaf_pot', desc: '高筒奶油陶盆里的琴叶榕，一角立刻变森系', unlockRequirement: { level: 16 }, defaultScale: 1.18 },
   { id: 'orn_flora_pink_phalaenopsis_pot', name: '粉蝶兰丛盆', slot: DecoSlot.ORNAMENT, rarity: DecoRarity.FINE, cost: 15000, starValue: 2, icon: 'orn_flora_pink_phalaenopsis_pot', desc: '小紫盆上多梗盛放的粉色蝴蝶兰，唇瓣形态准确', unlockRequirement: { level: 17 }, defaultScale: 0.88 },
   // 宣传款：仅广告解锁购买资格 + 花愿购买，不设花店等级门槛（见 AdConfig.AD_UNLOCK_DECO_IDS）
-  { id: 'promo_floral_sofa',  name: '花漾木扶手沙发', slot: DecoSlot.ORNAMENT, rarity: DecoRarity.RARE, cost: 299, starValue: 6, icon: 'promo_floral_sofa', desc: '宣传图同款浅木扶手双人沙发，碎花抱枕很适合休息角', defaultScale: 1.18, decorationPanelTab: 'furniture' },
+  { id: 'promo_floral_sofa',  name: '花漾木扶手沙发', slot: DecoSlot.ORNAMENT, rarity: DecoRarity.RARE, cost: 299, starValue: 6, icon: 'promo_floral_sofa', desc: '宣传图同款浅木扶手双人沙发，碎花抱枕很适合休息角', defaultScale: 1.48, decorationPanelTab: 'furniture' },
 
   // ═══════ 家具工坊专属（workshopExclusive：仅制作获得，不进直购）═══════
   { id: 'workshop_plush_green_sofa', name: '弧翼大沙发', slot: DecoSlot.ORNAMENT, rarity: DecoRarity.LIMITED, cost: 0, starValue: 9, icon: 'workshop_plush_green_sofa', desc: '工坊匠心：明亮春绿三人沙发，双侧胡桃木扶手，橙白撞色抱枕', workshopExclusive: true, defaultScale: 2.08, decorationPanelTab: 'furniture' },
@@ -289,7 +289,7 @@ export const DECO_DEFS: DecoDef[] = [
   { id: 'workshop_willow_wood_bay_window', name: '暖阳飘窗', slot: DecoSlot.WALLART, rarity: DecoRarity.LIMITED, cost: 0, starValue: 10, icon: 'workshop_willow_wood_bay_window', desc: '工坊匠心：暖木细框飘窗座，黄油黄抱枕，窗外垂柳疏影', workshopExclusive: true, defaultScale: 2.52, decorationPanelTab: 'furniture' },
   { id: 'workshop_summer_dining_chair', name: '夏日餐椅', slot: DecoSlot.ORNAMENT, rarity: DecoRarity.LIMITED, cost: 0, starValue: 7, icon: 'workshop_summer_dining_chair', desc: '工坊匠心：蜜色木框配薄荷绿坐垫，落地可四面旋转，适合围着夏日餐桌摆', workshopExclusive: true, stackable: true, maxOwned: 4, defaultScale: 0.85, decorationPanelTab: 'furniture' },
 
-  { id: 'promo_wood_tea_table', name: '原木花茶几', slot: DecoSlot.TABLE, rarity: DecoRarity.FINE, cost: 359, starValue: 2, icon: 'promo_wood_tea_table', desc: '厚木板小茶几，摆一杯花茶就有午后感', defaultScale: 0.98, decorationPanelTab: 'furniture' },
+  { id: 'promo_wood_tea_table', name: '原木花茶几', slot: DecoSlot.TABLE, rarity: DecoRarity.FINE, cost: 359, starValue: 2, icon: 'promo_wood_tea_table', desc: '厚木板小茶几，摆一杯花茶就有午后感', defaultScale: 1.28, decorationPanelTab: 'furniture' },
   { id: 'promo_petal_chaise', name: '花瓣奶油躺椅', slot: DecoSlot.ORNAMENT, rarity: DecoRarity.RARE, cost: 920, starValue: 5, icon: 'promo_petal_chaise', desc: '奶油躺椅配花瓣靠背，午后小憩像躺进花心里', defaultScale: 1.15, decorationPanelTab: 'furniture' },
   { id: 'promo_mint_fridge', name: '薄荷小冰箱', slot: DecoSlot.LIGHT, rarity: DecoRarity.FINE, cost: 780, starValue: 4, icon: 'promo_mint_fridge', desc: '圆角复古冰箱，冰饮和鲜花都能清清爽爽', defaultScale: 1.08 },
   // ═══════ 前期精致厨居线（Lv2–7：吸引新手，售价略高于同级）═══════
@@ -334,7 +334,7 @@ export const DECO_DEFS: DecoDef[] = [
   { id: 'greenhouse_pot_bud', name: '花苞小盆栽', slot: DecoSlot.ORNAMENT, rarity: DecoRarity.COMMON, cost: 180, starValue: 1, icon: 'greenhouse_pot_bud', desc: '粉尖花苞快要开了', unlockRequirement: { flowerCollectionItemId: 'flower_fresh_2' }, defaultScale: 0.48, decorationPanelTab: 'flower_room', allowedSceneIds: ['flower_shop'] },
   { id: 'greenhouse_pot_daisy', name: '雏菊小盆栽', slot: DecoSlot.ORNAMENT, rarity: DecoRarity.COMMON, cost: 280, starValue: 2, icon: 'greenhouse_pot_daisy', desc: '白瓣小黄心', unlockRequirement: { flowerCollectionItemId: 'flower_fresh_3' }, defaultScale: 0.5, decorationPanelTab: 'flower_room', allowedSceneIds: ['flower_shop'] },
   { id: 'greenhouse_pot_sunflower', name: '向日葵小盆栽', slot: DecoSlot.ORNAMENT, rarity: DecoRarity.COMMON, cost: 380, starValue: 2, icon: 'greenhouse_pot_sunflower', desc: '一小束阳光', unlockRequirement: { flowerCollectionItemId: 'flower_fresh_4' }, defaultScale: 0.52, decorationPanelTab: 'flower_room', allowedSceneIds: ['flower_shop'] },
-  { id: 'greenhouse_pot_carnation', name: '康乃馨小盆栽', slot: DecoSlot.ORNAMENT, rarity: DecoRarity.COMMON, cost: 480, starValue: 2, icon: 'greenhouse_pot_carnation', desc: '温柔粉瓣', unlockRequirement: { flowerCollectionItemId: 'flower_fresh_5' }, defaultScale: 0.4, decorationPanelTab: 'flower_room', allowedSceneIds: ['flower_shop'] },
+  { id: 'greenhouse_pot_carnation', name: '康乃馨小盆栽', slot: DecoSlot.ORNAMENT, rarity: DecoRarity.COMMON, cost: 480, starValue: 2, icon: 'greenhouse_pot_carnation', desc: '温柔粉瓣', unlockRequirement: { flowerCollectionItemId: 'flower_fresh_5' }, defaultScale: 0.6, decorationPanelTab: 'flower_room', allowedSceneIds: ['flower_shop'] },
   { id: 'greenhouse_pot_rose', name: '玫瑰小盆栽', slot: DecoSlot.ORNAMENT, rarity: DecoRarity.FINE, cost: 580, starValue: 2, icon: 'greenhouse_pot_rose', desc: '一枝就够浪漫', unlockRequirement: { flowerCollectionItemId: 'flower_fresh_6' }, defaultScale: 0.4, decorationPanelTab: 'flower_room', allowedSceneIds: ['flower_shop'] },
   { id: 'greenhouse_pot_lily', name: '百合小盆栽', slot: DecoSlot.ORNAMENT, rarity: DecoRarity.FINE, cost: 680, starValue: 2, icon: 'greenhouse_pot_lily', desc: '清香白瓣', unlockRequirement: { flowerCollectionItemId: 'flower_fresh_7' }, defaultScale: 0.62, decorationPanelTab: 'flower_room', allowedSceneIds: ['flower_shop'] },
   { id: 'greenhouse_pot_hydrangea', name: '绣球小盆栽', slot: DecoSlot.ORNAMENT, rarity: DecoRarity.FINE, cost: 880, starValue: 3, icon: 'greenhouse_pot_hydrangea', desc: '团团蓝紫', unlockRequirement: { flowerCollectionItemId: 'flower_fresh_9' }, defaultScale: 0.52, decorationPanelTab: 'flower_room', allowedSceneIds: ['flower_shop'] },

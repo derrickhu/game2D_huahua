@@ -1,0 +1,12 @@
+Cute kawaii 2.5D true isometric furniture for a flower-shop merge game. Camera from upper-left into the L-room corner (same family as the room shell). On-screen top-face edges and base edges must sit near ±30° from horizontal — match the attached iso grid and room wall-base / floor diamond, NOT 45° wall slant, NOT flat front view. Height edges stay vertical. Visible top surface plus front-right side, left and right top edges symmetrically angled. Use the attached grid ONLY for perspective; do not copy the gray demo cube.
+
+Single furniture prop only, centered on square 1:1 canvas with generous white margin. Soft brown outlines slightly thicker than hairline, hand-painted mobile merge-game style, warm upper-left light, gentle volume shading, readable silhouette at small size.
+
+CRITICAL SHAPE LOCK — match the attached current tea-table reference silhouette closely: a LOW LONG RECTANGULAR wood coffee table (landscape / elongated top, clearly wider than deep — NOT a square cube table, NOT a short stubby square). Thick plank top made of about two long boards, four sturdy legs with a horizontal stretcher on each short end. Keep the same long proportions and low height as the reference.
+
+Upgrade craftsmanship only (do not change the overall long shape): warmer polished honey oak with soft grain; gently rounded long plank edges; a slim carved floral apron under the long front edge with tiny rose-and-leaf relief; slightly more elegant tapered chunky legs with soft turned detail (still cozy, not spindly); keep the short-end stretchers. On the top: one small white floral teacup and saucer with amber tea placed toward one end, plus a tiny mint-glass bud vase with one soft pink daisy nearby (small props so the long table remains the hero).
+
+Still the same cottage long wood tea table product line — NOT square, NOT round, NOT glass, NOT marble, NOT Chinese antique, NOT metal industrial.
+
+Hard bans: NO text, NO letters, NO Chinese characters, NO watermark, NO logo, NO characters, NO room walls, NO floor tiles, NO long floor shadow strip, NO gray grid copied into the final art.
+Background pure solid white #FFFFFF only.
