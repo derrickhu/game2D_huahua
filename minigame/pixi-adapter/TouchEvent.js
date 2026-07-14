@@ -195,39 +195,59 @@ function registerTouchEvents() {
 
   // canvas.getBoundingClientRect - PixiJS 用来计算事件坐标
   // 必须返回逻辑像素尺寸（与触摸事件 clientX/clientY 一致），否则坐标偏移
-  var sysInfo = platform.getSystemInfoSync();
-  var screenW = sysInfo.screenWidth || sysInfo.windowWidth || 375;
-  var screenH = sysInfo.screenHeight || sysInfo.windowHeight || 667;
+  function getWindowSize() {
+    var info = null;
+    try {
+      info = typeof platform.getWindowInfo === 'function'
+        ? platform.getWindowInfo()
+        : platform.getSystemInfoSync();
+    } catch (e) {
+      try { info = platform.getSystemInfoSync(); } catch (e2) { info = {}; }
+    }
+    info = info || {};
+    return {
+      width: info.windowWidth || info.screenWidth || 375,
+      height: info.windowHeight || info.screenHeight || 667,
+    };
+  }
 
   try {
     canvas.getBoundingClientRect = function() {
+      var size = getWindowSize();
       return {
         x: 0,
         y: 0,
         top: 0,
         left: 0,
-        width: screenW,
-        height: screenH,
-        right: screenW,
-        bottom: screenH,
+        width: size.width,
+        height: size.height,
+        right: size.width,
+        bottom: size.height,
       };
     };
   } catch (e) {}
 
   // clientWidth/clientHeight 也需返回逻辑像素
   try {
-    Object.defineProperty(canvas, 'clientWidth', { get: function() { return screenW; }, configurable: true });
-    Object.defineProperty(canvas, 'clientHeight', { get: function() { return screenH; }, configurable: true });
+    Object.defineProperty(canvas, 'clientWidth', {
+      get: function() { return getWindowSize().width; },
+      configurable: true,
+    });
+    Object.defineProperty(canvas, 'clientHeight', {
+      get: function() { return getWindowSize().height; },
+      configurable: true,
+    });
   } catch (e) {}
 
   // PixiJS 会检查 canvas.style（微信 canvas 部分属性可能只读）
   try {
+    var initialSize = getWindowSize();
     if (!canvas.style) canvas.style = {};
     canvas.style.touchAction = '';
     canvas.style.msTouchAction = '';
     canvas.style.cursor = '';
-    canvas.style.width = screenW + 'px';
-    canvas.style.height = screenH + 'px';
+    canvas.style.width = initialSize.width + 'px';
+    canvas.style.height = initialSize.height + 'px';
   } catch (e) {}
 
   // PixiJS 检查 focus

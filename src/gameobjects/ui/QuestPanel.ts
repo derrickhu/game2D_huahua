@@ -246,7 +246,7 @@ function formatWeekRemain(ms: number): string {
 
 /** 与 Merch / 装修面板一致：微信小游戏上 stage 级 pointermove 常丢，滚动改绑 canvas */
 function nativeClientToDesignY(clientY: number): number {
-  return (clientY * Game.designHeight) / Game.screenHeight;
+  return Game.clientToDesign(0, clientY).y;
 }
 
 function federatedPointerToDesignY(e: PIXI.FederatedPointerEvent): number {
@@ -254,7 +254,7 @@ function federatedPointerToDesignY(e: PIXI.FederatedPointerEvent): number {
   if (n != null && typeof (n as PointerEvent).clientY === 'number') {
     return nativeClientToDesignY((n as PointerEvent).clientY);
   }
-  return e.global.y / Game.scale;
+  return Game.globalToDesign(e.global.x, e.global.y).y;
 }
 
 function rewardPreview(r: DailyChallengeReward): string {
@@ -438,6 +438,15 @@ export class QuestPanel extends PIXI.Container {
       this._opening = false;
       this._openReady();
     });
+  }
+
+  relayout(): void {
+    if (!this.visible) return;
+    this._bg.clear();
+    this._bg.beginFill(0x000000, 0.5);
+    this._bg.drawRect(0, 0, DESIGN_WIDTH, Game.logicHeight);
+    this._bg.endFill();
+    this._refresh();
   }
 
   private _openReady(): void {

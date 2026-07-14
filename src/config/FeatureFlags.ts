@@ -17,3 +17,9 @@ export const ENABLE_SHOP_ACTIVITY_EXPAND = false;
  * 关闭后 Game 会回退到旧版 screenWidth/screenHeight 数据源。
  */
 export const ENABLE_RESPONSIVE_LAYOUT_V2 = true;
+
+/**
+ * Pad 核心内容安全框。关闭时仅回退为 V2 的全宽缩放，不影响窗口/安全区读取。
+ * 便于真机灰度时独立止损。
+ */
+export const ENABLE_PAD_SAFE_FRAME = true;

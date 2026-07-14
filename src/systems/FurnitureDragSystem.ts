@@ -683,20 +683,16 @@ class FurnitureDragSystemClass {
 
   /** FederatedPointerEvent → 容器本地坐标（考虑 roomContainer 的 transform） */
   private _rawEventToDesign(e: PIXI.FederatedPointerEvent): { x: number; y: number } {
-    // global 坐标是 canvas 物理像素空间 [0, screenWidth*dpr]
-    // 转为设计坐标 [0, designWidth]：除以 dpr 得到逻辑像素，再乘 designWidth/screenWidth
-    const designX = (e.global.x / Game.dpr) * Game.designWidth / Game.screenWidth;
-    const designY = (e.global.y / Game.dpr) * Game.coordinateHeight / Game.screenHeight;
-    return this._designToLocal(designX, designY);
+    const design = Game.globalToDesign(e.global.x, e.global.y);
+    return this._designToLocal(design.x, design.y);
   }
 
   /** canvas 原生事件 → 容器本地坐标（考虑 roomContainer 的 transform） */
   private _clientToDesign(e: any): { x: number; y: number } {
     const clientX = e.clientX ?? e.pageX ?? 0;
     const clientY = e.clientY ?? e.pageY ?? 0;
-    const designX = clientX * Game.designWidth / Game.screenWidth;
-    const designY = clientY * Game.coordinateHeight / Game.screenHeight;
-    return this._designToLocal(designX, designY);
+    const design = Game.clientToDesign(clientX, clientY);
+    return this._designToLocal(design.x, design.y);
   }
 
   private _disposeNewFurnitureDragExtras(ctx: DragContext): void {

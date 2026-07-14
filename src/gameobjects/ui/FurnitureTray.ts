@@ -136,8 +136,8 @@ export const FURNITURE_TRAY_EDIT_CORNER_ICON_SIDE_PAD = 14;
 export const FURNITURE_TRAY_CLEAR_ICON_RIGHT_PAD = FURNITURE_TRAY_EDIT_CORNER_ICON_SIDE_PAD;
 
 /** 编辑态托盘顶边设计 Y（与 open() / ShopScene trayOpenTopY 一致） */
-export function furnitureTrayOpenTopY(logicH: number): number {
-  return logicH - TRAY_H;
+export function furnitureTrayOpenTopY(logicH: number, safeBottom = 0): number {
+  return logicH - safeBottom - TRAY_H;
 }
 
 /** 教程高亮「完成装修」顶右圆钮矩形（场景设计坐标，与 layoutEditCompleteIcon 一致） */
@@ -187,10 +187,10 @@ function mountTrayShellSprite(shellTex: PIXI.Texture, w: number, bgH: number): P
 
 /** 与 DecorationPanel 一致：原生 client → 设计坐标（微信小游戏上子节点 pointermove 不可靠，需绑 canvas） */
 function nativeClientToDesignX(clientX: number): number {
-  return (clientX * Game.designWidth) / Game.screenWidth;
+  return Game.clientToDesign(clientX, 0).x;
 }
 function nativeClientToDesignY(clientY: number): number {
-  return (clientY * Game.coordinateHeight) / Game.screenHeight;
+  return Game.clientToDesign(0, clientY).y;
 }
 
 function federatedPointerToDesign(e: PIXI.FederatedPointerEvent): { x: number; y: number } {
@@ -200,8 +200,7 @@ function federatedPointerToDesign(e: PIXI.FederatedPointerEvent): { x: number; y
     return { x: nativeClientToDesignX(pe.clientX), y: nativeClientToDesignY(pe.clientY) };
   }
   return {
-    x: (e.global.x / Game.dpr) * Game.designWidth / Game.screenWidth,
-    y: (e.global.y / Game.dpr) * Game.coordinateHeight / Game.screenHeight,
+    ...Game.globalToDesign(e.global.x, e.global.y),
   };
 }
 
@@ -389,7 +388,7 @@ export class FurnitureTray extends PIXI.Container {
 
     const logicH = Game.logicHeight;
     this._closedY = logicH;
-    this._openY = furnitureTrayOpenTopY(logicH);
+    this._openY = furnitureTrayOpenTopY(logicH, Game.safeBottom);
 
     this.y = this._closedY;
     if (trayArg != null && typeof trayArg === 'object' && 'deco' in trayArg) {
@@ -457,7 +456,7 @@ export class FurnitureTray extends PIXI.Container {
   relayout(): void {
     const logicH = Game.logicHeight;
     this._closedY = logicH;
-    this._openY = furnitureTrayOpenTopY(logicH);
+    this._openY = furnitureTrayOpenTopY(logicH, Game.safeBottom);
     TweenManager.cancelTarget(this);
     this.y = this._isOpen ? this._openY : this._closedY;
   }

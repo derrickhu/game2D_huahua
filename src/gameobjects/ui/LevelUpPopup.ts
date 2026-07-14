@@ -98,6 +98,9 @@ export class LevelUpPopup extends PIXI.Container {
   private _dismissPointerArmTimer: ReturnType<typeof setTimeout> | null = null;
   /** CDN 纹理异步到达后替换升级弹窗内的占位图；弹窗重建/关闭时统一取消。 */
   private _textureUnsubs: Array<() => void> = [];
+  private _lastLevel: number | null = null;
+  private _lastReward: (LevelUpRewardPayload & { gold?: number }) | null = null;
+  private _lastOptions: LevelUpPopupShowOptions | undefined;
 
   constructor() {
     super();
@@ -110,6 +113,9 @@ export class LevelUpPopup extends PIXI.Container {
     reward: LevelUpRewardPayload & { gold?: number },
     options?: LevelUpPopupShowOptions,
   ): void {
+    this._lastLevel = level;
+    this._lastReward = { ...reward };
+    this._lastOptions = options ? { ...options } : undefined;
     this.visible = true;
     this._dismissing = false;
     this._previewOnly = options?.previewOnly ?? false;
@@ -238,6 +244,11 @@ export class LevelUpPopup extends PIXI.Container {
 
     this.alpha = 0;
     TweenManager.to({ target: this, props: { alpha: 1 }, duration: 0.35, ease: Ease.easeOutQuad });
+  }
+
+  relayout(): void {
+    if (!this.visible || this._dismissing || this._lastLevel == null || !this._lastReward) return;
+    this.show(this._lastLevel, this._lastReward, this._lastOptions);
   }
 
   /**
