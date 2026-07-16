@@ -193,6 +193,20 @@ class ThursdayMagicTimeManagerClass {
 
   private _checkDailyReset(): void {
     const today = localDateKey();
+    // 本地已离开周四：即使 UTC dateKey 仍是周四，也必须清掉附魔状态并落盘。
+    if (!isInEventPeriod()) {
+      const cleared = BuildingManager.clearMagicEnchantments();
+      const rolled = this._state.dateKey !== today;
+      if (rolled) {
+        this._state = emptyState();
+        this._save();
+      }
+      if (cleared || rolled) {
+        SaveManager.save();
+        EventBus.emit('thursdayMagicTime:changed');
+      }
+      return;
+    }
     if (this._state.dateKey === today) return;
     this._state = emptyState();
     BuildingManager.clearMagicEnchantments();

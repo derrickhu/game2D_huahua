@@ -85,6 +85,17 @@ function currentEffectiveDateKey(): string {
   return CheckInManager?.effectiveDateKey ?? new Date().toISOString().slice(0, 10);
 }
 
+/**
+ * 活动入口「是否周四」用本地星期（含 GM UTC 日偏移）。
+ * 不可只靠 UTC dateKey：中国周五 0:00~7:59 UTC 仍是周四，入口已关但 dateKey 未变。
+ */
+function isThursdayMagicLocalDay(): boolean {
+  const d = new Date();
+  const offset = CheckInManager?.gmDateOffsetDays ?? 0;
+  if (offset !== 0) d.setUTCDate(d.getUTCDate() + offset);
+  return d.getDay() === 4;
+}
+
 // ═══════════════ 宝箱定义 ═══════════════
 
 const CHEST_DEFS: ChestDef[] = [
@@ -889,6 +900,8 @@ class BuildingManagerClass {
   }
 
   isMagicEnchanted(cellIndex: number): boolean {
+    // 本地已过周四则立即失效（与顶栏入口一致），避免 UTC dateKey 滞后导致「活动关了但工具仍附魔」
+    if (!isThursdayMagicLocalDay()) return false;
     const cell = BoardManager.getCellByIndex(cellIndex);
     if (!cell?.itemId) return false;
     const state = this._states.get(cellIndex);
@@ -923,7 +936,8 @@ class BuildingManagerClass {
     return changed;
   }
 
-  clearMagicEnchantments(): void {
+  /** @returns 是否确实清掉了至少一个附魔标记 */
+  clearMagicEnchantments(): boolean {
     let changed = false;
     for (const state of this._states.values()) {
       if (!state.magicEnchantDateKey) continue;
@@ -931,6 +945,7 @@ class BuildingManagerClass {
       changed = true;
     }
     if (changed) EventBus.emit('thursdayMagicTime:changed');
+    return changed;
   }
 
   exportState(): BuildingPersistEntry[] {
