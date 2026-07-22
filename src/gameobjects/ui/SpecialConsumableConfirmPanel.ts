@@ -1,5 +1,6 @@
 /**
- * 棋盘消耗品（万能水晶 / 金剪刀）确认面板 — 排版与视觉对齐通用教程 / ConfirmDialog（粉紫外框 + 奶油内底 + 蜜黄标题条 + 珊瑚主按钮）。
+ * 棋盘消耗品（幸运金币 / 万能水晶 / 金剪刀）确认面板。
+ * 排版与视觉对齐通用教程 / ConfirmDialog（粉紫外框 + 奶油内底 + 蜜黄标题条 + 珊瑚主按钮）。
  */
 import * as PIXI from 'pixi.js';
 import { Game } from '@/core/Game';
@@ -15,8 +16,9 @@ const TITLE_PAD_X = 22;
 
 const ICON_BOX = 88;
 const GAP = 14;
-/** 公式里「+」「▶」用柔和棕色，避免刺眼大红 */
+/** 公式里「+」、箭头用柔和棕色，避免刺眼大红 */
 const SYMBOL_FILL = 0xa86852;
+const SYMBOL_STROKE = 0xfff8f0;
 
 function makeIconFromKey(iconKey: string, box: number): PIXI.Container {
   const wrap = new PIXI.Container();
@@ -51,15 +53,50 @@ function symbolText(ch: string, size: number): PIXI.Text {
     fill: SYMBOL_FILL,
     fontFamily: FONT_FAMILY,
     fontWeight: 'bold',
-    stroke: 0xfff8f0,
+    stroke: SYMBOL_STROKE,
     strokeThickness: 2,
   });
   t.anchor.set(0.5);
   return t;
 }
 
+/** 手绘右向三角箭头（避免系统字体 ▶ 显示异常） */
+function makeArrowSymbol(w = 22, h = 28): PIXI.Graphics {
+  const g = new PIXI.Graphics();
+  // 奶油描边底
+  g.beginFill(SYMBOL_STROKE, 1);
+  g.moveTo(-w / 2 - 2, -h / 2 - 2);
+  g.lineTo(w / 2 + 3, 0);
+  g.lineTo(-w / 2 - 2, h / 2 + 2);
+  g.closePath();
+  g.endFill();
+  // 棕色主体
+  g.beginFill(SYMBOL_FILL, 1);
+  g.moveTo(-w / 2, -h / 2);
+  g.lineTo(w / 2, 0);
+  g.lineTo(-w / 2, h / 2);
+  g.closePath();
+  g.endFill();
+  return g;
+}
+
 export class SpecialConsumableConfirmPanel extends PIXI.Container {
   private _resolve!: (value: boolean) => void;
+
+  static showLuckyCoin(
+    targetItemId: string,
+    upItemId: string | null,
+    downItemId: string | null,
+  ): Promise<boolean> {
+    return new Promise(resolve => {
+      const p = new SpecialConsumableConfirmPanel();
+      p._resolve = resolve;
+      p.zIndex = 30000;
+      p._buildLuckyCoin(targetItemId, upItemId, downItemId);
+      Game.stage.addChild(p);
+      if (Game.stage.sortableChildren) Game.stage.sortChildren();
+    });
+  }
 
   static showCrystalBall(targetItemId: string, resultItemId: string): Promise<boolean> {
     return new Promise(resolve => {
@@ -81,6 +118,71 @@ export class SpecialConsumableConfirmPanel extends PIXI.Container {
       Game.stage.addChild(p);
       if (Game.stage.sortableChildren) Game.stage.sortChildren();
     });
+  }
+
+  private _buildLuckyCoin(
+    targetItemId: string,
+    upItemId: string | null,
+    downItemId: string | null,
+  ): void {
+    const targetDef = ITEM_DEFS.get(targetItemId);
+    const outcomes = [
+      downItemId ? { itemId: downItemId, label: '降一级', arrow: '↓' } : null,
+      upItemId ? { itemId: upItemId, label: '升一级', arrow: '↑' } : null,
+    ].filter((v): v is { itemId: string; label: string; arrow: string } => !!v);
+    const probability = outcomes.length === 2 ? '50%' : '100%';
+
+    const row = new PIXI.Container();
+    let x = 0;
+    const outcomeIconBox = 68;
+    const outcomeGap = 10;
+    const outcomeH =
+      outcomes.length * outcomeIconBox + Math.max(0, outcomes.length - 1) * outcomeGap;
+    const formulaMinHeight = Math.max(ICON_BOX, outcomeH);
+    const mainIconY = (formulaMinHeight - ICON_BOX) / 2;
+
+    const coin = makeIconFromKey('icon_coin', ICON_BOX);
+    coin.position.set(x, mainIconY);
+    row.addChild(coin);
+    x += ICON_BOX + GAP;
+
+    const plus = symbolText('+', 36);
+    plus.position.set(x + 16, formulaMinHeight / 2);
+    row.addChild(plus);
+    x += 32 + GAP;
+
+    const target = makeIconFromKey(targetDef?.icon ?? '', ICON_BOX);
+    target.position.set(x, mainIconY);
+    row.addChild(target);
+    x += ICON_BOX + GAP;
+
+    const arr = makeArrowSymbol();
+    arr.position.set(x + 16, formulaMinHeight / 2);
+    row.addChild(arr);
+    x += 32 + GAP;
+
+    outcomes.forEach((outcome, i) => {
+      const oy = i * (outcomeIconBox + outcomeGap);
+      const label = new PIXI.Text(`${probability}\n${outcome.arrow}${outcome.label}`, {
+        fontSize: 16,
+        fill: outcome.arrow === '↑' ? 0x3d8c4b : 0xb85f58,
+        fontFamily: FONT_FAMILY,
+        fontWeight: 'bold',
+        align: 'center',
+        lineHeight: 20,
+        stroke: 0xfff8f0,
+        strokeThickness: 2,
+      });
+      label.anchor.set(0.5);
+      label.position.set(x + 28, oy + outcomeIconBox / 2);
+      row.addChild(label);
+
+      const icon = makeIconFromKey(ITEM_DEFS.get(outcome.itemId)?.icon ?? '', outcomeIconBox);
+      icon.position.set(x + 58, oy);
+      row.addChild(icon);
+    });
+
+    this._buildShell('幸运金币', row, { formulaMinHeight });
   }
 
   private _buildCrystal(targetItemId: string, resultItemId: string): void {
@@ -105,7 +207,7 @@ export class SpecialConsumableConfirmPanel extends PIXI.Container {
     row.addChild(b);
     x += ICON_BOX + GAP;
 
-    const arr = symbolText('▶', 28);
+    const arr = makeArrowSymbol();
     arr.position.set(x + 16, h / 2);
     row.addChild(arr);
     x += 32 + GAP;
@@ -146,7 +248,7 @@ export class SpecialConsumableConfirmPanel extends PIXI.Container {
     row.addChild(tgt);
     x += ICON_BOX + GAP;
 
-    const arr = symbolText('▶', 28);
+    const arr = makeArrowSymbol();
     arr.position.set(x + 16, rowIconY + h / 2);
     row.addChild(arr);
     x += 32 + GAP;

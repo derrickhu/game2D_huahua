@@ -11,7 +11,13 @@ export type MergeEndDragResult =
   | { kind: 'merged' | 'moved' | 'swapped' | 'cancelled' }
   | { kind: 'fruit_cut_processed'; resultId: string; resultIndex: number }
   | { kind: 'fruit_cut_fail'; toast: string }
-  | { kind: 'lucky_coin'; direction: 'up' | 'down' }
+  | {
+      kind: 'lucky_coin_confirm';
+      srcIndex: number;
+      dstIndex: number;
+      upId: string | null;
+      downId: string | null;
+    }
   | { kind: 'lucky_coin_fail'; toast: string }
   | { kind: 'crystal_ball_confirm'; srcIndex: number; dstIndex: number; newId: string }
   | { kind: 'golden_scissors_confirm'; srcIndex: number; dstIndex: number; splitId: string }
@@ -49,10 +55,15 @@ class MergeManagerClass {
       return { kind: 'cancelled' };
     }
 
-    const lucky = BoardManager.tryApplyLuckyCoin(srcIndex, targetIndex);
+    const lucky = BoardManager.previewLuckyCoinApply(srcIndex, targetIndex);
     if (lucky.kind === 'ok') {
-      console.log(`[Merge] 幸运金币: ${lucky.direction === 'up' ? '升级' : '降级'} → ${ITEM_DEFS.get(lucky.newId)?.name}`);
-      return { kind: 'lucky_coin', direction: lucky.direction };
+      return {
+        kind: 'lucky_coin_confirm',
+        srcIndex,
+        dstIndex: targetIndex,
+        upId: lucky.upId,
+        downId: lucky.downId,
+      };
     }
     if (lucky.kind === 'fail') {
       EventBus.emit('merge:dragCancel', srcIndex);

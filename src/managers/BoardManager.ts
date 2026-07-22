@@ -49,6 +49,11 @@ export type LuckyCoinApplyResult =
   | { kind: 'fail'; toast: string }
   | { kind: 'ok'; direction: 'up' | 'down'; newId: string };
 
+export type LuckyCoinPreviewResult =
+  | { kind: 'not_applicable' }
+  | { kind: 'fail'; toast: string }
+  | { kind: 'ok'; upId: string | null; downId: string | null };
+
 export type CrystalBallPreviewResult =
   | { kind: 'not_applicable' }
   | { kind: 'fail'; toast: string }
@@ -431,11 +436,8 @@ class BoardManagerClass {
     return !!(getMergeResultId(dst.itemId) || getDowngradeResultId(dst.itemId));
   }
 
-  /**
-   * 源格为幸运金币时尝试作用目标格；非金币源返回 not_applicable。
-   * 目标为空、非 OPEN、非合法合成链物品时返回 not_applicable，以便走移动/互换。
-   */
-  tryApplyLuckyCoin(srcIndex: number, dstIndex: number): LuckyCoinApplyResult {
+  /** 幸运金币预览：只校验目标并返回升/降两种可能，不消耗或随机结算。 */
+  previewLuckyCoinApply(srcIndex: number, dstIndex: number): LuckyCoinPreviewResult {
     const src = this.cells[srcIndex];
     const dst = this.cells[dstIndex];
     if (!src?.itemId || !isLuckyCoinItem(src.itemId)) return { kind: 'not_applicable' };
@@ -451,14 +453,29 @@ class BoardManagerClass {
     const def = ITEM_DEFS.get(dst.itemId);
     if (!def || !isLuckyCoinValidTarget(def)) return { kind: 'not_applicable' };
 
-    const newId = pickLuckyCoinNewItemId(dst.itemId);
+    const upId = getMergeResultId(dst.itemId);
+    const downId = getDowngradeResultId(dst.itemId);
+    if (!upId && !downId) {
+      return { kind: 'fail', toast: '该物品无法再升或降级' };
+    }
+    return { kind: 'ok', upId, downId };
+  }
+
+  /** 确认后才消耗幸运金币并随机结算。 */
+  commitLuckyCoinApply(srcIndex: number, dstIndex: number): LuckyCoinApplyResult {
+    const preview = this.previewLuckyCoinApply(srcIndex, dstIndex);
+    if (preview.kind !== 'ok') return preview;
+
+    const src = this.cells[srcIndex];
+    const dst = this.cells[dstIndex];
+    const oldTargetId = dst.itemId!;
+    const newId = pickLuckyCoinNewItemId(oldTargetId);
     if (!newId) {
       return { kind: 'fail', toast: '该物品无法再升或降级' };
     }
 
-    const oldTargetId = dst.itemId;
     const direction = getLuckyCoinDirection(oldTargetId, newId);
-    const coinId = src.itemId;
+    const coinId = src.itemId!;
 
     src.itemId = null;
     src.reserved = false;
@@ -473,6 +490,11 @@ class BoardManagerClass {
     EventBus.emit('board:itemPlaced', dstIndex, newId);
 
     return { kind: 'ok', direction, newId };
+  }
+
+  /** @deprecated 新交互应先 preview，弹窗确认后再 commit。 */
+  tryApplyLuckyCoin(srcIndex: number, dstIndex: number): LuckyCoinApplyResult {
+    return this.commitLuckyCoinApply(srcIndex, dstIndex);
   }
 
   /** 第一个空的 OPEN 格（不含指定索引），无则 -1 */

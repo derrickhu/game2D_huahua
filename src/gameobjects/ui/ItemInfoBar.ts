@@ -498,9 +498,11 @@ export class ItemInfoBar extends PIXI.Container {
 
     const descTop = this._cardTop + LEAF_TARGET_H + 4;
     this._descText = new PIXI.Text('', {
-      fontSize: 17,
+      fontSize: 19,
       fill: COLORS.TEXT_DARK,
       fontFamily: FONT_FAMILY,
+      fontWeight: '500',
+      lineHeight: 24,
       wordWrap: true,
       wordWrapWidth: Math.max(80, this._cardW - 20 - BTN_COL_W),
     });

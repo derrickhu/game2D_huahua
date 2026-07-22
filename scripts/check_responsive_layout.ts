@@ -5,6 +5,7 @@ import {
   MAIN_BOARD_TOP_GAP,
   MAIN_MIN_MIDDLE_GAP,
   MAIN_PREFERRED_CELL_SIZE,
+  MAIN_TOP_BAR_LIFT,
   MIN_CONTENT_HEIGHT,
   SHOP_ROOM_CANONICAL_CENTER_Y,
   computeViewportLayout,
@@ -114,7 +115,7 @@ const invalidCapsule = normalizeViewportMetrics({
 });
 assert.equal(invalidCapsule.safeTopPx, 50, '异常胶囊坐标应回退 statusBarHeight + 6');
 
-// 视觉基准：390×844 模拟器上保留完整详情卡，同时维持接近标准尺寸的棋盘。
+// 视觉基准：390×844 模拟器上棋盘优先保持标准尺寸，详情栏按剩余空间动态收缩。
 const baselineSafeTop = Math.round(47 * DESIGN_WIDTH / 390);
 const baselineSafeBottom = Math.round(34 * DESIGN_WIDTH / 390);
 const baselineLogicH = 844 / 390 * DESIGN_WIDTH;
@@ -126,12 +127,17 @@ const baselineMain = computeMainSceneLayout(
   SHOP_HEIGHT,
 );
 const baselineBoard = baselineMain.board;
-assert.ok(
-  baselineBoard.cellSize >= MAIN_PREFERRED_CELL_SIZE - 2,
-  '模拟器棋盘格不得因恢复详情卡而明显缩小',
+assert.equal(baselineBoard.cellSize, MAIN_PREFERRED_CELL_SIZE, '模拟器必须使用标准棋盘格');
+assert.ok(baselineBoard.paddingX <= 2, '模拟器棋盘须横向铺满，不得保留明显侧边空隙');
+assert.equal(
+  baselineMain.topBarY,
+  Math.max(0, baselineSafeTop - MAIN_TOP_BAR_LIFT),
+  '模拟器顶栏应按约定幅度适度上提',
 );
-assert.ok(baselineBoard.topY > 491, '模拟器棋盘应较问题版本下移');
-assert.ok(baselineMain.infoBarHeight >= 170, '模拟器详情栏应保留完整说明卡高度');
+assert.ok(
+  baselineMain.infoBarHeight >= 130,
+  '模拟器详情栏压缩后仍须保留可读说明卡高度',
+);
 assert.ok(
   baselineMain.middleGap >= MAIN_MIN_MIDDLE_GAP,
   '模拟器顶部图标与客人之间应保留最小操作间距',

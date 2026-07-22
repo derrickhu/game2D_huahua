@@ -578,7 +578,11 @@ export class BoardView extends PIXI.Container {
 
         if (targetIdx >= 0 && targetIdx !== srcIdx) {
           const result = MergeManager.endDrag(targetIdx);
-          if (result.kind === 'crystal_ball_confirm' || result.kind === 'golden_scissors_confirm') {
+          if (
+            result.kind === 'lucky_coin_confirm'
+            || result.kind === 'crystal_ball_confirm'
+            || result.kind === 'golden_scissors_confirm'
+          ) {
             this._endDrag();
             void this._runSpecialConsumableConfirm(result);
             this._dragSrcIndex = -1;
@@ -600,13 +604,9 @@ export class BoardView extends PIXI.Container {
             result.kind === 'merged'
             || result.kind === 'moved'
             || result.kind === 'swapped'
-            || result.kind === 'lucky_coin'
             || result.kind === 'fruit_cut_processed'
           ) {
             this._playDropBounce(result.kind === 'fruit_cut_processed' ? result.resultIndex : targetIdx);
-          }
-          if (result.kind === 'lucky_coin') {
-            ToastMessage.show(result.direction === 'up' ? '幸运升级！' : '降级了…');
           }
           if (result.kind === 'lucky_coin_fail') {
             ToastMessage.show(result.toast);
@@ -1395,15 +1395,35 @@ export class BoardView extends PIXI.Container {
     }
   }
 
-  /** 万能水晶 / 金剪刀：弹窗确认后再提交棋盘数据 */
+  /** 幸运金币 / 万能水晶 / 金剪刀：弹窗确认后再提交棋盘数据 */
   private async _runSpecialConsumableConfirm(
     result:
+      | Extract<MergeEndDragResult, { kind: 'lucky_coin_confirm' }>
       | Extract<MergeEndDragResult, { kind: 'crystal_ball_confirm' }>
       | Extract<MergeEndDragResult, { kind: 'golden_scissors_confirm' }>,
   ): Promise<void> {
     const dstCell = BoardManager.getCellByIndex(result.dstIndex);
     const targetId = dstCell?.itemId;
     if (!targetId) {
+      this.refresh();
+      return;
+    }
+
+    if (result.kind === 'lucky_coin_confirm') {
+      const ok = await SpecialConsumableConfirmPanel.showLuckyCoin(
+        targetId,
+        result.upId,
+        result.downId,
+      );
+      if (ok) {
+        const applied = BoardManager.commitLuckyCoinApply(result.srcIndex, result.dstIndex);
+        if (applied.kind === 'ok') {
+          ToastMessage.show(applied.direction === 'up' ? '幸运升级！' : '降级了…');
+          this._playDropBounce(result.dstIndex);
+        } else if (applied.kind === 'fail') {
+          ToastMessage.show(applied.toast);
+        }
+      }
       this.refresh();
       return;
     }

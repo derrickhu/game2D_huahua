@@ -63,8 +63,13 @@ export interface ResponsiveBoardMetrics {
 
 /** 客人区到棋盘的刚性间距。 */
 export const MAIN_BOARD_TOP_GAP = 70;
-/** 标准长屏固定棋盘格；短屏/平板空间不足时才进入紧凑档。 */
-export const MAIN_PREFERRED_CELL_SIZE = 102;
+/** 标准手机按宽度铺满：7×105 + 6×2 = 747，仅保留 1～2px 边缘。 */
+export const MAIN_PREFERRED_CELL_SIZE = 105;
+/**
+ * 顶栏适度上提，把纵向空间留给棋盘下方详情栏；
+ * 26px 比原先的 36px 更保守，减少每周活动入口被系统区域遮挡。
+ */
+export const MAIN_TOP_BAR_LIFT = 26;
 /** 上区与客人区之间至少保留的弹性带。 */
 export const MAIN_MIN_MIDDLE_GAP = 12;
 /** 详情主体保持完整卡片高度；底部安全区在此高度之外额外保留。 */
@@ -154,17 +159,38 @@ export function computeMainSceneLayout(
   shopHeight: number,
   gap = 4,
 ): MainSceneLayout {
-  const topBarY = Math.max(0, safeTop);
+  const topBarY = Math.max(0, safeTop - MAIN_TOP_BAR_LIFT);
   const topClusterBottom = topBarY + topBarHeight + gap;
   const infoBarSafeBottom = Math.max(24, safeBottom);
-  const infoBarHeight = Math.max(
+  const preferredInfoBarHeight = Math.max(
     INFO_BAR_HEIGHT,
     MAIN_INFO_CONTENT_HEIGHT + infoBarSafeBottom,
   );
-  const infoBarY = Math.round(logicHeight - infoBarHeight);
   const maxCellByWidth = Math.floor(
     (DESIGN_WIDTH - (BOARD_COLS - 1) * CELL_GAP) / BOARD_COLS,
   );
+  /*
+   * 棋盘是主玩法，常规手机必须优先保持标准格子。先按标准格反算底栏
+   * 最多能占多少高度；空间不足时压缩详情栏，而不是先缩棋盘。
+   * 极短屏在详情栏已降到 INFO_BAR_HEIGHT 后才允许棋盘进入紧凑档。
+   */
+  const preferredCellSize = Math.min(MAIN_PREFERRED_CELL_SIZE, maxCellByWidth);
+  const preferredGridHeight =
+    preferredCellSize * BOARD_ROWS + (BOARD_ROWS - 1) * CELL_GAP;
+  const maxInfoHeightForPreferredBoard = Math.floor(
+    logicHeight
+      - topClusterBottom
+      - MAIN_MIN_MIDDLE_GAP
+      - shopHeight
+      - MAIN_BOARD_TOP_GAP
+      - BOARD_BAR_HEIGHT
+      - preferredGridHeight,
+  );
+  const infoBarHeight = Math.max(
+    INFO_BAR_HEIGHT,
+    Math.min(preferredInfoBarHeight, maxInfoHeightForPreferredBoard),
+  );
+  const infoBarY = Math.round(logicHeight - infoBarHeight);
   const maxGridHeight =
     infoBarY - BOARD_BAR_HEIGHT - MAIN_BOARD_TOP_GAP
     - shopHeight - topClusterBottom - MAIN_MIN_MIDDLE_GAP;
