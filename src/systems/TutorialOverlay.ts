@@ -1063,7 +1063,7 @@ export class TutorialOverlay {
     const TITLE_H = 48;
     const ICON_S = 58;
     const rewards = [
-      { texKey: 'icon_energy', amount: 100, label: '体力' },
+      { texKey: 'icon_energy', amount: 300, label: '体力' },
       { texKey: 'icon_gem',    amount: 30, label: '钻石' },
     ];
 

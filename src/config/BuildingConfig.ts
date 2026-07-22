@@ -189,11 +189,12 @@ const PLANT_OUTCOMES_TOOL_L3: ToolProduceOutcome[] = [
   { category: Category.FLOWER, line: FlowerLine.FRESH, level: 1, weight: 100 },
 ];
 
-/** 园艺 L4 工具：育苗仓 — 绿植 L1 55%、鲜花 L1 40%、鲜花 L2 5%（权重合计 100） */
+/** 园艺 L4 工具：育苗仓 — 鲜/绿各：L1 40%、L2 10%（权重合计 100） */
 const PLANT_OUTCOMES_TOOL_L4: ToolProduceOutcome[] = [
-  { category: Category.FLOWER, line: FlowerLine.GREEN, level: 1, weight: 55 },
   { category: Category.FLOWER, line: FlowerLine.FRESH, level: 1, weight: 40 },
-  { category: Category.FLOWER, line: FlowerLine.FRESH, level: 2, weight: 5 },
+  { category: Category.FLOWER, line: FlowerLine.GREEN, level: 1, weight: 40 },
+  { category: Category.FLOWER, line: FlowerLine.FRESH, level: 2, weight: 10 },
+  { category: Category.FLOWER, line: FlowerLine.GREEN, level: 2, weight: 10 },
 ];
 
 /** 园艺 L5 工具：简易温室 — 鲜/绿 1～3 级：1 级各 5%，2 级各 40%，3 级各 5% */

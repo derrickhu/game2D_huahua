@@ -188,7 +188,7 @@ class TutorialManagerClass {
 
   /** 发放新手礼包奖励 */
   grantTutorialGift(): void {
-    CurrencyManager.addStamina(100);
+    CurrencyManager.addStamina(300);
     CurrencyManager.addDiamond(30);
   }
 
