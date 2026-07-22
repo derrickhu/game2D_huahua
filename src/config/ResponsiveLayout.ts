@@ -67,8 +67,8 @@ export const MAIN_BOARD_TOP_GAP = 70;
 export const MAIN_PREFERRED_CELL_SIZE = 102;
 /** 上区与客人区之间至少保留的弹性带。 */
 export const MAIN_MIN_MIDDLE_GAP = 12;
-/** 长安全区设备压缩详情主体到 76px，安全区本身仍完整保留。 */
-export const MAIN_INFO_CONTENT_HEIGHT = 76;
+/** 详情主体保持完整卡片高度；底部安全区在此高度之外额外保留。 */
+export const MAIN_INFO_CONTENT_HEIGHT = 112;
 /** 4:3 平板仍需容纳完整 9 行。 */
 export const MIN_RESPONSIVE_CELL_SIZE = 44;
 /** 核心玩法最小设计高度；更宽的 Pad 改为高度适配，避免纵向压扁。 */

@@ -1,0 +1,17 @@
+Clean 2D vector mobile game UI for a cozy pastel flower-shop merge game, kawaii casual style. Compact centered modal settings panel shell only, portrait about 3:4 aspect. High resolution, crisp anti-aliased vector edges.
+
+USE THE ATTACHED REFERENCE IMAGE ONLY FOR OUTER SHELL STYLE AND COLOR DNA: thick soft lilac-lavender outer rim, thinner pastel pink inner lip, cream interior, golden scalloped empty title banner, chunky red close button. Do NOT copy the workshop tray, footer shortcuts, or any content from the reference.
+
+THIS IS AN EMPTY BACKPLATE ONLY for a small settings popup.
+
+KEEP ONLY THESE SHELL PARTS:
+- Compact rounded-rectangle modal, very rounded corners, thick soft lilac-lavender outer rim with thinner pastel-pink inner lip, gentle floating drop shadow that stays inside the green margins.
+- Large flat cream / ivory interior content field, smooth matte, optional VERY SUBTLE low-opacity damask, COMPLETELY EMPTY — no toggle rows, no switches, no ID cards, no buttons, no icons, no grid.
+- TOP: ornate golden-yellow scalloped title banner centered, empty center reserved for code-drawn Chinese title. No text baked in.
+- TOP-RIGHT: chunky circular red close button with simple white X, slightly past the frame corner.
+
+STRICTLY FORBIDDEN:
+Chinese text, English text, numbers, toggle switches, music notes, speaker icons, user ID boxes, lists, watermark, logo, photoreal metal.
+
+TECHNICAL BACKGROUND FOR CLEAN CUTOUT:
+ONLY the margins OUTSIDE the rounded modal silhouette must be pure bright screen green RGB exactly 0,255,0, flat, no gradient. The modal interior must contain ZERO green pixels.

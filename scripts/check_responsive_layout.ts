@@ -114,8 +114,7 @@ const invalidCapsule = normalizeViewportMetrics({
 });
 assert.equal(invalidCapsule.safeTopPx, 50, '异常胶囊坐标应回退 statusBarHeight + 6');
 
-// 视觉基准：390×844 模拟器上，详情栏缩短、棋盘整体下移，
-// 从而把多出的高度还给顶部图标与客人之间的弹性带。
+// 视觉基准：390×844 模拟器上保留完整详情卡，同时维持接近标准尺寸的棋盘。
 const baselineSafeTop = Math.round(47 * DESIGN_WIDTH / 390);
 const baselineSafeBottom = Math.round(34 * DESIGN_WIDTH / 390);
 const baselineLogicH = 844 / 390 * DESIGN_WIDTH;
@@ -127,12 +126,15 @@ const baselineMain = computeMainSceneLayout(
   SHOP_HEIGHT,
 );
 const baselineBoard = baselineMain.board;
-assert.equal(baselineBoard.cellSize, MAIN_PREFERRED_CELL_SIZE, '模拟器使用标准棋盘格');
-assert.ok(baselineBoard.topY > 491, '模拟器棋盘应较问题版本下移');
-assert.ok(baselineMain.infoBarHeight < 149, '模拟器详情栏应较问题版本缩短');
 assert.ok(
-  baselineMain.middleGap >= 30,
-  '模拟器顶部图标与客人之间应恢复明显弹性间距',
+  baselineBoard.cellSize >= MAIN_PREFERRED_CELL_SIZE - 2,
+  '模拟器棋盘格不得因恢复详情卡而明显缩小',
+);
+assert.ok(baselineBoard.topY > 491, '模拟器棋盘应较问题版本下移');
+assert.ok(baselineMain.infoBarHeight >= 170, '模拟器详情栏应保留完整说明卡高度');
+assert.ok(
+  baselineMain.middleGap >= MAIN_MIN_MIDDLE_GAP,
+  '模拟器顶部图标与客人之间应保留最小操作间距',
 );
 assert.ok(
   Math.abs(

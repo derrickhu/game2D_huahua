@@ -82,6 +82,8 @@ const MAIN_IMAGE_MAP: Record<string, string> = {
   /** 花店主页「许愿」入口（3 级解锁；与 icon_worldmap_nav 同款 HUD 银色硬币 + 薄荷水纹） */
   icon_wishing_nav: 'images/ui/icon_wishing_nav.png',
   icon_operate:   'images/ui/icon_operate.png',
+  /** 花店左下设置入口（NB2 紫圆齿轮） */
+  icon_settings:  'images/ui/icon_settings.png',
 
   // ---- 棋盘 & 场景背景 ----
   board_bg:       'images/ui/board_bg.png',
@@ -223,6 +225,8 @@ const PANELS_IMAGE_MAP: Record<string, string> = {
   merge_companion_flower_bubble: 'subpkg_panels/images/ui/merge_companion_flower_bubble_nb2.png',
   /** 花店装修面板：杏琥珀 flat vector 单壳底栏（DecorationPanel） */
   decoration_panel_shell_nb2: 'subpkg_panels/images/ui/decoration_panel_shell_nb2.png',
+  /** 设置弹层壳（紫框金标题牌 + 红关闭；内容由代码叠） */
+  settings_panel_shell_nb2: 'subpkg_panels/images/ui/settings_panel_shell_nb2.png',
   /** 编辑托盘 Tab 图标（6×2 表切图 + rembg；顺序同 FURNITURE_TRAY_TABS） */
   /** 家具托盘 Tab 图标（单态；选中由程序描边/底色区分） */
   furniture_tray_tab_flower_room_idle: 'subpkg_panels/images/ui/furniture_tray_tab_flower_room_idle.png',
@@ -907,6 +911,21 @@ const DECO_IMAGE_MAP: Record<string, string> = {
   sea_anchor_bench: 'subpkg_deco/images/furniture/sea_anchor_bench.png',
   sea_treasure_chest: 'subpkg_deco/images/furniture/sea_treasure_chest.png',
   sea_coral_cabinet: 'subpkg_deco/images/furniture/sea_coral_cabinet.png',
+
+  // ---- 橡树小屋森系家具（forest_treehouse Lv32–38）----
+  tree_bookshelf_hollow: 'subpkg_deco/images/furniture/tree_bookshelf_hollow.png',
+  tree_stump_table: 'subpkg_deco/images/furniture/tree_stump_table.png',
+  tree_hammock_chair: 'subpkg_deco/images/furniture/tree_hammock_chair.png',
+  tree_star_lamp: 'subpkg_deco/images/furniture/tree_star_lamp.png',
+  tree_moon_window: 'subpkg_deco/images/furniture/tree_moon_window.png',
+  tree_wardrobe_round: 'subpkg_deco/images/furniture/tree_wardrobe_round.png',
+  tree_nightstand: 'subpkg_deco/images/furniture/tree_nightstand.png',
+
+  // ---- 通用新增家具 ----
+  modern_pastel_capsule_shelf: 'subpkg_deco/images/furniture/modern_pastel_capsule_shelf.png',
+  tree_canopy_bed: 'subpkg_deco/images/furniture/tree_canopy_bed.png',
+  tea_paper_lantern: 'subpkg_deco/images/furniture/tea_paper_lantern.png',
+  villa_chester_sofa: 'subpkg_deco/images/furniture/villa_chester_sofa.png',
 
   // ---- 梦云小屋专属家具（dream_cloud_house Lv20–24 卧室休闲套）----
   dream_cloud_bed: 'subpkg_deco/images/furniture/dream_cloud_bed.png',

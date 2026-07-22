@@ -1,0 +1,7 @@
+Single mobile game HUD bottom-corner icon, square 1:1 canvas, one object centered with generous margin.
+
+Subject: ONE chunky circular SETTINGS button for a cozy pastel flower-shop merge game. Soft lilac-lavender purple circular badge (same family as workshop purple accents), thick soft warm chocolate-brown outline, gentle cel shading with a soft white highlight on the upper-left. In the center: a cute simple white gear / cog icon with rounded teeth, clear silhouette, slight soft lavender inner shadow so the gear reads at about 128px. Optional tiny white four-pointed star sparkle near the rim only.
+
+Match neighboring shop HUD icons (green operate/shop bag button, world-map coin): toy-like rounded forms, polished casual 2D vector merge-game style, no metallic photoreal gear.
+
+NO text, NO letters, NO numbers, NO watermark, NO UI frame, NO ground. Background flat uniform magenta chroma key exactly hexadecimal FF00FF, solid, no gradient, no fringe pixels.

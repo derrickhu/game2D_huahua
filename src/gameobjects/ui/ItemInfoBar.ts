@@ -50,7 +50,7 @@ const CHAIN_H = 48;
 /** 卡片内右侧留给双按钮的列宽（含间距） */
 const BTN_COL_W = CHAIN_W + SELL_BTN_W + 18;
 /** 卡片相对「铺满左右按钮之间」再左右各缩进的像素 */
-const CARD_SIDE_TRIM = 40;
+const CARD_SIDE_TRIM = 18;
 /** 叶条最大宽度（仅占左上，不拉满卡片；加长右侧可让长标题+Lv 留在红带主体内） */
 const LEAF_MAX_W = 380;
 /** 叶形条向左超出卡片左金边的像素（文字仍排在卡片内） */
@@ -201,11 +201,10 @@ export class ItemInfoBar extends PIXI.Container {
     super();
     this._actualHeight = actualHeight ?? INFO_BAR_HEIGHT;
     this._safeBottom = Math.max(SAFE_BOTTOM, safeBottom);
-    this._contentCY = (this._actualHeight - this._safeBottom) / 2;
+    this._layoutMetrics();
     this._buildBg();
     this._buildHouseBtn();
     this._buildWarehouseBtn();
-    this._layoutMetrics();
     this._buildHintArea();
     this._buildInfoArea();
     this._buildChainBtn();
@@ -225,9 +224,13 @@ export class ItemInfoBar extends PIXI.Container {
     const fullSpan = cardRightEdge - midL;
     this._cardLeft = midL + CARD_SIDE_TRIM;
     this._cardW = Math.max(208, fullSpan - CARD_SIDE_TRIM * 2);
-    const innerH = this._actualHeight - this._safeBottom - 8;
-    this._cardH = Math.min(108, Math.max(76, innerH - 4));
-    this._cardTop = (this._actualHeight - this._safeBottom - this._cardH) / 2;
+    // 视觉上卡片可下探进安全区黄条，避免整栏加高挤棋盘；底边仍留一点空隙。
+    const bottomPad = Math.min(10, Math.max(4, Math.floor(this._safeBottom * 0.25)));
+    const topPad = 6;
+    const maxCardH = Math.max(100, this._actualHeight - topPad - bottomPad);
+    this._cardH = Math.min(136, maxCardH);
+    this._cardTop = topPad;
+    this._contentCY = this._cardTop + this._cardH / 2;
     this._leafDisplayWMin = Math.min(
       LEAF_MAX_W,
       Math.max(168, Math.floor(this._cardW * 0.58)),
@@ -267,7 +270,6 @@ export class ItemInfoBar extends PIXI.Container {
   relayout(actualHeight: number, safeBottom = SAFE_BOTTOM): void {
     this._actualHeight = Math.max(INFO_BAR_HEIGHT, actualHeight);
     this._safeBottom = Math.max(SAFE_BOTTOM, safeBottom);
-    this._contentCY = (this._actualHeight - this._safeBottom) / 2;
     this._layoutMetrics();
     this._drawBg();
     const sideButtonCY = Math.max(SIDE_BTN_R, this._contentCY);

@@ -135,9 +135,12 @@ export const FURNITURE_TRAY_EDIT_CORNER_ICON_SIDE_PAD = 14;
 /** @deprecated */
 export const FURNITURE_TRAY_CLEAR_ICON_RIGHT_PAD = FURNITURE_TRAY_EDIT_CORNER_ICON_SIDE_PAD;
 
-/** 编辑态托盘顶边设计 Y（与 open() / ShopScene trayOpenTopY 一致） */
-export function furnitureTrayOpenTopY(logicH: number, safeBottom = 0): number {
-  return logicH - safeBottom - TRAY_H;
+/**
+ * 编辑态托盘顶边设计 Y。
+ * 托盘壳体属于贴底视觉层；内部控件已有留白，不应把整块壳体抬到安全区之上。
+ */
+export function furnitureTrayOpenTopY(logicH: number, _safeBottom = 0): number {
+  return logicH - TRAY_H;
 }
 
 /** 教程高亮「完成装修」顶右圆钮矩形（场景设计坐标，与 layoutEditCompleteIcon 一致） */

@@ -160,6 +160,8 @@ const C = {
   ACTIVITY_BG: 0xFFFFFF,     // 活动按钮底色
   RETURN_BG: 0x4CAF50,       // 返回按钮底色（绿色，参考四季物语）
   RETURN_ARROW: 0xFFFFFF,    // 返回箭头色
+  SETTINGS_BG: 0xA78BFA,     // 设置按钮底色（与旧折叠条设置入口同色）
+  SETTINGS_STROKE: 0x7C5FC5,
   SIDE_BTN_BG: 0xFFFFFF,     // 侧边胶囊按钮底色
   SIDE_BTN_SHADOW: 0x000000, // 侧边按钮阴影
 };
@@ -235,6 +237,8 @@ export class ShopScene implements Scene {
   /** 升星/星级礼包预览弹窗 */
   private _levelUpPopup!: LevelUpPopup;
   private _returnBtn!: PIXI.Container;
+  /** 左下设置入口（与右下「店铺/营业」钮对称） */
+  private _settingsBtn!: PIXI.Container;
   private _roomContainer!: PIXI.Container;
   private _activityBtns: Map<string, { container: PIXI.Container; redDot: PIXI.Graphics }> = new Map();
 
@@ -619,6 +623,7 @@ export class ShopScene implements Scene {
       this._tutorialOverlay = null;
     }
 
+    this._settingsPanel?.close();
     this._restoreShopHudAfterDecoPanel();
     RewardFlyCoordinator.setBindings(null);
     this._textureRefreshUnsub?.();
@@ -674,14 +679,16 @@ export class ShopScene implements Scene {
       );
     });
 
-    const operateY = h - bottom - 90;
+    // 底部 HUD 的按钮自身已有足够底距；视觉层贴屏幕底边，不再整体叠加安全区上移。
+    const operateY = h - 90;
+    this._settingsBtn.position.set(72, operateY);
     this._returnBtn.position.set(w - 72, operateY);
     if (this._worldMapBtn) {
       const r = WORLD_MAP_ICON_R;
       const operateTopY = operateY - RETURN_BTN_SIZE / 2;
       const labelY = r - 10;
       const mapExtentBelowCenter = labelY + WORLD_MAP_LABEL_H;
-      const stripTopY = h - bottom - SHOP_BOTTOM_STRIP_TOP_OFFSET;
+      const stripTopY = h - SHOP_BOTTOM_STRIP_TOP_OFFSET;
       let mapY = Math.max(
         operateTopY - WORLD_MAP_ABOVE_OPERATE_GAP - mapExtentBelowCenter,
         stripTopY + r + 2,
@@ -703,10 +710,10 @@ export class ShopScene implements Scene {
         );
       });
     }
-    this._editBtn.position.set(w / 2, h - bottom - 118);
+    this._editBtn.position.set(w / 2, h - 118);
 
     if (this._miscDrawerTab && this._miscDrawerPanel) {
-      const drawerY = h - bottom - MISC_DRAWER_Y_FROM_BOTTOM;
+      const drawerY = h - MISC_DRAWER_Y_FROM_BOTTOM;
       this._miscDrawerTab.position.set(18, drawerY);
       this._miscDrawerPanel.position.set(54, drawerY - 1);
     }
@@ -782,6 +789,9 @@ export class ShopScene implements Scene {
 
     // ============== 8. 右下角返回按钮（参考四季物语的大箭头） ==============
     this._buildReturnButton(w, h);
+
+    // ============== 8a. 左下设置按钮（与右下店铺钮对称，打开音乐/音效设置） ==============
+    this._buildSettingsButton(w, h);
 
     // ============== 8b. 大地图按钮（右下营业钮正上方、落在底部浅绿条内，配置等级解锁） ==============
     this._buildWorldMapButton(w, h);
@@ -2054,7 +2064,7 @@ export class ShopScene implements Scene {
     if (!ENABLE_SHOP_MISC_DRAWER) return;
 
     const root = new PIXI.Container();
-    const drawerY = Game.logicHeight - Game.safeBottom - MISC_DRAWER_Y_FROM_BOTTOM;
+    const drawerY = Game.logicHeight - MISC_DRAWER_Y_FROM_BOTTOM;
 
     const tab = new PIXI.Container();
     tab.position.set(18, drawerY);
@@ -2592,7 +2602,7 @@ export class ShopScene implements Scene {
   private _buildReturnButton(w: number, h: number): void {
     this._returnBtn = new PIXI.Container();
     const cx = w - 72;
-    const cy = h - Game.safeBottom - 90;
+    const cy = h - 90;
 
     const r = RETURN_BTN_SIZE / 2;
 
@@ -2671,6 +2681,65 @@ export class ShopScene implements Scene {
     pulse();
   }
 
+  // ─────────────────── 设置按钮（左下角，与右下店铺钮对称） ───────────────────
+
+  private _buildSettingsButton(_w: number, h: number): void {
+    this._settingsBtn = new PIXI.Container();
+    const cx = 72;
+    const cy = h - 90;
+    const r = RETURN_BTN_SIZE / 2;
+
+    const shadow = new PIXI.Graphics();
+    shadow.beginFill(0x5B3F9A, 0.28);
+    shadow.drawCircle(2, 3, r + 3);
+    shadow.endFill();
+    this._settingsBtn.addChild(shadow);
+
+    const iconHost = new PIXI.Container();
+    this._settingsBtn.addChild(iconHost);
+    const mountIcon = (tex: PIXI.Texture | null): void => {
+      iconHost.removeChildren().forEach(ch => ch.destroy({ children: true }));
+      if (tex) {
+        const sp = new PIXI.Sprite(tex);
+        sp.anchor.set(0.5);
+        sp.width = r * 2;
+        sp.height = r * 2;
+        iconHost.addChild(sp);
+        return;
+      }
+      const bg = new PIXI.Graphics();
+      bg.beginFill(C.SETTINGS_BG);
+      bg.drawCircle(0, 0, r);
+      bg.endFill();
+      bg.lineStyle(2.5, C.SETTINGS_STROKE, 0.9);
+      bg.drawCircle(0, 0, r - 1);
+      iconHost.addChild(bg);
+    };
+    mountIcon(TextureCache.get('icon_settings'));
+    if (!TextureCache.get('icon_settings')) {
+      void TextureCache.preloadKeys(['icon_settings']).then(() => {
+        mountIcon(TextureCache.get('icon_settings'));
+      });
+    }
+
+    this._settingsBtn.position.set(cx, cy);
+    this._settingsBtn.eventMode = 'static';
+    this._settingsBtn.cursor = 'pointer';
+    this._settingsBtn.hitArea = new PIXI.Circle(0, 0, r + 12);
+    this._settingsBtn.on('pointerdown', () => {
+      TweenManager.cancelTarget(this._settingsBtn.scale);
+      this._settingsBtn.scale.set(0.9);
+      TweenManager.to({
+        target: this._settingsBtn.scale,
+        props: { x: 1, y: 1 },
+        duration: 0.2,
+        ease: Ease.easeOutBack,
+      });
+      this._settingsPanel?.show();
+    });
+    this.container.addChild(this._settingsBtn);
+  }
+
   // ─────────────────── 大地图入口 ───────────────────
 
   private _buildWorldMapButton(w: number, h: number): void {
@@ -2678,13 +2747,13 @@ export class ShopScene implements Scene {
     const r = WORLD_MAP_ICON_R;
     // 与「营业」同列；整体上沿受底部浅绿条顶边限制（见 SHOP_BOTTOM_STRIP_TOP_OFFSET）
     const cx = w - 72;
-    const operateCY = h - Game.safeBottom - 90;
+    const operateCY = h - 90;
     const operateR = RETURN_BTN_SIZE / 2;
     const operateTopY = operateCY - operateR;
     // 文案上提、略压图标下缘：锚点顶对齐，y < r 形成重叠
     const labelY = r - 10;
     const mapExtentBelowCenter = labelY + WORLD_MAP_LABEL_H;
-    const stripTopY = h - Game.safeBottom - SHOP_BOTTOM_STRIP_TOP_OFFSET;
+    const stripTopY = h - SHOP_BOTTOM_STRIP_TOP_OFFSET;
     const cyFromOperate =
       operateTopY - WORLD_MAP_ABOVE_OPERATE_GAP - mapExtentBelowCenter;
     const cyMinForStrip = stripTopY + r + 2;
@@ -3041,7 +3110,7 @@ export class ShopScene implements Scene {
     this._applyShopEditButtonChrome();
 
     // 底部居中，略上移避免与系统安全区/返回键重叠
-    this._editBtn.position.set(w / 2, h - Game.safeBottom - 118);
+    this._editBtn.position.set(w / 2, h - 118);
     this._editBtn.eventMode = 'static';
     this._editBtn.cursor = 'pointer';
     this._editBtn.on('pointerdown', () => {
@@ -3209,8 +3278,10 @@ export class ShopScene implements Scene {
     this._ensureEditCompletePill();
     void this._preloadEditTrayUiTextures();
 
-    // 隐藏返回按钮和侧边按钮（编辑模式下不能退出场景）
+    // 隐藏返回/设置与侧边按钮（编辑模式下不能退出场景）
     this._returnBtn.visible = false;
+    this._settingsBtn.visible = false;
+    this._settingsPanel?.close();
     if (this._worldMapBtn) this._worldMapBtn.visible = false;
     if (this._wishingBtn) this._wishingBtn.visible = false;
     if (this._newbieGiftPackEntry) this._newbieGiftPackEntry.visible = false;
@@ -3529,7 +3600,7 @@ export class ShopScene implements Scene {
 
     // 还原编辑按钮（编辑态仅隐藏主钮，退出后恢复显隐与布局）
     const h = Game.logicHeight;
-    this._editBtn.position.set(DESIGN_WIDTH / 2, h - Game.safeBottom - 118);
+    this._editBtn.position.set(DESIGN_WIDTH / 2, h - 118);
     this._applyShopEditButtonChrome();
 
     // 恢复脉冲动画
@@ -3553,6 +3624,7 @@ export class ShopScene implements Scene {
     // 恢复按钮显示
     this._setShopHudVisible(true);
     this._returnBtn.visible = true;
+    this._settingsBtn.visible = true;
     this._refreshWorldMapBtnVisibility();
     this._refreshWishingBtnVisibility();
     this._refreshNewbieGiftEntryVisibility();
