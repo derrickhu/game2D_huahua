@@ -329,6 +329,7 @@ class SaveManagerClass {
         'huahua_regulars',
         'huahua_decoration',
         'huahua_room_layout',
+        'huahua_room_layout_presets',
         'huahua_furniture_workshop',
         'huahua_dressup',
         'huahua_social',

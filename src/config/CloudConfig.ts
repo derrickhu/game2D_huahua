@@ -54,6 +54,7 @@ export const CLOUD_SYNC_ALLOWLIST = [
   'huahua_flower_quotes',
   'huahua_decoration',
   'huahua_room_layout',
+  'huahua_room_layout_presets',
   'huahua_dressup',
   'huahua_social',
   'huahua_events',

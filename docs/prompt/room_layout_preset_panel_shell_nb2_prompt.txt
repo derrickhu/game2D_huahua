@@ -1,0 +1,23 @@
+Single mobile game UI asset, nearly square 1:1 aspect ratio (short compact modal, NOT tall 9:16 phone full-bleed). One flattened decorative SHELL ONLY for a room-layout preset modal that holds only three short list rows. Cozy pastel flower-shop merge game. High resolution, crisp anti-aliased vector edges.
+
+CRITICAL PROPORTION: Keep the panel SHORT and COMPACT — height only slightly taller than width. Do NOT make a tall full-screen phone modal. Think postcard / short dialog, not a long scroll page.
+
+USE THE ATTACHED REFERENCE IMAGE AS THE ONLY STYLE AUTHORITY.
+Match the CURRENT furniture renovation tray shell DNA exactly: thin soft pastel-pink outer border, warm cream-ivory interior, subtle floral damask watermark, light airy kawaii flat vector — NOT the old purple-lilac frames, NOT gold scalloped title plaques, NOT peach/orange baroque mansion panels.
+
+THIS IS AN EMPTY BACKPLATE ONLY. No gameplay content.
+
+KEEP ONLY THESE SHELL PARTS:
+- Tall centered modal, very rounded corners, gentle floating drop shadow.
+- OUTERMOST EDGE: single thin soft pastel-pink lip border (same family as the attached tray), optional warm soft-brown hairline stroke. NO thick lilac-purple outer rim. NO double purple+pink frame.
+- TOP STRIP (~12% height): warm cream-pink matte, optional VERY SUBTLE fine vertical pinstripe at ~4% opacity. Completely EMPTY — no title text, no gold banner, no Chinese, no letters, no numbers. Leave blank for code to draw the title.
+- TOP-RIGHT: chunky circular red close button with simple white X, slightly past the frame corner (functional close only).
+- MAIN CONTENT FIELD: large warm cream-ivory matte area filling most height. VERY SUBTLE floral scroll damask watermark at ~5–6% opacity (same ornamental family as the attached tray). Completely EMPTY — no preset cards, no furniture icons, no lock icons, no trash, no list rows, no dashed boxes, no placeholder slots, no grid lines.
+
+STRICTLY FORBIDDEN:
+Lilac/lavender/purple thick outer frame, golden-yellow scalloped title banner, peach/orange baroque rim, Chinese text, English text, numbers, furniture thumbnails, preset cards, tabs, dashed empty slots, annotation marks, red boxes.
+
+Art style: clean 2D vector kawaii mobile game UI, warm high-key pastel pink + cream palette matching the attached renovation tray, soft gradients only for depth, no photoreal, no brand watermark.
+
+TECHNICAL BACKGROUND FOR CLEAN CUTOUT:
+ONLY the margins OUTSIDE the rounded modal silhouette must be pure bright screen green RGB exactly 0,255,0, flat, no gradient. The modal interior must contain ZERO green pixels.

@@ -227,6 +227,9 @@ const PANELS_IMAGE_MAP: Record<string, string> = {
   decoration_panel_shell_nb2: 'subpkg_panels/images/ui/decoration_panel_shell_nb2.png',
   /** 设置弹层壳（紫框金标题牌 + 红关闭；内容由代码叠） */
   settings_panel_shell_nb2: 'subpkg_panels/images/ui/settings_panel_shell_nb2.png',
+  /** 装修布局预设弹层壳（紫框金标题牌 + 红关闭；三槽由代码叠） */
+  room_layout_preset_panel_shell_nb2:
+    'subpkg_panels/images/ui/room_layout_preset_panel_shell_nb2.png',
   /** 编辑托盘 Tab 图标（6×2 表切图 + rembg；顺序同 FURNITURE_TRAY_TABS） */
   /** 家具托盘 Tab 图标（单态；选中由程序描边/底色区分） */
   furniture_tray_tab_flower_room_idle: 'subpkg_panels/images/ui/furniture_tray_tab_flower_room_idle.png',
@@ -253,6 +256,12 @@ const PANELS_IMAGE_MAP: Record<string, string> = {
   shop_edit_deco_btn_nb2: 'subpkg_panels/images/ui/shop_edit_deco_btn_nb2.png',
   /** 编辑托盘顶左「清空」：圆钮 + 垃圾桶（无字） */
   furniture_edit_clear_icon_nb2: 'subpkg_panels/images/ui/furniture_edit_clear_icon_nb2.png',
+  /** 编辑托盘「保存预设」：圆钮 + 存档图标（无字） */
+  furniture_edit_save_preset_icon_nb2:
+    'subpkg_panels/images/ui/furniture_edit_save_preset_icon_nb2.png',
+  /** 编辑托盘「显示预设」：圆钮 + 相册叠层图标（无字） */
+  furniture_edit_show_preset_icon_nb2:
+    'subpkg_panels/images/ui/furniture_edit_show_preset_icon_nb2.png',
   /** 家具托盘底板壳（legacy 拱顶） */
   furniture_tray_panel_shell_nb2: 'subpkg_panels/images/ui/furniture_tray_panel_shell_nb2.png',
   /** 装修编辑托盘 v3：薄粉边 + 上竖纹/下 damask 双区 flat bottom sheet */
@@ -701,6 +710,7 @@ const DECO_IMAGE_MAP: Record<string, string> = {
   wallart_spring: 'subpkg_deco/images/furniture/wallart_spring.png',
   wallart_winter: 'subpkg_deco/images/furniture/wallart_winter.png',
   wallart_lace_curtain: 'subpkg_deco/images/furniture/wallart_lace_curtain.png',
+  wallart_cream_lace_rod_curtain: 'subpkg_deco/images/furniture/wallart_cream_lace_rod_curtain.png',
   wallart_rose_swag_drape: 'subpkg_deco/images/furniture/wallart_rose_swag_drape.png',
   promo_pearl_bead_curtain: 'subpkg_deco/images/furniture/promo_pearl_bead_curtain.png',
   event_jewelry_jade_curtain: 'subpkg_deco/images/furniture/event_jewelry_jade_curtain.png',
@@ -719,6 +729,7 @@ const DECO_IMAGE_MAP: Record<string, string> = {
   orn_greenhouse_rug: 'subpkg_deco/images/furniture/orn_greenhouse_rug.png',
   orn_greenhouse_coat_rack: 'subpkg_deco/images/furniture/orn_greenhouse_coat_rack.png',
   orn_greenhouse_flower_cart: 'subpkg_deco/images/furniture/orn_greenhouse_flower_cart.png',
+  orn_mint_utility_cart: 'subpkg_deco/images/furniture/orn_mint_utility_cart.png',
   greenhouse_pot_sprout: 'subpkg_deco/images/furniture/greenhouse_pot_sprout.png',
   greenhouse_pot_bud: 'subpkg_deco/images/furniture/greenhouse_pot_bud.png',
   greenhouse_pot_daisy: 'subpkg_deco/images/furniture/greenhouse_pot_daisy.png',
@@ -744,6 +755,7 @@ const DECO_IMAGE_MAP: Record<string, string> = {
   orn_flora_fern_terrarium: 'subpkg_deco/images/furniture/orn_flora_fern_terrarium.png',
   orn_flora_hanging_petunia: 'subpkg_deco/images/furniture/orn_flora_hanging_petunia.png',
   orn_flora_pink_phalaenopsis_pot: 'subpkg_deco/images/furniture/orn_flora_pink_phalaenopsis_pot.png',
+  orn_flora_boston_fern_pot: 'subpkg_deco/images/furniture/orn_flora_boston_fern_pot.png',
   // 蝴蝶小屋专属家具（由合图拆分）
   butterfly_house_display_case: 'subpkg_deco/images/furniture/butterfly_house_display_case.png',
   butterfly_house_writing_desk: 'subpkg_deco/images/furniture/butterfly_house_writing_desk.png',
@@ -1125,6 +1137,8 @@ const SHOP_WARMUP_KEYS = [
   'furniture_tray_tab_qinglian_idle',
   'furniture_edit_clear_icon_nb2',
   'furniture_edit_complete_icon_nb2',
+  'furniture_edit_save_preset_icon_nb2',
+  'furniture_edit_show_preset_icon_nb2',
   'icon_worldmap_nav',
   'icon_wishing_nav',
   'icon_weekend_huayuan_boost_nb2',
@@ -1189,6 +1203,8 @@ const TUTORIAL_DECO_KEYS = [
   'furniture_tray_tab_qinglian_idle',
   'furniture_edit_clear_icon_nb2',
   'furniture_edit_complete_icon_nb2',
+  'furniture_edit_save_preset_icon_nb2',
+  'furniture_edit_show_preset_icon_nb2',
   'ui_order_check_badge',
   'room_edit_toolbar_zoom_in',
   'room_edit_toolbar_zoom_out',

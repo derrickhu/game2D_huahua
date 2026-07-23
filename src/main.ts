@@ -23,6 +23,7 @@ import { SaveManager } from '@/managers/SaveManager';
 import { MerchShopManager } from '@/managers/MerchShopManager';
 import { IdleManager } from '@/managers/IdleManager';
 import { RoomLayoutManager } from '@/managers/RoomLayoutManager';
+import { RoomLayoutPresetManager } from '@/managers/RoomLayoutPresetManager';
 import { LevelManager } from '@/managers/LevelManager';
 import { RewardBoxHintManager } from '@/managers/RewardBoxHintManager';
 import { CloudSyncManager } from '@/managers/CloudSyncManager';
@@ -195,6 +196,9 @@ async function main(): Promise<void> {
       }
       if (info.changedKeys.includes('huahua_room_layout')) {
         RoomLayoutManager.reloadFromStorage();
+      }
+      if (info.changedKeys.includes('huahua_room_layout_presets')) {
+        RoomLayoutPresetManager.reloadFromStorage();
       }
       if (info.changedKeys.includes('huahua_furniture_workshop')) {
         FurnitureWorkshopManager.reloadFromStorage();

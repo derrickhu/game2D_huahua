@@ -121,6 +121,7 @@ import { LIVE_HOUSE_THUMB_CAPTURE_MAX } from '@/config/WorldMapConfig';
 import { RewardBoxManager } from '@/managers/RewardBoxManager';
 import { MERGE_BUBBLE_DISPLAY_NAME } from '@/config/MergeCompanionConfig';
 import { RoomLayoutManager } from '@/managers/RoomLayoutManager';
+import { RoomLayoutPresetManager } from '@/managers/RoomLayoutPresetManager';
 import { WeekendHuayuanBoostManager } from '@/managers/WeekendHuayuanBoostManager';
 import { TuesdayStaminaUnlimitedManager } from '@/managers/TuesdayStaminaUnlimitedManager';
 import { ThursdayMagicTimeManager } from '@/managers/ThursdayMagicTimeManager';
@@ -270,6 +271,7 @@ export class MainScene implements Scene {
       IdleManager.init();
       LevelManager.init();
       RoomLayoutManager.init();
+      RoomLayoutPresetManager.init();
       SoundSystem.init();
 
       // Phase 7+ 新系统初始化

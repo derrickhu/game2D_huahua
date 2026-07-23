@@ -37,6 +37,8 @@ export const AD_UNIT_CONFIG: Record<'wechat' | 'douyin', PlatformAdUnitConfig> =
       dressup_outfit_qinglian: 'adunit-73ce0cce0986d5b3',
       /** 花间珠匣 · 进度回响广告奖励 */
       event_progress_echo: 'adunit-ee586fd11571a756',
+      /** 装修布局预设第 3 槽：沿用原「清空房间」广告位 */
+      room_layout_preset_slot3: 'adunit-05c339f10f72ed43',
     },
     interstitial: 'adunit-yyyyyyyyyyyyyyyyyy',
     banner: 'adunit-zzzzzzzzzzzzzzzzzz',

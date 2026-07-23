@@ -134,6 +134,8 @@ export const FURNITURE_TRAY_CLEAR_ICON_Y = FURNITURE_TRAY_EDIT_CORNER_ICON_Y;
 export const FURNITURE_TRAY_EDIT_CORNER_ICON_SIDE_PAD = 14;
 /** @deprecated */
 export const FURNITURE_TRAY_CLEAR_ICON_RIGHT_PAD = FURNITURE_TRAY_EDIT_CORNER_ICON_SIDE_PAD;
+/** 清空右侧「保存/显示预设」圆钮间距 */
+export const FURNITURE_TRAY_PRESET_ICON_GAP = 10;
 
 /**
  * 编辑态托盘顶边设计 Y。
@@ -479,6 +481,49 @@ export class FurnitureTray extends PIXI.Container {
     this.sortChildren();
   }
 
+  /** 顶栏圆钮占用宽度（含 hit 外扩），用于清空右侧链式排布 */
+  private _editCornerIconSpan(icon?: PIXI.Container): number {
+    if (icon?.hitArea instanceof PIXI.Rectangle) return icon.hitArea.width;
+    return FURNITURE_TRAY_EDIT_CORNER_ICON_TARGET_H + 16;
+  }
+
+  /** 清空右侧第 1 钮：保存预设 */
+  layoutEditPresetSaveIcon(btn: PIXI.Container): void {
+    const span = this._editCornerIconSpan(btn);
+    const clearSpan = this._editCornerIconSpan();
+    const x =
+      FURNITURE_TRAY_EDIT_CORNER_ICON_SIDE_PAD
+      + clearSpan
+      + FURNITURE_TRAY_PRESET_ICON_GAP
+      + span / 2;
+    btn.position.set(x, FURNITURE_TRAY_EDIT_CORNER_ICON_Y);
+    btn.zIndex = 1;
+    if (btn.parent !== this._cornerIconLayer) {
+      this._cornerIconLayer.addChild(btn);
+    }
+    this.sortChildren();
+  }
+
+  /** 清空右侧第 2 钮：显示预设 */
+  layoutEditPresetShowIcon(btn: PIXI.Container): void {
+    const span = this._editCornerIconSpan(btn);
+    const clearSpan = this._editCornerIconSpan();
+    const saveSpan = this._editCornerIconSpan();
+    const x =
+      FURNITURE_TRAY_EDIT_CORNER_ICON_SIDE_PAD
+      + clearSpan
+      + FURNITURE_TRAY_PRESET_ICON_GAP
+      + saveSpan
+      + FURNITURE_TRAY_PRESET_ICON_GAP
+      + span / 2;
+    btn.position.set(x, FURNITURE_TRAY_EDIT_CORNER_ICON_Y);
+    btn.zIndex = 1;
+    if (btn.parent !== this._cornerIconLayer) {
+      this._cornerIconLayer.addChild(btn);
+    }
+    this.sortChildren();
+  }
+
   /** 「完成装修」圆钮：面板顶栏右缘（原清空位置） */
   layoutEditCompleteIcon(complete: PIXI.Container): void {
     const hit = complete.hitArea;
@@ -496,7 +541,18 @@ export class FurnitureTray extends PIXI.Container {
 
   /** 供 ShopScene 挂载编辑态清空图标 */
   mountEditClearIcon(clear: PIXI.Container): void {
+    (clear as PIXI.Container & { _editRole?: string })._editRole = 'clear';
     this.layoutEditClearIcon(clear);
+  }
+
+  mountEditPresetSaveIcon(btn: PIXI.Container): void {
+    (btn as PIXI.Container & { _editRole?: string })._editRole = 'preset_save';
+    this.layoutEditPresetSaveIcon(btn);
+  }
+
+  mountEditPresetShowIcon(btn: PIXI.Container): void {
+    (btn as PIXI.Container & { _editRole?: string })._editRole = 'preset_show';
+    this.layoutEditPresetShowIcon(btn);
   }
 
   /** 供 ShopScene 挂载编辑态完成图标 */

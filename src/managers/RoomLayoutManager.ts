@@ -481,6 +481,71 @@ class RoomLayoutManagerClass {
     EventBus.emit('roomlayout:changed');
   }
 
+  /**
+   * 用预设快照整房替换当前场景布局。
+   * 先清空再按拥有数量 / 场景白名单写入；超出拥有量或不可用的件计入 skipped。
+   */
+  replaceCurrentSceneLayout(
+    placements: FurniturePlacement[],
+    ownerPos?: { x: number; y: number } | null,
+  ): { placed: number; skipped: number } {
+    this._syncActiveSceneWithCurrency();
+    const sceneId = CurrencyManager.state.sceneId;
+    const prevOwner = this._scenes[sceneId]?.ownerPos;
+
+    this._placements = [];
+
+    const usedByDeco = new Map<string, number>();
+    const next: FurniturePlacement[] = [];
+    let skipped = 0;
+
+    for (const raw of placements) {
+      const deco = DECO_MAP.get(raw.decoId);
+      if (!deco || !isDecoAllowedInScene(deco, sceneId)) {
+        skipped += 1;
+        continue;
+      }
+      const owned = DecorationManager.getOwnedCount(raw.decoId);
+      const used = usedByDeco.get(raw.decoId) ?? 0;
+      if (owned <= 0 || used >= owned || (!deco.stackable && used > 0)) {
+        skipped += 1;
+        continue;
+      }
+      usedByDeco.set(raw.decoId, used + 1);
+      next.push({
+        instanceId: this._newInstanceId(raw.decoId),
+        decoId: raw.decoId,
+        x: this._clampX(raw.x),
+        y: this._clampY(raw.y),
+        scale: clampPlacementScale(raw.scale),
+        flipped: !!raw.flipped,
+        facing: this._isFacing4(raw.facing) ? raw.facing : undefined,
+        interactionState:
+          typeof raw.interactionState === 'string' ? raw.interactionState : undefined,
+        zLayer: raw.zLayer ?? 0,
+        depthManualBias: typeof raw.depthManualBias === 'number' ? raw.depthManualBias : 0,
+      });
+    }
+
+    this._placements = next;
+    if (ownerPos && typeof ownerPos.x === 'number' && typeof ownerPos.y === 'number') {
+      this._ownerPos = { x: ownerPos.x, y: ownerPos.y };
+    } else if (prevOwner) {
+      this._ownerPos = { ...prevOwner };
+    }
+
+    this._scenes[sceneId] = {
+      placements: this._clonePlacements(this._placements),
+      ownerPos: this._ownerPos ? { ...this._ownerPos } : undefined,
+    };
+    this.saveNow();
+    EventBus.emit('roomlayout:changed');
+    console.log(
+      `[RoomLayout] 预设应用 scene=${sceneId} placed=${next.length} skipped=${skipped}`,
+    );
+    return { placed: next.length, skipped };
+  }
+
   // ---- 存档 ----
 
   /** 立即保存 */

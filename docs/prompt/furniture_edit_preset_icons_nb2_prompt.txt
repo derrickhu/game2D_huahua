@@ -1,0 +1,7 @@
+Square 1:1 mobile game UI icon sheet, exactly 2 columns x 1 row, equal cells, thick white gutter between cells. Each cell: one circular glossy bubble button centered with generous margin, matching attached reference style (same border thickness, same 3D gem highlight, same white glyph weight). Soft brown/maroon outer ring, chunky casual kawaii merge-game UI. NO TEXT, no labels, no captions, no watermark.
+
+Left cell: SAVE PRESET button. Circular button with soft sky-blue to periwinkle gradient fill (pale top highlight, richer blue mid). Center: simple white floppy-disk / save icon with thin dark brown outline, bold readable silhouette.
+
+Right cell: SHOW PRESET button. Circular button with soft honey-yellow to warm gold gradient fill (pale top highlight). Center: simple white stacked photo frames / album cards icon with thin dark brown outline, two overlapping rounded rectangles slightly offset.
+
+Background of the whole sheet: pure solid magenta #FF00FF. Do not draw furniture, rooms, or extra decorations outside the two circular buttons.

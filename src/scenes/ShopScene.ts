@@ -37,7 +37,9 @@ import {
   furnitureTrayEditCompleteSpotlightRect,
   furnitureTrayOpenTopY,
 } from '@/gameobjects/ui/FurnitureTray';
+import { RoomLayoutPresetPanel } from '@/gameobjects/ui/RoomLayoutPresetPanel';
 import { RoomEditToolbar } from '@/gameobjects/ui/RoomEditToolbar';
+import { RoomLayoutPresetManager } from '@/managers/RoomLayoutPresetManager';
 import { TextureCache } from '@/utils/TextureCache';
 import { DECO_MAP, DecoDef, DecoSlot, SHOP_FURNITURE_DISPLAY_SCALE_MULTIPLIER, SHOP_FURNITURE_TEX_BASE_PX } from '@/config/DecorationConfig';
 import { resolveFurnitureTexture, collectFurniturePreloadKeys, FURNITURE_RENDER_MAP } from '@/config/FurnitureRenderConfig';
@@ -248,8 +250,13 @@ export class ShopScene implements Scene {
   private _furnitureTray!: FurnitureTray;
   /** 编辑态托盘右下角「完成编辑」贴图（与 _editBtn 互斥显示） */
   private _editCompletePill: PIXI.Container | null = null;
-  /** 编辑态「清空」图标（托盘顶右，替代原底栏按钮） */
+  /** 编辑态「清空」图标（托盘顶左） */
   private _editClearAllPill: PIXI.Container | null = null;
+  /** 编辑态「保存预设」圆钮（清空右侧） */
+  private _editSavePresetPill: PIXI.Container | null = null;
+  /** 编辑态「显示预设」圆钮 */
+  private _editShowPresetPill: PIXI.Container | null = null;
+  private _layoutPresetPanel: RoomLayoutPresetPanel | null = null;
   private _editToolbar!: RoomEditToolbar;
   private _shopBuildingSprite: PIXI.Sprite | null = null;
   private _textureRefreshUnsub: (() => void) | null = null;
@@ -492,6 +499,7 @@ export class ShopScene implements Scene {
 
     // 初始化房间布局管理器
     RoomLayoutManager.init();
+    RoomLayoutPresetManager.init();
 
     this._textureRefreshUnsub?.();
     this._textureRefreshUnsub = TextureCache.observeTextureDependencies(
@@ -3484,10 +3492,14 @@ export class ShopScene implements Scene {
     void TextureCache.preloadKeys([
       'furniture_edit_clear_icon_nb2',
       'furniture_edit_complete_icon_nb2',
+      'furniture_edit_save_preset_icon_nb2',
+      'furniture_edit_show_preset_icon_nb2',
     ]).then(() => {
       if (!this._isEditMode) return;
       this._refreshEditClearAllIconTexture();
       this._refreshEditCompleteIconTexture();
+      this._refreshEditPresetIconTexture('save');
+      this._refreshEditPresetIconTexture('show');
       if (this._editClearAllPill?.visible) {
         this._ensureEditClearAllPill();
       }
@@ -3521,14 +3533,177 @@ export class ShopScene implements Scene {
     btn.eventMode = 'static';
     this._syncEditClearAllIconLayout(btn);
     this._refreshEditClearAllIconTexture();
+    this._ensureEditPresetPills();
   }
 
   private _hideEditClearAllPill(): void {
-    if (!this._editClearAllPill) return;
-    this._editClearAllPill.visible = false;
-    this._editClearAllPill.eventMode = 'none';
-    if (this._editClearAllPill.parent) {
-      this._editClearAllPill.parent.removeChild(this._editClearAllPill);
+    if (this._editClearAllPill) {
+      this._editClearAllPill.visible = false;
+      this._editClearAllPill.eventMode = 'none';
+      if (this._editClearAllPill.parent) {
+        this._editClearAllPill.parent.removeChild(this._editClearAllPill);
+      }
+    }
+    this._hideEditPresetPills();
+  }
+
+  private _ensureLayoutPresetPanel(): RoomLayoutPresetPanel {
+    if (!this._layoutPresetPanel) {
+      this._layoutPresetPanel = new RoomLayoutPresetPanel();
+      this._layoutPresetPanel.setOnApplied(() => this._refreshRoomAfterPresetApply());
+      OverlayManager.container.addChild(this._layoutPresetPanel);
+    }
+    return this._layoutPresetPanel;
+  }
+
+  private _refreshRoomAfterPresetApply(): void {
+    if (this._isEditMode) {
+      FurnitureDragSystem.clearAllRoomFurnitureSprites();
+      this._editToolbar.hide();
+      this._ensureEditModeFurnitureSprites();
+    } else {
+      this._renderFurnitureLayout();
+    }
+    const owner = this._ownerContainer;
+    const pos = RoomLayoutManager.ownerPos;
+    if (owner && pos) {
+      owner.position.set(pos.x, pos.y);
+      owner.zIndex = roomDepthZForOwner(pos.y);
+      this._roomContainer?.sortChildren();
+    }
+    if (this._furnitureTray.isOpen) {
+      this._furnitureTray.refresh();
+    }
+  }
+
+  private _syncEditPresetIconLayout(wrap: PIXI.Container, role: 'save' | 'show'): void {
+    let bw = TRAY_EDIT_CORNER_ICON_TARGET_H;
+    let bh = TRAY_EDIT_CORNER_ICON_TARGET_H;
+    const bg = wrap.children[0];
+    if (bg instanceof PIXI.Sprite && bg.texture?.width) {
+      const tex = bg.texture;
+      const s = TRAY_EDIT_CORNER_ICON_TARGET_H / Math.max(tex.width, tex.height);
+      bg.anchor.set(0.5, 0.5);
+      bg.position.set(0, 0);
+      bg.scale.set(s);
+      bw = tex.width * s;
+      bh = tex.height * s;
+    }
+    wrap.hitArea = new PIXI.Rectangle(-bw / 2 - 8, -bh / 2 - 8, bw + 16, bh + 16);
+    if (role === 'save') {
+      this._furnitureTray.mountEditPresetSaveIcon(wrap);
+    } else {
+      this._furnitureTray.mountEditPresetShowIcon(wrap);
+    }
+  }
+
+  private _makeEditPresetIconFallback(wrap: PIXI.Container, role: 'save' | 'show'): void {
+    const r = 32;
+    const g = new PIXI.Graphics();
+    if (role === 'save') {
+      g.beginFill(0x8ec8f5, 1);
+      g.lineStyle(3, 0x3a6a9a, 0.95);
+      g.drawCircle(0, 0, r);
+      g.endFill();
+      g.beginFill(0xffffff, 1);
+      g.drawRoundedRect(-12, -10, 24, 20, 3);
+      g.endFill();
+      g.beginFill(0x8ec8f5, 1);
+      g.drawRect(-6, -14, 12, 6);
+      g.endFill();
+    } else {
+      g.beginFill(0xf5d26a, 1);
+      g.lineStyle(3, 0x8a6a20, 0.95);
+      g.drawCircle(0, 0, r);
+      g.endFill();
+      g.beginFill(0xffffff, 1);
+      g.drawRoundedRect(-14, -8, 20, 16, 3);
+      g.endFill();
+      g.beginFill(0xffffff, 0.85);
+      g.drawRoundedRect(-8, -4, 20, 16, 3);
+      g.endFill();
+    }
+    wrap.addChild(g);
+  }
+
+  private _makeEditPresetPill(role: 'save' | 'show'): PIXI.Container {
+    const wrap = new PIXI.Container();
+    const key =
+      role === 'save'
+        ? 'furniture_edit_save_preset_icon_nb2'
+        : 'furniture_edit_show_preset_icon_nb2';
+    const tex = TextureCache.get(key);
+    if (tex?.width) {
+      wrap.addChild(new PIXI.Sprite(tex));
+    } else {
+      this._makeEditPresetIconFallback(wrap, role);
+    }
+    this._syncEditPresetIconLayout(wrap, role);
+    wrap.eventMode = 'static';
+    wrap.cursor = 'pointer';
+    wrap.on('pointertap', (e: PIXI.FederatedPointerEvent) => {
+      e.stopPropagation();
+      if (role === 'save') {
+        if (RoomLayoutManager.count <= 0) {
+          ToastMessage.show('房间内没有家具');
+          return;
+        }
+        this._ensureLayoutPresetPanel().show('save');
+      } else {
+        this._ensureLayoutPresetPanel().show('apply');
+      }
+    });
+    return wrap;
+  }
+
+  private _refreshEditPresetIconTexture(role: 'save' | 'show'): void {
+    const btn = role === 'save' ? this._editSavePresetPill : this._editShowPresetPill;
+    const key =
+      role === 'save'
+        ? 'furniture_edit_save_preset_icon_nb2'
+        : 'furniture_edit_show_preset_icon_nb2';
+    const tex = TextureCache.get(key);
+    if (!btn || !tex?.width) return;
+    const bg = btn.children[0];
+    if (bg instanceof PIXI.Sprite && bg.texture === tex) {
+      this._syncEditPresetIconLayout(btn, role);
+      return;
+    }
+    if (bg) {
+      btn.removeChild(bg);
+      bg.destroy({ children: true });
+    }
+    btn.addChildAt(new PIXI.Sprite(tex), 0);
+    this._syncEditPresetIconLayout(btn, role);
+  }
+
+  private _ensureEditPresetPills(): void {
+    if (!this._editSavePresetPill) {
+      this._editSavePresetPill = this._makeEditPresetPill('save');
+    }
+    if (!this._editShowPresetPill) {
+      this._editShowPresetPill = this._makeEditPresetPill('show');
+    }
+    for (const [btn, role] of [
+      [this._editSavePresetPill, 'save'],
+      [this._editShowPresetPill, 'show'],
+    ] as const) {
+      btn.visible = true;
+      btn.eventMode = 'static';
+      this._syncEditPresetIconLayout(btn, role);
+      this._refreshEditPresetIconTexture(role);
+    }
+  }
+
+  private _hideEditPresetPills(): void {
+    for (const btn of [this._editSavePresetPill, this._editShowPresetPill]) {
+      if (!btn) continue;
+      btn.visible = false;
+      btn.eventMode = 'none';
+      if (btn.parent) btn.parent.removeChild(btn);
+    }
+    if (this._layoutPresetPanel?.isOpen) {
+      this._layoutPresetPanel.close();
     }
   }
 
@@ -3539,20 +3714,14 @@ export class ShopScene implements Scene {
     }
     const confirmed = await ConfirmDialog.show(
       '一键清空',
-      '看完广告，清空本房所有摆放。\n家具仍保留，可从托盘再拖入。',
-      '观看广告',
+      '清空本房所有摆放？\n家具仍保留，可从托盘再拖入。',
+      '清空',
       '取消',
     );
     if (!confirmed) return;
 
-    AdManager.showRewardedAd(AdScene.WAREHOUSE_ORGANIZE, (success) => {
-      if (!success) {
-        ToastMessage.show('广告未看完，未清空');
-        return;
-      }
-      this._applyClearAllFurnitureInRoom();
-      ToastMessage.show('已清空房间家具');
-    });
+    this._applyClearAllFurnitureInRoom();
+    ToastMessage.show('已清空房间家具');
   }
 
   /** 清空当前房屋布局并刷新编辑态视图 */

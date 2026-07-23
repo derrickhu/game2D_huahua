@@ -59,6 +59,8 @@ export enum AdScene {
   DRESSUP_OUTFIT_QINGLIAN = 'dressup_outfit_qinglian',
   /** 花间珠匣 · 进度回响广告奖励 */
   EVENT_PROGRESS_ECHO = 'event_progress_echo',
+  /** 装修布局预设：解锁第 3 槽 */
+  ROOM_LAYOUT_PRESET_SLOT3 = 'room_layout_preset_slot3',
 }
 
 export type AdFailReason =
