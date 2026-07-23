@@ -3,9 +3,7 @@ import { DESIGN_WIDTH, FONT_FAMILY } from '@/config/Constants';
 import { Game } from '@/core/Game';
 import { TweenManager, Ease } from '@/core/TweenManager';
 import { SettingsManager } from '@/managers/SettingsManager';
-import { UserIdentityManager } from '@/managers/UserIdentityManager';
 import { ToastMessage } from '@/gameobjects/ui/ToastMessage';
-import { Platform } from '@/core/PlatformService';
 import { TextureCache } from '@/utils/TextureCache';
 
 const PANEL_W = 360;
@@ -23,11 +21,11 @@ const TITLE_NY = 0.075;
 const CONTENT_TOP_NY = 0.18;
 const CONTENT_BOTTOM_NY = 0.93;
 
-/** 展示与复制均仅使用后 8 位。 */
-function formatUserIdDisplay(id: string): string {
-  if (!id) return '';
-  return id.length <= 8 ? id : id.slice(-8);
-}
+/** 壳内奶油区约 280 宽，行卡需留边距避免裁切 */
+const ROW_W = 276;
+const ROW_H = 78;
+const ROW_HALF_W = ROW_W / 2;
+const ROW_HALF_H = ROW_H / 2;
 
 export class SettingsPanel extends PIXI.Container {
   private _isOpen = false;
@@ -38,7 +36,6 @@ export class SettingsPanel extends PIXI.Container {
   private _closeHit!: PIXI.Container;
   private _musicToggle!: PIXI.Container;
   private _soundToggle!: PIXI.Container;
-  private _uidText!: PIXI.Text;
   private _dimOverlay!: PIXI.Graphics;
 
   constructor() {
@@ -61,9 +58,6 @@ export class SettingsPanel extends PIXI.Container {
       this._applyShell();
     });
     this._refresh();
-    void UserIdentityManager.refreshFromBackend().then(() => {
-      if (this._isOpen) this._refresh();
-    });
 
     TweenManager.to({
       target: this,
@@ -124,7 +118,7 @@ export class SettingsPanel extends PIXI.Container {
     this._applyShell();
 
     this._titleText = new PIXI.Text('设置', {
-      fontSize: 30,
+      fontSize: 32,
       fill: 0xffffff,
       fontFamily: FONT_FAMILY,
       fontWeight: 'bold',
@@ -152,64 +146,23 @@ export class SettingsPanel extends PIXI.Container {
     const contentTop = -PANEL_H / 2 + PANEL_H * CONTENT_TOP_NY;
     const contentBottom = -PANEL_H / 2 + PANEL_H * CONTENT_BOTTOM_NY;
     const contentMid = (contentTop + contentBottom) / 2;
+    const rowGap = 36;
+    const musicY = contentMid - (ROW_H + rowGap) / 2;
+    const soundY = contentMid + (ROW_H + rowGap) / 2;
 
-    this._musicToggle = this._createToggleRow('音乐', '背景音乐开关', contentTop + 48, () => {
+    this._musicToggle = this._createToggleRow('音乐', '背景音乐开关', musicY, () => {
       SettingsManager.setMusicEnabled(!SettingsManager.musicEnabled);
       this._refresh();
       ToastMessage.show(SettingsManager.musicEnabled ? '音乐已开启' : '音乐已关闭');
     });
     this._panel.addChild(this._musicToggle);
 
-    this._soundToggle = this._createToggleRow('音效', '点击、合成等奖励音效', contentTop + 132, () => {
+    this._soundToggle = this._createToggleRow('音效', '点击、合成等奖励音效', soundY, () => {
       SettingsManager.setSoundEnabled(!SettingsManager.soundEnabled);
       this._refresh();
       ToastMessage.show(SettingsManager.soundEnabled ? '音效已开启' : '音效已关闭');
     });
     this._panel.addChild(this._soundToggle);
-
-    const uidY = Math.min(contentMid + 90, contentBottom - 78);
-    const uidBox = new PIXI.Graphics();
-    uidBox.beginFill(0xffffff, 0.88);
-    uidBox.drawRoundedRect(-152, uidY - 34, 304, 128, 20);
-    uidBox.endFill();
-    uidBox.lineStyle(2, 0xf0d4ab, 1);
-    uidBox.drawRoundedRect(-152, uidY - 34, 304, 128, 20);
-    this._panel.addChild(uidBox);
-
-    const uidTitle = new PIXI.Text('游戏用户ID', {
-      fontSize: 20,
-      fill: 0x8b6650,
-      fontFamily: FONT_FAMILY,
-      fontWeight: 'bold',
-    });
-    uidTitle.anchor.set(0, 0.5);
-    uidTitle.position.set(-128, uidY - 6);
-    this._panel.addChild(uidTitle);
-
-    const copyUidBtn = this._createCopyUidButton();
-    copyUidBtn.position.set(114, uidY - 6);
-    this._panel.addChild(copyUidBtn);
-
-    this._uidText = new PIXI.Text('', {
-      fontSize: 28,
-      fill: 0x5e4637,
-      fontFamily: FONT_FAMILY,
-      fontWeight: 'bold',
-      letterSpacing: 2,
-      align: 'center',
-    });
-    this._uidText.anchor.set(0.5);
-    this._uidText.position.set(0, uidY + 32);
-    this._panel.addChild(this._uidText);
-
-    const hint = new PIXI.Text('复制后可联系客服', {
-      fontSize: 15,
-      fill: 0x9b7b63,
-      fontFamily: FONT_FAMILY,
-    });
-    hint.anchor.set(0.5);
-    hint.position.set(0, uidY + 66);
-    this._panel.addChild(hint);
   }
 
   private _applyShell(): void {
@@ -276,20 +229,20 @@ export class SettingsPanel extends PIXI.Container {
 
     const bg = new PIXI.Graphics();
     bg.beginFill(0xffffff, 0.78);
-    bg.drawRoundedRect(-152, -34, 304, 68, 20);
+    bg.drawRoundedRect(-ROW_HALF_W, -ROW_HALF_H, ROW_W, ROW_H, 24);
     bg.endFill();
     bg.lineStyle(2, 0xf3d8b4, 0.9);
-    bg.drawRoundedRect(-152, -34, 304, 68, 20);
+    bg.drawRoundedRect(-ROW_HALF_W, -ROW_HALF_H, ROW_W, ROW_H, 24);
     row.addChild(bg);
 
     const titleText = new PIXI.Text(title, {
-      fontSize: 24,
+      fontSize: 26,
       fill: 0x6d5142,
       fontFamily: FONT_FAMILY,
       fontWeight: 'bold',
     });
     titleText.anchor.set(0, 0.5);
-    titleText.position.set(-128, -10);
+    titleText.position.set(-ROW_HALF_W + 18, -12);
     row.addChild(titleText);
 
     const descText = new PIXI.Text(desc, {
@@ -298,54 +251,17 @@ export class SettingsPanel extends PIXI.Container {
       fontFamily: FONT_FAMILY,
     });
     descText.anchor.set(0, 0.5);
-    descText.position.set(-128, 16);
+    descText.position.set(-ROW_HALF_W + 18, 16);
     row.addChild(descText);
 
     row.eventMode = 'static';
     row.cursor = 'pointer';
-    row.hitArea = new PIXI.RoundedRectangle(-152, -34, 304, 68, 20);
+    row.hitArea = new PIXI.RoundedRectangle(-ROW_HALF_W, -ROW_HALF_H, ROW_W, ROW_H, 24);
     row.on('pointerdown', (e: PIXI.FederatedPointerEvent) => {
       e.stopPropagation();
       onTap();
     });
     return row;
-  }
-
-  private _createCopyUidButton(): PIXI.Container {
-    const btn = new PIXI.Container();
-    const padX = 14;
-    const padY = 8;
-    const label = new PIXI.Text('复制', {
-      fontSize: 17,
-      fill: 0xffffff,
-      fontFamily: FONT_FAMILY,
-      fontWeight: 'bold',
-    });
-    label.anchor.set(0.5);
-    const w = label.width + padX * 2;
-    const h = label.height + padY * 2;
-    const bg = new PIXI.Graphics();
-    bg.beginFill(0xd4a574, 1);
-    bg.drawRoundedRect(-w / 2, -h / 2, w, h, 12);
-    bg.endFill();
-    bg.lineStyle(2, 0xb8885a, 1);
-    bg.drawRoundedRect(-w / 2, -h / 2, w, h, 12);
-    btn.addChild(bg);
-    btn.addChild(label);
-    btn.eventMode = 'static';
-    btn.cursor = 'pointer';
-    btn.hitArea = new PIXI.Rectangle(-w / 2, -h / 2, w, h);
-    btn.on('pointerdown', (e: PIXI.FederatedPointerEvent) => {
-      e.stopPropagation();
-      const id = UserIdentityManager.state.id;
-      if (!id || UserIdentityManager.state.loading) {
-        ToastMessage.show('用户ID 获取中或暂不可用');
-        return;
-      }
-      Platform.setClipboardData(formatUserIdDisplay(id));
-      ToastMessage.show('已复制用户ID');
-    });
-    return btn;
   }
 
   private _createFallbackCloseButton(): PIXI.Container {
@@ -375,14 +291,6 @@ export class SettingsPanel extends PIXI.Container {
   private _refresh(): void {
     this._drawToggle(this._musicToggle, SettingsManager.musicEnabled);
     this._drawToggle(this._soundToggle, SettingsManager.soundEnabled);
-    const identity = UserIdentityManager.state;
-    if (identity.loading && !identity.id) {
-      this._uidText.text = '获取中...';
-    } else if (!identity.id) {
-      this._uidText.text = '暂未获取';
-    } else {
-      this._uidText.text = formatUserIdDisplay(identity.id);
-    }
   }
 
   private _drawToggle(row: PIXI.Container, enabled: boolean): void {
@@ -392,13 +300,13 @@ export class SettingsPanel extends PIXI.Container {
     const art = new PIXI.Container();
     art.name = 'toggleArt';
     art.eventMode = 'none';
-    art.position.set(98, 0);
+    art.position.set(ROW_HALF_W - 48, 0);
     const track = new PIXI.Graphics();
     track.beginFill(enabled ? 0x8bd36e : 0xd8c8bd, 1);
-    track.drawRoundedRect(-38, -20, 76, 40, 20);
+    track.drawRoundedRect(-40, -20, 80, 40, 20);
     track.endFill();
     track.lineStyle(2.5, enabled ? 0x5ca845 : 0xb7a397, 0.9);
-    track.drawRoundedRect(-38, -20, 76, 40, 20);
+    track.drawRoundedRect(-40, -20, 80, 40, 20);
     art.addChild(track);
 
     const knob = new PIXI.Graphics();
