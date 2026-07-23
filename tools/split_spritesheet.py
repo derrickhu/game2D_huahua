@@ -54,7 +54,7 @@ SHEET_CONFIGS = [
         "items": [
             ("light_desk.png",    "light_desk",          "台灯"),
             ("light_floor.png",   "light_floor",         "落地灯"),
-            ("light_pendant.png", "light_pendant",       "花式吊灯"),
+            ("light_pendant.png", "light_pendant",       "花式立灯"),
             ("light_crystal.png", "light_crystal",       "水晶吊灯"),
             ("light_summer.png",  "season_summer_light",  "🌻向日葵灯(限定)"),
         ]
