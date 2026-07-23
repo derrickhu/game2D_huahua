@@ -413,10 +413,11 @@ export class MainScene implements Scene {
       return;
     }
 
-    if (this._tryShowFruitCutUpdateGrantPrompt()) {
-      this._scheduleLimitedEventPromoAutoOpen(3200);
-      return;
-    }
+    // 已关闭：老玩家果切线补偿弹窗（FruitCutUpdateGrantManager.shouldPrompt 恒为 false）
+    // if (this._tryShowFruitCutUpdateGrantPrompt()) {
+    //   this._scheduleLimitedEventPromoAutoOpen(3200);
+    //   return;
+    // }
 
     // 2. 检查签到
     if (CheckInManager.canCheckIn) {
