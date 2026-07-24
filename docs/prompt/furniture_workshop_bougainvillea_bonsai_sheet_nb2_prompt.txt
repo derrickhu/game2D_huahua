@@ -1,0 +1,44 @@
+Create ONE clean 2D game furniture spritesheet for a cozy pastel flower-shop merge game.
+
+Canvas and layout (CRITICAL — single image, two states):
+- Square 1:1 canvas.
+- EXACTLY 2 equal columns × 1 row ONLY (NOT 2 rows, NOT 4 panels, NO duplicated rows).
+- Wide pure white gutter between the two panels.
+- Each panel contains exactly ONE standalone floor ornament prop, centered, with generous white margin inside its cell.
+- Both panels must show the SAME large potted bougainvillea tree, SAME white cylindrical planter, SAME twisted multi-trunk silhouette size and shape, SAME isometric angle — ONLY the foliage/flower stage changes between left and right.
+- NO TEXT, no labels, no captions, no numbers, no watermark.
+
+Perspective (CRITICAL):
+- Cute kawaii 2.5D true isometric furniture for a flower-shop merge game. Camera from upper-left into the L-room corner (same family as the room shell). On-screen top-face edges of the planter rim and base must sit near ±30° from horizontal — match the attached iso grid, NOT 45° wall slant, NOT flat front view. Height edges stay vertical. Visible top of the pot plus front-right side. Use the attached grid ONLY for perspective; do not copy the gray demo cube.
+
+Art style:
+- Hand-painted mobile merge-game flower shop ornament.
+- Soft warm brown outlines, gentle upper-left lighting, soft volumetric shading.
+- Readable silhouette at small grid size. Premium statement plant mood, still cute merge-game prop, not photoreal, not flat UI icon.
+
+Subject — giant bougainvillea bonsai pot plant (floor ornament, NOT a table vase bouquet):
+- A statement indoor tree plant inspired by a large sculpted bougainvillea bonsai.
+- Thick gnarled multi-stem twisted woody trunk in warm light brown / tan, deeply ridged and braided, rising from the pot and spreading upward into an airy canopy.
+- Large matte white cylindrical ceramic planter (modern minimal), about one-quarter of total prop height; soft soil visible; a few tiny low green ground-cover plants at the base inside the pot.
+- Overall height is tall and dramatic — like a floor tree that could nearly reach a high ceiling — but keep as a single readable prop with generous margins.
+
+Reference photos (use for structure and flower color ONLY):
+- Use the indoor tree photo ONLY for overall silhouette: thick twisted trunk, large white cylindrical pot, dense canopy volume.
+- Use the outdoor bloom close-up ONLY for flower color and paper-like bract clusters: mix of deep magenta / hot pink AND soft light pink / creamy pink. Sparse green leaves peeking through.
+- Do NOT copy the blue flowers from any reference. Do NOT copy the room, sofa, city skyline, ceiling, or sky background. Prop only on pure white.
+
+Panel 1 (LEFT column) — GREEN LEAVES ONLY stage:
+- Dense lush healthy green foliage canopy filling the crown — heart-shaped or small rounded bougainvillea-like leaves, bright fresh greens with soft shade variation.
+- Absolutely NO flowers, NO pink bracts, NO blue blooms. Pure leafy green tree look.
+- Same trunk and pot as the right panel.
+
+Panel 2 (RIGHT column) — FULL PINK BLOOM stage:
+- The SAME tree and pot, but the canopy is covered in dense vibrant bougainvillea flower clusters.
+- Flower colors MUST be deep magenta / hot pink mixed with soft light pink and creamy pale pink paper-like bracts (exactly the pink palette of the outdoor close-up reference).
+- Sparse green leaves visible under and between flower clusters.
+- Absolutely NO blue flowers, NO purple-blue, NO electric cyan — pinks only.
+- Must read unmistakably as the same plant after blooming, not a different prop.
+
+Restrictions:
+- NO room, NO windows, NO city skyline, NO sofa, NO floor plane, NO ground shadow strip, NO wall, NO characters, NO other furniture.
+- Background pure solid white #FFFFFF only for cutout.

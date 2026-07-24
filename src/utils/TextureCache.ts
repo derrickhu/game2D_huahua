@@ -684,6 +684,8 @@ const DECO_IMAGE_MAP: Record<string, string> = {
   /** 泡芙拼块沙发：2 列合图 col0=front col1=back；每格 max-side 342 */
   workshop_puffy_petal_sofa_sheet: 'subpkg_deco/images/furniture/workshop_puffy_petal_sofa_sheet.png',
   workshop_giant_rose_bouquet_sheet: 'subpkg_deco/images/furniture/workshop_giant_rose_bouquet_sheet.png',
+  /** 三角梅古桩：2 列（绿叶 / 深粉浅粉盛放）；每格 max-side 342 */
+  workshop_bougainvillea_bonsai_sheet: 'subpkg_deco/images/furniture/workshop_bougainvillea_bonsai_sheet.png',
   /** 黑色超薄电视柜：2 列正/背合图；每格 max-side 342 */
   workshop_pastel_tv_cabinet_sheet: 'subpkg_deco/images/furniture/workshop_pastel_tv_cabinet_sheet.png',
   /** 玫瑰垂幔帘：1 列 × 3 行（樱粉 / 天蓝 / 蜜黄）；每格 max-side 342 */

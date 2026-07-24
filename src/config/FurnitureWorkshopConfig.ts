@@ -291,6 +291,26 @@ export const WORKSHOP_BLUEPRINT_DEFS: WorkshopBlueprintDef[] = [
     ],
   },
   {
+    id: 'blueprint_workshop_bougainvillea_bonsai',
+    name: '三角梅古桩图纸',
+    outputDecoId: 'workshop_bougainvillea_bonsai',
+    rarity: 'rare',
+    sourceText: '99 钻石购买',
+    icon: 'workshop_blueprint_generic',
+    category: 'ornament',
+    acquire: [{ kind: 'diamond', cost: 99 }],
+    colorOptions: [
+      {
+        id: 'default',
+        name: '默认',
+        outputDecoId: 'workshop_bougainvillea_bonsai',
+        materialCost: 14,
+        dyeCost: 0,
+        huayuanCost: 56000,
+      },
+    ],
+  },
+  {
     id: 'blueprint_workshop_pastel_tv_cabinet',
     name: '黑色超薄电视柜图纸',
     outputDecoId: 'workshop_pastel_tv_cabinet',

@@ -159,6 +159,26 @@ export const FURNITURE_RENDER_DEFS: FurnitureRenderDef[] = [
     },
   },
   {
+    decoId: 'workshop_bougainvillea_bonsai',
+    renderMode: 'single',
+    atlas: {
+      sheetKey: 'workshop_bougainvillea_bonsai_sheet',
+      columns: 2,
+      rows: 1,
+      row: 0,
+      frontCol: 0,
+    },
+    interaction: {
+      type: 'toggle',
+      defaultState: 'leaves',
+      hint: '放入房间后单击切换绿叶与盛放',
+      states: {
+        leaves: {},
+        bloom: {},
+      },
+    },
+  },
+  {
     decoId: 'workshop_pastel_tv_cabinet',
     renderMode: 'fourFacing',
     atlas: {
