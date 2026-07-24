@@ -497,8 +497,9 @@ export class ShopScene implements Scene {
     this.container.alpha = 1;
     this.container.visible = true;
 
-    // 初始化房间布局管理器
+    // 初始化房间布局管理器，并与当前 sceneId 对齐（防房壳/家具桶脱节）
     RoomLayoutManager.init();
+    RoomLayoutManager.ensureSyncedWithCurrency();
     RoomLayoutPresetManager.init();
 
     this._textureRefreshUnsub?.();
@@ -548,6 +549,7 @@ export class ShopScene implements Scene {
   }
 
   private _refreshAfterReenter(): void {
+    RoomLayoutManager.ensureSyncedWithCurrency();
     if (this._isEditMode) {
       this._ensureEditModeFurnitureSprites();
     } else {

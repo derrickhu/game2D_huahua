@@ -194,6 +194,22 @@ async function main(): Promise<void> {
       ) {
         NewbieGiftPackManager.reconcileClaimedRewards(`cloud-import:${info.reason}`);
       }
+      if (info.changedKeys.includes('huahua_save')) {
+        if (initialSaveLoaded) {
+          TutorialManager.ensureCompletedIfVeteranSave(true);
+        }
+      }
+      // 同批有核心存档时：先刷新 sceneId，再 hydrate 布局，避免房壳/家具桶错位
+      const layoutKeysChanged =
+        info.changedKeys.includes('huahua_room_layout')
+        || info.changedKeys.includes('huahua_room_layout_presets');
+      if (
+        layoutKeysChanged
+        && info.changedKeys.includes('huahua_save')
+        && initialSaveLoaded
+      ) {
+        SaveManager.reloadFromStorage(`cloud-import-scene-before-layout:${info.reason}`);
+      }
       if (info.changedKeys.includes('huahua_room_layout')) {
         RoomLayoutManager.reloadFromStorage();
       }
@@ -217,11 +233,6 @@ async function main(): Promise<void> {
       }
       if (info.changedKeys.includes('huahua_weekend_huayuan_boost')) {
         WeekendHuayuanBoostManager.reloadFromStorage();
-      }
-      if (info.changedKeys.includes('huahua_save')) {
-        if (initialSaveLoaded) {
-          TutorialManager.ensureCompletedIfVeteranSave(true);
-        }
       }
       if (!info.changedKeys.includes('huahua_save')) return;
       if (!initialSaveLoaded) {

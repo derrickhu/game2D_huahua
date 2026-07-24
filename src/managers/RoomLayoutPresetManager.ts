@@ -134,6 +134,7 @@ class RoomLayoutPresetManagerClass {
     opts?: { thumb?: string; sceneId?: string },
   ): boolean {
     if (!this.isSlotUnlocked(slotIndex, opts?.sceneId)) return false;
+    RoomLayoutManager.ensureSyncedWithCurrency();
     RoomLayoutManager.saveNow();
     const layout = RoomLayoutManager.getLayout();
     if (layout.length <= 0) return false;
@@ -173,6 +174,7 @@ class RoomLayoutPresetManagerClass {
     sceneId?: string,
   ): { placed: number; skipped: number; roomStyleApplied: boolean } | null {
     if (!this.isSlotUnlocked(slotIndex, sceneId)) return null;
+    RoomLayoutManager.ensureSyncedWithCurrency();
     const slot = this.getSlot(slotIndex, sceneId);
     if (!slot || slot.placements.length <= 0) return null;
 

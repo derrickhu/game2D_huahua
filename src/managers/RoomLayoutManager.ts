@@ -176,16 +176,29 @@ class RoomLayoutManagerClass {
       return;
     }
     const loaded = this._load();
-    this._syncActiveSceneWithCurrency();
+    // 勿先 _syncActiveSceneWithCurrency：会把内存里旧房的 _placements flush 进刚读入的磁盘桶
     if (!loaded && Object.keys(this._scenes).length === 0) {
       this._scenes = { [DEFAULT_SCENE_ID]: { placements: [] } };
     }
+    this._layoutActiveSceneId = CurrencyManager.state.sceneId || DEFAULT_SCENE_ID;
     this._ensureSceneBucket(this._layoutActiveSceneId);
     this._hydrateFromScenes(this._layoutActiveSceneId);
     EventBus.emit('roomlayout:changed');
     console.log(
       `[RoomLayout] 已从存储重载 scene=${this._layoutActiveSceneId}, ${this._placements.length} 件`,
     );
+  }
+
+  /**
+   * 进店/应用预设前：把布局活跃桶与 CurrencyManager.sceneId 对齐。
+   * 解决「房壳已是蝴蝶小屋，家具仍是花房布局」的脱节。
+   */
+  ensureSyncedWithCurrency(): void {
+    if (!this._initialized) {
+      this.init();
+      return;
+    }
+    this._syncActiveSceneWithCurrency();
   }
 
   private readonly _onRenovationSceneChanged = (newSceneId: string): void => {

@@ -359,6 +359,8 @@ class CurrencyManagerClass {
   }
 
   loadState(state: Partial<CurrencyState>): void {
+    const prevSceneId = this._state.sceneId;
+
     if (state.staminaRecoverElapsed !== undefined) {
       this._lastStaminaRecover = state.staminaRecoverElapsed;
     }
@@ -414,6 +416,10 @@ class CurrencyManagerClass {
     this._checkDailyReset();
 
     EventBus.emit('currency:loaded');
+    // 读档/云导入改 sceneId 时须通知布局层，否则房壳已是蝴蝶小屋、家具仍停在花房桶
+    if (this._state.sceneId !== prevSceneId) {
+      EventBus.emit('renovation:sceneChanged', this._state.sceneId);
+    }
   }
 
   exportState(): CurrencyState {
