@@ -1,0 +1,9 @@
+Square game asset 1:1. Single furniture prop centered with generous margin.
+
+Cute kawaii 2.5D true isometric furniture for a flower-shop merge game. Camera from upper-left into the L-room corner. On-screen top-face edges near ±30° from horizontal — match the attached iso grid ONLY for perspective; do not copy the gray demo cube. Height edges stay vertical.
+
+Soft brown outlines, bright high-key pastel. Ceramic umbrella stand shaped like a cheerful flower pot, glossy coral body with cream drip glaze and mint leaf accents. Three closed umbrellas inside in bright sky blue, soft yellow, and lilac, rounded cute canopy tips visible. Small water tray detail at the base. Bright entrance-hall prop rarely seen in flower-shop sets.
+
+Readable silhouette. No text, no watermark, no characters, no room walls, no floor shadow strip.
+
+Background pure solid white #FFFFFF only for cutout.

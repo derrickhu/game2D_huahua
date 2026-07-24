@@ -1,0 +1,17 @@
+Square game asset 1:1. Single furniture prop centered with generous margin.
+
+Cute kawaii 2.5D true isometric furniture for a flower-shop merge game. Camera from upper-left. Thin flat rectangular floor rug. On-screen top edges near ±30° — use the RIGHT half of the attached reference only for isometric angle; do NOT copy the gray demo cube. Match the LEFT half reference for the rug identity.
+
+STRICT design match to the old pink rug (left reference):
+- Soft rose-pink / sakura-pink solid field
+- Thin clean cream-white inset rectangular border
+- Rounded soft corners
+- ONLY ONE large stylized white five-petal flower in the exact center
+- The pink field around the flower must stay mostly plain/empty
+- FORBIDDEN: dense scattered 碎花, millefleur pattern, many small flowers, dots filling the rug
+
+Quality upgrade only: subtle plush short-pile fabric texture, soft edge thickness bevel, gentle volume shading, soft brown outlines, bright high-key pastel. Keep the same simple elegant minimal look — just clearer and more tactile.
+
+No text, no watermark, no characters, no room walls, no heavy floor shadow strip.
+
+Background pure solid white #FFFFFF only for cutout.

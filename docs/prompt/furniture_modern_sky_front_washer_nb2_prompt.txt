@@ -1,0 +1,9 @@
+Square game asset 1:1. Single furniture prop centered with generous margin.
+
+Cute kawaii 2.5D true isometric furniture for a flower-shop merge game. Camera from upper-left into the L-room corner. On-screen top-face edges near ±30° from horizontal — match the attached iso grid ONLY for perspective; do not copy the gray demo cube. Height edges stay vertical. Visible top surface plus front-right side.
+
+Soft brown outlines, bright high-key pastel appliance. Compact front-load washing machine in bright sky-blue body with cream door ring and soft coral control dial. Circular glass door shows a peek of pastel laundry inside (pink and mint clothes swirls), no readable labels. Small plant sticker silhouette on the side (abstract leaf, no text). Cheerful modern laundry prop.
+
+Readable silhouette. No text, no watermark, no characters, no room walls, no floor shadow strip.
+
+Background pure solid white #FFFFFF only for cutout.

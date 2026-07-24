@@ -1,0 +1,9 @@
+Square game asset 1:1. Single furniture prop centered with generous margin.
+
+Cute kawaii 2.5D true isometric furniture for a flower-shop merge game. Camera from upper-left into the L-room corner. On-screen top-face edges near ±30° from horizontal — match the attached iso grid ONLY for perspective; do not copy the gray demo cube. Height edges stay vertical. Visible top surface plus front-right side.
+
+Soft brown outlines, bright high-key pastel. Peach-pink bathroom vanity cabinet with warm cream marble-like countertop, rounded white ceramic sink basin, soft gold faucet. Small oval mint-framed mirror attached above the vanity as one prop unit. Tiny glass jar with a pink flower on the counter. Bright cute furniture, not photoreal.
+
+Readable silhouette. No text, no watermark, no characters, no room walls, no floor shadow strip.
+
+Background pure solid white #FFFFFF only for cutout.

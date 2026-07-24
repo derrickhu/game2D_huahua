@@ -1,0 +1,9 @@
+Square game asset 1:1. Single furniture prop centered with generous margin.
+
+Cute kawaii 2.5D true isometric furniture for a flower-shop merge game. Camera from upper-left into the L-room corner (same family as the room shell). On-screen top-face edges and base edges must sit near ±30° from horizontal — match the attached iso grid and room wall-base / floor diamond, NOT 45° wall slant, NOT flat front view. Height edges stay vertical. Visible top surface plus front-right side, left and right top edges symmetrically angled. Use the attached grid ONLY for perspective; do not copy the gray demo cube.
+
+Soft brown outlines, bright high-key pastel, clean mobile merge-game prop style. Sakura-pink freestanding clawfoot bathtub, glossy ceramic, rounded chibi proportions. Warm cream claw feet, thin gold-rim lip. Clear water with a few soft white foam bubbles and one floating pink rose petal. Small mint-green folded towel draped on the rim. Cheerful bright colors, cozy bathroom luxury without photorealism.
+
+Readable silhouette. No text, no watermark, no characters, no room walls, no floor shadow strip.
+
+Background pure solid white #FFFFFF only for cutout.

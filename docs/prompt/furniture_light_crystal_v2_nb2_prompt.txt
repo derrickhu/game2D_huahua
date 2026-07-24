@@ -1,0 +1,9 @@
+Square game asset 1:1. Single furniture prop centered with generous margin.
+
+Cute kawaii 2.5D true isometric furniture for a flower-shop merge game. Camera from upper-left into the L-room corner. On-screen top-face edges near ±30° from horizontal — match the attached iso grid ONLY for perspective; do not copy the gray demo cube. Height edges stay vertical. Tall elegant floor lamp.
+
+Soft brown outlines, bright high-key pastel. Crystal chandelier-style floor lamp: tapered open cage shade of warm gold/brass thin bars, soft white bulb glow inside, several teardrop clear crystals hanging from the shade rim with sparkle highlights, slender gold pole, flat circular gold base. Luxurious but cute merge-game prop, brighter gold sheen and clearer crystals than a muddy old icon.
+
+Readable silhouette. No text, no watermark, no characters, no room walls, no floor shadow strip.
+
+Background pure solid white #FFFFFF only for cutout.

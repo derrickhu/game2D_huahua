@@ -1,0 +1,9 @@
+Square game asset 1:1. Single furniture prop centered with generous margin.
+
+Cute kawaii 2.5D true isometric furniture for a flower-shop merge game. Camera from upper-left into the L-room corner. On-screen top-face edges near ±30° from horizontal — match the attached iso grid ONLY for perspective; do not copy the gray demo cube. Height edges stay vertical. Compact table lamp scale.
+
+Soft brown outlines, bright high-key pastel. Cute sunflower table lamp: large round bright yellow petal bloom as the lamp head, warm tan seed-center disk, simple warm brown wood stem pole, flat circular wood base. Cheerful sunny organic vibe, glossy soft shading, chibi proportions, more detailed and prettier than a flat icon.
+
+Readable silhouette. No text, no watermark, no characters, no room walls, no floor shadow strip.
+
+Background pure solid white #FFFFFF only for cutout.

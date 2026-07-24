@@ -1,0 +1,9 @@
+Square game asset 1:1. Single furniture prop centered with generous margin.
+
+Cute kawaii 2.5D true isometric furniture for a flower-shop merge game. Camera from upper-left into the L-room corner. On-screen top-face edges near ±30° from horizontal — match the attached iso grid ONLY for perspective; do not copy the gray demo cube. Height edges stay vertical. Tall freestanding full-length mirror.
+
+Soft brown outlines, bright high-key pastel. Full-length standing mirror with a fluffy cloud-shaped soft lilac and cream frame, warm wood stand base with two short feet. Mirror glass is blank soft reflective pale blue-white (no scene reflection, no readable text). Small yellow star charm hanging from one cloud puff. Bright cute dreamy prop.
+
+Readable silhouette. No text, no watermark, no characters, no room walls, no floor shadow strip.
+
+Background pure solid white #FFFFFF only for cutout.

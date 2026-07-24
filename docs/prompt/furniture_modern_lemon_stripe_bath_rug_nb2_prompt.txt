@@ -1,0 +1,9 @@
+Square game asset 1:1. Single furniture prop centered with generous margin.
+
+Cute kawaii 2.5D true isometric furniture for a flower-shop merge game. Camera from upper-left into the L-room corner. On-screen top-face edges near ±30° from horizontal — match the attached iso grid ONLY for perspective; do not copy the gray demo cube. Height edges stay vertical. Thin flat floor rug / bath mat, readable as a soft textile lying on the floor (not a tall object).
+
+Soft brown outlines, bright high-key pastel. Oval bath rug with sunny lemon-yellow and cream candy stripes, soft mint edge binding, tiny embroidered daisy accents near one corner. Plush short pile, cheerful bright colors matching pink-tile flower shop rooms. Thin mat thickness only.
+
+Readable silhouette. No text, no watermark, no characters, no room walls, no heavy drop shadow.
+
+Background pure solid white #FFFFFF only for cutout.

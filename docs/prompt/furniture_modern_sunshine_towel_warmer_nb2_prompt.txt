@@ -1,0 +1,9 @@
+Square game asset 1:1. Single furniture prop centered with generous margin.
+
+Cute kawaii 2.5D true isometric furniture for a flower-shop merge game. Camera from upper-left into the L-room corner. On-screen top-face edges near ±30° from horizontal — match the attached iso grid ONLY for perspective; do not copy the gray demo cube. Height edges stay vertical.
+
+Soft brown outlines, bright high-key pastel. Tall ladder-style heated towel warmer in warm honey-gold metal tubes, freestanding with small rounded feet. Soft coral, mint, and cream fluffy towels neatly folded over the rungs. Tiny embossed sunburst motif on the top bar (abstract, no text). Cheerful bright bathroom prop.
+
+Readable silhouette. No text, no watermark, no characters, no room walls, no floor shadow strip.
+
+Background pure solid white #FFFFFF only for cutout.
