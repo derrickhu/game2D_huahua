@@ -21,6 +21,8 @@ import { Platform } from '@/core/PlatformService';
 export interface SharePayload {
   title: string;
   imageUrl: string;
+  desc?: string;
+  templateId?: string;
   query?: string;
 }
 

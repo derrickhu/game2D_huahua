@@ -495,10 +495,40 @@ class PlatformServiceClass {
   }
 
   /** 主动分享（fire-and-forget） */
-  shareAppMessage(opts: { title: string; imageUrl?: string; query?: string }): void {
+  shareAppMessage(opts: {
+    title: string;
+    imageUrl?: string;
+    query?: string;
+    desc?: string;
+    templateId?: string;
+  }): void {
     try {
-      this._api?.shareAppMessage?.(opts);
+      this._api?.shareAppMessage?.(this._buildShareAppMessageOpts(opts));
     } catch (_) {}
+  }
+
+  /** 组装平台分享参数：抖音多传 desc / templateId，并去掉空字段 */
+  private _buildShareAppMessageOpts(opts: {
+    title: string;
+    imageUrl?: string;
+    query?: string;
+    desc?: string;
+    templateId?: string;
+    success?: (...args: any[]) => void;
+    fail?: (...args: any[]) => void;
+    complete?: (...args: any[]) => void;
+  }): Record<string, unknown> {
+    const out: Record<string, unknown> = { title: opts.title };
+    if (opts.imageUrl) out.imageUrl = opts.imageUrl;
+    if (opts.query) out.query = opts.query;
+    if (opts.success) out.success = opts.success;
+    if (opts.fail) out.fail = opts.fail;
+    if (opts.complete) out.complete = opts.complete;
+    if (this.isDouyin) {
+      if (opts.desc) out.desc = opts.desc;
+      if (opts.templateId) out.templateId = opts.templateId;
+    }
+    return out;
   }
 
   /**
@@ -626,16 +656,21 @@ class PlatformServiceClass {
   }
 
   /**
-   * 主动分享并等待结果（通过 onHide/onShow 时间差判断）。
-   * 微信已移除分享成功回调，此方法用时间差启发式判断：
-   * 离开 >2s 视为分享成功，否则视为取消。
+   * 主动分享并等待结果。
    *
-   * 微信开发者工具：`platform === 'devtools'` 时分享往往不触发与真机一致的前后台切换，
-   * 或回到前台间隔 <2s，导致恒为「取消」。工具内调用 `shareAppMessage` 成功后直接视为成功，便于测转发解锁格等流程。
+   * - **抖音**：用 `tt.shareAppMessage` 的 success/fail（官方支持；hide/show 启发式在抖音端内分享不可靠）。
+   * - **微信**：已移除分享成功回调，用 onHide/onShow 时间差：离开 >2s 视为成功，否则取消。
+   * - **微信开发者工具**：`platform === 'devtools'` 时分享后直接视为成功，便于测转发解锁。
    *
    * @returns true = 可能已分享，false = 取消或未分享
    */
-  shareAndWait(opts: { title: string; imageUrl?: string; query?: string }): Promise<boolean> {
+  shareAndWait(opts: {
+    title: string;
+    imageUrl?: string;
+    query?: string;
+    desc?: string;
+    templateId?: string;
+  }): Promise<boolean> {
     return new Promise<boolean>((resolve) => {
       if (!this._api) {
         resolve(true);
@@ -647,11 +682,46 @@ class PlatformServiceClass {
 
       if (isDevtools) {
         try {
-          this._api.shareAppMessage(opts);
-          console.log('[Platform] shareAndWait: devtools 环境，分享调用后视为成功（真机仍走 onHide/onShow 启发式）');
+          this._api.shareAppMessage(this._buildShareAppMessageOpts(opts));
+          console.log('[Platform] shareAndWait: devtools 环境，分享调用后视为成功（真机仍按平台分支判定）');
           resolve(true);
         } catch (_) {
           resolve(false);
+        }
+        return;
+      }
+
+      // 抖音：官方有 success/fail，端内分享常不触发足够长的 hide/show
+      if (this.isDouyin) {
+        let settled = false;
+        const finish = (ok: boolean) => {
+          if (settled) return;
+          settled = true;
+          clearTimeout(timer);
+          resolve(ok);
+        };
+        const timer = setTimeout(() => {
+          console.warn('[Platform] shareAndWait: 抖音分享超时，视为取消');
+          finish(false);
+        }, 120_000);
+
+        try {
+          this._api.shareAppMessage(
+            this._buildShareAppMessageOpts({
+              ...opts,
+              success: () => {
+                console.log('[Platform] shareAndWait: 抖音 success');
+                finish(true);
+              },
+              fail: (err: unknown) => {
+                console.warn('[Platform] shareAndWait: 抖音 fail', err);
+                finish(false);
+              },
+            }),
+          );
+        } catch (e) {
+          console.warn('[Platform] shareAndWait: 抖音 exception', e);
+          finish(false);
         }
         return;
       }
@@ -678,7 +748,7 @@ class PlatformServiceClass {
       this._api.onShow(onShow);
 
       try {
-        this._api.shareAppMessage(opts);
+        this._api.shareAppMessage(this._buildShareAppMessageOpts(opts));
       } catch (_) {
         cleanup();
         resolve(false);
@@ -687,9 +757,21 @@ class PlatformServiceClass {
   }
 
   /** 注册被动分享（右上角"分享"） */
-  onShareAppMessage(callback: () => { title: string; imageUrl?: string; query?: string }): void {
+  onShareAppMessage(
+    callback: (res?: { from?: string }) => {
+      title: string;
+      imageUrl?: string;
+      query?: string;
+      desc?: string;
+      templateId?: string;
+    },
+  ): void {
     try {
-      this._api?.onShareAppMessage?.(callback);
+      // 统一剥空字段；抖音可带 desc / templateId
+      this._api?.onShareAppMessage?.((res?: { from?: string }) => {
+        const payload = callback(res) || { title: '' };
+        return this._buildShareAppMessageOpts(payload);
+      });
     } catch (_) {}
   }
 
