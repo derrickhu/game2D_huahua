@@ -43,8 +43,44 @@ export const AD_UNIT_CONFIG: Record<'wechat' | 'douyin', PlatformAdUnitConfig> =
     interstitial: 'adunit-yyyyyyyyyyyyyyyyyy',
     banner: 'adunit-zzzzzzzzzzzzzzzzzz',
   },
+  /**
+   * 抖音激励视频：与微信同名广告场景一一对应（后台广告位名称一致）。
+   * 插屏 / Banner 暂未申请，仍占位。
+   */
   douyin: {
-    rewardedVideo: 'xxxxxxxxxxxxxxxxxxxxxxxxxx',
+    /** 默认位 = 每日福利类 */
+    rewardedVideo: '12bki46390gke1rtc5',
+    rewardedVideoByScene: {
+      /** 体力 */
+      stamina_recover: 'm9d8wwev7qakt3q5q0',
+      /** 解锁类 */
+      board_cell_unlock: 'f0k39dd8gkbd76j4l6',
+      warehouse_slot_unlock: 'f0k39dd8gkbd76j4l6',
+      special_deco_unlock: 'f0k39dd8gkbd76j4l6',
+      dressup_outfit_qinglian: 'f0k39dd8gkbd76j4l6',
+      room_layout_preset_slot3: 'f0k39dd8gkbd76j4l6',
+      /** 家具解锁 */
+      promo_furniture_unlock: '6gf4e018ma043iv12j',
+      /** 每日福利类 */
+      merch_daily_refresh: '12bki46390gke1rtc5',
+      flower_sign_daily_draw: '12bki46390gke1rtc5',
+      checkin_ad_bonus: '12bki46390gke1rtc5',
+      /** 整理类 */
+      warehouse_organize: '5gvj0o3vg8b6kb86dc',
+      reward_box_organize: '5gvj0o3vg8b6kb86dc',
+      /** 加速类 */
+      cd_speedup: '2s6y8e7u7dye3icf03',
+      /** 泡泡类 */
+      merge_bubble_unlock: '39lo3bhwum94tmrkiq',
+      /** 新手礼包 */
+      newbie_gift_pack: '58fj6lf03l0g1dmg7i',
+      /** 每天活动 */
+      weekend_huayuan_boost: '5g5b6gua0rl3q8scte',
+      tuesday_stamina_unlimited: '5g5b6gua0rl3q8scte',
+      thursday_magic_time: '5g5b6gua0rl3q8scte',
+      /** 花间珠匣 */
+      event_progress_echo: 'ceh4mhhfbr836tbcwh',
+    },
     interstitial: 'yyyyyyyyyyyyyyyyyyyyyyyyyy',
     banner: 'zzzzzzzzzzzzzzzzzzzzzzzzzz',
   },
