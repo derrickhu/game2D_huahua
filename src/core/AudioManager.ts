@@ -7,11 +7,9 @@
  */
 
 import { CdnAssetService } from '@/core/CdnAssetService';
+import { getNativePlatformApi } from '@/core/platformDetect';
 
-declare const wx: any;
-declare const tt: any;
-
-const _api = typeof wx !== 'undefined' ? wx : typeof tt !== 'undefined' ? tt : null;
+const _api = getNativePlatformApi();
 const TAG = '[AudioManager]';
 
 /** 同名音效最小播放间隔（毫秒），防止快速连击创建大量 AudioContext */

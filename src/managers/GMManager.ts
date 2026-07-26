@@ -19,6 +19,7 @@
  */
 import { EventBus } from '@/core/EventBus';
 import { Platform } from '@/core/PlatformService';
+import { getNativePlatformApi } from '@/core/platformDetect';
 import { PersistService } from '@/core/PersistService';
 import { ToastMessage } from '@/gameobjects/ui/ToastMessage';
 import { BoardManager } from './BoardManager';
@@ -72,9 +73,7 @@ import { EventBoardManager } from './EventBoardManager';
 import { CoolSummerEventManager } from './CoolSummerEventManager';
 import { STAMINA_MAX } from '@/config/Constants';
 
-declare const wx: any;
-declare const tt: any;
-const _api = typeof wx !== 'undefined' ? wx : typeof tt !== 'undefined' ? tt : null;
+const _api = getNativePlatformApi();
 
 const GM_DIAMOND_BAG_IDS = ['diamond_bag_1', 'diamond_bag_2', 'diamond_bag_3'] as const;
 const GM_STAMINA_CHEST_IDS = ['stamina_chest_1', 'stamina_chest_2', 'stamina_chest_3'] as const;

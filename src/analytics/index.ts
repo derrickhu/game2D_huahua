@@ -37,6 +37,8 @@ export function initAnalytics(opts?: { endpoint?: string; userId?: string; debug
   if (inited) return;
 
   const platformName = mapPlatform();
+  // 与 xiaochu2 一致：经分 gameKey 固定基础名（白名单只有 huahua），端差异走 platform 字段
+  const gameKey = GAME_KEY;
   const deviceInfo = buildDeviceInfo();
   const endpoint = opts?.endpoint || ENDPOINT;
   const debug = opts?.debug ?? true;
@@ -52,12 +54,12 @@ export function initAnalytics(opts?: { endpoint?: string; userId?: string; debug
   }
 
   console.log(
-    `[analytics] init endpoint=${endpoint}, gameKey=${GAME_KEY}, platform=${platformName}, debug=${debug}, devtools=${Platform.isDevtools}`,
+    `[analytics] init endpoint=${endpoint}, gameKey=${gameKey}, platform=${platformName}, debug=${debug}, devtools=${Platform.isDevtools}`,
   );
 
   Analytics.init({
     endpoint,
-    gameKey: GAME_KEY,
+    gameKey,
     appVersion: typeof __APP_VERSION__ === 'string' ? __APP_VERSION__ : '0.0.0',
     platform: platformName,
     deviceInfo,

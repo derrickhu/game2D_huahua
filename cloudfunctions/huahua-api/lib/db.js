@@ -20,12 +20,13 @@ function getDb() {
   return getApp().database();
 }
 
-function getCollection() {
-  return getDb().collection(getCollectionName('playerData'));
+/** 存档主表：按平台隔离（wx → huahua_playerData，dy → huahua_tt_playerData） */
+function getCollection(platform) {
+  return getDb().collection(getCollectionName('playerData', platform));
 }
 
-function collection(suffix) {
-  return getDb().collection(getCollectionName(suffix));
+function collection(suffix, platform) {
+  return getDb().collection(getCollectionName(suffix, platform));
 }
 
 module.exports = {

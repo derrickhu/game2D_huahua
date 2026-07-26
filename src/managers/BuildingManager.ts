@@ -31,7 +31,7 @@ import {
 import { BOARD_COLS, BOARD_ROWS } from '@/config/Constants';
 import { formatLocalDateString } from '@/utils/WeeklyCycle';
 import { ToolProducePolicy } from '@/managers/ToolProducePolicy';
-import { CheckInManager } from '@/managers/CheckInManager';
+import { getCheckInGmDateOffsetDays } from './checkInDateAccess';
 
 /** 单次点击产出结果（工具 1 件；宝箱可能多件） */
 export type ProducePlacement = { itemId: string; targetIndex: number };
@@ -85,7 +85,7 @@ export type ToolStateSnapshot = Omit<BuildingPersistEntry, 'cellIndex'>;
 /** 本地自然日（含 GM 虚拟日偏移）；勿用签到 UTC dateKey，国内会变成早上 8 点换日 */
 function currentEffectiveDateKey(): string {
   const d = new Date();
-  const offset = CheckInManager?.gmDateOffsetDays ?? 0;
+  const offset = getCheckInGmDateOffsetDays();
   if (offset !== 0) d.setUTCDate(d.getUTCDate() + offset);
   return formatLocalDateString(d);
 }
@@ -93,7 +93,7 @@ function currentEffectiveDateKey(): string {
 /** 活动入口「是否周四」用本地星期（含 GM 日偏移） */
 function isThursdayMagicLocalDay(): boolean {
   const d = new Date();
-  const offset = CheckInManager?.gmDateOffsetDays ?? 0;
+  const offset = getCheckInGmDateOffsetDays();
   if (offset !== 0) d.setUTCDate(d.getUTCDate() + offset);
   return d.getDay() === 4;
 }

@@ -28,10 +28,6 @@ import { BOARD_PRESETS, CellState } from '@/config/BoardLayout';
 import { ITEM_DEFS, migrateLegacyItemId } from '@/config/ItemConfig';
 import { BACKEND_ANON_ID_KEY, BACKEND_TOKEN_KEY, CLOUD_SYNC_META_KEY } from '@/config/CloudConfig';
 
-declare const wx: any;
-declare const tt: any;
-const _api = typeof wx !== 'undefined' ? wx : typeof tt !== 'undefined' ? tt : null;
-
 const SAVE_SLOT = 'huahua_save';
 const AUTO_SAVE_INTERVAL = 30;
 

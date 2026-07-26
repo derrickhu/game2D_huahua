@@ -1,6 +1,5 @@
 import { CDN_CONFIG, type CdnConfig } from '@/config/CdnConfig';
-
-declare const wx: any;
+import { Platform } from './PlatformService';
 
 export interface CdnManifestFile {
   hash?: string;
@@ -218,64 +217,22 @@ class CdnAssetServiceClass {
   }
 
   private _requestText(url: string): Promise<string> {
-    return new Promise((resolve, reject) => {
-      if (typeof wx === 'undefined' || typeof wx.request !== 'function') {
-        reject(new Error('wx.request unavailable'));
-        return;
-      }
-      wx.request({
-        url,
-        method: 'GET',
-        responseType: 'text',
-        dataType: 'text',
-        timeout: this._config.downloadTimeoutMs,
-        success: (res: any) => {
-          const statusCode = Number(res?.statusCode || 0);
-          if (statusCode < 200 || statusCode >= 300) {
-            reject(new Error(`request status=${statusCode || 'unknown'} url=${url}`));
-            return;
-          }
-          const data = res?.data;
-          const text = typeof data === 'string' ? data : (data ? JSON.stringify(data) : '');
-          resolve(text);
-        },
-        fail: (err: any) => {
-          const msg = err?.errMsg || err?.message || String(err);
-          console.warn(`[CDN] request fail: ${url}, ${msg}`);
-          reject(new Error(msg));
-        },
+    return Platform.requestText(url, this._config.downloadTimeoutMs)
+      .catch((err: unknown) => {
+        const msg = err instanceof Error ? err.message : String(err);
+        console.warn(`[CDN] request fail: ${url}, ${msg}`);
+        throw err instanceof Error ? err : new Error(msg);
       });
-    });
   }
 
   private _downloadUrl(url: string): Promise<{ tempFilePath?: string }> {
-    return new Promise((resolve, reject) => {
-      if (typeof wx === 'undefined' || typeof wx.downloadFile !== 'function') {
-        reject(new Error('wx.downloadFile unavailable'));
-        return;
-      }
-      wx.downloadFile({
-        url,
-        success: (res: any) => {
-          const statusCode = Number(res?.statusCode || 0);
-          const hasTemp = !!res?.tempFilePath;
-          if (statusCode < 200 || statusCode >= 300) {
-            reject(new Error(`downloadFile status=${statusCode || 'unknown'} url=${url}`));
-            return;
-          }
-          if (!hasTemp) {
-            reject(new Error(`downloadFile missing tempFilePath url=${url}`));
-            return;
-          }
-          resolve({ tempFilePath: res.tempFilePath });
-        },
-        fail: (err: any) => {
-          const msg = err?.errMsg || err?.message || String(err);
-          console.warn(`[CDN] downloadFile fail: ${url}, ${msg}`);
-          reject(new Error(msg));
-        },
+    // 不传 timeout：与迁移前的 wx.downloadFile 调用保持一致，大图分包下载不设上限
+    return Platform.downloadFile({ url })
+      .catch((err: unknown) => {
+        const msg = err instanceof Error ? err.message : String(err);
+        console.warn(`[CDN] downloadFile fail: ${url}, ${msg}`);
+        throw err instanceof Error ? err : new Error(msg);
       });
-    });
   }
 
   private _loadCachedManifest(): void {
@@ -375,11 +332,11 @@ class CdnAssetServiceClass {
   }
 
   private _getFs(): any {
-    return typeof wx !== 'undefined' && wx.getFileSystemManager ? wx.getFileSystemManager() : null;
+    return Platform.getFileSystemManager();
   }
 
   private _getUserDataPath(): string {
-    return typeof wx !== 'undefined' && wx.env ? wx.env.USER_DATA_PATH : '';
+    return Platform.userDataPath;
   }
 
   private _touch(logicalPath: string): void {

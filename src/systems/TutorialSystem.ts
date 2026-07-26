@@ -23,10 +23,6 @@ import { DESIGN_WIDTH, FONT_FAMILY, COLORS, BoardMetrics, BOARD_COLS, CELL_GAP }
 import { ITEM_DEFS } from '@/config/ItemConfig';
 import { TextureCache } from '@/utils/TextureCache';
 
-declare const wx: any;
-declare const tt: any;
-const _api = typeof wx !== 'undefined' ? wx : typeof tt !== 'undefined' ? tt : null;
-
 const TUTORIAL_STORAGE_KEY = 'huahua_tutorial';
 
 /** 镂空区域描述 */

@@ -253,6 +253,13 @@ class BackendServiceClass {
       if (!raw) return null;
       const parsed = JSON.parse(raw);
       if (!parsed || typeof parsed.token !== 'string' || !parsed.token) return null;
+      // 同一台设备切换宿主（或复用了旧命名空间的缓存）时，旧 token 会带错 openid，直接丢弃重登
+      if (parsed.platform && parsed.platform !== Platform.backendPlatformCode) {
+        console.warn(
+          `[Backend] 丢弃平台不匹配的 token: stored=${parsed.platform}, current=${Platform.backendPlatformCode}`,
+        );
+        return null;
+      }
       return {
         token: parsed.token,
         userId: parsed.userId || '',

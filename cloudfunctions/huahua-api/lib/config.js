@@ -48,12 +48,41 @@ function readEnvPrefer(...keys) {
   return '';
 }
 
-function getCollectionName(suffix) {
-  // 整体覆盖（向后兼容 / 临时切换）：HUAHUA_COLLECTION='xxx' 时直接用
-  if (suffix === 'playerData' && process.env.HUAHUA_COLLECTION) {
+/** 后端 platform 字段 → 集合命名空间段。微信 / 匿名不加段，保持已上线的 huahua_xxx 不变。 */
+const PLATFORM_SCOPE = {
+  dy: 'tt',
+};
+
+function getPlatformScope(platform) {
+  return PLATFORM_SCOPE[String(platform || '').toLowerCase()] || '';
+}
+
+/** huahua 或 huahua_tt */
+function getScopedGameKey(platform) {
+  const scope = getPlatformScope(platform);
+  return scope ? `${getGameKey()}_${scope}` : getGameKey();
+}
+
+function scopedKeyUpper(platform) {
+  return getScopedGameKey(platform).toUpperCase().replace(/[^A-Z0-9]/g, '_');
+}
+
+/**
+ * 集合名：微信 huahua_playerData（与线上一致），抖音 huahua_tt_playerData。
+ * 可用 {SCOPED_GAME_KEY}_{SUFFIX}_COLLECTION 环境变量覆盖，如 HUAHUA_TT_PLAYERDATA_COLLECTION。
+ */
+function getCollectionName(suffix, platform) {
+  const normalizedSuffix = String(suffix || '').replace(/^_+/, '');
+
+  // 整体覆盖（向后兼容 / 临时切换）：仅对微信侧的 playerData 生效
+  if (normalizedSuffix === 'playerData' && !getPlatformScope(platform) && process.env.HUAHUA_COLLECTION) {
     return String(process.env.HUAHUA_COLLECTION);
   }
-  return `${getGameKey()}_${suffix}`;
+
+  const override = process.env[`${scopedKeyUpper(platform)}_${normalizedSuffix.toUpperCase()}_COLLECTION`];
+  if (override) return String(override);
+
+  return `${getScopedGameKey(platform)}_${normalizedSuffix}`;
 }
 
 function getJwtSecret() {
@@ -89,6 +118,8 @@ function getWechatPushTokens() {
 module.exports = {
   getGameKey,
   gameKeyUpper,
+  getPlatformScope,
+  getScopedGameKey,
   getCollectionName,
   getJwtSecret,
   getTtlSec,

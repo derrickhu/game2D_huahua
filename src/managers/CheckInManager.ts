@@ -26,10 +26,6 @@ import { DecorationManager } from './DecorationManager';
 import { FurnitureWorkshopManager } from './FurnitureWorkshopManager';
 import { grantQuest } from '@/utils/UnlockChecker';
 
-declare const wx: any;
-declare const tt: any;
-const _api = typeof wx !== 'undefined' ? wx : typeof tt !== 'undefined' ? tt : null;
-
 const CHECKIN_STORAGE_KEY = 'huahua_checkin';
 
 export interface RewardItem {

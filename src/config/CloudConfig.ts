@@ -70,6 +70,8 @@ export const CLOUD_SYNC_ALLOWLIST = [
   'huahua_furniture_workshop',
   'huahua_feature_grants',
   'huahua_settings',
+  // 抖音专属；微信端本地永远不存在此 key，不会进快照
+  'huahua_douyin_welfare',
 ] as const;
 
 export const CLOUD_SYNC_EXCLUDE_KEYS = [
