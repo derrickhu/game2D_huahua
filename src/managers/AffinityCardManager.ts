@@ -20,6 +20,7 @@
 
 import { EventBus } from '@/core/EventBus';
 import { PersistService } from '@/core/PersistService';
+import { formatLocalDateString } from '@/utils/WeeklyCycle';
 import { CurrencyManager } from './CurrencyManager';
 import { DecorationManager } from './DecorationManager';
 import { FlowerSignTicketManager } from './FlowerSignTicketManager';
@@ -73,7 +74,7 @@ interface PersistState {
   owners: OwnerCardState[];
   /** 已领取的赛季全集大奖（seasonId 列表） */
   claimedSeasonGrand: string[];
-  /** 当日掉卡计数所属日期（YYYY-MM-DD），与签到/每日糖一致 */
+  /** 当日掉卡计数所属日期（YYYY-MM-DD），与签到本地 0 点日切一致 */
   dailyDropDate: string;
   /** 当日已掉落的卡张数（用于 CARD_DROP_DAILY_LIMIT 判断） */
   dailyDropCount: number;
@@ -508,11 +509,14 @@ class AffinityCardManagerClass {
   // 每日额度
   // ============================================================
 
+  /** 与签到一致：本地自然日 0:00 日切（含 GM 偏移） */
   private _todayKey(): string {
-    // 与 CheckInManager._getTodayStr / DailyCandyManager._todayKey 一致
     const d = new Date();
-    d.setUTCDate(d.getUTCDate() + (CheckInManager.gmDateOffsetDays ?? 0));
-    return d.toISOString().slice(0, 10);
+    const offset = CheckInManager.gmDateOffsetDays ?? 0;
+    if (offset !== 0) {
+      d.setUTCDate(d.getUTCDate() + offset);
+    }
+    return formatLocalDateString(d);
   }
 
   private _rolloverDailyIfNeeded(): void {

@@ -10,6 +10,7 @@ import {
   type ToolProduceDisplayEntry,
 } from '@/config/BuildingConfig';
 import { ITEM_DEFS } from '@/config/ItemConfig';
+import { formatLocalDateString } from '@/utils/WeeklyCycle';
 import { BoardManager } from './BoardManager';
 import { BuildingManager } from './BuildingManager';
 import { CheckInManager } from './CheckInManager';
@@ -41,8 +42,9 @@ function effectiveNow(): Date {
   return d;
 }
 
+/** 本地自然日 0:00 日切（勿用签到 UTC dateKey，国内会变成早上 8 点换日） */
 function localDateKey(): string {
-  return CheckInManager?.effectiveDateKey ?? effectiveNow().toISOString().slice(0, 10);
+  return formatLocalDateString(effectiveNow());
 }
 
 function isInEventPeriod(now = effectiveNow()): boolean {
@@ -193,7 +195,7 @@ class ThursdayMagicTimeManagerClass {
 
   private _checkDailyReset(): void {
     const today = localDateKey();
-    // 本地已离开周四：即使 UTC dateKey 仍是周四，也必须清掉附魔状态并落盘。
+    // 本地已离开周四：立即清掉附魔（与顶栏入口一致）。
     if (!isInEventPeriod()) {
       const cleared = BuildingManager.clearMagicEnchantments();
       const rolled = this._state.dateKey !== today;

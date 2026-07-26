@@ -4,7 +4,7 @@
  * 职责：
  *  - 维护熟客基础配置与近期留言去重队列
  *  - 提供 onCustomerDelivered(typeId)：调 AffinityCardManager 抽卡
- *  - 提供 pickRandomAffinityNote() 给 IdleManager / DailyCandyManager
+ *  - 提供 pickRandomAffinityNote() 给 IdleManager
  *  - 存档 Key: huahua_affinity；CloudSync allowlist 同步注册
  */
 import { PersistService } from '@/core/PersistService';

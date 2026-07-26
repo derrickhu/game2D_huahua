@@ -20,6 +20,7 @@ import {
   getGlobalStarRequiredForLevel,
   type SceneStarProgress,
 } from '@/config/StarLevelConfig';
+import { formatLocalDateString } from '@/utils/WeeklyCycle';
 
 export interface CurrencyState {
   gold: number;
@@ -434,7 +435,7 @@ class CurrencyManagerClass {
   }
 
   private _checkDailyReset(): void {
-    const today = new Date().toISOString().slice(0, 10);
+    const today = formatLocalDateString();
     if (today !== this._lastDailyResetDate) {
       this._lastDailyResetDate = today;
       this._dailyStaminaBuyCount = 0;

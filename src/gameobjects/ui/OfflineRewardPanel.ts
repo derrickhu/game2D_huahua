@@ -1,10 +1,9 @@
 /**
- * 离线收益 / 开店糖果面板（3 段式）
+ * 离线收益面板（2 段式）
  *
  * 段位（自上而下）：
  *   1. 离线产出   - 离线时长 + 产出花束数 + 离线花愿
  *   2. 熟客留言   - 头像 + 一句话留言（离线面板重新启用时可展示）
- *   3. 开店糖果   - 当日基础包（体力/花愿/钻石）+ 当日彩蛋 + 连签里程碑（如有）
  *
  * 任何一段为空时整段隐藏；至少一段非空才会被 IdleManager.calculateOfflineReward 弹出。
  * 「领取收益」点击后由 IdleManager.claimReward 统一入账，再 close。
@@ -111,12 +110,6 @@ export class OfflineRewardPanel extends PIXI.Container {
     if (noteSec) {
       sections.push(noteSec);
       sectionHeights.push((noteSec as any).__h ?? 0);
-    }
-
-    const candySec = this._buildDailyCandySection(r, innerW);
-    if (candySec) {
-      sections.push(candySec);
-      sectionHeights.push((candySec as any).__h ?? 0);
     }
 
     // 顶部标题区高度（标题 + 副标题）
@@ -287,56 +280,6 @@ export class OfflineRewardPanel extends PIXI.Container {
 
     const sectionH = Math.max(60, Math.max(text.position.y + text.height, y + 60)) + 2;
     (root as any).__h = sectionH;
-    return root;
-  }
-
-  // ============================================================
-  // 段：开店糖果
-  // ============================================================
-  private _buildDailyCandySection(r: OfflineReward, innerW: number): PIXI.Container | null {
-    const dc = r.dailyCandy;
-    if (!dc) return null;
-
-    const root = new PIXI.Container();
-    let y = 0;
-    y = this._appendSectionHeader(root, `开店糖果（连签 ${dc.consecutiveDays} 天）`, innerW, y);
-
-    // 基础包
-    const baseParts: string[] = [];
-    if (dc.base.huayuan > 0) baseParts.push(`花愿+${dc.base.huayuan}`);
-    if (dc.base.stamina > 0) baseParts.push(`体力+${dc.base.stamina}`);
-    if (dc.base.diamond > 0) baseParts.push(`钻石+${dc.base.diamond}`);
-    if (baseParts.length > 0) {
-      this._appendBulletLine(root, `每日基础包 · ${baseParts.join(' / ')}`, innerW, y);
-      y += 22;
-    }
-
-    // 随机彩蛋
-    if (dc.bonus) {
-      this._appendBulletLine(root, `今日彩蛋 · ${dc.bonus.label}`, innerW, y);
-      y += 22;
-    }
-
-    // 连签里程碑
-    if (dc.streakTier) {
-      const t = dc.streakTier;
-      const tierParts: string[] = [];
-      if (t.huayuan) tierParts.push(`花愿+${t.huayuan}`);
-      if (t.stamina) tierParts.push(`体力+${t.stamina}`);
-      if (t.diamond) tierParts.push(`钻石+${t.diamond}`);
-      if (t.flowerSignTickets) tierParts.push(`许愿币+${t.flowerSignTickets}`);
-      if (t.blindBoxAffinityFurniture) tierParts.push('随机熟客主题家具盲盒');
-      const summary = tierParts.length > 0 ? ` · ${tierParts.join(' / ')}` : '';
-      const tierText = new PIXI.Text(`【${t.label}】${summary}`, {
-        fontSize: 13, fill: 0xb14a00, fontFamily: FONT_FAMILY, fontWeight: 'bold',
-        wordWrap: true, wordWrapWidth: innerW - 16,
-      } as PIXI.TextStyle);
-      tierText.position.set(8, y);
-      root.addChild(tierText);
-      y += tierText.height + 4;
-    }
-
-    (root as any).__h = y + 4;
     return root;
   }
 

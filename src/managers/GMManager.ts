@@ -17,7 +17,6 @@
  *
  * 激活方式：顶栏「内购商店图标」与右侧系统菜单之间的空白区连点 5 次 → 出现 ；再点打开面板（开发者工具可自动激活）
  */
-import { ENABLE_CHALLENGE_LEVEL_FEATURE } from '@/config/FeatureFlags';
 import { EventBus } from '@/core/EventBus';
 import { Platform } from '@/core/PlatformService';
 import { PersistService } from '@/core/PersistService';
@@ -46,7 +45,6 @@ import {
 } from '@/config/FurnitureWorkshopConfig';
 import { CUSTOMER_TYPES } from '@/config/CustomerConfig';
 import { AffinityCardManager } from './AffinityCardManager';
-import { DailyCandyManager } from './DailyCandyManager';
 import { IdleManager } from './IdleManager';
 import { AFFINITY_DEFS } from '@/config/AffinityConfig';
 import { AFFINITY_CARDS, CARD_RARITIES, type CardRarity } from '@/config/AffinityCardConfig';
@@ -128,7 +126,8 @@ const GM_GROUP_ORDER: readonly string[] = [
   ' 升星仪式',
   ' 熟客系统',
   ' 卡牌系统',
-  ' 离线/糖果',
+  ' 离线',
+  ' 签到',
   ' 棋盘操作',
   ' 活动棋盘',
   ' 订单/客人',
@@ -1187,7 +1186,7 @@ class GMManagerClass {
       id: 'gm_checkin_advance_day',
       group: ' 系统测试',
       name: ' 签到：虚拟下一天',
-      desc: 'UTC 日历 +1 天（测累计签到/再签）；数据写入 huahua_checkin',
+      desc: '本地日历 +1 天（测累计签到/再签）；数据写入 huahua_checkin',
       execute: () => {
         CheckInManager.gmAdvanceVirtualDay();
         return ` 虚拟日期 +1，偏移=${CheckInManager.gmDateOffsetDays}天，可签到=${CheckInManager.canCheckIn ? '是' : '否'}`;
@@ -1546,19 +1545,6 @@ class GMManagerClass {
       },
     });
 
-    if (ENABLE_CHALLENGE_LEVEL_FEATURE) {
-      this._commands.push({
-        id: 'open_challenge',
-        group: ' 新系统',
-        name: ' 打开挑战关卡',
-        desc: '打开挑战关卡面板',
-        execute: () => {
-          EventBus.emit('panel:openChallenge');
-          return ' 已打开挑战关卡';
-        },
-      });
-    }
-
     // ========== 升星仪式 ==========
     this._commands.push({
       id: 'gm_simulate_levelup',
@@ -1718,10 +1704,10 @@ class GMManagerClass {
       },
     });
 
-    // ========== 离线 / 开店糖果 ==========
+    // ========== 离线 ==========
     this._commands.push({
       id: 'gm_simulate_offline_return',
-      group: ' 离线/糖果',
+      group: ' 离线',
       name: ' 模拟离线 1 小时回归',
       desc: '把 lastOnlineTimestamp 回拨 1h，下次进游戏弹离线收益面板',
       execute: () => {
@@ -1742,55 +1728,35 @@ class GMManagerClass {
     });
 
     this._commands.push({
-      id: 'gm_force_daily_candy',
-      group: ' 离线/糖果',
-      name: ' 强制弹今日糖果',
-      desc: '清今日糖果记录后，立即弹离线/糖果面板',
-      execute: () => {
-        DailyCandyManager.gmReset();
-        const reward = IdleManager.calculateOfflineReward();
-        if (reward) {
-          EventBus.emit('panel:showOfflineReward', reward);
-        }
-        return reward
-          ? ` 已强制弹糖果（连签 ${reward.dailyCandy?.consecutiveDays ?? 0} 天）`
-          : ' 强制后仍无可弹内容';
-      },
-    });
-
-    this._commands.push({
       id: 'gm_set_consecutive_3',
-      group: ' 离线/糖果',
+      group: ' 签到',
       name: ' 连签设为 3 天',
-      desc: '触发「连签 3 天 · 鲜花礼包」里程碑',
+      desc: '测试签到连签加成（+2 钻石）',
       execute: () => {
         CheckInManager.gmSetConsecutiveDays(3);
-        DailyCandyManager.gmReset();
-        return ' 连签=3，下次糖果触发 3 天里程碑';
+        return ' 连签=3';
       },
     });
 
     this._commands.push({
       id: 'gm_set_consecutive_7',
-      group: ' 离线/糖果',
+      group: ' 签到',
       name: ' 连签设为 7 天',
-      desc: '触发「连签 7 天 · 周礼包」里程碑',
+      desc: '测试签到连签加成（+5 钻石）',
       execute: () => {
         CheckInManager.gmSetConsecutiveDays(7);
-        DailyCandyManager.gmReset();
-        return ' 连签=7，下次糖果触发 7 天里程碑';
+        return ' 连签=7';
       },
     });
 
     this._commands.push({
       id: 'gm_set_consecutive_30',
-      group: ' 离线/糖果',
+      group: ' 签到',
       name: ' 连签设为 30 天',
-      desc: '触发「连签 30 天 · 熟客盲盒」里程碑',
+      desc: '测试签到连签文案/加成阈值',
       execute: () => {
         CheckInManager.gmSetConsecutiveDays(30);
-        DailyCandyManager.gmReset();
-        return ' 连签=30，下次糖果触发 30 天熟客盲盒';
+        return ' 连签=30';
       },
     });
 

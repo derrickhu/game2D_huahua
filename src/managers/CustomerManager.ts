@@ -76,7 +76,7 @@ export interface CustomerInstance {
   allSatisfied: boolean;
   /** 订单原始花愿收益（含订单类型 / 熟客图鉴倍率，不含限时活动额外加成） */
   huayuanReward: number;
-  /** 周末广告活动额外花愿；当天 12 点重置后自动归零 */
+  /** 周末广告活动额外花愿；本地自然日跨日 0 点后自动归零 */
   weekendHuayuanBonus?: number;
   tier: OrderTier;
   orderType: OrderType;

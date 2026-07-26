@@ -17,6 +17,7 @@ import { Platform } from '@/core/PlatformService';
 import { EventBus } from '@/core/EventBus';
 import { analytics, EVENT_NAMES } from '@/analytics';
 import { AD_UNIT_CONFIG, type PlatformAdUnitConfig } from '@/config/AdConfig';
+import { formatLocalDateString } from '@/utils/WeeklyCycle';
 
 const AD_TYPE = 'reward';
 /**
@@ -33,7 +34,6 @@ export enum AdScene {
   STAMINA_RECOVER  = 'stamina_recover',   // 体力恢复
   CD_SPEEDUP       = 'cd_speedup',        // 建筑CD加速
   EXTRA_REWARD     = 'extra_reward',      // 额外奖励
-  REVIVE           = 'revive',            // 挑战复活
   FREE_CHEST       = 'free_chest',        // 免费开箱
   MERCH_SHOP       = 'merch_shop',        // 主场景内购商店广告购
   BOARD_CELL_UNLOCK = 'board_cell_unlock',
@@ -409,7 +409,7 @@ class AdManagerClass {
   }
 
   private _checkDailyReset(): void {
-    const today = new Date().toISOString().slice(0, 10);
+    const today = formatLocalDateString();
     if (today !== this._stats.lastResetDate) {
       this._stats.lastResetDate = today;
       this._stats.todayShown = 0;

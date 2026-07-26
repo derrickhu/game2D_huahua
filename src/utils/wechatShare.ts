@@ -11,7 +11,7 @@
  * entry_point 命名规范（与 dashboard 字典对齐）：
  * - 微信被动分享回调：wx_button / wx_menu / wx_other / wx_timeline
  * - 抖音被动分享：dy_button / dy_menu / dy_other
- * - 业务主动分享：与业务模块对应的 snake_case，如 `shop_invite` / `flower_card` / `gift_stamina`
+ * - 业务主动分享：与业务模块对应的 snake_case，如 `shop_invite` / `flower_card`
  *   / `unlock_cell` / `warehouse_slot` / `affinity_card` / `wish_lucky` / `default_share`
  */
 
@@ -29,7 +29,6 @@ export type ShareEntryPoint =
   | 'default_share'
   | 'shop_invite'
   | 'flower_card'
-  | 'gift_stamina'
   | 'unlock_cell'
   | 'warehouse_slot'
   | 'affinity_card'

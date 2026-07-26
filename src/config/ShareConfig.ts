@@ -4,8 +4,7 @@ import type { FlowerCard } from '@/managers/FlowerCardManager';
 export type ShareScene =
   | 'core_gameplay'
   | 'decor_gameplay'
-  | 'unlock_cell'
-  | 'gift_stamina';
+  | 'unlock_cell';
 
 export interface SharePayload {
   title: string;
@@ -15,7 +14,7 @@ export interface SharePayload {
 
 const SHARE_IMAGE_ROOT = 'subpkg_items/images/share';
 
-export const SHARE_IMAGES: Record<Exclude<ShareScene, 'gift_stamina'>, string> = {
+export const SHARE_IMAGES: Record<ShareScene, string> = {
   core_gameplay: `${SHARE_IMAGE_ROOT}/share_core_gameplay.jpg`,
   decor_gameplay: `${SHARE_IMAGE_ROOT}/share_decor_gameplay.jpg`,
   unlock_cell: `${SHARE_IMAGE_ROOT}/share_unlock_cell.jpg`,
@@ -74,13 +73,5 @@ export function createFlowerCardShare(card: FlowerCard): SharePayload {
     title: `送你一朵「${card.name}」`,
     imageUrl: SHARE_IMAGES.core_gameplay,
     query: `card=${card.id}`,
-  };
-}
-
-export function createGiftStaminaShare(amount: number): SharePayload {
-  return {
-    title: `${amount} 点体力，拿去合！`,
-    imageUrl: SHARE_IMAGES.core_gameplay,
-    query: `gift=stamina&amount=${amount}`,
   };
 }

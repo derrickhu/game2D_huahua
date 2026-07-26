@@ -1,5 +1,6 @@
 import { EventBus } from '@/core/EventBus';
 import { PersistService } from '@/core/PersistService';
+import { formatLocalDateString } from '@/utils/WeeklyCycle';
 import { CheckInManager } from './CheckInManager';
 
 const STORAGE_KEY = 'huahua_weekend_huayuan_boost';
@@ -23,8 +24,9 @@ function effectiveNow(): Date {
   return d;
 }
 
+/** 本地自然日 0:00 日切（勿用签到 UTC dateKey，国内会变成早上 8 点换日） */
 function localDateKey(): string {
-  return CheckInManager?.effectiveDateKey ?? effectiveNow().toISOString().slice(0, 10);
+  return formatLocalDateString(effectiveNow());
 }
 
 /** 活动期：周六 0:00 起至周一 0:00 止（不含周一当日） */

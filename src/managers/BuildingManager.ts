@@ -29,6 +29,7 @@ import {
   type ToolProduceDisplayEntry,
 } from '@/config/BuildingConfig';
 import { BOARD_COLS, BOARD_ROWS } from '@/config/Constants';
+import { formatLocalDateString } from '@/utils/WeeklyCycle';
 import { ToolProducePolicy } from '@/managers/ToolProducePolicy';
 import { CheckInManager } from '@/managers/CheckInManager';
 
@@ -81,14 +82,15 @@ export interface BuildingPersistEntry {
 /** 入仓时随物品保存（无格索引），取出后写回 BuildingManager */
 export type ToolStateSnapshot = Omit<BuildingPersistEntry, 'cellIndex'>;
 
+/** 本地自然日（含 GM 虚拟日偏移）；勿用签到 UTC dateKey，国内会变成早上 8 点换日 */
 function currentEffectiveDateKey(): string {
-  return CheckInManager?.effectiveDateKey ?? new Date().toISOString().slice(0, 10);
+  const d = new Date();
+  const offset = CheckInManager?.gmDateOffsetDays ?? 0;
+  if (offset !== 0) d.setUTCDate(d.getUTCDate() + offset);
+  return formatLocalDateString(d);
 }
 
-/**
- * 活动入口「是否周四」用本地星期（含 GM UTC 日偏移）。
- * 不可只靠 UTC dateKey：中国周五 0:00~7:59 UTC 仍是周四，入口已关但 dateKey 未变。
- */
+/** 活动入口「是否周四」用本地星期（含 GM 日偏移） */
 function isThursdayMagicLocalDay(): boolean {
   const d = new Date();
   const offset = CheckInManager?.gmDateOffsetDays ?? 0;
@@ -900,7 +902,7 @@ class BuildingManagerClass {
   }
 
   isMagicEnchanted(cellIndex: number): boolean {
-    // 本地已过周四则立即失效（与顶栏入口一致），避免 UTC dateKey 滞后导致「活动关了但工具仍附魔」
+    // 本地已过周四则立即失效（与顶栏入口一致）
     if (!isThursdayMagicLocalDay()) return false;
     const cell = BoardManager.getCellByIndex(cellIndex);
     if (!cell?.itemId) return false;

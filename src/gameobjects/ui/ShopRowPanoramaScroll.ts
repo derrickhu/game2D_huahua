@@ -17,7 +17,7 @@ import { FloatingMenu } from './FloatingMenu';
 import { RewardBoxButton } from '@/gameobjects/ui/RewardBoxButton';
 import { TextureCache } from '@/utils/TextureCache';
 import { DESIGN_WIDTH, FONT_FAMILY } from '@/config/Constants';
-import { ENABLE_CHALLENGE_LEVEL_FEATURE, ENABLE_SHOP_ACTIVITY_EXPAND } from '@/config/FeatureFlags';
+import { ENABLE_SHOP_ACTIVITY_EXPAND } from '@/config/FeatureFlags';
 
 /** 左侧活动列宽度（大图标区） */
 export const SHOP_PANORAMA_ACTIVITY_W = 232;
@@ -72,12 +72,6 @@ const TASK_DEFS: TaskDef[] = [
     event: 'panel:openCoolSummerEvent',
     isVisible: () => CoolSummerEventManager.isActive(),
     hasRedDot: () => CoolSummerEventManager.hasRedDot,
-  },
-  {
-    id: 'challenge',
-    texKey: 'icon_challenge',
-    event: 'nav:openChallenge',
-    isVisible: () => ENABLE_CHALLENGE_LEVEL_FEATURE,
   },
   {
     id: 'event',

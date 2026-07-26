@@ -20,6 +20,7 @@ import {
   WORKSHOP_DYE_YELLOW_ID,
   getWorkshopMaterialDisplayName,
 } from '@/config/FurnitureWorkshopConfig';
+import { formatLocalDateString } from '@/utils/WeeklyCycle';
 import { CurrencyManager } from './CurrencyManager';
 import { DecorationManager } from './DecorationManager';
 import { FurnitureWorkshopManager } from './FurnitureWorkshopManager';
@@ -236,7 +237,7 @@ class CheckInManagerClass {
   };
 
   /**
-   * GM 调试：相对真实 UTC 日历前进的天数，参与 `_getTodayStr()`。
+   * GM 调试：相对真实日历前进的天数，参与 `_getTodayStr()`（本地自然日）。
    * 写入 `huahua_checkin` 的 `_gmDateOffset` 字段，「重置签到」会一并清除。
    */
   private _gmDateOffsetDays = 0;
@@ -310,7 +311,7 @@ class CheckInManagerClass {
     return this._state.claimedMilestones.includes(threshold);
   }
 
-  /** 当前有效日历日（含 GM 虚拟偏移，UTC YYYY-MM-DD，与活动 dateKey 一致） */
+  /** 当前有效日历日（含 GM 虚拟偏移，本地 YYYY-MM-DD，0 点日切） */
   get effectiveDateKey(): string {
     return this._getTodayStr();
   }
@@ -420,10 +421,13 @@ class CheckInManagerClass {
     }
   }
 
+  /** 本地自然日 0:00 日切（含 GM 偏移；勿用 UTC，国内会变成早上 8 点换日） */
   private _getTodayStr(): string {
     const d = new Date();
-    d.setUTCDate(d.getUTCDate() + this._gmDateOffsetDays);
-    return d.toISOString().slice(0, 10);
+    if (this._gmDateOffsetDays !== 0) {
+      d.setUTCDate(d.getUTCDate() + this._gmDateOffsetDays);
+    }
+    return formatLocalDateString(d);
   }
 
   /** GM：虚拟日历 +1 天，可再次签到；连续签到若仅隔 1 天会保留 */
@@ -450,7 +454,7 @@ class CheckInManagerClass {
     EventBus.emit('checkin:gmVirtualDayAdvanced');
   }
 
-  /** GM：直接覆盖连续签到天数（用于测试 DailyCandy 连签里程碑） */
+  /** GM：直接覆盖连续签到天数（用于测试连签加成） */
   gmSetConsecutiveDays(n: number): void {
     const clamped = Math.max(0, Math.floor(n));
     this._state.consecutiveDays = clamped;

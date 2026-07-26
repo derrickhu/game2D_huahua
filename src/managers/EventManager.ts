@@ -16,6 +16,7 @@
 import { EventBus } from '@/core/EventBus';
 import { Platform } from '@/core/PlatformService';
 import { PersistService } from '@/core/PersistService';
+import { formatLocalDateString } from '@/utils/WeeklyCycle';
 import { CurrencyManager } from './CurrencyManager';
 
 const STORAGE_KEY = 'huahua_events';
@@ -195,9 +196,9 @@ class EventManagerClass {
     this._recordDailyLogin();
   }
 
-  /** 记录每日登录 */
+  /** 记录每日登录（本地自然日 0:00 日切） */
   private _recordDailyLogin(): void {
-    const today = new Date().toISOString().slice(0, 10);
+    const today = formatLocalDateString();
     if (!this._dailyLoginDays.has(today)) {
       this._dailyLoginDays.add(today);
       this._incrementTask('e_daily_login', 1);

@@ -7,6 +7,7 @@
  */
 import { EventBus } from '@/core/EventBus';
 import { PersistService } from '@/core/PersistService';
+import { formatLocalDateString } from '@/utils/WeeklyCycle';
 import { CheckInManager } from './CheckInManager';
 import { CloudSyncManager } from './CloudSyncManager';
 import { CurrencyManager } from './CurrencyManager';
@@ -52,8 +53,9 @@ function effectiveNow(): Date {
   return d;
 }
 
+/** 本地自然日 0:00 日切（勿用签到 UTC dateKey，国内会变成早上 8 点换日） */
 function localDateKey(): string {
-  return CheckInManager?.effectiveDateKey ?? effectiveNow().toISOString().slice(0, 10);
+  return formatLocalDateString(effectiveNow());
 }
 
 /** 活动期：仅周二（本地日历日） */

@@ -27,7 +27,6 @@ import {
 } from '@/managers/CheckInManager';
 import { IdleManager } from '@/managers/IdleManager';
 import { LevelManager } from '@/managers/LevelManager';
-import { DailyCandyManager } from '@/managers/DailyCandyManager';
 import { AffinityManager } from '@/managers/AffinityManager';
 import { AffinityCardManager } from '@/managers/AffinityCardManager';
 import { CARD_SYSTEM_UNLOCK_LEVEL } from '@/config/AffinityCardConfig';
@@ -84,10 +83,8 @@ import {
   JEWELRY_EVENT_UNLOCK_LEVEL,
 } from '@/config/EventBoardConfig';
 import {
-  ENABLE_CHALLENGE_LEVEL_FEATURE,
   ENABLE_RESPONSIVE_LAYOUT_V2,
 } from '@/config/FeatureFlags';
-import { ChallengeManager } from '@/managers/ChallengeManager';
 import { HapticSystem } from '@/systems/HapticSystem';
 import { CollectionPanel } from '@/gameobjects/ui/CollectionPanel';
 import { FlowerCardPanel } from '@/gameobjects/ui/FlowerCardPanel';
@@ -100,8 +97,6 @@ import {
 import { EventPanel } from '@/gameobjects/ui/EventPanel';
 import { EventBoardPanel } from '@/gameobjects/ui/EventBoardPanel';
 import { CoolSummerEventPanel } from '@/gameobjects/ui/CoolSummerEventPanel';
-import { ChallengePanel } from '@/gameobjects/ui/ChallengePanel';
-import { LeaderboardPanel } from '@/gameobjects/ui/LeaderboardPanel';
 import { RewardBoxButton } from '@/gameobjects/ui/RewardBoxButton';
 import { RewardBoxPanel } from '@/gameobjects/ui/RewardBoxPanel';
 import { PopupShopPanel } from '@/gameobjects/ui/PopupShopPanel';
@@ -209,9 +204,6 @@ export class MainScene implements Scene {
   private _eventPanel!: EventPanel;
   private _eventBoardPanel!: EventBoardPanel;
   private _coolSummerEventPanel!: CoolSummerEventPanel;
-  private _challengePanel!: ChallengePanel;
-  private _leaderboardPanel!: LeaderboardPanel;
-
   // ---- 奖励收纳框 ----
   private _rewardBoxButton!: RewardBoxButton;
   private _rewardBoxPanel!: RewardBoxPanel;
@@ -265,7 +257,6 @@ export class MainScene implements Scene {
       CustomerManager.init();
       QuestManager.init();
       RewardBoxHintManager.init();
-      DailyCandyManager.init();
       AffinityManager.init();
       AffinityCardManager.init();
       IdleManager.init();
@@ -285,7 +276,6 @@ export class MainScene implements Scene {
       this._refreshOwnerOutfit();
       SocialManager.init();
       EventManager.init();
-      ChallengeManager.init();
 
       this._bindCustomerEvents();
       this._bindBoardCurrencyFly();
@@ -628,12 +618,6 @@ export class MainScene implements Scene {
 
     this._coolSummerEventPanel = new CoolSummerEventPanel();
     overlay.addChild(this._coolSummerEventPanel);
-
-    this._challengePanel = new ChallengePanel();
-    overlay.addChild(this._challengePanel);
-
-    this._leaderboardPanel = new LeaderboardPanel();
-    overlay.addChild(this._leaderboardPanel);
 
     // 奖励收纳框面板
     this._rewardBoxPanel = new RewardBoxPanel();
@@ -1708,17 +1692,6 @@ export class MainScene implements Scene {
       EventBus.emit('panel:openEventBoard');
     });
 
-    // ---- 挑战关卡入口（关闭时事件无效果，面板与 Manager 内亦有开关） ----
-    EventBus.on('nav:openChallenge', () => {
-      if (!ENABLE_CHALLENGE_LEVEL_FEATURE) return;
-      EventBus.emit('panel:openChallenge');
-    });
-
-    // ---- 排行榜入口 ----
-    EventBus.on('nav:openLeaderboard', () => {
-      EventBus.emit('panel:openLeaderboard');
-    });
-
     // ---- 花语卡片收集事件 ----
     EventBus.on('flowerCard:collected', (card: any) => {
       ToastMessage.show(`获得花语卡片：「${card.name}」！`);
@@ -1747,15 +1720,6 @@ export class MainScene implements Scene {
 
     EventBus.on('eventBoard:changed', () => {
       this._markRedDotsDirty();
-    });
-
-    // ---- 挑战事件 ----
-    EventBus.on('challenge:ended', (_levelId: string, success: boolean, stars: number) => {
-      if (success) {
-        ToastMessage.show(`挑战成功！获得 ${stars} 星评价！`);
-      } else {
-        ToastMessage.show('挑战失败，再试一次？');
-      }
     });
 
     // ---- 进入花店/房屋装修场景（底栏 ，非「购买商店」；购买商店为顶栏 panel:openMerchShop） ----
@@ -2116,7 +2080,6 @@ export class MainScene implements Scene {
     this._topBar.updateWeekendCountdown();
     this._staminaPanel.updateTimer();
     this._hapticSystem.update(dt);
-    ChallengeManager.update(dt);
     WeekendHuayuanBoostManager.update(dt);
     TuesdayStaminaUnlimitedManager.update(dt);
     ThursdayMagicTimeManager.update(dt);

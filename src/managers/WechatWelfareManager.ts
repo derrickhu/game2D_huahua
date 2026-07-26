@@ -6,6 +6,7 @@ import {
   WECHAT_WELFARE_SYNC_RETRY_DELAYS_MS,
 } from '@/config/WechatWelfareConfig';
 import { Platform } from '@/core/PlatformService';
+import { formatLocalDateString } from '@/utils/WeeklyCycle';
 import { ToastMessage } from '@/gameobjects/ui/ToastMessage';
 import { TutorialManager } from '@/managers/TutorialManager';
 import { WechatGiftManager } from './WechatGiftManager';
@@ -146,8 +147,9 @@ class WechatWelfareManagerClass {
     this._pageManager = null;
   }
 
+  /** 本地自然日 0:00 日切 */
   private _todayKey(): string {
-    return new Date().toISOString().slice(0, 10);
+    return formatLocalDateString();
   }
 
   private _isNoGiftCoolingDownToday(): boolean {

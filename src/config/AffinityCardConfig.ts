@@ -66,7 +66,7 @@ export const CARD_DROP_BASE_CHANCE = 0.25;
  * 每日全局掉卡上限。
  * 达到当日上限后所有客人订单当天都不再掉卡，但保底计数仍在累积，
  * 保证"每天最多 N 张惊喜，不打扰核心节奏"。
- * 按本地日历日切日（与签到 / 每日糖一致：UTC 偏移 + GM dateOffset）。
+ * 按本地自然日 0:00 日切（与签到一致，含 GM dateOffset）。
  */
 export const CARD_DROP_DAILY_LIMIT = 5;
 
