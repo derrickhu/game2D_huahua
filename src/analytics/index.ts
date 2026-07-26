@@ -37,7 +37,8 @@ export function initAnalytics(opts?: { endpoint?: string; userId?: string; debug
   if (inited) return;
 
   const platformName = mapPlatform();
-  // 与 xiaochu2 一致：经分 gameKey 固定基础名（白名单只有 huahua），端差异走 platform 字段
+  // 经分 gameKey 固定基础名 huahua（白名单只有这一档）。
+  // 抖音存档命名空间 huahua_tt_* 走云集合 / 本地 key 隔离，端差异在埋点里用 platform 字段，不要把 scoped key 写进 gameKey。
   const gameKey = GAME_KEY;
   const deviceInfo = buildDeviceInfo();
   const endpoint = opts?.endpoint || ENDPOINT;
