@@ -1,0 +1,8 @@
+Wall-hanging furniture prop for a flower-shop merge game. This is WALLART — it must lie flat on a single vertical wall plane (parallel to the back wall), NOT ground isometric furniture with a top diamond face. Top edge of the frame gently slopes down toward the right (same family as attached wallart angle reference, about -30° class). Soft brown outlines slightly thicker than hairline, hand-painted mobile merge-game butterfly-house style, warm upper-left light, soft volumetric shading, readable silhouette at small size.
+
+Square 1:1 or near-square canvas, single wall prop centered with generous white margin. Match the attached current wall-frame reference for overall FORM and layout — same hanging rectangular wooden frame with a butterfly specimen/illustration inside and a thin hanging cord — but redesign it to look more exquisite, premium, and beautiful.
+
+Keep identity: warm light wood rectangular frame, thin dark hanging cord to a small peg, cream mat / background inside, one soft lavender butterfly with wings spread, dark brown wing veins and antennae. Upgrade craftsmanship: finer wood grain and soft inner bevel on the frame, optional thin mint or champagne inner lip, more delicate wing gradients (lilac to blush, no blue neon), subtle pearly highlights on wings, prettier specimen-mount feel, slightly richer shading — still the same hanging butterfly wall frame product. Use attached wallart reference ONLY for wall-plane angle; do not copy its curtain design.
+
+Hard bans: NO text, NO letters, NO Chinese characters, NO watermark, NO logo, NO characters, NO room walls painted in, NO floor, NO ground isometric top face, NO flat front billboard with perfectly level top edge, NO gray grid.
+Background pure solid white #FFFFFF only.

@@ -6,7 +6,7 @@ import {
   ITEM_DEFS,
   getMergeResultId,
   isEventProducerItem,
-  LUCKY_COIN_ITEM_ID,
+  isSpecialConsumableItem,
 } from '@/config/ItemConfig';
 import {
   EVENT_BOARD_COLS,
@@ -734,8 +734,12 @@ class EventBoardManagerClass {
     return false;
   }
 
+  /**
+   * 活动棋盘上可双击收进主棋盘奖励箱的物品：
+   * 幸运金币 / 万能水晶 / 金剪刀，以及体力箱等宝箱类（活动盘无法正确使用）。
+   */
   private _isRewardBoxCollectibleItem(itemId: string): boolean {
-    return itemId === LUCKY_COIN_ITEM_ID || isChestItem(itemId);
+    return isSpecialConsumableItem(itemId) || isChestItem(itemId);
   }
 
   /** 活动棋盘上仍允许合并、但不允许点击打开的奖励箱。 */
@@ -1108,15 +1112,9 @@ class EventBoardManagerClass {
           }
           break;
         case 'boxReward':
-          // 宝箱/钻石袋/红包：直接落到活动棋盘空格（点击开箱散落货币块）；棋盘满了才退收纳盒
-          for (let i = 0; i < reward.count; i++) {
-            const idx = this._placeItemInPreferredEmpty(reward.itemId, i === 0 ? preferredCellIndex : -1);
-            if (idx >= 0) {
-              this._markDiscovered(reward.itemId, true);
-              placements.push({ itemId: reward.itemId, cellIndex: idx });
-            } else {
-              RewardBoxManager.addItem(reward.itemId, 1);
-            }
+          // 进度回响等：宝箱/万能水晶/幸运金币等直接进主棋盘奖励箱（勿落活动副棋盘）
+          if (reward.count > 0) {
+            RewardBoxManager.addItem(reward.itemId, reward.count);
           }
           break;
         case 'deco': {

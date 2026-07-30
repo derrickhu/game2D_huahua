@@ -4,6 +4,9 @@
  * 纯 Graphics 绘制，不依赖任何新美术资源，避免为单平台功能增加包体。
  * 「添加到桌面」按钮的回调必须停留在 pointertap 的同步调用栈内——
  * 抖音的 addShortcut 要求用户手势，套一层 await / setTimeout 就会失败。
+ *
+ * 侧边栏复访须展示完备操作指引（平台审核必检，对齐官方「图二」三步说明）：
+ * 1) 点击侧边栏图标 → 2) 点击「花花妙屋」→ 3) 领取奖励，再点「进入侧边栏」。
  */
 import * as PIXI from 'pixi.js';
 import { Game } from '@/core/Game';
@@ -20,23 +23,40 @@ import { DESIGN_WIDTH, FONT_FAMILY } from '@/config/Constants';
 
 const Z = 11300;
 const PANEL_W = 600;
+/** 桌面卡 / 侧边栏已领完等短卡 */
 const CARD_H = 210;
+/** 侧边栏待前往：含三步操作指引 */
+const SIDEBAR_GUIDE_CARD_H = 470;
+/** 侧边栏可领取：略高于短卡 */
+const SIDEBAR_CLAIM_CARD_H = 250;
 const CARD_GAP = 24;
-const BTN_W = 240;
+const BTN_W = 280;
 const BTN_H = 76;
+
+const SIDEBAR_GUIDE_STEPS = [
+  '点击侧边栏图标',
+  '点击「花花妙屋」',
+  '领取奖励',
+] as const;
 
 interface WelfareCard {
   root: PIXI.Container;
+  bg: PIXI.Graphics;
+  title: PIXI.Text;
   desc: PIXI.Text;
+  guide: PIXI.Container | null;
   btnBg: PIXI.Graphics;
   btnLabel: PIXI.Text;
   btn: PIXI.Container;
+  height: number;
 }
 
 export class DouyinWelfarePanel extends PIXI.Container {
   private _isOpen = false;
   private _dim!: PIXI.Graphics;
   private _root!: PIXI.Container;
+  private _panelTitle!: PIXI.Text;
+  private _closeBtn!: PIXI.Container;
   private _sidebarCard: WelfareCard | null = null;
   private _desktopCard: WelfareCard | null = null;
 
@@ -96,7 +116,7 @@ export class DouyinWelfarePanel extends PIXI.Container {
     this._root.eventMode = 'passive';
     this.addChild(this._root);
 
-    const title = new PIXI.Text('抖音专属福利', {
+    this._panelTitle = new PIXI.Text('抖音专属福利', {
       fontSize: 42,
       fill: 0xffffff,
       fontFamily: FONT_FAMILY,
@@ -104,70 +124,84 @@ export class DouyinWelfarePanel extends PIXI.Container {
       stroke: 0x8b4513,
       strokeThickness: 6,
     } as PIXI.TextStyle);
-    title.anchor.set(0.5, 0);
-    title.position.set(0, -CARD_H - CARD_GAP / 2 - 90);
-    this._root.addChild(title);
+    this._panelTitle.anchor.set(0.5, 0);
+    this._root.addChild(this._panelTitle);
 
-    this._sidebarCard = this._buildCard(
-      '侧边栏复访',
-      `每日一次 · ${DOUYIN_WELFARE.sidebar.diamond}钻石 + ${DOUYIN_WELFARE.sidebar.stamina}体力`,
-      () => this._onSidebarTap(),
-    );
+    this._sidebarCard = this._buildSidebarCard();
     this._desktopCard = this._buildCard(
       '添加到桌面',
       `一次性 · ${DOUYIN_WELFARE.desktop.diamond}钻石`,
       () => this._onDesktopTap(),
+      CARD_H,
+      false,
     );
 
-    const close = this._buildCloseButton();
-    this._root.addChild(close);
+    this._closeBtn = this._buildCloseButton();
+    this._root.addChild(this._closeBtn);
 
     this._layout();
   }
 
-  private _buildCard(titleText: string, subText: string, onTap: () => void): WelfareCard {
+  /** 侧边栏卡：内置官方图二风格三步指引（审核必检） */
+  private _buildSidebarCard(): WelfareCard {
+    const card = this._buildCard(
+      '侧边栏进入领奖励',
+      `每日一次 · ${DOUYIN_WELFARE.sidebar.diamond}钻石 + ${DOUYIN_WELFARE.sidebar.stamina}体力`,
+      () => this._onSidebarTap(),
+      SIDEBAR_GUIDE_CARD_H,
+      true,
+    );
+    return card;
+  }
+
+  private _buildCard(
+    titleText: string,
+    subText: string,
+    onTap: () => void,
+    height: number,
+    withGuide: boolean,
+  ): WelfareCard {
     const root = new PIXI.Container();
     this._root.addChild(root);
 
     const bg = new PIXI.Graphics();
-    bg.beginFill(0xfffaf2, 1);
-    bg.lineStyle(4, 0xe8c9a0, 1);
-    bg.drawRoundedRect(-PANEL_W / 2, -CARD_H / 2, PANEL_W, CARD_H, 28);
-    bg.endFill();
     root.addChild(bg);
 
     const title = new PIXI.Text(titleText, {
-      fontSize: 34,
+      fontSize: 32,
       fill: 0x8b5a2b,
       fontFamily: FONT_FAMILY,
       fontWeight: 'bold',
     } as PIXI.TextStyle);
     title.anchor.set(0, 0.5);
-    title.position.set(-PANEL_W / 2 + 40, -CARD_H / 2 + 52);
     root.addChild(title);
 
     const desc = new PIXI.Text(subText, {
-      fontSize: 24,
+      fontSize: 22,
       fill: 0xa98763,
       fontFamily: FONT_FAMILY,
       wordWrap: true,
       wordWrapWidth: PANEL_W - 80,
     } as PIXI.TextStyle);
     desc.anchor.set(0, 0.5);
-    desc.position.set(-PANEL_W / 2 + 40, -CARD_H / 2 + 100);
     root.addChild(desc);
+
+    let guide: PIXI.Container | null = null;
+    if (withGuide) {
+      guide = this._buildSidebarGuideSteps();
+      root.addChild(guide);
+    }
 
     const btn = new PIXI.Container();
     btn.eventMode = 'static';
     btn.cursor = 'pointer';
     btn.hitArea = new PIXI.Rectangle(-BTN_W / 2, -BTN_H / 2, BTN_W, BTN_H);
-    // 直接用 pointertap 同步回调：addShortcut 依赖用户手势，不能延后到下一帧
+    // 直接用 pointertap 同步回调：addShortcut / navigateToScene 依赖用户手势
     btn.on('pointertap', (e: PIXI.FederatedPointerEvent) => {
       e.stopPropagation();
       AudioManager.play('button_click');
       onTap();
     });
-    btn.position.set(0, CARD_H / 2 - 56);
     root.addChild(btn);
 
     const btnBg = new PIXI.Graphics();
@@ -182,7 +216,92 @@ export class DouyinWelfarePanel extends PIXI.Container {
     btnLabel.anchor.set(0.5);
     btn.addChild(btnLabel);
 
-    return { root, desc, btnBg, btnLabel, btn };
+    const card: WelfareCard = { root, bg, title, desc, guide, btnBg, btnLabel, btn, height };
+    this._applyCardChrome(card, height, withGuide);
+    return card;
+  }
+
+  private _buildSidebarGuideSteps(): PIXI.Container {
+    const box = new PIXI.Container();
+    const stepH = 56;
+    const startY = 0;
+
+    SIDEBAR_GUIDE_STEPS.forEach((text, i) => {
+      const row = new PIXI.Container();
+      row.position.set(0, startY + i * stepH);
+
+      const badge = new PIXI.Container();
+      const badgeBg = new PIXI.Graphics();
+      badgeBg.beginFill(0xff7a45, 1);
+      badgeBg.drawCircle(0, 0, 18);
+      badgeBg.endFill();
+      badge.addChild(badgeBg);
+      const num = new PIXI.Text(String(i + 1), {
+        fontSize: 22,
+        fill: 0xffffff,
+        fontFamily: FONT_FAMILY,
+        fontWeight: 'bold',
+      } as PIXI.TextStyle);
+      num.anchor.set(0.5);
+      badge.addChild(num);
+      badge.position.set(-PANEL_W / 2 + 56, 0);
+      row.addChild(badge);
+
+      const label = new PIXI.Text(text, {
+        fontSize: 26,
+        fill: 0x5c4030,
+        fontFamily: FONT_FAMILY,
+        fontWeight: 'bold',
+      } as PIXI.TextStyle);
+      label.anchor.set(0, 0.5);
+      label.position.set(-PANEL_W / 2 + 90, 0);
+      row.addChild(label);
+
+      // 步骤间虚线连接（最后一步不加）
+      if (i < SIDEBAR_GUIDE_STEPS.length - 1) {
+        const link = new PIXI.Graphics();
+        link.lineStyle(3, 0xe8c9a0, 0.9);
+        const x = -PANEL_W / 2 + 56;
+        link.moveTo(x, 20);
+        link.lineTo(x, stepH - 20);
+        row.addChild(link);
+      }
+
+      box.addChild(row);
+    });
+
+    const tip = new PIXI.Text('按以上步骤从抖音首页侧边栏进入后，即可领取今日奖励', {
+      fontSize: 20,
+      fill: 0xb8956a,
+      fontFamily: FONT_FAMILY,
+      wordWrap: true,
+      wordWrapWidth: PANEL_W - 80,
+      align: 'left',
+    } as PIXI.TextStyle);
+    tip.anchor.set(0, 0);
+    tip.position.set(-PANEL_W / 2 + 40, startY + SIDEBAR_GUIDE_STEPS.length * stepH + 8);
+    box.addChild(tip);
+
+    return box;
+  }
+
+  private _applyCardChrome(card: WelfareCard, height: number, showGuide: boolean): void {
+    card.height = height;
+    card.bg.clear();
+    card.bg.beginFill(0xfffaf2, 1);
+    card.bg.lineStyle(4, 0xe8c9a0, 1);
+    card.bg.drawRoundedRect(-PANEL_W / 2, -height / 2, PANEL_W, height, 28);
+    card.bg.endFill();
+
+    card.title.position.set(-PANEL_W / 2 + 40, -height / 2 + 48);
+    card.desc.position.set(-PANEL_W / 2 + 40, -height / 2 + 92);
+
+    if (card.guide) {
+      card.guide.visible = showGuide;
+      card.guide.position.set(0, -height / 2 + 140);
+    }
+
+    card.btn.position.set(0, height / 2 - 56);
   }
 
   private _buildCloseButton(): PIXI.Container {
@@ -203,8 +322,6 @@ export class DouyinWelfarePanel extends PIXI.Container {
     g.moveTo(-11, -11); g.lineTo(11, 11);
     g.moveTo(11, -11); g.lineTo(-11, 11);
     btn.addChild(g);
-
-    btn.position.set(PANEL_W / 2 - 10, -CARD_H - CARD_GAP / 2 - 40);
     return btn;
   }
 
@@ -239,28 +356,43 @@ export class DouyinWelfarePanel extends PIXI.Container {
       if (this._desktopCard.root.visible) visibleCards.push(this._desktopCard);
     }
 
-    const totalH = visibleCards.length * CARD_H + Math.max(0, visibleCards.length - 1) * CARD_GAP;
-    let y = -totalH / 2 + CARD_H / 2;
+    const totalH =
+      visibleCards.reduce((sum, c) => sum + c.height, 0)
+      + Math.max(0, visibleCards.length - 1) * CARD_GAP;
+    let y = -totalH / 2;
     for (const card of visibleCards) {
-      card.root.position.set(0, y);
-      y += CARD_H + CARD_GAP;
+      card.root.position.set(0, y + card.height / 2);
+      y += card.height + CARD_GAP;
     }
+
+    const topY = visibleCards.length > 0
+      ? visibleCards[0]!.root.position.y - visibleCards[0]!.height / 2
+      : -120;
+    this._panelTitle.position.set(0, topY - 78);
+    this._closeBtn.position.set(PANEL_W / 2 - 10, topY - 28);
   }
 
   private _sync(): void {
-    this._layout();
-
     if (this._sidebarCard && DouyinWelfareManager.sidebarAvailable) {
+      const card = this._sidebarCard;
       if (DouyinWelfareManager.sidebarClaimedToday) {
-        this._sidebarCard.desc.text = '今日已领取，明天从侧边栏再来看看吧';
-        this._setButtonState(this._sidebarCard, '明日再来', false);
+        card.title.text = '侧边栏复访';
+        card.desc.text = '今日已领取，明天从侧边栏再来看看吧';
+        this._applyCardChrome(card, CARD_H, false);
+        this._setButtonState(card, '明日再来', false);
       } else if (SidebarService.isFromSidebar()) {
-        this._sidebarCard.desc.text = `本次从侧边栏进入 · ${DOUYIN_WELFARE.sidebar.diamond}钻石 + ${DOUYIN_WELFARE.sidebar.stamina}体力`;
-        this._setButtonState(this._sidebarCard, '领取奖励', true);
+        card.title.text = '侧边栏进入领奖励';
+        card.desc.text =
+          `本次已从侧边栏进入 · 可领 ${DOUYIN_WELFARE.sidebar.diamond}钻石 + ${DOUYIN_WELFARE.sidebar.stamina}体力`;
+        this._applyCardChrome(card, SIDEBAR_CLAIM_CARD_H, false);
+        this._setButtonState(card, '领取奖励', true);
       } else {
-        this._sidebarCard.desc.text =
-          `加到抖音侧边栏，从侧边栏进入即可领 · ${DOUYIN_WELFARE.sidebar.diamond}钻石 + ${DOUYIN_WELFARE.sidebar.stamina}体力`;
-        this._setButtonState(this._sidebarCard, '去侧边栏', true);
+        // 审核要求：未前往前必须展示清晰完备的三步操作指引
+        card.title.text = '侧边栏进入领奖励';
+        card.desc.text =
+          `每日一次 · ${DOUYIN_WELFARE.sidebar.diamond}钻石 + ${DOUYIN_WELFARE.sidebar.stamina}体力`;
+        this._applyCardChrome(card, SIDEBAR_GUIDE_CARD_H, true);
+        this._setButtonState(card, '进入侧边栏', true);
       }
     }
 
@@ -270,10 +402,13 @@ export class DouyinWelfarePanel extends PIXI.Container {
         this._desktopCard.desc.text = added ? '已添加到桌面，奖励已领取' : '奖励已领取';
         this._setButtonState(this._desktopCard, '已完成', false);
       } else {
-        this._desktopCard.desc.text = `添加到手机桌面，一键直达花店 · ${DOUYIN_WELFARE.desktop.diamond}钻石`;
+        this._desktopCard.desc.text =
+          `添加到手机桌面，一键直达花店 · ${DOUYIN_WELFARE.desktop.diamond}钻石`;
         this._setButtonState(this._desktopCard, added ? '领取奖励' : '添加到桌面', true);
       }
     }
+
+    this._layout();
   }
 
   private _onSidebarTap(): void {
@@ -281,7 +416,9 @@ export class DouyinWelfarePanel extends PIXI.Container {
 
     if (SidebarService.isFromSidebar()) {
       if (DouyinWelfareManager.claimSidebarReward()) {
-        ToastMessage.show(`领取成功！钻石 +${DOUYIN_WELFARE.sidebar.diamond}，体力 +${DOUYIN_WELFARE.sidebar.stamina}`);
+        ToastMessage.show(
+          `领取成功！钻石 +${DOUYIN_WELFARE.sidebar.diamond}，体力 +${DOUYIN_WELFARE.sidebar.stamina}`,
+        );
       }
       this._sync();
       return;

@@ -18,6 +18,7 @@ import {
   getOrderProduct,
   productOrderSpecsForTier,
   productToolCap,
+  isPlantOrderProduct,
   resolveOrderProduct,
   unlockedOrderProducts,
   type OrderProductId,
@@ -25,6 +26,7 @@ import {
 } from '@/config/OrderProductConfig';
 import {
   ORDER_ASPIRATIONAL_LEVEL_BONUS_CHANCE,
+  ORDER_PLANT_ASPIRATIONAL_SCALE,
   ORDER_COMBO_MIN_UNLOCKED_LINES_FOR_THIRD_SLOT,
   ORDER_COMBO_THIRD_SLOT_CHANCE,
   ORDER_GROWTH_BONUS_MULTIPLIER,
@@ -76,6 +78,7 @@ function resolveLevelBounds(
   tier: OrderTier,
   rng: () => number,
   playerLevel?: number,
+  aspirationalScale = 1,
 ): { lo: number; hi: number } {
   const tierAspirationalBonus: Record<OrderTier, number> = {
     C: 0,
@@ -84,7 +87,8 @@ function resolveLevelBounds(
     S: 0.18,
   };
   const aspirationalChance =
-    ORDER_ASPIRATIONAL_LEVEL_BONUS_CHANCE + tierAspirationalBonus[tier];
+    (ORDER_ASPIRATIONAL_LEVEL_BONUS_CHANCE + tierAspirationalBonus[tier])
+    * Math.max(0, aspirationalScale);
   const aspirational = toolCap > 0 && rng() < (
     playerLevel === 1 || playerLevel === 2 ? 0
       : playerLevel === 3 ? aspirationalChance * 0.5
@@ -124,6 +128,7 @@ function pickItemLevel(
   tier: OrderTier,
   rng: () => number,
   playerLevel?: number,
+  aspirationalScale = 1,
 ): number {
   const tierExponent: Record<OrderTier, number> = {
     C: ORDER_ITEM_LEVEL_PICK_EXPONENT,
@@ -139,6 +144,7 @@ function pickItemLevel(
     tier,
     rng,
     playerLevel,
+    aspirationalScale,
   );
   const span = hi - lo + 1;
   return lo + Math.floor(Math.pow(rng(), tierExponent[tier]) * span);
@@ -164,9 +170,14 @@ function tryPickProductItem(
   playerLevel?: number,
 ): string | null {
   const toolCap = productToolCap(spec.productId, ulk);
+  const aspirationalScale = isPlantOrderProduct(spec.productId)
+    ? ORDER_PLANT_ASPIRATIONAL_SCALE
+    : 1;
 
   for (let attempt = 0; attempt < 20; attempt++) {
-    const level = pickItemLevel(spec.minLv, spec.maxLv, toolCap, spec.maxLv, tier, rng, playerLevel);
+    const level = pickItemLevel(
+      spec.minLv, spec.maxLv, toolCap, spec.maxLv, tier, rng, playerLevel, aspirationalScale,
+    );
     const cand = findItemId(spec.category, spec.itemLine, level);
     if (cand && !usedIds.has(cand)) {
       return cand;
@@ -180,6 +191,7 @@ function tryPickProductItem(
     tier,
     rng,
     playerLevel,
+    aspirationalScale,
   );
   for (let lv = hi; lv >= lo; lv--) {
     const cand = findItemId(spec.category, spec.itemLine, lv);
@@ -431,6 +443,7 @@ function buildTimedFloristOrderSlots(ctx: OrderGenContext): OrderGenSlot[] | nul
     'A',
     ctx.rng,
     ctx.playerLevel,
+    ORDER_PLANT_ASPIRATIONAL_SCALE,
   );
   if (level < TIMED_FLORIST_ORDER_MIN_ITEM_LEVEL) return null;
 

@@ -164,7 +164,7 @@ export class CheckInPanel extends PIXI.Container {
 
     const cardAreaX = cx - CARD_AREA_W / 2;
 
-    const ESTIMATED_H = 200 + 220 + CARD_H + CARD_GAP + CARD_H + CARD_GAP + DAY7_H + 20 + 56 + 140;
+    const ESTIMATED_H = 200 + 220 + CARD_H + CARD_GAP + CARD_H + CARD_GAP + DAY7_H + 20 + 56 + 180;
     const startY = Math.max(36, (logicH - ESTIMATED_H) / 2);
     let y = startY;
 
@@ -214,7 +214,7 @@ export class CheckInPanel extends PIXI.Container {
     }
     if (CheckInManager.canClaimCheckInAdBonus) {
       this._buildCheckInAdBonusButton(cx, y);
-      y += 68;
+      y += 108; // 按钮 +「点击任意空白处关闭」提示
     } else if (state.signedToday && CheckInManager.hasClaimedCheckInAdBonusToday) {
       const tip = new PIXI.Text('今日额外奖励已领取', {
         fontSize: 15,
@@ -713,6 +713,25 @@ export class CheckInPanel extends PIXI.Container {
       });
     });
     this._content.addChild(hit);
+
+    // 审核：广告 CTA 旁须显著提示可关闭路径，避免误触广告
+    const closeHint = new PIXI.Text('点击任意空白处关闭', {
+      fontSize: 20,
+      fill: 0xfff8e7,
+      fontFamily: FONT_FAMILY,
+      fontWeight: 'bold',
+      stroke: 0x000000,
+      strokeThickness: 4,
+      dropShadow: true,
+      dropShadowColor: 0x000000,
+      dropShadowBlur: 2,
+      dropShadowDistance: 1,
+      dropShadowAlpha: 0.65,
+    } as PIXI.TextStyle);
+    closeHint.anchor.set(0.5, 0);
+    closeHint.position.set(cx, y + BH + 12);
+    closeHint.eventMode = 'none';
+    this._content.addChild(closeHint);
   }
 
   private _adBonusFailMessage(reason?: AdFailReason): string {
