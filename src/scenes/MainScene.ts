@@ -58,6 +58,10 @@ import { DecorationPanel } from '@/gameobjects/ui/DecorationPanel';
 import { FurnitureWorkshopPanel } from '@/gameobjects/ui/FurnitureWorkshopPanel';
 import { FloatingMenu } from '@/gameobjects/ui/FloatingMenu';
 import { SceneSwitch } from '@/gameobjects/ui/SceneSwitch';
+import { DouyinWelfareEntry } from '@/gameobjects/ui/DouyinWelfareEntry';
+import { DouyinWelfarePanel } from '@/gameobjects/ui/DouyinWelfarePanel';
+import { DouyinWelfareManager } from '@/managers/DouyinWelfareManager';
+import { SidebarService } from '@/core/SidebarService';
 import {
   DESIGN_WIDTH,
   COLORS,
@@ -193,6 +197,8 @@ export class MainScene implements Scene {
   // ---- 新UI架构 ----
   private _floatingMenu!: FloatingMenu;
   private _sceneSwitch!: SceneSwitch;
+  private _douyinWelfareEntry!: DouyinWelfareEntry;
+  private _douyinWelfarePanel!: DouyinWelfarePanel;
 
   // ---- 新增系统 Phase 7+ ----
   private _hapticSystem!: HapticSystem;
@@ -276,6 +282,7 @@ export class MainScene implements Scene {
       this._refreshOwnerOutfit();
       SocialManager.init();
       EventManager.init();
+      DouyinWelfareManager.init();
 
       this._bindCustomerEvents();
       this._bindBoardCurrencyFly();
@@ -379,6 +386,7 @@ export class MainScene implements Scene {
 
     this._infoBar.position.set(0, layout.infoBarY);
     this._infoBar.relayout(layout.infoBarHeight, layout.infoBarSafeBottom);
+    this._douyinWelfareEntry?.relayout();
     this._tutorialOverlay?.refreshLayout();
   }
 
@@ -417,6 +425,15 @@ export class MainScene implements Scene {
           this._checkInPanel.open();
         }
       }, 500);
+    }
+
+    // 2.5 抖音侧边栏进入且今日未领 → 自动弹福利面板，让玩家一进来就能领
+    if (SidebarService.isFromSidebar() && !DouyinWelfareManager.sidebarClaimedToday) {
+      setTimeout(() => {
+        if (TutorialManager.isActive) return;
+        if (this._checkInPanel?.visible) return;
+        this._douyinWelfarePanel.open();
+      }, CheckInManager.canCheckIn ? 2400 : 900);
     }
 
     // 4. 任务完成提示
@@ -553,6 +570,10 @@ export class MainScene implements Scene {
     this._sceneSwitch = new SceneSwitch();
     this.container.addChild(this._sceneSwitch);
 
+    // 抖音侧边栏 / 添加桌面入口，微信端 visible 恒为 false
+    this._douyinWelfareEntry = new DouyinWelfareEntry();
+    this.container.addChild(this._douyinWelfareEntry);
+
     // ---- 留存系统 UI（全局覆盖层，任何场景都能使用） ----
     const overlay = OverlayManager.container;
 
@@ -563,6 +584,9 @@ export class MainScene implements Scene {
     });
     this._buyFurnitureHintOverlay = new BuyFurnitureHintOverlay(this.container);
     this._rewardBoxHintOverlay = new RewardBoxHintOverlay(OverlayManager.container);
+
+    this._douyinWelfarePanel = new DouyinWelfarePanel();
+    overlay.addChild(this._douyinWelfarePanel);
 
     // 签到面板
     this._checkInPanel = new CheckInPanel();
@@ -1767,6 +1791,7 @@ export class MainScene implements Scene {
       eventUnlocked && (EventManager.hasClaimableTask || EventBoardManager.hasClaimable),
     );
     this._floatingMenu.setRedDot('quest', QuestManager.hasClaimableQuest);
+    this._douyinWelfareEntry?.refresh();
 
     // 底部栏红点（装修按钮）
     this._infoBar.updateQuickBtnRedDots();

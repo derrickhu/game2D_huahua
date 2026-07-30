@@ -1,7 +1,7 @@
 import { EventBus } from '@/core/EventBus';
 import { PersistService } from '@/core/PersistService';
 import { formatLocalDateString } from '@/utils/WeeklyCycle';
-import { CheckInManager } from './CheckInManager';
+import { getCheckInGmDateOffsetDays } from './checkInDateAccess';
 
 const STORAGE_KEY = 'huahua_weekend_huayuan_boost';
 const BONUS_RATE = 0.5;
@@ -17,7 +17,7 @@ interface WeekendHuayuanBoostState {
 /** 与签到 GM 虚拟日偏移共用，便于「下一天」测试 */
 function effectiveNow(): Date {
   const d = new Date();
-  const offset = CheckInManager?.gmDateOffsetDays ?? 0;
+  const offset = getCheckInGmDateOffsetDays();
   if (offset !== 0) {
     d.setUTCDate(d.getUTCDate() + offset);
   }

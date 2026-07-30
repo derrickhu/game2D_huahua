@@ -5,14 +5,13 @@
  */
 import { ShaderSystem, BaseImageResource, Texture, BaseTexture } from '@pixi/core';
 import { settings } from '@pixi/settings';
+import { getNativePlatformApi } from './platformDetect';
 
 // ======== 配置 PIXI.settings.ADAPTER ========
 // 关键：PixiJS 的 BrowserAdapter 默认通过 document.createElement('canvas') 创建离屏 canvas，
 // 真机环境中 document 可能不可用或不完整，导致 Graphics/Text 全部不渲染。
 // 直接注入 wx/tt API 调用，完全绕过 document。
-declare const wx: any;
-declare const tt: any;
-const _api: any = typeof wx !== 'undefined' ? wx : typeof tt !== 'undefined' ? tt : null;
+const _api: any = getNativePlatformApi();
 if (_api) {
   try {
     // 创建 2D 离屏 canvas 的辅助函数
@@ -157,9 +156,8 @@ console.log('[pixiPatch] unsafe-eval patch 已应用');
 // 2) PIXI.Text canvas → 用 toDataURL 转 Image 再上传（Image 上传真机可用）
 const _isRealDevice = (() => {
   try {
-    const p: any = typeof wx !== 'undefined' ? wx : typeof tt !== 'undefined' ? tt : null;
-    if (!p) return false;
-    const info = p.getSystemInfoSync();
+    if (!_api) return false;
+    const info = _api.getSystemInfoSync();
     console.log('[pixiPatch] platform:', info.platform, 'brand:', info.brand, 'model:', info.model);
     return info.platform !== 'devtools';
   } catch { return false; }

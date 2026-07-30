@@ -9,9 +9,20 @@ export type ShareScene =
 export interface SharePayload {
   title: string;
   imageUrl: string;
+  /** 抖音分享文案（desc）；微信忽略 */
+  desc?: string;
+  /**
+   * 抖音分享素材模板 ID（运营后台审核通过后填写）。
+   * 抖音 30.9+ 会忽略代码 imageUrl，改走后台「分享配置」或本 templateId。
+   */
+  templateId?: string;
   query?: string;
 }
 
+/**
+ * 微信分享图：放在 items 分包（与历史上线路径一致，不占主包 4MB 限额）。
+ * 抖音自定义图改走开放平台「分享配置」，勿再拷进主包 `images/share/`。
+ */
 const SHARE_IMAGE_ROOT = 'subpkg_items/images/share';
 
 export const SHARE_IMAGES: Record<ShareScene, string> = {

@@ -1,15 +1,26 @@
 /**
  * 平台服务抽象层 - 统一封装微信/抖音双平台 API
  *
- * 所有平台特有调用（存储、广告、分享等）都通过本模块统一访问，
+ * 所有平台特有调用（存储、广告、分享、侧边栏、桌面等）都通过本模块统一访问，
  * src/ 中不再需要各自 declare const wx / tt。
+ *
+ * 存储：读写前统一经 scopeStorageKey 映射到平台命名空间（微信原样，抖音加 _tt 段），
+ * 因此业务层继续用 `huahua_xxx` 逻辑 key 即可，无需感知平台。
  */
 
-declare const wx: any;
-declare const tt: any;
 declare const GameGlobal: any;
 
-export type PlatformName = 'wechat' | 'douyin' | 'unknown';
+import { scopeStorageKey, getScopedGameKey } from '@/config/gameKeyScope';
+import {
+  detectMinigamePlatform,
+  getNativePlatformApi,
+  toBackendPlatformCode,
+  type BackendPlatformCode,
+  type PlatformName,
+} from './platformDetect';
+
+export type { PlatformName, BackendPlatformCode };
+export { detectMinigamePlatform };
 
 class PlatformServiceClass {
   /** 当前平台名 */
@@ -19,17 +30,20 @@ class PlatformServiceClass {
   private _api: any;
 
   constructor() {
-    if (typeof wx !== 'undefined') {
-      this._api = wx;
-      this.name = 'wechat';
-    } else if (typeof tt !== 'undefined') {
-      this._api = tt;
-      this.name = 'douyin';
-    } else {
-      this._api = null;
-      this.name = 'unknown';
-    }
-    console.log(`[Platform] 当前平台: ${this.name}`);
+    this.name = detectMinigamePlatform();
+    this._api = getNativePlatformApi(this.name);
+    const apiLabel = this.name === 'douyin' ? 'tt' : this.name === 'wechat' ? 'wx' : 'none';
+    console.log(`[Platform] 当前平台: ${this.name}, api=${apiLabel}, gameKey=${getScopedGameKey(this.name)}`);
+  }
+
+  /** 后端 /login 的 platform 字段（wx / dy / anon） */
+  get backendPlatformCode(): BackendPlatformCode {
+    return toBackendPlatformCode(this.name);
+  }
+
+  /** 当前平台的数据命名空间（huahua / huahua_tt） */
+  get scopedGameKey(): string {
+    return getScopedGameKey(this.name);
   }
 
   /** 是否在小游戏环境中 */
@@ -82,11 +96,16 @@ class PlatformServiceClass {
     return this._api;
   }
 
-  // ═══════════════ 存储 ═══════════════
+  // ═══════════════ 存储（key 自动落到平台命名空间）═══════════════
+
+  /** 逻辑 key → 物理 key，供排障时确认实际写入的位置 */
+  storageKey(key: string): string {
+    return scopeStorageKey(key, this.name);
+  }
 
   getStorageSync(key: string): string | null {
     try {
-      return this._api?.getStorageSync(key) || null;
+      return this._api?.getStorageSync(this.storageKey(key)) || null;
     } catch (_) {
       return null;
     }
@@ -94,24 +113,25 @@ class PlatformServiceClass {
 
   setStorageSync(key: string, value: string): void {
     try {
-      this._api?.setStorageSync(key, value);
+      this._api?.setStorageSync(this.storageKey(key), value);
     } catch (_) {}
   }
 
   /** 异步写入本地存储（避免阻塞主线程） */
   setStorageAsync(key: string, value: string): void {
+    const physicalKey = this.storageKey(key);
     try {
       if (this._api?.setStorage) {
-        this._api.setStorage({ key, data: value, fail() {} });
+        this._api.setStorage({ key: physicalKey, data: value, fail() {} });
       } else {
-        this._api?.setStorageSync(key, value);
+        this._api?.setStorageSync(physicalKey, value);
       }
     } catch (_) {}
   }
 
   removeStorageSync(key: string): void {
     try {
-      this._api?.removeStorageSync(key);
+      this._api?.removeStorageSync(this.storageKey(key));
     } catch (_) {}
   }
 
@@ -462,6 +482,11 @@ class PlatformServiceClass {
   /** 显式开启右上角菜单分享入口（微信真机需要，否则菜单里可能显示当前页面不可分享） */
   showShareMenu(opts?: { withShareTicket?: boolean; menus?: string[] }): void {
     try {
+      // menus / withShareTicket 是微信特有参数，抖音传入会被判为非法入参
+      if (this.name === 'douyin') {
+        this._api?.showShareMenu?.({});
+        return;
+      }
       this._api?.showShareMenu?.({
         withShareTicket: opts?.withShareTicket ?? true,
         menus: opts?.menus ?? ['shareAppMessage', 'shareTimeline'],
@@ -470,10 +495,40 @@ class PlatformServiceClass {
   }
 
   /** 主动分享（fire-and-forget） */
-  shareAppMessage(opts: { title: string; imageUrl?: string; query?: string }): void {
+  shareAppMessage(opts: {
+    title: string;
+    imageUrl?: string;
+    query?: string;
+    desc?: string;
+    templateId?: string;
+  }): void {
     try {
-      this._api?.shareAppMessage?.(opts);
+      this._api?.shareAppMessage?.(this._buildShareAppMessageOpts(opts));
     } catch (_) {}
+  }
+
+  /** 组装平台分享参数：抖音多传 desc / templateId，并去掉空字段 */
+  private _buildShareAppMessageOpts(opts: {
+    title: string;
+    imageUrl?: string;
+    query?: string;
+    desc?: string;
+    templateId?: string;
+    success?: (...args: any[]) => void;
+    fail?: (...args: any[]) => void;
+    complete?: (...args: any[]) => void;
+  }): Record<string, unknown> {
+    const out: Record<string, unknown> = { title: opts.title };
+    if (opts.imageUrl) out.imageUrl = opts.imageUrl;
+    if (opts.query) out.query = opts.query;
+    if (opts.success) out.success = opts.success;
+    if (opts.fail) out.fail = opts.fail;
+    if (opts.complete) out.complete = opts.complete;
+    if (this.isDouyin) {
+      if (opts.desc) out.desc = opts.desc;
+      if (opts.templateId) out.templateId = opts.templateId;
+    }
+    return out;
   }
 
   /**
@@ -601,16 +656,21 @@ class PlatformServiceClass {
   }
 
   /**
-   * 主动分享并等待结果（通过 onHide/onShow 时间差判断）。
-   * 微信已移除分享成功回调，此方法用时间差启发式判断：
-   * 离开 >2s 视为分享成功，否则视为取消。
+   * 主动分享并等待结果。
    *
-   * 微信开发者工具：`platform === 'devtools'` 时分享往往不触发与真机一致的前后台切换，
-   * 或回到前台间隔 <2s，导致恒为「取消」。工具内调用 `shareAppMessage` 成功后直接视为成功，便于测转发解锁格等流程。
+   * - **抖音**：用 `tt.shareAppMessage` 的 success/fail（官方支持；hide/show 启发式在抖音端内分享不可靠）。
+   * - **微信**：已移除分享成功回调，用 onHide/onShow 时间差：离开 >2s 视为成功，否则取消。
+   * - **微信开发者工具**：`platform === 'devtools'` 时分享后直接视为成功，便于测转发解锁。
    *
    * @returns true = 可能已分享，false = 取消或未分享
    */
-  shareAndWait(opts: { title: string; imageUrl?: string; query?: string }): Promise<boolean> {
+  shareAndWait(opts: {
+    title: string;
+    imageUrl?: string;
+    query?: string;
+    desc?: string;
+    templateId?: string;
+  }): Promise<boolean> {
     return new Promise<boolean>((resolve) => {
       if (!this._api) {
         resolve(true);
@@ -622,11 +682,46 @@ class PlatformServiceClass {
 
       if (isDevtools) {
         try {
-          this._api.shareAppMessage(opts);
-          console.log('[Platform] shareAndWait: devtools 环境，分享调用后视为成功（真机仍走 onHide/onShow 启发式）');
+          this._api.shareAppMessage(this._buildShareAppMessageOpts(opts));
+          console.log('[Platform] shareAndWait: devtools 环境，分享调用后视为成功（真机仍按平台分支判定）');
           resolve(true);
         } catch (_) {
           resolve(false);
+        }
+        return;
+      }
+
+      // 抖音：官方有 success/fail，端内分享常不触发足够长的 hide/show
+      if (this.isDouyin) {
+        let settled = false;
+        const finish = (ok: boolean) => {
+          if (settled) return;
+          settled = true;
+          clearTimeout(timer);
+          resolve(ok);
+        };
+        const timer = setTimeout(() => {
+          console.warn('[Platform] shareAndWait: 抖音分享超时，视为取消');
+          finish(false);
+        }, 120_000);
+
+        try {
+          this._api.shareAppMessage(
+            this._buildShareAppMessageOpts({
+              ...opts,
+              success: () => {
+                console.log('[Platform] shareAndWait: 抖音 success');
+                finish(true);
+              },
+              fail: (err: unknown) => {
+                console.warn('[Platform] shareAndWait: 抖音 fail', err);
+                finish(false);
+              },
+            }),
+          );
+        } catch (e) {
+          console.warn('[Platform] shareAndWait: 抖音 exception', e);
+          finish(false);
         }
         return;
       }
@@ -653,7 +748,7 @@ class PlatformServiceClass {
       this._api.onShow(onShow);
 
       try {
-        this._api.shareAppMessage(opts);
+        this._api.shareAppMessage(this._buildShareAppMessageOpts(opts));
       } catch (_) {
         cleanup();
         resolve(false);
@@ -662,9 +757,21 @@ class PlatformServiceClass {
   }
 
   /** 注册被动分享（右上角"分享"） */
-  onShareAppMessage(callback: () => { title: string; imageUrl?: string; query?: string }): void {
+  onShareAppMessage(
+    callback: (res?: { from?: string }) => {
+      title: string;
+      imageUrl?: string;
+      query?: string;
+      desc?: string;
+      templateId?: string;
+    },
+  ): void {
     try {
-      this._api?.onShareAppMessage?.(callback);
+      // 统一剥空字段；抖音可带 desc / templateId
+      this._api?.onShareAppMessage?.((res?: { from?: string }) => {
+        const payload = callback(res) || { title: '' };
+        return this._buildShareAppMessageOpts(payload);
+      });
     } catch (_) {}
   }
 
@@ -753,6 +860,215 @@ class PlatformServiceClass {
       });
     } catch (e) {
       console.warn('[Platform] setClipboardData:', e);
+    }
+  }
+
+  // ═══════════════ 分包 ═══════════════
+
+  /**
+   * 加载资源分包（微信 / 抖音 API 同名同形）。
+   * 宿主不支持时 resolve(null)，由调用方决定走 CDN 还是兜底；下载失败则 reject。
+   */
+  loadSubpackage(
+    name: string,
+    onProgress?: (percent: number, written: number, total: number) => void,
+  ): Promise<'loaded' | 'unsupported'> {
+    return new Promise((resolve, reject) => {
+      if (typeof this._api?.loadSubpackage !== 'function') {
+        resolve('unsupported');
+        return;
+      }
+      try {
+        const task = this._api.loadSubpackage({
+          name,
+          success: () => resolve('loaded'),
+          fail: (err: any) => {
+            const errMsg = err?.errMsg || err?.message || '';
+            let raw = '';
+            try { raw = JSON.stringify(err); } catch (_) { raw = String(err); }
+            reject(Object.assign(
+              new Error(`loadSubpackage(${name}) 失败: ${errMsg || raw || 'unknown'}`),
+              { raw: err },
+            ));
+          },
+        });
+        if (onProgress && task?.onProgressUpdate) {
+          task.onProgressUpdate((res: any) => {
+            onProgress(res?.progress ?? 0, res?.totalBytesWritten ?? 0, res?.totalBytesExpectedToWrite ?? 0);
+          });
+        }
+      } catch (e) {
+        reject(e instanceof Error ? e : new Error(String(e)));
+      }
+    });
+  }
+
+  // ═══════════════ 文件系统 / 下载（CDN 资源缓存）═══════════════
+
+  getFileSystemManager(): any {
+    try {
+      return this._api?.getFileSystemManager?.() ?? null;
+    } catch (_) {
+      return null;
+    }
+  }
+
+  /** 用户数据根目录；抖音与微信同为 env.USER_DATA_PATH */
+  get userDataPath(): string {
+    try {
+      return this._api?.env?.USER_DATA_PATH || '';
+    } catch (_) {
+      return '';
+    }
+  }
+
+  /**
+   * 以纯文本取回响应体，绕过宿主的 JSON 协议解析层。
+   *
+   * CloudBase 默认域名上的 application/json 静态文件若走普通解析通道，
+   * 会被云开发协议层当成协议报文 JSON.parse 而报错，所以这里必须显式声明 text。
+   */
+  requestText(url: string, timeoutMs?: number): Promise<string> {
+    if (typeof this._api?.request === 'function') {
+      return new Promise((resolve, reject) => {
+        this._api.request({
+          url,
+          method: 'GET',
+          responseType: 'text',
+          dataType: 'text',
+          timeout: timeoutMs,
+          success: (res: any) => {
+            const statusCode = Number(res?.statusCode || 0);
+            if (statusCode < 200 || statusCode >= 300) {
+              reject(new Error(`request status=${statusCode || 'unknown'} url=${url}`));
+              return;
+            }
+            const data = res?.data;
+            resolve(typeof data === 'string' ? data : (data ? JSON.stringify(data) : ''));
+          },
+          fail: (err: any) => {
+            const msg = err?.errMsg || err?.message || String(err);
+            reject(new Error(msg));
+          },
+        });
+      });
+    }
+
+    const fetchFn = (globalThis as any).fetch as typeof fetch | undefined;
+    if (typeof fetchFn !== 'function') {
+      return Promise.reject(new Error('no http transport available'));
+    }
+    return fetchFn(url).then((res) => {
+      if (!res.ok) throw new Error(`request status=${res.status} url=${url}`);
+      return res.text();
+    });
+  }
+
+  /** 下载文件到临时路径（CDN 资源用） */
+  downloadFile(opts: { url: string; timeoutMs?: number }): Promise<{ tempFilePath: string }> {
+    return new Promise((resolve, reject) => {
+      if (typeof this._api?.downloadFile !== 'function') {
+        reject(new Error('downloadFile unavailable'));
+        return;
+      }
+      try {
+        this._api.downloadFile({
+          url: opts.url,
+          timeout: opts.timeoutMs,
+          success: (res: any) => {
+            const statusCode = Number(res?.statusCode || 0);
+            if (statusCode < 200 || statusCode >= 300) {
+              reject(new Error(`downloadFile status=${statusCode || 'unknown'} url=${opts.url}`));
+              return;
+            }
+            if (!res?.tempFilePath) {
+              reject(new Error(`downloadFile missing tempFilePath url=${opts.url}`));
+              return;
+            }
+            resolve({ tempFilePath: res.tempFilePath });
+          },
+          fail: (err: any) => {
+            const msg = err?.errMsg || err?.message || String(err);
+            reject(new Error(msg));
+          },
+        });
+      } catch (e) {
+        reject(e instanceof Error ? e : new Error(String(e)));
+      }
+    });
+  }
+
+  // ═══════════════ 抖音侧边栏复访（平台必接）═══════════════
+
+  /** 检测宿主是否支持指定场景（如 sidebar） */
+  checkScene(opts: {
+    scene: string;
+    success?: (res: { isExist?: boolean }) => void;
+    fail?: (err?: unknown) => void;
+  }): void {
+    try {
+      if (this._api?.checkScene) {
+        this._api.checkScene(opts);
+      } else {
+        opts.fail?.({ errMsg: 'checkScene not supported' });
+      }
+    } catch (e) {
+      opts.fail?.(e);
+    }
+  }
+
+  /** 跳转宿主场景（抖音侧边栏复访必接：tt.navigateToScene） */
+  navigateToScene(opts: {
+    scene: string;
+    success?: () => void;
+    fail?: (err?: unknown) => void;
+  }): void {
+    try {
+      if (this._api?.navigateToScene) {
+        this._api.navigateToScene(opts);
+      } else {
+        opts.fail?.({ errMsg: 'navigateToScene not supported' });
+      }
+    } catch (e) {
+      opts.fail?.(e);
+    }
+  }
+
+  // ═══════════════ 抖音添加到桌面（平台必接）═══════════════
+
+  /** 检查桌面快捷方式是否已添加（仅 Android 可靠） */
+  checkShortcut(opts: {
+    success?: (res: { status?: { exist?: boolean; needUpdate?: boolean } }) => void;
+    fail?: (err?: unknown) => void;
+  }): void {
+    try {
+      if (this._api?.checkShortcut) {
+        this._api.checkShortcut(opts);
+      } else {
+        opts.fail?.({ errMsg: 'checkShortcut not supported' });
+      }
+    } catch (e) {
+      opts.fail?.(e);
+    }
+  }
+
+  /**
+   * 添加小游戏到手机桌面。
+   * 抖音要求在用户点击的同步调用栈内触发，异步 await 之后再调会被判定为非用户手势而失败。
+   */
+  addShortcut(opts: {
+    success?: () => void;
+    fail?: (err?: { errMsg?: string }) => void;
+    complete?: () => void;
+  }): void {
+    try {
+      if (this._api?.addShortcut) {
+        this._api.addShortcut(opts);
+      } else {
+        opts.fail?.({ errMsg: 'addShortcut not supported' });
+      }
+    } catch (e) {
+      opts.fail?.(e as { errMsg?: string });
     }
   }
 }

@@ -44,6 +44,10 @@
       {
         "type": "folder",
         "value": "subpkg_audio"
+      },
+      {
+        "type": "file",
+        "value": "project.config.json"
       }
     ],
     "include": []

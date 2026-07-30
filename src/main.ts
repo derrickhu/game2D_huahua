@@ -264,29 +264,16 @@ async function main(): Promise<void> {
     loadingOverlay.setProgress(1);
 
     // 先等 audio 分包就绪再进主场景，避免 InnerAudioContext 在文件未落地时解码报错
-    const _apiAudio: any = typeof wx !== 'undefined' ? wx : typeof tt !== 'undefined' ? tt : null;
-    await new Promise<void>((resolve) => {
-      if (CdnAssetService.isCdnPath('subpkg_audio/bgm_main.mp3')) {
-        console.log('[main] audio 已 CDN 化，跳过 audio 分包加载');
-        resolve();
-        return;
-      }
-      if (!_apiAudio?.loadSubpackage) {
-        resolve();
-        return;
-      }
-      _apiAudio.loadSubpackage({
-        name: 'audio',
-        success: () => {
-          console.log('[main] audio 分包加载成功');
-          resolve();
-        },
-        fail: (err: any) => {
-          console.warn('[main] audio 分包加载失败:', err);
-          resolve();
-        },
-      });
-    });
+    if (CdnAssetService.isCdnPath('subpkg_audio/bgm_main.mp3')) {
+      console.log('[main] audio 已 CDN 化，跳过 audio 分包加载');
+    } else {
+      // 音频缺失不阻断启动，失败只降级为静音
+      await Platform.loadSubpackage('audio')
+        .then((result) => {
+          if (result === 'loaded') console.log('[main] audio 分包加载成功');
+        })
+        .catch((err) => console.warn('[main] audio 分包加载失败:', err));
+    }
 
     // 勿在此处移除 Loading：其后仍有棋盘初始化、云同步、MainScene 首帧构建等，
     // 过早销毁会只剩 renderer 底色 0xFFF5EE，表现为「白屏一闪」。见下方 switchTo 之后。
@@ -364,10 +351,9 @@ async function main(): Promise<void> {
     }, 800);
 
     // 监听小游戏生命周期：退到后台时保存状态
-    const _apiMain: any = typeof wx !== 'undefined' ? wx : typeof tt !== 'undefined' ? tt : null;
-    if (_apiMain) {
+    if (Platform.isMinigame) {
       let lastHideAt = 0;
-      _apiMain.onHide?.(() => {
+      Platform.onHide(() => {
         console.log('[main] 游戏退到后台，保存状态');
         WechatWelfareManager.notifyAppHide();
         IdleManager.onHide();
@@ -379,7 +365,7 @@ async function main(): Promise<void> {
         analytics.track(EVENT_NAMES.SESSION_END, { reason: 'app-hide' });
         lastHideAt = Date.now();
       });
-      _apiMain.onShow?.(() => {
+      Platform.onShow(() => {
         console.log('[main] 游戏回到前台');
         if (MerchShopManager.ensureUpToDate()) {
           SaveManager.save();

@@ -13,7 +13,7 @@ import { ITEM_DEFS } from '@/config/ItemConfig';
 import { formatLocalDateString } from '@/utils/WeeklyCycle';
 import { BoardManager } from './BoardManager';
 import { BuildingManager } from './BuildingManager';
-import { CheckInManager } from './CheckInManager';
+import { getCheckInGmDateOffsetDays } from './checkInDateAccess';
 import { CloudSyncManager } from './CloudSyncManager';
 import { SaveManager } from './SaveManager';
 
@@ -37,7 +37,7 @@ export interface MagicToolOption {
 
 function effectiveNow(): Date {
   const d = new Date();
-  const offset = CheckInManager?.gmDateOffsetDays ?? 0;
+  const offset = getCheckInGmDateOffsetDays();
   if (offset !== 0) d.setUTCDate(d.getUTCDate() + offset);
   return d;
 }

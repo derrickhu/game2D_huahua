@@ -23,10 +23,6 @@ import { CurrencyManager } from './CurrencyManager';
 import { DecorationManager } from './DecorationManager';
 import { DEFAULT_SCENE_ID } from '@/config/StarLevelConfig';
 
-declare const wx: any;
-declare const tt: any;
-const _api = typeof wx !== 'undefined' ? wx : typeof tt !== 'undefined' ? tt : null;
-
 const SAVE_KEY = 'huahua_room_layout';
 
 /**

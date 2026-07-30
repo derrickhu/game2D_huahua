@@ -1,6 +1,7 @@
 {
   "deviceOrientation": "portrait",
   "showStatusBar": false,
+  "usePrivacyCheck": true,
   "networkTimeout": {
     "request": 10000,
     "connectSocket": 10000,
@@ -8,6 +9,16 @@
     "downloadFile": 10000
   },
   "subpackages": [
+    {
+      "name": "items",
+      "root": "subpkg_items/"
+    },
+    {
+      "name": "events",
+      "root": "subpkg_events/"
+    }
+  ],
+  "subPackages": [
     {
       "name": "items",
       "root": "subpkg_items/"

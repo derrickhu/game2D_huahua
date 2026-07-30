@@ -8,7 +8,7 @@
 import { EventBus } from '@/core/EventBus';
 import { PersistService } from '@/core/PersistService';
 import { formatLocalDateString } from '@/utils/WeeklyCycle';
-import { CheckInManager } from './CheckInManager';
+import { getCheckInGmDateOffsetDays } from './checkInDateAccess';
 import { CloudSyncManager } from './CloudSyncManager';
 import { CurrencyManager } from './CurrencyManager';
 import { SaveManager } from './SaveManager';
@@ -46,7 +46,7 @@ interface TuesdayStaminaState {
 
 function effectiveNow(): Date {
   const d = new Date();
-  const offset = CheckInManager?.gmDateOffsetDays ?? 0;
+  const offset = getCheckInGmDateOffsetDays();
   if (offset !== 0) {
     d.setUTCDate(d.getUTCDate() + offset);
   }

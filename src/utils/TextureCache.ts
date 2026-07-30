@@ -10,6 +10,7 @@
 import * as PIXI from 'pixi.js';
 import { CdnAssetService } from '@/core/CdnAssetService';
 import { EventBus } from '@/core/EventBus';
+import { Platform } from '@/core/PlatformService';
 import {
   buildFurnitureIconAliasMap,
   furnitureAtlasFrameKey,
@@ -1986,39 +1987,22 @@ class TextureCacheClass {
     return promise;
   }
 
-  private _doLoadSubpackage(name: string): Promise<void> {
-    return new Promise<void>((resolve, reject) => {
-      const platform = typeof wx !== 'undefined' ? wx : typeof tt !== 'undefined' ? tt : null;
-      if (!platform || !platform.loadSubpackage) {
-        // 非微信环境，直接通过（开发模式）
-        console.log(`[TextureCache] 非微信环境，直接加载 ${name} 分包资源`);
-        resolve();
+  private async _doLoadSubpackage(name: string): Promise<void> {
+    console.log(`[TextureCache] 开始加载 ${name} 分包...`);
+    try {
+      const result = await Platform.loadSubpackage(name, (percent, written, total) => {
+        console.log(`[TextureCache] ${name} 分包下载: ${percent}% (${written}/${total})`);
+      });
+      if (result === 'unsupported') {
+        // 非小游戏环境（H5 调试），资源按普通路径直读
+        console.log(`[TextureCache] 非小游戏环境，直接加载 ${name} 分包资源`);
         return;
       }
-
-      console.log(`[TextureCache] 开始加载 ${name} 分包...`);
-      const task = platform.loadSubpackage({
-        name,
-        success: () => {
-          console.log(`[TextureCache] ${name} 分包加载成功`);
-          resolve();
-        },
-        fail: (err: any) => {
-          const errMsg = (err && (err.errMsg || err.message)) || '';
-          let raw = '';
-          try { raw = JSON.stringify(err); } catch (_) { raw = String(err); }
-          console.error(`[TextureCache] ${name} 分包加载失败 errMsg=${errMsg} raw=${raw}`);
-          reject(Object.assign(new Error(`loadSubpackage(${name}) 失败: ${errMsg || raw || 'unknown'}`), { raw: err }));
-        },
-      });
-
-      // 分包下载进度
-      if (task && task.onProgressUpdate) {
-        task.onProgressUpdate((res: any) => {
-          console.log(`[TextureCache] ${name} 分包下载: ${res.progress}% (${res.totalBytesWritten}/${res.totalBytesExpectedToWrite})`);
-        });
-      }
-    });
+      console.log(`[TextureCache] ${name} 分包加载成功`);
+    } catch (err) {
+      console.error(`[TextureCache] ${name} 分包加载失败:`, err);
+      throw err;
+    }
   }
 
   /** 通用图片批量预加载 */
@@ -2057,8 +2041,8 @@ class TextureCacheClass {
 
     const promise = new Promise<void>((resolve) => {
       try {
-        // 在微信小游戏中使用平台 API 创建图片
-        const platform = typeof wx !== 'undefined' ? wx : typeof tt !== 'undefined' ? tt : null;
+        // 在小游戏中使用宿主 API 创建图片
+        const platform = Platform.api;
         if (!platform) {
           this._failed.add(key);
           this._loading.delete(key);

@@ -37,6 +37,9 @@ export function initAnalytics(opts?: { endpoint?: string; userId?: string; debug
   if (inited) return;
 
   const platformName = mapPlatform();
+  // 经分 gameKey 固定基础名 huahua（白名单只有这一档）。
+  // 抖音存档命名空间 huahua_tt_* 走云集合 / 本地 key 隔离，端差异在埋点里用 platform 字段，不要把 scoped key 写进 gameKey。
+  const gameKey = GAME_KEY;
   const deviceInfo = buildDeviceInfo();
   const endpoint = opts?.endpoint || ENDPOINT;
   const debug = opts?.debug ?? true;
@@ -52,12 +55,12 @@ export function initAnalytics(opts?: { endpoint?: string; userId?: string; debug
   }
 
   console.log(
-    `[analytics] init endpoint=${endpoint}, gameKey=${GAME_KEY}, platform=${platformName}, debug=${debug}, devtools=${Platform.isDevtools}`,
+    `[analytics] init endpoint=${endpoint}, gameKey=${gameKey}, platform=${platformName}, debug=${debug}, devtools=${Platform.isDevtools}`,
   );
 
   Analytics.init({
     endpoint,
-    gameKey: GAME_KEY,
+    gameKey,
     appVersion: typeof __APP_VERSION__ === 'string' ? __APP_VERSION__ : '0.0.0',
     platform: platformName,
     deviceInfo,

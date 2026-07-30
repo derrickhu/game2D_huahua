@@ -22,7 +22,7 @@ const { getMaxBytes } = require('./config');
 
 async function handlePull(req) {
   const { userId, platform } = requireUser(req);
-  const col = getCollection();
+  const col = getCollection(platform);
 
   const res = await col.where({ userId }).limit(1).get();
   const doc = (res && Array.isArray(res.data) && res.data[0]) || null;
@@ -94,7 +94,7 @@ async function handlePush(req) {
     payloadKeys.push(k);
   }
 
-  const col = getCollection();
+  const col = getCollection(platform);
   const existingRes = await col.where({ userId }).limit(1).get();
   const existing = (existingRes && Array.isArray(existingRes.data) && existingRes.data[0]) || null;
 
