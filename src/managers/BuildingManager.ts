@@ -20,7 +20,8 @@ import {
   FlowerLine,
   DrinkLine,
   FoodLine,
-  ToolLine,
+  getLv1SeedToolWeightedEntries,
+  pickWeightedLv1SeedToolId,
 } from '@/config/ItemConfig';
 import {
   findBoardProducerDef,
@@ -451,9 +452,6 @@ const CHEST_DEFS: ChestDef[] = [
   },
 ];
 
-/** 所有 Lv1 工具ID列表，用于宝箱随机产出 */
-const ALL_LV1_TOOLS: string[] = Object.values(ToolLine).map(tl => `tool_${tl}_1`);
-
 /**
  * 是否有宝箱在随机掉落中可能产出「该品类 + 产品线 + 等级」的物品。
  * 须同时命中 lines 与 levelRange（旧逻辑只看线，会把小芽苗等 Lv1 绿植误标成可自宝箱出）。
@@ -514,7 +512,7 @@ export function rollChestBoardDrops(itemId: string): string[] | null {
     if (!opt) continue;
     let id: string | null = null;
     if (opt.type === 'tool') {
-      id = ALL_LV1_TOOLS[Math.floor(Math.random() * ALL_LV1_TOOLS.length)] ?? null;
+      id = pickWeightedLv1SeedToolId();
     } else if (opt.type === 'product' && opt.category && opt.lines && opt.levelRange) {
       const line = opt.lines[Math.floor(Math.random() * opt.lines.length)];
       const [minLv, maxLv] = opt.levelRange;
@@ -527,7 +525,7 @@ export function rollChestBoardDrops(itemId: string): string[] | null {
 }
 
 /**
- * 与单次 `_rollChestProduce` 一致：先按 weight 选条目，再 tool 均匀抽 Lv1 工具 / product 均匀抽线+等级。
+ * 与单次 `_rollChestProduce` 一致：先按 weight 选条目，再 tool 按产线权重抽 Lv1 工具 / product 均匀抽线+等级。
  * 用于合成线面板产出概率悬浮窗。
  */
 export function getChestProduceOutcomePercents(chestItemId: string): ToolProduceDisplayEntry[] {
@@ -536,13 +534,14 @@ export function getChestProduceOutcomePercents(chestItemId: string): ToolProduce
   const total = chest.produceItems.reduce((s, p) => s + p.weight, 0);
   if (total <= 0) return [];
   const raw: ToolProduceDisplayEntry[] = [];
+  const lv1Tools = getLv1SeedToolWeightedEntries();
+  const lv1ToolWeightSum = lv1Tools.reduce((s, e) => s + e.weight, 0);
   for (const p of chest.produceItems) {
     const share = (p.weight / total) * 100;
     if (p.type === 'tool') {
-      const n = ALL_LV1_TOOLS.length;
-      if (n <= 0) continue;
-      for (const tid of ALL_LV1_TOOLS) {
-        raw.push({ itemId: tid, percent: share / n });
+      if (lv1ToolWeightSum <= 0) continue;
+      for (const { itemId, weight } of lv1Tools) {
+        raw.push({ itemId, percent: (share * weight) / lv1ToolWeightSum });
       }
     } else if (p.type === 'product' && p.category && p.lines && p.levelRange) {
       const [minL, maxL] = p.levelRange;
@@ -1127,7 +1126,7 @@ class BuildingManagerClass {
 
     switch (option.type) {
       case 'tool': {
-        return ALL_LV1_TOOLS[Math.floor(Math.random() * ALL_LV1_TOOLS.length)];
+        return pickWeightedLv1SeedToolId();
       }
       case 'product': {
         if (!option.category || !option.lines || !option.levelRange) return null;
