@@ -311,6 +311,16 @@ export function getEffectiveMaxLevel(toolLevel: number, maxItemLevel: number): n
 }
 
 /**
+ * 园艺（鲜花/绿植）订单上限：比通用 `2t−1` 低两档（`2t−3`）。
+ * 温室直出偏低级，订单若跟通用公式会到 L9–10，合成压力过大。
+ * 例：简易温室 L5 → 订单上限 7（aspirational 最多 +1 → 8）。
+ */
+export function getPlantOrderMaxLevel(toolLevel: number, maxItemLevel: number): number {
+  if (toolLevel <= 0) return 0;
+  return Math.min(Math.max(toolLevel, toolLevel * 2 - 3), maxItemLevel);
+}
+
+/**
  * 订单区同时接待 / 锁格 / 可交付人数上限：依玩家星级（全局等级 `CurrencyManager.state.level`）。
  * 1–5 级：4 人；6–10 级：5 人；11 级及以上：6 人。
  */

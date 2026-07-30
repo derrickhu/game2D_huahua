@@ -9,6 +9,12 @@ import type { OrderGenSlot } from '@/orders/types';
 /** 略高于 toolCap 的概率（与 pickItemLevel 一致） */
 export const ORDER_ASPIRATIONAL_LEVEL_BONUS_CHANCE = 0.14;
 
+/**
+ * 园艺（鲜花/绿植）订单的 aspirational 乘子。
+ * 温室订单 toolCap 已单独下调，再压低「超 cap 一档」概率，避免简易温室频繁摸到高阶。
+ */
+export const ORDER_PLANT_ASPIRATIONAL_SCALE = 0.35;
+
 /** 物品等级抽样曲线；越接近 1 越平均，>1 会偏低级。早期需要更多中高阶体感，避免长期重复低级花。 */
 export const ORDER_ITEM_LEVEL_PICK_EXPONENT = 1.12;
 
