@@ -1422,14 +1422,16 @@ export class EventBoardPanel extends PIXI.Container {
   }
 
   private _claimProgressEchoPrimary(id: string): void {
+    const milestone = EventBoardManager.progressEchoMilestones.find(m => m.id === id);
     if (!EventBoardManager.claimProgressEchoPrimaryReward(id)) return;
-    ToastMessage.show('奖励已领取');
+    ToastMessage.show(this._progressEchoClaimToast(milestone?.primaryReward, false));
     this._drawCodexRewardMilestonePanel();
   }
 
   private _claimProgressEchoAd(id: string): void {
     if (this._progressEchoAdRequesting) return;
     this._progressEchoAdRequesting = true;
+    const milestone = EventBoardManager.progressEchoMilestones.find(m => m.id === id);
     AdManager.showRewardedAd(AdScene.EVENT_PROGRESS_ECHO, (success, reason?: AdFailReason) => {
       this._progressEchoAdRequesting = false;
       if (!success) {
@@ -1441,9 +1443,17 @@ export class EventBoardPanel extends PIXI.Container {
         this._drawCodexRewardMilestonePanel();
         return;
       }
-      ToastMessage.show('广告奖励已领取');
+      ToastMessage.show(this._progressEchoClaimToast(milestone?.adReward, true));
       this._drawCodexRewardMilestonePanel();
     });
+  }
+
+  /** boxReward 进主奖励箱，数值类直接到账 */
+  private _progressEchoClaimToast(reward: EventRewardDef | undefined, isAd: boolean): string {
+    if (reward?.kind === 'boxReward' || reward?.kind === 'boxItem') {
+      return isAd ? '广告奖励已放入奖励箱' : '奖励已放入奖励箱';
+    }
+    return isAd ? '广告奖励已领取' : '奖励已领取';
   }
 
   private _progressEchoAdFailMessage(reason?: AdFailReason): string {
