@@ -1,0 +1,11 @@
+Square 1:1 mobile game UI icon asset for a cozy pastel flower-shop merge game. One single centered icon, generous empty margin on all four sides, high resolution, crisp anti-aliased vector edges.
+
+SUBJECT: a "growth journey" icon — a short winding pale-cream stepping-stone path curving up from the lower left, with a small chibi potted sprout with two round leaves sitting at the bottom of the path, and a cheerful honey-gold pennant flag planted at the top of the path. Two or three tiny pastel blossoms and a couple of small sparkles scattered along the path edges. Compact chunky proportions so the silhouette stays readable at 64 pixels.
+
+Art style: clean 2D vector kawaii mobile game UI icon, soft brown outlines slightly thicker than hairline, rounded chunky forms, high-key pastel palette of lilac, blush pink, mint, cream and honey gold, soft gradients only for gentle volume, subtle inner highlight. Same visual DNA as cozy casual merge-game top-bar icons. Not photoreal, not flat minimal line art, no thick black outlines.
+
+STRICTLY FORBIDDEN:
+Chinese text, English text, numbers, letters, badges, notification dots, buttons, frames, borders, circular button plate behind the icon, drop shadow plate, watermark, human characters, faces.
+
+TECHNICAL BACKGROUND FOR CLEAN CUTOUT:
+The entire background must be pure bright screen green RGB exactly 0,255,0, flat, no gradient, no vignette. The icon artwork itself must contain ZERO green pixels — use mint or teal only if clearly distinct from pure green, otherwise avoid green entirely and make the leaves a soft sage or mint tone that is not RGB 0,255,0.

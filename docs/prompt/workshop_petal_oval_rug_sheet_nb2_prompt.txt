@@ -1,0 +1,9 @@
+Vertical sprite sheet, exactly 1 column x 3 rows, three equal-height panels stacked with clear white gutters between rows. Cozy pastel flower-shop merge game furniture prop sheet.
+
+Identical oval FLOOR RUG silhouette in every row — same size, same petal-scalloped edge shape, same soft isometric upper-left 35-degree view, thin soft fabric thickness only (flat floor mat, NOT a tall cushion). Cream woven center field with delicate tiny blossom dots. Outer rim is a ring of soft overlapping petal scallops like a flower silhouette, with a few tiny leaves tucked in the petal gaps. Gentle drop shadow under the rug only. Soft brown outlines, kawaii hand-painted 2.5D mobile game style, high readability at small icon size.
+
+Row 0 (top): blush sakura-pink petal rim, cream center, soft rose blossom dots, mint-green tiny leaves.
+Row 1 (middle): sky-blue petal rim, cream center, periwinkle blossom dots, soft teal tiny leaves.
+Row 2 (bottom): honey-yellow petal rim, cream center, coral blossom dots, sage-green tiny leaves.
+
+Each rug centered in its panel with generous empty white margin. Pure solid white #FFFFFF background only. NO text, no labels, no numbers, no watermark, no characters, no room, no walls, no floor plane, no furniture other than the rug.

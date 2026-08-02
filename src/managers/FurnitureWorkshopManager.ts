@@ -149,6 +149,15 @@ class FurnitureWorkshopManagerClass {
     return this.getCraftedCount(blueprintId, colorId) >= this.getCraftLimit(blueprintId, colorId);
   }
 
+  /**
+   * 已制作过的「图纸+配色」种类数（成长任务 workshopCrafted 进度）。
+   * 以 `_craftedVariants` 为准，它在读档时已由 `_syncCraftedVariantsFromDecorations` 按
+   * 实际已解锁家具重建，因此老存档也能正确追溯。
+   */
+  get craftedVariantCount(): number {
+    return this._craftedVariants.size;
+  }
+
   /** 该图纸所有配色均已制作（均已拥有对应家具） */
   isBlueprintFullyCrafted(blueprintId: string): boolean {
     const def = WORKSHOP_BLUEPRINT_MAP.get(blueprintId);

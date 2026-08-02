@@ -11,6 +11,7 @@ import {
 } from '@/config/FlowerSignGachaConfig';
 import { WORKSHOP_GACHA_DYE_IDS } from '@/config/FurnitureWorkshopConfig';
 import { WISHING_FOUNTAIN_UNLOCK_LEVEL } from '@/config/WorldMapConfig';
+import { EventBus } from '@/core/EventBus';
 import { PersistService } from '@/core/PersistService';
 import { AdEntitlementManager, DailyAdEntitlement } from '@/managers/AdEntitlementManager';
 import { CurrencyManager } from '@/managers/CurrencyManager';
@@ -124,9 +125,9 @@ export type FlowerSignDrawResult =
   | { ok: false; reason: 'no_ticket' | 'empty_pool' };
 
 /**
- * 抽奖经分埋点：在 Manager 内部统一打 fountain_draw 事件。
- * 设计原因：抽奖逻辑没有 EventBus emit（reward 直接 return 给调用方），
- * 在调用方（FlowerSignGachaPanel）多处 track 容易漏；内部统一 track 是单源真相。
+ * 抽奖经分埋点 + `flowerSign:drawn` 广播：都在 Manager 内部统一发出。
+ * 设计原因：三个 draw 入口都会走到这里，在调用方（FlowerSignGachaPanel）多处发容易漏；
+ * 内部统一是单源真相。
  *
  * draw_kind 区分 single / multi / multi_free，rarity_summary 统计本次产出的 4 类奖励数量。
  */
@@ -169,6 +170,7 @@ function trackDraw(
     direct_stamina: directStamina,
     workshop_dye: workshopDye,
   });
+  EventBus.emit('flowerSign:drawn', rewards.length);
 }
 
 export const FlowerSignGachaManager = {

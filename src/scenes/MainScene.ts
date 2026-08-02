@@ -20,6 +20,7 @@ import { WarehouseManager } from '@/managers/WarehouseManager';
 import { CustomerManager } from '@/managers/CustomerManager';
 import { SaveManager } from '@/managers/SaveManager';
 import { QuestManager } from '@/managers/QuestManager';
+import { GrowthQuestManager } from '@/managers/GrowthQuestManager';
 import {
   CheckInManager,
   MILESTONES,
@@ -42,6 +43,7 @@ import { ToastMessage } from '@/gameobjects/ui/ToastMessage';
 import { CheckInPanel } from '@/gameobjects/ui/CheckInPanel';
 import { NewbieGiftPackPanel } from '@/gameobjects/ui/NewbieGiftPackPanel';
 import { QuestPanel } from '@/gameobjects/ui/QuestPanel';
+import { GrowthQuestPanel } from '@/gameobjects/ui/GrowthQuestPanel';
 import { OfflineRewardPanel } from '@/gameobjects/ui/OfflineRewardPanel';
 import { LevelUpPopup } from '@/gameobjects/ui/LevelUpPopup';
 import { ShopRowPanoramaScroll, SHOP_PANORAMA_VIEW_H } from '@/gameobjects/ui/ShopRowPanoramaScroll';
@@ -183,6 +185,7 @@ export class MainScene implements Scene {
   private static readonly _REWARD_BOX_HINT_MAX_RETRY = 15;
   private _checkInPanel!: CheckInPanel;
   private _questPanel!: QuestPanel;
+  private _growthQuestPanel!: GrowthQuestPanel;
   private _offlineRewardPanel!: OfflineRewardPanel;
   private _levelUpPopup!: LevelUpPopup;
 
@@ -262,6 +265,7 @@ export class MainScene implements Scene {
       ThursdayMagicTimeManager.init();
       CustomerManager.init();
       QuestManager.init();
+      GrowthQuestManager.init();
       RewardBoxHintManager.init();
       AffinityManager.init();
       AffinityCardManager.init();
@@ -600,6 +604,10 @@ export class MainScene implements Scene {
     // 每日任务面板
     this._questPanel = new QuestPanel();
     overlay.addChild(this._questPanel);
+
+    // 成长之路面板
+    this._growthQuestPanel = new GrowthQuestPanel();
+    overlay.addChild(this._growthQuestPanel);
 
     // 离线收益面板
     this._offlineRewardPanel = new OfflineRewardPanel();
@@ -1498,6 +1506,11 @@ export class MainScene implements Scene {
       void TextureCache.preloadPanelAssets('quest')
         .finally(() => this._questPanel.open());
     });
+    EventBus.on('nav:openGrowthQuest', () => {
+      void TextureCache.preloadPanelAssets('growth')
+        .finally(() => this._growthQuestPanel.open());
+    });
+    EventBus.on('growth:updated', () => this._markRedDotsDirty());
     EventBus.on('currency:changed', (kind?: string, value?: number) => {
       this._markRedDotsDirty();
       if (kind === 'huayuan' && typeof value === 'number' && value > BUY_FURNITURE_HINT_HUAYUAN_MIN) {

@@ -109,6 +109,36 @@ export const FURNITURE_RENDER_DEFS: FurnitureRenderDef[] = [
     },
   },
   {
+    decoId: 'workshop_petal_oval_rug',
+    renderMode: 'single',
+    atlas: {
+      sheetKey: 'workshop_petal_oval_rug_sheet',
+      columns: 1,
+      rows: 3,
+      row: 0,
+    },
+  },
+  {
+    decoId: 'workshop_petal_oval_rug_moon',
+    renderMode: 'single',
+    atlas: {
+      sheetKey: 'workshop_petal_oval_rug_sheet',
+      columns: 1,
+      rows: 3,
+      row: 1,
+    },
+  },
+  {
+    decoId: 'workshop_petal_oval_rug_honey',
+    renderMode: 'single',
+    atlas: {
+      sheetKey: 'workshop_petal_oval_rug_sheet',
+      columns: 1,
+      rows: 3,
+      row: 2,
+    },
+  },
+  {
     decoId: 'workshop_rose_cascade_drape',
     renderMode: 'single',
     atlas: {

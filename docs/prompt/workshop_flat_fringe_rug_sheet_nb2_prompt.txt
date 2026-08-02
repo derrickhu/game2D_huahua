@@ -1,0 +1,16 @@
+Vertical sprite sheet, exactly 1 column x 3 rows, three equal-height panels stacked with clear white gutters. Cozy pastel flower-shop merge game FLOOR RUG prop sheet.
+
+CRITICAL LOOK (match attached reference rug catalogs):
+- True flat thin fabric rug lying on the floor — paper-thin, almost no thickness, NO plush pillow volume, NO 3D stuffed animal look, NO chunky side wall.
+- Clearly readable as a textile rug: soft woven feel, thin border, tiny fringe/tassels on the two short ends (like the striped fringe rugs in the references).
+- Isometric / dimetric floor orientation: wide diamond / parallelogram footprint; long edges align with isometric floor axes (about 15–25 degrees from horizontal), same as attached in-game rugs.
+- Soft thin warm-brown outlines only, light line weight like the reference mats. FORBIDDEN: thick black sticker borders, heavy comic ink.
+
+Subject (identical silhouette every row — only dye color changes):
+ONE large rounded-rectangle FLOOR RUG with gently scalloped or softly rounded corners, flat top face only. Interior: simple cute flower-shop pattern — a small central daisy / tiny blossom cluster + light dotted border stitch, clean and uncluttered. Short fluffy fringe tassels along both short ends. Soft fabric shading only (very subtle), no cast shadow blob, no furniture, no characters.
+
+Row 0 (top): blush sakura-pink field, cream border, soft rose blossoms, cream fringe.
+Row 1 (middle): sky-blue field, cream border, soft lavender blossoms, cream fringe.
+Row 2 (bottom): honey-yellow field, cream border, soft peach blossoms, cream fringe.
+
+Each rug centered with generous empty white margin. Pure solid white #FFFFFF background only. NO text, labels, numbers, watermark, room, walls, floor tiles, or other objects. NO animal silhouettes.

@@ -26,6 +26,7 @@ import { FURNITURE_TRAY_SPAWN_ROOM_LOCAL, RoomLayoutManager, type FurniturePlace
 import { CurrencyManager } from '@/managers/CurrencyManager';
 import { CheckInManager } from '@/managers/CheckInManager';
 import { QuestManager } from '@/managers/QuestManager';
+import { GrowthQuestManager } from '@/managers/GrowthQuestManager';
 import { CoolSummerEventManager } from '@/managers/CoolSummerEventManager';
 import { SaveManager } from '@/managers/SaveManager';
 import { DressUpManager } from '@/managers/DressUpManager';
@@ -200,9 +201,10 @@ const LEFT_TOP_BUTTONS: SideBtnDef[] = [
   { id: 'affinity_codex', icon: '', texKey: 'icon_affinity_card', label: '友谊卡', event: 'affinityCodex:open', iconBg: 0xFFB1CC, labelColor: 0xC75D8B },
 ];
 
-/** 右侧 — 活动快捷按钮（签到/任务/清凉一夏） */
+/** 右侧 — 活动快捷按钮（签到/成长/任务/清凉一夏） */
 const RIGHT_BUTTONS: SideBtnDef[] = [
   { id: 'checkin', icon: '', texKey: 'icon_checkin', label: '签到', event: 'nav:openCheckIn', iconBg: 0xFFA726, labelColor: 0xD48B2E },
+  { id: 'growth',  icon: '', texKey: 'icon_growth',  label: '成长', event: 'nav:openGrowthQuest', iconBg: 0x9CCC65, labelColor: 0x5F8F3A },
   { id: 'quest',   icon: '', texKey: 'icon_quest',   label: '任务', event: 'nav:openQuest',   iconBg: 0x42A5F5, labelColor: 0x1976D2 },
   { id: 'cool_summer', icon: '', texKey: 'icon_cool_summer_event_nb2', label: '清凉', event: 'panel:openCoolSummerEvent', iconBg: 0x4DB6AC, labelColor: 0x1B6B66 },
 ];
@@ -4491,6 +4493,10 @@ export class ShopScene implements Scene {
     // 任务红点
     const questBtn = this._activityBtns.get('quest');
     if (questBtn) questBtn.redDot.visible = QuestManager.hasClaimableQuest;
+
+    // 成长之路红点（有可领任务或章节大奖）
+    const growthBtn = this._activityBtns.get('growth');
+    if (growthBtn) growthBtn.redDot.visible = GrowthQuestManager.hasClaimable();
 
     // 清凉一夏红点
     const coolSummerBtn = this._activityBtns.get('cool_summer');

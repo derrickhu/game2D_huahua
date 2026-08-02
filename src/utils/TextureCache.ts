@@ -69,6 +69,7 @@ const MAIN_IMAGE_MAP: Record<string, string> = {
   icon_dress:     'images/ui/icon_dress.png',
   icon_checkin:   'images/ui/icon_checkin.png',
   icon_quest:     'images/ui/icon_quest.png',
+  icon_growth:    'images/ui/icon_growth.png',
   icon_workshop_material: 'images/ui/icon_workshop_material.png',
   icon_workshop_dye_pink: 'images/ui/icon_workshop_dye_pink.png',
   icon_workshop_dye_yellow: 'images/ui/icon_workshop_dye_yellow.png',
@@ -306,6 +307,8 @@ const PANELS_IMAGE_MAP: Record<string, string> = {
 
   /** 每日挑战：NB2+rembg 粉紫壳（顶栏标题位、关闭钮、秒表条；中间留白叠列表） */
   daily_challenge_panel_shell_nb2: 'subpkg_panels/images/ui/daily_challenge_panel_shell_nb2.png',
+  /** 成长之路：NB2 绿幕去底壳（金标题牌、章节条、底部大奖卡；中间留白叠任务列表） */
+  growth_panel_shell_nb2: 'subpkg_panels/images/ui/growth_panel_shell_nb2.png',
   /** 周末花愿加成宣传卡（rembg 透明底，按钮文案由代码叠） */
   weekend_huayuan_boost_promo_panel_nb2: 'subpkg_panels/images/ui/weekend_huayuan_boost_promo_panel_nb2.png',
   /** 周二体力无限活动壳（绿幕去底；上半宣传 + 下半空白叠购买行） */
@@ -687,6 +690,8 @@ const DECO_IMAGE_MAP: Record<string, string> = {
   workshop_bougainvillea_bonsai_sheet: 'subpkg_deco/images/furniture/workshop_bougainvillea_bonsai_sheet.png',
   /** 黑色超薄电视柜：2 列正/背合图；每格 max-side 342 */
   workshop_pastel_tv_cabinet_sheet: 'subpkg_deco/images/furniture/workshop_pastel_tv_cabinet_sheet.png',
+  /** 花边流苏地毯：1 列 × 3 行（樱粉 / 天蓝 / 蜜黄）；新手工坊图纸（id 沿用 petal_oval） */
+  workshop_petal_oval_rug_sheet: 'subpkg_deco/images/furniture/workshop_petal_oval_rug_sheet.png',
   /** 玫瑰垂幔帘：1 列 × 3 行（樱粉 / 天蓝 / 蜜黄）；每格 max-side 342 */
   workshop_rose_cascade_drape_sheet: 'subpkg_deco/images/furniture/workshop_rose_cascade_drape_sheet.png',
   /** 蕾丝铁艺床：单张 PNG，max-side 342 */
@@ -837,7 +842,10 @@ const DECO_IMAGE_MAP: Record<string, string> = {
   deco_lv19_table_cloud_dessert_island: 'subpkg_deco/images/furniture/deco_lv19_table_cloud_dessert_island.png',
   deco_lv20_garden_cloud_swing: 'subpkg_deco/images/furniture/deco_lv20_garden_cloud_swing.png',
   deco_lv10_orn_kitten_bed: 'subpkg_deco/images/furniture/deco_lv10_orn_kitten_bed.png',
+  deco_lv10_orn_petal_oval_rug: 'subpkg_deco/images/furniture/deco_lv10_orn_petal_oval_rug.png',
   deco_lv11_orn_cat_tower: 'subpkg_deco/images/furniture/deco_lv11_orn_cat_tower.png',
+  deco_lv11_orn_petal_oval_rug_sky: 'subpkg_deco/images/furniture/deco_lv11_orn_petal_oval_rug_sky.png',
+  deco_lv12_orn_petal_oval_rug_honey: 'subpkg_deco/images/furniture/deco_lv12_orn_petal_oval_rug_honey.png',
   deco_lv11_light_phonograph_vintage: 'subpkg_deco/images/furniture/deco_lv11_light_phonograph_vintage.png',
   deco_lv12_orn_pastel_postbox: 'subpkg_deco/images/furniture/deco_lv12_orn_pastel_postbox.png',
   deco_lv13_orn_teddy_armchair: 'subpkg_deco/images/furniture/deco_lv13_orn_teddy_armchair.png',
@@ -1107,7 +1115,7 @@ const DECO_IMAGE_MAP: Record<string, string> = {
 // 启动关键资源：随主包保底，不走 CDN；避免新号首进弱网时新手图/基础头像空白
 // ================================================================
 const CRITICAL_IMAGE_MAP: Record<string, string> = {
-  tutorial_story_1: 'images/tutorial/story_1.png',
+  tutorial_story_1: 'images/tutorial/story_1.jpg',
   tutorial_hand_pointer: 'images/tutorial/tutorial_hand_pointer.png',
 
   owner_chibi_default: 'images/critical/owner/chibi_default.png',
@@ -1252,6 +1260,22 @@ const QUEST_PANEL_KEYS = [
   'icon_huayuan',
 ] as const;
 
+const GROWTH_PANEL_KEYS = [
+  'growth_panel_shell_nb2',
+  'deco_card_btn_3',
+  'ui_order_check_badge',
+  'icon_energy',
+  'icon_gem',
+  'icon_huayuan',
+  'icon_flower_sign_coin',
+  'icon_workshop_material',
+  'icon_workshop_dye_blue',
+  'icon_workshop_dye_green',
+  'icon_workshop_dye_yellow',
+  // 章节大奖会展示图纸图标（在 deco 分包）
+  'workshop_blueprint_generic',
+] as const;
+
 const COLLECTION_PANEL_KEYS = [
   'collection_panel_shell_nb2',
   'collection_item_placeholder_nb2',
@@ -1382,6 +1406,7 @@ export type TextureAssetGroup =
   | 'tutorialDeco'
   | 'worldmap'
   | 'quest'
+  | 'growth'
   | 'collection'
   | 'furnitureWorkshop'
   | 'affinity'
@@ -1413,6 +1438,7 @@ const ASSET_GROUP_KEYS: Record<TextureAssetGroup, readonly string[]> = {
   tutorialDeco: TUTORIAL_DECO_KEYS,
   worldmap: WORLDMAP_WARMUP_KEYS,
   quest: QUEST_PANEL_KEYS,
+  growth: GROWTH_PANEL_KEYS,
   collection: COLLECTION_PANEL_KEYS,
   furnitureWorkshop: FURNITURE_WORKSHOP_PANEL_KEYS,
   affinity: AFFINITY_PANEL_KEYS,
@@ -1471,6 +1497,7 @@ const ASSET_GROUP_NOTIFY_KEYS: Record<TextureAssetGroup, readonly string[]> = {
   tutorialDeco: uniqueKeys(TUTORIAL_DECO_KEYS, ALL_DECO_KEYS, ALL_ITEMS_KEYS),
   worldmap: uniqueKeys(WORLDMAP_WARMUP_KEYS, WORLDMAP_KEYS),
   quest: uniqueKeys(QUEST_PANEL_KEYS, ALL_ITEMS_KEYS, ALL_DECO_KEYS),
+  growth: uniqueKeys(GROWTH_PANEL_KEYS, ALL_ITEMS_KEYS, ALL_DECO_KEYS),
   collection: uniqueKeys(COLLECTION_PANEL_KEYS, ALL_ITEMS_KEYS),
   furnitureWorkshop: uniqueKeys(FURNITURE_WORKSHOP_PANEL_KEYS, ALL_DECO_KEYS),
   affinity: uniqueKeys(AFFINITY_PANEL_KEYS, AFFINITY_CARD_KEYS, CUSTOMER_KEYS, ALL_DECO_KEYS, ALL_ITEMS_KEYS),

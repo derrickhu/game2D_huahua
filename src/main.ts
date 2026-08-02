@@ -31,6 +31,7 @@ import { TutorialManager } from '@/managers/TutorialManager';
 import { DecorationManager } from '@/managers/DecorationManager';
 import { NewbieGiftPackManager } from '@/managers/NewbieGiftPackManager';
 import { FurnitureWorkshopManager } from '@/managers/FurnitureWorkshopManager';
+import { GrowthQuestManager } from '@/managers/GrowthQuestManager';
 import { TuesdayStaminaUnlimitedManager } from '@/managers/TuesdayStaminaUnlimitedManager';
 import { ThursdayMagicTimeManager } from '@/managers/ThursdayMagicTimeManager';
 import { WeekendHuayuanBoostManager } from '@/managers/WeekendHuayuanBoostManager';
@@ -218,6 +219,11 @@ async function main(): Promise<void> {
       }
       if (info.changedKeys.includes('huahua_furniture_workshop')) {
         FurnitureWorkshopManager.reloadFromStorage();
+        // 工坊档被云端覆盖后，按成长已领记录补回图纸（锤子/染料不补，防叠发）
+        GrowthQuestManager.reconcileClaimedRewards(`cloud-import-workshop:${info.reason}`);
+      }
+      if (info.changedKeys.includes('huahua_growth')) {
+        GrowthQuestManager.reloadFromStorage(`cloud-import:${info.reason}`);
       }
       if (info.changedKeys.includes('huahua_checkin')) {
         CheckInManager.reloadFromStorage();

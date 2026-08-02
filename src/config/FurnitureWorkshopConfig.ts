@@ -114,10 +114,33 @@ export function getWorkshopMaterialDisplayName(materialId: string): string {
   return WORKSHOP_MATERIAL_DISPLAY_NAMES[materialId] ?? '工坊材料';
 }
 
-/** 图纸获取途径（当前仅钻石购买；`event` 预留活动发放） */
+/** 图纸获取途径（钻石购买 / 活动发放 / 成长之路赠送） */
 export type WorkshopBlueprintAcquire =
   | { kind: 'diamond'; cost: number }
-  | { kind: 'event'; label: string };
+  | { kind: 'event'; label: string }
+  | { kind: 'growth'; label: string };
+
+/**
+ * 「新手入门图纸」= 花边流苏地毯（可染色）。
+ *
+ * 选它的原因：扁平贴地、一眼能认出是毯子；三色（樱粉 / 天蓝 / 蜜黄）
+ * 教会染料玩法；比垂幔帘更适合新手「做出第一件就想摆上」。
+ *
+ * 由成长之路 `g3_level_6`（达成 6 星解锁工坊）免费赠送，并配 8 锤子 + 2 天蓝染料，
+ * 保证玩家「领完立刻能做出默认色 + 天蓝色两件」（各 4 锤；染色款另耗 1 染料）。
+ * 因此本图纸各色成本远低于其它图纸（其它为 8～20 锤 + 1.8 万～5.6 万花愿）。
+ *
+ * 平衡校验：三色共 15 星、约 4200 花愿 + 12 锤子，不存在刷星套利。
+ *
+ * 资源 key 仍为 `workshop_petal_oval_rug*`（历史 id，避免已领图纸失效）；美术为扁平花边流苏毯。
+ */
+export const WORKSHOP_NOVICE_BLUEPRINT_ID = 'blueprint_workshop_petal_oval_rug';
+/** 新手图纸单色锤子消耗 */
+export const NOVICE_CRAFT_MATERIAL_COST = 4;
+/** 新手图纸默认色加工费 */
+export const NOVICE_CRAFT_HUAYUAN_COST = 1200;
+/** 新手图纸染色款加工费（额外消耗 1 个对应染料） */
+export const NOVICE_CRAFT_DYED_HUAYUAN_COST = 1500;
 
 export interface WorkshopMaterialReward {
   materialId: string;
@@ -213,6 +236,44 @@ export const WORKSHOP_BLUEPRINT_DEFS: WorkshopBlueprintDef[] = [
     ],
   },
   {
+    id: WORKSHOP_NOVICE_BLUEPRINT_ID,
+    name: '花边流苏地毯图纸',
+    outputDecoId: 'workshop_petal_oval_rug',
+    rarity: 'rare',
+    sourceText: '成长之路赠送 / 66 钻石购买',
+    icon: 'workshop_blueprint_generic',
+    category: 'furniture',
+    acquire: [{ kind: 'growth', label: '成长之路赠送' }, { kind: 'diamond', cost: 66 }],
+    colorOptions: [
+      {
+        id: 'default',
+        name: '樱粉',
+        outputDecoId: 'workshop_petal_oval_rug',
+        materialCost: NOVICE_CRAFT_MATERIAL_COST,
+        dyeCost: 0,
+        huayuanCost: NOVICE_CRAFT_HUAYUAN_COST,
+      },
+      {
+        id: 'moon',
+        name: '天蓝',
+        outputDecoId: 'workshop_petal_oval_rug_moon',
+        materialCost: NOVICE_CRAFT_MATERIAL_COST,
+        dyeCost: 1,
+        dyeMaterialId: WORKSHOP_DYE_BLUE_ID,
+        huayuanCost: NOVICE_CRAFT_DYED_HUAYUAN_COST,
+      },
+      {
+        id: 'honey',
+        name: '蜜黄',
+        outputDecoId: 'workshop_petal_oval_rug_honey',
+        materialCost: NOVICE_CRAFT_MATERIAL_COST,
+        dyeCost: 1,
+        dyeMaterialId: WORKSHOP_DYE_YELLOW_ID,
+        huayuanCost: NOVICE_CRAFT_DYED_HUAYUAN_COST,
+      },
+    ],
+  },
+  {
     id: 'blueprint_workshop_rose_cascade_drape',
     name: '玫瑰垂幔帘图纸',
     outputDecoId: 'workshop_rose_cascade_drape',
@@ -228,7 +289,7 @@ export const WORKSHOP_BLUEPRINT_DEFS: WorkshopBlueprintDef[] = [
         outputDecoId: 'workshop_rose_cascade_drape',
         materialCost: 11,
         dyeCost: 0,
-        huayuanCost: 30000,
+        huayuanCost: 19999,
       },
       {
         id: 'moon',
@@ -237,7 +298,7 @@ export const WORKSHOP_BLUEPRINT_DEFS: WorkshopBlueprintDef[] = [
         materialCost: 10,
         dyeCost: 1,
         dyeMaterialId: WORKSHOP_DYE_BLUE_ID,
-        huayuanCost: 35000,
+        huayuanCost: 15000,
       },
       {
         id: 'honey',
@@ -246,7 +307,7 @@ export const WORKSHOP_BLUEPRINT_DEFS: WorkshopBlueprintDef[] = [
         materialCost: 10,
         dyeCost: 1,
         dyeMaterialId: WORKSHOP_DYE_YELLOW_ID,
-        huayuanCost: 30000,
+        huayuanCost: 15000,
       },
     ],
   },

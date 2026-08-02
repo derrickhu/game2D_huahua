@@ -27,6 +27,7 @@ import { CurrencyManager } from './CurrencyManager';
 import { SaveManager } from './SaveManager';
 import { FlowerSignTicketManager } from './FlowerSignTicketManager';
 import { CheckInManager } from './CheckInManager';
+import { GrowthQuestManager } from './GrowthQuestManager';
 import { WeekendHuayuanBoostManager } from './WeekendHuayuanBoostManager';
 import { TuesdayStaminaUnlimitedManager } from './TuesdayStaminaUnlimitedManager';
 import { ThursdayMagicTimeManager } from './ThursdayMagicTimeManager';
@@ -867,6 +868,7 @@ class GMManagerClass {
       desc: '泡芙沙发 / 玫瑰垂幔帘 / 蕾丝铁艺床',
       execute: () => {
         const ids = [
+          'blueprint_workshop_petal_oval_rug',
           'blueprint_workshop_puffy_petal_sofa',
           'blueprint_workshop_rose_cascade_drape',
           'blueprint_workshop_lace_ribbon_bed',
@@ -1321,6 +1323,46 @@ class GMManagerClass {
       execute: () => {
         EventBus.emit('nav:openQuest');
         return ' 已打开任务面板';
+      },
+    });
+
+    this._commands.push({
+      id: 'growth_open_panel',
+      group: ' 系统测试',
+      name: ' 打开成长之路',
+      desc: '强制打开成长之路面板',
+      execute: () => {
+        EventBus.emit('nav:openGrowthQuest');
+        return ' 已打开成长之路面板';
+      },
+    });
+
+    this._commands.push({
+      id: 'growth_fill_chapter',
+      group: ' 系统测试',
+      name: ' 成长：当前章全部达标',
+      desc: '把当前章所有累计型任务推到目标值（快照型仍须真实达成）',
+      execute: () => {
+        const chapter = GrowthQuestManager.currentChapter;
+        if (!chapter) return ' 成长之路已全部通关';
+        let filled = 0;
+        for (const t of chapter.tasks) {
+          if (GrowthQuestManager.debugFillTask(t.id)) filled++;
+        }
+        const view = GrowthQuestManager.getChapterView(chapter.id);
+        const done = view ? view.tasks.filter(t => t.completed).length : 0;
+        return ` ${chapter.title}：已填满 ${filled} 条累计任务，当前达标 ${done}/${chapter.tasks.length}`;
+      },
+    });
+
+    this._commands.push({
+      id: 'growth_reset',
+      group: ' 系统测试',
+      name: ' 成长：重置全部进度',
+      desc: '清空成长之路存档，回到第 1 章',
+      execute: () => {
+        GrowthQuestManager.reset();
+        return ' 成长之路进度已重置（累计型计数归零）';
       },
     });
 
