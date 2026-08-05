@@ -321,25 +321,25 @@ export const EVENT_ORDER_BOX_CHANCE = 0.35;
 /**
  * 主玩法普通订单携带原石奖励的概率，按订单档位区分：
  * 越高级的订单出原石概率越高。命中后该订单在花愿奖励基础上额外显示原石，
- * 交单时发放到活动库存。
+ * 交单时发放到活动库存。A/S 档额外抬高，缓解珠匣前期原石偏紧。
  */
 export const EVENT_ORDER_STONE_CHANCE_BY_TIER: Record<string, number> = {
   C: 0.5,
-  B: 0.55,
-  A: 0.6,
-  S: 0.65,
+  B: 0.58,
+  A: 0.70,
+  S: 0.78,
 };
 /** 取某档位订单的原石概率（未知档位回退到 C） */
 export function getEventOrderStoneChance(tier: string): number {
   return EVENT_ORDER_STONE_CHANCE_BY_TIER[tier] ?? EVENT_ORDER_STONE_CHANCE_BY_TIER.C;
 }
 
-/** 命中原石奖励后，各档订单给的原石数量区间（C/B/A/S = 1-8 递增） */
+/** 命中原石奖励后，各档订单给的原石数量区间（C 不变，B/A/S 递增加码） */
 export const EVENT_ORDER_STONE_AMOUNT_RANGE_BY_TIER: Record<string, { min: number; max: number }> = {
   C: { min: 2, max: 4 },
-  B: { min: 4, max: 7 },
-  A: { min: 7, max: 11 },
-  S: { min: 11, max: 15 },
+  B: { min: 5, max: 8 },
+  A: { min: 10, max: 15 },
+  S: { min: 15, max: 22 },
 };
 
 /** 取某档位订单的原石数量：生成订单时掷一次，所见即所得 */

@@ -14,21 +14,24 @@ export const COOL_SUMMER_CURRENCY_NAME = '清凉小扇';
 export const COOL_SUMMER_DEFAULT_START_AT = new Date(2026, 6, 11, 0, 0, 0, 0).getTime();
 export const COOL_SUMMER_DEFAULT_END_AT = new Date(2026, 7, 31, 23, 59, 59, 0).getTime();
 
-/** 冷饮 L1-L8 对应的清凉小扇奖励（整体偏低，拉长兑换节奏）。 */
-export const COOL_SUMMER_COLD_DRINK_REWARDS: readonly number[] = [1, 1, 2, 2, 3, 3, 4, 5];
+/**
+ * 冷饮 L1-L8 对应的清凉小扇奖励。
+ * 低阶保持克制；L6+ 抬高，让高级订单交单体感更足。
+ */
+export const COOL_SUMMER_COLD_DRINK_REWARDS: readonly number[] = [1, 1, 2, 2, 3, 4, 5, 7];
 
 /**
  * 果切全局等级 1-15 对应的清凉小扇奖励。
- * 不再按全局等级 1:1 发放，避免高阶果切单件过多。
+ * 低阶略平；G8+ 拉开梯度，高阶组合单明显多扇。
  */
 export const COOL_SUMMER_FRUIT_CUT_REWARDS: readonly number[] = [
-  1, 1, 1, 1, 2,
-  2, 2, 3, 3, 3,
-  4, 4, 5, 5, 6,
+  1, 1, 1, 2, 2,
+  2, 3, 3, 4, 4,
+  5, 6, 7, 8, 9,
 ];
 
 /** 同单同时含冷饮+果切时的加成倍率。 */
-export const COOL_SUMMER_MIXED_ORDER_MULTIPLIER = 1.15;
+export const COOL_SUMMER_MIXED_ORDER_MULTIPLIER = 1.25;
 
 /** 活动结束后，未兑换完的清凉小扇 → 花愿换算比例（1 扇 = N 花愿）。 */
 export const COOL_SUMMER_FAN_TO_HUAYUAN_RATE = 1;
