@@ -288,6 +288,12 @@ export class ShopScene implements Scene {
   // ── 店主 ──
   private _ownerContainer: PIXI.Container | null = null;
   private _ownerSprite: PIXI.Sprite | null = null;
+  /**
+   * 编辑态店主命中代理：zIndex 置顶，仅负责 hitArea，不参与 2.5D 遮挡绘制。
+   * 解决错层/大家具 AABB 盖住楼上角色导致「拖不动店主」。
+   */
+  private _ownerEditHitProxy: PIXI.Container | null = null;
+  private static readonly OWNER_EDIT_HIT_PROXY_Z = 2_000_000_000;
 
   private readonly _onDressUpEquipped = (): void => {
     this._refreshShopOwnerOutfitTextures();
@@ -336,6 +342,7 @@ export class ShopScene implements Scene {
     if (this._ownerContainer) {
       this._ownerContainer.position.set(ownerX, ownerY);
       this._ownerContainer.zIndex = roomDepthZForOwner(ownerY);
+      this._syncOwnerEditHitProxy();
       this._roomContainer.sortChildren();
     }
     if (this._isEditMode) {
@@ -1202,6 +1209,72 @@ export class ShopScene implements Scene {
     this._resetOwnerDragState();
     this._ownerContainer.eventMode = 'static';
     this._ownerContainer.cursor = inEdit ? 'grab' : 'pointer';
+    this._syncOwnerHitArea();
+    if (inEdit) {
+      this._ensureOwnerEditHitProxy();
+      this._syncOwnerEditHitProxy();
+      FurnitureDragSystem.setOwnerHitPrefer(
+        (lx, ly) => this._isRoomLocalOnOwnerHitArea(lx, ly),
+        (e) => {
+          const owner = this._ownerContainer;
+          if (!owner || owner.destroyed) return;
+          FurnitureDragSystem.cancelActiveDrag();
+          this._beginOwnerDrag(e, owner);
+        },
+      );
+    } else {
+      FurnitureDragSystem.setOwnerHitPrefer(null, null);
+      this._destroyOwnerEditHitProxy();
+    }
+  }
+
+  /** room 本地坐标是否落在店主 hitArea（含编辑态代理） */
+  private _isRoomLocalOnOwnerHitArea(roomLocalX: number, roomLocalY: number): boolean {
+    const owner = this._ownerContainer;
+    if (!owner || owner.destroyed || !owner.hitArea) return false;
+    const ha = owner.hitArea;
+    if (typeof (ha as PIXI.Rectangle).contains === 'function') {
+      return (ha as PIXI.Rectangle).contains(roomLocalX - owner.x, roomLocalY - owner.y);
+    }
+    return false;
+  }
+
+  private _ensureOwnerEditHitProxy(): void {
+    if (this._ownerEditHitProxy && !this._ownerEditHitProxy.destroyed) return;
+    const proxy = new PIXI.Container();
+    proxy.eventMode = 'static';
+    proxy.cursor = 'grab';
+    proxy.zIndex = ShopScene.OWNER_EDIT_HIT_PROXY_Z;
+    proxy.on('pointerdown', (e: PIXI.FederatedPointerEvent) => {
+      e.stopPropagation();
+      const owner = this._ownerContainer;
+      if (!owner || owner.destroyed || !this._isEditMode) return;
+      FurnitureDragSystem.cancelActiveDrag();
+      this._beginOwnerDrag(e, owner);
+    });
+    this._roomContainer.addChild(proxy);
+    this._ownerEditHitProxy = proxy;
+  }
+
+  private _syncOwnerEditHitProxy(): void {
+    const proxy = this._ownerEditHitProxy;
+    const owner = this._ownerContainer;
+    if (!proxy || proxy.destroyed || !owner || owner.destroyed) return;
+    if (!this._isEditMode) return;
+    proxy.position.set(owner.x, owner.y);
+    proxy.hitArea = owner.hitArea;
+    proxy.zIndex = ShopScene.OWNER_EDIT_HIT_PROXY_Z;
+    proxy.visible = true;
+    proxy.eventMode = 'static';
+  }
+
+  private _destroyOwnerEditHitProxy(): void {
+    const proxy = this._ownerEditHitProxy;
+    this._ownerEditHitProxy = null;
+    if (!proxy || proxy.destroyed) return;
+    proxy.removeAllListeners();
+    proxy.parent?.removeChild(proxy);
+    proxy.destroy({ children: true });
   }
 
   private _beginOwnerDragFromClient(
@@ -1265,9 +1338,12 @@ export class ShopScene implements Scene {
     const w = Math.max(Math.abs(sp.width), SHOP_OWNER_HIT_MIN_R * 2);
     const h = Math.max(Math.abs(sp.height), SHOP_OWNER_HIT_MIN_R * 2);
     if (w < 4 || h < 4) return;
-    const padX = Math.max(10, w * 0.08);
-    const padY = Math.max(8, h * 0.05);
+    // 编辑态略放大热区，错层/缩放后更容易点到
+    const padMul = this._isEditMode ? 1.4 : 1;
+    const padX = Math.max(10, w * 0.08) * padMul;
+    const padY = Math.max(8, h * 0.05) * padMul;
     owner.hitArea = new PIXI.Rectangle(-w / 2 - padX, -h - padY, w + padX * 2, h + padY * 2);
+    this._syncOwnerEditHitProxy();
   }
 
   /** 按当前换装刷新花店店主全身贴图与缩放（含眨眼所用睁眼/闭眼键） */
@@ -1360,6 +1436,7 @@ export class ShopScene implements Scene {
       owner.x = localX + this._ownerDragOffset.x;
       owner.y = localY + this._ownerDragOffset.y;
       owner.zIndex = roomDepthZForOwner(owner.y);
+      this._syncOwnerEditHitProxy();
       this._roomContainer.sortChildren();
     };
     this._onOwnerRawUp = (rawEvt: any) => {
@@ -3277,8 +3354,9 @@ export class ShopScene implements Scene {
     const trayTopY = furnitureTrayOpenTopY(h, Game.safeBottom);
     this._applySceneEditViewProfile(true, trayTopY);
 
-    // 启用拖拽系统
+    // 启用拖拽系统（店主命中优先已在 _applyOwnerEditModeInteraction 注入）
     FurnitureDragSystem.enable(this._roomContainer);
+    this._syncOwnerEditHitProxy();
 
     // 打开家具托盘
     if (trayArg != null && typeof trayArg === 'object' && 'deco' in trayArg) {
@@ -3573,6 +3651,7 @@ export class ShopScene implements Scene {
     if (owner && pos) {
       owner.position.set(pos.x, pos.y);
       owner.zIndex = roomDepthZForOwner(pos.y);
+      this._syncOwnerEditHitProxy();
       this._roomContainer?.sortChildren();
     }
     if (this._furnitureTray.isOpen) {
