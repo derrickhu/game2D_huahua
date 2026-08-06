@@ -1,0 +1,11 @@
+Cute kawaii 2.5D true isometric furniture for a flower-shop merge game garden villa. Camera from upper-left into the L-room corner (same family as the room shell). On-screen top-face edges and base edges must sit near ±30° from horizontal — match the attached iso grid and room wall-base / floor diamond, NOT 45° wall slant, NOT flat front view. Height edges stay vertical. Visible top surface plus front-right side, left and right top edges symmetrically angled. Use the attached grid ONLY for perspective; do not copy the gray demo cube.
+
+Square game asset 1:1. Single furniture prop centered with generous margin. Soft brown outlines slightly thicker than hairline, rounded chibi-friendly shapes, gentle upper-left lighting, readable silhouette at small grid size. Hand-painted mobile merge-game style, not photoreal, not heavy 3D render.
+
+Color and materials: cream lacquer body, dusty rose rosebuds as top ornament, champagne-gold handles, dark walnut short legs.
+
+Subject: A slim elegant entry console cabinet / sideboard for a villa foyer — two small drawers or doors, optional tiny decorative vase empty of text. Tall enough to read as furniture storage.
+
+No text, no labels, no numbers, no watermark, no characters, no room shell, no walls, no floor plane, no ground shadow strip pretending to be a floor.
+
+Background pure solid white #FFFFFF only for cutout.

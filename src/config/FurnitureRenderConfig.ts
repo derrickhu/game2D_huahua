@@ -234,6 +234,69 @@ export const FURNITURE_RENDER_DEFS: FurnitureRenderDef[] = [
     },
     defaultFacing: 'front_right',
   },
+  {
+    decoId: 'workshop_cottage_wing_chair',
+    renderMode: 'fourFacing',
+    atlas: {
+      sheetKey: 'workshop_cottage_wing_chair_sheet',
+      columns: 2,
+      rows: 1,
+      row: 0,
+      frontCol: 0,
+      backCol: 1,
+    },
+    defaultFacing: 'front_right',
+  },
+  {
+    decoId: 'workshop_round_nest_bed',
+    renderMode: 'single',
+    atlas: {
+      sheetKey: 'workshop_round_nest_bed_sheet',
+      columns: 1,
+      rows: 3,
+      row: 0,
+    },
+  },
+  {
+    decoId: 'workshop_round_nest_bed_honey',
+    renderMode: 'single',
+    atlas: {
+      sheetKey: 'workshop_round_nest_bed_sheet',
+      columns: 1,
+      rows: 3,
+      row: 1,
+    },
+  },
+  {
+    decoId: 'workshop_round_nest_bed_sakura',
+    renderMode: 'single',
+    atlas: {
+      sheetKey: 'workshop_round_nest_bed_sheet',
+      columns: 1,
+      rows: 3,
+      row: 2,
+    },
+  },
+  {
+    decoId: 'workshop_arc_floor_lamp',
+    renderMode: 'single',
+    atlas: {
+      sheetKey: 'workshop_arc_floor_lamp_sheet',
+      columns: 1,
+      rows: 2,
+      row: 0,
+    },
+  },
+  {
+    decoId: 'workshop_arc_floor_lamp_mint',
+    renderMode: 'single',
+    atlas: {
+      sheetKey: 'workshop_arc_floor_lamp_sheet',
+      columns: 1,
+      rows: 2,
+      row: 1,
+    },
+  },
 ];
 
 export const FURNITURE_RENDER_MAP = new Map(FURNITURE_RENDER_DEFS.map(def => [def.decoId, def]));

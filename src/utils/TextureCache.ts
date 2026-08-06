@@ -655,6 +655,12 @@ const DECO_IMAGE_MAP: Record<string, string> = {
   season_summer_floor_fan: 'subpkg_deco/images/furniture/season_summer_floor_fan.png',
   season_summer_dining_table: 'subpkg_deco/images/furniture/season_summer_dining_table.png',
   workshop_summer_dining_chair_sheet: 'subpkg_deco/images/furniture/workshop_summer_dining_chair_sheet.png',
+  /** 奶油木框沙发椅：2 列正/背；每格 max-side 342；可制作 2 件 */
+  workshop_cottage_wing_chair_sheet: 'subpkg_deco/images/furniture/workshop_cottage_wing_chair_sheet.png',
+  /** 圆窝软床：1 列 × 3 行（白红 / 蜜黄 / 樱粉）；每格 max-side 342 */
+  workshop_round_nest_bed_sheet: 'subpkg_deco/images/furniture/workshop_round_nest_bed_sheet.png',
+  /** 弧光落地灯：1 列 × 2 行（红黑 / 薄荷绿）；每格 max-side 342 */
+  workshop_arc_floor_lamp_sheet: 'subpkg_deco/images/furniture/workshop_arc_floor_lamp_sheet.png',
   light_plant_strip: 'subpkg_deco/images/furniture/light_plant_strip.png',
   light_radio_vintage: 'subpkg_deco/images/furniture/light_radio_vintage.png',
   light_fan_desk: 'subpkg_deco/images/furniture/light_fan_desk.png',
@@ -958,6 +964,28 @@ const DECO_IMAGE_MAP: Record<string, string> = {
   tea_paper_lantern: 'subpkg_deco/images/furniture/tea_paper_lantern.png',
   villa_chester_sofa: 'subpkg_deco/images/furniture/villa_chester_sofa.png',
 
+  // ---- 花园别墅专属家具（garden_villa Lv35–38）----
+  villa_salon_curved_sofa: 'subpkg_deco/images/furniture/villa_salon_curved_sofa.png',
+  villa_salon_marble_tea: 'subpkg_deco/images/furniture/villa_salon_marble_tea.png',
+  villa_salon_armchair: 'subpkg_deco/images/furniture/villa_salon_armchair.png',
+  villa_salon_floor_lamp: 'subpkg_deco/images/furniture/villa_salon_floor_lamp.png',
+  villa_salon_rose_rug: 'subpkg_deco/images/furniture/villa_salon_rose_rug.png',
+  villa_salon_console: 'subpkg_deco/images/furniture/villa_salon_console.png',
+  villa_salon_crystal_chandelier: 'subpkg_deco/images/furniture/villa_salon_crystal_chandelier.png',
+  villa_kitchen_island: 'subpkg_deco/images/furniture/villa_kitchen_island.png',
+  villa_kitchen_fridge: 'subpkg_deco/images/furniture/villa_kitchen_fridge.png',
+  villa_dining_long_table: 'subpkg_deco/images/furniture/villa_dining_long_table.png',
+  villa_dining_chair_pair: 'subpkg_deco/images/furniture/villa_dining_chair_pair.png',
+  villa_kitchen_pendant: 'subpkg_deco/images/furniture/villa_kitchen_pendant.png',
+  villa_kitchen_sideboard: 'subpkg_deco/images/furniture/villa_kitchen_sideboard.png',
+  villa_moon_nightstand: 'subpkg_deco/images/furniture/villa_moon_nightstand.png',
+  villa_moon_bedside_lamp: 'subpkg_deco/images/furniture/villa_moon_bedside_lamp.png',
+  villa_moon_wardrobe: 'subpkg_deco/images/furniture/villa_moon_wardrobe.png',
+  villa_moon_vanity: 'subpkg_deco/images/furniture/villa_moon_vanity.png',
+  villa_moon_floor_mirror: 'subpkg_deco/images/furniture/villa_moon_floor_mirror.png',
+  villa_moon_canopy_bed: 'subpkg_deco/images/furniture/villa_moon_canopy_bed.png',
+  villa_pearl_grand_piano: 'subpkg_deco/images/furniture/villa_pearl_grand_piano.png',
+
   // ---- 梦云小屋专属家具（dream_cloud_house Lv20–24 卧室休闲套）----
   dream_cloud_bed: 'subpkg_deco/images/furniture/dream_cloud_bed.png',
   dream_cloud_sofa: 'subpkg_deco/images/furniture/dream_cloud_sofa.png',
@@ -1095,6 +1123,8 @@ const DECO_IMAGE_MAP: Record<string, string> = {
   bg_room_flower_farm_spring_vine_nb2: 'subpkg_deco/images/house/bg_room_flower_farm_spring_vine_nb2.png',
   /** 花园别墅 — 宽景分层西式洋房 cutaway 空壳 */
   bg_room_garden_villa_loft_nb2: 'subpkg_deco/images/house/bg_room_garden_villa_loft_nb2.png',
+  /** 花园别墅 — 丁香暮色换色壳（同房型冷调淡紫） */
+  bg_room_garden_villa_lilac_dusk_nb2: 'subpkg_deco/images/house/bg_room_garden_villa_lilac_dusk_nb2.png',
   /** 花园别墅 — 旧版木骨双层洋房（保留备用） */
   bg_room_garden_villa_manor_nb2: 'subpkg_deco/images/house/bg_room_garden_villa_manor_nb2.png',
   /** 蛋糕房 — 现代 pastel 甜品店 cutaway 空壳（正式路径；preview/ 旧副本保留供现网 CDN） */
