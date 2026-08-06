@@ -964,7 +964,15 @@ const DECO_IMAGE_MAP: Record<string, string> = {
   tea_paper_lantern: 'subpkg_deco/images/furniture/tea_paper_lantern.png',
   villa_chester_sofa: 'subpkg_deco/images/furniture/villa_chester_sofa.png',
 
-  // ---- 花园别墅专属家具（garden_villa Lv35–38）----
+  // ---- 奶油轻奢厨餐（通用场景 · Lv35–37）----
+  villa_kitchen_island: 'subpkg_deco/images/furniture/villa_kitchen_island.png',
+  villa_kitchen_fridge: 'subpkg_deco/images/furniture/villa_kitchen_fridge.png',
+  villa_dining_long_table: 'subpkg_deco/images/furniture/villa_dining_long_table.png',
+  villa_dining_chair_pair: 'subpkg_deco/images/furniture/villa_dining_chair_pair.png',
+  villa_kitchen_pendant: 'subpkg_deco/images/furniture/villa_kitchen_pendant.png',
+  villa_kitchen_sideboard: 'subpkg_deco/images/furniture/villa_kitchen_sideboard.png',
+
+  // ---- 花园别墅专属家具（garden_villa Lv36–38，不低于房间开放等级）----
   villa_salon_curved_sofa: 'subpkg_deco/images/furniture/villa_salon_curved_sofa.png',
   villa_salon_marble_tea: 'subpkg_deco/images/furniture/villa_salon_marble_tea.png',
   villa_salon_armchair: 'subpkg_deco/images/furniture/villa_salon_armchair.png',
@@ -972,12 +980,6 @@ const DECO_IMAGE_MAP: Record<string, string> = {
   villa_salon_rose_rug: 'subpkg_deco/images/furniture/villa_salon_rose_rug.png',
   villa_salon_console: 'subpkg_deco/images/furniture/villa_salon_console.png',
   villa_salon_crystal_chandelier: 'subpkg_deco/images/furniture/villa_salon_crystal_chandelier.png',
-  villa_kitchen_island: 'subpkg_deco/images/furniture/villa_kitchen_island.png',
-  villa_kitchen_fridge: 'subpkg_deco/images/furniture/villa_kitchen_fridge.png',
-  villa_dining_long_table: 'subpkg_deco/images/furniture/villa_dining_long_table.png',
-  villa_dining_chair_pair: 'subpkg_deco/images/furniture/villa_dining_chair_pair.png',
-  villa_kitchen_pendant: 'subpkg_deco/images/furniture/villa_kitchen_pendant.png',
-  villa_kitchen_sideboard: 'subpkg_deco/images/furniture/villa_kitchen_sideboard.png',
   villa_moon_nightstand: 'subpkg_deco/images/furniture/villa_moon_nightstand.png',
   villa_moon_bedside_lamp: 'subpkg_deco/images/furniture/villa_moon_bedside_lamp.png',
   villa_moon_wardrobe: 'subpkg_deco/images/furniture/villa_moon_wardrobe.png',
