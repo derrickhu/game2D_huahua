@@ -6,6 +6,7 @@ import {
   getDefaultWorkshopColorOption,
   getWorkshopBlueprintInteractionHint,
   getWorkshopColorChipLabel,
+  getWorkshopColorChipSwatch,
   isDefaultWorkshopColorOption,
   isWorkshopBlueprintInteractive,
   shouldShowWorkshopBlueprintColorPreview,
@@ -369,7 +370,7 @@ export class FurnitureWorkshopBlueprintPreviewPopup extends PIXI.Container {
     if (isDefault) {
       this._drawDefaultColorChip(circle, chipR);
     } else {
-      circle.beginFill(this._colorSwatch(option.id), 1);
+      circle.beginFill(getWorkshopColorChipSwatch(option), 1);
       circle.drawCircle(0, 0, chipR);
       circle.endFill();
       circle.lineStyle(2, 0xffffff, 0.9);
@@ -400,16 +401,6 @@ export class FurnitureWorkshopBlueprintPreviewPopup extends PIXI.Container {
     g.lineStyle(2.5, 0xb0a8a0, 0.95);
     g.moveTo(-slash, -slash);
     g.lineTo(slash, slash);
-  }
-
-  private _colorSwatch(colorId: string): number {
-    switch (colorId) {
-      case 'sakura': return 0xf5b4d4;
-      case 'blue': return 0x64b5f6;
-      case 'moon': return 0x64b5f6;
-      case 'honey': return 0xf5d76e;
-      default: return 0x8fd86b;
-    }
   }
 
   private _updateInteractionHint(blueprint: WorkshopBlueprintDef): void {

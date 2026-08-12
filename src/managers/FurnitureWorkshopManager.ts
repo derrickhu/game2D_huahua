@@ -18,6 +18,8 @@ import {
   listDiamondShopBlueprintIds,
   makeWorkshopVariantKey,
   parseWorkshopVariantKey,
+  WORKSHOP_SHOP_CATALOG_SEEN_BASELINE_IDS,
+  WORKSHOP_SHOP_CATALOG_SEEN_MIGRATION,
   type WorkshopColorOption,
 } from '@/config/FurnitureWorkshopConfig';
 import { DECO_MAP } from '@/config/DecorationConfig';
@@ -38,12 +40,15 @@ export interface FurnitureWorkshopSaveData {
    */
   newBlueprintIds?: string[];
   /**
-   * 玩家已看过的「钻石在售」图纸目录。缺省字段时首次读档会用当前货架灌基线，
-   * 避免老玩家一上线就把整店标成「上新」；此后配置新增可购图纸会触发提醒。
+   * 玩家已看过的「钻石在售」图纸目录。缺省字段时首次读档会用
+   * `WORKSHOP_SHOP_CATALOG_SEEN_BASELINE_IDS` 灌基线（不是整店当前货架），
+   * 避免老玩家一上线就把整店标成「上新」；基线外的新增图纸会触发「上新」。
    */
   seenShopBlueprintIds?: string[];
   /** 是否已完成商店目录基线灌入 */
   shopCatalogSeenBootstrapped?: boolean;
+  /** 商店目录基线迁移版本（见 WORKSHOP_SHOP_CATALOG_SEEN_MIGRATION） */
+  shopCatalogSeenMigration?: number;
 }
 
 export interface WorkshopCraftCheck {
@@ -84,6 +89,7 @@ class FurnitureWorkshopManagerClass {
   /** 已看过的钻石在售图纸目录 */
   private _seenShopBlueprintIds = new Set<string>();
   private _shopCatalogSeenBootstrapped = false;
+  private _shopCatalogSeenMigration = 0;
   private _initialized = false;
 
   init(): void {
@@ -93,6 +99,7 @@ class FurnitureWorkshopManagerClass {
     this._syncCraftedVariantsFromDecorations();
     this._pruneNewBlueprintIds();
     this._bootstrapShopCatalogSeenIfNeeded();
+    this._migrateShopCatalogSeenIfNeeded();
     this._save();
     console.log(
       `[FurnitureWorkshop] 初始化: 图纸 ${this._blueprints.size}, 材料 ${this._workshopMaterial}, 粉染 ${this._workshopDyePink}, 黄染 ${this._workshopDyeYellow}, 蓝染 ${this._workshopDyeBlue}, 绿染 ${this._workshopDyeGreen}, 已制作 ${this._craftedVariants.size}`,
@@ -110,10 +117,12 @@ class FurnitureWorkshopManagerClass {
     this._newBlueprintIds = [];
     this._seenShopBlueprintIds.clear();
     this._shopCatalogSeenBootstrapped = false;
+    this._shopCatalogSeenMigration = 0;
     this._load();
     this._syncCraftedVariantsFromDecorations();
     this._pruneNewBlueprintIds();
     this._bootstrapShopCatalogSeenIfNeeded();
+    this._migrateShopCatalogSeenIfNeeded();
     this._save();
     EventBus.emit('furnitureWorkshop:changed');
   }
@@ -229,10 +238,28 @@ class FurnitureWorkshopManagerClass {
 
   private _bootstrapShopCatalogSeenIfNeeded(): void {
     if (this._shopCatalogSeenBootstrapped) return;
-    for (const id of listDiamondShopBlueprintIds()) {
-      this._seenShopBlueprintIds.add(id);
+    // 只用冻结基线灌「已看」，勿用当前整店货架（否则同期上架的新品会被吞掉）
+    for (const id of WORKSHOP_SHOP_CATALOG_SEEN_BASELINE_IDS) {
+      if (WORKSHOP_BLUEPRINT_MAP.has(id)) this._seenShopBlueprintIds.add(id);
     }
     this._shopCatalogSeenBootstrapped = true;
+  }
+
+  /**
+   * 修正「上新」功能上线时误把当时整店（含新品）灌进已看的存档：
+   * 将基线外的钻石图纸从已看中移除，补发商店入口「上新」。
+   */
+  private _migrateShopCatalogSeenIfNeeded(): void {
+    if (this._shopCatalogSeenMigration >= WORKSHOP_SHOP_CATALOG_SEEN_MIGRATION) return;
+    const baseline = new Set(WORKSHOP_SHOP_CATALOG_SEEN_BASELINE_IDS);
+    for (const id of listDiamondShopBlueprintIds()) {
+      if (!baseline.has(id)) this._seenShopBlueprintIds.delete(id);
+    }
+    for (const id of WORKSHOP_SHOP_CATALOG_SEEN_BASELINE_IDS) {
+      if (WORKSHOP_BLUEPRINT_MAP.has(id)) this._seenShopBlueprintIds.add(id);
+    }
+    this._shopCatalogSeenBootstrapped = true;
+    this._shopCatalogSeenMigration = WORKSHOP_SHOP_CATALOG_SEEN_MIGRATION;
   }
 
   /** 钻石在售、玩家未拥有、且尚未打开商店看过的「上新」图纸 */
@@ -469,6 +496,7 @@ class FurnitureWorkshopManagerClass {
       newBlueprintIds: [...this._newBlueprintIds],
       seenShopBlueprintIds: [...this._seenShopBlueprintIds],
       shopCatalogSeenBootstrapped: this._shopCatalogSeenBootstrapped,
+      shopCatalogSeenMigration: this._shopCatalogSeenMigration,
     };
   }
 
@@ -587,6 +615,11 @@ class FurnitureWorkshopManagerClass {
         this._shopCatalogSeenBootstrapped = false;
         this._seenShopBlueprintIds.clear();
       }
+
+      this._shopCatalogSeenMigration =
+        typeof data.shopCatalogSeenMigration === 'number' && data.shopCatalogSeenMigration > 0
+          ? data.shopCatalogSeenMigration
+          : 0;
 
     } catch (e) {
       console.warn('[FurnitureWorkshop] 加载失败:', e);

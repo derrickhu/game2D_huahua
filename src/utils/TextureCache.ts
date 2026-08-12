@@ -671,6 +671,17 @@ const DECO_IMAGE_MAP: Record<string, string> = {
   early_oak_island: 'subpkg_deco/images/furniture/early_oak_island.png',
   early_sage_sink_cabinet: 'subpkg_deco/images/furniture/early_sage_sink_cabinet.png',
   early_glass_bead_partition: 'subpkg_deco/images/furniture/early_glass_bead_partition.png',
+  /** Lv19–24 补档：卷轴瓶 / 茶盘 / 壁灯 / 收音机 / 窄高冰裂纹隔断 */
+  orn_scroll_blossom_vase: 'subpkg_deco/images/furniture/orn_scroll_blossom_vase.png',
+  orn_mint_tea_tray: 'subpkg_deco/images/furniture/orn_mint_tea_tray.png',
+  light_cream_globe_sconce: 'subpkg_deco/images/furniture/light_cream_globe_sconce.png',
+  light_retro_pastel_radio: 'subpkg_deco/images/furniture/light_retro_pastel_radio.png',
+  wallart_tall_ice_lattice_partition: 'subpkg_deco/images/furniture/wallart_tall_ice_lattice_partition.png',
+  /** 奶油云灯同风格套装（落地灯 / 侧几 / 壁架 / 单人椅） */
+  light_cottage_cream_floor_lamp: 'subpkg_deco/images/furniture/light_cottage_cream_floor_lamp.png',
+  table_cottage_cream_side_table: 'subpkg_deco/images/furniture/table_cottage_cream_side_table.png',
+  wallart_cottage_cream_wall_shelf: 'subpkg_deco/images/furniture/wallart_cottage_cream_wall_shelf.png',
+  orn_cottage_cream_armchair: 'subpkg_deco/images/furniture/orn_cottage_cream_armchair.png',
   early_blush_vine_sofa: 'subpkg_deco/images/furniture/early_blush_vine_sofa.png',
   early_sky_vine_tea_table: 'subpkg_deco/images/furniture/early_sky_vine_tea_table.png',
   // 摆件
@@ -696,6 +707,12 @@ const DECO_IMAGE_MAP: Record<string, string> = {
   workshop_bougainvillea_bonsai_sheet: 'subpkg_deco/images/furniture/workshop_bougainvillea_bonsai_sheet.png',
   /** 黑色超薄电视柜：2 列正/背合图；每格 max-side 342 */
   workshop_pastel_tv_cabinet_sheet: 'subpkg_deco/images/furniture/workshop_pastel_tv_cabinet_sheet.png',
+  /** 花漾圆浴盆：2 列（满水花瓣 / 空盆毛巾）；每格 max-side 342 */
+  workshop_blossom_tub_sheet: 'subpkg_deco/images/furniture/workshop_blossom_tub_sheet.png',
+  /** 蜜语软床：1 列 × 2 行（蜜黄 / 天蓝）；每格 max-side 342 */
+  workshop_buttercup_daybed_sheet: 'subpkg_deco/images/furniture/workshop_buttercup_daybed_sheet.png',
+  /** 霜糖软座：2 列正/背合图；每格 max-side 342 */
+  workshop_parfait_lounge_sheet: 'subpkg_deco/images/furniture/workshop_parfait_lounge_sheet.png',
   /** 花边流苏地毯：1 列 × 3 行（樱粉 / 天蓝 / 蜜黄）；新手工坊图纸（id 沿用 petal_oval） */
   workshop_petal_oval_rug_sheet: 'subpkg_deco/images/furniture/workshop_petal_oval_rug_sheet.png',
   /** 玫瑰垂幔帘：1 列 × 3 行（樱粉 / 天蓝 / 蜜黄）；每格 max-side 342 */

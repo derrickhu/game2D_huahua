@@ -547,6 +547,75 @@ export const WORKSHOP_BLUEPRINT_DEFS: WorkshopBlueprintDef[] = [
       },
     ],
   },
+  {
+    id: 'blueprint_workshop_blossom_tub',
+    name: '花漾圆浴盆图纸',
+    outputDecoId: 'workshop_blossom_tub',
+    rarity: 'rare',
+    sourceText: '96 钻石购买',
+    icon: 'workshop_blueprint_generic',
+    category: 'furniture',
+    acquire: [{ kind: 'diamond', cost: 96 }],
+    colorOptions: [
+      {
+        id: 'default',
+        name: '默认',
+        outputDecoId: 'workshop_blossom_tub',
+        materialCost: 14,
+        dyeCost: 0,
+        huayuanCost: 28000,
+      },
+    ],
+  },
+  {
+    id: 'blueprint_workshop_buttercup_daybed',
+    name: '蜜语软床图纸',
+    outputDecoId: 'workshop_buttercup_daybed',
+    rarity: 'rare',
+    sourceText: '118 钻石购买',
+    icon: 'workshop_blueprint_generic',
+    category: 'furniture',
+    acquire: [{ kind: 'diamond', cost: 118 }],
+    colorOptions: [
+      {
+        id: 'default',
+        name: '蜜黄',
+        outputDecoId: 'workshop_buttercup_daybed',
+        materialCost: 16,
+        dyeCost: 0,
+        huayuanCost: 18000,
+      },
+      {
+        id: 'sky',
+        name: '天蓝',
+        outputDecoId: 'workshop_buttercup_daybed_sky',
+        materialCost: 12,
+        dyeCost: 3,
+        dyeMaterialId: WORKSHOP_DYE_BLUE_ID,
+        huayuanCost: 14000,
+      },
+    ],
+  },
+  {
+    id: 'blueprint_workshop_parfait_lounge',
+    name: '霜糖软座图纸',
+    outputDecoId: 'workshop_parfait_lounge',
+    rarity: 'rare',
+    sourceText: '108 钻石购买',
+    icon: 'workshop_blueprint_generic',
+    category: 'furniture',
+    acquire: [{ kind: 'diamond', cost: 108 }],
+    colorOptions: [
+      {
+        id: 'default',
+        name: '默认',
+        outputDecoId: 'workshop_parfait_lounge',
+        materialCost: 15,
+        dyeCost: 0,
+        huayuanCost: 24000,
+      },
+    ],
+  },
 ];
 
 export const WORKSHOP_BLUEPRINT_MAP = new Map(WORKSHOP_BLUEPRINT_DEFS.map(b => [b.id, b]));
@@ -581,6 +650,23 @@ const WORKSHOP_DYE_CHIP_LABELS: Record<string, string> = {
   [WORKSHOP_DYE_GREEN_ID]: '绿色',
 };
 
+/** 配色圆点色：优先按染料，其次按 colorOption.id（含 sky/moon 等别名） */
+const WORKSHOP_DYE_CHIP_COLORS: Record<string, number> = {
+  [WORKSHOP_DYE_PINK_ID]: 0xf5b4d4,
+  [WORKSHOP_DYE_YELLOW_ID]: 0xf5d76e,
+  [WORKSHOP_DYE_BLUE_ID]: 0x64b5f6,
+  [WORKSHOP_DYE_GREEN_ID]: 0x8fd86b,
+};
+
+const WORKSHOP_COLOR_ID_SWATCH: Record<string, number> = {
+  sakura: 0xf5b4d4,
+  blue: 0x64b5f6,
+  moon: 0x64b5f6,
+  sky: 0x64b5f6,
+  honey: 0xf5d76e,
+  mint: 0x8fd86b,
+};
+
 export function getWorkshopColorChipLabel(
   blueprint: WorkshopBlueprintDef,
   option: WorkshopColorOption,
@@ -591,6 +677,14 @@ export function getWorkshopColorChipLabel(
       ?? getWorkshopMaterialDisplayName(option.dyeMaterialId).replace(/染料$/, '');
   }
   return option.name;
+}
+
+/** 制作/预览弹窗配色圆点填充色 */
+export function getWorkshopColorChipSwatch(option: WorkshopColorOption): number {
+  if (option.dyeMaterialId && WORKSHOP_DYE_CHIP_COLORS[option.dyeMaterialId] != null) {
+    return WORKSHOP_DYE_CHIP_COLORS[option.dyeMaterialId];
+  }
+  return WORKSHOP_COLOR_ID_SWATCH[option.id] ?? 0xb0bec5;
 }
 
 const WORKSHOP_DECO_BLUEPRINT_LOOKUP = new Map<
@@ -654,6 +748,28 @@ export function listDiamondShopBlueprintIds(): string[] {
     .filter(b => isBlueprintDiamondPurchasable(b.id))
     .map(b => b.id);
 }
+
+/**
+ * 商店「上新」冻结基线：功能上线前已在钻石货架的图纸。
+ * 首次灌基线只把这些记为已看，避免老玩家整店飘「上新」；
+ * **此后新增的钻石图纸不要写入此列表**，才会触发商店入口「上新」。
+ */
+export const WORKSHOP_SHOP_CATALOG_SEEN_BASELINE_IDS: readonly string[] = [
+  'blueprint_workshop_plush_green_sofa',
+  'blueprint_workshop_puffy_petal_sofa',
+  WORKSHOP_NOVICE_BLUEPRINT_ID,
+  'blueprint_workshop_rose_cascade_drape',
+  'blueprint_workshop_lace_ribbon_bed',
+  'blueprint_workshop_giant_rose_bouquet',
+  'blueprint_workshop_bougainvillea_bonsai',
+  'blueprint_workshop_pastel_tv_cabinet',
+  'blueprint_workshop_cottage_wing_chair',
+  'blueprint_workshop_round_nest_bed',
+  'blueprint_workshop_arc_floor_lamp',
+];
+
+/** 商店目录基线迁移版本：存档低于此值时，会把「基线外」图纸从已看里清掉以补发上新 */
+export const WORKSHOP_SHOP_CATALOG_SEEN_MIGRATION = 1;
 
 /** 工坊制作页 Tab 分类：优先 blueprint.category，否则按家具 slot / 装修 Tab 推断 */
 export function getBlueprintCraftCategory(blueprint: WorkshopBlueprintDef): WorkshopCraftCategory {

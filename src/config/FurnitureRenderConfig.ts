@@ -248,6 +248,58 @@ export const FURNITURE_RENDER_DEFS: FurnitureRenderDef[] = [
     defaultFacing: 'front_right',
   },
   {
+    decoId: 'workshop_blossom_tub',
+    renderMode: 'single',
+    atlas: {
+      sheetKey: 'workshop_blossom_tub_sheet',
+      columns: 2,
+      rows: 1,
+      row: 0,
+    },
+    interaction: {
+      type: 'toggle',
+      defaultState: 'filled',
+      hint: '放入房间后单击切换满水花瓣与空盆搭毛巾',
+      states: {
+        filled: {},
+        empty: {},
+      },
+    },
+  },
+  {
+    decoId: 'workshop_buttercup_daybed',
+    renderMode: 'single',
+    atlas: {
+      sheetKey: 'workshop_buttercup_daybed_sheet',
+      columns: 1,
+      rows: 2,
+      row: 0,
+    },
+  },
+  {
+    decoId: 'workshop_buttercup_daybed_sky',
+    renderMode: 'single',
+    atlas: {
+      sheetKey: 'workshop_buttercup_daybed_sheet',
+      columns: 1,
+      rows: 2,
+      row: 1,
+    },
+  },
+  {
+    decoId: 'workshop_parfait_lounge',
+    renderMode: 'fourFacing',
+    atlas: {
+      sheetKey: 'workshop_parfait_lounge_sheet',
+      columns: 2,
+      rows: 1,
+      row: 0,
+      frontCol: 0,
+      backCol: 1,
+    },
+    defaultFacing: 'front_right',
+  },
+  {
     decoId: 'workshop_round_nest_bed',
     renderMode: 'single',
     atlas: {
