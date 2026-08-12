@@ -130,6 +130,12 @@ function getSortedOwnedBlueprints(): WorkshopBlueprintDef[] {
   return WORKSHOP_BLUEPRINT_DEFS
     .filter(b => FurnitureWorkshopManager.hasBlueprint(b.id))
     .sort((a, b) => {
+      const aNew = FurnitureWorkshopManager.isNewBlueprintHighlight(a.id);
+      const bNew = FurnitureWorkshopManager.isNewBlueprintHighlight(b.id);
+      if (aNew !== bNew) return aNew ? -1 : 1;
+      if (aNew && bNew) {
+        return FurnitureWorkshopManager.compareNewBlueprintOrder(a.id, b.id);
+      }
       const aDone = FurnitureWorkshopManager.isBlueprintFullyCrafted(a.id) ? 1 : 0;
       const bDone = FurnitureWorkshopManager.isBlueprintFullyCrafted(b.id) ? 1 : 0;
       if (aDone !== bDone) return aDone - bDone;
@@ -160,6 +166,7 @@ export class FurnitureWorkshopPanel extends PIXI.Container {
   private _shopDockShadow!: PIXI.Graphics;
   private _shopDockIcon!: PIXI.Sprite;
   private _shopDockLabel!: PIXI.Text;
+  private _shopDockNewBadge!: PIXI.Container;
   private _resourceBar!: PIXI.Container;
   private _resourceLabel!: PIXI.Text;
   private _materialSlot!: PIXI.Container;
@@ -542,6 +549,7 @@ export class FurnitureWorkshopPanel extends PIXI.Container {
   /** 底栏快捷入口：图标下椭圆阴影 + 标签，无白底框 */
   private _createDockShopChip(onTap: () => void): PIXI.Container {
     const root = new PIXI.Container();
+    root.sortableChildren = true;
 
     this._shopDockShadow = new PIXI.Graphics();
     root.addChild(this._shopDockShadow);
@@ -565,6 +573,9 @@ export class FurnitureWorkshopPanel extends PIXI.Container {
     this._shopDockLabel = txt;
     root.addChild(txt);
 
+    this._shopDockNewBadge = this._createShopNewArrivalBadge();
+    root.addChild(this._shopDockNewBadge);
+
     root.eventMode = 'static';
     root.cursor = 'pointer';
     root.hitArea = new PIXI.Rectangle(-62, -68, 124, 142);
@@ -573,6 +584,46 @@ export class FurnitureWorkshopPanel extends PIXI.Container {
       onTap();
     });
     return root;
+  }
+
+  /** 图纸商店「上新」飘带：风格对齐花店底栏工坊「新上线」 */
+  private _createShopNewArrivalBadge(): PIXI.Container {
+    const promo = new PIXI.Container();
+    promo.name = 'workshop_shop_new_arrival';
+    promo.eventMode = 'none';
+    promo.zIndex = 30;
+    promo.visible = false;
+    promo.rotation = -0.14;
+
+    const w = 58;
+    const h = 24;
+    const bg = new PIXI.Graphics();
+    bg.lineStyle(2.5, 0xffffff, 0.98);
+    bg.beginFill(0xff3d00, 0.98);
+    bg.drawRoundedRect(0, 0, w, h, 10);
+    bg.endFill();
+    bg.lineStyle(1.5, 0xb71c1c, 0.55);
+    bg.drawRoundedRect(0, 0, w, h, 10);
+    promo.addChild(bg);
+
+    const shine = new PIXI.Graphics();
+    shine.beginFill(0xffab91, 0.42);
+    shine.drawRoundedRect(3, 3, w - 6, Math.round(h * 0.42), 7);
+    shine.endFill();
+    promo.addChild(shine);
+
+    const label = new PIXI.Text('上新', {
+      fontSize: 13,
+      fill: 0xffffff,
+      fontFamily: FONT_FAMILY,
+      fontWeight: 'bold',
+      stroke: 0xc62828,
+      strokeThickness: 2.5,
+    });
+    label.anchor.set(0.5);
+    label.position.set(w / 2, h / 2);
+    promo.addChild(label);
+    return promo;
   }
 
   /** 图纸商店入口：图标缩放 + 脚下椭圆投影（可点击立体感） */
@@ -600,6 +651,12 @@ export class FurnitureWorkshopPanel extends PIXI.Container {
     if (this._shopDockLabel) {
       this._shopDockLabel.style.fontSize = Math.max(14, Math.round(SHELL.SHOP_CHIP_LABEL_PX * layout.scale));
       this._shopDockLabel.y = layout.sy(SHELL.SHOP_CHIP_LABEL_Y_PX);
+    }
+
+    if (this._shopDockNewBadge) {
+      const iconSize = layout.sx(SHELL.SHOP_CHIP_ICON_PX);
+      this._shopDockNewBadge.position.set(iconSize * 0.18, -iconSize * 0.62);
+      this._shopDockNewBadge.scale.set(Math.max(0.92, layout.scale));
     }
   }
 
@@ -941,6 +998,10 @@ export class FurnitureWorkshopPanel extends PIXI.Container {
     const shopOpen = this._shopPopup?.visible ?? false;
     this._shopDockBtn.alpha = shopOpen ? 1 : 0.92;
     this._shopDockBtn.scale.set(shopOpen ? 1.06 : 1);
+    if (this._shopDockNewBadge) {
+      this._shopDockNewBadge.visible =
+        !shopOpen && FurnitureWorkshopManager.hasUnseenShopSaleBlueprints();
+    }
     this._categoryTabRow.visible = !shopOpen;
     this._content.visible = !shopOpen;
     this._contentMask.visible = !shopOpen;
@@ -949,6 +1010,7 @@ export class FurnitureWorkshopPanel extends PIXI.Container {
       this._shopPopup.zIndex = shopOpen ? 110 : 58;
       this._panel.sortChildren();
     }
+    if (this._shopDockBtn.sortableChildren) this._shopDockBtn.sortChildren();
   }
 
   private _renderCraftGrid(): void {
@@ -1064,6 +1126,10 @@ export class FurnitureWorkshopPanel extends PIXI.Container {
     preview.position.set(cardW / 2, pad + BLUEPRINT_IMAGE_H / 2);
     root.addChild(preview);
 
+    if (FurnitureWorkshopManager.isNewBlueprintHighlight(blueprint.id)) {
+      this._addNewBlueprintBadge(root, cardW);
+    }
+
     appendWorkshopBlueprintFeatureTags(root, blueprint, pad + imageW - 6, pad + BLUEPRINT_IMAGE_H - 6, {
       fontSize: 15,
       layout: 'vertical',
@@ -1100,5 +1166,31 @@ export class FurnitureWorkshopPanel extends PIXI.Container {
     }
 
     return root;
+  }
+
+  /** 新获得图纸角标（与装修面板「新解锁」同款）：卡片右上红底「新」 */
+  private _addNewBlueprintBadge(card: PIXI.Container, cardW: number): void {
+    const pad = 8;
+    const tagW = Math.round(Math.min(36, Math.max(30, cardW * 0.16)));
+    const tagH = Math.round(tagW * 0.68);
+    const x = cardW - pad - tagW;
+    const y = pad;
+
+    const bg = new PIXI.Graphics();
+    bg.beginFill(0xe53935);
+    bg.lineStyle(1.5, 0xffffff, 0.92);
+    bg.drawRoundedRect(x, y, tagW, tagH, 8);
+    bg.endFill();
+    card.addChild(bg);
+
+    const t = new PIXI.Text('新', {
+      fontSize: Math.round(tagH * 0.62),
+      fill: 0xffffff,
+      fontFamily: FONT_FAMILY,
+      fontWeight: 'bold',
+    });
+    t.anchor.set(0.5, 0.5);
+    t.position.set(x + tagW / 2, y + tagH / 2);
+    card.addChild(t);
   }
 }

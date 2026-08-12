@@ -128,7 +128,7 @@ export type WorkshopBlueprintAcquire =
  *
  * 由成长之路 `g3_level_6`（达成 6 星解锁工坊）免费赠送，并配 8 锤子 + 2 天蓝染料，
  * 保证玩家「领完立刻能做出默认色 + 天蓝色两件」（各 4 锤；染色款另耗 1 染料）。
- * 因此本图纸各色成本远低于其它图纸（其它为 8～20 锤 + 1.8 万～5.6 万花愿）。
+ * 因此本图纸各色成本远低于其它图纸（其它为 8～20 锤 + 约 0.9 万～3.8 万花愿）。
  *
  * 平衡校验：三色共 15 星、约 4200 花愿 + 12 锤子，不存在刷星套利。
  *
@@ -193,7 +193,7 @@ export const WORKSHOP_BLUEPRINT_DEFS: WorkshopBlueprintDef[] = [
         outputDecoId: 'workshop_plush_green_sofa',
         materialCost: 15,
         dyeCost: 0,
-        huayuanCost: 18000,
+        huayuanCost: 14000,
       },
       {
         id: 'sakura',
@@ -202,7 +202,7 @@ export const WORKSHOP_BLUEPRINT_DEFS: WorkshopBlueprintDef[] = [
         materialCost: 10,
         dyeCost: 5,
         dyeMaterialId: WORKSHOP_DYE_PINK_ID,
-        huayuanCost: 13000,
+        huayuanCost: 10000,
       },
       {
         id: 'blue',
@@ -211,7 +211,7 @@ export const WORKSHOP_BLUEPRINT_DEFS: WorkshopBlueprintDef[] = [
         materialCost: 10,
         dyeCost: 5,
         dyeMaterialId: WORKSHOP_DYE_BLUE_ID,
-        huayuanCost: 13000,
+        huayuanCost: 10000,
       },
     ],
   },
@@ -231,7 +231,7 @@ export const WORKSHOP_BLUEPRINT_DEFS: WorkshopBlueprintDef[] = [
         outputDecoId: 'workshop_puffy_petal_sofa',
         materialCost: 20,
         dyeCost: 0,
-        huayuanCost: 28000,
+        huayuanCost: 22000,
       },
     ],
   },
@@ -289,7 +289,7 @@ export const WORKSHOP_BLUEPRINT_DEFS: WorkshopBlueprintDef[] = [
         outputDecoId: 'workshop_rose_cascade_drape',
         materialCost: 11,
         dyeCost: 0,
-        huayuanCost: 19999,
+        huayuanCost: 16000,
       },
       {
         id: 'moon',
@@ -298,7 +298,7 @@ export const WORKSHOP_BLUEPRINT_DEFS: WorkshopBlueprintDef[] = [
         materialCost: 10,
         dyeCost: 1,
         dyeMaterialId: WORKSHOP_DYE_BLUE_ID,
-        huayuanCost: 15000,
+        huayuanCost: 12000,
       },
       {
         id: 'honey',
@@ -307,7 +307,7 @@ export const WORKSHOP_BLUEPRINT_DEFS: WorkshopBlueprintDef[] = [
         materialCost: 10,
         dyeCost: 1,
         dyeMaterialId: WORKSHOP_DYE_YELLOW_ID,
-        huayuanCost: 15000,
+        huayuanCost: 12000,
       },
     ],
   },
@@ -327,7 +327,7 @@ export const WORKSHOP_BLUEPRINT_DEFS: WorkshopBlueprintDef[] = [
         outputDecoId: 'workshop_lace_ribbon_bed',
         materialCost: 5,
         dyeCost: 0,
-        huayuanCost: 11000,
+        huayuanCost: 9000,
       },
     ],
   },
@@ -347,7 +347,7 @@ export const WORKSHOP_BLUEPRINT_DEFS: WorkshopBlueprintDef[] = [
         outputDecoId: 'workshop_giant_rose_bouquet',
         materialCost: 12,
         dyeCost: 0,
-        huayuanCost: 52000,
+        huayuanCost: 35000,
       },
     ],
   },
@@ -367,7 +367,7 @@ export const WORKSHOP_BLUEPRINT_DEFS: WorkshopBlueprintDef[] = [
         outputDecoId: 'workshop_bougainvillea_bonsai',
         materialCost: 14,
         dyeCost: 0,
-        huayuanCost: 56000,
+        huayuanCost: 38000,
       },
     ],
   },
@@ -387,7 +387,7 @@ export const WORKSHOP_BLUEPRINT_DEFS: WorkshopBlueprintDef[] = [
         outputDecoId: 'workshop_pastel_tv_cabinet',
         materialCost: 15,
         dyeCost: 0,
-        huayuanCost: 30000,
+        huayuanCost: 24000,
       },
     ],
   },
@@ -407,7 +407,7 @@ export const WORKSHOP_BLUEPRINT_DEFS: WorkshopBlueprintDef[] = [
         outputDecoId: 'workshop_summer_lotus_arch_window',
         materialCost: 12,
         dyeCost: 0,
-        huayuanCost: 32000,
+        huayuanCost: 25000,
       },
     ],
   },
@@ -427,7 +427,7 @@ export const WORKSHOP_BLUEPRINT_DEFS: WorkshopBlueprintDef[] = [
         outputDecoId: 'workshop_willow_wood_bay_window',
         materialCost: 14,
         dyeCost: 0,
-        huayuanCost: 36000,
+        huayuanCost: 29000,
       },
       {
         id: 'mint',
@@ -436,7 +436,7 @@ export const WORKSHOP_BLUEPRINT_DEFS: WorkshopBlueprintDef[] = [
         materialCost: 12,
         dyeCost: 1,
         dyeMaterialId: WORKSHOP_DYE_GREEN_ID,
-        huayuanCost: 38000,
+        huayuanCost: 30000,
       },
     ],
   },
@@ -456,7 +456,7 @@ export const WORKSHOP_BLUEPRINT_DEFS: WorkshopBlueprintDef[] = [
         outputDecoId: 'workshop_summer_dining_chair',
         materialCost: 8,
         dyeCost: 0,
-        huayuanCost: 18000,
+        huayuanCost: 14000,
       },
     ],
   },
@@ -476,7 +476,7 @@ export const WORKSHOP_BLUEPRINT_DEFS: WorkshopBlueprintDef[] = [
         outputDecoId: 'workshop_cottage_wing_chair',
         materialCost: 12,
         dyeCost: 0,
-        huayuanCost: 30000,
+        huayuanCost: 24000,
       },
     ],
   },
@@ -496,7 +496,7 @@ export const WORKSHOP_BLUEPRINT_DEFS: WorkshopBlueprintDef[] = [
         outputDecoId: 'workshop_round_nest_bed',
         materialCost: 18,
         dyeCost: 0,
-        huayuanCost: 32000,
+        huayuanCost: 25000,
       },
       {
         id: 'honey',
@@ -505,7 +505,7 @@ export const WORKSHOP_BLUEPRINT_DEFS: WorkshopBlueprintDef[] = [
         materialCost: 12,
         dyeCost: 4,
         dyeMaterialId: WORKSHOP_DYE_YELLOW_ID,
-        huayuanCost: 24000,
+        huayuanCost: 19000,
       },
       {
         id: 'sakura',
@@ -514,7 +514,7 @@ export const WORKSHOP_BLUEPRINT_DEFS: WorkshopBlueprintDef[] = [
         materialCost: 12,
         dyeCost: 4,
         dyeMaterialId: WORKSHOP_DYE_PINK_ID,
-        huayuanCost: 24000,
+        huayuanCost: 19000,
       },
     ],
   },
@@ -534,7 +534,7 @@ export const WORKSHOP_BLUEPRINT_DEFS: WorkshopBlueprintDef[] = [
         outputDecoId: 'workshop_arc_floor_lamp',
         materialCost: 10,
         dyeCost: 0,
-        huayuanCost: 16000,
+        huayuanCost: 13000,
       },
       {
         id: 'mint',
@@ -543,7 +543,7 @@ export const WORKSHOP_BLUEPRINT_DEFS: WorkshopBlueprintDef[] = [
         materialCost: 8,
         dyeCost: 2,
         dyeMaterialId: WORKSHOP_DYE_GREEN_ID,
-        huayuanCost: 12000,
+        huayuanCost: 10000,
       },
     ],
   },
@@ -646,6 +646,13 @@ export function isBlueprintEventAcquire(blueprintId: string): boolean {
 /** 图纸商店列表：钻石可购 / 活动展示 / 已拥有 */
 export function isBlueprintListedInShop(blueprintId: string): boolean {
   return isBlueprintDiamondPurchasable(blueprintId) || isBlueprintEventAcquire(blueprintId);
+}
+
+/** 图纸商店当前「钻石在售」图纸 id（用于上新提醒） */
+export function listDiamondShopBlueprintIds(): string[] {
+  return WORKSHOP_BLUEPRINT_DEFS
+    .filter(b => isBlueprintDiamondPurchasable(b.id))
+    .map(b => b.id);
 }
 
 /** 工坊制作页 Tab 分类：优先 blueprint.category，否则按家具 slot / 装修 Tab 推断 */

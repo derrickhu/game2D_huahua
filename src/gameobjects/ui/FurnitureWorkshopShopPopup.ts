@@ -77,6 +77,9 @@ function sortShopBlueprints(blueprints: WorkshopBlueprintDef[]): WorkshopBluepri
     const aOwned = FurnitureWorkshopManager.hasBlueprint(a.id);
     const bOwned = FurnitureWorkshopManager.hasBlueprint(b.id);
     if (aOwned !== bOwned) return aOwned ? 1 : -1;
+    const aNew = FurnitureWorkshopManager.isUnseenShopSaleBlueprint(a.id);
+    const bNew = FurnitureWorkshopManager.isUnseenShopSaleBlueprint(b.id);
+    if (aNew !== bNew) return aNew ? -1 : 1;
     return 0;
   });
 }
@@ -140,6 +143,8 @@ export class FurnitureWorkshopShopPopup extends PIXI.Container {
     this._unsubTextures = null;
     this.visible = false;
     this.eventMode = 'none';
+    // 关店时记已看：进店当次仍可看到「上新」行标，下次打开工坊不再飘「上新」
+    FurnitureWorkshopManager.markShopCatalogSeen();
     this._onClose?.();
     this._onClose = null;
     this._onChanged = null;
@@ -475,13 +480,36 @@ export class FurnitureWorkshopShopPopup extends PIXI.Container {
     name.position.set(96, SHOP_ROW_H / 2 - 10);
     root.addChild(name);
 
+    const isShopNew = !owned && FurnitureWorkshopManager.isUnseenShopSaleBlueprint(blueprint.id);
     const sub = new PIXI.Text(
-      owned ? '已拥有图纸' : (blueprint.sourceText || '钻石购买'),
-      textStyle({ fontSize: 16, fill: 0x9a8478, fontWeight: '700' }),
+      owned ? '已拥有图纸' : (isShopNew ? '商店上新' : (blueprint.sourceText || '钻石购买')),
+      textStyle({
+        fontSize: 16,
+        fill: isShopNew ? 0xe53935 : 0x9a8478,
+        fontWeight: '700',
+      }),
     );
     sub.anchor.set(0, 0.5);
     sub.position.set(96, SHOP_ROW_H / 2 + 16);
     root.addChild(sub);
+
+    if (isShopNew) {
+      const newTag = new PIXI.Container();
+      const tw = 28;
+      const th = 18;
+      const tg = new PIXI.Graphics();
+      tg.beginFill(0xe53935);
+      tg.lineStyle(1.2, 0xffffff, 0.95);
+      tg.drawRoundedRect(0, 0, tw, th, 6);
+      tg.endFill();
+      newTag.addChild(tg);
+      const tt = new PIXI.Text('新', textStyle({ fontSize: 12, fill: 0xffffff, fontWeight: '900' }));
+      tt.anchor.set(0.5);
+      tt.position.set(tw / 2, th / 2);
+      newTag.addChild(tt);
+      newTag.position.set(8, 8);
+      root.addChild(newTag);
+    }
 
     const previewHitW = Math.max(104, tagRight - 8);
     const previewHit = new PIXI.Container();

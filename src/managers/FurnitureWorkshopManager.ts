@@ -15,6 +15,7 @@ import {
   getBlueprintColorOption,
   getBlueprintDiamondCost,
   isBlueprintDiamondPurchasable,
+  listDiamondShopBlueprintIds,
   makeWorkshopVariantKey,
   parseWorkshopVariantKey,
   type WorkshopColorOption,
@@ -31,6 +32,18 @@ export interface FurnitureWorkshopSaveData {
   workshopDyeBlue: number;
   workshopDyeGreen: number;
   craftedVariants: string[];
+  /**
+   * 新获得、尚未制作过的图纸 id（新→旧）：商店购买 / 活动 / 成长之路等均计入。
+   * 工坊列表置顶并显示「新」角标；首次制作该图纸任一配色后清除。
+   */
+  newBlueprintIds?: string[];
+  /**
+   * 玩家已看过的「钻石在售」图纸目录。缺省字段时首次读档会用当前货架灌基线，
+   * 避免老玩家一上线就把整店标成「上新」；此后配置新增可购图纸会触发提醒。
+   */
+  seenShopBlueprintIds?: string[];
+  /** 是否已完成商店目录基线灌入 */
+  shopCatalogSeenBootstrapped?: boolean;
 }
 
 export interface WorkshopCraftCheck {
@@ -66,6 +79,11 @@ class FurnitureWorkshopManagerClass {
   private _workshopDyeBlue = 0;
   private _workshopDyeGreen = 0;
   private _craftedVariants = new Set<string>();
+  /** 新购图纸高亮顺序（index 0 = 最新） */
+  private _newBlueprintIds: string[] = [];
+  /** 已看过的钻石在售图纸目录 */
+  private _seenShopBlueprintIds = new Set<string>();
+  private _shopCatalogSeenBootstrapped = false;
   private _initialized = false;
 
   init(): void {
@@ -73,6 +91,8 @@ class FurnitureWorkshopManagerClass {
     this._initialized = true;
     this._load();
     this._syncCraftedVariantsFromDecorations();
+    this._pruneNewBlueprintIds();
+    this._bootstrapShopCatalogSeenIfNeeded();
     this._save();
     console.log(
       `[FurnitureWorkshop] 初始化: 图纸 ${this._blueprints.size}, 材料 ${this._workshopMaterial}, 粉染 ${this._workshopDyePink}, 黄染 ${this._workshopDyeYellow}, 蓝染 ${this._workshopDyeBlue}, 绿染 ${this._workshopDyeGreen}, 已制作 ${this._craftedVariants.size}`,
@@ -87,8 +107,13 @@ class FurnitureWorkshopManagerClass {
     this._workshopDyeBlue = 0;
     this._workshopDyeGreen = 0;
     this._craftedVariants.clear();
+    this._newBlueprintIds = [];
+    this._seenShopBlueprintIds.clear();
+    this._shopCatalogSeenBootstrapped = false;
     this._load();
     this._syncCraftedVariantsFromDecorations();
+    this._pruneNewBlueprintIds();
+    this._bootstrapShopCatalogSeenIfNeeded();
     this._save();
     EventBus.emit('furnitureWorkshop:changed');
   }
@@ -165,10 +190,79 @@ class FurnitureWorkshopManagerClass {
     return def.colorOptions.every(c => this.isCraftLimitReached(blueprintId, c.id));
   }
 
+  /** 新获得且尚未制作时显示「新」角标并置顶 */
+  isNewBlueprintHighlight(blueprintId: string): boolean {
+    return this._newBlueprintIds.includes(blueprintId);
+  }
+
+  /** 新图纸排序：越新越靠前；非新标返回 0 */
+  compareNewBlueprintOrder(aId: string, bId: string): number {
+    const ai = this._newBlueprintIds.indexOf(aId);
+    const bi = this._newBlueprintIds.indexOf(bId);
+    if (ai < 0 && bi < 0) return 0;
+    if (ai < 0) return 1;
+    if (bi < 0) return -1;
+    return ai - bi;
+  }
+
+  private _markBlueprintNew(blueprintId: string): void {
+    this._newBlueprintIds = [
+      blueprintId,
+      ...this._newBlueprintIds.filter(id => id !== blueprintId),
+    ];
+  }
+
+  private _clearBlueprintNew(blueprintId: string): boolean {
+    const before = this._newBlueprintIds.length;
+    this._newBlueprintIds = this._newBlueprintIds.filter(id => id !== blueprintId);
+    return this._newBlueprintIds.length !== before;
+  }
+
+  /** 去掉已不拥有、或任一配色已制作过的「新」标记 */
+  private _pruneNewBlueprintIds(): void {
+    this._newBlueprintIds = this._newBlueprintIds.filter((id) => {
+      if (!this._blueprints.has(id) || !WORKSHOP_BLUEPRINT_MAP.has(id)) return false;
+      const def = WORKSHOP_BLUEPRINT_MAP.get(id)!;
+      return !def.colorOptions.some(c => this.hasCraftedColor(id, c.id));
+    });
+  }
+
+  private _bootstrapShopCatalogSeenIfNeeded(): void {
+    if (this._shopCatalogSeenBootstrapped) return;
+    for (const id of listDiamondShopBlueprintIds()) {
+      this._seenShopBlueprintIds.add(id);
+    }
+    this._shopCatalogSeenBootstrapped = true;
+  }
+
+  /** 钻石在售、玩家未拥有、且尚未打开商店看过的「上新」图纸 */
+  isUnseenShopSaleBlueprint(blueprintId: string): boolean {
+    this._bootstrapShopCatalogSeenIfNeeded();
+    if (!isBlueprintDiamondPurchasable(blueprintId)) return false;
+    if (this._blueprints.has(blueprintId)) return false;
+    return !this._seenShopBlueprintIds.has(blueprintId);
+  }
+
+  hasUnseenShopSaleBlueprints(): boolean {
+    this._bootstrapShopCatalogSeenIfNeeded();
+    return listDiamondShopBlueprintIds().some(id => this.isUnseenShopSaleBlueprint(id));
+  }
+
+  /** 打开图纸商店时调用：当前货架全部记为已看，清除「上新」提醒 */
+  markShopCatalogSeen(): void {
+    for (const id of listDiamondShopBlueprintIds()) {
+      this._seenShopBlueprintIds.add(id);
+    }
+    this._shopCatalogSeenBootstrapped = true;
+    this._save();
+    EventBus.emit('furnitureWorkshop:changed');
+  }
+
   grantBlueprint(blueprintId: string): boolean {
     if (!WORKSHOP_BLUEPRINT_MAP.has(blueprintId)) return false;
     if (this._blueprints.has(blueprintId)) return false;
     this._blueprints.add(blueprintId);
+    this._markBlueprintNew(blueprintId);
     this._save();
     EventBus.emit('furnitureWorkshop:blueprintGranted', blueprintId);
     EventBus.emit('furnitureWorkshop:changed');
@@ -200,6 +294,7 @@ class FurnitureWorkshopManagerClass {
     CurrencyManager.addDiamond(-cost);
     AudioManager.play('purchase_tap');
     this._blueprints.add(blueprintId);
+    this._markBlueprintNew(blueprintId);
     this._save();
     EventBus.emit('furnitureWorkshop:blueprintGranted', blueprintId);
     EventBus.emit('furnitureWorkshop:changed');
@@ -333,6 +428,7 @@ class FurnitureWorkshopManagerClass {
     }
 
     this._craftedVariants.add(makeWorkshopVariantKey(blueprintId, colorId));
+    this._clearBlueprintNew(blueprintId);
     this._save();
     EventBus.emit('furnitureWorkshop:crafted', option.outputDecoId, {
       blueprintId,
@@ -360,6 +456,8 @@ class FurnitureWorkshopManagerClass {
 
   exportState(): FurnitureWorkshopSaveData {
     this._syncCraftedVariantsFromDecorations();
+    this._pruneNewBlueprintIds();
+    this._bootstrapShopCatalogSeenIfNeeded();
     return {
       blueprints: [...this._blueprints].filter(id => WORKSHOP_BLUEPRINT_MAP.has(id)),
       workshopMaterial: this._workshopMaterial,
@@ -368,6 +466,9 @@ class FurnitureWorkshopManagerClass {
       workshopDyeBlue: this._workshopDyeBlue,
       workshopDyeGreen: this._workshopDyeGreen,
       craftedVariants: [...this._craftedVariants],
+      newBlueprintIds: [...this._newBlueprintIds],
+      seenShopBlueprintIds: [...this._seenShopBlueprintIds],
+      shopCatalogSeenBootstrapped: this._shopCatalogSeenBootstrapped,
     };
   }
 
@@ -461,6 +562,31 @@ class FurnitureWorkshopManagerClass {
 
       // 读档后立即按当前家具解锁纠偏，避免旧号本地残留挡住新号制作
       this._syncCraftedVariantsFromDecorations();
+
+      if (Array.isArray(data.newBlueprintIds)) {
+        const seen = new Set<string>();
+        this._newBlueprintIds = [];
+        for (const id of data.newBlueprintIds) {
+          if (typeof id !== 'string' || seen.has(id)) continue;
+          if (!this._blueprints.has(id) || !WORKSHOP_BLUEPRINT_MAP.has(id)) continue;
+          seen.add(id);
+          this._newBlueprintIds.push(id);
+        }
+      }
+      this._pruneNewBlueprintIds();
+
+      if (data.shopCatalogSeenBootstrapped === true && Array.isArray(data.seenShopBlueprintIds)) {
+        this._shopCatalogSeenBootstrapped = true;
+        this._seenShopBlueprintIds.clear();
+        for (const id of data.seenShopBlueprintIds) {
+          if (typeof id === 'string' && WORKSHOP_BLUEPRINT_MAP.has(id)) {
+            this._seenShopBlueprintIds.add(id);
+          }
+        }
+      } else {
+        this._shopCatalogSeenBootstrapped = false;
+        this._seenShopBlueprintIds.clear();
+      }
 
     } catch (e) {
       console.warn('[FurnitureWorkshop] 加载失败:', e);

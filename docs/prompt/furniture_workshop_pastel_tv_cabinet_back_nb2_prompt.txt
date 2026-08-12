@@ -1,0 +1,6 @@
+Square 1:1 image, one single floor TV entertainment unit centered with generous white margin.
+Cute kawaii 2.5D true isometric furniture for a cozy pastel flower-shop merge game. Camera from upper-left. On-screen top edges near ±30° from horizontal — same true isometric as the front. Height edges stay vertical. FORBIDDEN: ±45° skew.
+Soft warm brown outlines, gentle upper-left lighting, warm honey-oak wood.
+CRITICAL SIZE LOCK: The attached image is the FRONT view. Draw ONLY the BACK view of that exact same TV+cabinet unit at the EXACT SAME absolute size and scale — same overall height, same TV width, same cabinet length, same leg/foot size, same wood thickness. Do not enlarge or shrink. Do not make the TV thinner or taller.
+BACK view: plain dark gray/black TV rear panel with a simple small port area and a few thin black cables neatly running into the cabinet back; plain wooden cabinet back with simple seams or small cable clips; same short feet. Same honey-oak wood. No open front shelves facing camera.
+No room shell, no floor, no wall, no characters, no second copy. NO TEXT. Background pure solid white #FFFFFF only.
