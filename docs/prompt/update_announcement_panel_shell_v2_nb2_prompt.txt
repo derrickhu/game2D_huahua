@@ -1,0 +1,21 @@
+Single full-screen vertical mobile game UI asset, 9:16 aspect ratio. ONE ornate EMPTY decorative SHELL for an "Update Announcement / What's New" modal letter in a cozy pastel flower-shop merge game.
+
+Use the attached collage ONLY for luxury decorative LANGUAGE: soft florals, ribbons, filigree corners, premium kawaii mobile UI richness, painterly pastel finish. Invent a NEW original composition — do NOT copy any of the three reference panels' layouts, titles, buttons, lists, portraits, progress bars, or icons.
+
+THEME: "Garden letter bulletin" — a romantic flower-shop update letter, warm cream parchment center, soft sakura-pink and lilac frame, gold accents. Cozy and delightful, not cold, not corporate flat purple box.
+
+SHELL STRUCTURE (empty backplate only):
+- Tall rounded modal with thick soft pink-lilac outer rim and thinner cream-gold inner lip; gentle drop shadow.
+- TOP: lavish floral clusters (sakura / soft roses) with flowing gold-peach ribbons at upper corners; center EMPTY ornate golden scalloped / scroll title plaque (no text).
+- TOP-RIGHT: chunky circular close button (coral-red or soft teal) with simple white X, slightly past the frame.
+- MAIN: large warm cream parchment content field with subtle soft vignette, COMPLETELY EMPTY — no list rows, no cards, no capsules, no icons, no lines for fake text. Generous margins so code can place scrollable announcement text.
+- Soft decorative divider flourishes near top of content (tiny floral dots or gold vine) that do not invade the readable area.
+- BOTTOM: decorative footer with floral corner clusters and soft ribbon / envelope motif accents; center EMPTY strip reserved for one CTA button (do not draw the button).
+
+STRICTLY FORBIDDEN:
+Any readable Chinese or English text, numbers, portraits, progress bars, reward icons, gem piles as content, jewelry grids, claim buttons, ads, checkmarks, watermarks, QR codes, baroque overload that fills the cream field.
+
+Art: clean 2D illustrated mobile game UI, high-key pastel, soft painterly shading, readable silhouette, premium but still kawaii flower-shop.
+
+TECHNICAL BACKGROUND:
+ONLY outside the modal silhouette: pure bright screen green RGB 0,255,0 flat. Zero green pixels inside the modal.

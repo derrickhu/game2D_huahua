@@ -1,0 +1,20 @@
+Single full-screen vertical mobile game UI asset, 9:16 aspect ratio, one flattened decorative SHELL ONLY for an update / what's-new announcement modal in a cozy pastel flower-shop merge game. High resolution, crisp anti-aliased vector edges.
+
+USE THE ATTACHED REFERENCE IMAGE ONLY FOR OUTER SHELL STYLE AND LAYOUT PROPORTIONS — same lilac-lavender rim, pastel pink inner lip, golden scalloped title banner, red close button language. Do not copy any workshop trays, material icons, or furniture cards from the reference.
+
+THIS IS AN EMPTY BACKPLATE ONLY. No gameplay content. No readable text or numbers.
+
+KEEP ONLY THESE SHELL PARTS:
+- Tall centered modal, very rounded corners, thick soft lilac-lavender outer rim with thinner pastel-pink inner lip, gentle floating drop shadow, clean 2D vector kawaii look.
+- TOP: ornate golden-yellow scalloped title banner, EMPTY center (code will place Chinese title).
+- TOP-RIGHT: chunky circular red close button with simple white X slightly past the frame corner.
+- MAIN CONTENT FIELD: large cream / soft pastel cream matte area filling most of the height, completely EMPTY — no list rows, no cards, no lines, no icons. Soft enough for scrollable announcement text.
+- BOTTOM FOOTER ZONE: soft lilac or cream footer strip with faint divider, EMPTY center reserved for a single CTA button (do not draw the button).
+
+STRICTLY FORBIDDEN:
+Chinese text, English text, numbers, list bullets, icons, scrollbars, furniture, characters, watermarks, barcodes, QR codes, lace overload, baroque gold frames.
+
+Art style: clean 2D vector mobile game UI, pastel high-key purple-pink-cream palette, soft gradients only for depth, same visual DNA as the reference workshop shell but simpler (announcement letter, not craft UI).
+
+TECHNICAL BACKGROUND FOR CLEAN CUTOUT:
+ONLY the margins OUTSIDE the rounded modal silhouette must be pure bright screen green RGB exactly 0,255,0, flat, no gradient. The modal interior must contain ZERO green pixels.

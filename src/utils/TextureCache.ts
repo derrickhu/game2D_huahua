@@ -309,6 +309,8 @@ const PANELS_IMAGE_MAP: Record<string, string> = {
   daily_challenge_panel_shell_nb2: 'subpkg_panels/images/ui/daily_challenge_panel_shell_nb2.png',
   /** 成长之路：NB2 绿幕去底壳（金标题牌、章节条、底部大奖卡；中间留白叠任务列表） */
   growth_panel_shell_nb2: 'subpkg_panels/images/ui/growth_panel_shell_nb2.png',
+  /** 更新公告：NB2 绿幕去底壳（金标题牌 + 大空白正文区 + 底栏 CTA 带） */
+  update_announcement_panel_shell_nb2: 'subpkg_panels/images/ui/update_announcement_panel_shell_nb2.png',
   /** 周末花愿加成宣传卡（rembg 透明底，按钮文案由代码叠） */
   weekend_huayuan_boost_promo_panel_nb2: 'subpkg_panels/images/ui/weekend_huayuan_boost_promo_panel_nb2.png',
   /** 周二体力无限活动壳（绿幕去底；上半宣传 + 下半空白叠购买行） */

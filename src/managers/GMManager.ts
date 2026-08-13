@@ -27,6 +27,7 @@ import { CurrencyManager } from './CurrencyManager';
 import { SaveManager } from './SaveManager';
 import { FlowerSignTicketManager } from './FlowerSignTicketManager';
 import { CheckInManager } from './CheckInManager';
+import { UpdateAnnouncementManager } from './UpdateAnnouncementManager';
 import { GrowthQuestManager } from './GrowthQuestManager';
 import { WeekendHuayuanBoostManager } from './WeekendHuayuanBoostManager';
 import { TuesdayStaminaUnlimitedManager } from './TuesdayStaminaUnlimitedManager';
@@ -1180,6 +1181,31 @@ class GMManagerClass {
       execute: () => {
         EventBus.emit('nav:openCheckIn');
         return ' 已打开签到面板';
+      },
+    });
+
+    this._commands.push({
+      id: 'trigger_update_announcement',
+      group: ' 系统测试',
+      name: '打开更新公告',
+      desc: '强制打开当前生效公告（不改已读状态）',
+      execute: () => {
+        const active = UpdateAnnouncementManager.active;
+        if (!active) return '当前无生效公告（enabled/文案为空）';
+        EventBus.emit('nav:openUpdateAnnouncement');
+        return `已打开公告 ${active.id}（关闭不写已读）`;
+      },
+    });
+
+    this._commands.push({
+      id: 'clear_update_announcement_seen',
+      group: ' 系统测试',
+      name: '重置公告已读',
+      desc: '清除更新公告已读，刷新后可再自动弹出',
+      execute: () => {
+        UpdateAnnouncementManager.clearSeen();
+        const id = UpdateAnnouncementManager.active?.id ?? '(无)';
+        return `已清除公告已读；当前 id=${id}，重进主界面可再弹`;
       },
     });
 

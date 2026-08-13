@@ -1,0 +1,8 @@
+Single full-screen vertical mobile game UI asset, 9:16. Recreate the SAME garden notice-board SHELL design as the attached reference: arched top, cream outer rim, mint-wood accents, daisy chain on the arch, hanging oval wood plaque on twine bow, parchment content field with thin wood lip, small watering can charm, pink butterflies, bottom mint ledge with two hanging flower pots, coral-red circular close button with white X at top-right.
+
+CRITICAL CHANGES from the reference:
+1) BACKGROUND: pure solid MAGENTA #FF00FF (RGB 255,0,255) filling ALL margins outside the board silhouette — flat, no gradient, no texture. Do NOT use green screen. Do NOT use mint/sage green as the outer background (mint may appear only as painted wood trim ON the board itself).
+2) TITLE PLAQUE: the hanging oval plaque must be COMPLETELY BLANK empty wood face — no letters, no "EMPTY", no Chinese, no numbers, no placeholder glyphs. Smooth clean wood only so code can overlay the title.
+3) Keep the large center parchment field EMPTY (no text, no lines, no icons). Bottom ledge EMPTY (no button drawn).
+
+Same soft painterly kawaii 2D flower-shop UI style as the reference. No watermarks.
