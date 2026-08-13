@@ -21,9 +21,10 @@ const SCREEN_MARGIN_Y = 36;
 /** 壳图分区（拱形木布告板：吊牌标题 / 羊皮纸正文 / 底木条 CTA） */
 const TITLE_NY = 0.158;
 const VERSION_NY = 0.205;
-const CLOSE_NX = 0.93;
-const CLOSE_NY = 0.055;
-const CLOSE_R_FRAC = 0.055;
+/** 对齐壳图右上红底白 X（相对 520×938 纹理实测约 0.90 / 0.12） */
+const CLOSE_NX = 0.90;
+const CLOSE_NY = 0.12;
+const CLOSE_R_FRAC = 0.065;
 /** 避开左右花蝶装饰 */
 const CONTENT_PAD_X_FRAC = 0.155;
 const CONTENT_TOP_NY = 0.255;
@@ -42,6 +43,36 @@ function splitAnnouncementItemKey(item: string): { key: string; body: string } |
   const m = item.match(/^(.{1,16}?[:：])\s*(.+)$/u);
   if (!m) return null;
   return { key: m[1]!, body: m[2]! };
+}
+
+/** 按像素宽度切出首行可放下的正文（中文按字切，保证后续行从左侧起排） */
+function takeTextFittingWidth(
+  text: string,
+  style: Partial<PIXI.ITextStyle>,
+  maxWidth: number,
+): { first: string; rest: string } {
+  if (!text || maxWidth <= 0) return { first: '', rest: text };
+  const textStyle = new PIXI.TextStyle({
+    ...style,
+    wordWrap: false,
+  } as PIXI.ITextStyle);
+  if (PIXI.TextMetrics.measureText(text, textStyle).width <= maxWidth) {
+    return { first: text, rest: '' };
+  }
+  let lo = 0;
+  let hi = text.length;
+  let best = 0;
+  while (lo <= hi) {
+    const mid = (lo + hi) >> 1;
+    const w = PIXI.TextMetrics.measureText(text.slice(0, mid), textStyle).width;
+    if (w <= maxWidth) {
+      best = mid;
+      lo = mid + 1;
+    } else {
+      hi = mid - 1;
+    }
+  }
+  return { first: text.slice(0, best), rest: text.slice(best) };
 }
 
 function nativeClientToDesignY(clientY: number): number {
@@ -239,15 +270,6 @@ export class UpdateAnnouncementPanel extends PIXI.Container {
     this._versionText.anchor.set(0.5, 0);
     this._panel.addChild(this._versionText);
 
-    this._closeHit = new PIXI.Container();
-    this._closeHit.eventMode = 'static';
-    this._closeHit.cursor = 'pointer';
-    this._closeHit.on('pointerdown', (e: PIXI.FederatedPointerEvent) => {
-      e.stopPropagation();
-      this.close(true);
-    });
-    this._panel.addChild(this._closeHit);
-
     this._scrollViewport = new PIXI.Container();
     this._scrollViewport.eventMode = 'static';
     this._panel.addChild(this._scrollViewport);
@@ -266,6 +288,19 @@ export class UpdateAnnouncementPanel extends PIXI.Container {
 
     this._ctaBtn = this._buildCta();
     this._panel.addChild(this._ctaBtn);
+
+    // 关闭热区置顶，避免被壳图/滚动区挡住
+    this._closeHit = new PIXI.Container();
+    this._closeHit.eventMode = 'static';
+    this._closeHit.cursor = 'pointer';
+    this._closeHit.on('pointertap', (e: PIXI.FederatedPointerEvent) => {
+      e.stopPropagation();
+      this.close(true);
+    });
+    this._closeHit.on('pointerdown', (e: PIXI.FederatedPointerEvent) => {
+      e.stopPropagation();
+    });
+    this._panel.addChild(this._closeHit);
   }
 
   private _buildCta(): PIXI.Container {
@@ -542,20 +577,35 @@ export class UpdateAnnouncementPanel extends PIXI.Container {
     } as Partial<PIXI.ITextStyle>);
     row.addChild(keyText);
 
-    const minBodyW = Math.round(contentW * 0.38);
-    const inline = keyText.width <= contentW - minBodyW;
-    const bodyText = new PIXI.Text(split.body, {
+    const bodyStyle = {
       ...baseStyle,
       fill: TEXT_DARK,
-      wordWrap: true,
-      wordWrapWidth: inline ? contentW - keyText.width - 2 : contentW - 2,
-    } as Partial<PIXI.ITextStyle>);
-    bodyText.position.set(inline ? keyText.width : 0, inline ? 0 : keyText.height);
-    row.addChild(bodyText);
+    } as Partial<PIXI.ITextStyle>;
 
-    const h = inline
-      ? Math.max(keyText.height, bodyText.height)
-      : keyText.height + bodyText.height;
+    // 首行：要点 + 正文前半；续行从左侧满宽换行（避免并排 Text 换行整块缩进）
+    const firstLineBudget = contentW - keyText.width - 2;
+    const { first, rest } = takeTextFittingWidth(split.body, bodyStyle, firstLineBudget);
+    let h = keyText.height;
+
+    if (first) {
+      const firstBody = new PIXI.Text(first, bodyStyle);
+      firstBody.position.set(keyText.width, 0);
+      row.addChild(firstBody);
+      h = Math.max(h, firstBody.height);
+    }
+
+    if (rest) {
+      const restBody = new PIXI.Text(rest, {
+        ...bodyStyle,
+        wordWrap: true,
+        wordWrapWidth: contentW - 2,
+      } as Partial<PIXI.ITextStyle>);
+      // 首行放不下任何正文时，正文从要点下一行起排
+      restBody.position.set(0, first ? h : keyText.height);
+      row.addChild(restBody);
+      h = restBody.y + restBody.height;
+    }
+
     return startY + h + itemGap;
   }
 

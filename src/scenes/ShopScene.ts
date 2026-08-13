@@ -78,6 +78,8 @@ import { playShopDecorationStarFly, playShopDecorationStarFlyOverOverlay } from 
 import { Platform } from '@/core/PlatformService';
 import { SocialManager } from '@/managers/SocialManager';
 import { SettingsPanel } from '@/gameobjects/ui/SettingsPanel';
+import { UpdateAnnouncementPanel } from '@/gameobjects/ui/UpdateAnnouncementPanel';
+import { UpdateAnnouncementManager } from '@/managers/UpdateAnnouncementManager';
 import { AdEntitlementManager, DailyAdEntitlement } from '@/managers/AdEntitlementManager';
 import { AdManager, AdScene } from '@/managers/AdManager';
 import { ConfirmDialog } from '@/gameobjects/ui/ConfirmDialog';
@@ -430,6 +432,7 @@ export class ShopScene implements Scene {
     this._refreshWishingBtnVisibility();
   };
   private _settingsPanel: SettingsPanel | null = null;
+  private _updateAnnouncementPanel: UpdateAnnouncementPanel | null = null;
 
   /** 装修面板全屏遮罩：把星级进度条+飞星层提到 overlay，盖在遮罩之上 */
   private readonly _onDecoPanelBackdrop = (payload: { open: boolean }): void => {
@@ -643,6 +646,9 @@ export class ShopScene implements Scene {
     }
 
     this._settingsPanel?.close();
+    if (this._updateAnnouncementPanel?.isOpen) {
+      this._updateAnnouncementPanel.close(false);
+    }
     this._restoreShopHudAfterDecoPanel();
     RewardFlyCoordinator.setBindings(null);
     this._textureRefreshUnsub?.();
@@ -843,7 +849,21 @@ export class ShopScene implements Scene {
     this._levelUpPopup.zIndex = ShopScene._LEVEL_UP_OVERLAY_Z;
     const ov = OverlayManager.container;
     ov.addChild(this._levelUpPopup);
-    this._settingsPanel = new SettingsPanel();
+    this._updateAnnouncementPanel = new UpdateAnnouncementPanel();
+    this._updateAnnouncementPanel.zIndex = 9400;
+    ov.addChild(this._updateAnnouncementPanel);
+    this._settingsPanel = new SettingsPanel({
+      onOpenUpdateAnnouncement: () => {
+        const data = UpdateAnnouncementManager.active;
+        if (!data || !this._updateAnnouncementPanel) return;
+        if (this._updateAnnouncementPanel.isOpen) {
+          this._updateAnnouncementPanel.close(false);
+        }
+        requestAnimationFrame(() => {
+          this._updateAnnouncementPanel?.open(data, null, { markSeenOnClose: false });
+        });
+      },
+    });
     ov.addChild(this._settingsPanel);
     ov.sortChildren();
 
