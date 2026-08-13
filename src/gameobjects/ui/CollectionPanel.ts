@@ -518,29 +518,54 @@ export class CollectionPanel extends PIXI.Container {
   }
 
   private _setupScrollInteraction(areaX: number, areaW: number, areaY: number, areaH: number): void {
-    let lastTouchY = 0;
+    if (this._maxScrollY <= 0) return;
+
+    let startDesignY = 0;
+    let startScrollY = 0;
     let isDragging = false;
 
+    const toDesignY = (e: PIXI.FederatedPointerEvent | PointerEvent): number => {
+      const native = (e as PIXI.FederatedPointerEvent).nativeEvent as PointerEvent | undefined;
+      const clientY = native?.clientY ?? (e as PointerEvent).clientY;
+      if (typeof clientY === 'number') return Game.clientToDesign(0, clientY).y;
+      const fe = e as PIXI.FederatedPointerEvent;
+      return Game.globalToDesign(fe.global.x, fe.global.y).y;
+    };
+
+    // 滚动手势板放在网格之下，避免挡住格子/宝箱点击（与 CustomerScrollArea 同思路）
     const hitArea = new PIXI.Container();
     hitArea.hitArea = new PIXI.Rectangle(areaX, areaY, areaW, areaH);
     hitArea.eventMode = 'static';
 
+    const onMove = (ev: PointerEvent): void => {
+      if (!isDragging) return;
+      const dy = startDesignY - toDesignY(ev);
+      this._scrollY = Math.max(0, Math.min(this._maxScrollY, startScrollY + dy));
+      this._scrollContainer.y = -this._scrollY;
+    };
+    const onUp = (): void => {
+      if (!isDragging) return;
+      isDragging = false;
+      const canvas = Game.app?.view as unknown as HTMLCanvasElement | undefined;
+      canvas?.removeEventListener?.('pointermove', onMove);
+      canvas?.removeEventListener?.('pointerup', onUp);
+      canvas?.removeEventListener?.('pointercancel', onUp);
+    };
+
     hitArea.on('pointerdown', (e: PIXI.FederatedPointerEvent) => {
       e.stopPropagation();
-      lastTouchY = e.globalY / Game.scale;
       isDragging = true;
+      startDesignY = toDesignY(e);
+      startScrollY = this._scrollY;
+      const canvas = Game.app?.view as unknown as HTMLCanvasElement | undefined;
+      if (canvas?.addEventListener) {
+        canvas.addEventListener('pointermove', onMove);
+        canvas.addEventListener('pointerup', onUp);
+        canvas.addEventListener('pointercancel', onUp);
+      }
     });
-    hitArea.on('pointermove', (e: PIXI.FederatedPointerEvent) => {
-      if (!isDragging) return;
-      const curTouchY = e.globalY / Game.scale;
-      const delta = lastTouchY - curTouchY;
-      lastTouchY = curTouchY;
-      this._scrollY = Math.max(0, Math.min(this._maxScrollY, this._scrollY + delta));
-      this._scrollContainer.y = -this._scrollY;
-    });
-    hitArea.on('pointerup', () => { isDragging = false; });
-    hitArea.on('pointerupoutside', () => { isDragging = false; });
 
-    this._content.addChild(hitArea);
+    const scrollIdx = this._content.getChildIndex(this._scrollContainer);
+    this._content.addChildAt(hitArea, Math.max(0, scrollIdx));
   }
 }

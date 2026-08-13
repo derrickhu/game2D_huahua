@@ -9,7 +9,7 @@ import { EventBus } from '@/core/EventBus';
 import { TweenManager, Ease } from '@/core/TweenManager';
 import { Game } from '@/core/Game';
 import { CELL_GAP, DESIGN_WIDTH, COLORS, FONT_FAMILY } from '@/config/Constants';
-import { ITEM_DEFS, FlowerLine, usesLargeBoardIconFill } from '@/config/ItemConfig';
+import { ITEM_DEFS, usesLargeBoardIconFill } from '@/config/ItemConfig';
 import { RewardBoxManager } from '@/managers/RewardBoxManager';
 import { BoardManager } from '@/managers/BoardManager';
 import { AdManager, AdScene } from '@/managers/AdManager';
@@ -25,6 +25,8 @@ const GRID_GAP = CELL_GAP;
 const ITEM_FILL = 0.72;
 const BOUQUET_FILL = 0.9;
 const MAX_VISIBLE_ROWS = 5;
+/** 滑动超过该设计像素后视为滚动，不再当作点击 */
+const DRAG_THRESHOLD = 4;
 
 /** 气泡尖角高度 */
 const TAIL_H = 12;
@@ -33,6 +35,31 @@ const TAIL_HALF_W = 15;
 /** 图标底边与尖角顶端的间距 */
 const ANCHOR_GAP = 5;
 const SCREEN_MARGIN = 12;
+
+function nativeClientToDesignY(clientY: number): number {
+  return Game.clientToDesign(0, clientY).y;
+}
+
+function federatedPointerToDesignY(e: PIXI.FederatedPointerEvent): number {
+  const native = e.nativeEvent as PointerEvent | MouseEvent | undefined;
+  if (native != null && typeof (native as PointerEvent).clientY === 'number') {
+    return nativeClientToDesignY((native as PointerEvent).clientY);
+  }
+  return Game.globalToDesign(e.global.x, e.global.y).y;
+}
+
+function rawEventToDesignY(ev: PointerEvent | MouseEvent | TouchEvent | any): number {
+  if (ev && typeof ev.clientY === 'number') {
+    return nativeClientToDesignY(ev.clientY);
+  }
+  if (ev?.touches?.[0] && typeof ev.touches[0].clientY === 'number') {
+    return nativeClientToDesignY(ev.touches[0].clientY);
+  }
+  if (ev?.changedTouches?.[0] && typeof ev.changedTouches[0].clientY === 'number') {
+    return nativeClientToDesignY(ev.changedTouches[0].clientY);
+  }
+  return 0;
+}
 
 export class RewardBoxPanel extends PIXI.Container {
   private _overlay!: PIXI.Graphics;
@@ -49,15 +76,26 @@ export class RewardBoxPanel extends PIXI.Container {
 
   private _scrollY = 0;
   private _maxScrollY = 0;
+  private _gridTop = 0;
   private _isDragging = false;
-  private _dragStartY = 0;
+  private _dragStartDesignY = 0;
   private _scrollStartY = 0;
   private _velocity = 0;
-  private _lastDragY = 0;
+  private _lastDragDesignY = 0;
   private _lastDragTime = 0;
-  private _onRawMove: ((e: any) => void) | null = null;
-  private _onRawUp: (() => void) | null = null;
   private _hasMoved = false;
+  /** 滚动松手后短暂忽略 slot 点击，避免拖曳误触 */
+  private _ignoreNextSlotTap = false;
+  private _pendingTapItemId: string | null = null;
+  private _scrollEnabled = false;
+
+  private readonly _onCanvasMove = (ev: PointerEvent): void => {
+    this._onDragMove(rawEventToDesignY(ev));
+  };
+
+  private readonly _onCanvasUp = (): void => {
+    this._finishDrag();
+  };
 
   private _cellSize = 0;
   private _gridInnerW = 0;
@@ -105,6 +143,7 @@ export class RewardBoxPanel extends PIXI.Container {
     });
     this._selectedItemId = null;
     this._scrollY = 0;
+    this._ignoreNextSlotTap = false;
     this.visible = true;
     this._refreshGrid();
 
@@ -143,6 +182,9 @@ export class RewardBoxPanel extends PIXI.Container {
   get isOpen(): boolean { return this._isOpen; }
 
   private _refreshGrid(): void {
+    // 重建前先卸掉 canvas 监听，避免旧闭包改已销毁的 grid
+    this._cleanupDrag();
+
     while (this._card.children.length > 0) {
       const c = this._card.children[0];
       this._card.removeChild(c);
@@ -167,6 +209,7 @@ export class RewardBoxPanel extends PIXI.Container {
     const gridVisibleH = visibleRows * cellSize + (visibleRows - 1) * GRID_GAP;
     this._gridVisibleH = gridVisibleH;
     this._maxScrollY = Math.max(0, gridTotalH - gridVisibleH);
+    this._scrollEnabled = rows > MAX_VISIBLE_ROWS;
 
     const panelInnerH = HEADER_H + gridVisibleH + PANEL_PAD;
     const totalH = TAIL_H + panelInnerH;
@@ -257,6 +300,7 @@ export class RewardBoxPanel extends PIXI.Container {
     this._card.addChild(organizeBtn);
 
     const gridTop = TAIL_H + HEADER_H;
+    this._gridTop = gridTop;
 
     this._gridMask = new PIXI.Graphics();
     this._gridMask.beginFill(0xffffff);
@@ -264,10 +308,30 @@ export class RewardBoxPanel extends PIXI.Container {
     this._gridMask.endFill();
     this._card.addChild(this._gridMask);
 
+    // 视口：固定在可见格区域，承接滚动手势；格内容放在其子节点中平移
+    const viewport = new PIXI.Container();
+    viewport.position.set(PANEL_PAD, gridTop);
+    viewport.eventMode = 'static';
+    viewport.hitArea = new PIXI.Rectangle(0, 0, innerW, gridVisibleH);
+    viewport.mask = this._gridMask;
+    this._card.addChild(viewport);
+
     this._gridContainer = new PIXI.Container();
-    this._gridContainer.position.set(PANEL_PAD, gridTop);
-    this._gridContainer.mask = this._gridMask;
-    this._card.addChild(this._gridContainer);
+    viewport.addChild(this._gridContainer);
+
+    // 底层拖拽板：保证空白处也能开滚（在 slot 之下，不挡点击）
+    if (this._scrollEnabled) {
+      const dragPlate = new PIXI.Graphics();
+      dragPlate.beginFill(0xffffff, 0.001);
+      dragPlate.drawRect(0, 0, innerW, Math.max(gridVisibleH, gridTotalH));
+      dragPlate.endFill();
+      dragPlate.eventMode = 'static';
+      this._gridContainer.addChild(dragPlate);
+      dragPlate.on('pointerdown', (e: PIXI.FederatedPointerEvent) => {
+        e.stopPropagation();
+        this._beginDrag(e, null);
+      });
+    }
 
     for (let i = 0; i < entries.length; i++) {
       const [itemId, count] = entries[i];
@@ -279,13 +343,22 @@ export class RewardBoxPanel extends PIXI.Container {
     }
 
     this._scrollY = Math.max(0, Math.min(this._scrollY, this._maxScrollY));
-    this._gridContainer.position.set(PANEL_PAD, gridTop - this._scrollY);
+    this._applyScroll();
 
     this._card.position.set(cardX, cardY);
     this._card.hitArea = new PIXI.Rectangle(0, 0, PANEL_W, totalH);
 
-    if (rows > MAX_VISIBLE_ROWS) {
-      this._setupScroll(gridTop);
+    if (this._scrollEnabled) {
+      viewport.on('pointerdown', (e: PIXI.FederatedPointerEvent) => {
+        e.stopPropagation();
+        this._beginDrag(e, null);
+      });
+    }
+  }
+
+  private _applyScroll(): void {
+    if (this._gridContainer && !this._gridContainer.destroyed) {
+      this._gridContainer.y = -this._scrollY;
     }
   }
 
@@ -347,8 +420,11 @@ export class RewardBoxPanel extends PIXI.Container {
     slot.hitArea = new PIXI.Rectangle(0, 0, s, s);
     slot.on('pointerdown', (e: PIXI.FederatedPointerEvent) => {
       e.stopPropagation();
-      if (this._hasMoved) return;
-      this._onSlotTap(itemId);
+      if (this._scrollEnabled) {
+        this._beginDrag(e, itemId);
+      } else {
+        this._onSlotTap(itemId);
+      }
     });
 
     return slot;
@@ -381,6 +457,10 @@ export class RewardBoxPanel extends PIXI.Container {
   }
 
   private _onSlotTap(itemId: string): void {
+    if (this._ignoreNextSlotTap) {
+      this._ignoreNextSlotTap = false;
+      return;
+    }
     if (this._selectedItemId === itemId) {
       const emptyCell = BoardManager.findEmptyOpenCell();
       if (emptyCell < 0) {
@@ -401,78 +481,80 @@ export class RewardBoxPanel extends PIXI.Container {
     }
   }
 
-  private _setupScroll(gridTop: number): void {
-    this._cleanupDrag();
-    const canvas = Game.app.view as any;
+  private _beginDrag(e: PIXI.FederatedPointerEvent, pendingItemId: string | null): void {
+    if (!this._scrollEnabled) return;
+    this._cleanupListeners();
+    this._isDragging = true;
+    this._hasMoved = false;
+    this._ignoreNextSlotTap = false;
+    this._pendingTapItemId = pendingItemId;
+    this._dragStartDesignY = federatedPointerToDesignY(e);
+    this._scrollStartY = this._scrollY;
+    this._lastDragDesignY = this._dragStartDesignY;
+    this._lastDragTime = Date.now();
+    this._velocity = 0;
 
-    const dragSurface = new PIXI.Graphics();
-    dragSurface.beginFill(0xffffff, 0.001);
-    dragSurface.drawRect(PANEL_PAD, gridTop, this._gridInnerW, this._gridVisibleH);
-    dragSurface.endFill();
-    dragSurface.eventMode = 'static';
-    this._card.addChild(dragSurface);
+    const canvas = Game.app?.view as unknown as HTMLCanvasElement | undefined;
+    if (canvas?.addEventListener) {
+      canvas.addEventListener('pointermove', this._onCanvasMove);
+      canvas.addEventListener('pointerup', this._onCanvasUp);
+      canvas.addEventListener('pointercancel', this._onCanvasUp);
+    }
+  }
 
-    dragSurface.on('pointerdown', (e: PIXI.FederatedPointerEvent) => {
-      e.stopPropagation();
-      this._isDragging = true;
+  private _onDragMove(designY: number): void {
+    if (!this._isDragging) return;
+    const deltaY = this._dragStartDesignY - designY;
+    if (Math.abs(deltaY) > DRAG_THRESHOLD) this._hasMoved = true;
+
+    let newScrollY = this._scrollStartY + deltaY;
+    if (newScrollY < 0) newScrollY *= 0.3;
+    if (newScrollY > this._maxScrollY) {
+      newScrollY = this._maxScrollY + (newScrollY - this._maxScrollY) * 0.3;
+    }
+    this._scrollY = newScrollY;
+    this._applyScroll();
+
+    const now = Date.now();
+    const dt = Math.max(1, now - this._lastDragTime);
+    this._velocity = (this._lastDragDesignY - designY) / dt * 16;
+    this._lastDragDesignY = designY;
+    this._lastDragTime = now;
+  }
+
+  private _finishDrag(): void {
+    if (!this._isDragging) return;
+    const pending = this._pendingTapItemId;
+    const moved = this._hasMoved;
+    this._isDragging = false;
+    this._pendingTapItemId = null;
+    this._cleanupListeners();
+
+    if (moved) {
+      this._ignoreNextSlotTap = true;
       this._hasMoved = false;
-      this._dragStartY = e.globalY;
-      this._scrollStartY = this._scrollY;
-      this._lastDragY = e.globalY;
-      this._lastDragTime = Date.now();
-      this._velocity = 0;
+      return;
+    }
 
-      this._onRawMove = (ev: any) => {
-        if (!this._isDragging) return;
-        const dy = ev.globalY ?? ev.clientY ?? 0;
-        const dpr = Game.dpr;
-        const deltaY = (this._dragStartY - dy) / dpr;
-        if (Math.abs(deltaY) > 3) this._hasMoved = true;
-
-        let newScrollY = this._scrollStartY + deltaY;
-        if (newScrollY < 0) newScrollY *= 0.3;
-        if (newScrollY > this._maxScrollY) {
-          newScrollY = this._maxScrollY + (newScrollY - this._maxScrollY) * 0.3;
-        }
-        this._scrollY = newScrollY;
-        const gt = TAIL_H + HEADER_H;
-        this._gridContainer.position.set(PANEL_PAD, gt - this._scrollY);
-
-        const now = Date.now();
-        const dt = Math.max(1, now - this._lastDragTime);
-        this._velocity = ((this._lastDragY - dy) / dpr) / dt * 16;
-        this._lastDragY = dy;
-        this._lastDragTime = now;
-      };
-
-      this._onRawUp = () => {
-        this._isDragging = false;
-        this._cleanupListeners();
-      };
-
-      canvas.addEventListener('pointermove', this._onRawMove);
-      canvas.addEventListener('pointerup', this._onRawUp);
-      canvas.addEventListener('pointercancel', this._onRawUp);
-    });
+    this._hasMoved = false;
+    if (pending) {
+      this._onSlotTap(pending);
+    }
   }
 
   private _cleanupListeners(): void {
-    const canvas = Game.app?.view as any;
-    if (!canvas) return;
-    if (this._onRawMove) {
-      canvas.removeEventListener('pointermove', this._onRawMove);
-      this._onRawMove = null;
-    }
-    if (this._onRawUp) {
-      canvas.removeEventListener('pointerup', this._onRawUp);
-      canvas.removeEventListener('pointercancel', this._onRawUp);
-      this._onRawUp = null;
-    }
+    const canvas = Game.app?.view as unknown as HTMLCanvasElement | undefined;
+    if (!canvas?.removeEventListener) return;
+    canvas.removeEventListener('pointermove', this._onCanvasMove);
+    canvas.removeEventListener('pointerup', this._onCanvasUp);
+    canvas.removeEventListener('pointercancel', this._onCanvasUp);
   }
 
   private _cleanupDrag(): void {
     this._isDragging = false;
     this._velocity = 0;
+    this._hasMoved = false;
+    this._pendingTapItemId = null;
     this._cleanupListeners();
   }
 
@@ -499,9 +581,6 @@ export class RewardBoxPanel extends PIXI.Container {
       this._velocity = 0;
     }
 
-    const gt = TAIL_H + HEADER_H;
-    if (this._gridContainer && !this._gridContainer.destroyed) {
-      this._gridContainer.position.set(PANEL_PAD, gt - this._scrollY);
-    }
+    this._applyScroll();
   }
 }
