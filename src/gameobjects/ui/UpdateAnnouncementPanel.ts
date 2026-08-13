@@ -33,7 +33,16 @@ const CTA_NY = 0.875;
 const TEXT_DARK = 0x5c4636;
 const TEXT_MUTED = 0x8a735a;
 const SECTION_PURPLE = 0x6b4f9a;
+/** 条目要点前缀（「xxx：」）强调色 */
+const ITEM_KEY_ACCENT = 0xc45a4a;
 const DRAG_THRESHOLD = 4;
+
+/** 拆出「要点：」前缀；无冒号或过长则整句当正文 */
+function splitAnnouncementItemKey(item: string): { key: string; body: string } | null {
+  const m = item.match(/^(.{1,16}?[:：])\s*(.+)$/u);
+  if (!m) return null;
+  return { key: m[1]!, body: m[2]! };
+}
 
 function nativeClientToDesignY(clientY: number): number {
   return Game.clientToDesign(0, clientY).y;
@@ -487,20 +496,67 @@ export class UpdateAnnouncementPanel extends PIXI.Container {
     y += head.height + Math.round(10 * s);
 
     for (const item of section.items) {
+      y = this._addItemLine(item, contentW, y, fs, itemGap, s);
+    }
+    return y;
+  }
+
+  private _addItemLine(
+    item: string,
+    contentW: number,
+    startY: number,
+    fs: (n: number) => number,
+    itemGap: number,
+    s: number,
+  ): number {
+    const fontSize = fs(17);
+    const lineHeight = Math.round(28 * s);
+    const baseStyle = {
+      fontFamily: FONT_FAMILY,
+      fontSize,
+      breakWords: true,
+      lineHeight,
+    } as Partial<PIXI.ITextStyle>;
+
+    const split = splitAnnouncementItemKey(item);
+    if (!split) {
       const line = new PIXI.Text(`· ${item}`, {
-        fontFamily: FONT_FAMILY,
-        fontSize: fs(17),
+        ...baseStyle,
         fill: TEXT_DARK,
         wordWrap: true,
         wordWrapWidth: contentW - 2,
-        breakWords: true,
-        lineHeight: Math.round(28 * s),
       } as Partial<PIXI.ITextStyle>);
-      line.position.set(0, y);
+      line.position.set(0, startY);
       this._scrollContent.addChild(line);
-      y += line.height + itemGap;
+      return startY + line.height + itemGap;
     }
-    return y;
+
+    const row = new PIXI.Container();
+    row.position.set(0, startY);
+    this._scrollContent.addChild(row);
+
+    const keyText = new PIXI.Text(`· ${split.key}`, {
+      ...baseStyle,
+      fill: ITEM_KEY_ACCENT,
+      fontWeight: 'bold',
+    } as Partial<PIXI.ITextStyle>);
+    row.addChild(keyText);
+
+    const minBodyW = Math.round(contentW * 0.38);
+    const inline = keyText.width <= contentW - minBodyW;
+    const bodyText = new PIXI.Text(split.body, {
+      ...baseStyle,
+      fill: TEXT_DARK,
+      wordWrap: true,
+      wordWrapWidth: inline ? contentW - keyText.width - 2 : contentW - 2,
+    } as Partial<PIXI.ITextStyle>);
+    bodyText.position.set(inline ? keyText.width : 0, inline ? 0 : keyText.height);
+    row.addChild(bodyText);
+
+    const h = inline
+      ? Math.max(keyText.height, bodyText.height)
+      : keyText.height + bodyText.height;
+    return startY + h + itemGap;
   }
 
   private _setScrollY(next: number): void {

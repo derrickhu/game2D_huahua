@@ -721,6 +721,11 @@ const DECO_IMAGE_MAP: Record<string, string> = {
   workshop_rose_cascade_drape_sheet: 'subpkg_deco/images/furniture/workshop_rose_cascade_drape_sheet.png',
   /** 蕾丝铁艺床：单张 PNG，max-side 342 */
   workshop_lace_ribbon_bed: 'subpkg_deco/images/furniture/workshop_lace_ribbon_bed.png',
+  /** 艺廊花艺瓶：默认红袖 / 青花蓝橙 / 金紫 / 荷韵；单张 PNG，max-side 342 */
+  workshop_atelier_bouquet_vase: 'subpkg_deco/images/furniture/workshop_atelier_bouquet_vase.png',
+  workshop_atelier_bouquet_vase_blue: 'subpkg_deco/images/furniture/workshop_atelier_bouquet_vase_blue.png',
+  workshop_atelier_bouquet_vase_honey: 'subpkg_deco/images/furniture/workshop_atelier_bouquet_vase_honey.png',
+  workshop_atelier_bouquet_vase_sakura: 'subpkg_deco/images/furniture/workshop_atelier_bouquet_vase_sakura.png',
   /** 夏日荷塘拱窗：单张墙饰 PNG，max-side 342（清凉一夏活动图纸） */
   workshop_summer_lotus_arch_window: 'subpkg_deco/images/furniture/workshop_summer_lotus_arch_window.png',
   /** 薄荷暖阳飘窗：暖阳飘窗染色款，max-side 342 */

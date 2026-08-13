@@ -616,6 +616,53 @@ export const WORKSHOP_BLUEPRINT_DEFS: WorkshopBlueprintDef[] = [
       },
     ],
   },
+  {
+    id: 'blueprint_workshop_atelier_bouquet_vase',
+    name: '艺廊花艺瓶图纸',
+    outputDecoId: 'workshop_atelier_bouquet_vase',
+    rarity: 'rare',
+    sourceText: '199 钻石购买',
+    icon: 'workshop_blueprint_generic',
+    category: 'ornament',
+    acquire: [{ kind: 'diamond', cost: 199 }],
+    colorOptions: [
+      {
+        id: 'default',
+        name: '红袖',
+        outputDecoId: 'workshop_atelier_bouquet_vase',
+        materialCost: 10,
+        dyeCost: 0,
+        huayuanCost: 15000,
+      },
+      {
+        id: 'blue',
+        name: '青花',
+        outputDecoId: 'workshop_atelier_bouquet_vase_blue',
+        materialCost: 10,
+        dyeCost: 3,
+        dyeMaterialId: WORKSHOP_DYE_BLUE_ID,
+        huayuanCost: 18000,
+      },
+      {
+        id: 'honey',
+        name: '金紫',
+        outputDecoId: 'workshop_atelier_bouquet_vase_honey',
+        materialCost: 10,
+        dyeCost: 3,
+        dyeMaterialId: WORKSHOP_DYE_YELLOW_ID,
+        huayuanCost: 18000,
+      },
+      {
+        id: 'sakura',
+        name: '荷韵',
+        outputDecoId: 'workshop_atelier_bouquet_vase_sakura',
+        materialCost: 10,
+        dyeCost: 3,
+        dyeMaterialId: WORKSHOP_DYE_PINK_ID,
+        huayuanCost: 18000,
+      },
+    ],
+  },
 ];
 
 export const WORKSHOP_BLUEPRINT_MAP = new Map(WORKSHOP_BLUEPRINT_DEFS.map(b => [b.id, b]));

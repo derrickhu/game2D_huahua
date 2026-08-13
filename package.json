@@ -1,6 +1,6 @@
 {
   "name": "huahua",
-  "version": "1.6.31",
+  "version": "1.6.32",
   "type": "module",
   "scripts": {
     "build": "vite build && rimraf minigame/index.html",

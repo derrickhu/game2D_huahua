@@ -49,38 +49,23 @@ export const UPDATE_ANNOUNCEMENT_SECTION_META: Record<
  */
 export const UPDATE_ANNOUNCEMENT_ACTIVE: UpdateAnnouncementDef & { enabled: boolean } = {
   enabled: true,
-  id: '1.6.31',
-  version: '1.6.31',
+  id: '1.6.32',
+  version: '1.6.32',
   title: '更新公告',
-  greeting: '花花妙屋又变好看啦～来看看这次新内容：',
+  greeting: '花花妙屋又添新花样啦～来看看这次更新：',
   sections: [
     {
       id: 'new',
       title: '【新增】',
       items: [
-        '家具上新：落地灯、扇贝侧几、花串壁架粉彩收音机等家具上架家具商城',
-        '家具工坊新品：花漾圆浴盆、蜜语软床、霜糖软座3个家具图纸上新',
-      ],
-    },
-    {
-      id: 'event',
-      title: '【活动】',
-      items: [
-        '清凉一夏小扇获取：订单获取的小扇数量调高',
-      ],
-    },
-    {
-      id: 'fix',
-      title: '【修复】',
-      items: [
-        '修复奖励收纳物品较多时，下滑后无法上滑、无法点击取物的问题',
+        '家具工坊新品：艺廊花艺瓶图纸上架，默认红袖款，可染青花 / 金紫 / 荷韵三色',
       ],
     },
     {
       id: 'improve',
       title: '【优化】',
       items: [
-        '部分家具默认尺寸已按摆放观感微调',
+        '图纸商店家具预览：可染色图纸支持点击配色圆点，即时查看对应家具造型与制作消耗',
       ],
     },
   ],

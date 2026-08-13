@@ -1,0 +1,14 @@
+Square 1:1 single countertop ornament for a cozy flower-shop merge game.
+
+Attached = APPROVED v2 paint style LOCK: same soft brown outlines, saturated pink/lime/peach, cel shading, plump juicy petals, glossy ceramic. Keep this thickness.
+
+CRITICAL SHAPE FIX (previous pass still had round ball peonies — break that):
+- Do NOT draw perfect circular peony balls.
+- Lime blooms: open peony/orchid with irregular lobed scalloped edges, oval clusters — expressive outline.
+- Peach blooms: same — ruffled open cups, NOT spheres.
+- Pink lotus: keep as bold high focal with pointed petals (good character).
+- Lotus seed pods: chunky plump pods matching peony visual weight — thick outline + volume shading; 2–3 pods nested at different heights (not thin sticks).
+- Bouquet outline: irregular with lotus high point and scalloped sides — dense but NOT a smooth sphere.
+
+KEEP identity: simple matte off-white tapered ceramic vase, pink lotus + lime + peach + seed pods.
+Camera upper-left three-quarter, centered, generous margin. Pure white #FFFFFF. No pedestal, shadow strip, room, text, watermark.
