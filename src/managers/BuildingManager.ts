@@ -26,6 +26,7 @@ import {
 import {
   findBoardProducerDef,
   mergeOutcomePercents,
+  rollEffectiveProduceLine,
   type ToolProduceOutcome,
   type ToolProduceDisplayEntry,
 } from '@/config/BuildingConfig';
@@ -681,11 +682,7 @@ class BuildingManagerClass {
       producedId = this._rollToolProduceOutcome(toolDef!.produceOutcomes, produceLevelBonus);
     } else {
       let level = this._rollLevel(toolDef!.produceTable);
-      const lines = toolDef!.produceLinesRandom;
-      const line =
-        lines && lines.length > 0
-          ? lines[Math.floor(Math.random() * lines.length)]
-          : toolDef!.produceLine;
+      const line = rollEffectiveProduceLine(toolDef!);
       level = this._clampProduceLevel(
         toolDef!.produceCategory,
         line,

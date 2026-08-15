@@ -28,6 +28,7 @@ import { CheckInManager } from '@/managers/CheckInManager';
 import { QuestManager } from '@/managers/QuestManager';
 import { GrowthQuestManager } from '@/managers/GrowthQuestManager';
 import { CoolSummerEventManager } from '@/managers/CoolSummerEventManager';
+import { MidAutumnEventManager } from '@/managers/MidAutumnEventManager';
 import { SaveManager } from '@/managers/SaveManager';
 import { DressUpManager } from '@/managers/DressUpManager';
 import { getOwnerShopDisplayScale } from '@/config/DressUpConfig';
@@ -209,6 +210,7 @@ const RIGHT_BUTTONS: SideBtnDef[] = [
   { id: 'growth',  icon: '', texKey: 'icon_growth',  label: '成长', event: 'nav:openGrowthQuest', iconBg: 0x9CCC65, labelColor: 0x5F8F3A },
   { id: 'quest',   icon: '', texKey: 'icon_quest',   label: '任务', event: 'nav:openQuest',   iconBg: 0x42A5F5, labelColor: 0x1976D2 },
   { id: 'cool_summer', icon: '', texKey: 'icon_cool_summer_event_nb2', label: '清凉', event: 'panel:openCoolSummerEvent', iconBg: 0x4DB6AC, labelColor: 0x1B6B66 },
+  { id: 'mid_autumn', icon: '', texKey: 'icon_mid_autumn_event_nb2', label: '中秋', event: 'panel:openMidAutumnEvent', iconBg: 0xE8B86D, labelColor: 0x8A5A28 },
 ];
 
 /** 左下折叠冷门功能区；当前先放「游戏圈」，后续可继续追加。 */
@@ -2611,12 +2613,21 @@ export class ShopScene implements Scene {
       this._activityBtns.set(def.id, btn);
     }
     this._refreshCoolSummerButtonVisibility();
+    this._refreshMidAutumnButtonVisibility();
   }
 
   private _refreshCoolSummerButtonVisibility(): void {
     const btn = this._activityBtns.get('cool_summer');
     if (!btn) return;
     const active = CoolSummerEventManager.isActive();
+    btn.container.visible = active;
+    if (!active) btn.redDot.visible = false;
+  }
+
+  private _refreshMidAutumnButtonVisibility(): void {
+    const btn = this._activityBtns.get('mid_autumn');
+    if (!btn) return;
+    const active = MidAutumnEventManager.isActive();
     btn.container.visible = active;
     if (!active) btn.redDot.visible = false;
   }
@@ -3077,10 +3088,17 @@ export class ShopScene implements Scene {
     EventBus.on('furniture:drag_pointer_down', this._onFurnitureDragPointerDown);
     EventBus.on('coolSummerEvent:changed', this._onCoolSummerChanged);
     EventBus.on('coolSummerEvent:periodChanged', this._onCoolSummerChanged);
+    EventBus.on('midAutumnEvent:changed', this._onMidAutumnChanged);
+    EventBus.on('midAutumnEvent:periodChanged', this._onMidAutumnChanged);
   }
 
   private readonly _onCoolSummerChanged = (): void => {
     this._refreshCoolSummerButtonVisibility();
+    this._updateRedDots();
+  };
+
+  private readonly _onMidAutumnChanged = (): void => {
+    this._refreshMidAutumnButtonVisibility();
     this._updateRedDots();
   };
 
@@ -3108,6 +3126,8 @@ export class ShopScene implements Scene {
     EventBus.off('furniture:drag_pointer_down', this._onFurnitureDragPointerDown);
     EventBus.off('coolSummerEvent:changed', this._onCoolSummerChanged);
     EventBus.off('coolSummerEvent:periodChanged', this._onCoolSummerChanged);
+    EventBus.off('midAutumnEvent:changed', this._onMidAutumnChanged);
+    EventBus.off('midAutumnEvent:periodChanged', this._onMidAutumnChanged);
   }
 
   /**
@@ -4602,6 +4622,12 @@ export class ShopScene implements Scene {
     if (coolSummerBtn) {
       coolSummerBtn.redDot.visible = coolSummerBtn.container.visible
         && CoolSummerEventManager.hasRedDot;
+    }
+
+    const midAutumnBtn = this._activityBtns.get('mid_autumn');
+    if (midAutumnBtn) {
+      midAutumnBtn.redDot.visible = midAutumnBtn.container.visible
+        && MidAutumnEventManager.hasRedDot;
     }
 
     // 装修红点（有可购买的新装饰）

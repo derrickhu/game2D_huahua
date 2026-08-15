@@ -40,6 +40,7 @@ export const CUSTOMER_TYPES: CustomerTypeDef[] = [
   { id: 'tycoon',           name: '大富翁',   emoji: '', specialOnly: true },
   { id: 'florist_merchant', name: '富贵花商', emoji: '', specialOnly: true },
   { id: 'furniture_craftswoman', name: '家具工匠', emoji: '', specialOnly: true },
+  { id: 'chang_e',          name: '嫦娥',     emoji: '', specialOnly: true },
 ];
 
 /** 按 ID 快速查找 */
@@ -49,4 +50,5 @@ export const DEFAULT_SPECIAL_CUSTOMER_BY_ORDER_KIND: Partial<Record<OrderGenerat
   timedDiamond: 'tycoon',
   timedFlorist: 'florist_merchant',
   timedWorkshop: 'furniture_craftswoman',
+  midAutumnChangE: 'chang_e',
 };

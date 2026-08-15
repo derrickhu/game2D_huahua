@@ -15,6 +15,7 @@ export interface CustomerArrivalCopy {
 export const CUSTOMER_ARRIVAL_BANNER_ORDER_KINDS: readonly OrderGenerationKind[] = [
   'timedDiamond',
   'timedFlorist',
+  'midAutumnChangE',
 ];
 
 export const CUSTOMER_ARRIVAL_COPY: Readonly<Record<string, CustomerArrivalCopy>> = {
@@ -32,6 +33,14 @@ export const CUSTOMER_ARRIVAL_COPY: Readonly<Record<string, CustomerArrivalCopy>
       '这三份要一模一样，等级可不能含糊。',
       '高价收花，限时备货——迟了就没这笔生意。',
       '鲜的、绿的都行，但都得是上品。',
+    ],
+  },
+  chang_e: {
+    subtitle: '月满嘉宾',
+    arrivalLines: [
+      '今晚月色正好，我想要一份月饼。',
+      '团圆的味道，就藏在这枚圆饼里。',
+      '玉兔等不及了，请准备最好的月饼吧。',
     ],
   },
 };

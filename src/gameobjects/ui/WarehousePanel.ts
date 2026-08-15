@@ -802,7 +802,7 @@ export class WarehousePanel extends PIXI.Container {
     const map: Record<string, number> = {
       fresh: COLORS.FLOWER_FRESH, bouquet: COLORS.FLOWER_BOUQUET,
       green: COLORS.FLOWER_GREEN, butterfly: COLORS.DRINK_BUTTERFLY,
-      cold: COLORS.DRINK_COLD, dessert: COLORS.DRINK_DESSERT,
+      cold: COLORS.DRINK_COLD, dessert: COLORS.DRINK_DESSERT, mooncake: COLORS.DRINK_MOONCAKE,
     };
     return map[line] || 0x999999;
   }

@@ -1,0 +1,27 @@
+Cute small mobile game item icon sheet for a cozy casual merge game, 3/4 top-down isometric view. Rounded chunky proportions, slightly chibi and compact. High readability for small in-game icons. Soft colored outlines instead of harsh black outlines, gentle form shading, brighter highlights, clear color blocks. Clean white background.
+
+STRICT: NO TEXT anywhere. No labels, no captions, no letters, no numbers, no Chinese, no English, no watermark, no UI, no nameplates under the cakes.
+
+Create a 4 columns x 2 rows sheet of 8 mooncake items for levels 1 to 8 of the same Mid-Autumn pastry progression. Each cell contains exactly ONE floating round mooncake and nothing else. NO plate, NO dish, NO tray, NO box, NO ribbon, NO gift packaging, NO stand, NO shadow platter, NO text under the cake. The cake itself sits on clean white.
+
+Style rules:
+- Same family as attached dessert icons: polished pastry-shop feel, readable at tiny size.
+- Do not make them look flat or sticker-like.
+- Do not use heavy black outlines.
+- Silhouettes grow fuller from level 1 to 8. Level 8 must be obviously the largest.
+- Every mooncake is a round cake seen from a slight 3/4 top view, with a distinct crust, pattern, color, and filling identity.
+- No glasses, no jars, no cups, no fruit cakes, no Western cakes.
+
+Top row left to right:
+Level 1: a very small traditional baked lotus-paste mooncake, pale golden flaky crust, one simple flower stamp on top, beginner-tier, compact.
+Level 2: a slightly larger baked mooncake, richer golden crust, a clean cut or translucent window showing a bright salted egg yolk center.
+Level 3: a plump five-nut baked mooncake, warmer brown-gold pastry, a few large visible nuts and seeds on a cut face, still clean and icon-friendly.
+Level 4: a round red-bean paste mooncake, deep mahogany-brown baked crust, dark red bean filling peeking from a small cut, warm sweet look.
+
+Bottom row left to right:
+Level 5: a snow-skin ice mooncake, soft white translucent skin, pale osmanthus-yellow filling glow, a few large osmanthus petals on top, cooler pastel palette. Still a round cake, no plate.
+Level 6: a matcha snow-skin mooncake, soft jade-green translucent skin, darker green tea swirl or stamp, cool mint-green filling hint, clearly different from the white ice-skin cake.
+Level 7: a lava custard mooncake, glossy golden-yellow skin, a thick molten custard drip from a bite or cut, shiny and richer than the baked cakes.
+Level 8: a LARGE reunion mooncake, much bigger than the others, ornate golden-brown crust, bold rabbit-and-full-moon stamp, festive and generous, the obvious top of the line. Still a single round cake, no box, no plate.
+
+All eight items feel like one pastry line. The image must contain only cakes on white. NO TEXT.

@@ -10,6 +10,7 @@ import { TweenManager, Ease } from '@/core/TweenManager';
 import { EventManager } from '@/managers/EventManager';
 import { EventBoardManager } from '@/managers/EventBoardManager';
 import { CoolSummerEventManager } from '@/managers/CoolSummerEventManager';
+import { MidAutumnEventManager } from '@/managers/MidAutumnEventManager';
 import { QuestManager } from '@/managers/QuestManager';
 import { LevelManager } from '@/managers/LevelManager';
 import { isJewelryEventUnlocked } from '@/config/EventBoardConfig';
@@ -66,6 +67,13 @@ interface TaskDef {
 }
 
 const TASK_DEFS: TaskDef[] = [
+  {
+    id: 'midAutumn',
+    texKey: 'icon_mid_autumn_event_nb2',
+    event: 'panel:openMidAutumnEvent',
+    isVisible: () => MidAutumnEventManager.isActive(),
+    hasRedDot: () => MidAutumnEventManager.hasRedDot,
+  },
   {
     id: 'coolSummer',
     texKey: 'icon_cool_summer_event_nb2',
@@ -453,7 +461,7 @@ export class ShopRowPanoramaScroll extends PIXI.Container {
     icon.anchor.set(0.5);
     icon.position.set(BIG_BTN / 2, BIG_BTN / 2);
     if (tex && tex.width > 0) {
-      const target = def.id === 'coolSummer' ? COOL_SUMMER_BIG_ICON : BIG_ICON;
+      const target = def.id === 'coolSummer' || def.id === 'midAutumn' ? COOL_SUMMER_BIG_ICON : BIG_ICON;
       const s = Math.min(target / tex.width, target / tex.height);
       icon.scale.set(s);
     }
@@ -499,7 +507,7 @@ export class ShopRowPanoramaScroll extends PIXI.Container {
       const icon = card.root.children.find(child => child instanceof PIXI.Sprite) as PIXI.Sprite | undefined;
       if (!icon || !tex || tex.width <= 0) return;
       icon.texture = tex;
-      const target = card.def.id === 'coolSummer' ? COOL_SUMMER_BIG_ICON : BIG_ICON;
+      const target = card.def.id === 'coolSummer' || card.def.id === 'midAutumn' ? COOL_SUMMER_BIG_ICON : BIG_ICON;
       const s = Math.min(target / tex.width, target / tex.height);
       icon.scale.set(s);
     }

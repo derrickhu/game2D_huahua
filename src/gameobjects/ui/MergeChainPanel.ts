@@ -1223,6 +1223,7 @@ export class MergeChainPanel extends PIXI.Container {
       butterfly: COLORS.DRINK_BUTTERFLY,
       cold: COLORS.DRINK_COLD,
       dessert: COLORS.DRINK_DESSERT,
+      mooncake: COLORS.DRINK_MOONCAKE,
     };
     return map[line] || 0x999999;
   }

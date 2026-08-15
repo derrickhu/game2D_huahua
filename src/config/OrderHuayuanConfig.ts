@@ -47,6 +47,7 @@ export type OrderDeliveryLine =
   | 'butterfly'
   | 'cold'
   | 'dessert'
+  | 'mooncake'
   | 'cut_avocado'
   | 'cut_watermelon'
   | 'cut_pineapple'
@@ -80,6 +81,8 @@ export const ORDER_DELIVERY_CURVES: Record<OrderDeliveryCategory, Record<string,
     cold: { base: 14, growth: 1.5 },
     /** 甜品：最高工具可直出到 L7，介于蝴蝶与冷饮之间 */
     dessert: { base: 13, growth: 1.49 },
+    /** 月饼：中秋烤箱附加线，8 级，单价贴近冷饮短链 */
+    mooncake: { base: 14, growth: 1.5 },
   },
   /** 果切单价见 deliverHuayuanForFruitCut（顺链对标花束，不走独立曲线） */
   food: {},

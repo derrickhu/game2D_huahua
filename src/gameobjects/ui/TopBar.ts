@@ -19,6 +19,7 @@ import { WeekendHuayuanBoostManager } from '@/managers/WeekendHuayuanBoostManage
 import { TuesdayStaminaUnlimitedManager } from '@/managers/TuesdayStaminaUnlimitedManager';
 import { ThursdayMagicTimeManager } from '@/managers/ThursdayMagicTimeManager';
 import { CoolSummerEventManager } from '@/managers/CoolSummerEventManager';
+import { MidAutumnEventManager } from '@/managers/MidAutumnEventManager';
 import {
   isJewelryEventUnlocked,
 } from '@/config/EventBoardConfig';
@@ -87,6 +88,7 @@ const QUEST_HIT = 64;
 const EVENT_ICON_SIZE = 62;
 /** 清凉一夏入口图留白较多，单独放大以对齐花间珠匣视觉体量 */
 const COOL_SUMMER_ICON_SIZE = 76;
+const MID_AUTUMN_ICON_SIZE = 76;
 const EVENT_HIT_W = 88;
 const EVENT_HIT_H = 92;
 /** 热区向上多探入顶栏带，减少被店铺区抢点击 */
@@ -100,6 +102,8 @@ const EVENT_BTN_CX = QUEST_BTN_CX + QUEST_HIT + 14;
 const EVENT_BTN_CY = QUEST_BTN_CY;
 const COOL_SUMMER_BTN_CX = EVENT_BTN_CX + EVENT_HIT_W + 4;
 const COOL_SUMMER_BTN_CY = EVENT_BTN_CY;
+const MID_AUTUMN_BTN_CX = COOL_SUMMER_BTN_CX + EVENT_HIT_W + 4;
+const MID_AUTUMN_BTN_CY = EVENT_BTN_CY;
 // ── 颜色（体力胶囊参考：浅粉框 + 鲜绿填充 + 绿圆加号）──
 const C = {
   /** 胶囊外沿浅粉米 */
@@ -137,6 +141,9 @@ export class TopBar extends PIXI.Container {
   private _coolSummerBtnWrap: PIXI.Container | null = null;
   private _coolSummerIcon: PIXI.Sprite | null = null;
   private _coolSummerRedDot: PIXI.Graphics | null = null;
+  private _midAutumnBtnWrap: PIXI.Container | null = null;
+  private _midAutumnIcon: PIXI.Sprite | null = null;
+  private _midAutumnRedDot: PIXI.Graphics | null = null;
   private _eventIconUnsub: (() => void) | null = null;
 
   constructor(opts?: TopBarOptions) {
@@ -157,11 +164,13 @@ export class TopBar extends PIXI.Container {
       this._buildDailyChallengeButton();
       this._buildEventBoardButton();
       this._buildCoolSummerButton();
+      this._buildMidAutumnButton();
       this._eventIconUnsub = TextureCache.onKeysLoaded(
-        ['icon_jewelry_event_nb2', 'icon_cool_summer_event_nb2'],
+        ['icon_jewelry_event_nb2', 'icon_cool_summer_event_nb2', 'icon_mid_autumn_event_nb2'],
         (key) => {
           if (key === 'icon_jewelry_event_nb2') this._refreshEventBoardIcon();
           if (key === 'icon_cool_summer_event_nb2') this._refreshCoolSummerIcon();
+          if (key === 'icon_mid_autumn_event_nb2') this._refreshMidAutumnIcon();
         },
       );
     }
@@ -748,6 +757,73 @@ export class TopBar extends PIXI.Container {
       this._coolSummerRedDot.visible = this._coolSummerBtnWrap.visible
         && CoolSummerEventManager.hasRedDot;
     }
+    this.updateMidAutumnButton();
+  }
+
+  private _buildMidAutumnButton(): void {
+    const wrap = new PIXI.Container();
+    wrap.position.set(this._midAutumnBtnX(), MID_AUTUMN_BTN_CY);
+    wrap.hitArea = new PIXI.Rectangle(
+      -EVENT_HIT_W / 2,
+      -EVENT_HIT_H / 2 + EVENT_HIT_SHIFT_Y,
+      EVENT_HIT_W,
+      EVENT_HIT_H,
+    );
+    wrap.eventMode = 'static';
+    wrap.cursor = 'pointer';
+    wrap.zIndex = 25;
+    wrap.name = 'midAutumnEventBtn';
+
+    const tex = TextureCache.get('icon_mid_autumn_event_nb2') ?? TextureCache.get('icon_gift');
+    if (tex?.width > 0) {
+      const sp = new PIXI.Sprite(tex);
+      sp.anchor.set(0.5);
+      sp.scale.set(Math.min(MID_AUTUMN_ICON_SIZE / tex.width, MID_AUTUMN_ICON_SIZE / tex.height));
+      sp.eventMode = 'none';
+      wrap.addChild(sp);
+      this._midAutumnIcon = sp;
+    }
+
+    const redDot = new PIXI.Graphics();
+    redDot.beginFill(0xff3333);
+    redDot.lineStyle(1.5, 0xffffff);
+    redDot.drawCircle(QUEST_HIT / 2 - 5, -QUEST_HIT / 2 + 7, 6);
+    redDot.endFill();
+    wrap.addChild(redDot);
+    this._midAutumnRedDot = redDot;
+
+    this._bindButtonClickSfx(wrap);
+    wrap.on('pointertap', (e: PIXI.FederatedPointerEvent) => {
+      e.stopPropagation();
+      EventBus.emit('panel:openMidAutumnEvent');
+    });
+    this.addChild(wrap);
+    this._midAutumnBtnWrap = wrap;
+    this.updateMidAutumnButton();
+  }
+
+  private _midAutumnBtnX(): number {
+    return CoolSummerEventManager.isActive() ? MID_AUTUMN_BTN_CX : COOL_SUMMER_BTN_CX;
+  }
+
+  private _refreshMidAutumnIcon(): void {
+    if (!this._midAutumnIcon) return;
+    const tex = TextureCache.get('icon_mid_autumn_event_nb2');
+    if (!tex?.width) return;
+    this._midAutumnIcon.texture = tex;
+    this._midAutumnIcon.scale.set(
+      Math.min(MID_AUTUMN_ICON_SIZE / tex.width, MID_AUTUMN_ICON_SIZE / tex.height),
+    );
+  }
+
+  updateMidAutumnButton(): void {
+    if (!this._midAutumnBtnWrap) return;
+    this._midAutumnBtnWrap.visible = MidAutumnEventManager.isActive();
+    this._midAutumnBtnWrap.position.set(this._midAutumnBtnX(), MID_AUTUMN_BTN_CY);
+    if (this._midAutumnRedDot) {
+      this._midAutumnRedDot.visible = this._midAutumnBtnWrap.visible
+        && MidAutumnEventManager.hasRedDot;
+    }
   }
 
   /** 未达开放等级时隐藏活动入口 */
@@ -827,6 +903,8 @@ export class TopBar extends PIXI.Container {
     EventBus.on('eventBoard:changed', () => this.updateEventRedDot());
     EventBus.on('coolSummerEvent:changed', () => this.updateCoolSummerButton());
     EventBus.on('coolSummerEvent:periodChanged', () => this.updateCoolSummerButton());
+    EventBus.on('midAutumnEvent:changed', () => this.updateMidAutumnButton());
+    EventBus.on('midAutumnEvent:periodChanged', () => this.updateMidAutumnButton());
     EventBus.on('star:levelUp', () => {
       this.updateEventBoardButtonVisibility();
       this.updateEventRedDot();
@@ -904,6 +982,10 @@ export class TopBar extends PIXI.Container {
     return { x: COOL_SUMMER_BTN_CX, y: COOL_SUMMER_BTN_CY };
   }
 
+  getMidAutumnEventIconPos(): { x: number; y: number } {
+    return { x: this._midAutumnBtnX(), y: MID_AUTUMN_BTN_CY };
+  }
+
   /** @deprecated 花露/星星顶栏已移除，飞入花愿槽位 */
   getHualuIconPos(): { x: number; y: number } {
     return this.getHuayuanIconPos();
@@ -956,6 +1038,27 @@ export class TopBar extends PIXI.Container {
   /** 清凉一夏入口弹跳反馈。 */
   flashCoolSummerEvent(): void {
     const wrap = this._coolSummerBtnWrap;
+    if (!wrap) return;
+    TweenManager.cancelTarget(wrap.scale);
+    wrap.scale.set(1);
+    TweenManager.to({
+      target: wrap.scale,
+      props: { x: 1.16, y: 1.16 },
+      duration: 0.12,
+      ease: Ease.easeOutQuad,
+      onComplete: () => {
+        TweenManager.to({
+          target: wrap.scale,
+          props: { x: 1, y: 1 },
+          duration: 0.18,
+          ease: Ease.easeOutBack,
+        });
+      },
+    });
+  }
+
+  flashMidAutumnEvent(): void {
+    const wrap = this._midAutumnBtnWrap;
     if (!wrap) return;
     TweenManager.cancelTarget(wrap.scale);
     wrap.scale.set(1);

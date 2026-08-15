@@ -1,7 +1,7 @@
 /**
  * 物品配置
  *
- * 产品线：花系（鲜花/绿植各13级、花束10级 + 包装中间品4级）+ 饮品：蝴蝶/甜品各10级、冷饮8级 + 食物：整果5级（牛油果→菠萝→火龙果→西瓜→香橙）+ 果切各3级
+ * 产品线：花系（鲜花/绿植各13级、花束10级 + 包装中间品4级）+ 饮品：蝴蝶/甜品各10级、冷饮8级、中秋月饼5级 + 食物：整果5级（牛油果→菠萝→火龙果→西瓜→香橙）+ 果切各3级
  * 工具线：园艺6级、包装5级、捕虫网/冷饮/烘焙各5级；工具1–2级仅合成，其后可产出
  * 宝箱：5级；红包：4级（散落花愿利是，双击入账花愿）；钻石袋 / 体力箱工具：各 3 级（散落货币块）
  */
@@ -43,6 +43,8 @@ export enum DrinkLine {
   BUTTERFLY = 'butterfly', // 蝴蝶标本线（捕虫网产出）
   COLD = 'cold',           // 冷饮线
   DESSERT = 'dessert',     // 甜品线
+  /** 中秋限时：烤箱附加产线 */
+  MOONCAKE = 'mooncake',
 }
 
 export enum FoodLine {
@@ -186,6 +188,10 @@ const DRINK_DATA: [DrinkLine, string[]][] = [
     '蓝莓奶油糕', '双果层层糕', '什果圆蛋糕', '丝绒双层蛋糕',
     '缤纷双层蛋糕', '鎏金双层蛋糕',
   ]],
+  [DrinkLine.MOONCAKE, [
+    '莲蓉小月饼', '豆沙月饼', '五仁月饼', '蛋黄月饼',
+    '冰皮桂花月饼', '鲜肉月饼', '流心奶黄月饼', '团圆大月饼',
+  ]],
 ];
 
 const FOOD_DATA: [FoodLine, string[]][] = [
@@ -299,11 +305,12 @@ export function isFruitCutLine(line: string): boolean {
 }
 
 /** 棋盘/仓库等同系 UI：资源留白较多，需与花束共用更大 cell fill（0.9） */
-export function usesLargeBoardIconFill(def: Pick<ItemDef, 'line'>): boolean {
+export function usesLargeBoardIconFill(def: Pick<ItemDef, 'id' | 'line'>): boolean {
   return (
     def.line === FlowerLine.BOUQUET ||
     def.line === FlowerLine.WRAP ||
-    isFruitCutLine(def.line)
+    isFruitCutLine(def.line) ||
+    def.id === 'drink_mooncake_8'
   );
 }
 
@@ -747,6 +754,7 @@ export function getMergeChainName(itemId: string): string {
     [DrinkLine.BUTTERFLY]: '蝴蝶标本',
     [DrinkLine.COLD]: '冷饮',
     [DrinkLine.DESSERT]: '甜品',
+    [DrinkLine.MOONCAKE]: '月饼',
     [FoodLine.FRUIT]: '水果',
     [FoodLine.CUT_AVOCADO]: '牛油果果切',
     [FoodLine.CUT_WATERMELON]: '西瓜果切',

@@ -46,6 +46,10 @@ const MAIN_IMAGE_MAP: Record<string, string> = {
   icon_cool_summer_event_nb2: 'images/ui/icon_cool_summer_event_nb2.png',
   /** 清凉一夏订单兑换物：现代圆角手持小扇 */
   icon_cool_summer_fan: 'images/ui/icon_cool_summer_fan.png',
+  /** 月满中秋限时活动入口：玉兔灯笼 + 月饼 */
+  icon_mid_autumn_event_nb2: 'images/ui/icon_mid_autumn_event_nb2.png',
+  /** 月满中秋订单货币：玉兔灯 */
+  icon_mid_autumn_lantern: 'images/ui/icon_mid_autumn_lantern.png',
   /** NB2+rembg：激励视频 / 看广告统一小图标（粉紫边框 + 播放三角） */
   icon_ad_reward_nb2: 'images/ui/icon_ad_reward_nb2.png',
   icon_heart:  'images/ui/icon_heart.png',
@@ -152,6 +156,7 @@ const CHARS_IMAGE_MAP: Record<string, string> = {
   customer_tycoon:    'subpkg_chars/images/customer/tycoon.png',
   customer_florist_merchant: 'subpkg_chars/images/customer/florist_merchant.png',
   customer_furniture_craftswoman: 'subpkg_chars/images/customer/furniture_craftswoman.png',
+  customer_chang_e: 'subpkg_chars/images/customer/chang_e.png',
 
   // 友谊卡 / 图鉴系统：S1 首发卡面（路径 affinity_cards/）
   affinity_card_student_01: 'subpkg_chars/images/affinity_cards/card_student_01.png',
@@ -447,6 +452,14 @@ const ITEMS_IMAGE_MAP: Record<string, string> = {
   drink_dessert_8: 'subpkg_items/images/drinks/dessert/drink_dessert_8.png',
   drink_dessert_9: 'subpkg_items/images/drinks/dessert/drink_dessert_9.png',
   drink_dessert_10: 'subpkg_items/images/drinks/dessert/drink_dessert_10.png',
+  drink_mooncake_1: 'subpkg_items/images/drinks/mooncake/drink_mooncake_1.png',
+  drink_mooncake_2: 'subpkg_items/images/drinks/mooncake/drink_mooncake_2.png',
+  drink_mooncake_3: 'subpkg_items/images/drinks/mooncake/drink_mooncake_3.png',
+  drink_mooncake_4: 'subpkg_items/images/drinks/mooncake/drink_mooncake_4.png',
+  drink_mooncake_5: 'subpkg_items/images/drinks/mooncake/drink_mooncake_5.png',
+  drink_mooncake_6: 'subpkg_items/images/drinks/mooncake/drink_mooncake_6.png',
+  drink_mooncake_7: 'subpkg_items/images/drinks/mooncake/drink_mooncake_7.png',
+  drink_mooncake_8: 'subpkg_items/images/drinks/mooncake/drink_mooncake_8.png',
 
   // ---- 工具：种植线 (3级试跑) ----
   tool_plant_1: 'subpkg_items/images/tools/plant/tool_plant_1.png',
@@ -607,14 +620,31 @@ const COOL_SUMMER_EVENT_IMAGE_MAP: Record<string, string> = {
     'subpkg_events/images/cool_summer_event/ui/cool_summer_event_panel_shell_v2.png',
 };
 
+const MID_AUTUMN_EVENT_IMAGE_MAP: Record<string, string> = {
+  mid_autumn_event_panel_shell_nb2:
+    'subpkg_events/images/mid_autumn_event/ui/mid_autumn_event_panel_shell_nb2.png',
+  mid_autumn_wheel_disc_nb2:
+    'subpkg_events/images/mid_autumn_event/ui/mid_autumn_wheel_disc_nb2.png',
+  mid_autumn_wheel_pointer_nb2:
+    'subpkg_events/images/mid_autumn_event/ui/mid_autumn_wheel_pointer_nb2.png',
+  mid_autumn_wheel_hub_nb2:
+    'subpkg_events/images/mid_autumn_event/ui/mid_autumn_wheel_hub_nb2.png',
+  mid_autumn_wheel_stand_nb2:
+    'subpkg_events/images/mid_autumn_event/ui/mid_autumn_wheel_stand_nb2.png',
+  mid_autumn_wheel_spin_btn_nb2:
+    'subpkg_events/images/mid_autumn_event/ui/mid_autumn_wheel_spin_btn_nb2.png',
+};
+
 const EVENT_IMAGE_MAPS: Record<string, Record<string, string>> = {
   jewelry_box_event: JEWELRY_BOX_EVENT_IMAGE_MAP,
   cool_summer_2026: COOL_SUMMER_EVENT_IMAGE_MAP,
+  mid_autumn_2026: MID_AUTUMN_EVENT_IMAGE_MAP,
 };
 
 const EVENTS_IMAGE_MAP: Record<string, string> = {
   ...JEWELRY_BOX_EVENT_IMAGE_MAP,
   ...COOL_SUMMER_EVENT_IMAGE_MAP,
+  ...MID_AUTUMN_EVENT_IMAGE_MAP,
 };
 
 // ================================================================
@@ -1448,6 +1478,7 @@ const ALL_ITEMS_KEYS = Object.keys(ITEMS_IMAGE_MAP);
 const ALL_EVENTS_KEYS = Object.keys(EVENTS_IMAGE_MAP);
 const JEWELRY_BOX_EVENT_KEYS = Object.keys(JEWELRY_BOX_EVENT_IMAGE_MAP);
 const COOL_SUMMER_EVENT_KEYS = Object.keys(COOL_SUMMER_EVENT_IMAGE_MAP);
+const MID_AUTUMN_EVENT_KEYS = Object.keys(MID_AUTUMN_EVENT_IMAGE_MAP);
 const ALL_DECO_KEYS = Object.keys(DECO_IMAGE_MAP);
 const ALL_CRITICAL_KEYS = Object.keys(CRITICAL_IMAGE_MAP);
 const OWNER_OUTFIT_KEYS = keysWhere(CHARS_IMAGE_MAP, key => key.startsWith('owner_'));
@@ -1480,6 +1511,7 @@ export type TextureAssetGroup =
   | 'events'
   | 'jewelryBoxEvent'
   | 'coolSummerEvent'
+  | 'midAutumnEvent'
   | 'chars'
   | 'panels'
   | 'critical'
@@ -1521,6 +1553,11 @@ const ASSET_GROUP_KEYS: Record<TextureAssetGroup, readonly string[]> = {
     'icon_cool_summer_fan',
     ...COOL_SUMMER_EVENT_KEYS,
   ],
+  midAutumnEvent: [
+    'icon_mid_autumn_event_nb2',
+    'icon_mid_autumn_lantern',
+    ...MID_AUTUMN_EVENT_KEYS,
+  ],
   chars: [],
   panels: [],
   critical: [],
@@ -1539,6 +1576,11 @@ const ASSET_GROUP_NOTIFY_KEYS: Record<TextureAssetGroup, readonly string[]> = {
     'icon_cool_summer_event_nb2',
     'icon_cool_summer_fan',
     ...COOL_SUMMER_EVENT_KEYS,
+  ],
+  midAutumnEvent: [
+    'icon_mid_autumn_event_nb2',
+    'icon_mid_autumn_lantern',
+    ...MID_AUTUMN_EVENT_KEYS,
   ],
   chars: ALL_CHARS_KEYS,
   panels: ALL_PANELS_KEYS,

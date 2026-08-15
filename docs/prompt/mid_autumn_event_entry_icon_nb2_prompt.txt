@@ -1,0 +1,11 @@
+Single square 1:1 mobile game limited-time event icon for a cozy pastel flower-shop merge game, designed first for tiny 48–64 pixel display.
+
+Use only three large readable objects: one chunky round golden mooncake with a simple flower stamp; one full warm harvest moon disc behind it; one cute jade-rabbit paper lantern leaning beside the mooncake.
+
+Composition: compact triangular silhouette filling about 88% of the canvas. The mooncake is the central largest object, the moon creates a clear gold-cream accent behind, and the small lantern creates a warm amber accent on the right. Keep all silhouettes separated and readable.
+
+Style: clean glossy cel-shaded 2D casual mobile game icon, rounded chunky forms, warm dark-brown broad outline, soft top-left highlights, high-key Mid-Autumn palette (gold, cream, soft amber, dusty rose), strong color separation, premium but simple.
+
+Strict small-icon rules: only 3–4 large color blocks per object, no thin lines, no tiny sesame seeds, no small sparkles, no decorative frame, no sticker border, no readable text, no letters, no numbers, no watermark.
+
+Background: solid flat magenta #FF00FF full bleed for background removal.

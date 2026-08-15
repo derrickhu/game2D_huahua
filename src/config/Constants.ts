@@ -150,6 +150,7 @@ export const COLORS = {
   DRINK_BUTTERFLY: 0x90EE90,   // 蝴蝶线 - 浅绿
   DRINK_COLD: 0x87CEEB,      // 冷饮线 - 天蓝
   DRINK_DESSERT: 0xFFB6C1,   // 甜品线 - 浅粉
+  DRINK_MOONCAKE: 0xE8B86D,  // 月饼线 - 桂花金
 
   // UI
   GOLD: 0xFFD700,
