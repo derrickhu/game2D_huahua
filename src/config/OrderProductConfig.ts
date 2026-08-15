@@ -2,7 +2,12 @@
  * 订单可需求产品定义：把玩法产品与 ItemConfig 的 line 解耦，便于独立配置解锁、工具 cap 与档位区间。
  */
 import { Category, DrinkLine, FlowerLine, FoodLine, fruitCutLevelForToolLevel } from './ItemConfig';
-import { getEffectiveMaxLevel, type OrderTier, type UnlockedLines } from './OrderTierConfig';
+import {
+  getEffectiveMaxLevel,
+  getPlantOrderMaxLevel,
+  type OrderTier,
+  type UnlockedLines,
+} from './OrderTierConfig';
 
 export type OrderProductId =
   | 'fresh'
@@ -263,7 +268,15 @@ export function productToolCap(productId: OrderProductId, ulk: UnlockedLines): n
   if (product.category === Category.FOOD) {
     return Math.min(fruitCutLevelForToolLevel(product.toolLevel(ulk)), product.maxLevel);
   }
+  if (productId === 'fresh' || productId === 'green') {
+    return getPlantOrderMaxLevel(product.toolLevel(ulk), product.maxLevel);
+  }
   return getEffectiveMaxLevel(product.toolLevel(ulk), product.maxLevel);
+}
+
+/** 是否园艺鲜花/绿植订单（用于 aspirational 下调） */
+export function isPlantOrderProduct(productId: OrderProductId): boolean {
+  return productId === 'fresh' || productId === 'green';
 }
 
 export function unlockedOrderProducts(ulk: UnlockedLines): OrderProductDef[] {
