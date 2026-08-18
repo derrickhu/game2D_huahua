@@ -1,0 +1,19 @@
+Vertical sprite sheet, exactly 1 column x 3 rows, three equal-height panels stacked with clear white gutters. Cozy pastel flower-shop merge game FLOOR RUG prop sheet.
+
+ORIENTATION (must match attached CORRECT-angle preview and pink sofa):
+- Flat isometric floor rug. Bunny LONG AXIS runs bottom-left → top-right (slash /), same as the pink sofa seat front edge.
+- Head and floppy ears near the BOTTOM-LEFT of each panel; round rump and fluffy tail toward the TOP-RIGHT.
+- Wide foreshortened diamond footprint on the floor. NOT left-right horizontal. NOT upper-left → lower-right backslash.
+- Soft thin fabric thickness only; no standing character.
+
+LINE STYLE (must match pink sofa):
+- Very soft thin warm-brown outlines, delicate light weight like the sofa.
+- FORBIDDEN: thick charcoal/black sticker borders, heavy comic ink, bold dark contours.
+
+Subject: ONE large cute sleeping BUNNY animal-shaped rug, chubby curled body cutout, cream tummy patch as solid fabric (not a hole), tiny paws, short fluffy tail, subtle mint stitch dashes. Identical silhouette/pose/size/angle every row — only dye color changes.
+
+Row 0 top: blush sakura-pink body, cream belly, soft rose inner ears.
+Row 1 middle: sky-blue body, cream belly, lavender inner ears.
+Row 2 bottom: honey-yellow body, cream belly, peach inner ears.
+
+Each rug centered with generous empty white margin. Pure solid white #FFFFFF background only. NO text, labels, numbers, watermark, room, walls, floor tiles, or other furniture.

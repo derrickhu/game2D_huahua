@@ -1,0 +1,7 @@
+Wide 16:9 sprite sheet, TWO columns ONE row, pure white #FFFFFF background, wide empty gutter between columns. Cute kawaii 2.5D true isometric furniture for a flower-shop merge game. Soft brown outlines slightly thicker than hairline.
+
+LEFT column: copy the attached FRONT armchair as closely as possible (cream tufted back with 4 buttons, green diamond pillow, dark walnut camelback crest rail, cream rolled arms with circular wood scrolls, four short tapered legs).
+
+RIGHT column: the BACK view of THAT EXACT SAME chair — identical absolute size, identical outer silhouette width and height, identical leg length and arm thickness. Same dark walnut camelback wood crest rail on top (not cream roll). Outer rear of backrest is flat dark walnut wood panel matching the front backrest outline. Cream seat mostly hidden. Cream rolled arms with wood scroll ends still match. NO green pillow. NO wingback side fins. NO larger chair.
+
+Both chairs must look like one model rotated. Same scale. No text, no room.

@@ -1,0 +1,9 @@
+Image A = full FRONT of the cream walnut armchair (same chair).
+Image B = crest crop from that front (the exact dark wood triple-curve top rail to copy).
+Image C = BACK draft already scaled to the same size — keep Image C's overall size and rear perspective.
+
+Edit Image C into the correct BACK of Image A:
+1) Replace the top edge of the wood back with Image B's EXACT dark walnut triple-curve / three-hump camelback crest rail (center peak + two shoulders). Not a single smooth arch.
+2) Keep true rear view: flat dark walnut rear panel inside that crest frame; cream seat mostly hidden; cream rolled arms with circular wood scrolls like Image A; four short tapered legs.
+3) No wingback side fins. No enlarging. Same absolute size as Image C.
+Pure white #FFFFFF background. Soft brown outlines. One chair. No text.

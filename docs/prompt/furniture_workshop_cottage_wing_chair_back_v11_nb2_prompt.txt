@@ -1,0 +1,21 @@
+Square 1:1. Pure white #FFFFFF background. Cute kawaii 2.5D true isometric furniture.
+
+Image A = FRONT of the cream+walnut armchair (the only correct model).
+Image B = crop of Image A's dark walnut triple-curve crest rail.
+
+Draw the BACK view of Image A only. It must look like the same physical chair rotated 180°.
+
+COPY FROM IMAGE A:
+- Same compact scale (do not make a bigger/bulkier chair)
+- Same dark walnut triple-curve crest (Image B) as a thin wood frame on top — center peak + two smaller shoulders, same width as Image A backrest
+- Same cream rolled arms with circular wood scroll ends — same thickness as Image A
+- Same four short tapered legs
+- Same empty white margin
+
+BACK-ONLY DIFFERENCES:
+- Inside the wood crest frame: flat dark walnut rear panel (soft grain), not cream tufting
+- Cream seat mostly hidden
+- No green pillow
+- No wingback side boards, no extra tall side walls
+
+Think: elegant salon armchair rear, not a wide wing chair. Soft brown outlines. No text.
