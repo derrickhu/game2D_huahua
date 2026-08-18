@@ -92,6 +92,41 @@ export const TOOL_TO_PRODUCT_LINE: Record<ToolLine, { category: Category; line: 
   [ToolLine.FRUIT_CUT]: { category: Category.FOOD, line: FoodLine.CUT_AVOCADO },
 };
 
+/**
+ * 宝箱 / 许愿喷泉抽到「1 级种子工具」时，各产线相对权重。
+ * 农田与果切刻意压到极低（主来源仍是升级/礼包发放）。
+ */
+export const LV1_SEED_TOOL_LINE_RELATIVE_WEIGHT: Readonly<Record<ToolLine, number>> = {
+  [ToolLine.PLANT]: 25,
+  [ToolLine.ARRANGE]: 25,
+  [ToolLine.BUTTERFLY_NET]: 25,
+  [ToolLine.MIXER]: 25,
+  [ToolLine.BAKE]: 25,
+  [ToolLine.FARM]: 1,
+  [ToolLine.FRUIT_CUT]: 1,
+};
+
+/** 各产线 1 级工具 id + 相对权重（宝箱/许愿共用） */
+export function getLv1SeedToolWeightedEntries(): ReadonlyArray<{ itemId: string; weight: number }> {
+  return (Object.values(ToolLine) as ToolLine[]).map((tl) => ({
+    itemId: `tool_${tl}_1`,
+    weight: LV1_SEED_TOOL_LINE_RELATIVE_WEIGHT[tl] ?? 1,
+  }));
+}
+
+/** 按 {@link LV1_SEED_TOOL_LINE_RELATIVE_WEIGHT} 加权抽取一件 1 级工具 */
+export function pickWeightedLv1SeedToolId(rng: () => number = Math.random): string | null {
+  const entries = getLv1SeedToolWeightedEntries();
+  const total = entries.reduce((s, e) => s + e.weight, 0);
+  if (total <= 0) return null;
+  let roll = rng() * total;
+  for (const e of entries) {
+    roll -= e.weight;
+    if (roll <= 0) return e.itemId;
+  }
+  return entries[entries.length - 1]?.itemId ?? null;
+}
+
 export interface ItemDef {
   id: string;
   name: string;

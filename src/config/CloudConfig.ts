@@ -68,6 +68,7 @@ export const CLOUD_SYNC_ALLOWLIST = [
   'huahua_tuesday_stamina_unlimited',
   'huahua_thursday_magic_time',
   'huahua_furniture_workshop',
+  'huahua_growth',
   'huahua_feature_grants',
   'huahua_settings',
   // 抖音专属；微信端本地永远不存在此 key，不会进快照

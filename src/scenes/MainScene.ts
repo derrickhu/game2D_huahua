@@ -20,6 +20,7 @@ import { WarehouseManager } from '@/managers/WarehouseManager';
 import { CustomerManager } from '@/managers/CustomerManager';
 import { SaveManager } from '@/managers/SaveManager';
 import { QuestManager } from '@/managers/QuestManager';
+import { GrowthQuestManager } from '@/managers/GrowthQuestManager';
 import {
   CheckInManager,
   MILESTONES,
@@ -42,6 +43,7 @@ import { ToastMessage } from '@/gameobjects/ui/ToastMessage';
 import { CheckInPanel } from '@/gameobjects/ui/CheckInPanel';
 import { NewbieGiftPackPanel } from '@/gameobjects/ui/NewbieGiftPackPanel';
 import { QuestPanel } from '@/gameobjects/ui/QuestPanel';
+import { GrowthQuestPanel } from '@/gameobjects/ui/GrowthQuestPanel';
 import { OfflineRewardPanel } from '@/gameobjects/ui/OfflineRewardPanel';
 import { LevelUpPopup } from '@/gameobjects/ui/LevelUpPopup';
 import { ShopRowPanoramaScroll, SHOP_PANORAMA_VIEW_H } from '@/gameobjects/ui/ShopRowPanoramaScroll';
@@ -103,6 +105,8 @@ import { EventBoardPanel } from '@/gameobjects/ui/EventBoardPanel';
 import { CoolSummerEventPanel } from '@/gameobjects/ui/CoolSummerEventPanel';
 import { RewardBoxButton } from '@/gameobjects/ui/RewardBoxButton';
 import { RewardBoxPanel } from '@/gameobjects/ui/RewardBoxPanel';
+import { UpdateAnnouncementPanel } from '@/gameobjects/ui/UpdateAnnouncementPanel';
+import { UpdateAnnouncementManager } from '@/managers/UpdateAnnouncementManager';
 import { PopupShopPanel } from '@/gameobjects/ui/PopupShopPanel';
 import { MerchShopPanel } from '@/gameobjects/ui/MerchShopPanel';
 import { AffinityCardDropPopup } from '@/gameobjects/ui/AffinityCardDropPopup';
@@ -183,6 +187,7 @@ export class MainScene implements Scene {
   private static readonly _REWARD_BOX_HINT_MAX_RETRY = 15;
   private _checkInPanel!: CheckInPanel;
   private _questPanel!: QuestPanel;
+  private _growthQuestPanel!: GrowthQuestPanel;
   private _offlineRewardPanel!: OfflineRewardPanel;
   private _levelUpPopup!: LevelUpPopup;
 
@@ -213,6 +218,8 @@ export class MainScene implements Scene {
   // ---- 奖励收纳框 ----
   private _rewardBoxButton!: RewardBoxButton;
   private _rewardBoxPanel!: RewardBoxPanel;
+  /** 版本更新公告（每公告 id 只弹一次） */
+  private _updateAnnouncementPanel!: UpdateAnnouncementPanel;
   private _newbieGiftPackPanel!: NewbieGiftPackPanel;
 
   // ---- 大地图弹框商店 ----
@@ -262,6 +269,7 @@ export class MainScene implements Scene {
       ThursdayMagicTimeManager.init();
       CustomerManager.init();
       QuestManager.init();
+      GrowthQuestManager.init();
       RewardBoxHintManager.init();
       AffinityManager.init();
       AffinityCardManager.init();
@@ -417,9 +425,21 @@ export class MainScene implements Scene {
     //   return;
     // }
 
+    // 1.5 版本更新公告（教程完成后、签到之前；点「知道了」再继续后续队列）
+    if (this._tryShowUpdateAnnouncement(() => this._continueGameReadyAfterAnnouncement())) {
+      return;
+    }
+
+    this._continueGameReadyAfterAnnouncement();
+  }
+
+  /** 更新公告关闭后（或无需公告时）继续签到 / 活动宣传等进场流程 */
+  private _continueGameReadyAfterAnnouncement(): void {
+    if (SceneManager.current?.name !== 'main') return;
+    if (TutorialManager.isActive) return;
+
     // 2. 检查签到
     if (CheckInManager.canCheckIn) {
-      // 延迟弹出签到面板
       setTimeout(() => {
         if (!TutorialManager.isActive) {
           this._checkInPanel.open();
@@ -432,6 +452,7 @@ export class MainScene implements Scene {
       setTimeout(() => {
         if (TutorialManager.isActive) return;
         if (this._checkInPanel?.visible) return;
+        if (this._updateAnnouncementPanel?.isOpen) return;
         this._douyinWelfarePanel.open();
       }, CheckInManager.canCheckIn ? 2400 : 900);
     }
@@ -447,6 +468,14 @@ export class MainScene implements Scene {
     this._scheduleRewardBoxHint(6000, true);
   }
 
+  /** @returns true 表示已弹出公告，调用方应暂停后续进场弹窗 */
+  private _tryShowUpdateAnnouncement(onClosed?: () => void): boolean {
+    if (!UpdateAnnouncementManager.shouldShow()) return false;
+    if (this._updateAnnouncementPanel?.isOpen) return true;
+    this._updateAnnouncementPanel.open(UpdateAnnouncementManager.active, onClosed);
+    return true;
+  }
+
   /**
    * 限时活动（周末花愿 / 周二体力无限 / 周四魔法时间）生效当日首次进主界面自动弹宣传页。
    * 签到等弹窗优先，延迟后再尝试；教程中不弹。
@@ -457,6 +486,10 @@ export class MainScene implements Scene {
     setTimeout(() => {
       if (SceneManager.current?.name !== 'main') return;
       if (TutorialManager.isActive) return;
+      if (this._updateAnnouncementPanel?.isOpen) {
+        this._scheduleLimitedEventPromoAutoOpen(1600);
+        return;
+      }
       if (this._checkInPanel?.visible) {
         this._scheduleLimitedEventPromoAutoOpen(1600);
         return;
@@ -601,6 +634,10 @@ export class MainScene implements Scene {
     this._questPanel = new QuestPanel();
     overlay.addChild(this._questPanel);
 
+    // 成长之路面板
+    this._growthQuestPanel = new GrowthQuestPanel();
+    overlay.addChild(this._growthQuestPanel);
+
     // 离线收益面板
     this._offlineRewardPanel = new OfflineRewardPanel();
     overlay.addChild(this._offlineRewardPanel);
@@ -646,6 +683,9 @@ export class MainScene implements Scene {
     // 奖励收纳框面板
     this._rewardBoxPanel = new RewardBoxPanel();
     overlay.addChild(this._rewardBoxPanel);
+
+    this._updateAnnouncementPanel = new UpdateAnnouncementPanel();
+    overlay.addChild(this._updateAnnouncementPanel);
 
     // 大地图弹框商店
     this._popupShopPanel = new PopupShopPanel();
@@ -1398,6 +1438,18 @@ export class MainScene implements Scene {
     // 签到面板
     EventBus.on('nav:openCheckIn', () => this._checkInPanel.open());
     EventBus.on('checkin:gmVirtualDayAdvanced', () => this._checkInPanel.refreshIfOpen());
+    // GM：预览当前更新公告（不写已读；先关 GM 以免挡在上层）
+    EventBus.on('nav:openUpdateAnnouncement', () => {
+      if (this._gmPanel?.visible) this._gmPanel.close();
+      const data = UpdateAnnouncementManager.active;
+      if (!data) return;
+      if (this._updateAnnouncementPanel.isOpen) {
+        this._updateAnnouncementPanel.close(false);
+      }
+      requestAnimationFrame(() => {
+        this._updateAnnouncementPanel.open(data, null, { markSeenOnClose: false });
+      });
+    });
     EventBus.on('checkin:decoUnlocked', (decoId: string, source: 'daily' | 'milestone') => {
       if (source !== 'daily') return;
       setTimeout(() => {
@@ -1498,6 +1550,11 @@ export class MainScene implements Scene {
       void TextureCache.preloadPanelAssets('quest')
         .finally(() => this._questPanel.open());
     });
+    EventBus.on('nav:openGrowthQuest', () => {
+      void TextureCache.preloadPanelAssets('growth')
+        .finally(() => this._growthQuestPanel.open());
+    });
+    EventBus.on('growth:updated', () => this._markRedDotsDirty());
     EventBus.on('currency:changed', (kind?: string, value?: number) => {
       this._markRedDotsDirty();
       if (kind === 'huayuan' && typeof value === 'number' && value > BUY_FURNITURE_HINT_HUAYUAN_MIN) {
@@ -1574,16 +1631,20 @@ export class MainScene implements Scene {
       }, 500);
     });
 
-    // 引导完成：仅弹签到，新手礼包改到首次进入花坊时再弹
+    // 引导完成：先更新公告（若有），再签到；新手礼包改到首次进入花坊时再弹
     EventBus.on('tutorial:completed', () => {
       this._tutorialOverlay?.unbind();
       ToastMessage.show('欢迎来到花花妙屋！');
-      if (CheckInManager.canCheckIn) {
-        setTimeout(() => this._checkInPanel.open(), 1000);
-      }
-      this._scheduleBuyFurnitureHint(3500);
-      this._scheduleRewardBoxHint(2800, true);
-      this._scheduleLimitedEventPromoAutoOpen(2800);
+      const afterAnnounce = () => {
+        if (CheckInManager.canCheckIn) {
+          setTimeout(() => this._checkInPanel.open(), 600);
+        }
+        this._scheduleBuyFurnitureHint(3500);
+        this._scheduleRewardBoxHint(2800, true);
+        this._scheduleLimitedEventPromoAutoOpen(2800);
+      };
+      if (this._tryShowUpdateAnnouncement(afterAnnounce)) return;
+      afterAnnounce();
     });
 
     EventBus.on('rewardBoxHint:pending', () => {

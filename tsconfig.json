@@ -11,6 +11,8 @@
     "isolatedModules": true,
     "noEmit": true,
     "lib": ["ES2020", "DOM", "DOM.Iterable"],
+    // TS 6+ 将弃用 baseUrl；路径别名仍依赖它，先静默到 7.0 迁移前
+    "ignoreDeprecations": "6.0",
     "baseUrl": ".",
     "paths": {
       "@/*": ["src/*"]

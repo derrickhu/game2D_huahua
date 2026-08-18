@@ -3,6 +3,7 @@ import { DESIGN_WIDTH, FONT_FAMILY } from '@/config/Constants';
 import { Game } from '@/core/Game';
 import { TweenManager, Ease } from '@/core/TweenManager';
 import { SettingsManager } from '@/managers/SettingsManager';
+import { UpdateAnnouncementManager } from '@/managers/UpdateAnnouncementManager';
 import { ToastMessage } from '@/gameobjects/ui/ToastMessage';
 import { TextureCache } from '@/utils/TextureCache';
 
@@ -23,9 +24,15 @@ const CONTENT_BOTTOM_NY = 0.93;
 
 /** 壳内奶油区约 280 宽，行卡需留边距避免裁切 */
 const ROW_W = 276;
-const ROW_H = 78;
+const ROW_H = 72;
 const ROW_HALF_W = ROW_W / 2;
 const ROW_HALF_H = ROW_H / 2;
+const ROW_GAP = 18;
+
+export type SettingsPanelOptions = {
+  /** 点击「更新公告」：由场景打开当前版本公告（建议不写已读） */
+  onOpenUpdateAnnouncement?: () => void;
+};
 
 export class SettingsPanel extends PIXI.Container {
   private _isOpen = false;
@@ -36,10 +43,14 @@ export class SettingsPanel extends PIXI.Container {
   private _closeHit!: PIXI.Container;
   private _musicToggle!: PIXI.Container;
   private _soundToggle!: PIXI.Container;
+  private _announceRow!: PIXI.Container;
+  private _announceDesc!: PIXI.Text;
   private _dimOverlay!: PIXI.Graphics;
+  private _onOpenUpdateAnnouncement: (() => void) | null;
 
-  constructor() {
+  constructor(options?: SettingsPanelOptions) {
     super();
+    this._onOpenUpdateAnnouncement = options?.onOpenUpdateAnnouncement ?? null;
     this.visible = false;
     this.eventMode = 'none';
     this.zIndex = 9300;
@@ -58,6 +69,7 @@ export class SettingsPanel extends PIXI.Container {
       this._applyShell();
     });
     this._refresh();
+    this._refreshAnnounceRow();
 
     TweenManager.to({
       target: this,
@@ -146,9 +158,11 @@ export class SettingsPanel extends PIXI.Container {
     const contentTop = -PANEL_H / 2 + PANEL_H * CONTENT_TOP_NY;
     const contentBottom = -PANEL_H / 2 + PANEL_H * CONTENT_BOTTOM_NY;
     const contentMid = (contentTop + contentBottom) / 2;
-    const rowGap = 36;
-    const musicY = contentMid - (ROW_H + rowGap) / 2;
-    const soundY = contentMid + (ROW_H + rowGap) / 2;
+    const stackH = ROW_H * 3 + ROW_GAP * 2;
+    const firstY = contentMid - stackH / 2 + ROW_H / 2;
+    const musicY = firstY;
+    const soundY = firstY + ROW_H + ROW_GAP;
+    const announceY = firstY + (ROW_H + ROW_GAP) * 2;
 
     this._musicToggle = this._createToggleRow('音乐', '背景音乐开关', musicY, () => {
       SettingsManager.setMusicEnabled(!SettingsManager.musicEnabled);
@@ -163,6 +177,41 @@ export class SettingsPanel extends PIXI.Container {
       ToastMessage.show(SettingsManager.soundEnabled ? '音效已开启' : '音效已关闭');
     });
     this._panel.addChild(this._soundToggle);
+
+    this._announceRow = this._createActionRow(
+      '更新公告',
+      '查看本次版本说明',
+      announceY,
+      () => this._handleOpenUpdateAnnouncement(),
+    );
+    this._announceDesc = this._announceRow.getChildByName('rowDesc') as PIXI.Text;
+    this._panel.addChild(this._announceRow);
+    this._refreshAnnounceRow();
+  }
+
+  private _handleOpenUpdateAnnouncement(): void {
+    if (!UpdateAnnouncementManager.active) {
+      ToastMessage.show('暂无更新公告');
+      return;
+    }
+    if (!this._onOpenUpdateAnnouncement) {
+      ToastMessage.show('暂无法打开公告');
+      return;
+    }
+    this.close();
+    this._onOpenUpdateAnnouncement();
+  }
+
+  private _refreshAnnounceRow(): void {
+    const active = UpdateAnnouncementManager.active;
+    this._announceRow.visible = true;
+    this._announceRow.alpha = active ? 1 : 0.55;
+    this._announceRow.eventMode = active ? 'static' : 'none';
+    if (this._announceDesc) {
+      this._announceDesc.text = active
+        ? `查看 v${active.version} 更新说明`
+        : '暂无更新公告';
+    }
   }
 
   private _applyShell(): void {
@@ -223,10 +272,8 @@ export class SettingsPanel extends PIXI.Container {
     this._fallbackBg = fallback;
   }
 
-  private _createToggleRow(title: string, desc: string, y: number, onTap: () => void): PIXI.Container {
+  private _createRowCard(): PIXI.Container {
     const row = new PIXI.Container();
-    row.position.set(0, y);
-
     const bg = new PIXI.Graphics();
     bg.beginFill(0xffffff, 0.78);
     bg.drawRoundedRect(-ROW_HALF_W, -ROW_HALF_H, ROW_W, ROW_H, 24);
@@ -234,9 +281,15 @@ export class SettingsPanel extends PIXI.Container {
     bg.lineStyle(2, 0xf3d8b4, 0.9);
     bg.drawRoundedRect(-ROW_HALF_W, -ROW_HALF_H, ROW_W, ROW_H, 24);
     row.addChild(bg);
+    return row;
+  }
+
+  private _createToggleRow(title: string, desc: string, y: number, onTap: () => void): PIXI.Container {
+    const row = this._createRowCard();
+    row.position.set(0, y);
 
     const titleText = new PIXI.Text(title, {
-      fontSize: 26,
+      fontSize: 24,
       fill: 0x6d5142,
       fontFamily: FONT_FAMILY,
       fontWeight: 'bold',
@@ -246,13 +299,69 @@ export class SettingsPanel extends PIXI.Container {
     row.addChild(titleText);
 
     const descText = new PIXI.Text(desc, {
-      fontSize: 15,
+      fontSize: 14,
       fill: 0xa78a75,
       fontFamily: FONT_FAMILY,
     });
     descText.anchor.set(0, 0.5);
     descText.position.set(-ROW_HALF_W + 18, 16);
     row.addChild(descText);
+
+    row.eventMode = 'static';
+    row.cursor = 'pointer';
+    row.hitArea = new PIXI.RoundedRectangle(-ROW_HALF_W, -ROW_HALF_H, ROW_W, ROW_H, 24);
+    row.on('pointerdown', (e: PIXI.FederatedPointerEvent) => {
+      e.stopPropagation();
+      onTap();
+    });
+    return row;
+  }
+
+  private _createActionRow(title: string, desc: string, y: number, onTap: () => void): PIXI.Container {
+    const row = this._createRowCard();
+    row.position.set(0, y);
+
+    const titleText = new PIXI.Text(title, {
+      fontSize: 24,
+      fill: 0x6d5142,
+      fontFamily: FONT_FAMILY,
+      fontWeight: 'bold',
+    });
+    titleText.anchor.set(0, 0.5);
+    titleText.position.set(-ROW_HALF_W + 18, -12);
+    row.addChild(titleText);
+
+    const descText = new PIXI.Text(desc, {
+      fontSize: 14,
+      fill: 0xa78a75,
+      fontFamily: FONT_FAMILY,
+    });
+    descText.name = 'rowDesc';
+    descText.anchor.set(0, 0.5);
+    descText.position.set(-ROW_HALF_W + 18, 16);
+    row.addChild(descText);
+
+    const chip = new PIXI.Container();
+    chip.eventMode = 'none';
+    chip.position.set(ROW_HALF_W - 44, 0);
+    const chipBg = new PIXI.Graphics();
+    chipBg.beginFill(0xffcf67, 1);
+    chipBg.drawRoundedRect(-34, -16, 68, 32, 16);
+    chipBg.endFill();
+    chipBg.lineStyle(2, 0xe7a63f, 0.95);
+    chipBg.drawRoundedRect(-34, -16, 68, 32, 16);
+    chip.addChild(chipBg);
+    const chipLabel = new PIXI.Text('查看', {
+      fontSize: 16,
+      fill: 0xffffff,
+      fontFamily: FONT_FAMILY,
+      fontWeight: 'bold',
+      stroke: 0xb86f24,
+      strokeThickness: 3,
+    });
+    chipLabel.anchor.set(0.5);
+    chip.addChild(chipLabel);
+    row.addChild(chip);
 
     row.eventMode = 'static';
     row.cursor = 'pointer';

@@ -69,6 +69,7 @@ const MAIN_IMAGE_MAP: Record<string, string> = {
   icon_dress:     'images/ui/icon_dress.png',
   icon_checkin:   'images/ui/icon_checkin.png',
   icon_quest:     'images/ui/icon_quest.png',
+  icon_growth:    'images/ui/icon_growth.png',
   icon_workshop_material: 'images/ui/icon_workshop_material.png',
   icon_workshop_dye_pink: 'images/ui/icon_workshop_dye_pink.png',
   icon_workshop_dye_yellow: 'images/ui/icon_workshop_dye_yellow.png',
@@ -306,6 +307,10 @@ const PANELS_IMAGE_MAP: Record<string, string> = {
 
   /** 每日挑战：NB2+rembg 粉紫壳（顶栏标题位、关闭钮、秒表条；中间留白叠列表） */
   daily_challenge_panel_shell_nb2: 'subpkg_panels/images/ui/daily_challenge_panel_shell_nb2.png',
+  /** 成长之路：NB2 绿幕去底壳（金标题牌、章节条、底部大奖卡；中间留白叠任务列表） */
+  growth_panel_shell_nb2: 'subpkg_panels/images/ui/growth_panel_shell_nb2.png',
+  /** 更新公告：NB2 绿幕去底壳（金标题牌 + 大空白正文区 + 底栏 CTA 带） */
+  update_announcement_panel_shell_nb2: 'subpkg_panels/images/ui/update_announcement_panel_shell_nb2.png',
   /** 周末花愿加成宣传卡（rembg 透明底，按钮文案由代码叠） */
   weekend_huayuan_boost_promo_panel_nb2: 'subpkg_panels/images/ui/weekend_huayuan_boost_promo_panel_nb2.png',
   /** 周二体力无限活动壳（绿幕去底；上半宣传 + 下半空白叠购买行） */
@@ -652,6 +657,12 @@ const DECO_IMAGE_MAP: Record<string, string> = {
   season_summer_floor_fan: 'subpkg_deco/images/furniture/season_summer_floor_fan.png',
   season_summer_dining_table: 'subpkg_deco/images/furniture/season_summer_dining_table.png',
   workshop_summer_dining_chair_sheet: 'subpkg_deco/images/furniture/workshop_summer_dining_chair_sheet.png',
+  /** 奶油木框沙发椅：2 列正/背；每格 max-side 342；可制作 2 件 */
+  workshop_cottage_wing_chair_sheet: 'subpkg_deco/images/furniture/workshop_cottage_wing_chair_sheet.png',
+  /** 圆窝软床：1 列 × 3 行（白红 / 蜜黄 / 樱粉）；每格 max-side 342 */
+  workshop_round_nest_bed_sheet: 'subpkg_deco/images/furniture/workshop_round_nest_bed_sheet.png',
+  /** 弧光落地灯：1 列 × 2 行（红黑 / 薄荷绿）；每格 max-side 342 */
+  workshop_arc_floor_lamp_sheet: 'subpkg_deco/images/furniture/workshop_arc_floor_lamp_sheet.png',
   light_plant_strip: 'subpkg_deco/images/furniture/light_plant_strip.png',
   light_radio_vintage: 'subpkg_deco/images/furniture/light_radio_vintage.png',
   light_fan_desk: 'subpkg_deco/images/furniture/light_fan_desk.png',
@@ -662,6 +673,17 @@ const DECO_IMAGE_MAP: Record<string, string> = {
   early_oak_island: 'subpkg_deco/images/furniture/early_oak_island.png',
   early_sage_sink_cabinet: 'subpkg_deco/images/furniture/early_sage_sink_cabinet.png',
   early_glass_bead_partition: 'subpkg_deco/images/furniture/early_glass_bead_partition.png',
+  /** Lv19–24 补档：卷轴瓶 / 茶盘 / 壁灯 / 收音机 / 窄高冰裂纹隔断 */
+  orn_scroll_blossom_vase: 'subpkg_deco/images/furniture/orn_scroll_blossom_vase.png',
+  orn_mint_tea_tray: 'subpkg_deco/images/furniture/orn_mint_tea_tray.png',
+  light_cream_globe_sconce: 'subpkg_deco/images/furniture/light_cream_globe_sconce.png',
+  light_retro_pastel_radio: 'subpkg_deco/images/furniture/light_retro_pastel_radio.png',
+  wallart_tall_ice_lattice_partition: 'subpkg_deco/images/furniture/wallart_tall_ice_lattice_partition.png',
+  /** 奶油云灯同风格套装（落地灯 / 侧几 / 壁架 / 单人椅） */
+  light_cottage_cream_floor_lamp: 'subpkg_deco/images/furniture/light_cottage_cream_floor_lamp.png',
+  table_cottage_cream_side_table: 'subpkg_deco/images/furniture/table_cottage_cream_side_table.png',
+  wallart_cottage_cream_wall_shelf: 'subpkg_deco/images/furniture/wallart_cottage_cream_wall_shelf.png',
+  orn_cottage_cream_armchair: 'subpkg_deco/images/furniture/orn_cottage_cream_armchair.png',
   early_blush_vine_sofa: 'subpkg_deco/images/furniture/early_blush_vine_sofa.png',
   early_sky_vine_tea_table: 'subpkg_deco/images/furniture/early_sky_vine_tea_table.png',
   // 摆件
@@ -687,10 +709,23 @@ const DECO_IMAGE_MAP: Record<string, string> = {
   workshop_bougainvillea_bonsai_sheet: 'subpkg_deco/images/furniture/workshop_bougainvillea_bonsai_sheet.png',
   /** 黑色超薄电视柜：2 列正/背合图；每格 max-side 342 */
   workshop_pastel_tv_cabinet_sheet: 'subpkg_deco/images/furniture/workshop_pastel_tv_cabinet_sheet.png',
+  /** 花漾圆浴盆：2 列（满水花瓣 / 空盆毛巾）；每格 max-side 342 */
+  workshop_blossom_tub_sheet: 'subpkg_deco/images/furniture/workshop_blossom_tub_sheet.png',
+  /** 蜜语软床：1 列 × 2 行（蜜黄 / 天蓝）；每格 max-side 342 */
+  workshop_buttercup_daybed_sheet: 'subpkg_deco/images/furniture/workshop_buttercup_daybed_sheet.png',
+  /** 霜糖软座：2 列正/背合图；每格 max-side 342 */
+  workshop_parfait_lounge_sheet: 'subpkg_deco/images/furniture/workshop_parfait_lounge_sheet.png',
+  /** 花边流苏地毯：1 列 × 3 行（樱粉 / 天蓝 / 蜜黄）；新手工坊图纸（id 沿用 petal_oval） */
+  workshop_petal_oval_rug_sheet: 'subpkg_deco/images/furniture/workshop_petal_oval_rug_sheet.png',
   /** 玫瑰垂幔帘：1 列 × 3 行（樱粉 / 天蓝 / 蜜黄）；每格 max-side 342 */
   workshop_rose_cascade_drape_sheet: 'subpkg_deco/images/furniture/workshop_rose_cascade_drape_sheet.png',
   /** 蕾丝铁艺床：单张 PNG，max-side 342 */
   workshop_lace_ribbon_bed: 'subpkg_deco/images/furniture/workshop_lace_ribbon_bed.png',
+  /** 艺廊花艺瓶：默认红袖 / 青花蓝橙 / 金紫 / 荷韵；单张 PNG，max-side 342 */
+  workshop_atelier_bouquet_vase: 'subpkg_deco/images/furniture/workshop_atelier_bouquet_vase.png',
+  workshop_atelier_bouquet_vase_blue: 'subpkg_deco/images/furniture/workshop_atelier_bouquet_vase_blue.png',
+  workshop_atelier_bouquet_vase_honey: 'subpkg_deco/images/furniture/workshop_atelier_bouquet_vase_honey.png',
+  workshop_atelier_bouquet_vase_sakura: 'subpkg_deco/images/furniture/workshop_atelier_bouquet_vase_sakura.png',
   /** 夏日荷塘拱窗：单张墙饰 PNG，max-side 342（清凉一夏活动图纸） */
   workshop_summer_lotus_arch_window: 'subpkg_deco/images/furniture/workshop_summer_lotus_arch_window.png',
   /** 薄荷暖阳飘窗：暖阳飘窗染色款，max-side 342 */
@@ -837,7 +872,10 @@ const DECO_IMAGE_MAP: Record<string, string> = {
   deco_lv19_table_cloud_dessert_island: 'subpkg_deco/images/furniture/deco_lv19_table_cloud_dessert_island.png',
   deco_lv20_garden_cloud_swing: 'subpkg_deco/images/furniture/deco_lv20_garden_cloud_swing.png',
   deco_lv10_orn_kitten_bed: 'subpkg_deco/images/furniture/deco_lv10_orn_kitten_bed.png',
+  deco_lv10_orn_petal_oval_rug: 'subpkg_deco/images/furniture/deco_lv10_orn_petal_oval_rug.png',
   deco_lv11_orn_cat_tower: 'subpkg_deco/images/furniture/deco_lv11_orn_cat_tower.png',
+  deco_lv11_orn_petal_oval_rug_sky: 'subpkg_deco/images/furniture/deco_lv11_orn_petal_oval_rug_sky.png',
+  deco_lv12_orn_petal_oval_rug_honey: 'subpkg_deco/images/furniture/deco_lv12_orn_petal_oval_rug_honey.png',
   deco_lv11_light_phonograph_vintage: 'subpkg_deco/images/furniture/deco_lv11_light_phonograph_vintage.png',
   deco_lv12_orn_pastel_postbox: 'subpkg_deco/images/furniture/deco_lv12_orn_pastel_postbox.png',
   deco_lv13_orn_teddy_armchair: 'subpkg_deco/images/furniture/deco_lv13_orn_teddy_armchair.png',
@@ -949,6 +987,30 @@ const DECO_IMAGE_MAP: Record<string, string> = {
   tree_canopy_bed: 'subpkg_deco/images/furniture/tree_canopy_bed.png',
   tea_paper_lantern: 'subpkg_deco/images/furniture/tea_paper_lantern.png',
   villa_chester_sofa: 'subpkg_deco/images/furniture/villa_chester_sofa.png',
+
+  // ---- 奶油轻奢厨餐（通用场景 · Lv35–37）----
+  villa_kitchen_island: 'subpkg_deco/images/furniture/villa_kitchen_island.png',
+  villa_kitchen_fridge: 'subpkg_deco/images/furniture/villa_kitchen_fridge.png',
+  villa_dining_long_table: 'subpkg_deco/images/furniture/villa_dining_long_table.png',
+  villa_dining_chair_pair: 'subpkg_deco/images/furniture/villa_dining_chair_pair.png',
+  villa_kitchen_pendant: 'subpkg_deco/images/furniture/villa_kitchen_pendant.png',
+  villa_kitchen_sideboard: 'subpkg_deco/images/furniture/villa_kitchen_sideboard.png',
+
+  // ---- 花园别墅专属家具（garden_villa Lv36–38，不低于房间开放等级）----
+  villa_salon_curved_sofa: 'subpkg_deco/images/furniture/villa_salon_curved_sofa.png',
+  villa_salon_marble_tea: 'subpkg_deco/images/furniture/villa_salon_marble_tea.png',
+  villa_salon_armchair: 'subpkg_deco/images/furniture/villa_salon_armchair.png',
+  villa_salon_floor_lamp: 'subpkg_deco/images/furniture/villa_salon_floor_lamp.png',
+  villa_salon_rose_rug: 'subpkg_deco/images/furniture/villa_salon_rose_rug.png',
+  villa_salon_console: 'subpkg_deco/images/furniture/villa_salon_console.png',
+  villa_salon_crystal_chandelier: 'subpkg_deco/images/furniture/villa_salon_crystal_chandelier.png',
+  villa_moon_nightstand: 'subpkg_deco/images/furniture/villa_moon_nightstand.png',
+  villa_moon_bedside_lamp: 'subpkg_deco/images/furniture/villa_moon_bedside_lamp.png',
+  villa_moon_wardrobe: 'subpkg_deco/images/furniture/villa_moon_wardrobe.png',
+  villa_moon_vanity: 'subpkg_deco/images/furniture/villa_moon_vanity.png',
+  villa_moon_floor_mirror: 'subpkg_deco/images/furniture/villa_moon_floor_mirror.png',
+  villa_moon_canopy_bed: 'subpkg_deco/images/furniture/villa_moon_canopy_bed.png',
+  villa_pearl_grand_piano: 'subpkg_deco/images/furniture/villa_pearl_grand_piano.png',
 
   // ---- 梦云小屋专属家具（dream_cloud_house Lv20–24 卧室休闲套）----
   dream_cloud_bed: 'subpkg_deco/images/furniture/dream_cloud_bed.png',
@@ -1087,6 +1149,8 @@ const DECO_IMAGE_MAP: Record<string, string> = {
   bg_room_flower_farm_spring_vine_nb2: 'subpkg_deco/images/house/bg_room_flower_farm_spring_vine_nb2.png',
   /** 花园别墅 — 宽景分层西式洋房 cutaway 空壳 */
   bg_room_garden_villa_loft_nb2: 'subpkg_deco/images/house/bg_room_garden_villa_loft_nb2.png',
+  /** 花园别墅 — 丁香暮色换色壳（同房型冷调淡紫） */
+  bg_room_garden_villa_lilac_dusk_nb2: 'subpkg_deco/images/house/bg_room_garden_villa_lilac_dusk_nb2.png',
   /** 花园别墅 — 旧版木骨双层洋房（保留备用） */
   bg_room_garden_villa_manor_nb2: 'subpkg_deco/images/house/bg_room_garden_villa_manor_nb2.png',
   /** 蛋糕房 — 现代 pastel 甜品店 cutaway 空壳（正式路径；preview/ 旧副本保留供现网 CDN） */
@@ -1107,7 +1171,7 @@ const DECO_IMAGE_MAP: Record<string, string> = {
 // 启动关键资源：随主包保底，不走 CDN；避免新号首进弱网时新手图/基础头像空白
 // ================================================================
 const CRITICAL_IMAGE_MAP: Record<string, string> = {
-  tutorial_story_1: 'images/tutorial/story_1.png',
+  tutorial_story_1: 'images/tutorial/story_1.jpg',
   tutorial_hand_pointer: 'images/tutorial/tutorial_hand_pointer.png',
 
   owner_chibi_default: 'images/critical/owner/chibi_default.png',
@@ -1252,6 +1316,22 @@ const QUEST_PANEL_KEYS = [
   'icon_huayuan',
 ] as const;
 
+const GROWTH_PANEL_KEYS = [
+  'growth_panel_shell_nb2',
+  'deco_card_btn_3',
+  'ui_order_check_badge',
+  'icon_energy',
+  'icon_gem',
+  'icon_huayuan',
+  'icon_flower_sign_coin',
+  'icon_workshop_material',
+  'icon_workshop_dye_blue',
+  'icon_workshop_dye_green',
+  'icon_workshop_dye_yellow',
+  // 章节大奖会展示图纸图标（在 deco 分包）
+  'workshop_blueprint_generic',
+] as const;
+
 const COLLECTION_PANEL_KEYS = [
   'collection_panel_shell_nb2',
   'collection_item_placeholder_nb2',
@@ -1382,6 +1462,7 @@ export type TextureAssetGroup =
   | 'tutorialDeco'
   | 'worldmap'
   | 'quest'
+  | 'growth'
   | 'collection'
   | 'furnitureWorkshop'
   | 'affinity'
@@ -1413,6 +1494,7 @@ const ASSET_GROUP_KEYS: Record<TextureAssetGroup, readonly string[]> = {
   tutorialDeco: TUTORIAL_DECO_KEYS,
   worldmap: WORLDMAP_WARMUP_KEYS,
   quest: QUEST_PANEL_KEYS,
+  growth: GROWTH_PANEL_KEYS,
   collection: COLLECTION_PANEL_KEYS,
   furnitureWorkshop: FURNITURE_WORKSHOP_PANEL_KEYS,
   affinity: AFFINITY_PANEL_KEYS,
@@ -1471,6 +1553,7 @@ const ASSET_GROUP_NOTIFY_KEYS: Record<TextureAssetGroup, readonly string[]> = {
   tutorialDeco: uniqueKeys(TUTORIAL_DECO_KEYS, ALL_DECO_KEYS, ALL_ITEMS_KEYS),
   worldmap: uniqueKeys(WORLDMAP_WARMUP_KEYS, WORLDMAP_KEYS),
   quest: uniqueKeys(QUEST_PANEL_KEYS, ALL_ITEMS_KEYS, ALL_DECO_KEYS),
+  growth: uniqueKeys(GROWTH_PANEL_KEYS, ALL_ITEMS_KEYS, ALL_DECO_KEYS),
   collection: uniqueKeys(COLLECTION_PANEL_KEYS, ALL_ITEMS_KEYS),
   furnitureWorkshop: uniqueKeys(FURNITURE_WORKSHOP_PANEL_KEYS, ALL_DECO_KEYS),
   affinity: uniqueKeys(AFFINITY_PANEL_KEYS, AFFINITY_CARD_KEYS, CUSTOMER_KEYS, ALL_DECO_KEYS, ALL_ITEMS_KEYS),

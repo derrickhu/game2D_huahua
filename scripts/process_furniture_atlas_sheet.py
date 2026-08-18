@@ -23,6 +23,7 @@
     --columns 2 --rows 1 --max-side 256 \\
     --match-height --bottom-align --width-ratio-max 1.08 \\
     -o minigame/subpkg_deco/images/furniture/workshop_summer_dining_chair_sheet.png
+  # 注意：width-ratio-max 超限时只等比缩小，不再拉回目标高度（拉回会抵消宽度限制）
 
   # 从多张单件拼成 1 列 × N 行（多配色）
   python3 scripts/process_furniture_atlas_sheet.py \\
@@ -93,8 +94,12 @@ def split_grid(im: Image.Image, columns: int, rows: int) -> list[Image.Image]:
     return cells
 
 
-def _cap_width_ratio(frames: list[Image.Image], width_ratio_max: float, target_h: int) -> list[Image.Image]:
-    """Keep each frame width within width_ratio_max of the first (front) frame."""
+def _cap_width_ratio(frames: list[Image.Image], width_ratio_max: float) -> list[Image.Image]:
+    """Keep each frame width within width_ratio_max of the first (front) frame.
+
+    Uniform scale only — do NOT re-fit height afterward (that would undo the width cap
+    and make an oversized back look chunkier than the front).
+    """
     if width_ratio_max <= 0 or len(frames) < 2:
         return frames
     ref_w = frames[0].width
@@ -109,13 +114,11 @@ def _cap_width_ratio(frames: list[Image.Image], width_ratio_max: float, target_h
             nw = max_w
             nh = max(1, int(round(frame.height * scale)))
             frame = frame.resize((nw, nh), Image.Resampling.LANCZOS)
-            frame = fit_height(frame, target_h)
         elif frame.width < min_w:
             scale = min_w / frame.width
             nw = min_w
             nh = max(1, int(round(frame.height * scale)))
             frame = frame.resize((nw, nh), Image.Resampling.LANCZOS)
-            frame = fit_height(frame, target_h)
         out.append(frame)
     return out
 
@@ -143,9 +146,8 @@ def compose_sheet(
         target_h = min(max_side, raw_h) if raw_h > 0 else max_side
         frames = [fit_height(im, target_h) for im in trimmed]
         if width_ratio_max > 0:
-            frames = _cap_width_ratio(frames, width_ratio_max, target_h)
-            # Re-sync height after width caps
-            frames = [fit_height(im, target_h) for im in frames]
+            # May leave back slightly shorter than front; bottom-align keeps feet shared.
+            frames = _cap_width_ratio(frames, width_ratio_max)
     else:
         frames = [fit_max_side(im, max_side) for im in trimmed]
 

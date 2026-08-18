@@ -26,6 +26,7 @@ import { FURNITURE_TRAY_SPAWN_ROOM_LOCAL, RoomLayoutManager, type FurniturePlace
 import { CurrencyManager } from '@/managers/CurrencyManager';
 import { CheckInManager } from '@/managers/CheckInManager';
 import { QuestManager } from '@/managers/QuestManager';
+import { GrowthQuestManager } from '@/managers/GrowthQuestManager';
 import { CoolSummerEventManager } from '@/managers/CoolSummerEventManager';
 import { SaveManager } from '@/managers/SaveManager';
 import { DressUpManager } from '@/managers/DressUpManager';
@@ -77,6 +78,8 @@ import { playShopDecorationStarFly, playShopDecorationStarFlyOverOverlay } from 
 import { Platform } from '@/core/PlatformService';
 import { SocialManager } from '@/managers/SocialManager';
 import { SettingsPanel } from '@/gameobjects/ui/SettingsPanel';
+import { UpdateAnnouncementPanel } from '@/gameobjects/ui/UpdateAnnouncementPanel';
+import { UpdateAnnouncementManager } from '@/managers/UpdateAnnouncementManager';
 import { AdEntitlementManager, DailyAdEntitlement } from '@/managers/AdEntitlementManager';
 import { AdManager, AdScene } from '@/managers/AdManager';
 import { ConfirmDialog } from '@/gameobjects/ui/ConfirmDialog';
@@ -200,9 +203,10 @@ const LEFT_TOP_BUTTONS: SideBtnDef[] = [
   { id: 'affinity_codex', icon: '', texKey: 'icon_affinity_card', label: '友谊卡', event: 'affinityCodex:open', iconBg: 0xFFB1CC, labelColor: 0xC75D8B },
 ];
 
-/** 右侧 — 活动快捷按钮（签到/任务/清凉一夏） */
+/** 右侧 — 活动快捷按钮（签到/成长/任务/清凉一夏） */
 const RIGHT_BUTTONS: SideBtnDef[] = [
   { id: 'checkin', icon: '', texKey: 'icon_checkin', label: '签到', event: 'nav:openCheckIn', iconBg: 0xFFA726, labelColor: 0xD48B2E },
+  { id: 'growth',  icon: '', texKey: 'icon_growth',  label: '成长', event: 'nav:openGrowthQuest', iconBg: 0x9CCC65, labelColor: 0x5F8F3A },
   { id: 'quest',   icon: '', texKey: 'icon_quest',   label: '任务', event: 'nav:openQuest',   iconBg: 0x42A5F5, labelColor: 0x1976D2 },
   { id: 'cool_summer', icon: '', texKey: 'icon_cool_summer_event_nb2', label: '清凉', event: 'panel:openCoolSummerEvent', iconBg: 0x4DB6AC, labelColor: 0x1B6B66 },
 ];
@@ -286,6 +290,12 @@ export class ShopScene implements Scene {
   // ── 店主 ──
   private _ownerContainer: PIXI.Container | null = null;
   private _ownerSprite: PIXI.Sprite | null = null;
+  /**
+   * 编辑态店主命中代理：zIndex 置顶，仅负责 hitArea，不参与 2.5D 遮挡绘制。
+   * 解决错层/大家具 AABB 盖住楼上角色导致「拖不动店主」。
+   */
+  private _ownerEditHitProxy: PIXI.Container | null = null;
+  private static readonly OWNER_EDIT_HIT_PROXY_Z = 2_000_000_000;
 
   private readonly _onDressUpEquipped = (): void => {
     this._refreshShopOwnerOutfitTextures();
@@ -334,6 +344,7 @@ export class ShopScene implements Scene {
     if (this._ownerContainer) {
       this._ownerContainer.position.set(ownerX, ownerY);
       this._ownerContainer.zIndex = roomDepthZForOwner(ownerY);
+      this._syncOwnerEditHitProxy();
       this._roomContainer.sortChildren();
     }
     if (this._isEditMode) {
@@ -421,6 +432,7 @@ export class ShopScene implements Scene {
     this._refreshWishingBtnVisibility();
   };
   private _settingsPanel: SettingsPanel | null = null;
+  private _updateAnnouncementPanel: UpdateAnnouncementPanel | null = null;
 
   /** 装修面板全屏遮罩：把星级进度条+飞星层提到 overlay，盖在遮罩之上 */
   private readonly _onDecoPanelBackdrop = (payload: { open: boolean }): void => {
@@ -634,6 +646,9 @@ export class ShopScene implements Scene {
     }
 
     this._settingsPanel?.close();
+    if (this._updateAnnouncementPanel?.isOpen) {
+      this._updateAnnouncementPanel.close(false);
+    }
     this._restoreShopHudAfterDecoPanel();
     RewardFlyCoordinator.setBindings(null);
     this._textureRefreshUnsub?.();
@@ -834,7 +849,21 @@ export class ShopScene implements Scene {
     this._levelUpPopup.zIndex = ShopScene._LEVEL_UP_OVERLAY_Z;
     const ov = OverlayManager.container;
     ov.addChild(this._levelUpPopup);
-    this._settingsPanel = new SettingsPanel();
+    this._updateAnnouncementPanel = new UpdateAnnouncementPanel();
+    this._updateAnnouncementPanel.zIndex = 9400;
+    ov.addChild(this._updateAnnouncementPanel);
+    this._settingsPanel = new SettingsPanel({
+      onOpenUpdateAnnouncement: () => {
+        const data = UpdateAnnouncementManager.active;
+        if (!data || !this._updateAnnouncementPanel) return;
+        if (this._updateAnnouncementPanel.isOpen) {
+          this._updateAnnouncementPanel.close(false);
+        }
+        requestAnimationFrame(() => {
+          this._updateAnnouncementPanel?.open(data, null, { markSeenOnClose: false });
+        });
+      },
+    });
     ov.addChild(this._settingsPanel);
     ov.sortChildren();
 
@@ -1200,6 +1229,72 @@ export class ShopScene implements Scene {
     this._resetOwnerDragState();
     this._ownerContainer.eventMode = 'static';
     this._ownerContainer.cursor = inEdit ? 'grab' : 'pointer';
+    this._syncOwnerHitArea();
+    if (inEdit) {
+      this._ensureOwnerEditHitProxy();
+      this._syncOwnerEditHitProxy();
+      FurnitureDragSystem.setOwnerHitPrefer(
+        (lx, ly) => this._isRoomLocalOnOwnerHitArea(lx, ly),
+        (e) => {
+          const owner = this._ownerContainer;
+          if (!owner || owner.destroyed) return;
+          FurnitureDragSystem.cancelActiveDrag();
+          this._beginOwnerDrag(e, owner);
+        },
+      );
+    } else {
+      FurnitureDragSystem.setOwnerHitPrefer(null, null);
+      this._destroyOwnerEditHitProxy();
+    }
+  }
+
+  /** room 本地坐标是否落在店主 hitArea（含编辑态代理） */
+  private _isRoomLocalOnOwnerHitArea(roomLocalX: number, roomLocalY: number): boolean {
+    const owner = this._ownerContainer;
+    if (!owner || owner.destroyed || !owner.hitArea) return false;
+    const ha = owner.hitArea;
+    if (typeof (ha as PIXI.Rectangle).contains === 'function') {
+      return (ha as PIXI.Rectangle).contains(roomLocalX - owner.x, roomLocalY - owner.y);
+    }
+    return false;
+  }
+
+  private _ensureOwnerEditHitProxy(): void {
+    if (this._ownerEditHitProxy && !this._ownerEditHitProxy.destroyed) return;
+    const proxy = new PIXI.Container();
+    proxy.eventMode = 'static';
+    proxy.cursor = 'grab';
+    proxy.zIndex = ShopScene.OWNER_EDIT_HIT_PROXY_Z;
+    proxy.on('pointerdown', (e: PIXI.FederatedPointerEvent) => {
+      e.stopPropagation();
+      const owner = this._ownerContainer;
+      if (!owner || owner.destroyed || !this._isEditMode) return;
+      FurnitureDragSystem.cancelActiveDrag();
+      this._beginOwnerDrag(e, owner);
+    });
+    this._roomContainer.addChild(proxy);
+    this._ownerEditHitProxy = proxy;
+  }
+
+  private _syncOwnerEditHitProxy(): void {
+    const proxy = this._ownerEditHitProxy;
+    const owner = this._ownerContainer;
+    if (!proxy || proxy.destroyed || !owner || owner.destroyed) return;
+    if (!this._isEditMode) return;
+    proxy.position.set(owner.x, owner.y);
+    proxy.hitArea = owner.hitArea;
+    proxy.zIndex = ShopScene.OWNER_EDIT_HIT_PROXY_Z;
+    proxy.visible = true;
+    proxy.eventMode = 'static';
+  }
+
+  private _destroyOwnerEditHitProxy(): void {
+    const proxy = this._ownerEditHitProxy;
+    this._ownerEditHitProxy = null;
+    if (!proxy || proxy.destroyed) return;
+    proxy.removeAllListeners();
+    proxy.parent?.removeChild(proxy);
+    proxy.destroy({ children: true });
   }
 
   private _beginOwnerDragFromClient(
@@ -1263,9 +1358,12 @@ export class ShopScene implements Scene {
     const w = Math.max(Math.abs(sp.width), SHOP_OWNER_HIT_MIN_R * 2);
     const h = Math.max(Math.abs(sp.height), SHOP_OWNER_HIT_MIN_R * 2);
     if (w < 4 || h < 4) return;
-    const padX = Math.max(10, w * 0.08);
-    const padY = Math.max(8, h * 0.05);
+    // 编辑态略放大热区，错层/缩放后更容易点到
+    const padMul = this._isEditMode ? 1.4 : 1;
+    const padX = Math.max(10, w * 0.08) * padMul;
+    const padY = Math.max(8, h * 0.05) * padMul;
     owner.hitArea = new PIXI.Rectangle(-w / 2 - padX, -h - padY, w + padX * 2, h + padY * 2);
+    this._syncOwnerEditHitProxy();
   }
 
   /** 按当前换装刷新花店店主全身贴图与缩放（含眨眼所用睁眼/闭眼键） */
@@ -1358,6 +1456,7 @@ export class ShopScene implements Scene {
       owner.x = localX + this._ownerDragOffset.x;
       owner.y = localY + this._ownerDragOffset.y;
       owner.zIndex = roomDepthZForOwner(owner.y);
+      this._syncOwnerEditHitProxy();
       this._roomContainer.sortChildren();
     };
     this._onOwnerRawUp = (rawEvt: any) => {
@@ -3275,8 +3374,9 @@ export class ShopScene implements Scene {
     const trayTopY = furnitureTrayOpenTopY(h, Game.safeBottom);
     this._applySceneEditViewProfile(true, trayTopY);
 
-    // 启用拖拽系统
+    // 启用拖拽系统（店主命中优先已在 _applyOwnerEditModeInteraction 注入）
     FurnitureDragSystem.enable(this._roomContainer);
+    this._syncOwnerEditHitProxy();
 
     // 打开家具托盘
     if (trayArg != null && typeof trayArg === 'object' && 'deco' in trayArg) {
@@ -3571,6 +3671,7 @@ export class ShopScene implements Scene {
     if (owner && pos) {
       owner.position.set(pos.x, pos.y);
       owner.zIndex = roomDepthZForOwner(pos.y);
+      this._syncOwnerEditHitProxy();
       this._roomContainer?.sortChildren();
     }
     if (this._furnitureTray.isOpen) {
@@ -4491,6 +4592,10 @@ export class ShopScene implements Scene {
     // 任务红点
     const questBtn = this._activityBtns.get('quest');
     if (questBtn) questBtn.redDot.visible = QuestManager.hasClaimableQuest;
+
+    // 成长之路红点（有可领任务或章节大奖）
+    const growthBtn = this._activityBtns.get('growth');
+    if (growthBtn) growthBtn.redDot.visible = GrowthQuestManager.hasClaimable();
 
     // 清凉一夏红点
     const coolSummerBtn = this._activityBtns.get('cool_summer');

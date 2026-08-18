@@ -34,6 +34,7 @@ import {
   type MergeCompanionFloatBubble,
 } from '@/managers/MergeCompanionManager';
 import { ConfirmDialog } from './ConfirmDialog';
+import { GrowthGoalWidget } from './GrowthGoalWidget';
 import { ToastMessage } from './ToastMessage';
 import { ToolProducePolicy } from '@/managers/ToolProducePolicy';
 import { DecorationManager } from '@/managers/DecorationManager';
@@ -166,6 +167,9 @@ export class ItemInfoBar extends PIXI.Container {
   private _hintContainer!: PIXI.Container;
   private _hintShadow!: PIXI.Graphics;
   private _hintCard!: PIXI.Graphics;
+  private _hintText!: PIXI.Text;
+  /** 成长之路当前目标；有目标时顶掉默认提示文案 */
+  private _growthWidget!: GrowthGoalWidget;
 
   private _infoContainer!: PIXI.Container;
   private _infoShadow!: PIXI.Graphics;
@@ -277,8 +281,8 @@ export class ItemInfoBar extends PIXI.Container {
     this._warehouseBtn.position.y = sideButtonCY;
 
     drawCardChrome(this._hintShadow, this._hintCard, this._cardLeft, this._cardTop, this._cardW, this._cardH);
-    const hint = this._hintContainer.children[2] as PIXI.Text | undefined;
-    hint?.position.set(this._cardLeft + this._cardW / 2, this._cardTop + this._cardH / 2);
+    this._hintText.position.set(this._cardLeft + this._cardW / 2, this._cardTop + this._cardH / 2);
+    this._syncGrowthWidget();
 
     drawCardChrome(this._infoShadow, this._infoCard, this._cardLeft, this._cardTop, this._cardW, this._cardH);
     this._leafStrip.position.set(this._cardLeft - LEAF_LEFT_OVERHANG, this._cardTop - 10);
@@ -422,8 +426,26 @@ export class ItemInfoBar extends PIXI.Container {
     hint.anchor.set(0.5, 0.5);
     hint.position.set(this._cardLeft + this._cardW / 2, this._cardTop + this._cardH / 2);
     this._hintContainer.addChild(hint);
+    this._hintText = hint;
+
+    this._growthWidget = new GrowthGoalWidget();
+    this._hintContainer.addChild(this._growthWidget);
+    this._syncGrowthWidget();
+    // 成长进度变了可能从「有目标」翻成「全通关」，须重算默认文案的显隐
+    EventBus.on('growth:updated', () => this._syncGrowthWidget());
 
     this.addChild(this._hintContainer);
+  }
+
+  /** 挂件有目标就铺满整张提示卡，否则退回默认提示文案 */
+  private _syncGrowthWidget(): void {
+    this._growthWidget.layout({
+      left: this._cardLeft,
+      top: this._cardTop,
+      w: this._cardW,
+      h: this._cardH,
+    });
+    this._hintText.visible = !this._growthWidget.hasGoal;
   }
 
   private _syncLeafStrip(): void {

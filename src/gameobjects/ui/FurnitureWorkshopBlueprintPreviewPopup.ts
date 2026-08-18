@@ -2,12 +2,14 @@ import * as PIXI from 'pixi.js';
 import { COLORS, FONT_FAMILY } from '@/config/Constants';
 import { DECO_MAP } from '@/config/DecorationConfig';
 import {
-  getBlueprintDisplayName,
   getDefaultWorkshopColorOption,
   getWorkshopBlueprintInteractionHint,
   getWorkshopColorChipLabel,
+  getWorkshopColorChipSwatch,
+  getWorkshopCraftDisplayName,
   isDefaultWorkshopColorOption,
   isWorkshopBlueprintInteractive,
+  resolveWorkshopMaterialIconKey,
   shouldShowWorkshopBlueprintColorPreview,
   WORKSHOP_HUAYUAN_ICON,
   WORKSHOP_MATERIAL_ICON,
@@ -47,6 +49,8 @@ export class FurnitureWorkshopBlueprintPreviewPopup extends PIXI.Container {
   private _interactionText!: PIXI.Text;
   private _starBadgeWrap!: PIXI.Container;
   private _featureTagWrap!: PIXI.Container;
+  private _blueprint: WorkshopBlueprintDef | null = null;
+  private _selectedColorId = '';
 
   constructor() {
     super();
@@ -57,28 +61,33 @@ export class FurnitureWorkshopBlueprintPreviewPopup extends PIXI.Container {
   }
 
   open(blueprint: WorkshopBlueprintDef): void {
-    const option = getDefaultWorkshopColorOption(blueprint);
-    const decoId = option?.outputDecoId ?? blueprint.outputDecoId;
-    const deco = DECO_MAP.get(decoId);
-    if (!deco) return;
+    const option = getDefaultWorkshopColorOption(blueprint) ?? blueprint.colorOptions[0];
+    if (!option || !DECO_MAP.get(option.outputDecoId)) return;
 
+    this._blueprint = blueprint;
+    this._selectedColorId = option.id;
     this.eventMode = 'static';
     this.visible = true;
-    this._refresh(blueprint, decoId, deco);
+    this._refresh();
 
-    const keys = new Set(collectFurniturePreloadKeys(decoId, deco.icon));
-    keys.add(WORKSHOP_MATERIAL_ICON);
-    keys.add(WORKSHOP_HUAYUAN_ICON);
+    const keys = new Set<string>([WORKSHOP_MATERIAL_ICON, WORKSHOP_HUAYUAN_ICON]);
+    for (const opt of blueprint.colorOptions) {
+      const deco = DECO_MAP.get(opt.outputDecoId);
+      if (!deco) continue;
+      for (const k of collectFurniturePreloadKeys(opt.outputDecoId, deco.icon)) keys.add(k);
+      if (opt.dyeMaterialId) keys.add(resolveWorkshopMaterialIconKey(opt.dyeMaterialId));
+    }
     void TextureCache.preloadKeys([...keys]).finally(() => {
-      if (!this.visible) return;
-      const latest = DECO_MAP.get(decoId);
-      if (latest) this._refresh(blueprint, decoId, latest);
+      if (!this.visible || this._blueprint?.id !== blueprint.id) return;
+      this._refresh();
     });
   }
 
   close(): void {
     this.visible = false;
     this.eventMode = 'none';
+    this._blueprint = null;
+    this._selectedColorId = '';
   }
 
   private _build(): void {
@@ -186,12 +195,23 @@ export class FurnitureWorkshopBlueprintPreviewPopup extends PIXI.Container {
     this._card.addChild(this._interactionText);
   }
 
-  private _refresh(
-    blueprint: WorkshopBlueprintDef,
-    decoId: string,
-    deco: NonNullable<ReturnType<typeof DECO_MAP.get>>,
-  ): void {
-    const resolved = resolveFurnitureTexture(decoId, deco.icon, {});
+  private _selectedOption(): WorkshopColorOption | null {
+    const blueprint = this._blueprint;
+    if (!blueprint) return null;
+    return blueprint.colorOptions.find(c => c.id === this._selectedColorId)
+      ?? getDefaultWorkshopColorOption(blueprint)
+      ?? blueprint.colorOptions[0]
+      ?? null;
+  }
+
+  private _refresh(): void {
+    const blueprint = this._blueprint;
+    const option = this._selectedOption();
+    if (!blueprint || !option) return;
+    const deco = DECO_MAP.get(option.outputDecoId);
+    if (!deco) return;
+
+    const resolved = resolveFurnitureTexture(option.outputDecoId, deco.icon, {});
     const tex = TextureCache.get(resolved.textureKey);
     this._previewSprite.texture = tex ?? PIXI.Texture.EMPTY;
     if (tex?.width) {
@@ -201,11 +221,11 @@ export class FurnitureWorkshopBlueprintPreviewPopup extends PIXI.Container {
       this._previewSprite.scale.set(1);
     }
 
-    this._nameText.text = getBlueprintDisplayName(blueprint);
+    this._nameText.text = getWorkshopCraftDisplayName(blueprint, option);
     this._descText.text = deco.desc || '默认形态预览';
     this._updateStarBadge(deco.starValue ?? 0);
     this._updateFeatureTags(blueprint);
-    this._updateCraftCostSection(blueprint);
+    this._updateCraftCostSection(option);
     this._updateColorSection(blueprint);
     this._updateInteractionHint(blueprint);
     this._layoutCard(blueprint);
@@ -275,10 +295,8 @@ export class FurnitureWorkshopBlueprintPreviewPopup extends PIXI.Container {
     };
   }
 
-  private _updateCraftCostSection(blueprint: WorkshopBlueprintDef): void {
+  private _updateCraftCostSection(option: WorkshopColorOption): void {
     this._craftCostSection.removeChildren();
-    const option = getDefaultWorkshopColorOption(blueprint);
-    if (!option) return;
 
     const title = new PIXI.Text('制作消耗', textStyle(this._sectionTitleStyle()));
     this._craftCostSection.addChild(title);
@@ -289,6 +307,15 @@ export class FurnitureWorkshopBlueprintPreviewPopup extends PIXI.Container {
 
     let x = 0;
     x = this._appendCostItem(row, WORKSHOP_MATERIAL_ICON, option.materialCost, x);
+    if (option.dyeCost > 0 && option.dyeMaterialId) {
+      x += COST_ITEM_GAP;
+      x = this._appendCostItem(
+        row,
+        resolveWorkshopMaterialIconKey(option.dyeMaterialId),
+        option.dyeCost,
+        x,
+      );
+    }
     x += COST_ITEM_GAP;
     this._appendCostItem(row, WORKSHOP_HUAYUAN_ICON, option.huayuanCost, x);
   }
@@ -349,8 +376,18 @@ export class FurnitureWorkshopBlueprintPreviewPopup extends PIXI.Container {
 
     let x = 0;
     for (const opt of blueprint.colorOptions) {
-      const chip = this._makeColorPreviewChip(blueprint, opt, COLOR_CHIP_R);
+      const selected = opt.id === this._selectedColorId;
+      const chip = this._makeColorPreviewChip(blueprint, opt, COLOR_CHIP_R, selected);
       chip.position.set(x + COLOR_CHIP_R, COLOR_CHIP_R);
+      chip.eventMode = 'static';
+      chip.cursor = 'pointer';
+      chip.hitArea = new PIXI.Circle(0, 0, COLOR_CHIP_R + 10);
+      chip.on('pointerdown', (e: PIXI.FederatedPointerEvent) => {
+        e.stopPropagation();
+        if (this._selectedColorId === opt.id) return;
+        this._selectedColorId = opt.id;
+        this._refresh();
+      });
       row.addChild(chip);
       x += COLOR_CHIP_R * 2 + COLOR_CHIP_GAP;
     }
@@ -360,6 +397,7 @@ export class FurnitureWorkshopBlueprintPreviewPopup extends PIXI.Container {
     blueprint: WorkshopBlueprintDef,
     option: WorkshopColorOption,
     chipR: number,
+    selected: boolean,
   ): PIXI.Container {
     const chip = new PIXI.Container();
     const isDefault = isDefaultWorkshopColorOption(blueprint, option);
@@ -367,19 +405,24 @@ export class FurnitureWorkshopBlueprintPreviewPopup extends PIXI.Container {
 
     const circle = new PIXI.Graphics();
     if (isDefault) {
-      this._drawDefaultColorChip(circle, chipR);
+      this._drawDefaultColorChip(circle, chipR, selected);
     } else {
-      circle.beginFill(this._colorSwatch(option.id), 1);
+      circle.beginFill(getWorkshopColorChipSwatch(option), 1);
       circle.drawCircle(0, 0, chipR);
       circle.endFill();
-      circle.lineStyle(2, 0xffffff, 0.9);
-      circle.drawCircle(0, 0, chipR);
+      if (selected) {
+        circle.lineStyle(3, 0x7b4b18, 1);
+        circle.drawCircle(0, 0, chipR + 2);
+      } else {
+        circle.lineStyle(2, 0xffffff, 0.9);
+        circle.drawCircle(0, 0, chipR);
+      }
     }
     chip.addChild(circle);
 
     const label = new PIXI.Text(labelText, textStyle({
       fontSize: 14,
-      fill: 0x735f52,
+      fill: selected ? 0x5c4938 : 0x735f52,
       fontWeight: '900',
     }));
     label.anchor.set(0.5, 0);
@@ -390,26 +433,16 @@ export class FurnitureWorkshopBlueprintPreviewPopup extends PIXI.Container {
   }
 
   /** 与 FurnitureWorkshopCraftPopup 默认色块一致：白圆 + 斜杠 */
-  private _drawDefaultColorChip(g: PIXI.Graphics, chipR: number): void {
+  private _drawDefaultColorChip(g: PIXI.Graphics, chipR: number, selected: boolean): void {
     g.beginFill(0xffffff, 1);
     g.drawCircle(0, 0, chipR);
     g.endFill();
-    g.lineStyle(2, 0xd0c8c0, 1);
-    g.drawCircle(0, 0, chipR);
+    g.lineStyle(selected ? 3 : 2, selected ? 0x7b4b18 : 0xd0c8c0, 1);
+    g.drawCircle(0, 0, selected ? chipR + 2 : chipR);
     const slash = chipR * 0.62;
     g.lineStyle(2.5, 0xb0a8a0, 0.95);
     g.moveTo(-slash, -slash);
     g.lineTo(slash, slash);
-  }
-
-  private _colorSwatch(colorId: string): number {
-    switch (colorId) {
-      case 'sakura': return 0xf5b4d4;
-      case 'blue': return 0x64b5f6;
-      case 'moon': return 0x64b5f6;
-      case 'honey': return 0xf5d76e;
-      default: return 0x8fd86b;
-    }
   }
 
   private _updateInteractionHint(blueprint: WorkshopBlueprintDef): void {

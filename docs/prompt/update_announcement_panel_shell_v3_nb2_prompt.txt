@@ -1,0 +1,18 @@
+Single full-screen vertical mobile game UI asset, 9:16. ONE completely NEW empty decorative SHELL for an Update Announcement modal in a cozy pastel flower-shop merge game.
+
+CRITICAL: Invent a brand-new composition. Do NOT resemble a friendship-codex letter panel, jewelry catalog, jade reward board, or any existing in-game modal. Forbidden familiar motifs from those: wax-seal envelopes, sakura corner clusters with gold ribbons in the same places, peacock feathers, hanging gem tassels, purple floor cushions, emerald crown jewels, wooden scroll title banners copied from jewelry UI.
+
+NEW DESIGN CONCEPT — "Garden Notice Board / Flower-shop chalkboard bulletin":
+- Silhouette: a standing wooden garden notice board with a gently arched top (garden-gate curve), not a plain rounded rectangle letter card.
+- Frame: soft honey wood + mint-cream painted trim, tiny daisy chain carved along the arch; pastel high-key, soft cel-shade 2D illustration.
+- Top center: EMPTY oval mint-and-gold nameplate hanging from a small twine bow (no text).
+- Top-right: chunky circular coral-red close button with white X, attached to the board corner.
+- Main field: large soft chalkboard-cream / warm parchment inset with subtle wood lip, COMPLETELY EMPTY for scroll text. No fake lines, no list rows, no icons inside.
+- Accents (only on frame edges, never covering the reading field): two tiny butterflies, a miniature watering can charm, a few loose daisies and eucalyptus — cute shop props, not stationery envelopes.
+- Bottom: empty soft mint wooden ledge / nameplate strip reserved for one CTA button (do not draw the button); small hanging flower-pot charms at bottom corners only.
+
+Style match only (not layout copy): soft painterly kawaii mobile UI, pastel cream-mint-blush-gold, gentle lighting, premium but playful flower-shop mood.
+
+STRICTLY FORBIDDEN: readable text/numbers, portraits, progress bars, reward icons, claim buttons, QR, watermarks, envelopes, wax seals, peacock, dense rose piles filling corners like jewelry UI.
+
+TECHNICAL: outside the board silhouette ONLY pure screen green RGB 0,255,0 flat. Zero green inside the board.

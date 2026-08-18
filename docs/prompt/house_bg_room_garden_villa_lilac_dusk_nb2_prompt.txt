@@ -1,0 +1,13 @@
+Inpaint / edit ONLY the lower-floor surface of the attached empty villa room shell.
+
+Keep 100% identical: building footprint, walls, upper wood loft, stairs, glass railing, roof, exterior flowers and trees, camera angle.
+
+Lower floor MUST become a soft plush FITTED CARPET (地毯), pale lavender matching the walls:
+- Looks like short-pile fabric / wool carpet filling the whole lower room.
+- Soft matte textile look with tiny fine nap grain only.
+- Absolutely NOT stone tiles, NOT ceramic tiles, NOT large rectangles with grout lines, NOT big damask panels.
+- Optional very thin cream border strip along the walls.
+
+Think: wall-to-wall carpet in a luxury pastel villa, fine texture, correct small scale.
+
+Empty shell, no furniture, no text. Same cute 2D game art style. Square 1:1.

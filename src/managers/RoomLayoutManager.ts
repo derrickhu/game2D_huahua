@@ -296,6 +296,19 @@ class RoomLayoutManagerClass {
     return this._placements.length;
   }
 
+  /**
+   * 所有装修场景已摆放家具总数（成长任务 decoPlaced 进度）。
+   * 先把当前场景回写进 `_scenes`，否则本房未存盘的改动会被漏算。
+   */
+  get totalPlacedCountAllScenes(): number {
+    this._flushActiveSceneToMap();
+    let n = 0;
+    for (const data of Object.values(this._scenes)) {
+      n += data?.placements?.length ?? 0;
+    }
+    return n;
+  }
+
   /** 获取店主位置（null 则使用默认） */
   get ownerPos(): { x: number; y: number } | null {
     return this._ownerPos;

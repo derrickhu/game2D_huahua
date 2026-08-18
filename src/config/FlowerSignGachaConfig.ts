@@ -12,6 +12,7 @@ import {
   LUCKY_COIN_ITEM_ID,
   LEGACY_FLOWER_SIGN_COIN_ITEM_ID,
   ITEM_DEFS,
+  LV1_SEED_TOOL_LINE_RELATIVE_WEIGHT,
   type ItemDef,
 } from './ItemConfig';
 
@@ -81,8 +82,9 @@ const PREMIUM_RELATIVE_WEIGHTS: Readonly<Record<(typeof PREMIUM_IDS)[number], nu
 };
 /** 旧 id 若仍出现在配置中则排除；许愿硬币不进奖池 */
 const EXCLUDED_FROM_GACHA_IDS = new Set<string>([LEGACY_FLOWER_SIGN_COIN_ITEM_ID]);
-/** 许愿池只补 1 级种子工具；高阶会直接抬产能，不能从抽奖获得。果切线走升级/礼包发放。 */
+/** 许愿池只补 1 级种子工具；高阶会直接抬产能，不能从抽奖获得。农田/果切完全不出（走升级/礼包）。 */
 const GACHA_PRODUCER_TOOL_LEVEL = 1;
+const GACHA_EXCLUDED_TOOL_LINES = new Set<string>([ToolLine.FARM, ToolLine.FRUIT_CUT]);
 
 /** 等级越高权重越低：(maxLevel - level + 1)^2，同级线内衰减 */
 function levelScore(def: ItemDef): number {
@@ -90,10 +92,15 @@ function levelScore(def: ItemDef): number {
   return span * span;
 }
 
-function distributeRewardBoxItems(defs: ItemDef[], totalWeight: number): FlowerSignPoolEntry[] {
+function distributeByScore(
+  defs: ItemDef[],
+  totalWeight: number,
+  scoreOf: (def: ItemDef) => number,
+): FlowerSignPoolEntry[] {
   if (defs.length === 0 || totalWeight <= 0) return [];
-  const scored = defs.map((def) => ({ def, score: levelScore(def) }));
+  const scored = defs.map((def) => ({ def, score: Math.max(0, scoreOf(def)) }));
   const sumScore = scored.reduce((a, b) => a + b.score, 0);
+  if (sumScore <= 0) return distributeEqualIds(defs.map((d) => d.id), totalWeight);
   const out: FlowerSignPoolEntry[] = [];
   let allocated = 0;
   for (let i = 0; i < scored.length; i++) {
@@ -110,6 +117,18 @@ function distributeRewardBoxItems(defs: ItemDef[], totalWeight: number): FlowerS
     last.weight = Math.max(1, last.weight + diff);
   }
   return out;
+}
+
+function distributeRewardBoxItems(defs: ItemDef[], totalWeight: number): FlowerSignPoolEntry[] {
+  return distributeByScore(defs, totalWeight, levelScore);
+}
+
+/** 1 级工具桶：按产线相对权重分（农田/果切极低），不再用 maxLevel 衰减 */
+function distributeSeedTools(defs: ItemDef[], totalWeight: number): FlowerSignPoolEntry[] {
+  return distributeByScore(defs, totalWeight, (def) => {
+    const line = def.line as ToolLine;
+    return LV1_SEED_TOOL_LINE_RELATIVE_WEIGHT[line] ?? 1;
+  });
 }
 
 function distributeEqualIds(ids: string[], totalWeight: number): FlowerSignPoolEntry[] {
@@ -145,7 +164,7 @@ function isGachaEligibleProducerTool(def: ItemDef): boolean {
   return (
     def.interactType === InteractType.TOOL
     && def.level === GACHA_PRODUCER_TOOL_LEVEL
-    && def.line !== ToolLine.FRUIT_CUT
+    && !GACHA_EXCLUDED_TOOL_LINES.has(def.line)
   );
 }
 
@@ -236,7 +255,7 @@ function buildFlowerSignGachaPool(): FlowerSignPoolEntry[] {
 
   pool.push(...distributeRewardBoxItems(main, BUCKET_MAIN));
   pool.push(...distributeRewardBoxItems(chestGroup, BUCKET_CHEST_GROUP));
-  pool.push(...distributeRewardBoxItems(tools, BUCKET_TOOLS));
+  pool.push(...distributeSeedTools(tools, BUCKET_TOOLS));
 
   const premiumIds = PREMIUM_IDS.filter((id) => ITEM_DEFS.has(id));
   pool.push(...distributeWeightedIds([...premiumIds], BUCKET_PREMIUM));
@@ -257,7 +276,7 @@ function buildFlowerSignGachaPool(): FlowerSignPoolEntry[] {
  * 全物品加权随机（仅 `ITEM_DEFS` 内有效 id）。
  * - 约 44%：鲜花/饮品/棋盘货币块（不含许愿硬币）等，等级越高权重越低。
  * - 15%：直加体力 + 直加钻石（多档 amount）。
- * - 20%：宝箱+体力箱+钻石袋+红包；12%：1 级生产工具（不含果切，桶内按线 maxLevel 衰减）；9%：高级道具，其中幸运金币高于金剪刀/万能水晶。
+ * - 20%：宝箱+体力箱+钻石袋+红包；12%：1 级生产工具（不含农田/果切）；9%：高级道具，其中幸运金币高于金剪刀/万能水晶。
  * - 2.5%：家具工坊四色染料（四色均分，约 40 抽 1 个）。
  * - 许愿硬币不参与抽奖。
  */

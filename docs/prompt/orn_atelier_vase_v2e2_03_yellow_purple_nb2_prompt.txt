@@ -1,0 +1,11 @@
+Square 1:1 single countertop ornament for a cozy flower-shop merge game.
+
+Attached = current yellow-purple draft — KEEP its paint style, purple deep-vs-light split, yellow roses, tiny yellow fillers, and pink/mauve pitcher. Only FIX balance and enrich further.
+
+FIXES:
+1) CENTERED BALANCE: redraw so the bouquet mass is perfectly centered over the vase — equal left/right weight, no left lean. Vase base dead-center in frame with equal white margins.
+2) MORE tiny yellow decorative fillers: add denser clusters of small 5-petal yellow blossoms and tiny yellow buds throughout gaps between large roses (more than the attached — fill empty pockets).
+3) Keep purple contrast sharp: large blooms DEEP indigo/violet; tall spikes clearly LIGHTER soft lavender. Keep rich multi-tone petal shading like premium v2 props.
+4) Keep open cupped yellow roses with golden recessed shading (not flat).
+
+Dense solid mass, soft brown outlines, upper-left light. Pure white #FFFFFF background. No floor shadow, room, text, watermark.

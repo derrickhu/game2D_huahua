@@ -114,10 +114,33 @@ export function getWorkshopMaterialDisplayName(materialId: string): string {
   return WORKSHOP_MATERIAL_DISPLAY_NAMES[materialId] ?? '工坊材料';
 }
 
-/** 图纸获取途径（当前仅钻石购买；`event` 预留活动发放） */
+/** 图纸获取途径（钻石购买 / 活动发放 / 成长之路赠送） */
 export type WorkshopBlueprintAcquire =
   | { kind: 'diamond'; cost: number }
-  | { kind: 'event'; label: string };
+  | { kind: 'event'; label: string }
+  | { kind: 'growth'; label: string };
+
+/**
+ * 「新手入门图纸」= 花边流苏地毯（可染色）。
+ *
+ * 选它的原因：扁平贴地、一眼能认出是毯子；三色（樱粉 / 天蓝 / 蜜黄）
+ * 教会染料玩法；比垂幔帘更适合新手「做出第一件就想摆上」。
+ *
+ * 由成长之路 `g3_level_6`（达成 6 星解锁工坊）免费赠送，并配 8 锤子 + 2 天蓝染料，
+ * 保证玩家「领完立刻能做出默认色 + 天蓝色两件」（各 4 锤；染色款另耗 1 染料）。
+ * 因此本图纸各色成本远低于其它图纸（其它为 8～20 锤 + 约 0.9 万～3.8 万花愿）。
+ *
+ * 平衡校验：三色共 15 星、约 4200 花愿 + 12 锤子，不存在刷星套利。
+ *
+ * 资源 key 仍为 `workshop_petal_oval_rug*`（历史 id，避免已领图纸失效）；美术为扁平花边流苏毯。
+ */
+export const WORKSHOP_NOVICE_BLUEPRINT_ID = 'blueprint_workshop_petal_oval_rug';
+/** 新手图纸单色锤子消耗 */
+export const NOVICE_CRAFT_MATERIAL_COST = 4;
+/** 新手图纸默认色加工费 */
+export const NOVICE_CRAFT_HUAYUAN_COST = 1200;
+/** 新手图纸染色款加工费（额外消耗 1 个对应染料） */
+export const NOVICE_CRAFT_DYED_HUAYUAN_COST = 1500;
 
 export interface WorkshopMaterialReward {
   materialId: string;
@@ -170,7 +193,7 @@ export const WORKSHOP_BLUEPRINT_DEFS: WorkshopBlueprintDef[] = [
         outputDecoId: 'workshop_plush_green_sofa',
         materialCost: 15,
         dyeCost: 0,
-        huayuanCost: 18000,
+        huayuanCost: 14000,
       },
       {
         id: 'sakura',
@@ -179,7 +202,7 @@ export const WORKSHOP_BLUEPRINT_DEFS: WorkshopBlueprintDef[] = [
         materialCost: 10,
         dyeCost: 5,
         dyeMaterialId: WORKSHOP_DYE_PINK_ID,
-        huayuanCost: 13000,
+        huayuanCost: 10000,
       },
       {
         id: 'blue',
@@ -188,7 +211,7 @@ export const WORKSHOP_BLUEPRINT_DEFS: WorkshopBlueprintDef[] = [
         materialCost: 10,
         dyeCost: 5,
         dyeMaterialId: WORKSHOP_DYE_BLUE_ID,
-        huayuanCost: 13000,
+        huayuanCost: 10000,
       },
     ],
   },
@@ -208,7 +231,45 @@ export const WORKSHOP_BLUEPRINT_DEFS: WorkshopBlueprintDef[] = [
         outputDecoId: 'workshop_puffy_petal_sofa',
         materialCost: 20,
         dyeCost: 0,
-        huayuanCost: 28000,
+        huayuanCost: 22000,
+      },
+    ],
+  },
+  {
+    id: WORKSHOP_NOVICE_BLUEPRINT_ID,
+    name: '花边流苏地毯图纸',
+    outputDecoId: 'workshop_petal_oval_rug',
+    rarity: 'rare',
+    sourceText: '成长之路赠送 / 66 钻石购买',
+    icon: 'workshop_blueprint_generic',
+    category: 'furniture',
+    acquire: [{ kind: 'growth', label: '成长之路赠送' }, { kind: 'diamond', cost: 66 }],
+    colorOptions: [
+      {
+        id: 'default',
+        name: '樱粉',
+        outputDecoId: 'workshop_petal_oval_rug',
+        materialCost: NOVICE_CRAFT_MATERIAL_COST,
+        dyeCost: 0,
+        huayuanCost: NOVICE_CRAFT_HUAYUAN_COST,
+      },
+      {
+        id: 'moon',
+        name: '天蓝',
+        outputDecoId: 'workshop_petal_oval_rug_moon',
+        materialCost: NOVICE_CRAFT_MATERIAL_COST,
+        dyeCost: 1,
+        dyeMaterialId: WORKSHOP_DYE_BLUE_ID,
+        huayuanCost: NOVICE_CRAFT_DYED_HUAYUAN_COST,
+      },
+      {
+        id: 'honey',
+        name: '蜜黄',
+        outputDecoId: 'workshop_petal_oval_rug_honey',
+        materialCost: NOVICE_CRAFT_MATERIAL_COST,
+        dyeCost: 1,
+        dyeMaterialId: WORKSHOP_DYE_YELLOW_ID,
+        huayuanCost: NOVICE_CRAFT_DYED_HUAYUAN_COST,
       },
     ],
   },
@@ -228,7 +289,7 @@ export const WORKSHOP_BLUEPRINT_DEFS: WorkshopBlueprintDef[] = [
         outputDecoId: 'workshop_rose_cascade_drape',
         materialCost: 11,
         dyeCost: 0,
-        huayuanCost: 30000,
+        huayuanCost: 16000,
       },
       {
         id: 'moon',
@@ -237,7 +298,7 @@ export const WORKSHOP_BLUEPRINT_DEFS: WorkshopBlueprintDef[] = [
         materialCost: 10,
         dyeCost: 1,
         dyeMaterialId: WORKSHOP_DYE_BLUE_ID,
-        huayuanCost: 35000,
+        huayuanCost: 12000,
       },
       {
         id: 'honey',
@@ -246,7 +307,7 @@ export const WORKSHOP_BLUEPRINT_DEFS: WorkshopBlueprintDef[] = [
         materialCost: 10,
         dyeCost: 1,
         dyeMaterialId: WORKSHOP_DYE_YELLOW_ID,
-        huayuanCost: 30000,
+        huayuanCost: 12000,
       },
     ],
   },
@@ -266,7 +327,7 @@ export const WORKSHOP_BLUEPRINT_DEFS: WorkshopBlueprintDef[] = [
         outputDecoId: 'workshop_lace_ribbon_bed',
         materialCost: 5,
         dyeCost: 0,
-        huayuanCost: 11000,
+        huayuanCost: 9000,
       },
     ],
   },
@@ -286,7 +347,7 @@ export const WORKSHOP_BLUEPRINT_DEFS: WorkshopBlueprintDef[] = [
         outputDecoId: 'workshop_giant_rose_bouquet',
         materialCost: 12,
         dyeCost: 0,
-        huayuanCost: 52000,
+        huayuanCost: 35000,
       },
     ],
   },
@@ -306,7 +367,7 @@ export const WORKSHOP_BLUEPRINT_DEFS: WorkshopBlueprintDef[] = [
         outputDecoId: 'workshop_bougainvillea_bonsai',
         materialCost: 14,
         dyeCost: 0,
-        huayuanCost: 56000,
+        huayuanCost: 38000,
       },
     ],
   },
@@ -326,7 +387,7 @@ export const WORKSHOP_BLUEPRINT_DEFS: WorkshopBlueprintDef[] = [
         outputDecoId: 'workshop_pastel_tv_cabinet',
         materialCost: 15,
         dyeCost: 0,
-        huayuanCost: 30000,
+        huayuanCost: 24000,
       },
     ],
   },
@@ -346,7 +407,7 @@ export const WORKSHOP_BLUEPRINT_DEFS: WorkshopBlueprintDef[] = [
         outputDecoId: 'workshop_summer_lotus_arch_window',
         materialCost: 12,
         dyeCost: 0,
-        huayuanCost: 32000,
+        huayuanCost: 25000,
       },
     ],
   },
@@ -366,7 +427,7 @@ export const WORKSHOP_BLUEPRINT_DEFS: WorkshopBlueprintDef[] = [
         outputDecoId: 'workshop_willow_wood_bay_window',
         materialCost: 14,
         dyeCost: 0,
-        huayuanCost: 36000,
+        huayuanCost: 29000,
       },
       {
         id: 'mint',
@@ -375,7 +436,7 @@ export const WORKSHOP_BLUEPRINT_DEFS: WorkshopBlueprintDef[] = [
         materialCost: 12,
         dyeCost: 1,
         dyeMaterialId: WORKSHOP_DYE_GREEN_ID,
-        huayuanCost: 38000,
+        huayuanCost: 30000,
       },
     ],
   },
@@ -395,6 +456,209 @@ export const WORKSHOP_BLUEPRINT_DEFS: WorkshopBlueprintDef[] = [
         outputDecoId: 'workshop_summer_dining_chair',
         materialCost: 8,
         dyeCost: 0,
+        huayuanCost: 14000,
+      },
+    ],
+  },
+  {
+    id: 'blueprint_workshop_cottage_wing_chair',
+    name: '奶油木框沙发椅图纸',
+    outputDecoId: 'workshop_cottage_wing_chair',
+    rarity: 'rare',
+    sourceText: '108 钻石购买',
+    icon: 'workshop_blueprint_generic',
+    category: 'furniture',
+    acquire: [{ kind: 'diamond', cost: 108 }],
+    colorOptions: [
+      {
+        id: 'default',
+        name: '默认',
+        outputDecoId: 'workshop_cottage_wing_chair',
+        materialCost: 12,
+        dyeCost: 0,
+        huayuanCost: 24000,
+      },
+    ],
+  },
+  {
+    id: 'blueprint_workshop_round_nest_bed',
+    name: '圆窝软床图纸',
+    outputDecoId: 'workshop_round_nest_bed',
+    rarity: 'rare',
+    sourceText: '120 钻石购买',
+    icon: 'workshop_blueprint_generic',
+    category: 'furniture',
+    acquire: [{ kind: 'diamond', cost: 120 }],
+    colorOptions: [
+      {
+        id: 'default',
+        name: '白红',
+        outputDecoId: 'workshop_round_nest_bed',
+        materialCost: 18,
+        dyeCost: 0,
+        huayuanCost: 25000,
+      },
+      {
+        id: 'honey',
+        name: '蜜黄',
+        outputDecoId: 'workshop_round_nest_bed_honey',
+        materialCost: 12,
+        dyeCost: 4,
+        dyeMaterialId: WORKSHOP_DYE_YELLOW_ID,
+        huayuanCost: 19000,
+      },
+      {
+        id: 'sakura',
+        name: '樱粉',
+        outputDecoId: 'workshop_round_nest_bed_sakura',
+        materialCost: 12,
+        dyeCost: 4,
+        dyeMaterialId: WORKSHOP_DYE_PINK_ID,
+        huayuanCost: 19000,
+      },
+    ],
+  },
+  {
+    id: 'blueprint_workshop_arc_floor_lamp',
+    name: '弧光落地灯图纸',
+    outputDecoId: 'workshop_arc_floor_lamp',
+    rarity: 'rare',
+    sourceText: '66 钻石购买',
+    icon: 'workshop_blueprint_generic',
+    category: 'appliance',
+    acquire: [{ kind: 'diamond', cost: 66 }],
+    colorOptions: [
+      {
+        id: 'default',
+        name: '红黑',
+        outputDecoId: 'workshop_arc_floor_lamp',
+        materialCost: 10,
+        dyeCost: 0,
+        huayuanCost: 13000,
+      },
+      {
+        id: 'mint',
+        name: '薄荷绿',
+        outputDecoId: 'workshop_arc_floor_lamp_mint',
+        materialCost: 8,
+        dyeCost: 2,
+        dyeMaterialId: WORKSHOP_DYE_GREEN_ID,
+        huayuanCost: 10000,
+      },
+    ],
+  },
+  {
+    id: 'blueprint_workshop_blossom_tub',
+    name: '花漾圆浴盆图纸',
+    outputDecoId: 'workshop_blossom_tub',
+    rarity: 'rare',
+    sourceText: '96 钻石购买',
+    icon: 'workshop_blueprint_generic',
+    category: 'furniture',
+    acquire: [{ kind: 'diamond', cost: 96 }],
+    colorOptions: [
+      {
+        id: 'default',
+        name: '默认',
+        outputDecoId: 'workshop_blossom_tub',
+        materialCost: 14,
+        dyeCost: 0,
+        huayuanCost: 28000,
+      },
+    ],
+  },
+  {
+    id: 'blueprint_workshop_buttercup_daybed',
+    name: '蜜语软床图纸',
+    outputDecoId: 'workshop_buttercup_daybed',
+    rarity: 'rare',
+    sourceText: '118 钻石购买',
+    icon: 'workshop_blueprint_generic',
+    category: 'furniture',
+    acquire: [{ kind: 'diamond', cost: 118 }],
+    colorOptions: [
+      {
+        id: 'default',
+        name: '蜜黄',
+        outputDecoId: 'workshop_buttercup_daybed',
+        materialCost: 16,
+        dyeCost: 0,
+        huayuanCost: 18000,
+      },
+      {
+        id: 'sky',
+        name: '天蓝',
+        outputDecoId: 'workshop_buttercup_daybed_sky',
+        materialCost: 12,
+        dyeCost: 3,
+        dyeMaterialId: WORKSHOP_DYE_BLUE_ID,
+        huayuanCost: 14000,
+      },
+    ],
+  },
+  {
+    id: 'blueprint_workshop_parfait_lounge',
+    name: '霜糖软座图纸',
+    outputDecoId: 'workshop_parfait_lounge',
+    rarity: 'rare',
+    sourceText: '108 钻石购买',
+    icon: 'workshop_blueprint_generic',
+    category: 'furniture',
+    acquire: [{ kind: 'diamond', cost: 108 }],
+    colorOptions: [
+      {
+        id: 'default',
+        name: '默认',
+        outputDecoId: 'workshop_parfait_lounge',
+        materialCost: 15,
+        dyeCost: 0,
+        huayuanCost: 24000,
+      },
+    ],
+  },
+  {
+    id: 'blueprint_workshop_atelier_bouquet_vase',
+    name: '艺廊花艺瓶图纸',
+    outputDecoId: 'workshop_atelier_bouquet_vase',
+    rarity: 'rare',
+    sourceText: '199 钻石购买',
+    icon: 'workshop_blueprint_generic',
+    category: 'ornament',
+    acquire: [{ kind: 'diamond', cost: 199 }],
+    colorOptions: [
+      {
+        id: 'default',
+        name: '红袖',
+        outputDecoId: 'workshop_atelier_bouquet_vase',
+        materialCost: 10,
+        dyeCost: 0,
+        huayuanCost: 15000,
+      },
+      {
+        id: 'blue',
+        name: '青花',
+        outputDecoId: 'workshop_atelier_bouquet_vase_blue',
+        materialCost: 10,
+        dyeCost: 3,
+        dyeMaterialId: WORKSHOP_DYE_BLUE_ID,
+        huayuanCost: 18000,
+      },
+      {
+        id: 'honey',
+        name: '金紫',
+        outputDecoId: 'workshop_atelier_bouquet_vase_honey',
+        materialCost: 10,
+        dyeCost: 3,
+        dyeMaterialId: WORKSHOP_DYE_YELLOW_ID,
+        huayuanCost: 18000,
+      },
+      {
+        id: 'sakura',
+        name: '荷韵',
+        outputDecoId: 'workshop_atelier_bouquet_vase_sakura',
+        materialCost: 10,
+        dyeCost: 3,
+        dyeMaterialId: WORKSHOP_DYE_PINK_ID,
         huayuanCost: 18000,
       },
     ],
@@ -433,6 +697,23 @@ const WORKSHOP_DYE_CHIP_LABELS: Record<string, string> = {
   [WORKSHOP_DYE_GREEN_ID]: '绿色',
 };
 
+/** 配色圆点色：优先按染料，其次按 colorOption.id（含 sky/moon 等别名） */
+const WORKSHOP_DYE_CHIP_COLORS: Record<string, number> = {
+  [WORKSHOP_DYE_PINK_ID]: 0xf5b4d4,
+  [WORKSHOP_DYE_YELLOW_ID]: 0xf5d76e,
+  [WORKSHOP_DYE_BLUE_ID]: 0x64b5f6,
+  [WORKSHOP_DYE_GREEN_ID]: 0x8fd86b,
+};
+
+const WORKSHOP_COLOR_ID_SWATCH: Record<string, number> = {
+  sakura: 0xf5b4d4,
+  blue: 0x64b5f6,
+  moon: 0x64b5f6,
+  sky: 0x64b5f6,
+  honey: 0xf5d76e,
+  mint: 0x8fd86b,
+};
+
 export function getWorkshopColorChipLabel(
   blueprint: WorkshopBlueprintDef,
   option: WorkshopColorOption,
@@ -443,6 +724,14 @@ export function getWorkshopColorChipLabel(
       ?? getWorkshopMaterialDisplayName(option.dyeMaterialId).replace(/染料$/, '');
   }
   return option.name;
+}
+
+/** 制作/预览弹窗配色圆点填充色 */
+export function getWorkshopColorChipSwatch(option: WorkshopColorOption): number {
+  if (option.dyeMaterialId && WORKSHOP_DYE_CHIP_COLORS[option.dyeMaterialId] != null) {
+    return WORKSHOP_DYE_CHIP_COLORS[option.dyeMaterialId];
+  }
+  return WORKSHOP_COLOR_ID_SWATCH[option.id] ?? 0xb0bec5;
 }
 
 const WORKSHOP_DECO_BLUEPRINT_LOOKUP = new Map<
@@ -499,6 +788,35 @@ export function isBlueprintEventAcquire(blueprintId: string): boolean {
 export function isBlueprintListedInShop(blueprintId: string): boolean {
   return isBlueprintDiamondPurchasable(blueprintId) || isBlueprintEventAcquire(blueprintId);
 }
+
+/** 图纸商店当前「钻石在售」图纸 id（用于上新提醒） */
+export function listDiamondShopBlueprintIds(): string[] {
+  return WORKSHOP_BLUEPRINT_DEFS
+    .filter(b => isBlueprintDiamondPurchasable(b.id))
+    .map(b => b.id);
+}
+
+/**
+ * 商店「上新」冻结基线：功能上线前已在钻石货架的图纸。
+ * 首次灌基线只把这些记为已看，避免老玩家整店飘「上新」；
+ * **此后新增的钻石图纸不要写入此列表**，才会触发商店入口「上新」。
+ */
+export const WORKSHOP_SHOP_CATALOG_SEEN_BASELINE_IDS: readonly string[] = [
+  'blueprint_workshop_plush_green_sofa',
+  'blueprint_workshop_puffy_petal_sofa',
+  WORKSHOP_NOVICE_BLUEPRINT_ID,
+  'blueprint_workshop_rose_cascade_drape',
+  'blueprint_workshop_lace_ribbon_bed',
+  'blueprint_workshop_giant_rose_bouquet',
+  'blueprint_workshop_bougainvillea_bonsai',
+  'blueprint_workshop_pastel_tv_cabinet',
+  'blueprint_workshop_cottage_wing_chair',
+  'blueprint_workshop_round_nest_bed',
+  'blueprint_workshop_arc_floor_lamp',
+];
+
+/** 商店目录基线迁移版本：存档低于此值时，会把「基线外」图纸从已看里清掉以补发上新 */
+export const WORKSHOP_SHOP_CATALOG_SEEN_MIGRATION = 1;
 
 /** 工坊制作页 Tab 分类：优先 blueprint.category，否则按家具 slot / 装修 Tab 推断 */
 export function getBlueprintCraftCategory(blueprint: WorkshopBlueprintDef): WorkshopCraftCategory {

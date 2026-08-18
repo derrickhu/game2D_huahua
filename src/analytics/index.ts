@@ -328,6 +328,15 @@ export function attachGameplayAnalytics(): void {
     });
   });
 
+  // 成长之路：SDK 未内置事件名，按 `动词+对象 snake_case` 规范自定义
+  EventBus.on('growth:taskClaimed', (taskId: string) => {
+    analytics.track('growth_task_claim', { task_id: String(taskId ?? '') });
+  });
+
+  EventBus.on('growth:chapterClaimed', (chapterId: string) => {
+    analytics.track('growth_chapter_claim', { chapter_id: String(chapterId ?? '') });
+  });
+
   EventBus.on('checkin:signed', (reward: any, streakBonus: number) => {
     analytics.track(EVENT_NAMES.CHECKIN_SIGN, {
       huayuan: Number(reward?.huayuan ?? 0),

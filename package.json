@@ -1,6 +1,6 @@
 {
   "name": "huahua",
-  "version": "2.0.0",
+  "version": "1.6.32",
   "type": "module",
   "scripts": {
     "build": "vite build && rimraf minigame/index.html",
@@ -8,7 +8,10 @@
     "check:assets": "node scripts/check_assets.js",
     "check:deco-textures": "node scripts/check_deco_texture_refs.js",
     "check:responsive-layout": "esbuild scripts/check_responsive_layout.ts --bundle --platform=node --format=cjs --outfile=/tmp/huahua-responsive-layout-check.cjs && node /tmp/huahua-responsive-layout-check.cjs",
-    "audit:order-pricing": "node scripts/audit_order_pricing.js"
+    "check:growth-quest": "esbuild scripts/check_growth_quest_config.ts --bundle --platform=node --format=cjs --outfile=/tmp/huahua-growth-quest-check.cjs && node /tmp/huahua-growth-quest-check.cjs",
+    "audit:order-pricing": "node scripts/audit_order_pricing.js",
+    "announce:draft": "node scripts/draft_update_announcement.mjs",
+    "announce:apply": "node scripts/apply_update_announcement.mjs"
   },
   "keywords": [],
   "author": "",

@@ -14,21 +14,24 @@ export const COOL_SUMMER_CURRENCY_NAME = '清凉小扇';
 export const COOL_SUMMER_DEFAULT_START_AT = new Date(2026, 6, 11, 0, 0, 0, 0).getTime();
 export const COOL_SUMMER_DEFAULT_END_AT = new Date(2026, 7, 31, 23, 59, 59, 0).getTime();
 
-/** 冷饮 L1-L8 对应的清凉小扇奖励（整体偏低，拉长兑换节奏）。 */
-export const COOL_SUMMER_COLD_DRINK_REWARDS: readonly number[] = [1, 1, 2, 2, 3, 3, 4, 5];
+/**
+ * 冷饮 L1-L8 对应的清凉小扇奖励。
+ * 相对初版整体上调一档，低阶也好攒扇；L6+ 继续拉开交单体感。
+ */
+export const COOL_SUMMER_COLD_DRINK_REWARDS: readonly number[] = [1, 2, 3, 3, 4, 5, 7, 9];
 
 /**
  * 果切全局等级 1-15 对应的清凉小扇奖励。
- * 不再按全局等级 1:1 发放，避免高阶果切单件过多。
+ * 相对初版整体上调；G8+ 仍保持梯度，高阶组合单更易攒扇。
  */
 export const COOL_SUMMER_FRUIT_CUT_REWARDS: readonly number[] = [
-  1, 1, 1, 1, 2,
-  2, 2, 3, 3, 3,
-  4, 4, 5, 5, 6,
+  1, 2, 2, 3, 3,
+  3, 4, 4, 5, 6,
+  7, 8, 9, 11, 12,
 ];
 
 /** 同单同时含冷饮+果切时的加成倍率。 */
-export const COOL_SUMMER_MIXED_ORDER_MULTIPLIER = 1.15;
+export const COOL_SUMMER_MIXED_ORDER_MULTIPLIER = 1.35;
 
 /** 活动结束后，未兑换完的清凉小扇 → 花愿换算比例（1 扇 = N 花愿）。 */
 export const COOL_SUMMER_FAN_TO_HUAYUAN_RATE = 1;
@@ -154,7 +157,7 @@ export const COOL_SUMMER_SHOP_PRODUCTS: readonly CoolSummerShopProduct[] = [
     id: 'workshop_dye_pink',
     categoryId: 'workshop_materials',
     name: '粉色染料',
-    cost: 461,
+    cost: 369,
     stock: 1,
     grant: { kind: 'workshopMaterial', materialId: WORKSHOP_DYE_PINK_ID, amount: 3 },
   },
@@ -162,7 +165,7 @@ export const COOL_SUMMER_SHOP_PRODUCTS: readonly CoolSummerShopProduct[] = [
     id: 'workshop_dye_yellow',
     categoryId: 'workshop_materials',
     name: '黄色染料',
-    cost: 461,
+    cost: 369,
     stock: 1,
     grant: { kind: 'workshopMaterial', materialId: WORKSHOP_DYE_YELLOW_ID, amount: 3 },
   },
@@ -170,7 +173,7 @@ export const COOL_SUMMER_SHOP_PRODUCTS: readonly CoolSummerShopProduct[] = [
     id: 'workshop_dye_blue',
     categoryId: 'workshop_materials',
     name: '蓝色染料',
-    cost: 461,
+    cost: 369,
     stock: 1,
     grant: { kind: 'workshopMaterial', materialId: WORKSHOP_DYE_BLUE_ID, amount: 3 },
   },
@@ -178,7 +181,7 @@ export const COOL_SUMMER_SHOP_PRODUCTS: readonly CoolSummerShopProduct[] = [
     id: 'workshop_dye_green',
     categoryId: 'workshop_materials',
     name: '绿色染料',
-    cost: 461,
+    cost: 369,
     stock: 1,
     grant: { kind: 'workshopMaterial', materialId: WORKSHOP_DYE_GREEN_ID, amount: 3 },
   },
@@ -186,7 +189,7 @@ export const COOL_SUMMER_SHOP_PRODUCTS: readonly CoolSummerShopProduct[] = [
     id: 'summer_blueprint_lotus_arch_window',
     categoryId: 'summer_collection',
     name: '夏日荷塘拱窗图纸',
-    cost: 648,
+    cost: 348,
     stock: 1,
     grant: { kind: 'blueprint', blueprintId: 'blueprint_workshop_summer_lotus_arch_window' },
   },
@@ -194,7 +197,7 @@ export const COOL_SUMMER_SHOP_PRODUCTS: readonly CoolSummerShopProduct[] = [
     id: 'summer_blueprint_mint_bay_window',
     categoryId: 'summer_collection',
     name: '暖阳飘窗图纸',
-    cost: 720,
+    cost: 388,
     stock: 1,
     grant: { kind: 'blueprint', blueprintId: 'blueprint_workshop_mint_bougainvillea_bay_window' },
   },
@@ -202,7 +205,7 @@ export const COOL_SUMMER_SHOP_PRODUCTS: readonly CoolSummerShopProduct[] = [
     id: 'summer_deco_floor_fan',
     categoryId: 'summer_collection',
     name: '清凉立式电扇',
-    cost: 264,
+    cost: 210,
     stock: 1,
     grant: { kind: 'deco', decoId: 'season_summer_floor_fan' },
   },
@@ -210,7 +213,7 @@ export const COOL_SUMMER_SHOP_PRODUCTS: readonly CoolSummerShopProduct[] = [
     id: 'summer_deco_dining_table',
     categoryId: 'summer_collection',
     name: '夏日西瓜餐桌',
-    cost: 440,
+    cost: 280,
     stock: 1,
     grant: { kind: 'deco', decoId: 'season_summer_dining_table' },
   },
@@ -218,7 +221,7 @@ export const COOL_SUMMER_SHOP_PRODUCTS: readonly CoolSummerShopProduct[] = [
     id: 'summer_blueprint_dining_chair',
     categoryId: 'summer_collection',
     name: '夏日餐椅图纸',
-    cost: 540,
+    cost: 292,
     stock: 1,
     grant: { kind: 'blueprint', blueprintId: 'blueprint_workshop_summer_dining_chair' },
   },

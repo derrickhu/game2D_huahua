@@ -10,6 +10,7 @@ import {
   getWorkshopCraftDisplayName,
   getDefaultWorkshopColorOption,
   getWorkshopColorChipLabel,
+  getWorkshopColorChipSwatch,
   isDefaultWorkshopColorOption,
   type WorkshopBlueprintDef,
 } from '@/config/FurnitureWorkshopConfig';
@@ -368,7 +369,7 @@ export class FurnitureWorkshopCraftPopup extends PIXI.Container {
       if (isDefaultWorkshopColorOption(def, opt)) {
         this._drawDefaultColorChip(circle, chipR, selected, limitReached);
       } else {
-        circle.beginFill(this._colorSwatch(opt.id), limitReached ? 0.45 : 1);
+        circle.beginFill(getWorkshopColorChipSwatch(opt), limitReached ? 0.45 : 1);
         circle.drawCircle(0, 0, chipR);
         circle.endFill();
         if (selected) {
@@ -429,16 +430,6 @@ export class FurnitureWorkshopCraftPopup extends PIXI.Container {
     g.lineStyle(2.5, crafted ? 0xc8c0b8 : 0xb0a8a0, crafted ? 0.65 : 0.95);
     g.moveTo(-slash, -slash);
     g.lineTo(slash, slash);
-  }
-
-  private _colorSwatch(colorId: string): number {
-    switch (colorId) {
-      case 'sakura': return 0xf5b4d4;
-      case 'blue': return 0x64b5f6;
-      case 'moon': return 0x64b5f6;
-      case 'honey': return 0xf5d76e;
-      default: return 0x8fd86b;
-    }
   }
 
   private _onCraftTap(): void {

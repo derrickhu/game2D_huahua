@@ -112,7 +112,24 @@ class FurnitureDragSystemClass {
   /** 当前拖拽对应的 pointerId；从托盘拖入时可能为 null（接受任意抬起） */
   private _dragPointerId: number | null = null;
 
+  /**
+   * 编辑态：若按下点落在店主热区内，家具不抢拖（错层房里楼下大家具 AABB 常盖住楼上角色）。
+   * 坐标为 roomContainer 本地坐标。
+   */
+  private _ownerHitTest: ((roomLocalX: number, roomLocalY: number) => boolean) | null = null;
+  /** 命中店主热区时转交店主拖拽（由 ShopScene 注入） */
+  private _ownerHitPrefer: ((e: PIXI.FederatedPointerEvent) => void) | null = null;
+
   // ---- 公共 API ----
+
+  /** 编辑态店主命中优先：由 ShopScene 在进出编辑模式时设置/清空 */
+  setOwnerHitPrefer(
+    hitTest: ((roomLocalX: number, roomLocalY: number) => boolean) | null,
+    onPrefer: ((e: PIXI.FederatedPointerEvent) => void) | null = null,
+  ): void {
+    this._ownerHitTest = hitTest;
+    this._ownerHitPrefer = onPrefer;
+  }
 
   /**
    * 启用拖拽系统（进入编辑模式）
@@ -159,6 +176,8 @@ class FurnitureDragSystemClass {
   disable(): void {
     if (!this._enabled) return;
     this._enabled = false;
+    this._ownerHitTest = null;
+    this._ownerHitPrefer = null;
 
     // 取消正在进行的拖拽
     if (this._dragCtx) {
@@ -469,12 +488,19 @@ class FurnitureDragSystemClass {
     sprite.on('pointerdown', (e: PIXI.FederatedPointerEvent) => {
       if (!this._enabled || this._dragCtx) return;
 
+      const localPos = this._rawEventToDesign(e);
+      // 大家具透明 AABB / 错层楼下件会盖住楼上店主；点在店主热区则转交店主拖拽
+      if (this._ownerHitTest?.(localPos.x, localPos.y)) {
+        e.stopPropagation();
+        this._ownerHitPrefer?.(e);
+        return;
+      }
+
       EventBus.emit('furniture:drag_pointer_down');
       this._dragPointerId = e.pointerId;
 
       const decoId = (sprite as any)._decoId as string;
       const instanceId = (sprite as any)._instanceId as string | undefined;
-      const localPos = this._rawEventToDesign(e);
 
       // 用 scale.y 作为 originalScale（始终为正值，不受翻转影响）
       const absScale = Math.abs(sprite.scale.y);

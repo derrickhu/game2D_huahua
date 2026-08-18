@@ -1,0 +1,11 @@
+Cute kawaii 2.5D true isometric furniture for a flower-shop merge game garden villa. Camera from upper-left into the L-room corner (same family as the room shell). On-screen top-face edges and base edges must sit near ±30° from horizontal — match the attached iso grid and room wall-base / floor diamond, NOT 45° wall slant, NOT flat front view. Height edges stay vertical. Visible top surface plus front-right side, left and right top edges symmetrically angled. Use the attached grid ONLY for perspective; do not copy the gray demo cube.
+
+Square game asset 1:1. Single furniture prop centered with generous margin. Soft brown outlines slightly thicker than hairline, rounded chibi-friendly shapes, gentle upper-left lighting, readable silhouette at small grid size. Hand-painted mobile merge-game style, not photoreal, not heavy 3D render. Premium luxury villa statement piece — unique silhouette, NOT a plain generic IKEA-style prop.
+
+Color and materials: dusty lilac velvet drawers, champagne-gold Hollywood-style arched mirror frame with soft glowing round bulbs around the mirror, pearl handles, matching velvet stool with gold tip legs, crystal perfume bottles without labels.
+
+Subject: A glamorous Hollywood vanity set with lit bulb mirror and ONE matching stool as a single prop. Ultra luxury bedroom vanity, modern villa (not antique Chinese). Tall arched mirror with bulbs is the signature.
+
+No text, no labels, no numbers, no watermark, no characters, no room shell, no walls, no floor plane, no ground shadow strip pretending to be a floor. Absolutely NO hanging ceiling fixture, NO ceiling hook, NO ceiling chain, NO pendant rods going upward as if mounted on ceiling.
+
+Background pure solid white #FFFFFF only for cutout.

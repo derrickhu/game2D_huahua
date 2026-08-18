@@ -256,6 +256,7 @@ export class WorldMapPanel extends PIXI.Container {
         break;
       case 'garden_villa':
         keys.push('bg_room_garden_villa_loft_nb2');
+        keys.push('bg_room_garden_villa_lilac_dusk_nb2');
         break;
       default:
         break;

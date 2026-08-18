@@ -1,0 +1,20 @@
+Single full-screen vertical mobile game UI asset, 9:16 aspect ratio, one flattened decorative SHELL ONLY for a "growth journey" quest modal panel in a cozy pastel flower-shop merge game. High resolution, crisp anti-aliased vector edges.
+
+USE THE ATTACHED REFERENCE IMAGE ONLY FOR THE OUTER FRAME STYLE: same panel silhouette, same lilac-purple rim weight, same cream interior treatment.
+
+CRITICAL DIFFERENCE FROM THE REFERENCE — you MUST add these three elements the reference does not have:
+1. A prominent GOLDEN-YELLOW SCALLOPED TITLE BANNER, wide and horizontally centered, overlapping the top purple header band and sticking out slightly past the panel's left and right edges. Warm honey-gold with a soft darker gold outline, gentle top-to-bottom gradient, softly puffy cute shape, small mint leaf and tiny blush blossom flourish at each of the two banner ends. The banner CENTER MUST BE COMPLETELY EMPTY — no text, no Chinese, no letters, no numbers.
+2. A slim CREAM PLAQUE STRIP directly below the header band, spanning most of the panel width, with a thin lilac rounded border and a small blooming-vine ornament at its far left end only. Plaque interior otherwise totally blank.
+3. A BLUSH-PINK RAISED CARD along the bottom of the panel, spanning most of the width, with a gently scalloped top edge, a faint horizontal decorative divider line floating just above it, and two small pastel sparkles in its upper corners only. Card interior totally blank.
+
+TOP-RIGHT: chunky circular red close button with a simple white X, sitting slightly past the frame corner.
+
+THE LARGE MIDDLE AREA BETWEEN THE PLAQUE STRIP AND THE BOTTOM CARD MUST BE A COMPLETELY EMPTY flat cream field with only a VERY SUBTLE floral scroll watermark at about 6% opacity. Absolutely nothing else in that middle area — no row plates, no cards, no list items, no icons, no buttons, no lines, no dashed boxes, no placeholder shapes.
+
+STRICTLY FORBIDDEN ANYWHERE IN THE IMAGE:
+Chinese text, English text, numbers, letters, tab buttons, gift boxes, tool icons, flower thumbnails, claim buttons, checkmarks, star ratings, progress bars, list rows, plus signs, dashed slots, wireframe labels, red annotation boxes, avatars, human characters, wood grain.
+
+Art style: clean 2D vector kawaii mobile game UI, high-key pastel palette of lilac, cream, blush pink, honey gold and mint, soft gradients only for depth, gentle ornamental detail. Not a wireframe, not a blurred screenshot. No photoreal, no watermark.
+
+TECHNICAL BACKGROUND FOR CLEAN CUTOUT:
+ONLY the margins OUTSIDE the panel silhouette must be pure bright screen green RGB exactly 0,255,0, flat, no gradient. The panel interior, the golden banner and the red close button must contain ZERO green pixels.

@@ -109,6 +109,36 @@ export const FURNITURE_RENDER_DEFS: FurnitureRenderDef[] = [
     },
   },
   {
+    decoId: 'workshop_petal_oval_rug',
+    renderMode: 'single',
+    atlas: {
+      sheetKey: 'workshop_petal_oval_rug_sheet',
+      columns: 1,
+      rows: 3,
+      row: 0,
+    },
+  },
+  {
+    decoId: 'workshop_petal_oval_rug_moon',
+    renderMode: 'single',
+    atlas: {
+      sheetKey: 'workshop_petal_oval_rug_sheet',
+      columns: 1,
+      rows: 3,
+      row: 1,
+    },
+  },
+  {
+    decoId: 'workshop_petal_oval_rug_honey',
+    renderMode: 'single',
+    atlas: {
+      sheetKey: 'workshop_petal_oval_rug_sheet',
+      columns: 1,
+      rows: 3,
+      row: 2,
+    },
+  },
+  {
     decoId: 'workshop_rose_cascade_drape',
     renderMode: 'single',
     atlas: {
@@ -203,6 +233,121 @@ export const FURNITURE_RENDER_DEFS: FurnitureRenderDef[] = [
       backCol: 1,
     },
     defaultFacing: 'front_right',
+  },
+  {
+    decoId: 'workshop_cottage_wing_chair',
+    renderMode: 'fourFacing',
+    atlas: {
+      sheetKey: 'workshop_cottage_wing_chair_sheet',
+      columns: 2,
+      rows: 1,
+      row: 0,
+      frontCol: 0,
+      backCol: 1,
+    },
+    defaultFacing: 'front_right',
+  },
+  {
+    decoId: 'workshop_blossom_tub',
+    renderMode: 'single',
+    atlas: {
+      sheetKey: 'workshop_blossom_tub_sheet',
+      columns: 2,
+      rows: 1,
+      row: 0,
+    },
+    interaction: {
+      type: 'toggle',
+      defaultState: 'filled',
+      hint: '放入房间后单击切换满水花瓣与空盆搭毛巾',
+      states: {
+        filled: {},
+        empty: {},
+      },
+    },
+  },
+  {
+    decoId: 'workshop_buttercup_daybed',
+    renderMode: 'single',
+    atlas: {
+      sheetKey: 'workshop_buttercup_daybed_sheet',
+      columns: 1,
+      rows: 2,
+      row: 0,
+    },
+  },
+  {
+    decoId: 'workshop_buttercup_daybed_sky',
+    renderMode: 'single',
+    atlas: {
+      sheetKey: 'workshop_buttercup_daybed_sheet',
+      columns: 1,
+      rows: 2,
+      row: 1,
+    },
+  },
+  {
+    decoId: 'workshop_parfait_lounge',
+    renderMode: 'fourFacing',
+    atlas: {
+      sheetKey: 'workshop_parfait_lounge_sheet',
+      columns: 2,
+      rows: 1,
+      row: 0,
+      frontCol: 0,
+      backCol: 1,
+    },
+    defaultFacing: 'front_right',
+  },
+  {
+    decoId: 'workshop_round_nest_bed',
+    renderMode: 'single',
+    atlas: {
+      sheetKey: 'workshop_round_nest_bed_sheet',
+      columns: 1,
+      rows: 3,
+      row: 0,
+    },
+  },
+  {
+    decoId: 'workshop_round_nest_bed_honey',
+    renderMode: 'single',
+    atlas: {
+      sheetKey: 'workshop_round_nest_bed_sheet',
+      columns: 1,
+      rows: 3,
+      row: 1,
+    },
+  },
+  {
+    decoId: 'workshop_round_nest_bed_sakura',
+    renderMode: 'single',
+    atlas: {
+      sheetKey: 'workshop_round_nest_bed_sheet',
+      columns: 1,
+      rows: 3,
+      row: 2,
+    },
+  },
+  {
+    decoId: 'workshop_arc_floor_lamp',
+    renderMode: 'single',
+    atlas: {
+      sheetKey: 'workshop_arc_floor_lamp_sheet',
+      columns: 1,
+      rows: 2,
+      row: 0,
+    },
+  },
+  {
+    decoId: 'workshop_arc_floor_lamp_mint',
+    renderMode: 'single',
+    atlas: {
+      sheetKey: 'workshop_arc_floor_lamp_sheet',
+      columns: 1,
+      rows: 2,
+      row: 1,
+    },
   },
 ];
 

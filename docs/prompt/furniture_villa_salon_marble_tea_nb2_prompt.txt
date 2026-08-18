@@ -1,0 +1,14 @@
+Cute kawaii 2.5D true isometric furniture for a flower-shop merge game garden villa. Camera from upper-left. Match the attached iso grid ONLY for ±30° perspective; do not copy the gray demo cube.
+
+Square 1:1, single prop, generous margin. Soft brown outlines, kawaii merge-game furniture, not photoreal.
+
+PRIMARY GOAL: Match the STYLE REFERENCE furniture image as closely as possible for the BEAUTIFUL tabletop — same soft wavy/scalloped blush-pink marble with delicate veining, same ornate champagne-gold rose-leaf carved apron hanging under the top, same cream journal + perfume atomizer composition, same romantic luxury painting quality. The top must look as pretty as the reference.
+
+ONLY CHANGE the middle support stem:
+- Keep the wide sculpted rose bloom base (pretty petals, stable floor contact).
+- Replace the old fragile skinny neck AND any fat stump with a SLENDER elegant champagne-gold stem — refined, graceful, roughly 15–20% of tabletop width (like a classic pedestal candlestick stem), with a small flared collar under the apron.
+- Must look able to hold the top, but still slender and elegant — NOT thick, NOT bulky, NOT half the table width.
+
+Composition: pretty marble top (hero) + ornate apron + slender stem + rose base. Low coffee table.
+
+No text, no characters, no room. Background pure solid white #FFFFFF.

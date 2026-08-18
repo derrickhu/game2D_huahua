@@ -36,6 +36,7 @@ import {
   TIMED_FLORIST_ORDER_DAILY_CAP,
   TIMED_FLORIST_ORDER_MIN_PLAYER_LEVEL,
   WORKSHOP_ORDER_DAILY_CAP,
+  WORKSHOP_ORDER_MAX_IN_QUEUE,
   WORKSHOP_ORDER_MIN_PLAYER_LEVEL,
   computeFloristStaminaChestReward,
   computeTimedDiamondReward,
@@ -795,9 +796,13 @@ class CustomerManagerClass {
     const tier = pickTierByWeight(weights);
 
     const noTimedInQueue = !this._customers.some(c => c.orderType === 'timed');
+    const workshopInQueue = this._customers.filter(
+      c => c.orderKind === 'timedWorkshop' || c.typeId === 'furniture_craftswoman',
+    ).length;
     const allowWorkshopOrder =
       level >= WORKSHOP_ORDER_MIN_PLAYER_LEVEL &&
-      this._workshopOrdersToday < WORKSHOP_ORDER_DAILY_CAP;
+      this._workshopOrdersToday < WORKSHOP_ORDER_DAILY_CAP &&
+      workshopInQueue < WORKSHOP_ORDER_MAX_IN_QUEUE;
     const allowTimedFloristOrder =
       level >= TIMED_FLORIST_ORDER_MIN_PLAYER_LEVEL &&
       this._timedFloristOrdersToday < TIMED_FLORIST_ORDER_DAILY_CAP &&

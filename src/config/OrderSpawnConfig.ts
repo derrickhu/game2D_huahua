@@ -9,6 +9,12 @@ import type { OrderGenSlot } from '@/orders/types';
 /** 略高于 toolCap 的概率（与 pickItemLevel 一致） */
 export const ORDER_ASPIRATIONAL_LEVEL_BONUS_CHANCE = 0.14;
 
+/**
+ * 园艺（鲜花/绿植）订单的 aspirational 乘子。
+ * 温室订单 toolCap 已单独下调，再压低「超 cap 一档」概率，避免简易温室频繁摸到高阶。
+ */
+export const ORDER_PLANT_ASPIRATIONAL_SCALE = 0.35;
+
 /** 物品等级抽样曲线；越接近 1 越平均，>1 会偏低级。早期需要更多中高阶体感，避免长期重复低级花。 */
 export const ORDER_ITEM_LEVEL_PICK_EXPONENT = 1.12;
 
@@ -118,6 +124,8 @@ export const TIMED_FLORIST_ORDER_TIME_LIMIT_SECONDS = 8 * 60 * 60;
 /** 家具工匠材料单：6 级后开放，非限时，组合单槽位规则 + 至少 1 槽 L6+ 花束，花愿 ×0.5，随机 1 种材料 ×1 */
 export const WORKSHOP_ORDER_MIN_PLAYER_LEVEL = 6;
 export const WORKSHOP_ORDER_DAILY_CAP = 4;
+/** 当前客人队列中家具工匠同时存在数量上限；已达此数则不再刷出 */
+export const WORKSHOP_ORDER_MAX_IN_QUEUE = 2;
 /** 刷客掷骰：首单 20%，后续 15%（仍高于钻石 6% / 花商 5%） */
 export const WORKSHOP_ORDER_BASE_CHANCE = 0.15;
 export const WORKSHOP_ORDER_FIRST_DAILY_CHANCE_MULT = 20 / 15;

@@ -1,0 +1,13 @@
+Square 1:1 single countertop ornament for a cozy flower-shop merge game.
+
+Attached = APPROVED v2 paint style LOCK: same soft brown outlines, saturated blue/orange, cel shading, glossy ceramic, plump juicy petals. Keep this thickness — do not go thin or flat.
+
+CRITICAL SHAPE FIX (the previous pass still looked like round pom-poms — break that):
+- Do NOT draw circular ball flowers. No perfect sphere peony/dahlia heads.
+- Deep blue: open butterfly-orchid with LOBED irregular silhouette (wide left/right petals, uneven outline).
+- Orange: open fan-shaped dahlia with pointed petal tips forming a STAR/CROWN outline, not a circle.
+- Sky-blue: thick 6-petal lily-like blooms with volume equal to orange blooms (chunky, shaded), irregular placement so the bouquet outline is scalloped / bumpy, not a smooth sphere.
+- Bouquet mass: organic scalloped silhouette with 2–3 bloom heads poking past the round outline.
+
+KEEP identity: white ceramic pitcher, blue-and-white qinghua pattern, curved handle, blue vs orange palette.
+Camera upper-left three-quarter, centered, generous margin. Pure white #FFFFFF background. No pedestal, shadow strip, room, text, watermark.
