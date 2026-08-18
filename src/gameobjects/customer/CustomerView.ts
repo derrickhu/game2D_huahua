@@ -39,6 +39,11 @@ const PANEL_H = SLOT_SIZE + 34;
  * 胸像脚底锚点在容器中的 y（>0 则整体下移，让面板能叠住胸像下沿直边）
  */
 const AVATAR_FEET_Y = 22;
+const AVATAR_TARGET_H = 160;
+/** 嫦娥发冠偏高，默认高度会显小；略放大并上移，少被需求托盘挡住。 */
+const AVATAR_DISPLAY_TWEAKS: Record<string, { targetH: number; feetY: number }> = {
+  chang_e: { targetH: 170, feetY: 14 },
+};
 /** 需求面板 y：略负可与胸像底重叠；增大则整体下移靠近棋盘（胸像锚点不变） */
 const PANEL_Y = 4;
 
@@ -154,9 +159,10 @@ export class CustomerView extends PIXI.Container {
     const tex = TextureCache.get(`customer_${customer.typeId}`);
     if (tex) {
       this._avatarSprite.texture = tex;
-      const targetH = 160;
-      const s = targetH / tex.height;
-      this._avatarSprite.scale.set(s);
+      const tweak = AVATAR_DISPLAY_TWEAKS[customer.typeId];
+      const targetH = tweak?.targetH ?? AVATAR_TARGET_H;
+      this._avatarSprite.scale.set(targetH / tex.height);
+      this._avatarSprite.position.set(0, tweak?.feetY ?? AVATAR_FEET_Y);
       this._avatarSprite.visible = true;
     } else {
       this._avatarSprite.visible = false;
@@ -674,7 +680,7 @@ export class CustomerView extends PIXI.Container {
     }
     const halfW = (this._avatarSprite.texture.width * this._avatarSprite.scale.x) / 2;
     const fullH = this._avatarSprite.texture.height * this._avatarSprite.scale.y;
-    return { halfW, fullH, topY: AVATAR_FEET_Y - fullH };
+    return { halfW, fullH, topY: this._avatarSprite.y - fullH };
   }
 
   private _buildStaminaChestBadge(): void {
@@ -782,7 +788,7 @@ export class CustomerView extends PIXI.Container {
       const halfW = (this._avatarSprite.texture.width * this._avatarSprite.scale.x) / 2;
       const fullH = this._avatarSprite.texture.height * this._avatarSprite.scale.y;
       badgeX = Math.min(PANEL_W / 2 - bw / 2 - 2, halfW + bw / 2 - 24);
-      badgeY = AVATAR_FEET_Y - fullH + 28;
+      badgeY = this._avatarSprite.y - fullH + 28;
     }
     badge.position.set(badgeX, badgeY);
 
@@ -1025,7 +1031,7 @@ export class CustomerView extends PIXI.Container {
       const halfW = (this._avatarSprite.texture.width * this._avatarSprite.scale.x) / 2;
       const fullH = this._avatarSprite.texture.height * this._avatarSprite.scale.y;
       badgeX = halfW - 4;
-      badgeY = AVATAR_FEET_Y - fullH + 8;
+      badgeY = this._avatarSprite.y - fullH + 8;
     }
     badge.position.set(badgeX, badgeY);
 

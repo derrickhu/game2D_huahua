@@ -1,0 +1,6 @@
+Repaint the attached tall moon window. Keep the same extra-tall wood frame, same arch, same size, same sheer curtains fully covering the glass, same big round moon glowing through the translucent fabric, same night sky.
+
+CRITICAL: Delete ALL readable text and letters. Remove the MID-AUTUMN plaque wording. Use a blank tiny wood crest or no plaque. No English, no Chinese, no numbers anywhere.
+
+Wall-plane perspective: left-high / right-low top edge, vertical height edges. Soft brown outlines, kawaii pastel merge-game style.
+Canvas 3:4, centered, pure solid white #FFFFFF background. No room, no floor, no watermark.

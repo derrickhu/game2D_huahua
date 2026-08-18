@@ -1,0 +1,13 @@
+Cute kawaii 2.5D true isometric furniture for a flower-shop merge game. Camera from upper-left into the L-room corner. On-screen top-face edges near ±30° from horizontal. Height edges stay vertical. Visible tabletop plus front-right apron and LONG vertical legs. Use the attached iso grid ONLY for perspective; do not copy the gray demo cube.
+
+Portrait 3:4 canvas. One single GROUND dining-table prop centered with generous white margin. Soft brown outlines slightly thicker than hairline, hand-painted mobile merge-game style, warm upper-left light. Not photoreal.
+
+COMPOSITION: leave lots of vertical room. Place the round tabletop in the UPPER HALF of the canvas. The FOUR LEGS must fill most of the LOWER HALF. Large empty air under the table — you can see through between the legs.
+
+This is a STANDING restaurant-height ROUND dining table, not a coffee table, not a kotatsu, not a floor tray, not a lazy-susan platter sitting on stubs. Four tall thick honey-oak cylindrical legs, each a long column from apron down to the floor. Leg length is about two-thirds of the tabletop diameter. Gold-rim circular wood top.
+
+Mid-Autumn feast painted on the tabletop only: stacked mooncakes, yellow pomelo, orange persimmons, purple grapes, kawaii roast duck, teapot and two cups, tiny jade rabbit lantern. Keep food simple and readable. Leave a wood rim so the circle stays clear.
+
+No chairs, no people, no text, no Chinese characters, no watermark, no room walls, no floor tiles, no floor shadow strip.
+
+Background pure solid white #FFFFFF only.

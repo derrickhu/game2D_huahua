@@ -248,6 +248,26 @@ export const FURNITURE_RENDER_DEFS: FurnitureRenderDef[] = [
     defaultFacing: 'front_right',
   },
   {
+    decoId: 'workshop_moon_sheer_window',
+    renderMode: 'single',
+    atlas: {
+      sheetKey: 'workshop_moon_sheer_window_sheet',
+      columns: 2,
+      rows: 1,
+      row: 0,
+      frontCol: 0,
+    },
+    interaction: {
+      type: 'toggle',
+      defaultState: 'sheer',
+      hint: '放入房间后单击切换半透遮月与纱帘拉开',
+      states: {
+        sheer: {},
+        open: {},
+      },
+    },
+  },
+  {
     decoId: 'workshop_blossom_tub',
     renderMode: 'single',
     atlas: {

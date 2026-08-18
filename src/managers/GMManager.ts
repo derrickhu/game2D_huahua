@@ -778,7 +778,7 @@ class GMManagerClass {
       id: 'gm_reset_mid_autumn',
       group: ' 活动棋盘',
       name: ' 重置月满中秋',
-      desc: '清空玉兔灯与抽奖次数',
+      desc: '清空玉兔灯、抽奖次数与转盘轮次',
       execute: () => {
         MidAutumnEventManager.gmReset();
         return ' 已重置月满中秋活动进度';
@@ -935,6 +935,17 @@ class GMManagerClass {
         FurnitureWorkshopManager.grantBlueprint('blueprint_workshop_summer_dining_chair');
         const count = DecorationManager.gmSetOwnedCount('workshop_summer_dining_chair', 4);
         return ` 夏日餐椅拥有量 ${count}/4`;
+      },
+    });
+
+    this._commands.push({
+      id: 'gm_grant_workshop_blueprint_moon_window',
+      group: ' 家具工坊',
+      name: ' 发放月纱长窗图纸',
+      desc: '月满中秋第 3 轮转盘图纸，不可钻石购买',
+      execute: () => {
+        const ok = FurnitureWorkshopManager.grantBlueprint('blueprint_workshop_moon_sheer_window');
+        return ok ? ' 已发放月纱长窗图纸' : ' 图纸已拥有或配置缺失';
       },
     });
 

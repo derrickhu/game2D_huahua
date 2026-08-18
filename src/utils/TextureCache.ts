@@ -762,6 +762,8 @@ const DECO_IMAGE_MAP: Record<string, string> = {
   workshop_mint_bougainvillea_bay_window: 'subpkg_deco/images/furniture/workshop_mint_bougainvillea_bay_window.png',
   /** 暖阳飘窗：默认木色款，max-side 342 */
   workshop_willow_wood_bay_window: 'subpkg_deco/images/furniture/workshop_willow_wood_bay_window.png',
+  /** 月纱长窗：2 列（半透遮月 / 纱帘拉开）；每格 max-side 342（月满中秋第 3 轮图纸） */
+  workshop_moon_sheer_window_sheet: 'subpkg_deco/images/furniture/workshop_moon_sheer_window_sheet.png',
   workshop_blueprint_generic: 'subpkg_deco/images/furniture/workshop_blueprint_generic.png',
   promo_petal_chaise: 'subpkg_deco/images/furniture/promo_petal_chaise.png',
   promo_doll_hug_pillow: 'subpkg_deco/images/furniture/promo_doll_hug_pillow.png',
@@ -1150,6 +1152,9 @@ const DECO_IMAGE_MAP: Record<string, string> = {
   // ---- 花间珠匣活动奖励家具 ----
   event_jewelry_back_sofa: 'subpkg_deco/images/furniture/event_jewelry_back_sofa.png',
   event_jewelry_empty_tea_table: 'subpkg_deco/images/furniture/event_jewelry_empty_tea_table.png',
+  // ---- 月满中秋转盘奖励家具 ----
+  event_mid_autumn_mooncake_gift_box: 'subpkg_deco/images/furniture/event_mid_autumn_mooncake_gift_box.png',
+  event_mid_autumn_reunion_dining_table: 'subpkg_deco/images/furniture/event_mid_autumn_reunion_dining_table.png',
 
   // ---- 房间背景 ----
   /** 花坊默认房壳 v3 试看（原 soft 图保留不删，验收后可改回或覆盖） */

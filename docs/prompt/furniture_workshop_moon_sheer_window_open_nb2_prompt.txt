@@ -1,0 +1,16 @@
+Single game sprite: the OPEN-curtain state of the attached extra-tall Mid-Autumn wall window.
+
+GEOMETRY LOCK — the attachment is the closed/sheer version of THIS same window.
+- Keep the EXACT same parallelogram: same size, same stile height on left and right, same 30-degree parallel top and bottom rails.
+- Left-high / right-low. Vertical stiles. Paper-thin wall hanging.
+- Do not turn it into a trapezoid, vanishing-point box, or front billboard.
+
+SUBJECT — state B, sheer curtains pulled to ONE side:
+- Ivory champagne sheer gathered and pulled ALL THE WAY to the viewer's RIGHT, tied with a soft gold ribbon. Left and center glass stay open.
+- Through the open glass: LARGE perfectly ROUND full moon, warm cream-gold, deep periwinkle night sky, a few tiny stars, a soft distant osmanthus-tree silhouette.
+- Optional tiny osmanthus sprig on the sill. Keep sparse.
+- Soft brown outlines, kawaii hand-painted merge-game style. Upper-left soft light.
+
+Canvas: portrait 3:4, one object centered, generous white margin.
+Background: pure solid white #FFFFFF only.
+NO room, NO floor, NO readable text, NO watermark, NO photoreal.

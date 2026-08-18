@@ -10,7 +10,14 @@ import {
   MID_AUTUMN_EVENT_NAME,
   MID_AUTUMN_SEASON_ID,
   MID_AUTUMN_SPIN_COST,
-  MID_AUTUMN_WHEEL_PRIZES,
+  MID_AUTUMN_MOONCAKE_GIFT_BOX_DECO_ID,
+  MID_AUTUMN_REUNION_DINING_TABLE_DECO_ID,
+  MID_AUTUMN_MOON_WINDOW_DECO_ID,
+  MID_AUTUMN_WHEEL_ROUND_COUNT,
+  MID_AUTUMN_WHEEL_SLICE_COUNT,
+  midAutumnPrizeQuantityLabel,
+  midAutumnWheelPrizesForRound,
+  type MidAutumnGrant,
 } from '@/config/events/MidAutumnEventConfig';
 import { MidAutumnEventManager } from '@/managers/MidAutumnEventManager';
 import { TextureCache } from '@/utils/TextureCache';
@@ -30,9 +37,16 @@ const FALLBACK_SHELL_H = 1138;
 const CLOSE_NX = 0.905;
 const CLOSE_NY = 0.084;
 const CLOSE_R = 56;
-const WHEEL_R = 198;
-const SLICE_COUNT = MID_AUTUMN_WHEEL_PRIZES.length;
+const WHEEL_R = 220;
+const SLICE_COUNT = MID_AUTUMN_WHEEL_SLICE_COUNT;
 const SLICE_ANGLE = (Math.PI * 2) / SLICE_COUNT;
+/** 盘面金线在整点方向，格子中心比轴线偏半格。 */
+const SLICE_CENTER_OFFSET = SLICE_ANGLE / 2;
+/** 奖品落在木格中圈，避开金边装饰带，避免探出盘沿。 */
+const PRIZE_ICON_R = WHEEL_R * 0.56;
+const PRIZE_LABEL_R = WHEEL_R * 0.40;
+const PRIZE_ICON_SIZE = 52;
+const PRIZE_ICON_SIZE_DECO = 56;
 
 export class MidAutumnEventPanel extends PIXI.Container {
   private _isOpen = false;
@@ -44,9 +58,18 @@ export class MidAutumnEventPanel extends PIXI.Container {
   private _content!: PIXI.Container;
   private _closeHit!: PIXI.Container;
   private _wheel!: PIXI.Container;
+  private _prizeLayer: PIXI.Container | null = null;
+  private _prizeNodes: PIXI.Container[] = [];
   private _currencyText: PIXI.Text | null = null;
   private _countdownText: PIXI.Text | null = null;
+  private _spinBtn: PIXI.Container | null = null;
   private _spinLabel: PIXI.Text | null = null;
+  private _leftArrow: PIXI.Container | null = null;
+  private _rightArrow: PIXI.Container | null = null;
+  private _previewRound = 1;
+  private _playableRound = 1;
+  private _displayedCleared = false;
+  private _displayedWonCount = -1;
   private _shellW = 0;
   private _shellH = 0;
   private _closeDesignX = 0;
@@ -61,7 +84,7 @@ export class MidAutumnEventPanel extends PIXI.Container {
     this._build();
     EventBus.on('panel:openMidAutumnEvent', () => this.open());
     EventBus.on('midAutumnEvent:changed', () => {
-      if (this._isOpen) this._refreshHud();
+      if (this._isOpen && !this._spinning) this._refreshHud();
     });
     EventBus.on('midAutumnEvent:periodChanged', () => {
       if (!this._isOpen) return;
@@ -90,6 +113,11 @@ export class MidAutumnEventPanel extends PIXI.Container {
         'icon_workshop_material',
         'icon_coin',
         'icon_mid_autumn_lantern',
+        MID_AUTUMN_MOONCAKE_GIFT_BOX_DECO_ID,
+        MID_AUTUMN_REUNION_DINING_TABLE_DECO_ID,
+        MID_AUTUMN_MOON_WINDOW_DECO_ID,
+        'workshop_moon_sheer_window_sheet',
+        'workshop_blueprint_generic',
       ]),
     ]).finally(() => {
       this._opening = false;
@@ -262,7 +290,10 @@ export class MidAutumnEventPanel extends PIXI.Container {
     this._countdownText.position.set(0, h * 0.238);
     this._content.addChild(this._countdownText);
 
-    const wheelY = h * 0.495;
+    this._previewRound = this._playablePreviewRound();
+    this._playableRound = MidAutumnEventManager.wheelRound;
+    this._displayedCleared = MidAutumnEventManager.wheelCleared;
+    const wheelY = h * 0.508;
     const stand = this._trySprite(STAND_KEY);
     if (stand) {
       const standW = WHEEL_R * 1.88;
@@ -275,6 +306,13 @@ export class MidAutumnEventPanel extends PIXI.Container {
     this._wheel = this._buildWheel();
     this._wheel.position.set(0, wheelY);
     this._content.addChild(this._wheel);
+
+    this._leftArrow = this._makePageArrow(-1);
+    this._leftArrow.position.set(-WHEEL_R - 36, wheelY);
+    this._content.addChild(this._leftArrow);
+    this._rightArrow = this._makePageArrow(1);
+    this._rightArrow.position.set(WHEEL_R + 36, wheelY);
+    this._content.addChild(this._rightArrow);
 
     const pointer = this._trySprite(POINTER_KEY);
     if (pointer) {
@@ -305,6 +343,7 @@ export class MidAutumnEventPanel extends PIXI.Container {
     }
 
     const spinBtn = new PIXI.Container();
+    this._spinBtn = spinBtn;
     spinBtn.position.set(0, h * 0.805);
     spinBtn.eventMode = 'static';
     spinBtn.cursor = 'pointer';
@@ -355,9 +394,10 @@ export class MidAutumnEventPanel extends PIXI.Container {
       disc.drawCircle(0, 0, WHEEL_R + 10);
       disc.endFill();
       root.addChild(disc);
+      const prizes = midAutumnWheelPrizesForRound(this._previewRound);
       for (let i = 0; i < SLICE_COUNT; i++) {
-        const prize = MID_AUTUMN_WHEEL_PRIZES[i]!;
-        const start = -Math.PI / 2 - SLICE_ANGLE / 2 + i * SLICE_ANGLE;
+        const prize = prizes[i]!;
+        const start = -Math.PI / 2 + i * SLICE_ANGLE;
         const end = start + SLICE_ANGLE;
         const slice = new PIXI.Graphics();
         slice.beginFill(prize.color);
@@ -369,29 +409,123 @@ export class MidAutumnEventPanel extends PIXI.Container {
       }
     }
 
-    const iconR = WHEEL_R * 0.50;
-    const labelR = WHEEL_R * 0.34;
+    this._prizeLayer = new PIXI.Container();
+    root.addChild(this._prizeLayer);
+    this._fillPrizeLayer();
+    return root;
+  }
+
+  private _fillPrizeLayer(): void {
+    const layer = this._prizeLayer;
+    if (!layer) return;
+    layer.removeChildren();
+    this._prizeNodes = [];
+    const prizes = midAutumnWheelPrizesForRound(this._previewRound);
+    const playable = MidAutumnEventManager.wheelRound;
+    const cleared = MidAutumnEventManager.wheelCleared;
     for (let i = 0; i < SLICE_COUNT; i++) {
-      const prize = MID_AUTUMN_WHEEL_PRIZES[i]!;
-      const mid = -Math.PI / 2 + i * SLICE_ANGLE;
+      const prize = prizes[i]!;
+      const mid = -Math.PI / 2 + SLICE_CENTER_OFFSET + i * SLICE_ANGLE;
       const cx = Math.cos(mid);
       const cy = Math.sin(mid);
-      const icon = this._makeIcon(prize.iconKey, 32);
-      icon.position.set(cx * iconR, cy * iconR);
-      root.addChild(icon);
-      const amount = new PIXI.Text(`×${prize.grant.amount}`, {
-        fontFamily: FONT_FAMILY,
-        fontSize: 14,
-        fontWeight: '700',
-        fill: 0x6B3A12,
-        stroke: 0xFFF8E6,
-        strokeThickness: 3,
-      });
-      amount.anchor.set(0.5);
-      amount.position.set(cx * labelR, cy * labelR);
-      root.addChild(amount);
+      const wrap = new PIXI.Container();
+      const qty = midAutumnPrizeQuantityLabel(prize);
+      const icon = this._makeIcon(prize.iconKey, qty ? PRIZE_ICON_SIZE : PRIZE_ICON_SIZE_DECO);
+      icon.position.set(cx * PRIZE_ICON_R, cy * PRIZE_ICON_R);
+      wrap.addChild(icon);
+      if (qty) {
+        const amount = new PIXI.Text(qty, {
+          fontFamily: FONT_FAMILY,
+          fontSize: 16,
+          fontWeight: '700',
+          fill: 0x6B3A12,
+          stroke: 0xFFF8E6,
+          strokeThickness: 3,
+        });
+        amount.anchor.set(0.5);
+        amount.position.set(cx * PRIZE_LABEL_R, cy * PRIZE_LABEL_R);
+        wrap.addChild(amount);
+      }
+      const grayAll = cleared || this._previewRound < playable;
+      if (grayAll || (this._previewRound === playable && MidAutumnEventManager.isPrizeWon(prize.id))) {
+        this._grayNode(wrap);
+      }
+      layer.addChild(wrap);
+      this._prizeNodes.push(wrap);
     }
-    return root;
+    this._displayedWonCount = this._previewRound === playable && !cleared
+      ? prizes.filter(prize => MidAutumnEventManager.isPrizeWon(prize.id)).length
+      : -1;
+    this._syncPageArrows();
+  }
+
+  private _playablePreviewRound(): number {
+    return MidAutumnEventManager.wheelCleared
+      ? MID_AUTUMN_WHEEL_ROUND_COUNT
+      : MidAutumnEventManager.wheelRound;
+  }
+
+  private _isPreviewPlayable(): boolean {
+    return !MidAutumnEventManager.wheelCleared
+      && this._previewRound === MidAutumnEventManager.wheelRound;
+  }
+
+  private _makePageArrow(dir: 1 | -1): PIXI.Container {
+    const btn = new PIXI.Container();
+    const g = new PIXI.Graphics();
+    g.beginFill(0xF2C14E);
+    g.lineStyle(3, 0xFFF6DE);
+    if (dir > 0) {
+      g.moveTo(-8, -20);
+      g.lineTo(18, 0);
+      g.lineTo(-8, 20);
+    } else {
+      g.moveTo(8, -20);
+      g.lineTo(-18, 0);
+      g.lineTo(8, 20);
+    }
+    g.closePath();
+    g.endFill();
+    btn.addChild(g);
+    btn.eventMode = 'static';
+    btn.cursor = 'pointer';
+    btn.hitArea = new PIXI.Circle(0, 0, 28);
+    btn.on('pointertap', (e: PIXI.FederatedPointerEvent) => {
+      e.stopPropagation();
+      this._turnPage(dir);
+    });
+    return btn;
+  }
+
+  private _turnPage(dir: 1 | -1): void {
+    if (this._spinning) return;
+    const next = this._previewRound + dir;
+    if (next < 1 || next > MID_AUTUMN_WHEEL_ROUND_COUNT) return;
+    this._previewRound = next;
+    this._wheel.rotation = 0;
+    this._fillPrizeLayer();
+    this._refreshHud();
+    AudioManager.play('button_click');
+  }
+
+  private _syncPageArrows(): void {
+    if (this._leftArrow) this._leftArrow.visible = this._previewRound > 1 && !this._spinning;
+    if (this._rightArrow) {
+      this._rightArrow.visible = this._previewRound < MID_AUTUMN_WHEEL_ROUND_COUNT && !this._spinning;
+    }
+  }
+
+  private _grayNode(node: PIXI.Container): void {
+    const filter = new PIXI.ColorMatrixFilter();
+    filter.desaturate();
+    filter.brightness(0.7, false);
+    node.filters = [filter];
+    node.alpha = 0.72;
+  }
+
+  private _grayPrizeAt(index: number): void {
+    const node = this._prizeNodes[index];
+    if (node) this._grayNode(node);
   }
 
   private _trySprite(key: string): PIXI.Sprite | null {
@@ -428,31 +562,81 @@ export class MidAutumnEventPanel extends PIXI.Container {
       const label = MidAutumnEventManager.countdownLabel();
       this._countdownText.text = label ? `剩余 ${label}` : '';
     }
-    if (this._spinLabel) {
-      this._spinLabel.text = this._spinning ? '转动中…' : `抽奖  ${MID_AUTUMN_SPIN_COST}玉兔灯`;
+    if (!this._spinning && this._prizeLayer) {
+      const playable = MidAutumnEventManager.wheelRound;
+      const cleared = MidAutumnEventManager.wheelCleared;
+      const playableChanged = this._playableRound !== playable || this._displayedCleared !== cleared;
+      if (playableChanged) {
+        this._playableRound = playable;
+        this._displayedCleared = cleared;
+        this._previewRound = this._playablePreviewRound();
+        this._fillPrizeLayer();
+        this._wheel.rotation = 0;
+      } else if (this._previewRound === playable && !cleared) {
+        const wonCount = MidAutumnEventManager.currentPrizes.filter(
+          prize => MidAutumnEventManager.isPrizeWon(prize.id),
+        ).length;
+        if (wonCount !== this._displayedWonCount) this._fillPrizeLayer();
+      }
     }
+    this._syncPageArrows();
+    const kind = this._previewButtonKind();
+    if (this._spinBtn) {
+      this._spinBtn.alpha = this._spinning || kind === 'spin' ? 1 : 0.55;
+    }
+    if (this._spinLabel) {
+      this._spinLabel.text = this._spinning
+        ? '转动中…'
+        : kind === 'cleared'
+          ? '已抽完'
+          : kind === 'locked'
+            ? '未解锁'
+            : `抽奖  ${MID_AUTUMN_SPIN_COST}玉兔灯`;
+    }
+  }
+
+  private _previewButtonKind(): 'spin' | 'locked' | 'cleared' {
+    if (MidAutumnEventManager.wheelCleared || this._previewRound < MidAutumnEventManager.wheelRound) {
+      return 'cleared';
+    }
+    if (this._previewRound > MidAutumnEventManager.wheelRound) return 'locked';
+    return 'spin';
   }
 
   private _onSpin(): void {
     if (this._spinning) return;
+    if (!this._isPreviewPlayable()) {
+      if (this._previewButtonKind() === 'cleared') {
+        ToastMessage.show(
+          MidAutumnEventManager.wheelCleared ? '三轮奖品已全部抽完' : '本轮奖品已抽完',
+        );
+      } else {
+        ToastMessage.show(`完成第${MidAutumnEventManager.wheelRound}轮转盘后解锁`);
+      }
+      return;
+    }
+    this._spinning = true;
     const result = MidAutumnEventManager.spin();
     if (!result.ok) {
+      this._spinning = false;
       if (result.reason === 'not_enough_currency') {
         ToastMessage.show(`玉兔灯不足，交付月饼订单可获得`);
       } else if (result.reason === 'not_active') {
         ToastMessage.show('月满中秋暂未开放');
+      } else if (result.reason === 'all_cleared') {
+        ToastMessage.show('三轮奖品已全部抽完');
       } else {
         ToastMessage.show('抽奖失败，请稍后再试');
       }
+      this._refreshHud();
       return;
     }
 
-    this._spinning = true;
     this._refreshHud();
     AudioManager.play('button_click');
 
     const current = ((this._wheel.rotation % (Math.PI * 2)) + Math.PI * 2) % (Math.PI * 2);
-    const land = -result.prizeIndex * SLICE_ANGLE;
+    const land = -(result.prizeIndex * SLICE_ANGLE + SLICE_CENTER_OFFSET);
     let delta = land - current;
     while (delta <= 0) delta += Math.PI * 2;
     const target = this._wheel.rotation + delta + Math.PI * 2 * 5;
@@ -463,18 +647,33 @@ export class MidAutumnEventPanel extends PIXI.Container {
       duration: 2.6,
       ease: Ease.easeOutQuad,
       onComplete: () => {
-        this._spinning = false;
-        this._refreshHud();
+        const settled = MidAutumnEventManager.settlePendingSpin();
+        this._grayPrizeAt(result.prizeIndex);
         ItemObtainOverlay.show(
           [this._toObtainEntry(result.prize.grant, result.prize.name)],
-          () => undefined,
+          () => {
+            this._spinning = false;
+            if (settled?.advancedToRound) {
+              ToastMessage.show(`第${settled.fromRound}轮已抽完，开启第${settled.advancedToRound}轮更丰厚奖品`);
+              this._previewRound = settled.advancedToRound;
+              this._playableRound = settled.advancedToRound;
+              this._fillPrizeLayer();
+              this._wheel.rotation = 0;
+            } else if (settled?.allCleared) {
+              ToastMessage.show('三轮奖品已全部抽完');
+              this._previewRound = MID_AUTUMN_WHEEL_ROUND_COUNT;
+              this._displayedCleared = true;
+              this._fillPrizeLayer();
+            }
+            this._refreshHud();
+          },
         );
       },
     });
   }
 
   private _toObtainEntry(
-    grant: (typeof MID_AUTUMN_WHEEL_PRIZES)[number]['grant'],
+    grant: MidAutumnGrant,
     fallbackName: string,
   ): ItemObtainEntry {
     switch (grant.kind) {
@@ -493,6 +692,10 @@ export class MidAutumnEventPanel extends PIXI.Container {
         };
       case 'rewardBoxItem':
         return { kind: 'board_item', itemId: grant.itemId, count: grant.amount };
+      case 'deco':
+        return { kind: 'deco', decoId: grant.decoId, label: fallbackName };
+      case 'blueprint':
+        return { kind: 'unlock_icon', iconKey: 'workshop_blueprint_generic', label: fallbackName };
     }
   }
 }

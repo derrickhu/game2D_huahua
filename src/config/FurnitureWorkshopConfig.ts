@@ -617,6 +617,26 @@ export const WORKSHOP_BLUEPRINT_DEFS: WorkshopBlueprintDef[] = [
     ],
   },
   {
+    id: 'blueprint_workshop_moon_sheer_window',
+    name: '月纱长窗图纸',
+    outputDecoId: 'workshop_moon_sheer_window',
+    rarity: 'limited',
+    sourceText: '月满中秋转盘',
+    icon: 'workshop_blueprint_generic',
+    category: 'wallart',
+    acquire: [{ kind: 'event', label: '月满中秋' }],
+    colorOptions: [
+      {
+        id: 'default',
+        name: '默认',
+        outputDecoId: 'workshop_moon_sheer_window',
+        materialCost: 16,
+        dyeCost: 0,
+        huayuanCost: 32000,
+      },
+    ],
+  },
+  {
     id: 'blueprint_workshop_atelier_bouquet_vase',
     name: '艺廊花艺瓶图纸',
     outputDecoId: 'workshop_atelier_bouquet_vase',
