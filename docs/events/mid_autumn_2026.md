@@ -64,13 +64,13 @@ GM「刷客人：嫦娥」可立刻验收。
 
 ## 转盘
 
-- 每次消耗 **8** 玉兔灯
+- 三轮花费：**8 / 10 / 12** 玉兔灯
 - **3 轮**，每轮 8 格；抽中的格子变灰，本轮不再抽到
 - 一轮 8 格抽完后换下一轮，奖品逐轮加码
-- 第 1 轮：体力 / 花愿 / 钻石 / 工坊材料 / 幸运金币 / **月饼礼盒** / **团圆餐桌**
-- 第 2 / 3 轮：同类型数量加码（无重复家具）
-- 第 3 轮稀有格：**月纱长窗**工坊图纸（不可钻石购买；制作后可单击切换半透遮月 / 纱帘拉开）
-- 两件活动家具抽中后直接拥有，不花花愿、不增加星星
+- 第 1 轮：体力×100 / 花愿×5000 / 钻石 / 工坊材料 / 粉色染料 / 幸运金币 / **月饼礼盒**
+- 第 2 轮：体力×200 / 花愿×10000 / 黄色染料 / **万能水晶** / **团圆餐桌** / **玉兔玩偶**
+- 第 3 轮：体力×300 / 花愿×20000 / 蓝色染料 / **金剪刀** / **月纱长窗**工坊图纸（不可钻石购买；制作后可单击切换半透遮月 / 纱帘拉开）
+- 活动家具抽中后直接拥有，不花花愿、不增加星星
 - 三轮全部抽完后不能再抽；红点：余额足够抽一次且尚未抽完
 
 ## 入口
@@ -86,5 +86,5 @@ GM「刷客人：嫦娥」可立刻验收。
 | 入口 / 货币 | 主包 `images/ui/icon_mid_autumn_event_nb2.png`、`icon_mid_autumn_lantern.png` |
 | 面板壳 | `minigame/subpkg_events/images/mid_autumn_event/ui/mid_autumn_event_panel_shell_nb2.png` |
 | 转盘分层 | 同目录 `mid_autumn_wheel_{disc,pointer,hub,stand,spin_btn}_nb2.png` |
-| 活动家具 | `minigame/subpkg_deco/images/furniture/event_mid_autumn_mooncake_gift_box.png`、`event_mid_autumn_reunion_dining_table.png` |
+| 活动家具 | `minigame/subpkg_deco/images/furniture/event_mid_autumn_mooncake_gift_box.png`、`event_mid_autumn_reunion_dining_table.png`、`event_mid_autumn_jade_rabbit_doll.png` |
 | 月纱长窗 | `minigame/subpkg_deco/images/furniture/workshop_moon_sheer_window_sheet.png`（半透遮月 / 纱帘拉开） |

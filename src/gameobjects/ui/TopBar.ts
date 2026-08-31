@@ -88,7 +88,8 @@ const QUEST_HIT = 64;
 const EVENT_ICON_SIZE = 62;
 /** 清凉一夏入口图留白较多，单独放大以对齐花间珠匣视觉体量 */
 const COOL_SUMMER_ICON_SIZE = 76;
-const MID_AUTUMN_ICON_SIZE = 76;
+/** 中秋入口图几乎铺满画布，按清凉一夏 76 会明显偏大，对齐任务/珠匣体量 */
+const MID_AUTUMN_ICON_SIZE = 60;
 const EVENT_HIT_W = 88;
 const EVENT_HIT_H = 92;
 /** 热区向上多探入顶栏带，减少被店铺区抢点击 */

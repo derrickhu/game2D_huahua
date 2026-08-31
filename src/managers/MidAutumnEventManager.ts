@@ -6,7 +6,7 @@ import {
   MID_AUTUMN_LANTERN_TO_HUAYUAN_RATE,
   midAutumnLanternsForMooncakeLevel,
   MID_AUTUMN_SEASON_ID,
-  MID_AUTUMN_SPIN_COST,
+  midAutumnSpinCostForRound,
   MID_AUTUMN_WHEEL_ROUND_COUNT,
   clampMidAutumnWheelRound,
   MID_AUTUMN_WHEEL_PRIZE_MAP,
@@ -102,12 +102,12 @@ class MidAutumnEventManagerClass {
   init(): void {
     if (this._initialized) return;
     this._initialized = true;
-    setMidAutumnActiveChecker(() => this.isActive());
+    setMidAutumnActiveChecker(() => this.canCollectLanterns());
     this._lastStatus = this.status;
     EventBus.on('customer:delivered', (_uid: number, customer: {
       midAutumnLanternReward?: number;
     }) => {
-      if (!this.isActive()) return;
+      if (!this.canCollectLanterns()) return;
       const reward = Math.max(0, Math.floor(customer?.midAutumnLanternReward ?? 0));
       if (reward > 0) this.addCurrency(reward);
     });
@@ -162,6 +162,11 @@ class MidAutumnEventManagerClass {
     return this._wheelCleared;
   }
 
+  /** 活动进行中且转盘尚未抽完：可刷嫦娥、可获玉兔灯。 */
+  canCollectLanterns(): boolean {
+    return this.isActive() && !this._wheelCleared;
+  }
+
   get currentPrizes(): readonly MidAutumnWheelPrize[] {
     return midAutumnWheelPrizesForRound(this._wheelRound);
   }
@@ -179,7 +184,9 @@ class MidAutumnEventManagerClass {
   }
 
   get hasRedDot(): boolean {
-    return this.isActive() && !this._wheelCleared && this._currency >= MID_AUTUMN_SPIN_COST;
+    return this.isActive()
+      && !this._wheelCleared
+      && this._currency >= midAutumnSpinCostForRound(this._wheelRound);
   }
 
   getActivitySnapshot(now = Date.now()): MidAutumnActivitySnapshot {
@@ -208,6 +215,7 @@ class MidAutumnEventManagerClass {
   }
 
   calculateOrderReward(itemIds: readonly string[]): number {
+    if (!this.canCollectLanterns()) return 0;
     let maxLevel = 0;
     for (const itemId of itemIds) {
       const item = ITEM_DEFS.get(itemId);
@@ -219,7 +227,7 @@ class MidAutumnEventManagerClass {
   }
 
   addCurrency(amount: number): number {
-    if (!this.isActive()) return this._currency;
+    if (!this.canCollectLanterns()) return this._currency;
     const add = Number.isFinite(amount) ? Math.max(0, Math.floor(amount)) : 0;
     if (add <= 0) return this._currency;
     this._currency += add;
@@ -231,11 +239,12 @@ class MidAutumnEventManagerClass {
   spin(): MidAutumnSpinResult {
     if (!this.isActive()) return { ok: false, reason: 'not_active' };
     if (this._pendingPrizeId) this.settlePendingSpin();
-    if (this._currency < MID_AUTUMN_SPIN_COST) {
-      return { ok: false, reason: 'not_enough_currency' };
-    }
     this._normalizeWheelProgress();
     if (this._wheelCleared) return { ok: false, reason: 'all_cleared' };
+    const spinCost = midAutumnSpinCostForRound(this._wheelRound);
+    if (this._currency < spinCost) {
+      return { ok: false, reason: 'not_enough_currency' };
+    }
 
     const prizes = this.currentPrizes;
     const won = new Set(this._wonPrizeIds);
@@ -244,7 +253,7 @@ class MidAutumnEventManagerClass {
 
     const fromRound = this._wheelRound;
     const prizeIndex = midAutumnWheelPrizeIndex(prize.id, prizes);
-    this._currency -= MID_AUTUMN_SPIN_COST;
+    this._currency -= spinCost;
     this._spinCount += 1;
     this._pendingPrizeId = prize.id;
     this._pendingRound = fromRound;

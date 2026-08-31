@@ -461,7 +461,7 @@ export class ShopRowPanoramaScroll extends PIXI.Container {
     icon.anchor.set(0.5);
     icon.position.set(BIG_BTN / 2, BIG_BTN / 2);
     if (tex && tex.width > 0) {
-      const target = def.id === 'coolSummer' || def.id === 'midAutumn' ? COOL_SUMMER_BIG_ICON : BIG_ICON;
+      const target = def.id === 'coolSummer' ? COOL_SUMMER_BIG_ICON : BIG_ICON;
       const s = Math.min(target / tex.width, target / tex.height);
       icon.scale.set(s);
     }
@@ -507,7 +507,7 @@ export class ShopRowPanoramaScroll extends PIXI.Container {
       const icon = card.root.children.find(child => child instanceof PIXI.Sprite) as PIXI.Sprite | undefined;
       if (!icon || !tex || tex.width <= 0) return;
       icon.texture = tex;
-      const target = card.def.id === 'coolSummer' || card.def.id === 'midAutumn' ? COOL_SUMMER_BIG_ICON : BIG_ICON;
+      const target = card.def.id === 'coolSummer' ? COOL_SUMMER_BIG_ICON : BIG_ICON;
       const s = Math.min(target / tex.width, target / tex.height);
       icon.scale.set(s);
     }

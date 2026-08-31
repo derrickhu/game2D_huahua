@@ -9,9 +9,10 @@ import {
   MID_AUTUMN_CURRENCY_NAME,
   MID_AUTUMN_EVENT_NAME,
   MID_AUTUMN_SEASON_ID,
-  MID_AUTUMN_SPIN_COST,
+  midAutumnSpinCostForRound,
   MID_AUTUMN_MOONCAKE_GIFT_BOX_DECO_ID,
   MID_AUTUMN_REUNION_DINING_TABLE_DECO_ID,
+  MID_AUTUMN_JADE_RABBIT_DOLL_DECO_ID,
   MID_AUTUMN_MOON_WINDOW_DECO_ID,
   MID_AUTUMN_WHEEL_ROUND_COUNT,
   MID_AUTUMN_WHEEL_SLICE_COUNT,
@@ -111,10 +112,16 @@ export class MidAutumnEventPanel extends PIXI.Container {
         'icon_huayuan',
         'icon_gem',
         'icon_workshop_material',
+        'icon_workshop_dye_pink',
+        'icon_workshop_dye_yellow',
+        'icon_workshop_dye_blue',
         'icon_coin',
+        'icon_crystal_ball',
+        'icon_golden_scissors',
         'icon_mid_autumn_lantern',
         MID_AUTUMN_MOONCAKE_GIFT_BOX_DECO_ID,
         MID_AUTUMN_REUNION_DINING_TABLE_DECO_ID,
+        MID_AUTUMN_JADE_RABBIT_DOLL_DECO_ID,
         MID_AUTUMN_MOON_WINDOW_DECO_ID,
         'workshop_moon_sheer_window_sheet',
         'workshop_blueprint_generic',
@@ -260,15 +267,15 @@ export class MidAutumnEventPanel extends PIXI.Container {
     }
 
     const currencyRow = new PIXI.Container();
-    currencyRow.position.set(0, h * 0.198);
+    currencyRow.position.set(-w / 2 + 156, h * 0.262);
     const pill = new PIXI.Graphics();
     pill.beginFill(0xFFF6DE, 0.95);
     pill.lineStyle(3, 0xE0A84A);
-    pill.drawRoundedRect(-118, -22, 236, 44, 22);
+    pill.drawRoundedRect(-112, -22, 224, 44, 22);
     pill.endFill();
     currencyRow.addChild(pill);
-    const lantern = this._makeIcon('icon_mid_autumn_lantern', 32);
-    lantern.position.set(-78, 0);
+    const lantern = this._makeIcon('icon_mid_autumn_lantern', 28);
+    lantern.position.set(-74, 0);
     currencyRow.addChild(lantern);
     this._currencyText = new PIXI.Text('', {
       fontFamily: FONT_FAMILY,
@@ -277,7 +284,7 @@ export class MidAutumnEventPanel extends PIXI.Container {
       fill: 0x6B3A12,
     });
     this._currencyText.anchor.set(0, 0.5);
-    this._currencyText.position.set(-56, 0);
+    this._currencyText.position.set(-52, 0);
     currencyRow.addChild(this._currencyText);
     this._content.addChild(currencyRow);
 
@@ -430,25 +437,25 @@ export class MidAutumnEventPanel extends PIXI.Container {
       const cy = Math.sin(mid);
       const wrap = new PIXI.Container();
       const qty = midAutumnPrizeQuantityLabel(prize);
+      const grayAll = cleared || this._previewRound < playable;
+      const isWon = grayAll
+        || (this._previewRound === playable && MidAutumnEventManager.isPrizeWon(prize.id));
       const icon = this._makeIcon(prize.iconKey, qty ? PRIZE_ICON_SIZE : PRIZE_ICON_SIZE_DECO);
       icon.position.set(cx * PRIZE_ICON_R, cy * PRIZE_ICON_R);
+      if (isWon) this._grayNode(icon);
       wrap.addChild(icon);
       if (qty) {
         const amount = new PIXI.Text(qty, {
           fontFamily: FONT_FAMILY,
           fontSize: 16,
           fontWeight: '700',
-          fill: 0x6B3A12,
-          stroke: 0xFFF8E6,
+          fill: isWon ? 0x8A8A8A : 0x6B3A12,
+          stroke: isWon ? 0xE8E8E8 : 0xFFF8E6,
           strokeThickness: 3,
         });
         amount.anchor.set(0.5);
         amount.position.set(cx * PRIZE_LABEL_R, cy * PRIZE_LABEL_R);
         wrap.addChild(amount);
-      }
-      const grayAll = cleared || this._previewRound < playable;
-      if (grayAll || (this._previewRound === playable && MidAutumnEventManager.isPrizeWon(prize.id))) {
-        this._grayNode(wrap);
       }
       layer.addChild(wrap);
       this._prizeNodes.push(wrap);
@@ -518,9 +525,7 @@ export class MidAutumnEventPanel extends PIXI.Container {
   private _grayNode(node: PIXI.Container): void {
     const filter = new PIXI.ColorMatrixFilter();
     filter.desaturate();
-    filter.brightness(0.7, false);
     node.filters = [filter];
-    node.alpha = 0.72;
   }
 
   private _grayPrizeAt(index: number): void {
@@ -591,7 +596,7 @@ export class MidAutumnEventPanel extends PIXI.Container {
           ? '已抽完'
           : kind === 'locked'
             ? '未解锁'
-            : `抽奖  ${MID_AUTUMN_SPIN_COST}玉兔灯`;
+            : `抽奖  ${midAutumnSpinCostForRound(this._previewRound)}玉兔灯`;
     }
   }
 

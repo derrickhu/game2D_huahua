@@ -1155,6 +1155,7 @@ const DECO_IMAGE_MAP: Record<string, string> = {
   // ---- 月满中秋转盘奖励家具 ----
   event_mid_autumn_mooncake_gift_box: 'subpkg_deco/images/furniture/event_mid_autumn_mooncake_gift_box.png',
   event_mid_autumn_reunion_dining_table: 'subpkg_deco/images/furniture/event_mid_autumn_reunion_dining_table.png',
+  event_mid_autumn_jade_rabbit_doll: 'subpkg_deco/images/furniture/event_mid_autumn_jade_rabbit_doll.png',
 
   // ---- 房间背景 ----
   /** 花坊默认房壳 v3 试看（原 soft 图保留不删，验收后可改回或覆盖） */

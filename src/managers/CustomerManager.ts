@@ -531,7 +531,7 @@ class CustomerManagerClass {
             ?? CoolSummerEventManager.calculateOrderReward(e.slots.map(s => s.itemId))
             ?? undefined)
           : undefined,
-        midAutumnLanternReward: MidAutumnEventManager.isActive()
+        midAutumnLanternReward: MidAutumnEventManager.canCollectLanterns()
           ? (e.midAutumnLanternReward
             ?? MidAutumnEventManager.calculateOrderReward(e.slots.map(s => s.itemId))
             ?? undefined)
@@ -580,7 +580,9 @@ class CustomerManagerClass {
     EventBus.on('tutorial:completed', this._onTutorialCompleted);
     EventBus.on('coolSummerEvent:periodChanged', () => this.refreshCoolSummerRewards());
     EventBus.on('midAutumnEvent:periodChanged', () => this.refreshMidAutumnRewards());
+    EventBus.on('midAutumnEvent:changed', () => this._syncMidAutumnWheelClearedState());
     this._refreshWeekendHuayuanBonuses(false);
+    this._syncMidAutumnWheelClearedState();
     this._rescanAll();
     this._bootstrapLowLevelQueue();
   }
@@ -897,7 +899,7 @@ class CustomerManagerClass {
     const changEChance = MID_AUTUMN_CHANGE_BASE_CHANCE
       * (this._changEOrdersToday === 0 ? MID_AUTUMN_CHANGE_FIRST_DAILY_CHANCE_MULT : 1);
     const allowChangEOrder =
-      MidAutumnEventManager.isActive() &&
+      MidAutumnEventManager.canCollectLanterns() &&
       this._changEOrdersToday < MID_AUTUMN_CHANGE_DAILY_CAP &&
       changEInQueue < MID_AUTUMN_CHANGE_MAX_IN_QUEUE &&
       Math.random() < changEChance;
@@ -982,7 +984,7 @@ class CustomerManagerClass {
     const midAutumnLanternReward = MidAutumnEventManager.calculateOrderReward(
       customer.slots.map(s => s.itemId),
     );
-    if (MidAutumnEventManager.isActive() && midAutumnLanternReward > 0) {
+    if (MidAutumnEventManager.canCollectLanterns() && midAutumnLanternReward > 0) {
       customer.midAutumnLanternReward = midAutumnLanternReward;
     }
 
@@ -1038,10 +1040,10 @@ class CustomerManagerClass {
   }
 
   refreshMidAutumnRewards(): void {
-    const active = MidAutumnEventManager.isActive();
+    const canCollect = MidAutumnEventManager.canCollectLanterns();
     let changed = false;
     for (const customer of this._customers) {
-      const next = active
+      const next = canCollect
         ? MidAutumnEventManager.calculateOrderReward(customer.slots.map(s => s.itemId))
         : 0;
       const normalized = next > 0 ? next : undefined;
@@ -1050,6 +1052,37 @@ class CustomerManagerClass {
       changed = true;
     }
     if (changed) EventBus.emit('customer:rewardBonusChanged');
+  }
+
+  /** 转盘抽完：去掉玉兔灯奖励，队列里的嫦娥立即离场。 */
+  private _syncMidAutumnWheelClearedState(): void {
+    if (!MidAutumnEventManager.wheelCleared) return;
+    this.refreshMidAutumnRewards();
+    this._dismissChangEOrders();
+  }
+
+  private _isChangECustomer(customer: CustomerInstance): boolean {
+    return customer.orderKind === 'midAutumnChangE'
+      || customer.typeId === MID_AUTUMN_CHANGE_CUSTOMER_ID;
+  }
+
+  private _dismissChangEOrders(): void {
+    let removed = false;
+    for (let i = this._customers.length - 1; i >= 0; i--) {
+      const customer = this._customers[i];
+      if (!customer || !this._isChangECustomer(customer)) continue;
+      for (const slot of customer.slots) {
+        if (slot.lockedCellIndex >= 0) {
+          const cell = BoardManager.getCellByIndex(slot.lockedCellIndex);
+          if (cell) cell.reserved = false;
+        }
+      }
+      this._customers.splice(i, 1);
+      removed = true;
+    }
+    if (!removed) return;
+    EventBus.emit('customer:lockChanged');
+    this._rescanAll();
   }
 
   private _syncTimedDiamondDailyState(): void {
@@ -1281,7 +1314,7 @@ class CustomerManagerClass {
     const midAutumnLanternReward = MidAutumnEventManager.calculateOrderReward(
       customer.slots.map(s => s.itemId),
     );
-    if (MidAutumnEventManager.isActive() && midAutumnLanternReward > 0) {
+    if (MidAutumnEventManager.canCollectLanterns() && midAutumnLanternReward > 0) {
       customer.midAutumnLanternReward = midAutumnLanternReward;
     }
 
