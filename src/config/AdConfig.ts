@@ -108,7 +108,7 @@ export const WAREHOUSE_SLOT_UNLOCK_MODES: Record<number, ExternalUnlockMode> = {
   9: 'ad',
 };
 
-/** 广告可解锁购买资格的家具白名单；只有这里列出的家具走广告条件。 */
+/** 广告可直接获得的家具白名单；看完广告即拥有，无需花愿。 */
 export const AD_UNLOCK_DECO_IDS = new Set<string>([
   'promo_floral_sofa',
   'promo_wood_tea_table',

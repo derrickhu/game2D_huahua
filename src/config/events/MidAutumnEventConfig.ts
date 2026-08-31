@@ -30,7 +30,7 @@ export const MID_AUTUMN_DESSERT_PRODUCE_WEIGHT = 55;
 
 /** 嫦娥专属客人 */
 export const MID_AUTUMN_CHANGE_CUSTOMER_ID = 'chang_e';
-export const MID_AUTUMN_CHANGE_DAILY_CAP = 2;
+export const MID_AUTUMN_CHANGE_DAILY_CAP = 4;
 export const MID_AUTUMN_CHANGE_MAX_IN_QUEUE = 1;
 export const MID_AUTUMN_CHANGE_BASE_CHANCE = 0.10;
 export const MID_AUTUMN_CHANGE_FIRST_DAILY_CHANCE_MULT = 1.6;
@@ -53,19 +53,19 @@ export function midAutumnChangETierFromMooncakeLevel(level: number): MidAutumnCh
 }
 
 /**
- * 含月饼订单按最高月饼等级给 1–2 盏玉兔灯。
- * L1–L4 → 1，L5–L8 → 2。
+ * 含月饼订单按最高月饼等级给玉兔灯。
+ * L1–L4（A 单）→ 2，L5–L8（S 单）→ 4。
  */
 export function midAutumnLanternsForMooncakeLevel(level: number): number {
   if (!Number.isFinite(level) || level < 1) return 0;
-  return Math.floor(level) >= 5 ? 2 : 1;
+  return Math.floor(level) >= 5 ? 4 : 2;
 }
 
 /** 活动结束后，未抽完的玉兔灯 → 花愿换算比例。 */
 export const MID_AUTUMN_LANTERN_TO_HUAYUAN_RATE = 1;
 
-/** 三轮抽奖花费：第 1 / 2 / 3 轮分别 8 / 10 / 12 盏。 */
-export const MID_AUTUMN_SPIN_COSTS = [8, 10, 12] as const;
+/** 三轮抽奖花费：第 1 / 2 / 3 轮分别 4 / 6 / 8 盏。 */
+export const MID_AUTUMN_SPIN_COSTS = [4, 6, 8] as const;
 export const MID_AUTUMN_SPIN_COST = MID_AUTUMN_SPIN_COSTS[0];
 
 export function midAutumnSpinCostForRound(round: number): number {

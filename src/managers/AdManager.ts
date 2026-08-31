@@ -55,7 +55,7 @@ export enum AdScene {
   TUESDAY_STAMINA_UNLIMITED = 'tuesday_stamina_unlimited',
   /** 周四魔法时间：看广告给单个工具附魔 */
   THURSDAY_MAGIC_TIME = 'thursday_magic_time',
-  /** 形象换装 · 清涟荷影：广告解锁购买资格 */
+  /** 形象换装 · 清涟荷影：广告直接获得 */
   DRESSUP_OUTFIT_QINGLIAN = 'dressup_outfit_qinglian',
   /** 花间珠匣 · 进度回响广告奖励 */
   EVENT_PROGRESS_ECHO = 'event_progress_echo',

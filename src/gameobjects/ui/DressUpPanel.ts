@@ -587,11 +587,11 @@ export class DressUpPanel extends PIXI.Container {
     }
   }
 
-  private async _unlockOutfitWithAd(outfit: Outfit): Promise<void> {
+  private async _unlockOutfitWithAd(outfit: Outfit, flyCard: PIXI.Container): Promise<void> {
     const ok = await ConfirmDialog.show(
-      '解锁购买资格',
-      `观看广告解锁「${outfit.name}」购买资格，之后仍需 ${outfit.huayuanCost} 花愿购买。`,
-      '看广告解锁',
+      '获取形象',
+      `观看广告即可获得「${outfit.name}」，无需花愿购买。`,
+      '看广告获取',
       '取消',
     );
     if (!ok) return;
@@ -599,17 +599,32 @@ export class DressUpPanel extends PIXI.Container {
     const adScene = AdScene.SPECIAL_DECO_UNLOCK;
     AdManager.showRewardedAd(adScene, (success) => {
       if (!success) {
-        ToastMessage.show('广告未看完，未解锁');
+        ToastMessage.show('广告未看完，未获得');
         return;
       }
-      if (!DressUpManager.unlockAdPurchaseGate(outfit.id)) {
-        ToastMessage.show('该形象已不可解锁');
-        return;
-      }
-      ToastMessage.show(`已解锁「${outfit.name}」购买资格`);
-      this._refreshHeaderNumbers();
-      this._rebuildGrid();
+      this._grantAdOutfit(outfit, flyCard);
     });
+  }
+
+  private _grantAdOutfit(outfit: Outfit, flyCard: PIXI.Container): void {
+    const deferStar = outfit.starValue > 0;
+    const flyLp = new PIXI.Point(14, 14);
+    const flyGlobal = deferStar ? flyCard.toGlobal(flyLp) : null;
+    if (!DressUpManager.unlockFromAd(outfit.id, { deferStarGrant: deferStar })) {
+      ToastMessage.show('该形象已不可领取');
+      return;
+    }
+    ToastMessage.show(`已获得「${outfit.name}」！`);
+    if (deferStar && flyGlobal) {
+      this._pendingDressUpStarGrant = outfit.starValue;
+      EventBus.emit('decoration:shopStarFly', {
+        globalX: flyGlobal.x,
+        globalY: flyGlobal.y,
+        amount: outfit.starValue,
+      });
+    }
+    this._refreshHeaderNumbers();
+    this._rebuildGrid();
   }
 
   private _buildOutfitCard(
@@ -624,9 +639,8 @@ export class DressUpPanel extends PIXI.Container {
     const reqResult = checkRequirement(outfit.unlockRequirement);
     const reqMet = reqResult.met;
     const isAdOutfit = DressUpManager.isAdUnlockOutfit(outfit.id);
-    const adGateSatisfied = DressUpManager.isAdPurchaseGateSatisfied(outfit.id);
-    const needsAdGate = isAdOutfit && reqMet && !isUnlocked && !adGateSatisfied;
-    const purchaseAllowed = reqMet && (!isAdOutfit || adGateSatisfied);
+    const needsAdGate = isAdOutfit && reqMet && !isUnlocked;
+    const purchaseAllowed = reqMet && !isAdOutfit;
     const cardUnlockedLook = isUnlocked || purchaseAllowed || needsAdGate;
 
     this._drawCardBg(card, cw, ch, cardUnlockedLook, isEquipped);
@@ -744,7 +758,7 @@ export class DressUpPanel extends PIXI.Container {
     } else if (isUnlocked) {
       this._addDressFooter(card, cw, ch, 'ready', '换装');
     } else if (needsAdGate) {
-      this._addDressFooter(card, cw, ch, 'ad_unlock', '看广告解锁');
+      this._addDressFooter(card, cw, ch, 'ad_unlock', '看广告获取');
     } else if (!reqResult.met) {
       this._addDressFooter(card, cw, ch, 'locked', reqResult.text);
     } else if (outfit.huayuanCost > 0) {
@@ -775,7 +789,11 @@ export class DressUpPanel extends PIXI.Container {
             this._rebuildGrid();
           }
         } else if (needsAdGate) {
-          void this._unlockOutfitWithAd(outfit);
+          if (DressUpManager.isAdPurchaseGateSatisfied(outfit.id)) {
+            this._grantAdOutfit(outfit, card);
+          } else {
+            void this._unlockOutfitWithAd(outfit, card);
+          }
         } else {
           const req = checkRequirement(outfit.unlockRequirement);
           if (!req.met) {

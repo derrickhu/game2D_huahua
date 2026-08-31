@@ -272,7 +272,7 @@ export const DECO_DEFS: DecoDef[] = [
   { id: 'orn_flora_fiddle_leaf_pot', name: '琴叶榕大绿植', slot: DecoSlot.ORNAMENT, rarity: DecoRarity.FINE, cost: 5000, starValue: 3, icon: 'orn_flora_fiddle_leaf_pot', desc: '高筒奶油陶盆里的琴叶榕，一角立刻变森系', unlockRequirement: { level: 16 }, defaultScale: 1.18 },
   { id: 'orn_flora_pink_phalaenopsis_pot', name: '粉蝶兰丛盆', slot: DecoSlot.ORNAMENT, rarity: DecoRarity.FINE, cost: 8000, starValue: 10, icon: 'orn_flora_pink_phalaenopsis_pot', desc: '小紫盆上多梗盛放的粉色蝴蝶兰，唇瓣形态准确', unlockRequirement: { level: 17 }, defaultScale: 0.88 },
   { id: 'orn_flora_boston_fern_pot', name: '波士顿蕨盆栽', slot: DecoSlot.ORNAMENT, rarity: DecoRarity.FINE, cost: 9800, starValue: 2, icon: 'orn_flora_boston_fern_pot', desc: '灰白陶盆里一丛羽状绿叶蕨，台面一角立刻添满绿意', unlockRequirement: { level: 27 }, defaultScale: 0.68 },
-  // 宣传款：仅广告解锁购买资格 + 花愿购买，不设花店等级门槛（见 AdConfig.AD_UNLOCK_DECO_IDS）
+  // 宣传款：看广告直接获得，不设花店等级门槛（见 AdConfig.AD_UNLOCK_DECO_IDS）
   { id: 'promo_floral_sofa',  name: '花漾木扶手沙发', slot: DecoSlot.ORNAMENT, rarity: DecoRarity.RARE, cost: 299, starValue: 6, icon: 'promo_floral_sofa', desc: '宣传图同款浅木扶手双人沙发，碎花抱枕很适合休息角', defaultScale: 1.48, decorationPanelTab: 'furniture' },
 
   // ═══════ 家具工坊专属（workshopExclusive：仅制作获得，不进直购）═══════

@@ -49,23 +49,25 @@ export const UPDATE_ANNOUNCEMENT_SECTION_META: Record<
  */
 export const UPDATE_ANNOUNCEMENT_ACTIVE: UpdateAnnouncementDef & { enabled: boolean } = {
   enabled: true,
-  id: '1.6.32',
-  version: '1.6.32',
+  id: '1.6.33',
+  version: '1.6.33',
   title: '更新公告',
-  greeting: '花花妙屋又添新花样啦～来看看这次更新：',
+  greeting: '花花妙屋又有新动静啦～',
   sections: [
     {
-      id: 'new',
-      title: '【新增】',
+      id: 'event',
+      title: '【活动】',
       items: [
-        '家具工坊新品：艺廊花艺瓶图纸上架，默认红袖款，可染青花 / 金紫 / 荷韵三色',
+        '清凉一夏活动下线',
+        '限时活动「月满中秋」开启：完成月饼订单，获取中秋抽奖机会',
       ],
     },
     {
       id: 'improve',
       title: '【优化】',
       items: [
-        '图纸商店家具预览：可染色图纸支持点击配色圆点，即时查看对应家具造型与制作消耗',
+        '广告解锁的家具看完广告即可获得，无需再花愿购买',
+        '成长之路友谊卡任务数量下调，更容易完成',
       ],
     },
   ],

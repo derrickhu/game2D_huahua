@@ -25,7 +25,7 @@ interface DressUpSave {
   unlocked: string[];
   /** 当前穿戴的形象 id */
   equipped: string;
-  /** 已看广告、可花愿购买的形象 id（见 AD_UNLOCK_OUTFIT_IDS） */
+  /** 已看过广告的形象 id（现用于直接发放；旧档可能仅有资格未拥有） */
   adPurchaseGates?: string[];
 }
 
@@ -136,20 +136,39 @@ class DressUpManagerClass {
     const req = checkRequirement(outfit.unlockRequirement);
     if (!req.met) return false;
     if (this.isAdUnlockOutfit(outfitId)) {
-      return this.isAdPurchaseGateSatisfied(outfitId);
+      return false;
     }
     return true;
   }
 
-  /** 激励视频看完后解锁购买资格（不扣花愿、不加星） */
+  /** 激励视频看完后记录广告（兼容旧档）；新流程请用 unlockFromAd。 */
   unlockAdPurchaseGate(outfitId: string): boolean {
     const outfit = OUTFIT_MAP.get(outfitId);
     if (!outfit || !this.isAdUnlockOutfit(outfitId)) return false;
     if (this._unlocked.has(outfitId)) return false;
     this._adPurchaseGates.add(outfitId);
     this._saveState();
-    console.log(`[DressUp] 广告解锁购买资格: ${outfit.name}`);
+    console.log(`[DressUp] 广告解锁记录: ${outfit.name}`);
     EventBus.emit('dressup:adUnlockGate', outfitId, outfit);
+    return true;
+  }
+
+  /** 看完广告直接获得形象，不扣花愿，成功后自动装备。 */
+  unlockFromAd(outfitId: string, options?: { deferStarGrant?: boolean }): boolean {
+    if (this._unlocked.has(outfitId)) return false;
+    const outfit = OUTFIT_MAP.get(outfitId);
+    if (!outfit || !this.isAdUnlockOutfit(outfitId)) return false;
+
+    this._adPurchaseGates.add(outfitId);
+    if (outfit.starValue > 0 && !options?.deferStarGrant) {
+      CurrencyManager.addStar(outfit.starValue);
+    }
+    this._unlocked.add(outfitId);
+    this._equippedId = outfitId;
+    this._saveState();
+    console.log(`[DressUp] 广告直接获得: ${outfit.name}`);
+    EventBus.emit('dressup:unlocked', outfitId, outfit);
+    EventBus.emit('dressup:equipped', outfitId);
     return true;
   }
 

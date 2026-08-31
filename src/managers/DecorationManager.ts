@@ -34,7 +34,7 @@ export interface DecoSaveData {
   roomStyleByScene?: Record<string, string>;
   /** 已解锁的房间风格 id */
   unlockedRoomStyles?: string[];
-  /** 已通过广告解锁购买资格的家具 id；不代表已拥有 */
+  /** 已看过广告的家具 id；现与拥有状态一起写入，旧档可能仅有资格未拥有 */
   adUnlockedDecos?: string[];
 }
 
@@ -51,7 +51,7 @@ class DecorationManagerClass {
   private _roomStyleByScene = new Map<string, string>();
   /** 已解锁的房间风格 */
   private _unlockedRoomStyles = new Set<string>();
-  /** 广告只解锁购买资格，仍需花愿购买后才进入 `_unlocked` */
+  /** 已看过广告的家具 id（现用于直接发放；旧存档「只开资格未购买」也会落在这里） */
   private _adUnlockedDecos = new Set<string>();
 
   private _initRoomStyleDefaults(): void {
@@ -190,7 +190,7 @@ class DecorationManagerClass {
     const req = checkRequirement(deco.unlockRequirement);
     if (!req.met) return false;
     if (this.isAdUnlockDeco(decoId)) {
-      return this.isAdUnlockSatisfied(decoId);
+      return false;
     }
     return true;
   }
@@ -303,8 +303,26 @@ class DecorationManagerClass {
 
     this._adUnlockedDecos.add(decoId);
     this._save();
-    console.log(`[Decoration] 广告解锁购买资格: ${deco.name}`);
+    console.log(`[Decoration] 广告解锁记录: ${deco.name}`);
     EventBus.emit('decoration:adUnlockGate', decoId, deco);
+    return true;
+  }
+
+  /** 看完广告直接获得家具，不扣花愿。 */
+  unlockFromAd(decoId: string, options?: { deferStarGrant?: boolean }): boolean {
+    if (this._unlocked.has(decoId)) return false;
+    const deco = DECO_MAP.get(decoId);
+    if (!deco || !this.isAdUnlockDeco(decoId)) return false;
+    if (!isDecoAllowedInScene(deco, CurrencyManager.state.sceneId)) return false;
+
+    this._adUnlockedDecos.add(decoId);
+    if (deco.starValue > 0 && !options?.deferStarGrant) {
+      CurrencyManager.addStar(deco.starValue);
+    }
+    this._unlocked.add(decoId);
+    this._save();
+    console.log(`[Decoration] 广告直接获得: ${deco.name}${deco.starValue > 0 ? ` +${deco.starValue}星` : ''}`);
+    EventBus.emit('decoration:unlocked', decoId, deco);
     return true;
   }
 

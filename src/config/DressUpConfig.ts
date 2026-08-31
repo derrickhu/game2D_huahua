@@ -50,7 +50,7 @@ export function getOwnerFullOpenTextureKey(outfitId: string): string {
   return outfitId === 'outfit_default' ? 'owner_full_default' : `owner_full_${outfitId}`;
 }
 
-/** 看广告解锁购买资格的形象（与 `DecorationManager` 广告 gate 同流程：先看广告，再花愿购买） */
+/** 看广告直接获得的形象（与宣传家具同流程：看完即拥有，无需花愿） */
 export const AD_UNLOCK_OUTFIT_IDS = new Set<string>(['outfit_qinglian']);
 
 /** 花之女王等活动赠送套装：活动结算处请调用 `DressUpManager.grantOutfitFromActivity('outfit_queen')`（会同步 grantQuest，条件与存档一致） */

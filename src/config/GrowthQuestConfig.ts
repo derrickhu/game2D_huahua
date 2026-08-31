@@ -326,9 +326,9 @@ export const GROWTH_CHAPTERS: ReadonlyArray<GrowthChapterDef> = [
       },
       {
         id: 'g3_affinity_cards_6',
-        title: '累计获得 6 张友谊卡',
+        title: '累计获得 2 张友谊卡',
         metric: GrowthMetric.AffinityCards,
-        target: 6,
+        target: 2,
         reward: { flowerSignTickets: 5 },
       },
       {
@@ -438,9 +438,9 @@ export const GROWTH_CHAPTERS: ReadonlyArray<GrowthChapterDef> = [
       },
       {
         id: 'g5_affinity_cards_18',
-        title: '累计获得 10 张友谊卡',
+        title: '累计获得 4 张友谊卡',
         metric: GrowthMetric.AffinityCards,
-        target: 10,
+        target: 4,
         reward: { flowerSignTickets: 10 },
       },
       {

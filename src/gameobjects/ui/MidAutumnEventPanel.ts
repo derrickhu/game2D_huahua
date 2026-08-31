@@ -62,9 +62,14 @@ export class MidAutumnEventPanel extends PIXI.Container {
   private _prizeLayer: PIXI.Container | null = null;
   private _prizeNodes: PIXI.Container[] = [];
   private _currencyText: PIXI.Text | null = null;
+  private _currencyAmountText: PIXI.Text | null = null;
+  private _currencyInfo: PIXI.Container | null = null;
   private _countdownText: PIXI.Text | null = null;
   private _spinBtn: PIXI.Container | null = null;
-  private _spinLabel: PIXI.Text | null = null;
+  private _spinHud: PIXI.Container | null = null;
+  private _spinActionText: PIXI.Text | null = null;
+  private _spinCostText: PIXI.Text | null = null;
+  private _spinCostIcon: PIXI.Container | null = null;
   private _leftArrow: PIXI.Container | null = null;
   private _rightArrow: PIXI.Container | null = null;
   private _previewRound = 1;
@@ -135,6 +140,7 @@ export class MidAutumnEventPanel extends PIXI.Container {
   close(): void {
     this._opening = false;
     if (!this._isOpen || this._spinning) return;
+    this._hideCurrencyInfo();
     this._isOpen = false;
     TweenManager.to({
       target: this,
@@ -167,12 +173,18 @@ export class MidAutumnEventPanel extends PIXI.Container {
   private _build(): void {
     this._bg = new PIXI.Graphics();
     this._bg.eventMode = 'static';
-    this._bg.on('pointertap', () => this.close());
+    this._bg.on('pointertap', () => {
+      if (this._hideCurrencyInfo()) return;
+      this.close();
+    });
     this.addChild(this._bg);
 
     this._root = new PIXI.Container();
     this._root.eventMode = 'static';
-    this._root.on('pointertap', (e: PIXI.FederatedPointerEvent) => e.stopPropagation());
+    this._root.on('pointertap', (e: PIXI.FederatedPointerEvent) => {
+      this._hideCurrencyInfo();
+      e.stopPropagation();
+    });
     this.addChild(this._root);
 
     this._art = new PIXI.Sprite();
@@ -181,6 +193,7 @@ export class MidAutumnEventPanel extends PIXI.Container {
     this._root.addChild(this._art);
 
     this._content = new PIXI.Container();
+    this._content.sortableChildren = true;
     this._root.addChild(this._content);
 
     this._closeHit = new PIXI.Container();
@@ -241,6 +254,7 @@ export class MidAutumnEventPanel extends PIXI.Container {
   }
 
   private _rebuildContent(): void {
+    this._currencyInfo = null;
     this._content.removeChildren();
     const w = this._shellW;
     const h = this._shellH;
@@ -277,7 +291,7 @@ export class MidAutumnEventPanel extends PIXI.Container {
     const lantern = this._makeIcon('icon_mid_autumn_lantern', 28);
     lantern.position.set(-74, 0);
     currencyRow.addChild(lantern);
-    this._currencyText = new PIXI.Text('', {
+    this._currencyText = new PIXI.Text(MID_AUTUMN_CURRENCY_NAME, {
       fontFamily: FONT_FAMILY,
       fontSize: 24,
       fontWeight: '700',
@@ -286,6 +300,23 @@ export class MidAutumnEventPanel extends PIXI.Container {
     this._currencyText.anchor.set(0, 0.5);
     this._currencyText.position.set(-52, 0);
     currencyRow.addChild(this._currencyText);
+    this._currencyAmountText = new PIXI.Text('', {
+      fontFamily: FONT_FAMILY,
+      fontSize: 28,
+      fontWeight: '800',
+      fill: 0xC2410C,
+      stroke: 0xFFFFFF,
+      strokeThickness: 4,
+    } as PIXI.TextStyle);
+    this._currencyAmountText.anchor.set(0, 0.5);
+    currencyRow.addChild(this._currencyAmountText);
+    currencyRow.eventMode = 'static';
+    currencyRow.cursor = 'pointer';
+    currencyRow.hitArea = new PIXI.Rectangle(-112, -22, 224, 44);
+    currencyRow.on('pointertap', (e: PIXI.FederatedPointerEvent) => {
+      e.stopPropagation();
+      this._toggleCurrencyInfo();
+    });
     this._content.addChild(currencyRow);
 
     this._countdownText = new PIXI.Text('', {
@@ -374,14 +405,29 @@ export class MidAutumnEventPanel extends PIXI.Container {
       spinBtn.addChild(btnG);
       spinBtn.hitArea = new PIXI.Rectangle(-130, -32, 260, 64);
     }
-    this._spinLabel = new PIXI.Text('', {
+    const spinHud = new PIXI.Container();
+    this._spinHud = spinHud;
+    this._spinActionText = new PIXI.Text('', {
       fontFamily: FONT_FAMILY,
       fontSize: 26,
       fontWeight: '700',
       fill: 0xFFFFFF,
     });
-    this._spinLabel.anchor.set(0.5);
-    spinBtn.addChild(this._spinLabel);
+    this._spinActionText.anchor.set(0, 0.5);
+    spinHud.addChild(this._spinActionText);
+    this._spinCostText = new PIXI.Text('', {
+      fontFamily: FONT_FAMILY,
+      fontSize: 34,
+      fontWeight: '800',
+      fill: 0xFFE566,
+      stroke: 0x5A3A08,
+      strokeThickness: 3,
+    } as PIXI.TextStyle);
+    this._spinCostText.anchor.set(0, 0.5);
+    spinHud.addChild(this._spinCostText);
+    this._spinCostIcon = this._makeIcon('icon_mid_autumn_lantern', 32);
+    spinHud.addChild(this._spinCostIcon);
+    spinBtn.addChild(spinHud);
     spinBtn.on('pointertap', (e: PIXI.FederatedPointerEvent) => {
       e.stopPropagation();
       this._onSpin();
@@ -559,9 +605,84 @@ export class MidAutumnEventPanel extends PIXI.Container {
     return wrap;
   }
 
+  private _toggleCurrencyInfo(): void {
+    if (this._hideCurrencyInfo()) return;
+    const root = new PIXI.Container();
+    root.position.set(0, this._shellH * 0.30);
+    root.zIndex = 50;
+
+    const w = Math.min(460, this._shellW - 48);
+    const h = 248;
+    const bg = new PIXI.Graphics();
+    bg.beginFill(0xFFFDF3, 0.98);
+    bg.lineStyle(3, 0xE0A84A, 1);
+    bg.drawRoundedRect(-w / 2, 0, w, h, 18);
+    bg.endFill();
+    bg.lineStyle(1.5, 0xffffff, 0.85);
+    bg.drawRoundedRect(-w / 2 + 6, 6, w - 12, h - 12, 14);
+    root.addChild(bg);
+
+    const icon = this._makeIcon('icon_mid_autumn_lantern', 38);
+    icon.position.set(-w / 2 + 36, 30);
+    root.addChild(icon);
+
+    const title = new PIXI.Text(MID_AUTUMN_CURRENCY_NAME, {
+      fontSize: 26,
+      fill: 0x6B3A12,
+      fontFamily: FONT_FAMILY,
+      fontWeight: 'bold',
+    } as PIXI.TextStyle);
+    title.anchor.set(0, 0.5);
+    title.position.set(-w / 2 + 62, 30);
+    root.addChild(title);
+
+    const body = new PIXI.Text(
+      '获取来源：用小烤箱烤出月饼，完成嫦娥的月饼订单\n（花店6级可获得烘焙工具棋子，合成小烤箱）\n用途：在月满中秋活动中抽奖',
+      {
+        fontSize: 20,
+        fill: 0x765548,
+        fontFamily: FONT_FAMILY,
+        fontWeight: 'bold',
+        lineHeight: 30,
+        wordWrap: true,
+        wordWrapWidth: w - 36,
+      } as PIXI.TextStyle,
+    );
+    body.position.set(-w / 2 + 18, 58);
+    root.addChild(body);
+
+    const note = new PIXI.Text(
+      '活动截止后未抽完的玉兔灯，自动换算为等量花愿值。',
+      {
+        fontSize: 19,
+        fill: 0xC9893A,
+        fontFamily: FONT_FAMILY,
+        fontWeight: 'bold',
+        lineHeight: 28,
+        wordWrap: true,
+        wordWrapWidth: w - 36,
+      } as PIXI.TextStyle,
+    );
+    note.position.set(-w / 2 + 18, 58 + body.height + 8);
+    root.addChild(note);
+
+    root.eventMode = 'static';
+    root.on('pointertap', (e: PIXI.FederatedPointerEvent) => e.stopPropagation());
+    this._currencyInfo = root;
+    this._content.addChild(root);
+  }
+
+  private _hideCurrencyInfo(): boolean {
+    if (!this._currencyInfo) return false;
+    this._currencyInfo.destroy({ children: true });
+    this._currencyInfo = null;
+    return true;
+  }
+
   private _refreshHud(): void {
-    if (this._currencyText) {
-      this._currencyText.text = `${MID_AUTUMN_CURRENCY_NAME}  ${MidAutumnEventManager.currency}`;
+    if (this._currencyAmountText && this._currencyText) {
+      this._currencyAmountText.text = String(MidAutumnEventManager.currency);
+      this._currencyAmountText.position.set(this._currencyText.x + this._currencyText.width + 8, 1);
     }
     if (this._countdownText) {
       const label = MidAutumnEventManager.countdownLabel();
@@ -589,15 +710,42 @@ export class MidAutumnEventPanel extends PIXI.Container {
     if (this._spinBtn) {
       this._spinBtn.alpha = this._spinning || kind === 'spin' ? 1 : 0.55;
     }
-    if (this._spinLabel) {
-      this._spinLabel.text = this._spinning
-        ? '转动中…'
-        : kind === 'cleared'
-          ? '已抽完'
-          : kind === 'locked'
-            ? '未解锁'
-            : `抽奖  ${midAutumnSpinCostForRound(this._previewRound)}玉兔灯`;
+    this._refreshSpinHud(kind);
+  }
+
+  private _refreshSpinHud(kind: 'spin' | 'locked' | 'cleared'): void {
+    const action = this._spinActionText;
+    const cost = this._spinCostText;
+    const icon = this._spinCostIcon;
+    const hud = this._spinHud;
+    if (!action || !cost || !icon || !hud) return;
+
+    const showCost = !this._spinning && kind === 'spin';
+    action.text = this._spinning
+      ? '转动中…'
+      : kind === 'cleared'
+        ? '已抽完'
+        : kind === 'locked'
+          ? '未解锁'
+          : '抽奖';
+    cost.visible = showCost;
+    icon.visible = showCost;
+    if (showCost) {
+      cost.text = String(midAutumnSpinCostForRound(this._previewRound));
     }
+
+    const gap = 10;
+    let x = 0;
+    action.position.set(x, 0);
+    x += action.width;
+    if (showCost) {
+      x += gap;
+      icon.position.set(x + 16, 0);
+      x += 32 + 4;
+      cost.position.set(x, 1);
+      x += cost.width;
+    }
+    hud.position.set(-x / 2, 0);
   }
 
   private _previewButtonKind(): 'spin' | 'locked' | 'cleared' {
