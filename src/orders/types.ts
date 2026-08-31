@@ -3,7 +3,7 @@ import type { WorkshopMaterialReward } from '@/config/FurnitureWorkshopConfig';
 
 /** 本帧生成语义：基础 / 成长加成 / 跨链组合 / 限时钻石 / 活动预留 */
 /** @deprecated 读档遇 `growth` 会迁移为 `basic` */
-export type OrderGenerationKind = 'basic' | 'growth' | 'combo' | 'timedDiamond' | 'timedFlorist' | 'timedWorkshop' | 'eventStub';
+export type OrderGenerationKind = 'basic' | 'growth' | 'combo' | 'timedDiamond' | 'timedFlorist' | 'timedWorkshop' | 'midAutumnChangE' | 'eventStub';
 
 export interface OrderGenSlot {
   itemId: string;
@@ -25,6 +25,10 @@ export interface OrderGenContext {
   allowWorkshopOrder?: boolean;
   /** 今日已刷出的家具工匠单数量 */
   workshopOrdersToday?: number;
+  /** 本次刷单是否允许嫦娥中秋单 */
+  allowChangEOrder?: boolean;
+  /** 今日已刷出的嫦娥单数量 */
+  changEOrdersToday?: number;
   rng: () => number;
 }
 
@@ -40,6 +44,8 @@ export interface OrderGenResult {
   bonusMultiplier?: number;
   /** 特殊订单可指定专属客人；普通订单留空走多样性随机 */
   customerTypeId?: string;
+  /** 嫦娥等特殊单可指定展示档，避免按槽位内容被算成 B/C */
+  displayTier?: OrderTier;
   generationKind: OrderGenerationKind;
 }
 

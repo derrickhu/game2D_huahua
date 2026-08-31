@@ -2,6 +2,7 @@ export { computeUnlockedLines, type OrderBoardCell } from './unlockedLines';
 export {
   generateOrderDemands,
   tryGenerateChainOrderTriple,
+  forceGenerateChangEOrder,
   validateOrderSlotsToolCap,
   toolCapForLine,
   lineOrderSpecsForTier,

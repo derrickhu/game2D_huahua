@@ -1,0 +1,11 @@
+Cute kawaii 2.5D true isometric furniture for a flower-shop merge game. Camera from upper-left into the L-room corner. On-screen top-face edges near ±30° from horizontal. Height edges stay vertical. Visible tabletop plus front-right apron. Use attached image as the CURRENT table to revise — keep the same round wood top, gold rim, lazy susan, and Mid-Autumn feast layout. Do not copy any gray grid.
+
+Square 1:1 canvas. One single GROUND dining-table prop centered with generous white margin. Soft brown outlines slightly thicker than hairline, hand-painted mobile merge-game style, warm upper-left light. Not photoreal.
+
+CRITICAL PROPORTION FIX: the attached table legs are TOO SHORT, like a coffee table or kotatsu. Redraw as a REAL standing dining table. Four LONG sturdy honey-oak legs, clearly dining height. Large open space under the tabletop — you can see through between the legs. Each leg is a tall thick column, not a stubby peg. Legs should be about as tall as two-thirds of the tabletop's visible width. This is a sit-at dinner table, NOT a low tea table, NOT a floor tray.
+
+Keep the circular reunion tabletop and the same cute feast on it: stacked mooncakes, pomelo, persimmons, grapes, roast duck, teapot and cups, small jade rabbit lantern. Food stays kawaii flat color blocks.
+
+No chairs, no people, no text, no Chinese characters, no watermark, no room walls, no floor tiles, no floor shadow strip.
+
+Background pure solid white #FFFFFF only.

@@ -1,0 +1,13 @@
+Vertical sprite sheet, exactly 1 column x 3 rows, three equal-height panels stacked with clear white gutters between rows. Cozy pastel flower-shop merge game FLOOR RUG prop sheet.
+
+CRITICAL PERSPECTIVE (match the attached reference rugs): true 2.5D isometric floor mat viewed from upper-left about 35-40 degrees, lying FLAT on the ground. The silhouette must be foreshortened into a wide diamond/ellipse footprint that matches isometric floor tiles — NOT a top-down circle, NOT upright, NOT standing character. Soft contact shadow under the rug only. Thin fabric thickness only.
+
+Subject: ONE large cute animal-shaped rug — a chubby sleeping BUNNY lying curled on its side, full body silhouette cutout (round head with floppy ears, round tummy, tiny paws, short fluffy tail). Soft plush rug texture with gentle stitch / tuft details. Friendly kawaii flower-shop mood, soft brown outlines, hand-painted mobile game style. Generous size — bigger footprint than a small round mat, readable as a statement floor piece.
+
+Identical bunny silhouette / pose / size in every row — only the dye color changes.
+
+Row 0 (top): blush sakura-pink bunny rug, cream belly patch, soft rose inner ears, tiny mint stitch accents.
+Row 1 (middle): sky-blue bunny rug, cream belly patch, lavender inner ears, soft teal stitch accents.
+Row 2 (bottom): honey-yellow bunny rug, cream belly patch, peach inner ears, soft sage stitch accents.
+
+Each rug centered in its panel with generous empty white margin. Pure solid white #FFFFFF background only. NO text, no labels, no numbers, no watermark, no characters standing, no room, no walls, no floor plane, no furniture other than the rug.

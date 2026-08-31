@@ -1,0 +1,13 @@
+Two reference images: Image A = FRONT of the correct armchair (size and design lock). Image B = a BACK draft that is too big / slightly wrong.
+
+Redraw ONLY a corrected BACK view. Match Image A as the same physical chair:
+- Exact same absolute height from feet to top crest as Image A
+- Exact same overall width and arm thickness as Image A
+- Same dark walnut triple-curve / camelback WOOD crest rail on top (like Image A top trim)
+- Same cream rolled arms with circular wood scroll ends as Image A
+- Same four short tapered legs
+- Outer rear of backrest = flat dark walnut panel shaped like Image A's backrest outline (not wider, no wing fins)
+- Cream seat mostly hidden; no green pillow
+- Same empty white margin around the chair as Image A
+
+Keep true back perspective (not a recolored front). Pure white #FFFFFF background. Soft brown outlines. One chair only. No text.

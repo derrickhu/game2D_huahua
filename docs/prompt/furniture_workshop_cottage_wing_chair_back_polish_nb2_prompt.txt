@@ -1,0 +1,9 @@
+Polish the attached armchair image into a clean TRUE BACK view game sprite. CRITICAL: keep the EXACT same outer silhouette, size, leg positions, arm curves, and top wood crest shape — do not enlarge, shrink, or reshape the outline.
+
+Improve only materials/shading for a rear three-quarter read:
+- Outer backrest = dark walnut wood panel with soft grain inside the existing wood crest frame
+- Cream rolled arms with circular wood scrolls stay
+- Seat mostly hidden
+- No green pillow, no tufting buttons on the back face
+- Soft brown outlines, pure white #FFFFFF background
+One chair only. No text.

@@ -10,6 +10,7 @@ import { TweenManager, Ease } from '@/core/TweenManager';
 import { EventManager } from '@/managers/EventManager';
 import { EventBoardManager } from '@/managers/EventBoardManager';
 import { CoolSummerEventManager } from '@/managers/CoolSummerEventManager';
+import { MidAutumnEventManager } from '@/managers/MidAutumnEventManager';
 import { QuestManager } from '@/managers/QuestManager';
 import { LevelManager } from '@/managers/LevelManager';
 import { isJewelryEventUnlocked } from '@/config/EventBoardConfig';
@@ -66,6 +67,13 @@ interface TaskDef {
 }
 
 const TASK_DEFS: TaskDef[] = [
+  {
+    id: 'midAutumn',
+    texKey: 'icon_mid_autumn_event_nb2',
+    event: 'panel:openMidAutumnEvent',
+    isVisible: () => MidAutumnEventManager.isActive(),
+    hasRedDot: () => MidAutumnEventManager.hasRedDot,
+  },
   {
     id: 'coolSummer',
     texKey: 'icon_cool_summer_event_nb2',

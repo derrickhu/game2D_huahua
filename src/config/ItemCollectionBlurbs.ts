@@ -84,6 +84,15 @@ const ITEM_UNLOCK_BLURB_EXTRA: Record<string, string> = {
   drink_dessert_9: '双层蛋糕堆起缤纷果香，越看越想分享。',
   drink_dessert_10: '鎏金蜜意裹满双塔，臻果清甜，甜品线的至高礼献。',
 
+  drink_mooncake_1: '小小莲蓉饼，一口就想到团圆。',
+  drink_mooncake_2: '豆沙沉红，甜得安稳又踏实。',
+  drink_mooncake_3: '五仁铺满，热闹得像一桌亲戚。',
+  drink_mooncake_4: '蛋黄陷进饼心，中秋最香的一口。',
+  drink_mooncake_5: '冰皮裹桂花，清甜得像月光。',
+  drink_mooncake_6: '鲜肉陷饱满，一口就是热腾腾的团圆饭。',
+  drink_mooncake_7: '奶黄一烫就流心，甜得像刚出炉的月亮。',
+  drink_mooncake_8: '团圆大饼压轴，一家人刚好分完这一轮。',
+
   tool_plant_1: '翻土第一铲，故事从泥土开始。',
   tool_plant_2: '滋润根须，也滋润期待。',
   tool_plant_3: '一盘新绿，育苗人的小宇宙。',

@@ -1,0 +1,13 @@
+Image A is the FRONT of the correct cream+walnut armchair (design reference).
+Image B is a same-size draft that already matches Image A's canvas footprint — keep Image B's exact chair bounding box, scale, and outer silhouette.
+
+Redraw Image B as a TRUE BACK VIEW of Image A's chair:
+- Camera is behind the chair (rear three-quarter), not a recolored front.
+- Outer rear of backrest = flat dark walnut panel with soft grain, bordered by the same dark wood triple-curve crest rail as Image A.
+- Cream seat mostly hidden behind the back panel.
+- Cream rolled arms with circular wood scroll ends match Image A, seen from behind.
+- Four short tapered walnut legs same as Image A.
+- Remove any front-facing tufting/buttons look. No green pillow. No wingback fins.
+- Do not enlarge beyond Image B's silhouette.
+
+Pure white #FFFFFF background. Soft brown outlines. One chair only. No text.

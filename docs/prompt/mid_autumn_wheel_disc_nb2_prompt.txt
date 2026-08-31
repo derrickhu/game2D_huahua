@@ -1,0 +1,18 @@
+Use the attached lucky-wheel screenshot ONLY as material-quality and construction reference: pale lacquered wood board, thick gold-metal rim, polished cartoon mobile-game rendering, soft inner glow, premium toy-like volume. Do NOT copy the full UI, cat mascot, zodiac letters, prize icons, or 12-slice layout.
+
+Draw exactly ONE isolated Mid-Autumn lottery WHEEL DISC, front-on, perfectly circular, centered on the canvas.
+
+Construction:
+- Exactly 8 equal 45-degree pie slices. Gold divider ridges at every 45 degrees.
+- The top slice is centered on the 12 o'clock axis so a pointer can sit on that slice.
+- Alternating warm cream-wood and honey-wood slice fills, same family as the reference wheel, not loud rainbow colors.
+- Thick ornate gold outer rim with a slight metallic sheen and tiny studs or cloud notches, like a luxury toy.
+- Thin inner gold ring. Between the two rings, a narrow decorative band of simple moon and osmanthus-cloud shapes. NO letters, NO Chinese, NO numbers, NO earthly-branch characters.
+- Center: leave a blank circular gold/cream medallion about 28 percent of the diameter, empty, ready for a separate mascot overlay. No character in the center.
+- NO prize icons, NO chests, NO lightning bolts, NO gift boxes, NO text, NO quantity labels.
+
+Art style: clean 2D vector kawaii mobile-game UI, polished but not photoreal wood, no food photography, no 3D render noise.
+
+Background: solid pure green #00FF00 full bleed outside the disc. The disc itself contains zero green pixels.
+
+NO TEXT, no labels, no letters, no numbers, no watermark.

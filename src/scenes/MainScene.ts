@@ -103,6 +103,7 @@ import {
 import { EventPanel } from '@/gameobjects/ui/EventPanel';
 import { EventBoardPanel } from '@/gameobjects/ui/EventBoardPanel';
 import { CoolSummerEventPanel } from '@/gameobjects/ui/CoolSummerEventPanel';
+import { MidAutumnEventPanel } from '@/gameobjects/ui/MidAutumnEventPanel';
 import { RewardBoxButton } from '@/gameobjects/ui/RewardBoxButton';
 import { RewardBoxPanel } from '@/gameobjects/ui/RewardBoxPanel';
 import { UpdateAnnouncementPanel } from '@/gameobjects/ui/UpdateAnnouncementPanel';
@@ -129,6 +130,7 @@ import { WeekendHuayuanBoostManager } from '@/managers/WeekendHuayuanBoostManage
 import { TuesdayStaminaUnlimitedManager } from '@/managers/TuesdayStaminaUnlimitedManager';
 import { ThursdayMagicTimeManager } from '@/managers/ThursdayMagicTimeManager';
 import { CoolSummerEventManager } from '@/managers/CoolSummerEventManager';
+import { MidAutumnEventManager } from '@/managers/MidAutumnEventManager';
 import { NewbieGiftPackManager } from '@/managers/NewbieGiftPackManager';
 import { WeekendHuayuanBoostPanel } from '@/gameobjects/ui/WeekendHuayuanBoostPanel';
 import { TuesdayStaminaUnlimitedPanel } from '@/gameobjects/ui/TuesdayStaminaUnlimitedPanel';
@@ -215,6 +217,7 @@ export class MainScene implements Scene {
   private _eventPanel!: EventPanel;
   private _eventBoardPanel!: EventBoardPanel;
   private _coolSummerEventPanel!: CoolSummerEventPanel;
+  private _midAutumnEventPanel!: MidAutumnEventPanel;
   // ---- 奖励收纳框 ----
   private _rewardBoxButton!: RewardBoxButton;
   private _rewardBoxPanel!: RewardBoxPanel;
@@ -680,6 +683,9 @@ export class MainScene implements Scene {
     this._coolSummerEventPanel = new CoolSummerEventPanel();
     overlay.addChild(this._coolSummerEventPanel);
 
+    this._midAutumnEventPanel = new MidAutumnEventPanel();
+    overlay.addChild(this._midAutumnEventPanel);
+
     // 奖励收纳框面板
     this._rewardBoxPanel = new RewardBoxPanel();
     overlay.addChild(this._rewardBoxPanel);
@@ -976,6 +982,26 @@ export class MainScene implements Scene {
           const endY = this._topBar.y + eventPos.y;
           this._playRewardFly('icon_cool_summer_fan', sx, sy, endX, endY, summerFanFly, () => {
             this._topBar.flashCoolSummerEvent();
+            onAnimDone();
+          }, 0.16, false);
+        }
+      }
+
+      const midAutumnFly = MidAutumnEventManager.isActive()
+        ? Math.max(0, Math.floor(customer.midAutumnLanternReward ?? 0))
+        : 0;
+      if (midAutumnFly > 0 && cv) {
+        const lanternLocal = cv.getMidAutumnLanternRewardIconLocalCenter();
+        if (lanternLocal) {
+          pendingAnims++;
+          const sg = cv.toGlobal(lanternLocal);
+          const sx = this.container.toLocal(sg).x;
+          const sy = this.container.toLocal(sg).y;
+          const eventPos = this._topBar.getMidAutumnEventIconPos();
+          const endX = this._topBar.x + eventPos.x;
+          const endY = this._topBar.y + eventPos.y;
+          this._playRewardFly('icon_mid_autumn_lantern', sx, sy, endX, endY, midAutumnFly, () => {
+            this._topBar.flashMidAutumnEvent();
             onAnimDone();
           }, 0.16, false);
         }
@@ -2125,7 +2151,8 @@ export class MainScene implements Scene {
       || this._offlineRewardPanel.visible
       || this._levelUpPopup.visible
       || this._eventBoardPanel.visible
-      || this._coolSummerEventPanel.visible;
+      || this._coolSummerEventPanel.visible
+      || this._midAutumnEventPanel.visible;
 
     if (blocked) {
       if (this._rewardBoxHintRetryCount < MainScene._REWARD_BOX_HINT_MAX_RETRY) {
@@ -2170,6 +2197,7 @@ export class MainScene implements Scene {
     TuesdayStaminaUnlimitedManager.update(dt);
     ThursdayMagicTimeManager.update(dt);
     CoolSummerEventManager.update(dt);
+    MidAutumnEventManager.update(dt);
 
     // 客人滚动区惯性动画
     this._customerScrollArea.update(dt);

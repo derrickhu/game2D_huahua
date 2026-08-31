@@ -20,7 +20,15 @@ import {
   isJewelryEventUnlocked,
 } from '@/config/EventBoardConfig';
 import { CUSTOMER_TYPES, CUSTOMER_TYPE_MAP, type CustomerTypeDef } from '@/config/CustomerConfig';
-import { Category, ITEM_DEFS, findItemId } from '@/config/ItemConfig';
+import {
+  MID_AUTUMN_CHANGE_BASE_CHANCE,
+  MID_AUTUMN_CHANGE_CUSTOMER_ID,
+  MID_AUTUMN_CHANGE_DAILY_CAP,
+  MID_AUTUMN_CHANGE_FIRST_DAILY_CHANCE_MULT,
+  MID_AUTUMN_CHANGE_MAX_IN_QUEUE,
+  midAutumnChangETierFromMooncakeLevel,
+} from '@/config/events/MidAutumnEventConfig';
+import { Category, DrinkLine, ITEM_DEFS, findItemId } from '@/config/ItemConfig';
 import {
   computeTierFromOrderSlots,
   getOrderTierWeights,
@@ -46,6 +54,7 @@ import {
 } from '@/config/OrderSpawnConfig';
 import { computeUnlockedLines } from '@/orders/unlockedLines';
 import {
+  forceGenerateChangEOrder,
   forceGenerateTimedDiamondOrder,
   forceGenerateTimedFloristOrder,
   forceGenerateWorkshopOrder,
@@ -62,6 +71,7 @@ import {
 import { AffinityManager } from './AffinityManager';
 import { WeekendHuayuanBoostManager } from './WeekendHuayuanBoostManager';
 import { CoolSummerEventManager } from './CoolSummerEventManager';
+import { MidAutumnEventManager } from './MidAutumnEventManager';
 
 export interface DemandSlot {
   itemId: string;
@@ -92,6 +102,8 @@ export interface CustomerInstance {
   eventStoneReward?: number;
   /** 清凉一夏：含冷饮/果切订单额外产出的清凉小扇（生成时固化并展示） */
   coolSummerFanReward?: number;
+  /** 月满中秋：含月饼订单额外产出的玉兔灯（生成时固化并展示） */
+  midAutumnLanternReward?: number;
   /** 预留：连续订单序号 */
   chainIndex?: number;
   /** 预留：奖励倍率 */
@@ -121,6 +133,7 @@ export interface CustomerSaveEntry {
   workshopMaterialRewards?: WorkshopMaterialReward[];
   eventStoneReward?: number;
   coolSummerFanReward?: number;
+  midAutumnLanternReward?: number;
   chainIndex?: number;
   bonusMultiplier?: number;
   /** 缺省时读档按 orderType + bonusMultiplier 推断 */
@@ -137,6 +150,8 @@ export interface CustomerPersistState {
   timedFloristOrdersToday?: number;
   workshopOrderDate?: string;
   workshopOrdersToday?: number;
+  changEOrderDate?: string;
+  changEOrdersToday?: number;
 }
 
 const VALID_ORDER_TYPES = new Set<OrderType>(['normal', 'timed', 'chain', 'challenge']);
@@ -147,6 +162,7 @@ const VALID_ORDER_KINDS = new Set<OrderGenerationKind>([
   'timedDiamond',
   'timedFlorist',
   'timedWorkshop',
+  'midAutumnChangE',
   'eventStub',
 ]);
 
@@ -218,7 +234,9 @@ function normalizeCustomerPersistState(raw: unknown): CustomerPersistState | nul
     if (slots.length === 0) continue;
 
     const contentTier = computeTierFromOrderSlots(slots.map(s => s.itemId), LevelManager.level);
-    const tier = contentTier;
+    const tier = typeId === MID_AUTUMN_CHANGE_CUSTOMER_ID
+      ? resolveChangEDisplayTier(slots)
+      : contentTier;
     const orderType = VALID_ORDER_TYPES.has(r.orderType as OrderType)
       ? (r.orderType as OrderType)
       : 'normal';
@@ -232,14 +250,24 @@ function normalizeCustomerPersistState(raw: unknown): CustomerPersistState | nul
         ? (rawKind as OrderGenerationKind)
         : inferOrderKindFromLegacy({ orderType, bonusMultiplier });
     /** 成长单已下线：读档归并为基础单，重算花愿（勿沿用旧 bonusMultiplier / 缓存高额） */
+    const isChangEOrder =
+      typeId === MID_AUTUMN_CHANGE_CUSTOMER_ID || orderKind === 'midAutumnChangE';
     const legacyGrowth =
-      rawKind === 'growth'
-      || (orderType === 'normal' && bonusMultiplier !== undefined && bonusMultiplier > 1);
+      !isChangEOrder
+      && (
+        rawKind === 'growth'
+        || (orderType === 'normal' && bonusMultiplier !== undefined && bonusMultiplier > 1)
+      );
     if (legacyGrowth) {
       orderKind = 'basic';
       bonusMultiplier = undefined;
     }
-    const computedHuayuanReward = CustomerManagerClass.computeOrderHuayuan(slots, bonusMultiplier, orderType);
+    const computedHuayuanReward = CustomerManagerClass.computeOrderHuayuan(
+      slots,
+      bonusMultiplier,
+      orderType,
+      isChangEOrder ? resolveChangEDisplayTier(slots) : undefined,
+    );
     const savedHuayuanReward =
       typeof r.huayuanReward === 'number' && Number.isFinite(r.huayuanReward) && r.huayuanReward >= 0
         ? Math.floor(r.huayuanReward)
@@ -288,6 +316,10 @@ function normalizeCustomerPersistState(raw: unknown): CustomerPersistState | nul
         typeof r.coolSummerFanReward === 'number' && r.coolSummerFanReward > 0
           ? Math.floor(r.coolSummerFanReward)
           : undefined,
+      midAutumnLanternReward:
+        typeof r.midAutumnLanternReward === 'number' && r.midAutumnLanternReward > 0
+          ? Math.floor(r.midAutumnLanternReward)
+          : undefined,
       chainIndex: typeof r.chainIndex === 'number' ? r.chainIndex : undefined,
       bonusMultiplier,
       orderKind,
@@ -331,6 +363,15 @@ function normalizeCustomerPersistState(raw: unknown): CustomerPersistState | nul
       ? Math.max(0, Math.floor(o.workshopOrdersToday))
       : 0;
 
+  const changEOrderDate =
+    typeof o.changEOrderDate === 'string' && o.changEOrderDate
+      ? o.changEOrderDate
+      : localDateKey();
+  const changEOrdersToday =
+    typeof o.changEOrdersToday === 'number' && Number.isFinite(o.changEOrdersToday)
+      ? Math.max(0, Math.floor(o.changEOrdersToday))
+      : 0;
+
   return {
     list,
     nextUid,
@@ -341,12 +382,24 @@ function normalizeCustomerPersistState(raw: unknown): CustomerPersistState | nul
     timedFloristOrdersToday,
     workshopOrderDate,
     workshopOrdersToday,
+    changEOrderDate,
+    changEOrdersToday,
   };
 }
 
 /** 与上一单需求去重：槽位无序，同 multiset 视为相同 */
 function orderSlotsFingerprint(slots: readonly { itemId: string }[]): string {
   return [...slots.map(s => s.itemId)].sort().join('|');
+}
+
+function resolveChangEDisplayTier(slots: readonly { itemId: string }[]): OrderTier {
+  let maxLevel = 0;
+  for (const slot of slots) {
+    const def = ITEM_DEFS.get(slot.itemId);
+    if (!def || def.category !== Category.DRINK || def.line !== DrinkLine.MOONCAKE) continue;
+    maxLevel = Math.max(maxLevel, def.level);
+  }
+  return midAutumnChangETierFromMooncakeLevel(maxLevel);
 }
 
 function inferOrderKindFromLegacy(entry: {
@@ -371,6 +424,8 @@ class CustomerManagerClass {
   private _timedFloristOrdersToday = 0;
   private _workshopOrderDate = localDateKey();
   private _workshopOrdersToday = 0;
+  private _changEOrderDate = localDateKey();
+  private _changEOrdersToday = 0;
   private _preparedOfflineSeconds = 0;
   private _timedOrderRefreshTicker = 0;
   /** 上一刷客人的 typeId，用于避免连续同人设（池子 >1 时） */
@@ -405,6 +460,8 @@ class CustomerManagerClass {
         timedFloristOrdersToday: p.timedFloristOrdersToday,
         workshopOrderDate: p.workshopOrderDate,
         workshopOrdersToday: p.workshopOrdersToday,
+        changEOrderDate: p.changEOrderDate,
+        changEOrdersToday: p.changEOrdersToday,
       };
     }
     return {
@@ -424,6 +481,7 @@ class CustomerManagerClass {
         workshopMaterialRewards: c.workshopMaterialRewards,
         eventStoneReward: c.eventStoneReward,
         coolSummerFanReward: c.coolSummerFanReward,
+        midAutumnLanternReward: c.midAutumnLanternReward,
         chainIndex: c.chainIndex,
         bonusMultiplier: c.bonusMultiplier,
         orderKind: c.orderKind,
@@ -436,6 +494,8 @@ class CustomerManagerClass {
       timedFloristOrdersToday: this._timedFloristOrdersToday,
       workshopOrderDate: this._workshopOrderDate,
       workshopOrdersToday: this._workshopOrdersToday,
+      changEOrderDate: this._changEOrderDate,
+      changEOrdersToday: this._changEOrdersToday,
     };
   }
 
@@ -455,7 +515,9 @@ class CustomerManagerClass {
         slots: e.slots.map(s => ({ itemId: s.itemId, lockedCellIndex: -1 })),
         allSatisfied: false,
         huayuanReward: this._computeCustomerHuayuan(e.typeId, e.slots, e.bonusMultiplier, e.orderType),
-        tier: computeTierFromOrderSlots(e.slots.map(s => s.itemId), LevelManager.level),
+        tier: e.typeId === MID_AUTUMN_CHANGE_CUSTOMER_ID
+          ? resolveChangEDisplayTier(e.slots)
+          : computeTierFromOrderSlots(e.slots.map(s => s.itemId), LevelManager.level),
         orderType: e.orderType,
         timeLimit: e.orderType === 'timed' && e.timeLimit !== null
           ? Math.max(0, e.timeLimit - offlineSeconds)
@@ -467,6 +529,11 @@ class CustomerManagerClass {
         coolSummerFanReward: CoolSummerEventManager.isActive()
           ? (e.coolSummerFanReward
             ?? CoolSummerEventManager.calculateOrderReward(e.slots.map(s => s.itemId))
+            ?? undefined)
+          : undefined,
+        midAutumnLanternReward: MidAutumnEventManager.canCollectLanterns()
+          ? (e.midAutumnLanternReward
+            ?? MidAutumnEventManager.calculateOrderReward(e.slots.map(s => s.itemId))
             ?? undefined)
           : undefined,
         chainIndex: e.chainIndex,
@@ -482,6 +549,8 @@ class CustomerManagerClass {
       this._timedFloristOrdersToday = p.timedFloristOrdersToday ?? 0;
       this._workshopOrderDate = p.workshopOrderDate ?? localDateKey();
       this._workshopOrdersToday = p.workshopOrdersToday ?? 0;
+      this._changEOrderDate = p.changEOrderDate ?? localDateKey();
+      this._changEOrdersToday = p.changEOrdersToday ?? 0;
       const maxCap = getDynamicMaxCustomers(LevelManager.level);
       if (this._customers.length > maxCap) {
         this._customers = this._customers.slice(0, maxCap);
@@ -497,17 +566,23 @@ class CustomerManagerClass {
       this._timedFloristOrdersToday = 0;
       this._workshopOrderDate = localDateKey();
       this._workshopOrdersToday = 0;
+      this._changEOrderDate = localDateKey();
+      this._changEOrdersToday = 0;
       this._preparedOfflineSeconds = 0;
     }
 
     this._syncTimedDiamondDailyState();
     this._syncTimedFloristDailyState();
     this._syncWorkshopDailyState();
+    this._syncChangEDailyState();
     this._syncAntiRepeatFromQueueTail();
     this._bindBoardEvents();
     EventBus.on('tutorial:completed', this._onTutorialCompleted);
     EventBus.on('coolSummerEvent:periodChanged', () => this.refreshCoolSummerRewards());
+    EventBus.on('midAutumnEvent:periodChanged', () => this.refreshMidAutumnRewards());
+    EventBus.on('midAutumnEvent:changed', () => this._syncMidAutumnWheelClearedState());
     this._refreshWeekendHuayuanBonuses(false);
+    this._syncMidAutumnWheelClearedState();
     this._rescanAll();
     this._bootstrapLowLevelQueue();
   }
@@ -581,6 +656,7 @@ class CustomerManagerClass {
     slots: { itemId: string }[],
     bonusMultiplier?: number,
     orderType?: OrderType,
+    forcedTier?: OrderTier,
   ): number {
     let sum = 0;
     for (const s of slots) {
@@ -590,7 +666,7 @@ class CustomerManagerClass {
     if (n <= 0) return 0;
     let base = Math.max(1, Math.round(sum * (1 + MULTI_SLOT_BONUS_RATE * (n - 1))));
     base = CustomerManagerClass._applySingleSlotMergeParityFloor(slots, base);
-    const tier = computeTierFromOrderSlots(slots.map(s => s.itemId), LevelManager.level);
+    const tier = forcedTier ?? computeTierFromOrderSlots(slots.map(s => s.itemId), LevelManager.level);
     base = Math.max(1, Math.round(base * ORDER_TIER_HUAYUAN_MULT[tier]));
     if (bonusMultiplier && bonusMultiplier > 0 && bonusMultiplier !== 1) {
       base = Math.max(1, Math.round(base * bonusMultiplier));
@@ -722,7 +798,12 @@ class CustomerManagerClass {
     bonusMultiplier: number | undefined,
     orderType: OrderType,
   ): number {
-    let huayuan = CustomerManagerClass.computeOrderHuayuan(slots, bonusMultiplier, orderType);
+    let huayuan = CustomerManagerClass.computeOrderHuayuan(
+      slots,
+      bonusMultiplier,
+      orderType,
+      typeId === MID_AUTUMN_CHANGE_CUSTOMER_ID ? resolveChangEDisplayTier(slots) : undefined,
+    );
     const affinityMult = AffinityManager.huayuanMultFor(typeId);
     if (affinityMult !== 1) {
       huayuan = Math.max(1, Math.round(huayuan * affinityMult));
@@ -791,6 +872,7 @@ class CustomerManagerClass {
     this._syncTimedDiamondDailyState();
     this._syncTimedFloristDailyState();
     this._syncWorkshopDailyState();
+    this._syncChangEDailyState();
     const weights = getOrderTierWeights(level, lines);
 
     const tier = pickTierByWeight(weights);
@@ -811,6 +893,16 @@ class CustomerManagerClass {
       level >= TIMED_DIAMOND_ORDER_MIN_PLAYER_LEVEL &&
       this._timedDiamondOrdersToday < TIMED_DIAMOND_ORDER_DAILY_CAP &&
       noTimedInQueue;
+    const changEInQueue = this._customers.filter(
+      c => c.orderKind === 'midAutumnChangE' || c.typeId === MID_AUTUMN_CHANGE_CUSTOMER_ID,
+    ).length;
+    const changEChance = MID_AUTUMN_CHANGE_BASE_CHANCE
+      * (this._changEOrdersToday === 0 ? MID_AUTUMN_CHANGE_FIRST_DAILY_CHANCE_MULT : 1);
+    const allowChangEOrder =
+      MidAutumnEventManager.canCollectLanterns() &&
+      this._changEOrdersToday < MID_AUTUMN_CHANGE_DAILY_CAP &&
+      changEInQueue < MID_AUTUMN_CHANGE_MAX_IN_QUEUE &&
+      Math.random() < changEChance;
 
     let gen: OrderGenResult | null = null;
     let fallbackGen: OrderGenResult | null = null;
@@ -825,10 +917,12 @@ class CustomerManagerClass {
         timedFloristOrdersToday: this._timedFloristOrdersToday,
         allowTimedDiamondOrder,
         timedDiamondOrdersToday: this._timedDiamondOrdersToday,
+        allowChangEOrder,
+        changEOrdersToday: this._changEOrdersToday,
         rng: Math.random,
       });
       if (!g || g.slots.length === 0) continue;
-      if (!validateOrderSlotsToolCap(g.slots, lines)) continue;
+      if (g.generationKind !== 'midAutumnChangE' && !validateOrderSlotsToolCap(g.slots, lines)) continue;
       fallbackGen = g;
       const fp = orderSlotsFingerprint(g.slots);
       if (!this._lastOrderFingerprint || fp !== this._lastOrderFingerprint) {
@@ -848,7 +942,9 @@ class CustomerManagerClass {
     const huayuan = this._computeCustomerHuayuan(type.id, slots, gen.bonusMultiplier, gen.orderType);
     const weekendHuayuanBonus = WeekendHuayuanBoostManager.bonusFor(huayuan);
 
-    const contentTier = computeTierFromOrderSlots(slots.map(s => s.itemId), level);
+    const contentTier = type.id === MID_AUTUMN_CHANGE_CUSTOMER_ID
+      ? (gen.displayTier ?? resolveChangEDisplayTier(slots))
+      : computeTierFromOrderSlots(slots.map(s => s.itemId), level);
 
     const customer: CustomerInstance = {
       uid: this._nextUid++,
@@ -885,10 +981,22 @@ class CustomerManagerClass {
       customer.coolSummerFanReward = coolSummerFanReward;
     }
 
+    const midAutumnLanternReward = MidAutumnEventManager.calculateOrderReward(
+      customer.slots.map(s => s.itemId),
+    );
+    if (MidAutumnEventManager.canCollectLanterns() && midAutumnLanternReward > 0) {
+      customer.midAutumnLanternReward = midAutumnLanternReward;
+    }
+
     if (customer.orderKind === 'timedWorkshop') {
       this._workshopOrdersToday = Math.min(
         WORKSHOP_ORDER_DAILY_CAP,
         this._workshopOrdersToday + 1,
+      );
+    } else if (customer.orderKind === 'midAutumnChangE') {
+      this._changEOrdersToday = Math.min(
+        MID_AUTUMN_CHANGE_DAILY_CAP,
+        this._changEOrdersToday + 1,
       );
     } else if (customer.orderKind === 'timedFlorist') {
       this._timedFloristOrdersToday = Math.min(
@@ -931,6 +1039,52 @@ class CustomerManagerClass {
     if (changed) EventBus.emit('customer:rewardBonusChanged');
   }
 
+  refreshMidAutumnRewards(): void {
+    const canCollect = MidAutumnEventManager.canCollectLanterns();
+    let changed = false;
+    for (const customer of this._customers) {
+      const next = canCollect
+        ? MidAutumnEventManager.calculateOrderReward(customer.slots.map(s => s.itemId))
+        : 0;
+      const normalized = next > 0 ? next : undefined;
+      if (customer.midAutumnLanternReward === normalized) continue;
+      customer.midAutumnLanternReward = normalized;
+      changed = true;
+    }
+    if (changed) EventBus.emit('customer:rewardBonusChanged');
+  }
+
+  /** 转盘抽完：去掉玉兔灯奖励，队列里的嫦娥立即离场。 */
+  private _syncMidAutumnWheelClearedState(): void {
+    if (!MidAutumnEventManager.wheelCleared) return;
+    this.refreshMidAutumnRewards();
+    this._dismissChangEOrders();
+  }
+
+  private _isChangECustomer(customer: CustomerInstance): boolean {
+    return customer.orderKind === 'midAutumnChangE'
+      || customer.typeId === MID_AUTUMN_CHANGE_CUSTOMER_ID;
+  }
+
+  private _dismissChangEOrders(): void {
+    let removed = false;
+    for (let i = this._customers.length - 1; i >= 0; i--) {
+      const customer = this._customers[i];
+      if (!customer || !this._isChangECustomer(customer)) continue;
+      for (const slot of customer.slots) {
+        if (slot.lockedCellIndex >= 0) {
+          const cell = BoardManager.getCellByIndex(slot.lockedCellIndex);
+          if (cell) cell.reserved = false;
+        }
+      }
+      this._customers.splice(i, 1);
+      removed = true;
+    }
+    if (!removed) return;
+    EventBus.emit('customer:lockChanged');
+    this._rescanAll();
+  }
+
   private _syncTimedDiamondDailyState(): void {
     const today = localDateKey();
     if (this._timedDiamondOrderDate !== today) {
@@ -952,6 +1106,14 @@ class CustomerManagerClass {
     if (this._workshopOrderDate !== today) {
       this._workshopOrderDate = today;
       this._workshopOrdersToday = 0;
+    }
+  }
+
+  private _syncChangEDailyState(): void {
+    const today = localDateKey();
+    if (this._changEOrderDate !== today) {
+      this._changEOrderDate = today;
+      this._changEOrdersToday = 0;
     }
   }
 
@@ -1079,6 +1241,16 @@ class CustomerManagerClass {
       if (!gen || gen.slots.length === 0) {
         return '无法生成家具工匠单：需至少解锁 2 条产线、已解锁花束且包装工具可产出 L6+ 花束';
       }
+    } else if (typeId === MID_AUTUMN_CHANGE_CUSTOMER_ID) {
+      gen = forceGenerateChangEOrder({
+        tier: Math.random() < 0.5 ? 'A' : 'S',
+        lines,
+        playerLevel: level,
+        rng: Math.random,
+      });
+      if (!gen || gen.slots.length === 0) {
+        return '无法生成嫦娥单：活动中需有可产出烤箱以解锁月饼';
+      }
     } else if (typeDef.specialOnly) {
       return `未配置特殊订单生成：${typeId}`;
     } else {
@@ -1105,7 +1277,7 @@ class CustomerManagerClass {
       }
     }
 
-    if (!validateOrderSlotsToolCap(gen.slots, lines)) {
+    if (gen.generationKind !== 'midAutumnChangE' && !validateOrderSlotsToolCap(gen.slots, lines)) {
       return '生成的订单超出当前工具能力，请先升级工具或解锁产线';
     }
 
@@ -1116,7 +1288,9 @@ class CustomerManagerClass {
     }));
     const huayuan = this._computeCustomerHuayuan(type.id, slots, gen.bonusMultiplier, gen.orderType);
     const weekendHuayuanBonus = WeekendHuayuanBoostManager.bonusFor(huayuan);
-    const contentTier = computeTierFromOrderSlots(slots.map(s => s.itemId), level);
+    const contentTier = type.id === MID_AUTUMN_CHANGE_CUSTOMER_ID
+      ? (gen.displayTier ?? resolveChangEDisplayTier(slots))
+      : computeTierFromOrderSlots(slots.map(s => s.itemId), level);
 
     const customer: CustomerInstance = {
       uid: this._nextUid++,
@@ -1136,6 +1310,13 @@ class CustomerManagerClass {
       bonusMultiplier: gen.bonusMultiplier,
       orderKind: gen.generationKind,
     };
+
+    const midAutumnLanternReward = MidAutumnEventManager.calculateOrderReward(
+      customer.slots.map(s => s.itemId),
+    );
+    if (MidAutumnEventManager.canCollectLanterns() && midAutumnLanternReward > 0) {
+      customer.midAutumnLanternReward = midAutumnLanternReward;
+    }
 
     this._lastSpawnTypeId = type.id;
     this._rememberRecentCustomerType(type.id);
@@ -1162,6 +1343,10 @@ class CustomerManagerClass {
     if (customer.orderType === 'timed') {
       const hours = Math.round((gen.timeLimit ?? 0) / 3600);
       return `已清空并刷出 ${customer.name}：限时钻石单 +${customer.diamondReward ?? 0}钻，${hours}h 倒计时`;
+    }
+    if (customer.orderKind === 'midAutumnChangE') {
+      const slotDesc = customer.slots.map(s => s.itemId).join('、');
+      return `已清空并刷出 ${customer.name} [${contentTier}]：${slotDesc}，花愿+20%，玉兔灯×${customer.midAutumnLanternReward ?? 0}`;
     }
     const slotDesc = customer.slots.map(s => s.itemId).join('、');
     return `已清空并刷出 ${customer.name} [${contentTier}]：${slotDesc}`;

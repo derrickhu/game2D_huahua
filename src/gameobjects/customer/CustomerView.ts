@@ -39,6 +39,11 @@ const PANEL_H = SLOT_SIZE + 34;
  * 胸像脚底锚点在容器中的 y（>0 则整体下移，让面板能叠住胸像下沿直边）
  */
 const AVATAR_FEET_Y = 22;
+const AVATAR_TARGET_H = 160;
+/** 嫦娥发冠偏高，默认高度会显小；略放大并上移，少被需求托盘挡住。 */
+const AVATAR_DISPLAY_TWEAKS: Record<string, { targetH: number; feetY: number }> = {
+  chang_e: { targetH: 170, feetY: 14 },
+};
 /** 需求面板 y：略负可与胸像底重叠；增大则整体下移靠近棋盘（胸像锚点不变） */
 const PANEL_Y = 4;
 
@@ -80,6 +85,7 @@ export class CustomerView extends PIXI.Container {
   private _eventStoneTextureUnsub: (() => void) | null = null;
   private _affinityHeartBadge: PIXI.Container | null = null;
   private _coolSummerFanBadge: PIXI.Container | null = null;
+  private _midAutumnLanternBadge: PIXI.Container | null = null;
   private _completeBtn: PIXI.Container | null = null;
   private _bounceTween: { config: any; startValues: any; elapsed: number; delayRemaining: number } | null = null;
   private _queueIndex = 0;
@@ -109,11 +115,12 @@ export class CustomerView extends PIXI.Container {
     this.sortChildren();
     this.visible = false;
     this._eventStoneTextureUnsub = TextureCache.onKeysLoaded(
-      ['event_jewelry_1', 'icon_cool_summer_fan'],
+      ['event_jewelry_1', 'icon_cool_summer_fan', 'icon_mid_autumn_lantern'],
       () => {
         if (
           (this._customer?.eventStoneReward ?? 0) > 0
           || (this._customer?.coolSummerFanReward ?? 0) > 0
+          || (this._customer?.midAutumnLanternReward ?? 0) > 0
         ) {
           this.refreshSlots();
         }
@@ -137,6 +144,7 @@ export class CustomerView extends PIXI.Container {
       TweenManager.cancelTarget(this.scale);
       this._clearAffinityHeartBadge();
       this._clearCoolSummerFanBadge();
+      this._clearMidAutumnLanternBadge();
       this._clearStaminaChestBadge();
       this._boundCustomerUid = -1;
       this._customer = null;
@@ -151,9 +159,10 @@ export class CustomerView extends PIXI.Container {
     const tex = TextureCache.get(`customer_${customer.typeId}`);
     if (tex) {
       this._avatarSprite.texture = tex;
-      const targetH = 160;
-      const s = targetH / tex.height;
-      this._avatarSprite.scale.set(s);
+      const tweak = AVATAR_DISPLAY_TWEAKS[customer.typeId];
+      const targetH = tweak?.targetH ?? AVATAR_TARGET_H;
+      this._avatarSprite.scale.set(targetH / tex.height);
+      this._avatarSprite.position.set(0, tweak?.feetY ?? AVATAR_FEET_Y);
       this._avatarSprite.visible = true;
     } else {
       this._avatarSprite.visible = false;
@@ -216,12 +225,14 @@ export class CustomerView extends PIXI.Container {
     this._rebuildInfoPanel();
     this._buildStaminaChestBadge();
     this._buildCoolSummerFanBadge();
+    this._buildMidAutumnLanternBadge();
   }
 
   override destroy(options?: PIXI.IDestroyOptions | boolean): void {
     this._eventStoneTextureUnsub?.();
     this._eventStoneTextureUnsub = null;
     this._clearCoolSummerFanBadge();
+    this._clearMidAutumnLanternBadge();
     super.destroy(options);
   }
 
@@ -298,6 +309,7 @@ export class CustomerView extends PIXI.Container {
     this._clearCompleteBtn();
     this._clearRewardBadge();
     this._clearCoolSummerFanBadge();
+    this._clearMidAutumnLanternBadge();
     this._clearStaminaChestBadge();
     this._clearTierBadge();
     this._clearTimedOrderBadge();
@@ -308,6 +320,7 @@ export class CustomerView extends PIXI.Container {
     // 奖励徽章（头像底部；花愿与交付到账一致）
     this._buildRewardBadge();
     this._buildCoolSummerFanBadge();
+    this._buildMidAutumnLanternBadge();
 
     // 档位角标（需求面板左上角小圆标）
     this._buildTierBadge();
@@ -554,6 +567,59 @@ export class CustomerView extends PIXI.Container {
     this.sortChildren();
   }
 
+  getMidAutumnLanternRewardIconLocalCenter(): PIXI.Point | null {
+    const cap = this._midAutumnLanternBadge;
+    if (!cap) return null;
+    const iconCx = REWARD_BADGE_PAD_X + REWARD_BADGE_ICON / 2;
+    const iconCy = cap.height / 2;
+    const g = cap.toGlobal(new PIXI.Point(iconCx, iconCy));
+    const local = this.toLocal(g);
+    return new PIXI.Point(local.x, local.y);
+  }
+
+  private _buildMidAutumnLanternBadge(): void {
+    this._clearMidAutumnLanternBadge();
+    if (!this._customer) return;
+    const lanternReward = this._customer.midAutumnLanternReward ?? 0;
+    if (lanternReward <= 0) return;
+
+    const lanternCap = this._makeRewardCapsule([
+      { icon: 'icon_mid_autumn_lantern', value: lanternReward, fill: 0x8A5A28 },
+    ], 16);
+    const badge = lanternCap.node;
+    badge.name = 'midAutumnLanternRewardCapsule';
+    badge.eventMode = 'none';
+    badge.zIndex = 12;
+
+    let x = -CARD_LAYOUT_HALF + 6;
+    let y = AVATAR_FEET_Y - 92;
+    const avatar = this._getAvatarSpriteMetrics();
+    if (avatar) {
+      const gapOutside = 6;
+      x = -avatar.halfW - lanternCap.w - gapOutside;
+      y = avatar.topY + avatar.fullH * 0.56 - lanternCap.h / 2;
+      const minX = -CARD_LAYOUT_HALF + 4;
+      x = Math.max(minX, x);
+    }
+    if (this._coolSummerFanBadge) {
+      y += lanternCap.h + 6;
+    }
+
+    badge.position.set(x, y);
+    this.addChild(badge);
+    this._midAutumnLanternBadge = badge;
+    this.sortChildren();
+  }
+
+  private _clearMidAutumnLanternBadge(): void {
+    if (!this._midAutumnLanternBadge) return;
+    if (this._midAutumnLanternBadge.parent) {
+      this._midAutumnLanternBadge.parent.removeChild(this._midAutumnLanternBadge);
+    }
+    this._midAutumnLanternBadge.destroy({ children: true });
+    this._midAutumnLanternBadge = null;
+  }
+
   private _clearCoolSummerFanBadge(): void {
     if (!this._coolSummerFanBadge) return;
     if (this._coolSummerFanBadge.parent) {
@@ -614,7 +680,7 @@ export class CustomerView extends PIXI.Container {
     }
     const halfW = (this._avatarSprite.texture.width * this._avatarSprite.scale.x) / 2;
     const fullH = this._avatarSprite.texture.height * this._avatarSprite.scale.y;
-    return { halfW, fullH, topY: AVATAR_FEET_Y - fullH };
+    return { halfW, fullH, topY: this._avatarSprite.y - fullH };
   }
 
   private _buildStaminaChestBadge(): void {
@@ -722,7 +788,7 @@ export class CustomerView extends PIXI.Container {
       const halfW = (this._avatarSprite.texture.width * this._avatarSprite.scale.x) / 2;
       const fullH = this._avatarSprite.texture.height * this._avatarSprite.scale.y;
       badgeX = Math.min(PANEL_W / 2 - bw / 2 - 2, halfW + bw / 2 - 24);
-      badgeY = AVATAR_FEET_Y - fullH + 28;
+      badgeY = this._avatarSprite.y - fullH + 28;
     }
     badge.position.set(badgeX, badgeY);
 
@@ -965,7 +1031,7 @@ export class CustomerView extends PIXI.Container {
       const halfW = (this._avatarSprite.texture.width * this._avatarSprite.scale.x) / 2;
       const fullH = this._avatarSprite.texture.height * this._avatarSprite.scale.y;
       badgeX = halfW - 4;
-      badgeY = AVATAR_FEET_Y - fullH + 8;
+      badgeY = this._avatarSprite.y - fullH + 8;
     }
     badge.position.set(badgeX, badgeY);
 
@@ -1017,6 +1083,7 @@ export class CustomerView extends PIXI.Container {
       case DrinkLine.BUTTERFLY: return COLORS.DRINK_BUTTERFLY;
       case DrinkLine.COLD: return COLORS.DRINK_COLD;
       case DrinkLine.DESSERT: return COLORS.DRINK_DESSERT;
+      case DrinkLine.MOONCAKE: return COLORS.DRINK_MOONCAKE;
       default: return 0x999999;
     }
   }

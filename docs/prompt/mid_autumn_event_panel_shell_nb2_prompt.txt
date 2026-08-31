@@ -1,0 +1,19 @@
+Redraw the attached Mid-Autumn activity panel shell. Keep the SAME overall layout, silhouette, decorations, close button, and art quality. Only fix the title lettering.
+
+Keep:
+- full-screen 9:16 portrait
+- solid pure green #00FF00 background outside the rounded panel, full bleed
+- thick soft honey-gold / dusty-rose rounded frame
+- top-right chunky circular red close button with a simple white X
+- top still-life: harvest moon, osmanthus, mooncake, cute rabbit lantern
+- very large clean cream content field in the middle, empty, no wheel
+- bottom still-life: osmanthus, mooncakes, rabbits, lanterns
+
+Title plaque MUST be perfect:
+- exactly four Chinese characters: 月满中秋
+- cute rounded festival lettering, warm honey-brown fill, thin gold rim
+- a perfectly straight horizontal baseline, like printed type, ZERO tilt, ZERO rotation, ZERO wave
+- all four characters the same size, even spacing, optically centered in the scalloped golden banner
+- do not follow the curve of the banner; the letters stay on one flat line
+
+No other text anywhere. NO extra Chinese, NO English, NO numbers, NO watermark, NO wheel.

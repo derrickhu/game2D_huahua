@@ -1,0 +1,17 @@
+Repaint ONLY the curtains of the attached tall Mid-Autumn wall window. Keep everything else pixel-identical in layout.
+
+SIZE AND FRAME LOCK — mandatory:
+- Same absolute canvas, same extra-tall wood frame, same parallelogram, same inner arch, same sill.
+- Same left-stile height and right-stile height. Same top-rail slope and bottom-rail slope.
+- Same moon size and position, same night sky, same osmanthus silhouette, same tiny osmanthus sprig on the sill.
+- Do not enlarge, shrink, crop differently, or redraw the frame.
+
+CHANGE — curtains CLOSED / drawn across:
+- Ivory champagne sheer voile now covers the FULL glass, left to right.
+- Translucent folds, scalloped hem just above the sill.
+- Moon and night sky stay readable through the cloth.
+- Remove the side tie-back and the gold ribbon. No gathered bunch on the right.
+
+Soft brown outlines, kawaii hand-painted merge-game style. Upper-left soft light.
+Background: pure solid white #FFFFFF only, same generous margin as the attachment.
+NO room, NO floor, NO readable text, NO watermark, NO photoreal.

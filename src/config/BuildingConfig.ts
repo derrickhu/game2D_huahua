@@ -16,6 +16,11 @@ import {
   getMaxLevelForLine,
   isFruitCutLine,
 } from './ItemConfig';
+import {
+  isMidAutumnBakeBonusActive,
+  MID_AUTUMN_DESSERT_PRODUCE_WEIGHT,
+  MID_AUTUMN_MOONCAKE_PRODUCE_WEIGHT,
+} from './events/MidAutumnEventConfig';
 
 /** 单次产出的明确目标：品类 + 产品线 + 产品等级 + 权重（相对权重即可） */
 export interface ToolProduceOutcome {
@@ -611,20 +616,45 @@ export function getBoardProducerOutcomePercents(
   if (!table.length) return [];
   const sumT = table.reduce((s, [, w]) => s + w, 0);
   if (sumT <= 0) return [];
+  const weightedLines = getEffectiveProduceLineWeights(def);
+  const raw: ToolProduceDisplayEntry[] = [];
+  for (const [lvl, w] of table) {
+    for (const { line, weight } of weightedLines) {
+      const level = clampProducePreviewLevel(def.produceCategory, line, lvl + bonus);
+      const id = findItemId(def.produceCategory, line, level);
+      if (!id) continue;
+      raw.push({ itemId: id, percent: (w / sumT) * weight * 100 });
+    }
+  }
+  return mergeOutcomePercents(raw);
+}
+
+/** 烘焙工具在中秋活动中附加月饼线；权重已归一化为 1。 */
+export function getEffectiveProduceLineWeights(
+  def: ToolDef,
+): ReadonlyArray<{ line: string; weight: number }> {
+  if (def.toolLine === ToolLine.BAKE && isMidAutumnBakeBonusActive()) {
+    const total = MID_AUTUMN_DESSERT_PRODUCE_WEIGHT + MID_AUTUMN_MOONCAKE_PRODUCE_WEIGHT;
+    return [
+      { line: DrinkLine.DESSERT, weight: MID_AUTUMN_DESSERT_PRODUCE_WEIGHT / total },
+      { line: DrinkLine.MOONCAKE, weight: MID_AUTUMN_MOONCAKE_PRODUCE_WEIGHT / total },
+    ];
+  }
   const lines =
     def.produceLinesRandom && def.produceLinesRandom.length > 0
       ? def.produceLinesRandom
       : [def.produceLine];
-  const raw: ToolProduceDisplayEntry[] = [];
-  for (const [lvl, w] of table) {
-    for (const line of lines) {
-      const level = clampProducePreviewLevel(def.produceCategory, line, lvl + bonus);
-      const id = findItemId(def.produceCategory, line, level);
-      if (!id) continue;
-      raw.push({ itemId: id, percent: (w / sumT) * (1 / lines.length) * 100 });
-    }
+  return lines.map(line => ({ line, weight: 1 / lines.length }));
+}
+
+export function rollEffectiveProduceLine(def: ToolDef, rng: () => number = Math.random): string {
+  const lines = getEffectiveProduceLineWeights(def);
+  let roll = rng();
+  for (const entry of lines) {
+    roll -= entry.weight;
+    if (roll <= 0) return entry.line;
   }
-  return mergeOutcomePercents(raw);
+  return lines[lines.length - 1]?.line ?? def.produceLine;
 }
 
 function toolMatchesProductLine(def: ToolDef, category: Category, productLine: string): boolean {
@@ -634,8 +664,7 @@ function toolMatchesProductLine(def: ToolDef, category: Category, productLine: s
     );
   }
   if (def.produceCategory !== category) return false;
-  const lines = def.produceLinesRandom ?? [def.produceLine];
-  return lines.includes(productLine);
+  return getEffectiveProduceLineWeights(def).some(entry => entry.line === productLine);
 }
 
 /** 棋盘产出物是否可出现指定品类+产品线（订单产线解锁与 BuildingManager 一致） */

@@ -16,6 +16,7 @@ export type OrderProductId =
   | 'butterfly'
   | 'cold'
   | 'dessert'
+  | 'mooncake'
   | 'cut_avocado'
   | 'cut_watermelon'
   | 'cut_pineapple'
@@ -29,6 +30,7 @@ export const ORDER_PRODUCT_IDS: readonly OrderProductId[] = [
   'butterfly',
   'cold',
   'dessert',
+  'mooncake',
   'cut_avocado',
   'cut_watermelon',
   'cut_pineapple',
@@ -161,6 +163,21 @@ export const ORDER_PRODUCT_DEFS: Record<OrderProductId, OrderProductDef> = {
     isUnlocked: ulk => (ulk.drinkToolMaxByLine[DrinkLine.DESSERT] ?? 0) > 0,
     toolLevel: ulk => ulk.drinkToolMaxByLine[DrinkLine.DESSERT] ?? 0,
     weightByTier: DESSERT_WEIGHT,
+  },
+  mooncake: {
+    id: 'mooncake',
+    category: Category.DRINK,
+    itemLine: DrinkLine.MOONCAKE,
+    maxLevel: 8,
+    tierLevelRanges: {
+      C: null,
+      B: null,
+      A: [1, 4],
+      S: [5, 8],
+    },
+    isUnlocked: ulk => (ulk.drinkToolMaxByLine[DrinkLine.MOONCAKE] ?? 0) > 0,
+    toolLevel: ulk => ulk.drinkToolMaxByLine[DrinkLine.MOONCAKE] ?? 0,
+    weightByTier: DRINK_B_PLUS_WEIGHT,
   },
   cut_avocado: {
     id: 'cut_avocado',

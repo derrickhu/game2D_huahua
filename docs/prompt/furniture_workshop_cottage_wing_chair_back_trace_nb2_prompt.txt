@@ -1,0 +1,15 @@
+Inpaint/edit the attached FRONT armchair image into its BACK view while LOCKING the canvas layout.
+
+HARD CONSTRAINTS:
+- Keep the chair in the same place on the white canvas with the same overall bounding box.
+- Keep the same outer silhouette: same height, width, leg positions, arm outer curves, and the dark wood triple-curve crest rail shape.
+- Do not zoom, enlarge, or change camera distance.
+
+WHAT TO CHANGE for a true back view:
+- The tall backrest face that currently shows cream tufting + 4 buttons becomes a flat dark walnut wood rear panel (subtle grain), still bordered by the same dark wood crest/frame.
+- Remove the green pillow completely.
+- The cream seat should be mostly covered by the backrest; only a thin edge may remain.
+- Cream rolled arms with circular wood scroll ends stay, seen from behind/side.
+- No wingback fins. No new chair design.
+
+Result: obviously the same chair turned around. Pure white background. Soft brown outlines. No text.

@@ -612,6 +612,7 @@ export class ItemView extends PIXI.Container {
       case DrinkLine.BUTTERFLY: return COLORS.DRINK_BUTTERFLY;
       case DrinkLine.COLD: return COLORS.DRINK_COLD;
       case DrinkLine.DESSERT: return COLORS.DRINK_DESSERT;
+      case DrinkLine.MOONCAKE: return COLORS.DRINK_MOONCAKE;
       case FoodLine.FRUIT:
       case FoodLine.CUT_AVOCADO:
         return 0x6a9e3a;

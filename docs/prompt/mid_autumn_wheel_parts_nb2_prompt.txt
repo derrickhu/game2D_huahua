@@ -1,0 +1,17 @@
+Use the attached lucky-wheel screenshot ONLY as material-quality reference: polished gold metal, pale lacquered wood stand, cute chibi mascot, chunky mobile-game UI. Mid-Autumn theme. Do NOT copy the cat, zodiac text, or full screen UI.
+
+Create a 2 columns x 2 rows sheet on solid pure green #00FF00. Each cell contains exactly ONE isolated object, centered, with padding. No object touches another cell.
+
+Top-left: an ornate golden lottery POINTER. Large teardrop / arrow frame pointing DOWN, luxury gold with a small ruby or amber gem, same toy-metal quality as the attached top pointer. Isolated, no wheel behind it.
+
+Top-right: a circular gold medallion hub with a cute chibi jade rabbit in the center. Round white-cream rabbit, big eyes, tiny gold ruyi collar, Mid-Autumn festival mascot. Soft 2D kawaii, not photoreal. No text on the collar.
+
+Bottom-left: a low wooden lottery-wheel STAND / pedestal, pale lacquered wood with gold trim, wider than tall, like the attached wheel base. Empty, no wheel sitting on it.
+
+Bottom-right: one empty chunky horizontal SPIN BUTTON, teal-jade green like the attached draw button, very rounded, gold corner ornaments, soft highlight. Completely blank center for later text. No letters, no Chinese, no "draw" label.
+
+Art style: clean 2D vector kawaii mobile-game UI, polished gold and wood, not photoreal.
+
+Each object on green. Objects contain zero green pixels.
+
+NO TEXT, no labels, no letters, no numbers, no watermark, no zodiac characters.

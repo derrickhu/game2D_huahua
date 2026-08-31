@@ -17,6 +17,7 @@ import { SceneManager } from '@/core/SceneManager';
 import { BoardManager } from '@/managers/BoardManager';
 import { EventBoardManager } from '@/managers/EventBoardManager';
 import { CoolSummerEventManager } from '@/managers/CoolSummerEventManager';
+import { MidAutumnEventManager } from '@/managers/MidAutumnEventManager';
 import { MergeCompanionManager } from '@/managers/MergeCompanionManager';
 import { BuildingManager } from '@/managers/BuildingManager';
 import { SaveManager } from '@/managers/SaveManager';
@@ -291,6 +292,8 @@ async function main(): Promise<void> {
     console.log('[main] EventBoardManager.init 完成');
     CoolSummerEventManager.init();
     console.log('[main] CoolSummerEventManager.init 完成');
+    MidAutumnEventManager.init();
+    console.log('[main] MidAutumnEventManager.init 完成');
 
     MergeCompanionManager.init();
 

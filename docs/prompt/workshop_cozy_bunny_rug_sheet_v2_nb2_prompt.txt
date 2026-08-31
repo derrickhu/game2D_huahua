@@ -1,0 +1,21 @@
+Vertical sprite sheet, exactly 1 column x 3 rows, three equal-height panels stacked with clear white gutters. Cozy pastel flower-shop merge game FLOOR RUG prop sheet.
+
+PERSPECTIVE AND ORIENTATION (critical — match attached room feedback and sofa):
+- True 2.5D isometric floor mat, upper-left camera ~35 degrees, lying FLAT on the ground.
+- The bunny's LONG AXIS (head → body → tail) must run along the SAME isometric floor-tile edge direction as the pink sofa's long front edge in the reference — roughly bottom-left toward top-right, compressed into a wide diamond footprint that sits on the checkered floor.
+- Compared to a horizontal left-right bunny, rotate the whole silhouette CLOCKWISE about 25-35 degrees so the long sides align with the room diamond tiles (see the red guide box in the feedback screenshot).
+- NOT top-down circle. NOT upright character. NOT nearly horizontal left-right stick. Foreshortened flat rug only.
+
+LINE STYLE (critical — match attached sofa):
+- Soft thin warm brown outlines only, gentle and light, same weight as the pink vine sofa reference.
+- FORBIDDEN: thick charcoal outlines, heavy black contours, sticker-border look, bold comic ink.
+
+Subject: ONE large cute sleeping BUNNY animal-shaped rug, chubby curled body cutout (floppy ears, round tummy cream patch as fabric color not a hole, tiny paws, short fluffy tail). Soft plush fabric, subtle tuft shading, tiny mint stitch dashes. Kawaii flower-shop mood.
+
+Identical silhouette / pose / size / angle in every row — only dye color changes.
+
+Row 0 (top): blush sakura-pink body, cream belly, soft rose inner ears.
+Row 1 (middle): sky-blue body, cream belly, lavender inner ears.
+Row 2 (bottom): honey-yellow body, cream belly, peach inner ears.
+
+Each rug centered with generous empty white margin. Pure solid white #FFFFFF background only. NO text, labels, numbers, watermark, standing characters, room walls, floor plane, or other furniture.

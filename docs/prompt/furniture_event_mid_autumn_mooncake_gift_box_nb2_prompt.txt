@@ -1,0 +1,11 @@
+Cute kawaii 2.5D true isometric furniture for a flower-shop merge game. Camera from upper-left into the L-room corner (same family as the room shell). On-screen top-face edges and base edges must sit near ±30° from horizontal — match the attached iso grid and room wall-base / floor diamond, NOT 45° wall slant, NOT flat front view. Height edges stay vertical. Visible top surface plus front-right side, left and right top edges symmetrically angled. Use the attached grid ONLY for perspective; do not copy the gray demo cube.
+
+Square 1:1 canvas. One single TABLETOP ornament centered with generous white margin. Soft brown outlines slightly thicker than hairline, hand-painted mobile merge-game style, warm pastel high-key colors, gentle upper-left light, readable silhouette at small size. Not photoreal, not 3D render, not luxury brand packaging photo.
+
+Subject: a Mid-Autumn mooncake gift box, compact tabletop prop. A cute stacked two-tier cream-ivory gift box with champagne-gold rim and a plump blush-coral ribbon bow on top. The upper lid is slightly ajar, tilted open toward the camera so two or three round cartoon mooncakes are visible inside — simple golden-brown pastry discs with cute stamped flower or rabbit shapes, same kawaii pastry style as a merge-game food icon, matte not oily. A tiny jade-green rabbit charm hangs from the ribbon. Soft gold latch and small osmanthus-yellow flower accent. Box sits on its own base; feet of the box are the lowest pixels.
+
+This is a SMALL ornament, not a table, not a room scene. Keep the box chunky and chibi, about the visual weight of a jewelry box or tea tin.
+
+Hard bans: NO text, NO letters, NO Chinese characters, NO numbers, NO watermark, NO logo, NO characters/people, NO room walls, NO floor tiles, NO long floor shadow strip, NO gray grid copied into the final art, NO chairs, NO plates scattered on the floor.
+
+Background pure solid white #FFFFFF only.

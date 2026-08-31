@@ -73,6 +73,7 @@ import { RewardBoxManager } from './RewardBoxManager';
 import { MergeCompanionManager } from './MergeCompanionManager';
 import { EventBoardManager } from './EventBoardManager';
 import { CoolSummerEventManager } from './CoolSummerEventManager';
+import { MidAutumnEventManager } from './MidAutumnEventManager';
 import { STAMINA_MAX } from '@/config/Constants';
 
 const _api = getNativePlatformApi();
@@ -746,6 +747,81 @@ class GMManagerClass {
       },
     });
 
+    this._commands.push({
+      id: 'gm_open_mid_autumn',
+      group: ' 活动棋盘',
+      name: ' 打开月满中秋',
+      desc: '临时开放活动并打开转盘页（仅本次运行）',
+      execute: () => {
+        MidAutumnEventManager.gmSetActiveOverride(true);
+        CustomerManager.refreshMidAutumnRewards();
+        EventBus.emit('panel:openMidAutumnEvent');
+        return ' 已临时开放月满中秋';
+      },
+    });
+
+    this._commands.push({
+      id: 'gm_add_mid_autumn_lanterns',
+      group: ' 活动棋盘',
+      name: ' 玉兔灯 +80',
+      desc: '临时开放活动并增加 80 盏玉兔灯，方便转盘测试',
+      execute: () => {
+        MidAutumnEventManager.gmSetActiveOverride(true);
+        CustomerManager.refreshMidAutumnRewards();
+        const bal = MidAutumnEventManager.gmAddCurrency(80);
+        ToastMessage.show(`玉兔灯 +80，当前 ${bal}`);
+        return ` 玉兔灯余额：${bal}`;
+      },
+    });
+
+    this._commands.push({
+      id: 'gm_reset_mid_autumn',
+      group: ' 活动棋盘',
+      name: ' 重置月满中秋',
+      desc: '清空玉兔灯、抽奖次数与转盘轮次',
+      execute: () => {
+        MidAutumnEventManager.gmReset();
+        return ' 已重置月满中秋活动进度';
+      },
+    });
+
+    this._commands.push({
+      id: 'board_place_mooncakes',
+      group: ' 增加物品',
+      name: ' 月饼 1–8 级 + 小烤箱 → 棋盘',
+      desc: '放置月饼合成链与可产出烤箱，便于中秋验收',
+      execute: () => {
+        const ids = [
+          'tool_bake_3',
+          'drink_mooncake_1',
+          'drink_mooncake_2',
+          'drink_mooncake_3',
+          'drink_mooncake_4',
+          'drink_mooncake_5',
+          'drink_mooncake_6',
+          'drink_mooncake_7',
+          'drink_mooncake_8',
+        ];
+        const placed: string[] = [];
+        for (const id of ids) {
+          if (!ITEM_DEFS.has(id)) return ` 未注册物品 ${id}`;
+          const idx = BoardManager.findEmptyOpenCell();
+          if (idx < 0) {
+            return placed.length === 0
+              ? ' 没有空的已开放格'
+              : ` 仅放置 ${placed.length}/${ids.length}（空格不足）`;
+          }
+          if (!BoardManager.placeItem(idx, id)) {
+            return ` 放置失败：${id}`;
+          }
+          placed.push(ITEM_DEFS.get(id)!.name);
+        }
+        MidAutumnEventManager.gmSetActiveOverride(true);
+        CustomerManager.refreshMidAutumnRewards();
+        return ` 已放置：${placed.join('、')}`;
+      },
+    });
+
     // ========== 订单/客人 ==========
     this._commands.push({
       id: 'gm_spawn_timed_diamond_order',
@@ -863,6 +939,17 @@ class GMManagerClass {
     });
 
     this._commands.push({
+      id: 'gm_grant_workshop_blueprint_moon_window',
+      group: ' 家具工坊',
+      name: ' 发放月纱长窗图纸',
+      desc: '月满中秋第 3 轮转盘图纸，不可钻石购买',
+      execute: () => {
+        const ok = FurnitureWorkshopManager.grantBlueprint('blueprint_workshop_moon_sheer_window');
+        return ok ? ' 已发放月纱长窗图纸' : ' 图纸已拥有或配置缺失';
+      },
+    });
+
+    this._commands.push({
       id: 'gm_grant_workshop_blueprint_healing_set',
       group: ' 家具工坊',
       name: ' 发放治愈系三件套图纸',
@@ -895,6 +982,7 @@ class GMManagerClass {
       if (customerType.id === 'tycoon') specialHint = '（限时钻石单）';
       else if (customerType.id === 'florist_merchant') specialHint = '（富贵花商限时单）';
       else if (customerType.id === 'furniture_craftswoman') specialHint = '（家具工匠材料单）';
+      else if (customerType.id === 'chang_e') specialHint = '（嫦娥中秋A/S单）';
       else if (customerType.specialOnly) specialHint = '（特殊订单）';
       this._commands.push({
         id: `gm_spawn_customer_${customerType.id}`,

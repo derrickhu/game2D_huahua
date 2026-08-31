@@ -1,0 +1,21 @@
+The attached image is a style-and-layout board of THREE existing mooncake icons from this exact game. COPY THEIR CAMERA, SCALE, AND CUT exactly.
+
+Must match the attached cakes:
+- Same 3/4 top-down isometric view
+- Same chunky thickness, same large icon scale: the pastry fills most of the square, like the attached cakes, NOT a tiny bun in the middle
+- Same opening: a clean 90-degree quarter-wedge cut from the FRONT-CENTER, facing the viewer, vertex at the cake center. NOT a small side nibble. NOT a 45-degree slice. NOT a cut on the right-only 4 o'clock side.
+- Same soft brown outline weight and gentle cel shading
+- Whole object fully inside the frame with only a little padding
+
+Identity of THIS cake only (do not copy fillings from the board):
+- Suzhou-style fresh-meat mooncake
+- Pale cream flaky shortcrust, paper-thin pastry layers visible on the cut walls and sides, some layers slightly peeling, light-gold toasted patches
+- Top: one blank solid red circular ink stamp, empty, no characters
+- Cut face shows thick juicy minced pork filling, brown-pink, not bloody
+- One single pastry. The missing wedge is attached as a cut on the same cake, not a separate slice beside it
+
+NOT a dark molded Cantonese mooncake. NOT ice skin. NOT matcha. NO plate, NO dish, NO tray.
+
+Clean white background. High readability at tiny size.
+
+NO TEXT, no labels, no letters, no numbers, no Chinese in the red stamp, no watermark.
