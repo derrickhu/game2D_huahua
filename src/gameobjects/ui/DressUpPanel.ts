@@ -97,9 +97,8 @@ function federatedPointerToDesignY(e: PIXI.FederatedPointerEvent): number {
 }
 
 function isActivityLockedOutfit(outfit: Outfit): boolean {
-  return Boolean(
-    outfit.unlockRequirement?.questId && outfit.unlockRequirement.conditionText === '活动解锁',
-  );
+  const text = outfit.unlockRequirement?.conditionText ?? '';
+  return Boolean(outfit.unlockRequirement?.questId && text.startsWith('活动'));
 }
 
 function outfitSortRank(outfit: Outfit & { unlocked: boolean; equipped: boolean }): number {
@@ -768,8 +767,8 @@ export class DressUpPanel extends PIXI.Container {
     }
 
     const canTapPurchase =
-      !isEquipped && purchaseAllowed && outfit.huayuanCost > 0
-      && CurrencyManager.state.huayuan >= outfit.huayuanCost;
+      !isEquipped && purchaseAllowed
+      && (outfit.huayuanCost <= 0 || CurrencyManager.state.huayuan >= outfit.huayuanCost);
 
     card.eventMode = 'static';
     card.hitArea = new PIXI.Rectangle(0, 0, cw, ch);

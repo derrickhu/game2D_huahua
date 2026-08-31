@@ -19,6 +19,8 @@ import {
 export const MID_AUTUMN_SEASON_ID = 'mid_autumn_2026';
 export const MID_AUTUMN_EVENT_NAME = '月满中秋';
 export const MID_AUTUMN_CURRENCY_NAME = '玉兔灯';
+/** 三轮转盘抽完后自动发放的店主套装 */
+export const MID_AUTUMN_OUTFIT_ID = 'outfit_change';
 
 /** 活动时间使用玩家设备本地时区。覆盖中秋（2026-09-25）并便于当期验收。 */
 export const MID_AUTUMN_DEFAULT_START_AT = new Date(2026, 7, 14, 0, 0, 0, 0).getTime();

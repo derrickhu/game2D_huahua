@@ -140,6 +140,10 @@ const CHARS_IMAGE_MAP: Record<string, string> = {
   owner_full_outfit_jewel_bloom_blink: 'subpkg_chars/images/owner/full_outfit_jewel_bloom_eyesclosed.png',
   owner_chibi_outfit_jewel_bloom: 'subpkg_chars/images/owner/chibi_outfit_jewel_bloom.png',
 
+  owner_full_outfit_change: 'subpkg_chars/images/owner/full_outfit_change.png',
+  owner_full_outfit_change_blink: 'subpkg_chars/images/owner/full_outfit_change_eyesclosed.png',
+  owner_chibi_outfit_change: 'subpkg_chars/images/owner/chibi_outfit_change.png',
+
   customer_child:   'subpkg_chars/images/customer/child.png',
   customer_student: 'subpkg_chars/images/customer/student.png',
   customer_worker:  'subpkg_chars/images/customer/worker.png',

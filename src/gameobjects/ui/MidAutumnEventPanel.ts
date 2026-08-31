@@ -18,9 +18,12 @@ import {
   MID_AUTUMN_WHEEL_SLICE_COUNT,
   midAutumnPrizeQuantityLabel,
   midAutumnWheelPrizesForRound,
+  MID_AUTUMN_OUTFIT_ID,
   type MidAutumnGrant,
 } from '@/config/events/MidAutumnEventConfig';
+import { getOwnerChibiTextureKey, OUTFIT_MAP } from '@/config/DressUpConfig';
 import { MidAutumnEventManager } from '@/managers/MidAutumnEventManager';
+import { DressUpManager } from '@/managers/DressUpManager';
 import { TextureCache } from '@/utils/TextureCache';
 import { ToastMessage } from '@/gameobjects/ui/ToastMessage';
 import { ItemObtainOverlay, type ItemObtainEntry } from '@/gameobjects/ui/ItemObtainOverlay';
@@ -130,6 +133,8 @@ export class MidAutumnEventPanel extends PIXI.Container {
         MID_AUTUMN_MOON_WINDOW_DECO_ID,
         'workshop_moon_sheer_window_sheet',
         'workshop_blueprint_generic',
+        getOwnerChibiTextureKey(MID_AUTUMN_OUTFIT_ID),
+        'ui_order_check_badge',
       ]),
     ]).finally(() => {
       this._opening = false;
@@ -162,6 +167,7 @@ export class MidAutumnEventPanel extends PIXI.Container {
     this.alpha = 0;
     this._layout();
     this._refreshHud();
+    this._showClearanceOutfitIfGranted();
     TweenManager.to({
       target: this,
       props: { alpha: 1 },
@@ -318,6 +324,7 @@ export class MidAutumnEventPanel extends PIXI.Container {
       this._toggleCurrencyInfo();
     });
     this._content.addChild(currencyRow);
+    this._content.addChild(this._buildOutfitRewardBtn(w, h));
 
     this._countdownText = new PIXI.Text('', {
       fontFamily: FONT_FAMILY,
@@ -587,6 +594,91 @@ export class MidAutumnEventPanel extends PIXI.Container {
     return sp;
   }
 
+  private _buildOutfitRewardBtn(w: number, h: number): PIXI.Container {
+    const btn = new PIXI.Container();
+    const name = OUTFIT_MAP.get(MID_AUTUMN_OUTFIT_ID)?.name ?? '广寒仙裳';
+    btn.position.set(w / 2 - 142, h * 0.268);
+    btn.eventMode = 'static';
+    btn.cursor = 'pointer';
+
+    const tex = TextureCache.get(getOwnerChibiTextureKey(MID_AUTUMN_OUTFIT_ID));
+    let figureH = 132;
+    let figureW = 96;
+    if (tex?.width > 1) {
+      const sp = new PIXI.Sprite(tex);
+      const maxH = 138;
+      const scale = maxH / tex.height;
+      sp.scale.set(scale);
+      sp.anchor.set(0.5, 1);
+      sp.position.set(0, 36);
+      btn.addChild(sp);
+      figureW = sp.width;
+      figureH = sp.height;
+    }
+
+    const label = new PIXI.Text(name, {
+      fontFamily: FONT_FAMILY,
+      fontSize: 20,
+      fontWeight: '700',
+      fill: 0x6B3A12,
+    });
+    const padX = 16;
+    const pillW = Math.max(108, label.width + padX * 2);
+    const pillH = 36;
+    const pill = new PIXI.Graphics();
+    pill.beginFill(0xFFF6DE, 0.95);
+    pill.lineStyle(3, 0xE0A84A);
+    pill.drawRoundedRect(-pillW / 2, 40, pillW, pillH, 18);
+    pill.endFill();
+    btn.addChild(pill);
+    label.anchor.set(0.5, 0.5);
+    label.position.set(0, 40 + pillH / 2);
+    btn.addChild(label);
+
+    if (MidAutumnEventManager.outfitGranted) {
+      const badgeTex = TextureCache.get('ui_order_check_badge');
+      if (badgeTex?.width > 1) {
+        const badge = new PIXI.Sprite(badgeTex);
+        badge.anchor.set(0.5);
+        badge.scale.set(32 / Math.max(badgeTex.width, badgeTex.height));
+        badge.position.set(figureW * 0.38, 28);
+        badge.eventMode = 'none';
+        btn.addChild(badge);
+      }
+    }
+
+    const hitTop = 36 - figureH;
+    const hitW = Math.max(figureW, pillW) + 12;
+    btn.hitArea = new PIXI.Rectangle(-hitW / 2, hitTop, hitW, figureH + pillH + 12);
+
+    btn.on('pointertap', (e: PIXI.FederatedPointerEvent) => {
+      e.stopPropagation();
+      if (MidAutumnEventManager.outfitGranted || DressUpManager.isUnlocked(MID_AUTUMN_OUTFIT_ID)) {
+        ToastMessage.show(`已获得「${name}」`);
+        return;
+      }
+      ToastMessage.show('完成所有抽奖后可领取');
+    });
+    return btn;
+  }
+
+  private _showClearanceOutfitIfGranted(): void {
+    const granted = MidAutumnEventManager.tryGrantClearanceOutfit();
+    if (!granted) return;
+    const name = OUTFIT_MAP.get(MID_AUTUMN_OUTFIT_ID)?.name ?? '广寒仙裳';
+    ItemObtainOverlay.show(
+      [{
+        kind: 'unlock_icon',
+        iconKey: getOwnerChibiTextureKey(MID_AUTUMN_OUTFIT_ID),
+        label: name,
+      }],
+      () => {
+        this._rebuildContent();
+        this._refreshHud();
+      },
+    );
+  }
+
   private _makeIcon(key: string, size: number): PIXI.Container {
     const wrap = new PIXI.Container();
     const tex = TextureCache.get(key);
@@ -817,6 +909,9 @@ export class MidAutumnEventPanel extends PIXI.Container {
               this._previewRound = MID_AUTUMN_WHEEL_ROUND_COUNT;
               this._displayedCleared = true;
               this._fillPrizeLayer();
+              this._refreshHud();
+              this._showClearanceOutfitIfGranted();
+              return;
             }
             this._refreshHud();
           },

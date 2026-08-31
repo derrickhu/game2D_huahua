@@ -56,6 +56,7 @@ export const AD_UNLOCK_OUTFIT_IDS = new Set<string>(['outfit_qinglian']);
 /** 花之女王等活动赠送套装：活动结算处请调用 `DressUpManager.grantOutfitFromActivity('outfit_queen')`（会同步 grantQuest，条件与存档一致） */
 export const OUTFIT_QUEEN_ACTIVITY_QUEST_ID = 'dressup_activity_outfit_queen';
 export const OUTFIT_JEWEL_BLOOM_ACTIVITY_QUEST_ID = 'dressup_activity_outfit_jewel_bloom';
+export const OUTFIT_CHANGE_ACTIVITY_QUEST_ID = 'dressup_activity_outfit_change';
 
 /**
  * 活动解锁的套装：完成对应活动时应调用 `grantOutfitFromActivity`，勿仅改存档。
@@ -64,6 +65,7 @@ export const OUTFIT_JEWEL_BLOOM_ACTIVITY_QUEST_ID = 'dressup_activity_outfit_jew
 export const OUTFIT_ACTIVITY_QUEST_BY_ID: Readonly<Record<string, string>> = {
   outfit_queen: OUTFIT_QUEEN_ACTIVITY_QUEST_ID,
   outfit_jewel_bloom: OUTFIT_JEWEL_BLOOM_ACTIVITY_QUEST_ID,
+  outfit_change: OUTFIT_CHANGE_ACTIVITY_QUEST_ID,
 };
 
 /** 形象换装面板展示的套装（2 列网格，活动套可用 quest 条件显示「活动解锁」；有花愿售价套相对初版 ×2） */
@@ -80,6 +82,19 @@ export const DRESSUP_PANEL_OUTFITS: Outfit[] = [
     icon: '',
     huayuanCost: 6998,
     starValue: 5,
+  },
+  {
+    id: 'outfit_change',
+    name: '广寒仙裳',
+    desc: '月白仙裙与云髻月饰，广寒清辉',
+    icon: '',
+    huayuanCost: 0,
+    starValue: 10,
+    unlockRequirement: {
+      questId: OUTFIT_CHANGE_ACTIVITY_QUEST_ID,
+      conditionText: '活动领取',
+      questDetailText: '完成月满中秋活动获取',
+    },
   },
   {
     id: 'outfit_jewel_bloom',

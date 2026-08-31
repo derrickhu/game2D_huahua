@@ -289,6 +289,7 @@ export class MainScene implements Scene {
       NewbieGiftPackManager.reconcileClaimedRewards('main-init');
       FlowerCardManager.init();
       DressUpManager.init();
+      MidAutumnEventManager.tryGrantClearanceOutfit();
       // 店主半身像在 _buildShopArea 里已刷新过，但当时尚未 _loadState，须在换装存档加载后再刷一次
       this._refreshOwnerOutfit();
       SocialManager.init();

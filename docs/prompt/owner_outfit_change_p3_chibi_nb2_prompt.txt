@@ -1,0 +1,28 @@
+REFERENCE IMAGE — attached `chibi_default.png` is the approved huahua owner bust card:
+Copy its EXACT camera crop and head size. The default bust cuts at mid-chest / upper torso only — you can see shoulders and a little chest, then the picture ends. Do NOT show more body than the reference. The current Chang'e bust showed too much torso; this version must be as tight as the attached default.
+
+Keep the SAME shop-owner girl face: warm light-brown hair COLOR, large brown eyes, soft oval face, gentle smile. Do NOT copy the reference bob, pink flower clip, pink blouse, or apron.
+
+BUST PORTRAIT — dialogue / dress-up card, TIGHT like default owner bust.
+Bottom crop through mid-chest only. Forbidden: waist, midriff, hips, arms hanging long, extra torso, full-body chibi.
+Head + hair + compact moon pin occupy about 62% to 74% of canvas height — LARGE head in frame.
+
+ART STYLE:
+Hand-drawn 2D cute mobile game. Soft 3D volume like customer busts. Soft brown outlines. Moonlight white, muted gold, pale lilac accents only.
+
+ANCIENT MAKEUP:
+Willow brows, elongated soft eye corners, high peach-blossom blush, small cherry-petal lips, tiny red three-dot plum huadian on the forehead. Same as the approved full-body Chang'e shop owner.
+
+POSE: slight 3/4 toward viewer's right, both eyes visible, serene smile.
+
+HAIR AND OUTFIT — must match the approved FULL-BODY white Chang'e shop owner:
+Warm light-brown high cloud bun, long soft side tresses. Compact ivory-gold crescent-moon hairpin with one jade bead and two short jade tassels, tiny yellow osmanthus. Jade drop earrings. Thin gold necklace with a tiny white-jade rabbit charm.
+Moonlight-white cross-collar ru, thin gold cloud embroidery, pale lilac inner collar only. Translucent pale-lilac pibo ribbons loop behind both shoulders and MUST end in complete soft rounded tips fully inside the picture — never cut by the left, right, or bottom edge.
+
+LAYOUT:
+Portrait 9:16, one character.
+Hair or moon-pin top about 10% to 14% from canvas top.
+Bottom crop HIGH, about 26% to 32% empty magenta below the mid-chest cut — same tightness as the attached default bust.
+Centered; 8% to 12% magenta side margins.
+Background pure flat magenta RGB 255 0 255 FF00FF only.
+NO TEXT, no watermark.

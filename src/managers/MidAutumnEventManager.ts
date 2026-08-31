@@ -14,6 +14,7 @@ import {
   midAutumnWheelPrizesForRound,
   rollMidAutumnWheelPrize,
   setMidAutumnActiveChecker,
+  MID_AUTUMN_OUTFIT_ID,
   type MidAutumnGrant,
   type MidAutumnWheelPrize,
 } from '@/config/events/MidAutumnEventConfig';
@@ -21,6 +22,7 @@ import { EventBus } from '@/core/EventBus';
 import { ToastMessage } from '@/gameobjects/ui/ToastMessage';
 import { CurrencyManager } from '@/managers/CurrencyManager';
 import { DecorationManager } from '@/managers/DecorationManager';
+import { DressUpManager } from '@/managers/DressUpManager';
 import { FurnitureWorkshopManager } from '@/managers/FurnitureWorkshopManager';
 import { RewardBoxManager } from '@/managers/RewardBoxManager';
 import { grantQuest } from '@/utils/UnlockChecker';
@@ -37,6 +39,8 @@ export interface MidAutumnEventState {
   wheelCleared?: boolean;
   pendingSpinPrizeId?: string;
   pendingSpinRound?: number;
+  /** 三轮抽完后是否已发放广寒仙裳 */
+  outfitGranted?: boolean;
 }
 export type MidAutumnEventPersistState = MidAutumnEventState;
 
@@ -81,6 +85,7 @@ function emptyState(): MidAutumnEventState {
     wheelCleared: false,
     pendingSpinPrizeId: undefined,
     pendingSpinRound: undefined,
+    outfitGranted: false,
   };
 }
 
@@ -91,6 +96,7 @@ class MidAutumnEventManagerClass {
   private _wheelRound = 1;
   private _wonPrizeIds = new Set<string>();
   private _wheelCleared = false;
+  private _outfitGranted = false;
   private _pendingPrizeId: string | null = null;
   private _pendingRound = 1;
   private _lastRedDot = false;
@@ -160,6 +166,27 @@ class MidAutumnEventManagerClass {
 
   get wheelCleared(): boolean {
     return this._wheelCleared;
+  }
+
+  get outfitGranted(): boolean {
+    return this._outfitGranted || DressUpManager.isUnlocked(MID_AUTUMN_OUTFIT_ID);
+  }
+
+  /**
+   * 三轮抽完后发放广寒仙裳。返回 true 表示本次新获得（调用方应弹获得层）。
+   */
+  tryGrantClearanceOutfit(): boolean {
+    if (!this._wheelCleared) return false;
+    if (this._outfitGranted) return false;
+    if (DressUpManager.isUnlocked(MID_AUTUMN_OUTFIT_ID)) {
+      this._outfitGranted = true;
+      this._emitChanged();
+      return false;
+    }
+    const granted = DressUpManager.grantOutfitFromActivity(MID_AUTUMN_OUTFIT_ID);
+    this._outfitGranted = true;
+    this._emitChanged();
+    return granted;
   }
 
   /** 活动进行中且转盘尚未抽完：可刷嫦娥、可获玉兔灯。 */
@@ -305,6 +332,7 @@ class MidAutumnEventManagerClass {
       wheelCleared: this._wheelCleared,
       pendingSpinPrizeId: this._pendingPrizeId ?? undefined,
       pendingSpinRound: this._pendingPrizeId ? this._pendingRound : undefined,
+      outfitGranted: this._outfitGranted,
     };
   }
 
@@ -319,6 +347,7 @@ class MidAutumnEventManagerClass {
     this._currencySettled = !!state.currencySettled;
     this._wheelRound = clampMidAutumnWheelRound(state.wheelRound ?? 1);
     this._wheelCleared = !!state.wheelCleared;
+    this._outfitGranted = !!state.outfitGranted || DressUpManager.isUnlocked(MID_AUTUMN_OUTFIT_ID);
     this._wonPrizeIds = new Set(
       (state.wonPrizeIds ?? []).filter((id): id is string => typeof id === 'string' && id.length > 0),
     );
@@ -359,6 +388,7 @@ class MidAutumnEventManagerClass {
     this._wheelRound = 1;
     this._wonPrizeIds = new Set();
     this._wheelCleared = false;
+    this._outfitGranted = false;
     this._pendingPrizeId = null;
     this._pendingRound = 1;
     this._emitChanged();
