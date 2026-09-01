@@ -699,12 +699,7 @@ export class ShopScene implements Scene {
         sideStartY + i * (sideBtnH + sideGap),
       );
     });
-    RIGHT_BUTTONS.forEach((def, i) => {
-      this._activityBtns.get(def.id)?.container.position.set(
-        rightX,
-        sideStartY + i * (sideBtnH + sideGap),
-      );
-    });
+    this._layoutRightActivityButtons(rightX, sideStartY, sideBtnH, sideGap);
 
     // 底部 HUD 的按钮自身已有足够底距；视觉层贴屏幕底边，不再整体叠加安全区上移。
     const operateY = h - 90;
@@ -2612,24 +2607,51 @@ export class ShopScene implements Scene {
       this.container.addChild(btn.container);
       this._activityBtns.set(def.id, btn);
     }
-    this._refreshCoolSummerButtonVisibility();
-    this._refreshMidAutumnButtonVisibility();
+    this._layoutRightActivityButtons(w - btnW / 2 - 14, startY, btnH, gap);
+  }
+
+  private _isRightActivityVisible(id: string): boolean {
+    if (id === 'cool_summer') return CoolSummerEventManager.isActive();
+    if (id === 'mid_autumn') return MidAutumnEventManager.isActive();
+    return true;
+  }
+
+  /** 右侧活动列按当前可见项从上往下紧排，下线活动不留空位。 */
+  private _layoutRightActivityButtons(
+    rightX: number,
+    startY: number,
+    btnH: number,
+    gap: number,
+  ): void {
+    let slot = 0;
+    for (const def of RIGHT_BUTTONS) {
+      const btn = this._activityBtns.get(def.id);
+      if (!btn) continue;
+      const visible = this._isRightActivityVisible(def.id);
+      btn.container.visible = visible;
+      if (!visible) {
+        btn.redDot.visible = false;
+        continue;
+      }
+      btn.container.position.set(rightX, startY + slot * (btnH + gap));
+      slot += 1;
+    }
   }
 
   private _refreshCoolSummerButtonVisibility(): void {
-    const btn = this._activityBtns.get('cool_summer');
-    if (!btn) return;
-    const active = CoolSummerEventManager.isActive();
-    btn.container.visible = active;
-    if (!active) btn.redDot.visible = false;
+    this._relayoutRightActivityButtons();
   }
 
   private _refreshMidAutumnButtonVisibility(): void {
-    const btn = this._activityBtns.get('mid_autumn');
-    if (!btn) return;
-    const active = MidAutumnEventManager.isActive();
-    btn.container.visible = active;
-    if (!active) btn.redDot.visible = false;
+    this._relayoutRightActivityButtons();
+  }
+
+  private _relayoutRightActivityButtons(): void {
+    const btnW = 84;
+    const btnH = 84;
+    const gap = 10;
+    const startY = Game.safeTop + TOP_BAR_HEIGHT + PROGRESS_BAR_H + 66 + btnH / 2;
+    this._layoutRightActivityButtons(DESIGN_WIDTH - btnW / 2 - 14, startY, btnH, gap);
   }
 
   /**

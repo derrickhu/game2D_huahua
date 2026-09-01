@@ -101,9 +101,9 @@ const QUEST_BTN_CX = STA_X + 42;
 const QUEST_BTN_CY = TOP_BAR_HEIGHT + 18;
 const EVENT_BTN_CX = QUEST_BTN_CX + QUEST_HIT + 14;
 const EVENT_BTN_CY = QUEST_BTN_CY;
-const COOL_SUMMER_BTN_CX = EVENT_BTN_CX + EVENT_HIT_W + 4;
+const SEASONAL_BTN_STEP = EVENT_HIT_W + 4;
+const COOL_SUMMER_BTN_CX = EVENT_BTN_CX + SEASONAL_BTN_STEP;
 const COOL_SUMMER_BTN_CY = EVENT_BTN_CY;
-const MID_AUTUMN_BTN_CX = COOL_SUMMER_BTN_CX + EVENT_HIT_W + 4;
 const MID_AUTUMN_BTN_CY = EVENT_BTN_CY;
 // ── 颜色（体力胶囊参考：浅粉框 + 鲜绿填充 + 绿圆加号）──
 const C = {
@@ -752,18 +752,12 @@ export class TopBar extends PIXI.Container {
   }
 
   updateCoolSummerButton(): void {
-    if (!this._coolSummerBtnWrap) return;
-    this._coolSummerBtnWrap.visible = CoolSummerEventManager.isActive();
-    if (this._coolSummerRedDot) {
-      this._coolSummerRedDot.visible = this._coolSummerBtnWrap.visible
-        && CoolSummerEventManager.hasRedDot;
-    }
-    this.updateMidAutumnButton();
+    this._layoutSeasonalEventButtons();
   }
 
   private _buildMidAutumnButton(): void {
     const wrap = new PIXI.Container();
-    wrap.position.set(this._midAutumnBtnX(), MID_AUTUMN_BTN_CY);
+    wrap.position.set(COOL_SUMMER_BTN_CX, MID_AUTUMN_BTN_CY);
     wrap.hitArea = new PIXI.Rectangle(
       -EVENT_HIT_W / 2,
       -EVENT_HIT_H / 2 + EVENT_HIT_SHIFT_Y,
@@ -803,10 +797,6 @@ export class TopBar extends PIXI.Container {
     this.updateMidAutumnButton();
   }
 
-  private _midAutumnBtnX(): number {
-    return CoolSummerEventManager.isActive() ? MID_AUTUMN_BTN_CX : COOL_SUMMER_BTN_CX;
-  }
-
   private _refreshMidAutumnIcon(): void {
     if (!this._midAutumnIcon) return;
     const tex = TextureCache.get('icon_mid_autumn_event_nb2');
@@ -818,23 +808,40 @@ export class TopBar extends PIXI.Container {
   }
 
   updateMidAutumnButton(): void {
-    if (!this._midAutumnBtnWrap) return;
-    this._midAutumnBtnWrap.visible = MidAutumnEventManager.isActive();
-    this._midAutumnBtnWrap.position.set(this._midAutumnBtnX(), MID_AUTUMN_BTN_CY);
+    this._layoutSeasonalEventButtons();
+  }
+
+  /**
+   * 任务右侧限时入口按当前可见项从左往右紧排：
+   * 花间珠匣 → 清凉一夏 → 月满中秋。下线的活动不占空位。
+   */
+  private _layoutSeasonalEventButtons(): void {
+    let slot = 0;
+    const place = (wrap: PIXI.Container | null, visible: boolean): void => {
+      if (!wrap) return;
+      wrap.visible = visible;
+      if (!visible) return;
+      wrap.position.set(EVENT_BTN_CX + slot * SEASONAL_BTN_STEP, EVENT_BTN_CY);
+      slot += 1;
+    };
+    const jewelryOn = isJewelryEventUnlocked(CurrencyManager.state.level);
+    place(this._eventBoardBtnWrap, jewelryOn);
+    place(this._coolSummerBtnWrap, CoolSummerEventManager.isActive());
+    place(this._midAutumnBtnWrap, MidAutumnEventManager.isActive());
+    if (!jewelryOn && this._eventRedDot) this._eventRedDot.visible = false;
+    if (this._coolSummerRedDot) {
+      this._coolSummerRedDot.visible = !!this._coolSummerBtnWrap?.visible
+        && CoolSummerEventManager.hasRedDot;
+    }
     if (this._midAutumnRedDot) {
-      this._midAutumnRedDot.visible = this._midAutumnBtnWrap.visible
+      this._midAutumnRedDot.visible = !!this._midAutumnBtnWrap?.visible
         && MidAutumnEventManager.hasRedDot;
     }
   }
 
   /** 未达开放等级时隐藏活动入口 */
   updateEventBoardButtonVisibility(): void {
-    const wrap = this._eventBoardBtnWrap;
-    if (!wrap) return;
-    wrap.visible = isJewelryEventUnlocked(CurrencyManager.state.level);
-    if (!wrap.visible && this._eventRedDot) {
-      this._eventRedDot.visible = false;
-    }
+    this._layoutSeasonalEventButtons();
   }
 
   /** 每日挑战红点（由 MainScene 红点刷新或 quest 事件触发） */
@@ -975,16 +982,25 @@ export class TopBar extends PIXI.Container {
 
   /** 首饰活动入口图标在 TopBar 内的中心坐标 */
   getEventBoardIconPos(): { x: number; y: number } {
-    return { x: EVENT_BTN_CX, y: EVENT_BTN_CY };
+    return {
+      x: this._eventBoardBtnWrap?.position.x ?? EVENT_BTN_CX,
+      y: EVENT_BTN_CY,
+    };
   }
 
   /** 清凉一夏入口中心（清凉小扇飞入落点）。 */
   getCoolSummerEventIconPos(): { x: number; y: number } {
-    return { x: COOL_SUMMER_BTN_CX, y: COOL_SUMMER_BTN_CY };
+    return {
+      x: this._coolSummerBtnWrap?.position.x ?? COOL_SUMMER_BTN_CX,
+      y: COOL_SUMMER_BTN_CY,
+    };
   }
 
   getMidAutumnEventIconPos(): { x: number; y: number } {
-    return { x: this._midAutumnBtnX(), y: MID_AUTUMN_BTN_CY };
+    return {
+      x: this._midAutumnBtnWrap?.position.x ?? COOL_SUMMER_BTN_CX,
+      y: MID_AUTUMN_BTN_CY,
+    };
   }
 
   /** @deprecated 花露/星星顶栏已移除，飞入花愿槽位 */

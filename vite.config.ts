@@ -28,6 +28,15 @@ function pixiUnsafeEvalPlugin(): Plugin {
       if (patched !== code) {
         fs.writeFileSync(bundlePath, patched, 'utf8');
         console.log('[pixi-unsafe-eval-patch] Patched systemCheck in bundle');
+        code = patched;
+      }
+      // 微信上传代码质量检测用旧解析器，?? 运算符会报 invalid file / Unexpected token ?
+      // 占位文案 "???" 可保留。
+      const nullish = (code.match(/(?<!\?)\?\?(?!\?)/g) || []).length;
+      if (nullish > 0) {
+        throw new Error(
+          `[wechat-js] game-bundle.js 仍含 ${nullish} 处 ?? 运算符，微信上传会失败。请确认 build.target 低于 es2020。`,
+        );
       }
     },
   };
@@ -46,6 +55,8 @@ export default defineConfig({
   },
   plugins: [pixiUnsafeEvalPlugin()],
   build: {
+    // 微信上传校验不认 ES2020 的 ?? / ?.（invalid file: Unexpected token ?）
+    target: 'es2017',
     outDir: 'minigame',
     assetsInlineLimit: 0,
     lib: {
