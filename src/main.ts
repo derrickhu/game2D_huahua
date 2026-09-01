@@ -94,19 +94,14 @@ if (typeof GameGlobal !== 'undefined') {
   };
 }
 
-const BUILD_TIME = '__BUILD_' + new Date().toISOString().slice(0, 19) + '__';
+// 对齐 xiaochu2：模块加载后立刻换登录态。抖音模拟器要求启动后尽快 tt.login，
+// 拖到 Loading / 棋盘初始化之后再登，经常 success 但没有 code。
+CloudSyncManager.prewarm();
 
 async function main(): Promise<void> {
   try {
-    console.log('[main] 花花妙屋启动中... BUILD:', BUILD_TIME);
-
     // 注意：不再在启动时无条件清除存档！
     // 旧存档的兼容性由 SaveManager 的指纹校验负责处理
-
-    // 环境诊断
-    console.log('[main] typeof document:', typeof document,
-      ', typeof window:', typeof window,
-      ', typeof setTimeout:', typeof setTimeout);
 
     // 获取主屏 canvas
     const canvas = (typeof GameGlobal !== 'undefined' && GameGlobal.canvas)
@@ -117,11 +112,8 @@ async function main(): Promise<void> {
       throw new Error('[main] 无法获取 canvas，请检查 pixi-adapter 是否正确加载');
     }
 
-    console.log('[main] canvas 获取成功, width:', canvas.width, 'height:', canvas.height);
-
     // 初始化游戏
     Game.init(canvas);
-    console.log('[main] Game.init 完成');
 
     // 经分埋点 SDK：在最早的时机初始化即可，此时 SDK 还没拿到 user_id，
     // 入队事件先用 anonymous_id 兜底；登录拿到 openid 后再调 setAnalyticsUserId 触发 LOGIN + flush。
@@ -134,16 +126,6 @@ async function main(): Promise<void> {
     // 玩法事件订阅同样要早 attach，避免错过 board:initialized 之类的早期事件。
     // BoardManager.init / CustomerManager.start 都在 main() 后段才执行，所以现在 attach 不会漏单。
     setupGameplayAnalytics();
-
-    // EventSystem 诊断
-    try {
-      const renderer = (Game as any).app?.renderer;
-      const events = renderer?.events;
-      console.log('[main] EventSystem:', !!events,
-        'domElement:', !!events?.domElement,
-        'supportsPointerEvents:', events?.supportsPointerEvents,
-        'supportsTouchEvents:', events?.supportsTouchEvents);
-    } catch (e) { console.warn('[main] EventSystem 诊断失败:', e); }
 
     const mainLayout = ENABLE_RESPONSIVE_LAYOUT_V2
       ? computeMainSceneLayout(
@@ -159,7 +141,6 @@ async function main(): Promise<void> {
         topReserved: Game.safeTop + 60 + 4 + MainScene.SHOP_HEIGHT,
       };
     computeBoardMetrics(Game.logicHeight, mainLayout.topReserved, 'board' in mainLayout ? mainLayout.board : undefined);
-    console.log(`[main] BoardMetrics 计算完成, logicHeight:${Game.logicHeight}, safeTop:${Game.safeTop}, topReserved:${mainLayout.topReserved}`);
 
     Game.stage.sortableChildren = true;
     const loadingOverlay = new LoadingScreenOverlay();
@@ -271,14 +252,9 @@ async function main(): Promise<void> {
     loadingOverlay.setProgress(1);
 
     // 先等 audio 分包就绪再进主场景，避免 InnerAudioContext 在文件未落地时解码报错
-    if (CdnAssetService.isCdnPath('subpkg_audio/bgm_main.mp3')) {
-      console.log('[main] audio 已 CDN 化，跳过 audio 分包加载');
-    } else {
+    if (!CdnAssetService.isCdnPath('subpkg_audio/bgm_main.mp3')) {
       // 音频缺失不阻断启动，失败只降级为静音
       await Platform.loadSubpackage('audio')
-        .then((result) => {
-          if (result === 'loaded') console.log('[main] audio 分包加载成功');
-        })
         .catch((err) => console.warn('[main] audio 分包加载失败:', err));
     }
 
@@ -287,13 +263,9 @@ async function main(): Promise<void> {
 
     // 初始化棋盘数据
     BoardManager.init();
-    console.log('[main] BoardManager.init 完成');
     EventBoardManager.init();
-    console.log('[main] EventBoardManager.init 完成');
     CoolSummerEventManager.init();
-    console.log('[main] CoolSummerEventManager.init 完成');
     MidAutumnEventManager.init();
-    console.log('[main] MidAutumnEventManager.init 完成');
 
     MergeCompanionManager.init();
 
@@ -323,7 +295,6 @@ async function main(): Promise<void> {
       MerchShopManager.init();
       MerchShopManager.bootstrapFresh();
     }
-    console.log('[main]', loaded ? '存档加载成功' : '无存档，使用默认数据');
     UserIdentityManager.init();
 
     // 星级升档奖励须在首帧 addStar 前就绪（不依赖 MainScene 是否已构建）
@@ -332,18 +303,11 @@ async function main(): Promise<void> {
     FurnitureWorkshopManager.init();
     void WechatGiftManager.syncAndGrant('startup');
 
-    // 再次确认棋盘状态
-    const cells = BoardManager.cells;
-    const hasItems = cells.some(c => c.itemId !== null);
-    const hasFog = cells.some(c => c.state !== 'open');
-    console.log(`[main] 棋盘确认: cells=${cells.length}, hasItems=${hasItems}, hasFog=${hasFog}`);
-
     // 注册场景
     const mainScene = new MainScene();
     const shopScene = new ShopScene();
     SceneManager.register(mainScene);
     SceneManager.register(shopScene);
-    console.log('[main] MainScene + ShopScene 已注册');
 
     // 进入主场景（首帧 UI 已挂到 stage 后再撤掉 Loading，避免中间空窗期浅底色「白屏」）
     SceneManager.switchTo('main');
@@ -363,7 +327,6 @@ async function main(): Promise<void> {
     if (Platform.isMinigame) {
       let lastHideAt = 0;
       Platform.onHide(() => {
-        console.log('[main] 游戏退到后台，保存状态');
         WechatWelfareManager.notifyAppHide();
         IdleManager.onHide();
         SaveManager.save();
@@ -375,7 +338,6 @@ async function main(): Promise<void> {
         lastHideAt = Date.now();
       });
       Platform.onShow(() => {
-        console.log('[main] 游戏回到前台');
         if (MerchShopManager.ensureUpToDate()) {
           SaveManager.save();
         }
@@ -390,8 +352,6 @@ async function main(): Promise<void> {
         }
       });
     }
-
-    console.log('[main] 花花妙屋启动完成 BUILD:', BUILD_TIME);
   } catch (e: any) {
     const errMsg = (e && (e.message || e.errMsg)) || '';
     let raw = '';

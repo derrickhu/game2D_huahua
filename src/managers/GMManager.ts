@@ -1958,7 +1958,6 @@ class GMManagerClass {
         if (sysInfo?.platform === 'devtools') {
           this._enabled = true;
           this._saveState();
-          console.log('[GM]  开发者工具环境，自动激活GM模式');
         }
       } catch (_) {}
     }

@@ -54,9 +54,6 @@ class RoomLayoutPresetManagerClass {
     this._initialized = true;
     this._load();
     EventBus.on('decoration:reset', this._onDecoReset);
-    console.log(
-      `[RoomLayoutPreset] 初始化 scenes=${Object.keys(this._scenes).length}`,
-    );
   }
 
   reloadFromStorage(): void {

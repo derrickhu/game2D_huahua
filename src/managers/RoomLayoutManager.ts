@@ -159,10 +159,6 @@ class RoomLayoutManagerClass {
 
     EventBus.on('decoration:reset', this._onDecoReset.bind(this));
     EventBus.on('renovation:sceneChanged', this._onRenovationSceneChanged);
-
-    console.log(
-      `[RoomLayout] 初始化 scene=${this._layoutActiveSceneId}, ${this._placements.length} 件家具已放置`,
-    );
   }
 
   /** 云同步写入 huahua_room_layout 后重载 */

@@ -1669,9 +1669,7 @@ class TextureCacheClass {
       })
     );
 
-    return Promise.all(promises).then(() => {
-      console.log(`[TextureCache] 主包预加载完成: ${this._cache.size}/${total} 张纹理`);
-    });
+    return Promise.all(promises).then(() => undefined);
   }
 
   /**
@@ -1687,10 +1685,7 @@ class TextureCacheClass {
     };
 
     return this.preloadMain(() => report())
-      .then(() => this._preloadImageMap(CRITICAL_IMAGE_MAP, 'critical', () => report()))
-      .then(() => {
-        console.log(`[TextureCache] 启动关键资源预加载完成: ${loaded}/${criticalTotal}`);
-      });
+      .then(() => this._preloadImageMap(CRITICAL_IMAGE_MAP, 'critical', () => report()));
   }
 
   /** 预加载 chars 图片；当前配置下走 CDN，非 CDN 配置才会加载微信分包。 */
@@ -1786,10 +1781,7 @@ class TextureCacheClass {
     };
 
     return this.preloadCritical(() => wrapProgress())
-      .then(() => this.loadItemsSubpackage(() => wrapProgress()))
-      .then(() => {
-        console.log(`[TextureCache] 启动预加载完成: ${this._cache.size}/${totalKeys} 张关键纹理`);
-      });
+      .then(() => this.loadItemsSubpackage(() => wrapProgress()));
   }
 
   /** 按 key 预热资源；用于场景/面板打开前的 CDN 懒加载补齐 */
@@ -2123,17 +2115,11 @@ class TextureCacheClass {
   }
 
   private async _doLoadSubpackage(name: string): Promise<void> {
-    console.log(`[TextureCache] 开始加载 ${name} 分包...`);
     try {
-      const result = await Platform.loadSubpackage(name, (percent, written, total) => {
-        console.log(`[TextureCache] ${name} 分包下载: ${percent}% (${written}/${total})`);
-      });
+      const result = await Platform.loadSubpackage(name);
       if (result === 'unsupported') {
-        // 非小游戏环境（H5 调试），资源按普通路径直读
-        console.log(`[TextureCache] 非小游戏环境，直接加载 ${name} 分包资源`);
         return;
       }
-      console.log(`[TextureCache] ${name} 分包加载成功`);
     } catch (err) {
       console.error(`[TextureCache] ${name} 分包加载失败:`, err);
       throw err;
@@ -2161,9 +2147,7 @@ class TextureCacheClass {
       })
     );
 
-    return Promise.all(promises).then(() => {
-      console.log(`[TextureCache] ${label} 图片预加载完成: ${loaded}/${total}`);
-    });
+    return Promise.all(promises).then(() => undefined);
   }
 
   /** 加载单张纹理 */

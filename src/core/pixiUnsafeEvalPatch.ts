@@ -25,7 +25,6 @@ if (_api) {
         if (_testCtx) _useOffscreen = true;
       }
     } catch (_) { /* 不支持则回退 */ }
-    console.log('[pixiPatch] createOffscreenCanvas 可用:', _useOffscreen);
 
     const _create2DCanvas = (w?: number, h?: number): any => {
       let c: any;
@@ -70,7 +69,6 @@ if (_api) {
         return Promise.reject(new Error('fetch not available in mini game'));
       }) as any,
     };
-    console.log('[pixiPatch] PIXI.settings.ADAPTER 已配置为小游戏模式');
   } catch (e) {
     console.warn('[pixiPatch] ADAPTER 配置失败:', e);
   }
@@ -147,8 +145,6 @@ Object.assign(ShaderSystem.prototype, {
   },
 });
 
-console.log('[pixiPatch] unsafe-eval patch 已应用');
-
 // ======== 真机 Canvas 纹理 patch ========
 // 微信小游戏真机 gl.texImage2D(canvas) 静默失败，getImageData 返回全黑。
 // 策略：
@@ -158,11 +154,9 @@ const _isRealDevice = (() => {
   try {
     if (!_api) return false;
     const info = _api.getSystemInfoSync();
-    console.log('[pixiPatch] platform:', info.platform, 'brand:', info.brand, 'model:', info.model);
     return info.platform !== 'devtools';
   } catch { return false; }
 })();
-console.log('[pixiPatch] _isRealDevice:', _isRealDevice);
 
 if (_isRealDevice) {
   // ---- 1) 强制用纯像素数据创建 Texture.WHITE ----
@@ -174,7 +168,6 @@ if (_isRealDevice) {
   // WHITE 是 getter 只读属性，必须用 defineProperty 覆盖
   try { Object.defineProperty(Texture, '_WHITE', { value: whiteTex, writable: true, configurable: true }); } catch (_e) { /* */ }
   try { Object.defineProperty(Texture, 'WHITE', { get: () => whiteTex, configurable: true }); } catch (_e) { /* */ }
-  console.log('[pixiPatch] Texture.WHITE 已用 fromBuffer 重建（绕过 Canvas）');
 
   // ---- 2) 真机 Canvas 纹理上传修复 ----
   // 策略：永远先调用原始 upload（确保所有 GL 状态正确、Image 源正常工作），
@@ -199,7 +192,6 @@ if (_isRealDevice) {
       _canReadPixels = td[0] > 200 && td[3] > 200;
     }
   } catch (_) { /* */ }
-  console.log('[pixiPatch] canvas getImageData 可用:', _canReadPixels);
 
   BaseImageResource.prototype.upload = function (
     renderer: any, baseTexture: any, glTexture: any, source?: any,
@@ -237,11 +229,6 @@ if (_isRealDevice) {
               baseTexture.alphaMode > 0 ? 1 : 0);
             gl.texImage2D(gl.TEXTURE_2D, 0, glTexture.internalFormat,
               w, h, 0, baseTexture.format, glTexture.type, pixels);
-
-            if (_uploadLog < 5) {
-              console.log('[pixiPatch] canvas buffer 覆盖成功:', w, 'x', h);
-              _uploadLog++;
-            }
           }
         } catch (e) {
           if (_uploadLog < 10) {
@@ -256,8 +243,6 @@ if (_isRealDevice) {
       _inUpload = false;
     }
   };
-
-  console.log('[pixiPatch] 真机 canvas 纹理上传 patch 已应用');
 }
 
 } // end if !__patched

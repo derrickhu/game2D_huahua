@@ -42,7 +42,7 @@ export function initAnalytics(opts?: { endpoint?: string; userId?: string; debug
   const gameKey = GAME_KEY;
   const deviceInfo = buildDeviceInfo();
   const endpoint = opts?.endpoint || ENDPOINT;
-  const debug = opts?.debug ?? true;
+  const debug = opts?.debug ?? false;
 
   // 开发者工具联调：合成事件全量上报，便于原始事件流验证（线上仍走 SDK 默认 10% 采样）
   const samplingRules: Record<string, number> = {
@@ -53,10 +53,6 @@ export function initAnalytics(opts?: { endpoint?: string; userId?: string; debug
   if (Platform.isDevtools) {
     samplingRules.merge_success = 1.0;
   }
-
-  console.log(
-    `[analytics] init endpoint=${endpoint}, gameKey=${gameKey}, platform=${platformName}, debug=${debug}, devtools=${Platform.isDevtools}`,
-  );
 
   Analytics.init({
     endpoint,
@@ -77,12 +73,6 @@ export function initAnalytics(opts?: { endpoint?: string; userId?: string; debug
   });
 
   inited = true;
-
-  if (Platform.isDevtools) {
-    console.info(
-      '[analytics] 开发者工具内 wx.request 可能报 request:fail（域名/网络限制），属经分上报通道，不影响玩法；真机 + 合法域名配置后应正常。',
-    );
-  }
 }
 
 /**
@@ -92,7 +82,6 @@ export function initAnalytics(opts?: { endpoint?: string; userId?: string; debug
  */
 export function setAnalyticsUserId(userId: string): void {
   if (!inited) return;
-  console.log(`[analytics] setUserId ${userId ? 'ok' : 'empty'}`);
   Analytics.setUserId(userId || '');
 }
 

@@ -1,0 +1,42 @@
+{
+  "description": "花花妙屋 · 微信。用微信开发者工具打开 build/wechat/（或仓库根目录）",
+  "projectname": "huahua",
+  "appid": "wx67b4d58810df8bba",
+  "compileType": "game",
+  "libVersion": "3.12.1",
+  "setting": {
+    "es6": true,
+    "minified": true,
+    "urlCheck": false,
+    "compileHotReLoad": true
+  },
+  "packOptions": {
+    "ignore": [
+      {
+        "type": "folder",
+        "value": "subpkg_chars/images"
+      },
+      {
+        "type": "folder",
+        "value": "subpkg_panels/images"
+      },
+      {
+        "type": "folder",
+        "value": "subpkg_deco/images"
+      },
+      {
+        "type": "folder",
+        "value": "subpkg_audio"
+      },
+      {
+        "type": "file",
+        "value": "project.config.json"
+      },
+      {
+        "type": "file",
+        "value": "project.private.config.json"
+      }
+    ],
+    "include": []
+  }
+}

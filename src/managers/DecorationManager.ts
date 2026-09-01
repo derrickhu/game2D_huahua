@@ -71,7 +71,6 @@ class DecorationManagerClass {
     DecoNewUnlockManager.init();
     this._initRoomStyleDefaults();
     this._load();
-    console.log(`[Decoration] 初始化: ${this._unlocked.size} 个装饰已解锁, 房间风格: ${this._roomStyleId}`);
   }
 
   /** 云同步写入 huahua_decoration 后重载（勿调用 _initRoomStyleDefaults，避免清空已解锁房壳） */

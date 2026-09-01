@@ -114,11 +114,6 @@ class BoardManagerClass {
       }
     }
 
-    const finalItemCount = this.cells.filter(c => c.itemId).length;
-    const openCount = this.cells.filter(c => c.state === CellState.OPEN).length;
-    const fogCount = this.cells.filter(c => c.state === CellState.FOG).length;
-    console.log(`[Board] init 完成: ${this.cells.length} 格, ${openCount} OPEN, ${fogCount} FOG, ${finalItemCount} 有物品, ITEM_DEFS.size=${ITEM_DEFS.size}`);
-
     EventBus.emit('board:initialized');
   }
 
@@ -646,10 +641,6 @@ class BoardManagerClass {
         cell.luckyCoinConsumed = saved.luckyCoinConsumed === true;
       }
     }
-
-    const openCells = this.cells.filter(c => c.state === CellState.OPEN);
-    const itemCount = openCells.filter(c => c.itemId).length;
-    console.log(`[Board] loadState 完成: ${openCells.length} OPEN, ${itemCount} 有物品`);
 
     EventBus.emit('board:loaded');
   }

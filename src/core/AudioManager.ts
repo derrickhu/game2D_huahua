@@ -223,7 +223,6 @@ class AudioManagerClass {
         this._bgmOriginalSrc = null;
       });
       this._bgm.onPlay(() => {
-        console.log(TAG, `BGM "${originalSrc}" 开始播放`);
         this._bgmPending = null;
       });
 
@@ -231,7 +230,6 @@ class AudioManagerClass {
         if (this._musicMuted || !this._bgm) return;
         try {
           this._bgm.play();
-          console.log(TAG, `BGM "${originalSrc}" 尝试播放...`);
         } catch (e) {
           console.warn(TAG, `BGM play():`, e);
         }
@@ -240,7 +238,6 @@ class AudioManagerClass {
       if (typeof this._bgm.onCanplay === 'function') {
         this._bgm.onCanplay(() => tryPlayBgm());
       }
-      console.log(TAG, `BGM "${originalSrc}" resolved src: ${resolvedSrc}`);
       this._bgm.src = resolvedSrc;
       if (!this._musicMuted) {
         setTimeout(tryPlayBgm, typeof this._bgm.onCanplay === 'function' ? 300 : 0);
@@ -257,12 +254,10 @@ class AudioManagerClass {
    */
   resumeOnInteraction(): void {
     if (this._bgmPending && !this._bgm) {
-      console.log(TAG, '用户交互后重试 BGM...');
       this.playBGM(this._bgmPending.src, this._bgmPending.volume);
       return;
     }
     if (this._bgm && this._bgmPending) {
-      console.log(TAG, '用户交互后恢复 BGM...');
       if (!this._musicMuted) {
         try { this._bgm.play(); } catch (_) {}
       }

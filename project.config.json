@@ -24,7 +24,7 @@
     "disableSWC": true
   },
   "compileType": "game",
-  "miniprogramRoot": "minigame/",
+  "miniprogramRoot": "build/wechat/",
   "cloudfunctionRoot": "cloudfunctions/",
   "simulatorPluginLibVersion": {},
   "packOptions": {
@@ -60,5 +60,7 @@
   "isGameTourist": false,
   "appid": "wx67b4d58810df8bba",
   "editorSetting": {},
-  "libVersion": "3.12.1"
+  "libVersion": "3.12.1",
+  "description": "花花妙屋。请先 npm run build，微信工具打开 build/wechat/（或本仓库根目录）。抖音工具打开 build/douyin/。",
+  "projectname": "huahua"
 }

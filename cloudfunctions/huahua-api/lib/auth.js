@@ -38,7 +38,7 @@ async function handleLogin(req) {
   if (platform === 'wx') {
     platformUid = await wxCode2Openid(body.code);
   } else if (platform === 'dy') {
-    platformUid = await ttCode2Openid(body.code);
+    platformUid = await ttCode2Openid(body.code, body.anonymousCode);
   } else if (platform === 'tap') {
     const id = String(body.taptapUserId || '').trim();
     if (!id) throw httpError(400, 'NO_TAP_ID', 'taptapUserId 缺失');
@@ -120,15 +120,20 @@ async function wxCode2Openid(code) {
   return data.openid;
 }
 
-async function ttCode2Openid(code) {
+async function ttCode2Openid(code, anonymousCode) {
   // 同 wxCode2Openid，抖音这组 env 也统一加游戏前缀，避免平台保留字冲突。
   const appid = process.env.HUAHUA_TT_APPID || process.env.TT_APPID;
   const secret = process.env.HUAHUA_TT_SECRET || process.env.TT_SECRET;
   if (!appid || !secret) throw httpError(500, 'NO_TT_CFG', 'HUAHUA_TT_APPID/HUAHUA_TT_SECRET 未配置');
-  if (!code) throw httpError(400, 'NO_CODE', 'dy code 缺失');
+  const loginCode = String(code || '').trim();
+  const anonCode = String(anonymousCode || '').trim();
+  if (!loginCode && !anonCode) throw httpError(400, 'NO_CODE', 'dy code 缺失');
 
   const url = 'https://developer.toutiao.com/api/apps/v2/jscode2session';
-  const data = await httpPostJson(url, { appid, secret, code });
+  const payload = { appid, secret };
+  if (loginCode) payload.code = loginCode;
+  if (anonCode) payload.anonymous_code = anonCode;
+  const data = await httpPostJson(url, payload);
   // 抖音返回结构：{ err_no, err_tips, data: { openid, session_key, ... } }
   if (!data || data.err_no !== 0 || !data.data || !data.data.openid) {
     throw httpError(401, 'TT_LOGIN_FAIL', `dy code2session 失败: ${JSON.stringify(data || {})}`);

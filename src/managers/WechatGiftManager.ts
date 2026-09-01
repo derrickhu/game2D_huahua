@@ -28,6 +28,7 @@ class WechatGiftManagerClass {
 
   async syncAndGrant(reason = 'manual'): Promise<WechatGiftSyncResult> {
     const empty = { granted: false, count: 0 };
+    if (!Platform.isWechat) return empty;
     if (!TutorialManager.isCompleted) return empty;
     if (this._syncing || !BackendService.available) return empty;
     this._syncing = true;

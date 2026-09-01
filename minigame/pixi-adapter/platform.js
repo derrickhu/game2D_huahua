@@ -1,11 +1,11 @@
 /**
  * 平台抽象层 - 统一微信/抖音小游戏 API
- * 所有 adapter 模块通过此模块调用平台 API，不直接写 wx.xxx 或 tt.xxx
+ * 宿主识别与 src/core/platformDetect.ts / runtime.js 一致：先判 tt，避免抖音误用 wx 兼容层
  */
 
-const _isWechat = typeof wx !== 'undefined';
-const _isDouyin = typeof tt !== 'undefined';
-const _api = _isWechat ? wx : _isDouyin ? tt : null;
+const { detectMinigamePlatform, getNativePlatformApi } = require('../runtime.js');
+const _platformName = detectMinigamePlatform();
+const _api = getNativePlatformApi(_platformName);
 
 if (!_api) {
   console.error('[platform] 未检测到小游戏运行环境（wx/tt）');
@@ -22,16 +22,6 @@ function _safeCall(fn, fallback) {
 }
 
 const noop = function() {};
-
-function _safeLogValue(v) {
-  if (v == null) return '';
-  try { return String(v); } catch (_) { return '[unstringifiable]'; }
-}
-
-function _shortUrl(url) {
-  const s = _safeLogValue(url);
-  return s.length > 220 ? s.slice(0, 220) + '...' : s;
-}
 
 function _sanitizeRequestOptions(opts) {
   const out = {
@@ -87,9 +77,6 @@ const platform = {
   request: (opts) => {
     if (!_api) return null;
     const clean = _sanitizeRequestOptions(opts || {});
-    try {
-      console.log('[platform.request]', clean.method, _shortUrl(clean.url), 'responseType=' + (clean.responseType || ''), 'dataType=' + (clean.dataType || ''));
-    } catch (_) {}
     return _api.request(clean);
   },
   downloadFile: (opts) => {
@@ -106,7 +93,6 @@ const platform = {
     }
     if (opts && typeof opts.complete === 'function') clean.complete = opts.complete;
     if (opts && opts.timeout) clean.timeout = Number(opts.timeout);
-    try { console.log('[platform.downloadFile]', _shortUrl(clean.url)); } catch (_) {}
     return _api.downloadFile(clean);
   },
   getFileSystemManager: () => _api && _api.getFileSystemManager ? _api.getFileSystemManager() : null,
@@ -123,7 +109,7 @@ const platform = {
 
   createInnerAudioContext: () => _api && _api.createInnerAudioContext ? _api.createInnerAudioContext() : null,
 
-  name: _isWechat ? 'wechat' : _isDouyin ? 'douyin' : 'unknown',
+  name: _platformName,
   api: _api,
 };
 

@@ -34,7 +34,6 @@ class SocialManagerClass {
   init(): void {
     this._loadState();
     this._setupShareMenu();
-    console.log(`[Social] 初始化完成`);
   }
 
   /**

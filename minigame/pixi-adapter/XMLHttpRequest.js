@@ -27,7 +27,6 @@ function _dataKind(v) {
 
 function _xhrLog(id, stage, info) {
   const line = '[XHR#' + id + '] ' + stage + (info ? ' ' + info : '');
-  try { console.log(line); } catch (_) {}
   try {
     const g = typeof GameGlobal !== 'undefined' ? GameGlobal : (typeof globalThis !== 'undefined' ? globalThis : null);
     if (g) {

@@ -289,8 +289,6 @@ class SaveManagerClass {
       MerchShopManager.init();
       MerchShopManager.loadState(data.merchShop);
       FlowerSignTicketManager.loadState(data.flowerSignTickets);
-
-      console.log('[Save] 读档成功, 距上次存档:', Math.round((Date.now() - data.timestamp) / 1000), '秒');
       return true;
     } catch (e) {
       console.error('[Save] 读档失败:', e);

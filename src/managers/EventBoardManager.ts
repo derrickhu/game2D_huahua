@@ -157,7 +157,6 @@ class EventBoardManagerClass {
       this._resetStage(this._stageIndex, false);
     }
     this._bindEvents();
-    console.log(`[EventBoard] 初始化完成: ${JEWELRY_EVENT_NAME}, stage=${this.currentStage.name}`);
   }
 
   private _bindEvents(): void {

@@ -173,16 +173,27 @@ class BackendServiceClass {
     return stored;
   }
 
-  private async _buildLoginBody(): Promise<{ platform: string; code?: string; anonId?: string }> {
+  private async _buildLoginBody(): Promise<{
+    platform: string;
+    code?: string;
+    anonymousCode?: string;
+    anonId?: string;
+  }> {
     if (Platform.isWechat) {
-      const code = await Platform.loginCode();
-      if (!code) throw new BackendError(0, 'NO_WX_CODE', 'wx.login 未返回 code');
-      return { platform: 'wx', code };
+      const creds = await Platform.loginCredentials();
+      if (!creds.code) throw new BackendError(0, 'NO_WX_CODE', 'wx.login 未返回 code');
+      return { platform: 'wx', code: creds.code };
     }
     if (Platform.isDouyin) {
-      const code = await Platform.loginCode();
-      if (!code) throw new BackendError(0, 'NO_TT_CODE', 'tt.login 未返回 code');
-      return { platform: 'dy', code };
+      const creds = await Platform.loginCredentials();
+      if (!creds.code && !creds.anonymousCode) {
+        throw new BackendError(0, 'NO_TT_CODE', 'tt.login 未返回 code');
+      }
+      return {
+        platform: 'dy',
+        code: creds.code || undefined,
+        anonymousCode: creds.anonymousCode || undefined,
+      };
     }
     // H5 / 其他 -> 匿名
     const anonId = this._getOrCreateAnonId();

@@ -77,9 +77,6 @@ export function computeBoardMetrics(
   BoardMetrics.paddingX = next.paddingX;
   BoardMetrics.topY = next.topY;
   BoardMetrics.areaHeight = next.areaHeight;
-
-  const gridWidth = BoardMetrics.cellSize * BOARD_COLS + CELL_GAP * (BOARD_COLS - 1);
-  console.log(`[Board] 响应式布局: cellSize=${BoardMetrics.cellSize}, topY=${BoardMetrics.topY}, topReserved=${topReserved}, paddingX=${BoardMetrics.paddingX}, area=${gridWidth}x${BoardMetrics.areaHeight}`);
 }
 
 // 客人（实际上限随星级等级变化，见 OrderTierConfig.getDynamicMaxCustomers，封顶 6）

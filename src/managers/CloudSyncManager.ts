@@ -77,7 +77,6 @@ class CloudSyncManagerClass {
       return;
     }
     if (!this._startupPromise) {
-      console.log('[CloudSync] prewarm 开始初始化');
       this._startupPromise = this._initialize();
     }
   }
@@ -178,7 +177,6 @@ class CloudSyncManagerClass {
 
     this._initPromise = (async () => {
       try {
-        console.log('[CloudSync] 初始化中... platform:', Platform.name);
         await BackendService.ensureToken();
         this._cloudReady = !!BackendService.userId;
 
@@ -331,9 +329,6 @@ class CloudSyncManagerClass {
         if (this._syncFailCount > 0) {
           console.log('[CloudSync] 云同步恢复成功');
         }
-        console.log(
-          `[CloudSync] 云端已同步 reason=${reason}, keys=${finalSnapshot.payloadKeys.length}, size=${res.sizeBytes ?? finalSnapshot.sizeBytes}B`,
-        );
 
         this._syncFailCount = 0;
         this._syncDisabled = false;
@@ -412,9 +407,8 @@ class CloudSyncManagerClass {
     console.warn(`[CloudSync] 进入 cacheOnly，本地仅作缓存，禁止上行 reason=${reason}`);
   }
 
-  private _confirmRemoteBaseline(remoteUpdatedAt: number, reason: string): void {
+  private _confirmRemoteBaseline(_remoteUpdatedAt: number, _reason: string): void {
     this._authorityState = 'confirmedRemote';
-    console.log(`[CloudSync] 云端基准已确认 reason=${reason}, remoteUpdatedAt=${remoteUpdatedAt}`);
   }
 }
 

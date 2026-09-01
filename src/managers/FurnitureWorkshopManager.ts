@@ -101,9 +101,6 @@ class FurnitureWorkshopManagerClass {
     this._bootstrapShopCatalogSeenIfNeeded();
     this._migrateShopCatalogSeenIfNeeded();
     this._save();
-    console.log(
-      `[FurnitureWorkshop] 初始化: 图纸 ${this._blueprints.size}, 材料 ${this._workshopMaterial}, 粉染 ${this._workshopDyePink}, 黄染 ${this._workshopDyeYellow}, 蓝染 ${this._workshopDyeBlue}, 绿染 ${this._workshopDyeGreen}, 已制作 ${this._craftedVariants.size}`,
-    );
   }
 
   reloadFromStorage(): void {

@@ -127,7 +127,6 @@ class AdManagerClass {
     // 微信开发者工具的广告桥接偶发 operateWXDataForAd / object clone 系统错误。
     // 本地联调统一模拟成功，真机仍走真实广告位。
     if (Platform.isDevtools) {
-      console.log('[AdManager] 微信开发者工具环境，激励视频使用开发模式模拟');
       this._devMode = true;
       this._adConfig = config;
       return;
@@ -146,15 +145,10 @@ class AdManagerClass {
     // 创建插屏广告
     this._interstitialAd = Platform.createInterstitialAd(config.interstitial);
     if (this._interstitialAd) {
-      this._interstitialAd.onLoad(() => {
-        console.log('[AdManager] 插屏广告加载成功');
-      });
       this._interstitialAd.onError((err: any) => {
         console.warn('[AdManager] 插屏广告错误:', err?.errMsg || err?.message || String(err));
       });
     }
-
-    console.log(`[AdManager] 初始化完成, 平台=${Platform.name}, devMode=${this._devMode}`);
   }
 
   /** 是否可以展示激励视频 */

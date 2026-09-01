@@ -30,8 +30,6 @@ class SceneManagerClass {
   }
 
   switchTo(name: string): void {
-    console.log(`[SceneManager] switchTo("${name}") Game.uid=${(Game as any)._uid}, stage=${!!Game.stage}`);
-
     const nextScene = this._scenes.get(name);
     if (!nextScene) {
       console.error(`[SceneManager] 场景 "${name}" 未注册`);
@@ -69,8 +67,6 @@ class SceneManagerClass {
 
     // 确保全局覆盖层（弹窗面板）始终在场景之上
     this._bringOverlayToFront();
-
-    console.log(`[SceneManager] 切换到场景: ${name}`);
   }
 
   get current(): Scene | null {
@@ -81,9 +77,6 @@ class SceneManagerClass {
   private _bringOverlayToFront(): void {
     try {
       OverlayManager.bringToFront();
-      // 调试：打印 stage 子元素顺序
-      const stageChildren = Game.stage.children.map((c: any) => c.constructor?.name || 'Container');
-      console.log(`[SceneManager] bringToFront 完成, stage 子元素顺序: [${stageChildren.join(', ')}]`);
     } catch (e) {
       console.warn('[SceneManager] bringToFront 失败:', e);
     }

@@ -39,7 +39,6 @@ class FlowerCardManagerClass {
   init(): void {
     this._loadState();
     this._bindEvents();
-    console.log(`[FlowerCard] 初始化完成, 已收集 ${this._cards.size}/${FLOWER_CARD_TRACKED_TOTAL} 张花语卡片`);
   }
 
   private _bindEvents(): void {

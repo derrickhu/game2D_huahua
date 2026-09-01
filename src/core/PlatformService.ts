@@ -156,11 +156,9 @@ class PlatformServiceClass {
     };
     const timeoutMs = opts.timeoutMs && opts.timeoutMs > 0 ? opts.timeoutMs : 10000;
 
-    // 微信开发者工具的 wx.request 底层会走一层内部 XMLHttpRequest 桥接。
-    // 在部分基础库版本里，即使请求成功，也会额外打印 "An object could not be cloned"。
-    // 工具环境优先使用 fetch，可绕过这层 DevTools 内部 XHR；真机仍使用 wx.request。
-    if (this._isDevtools() && typeof (globalThis as any).fetch === 'function') {
-      console.log(`[Platform.request] devtools fetch transport ${method} ${opts.url}`);
+    // 仅微信开发者工具走 fetch：wx.request 在部分基础库会误报 "An object could not be cloned"。
+    // 抖音模拟器必须走 tt.request，和 xiaochu2 一样；fetch 在 tt 环境经常拿不到登录/云同步。
+    if (this.isWechat && this._isDevtools() && typeof (globalThis as any).fetch === 'function') {
       return this._requestViaFetch(opts.url, method, opts.data, headers, timeoutMs);
     }
     if (this._api && typeof this._api.request === 'function') {
@@ -193,7 +191,6 @@ class PlatformServiceClass {
       }, timeoutMs);
 
       try {
-        console.log(`[Platform.request#${requestId}] ${method} ${url}, data=${requestData ? String(requestData).length : 0}B`);
         this._api.request({
           url,
           method,
@@ -204,9 +201,6 @@ class PlatformServiceClass {
             if (done) return;
             done = true;
             clearTimeout(timer);
-            console.log(
-              `[Platform.request#${requestId}] success ${method} ${url}, status=${res?.statusCode ?? 0}, cost=${Date.now() - startedAt}ms`,
-            );
             resolve({
               statusCode: res?.statusCode ?? 0,
               data: res?.data,
@@ -277,7 +271,6 @@ class PlatformServiceClass {
       init.body = typeof data === 'string' ? data : JSON.stringify(data);
     }
 
-    console.log(`[Platform.fetch] ${method} ${url}, data=${init.body ? String(init.body).length : 0}B`);
     return fetchFn(url, init).then(async (res) => {
       if (timer) clearTimeout(timer);
       const text = await res.text();
@@ -289,7 +282,6 @@ class PlatformServiceClass {
           parsed = text;
         }
       }
-      console.log(`[Platform.fetch] success ${method} ${url}, status=${res.status}`);
       return { statusCode: res.status, data: parsed };
     }).catch((e) => {
       if (timer) clearTimeout(timer);
@@ -333,26 +325,48 @@ class PlatformServiceClass {
   }
 
   /**
-   * 平台登录换 code：
-   *   微信 -> wx.login({ success: { code } })
-   *   抖音 -> tt.login({ success: { code } })
-   *   其他 -> 返回 ''（上层走匿名路径）
+   * 平台登录凭证：
+   *   微信 -> wx.login → code
+   *   抖音 -> tt.login({ force: true }) → code，未登录时也可能只有 anonymousCode
    */
-  loginCode(): Promise<string> {
+  loginCredentials(): Promise<{ code: string; anonymousCode: string }> {
     return new Promise((resolve) => {
+      const empty = { code: '', anonymousCode: '' };
       if (!this._api || typeof this._api.login !== 'function') {
-        resolve('');
+        console.warn(`[Platform] login 不可用 platform=${this.name}`);
+        resolve(empty);
         return;
       }
       try {
         this._api.login({
-          success: (res: any) => resolve(res?.code || ''),
-          fail: () => resolve(''),
+          force: this.isDouyin,
+          success: (res: any) => {
+            const code = String(res?.code || '');
+            const anonymousCode = String(res?.anonymousCode || '');
+            if (!code && !anonymousCode) {
+              console.warn(`[Platform] login 成功但无 code platform=${this.name}`, res);
+            } else {
+              console.log(
+                `[Platform] login ok platform=${this.name} hasCode=${!!code} hasAnonymous=${!!anonymousCode} isLogin=${res?.isLogin}`,
+              );
+            }
+            resolve({ code, anonymousCode });
+          },
+          fail: (err: any) => {
+            console.warn(`[Platform] login 失败 platform=${this.name}`, err);
+            resolve(empty);
+          },
         });
-      } catch (_) {
-        resolve('');
+      } catch (err) {
+        console.warn(`[Platform] login 抛错 platform=${this.name}`, err);
+        resolve(empty);
       }
     });
+  }
+
+  /** 兼容旧调用：优先正式 code，抖音可回落到 anonymousCode */
+  loginCode(): Promise<string> {
+    return this.loginCredentials().then((creds) => creds.code || creds.anonymousCode);
   }
 
   // ═══════════════ 系统信息 ═══════════════

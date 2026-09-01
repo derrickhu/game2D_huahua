@@ -1,5 +1,5 @@
 {
-  "description": "抖音小游戏工程配置。抖音开发者工具请直接打开本 minigame/ 目录；微信开发者工具仍打开仓库根目录（根 project.config.json 的 miniprogramRoot 指向此处）。",
+  "description": "花花妙屋 · 抖音。用抖音开发者工具打开 build/douyin/，不要再开 minigame/",
   "appid": "ttdcecaa51428b884502",
   "projectname": "huahua",
   "compileType": "game",
@@ -8,7 +8,8 @@
     "es6": true,
     "minified": true,
     "autoAudits": false,
-    "urlCheck": true
+    "urlCheck": true,
+    "compileHotReload": true
   },
   "packOptions": {
     "ignore": [
@@ -30,5 +31,11 @@
       }
     ],
     "include": []
+  },
+  "condition": {
+    "game": {
+      "current": -1,
+      "list": []
+    }
   }
 }

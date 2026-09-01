@@ -153,7 +153,6 @@ class EventManagerClass {
     this._loadState();
     this._checkEventStatus();
     this._bindEvents();
-    console.log(`[EventManager] 初始化完成, 活动: ${this._activeEvent?.name || '无'}, 积分: ${this._points}`);
   }
 
   private _unbindEvents(): void {

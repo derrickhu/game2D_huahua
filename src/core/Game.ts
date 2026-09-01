@@ -15,6 +15,7 @@ import {
   type ViewportLayout,
   type ViewportMetrics,
 } from '@/config/ResponsiveLayout';
+import { getNativePlatformApi } from '@/core/platformDetect';
 
 /* ---- @pixi/unsafe-eval 内联 patch ---- */
 
@@ -88,7 +89,6 @@ function ensureUnsafeEvalPatch(): void {
       patchedSyncUniforms(group, self.shader.program.uniformData, glProgram.uniformData, group.uniforms, self.renderer);
     },
   });
-  console.log('[Game] unsafe-eval patch 已应用');
 }
 
 // 立即执行一次（模块加载时）
@@ -139,7 +139,6 @@ class GameClass {
     // 预初始化 stage/ticker，保证任何时刻访问都不为 undefined
     this.stage = new PIXI.Container();
     this.ticker = new PIXI.Ticker();
-    console.log(`[Game] GameClass 构造, uid=${this._uid}`);
   }
 
   init(canvas: any): void {
@@ -188,7 +187,6 @@ class GameClass {
       this.stage = app.stage;
       this.ticker = app.ticker;
       renderer = app.renderer;
-      console.log('[Game] 方式1: PIXI.Application 创建成功');
     } else {
       if (app) {
         console.warn('[Game] Application 已创建但不完整',
@@ -210,7 +208,6 @@ class GameClass {
             preserveDrawingBuffer: true,
             preferWebGLVersion: 1,
           } as any);
-          console.log('[Game] 方式2: new PIXI.Renderer 创建成功');
         } catch (e2) {
           console.error('[Game] new PIXI.Renderer 失败:', e2);
         }
@@ -229,7 +226,6 @@ class GameClass {
             preserveDrawingBuffer: true,
             preferWebGLVersion: 1,
           } as any);
-          console.log('[Game] 方式3: autoDetectRenderer 创建成功');
         } catch (e3) {
           console.error('[Game] autoDetectRenderer 失败:', e3);
         }
@@ -287,13 +283,11 @@ class GameClass {
           point.x = ((x - (rect.left || 0)) * (dom.width / rect.width)) * resMul;
           point.y = ((y - (rect.top || 0)) * (dom.height / rect.height)) * resMul;
         };
-        console.log('[Game] EventSystem.mapPositionToPoint 已修复');
       }
     } catch (e) { console.warn('[Game] EventSystem patch 失败:', e); }
 
     this._initialized = true;
     this._bindViewportResize();
-    console.log(`[Game] 初始化完成: uid=${this._uid}, viewport=${this.screenWidth}x${this.screenHeight}, canvas=${realWidth}x${realHeight}, scale=${this.scale.toFixed(2)}, dpr=${this.dpr}, safeTop=${this.safeTop}, safeBottom=${this.safeBottom}, stage=${!!this.stage}`);
   }
 
   /** 监听可用窗口变化。返回取消监听函数。 */
@@ -338,7 +332,6 @@ class GameClass {
     }
     this.stage.scale.set(this.scale, this.scale);
     this.stage.position.set(this.contentOffsetX * this.dpr, this.contentOffsetY * this.dpr);
-    console.log(`[Game] viewport 已更新: ${this.screenWidth}x${this.screenHeight}, safeTop=${this.safeTop}, safeBottom=${this.safeBottom}`);
     for (const listener of [...this._viewportListeners]) {
       try { listener(); } catch (e) { console.warn('[Game] viewport listener 失败:', e); }
     }
@@ -365,8 +358,7 @@ class GameClass {
   }
 
   private _readViewportMetrics(resizeInfo?: any): ViewportMetrics {
-    const globals = globalThis as any;
-    const api: any = globals.wx ?? globals.tt ?? null;
+    const api: any = getNativePlatformApi();
     let sysInfo: any = null;
     let windowInfo: any = null;
     let capsule: any = null;
@@ -411,8 +403,7 @@ class GameClass {
 
   private _bindViewportResize(): void {
     if (!ENABLE_RESPONSIVE_LAYOUT_V2) return;
-    const globals = globalThis as any;
-    const api: any = globals.wx ?? globals.tt ?? null;
+    const api: any = getNativePlatformApi();
     const schedule = (info?: any): void => {
       if (this._resizeTimer) clearTimeout(this._resizeTimer);
       this._resizeTimer = setTimeout(() => {

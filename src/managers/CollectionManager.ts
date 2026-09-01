@@ -44,7 +44,6 @@ class CollectionManagerClass {
     this._loadState();
     this._bindEvents();
     this._syncOpenBoardDiscoveries();
-    console.log(`[Collection] 初始化完成, 总收集: ${this.totalDiscovered}/${this.totalCount}`);
   }
 
   private _syncOpenBoardDiscoveries(): void {

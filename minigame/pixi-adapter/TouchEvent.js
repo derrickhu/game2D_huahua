@@ -131,21 +131,7 @@ function registerTouchEvents() {
     }
   }
 
-  // 诊断：3秒后输出已注册的 canvas 事件监听器类型
-  setTimeout(function() {
-    console.log('[TouchEvent] canvas listeners:', Object.keys(_listeners).join(', ') || '(空)');
-  }, 3000);
-
-  var _touchLogCount = 0;
-
   platform.onTouchStart((e) => {
-    _touchLogCount++;
-    if (_touchLogCount <= 5) {
-      var t = (e.changedTouches || e.touches || [])[0];
-      console.log('[Touch] down #' + _touchLogCount,
-        'x:', t && t.clientX, 'y:', t && t.clientY,
-        'canvasListeners:', Object.keys(_listeners).join(','));
-    }
     dispatch('touchstart', e);
     dispatchPointer('pointerdown', e);
     // window 上也需要收到 pointerdown
@@ -156,19 +142,12 @@ function registerTouchEvents() {
     }
   });
 
-  var _moveLogCount = 0;
   platform.onTouchMove((e) => {
     dispatch('touchmove', e);
     dispatchPointer('pointermove', e);
     var touches = e.changedTouches || e.touches || [];
     if (touches.length) {
       var t = touches[0];
-      _moveLogCount++;
-      if (_moveLogCount <= 3) {
-        console.log('[Touch] move #' + _moveLogCount,
-          'x:', t.clientX, 'y:', t.clientY,
-          'windowListeners(pointermove):', typeof GameGlobal.__windowDispatchEvent);
-      }
       dispatchToWindow('pointermove', createPointerEvent('pointermove', t, 1));
     }
   });
@@ -274,9 +253,6 @@ function registerTouchEvents() {
     try { Object.defineProperty(canvas, 'parentNode', { value: fakeParent, configurable: true, writable: true }); } catch (e2) {}
   }
 
-  // 诊断：确认 parentElement 是否设置成功
-  console.log('[TouchEvent] canvas.parentElement set:', !!canvas.parentElement,
-    ', getBoundingClientRect:', typeof canvas.getBoundingClientRect);
 }
 
 module.exports = { TouchEvent, registerTouchEvents };

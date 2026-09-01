@@ -37,7 +37,6 @@ class DressUpManagerClass {
   init(): void {
     this._unlocked.add('outfit_default');
     this._loadState();
-    console.log(`[DressUp] 初始化完成，解锁 ${this._unlocked.size}/${DRESSUP_PANEL_OUTFITS.length} 套形象，当前穿戴: ${this._equippedId}`);
   }
 
   /** 获取全部形象（附带解锁/穿戴状态） */

@@ -1,3 +1,4 @@
+// 开发者工具请打开 build/wechat/ 或 build/douyin/，不要直接打开本目录。
 // 最早加载：宿主识别 + 抖音隐私兜底（须在 pixi-adapter / game-bundle 之前）
 var _runtime = require('./runtime.js');
 var _nativeApi = _runtime.getNativePlatformApi();
@@ -8,9 +9,7 @@ var _diagMsgs = [];
 var _diagStart = Date.now();
 function _diag(msg) {
   var ts = Date.now() - _diagStart;
-  var line = '[' + ts + 'ms] ' + msg;
-  _diagMsgs.push(line);
-  try { console.log(line); } catch(_) {}
+  _diagMsgs.push('[' + ts + 'ms] ' + msg);
 }
 
 function _dumpRecentXhr(reason) {
