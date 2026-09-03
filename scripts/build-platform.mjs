@@ -60,15 +60,32 @@ function cleanStale(dir) {
 }
 
 function inheritAppid(outConfigPath, freshConfig) {
-  if (freshConfig.appid) return { config: freshConfig, inherited: null };
-  if (!fs.existsSync(outConfigPath)) return { config: freshConfig, inherited: null };
-  try {
-    const prev = JSON.parse(fs.readFileSync(outConfigPath, 'utf8'));
-    if (!prev.appid) return { config: freshConfig, inherited: null };
-    return { config: { ...freshConfig, appid: prev.appid }, inherited: prev.appid };
-  } catch {
-    return { config: freshConfig, inherited: null };
+  let existing = {};
+  if (fs.existsSync(outConfigPath)) {
+    try {
+      existing = JSON.parse(fs.readFileSync(outConfigPath, 'utf8'));
+    } catch {
+      existing = {};
+    }
   }
+  const inherited = !freshConfig.appid && existing.appid ? existing.appid : null;
+  const config = {
+    ...existing,
+    ...freshConfig,
+    setting: {
+      ...(existing.setting || {}),
+      ...(freshConfig.setting || {}),
+    },
+    appid: freshConfig.appid || existing.appid || '',
+  };
+  // 独立打开 build/wechat 时不能带根目录的 miniprogramRoot，否则会去找 build/wechat/build/wechat
+  if (!Object.prototype.hasOwnProperty.call(freshConfig, 'miniprogramRoot')) {
+    delete config.miniprogramRoot;
+  }
+  if (!Object.prototype.hasOwnProperty.call(freshConfig, 'cloudfunctionRoot')) {
+    delete config.cloudfunctionRoot;
+  }
+  return { config, inherited };
 }
 
 function contentLooksCopied(out) {

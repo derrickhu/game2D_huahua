@@ -61,6 +61,6 @@
   "appid": "wx67b4d58810df8bba",
   "editorSetting": {},
   "libVersion": "3.12.1",
-  "description": "花花妙屋。请先 npm run build，微信工具打开 build/wechat/（或本仓库根目录）。抖音工具打开 build/douyin/。",
+  "description": "花花妙屋。请先 npm run build。微信开发者工具请打开本仓库根目录（不要再单独导入 build/wechat，会变成另一个工程）。抖音工具打开 build/douyin/。",
   "projectname": "huahua"
 }
