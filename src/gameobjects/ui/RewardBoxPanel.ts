@@ -9,7 +9,7 @@ import { EventBus } from '@/core/EventBus';
 import { TweenManager, Ease } from '@/core/TweenManager';
 import { Game } from '@/core/Game';
 import { CELL_GAP, DESIGN_WIDTH, COLORS, FONT_FAMILY } from '@/config/Constants';
-import { ITEM_DEFS, usesLargeBoardIconFill } from '@/config/ItemConfig';
+import { ITEM_DEFS, isToolItem, usesLargeBoardIconFill } from '@/config/ItemConfig';
 import { RewardBoxManager } from '@/managers/RewardBoxManager';
 import { BoardManager } from '@/managers/BoardManager';
 import { AdManager, AdScene } from '@/managers/AdManager';
@@ -46,6 +46,32 @@ function federatedPointerToDesignY(e: PIXI.FederatedPointerEvent): number {
     return nativeClientToDesignY((native as PointerEvent).clientY);
   }
   return Game.globalToDesign(e.global.x, e.global.y).y;
+}
+
+/** 收纳格左上角「工具」提示：1 级起所有可产出工具都标，提醒别当普通棋子卖掉 */
+function createToolHintTag(cellSize: number): PIXI.Container {
+  const wrap = new PIXI.Container();
+  wrap.eventMode = 'none';
+  const fontSize = Math.max(9, Math.min(11, Math.round(cellSize * 0.14)));
+  const label = new PIXI.Text('工具', {
+    fontSize,
+    fill: 0xffffff,
+    fontFamily: FONT_FAMILY,
+    fontWeight: 'bold',
+  });
+  const padX = 4;
+  const padY = 1;
+  const bw = Math.ceil(label.width) + padX * 2;
+  const bh = Math.ceil(label.height) + padY * 2;
+  const bg = new PIXI.Graphics();
+  bg.beginFill(0x2e9e6b, 0.92);
+  bg.drawRoundedRect(0, 0, bw, bh, 4);
+  bg.endFill();
+  wrap.addChild(bg);
+  label.position.set(padX, padY);
+  wrap.addChild(label);
+  wrap.position.set(2, 2);
+  return wrap;
 }
 
 function rawEventToDesignY(ev: PointerEvent | MouseEvent | TouchEvent | any): number {
@@ -392,6 +418,10 @@ export class RewardBoxPanel extends PIXI.Container {
         sprite.position.set(s / 2, s / 2);
         slot.addChild(sprite);
       }
+    }
+
+    if (isToolItem(itemId)) {
+      slot.addChild(createToolHintTag(s));
     }
 
     if (count > 1) {
