@@ -186,7 +186,7 @@ export class MainScene implements Scene {
   private _buyFurnitureHintTimer: ReturnType<typeof setTimeout> | null = null;
   private _rewardBoxHintTimer: ReturnType<typeof setTimeout> | null = null;
   private _rewardBoxHintRetryCount = 0;
-  private static readonly _REWARD_BOX_HINT_MAX_RETRY = 15;
+  private _buyFurnitureHintRetryCount = 0;
   private _checkInPanel!: CheckInPanel;
   private _questPanel!: QuestPanel;
   private _growthQuestPanel!: GrowthQuestPanel;
@@ -619,8 +619,8 @@ export class MainScene implements Scene {
       customerScrollArea: this._customerScrollArea,
       itemInfoBar: this._infoBar,
     });
-    this._buyFurnitureHintOverlay = new BuyFurnitureHintOverlay(this.container);
-    this._rewardBoxHintOverlay = new RewardBoxHintOverlay(OverlayManager.container);
+    this._buyFurnitureHintOverlay = new BuyFurnitureHintOverlay(overlay);
+    this._rewardBoxHintOverlay = new RewardBoxHintOverlay(overlay);
 
     this._douyinWelfarePanel = new DouyinWelfarePanel();
     overlay.addChild(this._douyinWelfarePanel);
@@ -1460,11 +1460,18 @@ export class MainScene implements Scene {
       this._customerScrollArea.refresh();
       this._checkInPanel.refreshIfOpen();
       this._markRedDotsDirty();
+      RewardBoxHintManager.onMainSceneEnter();
+      this._scheduleBuyFurnitureHint(1800);
+      this._scheduleRewardBoxHint(2200, true);
     });
 
     // 签到面板
     EventBus.on('nav:openCheckIn', () => this._checkInPanel.open());
     EventBus.on('checkin:gmVirtualDayAdvanced', () => this._checkInPanel.refreshIfOpen());
+    EventBus.on('checkin:signed', () => {
+      this._scheduleBuyFurnitureHint(1200);
+      this._scheduleRewardBoxHint(1200, true);
+    });
     // GM：预览当前更新公告（不写已读；先关 GM 以免挡在上层）
     EventBus.on('nav:openUpdateAnnouncement', () => {
       if (this._gmPanel?.visible) this._gmPanel.close();
@@ -1584,7 +1591,7 @@ export class MainScene implements Scene {
     EventBus.on('growth:updated', () => this._markRedDotsDirty());
     EventBus.on('currency:changed', (kind?: string, value?: number) => {
       this._markRedDotsDirty();
-      if (kind === 'huayuan' && typeof value === 'number' && value > BUY_FURNITURE_HINT_HUAYUAN_MIN) {
+      if (kind === 'huayuan' && typeof value === 'number' && value >= BUY_FURNITURE_HINT_HUAYUAN_MIN) {
         this._scheduleBuyFurnitureHint(1800);
       }
     });
@@ -2093,12 +2100,29 @@ export class MainScene implements Scene {
     root.destroy({ children: true });
   }
 
+  /** 签到/公告/周四活动等盖住合成页时，软指引先等，不要一次错过就不再弹 */
+  private _isSoftHintBlocked(): boolean {
+    return TutorialManager.isActive
+      || !!this._fruitCutUpdateGrantOverlay
+      || this._checkInPanel.visible
+      || this._offlineRewardPanel.visible
+      || this._levelUpPopup.visible
+      || this._eventBoardPanel.visible
+      || this._coolSummerEventPanel.visible
+      || this._midAutumnEventPanel.visible
+      || !!this._updateAnnouncementPanel?.isOpen
+      || !!this._douyinWelfarePanel?.isOpen
+      || !!this._weekendHuayuanBoostPanel?.isOpen
+      || !!this._tuesdayStaminaUnlimitedPanel?.isOpen
+      || !!this._thursdayMagicTimePanel?.isOpen;
+  }
+
   /** 延迟检测「该去买家具」软提醒，避免与签到/离线弹窗叠在一起 */
   private _scheduleBuyFurnitureHint(delayMs = 1500): void {
     if (this._buyFurnitureHintTimer) {
       clearTimeout(this._buyFurnitureHintTimer);
     }
-    this._buyFurnitureHintTimer = window.setTimeout(() => {
+    this._buyFurnitureHintTimer = setTimeout(() => {
       this._buyFurnitureHintTimer = null;
       this._tryShowBuyFurnitureHint();
     }, delayMs);
@@ -2106,15 +2130,23 @@ export class MainScene implements Scene {
 
   private _tryShowBuyFurnitureHint(): void {
     if (SceneManager.current?.name !== 'main') return;
-    if (!BuyFurnitureHintManager.shouldPrompt()) return;
+    if (!BuyFurnitureHintManager.shouldPrompt()) {
+      this._buyFurnitureHintRetryCount = 0;
+      return;
+    }
     if (this._buyFurnitureHintOverlay.isShowing) return;
-    if (this._rewardBoxHintOverlay.isShowing) return;
-    if (this._fruitCutUpdateGrantOverlay) return;
-    if (TutorialManager.isActive) return;
-    if (this._checkInPanel.visible) return;
-    if (this._offlineRewardPanel.visible) return;
-    if (this._levelUpPopup.visible) return;
+    if (this._rewardBoxHintOverlay.isShowing) {
+      this._buyFurnitureHintRetryCount += 1;
+      this._scheduleBuyFurnitureHint(2200);
+      return;
+    }
+    if (this._isSoftHintBlocked()) {
+      this._buyFurnitureHintRetryCount += 1;
+      this._scheduleBuyFurnitureHint(2200);
+      return;
+    }
 
+    this._buyFurnitureHintRetryCount = 0;
     this._buyFurnitureHintOverlay.show({
       itemInfoBar: this._infoBar,
       onDismiss: () => {
@@ -2130,7 +2162,7 @@ export class MainScene implements Scene {
     if (this._rewardBoxHintTimer) {
       clearTimeout(this._rewardBoxHintTimer);
     }
-    this._rewardBoxHintTimer = window.setTimeout(() => {
+    this._rewardBoxHintTimer = setTimeout(() => {
       this._rewardBoxHintTimer = null;
       this._tryShowRewardBoxHint();
     }, delayMs);
@@ -2144,27 +2176,13 @@ export class MainScene implements Scene {
     }
     if (this._rewardBoxHintOverlay.isShowing) return;
 
-    const blocked =
-      this._buyFurnitureHintOverlay.isShowing
-      || !!this._fruitCutUpdateGrantOverlay
-      || TutorialManager.isActive
-      || this._checkInPanel.visible
-      || this._offlineRewardPanel.visible
-      || this._levelUpPopup.visible
-      || this._eventBoardPanel.visible
-      || this._coolSummerEventPanel.visible
-      || this._midAutumnEventPanel.visible;
-
-    if (blocked) {
-      if (this._rewardBoxHintRetryCount < MainScene._REWARD_BOX_HINT_MAX_RETRY) {
-        this._rewardBoxHintRetryCount += 1;
-        this._scheduleRewardBoxHint(2200);
-      }
+    if (this._isSoftHintBlocked() || this._buyFurnitureHintOverlay.isShowing) {
+      this._rewardBoxHintRetryCount += 1;
+      this._scheduleRewardBoxHint(2200);
       return;
     }
 
     this._rewardBoxHintRetryCount = 0;
-    OverlayManager.bringToFront();
     this._rewardBoxHintOverlay.show({
       rewardBoxButton: this._rewardBoxButton,
       onDismiss: () => RewardBoxHintManager.markDismissed(),

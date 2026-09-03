@@ -83,6 +83,8 @@ export const CLOUD_SYNC_EXCLUDE_KEYS = [
 ] as const;
 
 export const CLOUD_SYNC_STARTUP_TIMEOUT_MS = 2500;
+/** 抖音 tt.login + 拉档更慢，过短会先玩后覆盖，中途弹「恢复云端存档」并回退 */
+export const CLOUD_SYNC_STARTUP_TIMEOUT_DOUYIN_MS = 8000;
 export const CLOUD_SYNC_DEBOUNCE_MS = 1500;
 export const CLOUD_SYNC_BASE_DELAY_MS = 1500;
 export const CLOUD_SYNC_MAX_BACKOFF_MS = 30000;

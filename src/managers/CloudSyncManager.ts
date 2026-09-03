@@ -17,6 +17,7 @@ import {
   CLOUD_SYNC_MAX_BACKOFF_MS,
   CLOUD_SYNC_MAX_FAIL_COUNT,
   CLOUD_SYNC_RETRY_INTERVAL_MS,
+  CLOUD_SYNC_STARTUP_TIMEOUT_DOUYIN_MS,
   CLOUD_SYNC_STARTUP_TIMEOUT_MS,
 } from '@/config/CloudConfig';
 import { BackendError, BackendService } from '@/core/BackendService';
@@ -81,7 +82,9 @@ class CloudSyncManagerClass {
     }
   }
 
-  async awaitStartupSync(timeoutMs = CLOUD_SYNC_STARTUP_TIMEOUT_MS): Promise<CloudStartupSyncResult> {
+  async awaitStartupSync(
+    timeoutMs = Platform.isDouyin ? CLOUD_SYNC_STARTUP_TIMEOUT_DOUYIN_MS : CLOUD_SYNC_STARTUP_TIMEOUT_MS,
+  ): Promise<CloudStartupSyncResult> {
     if (!this.enabled) {
       this._authorityState = 'disabled';
       return { status: 'disabled', reason: 'backend-disabled' };
@@ -215,20 +218,12 @@ class CloudSyncManagerClass {
 
     const localSnapshot = PersistService.exportCloudSnapshot();
     const localMeta = PersistService.getCloudSyncMeta();
+    const localUpdatedAt = Number(localMeta.updatedAt) || 0;
+    const hasLocal = localSnapshot.payloadKeys.length > 0;
+    const importReason = this._authorityState === 'cacheOnly' ? 'startup-late' : 'startup';
 
     if (!remote.exists) {
-      if (localSnapshot.payloadKeys.length > 0) {
-        console.warn(
-          `[CloudSync] 云端无存档，按云端权威清空本地缓存 keys=${localSnapshot.payloadKeys.length}`,
-        );
-      }
-      PersistService.importCloudSnapshot({
-        updatedAt: 0,
-        payload: {},
-        reason: this._authorityState === 'cacheOnly' ? 'startup-late' : 'startup',
-      });
-      this._confirmRemoteBaseline(0, 'startup-no-remote-doc');
-      this._lastStartupRemoteApplied = localSnapshot.payloadKeys.length > 0;
+      this._keepLocalWhenRemoteEmpty(hasLocal, 0, 'startup-no-remote-doc');
       return;
     }
 
@@ -238,34 +233,19 @@ class CloudSyncManagerClass {
       : Object.keys(remote.payload || {});
 
     if (remotePayloadKeys.length === 0) {
-      if (localSnapshot.payloadKeys.length > 0) {
-        console.warn(
-          `[CloudSync] 云端为空存档，按云端权威清空本地缓存 keys=${localSnapshot.payloadKeys.length}`,
-        );
-      }
-      PersistService.importCloudSnapshot({
-        updatedAt: remoteUpdatedAt,
-        payload: {},
-        reason: this._authorityState === 'cacheOnly' ? 'startup-late' : 'startup',
-      });
-      this._confirmRemoteBaseline(remoteUpdatedAt, 'startup-empty-remote-doc');
-      this._lastStartupRemoteApplied = localSnapshot.payloadKeys.length > 0;
+      this._keepLocalWhenRemoteEmpty(hasLocal, remoteUpdatedAt, 'startup-empty-remote-doc');
       return;
     }
 
-    const hasKnownRemoteBaseline = localMeta.remoteUpdatedAt > 0;
-    const shouldApplyRemote = remotePayloadKeys.length > 0
-      && (
-        localSnapshot.payloadKeys.length === 0
-        || !hasKnownRemoteBaseline
-        || remoteUpdatedAt > localMeta.remoteUpdatedAt
-      );
+    // 只在「本地无档」或「云端明确更新」时下行。禁止用「尚无 remoteUpdatedAt 基线」
+    // 强行覆盖：抖音登录超时后玩家已在本地推进，晚到的旧档/空档会回退并打断指引。
+    const shouldApplyRemote = !hasLocal || remoteUpdatedAt > localUpdatedAt;
 
     if (shouldApplyRemote) {
       PersistService.importCloudSnapshot({
         updatedAt: remoteUpdatedAt,
         payload: remote.payload || {},
-        reason: this._authorityState === 'cacheOnly' ? 'startup-late' : 'startup',
+        reason: importReason,
       });
       this._confirmRemoteBaseline(remoteUpdatedAt, 'startup-remote-imported');
       this._lastStartupRemoteApplied = true;
@@ -276,11 +256,28 @@ class CloudSyncManagerClass {
       return;
     }
 
-    this._confirmRemoteBaseline(remoteUpdatedAt, 'startup-remote-confirmed');
-
-    if (PersistService.isCloudDirty()) {
-      this.scheduleSync('startup-local-dirty');
+    this._confirmRemoteBaseline(remoteUpdatedAt, 'startup-keep-newer-local');
+    this._lastStartupRemoteApplied = false;
+    if (localUpdatedAt > remoteUpdatedAt && !PersistService.isCloudDirty()) {
+      PersistService.touchCloudMeta();
     }
+    if (PersistService.isCloudDirty()) {
+      this.scheduleSync('startup-local-newer');
+    }
+  }
+
+  /** 云端无档/空档时保留本地进度并上行，禁止清空后重启。 */
+  private _keepLocalWhenRemoteEmpty(
+    hasLocal: boolean,
+    remoteUpdatedAt: number,
+    reason: string,
+  ): void {
+    this._confirmRemoteBaseline(remoteUpdatedAt, reason);
+    this._lastStartupRemoteApplied = false;
+    if (!hasLocal) return;
+    console.warn(`[CloudSync] 云端无有效存档，保留本地并准备上行 reason=${reason}`);
+    if (!PersistService.isCloudDirty()) PersistService.touchCloudMeta();
+    this.scheduleSync(reason);
   }
 
   private async _syncToCloud(reason: string, force = false): Promise<void> {
@@ -338,15 +335,23 @@ class CloudSyncManagerClass {
         }
       } catch (e) {
         if (e instanceof BackendError && e.code === 'STALE_UPDATE' && e.data?.remote) {
-          // 服务端版本更新 → 下行覆盖，重置失败计数
           const remote = e.data.remote as {
             updatedAt?: number;
             payload?: Record<string, string>;
           };
+          const remotePayload = remote.payload || {};
+          const remoteKeys = Object.keys(remotePayload);
+          const localKeys = PersistService.exportCloudSnapshot().payloadKeys.length;
+          if (remoteKeys.length === 0 && localKeys > 0) {
+            console.warn('[CloudSync] STALE_UPDATE 但云端为空档，保留本地不覆盖');
+            this._syncFailCount = 0;
+            this._syncDisabled = false;
+            return;
+          }
           console.warn('[CloudSync] 服务端版本更新，改为下行覆盖本地');
           PersistService.importCloudSnapshot({
             updatedAt: Number(remote.updatedAt) || Date.now(),
-            payload: remote.payload || {},
+            payload: remotePayload,
             reason: 'stale-update',
           });
           this._confirmRemoteBaseline(Number(remote.updatedAt) || Date.now(), 'stale-update');
