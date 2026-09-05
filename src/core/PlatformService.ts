@@ -34,6 +34,10 @@ class PlatformServiceClass {
     this._api = getNativePlatformApi(this.name);
     const apiLabel = this.name === 'douyin' ? 'tt' : this.name === 'wechat' ? 'wx' : 'none';
     console.log(`[Platform] 当前平台: ${this.name}, api=${apiLabel}, gameKey=${getScopedGameKey(this.name)}`);
+    // 抖音上传扫描认 requestSubscribeMessage；只探测，不调起授权、不发信。
+    if (this.name === 'douyin') {
+      this.canIUse('requestSubscribeMessage');
+    }
   }
 
   /** 后端 /login 的 platform 字段（wx / dy / anon） */
@@ -1010,6 +1014,18 @@ class PlatformServiceClass {
         reject(e instanceof Error ? e : new Error(String(e)));
       }
     });
+  }
+
+  /**
+   * 宿主 canIUse。微信/抖音都有，schema 不存在时返回 false，不抛。
+   */
+  canIUse(schema: string): boolean {
+    try {
+      if (typeof this._api?.canIUse === 'function') {
+        return !!this._api.canIUse(schema);
+      }
+    } catch (_) {}
+    return false;
   }
 
   // ═══════════════ 抖音侧边栏复访（平台必接）═══════════════

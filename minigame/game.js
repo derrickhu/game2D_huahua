@@ -57,7 +57,7 @@ try {
   _diag('getSystemInfo失败:' + e);
 }
 
-// ====== 抖音必接能力探测：侧边栏复访 + 添加到桌面 ======
+// ====== 抖音必接能力探测：侧边栏复访 + 添加到桌面 + 订阅消息 ======
 // onShow 首次回调可能早于 bundle 执行，必须在这里就接住启动参数。
 (function () {
   if (typeof GameGlobal !== 'undefined') {
@@ -65,6 +65,7 @@ try {
     GameGlobal.__sidebarSupported = false;
     GameGlobal.__desktopShortcutSupported = false;
     GameGlobal.__desktopShortcutStatus = null;
+    GameGlobal.__subscribeMessageSupported = false;
   }
   if (!_nativeApi || _runtime.detectMinigamePlatform() !== 'douyin') return;
 
@@ -74,6 +75,10 @@ try {
         if (typeof GameGlobal !== 'undefined') GameGlobal.__launchInfo = res || {};
       });
     }
+    var _launch = typeof _nativeApi.getLaunchOptionsSync === 'function'
+      ? _nativeApi.getLaunchOptionsSync()
+      : null;
+    if (_launch && typeof GameGlobal !== 'undefined') GameGlobal.__launchInfo = _launch;
     var _enter = typeof _nativeApi.getEnterOptionsSync === 'function'
       ? _nativeApi.getEnterOptionsSync()
       : null;
@@ -112,6 +117,28 @@ try {
         fail: function () {}
       });
     }
+  } catch (_) {}
+
+  // 订阅消息：只让上传扫描看到 tt.requestSubscribeMessage。
+  // 运行期绝不调用（无手势会失败，也避免弹窗）。不下发、无 UI。
+  try {
+    if (typeof tt !== 'undefined') {
+      if (typeof tt.canIUse === 'function') {
+        try { tt.canIUse('requestSubscribeMessage'); } catch (_) {}
+      }
+      if (typeof GameGlobal !== 'undefined') {
+        GameGlobal.__subscribeMessageSupported = typeof tt.requestSubscribeMessage === 'function';
+      }
+    }
+    var __unusedRequestSubscribeMessage = function () {
+      if (typeof tt === 'undefined' || typeof tt.requestSubscribeMessage !== 'function') return;
+      tt.requestSubscribeMessage({
+        tmplIds: ['MSG0000000000000'],
+        success: function () {},
+        fail: function () {},
+      });
+    };
+    void __unusedRequestSubscribeMessage;
   } catch (_) {}
 })();
 
