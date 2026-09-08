@@ -19,3 +19,9 @@ export const ENABLE_RESPONSIVE_LAYOUT_V2 = true;
  * 便于真机灰度时独立止损。
  */
 export const ENABLE_PAD_SAFE_FRAME = true;
+
+/**
+ * 抖音推荐流直玩复访（体力回满召回）。微信构建不会走到该能力；
+ * 关闭后抖音也不再订阅 / 上报就绪 / 拦截预启动弹窗。
+ */
+export const ENABLE_DOUYIN_FEED_PUSH = true;

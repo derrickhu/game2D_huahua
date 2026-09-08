@@ -63,6 +63,7 @@ import { SceneSwitch } from '@/gameobjects/ui/SceneSwitch';
 import { DouyinWelfareEntry } from '@/gameobjects/ui/DouyinWelfareEntry';
 import { DouyinWelfarePanel } from '@/gameobjects/ui/DouyinWelfarePanel';
 import { DouyinWelfareManager } from '@/managers/DouyinWelfareManager';
+import { DouyinFeedPushManager } from '@/managers/DouyinFeedPushManager';
 import { SidebarService } from '@/core/SidebarService';
 import {
   DESIGN_WIDTH,
@@ -304,8 +305,10 @@ export class MainScene implements Scene {
 
       // 启动后处理（延迟一帧确保UI就绪）
       setTimeout(() => this._onGameReady(), 100);
-      RewardBoxHintManager.onMainSceneEnter();
-      this._scheduleRewardBoxHint(5500, true);
+      if (!DouyinFeedPushManager.shouldSuppressLaunchPopups) {
+        RewardBoxHintManager.onMainSceneEnter();
+        this._scheduleRewardBoxHint(5500, true);
+      }
     } else {
       // 从花店切回时同步 DressUpManager 当前装扮（避免仅依赖 dressup:equipped 漏刷新）
       this._refreshOwnerOutfit();
@@ -408,12 +411,37 @@ export class MainScene implements Scene {
     // 云端无存档时启动期会按云端权威清空本地缓存，此处应立即进入新手流程。
     TutorialManager.start();
     this._tutorialOverlay.bind('main');
+
+    // 抖音推荐流预启动：画面当背景，先别弹窗/BGM，等用户点「继续游戏」。
+    if (DouyinFeedPushManager.shouldSuppressLaunchPopups) {
+      EventBus.once('douyinFeed:entered', () => this._resumeLaunchAfterFeedEnter());
+      return;
+    }
+
+    this._playMainBgmIfIdle();
+    this._runLaunchPopupQueue();
+  }
+
+  private _playMainBgmIfIdle(): void {
     setTimeout(() => {
       if (SceneManager.current?.name === 'main' && !TutorialManager.isActive) {
         SoundSystem.playMainBGM();
       }
     }, 600);
+  }
 
+  private _resumeLaunchAfterFeedEnter(): void {
+    if (SceneManager.current?.name !== 'main') return;
+    if (DouyinFeedPushManager.feedGameScene === 2) {
+      ToastMessage.show('体力已回满，快来种花吧');
+    }
+    this._playMainBgmIfIdle();
+    RewardBoxHintManager.onMainSceneEnter();
+    this._scheduleRewardBoxHint(5500, true);
+    this._runLaunchPopupQueue();
+  }
+
+  private _runLaunchPopupQueue(): void {
     // 1. 离线收益（关闭时 IdleManager 仅同步时间戳，此处恒为 null）
     // 教程期间跳过离线收益弹窗
     const offlineReward = IdleManager.calculateOfflineReward();

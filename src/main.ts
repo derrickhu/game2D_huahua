@@ -40,6 +40,7 @@ import { CheckInManager } from '@/managers/CheckInManager';
 import { UserIdentityManager } from '@/managers/UserIdentityManager';
 import { WechatGiftManager } from '@/managers/WechatGiftManager';
 import { WechatWelfareManager } from '@/managers/WechatWelfareManager';
+import { DouyinFeedPushManager } from '@/managers/DouyinFeedPushManager';
 import { PersistService, type CloudImportInfo } from '@/core/PersistService';
 import { Platform } from '@/core/PlatformService';
 import { EventBus } from '@/core/EventBus';
@@ -121,6 +122,7 @@ async function main(): Promise<void> {
     // 否则 user_id='' 与登录后 user_id=xxx 会被算成两个不同 uk，DAU 翻倍。
     initAnalytics();
     AttributionManager.init();
+    DouyinFeedPushManager.init();
     // 在 TutorialManager.start() 之前就 attach EventBus 监听，避免错过首步的 stepChanged。
     setupTutorialAnalytics();
     // 玩法事件订阅同样要早 attach，避免错过 board:initialized 之类的早期事件。
@@ -278,16 +280,30 @@ async function main(): Promise<void> {
       setAnalyticsUserId(CloudSyncManager.userId);
       AttributionManager.bindUser(CloudSyncManager.userId);
     }
-    analytics.track(EVENT_NAMES.SESSION_START, {
+    const sessionPayload = {
       entry: 'main',
       with_user_id: !!CloudSyncManager.userId,
       cloud_sync_status: startupSync.status,
       ...AttributionManager.sessionParams(),
-    });
-    void analytics.flush('startup-session-start');
+      ...DouyinFeedPushManager.analyticsLaunchParams(),
+    };
+    if (DouyinFeedPushManager.shouldDeferSessionStart) {
+      analytics.track('feed_preboot', sessionPayload);
+      DouyinFeedPushManager.setSessionStartHandler(() => {
+        analytics.track(EVENT_NAMES.SESSION_START, {
+          ...sessionPayload,
+          entry: 'feed_enter',
+        });
+        void analytics.flush('feed-enter-session-start');
+      });
+    } else {
+      analytics.track(EVENT_NAMES.SESSION_START, sessionPayload);
+      void analytics.flush('startup-session-start');
+    }
 
     // 尝试加载存档（开发阶段已在启动时清除，此处应返回 false）
     const loaded = SaveManager.load();
+    DouyinFeedPushManager.bindAfterSave();
     initialSaveLoaded = true;
     TutorialManager.ensureCompletedIfVeteranSave(loaded);
     if (!loaded) {
@@ -313,6 +329,7 @@ async function main(): Promise<void> {
     SceneManager.switchTo('main');
     Game.stage.removeChild(loadingOverlay);
     loadingOverlay.destroy({ children: true });
+    DouyinFeedPushManager.reportInteractiveReady();
     runtimeReadyForCloudReload = true;
     if (pendingCloudReloadInfo) {
       const info = pendingCloudReloadInfo;
@@ -333,8 +350,11 @@ async function main(): Promise<void> {
         // 立即刷写装饰布局（防止防抖 timer 未触发导致位置丢失）
         RoomLayoutManager.saveNow();
         void CloudSyncManager.flushNow('app-hide');
-        // 经分 onHide 标准事件：reason 用 app-hide 与 hot-pot 对齐，便于跨游戏比较异常退出比例。
-        analytics.track(EVENT_NAMES.SESSION_END, { reason: 'app-hide' });
+        DouyinFeedPushManager.onAppHide();
+        // 推荐流预启动未点进游戏：不算一次真实会话结束，避免 DAU 被预加载灌水。
+        if (!DouyinFeedPushManager.isPreview) {
+          analytics.track(EVENT_NAMES.SESSION_END, { reason: 'app-hide' });
+        }
         lastHideAt = Date.now();
       });
       Platform.onShow(() => {
@@ -344,7 +364,7 @@ async function main(): Promise<void> {
         WechatWelfareManager.syncAfterAppShow('app-show');
         // 经分 app_show：业务侧自定义打，**不**重置 session_id（session = 一次冷启动）。
         // 携带 background_ms 便于 dashboard 看「后台多久回来」分布；首次启动 lastHideAt=0 就跳过。
-        if (lastHideAt > 0) {
+        if (lastHideAt > 0 && !DouyinFeedPushManager.isPreview) {
           analytics.track(EVENT_NAMES.APP_SHOW, {
             from_background: true,
             background_ms: Date.now() - lastHideAt,

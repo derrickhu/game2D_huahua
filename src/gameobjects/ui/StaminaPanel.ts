@@ -14,6 +14,10 @@ import { createFlowerEggModalFrame } from '@/gameobjects/ui/FlowerEggModalFrame'
 import { TextureCache } from '@/utils/TextureCache';
 import { AdManager, AdScene } from '@/managers/AdManager';
 import { SaveManager } from '@/managers/SaveManager';
+import { DouyinFeedPushManager } from '@/managers/DouyinFeedPushManager';
+import { Platform } from '@/core/PlatformService';
+import { ENABLE_DOUYIN_FEED_PUSH } from '@/config/FeatureFlags';
+import { EventBus } from '@/core/EventBus';
 import { createFreeAdBadge } from '@/gameobjects/ui/AdBadge';
 
 const COL_W = 200;
@@ -26,6 +30,9 @@ const BTN_H = 52;
 const AD_QUOTA_GAP = 6;
 const AD_QUOTA_H = 22;
 const TITLE_FONT = 24;
+const FEED_SUBSCRIBE_SLOT = Platform.isDouyin && ENABLE_DOUYIN_FEED_PUSH;
+const SUB_GAP = FEED_SUBSCRIBE_SLOT ? 14 : 0;
+const SUB_ROW_H = FEED_SUBSCRIBE_SLOT ? 44 : 0;
 
 /** 左右分栏独立圆角框（与面板 pastel 协调，不拦截点击） */
 function addColumnSurroundBox(
@@ -53,6 +60,8 @@ export class StaminaPanel extends PIXI.Container {
   private _leftHead!: PIXI.Container;
   private _rightHead!: PIXI.Container;
   private _adQuotaText!: PIXI.Text;
+  private _feedSubscribeRow: PIXI.Container | null = null;
+  private _feedSubscribeLabel: PIXI.Text | null = null;
   private _isOpen = false;
 
   constructor() {
@@ -68,6 +77,9 @@ export class StaminaPanel extends PIXI.Container {
     this._isOpen = true;
     this.visible = true;
     this._refresh();
+    if (FEED_SUBSCRIBE_SLOT) {
+      void DouyinFeedPushManager.refreshSubscribeStatus().then(() => this._refreshSubscribeRow());
+    }
 
     this.alpha = 0;
     TweenManager.to({
@@ -205,8 +217,8 @@ export class StaminaPanel extends PIXI.Container {
     const rowW = COL_W * 2 + COL_GAP;
     const btnTop = TOP_BLOCK_H + TOP_TO_BTN;
     const btnW = COL_W;
-    const contentH = btnTop + BTN_H + AD_QUOTA_GAP + AD_QUOTA_H;
-    const colBoxH = contentH;
+    const colBoxH = btnTop + BTN_H + AD_QUOTA_GAP + AD_QUOTA_H;
+    const contentH = colBoxH + SUB_GAP + SUB_ROW_H;
 
     const frame = createFlowerEggModalFrame({
       viewW: W,
@@ -261,6 +273,77 @@ export class StaminaPanel extends PIXI.Container {
     this._adQuotaText.position.set(COL_W / 2, btnTop + BTN_H + AD_QUOTA_GAP);
     this._adQuotaText.eventMode = 'none';
     rightCol.addChild(this._adQuotaText);
+
+    if (FEED_SUBSCRIBE_SLOT) {
+      this._feedSubscribeRow = this._buildFeedSubscribeRow(rowW);
+      this._feedSubscribeRow.position.set(0, btnTop + BTN_H + AD_QUOTA_GAP + AD_QUOTA_H + SUB_GAP);
+      mount.addChild(this._feedSubscribeRow);
+      EventBus.on('douyinFeed:subscribeChanged', this._onFeedSubscribeChanged);
+      this._refreshSubscribeRow();
+    }
+  }
+
+  private _onFeedSubscribeChanged = (ok?: boolean): void => {
+    if (this._isOpen) this._refreshSubscribeRow();
+    if (!this._isOpen || ok === undefined) return;
+    ToastMessage.show(ok ? '已订阅体力回满提醒' : '没有开通提醒，之后可再订');
+  };
+
+  private _buildFeedSubscribeRow(w: number): PIXI.Container {
+    const row = new PIXI.Container();
+    row.eventMode = 'static';
+    row.cursor = 'pointer';
+
+    const bg = new PIXI.Graphics();
+    bg.beginFill(0xF3E5F5);
+    bg.lineStyle(2, 0xCE93D8, 0.9);
+    bg.drawRoundedRect(0, 0, w, SUB_ROW_H, 14);
+    bg.endFill();
+    row.addChild(bg);
+
+    const label = new PIXI.Text('体力回满时提醒我', {
+      fontSize: 16,
+      fill: 0x6A1B9A,
+      fontFamily: FONT_FAMILY,
+      fontWeight: 'bold',
+    });
+    label.anchor.set(0.5);
+    label.position.set(w / 2, SUB_ROW_H / 2);
+    label.eventMode = 'none';
+    row.addChild(label);
+    this._feedSubscribeLabel = label;
+
+    row.on('pointerdown', () => {
+      if (!DouyinFeedPushManager.canShowSubscribeEntry) return;
+      DouyinFeedPushManager.armSubscribeOnTouchEnd();
+    });
+    row.on('pointerup', () => {
+      DouyinFeedPushManager.notifySubscribePointerUp();
+    });
+    row.on('pointerupoutside', () => {
+      DouyinFeedPushManager.notifySubscribePointerUp();
+    });
+    return row;
+  }
+
+  private _refreshSubscribeRow(): void {
+    if (!this._feedSubscribeRow || !this._feedSubscribeLabel) return;
+    if (!DouyinFeedPushManager.subscribeSupported) {
+      this._feedSubscribeRow.visible = false;
+      return;
+    }
+    this._feedSubscribeRow.visible = true;
+    if (DouyinFeedPushManager.subscribed) {
+      this._feedSubscribeLabel.text = '已订阅：体力回满后会提醒你';
+      this._feedSubscribeRow.eventMode = 'none';
+      this._feedSubscribeRow.cursor = 'default';
+      this._feedSubscribeRow.alpha = 0.75;
+    } else {
+      this._feedSubscribeLabel.text = '体力回满时提醒我';
+      this._feedSubscribeRow.eventMode = 'static';
+      this._feedSubscribeRow.cursor = 'pointer';
+      this._feedSubscribeRow.alpha = 1;
+    }
   }
 
   private _refresh(): void {

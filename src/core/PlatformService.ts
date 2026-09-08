@@ -34,9 +34,15 @@ class PlatformServiceClass {
     this._api = getNativePlatformApi(this.name);
     const apiLabel = this.name === 'douyin' ? 'tt' : this.name === 'wechat' ? 'wx' : 'none';
     console.log(`[Platform] 当前平台: ${this.name}, api=${apiLabel}, gameKey=${getScopedGameKey(this.name)}`);
-    // 抖音上传扫描认 requestSubscribeMessage；只探测，不调起授权、不发信。
+    // 抖音上传扫描认这些 API 名；只探测，不调起授权、不发信。
     if (this.name === 'douyin') {
       this.canIUse('requestSubscribeMessage');
+      this.canIUse('checkFeedSubscribeStatus');
+      this.canIUse('requestFeedSubscribe');
+      this.canIUse('storeFeedData');
+      this.canIUse('reportScene');
+      this.canIUse('onFeedStatusChange');
+      this.canIUse('getLaunchOptionsSync');
     }
   }
 
@@ -1026,6 +1032,114 @@ class PlatformServiceClass {
       }
     } catch (_) {}
     return false;
+  }
+
+  hasNativeApi(name: string): boolean {
+    return typeof this._api?.[name] === 'function';
+  }
+
+  onTouchEnd(callback: (res?: any) => void): void {
+    try {
+      this._api?.onTouchEnd?.(callback);
+    } catch (_) {}
+  }
+
+  offTouchEnd(callback: (res?: any) => void): void {
+    try {
+      this._api?.offTouchEnd?.(callback);
+    } catch (_) {}
+  }
+
+  // ═══════════════ 抖音推荐流直玩（仅 tt，微信无对应 API）═══════════════
+
+  checkFeedSubscribeStatus(opts: {
+    type?: 'play';
+    allScene?: boolean;
+    scene?: number;
+    contentID?: string;
+    success?: (res: { status?: boolean; data?: { status?: boolean } }) => void;
+    fail?: (err?: unknown) => void;
+  }): void {
+    try {
+      if (this._api?.checkFeedSubscribeStatus) {
+        this._api.checkFeedSubscribeStatus({ ...opts, type: 'play' });
+      } else {
+        opts.fail?.({ errMsg: 'checkFeedSubscribeStatus not supported' });
+      }
+    } catch (e) {
+      opts.fail?.(e);
+    }
+  }
+
+  requestFeedSubscribe(opts: {
+    type?: 'play';
+    allScene?: boolean;
+    scene?: number;
+    contentID?: string;
+    contentIDs?: string[];
+    success?: (res?: { success?: boolean; data?: { success?: boolean } }) => void;
+    fail?: (err?: unknown) => void;
+  }): void {
+    try {
+      if (this._api?.requestFeedSubscribe) {
+        this._api.requestFeedSubscribe({ ...opts, type: 'play' });
+      } else {
+        opts.fail?.({ errMsg: 'requestFeedSubscribe not supported' });
+      }
+    } catch (e) {
+      opts.fail?.(e);
+    }
+  }
+
+  storeFeedData(opts: {
+    scene: number;
+    contentID: string;
+    leftValue?: string;
+    operator?: string;
+    rightValue?: string;
+    status: number;
+    extra?: string;
+    success?: (res?: unknown) => void;
+    fail?: (err?: unknown) => void;
+  }): void {
+    try {
+      if (this._api?.storeFeedData) {
+        this._api.storeFeedData(opts);
+      } else {
+        opts.fail?.({ errMsg: 'storeFeedData not supported' });
+      }
+    } catch (e) {
+      opts.fail?.(e);
+    }
+  }
+
+  reportScene(opts: {
+    sceneId: number;
+    costTime?: number;
+    success?: (res?: unknown) => void;
+    fail?: (err?: unknown) => void;
+  }): void {
+    try {
+      if (this._api?.reportScene) {
+        this._api.reportScene(opts);
+      } else {
+        opts.fail?.({ errMsg: 'reportScene not supported' });
+      }
+    } catch (e) {
+      opts.fail?.(e);
+    }
+  }
+
+  onFeedStatusChange(callback: (res: { type?: string }) => void): void {
+    try {
+      this._api?.onFeedStatusChange?.(callback);
+    } catch (_) {}
+  }
+
+  offFeedStatusChange(callback: (res: { type?: string }) => void): void {
+    try {
+      this._api?.offFeedStatusChange?.(callback);
+    } catch (_) {}
   }
 
   // ═══════════════ 抖音侧边栏复访（平台必接）═══════════════

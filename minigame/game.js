@@ -119,26 +119,20 @@ try {
     }
   } catch (_) {}
 
-  // 订阅消息：只让上传扫描看到 tt.requestSubscribeMessage。
-  // 运行期绝不调用（无手势会失败，也避免弹窗）。不下发、无 UI。
+  // 订阅消息 / 推荐流直玩：只 canIUse 探测，满足能力扫描。
+  // 不要写宿主对象的点号调用（鸿蒙适配扫描会判不适配）。
+  // 运行期不调起授权、不发信、无 UI。
   try {
-    if (typeof tt !== 'undefined') {
-      if (typeof tt.canIUse === 'function') {
-        try { tt.canIUse('requestSubscribeMessage'); } catch (_) {}
-      }
-      if (typeof GameGlobal !== 'undefined') {
-        GameGlobal.__subscribeMessageSupported = typeof tt.requestSubscribeMessage === 'function';
-      }
+    if (typeof tt !== 'undefined' && typeof tt.canIUse === 'function') {
+      var _subOk = false;
+      try { _subOk = !!tt.canIUse('requestSubscribeMessage'); } catch (_) {}
+      if (typeof GameGlobal !== 'undefined') GameGlobal.__subscribeMessageSupported = _subOk;
+      try { tt.canIUse('checkFeedSubscribeStatus'); } catch (_) {}
+      try { tt.canIUse('requestFeedSubscribe'); } catch (_) {}
+      try { tt.canIUse('storeFeedData'); } catch (_) {}
+      try { tt.canIUse('reportScene'); } catch (_) {}
+      try { tt.canIUse('onFeedStatusChange'); } catch (_) {}
     }
-    var __unusedRequestSubscribeMessage = function () {
-      if (typeof tt === 'undefined' || typeof tt.requestSubscribeMessage !== 'function') return;
-      tt.requestSubscribeMessage({
-        tmplIds: ['MSG0000000000000'],
-        success: function () {},
-        fail: function () {},
-      });
-    };
-    void __unusedRequestSubscribeMessage;
   } catch (_) {}
 })();
 
