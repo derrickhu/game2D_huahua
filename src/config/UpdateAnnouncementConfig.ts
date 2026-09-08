@@ -49,25 +49,16 @@ export const UPDATE_ANNOUNCEMENT_SECTION_META: Record<
  */
 export const UPDATE_ANNOUNCEMENT_ACTIVE: UpdateAnnouncementDef & { enabled: boolean } = {
   enabled: true,
-  id: '1.6.33',
-  version: '1.6.33',
+  id: '1.6.34',
+  version: '1.6.34',
   title: '更新公告',
   greeting: '花花妙屋又有新动静啦～',
   sections: [
     {
-      id: 'event',
-      title: '【活动】',
-      items: [
-        '清凉一夏活动下线',
-        '限时活动「月满中秋」开启：完成月饼订单，获取中秋抽奖机会',
-      ],
-    },
-    {
       id: 'improve',
       title: '【优化】',
       items: [
-        '广告解锁的家具看完广告即可获得，无需再花愿购买',
-        '成长之路友谊卡任务数量下调，更容易完成',
+        '「月满中秋」抽奖更轻松，完成嫦娥订单也能拿到更多玉兔灯',
       ],
     },
   ],

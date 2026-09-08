@@ -56,18 +56,18 @@ export function midAutumnChangETierFromMooncakeLevel(level: number): MidAutumnCh
 
 /**
  * 含月饼订单按最高月饼等级给玉兔灯。
- * L1–L4（A 单）→ 2，L5–L8（S 单）→ 4。
+ * L1–L4（A 单）→ 3，L5–L8（S 单）→ 5。
  */
 export function midAutumnLanternsForMooncakeLevel(level: number): number {
   if (!Number.isFinite(level) || level < 1) return 0;
-  return Math.floor(level) >= 5 ? 4 : 2;
+  return Math.floor(level) >= 5 ? 5 : 3;
 }
 
 /** 活动结束后，未抽完的玉兔灯 → 花愿换算比例。 */
 export const MID_AUTUMN_LANTERN_TO_HUAYUAN_RATE = 1;
 
-/** 三轮抽奖花费：每轮每次都是 4 盏。 */
-export const MID_AUTUMN_SPIN_COSTS = [4, 4, 4] as const;
+/** 三轮抽奖花费：每轮每次都是 3 盏。 */
+export const MID_AUTUMN_SPIN_COSTS = [3, 3, 3] as const;
 export const MID_AUTUMN_SPIN_COST = MID_AUTUMN_SPIN_COSTS[0];
 
 export function midAutumnSpinCostForRound(round: number): number {
