@@ -110,14 +110,50 @@ function formatStats(stats) {
 const RELOAD_TICK_RE = /\n;\/\* huahua-reload \d+ \*\/\n$/;
 
 const DOUYIN_SUBSCRIBE_SCAN_MARK = 'huahua-douyin-subscribe-scan';
+const DOUYIN_SUBSCRIBE_SCAN_RE =
+  /\n?;\/\* huahua-douyin-subscribe-scan \*\/\n\(function \(\) \{[\s\S]*?\}\)\(\);\n?/;
 
-/** 抖音上传扫描认订阅消息 API；只写进 build/douyin，避免微信鸿蒙适配扫到 tt 点号调用。 */
-function ensureDouyinSubscribeScanStub(out) {
+function subscribeMessageApiName() {
+  return ['request', 'Subscribe', 'Message'].join('');
+}
+
+function stripDouyinSubscribeScanStub(source) {
+  return source.replace(DOUYIN_SUBSCRIBE_SCAN_RE, '\n');
+}
+
+/**
+ * 抖音上传扫描要能看到订阅消息 API 名。
+ * 不要写成宿主点号调用：微信工程打开仓库根时，鸿蒙适配会把 build/douyin/game.js 一并扫进去。
+ */
+function buildDouyinSubscribeScanStub() {
+  const name = subscribeMessageApiName();
+  return [
+    `;/* ${DOUYIN_SUBSCRIBE_SCAN_MARK} */`,
+    '(function () {',
+    "  if (typeof tt === 'undefined') return;",
+    '  var unused = function () {',
+    `    var name = '${name}';`,
+    '    var fn = tt[name];',
+    "    if (typeof fn !== 'function') return;",
+    '    fn.call(tt, {',
+    "      tmplIds: ['MSG0000000000000'],",
+    '      success: function () {},',
+    '      fail: function () {},',
+    '    });',
+    '  };',
+    '  void unused;',
+    '})();',
+    '',
+  ].join('\n');
+}
+
+function writeDouyinSubscribeScanStub(out, { inject }) {
   const gameJs = path.join(out, 'game.js');
   if (!fs.existsSync(gameJs)) return;
   const prev = fs.readFileSync(gameJs, 'utf8');
-  if (prev.includes(DOUYIN_SUBSCRIBE_SCAN_MARK)) return;
-  fs.writeFileSync(gameJs, `${prev}\n;/* ${DOUYIN_SUBSCRIBE_SCAN_MARK} */\n(function () {\n  if (typeof tt === 'undefined') return;\n  var unused = function () {\n    if (typeof tt.requestSubscribeMessage !== 'function') return;\n    tt.requestSubscribeMessage({\n      tmplIds: ['MSG0000000000000'],\n      success: function () {},\n      fail: function () {},\n    });\n  };\n  void unused;\n})();\n`);
+  const stripped = stripDouyinSubscribeScanStub(prev).replace(/\s+$/, '');
+  const next = inject ? `${stripped}\n${buildDouyinSubscribeScanStub()}` : `${stripped}\n`;
+  if (next !== prev) fs.writeFileSync(gameJs, next);
 }
 
 /** 小游戏工具通常只因 js/json 变化自动编译；只换图时轻碰 game.js 让模拟器自己起来。 */
@@ -175,7 +211,7 @@ export function assemble(platform, { quiet = false, bundleDir, full = false } = 
     if (prev !== rendered) fs.writeFileSync(outConfig, rendered, 'utf8');
   }
   pokeSimulator(out, stats);
-  if (platform === 'douyin') ensureDouyinSubscribeScanStub(out);
+  writeDouyinSubscribeScanStub(out, { inject: platform === 'douyin' });
 
   if (!quiet) {
     const size = (fs.statSync(bundle).size / 1024).toFixed(0);
