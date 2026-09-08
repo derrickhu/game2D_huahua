@@ -66,8 +66,8 @@ export function midAutumnLanternsForMooncakeLevel(level: number): number {
 /** 活动结束后，未抽完的玉兔灯 → 花愿换算比例。 */
 export const MID_AUTUMN_LANTERN_TO_HUAYUAN_RATE = 1;
 
-/** 三轮抽奖花费：第 1 / 2 / 3 轮分别 4 / 6 / 8 盏。 */
-export const MID_AUTUMN_SPIN_COSTS = [4, 6, 8] as const;
+/** 三轮抽奖花费：每轮每次都是 4 盏。 */
+export const MID_AUTUMN_SPIN_COSTS = [4, 4, 4] as const;
 export const MID_AUTUMN_SPIN_COST = MID_AUTUMN_SPIN_COSTS[0];
 
 export function midAutumnSpinCostForRound(round: number): number {
