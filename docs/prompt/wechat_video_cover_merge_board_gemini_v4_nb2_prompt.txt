@@ -1,0 +1,11 @@
+Vertical 9:16 promotional key art for WeChat Mini Game “花花妙屋”, a cozy pastel flower-shop MERGE game. Full-bleed illustration, edge to edge, no frame. Premium polished 2D casual-game advertising art, warm high-key lighting, soft depth, crisp readable icons. Not a screenshot, not a flat pasted collage, not photoreal.
+
+The attached image is the DESIGN REFERENCE. Follow its layout and elements, then redraw everything as beautiful key art.
+
+TOP: reproduce the exact title lockup from the reference. Four Chinese characters 花花妙屋 only, large, centered, thumbnail-readable. Same kawaii logotype: bubbly rounded strokes, pink-to-cream fill, thick terracotta-pink outline, tiny white daisies and pink cherry blossoms on the letters. Sticker-like, no extra words.
+
+MAIN (most of the canvas): a large cream MERGE BOARD, 7 columns by about 8–9 rows of rounded square cells. This board IS the gameplay and must dominate the poster. Each cell holds one cute 2D item in the same style as the reference board: roses, tulips, lilies, lotus, orchids, peonies, wrapped bouquets, potted plants, succulents, bonsai, cakes, a butterfly, a seed pod, scissors, a pitcher, a shovel. Icons slightly larger and cleaner than a phone screenshot, clear silhouettes, soft shadows. One pair of two identical flowers on neighboring cells may glow with a gentle gold merge sparkle. A few empty cream cells are OK.
+
+BACKGROUND: soft mint-cream flower-shop atmosphere around the board — blurred wooden shelves, window light, petals. The board stays the hero.
+
+Hard bans: NO phone frame, NO black or white border, NO letterbox bars, NO HUD, NO buttons, NO green checkmarks, NO order-complete ticks, NO progress bars, NO stamina or gem numbers, NO quest bar, NO inventory bar, NO speech bubbles, NO English, NO extra Chinese besides 花花妙屋, NO watermark, NO QR, NO photoreal, NO ugly icon dump, NO tiny unreadable icons.

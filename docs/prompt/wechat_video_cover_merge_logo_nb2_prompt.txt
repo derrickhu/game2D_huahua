@@ -1,0 +1,11 @@
+Vertical 9:16 promotional key art for WeChat Mini Game “花花妙屋”, a cozy pastel flower-shop MERGE game. Full-bleed illustration, edge to edge, no frame.
+
+TOP band: reproduce the exact game title lockup from the reference image. Four Chinese characters 花花妙屋 only, large, centered, readable at thumbnail size. Same kawaii logotype: bubbly rounded strokes, pink-to-cream fill, thick terracotta-pink outline, tiny white daisies and pink cherry blossoms on the letters. Opaque sticker look, no extra words.
+
+MAIN gameplay (most of the canvas): illustrate MERGE, not a screenshot. Huge readable flower-shop items in the foreground: two identical pink roses sliding together with a glowing merge spark, becoming one larger ribbon-wrapped bouquet. Around them: tulips, a succulent pot, a cute cake, a lemonade glass, a seed tray, a butterfly. Soft sparkles only at the merge point. Items have chunky 2D casual-game silhouettes, slight overlap, clear depth.
+
+MID: one chibi florist girl with a large head, brown bob, white apron, holding the new bouquet proudly. Optional two cute customer busts in the back, smiling, NO order trays, NO complete buttons.
+
+BACKGROUND: simplified isometric cream flower-shop nook, warm wood, plants, mint-green garden through a window. Soft high-key pastel lighting.
+
+Hard bans: NO phone frame, NO black or white border, NO letterbox bars, NO HUD, NO buttons, NO checkmarks, NO progress bars, NO stamina or gem numbers, NO grid of tiny icons, NO inventory bar, NO speech bubbles, NO English, NO extra Chinese besides 花花妙屋, NO watermark, NO QR, NO photoreal, NO cluttered collage.
