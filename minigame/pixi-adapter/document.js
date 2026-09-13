@@ -5,8 +5,10 @@
 const platform = require('./platform');
 const Image = require('./Image');
 const { Element } = require('./element');
+const { createMeasureCanvas } = require('./safeCanvas');
 
 const _eventListeners = {};
+let _creatingCanvas = false;
 
 const body = new Element();
 body.clientWidth = 0;
@@ -18,12 +20,21 @@ const document = {
   body,
   documentElement,
   readyState: 'complete',
+  __huahuaAdapterDoc: true,
 
   createElement(tag) {
-    tag = tag.toLowerCase();
+    tag = String(tag || 'div').toLowerCase();
     switch (tag) {
       case 'canvas':
-        return platform.createCanvas();
+        if (platform.name === 'huawei') return createMeasureCanvas(1, 1);
+        // 宿主 createCanvas 常会再调 document.createElement，无此守卫必栈溢出
+        if (_creatingCanvas) return createMeasureCanvas(1, 1);
+        _creatingCanvas = true;
+        try {
+          return platform.createCanvas();
+        } finally {
+          _creatingCanvas = false;
+        }
       case 'img':
       case 'image':
         return platform.createImage();
@@ -95,3 +106,4 @@ const document = {
 };
 
 module.exports = document;
+

@@ -32,6 +32,7 @@ import { TextureCache } from '@/utils/TextureCache';
 import { createCurrencyIconCluster } from '@/utils/CurrencyCellIcons';
 import { bringToolEnergyToFront, createToolEnergySprite } from '@/utils/ToolEnergyBadge';
 import { ToolSparkleLayer } from '@/utils/ToolSparkleLayer';
+import { attachCanvasMoveUp, type TouchCanvasLike } from '@/utils/canvasInteraction';
 
 /** 弹窗最小高度（过矮时仍可读） */
 const PANEL_MIN_HEIGHT = 580;
@@ -109,6 +110,8 @@ export class MergeChainPanel extends PIXI.Container {
   private _producePopoverLayer!: PIXI.Container;
   /** 当前正在展示产出列表的工具 id；与选中一致时再次点击可收起 */
   private _producePopoverForId: string | null = null;
+  private _detachChainScroll: (() => void) | null = null;
+  private _detachSourcesRowScroll: (() => void) | null = null;
 
   constructor() {
     super();
@@ -986,21 +989,33 @@ export class MergeChainPanel extends PIXI.Container {
 
     this._scrollContainer.on('pointerdown', (e: PIXI.FederatedPointerEvent) => {
       dragging = true;
-      startY = e.global.y;
+      startY = Game.federatedToDesign(e).y;
       startScrollY = this._scrollContainer.position.y;
+      const canvas = Game.app.view as unknown as TouchCanvasLike | undefined;
+      if (!canvas?.addEventListener) return;
+      this._detachChainScroll?.();
+      this._detachChainScroll = attachCanvasMoveUp(canvas, {
+        onMove: (ev) => {
+          if (!dragging) return;
+          const dy = Game.eventToDesign(ev).y - startY;
+          let newY = startScrollY + dy;
+          newY = Math.max(topY - maxOffset, Math.min(topY, newY));
+          this._scrollContainer.position.y = newY;
+        },
+        onUp: () => {
+          dragging = false;
+          this._detachChainScroll?.();
+          this._detachChainScroll = null;
+        },
+      });
     });
-    this._scrollContainer.on('pointermove', (e: PIXI.FederatedPointerEvent) => {
-      if (!dragging) return;
-      const dy = e.global.y - startY;
-      let newY = startScrollY + dy;
-      newY = Math.max(topY - maxOffset, Math.min(topY, newY));
-      this._scrollContainer.position.y = newY;
-    });
-    this._scrollContainer.on('pointerup', () => { dragging = false; });
-    this._scrollContainer.on('pointerupoutside', () => { dragging = false; });
   }
 
   private _clearChain(): void {
+    this._detachChainScroll?.();
+    this._detachChainScroll = null;
+    this._detachSourcesRowScroll?.();
+    this._detachSourcesRowScroll = null;
     while (this._scrollContainer.children.length > 0) {
       const child = this._scrollContainer.children[0];
       this._scrollContainer.removeChild(child);
@@ -1201,18 +1216,26 @@ export class MergeChainPanel extends PIXI.Container {
     row.on('pointerdown', (e: PIXI.FederatedPointerEvent) => {
       e.stopPropagation();
       dragging = true;
-      startX = e.global.x;
+      startX = Game.federatedToDesign(e).x;
       startRowX = row.position.x;
+      const canvas = Game.app.view as unknown as TouchCanvasLike | undefined;
+      if (!canvas?.addEventListener) return;
+      this._detachSourcesRowScroll?.();
+      this._detachSourcesRowScroll = attachCanvasMoveUp(canvas, {
+        onMove: (ev) => {
+          if (!dragging) return;
+          const dx = Game.eventToDesign(ev).x - startX;
+          let nx = startRowX + dx;
+          nx = Math.max(padX - maxOffset, Math.min(padX, nx));
+          row.position.x = nx;
+        },
+        onUp: () => {
+          dragging = false;
+          this._detachSourcesRowScroll?.();
+          this._detachSourcesRowScroll = null;
+        },
+      });
     });
-    row.on('pointermove', (e: PIXI.FederatedPointerEvent) => {
-      if (!dragging) return;
-      const dx = e.global.x - startX;
-      let nx = startRowX + dx;
-      nx = Math.max(padX - maxOffset, Math.min(padX, nx));
-      row.position.x = nx;
-    });
-    row.on('pointerup', () => { dragging = false; });
-    row.on('pointerupoutside', () => { dragging = false; });
   }
 
   private _getLineColor(line: string): number {

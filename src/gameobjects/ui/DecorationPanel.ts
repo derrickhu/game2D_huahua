@@ -13,6 +13,7 @@ import { AudioManager } from '@/core/AudioManager';
 import { SceneManager } from '@/core/SceneManager';
 import { TweenManager, Ease } from '@/core/TweenManager';
 import { EventBus } from '@/core/EventBus';
+import { attachCanvasMoveUp, eventClientPoint, type TouchCanvasLike } from '@/utils/canvasInteraction';
 import { ToastMessage } from '@/gameobjects/ui/ToastMessage';
 import { ConfirmDialog } from '@/gameobjects/ui/ConfirmDialog';
 import { createFreeAdBadge } from '@/gameobjects/ui/AdBadge';
@@ -34,6 +35,7 @@ import {
   getRoomStylesForScene,
   isDecoAllowedInScene,
   formatAllowedScenesShort,
+  DECO_MAP,
 } from '@/config/DecorationConfig';
 import { getDecoDisplayName } from '@/config/FurnitureWorkshopConfig';
 import { CurrencyManager } from '@/managers/CurrencyManager';
@@ -408,22 +410,13 @@ function shouldUseNextLevelUnlockLabel(deco: DecoDef, sceneOk: boolean): boolean
   return lv !== undefined && lv > 0 && LevelManager.level === lv - 1;
 }
 
-/** global pixel -> design coordinate */
-function globalToDesignY(globalY: number): number {
-  return Game.globalToDesign(0, globalY).y;
-}
-
 /** 与 BoardView / FurnitureDragSystem 一致：原生 clientY → 设计坐标纵轴 */
 function nativeClientToDesignY(clientY: number): number {
   return Game.clientToDesign(0, clientY).y;
 }
 
 function federatedPointerToDesignY(e: PIXI.FederatedPointerEvent): number {
-  const n = e.nativeEvent as PointerEvent | MouseEvent | undefined;
-  if (n != null && typeof (n as PointerEvent).clientY === 'number') {
-    return nativeClientToDesignY((n as PointerEvent).clientY);
-  }
-  return globalToDesignY(e.global.y);
+  return Game.federatedToDesign(e).y;
 }
 
 type DecoGridPendingTap =
@@ -460,6 +453,7 @@ export class DecorationPanel extends PIXI.Container {
   private _scrollY = 0;
   private _maxScrollY = 0;
   private _gridScrollListening = false;
+  private _detachCanvasGridScroll: (() => void) | null = null;
   private _gridScrollStartDesignY = 0;
   private _gridScrollStartScrollY = 0;
   private _pendingGridTap: DecoGridPendingTap | null = null;
@@ -492,6 +486,10 @@ export class DecorationPanel extends PIXI.Container {
   /** 避免 pointer 栈内 _refreshAll 销毁卡片后 Pixi updateTransform 读 null（与 QuestPanel 同因） */
   private _gridRefreshRaf: number | null = null;
   private _gridTapActionRaf: number | null = null;
+  /** 引导高亮代理点击与卡片松手不要连打两次购买 */
+  private _tutorialTapLockUntil = 0;
+  /** 「获得新家具」弹层里正在展示的家具 */
+  private _unlockPopupDeco: DecoDef | null = null;
 
   private _scheduleGridRefresh(): void {
     if (!this._isOpen) return;
@@ -537,35 +535,35 @@ export class DecorationPanel extends PIXI.Container {
     EventBus.on('decoration:shopStarFlyComplete', this._onShopStarFlyComplete);
     EventBus.on('shop:levelUpPopupClosed', this._onShopLevelUpPopupClosed);
     EventBus.on('decoNewUnlock:changed', this._onDecoNewUnlockChanged);
+    EventBus.on('decoration:tutorialPurchaseTap', this._onTutorialPurchaseTap);
+    EventBus.on('decoration:tutorialUnlockPlaceTap', this._onTutorialUnlockPlaceTap);
   }
 
   // ─── touch scroll：pointermove/up 绑 canvas（微信小游戏上 stage 级 move 常丢失）────
 
-  private readonly _onCanvasGridMove = (ev: PointerEvent): void => {
+  private readonly _onCanvasGridMove = (ev: unknown): void => {
     if (!this._isOpen || !this._gridScrollListening) return;
-    const dy = nativeClientToDesignY(ev.clientY) - this._gridScrollStartDesignY;
+    const dy = nativeClientToDesignY(eventClientPoint(ev).y) - this._gridScrollStartDesignY;
     this._scrollY = Math.max(-this._maxScrollY, Math.min(0, this._gridScrollStartScrollY + dy));
     this._applyScroll();
   };
 
-  private readonly _onCanvasGridUp = (ev: PointerEvent): void => {
+  private readonly _onCanvasGridUp = (ev?: unknown): void => {
     this._finishGridScroll(ev);
   };
 
   private _unbindCanvasGridScroll(): void {
-    const canvas = Game.app.view as unknown as HTMLCanvasElement | undefined;
-    if (!canvas?.removeEventListener) return;
-    canvas.removeEventListener('pointermove', this._onCanvasGridMove);
-    canvas.removeEventListener('pointerup', this._onCanvasGridUp);
-    canvas.removeEventListener('pointercancel', this._onCanvasGridUp);
+    this._detachCanvasGridScroll?.();
+    this._detachCanvasGridScroll = null;
   }
 
-  private _finishGridScroll(ev?: PointerEvent): void {
+  private _finishGridScroll(ev?: unknown, designY?: number): void {
     if (!this._gridScrollListening) return;
     this._unbindCanvasGridScroll();
     this._gridScrollListening = false;
 
-    const endDesignY = ev != null ? nativeClientToDesignY(ev.clientY) : this._gridScrollStartDesignY;
+    const endDesignY = designY
+      ?? (ev != null ? nativeClientToDesignY(eventClientPoint(ev).y) : this._gridScrollStartDesignY);
     const movedPx = Math.abs(endDesignY - this._gridScrollStartDesignY);
     const pending = this._pendingGridTap;
     this._pendingGridTap = null;
@@ -581,17 +579,44 @@ export class DecorationPanel extends PIXI.Container {
   }
 
   private _beginScroll(e: PIXI.FederatedPointerEvent): void {
-    if (this._gridScrollListening || !this._isOpen) return;
+    if (!this._isOpen) return;
+    if (this._gridScrollListening) this._teardownScroll();
     this._gridScrollListening = true;
     this._gridScrollStartDesignY = federatedPointerToDesignY(e);
     this._gridScrollStartScrollY = this._scrollY;
-    const canvas = Game.app.view as unknown as HTMLCanvasElement | undefined;
+    const canvas = Game.app.view as unknown as TouchCanvasLike | undefined;
     if (canvas?.addEventListener) {
-      canvas.addEventListener('pointermove', this._onCanvasGridMove);
-      canvas.addEventListener('pointerup', this._onCanvasGridUp);
-      canvas.addEventListener('pointercancel', this._onCanvasGridUp);
+      this._unbindCanvasGridScroll();
+      this._detachCanvasGridScroll = attachCanvasMoveUp(canvas, {
+        onMove: this._onCanvasGridMove,
+        onUp: this._onCanvasGridUp,
+      });
     }
   }
+
+  private readonly _onTutorialPurchaseTap = (): void => {
+    if (!this._isOpen) return;
+    if (!TutorialManager.isActive || TutorialManager.currentStep !== TutorialStep.GUIDE_BUY_FURNITURE) {
+      return;
+    }
+    const now = Date.now();
+    if (now < this._tutorialTapLockUntil) return;
+    this._tutorialTapLockUntil = now + 500;
+    const deco = DECO_MAP.get(TUTORIAL_BUY_DECO_ID);
+    if (!deco || DecorationManager.isUnlocked(deco.id)) return;
+    const flyCard = this._tutorialPurchaseAnchor?.parent as PIXI.Container | undefined;
+    this._purchaseDeco(deco, flyCard && !flyCard.destroyed ? flyCard : this);
+  };
+
+  private readonly _onTutorialUnlockPlaceTap = (): void => {
+    if (!this._isOpen || !this._unlockPopupDeco) return;
+    const now = Date.now();
+    if (now < this._tutorialTapLockUntil) return;
+    this._tutorialTapLockUntil = now + 500;
+    const decoId = this._unlockPopupDeco.id;
+    this._dismissUnlockPopup();
+    this._goToPlaceDeco(decoId);
+  };
 
   private _teardownScroll(): void {
     if (!this._gridScrollListening) return;
@@ -1820,6 +1845,12 @@ export class DecorationPanel extends PIXI.Container {
       this._beginScroll(e);
       this._pendingGridTap = { type: 'deco', deco, flyCard: card };
     });
+    card.on('pointerup', (e: PIXI.FederatedPointerEvent) => {
+      this._finishGridScroll(undefined, federatedPointerToDesignY(e));
+    });
+    card.on('pointerupoutside', () => {
+      this._finishGridScroll();
+    });
 
     if (
       TutorialManager.isActive
@@ -2155,6 +2186,7 @@ export class DecorationPanel extends PIXI.Container {
       this._unlockOverlay.destroy({ children: true });
       this._unlockOverlay = null;
       this._unlockPlaceRoomHit = null;
+      this._unlockPopupDeco = null;
       EventBus.emit('decoration:tutorialUnlockPopupClosed');
     }
   }
@@ -2215,6 +2247,7 @@ export class DecorationPanel extends PIXI.Container {
   /** 购买成功后：教程绘制壳体，可立即进店摆放 */
   private _showNewDecoUnlockPopup(deco: DecoDef): void {
     this._dismissUnlockPopup();
+    this._unlockPopupDeco = deco;
     const W = DESIGN_WIDTH;
     const H = Game.logicHeight;
 

@@ -12,10 +12,33 @@ import {
 import {
   computeViewportLayout,
   normalizeViewportMetrics,
+  pickHuaweiViewportInput,
   type ViewportLayout,
   type ViewportMetrics,
 } from '@/config/ResponsiveLayout';
 import { getNativePlatformApi } from '@/core/platformDetect';
+import { Platform } from '@/core/PlatformService';
+import { readHostCanvasRect } from '@/utils/hostCanvasRect';
+import { eventClientPoint, federatedToDesignPoint } from '@/utils/canvasInteraction';
+import {
+  acquireMainWebGLContext,
+  blockWebGL2OnCanvas,
+  configurePixiWebGLEnvForPlatform,
+  forcePixiWebGLRenderer,
+  installBlockWebGL2OnPlatform,
+  minigameRendererOpts,
+  rememberSharedWebGL,
+  resolveHuaweiViewSize,
+} from '@/core/webglContextPatch';
+
+/** 华为宿主 console 把异常对象打成 [object Object]，必须先摊平成文本 */
+function errText(e: unknown): string {
+  if (e == null) return String(e);
+  const any = e as { message?: unknown; errMsg?: unknown; stack?: unknown };
+  const head = String(any.message ?? any.errMsg ?? e);
+  const tail = any.stack ? ' | ' + String(any.stack).slice(0, 400) : '';
+  return head + tail;
+}
 
 /* ---- @pixi/unsafe-eval 内联 patch ---- */
 
@@ -129,6 +152,7 @@ class GameClass {
 
   private _initialized = false;
   private _canvas: any = null;
+  private _renderFailSeen = new Set<string>();
   private _viewportListeners = new Set<() => void>();
   private _resizeTimer: ReturnType<typeof setTimeout> | null = null;
 
@@ -147,39 +171,90 @@ class GameClass {
     // 再次确保 patch（防止 bundler 重排）
     ensureUnsafeEvalPatch();
 
+    this._canvas = canvas;
     const viewport = this._readViewportMetrics();
     this._assignViewportMetrics(viewport);
-    this._canvas = canvas;
 
-    const realWidth = this.screenWidth * this.dpr;
-    const realHeight = this.screenHeight * this.dpr;
+    let realWidth = Math.round(this.screenWidth * this.dpr);
+    let realHeight = Math.round(this.screenHeight * this.dpr);
+    if (Platform.isHuawei) {
+      const view = this._applyHuaweiHostView(canvas);
+      realWidth = view.width;
+      realHeight = view.height;
+    }
 
-    canvas.width = realWidth;
-    canvas.height = realHeight;
-
-    // ---- 创建 renderer + stage + ticker ----
-    // 微信小游戏环境下 PIXI.Application 可能因 polyfill / Object.defineProperty
-    // 被静默 patch 等原因导致内部属性（stage/ticker）丢失，因此采用多级降级策略。
-
-    let renderer: PIXI.IRenderer | null = null;
-
-    // 方式 1：标准 PIXI.Application
-    let app: PIXI.Application | null = null;
+    const RENDERER_OPTS = minigameRendererOpts(Platform.isCanvasHostGuarded);
+    forcePixiWebGLRenderer();
+    try { (PIXI.utils as { isWebGLSupported: () => boolean }).isWebGLSupported = () => true; } catch { /* */ }
+    blockWebGL2OnCanvas(canvas);
+    let sysPlatform: string | undefined;
+    try { sysPlatform = getNativePlatformApi()?.getSystemInfoSync?.()?.platform; } catch { /* */ }
+    configurePixiWebGLEnvForPlatform(sysPlatform);
+    installBlockWebGL2OnPlatform();
+    const sharedGL = acquireMainWebGLContext(canvas);
+    rememberSharedWebGL(sharedGL);
     try {
-      app = new PIXI.Application({
-        view: canvas,
-        width: realWidth,
-        height: realHeight,
-        backgroundColor: 0xFFF5EE,
-        resolution: 1,
-        antialias: true,
-        preserveDrawingBuffer: true,
-        // 业界已知：鸿蒙/Android 必须显式要求 stencil，否则 Filter/Mask/Graphics 不工作
-        // preferWebGLVersion 设为 1 避免鸿蒙返回假 WebGL2 上下文
-        preferWebGLVersion: 1,
-      } as any);
+      const cv = canvas as { width?: number; height?: number; __huahuaMeasure?: boolean };
+      (GameGlobal as any).__bootDiag?.(
+        (sharedGL ? 'gl=ok' : 'gl=null')
+        + ` cv=${cv?.width || 0}x${cv?.height || 0}`
+        + ` fake=${!!cv?.__huahuaMeasure}`
+        + ` src=${(GameGlobal as any).__hostCanvasSrc || '?'}`,
+      );
+    } catch { /* */ }
+
+    try {
+      if (Platform.isHuawei) {
+        // 华为主屏 canvas 设小了会缩在一角；只允许放大到目标像素，绝不缩小
+        if ((canvas.width || 0) < realWidth) canvas.width = realWidth;
+        if ((canvas.height || 0) < realHeight) canvas.height = realHeight;
+        realWidth = canvas.width || realWidth;
+        realHeight = canvas.height || realHeight;
+      } else {
+        canvas.width = realWidth;
+        canvas.height = realHeight;
+      }
     } catch (e) {
-      console.error('[Game] new PIXI.Application 失败:', e);
+      console.warn('[Game] 设置 canvas 尺寸失败:', errText(e));
+    }
+    try {
+      // 华为：宿主已经按物理像素铺满。再写 style.width=screenWidth
+      // 若 screenWidth 被报成 1084，CSS 画布会比窗口大一倍多，只露出屋顶。
+      if (canvas.style && !Platform.isHuawei) {
+        canvas.style.width = `${this.screenWidth}px`;
+        canvas.style.height = `${this.screenHeight}px`;
+      }
+    } catch { /* 宿主可能没有 style */ }
+    try {
+      const sys = getNativePlatformApi()?.getSystemInfoSync?.();
+      const rect = readHostCanvasRect();
+      (GameGlobal as any).__bootDiag?.(
+        `view=${realWidth}x${realHeight} dpr=${Number(this.dpr).toFixed(2)} logical=${this.screenWidth}x${this.screenHeight}`
+        + ` raw=${sys?.screenWidth || 0}x${sys?.screenHeight || 0}`
+        + ` css=${rect ? `${Math.round(rect.width)}x${Math.round(rect.height)}` : 'none'}`,
+      );
+    } catch { /* */ }
+
+    const rendererOpts = {
+      view: canvas,
+      width: realWidth,
+      height: realHeight,
+      ...RENDERER_OPTS,
+      accessibility: false,
+      hello: false,
+      ...(sharedGL ? { context: sharedGL } : {}),
+    } as any;
+
+    // 华为：不要走 Application。插件初始化会再 createCanvas，和宿主互相重入。
+    let renderer: PIXI.IRenderer | null = null;
+    let app: PIXI.Application | null = null;
+    if (!Platform.isCanvasHostGuarded) {
+      try {
+        app = new PIXI.Application(rendererOpts);
+      } catch (e) {
+        console.error('[Game] new PIXI.Application 失败:', errText(e));
+        try { (GameGlobal as any).__bootDiag?.('PIXI.Application 失败:' + errText(e)); } catch { /* */ }
+      }
     }
 
     if (app && app.stage && app.ticker && app.renderer) {
@@ -188,58 +263,31 @@ class GameClass {
       this.ticker = app.ticker;
       renderer = app.renderer;
     } else {
-      if (app) {
-        console.warn('[Game] Application 已创建但不完整',
-          'stage:', !!app.stage, 'ticker:', !!app.ticker, 'renderer:', !!app.renderer);
-        // 尝试从不完整的 app 中回收可用的 renderer
-        if (app.renderer) renderer = app.renderer;
-      }
-
-      // 方式 2：手动 new PIXI.Renderer
+      if (app?.renderer) renderer = app.renderer;
       if (!renderer) {
         try {
-          renderer = new PIXI.Renderer({
-            view: canvas,
-            width: realWidth,
-            height: realHeight,
-            backgroundColor: 0xFFF5EE,
-            resolution: 1,
-            antialias: true,
-            preserveDrawingBuffer: true,
-            preferWebGLVersion: 1,
-          } as any);
+          renderer = new PIXI.Renderer(rendererOpts);
+          try { (GameGlobal as any).__bootDiag?.('renderer=ok'); } catch { /* */ }
         } catch (e2) {
-          console.error('[Game] new PIXI.Renderer 失败:', e2);
+          console.error('[Game] new PIXI.Renderer 失败:', errText(e2));
+          try { (GameGlobal as any).__bootDiag?.('PIXI.Renderer 失败:' + errText(e2)); } catch { /* */ }
         }
       }
-
-      // 方式 3：autoDetectRenderer 降级
       if (!renderer) {
         try {
-          renderer = PIXI.autoDetectRenderer({
-            view: canvas,
-            width: realWidth,
-            height: realHeight,
-            backgroundColor: 0xFFF5EE,
-            resolution: 1,
-            antialias: true,
-            preserveDrawingBuffer: true,
-            preferWebGLVersion: 1,
-          } as any);
+          renderer = PIXI.autoDetectRenderer(rendererOpts);
         } catch (e3) {
-          console.error('[Game] autoDetectRenderer 失败:', e3);
+          console.error('[Game] autoDetectRenderer 失败:', errText(e3));
+          try { (GameGlobal as any).__bootDiag?.('autoDetectRenderer 失败:' + errText(e3)); } catch { /* */ }
         }
       }
 
-      // 确保 stage 和 ticker 存在
       this.stage = new PIXI.Container();
       this.ticker = new PIXI.Ticker();
       this.ticker.start();
 
       if (renderer) {
-        this.ticker.add(() => {
-          renderer!.render(this.stage);
-        });
+        this.ticker.add(() => { this._renderGuarded(renderer!); });
       } else {
         console.error('[Game] 所有渲染器创建均失败，画面将无法渲染');
       }
@@ -252,8 +300,14 @@ class GameClass {
       } as any;
     }
 
-    // 标记游戏已渲染成功（供 game.js 诊断弹窗判断）
-    try { (GameGlobal as any).__gameRendered = true; } catch (_) {}
+    if (!renderer) {
+      try { (GameGlobal as any).__gameRendered = false; } catch { /* */ }
+      try { (GameGlobal as any).__bootDiag?.('Game.init 无渲染器'); } catch { /* */ }
+      try { (GameGlobal as any).__showBootDiag?.(); } catch { /* */ }
+      console.error('[Game] 渲染器不可用，终止初始化');
+      return;
+    }
+    try { (GameGlobal as any).__gameRendered = true; } catch { /* */ }
 
     // 整体缩放到设计分辨率
     this.stage.scale.set(this.scale, this.scale);
@@ -284,7 +338,7 @@ class GameClass {
           point.y = ((y - (rect.top || 0)) * (dom.height / rect.height)) * resMul;
         };
       }
-    } catch (e) { console.warn('[Game] EventSystem patch 失败:', e); }
+    } catch (e) { console.warn('[Game] EventSystem patch 失败:', errText(e)); }
 
     this._initialized = true;
     this._bindViewportResize();
@@ -308,24 +362,43 @@ class GameClass {
     const nextSafeBottom = ENABLE_RESPONSIVE_LAYOUT_V2
       ? Math.round(nextLayout.safeBottom)
       : 0;
-    if (
-      next.width === this.screenWidth
+    const sameLogical = next.width === this.screenWidth
       && next.height === this.screenHeight
-      && next.pixelRatio === this.dpr
       && nextSafeTop === this.safeTop
-      && nextSafeBottom === this.safeBottom
-    ) {
+      && nextSafeBottom === this.safeBottom;
+    // 华为 dpr 以宿主 canvas 为准，不能和 getSystemInfo.pixelRatio 比相等
+    if (sameLogical && (Platform.isHuawei || next.pixelRatio === this.dpr)) {
       return false;
     }
 
     this._assignViewportMetrics(next);
-    const realWidth = Math.round(this.screenWidth * this.dpr);
-    const realHeight = Math.round(this.screenHeight * this.dpr);
+    let realWidth = Math.round(this.screenWidth * this.dpr);
+    let realHeight = Math.round(this.screenHeight * this.dpr);
+    if (Platform.isHuawei) {
+      const view = this._applyHuaweiHostView(this._canvas);
+      realWidth = view.width;
+      realHeight = view.height;
+    }
     try {
-      (this.app?.renderer as any)?.resize?.(realWidth, realHeight);
+      if (Platform.isHuawei) {
+        const canvas = this._canvas;
+        const prevW = canvas?.width || 0;
+        const prevH = canvas?.height || 0;
+        if (canvas) {
+          if (prevW < realWidth) canvas.width = realWidth;
+          if (prevH < realHeight) canvas.height = realHeight;
+          realWidth = canvas.width || realWidth;
+          realHeight = canvas.height || realHeight;
+        }
+        if (realWidth !== prevW || realHeight !== prevH) {
+          (this.app?.renderer as any)?.resize?.(realWidth, realHeight);
+        }
+      } else {
+        (this.app?.renderer as any)?.resize?.(realWidth, realHeight);
+      }
     } catch (e) {
       console.warn('[Game] renderer.resize 失败，回退直接更新 canvas:', e);
-      if (this._canvas) {
+      if (this._canvas && !Platform.isHuawei) {
         this._canvas.width = realWidth;
         this._canvas.height = realHeight;
       }
@@ -357,6 +430,23 @@ class GameClass {
     this.scale = this.contentScale * metrics.pixelRatio;
   }
 
+  /**
+   * 对齐 xiaochu2：宿主 canvas 已是物理像素时跟宿主走，dpr = hostW / screenWidth。
+   * 只改 scale/dpr，不在这里改小 canvas。
+   */
+  private _applyHuaweiHostView(canvas: any): { width: number; height: number } {
+    const view = resolveHuaweiViewSize({
+      canvasWidth: canvas?.width,
+      canvasHeight: canvas?.height,
+      screenWidth: this.screenWidth,
+      screenHeight: this.screenHeight,
+      pixelRatio: this.dpr,
+    });
+    this.dpr = view.dpr;
+    this.scale = this.contentScale * this.dpr;
+    return { width: view.width, height: view.height };
+  }
+
   private _readViewportMetrics(resizeInfo?: any): ViewportMetrics {
     const api: any = getNativePlatformApi();
     let sysInfo: any = null;
@@ -364,6 +454,20 @@ class GameClass {
     let capsule: any = null;
     try { sysInfo = api?.getSystemInfoSync?.() ?? null; } catch (_) {}
     try { capsule = api?.getMenuButtonBoundingClientRect?.() ?? null; } catch (_) {}
+    if (Platform.isHuawei) {
+      const rect = readHostCanvasRect();
+      const canvas = this._canvas as { width?: number; height?: number } | null;
+      return normalizeViewportMetrics(
+        pickHuaweiViewportInput(sysInfo, this.screenWidth, this.screenHeight, {
+          canvasWidth: canvas?.width,
+          canvasHeight: canvas?.height,
+          cssWidth: rect?.width,
+          cssHeight: rect?.height,
+        }),
+        this.screenWidth,
+        this.screenHeight,
+      );
+    }
     if (!ENABLE_RESPONSIVE_LAYOUT_V2) {
       const legacySafeTop = capsule?.top
         || (sysInfo?.statusBarHeight ? sysInfo.statusBarHeight + 6 : 40);
@@ -403,6 +507,8 @@ class GameClass {
 
   private _bindViewportResize(): void {
     if (!ENABLE_RESPONSIVE_LAYOUT_V2) return;
+    // 华为 onWindowResize / window.innerWidth 不可信，跟 xiaochu2 一样不跟窗体改主屏
+    if (Platform.isHuawei) return;
     const api: any = getNativePlatformApi();
     const schedule = (info?: any): void => {
       if (this._resizeTimer) clearTimeout(this._resizeTimer);
@@ -415,6 +521,19 @@ class GameClass {
       api.onWindowResize(schedule);
     } else if (typeof window !== 'undefined' && typeof window.addEventListener === 'function') {
       window.addEventListener('resize', () => schedule());
+    }
+  }
+
+  private _renderGuarded(renderer: PIXI.IRenderer): void {
+    try {
+      renderer.render(this.stage);
+    } catch (e) {
+      const desc = String((e as any)?.message || e);
+      if (this._renderFailSeen.has(desc) || this._renderFailSeen.size >= 3) return;
+      this._renderFailSeen.add(desc);
+      console.error('[Game] render-fail', errText(e));
+      try { (GameGlobal as any).__bootDiag?.('render-fail ' + desc); } catch { /* */ }
+      try { (GameGlobal as any).__showBootDiag?.(); } catch { /* */ }
     }
   }
 
@@ -449,10 +568,39 @@ class GameClass {
 
   /** 窗口 CSS 坐标转核心设计坐标，包含 Pad 居中偏移。 */
   clientToDesign(clientX: number, clientY: number): { x: number; y: number } {
+    const rect = readHostCanvasRect();
+    if (rect) {
+      const sx = this.screenWidth / rect.width;
+      const sy = this.screenHeight / rect.height;
+      return {
+        x: ((clientX - rect.left) * sx - this.contentOffsetX) / this.contentScale,
+        y: ((clientY - rect.top) * sy - this.contentOffsetY) / this.contentScale,
+      };
+    }
     return {
       x: (clientX - this.contentOffsetX) / this.contentScale,
       y: (clientY - this.contentOffsetY) / this.contentScale,
     };
+  }
+
+  /** 宿主 pointer / touch 事件 → 设计坐标 */
+  eventToDesign(e: unknown): { x: number; y: number } {
+    const p = eventClientPoint(e);
+    return this.clientToDesign(p.x, p.y);
+  }
+
+  /** Pixi Federated 按下 → 设计坐标（华为不把 CSS global 再 /dpr） */
+  federatedToDesign(e: {
+    nativeEvent?: unknown;
+    clientX?: number;
+    clientY?: number;
+    global?: { x: number; y: number };
+  }): { x: number; y: number } {
+    return federatedToDesignPoint(
+      e,
+      (x, y) => this.clientToDesign(x, y),
+      (x, y) => this.globalToDesign(x, y),
+    );
   }
 
   /** renderer 全局物理坐标转核心设计坐标。 */

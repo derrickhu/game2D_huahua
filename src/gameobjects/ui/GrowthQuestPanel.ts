@@ -14,6 +14,7 @@ import { GROWTH_CHAPTERS, type GrowthReward } from '@/config/GrowthQuestConfig';
 import { ITEM_DEFS } from '@/config/ItemConfig';
 import { WORKSHOP_RESOURCE_MAP, getWorkshopMaterialDisplayName } from '@/config/FurnitureWorkshopConfig';
 import { TextureCache } from '@/utils/TextureCache';
+import { attachCanvasMoveUp, eventClientPoint, type TouchCanvasLike } from '@/utils/canvasInteraction';
 import { DESIGN_WIDTH, FONT_FAMILY } from '@/config/Constants';
 import { ItemObtainOverlay, type ItemObtainEntry } from './ItemObtainOverlay';
 
@@ -61,11 +62,7 @@ function nativeClientToDesignY(clientY: number): number {
 }
 
 function federatedPointerToDesignY(e: PIXI.FederatedPointerEvent): number {
-  const n = e.nativeEvent as PointerEvent | MouseEvent | undefined;
-  if (n != null && typeof (n as PointerEvent).clientY === 'number') {
-    return nativeClientToDesignY((n as PointerEvent).clientY);
-  }
-  return Game.globalToDesign(e.global.x, e.global.y).y;
+  return Game.federatedToDesign(e).y;
 }
 
 interface RewardChip {
@@ -185,6 +182,7 @@ export class GrowthQuestPanel extends PIXI.Container {
   private _listScrollY = 0;
   private _listMaxScroll = 0;
   private _listListening = false;
+  private _detachListScroll: (() => void) | null = null;
   private _listLastY = 0;
   /** 列表视口顶部 y（滚动时 `inner.y = _listTop - _listScrollY`） */
   private _listTop = 0;
@@ -196,9 +194,9 @@ export class GrowthQuestPanel extends PIXI.Container {
    */
   private _listDragDistance = 0;
 
-  private readonly _onListMove = (ev: PointerEvent): void => {
+  private readonly _onListMove = (ev: unknown): void => {
     if (!this._isOpen || !this._listListening || !this._listContent) return;
-    const cur = nativeClientToDesignY(ev.clientY);
+    const cur = nativeClientToDesignY(eventClientPoint(ev).y);
     const delta = this._listLastY - cur;
     this._listLastY = cur;
     this._listDragDistance += Math.abs(delta);
@@ -356,19 +354,16 @@ export class GrowthQuestPanel extends PIXI.Container {
   }
 
   private _finishListScroll(): void {
-    if (!this._listListening) return;
-    const canvas = Game.app.view as unknown as HTMLCanvasElement | undefined;
-    if (canvas?.removeEventListener) {
-      canvas.removeEventListener('pointermove', this._onListMove);
-      canvas.removeEventListener('pointerup', this._onListUp);
-      canvas.removeEventListener('pointercancel', this._onListUp);
-    }
+    if (!this._listListening && !this._detachListScroll) return;
+    this._detachListScroll?.();
+    this._detachListScroll = null;
     this._listListening = false;
     if (this._listContent) this._listContent.cursor = 'grab';
   }
 
   private _beginListScroll(e: PIXI.FederatedPointerEvent): void {
-    if (!this._isOpen || !this._listContent || this._listListening) return;
+    if (!this._isOpen || !this._listContent) return;
+    if (this._listListening) this._finishListScroll();
     // 先归零：列表短到不能滚时也要清掉上一次手势的残留距离，否则 tap 会被一直吞掉
     this._listDragDistance = 0;
     if (this._listMaxScroll <= 0) return;
@@ -376,11 +371,13 @@ export class GrowthQuestPanel extends PIXI.Container {
     this._listScrollY = this._listTop - this._listContent.y;
     this._listLastY = federatedPointerToDesignY(e);
     this._listContent.cursor = 'grabbing';
-    const canvas = Game.app.view as unknown as HTMLCanvasElement | undefined;
+    const canvas = Game.app.view as unknown as TouchCanvasLike | undefined;
     if (canvas?.addEventListener) {
-      canvas.addEventListener('pointermove', this._onListMove);
-      canvas.addEventListener('pointerup', this._onListUp);
-      canvas.addEventListener('pointercancel', this._onListUp);
+      this._detachListScroll?.();
+      this._detachListScroll = attachCanvasMoveUp(canvas, {
+        onMove: this._onListMove,
+        onUp: this._onListUp,
+      });
     }
   }
 

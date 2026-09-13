@@ -6,6 +6,7 @@
     "build": "vite build && rimraf .bundle/index.html minigame/index.html && node scripts/build-platform.mjs",
     "build:wechat": "HUAHUA_PLATFORM=wechat npm run build",
     "build:douyin": "HUAHUA_PLATFORM=douyin npm run build",
+    "build:huawei": "VITE_PLATFORM=huawei HUAHUA_PLATFORM=huawei vite build && rimraf .bundle-huawei/index.html minigame/index.html && node scripts/build-platform.mjs huawei",
     "dev": "vite build --watch",
     "check:assets": "node scripts/check_assets.js",
     "check:deco-textures": "node scripts/check_deco_texture_refs.js",
@@ -18,7 +19,7 @@
   "keywords": [],
   "author": "",
   "license": "ISC",
-  "description": "花花妙屋 - 合成经营小游戏（微信/抖音）",
+  "description": "花花妙屋 - 合成经营小游戏（微信/抖音/华为快游戏）",
   "dependencies": {
     "@gp/analytics-sdk": "file:../game-analysis/packages/analytics-sdk",
     "@pixi/unsafe-eval": "^7.3.2",

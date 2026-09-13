@@ -16,6 +16,7 @@
 
 import * as PIXI from 'pixi.js';
 import { Game } from '@/core/Game';
+import { attachCanvasMoveUp, eventClientPoint } from '@/utils/canvasInteraction';
 import { EventBus } from '@/core/EventBus';
 import { TweenManager, Ease } from '@/core/TweenManager';
 import {
@@ -108,7 +109,7 @@ class FurnitureDragSystemClass {
   /** canvas 事件引用（用于 cleanup） */
   private _onRawMove: ((e: any) => void) | null = null;
   private _onRawUp: ((e: any) => void) | null = null;
-  private _onRawTouchEnd: ((e: TouchEvent) => void) | null = null;
+  private _detachCanvasMoveUp: (() => void) | null = null;
   /** 当前拖拽对应的 pointerId；从托盘拖入时可能为 null（接受任意抬起） */
   private _dragPointerId: number | null = null;
 
@@ -152,21 +153,14 @@ class FurnitureDragSystemClass {
       }
     }
 
-    // 绑定 canvas 级别的 move / up 事件
-    const canvas = Game.app.view as any;
+    // 绑定 canvas 级别的 move / up（华为走 touch，微信/抖音走 pointer）
     this._onRawMove = this._handleRawMove.bind(this);
     this._onRawUp = this._handleRawUp.bind(this);
-    canvas.addEventListener('pointermove', this._onRawMove);
-    canvas.addEventListener('pointerup', this._onRawUp);
-    canvas.addEventListener('pointercancel', this._onRawUp);
-    this._onRawTouchEnd = (e: TouchEvent) => {
-      const t = e.changedTouches?.[0];
-      if (t) this._handleRawUp(t);
-    };
-    canvas.addEventListener('touchend', this._onRawTouchEnd);
-    canvas.addEventListener('touchcancel', this._onRawTouchEnd);
+    this._detachCanvasMoveUp = attachCanvasMoveUp(Game.app.view as any, {
+      onMove: this._onRawMove,
+      onUp: this._onRawUp,
+    });
 
-    console.log('[FurnitureDrag] 已启用');
     EventBus.emit('furniture:edit_enabled');
   }
 
@@ -193,22 +187,10 @@ class FurnitureDragSystemClass {
       sprite.removeAllListeners();
     }
 
-    // 解绑 canvas 事件
-    const canvas = Game.app.view as any;
-    if (this._onRawMove) {
-      canvas.removeEventListener('pointermove', this._onRawMove);
-      this._onRawMove = null;
-    }
-    if (this._onRawUp) {
-      canvas.removeEventListener('pointerup', this._onRawUp);
-      canvas.removeEventListener('pointercancel', this._onRawUp);
-      this._onRawUp = null;
-    }
-    if (this._onRawTouchEnd) {
-      canvas.removeEventListener('touchend', this._onRawTouchEnd);
-      canvas.removeEventListener('touchcancel', this._onRawTouchEnd);
-      this._onRawTouchEnd = null;
-    }
+    this._detachCanvasMoveUp?.();
+    this._detachCanvasMoveUp = null;
+    this._onRawMove = null;
+    this._onRawUp = null;
     this._dragPointerId = null;
 
     this._spriteMap.clear();
@@ -217,7 +199,6 @@ class FurnitureDragSystemClass {
     // 保存布局
     RoomLayoutManager.saveNow();
 
-    console.log('[FurnitureDrag] 已禁用');
     EventBus.emit('furniture:edit_disabled');
   }
 
@@ -406,6 +387,17 @@ class FurnitureDragSystemClass {
   }
 
   /**
+   * 「放入房间」：在落点直接落地，不进入跟手拖拽。
+   * 否则点弹层的那次 pointerup 会把幽灵拖拽立刻放下，新手引导的「拖家具」就被跳过。
+   */
+  placeNewAtDesign(decoId: string, designX: number, designY: number): boolean {
+    this.startDragFromTray(decoId, designX, designY);
+    if (!this._dragCtx?.isNew) return false;
+    this._handleRawUp({ pointerId: this._dragPointerId ?? undefined });
+    return true;
+  }
+
+  /**
    * 对房间内所有家具按 y 坐标排序（2.5D 遮挡），考虑手动图层偏移
    */
   sortByDepth(): void {
@@ -520,6 +512,7 @@ class FurnitureDragSystemClass {
 
       // 选中该家具
       if (instanceId) this.select(instanceId);
+      e.stopPropagation();
     });
   }
 
@@ -527,7 +520,7 @@ class FurnitureDragSystemClass {
   private _handleRawMove(e: any): void {
     if (!this._dragCtx || !this._enabled) return;
 
-    const pos = this._clientToDesign(e);
+    const pos = this._eventToRoomLocal(e);
     const ctx = this._dragCtx;
 
     // 判定是否开始拖拽（超过移动阈值）
@@ -707,17 +700,20 @@ class FurnitureDragSystemClass {
     }
   }
 
-  /** FederatedPointerEvent → 容器本地坐标（考虑 roomContainer 的 transform） */
+  /**
+   * 按下 / 移动必须走同一套 client → 设计 → 房间本地。
+   * 华为上 PIXI `e.global` 已是 CSS 像素，再 `globalToDesign`（/dpr）会把起点压矮，
+   * 相对位移 dy 一直为正，家具被夹在 maxY（房子下面的草地）拖不上去。
+   */
   private _rawEventToDesign(e: PIXI.FederatedPointerEvent): { x: number; y: number } {
-    const design = Game.globalToDesign(e.global.x, e.global.y);
+    const design = Game.federatedToDesign(e);
     return this._designToLocal(design.x, design.y);
   }
 
-  /** canvas 原生事件 → 容器本地坐标（考虑 roomContainer 的 transform） */
-  private _clientToDesign(e: any): { x: number; y: number } {
-    const clientX = e.clientX ?? e.pageX ?? 0;
-    const clientY = e.clientY ?? e.pageY ?? 0;
-    const design = Game.clientToDesign(clientX, clientY);
+  /** canvas 原生事件 / PIXI 事件 → 房间容器本地坐标 */
+  private _eventToRoomLocal(e: unknown): { x: number; y: number } {
+    const p = eventClientPoint(e);
+    const design = Game.clientToDesign(p.x, p.y);
     return this._designToLocal(design.x, design.y);
   }
 

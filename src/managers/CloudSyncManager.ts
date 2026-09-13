@@ -7,7 +7,7 @@
  *   - 本地脏标记订阅 + 防抖
  *   - 连续失败指数退避 / 低频重试
  *
- * 每平台独立身份（wx:/dy:/anon: 前缀），不互通；闸门改用 Platform.canUseBackend。
+ * 每平台独立身份（wx:/dy:/hw:/anon: 前缀），不互通；闸门改用 Platform.canUseBackend。
  */
 
 import {
@@ -20,8 +20,10 @@ import {
   CLOUD_SYNC_STARTUP_TIMEOUT_MS,
 } from '@/config/CloudConfig';
 import { BackendError, BackendService } from '@/core/BackendService';
+import { isHuaweiAnonUpgrade } from '@/core/huaweiAccount';
 import { PersistService } from '@/core/PersistService';
 import { Platform } from '@/core/PlatformService';
+import { waitMs } from '@/utils/hostTimeout';
 
 export type CloudAuthorityState = 'disabled' | 'unknown' | 'confirmedRemote' | 'cacheOnly';
 
@@ -89,18 +91,16 @@ class CloudSyncManagerClass {
     this.prewarm();
     if (!this._startupPromise) return { status: 'disabled', reason: 'startup-missing' };
 
-    let timer: ReturnType<typeof setTimeout> | null = null;
+    const wait = Platform.isHuawei ? Math.max(timeoutMs, 8000) : timeoutMs;
     const result = await Promise.race([
       this._startupPromise
         .then(() => 'done' as const)
         .catch(() => 'done' as const),
-      new Promise<void>((resolve) => {
-        timer = setTimeout(resolve, timeoutMs);
-      }).then(() => 'timeout' as const),
+      waitMs(wait).then(() => 'timeout' as const),
     ]);
-    if (timer) clearTimeout(timer);
 
     if (result === 'timeout') {
+      // 超时后不要再 await ensureToken()：同一条 login Promise 可能还挂着。
       this._enterCacheOnly('startup-timeout');
       return { status: 'cache-only', reason: 'startup-timeout' };
     }
@@ -170,6 +170,44 @@ class CloudSyncManagerClass {
     }
 
     await this._syncToCloud(reason, true);
+  }
+
+  /**
+   * 启动时不弹华为帐号框。进游戏后再补一次，把 hw:anon 升级成 hw:playerId，
+   * 本地档跟着走，不清档。
+   */
+  async promoteHuaweiAccount(): Promise<string> {
+    if (!Platform.isHuawei || !this.enabled) return BackendService.userId;
+    if (this._startupPromise) {
+      try { await this._startupPromise; } catch { /* 启动登录失败也继续弹框补登 */ }
+    }
+    const previousUserId = BackendService.userId;
+    if (previousUserId.startsWith('hw:') && !previousUserId.startsWith('hw:anon_')) {
+      return previousUserId;
+    }
+    const account = await Platform.loginHuaweiAccount({ allowPrompt: true });
+    if (!account?.playerId) {
+      console.warn(`[HuaweiLogin] 未拿到 playerId，继续 ${previousUserId || '本地匿名'}`);
+      return previousUserId;
+    }
+    const nextUserId = `hw:${account.playerId}`;
+    if (nextUserId === previousUserId) return previousUserId;
+    try {
+      await BackendService.reloginWithHuaweiPlayerId(account.playerId);
+    } catch (e) {
+      console.warn('[HuaweiLogin] 换票失败，继续本地档:', e instanceof Error ? e.message : e);
+      return previousUserId;
+    }
+    this._cloudReady = !!BackendService.userId;
+    this._initDone = true;
+    if (this._authorityState === 'cacheOnly') {
+      this._authorityState = 'unknown';
+    }
+    if (isHuaweiAnonUpgrade(previousUserId, BackendService.userId) || !previousUserId) {
+      console.log(`[CloudSync] 华为帐号已就绪 userId=${BackendService.userId}`);
+      this.scheduleSync('huawei-account-ready');
+    }
+    return BackendService.userId;
   }
 
   private async _initialize(): Promise<void> {

@@ -13,6 +13,8 @@ import {
   computeShopRoomCenterY,
   computeMainSceneLayout,
   normalizeViewportMetrics,
+  pickHuaweiViewportInput,
+  resolveHuaweiLogicalSize,
 } from '../src/config/ResponsiveLayout';
 
 const TOP_BAR_HEIGHT = 76;
@@ -106,6 +108,67 @@ for (const c of cases) {
   assert.ok(Math.abs(roundTrip.x - designPoint.x) < 0.001, `${c.name}: X 坐标往返`);
   assert.ok(Math.abs(roundTrip.y - designPoint.y) < 0.001, `${c.name}: Y 坐标往返`);
 }
+
+const huaweiTrapSys = {
+  windowWidth: 360,
+  windowHeight: 640,
+  screenWidth: 425.1,
+  screenHeight: 945.9,
+  pixelRatio: 2.55,
+};
+const huaweiPicked = pickHuaweiViewportInput(huaweiTrapSys);
+assert.equal(huaweiPicked.width, 425.1, '华为必须忽略 windowWidth');
+assert.equal(huaweiPicked.height, 945.9, '华为必须忽略 windowHeight');
+const huaweiViewport = normalizeViewportMetrics(huaweiPicked);
+const huaweiLayout = computeViewportLayout(huaweiViewport, true);
+assert.equal(huaweiLayout.mode, 'width-fit', '华为手机应按宽度铺满，不能被预览窗触发 height-fit');
+assert.equal(huaweiLayout.contentOffsetX, 0, '华为手机不得被预览窗尺寸水平 letterbox');
+
+const huaweiPhysical = resolveHuaweiLogicalSize({
+  screenWidth: 1084,
+  screenHeight: 2412,
+  pixelRatio: 2.55,
+});
+assert.ok(Math.abs(huaweiPhysical.width - 1084 / 2.55) < 0.01, '华为物理 screenWidth 应收成逻辑宽');
+assert.ok(Math.abs(huaweiPhysical.height - 2412 / 2.55) < 0.01, '华为物理 screenHeight 应收成逻辑高');
+const huaweiPhysicalPicked = pickHuaweiViewportInput({
+  windowWidth: 360,
+  windowHeight: 640,
+  screenWidth: 1084,
+  screenHeight: 2412,
+  pixelRatio: 2.55,
+});
+assert.ok(huaweiPhysicalPicked.width! < 500, '华为物理像素不得当逻辑宽用');
+const huaweiPhysicalLayout = computeViewportLayout(normalizeViewportMetrics(huaweiPhysicalPicked), true);
+assert.equal(huaweiPhysicalLayout.mode, 'width-fit', '华为物理像素收成逻辑后仍按宽度铺满');
+assert.equal(huaweiPhysicalLayout.contentOffsetX, 0, '华为物理像素收成逻辑后不得水平 letterbox');
+
+const huaweiCssLogical = resolveHuaweiLogicalSize({
+  screenWidth: 1084,
+  screenHeight: 2412,
+  pixelRatio: 2.55,
+  cssWidth: 425.1,
+  cssHeight: 945.9,
+});
+assert.equal(huaweiCssLogical.width, 425.1, '已有 CSS 逻辑矩形时优先用 CSS');
+
+const huaweiCssPhysical = resolveHuaweiLogicalSize({
+  screenWidth: 425.1,
+  screenHeight: 945.9,
+  pixelRatio: 2.55,
+  canvasWidth: 1084,
+  canvasHeight: 2412,
+  cssWidth: 1084,
+  cssHeight: 2412,
+});
+assert.ok(Math.abs(huaweiCssPhysical.width - 1084 / 2.55) < 0.01, 'CSS 矩形等于物理缓冲时应再除 dpr');
+
+const huaweiPadLogical = resolveHuaweiLogicalSize({
+  screenWidth: 768,
+  screenHeight: 1024,
+  pixelRatio: 2,
+});
+assert.equal(huaweiPadLogical.width, 768, 'Pad 逻辑宽不得被当成物理像素除掉');
 
 const invalidCapsule = normalizeViewportMetrics({
   width: 390,

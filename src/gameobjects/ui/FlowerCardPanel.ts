@@ -11,6 +11,7 @@ import { TweenManager, Ease } from '@/core/TweenManager';
 import { FlowerCardManager, FlowerCard } from '@/managers/FlowerCardManager';
 import { ToastMessage } from './ToastMessage';
 import { DESIGN_WIDTH, FONT_FAMILY, COLORS } from '@/config/Constants';
+import { attachCanvasMoveUp, type TouchCanvasLike } from '@/utils/canvasInteraction';
 
 /** 花系颜色映射 */
 const LINE_COLORS: Record<string, number> = {
@@ -32,6 +33,7 @@ export class FlowerCardPanel extends PIXI.Container {
   private _isOpen = false;
   private _scrollY = 0;
   private _maxScrollY = 0;
+  private _detachPanelScroll: (() => void) | null = null;
 
   constructor() {
     super();
@@ -58,6 +60,8 @@ export class FlowerCardPanel extends PIXI.Container {
 
   close(): void {
     if (!this._isOpen) return;
+    this._detachPanelScroll?.();
+    this._detachPanelScroll = null;
     this._isOpen = false;
     TweenManager.to({ target: this._bg, props: { alpha: 0 }, duration: 0.15, ease: Ease.easeInQuad });
     TweenManager.to({
@@ -88,6 +92,8 @@ export class FlowerCardPanel extends PIXI.Container {
   }
 
   private _refresh(): void {
+    this._detachPanelScroll?.();
+    this._detachPanelScroll = null;
     while (this._content.children.length > 0) {
       const child = this._content.children[0];
       this._content.removeChild(child);
@@ -177,26 +183,34 @@ export class FlowerCardPanel extends PIXI.Container {
     const contentH = this._drawCards(panelX, scrollAreaY, panelW);
     this._maxScrollY = Math.max(0, contentH - scrollAreaH);
 
-    // 滚动交互
+    // 滚动交互（华为 canvas 只稳发 touch，不能靠容器 pointermove）
     let lastTouchY = 0;
     let isDragging = false;
     bg.on('pointerdown', (e: PIXI.FederatedPointerEvent) => {
-      const localY = e.globalY / Game.scale;
+      const localY = Game.federatedToDesign(e).y;
       if (localY >= scrollAreaY && localY <= scrollAreaY + scrollAreaH) {
         lastTouchY = localY;
         isDragging = true;
+        const canvas = Game.app.view as unknown as TouchCanvasLike | undefined;
+        if (!canvas?.addEventListener) return;
+        this._detachPanelScroll?.();
+        this._detachPanelScroll = attachCanvasMoveUp(canvas, {
+          onMove: (ev) => {
+            if (!isDragging) return;
+            const curTouchY = Game.eventToDesign(ev).y;
+            const delta = lastTouchY - curTouchY;
+            lastTouchY = curTouchY;
+            this._scrollY = Math.max(0, Math.min(this._maxScrollY, this._scrollY + delta));
+            this._scrollContainer.y = -this._scrollY;
+          },
+          onUp: () => {
+            isDragging = false;
+            this._detachPanelScroll?.();
+            this._detachPanelScroll = null;
+          },
+        });
       }
     });
-    bg.on('pointermove', (e: PIXI.FederatedPointerEvent) => {
-      if (!isDragging) return;
-      const curTouchY = e.globalY / Game.scale;
-      const delta = lastTouchY - curTouchY;
-      lastTouchY = curTouchY;
-      this._scrollY = Math.max(0, Math.min(this._maxScrollY, this._scrollY + delta));
-      this._scrollContainer.y = -this._scrollY;
-    });
-    bg.on('pointerup', () => { isDragging = false; });
-    bg.on('pointerupoutside', () => { isDragging = false; });
   }
 
   /** 绘制花语卡片网格 */

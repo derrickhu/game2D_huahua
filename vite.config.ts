@@ -7,7 +7,9 @@ import { createRequire } from 'module';
 const requirePkg = createRequire(import.meta.url);
 const pkg = requirePkg('./package.json') as { version: string };
 
-const BUNDLE_DIR = '.bundle';
+const vitePlatform = process.env.VITE_PLATFORM || '';
+const isHuawei = vitePlatform === 'huawei';
+const BUNDLE_DIR = isHuawei ? '.bundle-huawei' : '.bundle';
 
 /**
  * Vite 插件：构建后替换 bundle 中所有 ShaderSystem 的 systemCheck 方法体，
@@ -31,6 +33,45 @@ function pixiUnsafeEvalPlugin(): Plugin {
         fs.writeFileSync(bundlePath, patched, 'utf8');
         console.log('[pixi-unsafe-eval-patch] Patched systemCheck in bundle');
         code = patched;
+      }
+      if (isHuawei) {
+        const replacements: Array<[RegExp, string, string]> = [
+          [
+            /Function\("binder","return function \("\+\w+\(\w+,","\)\+"\)\{ return binder\.apply\(this,arguments\); \}"\)/g,
+            '(function(binder){return function(){return binder.apply(this,arguments)}})',
+            'bind-Function',
+          ],
+          [
+            /new Function\("param1","param2","param3","return param1\[param2\] === param3;"\)\(\{a:"b"\},"a","b"\)===!0/g,
+            '!1',
+            'unsafeEvalSupported',
+          ],
+          [/"%eval%":eval/g, '"%eval%":void 0', 'get-intrinsic-eval'],
+          [
+            /function\((\w+)\)\{try\{return (\w+)\('"use strict"; return \('\+\1\+"\)\.constructor;"\)\(\)\}catch\{\}\}/g,
+            'function($1){}',
+            'getEvalledConstructor',
+          ],
+          [/new Function\(/g, '(function(){return function(){}})(', 'new-Function'],
+        ];
+        const applied: string[] = [];
+        for (const [reEval, to, name] of replacements) {
+          const next = code.replace(reEval, to);
+          if (next !== code) applied.push(name);
+          code = next;
+        }
+        const strictIife = '(function(){"use strict";';
+        if (code.startsWith(strictIife)) {
+          code = `(function(){var eval=function(){return void 0};${code.slice(strictIife.length)}`;
+          applied.push('huawei-local-eval');
+        }
+        if (applied.length) {
+          fs.writeFileSync(bundlePath, code, 'utf8');
+          console.log(`[pixi-unsafe-eval-patch] Huawei patched ${applied.join(', ')}`);
+        }
+        if (code.includes('"%eval%":eval')) {
+          throw new Error('[pixi-unsafe-eval-patch] bundle 仍含 "%eval%":eval，禁止出包');
+        }
       }
       // 微信上传代码质量检测用旧解析器，?? 运算符会报 invalid file / Unexpected token ?
       // 占位文案 "???" 可保留。
@@ -59,7 +100,9 @@ function assemblePlatformsPlugin(): Plugin {
   let stopWatch: (() => void) | undefined;
   let queue: Promise<void> = Promise.resolve();
 
-  const target = () => process.env.HUAHUA_PLATFORM ?? 'all';
+  const target = () => (
+    isHuawei ? 'huawei' : (process.env.HUAHUA_PLATFORM ?? 'all')
+  );
 
   const enqueue = (reason: string) => {
     queue = queue
@@ -104,6 +147,8 @@ export default defineConfig({
   publicDir: false,
   define: {
     __APP_VERSION__: JSON.stringify(pkg.version),
+    'import.meta.env.VITE_PLATFORM': JSON.stringify(process.env.VITE_PLATFORM || ''),
+    'import.meta.env.VITE_HUAWEI_APPID': JSON.stringify(process.env.VITE_HUAWEI_APPID || '118944555'),
   },
   plugins: [pixiUnsafeEvalPlugin(), assemblePlatformsPlugin()],
   build: {

@@ -1,6 +1,7 @@
 /**
  * 触摸事件适配
- * 将小游戏触摸事件转换为 PixiJS 所需的标准 DOM 事件格式
+ * wx/tt touch → canvas touch/pointer + window pointer（Pixi EventSystem 依赖后者收 move/up）
+ * 华为原生 qg 没有 onTouchStart，改听宿主 canvas / document DOM。
  */
 
 const platform = require('./platform');
@@ -27,7 +28,6 @@ class TouchEvent {
   stopPropagation() {}
 }
 
-// 将小游戏触摸坐标转换为 canvas 坐标
 function convertTouches(rawTouches) {
   if (!rawTouches) return [];
   return Array.prototype.map.call(rawTouches, (touch) => ({
@@ -57,6 +57,8 @@ function createPointerEvent(type, touch, buttons) {
     y: touch.clientY,
     offsetX: touch.clientX,
     offsetY: touch.clientY,
+    movementX: 0,
+    movementY: 0,
     width: 1,
     height: 1,
     pressure: buttons ? 0.5 : 0,
@@ -74,11 +76,35 @@ function createPointerEvent(type, touch, buttons) {
   };
 }
 
-// 注册触摸事件监听桥接
+function _hostDocument() {
+  try {
+    if (typeof GameGlobal !== 'undefined' && GameGlobal.__hostDocument) {
+      return GameGlobal.__hostDocument;
+    }
+  } catch (_) { /* */ }
+  return null;
+}
+
+function _toTouchList(rawEvent) {
+  if (!rawEvent) return [];
+  if (rawEvent.changedTouches && rawEvent.changedTouches.length) return rawEvent.changedTouches;
+  if (rawEvent.touches && rawEvent.touches.length) return rawEvent.touches;
+  if (typeof rawEvent.clientX === 'number' || typeof rawEvent.pageX === 'number') {
+    return [{
+      identifier: rawEvent.pointerId || rawEvent.identifier || 0,
+      clientX: rawEvent.clientX ?? rawEvent.pageX ?? 0,
+      clientY: rawEvent.clientY ?? rawEvent.pageY ?? 0,
+    }];
+  }
+  return [];
+}
+
 function registerTouchEvents() {
   const _listeners = {};
+  const nativeAdd = typeof canvas.addEventListener === 'function'
+    ? canvas.addEventListener.bind(canvas)
+    : null;
 
-  // 给 canvas 挂上 addEventListener / removeEventListener
   canvas.addEventListener = function(type, handler, options) {
     if (!_listeners[type]) _listeners[type] = [];
     _listeners[type].push(handler);
@@ -90,37 +116,46 @@ function registerTouchEvents() {
     if (idx !== -1) _listeners[type].splice(idx, 1);
   };
 
-  // 分发事件到 canvas 上的监听器
   function dispatch(type, rawEvent) {
-    const touches = convertTouches(rawEvent.touches || rawEvent.changedTouches);
+    const source = _toTouchList(rawEvent);
+    const touches = convertTouches(rawEvent.touches && rawEvent.touches.length ? rawEvent.touches : source);
     const event = new TouchEvent(type, touches);
-    event.changedTouches = convertTouches(rawEvent.changedTouches);
+    event.changedTouches = convertTouches(rawEvent.changedTouches && rawEvent.changedTouches.length
+      ? rawEvent.changedTouches
+      : source);
+    const t0 = event.changedTouches[0] || event.touches[0];
+    if (t0) {
+      event.clientX = t0.clientX;
+      event.clientY = t0.clientY;
+    }
 
     const queue = _listeners[type];
     if (queue) {
-      queue.forEach(handler => {
+      queue.forEach(function(handler) {
         try { handler(event); } catch (e) { console.error('[TouchEvent]', type, e); }
       });
     }
   }
 
-  // pointer 事件映射（PixiJS 7 优先使用 pointer 事件）
   function dispatchPointer(pointerType, rawEvent) {
     const touches = rawEvent.changedTouches || rawEvent.touches || [];
     if (!touches.length) return;
     const touch = touches[0];
 
-    const pointerEvent = createPointerEvent(pointerType, touch, pointerType === 'pointerup' ? 0 : 1);
+    const pointerEvent = createPointerEvent(
+      pointerType,
+      touch,
+      pointerType === 'pointerup' || pointerType === 'pointercancel' ? 0 : 1,
+    );
 
     const queue = _listeners[pointerType];
     if (queue) {
-      queue.forEach(handler => {
+      queue.forEach(function(handler) {
         try { handler(pointerEvent); } catch (e) { console.error('[PointerEvent]', pointerType, e); }
       });
     }
   }
 
-  // 分发 window 上的全局事件（PixiJS EventSystem 在 window 上也注册了 pointermove/pointerup）
   function dispatchToWindow(type, event) {
     if (typeof GameGlobal !== 'undefined' && GameGlobal.__windowDispatchEvent) {
       try {
@@ -131,109 +166,197 @@ function registerTouchEvents() {
     }
   }
 
-  platform.onTouchStart((e) => {
+  platform.onTouchStart(function(e) {
     dispatch('touchstart', e);
     dispatchPointer('pointerdown', e);
-    // window 上也需要收到 pointerdown
     var touches = e.changedTouches || e.touches || [];
     if (touches.length) {
-      var t = touches[0];
-      dispatchToWindow('pointerdown', createPointerEvent('pointerdown', t, 1));
+      dispatchToWindow('pointerdown', createPointerEvent('pointerdown', touches[0], 1));
     }
   });
 
-  platform.onTouchMove((e) => {
+  platform.onTouchMove(function(e) {
     dispatch('touchmove', e);
     dispatchPointer('pointermove', e);
     var touches = e.changedTouches || e.touches || [];
     if (touches.length) {
-      var t = touches[0];
-      dispatchToWindow('pointermove', createPointerEvent('pointermove', t, 1));
+      dispatchToWindow('pointermove', createPointerEvent('pointermove', touches[0], 1));
     }
   });
 
-  platform.onTouchEnd((e) => {
+  platform.onTouchEnd(function(e) {
     dispatch('touchend', e);
     dispatchPointer('pointerup', e);
     var touches = e.changedTouches || [];
     if (touches.length) {
-      var t = touches[0];
-      dispatchToWindow('pointerup', createPointerEvent('pointerup', t, 0));
+      dispatchToWindow('pointerup', createPointerEvent('pointerup', touches[0], 0));
     }
   });
 
-  platform.onTouchCancel((e) => {
+  platform.onTouchCancel(function(e) {
     dispatch('touchcancel', e);
     dispatchPointer('pointercancel', e);
     var touches = e.changedTouches || [];
     if (touches.length) {
-      var t = touches[0];
-      dispatchToWindow('pointercancel', createPointerEvent('pointercancel', t, 0));
+      dispatchToWindow('pointercancel', createPointerEvent('pointercancel', touches[0], 0));
     }
   });
 
-  // canvas.getBoundingClientRect - PixiJS 用来计算事件坐标
-  // 必须返回逻辑像素尺寸（与触摸事件 clientX/clientY 一致），否则坐标偏移
-  function getWindowSize() {
-    var info = null;
-    try {
-      info = typeof platform.getWindowInfo === 'function'
-        ? platform.getWindowInfo()
-        : platform.getSystemInfoSync();
-    } catch (e) {
-      try { info = platform.getSystemInfoSync(); } catch (e2) { info = {}; }
+  if (!platform.hasTouchApi) {
+    var lastSig = '';
+    var lastSigAt = 0;
+    var lastTouchAt = 0;
+    var logged = false;
+
+    function emitAdapter(touchType, pointerType, raw) {
+      var list = _toTouchList(raw);
+      if (!list.length) return;
+      var t0 = list[0];
+      var sig = touchType + ':' + Math.round(t0.clientX || 0) + ':' + Math.round(t0.clientY || 0);
+      var now = Date.now();
+      if (sig === lastSig && now - lastSigAt < 30) return;
+      lastSig = sig;
+      lastSigAt = now;
+      if (touchType === 'touchstart' || touchType === 'touchend') lastTouchAt = Date.now();
+      if (!logged) {
+        logged = true;
+        console.log('[TouchEvent] host-dom via=' + (raw && raw.type || touchType)
+          + ' ' + Math.round(t0.clientX || 0) + ',' + Math.round(t0.clientY || 0));
+      }
+      var payload = { touches: list, changedTouches: list };
+      dispatch(touchType, payload);
+      dispatchPointer(pointerType, payload);
+      var buttons = pointerType === 'pointerup' || pointerType === 'pointercancel' ? 0 : 1;
+      dispatchToWindow(pointerType, createPointerEvent(pointerType, list[0], buttons));
     }
-    info = info || {};
-    return {
-      width: info.windowWidth || info.screenWidth || 375,
-      height: info.windowHeight || info.screenHeight || 667,
-    };
+
+    function onDom(touchType, pointerType) {
+      return function(e) {
+        if (e && e.__adapterTouch) return;
+        emitAdapter(touchType, pointerType, e);
+      };
+    }
+
+    function listen(target, add, type, touchType, pointerType) {
+      if (!target || typeof add !== 'function') return false;
+      try {
+        add.call(target, type, onDom(touchType, pointerType), true);
+        return true;
+      } catch (_) {
+        try {
+          add.call(target, type, onDom(touchType, pointerType));
+          return true;
+        } catch (e2) {
+          return false;
+        }
+      }
+    }
+
+    var pairs = [
+      ['touchstart', 'touchstart', 'pointerdown'],
+      ['touchmove', 'touchmove', 'pointermove'],
+      ['touchend', 'touchend', 'pointerup'],
+      ['touchcancel', 'touchcancel', 'pointercancel'],
+      ['pointerdown', 'touchstart', 'pointerdown'],
+      ['pointermove', 'touchmove', 'pointermove'],
+      ['pointerup', 'touchend', 'pointerup'],
+      ['mousedown', 'touchstart', 'pointerdown'],
+      ['mousemove', 'touchmove', 'pointermove'],
+      ['mouseup', 'touchend', 'pointerup'],
+    ];
+
+    var bound = 0;
+    var hostDoc = _hostDocument();
+    var targets = [];
+    if (nativeAdd) targets.push([canvas, nativeAdd]);
+    if (hostDoc && typeof hostDoc.addEventListener === 'function') {
+      targets.push([hostDoc, hostDoc.addEventListener.bind(hostDoc)]);
+    }
+
+    for (var ti = 0; ti < targets.length; ti++) {
+      for (var pi = 0; pi < pairs.length; pi++) {
+        if (listen(targets[ti][0], targets[ti][1], pairs[pi][0], pairs[pi][1], pairs[pi][2])) {
+          bound += 1;
+        }
+      }
+    }
+
+    function onHostClick(e) {
+      if (Date.now() - lastTouchAt < 400) return;
+      emitAdapter('touchstart', 'pointerdown', e);
+      lastSig = '';
+      emitAdapter('touchend', 'pointerup', e);
+    }
+    if (nativeAdd) {
+      try { nativeAdd('click', onHostClick, true); } catch (_) { /* */ }
+    }
+    if (hostDoc && typeof hostDoc.addEventListener === 'function') {
+      try { hostDoc.addEventListener('click', onHostClick, true); } catch (_) { /* */ }
+    }
+
+    console.log('[TouchEvent] 华为无 qg.onTouchStart，改听宿主 DOM bound=' + bound);
+  }
+
+  var sysInfo = platform.getSystemInfoSync();
+  var dpr = Number(sysInfo.pixelRatio) || 2;
+  var screenW = sysInfo.screenWidth || sysInfo.windowWidth || 375;
+  var screenH = sysInfo.screenHeight || sysInfo.windowHeight || 667;
+  // 华为有的版本 screenWidth=1084（物理）。写进 style / clientWidth 会把画面放大裁切。
+  if (platform.name === 'huawei' && screenW >= 800 && dpr > 1.2 && screenH / screenW >= 1.7) {
+    screenW = screenW / dpr;
+    screenH = screenH / dpr;
+  }
+
+  var hostRect = null;
+  try {
+    if (typeof GameGlobal !== 'undefined' && typeof GameGlobal.__hostCanvasRect === 'function') {
+      hostRect = GameGlobal.__hostCanvasRect;
+    }
+  } catch (e) {}
+
+  if (hostRect) {
+    try { canvas.getBoundingClientRect = hostRect; } catch (e) {}
+  } else {
+    try {
+      canvas.getBoundingClientRect = function() {
+        return {
+          x: 0,
+          y: 0,
+          top: 0,
+          left: 0,
+          width: screenW,
+          height: screenH,
+          right: screenW,
+          bottom: screenH,
+        };
+      };
+    } catch (e) {}
   }
 
   try {
-    canvas.getBoundingClientRect = function() {
-      var size = getWindowSize();
-      return {
-        x: 0,
-        y: 0,
-        top: 0,
-        left: 0,
-        width: size.width,
-        height: size.height,
-        right: size.width,
-        bottom: size.height,
-      };
-    };
-  } catch (e) {}
-
-  // clientWidth/clientHeight 也需返回逻辑像素
-  try {
     Object.defineProperty(canvas, 'clientWidth', {
-      get: function() { return getWindowSize().width; },
+      get: function() { return hostRect ? hostRect().width : screenW; },
       configurable: true,
     });
     Object.defineProperty(canvas, 'clientHeight', {
-      get: function() { return getWindowSize().height; },
+      get: function() { return hostRect ? hostRect().height : screenH; },
       configurable: true,
     });
   } catch (e) {}
 
-  // PixiJS 会检查 canvas.style（微信 canvas 部分属性可能只读）
   try {
-    var initialSize = getWindowSize();
     if (!canvas.style) canvas.style = {};
     canvas.style.touchAction = '';
     canvas.style.msTouchAction = '';
     canvas.style.cursor = '';
-    canvas.style.width = initialSize.width + 'px';
-    canvas.style.height = initialSize.height + 'px';
+    if (platform.name !== 'huawei') {
+      canvas.style.width = screenW + 'px';
+      canvas.style.height = screenH + 'px';
+    }
   } catch (e) {}
 
-  // PixiJS 检查 focus
   if (!canvas.focus) canvas.focus = function() {};
 
-  // PixiJS EventSystem 需要 canvas.parentElement 来 addEventListener
-  // 不能设为 null，设为一个带事件能力的虚拟节点
   var _parentListeners = {};
   var fakeParent = {
     addEventListener: function(type, handler, options) {
@@ -252,7 +375,7 @@ function registerTouchEvents() {
   try { canvas.parentNode = fakeParent; } catch (e) {
     try { Object.defineProperty(canvas, 'parentNode', { value: fakeParent, configurable: true, writable: true }); } catch (e2) {}
   }
-
 }
 
 module.exports = { TouchEvent, registerTouchEvents };
+

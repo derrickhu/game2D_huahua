@@ -4,26 +4,58 @@
  * 独立成模块，是为了让 config/gameKeyScope 与 core/PlatformService 都能引用而不形成循环依赖；
  * minigame/runtime.js 里有一份等价的 JS 实现供启动期（bundle 之前）使用，两边逻辑必须保持一致。
  *
- * 抖音宿主同时注入了 wx 兼容层，因此必须先判 tt，否则抖音会被误判成微信。
+ * 识别顺序：
+ * 1. 编译锁 VITE_PLATFORM=huawei（运行时即使误注入 wx 也不当成微信）
+ * 2. 抖音 tt（同时存在的 wx 只是兼容层）
+ * 3. 华为 qg / qa（也可能再塞 wx 壳）
+ * 4. 微信 wx
  */
 
 declare const wx: any;
 declare const tt: any;
+declare const qa: any;
+declare const qg: any;
+declare const __wxConfig: any;
+declare const GameGlobal: any;
 
-export type PlatformName = 'wechat' | 'douyin' | 'unknown';
+export type PlatformName = 'wechat' | 'douyin' | 'huawei' | 'unknown';
 
 /** 后端 /login 的 platform 字段 */
-export type BackendPlatformCode = 'wx' | 'dy' | 'anon';
+export type BackendPlatformCode = 'wx' | 'dy' | 'hw' | 'anon';
+
+/** 华为快游戏原生是 qg；快应用才是 qa；转换层可能只剩 wx 壳 */
+export function isHuaweiQuickGameHost(): boolean {
+  if (typeof qg !== 'undefined') return true;
+  if (typeof qa !== 'undefined') return true;
+  try {
+    if (typeof GameGlobal !== 'undefined' && (GameGlobal.__wx2huawei || GameGlobal.qa || GameGlobal.qg)) return true;
+  } catch { /* */ }
+  if (typeof wx === 'undefined') return false;
+  if (typeof __wxConfig !== 'undefined') return false;
+  if (typeof wx.getAccountInfoSync === 'function') return false;
+  return true;
+}
+
+function resolveHuaweiApi(): any {
+  if (typeof qg !== 'undefined') return qg;
+  if (typeof qa !== 'undefined') return qa;
+  return typeof wx !== 'undefined' ? wx : null;
+}
 
 export function detectMinigamePlatform(): PlatformName {
+  if (typeof import.meta !== 'undefined' && import.meta.env && import.meta.env.VITE_PLATFORM === 'huawei') {
+    return 'huawei';
+  }
   if (typeof tt !== 'undefined') return 'douyin';
+  if (isHuaweiQuickGameHost()) return 'huawei';
   if (typeof wx !== 'undefined') return 'wechat';
   return 'unknown';
 }
 
-/** 指定宿主的原生 API：抖音只取 tt，微信只取 wx，避免误用兼容层 */
+/** 指定宿主的原生 API：抖音只取 tt，华为 qg/qa，微信只取 wx */
 export function getNativePlatformApi(platform: PlatformName = detectMinigamePlatform()): any {
   if (platform === 'douyin') return typeof tt !== 'undefined' ? tt : null;
+  if (platform === 'huawei') return resolveHuaweiApi();
   if (platform === 'wechat') return typeof wx !== 'undefined' ? wx : null;
   return null;
 }
@@ -33,5 +65,6 @@ export function toBackendPlatformCode(
 ): BackendPlatformCode {
   if (platform === 'wechat') return 'wx';
   if (platform === 'douyin') return 'dy';
+  if (platform === 'huawei') return 'hw';
   return 'anon';
 }

@@ -1,16 +1,21 @@
 /**
- * 平台服务抽象层 - 统一封装微信/抖音双平台 API
+ * 平台服务抽象层 - 统一封装微信 / 抖音 / 华为快游戏 API
  *
  * 所有平台特有调用（存储、广告、分享、侧边栏、桌面等）都通过本模块统一访问，
- * src/ 中不再需要各自 declare const wx / tt。
+ * src/ 中不再需要各自 declare const wx / tt / qg。
  *
- * 存储：读写前统一经 scopeStorageKey 映射到平台命名空间（微信原样，抖音加 _tt 段），
- * 因此业务层继续用 `huahua_xxx` 逻辑 key 即可，无需感知平台。
+ * 存储：读写前统一经 scopeStorageKey 映射到平台命名空间
+ * （微信原样，抖音加 _tt，华为加 _hw），业务层继续用 `huahua_xxx` 逻辑 key。
  */
 
 declare const GameGlobal: any;
+declare const qg: any;
+declare const qa: any;
 
 import { scopeStorageKey, getScopedGameKey } from '@/config/gameKeyScope';
+import { waitMs } from '@/utils/hostTimeout';
+import { parseHuaweiLoginData, readHuaweiAppId, type HuaweiAccount } from './huaweiAccount';
+import { readHostStorage, removeHostStorage, resolveHostLocalStorage, writeHostStorage } from './hostStorage';
 import {
   detectMinigamePlatform,
   getNativePlatformApi,
@@ -32,16 +37,19 @@ class PlatformServiceClass {
   constructor() {
     this.name = detectMinigamePlatform();
     this._api = getNativePlatformApi(this.name);
-    const apiLabel = this.name === 'douyin' ? 'tt' : this.name === 'wechat' ? 'wx' : 'none';
+    const apiLabel = this.name === 'douyin' ? 'tt'
+      : this.name === 'wechat' ? 'wx'
+      : this.name === 'huawei' ? (typeof qg !== 'undefined' ? 'qg' : typeof qa !== 'undefined' ? 'qa' : 'wx')
+      : 'none';
     console.log(`[Platform] 当前平台: ${this.name}, api=${apiLabel}, gameKey=${getScopedGameKey(this.name)}`);
   }
 
-  /** 后端 /login 的 platform 字段（wx / dy / anon） */
+  /** 后端 /login 的 platform 字段（wx / dy / hw / anon） */
   get backendPlatformCode(): BackendPlatformCode {
     return toBackendPlatformCode(this.name);
   }
 
-  /** 当前平台的数据命名空间（huahua / huahua_tt） */
+  /** 当前平台的数据命名空间（huahua / huahua_tt / huahua_hw） */
   get scopedGameKey(): string {
     return getScopedGameKey(this.name);
   }
@@ -59,6 +67,19 @@ class PlatformServiceClass {
   /** 是否抖音平台 */
   get isDouyin(): boolean {
     return this.name === 'douyin';
+  }
+
+  /** 是否华为快游戏 */
+  get isHuawei(): boolean {
+    return this.name === 'huawei';
+  }
+
+  /**
+   * 华为快游戏：宿主 createCanvas 会和 document.createElement 互相重入。
+   * 禁止再走 PIXI.Application，量字 canvas 也必须用假画布。
+   */
+  get isCanvasHostGuarded(): boolean {
+    return this.name === 'huawei';
   }
 
   /** 微信开发者工具（非真机）；brand/environment 亦可能为 devtools（模拟器 platform 常为 ios） */
@@ -82,13 +103,14 @@ class PlatformServiceClass {
   }
 
   /**
-   * 是否有可用的后端 HTTP 通道
-   * - 微信 / 抖音小游戏：有原生 request API
-   * - 浏览器：有全局 fetch
+   * 是否具备 HTTP 能力。
+   * 必须和 request() 真正用的三条通路一致：宿主 request → 适配器覆盖前的宿主 XHR → fetch。
+   * 华为真机 qg 既没有 request 也没有全局 fetch，只剩宿主 XHR。
    */
   get canUseBackend(): boolean {
-    if (this._api && typeof this._api.request === 'function') return true;
-    return typeof (globalThis as any).fetch === 'function';
+    return typeof this._api?.request === 'function'
+      || !!this._hostXHR()
+      || typeof this._hostFetch() === 'function';
   }
 
   /** 底层 API（慎用，优先使用封装方法） */
@@ -104,35 +126,27 @@ class PlatformServiceClass {
   }
 
   getStorageSync(key: string): string | null {
-    try {
-      return this._api?.getStorageSync(this.storageKey(key)) || null;
-    } catch (_) {
-      return null;
-    }
+    return readHostStorage(this._api, this.storageKey(key), resolveHostLocalStorage());
   }
 
   setStorageSync(key: string, value: string): void {
-    try {
-      this._api?.setStorageSync(this.storageKey(key), value);
-    } catch (_) {}
+    writeHostStorage(this._api, this.storageKey(key), value, resolveHostLocalStorage());
   }
 
   /** 异步写入本地存储（避免阻塞主线程） */
   setStorageAsync(key: string, value: string): void {
     const physicalKey = this.storageKey(key);
+    const hostLs = resolveHostLocalStorage();
+    writeHostStorage(this._api, physicalKey, value, hostLs);
     try {
-      if (this._api?.setStorage) {
-        this._api.setStorage({ key: physicalKey, data: value, fail() {} });
-      } else {
-        this._api?.setStorageSync(physicalKey, value);
+      if (typeof this._api?.setStorage === 'function') {
+        this._api.setStorage({ key: physicalKey, data: value, value, fail() {} });
       }
     } catch (_) {}
   }
 
   removeStorageSync(key: string): void {
-    try {
-      this._api?.removeStorageSync(this.storageKey(key));
-    } catch (_) {}
+    removeHostStorage(this._api, this.storageKey(key), resolveHostLocalStorage());
   }
 
   // ═══════════════ 通用 HTTP（对接 CloudBase HTTP 访问服务）═══════════════
@@ -164,7 +178,26 @@ class PlatformServiceClass {
     if (this._api && typeof this._api.request === 'function') {
       return this._requestViaMiniApi(opts.url, method, opts.data, headers, timeoutMs);
     }
-    if (typeof (globalThis as any).fetch === 'function') {
+    const HostXHR = this._hostXHR();
+    if (HostXHR) {
+      const payload = opts.data === undefined || typeof opts.data === 'string'
+        ? (opts.data as string | undefined)
+        : JSON.stringify(opts.data);
+      return this._hostXhrRequest(HostXHR, {
+        url: opts.url,
+        method,
+        headers,
+        payload,
+        timeoutMs,
+        responseType: 'text',
+      }).then((res) => {
+        const text = String(res.text || '');
+        let data: any = text;
+        try { data = text ? JSON.parse(text) : null; } catch { /* keep text */ }
+        return { statusCode: res.statusCode, data };
+      });
+    }
+    if (typeof this._hostFetch() === 'function') {
       return this._requestViaFetch(opts.url, method, opts.data, headers, timeoutMs);
     }
     return Promise.reject(new Error('no http transport available'));
@@ -251,6 +284,78 @@ class PlatformServiceClass {
     });
   }
 
+  private _hostXHR(): any {
+    try {
+      if (typeof GameGlobal !== 'undefined' && GameGlobal.__hostXMLHttpRequest) {
+        return GameGlobal.__hostXMLHttpRequest;
+      }
+    } catch { /* */ }
+    return null;
+  }
+
+  /**
+   * 宿主 XHR。华为真机经常既不 onload 也不 onerror，xhr.timeout 也不响。
+   * 必须再用 waitMs（setTimeout + rAF）硬切，否则 login 会把启动卡在 splash。
+   */
+  private _hostXhrRequest(
+    HostXHR: any,
+    opts: {
+      url: string;
+      method: string;
+      headers: Record<string, string>;
+      payload?: string;
+      timeoutMs: number;
+      responseType: 'text' | 'arraybuffer';
+    },
+  ): Promise<{ statusCode: number; text: string; buffer: unknown }> {
+    return new Promise((resolve, reject) => {
+      let done = false;
+      let xhr: any;
+      const finish = (fn: () => void): void => {
+        if (done) return;
+        done = true;
+        fn();
+      };
+      void waitMs(opts.timeoutMs).then(() => {
+        finish(() => {
+          try { xhr?.abort?.(); } catch { /* */ }
+          reject(new Error(`request timeout: ${opts.url}`));
+        });
+      });
+      try {
+        xhr = new HostXHR();
+        xhr.open(opts.method, opts.url);
+        if (opts.responseType === 'arraybuffer') {
+          try { xhr.responseType = 'arraybuffer'; } catch { /* 部分 JSB 不认 */ }
+        }
+        if (typeof xhr.timeout === 'number') xhr.timeout = opts.timeoutMs;
+        for (const key of Object.keys(opts.headers)) {
+          try { xhr.setRequestHeader(key, opts.headers[key]); } catch { /* */ }
+        }
+        xhr.onload = () => finish(() => resolve({
+          statusCode: Number(xhr.status || 0),
+          text: String(xhr.responseText || ''),
+          buffer: xhr.response,
+        }));
+        xhr.onerror = () => finish(() => reject(new Error(`xhr error: ${opts.url}`)));
+        xhr.ontimeout = () => finish(() => reject(new Error(`request timeout: ${opts.url}`)));
+        xhr.send(opts.payload);
+      } catch (e) {
+        finish(() => reject(e));
+      }
+    });
+  }
+
+  private _hostFetch(): ((input: string, init?: RequestInit) => Promise<Response>) | null {
+    try {
+      if (typeof GameGlobal !== 'undefined' && typeof GameGlobal.__hostFetch === 'function') {
+        return GameGlobal.__hostFetch.bind(GameGlobal);
+      }
+    } catch { /* */ }
+    if (typeof fetch === 'function') return fetch;
+    return null;
+  }
+
   private _requestViaFetch(
     url: string,
     method: string,
@@ -258,7 +363,10 @@ class PlatformServiceClass {
     headers: Record<string, string>,
     timeoutMs: number,
   ): Promise<{ statusCode: number; data: any }> {
-    const fetchFn = (globalThis as any).fetch as typeof fetch;
+    const fetchFn = this._hostFetch();
+    if (!fetchFn) {
+      return Promise.reject(new Error('no fetch transport'));
+    }
     const ctrl = typeof AbortController !== 'undefined' ? new AbortController() : null;
     const timer = ctrl ? setTimeout(() => ctrl.abort(), timeoutMs) : null;
 
@@ -367,6 +475,125 @@ class PlatformServiceClass {
   /** 兼容旧调用：优先正式 code，抖音可回落到 anonymousCode */
   loginCode(): Promise<string> {
     return this.loginCredentials().then((creds) => creds.code || creds.anonymousCode);
+  }
+
+  /**
+   * 华为帐号。
+   * allowPrompt=false：只读缓存，不弹框（启动用，避免 2.5s 启动闸把登录掐死）。
+   * allowPrompt=true：缓存没有再调 gameLoginWithReal，可能弹出华为帐号框。
+   */
+  loginHuaweiAccount(opts?: { allowPrompt?: boolean }): Promise<HuaweiAccount | null> {
+    if (!this.isHuawei || !this._api) return Promise.resolve(null);
+    const allowPrompt = opts?.allowPrompt !== false;
+    return this._qgGetCachePlayerId().then((cached) => {
+      if (cached) return cached;
+      if (!allowPrompt) return null;
+      return this._qgGameLogin();
+    });
+  }
+
+  private _hostDetail(value: unknown): string {
+    if (value == null) return 'null';
+    if (typeof value === 'string' || typeof value === 'number' || typeof value === 'boolean') {
+      return String(value);
+    }
+    try {
+      return JSON.stringify(value);
+    } catch {
+      return String(value);
+    }
+  }
+
+  private _qgGetCachePlayerId(): Promise<HuaweiAccount | null> {
+    const api = this._api;
+    if (typeof api?.getCachePlayerId !== 'function') return Promise.resolve(null);
+    return new Promise((resolve) => {
+      let done = false;
+      const finish = (account: HuaweiAccount | null): void => {
+        if (done) return;
+        done = true;
+        resolve(account);
+      };
+      void waitMs(2000).then(() => finish(null));
+      try {
+        api.getCachePlayerId({
+          success: (res: unknown) => {
+            const parsed = parseHuaweiLoginData(res);
+            if (parsed) {
+              console.log(`[HuaweiLogin] 缓存帐号 playerId=${parsed.playerId}`);
+            } else {
+              console.warn(`[HuaweiLogin] getCachePlayerId 无 playerId ${this._hostDetail(res)}`);
+            }
+            finish(parsed);
+          },
+          fail: (data: unknown, code?: number) => {
+            console.log(`[HuaweiLogin] 无缓存帐号 code=${code ?? '?'}`);
+            finish(null);
+          },
+        });
+      } catch {
+        finish(null);
+      }
+    });
+  }
+
+  private _qgGameLogin(): Promise<HuaweiAccount | null> {
+    const api = this._api;
+    const loginFn = (typeof api?.gameLoginWithReal === 'function' && api.gameLoginWithReal)
+      || (typeof api?.gameLogin === 'function' && api.gameLogin)
+      || null;
+    if (!loginFn) {
+      console.warn('[HuaweiLogin] 宿主无 gameLoginWithReal / gameLogin，回退设备匿名号');
+      return Promise.resolve(null);
+    }
+    const appid = readHuaweiAppId(api);
+    const via = typeof api.gameLoginWithReal === 'function' ? 'gameLoginWithReal' : 'gameLogin';
+    if (!appid) {
+      console.warn('[HuaweiLogin] appid 为空，登录会 AUTH FAIL');
+    }
+    console.log(`[HuaweiLogin] 开始 via=${via} appid=${appid || '(empty)'}`);
+    return new Promise((resolve) => {
+      let done = false;
+      const finish = (account: HuaweiAccount | null): void => {
+        if (done) return;
+        done = true;
+        resolve(account);
+      };
+      // 帐号框要等人点，8 秒会把成功回调掐掉，之后一直是 hw:anon
+      void waitMs(45000).then(() => {
+        if (done) return;
+        console.warn('[HuaweiLogin] 等待超时，回退设备匿名号');
+        finish(null);
+      });
+      try {
+        loginFn.call(api, {
+          forceLogin: 1,
+          appid,
+          success: (data: unknown) => {
+            const parsed = parseHuaweiLoginData(data);
+            if (parsed) {
+              console.log(`[HuaweiLogin] ok playerId=${parsed.playerId}`);
+            } else {
+              console.warn(`[HuaweiLogin] 成功回调无 playerId ${this._hostDetail(data)}`);
+            }
+            finish(parsed);
+          },
+          fail: (data: unknown, code?: number) => {
+            const codeNum = Number(code);
+            const hint = codeNum === 7004 || codeNum === 2012
+              ? '玩家取消登录'
+              : codeNum === 7021
+                ? '玩家取消实名'
+                : '登录失败';
+            console.warn(`[HuaweiLogin] ${hint} code=${code ?? '?'} ${this._hostDetail(data)}`);
+            finish(null);
+          },
+        });
+      } catch (e) {
+        console.warn('[HuaweiLogin] 调用异常', e instanceof Error ? e.message : this._hostDetail(e));
+        finish(null);
+      }
+    });
   }
 
   // ═══════════════ 系统信息 ═══════════════
@@ -892,18 +1119,40 @@ class PlatformServiceClass {
         resolve('unsupported');
         return;
       }
+      // 华为：qg.loadSubpackage 常常不回调。最多等 2.5s，避免卡 splash；
+      // 成功前不能提前标 loaded（由调用方决定），超时后继续启动。
+      let settled = false;
+      const finish = (fn: () => void): void => {
+        if (settled) return;
+        settled = true;
+        fn();
+      };
+      if (this.isHuawei) {
+        void waitMs(2500).then(() => {
+          finish(() => {
+            console.warn(`[Platform] 华为 loadSubpackage(${name}) 超时，继续启动`);
+            resolve('unsupported');
+          });
+        });
+      }
       try {
         const task = this._api.loadSubpackage({
           name,
-          success: () => resolve('loaded'),
+          subpackage: name,
+          success: () => finish(() => resolve('loaded')),
           fail: (err: any) => {
             const errMsg = err?.errMsg || err?.message || '';
             let raw = '';
             try { raw = JSON.stringify(err); } catch (_) { raw = String(err); }
-            reject(Object.assign(
+            if (this.isHuawei) {
+              console.warn(`[Platform] 华为 loadSubpackage(${name}) 失败，继续启动`, errMsg || raw);
+              finish(() => resolve('unsupported'));
+              return;
+            }
+            finish(() => reject(Object.assign(
               new Error(`loadSubpackage(${name}) 失败: ${errMsg || raw || 'unknown'}`),
               { raw: err },
-            ));
+            )));
           },
         });
         if (onProgress && task?.onProgressUpdate) {
@@ -912,7 +1161,11 @@ class PlatformServiceClass {
           });
         }
       } catch (e) {
-        reject(e instanceof Error ? e : new Error(String(e)));
+        if (this.isHuawei) {
+          finish(() => resolve('unsupported'));
+          return;
+        }
+        finish(() => reject(e instanceof Error ? e : new Error(String(e))));
       }
     });
   }
@@ -968,7 +1221,23 @@ class PlatformServiceClass {
       });
     }
 
-    const fetchFn = (globalThis as any).fetch as typeof fetch | undefined;
+    const HostXHR = this._hostXHR();
+    if (HostXHR) {
+      return this._hostXhrRequest(HostXHR, {
+        url,
+        method: 'GET',
+        headers: {},
+        timeoutMs: timeoutMs || 10000,
+        responseType: 'text',
+      }).then((res) => {
+        if (res.statusCode > 0 && (res.statusCode < 200 || res.statusCode >= 300)) {
+          throw new Error(`request status=${res.statusCode} url=${url}`);
+        }
+        return String(res.text || '');
+      });
+    }
+
+    const fetchFn = this._hostFetch();
     if (typeof fetchFn !== 'function') {
       return Promise.reject(new Error('no http transport available'));
     }

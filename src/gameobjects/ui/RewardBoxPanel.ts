@@ -8,6 +8,7 @@ import * as PIXI from 'pixi.js';
 import { EventBus } from '@/core/EventBus';
 import { TweenManager, Ease } from '@/core/TweenManager';
 import { Game } from '@/core/Game';
+import { attachCanvasMoveUp, eventClientPoint, type TouchCanvasLike } from '@/utils/canvasInteraction';
 import { CELL_GAP, DESIGN_WIDTH, COLORS, FONT_FAMILY } from '@/config/Constants';
 import { ITEM_DEFS, usesLargeBoardIconFill } from '@/config/ItemConfig';
 import { RewardBoxManager } from '@/managers/RewardBoxManager';
@@ -41,11 +42,7 @@ function nativeClientToDesignY(clientY: number): number {
 }
 
 function federatedPointerToDesignY(e: PIXI.FederatedPointerEvent): number {
-  const native = e.nativeEvent as PointerEvent | MouseEvent | undefined;
-  if (native != null && typeof (native as PointerEvent).clientY === 'number') {
-    return nativeClientToDesignY((native as PointerEvent).clientY);
-  }
-  return Game.globalToDesign(e.global.x, e.global.y).y;
+  return Game.federatedToDesign(e).y;
 }
 
 function rawEventToDesignY(ev: PointerEvent | MouseEvent | TouchEvent | any): number {
@@ -88,9 +85,10 @@ export class RewardBoxPanel extends PIXI.Container {
   private _ignoreNextSlotTap = false;
   private _pendingTapItemId: string | null = null;
   private _scrollEnabled = false;
+  private _detachCanvasDrag: (() => void) | null = null;
 
-  private readonly _onCanvasMove = (ev: PointerEvent): void => {
-    this._onDragMove(rawEventToDesignY(ev));
+  private readonly _onCanvasMove = (ev: unknown): void => {
+    this._onDragMove(nativeClientToDesignY(eventClientPoint(ev).y));
   };
 
   private readonly _onCanvasUp = (): void => {
@@ -494,11 +492,13 @@ export class RewardBoxPanel extends PIXI.Container {
     this._lastDragTime = Date.now();
     this._velocity = 0;
 
-    const canvas = Game.app?.view as unknown as HTMLCanvasElement | undefined;
+    const canvas = Game.app?.view as unknown as TouchCanvasLike | undefined;
     if (canvas?.addEventListener) {
-      canvas.addEventListener('pointermove', this._onCanvasMove);
-      canvas.addEventListener('pointerup', this._onCanvasUp);
-      canvas.addEventListener('pointercancel', this._onCanvasUp);
+      this._detachCanvasDrag?.();
+      this._detachCanvasDrag = attachCanvasMoveUp(canvas, {
+        onMove: this._onCanvasMove,
+        onUp: this._onCanvasUp,
+      });
     }
   }
 
@@ -543,11 +543,8 @@ export class RewardBoxPanel extends PIXI.Container {
   }
 
   private _cleanupListeners(): void {
-    const canvas = Game.app?.view as unknown as HTMLCanvasElement | undefined;
-    if (!canvas?.removeEventListener) return;
-    canvas.removeEventListener('pointermove', this._onCanvasMove);
-    canvas.removeEventListener('pointerup', this._onCanvasUp);
-    canvas.removeEventListener('pointercancel', this._onCanvasUp);
+    this._detachCanvasDrag?.();
+    this._detachCanvasDrag = null;
   }
 
   private _cleanupDrag(): void {

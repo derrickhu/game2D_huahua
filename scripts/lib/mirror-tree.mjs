@@ -12,7 +12,13 @@
 import fs from 'node:fs';
 import path from 'node:path';
 
-const KEEP_ALWAYS = new Set(['project.private.config.json']);
+const KEEP_ALWAYS = new Set([
+  'project.private.config.json',
+  // 华为快游戏助手会在 build/huawei/ 写下这些，增量组装时不能剪掉
+  'settings',
+  'sign',
+  'dist',
+]);
 const TMP_SUFFIX = '.huahua-tmp';
 const COPY_RETRIES = 4;
 const RETRY_WAIT_MS = 40;

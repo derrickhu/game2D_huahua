@@ -3,6 +3,7 @@
  */
 import * as PIXI from 'pixi.js';
 import { Game } from '@/core/Game';
+import { attachCanvasMoveUp, eventClientPoint, type TouchCanvasLike } from '@/utils/canvasInteraction';
 import { AudioManager } from '@/core/AudioManager';
 import { EventBus } from '@/core/EventBus';
 import { OverlayManager } from '@/core/OverlayManager';
@@ -89,11 +90,7 @@ function nativeClientToDesignY(clientY: number): number {
 }
 
 function federatedPointerToDesignY(e: PIXI.FederatedPointerEvent): number {
-  const native = e.nativeEvent as PointerEvent | MouseEvent | undefined;
-  if (native != null && typeof (native as PointerEvent).clientY === 'number') {
-    return nativeClientToDesignY((native as PointerEvent).clientY);
-  }
-  return Game.globalToDesign(e.global.x, e.global.y).y;
+  return Game.federatedToDesign(e).y;
 }
 
 function isActivityLockedOutfit(outfit: Outfit): boolean {
@@ -125,6 +122,7 @@ export class DressUpPanel extends PIXI.Container {
   private _scrollY = 0;
   private _maxScrollY = 0;
   private _draggingGrid = false;
+  private _detachCanvasGridScroll: (() => void) | null = null;
   private _dragStartDesignY = 0;
   private _dragStartScrollY = 0;
   private _dragMoved = false;
@@ -144,14 +142,14 @@ export class DressUpPanel extends PIXI.Container {
     EventBus.on('decoration:shopStarFlyComplete', () => this._onDressUpStarFlyComplete());
   }
 
-  private readonly _onCanvasGridMove = (ev: PointerEvent): void => {
+  private readonly _onCanvasGridMove = (ev: unknown): void => {
     if (!this._isOpen || !this._draggingGrid) return;
-    const dy = nativeClientToDesignY(ev.clientY) - this._dragStartDesignY;
+    const dy = nativeClientToDesignY(eventClientPoint(ev).y) - this._dragStartDesignY;
     if (Math.abs(dy) > 4) this._dragMoved = true;
     this._setScrollY(this._dragStartScrollY + dy);
   };
 
-  private readonly _onCanvasGridUp = (ev: PointerEvent): void => {
+  private readonly _onCanvasGridUp = (ev?: unknown): void => {
     this._finishGridScroll(ev);
   };
 
@@ -302,15 +300,18 @@ export class DressUpPanel extends PIXI.Container {
     this._ignoreNextCardTap = false;
     this._dragStartDesignY = federatedPointerToDesignY(e);
     this._dragStartScrollY = this._scrollY;
-    const canvas = Game.app.view as unknown as HTMLCanvasElement | undefined;
+    const canvas = Game.app.view as unknown as TouchCanvasLike | undefined;
     if (canvas?.addEventListener) {
-      canvas.addEventListener('pointermove', this._onCanvasGridMove);
-      canvas.addEventListener('pointerup', this._onCanvasGridUp);
-      canvas.addEventListener('pointercancel', this._onCanvasGridUp);
+      this._unbindCanvasGridScroll();
+      this._detachCanvasGridScroll = attachCanvasMoveUp(canvas, {
+        onMove: this._onCanvasGridMove,
+        onUp: this._onCanvasGridUp,
+      });
     }
   }
 
   private _onGridPointerMove(e: PIXI.FederatedPointerEvent): void {
+    if (this._detachCanvasGridScroll) return;
     if (!this._draggingGrid) return;
     const dy = federatedPointerToDesignY(e) - this._dragStartDesignY;
     if (Math.abs(dy) > 4) this._dragMoved = true;
@@ -323,14 +324,11 @@ export class DressUpPanel extends PIXI.Container {
   }
 
   private _unbindCanvasGridScroll(): void {
-    const canvas = Game.app.view as unknown as HTMLCanvasElement | undefined;
-    if (!canvas?.removeEventListener) return;
-    canvas.removeEventListener('pointermove', this._onCanvasGridMove);
-    canvas.removeEventListener('pointerup', this._onCanvasGridUp);
-    canvas.removeEventListener('pointercancel', this._onCanvasGridUp);
+    this._detachCanvasGridScroll?.();
+    this._detachCanvasGridScroll = null;
   }
 
-  private _finishGridScroll(e?: PIXI.FederatedPointerEvent | PointerEvent): void {
+  private _finishGridScroll(e?: PIXI.FederatedPointerEvent | PointerEvent | unknown): void {
     if (!this._draggingGrid) return;
     this._unbindCanvasGridScroll();
     if (this._dragMoved) {

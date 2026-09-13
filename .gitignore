@@ -4,6 +4,7 @@ dist/
 *.local
 .vite/
 .bundle/
+.bundle-huawei/
 build/
 minigame/game-bundle.js
 minigame/index.html

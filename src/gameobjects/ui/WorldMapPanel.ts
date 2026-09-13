@@ -8,6 +8,7 @@ import { Game } from '@/core/Game';
 import { AudioManager } from '@/core/AudioManager';
 import { SoundSystem } from '@/systems/SoundSystem';
 import { EventBus } from '@/core/EventBus';
+import { attachCanvasMoveUp, eventClientPoint, type TouchCanvasLike } from '@/utils/canvasInteraction';
 import { TweenManager, Ease } from '@/core/TweenManager';
 import { TextureCache } from '@/utils/TextureCache';
 import { ToastMessage } from '@/gameobjects/ui/ToastMessage';
@@ -81,6 +82,7 @@ export class WorldMapPanel extends PIXI.Container {
 
   private _onRawMove: ((e: any) => void) | null = null;
   private _onRawUp: ((e: any) => void) | null = null;
+  private _detachCanvasDrag: (() => void) | null = null;
 
   private readonly _onTicker = (): void => {
     if (!this._isOpen || !this.visible) return;
@@ -791,7 +793,7 @@ export class WorldMapPanel extends PIXI.Container {
     this._isDragging = true;
     this._hasMoved = false;
     this._pressedNodeIndex = nodeIndex;
-    const { gx, gy } = this._designFromFederated(e);
+    const { gx, gy } = this._designFromPointerDown(e);
     this._dragStartGX = gx;
     this._dragStartGY = gy;
     this._scrollStartX = this._scrollX;
@@ -842,9 +844,10 @@ export class WorldMapPanel extends PIXI.Container {
       }
     };
 
-    canvas.addEventListener('pointermove', this._onRawMove);
-    canvas.addEventListener('pointerup', this._onRawUp);
-    canvas.addEventListener('pointercancel', this._onRawUp);
+    this._detachCanvasDrag = attachCanvasMoveUp(canvas as TouchCanvasLike, {
+      onMove: this._onRawMove,
+      onUp: this._onRawUp,
+    });
   }
 
   /**
@@ -852,32 +855,22 @@ export class WorldMapPanel extends PIXI.Container {
    * 拖拽 move 逻辑则使用浏览器 client 坐标换算出的设计坐标。
    * 若两者混用，在高 DPR 设备上按下起点会比 move 坐标大一截，轻触也会被判定为拖拽。
    */
-  private _designFromFederated(e: PIXI.FederatedPointerEvent): { gx: number; gy: number } {
-    const design = Game.globalToDesign(e.global.x, e.global.y);
+  private _designFromPointerDown(e: PIXI.FederatedPointerEvent): { gx: number; gy: number } {
+    const design = Game.federatedToDesign(e);
     return { gx: design.x, gy: design.y };
   }
 
   private _rawToDesign(e: any): { gx: number; gy: number } {
-    const rect = (Game.app.view as any).getBoundingClientRect
-      ? (Game.app.view as any).getBoundingClientRect()
-      : { left: 0, top: 0, width: Game.screenWidth, height: Game.screenHeight };
-    const clientX = e.clientX ?? e.pageX ?? (e.changedTouches?.[0]?.clientX ?? 0);
-    const clientY = e.clientY ?? e.pageY ?? (e.changedTouches?.[0]?.clientY ?? 0);
-    const design = Game.clientToDesign(clientX - rect.left, clientY - rect.top);
+    const p = eventClientPoint(e);
+    const design = Game.clientToDesign(p.x, p.y);
     return { gx: design.x, gy: design.y };
   }
 
   private _cleanupRawEvents(): void {
-    const canvas = Game.app.view as any;
-    if (this._onRawMove) {
-      canvas.removeEventListener('pointermove', this._onRawMove);
-      this._onRawMove = null;
-    }
-    if (this._onRawUp) {
-      canvas.removeEventListener('pointerup', this._onRawUp);
-      canvas.removeEventListener('pointercancel', this._onRawUp);
-      this._onRawUp = null;
-    }
+    this._detachCanvasDrag?.();
+    this._detachCanvasDrag = null;
+    this._onRawMove = null;
+    this._onRawUp = null;
   }
 
   private _syncScroll(): void {

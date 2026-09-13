@@ -3,48 +3,187 @@
  * 必须在 new PIXI.Application() 之前执行
  * 单独文件，避免 Game.ts 因副作用代码被 bundler 打包多份
  */
-import { ShaderSystem, BaseImageResource, Texture, BaseTexture } from '@pixi/core';
+import { AccessibilityManager } from '@pixi/accessibility';
+import { ShaderSystem, BaseImageResource, Texture, BaseTexture, extensions } from '@pixi/core';
 import { settings } from '@pixi/settings';
+import { Platform } from '@/core/PlatformService';
 import { getNativePlatformApi } from './platformDetect';
+import { installTapTextRaster, shouldInstallTapTextRaster } from './tapTextRaster';
+import { isSyntheticCanvas, uploadCanvasPixels } from './tapTextureUpload';
+
+declare const GameGlobal: any;
+declare const qg: any;
+declare const qa: any;
+
+try {
+  // 小游戏无 DOM button，无障碍插件会在 Application/Renderer 初始化时再 createCanvas
+  extensions.remove(AccessibilityManager);
+} catch { /* 已移除或环境不支持 */ }
 
 // ======== 配置 PIXI.settings.ADAPTER ========
-// 关键：PixiJS 的 BrowserAdapter 默认通过 document.createElement('canvas') 创建离屏 canvas，
-// 真机环境中 document 可能不可用或不完整，导致 Graphics/Text 全部不渲染。
-// 直接注入 wx/tt API 调用，完全绕过 document。
+// 微信/抖音：走 createOffscreenCanvas / createCanvas。
+// 华为：qg 没有 createCanvas；ADAPTER 只能给假画布/文字包装，WebGL 用主屏那一块。
 const _api: any = getNativePlatformApi();
-if (_api) {
+if (_api || Platform.isHuawei) {
   try {
-    // 创建 2D 离屏 canvas 的辅助函数
-    // 优先 createOffscreenCanvas({ type:'2d' }) 确保真机 canvas 2D 上下文可用；
-    // 部分设备（如鸿蒙/旧版微信）可能不支持，安全降级到 createCanvas()
     let _useOffscreen = false;
     try {
-      if (typeof _api.createOffscreenCanvas === 'function') {
+      if (!Platform.isCanvasHostGuarded && typeof _api?.createOffscreenCanvas === 'function') {
         const _test = _api.createOffscreenCanvas({ type: '2d', width: 1, height: 1 });
         const _testCtx = _test.getContext('2d');
         if (_testCtx) _useOffscreen = true;
       }
-    } catch (_) { /* 不支持则回退 */ }
+    } catch (_) { /* */ }
+
+    const _isMainCanvas = (c: any): boolean => {
+      try {
+        return !!(c && typeof GameGlobal !== 'undefined' && (
+          (GameGlobal.canvas && c === GameGlobal.canvas)
+          || (GameGlobal.__hostCanvas && c === GameGlobal.__hostCanvas)
+        ));
+      } catch {
+        return false;
+      }
+    };
+
+    const _measureCanvas = (w?: number, h?: number): any => {
+      const width = w || 1;
+      const height = h || 1;
+      const ctx: any = {
+        fillStyle: '',
+        font: '16px sans-serif',
+        textAlign: 'left',
+        textBaseline: 'alphabetic',
+        measureText: (s: string) => ({ width: String(s || '').length * 10 }),
+        fillRect() {},
+        clearRect() {},
+        fillText() {},
+        strokeText() {},
+        drawImage() {},
+        getImageData: (_x: number, _y: number, iw: number, ih: number) => ({
+          data: new Uint8ClampedArray(iw * ih * 4), width: iw, height: ih,
+        }),
+        putImageData() {},
+        save() {},
+        restore() {},
+        scale() {},
+        translate() {},
+        setTransform() {},
+        beginPath() {},
+        closePath() {},
+        createLinearGradient() { return { addColorStop() {} }; },
+      };
+      const canvas: any = {
+        __huahuaMeasure: true,
+        width,
+        height,
+        style: {},
+        getContext(type: string) {
+          if (type === '2d') return ctx;
+          return null;
+        },
+        addEventListener() {},
+        removeEventListener() {},
+      };
+      ctx.canvas = canvas;
+      return canvas;
+    };
+
+    const _tryHost2d = (api: any): { canvas: any; ctx: any } | null => {
+      if (!api) return null;
+      try {
+        if (typeof api.createOffscreenCanvas === 'function') {
+          const c = api.createOffscreenCanvas({ type: '2d', width: 64, height: 64 });
+          const ctx = c?.getContext?.('2d');
+          if (ctx && typeof ctx.fillText === 'function') return { canvas: c, ctx };
+        }
+      } catch { /* */ }
+      try {
+        if (typeof api.createCanvas === 'function') {
+          const c = api.createCanvas();
+          if (c && !_isMainCanvas(c)) {
+            const ctx = c.getContext?.('2d');
+            if (ctx && typeof ctx.fillText === 'function') return { canvas: c, ctx };
+          }
+        }
+      } catch { /* */ }
+      return null;
+    };
+
+    const _tryHuawei2d = (): { canvas: any; ctx: any } | null => {
+      const fromApi = _tryHost2d(typeof qg !== 'undefined' ? qg : typeof qa !== 'undefined' ? qa : null);
+      if (fromApi) return fromApi;
+      try {
+        const runtime = typeof GameGlobal !== 'undefined' ? GameGlobal.__huahuaRuntime : null;
+        const c = (typeof runtime?.createHuaweiOffscreenCanvas === 'function'
+          ? runtime.createHuaweiOffscreenCanvas()
+          : null)
+          || (typeof GameGlobal !== 'undefined' && GameGlobal.__hostDocument
+            ? GameGlobal.__hostDocument.createElement('canvas')
+            : null);
+        if (c && !_isMainCanvas(c)) {
+          const ctx = c.getContext?.('2d');
+          if (ctx && typeof ctx.fillText === 'function') return { canvas: c, ctx };
+        }
+      } catch { /* */ }
+      return null;
+    };
+
+    const _createTapTextCanvas = shouldInstallTapTextRaster()
+      ? installTapTextRaster(() => {
+        if (Platform.isHuawei) return _tryHuawei2d();
+        return _tryHost2d(_api);
+      })
+      : null;
+
+    const _safeApiCanvas = (api: any, w?: number, h?: number): any => {
+      if (!api) return null;
+      try {
+        if (typeof api.createOffscreenCanvas === 'function') {
+          const c = api.createOffscreenCanvas({ type: '2d', width: w || 1, height: h || 1 });
+          if (c && typeof c.getContext === 'function') return c;
+        }
+      } catch { /* */ }
+      try {
+        if (typeof api.createCanvas === 'function') {
+          const c = api.createCanvas();
+          if (c && typeof c.getContext === 'function') return c;
+        }
+      } catch { /* */ }
+      return null;
+    };
 
     const _create2DCanvas = (w?: number, h?: number): any => {
-      let c: any;
-      if (_useOffscreen) {
-        try {
-          c = _api.createOffscreenCanvas({ type: '2d', width: w || 1, height: h || 1 });
-        } catch (_) {
-          c = _api.createCanvas();
+      try {
+        if (Platform.isCanvasHostGuarded) {
+          // 只开一块真实 2D，每个 Text 拿独立包装。禁止每字一块 createCanvas
+          return _createTapTextCanvas ? _createTapTextCanvas(w, h) : _measureCanvas(w, h);
         }
-      } else {
-        c = _api.createCanvas();
+        let c: any = null;
+        if (_useOffscreen) {
+          try {
+            c = _api.createOffscreenCanvas({ type: '2d', width: w || 1, height: h || 1 });
+          } catch (_) {
+            c = _safeApiCanvas(_api, w, h);
+          }
+        } else {
+          c = _safeApiCanvas(_api, w, h);
+        }
+        if (!c || typeof c.getContext !== 'function') return _measureCanvas(w, h);
+        if (w !== undefined) c.width = w;
+        if (h !== undefined) c.height = h;
+        return c;
+      } catch {
+        return _measureCanvas(w, h);
       }
-      if (w !== undefined) c.width = w;
-      if (h !== undefined) c.height = h;
-      return c;
     };
 
     settings.ADAPTER = {
       createCanvas: _create2DCanvas,
       getCanvasRenderingContext2D: (): any => {
+        if (Platform.isCanvasHostGuarded) {
+          return (typeof GameGlobal !== 'undefined' && GameGlobal.CanvasRenderingContext2D) || Object;
+        }
         try {
           const c = _create2DCanvas(1, 1);
           const ctx = c.getContext('2d');
@@ -52,12 +191,8 @@ if (_api) {
         } catch { return Object; }
       },
       getWebGLRenderingContext: (): any => {
-        try {
-          const c = _api.createCanvas();
-          // 业界已知：必须传 stencil:true，否则鸿蒙/部分安卓 stencil 不可用
-          const gl = c.getContext('webgl', { stencil: true, antialias: true, alpha: true, depth: true });
-          return gl ? gl.constructor : Object;
-        } catch { return Object; }
+        // 探测阶段禁止 createCanvas+getContext('webgl')
+        return (typeof GameGlobal !== 'undefined' && GameGlobal.WebGLRenderingContext) || Object;
       },
       getNavigator: (): any => ({
         userAgent: 'wxgame',
@@ -68,6 +203,7 @@ if (_api) {
       fetch: ((_url: any, _opts?: any): any => {
         return Promise.reject(new Error('fetch not available in mini game'));
       }) as any,
+      parseXML: ((_xml: string): any => null) as any,
     };
   } catch (e) {
     console.warn('[pixiPatch] ADAPTER 配置失败:', e);
@@ -205,8 +341,21 @@ if (_isRealDevice) {
     try {
       source = source || this.source;
 
-      // 1) 永远先执行原始 upload（Image 纹理靠这步正常工作）
-      const result = _origUpload.call(this, renderer, baseTexture, glTexture, source);
+      if (Platform.isCanvasHostGuarded && isSyntheticCanvas(source)) {
+        return uploadCanvasPixels(renderer, baseTexture, glTexture, source);
+      }
+
+      let result = false;
+      try {
+        result = _origUpload.call(this, renderer, baseTexture, glTexture, source);
+      } catch (e) {
+        if (uploadCanvasPixels(renderer, baseTexture, glTexture, source)) return true;
+        if (_uploadLog < 10) {
+          console.warn('[pixiPatch] 纹理上传失败:', e);
+          _uploadLog++;
+        }
+        return false;
+      }
 
       // 2) 仅对 Canvas 源做像素补救
       // Canvas 独有 toTempFilePathSync，Image 对象没有

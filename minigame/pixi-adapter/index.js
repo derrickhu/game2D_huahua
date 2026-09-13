@@ -9,7 +9,7 @@
  */
 
 var platform, noop, Image, canvas, location, document, navigator, localStorage, XMLHttpRequest, registerTouchEvents;
-var Element, HTMLCanvasElement, HTMLImageElement, HTMLVideoElement;
+var Element, HTMLCanvasElement, HTMLImageElement, HTMLVideoElement, AdapterTouchEvent;
 
 try { platform = require('./platform'); } catch(e) { console.error('[pixi-adapter] ✗ platform:', e); }
 try { noop = require('./util').noop; } catch(e) { console.error('[pixi-adapter] ✗ util:', e); noop = function(){}; }
@@ -20,7 +20,11 @@ try { document = require('./document'); } catch(e) { console.error('[pixi-adapte
 try { navigator = require('./navigator'); } catch(e) { console.error('[pixi-adapter] ✗ navigator:', e); navigator = {}; }
 try { localStorage = require('./localStorage'); } catch(e) { console.error('[pixi-adapter] ✗ localStorage:', e); localStorage = {}; }
 try { XMLHttpRequest = require('./XMLHttpRequest'); } catch(e) { console.error('[pixi-adapter] ✗ XMLHttpRequest:', e); }
-try { registerTouchEvents = require('./TouchEvent').registerTouchEvents; } catch(e) { console.error('[pixi-adapter] ✗ TouchEvent:', e); registerTouchEvents = function(){}; }
+try {
+  var _touchMod = require('./TouchEvent');
+  registerTouchEvents = _touchMod.registerTouchEvents;
+  var AdapterTouchEvent = _touchMod.TouchEvent;
+} catch(e) { console.error('[pixi-adapter] ✗ TouchEvent:', e); registerTouchEvents = function(){}; AdapterTouchEvent = function(){}; }
 try {
   var _elem = require('./element');
   Element = _elem.Element;
@@ -87,12 +91,24 @@ const isDevtools = sysInfo.platform === 'devtools';
 // 在 adapter 模块作用域中它们可用，挂到真正的全局对象。
 ;(function _patchTimers() {
   var pairs = {};
+  var _qg = typeof qg !== 'undefined' ? qg : null;
+  var _qa = typeof qa !== 'undefined' ? qa : null;
+  var _wx = typeof wx !== 'undefined' ? wx : null;
+  var _host = _qg || _qa || _wx || {};
   if (typeof setTimeout !== 'undefined')              pairs.setTimeout = setTimeout;
+  else if (_host.setTimeout)                          pairs.setTimeout = _host.setTimeout.bind(_host);
   if (typeof clearTimeout !== 'undefined')             pairs.clearTimeout = clearTimeout;
+  else if (_host.clearTimeout)                         pairs.clearTimeout = _host.clearTimeout.bind(_host);
   if (typeof setInterval !== 'undefined')              pairs.setInterval = setInterval;
+  else if (_host.setInterval)                          pairs.setInterval = _host.setInterval.bind(_host);
   if (typeof clearInterval !== 'undefined')            pairs.clearInterval = clearInterval;
+  else if (_host.clearInterval)                         pairs.clearInterval = _host.clearInterval.bind(_host);
   if (typeof requestAnimationFrame !== 'undefined')    pairs.requestAnimationFrame = requestAnimationFrame;
+  else if (GameGlobal.requestAnimationFrame)           pairs.requestAnimationFrame = GameGlobal.requestAnimationFrame;
+  else if (_host.requestAnimationFrame)                pairs.requestAnimationFrame = _host.requestAnimationFrame.bind(_host);
   if (typeof cancelAnimationFrame !== 'undefined')     pairs.cancelAnimationFrame = cancelAnimationFrame;
+  else if (GameGlobal.cancelAnimationFrame)            pairs.cancelAnimationFrame = GameGlobal.cancelAnimationFrame;
+  else if (_host.cancelAnimationFrame)                 pairs.cancelAnimationFrame = _host.cancelAnimationFrame.bind(_host);
   for (var k in pairs) {
     if (typeof _realGlobal[k] === 'undefined') _realGlobal[k] = pairs[k];
     if (typeof GameGlobal[k] === 'undefined')  GameGlobal[k] = pairs[k];
@@ -108,8 +124,20 @@ if (typeof GameGlobal !== 'undefined') {
 // ======== WebGL / Canvas2D 上下文构造函数 ========
 // 业界已知坑：Android/鸿蒙 WebGL contextAttributes 中 stencil 返回数字 0 而不是 false，
 // 导致 PixiJS 判断为不支持 stencil，Filter/Mask/Graphics 全部失效
+// 华为：探测阶段 getContext 会和宿主互相重入，只取全局构造函数
+function _ctorFromGlobal(name) {
+  try {
+    if (typeof GameGlobal !== 'undefined' && GameGlobal[name]) return GameGlobal[name];
+    if (typeof globalThis !== 'undefined' && globalThis[name]) return globalThis[name];
+  } catch (_) { /* */ }
+  return {};
+}
+
+const isGuardedHost = platform.name === 'huawei';
 let _WebGLRenderingContext = {};
-try {
+if (isGuardedHost) {
+  _WebGLRenderingContext = _ctorFromGlobal('WebGLRenderingContext');
+} else try {
   const _tmpCanvas = platform.createCanvas();
   if (_tmpCanvas && typeof _tmpCanvas.getContext === 'function') {
     // 业界经验：优先 webgl，不要尝试 webgl2（鸿蒙/部分安卓返回假上下文）
@@ -170,7 +198,9 @@ try {
 }
 
 let _CanvasRenderingContext2D = {};
-try {
+if (isGuardedHost) {
+  _CanvasRenderingContext2D = _ctorFromGlobal('CanvasRenderingContext2D');
+} else try {
   const _tmpCanvas2 = platform.createCanvas();
   if (_tmpCanvas2 && typeof _tmpCanvas2.getContext === 'function') {
     const _tmpCtx = _tmpCanvas2.getContext('2d');
@@ -253,7 +283,7 @@ const _allGlobals = {
   removeEventListener: _windowRemoveEventListener,
   self: null,            // 下面特殊处理
   PointerEvent: _PointerEvent,
-  TouchEvent: _TouchEventCtor,
+  TouchEvent: AdapterTouchEvent,
   MouseEvent: _MouseEvent,
   URL: _URL,
   Blob: _Blob,
@@ -357,7 +387,7 @@ if (isDevtools) {
   // addEventListener/removeEventListener 必须强制覆盖：
   // 微信框架可能内置了无效版本，PixiJS EventSystem 在 self 上注册
   // pointermove/pointerup 依赖这些函数正确工作
-  var _forceOverwrite = ['addEventListener', 'removeEventListener'];
+  var _forceOverwrite = ['addEventListener', 'removeEventListener', 'document'];
 
   for (const key in _allGlobals) {
     if (key === 'window' || key === 'self') continue;
@@ -381,12 +411,37 @@ if (isDevtools) {
     }
   }
   _forceInstallGlobal('XMLHttpRequest', XMLHttpRequest, [_realGlobal, typeof GameGlobal !== 'undefined' ? GameGlobal : null]);
+  _forceInstallGlobal('document', document, [_realGlobal, typeof GameGlobal !== 'undefined' ? GameGlobal : null]);
+  ;(function _patchHostDocument() {
+    var targets = [_realGlobal, typeof GameGlobal !== 'undefined' ? GameGlobal : null];
+    if (typeof globalThis !== 'undefined') targets.push(globalThis);
+    for (var i = 0; i < targets.length; i++) {
+      var hostDoc = targets[i] && targets[i].document;
+      if (!hostDoc || typeof hostDoc.createElement === 'function') continue;
+      try { hostDoc.createElement = document.createElement.bind(document); } catch (e1) { /* */ }
+      try { hostDoc.createElementNS = document.createElementNS.bind(document); } catch (e2) { /* */ }
+    }
+  })();
 }
 
 // ======== 全局 canvas ========
-// 微信框架可能已将 canvas 设为只读属性，需 try-catch 保护
-try { GameGlobal.canvas = canvas; } catch (e) { /* 已由框架设置 */ }
-try { _realGlobal.canvas = canvas; } catch (e) { /* 只读属性忽略 */ }
+// 华为宿主可能已经注入了全局 canvas；禁止用 undefined/假画布把它盖掉。
+function _usableCanvas(c) {
+  if (!c || typeof c.getContext !== 'function') return false;
+  // 量字假画布拿不到 WebGL，不能当主屏
+  return !c.__huahuaMeasure && !c.__tapTextWrap;
+}
+if (!_usableCanvas(canvas)) {
+  canvas = (typeof GameGlobal !== 'undefined' && _usableCanvas(GameGlobal.__hostCanvas))
+    ? GameGlobal.__hostCanvas
+    : (_usableCanvas(_realGlobal.canvas) ? _realGlobal.canvas : canvas);
+}
+try {
+  if (_usableCanvas(canvas)) GameGlobal.canvas = canvas;
+} catch (e) { /* 已由框架设置 */ }
+try {
+  if (_usableCanvas(canvas)) _realGlobal.canvas = canvas;
+} catch (e) { /* 只读属性忽略 */ }
 
 // ======== navigator.userAgent ========
 try {
@@ -397,3 +452,4 @@ try {
 
 // ======== 注册触摸事件 ========
 registerTouchEvents();
+

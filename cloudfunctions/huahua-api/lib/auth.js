@@ -4,6 +4,7 @@
  * - wx: 调 api.weixin.qq.com/sns/jscode2session
  * - dy: 调 developer.toutiao.com/api/apps/v2/jscode2session
  * - tap: 当前占位，仅校验 taptapUserId 非空
+ * - hw: 华为 playerId，没有则用设备 anonId（仍走 hw 集合）
  * - anon: 直接把客户端传的 anonId 作为 userId 后缀
  */
 
@@ -15,7 +16,7 @@ const {
   getTtlSec,
 } = require('./config');
 
-const SUPPORTED_PLATFORMS = new Set(['wx', 'dy', 'tap', 'anon']);
+const SUPPORTED_PLATFORMS = new Set(['wx', 'dy', 'tap', 'hw', 'anon']);
 
 function getJwtSecret() {
   const s = _readJwtSecret();
@@ -42,6 +43,15 @@ async function handleLogin(req) {
   } else if (platform === 'tap') {
     const id = String(body.taptapUserId || '').trim();
     if (!id) throw httpError(400, 'NO_TAP_ID', 'taptapUserId 缺失');
+    platformUid = id;
+  } else if (platform === 'hw') {
+    const playerId = String(body.playerId || '').trim();
+    const anonId = String(body.anonId || '').trim();
+    const id = playerId || anonId;
+    if (!id) throw httpError(400, 'NO_HW_ID', '华为 playerId / anonId 缺失');
+    if (!/^[A-Za-z0-9_\-:.]{8,128}$/.test(id)) {
+      throw httpError(400, 'BAD_HW_ID', '华为帐号 id 非法');
+    }
     platformUid = id;
   } else if (platform === 'anon') {
     const id = String(body.anonId || '').trim();

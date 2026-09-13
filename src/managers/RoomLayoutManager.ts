@@ -99,12 +99,13 @@ const DEFAULT_POSITIONS: Record<string, { x: number; y: number; scale: number }>
 };
 
 /**
- * 程序化拖入/「放入房间」时幽灵家具默认出现点（房间容器本地坐标）。
- * 选在门廊木台前景（y 与庭院默认同量级、更靠中），避免落在室内后墙夹角；不复用 TABLE 默认位。
+ * 程序化拖入/「放入房间」时默认出现点（房间容器本地坐标）。
+ * 必须落在室内地板上（店主默认约 centerY+120≈837，桌默认 620）。
+ * 旧值 y=950 是门廊/草地，空房壳上会看起来「在房子下面」。
  */
 export const FURNITURE_TRAY_SPAWN_ROOM_LOCAL = {
   x: 400,
-  y: 950,
+  y: 680,
 } as const;
 
 // ---- 房间可摆放区域边界 (设计坐标) ----
@@ -176,9 +177,6 @@ class RoomLayoutManagerClass {
     this._ensureSceneBucket(this._layoutActiveSceneId);
     this._hydrateFromScenes(this._layoutActiveSceneId);
     EventBus.emit('roomlayout:changed');
-    console.log(
-      `[RoomLayout] 已从存储重载 scene=${this._layoutActiveSceneId}, ${this._placements.length} 件`,
-    );
   }
 
   /**
@@ -330,7 +328,6 @@ class RoomLayoutManagerClass {
     if (partial.maxX !== undefined) ROOM_BOUNDS.maxX = partial.maxX;
     if (partial.minY !== undefined) ROOM_BOUNDS.minY = partial.minY;
     if (partial.maxY !== undefined) ROOM_BOUNDS.maxY = partial.maxY;
-    console.log(`[RoomLayout] bounds 已更新: minX=${ROOM_BOUNDS.minX}, maxX=${ROOM_BOUNDS.maxX}, minY=${ROOM_BOUNDS.minY}, maxY=${ROOM_BOUNDS.maxY}`);
   }
 
   // ---- 操作 ----
@@ -391,7 +388,6 @@ class RoomLayoutManagerClass {
     this._debounceSave();
 
     EventBus.emit('roomlayout:added', placement);
-    console.log(`[RoomLayout] 添加: ${deco.name} @(${placement.x}, ${placement.y})`);
     return placement;
   }
 
@@ -407,7 +403,6 @@ class RoomLayoutManagerClass {
     this._debounceSave();
 
     EventBus.emit('roomlayout:removed', removed);
-    console.log(`[RoomLayout] 移除: ${removed.decoId}#${instanceId}`);
     return removed;
   }
 
@@ -558,9 +553,6 @@ class RoomLayoutManagerClass {
     };
     this.saveNow();
     EventBus.emit('roomlayout:changed');
-    console.log(
-      `[RoomLayout] 预设应用 scene=${sceneId} placed=${next.length} skipped=${skipped}`,
-    );
     return { placed: next.length, skipped };
   }
 
@@ -606,7 +598,6 @@ class RoomLayoutManagerClass {
 
     this.saveNow();
     EventBus.emit('roomlayout:changed');
-    console.log(`[RoomLayout] 已清空当前房屋 scene=${sceneId}，其它场景未改动`);
   }
 
   /** 清空当前装修场景（GM 填充前 / 兼容旧调用） */
@@ -627,7 +618,6 @@ class RoomLayoutManagerClass {
     }
     this.saveNow();
     EventBus.emit('roomlayout:changed');
-    console.log('[RoomLayout] 已清空全部装修场景的家具摆放');
   }
 
   // ---- 私有方法 ----
@@ -778,7 +768,7 @@ class RoomLayoutManagerClass {
           ...p,
           scale: (typeof p.scale === 'number' ? p.scale : 1) * 0.5,
         }));
-        console.log('[RoomLayout] 存档 v1→v2：已按贴图折半迁移 placement.scale');
+        console.warn('[RoomLayout] 存档 v1→v2：已按贴图折半迁移 placement.scale');
       }
 
       const placements = rows.map(p => this._normalizePlacementRow(p));

@@ -92,6 +92,102 @@ export const SHOP_BROWSE_BOTTOM_RESERVED = 260;
 const finitePositive = (value: number | undefined, fallback: number): number =>
   Number.isFinite(value) && (value as number) > 0 ? (value as number) : fallback;
 
+export interface HuaweiHostSizeHint {
+  canvasWidth?: number;
+  canvasHeight?: number;
+  cssWidth?: number;
+  cssHeight?: number;
+}
+
+/**
+ * 把华为报上来的宽高收成「逻辑像素」。
+ *
+ * qg.getSystemInfoSync().screenWidth 有的版本是 425（CSS），有的是 1084（物理）。
+ * 若把 1084 当逻辑宽再写进 canvas.style，750 设计会被放大到整屏的 2.5 倍，
+ * 画面只剩屋顶和一块天——就是真机那张裁切图。
+ */
+export function resolveHuaweiLogicalSize(opts: {
+  screenWidth?: number;
+  screenHeight?: number;
+  pixelRatio?: number;
+  canvasWidth?: number;
+  canvasHeight?: number;
+  cssWidth?: number;
+  cssHeight?: number;
+  fallbackWidth?: number;
+  fallbackHeight?: number;
+}): { width: number; height: number } {
+  const dpr = finitePositive(opts.pixelRatio, 2);
+  const sw = Number(opts.screenWidth) || 0;
+  const sh = Number(opts.screenHeight) || 0;
+  const cw = Number(opts.canvasWidth) || 0;
+  const ch = Number(opts.canvasHeight) || 0;
+  const cssW = Number(opts.cssWidth) || 0;
+  const cssH = Number(opts.cssHeight) || 0;
+  const fallbackW = finitePositive(opts.fallbackWidth, 375);
+  const fallbackH = finitePositive(opts.fallbackHeight, 667);
+
+  const looksPhysical = (w: number, h: number): boolean => {
+    if (cw >= 80 && w >= 80 && Math.abs(w - cw) / cw < 0.12) return true;
+    if (ch >= 80 && h >= 80 && Math.abs(h - ch) / ch < 0.12) return true;
+    // 没画布对照时：长屏手机的物理宽（≈1084）除以 dpr 才落在 360～480。
+    // 不能单用 w>=600，否则 Pad 逻辑宽 768/1024 会被误除。
+    if (w >= 800 && h > w && dpr > 1.2) {
+      const logicalW = w / dpr;
+      const aspect = h / w;
+      return logicalW >= 300 && logicalW <= 520 && aspect >= 1.7;
+    }
+    return false;
+  };
+
+  if (cssW >= 80 && cssH >= 80) {
+    if (looksPhysical(cssW, cssH)) {
+      return { width: cssW / dpr, height: cssH / dpr };
+    }
+    return { width: cssW, height: cssH };
+  }
+
+  if (sw >= 80 && sh >= 80) {
+    if (looksPhysical(sw, sh)) {
+      return { width: sw / dpr, height: sh / dpr };
+    }
+    return { width: sw, height: sh };
+  }
+
+  return { width: fallbackW, height: fallbackH };
+}
+
+/**
+ * 华为快游戏视口：先收成逻辑像素，再忽略 windowWidth / getWindowInfo / innerWidth。
+ * 那几个在华为上经常是助手预览窗或物理像素，会触发错误的 height-fit 或把画面放大裁切。
+ */
+export function pickHuaweiViewportInput(
+  sysInfo: any,
+  fallbackWidth = 375,
+  fallbackHeight = 667,
+  host?: HuaweiHostSizeHint,
+): ViewportMetricInput {
+  const logical = resolveHuaweiLogicalSize({
+    screenWidth: sysInfo?.screenWidth,
+    screenHeight: sysInfo?.screenHeight,
+    pixelRatio: sysInfo?.pixelRatio,
+    canvasWidth: host?.canvasWidth,
+    canvasHeight: host?.canvasHeight,
+    cssWidth: host?.cssWidth,
+    cssHeight: host?.cssHeight,
+    fallbackWidth,
+    fallbackHeight,
+  });
+  return {
+    width: logical.width,
+    height: logical.height,
+    pixelRatio: sysInfo?.pixelRatio,
+    statusBarHeight: sysInfo?.statusBarHeight,
+    safeAreaTop: sysInfo?.safeArea?.top,
+    safeAreaBottom: sysInfo?.safeArea?.bottom,
+  };
+}
+
 /**
  * 计算核心安全框。
  * 长屏手机沿用宽适配；4:3 等短宽比设备按高度适配，并将 750 宽核心内容水平居中。

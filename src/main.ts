@@ -42,6 +42,8 @@ import { WechatGiftManager } from '@/managers/WechatGiftManager';
 import { WechatWelfareManager } from '@/managers/WechatWelfareManager';
 import { PersistService, type CloudImportInfo } from '@/core/PersistService';
 import { Platform } from '@/core/PlatformService';
+import { isUsableCanvas, pickCanvasFromHost } from '@/core/hostCanvas';
+import { tapTextHostState } from '@/core/tapTextRaster';
 import { EventBus } from '@/core/EventBus';
 import { CdnAssetService } from '@/core/CdnAssetService';
 import { TextureCache } from '@/utils/TextureCache';
@@ -53,6 +55,15 @@ import { TOP_BAR_HEIGHT } from '@/gameobjects/ui/TopBar';
 import { computeMainSceneLayout } from '@/config/ResponsiveLayout';
 import { ENABLE_RESPONSIVE_LAYOUT_V2 } from '@/config/FeatureFlags';
 declare const GameGlobal: any;
+declare const qg: any;
+declare const qa: any;
+declare const wx: any;
+
+function bootStep(msg: string): void {
+  try { GameGlobal.__bootStep = msg; } catch { /* */ }
+  try { GameGlobal.__bootDiag?.(msg); } catch { /* */ }
+  console.log(`[boot] ${msg}`);
+}
 
 // 全局错误捕获——确保真机上所有异常可见，并按经分 SOP 上报 app_error。
 //
@@ -61,8 +72,11 @@ declare const GameGlobal: any;
 // 想覆盖更早的启动期异常，得把 initAnalytics() 也搬到模块顶部，但那样 PlatformService 还没 ready，
 // 风险更大；当前选择"漏掉极少数 init 前异常"换稳定性。
 if (typeof GameGlobal !== 'undefined') {
+  const prevError = GameGlobal.onError;
+  const prevReject = GameGlobal.onUnhandledRejection;
   GameGlobal.onError = (msg: string) => {
     console.error('[GlobalError]', msg);
+    try { prevError?.(msg); } catch { /* */ }
     try {
       analytics.track(EVENT_NAMES.APP_ERROR, {
         err_code: 0,
@@ -75,6 +89,7 @@ if (typeof GameGlobal !== 'undefined') {
   };
   GameGlobal.onUnhandledRejection = (ev: any) => {
     console.error('[UnhandledRejection]', ev?.reason || ev);
+    try { prevReject?.(ev); } catch { /* */ }
     try {
       const reason = ev?.reason;
       const errMsg = reason instanceof Error
@@ -100,20 +115,58 @@ CloudSyncManager.prewarm();
 
 async function main(): Promise<void> {
   try {
-    // 注意：不再在启动时无条件清除存档！
-    // 旧存档的兼容性由 SaveManager 的指纹校验负责处理
-
-    // 获取主屏 canvas
-    const canvas = (typeof GameGlobal !== 'undefined' && GameGlobal.canvas)
-      || (typeof window !== 'undefined' && (window as any).canvas)
-      || null;
-
-    if (!canvas) {
+    bootStep('main-start');
+    let canvas = isUsableCanvas(GameGlobal?.canvas) ? GameGlobal.canvas : null;
+    if (!isUsableCanvas(canvas) && typeof qg !== 'undefined' && typeof qg.createCanvas === 'function') {
+      canvas = qg.createCanvas();
+      try { GameGlobal.canvas = canvas; } catch { /* */ }
+      bootStep('canvas-from-qg');
+    }
+    if (!isUsableCanvas(canvas) && typeof qa !== 'undefined' && typeof qa.createCanvas === 'function') {
+      canvas = qa.createCanvas();
+      try { GameGlobal.canvas = canvas; } catch { /* */ }
+      bootStep('canvas-from-qa');
+    }
+    if (!isUsableCanvas(canvas) && typeof wx !== 'undefined' && typeof wx.createCanvas === 'function') {
+      canvas = wx.createCanvas();
+      try { GameGlobal.canvas = canvas; } catch { /* */ }
+      bootStep('canvas-from-wx');
+    }
+    if (!isUsableCanvas(canvas)) {
+      const g = (typeof globalThis !== 'undefined' ? globalThis : {}) as Record<string, any>;
+      const picked = pickCanvasFromHost({
+        hostCanvas: GameGlobal?.__hostCanvas,
+        canvas: g.canvas,
+        screencanvas: g.screencanvas,
+        document: typeof document !== 'undefined' ? document : GameGlobal?.__hostDocument,
+        createCanvas: typeof qg !== 'undefined' && typeof qg.createCanvas === 'function'
+          ? () => qg.createCanvas()
+          : undefined,
+      });
+      if (isUsableCanvas(picked)) {
+        canvas = picked;
+        try { GameGlobal.canvas = canvas; } catch { /* */ }
+        bootStep('canvas-from-host src=' + (GameGlobal?.__hostCanvasSrc || 'pick'));
+      }
+    }
+    bootStep(
+      'canvas=' + (canvas
+        ? `${(canvas as any).width || 0}x${(canvas as any).height || 0} getContext=${typeof (canvas as any).getContext}`
+        : 'null'),
+    );
+    if (!isUsableCanvas(canvas)) {
       throw new Error('[main] 无法获取 canvas，请检查 pixi-adapter 是否正确加载');
     }
 
-    // 初始化游戏
     Game.init(canvas);
+    bootStep(
+      'init rendered=' + !!GameGlobal.__gameRendered
+      + ' renderer=' + !!Game.app?.renderer
+      + ' textHost=' + tapTextHostState(),
+    );
+    if (!Game.app?.renderer) {
+      throw new Error('[main] 渲染器初始化失败');
+    }
 
     // 经分埋点 SDK：在最早的时机初始化即可，此时 SDK 还没拿到 user_id，
     // 入队事件先用 anonymous_id 兜底；登录拿到 openid 后再调 setAnalyticsUserId 触发 LOGIN + flush。
@@ -270,13 +323,26 @@ async function main(): Promise<void> {
     MergeCompanionManager.init();
 
     const startupSync = await CloudSyncManager.awaitStartupSync();
-    console.log(`[main] 云同步启动结果: ${startupSync.status}, reason=${startupSync.reason}`);
+    console.log(
+      `[main] userId=${CloudSyncManager.userId || '(empty)'} sync=${startupSync.status} reason=${startupSync.reason}`,
+    );
 
     // 拿到 openid 后第一时间通知 SDK：内部会自动 track LOGIN 并立即 flush，
     // 给后端做 anonymous_id ↔ user_id 归一锚点；本地登录失败（cacheOnly）时 userId 为空，仍要兜底打 session_start。
     if (CloudSyncManager.userId) {
       setAnalyticsUserId(CloudSyncManager.userId);
       AttributionManager.bindUser(CloudSyncManager.userId);
+    }
+    if (Platform.isHuawei) {
+      void CloudSyncManager.promoteHuaweiAccount().then((userId) => {
+        if (userId) {
+          setAnalyticsUserId(userId);
+          AttributionManager.bindUser(userId);
+        }
+        console.log(`[main] 华为帐号 userId=${userId || '(empty)'}`);
+      }).catch((err) => {
+        console.warn('[main] 华为帐号补登失败:', err instanceof Error ? err.message : err);
+      });
     }
     analytics.track(EVENT_NAMES.SESSION_START, {
       entry: 'main',
@@ -310,7 +376,13 @@ async function main(): Promise<void> {
     SceneManager.register(shopScene);
 
     // 进入主场景（首帧 UI 已挂到 stage 后再撤掉 Loading，避免中间空窗期浅底色「白屏」）
+    bootStep('switch-main');
     SceneManager.switchTo('main');
+    try { GameGlobal.__bootOk = true; } catch { /* */ }
+    try { GameGlobal.__huahuaBootHud && GameGlobal.__huahuaBootHud.parentNode
+      && GameGlobal.__huahuaBootHud.parentNode.removeChild(GameGlobal.__huahuaBootHud);
+      GameGlobal.__huahuaBootHud = null; } catch { /* */ }
+    bootStep('main-ok');
     Game.stage.removeChild(loadingOverlay);
     loadingOverlay.destroy({ children: true });
     runtimeReadyForCloudReload = true;

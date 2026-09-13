@@ -4,6 +4,7 @@
 import * as PIXI from 'pixi.js';
 import { EventBus } from '@/core/EventBus';
 import { Game } from '@/core/Game';
+import { attachCanvasMoveUp, eventClientPoint } from '@/utils/canvasInteraction';
 import { TweenManager, Ease } from '@/core/TweenManager';
 import {
   BOARD_COLS,
@@ -492,19 +493,16 @@ export class BoardView extends PIXI.Container {
       }
     });
 
-    // ---- pointermove / pointerup：直接注册在 canvas 上 ----
+    // ---- move / up：直接注册在 canvas 上（华为必须走 touch，不能混 pointer）----
     const canvas = Game.app.view as any;
 
-    canvas.addEventListener('pointermove', (e: any) => {
+    const handleRawMove = (e: any) => {
       if (this._mergeBubblePtr) {
-        const te = e as { clientX?: number; clientY?: number; touches?: TouchList };
-        const t0 = te.touches?.[0];
-        const cx = te.clientX ?? t0?.clientX ?? te.x ?? 0;
-        const cy = te.clientY ?? t0?.clientY ?? te.y ?? 0;
+        const p = eventClientPoint(e);
         const localPos = this._rawToLocal(e);
         if (!this._mergeBubblePtr.dragStarted) {
-          const dx = cx - this._mergeBubblePtr.startClientX;
-          const dy = cy - this._mergeBubblePtr.startClientY;
+          const dx = p.x - this._mergeBubblePtr.startClientX;
+          const dy = p.y - this._mergeBubblePtr.startClientY;
           if (dx * dx + dy * dy >= 14 * 14) {
             this._mergeBubblePtr.dragStarted = true;
             this._startBubbleDragGhost(this._mergeBubblePtr.id);
@@ -523,7 +521,7 @@ export class BoardView extends PIXI.Container {
       this._clearLongPress();
       const localPos = this._rawToLocal(e);
       this._moveDragGhost(localPos);
-    });
+    };
 
     const handleRawUp = (e: any) => {
       this._clearLongPress();
@@ -649,20 +647,23 @@ export class BoardView extends PIXI.Container {
       this._dragSrcIndex = -1;
     };
 
-    canvas.addEventListener('pointerup', handleRawUp);
-    canvas.addEventListener('pointercancel', () => {
-      this._clearLongPress();
-      if (this._mergeBubblePtr) {
-        this._cancelMergeBubblePointer();
-      }
-      if (this._dragGhost) {
-        MergeManager.cancelDrag();
-        this._endDrag();
-        if (TutorialInteractionGuard.hasMergeRule) {
-          TutorialInteractionGuard.notifyInvalidAction();
+    attachCanvasMoveUp(canvas, {
+      onMove: handleRawMove,
+      onUp: handleRawUp,
+      onCancel: () => {
+        this._clearLongPress();
+        if (this._mergeBubblePtr) {
+          this._cancelMergeBubblePointer();
         }
-      }
-      this._dragSrcIndex = -1;
+        if (this._dragGhost) {
+          MergeManager.cancelDrag();
+          this._endDrag();
+          if (TutorialInteractionGuard.hasMergeRule) {
+            TutorialInteractionGuard.notifyInvalidAction();
+          }
+        }
+        this._dragSrcIndex = -1;
+      },
     });
   }
 
@@ -672,9 +673,7 @@ export class BoardView extends PIXI.Container {
    * 然后手动除以 stageScale 并减去 BoardView 偏移，不依赖 toLocal / worldTransform。
    */
   private _rawToLocal(e: any): PIXI.IPointData {
-    const cx = e.clientX ?? e.x ?? 0;
-    const cy = e.clientY ?? e.y ?? 0;
-    const { x: designX, y: designY } = Game.clientToDesign(cx, cy);
+    const { x: designX, y: designY } = Game.eventToDesign(e);
     return {
       x: designX,
       y: designY - BoardMetrics.topY,

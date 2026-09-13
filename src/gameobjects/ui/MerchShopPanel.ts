@@ -15,6 +15,7 @@ import { CurrencyManager } from '@/managers/CurrencyManager';
 import { MerchShopManager, type MerchSlotSnapshot } from '@/managers/MerchShopManager';
 import { AdEntitlementManager, DailyAdEntitlement } from '@/managers/AdEntitlementManager';
 import { MERCH_DIAMOND_REFRESH_SHELF_COST } from '@/config/MerchShopConfig';
+import { attachCanvasMoveUp, eventClientPoint, type TouchCanvasLike } from '@/utils/canvasInteraction';
 
 /** 相对原先边距略收紧 + 乘系数，整体面板（底板+内嵌货架）约大 6%～10%，仍钳在屏内 */
 const MERCH_PANEL_PAD_X = 22;
@@ -89,11 +90,7 @@ function nativeClientToDesignY(clientY: number): number {
 }
 
 function federatedPointerToDesignY(e: PIXI.FederatedPointerEvent): number {
-  const n = e.nativeEvent as PointerEvent | MouseEvent | undefined;
-  if (n != null && typeof (n as PointerEvent).clientY === 'number') {
-    return nativeClientToDesignY((n as PointerEvent).clientY);
-  }
-  return Game.globalToDesign(e.global.x, e.global.y).y;
+  return Game.federatedToDesign(e).y;
 }
 
 /** 剩余秒数 → `HH:MM:SS`（商店层板底部「刷新时间」） */
@@ -174,10 +171,11 @@ export class MerchShopPanel extends PIXI.Container {
   /** 货架滚动层（有组件底板时存在） */
   private _merchScrollContent: PIXI.Container | null = null;
   private _merchScrollMinY = 0;
-  /** 微信等环境：子节点 pointermove 不可靠，改绑 canvas */
+  /** 微信等环境：子节点 pointermove 不可靠，改绑 canvas；华为走 touch */
   private _merchScrollListening = false;
   private _merchScrollStartDesignY = 0;
   private _merchScrollStartScrollY = 0;
+  private _detachMerchCanvasScroll: (() => void) | null = null;
   /** 由 `_buildFrameWithComposedShelves` 填充；无货架纹理时为 false */
   private _merchDataBound = false;
   private _slotCells: MerchSlotCell[] = [];
@@ -328,9 +326,9 @@ export class MerchShopPanel extends PIXI.Container {
     TweenManager.to({ target: this._frameRoot.scale, props: { x: 0.94, y: 0.94 }, duration: 0.15, ease: Ease.easeInQuad });
   }
 
-  private readonly _onCanvasMerchMove = (ev: PointerEvent): void => {
+  private readonly _onCanvasMerchMove = (ev: unknown): void => {
     if (!this._isOpen || !this._merchScrollListening || !this._merchScrollContent) return;
-    const dy = nativeClientToDesignY(ev.clientY) - this._merchScrollStartDesignY;
+    const dy = nativeClientToDesignY(eventClientPoint(ev).y) - this._merchScrollStartDesignY;
     let ny = this._merchScrollStartScrollY + dy;
     if (ny > 0) ny = 0;
     if (ny < this._merchScrollMinY) ny = this._merchScrollMinY;
@@ -342,26 +340,25 @@ export class MerchShopPanel extends PIXI.Container {
   };
 
   private _finishMerchCanvasScroll(): void {
-    if (!this._merchScrollListening) return;
-    const canvas = Game.app.view as unknown as HTMLCanvasElement | undefined;
-    if (canvas?.removeEventListener) {
-      canvas.removeEventListener('pointermove', this._onCanvasMerchMove);
-      canvas.removeEventListener('pointerup', this._onCanvasMerchUp);
-      canvas.removeEventListener('pointercancel', this._onCanvasMerchUp);
-    }
+    if (!this._merchScrollListening && !this._detachMerchCanvasScroll) return;
+    this._detachMerchCanvasScroll?.();
+    this._detachMerchCanvasScroll = null;
     this._merchScrollListening = false;
   }
 
   private _beginMerchCanvasScroll(e: PIXI.FederatedPointerEvent): void {
-    if (!this._isOpen || !this._merchScrollContent || this._merchScrollListening) return;
+    if (!this._isOpen || !this._merchScrollContent) return;
+    if (this._merchScrollListening) this._finishMerchCanvasScroll();
     this._merchScrollListening = true;
     this._merchScrollStartDesignY = federatedPointerToDesignY(e);
     this._merchScrollStartScrollY = this._merchScrollContent.y;
-    const canvas = Game.app.view as unknown as HTMLCanvasElement | undefined;
+    const canvas = Game.app.view as unknown as TouchCanvasLike | undefined;
     if (canvas?.addEventListener) {
-      canvas.addEventListener('pointermove', this._onCanvasMerchMove);
-      canvas.addEventListener('pointerup', this._onCanvasMerchUp);
-      canvas.addEventListener('pointercancel', this._onCanvasMerchUp);
+      this._detachMerchCanvasScroll?.();
+      this._detachMerchCanvasScroll = attachCanvasMoveUp(canvas, {
+        onMove: this._onCanvasMerchMove,
+        onUp: this._onCanvasMerchUp,
+      });
     }
   }
 

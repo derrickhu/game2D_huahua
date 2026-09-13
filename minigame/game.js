@@ -1,64 +1,156 @@
-// 开发者工具请打开 build/wechat/ 或 build/douyin/，不要直接打开本目录。
-// 最早加载：宿主识别 + 抖音隐私兜底（须在 pixi-adapter / game-bundle 之前）
-var _runtime = require('./runtime.js');
-var _nativeApi = _runtime.getNativePlatformApi();
+// 任何 require 之前先打点。华为助手控制台经常是空的，错误另走 qg.onError + 弹窗。
+(function () {
+  try {
+    if (typeof globalThis !== 'undefined' && typeof require === 'function' && !globalThis.require) {
+      globalThis.require = require;
+    }
+  } catch (eReq) {}
+  try { console.log('[boot] game.js entered'); } catch (e0) {}
+  try {
+    console.log('[boot] hosts qg=' + (typeof qg)
+      + ' qa=' + (typeof qa)
+      + ' wx=' + (typeof wx)
+      + ' tt=' + (typeof tt)
+      + ' GameGlobal=' + (typeof GameGlobal)
+      + ' require=' + (typeof require));
+  } catch (e1) {}
+  try {
+    if (typeof qg !== 'undefined' && typeof qg.onError === 'function') {
+      qg.onError(function (res) {
+        try { console.error('[boot] qg.onError', res && (res.message || res.errMsg || res)); } catch (e2) {}
+      });
+    }
+  } catch (e4) {}
+})();
 
-// ====== 最早期诊断 ======
-// 鸿蒙上"卡在转圈、控制台出不来"的情况，用 showModal 弹窗显示诊断信息
+// 华为真机没有 eval 绑定；Function() 内部会去找 eval，一加载 bundle 就
+// ReferenceError: Can't find variable: eval。必须在 require bundle 之前挂上。
+// 华为原生快游戏未必注入 GameGlobal，先把全局对象挂成 GameGlobal。
+(function () {
+  var g = (typeof globalThis !== 'undefined' && globalThis)
+    || (typeof global !== 'undefined' && global)
+    || (typeof GameGlobal !== 'undefined' && GameGlobal);
+  if (!g) return;
+  try { g.GameGlobal = g; } catch (e0) {}
+  try { GameGlobal = g; } catch (e1) {}
+  var evalFn = function () { return void 0; };
+  if (typeof g.eval !== 'function') {
+    try {
+      Object.defineProperty(g, 'eval', { value: evalFn, writable: true, configurable: true });
+    } catch (e1) {
+      try { g.eval = evalFn; } catch (e2) {}
+    }
+  }
+  if (typeof GameGlobal !== 'undefined' && typeof GameGlobal.eval !== 'function') {
+    try { GameGlobal.eval = g.eval; } catch (e3) {}
+  }
+})();
+
+// 最早加载：宿主识别 + 原生 API 绑定（须早于 pixi-adapter 与 bundle）
+var _runtime = null;
+try {
+  _runtime = require('./runtime.js');
+} catch (e) {
+  try { console.error('[boot] runtime.js 失败', e); } catch (_) {}
+  throw e;
+}
+if (!_runtime) {
+  try {
+    _runtime = (typeof globalThis !== 'undefined' && globalThis.__huahuaRuntime)
+      || (typeof GameGlobal !== 'undefined' && GameGlobal.__huahuaRuntime)
+      || null;
+  } catch (_) { _runtime = null; }
+}
+if (!_runtime) {
+  try { console.error('[boot] runtime.js 无导出'); } catch (_) {}
+}
+
+// ====== 启动诊断（仅启动失败时弹窗）======
 var _diagMsgs = [];
 var _diagStart = Date.now();
+function _hostApi() {
+  var api = _runtime && _runtime.getNativePlatformApi && _runtime.getNativePlatformApi();
+  if (api) return api;
+  return (typeof qg !== 'undefined' && qg)
+    || (typeof qa !== 'undefined' && qa)
+    || (typeof wx !== 'undefined' && wx)
+    || (typeof tt !== 'undefined' && tt)
+    || null;
+}
 function _diag(msg) {
   var ts = Date.now() - _diagStart;
-  _diagMsgs.push('[' + ts + 'ms] ' + msg);
+  var line = '[' + ts + 'ms] ' + msg;
+  _diagMsgs.push(line);
+  try { console.log('[boot] ' + line); } catch (_) {}
+  try {
+    var api = _hostApi();
+    if (api && typeof api.setStorageSync === 'function') {
+      api.setStorageSync('huahua_boot_diag', _diagMsgs.join('\n'));
+    }
+  } catch (_) {}
+}
+
+function _showDiag() {
+  var dump = _diagMsgs.join('\n');
+  try { console.error('[boot-diag]\n' + dump); } catch (_) {}
+  try {
+    var api = _hostApi();
+    if (!api) return;
+    var tail = _diagMsgs.length > 28 ? _diagMsgs.slice(-28) : _diagMsgs.slice();
+    var content = tail.join('\n');
+    if (typeof api.showModal === 'function') {
+      api.showModal({ title: '启动诊断', content: content, showCancel: false });
+      return;
+    }
+    if (typeof api.showDialog === 'function') {
+      api.showDialog({ title: '启动诊断', message: content, buttons: [{ text: '确定' }] });
+      return;
+    }
+    if (typeof api.showToast === 'function') {
+      try { api.showToast({ title: content.slice(0, 80), icon: 'none', duration: 8000 }); return; } catch (_) {}
+      try { api.showToast({ message: content.slice(0, 120), duration: 8000 }); } catch (_) {}
+    }
+  } catch (_) {}
 }
 
 function _dumpRecentXhr(reason) {
   try {
     var g = typeof GameGlobal !== 'undefined' ? GameGlobal : (typeof globalThis !== 'undefined' ? globalThis : null);
     var logs = g && g.__xhrDebugLogs;
-    if (!logs || !logs.length) {
-      console.warn('[XHR-DUMP]', reason, 'no xhr logs');
-      return;
-    }
+    if (!logs || !logs.length) return;
     var start = Math.max(0, logs.length - 30);
     console.warn('[XHR-DUMP]', reason, 'recent=' + (logs.length - start) + '/' + logs.length);
-    for (var i = start; i < logs.length; i++) {
-      console.warn(logs[i]);
-    }
-  } catch (e) {
-    try { console.warn('[XHR-DUMP] failed:', e); } catch (_) {}
-  }
+    for (var i = start; i < logs.length; i++) console.warn(logs[i]);
+  } catch (_) {}
 }
 
-// 弹窗显示诊断信息（控制台出不来时的最后手段）
-function _showDiag() {
-  try {
-    if (_nativeApi && _nativeApi.showModal) {
-      _nativeApi.showModal({
-        title: '启动诊断',
-        content: _diagMsgs.join('\n'),
-        showCancel: false
-      });
-    }
-  } catch(_) {}
-}
-
-_diag('game.js 开始执行, host=' + _runtime.detectMinigamePlatform());
-
-// 获取系统信息（用弹窗展示，不依赖控制台）
 try {
-  if (_nativeApi) {
-    var _si = _nativeApi.getSystemInfoSync();
-    _diag('platform:' + _si.platform + ' system:' + _si.system);
-    _diag('brand:' + _si.brand + ' model:' + _si.model);
-    _diag('hostver:' + _si.version + ' SDKver:' + _si.SDKVersion);
+  if (typeof GameGlobal !== 'undefined') {
+    GameGlobal.__bootDiag = _diag;
+    GameGlobal.__showBootDiag = _showDiag;
+    GameGlobal.onError = function (msg) {
+      _diag('onError:' + msg);
+      _dumpRecentXhr('onError');
+      _showDiag();
+    };
+    GameGlobal.onUnhandledRejection = function (ev) {
+      _diag('unhandledRej:' + (ev && ev.reason || ev));
+      _dumpRecentXhr('onUnhandledRejection');
+      _showDiag();
+    };
   }
-} catch(e) {
-  _diag('getSystemInfo失败:' + e);
-}
+} catch (_) {}
+try {
+  var _errApi = _hostApi();
+  if (_errApi && typeof _errApi.onError === 'function') {
+    _errApi.onError(function (err) {
+      _diag('host.onError:' + (err && (err.message || err.errMsg) || err));
+      _showDiag();
+    });
+  }
+} catch (_) {}
 
-// ====== 抖音必接能力探测：侧边栏复访 + 添加到桌面 ======
-// onShow 首次回调可能早于 bundle 执行，必须在这里就接住启动参数。
+// 抖音必接能力：侧边栏复访 + 添加到桌面（须在 bundle 加载前注册/探测）
 (function () {
   if (typeof GameGlobal !== 'undefined') {
     GameGlobal.__launchInfo = {};
@@ -66,107 +158,97 @@ try {
     GameGlobal.__desktopShortcutSupported = false;
     GameGlobal.__desktopShortcutStatus = null;
   }
-  if (!_nativeApi || _runtime.detectMinigamePlatform() !== 'douyin') return;
-
-  try {
-    if (typeof _nativeApi.onShow === 'function') {
-      _nativeApi.onShow(function (res) {
-        if (typeof GameGlobal !== 'undefined') GameGlobal.__launchInfo = res || {};
-      });
-    }
-    var _enter = typeof _nativeApi.getEnterOptionsSync === 'function'
-      ? _nativeApi.getEnterOptionsSync()
-      : null;
-    if (_enter && typeof GameGlobal !== 'undefined') GameGlobal.__launchInfo = _enter;
-  } catch (e) {
-    _diag('onShow 注册失败:' + e);
+  if (!_runtime || typeof _runtime.detectMinigamePlatform !== 'function') return;
+  if (_runtime.detectMinigamePlatform() !== 'douyin') return;
+  var P = _runtime.getNativePlatformApi();
+  if (!P) return;
+  if (typeof P.onShow === 'function') {
+    P.onShow(function (res) {
+      if (typeof GameGlobal !== 'undefined') GameGlobal.__launchInfo = res || {};
+    });
   }
-
-  try {
-    if (typeof _nativeApi.checkScene === 'function') {
-      _nativeApi.checkScene({
-        scene: 'sidebar',
-        success: function (res) {
-          if (typeof GameGlobal !== 'undefined') {
-            GameGlobal.__sidebarSupported = !!(res && res.isExist);
-          }
-        },
-        fail: function () {
-          if (typeof GameGlobal !== 'undefined') GameGlobal.__sidebarSupported = false;
+  if (typeof P.checkScene === 'function') {
+    P.checkScene({
+      scene: 'sidebar',
+      success: function (res) {
+        if (typeof GameGlobal !== 'undefined') GameGlobal.__sidebarSupported = !!(res && res.isExist);
+      },
+      fail: function () {
+        if (typeof GameGlobal !== 'undefined') GameGlobal.__sidebarSupported = false;
+      },
+    });
+  }
+  if (typeof P.addShortcut === 'function' && typeof GameGlobal !== 'undefined') {
+    GameGlobal.__desktopShortcutSupported = true;
+  }
+  if (typeof P.checkShortcut === 'function') {
+    P.checkShortcut({
+      success: function (res) {
+        if (typeof GameGlobal !== 'undefined') {
+          GameGlobal.__desktopShortcutStatus = res && res.status ? res.status : null;
         }
-      });
-    }
-  } catch (_) {}
-
-  try {
-    if (typeof _nativeApi.addShortcut === 'function' && typeof GameGlobal !== 'undefined') {
-      GameGlobal.__desktopShortcutSupported = true;
-    }
-    if (typeof _nativeApi.checkShortcut === 'function') {
-      _nativeApi.checkShortcut({
-        success: function (res) {
-          if (typeof GameGlobal !== 'undefined') {
-            GameGlobal.__desktopShortcutStatus = res && res.status ? res.status : null;
-          }
-        },
-        fail: function () {}
-      });
-    }
-  } catch (_) {}
+      },
+      fail: function () {},
+    });
+  }
 })();
 
-// 全局错误捕获——鸿蒙等设备 adapter 阶段崩溃无日志，必须最先注册
 try {
-  if (typeof GameGlobal !== 'undefined') {
-    GameGlobal.onError = function(msg) {
-      _diag('onError:' + msg);
-      _dumpRecentXhr('onError');
-      _showDiag();
-    };
-    GameGlobal.onUnhandledRejection = function(ev) {
-      _diag('unhandledRej:' + (ev && ev.reason || ev));
-      _dumpRecentXhr('onUnhandledRejection');
-      _showDiag();
-    };
+  if (_runtime && typeof _runtime.captureHostCanvas === 'function') {
+    var _hostCv = _runtime.captureHostCanvas();
+    _diag((_runtime.listHostCanvasHints ? _runtime.listHostCanvasHints() : 'no-hints')
+      + ' captured=' + (_hostCv ? 'yes' : 'no'));
   }
-} catch(_) {}
+  if (_runtime && typeof _runtime.installHuaweiCreateCanvasShim === 'function') {
+    _runtime.installHuaweiCreateCanvasShim();
+  }
+} catch (eCap) {
+  _diag('captureHostCanvas 失败:' + eCap);
+}
 
-// ====== 加载 adapter ======
-_diag('加载 pixi-adapter...');
 try {
   require('./pixi-adapter/index');
-  _diag('pixi-adapter OK');
+  var _cv = typeof GameGlobal !== 'undefined' ? GameGlobal.canvas : null;
+  if ((!_cv || typeof _cv.getContext !== 'function') && typeof GameGlobal !== 'undefined' && GameGlobal.__hostCanvas) {
+    _cv = GameGlobal.__hostCanvas;
+    try { GameGlobal.canvas = _cv; } catch (_) {}
+  }
+  var _doc = typeof document !== 'undefined' ? document : (GameGlobal && GameGlobal.document);
+  _diag('cv=' + (_cv ? ((_cv.width || 0) + 'x' + (_cv.height || 0) + ' getContext=' + (typeof _cv.getContext)) : 'none')
+    + ' createCanvas=' + (typeof qg !== 'undefined' ? typeof qg.createCanvas : 'no-qg')
+    + ' rAF=' + (typeof requestAnimationFrame)
+    + ' createElement=' + (_doc ? typeof _doc.createElement : 'no-doc')
+    + ' hostSrc=' + (typeof GameGlobal !== 'undefined' ? GameGlobal.__hostCanvasSrc : '?'));
 } catch (e) {
-  _diag('pixi-adapter 失败!!:' + e);
+  _diag('pixi-adapter 失败:' + e);
   _showDiag();
 }
 
-// ====== 鸿蒙 Intl polyfill ======
-// 鸿蒙版微信 V8 引擎不含 ICU，Intl 对象不存在
-// PixiJS graphemeSegmenter 中 `Intl==null?...` 会触发 ReferenceError
-// 注入一个最小 Intl stub，让 PixiJS 安全降级到 [...str] 分割
+// 鸿蒙 V8 不含 ICU，Intl 不存在时 PixiJS graphemeSegmenter 会 ReferenceError
 if (typeof Intl === 'undefined') {
-  _diag('Intl不存在,注入polyfill');
   var _g = typeof GameGlobal !== 'undefined' ? GameGlobal : (typeof globalThis !== 'undefined' ? globalThis : {});
   _g.Intl = {};
 }
 
-// ====== 加载 game-bundle ======
-_diag('加载 game-bundle...');
+_diag('boot wx=' + (typeof wx) + ' tt=' + (typeof tt)
+  + ' qg=' + (typeof qg) + ' qa=' + (typeof qa)
+  + ' plat=' + (_runtime && _runtime.detectMinigamePlatform ? _runtime.detectMinigamePlatform() : '?'));
+try { require('./huawei-pack-stamp.js'); } catch (e) { /* 非华为包没有 */ }
+try {
+  var _pack = typeof GameGlobal !== 'undefined' ? GameGlobal.__HUAHUA_HUAWEI_VERSION : null;
+  if (_pack) _diag('pack=' + _pack);
+} catch (e) { /* */ }
 try {
   require('./game-bundle.js');
-  _diag('game-bundle OK');
 } catch (e) {
-  _diag('game-bundle 失败!!:' + e);
+  _diag('game-bundle 失败:' + e);
   _showDiag();
 }
 
-_diag('全部加载完成');
-
-// 5秒后如果还没有渲染，自动弹窗显示诊断（兜底）
-setTimeout(function() {
-  if (typeof GameGlobal !== 'undefined' && !GameGlobal.__gameRendered) {
-    _diag('5秒超时 - 游戏未渲染');
+setTimeout(function () {
+  if (typeof GameGlobal !== 'undefined' && !GameGlobal.__bootOk) {
+    _diag('6秒未进主场景 step=' + (GameGlobal.__bootStep || '?')
+      + ' rendered=' + GameGlobal.__gameRendered);
     _showDiag();
   }
-}, 5000);
+}, 6000);

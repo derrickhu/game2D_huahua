@@ -37,6 +37,15 @@ class CdnAssetServiceClass {
     return this._manifest;
   }
 
+  /**
+   * 能否落盘缓存。华为即使后来露出 getFileSystemManager / downloadFile，
+   * 路径和回调也不稳；批量预下载只会把启动卡死，继续走 createImage(https)。
+   */
+  get canCacheLocally(): boolean {
+    if (Platform.isHuawei) return false;
+    return !!this._getFs() && !!this._getUserDataPath();
+  }
+
   isCdnPath(path: string): boolean {
     const normalized = this._normalize(path);
     if (!this.enabled || this.isBundledPath(normalized)) return false;
@@ -70,6 +79,11 @@ class CdnAssetServiceClass {
       return logicalPath;
     }
 
+    if (!this.canCacheLocally) {
+      const remote = this._getCdnUrl(logicalPath);
+      return remote || logicalPath;
+    }
+
     const ok = await this.download(logicalPath);
     if (ok && this._isCacheValid(logicalPath)) return this._getCachePath(logicalPath);
 
@@ -85,10 +99,18 @@ class CdnAssetServiceClass {
       return false;
     }
 
-    const fs = this._getFs();
-    if (!fs || !this._config.baseUrl) {
-      this._loadCachedManifest();
-      return false;
+    if (!this.canCacheLocally) {
+      if (!this._config.baseUrl) {
+        this._manifest = { files: {} };
+        this._manifestReady = true;
+        return false;
+      }
+    } else {
+      const fs = this._getFs();
+      if (!fs || !this._config.baseUrl) {
+        this._loadCachedManifest();
+        return false;
+      }
     }
 
     /** 注意：不要走 wx.downloadFile 拉 manifest.json。
@@ -106,8 +128,11 @@ class CdnAssetServiceClass {
 
       this._manifest = JSON.parse(text) as CdnManifest;
       this._manifestReady = true;
-      this._ensureCacheDir(this._getCachePath('manifest.json'));
-      try { fs.writeFileSync(this._getCachePath('manifest.json'), text, 'utf-8'); } catch (_) {}
+      if (this.canCacheLocally) {
+        const fs = this._getFs();
+        this._ensureCacheDir(this._getCachePath('manifest.json'));
+        try { fs?.writeFileSync(this._getCachePath('manifest.json'), text, 'utf-8'); } catch (_) {}
+      }
       return true;
     } catch (e) {
       console.warn('[CDN] manifest 拉取失败，使用本地缓存:', e);

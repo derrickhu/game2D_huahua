@@ -77,6 +77,15 @@ import { FURNITURE_WORKSHOP_UNLOCK_LEVEL } from '@/config/FurnitureWorkshopConfi
 import { TutorialOverlay } from '@/systems/TutorialOverlay';
 import { playShopDecorationStarFly, playShopDecorationStarFlyOverOverlay } from '@/gameobjects/ui/ShopDecorationStarFly';
 import { Platform } from '@/core/PlatformService';
+import {
+  attachCanvasMoveUp,
+  eventClientPoint,
+  eventPointerId,
+  eventTouchPoints,
+  federatedHasBrowserClient,
+  federatedToClientPoint,
+  type TouchCanvasLike,
+} from '@/utils/canvasInteraction';
 import { SocialManager } from '@/managers/SocialManager';
 import { SettingsPanel } from '@/gameobjects/ui/SettingsPanel';
 import { UpdateAnnouncementPanel } from '@/gameobjects/ui/UpdateAnnouncementPanel';
@@ -450,7 +459,7 @@ export class ShopScene implements Scene {
   private _ownerDragOffset = { x: 0, y: 0 };
   private _onOwnerRawMove: ((e: any) => void) | null = null;
   private _onOwnerRawUp: ((e: any) => void) | null = null;
-  private _onOwnerTouchEnd: ((e: TouchEvent) => void) | null = null;
+  private _detachOwnerCanvas: (() => void) | null = null;
   /** 非编辑模式：在店主上按下待判定（点按对话 vs 移动拖动） */
   private _ownerPointerDownOwner: PIXI.Container | null = null;
   private _ownerPointerDownId: number | null = null;
@@ -475,8 +484,9 @@ export class ShopScene implements Scene {
   private _roomPanDragStartClientY = 0;
   private _roomPanDragStartPanX = 0;
   private _roomPanDragStartPanY = 0;
-  private _onRoomPanCanvasMove: ((ev: PointerEvent) => void) | null = null;
-  private _onRoomPanCanvasUp: ((ev: PointerEvent) => void) | null = null;
+  private _onRoomPanCanvasMove: ((ev: unknown) => void) | null = null;
+  private _onRoomPanCanvasUp: ((ev: unknown) => void) | null = null;
+  private _detachRoomPanCanvas: (() => void) | null = null;
   /** 编辑模式下垫在建筑背后的全屏命中层，便于点在留白处也能平移 */
   private _roomPanHitLayer: PIXI.Graphics | null = null;
   /** 编辑模式：贴右缘的缩放滑杆 */
@@ -489,15 +499,17 @@ export class ShopScene implements Scene {
   private _zoomSliderDragActive = false;
   private _zoomSliderLastTap = 0;
   private _zoomSliderPointerId = 0;
-  private _onZoomSliderCanvasMove: ((e: Event) => void) | null = null;
-  private _onZoomSliderCanvasUp: ((e: Event) => void) | null = null;
+  private _onZoomSliderCanvasMove: ((e: unknown) => void) | null = null;
+  private _onZoomSliderCanvasUp: ((e: unknown) => void) | null = null;
+  private _detachZoomSliderCanvas: (() => void) | null = null;
   // pinch 手势追踪
   private _pinchPointers = new Map<number, { x: number; y: number }>();
   private _pinchStartDist = 0;
   private _pinchStartScale = 1;
-  private _onPinchDown: ((e: any) => void) | null = null;
-  private _onPinchMove: ((e: any) => void) | null = null;
-  private _onPinchUp: ((e: any) => void) | null = null;
+  private _onPinchDown: ((e: unknown) => void) | null = null;
+  private _onPinchMove: ((e: unknown) => void) | null = null;
+  private _onPinchUp: ((e: unknown) => void) | null = null;
+  private _detachPinchCanvas: (() => void) | null = null;
 
   constructor() {
     this.container = new PIXI.Container();
@@ -763,21 +775,10 @@ export class ShopScene implements Scene {
 
   private _cleanupOwnerDragEvents(): void {
     this._resetOwnerDragState();
-    const canvas = Game.app.view as any;
-    if (this._onOwnerRawMove) {
-      canvas.removeEventListener('pointermove', this._onOwnerRawMove);
-      this._onOwnerRawMove = null;
-    }
-    if (this._onOwnerRawUp) {
-      canvas.removeEventListener('pointerup', this._onOwnerRawUp);
-      canvas.removeEventListener('pointercancel', this._onOwnerRawUp);
-      this._onOwnerRawUp = null;
-    }
-    if (this._onOwnerTouchEnd) {
-      canvas.removeEventListener('touchend', this._onOwnerTouchEnd);
-      canvas.removeEventListener('touchcancel', this._onOwnerTouchEnd);
-      this._onOwnerTouchEnd = null;
-    }
+    this._detachOwnerCanvas?.();
+    this._detachOwnerCanvas = null;
+    this._onOwnerRawMove = null;
+    this._onOwnerRawUp = null;
   }
 
   private _build(): void {
@@ -1186,7 +1187,7 @@ export class ShopScene implements Scene {
   }
 
   private _designPosFromFederated(e: PIXI.FederatedPointerEvent): { x: number; y: number } {
-    return Game.globalToDesign(e.global.x, e.global.y);
+    return Game.federatedToDesign(e);
   }
 
   private _roomLocalFromDesign(designX: number, designY: number): { x: number; y: number } {
@@ -1199,9 +1200,8 @@ export class ShopScene implements Scene {
   }
 
   private _clientXYFromFederated(e: PIXI.FederatedPointerEvent): { x: number; y: number } {
-    const native = e.nativeEvent as PointerEvent | MouseEvent | undefined;
-    if (native && typeof (native as PointerEvent).clientX === 'number') {
-      return { x: (native as PointerEvent).clientX, y: (native as PointerEvent).clientY };
+    if (federatedHasBrowserClient(e) || Platform.isHuawei) {
+      return federatedToClientPoint(e);
     }
     const g = this._designPosFromFederated(e);
     return Game.designToClient(g.x, g.y);
@@ -1425,14 +1425,14 @@ export class ShopScene implements Scene {
     // 使用 canvas 级别事件处理拖拽（与 FurnitureDragSystem 一致，兼容微信小游戏）
     const canvas = Game.app.view as any;
     this._onOwnerRawMove = (rawEvt: any) => {
-      const clientX = rawEvt.clientX ?? rawEvt.pageX ?? 0;
-      const clientY = rawEvt.clientY ?? rawEvt.pageY ?? 0;
+      const { x: clientX, y: clientY } = eventClientPoint(rawEvt);
+      const moveId = eventPointerId(rawEvt);
 
       if (
         !this._ownerDragging
         && this._ownerPointerDownOwner
         && this._ownerPressStartClient
-        && (this._ownerPointerDownId == null || rawEvt.pointerId === this._ownerPointerDownId)
+        && (this._ownerPointerDownId == null || moveId === undefined || moveId === this._ownerPointerDownId)
       ) {
         const dx = clientX - this._ownerPressStartClient.x;
         const dy = clientY - this._ownerPressStartClient.y;
@@ -1457,11 +1457,7 @@ export class ShopScene implements Scene {
       this._roomContainer.sortChildren();
     };
     this._onOwnerRawUp = (rawEvt: any) => {
-      const upId = typeof rawEvt?.pointerId === 'number'
-        ? rawEvt.pointerId
-        : typeof rawEvt?.identifier === 'number'
-          ? rawEvt.identifier
-          : undefined;
+      const upId = eventPointerId(rawEvt);
       if (this._ownerDragging) {
         if (
           this._ownerPointerDownId != null
@@ -1516,21 +1512,12 @@ export class ShopScene implements Scene {
         }
       }
     };
-    canvas.addEventListener('pointermove', this._onOwnerRawMove);
-    canvas.addEventListener('pointerup', this._onOwnerRawUp);
-    canvas.addEventListener('pointercancel', this._onOwnerRawUp);
-    this._onOwnerTouchEnd = (e: TouchEvent) => {
-      const t = e.changedTouches?.[0];
-      if (!t || !this._onOwnerRawUp) return;
-      // 微信端 touch.identifier 常与 Pixi pointerId 不一致；不传 pointerId，按「结束当前手势」处理
-      this._onOwnerRawUp({
-        clientX: t.clientX,
-        clientY: t.clientY,
-        type: e.type === 'touchcancel' ? 'touchcancel' : 'pointerup',
-      });
-    };
-    canvas.addEventListener('touchend', this._onOwnerTouchEnd);
-    canvas.addEventListener('touchcancel', this._onOwnerTouchEnd);
+    this._detachOwnerCanvas?.();
+    this._detachOwnerCanvas = attachCanvasMoveUp(canvas as TouchCanvasLike, {
+      onMove: this._onOwnerRawMove,
+      onUp: this._onOwnerRawUp,
+      onCancel: this._onOwnerRawUp,
+    });
 
     this._roomContainer.addChild(owner);
   }
@@ -1573,11 +1560,13 @@ export class ShopScene implements Scene {
     };
   }
 
-  /** 新手引导「保存装修」：始终读取当前托盘实际位置。 */
+  /** 新手引导「保存装修」：用托盘打开后的目标位置，不能读滑入动画中的 y。 */
   _getTutorialEditCompleteSpotlightRect(): { x: number; y: number; w: number; h: number; r: number } | null {
     if (!this._editCompletePill?.parent || !this._furnitureTray.visible) return null;
     return {
-      ...furnitureTrayEditCompleteSpotlightRect(this._furnitureTray.y),
+      ...furnitureTrayEditCompleteSpotlightRect(
+        furnitureTrayOpenTopY(Game.logicHeight, Game.safeBottom),
+      ),
       r: 28,
     };
   }
@@ -3108,6 +3097,7 @@ export class ShopScene implements Scene {
     EventBus.on('roomlayout:removed', this._onRoomLayoutRemoved);
     EventBus.on('roomlayout:updated', this._onRoomLayoutUpdated);
     EventBus.on('furniture:drag_pointer_down', this._onFurnitureDragPointerDown);
+    EventBus.on('furniture:tutorialEditCompleteTap', this._onTutorialEditCompleteTap);
     EventBus.on('coolSummerEvent:changed', this._onCoolSummerChanged);
     EventBus.on('coolSummerEvent:periodChanged', this._onCoolSummerChanged);
     EventBus.on('midAutumnEvent:changed', this._onMidAutumnChanged);
@@ -3130,6 +3120,11 @@ export class ShopScene implements Scene {
     this._resetOwnerDragState();
   };
 
+  private readonly _onTutorialEditCompleteTap = (): void => {
+    if (!this._isEditMode) return;
+    this._exitEditMode();
+  };
+
   private _unbindEvents(): void {
     EventBus.off('decoration:decoPanelBackdrop', this._onDecoPanelBackdrop);
     EventBus.off('decoration:room_style', this._refreshShopBuildingTexture);
@@ -3146,6 +3141,7 @@ export class ShopScene implements Scene {
     EventBus.off('roomlayout:removed', this._onRoomLayoutRemoved);
     EventBus.off('roomlayout:updated', this._onRoomLayoutUpdated);
     EventBus.off('furniture:drag_pointer_down', this._onFurnitureDragPointerDown);
+    EventBus.off('furniture:tutorialEditCompleteTap', this._onTutorialEditCompleteTap);
     EventBus.off('coolSummerEvent:changed', this._onCoolSummerChanged);
     EventBus.off('coolSummerEvent:periodChanged', this._onCoolSummerChanged);
     EventBus.off('midAutumnEvent:changed', this._onMidAutumnChanged);
@@ -3154,7 +3150,7 @@ export class ShopScene implements Scene {
 
   /**
    * 装修面板「去放置 / 放入房间」进店后：进编辑模式、托盘切到对应槽位；
-   * 若该 deco 尚未摆放则自动从门廊木台前景（房间内本地坐标）拉起拖入。
+   * 若该 deco 尚未摆放则自动在室内地板默认点放入。
    *
    * 注意：面板可在花店场景内打开（current 已是 shop），此时不会走 MainScene 切场景、
    * onEnter 也不会再执行，须由 `scene:switchToShop` 的另一路监听消费 pending。
@@ -3198,7 +3194,7 @@ export class ShopScene implements Scene {
         FURNITURE_TRAY_SPAWN_ROOM_LOCAL.x,
         FURNITURE_TRAY_SPAWN_ROOM_LOCAL.y,
       );
-      FurnitureDragSystem.startDragFromTray(decoId, spawnDesignX, spawnDesignY);
+      FurnitureDragSystem.placeNewAtDesign(decoId, spawnDesignX, spawnDesignY);
       return true;
     };
 
@@ -4031,7 +4027,7 @@ export class ShopScene implements Scene {
 
   /**
    * 房间内容本地坐标 → 设计坐标（与 FurnitureDragSystem 内 _designToLocal 互逆）。
-   * 用于把「房间内本地」默认落点换算到设计坐标；落点取自 FURNITURE_TRAY_SPAWN_ROOM_LOCAL（门廊前景）。
+   * 用于把「房间内本地」默认落点换算到设计坐标；落点取自 FURNITURE_TRAY_SPAWN_ROOM_LOCAL（室内地板）。
    */
   private _roomLocalToDesign(localX: number, localY: number): { x: number; y: number } {
     const c = this._roomContainer;
@@ -4141,16 +4137,10 @@ export class ShopScene implements Scene {
   }
 
   private _cleanupRoomPanCanvasListeners(): void {
-    const canvas = Game.app.view as HTMLCanvasElement;
-    if (this._onRoomPanCanvasMove) {
-      canvas.removeEventListener('pointermove', this._onRoomPanCanvasMove);
-      this._onRoomPanCanvasMove = null;
-    }
-    if (this._onRoomPanCanvasUp) {
-      canvas.removeEventListener('pointerup', this._onRoomPanCanvasUp);
-      canvas.removeEventListener('pointercancel', this._onRoomPanCanvasUp);
-      this._onRoomPanCanvasUp = null;
-    }
+    this._detachRoomPanCanvas?.();
+    this._detachRoomPanCanvas = null;
+    this._onRoomPanCanvasMove = null;
+    this._onRoomPanCanvasUp = null;
     this._roomPanDragging = false;
   }
 
@@ -4158,55 +4148,56 @@ export class ShopScene implements Scene {
   private _handleRoomPanSurfaceDown = (e: PIXI.FederatedPointerEvent): void => {
     if (!this._isEditMode || this._viewScalePanExcess() <= 0.001) return;
     if (this._roomPanDragging) return;
-    const native = e.nativeEvent as PointerEvent | undefined;
-    if (!native) return;
+    const start = this._clientXYFromFederated(e);
+    const pid = eventPointerId(e.nativeEvent ?? e) ?? e.pointerId ?? 0;
     e.stopPropagation();
     this._roomPanDragging = true;
-    this._roomPanPointerId = native.pointerId;
-    this._roomPanDragStartClientX = native.clientX;
-    this._roomPanDragStartClientY = native.clientY;
+    this._roomPanPointerId = pid;
+    this._roomPanDragStartClientX = start.x;
+    this._roomPanDragStartClientY = start.y;
     this._roomPanDragStartPanX = this._roomPanX;
     this._roomPanDragStartPanY = this._roomPanY;
 
     const canvas = Game.app.view as HTMLCanvasElement;
     // 微信真机 setPointerCapture 易导致后续 pointerup 到不了家具拖拽，仅开发者工具使用
-    if (!Platform.isWechat && canvas.setPointerCapture) {
+    if (!Platform.isWechat && !Platform.isHuawei && canvas.setPointerCapture && typeof e.pointerId === 'number') {
       try {
-        canvas.setPointerCapture(native.pointerId);
+        canvas.setPointerCapture(e.pointerId);
       } catch (_) { /* 部分环境不支持 */ }
     }
 
-    this._onRoomPanCanvasMove = (ev: PointerEvent) => {
-      if (!this._roomPanDragging || ev.pointerId !== this._roomPanPointerId) return;
-      const dxClient = ev.clientX - this._roomPanDragStartClientX;
-      const dyClient = ev.clientY - this._roomPanDragStartClientY;
+    this._onRoomPanCanvasMove = (ev: unknown) => {
+      const moveId = eventPointerId(ev);
+      if (!this._roomPanDragging || (moveId !== undefined && moveId !== this._roomPanPointerId)) return;
+      const p = eventClientPoint(ev);
+      const dxClient = p.x - this._roomPanDragStartClientX;
+      const dyClient = p.y - this._roomPanDragStartClientY;
       this._roomPanX = this._roomPanDragStartPanX + dxClient / Game.contentScale;
       this._roomPanY = this._roomPanDragStartPanY + dyClient / Game.contentScale;
       this._syncRoomContainerTransform();
     };
 
-    this._onRoomPanCanvasUp = (ev: PointerEvent) => {
-      if (ev.pointerId !== this._roomPanPointerId) return;
+    this._onRoomPanCanvasUp = (ev: unknown) => {
+      const upId = eventPointerId(ev);
+      if (upId !== undefined && upId !== this._roomPanPointerId) return;
       this._roomPanDragging = false;
-      if (canvas.releasePointerCapture) {
+      if (canvas.releasePointerCapture && typeof e.pointerId === 'number') {
         try {
-          canvas.releasePointerCapture(ev.pointerId);
+          canvas.releasePointerCapture(e.pointerId);
         } catch (_) { /* */ }
       }
-      if (this._onRoomPanCanvasMove) {
-        canvas.removeEventListener('pointermove', this._onRoomPanCanvasMove);
-        this._onRoomPanCanvasMove = null;
-      }
-      if (this._onRoomPanCanvasUp) {
-        canvas.removeEventListener('pointerup', this._onRoomPanCanvasUp);
-        canvas.removeEventListener('pointercancel', this._onRoomPanCanvasUp);
-        this._onRoomPanCanvasUp = null;
-      }
+      this._detachRoomPanCanvas?.();
+      this._detachRoomPanCanvas = null;
+      this._onRoomPanCanvasMove = null;
+      this._onRoomPanCanvasUp = null;
     };
 
-    canvas.addEventListener('pointermove', this._onRoomPanCanvasMove);
-    canvas.addEventListener('pointerup', this._onRoomPanCanvasUp);
-    canvas.addEventListener('pointercancel', this._onRoomPanCanvasUp);
+    this._detachRoomPanCanvas?.();
+    this._detachRoomPanCanvas = attachCanvasMoveUp(canvas as unknown as TouchCanvasLike, {
+      onMove: this._onRoomPanCanvasMove,
+      onUp: this._onRoomPanCanvasUp,
+      onCancel: this._onRoomPanCanvasUp,
+    });
   };
 
   /** 应用视图缩放 — 以屏幕中心为基点缩放 roomContainer */
@@ -4341,18 +4332,18 @@ export class ShopScene implements Scene {
       const ly0 = this._sliderLocalYFromClientY(startY);
       this._applyViewZoom(this._scaleFromTrackY(ly0));
 
-      this._onZoomSliderCanvasMove = (ev: Event) => {
+      this._onZoomSliderCanvasMove = (ev: unknown) => {
         if (!this._zoomSliderDragging || !this._zoomSlider) return;
-        const movePid = this._pointerIdFromBrowserEvent(ev);
+        const movePid = eventPointerId(ev) ?? this._pointerIdFromBrowserEvent(ev as Event);
         if (this._zoomSliderPointerId && movePid !== this._zoomSliderPointerId) return;
-        const cy = this._clientYFromBrowserEvent(ev);
+        const cy = eventClientPoint(ev).y || this._clientYFromBrowserEvent(ev as Event);
         if (cy == null) return;
         const ly2 = this._sliderLocalYFromClientY(cy);
         this._applyViewZoom(this._scaleFromTrackY(ly2));
       };
 
-      this._onZoomSliderCanvasUp = (ev: Event) => {
-        const upPid = this._pointerIdFromBrowserEvent(ev);
+      this._onZoomSliderCanvasUp = (ev: unknown) => {
+        const upPid = eventPointerId(ev) ?? this._pointerIdFromBrowserEvent(ev as Event);
         if (this._zoomSliderPointerId && upPid !== this._zoomSliderPointerId) return;
         this._zoomSliderDragging = false;
         this._zoomSliderDragActive = false;
@@ -4363,20 +4354,18 @@ export class ShopScene implements Scene {
             canvas.releasePointerCapture(pe.pointerId);
           } catch (_) { /* */ }
         }
-        if (this._onZoomSliderCanvasMove) {
-          canvas.removeEventListener('pointermove', this._onZoomSliderCanvasMove);
-          this._onZoomSliderCanvasMove = null;
-        }
-        if (this._onZoomSliderCanvasUp) {
-          canvas.removeEventListener('pointerup', this._onZoomSliderCanvasUp);
-          canvas.removeEventListener('pointercancel', this._onZoomSliderCanvasUp);
-          this._onZoomSliderCanvasUp = null;
-        }
+        this._detachZoomSliderCanvas?.();
+        this._detachZoomSliderCanvas = null;
+        this._onZoomSliderCanvasMove = null;
+        this._onZoomSliderCanvasUp = null;
       };
 
-      canvas.addEventListener('pointermove', this._onZoomSliderCanvasMove);
-      canvas.addEventListener('pointerup', this._onZoomSliderCanvasUp);
-      canvas.addEventListener('pointercancel', this._onZoomSliderCanvasUp);
+      this._detachZoomSliderCanvas?.();
+      this._detachZoomSliderCanvas = attachCanvasMoveUp(canvas as unknown as TouchCanvasLike, {
+        onMove: this._onZoomSliderCanvasMove,
+        onUp: this._onZoomSliderCanvasUp,
+        onCancel: this._onZoomSliderCanvasUp,
+      });
     });
   }
 
@@ -4410,16 +4399,10 @@ export class ShopScene implements Scene {
   private _removeZoomControls(): void {
     this._zoomSliderDragging = false;
     this._zoomSliderDragActive = false;
-    const canvas = Game.app.view as HTMLCanvasElement;
-    if (this._onZoomSliderCanvasMove) {
-      canvas.removeEventListener('pointermove', this._onZoomSliderCanvasMove);
-      this._onZoomSliderCanvasMove = null;
-    }
-    if (this._onZoomSliderCanvasUp) {
-      canvas.removeEventListener('pointerup', this._onZoomSliderCanvasUp);
-      canvas.removeEventListener('pointercancel', this._onZoomSliderCanvasUp);
-      this._onZoomSliderCanvasUp = null;
-    }
+    this._detachZoomSliderCanvas?.();
+    this._detachZoomSliderCanvas = null;
+    this._onZoomSliderCanvasMove = null;
+    this._onZoomSliderCanvasUp = null;
     if (this._zoomSlider) {
       this._zoomSlider.parent?.removeChild(this._zoomSlider);
       this._zoomSlider.destroy({ children: true });
@@ -4430,66 +4413,78 @@ export class ShopScene implements Scene {
 
   /** 启用双指捏合缩放手势 */
   private _enablePinchZoom(): void {
-    const canvas = Game.app.view as any;
+    const canvas = Game.app.view as TouchCanvasLike | undefined;
+    if (!canvas?.addEventListener) return;
 
-    this._onPinchDown = (e: PointerEvent) => {
+    this._onPinchDown = (e: unknown) => {
       if (!this._isEditMode) return;
-      this._pinchPointers.set(e.pointerId, { x: e.clientX, y: e.clientY });
+      const pts = eventTouchPoints(e);
+      if (pts.length >= 2) {
+        this._pinchPointers.clear();
+        for (const p of pts) this._pinchPointers.set(p.id, { x: p.x, y: p.y });
+        return;
+      }
+      if (pts.length === 1) {
+        this._pinchPointers.set(pts[0].id, { x: pts[0].x, y: pts[0].y });
+      }
     };
 
-    this._onPinchMove = (e: PointerEvent) => {
+    this._onPinchMove = (e: unknown) => {
       if (!this._isEditMode) return;
-      if (!this._pinchPointers.has(e.pointerId)) return;
-
-      this._pinchPointers.set(e.pointerId, { x: e.clientX, y: e.clientY });
+      const pts = eventTouchPoints(e);
+      if (pts.length >= 2) {
+        this._pinchPointers.clear();
+        for (const p of pts) this._pinchPointers.set(p.id, { x: p.x, y: p.y });
+      } else if (pts.length === 1) {
+        this._pinchPointers.set(pts[0].id, { x: pts[0].x, y: pts[0].y });
+      }
 
       if (this._pinchPointers.size === 2) {
-        const pts = Array.from(this._pinchPointers.values());
-        const dx = pts[0].x - pts[1].x;
-        const dy = pts[0].y - pts[1].y;
+        const pair = Array.from(this._pinchPointers.values());
+        const dx = pair[0].x - pair[1].x;
+        const dy = pair[0].y - pair[1].y;
         const dist = Math.sqrt(dx * dx + dy * dy);
 
         if (this._pinchStartDist === 0) {
-          // 首次检测到双指 → 记录初始距离和缩放
           this._pinchStartDist = dist;
           this._pinchStartScale = this._viewScale;
         } else {
-          // 计算缩放比例
           const ratio = dist / this._pinchStartDist;
           this._applyViewZoom(this._pinchStartScale * ratio);
         }
       }
     };
 
-    this._onPinchUp = (e: PointerEvent) => {
-      this._pinchPointers.delete(e.pointerId);
+    this._onPinchUp = (e: unknown) => {
+      const ev = e as { touches?: ArrayLike<unknown> };
+      if (ev.touches) {
+        this._pinchPointers.clear();
+        for (const p of eventTouchPoints(e)) this._pinchPointers.set(p.id, { x: p.x, y: p.y });
+      } else {
+        const id = eventPointerId(e);
+        if (id !== undefined) this._pinchPointers.delete(id);
+      }
       if (this._pinchPointers.size < 2) {
         this._pinchStartDist = 0;
       }
     };
 
-    canvas.addEventListener('pointerdown', this._onPinchDown);
-    canvas.addEventListener('pointermove', this._onPinchMove);
-    canvas.addEventListener('pointerup', this._onPinchUp);
-    canvas.addEventListener('pointercancel', this._onPinchUp);
+    this._detachPinchCanvas?.();
+    this._detachPinchCanvas = attachCanvasMoveUp(canvas, {
+      onDown: this._onPinchDown,
+      onMove: this._onPinchMove,
+      onUp: this._onPinchUp,
+      onCancel: this._onPinchUp,
+    });
   }
 
   /** 禁用双指缩放手势 */
   private _disablePinchZoom(): void {
-    const canvas = Game.app.view as any;
-    if (this._onPinchDown) {
-      canvas.removeEventListener('pointerdown', this._onPinchDown);
-      this._onPinchDown = null;
-    }
-    if (this._onPinchMove) {
-      canvas.removeEventListener('pointermove', this._onPinchMove);
-      this._onPinchMove = null;
-    }
-    if (this._onPinchUp) {
-      canvas.removeEventListener('pointerup', this._onPinchUp);
-      canvas.removeEventListener('pointercancel', this._onPinchUp);
-      this._onPinchUp = null;
-    }
+    this._detachPinchCanvas?.();
+    this._detachPinchCanvas = null;
+    this._onPinchDown = null;
+    this._onPinchMove = null;
+    this._onPinchUp = null;
     this._pinchPointers.clear();
     this._pinchStartDist = 0;
   }

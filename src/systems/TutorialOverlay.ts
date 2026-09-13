@@ -1435,6 +1435,7 @@ export class TutorialOverlay {
       hitW: number;
       hitH: number;
       dimAlpha?: number;
+      onSpotlightTap?: () => void;
     },
   ): void {
     this._clearDecoPurchaseOverlay();
@@ -1456,9 +1457,27 @@ export class TutorialOverlay {
       h: spec.hitH,
       r: 14,
     };
+    // 四周遮罩挡住关闭/切 Tab/其它卡片；镂空只留给购买/放入热区。
+    // 热区自己 emit，不靠穿透点到面板按钮（华为上那条链经常接不上）。
     this._drawSpotlightMaskOn(top, [rect], spec.dimAlpha ?? 0.52);
-    this._drawGlowBorderOn(top, rect);
     this._startFingerTapAnim(local.x, local.y, top);
+
+    if (spec.onSpotlightTap) {
+      const hit = new PIXI.Container();
+      hit.eventMode = 'static';
+      hit.cursor = 'pointer';
+      hit.hitArea = new PIXI.Rectangle(rect.x, rect.y, rect.w, rect.h);
+      let armed = true;
+      const fire = (): void => {
+        if (!armed) return;
+        armed = false;
+        spec.onSpotlightTap?.();
+        setTimeout(() => { armed = true; }, 400);
+      };
+      hit.on('pointertap', fire);
+      hit.on('pointerdown', fire);
+      top.addChild(hit);
+    }
 
     this._showBubble(
       {
@@ -1479,8 +1498,9 @@ export class TutorialOverlay {
       zIndex: 5700,
       title: '购买家具',
       body: '点击绿色按钮，\n用花愿买下这件家具~',
-      hitW: 138,
-      hitH: 58,
+      hitW: 168,
+      hitH: 176,
+      onSpotlightTap: () => EventBus.emit('decoration:tutorialPurchaseTap'),
     });
   }
 
@@ -1490,9 +1510,10 @@ export class TutorialOverlay {
       zIndex: 13000,
       title: '放入房间',
       body: '点「放入房间」，\n到花店里摆放这件家具~',
-      hitW: 156,
-      hitH: 50,
+      hitW: 168,
+      hitH: 64,
       dimAlpha: 0.38,
+      onSpotlightTap: () => EventBus.emit('decoration:tutorialUnlockPlaceTap'),
     });
   }
 
@@ -1561,9 +1582,25 @@ export class TutorialOverlay {
         ),
         r: 28,
       };
-      this._drawSpotlightMask([rect], 0.62);
+      this._drawNonBlockingDim(0.45);
       this._drawGlowBorder(rect);
       this._startFingerTapAnim(rect.x + rect.w / 2, rect.y + rect.h / 2);
+
+      const hit = new PIXI.Container();
+      hit.eventMode = 'static';
+      hit.cursor = 'pointer';
+      hit.hitArea = new PIXI.Rectangle(rect.x - 8, rect.y - 8, rect.w + 16, rect.h + 16);
+      let armed = true;
+      const fire = (): void => {
+        if (!armed) return;
+        armed = false;
+        EventBus.emit('furniture:tutorialEditCompleteTap');
+        setTimeout(() => { armed = true; }, 400);
+      };
+      hit.on('pointertap', fire);
+      hit.on('pointerdown', fire);
+      this._overlay.addChild(hit);
+
       this._showBubble({
         title: TUTORIAL_COPY.furniturePlace.finishTitle,
         body: TUTORIAL_COPY.furniturePlace.finishBody,
@@ -1575,14 +1612,10 @@ export class TutorialOverlay {
       this._layoutRefresh = showFinishGuide;
     };
 
-    const onPlaced = (): void => {
-      if (placed) return;
+    const onPlaced = (placement?: { x: number; y: number } | null): void => {
       placed = true;
-      // 从托盘首次拖入即完成摆放，无需再拖第二次才进「完成装修」
-      if (!moved) {
-        moved = true;
-        showFinishGuide();
-      }
+      if (moved) return;
+      showMoveGuide(placement ?? RoomLayoutManager.getLayout()[0] ?? null);
     };
 
     const onMoved = (): void => {
@@ -1722,12 +1755,16 @@ export class TutorialOverlay {
   }
 
   private _drawNonBlockingDim(alpha: number): void {
+    this._drawNonBlockingDimOn(this._overlay, alpha);
+  }
+
+  private _drawNonBlockingDimOn(parent: PIXI.Container, alpha: number): void {
     const g = new PIXI.Graphics();
     g.beginFill(0x000000, alpha);
     g.drawRect(0, 0, DESIGN_WIDTH, Game.logicHeight);
     g.endFill();
     g.eventMode = 'none';
-    this._overlay.addChild(g);
+    parent.addChild(g);
   }
 
   private _drawBlockingDimWithGlow(spotlights: SpotlightRect[], alpha: number): void {

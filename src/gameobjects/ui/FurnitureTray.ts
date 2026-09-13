@@ -14,6 +14,7 @@ import { DecorationManager } from '@/managers/DecorationManager';
 import { RoomLayoutManager } from '@/managers/RoomLayoutManager';
 import { FurnitureDragSystem } from '@/systems/FurnitureDragSystem';
 import { TextureCache } from '@/utils/TextureCache';
+import { attachCanvasMoveUp, eventClientPoint, eventPointerId, type TouchCanvasLike } from '@/utils/canvasInteraction';
 import { getDecoDisplayName } from '@/config/FurnitureWorkshopConfig';
 import {
   DecoSlot,
@@ -154,7 +155,7 @@ export function furnitureTrayEditCompleteSpotlightRect(trayTopY: number): {
 } {
   const size = FURNITURE_TRAY_EDIT_CORNER_ICON_TARGET_H + 16;
   const cx =
-    DESIGN_WIDTH - FURNITURE_TRAY_EDIT_CORNER_ICON_SIDE_PAD - size / 2 + 8;
+    DESIGN_WIDTH - FURNITURE_TRAY_EDIT_CORNER_ICON_SIDE_PAD - size / 2;
   const cy = trayTopY + FURNITURE_TRAY_EDIT_CORNER_ICON_Y;
   return {
     x: cx - size / 2,
@@ -198,15 +199,13 @@ function nativeClientToDesignY(clientY: number): number {
   return Game.clientToDesign(0, clientY).y;
 }
 
+function trayEventToDesign(e: unknown): { x: number; y: number } {
+  const p = eventClientPoint(e);
+  return Game.clientToDesign(p.x, p.y);
+}
+
 function federatedPointerToDesign(e: PIXI.FederatedPointerEvent): { x: number; y: number } {
-  const n = e.nativeEvent as PointerEvent | MouseEvent | undefined;
-  if (n != null && typeof (n as PointerEvent).clientX === 'number') {
-    const pe = n as PointerEvent;
-    return { x: nativeClientToDesignX(pe.clientX), y: nativeClientToDesignY(pe.clientY) };
-  }
-  return {
-    ...Game.globalToDesign(e.global.x, e.global.y),
-  };
+  return Game.federatedToDesign(e);
 }
 
 /** 滑动与点击区分：小于此位移视为点击 */
@@ -327,14 +326,15 @@ export class FurnitureTray extends PIXI.Container {
   private _trayMode: TrayScrollMode | null = null;
   private _trayDragStarted = false;
   private _trayPending: { decoId: string; isPlaced: boolean; selectInstanceId?: string } | null = null;
+  /** 华为走 touchmove/touchend，不能只听 pointermove */
+  private _detachCanvasTrayScroll: (() => void) | null = null;
 
   /** 列表筛选：默认仅显示尚未放入房间的家具 */
   private _listFilter: TrayListFilter = 'unplaced';
 
-  private readonly _onCanvasTrayMove = (ev: PointerEvent): void => {
+  private readonly _onCanvasTrayMove = (ev: unknown): void => {
     if (!this._isOpen || !this._trayScrollListening) return;
-    const designX = nativeClientToDesignX(ev.clientX);
-    const designY = nativeClientToDesignY(ev.clientY);
+    const { x: designX, y: designY } = trayEventToDesign(ev);
     const tdx = designX - this._trayStartDesignX;
     const tdy = designY - this._trayStartDesignY;
 
@@ -361,7 +361,7 @@ export class FurnitureTray extends PIXI.Container {
         this._trayPending.decoId,
         designX,
         designY,
-        ev.pointerId,
+        eventPointerId(ev),
       );
       this._trayPending = null;
       this._trayScrollListening = false;
@@ -370,7 +370,7 @@ export class FurnitureTray extends PIXI.Container {
     }
   };
 
-  private readonly _onCanvasTrayUp = (ev: PointerEvent): void => {
+  private readonly _onCanvasTrayUp = (ev?: unknown): void => {
     this._finishTrayScroll(ev);
   };
 
@@ -733,11 +733,8 @@ export class FurnitureTray extends PIXI.Container {
   }
 
   private _unbindCanvasTrayScroll(): void {
-    const canvas = Game.app.view as unknown as HTMLCanvasElement | undefined;
-    if (!canvas?.removeEventListener) return;
-    canvas.removeEventListener('pointermove', this._onCanvasTrayMove);
-    canvas.removeEventListener('pointerup', this._onCanvasTrayUp);
-    canvas.removeEventListener('pointercancel', this._onCanvasTrayUp);
+    this._detachCanvasTrayScroll?.();
+    this._detachCanvasTrayScroll = null;
   }
 
   /** 结束托盘上的滑动跟踪（不关闭托盘） */
@@ -755,7 +752,8 @@ export class FurnitureTray extends PIXI.Container {
     e: PIXI.FederatedPointerEvent,
     pending: { decoId: string; isPlaced: boolean; selectInstanceId?: string } | null,
   ): void {
-    if (this._trayScrollListening || !this._isOpen) return;
+    if (!this._isOpen) return;
+    if (this._trayScrollListening) this._teardownTrayScroll();
     const p = federatedPointerToDesign(e);
     this._trayScrollListening = true;
     this._trayPending = pending;
@@ -765,19 +763,22 @@ export class FurnitureTray extends PIXI.Container {
     this._trayStartDesignY = p.y;
     this._trayStartScrollX = this._scrollX;
 
-    const canvas = Game.app.view as unknown as HTMLCanvasElement | undefined;
+    const canvas = Game.app.view as unknown as TouchCanvasLike | undefined;
     if (canvas?.addEventListener) {
-      canvas.addEventListener('pointermove', this._onCanvasTrayMove);
-      canvas.addEventListener('pointerup', this._onCanvasTrayUp);
-      canvas.addEventListener('pointercancel', this._onCanvasTrayUp);
+      this._unbindCanvasTrayScroll();
+      this._detachCanvasTrayScroll = attachCanvasMoveUp(canvas, {
+        onMove: this._onCanvasTrayMove,
+        onUp: this._onCanvasTrayUp,
+      });
     }
   }
 
-  private _finishTrayScroll(ev?: PointerEvent): void {
+  private _finishTrayScroll(ev?: unknown): void {
     if (!this._trayScrollListening) return;
 
-    const endX = ev != null ? nativeClientToDesignX(ev.clientX) : this._trayStartDesignX;
-    const endY = ev != null ? nativeClientToDesignY(ev.clientY) : this._trayStartDesignY;
+    const end = ev != null ? trayEventToDesign(ev) : { x: this._trayStartDesignX, y: this._trayStartDesignY };
+    const endX = end.x;
+    const endY = end.y;
     const tdx = endX - this._trayStartDesignX;
     const tdy = endY - this._trayStartDesignY;
     const moved = Math.hypot(tdx, tdy);

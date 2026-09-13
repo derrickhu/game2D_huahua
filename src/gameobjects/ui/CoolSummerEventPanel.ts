@@ -2,6 +2,7 @@ import * as PIXI from 'pixi.js';
 import { DESIGN_WIDTH, FONT_FAMILY } from '@/config/Constants';
 import { Game } from '@/core/Game';
 import { EventBus } from '@/core/EventBus';
+import { attachCanvasMoveUp, eventClientPoint, type TouchCanvasLike } from '@/utils/canvasInteraction';
 import { OverlayManager } from '@/core/OverlayManager';
 import { TweenManager, Ease } from '@/core/TweenManager';
 import {
@@ -71,9 +72,7 @@ export class CoolSummerEventPanel extends PIXI.Container {
   private _currencyInfo: PIXI.Container | null = null;
   private _scrollY = 0;
   private _contentHeight = 0;
-  private _dragging = false;
   private _dragMoved = false;
-  private _dragLastY = 0;
   private _canvasScrollListening = false;
   private _canvasScrollStartDesignY = 0;
   private _canvasScrollStartY = 0;
@@ -130,7 +129,6 @@ export class CoolSummerEventPanel extends PIXI.Container {
     this._opening = false;
     if (!this._isOpen) return;
     this._isOpen = false;
-    this._dragging = false;
     this._canvasScrollListening = false;
     TweenManager.to({
       target: this,
@@ -181,10 +179,6 @@ export class CoolSummerEventPanel extends PIXI.Container {
       this._hideCurrencyInfo();
       e.stopPropagation();
     });
-    this._root.on('pointerdown', (e: PIXI.FederatedPointerEvent) => this._onPanelPointerDown(e));
-    this._root.on('globalpointermove', (e: PIXI.FederatedPointerEvent) => this._onPanelPointerMove(e));
-    this._root.on('pointerup', () => this._onPanelPointerUp());
-    this._root.on('pointerupoutside', () => this._onPanelPointerUp());
     this.addChild(this._root);
 
     this._art = new PIXI.Sprite();
@@ -659,42 +653,17 @@ export class CoolSummerEventPanel extends PIXI.Container {
     return root;
   }
 
-  private _onPanelPointerDown(e: PIXI.FederatedPointerEvent): void {
-    if (!this._list) return;
-    const p = this._root.toLocal(e.global);
-    const vx = this._content.x;
-    const vy = this._content.y + 58;
-    const vh = Math.max(1, this._areaH - 64 - VIEWPORT_BOTTOM_INSET);
-    if (p.x < vx || p.x > vx + this._areaW || p.y < vy || p.y > vy + vh) return;
-    this._dragging = true;
-    this._dragMoved = false;
-    this._dragLastY = e.global.y;
-  }
-
-  private _onPanelPointerMove(e: PIXI.FederatedPointerEvent): void {
-    if (!this._dragging) return;
-    const dy = e.global.y - this._dragLastY;
-    if (Math.abs(dy) >= 2) this._dragMoved = true;
-    this._dragLastY = e.global.y;
-    this._setScroll(this._scrollY + dy);
-  }
-
-  private _onPanelPointerUp(): void {
-    this._dragging = false;
-    // 微信小游戏上拖动抬手后仍可能补发 pointertap，短暂保留防误触
-    setTimeout(() => { this._dragMoved = false; }, 80);
-  }
-
   private _setupCanvasScroll(): void {
-    const canvas = Game.app.view as unknown as HTMLCanvasElement | undefined;
+    const canvas = Game.app.view as unknown as TouchCanvasLike | undefined;
     if (!canvas?.addEventListener) return;
-    canvas.addEventListener('pointerdown', this._onCanvasPointerDown);
-    canvas.addEventListener('pointermove', this._onCanvasPointerMove);
-    canvas.addEventListener('pointerup', this._onCanvasPointerUp);
-    canvas.addEventListener('pointercancel', this._onCanvasPointerUp);
+    attachCanvasMoveUp(canvas, {
+      onDown: this._onCanvasPointerDown,
+      onMove: this._onCanvasPointerMove,
+      onUp: this._onCanvasPointerUp,
+    });
   }
 
-  private readonly _onCanvasPointerDown = (ev: PointerEvent): void => {
+  private readonly _onCanvasPointerDown = (ev: unknown): void => {
     if (!this._isOpen) return;
     const p = this._rawToDesign(ev);
     if (this._isPointInCloseHit(p.x, p.y)) {
@@ -710,13 +679,13 @@ export class CoolSummerEventPanel extends PIXI.Container {
     this._canvasScrollStartY = this._scrollY;
   };
 
-  private readonly _onCanvasPointerMove = (ev: PointerEvent): void => {
+  private readonly _onCanvasPointerMove = (ev: unknown): void => {
     if (!this._isOpen || !this._canvasScrollListening) return;
     const y = this._rawToDesign(ev).y;
     const dy = y - this._canvasScrollStartDesignY;
     if (Math.abs(dy) >= 3) this._dragMoved = true;
     this._setScroll(this._canvasScrollStartY + dy);
-    ev.preventDefault?.();
+    (ev as { preventDefault?: () => void }).preventDefault?.();
   };
 
   private readonly _onCanvasPointerUp = (): void => {
@@ -740,10 +709,9 @@ export class CoolSummerEventPanel extends PIXI.Container {
     return x >= vx && x <= vx + this._areaW && y >= vy && y <= vy + vh;
   }
 
-  private _rawToDesign(e: PointerEvent): { x: number; y: number } {
-    const cx = e.clientX ?? 0;
-    const cy = e.clientY ?? 0;
-    return Game.clientToDesign(cx, cy);
+  private _rawToDesign(e: unknown): { x: number; y: number } {
+    const p = eventClientPoint(e);
+    return Game.clientToDesign(p.x, p.y);
   }
 
   private _purchase(product: CoolSummerShopProduct): void {

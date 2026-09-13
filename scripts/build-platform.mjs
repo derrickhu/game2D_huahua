@@ -1,7 +1,7 @@
 /**
  * 把一份内容树 + 一份 bundle 组装成各平台可直接用开发者工具打开的目录。
  *
- *   CLI：node scripts/build-platform.mjs [wechat|douyin|all] [--full]
+ *   CLI：node scripts/build-platform.mjs [wechat|douyin|huawei|all] [--full]
  *   仅 `vite build --watch` 会在插件里组装；一次性 `vite build` 不组装，
  *   留给本脚本在 vite 之后跑，避免先拷未完成的树。
  *
@@ -17,20 +17,33 @@ import {
   lstatOrNull,
   mirrorDir,
 } from './lib/mirror-tree.mjs';
+import { wrapHuaweiCjsTree } from './lib/wrap-huawei-cjs.mjs';
 
 const rootDir = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 export const CONTENT_DIR = path.join(rootDir, 'minigame');
 export const PLATFORM_DIR = path.join(rootDir, 'platform');
 export const BUILD_DIR = path.join(rootDir, 'build');
 export const BUNDLE_DIR = path.join(rootDir, '.bundle');
+export const BUNDLE_HUAWEI_DIR = path.join(rootDir, '.bundle-huawei');
 
-export const PLATFORMS = ['wechat', 'douyin'];
+export const PLATFORMS = ['wechat', 'douyin', 'huawei'];
+export const WX_TT_PLATFORMS = ['wechat', 'douyin'];
+
+const HUAWEI_SKIP_CDN = new Set([
+  'subpkg_chars',
+  'subpkg_panels',
+  'subpkg_deco',
+  'subpkg_audio',
+]);
 
 const KEEP = new Set(['project.private.config.json']);
 const SKIP_FROM_CONTENT = new Set([
   'game-bundle.js',
   'index.html',
   'game.json',
+  'manifest.json',
+  'huawei-pack-stamp.js',
+  'weapp-adapter.js',
   'project.config.json',
   'project.private.config.json',
   '.cdn_stripped',
@@ -54,7 +67,8 @@ function fail(msg) {
 function cleanStale(dir) {
   if (!fs.existsSync(dir)) return;
   for (const entry of fs.readdirSync(dir)) {
-    if (KEEP.has(entry) || entry.startsWith('.') || entry.endsWith('.zip')) continue;
+    if (KEEP.has(entry) || entry.startsWith('.') || entry.endsWith('.zip') || entry.endsWith('.rpk')) continue;
+    if (entry === 'settings' || entry === 'sign' || entry === 'dist' || entry === 'img') continue;
     fs.rmSync(path.join(dir, entry), { recursive: true, force: true });
   }
 }
@@ -71,8 +85,9 @@ function inheritAppid(outConfigPath, freshConfig) {
   }
 }
 
-function contentLooksCopied(out) {
+function contentLooksCopied(out, skipNames = new Set()) {
   const markersOk = CONTENT_MARKERS.every((name) => {
+    if (skipNames.has(name)) return true;
     const src = path.join(CONTENT_DIR, name);
     if (!fs.existsSync(src)) return true;
     return isRealDir(path.join(out, name)) || fs.existsSync(path.join(out, name));
@@ -102,12 +117,17 @@ function pokeSimulator(out, stats) {
   if (next !== prev) fs.writeFileSync(gameJs, next);
 }
 
+function bundleDirOf(platform) {
+  if (platform === 'huawei') return BUNDLE_HUAWEI_DIR;
+  return BUNDLE_DIR;
+}
+
 export function assemble(platform, { quiet = false, bundleDir, full = false } = {}) {
   if (!PLATFORMS.includes(platform)) fail(`未知平台 ${platform}`);
   const platformSrc = path.join(PLATFORM_DIR, platform);
   if (!fs.existsSync(platformSrc)) fail(`缺少平台配置目录 platform/${platform}`);
 
-  const resolvedBundleDir = bundleDir || BUNDLE_DIR;
+  const resolvedBundleDir = bundleDir || bundleDirOf(platform);
   const bundle = path.join(resolvedBundleDir, 'game-bundle.js');
   if (!fs.existsSync(bundle)) {
     fail(`找不到 ${path.relative(rootDir, bundle)}，请先跑对应 vite build`);
@@ -126,21 +146,71 @@ export function assemble(platform, { quiet = false, bundleDir, full = false } = 
 
   const stats = createMirrorStats();
   fs.mkdirSync(out, { recursive: true });
-  if (full || !contentLooksCopied(out)) {
+  if (full || !contentLooksCopied(out, platform === 'huawei' ? HUAWEI_SKIP_CDN : new Set())) {
     cleanStale(out);
   }
-  mirrorDir(CONTENT_DIR, out, { skip: SKIP_FROM_CONTENT, stats });
+  const contentSkip = new Set(SKIP_FROM_CONTENT);
+  if (platform === 'huawei') {
+    for (const name of HUAWEI_SKIP_CDN) contentSkip.add(name);
+    contentSkip.add('sign');
+    contentSkip.add('settings');
+    contentSkip.add('dist');
+  }
+  mirrorDir(CONTENT_DIR, out, { skip: contentSkip, stats });
   const leftoverBundle = path.join(CONTENT_DIR, 'game-bundle.js');
   if (fs.existsSync(leftoverBundle)) {
     fs.rmSync(leftoverBundle);
     if (!quiet) console.log('[build-platform] 已删除 minigame/game-bundle.js（旧产物，勿用这个目录扫码）');
   }
   copyFileIfStale(bundle, path.join(out, 'game-bundle.js'), stats);
+  if (platform === 'huawei') {
+    const stamp = path.join(out, 'huawei-pack-stamp.js');
+    const stampSrc = "GameGlobal.__HUAHUA_HUAWEI_VERSION='native';\n";
+    if (!fs.existsSync(stamp) || fs.readFileSync(stamp, 'utf8') !== stampSrc) {
+      fs.writeFileSync(stamp, stampSrc);
+    }
+    const assembled = fs.readFileSync(path.join(out, 'game-bundle.js'), 'utf8');
+    if (assembled.includes('"%eval%":eval')) {
+      fail('build/huawei/game-bundle.js 仍含 "%eval%":eval，先检查 pixi-unsafe-eval-patch');
+    }
+  }
   mirrorDir(platformSrc, out, {
     skip: new Set(['project.config.json']),
     prune: false,
     stats,
   });
+  if (platform === 'huawei') {
+    if (!fs.existsSync(path.join(out, 'manifest.json'))) {
+      fail('build/huawei/ 缺少 manifest.json');
+    }
+    if (!fs.existsSync(path.join(out, 'img/icon.png'))) {
+      fail('build/huawei/ 缺少 img/icon.png');
+    }
+    const signCert = path.join(out, 'sign', 'release', 'certificate.pem');
+    const signKey = path.join(out, 'sign', 'release', 'private.pem');
+    if (!fs.existsSync(signCert) || !fs.existsSync(signKey)) {
+      fail('缺少 platform/huawei/sign/release/{certificate,private}.pem，换机先把签名证书拷进工程');
+    }
+    const settingsPath = path.join(out, 'settings', 'project.json');
+    let settings = {};
+    if (fs.existsSync(settingsPath)) {
+      try { settings = JSON.parse(fs.readFileSync(settingsPath, 'utf8')); } catch { settings = {}; }
+    }
+    const nextSettings = {
+      ...settings,
+      description: settings.description || '项目配置',
+      projectPath: settings.projectPath || out,
+      projectType: 'fastgame',
+      appId: settings.appId || process.env.VITE_HUAWEI_APPID || '118944555',
+    };
+    delete nextSettings.isWxGameSource;
+    fs.mkdirSync(path.dirname(settingsPath), { recursive: true });
+    const renderedSettings = `${JSON.stringify(nextSettings, null, 2)}\n`;
+    const prevSettings = fs.existsSync(settingsPath) ? fs.readFileSync(settingsPath, 'utf8') : '';
+    if (prevSettings !== renderedSettings) fs.writeFileSync(settingsPath, renderedSettings, 'utf8');
+    const cjs = wrapHuaweiCjsTree(out);
+    if (!quiet) console.log(`[build-platform] huawei CJS wrap ${cjs.wrapped} files`);
+  }
   if (config) {
     const rendered = `${JSON.stringify(config, null, 2)}\n`;
     const prev = fs.existsSync(outConfig) ? fs.readFileSync(outConfig, 'utf8') : '';
@@ -161,7 +231,7 @@ export function assemble(platform, { quiet = false, bundleDir, full = false } = 
 }
 
 export function assembleAll(target = 'all', opts) {
-  const targets = target === 'all' ? PLATFORMS : [target];
+  const targets = target === 'all' ? WX_TT_PLATFORMS : [target];
   const all = createMirrorStats();
   for (const p of targets) {
     if (!PLATFORMS.includes(p)) fail(`未知平台 ${p}，可选：${PLATFORMS.join(' / ')} / all`);

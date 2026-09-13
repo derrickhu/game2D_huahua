@@ -5,6 +5,7 @@ import * as PIXI from 'pixi.js';
 import { Game } from '@/core/Game';
 import { TweenManager, Ease } from '@/core/TweenManager';
 import { EventBus } from '@/core/EventBus';
+import { attachCanvasMoveUp, eventClientPoint, type TouchCanvasLike } from '@/utils/canvasInteraction';
 import { RewardFlyCoordinator, type RewardFlyItem } from '@/core/RewardFlyCoordinator';
 import { QuestManager } from '@/managers/QuestManager';
 import { ITEM_DEFS } from '@/config/ItemConfig';
@@ -250,11 +251,7 @@ function nativeClientToDesignY(clientY: number): number {
 }
 
 function federatedPointerToDesignY(e: PIXI.FederatedPointerEvent): number {
-  const n = e.nativeEvent as PointerEvent | MouseEvent | undefined;
-  if (n != null && typeof (n as PointerEvent).clientY === 'number') {
-    return nativeClientToDesignY((n as PointerEvent).clientY);
-  }
-  return Game.globalToDesign(e.global.x, e.global.y).y;
+  return Game.federatedToDesign(e).y;
 }
 
 function rewardPreview(r: DailyChallengeReward): string {
@@ -388,6 +385,7 @@ export class QuestPanel extends PIXI.Container {
 
   /** 任务列表：canvas 跟手滚动（与 MerchShopPanel 一致） */
   private _questListCanvasListening = false;
+  private _detachQuestListScroll: (() => void) | null = null;
   private _questListCanvasLastY = 0;
   private _questListCanvasScrollY = 0;
   private _questListCanvasMaxScroll = 0;
@@ -400,9 +398,9 @@ export class QuestPanel extends PIXI.Container {
   private _questUpdatedRefreshRaf: number | null = null;
   private _assetUnsub: (() => void) | null = null;
 
-  private readonly _onQuestListCanvasMove = (ev: PointerEvent): void => {
+  private readonly _onQuestListCanvasMove = (ev: unknown): void => {
     if (!this._isOpen || !this._questListCanvasListening || !this._questListCanvasContent) return;
-    const cur = nativeClientToDesignY(ev.clientY);
+    const cur = nativeClientToDesignY(eventClientPoint(ev).y);
     const delta = this._questListCanvasLastY - cur;
     this._questListCanvasLastY = cur;
     this._questListCanvasScrollY = Math.max(
@@ -548,30 +546,29 @@ export class QuestPanel extends PIXI.Container {
   }
 
   private _finishQuestListCanvasScroll(): void {
-    if (!this._questListCanvasListening) return;
-    const canvas = Game.app.view as unknown as HTMLCanvasElement | undefined;
-    if (canvas?.removeEventListener) {
-      canvas.removeEventListener('pointermove', this._onQuestListCanvasMove);
-      canvas.removeEventListener('pointerup', this._onQuestListCanvasUp);
-      canvas.removeEventListener('pointercancel', this._onQuestListCanvasUp);
-    }
+    if (!this._questListCanvasListening && !this._detachQuestListScroll) return;
+    this._detachQuestListScroll?.();
+    this._detachQuestListScroll = null;
     this._questListCanvasListening = false;
     if (this._questListCanvasContent) this._questListCanvasContent.cursor = 'grab';
   }
 
   private _beginQuestListCanvasScroll(e: PIXI.FederatedPointerEvent): void {
-    if (!this._isOpen || !this._questListCanvasContent || this._questListCanvasListening) return;
+    if (!this._isOpen || !this._questListCanvasContent) return;
+    if (this._questListCanvasListening) this._finishQuestListCanvasScroll();
     if (this._questListCanvasMaxScroll <= 0) return;
     this._questListCanvasListening = true;
     this._questListCanvasScrollY = -this._questListCanvasContent.y;
     this._questListCanvasLastY = federatedPointerToDesignY(e);
     this._questListCanvasContent.cursor = 'grabbing';
     e.stopPropagation();
-    const canvas = Game.app.view as unknown as HTMLCanvasElement | undefined;
+    const canvas = Game.app.view as unknown as TouchCanvasLike | undefined;
     if (canvas?.addEventListener) {
-      canvas.addEventListener('pointermove', this._onQuestListCanvasMove);
-      canvas.addEventListener('pointerup', this._onQuestListCanvasUp);
-      canvas.addEventListener('pointercancel', this._onQuestListCanvasUp);
+      this._detachQuestListScroll?.();
+      this._detachQuestListScroll = attachCanvasMoveUp(canvas, {
+        onMove: this._onQuestListCanvasMove,
+        onUp: this._onQuestListCanvasUp,
+      });
     }
   }
 

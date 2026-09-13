@@ -1,0 +1,31 @@
+{
+  "package": "com.huahua.miaowu.huawei",
+  "appType": "fastgame",
+  "name": "花花妙屋",
+  "versionName": "1.6.36",
+  "versionCode": 1637,
+  "minPlatformVersion": 1103,
+  "icon": "/img/icon.png",
+  "router": {},
+  "features": [
+    { "name": "system.prompt" },
+    { "name": "system.router" },
+    { "name": "service.account" }
+  ],
+  "permissions": [
+    {
+      "origin": "*"
+    }
+  ],
+  "subpackages": [
+    { "name": "items", "resource": "subpkg_items" },
+    { "name": "events", "resource": "subpkg_events" }
+  ],
+  "config": {
+    "logLevel": "log"
+  },
+  "display": {
+    "orientation": "portrait",
+    "fullScreen": true
+  }
+}

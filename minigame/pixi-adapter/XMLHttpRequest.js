@@ -224,3 +224,4 @@ XMLHttpRequest.LOADING = 3;
 XMLHttpRequest.DONE = 4;
 
 module.exports = XMLHttpRequest;
+

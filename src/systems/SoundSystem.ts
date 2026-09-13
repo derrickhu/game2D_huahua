@@ -101,13 +101,15 @@ class SoundSystemClass {
     // ---- 用户交互恢复 BGM ----
     const canvas = Game.app?.view as HTMLCanvasElement | undefined;
     if (canvas) {
-      canvas.addEventListener('pointerdown', () => {
+      const resumeAudio = (): void => {
         if (BGM_ENABLED && !this._mainBgmStarted && SceneManager.current?.name === 'main') {
           this._mainBgmStarted = true;
           this.playMainBGM();
         }
         if (BGM_ENABLED) AudioManager.resumeOnInteraction();
-      });
+      };
+      canvas.addEventListener('pointerdown', resumeAudio);
+      canvas.addEventListener('touchstart', resumeAudio);
     }
 
     // ---- 全局按钮点击音效（默认 `button_click` = `subpkg_audio/button_click.mp3`，源 `game_assets/huahua/bgm/按钮通用.mp3`）----

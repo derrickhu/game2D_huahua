@@ -1,6 +1,7 @@
 import * as PIXI from 'pixi.js';
 import { Game } from '@/core/Game';
 import { EventBus } from '@/core/EventBus';
+import { attachCanvasMoveUp, eventClientPoint, type TouchCanvasLike } from '@/utils/canvasInteraction';
 import { TweenManager, Ease } from '@/core/TweenManager';
 import { DESIGN_WIDTH, FONT_FAMILY } from '@/config/Constants';
 import { TextureCache } from '@/utils/TextureCache';
@@ -109,11 +110,7 @@ function nativeClientToDesignY(clientY: number): number {
 }
 
 function federatedPointerToDesignY(e: PIXI.FederatedPointerEvent): number {
-  const n = e.nativeEvent as PointerEvent | MouseEvent | undefined;
-  if (n != null && typeof (n as PointerEvent).clientY === 'number') {
-    return nativeClientToDesignY((n as PointerEvent).clientY);
-  }
-  return Game.globalToDesign(e.global.x, e.global.y).y;
+  return Game.federatedToDesign(e).y;
 }
 
 export class AffinityCodexPanel extends PIXI.Container {
@@ -131,14 +128,15 @@ export class AffinityCodexPanel extends PIXI.Container {
   private _gridScrollY = 0;
   private _gridMaxScroll = 0;
   private _gridListening = false;
+  private _detachGridScroll: (() => void) | null = null;
   private _gridLastY = 0;
   private _gridDownY = 0;
   private _gridMoved = false;
   private static readonly GRID_DRAG_THRESHOLD = 6;
 
-  private readonly _onGridCanvasMove = (ev: PointerEvent): void => {
+  private readonly _onGridCanvasMove = (ev: unknown): void => {
     if (!this._isOpen || !this._gridListening || !this._gridContent) return;
-    const cur = nativeClientToDesignY(ev.clientY);
+    const cur = nativeClientToDesignY(eventClientPoint(ev).y);
     if (!this._gridMoved && Math.abs(cur - this._gridDownY) > AffinityCodexPanel.GRID_DRAG_THRESHOLD) {
       this._gridMoved = true;
     }
@@ -398,7 +396,8 @@ export class AffinityCodexPanel extends PIXI.Container {
   }
 
   private _beginGridCanvasScroll(e: PIXI.FederatedPointerEvent): void {
-    if (!this._isOpen || !this._gridContent || this._gridListening) return;
+    if (!this._isOpen || !this._gridContent) return;
+    if (this._gridListening) this._finishGridCanvasScroll();
     if (this._gridMaxScroll <= 0) return;
     this._gridListening = true;
     this._gridMoved = false;
@@ -406,22 +405,20 @@ export class AffinityCodexPanel extends PIXI.Container {
     this._gridDownY = this._gridLastY = federatedPointerToDesignY(e);
     this._gridContent.cursor = 'grabbing';
     e.stopPropagation();
-    const canvas = Game.app.view as unknown as HTMLCanvasElement | undefined;
+    const canvas = Game.app.view as unknown as TouchCanvasLike | undefined;
     if (canvas?.addEventListener) {
-      canvas.addEventListener('pointermove', this._onGridCanvasMove);
-      canvas.addEventListener('pointerup', this._onGridCanvasUp);
-      canvas.addEventListener('pointercancel', this._onGridCanvasUp);
+      this._detachGridScroll?.();
+      this._detachGridScroll = attachCanvasMoveUp(canvas, {
+        onMove: this._onGridCanvasMove,
+        onUp: this._onGridCanvasUp,
+      });
     }
   }
 
   private _finishGridCanvasScroll(): void {
-    if (!this._gridListening) return;
-    const canvas = Game.app.view as unknown as HTMLCanvasElement | undefined;
-    if (canvas?.removeEventListener) {
-      canvas.removeEventListener('pointermove', this._onGridCanvasMove);
-      canvas.removeEventListener('pointerup', this._onGridCanvasUp);
-      canvas.removeEventListener('pointercancel', this._onGridCanvasUp);
-    }
+    if (!this._gridListening && !this._detachGridScroll) return;
+    this._detachGridScroll?.();
+    this._detachGridScroll = null;
     this._gridListening = false;
     if (this._gridContent) this._gridContent.cursor = 'grab';
   }

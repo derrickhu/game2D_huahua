@@ -12,6 +12,7 @@ import { Game } from '@/core/Game';
 import { CustomerView, CARD_W } from './CustomerView';
 import { CustomerInstance, CustomerManager } from '@/managers/CustomerManager';
 import { EventBus } from '@/core/EventBus';
+import { attachCanvasMoveUp, eventClientPoint, type TouchCanvasLike } from '@/utils/canvasInteraction';
 import { TextureCache } from '@/utils/TextureCache';
 import { COLORS, FONT_FAMILY } from '@/config/Constants';
 
@@ -186,6 +187,7 @@ export class CustomerScrollArea extends PIXI.Container {
 
   private _onRawMove: ((e: any) => void) | null = null;
   private _onRawUp: ((e: any) => void) | null = null;
+  private _detachCanvasDrag: (() => void) | null = null;
 
   private _setupInteraction(): void {
     const hitArea = new PIXI.Graphics();
@@ -237,36 +239,27 @@ export class CustomerScrollArea extends PIXI.Container {
         this._cleanupRawEvents();
       };
 
-      canvas.addEventListener('pointermove', this._onRawMove);
-      canvas.addEventListener('pointerup', this._onRawUp);
-      canvas.addEventListener('pointercancel', this._onRawUp);
+      this._detachCanvasDrag = attachCanvasMoveUp(canvas as TouchCanvasLike, {
+        onMove: this._onRawMove,
+        onUp: this._onRawUp,
+      });
     });
   }
 
   private _rawToDesignX(e: any): number {
-    const rect = (Game.app.view as any).getBoundingClientRect
-      ? (Game.app.view as any).getBoundingClientRect()
-      : { left: 0, width: Game.screenWidth };
-    const clientX = e.clientX ?? e.pageX ?? (e.changedTouches?.[0]?.clientX);
-    if (clientX === undefined) {
-      // Pixi 的 globalX 是 renderer 像素坐标；stage 按 Game.scale 缩放后需转回设计坐标。
-      return (e.globalX ?? e.global?.x ?? 0) / Game.scale;
+    const native = e?.nativeEvent;
+    if (native && typeof native.clientX === 'number') {
+      return Game.clientToDesign(native.clientX, native.clientY ?? 0).x;
     }
-    const ratio = Game.designWidth / (rect.width || Game.screenWidth);
-    return (clientX - rect.left) * ratio;
+    const p = eventClientPoint(e);
+    return Game.clientToDesign(p.x, p.y).x;
   }
 
   private _cleanupRawEvents(): void {
-    const canvas = Game.app.view as any;
-    if (this._onRawMove) {
-      canvas.removeEventListener('pointermove', this._onRawMove);
-      this._onRawMove = null;
-    }
-    if (this._onRawUp) {
-      canvas.removeEventListener('pointerup', this._onRawUp);
-      canvas.removeEventListener('pointercancel', this._onRawUp);
-      this._onRawUp = null;
-    }
+    this._detachCanvasDrag?.();
+    this._detachCanvasDrag = null;
+    this._onRawMove = null;
+    this._onRawUp = null;
   }
 
   private _bindEvents(): void {

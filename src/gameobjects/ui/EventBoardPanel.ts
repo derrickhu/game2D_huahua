@@ -1,6 +1,7 @@
 import * as PIXI from 'pixi.js';
 import { Game } from '@/core/Game';
 import { EventBus } from '@/core/EventBus';
+import { attachCanvasMoveUp, type TouchCanvasLike } from '@/utils/canvasInteraction';
 import { TweenManager, Ease } from '@/core/TweenManager';
 import { CellState } from '@/config/BoardLayout';
 import { BoardMetrics, DESIGN_WIDTH, FONT_FAMILY } from '@/config/Constants';
@@ -1662,21 +1663,22 @@ export class EventBoardPanel extends PIXI.Container {
   }
 
   private _setupCanvasRewardCodexScroll(): void {
-    const canvas = Game.app.view as unknown as HTMLCanvasElement | undefined;
+    const canvas = Game.app.view as unknown as TouchCanvasLike | undefined;
     if (!canvas?.addEventListener) return;
-    canvas.addEventListener('pointerdown', this._onCanvasRewardCodexDown);
-    canvas.addEventListener('pointermove', this._onCanvasRewardCodexMove);
-    canvas.addEventListener('pointerup', this._onCanvasRewardCodexUp);
-    canvas.addEventListener('pointercancel', this._onCanvasRewardCodexUp);
+    attachCanvasMoveUp(canvas, {
+      onDown: this._onCanvasRewardCodexDown,
+      onMove: this._onCanvasRewardCodexMove,
+      onUp: this._onCanvasRewardCodexUp,
+    });
   }
 
-  private readonly _onCanvasRewardCodexDown = (ev: PointerEvent): void => {
+  private readonly _onCanvasRewardCodexDown = (ev: unknown): void => {
     if (!this._isOpen || (!this._codexPanelOpen && !this._codexRewardPanelOpen)) return;
     const p = this._rawToDesign(ev);
     const c = this._codexCloseHit;
     if (c.r > 0 && Math.hypot(p.x - c.x, p.y - c.y) <= c.r) {
-      ev.preventDefault?.();
-      if (this._codexRewardPanelOpen) this._hideCodexRewardMilestonePanel();
+    (ev as { preventDefault?: () => void }).preventDefault?.();
+    if (this._codexRewardPanelOpen) this._hideCodexRewardMilestonePanel();
       else this._hideRewardCodexPanel();
       return;
     }
@@ -1686,10 +1688,10 @@ export class EventBoardPanel extends PIXI.Container {
     this._codexScrollListening = true;
     this._codexScrollStartDesignY = p.y;
     this._codexScrollStartY = this._codexScrollY;
-    ev.preventDefault?.();
+    (ev as { preventDefault?: () => void }).preventDefault?.();
   };
 
-  private readonly _onCanvasRewardCodexMove = (ev: PointerEvent): void => {
+  private readonly _onCanvasRewardCodexMove = (ev: unknown): void => {
     if (
       !this._isOpen ||
       (!this._codexPanelOpen && !this._codexRewardPanelOpen) ||
@@ -1699,14 +1701,14 @@ export class EventBoardPanel extends PIXI.Container {
     const dy = this._rawToDesign(ev).y - this._codexScrollStartDesignY;
     this._codexScrollY = Math.max(0, Math.min(this._codexScrollMaxY, this._codexScrollStartY - dy));
     this._codexScroller.position.y = this._codexScrollerViewportY - this._codexScrollY;
-    ev.preventDefault?.();
+    (ev as { preventDefault?: () => void }).preventDefault?.();
   };
 
-  private readonly _onCanvasRewardCodexUp = (ev: PointerEvent): void => {
+  private readonly _onCanvasRewardCodexUp = (ev?: unknown): void => {
     this._finishRewardCodexScroll(ev);
   };
 
-  private _finishRewardCodexScroll(ev?: PointerEvent): void {
+  private _finishRewardCodexScroll(ev?: unknown): void {
     if (!this._codexScrollListening) return;
     const endY = ev != null ? this._rawToDesign(ev).y : this._codexScrollStartDesignY;
     const movedPx = Math.abs(endY - this._codexScrollStartDesignY);
@@ -2920,10 +2922,10 @@ export class EventBoardPanel extends PIXI.Container {
   }
 
   private _setupCanvasDrag(): void {
-    const canvas = Game.app.view as any;
+    const canvas = Game.app.view as unknown as TouchCanvasLike | undefined;
     if (!canvas?.addEventListener) return;
 
-    canvas.addEventListener('pointermove', (e: any) => {
+    const onMove = (e: unknown): void => {
       if (!this._isOpen || this._dragSrcIndex < 0) return;
       const d = this._rawToDesign(e);
       if (Number.isNaN(this._dragStartDesign.x)) {
@@ -2936,7 +2938,7 @@ export class EventBoardPanel extends PIXI.Container {
         this._beginDrag();
       }
       this._moveDragGhost(d);
-    });
+    };
 
     const handleUp = (e: any) => {
       if (!this._isOpen || this._dragSrcIndex < 0) return;
@@ -3026,19 +3028,19 @@ export class EventBoardPanel extends PIXI.Container {
       this._refresh();
     };
 
-    canvas.addEventListener('pointerup', handleUp);
-    canvas.addEventListener('pointercancel', () => {
-      if (this._dragSrcIndex < 0) return;
-      this._clearDragGhost();
-      this._refresh();
+    attachCanvasMoveUp(canvas as TouchCanvasLike, {
+      onMove,
+      onUp: handleUp,
+      onCancel: () => {
+        if (this._dragSrcIndex < 0) return;
+        this._clearDragGhost();
+        this._refresh();
+      },
     });
   }
 
   private _rawToDesign(e: any): { x: number; y: number } {
-    const t0 = e.touches?.[0] ?? e.changedTouches?.[0];
-    const cx = e.clientX ?? t0?.clientX ?? e.x ?? 0;
-    const cy = e.clientY ?? t0?.clientY ?? e.y ?? 0;
-    return Game.clientToDesign(cx, cy);
+    return Game.eventToDesign(e);
   }
 
   private _createDragGhost(itemId: string): void {

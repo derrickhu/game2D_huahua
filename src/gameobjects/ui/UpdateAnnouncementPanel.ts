@@ -7,6 +7,7 @@ import { Game } from '@/core/Game';
 import { TweenManager, Ease } from '@/core/TweenManager';
 import { DESIGN_WIDTH, FONT_FAMILY } from '@/config/Constants';
 import { TextureCache } from '@/utils/TextureCache';
+import { attachCanvasMoveUp, eventClientPoint, type TouchCanvasLike } from '@/utils/canvasInteraction';
 import {
   type UpdateAnnouncementDef,
   type UpdateAnnouncementSection,
@@ -80,11 +81,7 @@ function nativeClientToDesignY(clientY: number): number {
 }
 
 function federatedPointerToDesignY(e: PIXI.FederatedPointerEvent): number {
-  const native = e.nativeEvent as PointerEvent | MouseEvent | undefined;
-  if (native != null && typeof (native as PointerEvent).clientY === 'number') {
-    return nativeClientToDesignY((native as PointerEvent).clientY);
-  }
-  return Game.globalToDesign(e.global.x, e.global.y).y;
+  return Game.federatedToDesign(e).y;
 }
 
 function rawEventToDesignY(ev: PointerEvent | any): number {
@@ -135,13 +132,14 @@ export class UpdateAnnouncementPanel extends PIXI.Container {
   private _scrollY = 0;
   private _maxScrollY = 0;
   private _dragging = false;
+  private _detachScroll: (() => void) | null = null;
   private _dragMoved = false;
   private _dragStartDesignY = 0;
   private _dragStartScrollY = 0;
 
-  private readonly _onCanvasMove = (ev: PointerEvent): void => {
+  private readonly _onCanvasMove = (ev: unknown): void => {
     if (!this._dragging) return;
-    const dy = this._dragStartDesignY - rawEventToDesignY(ev);
+    const dy = this._dragStartDesignY - nativeClientToDesignY(eventClientPoint(ev).y);
     if (Math.abs(dy) > DRAG_THRESHOLD) this._dragMoved = true;
     this._setScrollY(this._dragStartScrollY + dy);
   };
@@ -625,11 +623,13 @@ export class UpdateAnnouncementPanel extends PIXI.Container {
     this._dragMoved = false;
     this._dragStartDesignY = federatedPointerToDesignY(e);
     this._dragStartScrollY = this._scrollY;
-    const canvas = Game.app?.view as unknown as HTMLCanvasElement | undefined;
+    const canvas = Game.app?.view as unknown as TouchCanvasLike | undefined;
     if (canvas?.addEventListener) {
-      canvas.addEventListener('pointermove', this._onCanvasMove);
-      canvas.addEventListener('pointerup', this._onCanvasUp);
-      canvas.addEventListener('pointercancel', this._onCanvasUp);
+      this._detachScroll?.();
+      this._detachScroll = attachCanvasMoveUp(canvas, {
+        onMove: this._onCanvasMove,
+        onUp: this._onCanvasUp,
+      });
     }
   }
 
@@ -643,10 +643,7 @@ export class UpdateAnnouncementPanel extends PIXI.Container {
   }
 
   private _cleanupScrollListeners(): void {
-    const canvas = Game.app?.view as unknown as HTMLCanvasElement | undefined;
-    if (!canvas?.removeEventListener) return;
-    canvas.removeEventListener('pointermove', this._onCanvasMove);
-    canvas.removeEventListener('pointerup', this._onCanvasUp);
-    canvas.removeEventListener('pointercancel', this._onCanvasUp);
+    this._detachScroll?.();
+    this._detachScroll = null;
   }
 }

@@ -51,6 +51,7 @@ function readEnvPrefer(...keys) {
 /** 后端 platform 字段 → 集合命名空间段。微信 / 匿名不加段，保持已上线的 huahua_xxx 不变。 */
 const PLATFORM_SCOPE = {
   dy: 'tt',
+  hw: 'hw',
 };
 
 function getPlatformScope(platform) {
@@ -68,7 +69,7 @@ function scopedKeyUpper(platform) {
 }
 
 /**
- * 集合名：微信 huahua_playerData（与线上一致），抖音 huahua_tt_playerData。
+ * 集合名：微信 huahua_playerData（与线上一致），抖音 huahua_tt_playerData，华为 huahua_hw_playerData。
  * 可用 {SCOPED_GAME_KEY}_{SUFFIX}_COLLECTION 环境变量覆盖，如 HUAHUA_TT_PLAYERDATA_COLLECTION。
  */
 function getCollectionName(suffix, platform) {

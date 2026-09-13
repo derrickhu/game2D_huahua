@@ -16,6 +16,7 @@ import { TweenManager, Ease } from '@/core/TweenManager';
 import { CollectionManager, CollectionCategory } from '@/managers/CollectionManager';
 import { Category, FoodLine, type ItemDef, ITEM_DEFS } from '@/config/ItemConfig';
 import { TextureCache } from '@/utils/TextureCache';
+import { attachCanvasMoveUp, type TouchCanvasLike } from '@/utils/canvasInteraction';
 import { RewardFlyCoordinator } from '@/core/RewardFlyCoordinator';
 import { DESIGN_WIDTH, FONT_FAMILY, COLORS } from '@/config/Constants';
 
@@ -524,20 +525,21 @@ export class CollectionPanel extends PIXI.Container {
     let startScrollY = 0;
     let isDragging = false;
 
-    const toDesignY = (e: PIXI.FederatedPointerEvent | PointerEvent): number => {
-      const native = (e as PIXI.FederatedPointerEvent).nativeEvent as PointerEvent | undefined;
-      const clientY = native?.clientY ?? (e as PointerEvent).clientY;
-      if (typeof clientY === 'number') return Game.clientToDesign(0, clientY).y;
+    const toDesignY = (e: unknown): number => {
       const fe = e as PIXI.FederatedPointerEvent;
-      return Game.globalToDesign(fe.global.x, fe.global.y).y;
+      if (fe && (fe.nativeEvent || typeof fe.global?.y === 'number')) {
+        return Game.federatedToDesign(fe).y;
+      }
+      return Game.eventToDesign(e).y;
     };
 
     // 滚动手势板放在网格之下，避免挡住格子/宝箱点击（与 CustomerScrollArea 同思路）
     const hitArea = new PIXI.Container();
     hitArea.hitArea = new PIXI.Rectangle(areaX, areaY, areaW, areaH);
     hitArea.eventMode = 'static';
+    let detach: (() => void) | null = null;
 
-    const onMove = (ev: PointerEvent): void => {
+    const onMove = (ev: unknown): void => {
       if (!isDragging) return;
       const dy = startDesignY - toDesignY(ev);
       this._scrollY = Math.max(0, Math.min(this._maxScrollY, startScrollY + dy));
@@ -546,10 +548,8 @@ export class CollectionPanel extends PIXI.Container {
     const onUp = (): void => {
       if (!isDragging) return;
       isDragging = false;
-      const canvas = Game.app?.view as unknown as HTMLCanvasElement | undefined;
-      canvas?.removeEventListener?.('pointermove', onMove);
-      canvas?.removeEventListener?.('pointerup', onUp);
-      canvas?.removeEventListener?.('pointercancel', onUp);
+      detach?.();
+      detach = null;
     };
 
     hitArea.on('pointerdown', (e: PIXI.FederatedPointerEvent) => {
@@ -557,11 +557,10 @@ export class CollectionPanel extends PIXI.Container {
       isDragging = true;
       startDesignY = toDesignY(e);
       startScrollY = this._scrollY;
-      const canvas = Game.app?.view as unknown as HTMLCanvasElement | undefined;
+      const canvas = Game.app?.view as unknown as TouchCanvasLike | undefined;
       if (canvas?.addEventListener) {
-        canvas.addEventListener('pointermove', onMove);
-        canvas.addEventListener('pointerup', onUp);
-        canvas.addEventListener('pointercancel', onUp);
+        detach?.();
+        detach = attachCanvasMoveUp(canvas, { onMove, onUp });
       }
     });
 

@@ -2,7 +2,7 @@
  * 统一后端访问层（CloudBase HTTP 访问服务）
  *
  * - 跨平台：复用 PlatformService.request()（微信 wx.request / 抖音 tt.request / H5 fetch）
- * - 身份：微信/抖音走原生 code 登录，H5 等走本地匿名 ID 登录；userId 形如 `wx:{openid}` / `dy:{openid}` / `anon:{uuid}`
+ * - 身份：微信/抖音走原生 code 登录，华为走 playerId / 设备匿名号；userId 形如 `wx:{openid}` / `dy:{openid}` / `hw:{playerId}` / `anon:{uuid}`
  * - Token：服务端签发 JWT，客户端缓存在本地；过期或 401 自动重新 login
  */
 
@@ -88,6 +88,8 @@ export class BackendError extends Error {
 class BackendServiceClass {
   private _stored: StoredToken | null = null;
   private _loginInflight: Promise<StoredToken> | null = null;
+  private _huaweiSessionAuthed = false;
+  private _forcedHuaweiPlayerId: string | null = null;
 
   get available(): boolean {
     return Platform.canUseBackend;
@@ -103,6 +105,20 @@ class BackendServiceClass {
 
   /** 拿到有效 token；过期 / 无缓存会自动登录 */
   async ensureToken(): Promise<StoredToken> {
+    if (Platform.isHuawei && !this._huaweiSessionAuthed) {
+      this._huaweiSessionAuthed = true;
+      if (this._loginInflight) return this._loginInflight;
+      this._loginInflight = this._login()
+        .then((t) => {
+          this._loginInflight = null;
+          return t;
+        })
+        .catch((e) => {
+          this._loginInflight = null;
+          throw e;
+        });
+      return this._loginInflight;
+    }
     if (this._stored && this._stored.expiresAt - Date.now() > 60_000) {
       return this._stored;
     }
@@ -149,6 +165,18 @@ class BackendServiceClass {
     } catch (_) {}
   }
 
+  /** 进游戏后再弹华为帐号框拿到 playerId，换票但不清本地档 */
+  async reloginWithHuaweiPlayerId(playerId: string): Promise<StoredToken> {
+    this._forcedHuaweiPlayerId = playerId;
+    this.clearToken();
+    this._huaweiSessionAuthed = true;
+    try {
+      return await this._login();
+    } finally {
+      this._forcedHuaweiPlayerId = null;
+    }
+  }
+
   // ═══════════════ 内部 ═══════════════
 
   private async _login(): Promise<StoredToken> {
@@ -169,7 +197,7 @@ class BackendServiceClass {
     };
     this._stored = stored;
     this._saveTokenToStorage(stored);
-    console.log(`[Backend] login ok userId=${stored.userId}`);
+    console.log(`[Backend] login ok userId=${stored.userId} platform=${stored.platform}`);
     return stored;
   }
 
@@ -178,6 +206,7 @@ class BackendServiceClass {
     code?: string;
     anonymousCode?: string;
     anonId?: string;
+    playerId?: string;
   }> {
     if (Platform.isWechat) {
       const creds = await Platform.loginCredentials();
@@ -194,6 +223,21 @@ class BackendServiceClass {
         code: creds.code || undefined,
         anonymousCode: creds.anonymousCode || undefined,
       };
+    }
+    if (Platform.isHuawei) {
+      if (this._forcedHuaweiPlayerId) {
+        return { platform: 'hw', playerId: this._forcedHuaweiPlayerId };
+      }
+      // 启动阶段不弹框，避免被云同步 2.5s 闸门掐掉
+      const account = await Platform.loginHuaweiAccount({ allowPrompt: false });
+      if (account?.playerId) {
+        return {
+          platform: 'hw',
+          playerId: account.playerId,
+        };
+      }
+      console.log('[HuaweiLogin] 启动未拿到帐号，先用设备匿名号');
+      return { platform: 'hw', anonId: this._getOrCreateAnonId() };
     }
     // H5 / 其他 -> 匿名
     const anonId = this._getOrCreateAnonId();

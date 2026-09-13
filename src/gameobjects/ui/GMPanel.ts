@@ -13,6 +13,7 @@ import { TweenManager, Ease } from '@/core/TweenManager';
 import { EventBus } from '@/core/EventBus';
 import { GMManager, GMCommand } from '@/managers/GMManager';
 import { DESIGN_WIDTH, FONT_FAMILY } from '@/config/Constants';
+import { attachCanvasMoveUp, type TouchCanvasLike } from '@/utils/canvasInteraction';
 
 /** 指令按钮高度（标题一行 + 说明约两行） */
 const BTN_H = 78;
@@ -40,8 +41,8 @@ const C = {
   arrowBg: 0x343b55,
 };
 
-function globalToDesignY(globalY: number): number {
-  return globalY / Game.scale;
+function pointerToDesignY(e: PIXI.FederatedPointerEvent): number {
+  return Game.federatedToDesign(e).y;
 }
 
 export class GMPanel extends PIXI.Container {
@@ -67,6 +68,7 @@ export class GMPanel extends PIXI.Container {
   private _sbThumbDrag = false;
   private _sbThumbStartScroll = 0;
   private _sbThumbStartDesignY = 0;
+  private _detachGmDrag: (() => void) | null = null;
 
   constructor() {
     super();
@@ -76,9 +78,9 @@ export class GMPanel extends PIXI.Container {
     this._bindEvents();
   }
 
-  private readonly _onGmStageMove = (e: PIXI.FederatedPointerEvent): void => {
+  private readonly _onGmCanvasMove = (ev: unknown): void => {
     if (!this._gmPointerActive || !this._isOpen) return;
-    const y = globalToDesignY(e.global.y);
+    const y = Game.eventToDesign(ev).y;
     if (this._sbThumbDrag) {
       const dy = y - this._sbThumbStartDesignY;
       const range = Math.max(1, this._sbTrackH - this._thumbLength());
@@ -93,18 +95,15 @@ export class GMPanel extends PIXI.Container {
     }
   };
 
-  private readonly _onGmStageUp = (e?: PIXI.FederatedPointerEvent): void => {
+  private readonly _onGmCanvasUp = (ev?: unknown): void => {
     if (!this._gmPointerActive) return;
-    const st = Game.app.stage;
-    st.off('pointermove', this._onGmStageMove);
-    st.off('pointerup', this._onGmStageUp);
-    st.off('pointerupoutside', this._onGmStageUp);
-    st.off('pointercancel', this._onGmStageUp);
+    this._detachGmDrag?.();
+    this._detachGmDrag = null;
     this._gmPointerActive = false;
     const wasThumb = this._sbThumbDrag;
     this._sbThumbDrag = false;
 
-    const endY = e ? globalToDesignY(e.global.y) : this._gmStartDesignY;
+    const endY = ev != null ? Game.eventToDesign(ev).y : this._gmStartDesignY;
     const moved = Math.abs(endY - this._gmStartDesignY);
     const cmd = this._gmPendingCmd;
     this._gmPendingCmd = null;
@@ -115,23 +114,29 @@ export class GMPanel extends PIXI.Container {
     this._gmSlopExceeded = false;
   };
 
+  private _bindGmCanvasDrag(): void {
+    const canvas = Game.app.view as unknown as TouchCanvasLike | undefined;
+    if (!canvas?.addEventListener) return;
+    this._detachGmDrag?.();
+    this._detachGmDrag = attachCanvasMoveUp(canvas, {
+      onMove: this._onGmCanvasMove,
+      onUp: this._onGmCanvasUp,
+    });
+  }
+
   private _beginListScroll(e: PIXI.FederatedPointerEvent, pendingCmd: GMCommand | null): void {
     if (this._gmPointerActive || !this._isOpen) return;
     this._gmPointerActive = true;
     this._gmSlopExceeded = false;
     this._gmPendingCmd = pendingCmd;
-    this._gmStartDesignY = globalToDesignY(e.global.y);
+    this._gmStartDesignY = pointerToDesignY(e);
     this._gmStartScrollY = this._scrollY;
-    const st = Game.app.stage;
-    st.on('pointermove', this._onGmStageMove);
-    st.on('pointerup', this._onGmStageUp);
-    st.on('pointerupoutside', this._onGmStageUp);
-    st.on('pointercancel', this._onGmStageUp);
+    this._bindGmCanvasDrag();
   }
 
   private _teardownGmPointer(): void {
     if (!this._gmPointerActive) return;
-    this._onGmStageUp();
+    this._onGmCanvasUp();
   }
 
   private _thumbLength(): number {
@@ -392,7 +397,7 @@ export class GMPanel extends PIXI.Container {
     this._sbTrack.on('pointerdown', (e: PIXI.FederatedPointerEvent) => {
       e.stopPropagation();
       if (this._maxScrollY <= 0) return;
-      const ly = globalToDesignY(e.global.y) - this._sbTrackY;
+      const ly = pointerToDesignY(e) - this._sbTrackY;
       const th = this._thumbLength();
       const range = Math.max(1, this._sbTrackH - th);
       const target = Math.max(0, Math.min(1, (ly - th / 2) / range));
@@ -408,17 +413,13 @@ export class GMPanel extends PIXI.Container {
       if (this._maxScrollY <= 0) return;
       this._sbThumbDrag = true;
       this._sbThumbStartScroll = this._scrollY;
-      this._sbThumbStartDesignY = globalToDesignY(e.global.y);
+      this._sbThumbStartDesignY = pointerToDesignY(e);
       this._gmPointerActive = true;
       this._gmPendingCmd = null;
       this._gmStartDesignY = this._sbThumbStartDesignY;
       this._gmStartScrollY = this._scrollY;
       this._gmSlopExceeded = true;
-      const st = Game.app.stage;
-      st.on('pointermove', this._onGmStageMove);
-      st.on('pointerup', this._onGmStageUp);
-      st.on('pointerupoutside', this._onGmStageUp);
-      st.on('pointercancel', this._onGmStageUp);
+      this._bindGmCanvasDrag();
     });
     this._content.addChild(this._sbThumb);
 

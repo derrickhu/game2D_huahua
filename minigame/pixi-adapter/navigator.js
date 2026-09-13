@@ -46,3 +46,4 @@ const navigator = {
 };
 
 module.exports = navigator;
+

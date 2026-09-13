@@ -1,5 +1,6 @@
 import * as PIXI from 'pixi.js';
 import { EventBus } from '@/core/EventBus';
+import { attachCanvasMoveUp, eventClientPoint, type TouchCanvasLike } from '@/utils/canvasInteraction';
 import { Game } from '@/core/Game';
 import { COLORS, DESIGN_WIDTH, FONT_FAMILY } from '@/config/Constants';
 import { FurnitureWorkshopManager } from '@/managers/FurnitureWorkshopManager';
@@ -108,11 +109,7 @@ function nativeClientToDesignY(clientY: number): number {
 }
 
 function federatedPointerToDesignY(e: PIXI.FederatedPointerEvent): number {
-  const n = e.nativeEvent as PointerEvent | MouseEvent | undefined;
-  if (n != null && typeof (n as PointerEvent).clientY === 'number') {
-    return nativeClientToDesignY((n as PointerEvent).clientY);
-  }
-  return Game.globalToDesign(e.global.x, e.global.y).y;
+  return Game.federatedToDesign(e).y;
 }
 
 function blueprintCardHeight(): number {
@@ -181,6 +178,7 @@ export class FurnitureWorkshopPanel extends PIXI.Container {
   private _assetUnsub: (() => void) | null = null;
   private _contentScrollY = 0;
   private _contentScrollListening = false;
+  private _detachContentScroll: (() => void) | null = null;
   private _contentScrollStartDesignY = 0;
   private _contentScrollStartScrollY = 0;
   private _resourceTipRoot: PIXI.Container | null = null;
@@ -481,9 +479,9 @@ export class FurnitureWorkshopPanel extends PIXI.Container {
   }
 
   /** 微信小游戏上容器级 pointermove 常丢失，须绑 canvas（与 DecorationPanel 一致） */
-  private readonly _onCanvasContentMove = (ev: PointerEvent): void => {
+  private readonly _onCanvasContentMove = (ev: unknown): void => {
     if (!this._isOpen || !this._contentScrollListening) return;
-    const dy = nativeClientToDesignY(ev.clientY) - this._contentScrollStartDesignY;
+    const dy = nativeClientToDesignY(eventClientPoint(ev).y) - this._contentScrollStartDesignY;
     this._setContentScroll(this._contentScrollStartScrollY - dy);
   };
 
@@ -492,26 +490,25 @@ export class FurnitureWorkshopPanel extends PIXI.Container {
   };
 
   private _teardownContentScroll(): void {
-    if (!this._contentScrollListening) return;
-    const canvas = Game.app.view as unknown as HTMLCanvasElement | undefined;
-    if (canvas?.removeEventListener) {
-      canvas.removeEventListener('pointermove', this._onCanvasContentMove);
-      canvas.removeEventListener('pointerup', this._onCanvasContentUp);
-      canvas.removeEventListener('pointercancel', this._onCanvasContentUp);
-    }
+    if (!this._contentScrollListening && !this._detachContentScroll) return;
+    this._detachContentScroll?.();
+    this._detachContentScroll = null;
     this._contentScrollListening = false;
   }
 
   private _beginContentScroll(e: PIXI.FederatedPointerEvent): void {
-    if (!this._isOpen || this._shopPopup.visible || this._contentScrollListening) return;
+    if (!this._isOpen || this._shopPopup.visible) return;
+    if (this._contentScrollListening) this._teardownContentScroll();
     this._contentScrollListening = true;
     this._contentScrollStartDesignY = federatedPointerToDesignY(e);
     this._contentScrollStartScrollY = this._contentScrollY;
-    const canvas = Game.app.view as unknown as HTMLCanvasElement | undefined;
+    const canvas = Game.app.view as unknown as TouchCanvasLike | undefined;
     if (canvas?.addEventListener) {
-      canvas.addEventListener('pointermove', this._onCanvasContentMove);
-      canvas.addEventListener('pointerup', this._onCanvasContentUp);
-      canvas.addEventListener('pointercancel', this._onCanvasContentUp);
+      this._detachContentScroll?.();
+      this._detachContentScroll = attachCanvasMoveUp(canvas, {
+        onMove: this._onCanvasContentMove,
+        onUp: this._onCanvasContentUp,
+      });
     }
   }
 
