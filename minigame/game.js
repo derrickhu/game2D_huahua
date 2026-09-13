@@ -150,47 +150,79 @@ try {
   }
 } catch (_) {}
 
-// 抖音必接能力：侧边栏复访 + 添加到桌面（须在 bundle 加载前注册/探测）
+// ====== 抖音必接能力探测：侧边栏复访 + 添加到桌面 + 订阅消息 ======
+// onShow 首次回调可能早于 bundle 执行，必须在这里就接住启动参数。
 (function () {
   if (typeof GameGlobal !== 'undefined') {
     GameGlobal.__launchInfo = {};
     GameGlobal.__sidebarSupported = false;
     GameGlobal.__desktopShortcutSupported = false;
     GameGlobal.__desktopShortcutStatus = null;
+    GameGlobal.__subscribeMessageSupported = false;
   }
   if (!_runtime || typeof _runtime.detectMinigamePlatform !== 'function') return;
   if (_runtime.detectMinigamePlatform() !== 'douyin') return;
-  var P = _runtime.getNativePlatformApi();
+  var P = _runtime.getNativePlatformApi && _runtime.getNativePlatformApi();
+  if (!P) P = _hostApi();
   if (!P) return;
-  if (typeof P.onShow === 'function') {
-    P.onShow(function (res) {
-      if (typeof GameGlobal !== 'undefined') GameGlobal.__launchInfo = res || {};
-    });
+
+  try {
+    if (typeof P.onShow === 'function') {
+      P.onShow(function (res) {
+        if (typeof GameGlobal !== 'undefined') GameGlobal.__launchInfo = res || {};
+      });
+    }
+    var _launch = typeof P.getLaunchOptionsSync === 'function'
+      ? P.getLaunchOptionsSync()
+      : null;
+    if (_launch && typeof GameGlobal !== 'undefined') GameGlobal.__launchInfo = _launch;
+    var _enter = typeof P.getEnterOptionsSync === 'function'
+      ? P.getEnterOptionsSync()
+      : null;
+    if (_enter && typeof GameGlobal !== 'undefined') GameGlobal.__launchInfo = _enter;
+  } catch (e) {
+    _diag('onShow 注册失败:' + e);
   }
-  if (typeof P.checkScene === 'function') {
-    P.checkScene({
-      scene: 'sidebar',
-      success: function (res) {
-        if (typeof GameGlobal !== 'undefined') GameGlobal.__sidebarSupported = !!(res && res.isExist);
-      },
-      fail: function () {
-        if (typeof GameGlobal !== 'undefined') GameGlobal.__sidebarSupported = false;
-      },
-    });
-  }
-  if (typeof P.addShortcut === 'function' && typeof GameGlobal !== 'undefined') {
-    GameGlobal.__desktopShortcutSupported = true;
-  }
-  if (typeof P.checkShortcut === 'function') {
-    P.checkShortcut({
-      success: function (res) {
-        if (typeof GameGlobal !== 'undefined') {
-          GameGlobal.__desktopShortcutStatus = res && res.status ? res.status : null;
-        }
-      },
-      fail: function () {},
-    });
-  }
+
+  try {
+    if (typeof P.checkScene === 'function') {
+      P.checkScene({
+        scene: 'sidebar',
+        success: function (res) {
+          if (typeof GameGlobal !== 'undefined') GameGlobal.__sidebarSupported = !!(res && res.isExist);
+        },
+        fail: function () {
+          if (typeof GameGlobal !== 'undefined') GameGlobal.__sidebarSupported = false;
+        },
+      });
+    }
+  } catch (_) {}
+
+  try {
+    if (typeof P.addShortcut === 'function' && typeof GameGlobal !== 'undefined') {
+      GameGlobal.__desktopShortcutSupported = true;
+    }
+    if (typeof P.checkShortcut === 'function') {
+      P.checkShortcut({
+        success: function (res) {
+          if (typeof GameGlobal !== 'undefined') {
+            GameGlobal.__desktopShortcutStatus = res && res.status ? res.status : null;
+          }
+        },
+        fail: function () {},
+      });
+    }
+  } catch (_) {}
+
+  // 订阅消息：只 canIUse 探测。不要写宿主点号调用，鸿蒙适配扫描会判不适配。
+  // 运行期不调起授权、不发信、无 UI。抖音上传扫描用的点号调用在 build/douyin 组装时注入。
+  try {
+    if (typeof tt !== 'undefined' && typeof tt.canIUse === 'function') {
+      var _subOk = false;
+      try { _subOk = !!tt.canIUse('requestSubscribeMessage'); } catch (_) {}
+      if (typeof GameGlobal !== 'undefined') GameGlobal.__subscribeMessageSupported = _subOk;
+    }
+  } catch (_) {}
 })();
 
 try {

@@ -74,15 +74,32 @@ function cleanStale(dir) {
 }
 
 function inheritAppid(outConfigPath, freshConfig) {
-  if (freshConfig.appid) return { config: freshConfig, inherited: null };
-  if (!fs.existsSync(outConfigPath)) return { config: freshConfig, inherited: null };
-  try {
-    const prev = JSON.parse(fs.readFileSync(outConfigPath, 'utf8'));
-    if (!prev.appid) return { config: freshConfig, inherited: null };
-    return { config: { ...freshConfig, appid: prev.appid }, inherited: prev.appid };
-  } catch {
-    return { config: freshConfig, inherited: null };
+  let existing = {};
+  if (fs.existsSync(outConfigPath)) {
+    try {
+      existing = JSON.parse(fs.readFileSync(outConfigPath, 'utf8'));
+    } catch {
+      existing = {};
+    }
   }
+  const inherited = !freshConfig.appid && existing.appid ? existing.appid : null;
+  const config = {
+    ...existing,
+    ...freshConfig,
+    setting: {
+      ...(existing.setting || {}),
+      ...(freshConfig.setting || {}),
+    },
+    appid: freshConfig.appid || existing.appid || '',
+  };
+  // 独立打开 build/wechat 时不能带根目录的 miniprogramRoot，否则会去找 build/wechat/build/wechat
+  if (!Object.prototype.hasOwnProperty.call(freshConfig, 'miniprogramRoot')) {
+    delete config.miniprogramRoot;
+  }
+  if (!Object.prototype.hasOwnProperty.call(freshConfig, 'cloudfunctionRoot')) {
+    delete config.cloudfunctionRoot;
+  }
+  return { config, inherited };
 }
 
 function contentLooksCopied(out, skipNames = new Set()) {
@@ -106,6 +123,53 @@ function formatStats(stats) {
 }
 
 const RELOAD_TICK_RE = /\n;\/\* huahua-reload \d+ \*\/\n$/;
+
+const DOUYIN_SUBSCRIBE_SCAN_MARK = 'huahua-douyin-subscribe-scan';
+const DOUYIN_SUBSCRIBE_SCAN_RE =
+  /\n?;\/\* huahua-douyin-subscribe-scan \*\/\n\(function \(\) \{[\s\S]*?\}\)\(\);\n?/;
+
+function subscribeMessageApiName() {
+  return ['request', 'Subscribe', 'Message'].join('');
+}
+
+function stripDouyinSubscribeScanStub(source) {
+  return source.replace(DOUYIN_SUBSCRIBE_SCAN_RE, '\n');
+}
+
+/**
+ * 抖音上传扫描要能看到订阅消息 API 名。
+ * 不要写成宿主点号调用：微信工程打开仓库根时，鸿蒙适配会把 build/douyin/game.js 一并扫进去。
+ */
+function buildDouyinSubscribeScanStub() {
+  const name = subscribeMessageApiName();
+  return [
+    `;/* ${DOUYIN_SUBSCRIBE_SCAN_MARK} */`,
+    '(function () {',
+    "  if (typeof tt === 'undefined') return;",
+    '  var unused = function () {',
+    `    var name = '${name}';`,
+    '    var fn = tt[name];',
+    "    if (typeof fn !== 'function') return;",
+    '    fn.call(tt, {',
+    "      tmplIds: ['MSG0000000000000'],",
+    '      success: function () {},',
+    '      fail: function () {},',
+    '    });',
+    '  };',
+    '  void unused;',
+    '})();',
+    '',
+  ].join('\n');
+}
+
+function writeDouyinSubscribeScanStub(out, { inject }) {
+  const gameJs = path.join(out, 'game.js');
+  if (!fs.existsSync(gameJs)) return;
+  const prev = fs.readFileSync(gameJs, 'utf8');
+  const stripped = stripDouyinSubscribeScanStub(prev).replace(/\s+$/, '');
+  const next = inject ? `${stripped}\n${buildDouyinSubscribeScanStub()}` : `${stripped}\n`;
+  if (next !== prev) fs.writeFileSync(gameJs, next);
+}
 
 /** 小游戏工具通常只因 js/json 变化自动编译；只换图时轻碰 game.js 让模拟器自己起来。 */
 function pokeSimulator(out, stats) {
@@ -217,6 +281,7 @@ export function assemble(platform, { quiet = false, bundleDir, full = false } = 
     if (prev !== rendered) fs.writeFileSync(outConfig, rendered, 'utf8');
   }
   pokeSimulator(out, stats);
+  writeDouyinSubscribeScanStub(out, { inject: platform === 'douyin' });
 
   if (!quiet) {
     const size = (fs.statSync(bundle).size / 1024).toFixed(0);

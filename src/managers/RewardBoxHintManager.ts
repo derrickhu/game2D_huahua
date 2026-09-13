@@ -6,6 +6,7 @@ import { PersistService } from '@/core/PersistService';
 import { REWARD_BOX_HINT_TRIGGER_LEVEL } from '@/config/RewardBoxHintConfig';
 import { LevelManager } from '@/managers/LevelManager';
 import { RewardBoxManager } from '@/managers/RewardBoxManager';
+import { TutorialManager } from '@/managers/TutorialManager';
 
 const STORAGE_KEY = 'huahua_reward_box_hint';
 
@@ -31,10 +32,16 @@ class RewardBoxHintManagerClass {
         this._markPendingMainReturn();
       }
     });
+    EventBus.on('tutorial:completed', () => {
+      this._ensureLoaded();
+      if (this._dismissed) return;
+      if (RewardBoxManager.totalCount <= 0) return;
+      if (!this._pendingMainReturn) this._markPendingMainReturn();
+    });
     EventBus.on('rewardBox:changed', () => {
       this._ensureLoaded();
       if (this._dismissed) return;
-      if (LevelManager.level < REWARD_BOX_HINT_TRIGGER_LEVEL) return;
+      if (!this._canPromptByProgress()) return;
       if (RewardBoxManager.totalCount <= 0) return;
       if (!this._pendingMainReturn) this._markPendingMainReturn();
     });
@@ -78,7 +85,7 @@ class RewardBoxHintManagerClass {
   onMainSceneEnter(): void {
     this._ensureLoaded();
     if (this._dismissed) return;
-    if (LevelManager.level < REWARD_BOX_HINT_TRIGGER_LEVEL) return;
+    if (!this._canPromptByProgress()) return;
     if (!this._pendingMainReturn && RewardBoxManager.totalCount > 0) {
       this._pendingMainReturn = true;
       this._save();
@@ -87,13 +94,17 @@ class RewardBoxHintManagerClass {
     EventBus.emit('rewardBoxHint:pending');
   }
 
+  /** 教程完成后、或已到首次升星，篮内首次有物即可提示 */
+  private _canPromptByProgress(): boolean {
+    return TutorialManager.isCompleted || LevelManager.level >= REWARD_BOX_HINT_TRIGGER_LEVEL;
+  }
+
   /** 是否满足弹出条件（不含 UI 互斥） */
   shouldPrompt(): boolean {
     this._ensureLoaded();
     if (this._dismissed) return false;
-    if (LevelManager.level < REWARD_BOX_HINT_TRIGGER_LEVEL) return false;
+    if (!this._canPromptByProgress()) return false;
     if (this._pendingMainReturn) return true;
-    // 兜底：已达触发等级且篮内有待领物品（pending 漏标或冷启动未调度时仍可提示一次）
     return RewardBoxManager.totalCount > 0;
   }
 

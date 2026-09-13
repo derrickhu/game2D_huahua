@@ -48,8 +48,8 @@ class BuyFurnitureHintManagerClass {
     this._ensureLoaded();
     if (this._dismissed) return false;
     if (!TutorialManager.isCompleted) return false;
-    if (LevelManager.level !== BUY_FURNITURE_HINT_PLAYER_LEVEL) return false;
-    if (CurrencyManager.state.huayuan <= BUY_FURNITURE_HINT_HUAYUAN_MIN) return false;
+    if (LevelManager.level > BUY_FURNITURE_HINT_PLAYER_LEVEL + 1) return false;
+    if (CurrencyManager.state.huayuan < BUY_FURNITURE_HINT_HUAYUAN_MIN) return false;
     if (DecorationManager.unlockedCount !== BUY_FURNITURE_HINT_OWNED_MAX) return false;
     return true;
   }

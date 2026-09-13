@@ -3,7 +3,6 @@
  */
 import * as PIXI from 'pixi.js';
 import { Game } from '@/core/Game';
-import { OverlayManager } from '@/core/OverlayManager';
 import { TweenManager, Ease } from '@/core/TweenManager';
 import { DESIGN_WIDTH, BoardMetrics } from '@/config/Constants';
 import { TutorialDialogBubble } from '@/gameobjects/ui/TutorialDialogBubble';
@@ -26,7 +25,7 @@ export class RewardBoxHintOverlay {
   constructor(parent: PIXI.Container) {
     this._root = new PIXI.Container();
     this._root.visible = false;
-    this._root.zIndex = 11500;
+    this._root.zIndex = 20000;
     this._root.eventMode = 'passive';
     parent.addChild(this._root);
     if (!parent.sortableChildren) parent.sortableChildren = true;
@@ -45,7 +44,6 @@ export class RewardBoxHintOverlay {
     this._layer.removeChildren();
     this._root.visible = true;
     this._root.alpha = 0;
-    OverlayManager.bringToFront();
     this._root.parent?.sortChildren?.();
 
     const spotlight = this._getRewardBoxSpotlight(options.rewardBoxButton);

@@ -25,7 +25,7 @@ export class BuyFurnitureHintOverlay {
   constructor(parent: PIXI.Container) {
     this._root = new PIXI.Container();
     this._root.visible = false;
-    this._root.zIndex = 7600;
+    this._root.zIndex = 20000;
     this._root.eventMode = 'passive';
     parent.addChild(this._root);
     if (!parent.sortableChildren) parent.sortableChildren = true;
@@ -52,14 +52,15 @@ export class BuyFurnitureHintOverlay {
 
     if (options.itemInfoBar) {
       const local = options.itemInfoBar.getHouseButtonSpotlightRectLocal();
-      const shopRect: SpotlightRect = {
-        x: options.itemInfoBar.x + local.x,
-        y: options.itemInfoBar.y + local.y,
+      const global = options.itemInfoBar.toGlobal(new PIXI.Point(local.x, local.y));
+      const origin = this._root.parent?.toLocal(global) ?? global;
+      this._drawGlowBorder({
+        x: origin.x,
+        y: origin.y,
         w: local.w,
         h: local.h,
         r: 16,
-      };
-      this._drawGlowBorder(shopRect);
+      });
     }
 
     this._bubble = new TutorialDialogBubble({
