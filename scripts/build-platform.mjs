@@ -1,7 +1,7 @@
 /**
  * 把一份内容树 + 一份 bundle 组装成各平台可直接用开发者工具打开的目录。
  *
- *   CLI：node scripts/build-platform.mjs [wechat|douyin|huawei|all] [--full]
+ *   CLI：node scripts/build-platform.mjs [wechat|douyin|taptap|huawei|all] [--full]
  *   仅 `vite build --watch` 会在插件里组装；一次性 `vite build` 不组装，
  *   留给本脚本在 vite 之后跑，避免先拷未完成的树。
  *
@@ -24,9 +24,10 @@ export const CONTENT_DIR = path.join(rootDir, 'minigame');
 export const PLATFORM_DIR = path.join(rootDir, 'platform');
 export const BUILD_DIR = path.join(rootDir, 'build');
 export const BUNDLE_DIR = path.join(rootDir, '.bundle');
+export const BUNDLE_TAPTAP_DIR = path.join(rootDir, '.bundle-taptap');
 export const BUNDLE_HUAWEI_DIR = path.join(rootDir, '.bundle-huawei');
 
-export const PLATFORMS = ['wechat', 'douyin', 'huawei'];
+export const PLATFORMS = ['wechat', 'douyin', 'taptap', 'huawei'];
 export const WX_TT_PLATFORMS = ['wechat', 'douyin'];
 
 const HUAWEI_SKIP_CDN = new Set([
@@ -42,6 +43,7 @@ const SKIP_FROM_CONTENT = new Set([
   'index.html',
   'game.json',
   'manifest.json',
+  'tap-pack-stamp.js',
   'huawei-pack-stamp.js',
   'weapp-adapter.js',
   'project.config.json',
@@ -182,6 +184,7 @@ function pokeSimulator(out, stats) {
 }
 
 function bundleDirOf(platform) {
+  if (platform === 'taptap') return BUNDLE_TAPTAP_DIR;
   if (platform === 'huawei') return BUNDLE_HUAWEI_DIR;
   return BUNDLE_DIR;
 }
@@ -227,6 +230,17 @@ export function assemble(platform, { quiet = false, bundleDir, full = false } = 
     if (!quiet) console.log('[build-platform] 已删除 minigame/game-bundle.js（旧产物，勿用这个目录扫码）');
   }
   copyFileIfStale(bundle, path.join(out, 'game-bundle.js'), stats);
+  if (platform === 'taptap') {
+    const stamp = path.join(out, 'tap-pack-stamp.js');
+    const stampSrc = "GameGlobal.__HUAHUA_TAP_PACK='fix5';\n";
+    if (!fs.existsSync(stamp) || fs.readFileSync(stamp, 'utf8') !== stampSrc) {
+      fs.writeFileSync(stamp, stampSrc);
+    }
+    const assembled = fs.readFileSync(path.join(out, 'game-bundle.js'), 'utf8');
+    if (assembled.includes('"%eval%":eval')) {
+      fail('build/taptap/game-bundle.js 仍含 "%eval%":eval，先检查 pixi-unsafe-eval-patch');
+    }
+  }
   if (platform === 'huawei') {
     const stamp = path.join(out, 'huawei-pack-stamp.js');
     const stampSrc = "GameGlobal.__HUAHUA_HUAWEI_VERSION='native';\n";

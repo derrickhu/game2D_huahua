@@ -11,6 +11,7 @@ import * as PIXI from 'pixi.js';
 import { CdnAssetService } from '@/core/CdnAssetService';
 import { EventBus } from '@/core/EventBus';
 import { Platform } from '@/core/PlatformService';
+import { markImageLoaded } from '@/core/imageDomShim';
 import {
   buildFurnitureIconAliasMap,
   furnitureAtlasFrameKey,
@@ -2161,15 +2162,13 @@ class TextureCacheClass {
     const promise = new Promise<void>((resolve) => {
       try {
         // 在小游戏中使用宿主 API 创建图片
-        const platform = Platform.api;
-        if (!platform) {
+        const img = Platform.createImage();
+        if (!img) {
           this._failed.add(key);
           this._loading.delete(key);
           resolve();
           return;
         }
-
-        const img = platform.createImage();
         let retriedLocalSubpackage = false;
         const markFailed = (err?: any): void => {
           console.warn(`[TextureCache] 图片加载失败: ${key} (${path})`, err);
@@ -2182,6 +2181,7 @@ class TextureCacheClass {
         };
         img.onload = () => {
           try {
+            markImageLoaded(img);
             const baseTexture = PIXI.BaseTexture.from(img as any);
             const texture = new PIXI.Texture(baseTexture);
             this._cache.set(key, texture);

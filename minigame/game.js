@@ -9,6 +9,7 @@
   try {
     console.log('[boot] hosts qg=' + (typeof qg)
       + ' qa=' + (typeof qa)
+      + ' tap=' + (typeof tap)
       + ' wx=' + (typeof wx)
       + ' tt=' + (typeof tt)
       + ' GameGlobal=' + (typeof GameGlobal)
@@ -23,7 +24,7 @@
   } catch (e4) {}
 })();
 
-// 华为真机没有 eval 绑定；Function() 内部会去找 eval，一加载 bundle 就
+// Tap / 华为真机没有 eval 绑定；Function() 内部会去找 eval，一加载 bundle 就
 // ReferenceError: Can't find variable: eval。必须在 require bundle 之前挂上。
 // 华为原生快游戏未必注入 GameGlobal，先把全局对象挂成 GameGlobal。
 (function () {
@@ -71,7 +72,8 @@ var _diagStart = Date.now();
 function _hostApi() {
   var api = _runtime && _runtime.getNativePlatformApi && _runtime.getNativePlatformApi();
   if (api) return api;
-  return (typeof qg !== 'undefined' && qg)
+  return (typeof tap !== 'undefined' && tap)
+    || (typeof qg !== 'undefined' && qg)
     || (typeof qa !== 'undefined' && qa)
     || (typeof wx !== 'undefined' && wx)
     || (typeof tt !== 'undefined' && tt)
@@ -247,7 +249,9 @@ try {
   }
   var _doc = typeof document !== 'undefined' ? document : (GameGlobal && GameGlobal.document);
   _diag('cv=' + (_cv ? ((_cv.width || 0) + 'x' + (_cv.height || 0) + ' getContext=' + (typeof _cv.getContext)) : 'none')
-    + ' createCanvas=' + (typeof qg !== 'undefined' ? typeof qg.createCanvas : 'no-qg')
+    + ' createCanvas=' + (typeof tap !== 'undefined' ? typeof tap.createCanvas
+      : (typeof qg !== 'undefined' ? typeof qg.createCanvas
+        : (typeof qa !== 'undefined' ? typeof qa.createCanvas : 'no-host')))
     + ' rAF=' + (typeof requestAnimationFrame)
     + ' createElement=' + (_doc ? typeof _doc.createElement : 'no-doc')
     + ' hostSrc=' + (typeof GameGlobal !== 'undefined' ? GameGlobal.__hostCanvasSrc : '?'));
@@ -262,12 +266,15 @@ if (typeof Intl === 'undefined') {
   _g.Intl = {};
 }
 
-_diag('boot wx=' + (typeof wx) + ' tt=' + (typeof tt)
+_diag('boot tap=' + (typeof tap) + ' wx=' + (typeof wx) + ' tt=' + (typeof tt)
   + ' qg=' + (typeof qg) + ' qa=' + (typeof qa)
   + ' plat=' + (_runtime && _runtime.detectMinigamePlatform ? _runtime.detectMinigamePlatform() : '?'));
+try { require('./tap-pack-stamp.js'); } catch (e) { /* 非 Tap 包没有 */ }
 try { require('./huawei-pack-stamp.js'); } catch (e) { /* 非华为包没有 */ }
 try {
-  var _pack = typeof GameGlobal !== 'undefined' ? GameGlobal.__HUAHUA_HUAWEI_VERSION : null;
+  var _pack = typeof GameGlobal !== 'undefined'
+    ? (GameGlobal.__HUAHUA_TAP_VERSION || GameGlobal.__HUAHUA_TAP_PACK || GameGlobal.__HUAHUA_HUAWEI_VERSION)
+    : null;
   if (_pack) _diag('pack=' + _pack);
 } catch (e) { /* */ }
 try {

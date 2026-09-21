@@ -26,7 +26,7 @@ const document = {
     tag = String(tag || 'div').toLowerCase();
     switch (tag) {
       case 'canvas':
-        if (platform.name === 'huawei') return createMeasureCanvas(1, 1);
+        if (platform.name === 'taptap' || platform.name === 'huawei') return createMeasureCanvas(1, 1);
         // 宿主 createCanvas 常会再调 document.createElement，无此守卫必栈溢出
         if (_creatingCanvas) return createMeasureCanvas(1, 1);
         _creatingCanvas = true;

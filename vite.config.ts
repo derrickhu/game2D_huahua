@@ -8,8 +8,9 @@ const requirePkg = createRequire(import.meta.url);
 const pkg = requirePkg('./package.json') as { version: string };
 
 const vitePlatform = process.env.VITE_PLATFORM || '';
+const isTap = vitePlatform === 'taptap';
 const isHuawei = vitePlatform === 'huawei';
-const BUNDLE_DIR = isHuawei ? '.bundle-huawei' : '.bundle';
+const BUNDLE_DIR = isTap ? '.bundle-taptap' : isHuawei ? '.bundle-huawei' : '.bundle';
 
 /**
  * Vite 插件：构建后替换 bundle 中所有 ShaderSystem 的 systemCheck 方法体，
@@ -34,7 +35,7 @@ function pixiUnsafeEvalPlugin(): Plugin {
         console.log('[pixi-unsafe-eval-patch] Patched systemCheck in bundle');
         code = patched;
       }
-      if (isHuawei) {
+      if (isTap || isHuawei) {
         const replacements: Array<[RegExp, string, string]> = [
           [
             /Function\("binder","return function \("\+\w+\(\w+,","\)\+"\)\{ return binder\.apply\(this,arguments\); \}"\)/g,
@@ -63,11 +64,11 @@ function pixiUnsafeEvalPlugin(): Plugin {
         const strictIife = '(function(){"use strict";';
         if (code.startsWith(strictIife)) {
           code = `(function(){var eval=function(){return void 0};${code.slice(strictIife.length)}`;
-          applied.push('huawei-local-eval');
+          applied.push(`${vitePlatform}-local-eval`);
         }
         if (applied.length) {
           fs.writeFileSync(bundlePath, code, 'utf8');
-          console.log(`[pixi-unsafe-eval-patch] Huawei patched ${applied.join(', ')}`);
+          console.log(`[pixi-unsafe-eval-patch] ${vitePlatform} patched ${applied.join(', ')}`);
         }
         if (code.includes('"%eval%":eval')) {
           throw new Error('[pixi-unsafe-eval-patch] bundle 仍含 "%eval%":eval，禁止出包');
@@ -101,7 +102,7 @@ function assemblePlatformsPlugin(): Plugin {
   let queue: Promise<void> = Promise.resolve();
 
   const target = () => (
-    isHuawei ? 'huawei' : (process.env.HUAHUA_PLATFORM ?? 'all')
+    isTap ? 'taptap' : isHuawei ? 'huawei' : (process.env.HUAHUA_PLATFORM ?? 'all')
   );
 
   const enqueue = (reason: string) => {

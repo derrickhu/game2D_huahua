@@ -2,7 +2,7 @@
  * 统一后端访问层（CloudBase HTTP 访问服务）
  *
  * - 跨平台：复用 PlatformService.request()（微信 wx.request / 抖音 tt.request / H5 fetch）
- * - 身份：微信/抖音走原生 code 登录，华为走 playerId / 设备匿名号；userId 形如 `wx:{openid}` / `dy:{openid}` / `hw:{playerId}` / `anon:{uuid}`
+ * - 身份：微信/抖音/Tap 走原生 code 登录，华为走 playerId / 设备匿名号；userId 形如 `wx:{openid}` / `dy:{openid}` / `tap:{openid}` / `hw:{playerId}` / `anon:{uuid}`
  * - Token：服务端签发 JWT，客户端缓存在本地；过期或 401 自动重新 login
  */
 
@@ -223,6 +223,13 @@ class BackendServiceClass {
         code: creds.code || undefined,
         anonymousCode: creds.anonymousCode || undefined,
       };
+    }
+    if (Platform.isTaptap) {
+      const creds = await Platform.loginCredentials();
+      if (!creds.code) {
+        throw new BackendError(0, 'NO_TAP_CODE', 'tap.login 未返回 code');
+      }
+      return { platform: 'tap', code: creds.code };
     }
     if (Platform.isHuawei) {
       if (this._forcedHuaweiPlayerId) {

@@ -47,6 +47,26 @@ export function minigameRendererOpts(guardedHost: boolean): {
  * 华为 1078+：主屏 canvas 设得比屏幕像素小，画面会缩在一角，不会像微信那样拉伸铺满。
  * 优先用宿主已经开好的主屏尺寸，绝不能再往小了改。
  */
+export function capTapDevicePixelRatio(pixelRatio: number): number {
+  const dpr = Number(pixelRatio) || 2;
+  return Math.min(dpr, 2);
+}
+
+export function capTapFramebuffer(
+  width: number,
+  height: number,
+  maxEdge = 2560,
+): { width: number; height: number; scale: number } {
+  const edge = Math.max(width, height);
+  if (edge <= maxEdge) return { width, height, scale: 1 };
+  const scale = maxEdge / edge;
+  return {
+    width: Math.floor(width * scale),
+    height: Math.floor(height * scale),
+    scale,
+  };
+}
+
 export function resolveHuaweiViewSize(opts: {
   canvasWidth?: number;
   canvasHeight?: number;

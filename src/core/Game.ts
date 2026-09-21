@@ -29,6 +29,8 @@ import {
   minigameRendererOpts,
   rememberSharedWebGL,
   resolveHuaweiViewSize,
+  capTapDevicePixelRatio,
+  capTapFramebuffer,
 } from '@/core/webglContextPatch';
 
 /** 华为宿主 console 把异常对象打成 [object Object]，必须先摊平成文本 */
@@ -181,6 +183,17 @@ class GameClass {
       const view = this._applyHuaweiHostView(canvas);
       realWidth = view.width;
       realHeight = view.height;
+    } else if (Platform.isTaptap) {
+      this.dpr = capTapDevicePixelRatio(this.dpr);
+      realWidth = Math.round(this.screenWidth * this.dpr);
+      realHeight = Math.round(this.screenHeight * this.dpr);
+      const capped = capTapFramebuffer(realWidth, realHeight);
+      if (capped.scale !== 1) {
+        realWidth = capped.width;
+        realHeight = capped.height;
+        this.dpr *= capped.scale;
+      }
+      this.scale = this.contentScale * this.dpr;
     }
 
     const RENDERER_OPTS = minigameRendererOpts(Platform.isCanvasHostGuarded);
@@ -367,7 +380,7 @@ class GameClass {
       && nextSafeTop === this.safeTop
       && nextSafeBottom === this.safeBottom;
     // 华为 dpr 以宿主 canvas 为准，不能和 getSystemInfo.pixelRatio 比相等
-    if (sameLogical && (Platform.isHuawei || next.pixelRatio === this.dpr)) {
+    if (sameLogical && (Platform.isHuawei || Platform.isTaptap || next.pixelRatio === this.dpr)) {
       return false;
     }
 
@@ -378,6 +391,17 @@ class GameClass {
       const view = this._applyHuaweiHostView(this._canvas);
       realWidth = view.width;
       realHeight = view.height;
+    } else if (Platform.isTaptap) {
+      this.dpr = capTapDevicePixelRatio(this.dpr);
+      realWidth = Math.round(this.screenWidth * this.dpr);
+      realHeight = Math.round(this.screenHeight * this.dpr);
+      const capped = capTapFramebuffer(realWidth, realHeight);
+      if (capped.scale !== 1) {
+        realWidth = capped.width;
+        realHeight = capped.height;
+        this.dpr *= capped.scale;
+      }
+      this.scale = this.contentScale * this.dpr;
     }
     try {
       if (Platform.isHuawei) {

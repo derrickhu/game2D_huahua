@@ -1,5 +1,5 @@
 /**
- * 广告管理器 - 微信/抖音双平台广告统一管理
+ * 广告管理器 - 微信/抖音/Tap 广告统一管理
  *
  * 支持：
  * - 激励视频广告（体力恢复、CD加速等）
@@ -116,11 +116,20 @@ class AdManagerClass {
 
     const config = Platform.name === 'wechat' ? AD_UNIT_CONFIG.wechat
       : Platform.name === 'douyin' ? AD_UNIT_CONFIG.douyin
+      : Platform.name === 'taptap' ? AD_UNIT_CONFIG.taptap
       : null;
 
     if (!config) {
       console.log('[AdManager] 未知平台，使用开发模式');
       this._devMode = true;
+      return;
+    }
+
+    // Tap 真机没有开发桩：空广告位 / 创建失败一律不发奖，避免白给。
+    if (Platform.isTaptap && !config.rewardedVideo) {
+      console.log('[AdManager] Tap 广告位未配置，真机不发奖');
+      this._devMode = false;
+      this._adConfig = config;
       return;
     }
 

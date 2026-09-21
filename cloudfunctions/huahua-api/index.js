@@ -18,6 +18,7 @@
  *   HUAHUA_WX_APPID / HUAHUA_WX_SECRET   微信 code2session（带 HUAHUA_ 前缀是为了
  *     避开 CloudBase 对 `WX_APPID`/`WX_SECRET` 这两个裸 Key 的系统脱敏，否则值会被清空）
  *   HUAHUA_TT_APPID / HUAHUA_TT_SECRET   抖音 code2session（同理加前缀）
+ *   HUAHUA_TAP_APPID / HUAHUA_TAP_SECRET Tap jscode2session（同理加前缀，Secret 只放云函数环境变量）
  *   HUAHUA_SAVE_MAX_BYTES           可选，默认 262144（256KB）
  *   HUAHUA_TOKEN_TTL_SEC            可选，默认 604800（7d）
  */

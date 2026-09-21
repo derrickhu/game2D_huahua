@@ -22,9 +22,9 @@ try {
 
 // ======== 配置 PIXI.settings.ADAPTER ========
 // 微信/抖音：走 createOffscreenCanvas / createCanvas。
-// 华为：qg 没有 createCanvas；ADAPTER 只能给假画布/文字包装，WebGL 用主屏那一块。
+// Tap / 华为：ADAPTER 只能给假画布/文字包装，WebGL 用主屏那一块。
 const _api: any = getNativePlatformApi();
-if (_api || Platform.isHuawei) {
+if (_api || Platform.isCanvasHostGuarded) {
   try {
     let _useOffscreen = false;
     try {

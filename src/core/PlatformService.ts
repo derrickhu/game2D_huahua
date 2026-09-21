@@ -1,11 +1,11 @@
 /**
- * 平台服务抽象层 - 统一封装微信 / 抖音 / 华为快游戏 API
+ * 平台服务抽象层 - 统一封装微信 / 抖音 / Tap / 华为快游戏 API
  *
  * 所有平台特有调用（存储、广告、分享、侧边栏、桌面等）都通过本模块统一访问，
  * src/ 中不再需要各自 declare const wx / tt / qg。
  *
  * 存储：读写前统一经 scopeStorageKey 映射到平台命名空间
- * （微信原样，抖音加 _tt，华为加 _hw），业务层继续用 `huahua_xxx` 逻辑 key。
+ * （微信原样，抖音加 _tt，Tap 加 _tap，华为加 _hw），业务层继续用 `huahua_xxx` 逻辑 key。
  */
 
 declare const GameGlobal: any;
@@ -16,6 +16,7 @@ import { scopeStorageKey, getScopedGameKey } from '@/config/gameKeyScope';
 import { waitMs } from '@/utils/hostTimeout';
 import { parseHuaweiLoginData, readHuaweiAppId, type HuaweiAccount } from './huaweiAccount';
 import { readHostStorage, removeHostStorage, resolveHostLocalStorage, writeHostStorage } from './hostStorage';
+import { shimImageDomContract } from './imageDomShim';
 import {
   detectMinigamePlatform,
   getNativePlatformApi,
@@ -39,6 +40,7 @@ class PlatformServiceClass {
     this._api = getNativePlatformApi(this.name);
     const apiLabel = this.name === 'douyin' ? 'tt'
       : this.name === 'wechat' ? 'wx'
+      : this.name === 'taptap' ? 'tap'
       : this.name === 'huawei' ? (typeof qg !== 'undefined' ? 'qg' : typeof qa !== 'undefined' ? 'qa' : 'wx')
       : 'none';
     console.log(`[Platform] 当前平台: ${this.name}, api=${apiLabel}, gameKey=${getScopedGameKey(this.name)}`);
@@ -48,12 +50,12 @@ class PlatformServiceClass {
     }
   }
 
-  /** 后端 /login 的 platform 字段（wx / dy / hw / anon） */
+  /** 后端 /login 的 platform 字段（wx / dy / tap / hw / anon） */
   get backendPlatformCode(): BackendPlatformCode {
     return toBackendPlatformCode(this.name);
   }
 
-  /** 当前平台的数据命名空间（huahua / huahua_tt / huahua_hw） */
+  /** 当前平台的数据命名空间（huahua / huahua_tt / huahua_tap / huahua_hw） */
   get scopedGameKey(): string {
     return getScopedGameKey(this.name);
   }
@@ -73,17 +75,22 @@ class PlatformServiceClass {
     return this.name === 'douyin';
   }
 
+  /** 是否 TapTap 小游戏 */
+  get isTaptap(): boolean {
+    return this.name === 'taptap';
+  }
+
   /** 是否华为快游戏 */
   get isHuawei(): boolean {
     return this.name === 'huawei';
   }
 
   /**
-   * 华为快游戏：宿主 createCanvas 会和 document.createElement 互相重入。
+   * Tap / 华为快游戏：宿主 createCanvas 会和 document.createElement 互相重入。
    * 禁止再走 PIXI.Application，量字 canvas 也必须用假画布。
    */
   get isCanvasHostGuarded(): boolean {
-    return this.name === 'huawei';
+    return this.name === 'taptap' || this.name === 'huawei';
   }
 
   /** 微信开发者工具（非真机）；brand/environment 亦可能为 devtools（模拟器 platform 常为 ios） */
@@ -440,6 +447,7 @@ class PlatformServiceClass {
    * 平台登录凭证：
    *   微信 -> wx.login → code
    *   抖音 -> tt.login({ force: true }) → code，未登录时也可能只有 anonymousCode
+   *   Tap  -> tap.login → code
    */
   loginCredentials(): Promise<{ code: string; anonymousCode: string }> {
     return new Promise((resolve) => {
@@ -633,7 +641,8 @@ class PlatformServiceClass {
     try {
       if (this.name === 'wechat') {
         return this._api?.createRewardedVideoAd?.({ adUnitId, multiton: true });
-      } else if (this.name === 'douyin') {
+      }
+      if (this.name === 'douyin' || this.name === 'taptap') {
         return this._api?.createRewardedVideoAd?.({ adUnitId });
       }
     } catch (e) {
@@ -647,7 +656,8 @@ class PlatformServiceClass {
     try {
       if (this.name === 'wechat') {
         return this._api?.createBannerAd?.({ adUnitId, style });
-      } else if (this.name === 'douyin') {
+      }
+      if (this.name === 'douyin' || this.name === 'taptap') {
         return this._api?.createBannerAd?.({ adUnitId, style });
       }
     } catch (e) {
@@ -665,7 +675,8 @@ class PlatformServiceClass {
     try {
       if (this.name === 'wechat') {
         return this._api?.createInterstitialAd?.({ adUnitId });
-      } else if (this.name === 'douyin') {
+      }
+      if (this.name === 'douyin' || this.name === 'taptap') {
         return this._api?.createInterstitialAd?.({ adUnitId });
       }
     } catch (e) {
@@ -678,8 +689,17 @@ class PlatformServiceClass {
     if (!adUnitId) return false;
     if (/[xyz]{6,}/i.test(adUnitId)) return false;
     if (this.name === 'wechat') return /^adunit-[0-9a-f]{16}$/i.test(adUnitId);
-    if (this.name === 'douyin') return !/[xyz]{6,}/i.test(adUnitId) && adUnitId.length >= 8;
+    if (this.name === 'douyin' || this.name === 'taptap') {
+      return !/[xyz]{6,}/i.test(adUnitId) && adUnitId.length >= 4;
+    }
     return false;
+  }
+
+  /** 创建平台 Image 对象（加载本地/网络图片用） */
+  createImage(): any {
+    if (this._api?.createImage) return shimImageDomContract(this._api.createImage());
+    if (typeof Image !== 'undefined') return new Image();
+    return null;
   }
 
   /**

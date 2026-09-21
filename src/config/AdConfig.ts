@@ -10,7 +10,7 @@ export interface PlatformAdUnitConfig {
 }
 
 /** 广告位 ID 配置：拿到真实 ID 后只改这里。 */
-export const AD_UNIT_CONFIG: Record<'wechat' | 'douyin', PlatformAdUnitConfig> = {
+export const AD_UNIT_CONFIG: Record<'wechat' | 'douyin' | 'taptap', PlatformAdUnitConfig> = {
   wechat: {
     rewardedVideo: 'adunit-6ca54692fdb75515',
     rewardedVideoByScene: {
@@ -83,6 +83,15 @@ export const AD_UNIT_CONFIG: Record<'wechat' | 'douyin', PlatformAdUnitConfig> =
     },
     interstitial: 'yyyyyyyyyyyyyyyyyyyyyyyyyy',
     banner: 'zzzzzzzzzzzzzzzzzzzzzzzzzz',
+  },
+  /**
+   * Tap 广告位：Dirichlet 建「小游戏」媒体后填 adUnitId。
+   * 空串 = 未配置。真机没有开发桩，空位一律不发奖。
+   */
+  taptap: {
+    rewardedVideo: '',
+    interstitial: '',
+    banner: '',
   },
 };
 

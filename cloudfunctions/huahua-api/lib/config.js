@@ -51,6 +51,8 @@ function readEnvPrefer(...keys) {
 /** 后端 platform 字段 → 集合命名空间段。微信 / 匿名不加段，保持已上线的 huahua_xxx 不变。 */
 const PLATFORM_SCOPE = {
   dy: 'tt',
+  tap: 'tap',
+  taptap: 'tap',
   hw: 'hw',
 };
 
@@ -69,7 +71,7 @@ function scopedKeyUpper(platform) {
 }
 
 /**
- * 集合名：微信 huahua_playerData（与线上一致），抖音 huahua_tt_playerData，华为 huahua_hw_playerData。
+ * 集合名：微信 huahua_playerData（与线上一致），抖音 huahua_tt_playerData，Tap huahua_tap_playerData，华为 huahua_hw_playerData。
  * 可用 {SCOPED_GAME_KEY}_{SUFFIX}_COLLECTION 环境变量覆盖，如 HUAHUA_TT_PLAYERDATA_COLLECTION。
  */
 function getCollectionName(suffix, platform) {
@@ -106,6 +108,12 @@ function getMaxBytes() {
   return Number.isFinite(v) && v > 0 ? Math.floor(v) : DEFAULT_MAX_BYTES;
 }
 
+function getPlatformCredential(platform, field) {
+  const upper = gameKeyUpper();
+  const platformUpper = String(platform || '').toUpperCase();
+  return readEnvPrefer(`${upper}_${platformUpper}_${field}`);
+}
+
 function getWechatPushTokens() {
   const gameKey = getGameKey();
   const gk = gameKeyUpper();
@@ -126,4 +134,5 @@ module.exports = {
   getTtlSec,
   getMaxBytes,
   getWechatPushTokens,
+  getPlatformCredential,
 };

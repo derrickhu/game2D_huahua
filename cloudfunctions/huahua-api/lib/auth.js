@@ -3,7 +3,7 @@
  *
  * - wx: 调 api.weixin.qq.com/sns/jscode2session
  * - dy: 调 developer.toutiao.com/api/apps/v2/jscode2session
- * - tap: 当前占位，仅校验 taptapUserId 非空
+ * - tap: tap.login code → Tap jscode2session；没有凭证时回退 taptapUserId / anonId
  * - hw: 华为 playerId，没有则用设备 anonId（仍走 hw 集合）
  * - anon: 直接把客户端传的 anonId 作为 userId 后缀
  */
@@ -14,6 +14,8 @@ const {
   getGameKey,
   getJwtSecret: _readJwtSecret,
   getTtlSec,
+  gameKeyUpper,
+  getPlatformCredential,
 } = require('./config');
 
 const SUPPORTED_PLATFORMS = new Set(['wx', 'dy', 'tap', 'hw', 'anon']);
@@ -41,9 +43,18 @@ async function handleLogin(req) {
   } else if (platform === 'dy') {
     platformUid = await ttCode2Openid(body.code, body.anonymousCode);
   } else if (platform === 'tap') {
-    const id = String(body.taptapUserId || '').trim();
-    if (!id) throw httpError(400, 'NO_TAP_ID', 'taptapUserId 缺失');
-    platformUid = id;
+    const code = String(body.code || '').trim();
+    if (code) {
+      const tapSession = await tapCode2Session(code);
+      platformUid = tapSession.openid;
+    } else {
+      const id = String(body.taptapUserId || body.anonId || '').trim();
+      if (!id) throw httpError(400, 'NO_TAP_ID', 'tap code / taptapUserId 缺失');
+      if (!/^[A-Za-z0-9_\-:.]{8,128}$/.test(id)) {
+        throw httpError(400, 'BAD_TAP_ID', 'tap 帐号 id 非法');
+      }
+      platformUid = id;
+    }
   } else if (platform === 'hw') {
     const playerId = String(body.playerId || '').trim();
     const anonId = String(body.anonId || '').trim();
@@ -128,6 +139,22 @@ async function wxCode2Openid(code) {
     throw httpError(401, 'WX_LOGIN_FAIL', `wx code2session 失败: ${JSON.stringify(data || {})}`);
   }
   return data.openid;
+}
+
+async function tapCode2Session(code) {
+  const appid = process.env.HUAHUA_TAP_APPID || getPlatformCredential('tap', 'APPID');
+  const secret = process.env.HUAHUA_TAP_SECRET || getPlatformCredential('tap', 'SECRET');
+  if (!appid || !secret) throw httpError(500, 'NO_TAP_CFG', `${gameKeyUpper()}_TAP_APPID/${gameKeyUpper()}_TAP_SECRET 未配置`);
+  if (!code) throw httpError(400, 'NO_CODE', 'tap code 缺失');
+  const url = `https://cloud-miniapp.tapapis.cn/auth/v1/jscode2session?appid=${encodeURIComponent(appid)}&secret=${encodeURIComponent(secret)}&js_code=${encodeURIComponent(code)}&grant_type=authorization_code`;
+  const data = await httpGetJson(url);
+  if (!data || !data.openid || data.errcode) {
+    throw httpError(401, 'TAP_LOGIN_FAIL', `tap code2session 失败: ${JSON.stringify(data || {})}`);
+  }
+  return {
+    openid: data.openid,
+    session_key: typeof data.session_key === 'string' ? data.session_key : '',
+  };
 }
 
 async function ttCode2Openid(code, anonymousCode) {

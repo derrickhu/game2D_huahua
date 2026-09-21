@@ -2,6 +2,7 @@
  * 小游戏宿主识别与原生 API 绑定（启动期单一真源，逻辑对齐 src/core/platformDetect.ts）
  *
  * - 抖音宿主：注入 tt → 只走 tt（同时存在的 wx 仅是宿主兼容层）
+ * - Tap 宿主：注入 tap（无 tt）
  * - 华为快游戏：注入 qg（快应用才是 qa）；也可能再塞 wx 壳，必须先认华为
  * - 微信宿主：注入 wx → 只走 wx
  *
@@ -22,6 +23,7 @@ function isHuaweiQuickGameHost() {
 
 function detectMinigamePlatform() {
   if (typeof tt !== 'undefined') return 'douyin';
+  if (typeof tap !== 'undefined') return 'taptap';
   if (isHuaweiQuickGameHost()) return 'huawei';
   if (typeof wx !== 'undefined') return 'wechat';
   return 'unknown';
@@ -30,6 +32,7 @@ function detectMinigamePlatform() {
 function getNativePlatformApi(platform) {
   var p = platform || detectMinigamePlatform();
   if (p === 'douyin') return typeof tt !== 'undefined' ? tt : null;
+  if (p === 'taptap') return typeof tap !== 'undefined' ? tap : null;
   if (p === 'huawei') {
     if (typeof qg !== 'undefined') return qg;
     if (typeof qa !== 'undefined') return qa;

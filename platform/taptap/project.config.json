@@ -1,0 +1,10 @@
+{
+  "description": "花花妙屋 · TapTap。组装目录 build/taptap/，用 Tap 打包工具打 zip 后上传后台。不要打开 minigame/，也不要把 zip / .bundle-taptap 入库。",
+  "projectname": "花花妙屋",
+  "appid": "tapmcskkny8xrrbisn",
+  "setting": {
+    "es6": true,
+    "minified": true,
+    "urlCheck": false
+  }
+}

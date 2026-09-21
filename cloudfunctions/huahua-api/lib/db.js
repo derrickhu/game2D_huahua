@@ -20,7 +20,7 @@ function getDb() {
   return getApp().database();
 }
 
-/** 存档主表：按平台隔离（wx → huahua_playerData，dy → huahua_tt_playerData，hw → huahua_hw_playerData） */
+/** 存档主表：按平台隔离（wx → huahua_playerData，dy → huahua_tt_playerData，tap → huahua_tap_playerData，hw → huahua_hw_playerData） */
 function getCollection(platform) {
   return getDb().collection(getCollectionName('playerData', platform));
 }

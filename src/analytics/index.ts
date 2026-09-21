@@ -88,6 +88,7 @@ export function setAnalyticsUserId(userId: string): void {
 function mapPlatform(): PlatformName {
   if (Platform.isWechat) return 'wechat';
   if (Platform.isDouyin) return 'douyin';
+  if (Platform.isTaptap) return 'taptap';
   if (Platform.isHuawei) return 'huawei';
   return 'h5';
 }

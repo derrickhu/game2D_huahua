@@ -19,7 +19,7 @@ try {
   }
 
   const _sysPlat = platform.getSystemInfoSync().platform;
-  if ((_sysPlat === 'ios' || platform.name === 'huawei') && canvas && typeof canvas.getContext === 'function') {
+  if ((_sysPlat === 'ios' || platform.name === 'taptap' || platform.name === 'huawei') && canvas && typeof canvas.getContext === 'function') {
     const origGetContext = canvas.getContext.bind(canvas);
     canvas.getContext = function(type, opts) {
       if (type === 'webgl2') return null;
