@@ -1,7 +1,8 @@
 /**
  * 纹理缓存 - 管理图片加载和 PIXI.Texture 缓存
  * 支持微信小游戏分包 / CDN 加载：
- *   - 主包：棋盘/顶栏等小图标与启动必需 UI（images/）
+ *   - 微信/抖音主包：棋盘/顶栏等 UI（images/）
+ *   - Tap：images/ 是分包 images，首包只留代码。准入机大约 50KB/s、30 秒，带上图会停在加载页。
  *   - CDN chars：店主全身/半身 + 客人胸像（subpkg_chars/images/）
  *   - CDN panels：签到/花语彩蛋/仓库/合成线/装修大卡等面板底图（subpkg_panels/images/ui/）
  *   - 分包 items：花朵 + 饮品 + 工具 + 棋盘消耗品等（subpkg_items/images/）；PNG 入库规范见 .cursor/rules/board-item-png-spec.mdc → compress_subpkg_items_pngs.py
@@ -2262,7 +2263,8 @@ class TextureCacheClass {
   /**
    * 图片 onerror 时尝试加载微信分包后重试。
    * chars/panels/deco/audio 在 CdnConfig.cdnDirs 中，安装包不携带、game.json 也无对应分包，
-   * 不得 loadSubpackage（必报 does not exist）；仅 items/events 等本地分包可走分包兜底。
+   * 不得 loadSubpackage（必报 does not exist）。items/events 是各端本地分包。
+   * images/ 只在 Tap 的 game.json 里声明成分包，其它端仍在主包，不能对它们 loadSubpackage。
    *
    * 注意：不要用 _itemsLoaded/_eventsLoaded 作为短路条件——标志位为 true 不代表该图片首次
    * img.src 没有因首屏时序竞态失败。统一再 ensure 一次即可（_loadSubpackage 已去重，已加载时瞬时返回），
@@ -2276,6 +2278,7 @@ class TextureCacheClass {
     let subpackage: string | null = null;
     if (normalized.startsWith('subpkg_items/')) subpackage = 'items';
     else if (normalized.startsWith('subpkg_events/')) subpackage = 'events';
+    else if (Platform.isTaptap && normalized.startsWith('images/')) subpackage = 'images';
     if (!subpackage) return false;
     try {
       await this._loadSubpackage(subpackage);

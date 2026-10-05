@@ -14,9 +14,7 @@ export type HuaweiAccount = {
 export const HUAWEI_AG_APPID = '118944555';
 
 export function readHuaweiAppId(api: { getSystemInfoSync?: () => Record<string, unknown> } | null | undefined): string {
-  const fromEnv = String(
-    (typeof import.meta !== 'undefined' && import.meta.env && import.meta.env.VITE_HUAWEI_APPID) || '',
-  ).trim();
+  const fromEnv = String(import.meta.env.VITE_HUAWEI_APPID || '').trim();
   if (fromEnv) return fromEnv;
   if (HUAWEI_AG_APPID) return HUAWEI_AG_APPID;
   try {

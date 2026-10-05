@@ -18,6 +18,7 @@ import {
   mirrorDir,
 } from './lib/mirror-tree.mjs';
 import { wrapHuaweiCjsTree } from './lib/wrap-huawei-cjs.mjs';
+import { readCdnDirs } from './lib/cdn-dirs.mjs';
 
 const rootDir = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 export const CONTENT_DIR = path.join(rootDir, 'minigame');
@@ -213,7 +214,13 @@ export function assemble(platform, { quiet = false, bundleDir, full = false } = 
 
   const stats = createMirrorStats();
   fs.mkdirSync(out, { recursive: true });
-  if (full || !contentLooksCopied(out, platform === 'huawei' ? HUAWEI_SKIP_CDN : new Set())) {
+  // Tap 没有微信开发者工具的 packOptions.ignore。CDN 目录若进 zip，
+  // 宿主会把它们算进主包（准入日志里 main_package ≈ 97MB，加载页停在 3%）。
+  const cdnDirs = platform === 'taptap' ? readCdnDirs(rootDir) : [];
+  const markerSkip = platform === 'huawei'
+    ? HUAWEI_SKIP_CDN
+    : new Set(cdnDirs.filter((dir) => !dir.includes('/')));
+  if (full || !contentLooksCopied(out, markerSkip)) {
     cleanStale(out);
   }
   const contentSkip = new Set(SKIP_FROM_CONTENT);
@@ -223,7 +230,11 @@ export function assemble(platform, { quiet = false, bundleDir, full = false } = 
     contentSkip.add('settings');
     contentSkip.add('dist');
   }
-  mirrorDir(CONTENT_DIR, out, { skip: contentSkip, stats });
+  mirrorDir(CONTENT_DIR, out, {
+    skip: contentSkip,
+    skipRel: cdnDirs.length ? new Set(cdnDirs) : undefined,
+    stats,
+  });
   const leftoverBundle = path.join(CONTENT_DIR, 'game-bundle.js');
   if (fs.existsSync(leftoverBundle)) {
     fs.rmSync(leftoverBundle);
@@ -252,11 +263,20 @@ export function assemble(platform, { quiet = false, bundleDir, full = false } = 
       fail('build/huawei/game-bundle.js 仍含 "%eval%":eval，先检查 pixi-unsafe-eval-patch');
     }
   }
+  const docExt = new Set(['.doc', '.docx', '.pdf', '.md']);
   mirrorDir(platformSrc, out, {
     skip: new Set(['project.config.json']),
+    skipExt: docExt,
     prune: false,
     stats,
   });
+  // platform 镜像 prune=false，已经拷进去的说明文档不会自己消失
+  if (fs.existsSync(out)) {
+    for (const name of fs.readdirSync(out)) {
+      if (!docExt.has(path.extname(name).toLowerCase())) continue;
+      fs.rmSync(path.join(out, name), { force: true });
+    }
+  }
   if (platform === 'huawei') {
     if (!fs.existsSync(path.join(out, 'manifest.json'))) {
       fail('build/huawei/ 缺少 manifest.json');

@@ -277,6 +277,30 @@ try {
     : null;
   if (_pack) _diag('pack=' + _pack);
 } catch (e) { /* */ }
+// 宿主 URL 在 base 不是字符串时直接抛，bundle 里的 new URL 会把启动打断。
+try {
+  var _urlHost = typeof globalThis !== 'undefined' ? globalThis : GameGlobal;
+  var _NativeURL = _urlHost && _urlHost.URL;
+  if (typeof _NativeURL === 'function' && !_NativeURL.__huahuaSafe) {
+    var _urlFallback = 'https://taptap.local/';
+    var _SafeURL = function URL(url, base) {
+      var u = typeof url === 'string' ? url : '';
+      var b = (typeof base === 'string' && base) ? base : _urlFallback;
+      try { return new _NativeURL(u, b); } catch (e1) {
+        return new _NativeURL(_urlFallback);
+      }
+    };
+    _SafeURL.prototype = _NativeURL.prototype;
+    _SafeURL.__huahuaSafe = true;
+    try { if (_NativeURL.createObjectURL) _SafeURL.createObjectURL = _NativeURL.createObjectURL.bind(_NativeURL); } catch (e2) { /* */ }
+    try { if (_NativeURL.revokeObjectURL) _SafeURL.revokeObjectURL = _NativeURL.revokeObjectURL.bind(_NativeURL); } catch (e3) { /* */ }
+    _urlHost.URL = _SafeURL;
+  }
+  var _docForUrl = typeof document !== 'undefined' ? document : null;
+  if (_docForUrl && typeof _docForUrl.baseURI !== 'string') {
+    _docForUrl.baseURI = 'https://taptap.local/game-bundle.js';
+  }
+} catch (eUrl) { /* URL 补丁失败不挡启动 */ }
 try {
   require('./game-bundle.js');
 } catch (e) {

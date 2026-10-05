@@ -130,6 +130,8 @@ function captureHostCanvas() {
 
   if (!acc.found) {
     var apis = [];
+    // 不要在这里调 tap.createCanvas。主屏只能由 adapter 的第一次 createCanvas 认领，
+    // 提前调用会把主屏用掉，后面再开的才是真正上屏的那块。
     try { if (typeof qg !== 'undefined' && qg) apis.push(['qg', qg]); } catch (_) { /* */ }
     try { if (typeof qa !== 'undefined' && qa) apis.push(['qa', qa]); } catch (_) { /* */ }
     for (var i = 0; i < apis.length; i++) {

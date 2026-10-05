@@ -149,15 +149,26 @@ function followedStat(abs, dirent) {
   return dirent;
 }
 
+function relSkipped(rel, skipRel) {
+  if (!skipRel || !rel) return false;
+  for (const prefix of skipRel) {
+    if (rel === prefix || rel.startsWith(`${prefix}/`)) return true;
+  }
+  return false;
+}
+
 /**
  * @param {string} from
  * @param {string} to
- * @param {{ skip?: Set<string>, prune?: boolean, stats?: ReturnType<typeof createMirrorStats> }} [opts]
+ * @param {{ skip?: Set<string>, skipRel?: Set<string>, skipExt?: Set<string>, rel?: string, prune?: boolean, stats?: ReturnType<typeof createMirrorStats> }} [opts]
  */
 export function mirrorDir(from, to, opts = {}) {
   const skip = opts.skip ?? new Set();
   const prune = opts.prune !== false;
   const stats = opts.stats ?? createMirrorStats();
+  const rel = opts.rel ?? '';
+  const skipRel = opts.skipRel ?? null;
+  const skipExt = opts.skipExt ?? null;
 
   const toStat = lstatOrNull(to);
   prepareDestForDir(to, toStat, stats);
@@ -167,12 +178,16 @@ export function mirrorDir(from, to, opts = {}) {
   const keep = new Set();
   for (const entry of fs.readdirSync(from, { withFileTypes: true })) {
     if (entry.name.startsWith('.') || skip.has(entry.name)) continue;
+    if (skipExt && skipExt.has(path.extname(entry.name).toLowerCase())) continue;
+    const childRel = rel ? `${rel}/${entry.name}` : entry.name;
+    // 命中的目录不进 keep，prune 会把产物里的旧副本删掉（Tap 包不能带 CDN 大目录）
+    if (relSkipped(childRel, skipRel)) continue;
     keep.add(entry.name);
     const src = path.join(from, entry.name);
     const dest = path.join(to, entry.name);
     const kind = followedStat(src, entry);
     if (kind.isDirectory()) {
-      mirrorDir(src, dest, { prune, stats });
+      mirrorDir(src, dest, { prune, stats, skipRel, skipExt, rel: childRel });
       continue;
     }
     atomicCopyFile(src, dest, fs.statSync(src), stats);

@@ -45,10 +45,11 @@ function resolveHuaweiApi(): any {
 }
 
 export function detectMinigamePlatform(): PlatformName {
-  if (typeof import.meta !== 'undefined' && import.meta.env) {
-    if (import.meta.env.VITE_PLATFORM === 'taptap') return 'taptap';
-    if (import.meta.env.VITE_PLATFORM === 'huawei') return 'huawei';
-  }
+  // 不要写 typeof import.meta。Vite 会把整段 import.meta 编成
+  // new URL("game-bundle.js", document.baseURI)，红米上 baseURI 不是字符串，
+  // 包一加载就抛 URL constructor requires string arguments，画面停在黑屏。
+  if (import.meta.env.VITE_PLATFORM === 'taptap') return 'taptap';
+  if (import.meta.env.VITE_PLATFORM === 'huawei') return 'huawei';
   if (typeof tt !== 'undefined') return 'douyin';
   if (typeof tap !== 'undefined') return 'taptap';
   if (isHuaweiQuickGameHost()) return 'huawei';

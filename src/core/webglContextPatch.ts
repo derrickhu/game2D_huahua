@@ -89,9 +89,15 @@ export function resolveHuaweiViewSize(opts: {
   };
 }
 
-/** 华为宿主对 stencil / MSAA / 第二块 WebGL canvas 很脆，探测从最简属性开始 */
+/**
+ * Tap Android 的 libwebglhost 在部分机型上会把 alpha 画布合成到黑色窗口上，
+ * 清屏色写了也是纯黑（准入截图 luma_std=0）。先要一块不透明、保留缓冲的 WebGL1。
+ * stencil / MSAA 仍不要开，那两项会把主屏搞死。
+ */
 export function guardedWebGLContextAttempts(): Record<string, unknown>[] {
   return [
+    { antialias: false, preserveDrawingBuffer: true, stencil: false, depth: false, alpha: false },
+    { antialias: false, preserveDrawingBuffer: true, stencil: false, depth: false, alpha: true },
     { antialias: false, preserveDrawingBuffer: false, stencil: false, depth: true, alpha: true },
     { antialias: false, preserveDrawingBuffer: false },
     {},
@@ -113,7 +119,18 @@ export function acquireMainWebGLContext(canvas: unknown): any {
   for (const opts of attempts) {
     try {
       const gl = c.getContext('webgl', opts) || c.getContext('experimental-webgl', opts);
-      if (gl) return gl;
+      if (!gl) continue;
+      // 上下文刚拿到就铺一层不透明底，避免宿主在首帧 Pixi 之前把透明缓冲合成成黑屏
+      try {
+        const g = gl as {
+          clearColor?: (r: number, g: number, b: number, a: number) => void;
+          clear?: (mask: number) => void;
+          COLOR_BUFFER_BIT?: number;
+        };
+        g.clearColor?.(1, 0.961, 0.933, 1);
+        if (g.COLOR_BUFFER_BIT) g.clear?.(g.COLOR_BUFFER_BIT);
+      } catch { /* 清屏失败不挡后续 Pixi */ }
+      return gl;
     } catch { /* 换下一组属性 */ }
   }
   return null;

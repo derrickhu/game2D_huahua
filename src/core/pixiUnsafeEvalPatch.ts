@@ -98,10 +98,13 @@ if (_api || Platform.isCanvasHostGuarded) {
           if (ctx && typeof ctx.fillText === 'function') return { canvas: c, ctx };
         }
       } catch { /* */ }
+      // Tap 的主屏已经在 adapter 里 createCanvas 过一次。这里再调会开出第二块 SurfaceView，
+      // 主屏不再提交缓冲（OPPO 日志里的 InstantGameActivity#1，拆掉后窗口纯黑）。
+      if (Platform.isTaptap) return null;
       try {
         if (typeof api.createCanvas === 'function') {
           const c = api.createCanvas();
-          if (c && !_isMainCanvas(c)) {
+          if (c && !_isMainCanvas(c) && !c.__huahuaMeasure && !c.__tapTextWrap) {
             const ctx = c.getContext?.('2d');
             if (ctx && typeof ctx.fillText === 'function') return { canvas: c, ctx };
           }

@@ -11,6 +11,10 @@
   },
   "subPackages": [
     {
+      "name": "images",
+      "root": "images/"
+    },
+    {
       "name": "items",
       "root": "subpkg_items/"
     },

@@ -20,6 +20,9 @@ const document = {
   body,
   documentElement,
   readyState: 'complete',
+  // Pixi 用 new URL(src, document.baseURI) 判断跨域。Tap 的 URL 要求 base 必须是字符串，
+  // 缺了就在进主场景前把整个 bundle 打崩（红米：URL constructor requires string arguments）。
+  baseURI: 'https://taptap.local/game-bundle.js',
   __huahuaAdapterDoc: true,
 
   createElement(tag) {

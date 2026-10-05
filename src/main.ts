@@ -197,6 +197,7 @@ async function main(): Promise<void> {
 
     Game.stage.sortableChildren = true;
     const loadingOverlay = new LoadingScreenOverlay();
+    const loadingShownAt = Date.now();
     Game.stage.addChild(loadingOverlay);
     let initialSaveLoaded = false;
     let runtimeReadyForCloudReload = false;
@@ -383,6 +384,13 @@ async function main(): Promise<void> {
       && GameGlobal.__huahuaBootHud.parentNode.removeChild(GameGlobal.__huahuaBootHud);
       GameGlobal.__huahuaBootHud = null; } catch { /* */ }
     bootStep('main-ok');
+    // 华为核准要看启动页上的适龄提示、公告、著作权人和登记号，停留不宜过短。
+    if (Platform.isHuawei) {
+      const remain = 2500 - (Date.now() - loadingShownAt);
+      if (remain > 0) {
+        await new Promise((resolve) => setTimeout(resolve, remain));
+      }
+    }
     Game.stage.removeChild(loadingOverlay);
     loadingOverlay.destroy({ children: true });
     runtimeReadyForCloudReload = true;

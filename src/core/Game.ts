@@ -355,6 +355,9 @@ class GameClass {
 
     this._initialized = true;
     this._bindViewportResize();
+    // 主屏 SurfaceView 只有真正 swap 过才不是黑的。先交一帧底色，
+    // 别等下一帧把文字纹理带上，异常把这次 present 吃掉。
+    if (Platform.isTaptap) this._renderGuarded(renderer);
   }
 
   /** 监听可用窗口变化。返回取消监听函数。 */
@@ -551,14 +554,22 @@ class GameClass {
   private _renderGuarded(renderer: PIXI.IRenderer): void {
     try {
       renderer.render(this.stage);
+      return;
     } catch (e) {
       const desc = String((e as any)?.message || e);
-      if (this._renderFailSeen.has(desc) || this._renderFailSeen.size >= 3) return;
-      this._renderFailSeen.add(desc);
-      console.error('[Game] render-fail', errText(e));
-      try { (GameGlobal as any).__bootDiag?.('render-fail ' + desc); } catch { /* */ }
-      try { (GameGlobal as any).__showBootDiag?.(); } catch { /* */ }
+      if (!this._renderFailSeen.has(desc) && this._renderFailSeen.size < 3) {
+        this._renderFailSeen.add(desc);
+        console.error('[Game] render-fail', errText(e));
+        try { (GameGlobal as any).__bootDiag?.('render-fail ' + desc); } catch { /* */ }
+        try { (GameGlobal as any).__showBootDiag?.(); } catch { /* */ }
+      }
     }
+    // 抛异常的那一帧不会 swap，SurfaceView 就停在宿主的黑缓冲上。
+    const stage = this.stage;
+    const prev = stage.visible;
+    stage.visible = false;
+    try { renderer.render(stage); } catch { /* 底色也交不出去就保持上一帧 */ }
+    stage.visible = prev;
   }
 
   /** 设计坐标转实际像素 */

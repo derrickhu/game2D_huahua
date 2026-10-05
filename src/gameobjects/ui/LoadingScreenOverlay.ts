@@ -18,14 +18,26 @@ const TITLE_NUDGE_Y = -30;
 const TITLE_BELOW_SAFE = 20;
 
 /** 合规文案区距屏幕底边（设计坐标） */
-const LEGAL_BOTTOM_INSET = 28;
-/** 进度条与合规文案间距 */
-const BAR_ABOVE_LEGAL_GAP = 14;
-const LEGAL_FONT_SIZE = 13;
-const LEGAL_LINE_HEIGHT = 19;
+const LEGAL_BOTTOM_INSET = 22;
+/** 进度条与适龄提示框间距 */
+const BAR_ABOVE_LEGAL_GAP = 12;
+const LEGAL_FONT_SIZE = 15;
+const LEGAL_LINE_HEIGHT = 21;
+/** 适龄提示框：审核要求黄框，和公告、著作权人、登记号同屏 */
+const AGE_BOX_PAD_X = 14;
+const AGE_BOX_PAD_Y = 8;
+const AGE_BOX_RADIUS = 10;
+const AGE_BORDER = 0xffe14a;
+const AGE_FILL = 0x1a1408;
+const PANEL_FILL = 0x102018;
+const AGE_TEXT = [
+  '适龄提示  8+',
+  '本游戏适合年满8周岁及以上的用户使用。',
+].join('\n');
 const LOADING_LEGAL_TEXT = [
+  '游戏公告：欢迎来到花花妙屋。本作为休闲合成经营，请适度游戏。',
   '著作权人：深圳幸运呱科技有限公司',
-  '软著编号：2026SR0689689',
+  '登记号：2026SR0689689',
   '',
   '《健康游戏忠告》',
   '抵制不良游戏，拒绝盗版游戏。注意自我保护，谨防受骗上当。',
@@ -56,6 +68,9 @@ export class LoadingScreenOverlay extends PIXI.Container {
   private _track = new PIXI.Graphics();
   private _fill = new PIXI.Graphics();
   private _pctText: PIXI.Text;
+  private _legalBg = new PIXI.Graphics();
+  private _ageBox = new PIXI.Graphics();
+  private _ageText: PIXI.Text;
   private _legalText: PIXI.Text;
   private _barW = 480;
   private _barX = 0;
@@ -86,6 +101,20 @@ export class LoadingScreenOverlay extends PIXI.Container {
     this._pctText.anchor.set(0.5, 0.5);
     this._pctText.zIndex = 13;
 
+    this._legalBg.zIndex = 13;
+    this._ageBox.zIndex = 14;
+    this._ageText = new PIXI.Text(AGE_TEXT, {
+      fontSize: 16,
+      fill: 0xfff6d4,
+      fontFamily: FONT_FAMILY,
+      fontWeight: 'bold',
+      align: 'center',
+      lineHeight: 22,
+      wordWrap: true,
+    });
+    this._ageText.anchor.set(0.5, 0.5);
+    this._ageText.zIndex = 15;
+
     this._legalText = new PIXI.Text(LOADING_LEGAL_TEXT, {
       fontSize: LEGAL_FONT_SIZE,
       fill: 0xffffff,
@@ -107,6 +136,9 @@ export class LoadingScreenOverlay extends PIXI.Container {
     this.addChild(this._track);
     this.addChild(this._fill);
     this.addChild(this._pctText);
+    this.addChild(this._legalBg);
+    this.addChild(this._ageBox);
+    this.addChild(this._ageText);
     this.addChild(this._legalText);
     this._relayout();
   }
@@ -138,13 +170,19 @@ export class LoadingScreenOverlay extends PIXI.Container {
     this._barW = Math.min(BAR_MAX_W, this._lw - BAR_PAD_X * 2);
     this._barX = (this._lw - this._barW) / 2;
 
-    this._legalText.style.wordWrapWidth = this._barW;
+    this._legalText.style.wordWrapWidth = this._barW - 16;
     this._legalText.position.set(this._lw * 0.5, this._lh - LEGAL_BOTTOM_INSET);
-    this._barY = this._legalText.position.y
-      - this._legalText.height
-      - BAR_ABOVE_LEGAL_GAP
-      - BAR_H;
 
+    this._ageText.style.wordWrapWidth = this._barW - AGE_BOX_PAD_X * 2;
+    const ageW = this._barW;
+    const ageH = this._ageText.height + AGE_BOX_PAD_Y * 2;
+    const ageX = this._barX;
+    const ageY = this._legalText.position.y - this._legalText.height - 8 - ageH;
+    this._ageText.position.set(ageX + ageW * 0.5, ageY + ageH * 0.5);
+    this._drawAgeBox(ageX, ageY, ageW, ageH);
+    this._drawLegalBg(ageX, ageY, ageW, this._legalText.position.y - ageY + 8);
+
+    this._barY = ageY - BAR_ABOVE_LEGAL_GAP - BAR_H;
     this._pctText.position.set(this._lw * 0.5, this._barY + BAR_H * 0.5);
 
     this._drawShadow();
@@ -208,6 +246,21 @@ export class LoadingScreenOverlay extends PIXI.Container {
   private _syncPercentLabel(): void {
     const n = Math.round(this._progress * 100);
     this._pctText.text = `${n}%`;
+  }
+
+  private _drawAgeBox(x: number, y: number, w: number, h: number): void {
+    this._ageBox.clear();
+    this._ageBox.lineStyle(4, AGE_BORDER, 1);
+    this._ageBox.beginFill(AGE_FILL, 0.88);
+    this._ageBox.drawRoundedRect(x, y, w, h, AGE_BOX_RADIUS);
+    this._ageBox.endFill();
+  }
+
+  private _drawLegalBg(x: number, y: number, w: number, h: number): void {
+    this._legalBg.clear();
+    this._legalBg.beginFill(PANEL_FILL, 0.55);
+    this._legalBg.drawRoundedRect(x, y - 4, w, h, AGE_BOX_RADIUS);
+    this._legalBg.endFill();
   }
 
   private _drawShadow(): void {

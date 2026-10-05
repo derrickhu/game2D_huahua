@@ -9,6 +9,7 @@ const {
   createHuaweiCanvas,
   createHuaweiImage,
 } = require('../runtime.js');
+const { createMeasureCanvas } = require('./safeCanvas');
 const _platformName = detectMinigamePlatform();
 const _api = getNativePlatformApi(_platformName);
 const _dummyCanvas = { width: 0, height: 0, getContext: function() { return null; } };
@@ -85,15 +86,35 @@ function _removeStorage(key) {
   }
 }
 
+let _tapScreenIssued = false;
+
+function _sealTapCreateCanvas() {
+  if (!_api || _api.__huahuaTapCanvasSealed || typeof _api.createCanvas !== 'function') return;
+  _api.__huahuaTapCanvasSealed = true;
+  // 业务侧还会直接调 tap.createCanvas()（文字光栅、探测）。第二次原生画布就是日志里的 #1。
+  _api.createCanvas = function() {
+    return createMeasureCanvas(1, 1);
+  };
+}
+
 function _createCanvas() {
   if (_platformName === 'huawei' && typeof createHuaweiCanvas === 'function') {
     const hw = createHuaweiCanvas();
     if (hw) return hw;
   }
+  if (_platformName === 'taptap' && _tapScreenIssued) {
+    return createMeasureCanvas(1, 1);
+  }
   if (_api && typeof _api.createCanvas === 'function') {
     try {
       const c = _api.createCanvas();
-      if (c && typeof c.getContext === 'function') return c;
+      if (c && typeof c.getContext === 'function') {
+        if (_platformName === 'taptap') {
+          _tapScreenIssued = true;
+          _sealTapCreateCanvas();
+        }
+        return c;
+      }
     } catch (e) {
       console.warn('[platform] createCanvas 失败:', e);
     }

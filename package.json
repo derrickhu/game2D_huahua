@@ -1,7 +1,7 @@
 {
   "name": "huahua",
   "version": "1.6.34",
-  "tapVersion": "1.0.1",
+  "tapVersion": "1.0.5",
   "type": "module",
   "scripts": {
     "build": "vite build && rimraf .bundle/index.html minigame/index.html && node scripts/build-platform.mjs",
