@@ -95,6 +95,12 @@ export const FLOWER_FARM_HOUSE_UNLOCK_LEVEL = 30;
 /** 花田农舍购买解锁所需花愿 */
 export const FLOWER_FARM_HOUSE_PURCHASE_COST = 180000;
 
+/**
+ * 晴汐花湾与第一栋汐岸阁楼同时开放。
+ * 暖阳花野主线最后一栋是 36 级花园别墅，40 级是下一段收藏的起点。
+ */
+export const TIDE_BAY_UNLOCK_LEVEL = 40;
+
 /** 大地图「当前店铺」实时缩略图：截取最长边像素（略小于节点 thumbSize，省显存） */
 export const LIVE_HOUSE_THUMB_CAPTURE_MAX = 160;
 
@@ -222,3 +228,83 @@ export const MAP_NODES: MapNodeDef[] = [
     targetSceneId: 'flower_farm_house',
   },
 ];
+
+/** 新地图上预留的建房点。只记坐标，大地图上先不放房子。 */
+export interface WorldMapReservedPlot {
+  id: string;
+  x: number;
+  y: number;
+}
+
+export interface WorldMapRegionDef {
+  id: string;
+  /** 顶栏下拉框显示名 */
+  name: string;
+  /** TextureCache key */
+  bgKey: string;
+  nodes: readonly MapNodeDef[];
+  reservedPlots: readonly WorldMapReservedPlot[];
+  /** 未达到时下拉项显示锁和「N级解锁」，不能切换进去。不填表示已随大地图开放。 */
+  unlockLevel?: number;
+}
+
+/**
+ * 晴汐花湾的空地，按生图后的浅色沙洲中心标在内容坐标上。
+ * 比暖阳花野现有建筑位更多，后续接新房时再改成 MapNodeDef。
+ */
+const TIDE_BAY_NODES: MapNodeDef[] = [
+  {
+    id: 'tide_loft',
+    type: 'house',
+    label: '汐岸阁楼',
+    /** 左上第一块浅色空地。锚点在图心，地基落在沙地中下部 */
+    x: 185,
+    y: 510,
+    thumbKey: 'worldmap_thumb_tide_loft',
+    thumbSize: 300,
+    unlockLevel: TIDE_BAY_UNLOCK_LEVEL,
+    useLiveMapThumb: false,
+    targetSceneId: 'tide_loft',
+  },
+];
+
+const TIDE_BAY_RESERVED_PLOTS: WorldMapReservedPlot[] = [
+  { id: 'tide_plot_02', x: 593, y: 554 },
+  { id: 'tide_plot_03', x: 1125, y: 627 },
+  { id: 'tide_plot_04', x: 2086, y: 505 },
+  { id: 'tide_plot_05', x: 613, y: 905 },
+  { id: 'tide_plot_06', x: 1556, y: 856 },
+  { id: 'tide_plot_07', x: 258, y: 1159 },
+  { id: 'tide_plot_08', x: 2032, y: 1014 },
+  { id: 'tide_plot_09', x: 1233, y: 1086 },
+  { id: 'tide_plot_10', x: 1667, y: 1259 },
+];
+
+export const WORLD_MAP_REGIONS: readonly WorldMapRegionDef[] = [
+  {
+    id: 'sunny_meadow',
+    name: '暖阳花野',
+    bgKey: 'worldmap_bg',
+    nodes: MAP_NODES,
+    reservedPlots: [],
+  },
+  {
+    id: 'sunny_tide_bay',
+    name: '晴汐花湾',
+    bgKey: 'worldmap_bg_tide_bay',
+    nodes: TIDE_BAY_NODES,
+    reservedPlots: TIDE_BAY_RESERVED_PLOTS,
+    unlockLevel: TIDE_BAY_UNLOCK_LEVEL,
+  },
+];
+
+export function getWorldMapRegion(id: string): WorldMapRegionDef {
+  return WORLD_MAP_REGIONS.find(region => region.id === id) ?? WORLD_MAP_REGIONS[0];
+}
+
+/** 当前店铺所在的大地图；没有对应房子时回到第一张。 */
+export function findWorldMapRegionByScene(sceneId: string | undefined): WorldMapRegionDef {
+  if (!sceneId) return WORLD_MAP_REGIONS[0];
+  return WORLD_MAP_REGIONS.find(region => region.nodes.some(node => node.targetSceneId === sceneId))
+    ?? WORLD_MAP_REGIONS[0];
+}

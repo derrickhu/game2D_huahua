@@ -294,6 +294,10 @@ const PANELS_IMAGE_MAP: Record<string, string> = {
 
   // ---- 大地图 ----
   worldmap_bg: 'subpkg_panels/images/ui/worldmap_bg.png',
+  /** 第二张大地图：晴汐花湾 */
+  worldmap_bg_tide_bay: 'subpkg_panels/images/ui/worldmap_bg_tide_bay.png',
+  /** 晴汐花湾第一栋：汐岸阁楼外观 */
+  worldmap_thumb_tide_loft: 'subpkg_panels/images/ui/worldmap_thumb_tide_loft.png',
   /** 大地图「花花妙屋」静态花坊外观（与装修房壳同系粉瓦白墙，完整店面） */
   worldmap_house_flower_shop: 'subpkg_panels/images/ui/worldmap_house_flower_shop.png',
   /** 大地图蝴蝶小屋立绘（NB2+rembg；原茶室占位已替换） */
@@ -663,6 +667,7 @@ const DECO_IMAGE_MAP: Record<string, string> = {
   house_bg:   'subpkg_deco/images/house/bg_integrated_grass_nb2.jpg',
   house_bg_dream_cloud_sky_nb2: 'subpkg_deco/images/house/bg_dream_cloud_sky_nb2.jpg',
   house_bg_flower_farm_fields_nb2: 'subpkg_deco/images/house/bg_flower_farm_fields_nb2.jpg',
+  house_bg_tide_bay_nb2: 'subpkg_deco/images/house/bg_tide_bay_nb2.jpg',
 
   // ---- 新家具素材 furniture/ (含 NB2 扩展，已扣底) ----
   // 花架
@@ -1185,6 +1190,10 @@ const DECO_IMAGE_MAP: Record<string, string> = {
   bg_room_tea_house_darkwood_two_story_nb2: 'subpkg_deco/images/house/bg_room_tea_house_darkwood_two_story_nb2.png',
   /** 橡树小屋 — 童话森林双层树屋 cutaway 空壳 */
   bg_room_forest_treehouse_oak_nb2: 'subpkg_deco/images/house/bg_room_forest_treehouse_oak_nb2.png',
+  /** 晴汐花湾汐岸阁楼默认房壳 */
+  bg_room_tide_loft_nb2: 'subpkg_deco/images/house/bg_room_tide_loft_nb2.png',
+  /** 汐岸阁楼自然换景：屋顶野花与藤叶 */
+  bg_room_tide_loft_bloom_roof_nb2: 'subpkg_deco/images/house/bg_room_tide_loft_bloom_roof_nb2.png',
   bg_room_forest_treehouse_spring_bloom_nb2: 'subpkg_deco/images/house/bg_room_forest_treehouse_spring_bloom_nb2.png',
   /** 梦云小屋 — 云朵双层 cutaway 空壳（支线场景默认壳） */
   bg_room_dream_cloud_two_story_nb2: 'subpkg_deco/images/house/bg_room_dream_cloud_two_story_nb2.png',
@@ -1246,6 +1255,7 @@ const SHOP_WARMUP_KEYS = [
   'house_bg',
   'house_bg_dream_cloud_sky_nb2',
   'house_bg_flower_farm_fields_nb2',
+  'house_bg_tide_bay_nb2',
   'house_shop',
   'owner_full_default',
   'owner_full_default_blink',
@@ -1339,6 +1349,7 @@ const TUTORIAL_DECO_KEYS = [
 /** 大地图节点用到的缩略图须在此列表：否则 open 前 preload 不等人齐，首帧易落成五边形占位 */
 const WORLDMAP_WARMUP_KEYS = [
   'worldmap_bg',
+  'worldmap_bg_tide_bay',
   'worldmap_house_flower_shop',
   'worldmap_thumb_butterfly_house',
   'worldmap_thumb_cake_shop',
@@ -1347,6 +1358,7 @@ const WORLDMAP_WARMUP_KEYS = [
   'worldmap_thumb_forest_treehouse',
   'worldmap_thumb_dream_cloud_house',
   'worldmap_thumb_flower_farm_house',
+  'worldmap_thumb_tide_loft',
   'worldmap_thumb_wishing_fountain_1',
   'worldmap_thumb_wishing_fountain_2',
   'icon_worldmap',

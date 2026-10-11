@@ -20,6 +20,9 @@ minigame/**/tmp*.png
 .tmp/
 # Cursor / 本地生图流水日志
 .cursor*_*.log
+.cursor/hooks/.last-pack-ok
+.cursor/hooks/.pack.lock
+.cursor/hooks/pack.log
 
 # CodeBuddy 项目数据
 .codebuddy/

@@ -9,7 +9,7 @@
  * 友谊卡系统仅由 2 级功能入口控制，不再按熟客等级生成解锁项。
  */
 
-import { WORLD_MAP_UNLOCK_LEVEL } from './WorldMapConfig';
+import { TIDE_BAY_UNLOCK_LEVEL, WORLD_MAP_UNLOCK_LEVEL } from './WorldMapConfig';
 
 export type LevelUnlockEntryKind =
   | 'feature'        // 玩法功能解锁（花语泡泡 / 组合单 / 高阶宝箱等）
@@ -352,6 +352,23 @@ const LEVEL_UNLOCK_BASE: Record<number, Omit<LevelUnlockDef, 'level'>> = {
         title: '银宝箱补给',
         desc: '本次五级里程碑额外附赠银宝箱 1 份。',
         iconKey: 'chest_2',
+      },
+    ],
+  },
+  [TIDE_BAY_UNLOCK_LEVEL]: {
+    ceremonyTitle: '晴汐花湾',
+    entries: [
+      {
+        kind: 'map',
+        title: '晴汐花湾开放',
+        desc: '新的大地图开启，海岸空地与汐岸阁楼一起解锁。',
+        iconKey: 'ui_lvup_world_map',
+      },
+      {
+        kind: 'map',
+        title: '汐岸阁楼开放',
+        desc: '晴汐花湾第一栋双层阁楼可进入，花檐野阁也能换上。',
+        iconKey: 'worldmap_thumb_tide_loft',
       },
     ],
   },

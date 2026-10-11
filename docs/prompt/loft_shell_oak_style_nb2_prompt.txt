@@ -1,0 +1,18 @@
+Square 1:1 game asset. One single room shell, large and centered. The attached image is a structure blueprint only. Redraw that one building. Do not draw a second copy. Do not add a tree.
+
+STRUCTURE, match the blueprint:
+- Open-front 2:1 isometric dollhouse. Lower floor is a plan square in front. Upper floor is a solid podium against the back wall, shorter in depth than the lower floor, same width, ending flush with the right wall.
+- Left wall full height. Back wall above the upper floor ends at the right corner post. No extra wall panel past that corner. No floating eave past the corner.
+- Right wall on the floor's right edge, stopping before the front tip, with a small front-right notch.
+- One small wooden stair tight against the left wall, landing on the front edge of the upper floor.
+- Two small wooden steps inside the front-right notch only.
+- No room under the upper floor.
+
+PAINT, refined oak-treehouse storybook finish:
+- Thin warm brown outlines, visible wood grain, soft plaster mottling, delicate highlights. Precise and airy, not flat vector, not pink clay tiles.
+- Mossy green-brown wooden shingle eaves along the left wall, the back wall, and the right wall only. Eaves stop at the corner posts. A little soft moss on the shingles. The eaves never lid the floors.
+- Cream plaster walls. Slender caramel wood posts. Pale cream oak plank floors with fine grain on both levels.
+- A low ring of pale pebbles under the front edge. Two tiny red-capped mushrooms and a few fern tips outside the foundation corners only.
+- NO windows. No glass. No round porthole. No curtains. No tree trunk. No ladder on a tree. No lantern. No furniture. No characters.
+
+Background outside the building: pure solid white. No text, no numbers, no logo, no watermark.

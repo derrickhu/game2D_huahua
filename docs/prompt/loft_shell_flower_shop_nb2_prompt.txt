@@ -1,0 +1,25 @@
+Square 1:1 game asset. The attached image is a HARD STRUCTURE BLUEPRINT of an open-front two-story room shell. Redraw that exact building as a finished flower-shop room shell. Keep the blueprint's camera, footprint, and wall plan. Change only materials and built-in architectural decoration.
+
+STRUCTURE LOCK, copy the blueprint exactly:
+- Classic 2:1 isometric dollhouse, camera from the upper left. Open front. No front wall, no glass facade, no closed box.
+- LOWER FLOOR is a plan square, in front, closer to the camera. Its front edge and side edges are equal in plan.
+- UPPER FLOOR is a solid raised podium against the back wall only. It is clearly SHORTER in depth than the lower floor, not a square, and it does not cover the lower floor. Same width as the lower floor. The front face of the podium is a plain vertical wall.
+- LEFT WALL runs the full depth and full height, from the back corner to the front edge of the lower floor.
+- BACK WALL sits above the upper floor. It continues PAST the right corner of the floors: a straight upper wall segment sticks out to the screen-right beyond the floor, same height as the rest of the back wall, not dropping to the ground.
+- RIGHT WALL stands on the right edge of the floors, full height beside both floors, and stops short of the front tip, leaving a small front-right notch.
+- INTERIOR STAIRS: one small straight flight tight against the left wall, landing on the front edge of the upper floor. Narrow, about six treads, not huge.
+- EXTERIOR STEPS: two small treads sitting inside the front-right notch, flush with the lower floor, not stuck outside the footprint.
+- No crawlspace under the upper floor. No extra rooms, no balcony wing, no second staircase.
+
+DECORATION, same language as the existing pastel flower-shop room shell:
+- Roof eaves only, never a lid over the floors. Pastel pink scalloped clay tiles, soft coral-pink, each tile a rounded half-cylinder with a gentle highlight. Eaves overhang outward past the walls. A thick rounded pink ridge roll caps the outer corner where the left-wall eave meets the back-wall eave, and another small roll caps the far tip of the extended back wall. The eave follows the extended back-wall segment all the way to its tip.
+- Walls: warm ivory plaster, slim, not chunky stone. Slender warm chestnut wood posts at the left front corner, the back corner, the floor's right corner, and the tip of the extended wall. Thin honey wood baseboard.
+- Windows, empty of curtains: caramel wood frames, pale aqua-mint glass, soft inner glow. One 3-by-2 window on the left wall above the stair. One 3-by-2 window centered on the back wall above the upper floor. One smaller 2-by-2 window on the right wall. No window on the open front. No window on the short extended tip if it would break the wall end.
+- Both floors: fine honey-oak herringbone of many narrow strips, at least eight zigzag repeats across the lower floor. Upper floor uses the same wood. The podium front face stays warm cream with a thin darker wood nosing along the top edge.
+- Foundation: a low band of warm light-gray cobblestones under the front edge of the lower floor only.
+- Stairs and the two exterior steps: the same honey wood, slim treads, a thin wood handrail only on the interior stair.
+- A few tiny grass tufts at the cobblestone edge. No garden, no trees, no fence, no flowers in pots, no furniture.
+
+Style: 2D hand-painted kawaii mobile merge-game art, high-key daylight, soft taupe-brown outlines, rounded edges, gentle shading. Single soft light from the upper left. Wall bases and floor edges stay near the blueprint's shallow isometric angle, about 27 degrees from horizontal, not a 45-degree diamond and not a flat side view.
+
+Background outside the building: pure solid white. No scenery, no cast-shadow card, no text, no numbers, no logo, no watermark, no characters, no furniture.

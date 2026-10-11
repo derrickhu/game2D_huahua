@@ -1,0 +1,5 @@
+One single continuous mobile game world map, same pastel 2D style as the reference: thin warm olive outlines, flat gentle shading, puffy clouds, blue mountains, top-down three-quarter view. Do not copy the inland meadow from the reference.
+
+A sunny flower coast. Most of the ground is green grass and pale sand. A small turquoise cove sits only near the top center and stays small. A wooden boardwalk wanders between clearings. Round trees, a few palms, pink blossoms, wildflowers, reeds, tiny shells.
+
+The important part: exactly twelve separate round pale-sand clearings, all similar size, each surrounded by grass so they do not touch. Arrange them as two loose rows of six from the far left edge to the far right edge. The upper row sits on the hillside. The lower row sits closer to the foreground. None of the twelve circles is covered by water. No houses, no buildings, no boats, no people, no text, no labels, no numbers, no UI, no watermark. Fill the wide frame edge to edge with no seams.

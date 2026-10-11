@@ -70,6 +70,18 @@ class CdnAssetServiceClass {
     return null;
   }
 
+  /**
+   * 微信开发者工具的 InnerAudioContext 读 `http://usr` 本地缓存会 request:fail。
+   * 仅音效播放改走 CDN https；图片仍用本地缓存。真机路径不是 http://usr，不受影响。
+   */
+  audioSrc(resolvedPath: string): string {
+    if (!Platform.isWechat || !Platform.isDevtools) return resolvedPath;
+    const root = this._getCacheRootPath();
+    const prefix = root ? `${root}/` : '';
+    if (!prefix || !resolvedPath.startsWith(prefix)) return resolvedPath;
+    return this._getCdnUrl(resolvedPath.slice(prefix.length));
+  }
+
   async resolveOrDownload(path: string): Promise<string> {
     const logicalPath = this._normalize(path);
     const resolved = this.resolveAsset(logicalPath);

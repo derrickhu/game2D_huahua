@@ -17,10 +17,12 @@ import { CurrencyManager } from '@/managers/CurrencyManager';
 import { OverlayManager } from '@/core/OverlayManager';
 import { COLORS, DESIGN_WIDTH, FONT_FAMILY } from '@/config/Constants';
 import {
-  MAP_NODES,
   MAP_NODE_UNMET_UNLOCK_ALPHA,
   WORLD_MAP_CONTENT_W,
   WORLD_MAP_CONTENT_H,
+  WORLD_MAP_REGIONS,
+  findWorldMapRegionByScene,
+  getWorldMapRegion,
   type MapNodeDef,
 } from '@/config/WorldMapConfig';
 import { WishingFountainMapFxLayer } from '@/gameobjects/ui/WishingFountainMapFxLayer';
@@ -45,6 +47,12 @@ export class WorldMapPanel extends PIXI.Container {
   private _scrollMask!: PIXI.Graphics;
   private _topBar!: PIXI.Container;
   private _closeBtn!: PIXI.Container;
+  private _regionPicker!: PIXI.Container;
+  private _regionLabel!: PIXI.Text;
+  private _regionChevron!: PIXI.Graphics;
+  private _regionMenu!: PIXI.Container;
+  private _regionMenuOpen = false;
+  private _activeRegionId = WORLD_MAP_REGIONS[0].id;
   private _huayuanText!: PIXI.Text;
   private _staminaText!: PIXI.Text;
   private _staminaTimer!: PIXI.Text;
@@ -127,6 +135,12 @@ export class WorldMapPanel extends PIXI.Container {
     if (this._isOpen) return;
     this._isOpen = true;
     this.visible = true;
+    const sceneRegion = findWorldMapRegionByScene(CurrencyManager.state.sceneId);
+    this._activeRegionId = this._isRegionUnlocked(sceneRegion.id)
+      ? sceneRegion.id
+      : WORLD_MAP_REGIONS[0].id;
+    this._regionMenuOpen = false;
+    this._refreshRegionPicker();
     /** 构造阶段 _build 可能早于纹理入缓存；preloadPanelAssets 完成后重绘，避免长期停在程序占位五边形 */
     this._rebuildMapContent();
     this._assetUnsub = TextureCache.onAssetGroupLoaded('worldmap', () => {
@@ -220,13 +234,18 @@ export class WorldMapPanel extends PIXI.Container {
     this._buildNodes();
     this._setupDrag();
     this._buildTopBar();
+    this._buildRegionPicker();
     EventBus.on('currency:changed', () => this._refreshHud());
     EventBus.on('currency:loaded', () => this._refreshHud());
   }
 
+  private _activeNodes(): readonly MapNodeDef[] {
+    return getWorldMapRegion(this._activeRegionId).nodes;
+  }
+
   /** 底图缺失时回退到已加载的花店草地 / 主界面顶图，避免整屏纯色 */
   private _resolveWorldmapBgTexture(): PIXI.Texture | null {
-    const keys = ['worldmap_bg', 'house_bg', 'shop_scene_bg'] as const;
+    const keys = [getWorldMapRegion(this._activeRegionId).bgKey, 'worldmap_bg', 'house_bg', 'shop_scene_bg'];
     for (const k of keys) {
       const t = TextureCache.get(k);
       if (t && t.width > 1) return t;
@@ -255,6 +274,10 @@ export class WorldMapPanel extends PIXI.Container {
         break;
       case 'flower_farm_house':
         keys.push('bg_room_flower_farm_courtyard_sunny_nb2');
+        break;
+      case 'tide_loft':
+        keys.push('bg_room_tide_loft_nb2');
+        keys.push('bg_room_tide_loft_bloom_roof_nb2');
         break;
       case 'garden_villa':
         keys.push('bg_room_garden_villa_loft_nb2');
@@ -327,13 +350,39 @@ export class WorldMapPanel extends PIXI.Container {
 
   private _buildNodes(): void {
     this._wishingFountainAnimPair = null;
-    for (const node of MAP_NODES) {
+    for (const node of this._activeNodes()) {
       const nc = this._createNodeContainer(node);
       nc.position.set(node.x, this._mapNodeY(node.y));
       this._scrollContent.addChild(nc);
       this._nodeContainers.push(nc);
     }
     this._syncLiveBuildingThumbTexture();
+    this._buildComingSoonLabels();
+  }
+
+  /** 已开放地图上还没建房的空地，只标「即将上线」。 */
+  private _buildComingSoonLabels(): void {
+    const plots = getWorldMapRegion(this._activeRegionId).reservedPlots;
+    for (const plot of plots) {
+      const label = new PIXI.Text('即将上线', {
+        fontSize: 16,
+        fill: 0xFFFFFF,
+        fontFamily: FONT_FAMILY,
+        fontWeight: 'bold',
+        stroke: 0x2C2419,
+        strokeThickness: 3,
+      });
+      label.anchor.set(0.5);
+      label.position.set(plot.x, this._mapNodeY(plot.y));
+      label.eventMode = 'none';
+      this._scrollContent.addChild(label);
+    }
+  }
+
+  private _isRegionUnlocked(regionId: string): boolean {
+    const level = getWorldMapRegion(regionId).unlockLevel;
+    if (level == null) return true;
+    return CurrencyManager.globalLevel >= level;
   }
 
   private _rebuildMapContent(): void {
@@ -484,8 +533,9 @@ export class WorldMapPanel extends PIXI.Container {
   private _refreshNodes(): void {
     const currentSceneId = CurrencyManager.state.sceneId;
 
-    for (let i = 0; i < MAP_NODES.length; i++) {
-      const node = MAP_NODES[i];
+    const nodes = this._activeNodes();
+    for (let i = 0; i < nodes.length; i++) {
+      const node = nodes[i];
       const nc = this._nodeContainers[i];
       if (!nc) continue;
 
@@ -542,8 +592,9 @@ export class WorldMapPanel extends PIXI.Container {
     const currentSceneId = CurrencyManager.state.sceneId;
     const live = this._liveHouseRt && !this._liveHouseRt.destroyed ? this._liveHouseRt : null;
 
-    for (let i = 0; i < MAP_NODES.length; i++) {
-      const node = MAP_NODES[i];
+    const nodes = this._activeNodes();
+    for (let i = 0; i < nodes.length; i++) {
+      const node = nodes[i];
       if (node.id === 'wishing_fountain') continue;
       const nc = this._nodeContainers[i];
       const sp = nc ? (nc as any)._mapThumbSprite as PIXI.Sprite | undefined : undefined;
@@ -789,6 +840,7 @@ export class WorldMapPanel extends PIXI.Container {
   }
 
   private _beginPointerTracking(e: PIXI.FederatedPointerEvent, nodeIndex: number): void {
+    if (this._regionMenuOpen) this._setRegionMenuOpen(false);
     const canvas = Game.app.view as any;
     this._isDragging = true;
     this._hasMoved = false;
@@ -834,7 +886,7 @@ export class WorldMapPanel extends PIXI.Container {
       this._isDragging = false;
       this._cleanupRawEvents();
       if (pressedNodeIndex >= 0 && !this._hasMoved) {
-        const tappedNode = MAP_NODES[pressedNodeIndex];
+        const tappedNode = this._activeNodes()[pressedNodeIndex];
         if (!tappedNode) return;
         const currentLevel = CurrencyManager.globalLevel;
         const currentSceneId = CurrencyManager.state.sceneId;
@@ -898,11 +950,11 @@ export class WorldMapPanel extends PIXI.Container {
 
   private _scrollToCurrentHouse(): void {
     const currentSceneId = CurrencyManager.state.sceneId;
-    const node = MAP_NODES.find(n => n.targetSceneId === currentSceneId);
+    const node = this._activeNodes().find(n => n.targetSceneId === currentSceneId);
     const W = DESIGN_WIDTH;
     const H = Game.logicHeight;
     if (!node) {
-      this._scrollX = 0;
+      this._scrollX = this._clampScrollX(-(this._contentW - W) / 2);
       this._scrollY = this._contentH > H ? 0 : (H - this._contentH) / 2;
     } else {
       const ny = this._mapNodeY(node.y);
@@ -1137,6 +1189,195 @@ export class WorldMapPanel extends PIXI.Container {
 
     this.addChild(this._topBar);
     this.addChild(this._closeBtn);
+  }
+
+  /**
+   * 红框位置：与「返回」同一行、水平居中。点开后在下方列出各地图名字。
+   */
+  private _buildRegionPicker(): void {
+    const pillW = 420;
+    const pillH = 46;
+    const radius = pillH / 2;
+
+    this._regionPicker = new PIXI.Container();
+    this._regionPicker.position.set(DESIGN_WIDTH / 2, Game.safeTop + 96);
+    this._regionPicker.zIndex = 4020;
+    this._regionPicker.eventMode = 'static';
+    this._regionPicker.cursor = 'pointer';
+
+    const shadow = new PIXI.Graphics();
+    shadow.beginFill(0x000000, 0.22);
+    shadow.drawRoundedRect(-pillW / 2 - 6, -pillH / 2 - 4, pillW + 12, pillH + 12, radius + 6);
+    shadow.endFill();
+    shadow.eventMode = 'none';
+    this._regionPicker.addChild(shadow);
+
+    const bg = new PIXI.Graphics();
+    bg.beginFill(0x3C4A38, 0.9);
+    bg.drawRoundedRect(-pillW / 2, -pillH / 2, pillW, pillH, radius);
+    bg.endFill();
+    bg.lineStyle(2, 0xFFF8F0, 0.95);
+    bg.drawRoundedRect(-pillW / 2, -pillH / 2, pillW, pillH, radius);
+    bg.eventMode = 'none';
+    this._regionPicker.addChild(bg);
+
+    this._regionLabel = new PIXI.Text(getWorldMapRegion(this._activeRegionId).name, {
+      fontSize: 22,
+      fontWeight: 'bold',
+      fill: 0xFFF8F0,
+      fontFamily: FONT_FAMILY,
+      stroke: 0x2C2419,
+      strokeThickness: 2,
+    });
+    this._regionLabel.anchor.set(0.5);
+    this._regionLabel.eventMode = 'none';
+    this._regionPicker.addChild(this._regionLabel);
+
+    this._regionChevron = new PIXI.Graphics();
+    this._regionChevron.eventMode = 'none';
+    this._regionPicker.addChild(this._regionChevron);
+
+    this._regionMenu = new PIXI.Container();
+    this._regionMenu.y = pillH / 2 + 8;
+    this._regionMenu.visible = false;
+    this._regionMenu.eventMode = 'static';
+    this._regionPicker.addChild(this._regionMenu);
+
+    this._regionPicker.hitArea = new PIXI.Rectangle(-pillW / 2, -pillH / 2, pillW, pillH);
+    this._regionPicker.on('pointerdown', (e: PIXI.FederatedPointerEvent) => {
+      e.stopPropagation();
+      this._setRegionMenuOpen(!this._regionMenuOpen);
+    });
+
+    this._refreshRegionPicker();
+    this.addChild(this._regionPicker);
+  }
+
+  private _setRegionMenuOpen(open: boolean): void {
+    this._regionMenuOpen = open;
+    this._refreshRegionPicker();
+  }
+
+  private _selectRegion(id: string): void {
+    this._regionMenuOpen = false;
+    if (!this._isRegionUnlocked(id)) {
+      const region = getWorldMapRegion(id);
+      ToastMessage.show(`${region.unlockLevel}级解锁「${region.name}」`);
+      this._refreshRegionPicker();
+      return;
+    }
+    if (id !== this._activeRegionId) {
+      this._activeRegionId = id;
+      this._rebuildMapContent();
+      this._scrollToCurrentHouse();
+      this._refreshNodes();
+    }
+    this._refreshRegionPicker();
+  }
+
+  private _refreshRegionPicker(): void {
+    if (!this._regionLabel || !this._regionChevron || !this._regionMenu) return;
+    const region = getWorldMapRegion(this._activeRegionId);
+    this._regionLabel.text = region.name;
+
+    const chevron = this._regionChevron;
+    chevron.clear();
+    chevron.beginFill(0xFFF8F0);
+    if (this._regionMenuOpen) {
+      chevron.moveTo(-7, 3);
+      chevron.lineTo(7, 3);
+      chevron.lineTo(0, -5);
+    } else {
+      chevron.moveTo(-7, -3);
+      chevron.lineTo(7, -3);
+      chevron.lineTo(0, 5);
+    }
+    chevron.closePath();
+    chevron.endFill();
+    const labelW = this._regionLabel.width;
+    chevron.position.set(Math.min(168, labelW / 2 + 22), 1);
+
+    const menu = this._regionMenu;
+    menu.removeChildren();
+    menu.visible = this._regionMenuOpen;
+    const rowW = 420;
+    const rowH = 46;
+    const gap = 6;
+    const pad = 8;
+    const totalH = pad * 2 + WORLD_MAP_REGIONS.length * rowH + (WORLD_MAP_REGIONS.length - 1) * gap;
+    this._regionPicker.hitArea = new PIXI.Rectangle(
+      -rowW / 2,
+      -rowH / 2,
+      rowW,
+      rowH + (this._regionMenuOpen ? 8 + totalH : 0),
+    );
+    if (!this._regionMenuOpen) return;
+    const plate = new PIXI.Graphics();
+    plate.beginFill(0x000000, 0.18);
+    plate.drawRoundedRect(-rowW / 2 - 4, 2, rowW + 8, totalH + 6, 22);
+    plate.endFill();
+    plate.beginFill(0xFFF8F0, 0.98);
+    plate.drawRoundedRect(-rowW / 2, 0, rowW, totalH, 20);
+    plate.endFill();
+    plate.lineStyle(2, 0xE7D7C4, 1);
+    plate.drawRoundedRect(-rowW / 2, 0, rowW, totalH, 20);
+    plate.eventMode = 'none';
+    menu.addChild(plate);
+
+    WORLD_MAP_REGIONS.forEach((item, index) => {
+      const row = new PIXI.Container();
+      row.y = pad + index * (rowH + gap);
+      const selected = item.id === this._activeRegionId;
+      const locked = !this._isRegionUnlocked(item.id);
+      const hit = new PIXI.Graphics();
+      hit.beginFill(selected ? 0xE4F2D4 : 0xFFF8F0, 1);
+      hit.drawRoundedRect(-rowW / 2 + 8, 0, rowW - 16, rowH, 16);
+      hit.endFill();
+      row.addChild(hit);
+      const text = new PIXI.Text(item.name, {
+        fontSize: 20,
+        fontWeight: 'bold',
+        fill: selected ? 0x3C4A38 : 0x6D5A48,
+        fontFamily: FONT_FAMILY,
+      });
+      text.eventMode = 'none';
+      if (locked && item.unlockLevel != null) {
+        text.anchor.set(0, 0.5);
+        const lock = createSmallNameLockIcon(220, 140);
+        lock.eventMode = 'none';
+        const hint = new PIXI.Text(`${item.unlockLevel}级解锁`, {
+          fontSize: 16,
+          fontWeight: 'bold',
+          fill: 0xA67B5B,
+          fontFamily: FONT_FAMILY,
+        });
+        hint.anchor.set(0, 0.5);
+        hint.eventMode = 'none';
+        const gapX = 6;
+        const lockW = 18;
+        const total = text.width + gapX + lockW + gapX + hint.width;
+        let x = -total / 2;
+        text.position.set(x, rowH / 2);
+        x += text.width + gapX;
+        lock.position.set(x, rowH / 2);
+        x += lockW + gapX;
+        hint.position.set(x, rowH / 2);
+        row.addChild(text, lock, hint);
+      } else {
+        text.anchor.set(0.5);
+        text.position.set(0, rowH / 2);
+        row.addChild(text);
+      }
+      row.eventMode = 'static';
+      row.cursor = 'pointer';
+      row.hitArea = new PIXI.Rectangle(-rowW / 2 + 8, 0, rowW - 16, rowH);
+      row.on('pointerdown', (e: PIXI.FederatedPointerEvent) => {
+        e.stopPropagation();
+        const id = item.id;
+        setTimeout(() => this._selectRegion(id), 0);
+      });
+      menu.addChild(row);
+    });
   }
 
   private _refreshHud(): void {

@@ -78,7 +78,7 @@ class AudioManagerClass {
         : 1;
 
     void CdnAssetService.resolveOrDownload(entry.src)
-      .then(src => this._playResolvedSound(name, src, entry.volume * volumeScale, opts, rate))
+      .then(src => this._playResolvedSound(name, CdnAssetService.audioSrc(src), entry.volume * volumeScale, opts, rate))
       .catch(err => {
         console.warn(TAG, `音效 "${name}" 资源未就绪:`, err?.message || err);
       });
@@ -164,7 +164,7 @@ class AudioManagerClass {
 
     const seq = ++this._bgmRequestSeq;
     void CdnAssetService.resolveOrDownload(src)
-      .then(resolvedSrc => this._playResolvedBGM(seq, src, resolvedSrc, volume, opts))
+      .then(resolvedSrc => this._playResolvedBGM(seq, src, CdnAssetService.audioSrc(resolvedSrc), volume, opts))
       .catch(err => {
         if (seq !== this._bgmRequestSeq) return;
         console.warn(TAG, `BGM "${src}" 资源未就绪:`, err?.message || err);

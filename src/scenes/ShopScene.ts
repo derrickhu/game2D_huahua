@@ -343,6 +343,11 @@ export class ShopScene implements Scene {
     if (SceneManager.current?.name !== 'shop') return;
     const bgKey = getSceneRenovationProfile(CurrencyManager.state.sceneId).backgroundTexture;
     if (bgKey) void TextureCache.preloadKeys([bgKey]).catch(() => undefined);
+    const roomBgKey = DecorationManager.getRoomBgTextureKey();
+    void TextureCache.preloadKeys([roomBgKey]).then(() => {
+      if (SceneManager.current?.name !== 'shop') return;
+      this._refreshShopBuildingTexture();
+    }).catch(() => undefined);
     this._buildBackground(DESIGN_WIDTH, Game.logicHeight);
     this._refreshShopBuildingTexture();
     this._renderFurnitureLayout();
@@ -3446,8 +3451,8 @@ export class ShopScene implements Scene {
     this._enableRoomPanSurface();
 
     ToastMessage.show(
-      CurrencyManager.state.sceneId === 'garden_villa'
-        ? '大房壳模式：默认缩小总览，右侧滑杆可放大精调；家具与人物已缩小便于分区布局'
+      CurrencyManager.state.sceneId === 'garden_villa' || CurrencyManager.state.sceneId === 'tide_loft'
+        ? '大房壳模式：默认缩小总览，右侧滑杆可放大精调；放大后可拖底板平移'
         : '装修模式：拖动家具；放大后可拖底板/空白平移；拖右侧圆点缩放，双击圆点恢复默认',
     );
     EventBus.emit('furniture:edit_enabled');

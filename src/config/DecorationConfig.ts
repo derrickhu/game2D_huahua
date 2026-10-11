@@ -185,6 +185,8 @@ export const ROOM_STYLES: RoomStyleDef[] = [
     id: 'style_dream_cloud_purple_mooncradle_nb2', name: '紫月云台', cost: 86666, starValue: 12, rarity: DecoRarity.FINE, bgTexture: 'bg_room_dream_cloud_purple_mooncradle_nb2', desc: '梦云小屋换色壳：粉紫月云双层空壳，月石地面、星月吊饰与云梯围栏更梦幻', unlockRequirement: { level: 22 }, allowedSceneIds: ['dream_cloud_house'] },
   { id: 'style_flower_farm_cottage_nb2', name: '日光小院', cost: 0, starValue: 0, rarity: DecoRarity.COMMON, bgTexture: 'bg_room_flower_farm_courtyard_sunny_nb2', desc: '花田农舍默认壳：等距日光户外小院，轻描边、贴地院落，木平台与土院地面', allowedSceneIds: ['flower_farm_house'] },
   { id: 'style_flower_farm_spring_vine_nb2', name: '青藤春棚', cost: 72000, starValue: 15, rarity: DecoRarity.FINE, bgTexture: 'bg_room_flower_farm_spring_vine_nb2', desc: '春日换色壳：常春藤爬墙、浅绿木瓦与 mint spring 氛围', unlockRequirement: { level: 31 }, allowedSceneIds: ['flower_farm_house'] },
+  { id: 'style_tide_loft_nb2', name: '汐岸阁楼', cost: 0, starValue: 0, rarity: DecoRarity.COMMON, bgTexture: 'bg_room_tide_loft_nb2', desc: '晴汐花湾第一栋：双层木瓦阁楼，二楼较短，无窗，青苔檐与卵石地基', allowedSceneIds: ['tide_loft'] },
+  { id: 'style_tide_loft_bloom_roof_nb2', name: '花檐野阁', cost: 0, starValue: 0, rarity: DecoRarity.COMMON, bgTexture: 'bg_room_tide_loft_bloom_roof_nb2', desc: '同款双层短阁楼的自然换景：屋檐铺满苔藓、藤叶与野花，墙面偏暖绿，地面仍是空的橡木地板', allowedSceneIds: ['tide_loft'] },
 ];
 
 export const ROOM_STYLE_MAP = new Map<string, RoomStyleDef>(

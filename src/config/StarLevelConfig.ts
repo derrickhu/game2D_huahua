@@ -241,6 +241,13 @@ export const SCENE_DEFS: SceneDef[] = [
     thresholds: FLOWER_FARM_HOUSE_THRESHOLDS,
     milestones: FLOWER_FARM_HOUSE_MILESTONES,
   },
+  {
+    sceneId: 'tide_loft',
+    name: '汐岸阁楼',
+    maxStarLevel: 8,
+    thresholds: FOREST_TREEHOUSE_THRESHOLDS,
+    milestones: FOREST_TREEHOUSE_MILESTONES,
+  },
 ];
 
 export const SCENE_MAP = new Map<string, SceneDef>(

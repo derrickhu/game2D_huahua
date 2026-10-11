@@ -1,0 +1,11 @@
+Vertical 9:16 full-screen outdoor background for a cozy pastel flower-shop merge game. The attached image is the world map. Match ONLY its art style: thin warm olive outlines, flat gentle shading, pale sand, fresh green grass, blue mountains, a small turquoise cove, round trees, pink blossoms, wildflowers, wooden boardwalk, soft daylight. Do not copy its wide layout, and do not draw the many empty building plots.
+
+This picture sits BEHIND a transparent two-story room shell, so the middle of the frame must stay open and calm.
+
+Composition, top to bottom:
+- Sky: pale blue with a few soft white clouds and distant blue mountains along the horizon.
+- Upper middle: a small turquoise cove tucked to one side, reeds and a short wooden boardwalk, round green trees and a cluster of pink blossom trees at the edges. Keep the center open.
+- Center: one large pale sand clearing, the same cream-sand color as the map plots, wide enough for a house to sit on. Soft grass rim around it. No building, no shadow hole, no dark oval.
+- Bottom: brighter meadow with purple, yellow, and white wildflowers, a few grass tufts, maybe one small palm near a corner. The lower center stays readable.
+
+No house, no walls, no roof, no furniture, no people, no animals, no text, no numbers, no logo, no watermark, no UI. Opaque illustration, edge to edge, no transparency.

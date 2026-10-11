@@ -46,6 +46,19 @@ const SCENE_OVERRIDES: Record<string, Partial<SceneRenovationProfile>> = {
   butterfly_house: { buildingScaleMultiplier: 1.3 },
   tea_house: { buildingScaleMultiplier: 1.4 },
   forest_treehouse: { buildingScaleMultiplier: 1.4 },
+  tide_loft: {
+    backgroundTexture: 'house_bg_tide_bay_nb2',
+    buildingScaleMultiplier: 1.35,
+    // 大房壳：家具与店主相对房壳缩小，比例对齐花园洋房
+    furnitureDisplayScaleMultiplier: 0.95,
+    ownerDisplayScaleMultiplier: 0.78,
+    placementScaleMultiplier: 0.95,
+    browseViewScale: 0.72,
+    editViewScaleMin: 0.5,
+    editViewScaleMax: 2.4,
+    editViewScaleDefault: 0.72,
+    layoutBounds: { minY: 200 },
+  },
   dream_cloud_house: {
     backgroundTexture: 'house_bg_dream_cloud_sky_nb2',
     buildingScaleMultiplier: 1.2,

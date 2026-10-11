@@ -1,0 +1,19 @@
+Square 1:1 game asset. One single room shell, large and centered. The attached image is the approved building. Redraw that same one building with a new finish. Do not draw a second house. Do not add a tree.
+
+STRUCTURE, keep identical to the attached shell:
+- Open-front 2:1 isometric dollhouse. Lower floor is a plan square in front. Upper floor is a solid podium against the back wall, shorter in depth than the lower floor, same width, ending flush with the right wall.
+- Left wall full height. Back wall above the upper floor ends at the right corner post. No extra wall panel past that corner. No floating eave past the corner.
+- Right wall on the floor's right edge, stopping before the front tip, with a small front-right notch.
+- One small wooden stair tight against the left wall, landing on the front edge of the upper floor.
+- Two small wooden steps inside the front-right notch only.
+- No room under the upper floor.
+- Both floor interiors stay empty and fully visible.
+
+NEW FINISH, wilder and more natural than the attached oak cottage:
+- Living roofs. Both shingle eaves are covered with soft moss and overflowing plants: ferns, trailing ivy, and clusters of small wildflowers in butter yellow, cream, coral pink, and tiny red. Flowers and leaves sit on the roof slopes and spill slightly over the eave edges. They never lid the floors and never grow across the open floorboards.
+- Walls are warm sage-tinted plaster with a little moss at the base, still clean enough to place wall decor. Slender weathered wood posts, honey-brown, with a few vine tendrils climbing only the outer posts.
+- Floors stay pale oak planks with fine grain, clear of plants.
+- Outside the foundation only: a low ring of pale pebbles, more ferns, and a few wildflowers. Two tiny red-capped mushrooms may remain at the corners.
+- NO windows. No glass. No round porthole. No curtains. No tree trunk. No ladder. No lantern. No furniture. No characters.
+
+Thin warm brown outlines, soft storybook shading, airy and precise. Background outside the building: pure solid white. No text, no numbers, no logo, no watermark.
