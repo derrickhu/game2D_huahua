@@ -412,6 +412,18 @@ class PlatformServiceClass {
   private _isDevtools(): boolean {
     if (!this.isMinigame) return false;
     try {
+      const nav = (globalThis as any).navigator;
+      if (/wechatdevtools/i.test(String(nav?.userAgent || ''))) return true;
+    } catch (_) { /* */ }
+    try {
+      const cfg = (globalThis as any).__wxConfig;
+      if (String(cfg?.platform || '').toLowerCase() === 'devtools') return true;
+    } catch (_) { /* */ }
+    try {
+      const dev = typeof this._api?.getDeviceInfo === 'function' ? this._api.getDeviceInfo() : null;
+      if (String(dev?.platform || '').toLowerCase() === 'devtools') return true;
+    } catch (_) { /* */ }
+    try {
       const info = this._api?.getSystemInfoSync?.();
       if (!info) return false;
       const platform = String(info.platform || '').toLowerCase();
@@ -1220,6 +1232,34 @@ class PlatformServiceClass {
    * 会被云开发协议层当成协议报文 JSON.parse 而报错，所以这里必须显式声明 text。
    */
   requestText(url: string, timeoutMs?: number): Promise<string> {
+    // 与 request() 同一条：微信开发者工具里 wx.request 会误报 "An object could not be cloned"。
+    if (this.isWechat && this._isDevtools() && this._hostFetch()) {
+      return this._requestTextViaFetch(url, timeoutMs).catch((err) => {
+        const msg = err instanceof Error ? err.message : String(err);
+        console.warn(`[Platform.requestText] devtools fetch 失败，回退 wx.request: ${msg}`);
+        return this._requestTextViaHost(url, timeoutMs);
+      });
+    }
+    return this._requestTextViaHost(url, timeoutMs);
+  }
+
+  private _requestTextViaFetch(url: string, timeoutMs?: number): Promise<string> {
+    const fetchFn = this._hostFetch();
+    if (!fetchFn) return Promise.reject(new Error('no fetch transport'));
+    const timeout = timeoutMs && timeoutMs > 0 ? timeoutMs : 10000;
+    const ctrl = typeof AbortController !== 'undefined' ? new AbortController() : null;
+    const timer = ctrl ? setTimeout(() => ctrl.abort(), timeout) : null;
+    return fetchFn(url, { method: 'GET', signal: ctrl ? ctrl.signal : undefined }).then(async (res) => {
+      if (timer) clearTimeout(timer);
+      if (!res.ok) throw new Error(`request status=${res.status} url=${url}`);
+      return res.text();
+    }).catch((e) => {
+      if (timer) clearTimeout(timer);
+      throw e instanceof Error ? e : new Error(String(e));
+    });
+  }
+
+  private _requestTextViaHost(url: string, timeoutMs?: number): Promise<string> {
     if (typeof this._api?.request === 'function') {
       return new Promise((resolve, reject) => {
         this._api.request({
@@ -1273,6 +1313,39 @@ class PlatformServiceClass {
 
   /** 下载文件到临时路径（CDN 资源用） */
   downloadFile(opts: { url: string; timeoutMs?: number }): Promise<{ tempFilePath: string }> {
+    // 开发者工具里 wx.downloadFile 的回调过桥会误报 "An object could not be cloned"。
+    if (this.isWechat && this._isDevtools() && this._hostFetch()) {
+      return this._downloadViaFetch(opts).catch((err) => {
+        const msg = err instanceof Error ? err.message : String(err);
+        console.warn(`[Platform.downloadFile] devtools fetch 失败，回退 wx.downloadFile: ${msg}`);
+        return this._downloadViaMiniApi(opts);
+      });
+    }
+    return this._downloadViaMiniApi(opts);
+  }
+
+  private async _downloadViaFetch(opts: { url: string; timeoutMs?: number }): Promise<{ tempFilePath: string }> {
+    const fetchFn = this._hostFetch();
+    if (!fetchFn) throw new Error('no fetch transport');
+    const timeoutMs = opts.timeoutMs && opts.timeoutMs > 0 ? opts.timeoutMs : 30000;
+    const ctrl = typeof AbortController !== 'undefined' ? new AbortController() : null;
+    const timer = ctrl ? setTimeout(() => ctrl.abort(), timeoutMs) : null;
+    try {
+      const res = await fetchFn(opts.url, { method: 'GET', signal: ctrl ? ctrl.signal : undefined });
+      if (!res.ok) throw new Error(`download status=${res.status} url=${opts.url}`);
+      const buf = await res.arrayBuffer();
+      const fs = this.getFileSystemManager();
+      const root = this.userDataPath;
+      if (!fs?.writeFileSync || !root) throw new Error('downloadFile fetch has no fs');
+      const filePath = `${root}/fetch_dl_${Date.now()}_${Math.random().toString(36).slice(2, 8)}.bin`;
+      fs.writeFileSync(filePath, buf);
+      return { tempFilePath: filePath };
+    } finally {
+      if (timer) clearTimeout(timer);
+    }
+  }
+
+  private _downloadViaMiniApi(opts: { url: string; timeoutMs?: number }): Promise<{ tempFilePath: string }> {
     return new Promise((resolve, reject) => {
       if (typeof this._api?.downloadFile !== 'function') {
         reject(new Error('downloadFile unavailable'));

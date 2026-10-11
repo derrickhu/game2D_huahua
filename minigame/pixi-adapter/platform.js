@@ -136,6 +136,94 @@ function _createImage() {
 
 const noop = function() {};
 
+function _isWechatDevtools() {
+  if (_platformName !== 'wechat') return false;
+  try {
+    if (typeof navigator !== 'undefined' && /wechatdevtools/i.test(String(navigator.userAgent || ''))) {
+      return true;
+    }
+  } catch (_) { /* */ }
+  try {
+    const cfg = typeof __wxConfig !== 'undefined' ? __wxConfig : null;
+    if (cfg && String(cfg.platform || '').toLowerCase() === 'devtools') return true;
+  } catch (_) { /* */ }
+  try {
+    const dev = _api && typeof _api.getDeviceInfo === 'function' ? _api.getDeviceInfo() : null;
+    if (dev && String(dev.platform || '').toLowerCase() === 'devtools') return true;
+  } catch (_) { /* */ }
+  try {
+    const info = _api && _api.getSystemInfoSync ? _api.getSystemInfoSync() : null;
+    if (!info) return false;
+    const platform = String(info.platform || '').toLowerCase();
+    const brand = String(info.brand || '').toLowerCase();
+    const model = String(info.model || '').toLowerCase();
+    return platform === 'devtools' || brand === 'devtools' || model.indexOf('devtools') >= 0;
+  } catch (_) {
+    return false;
+  }
+}
+
+function _finishHostCall(opts, ok, result) {
+  try {
+    if (ok && typeof opts.success === 'function') opts.success(result);
+    if (!ok && typeof opts.fail === 'function') opts.fail(result);
+  } catch (e) {
+    console.warn('[platform] 回调失败:', e);
+  }
+  try {
+    if (typeof opts.complete === 'function') opts.complete(result);
+  } catch (_) { /* */ }
+}
+
+function _devtoolsFetchRequest(opts) {
+  const method = String(opts && opts.method || 'GET').toUpperCase();
+  const headers = (opts && opts.header) || {};
+  const init = { method: method, headers: headers };
+  if (opts && opts.data !== undefined && method !== 'GET') {
+    init.body = typeof opts.data === 'string' || opts.data instanceof ArrayBuffer
+      ? opts.data
+      : JSON.stringify(opts.data);
+  }
+  const responseType = opts && opts.responseType === 'arraybuffer' ? 'arraybuffer' : 'text';
+  fetch(String(opts && opts.url || ''), init).then(function(res) {
+    const read = responseType === 'arraybuffer' ? res.arrayBuffer() : res.text();
+    return read.then(function(data) {
+      const header = {};
+      try { res.headers.forEach(function(v, k) { header[k] = v; }); } catch (_) { /* */ }
+      _finishHostCall(opts, true, {
+        statusCode: res.status,
+        data: data,
+        header: header,
+        errMsg: 'request:ok',
+      });
+    });
+  }).catch(function(err) {
+    _finishHostCall(opts, false, { errMsg: err && err.message ? err.message : String(err) });
+  });
+  return null;
+}
+
+function _devtoolsFetchDownload(opts) {
+  fetch(String(opts && opts.url || '')).then(function(res) {
+    if (!res.ok) throw new Error('download status=' + res.status);
+    return res.arrayBuffer().then(function(buf) {
+      const fs = _api && _api.getFileSystemManager ? _api.getFileSystemManager() : null;
+      const root = _api && _api.env ? _api.env.USER_DATA_PATH : '';
+      if (!fs || !fs.writeFileSync || !root) throw new Error('downloadFile fetch has no fs');
+      const filePath = root + '/fetch_dl_' + Date.now() + '_' + Math.random().toString(36).slice(2, 8) + '.bin';
+      fs.writeFileSync(filePath, buf);
+      _finishHostCall(opts, true, {
+        statusCode: res.status,
+        tempFilePath: filePath,
+        errMsg: 'downloadFile:ok',
+      });
+    });
+  }).catch(function(err) {
+    _finishHostCall(opts, false, { errMsg: err && err.message ? err.message : String(err) });
+  });
+  return null;
+}
+
 function _sanitizeRequestOptions(opts) {
   const out = {
     url: String(opts && opts.url || ''),
@@ -188,11 +276,17 @@ const platform = {
   removeStorageSync: (key) => _removeStorage(key),
 
   request: (opts) => {
+    if (_isWechatDevtools() && typeof fetch === 'function') {
+      return _devtoolsFetchRequest(opts || {});
+    }
     if (!_api) return null;
     const clean = _sanitizeRequestOptions(opts || {});
     return _api.request(clean);
   },
   downloadFile: (opts) => {
+    if (_isWechatDevtools() && typeof fetch === 'function') {
+      return _devtoolsFetchDownload(opts || {});
+    }
     if (!_api || !_api.downloadFile) return null;
     const clean = {
       url: String(opts && opts.url || ''),

@@ -71,10 +71,18 @@ function bootStep(msg: string): void {
 // 的"未初始化即丢弃"分支吞掉（不会抛错），属于预期行为。也即：仅 init 之后捕获到的错误才会上报。
 // 想覆盖更早的启动期异常，得把 initAnalytics() 也搬到模块顶部，但那样 PlatformService 还没 ready，
 // 风险更大；当前选择"漏掉极少数 init 前异常"换稳定性。
+function isWechatDevtoolsCloneNoise(msg: unknown): boolean {
+  return String(msg ?? '').includes('could not be cloned');
+}
+
 if (typeof GameGlobal !== 'undefined') {
   const prevError = GameGlobal.onError;
   const prevReject = GameGlobal.onUnhandledRejection;
   GameGlobal.onError = (msg: string) => {
+    if (isWechatDevtoolsCloneNoise(msg)) {
+      try { prevError?.(msg); } catch { /* */ }
+      return;
+    }
     console.error('[GlobalError]', msg);
     try { prevError?.(msg); } catch { /* */ }
     try {
@@ -88,6 +96,10 @@ if (typeof GameGlobal !== 'undefined') {
     }
   };
   GameGlobal.onUnhandledRejection = (ev: any) => {
+    if (isWechatDevtoolsCloneNoise(ev?.reason) || isWechatDevtoolsCloneNoise(ev?.reason?.message)) {
+      try { prevReject?.(ev); } catch { /* */ }
+      return;
+    }
     console.error('[UnhandledRejection]', ev?.reason || ev);
     try { prevReject?.(ev); } catch { /* */ }
     try {

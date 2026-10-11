@@ -92,6 +92,30 @@ function _diag(msg) {
   } catch (_) {}
 }
 
+function _errText(err) {
+  try {
+    if (err == null) return '';
+    if (typeof err === 'string') return err;
+    return String(err.message || err.errMsg || err);
+  } catch (_) {
+    return '';
+  }
+}
+
+/** 微信开发者工具基础库 3.x：request/downloadFile 过桥的误报，不是启动失败。 */
+function _isCloneNoise(err) {
+  return _errText(err).indexOf('could not be cloned') >= 0;
+}
+
+var _cloneNoiseNoted = false;
+function _noteCloneNoise(via) {
+  if (_cloneNoiseNoted) return;
+  _cloneNoiseNoted = true;
+  try {
+    console.warn('[boot] 忽略微信开发者工具误报 An object could not be cloned（' + via + '），游戏继续');
+  } catch (_) {}
+}
+
 function _showDiag() {
   var dump = _diagMsgs.join('\n');
   try { console.error('[boot-diag]\n' + dump); } catch (_) {}
@@ -131,12 +155,21 @@ try {
     GameGlobal.__bootDiag = _diag;
     GameGlobal.__showBootDiag = _showDiag;
     GameGlobal.onError = function (msg) {
+      if (_isCloneNoise(msg)) {
+        _noteCloneNoise('onError');
+        return;
+      }
       _diag('onError:' + msg);
       _dumpRecentXhr('onError');
       _showDiag();
     };
     GameGlobal.onUnhandledRejection = function (ev) {
-      _diag('unhandledRej:' + (ev && ev.reason || ev));
+      var reason = ev && ev.reason;
+      if (_isCloneNoise(reason) || _isCloneNoise(reason && reason.message)) {
+        _noteCloneNoise('unhandledRej');
+        return;
+      }
+      _diag('unhandledRej:' + (reason || ev));
       _dumpRecentXhr('onUnhandledRejection');
       _showDiag();
     };
@@ -146,7 +179,11 @@ try {
   var _errApi = _hostApi();
   if (_errApi && typeof _errApi.onError === 'function') {
     _errApi.onError(function (err) {
-      _diag('host.onError:' + (err && (err.message || err.errMsg) || err));
+      if (_isCloneNoise(err)) {
+        _noteCloneNoise('host.onError');
+        return;
+      }
+      _diag('host.onError:' + _errText(err));
       _showDiag();
     });
   }

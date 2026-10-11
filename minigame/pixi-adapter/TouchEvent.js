@@ -92,8 +92,8 @@ function _toTouchList(rawEvent) {
   if (typeof rawEvent.clientX === 'number' || typeof rawEvent.pageX === 'number') {
     return [{
       identifier: rawEvent.pointerId || rawEvent.identifier || 0,
-      clientX: rawEvent.clientX ?? rawEvent.pageX ?? 0,
-      clientY: rawEvent.clientY ?? rawEvent.pageY ?? 0,
+      clientX: rawEvent.clientX != null ? rawEvent.clientX : (rawEvent.pageX != null ? rawEvent.pageX : 0),
+      clientY: rawEvent.clientY != null ? rawEvent.clientY : (rawEvent.pageY != null ? rawEvent.pageY : 0),
     }];
   }
   return [];
