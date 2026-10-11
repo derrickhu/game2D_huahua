@@ -1,0 +1,10 @@
+Square 1:1 game furniture asset. One single prop centered, generous white margin on all sides.
+
+Cute kawaii 2.5D true isometric furniture for a flower-shop merge game. Camera from upper-left into the L-room corner (same family as the room shell). On-screen top-face edges and base edges must sit near ±30° from horizontal — match the attached iso grid and room wall-base / floor diamond, NOT 45° wall slant, NOT flat front view. Height edges stay vertical. Visible top surface plus front-right side, left and right top edges symmetrically angled. Use the attached grid ONLY for perspective; do not copy the gray demo cube. The finished picture background is empty pure white. Leave out every grid line, graph-paper mark, blue line, and the gray cube.
+
+Hand-painted mobile merge-game flower shop style. Soft caramel-brown outlines slightly thicker than a hairline, rounded chibi-friendly shapes, upper-left light, gentle volume, readable silhouette at small size. Palette: pale oak, cream plaster, sage, butter yellow, coral blossom, sea-glass aqua. Warm storybook flower-shop materials, inventive coastal wildflower silhouette.
+
+Subject: a small table lamp. A chunk of pale-pink salt crystal glows warm and sits in a shallow cream shell dish. The feet are the bottom of the dish.
+No text, no numbers, no letters, no logo, no watermark, no people, no animal faces, no room, no walls, no floor plane, no drop-shadow strip.
+
+Background is pure solid white #FFFFFF.

@@ -1057,6 +1057,28 @@ const DECO_IMAGE_MAP: Record<string, string> = {
   villa_moon_canopy_bed: 'subpkg_deco/images/furniture/villa_moon_canopy_bed.png',
   villa_pearl_grand_piano: 'subpkg_deco/images/furniture/villa_pearl_grand_piano.png',
 
+  // ---- 野檐花居（Lv35–40 全场景）----
+  wildloft_reed_daybed: 'subpkg_deco/images/furniture/wildloft_reed_daybed.png',
+  wildloft_shell_table: 'subpkg_deco/images/furniture/wildloft_shell_table.png',
+  wildloft_tidepool_globe: 'subpkg_deco/images/furniture/wildloft_tidepool_globe.png',
+  wildloft_drift_bench: 'subpkg_deco/images/furniture/wildloft_drift_bench.png',
+  wildloft_pebble_lamp: 'subpkg_deco/images/furniture/wildloft_pebble_lamp.png',
+  wildloft_sanddollar_rug: 'subpkg_deco/images/furniture/wildloft_sanddollar_rug.png',
+  wildloft_press_cabinet: 'subpkg_deco/images/furniture/wildloft_press_cabinet.png',
+  wildloft_fern_chair: 'subpkg_deco/images/furniture/wildloft_fern_chair.png',
+  wildloft_coral_rack: 'subpkg_deco/images/furniture/wildloft_coral_rack.png',
+  wildloft_seaglass_lamp: 'subpkg_deco/images/furniture/wildloft_seaglass_lamp.png',
+  wildloft_window_seat: 'subpkg_deco/images/furniture/wildloft_window_seat.png',
+  wildloft_kelp_swag: 'subpkg_deco/images/furniture/wildloft_kelp_swag.png',
+  wildloft_mosaic_panel: 'subpkg_deco/images/furniture/wildloft_mosaic_panel.png',
+  wildloft_oyster_stool: 'subpkg_deco/images/furniture/wildloft_oyster_stool.png',
+  wildloft_salt_lamp: 'subpkg_deco/images/furniture/wildloft_salt_lamp.png',
+  wildloft_rose_screen: 'subpkg_deco/images/furniture/wildloft_rose_screen.png',
+  wildloft_shell_clock: 'subpkg_deco/images/furniture/wildloft_shell_clock.png',
+  wildloft_hammock_chair: 'subpkg_deco/images/furniture/wildloft_hammock_chair.png',
+  wildloft_eave_box: 'subpkg_deco/images/furniture/wildloft_eave_box.png',
+  wildloft_pearl_table: 'subpkg_deco/images/furniture/wildloft_pearl_table.png',
+
   // ---- 梦云小屋专属家具（dream_cloud_house Lv20–24 卧室休闲套）----
   dream_cloud_bed: 'subpkg_deco/images/furniture/dream_cloud_bed.png',
   dream_cloud_sofa: 'subpkg_deco/images/furniture/dream_cloud_sofa.png',
