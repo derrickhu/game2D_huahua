@@ -16,12 +16,12 @@ export const GOLDEN_AUTUMN_CHESTNUT_STOVE_DECO_ID = 'event_golden_autumn_chestnu
 export const GOLDEN_AUTUMN_MAPLE_WINDOW_DECO_ID = 'workshop_maple_arch_window';
 export const GOLDEN_AUTUMN_MAPLE_WINDOW_BLUEPRINT_ID = 'blueprint_workshop_maple_arch_window';
 
-/** 金秋丰收（2026-10-15 ～ 11-30）：甜品 / 果切订单产「枫叶」，兑换秋日家具与补给。 */
+/** 金秋丰收（2026-10-12 ～ 11-30）：甜品 / 果切订单产「枫叶」，兑换秋日家具与补给。 */
 export const GOLDEN_AUTUMN_2026: ExchangeEventTheme = {
   seasonId: 'golden_autumn_2026',
   name: '金秋丰收',
   currencyName: '枫叶',
-  startAt: new Date(2026, 9, 15, 0, 0, 0, 0).getTime(),
+  startAt: new Date(2026, 9, 12, 0, 0, 0, 0).getTime(),
   endAt: new Date(2026, 10, 30, 23, 59, 59, 0).getTime(),
   settleToHuayuanRate: 1,
 

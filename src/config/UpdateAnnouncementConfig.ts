@@ -59,7 +59,7 @@ export const UPDATE_ANNOUNCEMENT_ACTIVE: UpdateAnnouncementDef & { enabled: bool
       title: '【活动】',
       items: [
         '「月满中秋」已结束，剩下的玉兔灯会自动换成花愿',
-        '10月15日起「金秋丰收」：完成甜品或果切订单获取枫叶，可兑换秋日家具',
+        '10月12日起「金秋丰收」：完成甜品或果切订单获取枫叶，可兑换秋日家具',
       ],
     },
   ],
