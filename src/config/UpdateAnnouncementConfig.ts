@@ -58,6 +58,7 @@ export const UPDATE_ANNOUNCEMENT_ACTIVE: UpdateAnnouncementDef & { enabled: bool
       id: 'new',
       title: '【新增】',
       items: [
+        '40级解锁新大地图「晴汐花湾」，并开放新房屋「汐岸阁楼」',
         '35–40级解锁新家具：芦苇软榻、野花窗座、贝壳壁钟、珍珠泉茶几等',
       ],
     },
