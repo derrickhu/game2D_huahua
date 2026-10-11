@@ -55,6 +55,13 @@ export const UPDATE_ANNOUNCEMENT_ACTIVE: UpdateAnnouncementDef & { enabled: bool
   greeting: '花花妙屋又有新动静啦～',
   sections: [
     {
+      id: 'new',
+      title: '【新增】',
+      items: [
+        '35–40级解锁新家具：芦苇软榻、野花窗座、贝壳壁钟、珍珠泉茶几等',
+      ],
+    },
+    {
       id: 'event',
       title: '【活动】',
       items: [
