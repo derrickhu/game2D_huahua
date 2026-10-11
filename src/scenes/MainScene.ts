@@ -102,7 +102,7 @@ import {
 } from '@/gameobjects/ui/ShopDecorationStarFly';
 import { EventPanel } from '@/gameobjects/ui/EventPanel';
 import { EventBoardPanel } from '@/gameobjects/ui/EventBoardPanel';
-import { CoolSummerEventPanel } from '@/gameobjects/ui/CoolSummerEventPanel';
+import { ExchangeEventPanel } from '@/gameobjects/ui/ExchangeEventPanel';
 import { MidAutumnEventPanel } from '@/gameobjects/ui/MidAutumnEventPanel';
 import { RewardBoxButton } from '@/gameobjects/ui/RewardBoxButton';
 import { RewardBoxPanel } from '@/gameobjects/ui/RewardBoxPanel';
@@ -129,7 +129,8 @@ import { RoomLayoutPresetManager } from '@/managers/RoomLayoutPresetManager';
 import { WeekendHuayuanBoostManager } from '@/managers/WeekendHuayuanBoostManager';
 import { TuesdayStaminaUnlimitedManager } from '@/managers/TuesdayStaminaUnlimitedManager';
 import { ThursdayMagicTimeManager } from '@/managers/ThursdayMagicTimeManager';
-import { CoolSummerEventManager } from '@/managers/CoolSummerEventManager';
+import { ExchangeEventManager } from '@/managers/ExchangeEventManager';
+import { ACTIVE_EXCHANGE_THEME } from '@/config/events/exchange/ExchangeEventRegistry';
 import { MidAutumnEventManager } from '@/managers/MidAutumnEventManager';
 import { NewbieGiftPackManager } from '@/managers/NewbieGiftPackManager';
 import { WeekendHuayuanBoostPanel } from '@/gameobjects/ui/WeekendHuayuanBoostPanel';
@@ -216,7 +217,7 @@ export class MainScene implements Scene {
   private _dressShopStarFlyLayer: PIXI.Container | null = null;
   private _eventPanel!: EventPanel;
   private _eventBoardPanel!: EventBoardPanel;
-  private _coolSummerEventPanel!: CoolSummerEventPanel;
+  private _exchangeEventPanel!: ExchangeEventPanel;
   private _midAutumnEventPanel!: MidAutumnEventPanel;
   // ---- 奖励收纳框 ----
   private _rewardBoxButton!: RewardBoxButton;
@@ -681,8 +682,8 @@ export class MainScene implements Scene {
     this._eventBoardPanel = new EventBoardPanel();
     overlay.addChild(this._eventBoardPanel);
 
-    this._coolSummerEventPanel = new CoolSummerEventPanel();
-    overlay.addChild(this._coolSummerEventPanel);
+    this._exchangeEventPanel = new ExchangeEventPanel();
+    overlay.addChild(this._exchangeEventPanel);
 
     this._midAutumnEventPanel = new MidAutumnEventPanel();
     overlay.addChild(this._midAutumnEventPanel);
@@ -968,21 +969,21 @@ export class MainScene implements Scene {
         }
       }
 
-      const summerFanFly = CoolSummerEventManager.isActive()
-        ? Math.max(0, Math.floor(customer.coolSummerFanReward ?? 0))
+      const exchangeFly = ExchangeEventManager.isActive()
+        ? Math.max(0, Math.floor(customer.exchangeEventReward ?? 0))
         : 0;
-      if (summerFanFly > 0 && cv) {
-        const fanLocal = cv.getCoolSummerFanRewardIconLocalCenter();
+      if (exchangeFly > 0 && cv) {
+        const fanLocal = cv.getExchangeEventRewardIconLocalCenter();
         if (fanLocal) {
           pendingAnims++;
           const sg = cv.toGlobal(fanLocal);
           const sx = this.container.toLocal(sg).x;
           const sy = this.container.toLocal(sg).y;
-          const eventPos = this._topBar.getCoolSummerEventIconPos();
+          const eventPos = this._topBar.getExchangeEventIconPos();
           const endX = this._topBar.x + eventPos.x;
           const endY = this._topBar.y + eventPos.y;
-          this._playRewardFly('icon_cool_summer_fan', sx, sy, endX, endY, summerFanFly, () => {
-            this._topBar.flashCoolSummerEvent();
+          this._playRewardFly(ACTIVE_EXCHANGE_THEME.art.currencyIconKey, sx, sy, endX, endY, exchangeFly, () => {
+            this._topBar.flashExchangeEvent();
             onAnimDone();
           }, 0.16, false);
         }
@@ -2108,7 +2109,7 @@ export class MainScene implements Scene {
       || this._offlineRewardPanel.visible
       || this._levelUpPopup.visible
       || this._eventBoardPanel.visible
-      || this._coolSummerEventPanel.visible
+      || this._exchangeEventPanel.visible
       || this._midAutumnEventPanel.visible
       || !!this._updateAnnouncementPanel?.isOpen
       || !!this._douyinWelfarePanel?.isOpen
@@ -2215,7 +2216,7 @@ export class MainScene implements Scene {
     WeekendHuayuanBoostManager.update(dt);
     TuesdayStaminaUnlimitedManager.update(dt);
     ThursdayMagicTimeManager.update(dt);
-    CoolSummerEventManager.update(dt);
+    ExchangeEventManager.update(dt);
     MidAutumnEventManager.update(dt);
 
     // 客人滚动区惯性动画

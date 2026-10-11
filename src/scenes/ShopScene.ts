@@ -27,7 +27,8 @@ import { CurrencyManager } from '@/managers/CurrencyManager';
 import { CheckInManager } from '@/managers/CheckInManager';
 import { QuestManager } from '@/managers/QuestManager';
 import { GrowthQuestManager } from '@/managers/GrowthQuestManager';
-import { CoolSummerEventManager } from '@/managers/CoolSummerEventManager';
+import { ExchangeEventManager } from '@/managers/ExchangeEventManager';
+import { ACTIVE_EXCHANGE_THEME } from '@/config/events/exchange/ExchangeEventRegistry';
 import { MidAutumnEventManager } from '@/managers/MidAutumnEventManager';
 import { SaveManager } from '@/managers/SaveManager';
 import { DressUpManager } from '@/managers/DressUpManager';
@@ -213,12 +214,12 @@ const LEFT_TOP_BUTTONS: SideBtnDef[] = [
   { id: 'affinity_codex', icon: '', texKey: 'icon_affinity_card', label: '友谊卡', event: 'affinityCodex:open', iconBg: 0xFFB1CC, labelColor: 0xC75D8B },
 ];
 
-/** 右侧 — 活动快捷按钮（签到/成长/任务/清凉一夏） */
+/** 右侧 — 活动快捷按钮（签到/成长/任务/限时兑换活动） */
 const RIGHT_BUTTONS: SideBtnDef[] = [
   { id: 'checkin', icon: '', texKey: 'icon_checkin', label: '签到', event: 'nav:openCheckIn', iconBg: 0xFFA726, labelColor: 0xD48B2E },
   { id: 'growth',  icon: '', texKey: 'icon_growth',  label: '成长', event: 'nav:openGrowthQuest', iconBg: 0x9CCC65, labelColor: 0x5F8F3A },
   { id: 'quest',   icon: '', texKey: 'icon_quest',   label: '任务', event: 'nav:openQuest',   iconBg: 0x42A5F5, labelColor: 0x1976D2 },
-  { id: 'cool_summer', icon: '', texKey: 'icon_cool_summer_event_nb2', label: '清凉', event: 'panel:openCoolSummerEvent', iconBg: 0x4DB6AC, labelColor: 0x1B6B66 },
+  { id: 'exchange_event', icon: '', texKey: ACTIVE_EXCHANGE_THEME.art.entryIconKey, label: ACTIVE_EXCHANGE_THEME.copy.shopBtnLabel, event: 'panel:openExchangeEvent', iconBg: ACTIVE_EXCHANGE_THEME.colors.shopBtnBg, labelColor: ACTIVE_EXCHANGE_THEME.colors.shopBtnLabel },
   { id: 'mid_autumn', icon: '', texKey: 'icon_mid_autumn_event_nb2', label: '中秋', event: 'panel:openMidAutumnEvent', iconBg: 0xE8B86D, labelColor: 0x8A5A28 },
 ];
 
@@ -2600,7 +2601,7 @@ export class ShopScene implements Scene {
   }
 
   private _isRightActivityVisible(id: string): boolean {
-    if (id === 'cool_summer') return CoolSummerEventManager.isActive();
+    if (id === 'exchange_event') return ExchangeEventManager.isActive();
     if (id === 'mid_autumn') return MidAutumnEventManager.isActive();
     return true;
   }
@@ -2627,7 +2628,7 @@ export class ShopScene implements Scene {
     }
   }
 
-  private _refreshCoolSummerButtonVisibility(): void {
+  private _refreshExchangeButtonVisibility(): void {
     this._relayoutRightActivityButtons();
   }
 
@@ -3098,14 +3099,14 @@ export class ShopScene implements Scene {
     EventBus.on('roomlayout:updated', this._onRoomLayoutUpdated);
     EventBus.on('furniture:drag_pointer_down', this._onFurnitureDragPointerDown);
     EventBus.on('furniture:tutorialEditCompleteTap', this._onTutorialEditCompleteTap);
-    EventBus.on('coolSummerEvent:changed', this._onCoolSummerChanged);
-    EventBus.on('coolSummerEvent:periodChanged', this._onCoolSummerChanged);
+    EventBus.on('exchangeEvent:changed', this._onExchangeEventChanged);
+    EventBus.on('exchangeEvent:periodChanged', this._onExchangeEventChanged);
     EventBus.on('midAutumnEvent:changed', this._onMidAutumnChanged);
     EventBus.on('midAutumnEvent:periodChanged', this._onMidAutumnChanged);
   }
 
-  private readonly _onCoolSummerChanged = (): void => {
-    this._refreshCoolSummerButtonVisibility();
+  private readonly _onExchangeEventChanged = (): void => {
+    this._refreshExchangeButtonVisibility();
     this._updateRedDots();
   };
 
@@ -3142,8 +3143,8 @@ export class ShopScene implements Scene {
     EventBus.off('roomlayout:updated', this._onRoomLayoutUpdated);
     EventBus.off('furniture:drag_pointer_down', this._onFurnitureDragPointerDown);
     EventBus.off('furniture:tutorialEditCompleteTap', this._onTutorialEditCompleteTap);
-    EventBus.off('coolSummerEvent:changed', this._onCoolSummerChanged);
-    EventBus.off('coolSummerEvent:periodChanged', this._onCoolSummerChanged);
+    EventBus.off('exchangeEvent:changed', this._onExchangeEventChanged);
+    EventBus.off('exchangeEvent:periodChanged', this._onExchangeEventChanged);
     EventBus.off('midAutumnEvent:changed', this._onMidAutumnChanged);
     EventBus.off('midAutumnEvent:periodChanged', this._onMidAutumnChanged);
   }
@@ -4634,11 +4635,11 @@ export class ShopScene implements Scene {
     const growthBtn = this._activityBtns.get('growth');
     if (growthBtn) growthBtn.redDot.visible = GrowthQuestManager.hasClaimable();
 
-    // 清凉一夏红点
-    const coolSummerBtn = this._activityBtns.get('cool_summer');
-    if (coolSummerBtn) {
-      coolSummerBtn.redDot.visible = coolSummerBtn.container.visible
-        && CoolSummerEventManager.hasRedDot;
+    // 兑换活动红点
+    const exchangeBtn = this._activityBtns.get('exchange_event');
+    if (exchangeBtn) {
+      exchangeBtn.redDot.visible = exchangeBtn.container.visible
+        && ExchangeEventManager.hasRedDot;
     }
 
     const midAutumnBtn = this._activityBtns.get('mid_autumn');

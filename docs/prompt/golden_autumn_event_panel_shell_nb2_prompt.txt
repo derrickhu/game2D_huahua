@@ -1,0 +1,31 @@
+Generate one empty full-screen 9:16 mobile game activity panel shell for the Golden Autumn Harvest exchange shop page.
+
+The attached summer panel shell is the exact LAYOUT and QUALITY reference: keep the same panel proportions, the same illustrated header band, the same yellow scalloped title plaque position, the same very large empty cream content field, the same illustrated footer band, and the same chunky circular close button position at the top-right. Replace every summer motif with a warm autumn harvest theme.
+
+Canvas and cutout:
+- full-screen 9:16 portrait;
+- solid pure green #00FF00 background outside the panel silhouette, full bleed;
+- centered tall rounded panel occupying about 94% height and 92% width, same as the reference;
+- top-right chunky circular close button in the red of a ripe apple with a simple white X.
+
+Panel frame:
+- thick soft rounded outer rim in warm caramel-amber, like toasted honey;
+- thinner soft cream-gold inner lip;
+- gentle volume and soft highlights like the reference.
+
+Top illustration, upper ~22%:
+- soft painterly autumn still-life framing a blank golden scalloped title plaque in the center, plaque surface completely empty;
+- a cluster of red and orange maple leaves, two round tangerine-orange pumpkins, a small wicker basket of chestnuts and apples, a few golden wheat stalks;
+- same soft volumetric shading quality as the reference.
+
+Middle content field:
+- one extremely large uninterrupted cream / warm-ivory rounded rectangle from roughly 26% to 76% of panel height, same as the reference;
+- plain nearly flat fill, completely empty, generous safe margins for code-drawn shop UI.
+
+Bottom illustration, lower ~22%:
+- soft painterly harvest base: a curved warm-brown wooden crate edge, scattered maple leaves, small pumpkins, chestnuts, golden wheat, a few acorns;
+- rich and decorative like the reference footer while leaving the cream field clean.
+
+Art style: match the reference softness and volume; high-key warm palette of caramel, tangerine, maple red, honey gold and cream; cute cozy flower-shop mobile game.
+
+The whole image contains only illustration shapes: a plain empty plaque, plain empty content field, no lettering, no numbers, no item cards, no counters, no bars, no watermark, no logo.

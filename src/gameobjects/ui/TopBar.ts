@@ -18,7 +18,8 @@ import { EventBoardManager } from '@/managers/EventBoardManager';
 import { WeekendHuayuanBoostManager } from '@/managers/WeekendHuayuanBoostManager';
 import { TuesdayStaminaUnlimitedManager } from '@/managers/TuesdayStaminaUnlimitedManager';
 import { ThursdayMagicTimeManager } from '@/managers/ThursdayMagicTimeManager';
-import { CoolSummerEventManager } from '@/managers/CoolSummerEventManager';
+import { ExchangeEventManager } from '@/managers/ExchangeEventManager';
+import { ACTIVE_EXCHANGE_THEME } from '@/config/events/exchange/ExchangeEventRegistry';
 import { MidAutumnEventManager } from '@/managers/MidAutumnEventManager';
 import {
   isJewelryEventUnlocked,
@@ -86,9 +87,10 @@ const QUEST_ICON_SIZE = 58;
 const QUEST_HIT = 64;
 /** 首饰活动：图标视觉更大、且与客人区横向滑动层重叠，单独加大热区 */
 const EVENT_ICON_SIZE = 62;
-/** 清凉一夏入口图留白较多，单独放大以对齐花间珠匣视觉体量 */
-const COOL_SUMMER_ICON_SIZE = 76;
-/** 中秋入口图几乎铺满画布，按清凉一夏 76 会明显偏大，对齐任务/珠匣体量 */
+/** 兑换活动入口图留白因期而异，目标边长由主题 art.topBarIconSize 决定 */
+const EXCHANGE_ICON_SIZE = ACTIVE_EXCHANGE_THEME.art.topBarIconSize;
+const EXCHANGE_ICON_KEY = ACTIVE_EXCHANGE_THEME.art.entryIconKey;
+/** 中秋入口图几乎铺满画布，对齐任务/珠匣体量 */
 const MID_AUTUMN_ICON_SIZE = 60;
 const EVENT_HIT_W = 88;
 const EVENT_HIT_H = 92;
@@ -102,8 +104,8 @@ const QUEST_BTN_CY = TOP_BAR_HEIGHT + 18;
 const EVENT_BTN_CX = QUEST_BTN_CX + QUEST_HIT + 14;
 const EVENT_BTN_CY = QUEST_BTN_CY;
 const SEASONAL_BTN_STEP = EVENT_HIT_W + 4;
-const COOL_SUMMER_BTN_CX = EVENT_BTN_CX + SEASONAL_BTN_STEP;
-const COOL_SUMMER_BTN_CY = EVENT_BTN_CY;
+const EXCHANGE_BTN_CX = EVENT_BTN_CX + SEASONAL_BTN_STEP;
+const EXCHANGE_BTN_CY = EVENT_BTN_CY;
 const MID_AUTUMN_BTN_CY = EVENT_BTN_CY;
 // ── 颜色（体力胶囊参考：浅粉框 + 鲜绿填充 + 绿圆加号）──
 const C = {
@@ -139,9 +141,9 @@ export class TopBar extends PIXI.Container {
   private _eventRedDot: PIXI.Graphics | null = null;
   private _eventBoardBtnWrap: PIXI.Container | null = null;
   private _eventBoardIcon: PIXI.Sprite | null = null;
-  private _coolSummerBtnWrap: PIXI.Container | null = null;
-  private _coolSummerIcon: PIXI.Sprite | null = null;
-  private _coolSummerRedDot: PIXI.Graphics | null = null;
+  private _exchangeBtnWrap: PIXI.Container | null = null;
+  private _exchangeIcon: PIXI.Sprite | null = null;
+  private _exchangeRedDot: PIXI.Graphics | null = null;
   private _midAutumnBtnWrap: PIXI.Container | null = null;
   private _midAutumnIcon: PIXI.Sprite | null = null;
   private _midAutumnRedDot: PIXI.Graphics | null = null;
@@ -164,13 +166,13 @@ export class TopBar extends PIXI.Container {
     if (this._opts.showDailyChallenge) {
       this._buildDailyChallengeButton();
       this._buildEventBoardButton();
-      this._buildCoolSummerButton();
+      this._buildExchangeButton();
       this._buildMidAutumnButton();
       this._eventIconUnsub = TextureCache.onKeysLoaded(
-        ['icon_jewelry_event_nb2', 'icon_cool_summer_event_nb2', 'icon_mid_autumn_event_nb2'],
+        ['icon_jewelry_event_nb2', EXCHANGE_ICON_KEY, 'icon_mid_autumn_event_nb2'],
         (key) => {
           if (key === 'icon_jewelry_event_nb2') this._refreshEventBoardIcon();
-          if (key === 'icon_cool_summer_event_nb2') this._refreshCoolSummerIcon();
+          if (key === EXCHANGE_ICON_KEY) this._refreshExchangeIcon();
           if (key === 'icon_mid_autumn_event_nb2') this._refreshMidAutumnIcon();
         },
       );
@@ -698,10 +700,10 @@ export class TopBar extends PIXI.Container {
     this._eventBoardIcon.scale.set(s);
   }
 
-  /** 清凉一夏独立入口：与花间珠匣并列，不占用周末/周二/周四的互斥活动槽。 */
-  private _buildCoolSummerButton(): void {
+  /** 限时兑换活动独立入口：与花间珠匣并列，不占用周末/周二/周四的互斥活动槽。 */
+  private _buildExchangeButton(): void {
     const wrap = new PIXI.Container();
-    wrap.position.set(COOL_SUMMER_BTN_CX, COOL_SUMMER_BTN_CY);
+    wrap.position.set(EXCHANGE_BTN_CX, EXCHANGE_BTN_CY);
     wrap.hitArea = new PIXI.Rectangle(
       -EVENT_HIT_W / 2,
       -EVENT_HIT_H / 2 + EVENT_HIT_SHIFT_Y,
@@ -711,16 +713,16 @@ export class TopBar extends PIXI.Container {
     wrap.eventMode = 'static';
     wrap.cursor = 'pointer';
     wrap.zIndex = 25;
-    wrap.name = 'coolSummerEventBtn';
+    wrap.name = 'exchangeEventBtn';
 
-    const tex = TextureCache.get('icon_cool_summer_event_nb2') ?? TextureCache.get('icon_gift');
+    const tex = TextureCache.get(EXCHANGE_ICON_KEY) ?? TextureCache.get('icon_gift');
     if (tex?.width > 0) {
       const sp = new PIXI.Sprite(tex);
       sp.anchor.set(0.5);
-      sp.scale.set(Math.min(COOL_SUMMER_ICON_SIZE / tex.width, COOL_SUMMER_ICON_SIZE / tex.height));
+      sp.scale.set(Math.min(EXCHANGE_ICON_SIZE / tex.width, EXCHANGE_ICON_SIZE / tex.height));
       sp.eventMode = 'none';
       wrap.addChild(sp);
-      this._coolSummerIcon = sp;
+      this._exchangeIcon = sp;
     }
 
     const redDot = new PIXI.Graphics();
@@ -729,35 +731,35 @@ export class TopBar extends PIXI.Container {
     redDot.drawCircle(QUEST_HIT / 2 - 5, -QUEST_HIT / 2 + 7, 6);
     redDot.endFill();
     wrap.addChild(redDot);
-    this._coolSummerRedDot = redDot;
+    this._exchangeRedDot = redDot;
 
     this._bindButtonClickSfx(wrap);
     wrap.on('pointertap', (e: PIXI.FederatedPointerEvent) => {
       e.stopPropagation();
-      EventBus.emit('panel:openCoolSummerEvent');
+      EventBus.emit('panel:openExchangeEvent');
     });
     this.addChild(wrap);
-    this._coolSummerBtnWrap = wrap;
-    this.updateCoolSummerButton();
+    this._exchangeBtnWrap = wrap;
+    this.updateExchangeButton();
   }
 
-  private _refreshCoolSummerIcon(): void {
-    if (!this._coolSummerIcon) return;
-    const tex = TextureCache.get('icon_cool_summer_event_nb2');
+  private _refreshExchangeIcon(): void {
+    if (!this._exchangeIcon) return;
+    const tex = TextureCache.get(EXCHANGE_ICON_KEY);
     if (!tex?.width) return;
-    this._coolSummerIcon.texture = tex;
-    this._coolSummerIcon.scale.set(
-      Math.min(COOL_SUMMER_ICON_SIZE / tex.width, COOL_SUMMER_ICON_SIZE / tex.height),
+    this._exchangeIcon.texture = tex;
+    this._exchangeIcon.scale.set(
+      Math.min(EXCHANGE_ICON_SIZE / tex.width, EXCHANGE_ICON_SIZE / tex.height),
     );
   }
 
-  updateCoolSummerButton(): void {
+  updateExchangeButton(): void {
     this._layoutSeasonalEventButtons();
   }
 
   private _buildMidAutumnButton(): void {
     const wrap = new PIXI.Container();
-    wrap.position.set(COOL_SUMMER_BTN_CX, MID_AUTUMN_BTN_CY);
+    wrap.position.set(EXCHANGE_BTN_CX, MID_AUTUMN_BTN_CY);
     wrap.hitArea = new PIXI.Rectangle(
       -EVENT_HIT_W / 2,
       -EVENT_HIT_H / 2 + EVENT_HIT_SHIFT_Y,
@@ -813,7 +815,7 @@ export class TopBar extends PIXI.Container {
 
   /**
    * 任务右侧限时入口按当前可见项从左往右紧排：
-   * 花间珠匣 → 清凉一夏 → 月满中秋。下线的活动不占空位。
+   * 花间珠匣 → 兑换活动 → 月满中秋。下线的活动不占空位。
    */
   private _layoutSeasonalEventButtons(): void {
     let slot = 0;
@@ -826,12 +828,12 @@ export class TopBar extends PIXI.Container {
     };
     const jewelryOn = isJewelryEventUnlocked(CurrencyManager.state.level);
     place(this._eventBoardBtnWrap, jewelryOn);
-    place(this._coolSummerBtnWrap, CoolSummerEventManager.isActive());
+    place(this._exchangeBtnWrap, ExchangeEventManager.isActive());
     place(this._midAutumnBtnWrap, MidAutumnEventManager.isActive());
     if (!jewelryOn && this._eventRedDot) this._eventRedDot.visible = false;
-    if (this._coolSummerRedDot) {
-      this._coolSummerRedDot.visible = !!this._coolSummerBtnWrap?.visible
-        && CoolSummerEventManager.hasRedDot;
+    if (this._exchangeRedDot) {
+      this._exchangeRedDot.visible = !!this._exchangeBtnWrap?.visible
+        && ExchangeEventManager.hasRedDot;
     }
     if (this._midAutumnRedDot) {
       this._midAutumnRedDot.visible = !!this._midAutumnBtnWrap?.visible
@@ -909,8 +911,8 @@ export class TopBar extends PIXI.Container {
     EventBus.on('quest:updated', () => this.updateQuestRedDot());
     EventBus.on('quest:taskCompleted', () => this.updateQuestRedDot());
     EventBus.on('eventBoard:changed', () => this.updateEventRedDot());
-    EventBus.on('coolSummerEvent:changed', () => this.updateCoolSummerButton());
-    EventBus.on('coolSummerEvent:periodChanged', () => this.updateCoolSummerButton());
+    EventBus.on('exchangeEvent:changed', () => this.updateExchangeButton());
+    EventBus.on('exchangeEvent:periodChanged', () => this.updateExchangeButton());
     EventBus.on('midAutumnEvent:changed', () => this.updateMidAutumnButton());
     EventBus.on('midAutumnEvent:periodChanged', () => this.updateMidAutumnButton());
     EventBus.on('star:levelUp', () => {
@@ -929,7 +931,7 @@ export class TopBar extends PIXI.Container {
     this._drawStaminaBar(barRatio);
     this.updateEventBoardButtonVisibility();
     this.updateEventRedDot();
-    this.updateCoolSummerButton();
+    this.updateExchangeButton();
   }
 
   /** 由外部 ticker 调用，刷新体力倒计时 */
@@ -988,17 +990,17 @@ export class TopBar extends PIXI.Container {
     };
   }
 
-  /** 清凉一夏入口中心（清凉小扇飞入落点）。 */
-  getCoolSummerEventIconPos(): { x: number; y: number } {
+  /** 兑换活动入口中心（活动货币飞入落点）。 */
+  getExchangeEventIconPos(): { x: number; y: number } {
     return {
-      x: this._coolSummerBtnWrap?.position.x ?? COOL_SUMMER_BTN_CX,
-      y: COOL_SUMMER_BTN_CY,
+      x: this._exchangeBtnWrap?.position.x ?? EXCHANGE_BTN_CX,
+      y: EXCHANGE_BTN_CY,
     };
   }
 
   getMidAutumnEventIconPos(): { x: number; y: number } {
     return {
-      x: this._midAutumnBtnWrap?.position.x ?? COOL_SUMMER_BTN_CX,
+      x: this._midAutumnBtnWrap?.position.x ?? EXCHANGE_BTN_CX,
       y: MID_AUTUMN_BTN_CY,
     };
   }
@@ -1052,9 +1054,9 @@ export class TopBar extends PIXI.Container {
     });
   }
 
-  /** 清凉一夏入口弹跳反馈。 */
-  flashCoolSummerEvent(): void {
-    const wrap = this._coolSummerBtnWrap;
+  /** 兑换活动入口弹跳反馈。 */
+  flashExchangeEvent(): void {
+    const wrap = this._exchangeBtnWrap;
     if (!wrap) return;
     TweenManager.cancelTarget(wrap.scale);
     wrap.scale.set(1);

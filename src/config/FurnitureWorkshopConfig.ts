@@ -412,6 +412,26 @@ export const WORKSHOP_BLUEPRINT_DEFS: WorkshopBlueprintDef[] = [
     ],
   },
   {
+    id: 'blueprint_workshop_maple_arch_window',
+    name: '枫红拱窗图纸',
+    outputDecoId: 'workshop_maple_arch_window',
+    rarity: 'rare',
+    sourceText: '活动获得',
+    icon: 'workshop_blueprint_generic',
+    category: 'wallart',
+    acquire: [{ kind: 'event', label: '金秋丰收' }],
+    colorOptions: [
+      {
+        id: 'default',
+        name: '默认',
+        outputDecoId: 'workshop_maple_arch_window',
+        materialCost: 12,
+        dyeCost: 0,
+        huayuanCost: 11200,
+      },
+    ],
+  },
+  {
     id: 'blueprint_workshop_mint_bougainvillea_bay_window',
     name: '暖阳飘窗图纸',
     outputDecoId: 'workshop_willow_wood_bay_window',

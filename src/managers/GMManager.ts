@@ -72,8 +72,8 @@ import {
 import { RewardBoxManager } from './RewardBoxManager';
 import { MergeCompanionManager } from './MergeCompanionManager';
 import { EventBoardManager } from './EventBoardManager';
-import { CoolSummerEventManager } from './CoolSummerEventManager';
-import { MidAutumnEventManager } from './MidAutumnEventManager';
+import { ExchangeEventManager } from './ExchangeEventManager';
+import { ACTIVE_EXCHANGE_THEME } from '@/config/events/exchange/ExchangeEventRegistry';
 import { STAMINA_MAX } from '@/config/Constants';
 
 const _api = getNativePlatformApi();
@@ -696,92 +696,42 @@ class GMManagerClass {
     });
 
     this._commands.push({
-      id: 'gm_open_cool_summer',
+      id: 'gm_open_exchange_event',
       group: ' 活动棋盘',
-      name: ' 打开清凉一夏',
+      name: ` 打开当前兑换活动（${ACTIVE_EXCHANGE_THEME.name}）`,
       desc: '临时开放活动并打开兑换页（仅本次运行，不写入正式活动时间）',
       execute: () => {
-        CoolSummerEventManager.gmSetActiveOverride(true);
-        CustomerManager.refreshCoolSummerRewards();
-        EventBus.emit('panel:openCoolSummerEvent');
-        return ' 已临时开放清凉一夏';
+        ExchangeEventManager.gmSetActiveOverride(true);
+        CustomerManager.refreshExchangeEventRewards();
+        EventBus.emit('panel:openExchangeEvent');
+        return ` 已临时开放${ACTIVE_EXCHANGE_THEME.name}`;
       },
     });
 
-    this._commands.push({
-      id: 'gm_add_cool_summer_fans',
-      group: ' 活动棋盘',
-      name: ' 清凉小扇 +500',
-      desc: '临时开放活动并增加 500 把清凉小扇，方便兑换测试',
-      execute: () => {
-        CoolSummerEventManager.gmSetActiveOverride(true);
-        CustomerManager.refreshCoolSummerRewards();
-        const bal = CoolSummerEventManager.gmAddCurrency(500);
-        ToastMessage.show(`清凉小扇 +500，当前 ${bal}`);
-        return ` 清凉小扇余额：${bal}`;
-      },
-    });
+    for (const amount of [500, 2000]) {
+      this._commands.push({
+        id: amount === 500 ? 'gm_add_exchange_currency' : 'gm_add_exchange_currency_2k',
+        group: ' 活动棋盘',
+        name: ` 活动货币 +${amount}（${ACTIVE_EXCHANGE_THEME.currencyName}）`,
+        desc: `临时开放活动并增加 ${amount} 个${ACTIVE_EXCHANGE_THEME.currencyName}，方便兑换测试`,
+        execute: () => {
+          ExchangeEventManager.gmSetActiveOverride(true);
+          CustomerManager.refreshExchangeEventRewards();
+          const bal = ExchangeEventManager.gmAddCurrency(amount);
+          ToastMessage.show(`${ACTIVE_EXCHANGE_THEME.currencyName} +${amount}，当前 ${bal}`);
+          return ` ${ACTIVE_EXCHANGE_THEME.currencyName}余额：${bal}`;
+        },
+      });
+    }
 
     this._commands.push({
-      id: 'gm_add_cool_summer_fans_2k',
+      id: 'gm_reset_exchange_event',
       group: ' 活动棋盘',
-      name: ' 清凉小扇 +2000',
-      desc: '临时开放活动并增加 2000 把清凉小扇，方便清店测试',
+      name: ` 重置当前兑换活动（${ACTIVE_EXCHANGE_THEME.name}）`,
+      desc: '清空活动货币、购买次数与分类奖励领取状态',
       execute: () => {
-        CoolSummerEventManager.gmSetActiveOverride(true);
-        CustomerManager.refreshCoolSummerRewards();
-        const bal = CoolSummerEventManager.gmAddCurrency(2000);
-        ToastMessage.show(`清凉小扇 +2000，当前 ${bal}`);
-        return ` 清凉小扇余额：${bal}`;
-      },
-    });
-
-    this._commands.push({
-      id: 'gm_reset_cool_summer',
-      group: ' 活动棋盘',
-      name: ' 重置清凉一夏',
-      desc: '清空小扇、购买次数与分类奖励领取状态',
-      execute: () => {
-        CoolSummerEventManager.gmReset();
-        return ' 已重置清凉一夏活动进度';
-      },
-    });
-
-    this._commands.push({
-      id: 'gm_open_mid_autumn',
-      group: ' 活动棋盘',
-      name: ' 打开月满中秋',
-      desc: '临时开放活动并打开转盘页（仅本次运行）',
-      execute: () => {
-        MidAutumnEventManager.gmSetActiveOverride(true);
-        CustomerManager.refreshMidAutumnRewards();
-        EventBus.emit('panel:openMidAutumnEvent');
-        return ' 已临时开放月满中秋';
-      },
-    });
-
-    this._commands.push({
-      id: 'gm_add_mid_autumn_lanterns',
-      group: ' 活动棋盘',
-      name: ' 玉兔灯 +80',
-      desc: '临时开放活动并增加 80 盏玉兔灯，方便转盘测试',
-      execute: () => {
-        MidAutumnEventManager.gmSetActiveOverride(true);
-        CustomerManager.refreshMidAutumnRewards();
-        const bal = MidAutumnEventManager.gmAddCurrency(80);
-        ToastMessage.show(`玉兔灯 +80，当前 ${bal}`);
-        return ` 玉兔灯余额：${bal}`;
-      },
-    });
-
-    this._commands.push({
-      id: 'gm_reset_mid_autumn',
-      group: ' 活动棋盘',
-      name: ' 重置月满中秋',
-      desc: '清空玉兔灯、抽奖次数与转盘轮次',
-      execute: () => {
-        MidAutumnEventManager.gmReset();
-        return ' 已重置月满中秋活动进度';
+        ExchangeEventManager.gmReset();
+        return ` 已重置${ACTIVE_EXCHANGE_THEME.name}活动进度`;
       },
     });
 
@@ -816,8 +766,6 @@ class GMManagerClass {
           }
           placed.push(ITEM_DEFS.get(id)!.name);
         }
-        MidAutumnEventManager.gmSetActiveOverride(true);
-        CustomerManager.refreshMidAutumnRewards();
         return ` 已放置：${placed.join('、')}`;
       },
     });

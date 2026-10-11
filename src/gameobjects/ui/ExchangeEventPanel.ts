@@ -5,16 +5,13 @@ import { EventBus } from '@/core/EventBus';
 import { attachCanvasMoveUp, eventClientPoint, type TouchCanvasLike } from '@/utils/canvasInteraction';
 import { OverlayManager } from '@/core/OverlayManager';
 import { TweenManager, Ease } from '@/core/TweenManager';
-import {
-  COOL_SUMMER_EVENT_NAME,
-  COOL_SUMMER_SEASON_ID,
-  COOL_SUMMER_SHOP_CATEGORIES,
-  COOL_SUMMER_SHOP_PRODUCTS,
-  type CoolSummerGrant,
-  type CoolSummerShopCategory,
-  type CoolSummerShopProduct,
-} from '@/config/events/CoolSummerEventConfig';
-import { CoolSummerEventManager } from '@/managers/CoolSummerEventManager';
+import { ACTIVE_EXCHANGE_THEME } from '@/config/events/exchange/ExchangeEventRegistry';
+import type {
+  ExchangeGrant,
+  ExchangeShopCategory,
+  ExchangeShopProduct,
+} from '@/config/events/exchange/ExchangeEventTheme';
+import { ExchangeEventManager } from '@/managers/ExchangeEventManager';
 import { DECO_MAP } from '@/config/DecorationConfig';
 import {
   WORKSHOP_BLUEPRINT_MAP,
@@ -30,23 +27,16 @@ import {
   WORKSHOP_BLUEPRINT_SCROLL_KEY,
 } from '@/utils/WorkshopBlueprintDisplay';
 
-const COOL_SUMMER_PANEL_SHELL_KEY = 'cool_summer_event_panel_shell_v2';
+const THEME = ACTIVE_EXCHANGE_THEME;
+const ART = THEME.art;
+const COLORS = THEME.colors;
+const { closeNX: CLOSE_NX, closeNY: CLOSE_NY, contentNX: CONTENT_NX, contentNY: CONTENT_NY } = THEME.layout;
+const { contentNW: CONTENT_NW, contentNH: CONTENT_NH } = THEME.layout;
 
 const Z = 11240;
 const FALLBACK_SHELL_W = 680;
 const FALLBACK_SHELL_H = 1138;
-/** 壳体图右上红 X 中心（按 v2 图像素实测） */
-const CLOSE_NX = 0.905;
-const CLOSE_NY = 0.084;
 const CLOSE_R = 56;
-const TITLE_NY = 0.135;
-const CURRENCY_NY = 0.275;
-const COUNTDOWN_NY = 0.325;
-const CONTENT_NX = 0.11;
-const CONTENT_NY = 0.31;
-const CONTENT_NW = 0.78;
-/** 略收矮，避免列表底边压进壳体底部装饰条 */
-const CONTENT_NH = 0.40;
 const CARD_W = 172;
 const CARD_H = 172;
 const CARD_GAP_X = 14;
@@ -59,7 +49,8 @@ const LIST_BOTTOM_PAD = 48;
 /** 滚动视口相对 content 区再上收，给底饰留空 */
 const VIEWPORT_BOTTOM_INSET = 56;
 
-export class CoolSummerEventPanel extends PIXI.Container {
+/** 限时兑换活动面板：壳体、文案、配色、商品全部来自当前主题。 */
+export class ExchangeEventPanel extends PIXI.Container {
   private _isOpen = false;
   private _opening = false;
   private _bg!: PIXI.Graphics;
@@ -91,14 +82,14 @@ export class CoolSummerEventPanel extends PIXI.Container {
     this.sortableChildren = true;
     this._build();
     this._setupCanvasScroll();
-    EventBus.on('panel:openCoolSummerEvent', () => this.open());
-    EventBus.on('coolSummerEvent:changed', () => {
+    EventBus.on('panel:openExchangeEvent', () => this.open());
+    EventBus.on('exchangeEvent:changed', () => {
       if (this._isOpen) this._refresh();
     });
-    EventBus.on('coolSummerEvent:periodChanged', () => {
+    EventBus.on('exchangeEvent:periodChanged', () => {
       if (!this._isOpen) return;
-      if (!CoolSummerEventManager.isActive()) {
-        ToastMessage.show('清凉一夏活动已结束');
+      if (!ExchangeEventManager.isActive()) {
+        ToastMessage.show(`${THEME.name}活动已结束`);
         this.close();
       } else {
         this._refresh();
@@ -108,16 +99,13 @@ export class CoolSummerEventPanel extends PIXI.Container {
 
   open(): void {
     if (this._isOpen || this._opening) return;
-    if (!CoolSummerEventManager.isActive()) {
-      ToastMessage.show('清凉一夏暂未开放');
+    if (!ExchangeEventManager.isActive()) {
+      ToastMessage.show(`${THEME.name}暂未开放`);
       return;
     }
     this._opening = true;
     void Promise.all([
-      TextureCache.preloadEventKeys(
-        COOL_SUMMER_SEASON_ID,
-        [COOL_SUMMER_PANEL_SHELL_KEY],
-      ),
+      TextureCache.preloadEventKeys(THEME.seasonId, [ART.panelShellKey]),
       TextureCache.preloadKeys(this._rewardIconKeys()),
     ]).finally(() => {
       this._opening = false;
@@ -219,7 +207,7 @@ export class CoolSummerEventPanel extends PIXI.Container {
   }
 
   private _rebuildArt(): void {
-    const tex = TextureCache.get(COOL_SUMMER_PANEL_SHELL_KEY);
+    const tex = TextureCache.get(ART.panelShellKey);
     if (tex && tex.width > 1) {
       this._art.texture = tex;
       this._art.visible = true;
@@ -282,7 +270,7 @@ export class CoolSummerEventPanel extends PIXI.Container {
     this._content.addChild(viewport);
 
     let y = 0;
-    for (const category of COOL_SUMMER_SHOP_CATEGORIES) {
+    for (const category of THEME.categories) {
       y = this._drawCategory(this._list, category, y);
     }
     this._contentHeight = y + LIST_BOTTOM_PAD;
@@ -290,12 +278,12 @@ export class CoolSummerEventPanel extends PIXI.Container {
   }
 
   private _drawProgrammaticChrome(topY: number): void {
-    const title = new PIXI.Text(COOL_SUMMER_EVENT_NAME, {
+    const title = new PIXI.Text(THEME.name, {
       fontSize: 38,
-      fill: 0x8A5638,
+      fill: COLORS.titleFill,
       fontFamily: FONT_FAMILY,
       fontWeight: 'bold',
-      stroke: 0xFFF6D5,
+      stroke: COLORS.titleStroke,
       strokeThickness: 5,
     } as PIXI.TextStyle);
     title.anchor.set(0.5);
@@ -307,12 +295,12 @@ export class CoolSummerEventPanel extends PIXI.Container {
     const pillY = 0;
     const pill = new PIXI.Graphics();
     pill.beginFill(0xF8FFFC, 0.98);
-    pill.lineStyle(2.2, 0x55B9B3, 1);
+    pill.lineStyle(2.2, COLORS.accent, 1);
     pill.drawRoundedRect(this._areaW / 2 - pillW / 2, pillY - pillH / 2, pillW, pillH, pillH / 2);
     pill.endFill();
     this._content.addChild(pill);
 
-    const fan = this._makeIcon('icon_cool_summer_fan', 30);
+    const fan = this._makeIcon(ART.currencyIconKey, 30);
     fan.position.set(this._areaW / 2 - pillW / 2 + 36, pillY);
     fan.eventMode = 'static';
     fan.cursor = 'pointer';
@@ -323,9 +311,9 @@ export class CoolSummerEventPanel extends PIXI.Container {
     });
     this._content.addChild(fan);
 
-    const currency = new PIXI.Text(`${CoolSummerEventManager.currency}`, {
+    const currency = new PIXI.Text(`${ExchangeEventManager.currency}`, {
       fontSize: 24,
-      fill: 0x1A4F4C,
+      fill: COLORS.currencyText,
       fontFamily: FONT_FAMILY,
       fontWeight: 'bold',
       stroke: 0xFFFFFF,
@@ -335,7 +323,7 @@ export class CoolSummerEventPanel extends PIXI.Container {
     currency.position.set(this._areaW / 2 - pillW / 2 + 58, pillY);
     this._content.addChild(currency);
 
-    const countdown = new PIXI.Text(`活动剩余 ${CoolSummerEventManager.countdownLabel() ?? '已结束'}`, {
+    const countdown = new PIXI.Text(`活动剩余 ${ExchangeEventManager.countdownLabel() ?? '已结束'}`, {
       fontSize: 18,
       fill: 0x765548,
       fontFamily: FONT_FAMILY,
@@ -346,23 +334,23 @@ export class CoolSummerEventPanel extends PIXI.Container {
     this._content.addChild(countdown);
   }
 
-  private _drawCategory(target: PIXI.Container, category: CoolSummerShopCategory, y: number): number {
-    const claimed = CoolSummerEventManager.isCategoryRewardClaimed(category.id);
-    const canClaim = CoolSummerEventManager.canClaimCategoryReward(category.id);
+  private _drawCategory(target: PIXI.Container, category: ExchangeShopCategory, y: number): number {
+    const claimed = ExchangeEventManager.isCategoryRewardClaimed(category.id);
+    const canClaim = ExchangeEventManager.canClaimCategoryReward(category.id);
     const headerH = canClaim ? SECTION_HEADER_CLAIM_H : SECTION_HEADER_H;
 
     const header = new PIXI.Container();
     header.position.set(0, y);
     const bg = new PIXI.Graphics();
-    bg.beginFill(0xBFEFE6, 0.98);
-    bg.lineStyle(2.5, 0x51AAA8, 1);
+    bg.beginFill(COLORS.headerFill, 0.98);
+    bg.lineStyle(2.5, COLORS.headerStroke, 1);
     bg.drawRoundedRect(0, 0, this._areaW, headerH, 18);
     bg.endFill();
     header.addChild(bg);
 
     const title = new PIXI.Text(category.name, {
       fontSize: 24,
-      fill: 0x285E5D,
+      fill: COLORS.headerText,
       fontFamily: FONT_FAMILY,
       fontWeight: 'bold',
     });
@@ -422,7 +410,7 @@ export class CoolSummerEventPanel extends PIXI.Container {
     this._drawCategoryRewardIcons(header, category.completionRewards, rewardRight, rewardCy, claimed);
     target.addChild(header);
 
-    const products = COOL_SUMMER_SHOP_PRODUCTS.filter(p => p.categoryId === category.id);
+    const products = THEME.products.filter(p => p.categoryId === category.id);
     const cardTop = y + headerH + 12;
     const innerW = this._areaW;
     const gapX = CARD_GAP_X;
@@ -453,20 +441,20 @@ export class CoolSummerEventPanel extends PIXI.Container {
     const h = 198;
     const bg = new PIXI.Graphics();
     bg.beginFill(0xFFFDF3, 0.98);
-    bg.lineStyle(3, 0x55B9B3, 1);
+    bg.lineStyle(3, COLORS.accent, 1);
     bg.drawRoundedRect(-w / 2, 0, w, h, 18);
     bg.endFill();
     bg.lineStyle(1.5, 0xffffff, 0.85);
     bg.drawRoundedRect(-w / 2 + 6, 6, w - 12, h - 12, 14);
     root.addChild(bg);
 
-    const icon = this._makeIcon('icon_cool_summer_fan', 38);
+    const icon = this._makeIcon(ART.currencyIconKey, 38);
     icon.position.set(-w / 2 + 36, 30);
     root.addChild(icon);
 
-    const title = new PIXI.Text('清凉小扇', {
+    const title = new PIXI.Text(THEME.currencyName, {
       fontSize: 26,
-      fill: 0x285E5D,
+      fill: COLORS.headerText,
       fontFamily: FONT_FAMILY,
       fontWeight: 'bold',
     } as PIXI.TextStyle);
@@ -475,7 +463,7 @@ export class CoolSummerEventPanel extends PIXI.Container {
     root.addChild(title);
 
     const body = new PIXI.Text(
-      '获取来源：完成包含冷饮或果切的订单\n用途：在清凉一夏活动中兑换奖励',
+      `${THEME.copy.currencySource}\n${THEME.copy.currencyUsage}`,
       {
         fontSize: 20,
         fill: 0x765548,
@@ -490,7 +478,7 @@ export class CoolSummerEventPanel extends PIXI.Container {
     root.addChild(body);
 
     const note = new PIXI.Text(
-      '活动截止后未兑换完的扇子，自动换算为等量花愿值。',
+      THEME.copy.currencySettleNote,
       {
         fontSize: 19,
         fill: 0xD97706,
@@ -519,7 +507,7 @@ export class CoolSummerEventPanel extends PIXI.Container {
 
   private _drawCategoryRewardIcons(
     target: PIXI.Container,
-    grants: readonly CoolSummerGrant[],
+    grants: readonly ExchangeGrant[],
     rightX: number,
     cy: number,
     claimed: boolean,
@@ -551,7 +539,7 @@ export class CoolSummerEventPanel extends PIXI.Container {
     }
   }
 
-  private _estimateCategoryRewardWidth(grants: readonly CoolSummerGrant[]): number {
+  private _estimateCategoryRewardWidth(grants: readonly ExchangeGrant[]): number {
     return grants.reduce((sum, grant) => {
       const value = `x${this._grantValueLabel(grant)}`;
       // 粗估：图标 42 + 描边粗体数字约 13px/字 + 间距
@@ -559,11 +547,11 @@ export class CoolSummerEventPanel extends PIXI.Container {
     }, 0);
   }
 
-  private _makeProductCard(product: CoolSummerShopProduct, cardW = CARD_W): PIXI.Container {
+  private _makeProductCard(product: ExchangeShopProduct, cardW = CARD_W): PIXI.Container {
     const root = new PIXI.Container();
-    const remaining = CoolSummerEventManager.getRemainingStock(product.id);
-    const satisfied = CoolSummerEventManager.isProductSatisfied(product.id);
-    const enabled = !satisfied && remaining > 0 && CoolSummerEventManager.currency >= product.cost;
+    const remaining = ExchangeEventManager.getRemainingStock(product.id);
+    const satisfied = ExchangeEventManager.isProductSatisfied(product.id);
+    const enabled = !satisfied && remaining > 0 && ExchangeEventManager.currency >= product.cost;
 
     const radius = 15;
     const bg = new PIXI.Graphics();
@@ -633,7 +621,7 @@ export class CoolSummerEventPanel extends PIXI.Container {
     buyBtn.addChild(price);
 
     if (!satisfied) {
-      const fan = this._makeIcon('icon_cool_summer_fan', 26);
+      const fan = this._makeIcon(ART.currencyIconKey, 26);
       fan.position.set(btnW / 2 - 26, btnH / 2);
       buyBtn.addChild(fan);
     }
@@ -714,8 +702,8 @@ export class CoolSummerEventPanel extends PIXI.Container {
     return Game.clientToDesign(p.x, p.y);
   }
 
-  private _purchase(product: CoolSummerShopProduct): void {
-    const result = CoolSummerEventManager.purchase(product.id);
+  private _purchase(product: ExchangeShopProduct): void {
+    const result = ExchangeEventManager.purchase(product.id);
     if (result.ok) {
       const entry = this._grantToObtainEntry(product.grant);
       this._refresh();
@@ -731,7 +719,7 @@ export class CoolSummerEventPanel extends PIXI.Container {
     const messages: Record<string, string> = {
       not_active: '活动已结束',
       out_of_stock: '该奖励已售罄',
-      not_enough_currency: '清凉小扇不足',
+      not_enough_currency: `${THEME.currencyName}不足`,
       already_owned: '已经拥有该奖励',
       grant_failed: '奖励发放失败，请稍后再试',
       product_not_found: '奖励配置不存在',
@@ -739,9 +727,9 @@ export class CoolSummerEventPanel extends PIXI.Container {
     ToastMessage.show(messages[result.reason] ?? '暂时无法兑换');
   }
 
-  private _claimCategory(category: CoolSummerShopCategory): void {
+  private _claimCategory(category: ExchangeShopCategory): void {
     if (this._dragMoved) return;
-    const result = CoolSummerEventManager.claimCategoryReward(category.id);
+    const result = ExchangeEventManager.claimCategoryReward(category.id);
     if (result.ok) {
       const entries = category.completionRewards
         .map(grant => this._grantToObtainEntry(grant))
@@ -762,7 +750,7 @@ export class CoolSummerEventPanel extends PIXI.Container {
       });
   }
 
-  private _grantToObtainEntry(grant: CoolSummerGrant): ItemObtainEntry | null {
+  private _grantToObtainEntry(grant: ExchangeGrant): ItemObtainEntry | null {
     switch (grant.kind) {
       case 'stamina':
         return { kind: 'direct_currency', currency: 'stamina', amount: grant.amount };
@@ -831,7 +819,7 @@ export class CoolSummerEventPanel extends PIXI.Container {
       root.addChild(sprite);
     } else {
       const fallback = new PIXI.Graphics();
-      fallback.beginFill(0x77D2C8);
+      fallback.beginFill(COLORS.iconFallback);
       fallback.drawCircle(0, 0, size * 0.36);
       fallback.endFill();
       root.addChild(fallback);
@@ -840,7 +828,7 @@ export class CoolSummerEventPanel extends PIXI.Container {
   }
 
   /** 图纸奖励：与工坊图纸商店相同的卷轴+家具剪影；其它奖励走普通图标 */
-  private _makeGrantIcon(grant: CoolSummerGrant, size: number): PIXI.Container {
+  private _makeGrantIcon(grant: ExchangeGrant, size: number): PIXI.Container {
     if (grant.kind === 'blueprint') {
       const root = new PIXI.Container();
       const decoId = WORKSHOP_BLUEPRINT_MAP.get(grant.blueprintId)?.outputDecoId;
@@ -856,11 +844,11 @@ export class CoolSummerEventPanel extends PIXI.Container {
 
   private _rewardIconKeys(): string[] {
     const keys = new Set<string>([
-      'icon_cool_summer_fan',
+      ART.currencyIconKey,
       WORKSHOP_BLUEPRINT_SCROLL_KEY,
       'icon_workshop_blueprint_scroll',
     ]);
-    const addGrantKeys = (grant: CoolSummerGrant) => {
+    const addGrantKeys = (grant: ExchangeGrant) => {
       if (grant.kind === 'blueprint') {
         const decoId = WORKSHOP_BLUEPRINT_MAP.get(grant.blueprintId)?.outputDecoId;
         if (!decoId) return;
@@ -872,14 +860,14 @@ export class CoolSummerEventPanel extends PIXI.Container {
       }
       keys.add(this._grantIcon(grant));
     };
-    for (const product of COOL_SUMMER_SHOP_PRODUCTS) addGrantKeys(product.grant);
-    for (const category of COOL_SUMMER_SHOP_CATEGORIES) {
+    for (const product of THEME.products) addGrantKeys(product.grant);
+    for (const category of THEME.categories) {
       for (const grant of category.completionRewards) addGrantKeys(grant);
     }
     return Array.from(keys);
   }
 
-  private _grantIcon(grant: CoolSummerGrant): string {
+  private _grantIcon(grant: ExchangeGrant): string {
     switch (grant.kind) {
       case 'stamina':
         return 'icon_energy';
@@ -898,7 +886,7 @@ export class CoolSummerEventPanel extends PIXI.Container {
     }
   }
 
-  private _grantLabel(grant: CoolSummerGrant): string {
+  private _grantLabel(grant: ExchangeGrant): string {
     switch (grant.kind) {
       case 'stamina':
         return `体力×${grant.amount}`;
@@ -917,7 +905,7 @@ export class CoolSummerEventPanel extends PIXI.Container {
     }
   }
 
-  private _grantValueLabel(grant: CoolSummerGrant): string {
+  private _grantValueLabel(grant: ExchangeGrant): string {
     switch (grant.kind) {
       case 'stamina':
       case 'huayuan':
@@ -932,7 +920,7 @@ export class CoolSummerEventPanel extends PIXI.Container {
     }
   }
 
-  private _grantsLabel(grants: readonly CoolSummerGrant[]): string {
+  private _grantsLabel(grants: readonly ExchangeGrant[]): string {
     return grants.map(g => this._grantLabel(g)).join(' + ');
   }
 }

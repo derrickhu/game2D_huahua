@@ -1,0 +1,12 @@
+{
+  "seasonId": "mid_autumn_2026",
+  "name": "月满中秋",
+  "kind": "wheel",
+  "theme": "src/config/events/MidAutumnEventConfig.ts",
+  "note": "转盘玩法，未接入兑换框架；MidAutumnEventManager 保留用于旧存档结算。活动家具 event_mid_autumn_*、嫦娥装、月饼物品图仍在包内。复刻 restore 后把 TextureCache.ARCHIVED_IMAGE_MAP 里 mid_autumn 条目挪回 MAIN_IMAGE_MAP / 活动分包 map。",
+  "files": [
+    "images/ui/icon_mid_autumn_event_nb2.png",
+    "images/ui/icon_mid_autumn_lantern.png",
+    "subpkg_events/images/mid_autumn_event/**"
+  ]
+}

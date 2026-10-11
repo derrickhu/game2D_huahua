@@ -70,7 +70,7 @@ import {
 } from '@/config/FurnitureWorkshopConfig';
 import { AffinityManager } from './AffinityManager';
 import { WeekendHuayuanBoostManager } from './WeekendHuayuanBoostManager';
-import { CoolSummerEventManager } from './CoolSummerEventManager';
+import { ExchangeEventManager } from './ExchangeEventManager';
 import { MidAutumnEventManager } from './MidAutumnEventManager';
 
 export interface DemandSlot {
@@ -100,8 +100,8 @@ export interface CustomerInstance {
   workshopMaterialRewards?: WorkshopMaterialReward[];
   /** 首饰活动原石奖励：命中的普通订单额外送 1 原石（生成时决定并展示） */
   eventStoneReward?: number;
-  /** 清凉一夏：含冷饮/果切订单额外产出的清凉小扇（生成时固化并展示） */
-  coolSummerFanReward?: number;
+  /** 限时兑换活动：命中当前主题获取规则的订单额外产出的活动货币（读档时按订单内容重算） */
+  exchangeEventReward?: number;
   /** 月满中秋：含月饼订单额外产出的玉兔灯（生成时固化并展示） */
   midAutumnLanternReward?: number;
   /** 预留：连续订单序号 */
@@ -132,7 +132,6 @@ export interface CustomerSaveEntry {
   staminaChestReward?: string;
   workshopMaterialRewards?: WorkshopMaterialReward[];
   eventStoneReward?: number;
-  coolSummerFanReward?: number;
   midAutumnLanternReward?: number;
   chainIndex?: number;
   bonusMultiplier?: number;
@@ -312,10 +311,6 @@ function normalizeCustomerPersistState(raw: unknown): CustomerPersistState | nul
         typeof r.eventStoneReward === 'number' && r.eventStoneReward > 0
           ? Math.floor(r.eventStoneReward)
           : undefined,
-      coolSummerFanReward:
-        typeof r.coolSummerFanReward === 'number' && r.coolSummerFanReward > 0
-          ? Math.floor(r.coolSummerFanReward)
-          : undefined,
       midAutumnLanternReward:
         typeof r.midAutumnLanternReward === 'number' && r.midAutumnLanternReward > 0
           ? Math.floor(r.midAutumnLanternReward)
@@ -480,7 +475,6 @@ class CustomerManagerClass {
         staminaChestReward: c.staminaChestReward,
         workshopMaterialRewards: c.workshopMaterialRewards,
         eventStoneReward: c.eventStoneReward,
-        coolSummerFanReward: c.coolSummerFanReward,
         midAutumnLanternReward: c.midAutumnLanternReward,
         chainIndex: c.chainIndex,
         bonusMultiplier: c.bonusMultiplier,
@@ -526,11 +520,7 @@ class CustomerManagerClass {
         staminaChestReward: e.staminaChestReward,
         workshopMaterialRewards: e.workshopMaterialRewards,
         eventStoneReward: e.eventStoneReward,
-        coolSummerFanReward: CoolSummerEventManager.isActive()
-          ? (e.coolSummerFanReward
-            ?? CoolSummerEventManager.calculateOrderReward(e.slots.map(s => s.itemId))
-            ?? undefined)
-          : undefined,
+        exchangeEventReward: this._exchangeRewardFor(e.slots.map(s => s.itemId)),
         midAutumnLanternReward: MidAutumnEventManager.canCollectLanterns()
           ? (e.midAutumnLanternReward
             ?? MidAutumnEventManager.calculateOrderReward(e.slots.map(s => s.itemId))
@@ -578,7 +568,7 @@ class CustomerManagerClass {
     this._syncAntiRepeatFromQueueTail();
     this._bindBoardEvents();
     EventBus.on('tutorial:completed', this._onTutorialCompleted);
-    EventBus.on('coolSummerEvent:periodChanged', () => this.refreshCoolSummerRewards());
+    EventBus.on('exchangeEvent:periodChanged', () => this.refreshExchangeEventRewards());
     EventBus.on('midAutumnEvent:periodChanged', () => this.refreshMidAutumnRewards());
     EventBus.on('midAutumnEvent:changed', () => this._syncMidAutumnWheelClearedState());
     this._refreshWeekendHuayuanBonuses(false);
@@ -974,12 +964,7 @@ class CustomerManagerClass {
       customer.eventStoneReward = rollEventOrderStoneAmount(customer.tier);
     }
 
-    const coolSummerFanReward = CoolSummerEventManager.calculateOrderReward(
-      customer.slots.map(s => s.itemId),
-    );
-    if (CoolSummerEventManager.isActive() && coolSummerFanReward > 0) {
-      customer.coolSummerFanReward = coolSummerFanReward;
-    }
+    customer.exchangeEventReward = this._exchangeRewardFor(customer.slots.map(s => s.itemId));
 
     const midAutumnLanternReward = MidAutumnEventManager.calculateOrderReward(
       customer.slots.map(s => s.itemId),
@@ -1023,20 +1008,22 @@ class CustomerManagerClass {
     this._rescanAll();
   }
 
-  /** 活动跨日启停时刷新当前队列：活动开始补标，结束立即移除，避免旧订单过期后仍产扇。 */
-  refreshCoolSummerRewards(): void {
-    const active = CoolSummerEventManager.isActive();
+  /** 活动跨日启停时刷新当前队列：活动开始补标，结束立即移除，避免旧订单过期后仍产货币。 */
+  refreshExchangeEventRewards(): void {
     let changed = false;
     for (const customer of this._customers) {
-      const next = active
-        ? CoolSummerEventManager.calculateOrderReward(customer.slots.map(s => s.itemId))
-        : 0;
-      const normalized = next > 0 ? next : undefined;
-      if (customer.coolSummerFanReward === normalized) continue;
-      customer.coolSummerFanReward = normalized;
+      const normalized = this._exchangeRewardFor(customer.slots.map(s => s.itemId));
+      if (customer.exchangeEventReward === normalized) continue;
+      customer.exchangeEventReward = normalized;
       changed = true;
     }
     if (changed) EventBus.emit('customer:rewardBonusChanged');
+  }
+
+  private _exchangeRewardFor(itemIds: readonly string[]): number | undefined {
+    if (!ExchangeEventManager.isActive()) return undefined;
+    const reward = ExchangeEventManager.calculateOrderReward(itemIds);
+    return reward > 0 ? reward : undefined;
   }
 
   refreshMidAutumnRewards(): void {

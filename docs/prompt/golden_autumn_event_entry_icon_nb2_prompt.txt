@@ -1,0 +1,13 @@
+Single square 1:1 mobile game limited-time event icon for a cozy pastel flower-shop merge game, designed first for tiny 48–64 pixel display.
+
+Match the attached jewelry-box event icon ONLY for rendering quality: same glossy cel-shaded 2D casual mobile-game look, chunky rounded forms, warm dark-brown outline, soft top-left highlights. Use none of its jewelry, box or gem content.
+
+Use only three large readable objects: one chunky round harvest pumpkin in the color of a ripe tangerine, sitting in front; one small woven honey-wicker basket behind it holding two shiny chestnuts and one red apple; one oversized five-pointed maple leaf in the red-orange of a fresh autumn maple, leaning behind the basket on the right like a little flag.
+
+Composition: compact triangular silhouette filling about 88% of the canvas. The pumpkin is the central largest object with a short green stem and one curly vine, the basket adds a warm honey-brown accent on the left, the maple leaf adds a bright red-orange accent on the right. Keep every silhouette separated and readable.
+
+Palette: tangerine orange, maple red, honey gold, warm chestnut brown, a little leaf green, cream highlights. High-key, warm and cozy.
+
+Small-icon rules: only 3–4 large color blocks per object, thick simple shapes, broad highlights, plain clean surfaces, empty background around the group.
+
+Background: solid flat magenta #FF00FF full bleed for background removal.

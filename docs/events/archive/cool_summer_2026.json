@@ -1,0 +1,12 @@
+{
+  "seasonId": "cool_summer_2026",
+  "name": "清凉一夏",
+  "kind": "exchange",
+  "theme": "src/config/events/exchange/themes/coolSummer2026.ts",
+  "note": "活动家具 season_summer_* / workshop_summer_* 与图纸仍在包内（玩家已拥有），不归档。",
+  "files": [
+    "images/ui/icon_cool_summer_event_nb2.png",
+    "images/ui/icon_cool_summer_fan.png",
+    "subpkg_events/images/cool_summer_event/**"
+  ]
+}

@@ -1,0 +1,10 @@
+Square 1:1 image, one single floor prop centered with generous white margin.
+Cute kawaii 2.5D true isometric furniture for a flower-shop merge game. Match the attached dining-table furniture exactly for camera angle, outline weight, shading softness and size language: camera from upper-left, top-face edges near ±30°, height edges vertical. Use the reference only for style and perspective; draw a new subject.
+Soft brown outlines slightly thicker than hairline, rounded chibi-friendly shapes, gentle upper-left lighting, clean readable silhouette at small size.
+Subject — pumpkin harvest cart (南瓜丰收推车):
+- A small honey-oak wooden market hand-cart with two big round spoked wooden wheels and one short push handle, waist-high, about as wide as a small table.
+- The cart bed is heaped with a harvest: three or four round pumpkins in tangerine orange and one pale cream pumpkin, a bundle of golden wheat, a few red apples and shiny chestnuts, two maple leaves tucked on top.
+- A small plain cream linen pennant tied to the handle.
+- Palette: honey oak, tangerine orange, cream, maple red, wheat gold, chestnut brown, leaf green accents.
+Only the cart itself on plain white: no room, no floor tiles, no other furniture, no characters, no lettering.
+Background pure solid white #FFFFFF only.

@@ -1,0 +1,15 @@
+Single square 1:1 mobile game currency icon. Match the glossy soft-3D candy style of the attached reference icons: chunky, polished, opaque, readable at 24px. The references only show the rendering style; draw a completely new subject.
+
+Subject: ONE single plump maple leaf, the classic five-pointed autumn maple shape with soft rounded tips, slightly tilted to the right, with a short thick curved stem at the bottom.
+
+Volume:
+- Leaf body is opaque glazed candy, puffy and slightly inflated like a gummy
+- Broad soft white highlight on the upper-left lobes
+- Deeper red shadow toward the lower-right edge for thickness
+- Rounded bevel along the leaf outline
+- Three simple raised vein ridges from the stem, wide and soft
+- One tiny four-point sparkle near the top is optional
+
+Palette: one warm maple family only — bright tangerine orange at the top lobes blending to ripe maple red at the bottom, warm deep-brown outline, honey-gold stem.
+
+Background: solid flat magenta #FF00FF full bleed.

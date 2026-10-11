@@ -19,6 +19,10 @@ import {
   FURNITURE_RENDER_DEFS,
   type FurnitureAtlasFrameRef,
 } from '@/config/FurnitureRenderConfig';
+import {
+  ACTIVE_EXCHANGE_ART,
+  ACTIVE_EXCHANGE_SEASON_ID,
+} from '@/config/events/exchange/ExchangeEventArtRegistry';
 
 const FURNITURE_ICON_ALIASES = buildFurnitureIconAliasMap();
 
@@ -44,14 +48,8 @@ const MAIN_IMAGE_MAP: Record<string, string> = {
   icon_thursday_magic_time_nb2: 'images/ui/icon_thursday_magic_time_nb2.png',
   /** 花间珠匣活动入口：打开首饰盒 + 大颗宝石（主页面常驻入口，留在主包） */
   icon_jewelry_event_nb2: 'images/ui/icon_jewelry_event_nb2.png',
-  /** 清凉一夏限时活动入口：冰饮 + 西瓜 + 清凉小扇（主包顶栏入口） */
-  icon_cool_summer_event_nb2: 'images/ui/icon_cool_summer_event_nb2.png',
-  /** 清凉一夏订单兑换物：现代圆角手持小扇 */
-  icon_cool_summer_fan: 'images/ui/icon_cool_summer_fan.png',
-  /** 月满中秋限时活动入口：玉兔灯笼 + 月饼 */
-  icon_mid_autumn_event_nb2: 'images/ui/icon_mid_autumn_event_nb2.png',
-  /** 月满中秋订单货币：玉兔灯 */
-  icon_mid_autumn_lantern: 'images/ui/icon_mid_autumn_lantern.png',
+  /** 当期兑换活动入口 + 货币图标（由 ExchangeEventArtRegistry 决定） */
+  ...ACTIVE_EXCHANGE_ART.mainImages,
   /** NB2+rembg：激励视频 / 看广告统一小图标（粉紫边框 + 播放三角） */
   icon_ad_reward_nb2: 'images/ui/icon_ad_reward_nb2.png',
   icon_heart:  'images/ui/icon_heart.png',
@@ -620,13 +618,18 @@ const JEWELRY_BOX_EVENT_IMAGE_MAP: Record<string, string> = {
   event_jewelry_dian_cui_8: 'subpkg_events/images/jewelry_box_event/items/event_jewelry_dian_cui_8.png',
 };
 
-const COOL_SUMMER_EVENT_IMAGE_MAP: Record<string, string> = {
-  /** 清凉一夏兑换页空壳：上下夏日场景 + 中部程序化商品区 */
-  cool_summer_event_panel_shell_v2:
-    'subpkg_events/images/cool_summer_event/ui/cool_summer_event_panel_shell_v2.png',
+/** 当期兑换活动面板壳等 events 分包图 */
+const EXCHANGE_EVENT_IMAGE_MAP: Record<string, string> = {
+  ...ACTIVE_EXCHANGE_ART.eventImages,
 };
 
-const MID_AUTUMN_EVENT_IMAGE_MAP: Record<string, string> = {
+/**
+ * 已下线活动的贴图：文件已移到 game_assets/huahua/archive/events/<seasonId>/，不在包内、运行时不加载。
+ * 只为旧面板代码里的静态 key 保留登记（get 返回 null 走兜底）。复刻时 restore 文件后把对应条目挪回上面。
+ */
+export const ARCHIVED_IMAGE_MAP: Record<string, string> = {
+  icon_mid_autumn_event_nb2: 'images/ui/icon_mid_autumn_event_nb2.png',
+  icon_mid_autumn_lantern: 'images/ui/icon_mid_autumn_lantern.png',
   mid_autumn_event_panel_shell_nb2:
     'subpkg_events/images/mid_autumn_event/ui/mid_autumn_event_panel_shell_nb2.png',
   mid_autumn_wheel_disc_nb2:
@@ -643,14 +646,12 @@ const MID_AUTUMN_EVENT_IMAGE_MAP: Record<string, string> = {
 
 const EVENT_IMAGE_MAPS: Record<string, Record<string, string>> = {
   jewelry_box_event: JEWELRY_BOX_EVENT_IMAGE_MAP,
-  cool_summer_2026: COOL_SUMMER_EVENT_IMAGE_MAP,
-  mid_autumn_2026: MID_AUTUMN_EVENT_IMAGE_MAP,
+  [ACTIVE_EXCHANGE_SEASON_ID]: EXCHANGE_EVENT_IMAGE_MAP,
 };
 
 const EVENTS_IMAGE_MAP: Record<string, string> = {
   ...JEWELRY_BOX_EVENT_IMAGE_MAP,
-  ...COOL_SUMMER_EVENT_IMAGE_MAP,
-  ...MID_AUTUMN_EVENT_IMAGE_MAP,
+  ...EXCHANGE_EVENT_IMAGE_MAP,
 };
 
 // ================================================================
@@ -764,6 +765,7 @@ const DECO_IMAGE_MAP: Record<string, string> = {
   workshop_atelier_bouquet_vase_sakura: 'subpkg_deco/images/furniture/workshop_atelier_bouquet_vase_sakura.png',
   /** 夏日荷塘拱窗：单张墙饰 PNG，max-side 342（清凉一夏活动图纸） */
   workshop_summer_lotus_arch_window: 'subpkg_deco/images/furniture/workshop_summer_lotus_arch_window.png',
+  workshop_maple_arch_window: 'subpkg_deco/images/furniture/workshop_maple_arch_window.png',
   /** 薄荷暖阳飘窗：暖阳飘窗染色款，max-side 342 */
   workshop_mint_bougainvillea_bay_window: 'subpkg_deco/images/furniture/workshop_mint_bougainvillea_bay_window.png',
   /** 暖阳飘窗：默认木色款，max-side 342 */
@@ -1162,6 +1164,11 @@ const DECO_IMAGE_MAP: Record<string, string> = {
   event_mid_autumn_mooncake_gift_box: 'subpkg_deco/images/furniture/event_mid_autumn_mooncake_gift_box.png',
   event_mid_autumn_reunion_dining_table: 'subpkg_deco/images/furniture/event_mid_autumn_reunion_dining_table.png',
   event_mid_autumn_jade_rabbit_doll: 'subpkg_deco/images/furniture/event_mid_autumn_jade_rabbit_doll.png',
+  // ---- 金秋丰收兑换奖励家具 ----
+  event_golden_autumn_maple_floor_lamp: 'subpkg_deco/images/furniture/event_golden_autumn_maple_floor_lamp.png',
+  event_golden_autumn_pumpkin_cart: 'subpkg_deco/images/furniture/event_golden_autumn_pumpkin_cart.png',
+  event_golden_autumn_plaid_dining_table: 'subpkg_deco/images/furniture/event_golden_autumn_plaid_dining_table.png',
+  event_golden_autumn_chestnut_stove: 'subpkg_deco/images/furniture/event_golden_autumn_chestnut_stove.png',
 
   // ---- 房间背景 ----
   /** 花坊默认房壳 v3 试看（原 soft 图保留不删，验收后可改回或覆盖） */
@@ -1489,8 +1496,10 @@ const ALL_PANELS_KEYS = Object.keys(PANELS_IMAGE_MAP);
 const ALL_ITEMS_KEYS = Object.keys(ITEMS_IMAGE_MAP);
 const ALL_EVENTS_KEYS = Object.keys(EVENTS_IMAGE_MAP);
 const JEWELRY_BOX_EVENT_KEYS = Object.keys(JEWELRY_BOX_EVENT_IMAGE_MAP);
-const COOL_SUMMER_EVENT_KEYS = Object.keys(COOL_SUMMER_EVENT_IMAGE_MAP);
-const MID_AUTUMN_EVENT_KEYS = Object.keys(MID_AUTUMN_EVENT_IMAGE_MAP);
+const EXCHANGE_EVENT_KEYS = [
+  ...Object.keys(ACTIVE_EXCHANGE_ART.mainImages),
+  ...Object.keys(EXCHANGE_EVENT_IMAGE_MAP),
+];
 const ALL_DECO_KEYS = Object.keys(DECO_IMAGE_MAP);
 const ALL_CRITICAL_KEYS = Object.keys(CRITICAL_IMAGE_MAP);
 const OWNER_OUTFIT_KEYS = keysWhere(CHARS_IMAGE_MAP, key => key.startsWith('owner_'));
@@ -1522,8 +1531,7 @@ export type TextureAssetGroup =
   | 'items'
   | 'events'
   | 'jewelryBoxEvent'
-  | 'coolSummerEvent'
-  | 'midAutumnEvent'
+  | 'exchangeEvent'
   | 'chars'
   | 'panels'
   | 'critical'
@@ -1560,16 +1568,7 @@ const ASSET_GROUP_KEYS: Record<TextureAssetGroup, readonly string[]> = {
   items: [],
   events: [],
   jewelryBoxEvent: JEWELRY_BOX_EVENT_KEYS,
-  coolSummerEvent: [
-    'icon_cool_summer_event_nb2',
-    'icon_cool_summer_fan',
-    ...COOL_SUMMER_EVENT_KEYS,
-  ],
-  midAutumnEvent: [
-    'icon_mid_autumn_event_nb2',
-    'icon_mid_autumn_lantern',
-    ...MID_AUTUMN_EVENT_KEYS,
-  ],
+  exchangeEvent: EXCHANGE_EVENT_KEYS,
   chars: [],
   panels: [],
   critical: [],
@@ -1584,16 +1583,7 @@ const ASSET_GROUP_NOTIFY_KEYS: Record<TextureAssetGroup, readonly string[]> = {
   items: ALL_ITEMS_KEYS,
   events: ALL_EVENTS_KEYS,
   jewelryBoxEvent: JEWELRY_BOX_EVENT_KEYS,
-  coolSummerEvent: [
-    'icon_cool_summer_event_nb2',
-    'icon_cool_summer_fan',
-    ...COOL_SUMMER_EVENT_KEYS,
-  ],
-  midAutumnEvent: [
-    'icon_mid_autumn_event_nb2',
-    'icon_mid_autumn_lantern',
-    ...MID_AUTUMN_EVENT_KEYS,
-  ],
+  exchangeEvent: EXCHANGE_EVENT_KEYS,
   chars: ALL_CHARS_KEYS,
   panels: ALL_PANELS_KEYS,
   critical: ALL_CRITICAL_KEYS,

@@ -1,6 +1,6 @@
 {
   "name": "huahua",
-  "version": "1.6.34",
+  "version": "1.6.35",
   "tapVersion": "1.0.5",
   "type": "module",
   "scripts": {
@@ -14,6 +14,7 @@
     "check:assets": "node scripts/check_assets.js",
     "check:deco-textures": "node scripts/check_deco_texture_refs.js",
     "check:responsive-layout": "esbuild scripts/check_responsive_layout.ts --bundle --platform=node --format=cjs --outfile=/tmp/huahua-responsive-layout-check.cjs && node /tmp/huahua-responsive-layout-check.cjs",
+    "check:exchange-event": "esbuild scripts/check_exchange_event_config.ts --bundle --platform=node --format=cjs --outfile=/tmp/huahua-exchange-event-check.cjs && node /tmp/huahua-exchange-event-check.cjs",
     "check:growth-quest": "esbuild scripts/check_growth_quest_config.ts --bundle --platform=node --format=cjs --outfile=/tmp/huahua-growth-quest-check.cjs && node /tmp/huahua-growth-quest-check.cjs",
     "audit:order-pricing": "node scripts/audit_order_pricing.js",
     "announce:draft": "node scripts/draft_update_announcement.mjs",

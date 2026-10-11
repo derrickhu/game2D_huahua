@@ -49,16 +49,17 @@ export const UPDATE_ANNOUNCEMENT_SECTION_META: Record<
  */
 export const UPDATE_ANNOUNCEMENT_ACTIVE: UpdateAnnouncementDef & { enabled: boolean } = {
   enabled: true,
-  id: '1.6.34',
-  version: '1.6.34',
+  id: '1.6.35',
+  version: '1.6.35',
   title: '更新公告',
   greeting: '花花妙屋又有新动静啦～',
   sections: [
     {
-      id: 'improve',
-      title: '【优化】',
+      id: 'event',
+      title: '【活动】',
       items: [
-        '「月满中秋」抽奖更轻松，完成嫦娥订单也能拿到更多玉兔灯',
+        '「月满中秋」已结束，剩下的玉兔灯会自动换成花愿',
+        '10月15日起「金秋丰收」：完成甜品或果切订单获取枫叶，可兑换秋日家具',
       ],
     },
   ],

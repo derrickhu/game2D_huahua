@@ -16,10 +16,7 @@ import { MergeCompanionManager, type MergeCompanionPersistState } from './MergeC
 import { MerchShopManager, type MerchShopPersistState } from './MerchShopManager';
 import { FlowerSignTicketManager } from './FlowerSignTicketManager';
 import { EventBoardManager, type EventBoardPersistState } from './EventBoardManager';
-import {
-  CoolSummerEventManager,
-  type CoolSummerEventPersistState,
-} from './CoolSummerEventManager';
+import { ExchangeEventManager, type ExchangeEventState } from './ExchangeEventManager';
 import {
   MidAutumnEventManager,
   type MidAutumnEventPersistState,
@@ -114,8 +111,10 @@ interface SaveData {
   flowerSignTickets?: number;
   /** 限时活动独立棋盘（不参与主棋盘布局指纹） */
   eventBoard?: EventBoardPersistState;
-  /** 清凉一夏兑换活动（赛季 ID 自行处理跨季重置） */
-  coolSummerEvent?: CoolSummerEventPersistState;
+  /** 限时兑换活动（当前主题；赛季 ID 不同时由 Manager 结算上一期） */
+  exchangeEvent?: ExchangeEventState;
+  /** 旧版清凉一夏字段，只读不写；读档时交给 ExchangeEventManager 结算 */
+  coolSummerEvent?: ExchangeEventState;
   /** 月满中秋转盘活动 */
   midAutumnEvent?: MidAutumnEventPersistState;
 }
@@ -124,7 +123,7 @@ class SaveManagerClass {
   private _lastSave = 0;
   private _mergeCompanionSaveTimer: ReturnType<typeof setTimeout> | null = null;
   private _eventBoardSaveTimer: ReturnType<typeof setTimeout> | null = null;
-  private _coolSummerEventSaveTimer: ReturnType<typeof setTimeout> | null = null;
+  private _exchangeEventSaveTimer: ReturnType<typeof setTimeout> | null = null;
   private _midAutumnEventSaveTimer: ReturnType<typeof setTimeout> | null = null;
 
   constructor() {
@@ -143,10 +142,10 @@ class SaveManagerClass {
         this._persistToStorage(false);
       }, 200);
     });
-    EventBus.on('coolSummerEvent:changed', () => {
-      if (this._coolSummerEventSaveTimer) clearTimeout(this._coolSummerEventSaveTimer);
-      this._coolSummerEventSaveTimer = setTimeout(() => {
-        this._coolSummerEventSaveTimer = null;
+    EventBus.on('exchangeEvent:changed', () => {
+      if (this._exchangeEventSaveTimer) clearTimeout(this._exchangeEventSaveTimer);
+      this._exchangeEventSaveTimer = setTimeout(() => {
+        this._exchangeEventSaveTimer = null;
         this._persistToStorage(false);
       }, 200);
     });
@@ -175,7 +174,7 @@ class SaveManagerClass {
       merchShop: MerchShopManager.exportState(),
       flowerSignTickets: FlowerSignTicketManager.exportState(),
       eventBoard: EventBoardManager.exportState(),
-      coolSummerEvent: CoolSummerEventManager.exportState(),
+      exchangeEvent: ExchangeEventManager.exportState(),
       midAutumnEvent: MidAutumnEventManager.exportState(),
     };
     return JSON.stringify(data);
@@ -276,7 +275,7 @@ class SaveManagerClass {
       BoardManager.loadState(data.board);
       BuildingManager.loadState(data.buildings);
       EventBoardManager.loadState(data.eventBoard);
-      CoolSummerEventManager.loadState(data.coolSummerEvent);
+      ExchangeEventManager.loadState(data.exchangeEvent ?? data.coolSummerEvent);
       MidAutumnEventManager.loadState(data.midAutumnEvent);
       if (data.warehouse) {
         WarehouseManager.loadState(data.warehouse);

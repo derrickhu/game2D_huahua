@@ -26,6 +26,7 @@ import { AffinityManager } from '@/managers/AffinityManager';
 import { resolveWorkshopMaterialIconKey } from '@/config/FurnitureWorkshopConfig';
 import { ToastMessage } from '@/gameobjects/ui/ToastMessage';
 import { AFFINITY_MAP } from '@/config/AffinityConfig';
+import { ACTIVE_EXCHANGE_THEME } from '@/config/events/exchange/ExchangeEventRegistry';
 /** 单格物品显示边长（3 个并排仍落在 PANEL_W 内） */
 const SLOT_SIZE = 72;
 const SLOT_GAP = 8;
@@ -84,7 +85,7 @@ export class CustomerView extends PIXI.Container {
   private _infoPanel: PIXI.Container;
   private _eventStoneTextureUnsub: (() => void) | null = null;
   private _affinityHeartBadge: PIXI.Container | null = null;
-  private _coolSummerFanBadge: PIXI.Container | null = null;
+  private _exchangeRewardBadge: PIXI.Container | null = null;
   private _midAutumnLanternBadge: PIXI.Container | null = null;
   private _completeBtn: PIXI.Container | null = null;
   private _bounceTween: { config: any; startValues: any; elapsed: number; delayRemaining: number } | null = null;
@@ -115,11 +116,11 @@ export class CustomerView extends PIXI.Container {
     this.sortChildren();
     this.visible = false;
     this._eventStoneTextureUnsub = TextureCache.onKeysLoaded(
-      ['event_jewelry_1', 'icon_cool_summer_fan', 'icon_mid_autumn_lantern'],
+      ['event_jewelry_1', ACTIVE_EXCHANGE_THEME.art.currencyIconKey, 'icon_mid_autumn_lantern'],
       () => {
         if (
           (this._customer?.eventStoneReward ?? 0) > 0
-          || (this._customer?.coolSummerFanReward ?? 0) > 0
+          || (this._customer?.exchangeEventReward ?? 0) > 0
           || (this._customer?.midAutumnLanternReward ?? 0) > 0
         ) {
           this.refreshSlots();
@@ -143,7 +144,7 @@ export class CustomerView extends PIXI.Container {
       TweenManager.cancelTarget(this);
       TweenManager.cancelTarget(this.scale);
       this._clearAffinityHeartBadge();
-      this._clearCoolSummerFanBadge();
+      this._clearExchangeRewardBadge();
       this._clearMidAutumnLanternBadge();
       this._clearStaminaChestBadge();
       this._boundCustomerUid = -1;
@@ -224,14 +225,14 @@ export class CustomerView extends PIXI.Container {
     if (!this._customer) return;
     this._rebuildInfoPanel();
     this._buildStaminaChestBadge();
-    this._buildCoolSummerFanBadge();
+    this._buildExchangeRewardBadge();
     this._buildMidAutumnLanternBadge();
   }
 
   override destroy(options?: PIXI.IDestroyOptions | boolean): void {
     this._eventStoneTextureUnsub?.();
     this._eventStoneTextureUnsub = null;
-    this._clearCoolSummerFanBadge();
+    this._clearExchangeRewardBadge();
     this._clearMidAutumnLanternBadge();
     super.destroy(options);
   }
@@ -268,9 +269,9 @@ export class CustomerView extends PIXI.Container {
     return new PIXI.Point(local.x, local.y);
   }
 
-  /** 清凉一夏小扇奖励图标中心（CustomerView 局部坐标；无奖励时 null） */
-  getCoolSummerFanRewardIconLocalCenter(): PIXI.Point | null {
-    const cap = this._coolSummerFanBadge;
+  /** 限时兑换活动货币图标中心（CustomerView 局部坐标；无奖励时 null） */
+  getExchangeEventRewardIconLocalCenter(): PIXI.Point | null {
+    const cap = this._exchangeRewardBadge;
     if (!cap) return null;
     const iconCx = REWARD_BADGE_PAD_X + REWARD_BADGE_ICON / 2;
     const iconCy = cap.height / 2;
@@ -308,7 +309,7 @@ export class CustomerView extends PIXI.Container {
     this._infoPanel.removeChildren();
     this._clearCompleteBtn();
     this._clearRewardBadge();
-    this._clearCoolSummerFanBadge();
+    this._clearExchangeRewardBadge();
     this._clearMidAutumnLanternBadge();
     this._clearStaminaChestBadge();
     this._clearTierBadge();
@@ -319,7 +320,7 @@ export class CustomerView extends PIXI.Container {
 
     // 奖励徽章（头像底部；花愿与交付到账一致）
     this._buildRewardBadge();
-    this._buildCoolSummerFanBadge();
+    this._buildExchangeRewardBadge();
     this._buildMidAutumnLanternBadge();
 
     // 档位角标（需求面板左上角小圆标）
@@ -536,17 +537,18 @@ export class CustomerView extends PIXI.Container {
     }
   }
 
-  private _buildCoolSummerFanBadge(): void {
-    this._clearCoolSummerFanBadge();
+  private _buildExchangeRewardBadge(): void {
+    this._clearExchangeRewardBadge();
     if (!this._customer) return;
-    const fanReward = this._customer.coolSummerFanReward ?? 0;
+    const fanReward = this._customer.exchangeEventReward ?? 0;
     if (fanReward <= 0) return;
 
+    const { art, colors } = ACTIVE_EXCHANGE_THEME;
     const fanCap = this._makeRewardCapsule([
-      { icon: 'icon_cool_summer_fan', value: fanReward, fill: 0x1B6B66 },
+      { icon: art.currencyIconKey, value: fanReward, fill: colors.badgeFill },
     ], 16);
     const badge = fanCap.node;
-    badge.name = 'coolSummerFanRewardCapsule';
+    badge.name = 'exchangeEventRewardCapsule';
     badge.eventMode = 'none';
     badge.zIndex = 12;
 
@@ -563,7 +565,7 @@ export class CustomerView extends PIXI.Container {
 
     badge.position.set(x, y);
     this.addChild(badge);
-    this._coolSummerFanBadge = badge;
+    this._exchangeRewardBadge = badge;
     this.sortChildren();
   }
 
@@ -601,7 +603,7 @@ export class CustomerView extends PIXI.Container {
       const minX = -CARD_LAYOUT_HALF + 4;
       x = Math.max(minX, x);
     }
-    if (this._coolSummerFanBadge) {
+    if (this._exchangeRewardBadge) {
       y += lanternCap.h + 6;
     }
 
@@ -620,13 +622,13 @@ export class CustomerView extends PIXI.Container {
     this._midAutumnLanternBadge = null;
   }
 
-  private _clearCoolSummerFanBadge(): void {
-    if (!this._coolSummerFanBadge) return;
-    if (this._coolSummerFanBadge.parent) {
-      this._coolSummerFanBadge.parent.removeChild(this._coolSummerFanBadge);
+  private _clearExchangeRewardBadge(): void {
+    if (!this._exchangeRewardBadge) return;
+    if (this._exchangeRewardBadge.parent) {
+      this._exchangeRewardBadge.parent.removeChild(this._exchangeRewardBadge);
     }
-    this._coolSummerFanBadge.destroy({ children: true });
-    this._coolSummerFanBadge = null;
+    this._exchangeRewardBadge.destroy({ children: true });
+    this._exchangeRewardBadge = null;
   }
 
   private static readonly TIER_BADGE_R = 11;

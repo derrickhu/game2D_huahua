@@ -9,7 +9,8 @@ import { EventBus } from '@/core/EventBus';
 import { TweenManager, Ease } from '@/core/TweenManager';
 import { EventManager } from '@/managers/EventManager';
 import { EventBoardManager } from '@/managers/EventBoardManager';
-import { CoolSummerEventManager } from '@/managers/CoolSummerEventManager';
+import { ExchangeEventManager } from '@/managers/ExchangeEventManager';
+import { ACTIVE_EXCHANGE_THEME } from '@/config/events/exchange/ExchangeEventRegistry';
 import { MidAutumnEventManager } from '@/managers/MidAutumnEventManager';
 import { QuestManager } from '@/managers/QuestManager';
 import { LevelManager } from '@/managers/LevelManager';
@@ -27,8 +28,8 @@ export const SHOP_PANORAMA_VIEW_H = 310;
 
 const BIG_BTN = 92;
 const BIG_ICON = 72;
-/** 清凉一夏入口图留白较多，单独放大 */
-const COOL_SUMMER_BIG_ICON = 86;
+/** 兑换活动入口图留白因期而异，由主题 art.panoramaIconSize 决定 */
+const EXCHANGE_BIG_ICON = ACTIVE_EXCHANGE_THEME.art.panoramaIconSize;
 const BIG_GAP = 8;
 const BIG_R = 18;
 /** 任务/活动大图标右上角红点半径（略大便于辨认） */
@@ -75,11 +76,11 @@ const TASK_DEFS: TaskDef[] = [
     hasRedDot: () => MidAutumnEventManager.hasRedDot,
   },
   {
-    id: 'coolSummer',
-    texKey: 'icon_cool_summer_event_nb2',
-    event: 'panel:openCoolSummerEvent',
-    isVisible: () => CoolSummerEventManager.isActive(),
-    hasRedDot: () => CoolSummerEventManager.hasRedDot,
+    id: 'exchange',
+    texKey: ACTIVE_EXCHANGE_THEME.art.entryIconKey,
+    event: 'panel:openExchangeEvent',
+    isVisible: () => ExchangeEventManager.isActive(),
+    hasRedDot: () => ExchangeEventManager.hasRedDot,
   },
   {
     id: 'event',
@@ -461,7 +462,7 @@ export class ShopRowPanoramaScroll extends PIXI.Container {
     icon.anchor.set(0.5);
     icon.position.set(BIG_BTN / 2, BIG_BTN / 2);
     if (tex && tex.width > 0) {
-      const target = def.id === 'coolSummer' ? COOL_SUMMER_BIG_ICON : BIG_ICON;
+      const target = def.id === 'exchange' ? EXCHANGE_BIG_ICON : BIG_ICON;
       const s = Math.min(target / tex.width, target / tex.height);
       icon.scale.set(s);
     }
@@ -507,7 +508,7 @@ export class ShopRowPanoramaScroll extends PIXI.Container {
       const icon = card.root.children.find(child => child instanceof PIXI.Sprite) as PIXI.Sprite | undefined;
       if (!icon || !tex || tex.width <= 0) return;
       icon.texture = tex;
-      const target = card.def.id === 'coolSummer' ? COOL_SUMMER_BIG_ICON : BIG_ICON;
+      const target = card.def.id === 'exchange' ? EXCHANGE_BIG_ICON : BIG_ICON;
       const s = Math.min(target / tex.width, target / tex.height);
       icon.scale.set(s);
     }

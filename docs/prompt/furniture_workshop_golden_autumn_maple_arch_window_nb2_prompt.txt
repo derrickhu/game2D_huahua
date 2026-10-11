@@ -1,0 +1,20 @@
+Create ONE tall wall-decoration sprite for a cozy pastel flower-shop merge game (workshop exclusive wall art).
+
+The attached lotus-pond arch window is the exact reference for wall-plane perspective, silhouette, proportions, frame thickness and level of detail. Keep the same arch shape, the same slight wall tilt and the same sill. Replace the summer lotus content with an autumn maple scene.
+
+PERSPECTIVE (wall decoration, most important):
+- The whole prop lies flat on the LEFT back wall of an isometric L-room, seen at an angle, exactly like the reference.
+- The window outline is a skewed parallelogram: the left side stands higher, the right side sits lower, and the sill runs diagonally down from upper-left to lower-right at about 25–30°.
+- The arch crown is shifted toward the upper-left, the right half of the arch is visibly lower than the left half.
+- All vertical edges stay perfectly vertical; only the horizontal lines slope.
+- The curtains, the sill and the view inside follow the same slanted wall plane.
+
+SUBJECT — Maple-red arch window with sheer curtains (枫红拱窗):
+- Tall elegant arched window about 85–90% of canvas height, centered with generous white margin.
+- Slim polished antique-brass arch frame with delicate curved moldings; soft warm-cream inner lip.
+- Airy semi-transparent cream-to-apricot sheer curtains gathered at the arch crown, soft swags across the top, cascading down both sides; the center of the arch stays open.
+- Through the open arch: a dreamy autumn maple grove — red, orange and golden maple trees, a winding path covered in fallen leaves, a tiny wooden bridge, soft warm late-afternoon sky in peach and honey.
+- Decorations, sparse and elegant: a small brass lantern charm with a warm glow hanging from one side; a narrow cream sill at the base with a little terracotta pot holding a sprig of red maple and a tiny pumpkin; a few maple leaves drifting across the sill.
+- Soft brown outlines, rounded kawaii hand-painted merge-game style, warm high-key autumn palette (maple red, tangerine, honey gold, cream, soft brass). Gentle upper-left lighting, clean readable silhouette.
+
+Canvas: portrait 3:4, single object centered, pure solid white #FFFFFF background only. Only the window on plain white: no room walls, no floor, no other furniture, no characters, no lettering.

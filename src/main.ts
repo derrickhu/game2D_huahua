@@ -16,7 +16,7 @@ import { Game } from '@/core/Game';
 import { SceneManager } from '@/core/SceneManager';
 import { BoardManager } from '@/managers/BoardManager';
 import { EventBoardManager } from '@/managers/EventBoardManager';
-import { CoolSummerEventManager } from '@/managers/CoolSummerEventManager';
+import { ExchangeEventManager } from '@/managers/ExchangeEventManager';
 import { MidAutumnEventManager } from '@/managers/MidAutumnEventManager';
 import { MergeCompanionManager } from '@/managers/MergeCompanionManager';
 import { BuildingManager } from '@/managers/BuildingManager';
@@ -318,7 +318,7 @@ async function main(): Promise<void> {
     // 初始化棋盘数据
     BoardManager.init();
     EventBoardManager.init();
-    CoolSummerEventManager.init();
+    ExchangeEventManager.init();
     MidAutumnEventManager.init();
 
     MergeCompanionManager.init();
