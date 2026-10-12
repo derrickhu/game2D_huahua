@@ -16,11 +16,9 @@ import {
   getMaxLevelForLine,
   isFruitCutLine,
 } from './ItemConfig';
-import {
-  isMidAutumnBakeBonusActive,
-  MID_AUTUMN_DESSERT_PRODUCE_WEIGHT,
-  MID_AUTUMN_MOONCAKE_PRODUCE_WEIGHT,
-} from './events/MidAutumnEventConfig';
+import { ACTIVE_WHEEL_THEME } from './events/wheel/WheelEventRegistry';
+import { isWheelEarnActive } from './events/wheel/WheelEventLive';
+import { seasonalSurfaceOpen } from './events/SeasonalItemRegistry';
 
 /** 单次产出的明确目标：品类 + 产品线 + 产品等级 + 权重（相对权重即可） */
 export interface ToolProduceOutcome {
@@ -594,16 +592,24 @@ function clampProducePreviewLevel(category: Category, line: string, level: numbe
   return Math.min(maxLv, Math.max(1, level));
 }
 
+export function filterLiveProduceOutcomes(
+  outcomes: readonly ToolProduceOutcome[],
+): ToolProduceOutcome[] {
+  return outcomes.filter(outcome => seasonalSurfaceOpen(outcome.category, outcome.line, 'produce'));
+}
+
 export function getBoardProducerOutcomePercents(
   def: ToolDef,
   levelBonus = 0,
 ): ToolProduceDisplayEntry[] {
   const bonus = Math.max(0, Math.floor(levelBonus));
   if (def.produceOutcomes && def.produceOutcomes.length > 0) {
-    const sum = def.produceOutcomes.reduce((s, o) => s + o.weight, 0);
+    const liveOutcomes = filterLiveProduceOutcomes(def.produceOutcomes);
+    if (liveOutcomes.length === 0) return [];
+    const sum = liveOutcomes.reduce((s, o) => s + o.weight, 0);
     if (sum <= 0) return [];
     const raw: ToolProduceDisplayEntry[] = [];
-    for (const o of def.produceOutcomes) {
+    for (const o of liveOutcomes) {
       const level = clampProducePreviewLevel(o.category, o.line, o.level + bonus);
       const id = findItemId(o.category, o.line, level);
       if (!id) continue;
@@ -629,22 +635,40 @@ export function getBoardProducerOutcomePercents(
   return mergeOutcomePercents(raw);
 }
 
-/** 烘焙工具在中秋活动中附加月饼线；权重已归一化为 1。 */
+function gateSeasonalProduceLines(
+  category: string,
+  lines: ReadonlyArray<{ line: string; weight: number }>,
+  fallbackLine: string,
+): ReadonlyArray<{ line: string; weight: number }> {
+  const kept = lines.filter(entry => seasonalSurfaceOpen(category, entry.line, 'produce'));
+  const sum = kept.reduce((total, entry) => total + entry.weight, 0);
+  if (kept.length === 0 || sum <= 0) {
+    return [{ line: fallbackLine, weight: 1 }];
+  }
+  return kept.map(entry => ({ line: entry.line, weight: entry.weight / sum }));
+}
+
+/** 当期转盘如果给工具加了额外产线，活动进行中并进权重；到期后这条线关掉。 */
 export function getEffectiveProduceLineWeights(
   def: ToolDef,
 ): ReadonlyArray<{ line: string; weight: number }> {
-  if (def.toolLine === ToolLine.BAKE && isMidAutumnBakeBonusActive()) {
-    const total = MID_AUTUMN_DESSERT_PRODUCE_WEIGHT + MID_AUTUMN_MOONCAKE_PRODUCE_WEIGHT;
-    return [
-      { line: DrinkLine.DESSERT, weight: MID_AUTUMN_DESSERT_PRODUCE_WEIGHT / total },
-      { line: DrinkLine.MOONCAKE, weight: MID_AUTUMN_MOONCAKE_PRODUCE_WEIGHT / total },
-    ];
+  const bonus = ACTIVE_WHEEL_THEME.produceBonus;
+  if (bonus && def.toolLine === bonus.toolLine && isWheelEarnActive()) {
+    const total = bonus.baseWeight + bonus.extraWeight;
+    return gateSeasonalProduceLines(def.produceCategory, [
+      { line: bonus.baseLine, weight: bonus.baseWeight / total },
+      { line: bonus.extraLine, weight: bonus.extraWeight / total },
+    ], def.produceLine);
   }
   const lines =
     def.produceLinesRandom && def.produceLinesRandom.length > 0
       ? def.produceLinesRandom
       : [def.produceLine];
-  return lines.map(line => ({ line, weight: 1 / lines.length }));
+  return gateSeasonalProduceLines(
+    def.produceCategory,
+    lines.map(line => ({ line, weight: 1 / lines.length })),
+    def.produceLine,
+  );
 }
 
 export function rollEffectiveProduceLine(def: ToolDef, rng: () => number = Math.random): string {

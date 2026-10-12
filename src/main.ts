@@ -17,7 +17,7 @@ import { SceneManager } from '@/core/SceneManager';
 import { BoardManager } from '@/managers/BoardManager';
 import { EventBoardManager } from '@/managers/EventBoardManager';
 import { ExchangeEventManager } from '@/managers/ExchangeEventManager';
-import { MidAutumnEventManager } from '@/managers/MidAutumnEventManager';
+import { WheelEventManager } from '@/managers/WheelEventManager';
 import { MergeCompanionManager } from '@/managers/MergeCompanionManager';
 import { BuildingManager } from '@/managers/BuildingManager';
 import { SaveManager } from '@/managers/SaveManager';
@@ -331,7 +331,7 @@ async function main(): Promise<void> {
     BoardManager.init();
     EventBoardManager.init();
     ExchangeEventManager.init();
-    MidAutumnEventManager.init();
+    WheelEventManager.init();
 
     MergeCompanionManager.init();
 

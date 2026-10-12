@@ -9,9 +9,8 @@ import {
   Category,
   ITEM_DEFS,
   LEGACY_FLOWER_SIGN_COIN_ITEM_ID,
-  isMooncakeItemId,
-  mooncakeRetirementHuayuan,
 } from '@/config/ItemConfig';
+import { isSeasonalItemRetired, seasonalItemRetireHuayuan } from '@/config/events/SeasonalItemRegistry';
 import { CurrencyManager } from '@/managers/CurrencyManager';
 import { FlowerSignTicketManager } from '@/managers/FlowerSignTicketManager';
 
@@ -124,8 +123,8 @@ class RewardBoxManagerClass {
       EventBus.emit('rewardBox:changed');
       return;
     }
-    if (isMooncakeItemId(itemId)) {
-      const hy = mooncakeRetirementHuayuan(itemId, count);
+    if (isSeasonalItemRetired(itemId)) {
+      const hy = seasonalItemRetireHuayuan(itemId, count);
       if (hy > 0) CurrencyManager.addHuayuan(hy);
       return;
     }
@@ -136,6 +135,21 @@ class RewardBoxManagerClass {
     }
     this._lastAddedItemId = itemId;
     EventBus.emit('rewardBox:changed');
+  }
+
+  /** 整组取出已下线的活动物品。读档结算已经付过花愿，这里只清库存。 */
+  pullWhere(pred: (itemId: string) => boolean): [string, number][] {
+    const pulled: [string, number][] = [];
+    for (const [itemId, count] of this.entries()) {
+      if (count <= 0 || !pred(itemId)) continue;
+      pulled.push([itemId, count]);
+      this._items.delete(itemId);
+      this._order = this._order.filter(id => id !== itemId);
+    }
+    if (pulled.length === 0) return pulled;
+    this._syncDisplayPointer();
+    EventBus.emit('rewardBox:changed');
+    return pulled;
   }
 
   /** 取出一个，成功返回 true */
@@ -168,7 +182,7 @@ class RewardBoxManagerClass {
           FlowerSignTicketManager.add(count);
           continue;
         }
-        if (isMooncakeItemId(itemId)) continue;
+        if (isSeasonalItemRetired(itemId)) continue;
         if (ITEM_DEFS.has(itemId)) {
           this._items.set(itemId, count);
           this._order.push(itemId);

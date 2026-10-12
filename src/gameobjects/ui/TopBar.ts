@@ -20,7 +20,8 @@ import { TuesdayStaminaUnlimitedManager } from '@/managers/TuesdayStaminaUnlimit
 import { ThursdayMagicTimeManager } from '@/managers/ThursdayMagicTimeManager';
 import { ExchangeEventManager } from '@/managers/ExchangeEventManager';
 import { ACTIVE_EXCHANGE_THEME } from '@/config/events/exchange/ExchangeEventRegistry';
-import { MidAutumnEventManager } from '@/managers/MidAutumnEventManager';
+import { WheelEventManager } from '@/managers/WheelEventManager';
+import { ACTIVE_WHEEL_THEME } from '@/config/events/wheel/WheelEventRegistry';
 import {
   isJewelryEventUnlocked,
 } from '@/config/EventBoardConfig';
@@ -90,8 +91,9 @@ const EVENT_ICON_SIZE = 62;
 /** 兑换活动入口图留白因期而异，目标边长由主题 art.topBarIconSize 决定 */
 const EXCHANGE_ICON_SIZE = ACTIVE_EXCHANGE_THEME.art.topBarIconSize;
 const EXCHANGE_ICON_KEY = ACTIVE_EXCHANGE_THEME.art.entryIconKey;
-/** 中秋入口图几乎铺满画布，对齐任务/珠匣体量 */
-const MID_AUTUMN_ICON_SIZE = 60;
+/** 转盘入口图留白因期而异，目标边长由主题 art.topBarIconSize 决定 */
+const MID_AUTUMN_ICON_SIZE = ACTIVE_WHEEL_THEME.art.topBarIconSize;
+const WHEEL_ICON_KEY = ACTIVE_WHEEL_THEME.art.entryIconKey;
 const EVENT_HIT_W = 88;
 const EVENT_HIT_H = 92;
 /** 热区向上多探入顶栏带，减少被店铺区抢点击 */
@@ -169,11 +171,11 @@ export class TopBar extends PIXI.Container {
       this._buildExchangeButton();
       this._buildMidAutumnButton();
       this._eventIconUnsub = TextureCache.onKeysLoaded(
-        ['icon_jewelry_event_nb2', EXCHANGE_ICON_KEY, 'icon_mid_autumn_event_nb2'],
+        ['icon_jewelry_event_nb2', EXCHANGE_ICON_KEY, WHEEL_ICON_KEY],
         (key) => {
           if (key === 'icon_jewelry_event_nb2') this._refreshEventBoardIcon();
           if (key === EXCHANGE_ICON_KEY) this._refreshExchangeIcon();
-          if (key === 'icon_mid_autumn_event_nb2') this._refreshMidAutumnIcon();
+          if (key === WHEEL_ICON_KEY) this._refreshMidAutumnIcon();
         },
       );
     }
@@ -771,7 +773,7 @@ export class TopBar extends PIXI.Container {
     wrap.zIndex = 25;
     wrap.name = 'midAutumnEventBtn';
 
-    const tex = TextureCache.get('icon_mid_autumn_event_nb2') ?? TextureCache.get('icon_gift');
+    const tex = TextureCache.get(WHEEL_ICON_KEY) ?? TextureCache.get('icon_gift');
     if (tex?.width > 0) {
       const sp = new PIXI.Sprite(tex);
       sp.anchor.set(0.5);
@@ -792,7 +794,7 @@ export class TopBar extends PIXI.Container {
     this._bindButtonClickSfx(wrap);
     wrap.on('pointertap', (e: PIXI.FederatedPointerEvent) => {
       e.stopPropagation();
-      EventBus.emit('panel:openMidAutumnEvent');
+      EventBus.emit('panel:openWheelEvent');
     });
     this.addChild(wrap);
     this._midAutumnBtnWrap = wrap;
@@ -801,7 +803,7 @@ export class TopBar extends PIXI.Container {
 
   private _refreshMidAutumnIcon(): void {
     if (!this._midAutumnIcon) return;
-    const tex = TextureCache.get('icon_mid_autumn_event_nb2');
+    const tex = TextureCache.get(WHEEL_ICON_KEY);
     if (!tex?.width) return;
     this._midAutumnIcon.texture = tex;
     this._midAutumnIcon.scale.set(
@@ -829,7 +831,7 @@ export class TopBar extends PIXI.Container {
     const jewelryOn = isJewelryEventUnlocked(CurrencyManager.state.level);
     place(this._eventBoardBtnWrap, jewelryOn);
     place(this._exchangeBtnWrap, ExchangeEventManager.isActive());
-    place(this._midAutumnBtnWrap, MidAutumnEventManager.isActive());
+    place(this._midAutumnBtnWrap, WheelEventManager.isActive());
     if (!jewelryOn && this._eventRedDot) this._eventRedDot.visible = false;
     if (this._exchangeRedDot) {
       this._exchangeRedDot.visible = !!this._exchangeBtnWrap?.visible
@@ -837,7 +839,7 @@ export class TopBar extends PIXI.Container {
     }
     if (this._midAutumnRedDot) {
       this._midAutumnRedDot.visible = !!this._midAutumnBtnWrap?.visible
-        && MidAutumnEventManager.hasRedDot;
+        && WheelEventManager.hasRedDot;
     }
   }
 
@@ -913,8 +915,8 @@ export class TopBar extends PIXI.Container {
     EventBus.on('eventBoard:changed', () => this.updateEventRedDot());
     EventBus.on('exchangeEvent:changed', () => this.updateExchangeButton());
     EventBus.on('exchangeEvent:periodChanged', () => this.updateExchangeButton());
-    EventBus.on('midAutumnEvent:changed', () => this.updateMidAutumnButton());
-    EventBus.on('midAutumnEvent:periodChanged', () => this.updateMidAutumnButton());
+    EventBus.on('wheelEvent:changed', () => this.updateMidAutumnButton());
+    EventBus.on('wheelEvent:periodChanged', () => this.updateMidAutumnButton());
     EventBus.on('star:levelUp', () => {
       this.updateEventBoardButtonVisibility();
       this.updateEventRedDot();

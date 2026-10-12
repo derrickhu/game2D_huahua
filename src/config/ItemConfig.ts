@@ -685,23 +685,6 @@ export function isGoldenScissorsItem(itemId: string): boolean {
   return itemId === GOLDEN_SCISSORS_ITEM_ID;
 }
 
-/** 中秋月饼线已下线：商店、抽奖和产出都不再发放。 */
-export function isMooncakeItemId(itemId: string): boolean {
-  return ITEM_DEFS.get(itemId)?.line === DrinkLine.MOONCAKE;
-}
-
-/**
- * 活动下线后，玩家手里的月饼按订单花愿折算。
- * 不是主动出售，不用棋盘出售价。
- */
-export function mooncakeRetirementHuayuan(itemId: string, count = 1): number {
-  const def = ITEM_DEFS.get(itemId);
-  if (!def || def.line !== DrinkLine.MOONCAKE) return 0;
-  const each = Math.max(1, Math.floor(def.orderHuayuan ?? def.sellHuayuan ?? 1));
-  const n = Math.max(1, Math.floor(count));
-  return each * n;
-}
-
 /** 棋盘消耗品（金币 / 万能水晶 / 金剪刀） */
 export function isSpecialConsumableItem(itemId: string): boolean {
   return isLuckyCoinItem(itemId) || isCrystalBallItem(itemId) || isGoldenScissorsItem(itemId);

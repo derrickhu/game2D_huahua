@@ -5,6 +5,8 @@
  * 开新一期：复制上一期主题文件，换 seasonId、日期、文案、配色、素材 key，再在 Registry 里设为 ACTIVE。
  */
 
+import type { ExchangeSeasonalItem } from '../SeasonalItemConfig';
+
 /** 活动发奖描述；Manager 直接执行，UI 与 SaveManager 共享。 */
 export type ExchangeGrant =
   | { kind: 'stamina'; amount: number }
@@ -122,6 +124,11 @@ export interface ExchangeEventTheme {
   copy: ExchangeEventCopy;
   colors: ExchangeEventColors;
   layout: ExchangeEventLayout;
+  /**
+   * 本期新增的棋盘物品线。活动期内只走 surfaces 里的入口，到期自动下线，
+   * 棋盘 / 仓库 / 收纳盒里剩下的按订单花愿换成花愿。
+   */
+  seasonalItems?: readonly ExchangeSeasonalItem[];
 }
 
 /** 已下线主题的最小信息：只用于把旧存档里没花完的货币换成花愿。 */

@@ -2,14 +2,9 @@
  * 订单需求生成：产品级基础池、组合单、成长加成、活动钩子占位。
  */
 import { DEFAULT_SPECIAL_CUSTOMER_BY_ORDER_KIND } from '@/config/CustomerConfig';
-import {
-  MID_AUTUMN_CHANGE_CUSTOMER_ID,
-  MID_AUTUMN_CHANGE_DAILY_CAP,
-  MID_AUTUMN_CHANGE_HUAYUAN_MULT,
-  MID_AUTUMN_CHANGE_MOONCAKE_LEVELS,
-  isMidAutumnBakeBonusActive,
-  type MidAutumnChangETier,
-} from '@/config/events/MidAutumnEventConfig';
+import { ACTIVE_WHEEL_THEME } from '@/config/events/wheel/WheelEventRegistry';
+import { isWheelEarnActive } from '@/config/events/wheel/WheelEventLive';
+import type { WheelFeaturedTier } from '@/config/events/wheel/WheelEventTheme';
 import {
   ORDER_TIERS,
   type OrderTier,
@@ -17,7 +12,6 @@ import {
 } from '@/config/OrderTierConfig';
 import {
   Category,
-  DrinkLine,
   FlowerLine,
   ITEM_DEFS,
   findItemId,
@@ -555,19 +549,24 @@ export function forceGenerateWorkshopOrder(ctx: OrderGenContext): OrderGenResult
   return workshopOrderFromComboSlots(comboSlots, ctx.rng);
 }
 
-function mooncakeSpecForChangE(tier: MidAutumnChangETier): ProductOrderSpec {
-  const [minLv, maxLv] = MID_AUTUMN_CHANGE_MOONCAKE_LEVELS[tier];
+function featuredOrderSpec(tier: WheelFeaturedTier): ProductOrderSpec | null {
+  const theme = ACTIVE_WHEEL_THEME;
+  const featured = theme.featuredCustomer;
+  if (!featured) return null;
+  const product = resolveOrderProduct(theme.orderEarn.category as Category, theme.orderEarn.line);
+  if (!product) return null;
+  const [minLv, maxLv] = featured.levelBands[tier];
   return {
-    productId: 'mooncake',
-    category: Category.DRINK,
-    itemLine: DrinkLine.MOONCAKE,
+    productId: product.id,
+    category: product.category,
+    itemLine: product.itemLine,
     minLv,
     maxLv,
     weight: 1.2,
   };
 }
 
-function tryPickChangEMooncake(
+function tryPickFeaturedItem(
   spec: ProductOrderSpec,
   usedIds: Set<string>,
   rng: () => number,
@@ -585,48 +584,50 @@ function tryPickChangEMooncake(
   return null;
 }
 
-function pickChangETier(ctx: OrderGenContext): MidAutumnChangETier {
+function pickFeaturedTier(ctx: OrderGenContext): WheelFeaturedTier {
   if (ctx.tier === 'S') return 'S';
   if (ctx.tier === 'A') return 'A';
   return ctx.rng() < 0.4 ? 'S' : 'A';
 }
 
-function buildChangEOrderSlots(
+function buildFeaturedOrderSlots(
   ctx: OrderGenContext,
-  tier: MidAutumnChangETier,
+  tier: WheelFeaturedTier,
 ): OrderGenSlot[] | null {
-  if (!getOrderProduct('mooncake').isUnlocked(ctx.lines)) return null;
-  const mooncakeSpec = mooncakeSpecForChangE(tier);
+  const spec = featuredOrderSpec(tier);
+  if (!spec) return null;
+  const product = getOrderProduct(spec.productId);
+  if (!product.isUnlocked(ctx.lines)) return null;
   const usedIds = new Set<string>();
-  const firstMooncake = tryPickChangEMooncake(mooncakeSpec, usedIds, ctx.rng);
-  if (!firstMooncake) return null;
-  usedIds.add(firstMooncake);
-  const slots: OrderGenSlot[] = [{ itemId: firstMooncake }];
+  const firstItem = tryPickFeaturedItem(spec, usedIds, ctx.rng);
+  if (!firstItem) return null;
+  usedIds.add(firstItem);
+  const slots: OrderGenSlot[] = [{ itemId: firstItem }];
 
   const [minSlots, maxSlots] = ORDER_TIERS[tier].slotRange;
   const slotCount = minSlots + Math.floor(ctx.rng() * (maxSlots - minSlots + 1));
   const fillSpecs: ProductOrderSpec[] = [
     ...productOrderSpecsForTier(tier, ctx.lines),
-    mooncakeSpec,
+    spec,
   ];
 
   for (let i = slots.length; i < slotCount; i++) {
     let picked: string | null = null;
     for (let attempt = 0; attempt < 24; attempt++) {
-      const spec = pickWeightedSpec(fillSpecs, ctx.rng);
-      if (!spec) break;
-      picked = spec.productId === 'mooncake'
-        ? tryPickChangEMooncake(spec, usedIds, ctx.rng)
-        : tryPickProductItem(spec, ctx.lines, usedIds, tier, ctx.rng, ctx.playerLevel);
+      const fill = pickWeightedSpec(fillSpecs, ctx.rng);
+      if (!fill) break;
+      picked = fill.productId === spec.productId
+        ? tryPickFeaturedItem(fill, usedIds, ctx.rng)
+        : tryPickProductItem(fill, ctx.lines, usedIds, tier, ctx.rng, ctx.playerLevel);
       if (picked) break;
     }
     if (!picked) {
-      picked = tryPickChangEMooncake(mooncakeSpec, usedIds, ctx.rng);
+      picked = tryPickFeaturedItem(spec, usedIds, ctx.rng);
     }
     if (!picked) {
-      for (const spec of fillSpecs) {
-        if (spec.productId === 'mooncake') continue;
-        picked = tryPickProductItem(spec, ctx.lines, usedIds, tier, ctx.rng, ctx.playerLevel);
+      for (const fill of fillSpecs) {
+        if (fill.productId === spec.productId) continue;
+        picked = tryPickProductItem(fill, ctx.lines, usedIds, tier, ctx.rng, ctx.playerLevel);
         if (picked) break;
       }
     }
@@ -638,34 +639,38 @@ function buildChangEOrderSlots(
   return slots.length > 0 ? slots : null;
 }
 
-function changEOrderFromSlots(slots: OrderGenSlot[], tier: MidAutumnChangETier): OrderGenResult {
+function featuredOrderFromSlots(slots: OrderGenSlot[], tier: WheelFeaturedTier): OrderGenResult | null {
+  const featured = ACTIVE_WHEEL_THEME.featuredCustomer;
+  if (!featured) return null;
   return {
     slots,
     orderType: 'normal',
     timeLimit: null,
-    bonusMultiplier: MID_AUTUMN_CHANGE_HUAYUAN_MULT,
-    customerTypeId: MID_AUTUMN_CHANGE_CUSTOMER_ID,
+    bonusMultiplier: featured.huayuanMult,
+    customerTypeId: featured.typeId,
     displayTier: tier,
-    generationKind: 'midAutumnChangE',
+    generationKind: 'wheelFeatured',
   };
 }
 
 function tryGenerateChangEOrder(ctx: OrderGenContext): OrderGenResult | null {
-  if (!ctx.allowChangEOrder) return null;
-  if (!isMidAutumnBakeBonusActive()) return null;
-  if ((ctx.changEOrdersToday ?? 0) >= MID_AUTUMN_CHANGE_DAILY_CAP) return null;
-  const tier = pickChangETier(ctx);
-  const slots = buildChangEOrderSlots(ctx, tier);
+  const featured = ACTIVE_WHEEL_THEME.featuredCustomer;
+  if (!featured || !ctx.allowChangEOrder) return null;
+  if (!isWheelEarnActive()) return null;
+  if ((ctx.changEOrdersToday ?? 0) >= featured.dailyCap) return null;
+  const tier = pickFeaturedTier(ctx);
+  const slots = buildFeaturedOrderSlots(ctx, tier);
   if (!slots) return null;
-  return changEOrderFromSlots(slots, tier);
+  return featuredOrderFromSlots(slots, tier);
 }
 
-/** GM / 调试：强制生成嫦娥中秋单（A/S 且必含月饼） */
+/** GM / 调试：强制生成当期转盘的专属客人订单。 */
 export function forceGenerateChangEOrder(ctx: OrderGenContext): OrderGenResult | null {
-  const tier = pickChangETier(ctx);
-  const slots = buildChangEOrderSlots(ctx, tier);
+  if (!ACTIVE_WHEEL_THEME.featuredCustomer) return null;
+  const tier = pickFeaturedTier(ctx);
+  const slots = buildFeaturedOrderSlots(ctx, tier);
   if (!slots) return null;
-  return changEOrderFromSlots(slots, tier);
+  return featuredOrderFromSlots(slots, tier);
 }
 
 /** 当前解锁工具能力下，订单槽位是否不超过 cap+1（与 aspirational 上限一致） */

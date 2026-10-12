@@ -12,7 +12,7 @@
 
 archive：复制到归档目录 → 校验 sha256 → 删除包内文件，并在归档目录写 manifest.lock.json。
 restore：按 manifest.lock.json 拷回 minigame/ 并校验；不删归档副本。
-复刻时还要把 TextureCache 里 ARCHIVED_IMAGE_MAP 的条目挪回正式 map（或把主题设为 ACTIVE）。
+复刻兑换活动：restore 后改当期 seasonId。转盘活动还要把 WHEEL_ASSETS_IN_PACKAGE 改成 true。
 """
 
 from __future__ import annotations

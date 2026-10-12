@@ -7,7 +7,8 @@ import {
   boardProducerOutputsProductLine,
 } from '@/config/BuildingConfig';
 import { Category, DrinkLine, FlowerLine, FoodLine, ToolLine } from '@/config/ItemConfig';
-import { isMidAutumnBakeBonusActive } from '@/config/events/MidAutumnEventConfig';
+import { ACTIVE_WHEEL_THEME } from '@/config/events/wheel/WheelEventRegistry';
+import { isWheelEarnActive } from '@/config/events/wheel/WheelEventLive';
 import type { UnlockedLines } from '@/config/OrderTierConfig';
 
 export interface OrderBoardCell {
@@ -53,9 +54,10 @@ export function computeUnlockedLines(cells: readonly OrderBoardCell[]): Unlocked
       drinkLinesOnBoard.add(def.produceLine);
       const dl = def.produceLine as DrinkLine;
       drinkToolMaxByLine[dl] = Math.max(drinkToolMaxByLine[dl] ?? 0, def.level);
-      if (def.toolLine === ToolLine.BAKE && isMidAutumnBakeBonusActive()) {
-        drinkToolMaxByLine[DrinkLine.MOONCAKE] = Math.max(
-          drinkToolMaxByLine[DrinkLine.MOONCAKE] ?? 0,
+      const bonus = ACTIVE_WHEEL_THEME.produceBonus;
+      if (bonus && def.toolLine === bonus.toolLine && isWheelEarnActive()) {
+        drinkToolMaxByLine[bonus.extraLine as DrinkLine] = Math.max(
+          drinkToolMaxByLine[bonus.extraLine as DrinkLine] ?? 0,
           def.level,
         );
       }

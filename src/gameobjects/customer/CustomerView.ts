@@ -27,6 +27,7 @@ import { resolveWorkshopMaterialIconKey } from '@/config/FurnitureWorkshopConfig
 import { ToastMessage } from '@/gameobjects/ui/ToastMessage';
 import { AFFINITY_MAP } from '@/config/AffinityConfig';
 import { ACTIVE_EXCHANGE_THEME } from '@/config/events/exchange/ExchangeEventRegistry';
+import { ACTIVE_WHEEL_THEME } from '@/config/events/wheel/WheelEventRegistry';
 /** 单格物品显示边长（3 个并排仍落在 PANEL_W 内） */
 const SLOT_SIZE = 72;
 const SLOT_GAP = 8;
@@ -116,7 +117,7 @@ export class CustomerView extends PIXI.Container {
     this.sortChildren();
     this.visible = false;
     this._eventStoneTextureUnsub = TextureCache.onKeysLoaded(
-      ['event_jewelry_1', ACTIVE_EXCHANGE_THEME.art.currencyIconKey, 'icon_mid_autumn_lantern'],
+      ['event_jewelry_1', ACTIVE_EXCHANGE_THEME.art.currencyIconKey, ACTIVE_WHEEL_THEME.art.currencyIconKey],
       () => {
         if (
           (this._customer?.eventStoneReward ?? 0) > 0
@@ -586,7 +587,7 @@ export class CustomerView extends PIXI.Container {
     if (lanternReward <= 0) return;
 
     const lanternCap = this._makeRewardCapsule([
-      { icon: 'icon_mid_autumn_lantern', value: lanternReward, fill: 0x8A5A28 },
+      { icon: ACTIVE_WHEEL_THEME.art.currencyIconKey, value: lanternReward, fill: ACTIVE_WHEEL_THEME.colors.badgeFill },
     ], 16);
     const badge = lanternCap.node;
     badge.name = 'midAutumnLanternRewardCapsule';

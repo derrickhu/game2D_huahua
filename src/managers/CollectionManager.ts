@@ -13,7 +13,8 @@
 import { EventBus } from '@/core/EventBus';
 import { PersistService } from '@/core/PersistService';
 import { CellState } from '@/config/BoardLayout';
-import { ITEM_DEFS, Category, isMooncakeItemId, type ItemDef } from '@/config/ItemConfig';
+import { ITEM_DEFS, Category, type ItemDef } from '@/config/ItemConfig';
+import { isSeasonalItemBlockedOn } from '@/config/events/SeasonalItemRegistry';
 import { BoardManager } from './BoardManager';
 
 const STORAGE_KEY = 'huahua_collection';
@@ -70,7 +71,7 @@ class CollectionManagerClass {
 
   private _registerItemDiscoveryFromBoard(itemId: string): void {
     const def = ITEM_DEFS.get(itemId);
-    if (!def || isMooncakeItemId(itemId)) return;
+    if (!def || isSeasonalItemBlockedOn(itemId, 'collection')) return;
 
     if (def.category === Category.FLOWER) {
       this._discover(CollectionCategory.FLOWER, itemId);
@@ -106,7 +107,7 @@ class CollectionManagerClass {
   getCategoryTotal(cat: CollectionCategory): number {
     let n = 0;
     for (const def of ITEM_DEFS.values()) {
-      if (isMooncakeItemId(def.id)) continue;
+      if (isSeasonalItemBlockedOn(def.id, 'collection')) continue;
       if (def.category === (cat as string)) n++;
     }
     return n;
@@ -151,7 +152,7 @@ class CollectionManagerClass {
     let total = 0;
     for (const set of this._discovered.values()) {
       for (const itemId of set) {
-        if (!isMooncakeItemId(itemId)) total += 1;
+        if (!isSeasonalItemBlockedOn(itemId, 'collection')) total += 1;
       }
     }
     return total;

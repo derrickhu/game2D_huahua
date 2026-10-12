@@ -29,7 +29,8 @@ import { QuestManager } from '@/managers/QuestManager';
 import { GrowthQuestManager } from '@/managers/GrowthQuestManager';
 import { ExchangeEventManager } from '@/managers/ExchangeEventManager';
 import { ACTIVE_EXCHANGE_THEME } from '@/config/events/exchange/ExchangeEventRegistry';
-import { MidAutumnEventManager } from '@/managers/MidAutumnEventManager';
+import { WheelEventManager } from '@/managers/WheelEventManager';
+import { ACTIVE_WHEEL_THEME } from '@/config/events/wheel/WheelEventRegistry';
 import { SaveManager } from '@/managers/SaveManager';
 import { DressUpManager } from '@/managers/DressUpManager';
 import { getOwnerShopDisplayScale } from '@/config/DressUpConfig';
@@ -220,7 +221,7 @@ const RIGHT_BUTTONS: SideBtnDef[] = [
   { id: 'growth',  icon: '', texKey: 'icon_growth',  label: '成长', event: 'nav:openGrowthQuest', iconBg: 0x9CCC65, labelColor: 0x5F8F3A },
   { id: 'quest',   icon: '', texKey: 'icon_quest',   label: '任务', event: 'nav:openQuest',   iconBg: 0x42A5F5, labelColor: 0x1976D2 },
   { id: 'exchange_event', icon: '', texKey: ACTIVE_EXCHANGE_THEME.art.entryIconKey, label: ACTIVE_EXCHANGE_THEME.copy.shopBtnLabel, event: 'panel:openExchangeEvent', iconBg: ACTIVE_EXCHANGE_THEME.colors.shopBtnBg, labelColor: ACTIVE_EXCHANGE_THEME.colors.shopBtnLabel },
-  { id: 'mid_autumn', icon: '', texKey: 'icon_mid_autumn_event_nb2', label: '中秋', event: 'panel:openMidAutumnEvent', iconBg: 0xE8B86D, labelColor: 0x8A5A28 },
+  { id: 'mid_autumn', icon: '', texKey: ACTIVE_WHEEL_THEME.art.entryIconKey, label: ACTIVE_WHEEL_THEME.copy.shopBtnLabel, event: 'panel:openWheelEvent', iconBg: ACTIVE_WHEEL_THEME.colors.shopBtnBg, labelColor: ACTIVE_WHEEL_THEME.colors.shopBtnLabel },
 ];
 
 /** 左下折叠冷门功能区；当前先放「游戏圈」，后续可继续追加。 */
@@ -2607,7 +2608,7 @@ export class ShopScene implements Scene {
 
   private _isRightActivityVisible(id: string): boolean {
     if (id === 'exchange_event') return ExchangeEventManager.isActive();
-    if (id === 'mid_autumn') return MidAutumnEventManager.isActive();
+    if (id === 'mid_autumn') return WheelEventManager.isActive();
     return true;
   }
 
@@ -3106,8 +3107,8 @@ export class ShopScene implements Scene {
     EventBus.on('furniture:tutorialEditCompleteTap', this._onTutorialEditCompleteTap);
     EventBus.on('exchangeEvent:changed', this._onExchangeEventChanged);
     EventBus.on('exchangeEvent:periodChanged', this._onExchangeEventChanged);
-    EventBus.on('midAutumnEvent:changed', this._onMidAutumnChanged);
-    EventBus.on('midAutumnEvent:periodChanged', this._onMidAutumnChanged);
+    EventBus.on('wheelEvent:changed', this._onMidAutumnChanged);
+    EventBus.on('wheelEvent:periodChanged', this._onMidAutumnChanged);
   }
 
   private readonly _onExchangeEventChanged = (): void => {
@@ -3150,8 +3151,8 @@ export class ShopScene implements Scene {
     EventBus.off('furniture:tutorialEditCompleteTap', this._onTutorialEditCompleteTap);
     EventBus.off('exchangeEvent:changed', this._onExchangeEventChanged);
     EventBus.off('exchangeEvent:periodChanged', this._onExchangeEventChanged);
-    EventBus.off('midAutumnEvent:changed', this._onMidAutumnChanged);
-    EventBus.off('midAutumnEvent:periodChanged', this._onMidAutumnChanged);
+    EventBus.off('wheelEvent:changed', this._onMidAutumnChanged);
+    EventBus.off('wheelEvent:periodChanged', this._onMidAutumnChanged);
   }
 
   /**
@@ -4650,7 +4651,7 @@ export class ShopScene implements Scene {
     const midAutumnBtn = this._activityBtns.get('mid_autumn');
     if (midAutumnBtn) {
       midAutumnBtn.redDot.visible = midAutumnBtn.container.visible
-        && MidAutumnEventManager.hasRedDot;
+        && WheelEventManager.hasRedDot;
     }
 
     // 装修红点（有可购买的新装饰）

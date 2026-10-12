@@ -2,6 +2,7 @@
  * 订单可需求产品定义：把玩法产品与 ItemConfig 的 line 解耦，便于独立配置解锁、工具 cap 与档位区间。
  */
 import { Category, DrinkLine, FlowerLine, FoodLine, fruitCutLevelForToolLevel } from './ItemConfig';
+import { seasonalSurfaceOpen } from './events/SeasonalItemRegistry';
 import {
   getEffectiveMaxLevel,
   getPlantOrderMaxLevel,
@@ -175,7 +176,8 @@ export const ORDER_PRODUCT_DEFS: Record<OrderProductId, OrderProductDef> = {
       A: [1, 4],
       S: [5, 8],
     },
-    isUnlocked: ulk => (ulk.drinkToolMaxByLine[DrinkLine.MOONCAKE] ?? 0) > 0,
+    isUnlocked: ulk => seasonalSurfaceOpen(Category.DRINK, DrinkLine.MOONCAKE, 'orders')
+      && (ulk.drinkToolMaxByLine[DrinkLine.MOONCAKE] ?? 0) > 0,
     toolLevel: ulk => ulk.drinkToolMaxByLine[DrinkLine.MOONCAKE] ?? 0,
     weightByTier: DRINK_B_PLUS_WEIGHT,
   },

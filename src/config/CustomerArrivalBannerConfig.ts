@@ -16,6 +16,7 @@ export const CUSTOMER_ARRIVAL_BANNER_ORDER_KINDS: readonly OrderGenerationKind[]
   'timedDiamond',
   'timedFlorist',
   'midAutumnChangE',
+  'wheelFeatured',
 ];
 
 export const CUSTOMER_ARRIVAL_COPY: Readonly<Record<string, CustomerArrivalCopy>> = {

@@ -18,9 +18,9 @@ import { FlowerSignTicketManager } from './FlowerSignTicketManager';
 import { EventBoardManager, type EventBoardPersistState } from './EventBoardManager';
 import { ExchangeEventManager, type ExchangeEventState } from './ExchangeEventManager';
 import {
-  MidAutumnEventManager,
-  type MidAutumnEventPersistState,
-} from './MidAutumnEventManager';
+  WheelEventManager,
+  type WheelEventPersistState,
+} from './WheelEventManager';
 import { EventBus } from '@/core/EventBus';
 import { PersistService } from '@/core/PersistService';
 import { CdnAssetService } from '@/core/CdnAssetService';
@@ -28,10 +28,10 @@ import { BOARD_COLS, BOARD_TOTAL } from '@/config/Constants';
 import { BOARD_PRESETS, CellState } from '@/config/BoardLayout';
 import { ITEM_DEFS, migrateLegacyItemId } from '@/config/ItemConfig';
 import {
-  exportMooncakeRetirementNotice,
-  retireMooncakesInSave,
-  type MooncakeRetirementNotice,
-} from './MooncakeRetirement';
+  exportSeasonalRetirementNotice,
+  retireSeasonalItemsInSave,
+  type SeasonalRetirementNotice,
+} from './SeasonalItemRetirement';
 import { BACKEND_ANON_ID_KEY, BACKEND_TOKEN_KEY, CLOUD_SYNC_META_KEY } from '@/config/CloudConfig';
 
 const SAVE_SLOT = 'huahua_save';
@@ -120,10 +120,14 @@ interface SaveData {
   exchangeEvent?: ExchangeEventState;
   /** 旧版清凉一夏字段，只读不写；读档时交给 ExchangeEventManager 结算 */
   coolSummerEvent?: ExchangeEventState;
-  /** 月满中秋转盘活动 */
-  midAutumnEvent?: MidAutumnEventPersistState;
-  /** 月饼折花愿后尚未弹出的提示；弹出后清除 */
-  pendingMooncakeNotice?: MooncakeRetirementNotice;
+  /** 当期转盘活动 */
+  wheelEvent?: WheelEventPersistState;
+  /** 旧字段：月满中秋。新档不再写入 */
+  midAutumnEvent?: WheelEventPersistState;
+  /** 活动物品折花愿后尚未弹出的提示；弹出后清除 */
+  pendingSeasonalItemNotice?: SeasonalRetirementNotice;
+  /** 旧字段：只含月饼折算。新档不再写入，读档时并进 pendingSeasonalItemNotice */
+  pendingMooncakeNotice?: { pieces: number; huayuan: number };
 }
 
 class SaveManagerClass {
@@ -156,7 +160,7 @@ class SaveManagerClass {
         this._persistToStorage(false);
       }, 200);
     });
-    EventBus.on('midAutumnEvent:changed', () => {
+    EventBus.on('wheelEvent:changed', () => {
       if (this._midAutumnEventSaveTimer) clearTimeout(this._midAutumnEventSaveTimer);
       this._midAutumnEventSaveTimer = setTimeout(() => {
         this._midAutumnEventSaveTimer = null;
@@ -182,8 +186,8 @@ class SaveManagerClass {
       flowerSignTickets: FlowerSignTicketManager.exportState(),
       eventBoard: EventBoardManager.exportState(),
       exchangeEvent: ExchangeEventManager.exportState(),
-      midAutumnEvent: MidAutumnEventManager.exportState(),
-      pendingMooncakeNotice: exportMooncakeRetirementNotice(),
+      wheelEvent: WheelEventManager.exportState(),
+      pendingSeasonalItemNotice: exportSeasonalRetirementNotice(),
     };
     return JSON.stringify(data);
   }
@@ -263,7 +267,7 @@ class SaveManagerClass {
         }
       }
 
-      const retiredMooncakes = retireMooncakesInSave(data);
+      const retiredSeasonal = retireSeasonalItemsInSave(data);
 
       // 清理存档中引用了已不存在物品ID的格子（物品配置变化时的软迁移）
       let cleanedCount = 0;
@@ -280,8 +284,8 @@ class SaveManagerClass {
 
       BuildingManager.reset();
       CurrencyManager.loadState(data.currency);
-      if (retiredMooncakes.huayuan > 0) {
-        CurrencyManager.addHuayuan(retiredMooncakes.huayuan);
+      if (retiredSeasonal.huayuan > 0) {
+        CurrencyManager.addHuayuan(retiredSeasonal.huayuan);
       }
       const offlineSec = Math.max(0, Math.floor((Date.now() - data.timestamp) / 1000));
       CurrencyManager.applyElapsedStaminaRecovery(offlineSec);
@@ -289,7 +293,7 @@ class SaveManagerClass {
       BuildingManager.loadState(data.buildings);
       EventBoardManager.loadState(data.eventBoard);
       ExchangeEventManager.loadState(data.exchangeEvent ?? data.coolSummerEvent);
-      MidAutumnEventManager.loadState(data.midAutumnEvent);
+      WheelEventManager.loadState(data.wheelEvent ?? data.midAutumnEvent);
       if (data.warehouse) {
         WarehouseManager.loadState(data.warehouse);
       }
@@ -301,7 +305,7 @@ class SaveManagerClass {
       MerchShopManager.init();
       MerchShopManager.loadState(data.merchShop);
       FlowerSignTicketManager.loadState(data.flowerSignTickets);
-      if (retiredMooncakes.pieces > 0) {
+      if (retiredSeasonal.pieces > 0) {
         this.save();
       }
       return true;

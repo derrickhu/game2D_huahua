@@ -10,6 +10,7 @@ import {
   type FlowerSignPoolEntry,
 } from '@/config/FlowerSignGachaConfig';
 import { WORKSHOP_GACHA_DYE_IDS } from '@/config/FurnitureWorkshopConfig';
+import { isSeasonalItemBlockedOn } from '@/config/events/SeasonalItemRegistry';
 import { WISHING_FOUNTAIN_UNLOCK_LEVEL } from '@/config/WorldMapConfig';
 import { EventBus } from '@/core/EventBus';
 import { PersistService } from '@/core/PersistService';
@@ -49,7 +50,9 @@ const WORKSHOP_GACHA_DYE_SET = new Set<string>(WORKSHOP_GACHA_DYE_IDS);
 
 function buildValidPool(): FlowerSignPoolEntry[] {
   return FLOWER_SIGN_GACHA_POOL.filter((e) => {
-    if (e.kind === 'reward_box_item') return ITEM_DEFS.has(e.itemId);
+    if (e.kind === 'reward_box_item') {
+      return ITEM_DEFS.has(e.itemId) && !isSeasonalItemBlockedOn(e.itemId, 'gacha');
+    }
     if (e.kind === 'workshop_dye') return WORKSHOP_GACHA_DYE_SET.has(e.materialId);
     return e.amount > 0;
   });

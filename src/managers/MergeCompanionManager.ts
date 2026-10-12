@@ -2,7 +2,8 @@
  * 合成伴生物：概率 roll、漂浮气泡状态、钻石解锁 / 移除 / 到期、存档、活动规则注册
  */
 import { EventBus } from '@/core/EventBus';
-import { ITEM_DEFS, InteractType, isMooncakeItemId } from '@/config/ItemConfig';
+import { ITEM_DEFS, InteractType } from '@/config/ItemConfig';
+import { isSeasonalItemBlockedOn } from '@/config/events/SeasonalItemRegistry';
 import {
   MERGE_COMPANION_ENABLED,
   MERGE_COMPANION_MAX_ACTIVE_FLOAT,
@@ -135,7 +136,7 @@ function _resolvePayloadItemId(rule: MergeCompanionRuleDef, ctx: MergeCompanionC
 function _bubblePayloadItemAllowed(payloadItemId: string): boolean {
   const def = ITEM_DEFS.get(payloadItemId);
   if (!def || def.interactType === InteractType.TOOL) return false;
-  if (isMooncakeItemId(payloadItemId)) return false;
+  if (isSeasonalItemBlockedOn(payloadItemId, 'bubbles')) return false;
   return true;
 }
 
@@ -217,6 +218,26 @@ class MergeCompanionManagerClass {
 
   getFloatBubbles(): readonly MergeCompanionFloatBubble[] {
     return this._bubbles;
+  }
+
+  /** 摘掉载荷已下线的花语泡泡，返回被摘掉的物品 id。 */
+  pullBubblesWhere(pred: (itemId: string) => boolean): string[] {
+    const pulled: string[] = [];
+    const removedIds: string[] = [];
+    for (const bubble of this._bubbles) {
+      if (!pred(bubble.payloadItemId)) continue;
+      pulled.push(bubble.payloadItemId);
+      removedIds.push(bubble.id);
+    }
+    if (removedIds.length === 0) return pulled;
+    const selectedGone = this._selectedBubbleId != null && removedIds.includes(this._selectedBubbleId);
+    this._bubbles = this._bubbles.filter(bubble => !removedIds.includes(bubble.id));
+    if (selectedGone) {
+      this._selectedBubbleId = null;
+      EventBus.emit('board:selectionCleared');
+    }
+    EventBus.emit('mergeCompanion:changed');
+    return pulled;
   }
 
   getFloatBubble(id: string): MergeCompanionFloatBubble | undefined {

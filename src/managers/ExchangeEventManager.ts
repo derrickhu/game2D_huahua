@@ -11,12 +11,15 @@ import type {
   ExchangeGrant,
   ExchangeShopProduct,
 } from '@/config/events/exchange/ExchangeEventTheme';
+import { setSeasonalSeasonLiveChecker } from '@/config/events/SeasonalItemRegistry';
 import { EventBus } from '@/core/EventBus';
 import { ToastMessage } from '@/gameobjects/ui/ToastMessage';
 import { CurrencyManager } from '@/managers/CurrencyManager';
 import { DecorationManager } from '@/managers/DecorationManager';
 import { FurnitureWorkshopManager } from '@/managers/FurnitureWorkshopManager';
 import { grantQuest } from '@/utils/UnlockChecker';
+import { SaveManager } from '@/managers/SaveManager';
+import { retireLiveSeasonalItems } from '@/managers/SeasonalItemRetirement';
 import { DECO_MAP } from '@/config/DecorationConfig';
 
 const THEME = ACTIVE_EXCHANGE_THEME;
@@ -106,6 +109,7 @@ class ExchangeEventManagerClass {
   init(): void {
     if (this._initialized) return;
     this._initialized = true;
+    setSeasonalSeasonLiveChecker(ACTIVE_EXCHANGE_THEME.seasonId, () => this.isActive());
     this._lastStatus = this.status;
     EventBus.on('customer:delivered', (_uid: number, customer: {
       exchangeEventReward?: number;
@@ -127,12 +131,16 @@ class ExchangeEventManagerClass {
     const status = this.status;
     if (status === this._lastStatus) {
       // 活动已结束但读档/跨日时可能尚未结算
-      if (status === 'ended') this._trySettleExpiredCurrency({ notify: true });
+      if (status === 'ended') {
+        this._trySettleExpiredCurrency({ notify: true });
+        this._retireSeasonalItems();
+      }
       return;
     }
     this._lastStatus = status;
     if (status === 'ended') {
       this._trySettleExpiredCurrency({ notify: true });
+      this._retireSeasonalItems();
     }
     EventBus.emit('exchangeEvent:periodChanged', status);
     this._emitChanged();
@@ -392,6 +400,11 @@ class ExchangeEventManagerClass {
    * 活动截止后：剩余货币按比例换算花愿，只结算一次。
    * @returns 换算的花愿数量（0 表示无需结算或已结算过）
    */
+  private _retireSeasonalItems(): void {
+    const retired = retireLiveSeasonalItems({ notify: true });
+    if (retired.pieces > 0) SaveManager.save();
+  }
+
   private _trySettleExpiredCurrency(opts?: { notify?: boolean }): number {
     if (this._currencySettled) return 0;
     if (this.getActivitySnapshot().status !== 'ended') return 0;

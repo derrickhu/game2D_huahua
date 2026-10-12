@@ -23,6 +23,11 @@ import {
   ACTIVE_EXCHANGE_ART,
   ACTIVE_EXCHANGE_SEASON_ID,
 } from '@/config/events/exchange/ExchangeEventArtRegistry';
+import {
+  ACTIVE_WHEEL_ART,
+  ACTIVE_WHEEL_SEASON_ID,
+  WHEEL_ASSETS_IN_PACKAGE,
+} from '@/config/events/wheel/WheelEventArtRegistry';
 
 const FURNITURE_ICON_ALIASES = buildFurnitureIconAliasMap();
 
@@ -50,6 +55,8 @@ const MAIN_IMAGE_MAP: Record<string, string> = {
   icon_jewelry_event_nb2: 'images/ui/icon_jewelry_event_nb2.png',
   /** 当期兑换活动入口 + 货币图标（由 ExchangeEventArtRegistry 决定） */
   ...ACTIVE_EXCHANGE_ART.mainImages,
+  /** 当期转盘入口 + 货币图标；素材未进包时不登记，避免启动预加载缺文件 */
+  ...(WHEEL_ASSETS_IN_PACKAGE ? ACTIVE_WHEEL_ART.mainImages : {}),
   /** NB2+rembg：激励视频 / 看广告统一小图标（粉紫边框 + 播放三角） */
   icon_ad_reward_nb2: 'images/ui/icon_ad_reward_nb2.png',
   icon_heart:  'images/ui/icon_heart.png',
@@ -629,33 +636,28 @@ const EXCHANGE_EVENT_IMAGE_MAP: Record<string, string> = {
 
 /**
  * 已下线活动的贴图：文件已移到 game_assets/huahua/archive/events/<seasonId>/，不在包内、运行时不加载。
- * 只为旧面板代码里的静态 key 保留登记（get 返回 null 走兜底）。复刻时 restore 文件后把对应条目挪回上面。
+ * 当期转盘素材未进包时，key 只登记在这里。素材进包后把 WHEEL_ASSETS_IN_PACKAGE 改成 true。
  */
 export const ARCHIVED_IMAGE_MAP: Record<string, string> = {
-  icon_mid_autumn_event_nb2: 'images/ui/icon_mid_autumn_event_nb2.png',
-  icon_mid_autumn_lantern: 'images/ui/icon_mid_autumn_lantern.png',
-  mid_autumn_event_panel_shell_nb2:
-    'subpkg_events/images/mid_autumn_event/ui/mid_autumn_event_panel_shell_nb2.png',
-  mid_autumn_wheel_disc_nb2:
-    'subpkg_events/images/mid_autumn_event/ui/mid_autumn_wheel_disc_nb2.png',
-  mid_autumn_wheel_pointer_nb2:
-    'subpkg_events/images/mid_autumn_event/ui/mid_autumn_wheel_pointer_nb2.png',
-  mid_autumn_wheel_hub_nb2:
-    'subpkg_events/images/mid_autumn_event/ui/mid_autumn_wheel_hub_nb2.png',
-  mid_autumn_wheel_stand_nb2:
-    'subpkg_events/images/mid_autumn_event/ui/mid_autumn_wheel_stand_nb2.png',
-  mid_autumn_wheel_spin_btn_nb2:
-    'subpkg_events/images/mid_autumn_event/ui/mid_autumn_wheel_spin_btn_nb2.png',
+  ...(WHEEL_ASSETS_IN_PACKAGE
+    ? {}
+    : { ...ACTIVE_WHEEL_ART.mainImages, ...ACTIVE_WHEEL_ART.eventImages }),
 };
+
+const WHEEL_EVENT_IMAGE_MAP: Record<string, string> = WHEEL_ASSETS_IN_PACKAGE
+  ? { ...ACTIVE_WHEEL_ART.eventImages }
+  : {};
 
 const EVENT_IMAGE_MAPS: Record<string, Record<string, string>> = {
   jewelry_box_event: JEWELRY_BOX_EVENT_IMAGE_MAP,
   [ACTIVE_EXCHANGE_SEASON_ID]: EXCHANGE_EVENT_IMAGE_MAP,
+  ...(WHEEL_ASSETS_IN_PACKAGE ? { [ACTIVE_WHEEL_SEASON_ID]: WHEEL_EVENT_IMAGE_MAP } : {}),
 };
 
 const EVENTS_IMAGE_MAP: Record<string, string> = {
   ...JEWELRY_BOX_EVENT_IMAGE_MAP,
   ...EXCHANGE_EVENT_IMAGE_MAP,
+  ...WHEEL_EVENT_IMAGE_MAP,
 };
 
 // ================================================================

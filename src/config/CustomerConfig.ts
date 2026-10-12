@@ -6,6 +6,7 @@
  */
 import type { Category } from './ItemConfig';
 import type { OrderGenerationKind } from '@/orders/types';
+import { ACTIVE_WHEEL_THEME } from '@/config/events/wheel/WheelEventRegistry';
 
 export interface CustomerDemandDef {
   category: Category;
@@ -51,4 +52,5 @@ export const DEFAULT_SPECIAL_CUSTOMER_BY_ORDER_KIND: Partial<Record<OrderGenerat
   timedFlorist: 'florist_merchant',
   timedWorkshop: 'furniture_craftswoman',
   midAutumnChangE: 'chang_e',
+  wheelFeatured: ACTIVE_WHEEL_THEME.featuredCustomer?.typeId ?? 'chang_e',
 };

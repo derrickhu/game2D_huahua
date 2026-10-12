@@ -1,23 +1,20 @@
-import { Category, DrinkLine, ITEM_DEFS } from '@/config/ItemConfig';
+import { ITEM_DEFS } from '@/config/ItemConfig';
 import { DECO_MAP } from '@/config/DecorationConfig';
+import { ACTIVE_WHEEL_THEME, findWheelTheme } from '@/config/events/wheel/WheelEventRegistry';
 import {
-  MID_AUTUMN_DEFAULT_END_AT,
-  MID_AUTUMN_DEFAULT_START_AT,
-  MID_AUTUMN_LANTERN_TO_HUAYUAN_RATE,
-  midAutumnLanternsForMooncakeLevel,
-  MID_AUTUMN_SEASON_ID,
-  midAutumnSpinCostForRound,
-  MID_AUTUMN_WHEEL_ROUND_COUNT,
-  clampMidAutumnWheelRound,
-  MID_AUTUMN_WHEEL_PRIZE_MAP,
-  midAutumnWheelPrizeIndex,
-  midAutumnWheelPrizesForRound,
-  rollMidAutumnWheelPrize,
-  setMidAutumnActiveChecker,
-  MID_AUTUMN_OUTFIT_ID,
-  type MidAutumnGrant,
-  type MidAutumnWheelPrize,
-} from '@/config/events/MidAutumnEventConfig';
+  clampWheelRound,
+  findWheelPrize,
+  rollWheelPrize,
+  wheelEarnAmount,
+  wheelPrizeIndex,
+  wheelPrizesForRound,
+  wheelRoundCount,
+  wheelSpinCost,
+  type WheelGrant,
+  type WheelPrize,
+} from '@/config/events/wheel/WheelEventTheme';
+import { setWheelEarnChecker } from '@/config/events/wheel/WheelEventLive';
+import { setSeasonalSeasonLiveChecker } from '@/config/events/SeasonalItemRegistry';
 import { EventBus } from '@/core/EventBus';
 import { ToastMessage } from '@/gameobjects/ui/ToastMessage';
 import { CurrencyManager } from '@/managers/CurrencyManager';
@@ -26,10 +23,14 @@ import { DressUpManager } from '@/managers/DressUpManager';
 import { FurnitureWorkshopManager } from '@/managers/FurnitureWorkshopManager';
 import { RewardBoxManager } from '@/managers/RewardBoxManager';
 import { grantQuest } from '@/utils/UnlockChecker';
+import { SaveManager } from '@/managers/SaveManager';
+import { retireLiveSeasonalItems } from '@/managers/SeasonalItemRetirement';
 
-export type MidAutumnActivityStatus = 'upcoming' | 'active' | 'ended';
+const THEME = ACTIVE_WHEEL_THEME;
 
-export interface MidAutumnEventState {
+export type WheelActivityStatus = 'upcoming' | 'active' | 'ended';
+
+export interface WheelEventState {
   seasonId: string;
   currency: number;
   spinCount: number;
@@ -39,44 +40,43 @@ export interface MidAutumnEventState {
   wheelCleared?: boolean;
   pendingSpinPrizeId?: string;
   pendingSpinRound?: number;
-  /** 三轮抽完后是否已发放广寒仙裳 */
   outfitGranted?: boolean;
 }
-export type MidAutumnEventPersistState = MidAutumnEventState;
+export type WheelEventPersistState = WheelEventState;
 
-export interface MidAutumnActivitySnapshot {
-  status: MidAutumnActivityStatus;
+export interface WheelActivitySnapshot {
+  status: WheelActivityStatus;
   startAt: number;
   endAt: number;
   remainingMs: number;
 }
 
-export type MidAutumnSpinFailure =
+export type WheelSpinFailure =
   | 'not_active'
   | 'not_enough_currency'
   | 'grant_failed'
   | 'all_cleared';
 
-export type MidAutumnSpinResult =
+export type WheelSpinResult =
   | {
       ok: true;
-      prize: MidAutumnWheelPrize;
+      prize: WheelPrize;
       prizeIndex: number;
       remainingCurrency: number;
       fromRound: number;
     }
-  | { ok: false; reason: MidAutumnSpinFailure };
+  | { ok: false; reason: WheelSpinFailure };
 
-export interface MidAutumnSpinSettleResult {
-  prize: MidAutumnWheelPrize;
+export interface WheelSpinSettleResult {
+  prize: WheelPrize;
   fromRound: number;
   advancedToRound?: number;
   allCleared: boolean;
 }
 
-function emptyState(): MidAutumnEventState {
+function emptyState(): WheelEventState {
   return {
-    seasonId: MID_AUTUMN_SEASON_ID,
+    seasonId: THEME.seasonId,
     currency: 0,
     spinCount: 0,
     currencySettled: false,
@@ -89,7 +89,7 @@ function emptyState(): MidAutumnEventState {
   };
 }
 
-class MidAutumnEventManagerClass {
+class WheelEventManagerClass {
   private _currency = 0;
   private _spinCount = 0;
   private _currencySettled = false;
@@ -102,18 +102,23 @@ class MidAutumnEventManagerClass {
   private _lastRedDot = false;
   private _initialized = false;
   private _ticker = 0;
-  private _lastStatus: MidAutumnActivityStatus | null = null;
+  private _lastStatus: WheelActivityStatus | null = null;
   private _gmActiveOverride = false;
+
+  get theme() {
+    return THEME;
+  }
 
   init(): void {
     if (this._initialized) return;
     this._initialized = true;
-    setMidAutumnActiveChecker(() => this.canCollectLanterns());
+    setWheelEarnChecker(() => this.canEarnCurrency());
+    setSeasonalSeasonLiveChecker(THEME.seasonId, () => this.isActive());
     this._lastStatus = this.status;
     EventBus.on('customer:delivered', (_uid: number, customer: {
       midAutumnLanternReward?: number;
     }) => {
-      if (!this.canCollectLanterns()) return;
+      if (!this.canEarnCurrency()) return;
       const reward = Math.max(0, Math.floor(customer?.midAutumnLanternReward ?? 0));
       if (reward > 0) this.addCurrency(reward);
     });
@@ -125,14 +130,18 @@ class MidAutumnEventManagerClass {
     this._ticker = 0;
     const status = this.status;
     if (status === this._lastStatus) {
-      if (status === 'ended') this._trySettleExpiredCurrency({ notify: true });
+      if (status === 'ended') {
+        this._trySettleExpiredCurrency({ notify: true });
+        this._retireSeasonalItems();
+      }
       return;
     }
     this._lastStatus = status;
     if (status === 'ended') {
       this._trySettleExpiredCurrency({ notify: true });
+      this._retireSeasonalItems();
     }
-    EventBus.emit('midAutumnEvent:periodChanged', status);
+    EventBus.emit('wheelEvent:periodChanged', status);
     this._emitChanged();
   }
 
@@ -169,40 +178,40 @@ class MidAutumnEventManagerClass {
   }
 
   get outfitGranted(): boolean {
-    return this._outfitGranted || DressUpManager.isUnlocked(MID_AUTUMN_OUTFIT_ID);
+    const outfitId = THEME.clearanceOutfitId;
+    return this._outfitGranted || (!!outfitId && DressUpManager.isUnlocked(outfitId));
   }
 
-  /**
-   * 三轮抽完后发放广寒仙裳。返回 true 表示本次新获得（调用方应弹获得层）。
-   */
+  /** 全部轮次抽完后发放主题里的店主套装。返回 true 表示这次新获得。 */
   tryGrantClearanceOutfit(): boolean {
-    if (!this._wheelCleared) return false;
+    const outfitId = THEME.clearanceOutfitId;
+    if (!outfitId || !this._wheelCleared) return false;
     if (this._outfitGranted) return false;
-    if (DressUpManager.isUnlocked(MID_AUTUMN_OUTFIT_ID)) {
+    if (DressUpManager.isUnlocked(outfitId)) {
       this._outfitGranted = true;
       this._emitChanged();
       return false;
     }
-    const granted = DressUpManager.grantOutfitFromActivity(MID_AUTUMN_OUTFIT_ID);
+    const granted = DressUpManager.grantOutfitFromActivity(outfitId);
     this._outfitGranted = true;
     this._emitChanged();
     return granted;
   }
 
-  /** 活动进行中且转盘尚未抽完：可刷嫦娥、可获玉兔灯。 */
-  canCollectLanterns(): boolean {
+  /** 活动进行中且转盘还没抽完：可以刷专属客人、订单可以拿活动货币。 */
+  canEarnCurrency(): boolean {
     return this.isActive() && !this._wheelCleared;
   }
 
-  get currentPrizes(): readonly MidAutumnWheelPrize[] {
-    return midAutumnWheelPrizesForRound(this._wheelRound);
+  get currentPrizes(): readonly WheelPrize[] {
+    return wheelPrizesForRound(THEME, this._wheelRound);
   }
 
   isPrizeWon(prizeId: string): boolean {
     return this._wonPrizeIds.has(prizeId);
   }
 
-  get status(): MidAutumnActivityStatus {
+  get status(): WheelActivityStatus {
     return this.getActivitySnapshot().status;
   }
 
@@ -213,78 +222,77 @@ class MidAutumnEventManagerClass {
   get hasRedDot(): boolean {
     return this.isActive()
       && !this._wheelCleared
-      && this._currency >= midAutumnSpinCostForRound(this._wheelRound);
+      && this._currency >= wheelSpinCost(THEME, this._wheelRound);
   }
 
-  getActivitySnapshot(now = Date.now()): MidAutumnActivitySnapshot {
-    if (now < MID_AUTUMN_DEFAULT_START_AT) {
+  getActivitySnapshot(now = Date.now()): WheelActivitySnapshot {
+    if (now < THEME.startAt) {
       return {
         status: 'upcoming',
-        startAt: MID_AUTUMN_DEFAULT_START_AT,
-        endAt: MID_AUTUMN_DEFAULT_END_AT,
-        remainingMs: MID_AUTUMN_DEFAULT_START_AT - now,
+        startAt: THEME.startAt,
+        endAt: THEME.endAt,
+        remainingMs: THEME.startAt - now,
       };
     }
-    if (now <= MID_AUTUMN_DEFAULT_END_AT) {
+    if (now <= THEME.endAt) {
       return {
         status: 'active',
-        startAt: MID_AUTUMN_DEFAULT_START_AT,
-        endAt: MID_AUTUMN_DEFAULT_END_AT,
-        remainingMs: Math.max(0, MID_AUTUMN_DEFAULT_END_AT - now),
+        startAt: THEME.startAt,
+        endAt: THEME.endAt,
+        remainingMs: Math.max(0, THEME.endAt - now),
       };
     }
     return {
       status: 'ended',
-      startAt: MID_AUTUMN_DEFAULT_START_AT,
-      endAt: MID_AUTUMN_DEFAULT_END_AT,
+      startAt: THEME.startAt,
+      endAt: THEME.endAt,
       remainingMs: 0,
     };
   }
 
   calculateOrderReward(itemIds: readonly string[]): number {
-    if (!this.canCollectLanterns()) return 0;
+    if (!this.canEarnCurrency()) return 0;
+    const earn = THEME.orderEarn;
     let maxLevel = 0;
     for (const itemId of itemIds) {
       const item = ITEM_DEFS.get(itemId);
-      if (!item) continue;
-      if (item.category !== Category.DRINK || item.line !== DrinkLine.MOONCAKE) continue;
+      if (!item || item.category !== earn.category || item.line !== earn.line) continue;
       maxLevel = Math.max(maxLevel, item.level);
     }
-    return midAutumnLanternsForMooncakeLevel(maxLevel);
+    return wheelEarnAmount(THEME, maxLevel);
   }
 
   addCurrency(amount: number): number {
-    if (!this.canCollectLanterns()) return this._currency;
+    if (!this.canEarnCurrency()) return this._currency;
     const add = Number.isFinite(amount) ? Math.max(0, Math.floor(amount)) : 0;
     if (add <= 0) return this._currency;
     this._currency += add;
-    EventBus.emit('midAutumnEvent:currencyAdded', add, this._currency);
+    EventBus.emit('wheelEvent:currencyAdded', add, this._currency);
     this._emitChanged();
     return this._currency;
   }
 
-  spin(): MidAutumnSpinResult {
+  spin(): WheelSpinResult {
     if (!this.isActive()) return { ok: false, reason: 'not_active' };
     if (this._pendingPrizeId) this.settlePendingSpin();
     this._normalizeWheelProgress();
     if (this._wheelCleared) return { ok: false, reason: 'all_cleared' };
-    const spinCost = midAutumnSpinCostForRound(this._wheelRound);
+    const spinCost = wheelSpinCost(THEME, this._wheelRound);
     if (this._currency < spinCost) {
       return { ok: false, reason: 'not_enough_currency' };
     }
 
     const prizes = this.currentPrizes;
-    const won = new Set(this._wonPrizeIds);
-    const prize = rollMidAutumnWheelPrize(prizes, won);
+    const prize = rollWheelPrize(prizes, this._wonPrizeIds);
     if (!prize) return { ok: false, reason: 'all_cleared' };
 
     const fromRound = this._wheelRound;
-    const prizeIndex = midAutumnWheelPrizeIndex(prize.id, prizes);
+    const prizeIndex = wheelPrizeIndex(prize.id, prizes);
     this._currency -= spinCost;
     this._spinCount += 1;
     this._pendingPrizeId = prize.id;
     this._pendingRound = fromRound;
-    EventBus.emit('midAutumnEvent:spun', prize, this._currency);
+    EventBus.emit('wheelEvent:spun', prize, this._currency);
     this._emitChanged();
     return {
       ok: true,
@@ -296,13 +304,12 @@ class MidAutumnEventManagerClass {
   }
 
   /** 转盘停稳后再入账、置灰、进下一轮。杀进程中断时会在读档时补发。 */
-  settlePendingSpin(): MidAutumnSpinSettleResult | null {
+  settlePendingSpin(): WheelSpinSettleResult | null {
     const prizeId = this._pendingPrizeId;
     if (!prizeId) return null;
-    const fromRound = clampMidAutumnWheelRound(this._pendingRound);
-    const prizes = midAutumnWheelPrizesForRound(fromRound);
-    const prize = prizes.find(item => item.id === prizeId)
-      ?? MID_AUTUMN_WHEEL_PRIZE_MAP.get(prizeId);
+    const fromRound = clampWheelRound(THEME, this._pendingRound);
+    const prizes = wheelPrizesForRound(THEME, fromRound);
+    const prize = prizes.find(item => item.id === prizeId) ?? findWheelPrize(THEME, prizeId);
     this._pendingPrizeId = null;
     this._pendingRound = this._wheelRound;
     if (!prize) {
@@ -321,9 +328,9 @@ class MidAutumnEventManagerClass {
     };
   }
 
-  exportState(): MidAutumnEventState {
+  exportState(): WheelEventState {
     return {
-      seasonId: MID_AUTUMN_SEASON_ID,
+      seasonId: THEME.seasonId,
       currency: this._currency,
       spinCount: this._spinCount,
       currencySettled: this._currencySettled,
@@ -336,8 +343,12 @@ class MidAutumnEventManagerClass {
     };
   }
 
-  loadState(raw?: Partial<MidAutumnEventState> | null): void {
-    const state = raw?.seasonId === MID_AUTUMN_SEASON_ID ? raw : emptyState();
+  loadState(raw?: Partial<WheelEventState> | null): void {
+    if (raw?.seasonId && raw.seasonId !== THEME.seasonId) {
+      this._settleForeignSeason(raw);
+      raw = null;
+    }
+    const state = raw?.seasonId === THEME.seasonId ? raw : emptyState();
     this._currency = Number.isFinite(state.currency)
       ? Math.max(0, Math.floor(state.currency ?? 0))
       : 0;
@@ -345,16 +356,17 @@ class MidAutumnEventManagerClass {
       ? Math.max(0, Math.floor(state.spinCount ?? 0))
       : 0;
     this._currencySettled = !!state.currencySettled;
-    this._wheelRound = clampMidAutumnWheelRound(state.wheelRound ?? 1);
+    this._wheelRound = clampWheelRound(THEME, state.wheelRound ?? 1);
     this._wheelCleared = !!state.wheelCleared;
-    this._outfitGranted = !!state.outfitGranted || DressUpManager.isUnlocked(MID_AUTUMN_OUTFIT_ID);
+    const outfitId = THEME.clearanceOutfitId;
+    this._outfitGranted = !!state.outfitGranted || (!!outfitId && DressUpManager.isUnlocked(outfitId));
     this._wonPrizeIds = new Set(
       (state.wonPrizeIds ?? []).filter((id): id is string => typeof id === 'string' && id.length > 0),
     );
     this._pendingPrizeId = typeof state.pendingSpinPrizeId === 'string' && state.pendingSpinPrizeId
       ? state.pendingSpinPrizeId
       : null;
-    this._pendingRound = clampMidAutumnWheelRound(state.pendingSpinRound ?? this._wheelRound);
+    this._pendingRound = clampWheelRound(THEME, state.pendingSpinRound ?? this._wheelRound);
     this._lastStatus = this.status;
     this._normalizeWheelProgress();
     if (this._pendingPrizeId) this.settlePendingSpin();
@@ -368,7 +380,7 @@ class MidAutumnEventManagerClass {
     if (!active && this.status === 'ended') {
       this._trySettleExpiredCurrency({ notify: true });
     }
-    EventBus.emit('midAutumnEvent:periodChanged', this.status);
+    EventBus.emit('wheelEvent:periodChanged', this.status);
     this._emitChanged();
   }
 
@@ -381,8 +393,7 @@ class MidAutumnEventManagerClass {
   }
 
   gmReset(): void {
-    const state = emptyState();
-    this._currency = state.currency;
+    this._currency = 0;
     this._spinCount = 0;
     this._currencySettled = false;
     this._wheelRound = 1;
@@ -394,21 +405,44 @@ class MidAutumnEventManagerClass {
     this._emitChanged();
   }
 
+  private _settleForeignSeason(raw: Partial<WheelEventState>): void {
+    const past = findWheelTheme(raw.seasonId);
+    if (raw.pendingSpinPrizeId && past) {
+      const prize = findWheelPrize(past, raw.pendingSpinPrizeId);
+      if (prize) this._grant(prize.grant);
+    }
+    if (raw.currencySettled) return;
+    const amount = Math.max(0, Math.floor(raw.currency ?? 0));
+    const rate = past?.settleToHuayuanRate ?? 1;
+    const huayuan = amount * rate;
+    if (huayuan > 0) {
+      CurrencyManager.addHuayuan(huayuan);
+      const name = past?.name ?? '限时转盘';
+      const currencyName = past?.currencyName ?? '活动货币';
+      ToastMessage.show(`${name}已结束，剩余${amount}${currencyName}已兑换为${huayuan}花愿`);
+    }
+  }
+
+  private _retireSeasonalItems(): void {
+    const retired = retireLiveSeasonalItems({ notify: true });
+    if (retired.pieces > 0) SaveManager.save();
+  }
+
   private _trySettleExpiredCurrency(opts?: { notify?: boolean }): number {
     if (this._currencySettled) return 0;
     if (this.getActivitySnapshot().status !== 'ended') return 0;
     if (this._gmActiveOverride) return 0;
 
-    const lanterns = Math.max(0, Math.floor(this._currency));
-    const huayuan = lanterns * MID_AUTUMN_LANTERN_TO_HUAYUAN_RATE;
+    const amount = Math.max(0, Math.floor(this._currency));
+    const huayuan = amount * THEME.settleToHuayuanRate;
     this._currency = 0;
     this._currencySettled = true;
 
     if (huayuan > 0) {
       CurrencyManager.addHuayuan(huayuan);
-      EventBus.emit('midAutumnEvent:currencySettled', lanterns, huayuan);
+      EventBus.emit('wheelEvent:currencySettled', amount, huayuan);
       if (opts?.notify) {
-        ToastMessage.show(`月满中秋已结束，剩余${lanterns}盏玉兔灯已兑换为${huayuan}花愿`);
+        ToastMessage.show(`${THEME.name}已结束，剩余${amount}${THEME.currencyName}已兑换为${huayuan}花愿`);
       }
     }
 
@@ -416,7 +450,7 @@ class MidAutumnEventManagerClass {
     return huayuan;
   }
 
-  private _isUniqueGrantOwned(grant: MidAutumnGrant): boolean {
+  private _isUniqueGrantOwned(grant: WheelGrant): boolean {
     if (grant.kind === 'deco') return DecorationManager.isUnlocked(grant.decoId);
     if (grant.kind === 'blueprint') return FurnitureWorkshopManager.hasBlueprint(grant.blueprintId);
     return false;
@@ -424,11 +458,11 @@ class MidAutumnEventManagerClass {
 
   private _normalizeWheelProgress(): void {
     if (this._wheelCleared) {
-      this._wheelRound = MID_AUTUMN_WHEEL_ROUND_COUNT;
+      this._wheelRound = wheelRoundCount(THEME);
       this._wonPrizeIds = new Set(this.currentPrizes.map(prize => prize.id));
       return;
     }
-    this._wheelRound = clampMidAutumnWheelRound(this._wheelRound);
+    this._wheelRound = clampWheelRound(THEME, this._wheelRound);
     for (const prize of this.currentPrizes) {
       if (this._isUniqueGrantOwned(prize.grant)) this._wonPrizeIds.add(prize.id);
     }
@@ -439,9 +473,9 @@ class MidAutumnEventManagerClass {
 
   private _advanceRoundIfComplete(): number | undefined {
     if (this._wheelCleared) return undefined;
-    const prizes = midAutumnWheelPrizesForRound(this._wheelRound);
+    const prizes = wheelPrizesForRound(THEME, this._wheelRound);
     if (!prizes.every(prize => this._wonPrizeIds.has(prize.id))) return undefined;
-    if (this._wheelRound < MID_AUTUMN_WHEEL_ROUND_COUNT) {
+    if (this._wheelRound < wheelRoundCount(THEME)) {
       this._wheelRound += 1;
       this._wonPrizeIds = new Set();
       for (const prize of this.currentPrizes) {
@@ -453,7 +487,7 @@ class MidAutumnEventManagerClass {
     return undefined;
   }
 
-  private _grant(grant: MidAutumnGrant): boolean {
+  private _grant(grant: WheelGrant): boolean {
     switch (grant.kind) {
       case 'stamina':
         CurrencyManager.addStamina(grant.amount);
@@ -483,13 +517,13 @@ class MidAutumnEventManagerClass {
 
   private _emitChanged(): void {
     const state = this.exportState();
-    EventBus.emit('midAutumnEvent:changed', state);
+    EventBus.emit('wheelEvent:changed', state);
     const redDot = this.hasRedDot;
     if (redDot !== this._lastRedDot) {
       this._lastRedDot = redDot;
-      EventBus.emit('midAutumnEvent:redDotChanged', redDot);
+      EventBus.emit('wheelEvent:redDotChanged', redDot);
     }
   }
 }
 
-export const MidAutumnEventManager = new MidAutumnEventManagerClass();
+export const WheelEventManager = new WheelEventManagerClass();

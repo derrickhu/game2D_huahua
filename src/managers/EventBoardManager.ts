@@ -1131,6 +1131,27 @@ class EventBoardManagerClass {
     // 合成爆奖：额外发一个用于"掉落飘字"的事件
     if (isDrop) EventBus.emit('eventBoard:mergeDrop', rewards, placements);
   }
+
+  /** 清掉活动副棋盘上已下线的物品，以及生产者队列里的同类物品。 */
+  pullItemsWhere(pred: (itemId: string) => boolean): string[] {
+    const pulled: string[] = [];
+    for (const cell of this._cells) {
+      if (cell.itemId && pred(cell.itemId)) {
+        pulled.push(cell.itemId);
+        cell.itemId = null;
+      }
+      const queue = cell.chestQueue;
+      if (!queue || queue.length === 0) continue;
+      const next: string[] = [];
+      for (const id of queue) {
+        if (pred(id)) pulled.push(id);
+        else next.push(id);
+      }
+      if (next.length !== queue.length) cell.chestQueue = next.length > 0 ? next : undefined;
+    }
+    if (pulled.length > 0) EventBus.emit('eventBoard:changed');
+    return pulled;
+  }
 }
 
 export const EventBoardManager = new EventBoardManagerClass();

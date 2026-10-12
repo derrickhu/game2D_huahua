@@ -3,7 +3,7 @@ import type { WorkshopMaterialReward } from '@/config/FurnitureWorkshopConfig';
 
 /** 本帧生成语义：基础 / 成长加成 / 跨链组合 / 限时钻石 / 活动预留 */
 /** @deprecated 读档遇 `growth` 会迁移为 `basic` */
-export type OrderGenerationKind = 'basic' | 'growth' | 'combo' | 'timedDiamond' | 'timedFlorist' | 'timedWorkshop' | 'midAutumnChangE' | 'eventStub';
+export type OrderGenerationKind = 'basic' | 'growth' | 'combo' | 'timedDiamond' | 'timedFlorist' | 'timedWorkshop' | 'midAutumnChangE' | 'wheelFeatured' | 'eventStub';
 
 export interface OrderGenSlot {
   itemId: string;

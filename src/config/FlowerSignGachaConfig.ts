@@ -5,7 +5,6 @@
 
 import {
   Category,
-  DrinkLine,
   InteractType,
   ToolLine,
   GOLDEN_SCISSORS_ITEM_ID,
@@ -20,6 +19,7 @@ import {
 import {
   WORKSHOP_GACHA_DYE_IDS,
 } from './FurnitureWorkshopConfig';
+import { findSeasonalItemLine } from './events/SeasonalItemRegistry';
 
 export const FLOWER_SIGN_DRAW_COST_SINGLE = 1;
 export const FLOWER_SIGN_DRAW_COST_MULTI = 10;
@@ -217,7 +217,8 @@ function buildDirectEntries(totalWeight: number): FlowerSignPoolEntry[] {
 
 function classify(def: ItemDef): 'main' | 'chest_group' | 'tool' | 'premium' | 'none' {
   if (EXCLUDED_FROM_GACHA_IDS.has(def.id)) return 'none';
-  if (def.line === DrinkLine.MOONCAKE) return 'none';
+  const seasonal = findSeasonalItemLine(def.category, def.line);
+  if (seasonal && !seasonal.surfaces.includes('gacha')) return 'none';
   if (PREMIUM_IDS.includes(def.id as (typeof PREMIUM_IDS)[number])) return 'premium';
   /** 铜～传说宝箱、体力箱、钻石袋、红包 共用 20% 桶 */
   if (def.category === Category.CHEST) return 'chest_group';
@@ -276,7 +277,7 @@ function buildFlowerSignGachaPool(): FlowerSignPoolEntry[] {
 
 /**
  * 全物品加权随机（仅 `ITEM_DEFS` 内有效 id）。
- * - 约 44%：鲜花/饮品/棋盘货币块（不含许愿硬币、不含已下线的中秋月饼）等，等级越高权重越低。
+ * - 约 44%：鲜花/饮品/棋盘货币块（许愿硬币、未开放抽奖入口的活动物品不进池）等，等级越高权重越低。
  * - 15%：直加体力 + 直加钻石（多档 amount）。
  * - 20%：宝箱+体力箱+钻石袋+红包；12%：1 级生产工具（不含农田/果切）；9%：高级道具，其中幸运金币高于金剪刀/万能水晶。
  * - 2.5%：家具工坊四色染料（四色均分，约 40 抽 1 个）。

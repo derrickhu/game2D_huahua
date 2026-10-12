@@ -4,7 +4,7 @@ import { COOL_SUMMER_2026 } from './themes/coolSummer2026';
 import { GOLDEN_AUTUMN_2026 } from './themes/goldenAutumn2026';
 
 /** 所有登记过的兑换主题（含已下线）。新一期把主题文件加进来，再改 ACTIVE_EXCHANGE_SEASON_ID。 */
-const ALL_EXCHANGE_THEMES: readonly ExchangeEventTheme[] = [
+export const ALL_EXCHANGE_THEMES: readonly ExchangeEventTheme[] = [
   COOL_SUMMER_2026,
   GOLDEN_AUTUMN_2026,
 ];

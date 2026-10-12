@@ -12,10 +12,13 @@ import {
   GOLDEN_SCISSORS_ITEM_ID,
   ITEM_DEFS,
   LUCKY_COIN_ITEM_ID,
-  isMooncakeItemId,
-  mooncakeRetirementHuayuan,
   type ItemDef,
 } from '@/config/ItemConfig';
+import {
+  isSeasonalItemBlockedOn,
+  isSeasonalItemRetired,
+  seasonalItemRetireHuayuan,
+} from '@/config/events/SeasonalItemRegistry';
 import {
   MERCH_FREE_SHOP_BASE_WEIGHT,
   MERCH_FREE_SHOP_RARE_WEIGHT,
@@ -206,7 +209,7 @@ function buildMysteryCandidates(): MysteryCandidate[] {
   const out: MysteryCandidate[] = [];
   for (const [id, def] of ITEM_DEFS) {
     if (def.category === Category.CURRENCY) continue;
-    if (isMooncakeItemId(id)) continue;
+    if (isSeasonalItemBlockedOn(id, 'shop')) continue;
 
     if (def.category === Category.BUILDING) {
       if (id.startsWith('tool_') && def.level === 1) {
@@ -455,7 +458,7 @@ function buildFreeShopDynamicPool(): MerchPoolEntry[] {
   const main: MerchPoolEntry[] = [];
   for (const [id, def] of ITEM_DEFS) {
     if (def.level >= 6) continue;
-    if (isMooncakeItemId(id)) continue;
+    if (isSeasonalItemBlockedOn(id, 'shop')) continue;
     if (id.startsWith('tool_')) continue;
     if (rareSet.has(id)) continue;
     if (!isDiscoveredForFreeShop(id)) continue;
@@ -508,7 +511,7 @@ function rollSlotsForShelf(def: MerchShelfDef): MerchSlotState[] {
     return rollMysteryShopSlots(def);
   }
   const poolSource = def.dynamicFreeShopPool ? buildFreeShopDynamicPool() : def.pool;
-  const valid = poolSource.filter((p) => ITEM_DEFS.has(p.itemId) && !isMooncakeItemId(p.itemId));
+  const valid = poolSource.filter((p) => ITEM_DEFS.has(p.itemId) && !isSeasonalItemBlockedOn(p.itemId, 'shop'));
   if (valid.length === 0) {
     console.warn(`[MerchShop] shelf ${def.id} has no valid pool entries`);
     return [];
@@ -599,23 +602,23 @@ class MerchShopManagerClass {
         })),
       };
     });
-    this.replaceRetiredMooncakeSlots();
+    this.replaceBlockedSeasonalSlots();
     this.ensureUpToDate();
   }
 
-  /** 货架上残留的月饼换成同规则新货，不把月饼发给玩家。 */
-  private replaceRetiredMooncakeSlots(): void {
+  /** 货架上不该卖的活动物品换成同规则新货，不把原物品发给玩家。 */
+  replaceBlockedSeasonalSlots(): void {
     let changed = false;
     for (let i = 0; i < this._shelves.length; i++) {
       const shelf = this._shelves[i];
       const def = MERCH_SHELVES[i];
-      if (!shelf || !def || !shelf.slots.some((sl) => isMooncakeItemId(sl.itemId))) continue;
+      if (!shelf || !def || !shelf.slots.some((sl) => isSeasonalItemBlockedOn(sl.itemId, 'shop'))) continue;
       const rolled = rollSlotsForShelf(def);
       shelf.slots = shelf.slots.map((sl, idx) => {
-        if (!isMooncakeItemId(sl.itemId)) return sl;
+        if (!isSeasonalItemBlockedOn(sl.itemId, 'shop')) return sl;
         changed = true;
         const replacement = rolled[idx];
-        if (replacement && !isMooncakeItemId(replacement.itemId)) return replacement;
+        if (replacement && !isSeasonalItemBlockedOn(replacement.itemId, 'shop')) return replacement;
         return {
           itemId: 'flower_fresh_1',
           remaining: sl.remaining > 0 ? sl.remaining : 1,
@@ -744,11 +747,12 @@ class MerchShopManagerClass {
   }
 
   private grantItem(itemId: string): void {
-    if (isMooncakeItemId(itemId)) {
-      const hy = mooncakeRetirementHuayuan(itemId);
+    if (isSeasonalItemRetired(itemId)) {
+      const hy = seasonalItemRetireHuayuan(itemId);
       if (hy > 0) CurrencyManager.addHuayuan(hy);
       return;
     }
+    if (isSeasonalItemBlockedOn(itemId, 'shop')) return;
     if (isWorkshopDyeMerchItemId(itemId)) {
       FurnitureWorkshopManager.addMaterial(itemId, 1);
       return;
@@ -788,9 +792,9 @@ class MerchShopManagerClass {
       ToastMessage.show('请使用广告购买');
       return false;
     }
-    if (isMooncakeItemId(slot.itemId)) {
-      this.replaceRetiredMooncakeSlots();
-      ToastMessage.show('月饼已下架');
+    if (isSeasonalItemBlockedOn(slot.itemId, 'shop')) {
+      this.replaceBlockedSeasonalSlots();
+      ToastMessage.show('活动物品已下架');
       return false;
     }
     if (!this.canAfford(slot.priceType, slot.priceAmount)) {
@@ -819,9 +823,9 @@ class MerchShopManagerClass {
       ToastMessage.show('已售罄');
       return;
     }
-    if (isMooncakeItemId(slot.itemId)) {
-      this.replaceRetiredMooncakeSlots();
-      ToastMessage.show('月饼已下架');
+    if (isSeasonalItemBlockedOn(slot.itemId, 'shop')) {
+      this.replaceBlockedSeasonalSlots();
+      ToastMessage.show('活动物品已下架');
       return;
     }
     if (slot.priceType !== 'ad') {

@@ -74,6 +74,8 @@ import { MergeCompanionManager } from './MergeCompanionManager';
 import { EventBoardManager } from './EventBoardManager';
 import { ExchangeEventManager } from './ExchangeEventManager';
 import { ACTIVE_EXCHANGE_THEME } from '@/config/events/exchange/ExchangeEventRegistry';
+import { ACTIVE_WHEEL_THEME } from '@/config/events/wheel/WheelEventRegistry';
+import { WheelEventManager } from './WheelEventManager';
 import { STAMINA_MAX } from '@/config/Constants';
 
 const _api = getNativePlatformApi();
@@ -725,6 +727,46 @@ class GMManagerClass {
     }
 
     this._commands.push({
+      id: 'gm_open_wheel_event',
+      group: ' 活动棋盘',
+      name: ` 打开当前转盘活动（${ACTIVE_WHEEL_THEME.name}）`,
+      desc: '临时开放活动并打开转盘页（仅本次运行，不写入正式活动时间）',
+      execute: () => {
+        WheelEventManager.gmSetActiveOverride(true);
+        CustomerManager.refreshMidAutumnRewards();
+        EventBus.emit('panel:openWheelEvent');
+        return ` 已临时开放${ACTIVE_WHEEL_THEME.name}`;
+      },
+    });
+
+    for (const amount of [30, 100]) {
+      this._commands.push({
+        id: amount === 30 ? 'gm_add_wheel_currency' : 'gm_add_wheel_currency_100',
+        group: ' 活动棋盘',
+        name: ` 转盘货币 +${amount}（${ACTIVE_WHEEL_THEME.currencyName}）`,
+        desc: `临时开放活动并增加 ${amount} 个${ACTIVE_WHEEL_THEME.currencyName}`,
+        execute: () => {
+          WheelEventManager.gmSetActiveOverride(true);
+          CustomerManager.refreshMidAutumnRewards();
+          const bal = WheelEventManager.gmAddCurrency(amount);
+          ToastMessage.show(`${ACTIVE_WHEEL_THEME.currencyName} +${amount}，当前 ${bal}`);
+          return ` ${ACTIVE_WHEEL_THEME.currencyName}余额：${bal}`;
+        },
+      });
+    }
+
+    this._commands.push({
+      id: 'gm_reset_wheel_event',
+      group: ' 活动棋盘',
+      name: ` 重置当前转盘活动（${ACTIVE_WHEEL_THEME.name}）`,
+      desc: '清空转盘货币、已抽奖品与通关套装领取状态',
+      execute: () => {
+        WheelEventManager.gmReset();
+        return ` 已重置${ACTIVE_WHEEL_THEME.name}活动进度`;
+      },
+    });
+
+    this._commands.push({
       id: 'gm_reset_exchange_event',
       group: ' 活动棋盘',
       name: ` 重置当前兑换活动（${ACTIVE_EXCHANGE_THEME.name}）`,
@@ -930,7 +972,7 @@ class GMManagerClass {
       if (customerType.id === 'tycoon') specialHint = '（限时钻石单）';
       else if (customerType.id === 'florist_merchant') specialHint = '（富贵花商限时单）';
       else if (customerType.id === 'furniture_craftswoman') specialHint = '（家具工匠材料单）';
-      else if (customerType.id === 'chang_e') specialHint = '（嫦娥中秋A/S单）';
+      else if (customerType.id === 'chang_e') specialHint = `（${ACTIVE_WHEEL_THEME.name}特色客人）`;
       else if (customerType.specialOnly) specialHint = '（特殊订单）';
       this._commands.push({
         id: `gm_spawn_customer_${customerType.id}`,

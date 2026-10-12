@@ -259,6 +259,36 @@ class WarehouseManagerClass {
     return true;
   }
 
+  /** 取出符合条件的物品（含工具宝箱队列里的单件）。用于活动到期结算。 */
+  pullWhere(pred: (itemId: string) => boolean): { itemId: string; count: number }[] {
+    const pulled: { itemId: string; count: number }[] = [];
+    let changed = false;
+    for (let i = 0; i < this._items.length; i++) {
+      const entry = this._items[i];
+      if (!entry) continue;
+      const queue = entry.toolState?.chestQueue;
+      if (queue && queue.length > 0) {
+        const next: string[] = [];
+        for (const id of queue) {
+          if (pred(id)) {
+            pulled.push({ itemId: id, count: 1 });
+            changed = true;
+          } else {
+            next.push(id);
+          }
+        }
+        if (next.length !== queue.length) entry.toolState!.chestQueue = next;
+      }
+      if (!pred(entry.itemId)) continue;
+      const count = Math.max(1, Math.floor(entry.count ?? 1));
+      pulled.push({ itemId: entry.itemId, count });
+      this._items[i] = null;
+      changed = true;
+    }
+    if (changed) EventBus.emit('warehouse:changed');
+    return pulled;
+  }
+
   withdrawSlot(slotIndex: number): WarehouseSlotEntry | null {
     if (slotIndex < 0 || slotIndex >= this._capacity) return null;
     const entry = this._items[slotIndex];

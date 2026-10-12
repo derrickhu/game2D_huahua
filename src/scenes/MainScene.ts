@@ -19,7 +19,10 @@ import { CurrencyManager } from '@/managers/CurrencyManager';
 import { WarehouseManager } from '@/managers/WarehouseManager';
 import { CustomerManager } from '@/managers/CustomerManager';
 import { SaveManager } from '@/managers/SaveManager';
-import { consumeMooncakeRetirementNotice } from '@/managers/MooncakeRetirement';
+import {
+  consumeSeasonalRetirementNotice,
+  formatSeasonalRetirementToast,
+} from '@/managers/SeasonalItemRetirement';
 import { QuestManager } from '@/managers/QuestManager';
 import { GrowthQuestManager } from '@/managers/GrowthQuestManager';
 import {
@@ -104,7 +107,8 @@ import {
 import { EventPanel } from '@/gameobjects/ui/EventPanel';
 import { EventBoardPanel } from '@/gameobjects/ui/EventBoardPanel';
 import { ExchangeEventPanel } from '@/gameobjects/ui/ExchangeEventPanel';
-import { MidAutumnEventPanel } from '@/gameobjects/ui/MidAutumnEventPanel';
+import { ACTIVE_WHEEL_THEME } from '@/config/events/wheel/WheelEventRegistry';
+import { WheelEventPanel } from '@/gameobjects/ui/WheelEventPanel';
 import { RewardBoxButton } from '@/gameobjects/ui/RewardBoxButton';
 import { RewardBoxPanel } from '@/gameobjects/ui/RewardBoxPanel';
 import { UpdateAnnouncementPanel } from '@/gameobjects/ui/UpdateAnnouncementPanel';
@@ -132,7 +136,7 @@ import { TuesdayStaminaUnlimitedManager } from '@/managers/TuesdayStaminaUnlimit
 import { ThursdayMagicTimeManager } from '@/managers/ThursdayMagicTimeManager';
 import { ExchangeEventManager } from '@/managers/ExchangeEventManager';
 import { ACTIVE_EXCHANGE_THEME } from '@/config/events/exchange/ExchangeEventRegistry';
-import { MidAutumnEventManager } from '@/managers/MidAutumnEventManager';
+import { WheelEventManager } from '@/managers/WheelEventManager';
 import { NewbieGiftPackManager } from '@/managers/NewbieGiftPackManager';
 import { WeekendHuayuanBoostPanel } from '@/gameobjects/ui/WeekendHuayuanBoostPanel';
 import { TuesdayStaminaUnlimitedPanel } from '@/gameobjects/ui/TuesdayStaminaUnlimitedPanel';
@@ -219,7 +223,7 @@ export class MainScene implements Scene {
   private _eventPanel!: EventPanel;
   private _eventBoardPanel!: EventBoardPanel;
   private _exchangeEventPanel!: ExchangeEventPanel;
-  private _midAutumnEventPanel!: MidAutumnEventPanel;
+  private _midAutumnEventPanel!: WheelEventPanel;
   // ---- 奖励收纳框 ----
   private _rewardBoxButton!: RewardBoxButton;
   private _rewardBoxPanel!: RewardBoxPanel;
@@ -257,14 +261,11 @@ export class MainScene implements Scene {
   }
 
   onEnter(): void {
-    const mooncakeNotice = consumeMooncakeRetirementNotice();
-    if (mooncakeNotice) {
+    const seasonalNotice = consumeSeasonalRetirementNotice();
+    if (seasonalNotice) {
       SaveManager.save();
       setTimeout(() => {
-        ToastMessage.show(
-          `中秋已结束，剩余${mooncakeNotice.pieces}个月饼已换成${mooncakeNotice.huayuan}花愿`,
-          3.2,
-        );
+        ToastMessage.show(formatSeasonalRetirementToast(seasonalNotice), 3.2);
       }, 900);
     }
     // 确保容器 transform 干净（从花店等其他场景切回后可能有残留状态）
@@ -301,7 +302,7 @@ export class MainScene implements Scene {
       NewbieGiftPackManager.reconcileClaimedRewards('main-init');
       FlowerCardManager.init();
       DressUpManager.init();
-      MidAutumnEventManager.tryGrantClearanceOutfit();
+      WheelEventManager.tryGrantClearanceOutfit();
       // 店主半身像在 _buildShopArea 里已刷新过，但当时尚未 _loadState，须在换装存档加载后再刷一次
       this._refreshOwnerOutfit();
       SocialManager.init();
@@ -696,7 +697,7 @@ export class MainScene implements Scene {
     this._exchangeEventPanel = new ExchangeEventPanel();
     overlay.addChild(this._exchangeEventPanel);
 
-    this._midAutumnEventPanel = new MidAutumnEventPanel();
+    this._midAutumnEventPanel = new WheelEventPanel();
     overlay.addChild(this._midAutumnEventPanel);
 
     // 奖励收纳框面板
@@ -1000,7 +1001,7 @@ export class MainScene implements Scene {
         }
       }
 
-      const midAutumnFly = MidAutumnEventManager.isActive()
+      const midAutumnFly = WheelEventManager.isActive()
         ? Math.max(0, Math.floor(customer.midAutumnLanternReward ?? 0))
         : 0;
       if (midAutumnFly > 0 && cv) {
@@ -1013,7 +1014,7 @@ export class MainScene implements Scene {
           const eventPos = this._topBar.getMidAutumnEventIconPos();
           const endX = this._topBar.x + eventPos.x;
           const endY = this._topBar.y + eventPos.y;
-          this._playRewardFly('icon_mid_autumn_lantern', sx, sy, endX, endY, midAutumnFly, () => {
+          this._playRewardFly(ACTIVE_WHEEL_THEME.art.currencyIconKey, sx, sy, endX, endY, midAutumnFly, () => {
             this._topBar.flashMidAutumnEvent();
             onAnimDone();
           }, 0.16, false);
@@ -2228,7 +2229,7 @@ export class MainScene implements Scene {
     TuesdayStaminaUnlimitedManager.update(dt);
     ThursdayMagicTimeManager.update(dt);
     ExchangeEventManager.update(dt);
-    MidAutumnEventManager.update(dt);
+    WheelEventManager.update(dt);
 
     // 客人滚动区惯性动画
     this._customerScrollArea.update(dt);

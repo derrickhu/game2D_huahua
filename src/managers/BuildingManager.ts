@@ -24,6 +24,7 @@ import {
   pickWeightedLv1SeedToolId,
 } from '@/config/ItemConfig';
 import {
+  filterLiveProduceOutcomes,
   findBoardProducerDef,
   mergeOutcomePercents,
   rollEffectiveProduceLine,
@@ -679,7 +680,10 @@ class BuildingManagerClass {
 
     let producedId: string | null = null;
     if (toolDef!.produceOutcomes && toolDef!.produceOutcomes.length > 0) {
-      producedId = this._rollToolProduceOutcome(toolDef!.produceOutcomes, produceLevelBonus);
+      producedId = this._rollToolProduceOutcome(
+        filterLiveProduceOutcomes(toolDef!.produceOutcomes),
+        produceLevelBonus,
+      );
     } else {
       let level = this._rollLevel(toolDef!.produceTable);
       const line = rollEffectiveProduceLine(toolDef!);
@@ -711,6 +715,30 @@ class BuildingManagerClass {
     EventBus.emit('building:produced', cellIndex, targetIndex, producedId);
 
     return { placements: [{ itemId: producedId, targetIndex }] };
+  }
+
+  /** 从已开启宝箱的待散落队列里拿走活动下线物品。队列被拿空则收掉宝箱。 */
+  pullChestQueueWhere(pred: (itemId: string) => boolean): string[] {
+    const pulled: string[] = [];
+    const exhausted: number[] = [];
+    for (const [cellIndex, state] of this._states) {
+      const queue = state.chestQueue;
+      if (!queue || queue.length === 0) continue;
+      const next: string[] = [];
+      for (const id of queue) {
+        if (pred(id)) pulled.push(id);
+        else next.push(id);
+      }
+      if (next.length === queue.length) continue;
+      state.chestQueue = next;
+      if (next.length === 0) exhausted.push(cellIndex);
+    }
+    for (const cellIndex of exhausted) {
+      BoardManager.removeItem(cellIndex);
+      this._states.delete(cellIndex);
+      EventBus.emit('building:exhausted', cellIndex);
+    }
+    return pulled;
   }
 
   /** 宝箱：首次点击扣体力并掷出固定件数；每次点击往全棋盘空格散落，未散完保留宝箱并显示进度 */
