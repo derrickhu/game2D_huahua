@@ -5,7 +5,14 @@
  * 进入收纳框堆叠存储，玩家手动取出放入棋盘。
  */
 import { EventBus } from '@/core/EventBus';
-import { Category, ITEM_DEFS, LEGACY_FLOWER_SIGN_COIN_ITEM_ID } from '@/config/ItemConfig';
+import {
+  Category,
+  ITEM_DEFS,
+  LEGACY_FLOWER_SIGN_COIN_ITEM_ID,
+  isMooncakeItemId,
+  mooncakeRetirementHuayuan,
+} from '@/config/ItemConfig';
+import { CurrencyManager } from '@/managers/CurrencyManager';
 import { FlowerSignTicketManager } from '@/managers/FlowerSignTicketManager';
 
 export interface RewardBoxState {
@@ -117,6 +124,11 @@ class RewardBoxManagerClass {
       EventBus.emit('rewardBox:changed');
       return;
     }
+    if (isMooncakeItemId(itemId)) {
+      const hy = mooncakeRetirementHuayuan(itemId, count);
+      if (hy > 0) CurrencyManager.addHuayuan(hy);
+      return;
+    }
     const existing = this._items.get(itemId) || 0;
     this._items.set(itemId, existing + count);
     if (!this._order.includes(itemId)) {
@@ -156,6 +168,7 @@ class RewardBoxManagerClass {
           FlowerSignTicketManager.add(count);
           continue;
         }
+        if (isMooncakeItemId(itemId)) continue;
         if (ITEM_DEFS.has(itemId)) {
           this._items.set(itemId, count);
           this._order.push(itemId);

@@ -19,6 +19,7 @@ import { CurrencyManager } from '@/managers/CurrencyManager';
 import { WarehouseManager } from '@/managers/WarehouseManager';
 import { CustomerManager } from '@/managers/CustomerManager';
 import { SaveManager } from '@/managers/SaveManager';
+import { consumeMooncakeRetirementNotice } from '@/managers/MooncakeRetirement';
 import { QuestManager } from '@/managers/QuestManager';
 import { GrowthQuestManager } from '@/managers/GrowthQuestManager';
 import {
@@ -256,6 +257,16 @@ export class MainScene implements Scene {
   }
 
   onEnter(): void {
+    const mooncakeNotice = consumeMooncakeRetirementNotice();
+    if (mooncakeNotice) {
+      SaveManager.save();
+      setTimeout(() => {
+        ToastMessage.show(
+          `中秋已结束，剩余${mooncakeNotice.pieces}个月饼已换成${mooncakeNotice.huayuan}花愿`,
+          3.2,
+        );
+      }, 900);
+    }
     // 确保容器 transform 干净（从花店等其他场景切回后可能有残留状态）
     this.container.position.set(0, 0);
     this.container.scale.set(1, 1);

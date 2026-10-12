@@ -2,7 +2,7 @@
  * 合成伴生物：概率 roll、漂浮气泡状态、钻石解锁 / 移除 / 到期、存档、活动规则注册
  */
 import { EventBus } from '@/core/EventBus';
-import { ITEM_DEFS, InteractType } from '@/config/ItemConfig';
+import { ITEM_DEFS, InteractType, isMooncakeItemId } from '@/config/ItemConfig';
 import {
   MERGE_COMPANION_ENABLED,
   MERGE_COMPANION_MAX_ACTIVE_FLOAT,
@@ -134,7 +134,9 @@ function _resolvePayloadItemId(rule: MergeCompanionRuleDef, ctx: MergeCompanionC
 /** 花语泡泡载荷不允许为工具（合成规则与活动规则双保险） */
 function _bubblePayloadItemAllowed(payloadItemId: string): boolean {
   const def = ITEM_DEFS.get(payloadItemId);
-  return !!def && def.interactType !== InteractType.TOOL;
+  if (!def || def.interactType === InteractType.TOOL) return false;
+  if (isMooncakeItemId(payloadItemId)) return false;
+  return true;
 }
 
 /**

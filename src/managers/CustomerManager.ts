@@ -28,7 +28,7 @@ import {
   MID_AUTUMN_CHANGE_MAX_IN_QUEUE,
   midAutumnChangETierFromMooncakeLevel,
 } from '@/config/events/MidAutumnEventConfig';
-import { Category, DrinkLine, ITEM_DEFS, findItemId } from '@/config/ItemConfig';
+import { Category, DrinkLine, ITEM_DEFS, findItemId, isMooncakeItemId } from '@/config/ItemConfig';
 import {
   computeTierFromOrderSlots,
   getOrderTierWeights,
@@ -221,13 +221,17 @@ function normalizeCustomerPersistState(raw: unknown): CustomerPersistState | nul
 
     const slotsRaw = r.slots;
     const slots: CustomerSaveSlot[] = [];
+    let droppedMooncake = false;
     if (Array.isArray(slotsRaw)) {
       for (const s of slotsRaw) {
         if (!s || typeof s !== 'object') continue;
         const itemId = (s as Record<string, unknown>).itemId;
-        if (typeof itemId === 'string' && ITEM_DEFS.has(itemId)) {
-          slots.push({ itemId });
+        if (typeof itemId !== 'string' || !ITEM_DEFS.has(itemId)) continue;
+        if (isMooncakeItemId(itemId)) {
+          droppedMooncake = true;
+          continue;
         }
+        slots.push({ itemId });
       }
     }
     if (slots.length === 0) continue;
@@ -272,7 +276,7 @@ function normalizeCustomerPersistState(raw: unknown): CustomerPersistState | nul
         ? Math.floor(r.huayuanReward)
         : undefined;
     const huayuanReward =
-      legacyGrowth || savedHuayuanReward === undefined
+      droppedMooncake || legacyGrowth || savedHuayuanReward === undefined
         ? computedHuayuanReward
         : Math.max(savedHuayuanReward, computedHuayuanReward);
     const timeLimit =
@@ -312,7 +316,9 @@ function normalizeCustomerPersistState(raw: unknown): CustomerPersistState | nul
           ? Math.floor(r.eventStoneReward)
           : undefined,
       midAutumnLanternReward:
-        typeof r.midAutumnLanternReward === 'number' && r.midAutumnLanternReward > 0
+        slots.some(s => isMooncakeItemId(s.itemId))
+        && typeof r.midAutumnLanternReward === 'number'
+        && r.midAutumnLanternReward > 0
           ? Math.floor(r.midAutumnLanternReward)
           : undefined,
       chainIndex: typeof r.chainIndex === 'number' ? r.chainIndex : undefined,

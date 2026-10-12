@@ -27,6 +27,11 @@ import { CdnAssetService } from '@/core/CdnAssetService';
 import { BOARD_COLS, BOARD_TOTAL } from '@/config/Constants';
 import { BOARD_PRESETS, CellState } from '@/config/BoardLayout';
 import { ITEM_DEFS, migrateLegacyItemId } from '@/config/ItemConfig';
+import {
+  exportMooncakeRetirementNotice,
+  retireMooncakesInSave,
+  type MooncakeRetirementNotice,
+} from './MooncakeRetirement';
 import { BACKEND_ANON_ID_KEY, BACKEND_TOKEN_KEY, CLOUD_SYNC_META_KEY } from '@/config/CloudConfig';
 
 const SAVE_SLOT = 'huahua_save';
@@ -117,6 +122,8 @@ interface SaveData {
   coolSummerEvent?: ExchangeEventState;
   /** 月满中秋转盘活动 */
   midAutumnEvent?: MidAutumnEventPersistState;
+  /** 月饼折花愿后尚未弹出的提示；弹出后清除 */
+  pendingMooncakeNotice?: MooncakeRetirementNotice;
 }
 
 class SaveManagerClass {
@@ -176,6 +183,7 @@ class SaveManagerClass {
       eventBoard: EventBoardManager.exportState(),
       exchangeEvent: ExchangeEventManager.exportState(),
       midAutumnEvent: MidAutumnEventManager.exportState(),
+      pendingMooncakeNotice: exportMooncakeRetirementNotice(),
     };
     return JSON.stringify(data);
   }
@@ -249,11 +257,13 @@ class SaveManagerClass {
       }
       if (data.warehouse?.items) {
         for (const entry of data.warehouse.items) {
-          if (entry?.itemId) {
+          if (entry && typeof entry === 'object' && entry.itemId) {
             entry.itemId = migrateLegacyItemId(entry.itemId);
           }
         }
       }
+
+      const retiredMooncakes = retireMooncakesInSave(data);
 
       // 清理存档中引用了已不存在物品ID的格子（物品配置变化时的软迁移）
       let cleanedCount = 0;
@@ -270,6 +280,9 @@ class SaveManagerClass {
 
       BuildingManager.reset();
       CurrencyManager.loadState(data.currency);
+      if (retiredMooncakes.huayuan > 0) {
+        CurrencyManager.addHuayuan(retiredMooncakes.huayuan);
+      }
       const offlineSec = Math.max(0, Math.floor((Date.now() - data.timestamp) / 1000));
       CurrencyManager.applyElapsedStaminaRecovery(offlineSec);
       BoardManager.loadState(data.board);
@@ -288,6 +301,9 @@ class SaveManagerClass {
       MerchShopManager.init();
       MerchShopManager.loadState(data.merchShop);
       FlowerSignTicketManager.loadState(data.flowerSignTickets);
+      if (retiredMooncakes.pieces > 0) {
+        this.save();
+      }
       return true;
     } catch (e) {
       console.error('[Save] 读档失败:', e);

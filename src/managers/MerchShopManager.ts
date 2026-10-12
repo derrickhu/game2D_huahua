@@ -12,6 +12,8 @@ import {
   GOLDEN_SCISSORS_ITEM_ID,
   ITEM_DEFS,
   LUCKY_COIN_ITEM_ID,
+  isMooncakeItemId,
+  mooncakeRetirementHuayuan,
   type ItemDef,
 } from '@/config/ItemConfig';
 import {
@@ -204,6 +206,7 @@ function buildMysteryCandidates(): MysteryCandidate[] {
   const out: MysteryCandidate[] = [];
   for (const [id, def] of ITEM_DEFS) {
     if (def.category === Category.CURRENCY) continue;
+    if (isMooncakeItemId(id)) continue;
 
     if (def.category === Category.BUILDING) {
       if (id.startsWith('tool_') && def.level === 1) {
@@ -452,6 +455,7 @@ function buildFreeShopDynamicPool(): MerchPoolEntry[] {
   const main: MerchPoolEntry[] = [];
   for (const [id, def] of ITEM_DEFS) {
     if (def.level >= 6) continue;
+    if (isMooncakeItemId(id)) continue;
     if (id.startsWith('tool_')) continue;
     if (rareSet.has(id)) continue;
     if (!isDiscoveredForFreeShop(id)) continue;
@@ -504,7 +508,7 @@ function rollSlotsForShelf(def: MerchShelfDef): MerchSlotState[] {
     return rollMysteryShopSlots(def);
   }
   const poolSource = def.dynamicFreeShopPool ? buildFreeShopDynamicPool() : def.pool;
-  const valid = poolSource.filter((p) => ITEM_DEFS.has(p.itemId));
+  const valid = poolSource.filter((p) => ITEM_DEFS.has(p.itemId) && !isMooncakeItemId(p.itemId));
   if (valid.length === 0) {
     console.warn(`[MerchShop] shelf ${def.id} has no valid pool entries`);
     return [];
@@ -595,7 +599,32 @@ class MerchShopManagerClass {
         })),
       };
     });
+    this.replaceRetiredMooncakeSlots();
     this.ensureUpToDate();
+  }
+
+  /** 货架上残留的月饼换成同规则新货，不把月饼发给玩家。 */
+  private replaceRetiredMooncakeSlots(): void {
+    let changed = false;
+    for (let i = 0; i < this._shelves.length; i++) {
+      const shelf = this._shelves[i];
+      const def = MERCH_SHELVES[i];
+      if (!shelf || !def || !shelf.slots.some((sl) => isMooncakeItemId(sl.itemId))) continue;
+      const rolled = rollSlotsForShelf(def);
+      shelf.slots = shelf.slots.map((sl, idx) => {
+        if (!isMooncakeItemId(sl.itemId)) return sl;
+        changed = true;
+        const replacement = rolled[idx];
+        if (replacement && !isMooncakeItemId(replacement.itemId)) return replacement;
+        return {
+          itemId: 'flower_fresh_1',
+          remaining: sl.remaining > 0 ? sl.remaining : 1,
+          priceType: sl.priceType === 'free' ? 'free' as const : 'huayuan' as const,
+          priceAmount: sl.priceType === 'free' ? 0 : 12,
+        };
+      });
+    }
+    if (changed) EventBus.emit('merchShop:changed');
   }
 
   exportState(): MerchShopPersistState {
@@ -715,6 +744,11 @@ class MerchShopManagerClass {
   }
 
   private grantItem(itemId: string): void {
+    if (isMooncakeItemId(itemId)) {
+      const hy = mooncakeRetirementHuayuan(itemId);
+      if (hy > 0) CurrencyManager.addHuayuan(hy);
+      return;
+    }
     if (isWorkshopDyeMerchItemId(itemId)) {
       FurnitureWorkshopManager.addMaterial(itemId, 1);
       return;
@@ -754,6 +788,11 @@ class MerchShopManagerClass {
       ToastMessage.show('请使用广告购买');
       return false;
     }
+    if (isMooncakeItemId(slot.itemId)) {
+      this.replaceRetiredMooncakeSlots();
+      ToastMessage.show('月饼已下架');
+      return false;
+    }
     if (!this.canAfford(slot.priceType, slot.priceAmount)) {
       if (slot.priceType === 'diamond') ToastMessage.show('钻石不足');
       else if (slot.priceType === 'huayuan') ToastMessage.show('花愿不足');
@@ -778,6 +817,11 @@ class MerchShopManagerClass {
     const slot = shelf.slots[slotIndex]!;
     if (slot.remaining <= 0) {
       ToastMessage.show('已售罄');
+      return;
+    }
+    if (isMooncakeItemId(slot.itemId)) {
+      this.replaceRetiredMooncakeSlots();
+      ToastMessage.show('月饼已下架');
       return;
     }
     if (slot.priceType !== 'ad') {
