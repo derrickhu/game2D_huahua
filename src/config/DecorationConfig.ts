@@ -897,6 +897,11 @@ export const DECO_DEFS: DecoDef[] = [
   // ═══════ ⑬ 赛季限定大件家具（图鉴 100% 全集大奖；占位先用通用大件作 fallback，正式美术见 step4）
   { id: 'affinity_season_s1_signlight', name: '初春营业中招牌灯箱', slot: DecoSlot.LIGHT, rarity: DecoRarity.LIMITED, cost: 0, starValue: 0, icon: 'affinity_season_s1_signlight', desc: '初春繁花季 S1 全集大奖：浅金灯箱 + 粉樱字「营业中」，温暖灵动的店铺新灵魂', defaultScale: 1.3, decorationPanelTab: 'furniture', unlockRequirement: { questId: 'affinity_season_S1_complete', conditionText: '集齐 S1 全图鉴', questDetailText: '集齐初春繁花季所有客人 12×3=36 张友谊图鉴即可解锁' } },
 
+  // 花布工坊三件：补全场景家具偏少的 23 / 26 / 38 级。地面大件，不挂活动。
+  { id: 'orn_patchwork_doll_cradle', name: '拼布玩偶摇篮', slot: DecoSlot.ORNAMENT, rarity: DecoRarity.FINE, cost: 12840, starValue: 6, icon: 'orn_patchwork_doll_cradle', desc: '奶油摇篮铺着粉、薄荷和暖黄拼布，里面坐着一只系粉蝴蝶结的小兔', unlockRequirement: { level: 23 }, defaultScale: 1.36, decorationPanelTab: 'furniture' },
+  { id: 'orn_floral_sewing_machine', name: '花布缝纫机', slot: DecoSlot.ORNAMENT, rarity: DecoRarity.FINE, cost: 18600, starValue: 6, icon: 'orn_floral_sewing_machine', desc: '珊瑚粉缝纫机放在蜜木小桌上，吐出一条印着粉花的布', unlockRequirement: { level: 26 }, defaultScale: 1.22, decorationPanelTab: 'furniture' },
+  { id: 'orn_flower_birdcage', name: '花环雀笼', slot: DecoSlot.ORNAMENT, rarity: DecoRarity.RARE, cost: 43600, starValue: 7, icon: 'orn_flower_birdcage', desc: '圆顶鸟笼缠着粉玫瑰和丁香，金钩下栖着一只戴花的小黄雀', unlockRequirement: { level: 38 }, defaultScale: 1.48, decorationPanelTab: 'furniture' },
+
   // ═══════ 野檐花居（Lv35–40 全场景可摆，补中后期通用家具）═══════
   { id: 'wildloft_reed_daybed', name: '芦苇软榻', slot: DecoSlot.ORNAMENT, rarity: DecoRarity.RARE, cost: 46800, starValue: 8, icon: 'wildloft_reed_daybed', desc: '半圆芦苇罩软榻，奶油垫上点着黄油黄与珊瑚小花', unlockRequirement: { level: 35 }, defaultScale: 1.68, decorationPanelTab: 'furniture' },
   { id: 'wildloft_shell_table', name: '贝母圆边几', slot: DecoSlot.TABLE, rarity: DecoRarity.FINE, cost: 35200, starValue: 6, icon: 'wildloft_shell_table', desc: '螺壳台面的圆边几，海玻璃杯里插着一枝蕨', unlockRequirement: { level: 35 }, defaultScale: 1.18, decorationPanelTab: 'furniture' },
