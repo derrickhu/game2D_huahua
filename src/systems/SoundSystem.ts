@@ -112,7 +112,7 @@ class SoundSystemClass {
       canvas.addEventListener('touchstart', resumeAudio);
     }
 
-    // ---- 全局按钮点击音效（默认 `button_click` = `subpkg_audio/button_click.mp3`，源 `game_assets/huahua/bgm/按钮通用.mp3`）----
+    // ---- 全局按钮点击音效（默认 `button_click` = `subpkg_audio/button_click.mp3`，源 `game_assets/huahua/sfx/button_click_v2/click_f_synth_twonote.mp3`）----
     // 沿命中链向上找 `cursor === 'pointer'` 即播；未设 pointer 的交互区不会自动播（需在控件上设 cursor 或单独 play）。
     // 利用 PixiJS 事件冒泡机制：在 stage 上监听 pointerdown，
     // e.target 就是实际命中的元素（在按钮回调修改场景树之前就已确定）。
