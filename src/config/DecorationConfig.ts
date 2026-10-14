@@ -74,9 +74,14 @@ export interface DecoDef {
    * - 'furniture' = 通用「家具」Tab（含通用 shelf/table 与指定放入家具大类的条目）
    * - 'flower_room' = 当前房屋专属 Tab（名称随 sceneId 变化；花店显示「花坊」，蝴蝶小屋显示「蝴蝶小屋」）
    * - 'garden' = 通用「庭院」Tab
-   * - 'qinglian' = 跨场景主题「清涟荷影」Tab
+   * - 'qinglian' = 购买面板「主题」Tab（具体主题名见 themeSetId / DECO_THEME_SETS）
    */
   decorationPanelTab?: 'furniture' | 'flower_room' | 'garden' | 'qinglian';
+  /**
+   * 「主题」Tab 下的主题 id，对应 `DECO_THEME_SETS`。
+   * 不填且 decorationPanelTab 为 qinglian 时归入清涟荷影。
+   */
+  themeSetId?: string;
   /**
    * 深度排序 Y 辅助（仅影响遮挡，不改坐标）：用于覆盖槽位默认的「台面小物」抬升。
    * 0 = 按地板大件处理；未设置时由 getDepthSortTypeLift() 按 slot/tab 推断。
@@ -1144,7 +1149,7 @@ export function getDecorationTabLabel(tab: DecoPanelTabId, sceneId: string = DEC
   if (tab === 'flower_room') return { name: SCENE_MAP.get(sceneId)?.name ?? '房屋专属', emoji: '' };
   if (tab === 'furniture') return { name: '家具', emoji: '' };
   if (tab === 'appliance') return { name: '家电', emoji: '' };
-  if (tab === 'qinglian') return { name: '清涟荷影', emoji: '' };
+  if (tab === 'qinglian') return { name: '主题', emoji: '' };
   return DECO_SLOT_INFO[tab];
 }
 

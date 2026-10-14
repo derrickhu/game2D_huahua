@@ -37,6 +37,7 @@ import {
   formatAllowedScenesShort,
   DECO_MAP,
 } from '@/config/DecorationConfig';
+import { DECO_THEME_SETS, decoThemeSetId } from '@/config/DecoThemeConfig';
 import { getDecoDisplayName } from '@/config/FurnitureWorkshopConfig';
 import { CurrencyManager } from '@/managers/CurrencyManager';
 import { LevelManager } from '@/managers/LevelManager';
@@ -121,6 +122,10 @@ const CATEGORY_TAB_FONT_SIZE = 22;
 const FILTER_TO_CATEGORY_GAP = 12;
 /** 分类 Tab 底到黄条：留足呼吸感，避免顶区拥挤 */
 const CATEGORY_TO_DIVIDER_GAP = 30;
+/** 「主题」Tab 的主题名：贴在黄条下方，黄条本身不挪 */
+const THEME_CHIP_H = 36;
+const THEME_BELOW_BAR_GAP = 8;
+const THEME_CHIP_TO_GRID = 6;
 
 function decoPanelContentX(): number {
   return GRID_MARGIN_H;
@@ -449,6 +454,9 @@ export class DecorationPanel extends PIXI.Container {
   private _assetUnsub: (() => void) | null = null;
   private _assetRefreshRaf: number | null = null;
   private _activeTab: DecoPanelTabId = 'flower_room';
+  /** 「主题」Tab 下当前主题，对应 DECO_THEME_SETS.id */
+  private _activeThemeId = 'qinglian';
+  private _themeRow!: PIXI.Container;
   private _decoInvFilter: DecoInvFilter = 'all';
   private _scrollY = 0;
   private _maxScrollY = 0;
@@ -778,6 +786,7 @@ export class DecorationPanel extends PIXI.Container {
     filterBarTop: number;
     categoryTabTop: number;
     dividerY: number;
+    themeRowTop: number;
     contentTopY: number;
     gridViewportTop: number;
     gridH: number;
@@ -791,13 +800,13 @@ export class DecorationPanel extends PIXI.Container {
     const { blockH: categoryTabBlockH } = categoryTabGridLayout(contentW);
     const filterBlockH = filterVisible ? FILTER_BAR_H : 0;
     const filterToCategoryGap = filterVisible ? FILTER_TO_CATEGORY_GAP : 0;
+    const showThemeRow = this._activeTab === 'qinglian';
 
-    if (this._usesFlatShell && this._panelBaseSprite) {
-      const headerBottom = Math.round(this._shellMapY(panelH, SHELL_HEADER_BOTTOM_TEX_FRAC));
-      const filterBarTop = Math.round(headerBottom + SHELL_FILTER_ROW_GAP_BELOW_HEADER);
-      const categoryTabTop = filterBarTop + filterBlockH + filterToCategoryGap;
+    const finish = (filterBarTop: number, categoryTabTop: number, pullGridUp: number) => {
       const dividerY = Math.round(categoryTabTop + categoryTabBlockH + CATEGORY_TO_DIVIDER_GAP);
-      const contentTopY = Math.round(dividerY + DIVIDER_TO_CONTENT);
+      const themeRowTop = showThemeRow ? Math.round(dividerY + THEME_BELOW_BAR_GAP) : 0;
+      const themeBlock = showThemeRow ? THEME_BELOW_BAR_GAP + THEME_CHIP_H + THEME_CHIP_TO_GRID : 0;
+      const contentTopY = Math.round(dividerY + DIVIDER_TO_CONTENT + themeBlock - pullGridUp);
       const gridViewportTop = contentTopY + gridInset + GRID_VIEWPORT_NUDGE_Y;
       const gridH = Math.max(48, panelH - gridViewportTop - CONTENT_BOTTOM);
       return {
@@ -806,34 +815,27 @@ export class DecorationPanel extends PIXI.Container {
         filterBarTop,
         categoryTabTop,
         dividerY,
+        themeRowTop,
         contentTopY,
         gridViewportTop,
         gridH,
         gridX: contentX,
         gridW: contentW,
       };
+    };
+
+    if (this._usesFlatShell && this._panelBaseSprite) {
+      const headerBottom = Math.round(this._shellMapY(panelH, SHELL_HEADER_BOTTOM_TEX_FRAC));
+      const filterBarTop = Math.round(headerBottom + SHELL_FILTER_ROW_GAP_BELOW_HEADER);
+      const categoryTabTop = filterBarTop + filterBlockH + filterToCategoryGap;
+      return finish(filterBarTop, categoryTabTop, 0);
     }
 
     const headerBottom = Math.round(panelH * PANEL_PINK_BAND_BOTTOM_RATIO);
     const filterGap = FILTER_ROW_GAP_BELOW_PINK;
     const filterBarTop = Math.round(headerBottom + filterGap + chromeExtra);
     const categoryTabTop = filterBarTop + filterBlockH + filterToCategoryGap;
-    const dividerY = Math.round(categoryTabTop + categoryTabBlockH + CATEGORY_TO_DIVIDER_GAP);
-    const contentTopY = Math.round(dividerY + DIVIDER_TO_CONTENT - chromeExtra);
-    const gridViewportTop = contentTopY + gridInset + GRID_VIEWPORT_NUDGE_Y;
-    const gridH = Math.max(48, panelH - gridViewportTop - CONTENT_BOTTOM);
-    return {
-      contentX,
-      contentW,
-      filterBarTop,
-      categoryTabTop,
-      dividerY,
-      contentTopY,
-      gridViewportTop,
-      gridH,
-      gridX: contentX,
-      gridW: contentW,
-    };
+    return finish(filterBarTop, categoryTabTop, chromeExtra);
   }
 
   private _titleCenterY(panelH: number): number {
@@ -882,6 +884,7 @@ export class DecorationPanel extends PIXI.Container {
     this._filterBar.position.set(L.contentX, L.filterBarTop);
     this._filterBar.visible = filterVisible;
     this._tabContainer.position.set(L.contentX, L.categoryTabTop);
+    if (this._themeRow) this._layoutThemeRow(L.contentX, L.contentW, L.themeRowTop);
     const titleY = this._titleCenterY(panelH);
     this._titleText.position.y = titleY;
     this._layoutCloseBtn(panelH);
@@ -1109,6 +1112,12 @@ export class DecorationPanel extends PIXI.Container {
     this._buildCategoryTabs(L.contentW);
     this._filterBar.visible = filterVisible;
 
+    this._themeRow = new PIXI.Container();
+    this._themeRow.zIndex = 11;
+    this._themeRow.visible = false;
+    this._content.addChild(this._themeRow);
+    this._layoutThemeRow(L.contentX, L.contentW, L.themeRowTop);
+
     // --- 顶部分隔：棋盘同款 board_bar ---
     this._headerDivider = new PIXI.Container();
     this._headerDivider.zIndex = 11;
@@ -1253,6 +1262,59 @@ export class DecorationPanel extends PIXI.Container {
     this._syncGridViewportClip();
   }
 
+  /** 「主题」Tab：主题名排在黄条下面。其它 Tab 不占这块位置。 */
+  private _layoutThemeRow(contentX: number, contentW: number, themeRowTop: number): void {
+    if (!this._themeRow) return;
+    const show = this._activeTab === 'qinglian' && themeRowTop > 0;
+    this._themeRow.visible = show;
+    if (!show) return;
+    this._themeRow.position.set(contentX, themeRowTop);
+    this._buildThemeChips(contentW);
+  }
+
+  private _buildThemeChips(contentW: number): void {
+    this._themeRow.removeChildren().forEach(ch => ch.destroy({ children: true }));
+    if (!DECO_THEME_SETS.some(t => t.id === this._activeThemeId)) {
+      this._activeThemeId = DECO_THEME_SETS[0]?.id ?? 'qinglian';
+    }
+    const gap = 8;
+    let x = 0;
+    for (const theme of DECO_THEME_SETS) {
+      const selected = theme.id === this._activeThemeId;
+      const label = new PIXI.Text(theme.name, decoPanelTextStyle({
+        fontSize: 18,
+        fill: selected ? DECO_SIDE_TAB_SELECTED_TEXT : DECO_SIDE_TAB_IDLE_TEXT,
+        fontWeight: '900',
+      }));
+      const w = Math.max(88, Math.ceil(label.width) + 28);
+      const chip = new PIXI.Container();
+      chip.position.set(x, 0);
+      const bg = new PIXI.Graphics();
+      paintDecoCategoryPill(bg, w, THEME_CHIP_H, selected);
+      chip.addChild(bg);
+      label.anchor.set(0.5, 0.5);
+      label.position.set(w / 2, THEME_CHIP_H / 2);
+      chip.addChild(label);
+      chip.eventMode = 'static';
+      chip.cursor = 'pointer';
+      chip.hitArea = new PIXI.Rectangle(0, 0, w, THEME_CHIP_H);
+      const themeId = theme.id;
+      chip.on('pointertap', () => {
+        if (this._activeThemeId === themeId) return;
+        this._activeThemeId = themeId;
+        this._scrollY = 0;
+        this._buildThemeChips(contentW);
+        const { gridH } = this._gridLayoutMetrics();
+        this._buildGrid(gridH);
+      });
+      this._themeRow.addChild(chip);
+      x += w + gap;
+    }
+    const rowW = Math.max(0, x - gap);
+    const scale = rowW > contentW && rowW > 0 ? contentW / rowW : 1;
+    this._themeRow.scale.set(scale);
+  }
+
   // ─── category tabs (top horizontal, 1–2 rows) ───────────
 
   private _buildCategoryTabs(contentW: number): void {
@@ -1267,7 +1329,6 @@ export class DecorationPanel extends PIXI.Container {
       const labelDef = getDecorationTabLabel(tabId, CurrencyManager.state.sceneId);
       const isCurrent = this._activeTab === tabId;
       const title = labelDef.name;
-      const withLotus = tabId === 'qinglian';
 
       const tab = new PIXI.Container();
       tab.position.set(col * (tabW + gap), row * (tabH + gap));
@@ -1281,27 +1342,8 @@ export class DecorationPanel extends PIXI.Container {
         fill: isCurrent ? DECO_SIDE_TAB_SELECTED_TEXT : DECO_SIDE_TAB_IDLE_TEXT,
         fontWeight: '900',
       }));
-
-      const lotusTex = withLotus ? TextureCache.get('furniture_tray_tab_qinglian_idle') : null;
-      const iconMax = 20;
-      if (lotusTex?.width) {
-        const sp = new PIXI.Sprite(lotusTex);
-        sp.anchor.set(0.5, 0.5);
-        const s = Math.min(iconMax / lotusTex.width, iconMax / lotusTex.height);
-        sp.scale.set(s);
-        const iconW = lotusTex.width * s;
-        const textGap = 4;
-        label.anchor.set(0, 0.5);
-        const textW = label.width;
-        const totalW = iconW + textGap + textW;
-        const cx = tabW / 2;
-        sp.position.set(cx - totalW / 2 + iconW / 2, tabH / 2);
-        label.position.set(cx - totalW / 2 + iconW + textGap, tabH / 2);
-        tab.addChild(sp);
-      } else {
-        label.anchor.set(0.5, 0.5);
-        label.position.set(tabW / 2, tabH / 2);
-      }
+      label.anchor.set(0.5, 0.5);
+      label.position.set(tabW / 2, tabH / 2);
       tab.addChild(label);
 
       tab.eventMode = 'static';
@@ -1328,6 +1370,7 @@ export class DecorationPanel extends PIXI.Container {
     this._filterBar.visible = filterVisible;
     this._tabContainer.position.set(L.contentX, L.categoryTabTop);
     this._buildCategoryTabs(L.contentW);
+    this._layoutThemeRow(L.contentX, L.contentW, L.themeRowTop);
     this._buildInventoryFilterBar(L.contentW);
     this._layoutHeaderDivider(L.dividerY);
     this._syncGridViewportClip();
@@ -1355,6 +1398,10 @@ export class DecorationPanel extends PIXI.Container {
       this._decoInvFilter,
       sceneId,
     );
+    if (this._activeTab === 'qinglian') {
+      const themeId = this._activeThemeId;
+      decos = decos.filter(d => decoThemeSetId(d) === themeId);
+    }
     decos = decos.filter((d) => decoMatchesInvFilter(d, this._decoInvFilter, sceneId));
     const gridW = decoPanelGridWidth();
     const { cw, ch, cols, startX } = measureCardGrid(gridW);
@@ -1363,7 +1410,9 @@ export class DecorationPanel extends PIXI.Container {
     this._gridContainer.addChild(inner);
 
     if (decos.length === 0) {
-      const hint = '该筛选下暂无家具';
+      const hint = this._activeTab === 'qinglian' && this._decoInvFilter === 'all'
+        ? '该主题暂无家具'
+        : '该筛选下暂无家具';
       const empty = new PIXI.Text(hint, {
         fontSize: 15,
         fill: COLORS.TEXT_LIGHT,
