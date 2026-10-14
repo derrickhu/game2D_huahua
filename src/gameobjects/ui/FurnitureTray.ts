@@ -39,6 +39,8 @@ import {
   furnitureTrayTabTextureKey,
 } from '@/config/DecorationConfig';
 import { CurrencyManager } from '@/managers/CurrencyManager';
+import { TutorialManager } from '@/managers/TutorialManager';
+import { getTraySubCategories, traySubCategoryOf, type TraySubCategory } from '@/config/FurnitureTraySubCategory';
 import { DESIGN_WIDTH, FONT_FAMILY, COLORS } from '@/config/Constants';
 
 // ---- 布局常量 ----
@@ -77,14 +79,12 @@ const CATEGORY_TAB_ICON_SELECTED_SCALE = 1.22;
 const CATEGORY_TAB_ICON_SHADOW_ALPHA = 0.24;
 /** 分类图标行相对顶部的额外下移 */
 const CATEGORY_TAB_ROW_EXTRA_Y = 16;
-/** 底栏：全部/未放置筛选 chip（托盘底边水平居中） */
+/** 底栏：未放置开关 + 小类筛选 chip */
 const GRID_FILTER_BAR_H = 40;
 const FILTER_CHIP_H = 36;
 const FILTER_CHIP_FONT = 18;
 const FILTER_CHIP_RADIUS = 12;
 const FILTER_CHIP_GAP = 8;
-const FILTER_CHIP_W_ALL = 72;
-const FILTER_CHIP_W_UNPLACED = 96;
 /** 底栏 chip 相对居中位置的垂直微调（负值上移） */
 const FILTER_CHIP_NUDGE_Y = -15;
 const TAB_BAND_BOTTOM = TRAY_TOP_PAD + CATEGORY_TAB_ROW_EXTRA_Y + TAB_BAR_H + 8;
@@ -210,6 +210,27 @@ function federatedPointerToDesign(e: PIXI.FederatedPointerEvent): { x: number; y
 
 /** 滑动与点击区分：小于此位移视为点击 */
 const TRAY_TAP_SLOP_PX = 12;
+/** 松手惯性：低于此速度（设计 px/ms）不滑行 */
+const TRAY_GLIDE_MIN_SPEED = 0.25;
+/** 松手惯性：滑行距离 ≈ 速度 × 此毫秒数 */
+const TRAY_GLIDE_DIST_MS = 260;
+const TRAY_GLIDE_MAX_DIST = 900;
+const TRAY_GLIDE_SEC = 0.55;
+/** 拖拽中手指低于托盘顶此距离即进入收起区（顶缘留给拖到房间底边的余量） */
+const TRAY_STORE_ZONE_TOP_INSET = 30;
+/** 小类筛选：大类内已解锁件数达到此值才显示小类条 */
+const SUB_FILTER_MIN_ITEMS = 10;
+const SUB_FILTER_ALL = 'all';
+/** 底栏筛选条可用区：避开左侧竖 Tab */
+const FILTER_ROW_LEFT = CONTENT_LEFT + 4;
+const FILTER_ROW_RIGHT = DESIGN_WIDTH - 22;
+const FILTER_CHIP_PAD_X = 14;
+const FILTER_TOGGLE_DOT_R = 7;
+
+function easeOutCubic(t: number): number {
+  const u = 1 - t;
+  return 1 - u * u * u;
+}
 
 type TrayScrollMode = 'scroll' | 'drag' | 'neutral';
 
@@ -331,6 +352,20 @@ export class FurnitureTray extends PIXI.Container {
 
   /** 列表筛选：默认仅显示尚未放入房间的家具 */
   private _listFilter: TrayListFilter = 'unplaced';
+  /** 小类筛选：SUB_FILTER_ALL 或 TraySubCategory.id */
+  private _subFilter: string = SUB_FILTER_ALL;
+
+  /** 横滑速度采样（设计 px/ms） */
+  private _scrollVel = 0;
+  private _scrollLastX = 0;
+  private _scrollLastT = 0;
+  /** 松手惯性滑行代理（tween 目标） */
+  private _glideProxy: { x: number } | null = null;
+  /** 按下时正在惯性滑行：这次按下只用来停住列表，不算点卡片 */
+  private _pressStoppedGlide = false;
+  /** 拖家具到托盘上时的「松手收起」提示层 */
+  private _storeHint!: PIXI.Container;
+  private _storeHintText!: PIXI.Text;
 
   private readonly _onCanvasTrayMove = (ev: unknown): void => {
     if (!this._isOpen || !this._trayScrollListening) return;
@@ -352,6 +387,14 @@ export class FurnitureTray extends PIXI.Container {
     if (this._trayMode === 'scroll') {
       this._scrollX = Math.max(-this._maxScrollX, Math.min(0, this._trayStartScrollX + tdx));
       if (this._trayScrollInner) this._trayScrollInner.x = this._scrollX;
+      const now = Date.now();
+      const dt = now - this._scrollLastT;
+      if (dt > 0) {
+        const v = (designX - this._scrollLastX) / dt;
+        this._scrollVel = dt > 80 ? v : this._scrollVel * 0.4 + v * 0.6;
+      }
+      this._scrollLastX = designX;
+      this._scrollLastT = now;
       return;
     }
 
@@ -416,6 +459,11 @@ export class FurnitureTray extends PIXI.Container {
       this._currentTab = 'flower_room';
     }
     this._listFilter = 'unplaced';
+    this._subFilter = SUB_FILTER_ALL;
+    FurnitureDragSystem.setTrayDropZone(
+      (x, y) => this._isInStoreZone(x, y),
+      (over, isNew) => this._showStoreHint(over, isNew),
+    );
     this._textureRefreshUnsub?.();
     this._textureRefreshUnsub = TextureCache.observeTextureDependencies(
       { groups: ['deco', 'panels'] },
@@ -443,6 +491,9 @@ export class FurnitureTray extends PIXI.Container {
     this._textureRefreshUnsub = null;
     this._cancelScheduledRefreshes();
     this._teardownTrayScroll();
+    this._stopGlide();
+    FurnitureDragSystem.setTrayDropZone(null);
+    this._showStoreHint(false, false);
 
     TweenManager.to({
       target: this,
@@ -708,6 +759,27 @@ export class FurnitureTray extends PIXI.Container {
     this._filterRow.zIndex = 14;
     this.addChild(this._filterRow);
 
+    this._storeHint = new PIXI.Container();
+    this._storeHint.zIndex = 30;
+    this._storeHint.eventMode = 'none';
+    this._storeHint.visible = false;
+    const hintBg = new PIXI.Graphics();
+    hintBg.beginFill(0xfff0f6, 0.9);
+    hintBg.lineStyle(3, SECTION_TAB_SELECTED_FILL, 1);
+    hintBg.drawRoundedRect(14, 12, w - 28, TRAY_H - 24, TRAY_RADIUS);
+    hintBg.endFill();
+    this._storeHint.addChild(hintBg);
+    this._storeHintText = new PIXI.Text('松手收起', {
+      fontSize: 30,
+      fill: 0xc0507f,
+      fontFamily: FONT_FAMILY,
+      fontWeight: 'bold',
+    });
+    this._storeHintText.anchor.set(0.5, 0.5);
+    this._storeHintText.position.set(w / 2, TRAY_H / 2);
+    this._storeHint.addChild(this._storeHintText);
+    this.addChild(this._storeHint);
+
     this._buildModeToggle();
     this.sortChildren();
   }
@@ -737,6 +809,50 @@ export class FurnitureTray extends PIXI.Container {
     this._detachCanvasTrayScroll = null;
   }
 
+  private _isInStoreZone(designX: number, designY: number): boolean {
+    if (!this._isOpen || TutorialManager.isActive) return false;
+    return designX >= 0 && designX <= DESIGN_WIDTH && designY >= this._openY + TRAY_STORE_ZONE_TOP_INSET;
+  }
+
+  private _showStoreHint(over: boolean, isNew: boolean): void {
+    if (this._storeHint.destroyed) return;
+    this._storeHintText.text = isNew ? '松手放回' : '松手收起';
+    this._storeHint.visible = over;
+  }
+
+  private _stopGlide(): void {
+    if (!this._glideProxy) return;
+    TweenManager.cancelTarget(this._glideProxy);
+    this._glideProxy = null;
+  }
+
+  /** 横滑松手后按速度惯性滑行，撞边即停 */
+  private _startGlide(): void {
+    this._stopGlide();
+    const v = Date.now() - this._scrollLastT > 100 ? 0 : this._scrollVel;
+    if (Math.abs(v) < TRAY_GLIDE_MIN_SPEED || this._maxScrollX <= 0) return;
+    const dist = Math.max(-TRAY_GLIDE_MAX_DIST, Math.min(TRAY_GLIDE_MAX_DIST, v * TRAY_GLIDE_DIST_MS));
+    const target = Math.max(-this._maxScrollX, Math.min(0, this._scrollX + dist));
+    if (Math.abs(target - this._scrollX) < 1) return;
+    const inner = this._trayScrollInner;
+    const proxy = { x: this._scrollX };
+    this._glideProxy = proxy;
+    TweenManager.to({
+      target: proxy,
+      props: { x: target },
+      duration: TRAY_GLIDE_SEC,
+      ease: easeOutCubic,
+      onUpdate: () => {
+        if (this._glideProxy !== proxy || !inner || inner.destroyed || inner !== this._trayScrollInner) return;
+        this._scrollX = proxy.x;
+        inner.x = proxy.x;
+      },
+      onComplete: () => {
+        if (this._glideProxy === proxy) this._glideProxy = null;
+      },
+    });
+  }
+
   /** 结束托盘上的滑动跟踪（不关闭托盘） */
   private _teardownTrayScroll(): void {
     if (this._trayScrollListening) {
@@ -754,7 +870,12 @@ export class FurnitureTray extends PIXI.Container {
   ): void {
     if (!this._isOpen) return;
     if (this._trayScrollListening) this._teardownTrayScroll();
+    this._pressStoppedGlide = this._glideProxy != null;
+    this._stopGlide();
     const p = federatedPointerToDesign(e);
+    this._scrollVel = 0;
+    this._scrollLastX = p.x;
+    this._scrollLastT = Date.now();
     this._trayScrollListening = true;
     this._trayPending = pending;
     this._trayMode = null;
@@ -793,6 +914,11 @@ export class FurnitureTray extends PIXI.Container {
     this._trayDragStarted = false;
 
     if (mode === 'drag') return;
+    if (mode === 'scroll') {
+      this._startGlide();
+      return;
+    }
+    if (this._pressStoppedGlide) return;
 
     if (pending && moved < TRAY_TAP_SLOP_PX) {
       if (pending.isPlaced) {
@@ -819,6 +945,7 @@ export class FurnitureTray extends PIXI.Container {
       this._currentTab = tabs[0] ?? 'furniture';
     }
     this._scrollX = 0;
+    this._subFilter = SUB_FILTER_ALL;
     this._scheduleFullRefresh();
   }
 
@@ -916,6 +1043,7 @@ export class FurnitureTray extends PIXI.Container {
       tab.hitArea = new PIXI.Rectangle(0, 0, TAB_SLOT_W, TAB_BAR_H);
       tab.cursor = 'pointer';
       tab.on('pointertap', () => {
+        if (this._currentTab !== tabId) this._subFilter = SUB_FILTER_ALL;
         this._currentTab = tabId;
         this._scrollX = 0;
         this._scheduleGridRefresh();
@@ -925,13 +1053,93 @@ export class FurnitureTray extends PIXI.Container {
     });
   }
 
-  private _layoutFilterRowPosition(rowW: number): void {
-    this._filterRow.position.set(
-      (DESIGN_WIDTH - rowW) / 2,
-      FURNITURE_TRAY_FOOTER_Y + Math.max(0, (GRID_FILTER_BAR_H - FILTER_CHIP_H) / 2) + FILTER_CHIP_NUDGE_Y,
+  /** 当前分区 + 大类下已解锁、本场景可用的家具（未按放置 / 小类筛选） */
+  private _collectUnlockedDecos(): DecoDef[] {
+    const sceneId = CurrencyManager.state.sceneId;
+    const candidates = this._traySection === 'workshop'
+      ? getWorkshopDecosForTrayTab(this._currentTab, sceneId)
+      : getDecosForDecorationPanelTab(this._currentTab as DecoPanelTabId, sceneId)
+          .filter(d => !d.workshopExclusive);
+    return candidates.filter(
+      d => DecorationManager.isUnlocked(d.id) && isDecoAllowedInScene(d, sceneId),
     );
   }
 
+  /** 有家具的小类（不足 2 个或总件数太少时不分小类） */
+  private _visibleSubCategories(unlocked: readonly DecoDef[]): TraySubCategory[] {
+    const tab = this._currentTab as DecoPanelTabId;
+    const subs = getTraySubCategories(tab);
+    if (subs.length === 0 || unlocked.length < SUB_FILTER_MIN_ITEMS) return [];
+    const used = new Set<string>();
+    for (const d of unlocked) {
+      const s = traySubCategoryOf(tab, getDecoDisplayName(d.id));
+      if (s) used.add(s);
+    }
+    const visible = subs.filter(s => used.has(s.id));
+    return visible.length >= 2 ? visible : [];
+  }
+
+  private _buildFilterChip(
+    label: string,
+    selected: boolean,
+    x: number,
+    withToggleDot: boolean,
+    onTap: () => void,
+  ): PIXI.Container {
+    const CHIP_H = FILTER_CHIP_H;
+    const tx = new PIXI.Text(label, {
+      fontSize: FILTER_CHIP_FONT,
+      fill: selected ? COLORS.TEXT_DARK : COLORS.TEXT_LIGHT,
+      fontFamily: FONT_FAMILY,
+      fontWeight: 'bold',
+    });
+    const dotW = withToggleDot ? FILTER_TOGGLE_DOT_R * 2 + 6 : 0;
+    const w = Math.ceil(tx.width) + FILTER_CHIP_PAD_X * 2 + dotW;
+
+    const chip = new PIXI.Container();
+    chip.position.set(x, Math.max(0, (GRID_FILTER_BAR_H - CHIP_H) / 2));
+    const bg = new PIXI.Graphics();
+    if (selected) {
+      bg.beginFill(0xFFE8D0);
+      bg.drawRoundedRect(0, 0, w, CHIP_H, FILTER_CHIP_RADIUS);
+      bg.endFill();
+      bg.lineStyle(2, COLORS.BUTTON_PRIMARY);
+      bg.drawRoundedRect(0, 0, w, CHIP_H, FILTER_CHIP_RADIUS);
+    } else {
+      bg.beginFill(0xFFFFFF, 0.96);
+      bg.drawRoundedRect(0, 0, w, CHIP_H, FILTER_CHIP_RADIUS);
+      bg.endFill();
+      bg.lineStyle(1, 0xE0D0C0);
+      bg.drawRoundedRect(0, 0, w, CHIP_H, FILTER_CHIP_RADIUS);
+    }
+    if (withToggleDot) {
+      const cx = FILTER_CHIP_PAD_X + FILTER_TOGGLE_DOT_R - 2;
+      const cy = CHIP_H / 2;
+      bg.lineStyle(2, selected ? COLORS.BUTTON_PRIMARY : 0xC8B8A8);
+      bg.beginFill(selected ? COLORS.BUTTON_PRIMARY : 0xFFFFFF);
+      bg.drawCircle(cx, cy, FILTER_TOGGLE_DOT_R);
+      bg.endFill();
+      if (selected) {
+        bg.lineStyle(2, 0xFFFFFF);
+        bg.moveTo(cx - 3.5, cy);
+        bg.lineTo(cx - 1, cy + 3);
+        bg.lineTo(cx + 4, cy - 3);
+      }
+    }
+    chip.addChild(bg);
+    tx.anchor.set(0.5, 0.5);
+    tx.position.set(dotW + (w - dotW) / 2 - (withToggleDot ? 4 : 0), CHIP_H / 2);
+    chip.addChild(tx);
+    chip.eventMode = 'static';
+    chip.cursor = 'pointer';
+    const hitPad = 4;
+    chip.hitArea = new PIXI.Rectangle(-hitPad, -hitPad, w + hitPad * 2, CHIP_H + hitPad * 2);
+    chip.on('pointertap', onTap);
+    (chip as PIXI.Container & { _chipW?: number })._chipW = w;
+    return chip;
+  }
+
+  /** 底栏：「未放置」开关 + 小类 chip（全部 / 桌几 / 椅凳…）；放不下时整行等比缩小 */
   private _buildFilterRow(): void {
     this._filterRow.removeChildren().forEach(ch => ch.destroy({ children: true }));
     if (this._currentTab === 'room_styles') {
@@ -939,61 +1147,60 @@ export class FurnitureTray extends PIXI.Container {
       return;
     }
     this._filterRow.visible = true;
-    const CHIP_H = FILTER_CHIP_H;
-    const PAD_Y = Math.max(0, (GRID_FILTER_BAR_H - CHIP_H) / 2);
-    const CHIP_GAP = FILTER_CHIP_GAP;
-    const chips: { id: TrayListFilter; label: string; w: number }[] = [
-      { id: 'all', label: '全部', w: FILTER_CHIP_W_ALL },
-      { id: 'unplaced', label: '未放置', w: FILTER_CHIP_W_UNPLACED },
-    ];
-    const rowW = chips.reduce((s, c, i) => s + c.w + (i > 0 ? CHIP_GAP : 0), 0);
-    this._layoutFilterRowPosition(rowW);
+
+    const subs = this._visibleSubCategories(this._collectUnlockedDecos());
+    if (this._subFilter !== SUB_FILTER_ALL && !subs.some(s => s.id === this._subFilter)) {
+      this._subFilter = SUB_FILTER_ALL;
+    }
+
     let x = 0;
-    for (const { id, label, w } of chips) {
-      const chip = new PIXI.Container();
-      chip.position.set(x, PAD_Y);
-      const selected = this._listFilter === id;
-      const bg = new PIXI.Graphics();
-      if (selected) {
-        bg.beginFill(0xFFE8D0);
-        bg.drawRoundedRect(0, 0, w, CHIP_H, FILTER_CHIP_RADIUS);
-        bg.endFill();
-        bg.lineStyle(2, COLORS.BUTTON_PRIMARY);
-        bg.drawRoundedRect(0, 0, w, CHIP_H, FILTER_CHIP_RADIUS);
-      } else {
-        bg.beginFill(0xFFFFFF, 0.96);
-        bg.drawRoundedRect(0, 0, w, CHIP_H, FILTER_CHIP_RADIUS);
-        bg.endFill();
-        bg.lineStyle(1, 0xE0D0C0);
-        bg.drawRoundedRect(0, 0, w, CHIP_H, FILTER_CHIP_RADIUS);
-      }
-      chip.addChild(bg);
-      const tx = new PIXI.Text(label, {
-        fontSize: FILTER_CHIP_FONT,
-        fill: selected ? COLORS.TEXT_DARK : COLORS.TEXT_LIGHT,
-        fontFamily: FONT_FAMILY,
-        fontWeight: 'bold',
-      });
-      tx.anchor.set(0.5, 0.5);
-      tx.position.set(w / 2, CHIP_H / 2);
-      chip.addChild(tx);
-      chip.eventMode = 'static';
-      chip.cursor = 'pointer';
-      const hitPad = 4;
-      chip.hitArea = new PIXI.Rectangle(-hitPad, -hitPad, w + hitPad * 2, CHIP_H + hitPad * 2);
-      chip.on('pointertap', () => {
-        if (this._listFilter === id) return;
-        this._listFilter = id;
+    const place = (chip: PIXI.Container, gapAfter: number): void => {
+      this._filterRow.addChild(chip);
+      x += ((chip as PIXI.Container & { _chipW?: number })._chipW ?? 0) + gapAfter;
+    };
+
+    const unplacedOn = this._listFilter === 'unplaced';
+    place(
+      this._buildFilterChip('未放置', unplacedOn, x, true, () => {
+        this._listFilter = unplacedOn ? 'all' : 'unplaced';
         this._scrollX = 0;
         this._scheduleGridRefresh();
+      }),
+      subs.length > 0 ? FILTER_CHIP_GAP * 2 : 0,
+    );
+
+    if (subs.length > 0) {
+      const items: { id: string; label: string }[] = [
+        { id: SUB_FILTER_ALL, label: '全部' },
+        ...subs.map(s => ({ id: s.id, label: s.label })),
+      ];
+      items.forEach((it, i) => {
+        place(
+          this._buildFilterChip(it.label, this._subFilter === it.id, x, false, () => {
+            if (this._subFilter === it.id) return;
+            this._subFilter = it.id;
+            this._scrollX = 0;
+            this._scheduleGridRefresh();
+          }),
+          i < items.length - 1 ? FILTER_CHIP_GAP : 0,
+        );
       });
-      this._filterRow.addChild(chip);
-      x += w + CHIP_GAP;
     }
+
+    const rowW = x;
+    const avail = FILTER_ROW_RIGHT - FILTER_ROW_LEFT;
+    const s = rowW > avail ? avail / rowW : 1;
+    this._filterRow.scale.set(s);
+    const centerX = subs.length > 0 ? (FILTER_ROW_LEFT + FILTER_ROW_RIGHT) / 2 : DESIGN_WIDTH / 2;
+    this._filterRow.position.set(
+      Math.max(FILTER_ROW_LEFT, centerX - (rowW * s) / 2),
+      FURNITURE_TRAY_FOOTER_Y + FILTER_CHIP_NUDGE_Y + (FILTER_CHIP_H * (1 - s)) / 2,
+    );
   }
 
   private _buildGrid(): void {
     this._teardownTrayScroll();
+    this._stopGlide();
     this._trayScrollInner = null;
     this._gridContainer.removeChildren().forEach(ch => ch.destroy({ children: true }));
 
@@ -1002,19 +1209,18 @@ export class FurnitureTray extends PIXI.Container {
       return;
     }
 
-    const sceneId = CurrencyManager.state.sceneId;
-    const candidates = this._traySection === 'workshop'
-      ? getWorkshopDecosForTrayTab(this._currentTab, sceneId)
-      : getDecosForDecorationPanelTab(this._currentTab as DecoPanelTabId, sceneId)
-          .filter(d => !d.workshopExclusive);
     const layout = RoomLayoutManager.getLayout();
-    const unlocked = candidates.filter(
-      d => DecorationManager.isUnlocked(d.id) && isDecoAllowedInScene(d, sceneId),
-    );
+    const unlocked = this._collectUnlockedDecos();
+    const tab = this._currentTab as DecoPanelTabId;
+    const subId = this._subFilter;
+    const inSub =
+      subId === SUB_FILTER_ALL
+        ? unlocked
+        : unlocked.filter(d => traySubCategoryOf(tab, getDecoDisplayName(d.id)) === subId);
     const decos =
       this._listFilter === 'unplaced'
-        ? unlocked.filter(d => RoomLayoutManager.getAvailableCount(d.id) > 0)
-        : unlocked;
+        ? inSub.filter(d => RoomLayoutManager.getAvailableCount(d.id) > 0)
+        : inSub;
 
     if (unlocked.length === 0) {
       const emptyText = new PIXI.Text(
@@ -1032,7 +1238,7 @@ export class FurnitureTray extends PIXI.Container {
     }
 
     if (decos.length === 0) {
-      const emptyText = new PIXI.Text('该分类下暂无未放置的家具\n点「全部」可查看已放置项', {
+      const emptyText = new PIXI.Text('这里的家具都已摆进房间啦\n点掉「未放置」可查看已放置项', {
         fontSize: 15, fill: COLORS.TEXT_LIGHT, fontFamily: FONT_FAMILY,
         align: 'center',
       });
@@ -1259,15 +1465,18 @@ export class FurnitureTray extends PIXI.Container {
     rarityDot.endFill();
     card.addChild(rarityDot);
 
-    if (deco.stackable) {
-      const countText = new PIXI.Text(`可用${availableCount}/${ownedCount}`, {
-        fontSize: 12,
-        fill: 0x5b6f62,
+    // 同款多件：左上角 ×剩余可放数量
+    if (ownedCount > 1 && availableCount > 0) {
+      const countText = new PIXI.Text(`×${availableCount}`, {
+        fontSize: 17,
+        fill: 0x7a4a5e,
         fontFamily: FONT_FAMILY,
         fontWeight: 'bold',
+        stroke: 0xffffff,
+        strokeThickness: 3,
       });
       countText.anchor.set(0, 0);
-      countText.position.set(6, 5);
+      countText.position.set(6, 3);
       card.addChild(countText);
     }
 

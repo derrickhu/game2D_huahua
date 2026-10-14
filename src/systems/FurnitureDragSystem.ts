@@ -43,6 +43,7 @@ import {
   getScenePlacementScaleMultiplier,
 } from '@/config/SceneRenovationConfig';
 import { ToastMessage } from '@/gameobjects/ui/ToastMessage';
+import { getDecoDisplayName } from '@/config/FurnitureWorkshopConfig';
 import { TextureCache } from '@/utils/TextureCache';
 import {
   ROOM_DEPTH_AUX_MAX,
@@ -88,7 +89,14 @@ export interface DragContext {
   originalScale: number;
   /** 仅 isNew：脚下柔光层（随 sprite 移动，落地后移除） */
   newFurnitureGlow?: PIXI.Graphics;
+  /** 手指当前在托盘收起区内：松手即收起（新件则放回） */
+  overTray?: boolean;
+  /** 新件起手就在托盘上，须先离开一次收起区才生效；已摆放件为 undefined 视为已生效 */
+  trayArmed?: boolean;
 }
+
+/** 手指拖到托盘收起区时家具本体的透明度 */
+const OVER_TRAY_ALPHA = 0.35;
 
 class FurnitureDragSystemClass {
   /** 是否启用（编辑模式开关） */
@@ -121,7 +129,21 @@ class FurnitureDragSystemClass {
   /** 命中店主热区时转交店主拖拽（由 ShopScene 注入） */
   private _ownerHitPrefer: ((e: PIXI.FederatedPointerEvent) => void) | null = null;
 
+  /** 托盘收起区（设计坐标），由 FurnitureTray 打开时注入 */
+  private _trayDropZone: ((designX: number, designY: number) => boolean) | null = null;
+  private _trayDropHover: ((over: boolean, isNew: boolean) => void) | null = null;
+
   // ---- 公共 API ----
+
+  /** 拖到托盘上松手 = 收起；传 null 关闭 */
+  setTrayDropZone(
+    zone: ((designX: number, designY: number) => boolean) | null,
+    onHover: ((over: boolean, isNew: boolean) => void) | null = null,
+  ): void {
+    if (this._dragCtx?.overTray) this._setOverTray(this._dragCtx, false);
+    this._trayDropZone = zone;
+    this._trayDropHover = onHover;
+  }
 
   /** 编辑态店主命中优先：由 ShopScene 在进出编辑模式时设置/清空 */
   setOwnerHitPrefer(
@@ -382,6 +404,7 @@ class FurnitureDragSystemClass {
       isNew: true,
       originalScale: baseScale,
       newFurnitureGlow: glow,
+      trayArmed: false,
     };
     this.sortByDepth();
   }
@@ -551,8 +574,38 @@ class FurnitureDragSystemClass {
       ctx.newFurnitureGlow.y = newY;
     }
 
+    if (this._trayDropZone) {
+      const p = eventClientPoint(e);
+      const design = Game.clientToDesign(p.x, p.y);
+      const inZone = this._trayDropZone(design.x, design.y);
+      if (!inZone) ctx.trayArmed = true;
+      const over = inZone && ctx.trayArmed !== false;
+      if (over !== !!ctx.overTray) this._setOverTray(ctx, over);
+    }
+
     // 实时排序
     this.sortByDepth();
+  }
+
+  private _setOverTray(ctx: DragContext, over: boolean): void {
+    ctx.overTray = over;
+    if (!ctx.sprite.destroyed) ctx.sprite.alpha = over ? OVER_TRAY_ALPHA : DRAG_ALPHA;
+    if (ctx.newFurnitureGlow && !ctx.newFurnitureGlow.destroyed) ctx.newFurnitureGlow.visible = !over;
+    this._trayDropHover?.(over, ctx.isNew);
+  }
+
+  /** 已摆放家具拖回托盘：与工具栏「移除」同一套收起流程 */
+  private _storeToTray(ctx: DragContext): void {
+    const instanceId = ctx.instanceId;
+    if (!instanceId) return;
+    this.unregisterSprite(instanceId);
+    TweenManager.cancelTarget(ctx.sprite);
+    TweenManager.cancelTarget(ctx.sprite.scale);
+    ctx.sprite.parent?.removeChild(ctx.sprite);
+    ctx.sprite.destroy();
+    RoomLayoutManager.removeFurniture(instanceId);
+    ToastMessage.show(`已收起「${getDecoDisplayName(ctx.decoId)}」`);
+    EventBus.emit('roomlayout:changed');
   }
 
   /** 处理 canvas 级别的 pointerup / touchend */
@@ -592,6 +645,19 @@ class FurnitureDragSystemClass {
     const disposeNewDragExtras = () => {
       this._disposeNewFurnitureDragExtras(ctx);
     };
+
+    if (ctx.overTray) {
+      this._trayDropHover?.(false, ctx.isNew);
+      if (ctx.isNew) {
+        disposeNewDragExtras();
+        ctx.sprite.parent?.removeChild(ctx.sprite);
+        ctx.sprite.destroy();
+        EventBus.emit('furniture:drag_cancelled', ctx.decoId);
+      } else {
+        this._storeToTray(ctx);
+      }
+      return;
+    }
 
     if (ctx.isNew) {
       if (inBounds) {
@@ -686,6 +752,7 @@ class FurnitureDragSystemClass {
     const ctx = this._dragCtx;
     this._dragCtx = null;
     this._dragPointerId = null;
+    if (ctx.overTray) this._trayDropHover?.(false, ctx.isNew);
 
     if (ctx.isNew) {
       this._disposeNewFurnitureDragExtras(ctx);
