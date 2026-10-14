@@ -23,6 +23,8 @@ import {
 import { ToolSparkleLayer } from '@/utils/ToolSparkleLayer';
 import { createCurrencyIconCluster } from '@/utils/CurrencyCellIcons';
 
+const MERGE_SPAWN_SEC = 0.4;
+
 /** 格子内物品最大边长占格子的比例（其余为边距） */
 const ITEM_CELL_FILL = 0.76;
 /** 花束线资源留白多，在格子里单独放大，边距更小 */
@@ -637,9 +639,125 @@ export class ItemView extends PIXI.Container {
    */
   snapToCellLayout(): void {
     TweenManager.cancelTarget(this.scale);
-    this.pivot.set(0, 0);
+    this._cancelSquash();
+    this._spawnProxy = null;
+    this._dropPivotToTopLeft();
     this.scale.set(1, 1);
     this.alpha = 1;
+  }
+
+  /** pivot 归零时同步挪回 position，保持格位不动（被打断的弹出动画也不会把物品留在格心偏移处） */
+  private _dropPivotToTopLeft(): void {
+    if (this.pivot.x !== 0 || this.pivot.y !== 0) {
+      this.position.set(this.x - this.pivot.x, this.y - this.pivot.y);
+      this.pivot.set(0, 0);
+    }
+    this._focusScaled = false;
+  }
+
+  private _focusScaled = false;
+
+  private _enterCenterPivot(): void {
+    if (this._focusScaled) return;
+    this.snapToCellLayout();
+    const cs = BoardMetrics.cellSize;
+    this.pivot.set(cs / 2, cs / 2);
+    this.position.set(this.x + cs / 2, this.y + cs / 2);
+    this._focusScaled = true;
+  }
+
+  /** 拖拽反馈：按下回缩 / 合成落点放大，绕格心缩放 */
+  setFocusScale(scale: number, duration = 0.08): void {
+    if (!this.visible || !this._itemId) return;
+    this._enterCenterPivot();
+    this._cancelSquash();
+    TweenManager.cancelTarget(this.scale);
+    TweenManager.to({
+      target: this.scale,
+      props: { x: scale, y: scale },
+      duration,
+      ease: Ease.easeOutQuad,
+    });
+  }
+
+  /** 撤掉 setFocusScale；不碰 alpha（拖起时源格要保持半透明） */
+  clearFocusScale(animated = true): void {
+    if (!this._focusScaled) return;
+    this._cancelSquash();
+    TweenManager.cancelTarget(this.scale);
+    if (!animated) {
+      this._dropPivotToTopLeft();
+      this.scale.set(1, 1);
+      return;
+    }
+    TweenManager.to({
+      target: this.scale,
+      props: { x: 1, y: 1 },
+      duration: 0.08,
+      ease: Ease.easeOutQuad,
+      onComplete: () => {
+        if (!this._focusScaled) return;
+        this._dropPivotToTopLeft();
+        this.scale.set(1, 1);
+      },
+    });
+  }
+
+  /** 点工具产出：绕格心压扁再弹回 */
+  playSquash(): void {
+    if (!this.visible || !this._itemId) return;
+    this._enterCenterPivot();
+    this._cancelSquash();
+    const proxy = { t: 0 };
+    this._squashProxy = proxy;
+    TweenManager.to({
+      target: proxy,
+      props: { t: 1 },
+      duration: 0.26,
+      onUpdate: () => {
+        if (!this._focusScaled || this._squashProxy !== proxy) {
+          TweenManager.cancelTarget(proxy);
+          return;
+        }
+        const u = proxy.t;
+        const w = Math.sin(u * Math.PI * 2) * (1 - u) * 0.16;
+        this.scale.set(1 + w, 1 - w);
+      },
+      onComplete: () => {
+        if (this._squashProxy !== proxy) return;
+        this._squashProxy = null;
+        if (!this._focusScaled) return;
+        this._dropPivotToTopLeft();
+        this.scale.set(1, 1);
+      },
+    });
+  }
+
+  private _squashProxy: { t: number } | null = null;
+
+  private _cancelSquash(): void {
+    if (!this._squashProxy) return;
+    TweenManager.cancelTarget(this._squashProxy);
+    this._squashProxy = null;
+  }
+
+  /** 拖放落位：绕格心轻弹一下 */
+  playLandBounce(): void {
+    if (!this.visible || !this._itemId) return;
+    this._enterCenterPivot();
+    this._cancelSquash();
+    this.scale.set(1.12, 1.12);
+    TweenManager.to({
+      target: this.scale,
+      props: { x: 1, y: 1 },
+      duration: 0.18,
+      ease: Ease.easeOutBack,
+      onComplete: () => {
+        if (!this._focusScaled) return;
+        this._dropPivotToTopLeft();
+        this.scale.set(1, 1);
+      },
+    });
   }
 
   /** 点击选中时的轻量反馈：仅轻微放大回弹（由 BoardView 仅在 OPEN 格调用） */
@@ -684,20 +802,36 @@ export class ItemView extends PIXI.Container {
     this.scale.set(0.08, 0.08);
     this.alpha = 0.92;
 
-    const finish = (): void => {
-      this.pivot.set(0, 0);
-      this.position.set(ox, oy);
-      this.scale.set(1, 1);
-      this.alpha = 1;
-      onComplete?.();
-    };
-
+    const total = MERGE_SPAWN_SEC;
+    const proxy = { t: 0 };
+    this._spawnProxy = proxy;
+    // 驱动用独立 proxy：snapToCellLayout 只会让动画停在原位，不会吞掉 onComplete（合成后的选中靠它）
     TweenManager.to({
-      target: this.scale,
-      props: { x: 1, y: 1 },
-      duration: 0.4,
-      ease: Ease.easeOutBack,
-      onComplete: finish,
+      target: proxy,
+      props: { t: total },
+      duration: total,
+      onUpdate: () => {
+        if (this._spawnProxy !== proxy) return;
+        const s = 0.08 + (1 - 0.08) * Ease.easeOutBack(Math.min(1, proxy.t / total));
+        this.scale.set(s, s);
+      },
+      onComplete: () => {
+        if (this._spawnProxy === proxy) {
+          this._spawnProxy = null;
+          this.pivot.set(0, 0);
+          this.position.set(ox, oy);
+          this.scale.set(1, 1);
+          this.alpha = 1;
+        }
+        onComplete?.();
+      },
     });
+  }
+
+  private _spawnProxy: { t: number } | null = null;
+
+  /** 合成弹出动画进行中（BoardView.refresh 期间不要复位它的格位） */
+  get isSpawning(): boolean {
+    return !!this._spawnProxy;
   }
 }

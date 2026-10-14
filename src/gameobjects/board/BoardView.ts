@@ -4,7 +4,7 @@
 import * as PIXI from 'pixi.js';
 import { EventBus } from '@/core/EventBus';
 import { Game } from '@/core/Game';
-import { attachCanvasMoveUp, eventClientPoint } from '@/utils/canvasInteraction';
+import { attachCanvasMoveUp, eventClientPoint, federatedToClientPoint } from '@/utils/canvasInteraction';
 import { TweenManager, Ease } from '@/core/TweenManager';
 import {
   BOARD_COLS,
@@ -48,6 +48,15 @@ import { TutorialInteractionGuard } from '@/systems/TutorialInteractionGuard';
 import { MergeCompanionOverlay, createMergeBubbleDragReplica } from './MergeCompanionOverlay';
 import { MergeCompanionManager } from '@/managers/MergeCompanionManager';
 
+/** 按下后手指移动超过这么多屏幕点（client px）才拿起，轻点不出幽灵 */
+const DRAG_START_DIST = 12;
+/** 幽灵画在手指上方多少格，落点也按幽灵中心判定 */
+const DRAG_LIFT_OFFSET = 0.4;
+const DRAG_GHOST_SCALE = 1.1;
+const DRAG_LIFT_SEC = 0.08;
+const PRESS_SCALE = 0.92;
+const DROP_HOVER_SCALE = 1.08;
+
 export class BoardView extends PIXI.Container {
   private _boardChrome!: PIXI.Container;
   /** 仅格子底与雾等，必须在物品下层，避免交错 addChild 导致右侧/下方格子盖住左侧物品 */
@@ -61,6 +70,21 @@ export class BoardView extends PIXI.Container {
   private _dragGhostParent: PIXI.Container | null = null;
   private _dragSrcIndex = -1;
   private _dragHoverIndex = -1;
+  /** 已按下可拖格、还没移动到拿起阈值（client 坐标；known=false 时以第一次 move 为起点） */
+  private _dragPending: { idx: number; x: number; y: number; known: boolean } | null = null;
+  private _pressedIndex = -1;
+  /** 手指离开过源格：之后松手按幽灵落点结算，不再当点击 */
+  private _dragLeftSource = false;
+  private _dragGhostGoal = { x: 0, y: 0 };
+  private _dragLiftProxy: { t: number } | null = null;
+  /** 点工具产出：从工具飞向落点的物品（落地前目标格物品先藏起） */
+  private _produceFlights: { sprite: PIXI.Sprite; proxy: { t: number }; targetIdx: number }[] = [];
+  /** 松手后还在飞向落点 / 飞回原格的幽灵 */
+  private _flyingGhost: {
+    ghost: PIXI.Container;
+    proxy: { t: number };
+    hideIdx: number;
+  } | null = null;
   /** 合成气泡按下 → canvas 上区分短按（钻石）与拖到空格落地 */
   private _mergeBubblePtr: {
     id: string;
@@ -167,6 +191,10 @@ export class BoardView extends PIXI.Container {
 
   /** 窗口比例变化后按最新 BoardMetrics 原地更新格子尺寸与位置。 */
   relayout(): void {
+    this._finishFlyingGhost();
+    this._finishProduceFlights();
+    this._dragPending = null;
+    this._clearPressed();
     if (this._dragSrcIndex >= 0) {
       MergeManager.cancelDrag();
       this._endDrag();
@@ -183,6 +211,7 @@ export class BoardView extends PIXI.Container {
       const p = this._cellPositionForIndex(i);
       this._cellViews[i].position.set(p.x, p.y);
       this._cellViews[i].relayout();
+      this._itemViews[i].snapToCellLayout();
       this._itemViews[i].position.set(p.x, p.y);
       this._itemViews[i].relayout();
     }
@@ -288,8 +317,13 @@ export class BoardView extends PIXI.Container {
       // 格底 CellView 也要复位：抖动 _shakeCell 在 refresh 里被 cancel 时不会走 onComplete，否则白底与物品层错位
       const pos = this._cellPositionForIndex(i);
       cellView.position.set(pos.x, pos.y);
-      itemView.snapToCellLayout();
-      itemView.position.set(pos.x, pos.y);
+      if (!itemView.isSpawning) {
+        itemView.snapToCellLayout();
+        itemView.position.set(pos.x, pos.y);
+      }
+    }
+    for (const f of this._produceFlights) {
+      this._itemViews[f.targetIdx].alpha = 0;
     }
     this._mergeCompanionLayer.sync();
   }
@@ -441,10 +475,14 @@ export class BoardView extends PIXI.Container {
     this.on('pointerdown', (e: PIXI.FederatedPointerEvent) => {
       this._mergeHintSystem.resetIdle();
       MergeCompanionManager.clearBubbleSelectionForBoardInteraction();
+      this._finishFlyingGhost();
+      this._dragPending = null;
+      this._clearPressed();
 
       const localPos = this.toLocal(e.global);
       const cellIdx = this._hitTestCell(localPos.x, localPos.y);
       if (cellIdx < 0) return;
+      this._finishProduceFlights(cellIdx);
 
       this._dragSrcIndex = cellIdx;
       this._longPressTriggered = false;
@@ -468,6 +506,8 @@ export class BoardView extends PIXI.Container {
           const pressItemId = cell.itemId;
           this._longPressTimer = setTimeout(() => {
             this._longPressTriggered = true;
+            this._dragPending = null;
+            this._clearPressed();
             // 取消拖拽
             if (this._dragGhost) {
               MergeManager.cancelDrag();
@@ -481,15 +521,11 @@ export class BoardView extends PIXI.Container {
       }
 
       if (canBoardDrag) {
-        if (MergeManager.startDrag(cellIdx)) {
-          this._startDragGhost(cellIdx, localPos);
-          this._cacheAndHighlightTargets(cellIdx);
-          if (!TutorialInteractionGuard.hasMergeRule) {
-            this._guideLineSystem.startGuide(cellIdx);
-          }
-        } else {
-          this._dragSrcIndex = -1;
-        }
+        const c = federatedToClientPoint(e);
+        const known = c.x !== 0 || c.y !== 0;
+        this._dragPending = { idx: cellIdx, x: c.x, y: c.y, known };
+        this._pressedIndex = cellIdx;
+        this._itemViews[cellIdx].setFocusScale(PRESS_SCALE);
       }
     });
 
@@ -516,10 +552,10 @@ export class BoardView extends PIXI.Container {
         return;
       }
 
-      if (this._dragSrcIndex < 0 || !this._dragGhost) return;
-      // 开始拖动后取消长按检测
-      this._clearLongPress();
+      if (this._dragSrcIndex < 0) return;
       const localPos = this._rawToLocal(e);
+      if (this._dragPending && !this._tryLiftPendingDrag(e)) return;
+      if (!this._dragGhost) return;
       this._moveDragGhost(localPos);
     };
 
@@ -540,14 +576,40 @@ export class BoardView extends PIXI.Container {
       }
       const srcIdx = this._dragSrcIndex;
 
+      const upPos = this._rawToLocal(e);
+      const fingerOnSource = this._cellAtLenient(upPos.x, upPos.y) === srcIdx;
+      if (this._dragGhost && fingerOnSource && this._dragLeftSource) {
+        // 拖出去又回到原格：放回去，不当点击
+        this._flyGhostHome(srcIdx, false);
+        if (TutorialInteractionGuard.hasMergeRule) TutorialInteractionGuard.notifyInvalidAction();
+        this._dragSrcIndex = -1;
+        return;
+      }
+      if (this._dragGhost && fingerOnSource) {
+        // 手指没离开过源格 → 和轻点一样
+        MergeManager.cancelDrag();
+        this._endDrag();
+        if (TutorialInteractionGuard.hasMergeRule) {
+          TutorialInteractionGuard.notifyInvalidAction();
+          this._dragSrcIndex = -1;
+          return;
+        }
+        this._handleTap(srcIdx);
+        this._dragSrcIndex = -1;
+        return;
+      }
+
       if (this._dragGhost) {
         const localPos = this._rawToLocal(e);
-        const targetIdx = this._dragHoverIndex >= 0
-          ? this._dragHoverIndex
-          : this._hitTestCell(localPos.x, localPos.y);
+        const belowBoard = localPos.y > BoardMetrics.areaHeight;
+        const targetIdx = belowBoard
+          ? -1
+          : this._dragHoverIndex >= 0
+            ? this._dragHoverIndex
+            : this._cellUnderGhost(localPos);
 
         // 拖到棋盘外下方区域 → 尝试存入仓库
-        if (targetIdx < 0 && localPos.y > BoardMetrics.areaHeight) {
+        if (belowBoard) {
           if (TutorialInteractionGuard.hasMergeRule) {
             MergeManager.cancelDrag();
             this._endDrag();
@@ -586,30 +648,27 @@ export class BoardView extends PIXI.Container {
             this._dragSrcIndex = -1;
             return;
           }
-          if (result.kind === 'special_consumable_fail') {
+          if (result.kind === 'special_consumable_fail' || result.kind === 'fruit_cut_fail') {
             ToastMessage.show(result.toast);
-            this._endDrag();
+            this._flyGhostHome(srcIdx, true);
             this._dragSrcIndex = -1;
             return;
           }
-          if (result.kind === 'fruit_cut_fail') {
-            ToastMessage.show(result.toast);
-            this._endDrag();
+          if (result.kind === 'cancelled') {
+            this._flyGhostHome(srcIdx, false);
+            EventBus.emit('tutorial:boardActionSettled', result.kind);
             this._dragSrcIndex = -1;
             return;
-          }
-          if (
-            result.kind === 'merged'
-            || result.kind === 'moved'
-            || result.kind === 'swapped'
-            || result.kind === 'fruit_cut_processed'
-          ) {
-            this._playDropBounce(result.kind === 'fruit_cut_processed' ? result.resultIndex : targetIdx);
           }
           if (result.kind === 'lucky_coin_fail') {
             ToastMessage.show(result.toast);
+            this._flyGhostHome(srcIdx, true);
+            EventBus.emit('tutorial:boardActionSettled', result.kind);
+            this._dragSrcIndex = -1;
+            return;
           }
           if (result.kind === 'fruit_cut_processed') {
+            this._playDropBounce(result.resultIndex);
             const def = ITEM_DEFS.get(result.resultId);
             ToastMessage.show(def ? `切好了：${def.name}` : '切好了！');
           }
@@ -620,22 +679,37 @@ export class BoardView extends PIXI.Container {
             if (cellAfter?.itemId) {
               this._selectItem(targetIdx, cellAfter.itemId);
             }
-          }
-        } else {
-          // 原地释放（没有实际拖拽到其他格子）→ 当作点击，触发选中
-          MergeManager.cancelDrag();
-          this._endDrag();
-          if (TutorialInteractionGuard.hasMergeRule) {
-            TutorialInteractionGuard.notifyInvalidAction();
+            const ghost = this._detachDragGhost();
+            this._endDrag();
+            if (ghost) {
+              this._flyGhost(ghost, targetIdx, 0.1, DRAG_GHOST_SCALE, 1, () => {
+                this._itemViews[targetIdx]?.playLandBounce();
+              });
+            }
+            if (result.kind === 'swapped') this._itemViews[srcIdx]?.playLandBounce();
             this._dragSrcIndex = -1;
             return;
           }
-          this._handleTap(srcIdx);
+          if (result.kind === 'merged') {
+            // 新物品由 board:merged 的弹出动画负责；幽灵缩进落点格
+            const ghost = this._detachDragGhost();
+            this._endDrag();
+            if (ghost) this._flyGhost(ghost, targetIdx, 0.12, 0.45, 0, null, false);
+            this._dragSrcIndex = -1;
+            return;
+          }
+        } else {
+          this._flyGhostHome(srcIdx, false);
+          if (TutorialInteractionGuard.hasMergeRule) {
+            TutorialInteractionGuard.notifyInvalidAction();
+          }
           this._dragSrcIndex = -1;
           return;
         }
         this._endDrag();
       } else {
+        this._dragPending = null;
+        this._clearPressed();
         if (TutorialInteractionGuard.hasMergeRule) {
           TutorialInteractionGuard.notifyInvalidAction();
           this._dragSrcIndex = -1;
@@ -655,6 +729,8 @@ export class BoardView extends PIXI.Container {
         if (this._mergeBubblePtr) {
           this._cancelMergeBubblePointer();
         }
+        this._dragPending = null;
+        this._clearPressed();
         if (this._dragGhost) {
           MergeManager.cancelDrag();
           this._endDrag();
@@ -689,54 +765,192 @@ export class BoardView extends PIXI.Container {
     return this._dragGhostParent.toLocal(g);
   }
 
-  /** 移动幽灵：跟手 + 靠近有效目标时吸附 */
+  /** 按下后移动够远（或已移出源格）才真正拿起；返回是否已在拖 */
+  private _tryLiftPendingDrag(e: unknown): boolean {
+    const pending = this._dragPending;
+    if (!pending) return !!this._dragGhost;
+    const c = eventClientPoint(e);
+    if (!pending.known) {
+      pending.x = c.x;
+      pending.y = c.y;
+      pending.known = true;
+      return false;
+    }
+    const dx = c.x - pending.x;
+    const dy = c.y - pending.y;
+    if (dx * dx + dy * dy < DRAG_START_DIST * DRAG_START_DIST) return false;
+
+    this._dragPending = null;
+    this._clearPressed();
+    this._clearLongPress();
+    const idx = pending.idx;
+    const cell = BoardManager.getCellByIndex(idx);
+    if (!cell?.itemId || cell.state !== CellState.OPEN || !MergeManager.startDrag(idx)) {
+      this._dragSrcIndex = -1;
+      return false;
+    }
+    this._dragLeftSource = false;
+    this._startDragGhost(idx);
+    this._cacheAndHighlightTargets(idx);
+    if (!TutorialInteractionGuard.hasMergeRule) {
+      this._guideLineSystem.startGuide(idx);
+    }
+    return true;
+  }
+
+  private _clearPressed(): void {
+    if (this._pressedIndex < 0) return;
+    this._itemViews[this._pressedIndex]?.clearFocusScale(false);
+    this._pressedIndex = -1;
+  }
+
+  /** 移动幽灵：始终跟手（画在手指上方），落点按幽灵中心判定 */
   private _moveDragGhost(localPos: PIXI.IPointData): void {
     if (!this._dragGhost) return;
     const cs = BoardMetrics.cellSize;
-    // 手指上方偏移，避免遮挡
     const gx = localPos.x;
-    const gy = localPos.y - cs * 0.4;
+    const gy = localPos.y - cs * DRAG_LIFT_OFFSET;
+    const p = this._ghostPosInParent(gx, gy);
+    this._dragGhostGoal.x = p.x;
+    this._dragGhostGoal.y = p.y;
+    if (!this._dragLiftProxy) this._dragGhost.position.set(p.x, p.y);
 
-    const hoverIdx = this._hitTestCell(localPos.x, localPos.y);
-
-    // 靠近可合成或可放置的目标时吸附到格子中心
-    if (hoverIdx >= 0 && hoverIdx !== this._dragSrcIndex) {
-      const isValidTarget = this._mergeTargets.has(hoverIdx)
-        || this._isEmptyPlayableCell(hoverIdx)
-        || this._canSwapWithHover(hoverIdx);
-      if (isValidTarget) {
-        const center = this._getCellCenter(hoverIdx);
-        const p = this._ghostPosInParent(center.x, center.y);
-        this._dragGhost.position.set(p.x, p.y);
-        if (this._dragHoverIndex !== hoverIdx) {
-          this._setHoverHighlight(hoverIdx);
-        }
-        return;
+    const fingerOnSource = this._cellAtLenient(localPos.x, localPos.y) === this._dragSrcIndex;
+    if (!fingerOnSource) this._dragLeftSource = true;
+    let hoverIdx = -1;
+    if (!fingerOnSource && localPos.y <= BoardMetrics.areaHeight) {
+      const idx = this._cellUnderGhost(localPos);
+      if (idx >= 0 && idx !== this._dragSrcIndex && (
+        this._mergeTargets.has(idx)
+        || this._isEmptyPlayableCell(idx)
+        || this._canSwapWithHover(idx)
+      )) {
+        hoverIdx = idx;
       }
     }
-
-    // 未吸附：跟手
-    const p = this._ghostPosInParent(gx, gy);
-    this._dragGhost.position.set(p.x, p.y);
-    if (this._dragHoverIndex >= 0) {
-      this._setHoverHighlight(-1);
-    }
+    this._setHoverHighlight(hoverIdx);
   }
 
-  /** 设置/清除悬停格缩放反馈 */
+  /** 幽灵中心所在格（幽灵画在手指上方） */
+  private _cellUnderGhost(localPos: PIXI.IPointData): number {
+    return this._cellAtLenient(localPos.x, localPos.y - BoardMetrics.cellSize * DRAG_LIFT_OFFSET);
+  }
+
+  /** 棋盘局部坐标所在格；格缝归最近的格，棋盘外为 -1 */
+  private _cellAtLenient(px: number, py: number): number {
+    const cs = BoardMetrics.cellSize;
+    const x = px - BoardMetrics.paddingX;
+    const y = py - this._gridOffsetY;
+    const pitch = cs + CELL_GAP;
+    const gridW = BOARD_COLS * pitch - CELL_GAP;
+    const gridH = BOARD_ROWS * pitch - CELL_GAP;
+    if (x < 0 || y < 0 || x > gridW || y > gridH) return -1;
+    const col = Math.min(BOARD_COLS - 1, Math.floor((x + CELL_GAP / 2) / pitch));
+    const row = Math.min(BOARD_ROWS - 1, Math.floor((y + CELL_GAP / 2) / pitch));
+    return row * BOARD_COLS + col;
+  }
+
+  /** 落点格：选中角框；可合成时目标物品微微放大 */
   private _setHoverHighlight(idx: number): void {
-    if (this._dragHoverIndex >= 0 && this._dragHoverIndex < this._cellViews.length) {
-      this._cellViews[this._dragHoverIndex].scale.set(1);
+    if (idx === this._dragHoverIndex) return;
+    const prev = this._dragHoverIndex;
+    if (prev >= 0 && prev < this._cellViews.length) {
+      this._cellViews[prev].setHighlight(prev === this._selectedIndex);
+      this._itemViews[prev].clearFocusScale();
     }
     this._dragHoverIndex = idx;
     if (idx >= 0 && idx < this._cellViews.length) {
-      this._cellViews[idx].scale.set(1.06);
+      this._cellViews[idx].setHighlight(true);
+      if (this._mergeTargets.has(idx)) this._itemViews[idx].setFocusScale(DROP_HOVER_SCALE);
     }
+  }
+
+  /** 把拖拽幽灵从拖拽状态里摘出来，交给松手动画；之后 _endDrag 不会销毁它 */
+  private _detachDragGhost(): PIXI.Container | null {
+    const ghost = this._dragGhost;
+    if (!ghost) return null;
+    if (this._dragLiftProxy) {
+      TweenManager.cancelTarget(this._dragLiftProxy);
+      this._dragLiftProxy = null;
+    }
+    TweenManager.cancelTarget(ghost.scale);
+    TweenManager.cancelTarget(ghost);
+    this._dragGhost = null;
+    return ghost;
+  }
+
+  /**
+   * 松手后幽灵飞到某格中心再消失。hideTarget 时该格物品先藏起，落地再露出，看起来是同一件落进去。
+   * 下次按下、relayout 会直接收尾，不会留下藏起的物品。
+   */
+  private _flyGhost(
+    ghost: PIXI.Container,
+    cellIdx: number,
+    duration: number,
+    endScale: number,
+    endAlpha: number,
+    onLand: (() => void) | null,
+    hideTarget = true,
+  ): void {
+    this._finishFlyingGhost();
+    const center = this._getCellCenter(cellIdx);
+    const to = this._ghostPosInParent(center.x, center.y);
+    const fromX = ghost.x;
+    const fromY = ghost.y;
+    const fromScale = ghost.scale.x;
+    const fromAlpha = ghost.alpha;
+    const hideIdx = hideTarget ? cellIdx : -1;
+    if (hideIdx >= 0) this._itemViews[hideIdx].alpha = 0;
+    const proxy = { t: 0 };
+    this._flyingGhost = { ghost, proxy, hideIdx };
+    TweenManager.to({
+      target: proxy,
+      props: { t: 1 },
+      duration,
+      ease: Ease.easeOutQuad,
+      onUpdate: () => {
+        if (ghost.destroyed) return;
+        const u = proxy.t;
+        ghost.position.set(fromX + (to.x - fromX) * u, fromY + (to.y - fromY) * u);
+        ghost.scale.set(fromScale + (endScale - fromScale) * u);
+        ghost.alpha = fromAlpha + (endAlpha - fromAlpha) * u;
+      },
+      onComplete: () => {
+        if (this._flyingGhost?.proxy !== proxy) return;
+        this._finishFlyingGhost();
+        onLand?.();
+      },
+    });
+  }
+
+  private _finishFlyingGhost(): void {
+    const f = this._flyingGhost;
+    if (!f) return;
+    this._flyingGhost = null;
+    TweenManager.cancelTarget(f.proxy);
+    if (f.hideIdx >= 0) {
+      const cell = BoardManager.getCellByIndex(f.hideIdx);
+      if (cell?.state === CellState.OPEN || cell?.state === CellState.PEEK) {
+        this._itemViews[f.hideIdx].alpha = 1;
+      }
+    }
+    f.ghost.parent?.removeChild(f.ghost);
+    if (!f.ghost.destroyed) f.ghost.destroy({ children: true });
+  }
+
+  /** 放不下 / 取消：幽灵飞回原格；deny 时落地抖一下 */
+  private _flyGhostHome(srcIdx: number, deny: boolean): void {
+    MergeManager.cancelDrag();
+    const ghost = this._detachDragGhost();
+    this._endDrag();
+    if (!ghost) return;
+    this._flyGhost(ghost, srcIdx, 0.16, 1, 1, deny ? () => this._shakeCell(srcIdx) : null);
   }
 
   /** 结束拖拽：清理所有拖拽状态 */
   private _endDrag(): void {
     this._setHoverHighlight(-1);
+    this._dragLeftSource = false;
     this._clearDragGhost();
     this._clearMergePartnerHints();
     this._clearHighlights();
@@ -782,7 +996,7 @@ export class BoardView extends PIXI.Container {
       if (BuildingManager.canProduce(cellIndex)) {
         const result = BuildingManager.produce(cellIndex);
         if (result) {
-          this._playProduceAnim(cellIndex);
+          this._playProduceAnim(cellIndex, result.placements);
         }
       } else {
         this._shakeCell(cellIndex);
@@ -931,22 +1145,14 @@ export class BoardView extends PIXI.Container {
     };
 
     const flash = new PIXI.Graphics();
-    flash.position.set(cellView.x, cellView.y);
+    flash.position.set(cx, cy);
     // 中心强光核
     flash.beginFill(0xFFFFFF, 0.95);
-    flash.drawCircle(cs / 2, cs / 2, cs * 0.22);
+    flash.drawCircle(0, 0, cs * 0.22);
     flash.endFill();
     flash.beginFill(0xFFF8E1, 0.75);
-    flash.drawCircle(cs / 2, cs / 2, cs * 0.32);
+    flash.drawCircle(0, 0, cs * 0.32);
     flash.endFill();
-    // 星点环
-    for (let i = 0; i < 8; i++) {
-      const angle = (i / 8) * Math.PI * 2;
-      const len = cs * 0.38;
-      flash.beginFill(0xFFE082, 0.85);
-      flash.drawCircle(cs / 2 + Math.cos(angle) * len, cs / 2 + Math.sin(angle) * len, 4);
-      flash.endFill();
-    }
 
     flash.scale.set(0.45);
     insertBelowItem(flash);
@@ -963,8 +1169,46 @@ export class BoardView extends PIXI.Container {
       duration: 0.48,
       ease: Ease.easeOutQuad,
       onComplete: () => {
-        this.removeChild(flash);
+        flash.parent?.removeChild(flash);
         flash.destroy();
+      },
+    });
+
+    // 放射光：边扩散边慢慢转
+    const rays = new PIXI.Graphics();
+    const rayCount = 12;
+    const rayLen = cs * 0.72;
+    rays.beginFill(0xFFF1B0, 0.55);
+    for (let i = 0; i < rayCount; i++) {
+      const a = (i / rayCount) * Math.PI * 2;
+      const half = i % 2 === 0 ? 0.07 : 0.045;
+      const len = i % 2 === 0 ? rayLen : rayLen * 0.72;
+      rays.moveTo(0, 0);
+      rays.lineTo(Math.cos(a - half) * len, Math.sin(a - half) * len);
+      rays.lineTo(Math.cos(a + half) * len, Math.sin(a + half) * len);
+      rays.closePath();
+    }
+    rays.endFill();
+    rays.position.set(cx, cy);
+    rays.scale.set(0.45);
+    rays.alpha = 0.8;
+    insertBelowItem(rays);
+    const raysProxy = { t: 0 };
+    TweenManager.to({
+      target: raysProxy,
+      props: { t: 1 },
+      duration: 0.5,
+      delay: 0.02,
+      onUpdate: () => {
+        if (rays.destroyed) return;
+        const u = raysProxy.t;
+        rays.scale.set(0.45 + 0.7 * Ease.easeOutQuad(u));
+        rays.rotation = 0.61 * u;
+        rays.alpha = 0.8 * Math.pow(1 - u, 1.4);
+      },
+      onComplete: () => {
+        rays.parent?.removeChild(rays);
+        if (!rays.destroyed) rays.destroy();
       },
     });
 
@@ -999,41 +1243,73 @@ export class BoardView extends PIXI.Container {
       });
     }
 
-    // 径向飞散粒子
-    const n = 12;
-    for (let i = 0; i < n; i++) {
-      const angle = (i / n) * Math.PI * 2 + Math.random() * 0.25;
-      const g = new PIXI.Graphics();
-      const warm = i % 3 === 0 ? 0xFFFFFF : (i % 3 === 1 ? 0xFFE082 : 0xFFCA28);
-      g.beginFill(warm, 0.95);
-      g.drawCircle(0, 0, 2.5 + Math.random() * 2);
-      g.endFill();
-      g.position.set(cx, cy);
-      this.addChild(g);
-
-      const dist = cs * (0.42 + Math.random() * 0.12);
-      const endX = cx + Math.cos(angle) * dist;
-      const endY = cy + Math.sin(angle) * dist;
-
-      TweenManager.to({
-        target: g,
-        props: { alpha: 0 },
-        duration: 0.42,
-        ease: Ease.easeOutQuad,
-      });
-      TweenManager.to({
-        target: g.position,
-        props: { x: endX, y: endY },
-        duration: 0.42,
-        ease: Ease.easeOutQuad,
-        onComplete: () => {
-          if (g.parent) {
-            g.parent.removeChild(g);
-            g.destroy();
-          }
-        },
-      });
+    // 四角星：一圈向外飞散并闪烁，盖在新物品上
+    const colors = [0xFFE066, 0xFFFFFF, 0xFFC1D6];
+    for (let i = 0; i < 8; i++) {
+      const a = ((i * 45 + (Math.random() * 32 - 16)) * Math.PI) / 180;
+      const dx = Math.cos(a);
+      const dy = Math.sin(a);
+      const dist = cs * (0.28 + Math.random() * 0.17);
+      this._spawnSparkle(
+        cx + dx * cs * 0.15,
+        cy + dy * cs * 0.15,
+        dx * dist,
+        dy * dist,
+        cs * (0.11 + Math.random() * 0.05),
+        colors[i % colors.length],
+        0.5 + Math.random() * 0.18,
+        0.04 + i * 0.02,
+      );
     }
+    // 两颗晚到的余闪
+    this._spawnSparkle(cx - cs * 0.24, cy - cs * 0.22, 0, 0, cs * 0.11, 0xFFFFFF, 0.45, 0.28);
+    this._spawnSparkle(cx + cs * 0.26, cy + cs * 0.14, 0, 0, cs * 0.11, 0xFFE066, 0.45, 0.38);
+  }
+
+  /** 一颗四角星：从 (x,y) 飞出 (vx,vy)，先放大再缩没，同时淡出 */
+  private _spawnSparkle(
+    x: number,
+    y: number,
+    vx: number,
+    vy: number,
+    radius: number,
+    color: number,
+    duration: number,
+    delay: number,
+  ): void {
+    const g = new PIXI.Graphics();
+    const w = radius * 0.24;
+    g.beginFill(color, 1);
+    g.drawPolygon([0, -radius, w, -w, radius, 0, w, w, 0, radius, -w, w, -radius, 0, -w, -w]);
+    g.endFill();
+    g.beginFill(0xFFFFFF, 0.9);
+    g.drawCircle(0, 0, w * 0.9);
+    g.endFill();
+    g.position.set(x, y);
+    g.scale.set(0);
+    g.visible = false;
+    this.addChild(g);
+    const proxy = { t: 0 };
+    TweenManager.to({
+      target: proxy,
+      props: { t: 1 },
+      duration,
+      delay,
+      onUpdate: () => {
+        if (g.destroyed) return;
+        const u = proxy.t;
+        g.visible = true;
+        const k = Ease.easeOutQuad(u);
+        g.position.set(x + vx * k, y + vy * k);
+        g.scale.set(Math.pow(Math.sin(Math.PI * Math.min(1, u * 1.15)), 0.6));
+        g.alpha = 1 - u * u;
+        g.rotation = u * 0.6;
+      },
+      onComplete: () => {
+        g.parent?.removeChild(g);
+        if (!g.destroyed) g.destroy();
+      },
+    });
   }
 
   /** FOG→PEEK 过渡动画：礼盒缩小消失 + 丝带+物品淡入 */
@@ -1108,9 +1384,112 @@ export class BoardView extends PIXI.Container {
     }
   }
 
-  /** 建筑产出动画 */
-  private _playProduceAnim(srcIndex: number): void {
-    this._shakeCell(srcIndex);
+  /** 建筑产出动画：工具压扁回弹，新物品从工具沿弧线蹦到落点 */
+  private _playProduceAnim(
+    srcIndex: number,
+    placements: { itemId: string; targetIndex: number }[],
+  ): void {
+    this._itemViews[srcIndex]?.playSquash();
+    for (let i = 0; i < placements.length; i++) {
+      this._flyProducedItem(srcIndex, placements[i].targetIndex, placements[i].itemId, i);
+    }
+  }
+
+  private _flyProducedItem(srcIndex: number, targetIdx: number, itemId: string, order: number): void {
+    const def = ITEM_DEFS.get(itemId);
+    const tex = def ? TextureCache.get(def.icon) : null;
+    const itemView = this._itemViews[targetIdx];
+    if (!tex || !itemView) return;
+    this._finishProduceFlights(targetIdx);
+
+    const cs = BoardMetrics.cellSize;
+    const sprite = new PIXI.Sprite(tex);
+    sprite.anchor.set(0.5, 0.5);
+    const fit = Math.min((cs - 8) / tex.width, (cs - 8) / tex.height);
+    const fromC = this._getCellCenter(srcIndex);
+    const toC = this._getCellCenter(targetIdx);
+    const from = this._ghostPosInParent(fromC.x, fromC.y);
+    const to = this._ghostPosInParent(toC.x, toC.y);
+    sprite.position.set(from.x, from.y);
+    sprite.scale.set(fit * 0.3);
+    sprite.visible = order === 0;
+    (this._dragGhostParent ?? this).addChild(sprite);
+    itemView.alpha = 0;
+
+    const arc = cs * 0.28;
+    const proxy = { t: 0 };
+    const flight = { sprite, proxy, targetIdx };
+    this._produceFlights.push(flight);
+    TweenManager.to({
+      target: proxy,
+      props: { t: 1 },
+      duration: 0.32,
+      delay: order * 0.07,
+      onUpdate: () => {
+        if (sprite.destroyed) return;
+        const lin = proxy.t;
+        const u = Ease.easeOutQuad(lin);
+        const hump = Math.sin(Math.PI * lin);
+        sprite.visible = true;
+        sprite.position.set(from.x + (to.x - from.x) * u, from.y + (to.y - from.y) * u - arc * hump);
+        sprite.scale.set(fit * (0.3 + 0.7 * u + 0.12 * hump));
+      },
+      onComplete: () => {
+        if (!this._produceFlights.includes(flight)) return;
+        this._finishProduceFlight(flight);
+        this._itemViews[targetIdx]?.playLandBounce();
+        this._playLandPuff(targetIdx);
+      },
+    });
+  }
+
+  /** 收尾产出飞行；传 cellIdx 时只收尾飞向该格的 */
+  private _finishProduceFlights(cellIdx = -1): void {
+    for (const f of this._produceFlights.slice()) {
+      if (cellIdx < 0 || f.targetIdx === cellIdx) this._finishProduceFlight(f);
+    }
+  }
+
+  private _finishProduceFlight(f: { sprite: PIXI.Sprite; proxy: { t: number }; targetIdx: number }): void {
+    const i = this._produceFlights.indexOf(f);
+    if (i < 0) return;
+    this._produceFlights.splice(i, 1);
+    TweenManager.cancelTarget(f.proxy);
+    f.sprite.parent?.removeChild(f.sprite);
+    if (!f.sprite.destroyed) f.sprite.destroy();
+    const cell = BoardManager.getCellByIndex(f.targetIdx);
+    if (cell?.state === CellState.OPEN || cell?.state === CellState.PEEK) {
+      this._itemViews[f.targetIdx].alpha = 1;
+    }
+  }
+
+  /** 物品落地：一圈小光环 + 柔光 */
+  private _playLandPuff(cellIdx: number): void {
+    const itemView = this._itemViews[cellIdx];
+    const parent = itemView?.parent;
+    if (!parent) return;
+    const cs = BoardMetrics.cellSize;
+    const c = this._getCellCenter(cellIdx);
+    const g = new PIXI.Graphics();
+    g.beginFill(0xFFFFFF, 0.45);
+    g.drawCircle(0, 0, cs * 0.3);
+    g.endFill();
+    g.lineStyle(3, 0xFFE082, 0.9);
+    g.drawCircle(0, 0, cs * 0.34);
+    g.position.set(c.x, c.y);
+    g.scale.set(0.45);
+    parent.addChildAt(g, parent.getChildIndex(itemView));
+    TweenManager.to({ target: g, props: { alpha: 0 }, duration: 0.28, ease: Ease.easeOutQuad });
+    TweenManager.to({
+      target: g.scale,
+      props: { x: 1.25, y: 1.25 },
+      duration: 0.28,
+      ease: Ease.easeOutQuad,
+      onComplete: () => {
+        g.parent?.removeChild(g);
+        g.destroy();
+      },
+    });
   }
 
   /** 格子抖动反馈（基于 TweenManager，不依赖原生定时器） */
@@ -1125,6 +1504,7 @@ export class BoardView extends PIXI.Container {
     const pos = this._cellPositionForIndex(cellIndex);
     cellView.position.set(pos.x, pos.y);
     if (itemView) {
+      itemView.clearFocusScale(false);
       itemView.position.set(pos.x, pos.y);
     }
     const origCellX = pos.x;
@@ -1307,8 +1687,8 @@ export class BoardView extends PIXI.Container {
     const center = this._getCellCenter(cellIdx);
     const p0 = this._ghostPosInParent(center.x, center.y);
     ghost.position.set(p0.x, p0.y);
-    ghost.scale.set(0.6);
-    ghost.alpha = 0.9;
+    ghost.scale.set(1);
+    ghost.alpha = 0.95;
     if (this._dragGhostParent) {
       this._dragGhostParent.addChild(ghost);
     } else {
@@ -1316,12 +1696,30 @@ export class BoardView extends PIXI.Container {
     }
     this._dragGhost = ghost;
 
-    // "拿起"弹跳放大
+    // 拿起：从格心滑到手指上方并放大；期间 _moveDragGhost 只更新目标点
+    this._dragGhostGoal.x = p0.x;
+    this._dragGhostGoal.y = p0.y;
+    const goal = this._dragGhostGoal;
+    const proxy = { t: 0 };
+    this._dragLiftProxy = proxy;
     TweenManager.to({
-      target: ghost.scale,
-      props: { x: 1.12, y: 1.12 },
-      duration: 0.12,
-      ease: Ease.easeOutBack,
+      target: proxy,
+      props: { t: 1 },
+      duration: DRAG_LIFT_SEC,
+      ease: Ease.easeOutQuad,
+      onUpdate: () => {
+        if (this._dragLiftProxy !== proxy || ghost.destroyed) return;
+        const u = proxy.t;
+        ghost.position.set(p0.x + (goal.x - p0.x) * u, p0.y + (goal.y - p0.y) * u);
+        ghost.scale.set(1 + (DRAG_GHOST_SCALE - 1) * u);
+      },
+      onComplete: () => {
+        if (this._dragLiftProxy !== proxy) return;
+        this._dragLiftProxy = null;
+        if (ghost.destroyed) return;
+        ghost.position.set(goal.x, goal.y);
+        ghost.scale.set(DRAG_GHOST_SCALE);
+      },
     });
 
     // 源物品半透明
@@ -1349,6 +1747,10 @@ export class BoardView extends PIXI.Container {
   }
 
   private _clearDragGhost(): void {
+    if (this._dragLiftProxy) {
+      TweenManager.cancelTarget(this._dragLiftProxy);
+      this._dragLiftProxy = null;
+    }
     if (this._dragGhost) {
       const g = this._dragGhost;
       TweenManager.cancelTarget(g.scale);
