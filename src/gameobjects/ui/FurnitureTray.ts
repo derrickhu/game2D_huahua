@@ -139,11 +139,17 @@ export const FURNITURE_TRAY_CLEAR_ICON_RIGHT_PAD = FURNITURE_TRAY_EDIT_CORNER_IC
 export const FURNITURE_TRAY_PRESET_ICON_GAP = 10;
 
 /**
+ * 托盘底边离屏幕下沿的空隙（设计像素）。
+ * 底栏「未放置」贴死下沿时不好点；只抬这一小段，不跟安全区走。
+ */
+const FURNITURE_TRAY_BOTTOM_LIFT = 24;
+
+/**
  * 编辑态托盘顶边设计 Y。
- * 托盘壳体属于贴底视觉层；内部控件已有留白，不应把整块壳体抬到安全区之上。
+ * 完成钮的新手高亮、摆放边界都读这个值，改这里即可一起跟上。
  */
 export function furnitureTrayOpenTopY(logicH: number, _safeBottom = 0): number {
-  return logicH - TRAY_H;
+  return logicH - TRAY_H - FURNITURE_TRAY_BOTTOM_LIFT;
 }
 
 /** 教程高亮「完成装修」顶右圆钮矩形（场景设计坐标，与 layoutEditCompleteIcon 一致） */
