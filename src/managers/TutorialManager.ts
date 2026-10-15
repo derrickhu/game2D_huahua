@@ -55,6 +55,9 @@ export enum TutorialStep {
   GUIDE_DELIVER3 = 25,
   DELIVER3_SUCCESS = 26,
 
+  // ── 精简版：花种子拖到丝带花种子格 → 花苞（合成 + 解锁格子） ──
+  GUIDE_MERGE_SEED_PEEK = 29,
+
   // ── 花店引导 ──
   SHOP_INTRO_DIALOG = 12,
   SWITCH_TO_SHOP    = 13,
@@ -74,21 +77,11 @@ const TUTORIAL_SEQUENCE: TutorialStep[] = [
   TutorialStep.STORY_INTRO,
   TutorialStep.BOARD_INTRO_OPEN,
   TutorialStep.GUIDE_MERGE_TOOL,
-  TutorialStep.GUIDE_TAP_TOOL,
   TutorialStep.CUSTOMER1_ARRIVE,
+  TutorialStep.GUIDE_TAP_TOOL,
+  TutorialStep.GUIDE_MERGE_SEED_PEEK,
   TutorialStep.GUIDE_DELIVER1,
   TutorialStep.DELIVER1_SUCCESS,
-  TutorialStep.GUIDE_TAP_MORE,
-  TutorialStep.GUIDE_MERGE_FLOWER,
-  TutorialStep.CUSTOMER2_ARRIVE,
-  TutorialStep.GUIDE_DELIVER2,
-  TutorialStep.DELIVER2_SUCCESS,
-  TutorialStep.GUIDE_TAP_MORE_PEEK_FLOWER,
-  TutorialStep.GUIDE_MERGE_FLOWER_PEEK_PREP,
-  TutorialStep.GUIDE_MERGE_PEEK_FLOWER,
-  TutorialStep.CUSTOMER3_ARRIVE,
-  TutorialStep.GUIDE_DELIVER3,
-  TutorialStep.DELIVER3_SUCCESS,
   TutorialStep.SHOP_INTRO_DIALOG,
   TutorialStep.SWITCH_TO_SHOP,
   TutorialStep.SHOP_TOUR,
@@ -99,6 +92,27 @@ const TUTORIAL_SEQUENCE: TutorialStep[] = [
   TutorialStep.TUTORIAL_GIFT,
   TutorialStep.COMPLETED,
 ];
+
+/**
+ * 旧版三轮订单的存档步骤 → 精简版落点。
+ * 已交过第一单的直接去装修；停在旧第一单交付上的重新接花苞单（旧单需求是花种子）。
+ */
+const LEGACY_STEP_REMAP = new Map<TutorialStep, TutorialStep>([
+  [TutorialStep.BOARD_INTRO_PEEK, TutorialStep.GUIDE_MERGE_TOOL],
+  [TutorialStep.BOARD_INTRO_FOG_KEY, TutorialStep.GUIDE_MERGE_TOOL],
+  [TutorialStep.GUIDE_DELIVER1, TutorialStep.CUSTOMER1_ARRIVE],
+  [TutorialStep.GUIDE_TAP_MORE, TutorialStep.SHOP_INTRO_DIALOG],
+  [TutorialStep.GUIDE_MERGE_FLOWER, TutorialStep.SHOP_INTRO_DIALOG],
+  [TutorialStep.CUSTOMER2_ARRIVE, TutorialStep.SHOP_INTRO_DIALOG],
+  [TutorialStep.GUIDE_DELIVER2, TutorialStep.SHOP_INTRO_DIALOG],
+  [TutorialStep.DELIVER2_SUCCESS, TutorialStep.SHOP_INTRO_DIALOG],
+  [TutorialStep.GUIDE_TAP_MORE_PEEK_FLOWER, TutorialStep.SHOP_INTRO_DIALOG],
+  [TutorialStep.GUIDE_MERGE_FLOWER_PEEK_PREP, TutorialStep.SHOP_INTRO_DIALOG],
+  [TutorialStep.GUIDE_MERGE_PEEK_FLOWER, TutorialStep.SHOP_INTRO_DIALOG],
+  [TutorialStep.CUSTOMER3_ARRIVE, TutorialStep.SHOP_INTRO_DIALOG],
+  [TutorialStep.GUIDE_DELIVER3, TutorialStep.SHOP_INTRO_DIALOG],
+  [TutorialStep.DELIVER3_SUCCESS, TutorialStep.SHOP_INTRO_DIALOG],
+]);
 
 const TUTORIAL_ORDER = new Map<TutorialStep, number>(
   TUTORIAL_SEQUENCE.map((step, index) => [step, index]),
@@ -143,9 +157,7 @@ class TutorialManagerClass {
 
     this._step = saved || TutorialStep.NOT_STARTED;
 
-    if (this._step === TutorialStep.BOARD_INTRO_PEEK || this._step === TutorialStep.BOARD_INTRO_FOG_KEY) {
-      this._step = TutorialStep.GUIDE_MERGE_TOOL;
-    }
+    this._step = LEGACY_STEP_REMAP.get(this._step) ?? this._step;
 
     if (this._step === TutorialStep.NOT_STARTED) {
       this._step = TutorialStep.STORY_INTRO;

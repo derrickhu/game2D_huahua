@@ -30,8 +30,20 @@ export const TUTORIAL_COPY = {
   },
   tapTool: {
     title: '培育花朵',
-    body: '点击育苗盘就可以培育花朵。\n快试试吧。',
+    body: '点击育苗盘，\n培育一朵花种子吧。',
     actionText: '点击高亮育苗盘',
+  },
+  mergeSeedPeek: {
+    title: '合成花苞',
+    body: '丝带盒里也有一朵花种子。\n把花种子拖上去，\n合成花苞、打开格子！',
+    actionText: '拖动花种子到丝带盒',
+    invalidActionText: '把花种子拖到丝带盒里的花种子上',
+  },
+  mergeSeedOpen: {
+    title: '合成花苞',
+    body: '把两朵花种子拖到一起，\n就能合成一朵花苞！',
+    actionText: '拖动花种子到另一朵花种子',
+    invalidActionText: '找一样的花种子拖到一起试试',
   },
   furniturePlace: {
     dragTitle: '摆放家具',
@@ -39,7 +51,7 @@ export const TUTORIAL_COPY = {
     dragAction: '拖动家具到高亮区域',
     finishTitle: '保存装修',
     finishBody: '家具已经摆好啦。\n点击完成装修，保存这次布置。',
-    finishAction: '点击完成装修',
+    finishAction: '只能点击高亮的完成按钮',
     invalidAction: '拖到房间空地上就可以摆放',
   },
   shopCompleteDialog: {

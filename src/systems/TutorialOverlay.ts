@@ -31,12 +31,16 @@ import { RoomLayoutManager } from '@/managers/RoomLayoutManager';
 import type { CustomerScrollArea } from '@/gameobjects/customer/CustomerScrollArea';
 import type { ItemInfoBar } from '@/gameobjects/ui/ItemInfoBar';
 import { OverlayManager } from '@/core/OverlayManager';
-import { DecorationPanel } from '@/gameobjects/ui/DecorationPanel';
+import { DecorationPanel, TUTORIAL_BUY_DECO_ID } from '@/gameobjects/ui/DecorationPanel';
+import { DECO_MAP } from '@/config/DecorationConfig';
+import { CurrencyManager } from '@/managers/CurrencyManager';
 import { SoundSystem } from '@/systems/SoundSystem';
 
 interface SpotlightRect {
   x: number; y: number; w: number; h: number; r?: number;
 }
+
+const TUTORIAL_ORDER_ITEM = 'flower_fresh_2';
 
 interface FurniturePlacementGuide {
   rect: SpotlightRect;
@@ -159,20 +163,10 @@ export class TutorialOverlay {
         case TutorialStep.BOARD_INTRO_FOG_KEY: this._showBoardIntroFogKey(); break;
         case TutorialStep.GUIDE_MERGE_TOOL:  this._showGuideMergeTool(); break;
         case TutorialStep.GUIDE_TAP_TOOL:    this._showGuideTapTool(); break;
-        case TutorialStep.CUSTOMER1_ARRIVE:  this._showCustomerArrive(1); break;
-        case TutorialStep.GUIDE_DELIVER1:    this._showGuideDeliver(1); break;
-        case TutorialStep.DELIVER1_SUCCESS:  this._showDeliverSuccess(1); break;
-        case TutorialStep.GUIDE_TAP_MORE:    this._showGuideTapMore(); break;
-        case TutorialStep.GUIDE_MERGE_FLOWER: this._showGuideMergeFlower(); break;
-        case TutorialStep.CUSTOMER2_ARRIVE:  this._showCustomerArrive(2); break;
-        case TutorialStep.GUIDE_DELIVER2:    this._showGuideDeliver(2); break;
-        case TutorialStep.DELIVER2_SUCCESS:  this._showDeliverSuccess(2); break;
-        case TutorialStep.GUIDE_TAP_MORE_PEEK_FLOWER: this._showGuideTapMoreForPeek(); break;
-        case TutorialStep.GUIDE_MERGE_FLOWER_PEEK_PREP: this._showGuideMergeFlowerForPeek(); break;
-        case TutorialStep.GUIDE_MERGE_PEEK_FLOWER: this._showGuideMergePeekFlower(); break;
-        case TutorialStep.CUSTOMER3_ARRIVE:  this._showCustomerArrive(3); break;
-        case TutorialStep.GUIDE_DELIVER3:    this._showGuideDeliver(3); break;
-        case TutorialStep.DELIVER3_SUCCESS:  this._showDeliverSuccess(3); break;
+        case TutorialStep.CUSTOMER1_ARRIVE:  this._showCustomerArrive(); break;
+        case TutorialStep.GUIDE_MERGE_SEED_PEEK: this._showGuideMergeSeedPeek(); break;
+        case TutorialStep.GUIDE_DELIVER1:    this._showGuideDeliver(); break;
+        case TutorialStep.DELIVER1_SUCCESS:  this._showDeliverSuccess(); break;
         case TutorialStep.SHOP_INTRO_DIALOG: this._showShopIntroDialog(); break;
         case TutorialStep.SWITCH_TO_SHOP:    this._showSwitchToShop(); break;
         case TutorialStep.TUTORIAL_GIFT:     this._showTutorialGift(); break;
@@ -273,13 +267,13 @@ export class TutorialOverlay {
     this._clearOverlay();
 
     if (this._findToolOnBoard('tool_plant_3') >= 0) {
-      TutorialManager.advanceTo(TutorialStep.GUIDE_TAP_TOOL);
+      TutorialManager.advanceTo(TutorialStep.CUSTOMER1_ARRIVE);
       return;
     }
 
     const pair = this._findToolPair();
     if (!pair) {
-      TutorialManager.advanceTo(TutorialStep.GUIDE_TAP_TOOL);
+      TutorialManager.advanceTo(TutorialStep.CUSTOMER1_ARRIVE);
       return;
     }
 
@@ -389,7 +383,7 @@ export class TutorialOverlay {
       cleanupGuide();
       this._clearOverlay();
       if (this._findToolOnBoard('tool_plant_3') >= 0) {
-        this._showPlantTrayReadyDialog();
+        TutorialManager.advanceTo(TutorialStep.CUSTOMER1_ARRIVE);
         return;
       }
       this._showGuideMergeTool();
@@ -420,7 +414,7 @@ export class TutorialOverlay {
 
       const hasLv3 = this._findToolOnBoard('tool_plant_3') >= 0;
       if (hasLv3) {
-        this._showPlantTrayReadyDialog();
+        TutorialManager.advanceTo(TutorialStep.CUSTOMER1_ARRIVE);
       } else {
         refreshTimer = setTimeout(() => {
           if (TutorialManager.currentStep === TutorialStep.GUIDE_MERGE_TOOL) {
@@ -440,25 +434,39 @@ export class TutorialOverlay {
     this._cleanup = cleanupGuide;
   }
 
-  /** 合成出育苗盘后：居中提示（不跟格子避让），点继续再进入点击引导 */
-  private _showPlantTrayReadyDialog(): void {
-    this._clearOverlay();
+  /** 教程唯一订单：一朵花苞（花种子 + 丝带花种子合成而来） */
+  private _ensureTutorialOrder(): void {
+    if (CustomerManager.customers.length > 0) return;
+    CustomerManager.spawnScriptedCustomer([TUTORIAL_ORDER_ITEM]);
+  }
+
+  // ══════════════════════════════════════════════
+  //  MAIN SCENE — 唯一一轮客人：先下单，再培育 + 合成花苞
+  // ══════════════════════════════════════════════
+
+  private _showCustomerArrive(): void {
     this._overlay.visible = true;
     this._drawSpotlightMask([], 0.5);
 
+    CustomerManager.spawnScriptedCustomer([TUTORIAL_ORDER_ITEM]);
     this._showBubble({
-      title: '育苗盘出现了！',
-      body: '太棒了！点击育苗盘就可以培育花朵了~',
-      buttonText: '继续',
+      title: '第一位客人来了',
+      body: '育苗盘做好了，客人也到了！\n她想要一朵「花苞」，\n我们来培育吧~',
+      buttonText: '去培育',
       onButton: () => TutorialManager.advanceTo(TutorialStep.GUIDE_TAP_TOOL),
     });
   }
 
-  /** 引导点击 3 级工具产出花朵 */
+  /** 引导点击 3 级工具产出一朵花种子 */
   private _showGuideTapTool(): void {
-    const toolIdx = this._findToolOnBoard('tool_plant_3');
+    this._ensureTutorialOrder();
+    if (this._countFlowersOnBoard('flower_fresh_1') > 0 || this._countFlowersOnBoard(TUTORIAL_ORDER_ITEM) > 0) {
+      TutorialManager.advanceTo(TutorialStep.GUIDE_MERGE_SEED_PEEK);
+      return;
+    }
+    const toolIdx = this._findProducibleTool();
     if (toolIdx < 0) {
-      TutorialManager.advanceTo(TutorialStep.CUSTOMER1_ARRIVE);
+      TutorialManager.advanceTo(TutorialStep.GUIDE_MERGE_SEED_PEEK);
       return;
     }
 
@@ -478,70 +486,126 @@ export class TutorialOverlay {
     const onProduced = (_srcIdx: number, _tgtIdx: number, producedId: string): void => {
       if (!producedId.startsWith('flower_')) return;
       EventBus.off('building:produced', onProduced);
-      this._clearOverlay();
-      this._overlay.visible = true;
-      this._drawSpotlightMask([], 0.5);
-
-      this._showBubble({
-        title: '花朵培育成功',
-        body: '花种子出来了！\n等客人来买的时候就能用到~',
-        buttonText: '继续',
-        onButton: () => TutorialManager.advanceTo(TutorialStep.CUSTOMER1_ARRIVE),
-      });
+      TutorialManager.advanceTo(TutorialStep.GUIDE_MERGE_SEED_PEEK);
     };
     EventBus.on('building:produced', onProduced);
     this._cleanup = () => EventBus.off('building:produced', onProduced);
   }
 
-  // ══════════════════════════════════════════════
-  //  MAIN SCENE — 第一轮客人（1级花）
-  // ══════════════════════════════════════════════
+  /** 花种子拖到丝带花种子格：合成花苞，同时打开格子 */
+  private _showGuideMergeSeedPeek(): void {
+    this._clearOverlay();
+    this._ensureTutorialOrder();
 
-  private _showCustomerArrive(round: number): void {
-    this._overlay.visible = true;
-    this._drawSpotlightMask([], 0.5);
-
-    if (round === 1) {
-      CustomerManager.spawnScriptedCustomer(['flower_fresh_1']);
-      this._showBubble({
-        title: '第一位客人来了',
-        body: '客人想要一朵「花种子」！\n棋盘上有匹配的花就能交付~',
-        buttonText: '知道了',
-        onButton: () => TutorialManager.advanceTo(TutorialStep.GUIDE_DELIVER1),
-      });
-    } else if (round === 2) {
-      CustomerManager.spawnScriptedCustomer(['flower_fresh_2']);
-      this._showBubble({
-        title: '又有客人来了',
-        body: '这位客人想要一朵「花苞」！\n刚好是合成的那朵~',
-        buttonText: '知道了',
-        onButton: () => TutorialManager.advanceTo(TutorialStep.GUIDE_DELIVER2),
-      });
-    } else {
-      CustomerManager.spawnScriptedCustomer(['flower_fresh_3']);
-      this._showBubble({
-        title: '再接一单',
-        body: '刚合成出的高级花，\n正好可以给这位客人~',
-        buttonText: '交给客人',
-        onButton: () => TutorialManager.advanceTo(TutorialStep.GUIDE_DELIVER3),
-      });
+    if (this._countFlowersOnBoard(TUTORIAL_ORDER_ITEM) > 0) {
+      TutorialManager.advanceTo(TutorialStep.GUIDE_DELIVER1);
+      return;
     }
+
+    const peekPair = this._findFlowerPeekPair('flower_fresh_1');
+    const pair = peekPair ?? this._findFlowerPair('flower_fresh_1');
+    if (!pair) {
+      const toolIdx = this._findProducibleTool();
+      if (toolIdx < 0) {
+        TutorialManager.advanceTo(TutorialStep.GUIDE_DELIVER1);
+        return;
+      }
+      this._showTapForSeedAgain(toolIdx);
+      return;
+    }
+
+    this._overlay.visible = true;
+    const [srcIdx, dstIdx] = pair;
+    const srcRect = this._getCellRect(srcIdx);
+    const dstRect = this._getCellRect(dstIdx);
+    const pad = 8;
+    const spotlight = this._mergePairSpotlight(srcRect, dstRect, pad);
+    this._drawMergeGuideGlow(srcRect, dstRect, pad);
+    const replayFinger = (): void => {
+      this._stopFingerAnim();
+      this._startFingerDragAnim(
+        srcRect.x + srcRect.w / 2, srcRect.y + srcRect.h / 2,
+        dstRect.x + dstRect.w / 2, dstRect.y + dstRect.h / 2,
+      );
+    };
+    replayFinger();
+
+    const copy = peekPair ? TUTORIAL_COPY.mergeSeedPeek : TUTORIAL_COPY.mergeSeedOpen;
+    this._showBubble({
+      title: copy.title,
+      body: copy.body,
+      actionText: copy.actionText,
+      spotlightTop: spotlight.y,
+      spotlightBottom: spotlight.y + spotlight.h,
+    });
+
+    TutorialInteractionGuard.allowMerge({
+      srcIndex: srcIdx,
+      dstIndex: dstIdx,
+      allowReverse: !peekPair,
+    });
+
+    const onInvalidAction = (): void => {
+      this._nudgeBubble();
+      this._showInlineHint(copy.invalidActionText);
+      replayFinger();
+    };
+
+    const onMerged = (_src: number, _dst: number, resultId: string, _resultCell: number, isPeekMerge?: boolean): void => {
+      if (resultId !== TUTORIAL_ORDER_ITEM) return;
+      cleanup();
+      TutorialManager.advanceTo(TutorialStep.GUIDE_DELIVER1);
+      if (isPeekMerge) {
+        this._showInlineHint('丝带盒打开了，周围的神秘盒子也露出惊喜了');
+      }
+    };
+
+    EventBus.on('board:merged', onMerged);
+    EventBus.on('tutorial:invalidAction', onInvalidAction);
+
+    const cleanup = (): void => {
+      EventBus.off('board:merged', onMerged);
+      EventBus.off('tutorial:invalidAction', onInvalidAction);
+      TutorialInteractionGuard.clear();
+    };
+    this._cleanup = cleanup;
   }
 
-  private _showGuideDeliver(round: number): void {
-    this._clearOverlay();
+  /** 合成前花种子不见了（卖掉 / 收纳）：同一步内再点一次育苗盘 */
+  private _showTapForSeedAgain(toolIdx: number): void {
+    this._overlay.visible = true;
+    const rect = this._getCellRect(toolIdx);
+    this._drawSpotlightMask([{ ...rect, r: 10 }], 0.65);
+    this._startFingerTapAnim(rect.x + rect.w / 2, rect.y + rect.h / 2);
+    this._showBubble({
+      title: TUTORIAL_COPY.tapTool.title,
+      body: TUTORIAL_COPY.tapTool.body,
+      spotlightTop: rect.y,
+      spotlightBottom: rect.y + rect.h,
+      preferAboveSpotlight: true,
+    });
 
-    const nextStep = round === 1
-      ? TutorialStep.DELIVER1_SUCCESS
-      : round === 2
-        ? TutorialStep.DELIVER2_SUCCESS
-        : TutorialStep.DELIVER3_SUCCESS;
+    const onProduced = (_srcIdx: number, _tgtIdx: number, producedId: string): void => {
+      if (!producedId.startsWith('flower_')) return;
+      EventBus.off('building:produced', onProduced);
+      this._cleanup = null;
+      if (TutorialManager.currentStep === TutorialStep.GUIDE_MERGE_SEED_PEEK) {
+        this._showGuideMergeSeedPeek();
+      }
+    };
+    EventBus.on('building:produced', onProduced);
+    this._cleanup = () => EventBus.off('building:produced', onProduced);
+  }
+
+  private _showGuideDeliver(): void {
+    this._clearOverlay();
+    this._ensureTutorialOrder();
 
     const onDelivered = (): void => {
       EventBus.off('customer:delivered', onDelivered);
       EventBus.off('customer:lockChanged', checkReady);
       clearTimeout(timeout);
-      TutorialManager.advanceTo(nextStep);
+      TutorialManager.advanceTo(TutorialStep.DELIVER1_SUCCESS);
     };
 
     const showDeliverHint = (): void => {
@@ -566,8 +630,8 @@ export class TutorialOverlay {
       this._startFingerTapAnim(fingerX, fingerY);
 
       this._showBubble({
-        title: round === 1 ? '交付订单' : '再次交付',
-        body: '客人的订单已经凑齐了！\n点击客人完成交付吧~',
+        title: '交付订单',
+        body: '花苞做好了，订单凑齐啦！\n点击客人完成交付吧~',
         spotlightTop: this._getDeliverBubbleAnchor().y,
         spotlightBottom: this._getDeliverBubbleAnchor().y + this._getDeliverBubbleAnchor().h,
         spotlightCenterX: this._getDeliverBubbleAnchor().x + this._getDeliverBubbleAnchor().w / 2,
@@ -591,15 +655,10 @@ export class TutorialOverlay {
     }
 
     const timeout = setTimeout(() => {
-      const curStep = TutorialManager.currentStep;
-      if (
-        curStep === TutorialStep.GUIDE_DELIVER1
-        || curStep === TutorialStep.GUIDE_DELIVER2
-        || curStep === TutorialStep.GUIDE_DELIVER3
-      ) {
+      if (TutorialManager.currentStep === TutorialStep.GUIDE_DELIVER1) {
         EventBus.off('customer:delivered', onDelivered);
         EventBus.off('customer:lockChanged', checkReady);
-        TutorialManager.advanceTo(nextStep);
+        TutorialManager.advanceTo(TutorialStep.DELIVER1_SUCCESS);
       }
     }, 60000);
 
@@ -610,33 +669,17 @@ export class TutorialOverlay {
     };
   }
 
-  private _showDeliverSuccess(round: number): void {
+  private _showDeliverSuccess(): void {
     this._overlay.visible = true;
     this._clearOverlay();
     this._drawSpotlightMask([], 0.5);
 
-    if (round === 1) {
-      this._showBubble({
-        title: '第一笔生意',
-        body: '客人满意地离开了！\n我们赚到了花愿~',
-        buttonText: '花愿是什么？',
-        onButton: () => this._showHuayuanExplain(),
-      });
-    } else if (round === 2) {
-      this._showBubble({
-        title: '做得好',
-        body: '连续完成两笔订单！\n接下来先准备一个花苞，\n再用它打开丝带盒。',
-        buttonText: '继续',
-        onButton: () => TutorialManager.advanceTo(TutorialStep.GUIDE_TAP_MORE_PEEK_FLOWER),
-      });
-    } else {
-      this._showBubble({
-        title: '盒子也会帮忙',
-        body: '做得好！\n把同样物品拖到丝带盒上，\n就能打开更多格子。',
-        buttonText: '去装修花店',
-        onButton: () => TutorialManager.advanceTo(TutorialStep.SHOP_INTRO_DIALOG),
-      });
-    }
+    this._showBubble({
+      title: '第一笔生意',
+      body: '客人满意地离开了！\n我们赚到了花愿~',
+      buttonText: '花愿是什么？',
+      onButton: () => this._showHuayuanExplain(),
+    });
   }
 
   private _getDeliverBubbleAnchor(): SpotlightRect {
@@ -670,11 +713,11 @@ export class TutorialOverlay {
 
     this._showBubble({
       title: '花愿',
-      body: '花愿是花店的收入！\n完成客人的订单就能赚取花愿，\n花愿可以用来装修花店哦~',
-      buttonText: '继续培育',
+      body: '花愿是花店的收入！\n完成客人的订单就能赚取花愿，\n快用它把花店装修一下吧~',
+      buttonText: '去装修花店',
       spotlightTop: rect.y,
       spotlightBottom: rect.y + rect.h,
-      onButton: () => TutorialManager.advanceTo(TutorialStep.GUIDE_TAP_MORE),
+      onButton: () => TutorialManager.advanceTo(TutorialStep.SWITCH_TO_SHOP),
     });
   }
 
@@ -689,297 +732,6 @@ export class TutorialOverlay {
       r: 12,
     };
   }
-
-  // ══════════════════════════════════════════════
-  //  MAIN SCENE — 花朵合成教学
-  // ══════════════════════════════════════════════
-
-  /** 引导多次点击工具产出花朵（需要 2 朵才能合成） */
-  private _showGuideTapMore(): void {
-    const toolIdx = this._findProducibleTool();
-    if (toolIdx < 0) {
-      TutorialManager.advanceTo(TutorialStep.GUIDE_MERGE_FLOWER);
-      return;
-    }
-
-    this._overlay.visible = true;
-    const rect = this._getCellRect(toolIdx);
-    this._drawSpotlightMask([{ ...rect, r: 10 }], 0.65);
-    this._startFingerTapAnim(rect.x + rect.w / 2, rect.y + rect.h / 2);
-
-    this._showBubble({
-      title: '继续培育',
-      body: '多点几次育苗盘，\n凑齐两朵一样的花就能合成更高级的~',
-      spotlightTop: rect.y,
-      spotlightBottom: rect.y + rect.h,
-    });
-
-    let flowerCount = this._countFlowersOnBoard('flower_fresh_1');
-    const onProduced = (_srcIdx: number, _tgtIdx: number, producedId: string): void => {
-      if (producedId === 'flower_fresh_1') flowerCount++;
-      if (flowerCount >= 2) {
-        EventBus.off('building:produced', onProduced);
-        this._clearOverlay();
-        this._overlay.visible = true;
-        this._drawSpotlightMask([], 0.5);
-
-        this._showBubble({
-          title: '花朵够了',
-          body: '已经有两朵花种子了！\n把它们合成一朵更高级的花吧~',
-          buttonText: '继续',
-          onButton: () => TutorialManager.advanceTo(TutorialStep.GUIDE_MERGE_FLOWER),
-        });
-      }
-    };
-    EventBus.on('building:produced', onProduced);
-
-    const timeout = setTimeout(() => {
-      if (TutorialManager.currentStep === TutorialStep.GUIDE_TAP_MORE) {
-        EventBus.off('building:produced', onProduced);
-        TutorialManager.advanceTo(TutorialStep.GUIDE_MERGE_FLOWER);
-      }
-    }, 60000);
-
-    this._cleanup = () => {
-      EventBus.off('building:produced', onProduced);
-      clearTimeout(timeout);
-    };
-  }
-
-  /** 引导把开放花种子拖到丝带花格，触发盒子解锁 */
-  private _showGuideTapMoreForPeek(): void {
-    const toolIdx = this._findProducibleTool();
-    if (toolIdx < 0) {
-      TutorialManager.advanceTo(TutorialStep.GUIDE_MERGE_FLOWER_PEEK_PREP);
-      return;
-    }
-
-    this._overlay.visible = true;
-    const rect = this._getCellRect(toolIdx);
-    this._drawSpotlightMask([{ ...rect, r: 10 }], 0.65);
-    this._startFingerTapAnim(rect.x + rect.w / 2, rect.y + rect.h / 2);
-
-    this._showBubble({
-      title: '准备花种子',
-      body: '再点击育苗盘，\n先准备两朵花种子。',
-      actionText: '点击育苗盘产出花种子',
-      spotlightTop: rect.y,
-      spotlightBottom: rect.y + rect.h,
-    });
-
-    let flowerCount = this._countFlowersOnBoard('flower_fresh_1');
-    const onProduced = (_srcIdx: number, _tgtIdx: number, producedId: string): void => {
-      if (producedId === 'flower_fresh_1') flowerCount++;
-      if (flowerCount >= 2) {
-        cleanup();
-        TutorialManager.advanceTo(TutorialStep.GUIDE_MERGE_FLOWER_PEEK_PREP);
-      }
-    };
-    EventBus.on('building:produced', onProduced);
-
-    const cleanup = (): void => {
-      EventBus.off('building:produced', onProduced);
-    };
-    this._cleanup = cleanup;
-  }
-
-  private _showGuideMergeFlowerForPeek(): void {
-    const pair = this._findFlowerPair('flower_fresh_1');
-    if (!pair) {
-      TutorialManager.advanceTo(TutorialStep.GUIDE_MERGE_PEEK_FLOWER);
-      return;
-    }
-
-    this._overlay.visible = true;
-    const [srcIdx, dstIdx] = pair;
-    const srcRect = this._getCellRect(srcIdx);
-    const dstRect = this._getCellRect(dstIdx);
-    const pad = 8;
-    const spotlight = this._mergePairSpotlight(srcRect, dstRect, pad);
-    this._drawMergeGuideGlow(srcRect, dstRect, pad);
-    this._startFingerDragAnim(
-      srcRect.x + srcRect.w / 2, srcRect.y + srcRect.h / 2,
-      dstRect.x + dstRect.w / 2, dstRect.y + dstRect.h / 2,
-    );
-
-    this._showBubble({
-      title: '先合成花苞',
-      body: '把两朵花种子合在一起，\n得到一朵花苞。',
-      actionText: '拖动花种子到另一朵花种子',
-      spotlightTop: spotlight.y,
-      spotlightBottom: spotlight.y + spotlight.h,
-    });
-
-    TutorialInteractionGuard.allowMerge({
-      srcIndex: srcIdx,
-      dstIndex: dstIdx,
-      allowReverse: true,
-    });
-
-    const onInvalidAction = (): void => {
-      this._nudgeBubble();
-      this._showInlineHint('先把两朵花种子合成花苞');
-    };
-
-    const onMerged = (_src: number, _dst: number, resultId: string): void => {
-      if (resultId !== 'flower_fresh_2') return;
-      cleanup();
-      TutorialManager.advanceTo(TutorialStep.GUIDE_MERGE_PEEK_FLOWER);
-    };
-
-    EventBus.on('board:merged', onMerged);
-    EventBus.on('tutorial:invalidAction', onInvalidAction);
-
-    const cleanup = (): void => {
-      EventBus.off('board:merged', onMerged);
-      EventBus.off('tutorial:invalidAction', onInvalidAction);
-      TutorialInteractionGuard.clear();
-    };
-    this._cleanup = cleanup;
-  }
-
-  private _showGuideMergePeekFlower(): void {
-    this._clearOverlay();
-    const pair = this._findFlowerPeekPair('flower_fresh_2');
-    if (!pair) {
-      TutorialManager.advanceTo(TutorialStep.CUSTOMER3_ARRIVE);
-      return;
-    }
-
-    this._overlay.visible = true;
-    const [srcIdx, dstIdx] = pair;
-    const srcRect = this._getCellRect(srcIdx);
-    const dstRect = this._getCellRect(dstIdx);
-    const pad = 8;
-    const spotlight = this._mergePairSpotlight(srcRect, dstRect, pad);
-
-    this._drawMergeGuideGlow(srcRect, dstRect, pad);
-    this._startFingerDragAnim(
-      srcRect.x + srcRect.w / 2, srcRect.y + srcRect.h / 2,
-      dstRect.x + dstRect.w / 2, dstRect.y + dstRect.h / 2,
-    );
-
-    this._showBubble({
-      title: '打开丝带盒',
-      body: '丝带盒里藏着花苞。\n把同样的花苞拖上去，\n就能合成出更高级的花。',
-      actionText: '拖动花苞到丝带花苞格',
-      spotlightTop: spotlight.y,
-      spotlightBottom: spotlight.y + spotlight.h,
-    });
-
-    TutorialInteractionGuard.allowMerge({
-      srcIndex: srcIdx,
-      dstIndex: dstIdx,
-      allowReverse: false,
-    });
-
-    const onInvalidAction = (): void => {
-      this._nudgeBubble();
-      this._showInlineHint('把开放格里的花苞拖到丝带花苞格上');
-      this._stopFingerAnim();
-      this._startFingerDragAnim(
-        srcRect.x + srcRect.w / 2, srcRect.y + srcRect.h / 2,
-        dstRect.x + dstRect.w / 2, dstRect.y + dstRect.h / 2,
-      );
-    };
-
-    const onMerged = (_src: number, _dst: number, resultId: string, _resultCell: number, isPeekMerge?: boolean): void => {
-      if (!resultId.startsWith('flower_')) return;
-      cleanup();
-      this._clearOverlay();
-      this._overlay.visible = true;
-      if (isPeekMerge) {
-        this._showInlineHint('丝带盒打开了，周围的神秘盒子也露出惊喜了');
-      }
-      this._showBubble({
-        title: '盒子打开了',
-        body: '太好了！花苞合成了更高级的花，\n周围盒子也露出了惊喜。',
-        buttonText: '接下一单',
-        onButton: () => TutorialManager.advanceTo(TutorialStep.CUSTOMER3_ARRIVE),
-      });
-    };
-
-    EventBus.on('board:merged', onMerged);
-    EventBus.on('tutorial:invalidAction', onInvalidAction);
-
-    const cleanup = (): void => {
-      EventBus.off('board:merged', onMerged);
-      EventBus.off('tutorial:invalidAction', onInvalidAction);
-      TutorialInteractionGuard.clear();
-    };
-    this._cleanup = cleanup;
-  }
-
-  /** 引导合成两朵 1 级花 → 2 级花 */
-  private _showGuideMergeFlower(): void {
-    const pair = this._findFlowerPair('flower_fresh_1');
-    if (!pair) {
-      TutorialManager.advanceTo(TutorialStep.CUSTOMER2_ARRIVE);
-      return;
-    }
-
-    this._overlay.visible = true;
-    const [srcIdx, dstIdx] = pair;
-    const srcRect = this._getCellRect(srcIdx);
-    const dstRect = this._getCellRect(dstIdx);
-
-    const pad = 8;
-    const spotlight = this._mergePairSpotlight(srcRect, dstRect, pad);
-    this._drawMergeGuideGlow(srcRect, dstRect, pad);
-    this._startFingerDragAnim(
-      srcRect.x + srcRect.w / 2, srcRect.y + srcRect.h / 2,
-      dstRect.x + dstRect.w / 2, dstRect.y + dstRect.h / 2,
-    );
-
-    this._showBubble({
-      title: '合成花朵',
-      body: '把两朵相同的花拖到一起，\n就能合成更高级的花朵！',
-      actionText: '拖动高亮鲜花到目标格',
-      spotlightTop: spotlight.y,
-      spotlightBottom: spotlight.y + spotlight.h,
-    });
-
-    TutorialInteractionGuard.allowMerge({
-      srcIndex: srcIdx,
-      dstIndex: dstIdx,
-      allowReverse: true,
-    });
-
-    const onInvalidAction = (): void => {
-      this._nudgeBubble();
-      this._showInlineHint('找一样的花拖到一起试试');
-      this._stopFingerAnim();
-      this._startFingerDragAnim(
-        srcRect.x + srcRect.w / 2, srcRect.y + srcRect.h / 2,
-        dstRect.x + dstRect.w / 2, dstRect.y + dstRect.h / 2,
-      );
-    };
-
-    const onMerged = (_src: number, _dst: number, resultId: string): void => {
-      if (!resultId.startsWith('flower_')) return;
-      EventBus.off('board:merged', onMerged);
-      EventBus.off('tutorial:invalidAction', onInvalidAction);
-      TutorialInteractionGuard.clear();
-      this._clearOverlay();
-      this._overlay.visible = true;
-      this._drawSpotlightMask([], 0.5);
-
-      this._showBubble({
-        title: '合成成功',
-        body: '花种子变成了花苞！\n更高级的花可以满足更多客人~',
-        buttonText: '继续',
-        onButton: () => TutorialManager.advanceTo(TutorialStep.CUSTOMER2_ARRIVE),
-      });
-    };
-    EventBus.on('board:merged', onMerged);
-    EventBus.on('tutorial:invalidAction', onInvalidAction);
-    this._cleanup = () => {
-      EventBus.off('board:merged', onMerged);
-      EventBus.off('tutorial:invalidAction', onInvalidAction);
-      TutorialInteractionGuard.clear();
-    };
-  }
-
   // ══════════════════════════════════════════════
   //  MAIN SCENE — 花店引导过渡
   // ══════════════════════════════════════════════
@@ -1001,9 +753,17 @@ export class TutorialOverlay {
     });
   }
 
+  /** 交单超时跳过等情况下花愿可能不够，进店前补足教程家具价格，避免卡在购买步骤 */
+  private _ensureTutorialFurnitureAffordable(): void {
+    const cost = DECO_MAP.get(TUTORIAL_BUY_DECO_ID)?.cost ?? 0;
+    const lack = cost - CurrencyManager.state.huayuan;
+    if (lack > 0) CurrencyManager.addHuayuan(lack);
+  }
+
   private _showSwitchToShop(): void {
     this._overlay.visible = true;
     this._clearOverlay();
+    this._ensureTutorialFurnitureAffordable();
 
     let spotlight: SpotlightRect;
     let fingerX: number;
@@ -1555,10 +1315,8 @@ export class TutorialOverlay {
 
       const fromX = liveGuide?.fromX ?? placement?.x ?? (placeRect.x + placeRect.w * 0.56);
       const fromY = liveGuide?.fromY ?? placement?.y ?? (placeRect.y + placeRect.h * 0.54);
-      const toX = liveGuide?.toX
-        ?? Math.max(bounds.minX + 40, Math.min(bounds.maxX - 40, fromX - 130));
-      const toY = liveGuide?.toY
-        ?? Math.max(bounds.minY + 40, Math.min(bounds.maxY - 40, fromY - 70));
+      const toX = liveGuide?.toX ?? (placeRect.x + placeRect.w * 0.62);
+      const toY = liveGuide?.toY ?? (placeRect.y + placeRect.h * 0.62);
       this._startFingerDragAnim(fromX, fromY, toX, toY);
 
       this._showBubble({
@@ -1582,7 +1340,7 @@ export class TutorialOverlay {
         ),
         r: 28,
       };
-      this._drawNonBlockingDim(0.45);
+      this._drawSpotlightMask([rect], 0.62);
       this._drawGlowBorder(rect);
       this._startFingerTapAnim(rect.x + rect.w / 2, rect.y + rect.h / 2);
 

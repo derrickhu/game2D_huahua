@@ -100,12 +100,12 @@ const DEFAULT_POSITIONS: Record<string, { x: number; y: number; scale: number }>
 
 /**
  * 程序化拖入/「放入房间」时默认出现点（房间容器本地坐标）。
- * 必须落在室内地板上（店主默认约 centerY+120≈837，桌默认 620）。
- * 旧值 y=950 是门廊/草地，空房壳上会看起来「在房子下面」。
+ * 必须落在室内地板空处：店主默认约 centerY+120≈837。
+ * y=680 贴后墙，花架身子埋进墙里，拖不动；y=950 会落到门廊/草地上。
  */
 export const FURNITURE_TRAY_SPAWN_ROOM_LOCAL = {
-  x: 400,
-  y: 680,
+  x: 220,
+  y: 820,
 } as const;
 
 // ---- 房间可摆放区域边界 (设计坐标) ----

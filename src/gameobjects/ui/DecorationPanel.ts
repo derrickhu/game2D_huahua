@@ -428,7 +428,7 @@ type DecoGridPendingTap =
   | { type: 'deco'; deco: DecoDef; flyCard: PIXI.Container }
   | { type: 'room'; style: RoomStyleDef; flyCard: PIXI.Container };
 
-const TUTORIAL_BUY_DECO_ID = 'shelf_wood';
+export const TUTORIAL_BUY_DECO_ID = 'shelf_wood';
 
 export class DecorationPanel extends PIXI.Container {
   /** MainScene 唯一实例；供新手引导在 overlay 上对齐购买钮 */

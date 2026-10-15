@@ -471,6 +471,8 @@ export class ShopScene implements Scene {
   private _ownerPointerDownOwner: PIXI.Container | null = null;
   private _ownerPointerDownId: number | null = null;
   private _ownerPressStartClient: { x: number; y: number } | null = null;
+  /** 新手摆放：贴后墙的花架只往前挪一次，避免刷新引导时把玩家拖好的位置拽回去 */
+  private _tutorialBackWallNudgeDone = false;
   /** 非编辑模式：家具双击进装修的第一下计时 */
   private _furnitureBrowseTapTimer: ReturnType<typeof setTimeout> | null = null;
   private _furnitureBrowsePendingInstanceId: string | null = null;
@@ -1592,6 +1594,38 @@ export class ShopScene implements Scene {
     };
   }
 
+  /**
+   * 已经落在后墙上的新手家具，拖动手感像被墙卡住。
+   * 引导出现时挪到室内空地，只做一次。
+   */
+  private _pullTutorialFurnitureOffBackWall(
+    placement?: { x: number; y: number } | null,
+  ): { x: number; y: number } | null {
+    if (this._tutorialBackWallNudgeDone) {
+      return RoomLayoutManager.getLayout()[0] ?? placement ?? null;
+    }
+    if (TutorialManager.currentStep !== TutorialStep.GUIDE_PLACE_FURNITURE) return placement ?? null;
+    const layout = RoomLayoutManager.getLayout();
+    const item = layout.find(p =>
+      placement != null && Math.abs(p.x - placement.x) < 4 && Math.abs(p.y - placement.y) < 4,
+    ) ?? layout[0];
+    if (!item || item.y >= 760) {
+      this._tutorialBackWallNudgeDone = true;
+      return item ?? placement ?? null;
+    }
+    const bounds = RoomLayoutManager.bounds;
+    const x = Math.max(bounds.minX + 36, Math.min(bounds.maxX - 36, FURNITURE_TRAY_SPAWN_ROOM_LOCAL.x));
+    const y = Math.max(bounds.minY + 72, Math.min(bounds.maxY - 36, FURNITURE_TRAY_SPAWN_ROOM_LOCAL.y));
+    RoomLayoutManager.moveFurniture(item.instanceId, x, y);
+    const sprite = FurnitureDragSystem.getSpriteByInstanceId(item.instanceId);
+    if (sprite) {
+      sprite.position.set(item.x, item.y);
+      FurnitureDragSystem.sortByDepth();
+    }
+    this._tutorialBackWallNudgeDone = true;
+    return item;
+  }
+
   /** 新手引导「调整家具」：将房间本地 bounds/点转换到场景设计坐标。 */
   _getTutorialFurniturePlacementGuide(
     placement?: { x: number; y: number } | null,
@@ -1602,6 +1636,7 @@ export class ShopScene implements Scene {
     toX: number;
     toY: number;
   } {
+    const livePlacement = this._pullTutorialFurnitureOffBackWall(placement);
     const bounds = RoomLayoutManager.bounds;
     const corners = [
       this._roomLocalToDesign(bounds.minX, bounds.minY),
@@ -1619,10 +1654,10 @@ export class ShopScene implements Scene {
       r: 22,
     };
 
-    const fromLocalX = placement?.x ?? (bounds.minX + (bounds.maxX - bounds.minX) * 0.56);
-    const fromLocalY = placement?.y ?? (bounds.minY + (bounds.maxY - bounds.minY) * 0.54);
-    const toLocalX = Math.max(bounds.minX + 40, Math.min(bounds.maxX - 40, fromLocalX - 130));
-    const toLocalY = Math.max(bounds.minY + 40, Math.min(bounds.maxY - 40, fromLocalY - 70));
+    const fromLocalX = livePlacement?.x ?? (bounds.minX + (bounds.maxX - bounds.minX) * 0.56);
+    const fromLocalY = livePlacement?.y ?? (bounds.minY + (bounds.maxY - bounds.minY) * 0.54);
+    const toLocalX = Math.max(bounds.minX + 40, Math.min(bounds.maxX - 40, fromLocalX + 160));
+    const toLocalY = Math.max(bounds.minY + 80, Math.min(bounds.maxY - 40, fromLocalY + 20));
     const from = this._roomLocalToDesign(fromLocalX, fromLocalY);
     const to = this._roomLocalToDesign(toLocalX, toLocalY);
 
@@ -3197,9 +3232,18 @@ export class ShopScene implements Scene {
       if (SceneManager.current?.name !== 'shop' || !this._isEditMode) return true;
       if (RoomLayoutManager.getAvailableCount(decoId) <= 0) return true;
       if (!TextureCache.get(deco.icon)) return false;
+      const bounds = RoomLayoutManager.bounds;
+      const spawnLocalX = Math.max(
+        bounds.minX + 36,
+        Math.min(bounds.maxX - 36, FURNITURE_TRAY_SPAWN_ROOM_LOCAL.x),
+      );
+      const spawnLocalY = Math.max(
+        bounds.minY + 72,
+        Math.min(bounds.maxY - 36, FURNITURE_TRAY_SPAWN_ROOM_LOCAL.y),
+      );
       const { x: spawnDesignX, y: spawnDesignY } = this._roomLocalToDesign(
-        FURNITURE_TRAY_SPAWN_ROOM_LOCAL.x,
-        FURNITURE_TRAY_SPAWN_ROOM_LOCAL.y,
+        spawnLocalX,
+        spawnLocalY,
       );
       FurnitureDragSystem.placeNewAtDesign(decoId, spawnDesignX, spawnDesignY);
       return true;
