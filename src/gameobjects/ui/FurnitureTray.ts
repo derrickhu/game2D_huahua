@@ -28,7 +28,6 @@ import {
   type FurnitureTrayTabId,
   type DecoPanelTabId,
   type RoomStyleDef,
-  getDecorationTabLabel,
   getDecosForDecorationPanelTab,
   getWorkshopDecosForTrayTab,
   getWorkshopTrayTabForDeco,
@@ -41,6 +40,7 @@ import {
 import { CurrencyManager } from '@/managers/CurrencyManager';
 import { TutorialManager } from '@/managers/TutorialManager';
 import { getTraySubCategories, traySubCategoryOf, type TraySubCategory } from '@/config/FurnitureTraySubCategory';
+import { DECO_THEME_SETS, decoThemeSetId } from '@/config/DecoThemeConfig';
 import { DESIGN_WIDTH, FONT_FAMILY, COLORS } from '@/config/Constants';
 
 // ---- 布局常量 ----
@@ -338,6 +338,8 @@ export class FurnitureTray extends PIXI.Container {
   private _gridRefreshRaf: number | null = null;
   private _assetRefreshRaf: number | null = null;
   private _currentTab: FurnitureTrayTabId = 'flower_room';
+  /** 「主题」分区里当前选中的主题套，对应黄条上的图标 */
+  private _themeSetId: string = DECO_THEME_SETS[0]?.id ?? 'qinglian';
   private _traySection: TraySection = 'regular';
   private _closedY = 0;
   private _openY = 0;
@@ -453,6 +455,8 @@ export class FurnitureTray extends PIXI.Container {
       } else if (furnitureTrayTabForDeco(deco) === 'qinglian') {
         this._traySection = 'theme';
         this._currentTab = 'qinglian';
+        const themeId = decoThemeSetId(deco);
+        if (themeId) this._themeSetId = themeId;
       } else {
         this._traySection = 'regular';
         this._currentTab = furnitureTrayTabForDeco(deco);
@@ -946,6 +950,7 @@ export class FurnitureTray extends PIXI.Container {
   private _setTraySection(section: TraySection): void {
     if (this._traySection === section) return;
     this._traySection = section;
+    if (section === 'theme') this._ensureThemeSetHasFurniture();
     const tabs = this._getActiveTrayTabs();
     if (!tabs.includes(this._currentTab)) {
       this._currentTab = tabs[0] ?? 'furniture';
@@ -1000,20 +1005,44 @@ export class FurnitureTray extends PIXI.Container {
   private _buildTabs(): void {
     this._tabContainer.removeChildren().forEach(ch => ch.destroy({ children: true }));
 
+    if (this._traySection === 'theme') {
+      this._buildIconTabRow(DECO_THEME_SETS.map(theme => ({
+        selected: theme.id === this._themeSetId,
+        textureKey: theme.trayIconKey,
+        onTap: () => {
+          if (this._themeSetId === theme.id) return;
+          this._themeSetId = theme.id;
+          this._subFilter = SUB_FILTER_ALL;
+          this._scrollX = 0;
+          this._scheduleGridRefresh();
+        },
+      })));
+      return;
+    }
+
     const tabs = this._getActiveTrayTabs();
-    const n = tabs.length;
+    this._buildIconTabRow(tabs.map(tabId => ({
+      selected: tabId === this._currentTab,
+      textureKey: furnitureTrayTabTextureKey(tabId),
+      onTap: () => {
+        if (this._currentTab !== tabId) this._subFilter = SUB_FILTER_ALL;
+        this._currentTab = tabId;
+        this._scrollX = 0;
+        this._scheduleGridRefresh();
+      },
+    })));
+  }
+
+  private _buildIconTabRow(items: { selected: boolean; textureKey: string; onTap: () => void }[]): void {
+    const n = items.length;
     const rowW = n * TAB_SLOT_W + (n - 1) * TAB_GAP;
     const rowStartX = Math.max(0, (GRID_CLIP_INNER_W - rowW) / 2);
 
-    tabs.forEach((tabId, i) => {
-      const meta = getDecorationTabLabel(tabId as DecoPanelTabId, CurrencyManager.state.sceneId);
-      const isCurrent = tabId === this._currentTab;
-
+    items.forEach((item, i) => {
       const tab = new PIXI.Container();
       tab.position.set(rowStartX + i * (TAB_SLOT_W + TAB_GAP), 0);
 
-      const iconKey = furnitureTrayTabTextureKey(tabId);
-      const tabTex = TextureCache.get(iconKey);
+      const tabTex = TextureCache.get(item.textureKey);
       const maxW = TAB_SLOT_W - TAB_ICON_PAD * 2;
       const maxH = TAB_BAR_H - 2;
       const cx = TAB_SLOT_W / 2;
@@ -1021,11 +1050,11 @@ export class FurnitureTray extends PIXI.Container {
 
       if (tabTex?.width) {
         const baseFit = Math.min(maxW / tabTex.width, maxH / tabTex.height);
-        const iconScale = isCurrent ? baseFit * CATEGORY_TAB_ICON_SELECTED_SCALE : baseFit;
+        const iconScale = item.selected ? baseFit * CATEGORY_TAB_ICON_SELECTED_SCALE : baseFit;
         const iconH = tabTex.height * iconScale;
         const iconW = tabTex.width * iconScale;
 
-        if (isCurrent) {
+        if (item.selected) {
           const shadow = new PIXI.Graphics();
           shadow.beginFill(0x8a5070, CATEGORY_TAB_ICON_SHADOW_ALPHA);
           shadow.drawEllipse(
@@ -1048,19 +1077,32 @@ export class FurnitureTray extends PIXI.Container {
       tab.eventMode = 'static';
       tab.hitArea = new PIXI.Rectangle(0, 0, TAB_SLOT_W, TAB_BAR_H);
       tab.cursor = 'pointer';
-      tab.on('pointertap', () => {
-        if (this._currentTab !== tabId) this._subFilter = SUB_FILTER_ALL;
-        this._currentTab = tabId;
-        this._scrollX = 0;
-        this._scheduleGridRefresh();
-      });
-
+      tab.on('pointertap', item.onTap);
       this._tabContainer.addChild(tab);
     });
   }
 
+  /** 主题分区里已解锁、本场景可摆的全部主题家具（不按当前图标过滤） */
+  private _unlockedThemeDecos(): DecoDef[] {
+    const sceneId = CurrencyManager.state.sceneId;
+    return getDecosForDecorationPanelTab('qinglian', sceneId)
+      .filter(d => !d.workshopExclusive)
+      .filter(d => DecorationManager.isUnlocked(d.id) && isDecoAllowedInScene(d, sceneId));
+  }
+
+  /** 当前图标下没有已解锁家具时，改选第一个有家具的主题 */
+  private _ensureThemeSetHasFurniture(): void {
+    const owned = this._unlockedThemeDecos();
+    if (owned.some(d => decoThemeSetId(d) === this._themeSetId)) return;
+    const next = DECO_THEME_SETS.find(t => owned.some(d => decoThemeSetId(d) === t.id));
+    if (next) this._themeSetId = next.id;
+  }
+
   /** 当前分区 + 大类下已解锁、本场景可用的家具（未按放置 / 小类筛选） */
   private _collectUnlockedDecos(): DecoDef[] {
+    if (this._traySection === 'theme') {
+      return this._unlockedThemeDecos().filter(d => decoThemeSetId(d) === this._themeSetId);
+    }
     const sceneId = CurrencyManager.state.sceneId;
     const candidates = this._traySection === 'workshop'
       ? getWorkshopDecosForTrayTab(this._currentTab, sceneId)
@@ -1074,6 +1116,17 @@ export class FurnitureTray extends PIXI.Container {
   /** 有家具的小类（不足 2 个或总件数太少时不分小类） */
   private _visibleSubCategories(unlocked: readonly DecoDef[]): TraySubCategory[] {
     const tab = this._currentTab as DecoPanelTabId;
+    if (tab === 'qinglian') {
+      const usedThemes = new Set<string>();
+      for (const d of unlocked) {
+        const tid = decoThemeSetId(d);
+        if (tid) usedThemes.add(tid);
+      }
+      const visibleThemes = DECO_THEME_SETS
+        .filter(t => usedThemes.has(t.id))
+        .map(t => ({ id: t.id, label: t.name, keys: [] as readonly string[] }));
+      return visibleThemes.length >= 2 ? visibleThemes : [];
+    }
     const subs = getTraySubCategories(tab);
     if (subs.length === 0 || unlocked.length < SUB_FILTER_MIN_ITEMS) return [];
     const used = new Set<string>();
@@ -1222,7 +1275,9 @@ export class FurnitureTray extends PIXI.Container {
     const inSub =
       subId === SUB_FILTER_ALL
         ? unlocked
-        : unlocked.filter(d => traySubCategoryOf(tab, getDecoDisplayName(d.id)) === subId);
+        : tab === 'qinglian'
+          ? unlocked.filter(d => decoThemeSetId(d) === subId)
+          : unlocked.filter(d => traySubCategoryOf(tab, getDecoDisplayName(d.id)) === subId);
     const decos =
       this._listFilter === 'unplaced'
         ? inSub.filter(d => RoomLayoutManager.getAvailableCount(d.id) > 0)

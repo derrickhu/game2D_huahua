@@ -1,5 +1,5 @@
 ---
-description: 花店室内家具（subpkg_deco/furniture）NB2 生图 — 与房间壳一致的等距视角；配色按单品需求；入库须压缩并注册 TextureCache
+description: 花店室内家具（subpkg_deco/furniture）生图与入库。等距视角、抠图压缩、TextureCache 之外，购买面板标签必须按物件本身拆开：家具 / 家电 / 摆件 / 墙饰 / 庭院。禁止整套写入 decorationPanelTab furniture。
 globs: docs/prompt/furniture_*.txt,minigame/subpkg_deco/images/furniture/**,minigame/subpkg_deco/images/cake/**,src/config/DecorationConfig.ts,src/utils/TextureCache.ts
 alwaysApply: false
 ---
@@ -153,11 +153,12 @@ python3 scripts/compress_furniture_deco_pngs.py --dry-run
 **工坊**（`workshopExclusive`）与 **清涟类主题套装**（`qinglian_*` 及同类房间主题大件）在房间里放大多、细节密，**必须**按高清档入库，**不要**用普通线默认 256。
 
 | 线 | 建议 | 验收/脚本参考 |
-|---|---|---|
-| 工坊合图/单件 | **`--max-side 342`** | 弧翼沙发 `workshop_plush_sofa_sheet` 每格 342，不必默认再提到 512 |
-| 清涟等主题套装 | **`--max-side 342` 起，常用 512** | `process_qinglian_*` / `reprocess_qinglian_*` 脚本默认 `MAX_SIDE=512` |
-
-**注意**：高清档 PNG 入库后**勿**再跑默认 `--max-side 256` 的整目录压缩，否则会被压糊。主题件请显式传路径 + `--max-side`。
+1. 已按「装修商店标签」选定家具 / 家电 / 摆件 / 墙饰 / 庭院，没有整套写 `decorationPanelTab: 'furniture'`。
+2. 已选放置意图 A/B/C/D，且与策划描述一致（「可摆台面」≠ 默认地面大件）。
+3. 台面小物：若 `furniture` Tab 且 `defaultScale > 0.92` → 已写 `depthSortFeetYFudge` + `depthSortYLift`。落地摆件不进「家具」时，这两项写 `0`。
+4. 地毯类：已写 `depthSortFloorMat: true` 且 `depthSortYLift: 0`，且没有 `furniture` Tab。
+5. 地面大件：未误加台面补偿（避免整件浮在桌面前面）。
+6. 游戏内编辑模式实测：台面件能摆上桌子；地毯不挡家具/人物；购买面板五个标签与上表一致。
 
 | 类型 | 命令要点 |
 |------|----------|

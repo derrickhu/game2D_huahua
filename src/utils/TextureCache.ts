@@ -256,6 +256,7 @@ const PANELS_IMAGE_MAP: Record<string, string> = {
   furniture_tray_tab_garden_idle: 'subpkg_panels/images/ui/furniture_tray_tab_garden_idle.png',
   furniture_tray_tab_room_styles_idle: 'subpkg_panels/images/ui/furniture_tray_tab_room_styles_idle.png',
   furniture_tray_tab_qinglian_idle: 'subpkg_panels/images/ui/furniture_tray_tab_qinglian_idle.png',
+  furniture_tray_tab_qingfeng_idle: 'subpkg_panels/images/ui/furniture_tray_tab_qingfeng_idle.png',
   /** 房间编辑条：6 枚独立图标（横排；由合图 split 脚本产出） */
   room_edit_toolbar_zoom_in: 'subpkg_panels/images/ui/room_edit_toolbar_zoom_in.png',
   room_edit_toolbar_zoom_out: 'subpkg_panels/images/ui/room_edit_toolbar_zoom_out.png',
@@ -1108,6 +1109,46 @@ const DECO_IMAGE_MAP: Record<string, string> = {
   tideloft_short_daybed: 'subpkg_deco/images/furniture/tideloft_short_daybed.png',
   tideloft_fern_panel: 'subpkg_deco/images/furniture/tideloft_fern_panel.png',
 
+  // ---- 雪绒山茶（Lv40–45 通用，不进主题）----
+  xuerong_porcelain_bud: 'subpkg_deco/images/furniture/xuerong_porcelain_bud.png',
+  xuerong_wall_spray: 'subpkg_deco/images/furniture/xuerong_wall_spray.png',
+  xuerong_coat_rack: 'subpkg_deco/images/furniture/xuerong_coat_rack.png',
+  xuerong_skirt_table: 'subpkg_deco/images/furniture/xuerong_skirt_table.png',
+  xuerong_snow_rug: 'subpkg_deco/images/furniture/xuerong_snow_rug.png',
+  xuerong_daybed: 'subpkg_deco/images/furniture/xuerong_daybed.png',
+  xuerong_frost_table: 'subpkg_deco/images/furniture/xuerong_frost_table.png',
+  xuerong_snow_window: 'subpkg_deco/images/furniture/xuerong_snow_window.png',
+  xuerong_etagere: 'subpkg_deco/images/furniture/xuerong_etagere.png',
+  xuerong_vanity: 'subpkg_deco/images/furniture/xuerong_vanity.png',
+  xuerong_book_desk: 'subpkg_deco/images/furniture/xuerong_book_desk.png',
+  xuerong_screen: 'subpkg_deco/images/furniture/xuerong_screen.png',
+  xuerong_vitrine: 'subpkg_deco/images/furniture/xuerong_vitrine.png',
+  xuerong_pine_cart: 'subpkg_deco/images/furniture/xuerong_pine_cart.png',
+  xuerong_wardrobe: 'subpkg_deco/images/furniture/xuerong_wardrobe.png',
+  xuerong_chaise: 'subpkg_deco/images/furniture/xuerong_chaise.png',
+  xuerong_canopy_bed: 'subpkg_deco/images/furniture/xuerong_canopy_bed.png',
+
+  // ---- 晴风花绘坊主题（themeSetId='qingfeng'）----
+  qingfeng_terrarium_cloche: 'subpkg_deco/images/furniture/qingfeng_terrarium_cloche.png',
+  qingfeng_picnic_gingham_rug: 'subpkg_deco/images/furniture/qingfeng_picnic_gingham_rug.png',
+  qingfeng_floral_postcard_grid: 'subpkg_deco/images/furniture/qingfeng_floral_postcard_grid.png',
+  qingfeng_empty_low_tea_table: 'subpkg_deco/images/furniture/qingfeng_empty_low_tea_table.png',
+  qingfeng_petal_tea_table: 'subpkg_deco/images/furniture/qingfeng_petal_tea_table.png',
+  qingfeng_lily_trio_lamp: 'subpkg_deco/images/furniture/qingfeng_lily_trio_lamp.png',
+  qingfeng_balloon_picnic_hamper: 'subpkg_deco/images/furniture/qingfeng_balloon_picnic_hamper.png',
+  qingfeng_glazed_dye_jars: 'subpkg_deco/images/furniture/qingfeng_glazed_dye_jars.png',
+  qingfeng_empty_console_table: 'subpkg_deco/images/furniture/qingfeng_empty_console_table.png',
+  qingfeng_stained_glass_window: 'subpkg_deco/images/furniture/qingfeng_stained_glass_window.png',
+  qingfeng_morning_glory_phonograph: 'subpkg_deco/images/furniture/qingfeng_morning_glory_phonograph.png',
+  qingfeng_easel_flower_basket: 'subpkg_deco/images/furniture/qingfeng_easel_flower_basket.png',
+  qingfeng_palette_art_desk: 'subpkg_deco/images/furniture/qingfeng_palette_art_desk.png',
+  qingfeng_puffy_cloud_chair: 'subpkg_deco/images/furniture/qingfeng_puffy_cloud_chair.png',
+  qingfeng_skylight_seedling_cabinet: 'subpkg_deco/images/furniture/qingfeng_skylight_seedling_cabinet.png',
+  qingfeng_open_arch_wardrobe: 'subpkg_deco/images/furniture/qingfeng_open_arch_wardrobe.png',
+  qingfeng_conservatory_arch_divider: 'subpkg_deco/images/furniture/qingfeng_conservatory_arch_divider.png',
+  qingfeng_wisteria_parasol_seat: 'subpkg_deco/images/furniture/qingfeng_wisteria_parasol_seat.png',
+  qingfeng_skylight_wisteria_bed: 'subpkg_deco/images/furniture/qingfeng_skylight_wisteria_bed.png',
+
   // ---- 梦云小屋专属家具（dream_cloud_house Lv20–24 卧室休闲套）----
   dream_cloud_bed: 'subpkg_deco/images/furniture/dream_cloud_bed.png',
   dream_cloud_sofa: 'subpkg_deco/images/furniture/dream_cloud_sofa.png',
@@ -1320,6 +1361,7 @@ const SHOP_WARMUP_KEYS = [
   'furniture_tray_tab_garden_idle',
   'furniture_tray_tab_room_styles_idle',
   'furniture_tray_tab_qinglian_idle',
+  'furniture_tray_tab_qingfeng_idle',
   'furniture_edit_clear_icon_nb2',
   'furniture_edit_complete_icon_nb2',
   'furniture_edit_save_preset_icon_nb2',
@@ -1343,6 +1385,7 @@ const DECO_PANEL_WARMUP_KEYS = [
   'deco_rarity_tag_common',
   'deco_rarity_tag_fine',
   'furniture_tray_tab_qinglian_idle',
+  'furniture_tray_tab_qingfeng_idle',
 ] as const;
 
 const CHECKIN_PANEL_KEYS = [
@@ -1386,6 +1429,7 @@ const TUTORIAL_DECO_KEYS = [
   'furniture_tray_tab_ornament_idle',
   'furniture_tray_tab_garden_idle',
   'furniture_tray_tab_qinglian_idle',
+  'furniture_tray_tab_qingfeng_idle',
   'furniture_edit_clear_icon_nb2',
   'furniture_edit_complete_icon_nb2',
   'furniture_edit_save_preset_icon_nb2',

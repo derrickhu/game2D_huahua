@@ -1,0 +1,11 @@
+Square 1:1 game furniture asset. One single prop centered, generous white margin. The prop fills about two thirds of the canvas.
+
+Cute kawaii 2.5D true isometric furniture for a flower-shop merge game. Camera from upper-left into the L-room corner (same family as the room shell). On-screen top-face edges and base edges must sit near ±30° from horizontal — match the attached iso grid and room wall-base / floor diamond, NOT 45° wall slant, NOT flat front view. Height edges stay vertical. Visible top surface plus front-right side, left and right top edges symmetrically angled. Use the attached grid ONLY for perspective; do not copy the gray demo cube. The finished picture background is empty pure white. Leave out every grid line, graph-paper mark, blue line, and the gray cube.
+
+Hand-painted mobile merge-game furniture at workshop-piece quality. Soft caramel-brown outlines slightly thicker than a hairline, gentle painted shading, refined rounded shapes, layered materials, a designed silhouette readable at small size. Palette: cream lacquer, blush camellia velvet, antique brass. Structure is physically buildable: straight supports, real joints, one object only.
+
+Subject: A low rectangular cream-lacquer table with four short straight legs and a shallow scalloped apron. An oval white-porcelain panel is inset in the top, edged with a thin brass rim. The porcelain shows one painted camellia branch and a thin bank of snow. On the tabletop: one lidded cream porcelain cup, one small brass dish holding two dried orange slices, and one tiny bud vase with a single camellia bud.
+
+No text, no numbers, no letters, no logo, no watermark, no people, no animal faces, no room, no walls, no floor plane, no drop-shadow strip.
+
+Background is pure solid white #FFFFFF.

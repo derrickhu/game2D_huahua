@@ -304,8 +304,8 @@ export class ShopScene implements Scene {
   private _ownerContainer: PIXI.Container | null = null;
   private _ownerSprite: PIXI.Sprite | null = null;
   /**
-   * 编辑态店主命中代理：zIndex 置顶，仅负责 hitArea，不参与 2.5D 遮挡绘制。
-   * 解决错层/大家具 AABB 盖住楼上角色导致「拖不动店主」。
+   * 店主命中代理：zIndex 置顶，仅负责 hitArea，不参与 2.5D 遮挡绘制。
+   * 装修中和装修后都保留。家具贴图的透明边框会盖住人物，点在人身上却拖到家具。
    */
   private _ownerEditHitProxy: PIXI.Container | null = null;
   private static readonly OWNER_EDIT_HIT_PROXY_Z = 2_000_000_000;
@@ -464,8 +464,6 @@ export class ShopScene implements Scene {
   private _isBlinking = false;
   private _ownerDragging = false;
   private _ownerDragOffset = { x: 0, y: 0 };
-  private _onOwnerRawMove: ((e: any) => void) | null = null;
-  private _onOwnerRawUp: ((e: any) => void) | null = null;
   private _detachOwnerCanvas: (() => void) | null = null;
   /** 非编辑模式：在店主上按下待判定（点按对话 vs 移动拖动） */
   private _ownerPointerDownOwner: PIXI.Container | null = null;
@@ -473,6 +471,8 @@ export class ShopScene implements Scene {
   private _ownerPressStartClient: { x: number; y: number } | null = null;
   /** 新手摆放：贴后墙的花架只往前挪一次，避免刷新引导时把玩家拖好的位置拽回去 */
   private _tutorialBackWallNudgeDone = false;
+  /** 点在被家具透明框盖住的店主上时，丢掉紧接着的家具单击 */
+  private _ownerStealFurnitureTap = false;
   /** 非编辑模式：家具双击进装修的第一下计时 */
   private _furnitureBrowseTapTimer: ReturnType<typeof setTimeout> | null = null;
   private _furnitureBrowsePendingInstanceId: string | null = null;
@@ -580,6 +580,9 @@ export class ShopScene implements Scene {
     this._restoreShopHudAfterDecoPanel();
     this._bindEvents();
     this._refreshAfterReenter();
+    this._bindOwnerCanvasDrag();
+    this._ensureOwnerEditHitProxy();
+    this._syncOwnerEditHitProxy();
     this._finishShopEnter(true);
   }
 
@@ -786,8 +789,114 @@ export class ShopScene implements Scene {
     this._resetOwnerDragState();
     this._detachOwnerCanvas?.();
     this._detachOwnerCanvas = null;
-    this._onOwnerRawMove = null;
-    this._onOwnerRawUp = null;
+  }
+
+  /**
+   * 店主跟手拖拽听在 canvas 上。离店会卸掉监听；二次进店复用 UI，必须重新绑，
+   * 否则按下能变半透明，手指移动人物却不动（装修中、装修后都一样）。
+   */
+  private _bindOwnerCanvasDrag(): void {
+    if (this._detachOwnerCanvas) return;
+    const canvas = Game.app.view as TouchCanvasLike;
+    this._detachOwnerCanvas = attachCanvasMoveUp(canvas, {
+      onMove: (ev) => this._handleOwnerCanvasMove(ev),
+      onUp: (ev) => this._handleOwnerCanvasUp(ev),
+      onCancel: (ev) => this._handleOwnerCanvasUp(ev),
+    });
+  }
+
+  private _handleOwnerCanvasMove(rawEvt: unknown): void {
+    const owner = this._ownerContainer;
+    if (!owner || owner.destroyed) return;
+    const { x: clientX, y: clientY } = eventClientPoint(rawEvt);
+    const moveId = eventPointerId(rawEvt);
+
+    if (
+      !this._ownerDragging
+      && this._ownerPointerDownOwner
+      && this._ownerPressStartClient
+      && (this._ownerPointerDownId == null || moveId === undefined || moveId === this._ownerPointerDownId)
+    ) {
+      const dx = clientX - this._ownerPressStartClient.x;
+      const dy = clientY - this._ownerPressStartClient.y;
+      if (Math.hypot(dx, dy) > SHOP_OWNER_DRAG_THRESHOLD_PX) {
+        const o = this._ownerPointerDownOwner;
+        const pid = this._ownerPointerDownId;
+        this._clearOwnerPressTracking();
+        this._beginOwnerDragFromClient(clientX, clientY, o, pid);
+      }
+    }
+
+    if (!this._ownerDragging) return;
+    const { x: designX, y: designY } = Game.clientToDesign(clientX, clientY);
+    const c = this._roomContainer;
+    const s = c.scale.x || 1;
+    const localX = (designX - c.position.x) / s + c.pivot.x;
+    const localY = (designY - c.position.y) / s + c.pivot.y;
+    owner.x = localX + this._ownerDragOffset.x;
+    owner.y = localY + this._ownerDragOffset.y;
+    owner.zIndex = roomDepthZForOwner(owner.y);
+    this._syncOwnerEditHitProxy();
+    this._roomContainer.sortChildren();
+  }
+
+  private _handleOwnerCanvasUp(rawEvt: unknown): void {
+    const owner = this._ownerContainer;
+    if (!owner || owner.destroyed) return;
+    const upId = eventPointerId(rawEvt);
+    const evType = (rawEvt as { type?: string } | null)?.type;
+    if (this._ownerDragging) {
+      if (
+        this._ownerPointerDownId != null
+        && upId !== undefined
+        && upId !== this._ownerPointerDownId
+      ) {
+        return;
+      }
+      this._ownerDragging = false;
+      this._clearOwnerPressTracking();
+      owner.alpha = 1;
+      if (this._ownerSprite) {
+        this._ownerSprite.tint = 0xffffff;
+      }
+      RoomLayoutManager.setOwnerPos(owner.x, owner.y);
+      return;
+    }
+    if (evType === 'pointercancel' || evType === 'touchcancel') {
+      if (
+        this._ownerPointerDownOwner
+        && (this._ownerPointerDownId == null || upId === undefined || upId === this._ownerPointerDownId)
+      ) {
+        this._clearOwnerPressTracking();
+      }
+      return;
+    }
+    if (
+      this._ownerPointerDownOwner
+      && (this._ownerPointerDownId == null || upId === undefined || upId === this._ownerPointerDownId)
+    ) {
+      const tapped = this._ownerPointerDownOwner;
+      this._clearOwnerPressTracking();
+      if (!this._isEditMode) {
+        const greetings = [
+          '欢迎来到花花妙屋~',
+          '今天想做什么呢？可以装修花店哦！',
+          '新的花材到了，快去合成吧~',
+          '花店越来越漂亮了呢！',
+          '记得每天签到领奖励呀~',
+        ];
+        const msg = greetings[Math.floor(Math.random() * greetings.length)];
+        ToastMessage.show(`店主：「${msg}」`);
+        TweenManager.cancelTarget(tapped.scale);
+        tapped.scale.set(0.9);
+        TweenManager.to({
+          target: tapped.scale,
+          props: { x: 1, y: 1 },
+          duration: 0.3,
+          ease: Ease.easeOutBack,
+        });
+      }
+    }
   }
 
   private _build(): void {
@@ -1166,7 +1275,24 @@ export class ShopScene implements Scene {
     sprite.eventMode = 'static';
     sprite.cursor = 'pointer';
     const interactive = !!FURNITURE_RENDER_MAP.get(decoId)?.interaction;
+    sprite.on('pointerdown', (e: PIXI.FederatedPointerEvent) => {
+      if (this._isEditMode) return;
+      const owner = this._ownerContainer;
+      if (!owner || owner.destroyed) return;
+      const design = this._designPosFromFederated(e);
+      const local = this._roomLocalFromDesign(design.x, design.y);
+      if (!this._isRoomLocalOnOwnerHitArea(local.x, local.y)) {
+        this._ownerStealFurnitureTap = false;
+        return;
+      }
+      this._ownerStealFurnitureTap = true;
+      this._onOwnerPointerDown(e, owner);
+    });
     sprite.on('pointertap', () => {
+      if (this._ownerStealFurnitureTap) {
+        this._ownerStealFurnitureTap = false;
+        return;
+      }
       if (this._isEditMode) return;
       if (this._furnitureBrowseTapTimer != null) {
         clearTimeout(this._furnitureBrowseTapTimer);
@@ -1236,9 +1362,9 @@ export class ShopScene implements Scene {
     this._ownerContainer.eventMode = 'static';
     this._ownerContainer.cursor = inEdit ? 'grab' : 'pointer';
     this._syncOwnerHitArea();
+    this._ensureOwnerEditHitProxy();
+    this._syncOwnerEditHitProxy();
     if (inEdit) {
-      this._ensureOwnerEditHitProxy();
-      this._syncOwnerEditHitProxy();
       FurnitureDragSystem.setOwnerHitPrefer(
         (lx, ly) => this._isRoomLocalOnOwnerHitArea(lx, ly),
         (e) => {
@@ -1250,8 +1376,9 @@ export class ShopScene implements Scene {
       );
     } else {
       FurnitureDragSystem.setOwnerHitPrefer(null, null);
-      this._destroyOwnerEditHitProxy();
     }
+    const proxy = this._ownerEditHitProxy;
+    if (proxy && !proxy.destroyed) proxy.cursor = inEdit ? 'grab' : 'pointer';
   }
 
   /** room 本地坐标是否落在店主 hitArea（含编辑态代理） */
@@ -1269,14 +1396,12 @@ export class ShopScene implements Scene {
     if (this._ownerEditHitProxy && !this._ownerEditHitProxy.destroyed) return;
     const proxy = new PIXI.Container();
     proxy.eventMode = 'static';
-    proxy.cursor = 'grab';
+    proxy.cursor = 'pointer';
     proxy.zIndex = ShopScene.OWNER_EDIT_HIT_PROXY_Z;
     proxy.on('pointerdown', (e: PIXI.FederatedPointerEvent) => {
-      e.stopPropagation();
       const owner = this._ownerContainer;
-      if (!owner || owner.destroyed || !this._isEditMode) return;
-      FurnitureDragSystem.cancelActiveDrag();
-      this._beginOwnerDrag(e, owner);
+      if (!owner || owner.destroyed) return;
+      this._onOwnerPointerDown(e, owner);
     });
     this._roomContainer.addChild(proxy);
     this._ownerEditHitProxy = proxy;
@@ -1286,21 +1411,11 @@ export class ShopScene implements Scene {
     const proxy = this._ownerEditHitProxy;
     const owner = this._ownerContainer;
     if (!proxy || proxy.destroyed || !owner || owner.destroyed) return;
-    if (!this._isEditMode) return;
     proxy.position.set(owner.x, owner.y);
     proxy.hitArea = owner.hitArea;
     proxy.zIndex = ShopScene.OWNER_EDIT_HIT_PROXY_Z;
     proxy.visible = true;
     proxy.eventMode = 'static';
-  }
-
-  private _destroyOwnerEditHitProxy(): void {
-    const proxy = this._ownerEditHitProxy;
-    this._ownerEditHitProxy = null;
-    if (!proxy || proxy.destroyed) return;
-    proxy.removeAllListeners();
-    proxy.parent?.removeChild(proxy);
-    proxy.destroy({ children: true });
   }
 
   private _beginOwnerDragFromClient(
@@ -1420,115 +1535,28 @@ export class ShopScene implements Scene {
       this._ownerSprite.eventMode = 'none';
     }
     owner.on('pointerdown', (e: PIXI.FederatedPointerEvent) => {
-      e.stopPropagation();
-      if (this._isEditMode) {
-        this._beginOwnerDrag(e, owner);
-        return;
-      }
-      this._armOwnerPressForDragOrTap(e, owner);
-      if (this._ownerSprite) {
-        this._ownerSprite.tint = 0xe8f2ff;
-      }
+      this._onOwnerPointerDown(e, owner);
     });
 
-    // 使用 canvas 级别事件处理拖拽（与 FurnitureDragSystem 一致，兼容微信小游戏）
-    const canvas = Game.app.view as any;
-    this._onOwnerRawMove = (rawEvt: any) => {
-      const { x: clientX, y: clientY } = eventClientPoint(rawEvt);
-      const moveId = eventPointerId(rawEvt);
-
-      if (
-        !this._ownerDragging
-        && this._ownerPointerDownOwner
-        && this._ownerPressStartClient
-        && (this._ownerPointerDownId == null || moveId === undefined || moveId === this._ownerPointerDownId)
-      ) {
-        const dx = clientX - this._ownerPressStartClient.x;
-        const dy = clientY - this._ownerPressStartClient.y;
-        if (Math.hypot(dx, dy) > SHOP_OWNER_DRAG_THRESHOLD_PX) {
-          const o = this._ownerPointerDownOwner;
-          const pid = this._ownerPointerDownId;
-          this._clearOwnerPressTracking();
-          this._beginOwnerDragFromClient(clientX, clientY, o, pid);
-        }
-      }
-
-      if (!this._ownerDragging) return;
-      const { x: designX, y: designY } = Game.clientToDesign(clientX, clientY);
-      const c = this._roomContainer;
-      const s = c.scale.x || 1;
-      const localX = (designX - c.position.x) / s + c.pivot.x;
-      const localY = (designY - c.position.y) / s + c.pivot.y;
-      owner.x = localX + this._ownerDragOffset.x;
-      owner.y = localY + this._ownerDragOffset.y;
-      owner.zIndex = roomDepthZForOwner(owner.y);
-      this._syncOwnerEditHitProxy();
-      this._roomContainer.sortChildren();
-    };
-    this._onOwnerRawUp = (rawEvt: any) => {
-      const upId = eventPointerId(rawEvt);
-      if (this._ownerDragging) {
-        if (
-          this._ownerPointerDownId != null
-          && upId !== undefined
-          && upId !== this._ownerPointerDownId
-        ) {
-          return;
-        }
-        this._ownerDragging = false;
-        this._clearOwnerPressTracking();
-        owner.alpha = 1;
-        if (this._ownerSprite) {
-          this._ownerSprite.tint = 0xffffff;
-        }
-        RoomLayoutManager.setOwnerPos(owner.x, owner.y);
-        return;
-      }
-      if (rawEvt?.type === 'pointercancel' || rawEvt?.type === 'touchcancel') {
-        if (
-          this._ownerPointerDownOwner
-          && (this._ownerPointerDownId == null || upId === undefined || upId === this._ownerPointerDownId)
-        ) {
-          this._clearOwnerPressTracking();
-        }
-        return;
-      }
-      // 轻点：未触发拖动阈值就松手 → 播对话
-      if (
-        this._ownerPointerDownOwner
-        && (this._ownerPointerDownId == null || upId === undefined || upId === this._ownerPointerDownId)
-      ) {
-        const tapped = this._ownerPointerDownOwner;
-        this._clearOwnerPressTracking();
-        if (!this._isEditMode) {
-          const greetings = [
-            '欢迎来到花花妙屋~',
-            '今天想做什么呢？可以装修花店哦！',
-            '新的花材到了，快去合成吧~',
-            '花店越来越漂亮了呢！',
-            '记得每天签到领奖励呀~',
-          ];
-          const msg = greetings[Math.floor(Math.random() * greetings.length)];
-          ToastMessage.show(`店主：「${msg}」`);
-          TweenManager.cancelTarget(tapped.scale);
-          tapped.scale.set(0.9);
-          TweenManager.to({
-            target: tapped.scale,
-            props: { x: 1, y: 1 },
-            duration: 0.3,
-            ease: Ease.easeOutBack,
-          });
-        }
-      }
-    };
-    this._detachOwnerCanvas?.();
-    this._detachOwnerCanvas = attachCanvasMoveUp(canvas as TouchCanvasLike, {
-      onMove: this._onOwnerRawMove,
-      onUp: this._onOwnerRawUp,
-      onCancel: this._onOwnerRawUp,
-    });
-
+    this._bindOwnerCanvasDrag();
     this._roomContainer.addChild(owner);
+    this._ensureOwnerEditHitProxy();
+    this._syncOwnerEditHitProxy();
+    this._roomContainer.sortChildren();
+  }
+
+  /** 点在店主身上：装修中直接拖；平时先按下，滑动再拖，轻点才说话 */
+  private _onOwnerPointerDown(e: PIXI.FederatedPointerEvent, owner: PIXI.Container): void {
+    e.stopPropagation();
+    if (this._isEditMode) {
+      FurnitureDragSystem.cancelActiveDrag();
+      this._beginOwnerDrag(e, owner);
+      return;
+    }
+    this._armOwnerPressForDragOrTap(e, owner);
+    if (this._ownerSprite && !this._ownerSprite.destroyed) {
+      this._ownerSprite.tint = 0xe8f2ff;
+    }
   }
 
   // ─────────────────── 装修进度条 ───────────────────
