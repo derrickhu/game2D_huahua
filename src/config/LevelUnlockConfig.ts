@@ -9,7 +9,7 @@
  * 友谊卡系统仅由 2 级功能入口控制，不再按熟客等级生成解锁项。
  */
 
-import { TIDE_BAY_UNLOCK_LEVEL, WORLD_MAP_UNLOCK_LEVEL } from './WorldMapConfig';
+import { BROOK_PERGOLA_UNLOCK_LEVEL, TIDE_BAY_UNLOCK_LEVEL, WORLD_MAP_UNLOCK_LEVEL } from './WorldMapConfig';
 
 export type LevelUnlockEntryKind =
   | 'feature'        // 玩法功能解锁（花语泡泡 / 组合单 / 高阶宝箱等）
@@ -372,9 +372,15 @@ const LEVEL_UNLOCK_BASE: Record<number, Omit<LevelUnlockDef, 'level'>> = {
       },
     ],
   },
-  45: {
-    ceremonyTitle: '珍藏殿堂',
+  [BROOK_PERGOLA_UNLOCK_LEVEL]: {
+    ceremonyTitle: '松溪花桥',
     entries: [
+      {
+        kind: 'map',
+        title: '松溪花桥庭开放',
+        desc: '晴汐花湾的开放式花棚小桥庭院解锁，春溪木桥、苔瓦花架与花坪任你布置。',
+        iconKey: 'worldmap_thumb_brook_pergola',
+      },
       {
         kind: 'feature',
         title: '银宝箱补给',

@@ -57,7 +57,6 @@ import { roomDepthZForPlacement, roomDepthZForOwner, getTopSurfaceFeetBoost, typ
 import { ToastMessage } from '@/gameobjects/ui/ToastMessage';
 import { LevelUpPopup } from '@/gameobjects/ui/LevelUpPopup';
 import {
-  getSceneBuildingScaleMultiplier,
   getSceneFurnitureDisplayScaleMultiplier,
   getSceneOwnerDisplayScaleMultiplier,
   getSceneRenovationProfile,
@@ -1104,13 +1103,15 @@ export class ShopScene implements Scene {
     if (!this._shopBuildingSprite) return;
     const tex = this._shopBuildingSprite.texture;
     const sceneId = CurrencyManager.state.sceneId;
-    const roomScaleMultiplier = getSceneBuildingScaleMultiplier(sceneId);
+    const profile = getSceneRenovationProfile(sceneId);
+    const roomScaleMultiplier = profile.buildingScaleMultiplier;
+    const extraOffsetY = profile.buildingOffsetY ?? 0;
     const referenceRoomHeight = (844 / 390 * DESIGN_WIDTH) * 0.72;
     const shopScale = Math.min((w * 1.18) / tex.width, referenceRoomHeight / tex.height)
       * roomScaleMultiplier;
     this._shopBuildingSprite.scale.set(shopScale);
     this._shopBuildingSprite.anchor.set(0.5, 0.5);
-    this._shopBuildingSprite.position.set(centerX, centerY + SHOP_BUILDING_ANCHOR_OFFSET_Y);
+    this._shopBuildingSprite.position.set(centerX, centerY + SHOP_BUILDING_ANCHOR_OFFSET_Y + extraOffsetY);
   }
 
   /** 切换房间风格后刷新建筑贴图 */

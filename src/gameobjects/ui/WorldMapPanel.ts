@@ -279,6 +279,9 @@ export class WorldMapPanel extends PIXI.Container {
         keys.push('bg_room_tide_loft_nb2');
         keys.push('bg_room_tide_loft_bloom_roof_nb2');
         break;
+      case 'brook_pergola':
+        keys.push('bg_room_brook_pergola_nb2');
+        break;
       case 'garden_villa':
         keys.push('bg_room_garden_villa_loft_nb2');
         keys.push('bg_room_garden_villa_lilac_dusk_nb2');

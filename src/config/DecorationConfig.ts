@@ -192,6 +192,7 @@ export const ROOM_STYLES: RoomStyleDef[] = [
   { id: 'style_flower_farm_spring_vine_nb2', name: '青藤春棚', cost: 72000, starValue: 15, rarity: DecoRarity.FINE, bgTexture: 'bg_room_flower_farm_spring_vine_nb2', desc: '春日换色壳：常春藤爬墙、浅绿木瓦与 mint spring 氛围', unlockRequirement: { level: 31 }, allowedSceneIds: ['flower_farm_house'] },
   { id: 'style_tide_loft_nb2', name: '汐岸阁楼', cost: 0, starValue: 0, rarity: DecoRarity.COMMON, bgTexture: 'bg_room_tide_loft_nb2', desc: '晴汐花湾第一栋：双层木瓦阁楼，二楼较短，无窗，青苔檐与卵石地基', allowedSceneIds: ['tide_loft'] },
   { id: 'style_tide_loft_bloom_roof_nb2', name: '花檐野阁', cost: 0, starValue: 0, rarity: DecoRarity.COMMON, bgTexture: 'bg_room_tide_loft_bloom_roof_nb2', desc: '同款双层短阁楼的自然换景：屋檐铺满苔藓、藤叶与野花，墙面偏暖绿，地面仍是空的橡木地板', allowedSceneIds: ['tide_loft'] },
+  { id: 'style_brook_pergola_nb2', name: '松溪花桥', cost: 0, starValue: 0, rarity: DecoRarity.COMMON, bgTexture: 'bg_room_brook_pergola_nb2', desc: '松溪花桥庭默认壳：焦糖橡木半敞花棚、苔绿木瓦、春溪圆拱小桥与草甸卵石庭院', allowedSceneIds: ['brook_pergola'] },
 ];
 
 export const ROOM_STYLE_MAP = new Map<string, RoomStyleDef>(
@@ -997,6 +998,14 @@ export const DECO_DEFS: DecoDef[] = [
   { id: 'xuerong_wardrobe', name: '绒门衣柜', slot: DecoSlot.SHELF, rarity: DecoRarity.RARE, cost: 71100, starValue: 28, icon: 'xuerong_wardrobe', desc: '拱顶衣柜，铜山茶顶饰，奶油门心嵌着绛绒，铜圆钮', unlockRequirement: { level: 45 }, defaultScale: 1.75, decorationPanelTab: 'furniture' },
   { id: 'xuerong_chaise', name: '厚枕软榻', slot: DecoSlot.ORNAMENT, rarity: DecoRarity.RARE, cost: 66500, starValue: 26, icon: 'xuerong_chaise', desc: '左侧卷扶手软榻，绛绒座面，圆扣抱枕和一角山茶盖毯', unlockRequirement: { level: 45 }, defaultScale: 1.62, decorationPanelTab: 'furniture' },
   { id: 'xuerong_canopy_bed', name: '绒帐暖床', slot: DecoSlot.ORNAMENT, rarity: DecoRarity.LIMITED, cost: 84000, starValue: 30, icon: 'xuerong_canopy_bed', desc: '四柱铜顶的暖床，绛绒帐幔束在两侧，枕上一朵山茶', unlockRequirement: { level: 45 }, defaultScale: 1.95, decorationPanelTab: 'furniture' },
+
+  // ═══════ 松溪花桥庭专属（仅 brook_pergola，Lv45–48，房屋专属 Tab）═══════
+  { id: 'brook_wildflower_stone_rug', name: '卵石繁花野径毯', slot: DecoSlot.ORNAMENT, rarity: DecoRarity.FINE, cost: 42800, starValue: 16, icon: 'brook_wildflower_stone_rug', desc: '苔绿草甸里嵌着圆润河卵石，石缝簇拥勿忘我、洋甘菊、粉三叶草与小蘑菇', unlockRequirement: { level: 45 }, defaultScale: 1.95, depthSortFloorMat: true, depthSortYLift: 0, decorationPanelTab: 'flower_room', allowedSceneIds: ['brook_pergola'] },
+  { id: 'brook_hydrangea_trough', name: '苔木槽绣球花境', slot: DecoSlot.GARDEN, rarity: DecoRarity.FINE, cost: 46500, starValue: 18, icon: 'brook_hydrangea_trough', desc: '掏空老橡木花槽覆着软青苔，满盛晴蓝与淡紫绣球、飞燕草与垂藤，停着一只小黄蝶', unlockRequirement: { level: 45 }, defaultScale: 1.48, decorationPanelTab: 'flower_room', allowedSceneIds: ['brook_pergola'] },
+  { id: 'brook_bamboo_water_basin', name: '流泉竹筒水钵花坛', slot: DecoSlot.GARDEN, rarity: DecoRarity.RARE, cost: 58600, starValue: 22, icon: 'brook_bamboo_water_basin', desc: '青灰圆石钵浮着粉白睡莲，竹笕轻引清泉滴落，四周簇拥薰衣草与溪畔野花', unlockRequirement: { level: 46 }, defaultScale: 1.45, decorationPanelTab: 'flower_room', allowedSceneIds: ['brook_pergola'] },
+  { id: 'brook_rose_garland_wall', name: '野蔷薇花环壁灯架', slot: DecoSlot.WALLART, rarity: DecoRarity.FINE, cost: 49200, starValue: 18, icon: 'brook_rose_garland_wall', desc: '焦糖原木枝缠满蜜桃野蔷薇与绿藤，垂挂风干薰衣草束、彩珠串与一盏暖光花灯', unlockRequirement: { level: 46 }, defaultScale: 1.28, decorationPanelTab: 'flower_room', allowedSceneIds: ['brook_pergola'] },
+  { id: 'brook_vine_tea_table', name: '花藤原木空茶桌', slot: DecoSlot.TABLE, rarity: DecoRarity.RARE, cost: 63800, starValue: 24, icon: 'brook_vine_tea_table', desc: '温润浅橡木空台面茶桌好摆小物，桌腿缠绕粉蓝碎花绿藤，底层藤架收着小花篮', unlockRequirement: { level: 47 }, defaultScale: 1.32, decorationPanelTab: 'flower_room', allowedSceneIds: ['brook_pergola'] },
+  { id: 'brook_floral_pergola_swing', name: '繁花拱架摇椅秋千', slot: DecoSlot.ORNAMENT, rarity: DecoRarity.LIMITED, cost: 96000, starValue: 28, icon: 'brook_floral_pergola_swing', desc: '焦糖木拱架垂满紫藤与粉蔷薇，麻绳悬吊格纹软垫双人藤编摇椅，檐边挂暖光木灯', unlockRequirement: { level: 48 }, defaultScale: 1.88, decorationPanelTab: 'flower_room', allowedSceneIds: ['brook_pergola'] },
 ];
 
 // ======== 索引 & 工具函数 ========

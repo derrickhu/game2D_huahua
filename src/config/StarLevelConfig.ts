@@ -248,6 +248,13 @@ export const SCENE_DEFS: SceneDef[] = [
     thresholds: FOREST_TREEHOUSE_THRESHOLDS,
     milestones: FOREST_TREEHOUSE_MILESTONES,
   },
+  {
+    sceneId: 'brook_pergola',
+    name: '松溪花桥庭',
+    maxStarLevel: 8,
+    thresholds: FOREST_TREEHOUSE_THRESHOLDS,
+    milestones: FOREST_TREEHOUSE_MILESTONES,
+  },
 ];
 
 export const SCENE_MAP = new Map<string, SceneDef>(

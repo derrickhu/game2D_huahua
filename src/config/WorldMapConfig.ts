@@ -101,6 +101,9 @@ export const FLOWER_FARM_HOUSE_PURCHASE_COST = 180000;
  */
 export const TIDE_BAY_UNLOCK_LEVEL = 40;
 
+/** 晴汐花湾第二处开放式庭院场景「松溪花桥庭」解锁等级 */
+export const BROOK_PERGOLA_UNLOCK_LEVEL = 45;
+
 /** 大地图「当前店铺」实时缩略图：截取最长边像素（略小于节点 thumbSize，省显存） */
 export const LIVE_HOUSE_THUMB_CAPTURE_MAX = 160;
 
@@ -266,10 +269,22 @@ const TIDE_BAY_NODES: MapNodeDef[] = [
     useLiveMapThumb: false,
     targetSceneId: 'tide_loft',
   },
+  {
+    id: 'brook_pergola',
+    type: 'house',
+    label: '松溪花桥庭',
+    /** 汐岸阁楼右侧圆形空地（原 tide_plot_02），45 级开放 */
+    x: 593,
+    y: 542,
+    thumbKey: 'worldmap_thumb_brook_pergola',
+    thumbSize: 332,
+    unlockLevel: BROOK_PERGOLA_UNLOCK_LEVEL,
+    useLiveMapThumb: false,
+    targetSceneId: 'brook_pergola',
+  },
 ];
 
 const TIDE_BAY_RESERVED_PLOTS: WorldMapReservedPlot[] = [
-  { id: 'tide_plot_02', x: 593, y: 554 },
   { id: 'tide_plot_03', x: 1125, y: 627 },
   { id: 'tide_plot_04', x: 2086, y: 505 },
   { id: 'tide_plot_05', x: 613, y: 905 },

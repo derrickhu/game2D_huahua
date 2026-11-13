@@ -9,6 +9,8 @@ export interface SceneRenovationProfile {
   backgroundTexture?: string;
   /** 房壳相对通用公式的额外倍率（叠在 ShopScene 基础 fit 公式上） */
   buildingScaleMultiplier: number;
+  /** 房壳锚点 Y 额外微调（设计 px，正值下移；贴地圆岛庭院对齐背景沙洲中心时使用） */
+  buildingOffsetY?: number;
   /** 叠在 SHOP_FURNITURE_DISPLAY_SCALE_MULTIPLIER 上 */
   furnitureDisplayScaleMultiplier: number;
   /** 叠在 SHOP_OWNER_DISPLAY_SCALE_MULTIPLIER 上 */
@@ -58,6 +60,19 @@ const SCENE_OVERRIDES: Record<string, Partial<SceneRenovationProfile>> = {
     editViewScaleMax: 2.4,
     editViewScaleDefault: 0.72,
     layoutBounds: { minY: 200 },
+  },
+  brook_pergola: {
+    backgroundTexture: 'house_bg_tide_bay_nb2',
+    buildingScaleMultiplier: 1.16,
+    buildingOffsetY: 86,
+    furnitureDisplayScaleMultiplier: 0.96,
+    ownerDisplayScaleMultiplier: 0.88,
+    placementScaleMultiplier: 0.96,
+    browseViewScale: 0.88,
+    editViewScaleMin: 0.65,
+    editViewScaleMax: 2.3,
+    editViewScaleDefault: 0.88,
+    layoutBounds: { minY: 310 },
   },
   dream_cloud_house: {
     backgroundTexture: 'house_bg_dream_cloud_sky_nb2',

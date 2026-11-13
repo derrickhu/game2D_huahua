@@ -49,8 +49,8 @@ export const UPDATE_ANNOUNCEMENT_SECTION_META: Record<
  */
 export const UPDATE_ANNOUNCEMENT_ACTIVE: UpdateAnnouncementDef & { enabled: boolean } = {
   enabled: true,
-  id: '1.6.35',
-  version: '1.6.35',
+  id: '1.6.36',
+  version: '1.6.36',
   title: '更新公告',
   greeting: '花花妙屋又有新动静啦～',
   sections: [
@@ -58,16 +58,16 @@ export const UPDATE_ANNOUNCEMENT_ACTIVE: UpdateAnnouncementDef & { enabled: bool
       id: 'new',
       title: '【新增】',
       items: [
-        '40级解锁新大地图「晴汐花湾」，并开放新房屋「汐岸阁楼」',
-        '35–40级解锁新家具：芦苇软榻、野花窗座、贝壳壁钟、珍珠泉茶几等',
+        '新场景「松溪花桥庭」：45级在晴汐花湾开放，45–48级可解锁繁花拱架摇椅秋千、流泉水钵花坛、苔木槽绣球、花藤空茶桌等专属花草装饰',
+        '新主题「晴风花绘坊」：紫藤花伞茶座、天窗藤幔卧榻、彩绘琉璃隔断等19件上线，在装修「主题」里切换查看',
+        '新家具「雪绒山茶」：40–45级解锁绒帐暖床、厚枕软榻、绛蕊屏风、松棚花车等',
       ],
     },
     {
-      id: 'event',
-      title: '【活动】',
+      id: 'fix',
+      title: '【修复】',
       items: [
-        '「月满中秋」已结束，剩下的玉兔灯会自动换成花愿',
-        '10月12日起「金秋丰收」：完成甜品或果切订单获取枫叶，可兑换秋日家具',
+        '修复了装修中或退出装修后，店主偶尔拖不动的问题',
       ],
     },
   ],

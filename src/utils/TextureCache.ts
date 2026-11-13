@@ -306,6 +306,8 @@ const PANELS_IMAGE_MAP: Record<string, string> = {
   worldmap_bg_tide_bay: 'subpkg_panels/images/ui/worldmap_bg_tide_bay.png',
   /** 晴汐花湾第一栋：汐岸阁楼外观 */
   worldmap_thumb_tide_loft: 'subpkg_panels/images/ui/worldmap_thumb_tide_loft.png',
+  /** 晴汐花湾第二处（45级开放）：松溪花桥庭外观 */
+  worldmap_thumb_brook_pergola: 'subpkg_panels/images/ui/worldmap_thumb_brook_pergola.png',
   /** 大地图「花花妙屋」静态花坊外观（与装修房壳同系粉瓦白墙，完整店面） */
   worldmap_house_flower_shop: 'subpkg_panels/images/ui/worldmap_house_flower_shop.png',
   /** 大地图蝴蝶小屋立绘（NB2+rembg；原茶室占位已替换） */
@@ -1149,6 +1151,14 @@ const DECO_IMAGE_MAP: Record<string, string> = {
   qingfeng_wisteria_parasol_seat: 'subpkg_deco/images/furniture/qingfeng_wisteria_parasol_seat.png',
   qingfeng_skylight_wisteria_bed: 'subpkg_deco/images/furniture/qingfeng_skylight_wisteria_bed.png',
 
+  // ---- 松溪花桥庭专属家具（brook_pergola Lv45–48 溪畔花草套）----
+  brook_wildflower_stone_rug: 'subpkg_deco/images/furniture/brook_wildflower_stone_rug.png',
+  brook_hydrangea_trough: 'subpkg_deco/images/furniture/brook_hydrangea_trough.png',
+  brook_bamboo_water_basin: 'subpkg_deco/images/furniture/brook_bamboo_water_basin.png',
+  brook_rose_garland_wall: 'subpkg_deco/images/furniture/brook_rose_garland_wall.png',
+  brook_vine_tea_table: 'subpkg_deco/images/furniture/brook_vine_tea_table.png',
+  brook_floral_pergola_swing: 'subpkg_deco/images/furniture/brook_floral_pergola_swing.png',
+
   // ---- 梦云小屋专属家具（dream_cloud_house Lv20–24 卧室休闲套）----
   dream_cloud_bed: 'subpkg_deco/images/furniture/dream_cloud_bed.png',
   dream_cloud_sofa: 'subpkg_deco/images/furniture/dream_cloud_sofa.png',
@@ -1286,6 +1296,8 @@ const DECO_IMAGE_MAP: Record<string, string> = {
   bg_room_tide_loft_nb2: 'subpkg_deco/images/house/bg_room_tide_loft_nb2.png',
   /** 汐岸阁楼自然换景：屋顶野花与藤叶 */
   bg_room_tide_loft_bloom_roof_nb2: 'subpkg_deco/images/house/bg_room_tide_loft_bloom_roof_nb2.png',
+  /** 晴汐花湾松溪花桥庭默认场景壳（45级开放式花棚小桥庭院） */
+  bg_room_brook_pergola_nb2: 'subpkg_deco/images/house/bg_room_brook_pergola_nb2.png',
   bg_room_forest_treehouse_spring_bloom_nb2: 'subpkg_deco/images/house/bg_room_forest_treehouse_spring_bloom_nb2.png',
   /** 梦云小屋 — 云朵双层 cutaway 空壳（支线场景默认壳） */
   bg_room_dream_cloud_two_story_nb2: 'subpkg_deco/images/house/bg_room_dream_cloud_two_story_nb2.png',
@@ -1454,6 +1466,7 @@ const WORLDMAP_WARMUP_KEYS = [
   'worldmap_thumb_dream_cloud_house',
   'worldmap_thumb_flower_farm_house',
   'worldmap_thumb_tide_loft',
+  'worldmap_thumb_brook_pergola',
   'worldmap_thumb_wishing_fountain_1',
   'worldmap_thumb_wishing_fountain_2',
   'icon_worldmap',
