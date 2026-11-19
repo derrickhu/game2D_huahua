@@ -44,6 +44,14 @@ export const CUSTOMER_ARRIVAL_COPY: Readonly<Record<string, CustomerArrivalCopy>
       '玉兔等不及了，请准备最好的月饼吧。',
     ],
   },
+  winter_herald: {
+    subtitle: '双旦特使',
+    arrivalLines: [
+      '外面飘雪啦，来一壶热腾腾的暖茶和姜饼吧！',
+      '星愿铃铛已经系好，就等你的双旦茶点出炉啦。',
+      '热茶暖身、姜饼甜心，一起热热闹闹跨进新年吧！',
+    ],
+  },
 };
 
 export function shouldShowCustomerArrivalBanner(customer: {

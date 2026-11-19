@@ -9,7 +9,13 @@
  * 友谊卡系统仅由 2 级功能入口控制，不再按熟客等级生成解锁项。
  */
 
-import { BROOK_PERGOLA_UNLOCK_LEVEL, TIDE_BAY_UNLOCK_LEVEL, WORLD_MAP_UNLOCK_LEVEL } from './WorldMapConfig';
+import {
+  BROOK_PERGOLA_UNLOCK_LEVEL,
+  SAKURA_WATER_PAVILION_UNLOCK_LEVEL,
+  TIDE_BAY_UNLOCK_LEVEL,
+  TIDE_CONSERVATORY_UNLOCK_LEVEL,
+  WORLD_MAP_UNLOCK_LEVEL,
+} from './WorldMapConfig';
 
 export type LevelUnlockEntryKind =
   | 'feature'        // 玩法功能解锁（花语泡泡 / 组合单 / 高阶宝箱等）
@@ -389,9 +395,32 @@ const LEVEL_UNLOCK_BASE: Record<number, Omit<LevelUnlockDef, 'level'>> = {
       },
     ],
   },
-  50: {
-    ceremonyTitle: '传承花境',
+  [TIDE_CONSERVATORY_UNLOCK_LEVEL]: {
+    ceremonyTitle: '晴汐琉璃',
     entries: [
+      {
+        kind: 'map',
+        title: '晴汐琉璃花房开放',
+        desc: '晴汐花湾中央海湾畔的复式玻璃阳光花房解锁，大二层与海风露台任你布置。',
+        iconKey: 'worldmap_thumb_tide_conservatory',
+      },
+      {
+        kind: 'feature',
+        title: '银宝箱补给',
+        desc: '本次五级里程碑额外附赠银宝箱 1 份。',
+        iconKey: 'chest_2',
+      },
+    ],
+  },
+  [SAKURA_WATER_PAVILION_UNLOCK_LEVEL]: {
+    ceremonyTitle: '绯樱镜水',
+    entries: [
+      {
+        kind: 'map',
+        title: '绯樱镜水花阁开放',
+        desc: '晴汐花湾樱林高坡的三台错层落樱镜水花阁解锁，三重楼台与浮水石院任你布置。',
+        iconKey: 'worldmap_thumb_sakura_water_pavilion',
+      },
       {
         kind: 'feature',
         title: '银宝箱补给',

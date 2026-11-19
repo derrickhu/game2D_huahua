@@ -151,6 +151,10 @@ const CHARS_IMAGE_MAP: Record<string, string> = {
   owner_full_outfit_change_blink: 'subpkg_chars/images/owner/full_outfit_change_eyesclosed.png',
   owner_chibi_outfit_change: 'subpkg_chars/images/owner/chibi_outfit_change.png',
 
+  owner_full_outfit_winter_star: 'subpkg_chars/images/owner/full_outfit_winter_star.png',
+  owner_full_outfit_winter_star_blink: 'subpkg_chars/images/owner/full_outfit_winter_star_eyesclosed.png',
+  owner_chibi_outfit_winter_star: 'subpkg_chars/images/owner/chibi_outfit_winter_star.png',
+
   customer_child:   'subpkg_chars/images/customer/child.png',
   customer_student: 'subpkg_chars/images/customer/student.png',
   customer_worker:  'subpkg_chars/images/customer/worker.png',
@@ -168,6 +172,7 @@ const CHARS_IMAGE_MAP: Record<string, string> = {
   customer_florist_merchant: 'subpkg_chars/images/customer/florist_merchant.png',
   customer_furniture_craftswoman: 'subpkg_chars/images/customer/furniture_craftswoman.png',
   customer_chang_e: 'subpkg_chars/images/customer/chang_e.png',
+  customer_winter_herald: 'subpkg_chars/images/customer/winter_herald.png',
 
   // 友谊卡 / 图鉴系统：S1 首发卡面（路径 affinity_cards/）
   affinity_card_student_01: 'subpkg_chars/images/affinity_cards/card_student_01.png',
@@ -308,6 +313,10 @@ const PANELS_IMAGE_MAP: Record<string, string> = {
   worldmap_thumb_tide_loft: 'subpkg_panels/images/ui/worldmap_thumb_tide_loft.png',
   /** 晴汐花湾第二处（45级开放）：松溪花桥庭外观 */
   worldmap_thumb_brook_pergola: 'subpkg_panels/images/ui/worldmap_thumb_brook_pergola.png',
+  /** 晴汐花湾第三处（50级开放）：晴汐琉璃花房外观 */
+  worldmap_thumb_tide_conservatory: 'subpkg_panels/images/ui/worldmap_thumb_tide_conservatory.png',
+  /** 晴汐花湾第四处（60级开放）：绯樱镜水花阁外观 */
+  worldmap_thumb_sakura_water_pavilion: 'subpkg_panels/images/ui/worldmap_thumb_sakura_water_pavilion.png',
   /** 大地图「花花妙屋」静态花坊外观（与装修房壳同系粉瓦白墙，完整店面） */
   worldmap_house_flower_shop: 'subpkg_panels/images/ui/worldmap_house_flower_shop.png',
   /** 大地图蝴蝶小屋立绘（NB2+rembg；原茶室占位已替换） */
@@ -478,6 +487,22 @@ const ITEMS_IMAGE_MAP: Record<string, string> = {
   drink_mooncake_6: 'subpkg_items/images/drinks/mooncake/drink_mooncake_6.png',
   drink_mooncake_7: 'subpkg_items/images/drinks/mooncake/drink_mooncake_7.png',
   drink_mooncake_8: 'subpkg_items/images/drinks/mooncake/drink_mooncake_8.png',
+  drink_gingerbread_1: 'subpkg_items/images/drinks/gingerbread/drink_gingerbread_1.png',
+  drink_gingerbread_2: 'subpkg_items/images/drinks/gingerbread/drink_gingerbread_2.png',
+  drink_gingerbread_3: 'subpkg_items/images/drinks/gingerbread/drink_gingerbread_3.png',
+  drink_gingerbread_4: 'subpkg_items/images/drinks/gingerbread/drink_gingerbread_4.png',
+  drink_gingerbread_5: 'subpkg_items/images/drinks/gingerbread/drink_gingerbread_5.png',
+  drink_gingerbread_6: 'subpkg_items/images/drinks/gingerbread/drink_gingerbread_6.png',
+  drink_gingerbread_7: 'subpkg_items/images/drinks/gingerbread/drink_gingerbread_7.png',
+  drink_gingerbread_8: 'subpkg_items/images/drinks/gingerbread/drink_gingerbread_8.png',
+  drink_winter_tea_1: 'subpkg_items/images/drinks/winter_tea/drink_winter_tea_1.png',
+  drink_winter_tea_2: 'subpkg_items/images/drinks/winter_tea/drink_winter_tea_2.png',
+  drink_winter_tea_3: 'subpkg_items/images/drinks/winter_tea/drink_winter_tea_3.png',
+  drink_winter_tea_4: 'subpkg_items/images/drinks/winter_tea/drink_winter_tea_4.png',
+  drink_winter_tea_5: 'subpkg_items/images/drinks/winter_tea/drink_winter_tea_5.png',
+  drink_winter_tea_6: 'subpkg_items/images/drinks/winter_tea/drink_winter_tea_6.png',
+  drink_winter_tea_7: 'subpkg_items/images/drinks/winter_tea/drink_winter_tea_7.png',
+  drink_winter_tea_8: 'subpkg_items/images/drinks/winter_tea/drink_winter_tea_8.png',
 
   // ---- 工具：种植线 (3级试跑) ----
   tool_plant_1: 'subpkg_items/images/tools/plant/tool_plant_1.png',
@@ -782,6 +807,15 @@ const DECO_IMAGE_MAP: Record<string, string> = {
   workshop_willow_wood_bay_window: 'subpkg_deco/images/furniture/workshop_willow_wood_bay_window.png',
   /** 月纱长窗：2 列（半透遮月 / 纱帘拉开）；每格 max-side 342（月满中秋第 3 轮图纸） */
   workshop_moon_sheer_window_sheet: 'subpkg_deco/images/furniture/workshop_moon_sheer_window_sheet.png',
+  /** 冬日星愿季（双旦转盘）6 套工坊限定图纸合图 */
+  workshop_winter_star_clock_sheet: 'subpkg_deco/images/furniture/workshop_winter_star_clock_sheet.png',
+  workshop_winter_cocoa_table_sheet: 'subpkg_deco/images/furniture/workshop_winter_cocoa_table_sheet.png',
+  workshop_winter_hearth_chair_sheet: 'subpkg_deco/images/furniture/workshop_winter_hearth_chair_sheet.png',
+  workshop_newyear_firework_window_sheet: 'subpkg_deco/images/furniture/workshop_newyear_firework_window_sheet.png',
+  workshop_winter_pine_tree_sheet: 'subpkg_deco/images/furniture/workshop_winter_pine_tree_sheet.png',
+  workshop_winter_fireplace_sheet: 'subpkg_deco/images/furniture/workshop_winter_fireplace_sheet.png',
+  /** 大红灯笼：单格墙饰壁挂宫灯，可制作 4 件；max-side 342 */
+  workshop_winter_red_lantern_sheet: 'subpkg_deco/images/furniture/workshop_winter_red_lantern_sheet.png',
   workshop_blueprint_generic: 'subpkg_deco/images/furniture/workshop_blueprint_generic.png',
   promo_petal_chaise: 'subpkg_deco/images/furniture/promo_petal_chaise.png',
   promo_doll_hug_pillow: 'subpkg_deco/images/furniture/promo_doll_hug_pillow.png',
@@ -1159,6 +1193,30 @@ const DECO_IMAGE_MAP: Record<string, string> = {
   brook_vine_tea_table: 'subpkg_deco/images/furniture/brook_vine_tea_table.png',
   brook_floral_pergola_swing: 'subpkg_deco/images/furniture/brook_floral_pergola_swing.png',
 
+  // ---- 晴汐琉璃花房专属家具（tide_conservatory Lv50–54 海岸阳光花房10件套）----
+  tidecons_arch_glass_divider: 'subpkg_deco/images/furniture/tidecons_arch_glass_divider.png',
+  tidecons_mosaic_shell_rug: 'subpkg_deco/images/furniture/tidecons_mosaic_shell_rug.png',
+  tidecons_hydrangea_tiered_stand: 'subpkg_deco/images/furniture/tidecons_hydrangea_tiered_stand.png',
+  tidecons_pearl_tea_table: 'subpkg_deco/images/furniture/tidecons_pearl_tea_table.png',
+  tidecons_seaglass_terrarium: 'subpkg_deco/images/furniture/tidecons_seaglass_terrarium.png',
+  tidecons_jasmine_chandelier_lamp: 'subpkg_deco/images/furniture/tidecons_jasmine_chandelier_lamp.png',
+  tidecons_stained_arch_mirror: 'subpkg_deco/images/furniture/tidecons_stained_arch_mirror.png',
+  tidecons_wrought_daybed: 'subpkg_deco/images/furniture/tidecons_wrought_daybed.png',
+  tidecons_shell_fountain_basin: 'subpkg_deco/images/furniture/tidecons_shell_fountain_basin.png',
+  tidecons_canopy_sunbed: 'subpkg_deco/images/furniture/tidecons_canopy_sunbed.png',
+
+  // ---- 绯樱镜水花阁专属家具（sakura_water_pavilion Lv60–64 落樱镜水10件套）----
+  sakurapav_blossom_shoji_divider: 'subpkg_deco/images/furniture/sakurapav_blossom_shoji_divider.png',
+  sakurapav_petal_ripple_rug: 'subpkg_deco/images/furniture/sakurapav_petal_ripple_rug.png',
+  sakurapav_hinoki_low_table: 'subpkg_deco/images/furniture/sakurapav_hinoki_low_table.png',
+  sakurapav_tea_blossom_tray: 'subpkg_deco/images/furniture/sakurapav_tea_blossom_tray.png',
+  sakurapav_bonsai_shelf: 'subpkg_deco/images/furniture/sakurapav_bonsai_shelf.png',
+  sakurapav_petal_palace_lamp: 'subpkg_deco/images/furniture/sakurapav_petal_palace_lamp.png',
+  sakurapav_moon_window_wall: 'subpkg_deco/images/furniture/sakurapav_moon_window_wall.png',
+  sakurapav_veranda_daybed: 'subpkg_deco/images/furniture/sakurapav_veranda_daybed.png',
+  sakurapav_mirror_lotus_basin: 'subpkg_deco/images/furniture/sakurapav_mirror_lotus_basin.png',
+  sakurapav_sakura_canopy_bed: 'subpkg_deco/images/furniture/sakurapav_sakura_canopy_bed.png',
+
   // ---- 梦云小屋专属家具（dream_cloud_house Lv20–24 卧室休闲套）----
   dream_cloud_bed: 'subpkg_deco/images/furniture/dream_cloud_bed.png',
   dream_cloud_sofa: 'subpkg_deco/images/furniture/dream_cloud_sofa.png',
@@ -1298,6 +1356,10 @@ const DECO_IMAGE_MAP: Record<string, string> = {
   bg_room_tide_loft_bloom_roof_nb2: 'subpkg_deco/images/house/bg_room_tide_loft_bloom_roof_nb2.png',
   /** 晴汐花湾松溪花桥庭默认场景壳（45级开放式花棚小桥庭院） */
   bg_room_brook_pergola_nb2: 'subpkg_deco/images/house/bg_room_brook_pergola_nb2.png',
+  /** 晴汐花湾晴汐琉璃花房默认场景壳（50级复式转角玻璃阳光花房） */
+  bg_room_tide_conservatory_nb2: 'subpkg_deco/images/house/bg_room_tide_conservatory_nb2.png',
+  /** 晴汐花湾绯樱镜水花阁默认场景壳（60级三台错层落樱镜水庭阁） */
+  bg_room_sakura_water_pavilion_nb2: 'subpkg_deco/images/house/bg_room_sakura_water_pavilion_nb2.png',
   bg_room_forest_treehouse_spring_bloom_nb2: 'subpkg_deco/images/house/bg_room_forest_treehouse_spring_bloom_nb2.png',
   /** 梦云小屋 — 云朵双层 cutaway 空壳（支线场景默认壳） */
   bg_room_dream_cloud_two_story_nb2: 'subpkg_deco/images/house/bg_room_dream_cloud_two_story_nb2.png',
@@ -1467,6 +1529,8 @@ const WORLDMAP_WARMUP_KEYS = [
   'worldmap_thumb_flower_farm_house',
   'worldmap_thumb_tide_loft',
   'worldmap_thumb_brook_pergola',
+  'worldmap_thumb_tide_conservatory',
+  'worldmap_thumb_sakura_water_pavilion',
   'worldmap_thumb_wishing_fountain_1',
   'worldmap_thumb_wishing_fountain_2',
   'icon_worldmap',

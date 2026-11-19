@@ -33,6 +33,7 @@ import {
   PAST_WHEEL_THEMES,
   findPastWheelTheme,
 } from '../src/config/events/wheel/WheelEventRegistry';
+import { wheelOrderEarns } from '../src/config/events/wheel/WheelEventTheme';
 
 const root = process.cwd();
 const minigame = join(root, 'minigame');
@@ -150,12 +151,16 @@ for (const round of wheel.rounds) {
   }
 }
 for (const cost of wheel.spinCosts) assert.ok(cost > 0, '转盘花费必须大于 0');
-assert.ok(wheel.orderEarn.bands.length > 0, '订单产出至少要有一档');
-for (const band of wheel.orderEarn.bands) {
-  assert.ok(band.minLevel >= 1 && band.amount > 0, '订单产出档位不合法');
+const earnRules = wheelOrderEarns(wheel);
+assert.ok(earnRules.length > 0, '转盘至少要有一条订单产线规则');
+for (const earn of earnRules) {
+  assert.ok(earn.bands.length > 0, `订单产出 ${earn.line} 至少要有一档`);
+  for (const band of earn.bands) {
+    assert.ok(band.minLevel >= 1 && band.amount > 0, `订单产出 ${earn.line} 档位不合法`);
+  }
+  const earnProduct = resolveOrderProduct(earn.category as Category, earn.line);
+  assert.ok(earnProduct, `订单产线 ${earn.category}/${earn.line} 没有对应订单商品`);
 }
-const earnProduct = resolveOrderProduct(wheel.orderEarn.category as Category, wheel.orderEarn.line);
-assert.ok(earnProduct, `订单产线 ${wheel.orderEarn.category}/${wheel.orderEarn.line} 没有对应订单商品`);
 if (wheel.featuredCustomer) {
   assert.ok(CUSTOMER_TYPE_MAP.has(wheel.featuredCustomer.typeId), `专属客人 ${wheel.featuredCustomer.typeId} 未登记`);
   assert.ok(wheel.featuredCustomer.dailyCap > 0, '专属客人每日上限必须大于 0');

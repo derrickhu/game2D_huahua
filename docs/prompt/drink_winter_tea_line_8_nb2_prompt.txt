@@ -1,0 +1,23 @@
+Cute mobile-game merge item icon SPRITE SHEET on a 4:3 landscape canvas, pure solid white #FFFFFF background. 3/4 top-down isometric view, rounded chunky kawaii proportions, soft warm reddish-brown outlines, clean cel-shaded volumetric highlights, high readability at 128px, matching the attached game icon's polish.
+
+STRICT GRID & MARGIN RULES:
+- EXACTLY 4 equal columns x 2 equal rows (8 items total: Top row left-to-right = Levels 1, 2, 3, 4; Bottom row left-to-right = Levels 5, 6, 7, 8).
+- Imagine 8 invisible equal square cells with WIDE pure #FFFFFF gutters between every column and a WIDE horizontal pure #FFFFFF gutter separating the top row and bottom row.
+- Every single item sits centered inside its own cell, occupying at most 65% of the cell width and height, with generous pure white space on ALL FOUR SIDES. Keep handles and lids compact and low; omit tall floating steam trails so every silhouette stays compact and self-contained.
+- Zero text, zero numbers, zero labels, zero UI tiles or frames.
+
+UNIFIED COLOR FAMILY & PROGRESSION (crucial):
+- ALL 8 ITEMS MUST SHARE THE SAME SIGNATURE MAIN PALETTE: festive Chinese vermilion-persimmon red glazed ceramic (#D94E34) with warm coin-gold rim accents and glowing amber-red hot tea, accented sparingly with tiny jade-green leaves, cream foam, or golden osmanthus so players immediately recognize all 8 belong to ONE Chinese Winter Hot Tea merge line.
+- Clear visual progression from a tiny cup (Lv1) to a luxurious festive tea-stove set (Lv8):
+
+Top row left to right:
+- Level 1: a tiny round vermilion-red glazed porcelain teacup holding warm amber tea with two red jujube dates floating inside.
+- Level 2: a plump vermilion-red glazed mug with a gold rim line, filled with golden-amber longan and ginger strip tea.
+- Level 3: a cute round persimmon-shaped vermilion-red ceramic tea jar with a tiny jade-green leaf lid knob, showing warm amber tea at the rim.
+- Level 4: a traditional Chinese vermilion-red glazed lidded gaiwan on a matching red saucer with gold trim, lid slightly ajar revealing amber tea sprinkled with golden osmanthus dots.
+
+Bottom row left to right:
+- Level 5: a plump two-handled vermilion-red clay milk-tea pot with gold cloud trim, crowned with a swirl of creamy white roasted milk foam, dried rose petals, and red jujube bits.
+- Level 6: an ornate vermilion-red glazed round teapot with a low curved golden handle and gold auspicious cloud motifs, paired right beside one matching tiny red teacup.
+- Level 7: a refined vermilion-red and gold tea set on a compact warm-wood round tray: a red-and-gold pitcher teapot, two matching red teacups of amber tea, and a small white winter-plum blossom sprig accent.
+- Level 8: the ultimate compact Chinese stove-boiled tea centerpiece: a round vermilion-red clay charcoal brazier with a warm glowing ember window, topped with a low-handle vermilion-red and gold teapot surrounded on the grill by a tiny roasted orange, red dates, and chestnuts — clearly the richest top tier while keeping the exact vermilion-red and gold main colors.

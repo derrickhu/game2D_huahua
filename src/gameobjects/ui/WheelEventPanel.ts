@@ -13,10 +13,17 @@ import {
   wheelSpinCost,
   type WheelGrant,
 } from '@/config/events/wheel/WheelEventTheme';
+import { DECO_MAP } from '@/config/DecorationConfig';
 import { getOwnerChibiTextureKey, OUTFIT_MAP } from '@/config/DressUpConfig';
+import { collectFurniturePreloadKeys } from '@/config/FurnitureRenderConfig';
+import { WORKSHOP_BLUEPRINT_MAP } from '@/config/FurnitureWorkshopConfig';
 import { WheelEventManager } from '@/managers/WheelEventManager';
 import { DressUpManager } from '@/managers/DressUpManager';
 import { TextureCache } from '@/utils/TextureCache';
+import {
+  appendWorkshopBlueprintIcon,
+  WORKSHOP_BLUEPRINT_SCROLL_KEY,
+} from '@/utils/WorkshopBlueprintDisplay';
 import { ToastMessage } from '@/gameobjects/ui/ToastMessage';
 import { ItemObtainOverlay, type ItemObtainEntry } from '@/gameobjects/ui/ItemObtainOverlay';
 
@@ -119,8 +126,16 @@ export class WheelEventPanel extends PIXI.Container {
       TextureCache.preloadEventKeys(THEME.seasonId, PRELOAD_KEYS),
       TextureCache.preloadKeys([
         ART.currencyIconKey,
-        ...THEME.rounds.flat().map(prize => prize.iconKey),
-        'workshop_blueprint_generic',
+        WORKSHOP_BLUEPRINT_SCROLL_KEY,
+        ...THEME.rounds.flat().flatMap(prize => {
+          if (prize.grant.kind === 'blueprint') {
+            const decoId = WORKSHOP_BLUEPRINT_MAP.get(prize.grant.blueprintId)?.outputDecoId;
+            if (!decoId) return [prize.iconKey];
+            const deco = DECO_MAP.get(decoId);
+            return collectFurniturePreloadKeys(decoId, deco?.icon ?? decoId);
+          }
+          return collectFurniturePreloadKeys(prize.iconKey, prize.iconKey);
+        }),
         ...(THEME.clearanceOutfitId ? [getOwnerChibiTextureKey(THEME.clearanceOutfitId)] : []),
         'ui_order_check_badge',
       ]),
@@ -481,7 +496,18 @@ export class WheelEventPanel extends PIXI.Container {
       const grayAll = cleared || this._previewRound < playable;
       const isWon = grayAll
         || (this._previewRound === playable && WheelEventManager.isPrizeWon(prize.id));
-      const icon = this._makeIcon(prize.iconKey, qty ? PRIZE_ICON_SIZE : PRIZE_ICON_SIZE_DECO);
+      let icon: PIXI.Container;
+      if (prize.grant.kind === 'blueprint') {
+        icon = new PIXI.Container();
+        const decoId = WORKSHOP_BLUEPRINT_MAP.get(prize.grant.blueprintId)?.outputDecoId;
+        if (decoId) {
+          appendWorkshopBlueprintIcon(icon, decoId, 0, 0, PRIZE_ICON_SIZE_DECO);
+        } else {
+          icon = this._makeIcon(WORKSHOP_BLUEPRINT_SCROLL_KEY, PRIZE_ICON_SIZE_DECO);
+        }
+      } else {
+        icon = this._makeIcon(prize.iconKey, qty ? PRIZE_ICON_SIZE : PRIZE_ICON_SIZE_DECO);
+      }
       icon.position.set(cx * PRIZE_ICON_R, cy * PRIZE_ICON_R);
       if (isWon) this._grayNode(icon);
       wrap.addChild(icon);
@@ -886,27 +912,33 @@ export class WheelEventPanel extends PIXI.Container {
       onComplete: () => {
         const settled = WheelEventManager.settlePendingSpin();
         this._grayPrizeAt(result.prizeIndex);
+        const applyPostSpinState = (showRoundToast: boolean) => {
+          this._spinning = false;
+          if (settled?.advancedToRound) {
+            if (showRoundToast) {
+              ToastMessage.show(`第${settled.fromRound}轮已抽完，开启第${settled.advancedToRound}轮更丰厚奖品`);
+            }
+            this._previewRound = settled.advancedToRound;
+            this._playableRound = settled.advancedToRound;
+            this._wheel.rotation = 0;
+            this._fillPrizeLayer();
+          } else if (settled?.allCleared) {
+            if (showRoundToast) {
+              ToastMessage.show(THEME.copy.allCleared);
+            }
+            this._previewRound = wheelRoundCount(THEME);
+            this._displayedCleared = true;
+            this._fillPrizeLayer();
+            this._refreshHud();
+            if (showRoundToast) this._showClearanceOutfitIfGranted();
+            return;
+          }
+          this._refreshHud();
+        };
         ItemObtainOverlay.show(
           [this._toObtainEntry(result.prize.grant, result.prize.name)],
-          () => {
-            this._spinning = false;
-            if (settled?.advancedToRound) {
-              ToastMessage.show(`第${settled.fromRound}轮已抽完，开启第${settled.advancedToRound}轮更丰厚奖品`);
-              this._previewRound = settled.advancedToRound;
-              this._playableRound = settled.advancedToRound;
-              this._fillPrizeLayer();
-              this._wheel.rotation = 0;
-            } else if (settled?.allCleared) {
-              ToastMessage.show(THEME.copy.allCleared);
-              this._previewRound = wheelRoundCount(THEME);
-              this._displayedCleared = true;
-              this._fillPrizeLayer();
-              this._refreshHud();
-              this._showClearanceOutfitIfGranted();
-              return;
-            }
-            this._refreshHud();
-          },
+          () => applyPostSpinState(true),
+          { onForceClose: () => applyPostSpinState(false) },
         );
       },
     });
@@ -935,7 +967,11 @@ export class WheelEventPanel extends PIXI.Container {
       case 'deco':
         return { kind: 'deco', decoId: grant.decoId, label: fallbackName };
       case 'blueprint':
-        return { kind: 'unlock_icon', iconKey: 'workshop_blueprint_generic', label: fallbackName };
+        return {
+          kind: 'blueprint',
+          blueprintId: grant.blueprintId,
+          label: fallbackName,
+        };
     }
   }
 }

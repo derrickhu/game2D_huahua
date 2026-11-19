@@ -812,6 +812,42 @@ class GMManagerClass {
       },
     });
 
+    this._commands.push({
+      id: 'board_place_winter_gala_items',
+      group: ' 增加物品',
+      name: ' 双旦姜饼 & 暖冬热茶 → 棋盘',
+      desc: '临时开放活动并放置可产出小烤箱、搅拌器及姜饼/热茶样品，便于冬日星愿季验收',
+      execute: () => {
+        WheelEventManager.gmSetActiveOverride(true);
+        CustomerManager.refreshMidAutumnRewards();
+        const ids = [
+          'tool_bake_3',
+          'tool_mixer_3',
+          'drink_gingerbread_1',
+          'drink_gingerbread_5',
+          'drink_gingerbread_8',
+          'drink_winter_tea_1',
+          'drink_winter_tea_4',
+          'drink_winter_tea_8',
+        ];
+        const placed: string[] = [];
+        for (const id of ids) {
+          if (!ITEM_DEFS.has(id)) return ` 未注册物品 ${id}`;
+          const idx = BoardManager.findEmptyOpenCell();
+          if (idx < 0) {
+            return placed.length === 0
+              ? ' 没有空的已开放格'
+              : ` 仅放置 ${placed.length}/${ids.length}（空格不足）`;
+          }
+          if (!BoardManager.placeItem(idx, id)) {
+            return ` 放置失败：${id}`;
+          }
+          placed.push(ITEM_DEFS.get(id)!.name);
+        }
+        return ` 已放置：${placed.join('、')}`;
+      },
+    });
+
     // ========== 订单/客人 ==========
     this._commands.push({
       id: 'gm_spawn_timed_diamond_order',
@@ -960,6 +996,29 @@ class GMManagerClass {
     });
 
     this._commands.push({
+      id: 'gm_grant_winter_gala_blueprints',
+      group: ' 家具工坊',
+      name: ' 发放双旦全套7张图纸',
+      desc: '发放冬日星愿季 7 张限定图纸（挂毯钟/围炉圆几/围炉单椅/烟花拱窗/松枝树/壁炉架/大红灯笼）',
+      execute: () => {
+        const ids = [
+          'blueprint_workshop_winter_star_clock',
+          'blueprint_workshop_winter_cocoa_table',
+          'blueprint_workshop_winter_hearth_chair',
+          'blueprint_workshop_newyear_firework_window',
+          'blueprint_workshop_winter_pine_tree',
+          'blueprint_workshop_winter_fireplace',
+          'blueprint_workshop_winter_red_lantern',
+        ];
+        let n = 0;
+        for (const id of ids) {
+          if (FurnitureWorkshopManager.grantBlueprint(id)) n++;
+        }
+        return ` 已发放 ${n} 张双旦图纸（已有则跳过）`;
+      },
+    });
+
+    this._commands.push({
       id: 'gm_spawn_workshop_order',
       group: ' 家具工坊',
       name: ' 立即刷家具工匠单',
@@ -972,7 +1031,7 @@ class GMManagerClass {
       if (customerType.id === 'tycoon') specialHint = '（限时钻石单）';
       else if (customerType.id === 'florist_merchant') specialHint = '（富贵花商限时单）';
       else if (customerType.id === 'furniture_craftswoman') specialHint = '（家具工匠材料单）';
-      else if (customerType.id === 'chang_e') specialHint = `（${ACTIVE_WHEEL_THEME.name}特色客人）`;
+      else if (customerType.id === ACTIVE_WHEEL_THEME.featuredCustomer?.typeId) specialHint = `（${ACTIVE_WHEEL_THEME.name}特色客人）`;
       else if (customerType.specialOnly) specialHint = '（特殊订单）';
       this._commands.push({
         id: `gm_spawn_customer_${customerType.id}`,

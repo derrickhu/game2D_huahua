@@ -1,0 +1,12 @@
+Create ONE clean 2D game floor-ornament spritesheet on a 1:1 square canvas, pure solid white #FFFFFF background.
+EXACTLY 2 equal columns x 1 row with a wide pure white gutter between left and right panels. Cute kawaii 2.5D true isometric floor prop (±30 degree base axes), soft warm brown outlines, matching the rendering quality of the attached reference prop.
+
+Both panels show the IDENTICAL lush conical holiday pine tree planted in a cozy caramel-wood barrel tub wrapped with a crimson velvet ribbon, soft snow resting on layered pine boughs, decorated with golden jingle bells, crimson baubles, tiny gingerbread stars, and a coin-gold star topper, with two small ribboned gift boxes nestled against the tub base. ONLY the lighting state changes:
+
+LEFT column (Starlight Lit state):
+- Twinkling warm golden fairy string lights and a radiant glowing star topper illuminate the pine boughs with a cozy magical holiday glow.
+
+RIGHT column (Daytime Unlit state):
+- The EXACT same pine tree, barrel tub, snow, baubles, gingerbread cookies, and gold star topper in crisp natural daytime colors with the fairy lights switched off (no glow halo).
+
+Pure solid white #FFFFFF background. Zero text, zero watermark.

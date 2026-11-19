@@ -18,6 +18,8 @@ export type OrderProductId =
   | 'cold'
   | 'dessert'
   | 'mooncake'
+  | 'gingerbread'
+  | 'winter_tea'
   | 'cut_avocado'
   | 'cut_watermelon'
   | 'cut_pineapple'
@@ -32,6 +34,8 @@ export const ORDER_PRODUCT_IDS: readonly OrderProductId[] = [
   'cold',
   'dessert',
   'mooncake',
+  'gingerbread',
+  'winter_tea',
   'cut_avocado',
   'cut_watermelon',
   'cut_pineapple',
@@ -179,6 +183,36 @@ export const ORDER_PRODUCT_DEFS: Record<OrderProductId, OrderProductDef> = {
     isUnlocked: ulk => seasonalSurfaceOpen(Category.DRINK, DrinkLine.MOONCAKE, 'orders')
       && (ulk.drinkToolMaxByLine[DrinkLine.MOONCAKE] ?? 0) > 0,
     toolLevel: ulk => ulk.drinkToolMaxByLine[DrinkLine.MOONCAKE] ?? 0,
+    weightByTier: DRINK_B_PLUS_WEIGHT,
+  },
+  gingerbread: {
+    id: 'gingerbread',
+    category: Category.DRINK,
+    itemLine: DrinkLine.GINGERBREAD,
+    maxLevel: 8,
+    tierLevelRanges: {
+      C: null,
+      B: null,
+      A: [1, 4],
+      S: [5, 8],
+    },
+    isUnlocked: ulk => (ulk.drinkToolMaxByLine[DrinkLine.GINGERBREAD] ?? 0) > 0,
+    toolLevel: ulk => ulk.drinkToolMaxByLine[DrinkLine.GINGERBREAD] ?? 0,
+    weightByTier: DRINK_B_PLUS_WEIGHT,
+  },
+  winter_tea: {
+    id: 'winter_tea',
+    category: Category.DRINK,
+    itemLine: DrinkLine.WINTER_TEA,
+    maxLevel: 8,
+    tierLevelRanges: {
+      C: null,
+      B: null,
+      A: [1, 3],
+      S: [4, 7],
+    },
+    isUnlocked: ulk => (ulk.drinkToolMaxByLine[DrinkLine.WINTER_TEA] ?? 0) > 0,
+    toolLevel: ulk => ulk.drinkToolMaxByLine[DrinkLine.WINTER_TEA] ?? 0,
     weightByTier: DRINK_B_PLUS_WEIGHT,
   },
   cut_avocado: {

@@ -1,0 +1,24 @@
+---
+description: 装修场景房壳（bg_room_*）设计与生图规范：严禁室内立面隔断、2:1正交等距蓝图锁透视、大进深二层/错层比例与透明底入库流程
+globs: docs/prompt/*room*.txt,minigame/subpkg_deco/images/house/**,src/config/SceneRenovationConfig.ts,src/config/WorldMapConfig.ts,src/config/StarLevelConfig.ts
+alwaysApply: false
+---
+
+# 装修场景房壳（`bg_room_*`）美术与结构规范
+
+## 1. 室内零隔断铁律（强制）
+
+- 房壳在引擎中是位于家具层下方的单张完整 Sprite，任何立在房壳地面中间的墙体/隔断都会死死挡住地面或被前景家具错误穿模。
+- **严禁**在房壳内部地面上绘制任何立面隔断、屏风、玻璃隔断框、内伸短墙或中置立柱。
+- 每一层楼板及室内外露台交界处必须 **100% 贯通平整、无竖向遮挡**（仅允许地坪材质平铺分界线与平台最外沿低矮护栏）；隔断一律作为独立可摆放家具提供。
+
+## 2. 透视几何与多层面积比例
+
+- **正交等距锁角**：所有墙脚线、地坪边严格遵循 **2:1 正交等距（约 ±26.6°～30°）**，竖边严格垂直；禁止自由手绘弯曲楼板导致二层画面歪斜。双层/多层跃层房壳应先用 Python 2:1 等距投影脚本（参考 `scripts/draw_loft_shell.py`）生成硬结构蓝图锁死几何后再上色。
+- **二层/错层大进深**：二层及三层错层平台须为宽深方正的完整大房间（可摆床、沙发、大柜、地毯），禁止做成窄条走廊；楼梯贴边或贴转角布置，不割裂主厅地面。
+- **敞顶剖面**：正面完全敞开，屋檐仅沿后墙/侧墙外沿做挑檐或分段斜天窗，严禁封顶遮挡楼板。
+
+## 3. 画风与入库检查
+
+- 细暖棕描边、左上高调晨光 pastel 手绘上色，室内零家具/盆栽/地毯/文字。
+- 纯白底 `#FFFFFF` 原图归档 `../game_assets/huahua/assets/raw/` → `rembg -m birefnet-general` 抠透明底 → 同步生成大地图外观缩略图 `worldmap_thumb_*` → 注册 `TextureCache` 等全部配置并跑通 `npm run check:deco-textures`。

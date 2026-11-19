@@ -1,0 +1,11 @@
+Square 1:1 game furniture asset. One single prop centered, generous white margin on all sides.
+
+Cute kawaii 2.5D true isometric furniture for a flower-shop merge game. Camera from upper-left into the L-room corner (same family as the room shell). On-screen top-face edges and base edges must sit near ±30° from horizontal — match the attached iso grid and room wall-base / floor diamond, NOT 45° wall slant, NOT flat front view. Height edges stay vertical. Visible top surface plus front-right side, left and right top edges symmetrically angled. Use the attached grid ONLY for perspective; do not copy the gray demo cube. The finished picture background is empty pure white. Leave out every grid line, graph-paper mark, blue line, and the gray cube.
+
+Hand-painted mobile merge-game flower shop style. Soft caramel-brown outlines slightly thicker than a hairline, rounded chibi-friendly shapes, upper-left light, gentle volume, readable silhouette at small size. Flat storybook color fills, the same simple sticker drawing as a cute merge-game sofa icon. Wood is one flat honey color inside the outline. Cushions are plain cream shapes. A blossom is a simple five-petal icon with a yellow dot center and two flat leaves.
+
+Subject: a low chunky daybed, shorter than a sofa. Honey-wood frame, four short stubby legs, a low curved back. One plain cream seat cushion with a thin blush piping line. Two plain cream back cushions. At one end, a folded blush blanket and one simple camellia icon with two sage leaves. Palette: honey oak, fresh cream, blush camellia, soft sage.
+
+No text, no numbers, no letters, no logo, no watermark, no people, no animal faces, no room, no walls, no floor plane, no drop-shadow strip.
+
+Background is pure solid white #FFFFFF.

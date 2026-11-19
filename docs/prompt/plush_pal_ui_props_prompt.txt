@@ -1,0 +1,8 @@
+Clean 2D casual mobile merge-game prop sheet for a cozy pastel flower shop. Match the reference: thick rounded outline, chunky sticker volume, cream pink mint and warm gold. Pure white background. 3 columns and 2 rows, wide even white gutters, one object centered in each cell. NO TEXT.
+
+Top-left: an open sewing basket, pink and cream, filled with cotton puffs and one spool of thread.
+Top-middle: a small arched cloth doorway, pastel curtains tied to each side, a tiny flower on the frame.
+Top-right: a closed square gift box in cream and pink, a ribbon on the lid, front view, used as a locked-cell cover.
+Bottom-left: a square of cream silk cloth draped so the lower half is covered and the top edge is a soft wavy fold.
+Bottom-middle: a small golden ribbon bow shaped like a cute key token.
+Bottom-right: a tiny cotton sack tied with a pink ribbon and one flower.

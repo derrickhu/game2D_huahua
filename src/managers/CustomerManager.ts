@@ -23,10 +23,13 @@ import { CUSTOMER_TYPES, CUSTOMER_TYPE_MAP, type CustomerTypeDef } from '@/confi
 import { ACTIVE_WHEEL_THEME } from '@/config/events/wheel/WheelEventRegistry';
 import {
   isWheelFeaturedOrderKind,
-  wheelFeaturedTierFromLevel,
+  wheelFeaturedTierFromItems,
+  wheelOrderEarns,
 } from '@/config/events/wheel/WheelEventTheme';
-import { Category, ITEM_DEFS, findItemId } from '@/config/ItemConfig';
+import { Category, ITEM_DEFS, ToolLine, findItemId } from '@/config/ItemConfig';
 import { isSeasonalItemRetired } from '@/config/events/SeasonalItemRegistry';
+import { CellState } from '@/config/BoardLayout';
+import { findToolDef } from '@/config/BuildingConfig';
 import {
   computeTierFromOrderSlots,
   getOrderTierWeights,
@@ -50,7 +53,7 @@ import {
   getCustomerRefreshTier,
   rollCustomerRefreshInterval,
 } from '@/config/OrderSpawnConfig';
-import { computeUnlockedLines } from '@/orders/unlockedLines';
+import { computeUnlockedLines, grantWheelExtraLinesFromBoard } from '@/orders/unlockedLines';
 import {
   forceGenerateChangEOrder,
   forceGenerateTimedDiamondOrder,
@@ -168,6 +171,28 @@ const RECENT_CUSTOMER_AVOID_N = 4;
 
 function wheelFeatured() {
   return ACTIVE_WHEEL_THEME.featuredCustomer ?? null;
+}
+
+/** 棋盘上烘焙/冷饮器具为什么没能打开当期附加产线。 */
+function wheelFeaturedToolGap(): string {
+  const ready: string[] = [];
+  const weak: string[] = [];
+  for (const cell of BoardManager.cells) {
+    if (!cell.itemId) continue;
+    const def = findToolDef(cell.itemId);
+    if (!def || (def.toolLine !== ToolLine.BAKE && def.toolLine !== ToolLine.MIXER)) continue;
+    const name = ITEM_DEFS.get(cell.itemId)?.name ?? cell.itemId;
+    if (def.canProduce && cell.state === CellState.OPEN) ready.push(name);
+    else if (!def.canProduce) weak.push(name);
+    else weak.push(`${name}（格子未解锁）`);
+  }
+  if (ready.length === 0 && weak.length > 0) {
+    return `棋盘上的${weak.join('、')}还不能点击产出。烘焙要合成到小烤箱，冷饮要合成到制冰机、冰箱或冰柜`;
+  }
+  if (ready.length === 0) {
+    return '已解锁棋盘格上没有能产出的小烤箱或冰箱。店里摆的烤箱冰箱不算，棋子要是小烤箱/双层烤箱/高级烘焙炉，或制冰机/冰箱/冰柜';
+  }
+  return `已看到${ready.join('、')}，但没能生成当期订单`;
 }
 
 function isWheelFeaturedCustomer(typeId: string, orderKind?: string): boolean {
@@ -326,8 +351,10 @@ function normalizeCustomerPersistState(raw: unknown): CustomerPersistState | nul
       midAutumnLanternReward:
         slots.some(s => {
           const def = ITEM_DEFS.get(s.itemId);
-          const earn = ACTIVE_WHEEL_THEME.orderEarn;
-          return def?.category === earn.category && def.line === earn.line;
+          if (!def) return false;
+          return wheelOrderEarns(ACTIVE_WHEEL_THEME).some(
+            earn => def.category === earn.category && def.line === earn.line,
+          );
         })
         && typeof r.midAutumnLanternReward === 'number'
         && r.midAutumnLanternReward > 0
@@ -406,14 +433,12 @@ function orderSlotsFingerprint(slots: readonly { itemId: string }[]): string {
 }
 
 function resolveChangEDisplayTier(slots: readonly { itemId: string }[]): OrderTier {
-  const earn = ACTIVE_WHEEL_THEME.orderEarn;
-  let maxLevel = 0;
+  const items: { category: string; line: string; level: number }[] = [];
   for (const slot of slots) {
     const def = ITEM_DEFS.get(slot.itemId);
-    if (!def || def.category !== earn.category || def.line !== earn.line) continue;
-    maxLevel = Math.max(maxLevel, def.level);
+    if (def) items.push({ category: def.category, line: def.line, level: def.level });
   }
-  return wheelFeaturedTierFromLevel(ACTIVE_WHEEL_THEME, maxLevel);
+  return wheelFeaturedTierFromItems(ACTIVE_WHEEL_THEME, items);
 }
 
 function inferOrderKindFromLegacy(entry: {
@@ -1255,9 +1280,15 @@ class CustomerManagerClass {
     if (!typeDef) return `未知客人类型：${typeId}`;
 
     this.clearAllCustomers();
+    if (typeId === wheelFeatured()?.typeId) {
+      WheelEventManager.gmSetActiveOverride(true);
+    }
 
     const level = LevelManager.level;
-    const lines = computeUnlockedLines(BoardManager.cells);
+    const boardCells = BoardManager.cells;
+    const lines = typeId === wheelFeatured()?.typeId
+      ? grantWheelExtraLinesFromBoard(computeUnlockedLines(boardCells), boardCells)
+      : computeUnlockedLines(boardCells);
     let gen: OrderGenResult | null = null;
 
     if (typeId === 'florist_merchant') {
@@ -1298,7 +1329,7 @@ class CustomerManagerClass {
         rng: Math.random,
       });
       if (!gen || gen.slots.length === 0) {
-        return '无法生成嫦娥单：活动中需有可产出烤箱以解锁月饼';
+        return `无法生成${typeDef.name}专属单：${wheelFeaturedToolGap()}`;
       }
     } else if (typeDef.specialOnly) {
       return `未配置特殊订单生成：${typeId}`;

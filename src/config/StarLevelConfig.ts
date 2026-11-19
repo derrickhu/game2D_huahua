@@ -255,6 +255,20 @@ export const SCENE_DEFS: SceneDef[] = [
     thresholds: FOREST_TREEHOUSE_THRESHOLDS,
     milestones: FOREST_TREEHOUSE_MILESTONES,
   },
+  {
+    sceneId: 'tide_conservatory',
+    name: '晴汐琉璃花房',
+    maxStarLevel: 8,
+    thresholds: FOREST_TREEHOUSE_THRESHOLDS,
+    milestones: FOREST_TREEHOUSE_MILESTONES,
+  },
+  {
+    sceneId: 'sakura_water_pavilion',
+    name: '绯樱镜水花阁',
+    maxStarLevel: 8,
+    thresholds: FOREST_TREEHOUSE_THRESHOLDS,
+    milestones: FOREST_TREEHOUSE_MILESTONES,
+  },
 ];
 
 export const SCENE_MAP = new Map<string, SceneDef>(

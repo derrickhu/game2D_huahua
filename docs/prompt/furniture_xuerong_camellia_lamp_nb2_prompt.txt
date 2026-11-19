@@ -1,0 +1,13 @@
+Square 1:1 game furniture asset. One single floor lamp centered, generous white margin on all sides. The lamp fills about two thirds of the canvas height.
+
+Cute kawaii 2.5D true isometric furniture for a flower-shop merge game. Camera from upper-left into the L-room corner (same family as the room shell). On-screen top-face edges and base edges must sit near ±30° from horizontal — match the attached iso grid and room wall-base / floor diamond, NOT 45° wall slant, NOT flat front view. Height edges stay vertical. Visible top surface plus front-right side, left and right top edges symmetrically angled. Use the attached grid ONLY for perspective; do not copy the gray demo cube. The finished picture background is empty pure white. Leave out every grid line, graph-paper mark, blue line, and the gray cube.
+
+Hand-painted polished mobile merge-game prop. Creamy gold outlines slightly thicker than a hairline, soft cel gradients, rounded chubby forms, clean sticker edges, gentle upper-left highlight, airy high-key color. Same cute furniture family as a cozy pastel flower shop: matte surfaces, soft volume, readable at a small icon size.
+
+Shared winter camellia set palette: honey-oak wood, fresh cream, blush camellia rose used as a small accent, soft pine sage, warm brass that reads as soft gold.
+
+Subject: a tall standing floor lamp with a chibi flower shade as the hero. Slim honey-oak stem, one delicate brass vine curling once around it, a small brass collar under the shade. The shade is one large half-open camellia bloom of layered rounded petals: outer petals fresh cream, middle petals blush pink, inner cup a soft camellia rose, with a warm yellow glow and a tiny brass stamen cluster at the heart. The base is a low scalloped cream tray on three short chubby honey-oak feet; a few tiny pinecones and soft pine needles sit between the feet. Elegant, plush, and immediately readable as a flower lamp.
+
+No text, no numbers, no letters, no logo, no watermark, no people, no animal faces, no room, no walls, no floor plane, no drop-shadow strip.
+
+Background is pure solid white #FFFFFF.

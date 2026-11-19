@@ -57,6 +57,7 @@ export const AD_UNLOCK_OUTFIT_IDS = new Set<string>(['outfit_qinglian']);
 export const OUTFIT_QUEEN_ACTIVITY_QUEST_ID = 'dressup_activity_outfit_queen';
 export const OUTFIT_JEWEL_BLOOM_ACTIVITY_QUEST_ID = 'dressup_activity_outfit_jewel_bloom';
 export const OUTFIT_CHANGE_ACTIVITY_QUEST_ID = 'dressup_activity_outfit_change';
+export const OUTFIT_WINTER_STAR_ACTIVITY_QUEST_ID = 'dressup_activity_outfit_winter_star';
 
 /**
  * 活动解锁的套装：完成对应活动时应调用 `grantOutfitFromActivity`，勿仅改存档。
@@ -66,6 +67,7 @@ export const OUTFIT_ACTIVITY_QUEST_BY_ID: Readonly<Record<string, string>> = {
   outfit_queen: OUTFIT_QUEEN_ACTIVITY_QUEST_ID,
   outfit_jewel_bloom: OUTFIT_JEWEL_BLOOM_ACTIVITY_QUEST_ID,
   outfit_change: OUTFIT_CHANGE_ACTIVITY_QUEST_ID,
+  outfit_winter_star: OUTFIT_WINTER_STAR_ACTIVITY_QUEST_ID,
 };
 
 /** 形象换装面板展示的套装（2 列网格，活动套可用 quest 条件显示「活动解锁」；有花愿售价套相对初版 ×2） */
@@ -107,6 +109,19 @@ export const DRESSUP_PANEL_OUTFITS: Outfit[] = [
       questId: OUTFIT_JEWEL_BLOOM_ACTIVITY_QUEST_ID,
       conditionText: '活动解锁',
       questDetailText: '完成花间珠匣活动进度后自动获得该套装',
+    },
+  },
+  {
+    id: 'outfit_winter_star',
+    name: '雪绒星愿',
+    desc: '茜红丝绒白绒斗篷裙配星铃鹿角发饰，冬日星愿季限定盛装',
+    icon: '',
+    huayuanCost: 0,
+    starValue: 10,
+    unlockRequirement: {
+      questId: OUTFIT_WINTER_STAR_ACTIVITY_QUEST_ID,
+      conditionText: '活动领取',
+      questDetailText: '完成冬日星愿季全部转盘抽奖后自动获得',
     },
   },
 ];

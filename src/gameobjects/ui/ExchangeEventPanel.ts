@@ -767,13 +767,11 @@ export class ExchangeEventPanel extends PIXI.Container {
           label: DECO_MAP.get(grant.decoId)?.name ?? '家具',
         };
       case 'blueprint': {
-        const decoId = WORKSHOP_BLUEPRINT_MAP.get(grant.blueprintId)?.outputDecoId;
+        const bpName = WORKSHOP_BLUEPRINT_MAP.get(grant.blueprintId)?.name ?? '图纸×1';
         return {
-          kind: 'unlock_icon',
-          iconKey: decoId
-            ? (DECO_MAP.get(decoId)?.icon ?? decoId)
-            : 'icon_workshop_blueprint_scroll',
-          label: '图纸×1',
+          kind: 'blueprint',
+          blueprintId: grant.blueprintId,
+          label: bpName,
         };
       }
       default:
@@ -793,6 +791,13 @@ export class ExchangeEventPanel extends PIXI.Container {
         keys.push(resolveWorkshopMaterialIconKey(entry.materialId));
       } else if (entry.kind === 'deco') {
         keys.push(DECO_MAP.get(entry.decoId)?.icon ?? entry.decoId);
+      } else if (entry.kind === 'blueprint') {
+        keys.push(WORKSHOP_BLUEPRINT_SCROLL_KEY);
+        const decoId = WORKSHOP_BLUEPRINT_MAP.get(entry.blueprintId)?.outputDecoId;
+        if (decoId) {
+          const deco = DECO_MAP.get(decoId);
+          keys.push(...collectFurniturePreloadKeys(decoId, deco?.icon ?? decoId));
+        }
       } else if (entry.kind === 'unlock_icon') {
         keys.push(entry.iconKey);
       } else if (entry.kind === 'board_item') {

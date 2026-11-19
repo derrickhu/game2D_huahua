@@ -1,0 +1,11 @@
+Create a 2 columns x 2 rows mobile-game UI sprite sheet on solid pure green #00FF00 background (1:1 square canvas). Each quadrant contains ONE isolated Christmas and New Year lottery-wheel component, centered with generous green margin around it. Avoid green colors on the objects themselves; use coin-gold, warm cream wood, snow white, and red-envelope crimson.
+
+Top-left quadrant: an ornate coin-gold lottery POINTER frame pointing straight DOWN, topped with afaceted ruby-crimson star gem and soft white snow-fur trim at the cap.
+
+Top-right quadrant: a circular coin-gold medallion HUB featuring a cute kawaii chibi white snow-fawn head in the center with tiny golden antlers and a crimson velvet collar with a tiny gold bell.
+
+Bottom-left quadrant: a wide low lacquered honey-wood and coin-gold lottery wheel STAND pedestal, wider than tall, accented with crimson ribbon trim and carved golden snowflakes, empty top curve ready to sit beneath a wheel.
+
+Bottom-right quadrant: one chunky horizontal rounded SPIN BUTTON in glossy red-envelope-crimson enamel with a thick coin-gold rim, tiny golden corner stars, and a soft top highlight; completely blank smooth center for runtime text overlay.
+
+Clean 2D vector kawaii mobile-game UI, polished warm shading, zero text, zero letters, zero numbers, zero watermark.

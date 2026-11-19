@@ -8,6 +8,7 @@ import {
 } from '@/config/BuildingConfig';
 import { Category, DrinkLine, FlowerLine, FoodLine, ToolLine } from '@/config/ItemConfig';
 import { ACTIVE_WHEEL_THEME } from '@/config/events/wheel/WheelEventRegistry';
+import { wheelProduceBonuses } from '@/config/events/wheel/WheelEventTheme';
 import { isWheelEarnActive } from '@/config/events/wheel/WheelEventLive';
 import type { UnlockedLines } from '@/config/OrderTierConfig';
 
@@ -54,12 +55,14 @@ export function computeUnlockedLines(cells: readonly OrderBoardCell[]): Unlocked
       drinkLinesOnBoard.add(def.produceLine);
       const dl = def.produceLine as DrinkLine;
       drinkToolMaxByLine[dl] = Math.max(drinkToolMaxByLine[dl] ?? 0, def.level);
-      const bonus = ACTIVE_WHEEL_THEME.produceBonus;
-      if (bonus && def.toolLine === bonus.toolLine && isWheelEarnActive()) {
-        drinkToolMaxByLine[bonus.extraLine as DrinkLine] = Math.max(
-          drinkToolMaxByLine[bonus.extraLine as DrinkLine] ?? 0,
-          def.level,
-        );
+      if (isWheelEarnActive()) {
+        for (const bonus of wheelProduceBonuses(ACTIVE_WHEEL_THEME)) {
+          if (def.toolLine !== bonus.toolLine) continue;
+          drinkToolMaxByLine[bonus.extraLine as DrinkLine] = Math.max(
+            drinkToolMaxByLine[bonus.extraLine as DrinkLine] ?? 0,
+            def.level,
+          );
+        }
       }
     } else if (def.toolLine === ToolLine.FARM) {
       maxFarmToolLevel = Math.max(maxFarmToolLevel, def.level);
@@ -102,4 +105,31 @@ export function computeUnlockedLines(cells: readonly OrderBoardCell[]): Unlocked
     foodToolMaxByLine,
     unlockedLineCount,
   };
+}
+
+/**
+ * 按棋盘上已能点击产出的烘焙/冷饮器具，写入当期转盘的附加产线等级。
+ * 不看活动日期。GM 刷专属客人时用，避免活动未到开始日时有小烤箱/冰箱仍刷不出订单。
+ */
+export function grantWheelExtraLinesFromBoard(
+  lines: UnlockedLines,
+  cells: readonly OrderBoardCell[],
+): UnlockedLines {
+  const drinkToolMaxByLine = { ...lines.drinkToolMaxByLine };
+  let changed = false;
+  for (const c of cells) {
+    if (c.state !== CellState.OPEN || !c.itemId) continue;
+    const def = findBoardProducerDef(c.itemId);
+    if (!def?.canProduce || def.produceCategory !== Category.DRINK) continue;
+    for (const bonus of wheelProduceBonuses(ACTIVE_WHEEL_THEME)) {
+      if (def.toolLine !== bonus.toolLine) continue;
+      const extra = bonus.extraLine as DrinkLine;
+      const next = Math.max(drinkToolMaxByLine[extra] ?? 0, def.level);
+      if (next === (drinkToolMaxByLine[extra] ?? 0)) continue;
+      drinkToolMaxByLine[extra] = next;
+      changed = true;
+    }
+  }
+  if (!changed) return lines;
+  return { ...lines, drinkToolMaxByLine };
 }

@@ -1,0 +1,15 @@
+Redraw the attached vertical 9:16 mobile-game activity panel shell into a cozy Christmas and Chinese New Year double-festival theme while keeping the EXACT same panel proportions, outer border thickness, close button position, title plaque placement, and large empty pale-cream center area.
+
+Keep exact layout structure:
+- Full-screen 9:16 portrait canvas on solid pure green #00FF00 background outside the rounded modal frame, full bleed.
+- Thick warm honey-gold and soft cranberry-rose rounded outer frame.
+- Top-right chunky circular red close button with a simple white X at the exact same corner position.
+- Top header still-life behind and around the golden scalloped cloud title plaque: snow-dusted pine branches, holly red berries, shiny coin-gold jingle bells, a cute gingerbread star cookie, and warm golden New Year firework sparks in a soft twilight glow.
+- Very large clean flat pale-cream content field in the middle, completely empty and smooth, ready for a wheel overlay.
+- Bottom footer still-life along the lower frame: a cute chibi white snow-fawn wearing a red scarf, an orange-red Chinese persimmon ceramic teapot with tiny teacups, frosted pinecones, ribboned gift boxes, and a warm glowing red New Year lantern.
+
+Title plaque lettering:
+- Five printed horizontal Chinese characters: 冬日星愿季
+- Cute rounded festival lettering in warm cinnamon-crimson fill with a thin cream-gold rim, sitting on one flat horizontal baseline centered inside the golden scalloped banner.
+
+Clean 2D kawaii vector mobile-game illustration, soft warm shading, zero extra words, zero English, zero numbers, zero watermark.

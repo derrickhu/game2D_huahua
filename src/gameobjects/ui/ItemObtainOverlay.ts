@@ -12,7 +12,14 @@ import { ITEM_DEFS } from '@/config/ItemConfig';
 import {
   getWorkshopMaterialDisplayName,
   resolveWorkshopMaterialIconKey,
+  WORKSHOP_BLUEPRINT_MAP,
 } from '@/config/FurnitureWorkshopConfig';
+import { DECO_MAP } from '@/config/DecorationConfig';
+import { collectFurniturePreloadKeys } from '@/config/FurnitureRenderConfig';
+import {
+  appendWorkshopBlueprintIcon,
+  WORKSHOP_BLUEPRINT_SCROLL_KEY,
+} from '@/utils/WorkshopBlueprintDisplay';
 import { TextureCache } from '@/utils/TextureCache';
 import { captureContainerShareImageUrl } from '@/utils/shareSnapshot';
 
@@ -30,6 +37,8 @@ export type ItemObtainEntry =
     }
   /** 家具工坊材料/染料（直加，不进收纳盒） */
   | { kind: 'workshop_material'; materialId: string; count: number; label?: string }
+  /** 家具工坊图纸：卷轴底图 + 黑色家具剪影（保留神秘感） */
+  | { kind: 'blueprint'; blueprintId: string; label?: string }
   /** 升星解锁区：仅图标 + 短标签（无底板卡片） */
   | { kind: 'unlock_icon'; iconKey: string; label: string };
 
@@ -118,6 +127,10 @@ export function createItemObtainRewardCell(
   } else if (entry.kind === 'deco') {
     texKey = entry.decoId;
     qtyStr = entry.label ?? '专属家具';
+  } else if (entry.kind === 'blueprint') {
+    qtyStr = entry.label ?? '工坊图纸';
+    labelFontSize = qtyFs >= 14 ? qtyFs : Math.max(13, Math.round(cell * 0.155));
+    labelWrapWidth = cell + 28;
   } else if (entry.kind === 'unlock_icon') {
     texKey = entry.iconKey;
     qtyStr = entry.label;
@@ -132,20 +145,38 @@ export function createItemObtainRewardCell(
   }
 
   const iconLayer = new PIXI.Container();
-  const isUnlockIcon = entry.kind === 'unlock_icon';
+  const isLabelStyle = entry.kind === 'unlock_icon' || entry.kind === 'blueprint';
   root.addChild(iconLayer);
   let textureUnsub: (() => void) | null = null;
   const drawIcon = (): boolean => {
     iconLayer.removeChildren();
+    if (entry.kind === 'blueprint') {
+      const decoId = WORKSHOP_BLUEPRINT_MAP.get(entry.blueprintId)?.outputDecoId;
+      const scrollReady = !!TextureCache.get(WORKSHOP_BLUEPRINT_SCROLL_KEY)?.width;
+      if (!decoId) {
+        if (!scrollReady) return false;
+        const sp = new PIXI.Sprite(TextureCache.get(WORKSHOP_BLUEPRINT_SCROLL_KEY)!);
+        sp.anchor.set(0.5);
+        const iconMax = cell * 0.84;
+        sp.scale.set(Math.min(iconMax / sp.texture.width, iconMax / sp.texture.height));
+        iconLayer.position.set(0, -cell * 0.05);
+        iconLayer.addChild(sp);
+        return true;
+      }
+      if (!scrollReady) return false;
+      appendWorkshopBlueprintIcon(iconLayer, decoId, 0, 0, cell * 0.88);
+      iconLayer.position.set(0, -cell * 0.05);
+      return iconLayer.children.length >= 2;
+    }
     const tex = TextureCache.get(texKey);
     if (!tex?.width) return false;
     const sp = new PIXI.Sprite(tex);
     sp.anchor.set(0.5);
     // 升星解锁区：与上方奖励格同款，图标铺满格子上半部，无圆形底
-    const iconMax = isUnlockIcon ? cell * 0.8 : cell - 10;
+    const iconMax = isLabelStyle ? cell * 0.8 : cell - 10;
     const sc = Math.min(iconMax / tex.width, iconMax / tex.height);
     sp.scale.set(sc);
-    if (isUnlockIcon) iconLayer.position.set(0, -cell * 0.06);
+    if (isLabelStyle) iconLayer.position.set(0, -cell * 0.06);
     iconLayer.addChild(sp);
     return true;
   };
@@ -153,8 +184,17 @@ export function createItemObtainRewardCell(
     const ph = new PIXI.Text('?', { fontSize: 30, fontFamily: FONT_FAMILY, fill: 0xffffff });
     ph.anchor.set(0.5);
     iconLayer.addChild(ph);
-    if (texKey) {
-      textureUnsub = TextureCache.onKeysLoaded([texKey], () => {
+    const waitKeys = entry.kind === 'blueprint'
+      ? (() => {
+          const decoId = WORKSHOP_BLUEPRINT_MAP.get(entry.blueprintId)?.outputDecoId;
+          const deco = decoId ? DECO_MAP.get(decoId) : undefined;
+          return decoId
+            ? [WORKSHOP_BLUEPRINT_SCROLL_KEY, ...collectFurniturePreloadKeys(decoId, deco?.icon ?? decoId)]
+            : [WORKSHOP_BLUEPRINT_SCROLL_KEY];
+        })()
+      : (texKey ? [texKey] : []);
+    if (waitKeys.length > 0) {
+      textureUnsub = TextureCache.onKeysLoaded(waitKeys, () => {
         if (drawIcon()) {
           textureUnsub?.();
           textureUnsub = null;
@@ -171,20 +211,20 @@ export function createItemObtainRewardCell(
 
   const cnt = new PIXI.Text(qtyStr, {
     fontSize: labelFontSize,
-    fill: entry.kind === 'unlock_icon' ? 0xfff8e7 : 0xffeb3b,
+    fill: isLabelStyle ? 0xfff8e7 : 0xffeb3b,
     fontFamily: FONT_FAMILY,
     fontWeight: 'bold',
     stroke: 0x4e342e,
-    strokeThickness: entry.kind === 'unlock_icon' ? 2 : strokeT,
+    strokeThickness: isLabelStyle ? 2 : strokeT,
     dropShadow: true,
     dropShadowColor: 0x000000,
     dropShadowAlpha: 0.45,
     dropShadowBlur: 2,
     dropShadowDistance: 1,
-    wordWrap: entry.kind === 'unlock_icon',
+    wordWrap: isLabelStyle,
     wordWrapWidth: labelWrapWidth,
     align: 'center',
-    lineHeight: (entry.kind === 'unlock_icon' ? labelFontSize : qtyFs) + 3,
+    lineHeight: (isLabelStyle ? labelFontSize : qtyFs) + 3,
   });
   cnt.anchor.set(0.5, 0);
   cnt.position.set(0, cell * 0.36);
@@ -473,9 +513,10 @@ export function layoutIconOnlyGrid(
   for (let i = 0; i < n; i++) {
     const row = Math.floor(i / cols);
     const col = i % cols;
+    const label = display[i]!.kind === 'unlock_icon' || display[i]!.kind === 'blueprint';
     const cellView = createItemObtainRewardCell(display[i]!, {
       cellSize: cell,
-      qtyFontSize: display[i]!.kind === 'unlock_icon' ? labelFontSize : 13,
+      qtyFontSize: label ? labelFontSize : 13,
     });
     const cellCx = startX + col * (cell + gap) + cell / 2;
     const cellCy = gridTop + row * (cell + gap) + cell / 2;
@@ -505,6 +546,8 @@ export function layoutIconOnlyGrid(
 export interface ItemObtainOverlayOptions {
   shareLabel?: string;
   onShare?: (overlay: ItemObtainOverlay) => void | Promise<void>;
+  /** 被 forceClose 强制顶掉时的兜底清理（例如恢复外层面板交互锁） */
+  onForceClose?: () => void;
 }
 
 export class ItemObtainOverlay extends PIXI.Container {
@@ -515,6 +558,7 @@ export class ItemObtainOverlay extends PIXI.Container {
   private _settled = false;
   private _shareBtn: PIXI.Container | null = null;
   private _content!: PIXI.Container;
+  private _armTimer: ReturnType<typeof setTimeout> | null = null;
 
   /**
    * 展示获得物品；点击任意处触发 onClaim 后移除自身。
@@ -533,6 +577,7 @@ export class ItemObtainOverlay extends PIXI.Container {
     layer.zIndex = Z;
     ItemObtainOverlay._current = layer;
     parent.addChild(layer);
+    parent.sortChildren();
     AudioManager.play('ui_reward_fanfare');
     layer.alpha = 0;
     TweenManager.to({ target: layer, props: { alpha: 1 }, duration: 0.22, ease: Ease.easeOutQuad });
@@ -543,9 +588,16 @@ export class ItemObtainOverlay extends PIXI.Container {
     const c = ItemObtainOverlay._current;
     if (!c) return;
     ItemObtainOverlay._current = null;
+    if (c._armTimer !== null) {
+      clearTimeout(c._armTimer);
+      c._armTimer = null;
+    }
+    const onForce = !c._settled ? c._options?.onForceClose : undefined;
+    c._settled = true;
     TweenManager.cancelTarget(c);
     if (c.parent) c.parent.removeChild(c);
     c.destroy({ children: true });
+    try { onForce?.(); } catch (e) { console.error('[ItemObtainOverlay] onForceClose error:', e); }
   }
 
   private constructor(rewards: ItemObtainEntry[], onClaim: () => void, options?: ItemObtainOverlayOptions) {
@@ -559,17 +611,39 @@ export class ItemObtainOverlay extends PIXI.Container {
   private _build(rewards: ItemObtainEntry[]): void {
     const W = DESIGN_WIDTH;
     const H = Game.logicHeight;
+    const vb = Game.visibleBounds;
+    const hitX = Math.min(0, vb.left);
+    const hitY = Math.min(0, vb.top);
+    const hitW = Math.max(W, vb.right) - hitX;
+    const hitH = Math.max(H, vb.bottom) - hitY;
 
     this.eventMode = 'static';
-    this.hitArea = new PIXI.Rectangle(0, 0, W, H);
-    this.on('pointertap', () => this._finish());
+    this.cursor = 'pointer';
+    this.hitArea = new PIXI.Rectangle(hitX, hitY, hitW, hitH);
+    const onDismiss = (e?: PIXI.FederatedPointerEvent) => {
+      e?.stopPropagation();
+      this._finish();
+    };
+    this.on('pointertap', onDismiss);
 
     const mask = new PIXI.Graphics();
     mask.beginFill(0x000000, MASK_ALPHA);
-    mask.drawRect(0, 0, W, H);
+    mask.drawRect(hitX, hitY, hitW, hitH);
     mask.endFill();
-    mask.eventMode = 'none';
+    mask.eventMode = 'static';
+    mask.cursor = 'pointer';
+    mask.hitArea = new PIXI.Rectangle(hitX, hitY, hitW, hitH);
+    mask.on('pointertap', onDismiss);
     this.addChild(mask);
+
+    // 微信小游戏/开发者工具偶发丢失 window pointerup 导致 pointertap 不触发；
+    // 延迟 120ms 后同时武装 pointerdown，保证单击任意位置必定可关闭弹层。
+    this._armTimer = setTimeout(() => {
+      this._armTimer = null;
+      if (this._settled || this.destroyed) return;
+      this.on('pointerdown', onDismiss);
+      mask.on('pointerdown', onDismiss);
+    }, 120);
 
     const content = new PIXI.Container();
     content.eventMode = 'none';
@@ -610,6 +684,7 @@ export class ItemObtainOverlay extends PIXI.Container {
     label.anchor.set(0.5);
     btn.addChild(label);
 
+    btn.on('pointerdown', (e: PIXI.FederatedPointerEvent) => e.stopPropagation());
     btn.on('pointertap', (e: PIXI.FederatedPointerEvent) => {
       e.stopPropagation();
       void this._options?.onShare?.(this);
@@ -641,14 +716,26 @@ export class ItemObtainOverlay extends PIXI.Container {
   private _finish(): void {
     if (this._settled) return;
     this._settled = true;
+    if (this._armTimer !== null) {
+      clearTimeout(this._armTimer);
+      this._armTimer = null;
+    }
     if (ItemObtainOverlay._current === this) {
       ItemObtainOverlay._current = null;
     }
     const fn = this._onClaim;
     this._onClaim = () => {};
     TweenManager.cancelTarget(this);
+    this.eventMode = 'none';
+    this.visible = false;
     if (this.parent) this.parent.removeChild(this);
-    this.destroy({ children: true });
-    fn();
+    try {
+      fn();
+    } catch (e) {
+      console.error('[ItemObtainOverlay] onClaim error:', e);
+    }
+    setTimeout(() => {
+      if (!this.destroyed) this.destroy({ children: true });
+    }, 0);
   }
 }

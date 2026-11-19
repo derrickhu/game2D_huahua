@@ -1,0 +1,12 @@
+Square 1:1 world-map exterior building landmark icon for a cozy healing pastel merge game. The attached image is the approved cutaway room shell of "绯樱镜水花阁" (Sakura Mirror-Water Pavilion). Draw that SAME building as a charming COMPLETE EXTERIOR miniature landmark (closed roofs and exterior walls, NOT an open cutaway dollhouse, NOT an interior floorplan!).
+
+Architecture & recognizable identity (matching the approved pavilion's exact colors and romantic sakura-water charm):
+- A stately yet cozy three-tier stepped Eastern sakura garden pavilion in warm cream-white plaster walls, slender honey-hinoki timber framing, and graceful upturned pearl-grey & soft blush-taupe scalloped clay tile roofs on the stepped tiers.
+- Features a charming pink-glowing quatrefoil blossom window on the upper gable, warm wooden veranda railings, a translucent shoji-glass sliding entrance door with two wooden entry steps, and a petite glowing pink petal lantern under the eave.
+- Behind the upper roof ridge, a dreamy, fluffy pastel-pink blooming cherry blossom tree canopy softly frames the back of the pavilion.
+- Along the front stone courtyard rim, a narrow crystal-clear pastel aqua-pink mirror-water channel with tiny floating sakura petals, pale square stepping stones, and a low wooden courtyard fence.
+
+Base & composition:
+- Sit the entire miniature pavilion cleanly on a round/oval pale cream-sand island clearing (matching Sunny Tide Bay world-map plots) with a thin soft green grass outer rim.
+- High-angle isometric-lite world-map view (matching `worldmap_thumb_tide_loft.png` and `worldmap_thumb_tea_house.png`), gentle thin warm taupe-brown outlines, airy pastel cel/watercolor shading.
+- Single centered landmark icon with clean silhouette and generous margin on a pure solid white #FFFFFF background. Zero text, zero numbers, zero logos, zero characters.

@@ -4,7 +4,11 @@
 import { DEFAULT_SPECIAL_CUSTOMER_BY_ORDER_KIND } from '@/config/CustomerConfig';
 import { ACTIVE_WHEEL_THEME } from '@/config/events/wheel/WheelEventRegistry';
 import { isWheelEarnActive } from '@/config/events/wheel/WheelEventLive';
-import type { WheelFeaturedTier } from '@/config/events/wheel/WheelEventTheme';
+import {
+  wheelFeaturedLevelBandsForRule,
+  wheelOrderEarns,
+  type WheelFeaturedTier,
+} from '@/config/events/wheel/WheelEventTheme';
 import {
   ORDER_TIERS,
   type OrderTier,
@@ -549,21 +553,24 @@ export function forceGenerateWorkshopOrder(ctx: OrderGenContext): OrderGenResult
   return workshopOrderFromComboSlots(comboSlots, ctx.rng);
 }
 
-function featuredOrderSpec(tier: WheelFeaturedTier): ProductOrderSpec | null {
+function unlockedFeaturedOrderSpecs(tier: WheelFeaturedTier, lines: UnlockedLines): ProductOrderSpec[] {
   const theme = ACTIVE_WHEEL_THEME;
-  const featured = theme.featuredCustomer;
-  if (!featured) return null;
-  const product = resolveOrderProduct(theme.orderEarn.category as Category, theme.orderEarn.line);
-  if (!product) return null;
-  const [minLv, maxLv] = featured.levelBands[tier];
-  return {
-    productId: product.id,
-    category: product.category,
-    itemLine: product.itemLine,
-    minLv,
-    maxLv,
-    weight: 1.2,
-  };
+  if (!theme.featuredCustomer) return [];
+  const out: ProductOrderSpec[] = [];
+  for (const rule of wheelOrderEarns(theme)) {
+    const product = resolveOrderProduct(rule.category as Category, rule.line);
+    if (!product || !product.isUnlocked(lines)) continue;
+    const [minLv, maxLv] = wheelFeaturedLevelBandsForRule(theme, rule)[tier];
+    out.push({
+      productId: product.id,
+      category: product.category,
+      itemLine: product.itemLine,
+      minLv,
+      maxLv,
+      weight: 1.2,
+    });
+  }
+  return out;
 }
 
 function tryPickFeaturedItem(
@@ -594,21 +601,33 @@ function buildFeaturedOrderSlots(
   ctx: OrderGenContext,
   tier: WheelFeaturedTier,
 ): OrderGenSlot[] | null {
-  const spec = featuredOrderSpec(tier);
-  if (!spec) return null;
-  const product = getOrderProduct(spec.productId);
-  if (!product.isUnlocked(ctx.lines)) return null;
+  const featuredSpecs = unlockedFeaturedOrderSpecs(tier, ctx.lines);
+  if (featuredSpecs.length === 0) return null;
+  const featuredProductIds = new Set(featuredSpecs.map(s => s.productId));
   const usedIds = new Set<string>();
-  const firstItem = tryPickFeaturedItem(spec, usedIds, ctx.rng);
+  const primarySpec = featuredSpecs[Math.floor(ctx.rng() * featuredSpecs.length)]!;
+  const firstItem = tryPickFeaturedItem(primarySpec, usedIds, ctx.rng);
   if (!firstItem) return null;
   usedIds.add(firstItem);
   const slots: OrderGenSlot[] = [{ itemId: firstItem }];
 
   const [minSlots, maxSlots] = ORDER_TIERS[tier].slotRange;
   const slotCount = minSlots + Math.floor(ctx.rng() * (maxSlots - minSlots + 1));
+
+  // 双产线同时解锁时（如圣诞姜饼 + 暖冬热茶），S 档高概率凑成中西双节套餐
+  if (slots.length < slotCount && featuredSpecs.length >= 2 && (tier === 'S' || ctx.rng() < 0.45)) {
+    const otherSpecs = featuredSpecs.filter(s => s.productId !== primarySpec.productId);
+    const secondSpec = otherSpecs[Math.floor(ctx.rng() * otherSpecs.length)];
+    const secondItem = secondSpec ? tryPickFeaturedItem(secondSpec, usedIds, ctx.rng) : null;
+    if (secondItem) {
+      usedIds.add(secondItem);
+      slots.push({ itemId: secondItem });
+    }
+  }
+
   const fillSpecs: ProductOrderSpec[] = [
     ...productOrderSpecsForTier(tier, ctx.lines),
-    spec,
+    ...featuredSpecs,
   ];
 
   for (let i = slots.length; i < slotCount; i++) {
@@ -616,17 +635,20 @@ function buildFeaturedOrderSlots(
     for (let attempt = 0; attempt < 24; attempt++) {
       const fill = pickWeightedSpec(fillSpecs, ctx.rng);
       if (!fill) break;
-      picked = fill.productId === spec.productId
+      picked = featuredProductIds.has(fill.productId)
         ? tryPickFeaturedItem(fill, usedIds, ctx.rng)
         : tryPickProductItem(fill, ctx.lines, usedIds, tier, ctx.rng, ctx.playerLevel);
       if (picked) break;
     }
     if (!picked) {
-      picked = tryPickFeaturedItem(spec, usedIds, ctx.rng);
+      for (const fSpec of featuredSpecs) {
+        picked = tryPickFeaturedItem(fSpec, usedIds, ctx.rng);
+        if (picked) break;
+      }
     }
     if (!picked) {
       for (const fill of fillSpecs) {
-        if (fill.productId === spec.productId) continue;
+        if (featuredProductIds.has(fill.productId)) continue;
         picked = tryPickProductItem(fill, ctx.lines, usedIds, tier, ctx.rng, ctx.playerLevel);
         if (picked) break;
       }

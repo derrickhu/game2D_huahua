@@ -1,0 +1,14 @@
+Create ONE clean 2D game floor-furniture spritesheet on a 1:1 square canvas, pure solid white #FFFFFF background.
+EXACTLY 2 equal columns x 1 row with a wide pure white gutter between left and right panels. Cute kawaii 2.5D true isometric floor fireplace (±30 degree hearth and mantel axes, facing down-right into the room), soft warm brown outlines, matching the angle and style of the attached reference prop.
+
+Both fireplaces are LOW HEARTHS that sit in the lower two-thirds of their column. The upper third of each column is empty white space. The thick honey-oak mantel shelf is the highest brick line, and the pine garland draped on that shelf is the top of the object. The brick body is only the arched firebox, the short side cheeks under the shelf, and the hearth base. The whole hearth, garland, and hearth base are fully inside the frame with white margin on every side.
+
+Both panels show the IDENTICAL cozy holiday hearth: warm cream painted brick, honey-oak mantel shelf, snowy pine garland, red berries, two hanging red-and-white velvet stockings, golden jingle bells, and a neat brass hearth fender. ONLY the fire inside the firebox changes:
+
+LEFT column (Crackling Warm Fire state):
+- Inside the arched firebox, cheerful bright golden-orange flames dance over stacked birch logs, casting a warm cozy amber glow onto the hearth bricks.
+
+RIGHT column (Gentle Resting Embers state):
+- Identical fireplace mantel, pine garland, stockings, and brass fender; inside the firebox, stacked logs rest quietly with only faint soft warm-orange embers (no tall flames).
+
+Pure solid white #FFFFFF background. Zero text, zero watermark.

@@ -17,6 +17,7 @@ import {
   isFruitCutLine,
 } from './ItemConfig';
 import { ACTIVE_WHEEL_THEME } from './events/wheel/WheelEventRegistry';
+import { wheelProduceBonuses } from './events/wheel/WheelEventTheme';
 import { isWheelEarnActive } from './events/wheel/WheelEventLive';
 import { seasonalSurfaceOpen } from './events/SeasonalItemRegistry';
 
@@ -652,8 +653,8 @@ function gateSeasonalProduceLines(
 export function getEffectiveProduceLineWeights(
   def: ToolDef,
 ): ReadonlyArray<{ line: string; weight: number }> {
-  const bonus = ACTIVE_WHEEL_THEME.produceBonus;
-  if (bonus && def.toolLine === bonus.toolLine && isWheelEarnActive()) {
+  const bonus = wheelProduceBonuses(ACTIVE_WHEEL_THEME).find(b => b.toolLine === def.toolLine);
+  if (bonus && isWheelEarnActive()) {
     const total = bonus.baseWeight + bonus.extraWeight;
     return gateSeasonalProduceLines(def.produceCategory, [
       { line: bonus.baseLine, weight: bonus.baseWeight / total },

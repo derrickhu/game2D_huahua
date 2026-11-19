@@ -369,6 +369,158 @@ export const FURNITURE_RENDER_DEFS: FurnitureRenderDef[] = [
       row: 1,
     },
   },
+  // ---- 冬日星愿季（双旦转盘）工坊图纸家具合图 ----
+  {
+    decoId: 'workshop_winter_star_clock',
+    renderMode: 'single',
+    atlas: { sheetKey: 'workshop_winter_star_clock_sheet', columns: 1, rows: 3, row: 0 },
+  },
+  {
+    decoId: 'workshop_winter_star_clock_mint',
+    renderMode: 'single',
+    atlas: { sheetKey: 'workshop_winter_star_clock_sheet', columns: 1, rows: 3, row: 1 },
+  },
+  {
+    decoId: 'workshop_winter_star_clock_sakura',
+    renderMode: 'single',
+    atlas: { sheetKey: 'workshop_winter_star_clock_sheet', columns: 1, rows: 3, row: 2 },
+  },
+  {
+    decoId: 'workshop_winter_cocoa_table',
+    renderMode: 'single',
+    atlas: { sheetKey: 'workshop_winter_cocoa_table_sheet', columns: 1, rows: 2, row: 0 },
+  },
+  {
+    decoId: 'workshop_winter_cocoa_table_blue',
+    renderMode: 'single',
+    atlas: { sheetKey: 'workshop_winter_cocoa_table_sheet', columns: 1, rows: 2, row: 1 },
+  },
+  {
+    decoId: 'workshop_winter_hearth_chair',
+    renderMode: 'fourFacing',
+    atlas: {
+      sheetKey: 'workshop_winter_hearth_chair_sheet',
+      columns: 2,
+      rows: 2,
+      row: 0,
+      frontCol: 0,
+      backCol: 1,
+    },
+    defaultFacing: 'front_right',
+  },
+  {
+    decoId: 'workshop_winter_hearth_chair_mint',
+    renderMode: 'fourFacing',
+    atlas: {
+      sheetKey: 'workshop_winter_hearth_chair_sheet',
+      columns: 2,
+      rows: 2,
+      row: 1,
+      frontCol: 0,
+      backCol: 1,
+    },
+    defaultFacing: 'front_right',
+  },
+  {
+    decoId: 'workshop_newyear_firework_window',
+    renderMode: 'single',
+    atlas: {
+      sheetKey: 'workshop_newyear_firework_window_sheet',
+      columns: 2,
+      rows: 1,
+      row: 0,
+      frontCol: 0,
+    },
+    interaction: {
+      type: 'toggle',
+      defaultState: 'snow',
+      hint: '放入房间后单击切换静谧飘雪夜与跨年零点烟花',
+      states: {
+        snow: {},
+        firework: {},
+      },
+    },
+  },
+  {
+    decoId: 'workshop_winter_pine_tree',
+    renderMode: 'single',
+    atlas: {
+      sheetKey: 'workshop_winter_pine_tree_sheet',
+      columns: 1,
+      rows: 3,
+      row: 0,
+    },
+  },
+  {
+    decoId: 'workshop_winter_pine_tree_blue',
+    renderMode: 'single',
+    atlas: {
+      sheetKey: 'workshop_winter_pine_tree_sheet',
+      columns: 1,
+      rows: 3,
+      row: 1,
+    },
+  },
+  {
+    decoId: 'workshop_winter_pine_tree_sakura',
+    renderMode: 'single',
+    atlas: {
+      sheetKey: 'workshop_winter_pine_tree_sheet',
+      columns: 1,
+      rows: 3,
+      row: 2,
+    },
+  },
+  {
+    decoId: 'workshop_winter_fireplace',
+    renderMode: 'single',
+    atlas: {
+      sheetKey: 'workshop_winter_fireplace_sheet',
+      columns: 2,
+      rows: 2,
+      row: 0,
+      frontCol: 0,
+    },
+    interaction: {
+      type: 'toggle',
+      defaultState: 'lit',
+      hint: '放入房间后单击切换暖焰摇曳与余烬微光',
+      states: {
+        lit: {},
+        ember: {},
+      },
+    },
+  },
+  {
+    decoId: 'workshop_winter_fireplace_honey',
+    renderMode: 'single',
+    atlas: {
+      sheetKey: 'workshop_winter_fireplace_sheet',
+      columns: 2,
+      rows: 2,
+      row: 1,
+      frontCol: 0,
+    },
+    interaction: {
+      type: 'toggle',
+      defaultState: 'lit',
+      hint: '放入房间后单击切换暖焰摇曳与余烬微光',
+      states: {
+        lit: {},
+        ember: {},
+      },
+    },
+  },
+  {
+    decoId: 'workshop_winter_red_lantern',
+    renderMode: 'single',
+    atlas: {
+      sheetKey: 'workshop_winter_red_lantern_sheet',
+      columns: 1,
+      rows: 1,
+      row: 0,
+    },
+  },
 ];
 
 export const FURNITURE_RENDER_MAP = new Map(FURNITURE_RENDER_DEFS.map(def => [def.decoId, def]));

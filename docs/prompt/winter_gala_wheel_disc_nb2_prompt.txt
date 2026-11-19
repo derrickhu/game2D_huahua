@@ -1,0 +1,10 @@
+Redraw the attached circular 8-slice game lottery wheel disc into a festive Christmas and New Year winter gala theme while preserving the EXACT circular diameter, center hub circle size, and exact 8-spoke geometry.
+
+Exact geometry to preserve:
+- Front-on perfectly circular wheel centered on a 1:1 square canvas.
+- Exactly 8 equal 45-degree wedge segments divided by polished coin-gold spokes placed at 12:00, 1:30, 3:00, 4:30, 6:00, 7:30, 9:00, and 10:30 o'clock (a spoke sits straight up at 12 o'clock, matching the reference).
+- Alternating warm ivory-cream wood wedges and honey-apricot wood wedges, completely empty inside each wedge so game prize icons can be overlaid cleanly.
+- Thick ornate coin-gold outer rim decorated with tiny carved white snowflakes, red-envelope-crimson enamel berries, and twinkling golden stars (avoid green leaves on the outer edge so the green screen stays clean).
+- Center: a clean blank cream-gold circle about 28 percent of the diameter bordered by a thin gold ring, empty for a separate hub sprite.
+
+Clean 2D vector kawaii mobile-game UI art. Solid pure green #00FF00 background outside the wheel disc. Zero green pixels inside the wheel itself. Zero text, zero numbers, zero prize icons.

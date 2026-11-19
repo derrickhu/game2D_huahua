@@ -1,0 +1,21 @@
+REFERENCE IMAGE — attached chibi_default.png is the approved huahua owner bust card:
+Copy its EXACT camera crop and head size. Cut cleanly at mid-chest / upper torso only, showing shoulders and upper capelet collar, with generous empty space below. Keep the SAME shop-owner girl face identity: warm chestnut-brown hair color, large warm brown eyes, soft oval face, sweet smile.
+
+BUST PORTRAIT — dialogue and dress-up card, tight mid-chest crop matching the reference. Head plus hair plus low star-antler headband occupy about 62% to 72% of canvas height.
+
+ART STYLE:
+Hand-drawn 2D cute mobile game, soft 3D volume like customer busts, soft warm brown outlines, cozy holiday palette.
+
+POSE: slight 3/4 toward viewer's right, both eyes open and sparkling, warm joyful smile, rosy winter cheeks.
+
+HAIR AND OUTFIT — Winter Star Wish double-festival dress:
+Warm chestnut-brown hair in soft twin curled side-ponytails with fluffy white snow pom-poms, low compact golden star-and-mini-antler headband with holly red berries.
+Red-envelope-crimson velvet winter capelet trimmed with thick cream-white faux fur over a cream knit neckline, fastened at the throat with a golden ribbon bow and a tiny auspicious Chinese knot gold jingle bell.
+
+LAYOUT:
+Portrait 9:16, one character.
+Top of headband about 10% to 14% from canvas top.
+Bottom crop high at mid-chest with about 26% to 32% empty magenta below.
+Centered; 8% to 12% magenta side margins.
+Background pure flat magenta RGB 255 0 255 FF00FF only.
+Zero text, zero watermark.

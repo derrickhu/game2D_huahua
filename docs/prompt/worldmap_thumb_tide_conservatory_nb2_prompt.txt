@@ -1,0 +1,12 @@
+Square 1:1 world-map exterior building landmark icon for a cozy healing pastel merge game. The attached image is the approved cutaway room shell of "晴汐琉璃花房" (Tide Glass Conservatory). Draw that SAME building as a charming COMPLETE EXTERIOR miniature landmark (closed roof and exterior walls, NOT an open cutaway dollhouse, NOT an interior floorplan!).
+
+Architecture & recognizable identity (matching the approved conservatory's exact colors and coastal charm):
+- A two-story stepped European coastal glass conservatory & flower villa in warm ivory plaster, soft sage-celadon timber/iron trim, and luminous aqua-mint arched conservatory glass windows.
+- Upper story on the back half topped with a graceful pitched sage-framed translucent aqua glass conservatory skylight roof with pale gold finials and clusters of pastel blue-and-white hydrangeas and ivy along the eaves.
+- Front-left single-story wing with a charming arched sage-wood double glass entrance door, a cozy honey-oak front sun deck with low wooden railing, and two small stone entry steps.
+- Small courtyard detail on the right side: a tiny sparkling turquoise mosaic reflection pool patch and neat green grass strip inside a low cream-and-sage fence.
+
+Base & composition:
+- Sit the entire miniature conservatory cleanly on a round/oval pale cream-sand island clearing (matching Sunny Tide Bay world-map plots) with a thin soft green grass outer rim.
+- High-angle isometric-lite world-map view (matching `worldmap_thumb_tide_loft.png` and `worldmap_thumb_garden_villa.png`), gentle thin warm taupe-brown outlines, airy pastel cel/watercolor shading.
+- Single centered landmark icon with clean silhouette and generous margin on a pure solid white #FFFFFF background. Zero text, zero numbers, zero logos, zero characters.

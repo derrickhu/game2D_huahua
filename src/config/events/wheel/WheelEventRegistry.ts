@@ -1,10 +1,12 @@
 import { ACTIVE_WHEEL_SEASON_ID } from './WheelEventArtRegistry';
 import { toPastWheelTheme, type PastWheelTheme, type WheelEventTheme } from './WheelEventTheme';
 import { MID_AUTUMN_2026 } from './themes/midAutumn2026';
+import { WINTER_GALA_2026 } from './themes/winterGala2026';
 
 /** 所有登记过的转盘主题。新一期加进这里，再改 ACTIVE_WHEEL_SEASON_ID。 */
 export const ALL_WHEEL_THEMES: readonly WheelEventTheme[] = [
   MID_AUTUMN_2026,
+  WINTER_GALA_2026,
 ];
 
 function pickActiveTheme(): WheelEventTheme {

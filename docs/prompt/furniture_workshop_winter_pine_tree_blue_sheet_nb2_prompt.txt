@@ -1,0 +1,6 @@
+Recolor BOTH columns of the attached 2-column holiday pine tree spritesheet into an Icy Crystal Sky-Blue edition. Keep the EXACT same 2-column layout, wide white gutter, identical tree silhouette, barrel planter, snow boughs, star topper, and gift boxes, keeping LEFT column glowing with warm-white starlight and RIGHT column daytime unlit.
+
+Color palette change:
+- Foliage becomes frosted silvery sky-blue spruce needles with snow tips; ornaments become sapphire-blue, pearl-white, and silver baubles; barrel tub becomes pale whitewashed oak with an ice-blue satin ribbon.
+
+1:1 square canvas, pure solid white #FFFFFF background, zero text, zero watermark.

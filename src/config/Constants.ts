@@ -148,6 +148,8 @@ export const COLORS = {
   DRINK_COLD: 0x87CEEB,      // 冷饮线 - 天蓝
   DRINK_DESSERT: 0xFFB6C1,   // 甜品线 - 浅粉
   DRINK_MOONCAKE: 0xE8B86D,  // 月饼线 - 桂花金
+  DRINK_GINGERBREAD: 0xD9824C, // 圣诞姜饼线 - 肉桂焦糖
+  DRINK_WINTER_TEA: 0xD95B43,  // 暖冬热茶线 - 围炉朱红
 
   // UI
   GOLD: 0xFFD700,

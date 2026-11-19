@@ -48,6 +48,8 @@ export type OrderDeliveryLine =
   | 'cold'
   | 'dessert'
   | 'mooncake'
+  | 'gingerbread'
+  | 'winter_tea'
   | 'cut_avocado'
   | 'cut_watermelon'
   | 'cut_pineapple'
@@ -83,6 +85,10 @@ export const ORDER_DELIVERY_CURVES: Record<OrderDeliveryCategory, Record<string,
     dessert: { base: 13, growth: 1.49 },
     /** 月饼：中秋烤箱附加线，8 级，单价贴近冷饮短链 */
     mooncake: { base: 14, growth: 1.5 },
+    /** 圣诞姜饼：双旦烤箱附加线，8 级 */
+    gingerbread: { base: 14, growth: 1.5 },
+    /** 暖冬热茶：双旦搅拌器附加线，8 级，搅拌器直出低阶故单价略优 */
+    winter_tea: { base: 15, growth: 1.52 },
   },
   /** 果切单价见 deliverHuayuanForFruitCut（顺链对标花束，不走独立曲线） */
   food: {},

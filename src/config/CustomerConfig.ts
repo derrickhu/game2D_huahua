@@ -42,6 +42,7 @@ export const CUSTOMER_TYPES: CustomerTypeDef[] = [
   { id: 'florist_merchant', name: '富贵花商', emoji: '', specialOnly: true },
   { id: 'furniture_craftswoman', name: '家具工匠', emoji: '', specialOnly: true },
   { id: 'chang_e',          name: '嫦娥',     emoji: '', specialOnly: true },
+  { id: 'winter_herald',    name: '冬铃信使', emoji: '', specialOnly: true },
 ];
 
 /** 按 ID 快速查找 */

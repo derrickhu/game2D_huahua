@@ -45,6 +45,10 @@ export enum DrinkLine {
   DESSERT = 'dessert',     // 甜品线
   /** 中秋限时：烤箱附加产线 */
   MOONCAKE = 'mooncake',
+  /** 双旦限时：烤箱附加圣诞姜饼产线 */
+  GINGERBREAD = 'gingerbread',
+  /** 双旦限时：饮品器具附加中式暖冬热茶产线 */
+  WINTER_TEA = 'winter_tea',
 }
 
 export enum FoodLine {
@@ -191,6 +195,14 @@ const DRINK_DATA: [DrinkLine, string[]][] = [
   [DrinkLine.MOONCAKE, [
     '莲蓉小月饼', '豆沙月饼', '五仁月饼', '蛋黄月饼',
     '冰皮桂花月饼', '鲜肉月饼', '流心奶黄月饼', '团圆大月饼',
+  ]],
+  [DrinkLine.GINGERBREAD, [
+    '星星小姜饼', '微笑姜饼人', '拐杖糖心姜饼', '冬青双铃姜饼',
+    '雪花糖霜姜饼环', '雪顶姜饼小屋', '驯鹿姜饼甜点橇', '童话双塔姜饼堡',
+  ]],
+  [DrinkLine.WINTER_TEA, [
+    '红枣暖茶盏', '桂圆姜丝红釉杯', '柿柿如意茶盅', '金桂红釉盖碗',
+    '玫瑰烤奶红陶罐', '祥云朱红提梁壶', '红梅朱釉双杯席', '岁朝朱泥围炉茶席',
   ]],
 ];
 
@@ -755,6 +767,8 @@ export function getMergeChainName(itemId: string): string {
     [DrinkLine.COLD]: '冷饮',
     [DrinkLine.DESSERT]: '甜品',
     [DrinkLine.MOONCAKE]: '月饼',
+    [DrinkLine.GINGERBREAD]: '圣诞姜饼',
+    [DrinkLine.WINTER_TEA]: '暖冬热茶',
     [FoodLine.FRUIT]: '水果',
     [FoodLine.CUT_AVOCADO]: '牛油果果切',
     [FoodLine.CUT_WATERMELON]: '西瓜果切',

@@ -1,0 +1,23 @@
+Cute mobile-game merge item icon SPRITE SHEET on a 4:3 landscape canvas, pure solid white #FFFFFF background. 3/4 top-down isometric view, rounded chunky kawaii proportions, soft warm cinnamon-brown outlines, clean cel-shaded volumetric highlights, high readability at 128px, matching the attached pastry icon's polish.
+
+STRICT GRID & MARGIN RULES:
+- EXACTLY 4 equal columns x 2 equal rows (8 items total: Top row left-to-right = Levels 1, 2, 3, 4; Bottom row left-to-right = Levels 5, 6, 7, 8).
+- Imagine 8 invisible equal square cells with WIDE pure #FFFFFF gutters between every column and between the top and bottom rows.
+- Every single item sits centered inside its own cell, occupying at most 65% of the cell width and height, with generous pure white space on ALL FOUR SIDES so nothing ever touches a neighbor or crosses the horizontal midline.
+- Zero text, zero numbers, zero labels, zero UI tiles or frames, zero plates under Levels 1 to 6.
+
+UNIFIED COLOR FAMILY & PROGRESSION (crucial):
+- ALL 8 ITEMS MUST SHARE THE SAME SIGNATURE MAIN PALETTE: warm golden-baked honey-gingerbread brown (#C87533) paired with thick snow-white royal icing (#FFFDF9), accented sparingly with festive berry-red and coin-gold sugar pearls so players immediately recognize all 8 belong to ONE Gingerbread merge line.
+- Clear visual progression from simple tiny cookie (Lv1) to grand ornate centerpiece (Lv8):
+
+Top row left to right:
+- Level 1: one small simple five-pointed star gingerbread cookie edged with a thin dotted white royal-icing line.
+- Level 2: a cute classic smiling gingerbread man cookie with white icing wavy cuffs and two tiny red candy buttons.
+- Level 3: a plump scalloped round gingerbread biscuit topped with glossy white icing and a red-and-white candy-cane heart in the center.
+- Level 4: a twin-bell shaped gingerbread cookie pair piped with white lace icing, a tiny holly leaf sprig, and a red berry dot.
+
+Bottom row left to right:
+- Level 5: a braided ring-shaped gingerbread cookie wreath generously piped with white snowflake icing, golden sugar pearls, and a small red icing bow.
+- Level 6: a compact single-gabled mini gingerbread cabin with thick white snow-icing eaves, candy-cane doorposts, and a warm yellow sugar window.
+- Level 7: a sculpted 3D gingerbread sleigh filled with star gingerbread cookies, white icing swirls, red berries, and a tiny golden sugar bell.
+- Level 8: a grand two-turret fairy-tale gingerbread castle (compact square footprint, short turrets so height equals width) lavished with thick white snow icing roofs, red-and-white candy pillars, golden sugar star toppers, and warm glowing windows — clearly the most gorgeous ultimate tier while keeping the exact honey-gingerbread and white-icing main colors.

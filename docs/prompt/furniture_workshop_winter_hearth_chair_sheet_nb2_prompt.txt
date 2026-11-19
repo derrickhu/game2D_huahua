@@ -1,0 +1,7 @@
+Wide 16:9 sprite sheet, TWO equal columns x ONE row on pure solid white #FFFFFF background with a wide empty white gutter between left and right columns. Cute kawaii 2.5D true isometric furniture (±30 degree ground axes, vertical height edges), soft warm brown outlines, matching the rendering quality of the attached reference prop.
+
+Subject — Cozy Sherpa Tartan Fireside Armchair (default festive crimson plaid):
+- LEFT column (FRONT-RIGHT 3/4 isometric view): a plump cozy fireside armchair upholstered in warm red-envelope-crimson and cream holiday tartan plaid, trimmed along the backrest crest and rolled armrests with fluffy cream-white sherpa fleece, resting on four short honey-oak wooden legs, with one cute star-shaped cream pillow on the seat.
+- RIGHT column (BACK-RIGHT 3/4 isometric view of THAT EXACT SAME armchair rotated): identical absolute width, height, leg length, and silhouette volume. Shows the tartan-upholstered outer back panel framed by the same fluffy cream sherpa crest trim, rolled armrest backs, and four short honey-oak legs; seat and front pillow hidden behind the backrest.
+
+Both columns must read as one identical 3D model seen from front-3/4 and back-3/4. Pure white background, zero text, zero watermark.

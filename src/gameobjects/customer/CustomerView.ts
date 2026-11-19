@@ -45,6 +45,7 @@ const AVATAR_TARGET_H = 160;
 /** 嫦娥发冠偏高，默认高度会显小；略放大并上移，少被需求托盘挡住。 */
 const AVATAR_DISPLAY_TWEAKS: Record<string, { targetH: number; feetY: number }> = {
   chang_e: { targetH: 170, feetY: 14 },
+  winter_herald: { targetH: 164, feetY: 22 },
 };
 /** 需求面板 y：略负可与胸像底重叠；增大则整体下移靠近棋盘（胸像锚点不变） */
 const PANEL_Y = 4;
@@ -1087,6 +1088,8 @@ export class CustomerView extends PIXI.Container {
       case DrinkLine.COLD: return COLORS.DRINK_COLD;
       case DrinkLine.DESSERT: return COLORS.DRINK_DESSERT;
       case DrinkLine.MOONCAKE: return COLORS.DRINK_MOONCAKE;
+      case DrinkLine.GINGERBREAD: return COLORS.DRINK_GINGERBREAD;
+      case DrinkLine.WINTER_TEA: return COLORS.DRINK_WINTER_TEA;
       default: return 0x999999;
     }
   }

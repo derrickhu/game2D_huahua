@@ -86,6 +86,8 @@ export interface WheelOrderEarn {
   category: string;
   line: string;
   bands: readonly WheelEarnBand[];
+  /** 可选：该产线在专属客人订单中的等级区间（未填则用 featuredCustomer.levelBands） */
+  featuredLevelBands?: Record<WheelFeaturedTier, readonly [number, number]>;
 }
 
 /** 活动进行中，给某类工具额外加一条产出线。权重会再归一化。 */
@@ -99,7 +101,7 @@ export interface WheelProduceBonus {
 
 export type WheelFeaturedTier = 'A' | 'S';
 
-/** 活动专属客人。订单必含 orderEarn 那条产线。 */
+/** 活动专属客人。订单必含至少一条 orderEarn 产线。 */
 export interface WheelFeaturedCustomer {
   typeId: string;
   dailyCap: number;
@@ -121,8 +123,10 @@ export interface WheelEventTheme {
   spinCosts: readonly number[];
   rounds: readonly (readonly WheelPrize[])[];
   clearanceOutfitId?: string;
-  orderEarn: WheelOrderEarn;
-  produceBonus?: WheelProduceBonus;
+  orderEarn: WheelOrderEarn | readonly WheelOrderEarn[];
+  /** 同一笔订单同时交付 2 条及以上活动产线时，额外加发的活动货币 */
+  dualEarnBonus?: number;
+  produceBonus?: WheelProduceBonus | readonly WheelProduceBonus[];
   featuredCustomer?: WheelFeaturedCustomer;
   seasonalItems?: readonly ExchangeSeasonalItem[];
   art: WheelEventArt;
@@ -205,23 +209,64 @@ export function findWheelPrize(theme: WheelEventTheme, prizeId: string): WheelPr
   return null;
 }
 
-export function wheelEarnAmount(theme: WheelEventTheme, level: number): number {
+export function wheelOrderEarns(theme: WheelEventTheme): readonly WheelOrderEarn[] {
+  const raw = theme.orderEarn;
+  return Array.isArray(raw) ? raw : [raw as WheelOrderEarn];
+}
+
+export function wheelProduceBonuses(theme: WheelEventTheme): readonly WheelProduceBonus[] {
+  const raw = theme.produceBonus;
+  if (!raw) return [];
+  return Array.isArray(raw) ? raw : [raw as WheelProduceBonus];
+}
+
+export function wheelEarnAmountForRule(rule: WheelOrderEarn, level: number): number {
   if (!Number.isFinite(level) || level < 1) return 0;
   const lv = Math.floor(level);
   let amount = 0;
-  for (const band of theme.orderEarn.bands) {
+  for (const band of rule.bands) {
     if (lv >= band.minLevel) amount = band.amount;
   }
   return amount;
 }
 
+export function wheelEarnAmount(theme: WheelEventTheme, level: number): number {
+  const first = wheelOrderEarns(theme)[0];
+  return first ? wheelEarnAmountForRule(first, level) : 0;
+}
+
+export function wheelFeaturedLevelBandsForRule(
+  theme: WheelEventTheme,
+  rule: WheelOrderEarn,
+): Record<WheelFeaturedTier, readonly [number, number]> {
+  if (rule.featuredLevelBands) return rule.featuredLevelBands;
+  return theme.featuredCustomer?.levelBands ?? { A: [1, 4], S: [5, 8] };
+}
+
 export function wheelFeaturedTierFromLevel(
   theme: WheelEventTheme,
   level: number,
+  rule?: WheelOrderEarn,
 ): WheelFeaturedTier {
-  const featured = theme.featuredCustomer;
-  const sMin = featured?.levelBands.S[0] ?? 5;
+  const bands = rule
+    ? wheelFeaturedLevelBandsForRule(theme, rule)
+    : theme.featuredCustomer?.levelBands;
+  const sMin = bands?.S[0] ?? 5;
   return level >= sMin ? 'S' : 'A';
+}
+
+export function wheelFeaturedTierFromItems(
+  theme: WheelEventTheme,
+  items: ReadonlyArray<{ category: string; line: string; level: number }>,
+): WheelFeaturedTier {
+  const rules = wheelOrderEarns(theme);
+  for (const item of items) {
+    const rule = rules.find(r => r.category === item.category && r.line === item.line);
+    if (rule && wheelFeaturedTierFromLevel(theme, item.level, rule) === 'S') {
+      return 'S';
+    }
+  }
+  return 'A';
 }
 
 export function isWheelFeaturedOrderKind(kind: string | undefined): boolean {

@@ -703,6 +703,209 @@ export const WORKSHOP_BLUEPRINT_DEFS: WorkshopBlueprintDef[] = [
       },
     ],
   },
+  {
+    id: 'blueprint_workshop_winter_star_clock',
+    name: '双旦星芒挂毯钟图纸',
+    outputDecoId: 'workshop_winter_star_clock',
+    rarity: 'limited',
+    sourceText: '冬日星愿季转盘',
+    icon: 'workshop_blueprint_generic',
+    category: 'wallart',
+    acquire: [{ kind: 'event', label: '冬日星愿季' }],
+    colorOptions: [
+      {
+        id: 'default',
+        name: '茜红',
+        outputDecoId: 'workshop_winter_star_clock',
+        materialCost: 10,
+        dyeCost: 0,
+        huayuanCost: 6800,
+      },
+      {
+        id: 'mint',
+        name: '冬青',
+        outputDecoId: 'workshop_winter_star_clock_mint',
+        materialCost: 8,
+        dyeCost: 3,
+        dyeMaterialId: WORKSHOP_DYE_GREEN_ID,
+        huayuanCost: 5600,
+      },
+      {
+        id: 'sakura',
+        name: '甜莓',
+        outputDecoId: 'workshop_winter_star_clock_sakura',
+        materialCost: 8,
+        dyeCost: 3,
+        dyeMaterialId: WORKSHOP_DYE_PINK_ID,
+        huayuanCost: 5600,
+      },
+    ],
+  },
+  {
+    id: 'blueprint_workshop_winter_cocoa_table',
+    name: '热可可围炉圆几图纸',
+    outputDecoId: 'workshop_winter_cocoa_table',
+    rarity: 'limited',
+    sourceText: '冬日星愿季转盘',
+    icon: 'workshop_blueprint_generic',
+    category: 'furniture',
+    acquire: [{ kind: 'event', label: '冬日星愿季' }],
+    colorOptions: [
+      {
+        id: 'default',
+        name: '焦糖',
+        outputDecoId: 'workshop_winter_cocoa_table',
+        materialCost: 12,
+        dyeCost: 0,
+        huayuanCost: 8400,
+      },
+      {
+        id: 'blue',
+        name: '冰雪',
+        outputDecoId: 'workshop_winter_cocoa_table_blue',
+        materialCost: 10,
+        dyeCost: 4,
+        dyeMaterialId: WORKSHOP_DYE_BLUE_ID,
+        huayuanCost: 6800,
+      },
+    ],
+  },
+  {
+    id: 'blueprint_workshop_winter_hearth_chair',
+    name: '雪绒围炉单椅图纸',
+    outputDecoId: 'workshop_winter_hearth_chair',
+    rarity: 'limited',
+    sourceText: '冬日星愿季转盘',
+    icon: 'workshop_blueprint_generic',
+    category: 'furniture',
+    acquire: [{ kind: 'event', label: '冬日星愿季' }],
+    colorOptions: [
+      {
+        id: 'default',
+        name: '茜红',
+        outputDecoId: 'workshop_winter_hearth_chair',
+        materialCost: 10,
+        dyeCost: 0,
+        huayuanCost: 7800,
+      },
+      {
+        id: 'mint',
+        name: '松林',
+        outputDecoId: 'workshop_winter_hearth_chair_mint',
+        materialCost: 8,
+        dyeCost: 2,
+        dyeMaterialId: WORKSHOP_DYE_GREEN_ID,
+        huayuanCost: 6400,
+      },
+    ],
+  },
+  {
+    id: 'blueprint_workshop_newyear_firework_window',
+    name: '跨年烟花拱窗图纸',
+    outputDecoId: 'workshop_newyear_firework_window',
+    rarity: 'limited',
+    sourceText: '冬日星愿季转盘',
+    icon: 'workshop_blueprint_generic',
+    category: 'wallart',
+    acquire: [{ kind: 'event', label: '冬日星愿季' }],
+    colorOptions: [
+      {
+        id: 'default',
+        name: '默认',
+        outputDecoId: 'workshop_newyear_firework_window',
+        materialCost: 14,
+        dyeCost: 0,
+        huayuanCost: 11200,
+      },
+    ],
+  },
+  {
+    id: 'blueprint_workshop_winter_pine_tree',
+    name: '星铃松枝树图纸',
+    outputDecoId: 'workshop_winter_pine_tree',
+    rarity: 'limited',
+    sourceText: '冬日星愿季转盘',
+    icon: 'workshop_blueprint_generic',
+    category: 'ornament',
+    acquire: [{ kind: 'event', label: '冬日星愿季' }],
+    colorOptions: [
+      {
+        id: 'default',
+        name: '森绿',
+        outputDecoId: 'workshop_winter_pine_tree',
+        materialCost: 14,
+        dyeCost: 0,
+        huayuanCost: 12000,
+      },
+      {
+        id: 'blue',
+        name: '冰晶',
+        outputDecoId: 'workshop_winter_pine_tree_blue',
+        materialCost: 10,
+        dyeCost: 5,
+        dyeMaterialId: WORKSHOP_DYE_BLUE_ID,
+        huayuanCost: 9200,
+      },
+      {
+        id: 'sakura',
+        name: '樱粉',
+        outputDecoId: 'workshop_winter_pine_tree_sakura',
+        materialCost: 10,
+        dyeCost: 4,
+        dyeMaterialId: WORKSHOP_DYE_PINK_ID,
+        huayuanCost: 9200,
+      },
+    ],
+  },
+  {
+    id: 'blueprint_workshop_winter_fireplace',
+    name: '暖焰壁炉架图纸',
+    outputDecoId: 'workshop_winter_fireplace',
+    rarity: 'limited',
+    sourceText: '冬日星愿季转盘',
+    icon: 'workshop_blueprint_generic',
+    category: 'furniture',
+    acquire: [{ kind: 'event', label: '冬日星愿季' }],
+    colorOptions: [
+      {
+        id: 'default',
+        name: '奶油红袜',
+        outputDecoId: 'workshop_winter_fireplace',
+        materialCost: 16,
+        dyeCost: 0,
+        huayuanCost: 13600,
+      },
+      {
+        id: 'brick',
+        name: '砖红',
+        outputDecoId: 'workshop_winter_fireplace_honey',
+        materialCost: 12,
+        dyeCost: 5,
+        dyeMaterialId: WORKSHOP_DYE_PINK_ID,
+        huayuanCost: 10200,
+      },
+    ],
+  },
+  {
+    id: 'blueprint_workshop_winter_red_lantern',
+    name: '大红灯笼图纸',
+    outputDecoId: 'workshop_winter_red_lantern',
+    rarity: 'limited',
+    sourceText: '冬日星愿季转盘',
+    icon: 'workshop_blueprint_generic',
+    category: 'wallart',
+    acquire: [{ kind: 'event', label: '冬日星愿季' }],
+    colorOptions: [
+      {
+        id: 'default',
+        name: '大红',
+        outputDecoId: 'workshop_winter_red_lantern',
+        materialCost: 6,
+        dyeCost: 0,
+        huayuanCost: 4200,
+      },
+    ],
+  },
 ];
 
 export const WORKSHOP_BLUEPRINT_MAP = new Map(WORKSHOP_BLUEPRINT_DEFS.map(b => [b.id, b]));
@@ -751,6 +954,7 @@ const WORKSHOP_COLOR_ID_SWATCH: Record<string, number> = {
   moon: 0x64b5f6,
   sky: 0x64b5f6,
   honey: 0xf5d76e,
+  brick: 0xc4513a,
   mint: 0x8fd86b,
 };
 
@@ -759,6 +963,7 @@ export function getWorkshopColorChipLabel(
   option: WorkshopColorOption,
 ): string {
   if (isDefaultWorkshopColorOption(blueprint, option)) return '默认';
+  if (option.id === 'brick') return option.name;
   if (option.dyeMaterialId) {
     return WORKSHOP_DYE_CHIP_LABELS[option.dyeMaterialId]
       ?? getWorkshopMaterialDisplayName(option.dyeMaterialId).replace(/染料$/, '');
@@ -768,6 +973,9 @@ export function getWorkshopColorChipLabel(
 
 /** 制作/预览弹窗配色圆点填充色 */
 export function getWorkshopColorChipSwatch(option: WorkshopColorOption): number {
+  if (option.id === 'brick' && WORKSHOP_COLOR_ID_SWATCH[option.id] != null) {
+    return WORKSHOP_COLOR_ID_SWATCH[option.id];
+  }
   if (option.dyeMaterialId && WORKSHOP_DYE_CHIP_COLORS[option.dyeMaterialId] != null) {
     return WORKSHOP_DYE_CHIP_COLORS[option.dyeMaterialId];
   }

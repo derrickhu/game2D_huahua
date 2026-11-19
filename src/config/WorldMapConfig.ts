@@ -104,6 +104,12 @@ export const TIDE_BAY_UNLOCK_LEVEL = 40;
 /** 晴汐花湾第二处开放式庭院场景「松溪花桥庭」解锁等级 */
 export const BROOK_PERGOLA_UNLOCK_LEVEL = 45;
 
+/** 晴汐花湾第三处复式玻璃阳光花房「晴汐琉璃花房」解锁等级 */
+export const TIDE_CONSERVATORY_UNLOCK_LEVEL = 50;
+
+/** 晴汐花湾第四处三台错层庭阁「绯樱镜水花阁」解锁等级 */
+export const SAKURA_WATER_PAVILION_UNLOCK_LEVEL = 60;
+
 /** 大地图「当前店铺」实时缩略图：截取最长边像素（略小于节点 thumbSize，省显存） */
 export const LIVE_HOUSE_THUMB_CAPTURE_MAX = 160;
 
@@ -282,11 +288,35 @@ const TIDE_BAY_NODES: MapNodeDef[] = [
     useLiveMapThumb: false,
     targetSceneId: 'brook_pergola',
   },
+  {
+    id: 'tide_conservatory',
+    type: 'house',
+    label: '晴汐琉璃花房',
+    /** 中央碧海湾浅滩与木栈道旁圆形沙洲（原 tide_plot_03），50 级开放 */
+    x: 1125,
+    y: 627,
+    thumbKey: 'worldmap_thumb_tide_conservatory',
+    thumbSize: 340,
+    unlockLevel: TIDE_CONSERVATORY_UNLOCK_LEVEL,
+    useLiveMapThumb: false,
+    targetSceneId: 'tide_conservatory',
+  },
+  {
+    id: 'sakura_water_pavilion',
+    type: 'house',
+    label: '绯樱镜水花阁',
+    /** 右上漫山粉樱花林环抱山坡沙洲（原 tide_plot_04），60 级开放 */
+    x: 2086,
+    y: 505,
+    thumbKey: 'worldmap_thumb_sakura_water_pavilion',
+    thumbSize: 348,
+    unlockLevel: SAKURA_WATER_PAVILION_UNLOCK_LEVEL,
+    useLiveMapThumb: false,
+    targetSceneId: 'sakura_water_pavilion',
+  },
 ];
 
 const TIDE_BAY_RESERVED_PLOTS: WorldMapReservedPlot[] = [
-  { id: 'tide_plot_03', x: 1125, y: 627 },
-  { id: 'tide_plot_04', x: 2086, y: 505 },
   { id: 'tide_plot_05', x: 613, y: 905 },
   { id: 'tide_plot_06', x: 1556, y: 856 },
   { id: 'tide_plot_07', x: 258, y: 1159 },

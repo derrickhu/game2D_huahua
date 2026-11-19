@@ -1,0 +1,12 @@
+Create ONE clean 2D game wall-window spritesheet on a 1:1 square canvas, pure solid white #FFFFFF background.
+EXACTLY 2 equal columns x 1 row with a wide pure white gutter between left and right panels. Match the EXACT wall-plane isometric angle (left-high / right-low ~30 degree sill and arch slope, vertical side jambs) and cozy kawaii style of the attached arch window.
+
+Both panels show the IDENTICAL arched warm honey-oak window frame, same size and position: topped with a lush snowy pine-and-holly swag, red ribbon bow, and two golden jingle bells, with soft cream-and-gold tied-back side curtains and a snow-dusted sill. ONLY the night sky view seen through the glass panes changes:
+
+LEFT column (Snowy Quiet Night state):
+- Through the arched window glass: a serene deep-indigo winter night sky with gentle falling white snowflakes, a soft crescent moon, and quiet snow-covered pine silhouettes in the distance.
+
+RIGHT column (Midnight New Year Fireworks state):
+- Identical window frame, curtains, and holly bell garland; through the arched glass: dazzling celebratory golden, coral-pink, and crimson New Year fireworks blooming brightly across the starry winter night sky, casting a warm festive glow.
+
+Standalone wall window prop on pure white #FFFFFF background. Zero text, zero numbers, zero watermark.

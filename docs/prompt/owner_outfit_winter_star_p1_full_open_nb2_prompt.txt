@@ -1,0 +1,20 @@
+The attached image is the approved huahua shop-owner FULL-BODY sprite. Keep ONLY her face identity and SD chibi body: same soft oval face, large warm brown eyes, warm chestnut-brown hair color, sweet smile. Replace her hair styling and clothing completely with the new winter festival outfit below.
+
+CHIBI PROPORTION — critical, same as huahua shop owner full-body sprites: super-deformed SD chibi, 2 to 2.8 heads total height from hair ornament tip to boot soles. Huge head roughly 42% to 52% of standing height, short neck, compact round torso, short chunky limbs. Knee-length skirt and short capelet so BOTH winter boots remain clearly visible in the bottom 10% to 14% band.
+
+ART STYLE:
+2D cute mobile merge-game NPC, cozy warm pastel holiday palette, soft brown outlines, gentle cel shading with warm highlights.
+
+LAYOUT STANDARD for game sprites — follow exactly:
+Portrait 9:16, one character.
+Vertical: boot soles in bottom 10% to 14%; top of low antler-star hairband in top 16% to 22%.
+Horizontal: centered; 8% to 12% magenta side margins.
+Background: flat magenta FF00FF only. Zero text, zero frame, zero watermark.
+
+POSE: slight 3/4 toward viewer's right, arms relaxed slightly away from body, empty hands, cheerful open-eyed expression with rosy winter cheeks.
+
+HAIR AND OUTFIT — Winter Star Wish double-festival dress:
+Warm chestnut-brown hair in soft twin curled side-ponytails with fluffy white snow pom-poms, topped with a low compact golden star-and-mini-antler headband accented with holly red berries.
+Short red-envelope-crimson velvet capelet trimmed with thick cream-white faux fur, fastened at the collar with a golden ribbon bow and a tiny auspicious Chinese knot gold jingle bell. Underneath: a cozy cream knitted bodice and a flared crimson-and-gold starry velvet A-line skirt with white fur hem. Warm cream-and-caramel ankle boots with tiny gold bells.
+
+Full body head to feet, eyes open, festive and adorable.

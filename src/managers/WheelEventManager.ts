@@ -5,7 +5,8 @@ import {
   clampWheelRound,
   findWheelPrize,
   rollWheelPrize,
-  wheelEarnAmount,
+  wheelEarnAmountForRule,
+  wheelOrderEarns,
   wheelPrizeIndex,
   wheelPrizesForRound,
   wheelRoundCount,
@@ -198,9 +199,10 @@ class WheelEventManagerClass {
     return granted;
   }
 
-  /** 活动进行中且转盘还没抽完：可以刷专属客人、订单可以拿活动货币。 */
+  /** 活动进行中且转盘还没抽完：可以刷专属客人、订单可以拿活动货币。GM 强制开启时不受抽完限制。 */
   canEarnCurrency(): boolean {
-    return this.isActive() && !this._wheelCleared;
+    if (this._gmActiveOverride) return true;
+    return this.status === 'active' && !this._wheelCleared;
   }
 
   get currentPrizes(): readonly WheelPrize[] {
@@ -252,14 +254,25 @@ class WheelEventManagerClass {
 
   calculateOrderReward(itemIds: readonly string[]): number {
     if (!this.canEarnCurrency()) return 0;
-    const earn = THEME.orderEarn;
-    let maxLevel = 0;
-    for (const itemId of itemIds) {
-      const item = ITEM_DEFS.get(itemId);
-      if (!item || item.category !== earn.category || item.line !== earn.line) continue;
-      maxLevel = Math.max(maxLevel, item.level);
+    const rules = wheelOrderEarns(THEME);
+    let bestAmount = 0;
+    let matchedRuleCount = 0;
+    for (const rule of rules) {
+      let maxLevel = 0;
+      for (const itemId of itemIds) {
+        const item = ITEM_DEFS.get(itemId);
+        if (!item || item.category !== rule.category || item.line !== rule.line) continue;
+        maxLevel = Math.max(maxLevel, item.level);
+      }
+      const reward = wheelEarnAmountForRule(rule, maxLevel);
+      if (reward > 0) {
+        matchedRuleCount += 1;
+        bestAmount = Math.max(bestAmount, reward);
+      }
     }
-    return wheelEarnAmount(THEME, maxLevel);
+    if (bestAmount <= 0) return 0;
+    const dualBonus = matchedRuleCount >= 2 ? Math.max(0, Math.floor(THEME.dualEarnBonus ?? 0)) : 0;
+    return bestAmount + dualBonus;
   }
 
   addCurrency(amount: number): number {
@@ -473,18 +486,24 @@ class WheelEventManagerClass {
 
   private _advanceRoundIfComplete(): number | undefined {
     if (this._wheelCleared) return undefined;
-    const prizes = wheelPrizesForRound(THEME, this._wheelRound);
-    if (!prizes.every(prize => this._wonPrizeIds.has(prize.id))) return undefined;
-    if (this._wheelRound < wheelRoundCount(THEME)) {
-      this._wheelRound += 1;
-      this._wonPrizeIds = new Set();
-      for (const prize of this.currentPrizes) {
-        if (this._isUniqueGrantOwned(prize.grant)) this._wonPrizeIds.add(prize.id);
+    let advancedTo: number | undefined;
+    while (!this._wheelCleared) {
+      const prizes = wheelPrizesForRound(THEME, this._wheelRound);
+      if (!prizes.every(prize => this._wonPrizeIds.has(prize.id))) break;
+      if (this._wheelRound < wheelRoundCount(THEME)) {
+        this._wheelRound += 1;
+        this._wonPrizeIds = new Set();
+        for (const prize of this.currentPrizes) {
+          if (this._isUniqueGrantOwned(prize.grant)) this._wonPrizeIds.add(prize.id);
+        }
+        advancedTo = this._wheelRound;
+      } else {
+        this._wheelCleared = true;
+        advancedTo = undefined;
+        break;
       }
-      return this._wheelRound;
     }
-    this._wheelCleared = true;
-    return undefined;
+    return advancedTo;
   }
 
   private _grant(grant: WheelGrant): boolean {
