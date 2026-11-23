@@ -5,7 +5,7 @@
 declare const __APP_VERSION__: string;
 
 interface ImportMetaEnv {
-  readonly VITE_PLATFORM?: 'taptap' | 'huawei' | '';
+  readonly VITE_PLATFORM?: 'taptap' | 'huawei' | 'kuaishou' | '';
   readonly VITE_HUAWEI_APPID?: string;
 }
 

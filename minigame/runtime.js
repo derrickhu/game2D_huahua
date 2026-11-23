@@ -3,6 +3,7 @@
  *
  * - 抖音宿主：注入 tt → 只走 tt（同时存在的 wx 仅是宿主兼容层）
  * - Tap 宿主：注入 tap（无 tt）
+ * - 快手宿主：注入 ks（早期是 kwaigame）；工具可能再把 ks 挂成 wx，必须先认快手
  * - 华为快游戏：注入 qg（快应用才是 qa）；也可能再塞 wx 壳，必须先认华为
  * - 微信宿主：注入 wx → 只走 wx
  *
@@ -21,9 +22,30 @@ function isHuaweiQuickGameHost() {
   return true;
 }
 
+function isKuaishouMiniGameHost() {
+  if (typeof ks !== 'undefined') return true;
+  if (typeof kwaigame !== 'undefined') return true;
+  if (typeof KSGameGlobal !== 'undefined') return true;
+  try {
+    if (typeof GameGlobal !== 'undefined' && GameGlobal && GameGlobal.__HUAHUA_KS_PACK) return true;
+  } catch (_) { /* */ }
+  try {
+    var g = _globalObject();
+    if (g && g.__HUAHUA_KS_PACK) return true;
+  } catch (_) { /* */ }
+  return false;
+}
+
+function resolveKuaishouApi() {
+  if (typeof ks !== 'undefined') return ks;
+  if (typeof kwaigame !== 'undefined') return kwaigame;
+  return typeof wx !== 'undefined' ? wx : null;
+}
+
 function detectMinigamePlatform() {
   if (typeof tt !== 'undefined') return 'douyin';
   if (typeof tap !== 'undefined') return 'taptap';
+  if (isKuaishouMiniGameHost()) return 'kuaishou';
   if (isHuaweiQuickGameHost()) return 'huawei';
   if (typeof wx !== 'undefined') return 'wechat';
   return 'unknown';
@@ -33,6 +55,7 @@ function getNativePlatformApi(platform) {
   var p = platform || detectMinigamePlatform();
   if (p === 'douyin') return typeof tt !== 'undefined' ? tt : null;
   if (p === 'taptap') return typeof tap !== 'undefined' ? tap : null;
+  if (p === 'kuaishou') return resolveKuaishouApi();
   if (p === 'huawei') {
     if (typeof qg !== 'undefined') return qg;
     if (typeof qa !== 'undefined') return qa;
@@ -40,6 +63,23 @@ function getNativePlatformApi(platform) {
   }
   if (p === 'wechat') return typeof wx !== 'undefined' ? wx : null;
   return null;
+}
+
+/** 快手没开「自动适配微信」时没有 wx。pixi-adapter 的定时器兜底会找 wx，这里补上。 */
+function aliasKuaishouWx() {
+  if (!isKuaishouMiniGameHost()) return;
+  var api = resolveKuaishouApi();
+  if (!api) return;
+  var g = _globalObject();
+  try {
+    if (typeof wx === 'undefined') wx = api;
+  } catch (_) { /* */ }
+  try { if (g && typeof g.wx === 'undefined') g.wx = api; } catch (_) { /* */ }
+  try {
+    if (typeof GameGlobal !== 'undefined' && GameGlobal && typeof GameGlobal.wx === 'undefined') {
+      GameGlobal.wx = api;
+    }
+  } catch (_) { /* */ }
 }
 
 function _globalObject() {
@@ -343,6 +383,7 @@ function initDouyinPrivacyBootstrap() {
   });
 }
 
+aliasKuaishouWx();
 initDouyinPrivacyBootstrap();
 
 var __runtimeApi = {

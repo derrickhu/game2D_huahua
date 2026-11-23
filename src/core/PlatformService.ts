@@ -1,11 +1,11 @@
 /**
- * 平台服务抽象层 - 统一封装微信 / 抖音 / Tap / 华为快游戏 API
+ * 平台服务抽象层 - 统一封装微信 / 抖音 / Tap / 华为快游戏 / 快手小游戏 API
  *
  * 所有平台特有调用（存储、广告、分享、侧边栏、桌面等）都通过本模块统一访问，
- * src/ 中不再需要各自 declare const wx / tt / qg。
+ * src/ 中不再需要各自 declare const wx / tt / qg / ks。
  *
  * 存储：读写前统一经 scopeStorageKey 映射到平台命名空间
- * （微信原样，抖音加 _tt，Tap 加 _tap，华为加 _hw），业务层继续用 `huahua_xxx` 逻辑 key。
+ * （微信原样，抖音加 _tt，Tap 加 _tap，华为加 _hw，快手加 _ks），业务层继续用 `huahua_xxx` 逻辑 key。
  */
 
 declare const GameGlobal: any;
@@ -41,6 +41,7 @@ class PlatformServiceClass {
     const apiLabel = this.name === 'douyin' ? 'tt'
       : this.name === 'wechat' ? 'wx'
       : this.name === 'taptap' ? 'tap'
+      : this.name === 'kuaishou' ? 'ks'
       : this.name === 'huawei' ? (typeof qg !== 'undefined' ? 'qg' : typeof qa !== 'undefined' ? 'qa' : 'wx')
       : 'none';
     console.log(`[Platform] 当前平台: ${this.name}, api=${apiLabel}, gameKey=${getScopedGameKey(this.name)}`);
@@ -50,12 +51,12 @@ class PlatformServiceClass {
     }
   }
 
-  /** 后端 /login 的 platform 字段（wx / dy / tap / hw / anon） */
+  /** 后端 /login 的 platform 字段（wx / dy / tap / hw / ks / anon） */
   get backendPlatformCode(): BackendPlatformCode {
     return toBackendPlatformCode(this.name);
   }
 
-  /** 当前平台的数据命名空间（huahua / huahua_tt / huahua_tap / huahua_hw） */
+  /** 当前平台的数据命名空间（huahua / huahua_tt / huahua_tap / huahua_hw / huahua_ks） */
   get scopedGameKey(): string {
     return getScopedGameKey(this.name);
   }
@@ -83,6 +84,11 @@ class PlatformServiceClass {
   /** 是否华为快游戏 */
   get isHuawei(): boolean {
     return this.name === 'huawei';
+  }
+
+  /** 是否快手小游戏 */
+  get isKuaishou(): boolean {
+    return this.name === 'kuaishou';
   }
 
   /**
@@ -460,6 +466,7 @@ class PlatformServiceClass {
    *   微信 -> wx.login → code
    *   抖音 -> tt.login({ force: true }) → code，未登录时也可能只有 anonymousCode
    *   Tap  -> tap.login → code
+   *   快手 -> ks.login → code（不要带 force，快手没有这个字段）
    */
   loginCredentials(): Promise<{ code: string; anonymousCode: string }> {
     return new Promise((resolve) => {
@@ -470,8 +477,7 @@ class PlatformServiceClass {
         return;
       }
       try {
-        this._api.login({
-          force: this.isDouyin,
+        const loginOpts: Record<string, unknown> = {
           success: (res: any) => {
             const code = String(res?.code || '');
             const anonymousCode = String(res?.anonymousCode || '');
@@ -488,7 +494,9 @@ class PlatformServiceClass {
             console.warn(`[Platform] login 失败 platform=${this.name}`, err);
             resolve(empty);
           },
-        });
+        };
+        if (this.isDouyin) loginOpts.force = true;
+        this._api.login(loginOpts);
       } catch (err) {
         console.warn(`[Platform] login 抛错 platform=${this.name}`, err);
         resolve(empty);
@@ -654,7 +662,7 @@ class PlatformServiceClass {
       if (this.name === 'wechat') {
         return this._api?.createRewardedVideoAd?.({ adUnitId, multiton: true });
       }
-      if (this.name === 'douyin' || this.name === 'taptap') {
+      if (this.name === 'douyin' || this.name === 'taptap' || this.name === 'kuaishou') {
         return this._api?.createRewardedVideoAd?.({ adUnitId });
       }
     } catch (e) {
@@ -669,7 +677,7 @@ class PlatformServiceClass {
       if (this.name === 'wechat') {
         return this._api?.createBannerAd?.({ adUnitId, style });
       }
-      if (this.name === 'douyin' || this.name === 'taptap') {
+      if (this.name === 'douyin' || this.name === 'taptap' || this.name === 'kuaishou') {
         return this._api?.createBannerAd?.({ adUnitId, style });
       }
     } catch (e) {
@@ -688,7 +696,7 @@ class PlatformServiceClass {
       if (this.name === 'wechat') {
         return this._api?.createInterstitialAd?.({ adUnitId });
       }
-      if (this.name === 'douyin' || this.name === 'taptap') {
+      if (this.name === 'douyin' || this.name === 'taptap' || this.name === 'kuaishou') {
         return this._api?.createInterstitialAd?.({ adUnitId });
       }
     } catch (e) {
@@ -701,7 +709,7 @@ class PlatformServiceClass {
     if (!adUnitId) return false;
     if (/[xyz]{6,}/i.test(adUnitId)) return false;
     if (this.name === 'wechat') return /^adunit-[0-9a-f]{16}$/i.test(adUnitId);
-    if (this.name === 'douyin' || this.name === 'taptap') {
+    if (this.name === 'douyin' || this.name === 'taptap' || this.name === 'kuaishou') {
       return !/[xyz]{6,}/i.test(adUnitId) && adUnitId.length >= 4;
     }
     return false;
@@ -759,8 +767,8 @@ class PlatformServiceClass {
   /** 显式开启右上角菜单分享入口（微信真机需要，否则菜单里可能显示当前页面不可分享） */
   showShareMenu(opts?: { withShareTicket?: boolean; menus?: string[] }): void {
     try {
-      // menus / withShareTicket 是微信特有参数，抖音传入会被判为非法入参
-      if (this.name === 'douyin') {
+      // menus / withShareTicket 是微信特有参数，抖音、快手传入会被判为非法入参
+      if (this.name === 'douyin' || this.name === 'kuaishou') {
         this._api?.showShareMenu?.({});
         return;
       }

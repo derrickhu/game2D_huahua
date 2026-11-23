@@ -1,5 +1,5 @@
 /**
- * 平台抽象层 - 统一微信/抖音/Tap/华为快游戏 API
+ * 平台抽象层 - 统一微信/抖音/Tap/华为快游戏/快手小游戏 API
  * 宿主识别与 src/core/platformDetect.ts / runtime.js 一致
  */
 
@@ -15,7 +15,7 @@ const _api = getNativePlatformApi(_platformName);
 const _dummyCanvas = { width: 0, height: 0, getContext: function() { return null; } };
 
 if (!_api) {
-  console.error('[platform] 未检测到小游戏运行环境（wx/tt/tap/qg）');
+  console.error('[platform] 未检测到小游戏运行环境（wx/tt/tap/qg/ks）');
 }
 
 // 安全调用包装：防止鸿蒙等环境中 API 缺失导致崩溃

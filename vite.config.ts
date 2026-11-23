@@ -10,7 +10,8 @@ const pkg = requirePkg('./package.json') as { version: string };
 const vitePlatform = process.env.VITE_PLATFORM || '';
 const isTap = vitePlatform === 'taptap';
 const isHuawei = vitePlatform === 'huawei';
-const BUNDLE_DIR = isTap ? '.bundle-taptap' : isHuawei ? '.bundle-huawei' : '.bundle';
+const isKuaishou = vitePlatform === 'kuaishou';
+const BUNDLE_DIR = isTap ? '.bundle-taptap' : isHuawei ? '.bundle-huawei' : isKuaishou ? '.bundle-kuaishou' : '.bundle';
 
 /**
  * Vite 插件：构建后替换 bundle 中所有 ShaderSystem 的 systemCheck 方法体，
@@ -102,7 +103,7 @@ function assemblePlatformsPlugin(): Plugin {
   let queue: Promise<void> = Promise.resolve();
 
   const target = () => (
-    isTap ? 'taptap' : isHuawei ? 'huawei' : (process.env.HUAHUA_PLATFORM ?? 'all')
+    isTap ? 'taptap' : isHuawei ? 'huawei' : isKuaishou ? 'kuaishou' : (process.env.HUAHUA_PLATFORM ?? 'all')
   );
 
   const enqueue = (reason: string) => {

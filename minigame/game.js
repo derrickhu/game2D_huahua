@@ -10,6 +10,7 @@
     console.log('[boot] hosts qg=' + (typeof qg)
       + ' qa=' + (typeof qa)
       + ' tap=' + (typeof tap)
+      + ' ks=' + (typeof ks)
       + ' wx=' + (typeof wx)
       + ' tt=' + (typeof tt)
       + ' GameGlobal=' + (typeof GameGlobal)
@@ -47,6 +48,9 @@
   }
 })();
 
+// 快手包才有这个文件。必须早于 runtime：工具若只注入 wx 兼容层，会误判成华为。
+try { require('./kuaishou-pack-stamp.js'); } catch (e) { /* 非快手包没有 */ }
+
 // 最早加载：宿主识别 + 原生 API 绑定（须早于 pixi-adapter 与 bundle）
 var _runtime = null;
 try {
@@ -75,6 +79,8 @@ function _hostApi() {
   return (typeof tap !== 'undefined' && tap)
     || (typeof qg !== 'undefined' && qg)
     || (typeof qa !== 'undefined' && qa)
+    || (typeof ks !== 'undefined' && ks)
+    || (typeof kwaigame !== 'undefined' && kwaigame)
     || (typeof wx !== 'undefined' && wx)
     || (typeof tt !== 'undefined' && tt)
     || null;
@@ -303,7 +309,7 @@ if (typeof Intl === 'undefined') {
   _g.Intl = {};
 }
 
-_diag('boot tap=' + (typeof tap) + ' wx=' + (typeof wx) + ' tt=' + (typeof tt)
+_diag('boot tap=' + (typeof tap) + ' ks=' + (typeof ks) + ' wx=' + (typeof wx) + ' tt=' + (typeof tt)
   + ' qg=' + (typeof qg) + ' qa=' + (typeof qa)
   + ' plat=' + (_runtime && _runtime.detectMinigamePlatform ? _runtime.detectMinigamePlatform() : '?'));
 try { require('./tap-pack-stamp.js'); } catch (e) { /* 非 Tap 包没有 */ }

@@ -117,6 +117,7 @@ class AdManagerClass {
     const config = Platform.name === 'wechat' ? AD_UNIT_CONFIG.wechat
       : Platform.name === 'douyin' ? AD_UNIT_CONFIG.douyin
       : Platform.name === 'taptap' ? AD_UNIT_CONFIG.taptap
+      : Platform.name === 'kuaishou' ? AD_UNIT_CONFIG.kuaishou
       : null;
 
     if (!config) {
@@ -125,9 +126,16 @@ class AdManagerClass {
       return;
     }
 
-    // Tap 真机没有开发桩：空广告位 / 创建失败一律不发奖，避免白给。
-    if (Platform.isTaptap && !config.rewardedVideo) {
-      console.log('[AdManager] Tap 广告位未配置，真机不发奖');
+    // Tap / 快手真机没有开发桩：空广告位一律不发奖，避免白给。
+    // 快手开发者工具仍模拟成功，方便没填广告位时把流程走通。
+    if ((Platform.isTaptap || Platform.isKuaishou) && !config.rewardedVideo) {
+      if (Platform.isKuaishou && Platform.isDevtools) {
+        console.log('[AdManager] 快手广告位未配置，开发者工具模拟成功');
+        this._devMode = true;
+        this._adConfig = config;
+        return;
+      }
+      console.log(`[AdManager] ${Platform.name} 广告位未配置，真机不发奖`);
       this._devMode = false;
       this._adConfig = config;
       return;

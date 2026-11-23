@@ -24,7 +24,7 @@ const WATCH = [
   'scripts/lib',
 ];
 
-const SKIP_DIR = new Set(['node_modules', '.git', 'build', '.bundle', '.bundle-taptap', '.bundle-huawei']);
+const SKIP_DIR = new Set(['node_modules', '.git', 'build', '.bundle', '.bundle-taptap', '.bundle-huawei', '.bundle-kuaishou']);
 const SKIP_FILE = new Set(['index.html', 'game-bundle.js', '.DS_Store']);
 
 function newestMtime(rel) {

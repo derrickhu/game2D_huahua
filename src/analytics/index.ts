@@ -90,6 +90,7 @@ function mapPlatform(): PlatformName {
   if (Platform.isDouyin) return 'douyin';
   if (Platform.isTaptap) return 'taptap';
   if (Platform.isHuawei) return 'huawei';
+  if (Platform.isKuaishou) return 'kuaishou';
   return 'h5';
 }
 

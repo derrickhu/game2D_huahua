@@ -6,6 +6,7 @@ dist/
 .bundle/
 .bundle-taptap/
 .bundle-huawei/
+.bundle-kuaishou/
 build/
 minigame/game-bundle.js
 minigame/index.html

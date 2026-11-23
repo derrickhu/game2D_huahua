@@ -231,6 +231,13 @@ class BackendServiceClass {
       }
       return { platform: 'tap', code: creds.code };
     }
+    if (Platform.isKuaishou) {
+      const creds = await Platform.loginCredentials();
+      if (!creds.code) {
+        throw new BackendError(0, 'NO_KS_CODE', 'ks.login 未返回 code');
+      }
+      return { platform: 'ks', code: creds.code };
+    }
     if (Platform.isHuawei) {
       if (this._forcedHuaweiPlayerId) {
         return { platform: 'hw', playerId: this._forcedHuaweiPlayerId };

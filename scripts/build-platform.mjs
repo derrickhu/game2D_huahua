@@ -1,7 +1,7 @@
 /**
  * 把一份内容树 + 一份 bundle 组装成各平台可直接用开发者工具打开的目录。
  *
- *   CLI：node scripts/build-platform.mjs [wechat|douyin|taptap|huawei|all] [--full]
+ *   CLI：node scripts/build-platform.mjs [wechat|douyin|taptap|huawei|kuaishou|all] [--full]
  *   仅 `vite build --watch` 会在插件里组装；一次性 `vite build` 不组装，
  *   留给本脚本在 vite 之后跑，避免先拷未完成的树。
  *
@@ -27,8 +27,14 @@ export const BUILD_DIR = path.join(rootDir, 'build');
 export const BUNDLE_DIR = path.join(rootDir, '.bundle');
 export const BUNDLE_TAPTAP_DIR = path.join(rootDir, '.bundle-taptap');
 export const BUNDLE_HUAWEI_DIR = path.join(rootDir, '.bundle-huawei');
+export const BUNDLE_KUAISHOU_DIR = path.join(rootDir, '.bundle-kuaishou');
 
-export const PLATFORMS = ['wechat', 'douyin', 'taptap', 'huawei'];
+export const PLATFORMS = ['wechat', 'douyin', 'taptap', 'huawei', 'kuaishou'];
+
+/** 快手：主包 ≤ 6MB，全部代码包 ≤ 30MB（未压缩文件大小，留不出压缩红利时也必须过线）。 */
+const KUAISHOU_MAIN_LIMIT = 6 * 1024 * 1024;
+const KUAISHOU_TOTAL_LIMIT = 30 * 1024 * 1024;
+const KUAISHOU_SUBPACKAGES = ['subpkg_items', 'subpkg_events'];
 export const WX_TT_PLATFORMS = ['wechat', 'douyin'];
 
 const HUAWEI_SKIP_CDN = new Set([
@@ -187,7 +193,40 @@ function pokeSimulator(out, stats) {
 function bundleDirOf(platform) {
   if (platform === 'taptap') return BUNDLE_TAPTAP_DIR;
   if (platform === 'huawei') return BUNDLE_HUAWEI_DIR;
+  if (platform === 'kuaishou') return BUNDLE_KUAISHOU_DIR;
   return BUNDLE_DIR;
+}
+
+function dirBytes(dir) {
+  if (!fs.existsSync(dir)) return 0;
+  let total = 0;
+  for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
+    if (entry.name.startsWith('.')) continue;
+    const child = path.join(dir, entry.name);
+    if (entry.isDirectory()) total += dirBytes(child);
+    else total += fs.statSync(child).size;
+  }
+  return total;
+}
+
+function formatMb(bytes) {
+  return `${(bytes / 1024 / 1024).toFixed(2)}MB`;
+}
+
+function assertKuaishouPackageSize(out) {
+  const total = dirBytes(out);
+  let sub = 0;
+  for (const name of KUAISHOU_SUBPACKAGES) sub += dirBytes(path.join(out, name));
+  const main = total - sub;
+  console.log(
+    `[build-platform] kuaishou 包体 主包 ${formatMb(main)} / 6MB，总包 ${formatMb(total)} / 30MB`,
+  );
+  if (main > KUAISHOU_MAIN_LIMIT) {
+    fail(`快手主包 ${formatMb(main)} 超过 6MB。CDN 目录必须留在包外。`);
+  }
+  if (total > KUAISHOU_TOTAL_LIMIT) {
+    fail(`快手总包 ${formatMb(total)} 超过 30MB。`);
+  }
 }
 
 export function assemble(platform, { quiet = false, bundleDir, full = false } = {}) {
@@ -216,7 +255,8 @@ export function assemble(platform, { quiet = false, bundleDir, full = false } = 
   fs.mkdirSync(out, { recursive: true });
   // Tap 没有微信开发者工具的 packOptions.ignore。CDN 目录若进 zip，
   // 宿主会把它们算进主包（准入日志里 main_package ≈ 97MB，加载页停在 3%）。
-  const cdnDirs = platform === 'taptap' ? readCdnDirs(rootDir) : [];
+  // 快手开发者工具不认微信的 packOptions.ignore。CDN 目录若进包，主包会远超 6MB。
+  const cdnDirs = platform === 'taptap' || platform === 'kuaishou' ? readCdnDirs(rootDir) : [];
   const markerSkip = platform === 'huawei'
     ? HUAWEI_SKIP_CDN
     : new Set(cdnDirs.filter((dir) => !dir.includes('/')));
@@ -252,6 +292,22 @@ export function assemble(platform, { quiet = false, bundleDir, full = false } = 
       fail('build/taptap/game-bundle.js 仍含 "%eval%":eval，先检查 pixi-unsafe-eval-patch');
     }
   }
+  if (platform === 'kuaishou') {
+    const stamp = path.join(out, 'kuaishou-pack-stamp.js');
+    const stampSrc = [
+      '(function () {',
+      '  var g = (typeof GameGlobal !== "undefined" && GameGlobal)',
+      '    || (typeof globalThis !== "undefined" && globalThis);',
+      '  if (!g) return;',
+      '  g.__HUAHUA_KS_PACK = "1";',
+      '  try { if (typeof GameGlobal === "undefined") GameGlobal = g; } catch (e) {}',
+      '})();',
+      '',
+    ].join('\n');
+    if (!fs.existsSync(stamp) || fs.readFileSync(stamp, 'utf8') !== stampSrc) {
+      fs.writeFileSync(stamp, stampSrc);
+    }
+  }
   if (platform === 'huawei') {
     const stamp = path.join(out, 'huawei-pack-stamp.js');
     const stampSrc = "GameGlobal.__HUAHUA_HUAWEI_VERSION='native';\n";
@@ -263,9 +319,14 @@ export function assemble(platform, { quiet = false, bundleDir, full = false } = 
       fail('build/huawei/game-bundle.js 仍含 "%eval%":eval，先检查 pixi-unsafe-eval-patch');
     }
   }
-  const docExt = new Set(['.doc', '.docx', '.pdf', '.md']);
+  const docExt = new Set(['.doc', '.docx', '.pdf', '.md', '.txt']);
+  const platformSkip = new Set(['project.config.json']);
+  if (platform === 'kuaishou') {
+    platformSkip.add('store');
+    platformSkip.add('beian');
+  }
   mirrorDir(platformSrc, out, {
-    skip: new Set(['project.config.json']),
+    skip: platformSkip,
     skipExt: docExt,
     prune: false,
     stats,
@@ -313,6 +374,13 @@ export function assemble(platform, { quiet = false, bundleDir, full = false } = 
     const rendered = `${JSON.stringify(config, null, 2)}\n`;
     const prev = fs.existsSync(outConfig) ? fs.readFileSync(outConfig, 'utf8') : '';
     if (prev !== rendered) fs.writeFileSync(outConfig, rendered, 'utf8');
+  }
+  if (platform === 'kuaishou') {
+    for (const name of ['store', 'beian']) {
+      const extra = path.join(out, name);
+      if (fs.existsSync(extra)) fs.rmSync(extra, { recursive: true, force: true });
+    }
+    assertKuaishouPackageSize(out);
   }
   pokeSimulator(out, stats);
   writeDouyinSubscribeScanStub(out, { inject: platform === 'douyin' });

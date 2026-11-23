@@ -1,0 +1,13 @@
+{
+  "description": "花花妙屋 · 快手。用快手小游戏开发者工具打开 build/kuaishou/。appid 填开放平台的 ks 开头那串；工具里改过的 appid 会在下次组装时沿用。",
+  "appid": "ks684828619946232724",
+  "projectname": "huahua",
+  "compileType": "game",
+  "setting": {
+    "urlCheck": true,
+    "es6": true,
+    "postcss": false,
+    "minified": true,
+    "newFeature": true
+  }
+}

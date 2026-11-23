@@ -13,6 +13,7 @@
  *                         （向后兼容：回退 HUAHUA_SAVE_MAX_BYTES，再回退 256KB）
  *   WX_APPID / WX_SECRET        微信 code2session 凭证
  *   TT_APPID / TT_SECRET        抖音 code2session 凭证
+ *   HUAHUA_KS_APPID / HUAHUA_KS_SECRET  快手 code2session 凭证
  *   TCB_ENV                     CloudBase 环境 ID（默认取 SYMBOL_CURRENT_ENV）
  *
  * 集合命名约定：
@@ -54,6 +55,8 @@ const PLATFORM_SCOPE = {
   tap: 'tap',
   taptap: 'tap',
   hw: 'hw',
+  ks: 'ks',
+  kuaishou: 'ks',
 };
 
 function getPlatformScope(platform) {
@@ -71,7 +74,7 @@ function scopedKeyUpper(platform) {
 }
 
 /**
- * 集合名：微信 huahua_playerData（与线上一致），抖音 huahua_tt_playerData，Tap huahua_tap_playerData，华为 huahua_hw_playerData。
+ * 集合名：微信 huahua_playerData（与线上一致），抖音 huahua_tt_playerData，Tap huahua_tap_playerData，华为 huahua_hw_playerData，快手 huahua_ks_playerData。
  * 可用 {SCOPED_GAME_KEY}_{SUFFIX}_COLLECTION 环境变量覆盖，如 HUAHUA_TT_PLAYERDATA_COLLECTION。
  */
 function getCollectionName(suffix, platform) {

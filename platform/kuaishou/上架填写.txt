@@ -5,6 +5,7 @@
 变现方式：广告变现
 介绍：合花开店经营
 平台：iOS、Android
+小游戏 AppID：ks684828619946232724
 调试快手ID：（填你自己的快手号）
 私信分享文案：花花一合停不下来
 录屏分享文案：合成鲜花，一格一格变漂亮！来花花妙屋开自己的花店～
@@ -14,3 +15,14 @@
 游戏 icon 220×220：icon_220x220.png
 游戏 icon 148×148：icon_148x148.png
 加载图 640×1400：loading_640x1400.png（须小于 1MB）
+
+上线前还要做：
+1. 用快手小游戏开发者工具打开 build/kuaishou/，appid 填开放平台的 ks 开头那串，管理员号登录后点上传。上传后在「版本管理」里提交审核。
+2. 开发设置里加服务器域名（https，不要带路径和端口）：
+   request：rosa-env-d7grf78r5dbd37323.service.tcloudbase.com
+   downloadFile：726f-rosa-env-d7grf78r5dbd37323-1414200063.tcb.qcloud.la
+   downloadFile 再加一条：rosa-env-d7grf78r5dbd37323.service.tcloudbase.com
+3. 云函数配 HUAHUA_KS_APPID、HUAHUA_KS_SECRET 后重新部署 huahua-api。不配的话快手云存档登不上，本地还能玩。
+4. 流量主建好激励视频后，把广告位 ID 填进 src/config/AdConfig.ts 的 kuaishou，再打一包。现在是空的，真机看广告不会发奖。
+5. 包体：主包不超过 6MB，总包不超过 30MB。角色、装修、面板大图、音频不进包，从上面的 CDN 下。
+6. 截图里的 ICP 备案要在正式上线前做完。

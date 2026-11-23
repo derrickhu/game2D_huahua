@@ -10,7 +10,7 @@ export interface PlatformAdUnitConfig {
 }
 
 /** 广告位 ID 配置：拿到真实 ID 后只改这里。 */
-export const AD_UNIT_CONFIG: Record<'wechat' | 'douyin' | 'taptap', PlatformAdUnitConfig> = {
+export const AD_UNIT_CONFIG: Record<'wechat' | 'douyin' | 'taptap' | 'kuaishou', PlatformAdUnitConfig> = {
   wechat: {
     rewardedVideo: 'adunit-6ca54692fdb75515',
     rewardedVideoByScene: {
@@ -89,6 +89,15 @@ export const AD_UNIT_CONFIG: Record<'wechat' | 'douyin' | 'taptap', PlatformAdUn
    * 空串 = 未配置。真机没有开发桩，空位一律不发奖。
    */
   taptap: {
+    rewardedVideo: '',
+    interstitial: '',
+    banner: '',
+  },
+  /**
+   * 快手激励视频：流量主后台创建后把 adUnitId 填到这里，再打一包。
+   * 空串 = 未配置。真机不走开发桩，空位一律不发奖。
+   */
+  kuaishou: {
     rewardedVideo: '',
     interstitial: '',
     banner: '',

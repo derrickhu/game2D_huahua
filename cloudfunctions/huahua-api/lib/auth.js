@@ -5,6 +5,7 @@
  * - dy: 调 developer.toutiao.com/api/apps/v2/jscode2session
  * - tap: tap.login code → Tap jscode2session；没有凭证时回退 taptapUserId / anonId
  * - hw: 华为 playerId，没有则用设备 anonId（仍走 hw 集合）
+ * - ks: 调 open.kuaishou.com/game/minigame/jscode2session
  * - anon: 直接把客户端传的 anonId 作为 userId 后缀
  */
 
@@ -18,7 +19,7 @@ const {
   getPlatformCredential,
 } = require('./config');
 
-const SUPPORTED_PLATFORMS = new Set(['wx', 'dy', 'tap', 'hw', 'anon']);
+const SUPPORTED_PLATFORMS = new Set(['wx', 'dy', 'tap', 'hw', 'ks', 'anon']);
 
 function getJwtSecret() {
   const s = _readJwtSecret();
@@ -55,6 +56,8 @@ async function handleLogin(req) {
       }
       platformUid = id;
     }
+  } else if (platform === 'ks') {
+    platformUid = await ksCode2Openid(body.code);
   } else if (platform === 'hw') {
     const playerId = String(body.playerId || '').trim();
     const anonId = String(body.anonId || '').trim();
@@ -155,6 +158,22 @@ async function tapCode2Session(code) {
     openid: data.openid,
     session_key: typeof data.session_key === 'string' ? data.session_key : '',
   };
+}
+
+async function ksCode2Openid(code) {
+  const appid = process.env.HUAHUA_KS_APPID || process.env.KS_APPID;
+  const secret = process.env.HUAHUA_KS_SECRET || process.env.KS_SECRET;
+  if (!appid || !secret) throw httpError(500, 'NO_KS_CFG', 'HUAHUA_KS_APPID/HUAHUA_KS_SECRET 未配置');
+  if (!code) throw httpError(400, 'NO_CODE', 'ks code 缺失');
+
+  const url = `https://open.kuaishou.com/game/minigame/jscode2session?app_id=${encodeURIComponent(appid)}&app_secret=${encodeURIComponent(secret)}&js_code=${encodeURIComponent(code)}&grant_type=authorization_code`;
+  const data = await httpGetJson(url);
+  const openId = data && (data.open_id || data.openId);
+  // 成功包带 open_id。result 成功时是 1，失败时是业务错误码且没有 open_id。
+  if (!openId) {
+    throw httpError(401, 'KS_LOGIN_FAIL', `ks code2session 失败: ${JSON.stringify(data || {})}`);
+  }
+  return openId;
 }
 
 async function ttCode2Openid(code, anonymousCode) {
