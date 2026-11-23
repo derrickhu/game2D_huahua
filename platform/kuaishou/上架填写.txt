@@ -23,6 +23,6 @@
    downloadFile：726f-rosa-env-d7grf78r5dbd37323-1414200063.tcb.qcloud.la
    downloadFile 再加一条：rosa-env-d7grf78r5dbd37323.service.tcloudbase.com
 3. 云函数配 HUAHUA_KS_APPID、HUAHUA_KS_SECRET 后重新部署 huahua-api。不配的话快手云存档登不上，本地还能玩。
-4. 流量主建好激励视频后，把广告位 ID 填进 src/config/AdConfig.ts 的 kuaishou，再打一包。现在是空的，真机看广告不会发奖。
+4. 激励视频广告位只有一个：2300062134_01（看广告解锁）。所有看广告场景共用它。插屏先不做。
 5. 包体：主包不超过 6MB，总包不超过 30MB。角色、装修、面板大图、音频不进包，从上面的 CDN 下。
 6. 截图里的 ICP 备案要在正式上线前做完。

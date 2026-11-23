@@ -94,11 +94,12 @@ export const AD_UNIT_CONFIG: Record<'wechat' | 'douyin' | 'taptap' | 'kuaishou',
     banner: '',
   },
   /**
-   * 快手激励视频：流量主后台创建后把 adUnitId 填到这里，再打一包。
-   * 空串 = 未配置。真机不走开发桩，空位一律不发奖。
+   * 快手目前只能有一个激励视频位（看广告解锁，2300062134_01）。
+   * 不配 rewardedVideoByScene，棋盘、仓库、签到等场景都回落到这一个。
+   * 插屏 / Banner 没有独立广告位，留空，不会拿激励视频的 ID 去创建。
    */
   kuaishou: {
-    rewardedVideo: '',
+    rewardedVideo: '2300062134_01',
     interstitial: '',
     banner: '',
   },
