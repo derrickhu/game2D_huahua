@@ -1143,6 +1143,16 @@ class PlatformServiceClass {
     } catch (_) {}
   }
 
+  /** 快手：这次是否从手机桌面快捷方式打开。iOS 加桌面没有成功回调，只能靠这个判断。 */
+  isLaunchFromShortcut(): boolean {
+    try {
+      if (typeof this._api?.isLaunchFromShortcut === 'function') {
+        return !!this._api.isLaunchFromShortcut();
+      }
+    } catch (_) {}
+    return false;
+  }
+
   getLaunchOptionsSync(): any {
     try {
       return this._api?.getLaunchOptionsSync?.() || null;
@@ -1503,7 +1513,16 @@ class PlatformServiceClass {
   }): void {
     try {
       if (this._api?.checkShortcut) {
-        this._api.checkShortcut(opts);
+        this._api.checkShortcut({
+          success: (res: { status?: { exist?: boolean; needUpdate?: boolean }; installed?: boolean }) => {
+            const status = res?.status
+              ?? (typeof res?.installed === 'boolean'
+                ? { exist: res.installed, needUpdate: false }
+                : undefined);
+            opts.success?.({ ...res, status });
+          },
+          fail: opts.fail,
+        });
       } else {
         opts.fail?.({ errMsg: 'checkShortcut not supported' });
       }

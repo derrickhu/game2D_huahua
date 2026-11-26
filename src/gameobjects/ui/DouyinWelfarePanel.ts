@@ -1,11 +1,11 @@
 /**
- * 抖音专属福利面板：侧边栏复访 + 添加到桌面
+ * 抖音、快手福利面板：侧边栏复访 + 添加到桌面
  *
  * 纯 Graphics 绘制，不依赖任何新美术资源，避免为单平台功能增加包体。
  * 「添加到桌面」按钮的回调必须停留在 pointertap 的同步调用栈内——
- * 抖音的 addShortcut 要求用户手势，套一层 await / setTimeout 就会失败。
+ * addShortcut 要求用户手势，套一层 await / setTimeout 就会失败。
  *
- * 侧边栏复访须展示完备操作指引（平台审核必检，对齐官方「图二」三步说明）：
+ * 侧边栏复访须展示完备操作指引（审核必检）：
  * 1) 点击侧边栏图标 → 2) 点击「花花妙屋」→ 3) 领取奖励，再点「进入侧边栏」。
  */
 import * as PIXI from 'pixi.js';
@@ -18,6 +18,7 @@ import { SidebarService } from '@/core/SidebarService';
 import { DesktopShortcutService } from '@/core/DesktopShortcutService';
 import { DouyinWelfareManager } from '@/managers/DouyinWelfareManager';
 import { DOUYIN_WELFARE } from '@/config/DouyinWelfareConfig';
+import { Platform } from '@/core/PlatformService';
 import { ToastMessage } from './ToastMessage';
 import { DESIGN_WIDTH, FONT_FAMILY } from '@/config/Constants';
 
@@ -59,6 +60,8 @@ export class DouyinWelfarePanel extends PIXI.Container {
   private _closeBtn!: PIXI.Container;
   private _sidebarCard: WelfareCard | null = null;
   private _desktopCard: WelfareCard | null = null;
+
+  private _sidebarGuideTip: PIXI.Text | null = null;
 
   constructor() {
     super();
@@ -106,6 +109,10 @@ export class DouyinWelfarePanel extends PIXI.Container {
     this._layout();
   }
 
+  private _hostName(): string {
+    return Platform.isKuaishou ? '快手' : '抖音';
+  }
+
   private _build(): void {
     this._dim = new PIXI.Graphics();
     this._dim.eventMode = 'static';
@@ -116,7 +123,7 @@ export class DouyinWelfarePanel extends PIXI.Container {
     this._root.eventMode = 'passive';
     this.addChild(this._root);
 
-    this._panelTitle = new PIXI.Text('抖音专属福利', {
+    this._panelTitle = new PIXI.Text(`${this._hostName()}专属福利`, {
       fontSize: 42,
       fill: 0xffffff,
       fontFamily: FONT_FAMILY,
@@ -270,7 +277,7 @@ export class DouyinWelfarePanel extends PIXI.Container {
       box.addChild(row);
     });
 
-    const tip = new PIXI.Text('按以上步骤从抖音首页侧边栏进入后，即可领取今日奖励', {
+    const tip = new PIXI.Text(`按以上步骤从${this._hostName()}首页侧边栏进入后，即可领取今日奖励`, {
       fontSize: 20,
       fill: 0xb8956a,
       fontFamily: FONT_FAMILY,
@@ -280,6 +287,7 @@ export class DouyinWelfarePanel extends PIXI.Container {
     } as PIXI.TextStyle);
     tip.anchor.set(0, 0);
     tip.position.set(-PANEL_W / 2 + 40, startY + SIDEBAR_GUIDE_STEPS.length * stepH + 8);
+    this._sidebarGuideTip = tip;
     box.addChild(tip);
 
     return box;
@@ -402,9 +410,11 @@ export class DouyinWelfarePanel extends PIXI.Container {
         this._desktopCard.desc.text = added ? '已添加到桌面，奖励已领取' : '奖励已领取';
         this._setButtonState(this._desktopCard, '已完成', false);
       } else {
-        this._desktopCard.desc.text =
-          `添加到手机桌面，一键直达花店 · ${DOUYIN_WELFARE.desktop.diamond}钻石`;
-        this._setButtonState(this._desktopCard, added ? '领取奖励' : '添加到桌面', true);
+        const canClaim = added || (Platform.isKuaishou && DesktopShortcutService.addRequested);
+        this._desktopCard.desc.text = Platform.isKuaishou
+          ? `添加到桌面后回到游戏，再点领取 · ${DOUYIN_WELFARE.desktop.diamond}钻石`
+          : `添加到手机桌面，一键直达花店 · ${DOUYIN_WELFARE.desktop.diamond}钻石`;
+        this._setButtonState(this._desktopCard, canClaim ? '领取奖励' : '添加到桌面', true);
       }
     }
 
@@ -425,7 +435,13 @@ export class DouyinWelfarePanel extends PIXI.Container {
     }
 
     SidebarService.navigateToSidebar({
-      onFail: () => ToastMessage.show('当前版本暂不支持侧边栏，请升级抖音后重试'),
+      onFail: (msg) => {
+        if (msg.includes('-20041') || msg.includes('frequency')) {
+          ToastMessage.show('今天打开侧边栏的次数到了，明天再来');
+          return;
+        }
+        ToastMessage.show(msg || `当前版本暂不支持侧边栏，请升级${this._hostName()}后重试`);
+      },
     });
   }
 
@@ -433,7 +449,10 @@ export class DouyinWelfarePanel extends PIXI.Container {
     if (DouyinWelfareManager.desktopRewardClaimed) return;
 
     // 已添加过的用户直接补发，不必再走一次系统弹窗
-    if (DesktopShortcutService.alreadyAdded) {
+    if (
+      DesktopShortcutService.alreadyAdded
+      || (Platform.isKuaishou && DesktopShortcutService.addRequested)
+    ) {
       if (DouyinWelfareManager.claimDesktopReward()) {
         ToastMessage.show(`领取成功！钻石 +${DOUYIN_WELFARE.desktop.diamond}`);
       }
@@ -448,7 +467,7 @@ export class DouyinWelfarePanel extends PIXI.Container {
         }
         this._sync();
       },
-      onFail: () => ToastMessage.show('添加失败，请在系统弹窗中允许创建桌面快捷方式'),
+      onFail: (msg) => ToastMessage.show(msg || '添加失败，请在系统弹窗中允许创建桌面快捷方式'),
     });
     if (!started) ToastMessage.show('当前设备不支持添加到桌面');
   }

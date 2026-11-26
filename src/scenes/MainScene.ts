@@ -473,7 +473,10 @@ export class MainScene implements Scene {
     }
 
     // 2.5 抖音侧边栏进入且今日未领 → 自动弹福利面板，让玩家一进来就能领
-    if (SidebarService.isFromSidebar() && !DouyinWelfareManager.sidebarClaimedToday) {
+    if (
+      (SidebarService.isFromSidebar() && !DouyinWelfareManager.sidebarClaimedToday)
+      || DouyinWelfareManager.shouldPromptDesktopClaim
+    ) {
       setTimeout(() => {
         if (TutorialManager.isActive) return;
         if (this._checkInPanel?.visible) return;
@@ -628,7 +631,7 @@ export class MainScene implements Scene {
     this._sceneSwitch = new SceneSwitch();
     this.container.addChild(this._sceneSwitch);
 
-    // 抖音侧边栏 / 添加桌面入口，微信端 visible 恒为 false
+    // 侧边栏 / 添加桌面入口。抖音、快手在宿主支持时出现，其它端 visible 恒为 false
     this._douyinWelfareEntry = new DouyinWelfareEntry();
     this.container.addChild(this._douyinWelfareEntry);
 

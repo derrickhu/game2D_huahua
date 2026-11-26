@@ -1,8 +1,7 @@
 /**
  * 抖音福利状态管理（侧边栏每日奖励 + 添加桌面一次性奖励）
  *
- * 独立 storage key，不并入主存档：这两项是平台行为记录，只对抖音端有意义，
- * 微信端永远读不到（key 本身也被 PlatformService 隔离到 huahua_tt_ 命名空间）。
+ * 独立 storage key，不并入主存档。抖音落到 huahua_tt_，快手落到 huahua_ks_，两端不共用领取记录。
  */
 import { PersistService } from '@/core/PersistService';
 import { EventBus } from '@/core/EventBus';
@@ -27,13 +26,22 @@ class DouyinWelfareManagerClass {
   };
 
   init(): void {
-    if (!Platform.isDouyin) return;
+    if (!Platform.isDouyin && !Platform.isKuaishou) return;
     const raw = PersistService.readJSON<Partial<DouyinWelfareState>>(DOUYIN_WELFARE_STORAGE_KEY);
     this._state.sidebarRewardDate = typeof raw?.sidebarRewardDate === 'string' ? raw.sidebarRewardDate : '';
     this._state.desktopRewardClaimed = raw?.desktopRewardClaimed === true;
+    if (!Platform.isKuaishou) return;
+    const refresh = () => {
+      DesktopShortcutService.captureLaunch();
+      DesktopShortcutService.refreshStatus(() => {
+        EventBus.emit('douyinWelfare:changed');
+      });
+    };
+    refresh();
+    Platform.onShow(() => refresh());
   }
 
-  /** 抖音 + 宿主支持侧边栏时才展示入口 */
+  /** 抖音或快手，且宿主支持侧边栏时才展示入口 */
   get sidebarAvailable(): boolean {
     return SidebarService.isAvailable;
   }
@@ -55,10 +63,20 @@ class DouyinWelfareManagerClass {
     return this._state.desktopRewardClaimed;
   }
 
+  /** 快手从桌面图标回来，或加完桌面切回游戏，还没领过 */
+  get shouldPromptDesktopClaim(): boolean {
+    return Platform.isKuaishou
+      && this.desktopAvailable
+      && !this.desktopRewardClaimed
+      && DesktopShortcutService.alreadyAdded;
+  }
+
   /** 有未领奖励 → 主界面入口打红点 */
   get hasRedDot(): boolean {
     if (this.sidebarAvailable && SidebarService.isFromSidebar() && !this.sidebarClaimedToday) return true;
-    if (this.desktopAvailable && !this._state.desktopRewardClaimed && !DesktopShortcutService.alreadyAdded) return true;
+    if (this.desktopAvailable && !this._state.desktopRewardClaimed) {
+      if (Platform.isKuaishou || !DesktopShortcutService.alreadyAdded) return true;
+    }
     return false;
   }
 

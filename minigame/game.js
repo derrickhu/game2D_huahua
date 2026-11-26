@@ -195,7 +195,7 @@ try {
   }
 } catch (_) {}
 
-// ====== 抖音必接能力探测：侧边栏复访 + 添加到桌面 + 订阅消息 ======
+// ====== 复访探测：侧边栏 + 添加到桌面。抖音另探订阅消息 ======
 // onShow 首次回调可能早于 bundle 执行，必须在这里就接住启动参数。
 (function () {
   if (typeof GameGlobal !== 'undefined') {
@@ -206,31 +206,99 @@ try {
     GameGlobal.__subscribeMessageSupported = false;
   }
   if (!_runtime || typeof _runtime.detectMinigamePlatform !== 'function') return;
-  if (_runtime.detectMinigamePlatform() !== 'douyin') return;
+  var _plat = _runtime.detectMinigamePlatform();
+  if (_plat !== 'douyin' && _plat !== 'kuaishou') return;
   var P = _runtime.getNativePlatformApi && _runtime.getNativePlatformApi();
   if (!P) P = _hostApi();
   if (!P) return;
+
+  function _markSidebarLaunch(info) {
+    if (_plat !== 'kuaishou' || !info || typeof GameGlobal === 'undefined') return;
+    var from = info.from || '';
+    var scene = info.scene || '';
+    if (from === 'sidebar_new' || scene === 'sidebar_new' || scene === 'sidebar_miniprogram') {
+      GameGlobal.__sidebarSupported = true;
+    }
+  }
+
+  function _noteShortcutStatus(res) {
+    if (typeof GameGlobal === 'undefined') return;
+    if (res && typeof res.installed === 'boolean') {
+      GameGlobal.__desktopShortcutStatus = { exist: !!res.installed, needUpdate: false };
+      return;
+    }
+    GameGlobal.__desktopShortcutStatus = res && res.status ? res.status : null;
+  }
+
+  function _noteFromShortcut(api) {
+    if (_plat !== 'kuaishou' || typeof GameGlobal === 'undefined') return;
+    var host = api || (typeof ks !== 'undefined' ? ks : P);
+    try {
+      if (host && typeof host.isLaunchFromShortcut === 'function' && host.isLaunchFromShortcut()) {
+        GameGlobal.__launchFromShortcut = true;
+        GameGlobal.__desktopShortcutSupported = true;
+        GameGlobal.__desktopShortcutStatus = { exist: true, needUpdate: false };
+      }
+    } catch (e) {}
+  }
 
   try {
     if (typeof P.onShow === 'function') {
       P.onShow(function (res) {
         if (typeof GameGlobal !== 'undefined') GameGlobal.__launchInfo = res || {};
+        _markSidebarLaunch(res);
+        _noteFromShortcut(P);
+        if (_plat === 'kuaishou' && typeof GameGlobal !== 'undefined' && GameGlobal.__desktopAddRequested && GameGlobal.__desktopLeftApp) {
+          GameGlobal.__desktopShortcutStatus = { exist: true, needUpdate: false };
+          GameGlobal.__desktopLeftApp = false;
+        }
       });
+      if (typeof P.onHide === 'function') {
+        P.onHide(function () {
+          if (_plat === 'kuaishou' && typeof GameGlobal !== 'undefined' && GameGlobal.__desktopAddRequested) {
+            GameGlobal.__desktopLeftApp = true;
+          }
+        });
+      }
     }
     var _launch = typeof P.getLaunchOptionsSync === 'function'
       ? P.getLaunchOptionsSync()
       : null;
     if (_launch && typeof GameGlobal !== 'undefined') GameGlobal.__launchInfo = _launch;
+    _markSidebarLaunch(_launch);
+    _noteFromShortcut(P);
     var _enter = typeof P.getEnterOptionsSync === 'function'
       ? P.getEnterOptionsSync()
       : null;
     if (_enter && typeof GameGlobal !== 'undefined') GameGlobal.__launchInfo = _enter;
+    _markSidebarLaunch(_enter);
   } catch (e) {
     _diag('onShow 注册失败:' + e);
   }
 
   try {
-    if (typeof P.checkScene === 'function') {
+    if (_plat === 'kuaishou') {
+      // 备案已过的预览码，checkSliderBarIsAvailable 仍常回 available:false。入口照常展示，跳转失败再把平台原因告诉玩家。
+      if (typeof GameGlobal !== 'undefined') GameGlobal.__sidebarSupported = true;
+      var _sliderHost = typeof ks !== 'undefined' ? ks : P;
+      var _sliderCheck = _sliderHost && (
+        _sliderHost.checkSliderBarIsAvailable || _sliderHost.checkSliderBarIsAvaliable
+      );
+      if (typeof _sliderCheck === 'function') {
+        _sliderCheck.call(_sliderHost, {
+          success: function (res) {
+            var ok = !!(res && (res.available === true || res.available === 1 || res.isExist));
+            console.log('[huahua] 侧边栏检测 available=' + ok + ' ' + JSON.stringify(res || {}));
+            if (ok && typeof GameGlobal !== 'undefined') GameGlobal.__sidebarSupported = true;
+          },
+          fail: function (err) {
+            console.warn('[huahua] 侧边栏检测失败', err && (err.msg || err.code || err));
+          },
+        });
+      } else {
+        console.warn('[huahua] 当前快手没有 checkSliderBarIsAvailable');
+      }
+    } else if (typeof P.checkScene === 'function') {
       P.checkScene({
         scene: 'sidebar',
         success: function (res) {
@@ -249,11 +317,7 @@ try {
     }
     if (typeof P.checkShortcut === 'function') {
       P.checkShortcut({
-        success: function (res) {
-          if (typeof GameGlobal !== 'undefined') {
-            GameGlobal.__desktopShortcutStatus = res && res.status ? res.status : null;
-          }
-        },
+        success: function (res) { _noteShortcutStatus(res); },
         fail: function () {},
       });
     }
