@@ -95,6 +95,8 @@ const MAIN_IMAGE_MAP: Record<string, string> = {
   icon_operate:   'images/ui/icon_operate.png',
   /** 花店左下设置入口（NB2 紫圆齿轮） */
   icon_settings:  'images/ui/icon_settings.png',
+  /** 微信游戏圈福利入口图标（四色圆环 + 樱花蝴蝶结，主包常驻） */
+  icon_game_club_nb2: 'images/ui/icon_game_club_nb2.png',
 
   // ---- 棋盘 & 场景背景 ----
   board_bg:       'images/ui/board_bg.png',
@@ -343,6 +345,20 @@ const PANELS_IMAGE_MAP: Record<string, string> = {
   growth_panel_shell_nb2: 'subpkg_panels/images/ui/growth_panel_shell_nb2.png',
   /** 更新公告：NB2 绿幕去底壳（金标题牌 + 大空白正文区 + 底栏 CTA 带） */
   update_announcement_panel_shell_nb2: 'subpkg_panels/images/ui/update_announcement_panel_shell_nb2.png',
+  /** 微信游戏圈福利页：9:16 彩绘活动壳体 + 鎏金四态宝石按钮 */
+  game_club_panel_shell_nb2: 'subpkg_panels/images/ui/game_club_panel_shell_nb2.png',
+  /** 游戏圈 V3 手绘组件（九宫格卡片 / 奖励格 / 丝带标签 / 与 deco_card_btn 同款按钮） */
+  gc_task_card_nb2: 'subpkg_panels/images/ui/gc_task_card_nb2.png',
+  gc_task_card_ready_nb2: 'subpkg_panels/images/ui/gc_task_card_ready_nb2.png',
+  gc_header_card_nb2: 'subpkg_panels/images/ui/gc_header_card_nb2.png',
+  gc_gift_banner_nb2: 'subpkg_panels/images/ui/gc_gift_banner_nb2.png',
+  gc_reward_slot_nb2: 'subpkg_panels/images/ui/gc_reward_slot_nb2.png',
+  gc_tag_daily_nb2: 'subpkg_panels/images/ui/gc_tag_daily_nb2.png',
+  gc_tag_milestone_nb2: 'subpkg_panels/images/ui/gc_tag_milestone_nb2.png',
+  gc_btn_disabled_nb2: 'subpkg_panels/images/ui/gc_btn_disabled_nb2.png',
+  gc_btn_go_nb2: 'subpkg_panels/images/ui/gc_btn_go_nb2.png',
+  /** 微信游戏圈专属福利页顶部插画横幅（旧版归档保留兼容） */
+  game_club_hero_banner_nb2: 'subpkg_panels/images/ui/game_club_hero_banner_nb2.jpg',
   /** 周末花愿加成宣传卡（rembg 透明底，按钮文案由代码叠） */
   weekend_huayuan_boost_promo_panel_nb2: 'subpkg_panels/images/ui/weekend_huayuan_boost_promo_panel_nb2.png',
   /** 周二体力无限活动壳（绿幕去底；上半宣传 + 下半空白叠购买行） */
@@ -1664,6 +1680,33 @@ const FLOWER_SIGN_GACHA_PANEL_KEYS = [
   'deco_card_btn_1',
 ] as const;
 
+const GAME_CLUB_PANEL_KEYS = [
+  'game_club_panel_shell_nb2',
+  'gc_task_card_nb2',
+  'gc_task_card_ready_nb2',
+  'gc_header_card_nb2',
+  'gc_gift_banner_nb2',
+  'gc_reward_slot_nb2',
+  'gc_tag_daily_nb2',
+  'gc_tag_milestone_nb2',
+  'gc_btn_disabled_nb2',
+  'gc_btn_go_nb2',
+  'deco_card_btn_2',
+  'deco_card_btn_3',
+  'warehouse_slot_lock',
+  'ui_order_check_badge',
+  'owner_chibi_default',
+  'stamina_chest_1',
+  'stamina_chest_2',
+  'diamond_bag_1',
+  'chest_1',
+  'chest_2',
+  'icon_energy',
+  'icon_gem',
+  'icon_huayuan',
+  'icon_flower_sign_coin',
+] as const;
+
 function uniqueKeys(...groups: readonly (readonly string[])[]): string[] {
   const set = new Set<string>();
   groups.forEach(group => group.forEach(key => set.add(key)));
@@ -1711,6 +1754,7 @@ export type TextureAssetGroup =
   | 'tuesdayStaminaUnlimited'
   | 'thursdayMagicTime'
   | 'newbieGiftPack'
+  | 'gameClub'
   | 'main'
   | 'items'
   | 'events'
@@ -1748,6 +1792,7 @@ const ASSET_GROUP_KEYS: Record<TextureAssetGroup, readonly string[]> = {
     'thursday_magic_time_panel_shell_nb2',
   ],
   newbieGiftPack: NEWBIE_GIFT_PANEL_KEYS,
+  gameClub: GAME_CLUB_PANEL_KEYS,
   main: [],
   items: [],
   events: [],

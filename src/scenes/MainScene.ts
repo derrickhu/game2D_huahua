@@ -67,6 +67,9 @@ import { SceneSwitch } from '@/gameobjects/ui/SceneSwitch';
 import { DouyinWelfareEntry } from '@/gameobjects/ui/DouyinWelfareEntry';
 import { DouyinWelfarePanel } from '@/gameobjects/ui/DouyinWelfarePanel';
 import { DouyinWelfareManager } from '@/managers/DouyinWelfareManager';
+import { GameClubEntry } from '@/gameobjects/ui/GameClubEntry';
+import { GameClubPanel } from '@/gameobjects/ui/GameClubPanel';
+import { GameClubManager } from '@/managers/GameClubManager';
 import { SidebarService } from '@/core/SidebarService';
 import {
   DESIGN_WIDTH,
@@ -212,6 +215,8 @@ export class MainScene implements Scene {
   private _sceneSwitch!: SceneSwitch;
   private _douyinWelfareEntry!: DouyinWelfareEntry;
   private _douyinWelfarePanel!: DouyinWelfarePanel;
+  private _gameClubEntry!: GameClubEntry;
+  private _gameClubPanel!: GameClubPanel;
 
   // ---- 新增系统 Phase 7+ ----
   private _hapticSystem!: HapticSystem;
@@ -308,6 +313,7 @@ export class MainScene implements Scene {
       SocialManager.init();
       EventManager.init();
       DouyinWelfareManager.init();
+      GameClubManager.init();
 
       this._bindCustomerEvents();
       this._bindBoardCurrencyFly();
@@ -412,6 +418,8 @@ export class MainScene implements Scene {
     this._infoBar.position.set(0, layout.infoBarY);
     this._infoBar.relayout(layout.infoBarHeight, layout.infoBarSafeBottom);
     this._douyinWelfareEntry?.relayout();
+    this._gameClubEntry?.relayout();
+    this._gameClubPanel?.relayout();
     this._tutorialOverlay?.refreshLayout();
   }
 
@@ -624,6 +632,10 @@ export class MainScene implements Scene {
     this._douyinWelfareEntry = new DouyinWelfareEntry();
     this.container.addChild(this._douyinWelfareEntry);
 
+    // 微信游戏圈福利入口（合成页右上侧，抖音/Tap/华为自动隐藏）
+    this._gameClubEntry = new GameClubEntry();
+    this.container.addChild(this._gameClubEntry);
+
     // ---- 留存系统 UI（全局覆盖层，任何场景都能使用） ----
     const overlay = OverlayManager.container;
 
@@ -637,6 +649,9 @@ export class MainScene implements Scene {
 
     this._douyinWelfarePanel = new DouyinWelfarePanel();
     overlay.addChild(this._douyinWelfarePanel);
+
+    this._gameClubPanel = new GameClubPanel();
+    overlay.addChild(this._gameClubPanel);
 
     // 签到面板
     this._checkInPanel = new CheckInPanel();
@@ -1854,6 +1869,10 @@ export class MainScene implements Scene {
       this._markRedDotsDirty();
     });
 
+    EventBus.on('gameClub:changed', () => {
+      this._markRedDotsDirty();
+    });
+
     // ---- 进入花店/房屋装修场景（底栏 ，非「购买商店」；购买商店为顶栏 panel:openMerchShop） ----
     EventBus.on('scene:switchToShop', () => {
       if (SceneManager.current?.name !== 'main') return;
@@ -1900,6 +1919,7 @@ export class MainScene implements Scene {
     );
     this._floatingMenu.setRedDot('quest', QuestManager.hasClaimableQuest);
     this._douyinWelfareEntry?.refresh();
+    this._gameClubEntry?.refresh();
 
     // 底部栏红点（装修按钮）
     this._infoBar.updateQuickBtnRedDots();

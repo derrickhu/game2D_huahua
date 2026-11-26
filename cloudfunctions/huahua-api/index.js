@@ -32,6 +32,7 @@ const {
   handleQueryPendingWechatGifts,
   handleMarkWechatGiftsGranted,
 } = require('./lib/wechatPush');
+const { handleDecryptGameClubData } = require('./lib/gameClub');
 const { respond, parseEvent, preflight } = require('./lib/http');
 
 const ROUTES = {
@@ -44,6 +45,7 @@ const ROUTES = {
   'POST /giftDeliver': handleWechatPushCallback,
   'POST /wechat-gift/queryPending': handleQueryPendingWechatGifts,
   'POST /wechat-gift/markGranted': handleMarkWechatGiftsGranted,
+  'POST /game-club/decrypt': handleDecryptGameClubData,
 };
 
 exports.main = async (event, context) => {

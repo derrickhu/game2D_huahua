@@ -18,3 +18,11 @@
 3. **画风统一与入库流程**
    - 画风保持柔和细暖棕描边（`gentle thin warm taupe-brown outlines`）、左上高调柔光赛璐璐/水彩手绘质感，室内地面与墙面完全留空（零家具、零盆栽、零地毯、零文字水印）。
    - 生图统一输出纯白底 `#FFFFFF` 原图归档至 `../game_assets/huahua/assets/raw/`，经 `rembg -m birefnet-general` 去底写入 `minigame/subpkg_deco/images/house/`，同步补齐大地图外观缩略图与 `TextureCache` / `WorldMapConfig` / `StarLevelConfig` / `DecorationConfig` / `SceneRenovationConfig` / `LevelUnlockConfig`，并执行 `npm run check:deco-textures` 校验通过。
+
+## 打包发布前 CDN 资源同步硬性规范
+
+凡在改动功能或增改美术/音频资源后，需要打出最新微信或抖音小游戏包（`npm run build` / `npm run build:wechat` / `npm run build:douyin`）时，**必须同步检查并上传 CDN 资源**，严禁只打包不传 CDN 导致线上拉取资源失败：
+
+1. **检查范围**：对照 `src/config/CdnConfig.ts` 中的 `cdnDirs`（`subpkg_chars/images`、`subpkg_panels/images`、`subpkg_deco/images`、`subpkg_audio`），以及项目是否包含 CDN 上传脚本（`scripts/upload_cdn.js` / `scripts/upload.sh`）。
+2. **先查后传**：打包前或打包后立即执行 `node scripts/upload_cdn.js --dry-run`，核对是否有新增或修改文件待上传。
+3. **强制同步**：若 `新增/更新 > 0`，必须执行 `node scripts/upload_cdn.js` 完成腾讯云 COS / CloudBase 增量同步，并确认输出 `上传成功` 与最新云端 `manifest` 版本号后再交付发布包。

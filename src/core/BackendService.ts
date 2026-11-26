@@ -9,6 +9,7 @@
 import {
   BACKEND_ANON_ID_KEY,
   BACKEND_BASE_URL,
+  BACKEND_GAME_CLUB_DECRYPT_PATH,
   BACKEND_LOGIN_PATH,
   BACKEND_PULL_PATH,
   BACKEND_PUSH_PATH,
@@ -62,6 +63,19 @@ export interface WechatGiftQueryResult {
 
 export interface WechatGiftMarkResult {
   updated: number;
+}
+
+export interface GameClubMetricsPayload {
+  joined: boolean;
+  joinTime: number;
+  todayLikes: number;
+  todayComments: number;
+  todayPosts: number;
+}
+
+export interface GameClubDecryptResult {
+  metrics: GameClubMetricsPayload;
+  syncedAt: number;
 }
 
 interface StoredToken {
@@ -155,6 +169,19 @@ class BackendServiceClass {
 
   async markWechatGiftsGranted(ids: string[]): Promise<WechatGiftMarkResult> {
     return this._callWithAuth<WechatGiftMarkResult>(BACKEND_WECHAT_GIFT_MARK_PATH, { ids });
+  }
+
+  /** 发送最新 wx.login code 与游戏圈加密包到云函数解密 */
+  async decryptGameClubData(encryptedData: string, iv: string): Promise<GameClubDecryptResult> {
+    const creds = await Platform.loginCredentials();
+    if (!creds.code) {
+      throw new BackendError(0, 'NO_WX_CODE', 'wx.login 未返回 code');
+    }
+    return this._callWithAuth<GameClubDecryptResult>(BACKEND_GAME_CLUB_DECRYPT_PATH, {
+      code: creds.code,
+      encryptedData,
+      iv,
+    });
   }
 
   /** 清空本地 token（排障用），不影响本地存档 */

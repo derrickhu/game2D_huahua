@@ -40,6 +40,7 @@ import { CheckInManager } from '@/managers/CheckInManager';
 import { UserIdentityManager } from '@/managers/UserIdentityManager';
 import { WechatGiftManager } from '@/managers/WechatGiftManager';
 import { WechatWelfareManager } from '@/managers/WechatWelfareManager';
+import { GameClubManager } from '@/managers/GameClubManager';
 import { PersistService, type CloudImportInfo } from '@/core/PersistService';
 import { Platform } from '@/core/PlatformService';
 import { isUsableCanvas, pickCanvasFromHost } from '@/core/hostCanvas';
@@ -237,6 +238,9 @@ async function main(): Promise<void> {
       if (info.changedKeys.includes('huahua_newbie_gift_pack')) {
         NewbieGiftPackManager.reloadFromStorage();
       }
+      if (info.changedKeys.includes('huahua_game_club')) {
+        GameClubManager.reloadFromStorage();
+      }
       if (
         info.changedKeys.includes('huahua_newbie_gift_pack')
         || info.changedKeys.includes('huahua_decoration')
@@ -420,6 +424,7 @@ async function main(): Promise<void> {
       let lastHideAt = 0;
       Platform.onHide(() => {
         WechatWelfareManager.notifyAppHide();
+        GameClubManager.notifyAppHide();
         IdleManager.onHide();
         SaveManager.save();
         // 立即刷写装饰布局（防止防抖 timer 未触发导致位置丢失）
@@ -434,6 +439,7 @@ async function main(): Promise<void> {
           SaveManager.save();
         }
         WechatWelfareManager.syncAfterAppShow('app-show');
+        GameClubManager.syncAfterAppShow('app-show');
         // 经分 app_show：业务侧自定义打，**不**重置 session_id（session = 一次冷启动）。
         // 携带 background_ms 便于 dashboard 看「后台多久回来」分布；首次启动 lastHideAt=0 就跳过。
         if (lastHideAt > 0) {

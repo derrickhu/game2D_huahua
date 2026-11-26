@@ -127,7 +127,7 @@ function requireUser(req) {
   return { userId, platform: payload.plt || userId.split(':')[0] };
 }
 
-async function wxCode2Openid(code) {
+async function wxCode2Session(code) {
   // CloudBase/SCF 在某些环境会把 Key 为 `WX_APPID` / `WX_SECRET` 的值强制清空
   // （怀疑被当成小程序 AppID 保留字脱敏处理），所以这里优先读带游戏前缀的
   // `HUAHUA_WX_APPID` / `HUAHUA_WX_SECRET`，老的 `WX_APPID` / `WX_SECRET` 仅作兜底。
@@ -141,7 +141,15 @@ async function wxCode2Openid(code) {
   if (!data || !data.openid) {
     throw httpError(401, 'WX_LOGIN_FAIL', `wx code2session 失败: ${JSON.stringify(data || {})}`);
   }
-  return data.openid;
+  return {
+    openid: data.openid,
+    session_key: typeof data.session_key === 'string' ? data.session_key : '',
+  };
+}
+
+async function wxCode2Openid(code) {
+  const session = await wxCode2Session(code);
+  return session.openid;
 }
 
 async function tapCode2Session(code) {
@@ -225,4 +233,5 @@ function httpRequestJson(url, method, body) {
 module.exports = {
   handleLogin,
   requireUser,
+  wxCode2Session,
 };

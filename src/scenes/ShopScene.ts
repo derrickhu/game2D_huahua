@@ -27,6 +27,7 @@ import { CurrencyManager } from '@/managers/CurrencyManager';
 import { CheckInManager } from '@/managers/CheckInManager';
 import { QuestManager } from '@/managers/QuestManager';
 import { GrowthQuestManager } from '@/managers/GrowthQuestManager';
+import { GameClubManager } from '@/managers/GameClubManager';
 import { ExchangeEventManager } from '@/managers/ExchangeEventManager';
 import { ACTIVE_EXCHANGE_THEME } from '@/config/events/exchange/ExchangeEventRegistry';
 import { WheelEventManager } from '@/managers/WheelEventManager';
@@ -208,10 +209,11 @@ const DECO_PAIR_BUTTONS: SideBtnDef[] = [
   { id: 'dressup', icon: '', texKey: 'icon_dress',      label: '装扮', event: 'nav:openDressup', iconBg: 0xFF7EB3, labelColor: 0xE0559C },
 ];
 
-/** 左上角 — 图鉴竖排：花语图鉴 / 友谊卡（未开放时显示锁态） */
+/** 左上角 — 图鉴竖排：花语图鉴 / 友谊卡 / 游戏圈 */
 const LEFT_TOP_BUTTONS: SideBtnDef[] = [
   { id: 'album',  icon: '', texKey: 'icon_book',          label: '图鉴',   event: 'nav:openAlbum',       iconBg: 0xA78BFA, labelColor: 0x7C5FC5 },
   { id: 'affinity_codex', icon: '', texKey: 'icon_affinity_card', label: '友谊卡', event: 'affinityCodex:open', iconBg: 0xFFB1CC, labelColor: 0xC75D8B },
+  { id: 'game_club', icon: '', texKey: 'icon_game_club_nb2', label: '游戏圈', event: 'panel:openGameClub', iconBg: 0x7ED957, labelColor: 0x3D8B2F },
 ];
 
 /** 右侧 — 活动快捷按钮（签到/成长/任务/限时兑换活动） */
@@ -2018,7 +2020,11 @@ export class ShopScene implements Scene {
       if (def.id === 'affinity_codex') {
         this._syncAffinityCodexButtonVisibility();
       }
+      if (def.id === 'game_club') {
+        btn.container.visible = GameClubManager.isEntryVisible;
+      }
     }
+    this._updateRedDots();
   }
 
   /** 左侧「友谊卡」入口始终显示；未开放时显示锁态并点击提示开放等级。 */
@@ -3173,7 +3179,12 @@ export class ShopScene implements Scene {
     EventBus.on('exchangeEvent:periodChanged', this._onExchangeEventChanged);
     EventBus.on('wheelEvent:changed', this._onMidAutumnChanged);
     EventBus.on('wheelEvent:periodChanged', this._onMidAutumnChanged);
+    EventBus.on('gameClub:changed', this._onGameClubChanged);
   }
+
+  private readonly _onGameClubChanged = (): void => {
+    this._updateRedDots();
+  };
 
   private readonly _onExchangeEventChanged = (): void => {
     this._refreshExchangeButtonVisibility();
@@ -3217,6 +3228,7 @@ export class ShopScene implements Scene {
     EventBus.off('exchangeEvent:periodChanged', this._onExchangeEventChanged);
     EventBus.off('wheelEvent:changed', this._onMidAutumnChanged);
     EventBus.off('wheelEvent:periodChanged', this._onMidAutumnChanged);
+    EventBus.off('gameClub:changed', this._onGameClubChanged);
   }
 
   /**
@@ -4023,9 +4035,12 @@ export class ShopScene implements Scene {
     for (const { container } of this._activityBtns.values()) {
       container.visible = true;
     }
-    // 友谊卡未达开放等级时保持锁态；上面对全部入口统一 visible=true 后需刷新 alpha/锁标。
+    // 友谊卡未达开放等级时保持锁态；上面对全部入口统一 visible=true 后需刷新 alpha/锁标与平台专属可见性。
     this._syncAffinityCodexButtonVisibility();
     this._syncFurnitureWorkshopButtonVisibility();
+    this._refreshExchangeButtonVisibility();
+    this._refreshMidAutumnButtonVisibility();
+    this._updateRedDots();
 
     // 刷新房间渲染
     this._renderFurnitureLayout();
@@ -4713,6 +4728,15 @@ export class ShopScene implements Scene {
     // 成长之路红点（有可领任务或章节大奖）
     const growthBtn = this._activityBtns.get('growth');
     if (growthBtn) growthBtn.redDot.visible = GrowthQuestManager.hasClaimable();
+
+    // 游戏圈福利红点
+    const gameClubBtn = this._activityBtns.get('game_club');
+    if (gameClubBtn) {
+      if (!this._isEditMode) {
+        gameClubBtn.container.visible = GameClubManager.isEntryVisible;
+      }
+      gameClubBtn.redDot.visible = gameClubBtn.container.visible && GameClubManager.hasRedDot;
+    }
 
     // 兑换活动红点
     const exchangeBtn = this._activityBtns.get('exchange_event');

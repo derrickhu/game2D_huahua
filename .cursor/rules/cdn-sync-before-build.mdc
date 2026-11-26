@@ -1,0 +1,12 @@
+---
+description: 改动功能并准备打出微信/抖音小游戏包时，强制检查并同步 CDN 资源，防止发布包线上拉取资源失败
+alwaysApply: true
+---
+
+# 打包发布前 CDN 资源同步规范
+
+每次功能改动完成，且需要打出最新微信或抖音游戏包（如 `npm run build`、`npm run build:wechat`、`npm run build:douyin`）时，**必须**执行以下 CDN 检查与同步步骤：
+
+1. **核对 CDN 目录**：检查本次新增或修改的资源是否位于 `src/config/CdnConfig.ts` 的 `cdnDirs` 中（当前包含 `subpkg_chars/images`、`subpkg_panels/images`、`subpkg_deco/images`、`subpkg_audio`）。
+2. **执行增量预检**：运行 `node scripts/upload_cdn.js --dry-run`（或 `./scripts/upload.sh --dry-run`），确认云端 manifest 与本地资源差异。
+3. **补齐增量上传**：只要 `新增/更新 > 0`，必须立即执行 `node scripts/upload_cdn.js` 将新增/变更资源同步至云存储，确认 `上传成功` 及最新 `manifest` 版本号后再交付发布包。

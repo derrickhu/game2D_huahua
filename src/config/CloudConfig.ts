@@ -29,6 +29,7 @@ export const BACKEND_PUSH_PATH = `${BACKEND_PATH_PREFIX}/save/push`;
 export const BACKEND_HEALTH_PATH = `${BACKEND_PATH_PREFIX}/health`;
 export const BACKEND_WECHAT_GIFT_QUERY_PATH = `${BACKEND_PATH_PREFIX}/wechat-gift/queryPending`;
 export const BACKEND_WECHAT_GIFT_MARK_PATH = `${BACKEND_PATH_PREFIX}/wechat-gift/markGranted`;
+export const BACKEND_GAME_CLUB_DECRYPT_PATH = `${BACKEND_PATH_PREFIX}/game-club/decrypt`;
 
 /** 请求超时（毫秒） */
 export const BACKEND_REQUEST_TIMEOUT_MS = 10000;
@@ -73,6 +74,8 @@ export const CLOUD_SYNC_ALLOWLIST = [
   'huahua_settings',
   // 抖音专属；微信端本地永远不存在此 key，不会进快照
   'huahua_douyin_welfare',
+  // 微信游戏圈福利任务进度与领奖状态
+  'huahua_game_club',
 ] as const;
 
 export const CLOUD_SYNC_EXCLUDE_KEYS = [

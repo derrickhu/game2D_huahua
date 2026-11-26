@@ -743,6 +743,66 @@ class PlatformServiceClass {
     return null;
   }
 
+  /**
+   * 拉取微信游戏圈加密行为数据（需基础库 2.25.4+ 与 scope.gameClubData 授权）。
+   * type: 1=加圈时间, 4=当日点赞贴数, 5=当日评论贴数, 6=当日发帖数
+   */
+  getGameClubData(types: readonly number[]): Promise<{
+    encryptedData: string;
+    iv: string;
+    signature?: string;
+    cloudID?: string;
+  } | null> {
+    if (this.name !== 'wechat' || typeof this._api?.getGameClubData !== 'function') {
+      return Promise.resolve(null);
+    }
+    return new Promise((resolve, reject) => {
+      try {
+        this._api.getGameClubData({
+          dataTypeList: types.map((type) => ({ type })),
+          success: (res: any) => {
+            if (res?.encryptedData && res?.iv) {
+              resolve({
+                encryptedData: String(res.encryptedData),
+                iv: String(res.iv),
+                signature: res.signature ? String(res.signature) : undefined,
+                cloudID: res.cloudID ? String(res.cloudID) : undefined,
+              });
+            } else {
+              resolve(null);
+            }
+          },
+          fail: (err: any) => {
+            const errMsg = String(err?.errMsg || err?.message || '');
+            const denied = /auth\s*den|authorize:fail|scope\.gameClubData/i.test(errMsg);
+            const wrapped = new Error(errMsg || 'getGameClubData failed') as Error & { authDenied?: boolean };
+            wrapped.authDenied = denied;
+            reject(wrapped);
+          },
+        });
+      } catch (e) {
+        reject(e);
+      }
+    });
+  }
+
+  /** 打开宿主设置面板（用于玩家拒绝游戏圈数据授权后引导重新开启） */
+  openSetting(): Promise<Record<string, boolean>> {
+    if (typeof this._api?.openSetting !== 'function') {
+      return Promise.resolve({});
+    }
+    return new Promise((resolve) => {
+      try {
+        this._api.openSetting({
+          success: (res: any) => resolve((res && res.authSetting) || {}),
+          fail: () => resolve({}),
+        });
+      } catch (_) {
+        resolve({});
+      }
+    });
+  }
+
   /** 微信 PageManager openlink 能力：用于游戏圈 / 福利半屏。 */
   canOpenPageByOpenlink(): boolean {
     return this.name === 'wechat'

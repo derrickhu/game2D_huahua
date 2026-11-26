@@ -28,6 +28,7 @@ import { SaveManager } from './SaveManager';
 import { FlowerSignTicketManager } from './FlowerSignTicketManager';
 import { CheckInManager } from './CheckInManager';
 import { UpdateAnnouncementManager } from './UpdateAnnouncementManager';
+import { GameClubManager } from './GameClubManager';
 import { GrowthQuestManager } from './GrowthQuestManager';
 import { WeekendHuayuanBoostManager } from './WeekendHuayuanBoostManager';
 import { TuesdayStaminaUnlimitedManager } from './TuesdayStaminaUnlimitedManager';
@@ -1343,6 +1344,36 @@ class GMManagerClass {
         UpdateAnnouncementManager.clearSeen();
         const id = UpdateAnnouncementManager.active?.id ?? '(无)';
         return `已清除公告已读；当前 id=${id}，重进主界面可再弹`;
+      },
+    });
+
+    this._commands.push({
+      id: 'gm_open_game_club',
+      group: ' 系统测试',
+      name: '打开游戏圈福利页',
+      desc: '直接打开微信游戏圈每日任务与福利面板',
+      execute: () => {
+        EventBus.emit('panel:openGameClub');
+        return '已打开游戏圈福利页';
+      },
+    });
+
+    this._commands.push({
+      id: 'gm_simulate_game_club_step',
+      group: ' 系统测试',
+      name: '游戏圈：模拟互动+1',
+      desc: '模拟已加圈并让今日点赞/评论/发帖各 +1，验收阶梯解锁与领奖',
+      execute: () => GameClubManager.gmSimulateActivityStep(),
+    });
+
+    this._commands.push({
+      id: 'gm_reset_game_club',
+      group: ' 系统测试',
+      name: '游戏圈：重置任务进度',
+      desc: '清空游戏圈所有领奖与互动记录',
+      execute: () => {
+        GameClubManager.gmResetAll();
+        return '已重置游戏圈全部任务进度';
       },
     });
 
