@@ -8,12 +8,14 @@ import { ShaderSystem, BaseImageResource, Texture, BaseTexture, extensions } fro
 import { settings } from '@pixi/settings';
 import { Platform } from '@/core/PlatformService';
 import { getNativePlatformApi } from './platformDetect';
+import { acquireSoftTextHost } from './softTextCanvas';
 import { installTapTextRaster, shouldInstallTapTextRaster } from './tapTextRaster';
 import { isSyntheticCanvas, uploadCanvasPixels } from './tapTextureUpload';
 
 declare const GameGlobal: any;
 declare const qg: any;
 declare const qa: any;
+declare const wx: any;
 
 try {
   // 小游戏无 DOM button，无障碍插件会在 Application/Renderer 初始化时再 createCanvas
@@ -89,18 +91,41 @@ if (_api || Platform.isCanvasHostGuarded) {
       return canvas;
     };
 
+    const _offscreen2d = (api: any): { canvas: any; ctx: any } | null => {
+      if (!api || typeof api.createOffscreenCanvas !== 'function') return null;
+      const attempts = [
+        () => api.createOffscreenCanvas({ type: '2d', width: 64, height: 64 }),
+        () => api.createOffscreenCanvas(64, 64),
+      ];
+      for (const run of attempts) {
+        try {
+          const c = run();
+          const ctx = c?.getContext?.('2d');
+          if (ctx && typeof ctx.fillText === 'function') return { canvas: c, ctx };
+        } catch { /* */ }
+      }
+      return null;
+    };
+
     const _tryHost2d = (api: any): { canvas: any; ctx: any } | null => {
       if (!api) return null;
       try {
-        if (typeof api.createOffscreenCanvas === 'function') {
-          const c = api.createOffscreenCanvas({ type: '2d', width: 64, height: 64 });
-          const ctx = c?.getContext?.('2d');
-          if (ctx && typeof ctx.fillText === 'function') return { canvas: c, ctx };
+        const stashed = typeof GameGlobal !== 'undefined' ? GameGlobal.__huahuaTextCanvas : null;
+        const stashedCtx = stashed?.getContext?.('2d');
+        if (stashed && stashed !== GameGlobal.canvas && stashedCtx && typeof stashedCtx.fillText === 'function') {
+          return { canvas: stashed, ctx: stashedCtx };
         }
       } catch { /* */ }
+      const offscreen = _offscreen2d(api);
+      if (offscreen) return offscreen;
+      // tap 和 wx 在 Tap 宿主上不是同一套。离屏画布有时只挂在 wx 兼容层上。
+      if (Platform.isTaptap && typeof wx !== 'undefined' && wx !== api) {
+        const viaWx = _offscreen2d(wx);
+        if (viaWx) return viaWx;
+      }
       // Tap 的主屏已经在 adapter 里 createCanvas 过一次。这里再调会开出第二块 SurfaceView，
-      // 主屏不再提交缓冲（OPPO 日志里的 InstantGameActivity#1，拆掉后窗口纯黑）。
-      if (Platform.isTaptap) return null;
+      // 主屏不再提交缓冲。没有离屏画布时，用包内字体自己光栅。
+      if (Platform.isTaptap) return acquireSoftTextHost();
       try {
         if (typeof api.createCanvas === 'function') {
           const c = api.createCanvas();

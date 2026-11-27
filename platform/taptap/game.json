@@ -21,6 +21,10 @@
     {
       "name": "events",
       "root": "subpkg_events/"
+    },
+    {
+      "name": "fonts",
+      "root": "fonts/"
     }
   ]
 }

@@ -172,11 +172,19 @@ async function main(): Promise<void> {
     }
 
     Game.init(canvas);
+    const textHost = tapTextHostState();
     bootStep(
       'init rendered=' + !!GameGlobal.__gameRendered
       + ' renderer=' + !!Game.app?.renderer
-      + ' textHost=' + tapTextHostState(),
+      + ' textHost=' + textHost
+      + ' font=' + (GameGlobal.__huahuaFontFamily || 'none')
+      + ' soft=' + (GameGlobal.__huahuaSoftFont || 'no')
+      + ' ink=' + (GameGlobal.__huahuaSoftInk ?? 'na'),
     );
+    if (Platform.isTaptap && textHost !== 'ok') {
+      bootStep('字画布为空 soft=' + (GameGlobal.__huahuaSoftFont || 'no'));
+      try { GameGlobal.__showBootDiag?.(); } catch { /* */ }
+    }
     if (!Game.app?.renderer) {
       throw new Error('[main] 渲染器初始化失败');
     }

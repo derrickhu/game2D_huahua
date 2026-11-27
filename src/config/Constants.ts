@@ -160,8 +160,18 @@ export const COLORS = {
 };
 
 /**
- * 全局 UI 字体：优先系统中文黑体族（iOS 苹方 / macOS 冬青黑 / Windows 雅黑 / Android Noto），最后无衬线回退。
- * 微信小游戏 Canvas 会按设备解析；长期要全机一致可再叠加 wx.loadFont + 子集 TTF。
+ * 全局 UI 字体。
+ * 微信 / 抖音画布能解析系统中文黑体。TapTap 画布没有苹方、雅黑，
+ * game.js 会先 tap.loadFont 包内子集，把 family 写到 GameGlobal.__huahuaFontFamily。
  */
-export const FONT_FAMILY =
-  "'PingFang SC','Hiragino Sans GB','Microsoft YaHei','Noto Sans SC',sans-serif";
+declare const GameGlobal: { __huahuaFontFamily?: string } | undefined;
+
+function readFontFamily(): string {
+  try {
+    const packed = typeof GameGlobal !== 'undefined' ? GameGlobal?.__huahuaFontFamily : '';
+    if (packed) return packed;
+  } catch { /* 非小游戏环境 */ }
+  return "'PingFang SC','Hiragino Sans GB','Microsoft YaHei','Noto Sans SC',sans-serif";
+}
+
+export const FONT_FAMILY = readFontFamily();

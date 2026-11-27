@@ -282,6 +282,13 @@ export function assemble(platform, { quiet = false, bundleDir, full = false } = 
   }
   copyFileIfStale(bundle, path.join(out, 'game-bundle.js'), stats);
   if (platform === 'taptap') {
+    const fontSrc = path.join(platformSrc, 'fonts', 'HuahuaUI.ttf');
+    if (!fs.existsSync(fontSrc)) {
+      fail('缺少 platform/taptap/fonts/HuahuaUI.ttf，Tap 画布没有系统中文，不带字体包字是空的');
+    }
+    const fontOutDir = path.join(out, 'fonts');
+    fs.mkdirSync(fontOutDir, { recursive: true });
+    copyFileIfStale(fontSrc, path.join(fontOutDir, 'HuahuaUI.ttf'), stats);
     const stamp = path.join(out, 'tap-pack-stamp.js');
     const stampSrc = "GameGlobal.__HUAHUA_TAP_PACK='fix5';\n";
     if (!fs.existsSync(stamp) || fs.readFileSync(stamp, 'utf8') !== stampSrc) {
@@ -325,6 +332,11 @@ export function assemble(platform, { quiet = false, bundleDir, full = false } = 
     platformSkip.add('store');
     platformSkip.add('beian');
   }
+  // 商店图标和推广图只给后台传，打进主包会把准入压缩体积顶过 1.1MB
+  if (platform === 'taptap') {
+    platformSkip.add('icon_512.png');
+    platformSkip.add('promo_16x9.jpg');
+  }
   mirrorDir(platformSrc, out, {
     skip: platformSkip,
     skipExt: docExt,
@@ -337,6 +349,10 @@ export function assemble(platform, { quiet = false, bundleDir, full = false } = 
       if (!docExt.has(path.extname(name).toLowerCase())) continue;
       fs.rmSync(path.join(out, name), { force: true });
     }
+  }
+  if (platform === 'taptap') {
+    fs.rmSync(path.join(out, 'icon_512.png'), { force: true });
+    fs.rmSync(path.join(out, 'promo_16x9.jpg'), { force: true });
   }
   if (platform === 'huawei') {
     if (!fs.existsSync(path.join(out, 'manifest.json'))) {

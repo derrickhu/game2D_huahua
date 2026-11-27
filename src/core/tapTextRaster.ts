@@ -18,6 +18,19 @@ interface Host2d {
   ctx: any;
 }
 
+declare const GameGlobal: { __huahuaFontFamily?: string } | undefined;
+
+/** Tap 画布认不准 bold + 多字体串，字会整段画空。有包内字体时只留字号和这个 family。 */
+function tapFontForHost(font: string): string {
+  let packed = '';
+  try {
+    packed = typeof GameGlobal !== 'undefined' ? (GameGlobal?.__huahuaFontFamily || '') : '';
+  } catch { /* */ }
+  if (!packed) return font;
+  const size = String(font || '').match(/([\d.]+)px/);
+  return `${size ? size[1] : '16'}px ${packed}`;
+}
+
 let _hostState: 'pending' | 'ok' | 'null' = 'pending';
 
 export function tapTextHostState(): string {
@@ -74,7 +87,7 @@ export function installTapTextRaster(acquireHost: () => Host2d | null): (w?: num
       apply(hctx: any) {
         hctx.fillStyle = ctx.fillStyle;
         hctx.strokeStyle = ctx.strokeStyle;
-        hctx.font = ctx.font;
+        hctx.font = tapFontForHost(ctx.font);
         hctx.textAlign = ctx.textAlign;
         hctx.textBaseline = ctx.textBaseline;
         hctx.lineWidth = ctx.lineWidth;

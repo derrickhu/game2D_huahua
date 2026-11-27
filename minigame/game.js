@@ -408,17 +408,210 @@ try {
     _docForUrl.baseURI = 'https://taptap.local/game-bundle.js';
   }
 } catch (eUrl) { /* URL 补丁失败不挡启动 */ }
-try {
-  require('./game-bundle.js');
-} catch (e) {
-  _diag('game-bundle 失败:' + e);
-  _showDiag();
-}
-
-setTimeout(function () {
-  if (typeof GameGlobal !== 'undefined' && !GameGlobal.__bootOk) {
-    _diag('6秒未进主场景 step=' + (GameGlobal.__bootStep || '?')
-      + ' rendered=' + GameGlobal.__gameRendered);
+// Tap 画布没有苹方 / 雅黑。字体在 fonts 分包，装好再进 bundle，否则第一帧字就是空的。
+var _bundleStarted = false;
+function _startBundle() {
+  if (_bundleStarted) return;
+  _bundleStarted = true;
+  try {
+    require('./game-bundle.js');
+  } catch (e) {
+    _diag('game-bundle 失败:' + e);
     _showDiag();
   }
-}, 6000);
+  setTimeout(function () {
+    if (typeof GameGlobal !== 'undefined' && !GameGlobal.__bootOk) {
+      _diag('6秒未进主场景 step=' + (GameGlobal.__bootStep || '?')
+        + ' rendered=' + GameGlobal.__gameRendered);
+      _showDiag();
+    }
+  }, 6000);
+}
+function _fontHost() {
+  if (typeof tap !== 'undefined' && typeof tap.loadFont === 'function') return tap;
+  if (typeof wx !== 'undefined' && typeof wx.loadFont === 'function') return wx;
+  return null;
+}
+function _pixelInk(ctx, w, h) {
+  try {
+    var data = ctx.getImageData(0, 0, w, h).data;
+    var n = 0;
+    for (var i = 3; i < data.length; i += 4) {
+      if (data[i] > 16) n++;
+    }
+    return String(n);
+  } catch (e) {
+    return 'err';
+  }
+}
+function _probeOffscreen(label, api, fam) {
+  if (!api || typeof api.createOffscreenCanvas !== 'function') {
+    _diag(label + ' offscreen=no');
+    return false;
+  }
+  var makers = [
+    function () { return api.createOffscreenCanvas({ type: '2d', width: 64, height: 64 }); },
+    function () { return api.createOffscreenCanvas(64, 64); },
+  ];
+  var drew = false;
+  for (var m = 0; m < makers.length; m++) {
+    try {
+      var c = makers[m]();
+      var screen = typeof GameGlobal !== 'undefined' ? GameGlobal.canvas : null;
+      if (!c) {
+        _diag(label + '#' + m + ' canvas=null');
+        continue;
+      }
+      if (screen && c === screen) {
+        _diag(label + '#' + m + ' same-as-screen');
+        continue;
+      }
+      var ctx = c.getContext && c.getContext('2d');
+      if (!ctx || typeof ctx.fillText !== 'function') {
+        _diag(label + '#' + m + ' ctx=' + (ctx ? 'no-fillText' : 'null'));
+        continue;
+      }
+      c.width = 64;
+      c.height = 64;
+      ctx.fillStyle = '#ff0000';
+      ctx.fillRect(0, 0, 64, 64);
+      var rectInk = _pixelInk(ctx, 64, 64);
+      ctx.clearRect(0, 0, 64, 64);
+      ctx.fillStyle = '#000000';
+      ctx.font = '32px ' + (fam || 'sans-serif');
+      ctx.textBaseline = 'alphabetic';
+      ctx.fillText('花', 4, 48);
+      var textInk = _pixelInk(ctx, 64, 64);
+      _diag(label + '#' + m + ' rect=' + rectInk + ' text=' + textInk + ' fam=' + (fam || 'sans'));
+      drew = true;
+      if (Number(textInk) > 0 && typeof GameGlobal !== 'undefined' && !GameGlobal.__huahuaTextCanvas) {
+        GameGlobal.__huahuaTextCanvas = c;
+      }
+    } catch (e) {
+      _diag(label + '#' + m + ' throw=' + e);
+    }
+  }
+  return drew;
+}
+function _applyTapFont() {
+  var host = _fontHost();
+  if (!host) {
+    _diag('fontApi=none tap=' + (typeof tap !== 'undefined' ? typeof tap.loadFont : 'no-tap')
+      + ' wx=' + (typeof wx !== 'undefined' ? typeof wx.loadFont : 'no-wx'));
+    _startBundle();
+    return;
+  }
+  var fam = '';
+  try {
+    fam = host.loadFont('fonts/HuahuaUI.ttf') || '';
+    if (fam && typeof GameGlobal !== 'undefined') {
+      GameGlobal.__huahuaFontFamily = fam + ',sans-serif';
+    }
+    var _via = (typeof tap !== 'undefined' && host === tap) ? 'tap' : 'wx';
+    _diag('font=' + (fam || 'null') + ' via=' + _via);
+  } catch (eFont) {
+    _diag('loadFont 失败:' + eFont);
+  }
+  var tapOff = typeof tap !== 'undefined' ? typeof tap.createOffscreenCanvas : 'no-tap';
+  var wxOff = typeof wx !== 'undefined' ? typeof wx.createOffscreenCanvas : 'no-wx';
+  _diag('offscreen tap=' + tapOff + ' wx=' + wxOff);
+  if (typeof tap !== 'undefined') _probeOffscreen('tap', tap, fam);
+  if (typeof wx !== 'undefined' && (typeof tap === 'undefined' || wx !== tap)) _probeOffscreen('wx', wx, fam);
+  _loadFontBytes(_startBundle);
+}
+function _storeFontBytes(buf, via) {
+  var raw = buf;
+  if (buf && buf.data != null && buf.byteLength == null && buf.length == null) raw = buf.data;
+  var len = 0;
+  if (typeof raw === 'string') {
+    _diag('fontBytes string ' + raw.length + ' via=' + via);
+    return false;
+  }
+  if (raw && typeof raw.byteLength === 'number') len = raw.byteLength;
+  else if (raw && typeof raw.length === 'number') len = raw.length;
+  if (len < 1000 || typeof GameGlobal === 'undefined') {
+    _diag('fontBytes=' + len + ' via=' + via);
+    return false;
+  }
+  GameGlobal.__huahuaFontBytes = raw;
+  _diag('fontBytes=' + len + ' via=' + via);
+  return true;
+}
+function _loadFontBytes(done) {
+  var fs = null;
+  try {
+    fs = (typeof tap !== 'undefined' && typeof tap.getFileSystemManager === 'function')
+      ? tap.getFileSystemManager()
+      : null;
+  } catch (eFs) { /* */ }
+  if (!fs) {
+    _diag('fontFs=none');
+    done();
+    return;
+  }
+  var path = 'fonts/HuahuaUI.ttf';
+  try {
+    if (typeof fs.readFileSync === 'function' && _storeFontBytes(fs.readFileSync(path), 'sync')) {
+      done();
+      return;
+    }
+  } catch (eSync) {
+    _diag('readFileSync ' + eSync);
+  }
+  if (typeof fs.readFile !== 'function') {
+    _diag('fontBytes=miss');
+    done();
+    return;
+  }
+  var finished = false;
+  var finish = function () {
+    if (finished) return;
+    finished = true;
+    done();
+  };
+  try {
+    fs.readFile({
+      filePath: path,
+      success: function (res) {
+        _storeFontBytes(res && (res.data != null ? res.data : res), 'async');
+        finish();
+      },
+      fail: function (err) {
+        _diag('readFile fail ' + (err && (err.errMsg || err.msg || err)));
+        finish();
+      },
+    });
+    setTimeout(finish, 1500);
+  } catch (eRead) {
+    _diag('readFile throw ' + eRead);
+    finish();
+  }
+}
+if (_fontHost()) {
+  var _subHost = (typeof tap !== 'undefined' && typeof tap.loadSubpackage === 'function')
+    ? tap
+    : ((typeof wx !== 'undefined' && typeof wx.loadSubpackage === 'function') ? wx : null);
+  var _fontWait = setTimeout(function () {
+    _diag('字体分包超时，直接启动');
+    _applyTapFont();
+  }, 3000);
+  var _fontReady = function () {
+    clearTimeout(_fontWait);
+    _applyTapFont();
+  };
+  if (_subHost) {
+    _subHost.loadSubpackage({
+      name: 'fonts',
+      success: _fontReady,
+      fail: function (err) {
+        _diag('字体分包失败 ' + (err && (err.errMsg || err.msg || err)));
+        _fontReady();
+      },
+    });
+  } else {
+    _fontReady();
+  }
+} else {
+  _diag('fontApi=none');
+  _startBundle();
+}
