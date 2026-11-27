@@ -67,7 +67,6 @@ import { SceneSwitch } from '@/gameobjects/ui/SceneSwitch';
 import { DouyinWelfareEntry } from '@/gameobjects/ui/DouyinWelfareEntry';
 import { DouyinWelfarePanel } from '@/gameobjects/ui/DouyinWelfarePanel';
 import { DouyinWelfareManager } from '@/managers/DouyinWelfareManager';
-import { GameClubEntry } from '@/gameobjects/ui/GameClubEntry';
 import { GameClubPanel } from '@/gameobjects/ui/GameClubPanel';
 import { GameClubManager } from '@/managers/GameClubManager';
 import { SidebarService } from '@/core/SidebarService';
@@ -215,7 +214,6 @@ export class MainScene implements Scene {
   private _sceneSwitch!: SceneSwitch;
   private _douyinWelfareEntry!: DouyinWelfareEntry;
   private _douyinWelfarePanel!: DouyinWelfarePanel;
-  private _gameClubEntry!: GameClubEntry;
   private _gameClubPanel!: GameClubPanel;
 
   // ---- 新增系统 Phase 7+ ----
@@ -418,7 +416,6 @@ export class MainScene implements Scene {
     this._infoBar.position.set(0, layout.infoBarY);
     this._infoBar.relayout(layout.infoBarHeight, layout.infoBarSafeBottom);
     this._douyinWelfareEntry?.relayout();
-    this._gameClubEntry?.relayout();
     this._gameClubPanel?.relayout();
     this._tutorialOverlay?.refreshLayout();
   }
@@ -634,10 +631,6 @@ export class MainScene implements Scene {
     // 侧边栏 / 添加桌面入口。抖音、快手在宿主支持时出现，其它端 visible 恒为 false
     this._douyinWelfareEntry = new DouyinWelfareEntry();
     this.container.addChild(this._douyinWelfareEntry);
-
-    // 微信游戏圈福利入口（合成页右上侧，抖音/Tap/华为自动隐藏）
-    this._gameClubEntry = new GameClubEntry();
-    this.container.addChild(this._gameClubEntry);
 
     // ---- 留存系统 UI（全局覆盖层，任何场景都能使用） ----
     const overlay = OverlayManager.container;

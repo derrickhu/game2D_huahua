@@ -171,14 +171,14 @@ class BackendServiceClass {
     return this._callWithAuth<WechatGiftMarkResult>(BACKEND_WECHAT_GIFT_MARK_PATH, { ids });
   }
 
-  /** 发送最新 wx.login code 与游戏圈加密包到云函数解密 */
-  async decryptGameClubData(encryptedData: string, iv: string): Promise<GameClubDecryptResult> {
-    const creds = await Platform.loginCredentials();
-    if (!creds.code) {
+  /** 发送 wx.login code 与游戏圈加密包到云函数解密（code 必须在 getGameClubData 之前获取） */
+  async decryptGameClubData(encryptedData: string, iv: string, preLoginCode?: string): Promise<GameClubDecryptResult> {
+    const code = preLoginCode || (await Platform.loginCredentials()).code;
+    if (!code) {
       throw new BackendError(0, 'NO_WX_CODE', 'wx.login 未返回 code');
     }
     return this._callWithAuth<GameClubDecryptResult>(BACKEND_GAME_CLUB_DECRYPT_PATH, {
-      code: creds.code,
+      code,
       encryptedData,
       iv,
     });

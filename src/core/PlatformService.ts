@@ -744,18 +744,130 @@ class PlatformServiceClass {
   }
 
   /**
-   * 拉取微信游戏圈加密行为数据（需基础库 2.25.4+ 与 scope.gameClubData 授权）。
-   * type: 1=加圈时间, 4=当日点赞贴数, 5=当日评论贴数, 6=当日发帖数
+   * 拉取微信游戏圈加密行为数据：
+   *   1) 先检查 getPrivacySetting -> 未同意时自动拉起微信官方默认隐私弹窗 (requirePrivacyAuthorize)
+   *   2) 再检查 getSetting['scope.gameClubData'] -> 首次主动调 wx.authorize 弹窗；若曾拒绝且 promptModalIfDenied=true 则自动弹框引导跳设置页开启
+   *   3) 最后调用 wx.getGameClubData 拉取加圈/点赞/评论/发帖密文
    */
-  getGameClubData(types: readonly number[]): Promise<{
+  async getGameClubData(
+    types: readonly number[],
+    opts?: { promptModalIfDenied?: boolean },
+  ): Promise<{
     encryptedData: string;
     iv: string;
     signature?: string;
     cloudID?: string;
   } | null> {
     if (this.name !== 'wechat' || typeof this._api?.getGameClubData !== 'function') {
-      return Promise.resolve(null);
+      return null;
     }
+
+    const wrapErr = (rawErr: any, fallbackMsg: string) => {
+      const errMsg = String(rawErr?.errMsg || rawErr?.message || fallbackMsg);
+      const privacyPending = /no privacy api permission|announce your privacy usage/i.test(errMsg);
+      const denied = !privacyPending
+        && /auth\s*den|authorize:fail|scope\.gameClubData|privacy permission is not authorized|cancel/i.test(errMsg);
+      const wrapped = new Error(errMsg) as Error & { authDenied?: boolean; privacyPending?: boolean };
+      wrapped.authDenied = denied;
+      wrapped.privacyPending = privacyPending;
+      return wrapped;
+    };
+
+    // Step 1: 隐私保护指引检查与弹窗
+    if (typeof this._api?.getPrivacySetting === 'function') {
+      const priv = await new Promise<{ needAuthorization: boolean; privacyContractName: string }>((resolve) => {
+        try {
+          this._api.getPrivacySetting({
+            success: (res: any) => resolve({
+              needAuthorization: !!res?.needAuthorization,
+              privacyContractName: String(res?.privacyContractName || ''),
+            }),
+            fail: () => resolve({ needAuthorization: false, privacyContractName: '' }),
+          });
+        } catch (_) {
+          resolve({ needAuthorization: false, privacyContractName: '' });
+        }
+      });
+      console.log('[GameClub] getPrivacySetting:', priv);
+
+      if (priv.needAuthorization && typeof this._api?.requirePrivacyAuthorize === 'function') {
+        await new Promise<void>((resolve, reject) => {
+          try {
+            this._api.requirePrivacyAuthorize({
+              success: () => resolve(),
+              fail: (err: any) => reject(wrapErr(err, 'requirePrivacyAuthorize failed')),
+            });
+          } catch (e) {
+            reject(wrapErr(e, 'requirePrivacyAuthorize exception'));
+          }
+        });
+      }
+    }
+
+    // Step 2: scope.gameClubData 权限检查与主动弹窗
+    if (typeof this._api?.getSetting === 'function') {
+      const scopeVal = await new Promise<boolean | undefined>((resolve) => {
+        try {
+          this._api.getSetting({
+            success: (res: any) => resolve(res?.authSetting?.['scope.gameClubData']),
+            fail: () => resolve(undefined),
+          });
+        } catch (_) {
+          resolve(undefined);
+        }
+      });
+      console.log('[GameClub] scope.gameClubData =', scopeVal);
+
+      if (scopeVal === undefined && typeof this._api?.authorize === 'function') {
+        await new Promise<void>((resolve, reject) => {
+          try {
+            this._api.authorize({
+              scope: 'scope.gameClubData',
+              success: () => resolve(),
+              fail: (err: any) => reject(wrapErr(err, 'authorize scope.gameClubData failed')),
+            });
+          } catch (e) {
+            reject(wrapErr(e, 'authorize exception'));
+          }
+        });
+      } else if (scopeVal === false) {
+        if (!opts?.promptModalIfDenied || typeof this._api?.showModal !== 'function') {
+          const e = new Error('scope.gameClubData previously denied') as Error & { authDenied?: boolean };
+          e.authDenied = true;
+          throw e;
+        }
+        const reauthed = await new Promise<boolean>((resolve) => {
+          try {
+            this._api.showModal({
+              title: '开启游戏圈福利授权',
+              content: '需要获取你的游戏圈互动数据，用于自动核验点赞、评论任务并发放奖励',
+              confirmText: '去开启',
+              cancelText: '暂不开启',
+              success: (modalRes: any) => {
+                if (!modalRes?.confirm || typeof this._api?.openSetting !== 'function') {
+                  resolve(false);
+                  return;
+                }
+                this._api.openSetting({
+                  success: (st: any) => resolve(!!st?.authSetting?.['scope.gameClubData']),
+                  fail: () => resolve(false),
+                });
+              },
+              fail: () => resolve(false),
+            });
+          } catch (_) {
+            resolve(false);
+          }
+        });
+        if (!reauthed) {
+          const e = new Error('scope.gameClubData not enabled in openSetting') as Error & { authDenied?: boolean };
+          e.authDenied = true;
+          throw e;
+        }
+      }
+    }
+
+    // Step 3: 正式拉取游戏圈加密数据
     return new Promise((resolve, reject) => {
       try {
         this._api.getGameClubData({
@@ -772,16 +884,10 @@ class PlatformServiceClass {
               resolve(null);
             }
           },
-          fail: (err: any) => {
-            const errMsg = String(err?.errMsg || err?.message || '');
-            const denied = /auth\s*den|authorize:fail|scope\.gameClubData/i.test(errMsg);
-            const wrapped = new Error(errMsg || 'getGameClubData failed') as Error & { authDenied?: boolean };
-            wrapped.authDenied = denied;
-            reject(wrapped);
-          },
+          fail: (err: any) => reject(wrapErr(err, 'getGameClubData failed')),
         });
       } catch (e) {
-        reject(e);
+        reject(wrapErr(e, 'getGameClubData exception'));
       }
     });
   }
