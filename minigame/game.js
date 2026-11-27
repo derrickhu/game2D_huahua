@@ -495,22 +495,21 @@ function _probeOffscreen(label, api, fam) {
 }
 function _applyTapFont() {
   var host = _fontHost();
+  var fam = '';
   if (!host) {
     _diag('fontApi=none tap=' + (typeof tap !== 'undefined' ? typeof tap.loadFont : 'no-tap')
       + ' wx=' + (typeof wx !== 'undefined' ? typeof wx.loadFont : 'no-wx'));
-    _startBundle();
-    return;
-  }
-  var fam = '';
-  try {
-    fam = host.loadFont('fonts/HuahuaUI.ttf') || '';
-    if (fam && typeof GameGlobal !== 'undefined') {
-      GameGlobal.__huahuaFontFamily = fam + ',sans-serif';
+  } else {
+    try {
+      fam = host.loadFont('fonts/HuahuaUI.ttf') || '';
+      if (fam && typeof GameGlobal !== 'undefined') {
+        GameGlobal.__huahuaFontFamily = fam + ',sans-serif';
+      }
+      var _via = (typeof tap !== 'undefined' && host === tap) ? 'tap' : 'wx';
+      _diag('font=' + (fam || 'null') + ' via=' + _via);
+    } catch (eFont) {
+      _diag('loadFont 失败:' + eFont);
     }
-    var _via = (typeof tap !== 'undefined' && host === tap) ? 'tap' : 'wx';
-    _diag('font=' + (fam || 'null') + ' via=' + _via);
-  } catch (eFont) {
-    _diag('loadFont 失败:' + eFont);
   }
   var tapOff = typeof tap !== 'undefined' ? typeof tap.createOffscreenCanvas : 'no-tap';
   var wxOff = typeof wx !== 'undefined' ? typeof wx.createOffscreenCanvas : 'no-wx';
@@ -519,44 +518,135 @@ function _applyTapFont() {
   if (typeof wx !== 'undefined' && (typeof tap === 'undefined' || wx !== tap)) _probeOffscreen('wx', wx, fam);
   _loadFontBytes(_startBundle);
 }
+function _decodeBase64ToU8(raw) {
+  if (typeof raw !== 'string' || raw.length < 16) return null;
+  var chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/';
+  var lut = [];
+  for (var k = 0; k < 128; k++) lut[k] = -1;
+  for (var m = 0; m < chars.length; m++) lut[chars.charCodeAt(m)] = m;
+  lut[45] = 62;
+  lut[95] = 63;
+  var out = new Uint8Array(Math.floor((raw.length * 3) / 4) + 3);
+  var o = 0;
+  var acc = 0;
+  var bits = 0;
+  for (var i = 0; i < raw.length; i++) {
+    var c = raw.charCodeAt(i);
+    if (c === 61) break;
+    if (c >= 128) continue;
+    var v = lut[c];
+    if (v < 0) continue;
+    acc = (acc << 6) | v;
+    bits += 6;
+    if (bits >= 8) {
+      bits -= 8;
+      out[o++] = (acc >> bits) & 255;
+    }
+  }
+  return o > 0 ? out.subarray(0, o) : null;
+}
+function _coerceFontU8(buf, depth) {
+  if (!buf || (depth || 0) > 3) return null;
+  if (buf instanceof Uint8Array) return buf;
+  if (typeof buf === 'string') return _decodeBase64ToU8(buf);
+  if (typeof buf !== 'object') return null;
+  if (typeof ArrayBuffer !== 'undefined' && ArrayBuffer.isView && ArrayBuffer.isView(buf)) {
+    try { return new Uint8Array(buf.buffer, buf.byteOffset, buf.byteLength); } catch (e0) { /* */ }
+  }
+  var tag = Object.prototype.toString.call(buf);
+  if (
+    (typeof ArrayBuffer !== 'undefined' && buf instanceof ArrayBuffer)
+    || tag === '[object ArrayBuffer]'
+    || tag === '[object SharedArrayBuffer]'
+  ) {
+    try { return new Uint8Array(buf); } catch (e1) { /* */ }
+  }
+  if (buf.buffer && typeof buf.buffer.byteLength === 'number') {
+    try {
+      return typeof buf.byteLength === 'number'
+        ? new Uint8Array(buf.buffer, buf.byteOffset || 0, buf.byteLength)
+        : new Uint8Array(buf.buffer, buf.byteOffset || 0);
+    } catch (e2) { /* */ }
+  }
+  if (buf.data != null && buf.data !== buf) {
+    var inner = _coerceFontU8(buf.data, (depth || 0) + 1);
+    if (inner && inner.byteLength > 0) return inner;
+  }
+  if (typeof buf.byteLength === 'number' && buf.byteLength > 0) {
+    try {
+      var u = new Uint8Array(buf);
+      if (u.byteLength === buf.byteLength) return u;
+    } catch (e3) { /* */ }
+  }
+  if (Array.isArray(buf) || (typeof buf.length === 'number' && buf.length > 0)) {
+    try { return new Uint8Array(buf); } catch (e4) { /* */ }
+  }
+  return null;
+}
+function _hasSfntMagic(u8) {
+  if (!u8 || u8.byteLength < 12) return false;
+  var b0 = u8[0], b1 = u8[1], b2 = u8[2], b3 = u8[3];
+  return (b0 === 0 && b1 === 1 && b2 === 0 && b3 === 0)
+    || (b0 === 0x74 && b1 === 0x72 && b2 === 0x75 && b3 === 0x65)
+    || (b0 === 0x4f && b1 === 0x54 && b2 === 0x54 && b3 === 0x4f);
+}
 function _storeFontBytes(buf, via) {
-  var raw = buf;
-  if (buf && buf.data != null && buf.byteLength == null && buf.length == null) raw = buf.data;
-  var len = 0;
-  if (typeof raw === 'string') {
-    _diag('fontBytes string ' + raw.length + ' via=' + via);
+  if (typeof GameGlobal === 'undefined') return false;
+  var u8 = _coerceFontU8(buf, 0);
+  var len = u8 ? u8.byteLength : 0;
+  if (!u8 || len < 1000) {
+    var tag = buf == null ? 'null' : Object.prototype.toString.call(buf);
+    var rawLen = buf && (buf.byteLength != null ? buf.byteLength : buf.length);
+    _diag('fontBytes=' + len + ' rawLen=' + (rawLen != null ? rawLen : 'na') + ' tag=' + tag + ' via=' + via);
     return false;
   }
-  if (raw && typeof raw.byteLength === 'number') len = raw.byteLength;
-  else if (raw && typeof raw.length === 'number') len = raw.length;
-  if (len < 1000 || typeof GameGlobal === 'undefined') {
-    _diag('fontBytes=' + len + ' via=' + via);
+  if (!_hasSfntMagic(u8)) {
+    var hex = ((u8[0] << 24) | (u8[1] << 16) | (u8[2] << 8) | u8[3]) >>> 0;
+    _diag('fontBytes bad-magic=' + hex.toString(16) + ' len=' + len + ' via=' + via);
     return false;
   }
-  GameGlobal.__huahuaFontBytes = raw;
+  GameGlobal.__huahuaFontBytes = u8;
   _diag('fontBytes=' + len + ' via=' + via);
   return true;
 }
-function _loadFontBytes(done) {
-  var fs = null;
+function _tryReadFontSync(fs, label, path) {
+  if (!fs || typeof fs.readFileSync !== 'function') return false;
   try {
-    fs = (typeof tap !== 'undefined' && typeof tap.getFileSystemManager === 'function')
-      ? tap.getFileSystemManager()
-      : null;
-  } catch (eFs) { /* */ }
+    if (_storeFontBytes(fs.readFileSync(path), label + '-sync')) return true;
+  } catch (eSync) {
+    _diag(label + ' readFileSync ' + eSync);
+  }
+  try {
+    if (_storeFontBytes(fs.readFileSync(path, 'base64'), label + '-sync-b64')) return true;
+  } catch (eB64) {
+    _diag(label + ' readFileSync(b64) ' + eB64);
+  }
+  return false;
+}
+function _loadFontBytes(done) {
+  var tapFs = null;
+  var wxFs = null;
+  try {
+    if (typeof tap !== 'undefined' && typeof tap.getFileSystemManager === 'function') {
+      tapFs = tap.getFileSystemManager();
+    }
+  } catch (eFs1) { /* */ }
+  try {
+    if (typeof wx !== 'undefined' && typeof wx.getFileSystemManager === 'function') {
+      var candidate = wx.getFileSystemManager();
+      if (candidate && candidate !== tapFs) wxFs = candidate;
+    }
+  } catch (eFs2) { /* */ }
+  var fs = tapFs || wxFs;
   if (!fs) {
     _diag('fontFs=none');
     done();
     return;
   }
   var path = 'fonts/HuahuaUI.ttf';
-  try {
-    if (typeof fs.readFileSync === 'function' && _storeFontBytes(fs.readFileSync(path), 'sync')) {
-      done();
-      return;
-    }
-  } catch (eSync) {
-    _diag('readFileSync ' + eSync);
+  if (_tryReadFontSync(tapFs, 'tap', path) || _tryReadFontSync(wxFs, 'wx', path)) {
+    done();
+    return;
   }
   if (typeof fs.readFile !== 'function') {
     _diag('fontBytes=miss');
@@ -569,25 +659,48 @@ function _loadFontBytes(done) {
     finished = true;
     done();
   };
+  var tryAsyncBin = function () {
+    try {
+      fs.readFile({
+        filePath: path,
+        success: function (res) {
+          _storeFontBytes(res && (res.data != null ? res.data : res), 'async');
+          finish();
+        },
+        fail: function (err) {
+          _diag('readFile fail ' + (err && (err.errMsg || err.msg || err)));
+          finish();
+        },
+      });
+    } catch (eBin) {
+      _diag('readFile throw ' + eBin);
+      finish();
+    }
+  };
   try {
     fs.readFile({
       filePath: path,
+      encoding: 'base64',
       success: function (res) {
-        _storeFontBytes(res && (res.data != null ? res.data : res), 'async');
-        finish();
+        if (_storeFontBytes(res && (res.data != null ? res.data : res), 'async-b64')) {
+          finish();
+          return;
+        }
+        tryAsyncBin();
       },
-      fail: function (err) {
-        _diag('readFile fail ' + (err && (err.errMsg || err.msg || err)));
-        finish();
+      fail: function () {
+        tryAsyncBin();
       },
     });
     setTimeout(finish, 1500);
   } catch (eRead) {
-    _diag('readFile throw ' + eRead);
-    finish();
+    tryAsyncBin();
   }
 }
-if (_fontHost()) {
+var _isTapBoot = (_runtime && typeof _runtime.detectMinigamePlatform === 'function' && _runtime.detectMinigamePlatform() === 'taptap')
+  || typeof tap !== 'undefined'
+  || (typeof GameGlobal !== 'undefined' && !!(GameGlobal.__HUAHUA_TAP_VERSION || GameGlobal.__HUAHUA_TAP_PACK));
+if (_isTapBoot) {
   var _subHost = (typeof tap !== 'undefined' && typeof tap.loadSubpackage === 'function')
     ? tap
     : ((typeof wx !== 'undefined' && typeof wx.loadSubpackage === 'function') ? wx : null);
@@ -612,6 +725,5 @@ if (_fontHost()) {
     _fontReady();
   }
 } else {
-  _diag('fontApi=none');
   _startBundle();
 }

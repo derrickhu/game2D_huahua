@@ -16,53 +16,170 @@ interface SoftFont {
 
 interface Rgba { r: number; g: number; b: number; a: number }
 
+interface SoftGradientStop { off: number; color: Rgba }
+interface SoftGradient {
+  __huahuaGrad: true;
+  x0: number;
+  y0: number;
+  x1: number;
+  y1: number;
+  stops: SoftGradientStop[];
+  addColorStop: (off: number, col: string) => void;
+}
+
+const MAX_CANVAS_SIDE = 4096;
 const _glyphCache = new Map<string, { alpha: Uint8Array; w: number; h: number; ox: number; oy: number }>();
+const _strokeCache = new Map<string, { alpha: Uint8Array; w: number; h: number; shift: number }>();
 
-function u16(view: DataView, p: number): number {
-  return view.getUint16(p);
-}
-function i16(view: DataView, p: number): number {
-  return view.getInt16(p);
+function u16(b: Uint8Array, p: number): number {
+  return ((b[p] << 8) | b[p + 1]) >>> 0;
 }
 
-function findTables(view: DataView): Record<string, { off: number; len: number }> | null {
-  if (view.byteLength < 12 || view.getUint32(0) !== 0x00010000) return null;
-  const n = u16(view, 4);
+function i16(b: Uint8Array, p: number): number {
+  const v = (b[p] << 8) | b[p + 1];
+  return v & 0x8000 ? v - 0x10000 : v;
+}
+
+function u32(b: Uint8Array, p: number): number {
+  return ((b[p] * 0x1000000) + ((b[p + 1] << 16) | (b[p + 2] << 8) | b[p + 3])) >>> 0;
+}
+
+const B64_LUT = (() => {
+  const t = new Int8Array(128);
+  t.fill(-1);
+  const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/';
+  for (let i = 0; i < chars.length; i++) t[chars.charCodeAt(i)] = i;
+  t['-'.charCodeAt(0)] = 62;
+  t['_'.charCodeAt(0)] = 63;
+  return t;
+})();
+
+export function decodeBase64Bytes(raw: string): Uint8Array | null {
+  if (typeof raw !== 'string' || !raw) return null;
+  const comma = raw.indexOf(',');
+  const s = comma >= 0 && comma < 64 && raw.slice(0, comma).includes('base64')
+    ? raw.slice(comma + 1)
+    : raw;
+  const out = new Uint8Array(Math.floor((s.length * 3) / 4) + 3);
+  let o = 0;
+  let acc = 0;
+  let bits = 0;
+  for (let i = 0; i < s.length; i++) {
+    const c = s.charCodeAt(i);
+    if (c === 61) break; // '='
+    if (c >= 128) continue;
+    const v = B64_LUT[c];
+    if (v < 0) continue;
+    acc = (acc << 6) | v;
+    bits += 6;
+    if (bits >= 8) {
+      bits -= 8;
+      out[o++] = (acc >> bits) & 0xff;
+    }
+  }
+  return o > 0 ? out.subarray(0, o) : null;
+}
+
+/**
+ * 兼容小游戏宿主跨 Realm 的 ArrayBuffer / TypedArray / Buffer / 数组 / { data } / base64 字符串。
+ * Tap 真机上 fs.readFileSync 返回宿主侧 ArrayBuffer，`src instanceof ArrayBuffer` 为 false。
+ */
+export function toFontBytes(src: unknown, depth = 0): Uint8Array | null {
+  if (!src || depth > 3) return null;
+  if (src instanceof Uint8Array) return src;
+  if (typeof src === 'string') return decodeBase64Bytes(src);
+  if (typeof src !== 'object') return null;
+
+  if (ArrayBuffer.isView(src)) {
+    return new Uint8Array(src.buffer, src.byteOffset, src.byteLength);
+  }
+
+  const tag = Object.prototype.toString.call(src);
+  if (
+    src instanceof ArrayBuffer
+    || tag === '[object ArrayBuffer]'
+    || tag === '[object SharedArrayBuffer]'
+  ) {
+    try {
+      return new Uint8Array(src as ArrayBuffer);
+    } catch { /* 继续尝试后续兜底 */ }
+  }
+
+  const anySrc = src as Record<string, any>;
+  if (anySrc.buffer && typeof anySrc.buffer.byteLength === 'number') {
+    try {
+      const off = Number(anySrc.byteOffset) || 0;
+      const len = typeof anySrc.byteLength === 'number' ? anySrc.byteLength : undefined;
+      return len !== undefined
+        ? new Uint8Array(anySrc.buffer, off, len)
+        : new Uint8Array(anySrc.buffer, off);
+    } catch { /* */ }
+  }
+
+  if (anySrc.data != null && anySrc.data !== src) {
+    const nested = toFontBytes(anySrc.data, depth + 1);
+    if (nested && nested.byteLength > 0) return nested;
+  }
+
+  if (typeof anySrc.byteLength === 'number' && anySrc.byteLength > 0) {
+    try {
+      const view = new Uint8Array(src as ArrayBuffer);
+      if (view.byteLength === anySrc.byteLength) return view;
+    } catch { /* */ }
+    if (typeof anySrc.slice === 'function') {
+      try {
+        const sliced = anySrc.slice(0);
+        const view = new Uint8Array(sliced);
+        if (view.byteLength > 0) return view;
+      } catch { /* */ }
+    }
+  }
+
+  if (Array.isArray(anySrc) || (typeof anySrc.length === 'number' && anySrc.length > 0)) {
+    try {
+      return new Uint8Array(anySrc as ArrayLike<number>);
+    } catch { /* */ }
+  }
+
+  return null;
+}
+
+function isSupportedSfntMagic(magic: number): boolean {
+  // 0x00010000 (TrueType) 或 0x74727565 ('true')
+  return magic === 0x00010000 || magic === 0x74727565;
+}
+
+function findTables(bytes: Uint8Array): Record<string, { off: number; len: number }> | null {
+  if (bytes.byteLength < 12 || !isSupportedSfntMagic(u32(bytes, 0))) return null;
+  const n = u16(bytes, 4);
   const tables: Record<string, { off: number; len: number }> = {};
   for (let i = 0; i < n; i++) {
     const p = 12 + i * 16;
-    if (p + 16 > view.byteLength) break;
-    const tag = String.fromCharCode(view.getUint8(p), view.getUint8(p + 1), view.getUint8(p + 2), view.getUint8(p + 3));
-    tables[tag] = { off: view.getUint32(p + 8), len: view.getUint32(p + 12) };
+    if (p + 16 > bytes.byteLength) break;
+    const tag = String.fromCharCode(bytes[p], bytes[p + 1], bytes[p + 2], bytes[p + 3]);
+    const off = u32(bytes, p + 8);
+    const len = u32(bytes, p + 12);
+    if (off < bytes.byteLength) tables[tag] = { off, len };
   }
   if (!tables.cmap || !tables.glyf || !tables.loca || !tables.head || !tables.hhea || !tables.hmtx) return null;
   return tables;
 }
 
-function parseCmap4(view: DataView, tableOff: number): ((code: number) => number) | null {
-  const nTables = u16(view, tableOff + 2);
-  let sub = 0;
-  for (let i = 0; i < nTables; i++) {
-    const p = tableOff + 4 + i * 8;
-    const platform = u16(view, p);
-    const enc = u16(view, p + 2);
-    const off = view.getUint32(p + 4);
-    if ((platform === 3 && enc === 1) || platform === 0) sub = tableOff + off;
-    if (platform === 3 && enc === 1) break;
-  }
-  if (!sub || u16(view, sub) !== 4) return null;
-  const segCount = u16(view, sub + 6) >> 1;
+function parseCmapSubtable4(bytes: Uint8Array, sub: number): ((code: number) => number) | null {
+  if (sub + 16 > bytes.byteLength || u16(bytes, sub) !== 4) return null;
+  const segCount = u16(bytes, sub + 6) >> 1;
+  if (segCount <= 0 || sub + 16 + segCount * 8 > bytes.byteLength) return null;
   let p = sub + 14;
   const endCode = new Uint16Array(segCount);
-  for (let i = 0; i < segCount; i++, p += 2) endCode[i] = u16(view, p);
+  for (let i = 0; i < segCount; i++, p += 2) endCode[i] = u16(bytes, p);
   p += 2;
   const startCode = new Uint16Array(segCount);
-  for (let i = 0; i < segCount; i++, p += 2) startCode[i] = u16(view, p);
+  for (let i = 0; i < segCount; i++, p += 2) startCode[i] = u16(bytes, p);
   const idDelta = new Int16Array(segCount);
-  for (let i = 0; i < segCount; i++, p += 2) idDelta[i] = i16(view, p);
+  for (let i = 0; i < segCount; i++, p += 2) idDelta[i] = i16(bytes, p);
   const idRangeOff = p;
   const idRange = new Uint16Array(segCount);
-  for (let i = 0; i < segCount; i++, p += 2) idRange[i] = u16(view, p);
+  for (let i = 0; i < segCount; i++, p += 2) idRange[i] = u16(bytes, p);
   return (code: number): number => {
     if (code < 0 || code > 0xffff) return 0;
     let lo = 0;
@@ -76,27 +193,84 @@ function parseCmap4(view: DataView, tableOff: number): ((code: number) => number
     if (i < 0 || startCode[i] > code) return 0;
     if (idRange[i] === 0) return (code + idDelta[i]) & 0xffff;
     const pos = idRangeOff + i * 2 + idRange[i] + (code - startCode[i]) * 2;
-    const gid = u16(view, pos);
+    if (pos + 2 > bytes.byteLength) return 0;
+    const gid = u16(bytes, pos);
     if (!gid) return 0;
     return (gid + idDelta[i]) & 0xffff;
   };
 }
 
-function parseSimpleOutline(view: DataView, offset: number, nContours: number): FontPoint[][] {
+function parseCmapSubtable12(bytes: Uint8Array, sub: number): ((code: number) => number) | null {
+  if (sub + 16 > bytes.byteLength || u16(bytes, sub) !== 12) return null;
+  const nGroups = u32(bytes, sub + 12);
+  if (nGroups <= 0 || sub + 16 + nGroups * 12 > bytes.byteLength) return null;
+  const starts = new Uint32Array(nGroups);
+  const ends = new Uint32Array(nGroups);
+  const gids = new Uint32Array(nGroups);
+  let p = sub + 16;
+  for (let i = 0; i < nGroups; i++, p += 12) {
+    starts[i] = u32(bytes, p);
+    ends[i] = u32(bytes, p + 4);
+    gids[i] = u32(bytes, p + 8);
+  }
+  return (code: number): number => {
+    if (code < 0) return 0;
+    let lo = 0;
+    let hi = nGroups - 1;
+    while (lo <= hi) {
+      const mid = (lo + hi) >> 1;
+      if (code < starts[mid]) hi = mid - 1;
+      else if (code > ends[mid]) lo = mid + 1;
+      else return gids[mid] + (code - starts[mid]);
+    }
+    return 0;
+  };
+}
+
+function parseCmap(bytes: Uint8Array, tableOff: number): ((code: number) => number) | null {
+  if (tableOff + 4 > bytes.byteLength) return null;
+  const nTables = u16(bytes, tableOff + 2);
+  let sub12 = 0;
+  let sub4Win = 0;
+  let sub4Uni = 0;
+  for (let i = 0; i < nTables; i++) {
+    const p = tableOff + 4 + i * 8;
+    if (p + 8 > bytes.byteLength) break;
+    const platform = u16(bytes, p);
+    const enc = u16(bytes, p + 2);
+    const sub = tableOff + u32(bytes, p + 4);
+    if (sub + 2 > bytes.byteLength) continue;
+    const fmt = u16(bytes, sub);
+    if (fmt === 12 && ((platform === 3 && enc === 10) || platform === 0)) sub12 = sub;
+    else if (fmt === 4 && platform === 3 && enc === 1) sub4Win = sub;
+    else if (fmt === 4 && (platform === 0 || platform === 3)) sub4Uni = sub;
+  }
+  const fn12 = sub12 ? parseCmapSubtable12(bytes, sub12) : null;
+  const fn4 = parseCmapSubtable4(bytes, sub4Win || sub4Uni);
+  if (!fn12 && !fn4) return null;
+  return (code: number): number => {
+    let gid = fn12 ? fn12(code) : 0;
+    if (!gid && fn4 && code <= 0xffff) gid = fn4(code);
+    if (!gid && code === 0xa0) {
+      gid = (fn12 ? fn12(0x20) : 0) || (fn4 ? fn4(0x20) : 0);
+    }
+    return gid;
+  };
+}
+
+function parseSimpleOutline(bytes: Uint8Array, offset: number, nContours: number): FontPoint[][] {
   let p = offset;
   const ends: number[] = [];
-  for (let i = 0; i < nContours; i++, p += 2) ends.push(u16(view, p));
+  for (let i = 0; i < nContours; i++, p += 2) ends.push(u16(bytes, p));
   const nPts = ends[nContours - 1] + 1;
-  const instr = u16(view, p);
+  const instr = u16(bytes, p);
   p += 2 + instr;
   const flags = new Uint8Array(nPts);
   for (let i = 0; i < nPts; i++) {
-    const f = view.getUint8(p);
-    p += 1;
+    const f = bytes[p++];
     flags[i] = f;
     if (f & 8) {
-      let rep = view.getUint8(p);
-      p += 1;
+      let rep = bytes[p++];
       while (rep-- > 0 && i + 1 < nPts) flags[++i] = f;
     }
   }
@@ -105,11 +279,10 @@ function parseSimpleOutline(view: DataView, offset: number, nContours: number): 
   for (let i = 0; i < nPts; i++) {
     const f = flags[i];
     if (f & 2) {
-      const dx = view.getUint8(p);
-      p += 1;
+      const dx = bytes[p++];
       x += (f & 16) ? dx : -dx;
     } else if (!(f & 16)) {
-      x += i16(view, p);
+      x += i16(bytes, p);
       p += 2;
     }
     xs[i] = x;
@@ -119,11 +292,10 @@ function parseSimpleOutline(view: DataView, offset: number, nContours: number): 
   for (let i = 0; i < nPts; i++) {
     const f = flags[i];
     if (f & 4) {
-      const dy = view.getUint8(p);
-      p += 1;
+      const dy = bytes[p++];
       y += (f & 32) ? dy : -dy;
     } else if (!(f & 32)) {
-      y += i16(view, p);
+      y += i16(bytes, p);
       p += 2;
     }
     ys[i] = y;
@@ -140,34 +312,130 @@ function parseSimpleOutline(view: DataView, offset: number, nContours: number): 
   return contours;
 }
 
-export function parseSoftFont(src: ArrayBuffer | ArrayBufferView): SoftFont | null {
-  const view = src instanceof ArrayBuffer
-    ? new DataView(src)
-    : ArrayBuffer.isView(src)
-      ? new DataView(src.buffer, src.byteOffset, src.byteLength)
-      : null;
-  if (!view) return null;
-  const tables = findTables(view);
+function parseCompositeOutline(
+  bytes: Uint8Array,
+  offset: number,
+  getOutline: (gid: number, depth: number) => FontPoint[][],
+  depth: number,
+): FontPoint[][] {
+  if (depth > 6) return [];
+  const out: FontPoint[][] = [];
+  let p = offset;
+  let flags = 0x20;
+  while ((flags & 0x20) !== 0 && p + 4 <= bytes.byteLength) {
+    flags = u16(bytes, p);
+    const compGid = u16(bytes, p + 2);
+    p += 4;
+    let dx = 0;
+    let dy = 0;
+    if (flags & 1) {
+      if (flags & 2) {
+        dx = i16(bytes, p);
+        dy = i16(bytes, p + 2);
+      }
+      p += 4;
+    } else {
+      if (flags & 2) {
+        dx = (bytes[p] << 24) >> 24;
+        dy = (bytes[p + 1] << 24) >> 24;
+      }
+      p += 2;
+    }
+    let m00 = 1;
+    let m01 = 0;
+    let m10 = 0;
+    let m11 = 1;
+    if (flags & 8) {
+      m00 = m11 = i16(bytes, p) / 16384;
+      p += 2;
+    } else if (flags & 64) {
+      m00 = i16(bytes, p) / 16384;
+      m11 = i16(bytes, p + 2) / 16384;
+      p += 4;
+    } else if (flags & 128) {
+      m00 = i16(bytes, p) / 16384;
+      m01 = i16(bytes, p + 2) / 16384;
+      m10 = i16(bytes, p + 4) / 16384;
+      m11 = i16(bytes, p + 6) / 16384;
+      p += 8;
+    }
+    const sub = getOutline(compGid, depth + 1);
+    for (const contour of sub) {
+      out.push(contour.map((pt) => ({
+        x: Math.round(pt.x * m00 + pt.y * m10 + dx),
+        y: Math.round(pt.x * m01 + pt.y * m11 + dy),
+        on: pt.on,
+      })));
+    }
+  }
+  return out;
+}
+
+export function diagnoseFontSource(src: unknown): string {
+  if (!src) return 'no-bytes';
+  const bytes = toFontBytes(src);
+  if (!bytes) {
+    const tag = Object.prototype.toString.call(src);
+    return `unrecognized:${tag}`;
+  }
+  if (bytes.byteLength < 12) return `short:${bytes.byteLength}`;
+  const magic = u32(bytes, 0);
+  if (!isSupportedSfntMagic(magic)) {
+    return `bad-magic:${magic.toString(16).padStart(8, '0')}`;
+  }
+  const tables = findTables(bytes);
+  if (!tables) return 'missing-tables';
+  const cmap = parseCmap(bytes, tables.cmap.off);
+  if (!cmap) return 'no-cmap';
+  return 'valid';
+}
+
+export function parseSoftFont(src: unknown): SoftFont | null {
+  const bytes = toFontBytes(src);
+  if (!bytes) return null;
+  const tables = findTables(bytes);
   if (!tables) return null;
   const head = tables.head.off;
-  const unitsPerEm = u16(view, head + 18) || 1000;
-  const locaFormat = i16(view, head + 50);
+  const unitsPerEm = u16(bytes, head + 18) || 1000;
+  const locaFormat = i16(bytes, head + 50);
   const hhea = tables.hhea.off;
-  const ascent = i16(view, hhea + 4);
-  const descent = i16(view, hhea + 6);
-  const nMetrics = u16(view, hhea + 34);
-  const glyphId = parseCmap4(view, tables.cmap.off);
+  const ascent = i16(bytes, hhea + 4);
+  const descent = i16(bytes, hhea + 6);
+  const nMetrics = u16(bytes, hhea + 34);
+  const glyphId = parseCmap(bytes, tables.cmap.off);
   if (!glyphId) return null;
   const glyfOff = tables.glyf.off;
   const locaOff = tables.loca.off;
   const hmtxOff = tables.hmtx.off;
-  const numGlyphs = tables.maxp ? u16(view, tables.maxp.off + 4) : nMetrics;
+  const numGlyphs = tables.maxp ? u16(bytes, tables.maxp.off + 4) : nMetrics;
   const loca = (gid: number): number => (
     locaFormat === 0
-      ? u16(view, locaOff + gid * 2) * 2
-      : view.getUint32(locaOff + gid * 4)
+      ? u16(bytes, locaOff + gid * 2) * 2
+      : u32(bytes, locaOff + gid * 4)
   );
   const outlines = new Map<number, FontPoint[][]>();
+  const readOutline = (gid: number, depth: number): FontPoint[][] => {
+    if (depth === 0) {
+      const hit = outlines.get(gid);
+      if (hit) return hit;
+    }
+    let pts: FontPoint[][] = [];
+    try {
+      if (gid > 0 && gid < numGlyphs) {
+        const a = loca(gid);
+        const b = loca(gid + 1);
+        if (b > a + 8 && glyfOff + b <= bytes.byteLength) {
+          const at = glyfOff + a;
+          const n = i16(bytes, at);
+          if (n > 0) pts = parseSimpleOutline(bytes, at + 10, n);
+          else if (n < 0) pts = parseCompositeOutline(bytes, at + 10, readOutline, depth);
+        }
+      }
+    } catch { pts = []; }
+    if (depth === 0) outlines.set(gid, pts);
+    return pts;
+  };
+
   return {
     unitsPerEm,
     ascent,
@@ -175,26 +443,11 @@ export function parseSoftFont(src: ArrayBuffer | ArrayBufferView): SoftFont | nu
     glyphId,
     advance(gid: number): number {
       const i = gid < nMetrics ? gid : nMetrics - 1;
-      if (i < 0) return unitsPerEm;
-      return u16(view, hmtxOff + i * 4);
+      if (i < 0 || hmtxOff + i * 4 + 2 > bytes.byteLength) return unitsPerEm;
+      return u16(bytes, hmtxOff + i * 4);
     },
     outline(gid: number): FontPoint[][] {
-      const hit = outlines.get(gid);
-      if (hit) return hit;
-      let pts: FontPoint[][] = [];
-      try {
-        if (gid > 0 && gid < numGlyphs) {
-          const a = loca(gid);
-          const b = loca(gid + 1);
-          if (b > a + 8) {
-            const at = glyfOff + a;
-            const n = i16(view, at);
-            if (n > 0) pts = parseSimpleOutline(view, at + 10, n);
-          }
-        }
-      } catch { pts = []; }
-      outlines.set(gid, pts);
-      return pts;
+      return readOutline(gid, 0);
     },
   };
 }
@@ -345,41 +598,126 @@ function glyphBitmap(font: SoftFont, gid: number, devSize: number) {
   const key = `${gid}@${Math.round(devSize * 4)}`;
   const hit = _glyphCache.get(key);
   if (hit) return hit;
+  if (_glyphCache.size > 2048) _glyphCache.clear();
   const scale = devSize / font.unitsPerEm;
   const bmp = rasterOutline(font.outline(gid), scale);
   _glyphCache.set(key, bmp);
   return bmp;
 }
 
-function dilate(src: Uint8Array, w: number, h: number, radius: number) {
-  const r = Math.max(0, Math.min(6, Math.ceil(radius)));
-  if (!r || !w || !h) return { alpha: src, w, h, shift: 0 };
+function dilate(src: Uint8Array, w: number, h: number, radius: number, cacheKey?: string) {
+  if (cacheKey) {
+    const hit = _strokeCache.get(cacheKey);
+    if (hit) return hit;
+  }
+  const rad = Math.max(0, Math.min(12, radius));
+  const r = Math.ceil(rad + 0.5);
+  if (rad <= 0.05 || !r || !w || !h) return { alpha: src, w, h, shift: 0 };
   const w2 = w + r * 2;
   const h2 = h + r * 2;
   const dst = new Uint8Array(w2 * h2);
-  const r2 = r * r;
+  const kernel: { dx: number; dy: number; w: number }[] = [];
+  for (let dy = -r; dy <= r; dy++) {
+    for (let dx = -r; dx <= r; dx++) {
+      const d = Math.hypot(dx, dy);
+      if (d > rad + 0.5) continue;
+      const weight = d <= Math.max(0, rad - 0.5) ? 256 : Math.round((rad + 0.5 - d) * 256);
+      if (weight > 0) kernel.push({ dx, dy, w: weight });
+    }
+  }
   for (let y = 0; y < h; y++) {
     for (let x = 0; x < w; x++) {
       const a = src[y * w + x];
       if (!a) continue;
-      for (let dy = -r; dy <= r; dy++) {
-        for (let dx = -r; dx <= r; dx++) {
-          if (dx * dx + dy * dy > r2) continue;
-          const i = (y + r + dy) * w2 + (x + r + dx);
-          if (a > dst[i]) dst[i] = a;
-        }
+      const cy = y + r;
+      const cx = x + r;
+      for (let k = 0; k < kernel.length; k++) {
+        const kn = kernel[k];
+        const v = (a * kn.w) >> 8;
+        const idx = (cy + kn.dy) * w2 + (cx + kn.dx);
+        if (v > dst[idx]) dst[idx] = v;
       }
     }
   }
-  return { alpha: dst, w: w2, h: h2, shift: r };
+  const res = { alpha: dst, w: w2, h: h2, shift: r };
+  if (cacheKey) {
+    if (_strokeCache.size > 1024) _strokeCache.clear();
+    _strokeCache.set(cacheKey, res);
+  }
+  return res;
+}
+
+function blurStamp(src: Uint8Array, w: number, h: number, blurPx: number): { alpha: Uint8Array; w: number; h: number; shift: number } {
+  const r = Math.max(0, Math.min(6, Math.round(blurPx / 2)));
+  if (!r || !w || !h) return { alpha: src, w, h, shift: 0 };
+  const pad = r * 2;
+  const w2 = w + pad * 2;
+  const h2 = h + pad * 2;
+  let cur = new Uint8Array(w2 * h2);
+  for (let y = 0; y < h; y++) {
+    cur.set(src.subarray(y * w, (y + 1) * w), (y + pad) * w2 + pad);
+  }
+  const tmp = new Uint8Array(w2 * h2);
+  const diam = r * 2 + 1;
+  for (let y = 0; y < h2; y++) {
+    let sum = 0;
+    const row = y * w2;
+    for (let x = -r; x <= r; x++) sum += cur[row + Math.max(0, Math.min(w2 - 1, x))];
+    for (let x = 0; x < w2; x++) {
+      tmp[row + x] = (sum / diam) | 0;
+      const left = Math.max(0, x - r);
+      const right = Math.min(w2 - 1, x + r + 1);
+      sum += cur[row + right] - cur[row + left];
+    }
+  }
+  for (let x = 0; x < w2; x++) {
+    let sum = 0;
+    for (let y = -r; y <= r; y++) sum += tmp[Math.max(0, Math.min(h2 - 1, y)) * w2 + x];
+    for (let y = 0; y < h2; y++) {
+      cur[y * w2 + x] = (sum / diam) | 0;
+      const top = Math.max(0, y - r);
+      const bot = Math.min(h2 - 1, y + r + 1);
+      sum += tmp[bot * w2 + x] - tmp[top * w2 + x];
+    }
+  }
+  return { alpha: cur, w: w2, h: h2, shift: pad };
+}
+
+function isSoftGradient(input: unknown): input is SoftGradient {
+  return !!input && typeof input === 'object' && (input as SoftGradient).__huahuaGrad === true;
+}
+
+function sampleGradient(grad: SoftGradient, t: number): Rgba {
+  const stops = grad.stops;
+  if (!stops.length) return { r: 0, g: 0, b: 0, a: 255 };
+  if (stops.length === 1 || t <= stops[0].off) return stops[0].color;
+  const last = stops[stops.length - 1];
+  if (t >= last.off) return last.color;
+  for (let i = 0; i < stops.length - 1; i++) {
+    const a = stops[i];
+    const b = stops[i + 1];
+    if (t >= a.off && t <= b.off) {
+      const span = b.off - a.off;
+      const u = span > 1e-6 ? (t - a.off) / span : 0;
+      return {
+        r: Math.round(a.color.r + (b.color.r - a.color.r) * u),
+        g: Math.round(a.color.g + (b.color.g - a.color.g) * u),
+        b: Math.round(a.color.b + (b.color.b - a.color.b) * u),
+        a: Math.round(a.color.a + (b.color.a - a.color.a) * u),
+      };
+    }
+  }
+  return last.color;
 }
 
 function parseColor(input: unknown): Rgba {
+  if (isSoftGradient(input)) return sampleGradient(input, 0.5);
   if (typeof input === 'number' && Number.isFinite(input)) {
     const n = input >>> 0;
     return { r: (n >> 16) & 255, g: (n >> 8) & 255, b: n & 255, a: 255 };
   }
   const s = String(input ?? '').trim().toLowerCase();
+  if (s === 'transparent') return { r: 0, g: 0, b: 0, a: 0 };
   if (s === 'black' || s === '#000' || s === '#000000') return { r: 0, g: 0, b: 0, a: 255 };
   if (s === 'white' || s === '#fff' || s === '#ffffff') return { r: 255, g: 255, b: 255, a: 255 };
   if (s === 'red' || s === '#f00' || s === '#ff0000') return { r: 255, g: 0, b: 0, a: 255 };
@@ -422,19 +760,10 @@ function letterGap(value: string, scale: number): number {
   return m ? Number(m[1]) * scale : 0;
 }
 
-function asFontSource(src: unknown): ArrayBuffer | ArrayBufferView | null {
-  if (!src) return null;
-  if (src instanceof ArrayBuffer || ArrayBuffer.isView(src as ArrayBufferView)) return src as ArrayBuffer | ArrayBufferView;
-  const data = (src as { data?: unknown }).data;
-  if (data instanceof ArrayBuffer || ArrayBuffer.isView(data as ArrayBufferView)) return data as ArrayBuffer | ArrayBufferView;
-  return null;
-}
-
 export function createSoftTextCanvas(src: unknown): { canvas: any; ctx: any } | null {
-  const bytes = asFontSource(src);
-  if (!bytes) return null;
-  const font = parseSoftFont(bytes);
-  if (!font) return null;
+  const parsedFont = parseSoftFont(src);
+  if (!parsedFont) return null;
+  const font: SoftFont = parsedFont;
   let w = 1;
   let h = 1;
   let pixels = new Uint8ClampedArray(4);
@@ -451,8 +780,8 @@ export function createSoftTextCanvas(src: unknown): { canvas: any; ctx: any } | 
   };
   const ctx: any = {
     canvas,
-    fillStyle: '#000000',
-    strokeStyle: '#000000',
+    fillStyle: '#000000' as unknown,
+    strokeStyle: '#000000' as unknown,
     font: '16px sans-serif',
     textAlign: 'left',
     textBaseline: 'alphabetic',
@@ -493,14 +822,29 @@ export function createSoftTextCanvas(src: unknown): { canvas: any; ctx: any } | 
     },
     beginPath() {},
     closePath() {},
-    createLinearGradient() { return { addColorStop() {} }; },
+    createLinearGradient(x0 = 0, y0 = 0, x1 = 0, y1 = 1): SoftGradient {
+      const grad: SoftGradient = {
+        __huahuaGrad: true,
+        x0: Number(x0) || 0,
+        y0: Number(y0) || 0,
+        x1: Number(x1) || 0,
+        y1: Number(y1) || 0,
+        stops: [],
+        addColorStop(off: number, col: string) {
+          grad.stops.push({ off: Math.max(0, Math.min(1, Number(off) || 0)), color: parseColor(col) });
+          grad.stops.sort((p, q) => p.off - q.off);
+        },
+      };
+      return grad;
+    },
     measureText(text: string) {
+      const raw = String(text ?? '');
       const size = fontPx(ctx.font);
-      const gap = letterGap(ctx.letterSpacing, 1);
+      const gap = letterGap(ctx.letterSpacing || ctx.textLetterSpacing, 1);
       let width = 0;
       let n = 0;
-      for (let i = 0; i < String(text || '').length; i++) {
-        const cp = String(text).codePointAt(i) || 0;
+      for (let i = 0; i < raw.length; i++) {
+        const cp = raw.codePointAt(i) || 0;
         if (cp > 0xffff) i++;
         width += font.advance(font.glyphId(cp)) * size / font.unitsPerEm;
         n++;
@@ -562,11 +906,8 @@ export function createSoftTextCanvas(src: unknown): { canvas: any; ctx: any } | 
   };
 
   function resize(nw: number, nh: number) {
-    w = Math.max(1, Math.min(4096, nw | 0));
-    h = Math.max(1, Math.min(4096, nh | 0));
-    if (w * h > 4096 * 1024) {
-      h = Math.max(1, Math.floor((4096 * 1024) / w));
-    }
+    w = Math.max(1, Math.min(MAX_CANVAS_SIDE, nw | 0));
+    h = Math.max(1, Math.min(MAX_CANVAS_SIDE, nh | 0));
     pixels = new Uint8ClampedArray(w * h * 4);
     ctx.a = 1; ctx.b = 0; ctx.c = 0; ctx.d = 1; ctx.e = 0; ctx.f = 0;
   }
@@ -610,16 +951,47 @@ export function createSoftTextCanvas(src: unknown): { canvas: any; ctx: any } | 
     }
     const dstA = pixels[i + 3];
     const inv = 255 - a;
-    const outA = a + ((dstA * inv + 127) / 255 | 0);
+    const rem = (dstA * inv + 127) / 255 | 0;
+    const outA = a + rem;
     if (outA <= 0) return;
-    pixels[i] = (r * a + pixels[i] * ((dstA * inv + 127) / 255 | 0)) / outA;
-    pixels[i + 1] = (g * a + pixels[i + 1] * ((dstA * inv + 127) / 255 | 0)) / outA;
-    pixels[i + 2] = (b * a + pixels[i + 2] * ((dstA * inv + 127) / 255 | 0)) / outA;
+    pixels[i] = (r * a + pixels[i] * rem) / outA;
+    pixels[i + 1] = (g * a + pixels[i + 1] * rem) / outA;
+    pixels[i + 2] = (b * a + pixels[i + 2] * rem) / outA;
     pixels[i + 3] = outA;
   }
 
-  function blit(alpha: Uint8Array, bw: number, bh: number, dx: number, dy: number, color: Rgba) {
-    const alphaScale = Math.max(0, Math.min(1, Number(ctx.globalAlpha) || 0)) * (color.a / 255);
+  function blit(
+    alpha: Uint8Array,
+    bw: number,
+    bh: number,
+    dx: number,
+    dy: number,
+    paint: Rgba | SoftGradient,
+  ) {
+    const globalA = Math.max(0, Math.min(1, Number(ctx.globalAlpha) || 0));
+    if (globalA <= 0) return;
+    if (!isSoftGradient(paint)) {
+      const alphaScale = globalA * (paint.a / 255);
+      if (alphaScale <= 0) return;
+      for (let y = 0; y < bh; y++) {
+        const yy = dy + y;
+        if (yy < 0 || yy >= h) continue;
+        for (let x = 0; x < bw; x++) {
+          const xx = dx + x;
+          if (xx < 0 || xx >= w) continue;
+          const cov = alpha[y * bw + x];
+          if (!cov) continue;
+          blendAt((yy * w + xx) * 4, paint.r, paint.g, paint.b, Math.round(cov * alphaScale));
+        }
+      }
+      return;
+    }
+
+    const [gx0, gy0] = mapPoint(paint.x0, paint.y0);
+    const [gx1, gy1] = mapPoint(paint.x1, paint.y1);
+    const vx = gx1 - gx0;
+    const vy = gy1 - gy0;
+    const vLen2 = vx * vx + vy * vy || 1;
     for (let y = 0; y < bh; y++) {
       const yy = dy + y;
       if (yy < 0 || yy >= h) continue;
@@ -628,7 +1000,9 @@ export function createSoftTextCanvas(src: unknown): { canvas: any; ctx: any } | 
         if (xx < 0 || xx >= w) continue;
         const cov = alpha[y * bw + x];
         if (!cov) continue;
-        blendAt((yy * w + xx) * 4, color.r, color.g, color.b, Math.round(cov * alphaScale));
+        const t = ((xx - gx0) * vx + (yy - gy0) * vy) / vLen2;
+        const c = sampleGradient(paint, t);
+        blendAt((yy * w + xx) * 4, c.r, c.g, c.b, Math.round(cov * globalA * (c.a / 255)));
       }
     }
   }
@@ -662,30 +1036,48 @@ export function createSoftTextCanvas(src: unknown): { canvas: any; ctx: any } | 
     else if (base === 'bottom' || base === 'ideographic') baseShift = font.descent * up;
     else if (base === 'middle') baseShift = (font.ascent + font.descent) / 2 * up;
     const baseY = oy + baseShift;
-    const color = parseColor(mode === 'stroke' ? ctx.strokeStyle : ctx.fillStyle);
+    const rawStyle = mode === 'stroke' ? ctx.strokeStyle : ctx.fillStyle;
+    const paint: Rgba | SoftGradient = isSoftGradient(rawStyle) ? rawStyle : parseColor(rawStyle);
     const radius = mode === 'stroke' ? Math.abs(Number(ctx.lineWidth) || 0) * scale / 2 : 0;
     const shX = Number(ctx.shadowOffsetX) || 0;
     const shY = Number(ctx.shadowOffsetY) || 0;
     const shBlur = Number(ctx.shadowBlur) || 0;
     const drawShadow = shX !== 0 || shY !== 0 || shBlur > 0;
     const shadow = parseColor(ctx.shadowColor);
+    const sizeQ = Math.round(size * 4);
+    const radQ = Math.round(radius * 4);
     let pen = ox;
     for (let i = 0; i < glyphs.length; i++) {
-      const bmp = glyphBitmap(font, glyphs[i].gid, size);
-      const gx = Math.round(pen + bmp.ox);
-      const gy = Math.round(baseY + bmp.oy);
-      if (drawShadow) {
-        const blur = shBlur > 0.5 ? Math.min(3, shBlur / 2) : 0;
-        const stamp = dilate(bmp.alpha, bmp.w, bmp.h, Math.max(radius, blur));
-        blit(stamp.alpha, stamp.w, stamp.h, gx - stamp.shift + Math.round(shX), gy - stamp.shift + Math.round(shY), shadow);
-      }
-      if (mode === 'stroke') {
-        if (radius > 0.2) {
-          const stamp = dilate(bmp.alpha, bmp.w, bmp.h, radius);
-          blit(stamp.alpha, stamp.w, stamp.h, gx - stamp.shift, gy - stamp.shift, color);
+      const gid = glyphs[i].gid;
+      const bmp = glyphBitmap(font, gid, size);
+      if (bmp.w > 0 && bmp.h > 0) {
+        const gx = Math.round(pen + bmp.ox);
+        const gy = Math.round(baseY + bmp.oy);
+        const strokeStamp = radius > 0.2
+          ? dilate(bmp.alpha, bmp.w, bmp.h, radius, `${gid}@${sizeQ}@${radQ}`)
+          : null;
+        if (drawShadow && shadow.a > 0) {
+          const baseStamp = strokeStamp ?? { alpha: bmp.alpha, w: bmp.w, h: bmp.h, shift: 0 };
+          const blurred = shBlur > 0.5
+            ? blurStamp(baseStamp.alpha, baseStamp.w, baseStamp.h, shBlur)
+            : { alpha: baseStamp.alpha, w: baseStamp.w, h: baseStamp.h, shift: 0 };
+          const totalShift = baseStamp.shift + blurred.shift;
+          blit(
+            blurred.alpha,
+            blurred.w,
+            blurred.h,
+            gx - totalShift + Math.round(shX),
+            gy - totalShift + Math.round(shY),
+            shadow,
+          );
         }
-      } else {
-        blit(bmp.alpha, bmp.w, bmp.h, gx, gy, color);
+        if (mode === 'stroke') {
+          if (strokeStamp) {
+            blit(strokeStamp.alpha, strokeStamp.w, strokeStamp.h, gx - strokeStamp.shift, gy - strokeStamp.shift, paint);
+          }
+        } else {
+          blit(bmp.alpha, bmp.w, bmp.h, gx, gy, paint);
+        }
       }
       pen += glyphs[i].adv + (i < glyphs.length - 1 ? gap : 0);
     }
@@ -697,6 +1089,10 @@ export function createSoftTextCanvas(src: unknown): { canvas: any; ctx: any } | 
 
 let _host: { canvas: any; ctx: any } | null | undefined;
 
+export function resetSoftTextHostCache(): void {
+  _host = undefined;
+}
+
 export function acquireSoftTextHost(): { canvas: any; ctx: any } | null {
   if (_host !== undefined) return _host;
   _host = null;
@@ -704,7 +1100,9 @@ export function acquireSoftTextHost(): { canvas: any; ctx: any } | null {
     const src = typeof GameGlobal !== 'undefined' ? GameGlobal.__huahuaFontBytes : null;
     const made = createSoftTextCanvas(src);
     if (!made) {
-      if (typeof GameGlobal !== 'undefined') GameGlobal.__huahuaSoftFont = src ? 'parse-fail' : 'no-bytes';
+      if (typeof GameGlobal !== 'undefined') {
+        GameGlobal.__huahuaSoftFont = src ? `parse-fail(${diagnoseFontSource(src)})` : 'no-bytes';
+      }
       return null;
     }
     made.canvas.width = 64;
@@ -732,7 +1130,7 @@ export function acquireSoftTextHost(): { canvas: any; ctx: any } | null {
   }
 }
 
-export function inspectSoftGlyph(src: ArrayBuffer | ArrayBufferView, code: number): { gid: number; advance: number; first: FontPoint | null } | null {
+export function inspectSoftGlyph(src: unknown, code: number): { gid: number; advance: number; first: FontPoint | null } | null {
   const font = parseSoftFont(src);
   if (!font) return null;
   const gid = font.glyphId(code);
