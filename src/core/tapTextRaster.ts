@@ -20,8 +20,9 @@ interface Host2d {
 
 declare const GameGlobal: { __huahuaFontFamily?: string } | undefined;
 
-/** Tap 画布认不准 bold + 多字体串，字会整段画空。有包内字体时只留字号和这个 family。 */
-function tapFontForHost(font: string): string {
+/** Tap 宿主原生画布认不准 bold + 多字体串，字会整段画空。软光栅画布不受此限制。 */
+function tapFontForHost(font: string, hctx?: any): string {
+  if (hctx?.canvas?.__huahuaSoft) return font;
   let packed = '';
   try {
     packed = typeof GameGlobal !== 'undefined' ? (GameGlobal?.__huahuaFontFamily || '') : '';
@@ -29,6 +30,12 @@ function tapFontForHost(font: string): string {
   if (!packed) return font;
   const size = String(font || '').match(/([\d.]+)px/);
   return `${size ? size[1] : '16'}px ${packed}`;
+}
+
+const MAX_WRAP_SIDE = 4096;
+
+function clampCanvasSide(v?: number): number {
+  return Math.max(1, Math.min(MAX_WRAP_SIDE, (v || 1) | 0));
 }
 
 let _hostState: 'pending' | 'ok' | 'null' = 'pending';
@@ -49,8 +56,8 @@ export function installTapTextRaster(acquireHost: () => Host2d | null): (w?: num
 
   const createWrap = (w?: number, h?: number): any => {
     const state = {
-      w: Math.max(1, w || 1),
-      h: Math.max(1, h || 1),
+      w: clampCanvasSide(w),
+      h: clampCanvasSide(h),
       snap: null as Uint8ClampedArray | null,
       pendingReset: true,
     };
@@ -87,7 +94,7 @@ export function installTapTextRaster(acquireHost: () => Host2d | null): (w?: num
       apply(hctx: any) {
         hctx.fillStyle = ctx.fillStyle;
         hctx.strokeStyle = ctx.strokeStyle;
-        hctx.font = tapFontForHost(ctx.font);
+        hctx.font = tapFontForHost(ctx.font, hctx);
         hctx.textAlign = ctx.textAlign;
         hctx.textBaseline = ctx.textBaseline;
         hctx.lineWidth = ctx.lineWidth;
@@ -146,17 +153,22 @@ export function installTapTextRaster(acquireHost: () => Host2d | null): (w?: num
         }
         return { data: new Uint8ClampedArray(iw * ih * 4), width: iw, height: ih };
       },
-      putImageData() {},
-      createLinearGradient() { return { addColorStop() {} }; },
+      putImageData(img: any, x: number, y: number) {
+        ctx.withHost((hctx: any) => hctx.putImageData?.(img, x, y));
+      },
+      createLinearGradient(x0: number, y0: number, x1: number, y1: number) {
+        const g = getHost()?.ctx?.createLinearGradient?.(x0, y0, x1, y1);
+        return g || { addColorStop() {} };
+      },
     };
 
     const canvas: any = {
       __tapTextWrap: true,
       style: {},
       get width() { return state.w; },
-      set width(v: number) { state.w = Math.max(1, v | 0); state.snap = null; state.pendingReset = true; },
+      set width(v: number) { state.w = clampCanvasSide(v); state.snap = null; state.pendingReset = true; },
       get height() { return state.h; },
-      set height(v: number) { state.h = Math.max(1, v | 0); state.snap = null; state.pendingReset = true; },
+      set height(v: number) { state.h = clampCanvasSide(v); state.snap = null; state.pendingReset = true; },
       getContext(type: string) { return type === '2d' ? ctx : null; },
       addEventListener() {},
       removeEventListener() {},

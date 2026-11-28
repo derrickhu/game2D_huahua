@@ -22,6 +22,7 @@ import {
   type GameClubTaskDef,
 } from '@/config/GameClubConfig';
 import { formatLocalDateString } from '@/utils/WeeklyCycle';
+import { ToastMessage } from '@/gameobjects/ui/ToastMessage';
 import type { ItemObtainEntry } from '@/gameobjects/ui/ItemObtainOverlay';
 import { CurrencyManager } from './CurrencyManager';
 import { FlowerSignTicketManager } from './FlowerSignTicketManager';
@@ -86,22 +87,21 @@ class GameClubManagerClass {
   private _inited = false;
   private _state: GameClubPersistedState = createDefaultState(formatLocalDateString());
   private _syncing = false;
+  private _syncInflight: Promise<boolean> | null = null;
   private _authDenied = false;
   private _panelOpen = false;
   /** 面板打开或点击前往游戏圈后离开小游戏，返回时自动判为已访问游戏圈并拉取最新数据 */
   private _pendingClubReturn = false;
+  private _delayedResyncTimer: ReturnType<typeof setTimeout> | null = null;
 
   /**
    * 入口是否展示：
-   * - 微信端：常驻展示
-   * - H5 / 浏览器开发预览：常驻展示便于联调验收
-   * - 抖音 / TapTap / 华为快游戏：微信游戏圈专属能力，默认隐藏避免平台审核混淆
+   * - 微信小游戏端：常驻展示
+   * - 本地浏览器开发预览（非小游戏宿主）：常驻展示便于联调
+   * - 抖音 / 快手 / TapTap / 华为等非微信小游戏端：一律隐藏
    */
   get isEntryVisible(): boolean {
-    if (Platform.isDouyin || Platform.isTaptap || Platform.isHuawei) {
-      return false;
-    }
-    return true;
+    return Platform.isWechat || (!Platform.isMinigame && Platform.name === 'unknown');
   }
 
   get isSyncing(): boolean {
@@ -214,7 +214,7 @@ class GameClubManagerClass {
     return false;
   }
 
-  /** 标记玩家点击了「前往游戏圈」按钮（或原生 GameClubButton 被触发） */
+  /** 标记玩家点击了「去完成」按钮（或原生 GameClubButton 被触发） */
   markClubJumpTriggered(): void {
     this._ensureInitAndRollover();
     this._pendingClubReturn = true;
@@ -232,7 +232,7 @@ class GameClubManagerClass {
 
   /** 小游戏切后台（例如打开微信游戏圈半屏/全屏页） */
   notifyAppHide(): void {
-    if (this._panelOpen) {
+    if (this._panelOpen || this._pendingClubReturn) {
       this._pendingClubReturn = true;
     }
   }
@@ -241,16 +241,27 @@ class GameClubManagerClass {
   syncAfterAppShow(reason = 'app-show'): void {
     if (!this.isEntryVisible) return;
     this._ensureInitAndRollover();
-    if (this._pendingClubReturn) {
-      this._pendingClubReturn = false;
-      const today = formatLocalDateString();
-      if (this._state.visitedDate !== today) {
-        this._state.visitedDate = today;
-        this._save();
-        EventBus.emit('gameClub:changed');
-      }
-      void this.syncFromWechat(reason);
+    if (!this._pendingClubReturn) return;
+
+    this._pendingClubReturn = false;
+    const today = formatLocalDateString();
+    if (this._state.visitedDate !== today) {
+      this._state.visitedDate = today;
+      this._save();
+      EventBus.emit('gameClub:changed');
     }
+
+    void this.syncFromWechat(reason);
+    // 微信游戏圈点赞/评论计数偶发有 1~2 秒异步落库延迟，返回后再补拉一次确保变「领取」
+    if (this._delayedResyncTimer) {
+      clearTimeout(this._delayedResyncTimer);
+    }
+    this._delayedResyncTimer = setTimeout(() => {
+      this._delayedResyncTimer = null;
+      if (this._panelOpen) {
+        void this.syncFromWechat(`${reason}-delayed`);
+      }
+    }, 1800);
   }
 
   /**
@@ -260,56 +271,82 @@ class GameClubManagerClass {
   async syncFromWechat(reason = 'manual'): Promise<boolean> {
     this._ensureInitAndRollover();
     if (!Platform.isWechat) return false;
-    if (this._syncing) return false;
-
-    this._syncing = true;
-    EventBus.emit('gameClub:changed');
-    try {
-      const enc = await Platform.getGameClubData(GAME_CLUB_DATA_TYPES);
-      if (!enc) {
-        return false;
-      }
-      this._authDenied = false;
-
-      if (!BackendService.available) return false;
-      const res = await BackendService.decryptGameClubData(enc.encryptedData, enc.iv);
-      const m = res?.metrics;
-      if (!m) return false;
-
-      let changed = false;
-      if (m.joined && !this._state.joined) {
-        this._state.joined = true;
-        changed = true;
-      }
-      if (m.todayLikes > this._state.todayLikes) {
-        this._state.todayLikes = m.todayLikes;
-        changed = true;
-      }
-      if (m.todayComments > this._state.todayComments) {
-        this._state.todayComments = m.todayComments;
-        changed = true;
-      }
-      if (m.todayPosts > this._state.todayPosts) {
-        this._state.todayPosts = m.todayPosts;
-        changed = true;
-      }
-      this._state.lastSyncedAt = Date.now();
-      this._save();
-      if (changed) {
-        CloudSyncManager.scheduleSync(`game-club-sync:${reason}`);
-      }
-      return true;
-    } catch (err: any) {
-      if (err?.authDenied) {
-        this._authDenied = true;
-      } else {
-        console.warn(`[GameClub] syncFromWechat(${reason}) failed:`, err?.message || err);
-      }
-      return false;
-    } finally {
-      this._syncing = false;
-      EventBus.emit('gameClub:changed');
+    if (this._syncInflight) {
+      // 若前一次同步（如打开面板时）尚未结束，等待其完成后若是进圈返回则再补拉最新状态
+      const prev = await this._syncInflight;
+      if (!reason.startsWith('app-show')) return prev;
     }
+
+    const run = async (): Promise<boolean> => {
+      this._syncing = true;
+      EventBus.emit('gameClub:changed');
+      try {
+        if (!BackendService.available) return false;
+        // 1) 先确保后端 JWT 有效，避免后续 _callWithAuth 内部再次触发 wx.login 覆盖 session_key
+        await BackendService.ensureToken();
+        // 2) 先 wx.login 拿到新 code（刷新 session_key），再调用 getGameClubData 用同一 session_key 加密
+        const creds = await Platform.loginCredentials();
+        if (!creds.code) {
+          console.warn(`[GameClub] syncFromWechat(${reason}): wx.login did not return code`);
+          return false;
+        }
+
+        const enc = await Platform.getGameClubData(GAME_CLUB_DATA_TYPES, {
+          promptModalIfDenied: reason === 'panel-open',
+        });
+        if (!enc) {
+          return false;
+        }
+        this._authDenied = false;
+
+        const res = await BackendService.decryptGameClubData(enc.encryptedData, enc.iv, creds.code);
+        const m = res?.metrics;
+        if (!m) return false;
+
+        let changed = false;
+        if (m.joined && !this._state.joined) {
+          this._state.joined = true;
+          changed = true;
+        }
+        if (m.todayLikes > this._state.todayLikes) {
+          this._state.todayLikes = m.todayLikes;
+          changed = true;
+        }
+        if (m.todayComments > this._state.todayComments) {
+          this._state.todayComments = m.todayComments;
+          changed = true;
+        }
+        if (m.todayPosts > this._state.todayPosts) {
+          this._state.todayPosts = m.todayPosts;
+          changed = true;
+        }
+        this._state.lastSyncedAt = Date.now();
+        this._save();
+        if (changed) {
+          CloudSyncManager.scheduleSync(`game-club-sync:${reason}`);
+        }
+        return true;
+      } catch (err: any) {
+        if (err?.privacyPending) {
+          console.warn(`[GameClub] syncFromWechat(${reason}) privacy pending:`, err?.message || err);
+          if (reason === 'panel-open') {
+            ToastMessage.show('微信后台隐私保护指引尚在审核生效中，通过后将自动弹出授权');
+          }
+        } else if (err?.authDenied) {
+          this._authDenied = true;
+        } else {
+          console.warn(`[GameClub] syncFromWechat(${reason}) failed:`, err?.message || err);
+        }
+        return false;
+      } finally {
+        this._syncing = false;
+        this._syncInflight = null;
+        EventBus.emit('gameClub:changed');
+      }
+    };
+
+    this._syncInflight = run();
+    return this._syncInflight;
   }
 
   /** 引导玩家在微信设置页重新开启「游戏圈数据」权限并立即重拉 */

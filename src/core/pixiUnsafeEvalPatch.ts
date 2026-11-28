@@ -322,7 +322,7 @@ const _isRealDevice = (() => {
   } catch { return false; }
 })();
 
-if (_isRealDevice) {
+if (_isRealDevice || Platform.isCanvasHostGuarded) {
   // ---- 1) 强制用纯像素数据创建 Texture.WHITE ----
   const whitePixels = new Uint8Array(16 * 16 * 4);
   whitePixels.fill(255);
@@ -333,9 +333,9 @@ if (_isRealDevice) {
   try { Object.defineProperty(Texture, '_WHITE', { value: whiteTex, writable: true, configurable: true }); } catch (_e) { /* */ }
   try { Object.defineProperty(Texture, 'WHITE', { get: () => whiteTex, configurable: true }); } catch (_e) { /* */ }
 
-  // ---- 2) 真机 Canvas 纹理上传修复 ----
-  // 策略：永远先调用原始 upload（确保所有 GL 状态正确、Image 源正常工作），
-  // 然后仅对 Canvas 源用 getImageData 读取像素并同步覆盖 GL 纹理。
+  // ---- 2) 真机 / 守卫宿主 Canvas 纹理上传修复 ----
+  // 策略：守卫宿主上的合成画布（__tapTextWrap / __huahuaMeasure）无论真机或模拟器都必须走 9 参像素上传；
+  // 其余平台真机先调用原始 upload，再仅对 Canvas 源用 getImageData 读取像素并同步覆盖 GL 纹理。
   // 关键安全措施：
   // - 不调用 renderer.texture.bind()，避免触发递归 upload
   // - 用 toTempFilePathSync 存在性判断 Canvas（Image 无此方法）
@@ -385,9 +385,10 @@ if (_isRealDevice) {
         return false;
       }
 
-      // 2) 仅对 Canvas 源做像素补救
+      // 2) 仅对真机原生 Canvas 源做像素补救
       // Canvas 独有 toTempFilePathSync，Image 对象没有
-      if (_canReadPixels
+      if (_isRealDevice
+          && _canReadPixels
           && source
           && source.width > 0 && source.height > 0
           && typeof source.getContext === 'function'
